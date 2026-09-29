@@ -9,29 +9,20 @@ import {
   type StockCategory
 } from '$lib/db/stock';
 import { getTaxonomyTerm } from '$lib/db/taxonomy';
+import { STOCK_CATEGORIES } from '$lib/stock/categories';
 import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { requireOwner } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
-
-const CATEGORIES: StockCategory[] = [
-  'herbicide',
-  'insecticide',
-  'fungicide',
-  'fertilizer',
-  'seed',
-  'adjuvant',
-  'fuel',
-  'part'
-];
+import { checkAnimalStockWrite } from '$lib/server/animalStockRules';
 
 const updateSchema = z.object({
   displayName: z.string().min(1).max(120).optional(),
   /** Phase 15d — manual override for the Haiku-generated short label.
    *  Pass null to clear and fall back to displayName. */
   shortName: z.string().max(40).nullable().optional(),
-  category: z.enum(CATEGORIES as [StockCategory, ...StockCategory[]]).optional(),
+  category: z.enum(STOCK_CATEGORIES as [StockCategory, ...StockCategory[]]).optional(),
   defaultUnit: z.enum(ALL_STOCK_UNITS as unknown as [StockUnit, ...StockUnit[]]).optional(),
   pluginId: z.string().nullable().optional(),
   reorderThreshold: z.number().nonnegative().nullable().optional(),
@@ -61,7 +52,8 @@ export const GET: RequestHandler = ({ params }) => {
 export const PATCH: RequestHandler = async (event) => {
   requireOwner(event);
   if (!event.params.id) return json({ error: 'id required' }, { status: 400 });
-  if (!getStockItem(event.params.id)) return json({ error: 'not found' }, { status: 404 });
+  const current = getStockItem(event.params.id);
+  if (!current) return json({ error: 'not found' }, { status: 404 });
   let body: unknown;
   try {
     body = await event.request.json();
@@ -73,6 +65,14 @@ export const PATCH: RequestHandler = async (event) => {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   const foreign = rejectForeignRefs(['typeId', parsed.data.typeId, getTaxonomyTerm]);
   if (foreign) return foreign;
+  const next = parsed.data;
+  const refused = await checkAnimalStockWrite({
+    category: next.category ?? current.category,
+    defaultUnit: next.defaultUnit ?? current.defaultUnit,
+    pluginId: next.pluginId === undefined ? current.pluginId : next.pluginId,
+    metadataJson: next.metadataJson ?? current.metadataJson
+  });
+  if (refused) return refused;
   return json({ item: updateStockItem(event.params.id, parsed.data) });
 };
 

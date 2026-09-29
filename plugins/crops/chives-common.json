@@ -26,5 +26,18 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "animalToxicity": [
+    {
+      "speciesIds": [
+        "dog",
+        "cat",
+        "horse"
+      ],
+      "parts": [
+        "whole-plant"
+      ],
+      "severity": "toxic"
+    }
+  ]
 }

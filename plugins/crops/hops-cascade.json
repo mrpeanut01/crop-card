@@ -35,5 +35,17 @@
     ],
     "beeAttractive": false
   },
-  "archetype": "perennial-vine-quality"
+  "archetype": "perennial-vine-quality",
+  "animalToxicity": [
+    {
+      "speciesIds": [
+        "dog"
+      ],
+      "parts": [
+        "flowers"
+      ],
+      "severity": "toxic",
+      "note": "Hop cones, fresh or spent from brewing."
+    }
+  ]
 }

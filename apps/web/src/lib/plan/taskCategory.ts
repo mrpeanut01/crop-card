@@ -22,6 +22,7 @@ export const TASK_CATEGORY_VALUES = [
   'prune',
   'harvest',
   'hay-cutting',
+  'animal-care',
   'other'
 ] as const;
 
@@ -67,6 +68,8 @@ export function labelForTaskCategory(c: TaskCategory): string {
       return 'Harvest';
     case 'hay-cutting':
       return 'Hay';
+    case 'animal-care':
+      return 'Animal care';
     case 'other':
       return 'Other';
   }
@@ -122,6 +125,8 @@ export function glyphForTaskCategory(c: TaskCategory): string {
       return '🌾';
     case 'hay-cutting':
       return '🌿';
+    case 'animal-care':
+      return '🐾';
     case 'other':
       return '·';
   }

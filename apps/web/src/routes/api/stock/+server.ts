@@ -7,20 +7,11 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { createStockItem, listStockItems, type StockCategory } from '$lib/db/stock';
 import { getTaxonomyTerm } from '$lib/db/taxonomy';
+import { STOCK_CATEGORIES } from '$lib/stock/categories';
 import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
 import { requireOwner } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
-
-const CATEGORIES: StockCategory[] = [
-  'herbicide',
-  'insecticide',
-  'fungicide',
-  'fertilizer',
-  'seed',
-  'adjuvant',
-  'fuel',
-  'part'
-];
+import { checkAnimalStockWrite } from '$lib/server/animalStockRules';
 
 export const GET: RequestHandler = () => {
   return json({ items: listStockItems() });
@@ -28,7 +19,7 @@ export const GET: RequestHandler = () => {
 
 const createSchema = z
   .object({
-    category: z.enum(CATEGORIES as [StockCategory, ...StockCategory[]]),
+    category: z.enum(STOCK_CATEGORIES as [StockCategory, ...StockCategory[]]),
     displayName: z.string().min(1).max(120),
     /** Phase 15d — terse label (≤40 chars) for crowded UI. Pre-filled by the
      *  label scan when present; null/undefined means fall back to displayName. */
@@ -64,5 +55,7 @@ export const POST: RequestHandler = async (event) => {
   }
   const foreign = rejectForeignRefs(['typeId', parsed.data.typeId, getTaxonomyTerm]);
   if (foreign) return foreign;
+  const refused = await checkAnimalStockWrite(parsed.data);
+  if (refused) return refused;
   return json({ item: createStockItem(parsed.data) }, { status: 201 });
 };

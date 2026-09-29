@@ -69,6 +69,10 @@ export interface PushAlert {
   body: string;
   url: string;
   audience: PushAudience;
+  /** Alerts with the same key in one tick go out as one push (32D). */
+  batchKey?: string;
+  /** This alert's line in a batched push. */
+  batchLabel?: string;
 }
 
 const RECORD_LABEL: Record<LockableRecordKind, string> = {

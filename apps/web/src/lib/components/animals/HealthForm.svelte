@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { noteHoldWrite } from '$lib/animals/recordClient';
+  import { untrack } from 'svelte';
   import './animalForms.css';
   import {
     OFFLINE_MESSAGE,
@@ -26,6 +28,11 @@
     products: { id: string; name: string }[];
     stock: { id: string; name: string; unit: string }[];
     onDone: (result: { warnings?: { message: string }[] }, text: string) => void;
+    /** A care task (32D) fixes what was given and posts elsewhere. */
+    lockedKind?: HealthEventKind;
+    initialProductPluginId?: string | null;
+    submit?: (body: HealthRecordInput) => Promise<Response>;
+    submitLabel?: string;
   }
 
   const {
@@ -36,13 +43,17 @@
     isOwner = true,
     products,
     stock,
-    onDone
+    onDone,
+    lockedKind,
+    initialProductPluginId = null,
+    submit: submitTo,
+    submitLabel = 'Save'
   }: Props = $props();
   const uid = $props.id();
 
-  let kind = $state<HealthEventKind>('treatment');
+  let kind = $state<HealthEventKind>(untrack(() => lockedKind ?? 'treatment'));
   let productName = $state('');
-  let productPluginId = $state('');
+  let productPluginId = $state(untrack(() => initialProductPluginId ?? ''));
   let stockItemId = $state('');
   let dose = $state<number | null>(null);
   let doseUnit = $state('');
@@ -109,16 +120,19 @@
     if (notes.trim()) body.notes = notes.trim();
     saving = true;
     try {
-      const res = await fetch('/api/animals/health/record', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body)
-      });
+      const res = submitTo
+        ? await submitTo(body)
+        : await fetch('/api/animals/health/record', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(body)
+          });
       if (!res.ok) {
         error = await errorFromResponse(res);
         return;
       }
       const out = (await res.json()) as { warnings?: { message: string }[] };
+      if (!submitTo) await noteHoldWrite('animal-health', body);
       onDone(out, 'Saved.');
     } catch {
       error = OFFLINE_MESSAGE;
@@ -129,7 +143,7 @@
 </script>
 
 <form class="af-form" onsubmit={submit} novalidate aria-label="Record health">
-  <fieldset class="af-fieldset">
+  <fieldset class="af-fieldset" hidden={!!lockedKind}>
     <legend class="af-legend">What was it?</legend>
     <div class="af-tiles">
       {#each HEALTH_KIND_CHOICES as c (c.value)}
@@ -265,6 +279,6 @@
   {/if}
   {#if error}<p class="af-error" role="alert">{error}</p>{/if}
   <button class="af-primary" type="submit" disabled={saving}>
-    {saving ? 'Saving…' : 'Save'}
+    {saving ? 'Saving…' : submitLabel}
   </button>
 </form>

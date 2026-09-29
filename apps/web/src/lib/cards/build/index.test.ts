@@ -2,9 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { CARD_KINDS, RECORD_ONLY_CARD_KINDS } from '../model';
 import { buildCard, buildDeck } from './index';
 import { sampleGearSnapshot } from './fixturesGear';
+import { sampleAnimalSnapshot } from './fixturesAnimals';
 
 describe('buildCard / buildDeck', () => {
-  const snap = sampleGearSnapshot();
+  const animals = sampleAnimalSnapshot();
+  const snap = sampleGearSnapshot({
+    animals: animals.animals,
+    animalGroups: animals.animalGroups,
+    species: animals.species,
+    carePlans: animals.carePlans,
+    treatments: animals.treatments,
+    animalHolds: animals.animalHolds,
+    areaHolds: animals.areaHolds,
+    holdTimeZone: animals.holdTimeZone
+  });
   const deck = buildDeck(snap);
 
   it('every deck card rebuilds from its own key alone', () => {

@@ -62,5 +62,18 @@
     ],
     "beeAttractive": false
   },
-  "archetype": "winter-squash-cure"
+  "archetype": "winter-squash-cure",
+  "animalToxicity": [
+    {
+      "speciesIds": [
+        "dog",
+        "cat",
+        "horse"
+      ],
+      "parts": [
+        "whole-plant"
+      ],
+      "severity": "toxic"
+    }
+  ]
 }

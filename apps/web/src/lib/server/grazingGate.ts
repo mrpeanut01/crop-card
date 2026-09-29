@@ -43,6 +43,16 @@ import { RULES_VERSION } from '$lib/safety/version';
  *  there. It is saved, and their food carries the exposure hold (C-30). */
 export const ALREADY_THERE_MS = 30 * 60 * 1000;
 
+/** How a move's time is judged. `judgeAsLive` (a queued offline tap) always
+ *  stops on a hold; `alreadyThere` (the user said the animals already went
+ *  through the gate, on a queued move's recovery resend) saves it with food
+ *  held, however recent, except when the stop asks a helper to get the
+ *  owner. The route passes it only for a phone's client record id. */
+export interface GateTiming {
+  judgeAsLive?: boolean;
+  alreadyThere?: boolean;
+}
+
 export interface GrazingStopBody {
   code: 'GRAZING_INTERVAL' | 'GRAZING_UNKNOWN' | 'GRAZING_PROHIBITED';
   error: string;
@@ -176,10 +186,11 @@ export async function grazingMoveGate(
   plan: MovePlan,
   role: SessionRole,
   timeZone: string,
-  now = Date.now()
+  now = Date.now(),
+  opts: GateTiming = {}
 ): Promise<GateResult> {
   if (!plan.field) return { ok: true, warnings: [], rulesVersion: RULES_VERSION };
-  return gateOnArea(plan.field, () => moveSubject(plan), plan.movedAt, role, timeZone, now);
+  return gateOnArea(plan.field, () => moveSubject(plan), plan.movedAt, role, timeZone, now, opts);
 }
 
 type Covering = ReturnType<typeof listLocationsForSubject>[number];
@@ -389,7 +400,8 @@ async function gateOnArea(
   atMs: number,
   role: SessionRole,
   timeZone: string,
-  now: number
+  now: number,
+  opts: GateTiming = {}
 ): Promise<GateResult> {
   const context = await loadGrazingContext(now, { fromAtMs: atMs });
   const applications = applicationsOn(field, null, context);
@@ -429,7 +441,10 @@ async function gateOnArea(
       ]
     };
   }
-  if (atMs <= now - ALREADY_THERE_MS) {
+  const ownerMustAnswer =
+    (verdict.reason ?? 'GRAZING_UNKNOWN') === 'GRAZING_UNKNOWN' && role !== 'owner';
+  const claimedThere = opts.alreadyThere === true && !ownerMustAnswer;
+  if (!opts.judgeAsLive && (claimedThere || atMs <= now - ALREADY_THERE_MS)) {
     return {
       ok: true,
       ...saved,

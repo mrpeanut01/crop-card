@@ -2,11 +2,13 @@
  * Sprint 7 / Phase 27B+C (#257) — unified inventory loader.
  *
  * One canonical surface per CLAUDE.md Invariant 8. The active inventory
- * `type` lives in the URL search param (`?type=pesticide|fertility|seed|crop`);
+ * `type` lives in the URL search param (`?type=pesticide|fertility|seed|crop|feed|animal-health`);
  * the loader returns:
  *
  *   - `counts`     — per-type row counts for the type-swap chip badges
- *   - `mode`       — 'stock' | 'catalog' (crop is catalog only)
+ *   - `mode`       — 'stock' | 'catalog' (crop is catalog only, feed stock only)
+ *   - `visibleTypes` — chips to show; feed and animal-health stay hidden
+ *                    until the farm has animals or stock of that type
  *   - `rows`       — type-specific row shape consumed by `A_InventoryList`
  *
  * Sprayers are equipment (#474): the old `?type=sprayer` view 308s to
@@ -16,7 +18,9 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { listStockItems, type StockCategory, type StockItemWithBalance } from '$lib/db/stock';
-import { getRegistry } from '$lib/server/registry';
+import { getDataKinds, getRegistry } from '$lib/server/registry';
+import { farmHasAnimals } from '$lib/animals/profile.server';
+import { visibleInventoryTypes } from '$lib/inventory/chips';
 import { INVENTORY_TYPES, type InventoryType } from '$lib/inventory/types';
 
 /** Row shape consumed by `A_InventoryList`. Per-type columns are
@@ -46,7 +50,7 @@ export interface StockRow {
 export interface CatalogRow {
   pluginId: string;
   displayName: string;
-  pluginType: 'crop' | 'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer';
+  pluginType: 'crop' | 'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer' | 'animal-health';
   /** Source-of-truth field — version + archetype + cropFamily exposed
    *  on the catalog table. Per-type renderers pull what they need. */
   archetype?: string;
@@ -60,7 +64,9 @@ const TYPE_TO_STOCK_CATEGORIES: Record<InventoryType, StockCategory[] | null> = 
   pesticide: ['herbicide', 'insecticide', 'fungicide'],
   fertility: ['fertilizer'],
   seed: ['seed'],
-  crop: null
+  crop: null,
+  feed: ['feed', 'bedding'],
+  'animal-health': ['animal-health']
 };
 
 const TYPE_TO_PLUGIN_TYPES: Record<InventoryType, ReadonlyArray<CatalogRow['pluginType']> | null> =
@@ -68,7 +74,9 @@ const TYPE_TO_PLUGIN_TYPES: Record<InventoryType, ReadonlyArray<CatalogRow['plug
     pesticide: ['herbicide', 'insecticide', 'fungicide'],
     fertility: ['fertilizer'],
     seed: ['crop'],
-    crop: ['crop']
+    crop: ['crop'],
+    feed: null,
+    'animal-health': ['animal-health']
   };
 
 function parseType(raw: string | null): InventoryType {
@@ -80,6 +88,7 @@ function parseType(raw: string | null): InventoryType {
 
 function parseMode(raw: string | null, type: InventoryType): 'stock' | 'catalog' {
   if (type === 'crop') return 'catalog';
+  if (type === 'feed') return 'stock';
   return raw === 'catalog' ? 'catalog' : 'stock';
 }
 
@@ -110,6 +119,19 @@ function stockRowsFor(type: InventoryType, items: StockItemWithBalance[]): Stock
 async function catalogRowsFor(type: InventoryType): Promise<CatalogRow[]> {
   const allowed = TYPE_TO_PLUGIN_TYPES[type];
   if (!allowed) return [];
+  if (type === 'animal-health') {
+    return (await getDataKinds()).animalHealth
+      .all()
+      .map((p) => ({
+        pluginId: p.pluginId,
+        displayName: p.displayName,
+        pluginType: 'animal-health' as const,
+        archetype: p.productKind,
+        version: p.version,
+        hash: ''
+      }))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+  }
   const registry = await getRegistry();
   const allowedSet = new Set<string>(allowed);
   const out: CatalogRow[] = [];
@@ -143,7 +165,9 @@ async function buildCounts(items: StockItemWithBalance[]): Promise<Record<Invent
     pesticide: 0,
     fertility: 0,
     seed: 0,
-    crop: 0
+    crop: 0,
+    feed: 0,
+    'animal-health': 0
   } as Record<InventoryType, number>;
 
   for (const i of items) {
@@ -153,6 +177,10 @@ async function buildCounts(items: StockItemWithBalance[]): Promise<Record<Invent
       counts.fertility++;
     } else if (i.category === 'seed') {
       counts.seed++;
+    } else if (i.category === 'feed' || i.category === 'bedding') {
+      counts.feed++;
+    } else if (i.category === 'animal-health') {
+      counts['animal-health']++;
     }
   }
 
@@ -187,10 +215,17 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     rows = stock.map((r) => ({ ...r, kind: 'stock' as const }));
   }
 
+  const visibleTypes = visibleInventoryTypes({
+    stockCounts: counts,
+    hasAnimals: farmHasAnimals(),
+    active: type
+  });
+
   return {
     type,
     mode,
     counts,
+    visibleTypes,
     rows,
     canAdd: locals.user?.role === 'owner'
   };

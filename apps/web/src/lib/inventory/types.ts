@@ -2,9 +2,9 @@
  * Sprint 6 / Phase 27A (#257) — Unified Inventory type contract.
  *
  * Source-of-truth: docs/design/almanac/INVENTORY_UNIFICATION.md (data
- * model section). The four-type taxonomy (pesticide · fertility · seed ·
- * crop) shares one List → Detail → Edit/Add chrome per Invariant 8.
- * Sprayers are equipment and live under /equipment (#474).
+ * model section). The taxonomy (pesticide · fertility · seed · crop, plus
+ * feed and animal-health since Phase 32D) shares one List → Detail → Edit/Add
+ * chrome per Invariant 8. Sprayers are equipment and live under /equipment (#474).
  *
  * This module is types only — no runtime imports, no DB access. Phase
  * 27B (list screens) and 27C (detail screens) consume these as the
@@ -20,9 +20,9 @@
 
 import type { Archetype } from '$lib/plugins/schemas';
 
-export type InventoryType = 'pesticide' | 'fertility' | 'seed' | 'crop';
+export type InventoryType = 'pesticide' | 'fertility' | 'seed' | 'crop' | 'feed' | 'animal-health';
 
-export type LotUnit = 'fl oz' | 'gal' | 'lb' | 'oz' | 'g' | 'yd³' | 'plants';
+export type LotUnit = 'fl oz' | 'gal' | 'lb' | 'oz' | 'g' | 'yd³' | 'plants' | 'bag';
 
 export interface InventoryItemBase {
   id: string;
@@ -118,13 +118,30 @@ export interface CropPluginAttrs {
   source: 'core' | 'marketplace' | 'draft';
 }
 
-/** Discriminated union for the four inventory types — gives Phase 27B/C
+/** Phase 32D: feed and bedding. A lot counted in bags carries the owner's
+ *  pounds per bag so a use typed in pounds converts (D0-13). */
+export interface FeedAttrs {
+  lbPerBag?: number;
+  /** Owner-set "one scoop = N lb", tagged `manual`. */
+  scoopLb?: number;
+}
+
+/** Phase 32D: a medicine, vaccine or dewormer bottle. Withdrawal data only
+ *  ever comes from a linked animal-health plugin or an owner entry on a
+ *  treatment, never from a scan (D0-15). */
+export interface AnimalHealthAttrs {
+  nada?: { kind: 'NADA' | 'ANADA'; number: string; provenance: 'ai' | 'manual' };
+}
+
+/** Discriminated union for the inventory types — gives Phase 27B/C
  *  a single source-of-truth for type-aware switch arms. */
 export type InventoryItem =
   | (InventoryItemBase & { type: 'pesticide'; attrs: PesticideAttrs })
   | (InventoryItemBase & { type: 'fertility'; attrs: FertilityAttrs })
   | (InventoryItemBase & { type: 'seed'; attrs: SeedAttrs })
-  | (InventoryItemBase & { type: 'crop'; attrs: CropPluginAttrs });
+  | (InventoryItemBase & { type: 'crop'; attrs: CropPluginAttrs })
+  | (InventoryItemBase & { type: 'feed'; attrs: FeedAttrs })
+  | (InventoryItemBase & { type: 'animal-health'; attrs: AnimalHealthAttrs });
 
 /** Chip taxonomy for InvField. Drives the small badge that signals a
  *  field's authoring source / lock state. */
@@ -136,14 +153,22 @@ export const INVENTORY_TYPES: readonly InventoryType[] = [
   'pesticide',
   'fertility',
   'seed',
-  'crop'
+  'crop',
+  'feed',
+  'animal-health'
 ] as const;
+
+/** Types whose chip is hidden until the farm has animals or stock of that
+ *  type, so a crop-only farm keeps its short chip row. */
+export const ANIMAL_INVENTORY_TYPES: readonly InventoryType[] = ['feed', 'animal-health'] as const;
 
 export const INVENTORY_TYPE_LABELS: Record<InventoryType, string> = {
   pesticide: 'Pesticides',
   fertility: 'Fertility',
   seed: 'Seeds',
-  crop: 'Crops'
+  crop: 'Crops',
+  feed: 'Feed & bedding',
+  'animal-health': 'Animal health'
 };
 
 export const STOCK_CATEGORY_TO_INVENTORY_TYPE: Record<string, InventoryType> = {
@@ -151,5 +176,8 @@ export const STOCK_CATEGORY_TO_INVENTORY_TYPE: Record<string, InventoryType> = {
   insecticide: 'pesticide',
   fungicide: 'pesticide',
   fertilizer: 'fertility',
-  seed: 'seed'
+  seed: 'seed',
+  feed: 'feed',
+  bedding: 'feed',
+  'animal-health': 'animal-health'
 };

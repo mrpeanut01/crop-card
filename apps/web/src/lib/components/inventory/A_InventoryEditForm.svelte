@@ -42,16 +42,17 @@
     type StockUnit
   } from '$lib/stock/units';
   import { QUANTITY_STATUS_LABELS, type QuantityStatus } from '$lib/stock/quantityStatus';
-
-  type StockCategory =
-    | 'herbicide'
-    | 'insecticide'
-    | 'fungicide'
-    | 'fertilizer'
-    | 'seed'
-    | 'adjuvant'
-    | 'fuel'
-    | 'part';
+  import {
+    ANIMAL_HEALTH_UNITS,
+    FEED_UNITS,
+    MEDICATED_FEED_MESSAGE,
+    animalHealthMeta,
+    feedMeta,
+    formatNada,
+    normalizeNada,
+    withMetaSection
+  } from '$lib/stock/animalStock';
+  import type { StockCategory } from '$lib/db/stock';
 
   type LinkSource = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
@@ -65,6 +66,8 @@
     reorderThreshold?: number;
     notes?: string;
     barcode?: string;
+    /** Feed bag size and scoop, a medicine's NADA number (Phase 32D). */
+    metadataJson?: string;
     /** Current on-hand balance across lots, in `defaultUnit`. */
     onHand?: number;
     /** Expected quantity on ordered and planned lots (#475). */
@@ -98,6 +101,8 @@
   const isEdit = $derived(!!existing);
   const isSeed = $derived(type === 'seed');
   const lotBearing = $derived(type !== 'crop');
+  const isFeed = $derived(type === 'feed');
+  const isMed = $derived(type === 'animal-health');
 
   const showPrefillBanner = $derived(!isEdit && !!prefill && prefill.source !== 'manual');
 
@@ -111,14 +116,51 @@
     untrack(() => existing?.category ?? prefillCategory() ?? defaultCategoryFor(type))
   );
   let defaultUnit = $state<StockUnit>(untrack(() => initialUnit()));
-  let pluginId = $state(untrack(() => existing?.pluginId ?? prefill?.pluginId ?? ''));
+  // A medicine's library link drives its withdrawal, so a draft from any
+  // entry method never sets it; the owner picks or confirms it (D0-15).
+  let pluginId = $state(
+    untrack(() => existing?.pluginId ?? (type === 'animal-health' ? '' : prefill?.pluginId) ?? '')
+  );
   // An edit does not know whether the saved link was matched or picked, so
   // it reads as the saved library entry (`plugin`), never as `manual`.
   let pluginSource = $state<LinkSource>(
     untrack(() =>
-      existing ? (existing.pluginId ? 'plugin' : 'manual') : prefill?.pluginId ? 'data' : 'manual'
+      existing
+        ? existing.pluginId
+          ? 'plugin'
+          : 'manual'
+        : prefill?.pluginId && type !== 'animal-health'
+          ? 'data'
+          : 'manual'
     )
   );
+
+  // Phase 32D: feed bag size and scoop (D0-13), the medicated refusal
+  // (D0-14) and a medicine's NADA number (D0-15).
+  const initialFeed = untrack(() => feedMeta(existing?.metadataJson));
+  let lbPerBag = $state<number | null>(initialFeed.lbPerBag ?? null);
+  let scoopLb = $state<number | null>(initialFeed.scoopLb ?? null);
+  let medicated = $state(false);
+  const initialNada = untrack(() => {
+    const saved = animalHealthMeta(existing?.metadataJson).nada;
+    if (saved) return { text: formatNada(saved), source: saved.provenance };
+    if (prefill?.nada) {
+      return { text: formatNada(prefill.nada), source: prefill.source === 'ai' ? 'ai' : 'manual' };
+    }
+    return { text: '', source: 'manual' as const };
+  });
+  let nadaText = $state(initialNada.text);
+  const nadaSource = $derived<'ai' | 'manual'>(
+    nadaText === initialNada.text && initialNada.source === 'ai' ? 'ai' : 'manual'
+  );
+  const suggestedLink = $derived(
+    !isEdit && isMed && !pluginId ? (prefill?.suggestedHealthPlugin ?? null) : null
+  );
+  function confirmSuggestedLink(): void {
+    if (!suggestedLink) return;
+    pluginId = suggestedLink.pluginId;
+    pluginSource = 'manual';
+  }
   let reorderThreshold = $state<number | null>(
     untrack(() => existing?.reorderThreshold ?? prefill?.reorderThreshold ?? null)
   );
@@ -151,7 +193,10 @@
       notes,
       barcode,
       quantity,
-      lotNumber
+      lotNumber,
+      lbPerBag,
+      scoopLb,
+      nadaText
     ];
     dirty = true;
   });
@@ -180,12 +225,16 @@
     if (t === 'pesticide') return 'herbicide';
     if (t === 'fertility') return 'fertilizer';
     if (t === 'seed') return 'seed';
+    if (t === 'feed') return 'feed';
+    if (t === 'animal-health') return 'animal-health';
     return 'herbicide';
   }
   function categoryOptionsFor(t: InventoryType): StockCategory[] {
     if (t === 'pesticide') return ['herbicide', 'insecticide', 'fungicide'];
     if (t === 'fertility') return ['fertilizer'];
     if (t === 'seed') return ['seed'];
+    if (t === 'feed') return ['feed', 'bedding'];
+    if (t === 'animal-health') return ['animal-health'];
     return [];
   }
   // Only honor a prefilled category when it's valid for this type — a
@@ -197,6 +246,8 @@
   function defaultUnitFor(t: InventoryType): StockUnit {
     if (t === 'pesticide') return 'fl-oz';
     if (t === 'fertility') return 'lb';
+    if (t === 'feed') return 'bag';
+    if (t === 'animal-health') return 'ml';
     return 'seeds';
   }
   // #473: a new seed counts in Seeds; a scan that says "count" means seeds.
@@ -207,6 +258,10 @@
       if (u === 'count' || u === 'seeds' || !u) return 'seeds';
       return SEED_UNITS.includes(u) ? u : 'seeds';
     }
+    if (type === 'feed' || type === 'animal-health') {
+      const allowed = type === 'feed' ? FEED_UNITS : ANIMAL_HEALTH_UNITS;
+      return u && allowed.includes(u) ? u : defaultUnitFor(type);
+    }
     return u && u !== 'seeds' ? u : defaultUnitFor(type);
   }
   function placeholdersFor(t: InventoryType): { displayName: string; shortName: string } {
@@ -214,15 +269,32 @@
       return { displayName: 'e.g. Cherokee Purple Tomato', shortName: 'e.g. Cherokee Purple' };
     if (t === 'fertility')
       return { displayName: 'e.g. Calcium Nitrate 15.5-0-0', shortName: 'e.g. CalNit' };
+    if (t === 'feed') return { displayName: 'e.g. Layer pellets 16%', shortName: 'e.g. Layer' };
+    if (t === 'animal-health')
+      return { displayName: 'e.g. the name on the bottle', shortName: 'e.g. Dewormer' };
     return { displayName: 'e.g. Roundup PowerMAX', shortName: 'e.g. Roundup PM' };
   }
   const placeholders = $derived(placeholdersFor(type));
   const categoryOptions = $derived(categoryOptionsFor(type));
+  const CATEGORY_LABELS: Partial<Record<StockCategory, string>> = {
+    feed: 'Feed',
+    bedding: 'Bedding',
+    'animal-health': 'Animal health'
+  };
+  function nounFor(t: InventoryType): string {
+    if (t === 'feed') return 'feed or bedding';
+    if (t === 'animal-health') return 'medicine';
+    return t;
+  }
 
   const unitOptions = $derived.by((): StockUnit[] => {
     const base: StockUnit[] = isSeed
       ? [...SEED_UNITS]
-      : ALL_STOCK_UNITS.filter((u) => u !== 'seeds');
+      : isFeed
+        ? [...FEED_UNITS]
+        : isMed
+          ? [...ANIMAL_HEALTH_UNITS]
+          : ALL_STOCK_UNITS.filter((u) => u !== 'seeds' && u !== 'bag');
     const current = existing?.defaultUnit;
     if (current && !base.includes(current)) {
       if (isSeed && current === 'count') base.splice(0, 1, 'count');
@@ -267,6 +339,16 @@
         fieldErrors.quantity = 'On hand cannot be negative';
       }
     }
+    if (isFeed) {
+      if (medicated) fieldErrors.medicated = MEDICATED_FEED_MESSAGE;
+      if (defaultUnit === 'bag' && !(lbPerBag != null && lbPerBag > 0)) {
+        fieldErrors.lbPerBag = 'Say how many pounds are in one bag';
+      }
+      if (scoopLb != null && !(scoopLb > 0)) fieldErrors.scoopLb = 'A scoop must be more than 0 lb';
+    }
+    if (isMed && nadaText.trim() && !normalizeNada(nadaText)) {
+      fieldErrors.nada = 'Type it the way the label prints it, e.g. NADA 141-061';
+    }
     if (reorderThreshold != null && reorderThreshold < 0) {
       fieldErrors.reorderThreshold = 'Reorder threshold cannot be negative';
     }
@@ -304,9 +386,27 @@
     });
   }
 
+  function metadataFor(): string | undefined {
+    if (isFeed) {
+      return withMetaSection(existing?.metadataJson, 'feed', {
+        lbPerBag: defaultUnit === 'bag' && lbPerBag ? lbPerBag : undefined,
+        scoopLb: scoopLb && scoopLb > 0 ? scoopLb : undefined
+      });
+    }
+    if (isMed) {
+      const nada = normalizeNada(nadaText);
+      return withMetaSection(existing?.metadataJson, 'animalHealth', {
+        nada: nada ? { ...nada, provenance: nadaSource } : undefined,
+        pluginLink: pluginId.trim() ? 'manual' : undefined
+      });
+    }
+    return undefined;
+  }
+
   // POST /api/stock rejects null (fields are optional); PATCH uses null to clear.
   async function submitLotBearing(): Promise<string | null> {
     const unset = existing ? null : undefined;
+    const animalMeta = isFeed || isMed ? metadataFor() : undefined;
     const payload = {
       displayName: displayName.trim(),
       shortName: shortName.trim() || undefined,
@@ -315,7 +415,8 @@
       pluginId: pluginId.trim() || unset,
       reorderThreshold: reorderThreshold ?? unset,
       notes: notes.trim() || undefined,
-      barcode: barcode.trim() || undefined
+      barcode: barcode.trim() || undefined,
+      ...(isFeed || isMed ? { metadataJson: animalMeta ?? (existing ? '{}' : undefined) } : {})
     };
     if (existing) {
       const res = await postJson(`/api/stock/${existing.id}`, 'PATCH', payload);
@@ -390,9 +491,9 @@
 <svelte:window on:beforeunload={onBeforeUnload} />
 
 <header class="form-header">
-  <span class="kicker">{isEdit ? 'Edit' : 'Add'} · {type}</span>
+  <span class="kicker">{isEdit ? 'Edit' : 'Add'} · {nounFor(type)}</span>
   <h1 class="serif">
-    {isEdit ? displayName || '(unnamed)' : `New ${type}`}
+    {isEdit ? displayName || '(unnamed)' : `New ${nounFor(type)}`}
   </h1>
 </header>
 
@@ -433,7 +534,7 @@
         <InvField id="category" label="Kind" chip="required">
           <select id="category" bind:value={category}>
             {#each categoryOptions as opt (opt)}
-              <option value={opt}>{opt}</option>
+              <option value={opt}>{CATEGORY_LABELS[opt] ?? opt}</option>
             {/each}
           </select>
         </InvField>
@@ -441,31 +542,126 @@
     {/if}
   </InvSection>
 
-  {#if lotBearing}
-    <InvSection
-      title={isSeed ? 'Crop category' : 'Product label'}
-      kicker={requiresLink ? 'Required' : 'Optional'}
-    >
+  {#if isFeed}
+    <InvSection title="Bag and scoop" kicker="Feed">
       <InvField
-        id="pluginId"
-        label={isSeed ? 'Category' : 'Product'}
-        chip={requiresLink ? 'required' : 'from-plugin'}
-        hint={isSeed
-          ? 'The crop this seed grows. We match it from the name; search to change it.'
-          : 'Link the product in the library so its label and safety data stay in sync.'}
-        error={fieldErrors.pluginId}
+        id="medicated"
+        label="Medicated feed"
+        error={fieldErrors.medicated}
+        hint="Feed with a drug in it, such as a coccidiostat or antibiotic."
       >
-        <LibraryPicker
-          id="pluginId"
-          options={library}
-          bind:value={pluginId}
-          bind:source={pluginSource}
-          {suggestions}
-          noun={isSeed ? 'category' : 'product'}
-          placeholder={isSeed ? 'Search crops, e.g. tomato' : 'Search products'}
+        <label class="check">
+          <input id="medicated" type="checkbox" bind:checked={medicated} />
+          <span>This feed is medicated</span>
+        </label>
+      </InvField>
+      {#if medicated}
+        <p class="banner" role="alert" data-testid="medicated-refusal">
+          {MEDICATED_FEED_MESSAGE} That way every feeding goes through the treatment record and its hold
+          on eggs, milk and meat.
+          <a href="/inventory/animal-health/add">Add it as animal health</a>
+        </p>
+      {/if}
+      <InvField
+        id="lbPerBag"
+        label="Pounds in one bag"
+        chip={defaultUnit === 'bag' ? 'required' : undefined}
+        error={fieldErrors.lbPerBag}
+        hint="Printed on the bag. Needed when you count this in bags, so a use in pounds comes off the right amount."
+      >
+        <input
+          id="lbPerBag"
+          type="number"
+          inputmode="decimal"
+          step="any"
+          min="0"
+          bind:value={lbPerBag}
         />
       </InvField>
+      <InvField
+        id="scoopLb"
+        label="One scoop (lb)"
+        error={fieldErrors.scoopLb}
+        hint="Optional. Weigh your scoop once; the 1, 2 and 3 scoop buttons use it."
+      >
+        <div class="with-prov">
+          <input
+            id="scoopLb"
+            type="number"
+            inputmode="decimal"
+            step="any"
+            min="0"
+            bind:value={scoopLb}
+          />
+          {#if scoopLb}<Provenance source="manual" compact />{/if}
+        </div>
+      </InvField>
     </InvSection>
+  {/if}
+
+  {#if isMed}
+    <InvSection title="Approval number" kicker="Optional">
+      <InvField
+        id="nada"
+        label="NADA or ANADA number"
+        error={fieldErrors.nada}
+        hint="On the label, e.g. NADA 141-061. Withdrawal times are never read from a scan; you enter them from the label or your vet when you record a treatment."
+      >
+        <div class="with-prov">
+          <input id="nada" type="text" bind:value={nadaText} maxlength="30" />
+          {#if nadaText.trim()}<Provenance source={nadaSource} compact />{/if}
+        </div>
+      </InvField>
+    </InvSection>
+  {/if}
+
+  {#if lotBearing}
+    {#if !isFeed}
+      <InvSection
+        title={isSeed ? 'Crop category' : isMed ? 'Library product' : 'Product label'}
+        kicker={requiresLink ? 'Required' : 'Optional'}
+      >
+        {#if suggestedLink}
+          <div class="suggest" data-testid="suggested-link">
+            <p>
+              The approval number matches <strong>{suggestedLink.displayName}</strong> in the library.
+              Link it so treatments use its label withdrawal?
+            </p>
+            <button type="button" class="btn-secondary" onclick={confirmSuggestedLink}>
+              Link it
+            </button>
+          </div>
+        {/if}
+        {#if isMed && library.length === 0}
+          <p class="muted-note" data-testid="no-health-library">
+            No animal-health products are in the library yet. You can still save this bottle; its
+            withdrawal stays unknown until you enter it on a treatment.
+          </p>
+        {:else}
+          <InvField
+            id="pluginId"
+            label={isSeed ? 'Category' : 'Product'}
+            chip={requiresLink ? 'required' : 'from-plugin'}
+            hint={isSeed
+              ? 'The crop this seed grows. We match it from the name; search to change it.'
+              : isMed
+                ? 'Only link the exact product on the label. Its withdrawal times apply to every treatment from this bottle.'
+                : 'Link the product in the library so its label and safety data stay in sync.'}
+            error={fieldErrors.pluginId}
+          >
+            <LibraryPicker
+              id="pluginId"
+              options={library}
+              bind:value={pluginId}
+              bind:source={pluginSource}
+              {suggestions}
+              noun={isSeed ? 'category' : 'product'}
+              placeholder={isSeed ? 'Search crops, e.g. tomato' : 'Search products'}
+            />
+          </InvField>
+        {/if}
+      </InvSection>
+    {/if}
 
     <InvSection title="On hand" kicker={isEdit ? 'Stock' : 'Optional'}>
       <InvField
@@ -575,13 +771,53 @@
     <button type="button" class="btn-secondary" onclick={handleCancel} disabled={submitting}>
       Cancel
     </button>
-    <button type="submit" class="btn-primary" disabled={submitting}>
-      {submitting ? 'Saving…' : isEdit ? 'Save changes' : `Create ${type}`}
+    <button type="submit" class="btn-primary" disabled={submitting || (isFeed && medicated)}>
+      {submitting ? 'Saving…' : isEdit ? 'Save changes' : `Create ${nounFor(type)}`}
     </button>
   </footer>
 </form>
 
 <style>
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+  }
+  .check input {
+    width: 24px;
+    height: 24px;
+    min-height: 0;
+  }
+  .with-prov {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .with-prov input {
+    flex: 1;
+    min-width: 0;
+  }
+  .suggest {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--color-cream, #fff8e1);
+    border: 1px solid var(--color-divider, #e5e7e0);
+  }
+  .suggest p {
+    margin: 0;
+    flex: 1 1 220px;
+  }
+  .muted-note {
+    margin: 0;
+    color: var(--color-ink-soft, #4a4f46);
+    font-size: 0.9rem;
+  }
   .expected-note {
     margin: 4px 0 12px;
     padding: 10px 12px;

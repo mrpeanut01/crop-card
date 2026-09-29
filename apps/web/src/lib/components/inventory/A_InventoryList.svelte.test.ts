@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  *
  * Sprint 7 / Phase 27B — A_InventoryList per-type rendering.
- * Locks the chrome → 5-chip + (where applicable) Stock/Catalog toggle +
+ * Locks the chrome → type chips + (where applicable) Stock/Catalog toggle +
  * KPI strip + table. Per-type column sets verified per spec.
  */
 import { describe, it, expect } from 'vitest';
@@ -13,7 +13,9 @@ const counts = {
   pesticide: 12,
   fertility: 4,
   seed: 27,
-  crop: 376
+  crop: 376,
+  feed: 0,
+  'animal-health': 0
 };
 
 describe('A_InventoryList — Phase 27B', () => {
@@ -194,5 +196,52 @@ describe('A_InventoryList — Phase 27B', () => {
     });
     expect(getByTestId('inventory-empty')).not.toContainHTML('/inventory/pesticide/add"');
     expect(getByText(/Ask the owner to add some/)).toBeInTheDocument();
+  });
+
+  it('shows the feed and animal-health chips when the page says so (32D)', () => {
+    const { getByRole, getAllByRole } = render(A_InventoryList, {
+      type: 'pesticide',
+      mode: 'stock',
+      counts,
+      rows: [],
+      visibleTypes: ['pesticide', 'fertility', 'seed', 'crop', 'feed', 'animal-health']
+    });
+    expect(getAllByRole('tab')).toHaveLength(6);
+    expect(getByRole('tab', { name: /^Feed & bedding/ })).toBeInTheDocument();
+    expect(getByRole('tab', { name: /^Animal health/ })).toBeInTheDocument();
+  });
+
+  it('shows an animal chip that already has stock even without the prop', () => {
+    const { getAllByRole, queryByRole } = render(A_InventoryList, {
+      type: 'pesticide',
+      mode: 'stock',
+      counts: { ...counts, feed: 2 },
+      rows: []
+    });
+    expect(getAllByRole('tab')).toHaveLength(5);
+    expect(queryByRole('tab', { name: /^Animal health/ })).toBeNull();
+  });
+
+  it('feed is stock only, with no Catalog toggle', () => {
+    const r = render(A_InventoryList, { type: 'feed', mode: 'stock', counts, rows: [] });
+    expect(r.queryByRole('group', { name: /Stock vs catalog/ })).toBeNull();
+    expect(r.getByRole('link', { name: /Add feed or bedding/ })).toHaveAttribute(
+      'href',
+      '/inventory/feed/add'
+    );
+  });
+
+  it('explains the empty animal-health catalog instead of offering tiles', () => {
+    const r = render(A_InventoryList, {
+      type: 'animal-health',
+      mode: 'catalog',
+      counts,
+      rows: []
+    });
+    expect(r.getByTestId('animal-health-catalog-empty')).toHaveTextContent(
+      /withdrawal times have to be checked/
+    );
+    expect(r.queryByTestId('inventory-empty')).toBeNull();
+    expect(r.getByRole('group', { name: /Stock vs catalog/ })).toBeInTheDocument();
   });
 });

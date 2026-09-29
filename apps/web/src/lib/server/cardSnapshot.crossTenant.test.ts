@@ -11,7 +11,11 @@ import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { runWithTenant, runWithTenantAsync, tenantValues } from '$lib/db/tenant';
 import { db } from '$lib/db/client';
-import { crops, equipment, equipmentState, owners } from '$lib/db/schema';
+import { animalCarePlans, crops, equipment, equipmentState, owners } from '$lib/db/schema';
+import { insertAnimalGroup } from '$lib/db/animalGroups';
+import { insertAnimal } from '$lib/db/animals';
+import { insertStay } from '$lib/db/animalLocations';
+import { insertHealthEvent } from '$lib/db/animalHealth';
 import { createField } from '$lib/db/fields';
 import { createBlock } from '$lib/db/blocks';
 import { createTask } from '$lib/db/tasks';
@@ -115,6 +119,63 @@ function seedOwner(ownerId: string, now: number, extraPlantings = 0): Seeded {
       extractionMethod: 'mehlich-1'
     });
     ids.push(soil.id);
+    const flock = insertAnimalGroup({
+      name: `${ownerId} layers ${tag}`,
+      speciesId: 'chicken',
+      purpose: 'production',
+      headCount: 12,
+      foodProducing: true,
+      housingFieldId: field.id
+    });
+    insertStay({
+      subject: { subjectType: 'group', subjectId: flock.id },
+      fieldId: field.id,
+      atMs: now - 30 * DAY,
+      movedBy: null
+    });
+    const hen = insertAnimal({
+      speciesId: 'chicken',
+      groupId: flock.id,
+      name: `${ownerId} hen ${tag}`,
+      purpose: 'production',
+      foodProducing: true,
+      housingFieldId: field.id
+    });
+    const dog = insertAnimal({
+      speciesId: 'dog',
+      name: `${ownerId} dog ${tag}`,
+      purpose: 'pet',
+      foodProducing: false,
+      microchipId: `chip-${ownerId}-${tag}`,
+      feedingNote: `${ownerId} kibble ${tag}`
+    });
+    const planId = `plan-${ownerId}-${tag}`;
+    db.insert(animalCarePlans)
+      .values(
+        tenantValues({
+          id: planId,
+          subjectType: 'animal' as const,
+          subjectId: dog.id,
+          kind: 'vaccination' as const,
+          title: `${ownerId} rabies ${tag}`,
+          intervalDays: 365,
+          nextDueAt: new Date(now + 20 * DAY),
+          provenance: 'manual' as const
+        })
+      )
+      .run();
+    const dose = insertHealthEvent({
+      subjectType: 'group',
+      subjectId: flock.id,
+      kind: 'deworm',
+      productName: `${ownerId} wormer ${tag}`,
+      administeredAt: now - 2 * DAY,
+      withdrawalClear: null,
+      rulesVersion: 'test',
+      foodProducingAtRecord: true,
+      performedById: null
+    });
+    ids.push(flock.id, hen.id, dog.id, planId, dose.id);
     return { ownerId, ids };
   });
 }
@@ -157,6 +218,30 @@ describe('card snapshot cross-tenant isolation', () => {
       for (const id of self.ids) expect(mentions(snap, id), id).toBe(true);
       for (const id of other.ids) expect(mentions(snap, id), id).toBe(false);
       expect(mentions(snap, other.ownerId)).toBe(false);
+    }
+  });
+
+  it("carries each Owner's animals, care plans, treatments and kernel holds, and no one else's", async () => {
+    for (const [self, other] of [
+      [x, y],
+      [y, x]
+    ] as const) {
+      const snap = await runWithTenantAsync(self.ownerId, () => buildFarmSnapshot({ now }));
+      const [flockId, henId, dogId, planId, doseId] = self.ids.slice(-5);
+      expect(snap.animalGroups?.map((g) => g.id)).toEqual([flockId]);
+      expect(snap.animals?.map((a) => a.id).sort()).toEqual([henId, dogId].sort());
+      expect(snap.carePlans?.map((p) => p.id)).toEqual([planId]);
+      expect(snap.treatments?.map((t) => t.id)).toEqual([doseId]);
+      expect(snap.animalHolds?.some((h) => h.subject === `group:${flockId}`)).toBe(true);
+      expect(snap.animalHolds?.every((h) => !other.ids.some((id) => h.subject.endsWith(id)))).toBe(
+        true
+      );
+      const deck = buildDeck(snap, { now });
+      expect(deck.some((c) => c.key === `fl_${flockId}`)).toBe(true);
+      expect(deck.some((c) => c.key === `an_${dogId}`)).toBe(true);
+      for (const card of deck) {
+        for (const id of other.ids) expect(JSON.stringify(card)).not.toContain(id);
+      }
     }
   });
 

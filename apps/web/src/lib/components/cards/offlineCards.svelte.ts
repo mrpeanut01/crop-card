@@ -91,4 +91,25 @@ export class OfflineCards {
     }
     this.pinned = (await store.listPinned()).map((p) => p.key);
   }
+
+  allPinned(keys: readonly string[]): boolean {
+    return keys.length > 0 && keys.every((k) => this.pinned.includes(k));
+  }
+
+  /** Pins every key, the first one newest so it sorts ahead of the rest
+   *  ("Pin for the barn": the Flock Card, then its members). */
+  async pinAll(keys: readonly string[]): Promise<void> {
+    const store = await import('$lib/client/cardStore');
+    const now = Date.now();
+    for (let i = 0; i < keys.length; i++) await store.pinCard(keys[i], now - i);
+    const { requestPersistentStorage } = await import('$lib/client/offlineStorage');
+    this.storageKept = await requestPersistentStorage();
+    this.pinned = (await store.listPinned()).map((p) => p.key);
+  }
+
+  async unpinAll(keys: readonly string[]): Promise<void> {
+    const store = await import('$lib/client/cardStore');
+    for (const key of keys) await store.unpinCard(key);
+    this.pinned = (await store.listPinned()).map((p) => p.key);
+  }
 }

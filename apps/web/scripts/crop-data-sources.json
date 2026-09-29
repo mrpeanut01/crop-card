@@ -8,6 +8,144 @@
       "note": "VCE is internally inconsistent (426-331 Table 5: Squash, winter 2-4 ft; 426-406: bush 3-4 ft, semi-vining 4-6 ft, vining 5-7 ft), so the UMD figure, which overlaps both, is used."
     }
   },
+  "apple-cortland": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "apple-fuji": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "apple-gala": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "apple-honeycrisp": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "apple-orchard": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "apricot-moorpark": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apricot",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apricot (Prunus armeniaca): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apricot",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apricot (Prunus armeniaca): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apricot",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Apricot (Prunus armeniaca): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
   "arugula-rocket": {
     "inRowSpacingIn": {
       "url": "https://gardening.cals.cornell.edu/vegetables/arugula/",
@@ -94,6 +232,29 @@
       "date": "2022-05-05",
       "quote": "VCE 426-840, Small Fruit in the Home Garden: Table 1, Average bearing age (years): \"Blueberry | 6 | 5 | 4-6 | 3 | 20-30\"",
       "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095). The text adds that \"Some varieties of blueberry will bear the second year after planting. Full production is reached in about six years\"."
+    }
+  },
+  "bmr-sorghum-sudan": {
+    "animalToxicity.cattle": {
+      "url": "https://forage.msu.edu/extension/sorghum-sudangrass-pasture-poses-prussic-acid-and-nitrate-poisoning-risk/",
+      "publisher": "Michigan State University Extension, MSU Forage Connection",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "MSU Extension, Sorghum-sudangrass pasture poses prussic acid and nitrate poisoning risk: \"Care is needed when utilizing these forages for cattle, sheep, and goats because of risks related to prussic acid and nitrate poisoning.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.sheep": {
+      "url": "https://forage.msu.edu/extension/sorghum-sudangrass-pasture-poses-prussic-acid-and-nitrate-poisoning-risk/",
+      "publisher": "Michigan State University Extension, MSU Forage Connection",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "MSU Extension, Sorghum-sudangrass pasture poses prussic acid and nitrate poisoning risk: \"Care is needed when utilizing these forages for cattle, sheep, and goats because of risks related to prussic acid and nitrate poisoning.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.goat": {
+      "url": "https://forage.msu.edu/extension/sorghum-sudangrass-pasture-poses-prussic-acid-and-nitrate-poisoning-risk/",
+      "publisher": "Michigan State University Extension, MSU Forage Connection",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "MSU Extension, Sorghum-sudangrass pasture poses prussic acid and nitrate poisoning risk: \"Care is needed when utilizing these forages for cattle, sheep, and goats because of risks related to prussic acid and nitrate poisoning.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "brussels-sprouts-long-island": {
@@ -186,6 +347,50 @@
       "date": "2020-09-21",
       "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Cherry - sweet | 25 | 75 qt. | 5-7 | 20-30\"",
       "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095)."
+    },
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/cherry",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Cherry (Prunus spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/cherry",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Cherry (Prunus spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/cherry",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Cherry (Prunus spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "cherry-rainier-sweet": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/cherry",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Cherry (Prunus spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/cherry",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Cherry (Prunus spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/cherry",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Cherry (Prunus spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "cherry-tart-montmorency": {
@@ -202,6 +407,27 @@
       "date": "2020-09-21",
       "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Cherry - sour | 18 | 60 qt. | 4-5 | 15-20\"",
       "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095)."
+    },
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/cherry",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Cherry (Prunus spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/cherry",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Cherry (Prunus spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/cherry",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Cherry (Prunus spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "chives-common": {
@@ -210,6 +436,27 @@
       "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
       "date": "2019-10-11",
       "quote": "VCE 426-420, Herb Culture and Use (Perennials table, Plant spacing): \"Chives, garlic chives Allium spp. | 12” | 12”\""
+    },
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/chives",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Chives (Allium schoenoprasum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/chives",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Chives (Allium schoenoprasum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/chives",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Chives (Allium schoenoprasum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "cilantro-santo": {
@@ -303,6 +550,29 @@
       "note": "VCE 426-331 Table 5 agrees (Eggplant 18-24 in)."
     }
   },
+  "elephant-garlic": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/leek",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Leek (Allium ampeloprasum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Elephant garlic is Allium ampeloprasum, the species on the ASPCA leek page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/leek",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Leek (Allium ampeloprasum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Elephant garlic is Allium ampeloprasum, the species on the ASPCA leek page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/leek",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Leek (Allium ampeloprasum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Elephant garlic is Allium ampeloprasum, the species on the ASPCA leek page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
   "fairytale-pumpkin-film-coated-treated-seed": {
     "inRowSpacingIn": {
       "url": "https://www.harrisseeds.com/products/01328-pumpkin-fairytale",
@@ -326,6 +596,116 @@
       "quote": "NC State Extension, Central North Carolina Planting Calendar for Annual Vegetables, Fruits, and Herbs, Table 1 (Days to Harvest | Distance Between Plants (inches)): \"Fennel, Florence | 60–90 | 6–12\""
     }
   },
+  "garlic-german-extra-hardy": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/garlic",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/garlic",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/garlic",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "garlic-inchelium-red-softneck": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/garlic",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/garlic",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/garlic",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "garlic-music-hardneck": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/garlic",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/garlic",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/garlic",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "garlic-spanish-roja-hardneck": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/garlic",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/garlic",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/garlic",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "grape-cabernet-franc": {
+    "animalToxicity.dog": {
+      "url": "https://www.merckvetmanual.com/toxicology/food-hazards/grape-raisin-and-tamarind-vitis-spp-tamarindus-spp-toxicosis-in-dogs",
+      "publisher": "Merck Veterinary Manual, Grape, Raisin, and Tamarind (Vitis spp, Tamarindus spp) Toxicosis in Dogs",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "Merck Veterinary Manual: \"Multiple varieties of Vitis vinifera fruit have been reported as toxic in dogs, including fresh grapes, dried grapes (raisins and currants), and processed grape products.\"",
+      "note": "The article title covers Vitis spp. (American and hybrid grapes as well as V. vinifera). 'Currants' in the quote are dried grapes, not Ribes currants, so the currant plugins carry no entry. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "grape-chardonnay": {
+    "animalToxicity.dog": {
+      "url": "https://www.merckvetmanual.com/toxicology/food-hazards/grape-raisin-and-tamarind-vitis-spp-tamarindus-spp-toxicosis-in-dogs",
+      "publisher": "Merck Veterinary Manual, Grape, Raisin, and Tamarind (Vitis spp, Tamarindus spp) Toxicosis in Dogs",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "Merck Veterinary Manual: \"Multiple varieties of Vitis vinifera fruit have been reported as toxic in dogs, including fresh grapes, dried grapes (raisins and currants), and processed grape products.\"",
+      "note": "The article title covers Vitis spp. (American and hybrid grapes as well as V. vinifera). 'Currants' in the quote are dried grapes, not Ribes currants, so the currant plugins carry no entry. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
   "grape-concord": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
@@ -340,6 +720,40 @@
       "date": "2022-05-05",
       "quote": "VCE 426-840, Small Fruit in the Home Garden: Table 1, Average bearing age (years): \"Grape (American) | 8 | 6 | 10 | 3 | 20-30\"",
       "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095)."
+    },
+    "animalToxicity.dog": {
+      "url": "https://www.merckvetmanual.com/toxicology/food-hazards/grape-raisin-and-tamarind-vitis-spp-tamarindus-spp-toxicosis-in-dogs",
+      "publisher": "Merck Veterinary Manual, Grape, Raisin, and Tamarind (Vitis spp, Tamarindus spp) Toxicosis in Dogs",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "Merck Veterinary Manual: \"Multiple varieties of Vitis vinifera fruit have been reported as toxic in dogs, including fresh grapes, dried grapes (raisins and currants), and processed grape products.\"",
+      "note": "The article title covers Vitis spp. (American and hybrid grapes as well as V. vinifera). 'Currants' in the quote are dried grapes, not Ribes currants, so the currant plugins carry no entry. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "grape-marquette": {
+    "animalToxicity.dog": {
+      "url": "https://www.merckvetmanual.com/toxicology/food-hazards/grape-raisin-and-tamarind-vitis-spp-tamarindus-spp-toxicosis-in-dogs",
+      "publisher": "Merck Veterinary Manual, Grape, Raisin, and Tamarind (Vitis spp, Tamarindus spp) Toxicosis in Dogs",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "Merck Veterinary Manual: \"Multiple varieties of Vitis vinifera fruit have been reported as toxic in dogs, including fresh grapes, dried grapes (raisins and currants), and processed grape products.\"",
+      "note": "The article title covers Vitis spp. (American and hybrid grapes as well as V. vinifera). 'Currants' in the quote are dried grapes, not Ribes currants, so the currant plugins carry no entry. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "grape-niagara": {
+    "animalToxicity.dog": {
+      "url": "https://www.merckvetmanual.com/toxicology/food-hazards/grape-raisin-and-tamarind-vitis-spp-tamarindus-spp-toxicosis-in-dogs",
+      "publisher": "Merck Veterinary Manual, Grape, Raisin, and Tamarind (Vitis spp, Tamarindus spp) Toxicosis in Dogs",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "Merck Veterinary Manual: \"Multiple varieties of Vitis vinifera fruit have been reported as toxic in dogs, including fresh grapes, dried grapes (raisins and currants), and processed grape products.\"",
+      "note": "The article title covers Vitis spp. (American and hybrid grapes as well as V. vinifera). 'Currants' in the quote are dried grapes, not Ribes currants, so the currant plugins carry no entry. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "grape-pinot-noir": {
+    "animalToxicity.dog": {
+      "url": "https://www.merckvetmanual.com/toxicology/food-hazards/grape-raisin-and-tamarind-vitis-spp-tamarindus-spp-toxicosis-in-dogs",
+      "publisher": "Merck Veterinary Manual, Grape, Raisin, and Tamarind (Vitis spp, Tamarindus spp) Toxicosis in Dogs",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "Merck Veterinary Manual: \"Multiple varieties of Vitis vinifera fruit have been reported as toxic in dogs, including fresh grapes, dried grapes (raisins and currants), and processed grape products.\"",
+      "note": "The article title covers Vitis spp. (American and hybrid grapes as well as V. vinifera). 'Currants' in the quote are dried grapes, not Ribes currants, so the currant plugins carry no entry. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "hairy-vetch-cover": {
@@ -348,6 +762,24 @@
       "publisher": "University of Maryland Extension, Home and Garden Information Center",
       "date": "2026-08-07",
       "quote": "UMD HGIC, Cover Crops For Gardens: Selection chart: \"Hairy vetch (Vicia villosa) | legume | 3 to 4 | late summer/fall | spring | very hardy; slow to establish; can become weedy, so till under at bloom before it ripens seed\" \"Spring vegetable planting may be delayed somewhat by a cover crop (except for oats and usually daikon radish) since you must allow about 2 weeks for the terminated cover crop plants to break down.\""
+    }
+  },
+  "hops-cascade": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/hops",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Hops (Humulus lupulus): \"Toxicity: Toxic to Dogs\" \"Toxic Principles: Unknown\" \"Clinical Signs: Panting, high body temperature, seizures, death.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "hops-centennial": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/hops",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Hops (Humulus lupulus): \"Toxicity: Toxic to Dogs\" \"Toxic Principles: Unknown\" \"Clinical Signs: Panting, high body temperature, seizures, death.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "kale-lacinato": {
@@ -374,6 +806,50 @@
       "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
       "date": "2025-05-30",
       "quote": "VCE 426-331, Virginia's Home Garden Vegetable Planting Guide, Table 5 (Distance between plants in row): Leeks, 4-6 in"
+    },
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/leek",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Leek (Allium ampeloprasum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Elephant garlic is Allium ampeloprasum, the species on the ASPCA leek page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/leek",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Leek (Allium ampeloprasum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Elephant garlic is Allium ampeloprasum, the species on the ASPCA leek page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/leek",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Leek (Allium ampeloprasum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Elephant garlic is Allium ampeloprasum, the species on the ASPCA leek page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "leek-bandit-overwinter": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/leek",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Leek (Allium ampeloprasum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Elephant garlic is Allium ampeloprasum, the species on the ASPCA leek page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/leek",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Leek (Allium ampeloprasum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Elephant garlic is Allium ampeloprasum, the species on the ASPCA leek page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/leek",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Leek (Allium ampeloprasum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Elephant garlic is Allium ampeloprasum, the species on the ASPCA leek page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "lettuce-buttercrunch": {
@@ -427,6 +903,98 @@
       "quote": "UMD HGIC, Cover Crops For Gardens: \"Oats are killed by the first hard freeze, leaving a brown decomposing mat in spring.\" ... \"In spring, any remaining debris can be forked into the soil or raked aside to mulch around new plants.\""
     }
   },
+  "onion-candy-sweet-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "onion-long-day-patterson-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "onion-red-burgundy": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "onion-storage-yellow-stuttgarter": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
   "onion-walla-walla": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-331/426-331.html",
@@ -434,6 +1002,27 @@
       "date": "2025-05-30",
       "quote": "VCE 426-331, Virginia's Home Garden Vegetable Planting Guide, Table 5 (Distance between plants in row): Onions (bulbing), 2-4 in",
       "note": "VCE 426-411 (Onions) gives 1 to 6 inches, but that figure includes close planting thinned for green onions (\"Plant close, then thin using thinnings as green onions\"); the bulbing-onion row of 426-331 is used for a bulb crop."
+    },
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "oregano-greek": {
@@ -490,6 +1079,29 @@
       "quote": "VCE 426-422, Root Crops (Parsnips): \"Spacing: 1/2 inch deep, 2 to 4 inches x 18 to 24 inches\""
     }
   },
+  "peach-elberta": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/peach",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Peach (Prunus persica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/peach",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Peach (Prunus persica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/peach",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Peach (Prunus persica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
   "peach-redhaven": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-841/426-841.html",
@@ -504,6 +1116,27 @@
       "date": "2020-09-21",
       "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Peach | 20 | 4 | 3-4 | 15-20\"",
       "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095)."
+    },
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/peach",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Peach (Prunus persica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/peach",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Peach (Prunus persica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/peach",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Peach (Prunus persica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "pepper-jalapeno": {
@@ -513,6 +1146,52 @@
       "date": "2026-03-10",
       "quote": "VCE 426-413, Potatoes, Peppers and Eggplant (Peppers): \"Spacing: 18 to 24 inches by 30 to 36 inches.\"",
       "note": "Cross-check VCE 426-331 Table 5 gives Peppers 12-24 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "perennial-onion-egyptian-walking": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "plum-methley": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/plum",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Plum (Prunus domestica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/plum",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Plum (Prunus domestica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/plum",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Plum (Prunus domestica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "plum-stanley": {
@@ -529,6 +1208,27 @@
       "date": "2020-09-21",
       "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Plum | 20 | 2 | 4-5 | 15-20\"",
       "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095)."
+    },
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/plum",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Plum (Prunus domestica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/plum",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Plum (Prunus domestica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/plum",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Plum (Prunus domestica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "pole-beans-rattlesnake": {
@@ -676,6 +1376,29 @@
       "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention. Heritage is primocane-fruiting; the publication does not give a separate first-crop age for primocane types."
     }
   },
+  "rhubarb-victoria": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/rhubarb",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Rhubarb (Rheum rhabarbarium): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Soluble calcium oxalates\" \"Clinical Signs: Kidney failure, tremors, salivation\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/rhubarb",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Rhubarb (Rheum rhabarbarium): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Soluble calcium oxalates\" \"Clinical Signs: Kidney failure, tremors, salivation\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/rhubarb",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Rhubarb (Rheum rhabarbarium): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Soluble calcium oxalates\" \"Clinical Signs: Kidney failure, tremors, salivation\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
   "rosemary-tuscan-blue": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
@@ -699,6 +1422,73 @@
       "date": "2020-10-28 (PDF last modified)",
       "quote": "Penn State Extension Seed Planting Guide, column 7 \"Inches apart to thin plants\" (\"Distance in inches to leave between seedlings in the row after thinning out excess seedlings\"): \"Onion, Bunching C 6.2-7.2 0.5 0.5 12 2\"",
       "note": "NC State planting calendar gives Onions, green 1-2 in (overlapping)."
+    },
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "scallion-nabechan": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "shallot-french-red": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/onion",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
+      "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "snow-pea-oregon-sugar-pod-ii": {
@@ -707,6 +1497,29 @@
       "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
       "date": "2025-05-30",
       "quote": "VCE 426-331, Virginia's Home Garden Vegetable Planting Guide, Table 5 (Distance between plants in row): Peas, garden, 2-3 in"
+    }
+  },
+  "sorghum-sudangrass-cover": {
+    "animalToxicity.cattle": {
+      "url": "https://forage.msu.edu/extension/sorghum-sudangrass-pasture-poses-prussic-acid-and-nitrate-poisoning-risk/",
+      "publisher": "Michigan State University Extension, MSU Forage Connection",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "MSU Extension, Sorghum-sudangrass pasture poses prussic acid and nitrate poisoning risk: \"Care is needed when utilizing these forages for cattle, sheep, and goats because of risks related to prussic acid and nitrate poisoning.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.sheep": {
+      "url": "https://forage.msu.edu/extension/sorghum-sudangrass-pasture-poses-prussic-acid-and-nitrate-poisoning-risk/",
+      "publisher": "Michigan State University Extension, MSU Forage Connection",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "MSU Extension, Sorghum-sudangrass pasture poses prussic acid and nitrate poisoning risk: \"Care is needed when utilizing these forages for cattle, sheep, and goats because of risks related to prussic acid and nitrate poisoning.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.goat": {
+      "url": "https://forage.msu.edu/extension/sorghum-sudangrass-pasture-poses-prussic-acid-and-nitrate-poisoning-risk/",
+      "publisher": "Michigan State University Extension, MSU Forage Connection",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "MSU Extension, Sorghum-sudangrass pasture poses prussic acid and nitrate poisoning risk: \"Care is needed when utilizing these forages for cattle, sheep, and goats because of risks related to prussic acid and nitrate poisoning.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "southern-pea-pinkeye-purple-hull": {
@@ -784,6 +1597,29 @@
       "date": "2026-09-26 (accessed; product page has no publication date)",
       "quote": "Harris Seeds product page Growing Information: Maturation Days: 98 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
       "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    }
+  },
+  "sudangrass-piper": {
+    "animalToxicity.cattle": {
+      "url": "https://forage.msu.edu/extension/sorghum-sudangrass-pasture-poses-prussic-acid-and-nitrate-poisoning-risk/",
+      "publisher": "Michigan State University Extension, MSU Forage Connection",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "MSU Extension, Sorghum-sudangrass pasture poses prussic acid and nitrate poisoning risk: \"Care is needed when utilizing these forages for cattle, sheep, and goats because of risks related to prussic acid and nitrate poisoning.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.sheep": {
+      "url": "https://forage.msu.edu/extension/sorghum-sudangrass-pasture-poses-prussic-acid-and-nitrate-poisoning-risk/",
+      "publisher": "Michigan State University Extension, MSU Forage Connection",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "MSU Extension, Sorghum-sudangrass pasture poses prussic acid and nitrate poisoning risk: \"Care is needed when utilizing these forages for cattle, sheep, and goats because of risks related to prussic acid and nitrate poisoning.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.goat": {
+      "url": "https://forage.msu.edu/extension/sorghum-sudangrass-pasture-poses-prussic-acid-and-nitrate-poisoning-risk/",
+      "publisher": "Michigan State University Extension, MSU Forage Connection",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "MSU Extension, Sorghum-sudangrass pasture poses prussic acid and nitrate poisoning risk: \"Care is needed when utilizing these forages for cattle, sheep, and goats because of risks related to prussic acid and nitrate poisoning.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "summer-squash-yellow-crookneck": {
@@ -868,12 +1704,656 @@
       "note": "No VCE / Penn State / UMD / Cornell / NC State tomatillo spacing found; variety seed page used."
     }
   },
+  "tomato-amish-paste": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-better-boy-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-bhn-589-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-big-beef-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-black-cherry": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-black-krim": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-brandywine-pink": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-celebrity-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-cherokee-purple": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-defiant-phr-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-early-girl-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-green-zebra": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-indigo-rose": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-iron-lady-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-juliet-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-matts-wild-cherry": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-mortgage-lifter": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-mountain-magic-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-mountain-merit-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-pink-bumblebee": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-plum-regal-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
   "tomato-potato-late-blight": {
     "keepApart": {
       "url": "https://extension.wvu.edu/lawn-gardening-pests/plant-disease/fruit-vegetable-diseases/late-blight-tomatoes",
       "publisher": "West Virginia University Extension (Lewis W. Jett, \"Late Blight of Tomatoes\")",
       "date": "2010-05; last updated 2023-09-11",
       "quote": "Avoid planting tomatoes on sites that were previously in potatoes or close to potatoes."
+    }
+  },
+  "tomato-roma-vf": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-roma-vfn": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-san-marzano": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-sun-gold-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-sweet-100-f1": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-yellow-mini-grape": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "tomato-yellow-pear": {
+    "animalToxicity.dog": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.cat": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "animalToxicity.horse": {
+      "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/tomato-plant",
+      "publisher": "ASPCA Animal Poison Control Center, Toxic and Non-Toxic Plants",
+      "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
+      "quote": "ASPCA, Tomato Plant (Lycopersicon spp.): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Solanine\" \"Clinical Signs: Hypersalivation, inappetence, severe gastrointestinal upset, depression, weakness, dilated pupils, slow heart rate; ripe fruit is non-toxic\"",
+      "note": "The ASPCA entry is for the tomato plant. The Clinical Signs line comes from the same excerpt and says ripe fruit is non-toxic; that is why the parts are leaves, stems and unripe fruit. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
   "turnip-purple-top-white-globe": {

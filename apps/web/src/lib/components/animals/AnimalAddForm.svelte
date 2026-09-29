@@ -93,6 +93,8 @@
   let purpose = $state<AnimalPurpose | ''>('');
   let groupId = $state('');
   let notes = $state('');
+  let feedingNote = $state('');
+  let microchipId = $state('');
 
   let groupName = $state('');
   let headCount = $state<number | null>(null);
@@ -195,6 +197,8 @@
         if (acq !== null) body.acquiredDate = acq;
         if (purpose) body.purpose = purpose;
         if (trimmed(notes)) body.notes = trimmed(notes);
+        if (trimmed(feedingNote)) body.feedingNote = trimmed(feedingNote);
+        if (trimmed(microchipId)) body.microchipId = trimmed(microchipId);
       }
       if (groupId) body.groupId = groupId;
       else if (housingFieldId) body.housingFieldId = housingFieldId;
@@ -524,6 +528,28 @@
               </label>
             </div>
           {/if}
+          <label class="af-label" for="{uid}-feeding"
+            >How much food <span class="af-optional">(optional)</span></label
+          >
+          <input
+            id="{uid}-feeding"
+            class="af-input"
+            type="text"
+            maxlength="200"
+            placeholder="1 cup twice a day"
+            bind:value={feedingNote}
+          />
+          <label class="af-label" for="{uid}-chip"
+            >Microchip ID <span class="af-optional">(optional)</span></label
+          >
+          <input
+            id="{uid}-chip"
+            class="af-input"
+            type="text"
+            maxlength="40"
+            autocomplete="off"
+            bind:value={microchipId}
+          />
         {/if}
         {#if layout === 'farm'}
           <label class="af-label" for="{uid}-purpose">

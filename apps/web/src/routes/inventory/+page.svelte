@@ -14,4 +14,5 @@
   counts={data.counts}
   rows={data.rows}
   canAdd={data.canAdd}
+  visibleTypes={data.visibleTypes}
 />

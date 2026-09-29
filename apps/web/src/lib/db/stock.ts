@@ -25,8 +25,8 @@ import {
   withTenantPrepared
 } from './tenant';
 
-export type StockCategory =
-  'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer' | 'seed' | 'adjuvant' | 'fuel' | 'part';
+export { STOCK_CATEGORIES, type StockCategory } from '$lib/stock/categories';
+import type { StockCategory } from '$lib/stock/categories';
 
 export type MovementReason =
   | 'receipt'
@@ -38,7 +38,8 @@ export type MovementReason =
   | 'adjustment'
   | 'spill'
   | 'expiry'
-  | 'animal-treatment';
+  | 'animal-treatment'
+  | 'animal-feed';
 
 export interface StockItem {
   id: string;

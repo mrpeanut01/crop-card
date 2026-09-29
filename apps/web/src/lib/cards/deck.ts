@@ -4,12 +4,14 @@ export type DeckFilter =
   | 'all'
   | 'pinned'
   | 'today'
+  | 'animals'
   | Extract<CardKind, 'planting' | 'area' | 'equipment' | 'spray' | 'careGuide'>;
 
 export const DECK_FILTERS: { id: DeckFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'pinned', label: 'Pinned' },
   { id: 'today', label: 'Today' },
+  { id: 'animals', label: 'Animals' },
   { id: 'planting', label: 'Plantings' },
   { id: 'area', label: 'Areas' },
   { id: 'equipment', label: 'Equipment' },
@@ -49,6 +51,36 @@ export function filterDeck(
     return ordered.filter((c) => set.has(c.key));
   }
   if (filter === 'today') return ordered.filter((c) => c.kind === 'day');
+  if (filter === 'animals') {
+    return ordered.filter((c) => c.kind === 'flock' || c.kind === 'animal');
+  }
   if (filter === 'area') return ordered.filter((c) => c.kind === 'area' || c.kind === 'farmMap');
   return ordered.filter((c) => c.kind === filter);
+}
+
+export interface DeckSlot {
+  card: CardModel;
+  /** Member cards folded under a Flock Card (D2-14). */
+  members: CardModel[];
+}
+
+/** Folds each card whose `parentKey` card is also shown under that card,
+ *  in the order given. A member whose Flock Card is not shown (filtered
+ *  out, or not pinned under the Pinned filter) stays a slot of its own. */
+export function foldMembers(cards: readonly CardModel[]): DeckSlot[] {
+  const shown = new Set(cards.map((c) => c.key));
+  const slots: DeckSlot[] = [];
+  const byKey = new Map<string, DeckSlot>();
+  const pending: CardModel[] = [];
+  for (const card of cards) {
+    if (card.parentKey && shown.has(card.parentKey)) {
+      pending.push(card);
+      continue;
+    }
+    const slot = { card, members: [] };
+    slots.push(slot);
+    byKey.set(card.key, slot);
+  }
+  for (const card of pending) byKey.get(card.parentKey!)?.members.push(card);
+  return slots;
 }

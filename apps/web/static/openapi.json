@@ -3571,6 +3571,28 @@
                       }
                     ]
                   },
+                  "microchipId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "feedingNote": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "birthDate": {
                     "anyOf": [
                       {
@@ -3834,6 +3856,28 @@
                       {
                         "type": "string",
                         "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "microchipId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "feedingNote": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
                       },
                       {
                         "type": "null"
@@ -4148,7 +4192,7 @@
     "/api/animals/move": {
       "post": {
         "summary": "Move animals",
-        "description": "Owners and helpers. Moves a group or an individual to an Area (`fieldId`), part of a group into a new group (`count` unnamed animals and/or named `animalIds`), or an individual into a group (`toGroupId`; it then lives where the group lives, and one moved to an Area leaves its group). `movedAt` may be backdated; moves arriving out of order are slotted into a non-overlapping timeline. Natural areas, water and boundaries cannot house animals. A coop over its capacity is reported in `capacity`, never refused. Safe to replay from the offline queue with the client record id header.",
+        "description": "Owners and helpers. Moves a group or an individual to an Area (`fieldId`), part of a group into a new group (`count` unnamed animals and/or named `animalIds`), or an individual into a group (`toGroupId`; it then lives where the group lives, and one moved to an Area leaves its group). `movedAt` may be backdated; moves arriving out of order are slotted into a non-overlapping timeline. Natural areas, water and boundaries cannot house animals. A coop over its capacity is reported in `capacity`, never refused. Safe to replay from the offline queue with the client record id header. A move queued offline sends `queuedLive: true` and is judged as live at `movedAt`, so a grazing hold answers 422 instead of saving it as a move that already happened.",
         "security": [
           {
             "cookieSession": []
@@ -4214,6 +4258,12 @@
                     "type": "integer",
                     "exclusiveMinimum": 0,
                     "maximum": 9007199254740991
+                  },
+                  "queuedLive": {
+                    "type": "boolean"
+                  },
+                  "alreadyThere": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -4862,6 +4912,569 @@
           },
           "409": {
             "description": "`HOLD_WOULD_SHORTEN` (with `holds`, `coverage` and `diffHash`), `HOLD_DIFF_STALE` or `VOID_TOO_LATE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/animals/{id}/care-plans": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "An animal id or a group id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "List care plans of an animal or group",
+        "description": "Everyone on the farm can read. A plan repeats every `intervalDays` or happens once on `onceOn`; `nextDueOn` is null while the plan waits for a date (\"ask your vet\"). `provenance` is `plugin` for a species suggestion and `manual` once the owner changed it.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The plans.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "plans"
+                  ],
+                  "properties": {
+                    "plans": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No animal or group with that id on the active farm.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add a care plan",
+        "description": "Owner only. The next due day is `nextDueOn`, or `lastDoneOn` plus `intervalDays`, or `onceOn`; with none of them the plan is saved undated and never shows on /today. `leadDays` (how many days ahead the task shows and the first reminder goes out) defaults to 14 for a vaccine and 3 for anything else. Care tasks are written into `tasks` (category `animal-care`, id `tk_care_<planId>_<yyyymmdd>`) by /today and the push tick. Not gated by the season close-out.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "vaccination",
+                      "deworm",
+                      "treatment",
+                      "vet-visit",
+                      "hoof-trim",
+                      "grooming",
+                      "shearing",
+                      "health-check",
+                      "other"
+                    ]
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "intervalDays": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 3650
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "onceOn": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "nextDueOn": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "lastDoneOn": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "leadDays": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 90
+                  },
+                  "productPluginId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "title"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Added.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "plan"
+                  ],
+                  "properties": {
+                    "plan": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No animal or group with that id on the active farm.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The animal or group is no longer here (`NOT_ACTIVE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/animals/{id}/care-plans/{planId}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "An animal id or a group id.",
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "planId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "patch": {
+        "summary": "Change a care plan",
+        "description": "Owner only. Open tasks of the plan are aborted with reason `plan-edited` and written again from the edited plan; `active: false` ends them with `plan-ended`. A `lastDoneOn` needs an interval (`NO_INTERVAL`). The plan becomes `manual`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "vaccination",
+                      "deworm",
+                      "treatment",
+                      "vet-visit",
+                      "hoof-trim",
+                      "grooming",
+                      "shearing",
+                      "health-check",
+                      "other"
+                    ]
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "intervalDays": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 3650
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "onceOn": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "nextDueOn": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "lastDoneOn": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "leadDays": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 90
+                  },
+                  "productPluginId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "plan"
+                  ],
+                  "properties": {
+                    "plan": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or a last date with no interval (`NO_INTERVAL`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Care plan not found for this animal or group.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a care plan",
+        "description": "Owner only. Open tasks end with reason `plan-ended`; done tasks and the health records they wrote stay.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "deleted"
+                  ],
+                  "properties": {
+                    "deleted": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Care plan not found for this animal or group.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/animals/{id}/care-plans/defaults": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "An animal id or a group id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Add the species' suggested care",
+        "description": "Owner only. Adds each care suggestion of the species plugin that the animal or group does not have yet, tagged `plugin`, with no due date: the owner says when it was last done. Suggestions carry an interval only when it is sourced; today's dog and cat suggestions carry none and say to ask the vet.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Nothing new to add.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "added": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Added.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "added": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No animal or group with that id on the active farm.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5819,10 +6432,201 @@
         }
       }
     },
+    "/api/stock/{id}/use": {
+      "post": {
+        "summary": "Take feed or bedding off stock",
+        "description": "Owners and helpers. Feed and bedding items only (`NOT_FEED` otherwise). The use is typed in pounds and converted to the item unit; a bag item needs its pounds per bag first (`NEEDS_LB_PER_BAG`). Saved as an `animal-feed` stock movement; an optional animal or group rides in the movement notes as `animal-feed:<subjectType>:<id>`. A shortfall saves what was on hand and returns a `STOCK_SHORT` warning. Safe to replay from the offline queue with the client record id header.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Stock item id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/ClientRecordId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "lb": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 5000
+                  },
+                  "subjectType": {
+                    "type": "string",
+                    "enum": [
+                      "animal",
+                      "group"
+                    ]
+                  },
+                  "subjectId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "occurredAt": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "lb"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replay of a client record id that was already saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Either the saved record, or `{ ok: true, duplicate: true }` when the client record id was already saved and nothing new was written.",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "duplicate": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Used.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "used",
+                    "shortfall",
+                    "onHand",
+                    "warnings"
+                  ],
+                  "properties": {
+                    "used": {
+                      "type": "object",
+                      "properties": {
+                        "lb": {
+                          "type": "number"
+                        },
+                        "amount": {
+                          "type": "number"
+                        },
+                        "unit": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "shortfall": {
+                      "type": "number"
+                    },
+                    "onHand": {
+                      "type": "number"
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, not a feed or bedding item, a subject that is not on this farm, or a future date.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such stock item on this farm.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The item cannot take a use in pounds yet (`NEEDS_LB_PER_BAG`, `UNIT_NOT_WEIGHT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The same client record id is being saved by another request right now. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/animals/production/record": {
       "post": {
         "summary": "Log eggs, milk or a weight",
-        "description": "Owners and helpers. Eggs and milk declared as `food` or `sale` run the withdrawal gate at the time they were collected, with no override: a stop answers 422 with `code` (`WITHDRAWAL_ACTIVE`, `WITHDRAWAL_UNKNOWN` or `PROHIBITED_DRUG`), the clear date when known and `resubmitAs: discard`. `discard` always saves; `feed-to-animals` and `unknown` save with a warning. Weights are never gated. Not gated by the season close-out. Safe to replay from the offline queue; a replay that now hits a hold gets the same 422.",
+        "description": "Owners and helpers. Eggs and milk declared as `food` or `sale` run the withdrawal gate at the time they were collected, with no override: a stop answers 422 with `code` (`WITHDRAWAL_ACTIVE`, `WITHDRAWAL_UNKNOWN` or `PROHIBITED_DRUG`), the clear date when known and `resubmitAs: discard`. `discard` always saves; `feed-to-animals` and `unknown` save with a warning. Weights are never gated. Not gated by the season close-out. Safe to replay from the offline queue; a replay that now hits a hold gets the same 422 and waits in the queue. Resending it as `discard` with `convertedFromUse` (the use it was queued with) saves once and keeps that change in the record trail.",
         "security": [
           {
             "cookieSession": []
@@ -5893,6 +6697,13 @@
                       "discard",
                       "feed-to-animals",
                       "unknown"
+                    ]
+                  },
+                  "convertedFromUse": {
+                    "type": "string",
+                    "enum": [
+                      "food",
+                      "sale"
                     ]
                   }
                 },
@@ -8602,6 +9413,13 @@
                             "type": "string",
                             "minLength": 1,
                             "maxLength": 30
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "vet",
+                              "other"
+                            ]
                           }
                         },
                         "required": [
@@ -8853,13 +9671,18 @@
     "/api/tasks/close": {
       "post": {
         "summary": "Close a task (offline replay of Done or Skip)",
-        "description": "The offline queue's replay of a Done or Skip made on /today with no signal. Owners and helpers can close any task of the active Owner; inspectors are read-only. Idempotent: a task that is already closed answers 200 with `alreadyClosed: true` and is left as it was. `occurredAt` keeps the moment of the tap, clamped to no later than now and no earlier than 30 days back.",
+        "description": "The offline queue's replay of a Done or Skip made on /today with no signal. Owners and helpers can close any task of the active Owner; inspectors are read-only. Idempotent: a task that is already closed answers 200 with `alreadyClosed: true` and is left as it was, and a replay of a client record id that was already saved writes nothing. `occurredAt` keeps the moment of the tap, clamped to no later than now and no earlier than 30 days back. An animal-care task (category `animal-care`) closes through its care plan: a vaccine, wormer or treatment must carry `healthEvent` (the body of `POST /api/animals/health/record`, for the task's own animal or group), which is saved with the kernel verdict, stock deduction and hold guard in the same transaction as the close; without it the answer is 422 `CARE_NEEDS_RECORD`. A vet visit with no `healthEvent` saves a plain vet-visit record. Done rolls the plan forward from the day it was done, or to `nextDueOn` when the signed-in owner gives one (stored as `manual`; a helper's is ignored with a `NEXT_DUE_OWNER` warning). Skip on a vaccine, wormer or treatment must say `careSkip`: `skip-this` rolls from the due day, `snooze` with `snoozeDays` (1, 3 or 7) keeps the task open and moves it; otherwise 422 `CARE_SKIP_CHOICE`. Not gated by the season close-out.",
         "security": [
           {
             "cookieSession": []
           },
           {
             "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ClientRecordId"
           }
         ],
         "requestBody": {
@@ -8889,6 +9712,206 @@
                     "type": "integer",
                     "exclusiveMinimum": 0,
                     "maximum": 9007199254740991
+                  },
+                  "healthEvent": {
+                    "type": "object",
+                    "properties": {
+                      "subjectType": {
+                        "type": "string",
+                        "enum": [
+                          "animal",
+                          "group"
+                        ]
+                      },
+                      "subjectId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "treatment",
+                          "vaccination",
+                          "deworm",
+                          "vet-visit",
+                          "injury",
+                          "note"
+                        ]
+                      },
+                      "productPluginId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "productName": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 200
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "stockItemId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "lotNumber": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 80
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "dose": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 1000000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "doseUnit": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 20
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "route": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "oral",
+                              "drinking-water",
+                              "feed",
+                              "injection-im",
+                              "injection-sc",
+                              "injection-iv",
+                              "intranasal",
+                              "ocular",
+                              "topical",
+                              "pour-on",
+                              "intramammary",
+                              "other"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "administeredAt": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "courseEndAt": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "courseOpen": {
+                        "type": "boolean"
+                      },
+                      "labelUse": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "label",
+                              "extra-label-vet",
+                              "unknown"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "vetName": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 120
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "notes": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 2000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "subjectType",
+                      "subjectId",
+                      "kind",
+                      "administeredAt"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "nextDueOn": {
+                    "type": "string"
+                  },
+                  "careSkip": {
+                    "type": "string",
+                    "enum": [
+                      "skip-this",
+                      "snooze"
+                    ]
+                  },
+                  "snoozeDays": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
                   }
                 },
                 "required": [
@@ -8906,16 +9929,30 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": [
-                    "task",
-                    "alreadyClosed"
-                  ],
                   "properties": {
                     "task": {
                       "type": "object"
                     },
                     "alreadyClosed": {
                       "type": "boolean"
+                    },
+                    "nextDueOn": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "snoozedUntil": {
+                      "type": "string"
+                    },
+                    "event": {
+                      "type": "object"
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
                     }
                   }
                 }
@@ -8923,7 +9960,7 @@
             }
           },
           "400": {
-            "description": "Invalid body.",
+            "description": "Invalid body, or a treatment for another animal than the task (`SUBJECT_MISMATCH`).",
             "content": {
               "application/json": {
                 "schema": {
@@ -8954,6 +9991,36 @@
           },
           "404": {
             "description": "Task not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The hold guard refused the treatment (see the health endpoint).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "An animal-care close needs the treatment (`CARE_NEEDS_RECORD`) or a Skip choice (`CARE_SKIP_CHOICE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The same client record id is being saved by another request right now. Retry shortly.",
             "content": {
               "application/json": {
                 "schema": {

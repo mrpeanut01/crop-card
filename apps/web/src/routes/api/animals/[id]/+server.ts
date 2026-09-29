@@ -19,6 +19,7 @@ import { isInteractiveOwner } from '$lib/server/interactiveOwner';
 import { presumeLactating } from '$lib/safety/grazingInterval';
 import { getSpecies, parseBody, statusEventsWithLocks, tagWarnings } from '$lib/server/animals';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
+import { endCareForSubject } from '$lib/server/carePlans';
 
 const notFound = () => json({ error: 'animal not found' }, { status: 404 });
 
@@ -183,6 +184,7 @@ export const PATCH: RequestHandler = async (event) => {
     }
   });
   if (!guarded.ok) return guarded.response;
+  if (input.status === 'archived') endCareForSubject('animal', animal.id);
 
   return json({
     animal: getAnimal(animal.id),

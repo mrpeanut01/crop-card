@@ -23,6 +23,8 @@
     acquiredFrom: string | null;
     purpose: AnimalPurpose;
     notes: string | null;
+    microchipId: string | null;
+    feedingNote: string | null;
   }
 
   interface Props {
@@ -47,6 +49,8 @@
   let acquiredFrom = $state(start.acquiredFrom ?? '');
   let purpose = $state<AnimalPurpose>(start.purpose);
   let notes = $state(start.notes ?? '');
+  let microchip = $state(start.microchipId ?? '');
+  let feeding = $state(start.feedingNote ?? '');
   let saving = $state(false);
   let error = $state<string | null>(null);
   /** Set when the server asks why a sex change ends the milk reading (C-10). */
@@ -71,6 +75,8 @@
     const b = birth ? dateInputToMs(birth) : null;
     if (b !== animal.birthDate) out.birthDate = b;
     if (b !== null && estimated !== animal.birthDateEstimated) out.birthDateEstimated = estimated;
+    if (clean(microchip) !== animal.microchipId) out.microchipId = clean(microchip);
+    if (clean(feeding) !== animal.feedingNote) out.feedingNote = clean(feeding);
     return out;
   }
 
@@ -168,6 +174,24 @@
         <option value="mixed">Both</option>
       </select>
     {/if}
+    <label class="af-label" for="{uid}-feeding">How much food</label>
+    <input
+      id="{uid}-feeding"
+      class="af-input"
+      type="text"
+      maxlength="200"
+      placeholder="1 cup twice a day"
+      bind:value={feeding}
+    />
+    <label class="af-label" for="{uid}-chip">Microchip ID</label>
+    <input
+      id="{uid}-chip"
+      class="af-input"
+      type="text"
+      maxlength="40"
+      autocomplete="off"
+      bind:value={microchip}
+    />
   {/if}
   <label class="af-label" for="{uid}-notes">Notes</label>
   <textarea id="{uid}-notes" class="af-input" maxlength="2000" bind:value={notes}></textarea>

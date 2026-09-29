@@ -3,7 +3,11 @@
   import { onMount } from 'svelte';
   import LabelCapture from '$lib/components/LabelCapture.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
-  import { draftFromScanResult, type StockEntryDraft } from '$lib/stock/normalizeStockEntry';
+  import {
+    draftFromMedScan,
+    draftFromScanResult,
+    type StockEntryDraft
+  } from '$lib/stock/normalizeStockEntry';
 
   /**
    * Phase 25d (#89) — Method 4 of the 5-method add waterfall.
@@ -50,9 +54,19 @@
      *  while this callback advances the tab. */
     onSwitchToManual?: () => void;
     onBatch?: (files: File[]) => void;
+    /** Phase 32D: a medicine label. Claude reads only the name and the
+     *  NADA number; withdrawal data never comes from a scan (D0-15). */
+    target?: 'animal-health';
   }
 
-  const { onSubmit, busy = false, aiEnabled = false, onSwitchToManual, onBatch }: Props = $props();
+  const {
+    onSubmit,
+    busy = false,
+    aiEnabled = false,
+    onSwitchToManual,
+    onBatch,
+    target
+  }: Props = $props();
 
   let fileInput = $state<HTMLInputElement | null>(null);
   let preview = $state<string | null>(null); // data: URL for the preview card
@@ -135,7 +149,7 @@
       const res = await fetch('/api/scan-label', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ image: dataUrl })
+        body: JSON.stringify(target ? { image: dataUrl, target } : { image: dataUrl })
       });
       const body = await res.json();
       if (!res.ok) {
@@ -147,7 +161,7 @@
           'Claude could not identify the product. Try a clearer photo, the Barcode scanner, or Manual entry.';
         return;
       }
-      const draft = draftFromScanResult(body, 'ai');
+      const draft = target ? draftFromMedScan(body) : draftFromScanResult(body, 'ai');
       await onSubmit(draft);
     } catch (err) {
       extractError = err instanceof Error ? err.message : String(err);
@@ -163,10 +177,17 @@
 </script>
 
 <div class="ocr-panel">
-  <p class="lede">
-    Snap the front of the package or the ingredient block. Claude Vision extracts the structured
-    fields — every output gets a provenance tag so you can spot-check before save.
-  </p>
+  {#if target === 'animal-health'}
+    <p class="lede" data-testid="med-scan-lede">
+      Snap the bottle's label. Claude reads the product name and the NADA number only. Withdrawal
+      times always come from the label or your vet, never from a scan.
+    </p>
+  {:else}
+    <p class="lede">
+      Snap the front of the package or the ingredient block. Claude Vision extracts the structured
+      fields — every output gets a provenance tag so you can spot-check before save.
+    </p>
+  {/if}
 
   {#if !aiEnabled}
     <!-- #250 / CT-ST-009 — pre-flight empty-state when no Anthropic

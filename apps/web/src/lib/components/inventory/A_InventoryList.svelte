@@ -19,6 +19,7 @@
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatStockQuantity, isLabelUnitCategory } from '$lib/stock/units';
   import type { InventoryType } from '$lib/inventory/types';
+  import { visibleInventoryTypes } from '$lib/inventory/chips';
   import type { CatalogRow, InventoryRow, StockRow } from '../../../routes/inventory/+page.server';
 
   interface Props {
@@ -28,9 +29,16 @@
     rows: InventoryRow[];
     /** Owners get add links in the empty state; helpers are told to ask. */
     canAdd?: boolean;
+    /** Chips shown; feed and animal-health hide until the farm has animals
+     *  or stock of that type (Phase 32D). */
+    visibleTypes?: readonly InventoryType[];
   }
 
-  const { type, mode, counts, rows, canAdd = true }: Props = $props();
+  const { type, mode, counts, rows, canAdd = true, visibleTypes: visibleProp }: Props = $props();
+
+  const visibleTypes = $derived(
+    visibleProp ?? visibleInventoryTypes({ stockCounts: counts, hasAnimals: false, active: type })
+  );
 
   let search = $state('');
 
@@ -92,7 +100,11 @@
     ];
   });
 
-  const showCatalogToggle = $derived(type !== 'crop');
+  // Crop is catalog only; feed is stock only, like equipment (D0-17).
+  const showCatalogToggle = $derived(type !== 'crop' && type !== 'feed');
+  const addLabel = $derived(
+    type === 'feed' ? 'feed or bedding' : type === 'animal-health' ? 'medicine' : type
+  );
 
   const rowCards = $derived(filteredRows.map((r) => inventoryRowCard(r, type, currentPrefs())));
 </script>
@@ -102,16 +114,23 @@
     <span class="kicker">Inventory</span>
     <h1 class="serif">All inventory</h1>
     <p class="lede">
-      Pesticides, fertility, seeds and crops in one place. Sprayers and other gear live in
+      {visibleTypes.includes('feed')
+        ? 'Pesticides, fertility, seeds, crops, feed and animal health in one place.'
+        : 'Pesticides, fertility, seeds and crops in one place.'} Sprayers and other gear live in
       <a href="/equipment">Equipment</a>.
     </p>
   </div>
   {#if type !== 'crop'}
-    <a class="add-cta" href="/inventory/{type}/add">+ Add {type}</a>
+    <a class="add-cta" href="/inventory/{type}/add">+ Add {addLabel}</a>
   {/if}
 </header>
 
-<InvTypeChip activeType={type} onTypeChange={switchType} countByType={counts} />
+<InvTypeChip
+  activeType={type}
+  onTypeChange={switchType}
+  countByType={counts}
+  types={visibleTypes}
+/>
 
 {#if showCatalogToggle}
   <div class="mode-toggle" role="group" aria-label="Stock vs catalog">
@@ -143,8 +162,14 @@
   {/each}
 </div>
 
-{#if rows.length === 0}
-  <InventoryEmptyGrid activeType={type} {canAdd} />
+{#if rows.length === 0 && type === 'animal-health' && mode === 'catalog'}
+  <p class="catalog-pending" role="note" data-testid="animal-health-catalog-empty">
+    No animal-health products are in the library yet. Their withdrawal times have to be checked
+    against the printed label before they are added. Until then, add your bottles under Stock, and
+    enter the withdrawal from the label or your vet when you record a treatment.
+  </p>
+{:else if rows.length === 0}
+  <InventoryEmptyGrid activeType={type} {canAdd} types={visibleTypes} />
 {:else}
   <div class="search-row">
     <input
@@ -244,7 +269,19 @@
     gap: 12px;
     margin-bottom: 12px;
   }
+  .catalog-pending {
+    margin: 16px 0 0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: var(--pill-wheat-bg, #e8d9b5);
+    color: var(--color-ink, #1c1c1c);
+    line-height: 1.45;
+  }
   .add-cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    box-sizing: border-box;
     background: var(--color-forest, #1f5e3a);
     color: var(--color-cream, #fff8e1);
     padding: 8px 14px;
@@ -296,6 +333,7 @@
   .mode-toggle button {
     background: transparent;
     border: none;
+    min-height: 48px;
     padding: 6px 14px;
     font: inherit;
     font-size: 0.85rem;

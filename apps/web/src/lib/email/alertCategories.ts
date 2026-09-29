@@ -12,7 +12,9 @@ export const DEFAULT_EMAIL_ALERT_PREFS: EmailAlertPrefs = {
   'decon-due': false,
   'lock-window-closing': false,
   'spring-calibration': false,
-  'frost-tonight': false
+  'frost-tonight': false,
+  'animal-care-due': false,
+  'withdrawal-clears': false
 };
 
 export function isEmailAlertCategory(value: unknown): value is EmailAlertCategory {

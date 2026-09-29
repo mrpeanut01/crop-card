@@ -63,7 +63,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         rulesVersion: RULES_VERSION,
         performedById: user.id,
         clientRecordId: event.request.headers.get(CLIENT_RECORD_HEADER),
-        createdAt: now
+        createdAt: now,
+        convertedFromUse: input.convertedFromUse
       }),
     { dated: true }
   );

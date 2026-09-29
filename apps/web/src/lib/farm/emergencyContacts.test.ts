@@ -6,6 +6,7 @@ import {
   withPoisonControl,
   POISON_CONTROL_CONTACT,
   decodeEmergencyContacts,
+  firstVetContact,
   formatEmergencyContact,
   hasPoisonControl,
   parseContactRows,
@@ -150,5 +151,63 @@ describe('form helpers', () => {
     expect(withPoisonControl([POISON_CONTROL_CONTACT])).toEqual([POISON_CONTROL_CONTACT]);
     const five = Array.from({ length: 5 }, () => vet);
     expect(withPoisonControl(five)).toEqual(five);
+  });
+});
+
+describe('vet contact type (32D, D2-13)', () => {
+  it('stores only a vet type and drops other', () => {
+    const parsed = parseContactRows([
+      { name: 'Dr. Lee', role: '', phone: '540-555-0100', type: 'vet' },
+      { name: 'Ann', role: 'Neighbor', phone: '540-555-0101', type: 'other' }
+    ]);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(JSON.parse(JSON.stringify(parsed.contacts))).toEqual([
+      { name: 'Dr. Lee', role: '', phone: '540-555-0100', type: 'vet' },
+      { name: 'Ann', role: 'Neighbor', phone: '540-555-0101' }
+    ]);
+  });
+
+  it('reads the type from the form and back from storage', () => {
+    const fd = new FormData();
+    for (const [n, t] of [
+      ['Dr. Lee', 'vet'],
+      ['Ann', 'other']
+    ]) {
+      fd.append('contactName', n);
+      fd.append('contactRole', '');
+      fd.append('contactPhone', '540-555-0100');
+      fd.append('contactType', t);
+    }
+    const rows = contactRowsFromForm(fd);
+    expect(rows[0].type).toBe('vet');
+    expect(rows[1].type).toBeUndefined();
+    const stored = JSON.stringify([
+      { name: 'Dr. Lee', role: '', phone: '540-555-0100', type: 'vet' },
+      { name: 'Old', role: '', phone: '540-555-0102', type: 'other' },
+      { name: 'Legacy', role: '', phone: '540-555-0103' }
+    ]);
+    const decoded = decodeEmergencyContacts(stored);
+    expect(decoded.map((c) => c.type)).toEqual(['vet', undefined, undefined]);
+    expect('type' in decoded[1]).toBe(false);
+  });
+
+  it('finds the first typed vet, else a contact whose role says vet', () => {
+    const ann = { name: 'Ann', role: 'Neighbor', phone: '1' + '11' };
+    const byRole = { name: 'Valley Animal Hospital', role: '', phone: '222' };
+    const typed = { name: 'Dr. Lee', role: '', phone: '333', type: 'vet' as const };
+    expect(firstVetContact([ann, byRole, typed])).toBe(typed);
+    expect(firstVetContact([ann, byRole])).toBe(byRole);
+    expect(
+      firstVetContact([ann, { name: 'Sue', role: 'Veterinarian', phone: '4' + '44' }])?.name
+    ).toBe('Sue');
+    expect(firstVetContact([ann])).toBeNull();
+    expect(firstVetContact(undefined)).toBeNull();
+  });
+
+  it('labels an unroled vet as the vet on the Farm Map Card', () => {
+    expect(formatEmergencyContact({ name: 'Dr. Lee', role: '', phone: '333', type: 'vet' })).toBe(
+      'Dr. Lee (Vet): 333'
+    );
   });
 });

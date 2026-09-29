@@ -5,7 +5,18 @@ export interface QueuedTaskPayload {
   action: QueuedTaskAction;
   reason?: string;
   occurredAt: number;
+  /** An animal-care close (32D): the treatment, next due day and Skip
+   *  choice ride in the same row, so the replay is one write. */
+  healthEvent?: Record<string, unknown>;
+  nextDueOn?: string;
+  careSkip?: 'skip-this' | 'snooze';
+  snoozeDays?: number;
 }
+
+export type CareCloseExtra = Pick<
+  QueuedTaskPayload,
+  'healthEvent' | 'nextDueOn' | 'careSkip' | 'snoozeDays'
+>;
 
 export interface QueuedTaskRow {
   rowId: string;
@@ -27,20 +38,25 @@ export function parseQueuedTask(payload: unknown): Omit<QueuedTaskPayload, 'occu
 }
 
 /** Saves a Done or Skip on this device; the sync queue replays it through
- *  POST /api/tasks/close when there is signal again. */
+ *  POST /api/tasks/close when there is signal again. Pass the client record
+ *  id an online try already used, so a response lost on the way back
+ *  dedupes on the server instead of saving the dose twice. */
 export async function queueTaskAction(
   taskId: string,
   action: QueuedTaskAction,
-  reason?: string
+  reason?: string,
+  extra: CareCloseExtra = {},
+  clientId?: string
 ): Promise<string> {
   const { enqueueRecord } = await import('./syncQueue');
   const payload: QueuedTaskPayload = {
     taskId,
     action,
     occurredAt: Date.now(),
-    ...(reason ? { reason } : {})
+    ...(reason ? { reason } : {}),
+    ...extra
   };
-  return enqueueRecord('task', payload);
+  return clientId ? enqueueRecord('task', payload, clientId) : enqueueRecord('task', payload);
 }
 
 /** The active Owner's waiting task actions, newest last. */

@@ -1075,7 +1075,10 @@ export const stockItems = tenantScoped(
           'seed',
           'adjuvant',
           'fuel',
-          'part'
+          'part',
+          'feed',
+          'bedding',
+          'animal-health'
         ]
       }).notNull(),
       displayName: text('display_name').notNull(),
@@ -1357,7 +1360,8 @@ export const stockMovements = tenantScoped(
           'adjustment',
           'spill',
           'expiry',
-          'animal-treatment'
+          'animal-treatment',
+          'animal-feed'
         ]
       }).notNull(),
       sprayEventId: text('spray_event_id').references(() => sprayEvents.id),
@@ -1520,7 +1524,8 @@ export const tasks = tenantScoped(
           'insecticide_event',
           'fungicide_event',
           'hay_cutting',
-          'fertility_application'
+          'fertility_application',
+          'animal_health_event'
         ]
       }),
       relatedEventId: text('related_event_id'),
@@ -1545,6 +1550,7 @@ export const tasks = tenantScoped(
           'prune',
           'harvest',
           'hay-cutting',
+          'animal-care',
           'other'
         ]
       }),
@@ -1994,7 +2000,14 @@ export const pushDeliveries = tenantScoped(
       id: text('id').primaryKey(),
       ownerId: text('owner_id').notNull(),
       kind: text('kind', {
-        enum: ['decon-due', 'lock-window-closing', 'spring-calibration', 'frost-tonight']
+        enum: [
+          'decon-due',
+          'lock-window-closing',
+          'spring-calibration',
+          'frost-tonight',
+          'animal-care-due',
+          'withdrawal-clears'
+        ]
       }).notNull(),
       subjectId: text('subject_id').notNull(),
       sentAt: integer('sent_at', { mode: 'timestamp_ms' })
@@ -2029,7 +2042,14 @@ export const emailAlertConsents = tenantScoped(
         .notNull()
         .references(() => users.id, { onDelete: 'cascade' }),
       category: text('category', {
-        enum: ['decon-due', 'lock-window-closing', 'spring-calibration', 'frost-tonight']
+        enum: [
+          'decon-due',
+          'lock-window-closing',
+          'spring-calibration',
+          'frost-tonight',
+          'animal-care-due',
+          'withdrawal-clears'
+        ]
       }).notNull(),
       status: text('status', { enum: ['opted-in', 'opted-out'] }).notNull(),
       optedInAt: integer('opted_in_at', { mode: 'timestamp_ms' }),
@@ -2205,6 +2225,10 @@ export const animals = tenantScoped(
       }),
       photoRef: text('photo_ref'),
       notes: text('notes'),
+      /** 32D (D2-12): shown on a pet's Animal Card. Free text, owner-typed. */
+      microchipId: text('microchip_id'),
+      /** 32D (D2-12): "1 cup twice a day", shown on a pet's Animal Card. */
+      feedingNote: text('feeding_note'),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
         .default(sql`(unixepoch() * 1000)`),
@@ -2550,7 +2574,17 @@ export const animalCarePlans = tenantScoped(
       subjectType: text('subject_type', { enum: ANIMAL_SUBJECT_TYPES }).notNull(),
       subjectId: text('subject_id').notNull(),
       kind: text('kind', {
-        enum: ['vaccination', 'deworm', 'treatment', 'vet-visit', 'hoof-trim', 'grooming', 'other']
+        enum: [
+          'vaccination',
+          'deworm',
+          'treatment',
+          'vet-visit',
+          'hoof-trim',
+          'grooming',
+          'shearing',
+          'health-check',
+          'other'
+        ]
       }).notNull(),
       title: text('title').notNull(),
       productPluginId: text('product_plugin_id'),

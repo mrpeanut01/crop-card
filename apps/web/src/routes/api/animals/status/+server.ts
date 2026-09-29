@@ -10,6 +10,7 @@ import { requireMutator } from '$lib/server/auth';
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { assertAnimalSubject, firstUnknownRef } from '$lib/server/foreignRefs';
 import { guardedHoldWrite } from '$lib/server/holdGuard';
+import { endCareForSubject } from '$lib/server/carePlans';
 import { meatMoveOrderRefusal } from '$lib/server/animalOrder';
 import { groupAdditionGate, meatCutRefusal, returnToActiveGate } from '$lib/server/grazingGate';
 import { parseBody, recordStatus, ruleResponse, unknownSubjectMessage } from '$lib/server/animals';
@@ -95,6 +96,9 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         ),
       { dated: true }
     );
+    if (input.status !== 'active' && input.subjectType === 'animal') {
+      endCareForSubject('animal', input.subjectId);
+    }
     return json(grazingWarnings.length ? { ...result, grazingWarnings } : result, { status: 201 });
   } catch (e) {
     return ruleResponse(e);

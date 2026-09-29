@@ -3,7 +3,13 @@ import { and, asc, count, eq, inArray } from 'drizzle-orm';
 import { db } from './client';
 import { animalGroups, animalLocations, animals } from './schema';
 import { tenantValues, withTenant } from './tenant';
-import { hasRecords, insertFlagChange, subjectRecordCounts, type FlagChange } from './animals';
+import {
+  deleteUntouchedSeedPlans,
+  hasRecords,
+  insertFlagChange,
+  subjectRecordCounts,
+  type FlagChange
+} from './animals';
 import { effectiveGroupFoodProducing, groupTotal } from '$lib/animals/counts';
 import type { AnimalPurpose } from '$lib/animals/model';
 
@@ -255,6 +261,7 @@ export function deleteGroupIfEmpty(
     if (!getAnimalGroup(id)) return 'not-found';
     if (groupMemberRowCount(id) > 0) return 'has-members';
     if (hasRecords(subjectRecordCounts('group', id))) return 'has-records';
+    deleteUntouchedSeedPlans('group', id);
     deleteGroupStays(id);
     db.delete(animalGroups)
       .where(withTenant(animalGroups, eq(animalGroups.id, id)))

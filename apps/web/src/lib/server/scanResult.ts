@@ -8,6 +8,7 @@ import { getRegistry } from '$lib/server/registry';
 import { rankLibraryMatches } from '$lib/plugins/libraryMatch';
 import { getSetting } from '$lib/db/settings';
 import { usageSurchargeUsd } from './aiCost';
+import { parseMedLabelJson, type MedLabelScan } from '$lib/stock/animalStock';
 import {
   POLICY_ERROR_CODES,
   SafeFetchError,
@@ -91,6 +92,8 @@ export interface ScanResult {
   cropPluginMatches?: CropPluginMatch[];
   /** Type suggestion the UI displays for confirmation (mapped or new). */
   suggestedType?: SuggestedType;
+  /** Medicine label scan only (Phase 32D). */
+  nada?: { kind: 'NADA' | 'ANADA'; number: string };
 }
 
 export const STOCK_CATEGORIES = [
@@ -812,4 +815,39 @@ export async function claudeVisionLookup(
   reportUsage('claude-sonnet-4-6', msg.usage, onUsage);
   const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
   return parseClaudeJson(text);
+}
+
+const MED_LABEL_PROMPT = `You read animal medicine, vaccine and dewormer labels. Return ONLY a JSON object, no markdown:
+{"displayName": string (the product name as printed), "nada": string (the "NADA" or "ANADA" approval number exactly as printed, e.g. "NADA 141-061", or omit it)}
+Return nothing else. Do not report withdrawal times, doses, species or directions.`;
+
+/** Phase 32D (D0-15): a medicine label photo. Reads the product name and
+ *  the NADA or ANADA number only; `parseMedLabelJson` drops anything else,
+ *  so withdrawal data never comes from a scan. */
+export async function claudeMedLabelLookup(
+  image: string,
+  onUsage?: ScanUsageSink
+): Promise<MedLabelScan> {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error(NO_KEY_MESSAGE);
+  const client = new Anthropic({ apiKey });
+  const msg = await withRetry(() =>
+    client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 200,
+      system: MED_LABEL_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'image', source: toVisionSource(image) },
+            { type: 'text', text: 'Read the product name and NADA number from this label.' }
+          ]
+        }
+      ]
+    })
+  );
+  reportUsage('claude-sonnet-4-6', msg.usage, onUsage);
+  const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
+  return parseMedLabelJson(text);
 }

@@ -58,6 +58,10 @@ import {
 import { JOURNAL_KINDS, JOURNAL_PROVENANCE } from '../src/lib/journal/model.ts';
 import { taskCloseSchema } from '../src/lib/tasks/apiSchemas.ts';
 import {
+  carePlanCreateSchema,
+  carePlanPatchSchema
+} from '../src/lib/animals/carePlanApiSchemas.ts';
+import {
   fungicideRecordSchema,
   harvestRecordSchema,
   hayCuttingSchema,
@@ -86,6 +90,7 @@ import { holdVoidSchema } from '../src/lib/animals/holdVoidSchema.ts';
 import { RECORD_KINDS } from '../src/lib/db/recordKinds.ts';
 import { emergencyContactSchema } from '../src/lib/farm/emergencyContacts.ts';
 import { CLIENT_RECORD_HEADER } from '../src/lib/clientRecordHeader.ts';
+import { feedUseSchema } from '../src/lib/stock/apiSchemas.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const APP_ROOT = resolve(__dirname, '..');
@@ -953,7 +958,7 @@ const paths = {
     post: {
       summary: 'Move animals',
       description:
-        'Owners and helpers. Moves a group or an individual to an Area (`fieldId`), part of a group into a new group (`count` unnamed animals and/or named `animalIds`), or an individual into a group (`toGroupId`; it then lives where the group lives, and one moved to an Area leaves its group). `movedAt` may be backdated; moves arriving out of order are slotted into a non-overlapping timeline. Natural areas, water and boundaries cannot house animals. A coop over its capacity is reported in `capacity`, never refused. Safe to replay from the offline queue with the client record id header.',
+        'Owners and helpers. Moves a group or an individual to an Area (`fieldId`), part of a group into a new group (`count` unnamed animals and/or named `animalIds`), or an individual into a group (`toGroupId`; it then lives where the group lives, and one moved to an Area leaves its group). `movedAt` may be backdated; moves arriving out of order are slotted into a non-overlapping timeline. Natural areas, water and boundaries cannot house animals. A coop over its capacity is reported in `capacity`, never refused. Safe to replay from the offline queue with the client record id header. A move queued offline sends `queuedLive: true` and is judged as live at `movedAt`, so a grazing hold answers 422 instead of saving it as a move that already happened.',
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
       parameters: [clientRecordRef],
       requestBody: jsonBody(animalMoveSchema),
@@ -1015,6 +1020,126 @@ const paths = {
     'Void an insecticide application entered by mistake',
     'Insecticide record'
   ),
+
+  '/api/animals/{id}/care-plans': {
+    parameters: [
+      {
+        name: 'id',
+        in: 'path',
+        required: true,
+        description: 'An animal id or a group id.',
+        schema: { type: 'string' }
+      }
+    ],
+    get: {
+      summary: 'List care plans of an animal or group',
+      description:
+        'Everyone on the farm can read. A plan repeats every `intervalDays` or happens once on `onceOn`; `nextDueOn` is null while the plan waits for a date ("ask your vet"). `provenance` is `plugin` for a species suggestion and `manual` once the owner changed it.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The plans.', {
+          type: 'object',
+          required: ['plans'],
+          properties: { plans: { type: 'array', items: { type: 'object' } } }
+        }),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('No animal or group with that id on the active farm.')
+      }
+    },
+    post: {
+      summary: 'Add a care plan',
+      description:
+        'Owner only. The next due day is `nextDueOn`, or `lastDoneOn` plus `intervalDays`, or `onceOn`; with none of them the plan is saved undated and never shows on /today. `leadDays` (how many days ahead the task shows and the first reminder goes out) defaults to 14 for a vaccine and 3 for anything else. Care tasks are written into `tasks` (category `animal-care`, id `tk_care_<planId>_<yyyymmdd>`) by /today and the push tick. Not gated by the season close-out.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(carePlanCreateSchema),
+      responses: {
+        201: jsonResponse('Added.', {
+          type: 'object',
+          required: ['plan'],
+          properties: { plan: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body.'),
+        ...OWNER_ERRORS,
+        404: errorResponse('No animal or group with that id on the active farm.'),
+        409: errorResponse('The animal or group is no longer here (`NOT_ACTIVE`).')
+      }
+    }
+  },
+
+  '/api/animals/{id}/care-plans/{planId}': {
+    parameters: [
+      {
+        name: 'id',
+        in: 'path',
+        required: true,
+        description: 'An animal id or a group id.',
+        schema: { type: 'string' }
+      },
+      { name: 'planId', in: 'path', required: true, schema: { type: 'string' } }
+    ],
+    patch: {
+      summary: 'Change a care plan',
+      description:
+        'Owner only. Open tasks of the plan are aborted with reason `plan-edited` and written again from the edited plan; `active: false` ends them with `plan-ended`. A `lastDoneOn` needs an interval (`NO_INTERVAL`). The plan becomes `manual`.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(carePlanPatchSchema),
+      responses: {
+        200: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['plan'],
+          properties: { plan: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body, or a last date with no interval (`NO_INTERVAL`).'),
+        ...OWNER_ERRORS,
+        404: errorResponse('Care plan not found for this animal or group.')
+      }
+    },
+    delete: {
+      summary: 'Delete a care plan',
+      description:
+        'Owner only. Open tasks end with reason `plan-ended`; done tasks and the health records they wrote stay.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Deleted.', {
+          type: 'object',
+          required: ['deleted'],
+          properties: { deleted: { type: 'boolean' } }
+        }),
+        ...OWNER_ERRORS,
+        404: errorResponse('Care plan not found for this animal or group.')
+      }
+    }
+  },
+
+  '/api/animals/{id}/care-plans/defaults': {
+    parameters: [
+      {
+        name: 'id',
+        in: 'path',
+        required: true,
+        description: 'An animal id or a group id.',
+        schema: { type: 'string' }
+      }
+    ],
+    post: {
+      summary: "Add the species' suggested care",
+      description:
+        "Owner only. Adds each care suggestion of the species plugin that the animal or group does not have yet, tagged `plugin`, with no due date: the owner says when it was last done. Suggestions carry an interval only when it is sourced; today's dog and cat suggestions carry none and say to ask the vet.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Nothing new to add.', {
+          type: 'object',
+          properties: { added: { type: 'array', items: { type: 'object' } } }
+        }),
+        201: jsonResponse('Added.', {
+          type: 'object',
+          properties: { added: { type: 'array', items: { type: 'object' } } }
+        }),
+        ...OWNER_ERRORS,
+        404: errorResponse('No animal or group with that id on the active farm.')
+      }
+    }
+  },
 
   '/api/animals/status': {
     post: {
@@ -1161,11 +1286,56 @@ const paths = {
     }
   },
 
+  '/api/stock/{id}/use': {
+    post: {
+      summary: 'Take feed or bedding off stock',
+      description:
+        'Owners and helpers. Feed and bedding items only (`NOT_FEED` otherwise). The use is typed in pounds and converted to the item unit; a bag item needs its pounds per bag first (`NEEDS_LB_PER_BAG`). Saved as an `animal-feed` stock movement; an optional animal or group rides in the movement notes as `animal-feed:<subjectType>:<id>`. A shortfall saves what was on hand and returns a `STOCK_SHORT` warning. Safe to replay from the offline queue with the client record id header.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Stock item id.'), clientRecordRef],
+      requestBody: jsonBody(feedUseSchema),
+      responses: {
+        200: jsonResponse(
+          'A replay of a client record id that was already saved.',
+          DUPLICATE_SCHEMA
+        ),
+        201: jsonResponse('Used.', {
+          type: 'object',
+          required: ['used', 'shortfall', 'onHand', 'warnings'],
+          properties: {
+            used: {
+              type: 'object',
+              properties: {
+                lb: { type: 'number' },
+                amount: { type: 'number' },
+                unit: { type: 'string' }
+              }
+            },
+            shortfall: { type: 'number' },
+            onHand: { type: 'number' },
+            warnings: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        400: errorResponse(
+          'Invalid body, not a feed or bedding item, a subject that is not on this farm, or a future date.'
+        ),
+        ...AUTH_ERRORS,
+        404: errorResponse('No such stock item on this farm.'),
+        409: errorResponse(
+          'The item cannot take a use in pounds yet (`NEEDS_LB_PER_BAG`, `UNIT_NOT_WEIGHT`).'
+        ),
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
+      }
+    }
+  },
+
   '/api/animals/production/record': {
     post: {
       summary: 'Log eggs, milk or a weight',
       description:
-        'Owners and helpers. Eggs and milk declared as `food` or `sale` run the withdrawal gate at the time they were collected, with no override: a stop answers 422 with `code` (`WITHDRAWAL_ACTIVE`, `WITHDRAWAL_UNKNOWN` or `PROHIBITED_DRUG`), the clear date when known and `resubmitAs: discard`. `discard` always saves; `feed-to-animals` and `unknown` save with a warning. Weights are never gated. Not gated by the season close-out. Safe to replay from the offline queue; a replay that now hits a hold gets the same 422.',
+        'Owners and helpers. Eggs and milk declared as `food` or `sale` run the withdrawal gate at the time they were collected, with no override: a stop answers 422 with `code` (`WITHDRAWAL_ACTIVE`, `WITHDRAWAL_UNKNOWN` or `PROHIBITED_DRUG`), the clear date when known and `resubmitAs: discard`. `discard` always saves; `feed-to-animals` and `unknown` save with a warning. Weights are never gated. Not gated by the season close-out. Safe to replay from the offline queue; a replay that now hits a hold gets the same 422 and waits in the queue. Resending it as `discard` with `convertedFromUse` (the use it was queued with) saves once and keeps that change in the record trail.',
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
       parameters: [clientRecordRef],
       requestBody: jsonBody(productionRecordSchema),
@@ -1687,19 +1857,35 @@ const paths = {
     post: {
       summary: 'Close a task (offline replay of Done or Skip)',
       description:
-        "The offline queue's replay of a Done or Skip made on /today with no signal. Owners and helpers can close any task of the active Owner; inspectors are read-only. Idempotent: a task that is already closed answers 200 with `alreadyClosed: true` and is left as it was. `occurredAt` keeps the moment of the tap, clamped to no later than now and no earlier than 30 days back.",
+        "The offline queue's replay of a Done or Skip made on /today with no signal. Owners and helpers can close any task of the active Owner; inspectors are read-only. Idempotent: a task that is already closed answers 200 with `alreadyClosed: true` and is left as it was, and a replay of a client record id that was already saved writes nothing. `occurredAt` keeps the moment of the tap, clamped to no later than now and no earlier than 30 days back. An animal-care task (category `animal-care`) closes through its care plan: a vaccine, wormer or treatment must carry `healthEvent` (the body of `POST /api/animals/health/record`, for the task's own animal or group), which is saved with the kernel verdict, stock deduction and hold guard in the same transaction as the close; without it the answer is 422 `CARE_NEEDS_RECORD`. A vet visit with no `healthEvent` saves a plain vet-visit record. Done rolls the plan forward from the day it was done, or to `nextDueOn` when the signed-in owner gives one (stored as `manual`; a helper's is ignored with a `NEXT_DUE_OWNER` warning). Skip on a vaccine, wormer or treatment must say `careSkip`: `skip-this` rolls from the due day, `snooze` with `snoozeDays` (1, 3 or 7) keeps the task open and moves it; otherwise 422 `CARE_SKIP_CHOICE`. Not gated by the season close-out.",
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [clientRecordRef],
       requestBody: jsonBody(taskCloseSchema),
       responses: {
         200: jsonResponse('The task after closing, or as it already was.', {
           type: 'object',
-          required: ['task', 'alreadyClosed'],
-          properties: { task: { type: 'object' }, alreadyClosed: { type: 'boolean' } }
+          properties: {
+            task: { type: 'object' },
+            alreadyClosed: { type: 'boolean' },
+            nextDueOn: { type: ['string', 'null'] },
+            snoozedUntil: { type: 'string' },
+            event: { type: 'object' },
+            warnings: { type: 'array', items: { type: 'object' } }
+          }
         }),
-        400: errorResponse('Invalid body.'),
+        400: errorResponse(
+          'Invalid body, or a treatment for another animal than the task (`SUBJECT_MISMATCH`).'
+        ),
         401: errorResponse('Authentication required.'),
         403: errorResponse('Inspector role is read-only.'),
-        404: errorResponse('Task not found for the active Owner.')
+        404: errorResponse('Task not found for the active Owner.'),
+        409: errorResponse('The hold guard refused the treatment (see the health endpoint).'),
+        422: errorResponse(
+          'An animal-care close needs the treatment (`CARE_NEEDS_RECORD`) or a Skip choice (`CARE_SKIP_CHOICE`).'
+        ),
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
       }
     }
   },

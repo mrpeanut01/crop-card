@@ -13,7 +13,9 @@ export const CARD_KINDS = [
   'stock',
   'task',
   'scout',
-  'soilTest'
+  'soilTest',
+  'animal',
+  'flock'
 ] as const;
 
 /** Kinds built only from a saved record, never from the offline snapshot. */
@@ -44,6 +46,9 @@ export interface CardSection {
   /** Each item's text after the last copy of this is kept on one line,
    *  e.g. `': '` keeps a phone number whole. */
   nowrapAfter?: string;
+  /** On screen the title is one line that opens to the items. Print
+   *  always shows them. It can be opened and closed, never dismissed. */
+  collapsible?: boolean;
 }
 
 export interface CardProvenance {
@@ -125,6 +130,8 @@ export interface CardModel {
   /** Strip color that matches the item elsewhere on the page (a planting's
    *  swatch on /plan). Defaults to the kind color. */
   accent?: string;
+  /** The card this one folds under on /cards: an animal's Flock Card. */
+  parentKey?: string;
 }
 
 export const STALE_NOTICE = 'This card is more than a day old. Refresh it before you rely on it.';
@@ -148,7 +155,9 @@ export const CARD_KIND_LABEL: Record<CardKind, string> = {
   stock: 'Seed & stock',
   task: 'Task',
   scout: 'Scout',
-  soilTest: 'Soil test'
+  soilTest: 'Soil test',
+  animal: 'Animal',
+  flock: 'Flock'
 };
 
 export const CARD_KEY_PREFIX: Record<CardKind, string> = {
@@ -163,7 +172,10 @@ export const CARD_KEY_PREFIX: Record<CardKind, string> = {
   task: 'tk',
   scout: 'sc',
   /** `st` is taken by stock, whose keys are already printed on cards. */
-  soilTest: 'so'
+  soilTest: 'so',
+  animal: 'an',
+  /** Any herd, flock or litter (one animal group). */
+  flock: 'fl'
 };
 
 const KIND_BY_PREFIX = new Map<string, CardKind>(

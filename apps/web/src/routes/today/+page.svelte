@@ -15,6 +15,7 @@
   import CalendarGrid from '$lib/components/today/CalendarGrid.svelte';
   import SeasonTimeline from '$lib/components/today/SeasonTimeline.svelte';
   import TaskDeckCard, { type LinkedTaskItem } from '$lib/components/today/TaskDeckCard.svelte';
+  import CareTaskCard from '$lib/components/animals/CareTaskCard.svelte';
   import Recommendations, {
     type RecommendationItem
   } from '$lib/components/today/Recommendations.svelte';
@@ -231,6 +232,7 @@
   let busy = $state(false);
   let actionError = $state<string | null>(null);
   let liveMessage = $state('');
+  let careMessage = $state('');
 
   async function refreshQueued(): Promise<void> {
     try {
@@ -549,6 +551,28 @@
   </section>
 {/if}
 
+{#if data.animalCare.length > 0 || careMessage}
+  <section class="animal-care" aria-labelledby="care-heading" data-testid="today-animal-care">
+    <h2 id="care-heading" class="serif">Animal care</h2>
+    {#if careMessage}<p class="care-ok" role="status">{careMessage}</p>{/if}
+    {#each data.animalCare as card (card.key)}
+      <CareTaskCard
+        {card}
+        todayYmd={data.careTodayYmd}
+        isOwner={data.isOwner}
+        {canAct}
+        products={data.animalCareForm.products}
+        stock={data.animalCareForm.stock}
+        onChanged={async (text) => {
+          careMessage = text;
+          await refreshQueued();
+          await invalidateAll();
+        }}
+      />
+    {/each}
+  </section>
+{/if}
+
 <section class="deck" aria-labelledby="deck-heading" data-testid="today-deck" data-view={view}>
   <div class="deck-head">
     <h2 id="deck-heading" class="serif">
@@ -744,6 +768,20 @@
 </div>
 
 <style>
+  .animal-care {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+  .animal-care h2 {
+    margin: 0;
+  }
+  .care-ok {
+    margin: 0;
+    color: var(--color-forest-deep);
+    font-weight: 600;
+  }
   .t-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);

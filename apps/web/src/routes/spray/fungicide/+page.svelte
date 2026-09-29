@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { noteHoldWrite } from '$lib/animals/recordClient';
   import { goto, invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
@@ -319,6 +320,7 @@
         if (Array.isArray(payload.violations)) violations = payload.violations;
         return;
       }
+      await noteHoldWrite('fungicide', body);
       const reiClear = payload.event.reEntryClearAt
         ? fmt.instant(payload.event.reEntryClearAt)
         : 'n/a';

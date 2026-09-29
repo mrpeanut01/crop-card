@@ -33,7 +33,8 @@ export type RelatedEventTable =
   | 'insecticide_event'
   | 'fungicide_event'
   | 'hay_cutting'
-  | 'fertility_application';
+  | 'fertility_application'
+  | 'animal_health_event';
 
 export interface Task {
   id: string;
@@ -60,7 +61,7 @@ export interface Task {
   createdAt: number;
 }
 
-function rowToTask(row: typeof tasks.$inferSelect): Task {
+export function rowToTask(row: typeof tasks.$inferSelect): Task {
   return {
     id: row.id,
     title: row.title,

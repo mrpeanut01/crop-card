@@ -39,6 +39,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       reorderThreshold: item.reorderThreshold,
       notes: item.notes,
       barcode: item.barcode,
+      metadataJson: item.metadataJson,
       onHand: item.onHand,
       onOrder: item.onOrder,
       planned: item.planned,

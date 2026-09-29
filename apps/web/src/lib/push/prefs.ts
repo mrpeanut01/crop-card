@@ -2,7 +2,9 @@ export const PUSH_ALERT_KINDS = [
   'decon-due',
   'lock-window-closing',
   'spring-calibration',
-  'frost-tonight'
+  'frost-tonight',
+  'animal-care-due',
+  'withdrawal-clears'
 ] as const;
 
 export type PushAlertKind = (typeof PUSH_ALERT_KINDS)[number];
@@ -25,14 +27,38 @@ export const PUSH_ALERT_LABELS: Record<PushAlertKind, { label: string; sub: stri
   'frost-tonight': {
     label: 'Frost tonight',
     sub: 'The National Weather Service issues a frost or freeze advisory for your farm while frost-tender crops are planted or about to be.'
+  },
+  'animal-care-due': {
+    label: 'Animal care due',
+    sub: 'A care plan for an animal or group comes up, and again on the day it is due.'
+  },
+  'withdrawal-clears': {
+    label: 'Hold cleared',
+    sub: 'An egg, milk or meat hold on an animal or group has ended. Owner only.'
   }
 };
+
+/** Kinds added after devices had already saved their choices. A device
+ *  that saved before a kind existed keeps it off until the user turns it
+ *  on (D0-16). */
+export const PUSH_KINDS_ADDED_LATER: readonly PushAlertKind[] = [
+  'animal-care-due',
+  'withdrawal-clears'
+];
+
+/** Kinds only an owner receives, so helpers never see the toggle. */
+export const OWNER_ONLY_PUSH_KINDS: readonly PushAlertKind[] = ['withdrawal-clears'];
+
+/** Kinds about animals, shown once the farm has animals. */
+export const ANIMAL_PUSH_KINDS: readonly PushAlertKind[] = ['animal-care-due', 'withdrawal-clears'];
 
 export const DEFAULT_PUSH_PREFS: PushPrefs = {
   'decon-due': true,
   'lock-window-closing': true,
   'spring-calibration': true,
-  'frost-tonight': false
+  'frost-tonight': false,
+  'animal-care-due': true,
+  'withdrawal-clears': false
 };
 
 export function isPushAlertKind(value: unknown): value is PushAlertKind {
@@ -52,6 +78,7 @@ export function parsePushPrefs(raw: string | null | undefined): PushPrefs {
   for (const kind of PUSH_ALERT_KINDS) {
     const v = (parsed as Record<string, unknown>)[kind];
     if (typeof v === 'boolean') out[kind] = v;
+    else if (PUSH_KINDS_ADDED_LATER.includes(kind)) out[kind] = false;
   }
   return out;
 }

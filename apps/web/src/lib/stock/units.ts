@@ -9,13 +9,13 @@
 import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
 import { numberToLocaleString } from '$lib/intlCache';
 
-export type LiquidUnit = 'fl-oz' | 'pt' | 'qt' | 'gal';
+export type LiquidUnit = 'ml' | 'fl-oz' | 'pt' | 'qt' | 'gal';
 export type SolidUnit = 'oz' | 'lb' | 'kg' | 'g';
 /** Discrete-count units. `seeds` is a 1:1 plant equivalent for the
  *  AllocationWizard + SeedQuantityModal seed-math; it isn't convertible to
  *  any weight or volume unit. `count` covers transplants, plugs, packets
  *  with a labelled count, and any other "discrete plantable item." */
-export type CountUnit = 'count' | 'seeds' | 'bag-50lb' | 'bag-25kg';
+export type CountUnit = 'count' | 'seeds' | 'bag' | 'bag-50lb' | 'bag-25kg';
 export type StockUnit = LiquidUnit | SolidUnit | CountUnit;
 
 export const ALL_STOCK_UNITS: ReadonlyArray<StockUnit> = [
@@ -23,17 +23,20 @@ export const ALL_STOCK_UNITS: ReadonlyArray<StockUnit> = [
   'pt',
   'qt',
   'gal',
+  'ml',
   'oz',
   'lb',
   'kg',
   'g',
   'count',
   'seeds',
+  'bag',
   'bag-50lb',
   'bag-25kg'
 ];
 
 const LIQUID_FL_OZ_PER_UNIT: Record<LiquidUnit, number> = {
+  ml: 1 / 29.5735295625,
   'fl-oz': 1,
   pt: 16,
   qt: 32,
@@ -48,7 +51,7 @@ const MASS_GRAMS_PER_UNIT: Record<SolidUnit, number> = {
 };
 
 function isLiquid(u: StockUnit): u is LiquidUnit {
-  return u === 'fl-oz' || u === 'pt' || u === 'qt' || u === 'gal';
+  return u === 'ml' || u === 'fl-oz' || u === 'pt' || u === 'qt' || u === 'gal';
 }
 function isSolid(u: StockUnit): u is SolidUnit {
   return u === 'g' || u === 'oz' || u === 'lb' || u === 'kg';
@@ -127,6 +130,7 @@ export function isSeedCountUnit(unit: string, category: string | null | undefine
 }
 
 const UNIT_LABELS: Record<StockUnit, string> = {
+  ml: 'mL',
   'fl-oz': 'fl oz',
   pt: 'pt',
   qt: 'qt',
@@ -137,6 +141,7 @@ const UNIT_LABELS: Record<StockUnit, string> = {
   g: 'g',
   count: 'Count',
   seeds: 'Seeds',
+  bag: 'Bag',
   'bag-50lb': '50 lb bag',
   'bag-25kg': '25 kg bag'
 };
@@ -160,6 +165,9 @@ export function formatStockQuantity(
   if (amount === null || amount === undefined || !Number.isFinite(amount)) return '—';
   if (isSeedCountUnit(unit, opts.category)) {
     return `${num(amount, 0)} ${Math.abs(amount) === 1 ? 'seed' : 'seeds'}`;
+  }
+  if (unit === 'bag') {
+    return `${num(amount, opts.digits ?? 2)} ${Math.abs(amount) === 1 ? 'bag' : 'bags'}`;
   }
   const us = `${opts.digits === undefined ? amount.toFixed(1) : num(amount, opts.digits)} ${unit}`;
   if (prefs.units !== 'metric') return us;

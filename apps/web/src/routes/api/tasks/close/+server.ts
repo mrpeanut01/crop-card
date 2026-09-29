@@ -1,8 +1,12 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { taskCloseSchema } from '$lib/tasks/apiSchemas';
 import { abortTask, completeTask, getTask } from '$lib/db/tasks';
+import { farmTimeZone } from '$lib/db/userProfile';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
+import { withClientRecordId } from '$lib/server/clientRecordId';
+import { writeRecord } from '$lib/server/recordWrite';
+import { careMetaOf, closeCareTask } from '$lib/server/carePlans';
 
 const DAY_MS = 86_400_000;
 
@@ -14,8 +18,16 @@ export const _requestSchema = taskCloseSchema;
  * answers 200 with its current state, so a replay that already landed
  * never overwrites it. The moment the owner tapped is kept, but never a
  * future one, and never one more than 30 days back.
+ *
+ * An animal-care task (32D) closes through `closeCareTask`: a vaccine,
+ * wormer or treatment must carry `healthEvent`, which is saved through the
+ * 32C health writer and the hold guard in the same transaction, and the
+ * plan's next due day rolls forward. Replayable with the client record id.
+ * A dose sent for a task that was already closed another way (a plan edit,
+ * the subject leaving, another device) is still saved, never dropped, so
+ * the withdrawal hold it starts is on file.
  */
-export const POST: RequestHandler = async (event) => {
+export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
   if (!auth) return json({ error: 'sign in first' }, { status: 401 });
   if (!canMutate(auth.role)) {
@@ -34,14 +46,27 @@ export const POST: RequestHandler = async (event) => {
   const { taskId, action, reason } = parsed.data;
   const existing = getTask(taskId);
   if (!existing) return json({ error: 'task not found' }, { status: 404 });
-  if (existing.completedAt !== undefined || existing.abortedAt !== undefined) {
+  const meta = careMetaOf(existing);
+  const carriesDose = !!meta && action === 'complete' && !!parsed.data.healthEvent;
+  if ((existing.completedAt !== undefined || existing.abortedAt !== undefined) && !carriesDose) {
     return json({ task: existing, alreadyClosed: true });
+  }
+  if (meta) {
+    return closeCareTask({
+      event,
+      user: auth,
+      task: existing,
+      meta,
+      input: parsed.data,
+      timeZone: farmTimeZone()
+    });
   }
   const now = Date.now();
   const at = Math.min(now, Math.max(now - 30 * DAY_MS, parsed.data.occurredAt ?? now));
-  const task =
+  const task = writeRecord(event, () =>
     action === 'complete'
       ? completeTask(taskId, { occurredAt: at })
-      : abortTask(taskId, reason?.trim() || undefined, true, at);
+      : abortTask(taskId, reason?.trim() || undefined, true, at)
+  );
   return json({ task, alreadyClosed: false });
-};
+});

@@ -22,7 +22,12 @@ describe('submitMove', () => {
     expect(fetchFn).not.toHaveBeenCalled();
     expect(enqueueRecord).toHaveBeenCalledWith(
       'animal-move',
-      expect.objectContaining({ subjectId: 'g1', fieldId: 'f1', movedAt: expect.any(Number) }),
+      expect.objectContaining({
+        subjectId: 'g1',
+        fieldId: 'f1',
+        movedAt: expect.any(Number),
+        queuedLive: true
+      }),
       expect.any(String)
     );
   });

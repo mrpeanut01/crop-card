@@ -10,6 +10,7 @@
   import type { InventoryType } from '$lib/inventory/types';
   import type { StockEntryDraft } from '$lib/stock/normalizeStockEntry';
   import type { LibraryOption } from '$lib/plugins/libraryMatch';
+  import { sanitizeAnimalDraft } from '$lib/stock/animalStock';
 
   /**
    * Phase 27 follow-on (#296) — the multi-modal add waterfall, finally
@@ -164,8 +165,14 @@
     method = m;
   }
 
+  // Feed and medicine drafts keep only what an entry method may prefill.
+  const animalType = $derived(type === 'feed' || type === 'animal-health');
+  const nounLabel = $derived(
+    type === 'feed' ? 'feed or bedding' : type === 'animal-health' ? 'medicine' : type
+  );
+
   function onPanelDraft(d: StockEntryDraft): void {
-    draft = d;
+    draft = sanitizeAnimalDraft(type, d);
     phase = 'approve';
   }
 
@@ -227,8 +234,8 @@
   {/if}
 {:else}
   <header class="flow-header">
-    <span class="kicker">Add · {type}</span>
-    <h1 class="serif">New {type}</h1>
+    <span class="kicker">Add · {nounLabel}</span>
+    <h1 class="serif">New {nounLabel}</h1>
     <p class="lede">
       Pick how you want to add it — scan, search, or type it in. You'll review every field before
       saving.
@@ -301,7 +308,8 @@
             {busy}
             {aiEnabled}
             onSubmit={onPanelDraft}
-            onBatch={canSave ? startBatch : undefined}
+            onBatch={canSave && !animalType ? startBatch : undefined}
+            target={type === 'animal-health' ? 'animal-health' : undefined}
             onSwitchToManual={() => selectMethod('manual')}
           />
         {/if}

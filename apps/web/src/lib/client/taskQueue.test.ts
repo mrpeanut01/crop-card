@@ -62,6 +62,20 @@ describe('task actions in the offline queue', () => {
     expect((await listQueuedTaskActions()).map((r) => r.taskId)).toEqual(['t_a']);
   });
 
+  it('queues a care close under the client id its online try already sent', async () => {
+    sessionStorage.setItem(ACTIVE_KEY, 'owner_a');
+    const id = await queueTaskAction(
+      't_care',
+      'complete',
+      undefined,
+      { healthEvent: { subjectType: 'group', subjectId: 'g1', kind: 'deworm' } },
+      'online-try-1234'
+    );
+    expect(id).toBe('online-try-1234');
+    const [row] = await db().pendingSprayRecords.toArray();
+    expect(row.id).toBe('online-try-1234');
+  });
+
   it('stamps when the owner tapped, and drains to the close endpoint', async () => {
     sessionStorage.setItem(ACTIVE_KEY, 'owner_a');
     await queueTaskAction('t_a', 'abort', 'rain');

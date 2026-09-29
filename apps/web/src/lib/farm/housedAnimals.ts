@@ -2,12 +2,13 @@
  * Who lives on an Area, for the live Area Card and the farm map's Area
  * sheet (Phase 32B, B-26). Pure and client-safe: the server builds
  * `AreaHousing` from the tenant-scoped animal repos, and this module turns
- * it into card facts and a section. Animals stay out of the offline
- * snapshot until 32D, so the offline Area Card does not show them.
+ * it into card facts and a section. The offline Area Card builds the same
+ * `AreaHousing` from the card snapshot (`lib/cards/build/areaAnimals.ts`).
  */
 
 import type { AnimalPurpose } from '$lib/animals/model';
 import { formatCount } from './coopCapacity';
+import { pluralFrom, withToxicPlants, type ToxicCrop } from '$lib/animals/toxicAdjacency';
 import type { CapacityState } from '$lib/animals/counts';
 import {
   mergeProvenance,
@@ -50,6 +51,11 @@ export interface AreaHousing {
   capacityProvenance?: 'data' | 'manual';
   /** Species living here, most heads first; prefills the coop form. */
   speciesIds?: string[];
+  /** Crops in the ground here that the plugin library says can harm some
+   *  animal (Phase 32D, D5). Advisory only. */
+  toxicPlants?: ToxicCrop[];
+  /** Plural tile labels of the species living here, for the callout. */
+  speciesPlural?: Record<string, string>;
 }
 
 export type HousingByArea = Record<string, AreaHousing>;
@@ -144,10 +150,16 @@ export function withHousing(
         : { source: 'manual', detail: 'capacity typed by you' }
     );
   }
-  return {
+  const housed: CardModel = {
     ...card,
     facts: [...card.facts, ...facts],
     sections: section ? [section, ...card.sections] : card.sections,
     provenance: mergeProvenance([...card.provenance, ...added])
   };
+  return withToxicPlants(
+    housed,
+    h?.toxicPlants,
+    h?.speciesIds ?? [],
+    pluralFrom(h?.speciesPlural ?? {})
+  );
 }

@@ -56,6 +56,12 @@ export interface StockEntryDraft {
     npk?: { n: number; p: number; k: number };
     productClass?: 'synthetic' | 'organic' | 'biocontrol';
   };
+  /** Medicine label scan only (Phase 32D): the NADA or ANADA number read
+   *  off the label, tagged with the draft's source. */
+  nada?: { kind: 'NADA' | 'ANADA'; number: string };
+  /** A library product whose approval number matches exactly. Shown for
+   *  the owner to confirm; never saved as the link by itself (D0-15). */
+  suggestedHealthPlugin?: { pluginId: string; displayName: string };
   /** Method-of-entry tag — drives the per-field Provenance render on the
    *  confirm step. Always `manual` for the manual method; varies by
    *  field for label/barcode/search methods. The whole-draft tag is the
@@ -189,5 +195,25 @@ export function draftFromScanResult(
     draft.metadata = { seedMeta: scan.seedMeta };
   }
 
+  return draft;
+}
+
+/** Phase 32D: a draft from the medicine label scan. Only the name, the
+ *  NADA number and a library suggestion to confirm; never a library link
+ *  and never withdrawal data (D0-15). */
+export function draftFromMedScan(scan: {
+  displayName?: string;
+  nada?: { kind: 'NADA' | 'ANADA'; number: string };
+  suggestedHealthPlugin?: { pluginId: string; displayName: string } | null;
+}): StockEntryDraft {
+  const draft: StockEntryDraft = { source: 'ai' };
+  if (scan.displayName) draft.displayName = scan.displayName;
+  if (scan.nada) draft.nada = { kind: scan.nada.kind, number: scan.nada.number };
+  if (scan.suggestedHealthPlugin) {
+    draft.suggestedHealthPlugin = {
+      pluginId: scan.suggestedHealthPlugin.pluginId,
+      displayName: scan.suggestedHealthPlugin.displayName
+    };
+  }
   return draft;
 }

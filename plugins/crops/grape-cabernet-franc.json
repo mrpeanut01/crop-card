@@ -19,5 +19,17 @@
     ],
     "beeAttractive": false
   },
-  "archetype": "perennial-vine-quality"
+  "archetype": "perennial-vine-quality",
+  "animalToxicity": [
+    {
+      "speciesIds": [
+        "dog"
+      ],
+      "parts": [
+        "fruit"
+      ],
+      "severity": "toxic",
+      "note": "Grapes and raisins can cause kidney failure in dogs."
+    }
+  ]
 }

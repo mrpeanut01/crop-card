@@ -9,18 +9,28 @@
   import PhotoHelp from '$lib/components/cards/PhotoHelp.svelte';
   import { careGuideCardsFor, photoHelpTargets } from '$lib/journal/targets';
   import { OfflineCards } from '$lib/components/cards/offlineCards.svelte';
-  import { buildCard } from '$lib/cards/build';
+  import { barnPinKeys, buildCard } from '$lib/cards/build';
   import { CARD_KIND_LABEL, isCardKind, type CardPrintLayout } from '$lib/cards/model';
   import { FULL_PAGE_NOTE, PRINT_HELP, PRINT_LAYOUTS, needsFullPage } from '$lib/cards/print';
   import { installNudgeWanted } from '$lib/client/offlineStorage';
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { cardViewParams, snapshotOlderThan, withoutPrintParam } from '$lib/cards/viewParams';
   import { formatInstant } from '$lib/prefs';
+  import FlockQuickActions from '$lib/components/animals/FlockQuickActions.svelte';
 
   const cards = new OfflineCards();
   const FRESH_PRINT_WAIT_MS = 5000;
 
   let now = $state(Date.now());
+  let unsynced = $state<ReadonlySet<string>>(new Set());
+
+  async function refreshUnsynced() {
+    const { loadUnsyncedSubjects } = await import('$lib/client/animalHold');
+    unsynced = await loadUnsyncedSubjects(cards.row?.bundle ?? null);
+  }
+  $effect(() => {
+    if (cards.row) void refreshUnsynced();
+  });
   let layout = $state<CardPrintLayout>('index-4x6');
   let showNudge = $state(false);
 
@@ -32,7 +42,12 @@
   const view = $derived(cardViewParams(page.url.searchParams, kind));
   const card = $derived.by(() => {
     if (!snapshot || !isCardKind(kind)) return null;
-    const built = buildCard(snapshot, key, { prefs, now, bedMapOnMs: view.bedMapOnMs });
+    const built = buildCard(snapshot, key, {
+      prefs,
+      now,
+      bedMapOnMs: view.bedMapOnMs,
+      unsyncedAnimalSubjects: unsynced
+    });
     return built && built.kind === kind ? built : null;
   });
 
@@ -51,6 +66,19 @@
     void tick().then(print);
   });
   const pinned = $derived(cards.isPinned(key));
+  const barnKeys = $derived(
+    snapshot && card?.kind === 'flock' ? barnPinKeys(snapshot, key.slice(key.indexOf('_') + 1)) : []
+  );
+  const barnPinned = $derived(cards.allPinned(barnKeys));
+
+  async function toggleBarn() {
+    if (barnPinned) {
+      await cards.unpinAll(barnKeys);
+      return;
+    }
+    await cards.pinAll(barnKeys);
+    showNudge = installNudgeWanted();
+  }
   const careCards = $derived(
     snapshot && card ? careGuideCardsFor(snapshot, key, { prefs, now }) : []
   );
@@ -108,6 +136,11 @@
       <button type="button" class="btn ghost" aria-pressed={pinned} onclick={togglePin}>
         {pinned ? 'Pinned' : 'Pin'}
       </button>
+      {#if barnKeys.length > 1}
+        <button type="button" class="btn ghost" aria-pressed={barnPinned} onclick={toggleBarn}>
+          {barnPinned ? 'Pinned for the barn' : 'Pin for the barn'}
+        </button>
+      {/if}
       <button type="button" class="btn primary" onclick={print}>Print this card</button>
     </div>
     {#if cards.storageKept === false}
@@ -135,6 +168,17 @@
       </fieldset>
     {/if}
     <p class="hint">{PRINT_HELP}</p>
+    {#if card.kind === 'flock' && snapshot}
+      <FlockQuickActions
+        {snapshot}
+        groupId={key.slice(key.indexOf('_') + 1)}
+        {role}
+        {prefs}
+        {now}
+        {unsynced}
+        onChange={refreshUnsynced}
+      />
+    {/if}
     <CareGuideList cards={careCards} {prefs} {now} />
     {#key key}
       <PhotoHelp targets={helpTargets} {role} {prefs} sprayTerms={snapshot?.sprayTerms ?? []} />

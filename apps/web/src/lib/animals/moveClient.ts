@@ -9,6 +9,7 @@ import { errorFromResponse } from './display';
 import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 import { grazingTimeHref } from './holdCopy';
+import { noteHoldWrite } from './recordClient';
 
 export type MoveOutcome =
   | { status: 'saved'; move: MoveResponse; warnings?: string[] }
@@ -35,9 +36,12 @@ function recordId(): string {
     : `pending_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
+/** A queued move replays as a live move at its tapped-at time (D1-06), so
+ *  a grazing hold found on replay parks it for "Keep animals here" instead
+ *  of saving it as a move that already happened. */
 async function queue(payload: AnimalMoveInput, id: string): Promise<MoveOutcome> {
   const { enqueueRecord } = await import('$lib/client/syncQueue');
-  await enqueueRecord('animal-move', payload, id);
+  await enqueueRecord('animal-move', { ...payload, queuedLive: true }, id);
   return { status: 'queued' };
 }
 
@@ -91,6 +95,7 @@ export async function submitMove(
       : { status: 'error', message };
   }
   const body = (await res.json()) as { move: MoveResponse; warnings?: string[] };
+  await noteHoldWrite('animal-move', payload);
   return body.warnings?.length
     ? { status: 'saved', move: body.move, warnings: body.warnings }
     : { status: 'saved', move: body.move };

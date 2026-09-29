@@ -178,6 +178,10 @@ test.describe('AI limit', () => {
     await page.goto('/settings/ai');
     await expect(page.getByTestId('ai-budget')).toBeVisible();
     await expect(page.getByTestId('ai-upsell')).toHaveCount(0);
+    const note = page.getByTestId('ai-cap-planning-note');
+    await expect(note).toContainText('Planning a season with AI is counted apart');
+    await expect(note).toContainText('A lower limit caps everything together, planning included');
+    await expect(note).not.toContainText('If you save a limit here');
   });
 });
 

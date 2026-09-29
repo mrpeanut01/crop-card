@@ -8,7 +8,12 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
-import { IncompatibleUnitError, recordMovement, type MovementReason } from '$lib/db/stock';
+import {
+  IncompatibleUnitError,
+  LotStatusError,
+  recordMovement,
+  type MovementReason
+} from '$lib/db/stock';
 import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
 import { requireOwner } from '$lib/server/auth';
 
@@ -38,6 +43,9 @@ export const POST: RequestHandler = async (event) => {
     const movement = recordMovement({ ...parsed.data, performedById: user.id });
     return json({ movement }, { status: 201 });
   } catch (e) {
+    if (e instanceof LotStatusError) {
+      return json({ error: e.message }, { status: 409 });
+    }
     if (e instanceof IncompatibleUnitError) {
       return json({ error: e.message }, { status: 400 });
     }

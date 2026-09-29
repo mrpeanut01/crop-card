@@ -1,4 +1,4 @@
-import { DEFAULT_PREFS, formatQuantity, UNITS, type Prefs } from '$lib/prefs';
+import { DEFAULT_PREFS, formatArea, formatQuantity, UNITS, type Prefs } from '$lib/prefs';
 import { numberToLocaleString } from '$lib/intlCache';
 import type { InputsPlanApplication } from './inputsPlan';
 
@@ -55,7 +55,7 @@ export function formatApplicationRateLine(
 ): string | null {
   if (app.rateAmount == null || !app.rateUnit) return null;
   const rate = formatInputAmount(app.rateAmount, app.rateUnit, app.productCategory, prefs, true);
-  const area = formatQuantity(app.acres, 'area', prefs);
+  const area = formatArea(app.acres, prefs);
   const total = formatInputAmount(app.totalAmount ?? 0, app.rateUnit, app.productCategory, prefs);
   return `${rate} × ${area} = ${total}`;
 }

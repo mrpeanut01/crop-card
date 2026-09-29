@@ -2,10 +2,9 @@
  * Sprint 6 / Phase 27A (#257) — Unified Inventory type contract.
  *
  * Source-of-truth: docs/design/almanac/INVENTORY_UNIFICATION.md (data
- * model section). The five-type taxonomy (pesticide · fertility · seed ·
- * crop · sprayer) collapses three drifted shells (/stock,
- * /settings/plugins, /settings/sprayers) into one canonical List → Detail
- * → Edit/Add chrome per Invariant 8.
+ * model section). The four-type taxonomy (pesticide · fertility · seed ·
+ * crop) shares one List → Detail → Edit/Add chrome per Invariant 8.
+ * Sprayers are equipment and live under /equipment (#474).
  *
  * This module is types only — no runtime imports, no DB access. Phase
  * 27B (list screens) and 27C (detail screens) consume these as the
@@ -15,13 +14,13 @@
  *
  * Naming convention: every shared shape prefixed `Inv` (`InvField`,
  * `InvSection`, `InvKVP`, `InvTypeChip`) for unambiguous grep. Per-type
- * shapes use `Pesticide` / `Fertility` / `Seed` / `CropPlugin` /
- * `Sprayer` `Attrs` suffix to mirror the design doc.
+ * shapes use `Pesticide` / `Fertility` / `Seed` / `CropPlugin`
+ * `Attrs` suffix to mirror the design doc.
  */
 
 import type { Archetype } from '$lib/plugins/schemas';
 
-export type InventoryType = 'pesticide' | 'fertility' | 'seed' | 'crop' | 'sprayer';
+export type InventoryType = 'pesticide' | 'fertility' | 'seed' | 'crop';
 
 export type LotUnit = 'fl oz' | 'gal' | 'lb' | 'oz' | 'g' | 'yd³' | 'plants';
 
@@ -41,7 +40,7 @@ export interface InventoryItemBase {
 }
 
 /** Per-lot row. Only emitted for the three lot-bearing types
- *  (pesticide / fertility / seed). Crop catalog rows + sprayer rows
+ *  (pesticide / fertility / seed). Crop catalog rows
  *  carry no lot. */
 export interface InventoryLot {
   id: string;
@@ -119,46 +118,32 @@ export interface CropPluginAttrs {
   source: 'core' | 'marketplace' | 'draft';
 }
 
-export interface SprayerAttrs {
-  tankGal: number;
-  nozzleType: string;
-  nozzleCount: number;
-  boomWidthFt?: number;
-  lastCalibratedAt: number;
-  measuredGpa: number;
-  lastProductCycled?: string;
-  rupCleared: boolean;
-}
-
-/** Discriminated union for the five inventory types — gives Phase 27B/C
+/** Discriminated union for the four inventory types — gives Phase 27B/C
  *  a single source-of-truth for type-aware switch arms. */
 export type InventoryItem =
   | (InventoryItemBase & { type: 'pesticide'; attrs: PesticideAttrs })
   | (InventoryItemBase & { type: 'fertility'; attrs: FertilityAttrs })
   | (InventoryItemBase & { type: 'seed'; attrs: SeedAttrs })
-  | (InventoryItemBase & { type: 'crop'; attrs: CropPluginAttrs })
-  | (InventoryItemBase & { type: 'sprayer'; attrs: SprayerAttrs });
+  | (InventoryItemBase & { type: 'crop'; attrs: CropPluginAttrs });
 
 /** Chip taxonomy for InvField. Drives the small badge that signals a
  *  field's authoring source / lock state. */
 export type FieldChipKind = 'required' | 'from-plugin' | 'kernel-locked';
 
 /** Phase 27 design surface: every inventory-bearing surface routes
- *  through this list. Useful for the 5-chip type-swap row. */
+ *  through this list. Drives the type-swap chip row. */
 export const INVENTORY_TYPES: readonly InventoryType[] = [
   'pesticide',
   'fertility',
   'seed',
-  'crop',
-  'sprayer'
+  'crop'
 ] as const;
 
 export const INVENTORY_TYPE_LABELS: Record<InventoryType, string> = {
   pesticide: 'Pesticides',
   fertility: 'Fertility',
   seed: 'Seeds',
-  crop: 'Crops',
-  sprayer: 'Sprayers'
+  crop: 'Crops'
 };
 
 export const STOCK_CATEGORY_TO_INVENTORY_TYPE: Record<string, InventoryType> = {

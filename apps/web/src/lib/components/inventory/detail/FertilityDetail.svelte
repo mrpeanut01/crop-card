@@ -13,6 +13,7 @@
    */
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
+  import LotQuantities from '../LotQuantities.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatRateText, formatStockQuantity } from '$lib/stock/units';
   import type { FertilityDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
@@ -44,6 +45,12 @@
 <div class="detail-grid">
   <div class="col">
     <InvSection title="Guaranteed analysis" kicker="Label">
+      {#if !plugin}
+        <p class="empty" data-testid="no-product-link">
+          No product label linked, so the analysis below is unknown and nutrient plans cannot use
+          it. Link the product with Edit.
+        </p>
+      {/if}
       <div class="npk-bars">
         <div class="npk-row">
           <span class="npk-label">N</span>
@@ -95,9 +102,8 @@
   </div>
 
   <div class="col">
-    <InvSection title="On hand">
-      <InvKVP label="Total" value={stockQty(lots.reduce((s, l) => s + l.balance, 0))} />
-      <InvKVP label="Lots" value={lots.length} />
+    <InvSection title="Quantity" kicker="On hand, ordered, planned">
+      <LotQuantities itemId={item.id} unit={item.defaultUnit} {lots} />
     </InvSection>
 
     <InvSection title="Storage & reorder">
@@ -137,6 +143,12 @@
     gap: 12px;
   }
   .edit-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    min-width: 48px;
+    box-sizing: border-box;
     background: var(--color-forest, #1f5e3a);
     color: var(--color-cream, #fff8e1);
     padding: 8px 14px;

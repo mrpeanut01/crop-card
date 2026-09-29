@@ -49,6 +49,8 @@
       housing={data.housing}
       grazing={data.grazing}
       petsLayout={data.petsLayout}
+      coopSpecies={data.coopSpecies}
+      farmAnimals={data.farmAnimals}
       canEdit
       isFirstRun={data.isFirstRun}
       initialCenter={data.center}

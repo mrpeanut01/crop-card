@@ -1,12 +1,15 @@
 <script lang="ts">
   import { X } from 'lucide-svelte';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { areaFromDimensions, blockSizePatch } from '$lib/plan/editBlockSize';
 
   interface BlockSeed {
     id: string;
     name: string;
     blockLabel?: string;
     acres?: number;
+    widthFt?: number;
+    lengthFt?: number;
   }
 
   interface Props {
@@ -15,13 +18,25 @@
     legacyEditorHref: string;
     onClose: () => void;
     onSaved: () => void;
+    /** #475 — the planning wizard edits a block's size by its sketch
+     *  dimensions too, so a bed can be resized without leaving the plan. */
+    showDimensions?: boolean;
   }
 
-  const { open, block, legacyEditorHref, onClose, onSaved }: Props = $props();
+  const {
+    open,
+    block,
+    legacyEditorHref,
+    onClose,
+    onSaved,
+    showDimensions = false
+  }: Props = $props();
 
   let name = $state('');
   let blockLabel = $state('');
   let acres = $state<number | null>(null);
+  let widthFt = $state<number | null>(null);
+  let lengthFt = $state<number | null>(null);
   let submitting = $state(false);
   let saveError = $state<string | null>(null);
   let modalEl = $state<HTMLDivElement | null>(null);
@@ -31,6 +46,8 @@
       name = block.name;
       blockLabel = block.blockLabel ?? '';
       acres = block.acres ?? null;
+      widthFt = block.widthFt ?? null;
+      lengthFt = block.lengthFt ?? null;
       saveError = null;
     }
   });
@@ -54,6 +71,22 @@
     );
   }
 
+  const dimsArea = $derived(areaFromDimensions({ showDimensions, widthFt, lengthFt }));
+
+  function patchBody(): Record<string, unknown> {
+    return {
+      name: name.trim(),
+      blockLabel: blockLabel.trim() || null,
+      ...blockSizePatch({
+        showDimensions,
+        before: block ?? {},
+        acres,
+        widthFt,
+        lengthFt
+      })
+    };
+  }
+
   async function handleSubmit(e: SubmitEvent): Promise<void> {
     e.preventDefault();
     if (!block) return;
@@ -67,11 +100,7 @@
       const res = await fetch(`/api/blocks/${block.id}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          blockLabel: blockLabel.trim() || null,
-          acres: acres != null && acres > 0 ? acres : null
-        })
+        body: JSON.stringify(patchBody())
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
@@ -155,9 +184,35 @@
             maxlength="60"
           />
         </label>
+        {#if showDimensions}
+          <div class="dims">
+            <label class="field">
+              <span class="label">Width</span>
+              <UnitInput quantity="distance" min={0} bind:value={widthFt} placeholder="Optional" />
+            </label>
+            <label class="field">
+              <span class="label">Length</span>
+              <UnitInput quantity="distance" min={0} bind:value={lengthFt} placeholder="Optional" />
+            </label>
+          </div>
+          <p class="hint">Width and length set the area. The planner sizes beds from them.</p>
+        {/if}
         <label class="field">
           <span class="label">Area</span>
-          <UnitInput quantity="area" min={0} bind:value={acres} placeholder="Optional" />
+          {#if dimsArea !== null}
+            <UnitInput quantity="area" value={dimsArea} disabled data-testid="edit-block-area" />
+            <span class="hint">
+              Worked out from the width and length. Clear them to type an area instead.
+            </span>
+          {:else}
+            <UnitInput
+              quantity="area"
+              min={0}
+              bind:value={acres}
+              placeholder="Optional"
+              data-testid="edit-block-area"
+            />
+          {/if}
           <span class="hint">
             <a href={legacyEditorHref}>Edit geometry on map →</a>
           </span>
@@ -250,6 +305,19 @@
     outline: 2px solid var(--color-forest);
     outline-offset: 1px;
   }
+  .dims {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+  }
+  .field {
+    min-width: 0;
+  }
+  .field :global(.unit-input > input) {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
   .hint {
     font-size: 0.75rem;
     color: var(--color-ink-muted);
@@ -275,6 +343,7 @@
   }
   .btn-primary,
   .btn-secondary {
+    min-height: 48px;
     padding: 8px 16px;
     border-radius: 6px;
     font: inherit;

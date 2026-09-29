@@ -350,7 +350,9 @@ function seedCarryForwardDraft(
       payload: {
         step: 'seeds',
         selectedSeeds: [],
+        fillToBedSeeds: [],
         selectedBlockIds,
+        inputOverrides: {},
         chatDraft: '',
         resumeNote: resumeNote.slice(0, 280)
       },

@@ -113,6 +113,38 @@ export interface StockDisplayOpts {
   digits?: number;
   /** Pesticide stock is shown in its label unit, metric alongside. */
   labelUnit?: boolean;
+  /** Stock category. Seed counts ('count' or 'seeds') read as seeds. */
+  category?: string | null;
+}
+
+/** Units offered for seed (#473): a seed count first, then weights for bulk
+ *  seed bought by the ounce or pound. No weight-to-count conversion. */
+export const SEED_UNITS: ReadonlyArray<StockUnit> = ['seeds', 'oz', 'lb', 'g'];
+
+/** Seeds are counted in 'seeds'; older seed rows use 'count' for the same thing. */
+export function isSeedCountUnit(unit: string, category: string | null | undefined): boolean {
+  return category === 'seed' && (unit === 'seeds' || unit === 'count');
+}
+
+const UNIT_LABELS: Record<StockUnit, string> = {
+  'fl-oz': 'fl oz',
+  pt: 'pt',
+  qt: 'qt',
+  gal: 'gal',
+  oz: 'oz',
+  lb: 'lb',
+  kg: 'kg',
+  g: 'g',
+  count: 'Count',
+  seeds: 'Seeds',
+  'bag-50lb': '50 lb bag',
+  'bag-25kg': '25 kg bag'
+};
+
+/** Human label for a unit picker. For seed, 'count' reads as Seeds too. */
+export function stockUnitLabel(unit: StockUnit, category?: string | null): string {
+  if (isSeedCountUnit(unit, category)) return 'Seeds';
+  return UNIT_LABELS[unit] ?? unit;
 }
 
 /** A stored stock quantity for display. US users see it as stored
@@ -126,6 +158,9 @@ export function formatStockQuantity(
   opts: StockDisplayOpts = {}
 ): string {
   if (amount === null || amount === undefined || !Number.isFinite(amount)) return '—';
+  if (isSeedCountUnit(unit, opts.category)) {
+    return `${num(amount, 0)} ${Math.abs(amount) === 1 ? 'seed' : 'seeds'}`;
+  }
   const us = `${opts.digits === undefined ? amount.toFixed(1) : num(amount, opts.digits)} ${unit}`;
   if (prefs.units !== 'metric') return us;
   const metric = (ALL_STOCK_UNITS as ReadonlyArray<string>).includes(unit)

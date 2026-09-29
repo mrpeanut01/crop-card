@@ -13,6 +13,7 @@
    */
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
+  import LotQuantities from '../LotQuantities.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatStockQuantity } from '$lib/stock/units';
   import type { SeedDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
@@ -21,7 +22,7 @@
   const { item, lots, movements, plugin }: Props = $props();
 
   const stockQty = (v: number, digits?: number) =>
-    formatStockQuantity(v, item.defaultUnit, currentPrefs(), { digits });
+    formatStockQuantity(v, item.defaultUnit, currentPrefs(), { digits, category: item.category });
 </script>
 
 <header class="detail-header">
@@ -39,14 +40,17 @@
 
 <div class="detail-grid">
   <div class="col">
-    <InvSection title="Variety provenance" kicker="Plugin-linked">
+    <InvSection title="Crop category" kicker="Linked">
       {#if plugin}
-        <InvKVP label="Plugin id" value={plugin.pluginId} tone="mono" />
+        <InvKVP label="Category" value={plugin.displayName} />
         <InvKVP label="Crop family" value={plugin.cropFamily ?? '—'} />
         <InvKVP label="Archetype" value={plugin.archetype ?? '—'} tone="locked" />
+        <p class="cta-row">
+          <a href="/inventory/crop/{encodeURIComponent(plugin.pluginId)}">Open the crop →</a>
+        </p>
       {:else}
         <p class="empty">
-          No plugin bound — variety provenance unknown. Link via Edit so the planner can use it.
+          No crop category linked yet. Pick one with Edit so the planner can use this seed.
         </p>
       {/if}
     </InvSection>
@@ -55,7 +59,7 @@
       <InvKVP label="Notes" value={item.notes ?? '—'} />
     </InvSection>
 
-    <InvSection title="Planting parameters" kicker="Plugin-bound">
+    <InvSection title="Planting parameters" kicker="From the crop category">
       {#if plugin?.daysToMaturity}
         <InvKVP
           label="Days to maturity"
@@ -66,13 +70,8 @@
   </div>
 
   <div class="col">
-    <InvSection title="On hand">
-      {#if lots.length === 0}
-        <p class="empty">No lots received yet — receive a lot via /stock/add to plant.</p>
-      {:else}
-        <InvKVP label="Total" value={stockQty(lots.reduce((s, l) => s + l.balance, 0))} />
-        <InvKVP label="Lots" value={lots.length} />
-      {/if}
+    <InvSection title="Quantity" kicker="On hand, ordered, planned">
+      <LotQuantities itemId={item.id} unit={item.defaultUnit} category={item.category} {lots} />
     </InvSection>
 
     <InvSection title="Saving / sowing history" kicker="Last 8">
@@ -110,6 +109,12 @@
     gap: 12px;
   }
   .edit-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    min-width: 48px;
+    box-sizing: border-box;
     background: var(--color-forest, #1f5e3a);
     color: var(--color-cream, #fff8e1);
     padding: 8px 14px;
@@ -152,6 +157,16 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+  }
+  .cta-row {
+    margin: 6px 0 0;
+  }
+  .cta-row a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--color-forest, #1f5e3a);
+    font-weight: 600;
   }
   .empty {
     color: var(--color-ink-muted, #6a6f63);

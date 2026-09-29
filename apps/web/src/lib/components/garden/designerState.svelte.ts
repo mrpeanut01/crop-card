@@ -33,6 +33,7 @@ import {
   shortDate,
   utcDayStart
 } from '$lib/garden/occupancy';
+import { displayFootprints } from '$lib/garden/displayPack';
 import { footprintForCount, plantCount, resolveSpacing } from '$lib/garden/plantCount';
 import { bedHistory, companionHints, rotationWarnings } from '$lib/garden/rotation';
 import { proposeSuccession } from '$lib/garden/succession';
@@ -237,6 +238,11 @@ export class DesignerState {
     })
   );
   intervalById = $derived.by(() => new Map(this.intervals.map((i) => [i.cropId, i])));
+  /** Where scheduled plantings with no spot yet are drawn (#481). Display
+   *  only; nothing is saved until the owner drags one or taps Place. */
+  displayFootprints = $derived.by(() =>
+    displayFootprints(this.beds, this.design.plantings, this.intervals, this.design.crops)
+  );
   range = $derived.by(() =>
     scrubRange(this.design.seasonYear, this.intervals, this.nowMs, this.design.frost)
   );
@@ -1473,7 +1479,8 @@ export class DesignerState {
   async movePlantingTo(
     cropId: string,
     blockId: string,
-    at: { xIn: number; yIn: number }
+    at: { xIn: number; yIn: number },
+    sizeIn?: { w_in: number; l_in: number }
   ): Promise<void> {
     const p = this.design.plantings.find((q) => q.cropId === cropId);
     const bed = this.bed(blockId);
@@ -1487,7 +1494,7 @@ export class DesignerState {
     }
     const size = p.footprint
       ? { w_in: p.footprint.w_in, l_in: p.footprint.l_in }
-      : { w_in: bed.widthFt * 12, l_in: DEFAULT_CROP_LENGTH_IN };
+      : (sizeIn ?? { w_in: bed.widthFt * 12, l_in: DEFAULT_CROP_LENGTH_IN });
     let fp: Footprint | null = clampFootprint(
       {
         x_in: Math.max(0, snap(at.xIn - size.w_in / 2, FOOTPRINT_SNAP_IN)),

@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { CardBedMap } from '$lib/cards/model';
+  import { bedMapLabels } from '$lib/cards/bedMapLabels';
+  import { ALL_GLYPHS } from '$lib/garden/familyGlyph';
 
   interface Props {
     map: CardBedMap;
@@ -13,9 +15,19 @@
   const pad = $derived(Math.max(map.widthFt, map.lengthFt) * 0.04);
   const font = $derived(Math.max(map.widthFt, map.lengthFt) / 22);
   const scaleFt = $derived(map.widthFt >= 40 ? 10 : map.widthFt >= 12 ? 5 : 1);
+  const glyphD = new Map(ALL_GLYPHS.map((g) => [g.key, g.d]));
+  const glyphLabel = new Map(ALL_GLYPHS.map((g) => [g.key, g.label]));
+  const marks = $derived(bedMapLabels(map, font * 0.8));
+  const hasPlantings = $derived(map.beds.some((b) => (b.plantings ?? []).length > 0));
+  const glyphsUsed = $derived(
+    [...new Set(map.beds.flatMap((b) => (b.plantings ?? []).map((p) => p.glyph)))].sort()
+  );
   const label = $derived(
     `Bed map, ${map.widthFt} by ${map.lengthFt} feet. ` +
-      map.beds.map((b) => `${b.name}: ${b.crops.length ? b.crops.join(', ') : 'open'}`).join('. ')
+      map.beds.map((b) => `${b.name}: ${b.crops.length ? b.crops.join(', ') : 'open'}`).join('. ') +
+      (marks.legend.length
+        ? `. Numbers: ${marks.legend.map((r) => `${r.n}, ${r.text}`).join('; ')}.`
+        : '')
   );
 </script>
 
@@ -66,12 +78,63 @@
         stroke="#000"
         stroke-width={font / 6}
       />
+      {#each b.plantings ?? [] as p, j (j)}
+        {@const m = marks.labels[i]?.[j]}
+        <g
+          class="planting"
+          class:later={p.later}
+          class:unplaced={!p.placed}
+          data-testid="bedmap-planting"
+          data-glyph={p.glyph}
+        >
+          <rect
+            x={p.x}
+            y={p.y}
+            width={p.w}
+            height={p.l}
+            fill={p.later ? 'none' : '#fff'}
+            stroke="#000"
+            stroke-width={font / 9}
+            stroke-dasharray={p.later || !p.placed ? `${font / 3} ${font / 4}` : undefined}
+          />
+          {#if m && m.iconFt > 0}
+            <path
+              d={glyphD.get(p.glyph)}
+              transform="translate({p.x + font * 0.12} {p.y + font * 0.12}) scale({m.iconFt / 10})"
+              fill="none"
+              stroke="#000"
+              stroke-width={font / 9}
+              vector-effect="non-scaling-stroke"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          {/if}
+          {#if m?.text}
+            <text
+              x={p.x + (m.iconFt > 0 ? m.iconFt + font * 0.2 : font * 0.15)}
+              y={p.y + Math.min(p.l / 2, font * 0.9)}
+              font-size={font * 0.8}
+              dominant-baseline="middle"
+              class="pname">{m.text}</text
+            >
+          {:else if m?.n}
+            <text
+              x={p.x + p.w / 2}
+              y={p.y + p.l / 2}
+              font-size={Math.min(font * 0.8, Math.max(p.l, 0.3) * 0.9)}
+              text-anchor="middle"
+              dominant-baseline="middle"
+              class="pnum">{m.n}</text
+            >
+          {/if}
+        </g>
+      {/each}
       <text
         x={b.x + b.w / 2}
-        y={b.y + b.l / 2}
+        y={hasPlantings ? b.y + b.l - font * 0.3 : b.y + b.l / 2}
         font-size={font}
         text-anchor="middle"
-        dominant-baseline="middle"
+        dominant-baseline={hasPlantings ? 'auto' : 'middle'}
         class="name">{b.name}</text
       >
     {/each}
@@ -83,6 +146,35 @@
       <text x={map.widthFt - font} y={font} font-size={font} font-weight="700">N ↑</text>
     {/if}
   </svg>
+  {#if marks.legend.length || glyphsUsed.length}
+    <div class="legend" data-testid="bedmap-legend">
+      {#if marks.legend.length}
+        <ol>
+          {#each marks.legend as row (row.n)}
+            <li value={row.n}>{row.text}</li>
+          {/each}
+        </ol>
+      {/if}
+      {#if glyphsUsed.length}
+        <ul class="icons">
+          {#each glyphsUsed as g (g)}
+            <li>
+              <svg viewBox="0 0 10 10" aria-hidden="true" class="icon"
+                ><path
+                  d={glyphD.get(g)}
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="0.9"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg
+              >{glyphLabel.get(g)}
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </div>
+  {/if}
   {#if print}
     <figcaption>
       <ul>
@@ -118,6 +210,44 @@
   .print svg {
     max-height: 1.6in;
     border-color: #000;
+  }
+  .pname,
+  .pnum {
+    paint-order: stroke;
+    stroke: #fff;
+    stroke-width: 0.18;
+    fill: #000;
+    font-weight: 600;
+  }
+  .legend {
+    font-size: 12px;
+    color: var(--color-ink, #000);
+  }
+  .legend ol {
+    margin: 0 0 4px;
+    padding-left: 1.6em;
+  }
+  .legend .icons {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+  }
+  .legend .icons li {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .legend .icon {
+    width: 14px;
+    height: 14px;
+    flex: none;
+  }
+  .print .legend {
+    font-size: 8.5pt;
+    color: #000;
   }
   figcaption ul {
     margin: 0;

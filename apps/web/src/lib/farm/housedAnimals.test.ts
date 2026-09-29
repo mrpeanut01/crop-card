@@ -86,6 +86,7 @@ describe('housed animals on the Area Card', () => {
   it('reports capacity and flags going over it without blocking anything', () => {
     expect(capacityLabel({ capacity: 24, count: 20, over: false })).toBe('20 of 24');
     expect(capacityLabel({ capacity: 24, count: 26, over: true })).toBe('Over capacity (26 of 24)');
+    expect(capacityLabel({ capacity: 67565, count: 0, over: false })).toBe('0 of 67,565');
     expect(
       housingFacts(housing({ total: 26, capacity: { capacity: 24, count: 26, over: true } }))
     ).toEqual([
@@ -105,6 +106,22 @@ describe('housed animals on the Area Card', () => {
       { label: 'Capacity', value: '0 of 12', provenance: 'manual' }
     ]);
     expect(housingSection(empty)).toBeNull();
+  });
+
+  it('#477 a kept capacity suggestion stays tagged data, not typed by you', () => {
+    const kept = housing({
+      total: 6,
+      capacity: { capacity: 11, count: 6, over: false },
+      capacityProvenance: 'data'
+    });
+    expect(housingFacts(kept).find((f) => f.label === 'Capacity')?.provenance).toBe('data');
+    const out = withHousing(card, kept);
+    expect(JSON.stringify(out.provenance)).not.toMatch(/typed by you/);
+    const typed = withHousing(
+      card,
+      housing({ capacity: { capacity: 11, count: 6, over: false }, capacityProvenance: 'manual' })
+    );
+    expect(JSON.stringify(typed.provenance)).toMatch(/capacity typed by you/);
   });
 
   it('caps the list and says how many more', () => {

@@ -10,7 +10,7 @@ test('settings index counts the owner apart from helpers and lists Equipment', a
   const helpers = page.getByRole('link', { name: /Helpers & invites/ });
   await expect(helpers).toContainText('1 owner');
   await expect(helpers).toContainText(/\d+ helpers? · \d+ pending invites?/);
-  await expect(page.getByRole('link', { name: /^Equipment/ })).toHaveAttribute(
+  await expect(page.getByRole('main').getByRole('link', { name: /^Equipment/ })).toHaveAttribute(
     'href',
     '/settings/equipment'
   );

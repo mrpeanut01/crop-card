@@ -16,7 +16,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, asc, count, eq, gte, isNull, lte, or } from 'drizzle-orm';
+import { and, asc, count, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
 import { db } from './client';
 import { equipment, equipmentState, tasks } from './schema';
 import { tenantValues, withTenant } from './tenant';
@@ -127,6 +127,24 @@ export function listTasks(filters: ListFilters = {}): Task[] {
   q = q.orderBy(asc(tasks.scheduledFor));
   if (filters.limit) q = q.limit(filters.limit);
   return q.all().map(rowToTask);
+}
+
+/** Which of these template keys already have a task on the farm, whatever
+ *  its date or status, so a scheduled suggestion is not offered again. */
+export function existingTemplateKeys(keys: readonly string[]): Set<string> {
+  const out = new Set<string>();
+  const unique = [...new Set(keys)];
+  for (let i = 0; i < unique.length; i += 500) {
+    const chunk = unique.slice(i, i + 500);
+    for (const r of db
+      .select({ key: tasks.pluginTemplateKey })
+      .from(tasks)
+      .where(withTenant(tasks, inArray(tasks.pluginTemplateKey, chunk)))
+      .all()) {
+      if (r.key) out.add(r.key);
+    }
+  }
+  return out;
 }
 
 /** `listTasks(filters).length` without reading the rows. */

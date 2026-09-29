@@ -100,10 +100,28 @@ export const barnDetailsSchema = z.strictObject({
   chemicalStorage: z.boolean().optional()
 });
 
+export const COOP_SPACE_KINDS = ['indoor', 'outdoor', 'both'] as const;
+export type CoopSpaceKind = (typeof COOP_SPACE_KINDS)[number];
+export const CAPACITY_PROVENANCES = ['data', 'manual'] as const;
+
+const sqFt = z.number().positive().max(1_000_000);
+
 /** How many animals the owner says it holds. Shown on the Area Card and
- *  at a move, never enforced (Phase 32B, B-14). */
+ *  at a move, never enforced (Phase 32B, B-14). `speciesId` and `space`
+ *  drive the suggested number (`lib/farm/coopCapacity.ts`); `shelterSqFt`
+ *  and `runSqFt` are only asked for when the space is `both`.
+ *  `capacityProvenance` is `data` when the owner kept the suggestion and
+ *  `manual` when they typed the number. */
 export const coopPenDetailsSchema = z.strictObject({
-  capacity: z.number().int().positive().max(100_000).optional()
+  speciesId: z
+    .string()
+    .regex(/^[a-z0-9][a-z0-9-]{0,63}$/)
+    .optional(),
+  space: z.enum(COOP_SPACE_KINDS).optional(),
+  shelterSqFt: sqFt.optional(),
+  runSqFt: sqFt.optional(),
+  capacity: z.number().int().positive().max(100_000).optional(),
+  capacityProvenance: z.enum(CAPACITY_PROVENANCES).optional()
 });
 
 export const waterDetailsSchema = z.strictObject({

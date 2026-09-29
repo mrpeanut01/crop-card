@@ -125,10 +125,33 @@ export function numberToLocaleString(
   return numberFormat(locale, options).format(n);
 }
 
+const weekStarts = new Map<string, number>();
+
+/** The locale's first day of the week, 0 = Sunday to 6 = Saturday. Falls
+ *  back to Sunday where the runtime has no week data. */
+export function firstDayOfWeek(locale: string): number {
+  const hit = weekStarts.get(locale);
+  if (hit !== undefined) return hit;
+  let first = 0;
+  try {
+    const loc = new Intl.Locale(locale) as Intl.Locale & {
+      getWeekInfo?: () => { firstDay: number };
+      weekInfo?: { firstDay: number };
+    };
+    const info = typeof loc.getWeekInfo === 'function' ? loc.getWeekInfo() : loc.weekInfo;
+    if (info && Number.isInteger(info.firstDay)) first = info.firstDay % 7;
+  } catch {
+    first = 0;
+  }
+  weekStarts.set(locale, first);
+  return first;
+}
+
 export const __intlCacheForTests = {
   clear: () => {
     dateFormats.clear();
     numberFormats.clear();
+    weekStarts.clear();
   },
   sizes: () => ({ date: dateFormats.size(), number: numberFormats.size() }),
   maxEntries: MAX_ENTRIES

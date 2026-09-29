@@ -130,6 +130,10 @@ describe('loadTodayWeather', () => {
       source: 'farm',
       summary: { tempF: 54, tempKind: 'low', sky: 'partly-night' }
     });
+    if (w.status !== 'ok') throw new Error('expected a forecast');
+    expect(w.days.length).toBeGreaterThan(0);
+    expect(w.days[0]).toMatchObject({ sky: 'partly-night', overnightOnly: true });
+    expect(w.fetchedAt).toBeGreaterThan(Date.now() - 60_000);
   });
 
   it('prefers a mapped block over the farm location', async () => {

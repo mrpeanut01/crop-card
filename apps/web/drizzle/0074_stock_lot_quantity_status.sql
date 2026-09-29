@@ -1,0 +1,1 @@
+ALTER TABLE `stock_lots` ADD `quantity_status` text DEFAULT 'existing' NOT NULL;

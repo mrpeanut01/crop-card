@@ -17,6 +17,7 @@ import path from 'node:path';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+import { applyOutOfOrderMigrations } from './migrateOutOfOrder.mjs';
 
 const dbPath = (process.env.DATABASE_URL ?? 'file:/data/cropcard.db').replace(/^file:/, '');
 const migrationsFolder = process.env.MIGRATIONS_FOLDER ?? './drizzle';
@@ -35,6 +36,7 @@ sqlite.pragma('foreign_keys = OFF');
 const db = drizzle(sqlite);
 
 console.log(`[migrate] applying migrations from ${migrationsFolder} to ${dbPath}`);
+applyOutOfOrderMigrations(sqlite, migrationsFolder);
 migrate(db, { migrationsFolder });
 console.log('[migrate] done');
 

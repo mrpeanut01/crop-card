@@ -1,5 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { NEW_AREA, defaultSpotArea, emptyAreas, planSpot, saveSpot, wholeAreaPlan } from './spot';
+import {
+  NEW_AREA,
+  defaultSpotArea,
+  defaultWizardArea,
+  emptyAreas,
+  planSpot,
+  saveSpot,
+  wholeAreaPlan,
+  wizardBlockBody
+} from './spot';
 import type { SetupArea } from './types';
 
 const AREAS: SetupArea[] = [
@@ -139,5 +148,31 @@ describe('saveSpot', () => {
     if (!plan.ok) throw new Error('plan');
     const out = await saveSpot(plan, fetchFn as unknown as typeof fetch);
     expect(out).toEqual({ ok: false, error: 'Only the farm owner can add places.' });
+  });
+});
+
+describe('planning wizard add-block Area (regression: bed landed in a new Home Field)', () => {
+  const garden = { id: 'g', name: 'Kitchen Garden', kind: 'garden' as const, blockCount: 0 };
+  const pasture = { id: 'p', name: 'Back pasture', kind: 'pasture' as const, blockCount: 0 };
+  const field = { id: 'f', name: 'Home Field', kind: 'field' as const, blockCount: 2 };
+
+  it("puts a garden-only owner's bed in their garden as a bed", () => {
+    expect(defaultWizardArea([garden])).toBe(garden);
+    expect(wizardBlockBody({ name: ' Bed 1 ', widthFt: 4, lengthFt: 10 }, garden)).toEqual({
+      name: 'Bed 1',
+      fieldId: 'g',
+      kind: 'bed',
+      widthFt: 4,
+      lengthFt: 10
+    });
+  });
+
+  it('skips a pasture when there is a better place, and sends no Area when there is none', () => {
+    expect(defaultWizardArea([pasture, field])).toBe(field);
+    expect(defaultWizardArea([])).toBeNull();
+    expect(wizardBlockBody({ name: 'North', acres: 0.5 }, null)).toEqual({
+      name: 'North',
+      acres: 0.5
+    });
   });
 });

@@ -18,13 +18,14 @@ test('today renders Almanac shell after sign-in', async ({ page }) => {
   const deck = page.getByTestId('today-deck');
   await expect(deck.getByRole('heading', { name: "Today's work" })).toBeVisible();
   await expect(page.locator('details.legacy-detail')).toHaveCount(0);
-  // Week strip lives behind the deck's Calendar view
-  await deck.getByRole('button', { name: 'Calendar' }).click();
-  await expect(page.getByRole('heading', { name: 'This week' })).toBeVisible();
+  // Week is a calendar view next to the Day cards
+  await deck.getByRole('button', { name: 'Week' }).click();
+  await expect(page).toHaveURL(/view=week/);
+  await expect(page.getByTestId('calendar-week')).toBeVisible();
   // Season-at-a-glance
   await expect(page.getByText('Season at a glance')).toBeVisible();
-  // Sprayers and the rules version stay on the page
-  await expect(page.getByTestId('today-gear')).toContainText('Rules version');
+  // App data moved to Settings > Advanced (#470)
+  await expect(page.getByTestId('today-gear')).toHaveCount(0);
 
   // Only flag console errors that aren't pre-existing 404s for fonts/manifest
   // (Phase 25a self-host work still pending).

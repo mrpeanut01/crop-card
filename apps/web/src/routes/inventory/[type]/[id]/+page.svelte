@@ -3,18 +3,13 @@
   import FertilityDetail from '$lib/components/inventory/detail/FertilityDetail.svelte';
   import SeedDetail from '$lib/components/inventory/detail/SeedDetail.svelte';
   import CropPluginDetail from '$lib/components/inventory/detail/CropPluginDetail.svelte';
-  import SprayerDetail from '$lib/components/inventory/detail/SprayerDetail.svelte';
 
   const { data } = $props();
 </script>
 
 <svelte:head>
   <title>
-    {data.type === 'crop' || data.type === 'sprayer'
-      ? data.type === 'crop'
-        ? data.plugin.displayName
-        : data.equipment.label
-      : data.item.displayName} — CropCard
+    {data.type === 'crop' ? data.plugin.displayName : data.item.displayName} · CropCard
   </title>
 </svelte:head>
 
@@ -44,8 +39,6 @@
     resolvedArchetype={data.resolvedArchetype}
     hash={data.hash}
   />
-{:else if data.type === 'sprayer'}
-  <SprayerDetail equipment={data.equipment} />
 {/if}
 
 <style>

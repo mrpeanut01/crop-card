@@ -30,6 +30,8 @@
   import { withHousing, type AreaHousing } from '$lib/farm/housedAnimals';
   import { needsLabelTime, withGrazing, type AreaGrazing } from '$lib/farm/areaGrazing';
   import { currentPrefs } from '$lib/prefsState.svelte';
+  import { getCoopContext } from '$lib/farm/coopContext';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
 
   type Tab = 'details' | 'plantings' | 'tasks' | 'history';
 
@@ -47,7 +49,14 @@
     open: boolean;
     onClose: () => void;
     snapshot: FarmSnapshot;
-    area: { id: string; name: string; kind: AreaKind; details: AreaDetails | null };
+    area: {
+      id: string;
+      name: string;
+      kind: AreaKind;
+      details: AreaDetails | null;
+      /** Floor area for the coop or pen suggestion. */
+      sqFt?: number | null;
+    };
     canEdit: boolean;
     housing?: AreaHousing | null;
     grazing?: AreaGrazing | null;
@@ -74,7 +83,14 @@
   const title = $derived(areaDisplayName(area));
   const style = $derived(kindStyle(area.kind));
   const designer = $derived(designerState(area.kind));
-  const summary = $derived(detailsSummary(area.kind, area.details));
+  const coopCtx = getCoopContext();
+  const speciesNames = $derived(
+    Object.fromEntries((coopCtx?.().options ?? []).map((o) => [o.id, o.name]))
+  );
+  const speciesPlurals = $derived(
+    Object.fromEntries((coopCtx?.().options ?? []).map((o) => [o.id, o.plural]))
+  );
+  const summary = $derived(detailsSummary(area.kind, area.details, speciesNames, speciesPlurals));
 
   const blocks = $derived(snapshot.blocks.filter((b) => b.areaId === area.id));
   const blockById = $derived(new Map(blocks.map((b) => [b.id, b])));
@@ -258,6 +274,8 @@
               kind={draftKind}
               bind:draft={draftDetails}
               idPrefix="edit-{area.id}"
+              areaId={area.id}
+              areaSqFt={area.sqFt ?? null}
             />
             {#if error}<p class="error" role="alert">{error}</p>{/if}
             <div class="actions">
@@ -281,7 +299,18 @@
               {#each summary as row (row.label)}
                 <div>
                   <dt>{row.label}</dt>
-                  <dd>{row.value}</dd>
+                  <dd>
+                    {row.value}
+                    {#if row.provenance === 'data'}<Provenance
+                        source="data"
+                        label="Suggested"
+                        compact
+                      />{:else if row.provenance === 'manual'}<Provenance
+                        source="manual"
+                        label="Typed by you"
+                        compact
+                      />{/if}
+                  </dd>
                 </div>
               {/each}
             </dl>

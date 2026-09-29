@@ -63,7 +63,7 @@
       .join(', ')}…`;
   });
   const kickerText = $derived.by(() => {
-    const ac = block.acres !== undefined ? fmt.qty(block.acres, 'area') : 'no acres recorded';
+    const ac = block.acres !== undefined ? fmt.area(block.acres) : 'no acres recorded';
     const polyLabel = isPoly
       ? `${block.plantings.length} plantings`
       : block.plantings.length === 1
@@ -88,7 +88,7 @@
         </Pill>
       {/if}
       {#if block.acres !== undefined}
-        <Pill tone="neutral">{fmt.qty(block.acres, 'area')}</Pill>
+        <Pill tone="neutral">{fmt.area(block.acres)}</Pill>
       {/if}
       {#if geometryMissing}
         {#if geometryEditHref}

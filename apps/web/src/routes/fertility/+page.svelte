@@ -133,7 +133,7 @@
     <select bind:value={blockId}>
       {#each data.blocks as b (b.id)}
         <option value={b.id}
-          >{b.name}{b.acres ? ` — ${fmt.qty(b.acres, 'area', { digits: 2 })}` : ''}</option
+          >{b.name}{b.acres ? ` — ${fmt.area(b.acres, { digits: 2 })}` : ''}</option
         >
       {/each}
     </select>

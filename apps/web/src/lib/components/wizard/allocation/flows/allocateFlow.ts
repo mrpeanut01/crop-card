@@ -13,18 +13,28 @@ export class AllocateFlow {
 
   buildSeedSelections() {
     return [...this.#w.selectedSeeds.entries()]
-      .filter(([, qty]) => qty > 0)
+      .filter(([id, qty]) => qty > 0 || this.#w.isFillToBed(id))
       .map(([stockItemId, quantity]) => {
         const entry = this.#w.props.seedStock.find((s) => s.stockItemId === stockItemId)!;
+        // Prefer the curated shortName so Claude's rationale + chips
+        // surface "Bloody Butcher" instead of "Bloody Butcher
+        // Ornamental Corn — Raw Untreated Non-GMO (1/2 lb)". Falls back
+        // to displayName when no shortName is set.
+        const varietyDisplayName = entry.shortName ?? entry.displayName;
+        if (this.#w.isFillToBed(stockItemId)) {
+          // #471 — no quantity anywhere: the server sizes it to the bed.
+          return {
+            stockItemId,
+            cropPluginId: entry.cropPluginId!,
+            varietyDisplayName,
+            fillToBed: true as const
+          };
+        }
         const plants = this.#w.plantsFor(stockItemId, quantity);
         return {
           stockItemId,
           cropPluginId: entry.cropPluginId!,
-          // Prefer the curated shortName so Claude's rationale + chips
-          // surface "Bloody Butcher" instead of "Bloody Butcher
-          // Ornamental Corn — Raw Untreated Non-GMO (1/2 lb)". Falls back
-          // to displayName when no shortName is set.
-          varietyDisplayName: entry.shortName ?? entry.displayName,
+          varietyDisplayName,
           quantityPlants: Math.max(1, plants ?? Math.round(quantity))
         };
       });

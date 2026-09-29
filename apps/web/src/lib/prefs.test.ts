@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import {
   UNITS,
+  formatArea,
   formatCalendarDate,
   formatInstant,
   formatLabelRate,
@@ -101,5 +102,29 @@ describe('formatting', () => {
     expect(formatLabelRate(22, 'flOzPerArea', us)).toBe('22 fl oz/ac');
     expect(formatLabelRate(22, 'flOzPerArea', metric)).toBe('22 fl oz/ac (1,608 mL/ha)');
     expect(formatLabelRate(null, 'flOzPerArea', metric)).toBe('—');
+  });
+});
+
+describe('formatArea: garden beds never read as 0 ac', () => {
+  const bed = 40 / 43_560;
+  it('shows square feet or square meters below a tenth of an acre', () => {
+    expect(formatArea(bed, us)).toBe('40 sq ft');
+    expect(formatArea(bed, metric)).toBe('3.7 m²');
+    expect(formatArea(0.05, us)).toBe('2,178 sq ft');
+  });
+
+  it('keeps acres and hectares for fields', () => {
+    expect(formatArea(0.25, us)).toBe('0.25 ac');
+    expect(formatArea(2, metric)).toBe('0.81 ha');
+    expect(formatArea(0, us)).toBe('0 ac');
+    expect(formatArea(null, us)).toBe('—');
+  });
+
+  it('never prints 0 for a positive area', () => {
+    fc.assert(
+      fc.property(fc.double({ min: 1e-4, max: 1000, noNaN: true }), (acres) => {
+        expect(formatArea(acres, us)).not.toMatch(/^0 /);
+      })
+    );
   });
 });

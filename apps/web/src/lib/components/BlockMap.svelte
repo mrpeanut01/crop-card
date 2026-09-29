@@ -33,6 +33,7 @@
     geometryTypeFor,
     lineLengthFt,
     parseFeatureGeometry,
+    servesManyAreas,
     type FeatureGeometry,
     type MapFeatureDetails,
     type MapFeatureKind,
@@ -43,6 +44,25 @@
   import 'leaflet/dist/leaflet.css';
   import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
   import { geojsonCentroid, metersSquaredToAcres, polygonAreaSqMeters } from '$lib/geo/area';
+  import { SQFT_PER_ACRE } from '$lib/farm/sketch';
+  import { areasNearPoint } from '$lib/farm/nearbyAreas';
+  import Modal from '$lib/components/ui/Modal.svelte';
+  import {
+    areaShape,
+    blockShape,
+    confirmTitle,
+    deleteButtonLabel,
+    deleteHint,
+    deleteShapes,
+    describeDeletion,
+    featureShape,
+    isSelected,
+    outlineWarning,
+    shadeShape,
+    shapeKey,
+    toggleShape,
+    type MapShape
+  } from '$lib/farm/mapDelete';
   import type {
     Map as LMap,
     Polygon as LPolygon,
@@ -131,6 +151,7 @@
     geometry: FeatureGeometry;
     fieldId: string | null;
     details: MapFeatureDetails | null;
+    areaIds?: string[];
   }) => Promise<void>;
   export type UpdateMapFeatureGeometryCb = (id: string, geometry: FeatureGeometry) => Promise<void>;
   export type UpdateShadeGeometryCb = (id: string, geometryGeojson: string) => Promise<void>;
@@ -155,6 +176,7 @@
     mapFeatures = [],
     onCreateMapFeature,
     onUpdateMapFeatureGeometry,
+    onDeleteMapFeature,
     onBusyChange,
     initialCenter = null,
     autoLocate = false,
@@ -196,6 +218,8 @@
     mapFeatures?: MapFeatureView[];
     onCreateMapFeature?: CreateMapFeatureCb;
     onUpdateMapFeatureGeometry?: UpdateMapFeatureGeometryCb;
+    /** Deletes a line or point outright (it is only a shape). */
+    onDeleteMapFeature?: (id: string) => Promise<void>;
     /** Where the map opens before any geometry exists (the farm location).
      *  Once blocks or fields are drawn, the map fits to them instead. */
     initialCenter?: { lat: number; lon: number } | null;
@@ -301,6 +325,112 @@
   // Set to true in a layer click so the immediately-following map click doesn't deselect.
   let _suppressNextMapClick = false;
 
+  // ── Delete (#476): Select mode, right-click and long-press ──────────────
+  let selectMode = $state(false);
+  let selection = $state<MapShape[]>([]);
+  let deleteRequest = $state<MapShape[] | null>(null);
+  let deleteBusy = $state(false);
+  let deleteError = $state<string | null>(null);
+  let touchDevice = $state(false);
+  const deleteControls = $derived(canEdit && !thumbnail);
+  type StyledPath = import('leaflet').Path & { options: import('leaflet').PathOptions };
+  /** Leaflet layers per shape, with the style to restore after a highlight. */
+  const shapeLayers = new Map<
+    string,
+    Array<{ layer: import('leaflet').Layer; base: import('leaflet').PathOptions | null }>
+  >();
+
+  function registerShape(shape: MapShape, layer: import('leaflet').Layer) {
+    const key = shapeKey(shape);
+    const path = layer as StyledPath;
+    const base =
+      typeof path.setStyle === 'function'
+        ? {
+            color: path.options.color,
+            weight: path.options.weight,
+            dashArray: path.options.dashArray,
+            fillOpacity: path.options.fillOpacity
+          }
+        : null;
+    const list = shapeLayers.get(key) ?? [];
+    list.push({ layer, base });
+    shapeLayers.set(key, list);
+    if (!canEdit || thumbnail) return;
+    layer.on('contextmenu', () => requestDelete([shape]));
+  }
+
+  /** In Select mode a tap picks the shape instead of opening or editing it. */
+  function pickInSelectMode(shape: MapShape): boolean {
+    if (!selectMode) return false;
+    _suppressNextMapClick = true;
+    selection = toggleShape(selection, shape);
+    return true;
+  }
+
+  function clearShapes(type: MapShape['type']) {
+    for (const key of [...shapeLayers.keys()]) {
+      if (key.startsWith(`${type}:`)) shapeLayers.delete(key);
+    }
+  }
+
+  function applySelectionStyles() {
+    for (const [key, list] of shapeLayers) {
+      const on = selection.some((s) => shapeKey(s) === key);
+      for (const { layer, base } of list) {
+        const path = layer as StyledPath;
+        if (base && typeof path.setStyle === 'function') {
+          path.setStyle(on ? { color: '#b00020', weight: 5, dashArray: '6 4' } : base);
+        }
+        const el = (layer as { getElement?: () => Element | undefined }).getElement?.();
+        el?.classList.toggle('shape-selected', on);
+        el?.setAttribute('data-selected', on ? 'true' : 'false');
+      }
+    }
+  }
+
+  $effect(() => {
+    void selection;
+    applySelectionStyles();
+  });
+
+  function toggleSelectMode() {
+    selectMode = !selectMode;
+    selection = [];
+    deleteError = null;
+    if (selectMode) stopEditing();
+  }
+
+  function requestDelete(shapes: MapShape[]) {
+    if (!shapes.length || deleteRequest || drawing) return;
+    deleteError = null;
+    deleteRequest = shapes;
+  }
+
+  async function confirmDelete() {
+    const shapes = deleteRequest;
+    if (!shapes || deleteBusy) return;
+    deleteBusy = true;
+    deleteError = null;
+    const outcome = await deleteShapes(shapes, {
+      area: (id) => onSaveFieldGeometry(id, null),
+      block: (id) => onSaveGeometry(id, null),
+      shade: onDeleteShadeSource ? (id) => onDeleteShadeSource!(id, '') : undefined,
+      feature: onDeleteMapFeature
+    });
+    deleteBusy = false;
+    const gone = new Set(outcome.deleted.map(shapeKey));
+    selection = selection.filter((s) => !gone.has(shapeKey(s)));
+    if (outcome.failed.length) {
+      deleteRequest = outcome.failed.map((f) => f.shape);
+      deleteError = outcome.failed
+        .map((f) => `${f.shape.name || f.shape.kindLabel}: ${f.message}`)
+        .join(' ');
+      return;
+    }
+    deleteRequest = null;
+    if (selectMode && selection.length === 0) selectMode = false;
+  }
+
   const busy = $derived(drawing || !!featureDraft || !!shadeDraft || !!pendingDraft);
   $effect(() => {
     onBusyChange?.(busy);
@@ -396,8 +526,11 @@
     leaflet = L;
     await import('@geoman-io/leaflet-geoman-free');
 
+    touchDevice = window.matchMedia?.('(pointer: coarse)').matches ?? false;
     map = L.map(mapEl, {
       maxZoom: MAP_MAX_ZOOM,
+      // Long-press fires contextmenu on every touch browser, not just Safari.
+      tapHold: canEdit && !thumbnail,
       zoomControl: !thumbnail,
       dragging: !thumbnail,
       scrollWheelZoom: !thumbnail,
@@ -525,7 +658,14 @@
             kind,
             geometry: parsed.geometry,
             lengthFt: lineLengthFt(parsed.geometry),
-            form: { ...draftFromFeature(), fieldId: suggestFieldFor(parsed.geometry) },
+            form: {
+              ...draftFromFeature(),
+              fieldId: suggestFieldFor(parsed.geometry),
+              areaIds:
+                parsed.geometry.type === 'Point' && servesManyAreas(kind)
+                  ? areasNearPoint(parsed.geometry.coordinates, fields)
+                  : []
+            },
             busy: false,
             error: null
           };
@@ -652,6 +792,7 @@
   function renderFields(L: typeof import('leaflet')) {
     if (!map || !fieldLayer) return;
     fieldLayer.clearLayers();
+    clearShapes('area');
     polygonToFieldId.clear();
     fieldLayersById.clear();
     for (const f of fields) {
@@ -684,12 +825,11 @@
       fieldLayersById.set(f.id, layer as LGeoJSON);
       (layer as LGeoJSON).eachLayer((l) => {
         const poly = l as LPolygon & { pm: { enable: (o: object) => void } };
-        if (canEdit) {
-          l.on('pm:edit', () => debouncedFieldSave(f.id, poly));
-          l.on('contextmenu', () => removeFieldGeometry(f.id, f.name));
-        }
+        if (canEdit) l.on('pm:edit', () => debouncedFieldSave(f.id, poly));
+        registerShape(areaShape(f), l);
         l.on('click', () => {
           if (drawing) return;
+          if (pickInSelectMode(areaShape(f))) return;
           _suppressNextMapClick = true;
           if (onSelectArea && !editingActive) {
             onSelectArea(f.id);
@@ -712,6 +852,7 @@
   function renderBlocks(L: typeof import('leaflet')) {
     if (!map || !blockLayer) return;
     blockLayer.clearLayers();
+    clearShapes('block');
     polygonToBlockId.clear();
     if (labelLayer) labelLayer.clearLayers();
     labelEntries = [];
@@ -788,9 +929,10 @@
         (layer as LGeoJSON).eachLayer((l) => {
           const poly = l as LPolygon & { pm: { enable: (o: object) => void } };
           l.on('pm:edit', () => debouncedSave(b.id, poly));
-          l.on('contextmenu', () => removeGeometry(b.id, b.name));
+          registerShape(blockShape(b), l);
           l.on('click', () => {
             if (drawing) return;
+            if (pickInSelectMode(blockShape(b))) return;
             _suppressNextMapClick = true;
             editingActive = true;
             poly.pm.enable({ snappable: true, allowSelfIntersection: false });
@@ -804,6 +946,7 @@
   function renderShadeSources(L: typeof import('leaflet')) {
     if (!map || !shadeLayer) return;
     shadeLayer.clearLayers();
+    clearShapes('shade');
     polygonToShadeId.clear();
     if (filter && !filter.shade) return;
     for (const s of shadeSources) {
@@ -837,13 +980,10 @@
           if (onUpdateShadeGeometry) {
             l.on('pm:edit', () => debouncedShadeSave(s.id, poly));
           }
-          if (onDeleteShadeSource) {
-            l.on('contextmenu', () => {
-              void onDeleteShadeSource!(s.id, s.name);
-            });
-          }
+          if (onDeleteShadeSource) registerShape(shadeShape(s), l);
           l.on('click', () => {
             if (drawing) return;
+            if (onDeleteShadeSource && pickInSelectMode(shadeShape(s))) return;
             _suppressNextMapClick = true;
             editingActive = true;
             poly.pm.enable({ snappable: true, allowSelfIntersection: false });
@@ -882,6 +1022,7 @@
   function renderMapFeatures(L: typeof import('leaflet')) {
     if (!map || !featureLayer) return;
     featureLayer.clearLayers();
+    clearShapes('feature');
     for (const f of mapFeatures) {
       if (!f.geometry) continue;
       if (filter && !isFeatureVisible(filter, f.kind)) continue;
@@ -914,8 +1055,10 @@
           toGeoJSON: () => { geometry: unknown };
         };
         layer.on('pm:edit', () => debouncedFeatureSave(id, kind, editable));
+        if (onDeleteMapFeature) registerShape(featureShape(f), layer);
         layer.on('click', () => {
           if (drawing) return;
+          if (onDeleteMapFeature && pickInSelectMode(featureShape(f))) return;
           _suppressNextMapClick = true;
           editingActive = true;
           editable.pm.enable({ snappable: true, allowSelfIntersection: true });
@@ -967,6 +1110,9 @@
       renderBlocks(mod.default);
       renderShadeSources(mod.default);
       renderMapFeatures(mod.default);
+      const live = selection.filter((sh) => shapeLayers.has(shapeKey(sh)));
+      if (live.length !== selection.length) selection = live;
+      applySelectionStyles();
       if (showBlockLabels && declutterLabels) scheduleLabelRelayout();
     });
   });
@@ -1137,24 +1283,6 @@
         }
       }, 800)
     );
-  }
-
-  async function removeGeometry(blockId: string, name: string) {
-    if (!confirm(`Remove polygon for block "${name}"?`)) return;
-    try {
-      await onSaveGeometry(blockId, null);
-    } catch (e) {
-      drawError = e instanceof Error ? e.message : String(e);
-    }
-  }
-
-  async function removeFieldGeometry(fieldId: string, name: string) {
-    if (!confirm(`Remove boundary for field "${name}"?`)) return;
-    try {
-      await onSaveFieldGeometry(fieldId, null);
-    } catch (e) {
-      drawError = e instanceof Error ? e.message : String(e);
-    }
   }
 
   // ── Draw controls ─────────────────────────────────────────────────────────
@@ -1576,7 +1704,44 @@
 </script>
 
 <div class="map-shell" class:map-thumbnail={thumbnail}>
-  <div class="map" bind:this={mapEl} aria-label="Field and block map" role="application"></div>
+  {#if deleteControls}
+    <div class="select-bar" role="toolbar" aria-label="Select and delete shapes">
+      <button
+        type="button"
+        class="sel-btn"
+        class:on={selectMode}
+        aria-pressed={selectMode}
+        disabled={drawing}
+        onclick={toggleSelectMode}>{selectMode ? 'Done selecting' : 'Select'}</button
+      >
+      {#if selectMode}
+        <button
+          type="button"
+          class="sel-btn danger"
+          data-testid="map-delete-selected"
+          disabled={selection.length === 0}
+          onclick={() => requestDelete([...selection])}
+          >{selection.length ? deleteButtonLabel(selection.length) : 'Delete'}</button
+        >
+      {/if}
+    </div>
+    <p class="delete-hint" data-testid="map-delete-hint">
+      {#if selectMode}
+        {selection.length
+          ? `${selection.length} picked. Tap more shapes, or tap one again to drop it.`
+          : 'Tap the shapes you want to delete.'}
+      {:else}
+        {deleteHint(touchDevice)} To delete several, tap Select.
+      {/if}
+    </p>
+  {/if}
+  <div
+    class="map"
+    class:selecting={selectMode}
+    bind:this={mapEl}
+    aria-label="Field and block map"
+    role="application"
+  ></div>
 
   {#if thumbnail && onThumbnailClick}
     <div
@@ -1701,6 +1866,43 @@
     </p>
   {/if}
 </div>
+
+{#if deleteRequest}
+  <Modal
+    open={!!deleteRequest}
+    onClose={() => {
+      if (!deleteBusy) deleteRequest = null;
+    }}
+    title={confirmTitle(deleteRequest)}
+  >
+    <div class="delete-confirm" data-testid="map-delete-confirm">
+      <ul>
+        {#each deleteRequest as shape (shapeKey(shape))}
+          <li>{describeDeletion(shape)}</li>
+        {/each}
+      </ul>
+      {#if outlineWarning(deleteRequest)}
+        <p class="muted">{outlineWarning(deleteRequest)}</p>
+      {/if}
+      {#if deleteError}<p class="map-error" role="alert">{deleteError}</p>{/if}
+      <div class="actions">
+        <button type="button" class="danger-btn" disabled={deleteBusy} onclick={confirmDelete}
+          >{deleteBusy
+            ? 'Deleting…'
+            : deleteRequest.length === 1
+              ? 'Delete'
+              : `Delete ${deleteRequest.length}`}</button
+        >
+        <button
+          type="button"
+          class="cancel-btn"
+          disabled={deleteBusy}
+          onclick={() => (deleteRequest = null)}>Cancel</button
+        >
+      </div>
+    </div>
+  </Modal>
+{/if}
 
 <!-- Post-draw dialogs ignore backdrop clicks so stray clicks after finishing
      a shape can't discard it. Discard and Escape still close them. -->
@@ -1983,6 +2185,10 @@
           kind={pendingDraft.kind}
           bind:draft={pendingDraft.details}
           idPrefix="draft"
+          areaId={pendingDraft.assignFieldMode === 'existing' ? pendingDraft.existingFieldId : null}
+          areaSqFt={pendingDraft.acres !== null
+            ? Math.round(pendingDraft.acres * SQFT_PER_ACRE)
+            : null}
         />
       {/if}
 
@@ -2014,7 +2220,7 @@
       {#if acres !== null}
         <div>
           <dt>Size</dt>
-          <dd>≈ {fmt.qty(acres, 'area')} <Provenance source="data" compact /></dd>
+          <dd>≈ {fmt.area(acres)} <Provenance source="data" compact /></dd>
         </div>
       {/if}
       {#if perimeterFt !== null}
@@ -2141,6 +2347,90 @@
     pointer-events: none;
     user-select: none;
   }
+  .select-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+    background: var(--color-paper, #fff);
+    border-bottom: 1px solid var(--color-divider, #ddd);
+  }
+  .sel-btn {
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0 16px;
+    border: 2px solid #1f5e3a;
+    border-radius: 6px;
+    background: white;
+    color: #1f5e3a;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .sel-btn.on {
+    background: #1f5e3a;
+    color: white;
+  }
+  .sel-btn.danger {
+    border-color: #b00020;
+    background: #b00020;
+    color: white;
+  }
+  .sel-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .delete-hint {
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    color: var(--color-ink-soft, #444);
+    background: var(--color-cream, #faf7ef);
+    border-bottom: 1px solid var(--color-divider, #ddd);
+  }
+  .map.selecting {
+    cursor: pointer;
+  }
+  :global(.shape-selected .feature-pin) {
+    outline: 3px solid #b00020;
+    outline-offset: 2px;
+  }
+  .delete-confirm ul {
+    margin: 0 0 12px;
+    padding-left: 1.2em;
+  }
+  .delete-confirm li + li {
+    margin-top: 6px;
+  }
+  .delete-confirm .muted {
+    color: var(--color-ink-soft, #444);
+    font-size: 0.9rem;
+  }
+  .delete-confirm .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .danger-btn,
+  .cancel-btn {
+    min-height: 48px;
+    padding: 0 18px;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .danger-btn {
+    background: #b00020;
+    border: 2px solid #b00020;
+    color: white;
+  }
+  .cancel-btn {
+    background: white;
+    border: 2px solid var(--color-divider, #999);
+    color: var(--color-ink, #222);
+  }
   .map-shell {
     position: relative;
     margin-bottom: 1rem;
@@ -2242,7 +2532,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 1100;
     padding: 1rem;
   }
   .draft-modal {

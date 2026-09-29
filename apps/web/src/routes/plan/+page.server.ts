@@ -45,7 +45,8 @@ import {
 import { listBlocks, type BlockWithPlantings, type PlantingRecord } from '$lib/db/blocks';
 import { listCrops, type Crop } from '$lib/db/crops';
 import { harvestTargetKey } from '$lib/plan/harvestTargetKey';
-import { frostDatesForYear, frostDatesIsoForYear } from '$lib/schedule/settings';
+import { frostDatesForYear, frostDatesIsoForYear, hasFarmLatLon } from '$lib/schedule/settings';
+import { planSetupPrompts } from '$lib/onboarding/pageSetup';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 import { getSetting } from '$lib/db/settings';
 import {
@@ -210,6 +211,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       displayName: s.displayName,
       shortName: s.shortName,
       onHand: s.onHand,
+      onOrder: s.onOrder,
+      planned: s.planned,
       defaultUnit: s.defaultUnit,
       cropPluginId: s.pluginId ?? null,
       cropFamily
@@ -241,6 +244,20 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     seasonSetup,
     lastYearSetup,
     emptySeason: isEmptySeason(blocks, currentYear),
+    // #475 — setup questions for a farm that finished only part of setup.
+    setupLatLon: hasFarmLatLon() ? getFarmLatLon() : null,
+    setupPrompts: planSetupPrompts(
+      {
+        hasLocation: hasFarmLatLon(),
+        hasFrostDates:
+          !!getSetting(SETTINGS_KEYS.lastFrost) && !!getSetting(SETTINGS_KEYS.firstFrost),
+        hasSeasonSetup: !!seasonSetup,
+        hasBlocks: blocks.length > 0,
+        hasSeed: allSeedStock.length > 0,
+        year: currentYear
+      },
+      locals.user?.role ?? 'helper'
+    ),
     priorSeason: priorSeasonSummary(blocks, currentYear),
     // Phase 25d v2-addendum (#89) — drives AI-on/off variant on the
     // schedule step of the AllocationWizard.
@@ -787,8 +804,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     }));
 
     // Phase 15 — seed-stock cards for the wizard's gate (family + on-hand).
+    // #471 — seeds show even at zero on hand (not counted yet, or only
+    // ordered or planned).
     const seedStockForWizard = stockItems
-      .filter((s) => s.category === 'seed' && s.onHand > 0)
+      .filter((s) => s.category === 'seed')
       .map((s) => ({
         stockItemId: s.id,
         cropPluginId: s.pluginId ?? null,
@@ -797,6 +816,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
           : null,
         displayName: s.displayName,
         onHand: s.onHand,
+        onOrder: s.onOrder,
+        planned: s.planned,
         defaultUnit: s.defaultUnit
       }));
 

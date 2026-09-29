@@ -131,3 +131,47 @@ describe('addPlanting — merge into existing planned bucket', () => {
       expect(quantityFor(planned.id)).toBe(30 * 100);
     }));
 });
+
+describe("addPlanting keeps the plan's plant count (#471)", () => {
+  it('a fill-to-bed planting with no quantity stores its planned plants', () =>
+    runWithTenant(TEST_OWNER_ID, () => {
+      const block = createBlock({ name: uniq('addplanting-fill') });
+      const p = addPlanting({
+        blockId: block.id,
+        cropPluginId: uniq('plugin:tomato'),
+        varietyDisplayName: 'Cherokee Purple',
+        plantingDate: null,
+        quantityUnit: 'seeds',
+        plannedPlants: 8
+      });
+      const row = db
+        .select()
+        .from(plantingRecords)
+        .where(withTenant(plantingRecords, eq(plantingRecords.id, p.id)))
+        .get();
+      expect(row?.plantCount).toBe(8);
+      expect(row?.plantCountProvenance).toBe('data');
+      expect(row?.quantityPlantedHundredths).toBeNull();
+    }));
+
+  it('a merged drop adds its planned plants to the row', () =>
+    runWithTenant(TEST_OWNER_ID, () => {
+      const block = createBlock({ name: uniq('addplanting-fill-merge') });
+      const plugin = uniq('plugin:lettuce');
+      const base = {
+        blockId: block.id,
+        cropPluginId: plugin,
+        varietyDisplayName: 'Buttercrunch',
+        plantingDate: null,
+        quantityUnit: 'seeds'
+      };
+      const first = addPlanting({ ...base, quantityPlanted: 10, plannedPlants: 6 });
+      addPlanting({ ...base, quantityPlanted: 5, plannedPlants: 4 });
+      const row = db
+        .select()
+        .from(plantingRecords)
+        .where(withTenant(plantingRecords, eq(plantingRecords.id, first.id)))
+        .get();
+      expect(row?.plantCount).toBe(10);
+    }));
+});

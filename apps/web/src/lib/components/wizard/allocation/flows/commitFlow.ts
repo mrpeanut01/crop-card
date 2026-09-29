@@ -60,8 +60,10 @@ export class CommitFlow {
           body: JSON.stringify({
             cropPluginId: a.cropPluginId,
             varietyDisplayName: a.varietyDisplayName,
-            quantityPlanted: quantityForCommit,
+            // #471 — a fill-to-bed seed has no counted quantity to record.
+            quantityPlanted: this.#w.isFillToBed(a.stockItemId) ? undefined : quantityForCommit,
             quantityUnit: unit,
+            plannedPlants: a.plants > 0 ? Math.round(a.plants) : undefined,
             stockItemId: a.stockItemId,
             sourceProvenance: planProvenance
           })
@@ -131,8 +133,9 @@ export class CommitFlow {
           body: JSON.stringify({
             cropPluginId: p.cropPluginId,
             varietyDisplayName: p.varietyDisplayName,
-            quantityPlanted: quantityForCommit,
+            quantityPlanted: this.#w.isFillToBed(p.stockItemId) ? undefined : quantityForCommit,
             quantityUnit: unit,
+            plannedPlants: p.plants > 0 ? Math.round(p.plants) : undefined,
             stockItemId: p.stockItemId,
             plantingDate: p.plantingDateMs,
             sourceProvenance: planProvenance

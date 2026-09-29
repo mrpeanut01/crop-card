@@ -11,6 +11,8 @@ export interface PickerSeed {
   displayName: string;
   shortName?: string | null;
   onHand: number;
+  onOrder?: number;
+  planned?: number;
   defaultUnit: StockUnit;
   cropPluginId: string | null;
 }
@@ -50,8 +52,15 @@ function score(haystacks: Array<string | null | undefined>, q: string): number {
   return best;
 }
 
-/** Seed on hand first (it is what's in the shed), then the rest of the
- *  catalog. A crop with seed on hand is listed only under its seed. */
+/** Everything the seed can still cover: on hand plus ordered plus planned
+ *  (#475). Planting draws on hand first, then what is expected. */
+export function seedAvailable(seed: PickerSeed): number {
+  return Math.max(0, seed.onHand) + Math.max(0, seed.onOrder ?? 0) + Math.max(0, seed.planned ?? 0);
+}
+
+/** The farm's own seed first, whether it is on hand, ordered, planned or not
+ *  counted yet (#475), then the rest of the catalog. A crop with a seed
+ *  lot is listed only under its seed. */
 export function searchCrops(
   query: string,
   seeds: ReadonlyArray<PickerSeed>,
@@ -64,7 +73,7 @@ export function searchCrops(
   const seedRows: Array<{ opt: Extract<PickerOption, { kind: 'seed' }>; s: number }> = [];
   const seededIds = new Set<string>();
   for (const seed of seeds) {
-    if (seed.onHand <= 0 || !seed.cropPluginId) continue;
+    if (!seed.cropPluginId) continue;
     const crop = byId.get(seed.cropPluginId);
     if (!crop) continue;
     seededIds.add(crop.pluginId);
@@ -76,6 +85,7 @@ export function searchCrops(
   seedRows.sort(
     (a, b) =>
       b.s - a.s ||
+      Number(seedAvailable(b.opt.seed) > 0) - Number(seedAvailable(a.opt.seed) > 0) ||
       (a.opt.seed.shortName ?? a.opt.seed.displayName).localeCompare(
         b.opt.seed.shortName ?? b.opt.seed.displayName
       )
@@ -91,7 +101,7 @@ export function searchCrops(
     (a, b) => b.s - a.s || a.opt.crop.displayName.localeCompare(b.opt.crop.displayName)
   );
 
-  // With nothing typed and seed on hand, the list is just the seed.
+  // With nothing typed and seed in inventory, the list is just the seed.
   const cropLimit = !q && seedRows.length > 0 ? 0 : limit;
   return {
     seeds: seedRows.map((r) => r.opt),

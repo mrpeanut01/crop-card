@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     MAP_FEATURE_NAME_PLACEHOLDER,
+    servesManyAreas,
     WATER_SOURCE_LABELS,
     WATER_SOURCE_TYPES,
     type MapFeatureKind,
@@ -33,7 +34,32 @@
       oninput={(e) => (draft = { ...draft, name: e.currentTarget.value })}
     />
   </label>
-  {#if areas.length}
+  {#if areas.length && servesManyAreas(kind)}
+    <fieldset class="serves" data-testid="feature-serves">
+      <legend>Serves these Areas</legend>
+      <p class="hint">Tick every Area this one reaches. Areas next to it start ticked.</p>
+      <ul>
+        {#each areas as a (a.id)}
+          <li>
+            <label class="check">
+              <input
+                type="checkbox"
+                checked={draft.areaIds.includes(a.id)}
+                onchange={(e) =>
+                  (draft = {
+                    ...draft,
+                    areaIds: e.currentTarget.checked
+                      ? [...draft.areaIds.filter((id) => id !== a.id), a.id]
+                      : draft.areaIds.filter((id) => id !== a.id)
+                  })}
+              />
+              <span>{a.name}</span>
+            </label>
+          </li>
+        {/each}
+      </ul>
+    </fieldset>
+  {:else if areas.length}
     <label class="field" for="{idPrefix}-area">
       <span>Belongs to (optional)</span>
       <select
@@ -80,6 +106,48 @@
 </div>
 
 <style>
+  .serves {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 6px);
+    min-width: 0;
+  }
+  .serves legend {
+    font-size: 13px;
+    color: var(--color-ink-soft);
+    padding: 0 4px;
+  }
+  .serves .hint {
+    margin: 0 0 4px;
+    font-size: 13px;
+    color: var(--color-ink-muted);
+  }
+  .serves ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0 12px;
+  }
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    font-size: 15px;
+    color: var(--color-ink);
+    cursor: pointer;
+    overflow-wrap: anywhere;
+  }
+  .check input {
+    width: 22px;
+    height: 22px;
+    flex: none;
+    accent-color: var(--color-forest);
+  }
   .feature-fields {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

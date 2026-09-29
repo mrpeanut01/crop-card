@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
   /**
    * Inputs Plan wizard step (Phase 21 / B-28 / UC-37d).
@@ -32,6 +33,12 @@
     formatInputAmount,
     localizeRationale
   } from '$lib/plan/inputsPlanFormat';
+  import {
+    applyProductChoices,
+    buildShoppingList,
+    stockRowsFrom,
+    type InputsPlanProductOption
+  } from '$lib/plan/inputsChoice';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
@@ -54,9 +61,42 @@
       aiRefined: boolean;
     }) => void | Promise<void>;
     onBack: () => void;
+    /** #480 — products the farmer picked by hand (application id → product
+     *  plugin id), kept by the wizard so a saved draft restores them. */
+    choices?: Record<string, string>;
+    onChoicesChange?: (choices: Record<string, string>) => void;
   }
 
-  let { plantings, year, aiEnabled = false, onCommit, onBack }: Props = $props();
+  const {
+    plantings,
+    year,
+    aiEnabled = false,
+    onCommit,
+    onBack,
+    choices: initialChoices = {},
+    onChoicesChange
+  }: Props = $props();
+
+  // Seeded once from the wizard; the step owns the edits and reports them up.
+  let choices = $state<Record<string, string>>({ ...untrack(() => initialChoices) });
+
+  function chooseProduct(appId: string, pluginId: string): void {
+    choices = { ...choices, [appId]: pluginId };
+    onChoicesChange?.(choices);
+  }
+
+  function optionLabel(o: InputsPlanProductOption): string {
+    if (o.stock === 'enough') return `${o.displayName} (on hand)`;
+    if (o.stock === 'some') return `${o.displayName} (some on hand)`;
+    return `${o.displayName} (to buy)`;
+  }
+
+  function sourceFor(app: InputsPlanApplication): 'plugin' | 'data' | 'ai' | 'manual' | 'fallback' {
+    if (app.productSource === 'manual') return 'manual';
+    if (app.productSource === 'data') return 'data';
+    if (app.productSource === 'ai') return 'ai';
+    return planMeta?.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin';
+  }
 
   /** #211 — translate raw `PlannerWarning.kind` enum keys into human copy
    *  with planting name + recommended action, so users don't see bare
@@ -167,10 +207,32 @@
     rejectedScoutIds = next;
   }
 
+  /** The served plan with the farmer's product picks applied. */
+  const applications = $derived(plan ? applyProductChoices(plan.applications, choices) : []);
+
+  const shoppingList = $derived.by(() => {
+    if (!plan) return [];
+    if (!plan.stockOnHand) return plan.shoppingList;
+    return buildShoppingList(
+      applications.filter((a) => !rejectedAppIds.has(a.id)),
+      stockRowsFrom(plan.stockOnHand)
+    );
+  });
+
+  /** Chosen applications with a product but no amount to buy. */
+  const unsizedCount = $derived(
+    applications.filter(
+      (a) => !rejectedAppIds.has(a.id) && a.productPluginId && a.totalAmount == null
+    ).length
+  );
+  const productCount = $derived(
+    applications.filter((a) => !rejectedAppIds.has(a.id) && a.productPluginId).length
+  );
+
   const appsByPlanting = $derived.by(() => {
     const map = new Map<string, InputsPlanApplication[]>();
     if (!plan) return map;
-    for (const app of plan.applications) {
+    for (const app of applications) {
       const list = map.get(app.plantingId) ?? [];
       list.push(app);
       map.set(app.plantingId, list);
@@ -192,7 +254,7 @@
   const acceptedSummary = $derived.by(() => {
     if (!plan) return { apps: 0, scouts: 0 };
     return {
-      apps: plan.applications.filter((a) => !rejectedAppIds.has(a.id)).length,
+      apps: applications.filter((a) => !rejectedAppIds.has(a.id)).length,
       scouts: plan.scoutTasks.filter((s) => !rejectedScoutIds.has(s.id)).length
     };
   });
@@ -203,7 +265,9 @@
     commitError = null;
     try {
       await onCommit({
-        applications: plan.applications.filter((a) => !rejectedAppIds.has(a.id)),
+        applications: applications
+          .filter((a) => !rejectedAppIds.has(a.id))
+          .map(({ options: _options, ...rest }) => rest),
         scoutTasks: plan.scoutTasks.filter((s) => !rejectedScoutIds.has(s.id)),
         aiRefined: planMeta != null && !planMeta.fallback
       });
@@ -329,32 +393,55 @@
                 {/if}
 
                 {#each apps as app (app.id)}
-                  <label class="row app-row" class:rejected={rejectedAppIds.has(app.id)}>
+                  {@const opts = app.options ?? []}
+                  <div class="row app-row" class:rejected={rejectedAppIds.has(app.id)}>
                     <input
                       type="checkbox"
                       checked={!rejectedAppIds.has(app.id)}
                       onchange={() => toggleAppReject(app.id)}
+                      aria-label={`Keep ${fmtSlot(app.slot)} for ${planting.varietyDisplayName}`}
                     />
                     <div class="row-body">
                       <div class="row-title">
                         <span class="slot-pill" data-category={app.productCategory}
                           >{fmtSlot(app.slot)}</span
                         >
-                        <span class="product-name">
-                          {app.productDisplayName ?? '⚠ pick product'}
-                        </span>
+                        {#if opts.length > 0}
+                          <select
+                            class="product-select"
+                            value={app.productPluginId ?? ''}
+                            aria-label={`Product for ${fmtSlot(app.slot)} on ${planting.varietyDisplayName}`}
+                            data-testid="product-select"
+                            onchange={(e) =>
+                              chooseProduct(app.id, (e.target as HTMLSelectElement).value)}
+                          >
+                            {#if !app.productPluginId}
+                              <option value="" disabled>Pick a product</option>
+                            {:else if !opts.some((o) => o.pluginId === app.productPluginId)}
+                              <option value={app.productPluginId}>{app.productDisplayName}</option>
+                            {/if}
+                            {#each opts as o (o.pluginId)}
+                              <option value={o.pluginId}>{optionLabel(o)}</option>
+                            {/each}
+                          </select>
+                        {:else}
+                          <span class="product-name">
+                            {app.productDisplayName ?? '⚠ pick product'}
+                          </span>
+                        {/if}
                         <span class="row-date">{fmtDate(app.applicationDateMs)}</span>
-                        <Provenance
-                          source={planMeta?.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
-                          compact
-                        />
+                        <Provenance source={sourceFor(app)} compact />
                       </div>
                       <p class="rationale">{localizeRationale(app.rationale, currentPrefs())}</p>
                       {#if app.rateAmount != null && app.rateUnit}
                         <p class="rate-line">{formatApplicationRateLine(app, currentPrefs())}</p>
+                      {:else if app.productPluginId}
+                        <p class="rate-line" data-testid="rate-missing">
+                          No rate for this product here. Check its label for the amount.
+                        </p>
                       {/if}
                     </div>
-                  </label>
+                  </div>
                 {/each}
 
                 {#each scouts as scout (scout.id)}
@@ -398,11 +485,22 @@
 
       <aside class="shopping">
         <h3>Shopping list</h3>
-        {#if plan.shoppingList.length === 0}
-          <p class="muted">Nothing to buy — on-hand stock covers all chosen applications.</p>
+        {#if shoppingList.length === 0}
+          {#if unsizedCount > 0}
+            <p class="muted" data-testid="shopping-unsized">
+              No amounts to work out yet. {unsizedCount === 1
+                ? '1 chosen product has'
+                : `${unsizedCount} chosen products have`} no rate here, so check the label before you
+              buy.
+            </p>
+          {:else if productCount > 0}
+            <p class="muted">Nothing to buy. The stock you have covers the chosen applications.</p>
+          {:else}
+            <p class="muted">Nothing to buy for the chosen applications.</p>
+          {/if}
         {:else}
           <ul>
-            {#each plan.shoppingList as item (item.pluginId)}
+            {#each shoppingList as item (item.pluginId)}
               <li>
                 <div class="shop-title">
                   <span class="shop-cat">{item.category}</span>
@@ -427,6 +525,12 @@
                       currentPrefs()
                     )}</span
                   >
+                  {#if item.stockUnitMismatch}
+                    <span class="unit-mismatch"
+                      >You have some, kept in {item.stockUnitMismatch}. Check the label to see if it
+                      covers this.</span
+                    >
+                  {/if}
                   {#if item.shortfall > 0}
                     <span class="shortfall"
                       >Buy: {formatInputAmount(
@@ -443,6 +547,14 @@
               </li>
             {/each}
           </ul>
+          {#if unsizedCount > 0}
+            <p class="muted" data-testid="shopping-unsized">
+              {unsizedCount === 1
+                ? '1 chosen product has no rate here and is not on this list'
+                : `${unsizedCount} chosen products have no rate here and are not on this list`}, so
+              check the label before you buy.
+            </p>
+          {/if}
         {/if}
       </aside>
     </div>
@@ -569,15 +681,20 @@
   }
   @media (max-width: 720px) {
     .layout {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
+  }
+  .layout > * {
+    min-width: 0;
   }
   .cards {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    min-width: 0;
   }
   .planting {
+    min-width: 0;
     border: 1px solid #ddd;
     border-radius: 8px;
     background: #fff;
@@ -586,7 +703,7 @@
   .planting-header {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr auto 24px;
+    grid-template-columns: minmax(0, 1fr) auto 24px;
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
@@ -615,6 +732,8 @@
     gap: 0.75rem;
     padding: 0.6rem 0.4rem;
     border-bottom: 1px solid #eee;
+  }
+  .scout-row {
     cursor: pointer;
   }
   .row:last-child {
@@ -670,6 +789,20 @@
   }
   .product-name {
     font-weight: 500;
+  }
+  .product-select {
+    min-height: 48px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    flex: 1 1 12rem;
+    text-overflow: ellipsis;
+    padding: 0 0.5rem;
+    border: 1px solid #cbd5cb;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 500;
+    background: white;
   }
   .row-date {
     color: #666;

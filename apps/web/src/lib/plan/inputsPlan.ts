@@ -70,6 +70,21 @@ import type {
 } from '$lib/season/setup';
 
 import { effectiveAcresFor } from '$lib/db/blocks';
+import { checkCropCompatibility } from '$lib/safety/cropCompatibility';
+import type { ChemistryClass, HerbicideProduct } from '$lib/safety/types';
+import {
+  buildShoppingList,
+  STOCK_COVERAGE_RANK,
+  stockCoverage,
+  addStockAmount,
+  onHandInUnit,
+  takeStockAmount,
+  type StockAmount,
+  type InputsPlanProductOption,
+  type ProductSource
+} from './inputsChoice';
+
+export type { InputsPlanProductOption, ProductSource, StockCoverage } from './inputsChoice';
 
 /* ─── Tier comparators ──────────────────────────────────────────────── */
 
@@ -274,6 +289,13 @@ export interface InputsPlanApplication {
   totalAmount: number | null;
   /** Reason summary for the operator + chat thread. */
   rationale: string;
+  /** #480 — `data` when the product was picked because the farm has it on
+   *  hand, `plugin` for the catalog default, `manual` once the farmer
+   *  changes it, `ai` for an AI substitution. */
+  productSource?: ProductSource;
+  /** #480 — every product the farmer may pick for this slot, on-hand first
+   *  (enough, then some, then none). */
+  options?: InputsPlanProductOption[];
 }
 
 /** A recurring scout reminder — surfaced in `tasks` with a recurrence
@@ -300,6 +322,9 @@ export interface InputsPlanShoppingItem {
   totalNeeded: number;
   onHand: number;
   shortfall: number;
+  /** Set to the stock's unit when the farm has this product but in a unit
+   *  the rate cannot be converted to (a volume against a weight). */
+  stockUnitMismatch?: string;
   appliesToPlantingIds: string[];
 }
 
@@ -336,6 +361,9 @@ export interface InputsPlan {
   applications: InputsPlanApplication[];
   scoutTasks: InputsPlanScoutTask[];
   shoppingList: InputsPlanShoppingItem[];
+  /** #480 — on-hand balance per product plugin, so the Inputs step can
+   *  rebuild the shopping list after the farmer changes a product. */
+  stockOnHand?: Record<string, StockAmount[]>;
   warnings: PlannerWarning[];
   meta: {
     year: number;
@@ -492,61 +520,187 @@ function resolveWindowDates(
   };
 }
 
-/** Pick the first herbicide whose active-ingredient chemistry class
- *  matches the window's `chemistryClass` AND is allowed under the
- *  philosophy. */
-function pickHerbicideForWindow(
+/* ─── Candidate products (#480) ────────────────────────────────────── */
+
+interface Candidate {
+  plugin: { pluginId: string; displayName: string };
+  rateAmount: number | null;
+  rateUnit: string | null;
+}
+
+/** A fertilizer that supplies none of the budgeted nutrients (lime, gypsum,
+ *  a copper or calcium foliar) gets no rate and cannot fill the slot, so
+ *  it is not offered for it. */
+function suppliesBudget(c: Candidate): boolean {
+  return c.rateAmount != null && c.rateAmount > 0;
+}
+
+interface Ranked extends Candidate {
+  option: InputsPlanProductOption;
+}
+
+/** Options sent with each application; on-hand ones sort first, so the cap
+ *  only ever drops products the farm does not have. */
+const MAX_OPTIONS = 40;
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** Orders candidates so an allowed product the farm has always beats one it
+ *  would have to buy: enough on hand, then some, then none. Ties keep the
+ *  catalog preference order the candidates arrive in. */
+function rankCandidates(
+  candidates: ReadonlyArray<Candidate>,
+  acres: number,
+  stockLeft: ReadonlyMap<string, StockAmount[]>
+): Ranked[] {
+  const ranked = candidates.map((c, i) => {
+    const total = c.rateAmount != null ? round2(c.rateAmount * acres) : null;
+    const inRateUnit = onHandInUnit(stockLeft.get(c.plugin.pluginId), c.rateUnit);
+    const onHand = inRateUnit == null ? null : Math.max(0, inRateUnit);
+    return {
+      ...c,
+      i,
+      option: {
+        pluginId: c.plugin.pluginId,
+        displayName: c.plugin.displayName,
+        rateAmount: c.rateAmount,
+        rateUnit: c.rateUnit,
+        totalAmount: total,
+        onHand: round2(onHand ?? 0),
+        stock: stockCoverage(onHand, total)
+      }
+    };
+  });
+  ranked.sort(
+    (a, b) => STOCK_COVERAGE_RANK[a.option.stock] - STOCK_COVERAGE_RANK[b.option.stock] || a.i - b.i
+  );
+  return ranked.map(({ i: _i, ...r }) => r);
+}
+
+/** The chosen product's fields for an application, plus its options. Takes
+ *  the pick's amount out of `stockLeft` so a later application sees what is
+ *  really left. */
+function chooseProduct(
+  ranked: ReadonlyArray<Ranked>,
+  stockLeft: Map<string, StockAmount[]>
+): Pick<
+  InputsPlanApplication,
+  | 'productPluginId'
+  | 'productDisplayName'
+  | 'rateAmount'
+  | 'rateUnit'
+  | 'totalAmount'
+  | 'productSource'
+  | 'options'
+> {
+  const pick = ranked[0];
+  const options = ranked.slice(0, MAX_OPTIONS).map((r) => r.option);
+  if (!pick) {
+    return {
+      productPluginId: null,
+      productDisplayName: null,
+      rateAmount: null,
+      rateUnit: null,
+      totalAmount: null,
+      productSource: 'plugin',
+      options
+    };
+  }
+  const total = pick.option.totalAmount;
+  const held = stockLeft.get(pick.plugin.pluginId);
+  if (total != null && total > 0 && held && pick.rateUnit) {
+    takeStockAmount(held, total, pick.rateUnit);
+  }
+  return {
+    productPluginId: pick.plugin.pluginId,
+    productDisplayName: pick.plugin.displayName,
+    rateAmount: pick.rateAmount,
+    rateUnit: pick.rateUnit,
+    totalAmount: total,
+    productSource: pick.option.stock === 'none' ? 'plugin' : 'data',
+    options
+  };
+}
+
+function rateOf(p: unknown): { amount: number; unit: string } | undefined {
+  if (!p || typeof p !== 'object' || !('ratePerAcre' in p)) return undefined;
+  const r = (p as { ratePerAcre?: { amount?: unknown; unit?: unknown } }).ratePerAcre;
+  return r && typeof r.amount === 'number' && typeof r.unit === 'string'
+    ? { amount: r.amount, unit: r.unit }
+    : undefined;
+}
+
+function rateCandidate(p: { pluginId: string; displayName: string }): Candidate {
+  const rate = rateOf(p);
+  return { plugin: p, rateAmount: rate?.amount ?? null, rateUnit: rate?.unit ?? null };
+}
+
+/** True when the herbicide's chemistry would not harm the standing crop. */
+function herbicideSafeOnCrop(h: HerbicidePlugin, crop: CropPlugin): boolean {
+  const product: HerbicideProduct = {
+    pluginId: h.pluginId,
+    displayName: h.displayName,
+    activeIngredients: h.activeIngredients.map((ai) => ({
+      name: ai.name,
+      chemistryClass: ai.chemistryClass as ChemistryClass
+    }))
+  };
+  return (
+    checkCropCompatibility([product], {
+      cropPluginId: crop.pluginId,
+      cropFamily: crop.cropFamily
+    }).length === 0
+  );
+}
+
+/** Herbicides for a declared window: the window's chemistry class, allowed
+ *  under the philosophy, and for a post-emergent spray safe on the crop
+ *  that is already in the ground. */
+function herbicideCandidates(
   window: CropSprayWindow,
   pool: ReadonlyArray<HerbicidePlugin>,
-  philosophy: Philosophy
-): HerbicidePlugin | null {
-  for (const h of pool) {
-    if (!h.activeIngredients.some((ai) => ai.chemistryClass === window.chemistryClass)) continue;
-    if (!isProductAllowed(h, philosophy)) continue;
-    return h;
-  }
-  return null;
+  philosophy: Philosophy,
+  crop: CropPlugin,
+  purpose: SprayWindowPurpose
+): Candidate[] {
+  return pool
+    .filter((h) => h.activeIngredients.some((ai) => ai.chemistryClass === window.chemistryClass))
+    .filter((h) => isProductAllowed(h, philosophy))
+    .filter((h) => purpose !== 'post-emergent' || herbicideSafeOnCrop(h, crop))
+    .map(rateCandidate);
 }
 
-/** First philosophy-allowed plugin in the pool — used for insecticide /
- *  fungicide slots where the spray window doesn't constrain by
- *  chemistry class. */
-function pickFirstAllowed<T extends Parameters<typeof isProductAllowed>[0]>(
+/** Every philosophy-allowed plugin in the pool, catalog order. */
+function allowedCandidates<T extends Parameters<typeof isProductAllowed>[0]>(
   pool: ReadonlyArray<T>,
   philosophy: Philosophy
-): T | null {
-  for (const p of pool) {
-    if (isProductAllowed(p, philosophy)) return p;
-  }
-  return null;
+): Candidate[] {
+  return pool
+    .filter((p) => isProductAllowed(p, philosophy))
+    .map((p) => rateCandidate(p as unknown as { pluginId: string; displayName: string }));
 }
 
-/** Pick a fertilizer whose analysis matches the requested nutrient
- *  emphasis. `'n'` prefers the highest-N fertilizer; `'balanced'` picks
- *  the first allowed with all three nutrients non-zero. */
-function pickFertilizer(
+/** Fertilizers in preference order for the requested nutrient emphasis:
+ *  `'n'` puts the highest-N first; `'balanced'` puts products with all
+ *  three nutrients first. Compost and cover-crop approaches prefer
+ *  `organic === true` products when any are allowed. */
+function fertilizerPreference(
   pool: ReadonlyArray<FertilizerPlugin>,
   philosophy: Philosophy,
   emphasis: 'n' | 'balanced',
   approach: FertilityApproach
-): FertilizerPlugin | null {
+): FertilizerPlugin[] {
   const allowed = pool.filter((p) => isProductAllowed(p, philosophy));
-  if (allowed.length === 0) return null;
-
-  // Approach gating: when the operator chose `compost-amendments`, prefer
-  // `organic === true` products even if synthetic alternatives are
-  // philosophy-allowed. `mixed` accepts anything.
+  if (allowed.length === 0) return [];
   const approachFiltered =
     approach === 'compost-amendments' || approach === 'cover-crop-credits'
       ? allowed.filter((p) => p.organic === true)
       : allowed;
-
   const pool2 = approachFiltered.length > 0 ? approachFiltered : allowed;
-
-  if (emphasis === 'n') {
-    return [...pool2].sort((a, b) => b.analysis.n - a.analysis.n)[0] ?? null;
-  }
-  return pool2.find((p) => p.analysis.n > 0 && p.analysis.p > 0 && p.analysis.k > 0) ?? pool2[0];
+  if (emphasis === 'n') return [...pool2].sort((a, b) => b.analysis.n - a.analysis.n);
+  const complete = (p: FertilizerPlugin) =>
+    p.analysis.n > 0 && p.analysis.p > 0 && p.analysis.k > 0;
+  return [...pool2.filter(complete), ...pool2.filter((p) => !complete(p))];
 }
 
 /** Pre-plant fertilizer rate in lb/acre derived from the dominant
@@ -593,7 +747,8 @@ function planForPlanting(
   planting: InputsPlanProvisionalPlanting,
   block: Block,
   crop: CropPlugin,
-  input: InputsPlanInput
+  input: InputsPlanInput,
+  stockLeft: Map<string, StockAmount[]>
 ): PerPlantingOutput {
   const { seasonSetup, productPlugins, soilTests, fertilityCredits, year } = input;
   const applications: InputsPlanApplication[] = [];
@@ -652,14 +807,16 @@ function planForPlanting(
       continue;
     }
 
-    const { category, picked } = pickProductForPurpose(
+    const { category, candidates } = candidatesForPurpose(
       window,
       window.purpose,
       productPlugins,
-      seasonSetup.philosophy
+      seasonSetup.philosophy,
+      crop
     );
+    const choice = chooseProduct(rankCandidates(candidates, acres, stockLeft), stockLeft);
 
-    if (!picked) {
+    if (!choice.productPluginId) {
       const reason = reasonForEmptyPool(window.purpose, seasonSetup.philosophy);
       warnings.push({
         kind: 'no-compliant-product',
@@ -669,25 +826,19 @@ function planForPlanting(
       });
     }
 
-    const rate = picked && 'ratePerAcre' in picked ? picked.ratePerAcre : undefined;
-
     applications.push({
       id: applicationId(planting.id, window.purpose, windowIndex++),
       plantingId: planting.id,
       blockId: planting.blockId,
       cropPluginId: planting.cropPluginId,
       slot: window.purpose,
-      productPluginId: picked?.pluginId ?? null,
-      productDisplayName: picked?.displayName ?? null,
       productCategory: category,
       windowStartMs: dates.startMs,
       windowEndMs: dates.endMs,
       applicationDateMs: dates.startMs,
-      rateAmount: rate?.amount ?? null,
-      rateUnit: rate?.unit ?? null,
       acres,
-      totalAmount: picked && rate ? Math.round(rate.amount * acres * 100) / 100 : null,
-      rationale: window.body ?? window.title
+      rationale: window.body ?? window.title,
+      ...choice
     });
   }
 
@@ -730,14 +881,30 @@ function planForPlanting(
 
     if (totalDeficit > 0) {
       const emphasis = deficit.n >= deficit.p && deficit.n >= deficit.k ? 'n' : 'balanced';
-      const fert = pickFertilizer(
-        productPlugins.fertilizers,
-        seasonSetup.philosophy,
-        emphasis,
-        seasonSetup.fertilityApproach
+      const choice = chooseProduct(
+        rankCandidates(
+          fertilizerPreference(
+            productPlugins.fertilizers,
+            seasonSetup.philosophy,
+            emphasis,
+            seasonSetup.fertilityApproach
+          )
+            .map((f) => {
+              const rate = fertilizerRateFromDeficit(deficit, f);
+              return {
+                plugin: f,
+                rateAmount: rate || null,
+                rateUnit: f.applicationRange?.unit?.replace('-per-acre', '') ?? 'lb'
+              };
+            })
+            .filter(suppliesBudget),
+          acres,
+          stockLeft
+        ),
+        stockLeft
       );
 
-      if (!fert) {
+      if (!choice.productPluginId) {
         warnings.push({
           kind: 'no-compliant-product',
           plantingId: planting.id,
@@ -746,7 +913,6 @@ function planForPlanting(
         });
       }
 
-      const ratePerAcre = fert ? fertilizerRateFromDeficit(deficit, fert) : 0;
       const windowEnd = plantingDateMs - 7 * DAY_MS;
       const windowStart = plantingDateMs - 21 * DAY_MS;
 
@@ -756,16 +922,12 @@ function planForPlanting(
         blockId: planting.blockId,
         cropPluginId: planting.cropPluginId,
         slot: 'pre-plant-fertility',
-        productPluginId: fert?.pluginId ?? null,
-        productDisplayName: fert?.displayName ?? null,
         productCategory: 'fertilizer',
         windowStartMs: windowStart,
         windowEndMs: windowEnd,
         applicationDateMs: windowStart,
-        rateAmount: ratePerAcre || null,
-        rateUnit: fert ? (fert.applicationRange?.unit?.replace('-per-acre', '') ?? 'lb') : null,
         acres,
-        totalAmount: ratePerAcre > 0 ? Math.round(ratePerAcre * acres * 100) / 100 : null,
+        ...choice,
         rationale:
           `Pre-plant fertility budget: ` +
           `N ${Math.max(0, deficit.n).toFixed(0)} lb/ac, ` +
@@ -787,14 +949,28 @@ function planForPlanting(
     plantingDateMs != null &&
     !(crop.sprayWindows ?? []).some((w) => w.purpose === 'sidedress-n')
   ) {
-    const fert = pickFertilizer(
-      productPlugins.fertilizers,
-      seasonSetup.philosophy,
-      'n',
-      seasonSetup.fertilityApproach
+    const sidedressRate = 40; // lb-N/acre conservative split application
+    const choice = chooseProduct(
+      rankCandidates(
+        fertilizerPreference(
+          productPlugins.fertilizers,
+          seasonSetup.philosophy,
+          'n',
+          seasonSetup.fertilityApproach
+        )
+          .map((f) => ({
+            plugin: f,
+            rateAmount: f.analysis.n > 0 ? Math.ceil(sidedressRate / (f.analysis.n / 100)) : null,
+            rateUnit: 'lb'
+          }))
+          .filter(suppliesBudget),
+        acres,
+        stockLeft
+      ),
+      stockLeft
     );
 
-    if (!fert) {
+    if (!choice.productPluginId) {
       warnings.push({
         kind: 'no-compliant-product',
         plantingId: planting.id,
@@ -812,9 +988,6 @@ function planForPlanting(
     if (v6) anchorDays = Math.round((v6.daysFromPlanting.min + v6.daysFromPlanting.max) / 2);
 
     const sidedressDateMs = plantingDateMs + anchorDays * DAY_MS;
-    const sidedressRate = 40; // lb-N/acre conservative split application
-    const productLbPerAcre =
-      fert && fert.analysis.n > 0 ? Math.ceil(sidedressRate / (fert.analysis.n / 100)) : 0;
 
     applications.push({
       id: applicationId(planting.id, 'sidedress-n', 0),
@@ -822,16 +995,12 @@ function planForPlanting(
       blockId: planting.blockId,
       cropPluginId: planting.cropPluginId,
       slot: 'sidedress-n',
-      productPluginId: fert?.pluginId ?? null,
-      productDisplayName: fert?.displayName ?? null,
       productCategory: 'fertilizer',
       windowStartMs: sidedressDateMs - 3 * DAY_MS,
       windowEndMs: sidedressDateMs + 7 * DAY_MS,
       applicationDateMs: sidedressDateMs,
-      rateAmount: productLbPerAcre || null,
-      rateUnit: 'lb',
       acres,
-      totalAmount: productLbPerAcre > 0 ? Math.round(productLbPerAcre * acres * 100) / 100 : null,
+      ...choice,
       rationale: `Sidedress N (~40 lb-N/ac) at ${v6 ? `stage ${v6.code}` : `+${anchorDays}d`}; covers post-emergence demand peak for ${crop.cropFamily}.`
     });
   }
@@ -844,10 +1013,18 @@ function planForPlanting(
     !(crop.sprayWindows ?? []).some((w) => w.purpose === 'cover-terminate')
   ) {
     const useHerbicide = seasonSetup.weedStrategy !== 'cultivate-first';
-    let picked: HerbicidePlugin | null = null;
+    const choice = chooseProduct(
+      useHerbicide
+        ? rankCandidates(
+            allowedCandidates(productPlugins.herbicides, seasonSetup.philosophy),
+            acres,
+            stockLeft
+          )
+        : [],
+      stockLeft
+    );
     if (useHerbicide) {
-      picked = pickFirstAllowed(productPlugins.herbicides, seasonSetup.philosophy);
-      if (!picked) {
+      if (!choice.productPluginId) {
         warnings.push({
           kind: 'no-compliant-product',
           plantingId: planting.id,
@@ -866,20 +1043,15 @@ function planForPlanting(
       blockId: planting.blockId,
       cropPluginId: planting.cropPluginId,
       slot: 'cover-terminate',
-      productPluginId: picked?.pluginId ?? null,
-      productDisplayName:
-        (picked?.displayName ?? useHerbicide) ? null : `${mechanicalTerminate} (no herbicide)`,
       productCategory: 'herbicide',
       windowStartMs: terminateDateMs - 7 * DAY_MS,
       windowEndMs: terminateDateMs + 7 * DAY_MS,
       applicationDateMs: terminateDateMs,
-      rateAmount: picked?.ratePerAcre.amount ?? null,
-      rateUnit: picked?.ratePerAcre.unit ?? null,
       acres,
-      totalAmount:
-        picked && picked.ratePerAcre
-          ? Math.round(picked.ratePerAcre.amount * acres * 100) / 100
-          : null,
+      ...choice,
+      productDisplayName:
+        choice.productDisplayName ??
+        (useHerbicide ? null : `${mechanicalTerminate} (no herbicide)`),
       rationale: useHerbicide
         ? `Terminate prior-year ${seasonSetup.coverCropIntent} cover crop ~3 weeks before planting.`
         : `${mechanicalTerminate} ${seasonSetup.coverCropIntent} cover crop ~3 weeks before planting (cultivation-first weed strategy).`
@@ -913,17 +1085,18 @@ function planForPlanting(
 
 /* ─── Product picking by purpose ────────────────────────────────────── */
 
-interface PickedProduct {
+interface PurposeCandidates {
   category: 'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer';
-  picked: HerbicidePlugin | InsecticidePlugin | FungicidePlugin | FertilizerPlugin | null;
+  candidates: Candidate[];
 }
 
-function pickProductForPurpose(
+function candidatesForPurpose(
   window: CropSprayWindow,
   purpose: SprayWindowPurpose,
   pools: InputsPlanInput['productPlugins'],
-  philosophy: Philosophy
-): PickedProduct {
+  philosophy: Philosophy,
+  crop: CropPlugin
+): PurposeCandidates {
   switch (purpose) {
     case 'burndown':
     case 'pre-emergent':
@@ -931,21 +1104,23 @@ function pickProductForPurpose(
     case 'cover-terminate':
       return {
         category: 'herbicide',
-        picked: pickHerbicideForWindow(window, pools.herbicides, philosophy)
+        candidates: herbicideCandidates(window, pools.herbicides, philosophy, crop, purpose)
       };
     case 'insecticide-prophylactic':
     case 'insecticide-scouted':
       return {
         category: 'insecticide',
-        picked: pickFirstAllowed(pools.insecticides, philosophy)
+        candidates: allowedCandidates(pools.insecticides, philosophy)
       };
     case 'fungicide':
-      return { category: 'fungicide', picked: pickFirstAllowed(pools.fungicides, philosophy) };
+      return { category: 'fungicide', candidates: allowedCandidates(pools.fungicides, philosophy) };
     case 'sidedress-n':
     case 'sidedress-other':
       return {
         category: 'fertilizer',
-        picked: pickFertilizer(pools.fertilizers, philosophy, 'n', 'mixed')
+        candidates: fertilizerPreference(pools.fertilizers, philosophy, 'n', 'mixed').map(
+          rateCandidate
+        )
       };
   }
 }
@@ -968,83 +1143,22 @@ function reasonForEmptyPool(
   return `No ${philosophy}-compliant ${family} in catalog covers the ${slot} slot.`;
 }
 
-/* ─── Shopping list aggregation ─────────────────────────────────────── */
-
-function buildShoppingList(
-  applications: ReadonlyArray<InputsPlanApplication>,
-  stock: ReadonlyArray<InputsPlanStockRef>
-): InputsPlanShoppingItem[] {
-  const byPlugin = new Map<
-    string,
-    {
-      pluginId: string;
-      category: InputsPlanShoppingItem['category'];
-      displayName: string;
-      unit: string;
-      totalNeeded: number;
-      appliesToPlantingIds: Set<string>;
-    }
-  >();
-
-  for (const app of applications) {
-    if (!app.productPluginId || app.totalAmount == null || !app.rateUnit) continue;
-    const existing = byPlugin.get(app.productPluginId);
-    if (existing) {
-      existing.totalNeeded += app.totalAmount;
-      existing.appliesToPlantingIds.add(app.plantingId);
-    } else {
-      byPlugin.set(app.productPluginId, {
-        pluginId: app.productPluginId,
-        category: app.productCategory,
-        displayName: app.productDisplayName ?? app.productPluginId,
-        unit: app.rateUnit,
-        totalNeeded: app.totalAmount,
-        appliesToPlantingIds: new Set([app.plantingId])
-      });
-    }
-  }
-
-  const onHandByPlugin = new Map<string, number>();
-  for (const s of stock) {
-    if (!s.pluginId) continue;
-    onHandByPlugin.set(s.pluginId, (onHandByPlugin.get(s.pluginId) ?? 0) + s.onHand);
-  }
-
-  const items: InputsPlanShoppingItem[] = [];
-  for (const {
-    pluginId,
-    category,
-    displayName,
-    unit,
-    totalNeeded,
-    appliesToPlantingIds
-  } of byPlugin.values()) {
-    const onHand = onHandByPlugin.get(pluginId) ?? 0;
-    const shortfall = Math.max(0, Math.round((totalNeeded - onHand) * 100) / 100);
-    items.push({
-      pluginId,
-      category,
-      displayName,
-      unit,
-      totalNeeded: Math.round(totalNeeded * 100) / 100,
-      onHand: Math.round(onHand * 100) / 100,
-      shortfall,
-      appliesToPlantingIds: [...appliesToPlantingIds].sort()
-    });
-  }
-
-  // Sort by category then displayName for stable UI rendering.
-  items.sort((a, b) => {
-    if (a.category !== b.category) return a.category.localeCompare(b.category);
-    return a.displayName.localeCompare(b.displayName);
-  });
-  return items;
-}
-
 /* ─── Public entrypoint ─────────────────────────────────────────────── */
 
 export function planInputs(input: InputsPlanInput): InputsPlan {
   const blockById = new Map(input.blocks.map((b) => [b.id, b]));
+  const stockOnHand: Record<string, StockAmount[]> = {};
+  const stockLeft = new Map<string, StockAmount[]>();
+  for (const st of input.existingStock) {
+    if (!st.pluginId) continue;
+    addStockAmount((stockOnHand[st.pluginId] ??= []), st.onHand, st.defaultUnit);
+    let left = stockLeft.get(st.pluginId);
+    if (!left) stockLeft.set(st.pluginId, (left = []));
+    addStockAmount(left, st.onHand, st.defaultUnit);
+  }
+  for (const list of Object.values(stockOnHand)) {
+    for (const b of list) b.amount = round2(b.amount);
+  }
   const allApplications: InputsPlanApplication[] = [];
   const allScoutTasks: InputsPlanScoutTask[] = [];
   const allWarnings: PlannerWarning[] = [];
@@ -1054,18 +1168,26 @@ export function planInputs(input: InputsPlanInput): InputsPlan {
     const crop = input.cropPlugins[planting.cropPluginId];
     if (!block || !crop) continue;
 
-    const out = planForPlanting(planting, block, crop, input);
+    const out = planForPlanting(planting, block, crop, input, stockLeft);
     allApplications.push(...out.applications);
     allScoutTasks.push(...out.scoutTasks);
     allWarnings.push(...out.warnings);
   }
 
-  const shoppingList = buildShoppingList(allApplications, input.existingStock);
+  const shoppingList = buildShoppingList(
+    allApplications,
+    input.existingStock.map((st) => ({
+      pluginId: st.pluginId,
+      onHand: st.onHand,
+      unit: st.defaultUnit
+    }))
+  );
 
   return {
     applications: allApplications,
     scoutTasks: allScoutTasks,
     shoppingList,
+    stockOnHand,
     warnings: allWarnings,
     meta: {
       year: input.year,

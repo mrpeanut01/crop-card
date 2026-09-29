@@ -7,6 +7,7 @@
  */
 
 import type { AnimalPurpose } from '$lib/animals/model';
+import { formatCount } from './coopCapacity';
 import type { CapacityState } from '$lib/animals/counts';
 import {
   mergeProvenance,
@@ -45,6 +46,10 @@ export interface AreaHousing {
   total: number;
   /** Owner-typed coop or pen capacity; shown, never enforced. */
   capacity: CapacityState | null;
+  /** `data` when the owner kept the sourced suggestion, else typed. */
+  capacityProvenance?: 'data' | 'manual';
+  /** Species living here, most heads first; prefills the coop form. */
+  speciesIds?: string[];
 }
 
 export type HousingByArea = Record<string, AreaHousing>;
@@ -84,7 +89,8 @@ export function housedLines(h: AreaHousing, opts: HousingViewOptions = {}): stri
 }
 
 export function capacityLabel(c: CapacityState): string {
-  return c.over ? `Over capacity (${c.count} of ${c.capacity})` : `${c.count} of ${c.capacity}`;
+  const of = `${formatCount(c.count)} of ${formatCount(c.capacity)}`;
+  return c.over ? `Over capacity (${of})` : of;
 }
 
 export function housingFacts(h: AreaHousing | null | undefined): CardFact[] {
@@ -94,7 +100,11 @@ export function housingFacts(h: AreaHousing | null | undefined): CardFact[] {
     facts.push({ label: 'Animals', value: String(h.total), provenance: 'data' });
   }
   if (h.capacity) {
-    facts.push({ label: 'Capacity', value: capacityLabel(h.capacity), provenance: 'manual' });
+    facts.push({
+      label: 'Capacity',
+      value: capacityLabel(h.capacity),
+      provenance: h.capacityProvenance ?? 'manual'
+    });
   }
   return facts;
 }
@@ -127,7 +137,13 @@ export function withHousing(
   if (facts.length === 0 && !section) return card;
   const added: CardProvenance[] = [];
   if (h && h.total > 0) added.push({ source: 'data' });
-  if (h?.capacity) added.push({ source: 'manual', detail: 'capacity typed by you' });
+  if (h?.capacity) {
+    added.push(
+      h.capacityProvenance === 'data'
+        ? { source: 'data', detail: 'capacity suggested from housing guidance' }
+        : { source: 'manual', detail: 'capacity typed by you' }
+    );
+  }
   return {
     ...card,
     facts: [...card.facts, ...facts],

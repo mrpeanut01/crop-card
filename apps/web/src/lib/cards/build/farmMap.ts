@@ -20,6 +20,8 @@ import {
   MAP_FEATURE_PLURAL,
   MAP_FEATURE_STYLE,
   describeFeature,
+  servedAreaIds,
+  servesManyAreas,
   type MapFeatureKind
 } from '$lib/farm/mapFeatures';
 import { formatEmergencyContact, type EmergencyContact } from '$lib/farm/emergencyContacts';
@@ -145,13 +147,22 @@ export function buildFarmMapCard(
   }
 
   const features = snapshot.mapFeatures ?? [];
+  const areaById = new Map(areas.map((a) => [a.id, a]));
   const featureKinds = MAP_FEATURE_KINDS.filter((k) => features.some((f) => f.kind === k));
   const lengthText = (ft: number) => formatQuantity(ft, 'distance', prefs, { digits: 0 });
   for (const kind of featureKinds) {
     const ofKind = features
       .filter((f) => f.kind === kind)
       .sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }));
-    const items = ofKind.slice(0, MAX_PER_KIND).map((f) => describeFeature(f, lengthText));
+    const items = ofKind.slice(0, MAX_PER_KIND).map((f) => {
+      const line = describeFeature(f, lengthText);
+      if (!servesManyAreas(f.kind)) return line;
+      const served = servedAreaIds(f)
+        .map((id) => areaById.get(id))
+        .filter((a): a is NonNullable<typeof a> => !!a)
+        .map((a) => areaDisplayName(a));
+      return served.length ? `${line} · serves ${served.join(', ')}` : line;
+    });
     if (ofKind.length > MAX_PER_KIND) items.push(`+${ofKind.length - MAX_PER_KIND} more`);
     sections.push({ title: MAP_FEATURE_PLURAL[kind], items });
   }

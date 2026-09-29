@@ -91,7 +91,7 @@ describe('normalizeStockEntry', () => {
 });
 
 describe('draftFromScanResult', () => {
-  it('auto-binds the top crop-plugin match when score ≥ 0.75', () => {
+  it('pre-selects the top crop category match (#472)', () => {
     const d = draftFromScanResult({
       displayName: 'Cherokee Purple',
       category: 'seed',
@@ -104,12 +104,23 @@ describe('draftFromScanResult', () => {
     expect(d.pluginId).toBe('cherokee-purple');
   });
 
-  it('leaves pluginId unset when no match clears 0.75', () => {
+  it('pre-selects a weaker top match too, for the operator to confirm (#472)', () => {
     const d = draftFromScanResult({
       displayName: 'X',
       cropPluginMatches: [{ pluginId: 'maybe', score: 0.6 }]
     });
-    expect(d.pluginId).toBeUndefined();
+    expect(d.pluginId).toBe('maybe');
+  });
+
+  it('leaves pluginId unset with no matches', () => {
+    expect(
+      draftFromScanResult({ displayName: 'X', cropPluginMatches: [] }).pluginId
+    ).toBeUndefined();
+  });
+
+  it('carries the package quantity for the first lot (#473)', () => {
+    expect(draftFromScanResult({ displayName: 'X', packageQuantity: 250 }).quantity).toBe(250);
+    expect(draftFromScanResult({ displayName: 'X', packageQuantity: 0 }).quantity).toBeUndefined();
   });
 
   it('defaults source to ai but accepts override', () => {

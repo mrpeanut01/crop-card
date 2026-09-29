@@ -10,3 +10,4 @@ Rules:
 - `foodProducingDefault` and every care `intervalDays` need a quoted source in `apps/web/scripts/species-sources.json`, keyed by pluginId and field path. A value that cannot be sourced is left out.
 - Names, the scientific name, product types, the group noun and the tile icon need no source.
 - Care defaults are read in 32D and ship with that sprint, each `intervalDays` sourced.
+- `housingSpace` (floor space per adult animal indoors and in a run, plus the `sourceName` shown beside the suggestion) drives the advisory coop or pen capacity. Each number needs a quote under `housingSpace.<field>` in `species-sources.json`; leave a figure out when no extension source gives one.

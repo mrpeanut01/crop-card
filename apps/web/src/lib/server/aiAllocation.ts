@@ -27,6 +27,14 @@ import {
   type SufficiencyResult
 } from '$lib/layout/sufficiency';
 import {
+  BED_SHARE_CAP,
+  bedPlantsFit,
+  bedUsableSqft,
+  freeBedShare,
+  plantsForShare,
+  SHARE_EPSILON
+} from '$lib/layout/bedSharing';
+import {
   buildFarmSystemBlocks,
   estimateUsd,
   selectModel,
@@ -66,12 +74,22 @@ export interface MatrixRow {
   narrowBlock: boolean;
   threeSistersCandidate: boolean;
   usableSqft: number;
+  /** #440 — the block is a garden or greenhouse bed shared by area. */
+  sharedBed: boolean;
+  /** Plants of this crop that fill the whole block (bed math on shared
+   *  beds), before existing plantings. */
+  fullFit: number;
+  /** Share of the block still free (1 on field blocks). */
+  freeShare: number;
 }
 
 export interface AiAssignment {
   stockItemId: string;
   blockId: string;
   plants: number;
+  /** #440 — fraction of a shared bed (0-1). On a shared bed it sets plants:
+   *  floor(areaShare × the crop's whole-bed fit). */
+  areaShare?: number;
   rationale: string;
 }
 
@@ -614,12 +632,19 @@ export async function refineAllocation(
       .map((a) => {
         const seed = input.seeds.find((s) => s.stockItemId === a.stockItemId);
         if (!seed) return null;
+        const row = matrix.find((r) => r.stockItemId === a.stockItemId && r.blockId === a.blockId);
+        const plants =
+          a.plants > 0
+            ? a.plants
+            : row && a.areaShare !== undefined
+              ? plantsForShare(a.areaShare, row.fullFit)
+              : 0;
         return {
           stockItemId: a.stockItemId,
           cropPluginId: seed.cropPluginId,
           varietyDisplayName: seed.varietyDisplayName,
           blockId: a.blockId,
-          plants: Math.max(1, Math.floor(a.plants))
+          plants: Math.max(1, Math.floor(plants))
         };
       })
       .filter((a): a is NonNullable<typeof a> => a !== null);
@@ -684,7 +709,7 @@ function buildRefinementUserMessage(message: string): string {
     '  "reply": "1-3 plain-English sentences shown directly in the chat. Acknowledge what the farmer asked for and explain what you changed (or why you couldn\'t change it). Never quote column names like sufficiency, sunMatch, plantsFit, etc.",',
     '  "rationale": "2-4 sentence updated overview of the whole plan. If nothing material changed, repeat the previous overview.",',
     '  "assignments": [',
-    '    { "stockItemId": "...", "blockId": "...", "plants": <int>, "rationale": "1 plain-English sentence" }',
+    '    { "stockItemId": "...", "blockId": "...", "plants": <int>, "areaShare": <number 0-1, shared beds only>, "rationale": "1 plain-English sentence" }',
     '  ],',
     '  "advisories": ["0-4 short observations the farmer might want to consider — empty array is fine"]',
     '}',
@@ -721,19 +746,17 @@ function parseRefinementResponse(raw: unknown): RefinementResponse | null {
   for (const a of r.assignments) {
     if (!a || typeof a !== 'object') continue;
     const item = a as Partial<AiAssignment>;
-    if (
-      typeof item.stockItemId !== 'string' ||
-      typeof item.blockId !== 'string' ||
-      typeof item.plants !== 'number' ||
-      !Number.isFinite(item.plants) ||
-      item.plants <= 0
-    ) {
-      continue;
-    }
+    const hasPlants =
+      typeof item.plants === 'number' && Number.isFinite(item.plants) && item.plants > 0;
+    const hasShare =
+      typeof item.areaShare === 'number' && Number.isFinite(item.areaShare) && item.areaShare > 0;
+    if (typeof item.stockItemId !== 'string' || typeof item.blockId !== 'string') continue;
+    if (!hasPlants && !hasShare) continue;
     assignments.push({
       stockItemId: item.stockItemId,
       blockId: item.blockId,
-      plants: Math.floor(item.plants),
+      plants: hasPlants ? Math.floor(item.plants as number) : 0,
+      ...(hasShare ? { areaShare: item.areaShare } : {}),
       rationale: typeof item.rationale === 'string' ? item.rationale : ''
     });
   }
@@ -801,6 +824,14 @@ export function buildCandidacyMatrix(input: PlanInput): MatrixRow[] {
   const out: MatrixRow[] = [];
   const now = Date.now();
 
+  const bedIds = new Set(input.bedBlockIds ?? []);
+  const freeShareByBed = new Map<string, number>();
+  for (const block of input.blocks) {
+    if (bedIds.has(block.id)) {
+      freeShareByBed.set(block.id, freeBedShare(block, input.existingCrops, input.pluginIndex));
+    }
+  }
+
   for (const seed of input.seeds) {
     const plugin = input.pluginIndex[seed.cropPluginId];
     if (!plugin) continue;
@@ -809,8 +840,13 @@ export function buildCandidacyMatrix(input: PlanInput): MatrixRow[] {
     const lookbackCutoff = lookback > 0 ? now - lookback * 365 * 86_400_000 : 0;
 
     for (const block of input.blocks) {
-      const plantsFit = plantsFitUsableForBlock(block, plugin, input.existingCrops);
-      const usable = usableSqft(block);
+      const sharedBed = bedIds.has(block.id);
+      const freeShare = sharedBed ? (freeShareByBed.get(block.id) ?? 0) : 1;
+      const fullFit = sharedBed ? bedPlantsFit(block, plugin) : plantsFitUsable(block, plugin);
+      const plantsFit = sharedBed
+        ? plantsForShare(freeShare, fullFit)
+        : plantsFitUsableForBlock(block, plugin, input.existingCrops);
+      const usable = sharedBed ? { sqft: bedUsableSqft(block) } : usableSqft(block);
       const sufficiency = sufficiencyOf({
         plantsAvailable: seed.quantityPlants,
         plantsFit
@@ -839,8 +875,9 @@ export function buildCandidacyMatrix(input: PlanInput): MatrixRow[] {
       const badHere = compEntry.badWith.filter((p) => placedHere.has(p));
 
       const rowIn = plugin.plantingGuide?.rowSpacingIn ?? plugin.defaultRowSpacingInches ?? 12;
-      const minDimFt = sqrtAcresFt(block);
-      const narrow = minDimFt != null && minDimFt < (2 * rowIn) / 12;
+      const minDimFt = sharedBed ? bedMinDimFt(block) : sqrtAcresFt(block);
+      // A bed is planted from its edges: one row across is enough.
+      const narrow = minDimFt != null && minDimFt < ((sharedBed ? 1 : 2) * rowIn) / 12;
 
       const fam = plugin.cropFamily;
       const threeSistersCandidate = fam === 'corn' || fam === 'legume' || fam === 'cucurbit';
@@ -859,7 +896,10 @@ export function buildCandidacyMatrix(input: PlanInput): MatrixRow[] {
         companionBadHere: badHere,
         narrowBlock: narrow,
         threeSistersCandidate,
-        usableSqft: Math.round(usable.sqft)
+        usableSqft: Math.round(usable.sqft),
+        sharedBed,
+        fullFit,
+        freeShare: Number(freeShare.toFixed(3))
       });
     }
   }
@@ -905,6 +945,11 @@ function defaultSunForFamily(family: string): 'full' | 'partial' | 'shade' {
   return 'full';
 }
 
+function bedMinDimFt(block: BlockWithPlantings): number | null {
+  if (block.widthFt && block.lengthFt) return Math.min(block.widthFt, block.lengthFt);
+  return sqrtAcresFt(block);
+}
+
 function sqrtAcresFt(block: BlockWithPlantings): number | null {
   if (!block.acres || block.acres <= 0) return null;
   return Math.sqrt(block.acres * 43_560);
@@ -919,12 +964,33 @@ export function buildAllocationPrompt(
 ): string {
   const seedLines = input.seeds.map(
     (s) =>
-      `- ${s.stockItemId} | ${s.varietyDisplayName} | plugin=${s.cropPluginId} | available_plants=${s.quantityPlants}`
+      `- ${s.stockItemId} | ${s.varietyDisplayName} | plugin=${s.cropPluginId} | ` +
+      (s.fillToCapacity
+        ? `available_plants=not set (size it to the space you give it, at most ${s.quantityPlants})`
+        : `available_plants=${s.quantityPlants}`)
   );
+  const bedIds = new Set(input.bedBlockIds ?? []);
+  const freeShareOf = (blockId: string) =>
+    matrix.find((r) => r.blockId === blockId)?.freeShare ?? 1;
   const blockLines = input.blocks.map((b) => {
+    if (bedIds.has(b.id)) {
+      return `- ${b.id} | ${b.blockLabel ?? b.name} | shared_bed=Y | free_share=${freeShareOf(b.id)} | sun=${b.sunExposure ?? '?'} | usable_sqft=${Math.round(bedUsableSqft(b))}`;
+    }
     const usable = usableSqft(b);
     return `- ${b.id} | ${b.blockLabel ?? b.name} | acres=${b.acres ?? '?'} | sun=${b.sunExposure ?? '?'} | usable_sqft=${Math.round(usable.sqft)}`;
   });
+  const hasSharedBeds = input.blocks.some((b) => bedIds.has(b.id));
+  const sharedBedSection = hasSharedBeds
+    ? [
+        '',
+        'SHARED BEDS (blocks marked shared_bed=Y are garden or greenhouse beds):',
+        '- Crops on one shared bed split its AREA. For each assignment on a shared bed, return "areaShare": the fraction of the whole bed that crop gets (for example 0.25 for a quarter of the bed).',
+        "- The areaShare values of every crop on one shared bed must add up to no more than that bed's free_share. Never give two crops the whole bed.",
+        '- Plants are worked out for you as areaShare × that crop\'s whole-bed plantsFit, so you may leave "plants" out on a shared bed.',
+        '- Having seed left over once the beds are full is normal in a garden. Do not squeeze extra plants in to use it up.',
+        '- Split a bed between the crops that suit it, roughly in proportion to how much of each the farmer has. A crop with available_plants "not set" should get a fair share, not the whole bed.'
+      ]
+    : [];
 
   const matrixHeader = [
     'stockItemId',
@@ -973,6 +1039,8 @@ export function buildAllocationPrompt(
       'BLOCKS:',
       ...blockLines,
       '',
+      ...sharedBedSection,
+      '',
       'CANDIDACY MATRIX (one row per seed × block):',
       matrixHeader,
       ...matrixRows,
@@ -996,7 +1064,7 @@ export function buildAllocationPrompt(
       '',
       'HARD CAPS (a violation here will be rejected by the validator):',
       '- DENSITY CAP: never propose an assignment with utilizationPct > 1.25 ("badly surplus") when the same seed has any other viable block (sunMatch ≠ none AND narrow=N) where utilizationPct ≤ 1.25 is achievable. Split or reduce the assignment to avoid jamming a block.',
-      "- BLOCK SPACE CAP: crops share a block. Each assignment uses plants / plantsFit of the block, and the sum over every crop on one block must not exceed 1.25. Two crops on one block means roughly half of each crop's plantsFit, not the full amount of both.",
+      "- BLOCK SPACE CAP: crops share a block. Each assignment uses plants / plantsFit of the block, and the sum over every crop on one block must not exceed 1.25 (on a shared bed: the areaShare values must not exceed its free_share). Two crops on one block means roughly half of each crop's plantsFit, not the full amount of both.",
       '- COMBINED-FAMILY DENSITY CAP: when multiple varieties of the same family (e.g., several cucurbits, several brassicas) land on the same block, the SUM of their assigned plants across that block must not exceed plantsFit by more than 25% of the largest single-variety plantsFit on that block. If it does, REDUCE the smaller varieties or move them to other blocks. Cucurbits especially: a vining cultivar (vine_spread ≥ 10 ft) effectively claims the whole block — flag others for displacement.',
       '- Prefer sufficiency=match > surplus > deficit, but never push surplus past 1.25× when alternatives exist.',
       '',
@@ -1028,7 +1096,7 @@ export function buildAllocationPrompt(
       '{',
       '  "rationale": "2-4 sentence plain-English overview",',
       '  "assignments": [',
-      '    { "stockItemId": "...", "blockId": "...", "plants": <int>, "rationale": "1 plain-English sentence" }',
+      '    { "stockItemId": "...", "blockId": "...", "plants": <int>, "areaShare": <number 0-1, shared beds only>, "rationale": "1 plain-English sentence" }',
       '  ],',
       '  "advisories": ["short observation", "another short observation"]',
       '}'
@@ -1080,11 +1148,8 @@ export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow
       violations.push(`assignment[${i}] missing stockItemId or blockId`);
       continue;
     }
-    if (item.plants === 0) continue;
-    if (typeof item.plants !== 'number' || !Number.isFinite(item.plants) || item.plants < 0) {
-      violations.push(`assignment[${i}] plants must be a positive number`);
-      continue;
-    }
+    const share = typeof item.areaShare === 'number' ? item.areaShare : undefined;
+    if (item.plants === 0 && share === undefined) continue;
     const seed = seedById.get(item.stockItemId);
     if (!seed) {
       violations.push(`assignment[${i}] references unknown stockItemId ${item.stockItemId}`);
@@ -1101,7 +1166,27 @@ export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow
       );
       continue;
     }
-    const plantsInt = Math.floor(item.plants);
+    let plantsInt: number;
+    if (matrixRow.sharedBed && share !== undefined) {
+      if (!Number.isFinite(share) || share <= 0 || share > BED_SHARE_CAP) {
+        violations.push(`assignment[${i}] areaShare must be greater than 0 and at most 1`);
+        continue;
+      }
+      plantsInt = plantsForShare(share, matrixRow.fullFit);
+      if (plantsInt < 1) {
+        violations.push(
+          `assignment[${i}] areaShare=${share} of ${item.blockId} is too small for one plant of ${item.stockItemId}`
+        );
+        continue;
+      }
+    } else {
+      if (typeof item.plants !== 'number' || !Number.isFinite(item.plants) || item.plants < 0) {
+        violations.push(`assignment[${i}] plants must be a positive number`);
+        continue;
+      }
+      plantsInt = Math.floor(item.plants);
+      if (plantsInt === 0) continue;
+    }
     if (plantsInt > matrixRow.plantsFit) {
       violations.push(
         `assignment[${i}] plants=${plantsInt} exceeds plantsFit=${matrixRow.plantsFit} for (${item.stockItemId}, ${item.blockId})`
@@ -1179,9 +1264,12 @@ export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow
 
   // (a) Per-assignment density cap when alternatives exist.
   const seedHasAlternativeUnderCap = new Map<string, boolean>();
+  const onSharedBed = (a: AiAssignment) =>
+    matrixIndex.get(`${a.stockItemId}:${a.blockId}`)?.sharedBed === true;
   for (const a of validAssignments) {
     const seed = seedById.get(a.stockItemId);
     if (!seed) continue;
+    if (onSharedBed(a)) continue;
     if (seedHasAlternativeUnderCap.has(a.stockItemId)) continue;
     const candidates = matrix.filter(
       (r) =>
@@ -1196,7 +1284,7 @@ export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow
   }
   for (const a of validAssignments) {
     const matrixRow = matrixIndex.get(`${a.stockItemId}:${a.blockId}`);
-    if (!matrixRow || matrixRow.plantsFit <= 0) continue;
+    if (!matrixRow || matrixRow.plantsFit <= 0 || matrixRow.sharedBed) continue;
     const utilization = a.plants / matrixRow.plantsFit;
     if (utilization > 1.25 && seedHasAlternativeUnderCap.get(a.stockItemId)) {
       violations.push(
@@ -1211,7 +1299,7 @@ export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow
   const blockFamilyAssignments = new Map<string, AiAssignment[]>();
   for (const a of validAssignments) {
     const family = seedFamilyByStockId.get(a.stockItemId);
-    if (!family) continue;
+    if (!family || onSharedBed(a)) continue;
     const key = `${a.blockId}:${family}`;
     const list = blockFamilyAssignments.get(key) ?? [];
     list.push(a);
@@ -1243,16 +1331,38 @@ export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow
   // the whole block holds at one crop's spacing, so plants / plantsFit is
   // the share of the block that assignment uses; the shares must add up to
   // one block (with the same 25% slack as the caps above).
-  const blockShare = new Map<string, { share: number; detail: string[] }>();
+  // #440 — on a shared garden or greenhouse bed the shares are of the whole
+  // bed and must fit in its free share (at most 1.0, no slack).
+  const blockShare = new Map<
+    string,
+    { share: number; detail: string[]; cap: number; sharedBed: boolean }
+  >();
   for (const a of validAssignments) {
     const m = matrixIndex.get(`${a.stockItemId}:${a.blockId}`);
-    if (!m || m.plantsFit <= 0) continue;
-    const entry = blockShare.get(a.blockId) ?? { share: 0, detail: [] };
-    entry.share += a.plants / m.plantsFit;
-    entry.detail.push(`${a.stockItemId}=${a.plants}/${m.plantsFit}`);
+    if (!m) continue;
+    const denom = m.sharedBed ? m.fullFit : m.plantsFit;
+    if (denom <= 0) continue;
+    const entry = blockShare.get(a.blockId) ?? {
+      share: 0,
+      detail: [],
+      cap: m.sharedBed ? m.freeShare : BLOCK_SHARE_CAP,
+      sharedBed: m.sharedBed
+    };
+    entry.share += a.plants / denom;
+    entry.detail.push(`${a.stockItemId}=${a.plants}/${denom}`);
     blockShare.set(a.blockId, entry);
   }
-  for (const [blockId, { share, detail }] of blockShare) {
+  for (const [blockId, { share, detail, cap, sharedBed }] of blockShare) {
+    if (sharedBed) {
+      if (share > cap + SHARE_EPSILON + 0.005) {
+        violations.push(
+          `shared bed ${blockId} is over-packed: its crops' area shares add up to ${share.toFixed(2)} ` +
+            `but only ${cap} of the bed is free. Give each crop a smaller areaShare so they add up to ` +
+            `${cap} or less. (${detail.join(', ')})`
+        );
+      }
+      continue;
+    }
     if (share > BLOCK_SHARE_CAP) {
       violations.push(
         `block ${blockId} is over-packed: its crops together use ${share.toFixed(2)}× the block ` +
@@ -1405,7 +1515,16 @@ function engineAdvisories(
 
   // 4) Unplaced leftover seed — point the farmer at adding a bed or
   //    succession sowing rather than just dropping it on the floor.
-  if (unplaced.length > 0) {
+  const allUnsized =
+    input.blocks.length > 0 &&
+    input.blocks.every(
+      (b) => usableSqft(b).sqft <= 0 && !((b.widthFt ?? 0) > 0 && (b.lengthFt ?? 0) > 0)
+    );
+  if (unplaced.length > 0 && allUnsized) {
+    out.push(
+      'The blocks you picked have no size yet, so no seed could be placed. Give each bed a width and length, then plan again.'
+    );
+  } else if (unplaced.length > 0) {
     const names = unplaced
       .map((u) => seedNameOf(u.stockItemId))
       .slice(0, 3)
@@ -1457,9 +1576,10 @@ function computeSufficiencyByPair(
     const block = input.blocks.find((b) => b.id === a.blockId);
     const plugin = input.pluginIndex[a.cropPluginId];
     if (!seed || !block || !plugin) continue;
+    const sharedBed = (input.bedBlockIds ?? []).includes(block.id);
     out[`${a.stockItemId}:${a.blockId}`] = sufficiencyOf({
       plantsAvailable: a.plants,
-      plantsFit: plantsFitUsable(block, plugin)
+      plantsFit: sharedBed ? bedPlantsFit(block, plugin) : plantsFitUsable(block, plugin)
     });
   }
   return out;
@@ -1474,7 +1594,11 @@ function computeUnplaced(
     placed.set(a.stockItemId, (placed.get(a.stockItemId) ?? 0) + a.plants);
   }
   return seeds
-    .filter((s) => (placed.get(s.stockItemId) ?? 0) < s.quantityPlants)
+    .filter((s) =>
+      s.fillToCapacity
+        ? (placed.get(s.stockItemId) ?? 0) === 0
+        : (placed.get(s.stockItemId) ?? 0) < s.quantityPlants
+    )
     .map((s) => ({
       ...s,
       quantityPlants: s.quantityPlants - (placed.get(s.stockItemId) ?? 0)
@@ -1650,11 +1774,14 @@ function appendAllocateTurn(
  *  seed/block selection doesn't reuse a stale matrix from a prior call. */
 function hashInputsForMatrix(input: PlanInput): string {
   const seedKey = input.seeds
-    .map((s) => `${s.stockItemId}:${s.cropPluginId}:${s.quantityPlants}`)
+    .map(
+      (s) => `${s.stockItemId}:${s.cropPluginId}:${s.quantityPlants}:${s.fillToCapacity ? 'f' : ''}`
+    )
     .sort()
     .join(',');
+  const beds = new Set(input.bedBlockIds ?? []);
   const blockKey = input.blocks
-    .map((b) => b.id)
+    .map((b) => `${b.id}${beds.has(b.id) ? ':bed' : ''}`)
     .sort()
     .join(',');
   return `${seedKey}|${blockKey}`;

@@ -121,8 +121,8 @@
       </div>
       <h2 class="serif action-title">All caught up.</h2>
       <p class="action-body">
-        Nothing's overdue and nothing needs doing in the next 24 hours. The week below shows what's
-        coming.
+        Nothing's overdue and nothing needs doing in the next 24 hours. Pick Week or Month below to
+        see what's coming.
       </p>
     </div>
   {/if}

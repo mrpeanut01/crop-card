@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { skyFor, summarizeForecast, summarizeForecastSafely } from './weatherSummary';
+import {
+  forecastDays,
+  skyFor,
+  summarizeForecast,
+  summarizeForecastSafely,
+  weatherByDate
+} from './weatherSummary';
 import type { ForecastDay } from '$lib/hay/types';
 
 function day(over: Partial<ForecastDay>): ForecastDay {
@@ -103,5 +109,53 @@ describe('skyFor', () => {
     [undefined, true, 'clear-night']
   ] as const)('%s (night=%s) → %s', (f, night, sky) => {
     expect(skyFor(f, night)).toBe(sky);
+  });
+});
+
+describe('forecastDays', () => {
+  it('turns NWS days into calendar weather with a sky icon and rounded values', () => {
+    const days = forecastDays([
+      {
+        date: '2026-09-29',
+        popPct: 20,
+        highF: 71.4,
+        lowF: 52.6,
+        windMph: 7.6,
+        shortForecast: 'Sunny'
+      },
+      {
+        date: '2026-09-30',
+        popPct: 60,
+        highF: 58,
+        lowF: 58,
+        shortForecast: 'Showers Likely',
+        overnightOnly: true
+      },
+      { date: 'bad', popPct: 0, highF: Number.NaN, lowF: 3 }
+    ]);
+    expect(days).toEqual([
+      {
+        date: '2026-09-29',
+        sky: 'clear',
+        highF: 71,
+        lowF: 53,
+        popPct: 20,
+        windMph: 8,
+        shortForecast: 'Sunny',
+        overnightOnly: false
+      },
+      {
+        date: '2026-09-30',
+        sky: 'rain',
+        highF: 58,
+        lowF: 58,
+        popPct: 60,
+        windMph: undefined,
+        shortForecast: 'Showers Likely',
+        overnightOnly: true
+      }
+    ]);
+    expect(Object.keys(weatherByDate(days))).toEqual(['2026-09-29', '2026-09-30']);
+    expect(forecastDays(null)).toEqual([]);
   });
 });

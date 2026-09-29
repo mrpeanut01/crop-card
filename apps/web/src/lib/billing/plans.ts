@@ -16,6 +16,8 @@ export interface PlanDefinition {
   monthlyPriceUsd: number;
   annualPriceUsd: number;
   aiMonthlyUsd: number;
+  /** Separate monthly ceiling on AI planning spend (see PLANNING_ENDPOINTS). */
+  planningMonthlyUsd: number;
   helperSeats: number;
   webSearchAi: boolean;
   prioritySupport: boolean;
@@ -34,7 +36,7 @@ const FREE_QUOTA: DailyQuota = {
   'scan-label': 3,
   'scan-url': 1,
   'plugin-scan': 1,
-  allocate: 1,
+  allocate: 5,
   groups: 1,
   optimize: 0,
   'plugin-search': 1,
@@ -54,7 +56,7 @@ const GROWER_QUOTA: DailyQuota = {
   'scan-label': 20,
   'scan-url': 10,
   'plugin-scan': 10,
-  allocate: 5,
+  allocate: 25,
   groups: 5,
   optimize: 2,
   'plugin-search': 10,
@@ -74,7 +76,7 @@ const FARM_QUOTA: DailyQuota = {
   'scan-label': 40,
   'scan-url': 20,
   'plugin-scan': 20,
-  allocate: 10,
+  allocate: 50,
   groups: 10,
   optimize: 5,
   'plugin-search': 15,
@@ -89,6 +91,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     monthlyPriceUsd: 0,
     annualPriceUsd: 0,
     aiMonthlyUsd: 0.5,
+    planningMonthlyUsd: 1.5,
     helperSeats: 2,
     webSearchAi: false,
     prioritySupport: false,
@@ -100,6 +103,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     monthlyPriceUsd: 10,
     annualPriceUsd: 96,
     aiMonthlyUsd: 4,
+    planningMonthlyUsd: 6,
     helperSeats: 5,
     webSearchAi: true,
     prioritySupport: false,
@@ -111,6 +115,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     monthlyPriceUsd: 20,
     annualPriceUsd: 192,
     aiMonthlyUsd: 10,
+    planningMonthlyUsd: 12,
     helperSeats: 15,
     webSearchAi: true,
     prioritySupport: true,
@@ -153,10 +158,24 @@ export const AI_RESERVE_USD: Record<AiEndpointName, number> = {
   'scan-barcode': HAIKU
 };
 
+/** AI planning (allocate, schedule and refine all log as `allocate`) runs on
+ *  its daily cap and its own monthly planning budget (`planningMonthlyUsd`),
+ *  not on the budget for the other AI help: a Free farm gets its 5 a day
+ *  (#479) and a planning day never uses up the other AI help. The planning
+ *  budget bounds what one farm can cost against the operator's global cap.
+ *  When the owner sets a lower monthly limit, that limit covers all AI spend,
+ *  planning included. */
+export const PLANNING_ENDPOINTS: ReadonlySet<AiEndpointName> = new Set<AiEndpointName>([
+  'allocate'
+]);
+
+export const isPlanningEndpoint = (e: AiEndpointName | string): boolean =>
+  PLANNING_ENDPOINTS.has(e as AiEndpointName);
+
 /** Below this much left, no AI feature can start. */
 export const AI_MIN_RESERVE_USD = Math.min(...Object.values(AI_RESERVE_USD));
 
-/** Below this much left, a full AI plan cannot start but quick help can. */
+/** Below this much left, a web lookup cannot start but quick help can. */
 export const AI_PLAN_RESERVE_USD = SONNET_PLAN;
 
 export function isPlanId(v: unknown): v is PlanId {
@@ -202,6 +221,7 @@ export interface ResolvedPlan {
   plan: PlanId;
   source: PlanSource;
   aiMonthlyUsd: number;
+  planningMonthlyUsd: number;
   helperSeats: number;
   dailyQuota: DailyQuota;
   starterBoost: boolean;
@@ -240,6 +260,7 @@ export function resolvePlanFrom(input: PlanResolutionInput): ResolvedPlan {
       plan,
       source,
       aiMonthlyUsd: starterBoost ? Math.max(def.aiMonthlyUsd, STARTER_BOOST_USD) : def.aiMonthlyUsd,
+      planningMonthlyUsd: def.planningMonthlyUsd,
       helperSeats: def.helperSeats,
       dailyQuota: def.dailyQuota,
       starterBoost,
@@ -289,8 +310,18 @@ export interface AiUsageSnapshot {
   pctUsed: number;
   warnAt80: boolean;
   exhausted: boolean;
-  /** Enough left for quick help but not for a full AI plan. */
+  /** Enough left for the smallest AI help but not for a web lookup. */
   quickOnly: boolean;
+  /** AI planning runs on its own daily limit and monthly planning budget. */
+  planning: {
+    perDay: number;
+    usedToday: number;
+    monthlyUsd: number;
+    monthlyUsdSoFar: number;
+    monthlyExhausted: boolean;
+  };
+  /** The owner set a lower limit, which then covers planning too. */
+  ownerLimited: boolean;
   aiOff: boolean;
   plan: PlanId;
   planName: string;
@@ -347,43 +378,30 @@ export const PLAN_HIGHLIGHTS: Record<PlanId, readonly string[]> = {
   free: [
     'Everything that is not AI, with no limits',
     'Owner plus 2 helpers',
-    '$0.50 of AI help each month, $1.00 in your first 30 days'
+    'Up to 5 AI planning runs a day',
+    '$0.50 of other AI help each month, $1.00 in your first 30 days'
   ],
   grower: [
     'Everything in Free',
     'Owner plus 5 helpers',
-    '$4 of AI help each month',
+    'Up to 25 AI planning runs a day',
+    '$4 of other AI help each month',
     'AI web search: product lookup, stock refresh and receipt scans'
   ],
   farm: [
     'Everything in Grower',
     'Owner plus 15 helpers',
-    '$10 of AI help each month',
-    'About double the daily AI limits',
+    'Up to 50 AI planning runs a day',
+    '$10 of other AI help each month',
+    "About double Grower's daily AI limits",
     'Priority email support'
   ]
 };
 
-/** What one full AI plan (allocate, schedule and a refine turn) costs on a
- *  typical farm, from the decision record's unit costs. */
-export const TYPICAL_PLAN_USD = 0.14;
-
-/** Full AI plans that fit a monthly budget: each one can only start while
- *  spend plus the planning reserve still fits, exactly as the guard checks. */
-export function fullPlansFor(budget: number): number {
-  let spent = 0;
-  let n = 0;
-  while (spent + AI_PLAN_RESERVE_USD <= budget + 1e-9) {
-    spent += TYPICAL_PLAN_USD;
-    n += 1;
-  }
-  return n;
-}
-
-const roundDownTo5 = (n: number) => (n >= 10 ? Math.floor(n / 5) * 5 : n);
+const planningPerDay = (plan: PlanId) => PLANS[plan].dailyQuota.allocate;
 
 export const AI_BUDGET_EXAMPLES: Record<PlanId, string> = {
-  free: `About ${fullPlansFor(PLANS.free.aiMonthlyUsd)} full AI plans a month (more in your first 30 days), or around 100 quick lookups.`,
-  grower: `About ${roundDownTo5(fullPlansFor(PLANS.grower.aiMonthlyUsd))} full AI plans, or 20 web lookups plus daily quick help.`,
-  farm: 'Heavy daily use, receipt scans included.'
+  free: `Up to ${planningPerDay('free')} AI planning runs a day, plus around 100 quick lookups a month.`,
+  grower: `Up to ${planningPerDay('grower')} AI planning runs a day, plus 20 web lookups and daily quick help.`,
+  farm: `Up to ${planningPerDay('farm')} AI planning runs a day and heavy daily use, receipt scans included.`
 };

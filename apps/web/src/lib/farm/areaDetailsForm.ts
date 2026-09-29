@@ -1,4 +1,7 @@
+import { formatCount } from './coopCapacity';
 import {
+  CAPACITY_PROVENANCES,
+  COOP_SPACE_KINDS,
   GREENHOUSE_STRUCTURES,
   IRRIGATION_KINDS,
   ORGANIC_STATUSES,
@@ -11,12 +14,17 @@ import {
 
 type Option = { value: string; label: string };
 
+type OnlyWhen = { key: string; equals: string };
+
 export type DetailField =
   | { key: string; label: string; type: 'select'; options: readonly Option[] }
   | { key: string; label: string; type: 'boolean' }
-  | { key: string; label: string; type: 'date'; onlyWhen?: { key: string; equals: string } }
+  | { key: string; label: string; type: 'date'; onlyWhen?: OnlyWhen }
   | { key: string; label: string; type: 'feet' }
-  | { key: string; label: string; type: 'count'; unit: string };
+  | { key: string; label: string; type: 'count'; unit: string }
+  | { key: string; label: string; type: 'species' }
+  | { key: string; label: string; type: 'sqft'; onlyWhen?: OnlyWhen }
+  | { key: string; label: string; type: 'provenance'; options: readonly string[] };
 
 const ORGANIC_LABELS: Record<(typeof ORGANIC_STATUSES)[number], string> = {
   'non-organic': 'Not organic',
@@ -34,6 +42,11 @@ const STRUCTURE_LABELS: Record<(typeof GREENHOUSE_STRUCTURES)[number], string> =
   poly: 'Poly',
   'high-tunnel': 'High tunnel',
   caterpillar: 'Caterpillar tunnel'
+};
+export const COOP_SPACE_LABELS: Record<(typeof COOP_SPACE_KINDS)[number], string> = {
+  indoor: 'Indoor coop or shelter',
+  outdoor: 'Outdoor run',
+  both: 'Both: a shelter and a run'
 };
 const PASTURE_LABELS: Record<(typeof PASTURE_USES)[number], string> = {
   hay: 'Hay',
@@ -93,7 +106,29 @@ export const AREA_DETAIL_FIELDS: Readonly<Record<AreaKind, readonly DetailField[
     { key: 'coldStorage', label: 'Cold storage', type: 'boolean' },
     { key: 'chemicalStorage', label: 'Chemical storage', type: 'boolean' }
   ],
-  coop_pen: [{ key: 'capacity', label: 'Holds up to', type: 'count', unit: 'animals' }],
+  coop_pen: [
+    { key: 'speciesId', label: 'Animal type', type: 'species' },
+    {
+      key: 'space',
+      label: 'Is it indoors, a run, or both?',
+      type: 'select',
+      options: opts(COOP_SPACE_KINDS, COOP_SPACE_LABELS)
+    },
+    {
+      key: 'shelterSqFt',
+      label: 'Shelter floor',
+      type: 'sqft',
+      onlyWhen: { key: 'space', equals: 'both' }
+    },
+    { key: 'runSqFt', label: 'Run', type: 'sqft', onlyWhen: { key: 'space', equals: 'both' } },
+    { key: 'capacity', label: 'Holds up to', type: 'count', unit: 'animals' },
+    {
+      key: 'capacityProvenance',
+      label: 'Number from',
+      type: 'provenance',
+      options: CAPACITY_PROVENANCES
+    }
+  ],
   residence: [],
   natural_area: [],
   water: [{ key: 'usedForIrrigation', label: 'Used for irrigation', type: 'boolean' }],
@@ -107,10 +142,11 @@ export function hasDetailFields(kind: AreaKind): boolean {
 }
 
 export function fieldShown(field: DetailField, draft: DetailsDraft): boolean {
-  return (
-    field.type !== 'date' || !field.onlyWhen || draft[field.onlyWhen.key] === field.onlyWhen.equals
-  );
+  const when = 'onlyWhen' in field ? field.onlyWhen : undefined;
+  return !when || draft[when.key] === when.equals;
 }
+
+const NUMERIC_TYPES = new Set<DetailField['type']>(['feet', 'count', 'sqft']);
 
 export function draftFromDetails(
   kind: AreaKind,
@@ -121,8 +157,7 @@ export function draftFromDetails(
   for (const f of AREA_DETAIL_FIELDS[kind]) {
     const v = src[f.key];
     if (f.type === 'boolean') draft[f.key] = v === true;
-    else if (f.type === 'feet' || f.type === 'count')
-      draft[f.key] = typeof v === 'number' ? v : null;
+    else if (NUMERIC_TYPES.has(f.type)) draft[f.key] = typeof v === 'number' ? v : null;
     else draft[f.key] = typeof v === 'string' ? v : '';
   }
   return draft;
@@ -137,7 +172,7 @@ export function detailsFromDraft(kind: AreaKind, draft: DetailsDraft): DetailsRe
     const v = draft[f.key];
     if (f.type === 'boolean') {
       if (v === true) out[f.key] = true;
-    } else if (f.type === 'feet' || f.type === 'count') {
+    } else if (NUMERIC_TYPES.has(f.type)) {
       const n = typeof v === 'number' ? v : typeof v === 'string' && v.trim() ? Number(v) : NaN;
       if (Number.isFinite(n)) out[f.key] = n;
     } else if (typeof v === 'string' && v.trim()) {
@@ -148,21 +183,48 @@ export function detailsFromDraft(kind: AreaKind, draft: DetailsDraft): DetailsRe
 }
 
 /** Label/value pairs for showing stored details on a card. */
+export interface DetailSummaryRow {
+  label: string;
+  value: string;
+  provenance?: 'data' | 'manual';
+}
+
+function humanizeId(id: string): string {
+  const words = id.replace(/-/g, ' ');
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
 export function detailsSummary(
   kind: AreaKind,
-  details: AreaDetails | null | undefined
-): Array<{ label: string; value: string }> {
+  details: AreaDetails | null | undefined,
+  speciesNames?: Readonly<Record<string, string>>,
+  /** Lower-case plurals by species id, so a coop's capacity reads
+   *  "12 chickens" rather than "12 animals". */
+  speciesPlurals?: Readonly<Record<string, string>>
+): DetailSummaryRow[] {
   if (!details) return [];
   const src = details as Record<string, unknown>;
-  const rows: Array<{ label: string; value: string }> = [];
+  const rows: DetailSummaryRow[] = [];
   for (const f of AREA_DETAIL_FIELDS[kind]) {
     const v = src[f.key];
     if (v === undefined || v === null) continue;
+    if (f.type === 'provenance') continue;
     if (f.type === 'boolean') rows.push({ label: f.label, value: v ? 'Yes' : 'No' });
     else if (f.type === 'feet' && typeof v === 'number')
       rows.push({ label: f.label, value: `${v} ft` });
-    else if (f.type === 'count' && typeof v === 'number')
-      rows.push({ label: f.label, value: `${v} ${f.unit}` });
+    else if (f.type === 'count' && typeof v === 'number') {
+      const prov = src[`${f.key}Provenance`];
+      const species = typeof src.speciesId === 'string' ? src.speciesId : null;
+      const unit = (species && speciesPlurals?.[species]) || f.unit;
+      rows.push({
+        label: f.label,
+        value: `${formatCount(v)} ${unit}`,
+        ...(prov === 'data' || prov === 'manual' ? { provenance: prov } : {})
+      });
+    } else if (f.type === 'sqft' && typeof v === 'number')
+      rows.push({ label: f.label, value: `${v} sq ft` });
+    else if (f.type === 'species' && typeof v === 'string')
+      rows.push({ label: f.label, value: speciesNames?.[v] ?? humanizeId(v) });
     else if (f.type === 'select') {
       const opt = f.options.find((o) => o.value === v);
       rows.push({ label: f.label, value: opt?.label ?? String(v) });

@@ -45,6 +45,12 @@ function seedFarm() {
     geometry: { type: 'Point', coordinates: [-77.55, 39.1] },
     details: { source: 'well' }
   });
+  createMapFeature({
+    kind: 'hydrant',
+    name: 'Pasture waterer',
+    geometry: { type: 'Point', coordinates: [-77.55, 39.1] },
+    areaIds: [field.id]
+  });
 }
 
 describe('wipeAllData', () => {
@@ -54,13 +60,15 @@ describe('wipeAllData', () => {
     runWithTenant(seedOwner(), () => {
       seedFarm();
       const out = wipeAllData();
-      expect(out.removed.map_features).toBe(2);
+      expect(out.removed.map_features).toBe(3);
+      expect(out.removed.map_feature_areas).toBe(1);
       expect(out.removed.fields).toBe(1);
       expect(listMapFeatures()).toEqual([]);
       expect(listFields()).toEqual([]);
     });
     runWithTenant(other, () => {
-      expect(listMapFeatures()).toHaveLength(2);
+      expect(listMapFeatures()).toHaveLength(3);
+      expect(listMapFeatures().find((f) => f.kind === 'hydrant')?.areaIds).toHaveLength(1);
       expect(listFields()).toHaveLength(1);
     });
   });

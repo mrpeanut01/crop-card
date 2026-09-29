@@ -1,6 +1,10 @@
-import { getForecast, WeatherFetchError } from '$lib/server/weather';
+import { getForecastWithMeta, WeatherFetchError } from '$lib/server/weather';
 import { resolveWeatherLocation } from '$lib/server/weatherHourly';
-import { summarizeForecastSafely, type TodayWeather } from '$lib/today/weatherSummary';
+import {
+  forecastDays,
+  summarizeForecastSafely,
+  type TodayWeather
+} from '$lib/today/weatherSummary';
 
 /**
  * The /today strip uses the first mapped block, then the saved farm location.
@@ -10,13 +14,20 @@ import { summarizeForecastSafely, type TodayWeather } from '$lib/today/weatherSu
 export async function loadTodayWeather(): Promise<TodayWeather> {
   const location = resolveWeatherLocation(null);
   if (!location || location.source === 'farm-default') return { status: 'needs-location' };
-  let summary;
+  let forecast;
   try {
-    summary = summarizeForecastSafely(await getForecast(location.lat, location.lon));
+    forecast = await getForecastWithMeta(location.lat, location.lon);
   } catch (e) {
     if (!(e instanceof WeatherFetchError)) console.error('[today] weather fetch failed:', e);
     return { status: 'unavailable' };
   }
+  const summary = summarizeForecastSafely(forecast.days);
   if (!summary) return { status: 'unavailable' };
-  return { status: 'ok', summary, source: location.source === 'farm' ? 'farm' : 'block' };
+  return {
+    status: 'ok',
+    summary,
+    source: location.source === 'farm' ? 'farm' : 'block',
+    days: forecastDays(forecast.days),
+    fetchedAt: forecast.fetchedAt
+  };
 }

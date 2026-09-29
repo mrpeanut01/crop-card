@@ -36,6 +36,7 @@ import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listCuttings } from '$lib/db/hayCuttings';
 import { listJournalForExport } from '$lib/db/plantingJournal';
 import { listConsentHistoryForUser } from '$lib/db/emailAlertConsents';
+import { listFeedbackForUser } from '$lib/db/feedback';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { listUnifiedRecords, summarizeUnifiedRecords } from '$lib/db/recordsUnified';
@@ -46,6 +47,7 @@ import { RULES_VERSION } from '$lib/safety/version';
 import { identityLabel } from '$lib/identity';
 import {
   areaSection,
+  mapFeatureAreaSection,
   deletedRecordSection,
   mapFeatureSection,
   recordSections,
@@ -147,7 +149,7 @@ export const GET: RequestHandler = async (event) => {
     : [];
 
   const payload = {
-    schemaVersion: '1.1.0',
+    schemaVersion: '1.2.0',
     generatedAt: new Date().toISOString(),
     generator: `CropCard v${APP_VERSION}`,
     rulesVersion: RULES_VERSION,
@@ -162,7 +164,8 @@ export const GET: RequestHandler = async (event) => {
       timeZone: prefs.timeZone,
       displayUnits: prefs.units,
       avatarUrl: avatarUrl(user.id, avatarVersion(user.id)),
-      emailAlertConsents: listConsentHistoryForUser(user.id)
+      emailAlertConsents: listConsentHistoryForUser(user.id),
+      feedback: listFeedbackForUser(user.id)
     },
     activeOwner: ownerRow
       ? {
@@ -208,6 +211,7 @@ export const GET: RequestHandler = async (event) => {
       }))
     })),
     mapFeatures: mapFeatureSection(),
+    mapFeatureAreas: mapFeatureAreaSection(),
     shadeSources: shadeSourceSection(),
     soilTests: soilTestSection(),
     sprayers: listSprayers().map((s) => ({

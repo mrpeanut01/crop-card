@@ -1,6 +1,8 @@
 import {
   MAX_FLOW_GPM,
   WATER_SOURCE_TYPES,
+  servedAreaIds,
+  servesManyAreas,
   validateFeatureDetails,
   type MapFeatureDetails,
   type MapFeatureKind,
@@ -12,25 +14,36 @@ import {
 export interface FeatureFormDraft {
   name: string;
   fieldId: string;
+  /** Hydrants and waterers: every Area it serves (#478). */
+  areaIds: string[];
   source: '' | WaterSourceType;
   flowRate: string;
 }
 
 export function draftFromFeature(
-  feature?: Pick<MapFeatureView, 'name' | 'fieldId' | 'details'> | null
+  feature?: Pick<MapFeatureView, 'name' | 'fieldId' | 'details' | 'areaIds'> | null
 ): FeatureFormDraft {
   return {
     name: feature?.name ?? '',
     fieldId: feature?.fieldId ?? '',
+    areaIds: feature ? servedAreaIds(feature) : [],
     source: feature?.details?.source ?? '',
     flowRate: feature?.details?.flowRateGpm !== undefined ? String(feature.details.flowRateGpm) : ''
   };
 }
 
+export interface FeatureBody {
+  name: string;
+  fieldId: string | null;
+  details: MapFeatureDetails | null;
+  /** Sent for hydrants and waterers only. */
+  areaIds?: string[];
+}
+
 export type FeatureFormResult =
   | {
       ok: true;
-      body: { name: string; fieldId: string | null; details: MapFeatureDetails | null };
+      body: FeatureBody;
     }
   | { ok: false; message: string };
 
@@ -61,6 +74,10 @@ export function bodyFromDraft(kind: MapFeatureKind, draft: FeatureFormDraft): Fe
     const checked = validateFeatureDetails(kind, raw);
     if (!checked.ok) return { ok: false, message: 'Check the water details and try again.' };
     details = checked.details;
+  }
+  if (servesManyAreas(kind)) {
+    const areaIds = [...new Set(draft.areaIds.filter(Boolean))];
+    return { ok: true, body: { name, fieldId: areaIds[0] ?? null, details, areaIds } };
   }
   return { ok: true, body: { name, fieldId: draft.fieldId || null, details } };
 }

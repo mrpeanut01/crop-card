@@ -182,7 +182,7 @@ test.describe('map lines and points', () => {
     await page.setViewportSize({ width: 375, height: 800 });
     await openMap(page);
     const list = page.getByTestId('map-feature-list');
-    await expect(list.getByRole('heading', { name: 'Hydrants' })).toBeVisible();
+    await expect(list.getByRole('heading', { name: 'Hydrants / Waterers' })).toBeVisible();
     await expect(list.getByRole('heading', { name: 'Irrigation lines' })).toBeVisible();
 
     const editBtn = list.getByRole('button', { name: 'Edit Garden hydrant' });

@@ -9,6 +9,7 @@ import { db } from './client';
 import { crops, owners, tasks } from './schema';
 import { requireOwnerId, unscopedQueryNote, withTenant } from './tenant';
 import type { SnapshotPlanting, SnapshotTask, SnapshotTaskCategory } from '$lib/cards/snapshot';
+import { parseFootprint } from '$lib/farm/footprint';
 
 const DAY_MS = 86_400_000;
 
@@ -31,8 +32,17 @@ function toSnapshotPlanting(r: typeof crops.$inferSelect): SnapshotPlanting {
     rowSpacingIn: r.rowSpacingIn ?? null,
     plantCount: r.plantCount ?? null,
     plantCountProvenance: r.plantCountProvenance ?? null,
-    sourceProvenance: r.sourceProvenance ?? null
+    sourceProvenance: r.sourceProvenance ?? null,
+    ...layoutOf(r)
   };
+}
+
+function layoutOf(
+  r: typeof crops.$inferSelect
+): Pick<SnapshotPlanting, 'footprint' | 'spacingPattern'> {
+  const footprint = parseFootprint(r.footprintJson);
+  if (!footprint) return {};
+  return { footprint, spacingPattern: r.spacingPattern ?? null };
 }
 
 /** Active and planned plantings, plus anything harvested in the last

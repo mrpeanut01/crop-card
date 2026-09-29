@@ -33,4 +33,10 @@ describe('TodayHero skip', () => {
     render(TodayHero, { action, aiEnabled: false });
     expect(screen.queryByRole('button', { name: /Skip/ })).toBeNull();
   });
+
+  it('the all-caught-up copy points at the Week view, not a strip that is gone (#467)', () => {
+    render(TodayHero, { action: null, aiEnabled: false });
+    expect(screen.getByText(/Pick Week or Month below/)).toBeInTheDocument();
+    expect(screen.queryByText(/week below shows/)).toBeNull();
+  });
 });

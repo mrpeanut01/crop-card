@@ -56,7 +56,7 @@ describe('Add drawer lines and points', () => {
       'Fence line',
       'Gate',
       'Water source',
-      'Hydrant',
+      'Hydrant / Waterer',
       'Irrigation line',
       'Path'
     ]) {

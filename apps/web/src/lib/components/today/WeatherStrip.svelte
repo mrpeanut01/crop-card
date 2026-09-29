@@ -1,52 +1,32 @@
 <script lang="ts">
   /**
-   * Phase 25e (#97) — /today greeting header + right-aligned weather strip.
-   *
-   * 1:1 port of the `ATodayScreen` header in
-   * [`direction-almanac-today.jsx`](../../../../docs/design/almanac/direction-almanac-today.jsx)
-   * (lines 214–230). Render with `data.weather` from the loader.
+   * /today greeting header with the current conditions on the right. The
+   * conditions are a button that opens the 7-day forecast sheet, including
+   * when there is no forecast yet (the sheet says why and what to do).
    */
-  import {
-    Sun,
-    Moon,
-    CloudSun,
-    CloudMoon,
-    Cloud,
-    CloudRain,
-    CloudLightning,
-    CloudSnow,
-    CloudFog,
-    Wind,
-    MapPin
-  } from 'lucide-svelte';
+  import { Wind, CloudRain, MapPin, ChevronRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
-  import type { TodayWeather, WeatherSky } from '$lib/today/weatherSummary';
+  import WeatherIcon from './WeatherIcon.svelte';
+  import type { TodayWeather } from '$lib/today/weatherSummary';
   import { fmt } from '$lib/prefsState.svelte';
 
   interface Props {
-    /** Local date string ("May 24") — kicker above the greeting. */
     dateLabel: string;
-    /** "Good morning, Sherry." */
     greeting: string;
-    /** "One thing to do today. · 5 items this week." */
     subtitle: string;
     weather: TodayWeather;
-    /** Helpers can't open /settings/farm, so they get plain text. */
+    /** Helpers can't open /settings/farm, so their sheet says to ask. */
     canSetLocation?: boolean;
+    onOpenForecast?: () => void;
   }
-  const { dateLabel, greeting, subtitle, weather, canSetLocation = false }: Props = $props();
-
-  const SKY_ICON: Record<WeatherSky, typeof Sun> = {
-    clear: Sun,
-    'clear-night': Moon,
-    partly: CloudSun,
-    'partly-night': CloudMoon,
-    cloudy: Cloud,
-    rain: CloudRain,
-    storm: CloudLightning,
-    snow: CloudSnow,
-    fog: CloudFog
-  };
+  const {
+    dateLabel,
+    greeting,
+    subtitle,
+    weather,
+    canSetLocation = false,
+    onOpenForecast
+  }: Props = $props();
 </script>
 
 <header class="hdr">
@@ -55,45 +35,51 @@
     <h1 class="serif greeting">{greeting}</h1>
     <div class="subtitle">{subtitle}</div>
   </div>
-  {#if weather.status === 'ok'}
-    {@const w = weather.summary}
-    {@const SkyIcon = SKY_ICON[w.sky]}
-    <div
-      class="weather"
-      aria-label={weather.source === 'farm' ? 'Weather at your farm location' : 'Local weather'}
-    >
-      <div class="w-cell" title={w.shortForecast}>
-        <SkyIcon size={16} strokeWidth={1.75} aria-hidden="true" />
-        {#if w.shortForecast}<span class="sr-only">{w.shortForecast},</span>{/if}
-        {#if w.tempKind === 'low'}<span class="lbl">Low</span>{/if}
-        <span class="mono">{fmt.qty(w.tempF, 'temperature')}</span>
-      </div>
-      {#if w.windMph !== undefined}
-        <div class="w-cell">
-          <Wind size={16} strokeWidth={1.75} aria-hidden="true" /><span class="sr-only">Wind</span
-          ><span class="mono">{fmt.qty(w.windMph, 'speed')}</span>
-        </div>
-      {/if}
-      {#if w.rainHint}
-        <div class="w-cell">
-          <CloudRain size={16} strokeWidth={1.75} aria-hidden="true" /><span class="mono"
-            >{w.rainHint}</span
-          >
-        </div>
-      {/if}
-    </div>
-  {:else if weather.status === 'needs-location'}
-    {#if canSetLocation}
-      <a class="weather set-loc" href="/settings/farm">
-        <MapPin size={16} strokeWidth={1.75} aria-hidden="true" />Set your farm location to see the
-        forecast
-      </a>
+  <button
+    type="button"
+    class="weather"
+    data-testid="current-conditions"
+    aria-haspopup="dialog"
+    onclick={() => onOpenForecast?.()}
+  >
+    <span class="cc-label">Current conditions <ChevronRight size={14} aria-hidden="true" /></span>
+    {#if weather.status === 'ok'}
+      {@const w = weather.summary}
+      <span
+        class="cells"
+        aria-label={weather.source === 'farm' ? 'Weather at your farm location' : 'Local weather'}
+      >
+        <span class="w-cell" title={w.shortForecast}>
+          <WeatherIcon sky={w.sky} />
+          {#if w.shortForecast}<span class="sr-only">{w.shortForecast},</span>{/if}
+          {#if w.tempKind === 'low'}<span class="lbl">Low</span>{/if}
+          <span class="mono">{fmt.qty(w.tempF, 'temperature')}</span>
+        </span>
+        {#if w.windMph !== undefined}
+          <span class="w-cell">
+            <Wind size={16} strokeWidth={1.75} aria-hidden="true" /><span class="sr-only">Wind</span
+            ><span class="mono">{fmt.qty(w.windMph, 'speed')}</span>
+          </span>
+        {/if}
+        {#if w.rainHint}
+          <span class="w-cell">
+            <CloudRain size={16} strokeWidth={1.75} aria-hidden="true" /><span class="mono"
+              >{w.rainHint}</span
+            >
+          </span>
+        {/if}
+      </span>
+    {:else if weather.status === 'needs-location'}
+      <span class="cells set-loc">
+        <MapPin size={16} strokeWidth={1.75} aria-hidden="true" />
+        {canSetLocation
+          ? 'Set your farm location to see the forecast'
+          : 'No farm location set for the forecast'}
+      </span>
     {:else}
-      <div class="weather muted">No farm location set for the forecast</div>
+      <span class="cells muted">Weather unavailable right now</span>
     {/if}
-  {:else}
-    <div class="weather muted" role="status">Weather unavailable right now</div>
-  {/if}
+  </button>
 </header>
 
 <style>
@@ -120,10 +106,46 @@
   }
   .weather {
     display: flex;
-    align-items: center;
-    gap: 22px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-height: 48px;
+    max-width: 100%;
+    padding: 6px 10px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-input, 6px);
+    background: transparent;
     color: var(--color-ink-soft);
+    font: inherit;
     font-size: 13.5px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .weather:hover {
+    border-color: var(--color-divider);
+    background: var(--color-paper);
+  }
+  .weather:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+  .cc-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-forest-deep);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .cells {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 22px;
   }
   .w-cell {
     position: relative;
@@ -138,10 +160,7 @@
   }
   .set-loc {
     gap: 6px;
-    min-height: 48px;
     color: var(--color-forest-deep);
-    text-decoration: underline;
-    text-underline-offset: 3px;
   }
   .muted {
     font-style: italic;
@@ -163,8 +182,10 @@
       font-size: 30px;
     }
     .weather {
-      gap: 14px;
       font-size: 12.5px;
+    }
+    .cells {
+      gap: 6px 14px;
     }
   }
 </style>

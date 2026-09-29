@@ -129,7 +129,7 @@
     {@const c = plan.candidate}
     <header class="page-head">
       <div class="kicker">
-        {c.blockName}{plan.acres ? ` · ${fmt.qty(plan.acres, 'area')}` : ''} · small grain ·
+        {c.blockName}{plan.acres ? ` · ${fmt.area(plan.acres)}` : ''} · small grain ·
         {plan.habit} habit · stage scale: Zadoks
       </div>
       <h1 class="serif">{c.displayName}</h1>

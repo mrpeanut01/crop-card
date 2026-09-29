@@ -49,7 +49,11 @@ const plantingSchema = z.object({
   spacingPattern: z.enum(SPACING_PATTERNS).optional(),
   spacingIn: spacingInSchema.nullable().optional(),
   rowSpacingIn: spacingInSchema.nullable().optional(),
-  plantCount: z.number().int().positive().max(100_000).nullable().optional()
+  plantCount: z.number().int().positive().max(100_000).nullable().optional(),
+  /** Plants the planning wizard gave this planting, recorded without
+   *  placing it in a bed. Keeps a fill-to-bed planting's size on record so
+   *  later plans see how much of a shared bed it takes. */
+  plannedPlants: z.number().int().positive().max(100_000).optional()
 });
 
 export const POST: RequestHandler = async (event) => {
@@ -121,6 +125,7 @@ export const POST: RequestHandler = async (event) => {
     quantityUnit: parsed.data.quantityUnit,
     sourceProvenance: parsed.data.sourceProvenance,
     placement,
+    plannedPlants: placement ? undefined : parsed.data.plannedPlants,
     status: placement ? 'planned' : undefined
   });
 
@@ -165,7 +170,8 @@ export const POST: RequestHandler = async (event) => {
           unit: parsed.data.quantityUnit as StockUnit,
           cropId: planting.id,
           reason: 'planting',
-          performedById: user.id
+          performedById: user.id,
+          drawExpected: true
         });
         decrement = { fulfilled: result.fulfilled, shortfall: result.shortfall };
       } catch (err) {

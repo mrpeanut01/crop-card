@@ -40,7 +40,11 @@
   dilution calculator uses this GPA to scale every product rate.
 </p>
 
-<CalibrationWizard sprayers={data.sprayers} canSave={data.canSave} />
+<CalibrationWizard
+  sprayers={data.sprayers}
+  canSave={data.canSave}
+  initialSprayerId={data.initialSprayerId ?? undefined}
+/>
 
 {#if data.canSave && data.pendingCalibrations.length > 0}
   <section class="card pending-review" aria-labelledby="pending-review-title">

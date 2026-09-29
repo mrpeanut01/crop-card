@@ -13,13 +13,12 @@ const counts = {
   pesticide: 12,
   fertility: 4,
   seed: 27,
-  crop: 376,
-  sprayer: 2
+  crop: 376
 };
 
 describe('A_InventoryList — Phase 27B', () => {
-  it('renders all 5 type chips with counts', () => {
-    const { getByText, getByRole } = render(A_InventoryList, {
+  it('renders the four type chips with counts', () => {
+    const { getByText, getByRole, getAllByRole } = render(A_InventoryList, {
       type: 'pesticide',
       mode: 'stock',
       counts,
@@ -29,7 +28,7 @@ describe('A_InventoryList — Phase 27B', () => {
     expect(getByRole('tab', { name: /^Fertility/ })).toBeInTheDocument();
     expect(getByRole('tab', { name: /^Seeds/ })).toBeInTheDocument();
     expect(getByRole('tab', { name: /^Crops/ })).toBeInTheDocument();
-    expect(getByRole('tab', { name: /^Sprayers/ })).toBeInTheDocument();
+    expect(getAllByRole('tab')).toHaveLength(4);
     // Per-type count badges.
     expect(getByText('12')).toBeInTheDocument();
     expect(getByText('376')).toBeInTheDocument();
@@ -45,7 +44,7 @@ describe('A_InventoryList — Phase 27B', () => {
     expect(getByRole('group', { name: /Stock vs catalog/ })).toBeInTheDocument();
   });
 
-  it('hides Stock/Catalog toggle for crop (catalog-only) + sprayer (asset-only)', () => {
+  it('hides Stock/Catalog toggle for crop (catalog-only)', () => {
     const cropRender = render(A_InventoryList, {
       type: 'crop',
       mode: 'catalog',
@@ -53,14 +52,6 @@ describe('A_InventoryList — Phase 27B', () => {
       rows: []
     });
     expect(cropRender.queryByRole('group', { name: /Stock vs catalog/ })).toBeNull();
-
-    const sprayerRender = render(A_InventoryList, {
-      type: 'sprayer',
-      mode: 'stock',
-      counts,
-      rows: []
-    });
-    expect(sprayerRender.queryByRole('group', { name: /Stock vs catalog/ })).toBeNull();
   });
 
   it('renders pesticide stock columns', () => {
@@ -129,42 +120,19 @@ describe('A_InventoryList — Phase 27B', () => {
     );
     expect(cards.getByText('continuous-harvest-fruit')).toBeInTheDocument();
     expect(cards.getByText(/80.*85.*d/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/plugin/i);
   });
 
-  it('renders sprayer columns (Sprayer · Nozzle · Tank · Last cal · GPA · Status)', () => {
-    const { getByRole, getByTestId } = render(A_InventoryList, {
-      type: 'sprayer',
+  it('has no Sprayers chip and points gear at Equipment (#474)', () => {
+    const { getByRole, queryByRole } = render(A_InventoryList, {
+      type: 'pesticide',
       mode: 'stock',
       counts,
-      rows: [
-        {
-          kind: 'sprayer',
-          id: 'eq1',
-          label: 'Backpack 4-gal',
-          nozzleType: 'TeeJet XR110015',
-          tankGal: 4,
-          measuredGpa: 17.5,
-          lastCalibratedAt: Date.UTC(2026, 4, 1),
-          deconRequired: false
-        }
-      ] as never
+      rows: []
     });
-    const table = within(getByRole('table'));
-    expect(table.getByText('Sprayer')).toBeInTheDocument();
-    expect(table.getByText('Nozzle')).toBeInTheDocument();
-    expect(table.getByText('Tank')).toBeInTheDocument();
-    expect(table.getByText('GPA')).toBeInTheDocument();
-    expect(table.getByText('Backpack 4-gal')).toBeInTheDocument();
-    expect(table.getByText('OK')).toBeInTheDocument();
-
-    const cards = within(getByTestId('inventory-cards'));
-    expect(cards.getByRole('link', { name: 'Backpack 4-gal' })).toHaveAttribute(
-      'href',
-      '/inventory/sprayer/eq1'
-    );
-    expect(cards.getByText('TeeJet XR110015')).toBeInTheDocument();
-    expect(cards.getByText('17.5')).toBeInTheDocument();
-    expect(cards.getByText('OK')).toBeInTheDocument();
+    const tabs = within(getByRole('tablist', { name: 'Inventory type' }));
+    expect(tabs.queryByRole('tab', { name: /Sprayers/ })).toBeNull();
+    expect(queryByRole('link', { name: 'Equipment' })).toHaveAttribute('href', '/equipment');
   });
 
   it('search filters the table and the phone cards alike', async () => {

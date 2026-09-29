@@ -6,6 +6,7 @@ import {
   dateToLocaleDateString,
   dateToLocaleString,
   dateToLocaleTimeString,
+  firstDayOfWeek,
   numberToLocaleString
 } from './intlCache';
 import {
@@ -241,5 +242,14 @@ describe('prefs formatters keep their output', () => {
     expect(formatQuantity(12, 'temperature', { units: 'metric' })).toBe('-11°C');
     expect(zonedDayStartMs(2026, 3, 8, 'America/New_York')).toBe(Date.UTC(2026, 2, 8, 5, 0));
     expect(zonedDayStartMs(2026, 11, 1, 'America/New_York')).toBe(Date.UTC(2026, 10, 1, 4, 0));
+  });
+});
+
+describe('firstDayOfWeek', () => {
+  it('reads the locale week start, Sunday for en-US', () => {
+    expect(firstDayOfWeek('en-US')).toBe(0);
+    const gb = firstDayOfWeek('en-GB');
+    expect([0, 1]).toContain(gb);
+    expect(firstDayOfWeek('not a locale')).toBe(0);
   });
 });

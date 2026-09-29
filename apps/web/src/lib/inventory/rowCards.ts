@@ -6,16 +6,9 @@
 
 import type { CardFact, CardModel, CardStatus } from '$lib/cards/model';
 import type { InventoryType } from '$lib/inventory/types';
-import {
-  DEFAULT_PREFS,
-  formatCalendarDate,
-  formatInstant,
-  formatLabelRate,
-  formatQuantity,
-  type Prefs
-} from '$lib/prefs';
+import { DEFAULT_PREFS, formatCalendarDate, type Prefs } from '$lib/prefs';
 import { formatStockQuantity, isLabelUnitCategory } from '$lib/stock/units';
-import type { InventoryRow } from '../../routes/inventory/+page.server';
+import type { InventoryRow, StockRow } from '../../routes/inventory/+page.server';
 
 const NONE = '—';
 
@@ -27,16 +20,21 @@ export function inventoryDetailHref(type: InventoryType, row: InventoryRow): str
   return `/inventory/${type}/${encodeURIComponent(inventoryRowId(row))}`;
 }
 
-function gpaText(gpa: number, prefs: Prefs): string {
-  const metric =
-    prefs.units === 'metric' ? ` (${formatQuantity(gpa, 'volumePerArea', prefs)})` : '';
-  return `${gpa.toFixed(1)}${metric}`;
-}
-
-function sprayerStatus(row: Extract<InventoryRow, { kind: 'sprayer' }>): CardStatus {
-  if (row.deconRequired) return { label: 'Decon', tone: 'rust' };
-  if (row.lastCalibratedAt) return { label: 'OK', tone: 'forest' };
-  return { label: 'New', tone: 'neutral' };
+/** "200 seeds ordered, 50 seeds planned" for a stock row with expected
+ *  lots, or null. Shown beside On hand so an order is never read as lost. */
+export function expectedQuantityText(
+  row: Pick<StockRow, 'onOrder' | 'planned' | 'defaultUnit' | 'category'>,
+  prefs: Prefs = DEFAULT_PREFS
+): string | null {
+  const fmt = (n: number) =>
+    formatStockQuantity(n, row.defaultUnit, prefs, {
+      labelUnit: isLabelUnitCategory(row.category),
+      category: row.category
+    });
+  const parts: string[] = [];
+  if ((row.onOrder ?? 0) > 0) parts.push(`${fmt(row.onOrder ?? 0)} ordered`);
+  if ((row.planned ?? 0) > 0) parts.push(`${fmt(row.planned ?? 0)} planned`);
+  return parts.length ? parts.join(', ') : null;
 }
 
 export function inventoryRowCard(
@@ -48,34 +46,10 @@ export function inventoryRowCard(
   const href = inventoryDetailHref(type, row);
   const base = { sections: [], asOf: now, href, key: `inv_${type}_${inventoryRowId(row)}` };
 
-  if (row.kind === 'sprayer') {
-    const facts: CardFact[] = [
-      { label: 'Nozzle', value: row.nozzleType ?? NONE },
-      {
-        label: 'Tank',
-        value: row.tankGal != null ? formatLabelRate(row.tankGal, 'volume', prefs) : NONE
-      },
-      {
-        label: 'Last cal',
-        value: row.lastCalibratedAt ? formatInstant(row.lastCalibratedAt, prefs, 'date') : NONE
-      },
-      { label: 'GPA', value: row.measuredGpa != null ? gpaText(row.measuredGpa, prefs) : NONE }
-    ];
-    return {
-      ...base,
-      kind: 'equipment',
-      kicker: 'Sprayer',
-      title: row.label,
-      facts,
-      status: sprayerStatus(row),
-      provenance: [{ source: 'data' }]
-    };
-  }
-
   if (row.kind === 'catalog') {
     const crop = type === 'crop';
     const facts: CardFact[] = [
-      { label: 'Plugin id', value: row.pluginId },
+      { label: 'Id', value: row.pluginId },
       { label: crop ? 'Archetype' : 'Type', value: row.archetype ?? row.pluginType },
       { label: crop ? 'Family' : 'Source', value: row.cropFamily ?? NONE },
       {
@@ -88,21 +62,26 @@ export function inventoryRowCard(
     return {
       ...base,
       kind: crop ? 'careGuide' : 'stock',
-      kicker: crop ? 'Crop plugin' : 'Catalog',
+      kicker: crop ? 'Crop' : 'Catalog',
       title: row.displayName,
       facts,
       provenance: [{ source: 'plugin', detail: row.pluginId }]
     };
   }
 
+  const expected = expectedQuantityText(row, prefs);
   const facts: CardFact[] = [
-    { label: 'Category', value: row.category },
+    type === 'seed'
+      ? { label: 'Crop', value: row.cropName ?? NONE }
+      : { label: 'Kind', value: row.category },
     {
       label: 'On hand',
       value: formatStockQuantity(row.onHand, row.defaultUnit, prefs, {
-        labelUnit: isLabelUnitCategory(row.category)
+        labelUnit: isLabelUnitCategory(row.category),
+        category: row.category
       })
     },
+    ...(expected ? [{ label: 'Coming', value: expected }] : []),
     { label: 'Lots', value: String(row.lotCount) },
     {
       label: 'Expires',

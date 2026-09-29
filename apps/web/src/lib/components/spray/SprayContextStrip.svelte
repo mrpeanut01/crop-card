@@ -102,7 +102,7 @@
                 <span class="dot" style:background={b.color}></span>
               {/if}
               {b.label.replace(/^Block /, '')}
-              <span class="chip-acres mono">{fmt.qty(b.acres, 'area')}</span>
+              <span class="chip-acres mono">{fmt.area(b.acres)}</span>
             </span>
           {/each}
           {#if onAddBlock}

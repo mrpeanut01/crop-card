@@ -163,6 +163,14 @@ export function periodsToDays(periods: NwsPeriod[]): ForecastDay[] {
  * cached for 1 hr. Throws WeatherFetchError on network failure.
  */
 export async function getForecast(lat: number, lon: number): Promise<ForecastDay[]> {
+  return (await getForecastWithMeta(lat, lon)).days;
+}
+
+/** `getForecast` plus when NWS was last asked, for a "fetched at" line. */
+export async function getForecastWithMeta(
+  lat: number,
+  lon: number
+): Promise<{ days: ForecastDay[]; fetchedAt: number }> {
   const key = cacheKey(lat, lon);
   const now = Date.now();
   const cached = db
@@ -171,9 +179,11 @@ export async function getForecast(lat: number, lon: number): Promise<ForecastDay
     .where(eq(weatherForecastCache.cacheKey, key))
     .get();
   if (cached && cached.expiresAt.getTime() > now) {
-    return JSON.parse(cached.payloadJson) as ForecastDay[];
+    return {
+      days: JSON.parse(cached.payloadJson) as ForecastDay[],
+      fetchedAt: cached.fetchedAt.getTime()
+    };
   }
-
   const points = await fetchNwsPoints(lat, lon);
   const forecast = await nwsFetch<NwsForecastResponse>(points.properties.forecast);
   const days = periodsToDays(forecast.properties.periods);
@@ -200,7 +210,7 @@ export async function getForecast(lat: number, lon: number): Promise<ForecastDay
       }
     })
     .run();
-  return days;
+  return { days, fetchedAt: now };
 }
 
 /**

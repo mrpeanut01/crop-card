@@ -318,7 +318,7 @@ sqlite
     `INSERT INTO ai_call_log
        (id, owner_id, user_id, endpoint, model, input_tokens, cached_input_tokens,
         output_tokens, usd_estimate, success, provenance, created_at)
-     VALUES (?, ?, ?, 'allocate', 'claude-sonnet-4-6', 40000, 0, 30000, 0.55, 1, 'ai', ?)`
+     VALUES (?, ?, ?, 'plugin-search', 'claude-sonnet-4-6', 40000, 0, 30000, 0.55, 1, 'ai', ?)`
   )
   .run(randomUUID(), capped.owner.id, capped.user.id, now);
 

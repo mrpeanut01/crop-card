@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { plantsToLbs, seedsPerLb, seedsToPlants } from './quantity';
+import { plantsToLbs, seedStockUnit, seedsPerLb, seedsToPlants } from './quantity';
 import type { CropPlugin } from '$lib/plugins/schemas';
 
 function plugin(over: Partial<CropPlugin> & { pluginId: string }): CropPlugin {
@@ -90,6 +90,15 @@ describe('seedsToPlants — unit conversions', () => {
   it('`count` works without a plugin (no spacing math needed)', () => {
     const r = seedsToPlants({ unit: 'count', quantity: 25, plugin: undefined });
     expect(r?.plants).toBe(25);
+  });
+
+  it('#473 seed stock in legacy `count` plans like `seeds`', () => {
+    expect(seedStockUnit('count')).toBe('seeds');
+    expect(seedStockUnit('lb')).toBe('lb');
+    const legacy = seedsToPlants({ unit: seedStockUnit('count'), quantity: 100, plugin: corn });
+    const current = seedsToPlants({ unit: seedStockUnit('seeds'), quantity: 100, plugin: corn });
+    expect(legacy?.plants).toBe(85);
+    expect(legacy?.plants).toBe(current?.plants);
   });
 
   it('treats packets as 50 seeds by default', () => {

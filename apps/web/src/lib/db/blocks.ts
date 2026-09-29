@@ -31,7 +31,7 @@ import {
   withTenantPrepared
 } from './tenant';
 import { geojsonAreaAcres } from '$lib/geo/area';
-import { sketchAcres } from '$lib/farm/sketch';
+import { sketchAcres, storedSketchAcres } from '$lib/farm/sketch';
 import { DEFAULT_BLOCK_KIND, type BedStyle, type BlockKind } from '$lib/farm/areaKinds';
 import { placementColumns, type CropPlacement } from './crops';
 
@@ -101,7 +101,10 @@ function rowToBlock(row: typeof blocks.$inferSelect): Block {
   return {
     id: row.id,
     name: row.name,
-    acres: effectiveAcresFor({ acres: row.acres, geometryGeojson: row.geometryGeojson }),
+    acres: effectiveAcresFor({
+      acres: storedSketchAcres(row.acres, row.widthFt, row.lengthFt),
+      geometryGeojson: row.geometryGeojson
+    }),
     blockLabel: row.blockLabel ?? undefined,
     fieldId: row.fieldId ?? undefined,
     geometryGeojson: row.geometryGeojson ?? undefined,
@@ -418,6 +421,8 @@ export function addPlanting(input: {
   /** Phase 30E garden-bed footprint + spacing. A placed planting is always
    *  its own row, never merged into an existing planned one. */
   placement?: CropPlacement;
+  /** Plants a plan gave this planting, without a place in a bed. */
+  plannedPlants?: number;
   /** A placed planting is a plan until its date comes, so the designer
    *  paths pass `'planned'`; otherwise a dated row starts `'active'`. */
   status?: 'planned' | 'active';
@@ -445,7 +450,13 @@ export function addPlanting(input: {
       const updated = db
         .update(plantingRecords)
         .set({
-          quantityPlantedHundredths: sql`COALESCE(${plantingRecords.quantityPlantedHundredths}, 0) + ${addHundredths}`
+          quantityPlantedHundredths: sql`COALESCE(${plantingRecords.quantityPlantedHundredths}, 0) + ${addHundredths}`,
+          ...(input.plannedPlants !== undefined
+            ? {
+                plantCount: sql`COALESCE(${plantingRecords.plantCount}, 0) + ${input.plannedPlants}`,
+                plantCountProvenance: 'data' as const
+              }
+            : {})
         })
         .where(withTenant(plantingRecords, eq(plantingRecords.id, existing.id)))
         .returning()
@@ -476,7 +487,11 @@ export function addPlanting(input: {
           input.quantityPlanted !== undefined ? Math.round(input.quantityPlanted * 100) : null,
         quantityUnit: input.quantityUnit ?? null,
         sourceProvenance: input.sourceProvenance ?? null,
-        ...(input.placement ? placementColumns(input.placement) : {})
+        ...(input.placement
+          ? placementColumns(input.placement)
+          : input.plannedPlants !== undefined
+            ? { plantCount: input.plannedPlants, plantCountProvenance: 'data' as const }
+            : {})
       })
     )
     .returning()

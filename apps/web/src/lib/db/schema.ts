@@ -690,6 +690,36 @@ export const mapFeatures = tenantScoped(
   )
 );
 
+/** Areas a hydrant or waterer serves (#478). One row per (feature, Area);
+ *  both sides cascade so a link never points at a deleted row.
+ *  `map_features.field_id` stays as the first (primary) Area. */
+export const mapFeatureAreas = tenantScoped(
+  sqliteTable(
+    'map_feature_areas',
+    {
+      ownerId: text('owner_id').notNull(),
+      featureId: text('feature_id')
+        .notNull()
+        .references(() => mapFeatures.id, { onDelete: 'cascade' }),
+      fieldId: text('field_id')
+        .notNull()
+        .references(() => fields.id, { onDelete: 'cascade' }),
+      position: integer('position').notNull().default(0),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      pk: primaryKey({ columns: [table.featureId, table.fieldId] }),
+      ownerFeatureIdx: index('map_feature_areas_owner_feature_idx').on(
+        table.ownerId,
+        table.featureId
+      ),
+      ownerFieldIdx: index('map_feature_areas_owner_field_idx').on(table.ownerId, table.fieldId)
+    })
+  )
+);
+
 export const crops = tenantScoped(
   sqliteTable(
     'crops',
@@ -1092,7 +1122,12 @@ export const stockLots = tenantScoped(
       receivedQuantityHundredths: integer('received_quantity_hundredths').notNull(),
       receivedCostCents: integer('received_cost_cents'),
       supplier: text('supplier'),
-      notes: text('notes')
+      notes: text('notes'),
+      /** #475: `ordered` and `planned` lots carry no receipt movement, so they
+       *  never count toward on-hand until they are marked received. */
+      quantityStatus: text('quantity_status', { enum: ['existing', 'ordered', 'planned'] })
+        .notNull()
+        .default('existing')
     },
     (table) => ({
       ownerItemIdx: index('stock_lots_owner_item_idx').on(table.ownerId, table.stockItemId),
@@ -2040,6 +2075,46 @@ export const contactSuppressions = sqliteTable(
       table.channel,
       table.reason
     )
+  })
+);
+
+/** In-app feedback (#466). Deliberately global, not `tenantScoped`: triage
+ *  is a cross-farm superadmin queue and a signed-in user with no farm yet
+ *  can still submit. `owner_id` and `user_id` are context only (no FK, so
+ *  the row survives a farm or user going away); every read goes through
+ *  `unscopedQueryNote` in `lib/db/feedback.ts`. */
+export const feedbackSubmissions = sqliteTable(
+  'feedback_submissions',
+  {
+    id: text('id').primaryKey(),
+    kind: text('kind', { enum: ['bug', 'idea', 'other'] }).notNull(),
+    message: text('message').notNull(),
+    ownerId: text('owner_id'),
+    userId: text('user_id'),
+    role: text('role'),
+    pagePath: text('page_path'),
+    appVersion: text('app_version'),
+    userAgent: text('user_agent'),
+    status: text('status', {
+      enum: ['new', 'triaged', 'in-progress', 'done', 'wont-fix']
+    })
+      .notNull()
+      .default('new'),
+    adminNotes: text('admin_notes'),
+    githubIssueUrl: text('github_issue_url'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`)
+  },
+  (table) => ({
+    statusCreatedIdx: index('feedback_submissions_status_created_idx').on(
+      table.status,
+      table.createdAt
+    ),
+    userIdx: index('feedback_submissions_user_idx').on(table.userId)
   })
 );
 

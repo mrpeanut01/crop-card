@@ -101,9 +101,9 @@ describe('A_InventoryAddFlow — method chips', () => {
     expect(getByRole('button', { name: /different method/i })).toBeInTheDocument();
   });
 
-  it('sprayer renders the bare form with no method picker', () => {
+  it('crop renders the bare form with no method picker', () => {
     const { container, queryByRole } = render(A_InventoryAddFlow, {
-      type: 'sprayer',
+      type: 'crop',
       aiEnabled: true
     });
     expect(container.querySelector('#displayName')).toBeInTheDocument();

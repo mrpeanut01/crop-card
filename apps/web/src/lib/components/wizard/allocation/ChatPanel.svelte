@@ -32,7 +32,7 @@
         {/if}
       </span>
     </header>
-    <AiUsageChip refreshKey={w.chatMessages.length} />
+    <AiUsageChip planning refreshKey={w.chatMessages.length} />
   {:else}
     <header class="aw-chat-header aw-chat-header-off">
       <h3>AI assistant is off</h3>

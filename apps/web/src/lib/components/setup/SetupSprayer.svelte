@@ -108,7 +108,7 @@
   </ul>
   {#if error}<p class="error" role="alert">{error}</p>{/if}
   <p class="help">
-    Something else? <a href="/inventory/sprayer/add">Describe it in full on the Inventory page</a>.
+    Something else? <a href="/equipment?add=sprayer">Describe it in full on the Equipment page</a>.
   </p>
 {/if}
 

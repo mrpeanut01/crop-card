@@ -10,7 +10,8 @@ export const HINT_KEYS = [
   'plan_first_crop',
   'spray_first',
   'cards_offline',
-  'soil_test_nudge'
+  'soil_test_nudge',
+  'alpha_welcome'
 ] as const;
 
 export type HintKey = (typeof HINT_KEYS)[number];

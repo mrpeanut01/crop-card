@@ -66,15 +66,15 @@
 </script>
 
 <header class="detail-header">
-  <span class="kicker">Crop plugin · {plugin.cropFamily ?? 'unknown family'}</span>
+  <span class="kicker">Crop category · {plugin.cropFamily ?? 'unknown family'}</span>
   <h1 class="serif">{plugin.displayName}</h1>
   <p class="sub mono">{plugin.pluginId}</p>
 </header>
 
 <div class="detail-grid">
   <div class="col">
-    <InvSection title="Plugin metadata" kicker="Identity">
-      <InvKVP label="Plugin id" value={plugin.pluginId} tone="mono" />
+    <InvSection title="About this crop" kicker="Identity">
+      <InvKVP label="Crop id" value={plugin.pluginId} tone="mono" />
       <InvKVP label="Crop family" value={plugin.cropFamily ?? '—'} />
       <InvKVP label="Archetype (declared)" value={plugin.archetype ?? '—'} tone="locked" />
       <InvKVP label="Archetype (resolved)" value={resolvedArchetype} tone="locked" />
@@ -87,7 +87,7 @@
     </InvSection>
 
     {#if varieties.length > 0}
-      <InvSection title="Varieties" kicker="From plugin">
+      <InvSection title="Varieties" kicker="From the crop library">
         <ul class="bullet-list">
           {#each varieties.slice(0, 12) as v, idx (idx)}
             <li>
@@ -138,7 +138,7 @@
     </InvSection>
 
     {#if seasonalTasks.length > 0}
-      <InvSection title="Seasonal tasks" kicker="From plugin">
+      <InvSection title="Seasonal tasks" kicker="From the crop library">
         <ul class="bullet-list">
           {#each seasonalTasks.slice(0, 8) as t, idx (idx)}
             <li>{formatField(t)}</li>
@@ -147,7 +147,7 @@
       </InvSection>
     {/if}
 
-    <InvSection title="Plugin source" kicker="Signed hash">
+    <InvSection title="Crop library source" kicker="Signed hash">
       <InvKVP label="Hash (SHA-256)" value={hash} tone="mono" />
       <details class="json-preview">
         <summary>View JSON ({Object.keys(plugin).length} fields)</summary>

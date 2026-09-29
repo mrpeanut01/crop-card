@@ -22,6 +22,7 @@ const m = vi.hoisted(() => ({
 vi.mock('$lib/server/auth', () => ({ requireOwner: () => ({ id: 'u1', role: 'owner' }) }));
 vi.mock('$lib/db/blocks', () => ({ listBlocks: () => [{ id: 'blk-1' }] }));
 vi.mock('$lib/db/crops', () => ({ listCrops: () => [] }));
+vi.mock('$lib/db/fields', () => ({ listFields: () => [] }));
 vi.mock('$lib/server/registry', () => ({
   getRegistry: async () => ({
     all: () => [{ plugin: { type: 'crop', pluginId: 'tomato' } }]

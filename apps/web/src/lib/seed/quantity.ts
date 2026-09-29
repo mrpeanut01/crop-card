@@ -51,6 +51,12 @@ export function seedsPerLb(plugin: SeedPluginShape | CropPlugin | undefined): nu
   return null;
 }
 
+/** Seed stock stores its count as 'seeds'; older seed rows use 'count' for
+ *  the same thing (#473). Both are raw seeds for planning. */
+export function seedStockUnit(unit: SeedUnit | string): SeedUnit | string {
+  return unit === 'count' ? 'seeds' : unit;
+}
+
 export interface SeedsToPlantsInput {
   unit: SeedUnit | string;
   quantity: number;

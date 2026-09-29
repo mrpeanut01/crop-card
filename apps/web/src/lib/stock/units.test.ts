@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_PREFS } from '$lib/prefs';
 import {
   convert,
   formatRateText,
   formatStockQuantity,
   fromHundredths,
   isLabelUnitCategory,
+  isSeedCountUnit,
+  SEED_UNITS,
+  stockUnitLabel,
   toHundredths,
   toStorage
 } from './units';
@@ -106,5 +110,34 @@ describe('formatRateText', () => {
   });
   it('leaves unrecognised units alone', () => {
     expect(formatRateText(2, 'tons/ac', { units: 'metric' })).toBe('2 tons/ac');
+  });
+});
+
+describe('seed quantities (#473)', () => {
+  it('reads a seed count as seeds, whether stored as count or seeds', () => {
+    expect(formatStockQuantity(120, 'seeds', DEFAULT_PREFS, { category: 'seed' })).toBe(
+      '120 seeds'
+    );
+    expect(formatStockQuantity(1, 'count', DEFAULT_PREFS, { category: 'seed' })).toBe('1 seed');
+    expect(formatStockQuantity(1500, 'count', DEFAULT_PREFS, { category: 'seed' })).toBe(
+      '1,500 seeds'
+    );
+  });
+
+  it('leaves weights and non-seed counts alone', () => {
+    expect(formatStockQuantity(2, 'lb', DEFAULT_PREFS, { category: 'seed' })).toBe('2.0 lb');
+    expect(formatStockQuantity(3, 'count', DEFAULT_PREFS, { category: 'fertilizer' })).toBe(
+      '3.0 count'
+    );
+  });
+
+  it('labels units for the picker', () => {
+    expect(stockUnitLabel('count', 'seed')).toBe('Seeds');
+    expect(stockUnitLabel('seeds', 'seed')).toBe('Seeds');
+    expect(stockUnitLabel('count', 'herbicide')).toBe('Count');
+    expect(stockUnitLabel('fl-oz')).toBe('fl oz');
+    expect(SEED_UNITS).toEqual(['seeds', 'oz', 'lb', 'g']);
+    expect(isSeedCountUnit('count', 'seed')).toBe(true);
+    expect(isSeedCountUnit('oz', 'seed')).toBe(false);
   });
 });

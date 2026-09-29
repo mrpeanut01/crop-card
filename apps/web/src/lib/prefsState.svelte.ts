@@ -4,6 +4,7 @@ import {
   formatCalendarDate,
   formatInstant,
   formatLabelRate,
+  formatArea,
   formatQuantity,
   fromDisplay,
   todayYmd,
@@ -37,6 +38,9 @@ export const fmt = {
   label: (v: number | null | undefined, q: Quantity, opts?: FormatOpts) =>
     formatLabelRate(v, q, currentPrefs(), opts),
   unit: (q: Quantity) => unitLabel(q, currentPrefs()),
+  /** Acres for display; garden-sized areas read in sq ft or m². */
+  area: (acres: number | null | undefined, opts?: { digits?: number }) =>
+    formatArea(acres, currentPrefs(), opts),
   toDisplay: (v: number, q: Quantity) => toDisplay(v, q, currentPrefs()),
   fromDisplay: (v: number, q: Quantity) => fromDisplay(v, q, currentPrefs()),
   today: () => todayYmd(currentPrefs()),

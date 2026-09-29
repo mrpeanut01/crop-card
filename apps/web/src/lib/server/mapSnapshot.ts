@@ -70,7 +70,8 @@ export function buildMapSnapshot(
       rowSpacingIn: null,
       plantCount: null,
       plantCountProvenance: null,
-      sourceProvenance: null
+      sourceProvenance: null,
+      ...(c.footprint ? { footprint: c.footprint, spacingPattern: c.spacingPattern ?? null } : {})
     });
   }
 

@@ -33,6 +33,8 @@
 #                                                      vapidSubject param); without them every
 #                                                      push tick reports vapid-not-configured
 #   pingram-webhook-secret                             Pingram events webhook (unsubscribes, bounces)
+#   github-feedback-token                              "Send to GitHub" on /admin/feedback (repo is the
+#                                                      githubFeedbackRepo param); without it triage stays in-app
 # Set one with:  ./scripts/set-azure-secret.sh anthropic-api-key
 # Web Push keys: ./scripts/set-azure-secret.sh vapid --generate
 #
@@ -190,6 +192,7 @@ PASS_THROUGH=(
   stripe-price-grower-monthly stripe-price-grower-annual
   stripe-price-farm-monthly stripe-price-farm-annual
   pingram-webhook-secret
+  github-feedback-token
 )
 PRESENT=()
 for s in "${PASS_THROUGH[@]}"; do kv_has "$s" && PRESENT+=("$s"); done
@@ -203,6 +206,7 @@ if [ "$BILLING" = true ] && { ! present_has stripe-webhook-secret || [ "$STRIPE_
   echo "warning      : stripe-secret-key is set but the webhook secret or a plan price is missing; those plans stay unavailable" >&2
 fi
 echo "pingram hook : $(present_has pingram-webhook-secret && [ "$HAS_PINGRAM" = true ] && echo true || echo false)"
+echo "gh feedback  : $(present_has github-feedback-token && echo true || echo false)"
 
 # ─── Custom domain readiness ────────────────────────────────────────────
 # Zone and host labels come from the .bicepparam so the template and this

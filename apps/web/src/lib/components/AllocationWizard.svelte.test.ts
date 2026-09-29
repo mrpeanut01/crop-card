@@ -343,9 +343,10 @@ describe('AllocationWizard seeds step recovery', () => {
       ]
     });
 
-    expect(screen.getByText('1 seed need a crop plugin')).toBeInTheDocument();
-    await fireEvent.click(screen.getByRole('button', { name: 'Link to crop plugin →' }));
-    const search = screen.getByRole('searchbox', { name: 'Search crop plugin library' });
+    expect(screen.getByText('1 seed needs a crop category')).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/plugin/i);
+    await fireEvent.click(screen.getByRole('button', { name: 'Pick a crop category →' }));
+    const search = screen.getByRole('searchbox', { name: 'Search crop categories' });
     await fireEvent.input(search, { target: { value: 'bean' } });
     const result = await screen.findByRole('button', { name: /Bush Bean — Provider\s*92% match/ });
     expect(calls.find((c) => c.key === 'POST /api/plugins/search-by-name')?.body).toEqual({
@@ -359,7 +360,7 @@ describe('AllocationWizard seeds step recovery', () => {
     expect(calls.find((c) => c.key === 'PATCH /api/stock/stock-unlinked')?.body).toEqual({
       pluginId: 'bush-bean-provider'
     });
-    expect(screen.queryByRole('dialog', { name: 'Pick a crop plugin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Pick a crop category' })).not.toBeInTheDocument();
   });
 
   it('keeps search text and seed choices across a Back/Next round trip', async () => {
@@ -373,5 +374,134 @@ describe('AllocationWizard seeds step recovery', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(screen.getByRole('searchbox', { name: 'Search seed lots' })).toHaveValue('beet');
     expect(screen.getByRole('checkbox', { name: 'Select Beet — Detroit Dark Red' })).toBeChecked();
+  });
+});
+
+describe('seed quantities from inventory (#471, #475)', () => {
+  const EMPTY = '55555555-5555-4555-8555-555555555555';
+  const ORDERED = '66666666-6666-4666-8666-666666666666';
+  const stock = [
+    ...seedStock,
+    {
+      stockItemId: EMPTY,
+      displayName: 'Lettuce — Buttercrunch',
+      onHand: 0,
+      defaultUnit: 'seeds',
+      cropPluginId: 'lettuce-buttercrunch',
+      cropFamily: 'leafy-green'
+    },
+    {
+      stockItemId: ORDERED,
+      displayName: 'Carrot — Danvers',
+      onHand: 0,
+      onOrder: 50,
+      planned: 25,
+      defaultUnit: 'seeds',
+      cropPluginId: 'carrot-danvers',
+      cropFamily: 'root'
+    }
+  ];
+
+  it('shows a seed with no quantity and sends it to allocate as fill-to-bed', async () => {
+    renderWizard({ seedStock: stock });
+    await fireEvent.click(screen.getByRole('checkbox', { name: 'Select Lettuce — Buttercrunch' }));
+    expect(screen.getByTestId('fill-to-bed').textContent).toContain(
+      'Quantity not set, will size to bed'
+    );
+    const next = screen.getByRole('button', { name: /^Next: blocks/ });
+    expect(next.textContent).toContain('1 sized to bed');
+    await fireEvent.click(next);
+    await fireEvent.click(screen.getByRole('button', { name: 'Select all' }));
+    await fireEvent.click(screen.getByRole('button', { name: /^Generate plan/ }));
+    await waitFor(() => expect(calls.some((c) => c.key === 'POST /api/plan/allocate')).toBe(true));
+    const body = calls.find((c) => c.key === 'POST /api/plan/allocate')!.body as {
+      seedSelections: Array<Record<string, unknown>>;
+    };
+    expect(body.seedSelections).toEqual([
+      expect.objectContaining({ stockItemId: EMPTY, fillToBed: true })
+    ]);
+    expect(body.seedSelections[0].quantityPlants).toBeUndefined();
+  });
+
+  it('names a bed with no size instead of saying one plant did not fit', async () => {
+    const BED = '77777777-7777-4777-8777-777777777777';
+    routes['POST /api/plan/allocate'] = () => ({
+      json: {
+        ...allocateResponse,
+        assignments: [],
+        unplaced: [
+          {
+            stockItemId: EMPTY,
+            cropPluginId: 'lettuce-buttercrunch',
+            quantityPlants: 1,
+            fillToCapacity: true
+          }
+        ],
+        rationale: 'Nothing placed.'
+      }
+    });
+    renderWizard({
+      seedStock: stock,
+      blocks: [{ id: BED, name: 'Kitchen Garden', plantings: [] }]
+    });
+    await fireEvent.click(screen.getByRole('checkbox', { name: 'Select Lettuce — Buttercrunch' }));
+    await fireEvent.click(screen.getByRole('button', { name: /^Next: blocks/ }));
+    expect(screen.getByTestId('block-no-size')).toHaveTextContent('No size yet');
+    await fireEvent.click(screen.getByRole('button', { name: 'Select all' }));
+    expect(screen.getByTestId('unsized-blocks')).toHaveTextContent(
+      'Kitchen Garden has no size yet'
+    );
+    await fireEvent.click(screen.getByRole('button', { name: /^Generate plan/ }));
+    const row = await screen.findByTestId('unplaced-row');
+    expect(row).toHaveTextContent('have no size yet');
+    expect(row.textContent).not.toMatch(/1 plant didn't fit/);
+    expect(screen.getByRole('button', { name: /Accept all/ })).toBeDisabled();
+  });
+
+  it('tells counted seed in a bed with no size to size the bed, not to pick more space', async () => {
+    const BED = '88888888-8888-4888-8888-888888888888';
+    routes['POST /api/plan/allocate'] = () => ({
+      json: {
+        ...allocateResponse,
+        assignments: [],
+        unplaced: [{ stockItemId: BEAN, cropPluginId: 'bush-bean-provider', quantityPlants: 170 }],
+        rationale: 'Nothing placed.'
+      }
+    });
+    renderWizard({
+      seedStock: stock,
+      blocks: [{ id: BED, name: 'Kitchen Garden', plantings: [] }]
+    });
+    await fireEvent.click(screen.getByRole('checkbox', { name: 'Select Bush Bean — Provider' }));
+    await fireEvent.click(screen.getByRole('button', { name: /^Next: blocks/ }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Select all' }));
+    await fireEvent.click(screen.getByRole('button', { name: /^Generate plan/ }));
+    const row = await screen.findByTestId('unplaced-row');
+    expect(row).toHaveTextContent('have no size yet');
+    expect(row).toHaveTextContent('give the bed a width and length');
+    expect(row.textContent).not.toMatch(/pick more space|didn't fit/);
+  });
+
+  it('selects a seed from its name, not only from the small box (review)', async () => {
+    renderWizard({ seedStock: stock });
+    const box = screen.getByRole('checkbox', { name: 'Select Bush Bean — Provider' });
+    expect(box.closest('label')).not.toBeNull();
+    const name = box.closest('tr')!.querySelector('label.seed-name-cell') as HTMLLabelElement;
+    expect(name.htmlFor).toBe(box.id);
+    await fireEvent.click(name);
+    expect((box as HTMLInputElement).checked).toBe(true);
+    expect(screen.getByRole('button', { name: /^Next: blocks/ })).not.toBeDisabled();
+  });
+
+  it('labels ordered and planned seed and starts the quantity at the total', async () => {
+    renderWizard({ seedStock: stock });
+    const row = screen.getByRole('checkbox', { name: 'Select Carrot — Danvers' }).closest('tr')!;
+    expect(within(row).getByTestId('seed-available').textContent).toMatch(
+      /50 seeds ordered \+ 25 seeds planned/
+    );
+    await fireEvent.click(within(row).getByRole('checkbox'));
+    const qty = within(row).getByRole('spinbutton') as HTMLInputElement;
+    expect(qty.value).toBe('75');
+    expect(within(row).queryByTestId('fill-to-bed')).toBeNull();
   });
 });

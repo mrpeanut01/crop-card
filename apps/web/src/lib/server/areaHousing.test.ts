@@ -107,6 +107,8 @@ describe('loadAreaHousing', () => {
       expect(housing[pasture.id].animals.map((a) => a.name)).toEqual(['Ram']);
       expect(housing[pasture.id].total).toBe(13);
       expect(housing[pasture.id].capacity).toBeNull();
+      expect(housing[coop.id].speciesIds).toEqual(['chicken']);
+      expect(housing[house.id].speciesIds).toEqual(['dog']);
 
       expect(housing[house.id].animals).toEqual([
         expect.objectContaining({ name: 'Rex', speciesName: 'Dog', foodProducing: false })
@@ -126,8 +128,22 @@ describe('loadAreaHousing', () => {
         groups: [],
         animals: [],
         total: 0,
-        capacity: { capacity: 6, count: 0, over: false }
+        capacity: { capacity: 6, count: 0, over: false },
+        capacityProvenance: 'manual'
       });
+    });
+  });
+
+  it('#477 carries a kept suggestion through as data', async () => {
+    const owner = seedOwner();
+    await runWithTenantAsync(owner, async () => {
+      const coop = createField({
+        name: 'Coop',
+        kind: 'coop_pen',
+        details: { capacity: 11, capacityProvenance: 'data' }
+      });
+      const { housing } = await loadAreaHousing(listFields());
+      expect(housing[coop.id].capacityProvenance).toBe('data');
     });
   });
 

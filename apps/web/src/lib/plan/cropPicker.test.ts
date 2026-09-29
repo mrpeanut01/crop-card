@@ -3,6 +3,7 @@ import {
   amountInStockUnit,
   optionLabel,
   searchCrops,
+  seedAvailable,
   unitsCompatibleWith,
   type PickerCrop,
   type PickerSeed
@@ -41,11 +42,11 @@ const SEEDS: PickerSeed[] = [
 ];
 
 describe('searchCrops', () => {
-  it('shows only seed on hand when nothing is typed', () => {
+  it('shows only the farm seed when nothing is typed, counted seed first', () => {
     const r = searchCrops('', SEEDS, CATALOG);
-    expect(r.seeds.map((o) => o.seed.stockItemId)).toEqual(['s1']);
+    expect(r.seeds.map((o) => o.seed.stockItemId)).toEqual(['s1', 's2']);
     expect(r.crops).toEqual([]);
-    expect(r.moreCrops).toBe(3);
+    expect(r.moreCrops).toBe(2);
   });
 
   it('falls back to the catalog when there is no seed on hand', () => {
@@ -66,10 +67,27 @@ describe('searchCrops', () => {
     expect(g.crops[0].crop.pluginId).toBe('garlic-music');
   });
 
-  it('keeps empty and unlinked seed out of the seed group', () => {
-    const r = searchCrops('tomato', SEEDS, CATALOG);
+  it('keeps unlinked seed out of the seed group', () => {
+    const r = searchCrops('mystery', SEEDS, CATALOG);
     expect(r.seeds).toEqual([]);
-    expect(r.crops).toHaveLength(2);
+  });
+
+  it('offers ordered, planned and not-yet-counted seed, not only seed on hand (#475)', () => {
+    const ordered: PickerSeed = {
+      stockItemId: 'cp',
+      displayName: 'Cherokee Purple tomato',
+      onHand: 0,
+      onOrder: 50,
+      planned: 0,
+      defaultUnit: 'seeds',
+      cropPluginId: 'tomato-brandywine'
+    };
+    const planned: PickerSeed = { ...ordered, stockItemId: 'pl', onOrder: 0, planned: 20 };
+    const r = searchCrops('tom', [ordered, planned, SEEDS[1]], CATALOG);
+    expect(r.seeds.map((o) => o.seed.stockItemId).sort()).toEqual(['cp', 'pl', 's2']);
+    expect(seedAvailable(ordered)).toBe(50);
+    expect(seedAvailable(planned)).toBe(20);
+    expect(r.crops.map((o) => o.crop.pluginId)).toEqual([]);
   });
 
   it('labels a seed option by its short name', () => {

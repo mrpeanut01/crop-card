@@ -110,6 +110,9 @@ export function speciesFactPaths(p: SpeciesPlugin): string[] {
   for (const c of p.careDefaults ?? []) {
     if (c.intervalDays !== undefined) paths.push(`careDefaults.${c.key}.intervalDays`);
   }
+  const space = p.housingSpace;
+  if (space?.indoorSqFtPerAnimal !== undefined) paths.push('housingSpace.indoorSqFtPerAnimal');
+  if (space?.outdoorSqFtPerAnimal !== undefined) paths.push('housingSpace.outdoorSqFtPerAnimal');
   return paths;
 }
 

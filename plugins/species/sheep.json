@@ -14,5 +14,9 @@
   "tile": {
     "icon": "paw-print",
     "label": "Sheep"
+  },
+  "housingSpace": {
+    "indoorSqFtPerAnimal": 14,
+    "sourceName": "UMass Extension"
   }
 }

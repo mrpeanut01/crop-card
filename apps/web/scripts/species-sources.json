@@ -1,5 +1,5 @@
 {
-  "$comment": "Phase 32B. Quotes for species plugin facts, keyed pluginId → fact path (foodProducingDefault, careDefaults.<key>.intervalDays). Each entry is { url, publisher, date, quote, note? }. The gate in apps/web/src/lib/plugins/sourceCoverage.gate.test.ts fails on an unsourced value. Names, icons, group nouns, products and scientific names need no source (plugins/species/README.md). Care intervals are left out until 32D sources them.",
+  "$comment": "Phase 32B. Quotes for species plugin facts, keyed pluginId → fact path (foodProducingDefault, careDefaults.<key>.intervalDays, housingSpace.<field>). Each entry is { url, publisher, date, quote, note? }. The gate in apps/web/src/lib/plugins/sourceCoverage.gate.test.ts fails on an unsourced value. Names, icons, group nouns, products and scientific names need no source (plugins/species/README.md). Care intervals are left out until 32D sources them.",
   "entries": {
     "chicken": {
       "foodProducingDefault": {
@@ -8,6 +8,20 @@
         "date": "2026-09-27",
         "quote": "9 CFR 381.1: \"Poultry means any domesticated bird (chickens, turkeys, ducks, geese, guineas, ratites, or squabs, also termed young pigeons from one to about thirty days of age), whether live or dead.\"",
         "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+      },
+      "housingSpace.indoorSqFtPerAnimal": {
+        "url": "https://poultry.extension.org/articles/getting-started-with-small-and-backyard-poultry/housing-for-small-and-backyard-poultry-flocks/space-allowances-in-housing-for-small-and-backyard-poultry-flocks/",
+        "publisher": "eXtension Small and Backyard Poultry, Space Allowances in Housing for Small and Backyard Poultry Flocks",
+        "date": "2026-09-29",
+        "quote": "A spacing of 0.75 to 1 square foot per bird for small breeds to 3 to 3.5 square feet per bird for larger breeds is adequate for housing.",
+        "note": "CropCard uses 3.5, the top of the large-breed range, so the suggested maximum stays on the cautious side. Wording from a web search result on 2026-09-29. This environment could not open the page itself, so check the figure word for word against the URL (docs/research/label-research-prompt.md Task 11). Used only for the advisory coop or pen suggestion, never enforced."
+      },
+      "housingSpace.outdoorSqFtPerAnimal": {
+        "url": "https://poultry.extension.org/articles/getting-started-with-small-and-backyard-poultry/housing-for-small-and-backyard-poultry-flocks/space-allowances-in-housing-for-small-and-backyard-poultry-flocks/",
+        "publisher": "eXtension Small and Backyard Poultry, Space Allowances in Housing for Small and Backyard Poultry Flocks",
+        "date": "2026-09-29",
+        "quote": "Depending on bird size, space requirements will be 8 to 10 feet per bird in the run.",
+        "note": "CropCard uses 10 square feet, the top of the range. Wording from a web search result on 2026-09-29. This environment could not open the page itself, so check the figure word for word against the URL (docs/research/label-research-prompt.md Task 11). Used only for the advisory coop or pen suggestion, never enforced."
       }
     },
     "duck": {
@@ -17,6 +31,13 @@
         "date": "2026-09-27",
         "quote": "9 CFR 381.1: \"Poultry means any domesticated bird (chickens, turkeys, ducks, geese, guineas, ratites, or squabs, also termed young pigeons from one to about thirty days of age), whether live or dead.\"",
         "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+      },
+      "housingSpace.indoorSqFtPerAnimal": {
+        "url": "https://poultry.extension.org/articles/getting-started-with-small-and-backyard-poultry/housing-for-small-and-backyard-poultry-flocks/space-allowances-in-housing-for-small-and-backyard-poultry-flocks/",
+        "publisher": "eXtension Small and Backyard Poultry, Space Allowances in Housing for Small and Backyard Poultry Flocks",
+        "date": "2026-09-29",
+        "quote": "For adult ducks, 5 square feet/duck of indoor space are recommended. There are no specific recommendations for outdoor space, but the larger the run the better.",
+        "note": "No run figure is shipped for ducks because the source gives none. Wording from a web search result on 2026-09-29. This environment could not open the page itself, so check the figure word for word against the URL (docs/research/label-research-prompt.md Task 11). Used only for the advisory coop or pen suggestion, never enforced."
       }
     },
     "goat": {
@@ -26,6 +47,13 @@
         "date": "2026-09-27",
         "quote": "9 CFR 301.2: \"Livestock. Cattle, sheep, swine, goat, horse, mule, or other equine.\"",
         "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+      },
+      "housingSpace.indoorSqFtPerAnimal": {
+        "url": "https://www.umass.edu/agriculture-food-environment/crops-dairy-livestock-equine/fact-sheets/housing-working-facilites-for-goats",
+        "publisher": "UMass Extension Center for Agriculture, Food, and the Environment, Housing and Working Facilities for Goats",
+        "date": "2026-09-29",
+        "quote": "Goats in confinement barns require 15 square feet per animal if in pens.",
+        "note": "No exercise-lot figure is shipped because the excerpt gives none. Wording from a web search result on 2026-09-29. This environment could not open the page itself, so check the figure word for word against the URL (docs/research/label-research-prompt.md Task 11). Used only for the advisory coop or pen suggestion, never enforced."
       }
     },
     "sheep": {
@@ -35,6 +63,13 @@
         "date": "2026-09-27",
         "quote": "9 CFR 301.2: \"Livestock. Cattle, sheep, swine, goat, horse, mule, or other equine.\"",
         "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+      },
+      "housingSpace.indoorSqFtPerAnimal": {
+        "url": "https://www.umass.edu/agriculture-food-environment/crops-dairy-livestock-equine/fact-sheets/housing-working-facilities-for-sheep",
+        "publisher": "UMass Extension Center for Agriculture, Food, and the Environment, Housing and Working Facilities for Sheep",
+        "date": "2026-09-29",
+        "quote": "Ewes for flushing require 10 to 14 sq. ft/head, and ewes with lambs require 16 to 20 sq. ft/pair.",
+        "note": "CropCard uses 14, the top of the ewe range. Ewes with lambs need more room, so the owner should lower the number at lambing. Wording from a web search result on 2026-09-29. This environment could not open the page itself, so check the figure word for word against the URL (docs/research/label-research-prompt.md Task 11). Used only for the advisory coop or pen suggestion, never enforced."
       }
     },
     "cattle": {

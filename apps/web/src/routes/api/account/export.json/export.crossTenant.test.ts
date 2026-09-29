@@ -35,6 +35,7 @@ interface Seeded {
   areaId: string;
   bedId: string;
   featureId: string;
+  hydrantId: string;
   soilTestId: string;
   journalId: string;
   phase32: Phase32Seed;
@@ -76,6 +77,12 @@ function seed(label: string): Seeded {
         ]
       }
     });
+    const hydrant = createMapFeature({
+      kind: 'hydrant',
+      name: `${label} hydrant`,
+      geometry: { type: 'Point', coordinates: [-77.55, 39.1] },
+      areaIds: [area.id]
+    });
     const soil = insertSoilTest({ blockId: bed.id, sampledAt: Date.UTC(2026, 3, 1), ph: 6.4 });
     const journal = insertJournalEntry({
       cropId: crop.id,
@@ -91,6 +98,7 @@ function seed(label: string): Seeded {
       areaId: area.id,
       bedId: bed.id,
       featureId: feature.id,
+      hydrantId: hydrant.id,
       soilTestId: soil.id,
       journalId: journal.id,
       phase32: seedPhase32Rows(`${label}-p32`)
@@ -117,6 +125,7 @@ function idsOf(s: Seeded): string[] {
     s.areaId,
     s.bedId,
     s.featureId,
+    s.hydrantId,
     s.soilTestId,
     s.journalId,
     ...Object.values(s.phase32.rowIds)
@@ -167,7 +176,10 @@ describe('GET /api/account/export.json', () => {
         expect.arrayContaining(['xFt', 'yFt', 'rotationDeg', 'bedStyle'])
       );
       const features = json.mapFeatures as Array<{ id: string; kind: string }>;
-      expect(features.map((f) => f.id)).toEqual([self.featureId]);
+      expect(features.map((f) => f.id)).toEqual([self.featureId, self.hydrantId]);
+      expect(json.mapFeatureAreas).toEqual([
+        expect.objectContaining({ featureId: self.hydrantId, fieldId: self.areaId })
+      ]);
       const soil = json.soilTests as Array<{ id: string; ph: number }>;
       expect(soil).toEqual([expect.objectContaining({ id: self.soilTestId, ph: 6.4 })]);
       const journal = json.plantingJournal as Array<{ id: string; photoBytes: number }>;

@@ -1,3 +1,4 @@
+import { needsDecon as stateNeedsDecon } from '$lib/equipment/decon';
 import { formatInstant } from '$lib/prefs';
 import {
   cardHref,
@@ -37,9 +38,7 @@ export const EQUIPMENT_TYPE_LABEL: Record<SnapshotEquipmentType, string> = {
 
 /** True when the sprayer carried chemistry after its last decon. */
 export function needsDecon(e: SnapshotEquipment): boolean {
-  const s = e.state;
-  if (!s?.lastChemistryClass || !s.lastUsedAt) return false;
-  return !(s.lastDeconAt && s.lastDeconAt >= s.lastUsedAt);
+  return stateNeedsDecon(e.state);
 }
 
 function day(ms: number | null | undefined, opts: ResolvedOptions): string | null {

@@ -1,39 +1,46 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { invalidateAll, replaceState } from '$app/navigation';
+  import PageSetupQuestions from '$lib/components/setup/PageSetupQuestions.svelte';
+  import { goto, invalidateAll } from '$app/navigation';
   import type { CalendarEvent } from '$lib/calendar/engine';
   import type { Task } from '$lib/db/tasks';
   import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
   import Banner from '$lib/components/ui/Banner.svelte';
-  import Pill from '$lib/components/ui/Pill.svelte';
+  import Modal from '$lib/components/ui/Modal.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
   import WeatherStrip from '$lib/components/today/WeatherStrip.svelte';
+  import ForecastSheet from '$lib/components/today/ForecastSheet.svelte';
   import TodayHero from '$lib/components/today/TodayHero.svelte';
   import QuickActions from '$lib/components/today/QuickActions.svelte';
-  import WeekStrip, { type WeekItem, type WeekKind } from '$lib/components/today/WeekStrip.svelte';
-  import SeasonStrip from '$lib/components/today/SeasonStrip.svelte';
+  import CalendarGrid from '$lib/components/today/CalendarGrid.svelte';
+  import SeasonTimeline from '$lib/components/today/SeasonTimeline.svelte';
   import TaskDeckCard, { type LinkedTaskItem } from '$lib/components/today/TaskDeckCard.svelte';
   import Recommendations, {
     type RecommendationItem
   } from '$lib/components/today/Recommendations.svelte';
   import SeasonGlance from '$lib/components/today/SeasonGlance.svelte';
   import GettingStartedCard from '$lib/components/today/GettingStartedCard.svelte';
+  import AlphaWelcome from '$lib/components/feedback/AlphaWelcome.svelte';
   import { buildTaskCard } from '$lib/cards/build/task';
   import { taskPlanHref } from '$lib/cards/build/common';
-  import { cardHref, cardKey } from '$lib/cards/model';
   import { taskStart } from '$lib/tasks/start';
   import type { QueuedTaskAction } from '$lib/tasks/status';
   import {
-    TODAY_WINDOWS,
+    buildCalendarDeck,
     buildTaskDeck,
-    calendarItems,
     deckCounts,
     eventsForWindow,
-    periodForWindow,
-    type TodayView,
-    type TodayWindow,
-    type WeekPeriod
+    type DeckEntry
   } from '$lib/today/deck';
+  import {
+    calendarCells,
+    suggestionScheduleMs,
+    suggestionTemplateKey,
+    type CalendarChip
+  } from '$lib/today/calendar';
+  import { SEASON_SPAN_LABEL, type SeasonSpan } from '$lib/today/seasonTimeline';
+  import { TODAY_VIEWS, type TodayView } from '$lib/today/views';
+  import { weatherByDate } from '$lib/today/weatherSummary';
   import type { QueuedTaskRow } from '$lib/client/taskQueue';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatDueDay } from '$lib/prefs';
@@ -44,9 +51,9 @@
   const aiEnabled = $derived(data.aiEnabled);
   const gardenOnly = $derived(data.farmProfile === 'garden');
   const nothingPlanted = $derived(data.counts.blocks === 0 || data.counts.plantings === 0);
-  const gearOpen = $derived(data.sprayers.some((s) => !!s.lastChemistryClass));
   const prefs = $derived(currentPrefs());
   const canAct = $derived(!!data.user && data.user.role !== 'inspector');
+  const view = $derived<TodayView>(data.view);
 
   const todayDateLabel = $derived(fmt.instant(data.nowMs, 'date-long', { year: undefined }));
   const greeting = $derived.by(() => {
@@ -61,13 +68,6 @@
     return `Good ${part}.`;
   });
 
-  // svelte-ignore state_referenced_locally
-  let deckWindow = $state<TodayWindow>(data.deckWindow);
-  // svelte-ignore state_referenced_locally
-  let view = $state<TodayView>(data.view);
-  // svelte-ignore state_referenced_locally
-  let calPeriod = $state<WeekPeriod>(periodForWindow(data.deckWindow));
-
   let queuedRows = $state<QueuedTaskRow[]>([]);
   const queued = $derived.by(() => {
     const m = new Map<string, QueuedTaskAction>();
@@ -77,15 +77,23 @@
   const rejected = $derived(new Set(queuedRows.filter((r) => r.rejected).map((r) => r.taskId)));
 
   const tasks = $derived(data.deckTasks as Task[]);
-  const entries = $derived(
-    buildTaskDeck(tasks, {
-      window: deckWindow,
-      now: data.nowMs,
-      timeZone: prefs.timeZone,
-      queued
-    })
+  const entries = $derived<DeckEntry<Task>[]>(
+    data.calendar
+      ? buildCalendarDeck(tasks, {
+          now: data.nowMs,
+          timeZone: prefs.timeZone,
+          fromYmd: data.calendar.grid.fromYmd,
+          toYmd: data.calendar.grid.toYmd,
+          queued
+        })
+      : buildTaskDeck(tasks, {
+          window: 'today',
+          now: data.nowMs,
+          timeZone: prefs.timeZone,
+          queued
+        })
   );
-  const counts = $derived(deckCounts(entries));
+  const counts = $derived(deckCounts(view === 'day' ? entries : []));
   const summary = $derived.by(() => {
     const parts: string[] = [];
     if (counts.late) parts.push(`${counts.late} late`);
@@ -103,7 +111,9 @@
         ? `One thing to do first, then ${open - 1} more on the list.`
         : 'One thing to do today.';
     }
-    return 'Nothing scheduled today. Check the list below for what is coming.';
+    return view === 'day'
+      ? 'Nothing scheduled today. Check the list below for what is coming.'
+      : 'Nothing scheduled today.';
   });
 
   function whereFor(t: Task): string | null {
@@ -150,81 +160,27 @@
       }))
     }))
   );
+  const deckById = $derived(new Map(deck.map((d) => [d.entry.task.id, d])));
 
-  const windowEvents = $derived(
-    eventsForWindow(
-      data.seasonEvents as CalendarEvent[],
-      data.eventsToday as CalendarEvent[],
-      deckWindow,
-      data.nowMs
-    )
+  const todayEvents = $derived(
+    eventsForWindow([], data.eventsToday as CalendarEvent[], 'today', data.nowMs)
   );
 
-  const DECK_HEADINGS: Record<TodayWindow, string> = {
-    today: "Today's work",
-    '7d': 'The next 7 days',
-    '30d': 'The next 30 days',
-    season: 'The season ahead'
-  };
-
-  function weekKindForTask(t: Task): WeekKind {
-    switch (t.relatedEventTable) {
-      case 'spray_event':
-      case 'insecticide_event':
-      case 'fungicide_event':
-        return 'spray';
-      case 'harvest_event':
-      case 'hay_cutting':
-        return 'harvest';
-      case 'fertility_application':
-        return 'fertility';
-    }
-    switch (t.category) {
-      case 'spray':
-        return 'spray';
-      case 'scout':
-        return 'scout';
-      case 'harvest':
-      case 'hay-cutting':
-        return 'harvest';
-      case 'fertilize':
-        return 'fertility';
-      case 'plant':
-        return 'planting';
-      default:
-        return 'task';
-    }
-  }
-  function weekKindForEvent(e: CalendarEvent): WeekKind {
-    switch (e.kind) {
-      case 'spray-window':
-        return 'spray';
-      case 'harvest-window':
-      case 'curing-ready':
-        return 'harvest';
-      case 'planting':
-      case 'cover-termination':
-        return 'planting';
-      default:
-        return 'task';
-    }
-  }
-  const PASSIVE_KINDS = new Set(['emergence', 'stage-window', 'shade-window']);
-  const todayStartMs = $derived(Date.parse(data.today));
-  const weekItemsByDay = $derived.by(() => {
-    type Row = { at: number; value: WeekItem };
-    const rows: Row[] = [];
-    for (const t of tasks) {
-      if (t.kind !== 'primary' || t.completedAt !== undefined || t.abortedAt !== undefined)
-        continue;
-      if (queued.has(t.id)) continue;
-      rows.push({ at: t.scheduledFor, value: { title: t.title, kind: weekKindForTask(t) } });
-    }
-    for (const e of data.seasonEvents as CalendarEvent[]) {
-      if (PASSIVE_KINDS.has(e.kind)) continue;
-      rows.push({ at: e.startMs, value: { title: e.title, kind: weekKindForEvent(e) } });
-    }
-    return calendarItems(rows, data.today, prefs.timeZone, (v) => v);
+  const forecastByDate = $derived(
+    data.weather.status === 'ok' ? weatherByDate(data.weather.days) : {}
+  );
+  const suggestions = $derived((data.calendar?.suggestions ?? []) as CalendarEvent[]);
+  const cells = $derived.by(() => {
+    if (!data.calendar) return {};
+    return calendarCells({
+      entries,
+      suggestions,
+      scheduledKeys: new Set(data.calendar.scheduledKeys),
+      fromYmd: data.calendar.grid.fromYmd,
+      toYmd: data.calendar.grid.toYmd,
+      todayYmd: data.today,
+      timeZone: prefs.timeZone
+    });
   });
 
   const recommendationItems = $derived.by<RecommendationItem[]>(() =>
@@ -236,26 +192,40 @@
     }))
   );
 
-  function setWindow(w: TodayWindow) {
-    deckWindow = w;
-    calPeriod = periodForWindow(w);
-    syncUrl();
+  let forecastOpen = $state(false);
+
+  type Sheet =
+    | { kind: 'day'; day: string; only: string | null }
+    | { kind: 'season-row'; index: number }
+    | null;
+  let sheet = $state<Sheet>(null);
+  const sheetChips = $derived.by<CalendarChip[]>(() => {
+    if (sheet?.kind !== 'day') return [];
+    const all = (cells as Record<string, CalendarChip[]>)[sheet.day] ?? [];
+    const only = sheet.only;
+    return only ? all.filter((c) => c.key === only) : all;
+  });
+  const sheetRow = $derived(
+    sheet?.kind === 'season-row' && data.season ? data.season.timeline.rows[sheet.index] : null
+  );
+  const sheetTitle = $derived.by(() => {
+    if (sheet?.kind === 'day') return fmt.day(sheet.day, 'date-long', { year: undefined });
+    if (sheetRow) return `${sheetRow.name}, ${sheetRow.blockName}`;
+    return '';
+  });
+
+  function navigate(params: Record<string, string | null>) {
+    const url = new URL(window.location.href);
+    for (const [k, v] of Object.entries(params)) {
+      if (v === null) url.searchParams.delete(k);
+      else url.searchParams.set(k, v);
+    }
+    void goto(`${url.pathname}${url.search}`, { noScroll: true, keepFocus: true });
   }
   function setView(v: TodayView) {
-    view = v;
-    syncUrl();
-  }
-  function syncUrl() {
-    const url = new URL(window.location.href);
-    if (deckWindow === 'today') url.searchParams.delete('tab');
-    else url.searchParams.set('tab', deckWindow);
-    if (view === 'list') url.searchParams.delete('view');
-    else url.searchParams.set('view', view);
-    try {
-      replaceState(url, {});
-    } catch {
-      /* before hydration finishes; state still applies */
-    }
+    if (v === view) return;
+    sheet = null;
+    navigate({ view: v === 'day' ? null : v, at: null, season: null, tab: null });
   }
 
   let busy = $state(false);
@@ -326,7 +296,7 @@
     }
   }
 
-  async function scheduleFromEvent(e: CalendarEvent) {
+  async function scheduleFromEvent(e: CalendarEvent, dayYmd: string | null = null) {
     busy = true;
     actionError = null;
     try {
@@ -339,8 +309,8 @@
           kind: 'primary',
           blockId: e.blockId,
           cropId: e.cropId,
-          scheduledFor: e.startMs,
-          pluginTemplateKey: `derived:${e.kind}:${e.blockId}:${e.startMs}`
+          scheduledFor: suggestionScheduleMs(e, data.today, prefs.timeZone, dayYmd),
+          pluginTemplateKey: suggestionTemplateKey(e)
         })
       });
       if (!res.ok) {
@@ -349,6 +319,7 @@
         return;
       }
       liveMessage = 'Added to your list.';
+      sheet = null;
       await invalidateAll();
     } catch (err) {
       actionError =
@@ -417,9 +388,60 @@
     }
     return null;
   }
+
+  function spanDates(s: SeasonSpan): string {
+    return fmtRange(s.startMs, s.endMs);
+  }
 </script>
 
 <svelte:head><title>Today · CropCard</title></svelte:head>
+
+{#snippet suggestionCard(e: CalendarEvent, dayYmd: string | null = null)}
+  {@const cta = ctaFor(e)}
+  <div class="suggestion">
+    <div class="s-main">
+      <strong>{e.title}</strong>
+      <span class="s-meta"
+        >{fmtRange(e.startMs, e.endMs)} · {e.varietyDisplayName} ·
+        <span class="s-kind">{EVENT_KIND_LABEL[e.kind] ?? e.kind.replace(/-/g, ' ')}</span></span
+      >
+      {#if e.body}<span class="s-body">{e.body}</span>{/if}
+    </div>
+    <div class="s-actions">
+      {#if cta}<a class="btn ghost" href={cta.href}>{cta.label}</a>{/if}
+      {#if canAct}
+        <button
+          type="button"
+          class="btn ghost"
+          aria-label="Schedule: {e.title}"
+          disabled={busy}
+          onclick={() => scheduleFromEvent(e, dayYmd)}>Schedule</button
+        >
+      {/if}
+    </div>
+  </div>
+{/snippet}
+
+{#snippet taskCard(taskId: string)}
+  {@const d = deckById.get(taskId)}
+  {#if d}
+    <TaskDeckCard
+      card={d.card}
+      taskId={d.entry.task.id}
+      status={d.entry.status}
+      start={d.start}
+      {canAct}
+      queued={d.entry.queued !== null}
+      rejected={rejected.has(d.entry.task.id)}
+      linked={d.linked}
+      {busy}
+      {prefs}
+      now={data.nowMs}
+      onDone={(id) => closeTask(id, 'complete')}
+      onSkip={(id, reason) => closeTask(id, 'abort', reason)}
+    />
+  {/if}
+{/snippet}
 
 <WeatherStrip
   dateLabel={todayDateLabel}
@@ -427,10 +449,28 @@
   {subtitle}
   weather={data.weather}
   canSetLocation={data.canSetFarmLocation}
+  onOpenForecast={() => (forecastOpen = true)}
 />
+<ForecastSheet
+  open={forecastOpen}
+  onClose={() => (forecastOpen = false)}
+  weather={data.weather}
+  canSetLocation={data.canSetFarmLocation}
+/>
+
+<AlphaWelcome suppressed={(data.dirtySprayers?.length ?? 0) > 0} />
 
 {#if data.gettingStarted}
   <GettingStartedCard facts={data.gettingStarted.facts} dismissed={data.gettingStarted.dismissed} />
+{/if}
+
+{#if data.setupPrompts.nudges.length > 0}
+  <PageSetupQuestions
+    nudges={data.setupPrompts.nudges}
+    scope={`today:${data.user?.activeOwnerId ?? ''}`}
+    kicker="Today"
+    latLon={data.setupLatLon}
+  />
 {/if}
 
 <div class="t-grid">
@@ -441,6 +481,28 @@
   />
   <QuickActions profile={data.farmProfile} />
 </div>
+
+{#if data.deconAlerts.length > 0}
+  <section class="card decon-alert" aria-label="Sprayer cleanout" data-testid="today-decon-alert">
+    <h2>Sprayer cleanout due</h2>
+    <p>
+      {data.deconAlerts.length === 1 ? 'A sprayer still holds' : 'Sprayers still hold'} the last load.
+      Run the cleanout before the next spray.
+    </p>
+    <ul>
+      {#each data.deconAlerts as s (s.id)}
+        <li>
+          <strong>{s.label}</strong>
+          <span class="pill">last load: {s.lastChemistryClass}</span>
+          <a href="/spray/decon?sprayer={encodeURIComponent(s.id)}"
+            >{data.user?.role === 'owner' ? 'Run the cleanout' : 'See the cleanout steps'}</a
+          >
+        </li>
+      {/each}
+    </ul>
+    <a class="alert-link" href="/equipment">All equipment</a>
+  </section>
+{/if}
 
 {#if data.coveredLogs.length > 0}
   <section class="card covered-alert" role="alert" aria-label="Treated food already logged">
@@ -487,36 +549,19 @@
   </section>
 {/if}
 
-<section class="deck" aria-labelledby="deck-heading" data-testid="today-deck">
+<section class="deck" aria-labelledby="deck-heading" data-testid="today-deck" data-view={view}>
   <div class="deck-head">
-    <h2 id="deck-heading" class="serif">{DECK_HEADINGS[deckWindow]}</h2>
-    {#if summary}<p class="deck-sum" data-testid="deck-summary">{summary}</p>{/if}
+    <h2 id="deck-heading" class="serif">
+      {view === 'day' ? "Today's work" : view === 'season' ? 'Season timeline' : 'Calendar'}
+    </h2>
+    {#if view === 'day' && summary}<p class="deck-sum" data-testid="deck-summary">{summary}</p>{/if}
   </div>
-  <div class="filters">
-    <div class="chips" role="group" aria-label="Show work for">
-      {#each TODAY_WINDOWS as w (w.id)}
-        <button
-          type="button"
-          class="chip"
-          aria-pressed={deckWindow === w.id}
-          onclick={() => setWindow(w.id)}>{w.label}</button
-        >
-      {/each}
-    </div>
-    <div class="chips" role="group" aria-label="Show as">
-      <button
-        type="button"
-        class="chip"
-        aria-pressed={view === 'list'}
-        onclick={() => setView('list')}>Cards</button
+  <div class="chips" role="group" aria-label="Show">
+    {#each TODAY_VIEWS as v (v.id)}
+      <button type="button" class="chip" aria-pressed={view === v.id} onclick={() => setView(v.id)}
+        >{v.label}</button
       >
-      <button
-        type="button"
-        class="chip"
-        aria-pressed={view === 'calendar'}
-        onclick={() => setView('calendar')}>Calendar</button
-      >
-    </div>
+    {/each}
   </div>
 
   <p class="sr-only" role="status" aria-live="polite">{liveMessage}</p>
@@ -524,36 +569,42 @@
     <Banner tone="rust" urgent>{actionError}</Banner>
   {/if}
 
-  {#if view === 'calendar'}
-    <div class="calendar">
-      <WeekStrip {todayStartMs} items={weekItemsByDay} bind:period={calPeriod} />
-      {#if deckWindow === 'season'}
-        <SeasonStrip
-          crops={data.seasonCrops}
-          events={data.seasonEvents as CalendarEvent[]}
-          fromMs={data.nowMs}
-          toMs={data.nowMs + 200 * 86_400_000}
-        />
-      {/if}
-    </div>
+  {#if data.calendar}
+    <CalendarGrid
+      view={data.calendar.view}
+      anchor={data.calendar.anchor}
+      grid={data.calendar.grid}
+      todayYmd={data.today}
+      {cells}
+      weather={forecastByDate}
+      blockNames={data.blockNames}
+      onPage={(at) => navigate({ at: at === null || at === data.today ? null : at })}
+      onOpenChip={(day, chip) => (sheet = { kind: 'day', day, only: chip.key })}
+      onOpenDay={(day) => (sheet = { kind: 'day', day, only: null })}
+    />
+  {:else if data.season}
+    <SeasonTimeline
+      year={data.season.year}
+      years={data.season.years}
+      timeline={data.season.timeline}
+      now={data.nowMs}
+      onSelectYear={(y) => navigate({ season: String(y) })}
+      onOpenRow={(i) => (sheet = { kind: 'season-row', index: i })}
+    />
   {:else}
     {#if deck.length === 0}
       <div class="empty" data-testid="deck-empty">
-        {#if deckWindow === 'today'}
-          <p class="serif empty-title">Nothing on the list for today.</p>
-        {:else}
-          <p class="serif empty-title">Nothing scheduled in this window.</p>
-        {/if}
+        <p class="serif empty-title">Nothing on the list for today.</p>
         {#if nothingPlanted}
           <p>
             Add an Area on the Plan page and plant something, and the jobs it needs will show up
             here.
           </p>
           <a class="btn primary" href="/plan">Plan a crop</a>
-        {:else if windowEvents.length > 0}
+        {:else if todayEvents.length > 0}
           <p>Your crop calendar suggestions are below.</p>
         {:else}
-          <p>Nothing is due in this window.</p>
+          <p>Nothing is due today. Week and Month show what is coming.</p>
         {/if}
         {#if !gardenOnly}
           <a class="empty-link" href="/spray">Plan a spray</a>
@@ -562,81 +613,72 @@
     {:else}
       <ul class="cards" aria-label="Tasks">
         {#each deck as d (d.entry.task.id)}
-          <li>
-            <TaskDeckCard
-              card={d.card}
-              taskId={d.entry.task.id}
-              status={d.entry.status}
-              start={d.start}
-              {canAct}
-              queued={d.entry.queued !== null}
-              rejected={rejected.has(d.entry.task.id)}
-              linked={d.linked}
-              {busy}
-              {prefs}
-              now={data.nowMs}
-              onDone={(id) => closeTask(id, 'complete')}
-              onSkip={(id, reason) => closeTask(id, 'abort', reason)}
-            />
-          </li>
+          <li>{@render taskCard(d.entry.task.id)}</li>
         {/each}
       </ul>
     {/if}
 
-    {#if windowEvents.length > 0}
+    {#if todayEvents.length > 0}
       <h3 class="sub-head">From your crop calendar</h3>
       <p class="hint">
         Your crops suggest these. Schedule one to add it to your list, where it can get its own prep
         and follow-up jobs.
       </p>
       <ul class="suggestions" aria-label="Crop calendar suggestions">
-        {#each windowEvents as e (e.kind + e.blockId + e.startMs + e.title)}
-          {@const cta = ctaFor(e)}
-          <li class="suggestion">
-            <div class="s-main">
-              <strong>{e.title}</strong>
-              <span class="s-meta"
-                >{fmtRange(e.startMs, e.endMs)} · {e.varietyDisplayName} ·
-                <span class="s-kind">{EVENT_KIND_LABEL[e.kind] ?? e.kind.replace(/-/g, ' ')}</span
-                ></span
-              >
-              {#if e.body}<span class="s-body">{e.body}</span>{/if}
-            </div>
-            <div class="s-actions">
-              {#if cta}<a class="btn ghost" href={cta.href}>{cta.label}</a>{/if}
-              {#if canAct}
-                <button
-                  type="button"
-                  class="btn ghost"
-                  aria-label="Schedule: {e.title}"
-                  disabled={busy}
-                  onclick={() => scheduleFromEvent(e)}>Schedule</button
-                >
-              {/if}
-            </div>
-          </li>
-        {/each}
-      </ul>
-    {/if}
-
-    {#if deckWindow === 'season' && data.activeCrops.length > 0}
-      <h3 class="sub-head">Active crops</h3>
-      <ul class="active-crops">
-        {#each data.activeCrops as c (c.id)}
-          <li>
-            <a href={cardHref('planting', cardKey('planting', c.id))}>{c.varietyDisplayName}</a>
-            <span class="s-meta"
-              >{data.blockNames[c.blockId] ?? 'Unnamed block'} · {c.plantingDate
-                ? `planted ${fmt.day(c.plantingDate)}`
-                : 'planned'}</span
-            >
-            <Pill tone={c.status === 'active' ? 'forest' : 'neutral'}>{c.status}</Pill>
-          </li>
+        {#each todayEvents as e (e.kind + e.blockId + e.startMs + e.title)}
+          <li>{@render suggestionCard(e)}</li>
         {/each}
       </ul>
     {/if}
   {/if}
 </section>
+
+<Modal open={sheet !== null} onClose={() => (sheet = null)} title={sheetTitle}>
+  <div class="sheet" data-testid="today-sheet">
+    {#if sheet?.kind === 'day'}
+      {#if sheetChips.length === 0}
+        <p class="hint">Nothing scheduled on this day.</p>
+      {:else}
+        <ul class="sheet-list">
+          {#each sheetChips as c (c.key)}
+            <li>
+              {#if c.type === 'task'}
+                {@render taskCard(c.taskId)}
+              {:else if suggestions[c.index]}
+                <p class="sheet-kicker">Suggested by your crop calendar</p>
+                {@render suggestionCard(suggestions[c.index], sheet.day)}
+              {/if}
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    {:else if sheetRow && data.season}
+      {#if sheetRow.spans.length === 0}
+        <p class="hint">No dates yet. Give it a planting date on the Plan page.</p>
+      {:else}
+        <ul class="sheet-list">
+          {#each sheetRow.spans as s, k (k)}
+            {@const ev = s.suggestion !== undefined ? data.season.events[s.suggestion] : undefined}
+            <li class="span-item" data-kind={s.kind}>
+              {#if ev && ev.endMs >= data.nowMs}
+                {@render suggestionCard(ev as CalendarEvent)}
+              {:else}
+                <div class="span-line">
+                  <strong>{s.label}</strong>
+                  <span class="s-meta"
+                    >{SEASON_SPAN_LABEL[s.kind]} · {spanDates(s)} · {s.recorded
+                      ? 'Done'
+                      : 'Planned'}</span
+                  >
+                </div>
+              {/if}
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    {/if}
+  </div>
+</Modal>
 
 <div class="t-grid t-grid-second">
   <Recommendations
@@ -689,48 +731,6 @@
     </ul>
   </Banner>
 {/if}
-
-<details class="card gear" data-testid="today-gear" open={gearOpen}>
-  <summary><h2 id="gear-heading">Sprayers and app info</h2></summary>
-  {#if data.sprayers.length === 0}
-    <p class="hint">No sprayers yet. Add one from <a href="/inventory">Inventory</a>.</p>
-  {:else}
-    <ul class="sprayers">
-      {#each data.sprayers as s (s.id)}
-        <li>
-          <strong>{s.label}</strong>
-          {#if s.lastChemistryClass}
-            <span class="warn">last load: {s.lastChemistryClass}</span>
-            <a href="/spray/decon?sprayer={encodeURIComponent(s.id)}" class="link">Decon</a>
-          {:else}
-            <span class="ok">clean</span>
-          {/if}
-          {#if s.lastDeconAt}
-            <span class="meta">decon {fmt.instant(s.lastDeconAt)}</span>
-          {/if}
-        </li>
-      {/each}
-    </ul>
-  {/if}
-  <dl class="kernel">
-    <dt>Rules version</dt>
-    <dd><code>{data.rulesVersion}</code></dd>
-    <dt>Crops registered</dt>
-    <dd>{data.counts.crops}</dd>
-    <dt>Herbicides registered</dt>
-    <dd>{data.counts.herbicides}</dd>
-    <dt>Beds and blocks</dt>
-    <dd>{data.counts.blocks}</dd>
-    {#if data.pluginFailures.length > 0}
-      <dt>Plugin load failures</dt>
-      <dd class="warn-list">
-        <ul>
-          {#each data.pluginFailures as f, idx (idx)}<li>{f}</li>{/each}
-        </ul>
-      </dd>
-    {/if}
-  </dl>
-</details>
 
 <div class="legend-tail">
   <ProvenanceLegend
@@ -785,12 +785,6 @@
     color: var(--color-ink-soft);
     font-size: 14px;
   }
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 8px;
-  }
   .chips {
     display: flex;
     flex-wrap: wrap;
@@ -827,12 +821,6 @@
     gap: 12px;
   }
   .cards > li {
-    min-width: 0;
-  }
-  .calendar {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
     min-width: 0;
   }
   .empty {
@@ -888,7 +876,7 @@
     font-size: 14px;
   }
   .suggestions,
-  .active-crops {
+  .sheet-list {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -932,21 +920,6 @@
     flex-wrap: wrap;
     gap: 6px;
   }
-  .active-crops li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 10px;
-    min-height: 48px;
-    border-top: 1px solid var(--color-divider-soft);
-  }
-  .active-crops a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 48px;
-    font-weight: 600;
-    color: var(--color-forest-deep);
-  }
   .sr-only {
     position: absolute;
     width: 1px;
@@ -979,23 +952,6 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  .gear summary {
-    display: flex;
-    align-items: center;
-    min-height: 48px;
-    cursor: pointer;
-  }
-  .gear summary h2 {
-    display: inline;
-    margin: 0;
-  }
-  .gear summary:focus-visible {
-    outline: none;
-    box-shadow: var(--focus-ring);
-  }
-  .gear[open] summary {
-    margin-bottom: 0.75rem;
-  }
   .empty-link {
     display: inline-flex;
     align-items: center;
@@ -1010,67 +966,66 @@
     outline: none;
     box-shadow: var(--focus-ring);
   }
-  .sprayers {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 12px;
-  }
-  .sprayers li {
+  .sheet {
     display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0.5rem 0;
-    border-top: 1px solid var(--color-divider-soft);
+    flex-direction: column;
+    gap: 12px;
   }
-  .sprayers li:first-child {
-    border-top: none;
+  .sheet-list > li {
+    min-width: 0;
   }
-  .sprayers .warn {
-    background: var(--pill-wheat-bg);
-    color: var(--pill-wheat-fg);
-    padding: 0.15rem 0.5rem;
-    border-radius: 3px;
-    font-size: 0.85rem;
-    font-weight: 600;
-  }
-  .sprayers .ok {
-    background: var(--pill-forest-bg);
-    color: var(--pill-forest-fg);
-    padding: 0.15rem 0.5rem;
-    border-radius: 3px;
-    font-size: 0.85rem;
-    font-weight: 600;
-  }
-  .sprayers .meta {
+  .sheet-kicker {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: var(--color-ink-soft);
-    font-size: 0.8rem;
   }
-  .sprayers .link {
-    margin-left: auto;
+  .span-line {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-divider-soft);
+    border-radius: var(--radius-input);
+    overflow-wrap: anywhere;
+  }
+  .decon-alert {
+    border-left: 4px solid var(--color-rust, #ba4b38);
+  }
+  .decon-alert h2 {
+    color: var(--color-rust, #ba4b38);
+  }
+  .decon-alert p {
+    margin: 0;
+  }
+  .decon-alert ul {
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .decon-alert li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+  }
+  .decon-alert li a,
+  .alert-link {
     display: inline-flex;
     align-items: center;
     min-height: 48px;
-    padding: 0 8px;
-    color: var(--color-rust);
     font-weight: 600;
+    color: var(--color-forest-deep);
   }
-  .kernel {
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    gap: 0.4rem 1rem;
-    margin: 0;
-  }
-  .kernel dt {
-    color: var(--color-ink-soft);
-  }
-  .kernel dd {
-    margin: 0;
-    overflow-wrap: anywhere;
-  }
-  .warn-list ul {
-    margin: 0;
-    padding-left: 1.25rem;
+  .decon-alert .pill {
+    background: var(--pill-wheat-bg);
+    color: var(--pill-wheat-fg);
+    padding: 0.1rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    font-weight: 600;
   }
   .winterize-alert {
     border-left: 4px solid #2a6ca8;

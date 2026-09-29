@@ -207,4 +207,63 @@ describe('/api/map-features', () => {
       expect(after.fieldId).toBeNull();
     });
   });
+
+  it('a hydrant or waterer serves several Areas and survives one being deleted (#478)', async () => {
+    const other = seedOwner();
+    const theirs = runWithTenant(other, () => fieldsRepo.createField({ name: 'Their field' }));
+    await runWithTenantAsync(seedOwner(), async () => {
+      const north = fieldsRepo.createField({ name: 'North' });
+      const south = fieldsRepo.createField({ name: 'South' });
+      const hydrant = {
+        kind: 'hydrant',
+        name: 'Shared waterer',
+        geometry: { type: 'Point', coordinates: [-77.55, 39.1] }
+      };
+      const res = await create({ ...hydrant, areaIds: [north.id, south.id] });
+      expect(res.status).toBe(201);
+      const { mapFeature } = await res.json();
+      expect(mapFeature).toMatchObject({ fieldId: north.id, areaIds: [north.id, south.id] });
+
+      const bySouth = (await (await list(`?fieldId=${south.id}`)).json()).mapFeatures;
+      expect(bySouth.map((f: { id: string }) => f.id)).toEqual([mapFeature.id]);
+
+      await expectStatus(() => create({ ...hydrant, areaIds: [theirs.id] }), 400);
+      await expectStatus(() => create({ ...fence, areaIds: [north.id] }), 400);
+      await expectStatus(() => patch(mapFeature.id, { areaIds: [north.id, theirs.id] }), 400);
+
+      const swapped = await (await patch(mapFeature.id, { areaIds: [south.id] })).json();
+      expect(swapped.mapFeature).toMatchObject({ fieldId: south.id, areaIds: [south.id] });
+      await patch(mapFeature.id, { areaIds: [north.id, south.id] });
+
+      deleteFieldCascade(north.id);
+      const after = (await (await getOne(mapFeature.id)).json()).mapFeature;
+      expect(after).toMatchObject({ fieldId: south.id, areaIds: [south.id] });
+    });
+  });
+
+  it('a fieldId-only PATCH on a hydrant rewrites its links and can clear them', async () => {
+    await runWithTenantAsync(seedOwner(), async () => {
+      const a = fieldsRepo.createField({ name: 'A' });
+      const b = fieldsRepo.createField({ name: 'B' });
+      const c = fieldsRepo.createField({ name: 'C' });
+      const { mapFeature } = await (
+        await create({
+          kind: 'hydrant',
+          name: 'Hydrant',
+          geometry: { type: 'Point', coordinates: [-77.55, 39.1] },
+          areaIds: [a.id, b.id]
+        })
+      ).json();
+
+      const moved = (await (await patch(mapFeature.id, { fieldId: c.id })).json()).mapFeature;
+      expect(moved).toMatchObject({ fieldId: c.id, areaIds: [c.id] });
+      const byC = (await (await list(`?fieldId=${c.id}`)).json()).mapFeatures;
+      expect(byC.map((f: { id: string }) => f.id)).toEqual([mapFeature.id]);
+      const byA = (await (await list(`?fieldId=${a.id}`)).json()).mapFeatures;
+      expect(byA).toEqual([]);
+
+      const cleared = (await (await patch(mapFeature.id, { fieldId: null })).json()).mapFeature;
+      expect(cleared).toMatchObject({ fieldId: null, areaIds: [] });
+    });
+  });
 });

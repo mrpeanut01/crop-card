@@ -9,6 +9,7 @@
   import UrlPanel from '$lib/components/stock/add/UrlPanel.svelte';
   import type { InventoryType } from '$lib/inventory/types';
   import type { StockEntryDraft } from '$lib/stock/normalizeStockEntry';
+  import type { LibraryOption } from '$lib/plugins/libraryMatch';
 
   /**
    * Phase 27 follow-on (#296) — the multi-modal add waterfall, finally
@@ -32,8 +33,8 @@
    * unexplained 3-of-5 chip row. No-key methods (local Search, Barcode
    * via OpenFoodFacts, Manual) work end-to-end — no dead-ends.
    *
-   * Sprayer + crop are not lot-bearing scan targets, so they skip the
-   * picker and render the plain manual form directly.
+   * Crop is not a lot-bearing scan target, so it skips the picker and
+   * renders the plain manual form directly. Sprayers are equipment (#474).
    *
    * #152 — the picker is the mockup's card grid (icon chip + label +
    * mono hint), still an ARIA tablist with roving tabindex + arrow keys.
@@ -51,9 +52,15 @@
      *  up, but don't get the multi-photo batch (30 Claude calls they could
      *  never save). The server enforces the gate either way. */
     canSave?: boolean;
+    /** Crop categories (seed) or product labels this item can link to. */
+    library?: ReadonlyArray<LibraryOption>;
+    /** Embedded use (the planning wizard's add-seed sheet, #475): replaces
+     *  the post-save navigation and hands back the new item's id. */
+    onSaved?: (saved: { id: string | null }) => void;
+    onCancel?: () => void;
   }
 
-  const { type, aiEnabled, canSave = true }: Props = $props();
+  const { type, aiEnabled, canSave = true, library = [], onSaved, onCancel }: Props = $props();
 
   type AddMethod = 'search' | 'barcode' | 'label' | 'url' | 'manual';
 
@@ -71,9 +78,9 @@
   const METHODS: MethodMeta[] = [
     {
       id: 'search',
-      hint: 'Plugin library → web',
+      hint: 'Library, then the web',
       label: 'Search',
-      blurb: 'Type the name — instant matches from your plugin library.',
+      blurb: 'Type the name for instant matches from the crop and product library.',
       icon: Search,
       aiRequired: false
     },
@@ -111,8 +118,8 @@
     }
   ];
 
-  // Sprayer + crop aren't scan/search targets — render the bare form.
-  const lotBearing = $derived(type === 'pesticide' || type === 'fertility' || type === 'seed');
+  // Crop isn't a scan/search target, so it gets the bare form.
+  const lotBearing = $derived(type !== 'crop');
 
   // #312 / CT-S3-002 — all five chips always render. AI-required chips
   // are reachable with no key so their panels can surface the built-in
@@ -194,7 +201,7 @@
 </script>
 
 {#if !lotBearing}
-  <A_InventoryEditForm {type} />
+  <A_InventoryEditForm {type} {library} {onSaved} {onCancel} />
 {:else if phase === 'approve'}
   <button type="button" class="back-link" onclick={backToMethods}>
     {reviewingRowId ? '← Back to batch queue' : '← Choose a different method'}
@@ -203,13 +210,20 @@
     {#key reviewingRowId}
       <A_InventoryEditForm
         {type}
+        {library}
         prefill={draft ?? undefined}
         onSaved={onBatchRowSaved}
         onCancel={backToMethods}
       />
     {/key}
   {:else}
-    <A_InventoryEditForm {type} prefill={draft ?? undefined} />
+    <A_InventoryEditForm
+      {type}
+      {library}
+      prefill={draft ?? undefined}
+      {onSaved}
+      onCancel={onCancel ? backToMethods : undefined}
+    />
   {/if}
 {:else}
   <header class="flow-header">

@@ -5,6 +5,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { toVisionSource } from './visionImage';
 import type { StockCategory } from '$lib/db/stock';
 import { getRegistry } from '$lib/server/registry';
+import { rankLibraryMatches } from '$lib/plugins/libraryMatch';
 import { getSetting } from '$lib/db/settings';
 import { usageSurchargeUsd } from './aiCost';
 import {
@@ -107,21 +108,10 @@ export const STOCK_CATEGORIES = [
 export async function matchCropPlugins(displayName: string): Promise<CropPluginMatch[]> {
   try {
     const registry = await getRegistry();
-    const tokA = new Set(displayName.toLowerCase().split(/\W+/).filter(Boolean));
-    return registry
-      .crops()
-      .map((p) => {
-        const tokB = new Set(p.displayName.toLowerCase().split(/\W+/).filter(Boolean));
-        let shared = 0;
-        for (const t of tokA) {
-          if (tokB.has(t)) shared++;
-        }
-        const max = Math.max(tokA.size, tokB.size);
-        return { pluginId: p.pluginId, displayName: p.displayName, score: max ? shared / max : 0 };
-      })
-      .filter((m) => m.score >= 0.3)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3);
+    return rankLibraryMatches(
+      displayName,
+      registry.crops().map((p) => ({ id: p.pluginId, name: p.displayName }))
+    ).map((m) => ({ pluginId: m.id, displayName: m.name, score: m.score }));
   } catch {
     return [];
   }
@@ -141,8 +131,8 @@ Required fields:
 - displayName: string (product name as it would appear on a shelf label)
 - shortName: string ≤40 chars — a TERSE label for crowded UI (schedule bars). Lead with the variety/cultivar then the crop type. Drop marketing terms ("Treated", "Untreated", "Non-GMO", "Raw", "Film Coated", pack sizes, supplier names). Examples: "Pumpkin Cinderella Film Coated Treated" → "Cinderella Pumpkin"; "Bloody Butcher Ornamental Corn — Raw Untreated Non-GMO (1/2 lb)" → "Bloody Butcher Corn"; "Roundup PowerMax II Glyphosate" → "Roundup PowerMax". Title-case, no quotes, no emoji. 1-4 words.
 - category: one of exactly: herbicide|insecticide|fungicide|fertilizer|seed|adjuvant|fuel|part
-- defaultUnit: string — the natural unit for this product type. For seeds use "count" or "lb". For liquids use "fl-oz", "qt", "gal". For dry material use "lb", "oz", "bag".
-- packageQuantity: number — the amount **printed on this specific package**, expressed in defaultUnit. Read it directly from the label whenever possible. Examples: a "1 Quart" herbicide → 32 (defaultUnit "fl-oz") or 1 (defaultUnit "qt"); a "5 lb" fertilizer bag → 5 (defaultUnit "lb"); a "100 seeds" packet → 100 (defaultUnit "count"). Omit if you genuinely cannot tell.
+- defaultUnit: string — the natural unit for this product type. For seeds use "seeds" (a seed count), or "oz", "lb" or "g" when the seed is sold by weight. For liquids use "fl-oz", "qt", "gal". For dry material use "lb", "oz", "bag".
+- packageQuantity: number — the amount **printed on this specific package**, expressed in defaultUnit. Read it directly from the label whenever possible. Examples: a "1 Quart" herbicide → 32 (defaultUnit "fl-oz") or 1 (defaultUnit "qt"); a "5 lb" fertilizer bag → 5 (defaultUnit "lb"); a "100 seeds" packet → 100 (defaultUnit "seeds"). Omit if you genuinely cannot tell.
 - reorderThreshold: number — suggest a sensible low-stock reorder level in the defaultUnit (e.g. 2 for packets, 32 for fl-oz of herbicide). Use your best judgement.
 - notes: string ≤120 chars — key facts from the label (variety type, certifications, etc.). Empty string if nothing useful.
 - guessed: string[] — list ONLY the field names above that you inferred rather than read directly from the label/data. Be honest — if the label clearly states a value, do NOT include it in guessed.

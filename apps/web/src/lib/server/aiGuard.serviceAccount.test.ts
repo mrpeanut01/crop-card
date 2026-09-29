@@ -12,6 +12,9 @@ import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners, users, helperAssignments, aiCallLog, apiTokens } from '$lib/db/schema';
 import { runWithTenant, tenantValues, withTenant } from '$lib/db/tenant';
+import { PLANS } from '$lib/billing/plans';
+
+const GROWER_ALLOCATE = PLANS.grower.dailyQuota.allocate;
 
 function uniq(prefix: string): string {
   return `${prefix}-${randomUUID().slice(0, 8)}`;
@@ -119,7 +122,7 @@ function seedCalls(opts: {
 describe('daily caps are per farm', () => {
   it("a service-account token's calls use the farm's daily allowance", () => {
     const { ownerId, userId, tokenId } = seedServiceAccountToken();
-    seedCalls({ ownerId, userId: null, tokenId, endpoint: 'allocate', count: 5 });
+    seedCalls({ ownerId, userId: null, tokenId, endpoint: 'allocate', count: GROWER_ALLOCATE });
     runWithTenant(ownerId, () => {
       const cookieCall = checkGuard(userId, 'allocate');
       expect(cookieCall.ok).toBe(false);
@@ -148,7 +151,7 @@ describe('daily caps are per farm', () => {
   it("a per-token override cannot raise the farm's cap", () => {
     const { ownerId, userId, tokenId } = seedServiceAccountToken();
     db.update(apiTokens).set({ dailyQuotaAllocate: 1000 }).where(eq(apiTokens.id, tokenId)).run();
-    seedCalls({ ownerId, userId: null, tokenId, endpoint: 'allocate', count: 5 });
+    seedCalls({ ownerId, userId: null, tokenId, endpoint: 'allocate', count: GROWER_ALLOCATE });
     runWithTenant(ownerId, () => {
       const tokenCall = checkGuard(userId, 'allocate', { tokenId, isServiceAccount: true });
       expect(tokenCall.ok).toBe(false);
@@ -158,7 +161,7 @@ describe('daily caps are per farm', () => {
 
   it('personal-use Bearer token (isServiceAccount=false) shares the farm allowance', () => {
     const { ownerId, userId, tokenId } = seedPersonalToken();
-    seedCalls({ ownerId, userId, tokenId: null, endpoint: 'allocate', count: 5 });
+    seedCalls({ ownerId, userId, tokenId: null, endpoint: 'allocate', count: GROWER_ALLOCATE });
     runWithTenant(ownerId, () => {
       const tokenCall = checkGuard(userId, 'allocate', { tokenId, isServiceAccount: false });
       expect(tokenCall.ok).toBe(false);
@@ -182,7 +185,7 @@ describe('daily caps are per farm', () => {
       userId: home.userId,
       tokenId: null,
       endpoint: 'allocate',
-      count: 5
+      count: GROWER_ALLOCATE
     });
     runWithTenant(home.ownerId, () => {
       expect(checkGuard(home.userId, 'allocate').ok).toBe(true);
@@ -240,7 +243,7 @@ describe('Phase 24 — monthly USD cap stays global', () => {
           tenantValues({
             id: randomUUID(),
             userId,
-            endpoint: 'allocate',
+            endpoint: 'inputs',
             model: 'claude-opus-4-7',
             inputTokens: 0,
             cachedInputTokens: 0,
@@ -253,7 +256,7 @@ describe('Phase 24 — monthly USD cap stays global', () => {
     );
 
     runWithTenant(ownerId, () => {
-      const tokenCall = checkGuard(userId, 'allocate', {
+      const tokenCall = checkGuard(userId, 'inputs', {
         tokenId,
         isServiceAccount: true
       });

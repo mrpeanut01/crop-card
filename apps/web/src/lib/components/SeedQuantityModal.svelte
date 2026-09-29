@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { CropPlugin } from '$lib/plugins/schemas';
-  import { seedsToPlants } from '$lib/seed/quantity';
+  import { seedStockUnit, seedsToPlants } from '$lib/seed/quantity';
 
   type StockEntry = {
     stockItemId: string;
@@ -71,7 +71,7 @@
   const plantEquivalent = $derived.by(() => {
     if (!plugin) return null;
     const result = seedsToPlants({
-      unit: stock.defaultUnit,
+      unit: seedStockUnit(stock.defaultUnit),
       quantity,
       plugin
     });

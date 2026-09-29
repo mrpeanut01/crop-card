@@ -45,6 +45,9 @@ param hasAnthropicKey bool = false
 @description('Optional pass-through secrets present in the Key Vault (listed by deploy-azure.sh). Each one listed in passThroughEnv becomes a secret-backed env var; absent ones leave that feature in its honest "not configured" state.')
 param presentSecrets array = []
 
+@description('owner/repo that new in-app feedback (and "Send to GitHub" on /admin/feedback) files issues in. Only used when Key Vault holds github-feedback-token.')
+param githubFeedbackRepo string = ''
+
 @description('Deployment-wide AI brake: total Anthropic spend across all farms per UTC month, in USD. Empty = no brake.')
 param aiGlobalMonthlyUsdCap string = ''
 
@@ -340,6 +343,7 @@ var passThroughEnv = [
   { secret: 'stripe-price-farm-monthly', env: 'STRIPE_PRICE_FARM_MONTHLY' }
   { secret: 'stripe-price-farm-annual', env: 'STRIPE_PRICE_FARM_ANNUAL' }
   { secret: 'pingram-webhook-secret', env: 'PINGRAM_WEBHOOK_SECRET' }
+  { secret: 'github-feedback-token', env: 'GITHUB_FEEDBACK_TOKEN' }
 ]
 var passThrough = filter(
   passThroughEnv,
@@ -383,6 +387,9 @@ var optionalEnv = concat(
     : [],
   hasVapidKeys && !empty(vapidSubject) ? [{ name: 'VAPID_SUBJECT', value: vapidSubject }] : [],
   map(passThrough, e => { name: e.env, secretRef: e.secret }),
+  contains(presentSecrets, 'github-feedback-token') && !empty(githubFeedbackRepo)
+    ? [{ name: 'GITHUB_FEEDBACK_REPO', value: githubFeedbackRepo }]
+    : [],
   empty(aiGlobalMonthlyUsdCap) ? [] : [{ name: 'AI_GLOBAL_MONTHLY_USD_CAP', value: aiGlobalMonthlyUsdCap }],
   empty(aiFreePoolMonthlyUsd) ? [] : [{ name: 'AI_FREE_POOL_MONTHLY_USD', value: aiFreePoolMonthlyUsd }]
 )

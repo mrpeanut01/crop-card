@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import type { SignInChannel } from '$lib/identity';
+  import AlphaBanner from '$lib/components/feedback/AlphaBanner.svelte';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -185,6 +186,7 @@
 
   <section class="auth" aria-labelledby="signin-title">
     <div class="auth-card">
+      <AlphaBanner />
       <h2 id="signin-title">Sign in</h2>
       {#if !sent && via === 'phone'}
         <p class="auth-hint">

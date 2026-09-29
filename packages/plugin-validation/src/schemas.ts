@@ -1627,6 +1627,23 @@ export const speciesPluginSchema = z
       )
       .max(30)
       .optional(),
+    /** Floor space per adult animal, for the suggested capacity of a coop
+     *  or pen. Advisory only, never enforced. Each number needs a source
+     *  under `housingSpace.<field>`; `sourceName` is shown beside the
+     *  suggestion. */
+    housingSpace: z
+      .strictObject({
+        indoorSqFtPerAnimal: z.number().positive().max(1000).optional(),
+        outdoorSqFtPerAnimal: z.number().positive().max(10000).optional(),
+        sourceName: z.string().min(1).max(120),
+      })
+      .refine(
+        (h) =>
+          h.indoorSqFtPerAnimal !== undefined ||
+          h.outdoorSqFtPerAnimal !== undefined,
+        { message: "housingSpace needs an indoor or outdoor figure" },
+      )
+      .optional(),
     notes: z.string().max(1000).optional(),
   })
   .refine(

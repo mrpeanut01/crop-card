@@ -1029,3 +1029,170 @@ describe('planInputs — soil test units (Phase 32A regression)', () => {
     expect(fromLb?.rationale).toBe(fromPpm?.rationale);
   });
 });
+
+describe('planInputs — on-hand products first (#480)', () => {
+  const windowCrop = (purpose: 'pre-emergent' | 'post-emergent', chemistryClass = 'glufosinate') =>
+    buildCrop('legume', 'beans', {
+      sprayWindows: [
+        {
+          chemistryClass: chemistryClass as never,
+          purpose,
+          anchor: 'planting',
+          offsetDaysMin: 0,
+          offsetDaysMax: 7,
+          title: 'Weed control'
+        }
+      ]
+    });
+  const stock = (pluginId: string, onHand: number) => ({
+    pluginId,
+    category: 'herbicide',
+    displayName: pluginId,
+    defaultUnit: 'pt',
+    onHand
+  });
+  const run = (existingStock: InputsPlanInput['existingStock'], acres = 1) =>
+    planInputs(
+      buildBaseInput({
+        plantings: [buildPlanting('p1', 'b1', 'beans')],
+        blocks: [buildBlock('b1', acres)],
+        cropPlugins: { beans: windowCrop('pre-emergent') },
+        seasonSetup: buildSetup('conventional', 'synthetic', { weedStrategy: 'post-emergence-ok' }),
+        existingStock
+      })
+    ).applications.find((a) => a.slot === 'pre-emergent')!;
+
+  it('keeps the catalog default when nothing is on hand', () => {
+    const app = run([]);
+    expect(app.productPluginId).toBe('roundup');
+    expect(app.productSource).toBe('plugin');
+    expect(app.options?.map((o) => o.pluginId)).toEqual(['roundup', 'citric-burndown']);
+  });
+
+  it('picks an allowed on-hand product over one that must be bought', () => {
+    const app = run([stock('citric-burndown', 1)]);
+    expect(app.productPluginId).toBe('citric-burndown');
+    expect(app.productSource).toBe('data');
+    expect(app.options?.[0]).toMatchObject({ pluginId: 'citric-burndown', stock: 'some' });
+  });
+
+  it('prefers enough on hand over some on hand', () => {
+    const app = run([stock('roundup', 1), stock('citric-burndown', 10)]);
+    expect(app.productPluginId).toBe('citric-burndown');
+    expect(app.options?.map((o) => o.stock)).toEqual(['enough', 'some']);
+  });
+
+  it('counts what earlier applications already used', () => {
+    const result = planInputs(
+      buildBaseInput({
+        plantings: [buildPlanting('p1', 'b1', 'beans'), buildPlanting('p2', 'b2', 'beans')],
+        blocks: [buildBlock('b1'), buildBlock('b2')],
+        cropPlugins: { beans: windowCrop('pre-emergent') },
+        existingStock: [stock('roundup', 3), stock('citric-burndown', 2)]
+      })
+    );
+    const [first, second] = result.applications.filter((a) => a.slot === 'pre-emergent');
+    expect(first.productPluginId).toBe('roundup');
+    expect(second.productPluginId).toBe('citric-burndown');
+  });
+
+  it('never offers a post-emergent herbicide that would kill the crop', () => {
+    const pool = buildProductPool();
+    pool.herbicides.push(buildHerbicide('two-four-d', 'synthetic-auxin'));
+    const app = planInputs(
+      buildBaseInput({
+        plantings: [buildPlanting('p1', 'b1', 'beans')],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { beans: windowCrop('post-emergent', 'synthetic-auxin') },
+        productPlugins: pool,
+        existingStock: [stock('two-four-d', 100)]
+      })
+    ).applications.find((a) => a.slot === 'post-emergent')!;
+    expect(app.productPluginId).toBeNull();
+    expect(app.options).toEqual([]);
+  });
+
+  it('converts stock kept in fl oz before comparing it with a rate in pt', () => {
+    const flOz = (pluginId: string, onHand: number) => ({
+      ...stock(pluginId, onHand),
+      defaultUnit: 'fl-oz'
+    });
+    // 32 fl oz is 2 pt; 3 acres of roundup needs more than that.
+    const short = run([flOz('roundup', 32)], 3);
+    const roundup = short.options?.find((o) => o.pluginId === 'roundup');
+    expect(roundup?.stock).toBe('some');
+    const plenty = run([flOz('roundup', 32 * 16)], 3);
+    expect(plenty.options?.find((o) => o.pluginId === 'roundup')?.stock).toBe('enough');
+  });
+
+  it('reads stock in a unit that cannot convert as some on hand, never enough', () => {
+    const app = run([{ ...stock('roundup', 500), defaultUnit: 'lb' }]);
+    expect(app.options?.find((o) => o.pluginId === 'roundup')?.stock).toBe('some');
+  });
+
+  it('puts the true shortfall on the shopping list when units differ', () => {
+    const result = planInputs(
+      buildBaseInput({
+        plantings: [buildPlanting('p1', 'b1', 'beans')],
+        blocks: [buildBlock('b1', 3)],
+        cropPlugins: { beans: windowCrop('pre-emergent') },
+        seasonSetup: buildSetup('conventional', 'synthetic', { weedStrategy: 'post-emergence-ok' }),
+        existingStock: [{ ...stock('roundup', 32), defaultUnit: 'fl-oz' }]
+      })
+    );
+    const app = result.applications.find((a) => a.slot === 'pre-emergent')!;
+    const item = result.shoppingList.find((i) => i.pluginId === app.productPluginId)!;
+    expect(item.unit).toBe(app.rateUnit);
+    if (app.productPluginId === 'roundup') {
+      expect(item.onHand).toBe(2);
+      expect(item.shortfall).toBeCloseTo(app.totalAmount! - 2);
+    }
+  });
+
+  it('never offers a fertilizer that supplies none of the budget (lime, copper)', () => {
+    const pool = buildProductPool();
+    pool.fertilizers.push(
+      buildFertilizer('ag-lime', { analysis: { n: 0, p: 0, k: 0 } }),
+      buildFertilizer('copper-sulfate', { analysis: { n: 0, p: 0, k: 0 } })
+    );
+    const result = planInputs(
+      buildBaseInput({
+        plantings: [buildPlanting('p1', 'b1', 'corn-1')],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { 'corn-1': buildCrop('corn', 'corn-1') },
+        productPlugins: pool,
+        seasonSetup: buildSetup('conventional', 'synthetic')
+      })
+    );
+    const fert = result.applications.filter((a) => a.productCategory === 'fertilizer');
+    expect(fert.length).toBeGreaterThan(0);
+    for (const app of fert) {
+      const ids = app.options?.map((o) => o.pluginId) ?? [];
+      expect(ids).not.toContain('ag-lime');
+      expect(ids).not.toContain('copper-sulfate');
+      expect(app.options?.every((o) => o.rateAmount != null && o.rateAmount > 0)).toBe(true);
+    }
+  });
+
+  it('reports on-hand balances for the Inputs step', () => {
+    const result = planInputs(buildBaseInput({ existingStock: [stock('roundup', 3)] }));
+    expect(result.stockOnHand).toEqual({ roundup: [{ amount: 3, unit: 'pt' }] });
+  });
+
+  it('names a picked cover-crop termination herbicide', () => {
+    const result = planInputs(
+      buildBaseInput({
+        plantings: [buildPlanting('p1', 'b1', 'beans')],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { beans: buildCrop('legume', 'beans') },
+        seasonSetup: buildSetup('conventional', 'synthetic', {
+          coverCropIntent: 'fall-cereal',
+          weedStrategy: 'post-emergence-ok'
+        })
+      })
+    );
+    const terminate = result.applications.find((a) => a.slot === 'cover-terminate')!;
+    expect(terminate.productPluginId).toBe('roundup');
+    expect(terminate.productDisplayName).toBe('roundup');
+  });
+});

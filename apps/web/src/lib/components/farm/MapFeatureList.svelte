@@ -8,12 +8,17 @@
     MAP_FEATURE_STYLE,
     describeFeature,
     geometryTypeFor,
-    type MapFeatureDetails,
+    servedAreaIds,
     type MapFeatureView
   } from '$lib/farm/mapFeatures';
-  import { bodyFromDraft, draftFromFeature, type FeatureFormDraft } from '$lib/farm/mapFeatureForm';
+  import {
+    bodyFromDraft,
+    draftFromFeature,
+    type FeatureBody,
+    type FeatureFormDraft
+  } from '$lib/farm/mapFeatureForm';
 
-  type Body = { name: string; fieldId: string | null; details: MapFeatureDetails | null };
+  type Body = FeatureBody;
 
   const {
     features,
@@ -36,6 +41,10 @@
     })).filter((g) => g.items.length > 0)
   );
   const areaName = $derived(new Map(areas.map((a) => [a.id, a.name] as const)));
+  const servedNames = (f: MapFeatureView) =>
+    servedAreaIds(f)
+      .map((id) => areaName.get(id))
+      .filter((n): n is string => !!n);
 
   let editingId = $state<string | null>(null);
   let draft = $state<FeatureFormDraft>(draftFromFeature());
@@ -102,8 +111,10 @@
           <div class="row">
             <span class="text">
               <span class="name">{describeFeature(f, lengthText)}</span>
-              {#if f.fieldId && areaName.get(f.fieldId)}
-                <span class="where">{areaName.get(f.fieldId)}</span>
+              {#if servedNames(f).length}
+                <span class="where"
+                  >{f.kind === 'hydrant' ? 'Serves ' : ''}{servedNames(f).join(', ')}</span
+                >
               {/if}
               {#if !f.geometry}<span class="where">Not on the map</span>{/if}
             </span>

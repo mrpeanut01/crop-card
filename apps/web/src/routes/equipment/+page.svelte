@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { invalidateAll } from '$app/navigation';
 
@@ -32,9 +33,18 @@
     typeFilter === 'all' ? data.equipment : data.equipment.filter((e) => e.typeName === typeFilter)
   );
 
-  let newTypeName = $state('');
+  // #474: /equipment?add=sprayer (the old Inventory sprayer add link)
+  // opens the form with the Sprayer type filled in.
+  let newTypeName = $state(untrack(() => data.addType ?? ''));
   let newLabel = $state('');
   let newNotes = $state('');
+  let newTankGal = $state<number | null>(null);
+  let newNozzle = $state('');
+  const addingSprayer = $derived(newTypeName.trim().toLowerCase().includes('sprayer'));
+  let labelInput = $state<HTMLInputElement | null>(null);
+  $effect(() => {
+    if (data.addType && labelInput) untrack(() => labelInput?.focus());
+  });
   let creating = $state(false);
   let createError = $state<string | null>(null);
 
@@ -90,6 +100,11 @@
         creating = false;
         return;
       }
+      const spec: Record<string, unknown> = {};
+      if (typeRes.legacyType === 'sprayer') {
+        if (newTankGal != null && newTankGal > 0) spec.tankGal = newTankGal;
+        if (newNozzle.trim()) spec.nozzle = newNozzle.trim();
+      }
       const res = await fetch('/api/equipment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,7 +112,8 @@
           type: typeRes.legacyType,
           typeId: typeRes.typeId,
           label: newLabel.trim(),
-          notes: newNotes.trim() || undefined
+          notes: newNotes.trim() || undefined,
+          spec: Object.keys(spec).length > 0 ? spec : undefined
         })
       });
       const out = await res.json();
@@ -108,6 +124,8 @@
       newLabel = '';
       newNotes = '';
       newTypeName = '';
+      newTankGal = null;
+      newNozzle = '';
       await invalidateAll();
     } catch (e) {
       createError = e instanceof Error ? e.message : String(e);
@@ -154,17 +172,13 @@
   });
 </script>
 
-<p class="redirect-banner">
-  Looking for sprayer calibration + decon status?
-  <a href="/inventory?type=sprayer">→ /inventory?type=sprayer</a>. This page stays for CRUD across
-  all equipment types.
-</p>
+<svelte:head><title>Equipment · CropCard</title></svelte:head>
 
 <h1>Equipment</h1>
 <p class="lede">
-  Field gear: planters, drills, rakes, balers, sprayers, tractors, mowers, irrigation. Sprayer-typed
-  equipment carries the chemistry-history, decon, and GPA-calibration state the safety kernel reads
-  on every spray.
+  Sprayers, tractors, planters, drills, mowers, balers and irrigation. Each sprayer keeps its
+  chemical history, decon and calibration, which every spray checks. Chemicals, fertility and seed
+  live in <a href="/inventory">Inventory</a>.
 </p>
 
 <section class="card">
@@ -189,33 +203,69 @@
 {/if}
 
 {#if data.canEdit}
-  <section class="card">
+  <section class="card" id="add">
     <h2>Add equipment</h2>
     <datalist id="equipment-type-suggestions">
       {#each data.types as t (t.id)}<option value={t.name}>{t.description ?? ''}</option>{/each}
     </datalist>
-    <div class="row">
-      <input
-        type="text"
-        list="equipment-type-suggestions"
-        placeholder="Type (e.g. Tractor)"
-        bind:value={newTypeName}
-      />
-      <input type="text" placeholder="e.g. John Deere 4020" bind:value={newLabel} />
-      <input type="text" placeholder="notes (optional)" bind:value={newNotes} />
-      <button
-        class="primary"
-        onclick={createEquipment}
-        disabled={creating || !newLabel.trim() || !newTypeName.trim()}
-      >
-        {creating ? '…' : 'Add'}
-      </button>
+    <div class="add-grid">
+      <label class="field">
+        <span>Type</span>
+        <input
+          type="text"
+          list="equipment-type-suggestions"
+          placeholder="Tractor"
+          bind:value={newTypeName}
+        />
+      </label>
+      <label class="field">
+        <span>Name</span>
+        <input
+          type="text"
+          placeholder={addingSprayer ? 'Backpack 4 gal' : 'John Deere 4020'}
+          bind:value={newLabel}
+          bind:this={labelInput}
+        />
+      </label>
+      {#if addingSprayer}
+        <label class="field">
+          <span>Tank size in gallons (optional)</span>
+          <input
+            type="number"
+            min="0"
+            step="0.5"
+            inputmode="decimal"
+            placeholder="4"
+            bind:value={newTankGal}
+          />
+        </label>
+        <label class="field">
+          <span>Nozzle (optional)</span>
+          <input type="text" placeholder="TeeJet XR110015" maxlength="60" bind:value={newNozzle} />
+        </label>
+      {/if}
+      <label class="field">
+        <span>Notes (optional)</span>
+        <input type="text" bind:value={newNotes} />
+      </label>
     </div>
+    {#if addingSprayer}
+      <p class="hint-new-type">
+        New sprayers start uncalibrated. Calibrate one before it can size a spray.
+      </p>
+    {/if}
+    <button
+      class="primary add-btn"
+      onclick={createEquipment}
+      disabled={creating || !newLabel.trim() || !newTypeName.trim()}
+    >
+      {creating ? '…' : 'Add'}
+    </button>
     {#if newTypeName.trim() && !data.types.find((t) => t.name.toLowerCase() === newTypeName
             .trim()
             .toLowerCase())}
       <p class="hint-new-type">
-        "{newTypeName.trim()}" is new — you'll be asked to confirm adding it on save.
+        "{newTypeName.trim()}" is new. You'll be asked to confirm adding it when you save.
       </p>
     {/if}
     {#if createError}<p class="error">{createError}</p>{/if}
@@ -234,14 +284,16 @@
           <a href="/equipment/{e.id}"><strong>{e.label}</strong></a>
           <span class="type-badge">{e.typeName}</span>
           {#if e.retiredAt}<span class="retired">retired {fmtTs(e.retiredAt)}</span>{/if}
-          <button
-            class="delete-btn"
-            onclick={() => deleteEquipment(e.id, e.label)}
-            title="Delete"
-            aria-label="Delete {e.label}"
-          >
-            🗑
-          </button>
+          {#if data.canEdit}
+            <button
+              class="delete-btn"
+              onclick={() => deleteEquipment(e.id, e.label)}
+              title="Delete"
+              aria-label="Delete {e.label}"
+            >
+              🗑
+            </button>
+          {/if}
         </header>
         <dl>
           {#if e.type === 'sprayer'}
@@ -279,27 +331,17 @@
   h1 {
     margin: 0 0 0.25rem;
   }
-  .redirect-banner {
-    padding: 10px 14px;
-    background: var(--color-cream);
-    border-left: 3px solid var(--color-forest-deep);
-    border-radius: 4px;
-    margin: 0 0 16px;
-    font-size: 13px;
-    color: var(--color-ink);
-    line-height: 1.45;
-  }
-  .redirect-banner a {
-    color: var(--color-forest-deep);
-    font-weight: 600;
-    text-decoration: none;
-  }
-  .redirect-banner a:hover {
-    text-decoration: underline;
-  }
   .lede {
     color: var(--color-ink-muted);
     margin: 0 0 1.5rem;
+  }
+  .lede a {
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    min-width: 48px;
   }
   .card {
     background: var(--color-paper);
@@ -328,7 +370,7 @@
     cursor: pointer;
     text-transform: capitalize;
     font: inherit;
-    min-height: 40px;
+    min-height: 48px;
     color: var(--color-ink);
   }
   .chip.active {
@@ -343,19 +385,34 @@
   .role-notice h2 {
     color: var(--color-wheat, #d4a75c);
   }
-  .row {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
   .hint-new-type {
     font-size: 0.82rem;
     color: var(--color-ink-soft);
     margin: 0.4rem 0 0;
     font-style: italic;
   }
-  .row input {
-    flex: 1 1 120px;
+  .add-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 0.75rem;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .add-btn {
+    margin-top: 0.75rem;
+  }
+  .field input {
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    font-weight: 400;
     padding: 0.6rem;
     border: 2px solid var(--color-divider);
     border-radius: var(--radius-input, 6px);
@@ -399,6 +456,10 @@
     margin-bottom: 0.5rem;
   }
   .item header a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    min-width: 48px;
     color: var(--color-forest-deep);
     text-decoration: none;
     font-weight: 700;
@@ -430,8 +491,8 @@
     border-radius: var(--radius-input, 6px);
     cursor: pointer;
     font-size: 0.9rem;
-    min-height: 32px;
-    min-width: 36px;
+    min-height: 48px;
+    min-width: 48px;
   }
   .delete-btn:hover {
     background: rgba(186, 75, 56, 0.08);
@@ -468,10 +529,15 @@
     font-size: 0.85rem;
   }
   .link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0 0.5rem;
     color: var(--color-rust, #ba4b38);
     text-decoration: none;
     font-weight: 600;
-    margin-left: 0.5rem;
+    margin-left: 0.25rem;
   }
   .notes {
     color: var(--color-ink-muted);

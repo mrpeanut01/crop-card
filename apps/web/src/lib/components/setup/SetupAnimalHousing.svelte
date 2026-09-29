@@ -21,6 +21,10 @@
     /** Rendered inside another form (the add-animal form): no nested
      *  <form>, so saving the place never submits the outer one. */
     embedded?: boolean;
+    /** The species being added; a new coop or pen is saved for it, so the
+     *  Area's details can suggest how many it holds once it has a size. */
+    speciesId?: string;
+    speciesName?: string;
     onDone: (result: HousingPick) => void;
   }
 
@@ -30,6 +34,8 @@
     defaultKind,
     submitLabel = 'Use this place',
     embedded = false,
+    speciesId,
+    speciesName,
     onDone
   }: Props = $props();
   const uid = $props.id();
@@ -87,7 +93,11 @@
       const res = await fetch('/api/fields', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name: trimmed, kind })
+        body: JSON.stringify(
+          kind === 'coop_pen' && speciesId
+            ? { name: trimmed, kind, details: { speciesId } }
+            : { name: trimmed, kind }
+        )
       });
       if (!res.ok) {
         error = await errorFromResponse(res);
@@ -162,6 +172,12 @@
       <p class="af-help">
         A name is enough. You can draw it on the <a href="/plan/farm">farm map</a> later.
       </p>
+      {#if kind === 'coop_pen' && speciesId}
+        <p class="af-help" data-testid="coop-species-note">
+          Saved as a {speciesName ?? 'animal'} coop or pen. Add its size in the place's details on the
+          farm map to get a suggested number of animals it holds.
+        </p>
+      {/if}
     {/if}
 
     {#if error}<p class="af-error" role="alert">{error}</p>{/if}

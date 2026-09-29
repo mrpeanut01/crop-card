@@ -808,3 +808,79 @@ describe('attested intervals longer than the 365-day lookback (review round 1)',
     expect(v.status).toBe('clear');
   });
 });
+
+describe('attestation at the 365-day lookback edge (CI seed -1509767274)', () => {
+  const T0 = Date.UTC(2020, 0, 1);
+  const edgeAtMs = T0 + GRAZING_LOOKBACK_DAYS * DAY_MS + 1;
+  const unsourcedAt = (i: number, ms: number): GrazingApplication =>
+    app({ ref: `spray:e${i}`, productPluginId: 'p1', appliedAtMs: ms, restrictions: null });
+  const apps = [unsourcedAt(0, T0), unsourcedAt(1, T0 + 1), unsourcedAt(2, T0)];
+  const answered = att({ id: 't0', sprayEventRef: 'spray:e1', productPluginId: 'p1', hayDays: 0 });
+
+  it('keeps the edge exact for unknowns: only the spray 365 days back to the ms holds', () => {
+    const hay = evaluateHayCut({ applications: apps, atMs: edgeAtMs, timeZone: 'UTC' });
+    expect(hay.status).toBe('block');
+    expect(hay.reason).toBe('GRAZING_UNKNOWN');
+    expect(hay.findings.map((f) => f.ref)).toEqual(['spray:e1']);
+  });
+
+  it('the owner answering that unknown with 0 days clears it (C-27 fills an unknown)', () => {
+    const hay = evaluateHayCut({
+      applications: apps,
+      attestations: [answered],
+      atMs: edgeAtMs,
+      timeZone: 'UTC'
+    });
+    expect(hay.status).toBe('clear');
+    expect(hay.lookbackDays).toBe(GRAZING_LOOKBACK_DAYS);
+    expect(hay.findings).toHaveLength(1);
+    expect(hay.findings[0]).toMatchObject({
+      ref: 'spray:e1',
+      days: 0,
+      basis: 'attestation',
+      active: false,
+      attestationIds: ['t0']
+    });
+  });
+
+  it('the same clear happens away from the edge, so the edge is not the cause', () => {
+    const one = [unsourcedAt(1, T0)];
+    const atMs = T0 + 200 * DAY_MS;
+    expect(evaluateHayCut({ applications: one, atMs, timeZone: 'UTC' }).status).toBe('block');
+    expect(
+      evaluateHayCut({ applications: one, attestations: [answered], atMs, timeZone: 'UTC' }).status
+    ).toBe('clear');
+  });
+
+  it('an answer for one unknown never clears another that still holds', () => {
+    const hay = evaluateHayCut({
+      applications: [...apps, unsourcedAt(3, T0 + DAY_MS)],
+      attestations: [answered],
+      atMs: edgeAtMs,
+      timeZone: 'UTC'
+    });
+    expect(hay.status).toBe('block');
+    expect(hay.reason).toBe('GRAZING_UNKNOWN');
+    expect(hay.findings.find((f) => f.ref === 'spray:e3')?.active).toBe(true);
+  });
+
+  it('an answer on a spray past the edge can only bring it back in, never shorten', () => {
+    const hay = evaluateHayCut({
+      applications: apps,
+      attestations: [
+        answered,
+        att({ id: 't1', sprayEventRef: 'spray:e0', productPluginId: 'p1', hayDays: 366 })
+      ],
+      atMs: edgeAtMs,
+      timeZone: 'UTC'
+    });
+    expect(hay.status).toBe('block');
+    expect(hay.lookbackDays).toBe(366);
+    const e0 = hay.findings.find((f) => f.ref === 'spray:e0');
+    expect(e0).toMatchObject({ active: true, reason: 'GRAZING_INTERVAL', days: 366 });
+    expect(e0?.clearsAtMs).toBe(roundedClearMs(T0, 366, 'UTC'));
+    // The wider lookback also pulls the unanswered spray back in as unknown.
+    expect(hay.findings.find((f) => f.ref === 'spray:e2')?.reason).toBe('GRAZING_UNKNOWN');
+    expect(hay.reason).toBe('GRAZING_UNKNOWN');
+  });
+});

@@ -421,6 +421,23 @@ describe('grazing kernel properties', () => {
         applicationsArb,
         subjectArb,
         msArb,
+        // Judge often near an application and around the 365-day edge, where
+        // unknowns come and go; a uniform time over twelve years rarely does.
+        fc.option(
+          fc.record({
+            i: fc.nat(4),
+            off: fc.oneof(
+              fc.integer({ min: -3 * DAY_MS, max: 400 * DAY_MS }),
+              fc.integer({ min: 363 * DAY_MS, max: 368 * DAY_MS }),
+              fc.constantFrom(
+                GRAZING_LOOKBACK_DAYS * DAY_MS - 1,
+                GRAZING_LOOKBACK_DAYS * DAY_MS,
+                GRAZING_LOOKBACK_DAYS * DAY_MS + 1
+              )
+            )
+          }),
+          { nil: null }
+        ),
         zoneArb,
         fc.array(
           fc.record({
@@ -430,7 +447,9 @@ describe('grazing kernel properties', () => {
           }),
           { maxLength: 4 }
         ),
-        (apps, subject, atMs, zone, raw) => {
+        (apps, subject, randomAtMs, anchor, zone, raw) => {
+          const near = anchor ? apps[anchor.i] : undefined;
+          const atMs = near ? near.appliedAtMs + anchor!.off : randomAtMs;
           const attestations: GrazingAttestationInput[] = raw.map((x, k) => ({
             id: `t${k}`,
             sprayEventRef: `spray:e${x.i}`,
@@ -446,16 +465,62 @@ describe('grazing kernel properties', () => {
             timeZone: zone,
             attestations
           });
-          // An attested interval past 365 days widens the lookback, so the
-          // attested reading can hold more applications; match by ref.
-          const byRef = new Map(withAtt.findings.map((g) => [g.ref, g]));
-          without.findings.forEach((f) => {
-            const g = byRef.get(f.ref)!;
-            expect(g).toBeDefined();
-            if (f.reason === 'GRAZING_PROHIBITED') expect(g.reason).toBe('GRAZING_PROHIBITED');
-            if (f.days !== null) expect(g.days!).toBeGreaterThanOrEqual(f.days);
-            if (f.active && f.days !== null) expect(g.active).toBe(true);
-          });
+          const matchedIds = (ref: string, pluginId: string | null) =>
+            new Set(
+              attestations
+                .filter((t) => t.sprayEventRef === ref && t.productPluginId === pluginId)
+                .map((t) => t.id)
+            );
+          const rank = { clear: 0, warn: 1, block: 2 } as const;
+          // C-27: an attestation only fills an unknown or lengthens. The one
+          // way a finding stops holding is an unknown the owner answered for
+          // that very application, so a drop in status needs every finding
+          // that held to be such an answered unknown.
+          const check = (
+            before: typeof without,
+            after: typeof without,
+            valueOf: (x: (typeof raw)[number]) => number | null
+          ) => {
+            // An attested interval past 365 days widens the lookback, so the
+            // attested reading can hold more applications; match by ref.
+            const byRef = new Map(after.findings.map((g) => [g.ref, g]));
+            let allAnswered = true;
+            before.findings.forEach((f) => {
+              const g = byRef.get(f.ref)!;
+              expect(g).toBeDefined();
+              if (f.reason === 'GRAZING_PROHIBITED') {
+                expect(g.reason).toBe('GRAZING_PROHIBITED');
+                expect(g.active).toBe(true);
+              }
+              if (f.days !== null) {
+                expect(g.days!).toBeGreaterThanOrEqual(f.days);
+                if (f.active) {
+                  expect(g.active).toBe(true);
+                  expect(g.clearsAtMs!).toBeGreaterThanOrEqual(f.clearsAtMs!);
+                }
+              }
+              const ids = matchedIds(f.ref, f.productPluginId);
+              const answered = raw.some((x, k) => ids.has(`t${k}`) && valueOf(x) !== null);
+              if (f.reason === 'GRAZING_UNKNOWN' && !answered) {
+                expect(g.reason).toBe('GRAZING_UNKNOWN');
+                expect(g.active).toBe(true);
+              }
+              if (f.active && !g.active) {
+                expect(f.reason).toBe('GRAZING_UNKNOWN');
+                expect(g.days).not.toBeNull();
+                expect(g.attestationIds.length).toBeGreaterThan(0);
+                g.attestationIds.forEach((id) => expect(ids.has(id)).toBe(true));
+              }
+              if (f.active && !(f.reason === 'GRAZING_UNKNOWN' && !g.active)) allAnswered = false;
+            });
+            if (rank[after.status] < rank[before.status]) expect(allAnswered).toBe(true);
+            if (before.knownClearsAtMs !== null)
+              expect(after.knownClearsAtMs!).toBeGreaterThanOrEqual(before.knownClearsAtMs);
+          };
+          // Any attested graze value can reach the finding (the lactating path
+          // may still read unknown), so only a finding with no graze-type
+          // value at all must stay unknown.
+          check(without, withAtt, (x) => x.graze);
           const hayWithout = evaluateHayCut({ applications: apps, atMs, timeZone: zone });
           const hayWith = evaluateHayCut({
             applications: apps,
@@ -463,17 +528,10 @@ describe('grazing kernel properties', () => {
             timeZone: zone,
             attestations
           });
-          const hayByRef = new Map(hayWith.findings.map((g) => [g.ref, g]));
-          hayWithout.findings.forEach((f) => {
-            const g = hayByRef.get(f.ref)!;
-            expect(g).toBeDefined();
-            if (f.days !== null) expect(g.days!).toBeGreaterThanOrEqual(f.days);
-          });
-          if (without.status === 'block') expect(withAtt.status).toBe('block');
-          if (hayWithout.status === 'block') expect(hayWith.status).toBe('block');
+          check(hayWithout, hayWith, (x) => x.hay);
         }
       ),
-      RUNS
+      { numRuns: 1000 }
     );
   });
 

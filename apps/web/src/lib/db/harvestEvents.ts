@@ -25,6 +25,8 @@ export interface HarvestEventInput {
   lotNumber?: string;
   /** UC-16 (#339) — stored moisture %, when the operator measured it. */
   moisturePct?: number;
+  /** RULES_VERSION of the hay cut gate that cleared the cut (C-28). */
+  rulesVersion?: string;
 }
 
 export interface HarvestEvent extends HarvestEventInput {
@@ -52,12 +54,25 @@ export function insertHarvestEvent(input: HarvestEventInput): HarvestEvent {
         occurredAt: new Date(input.occurredAt),
         quantity: input.quantity ?? null,
         lotNumber: input.lotNumber ?? null,
-        moisturePct: input.moisturePct ?? null
+        moisturePct: input.moisturePct ?? null,
+        rulesVersion: input.rulesVersion ?? null
       })
     )
     .returning()
     .get();
   return rowToEvent(row);
+}
+
+/**
+ * @hold-exempt: a harvest saved with no rules version is not a hay
+ * declaration, so the hold ledger never reads it (only hay-cut harvests,
+ * which carry the rules version, go through `insertHarvestEvent` in the
+ * guard).
+ */
+export function insertCropHarvestEvent(
+  input: Omit<HarvestEventInput, 'rulesVersion'>
+): HarvestEvent {
+  return insertHarvestEvent({ ...input, rulesVersion: undefined });
 }
 
 export interface ListFilters {
@@ -95,6 +110,7 @@ function rowToEvent(row: typeof harvestEvents.$inferSelect): HarvestEvent {
     quantity: row.quantity ?? undefined,
     lotNumber: row.lotNumber ?? undefined,
     moisturePct: row.moisturePct ?? undefined,
+    ...(row.rulesVersion ? { rulesVersion: row.rulesVersion } : {}),
     lockedAt: row.lockedAt?.getTime()
   };
 }
@@ -113,6 +129,7 @@ export function getHarvestEvent(id: string): HarvestEvent | undefined {
  * passes, stamping `lockedAt` once and refusing future edits/deletes.
  * Returns the lock timestamp if locked, undefined if still mutable.
  * Mirrors sprayEvents.evaluateLock exactly.
+ * @hold-exempt: stamps locked_at only
  */
 export function evaluateLock(event: HarvestEvent, now: number = Date.now()): number | undefined {
   if (event.lockedAt) return event.lockedAt;

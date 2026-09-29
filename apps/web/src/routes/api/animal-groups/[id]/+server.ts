@@ -1,5 +1,4 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { db } from '$lib/db/client';
 import { listFlagChanges, listGroupMembers, type FlagChange } from '$lib/db/animals';
 import {
   activeMemberCount,
@@ -15,6 +14,9 @@ import { insertStatusEvent } from '$lib/db/animalStatus';
 import { animalGroupPatchSchema } from '$lib/animals/apiSchemas';
 import { requireOwner } from '$lib/server/auth';
 import { parseBody, statusEventsWithLocks } from '$lib/server/animals';
+import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
+import { groupAdditionGate } from '$lib/server/grazingGate';
+import { farmTimeZone } from '$lib/db/userProfile';
 
 const notFound = () => json({ error: 'group not found' }, { status: 404 });
 
@@ -73,8 +75,15 @@ export const PATCH: RequestHandler = async (event) => {
     return json({ error: 'Restore this group before changing its count.' }, { status: 409 });
   }
 
+  let grazingWarnings: string[] = [];
+  if (input.headCount !== undefined && input.headCount > group.headCount) {
+    const gate = await groupAdditionGate(group.id, Date.now(), user.role, farmTimeZone());
+    if (!gate.ok) return json(gate.body, { status: gate.status });
+    grazingWarnings = gate.warnings;
+  }
+
   const flagChanges: FlagChange[] = [];
-  db.transaction(() => {
+  const guarded = await tryGuardedHoldWrite(event, user, () => {
     const { headCount, countReason, foodProducing, flagReason, ...rest } = input;
     updateAnimalGroup(group.id, rest);
     if (headCount !== undefined && headCount !== group.headCount) {
@@ -94,15 +103,18 @@ export const PATCH: RequestHandler = async (event) => {
       if (change) flagChanges.push(change);
     }
   });
-  return json({ group: getAnimalGroupSummary(group.id), flagChanges });
+  if (!guarded.ok) return guarded.response;
+  return json({ group: getAnimalGroupSummary(group.id), flagChanges, grazingWarnings });
 };
 
 /** Deletes a mistaken group with no members and no records. */
-export const DELETE: RequestHandler = (event) => {
-  requireOwner(event);
+export const DELETE: RequestHandler = async (event) => {
+  const user = requireOwner(event);
   const id = event.params.id;
   if (!id) return notFound();
-  const outcome = deleteGroupIfEmpty(id);
+  const guarded = await tryGuardedHoldWrite(event, user, () => deleteGroupIfEmpty(id));
+  if (!guarded.ok) return guarded.response;
+  const outcome = guarded.value;
   if (outcome === 'not-found') return notFound();
   if (outcome === 'has-members') {
     return json(

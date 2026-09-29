@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { asc, eq, isNull } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
 import { db } from './client';
 import { animalLocations } from './schema';
 import { tenantValues, withTenant } from './tenant';
@@ -30,6 +31,18 @@ export interface AnimalLocation {
   fromGroupId: string | null;
   toGroupId: string | null;
   clientRecordId: string | null;
+  /** RULES_VERSION of the grazing gate that let this move through. */
+  rulesVersion: string | null;
+  /** Serialized `ExposureFloor` the gate stored with the move. */
+  exposureFloor: string | null;
+  /** C-35: when this stay's end was written. */
+  toRecordedAt: number | null;
+  /** C-35: an undone move. Its exposure still counts. */
+  deletedAt: number | null;
+  deletedBy: string | null;
+  /** C-35 §5: voided by the owner; no longer counts anywhere. */
+  voidedAt: number | null;
+  voidReason: string | null;
   createdAt: number;
 }
 
@@ -47,6 +60,13 @@ function rowToLocation(row: LocationRow): AnimalLocation {
     fromGroupId: row.fromGroupId ?? null,
     toGroupId: row.toGroupId ?? null,
     clientRecordId: row.clientRecordId ?? null,
+    rulesVersion: row.rulesVersion ?? null,
+    exposureFloor: row.exposureFloor ?? null,
+    toRecordedAt: row.toRecordedAt ? row.toRecordedAt.getTime() : null,
+    deletedAt: row.deletedAt ? row.deletedAt.getTime() : null,
+    deletedBy: row.deletedBy ?? null,
+    voidedAt: row.voidedAt ? row.voidedAt.getTime() : null,
+    voidReason: row.voidReason ?? null,
     createdAt: row.createdAt.getTime()
   };
 }
@@ -56,10 +76,36 @@ export interface Subject {
   subjectId: string;
 }
 
+export interface LocationReadOptions {
+  /** Keep undone moves (C-35 tombstones). Exposure reads pass this, since
+   *  an undone move still holds the food of the animals it carried. */
+  includeDeleted?: boolean;
+}
+
+/** Voided stays never count; undone ones only when asked for. */
+function liveOnly(opts: LocationReadOptions): SQL[] {
+  const out: SQL[] = [isNull(animalLocations.voidedAt)];
+  if (!opts.includeDeleted) out.push(isNull(animalLocations.deletedAt));
+  return out;
+}
+
+/** Areas any animal has stayed on, undone moves included (not voided ones). */
+export function listFieldIdsWithStays(): Set<string> {
+  return new Set(
+    db
+      .selectDistinct({ fieldId: animalLocations.fieldId })
+      .from(animalLocations)
+      .where(withTenant(animalLocations, ...liveOnly({ includeDeleted: true })))
+      .all()
+      .map((r) => r.fieldId)
+  );
+}
+
 /** A subject's stays, oldest first. */
 export function listLocationsForSubject(
   subjectType: AnimalSubjectType,
-  subjectId: string
+  subjectId: string,
+  opts: LocationReadOptions = {}
 ): AnimalLocation[] {
   return db
     .select()
@@ -68,7 +114,8 @@ export function listLocationsForSubject(
       withTenant(
         animalLocations,
         eq(animalLocations.subjectType, subjectType),
-        eq(animalLocations.subjectId, subjectId)
+        eq(animalLocations.subjectId, subjectId),
+        ...liveOnly(opts)
       )
     )
     .orderBy(asc(animalLocations.fromMs), asc(animalLocations.createdAt))
@@ -76,11 +123,43 @@ export function listLocationsForSubject(
     .map(rowToLocation);
 }
 
-export function getLocation(id: string): AnimalLocation | undefined {
+/** Every stay on the farm, undone and voided ones included, for the hold
+ *  ledger (C-35), which decides what each one still counts for. */
+export function listAllLocations(): AnimalLocation[] {
+  return db
+    .select()
+    .from(animalLocations)
+    .where(withTenant(animalLocations))
+    .orderBy(asc(animalLocations.fromMs), asc(animalLocations.createdAt))
+    .all()
+    .map(rowToLocation);
+}
+
+/** Groups split off this one: a group's stay that came out of it. */
+export function listGroupIdsSplitFrom(groupId: string): string[] {
+  const rows = db
+    .select({ id: animalLocations.subjectId })
+    .from(animalLocations)
+    .where(
+      withTenant(
+        animalLocations,
+        eq(animalLocations.subjectType, 'group'),
+        eq(animalLocations.fromGroupId, groupId),
+        isNull(animalLocations.voidedAt)
+      )
+    )
+    .all();
+  return [...new Set(rows.map((r) => r.id))].filter((id) => id !== groupId);
+}
+
+export function getLocation(
+  id: string,
+  opts: LocationReadOptions = {}
+): AnimalLocation | undefined {
   const row = db
     .select()
     .from(animalLocations)
-    .where(withTenant(animalLocations, eq(animalLocations.id, id)))
+    .where(withTenant(animalLocations, eq(animalLocations.id, id), ...liveOnly(opts)))
     .get();
   return row ? rowToLocation(row) : undefined;
 }
@@ -88,7 +167,7 @@ export function getLocation(id: string): AnimalLocation | undefined {
 /** Every stay on an Area, oldest first. `openOnly` keeps the current ones. */
 export function listLocationsOnField(
   fieldId: string,
-  opts: { openOnly?: boolean } = {}
+  opts: { openOnly?: boolean } & LocationReadOptions = {}
 ): AnimalLocation[] {
   return db
     .select()
@@ -97,7 +176,8 @@ export function listLocationsOnField(
       withTenant(
         animalLocations,
         eq(animalLocations.fieldId, fieldId),
-        opts.openOnly ? isNull(animalLocations.toMs) : undefined
+        opts.openOnly ? isNull(animalLocations.toMs) : undefined,
+        ...liveOnly(opts)
       )
     )
     .orderBy(asc(animalLocations.fromMs), asc(animalLocations.createdAt))
@@ -109,6 +189,7 @@ function setStayEnd(id: string, toMs: number | null, toGroupId?: string | null):
   db.update(animalLocations)
     .set({
       toMs: toMs === null ? null : new Date(toMs),
+      toRecordedAt: toMs === null ? null : new Date(),
       ...(toGroupId !== undefined ? { toGroupId } : {})
     })
     .where(withTenant(animalLocations, eq(animalLocations.id, id)))
@@ -124,6 +205,8 @@ function insertRow(input: {
   fromGroupId?: string | null;
   toGroupId?: string | null;
   clientRecordId?: string | null;
+  rulesVersion?: string | null;
+  exposureFloor?: string | null;
 }): AnimalLocation {
   return rowToLocation(
     db
@@ -139,7 +222,9 @@ function insertRow(input: {
           movedBy: input.movedBy,
           fromGroupId: input.fromGroupId ?? null,
           toGroupId: input.toGroupId ?? null,
-          clientRecordId: input.clientRecordId ?? null
+          clientRecordId: input.clientRecordId ?? null,
+          rulesVersion: input.rulesVersion ?? null,
+          exposureFloor: input.exposureFloor ?? null
         })
       )
       .returning()
@@ -162,6 +247,8 @@ export function insertStay(input: {
   movedBy: string | null;
   fromGroupId?: string | null;
   clientRecordId?: string | null;
+  rulesVersion?: string | null;
+  exposureFloor?: string | null;
 }): StayInsertResult {
   const stays = listLocationsForSubject(input.subject.subjectType, input.subject.subjectId);
   const plan = planStayInsert(stays, input.atMs);
@@ -174,7 +261,9 @@ export function insertStay(input: {
     toMs: plan.toMs,
     movedBy: input.movedBy,
     fromGroupId: input.fromGroupId,
-    clientRecordId: input.clientRecordId
+    clientRecordId: input.clientRecordId,
+    rulesVersion: input.rulesVersion,
+    exposureFloor: input.exposureFloor
   });
   return { ok: true, location };
 }
@@ -251,16 +340,19 @@ export type UndoStayResult =
   | { ok: true; reopened: AnimalLocation | null }
   | { ok: false; reason: 'not-found' | 'not-latest' | 'group-change' };
 
-/** Deletes a subject's latest stay and reopens the one before it when they
- *  met end to end. Stays that record a group change are not undone here. */
-export function deleteLatestStay(id: string): UndoStayResult {
+/** Undoes a subject's latest stay and reopens the one before it when they
+ *  met end to end. Stays that record a group change are not undone here.
+ *  C-35: the undone stay stays on file as a tombstone, so the exposure it
+ *  recorded still holds the animals' food. */
+export function deleteLatestStay(id: string, deletedBy: string | null = null): UndoStayResult {
   const target = getLocation(id);
   if (!target) return { ok: false, reason: 'not-found' };
   const stays = listLocationsForSubject(target.subjectType, target.subjectId);
   const latest = stays[stays.length - 1];
   if (!latest || latest.id !== target.id) return { ok: false, reason: 'not-latest' };
   if (target.fromGroupId || target.toGroupId) return { ok: false, reason: 'group-change' };
-  db.delete(animalLocations)
+  db.update(animalLocations)
+    .set({ deletedAt: new Date(), deletedBy })
     .where(withTenant(animalLocations, eq(animalLocations.id, id)))
     .run();
   const prior = stays[stays.length - 2];
@@ -295,7 +387,42 @@ export function housedSubjectCount(fieldId: string): number {
   return here.groups.length + here.animals.length;
 }
 
+/** Whether a group split or group change is recorded on the Area. Group
+ *  membership and lineage are rebuilt from those rows (C-15), so deleting
+ *  them would drop withdrawal and grazing holds a group inherited from
+ *  somewhere else. */
+export function fieldHoldsGroupHistory(fieldId: string): boolean {
+  return listLocationsOnField(fieldId).some((s) => s.fromGroupId !== null || s.toGroupId !== null);
+}
+
 /** Head on the Area once `adding` more arrive. */
 export function headCountAfterArrival(fieldId: string, adding: number): number {
   return housedOnField(fieldId).total + adding;
+}
+
+/** C-35 §5: an owner void of a fresh mistake. The stay stops counting
+ *  anywhere; the guard has already written the `hold_corrections` row. The
+ *  stay before it reopens when they met end to end, as with an undo. */
+export function voidStay(id: string, reason: string): UndoStayResult {
+  const target = getLocation(id, { includeDeleted: true });
+  if (!target) return { ok: false, reason: 'not-found' };
+  const stays = listLocationsForSubject(target.subjectType, target.subjectId);
+  const latest = stays[stays.length - 1];
+  const live = target.deletedAt === null;
+  if (live && (!latest || latest.id !== target.id)) return { ok: false, reason: 'not-latest' };
+  if (target.fromGroupId || target.toGroupId) return { ok: false, reason: 'group-change' };
+  db.update(animalLocations)
+    .set({ voidedAt: new Date(), voidReason: reason })
+    .where(withTenant(animalLocations, eq(animalLocations.id, id)))
+    .run();
+  let reopened: AnimalLocation | null = null;
+  if (live) {
+    const prior = stays[stays.length - 2];
+    if (prior && prior.toMs === target.fromMs && !prior.toGroupId) {
+      setStayEnd(prior.id, target.toMs);
+      reopened = { ...prior, toMs: target.toMs };
+    }
+    refreshHousingCache(target);
+  }
+  return { ok: true, reopened };
 }

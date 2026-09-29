@@ -65,7 +65,9 @@ describe('#316 — kind → endpoint routing', () => {
       scout: '/api/scout/record',
       task: '/api/tasks/close',
       journal: '/api/journal/record',
-      'animal-move': '/api/animals/move'
+      'animal-move': '/api/animals/move',
+      'animal-health': '/api/animals/health/record',
+      'animal-production': '/api/animals/production/record'
     });
     const endpoints = Object.values(ENDPOINT_BY_KIND);
     expect(new Set(endpoints).size).toBe(endpoints.length);
@@ -80,7 +82,9 @@ describe('#316 — kind → endpoint routing', () => {
     ['scout', '/api/scout/record'],
     ['task', '/api/tasks/close'],
     ['journal', '/api/journal/record'],
-    ['animal-move', '/api/animals/move']
+    ['animal-move', '/api/animals/move'],
+    ['animal-health', '/api/animals/health/record'],
+    ['animal-production', '/api/animals/production/record']
   ])('routes kind %s to %s', (kind, endpoint) => {
     expect(endpointForRecord({ kind })).toBe(endpoint);
   });
@@ -115,9 +119,21 @@ describe('withOccurredAt — application time survives the offline queue', () =>
     expect(withOccurredAt('insecticide', payload, T)).toBe(payload);
   });
 
+  it('stamps every kind whose gates count from the recorded moment (review round 4)', () => {
+    for (const kind of ['herbicide', 'fungicide', 'harvest'] as const) {
+      expect(withOccurredAt(kind, { blockId: 'b' }, T)).toEqual({ blockId: 'b', occurredAt: T });
+    }
+    expect(withOccurredAt('hay-cutting', { blockId: 'b' }, T)).toEqual({
+      blockId: 'b',
+      mowAt: T
+    });
+    const mowed = { blockId: 'b', mowAt: T - 5000 };
+    expect(withOccurredAt('hay-cutting', mowed, T)).toBe(mowed);
+  });
+
   it('leaves other record kinds untouched', () => {
     const payload = { blockId: 'b' };
-    for (const kind of ['herbicide', 'fungicide', 'harvest', 'hay-cutting'] as const) {
+    for (const kind of ['scout', 'task', 'journal'] as const) {
       expect(withOccurredAt(kind, payload, T)).toBe(payload);
     }
   });

@@ -23,6 +23,7 @@
     type SprayContextBlock,
     type CompatibilityState
   } from '$lib/components/spray/SprayContextStrip.svelte';
+  import { pastureNotice } from '$lib/farm/pastureNotice';
 
   // Stepper + context-strip $derived inputs computed below the rest of
   // the herbicide flow's state (selectedBlocks / sprayer / herbicides /
@@ -712,6 +713,15 @@
 
   // Phase 25b (#85) — Almanac chrome derived state.
   const sprayStepperData = $derived(deriveStepperData());
+  const ctxPasture = $derived(
+    pastureNotice({
+      blockIds: selectedBlocks.map((b) => b.id),
+      products: data.allHerbicides
+        .filter((h) => selectedHerbicideIds.includes(h.pluginId))
+        .map((h) => ({ pluginId: h.pluginId, name: h.displayName })),
+      context: data.pasture
+    })
+  );
   const ctxBlocks = $derived<SprayContextBlock[]>(
     selectedBlocks.map((b) => ({ id: b.id, label: b.label, acres: b.acres ?? 0 }))
   );
@@ -799,6 +809,7 @@
     cropLabel={ctxCropLabel}
     cropSubtitle={ctxCropSubtitle}
     compatibility={ctxCompatibility}
+    pastureNotice={ctxPasture}
   />
 </div>
 

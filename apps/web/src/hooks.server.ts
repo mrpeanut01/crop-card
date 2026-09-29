@@ -25,15 +25,17 @@ import { isFenced, startHandoffWatcher, trackMutation } from '$lib/server/ops/ha
 import { fenceResponse } from '$lib/server/ops/fenceResponse';
 import { startRuntimeMetrics, withServerTiming } from '$lib/server/runtimeMetrics';
 import { scheduleBootMaintenance } from '$lib/server/dbMaintenance';
+import { scheduleBootHoldBackfill } from '$lib/server/holdParamsBoot';
 
 /** Deploy handoff fence: hold the writer lease and release it to a newer
  *  container (docs/ops/restore-runbook.md). No-op outside Azure. Also starts
- *  runtime metrics and a non-blocking DB maintenance pass shortly after boot
- *  (both no-ops under tests). */
+ *  runtime metrics, a non-blocking DB maintenance pass shortly after boot
+ *  and the C-35 hold-parameter snapshot backfill (all no-ops under tests). */
 export const init: ServerInit = () => {
   startHandoffWatcher();
   startRuntimeMetrics();
   scheduleBootMaintenance();
+  scheduleBootHoldBackfill();
 };
 
 /**

@@ -3,6 +3,7 @@
   import type { ForecastDay, HayViolation } from '$lib/hay';
   import { untrack } from 'svelte';
   import { fmt } from '$lib/prefsState.svelte';
+  import { grazingTimeHref } from '$lib/animals/holdCopy';
 
   let { data } = $props();
 
@@ -19,6 +20,7 @@
 
   let busy = $state(false);
   let error = $state<string | null>(null);
+  let attestHref = $state<string | null>(null);
   let banner = $state<string | null>(null);
 
   // Forecast state
@@ -112,6 +114,8 @@
       const out = await res.json();
       if (!res.ok) {
         error = out.error ?? 'failed to start cutting';
+        attestHref =
+          out.ownerCanAttest && !out.askOwner && out.fieldId ? grazingTimeHref(out.fieldId) : null;
         if (out.violations) {
           mowViolations = out.violations;
         }
@@ -164,6 +168,8 @@
       });
       const out = await res.json();
       if (!res.ok) {
+        attestHref =
+          out.ownerCanAttest && !out.askOwner && out.fieldId ? grazingTimeHref(out.fieldId) : null;
         error = out.violations
           ? `${out.error}: ${out.violations.map((v: HayViolation) => v.message).join(' • ')}`
           : (out.error ?? 'advance failed');
@@ -250,6 +256,9 @@
 
 {#if banner}<p class="success" role="status" aria-live="polite">{banner}</p>{/if}
 {#if error}<p class="error" role="alert" aria-live="polite">{error}</p>{/if}
+{#if error && attestHref}
+  <a class="attest-link" href={attestHref}>Add the haying time from the label</a>
+{/if}
 
 <section class="card">
   <h2>1 — Mow decision</h2>
@@ -404,6 +413,11 @@
 </section>
 
 <style>
+  .attest-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+  }
   h1 {
     margin: 0 0 0.5rem;
   }

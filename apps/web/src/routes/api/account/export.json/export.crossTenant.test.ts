@@ -18,7 +18,7 @@ vi.mock('$lib/server/auth', () => {
 });
 
 import { db } from '$lib/db/client';
-import { owners, taskTimeEntries, users } from '$lib/db/schema';
+import { owners, recordDeletions, taskTimeEntries, users } from '$lib/db/schema';
 import { runWithTenantAsync, runWithTenant, tenantValues } from '$lib/db/tenant';
 import { createField } from '$lib/db/fields';
 import { createBlock } from '$lib/db/blocks';
@@ -179,6 +179,52 @@ describe('GET /api/account/export.json', () => {
       expect(operations.ledgerEntries.map((r) => r.id)).toEqual([
         self.phase32.rowIds.ledger_entries
       ]);
+    }
+  });
+
+  it("includes deleted and voided records with their saved copy, and no other Owner's (review round 8)", async () => {
+    const a = seed('del-a');
+    const b = seed('del-b');
+    const tomb = (farm: Seeded) =>
+      runWithTenant(farm.ownerId, () => {
+        const id = randomUUID();
+        const recordId = randomUUID();
+        db.insert(recordDeletions)
+          .values(
+            tenantValues({
+              id,
+              recordKind: 'animal-health' as const,
+              recordId,
+              deletedBy: 'export-user',
+              reason: 'wrong animal',
+              snapshotJson: JSON.stringify({
+                event: { id: recordId, productName: 'Drench' },
+                dosed: true
+              })
+            })
+          )
+          .run();
+        return recordId;
+      });
+    const mine = tomb(a);
+    const theirs = tomb(b);
+    for (const role of ['owner', 'helper']) {
+      const { text, json } = await exportFor(a.ownerId, role);
+      const deleted = json.deletedRecords as Array<{
+        recordId: string;
+        recordKind: string;
+        reason: string;
+        snapshot: { dosed: boolean; event: { productName: string } };
+      }>;
+      expect(deleted).toEqual([
+        expect.objectContaining({
+          recordId: mine,
+          recordKind: 'animal-health',
+          reason: 'wrong animal',
+          snapshot: { dosed: true, event: { id: mine, productName: 'Drench' } }
+        })
+      ]);
+      expect(text).not.toContain(theirs);
     }
   });
 

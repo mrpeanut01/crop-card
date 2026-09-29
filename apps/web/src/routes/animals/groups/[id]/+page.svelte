@@ -5,6 +5,7 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import SpeciesIcon from '$lib/components/animals/SpeciesIcon.svelte';
   import FoodChip from '$lib/components/animals/FoodChip.svelte';
+  import HoldChips from '$lib/components/animals/HoldChips.svelte';
   import FactList from '$lib/components/animals/FactList.svelte';
   import AnimalRow from '$lib/components/animals/AnimalRow.svelte';
   import MoveForm from '$lib/components/animals/MoveForm.svelte';
@@ -144,6 +145,18 @@
       />
       {#if archived}<Pill tone="neutral">Archived</Pill>{/if}
     </div>
+
+    <HoldChips
+      holds={data.holds}
+      foods={data.foods}
+      timeZone={prefs.timeZone}
+      isOwner={data.canEdit}
+      healthHref="/animals/{group.id}/health"
+    />
+    <nav class="record-links" aria-label="Records">
+      <a class="af-ghost" href="/animals/{group.id}/health">Health</a>
+      <a class="af-ghost" href="/animals/{group.id}/log">Eggs, milk and weights</a>
+    </nav>
     <FactList {facts} />
     {#if group.notes}
       <p class="notes">{group.notes}</p>
@@ -214,6 +227,7 @@
           subjectId={group.id}
           headCount={group.headCount}
           {noun}
+          meatChoices={group.effectiveFoodProducing}
           onDone={async (result, text) => {
             emptied = result.emptied;
             await refresh(text);
@@ -407,5 +421,15 @@
     align-items: center;
     cursor: pointer;
     font-weight: 600;
+  }
+  .record-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .record-links a {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
   }
 </style>

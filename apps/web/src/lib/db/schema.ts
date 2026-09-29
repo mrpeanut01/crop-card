@@ -291,6 +291,7 @@ export const loginCodes = sqliteTable(
   })
 );
 
+// @hold-fact (C-35: a farm copy carries grazing and withdrawal data; writes run inside the hold guard)
 /** Per-Owner plugin overlays. The base plugin catalog lives on the
  *  filesystem under /plugins/; this table layers per-Owner customizations:
  *  newest row per pluginId wins, a full payload replaces the shared plugin
@@ -456,6 +457,7 @@ export const superadminAudit = sqliteTable('superadmin_audit', {
     .default(sql`(unixepoch() * 1000)`)
 });
 
+// @hold-fact (C-35: writes run inside the hold guard)
 /**
  * Force-delete tombstones (#329). When an owner hard-deletes a *locked*
  * record via `?force=true`, the row itself is removed — leaving a gap in
@@ -472,7 +474,15 @@ export const recordDeletions = tenantScoped(
       id: text('id').primaryKey(),
       ownerId: text('owner_id').notNull(),
       recordKind: text('record_kind', {
-        enum: ['spray', 'insecticide', 'harvest']
+        enum: [
+          'spray',
+          'insecticide',
+          'fungicide',
+          'harvest',
+          'animal-health',
+          'animal-production',
+          'animal-status'
+        ]
       }).notNull(),
       recordId: text('record_id').notNull(),
       deletedBy: text('deleted_by'),
@@ -514,6 +524,7 @@ export const clientRecordReceipts = tenantScoped(
 
 // ─── Fields → Blocks hierarchy (Phase 13, tenant-scoped in Phase 18a) ──
 
+// @hold-fact (C-35: writes run inside the hold guard)
 export const fields = tenantScoped(
   sqliteTable(
     'fields',
@@ -564,6 +575,7 @@ export const fields = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
 export const blocks = tenantScoped(
   sqliteTable(
     'blocks',
@@ -814,6 +826,7 @@ export const sprayers = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
 export const sprayEvents = tenantScoped(
   sqliteTable(
     'spray_events',
@@ -847,7 +860,11 @@ export const sprayEvents = tenantScoped(
        *  fallbackReason?, attemptedAiAt?}. See AI_PROVENANCE_ADDENDUM.md
        *  "Field-by-field map" for the canonical field set. Single
        *  column (not N per-field columns) for query simplicity. */
-      provenanceJson: text('provenance_json')
+      provenanceJson: text('provenance_json'),
+      /** C-35: the hold parameters (label intervals) read when this was
+       *  recorded. A later data change can only lengthen the hold: the
+       *  kernels take the longer of this snapshot and the current data. */
+      holdParamsJson: text('hold_params_json')
     },
     (table) => ({
       ownerOccurredIdx: index('spray_events_owner_occurred_idx').on(
@@ -859,6 +876,7 @@ export const sprayEvents = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
 export const harvestEvents = tenantScoped(
   sqliteTable(
     'harvest_events',
@@ -879,6 +897,9 @@ export const harvestEvents = tenantScoped(
        *  against the family threshold. Persisted so the gate decision is
        *  auditable, not just enforced then dropped. */
       moisturePct: real('moisture_pct'),
+      /** RULES_VERSION of the hay cut gate (C-28) that cleared this cut.
+       *  Null for crops the gate does not run on and for older cuts. */
+      rulesVersion: text('rules_version'),
       /** FR-09 (#308) — 48-hour immutability lock, stamped on the first
        *  read past the window (mirrors spray_events.locked_at). Nullable:
        *  null means still-mutable. */
@@ -1183,6 +1204,7 @@ export const fertilityCredits = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
 export const insecticideEvents = tenantScoped(
   sqliteTable(
     'insecticide_events',
@@ -1199,6 +1221,10 @@ export const insecticideEvents = tenantScoped(
         .references(() => users.id),
       occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
       productsJson: text('products_json').notNull(),
+      /** C-35: the hold parameters (label intervals) read when this was
+       *  recorded. A later data change can only lengthen the hold: the
+       *  kernels take the longer of this snapshot and the current data. */
+      holdParamsJson: text('hold_params_json'),
       scoutObservationJson: text('scout_observation_json'),
       conditionsJson: text('conditions_json').notNull(),
       reEntryClearAt: integer('re_entry_clear_at', { mode: 'timestamp_ms' }),
@@ -1224,6 +1250,7 @@ export const insecticideEvents = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
 /**
  * Phase 21 (B-18): fungicide application events. Mirrors `insecticideEvents`
  * field-for-field — fungicides share REI/PHI semantics, the same 48-hour
@@ -1249,6 +1276,10 @@ export const fungicideEvents = tenantScoped(
         .references(() => users.id),
       occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
       productsJson: text('products_json').notNull(),
+      /** C-35: the hold parameters (label intervals) read when this was
+       *  recorded. A later data change can only lengthen the hold: the
+       *  kernels take the longer of this snapshot and the current data. */
+      holdParamsJson: text('hold_params_json'),
       scoutObservationJson: text('scout_observation_json'),
       conditionsJson: text('conditions_json').notNull(),
       reEntryClearAt: integer('re_entry_clear_at', { mode: 'timestamp_ms' }),
@@ -1290,7 +1321,8 @@ export const stockMovements = tenantScoped(
           'planting',
           'adjustment',
           'spill',
-          'expiry'
+          'expiry',
+          'animal-treatment'
         ]
       }).notNull(),
       sprayEventId: text('spray_event_id').references(() => sprayEvents.id),
@@ -1313,6 +1345,7 @@ export const stockMovements = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
 export const hayCuttings = tenantScoped(
   sqliteTable(
     'hay_cuttings',
@@ -1342,6 +1375,8 @@ export const hayCuttings = tenantScoped(
       weatherForecastJson: text('weather_forecast_json'),
       performedById: text('performed_by_id').references(() => users.id),
       rulesVersion: text('rules_version').notNull(),
+      /** C-35: saved more than 48 hours after the date it records. A label only. */
+      recordedLate: integer('recorded_late', { mode: 'boolean' }).notNull().default(false),
       notes: text('notes'),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
@@ -2017,6 +2052,7 @@ export const contactSuppressions = sqliteTable(
 export const ANIMAL_SUBJECT_TYPES = ['animal', 'group'] as const;
 export const ANIMAL_PURPOSES = ['production', 'pet', 'mixed'] as const;
 
+// @hold-fact (C-35: writes run inside the hold guard)
 export const animalGroups = tenantScoped(
   sqliteTable(
     'animal_groups',
@@ -2056,6 +2092,7 @@ export const animalGroups = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
 export const animals = tenantScoped(
   sqliteTable(
     'animals',
@@ -2108,6 +2145,7 @@ export const animals = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
 /** Where a subject lived and when. `to_ms` is null for the current stay. */
 export const animalLocations = tenantScoped(
   sqliteTable(
@@ -2131,6 +2169,23 @@ export const animalLocations = tenantScoped(
       /** The group the subject joined when this stay ended. */
       toGroupId: text('to_group_id').references(() => animalGroups.id, { onDelete: 'set null' }),
       clientRecordId: text('client_record_id'),
+      /** RULES_VERSION when the grazing gate ran on the move that opened
+       *  this stay; null for moves the gate never saw. */
+      rulesVersion: text('rules_version'),
+      /** The dated exposure holds the gate found when the move was saved,
+       *  kept as a floor so a later data or rules change cannot shorten
+       *  them (JSON, `ExposureFloor`). */
+      exposureFloor: text('exposure_floor'),
+      /** C-35: when the end of this stay was written (a move off, a leave,
+       *  a status), for the "recorded <date>" history line. */
+      toRecordedAt: integer('to_recorded_at', { mode: 'timestamp_ms' }),
+      /** C-35: an undone move leaves a tombstone; its exposure still counts. */
+      deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
+      deletedBy: text('deleted_by'),
+      /** C-35 §5: an owner void of a fresh mistake. A voided stay no longer
+       *  counts; `hold_corrections` keeps the diff. */
+      voidReason: text('void_reason'),
+      voidedAt: integer('voided_at', { mode: 'timestamp_ms' }),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
         .default(sql`(unixepoch() * 1000)`)
@@ -2151,6 +2206,7 @@ export const animalLocations = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
 /** Treatments, vaccinations, deworms, vet visits, injuries and notes.
  *  `withdrawal_clear` is the kernel's verdict at write time (JSON of
  *  per-product clear times), stored with `rules_version` like spray records.
@@ -2169,6 +2225,10 @@ export const animalHealthEvents = tenantScoped(
       }).notNull(),
       productPluginId: text('product_plugin_id'),
       productName: text('product_name'),
+      /** C-13, C-34: JSON array of the stock bottle's name and active
+       *  ingredients, kept apart from the typed name so the prohibited-drug
+       *  match reads both. */
+      stockProductText: text('stock_product_text'),
       stockItemId: text('stock_item_id').references(() => stockItems.id, { onDelete: 'set null' }),
       lotNumber: text('lot_number'),
       dose: real('dose'),
@@ -2180,12 +2240,19 @@ export const animalHealthEvents = tenantScoped(
       vetName: text('vet_name'),
       /** JSON of per-product withdrawal the vet directed; can only lengthen. */
       vetDirectedWithdrawal: text('vet_directed_withdrawal'),
+      /** C-35: the hold parameters (label intervals) read when this was
+       *  recorded. A later data change can only lengthen the hold: the
+       *  kernels take the longer of this snapshot and the current data. */
+      holdParamsJson: text('hold_params_json'),
       withdrawalClear: text('withdrawal_clear'),
       rulesVersion: text('rules_version'),
       foodProducingAtRecord: integer('food_producing_at_record', { mode: 'boolean' }).notNull(),
       notes: text('notes'),
       performedById: text('performed_by_id').references(() => users.id),
       clientRecordId: text('client_record_id'),
+      /** C-35: saved more than 48 hours after the date it records
+       *  ("Entered N days late"). A label only; no gate reads it. */
+      recordedLate: integer('recorded_late', { mode: 'boolean' }).notNull().default(false),
       lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
@@ -2209,6 +2276,7 @@ export const animalHealthEvents = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
 export const animalProductionLogs = tenantScoped(
   sqliteTable(
     'animal_production_logs',
@@ -2224,9 +2292,15 @@ export const animalProductionLogs = tenantScoped(
       use: text('use', {
         enum: ['food', 'sale', 'discard', 'feed-to-animals', 'unknown']
       }).notNull(),
+      /** C-06: the strongest food or sale use this log was ever saved as.
+       *  A later change to discard never lowers it. */
+      declaredUse: text('declared_use', { enum: ['food', 'sale'] }),
       rulesVersion: text('rules_version'),
       performedById: text('performed_by_id').references(() => users.id),
       clientRecordId: text('client_record_id'),
+      /** C-35: saved more than 48 hours after the date it records
+       *  ("Entered N days late"). A label only; no gate reads it. */
+      recordedLate: integer('recorded_late', { mode: 'boolean' }).notNull().default(false),
       lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
@@ -2243,6 +2317,7 @@ export const animalProductionLogs = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
 /** Sold, died, culled, rehomed and slaughter changes. A group row may carry
  *  a `head_count_delta` for unnamed members leaving the flock. */
 export const animalStatusEvents = tenantScoped(
@@ -2262,6 +2337,9 @@ export const animalStatusEvents = tenantScoped(
       rulesVersion: text('rules_version'),
       recordedById: text('recorded_by_id').references(() => users.id),
       clientRecordId: text('client_record_id'),
+      /** C-35: saved more than 48 hours after the date it records
+       *  ("Entered N days late"). A label only; no gate reads it. */
+      recordedLate: integer('recorded_late', { mode: 'boolean' }).notNull().default(false),
       lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
@@ -2278,6 +2356,7 @@ export const animalStatusEvents = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
 /** Owner-recorded grazing and haying intervals read from a label, which lift
  *  a `GRAZING_UNKNOWN` block for exactly the attested interval. */
 export const grazingAttestations = tenantScoped(
@@ -2294,6 +2373,10 @@ export const grazingAttestations = tenantScoped(
       sprayEventRef: text('spray_event_ref'),
       grazeDays: integer('graze_days'),
       hayDays: integer('hay_days'),
+      /** The label's lactating dairy grazing interval (C-25). */
+      lactatingGrazeDays: integer('lactating_graze_days'),
+      /** The label's meat-animal removal before slaughter. */
+      meatRemovalDays: integer('meat_removal_days'),
       reason: text('reason').notNull(),
       provenance: text('provenance', { enum: ['manual'] })
         .notNull()
@@ -2313,6 +2396,43 @@ export const grazingAttestations = tenantScoped(
   )
 );
 
+// @hold-fact (C-35: writes run inside the hold guard)
+/**
+ * C-35 §5: the only way a hold can shorten is an interactive owner voiding
+ * a fresh mistake (within 48 hours of entry). Each void writes one row:
+ * who, why, the full hold diff and its SHA-256, so the correction is on
+ * record for exports and the hash chain.
+ */
+export const holdCorrections = tenantScoped(
+  sqliteTable(
+    'hold_corrections',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      recordKind: text('record_kind').notNull(),
+      recordId: text('record_id').notNull(),
+      userId: text('user_id').references(() => users.id),
+      reason: text('reason').notNull(),
+      diffJson: text('diff_json').notNull(),
+      diffHash: text('diff_hash').notNull(),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerCreatedIdx: index('hold_corrections_owner_created_idx').on(
+        table.ownerId,
+        table.createdAt
+      ),
+      ownerRecordIdx: index('hold_corrections_owner_record_idx').on(
+        table.ownerId,
+        table.recordKind,
+        table.recordId
+      )
+    })
+  )
+);
+
 /** Audit of `food_producing` and horse "not for slaughter" changes. */
 export const animalFlagChanges = tenantScoped(
   sqliteTable(
@@ -2322,7 +2442,9 @@ export const animalFlagChanges = tenantScoped(
       ownerId: text('owner_id').notNull(),
       subjectType: text('subject_type', { enum: ANIMAL_SUBJECT_TYPES }).notNull(),
       subjectId: text('subject_id').notNull(),
-      flag: text('flag', { enum: ['food_producing', 'not_for_slaughter'] }).notNull(),
+      flag: text('flag', {
+        enum: ['food_producing', 'not_for_slaughter', 'presumed_lactating']
+      }).notNull(),
       oldValue: integer('old_value', { mode: 'boolean' }),
       newValue: integer('new_value', { mode: 'boolean' }).notNull(),
       reason: text('reason').notNull(),

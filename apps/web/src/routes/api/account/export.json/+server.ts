@@ -46,6 +46,7 @@ import { RULES_VERSION } from '$lib/safety/version';
 import { identityLabel } from '$lib/identity';
 import {
   areaSection,
+  deletedRecordSection,
   mapFeatureSection,
   recordSections,
   shadeSourceSection,
@@ -232,6 +233,7 @@ export const GET: RequestHandler = async (event) => {
       decon
     },
     hayCuttings,
+    deletedRecords: deletedRecordSection(),
     plantingJournal: listJournalForExport().map((e) => ({
       ...e,
       createdAt: new Date(e.createdAt).toISOString(),

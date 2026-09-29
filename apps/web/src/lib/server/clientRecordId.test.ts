@@ -363,7 +363,10 @@ describe('withClientRecordId', () => {
     'saves through writeRecord so the fenced receipt shares the record transaction (%s)',
     (path) => {
       const file = resolve(process.cwd(), `src/${path}`);
-      expect(readFileSync(file, 'utf8')).toMatch(/writeRecord\((event|\{ request \}),/);
+      // The C-35 hold guard runs its write inside writeRecord().
+      expect(readFileSync(file, 'utf8')).toMatch(
+        /writeRecord\((event|\{ request \}),|[gG]uardedHoldWrite\(\s*(event|requestEvent),/
+      );
     }
   );
 });

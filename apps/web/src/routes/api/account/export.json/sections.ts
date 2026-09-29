@@ -3,6 +3,7 @@ import { db } from '$lib/db/client';
 import {
   animalCarePlans,
   animalFlagChanges,
+  holdCorrections,
   animalGroups,
   animalHealthEvents,
   animalLocations,
@@ -14,6 +15,7 @@ import {
   irrigationEvents,
   ledgerEntries,
   rainGaugeReadings,
+  recordDeletions,
   seedStarts,
   soilTests,
   taskTimeEntries
@@ -34,7 +36,8 @@ export const RECORD_TABLE_GROUPS = {
     statusEvents: animalStatusEvents,
     grazingAttestations,
     flagChanges: animalFlagChanges,
-    carePlans: animalCarePlans
+    carePlans: animalCarePlans,
+    holdCorrections
   },
   growing: {
     seedStarts,
@@ -114,6 +117,27 @@ function parseJson(raw: string | null): unknown {
   } catch {
     return raw;
   }
+}
+
+/** Deleted and voided records with their saved copy (review round 8): a
+ *  deleted dose, spray or log can still hold food, and `holdCorrections`
+ *  names records that are only here. */
+export function deletedRecordSection() {
+  return db
+    .select()
+    .from(recordDeletions)
+    .where(withTenant(recordDeletions))
+    .orderBy(desc(recordDeletions.deletedAt))
+    .all()
+    .map((r) => ({
+      id: r.id,
+      recordKind: r.recordKind,
+      recordId: r.recordId,
+      deletedBy: r.deletedBy ?? null,
+      reason: r.reason ?? null,
+      deletedAt: r.deletedAt.toISOString(),
+      snapshot: parseJson(r.snapshotJson)
+    }));
 }
 
 const hundredths = (n: number | null) => (n == null ? null : n / 100);

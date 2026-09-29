@@ -59,6 +59,8 @@ export interface Crop {
    *  fresh-eating window, not the dent/grain window, for a dual-
    *  purpose corn crop). Undefined / null = show all. */
   harvestUseCases?: string[];
+  /** Phase 27A: the planting's archetype override, when one is set. */
+  archetypeOverride?: string;
   /** Phase 30E: where the planting sits in its bed and how it is spaced.
    *  Absent until the garden designer places it. */
   footprint?: Footprint;
@@ -122,6 +124,7 @@ function rowToCrop(row: typeof crops.$inferSelect): Crop {
   if (row.plantCount != null) out.plantCount = row.plantCount;
   if (row.plantCountProvenance) out.plantCountProvenance = row.plantCountProvenance;
   if (row.sourceProvenance) out.sourceProvenance = row.sourceProvenance;
+  if (row.archetypeOverride) out.archetypeOverride = row.archetypeOverride;
   if (row.harvestUseCases) {
     try {
       const parsed = JSON.parse(row.harvestUseCases);

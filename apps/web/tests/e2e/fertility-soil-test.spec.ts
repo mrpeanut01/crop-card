@@ -54,8 +54,12 @@ test.describe('soil tests on /fertility', () => {
 
     await page.goto(`/fertility?block=${blockId}`);
     await expect(page.getByRole('heading', { name: 'Fertility', level: 1 })).toBeVisible();
-    await page.getByRole('button', { name: 'Add a soil test' }).click();
     const form = page.getByTestId('setup-soil-test');
+    // A click before the page hydrates does nothing, so retry until it opens.
+    await expect(async () => {
+      await page.getByRole('button', { name: 'Add a soil test' }).click({ timeout: 2000 });
+      await expect(form).toBeVisible({ timeout: 1000 });
+    }).toPass();
     await expect(form).toBeVisible();
     await form.getByLabel('lb per acre').check();
     await form.getByLabel('Test method').selectOption('mehlich-1');
@@ -82,8 +86,13 @@ test.describe('soil tests on /fertility', () => {
     });
     const helper = await provisionHelper(page, browser);
     await helper.goto(`/fertility?block=${farm.blocks[0].id}`);
-    await helper.getByRole('button', { name: 'Add a soil test' }).click();
-    await expect(helper.getByText('Ask the owner to add the soil test.')).toBeVisible();
+    // A click before the page hydrates does nothing, so retry until it opens.
+    await expect(async () => {
+      await helper.getByRole('button', { name: 'Add a soil test' }).click({ timeout: 2000 });
+      await expect(helper.getByText('Ask the owner to add the soil test.')).toBeVisible({
+        timeout: 1000
+      });
+    }).toPass();
     await expect(helper.getByTestId('setup-soil-test')).toHaveCount(0);
     await helper.context().close();
   });

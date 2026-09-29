@@ -54,6 +54,14 @@ export function isDesignable(kind: AreaKind): kind is DesignableAreaKind {
   return (DESIGNABLE_AREA_KINDS as readonly string[]).includes(kind);
 }
 
+/** Grazing land: where the grazing and hay rules count every block in the
+ *  Area (C-21). Any other Area joins them once an animal has stayed on it. */
+export const GRAZING_AREA_KINDS = ['pasture'] as const;
+
+export function isGrazingAreaKind(kind: string | null | undefined): boolean {
+  return typeof kind === 'string' && (GRAZING_AREA_KINDS as readonly string[]).includes(kind);
+}
+
 // ─── Kind-specific details (fields.details_json) ─────────────────────────
 
 export const ORGANIC_STATUSES = ['non-organic', 'transitional', 'organic'] as const;

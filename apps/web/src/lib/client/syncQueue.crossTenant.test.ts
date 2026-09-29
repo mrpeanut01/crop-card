@@ -33,7 +33,9 @@ const KINDS: PendingRecordKind[] = [
   'scout',
   'task',
   'journal',
-  'animal-move'
+  'animal-move',
+  'animal-health',
+  'animal-production'
 ];
 
 /** 0 = accepted; 503 = transient (retried); 400/422 = definitive (parked). */

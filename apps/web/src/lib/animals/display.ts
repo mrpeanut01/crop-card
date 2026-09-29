@@ -21,8 +21,13 @@ export const OUTCOME_CHOICES: { value: Exclude<StatusEventStatus, 'active'>; lab
   { value: 'died', label: 'Died' },
   { value: 'sold', label: 'Sold' },
   { value: 'rehomed', label: 'Rehomed' },
-  { value: 'culled', label: 'Culled' }
+  { value: 'culled', label: 'Culled' },
+  { value: 'slaughtered', label: 'Slaughtered for meat' },
+  { value: 'sold-for-meat', label: 'Sold for meat' }
 ];
+
+/** The choices that declare meat as food; shown only for food animals. */
+export const MEAT_CHOICE_VALUES: readonly string[] = ['slaughtered', 'sold-for-meat'];
 
 export function animalLabel(a: { name: string | null; tag: string | null }): string {
   if (a.name?.trim()) return a.name.trim();
@@ -167,13 +172,37 @@ const CODE_MESSAGES: Record<string, string> = {
   GROUP_HAS_MEMBERS: 'Move or record the named animals in this group first.',
   ANIMAL_HAS_RECORDS: 'This has records, so it cannot be deleted. Archive it instead.',
   AREA_HAS_ANIMALS: 'Animals live there. Move them before deleting the place.',
+  AREA_HAS_GROUP_HISTORY:
+    'A group was split or changed here, and that record is kept for food safety. Rename the place instead.',
   UNKNOWN_SUBJECT: 'This animal or group is not on this farm any more.',
   OWNER_ONLY: 'Only the owner can change this.',
-  IN_THE_FUTURE: 'That time is in the future.'
+  LOG_UNDER_HOLD:
+    'This was used or sold while a hold was on. Change it to discarded, or ask the owner to remove it.',
+  IN_THE_FUTURE:
+    'That date is in the future. Records are for what already happened. Use a task to plan ahead.',
+  HOLD_NOT_VOIDABLE: "Holds from a prohibited drug or unknown label can't be shortened."
 };
 
+/** C-35: refusals whose server copy names the holds and dates involved, so
+ *  the form shows it as written. */
+const SERVER_WORDED = new Set([
+  'HOLD_WOULD_SHORTEN',
+  'HOLD_DIFF_STALE',
+  'VOID_TOO_LATE',
+  'BACKDATE_TOO_FAR',
+  'HOLD_ACTIVE'
+]);
+
 export async function errorFromResponse(res: Response): Promise<string> {
-  const body = (await res.json().catch(() => null)) as { error?: string; code?: string } | null;
+  const body = (await res.json().catch(() => null)) as {
+    error?: string;
+    code?: string;
+    resubmitAs?: unknown;
+  } | null;
+  if (body?.error && body.code && SERVER_WORDED.has(body.code)) return body.error;
+  if (body?.error && body.code === 'OUT_OF_ORDER' && body.resubmitAs === 'discard') {
+    return body.error;
+  }
   if (res.status === 403) {
     return body?.code && CODE_MESSAGES[body.code]
       ? CODE_MESSAGES[body.code]

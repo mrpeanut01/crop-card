@@ -74,6 +74,31 @@ describe('submitMove', () => {
     expect(enqueueRecord).not.toHaveBeenCalled();
   });
 
+  it('points the owner, never a helper, at adding the grazing time', async () => {
+    const stop = (askOwner: boolean) =>
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              code: 'GRAZING_UNKNOWN',
+              error: 'North pasture was sprayed.',
+              ownerCanAttest: true,
+              askOwner,
+              fieldId: 'f1'
+            }),
+            { status: 422 }
+          )
+      );
+    const owner = await submitMove(input, stop(false) as never, () => true);
+    expect(owner).toEqual({
+      status: 'error',
+      message: 'North pasture was sprayed.',
+      attestHref: '/plan/areas/f1/grazing'
+    });
+    const helper = await submitMove(input, stop(true) as never, () => true);
+    expect(helper).toEqual({ status: 'error', message: 'North pasture was sprayed.' });
+  });
+
   it('returns the saved move', async () => {
     const move = { fieldId: 'f1', newGroup: null, capacity: null };
     const fetchFn = vi.fn(async () => new Response(JSON.stringify({ move }), { status: 201 }));

@@ -34,6 +34,7 @@
         ownerId={data.ownerId}
         snapshot={data.snapshot}
         housing={data.housing}
+        grazing={data.grazing}
         petsLayout={data.petsLayout}
         canEdit={data.canEdit}
         isFirstRun={data.isFirstRun}

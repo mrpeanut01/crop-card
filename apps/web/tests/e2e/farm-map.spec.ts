@@ -298,13 +298,31 @@ test.describe('farm map zoom', () => {
 
     const zoomIn = page.locator('.leaflet-control-zoom-in').first();
     await expect(zoomIn).toBeVisible();
+    const tileZooms = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll<HTMLImageElement>('img.leaflet-tile')].map(
+          (t) => t.src.match(/\/tile\/(\d+)\//)?.[1] ?? ''
+        )
+      );
     // An empty farm opens at z13; the map should keep going to z22.
-    for (let i = 0; i < 9; i++) {
-      await expect(zoomIn).not.toHaveClass(/leaflet-disabled/);
+    expect(await tileZooms()).toContain('13');
+    // Leaflet drops a zoom click that lands while the previous zoom is still
+    // animating, so on a loaded runner nine clicks can fall short: click
+    // until the control disables, then check where the map ended up.
+    for (let i = 0; i < 20; i++) {
+      if ((await zoomIn.getAttribute('class'))?.includes('leaflet-disabled')) break;
       await zoomIn.click();
       await page.waitForTimeout(300);
     }
     await expect(zoomIn).toHaveClass(/leaflet-disabled/);
+    // z22 over native z19 imagery: the z19 tile level is drawn at 2^3 scale.
+    const scales = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLImageElement>('img.leaflet-tile')].map((t) => {
+        const m = (t.parentElement?.style.transform ?? '').match(/scale\(([\d.]+)\)/);
+        return m ? Number(m[1]) : 1;
+      })
+    );
+    expect(scales).toContain(8);
     // Past z19 the last real imagery tiles are upscaled, not requested.
     const tiles = await page.evaluate(() =>
       [...document.querySelectorAll<HTMLImageElement>('img.leaflet-tile')].map((t) => t.src)

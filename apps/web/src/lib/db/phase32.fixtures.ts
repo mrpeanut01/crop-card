@@ -12,6 +12,7 @@ import {
   animals,
   blockProtections,
   grazingAttestations,
+  holdCorrections,
   irrigationEvents,
   ledgerEntries,
   rainGaugeReadings,
@@ -41,7 +42,8 @@ export const PHASE_32_TABLES = {
   irrigation_events: irrigationEvents,
   rain_gauge_readings: rainGaugeReadings,
   task_time_entries: taskTimeEntries,
-  ledger_entries: ledgerEntries
+  ledger_entries: ledgerEntries,
+  hold_corrections: holdCorrections
 } as const;
 
 export type Phase32Table = keyof typeof PHASE_32_TABLES;
@@ -195,6 +197,14 @@ export function seedPhase32Rows(label: string): Phase32Seed {
     animalId,
     animalGroupId: groupId,
     stockLotId: lot.id
+  });
+
+  put('hold_corrections', {
+    recordKind: 'animal-health',
+    recordId: randomUUID(),
+    reason: 'Entered on the wrong animal',
+    diffJson: '{"holds":[],"coverage":[]}',
+    diffHash: 'test'
   });
 
   return { rowIds, fieldId: field.id, stockLotId: lot.id, animalId, groupId };

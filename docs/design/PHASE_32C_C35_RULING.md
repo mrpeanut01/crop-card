@@ -1,6 +1,6 @@
 # 32C ruling C-35: backdating and the hold guard
 
-Status: adopted by the 32C hardening decision panel on 2026-09-27 (judges 1 and 2, with judge 3 dissenting in favour of a read-time clamp). The implementation was interrupted by a container restart and is unfinished. It is parked, with the rest of the 32C code, on the `claude/determined-johnson-4ndty4` checkpoint branch until work resumes.
+Status: adopted by the 32C hardening decision panel on 2026-09-27 (judges 1 and 2, with judge 3 dissenting in favour of a read-time clamp). Built on `p32c-integration` (unshipped); what is built, and what is still open, is in the C-35 section of [`PHASE_32_PLAN.md`](PHASE_32_PLAN.md).
 
 ## Votes
 

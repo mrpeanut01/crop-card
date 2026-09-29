@@ -10,6 +10,7 @@
   import CardView from '$lib/components/cards/CardView.svelte';
   import type { FarmSnapshot } from '$lib/cards/snapshot';
   import { withHousing, type HousingByArea } from '$lib/farm/housedAnimals';
+  import { withGrazing, withGrazingTimeLink, type GrazingByArea } from '$lib/farm/areaGrazing';
   import { snapshotFromMapData } from '$lib/farm/mapSnapshot';
   import { isCropBearing, type AreaKind } from '$lib/farm/areaKinds';
   import {
@@ -76,6 +77,8 @@
     areaSnapshot?: FarmSnapshot | null;
     /** Animals housed on each Area (Phase 32B). */
     areaHousing?: HousingByArea;
+    /** Grazing and hay holds on each Area (Phase 32C). */
+    areaGrazing?: GrazingByArea;
     petsLayout?: boolean;
     /** False for helpers: block and map edits are the owner's. */
     canEdit?: boolean;
@@ -97,6 +100,7 @@
     geometryEditHref,
     areaSnapshot = null,
     areaHousing = {},
+    areaGrazing = {},
     petsLayout = false,
     canEdit = true
   }: Props = $props();
@@ -142,7 +146,10 @@
   const areaCard = $derived.by(() => {
     if (!selectedArea) return null;
     const card = planAreaCard(snapshot, selectedArea, prefs);
-    return card ? withHousing(card, areaHousing[selectedArea.id], { petsLayout }) : null;
+    if (!card) return null;
+    const housed = withHousing(card, areaHousing[selectedArea.id], { petsLayout });
+    const g = areaGrazing[selectedArea.id];
+    return withGrazingTimeLink(withGrazing(housed, g, prefs.timeZone), g, selectedArea.id, canEdit);
   });
   const cropDays = $derived.by<Record<string, number | undefined>>(() => {
     const out: Record<string, number | undefined> = {};

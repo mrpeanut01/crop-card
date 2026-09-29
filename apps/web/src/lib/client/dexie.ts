@@ -50,14 +50,11 @@ export type PendingRecordKind =
   | 'scout'
   | 'task'
   | 'journal'
-  | 'animal-move';
+  | 'animal-move'
+  | 'animal-health'
+  | 'animal-production';
 
-export const PHASE_32_RECORD_KINDS = [
-  'animal-health',
-  'animal-production',
-  'seed-start',
-  'irrigation'
-] as const;
+export const PHASE_32_RECORD_KINDS = ['seed-start', 'irrigation'] as const;
 
 export type Phase32RecordKind = (typeof PHASE_32_RECORD_KINDS)[number];
 
@@ -79,6 +76,8 @@ export interface PendingSprayRecord {
    *  the operator retries or discards them. Not indexed; no schema bump. */
   status?: 'rejected';
   lastStatus?: number;
+  /** C-35: what unblocks an item the hold guard refused. */
+  holdMarker?: string;
   createdAt: number;
 }
 

@@ -20,6 +20,7 @@
     CheckCircle2,
     AlertTriangle,
     Map as MapIcon,
+    PawPrint,
     Plus
   } from 'lucide-svelte';
   import Card from '$lib/components/ui/Card.svelte';
@@ -56,6 +57,8 @@
     compatibility?: CompatibilityState;
     onAddBlock?: () => void;
     onChangeSelection?: () => void;
+    /** Advisory lines when animals live on the sprayed Areas (Phase 32C). Never blocks. */
+    pastureNotice?: string[] | null;
   }
   const {
     blocks,
@@ -66,7 +69,8 @@
     targets = [],
     compatibility,
     onAddBlock,
-    onChangeSelection
+    onChangeSelection,
+    pastureNotice = null
   }: Props = $props();
 
   const totalAc = $derived(blocks.reduce((sum, b) => sum + (b.acres ?? 0), 0));
@@ -156,6 +160,17 @@
       {/if}
     </div>
   </div>
+
+  {#if pastureNotice && pastureNotice.length}
+    <div class="cs-pasture" role="note" aria-label="Animals on this Area">
+      <PawPrint size={15} strokeWidth={1.75} aria-hidden="true" />
+      <ul>
+        {#each pastureNotice as line, i (i)}
+          <li>{line}</li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
 
   {#if compatibility}
     <div class="cs-banner tone-{compatibility.tone}">
@@ -291,6 +306,30 @@
   .cs-banner.tone-rust {
     background: #f1d9ce;
     color: #8a341b;
+  }
+  .cs-pasture {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 18px;
+    font-size: 13px;
+    line-height: 1.45;
+    background: var(--color-wheat-soft, #e8d9b5);
+    color: var(--color-ink);
+    border-bottom: 1px solid var(--color-divider-soft, var(--color-divider));
+    overflow-wrap: anywhere;
+  }
+  .cs-pasture :global(svg) {
+    flex: none;
+    margin-top: 2px;
+  }
+  .cs-pasture ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 2px;
+    min-width: 0;
   }
   .why {
     color: var(--color-ink-soft);

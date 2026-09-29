@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './lib/test';
+import { reloadUnderServiceWorker } from './lib/serviceWorker';
 import { signInAsDemoOwner } from './lib/auth';
 import { provisionWizardTenant } from './lib/wizardTenant';
 
@@ -45,12 +46,8 @@ test.describe('offline Cards', () => {
   test('a card never opened online opens and prints with no signal', async ({ page, context }) => {
     await signInAsDemoOwner(page);
     await page.goto('/today');
-    await page.evaluate(async () => {
-      await navigator.serviceWorker.ready;
-    });
     // The first load installs the worker; the reload is the "app open" it controls.
-    await page.reload();
-    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    await reloadUnderServiceWorker(page);
 
     await expect.poll(() => snapshotSaved(page), { timeout: 20_000 }).toBeGreaterThan(0);
     await expect.poll(() => cardsDataCached(page), { timeout: 20_000 }).toBeGreaterThan(0);
@@ -144,11 +141,7 @@ test.describe('offline Cards', () => {
     });
 
     await page.goto('/cards');
-    await page.evaluate(async () => {
-      await navigator.serviceWorker.ready;
-    });
-    await page.reload();
-    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    await reloadUnderServiceWorker(page);
     await expect.poll(() => snapshotSaved(page), { timeout: 20_000 }).toBeGreaterThan(0);
     await expect.poll(() => cardsDataCached(page), { timeout: 20_000 }).toBeGreaterThan(0);
 

@@ -19,6 +19,7 @@ import { effectiveAcresFor } from './blocks';
 import { sketchAcres } from '$lib/farm/sketch';
 import {
   DEFAULT_AREA_KIND,
+  GRAZING_AREA_KINDS,
   parseAreaDetails,
   perimeterFtFor,
   type AreaDetails,
@@ -114,6 +115,18 @@ export function listFields(opts: { kinds?: readonly AreaKind[] } = {}): FieldWit
     .sort((a, b) => a.createdAt - b.createdAt);
 }
 
+/** Ids of the active Owner's Areas whose kind is grazing land. */
+export function listGrazingAreaIds(): Set<string> {
+  return new Set(
+    db
+      .select({ id: fields.id })
+      .from(fields)
+      .where(withTenant(fields, inArray(fields.kind, [...GRAZING_AREA_KINDS])))
+      .all()
+      .map((r) => r.id)
+  );
+}
+
 export function getField(id: string): Field | undefined {
   const row = db
     .select()
@@ -123,6 +136,7 @@ export function getField(id: string): Field | undefined {
   return row ? rowToField(row) : undefined;
 }
 
+/** @hold-exempt: a new Area has no blocks or stays, so it holds nothing */
 export function createField(input: {
   name: string;
   acres?: number;
@@ -162,6 +176,7 @@ export function createField(input: {
   return rowToField(row);
 }
 
+/** @hold-exempt: Area attributes; holds key on the Area id, and every patch carrying a kind (grazing land or not) runs inside the hold guard in PATCH /api/fields/:id */
 export function updateField(
   id: string,
   patch: {
@@ -233,7 +248,9 @@ export function updateField(
 
 /** Returns the auto-created "Home Field" id for the active Owner (creates
  *  one if missing). Application code calls this on first-block creation
- *  when the user has not yet picked a parent field. */
+ *  when the user has not yet picked a parent field.
+ * @hold-exempt: creates an empty Area at most
+ */
 export function ensureHomeField(): string {
   const existing = db
     .select({ id: fields.id })

@@ -6,7 +6,7 @@
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { deleteFieldCascade } from '$lib/db/admin';
-import { housedSubjectCount } from '$lib/db/animalLocations';
+import { fieldHoldsGroupHistory, housedSubjectCount } from '$lib/db/animalLocations';
 import { getField, updateField } from '$lib/db/fields';
 import { withSketchAcres } from '$lib/farm/sketch';
 import { fieldPatchSchema } from '$lib/farm/apiSchemas';
@@ -14,6 +14,10 @@ import { isDesignable, validateAreaDetails } from '$lib/farm/areaKinds';
 import { isHousingAreaKind } from '$lib/animals/model';
 import { bedsPastAreaEdge } from '$lib/server/garden/bedLayout';
 import { requireOwner } from '$lib/server/auth';
+import { listBlocks } from '$lib/db/blocks';
+import { farmTimeZone } from '$lib/db/userProfile';
+import { blocksDeleteRefusal } from '$lib/server/areaGrazing';
+import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 
 export const GET: RequestHandler = ({ params }) => {
   if (!params.id) throw error(400, 'id required');
@@ -26,9 +30,8 @@ export const _requestSchema = fieldPatchSchema;
 
 export const PATCH: RequestHandler = async (event) => {
   if (!event.params.id) throw error(400, 'id required');
-  requireOwner(event);
-  const existing = getField(event.params.id);
-  if (!existing) throw error(404, 'field not found');
+  const user = requireOwner(event);
+  if (!getField(event.params.id)) throw error(404, 'field not found');
 
   let body: unknown;
   try {
@@ -36,6 +39,10 @@ export const PATCH: RequestHandler = async (event) => {
   } catch {
     return json({ error: 'invalid JSON body' }, { status: 400 });
   }
+  // Read after the body arrives, so a slow request does not act on an
+  // Area kind another write has since changed.
+  const existing = getField(event.params.id);
+  if (!existing) throw error(404, 'field not found');
   const parsed = fieldPatchSchema.safeParse(body);
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
@@ -82,14 +89,35 @@ export const PATCH: RequestHandler = async (event) => {
     }
     details = checked.details;
   }
-  const field = updateField(event.params.id, { ...withSketchAcres(rest), details });
-  return json({ field });
+  const id = event.params.id;
+  const patch = { ...withSketchAcres(rest), details };
+  const write = () => updateField(id, patch);
+  if (parsed.data.kind === undefined) return json({ field: write() });
+  // A pasture that turns into a garden or crop field stops counting as
+  // grazing land, so its sprays' grazing and hay holds must not shorten.
+  // Any write that carries a kind goes through the guard, even one that
+  // looks unchanged here: the guard compares against the kind on file
+  // inside its own transaction, not a copy read before an await.
+  const guarded = await tryGuardedHoldWrite(event, user, write);
+  if (!guarded.ok) return guarded.response;
+  return json({ field: guarded.value });
 };
 
-export const DELETE: RequestHandler = (event) => {
+export const DELETE: RequestHandler = async (event) => {
   if (!event.params.id) throw error(400, 'id required');
-  requireOwner(event);
+  const user = requireOwner(event);
   if (!getField(event.params.id)) throw error(404, 'field not found');
+  const fieldId = event.params.id;
+  const held = await blocksDeleteRefusal(
+    fieldId,
+    listBlocks({ plantings: 'none' })
+      .filter((b) => b.fieldId === fieldId)
+      .map((b) => b.id),
+    farmTimeZone(),
+    Date.now(),
+    { wholeArea: true }
+  );
+  if (held) return json(held, { status: 409 });
   if (housedSubjectCount(event.params.id) > 0) {
     return json(
       {
@@ -99,5 +127,17 @@ export const DELETE: RequestHandler = (event) => {
       { status: 409 }
     );
   }
-  return json(deleteFieldCascade(event.params.id));
+  if (fieldHoldsGroupHistory(event.params.id)) {
+    return json(
+      {
+        error:
+          "A group was split or an animal changed group here. That record shows which animals share the group's treatments and grazing, so this place has to stay. Rename it instead.",
+        code: 'AREA_HAS_GROUP_HISTORY'
+      },
+      { status: 409 }
+    );
+  }
+  const guarded = await tryGuardedHoldWrite(event, user, () => deleteFieldCascade(fieldId));
+  if (!guarded.ok) return guarded.response;
+  return json(guarded.value);
 };

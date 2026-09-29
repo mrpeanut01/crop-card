@@ -13,6 +13,7 @@
     type CompatibilityState,
     type SprayContextBlock
   } from '$lib/components/spray/SprayContextStrip.svelte';
+  import { pastureNotice } from '$lib/farm/pastureNotice';
   import { checkFungicideTankMixCompat } from '$lib/safety/fungicideTankMix';
   import { checkFracRotation } from '$lib/safety/fracRotation';
   import LeafWetDial from '$lib/components/spray/LeafWetDial.svelte';
@@ -230,6 +231,15 @@
   });
 
   const selectedBlock = $derived(data.blocks.find((b) => b.id === selectedBlockId) ?? null);
+  const ctxPasture = $derived(
+    pastureNotice({
+      blockIds: selectedBlock ? [selectedBlock.id] : [],
+      products: data.fungicides
+        .filter((p) => selectedPluginIds.includes(p.pluginId))
+        .map((p) => ({ pluginId: p.pluginId, name: p.displayName })),
+      context: data.pasture
+    })
+  );
   const ctxBlocks = $derived<SprayContextBlock[]>(
     selectedBlock ? [{ id: selectedBlock.id, label: selectedBlock.name, acres: 0 }] : []
   );
@@ -349,7 +359,12 @@
 
 <div class="spray-almanac-chrome">
   <SprayStepper steps={stepperData} />
-  <SprayContextStrip blocks={ctxBlocks} cropLabel={ctxCropLabel} compatibility={ctxCompatibility} />
+  <SprayContextStrip
+    blocks={ctxBlocks}
+    cropLabel={ctxCropLabel}
+    compatibility={ctxCompatibility}
+    pastureNotice={ctxPasture}
+  />
 </div>
 
 {#each tankMixIssues as issue (issue.code)}

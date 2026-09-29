@@ -165,6 +165,7 @@ export class RecordLockedError extends Error {
  * passes, stamping `lockedAt` once and refusing future edits/deletes.
  * Returns the lock timestamp if locked, undefined if still mutable.
  * Mirrors sprayEvents.evaluateLock exactly.
+ * @hold-exempt: stamps locked_at only
  */
 export function evaluateLock(
   event: InsecticideEvent,

@@ -4,6 +4,7 @@ import { getCrop } from '$lib/db/crops';
 import { listInsecticideEvents, activeReEntryRestrictions } from '$lib/db/insecticideEvents';
 import { scoutLogByBlock as scoutLogFromTable } from '$lib/db/scoutObservations';
 import { getRegistry } from '$lib/server/registry';
+import { loadSprayPastureContext } from '$lib/server/pastureAnimals';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { getFarmLatLon } from '$lib/schedule/settings';
 import { isInBloom } from '$lib/safety/pollinatorBloom';
@@ -79,6 +80,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   return {
     insecticides: insecticidePlugins,
+    pasture: await loadSprayPastureContext(allBlocks, registry),
     blocks: allBlocks.map((b) => {
       const location = (b.geometryGeojson && geometryCentroid(b.geometryGeojson)) || farm;
       const blooming = b.plantings.filter((p) => {

@@ -198,6 +198,7 @@ export function setGroupHousing(id: string, housingFieldId: string | null, now =
     .run();
 }
 
+/** @hold-exempt: the food-producing flag is never read by a hold (32C ruling) */
 export function setGroupFoodProducing(
   id: string,
   value: boolean,

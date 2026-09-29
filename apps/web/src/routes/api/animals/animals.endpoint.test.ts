@@ -37,7 +37,10 @@ vi.mock('$lib/server/registry', async (importOriginal) => {
   };
   return {
     ...actual,
-    getDataKinds: async () => ({ species: { get: (id: string) => species[id] } })
+    getDataKinds: async () => ({
+      species: { get: (id: string) => species[id] },
+      animalHealth: { get: () => undefined }
+    })
   };
 });
 
@@ -62,6 +65,7 @@ import { openStay, isNonOverlapping } from '$lib/animals/timeline';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 import { fakeJpeg, toDataUrl } from '$lib/journal/jpegFixture';
 import { LOCK_WINDOW_MS } from '$lib/db/recordKinds';
+import { RULES_VERSION } from '$lib/safety/version';
 
 import { GET as LIST, POST as CREATE } from './+server';
 import { GET as GET_ONE, PATCH, DELETE } from './[id]/+server';
@@ -461,7 +465,7 @@ describe('moves', () => {
         })
       ).body as Json;
       const pearl = g.members[0].id;
-      const t0 = Date.now() - 60_000;
+      const t0 = Date.now();
       const out = await move({
         subjectType: 'animal',
         subjectId: pearl,
@@ -720,14 +724,25 @@ describe('status changes', () => {
     });
   });
 
-  it('refuses meat declarations until the withdrawal gate lands', async () => {
+  it('records a slaughter with no treatment or sprayed pasture on record (32C gate passes)', async () => {
     await runWithTenantAsync(seedOwner(), async () => {
-      const steer = (await create({ speciesId: 'sheep', tag: '7' })).body as Json;
-      for (const s of ['slaughtered', 'sold-for-meat']) {
-        const res = await status({ subjectType: 'animal', subjectId: steer.animal.id, status: s });
-        expect(res.status).toBe(400);
-      }
-      expect(getAnimal(steer.animal.id)?.status).toBe('active');
+      const wether = (await create({ speciesId: 'sheep', tag: '7' })).body as Json;
+      const res = await status({
+        subjectType: 'animal',
+        subjectId: wether.animal.id,
+        status: 'slaughtered'
+      });
+      expect(res.status).toBe(201);
+      expect(getAnimal(wether.animal.id)?.status).toBe('slaughtered');
+      expect(listStatusEvents('animal', wether.animal.id)[0].rulesVersion).toBe(RULES_VERSION);
+      const ewe = (await create({ speciesId: 'sheep', tag: '8' })).body as Json;
+      const sold = await status({
+        subjectType: 'animal',
+        subjectId: ewe.animal.id,
+        status: 'sold-for-meat'
+      });
+      expect(sold.status).toBe(201);
+      expect(getAnimal(ewe.animal.id)?.status).toBe('sold');
     });
   });
 
@@ -1160,7 +1175,10 @@ describe('outcomes keep the location timeline coherent (B-06, B-12, B-28)', () =
       }),
       { numRuns: 40 }
     );
-  });
+    // Every move and status change runs the C-35 hold guard (two farm
+    // projections in the write's transaction), so 40 runs of up to ten
+    // writes need more than the 5 s default under a loaded suite.
+  }, 60_000);
 });
 
 describe('group changes stay on record (B-04, B-07, B-08)', () => {

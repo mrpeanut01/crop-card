@@ -5,6 +5,8 @@ import { listShadeSources } from '$lib/db/shadeSources';
 import { listMapFeatures } from '$lib/db/mapFeatures';
 import { buildMapSnapshot } from '$lib/server/mapSnapshot';
 import { loadAreaHousing } from '$lib/server/areaHousing';
+import { loadAreaGrazing } from '$lib/server/areaGrazing';
+import { farmTimeZone } from '$lib/db/userProfile';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
@@ -15,6 +17,7 @@ export const load: ServerLoad = async ({ locals, url }) => {
   const blocks = listBlocks();
   const fields = listFields();
   const { housing, petsLayout } = await loadAreaHousing(fields);
+  const grazing = await loadAreaGrazing(blocks, farmTimeZone());
   return {
     blocks,
     fields,
@@ -23,6 +26,7 @@ export const load: ServerLoad = async ({ locals, url }) => {
     shadeSources: listShadeSources(),
     mapFeatures: listMapFeatures(),
     housing,
+    grazing,
     petsLayout,
     isFirstRun: blocks.length === 0 && fields.length === 0,
     seasonYear: getActivePlanningYear(),

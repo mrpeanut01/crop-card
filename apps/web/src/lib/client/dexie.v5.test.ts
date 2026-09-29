@@ -95,4 +95,12 @@ describe('Phase 32 queue kinds', () => {
     expect(PHASE_32_RECORD_KINDS as readonly string[]).not.toContain('animal-move');
     expect(ENDPOINT_BY_KIND['animal-move']).toBe('/api/animals/move');
   });
+
+  it('routes animal-health and animal-production once 32C wired them', () => {
+    for (const kind of ['animal-health', 'animal-production'] as const) {
+      expect(PHASE_32_RECORD_KINDS as readonly string[]).not.toContain(kind);
+    }
+    expect(ENDPOINT_BY_KIND['animal-health']).toBe('/api/animals/health/record');
+    expect(ENDPOINT_BY_KIND['animal-production']).toBe('/api/animals/production/record');
+  });
 });

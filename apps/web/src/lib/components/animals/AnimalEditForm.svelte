@@ -49,6 +49,9 @@
   let notes = $state(start.notes ?? '');
   let saving = $state(false);
   let error = $state<string | null>(null);
+  /** Set when the server asks why a sex change ends the milk reading (C-10). */
+  let needsReason = $state(false);
+  let sexReason = $state('');
 
   const clean = (v: string) => (v.trim() ? v.trim() : null);
 
@@ -58,7 +61,10 @@
     if (notesOnly) return out;
     if (clean(name) !== animal.name) out.name = clean(name);
     if (farm && clean(tag) !== animal.tag) out.tag = clean(tag);
-    if (sex !== animal.sex) out.sex = sex;
+    if (sex !== animal.sex) {
+      out.sex = sex;
+      if (needsReason && sexReason.trim()) out.flagReason = sexReason.trim();
+    }
     if (farm && clean(breed) !== animal.breed) out.breed = clean(breed);
     if (farm && clean(acquiredFrom) !== animal.acquiredFrom) out.acquiredFrom = clean(acquiredFrom);
     if (layout === 'farm' && purpose !== animal.purpose) out.purpose = purpose;
@@ -88,6 +94,14 @@
         body: JSON.stringify(body)
       });
       if (!res.ok) {
+        const code =
+          res.status === 400
+            ? await res
+                .clone()
+                .json()
+                .catch(() => null)
+            : null;
+        if (code?.code === 'REASON_REQUIRED') needsReason = true;
         error = await errorFromResponse(res);
         return;
       }
@@ -115,6 +129,17 @@
         <option value={o.value}>{o.label}</option>
       {/each}
     </select>
+    {#if needsReason && sex !== animal.sex}
+      <label class="af-label" for="{uid}-sex-reason">Why is the sex changing?</label>
+      <input
+        id="{uid}-sex-reason"
+        class="af-input"
+        type="text"
+        maxlength="500"
+        required
+        bind:value={sexReason}
+      />
+    {/if}
     <label class="af-label" for="{uid}-born">Birth date</label>
     <input id="{uid}-born" class="af-input" type="date" bind:value={birth} />
     {#if birth}

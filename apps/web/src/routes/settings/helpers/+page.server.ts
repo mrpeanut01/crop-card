@@ -62,6 +62,9 @@ export const actions: Actions = {
     if (!inviteeEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteeEmail)) {
       return fail(400, { error: 'invalid email' });
     }
+    if (u.email && u.email.toLowerCase() === inviteeEmail.toLowerCase()) {
+      return fail(400, { error: 'That is your own email. You already own this farm.' });
+    }
     const seats = seatUsage(u.activeOwnerId);
     if (!seats.canInvite) {
       return fail(409, { error: SEAT_LIMIT_MESSAGE, seatLimit: true });
@@ -111,6 +114,10 @@ export const actions: Actions = {
     const userId = String(fd.get('userId') ?? '');
     if (!userId) return fail(400, { error: 'userId required' });
     if (userId === u.id) return fail(400, { error: 'cannot remove yourself' });
+    const target = usersForOwner(u.activeOwnerId).find((a) => a.userId === userId);
+    if (target?.roleWithinOwner === 'owner' && target.status === 'active') {
+      return fail(403, { error: 'An owner of this farm cannot be removed here.' });
+    }
     revokeAssignment(u.activeOwnerId, userId);
     return { ok: true };
   }

@@ -1,17 +1,30 @@
 <script lang="ts">
   import type { AreaKind } from '$lib/farm/areaKinds';
   import { AREA_DETAIL_FIELDS, fieldShown, type DetailsDraft } from '$lib/farm/areaDetailsForm';
+  import CoopPenFields from './CoopPenFields.svelte';
 
   let {
     kind,
     draft = $bindable(),
-    idPrefix = 'area'
-  }: { kind: AreaKind; draft: DetailsDraft; idPrefix?: string } = $props();
+    idPrefix = 'area',
+    areaId = null,
+    areaSqFt = null
+  }: {
+    kind: AreaKind;
+    draft: DetailsDraft;
+    idPrefix?: string;
+    /** The Area being edited, so a coop can start on who lives there. */
+    areaId?: string | null;
+    /** Floor area for the coop or pen capacity suggestion. */
+    areaSqFt?: number | null;
+  } = $props();
 
   const specs = $derived(AREA_DETAIL_FIELDS[kind]);
 </script>
 
-{#if specs.length}
+{#if kind === 'coop_pen'}
+  <CoopPenFields bind:draft {idPrefix} {areaId} {areaSqFt} />
+{:else if specs.length}
   <div class="details-grid" data-testid="area-details-fields">
     {#each specs as f (f.key)}
       {#if fieldShown(f, draft)}

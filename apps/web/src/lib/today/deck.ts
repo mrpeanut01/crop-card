@@ -12,35 +12,11 @@ import {
 const DAY_MS = 86_400_000;
 
 export type TodayWindow = 'today' | '7d' | '30d' | 'season';
-export type TodayView = 'list' | 'calendar';
-export type WeekPeriod = 'week' | 'month' | 'season';
 
-export const TODAY_WINDOWS: { id: TodayWindow; label: string; days: number }[] = [
-  { id: 'today', label: 'Today', days: 1 },
-  { id: '7d', label: 'Next 7 days', days: 7 },
-  { id: '30d', label: 'Next 30 days', days: 30 },
-  { id: 'season', label: 'Season', days: 200 }
-];
-
-export const SEASON_DAYS = 200;
-export const CALENDAR_DAYS = 84;
-
-export function clampWindow(raw: string | null | undefined): TodayWindow {
-  return raw === '7d' || raw === '30d' || raw === 'season' ? raw : 'today';
-}
-
-export function clampView(raw: string | null | undefined): TodayView {
-  return raw === 'calendar' ? 'calendar' : 'list';
-}
-
-export function periodForWindow(w: TodayWindow): WeekPeriod {
-  if (w === '30d') return 'month';
-  if (w === 'season') return 'season';
-  return 'week';
-}
+const WINDOW_DAYS: Record<TodayWindow, number> = { today: 1, '7d': 7, '30d': 30, season: 200 };
 
 export function windowDays(w: TodayWindow): number {
-  return TODAY_WINDOWS.find((x) => x.id === w)?.days ?? 1;
+  return WINDOW_DAYS[w] ?? 1;
 }
 
 function addDaysYmd(ymd: string, days: number): string {
@@ -105,7 +81,10 @@ export function buildTaskDeck<T extends DeckTaskLike>(
       status: statusWithQueued(deriveTaskStatus(task, opts.now, opts.timeZone), queued)
     };
   });
-  const visible = items.filter((i) => inWindow(i, today, lastDay, opts.timeZone));
+  return groupLinked(items.filter((i) => inWindow(i, today, lastDay, opts.timeZone)));
+}
+
+function groupLinked<T extends DeckTaskLike>(visible: DeckItem<T>[]): DeckEntry<T>[] {
   const primaryIds = new Set(
     visible.filter((i) => i.task.kind === 'primary').map((i) => i.task.id)
   );
@@ -134,6 +113,37 @@ export function buildTaskDeck<T extends DeckTaskLike>(
     );
   }
   return entries.sort((a, b) => compareByStatus(sortKey(a), sortKey(b)));
+}
+
+export interface CalendarDeckOptions {
+  now: number;
+  timeZone: string;
+  fromYmd: string;
+  toYmd: string;
+  queued?: ReadonlyMap<string, QueuedTaskAction>;
+}
+
+/**
+ * Every task due inside a Week or Month grid, open or closed, so past days
+ * show what was done or skipped and missed work stays on its day as late.
+ * Prep and follow-up tasks sit under their job when that job is in range.
+ */
+export function buildCalendarDeck<T extends DeckTaskLike>(
+  tasks: readonly T[],
+  opts: CalendarDeckOptions
+): DeckEntry<T>[] {
+  const items: DeckItem<T>[] = [];
+  for (const task of tasks) {
+    const due = dueYmd(task.scheduledFor, opts.timeZone);
+    if (due < opts.fromYmd || due > opts.toYmd) continue;
+    const queued = opts.queued?.get(task.id) ?? null;
+    items.push({
+      task,
+      queued,
+      status: statusWithQueued(deriveTaskStatus(task, opts.now, opts.timeZone), queued)
+    });
+  }
+  return groupLinked(items);
 }
 
 export interface DeckCounts {
@@ -174,22 +184,4 @@ export function eventsForWindow<E extends WindowEvent>(
   if (window === 'today') return [...todayEvents];
   const to = now + windowDays(window) * DAY_MS;
   return upcoming.filter((e) => e.endMs >= now && e.startMs <= to);
-}
-
-/** Keys an instant by the owner's calendar day, for the WeekStrip. */
-export function calendarItems<T, K>(
-  entries: readonly { at: number; value: T }[],
-  todayYmd: string,
-  timeZone: string,
-  map: (v: T) => K,
-  days = CALENDAR_DAYS
-): Record<string, K[]> {
-  const last = addDaysYmd(todayYmd, days - 1);
-  const out: Record<string, K[]> = {};
-  for (const e of entries) {
-    const key = dueYmd(e.at, timeZone);
-    if (key < todayYmd || key > last) continue;
-    (out[key] ??= []).push(map(e.value));
-  }
-  return out;
 }

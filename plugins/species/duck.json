@@ -13,5 +13,9 @@
   "tile": {
     "icon": "feather",
     "label": "Ducks"
+  },
+  "housingSpace": {
+    "indoorSqFtPerAnimal": 5,
+    "sourceName": "eXtension Small and Backyard Poultry"
   }
 }

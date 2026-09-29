@@ -70,13 +70,24 @@ afterEach(() => {
 });
 
 describe('calls in flight hold their reserve', () => {
-  it('ten reservations with nothing logged in between give exactly one Free allocate', () => {
+  it('ten reservations with nothing logged in between stop at the Free monthly budget', () => {
+    const f = farm(null);
+    spend(f.ownerId, f.userId, 0.45);
+    runWithTenant(f.ownerId, () => {
+      const results = Array.from({ length: 3 }, () => reserveGuard(f.userId, 'scan-label'));
+      expect(results.filter((g) => g.ok)).toHaveLength(1);
+      const blocked = results.find((g) => !g.ok);
+      if (blocked && !blocked.ok) expect(blocked.detail).toBe('monthly-budget');
+    });
+  });
+
+  it('ten planning reservations on a Free farm stop at the daily cap of 5 (#479)', () => {
     const f = farm(null);
     runWithTenant(f.ownerId, () => {
-      const oks = Array.from({ length: 10 }, () => reserveGuard(f.userId, 'allocate')).filter(
-        (g) => g.ok
-      );
-      expect(oks).toHaveLength(1);
+      const results = Array.from({ length: 10 }, () => reserveGuard(f.userId, 'allocate'));
+      expect(results.filter((g) => g.ok)).toHaveLength(5);
+      const blocked = results.find((g) => !g.ok);
+      if (blocked && !blocked.ok) expect(blocked.detail).toBe('daily-quota');
     });
   });
 
@@ -97,13 +108,13 @@ describe('calls in flight hold their reserve', () => {
   it('checkGuard sees calls in flight but holds nothing itself', () => {
     const f = farm(null);
     runWithTenant(f.ownerId, () => {
-      expect(checkGuard(f.userId, 'allocate').ok).toBe(true);
-      expect(checkGuard(f.userId, 'allocate').ok).toBe(true);
-      const held = reserveGuard(f.userId, 'allocate');
+      expect(checkGuard(f.userId, 'plugin-search').ok).toBe(true);
+      expect(checkGuard(f.userId, 'plugin-search').ok).toBe(true);
+      const held = reserveGuard(f.userId, 'plugin-search');
       expect(held.ok).toBe(true);
-      expect(checkGuard(f.userId, 'allocate').ok).toBe(false);
+      expect(checkGuard(f.userId, 'plugin-search').ok).toBe(false);
       if (held.ok) held.hold?.release();
-      expect(checkGuard(f.userId, 'allocate').ok).toBe(true);
+      expect(checkGuard(f.userId, 'plugin-search').ok).toBe(true);
     });
   });
 
@@ -146,7 +157,7 @@ describe('calls in flight hold their reserve', () => {
     });
   });
 
-  it('twenty parallel AI plans on a Free farm reach the model exactly once', async () => {
+  it('twenty parallel AI plans on a Free farm stop at the daily planning cap', async () => {
     process.env.ANTHROPIC_API_KEY = 'sk-ant-test';
     const f = farm(null);
     let calls = 0;
@@ -173,9 +184,9 @@ describe('calls in flight hold their reserve', () => {
         )
       )
     );
-    expect(calls).toBe(1);
-    expect(results.filter((r) => r.provenance === 'ai')).toHaveLength(1);
-    expect(results.filter((r) => r.provenance === 'fallback')).toHaveLength(19);
+    expect(calls).toBe(5);
+    expect(results.filter((r) => r.provenance === 'ai')).toHaveLength(5);
+    expect(results.filter((r) => r.provenance === 'fallback')).toHaveLength(15);
   });
 
   it('a failed call gives its hold back', async () => {

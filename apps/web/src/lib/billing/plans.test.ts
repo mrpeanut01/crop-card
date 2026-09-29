@@ -5,8 +5,8 @@ import {
   AI_BUDGET_EXAMPLES,
   AI_PLAN_RESERVE_USD,
   AI_RESERVE_USD,
-  TYPICAL_PLAN_USD,
-  fullPlansFor,
+  PLAN_HIGHLIGHTS,
+  isPlanningEndpoint,
   PAST_DUE_GRACE_DAYS,
   PLANS,
   PLAN_IDS,
@@ -74,7 +74,7 @@ describe('plan definitions', () => {
     ['scan-label', 3, 20, 40],
     ['scan-url', 1, 10, 20],
     ['plugin-scan', 1, 10, 20],
-    ['allocate', 1, 5, 10],
+    ['allocate', 5, 25, 50],
     ['groups', 1, 5, 10],
     ['optimize', 0, 2, 5],
     ['plugin-search', 1, 10, 15],
@@ -315,22 +315,20 @@ describe('Stripe price mapping', () => {
 });
 
 describe('plan copy matches what the guard allows', () => {
-  it('a full plan starts only while spend plus the planning reserve fits', () => {
-    expect(AI_PLAN_RESERVE_USD).toBe(AI_RESERVE_USD.allocate);
-    const budget = PLANS.free.aiMonthlyUsd;
-    const n = fullPlansFor(budget);
-    expect((n - 1) * TYPICAL_PLAN_USD + AI_RESERVE_USD.allocate).toBeLessThanOrEqual(budget);
-    expect(n * TYPICAL_PLAN_USD + AI_RESERVE_USD.allocate).toBeGreaterThan(budget);
+  it("planning is its own daily limit, so the copy states each plan's cap (#479)", () => {
+    expect(isPlanningEndpoint('allocate')).toBe(true);
+    expect(isPlanningEndpoint('suggest')).toBe(false);
+    for (const id of PLAN_IDS) {
+      const n = PLANS[id].dailyQuota.allocate;
+      expect(AI_BUDGET_EXAMPLES[id]).toContain(`Up to ${n} AI planning runs a day`);
+      expect(PLAN_HIGHLIGHTS[id]).toContain(`Up to ${n} AI planning runs a day`);
+    }
+    expect(PLANS.free.dailyQuota.allocate).toBe(5);
+    expect(PLANS.grower.dailyQuota.allocate).toBeGreaterThan(PLANS.free.dailyQuota.allocate);
+    expect(PLANS.farm.dailyQuota.allocate).toBeGreaterThan(PLANS.grower.dailyQuota.allocate);
   });
 
-  it('the Free card promises 2 full plans, not 3', () => {
-    expect(fullPlansFor(PLANS.free.aiMonthlyUsd)).toBe(2);
-    expect(AI_BUDGET_EXAMPLES.free).toContain('About 2 full AI plans');
-    expect(AI_BUDGET_EXAMPLES.free).not.toContain('About 3');
-  });
-
-  it('the Grower card never promises more plans than fit', () => {
-    const claimed = Number(AI_BUDGET_EXAMPLES.grower.match(/About (\d+)/)?.[1]);
-    expect(claimed).toBeLessThanOrEqual(fullPlansFor(PLANS.grower.aiMonthlyUsd));
+  it('the web lookup reserve is still the planning-sized reserve', () => {
+    expect(AI_PLAN_RESERVE_USD).toBe(AI_RESERVE_USD['plugin-search']);
   });
 });

@@ -9,6 +9,11 @@
     ['Build version', data.advanced.buildVersion],
     ['Rules version', data.advanced.rulesVersion],
     ['Plugin failures', String(data.advanced.pluginFailures)],
+    ['Crops registered', String(data.appData.crops)],
+    ['Herbicides registered', String(data.appData.herbicides)],
+    ['Plugins loaded', String(data.appData.plugins)],
+    ['Beds and blocks', String(data.appData.blocks)],
+    ['Plantings', String(data.appData.plantings)],
     ['Tenant ID', data.advanced.tenantId],
     ['Last Litestream backup', data.advanced.lastBackup],
     ['Storage tier', 'SQLite · Litestream → Azure Blob']
@@ -61,11 +66,22 @@
   }
 </script>
 
-<svelte:head><title>Advanced & export-all · CropCard</title></svelte:head>
+<svelte:head
+  ><title>{data.isOwner ? 'Advanced & export-all' : 'App info'} · CropCard</title></svelte:head
+>
 
-<SettingsShell title="Advanced & export-all" kicker="Danger zone" hideFooter>
-  <SettingsSection title="Diagnostics" sub="Server-reported. Paste into a bug report.">
-    <div class="diag-grid">
+<SettingsShell
+  title={data.isOwner ? 'Advanced & export-all' : 'App info'}
+  kicker={data.isOwner ? 'Danger zone' : 'Diagnostics'}
+  hideFooter
+>
+  <SettingsSection
+    title={data.isOwner ? 'App info' : 'Versions and counts'}
+    sub={data.isOwner
+      ? 'Versions and counts from the server. Paste into a bug report.'
+      : 'From the server. Paste these into a bug report.'}
+  >
+    <div class="diag-grid" data-testid="app-info">
       {#each DIAGNOSTICS as [k, v] (k)}
         <div>
           <div class="kicker-row">{k}</div>
@@ -74,53 +90,64 @@
       {/each}
     </div>
     <button type="button" class="ghost-sm with-icon" onclick={copyDiagnostics}>
-      <FileText size={12} /> Copy diagnostics to clipboard
+      <FileText size={12} /> Copy app info to clipboard
     </button>
-  </SettingsSection>
-
-  <SettingsSection
-    title="Bulk export"
-    sub="Pulls everything for this owner_id. Useful for moving farms or year-end archive."
-  >
-    <div class="export-grid">
-      {#each EXPORTS as e (e.name)}
-        <div class="export-card">
-          <div>
-            <div class="export-name">{e.name}</div>
-            <div class="export-fmt mono">{e.fmt}</div>
-          </div>
-          {#if e.href}
-            <a class="ghost-sm" href={e.href}><FileText size={11} /></a>
-          {:else}
-            <button type="button" class="ghost-sm" disabled><FileText size={11} /></button>
-          {/if}
-        </div>
-      {/each}
-    </div>
-  </SettingsSection>
-
-  <section class="danger-card">
-    <header class="danger-head">
-      <AlertTriangle size={15} strokeWidth={1.75} />
-      <div>
-        <h3 class="serif">Danger zone</h3>
-        <p>Irreversible operations · double-confirm required.</p>
+    {#if data.pluginFailureList.length > 0}
+      <div class="failures" data-testid="plugin-failures">
+        <h3>Plugin files that did not load</h3>
+        <p>Products in these files are missing from pickers until they are fixed.</p>
+        <ul>
+          {#each data.pluginFailureList as f, i (i)}<li class="mono">{f}</li>{/each}
+        </ul>
       </div>
-    </header>
-    <div class="danger-body">
-      {#each DANGER as d (d.title)}
-        <div class="danger-row" class:full-danger={d.danger}>
-          <div class="danger-text">
-            <div class="danger-title">{d.title}</div>
-            <p class="danger-desc">{d.desc}</p>
+    {/if}
+  </SettingsSection>
+
+  {#if data.isOwner}
+    <SettingsSection
+      title="Bulk export"
+      sub="Pulls everything for this owner_id. Useful for moving farms or year-end archive."
+    >
+      <div class="export-grid">
+        {#each EXPORTS as e (e.name)}
+          <div class="export-card">
+            <div>
+              <div class="export-name">{e.name}</div>
+              <div class="export-fmt mono">{e.fmt}</div>
+            </div>
+            {#if e.href}
+              <a class="ghost-sm" href={e.href}><FileText size={11} /></a>
+            {:else}
+              <button type="button" class="ghost-sm" disabled><FileText size={11} /></button>
+            {/if}
           </div>
-          <button type="button" class="danger-btn" data-danger={d.danger} disabled>
-            {d.btn}
-          </button>
+        {/each}
+      </div>
+    </SettingsSection>
+
+    <section class="danger-card">
+      <header class="danger-head">
+        <AlertTriangle size={15} strokeWidth={1.75} />
+        <div>
+          <h3 class="serif">Danger zone</h3>
+          <p>Irreversible operations · double-confirm required.</p>
         </div>
-      {/each}
-    </div>
-  </section>
+      </header>
+      <div class="danger-body">
+        {#each DANGER as d (d.title)}
+          <div class="danger-row" class:full-danger={d.danger}>
+            <div class="danger-text">
+              <div class="danger-title">{d.title}</div>
+              <p class="danger-desc">{d.desc}</p>
+            </div>
+            <button type="button" class="danger-btn" data-danger={d.danger} disabled>
+              {d.btn}
+            </button>
+          </div>
+        {/each}
+      </div>
+    </section>
+  {/if}
 </SettingsShell>
 
 <style>
@@ -137,6 +164,7 @@
     text-transform: uppercase;
   }
   .diag-v {
+    overflow-wrap: anywhere;
     font-size: 12.5px;
     color: var(--color-ink);
     margin-top: 3px;
@@ -156,6 +184,7 @@
     gap: 4px;
   }
   .ghost-sm.with-icon {
+    min-height: 48px;
     margin-top: 14px;
     padding: 6px 12px;
     font-size: 12px;
@@ -270,6 +299,29 @@
     border: 0;
   }
 
+  .failures {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid #e2b69e;
+    border-radius: 8px;
+    background: rgba(186, 75, 56, 0.06);
+  }
+  .failures h3 {
+    margin: 0;
+    font-size: 14px;
+    color: #8a341b;
+  }
+  .failures p {
+    margin: 4px 0 8px;
+    font-size: 13px;
+    color: var(--color-ink-soft);
+  }
+  .failures ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
   .mono {
     font-family: var(--font-mono, ui-monospace, monospace);
   }

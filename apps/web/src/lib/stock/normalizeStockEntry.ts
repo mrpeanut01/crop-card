@@ -33,6 +33,9 @@ export interface StockEntryDraft {
    *  label-OCR + matcher, etc.). May be null when no plugin matches. */
   pluginId?: string | null;
   reorderThreshold?: number;
+  /** Amount printed on the package, in `defaultUnit`. Pre-fills the
+   *  form's on-hand quantity for review; it becomes the first lot. */
+  quantity?: number;
   notes?: string;
   barcode?: string;
   typeId?: string;
@@ -151,6 +154,7 @@ export function draftFromScanResult(
     category?: StockCategory;
     defaultUnit?: string;
     reorderThreshold?: number;
+    packageQuantity?: number;
     notes?: string;
     barcode?: string;
     activeIngredients?: StockEntryDraft['activeIngredients'];
@@ -167,16 +171,18 @@ export function draftFromScanResult(
   if (scan.category) draft.category = scan.category;
   if (scan.defaultUnit) draft.defaultUnit = scan.defaultUnit as StockUnit;
   if (scan.reorderThreshold !== undefined) draft.reorderThreshold = scan.reorderThreshold;
+  if (scan.packageQuantity !== undefined && scan.packageQuantity > 0) {
+    draft.quantity = scan.packageQuantity;
+  }
   if (scan.notes) draft.notes = scan.notes;
   if (scan.barcode) draft.barcode = scan.barcode;
   if (scan.activeIngredients) draft.activeIngredients = scan.activeIngredients;
   if (scan.formulation) draft.formulation = scan.formulation;
 
-  // Auto-bind the top crop-plugin match when its score is high enough
-  // to be unambiguous. The confirm-step UI surfaces alternates so the
-  // operator can override.
+  // #472: pre-select the best crop category match; the form tags it
+  // `data` and the operator can override it through the type-ahead.
   const topMatch = scan.cropPluginMatches?.[0];
-  if (topMatch && topMatch.score >= 0.75) draft.pluginId = topMatch.pluginId;
+  if (topMatch) draft.pluginId = topMatch.pluginId;
 
   if (scan.suggestedType?.matchedTypeId) draft.typeId = scan.suggestedType.matchedTypeId;
   if (scan.seedMeta && Object.keys(scan.seedMeta).length > 0) {

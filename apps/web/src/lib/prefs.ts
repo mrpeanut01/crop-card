@@ -238,6 +238,28 @@ export function formatQuantity(
   return unit.startsWith('°') || unit.startsWith('/') ? `${n}${unit}` : `${n} ${unit}`;
 }
 
+const SQFT_PER_ACRE = 43_560;
+const SQM_PER_SQFT = 0.09290304;
+/** Below this, an area reads in square feet (or square meters). */
+export const SMALL_AREA_ACRES = 0.1;
+
+/** An area in acres for display: "0.25 ac" for a field, "40 sq ft" for a
+ *  garden bed, so a bed never reads as "0 ac". */
+export function formatArea(
+  acres: number | null | undefined,
+  prefs: Pick<Prefs, 'units'>,
+  opts: { digits?: number } = {}
+): string {
+  if (acres === null || acres === undefined || !Number.isFinite(acres)) return '—';
+  if (acres > 0 && acres < SMALL_AREA_ACRES) {
+    const sqft = acres * SQFT_PER_ACRE;
+    return prefs.units === 'metric'
+      ? `${round(sqft * SQM_PER_SQFT, sqft * SQM_PER_SQFT < 10 ? 1 : 0)} m²`
+      : `${round(sqft, sqft < 10 ? 1 : 0)} sq ft`;
+  }
+  return formatQuantity(acres, 'area', prefs, opts);
+}
+
 /** Label-unit first, metric alongside for metric users:
  *  "22 fl oz/ac (1,608 mL/ha)". Use for anything read off a pesticide
  *  label or fed to the dilution/calibration kernel. */

@@ -56,6 +56,7 @@ function referenceLots(itemId: string): LotWithBalance[] {
       const expiresAt = row.expiresAt?.getTime();
       return {
         id: row.id,
+        quantityStatus: row.quantityStatus,
         stockItemId: row.stockItemId,
         lotNumber: row.lotNumber ?? undefined,
         expiresAt,
@@ -79,8 +80,18 @@ function referenceItems(): StockItemWithBalance[] {
       .where(withTenant(stockLots, eq(stockLots.stockItemId, row.id)))
       .all();
     let total = 0;
+    let ordered = 0;
+    let planned = 0;
     let earliestExpiry: number | undefined;
     for (const lot of lots) {
+      if (lot.quantityStatus === 'ordered') {
+        ordered += lot.receivedQuantityHundredths;
+        continue;
+      }
+      if (lot.quantityStatus === 'planned') {
+        planned += lot.receivedQuantityHundredths;
+        continue;
+      }
       total += referenceLotBalance(lot.id);
       const ts = lot.expiresAt?.getTime();
       if (ts !== undefined && (earliestExpiry === undefined || ts < earliestExpiry))
@@ -104,6 +115,8 @@ function referenceItems(): StockItemWithBalance[] {
       pendingRefreshJson: row.pendingRefreshJson ?? undefined,
       pendingRefreshAt: undefined,
       onHand: fromHundredths(total),
+      onOrder: fromHundredths(ordered),
+      planned: fromHundredths(planned),
       isLow: reorder !== null && total <= toHundredths(fromHundredths(reorder)),
       earliestExpiry,
       lotCount: lots.length
@@ -127,7 +140,13 @@ function referenceExpiring(windowDays: number) {
 const lotArb = fc.record({
   expiresInDays: fc.option(fc.integer({ min: -40, max: 60 }), { nil: null }),
   receivedDaysAgo: fc.integer({ min: 0, max: 900 }),
-  deltas: fc.array(fc.integer({ min: -20_000, max: 20_000 }), { maxLength: 6 })
+  deltas: fc.array(fc.integer({ min: -20_000, max: 20_000 }), { maxLength: 6 }),
+  status: fc.constantFrom(
+    'existing' as const,
+    'existing' as const,
+    'ordered' as const,
+    'planned' as const
+  )
 });
 const itemArb = fc.record({
   reorder: fc.option(fc.integer({ min: 0, max: 30_000 }), { nil: null }),
@@ -166,10 +185,12 @@ function seedFarm(ownerId: string, farm: FarmData): void {
               expiresAt:
                 lot.expiresInDays === null ? null : new Date(NOW + lot.expiresInDays * DAY),
               receivedAt: new Date(receivedAt),
-              receivedQuantityHundredths: 10_000
+              receivedQuantityHundredths: 10_000,
+              quantityStatus: lot.status
             })
           )
           .run();
+        if (lot.status !== 'existing') continue;
         for (const delta of lot.deltas) {
           db.insert(stockMovements)
             .values(

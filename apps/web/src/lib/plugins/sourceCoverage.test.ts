@@ -61,6 +61,18 @@ describe('fact paths', () => {
     ]);
   });
 
+  it('lists each coop or pen space figure a species carries', () => {
+    const withSpace = speciesPluginSchema.parse({
+      ...FIXTURE_SPECIES,
+      housingSpace: { indoorSqFtPerAnimal: 4, sourceName: 'Test Extension' }
+    });
+    expect(speciesFactPaths(withSpace)).toContain('housingSpace.indoorSqFtPerAnimal');
+    expect(speciesFactPaths(withSpace)).not.toContain('housingSpace.outdoorSqFtPerAnimal');
+    expect(() =>
+      speciesPluginSchema.parse({ ...FIXTURE_SPECIES, housingSpace: { sourceName: 'Nothing' } })
+    ).toThrow();
+  });
+
   it('lists grazing numbers and true safety flags only', () => {
     const g = grazingRestrictionsSchema.parse({
       grazeDays: 7,

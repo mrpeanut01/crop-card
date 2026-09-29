@@ -45,7 +45,7 @@
     },
     equipment: {
       text: 'No equipment yet.',
-      href: '/inventory/sprayer/add',
+      href: '/equipment?add=sprayer',
       action: 'Add a sprayer'
     },
     careGuide: {

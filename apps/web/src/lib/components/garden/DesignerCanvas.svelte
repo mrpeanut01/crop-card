@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import { footprintBounds, pointFt, rectFt, snap } from '$lib/garden/geometry';
+  import { footprintBounds, pointFt, pointInBedIn, rectFt, snap } from '$lib/garden/geometry';
+  import { familyGlyph } from '$lib/garden/familyGlyph';
   import { shortDate } from '$lib/garden/occupancy';
-  import type { BedLayout, PlacedPlanting, PointFt, RectFt } from '$lib/garden/types';
+  import type { BedLayout, Footprint, PlacedPlanting, PointFt, RectFt } from '$lib/garden/types';
   import { getDesigner } from './designerState.svelte';
   import {
     clampView,
@@ -245,13 +246,14 @@
     if (editable && down.cropId && d.selectedCropId === down.cropId) {
       const p = d.design.plantings.find((q) => q.cropId === down!.cropId);
       const bed = p ? d.bed(p.blockId) : undefined;
-      if (p?.footprint && bed) {
+      const fp = p ? fpOf(p) : null;
+      if (p && fp && bed) {
         return {
           kind: 'planting',
           cropId: p.cropId,
           blockId: bed.blockId,
           start: down.point,
-          origin: footprintBounds(p.footprint, bed)
+          origin: footprintBounds(fp, bed)
         };
       }
     }
@@ -357,7 +359,17 @@
             center.y >= b.rect.y &&
             center.y <= b.rect.y + b.rect.l
         );
-      if (targetBed) {
+      const moved = d.design.plantings.find((q) => q.cropId === finished.cropId);
+      const packed = moved && !moved.footprint ? d.displayFootprints.get(moved.cropId) : undefined;
+      if (targetBed && packed) {
+        const at = pointInBedIn(center, targetBed);
+        if (at) {
+          await d.movePlantingTo(finished.cropId, targetBed.blockId, at, {
+            w_in: packed.w_in,
+            l_in: packed.l_in
+          });
+        }
+      } else if (targetBed) {
         d.mode = { kind: 'move-planting', cropId: finished.cropId };
         await d.tap(center, targetBed.blockId, null);
       }
@@ -478,8 +490,13 @@
     return d.preview?.blockId === bed.blockId ? d.preview.rect : bed.rect;
   }
 
+  /** The saved spot, else where the diagram draws an unplaced planting. */
+  function fpOf(p: PlacedPlanting): Footprint | null {
+    return p.footprint ?? d.displayFootprints.get(p.cropId) ?? null;
+  }
+
   function shown(p: PlacedPlanting): 'now' | 'later' | null {
-    if (!p.footprint) return null;
+    if (!fpOf(p)) return null;
     const i = d.intervalById.get(p.cropId);
     if (i && d.dateMs >= i.startMs && d.dateMs < i.endMs) return 'now';
     return d.wholeSeason ? 'later' : null;
@@ -557,15 +574,38 @@
 
   /** Full crop name when it fits, else a short badge (the inspector and the
    *  printed legend carry the full name). */
-  function footprintLabel(p: PlacedPlanting, widthFt: number): string {
-    const name = p.varietyDisplayName.split(/[—(]/)[0].trim();
+  function footprintLabelFit(
+    p: PlacedPlanting,
+    widthFt: number
+  ): { text: string; abbreviated: boolean } {
+    const name = p.varietyDisplayName.split(/[—(,]/)[0].trim();
     const count = p.plantCount ? ` · ${p.plantCount}` : '';
     const font = fontFt * 0.9;
     const room = widthFt - 0.3;
-    if (textWidthFt(`${name}${count}`, font) <= room) return `${name}${count}`;
+    for (const text of [`${name}${count}`, name, `${name.split(/\s+/)[0]}${count}`]) {
+      if (textWidthFt(text, font) <= room) return { text, abbreviated: false };
+    }
     const first = name.split(/\s+/)[0];
-    if (textWidthFt(`${first}${count}`, font) <= room) return `${first}${count}`;
-    return fitText(cropBadge(name), room, font);
+    if (textWidthFt(first, font) <= room) return { text: first, abbreviated: false };
+    return { text: fitText(cropBadge(name), room, font), abbreviated: true };
+  }
+
+  /** The crop's name for a footprint. The family icon gives way when it
+   *  would cut the name down to a few letters (#481). */
+  function footprintLabel(
+    p: PlacedPlanting,
+    widthFt: number,
+    iconFt: number,
+    showIcon: boolean
+  ): { text: string; icon: boolean } {
+    if (showIcon) {
+      const withIcon = footprintLabelFit(p, widthFt - iconFt);
+      if (!withIcon.abbreviated) return { text: withIcon.text, icon: true };
+      const bare = footprintLabelFit(p, widthFt);
+      if (!bare.abbreviated) return { text: bare.text, icon: false };
+      return { text: withIcon.text, icon: true };
+    }
+    return { text: footprintLabelFit(p, widthFt).text, icon: false };
   }
 </script>
 
@@ -702,8 +742,9 @@
         />
         {#if !d.preview || d.preview.blockId !== bed.blockId}
           {#each d.plantingsIn(bed.blockId) as p (p.cropId)}
-            {#if shown(p) && p.footprint}
-              {@const pad = padRect(footprintBounds(p.footprint, bed), hitFt)}
+            {@const hfp = fpOf(p)}
+            {#if shown(p) && hfp}
+              {@const pad = padRect(footprintBounds(hfp, bed), hitFt)}
               <rect
                 class="hit"
                 data-crop-id={p.cropId}
@@ -717,23 +758,34 @@
           {/each}
           {#each d.plantingsIn(bed.blockId) as p (p.cropId)}
             {@const when = shown(p)}
-            {#if when && p.footprint}
+            {@const vfp = fpOf(p)}
+            {#if when && vfp}
               {@const pr =
                 plantingPreview?.cropId === p.cropId
                   ? plantingPreview.rect
-                  : footprintBounds(p.footprint, bed)}
+                  : footprintBounds(vfp, bed)}
               {@const stage = d.stageOf(p.cropId)}
               {@const psel = d.selectedCropId === p.cropId}
+              {@const notPlaced = !p.footprint}
+              {@const glyph = familyGlyph(p.cropFamily)}
+              {@const iconFt = Math.min(pr.w - 0.1, pr.l - 0.1, fontFt * 1.3)}
+              {@const showIcon = iconFt * pxPerFt >= 12}
+              {@const fpLabel = footprintLabel(p, pr.w, iconFt, showIcon)}
               <g
                 class="planting {when}"
                 class:psel
+                class:notplaced={notPlaced}
                 data-crop-id={p.cropId}
                 data-testid="footprint"
+                data-placed={notPlaced ? 'false' : 'true'}
+                data-family-glyph={glyph.key}
                 role="button"
                 tabindex={selected || psel ? 0 : -1}
                 aria-label="{p.varietyDisplayName}{p.plantCount
                   ? `, ${p.plantCount} plants`
-                  : ''}{stage ? `, ${stage.toLowerCase()}` : ''}"
+                  : ''}{stage ? `, ${stage.toLowerCase()}` : ''}{notPlaced
+                  ? ', not placed yet'
+                  : ''}, {glyph.label.toLowerCase()}"
                 onkeydown={(e) => onPlantingKey(e, p)}
               >
                 <rect
@@ -743,18 +795,43 @@
                   width={pr.w}
                   height={pr.l}
                   fill={when === 'now' ? `url(#fam-${familyTone(p.cropFamily)})` : 'none'}
+                  fill-opacity={notPlaced ? 0.45 : 1}
                   vector-effect="non-scaling-stroke"
                 />
+                {#if fpLabel.icon}
+                  <path
+                    class="glyph"
+                    d={glyph.d}
+                    transform="translate({pr.x + 0.08} {pr.y + 0.08}) scale({iconFt / 10})"
+                    vector-effect="non-scaling-stroke"
+                    aria-hidden="true"
+                  />
+                {/if}
                 {#if when === 'now'}
                   {#each dotsFor.get(p.cropId) ?? [] as [cx, cy], i (i)}
                     <circle class="dot" {cx} {cy} r={Math.min(0.18, pr.w / 6, pr.l / 6)} />
                   {/each}
                 {/if}
                 {#if pr.w * pxPerFt > 24 && pr.l * pxPerFt > 16}
-                  <text class="fp-label" x={pr.x + 0.15} y={pr.y + fontFt} font-size={fontFt * 0.9}>
-                    {footprintLabel(p, pr.w)}
+                  {@const labelX = pr.x + 0.15 + (fpLabel.icon ? iconFt : 0)}
+                  <text
+                    class="fp-label"
+                    data-testid="footprint-label"
+                    x={labelX}
+                    y={pr.y + fontFt}
+                    font-size={fontFt * 0.9}
+                  >
+                    {fpLabel.text}
                   </text>
-                  {#if stage && pr.l * pxPerFt > 34}
+                  {#if notPlaced && pr.l * pxPerFt > 34}
+                    <text
+                      class="stage notplaced-note"
+                      x={pr.x + 0.15}
+                      y={pr.y + fontFt * 2}
+                      font-size={fontFt * 0.8}
+                      >{fitText('Not placed yet', pr.w - 0.3, fontFt * 0.8)}</text
+                    >
+                  {:else if stage && pr.l * pxPerFt > 34}
                     <text
                       class="stage"
                       x={pr.x + 0.15}
@@ -763,7 +840,7 @@
                     >
                   {/if}
                 {/if}
-                {#if psel && d.canEdit}
+                {#if psel && d.canEdit && !notPlaced}
                   <rect
                     class="handle"
                     data-handle="planting"
@@ -971,6 +1048,21 @@
     stroke: var(--color-ink-muted);
     stroke-dasharray: 3 3;
     opacity: 0.8;
+  }
+  .planting.notplaced .fp {
+    stroke-dasharray: 5 4;
+    stroke: var(--color-ink-soft);
+  }
+  .glyph {
+    fill: none;
+    stroke: var(--color-ink);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+  .notplaced-note {
+    font-style: italic;
   }
   .planting.psel .fp {
     stroke: var(--color-rust);

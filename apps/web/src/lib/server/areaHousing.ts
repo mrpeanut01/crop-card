@@ -15,9 +15,13 @@ interface AreaLike {
   details?: unknown;
 }
 
-function coopCapacity(area: AreaLike): unknown {
+function coopCapacity(
+  area: AreaLike
+): { value: unknown; provenance: 'data' | 'manual' } | undefined {
   if (area.kind !== 'coop_pen') return undefined;
-  return (area.details as { capacity?: unknown } | null | undefined)?.capacity;
+  const d = area.details as { capacity?: unknown; capacityProvenance?: unknown } | null | undefined;
+  if (d?.capacity === undefined) return undefined;
+  return { value: d.capacity, provenance: d.capacityProvenance === 'data' ? 'data' : 'manual' };
 }
 
 /** Pure assembly, split out so tests can pass their own rows and species. */
@@ -61,12 +65,36 @@ export function buildHousingByArea(input: {
     });
     h.total += 1;
   }
+  const heads = new Map<string, Map<string, number>>();
+  const count = (areaId: string, speciesId: string, n: number) => {
+    const m = heads.get(areaId) ?? new Map<string, number>();
+    m.set(speciesId, (m.get(speciesId) ?? 0) + n);
+    heads.set(areaId, m);
+  };
+  for (const g of input.groups) {
+    if (g.status === 'active' && g.housingFieldId) count(g.housingFieldId, g.speciesId, g.total);
+  }
+  for (const a of input.animals) {
+    if (a.status === 'active' && !a.groupId && a.housingFieldId) {
+      count(a.housingFieldId, a.speciesId, 1);
+    }
+  }
+  for (const [areaId, m] of heads) {
+    if (!out[areaId]) continue;
+    out[areaId].speciesIds = [...m.entries()]
+      .sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))
+      .map(([id]) => id);
+  }
   for (const area of input.areas) {
     const cap = coopCapacity(area);
     if (cap === undefined) continue;
     const count = out[area.id]?.total ?? 0;
-    const state = capacityState(cap, count);
-    if (state) slot(area.id).capacity = state;
+    const state = capacityState(cap.value, count);
+    if (state) {
+      const h = slot(area.id);
+      h.capacity = state;
+      h.capacityProvenance = cap.provenance;
+    }
   }
   return out;
 }

@@ -46,7 +46,7 @@ The monthly budget is the real brake. The daily caps only stop a whole month bei
 | scan-label                               | 3    | 20     | 40   |
 | scan-url                                 | 1    | 10     | 20   |
 | plugin-scan                              | 1    | 10     | 20   |
-| allocate (schedule and refine draw here) | 1    | 5      | 10   |
+| allocate (schedule and refine draw here) | 5    | 25     | 50   |
 | groups                                   | 1    | 5      | 10   |
 | optimize                                 | 0    | 2      | 5    |
 | plugin-search (web search)               | 1    | 10     | 15   |
@@ -55,9 +55,11 @@ The monthly budget is the real brake. The daily caps only stop a whole month bei
 
 A cap of 0 degrades through the existing `over-cap` path, so no new degradation condition was needed.
 
+The allocate caps were raised from 1 / 5 / 10 to 5 / 25 / 50 (#479) so a farmer can iterate on a plan in one sitting. So that the Free cap is real, AI planning (the `allocate` endpoint, which schedule and refine also log under) does not draw on the budget for the other AI help. It has its own monthly planning budget instead (`planningMonthlyUsd` in `lib/billing/plans.ts`): $1.50 on Free, $6 on Grower and $12 on Farm. At about $0.05 a run that is roughly 30, 120 and 240 runs a month, and it bounds what one farm can cost against the global operator cap (a Farm farm at 50 runs a day used to be limited only by that cap). These are pricing values, not measurements, and can be changed in `plans.ts`. When the owner types a lower monthly limit on /settings/ai, that limit covers all AI spend, planning included, and the form says so. Planning spend still counts toward the free pool and the global cap. Recompute the global cap with the planning budgets included: free pool + 0.6 x (paid owners x (plan budget + planning budget)) + $25. Once any limit is reached, planning falls back to the deterministic engine through `aiTry`.
+
 ### What a budget buys
 
-At the researched unit costs, $0.50 is about three or four full AI plans, or about 100 cheap Haiku calls, or a mix such as one plan, 30 photo questions and five label scans. That is close to Seedtime's ten free credits. Grower's $4 is about 30 plans, or 20 web-search enrichments plus daily light use. Farm's $10 covers heavy use including receipt scans.
+At the researched unit costs, $0.50 is about 100 cheap Haiku calls, or a mix such as 30 photo questions and five label scans; AI planning sits outside it on its daily cap. That is close to Seedtime's ten free credits. Grower's $4 is about 20 web-search enrichments plus daily light use. Farm's $10 covers heavy use including receipt scans.
 
 ## Trials, failed payments, downgrades and cancelling
 

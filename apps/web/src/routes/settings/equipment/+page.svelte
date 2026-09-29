@@ -30,7 +30,7 @@
     sub="Calibrated GPA drives every tank-mix calculation. Sprayers that need decon block the next spray until cleaned."
   >
     {#snippet right()}
-      <a class="primary-sm" href="/inventory/sprayer/add"><Plus size={11} /> Add sprayer</a>
+      <a class="primary-sm" href="/equipment?add=sprayer"><Plus size={11} /> Add sprayer</a>
     {/snippet}
 
     {#if data.sprayers.length === 0}
@@ -40,7 +40,7 @@
       <div class="row">
         <div class="icon"><SprayCan size={16} strokeWidth={1.75} /></div>
         <div class="row-text">
-          <a class="row-title" href="/inventory/sprayer/{s.id}">{s.label}</a>
+          <a class="row-title" href="/equipment/{s.id}">{s.label}</a>
           <div class="row-sub mono">
             {#if s.calibratedGpa != null}
               {s.calibratedGpa.toFixed(1)} GPA{metricGpa(s.calibratedGpa)}{s.calibrationDate

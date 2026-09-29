@@ -752,7 +752,7 @@
       >
         <div class="block-name">{b.blockLabel ?? b.name}</div>
         <div class="block-meta">
-          {#if b.acres != null}<span>{fmt.qty(b.acres, 'area')}</span>{/if}
+          {#if b.acres != null}<span>{fmt.area(b.acres)}</span>{/if}
           <span class="sun sun-{b.sunExposure ?? 'full'}">{b.sunExposure ?? 'full'}</span>
           {#if b.eastWestIndex != null}<span class="axis">E{b.eastWestIndex}</span>{/if}
         </div>

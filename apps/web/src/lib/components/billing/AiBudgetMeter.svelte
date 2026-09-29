@@ -50,6 +50,7 @@
   {:else if level === 'out'}
     <p class="note" data-testid="ai-limit-note">
       You've used this month's AI help. CropCard keeps working without it and it resets on the 1st.
+      AI planning has its own daily limit.
     </p>
     {#if upgradeName && showUpsell}
       {#if isOwner}
@@ -62,7 +63,7 @@
     {/if}
   {:else if usage.quickOnly}
     <p class="note" data-testid="ai-low-note">
-      Enough left for quick help, not a full AI plan. Plans work without AI until the 1st.
+      Enough left for quick help, not a web lookup. AI planning has its own daily limit.
     </p>
     {#if upgradeName && showUpsell && !compact}
       {#if isOwner}

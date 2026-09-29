@@ -22,6 +22,7 @@
   import AddTaskModal from '$lib/components/plan/AddTaskModal.svelte';
   import Hint from '$lib/components/ui/Hint.svelte';
   import WhereWillThisGrow from '$lib/components/plan/WhereWillThisGrow.svelte';
+  import PageSetupQuestions from '$lib/components/setup/PageSetupQuestions.svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import SetupSpot from '$lib/components/setup/SetupSpot.svelte';
   import type { SetupArea, SetupSpotResult } from '$lib/setup/types';
@@ -1234,6 +1235,8 @@
       displayName: string;
       shortName?: string;
       onHand: number;
+      onOrder?: number;
+      planned?: number;
       defaultUnit: string;
       cropFamily: string | null;
     }>
@@ -1897,6 +1900,24 @@
      tabbed editor below for now — clicking "Edit block" / "Add planting"
      / "Refine with AI" routes the operator into the existing flows.
 -->
+{#if data.setupPrompts}
+  <PageSetupQuestions
+    nudges={data.setupPrompts.nudges}
+    scope={`plan:${data.user?.activeOwnerId ?? ''}`}
+    kicker="Plan"
+    latLon={data.setupLatLon}
+    year={data.currentYear ?? new Date().getFullYear()}
+    lastYearSetup={data.lastYearSetup ?? null}
+  />
+{/if}
+
+{#if !data.canEdit && data.setupPrompts?.gate === 'blocks'}
+  <div class="helper-gate" role="status" data-testid="plan-helper-gate">
+    <strong>Nothing to plan on yet.</strong>
+    This farm has no fields or beds yet. Ask the owner to add where things grow.
+  </div>
+{/if}
+
 {#if data.canEdit && (data.blocks.length === 0 || focusArea)}
   <WhereWillThisGrow
     onName={() => (spotSheetOpen = true)}
@@ -2024,6 +2045,8 @@
     displayName: s.displayName,
     shortName: s.shortName,
     onHand: s.onHand,
+    onOrder: s.onOrder,
+    planned: s.planned,
     defaultUnit: s.defaultUnit as StockUnit,
     cropPluginId: s.cropPluginId
   }))}
@@ -3559,6 +3582,8 @@
       displayName: s.displayName,
       shortName: s.shortName,
       onHand: s.onHand,
+      onOrder: s.onOrder,
+      planned: s.planned,
       defaultUnit: s.defaultUnit,
       cropPluginId: s.cropPluginId,
       cropFamily: s.cropFamily ?? null
@@ -3569,8 +3594,11 @@
       blockLabel: b.blockLabel,
       acres: b.acres,
       sunExposure: b.sunExposure,
+      widthFt: b.widthFt,
+      lengthFt: b.lengthFt,
       plantings: b.plantings.map((p) => ({ varietyDisplayName: p.varietyDisplayName }))
     }))}
+    areas={data.setupAreas ?? []}
     plantingGuides={data.plantingGuides}
     cropCatalog={data.cropCatalog}
     seasonSetup={data.seasonSetup ?? null}
@@ -5774,5 +5802,12 @@
   .bar-edit-foot .btn-secondary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+  .helper-gate {
+    margin: 0 0 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--color-divider, #e5e7e0);
+    border-radius: 8px;
+    background: var(--color-cream, #fbfaf3);
   }
 </style>

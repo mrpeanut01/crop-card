@@ -53,6 +53,7 @@ test.describe('soil tests on /fertility', () => {
     expect(before).toBeGreaterThan(0);
 
     await page.goto(`/fertility?block=${blockId}`);
+    await page.waitForLoadState('networkidle');
     await expect(page.getByRole('heading', { name: 'Fertility', level: 1 })).toBeVisible();
     const form = page.getByTestId('setup-soil-test');
     // A click before the page hydrates does nothing, so retry until it opens.

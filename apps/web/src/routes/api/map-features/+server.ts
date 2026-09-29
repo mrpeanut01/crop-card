@@ -8,8 +8,10 @@ import { mapFeatureCreateSchema } from '$lib/farm/apiSchemas';
 import {
   MAP_FEATURE_KINDS,
   parseFeatureGeometry,
+  servesManyAreas,
   validateFeatureDetails
 } from '$lib/farm/mapFeatures';
+import { checkAreaIds } from '$lib/server/mapFeatureAreaIds';
 
 export const GET: RequestHandler = ({ url }) => {
   const kinds = parseKindFilter(url.searchParams.get('kind'), MAP_FEATURE_KINDS);
@@ -40,12 +42,18 @@ export const POST: RequestHandler = async (event) => {
   if (!details.ok) return json({ error: details.message }, { status: 400 });
   const foreign = rejectForeignRefs(['fieldId', fieldId, getField]);
   if (foreign) return foreign;
+  const areaIds = parsed.data.areaIds;
+  if (areaIds !== undefined) {
+    const bad = checkAreaIds(kind, areaIds);
+    if (bad) return bad;
+  }
   const mapFeature = createMapFeature({
     kind,
     name,
     geometry: geom.geometry,
     fieldId: fieldId ?? null,
-    details: details.details
+    details: details.details,
+    ...(areaIds !== undefined && servesManyAreas(kind) ? { areaIds } : {})
   });
   return json({ mapFeature }, { status: 201 });
 };

@@ -1,5 +1,13 @@
 import { test as base, expect, type Page } from '@playwright/test';
 
+function markAlphaWelcomeSeen(): void {
+  try {
+    localStorage.setItem('cropcard.alpha-welcome.seen', '1');
+  } catch {
+    /* storage blocked: the spec sees the welcome */
+  }
+}
+
 /**
  * Every spec runs hermetically: third-party requests (map tiles, weather,
  * anything off the preview origin) are answered with an empty 204 so
@@ -7,15 +15,31 @@ import { test as base, expect, type Page } from '@playwright/test';
  * uptime — and no "Failed to load resource" console noise leaks into the
  * console-error assertions.
  */
-export const test = base.extend<{ hermetic: void }>({
+export const test = base.extend<{ hermetic: void; showAlphaWelcome: boolean }>({
+  // The one-time alpha welcome on /today (#466) is a modal; specs that are
+  // not about it start with it already seen on this device.
+  showAlphaWelcome: [false, { option: true }],
   hermetic: [
-    async ({ page, baseURL }, use) => {
+    async ({ page, baseURL, browser, showAlphaWelcome }, use) => {
+      const originalNewContext = browser.newContext.bind(browser);
+      if (!showAlphaWelcome) {
+        await page.context().addInitScript(markAlphaWelcomeSeen);
+        browser.newContext = async (...args: Parameters<typeof browser.newContext>) => {
+          const ctx = await originalNewContext(...args);
+          await ctx.addInitScript(markAlphaWelcomeSeen);
+          return ctx;
+        };
+      }
       const origin = new URL(baseURL ?? 'http://localhost:5173').origin;
       await page.route(
         (url) => url.origin !== origin && url.protocol.startsWith('http'),
         (route) => route.fulfill({ status: 204, body: '' })
       );
-      await use();
+      try {
+        await use();
+      } finally {
+        browser.newContext = originalNewContext;
+      }
     },
     { auto: true }
   ]

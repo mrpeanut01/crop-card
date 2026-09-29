@@ -1,36 +1,48 @@
 /**
- * Phase 25c (#88) — /settings/advanced loader.
- *
- * Diagnostics (build/rules/tenant/backup) + bulk-export menu + danger
- * zone landing. Matches the canonical mockup at
- * `docs/design/almanac/direction-almanac-settings.jsx` ASettingsAdvancedScreen.
+ * /settings/advanced: app info (build, rules version, plugin counts and
+ * load failures) for everyone on the farm, plus the owner's bulk export and
+ * danger zone.
  */
 
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { listStockItems } from '$lib/db/stock';
+import { countPlantings, listBlocks } from '$lib/db/blocks';
 import { listTokensForOwner } from '$lib/server/apiTokens';
+import { getRegistry, getRegistryStats } from '$lib/server/registry';
 import { RULES_VERSION } from '$lib/safety/version';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = ({ locals }) => {
+export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
-  if (locals.user.role !== 'owner') throw error(403, 'owner-only');
+  const isOwner = locals.user.role === 'owner';
 
   const ownerId = locals.user.activeOwnerId;
   const ownerRow = ownerId ? db.select().from(owners).where(eq(owners.id, ownerId)).get() : null;
+  const registry = await getRegistry();
+  const stats = getRegistryStats();
+  const canSeeFailures = isOwner || locals.user.isSuperadmin === true;
 
   return {
-    stockItemCount: listStockItems().length,
-    apiTokenCount: ownerId ? listTokensForOwner(ownerId).length : 0,
+    isOwner,
+    stockItemCount: isOwner ? listStockItems().length : 0,
+    apiTokenCount: isOwner && ownerId ? listTokensForOwner(ownerId).length : 0,
     advanced: {
-      buildVersion: 'phase-25c',
+      buildVersion: process.env.BUILD_SHA || 'dev',
       rulesVersion: RULES_VERSION,
-      pluginFailures: 0,
+      pluginFailures: stats.failures.length,
       tenantId: ownerRow?.slug ?? ownerRow?.id ?? '—',
       lastBackup: 'Litestream · live'
-    }
+    },
+    appData: {
+      crops: registry.crops().length,
+      herbicides: registry.herbicides().length,
+      plugins: registry.all().length,
+      blocks: listBlocks({ plantings: 'none' }).length,
+      plantings: countPlantings()
+    },
+    pluginFailureList: canSeeFailures ? stats.failures : []
   };
 };

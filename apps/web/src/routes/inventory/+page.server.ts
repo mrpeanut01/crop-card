@@ -1,33 +1,27 @@
 /**
  * Sprint 7 / Phase 27B+C (#257) — unified inventory loader.
  *
- * Replaces three drifted shells (/stock, /settings/plugins,
- * /settings/sprayers) with ONE canonical surface per CLAUDE.md
- * Invariant 8. The active inventory `type` lives in the URL search
- * param (`?type=pesticide|fertility|seed|crop|sprayer`); the loader
- * returns:
+ * One canonical surface per CLAUDE.md Invariant 8. The active inventory
+ * `type` lives in the URL search param (`?type=pesticide|fertility|seed|crop`);
+ * the loader returns:
  *
- *   - `counts`     — per-type row counts for the 5-chip type-swap badge
- *   - `mode`       — 'stock' | 'catalog' (toggle; sprayer + crop have
- *                    only 'stock' or only 'catalog' respectively)
+ *   - `counts`     — per-type row counts for the type-swap chip badges
+ *   - `mode`       — 'stock' | 'catalog' (crop is catalog only)
  *   - `rows`       — type-specific row shape consumed by `A_InventoryList`
  *
- * The old routes (/stock, /settings/plugins, /settings/sprayers) stay
- * live in parallel for diff comparison until the Sprint 9 cutover.
+ * Sprayers are equipment (#474): the old `?type=sprayer` view 308s to
+ * /equipment.
  */
 
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { listStockItems, type StockCategory, type StockItemWithBalance } from '$lib/db/stock';
-import { listEquipment } from '$lib/db/equipment';
 import { getRegistry } from '$lib/server/registry';
 import { INVENTORY_TYPES, type InventoryType } from '$lib/inventory/types';
 
 /** Row shape consumed by `A_InventoryList`. Per-type columns are
  *  selected at render time via the `kind` discriminator. */
-export type InventoryRow =
-  | (StockRow & { kind: 'stock' })
-  | (CatalogRow & { kind: 'catalog' })
-  | (SprayerRow & { kind: 'sprayer' });
+export type InventoryRow = (StockRow & { kind: 'stock' }) | (CatalogRow & { kind: 'catalog' });
 
 export interface StockRow {
   id: string;
@@ -36,12 +30,17 @@ export interface StockRow {
   category: StockCategory;
   /** True onHand count summed across lots; 0 when no lots received. */
   onHand: number;
+  /** Expected on ordered and planned lots (#475); never part of onHand. */
+  onOrder?: number;
+  planned?: number;
   defaultUnit: string;
   lotCount: number;
   reorderThreshold?: number;
   isLow: boolean;
   earliestExpiry?: number;
   pluginId?: string;
+  /** Seed only: the crop category's name, e.g. "Tomato, Cherokee Purple". */
+  cropName?: string;
 }
 
 export interface CatalogRow {
@@ -57,27 +56,11 @@ export interface CatalogRow {
   hash: string;
 }
 
-export interface SprayerRow {
-  id: string;
-  label: string;
-  nozzleType?: string;
-  tankGal?: number;
-  measuredGpa?: number;
-  lastCalibratedAt?: number;
-  lastChemistryClass?: string;
-  lastDeconAt?: number;
-  /** Decon required when last product is restricted-use AND no decon
-   *  recorded since. Computed here so the list table renders without
-   *  re-running the safety-kernel query. */
-  deconRequired: boolean;
-}
-
 const TYPE_TO_STOCK_CATEGORIES: Record<InventoryType, StockCategory[] | null> = {
   pesticide: ['herbicide', 'insecticide', 'fungicide'],
   fertility: ['fertilizer'],
   seed: ['seed'],
-  crop: null,
-  sprayer: null
+  crop: null
 };
 
 const TYPE_TO_PLUGIN_TYPES: Record<InventoryType, ReadonlyArray<CatalogRow['pluginType']> | null> =
@@ -85,8 +68,7 @@ const TYPE_TO_PLUGIN_TYPES: Record<InventoryType, ReadonlyArray<CatalogRow['plug
     pesticide: ['herbicide', 'insecticide', 'fungicide'],
     fertility: ['fertilizer'],
     seed: ['crop'],
-    crop: ['crop'],
-    sprayer: null
+    crop: ['crop']
   };
 
 function parseType(raw: string | null): InventoryType {
@@ -98,7 +80,6 @@ function parseType(raw: string | null): InventoryType {
 
 function parseMode(raw: string | null, type: InventoryType): 'stock' | 'catalog' {
   if (type === 'crop') return 'catalog';
-  if (type === 'sprayer') return 'stock';
   return raw === 'catalog' ? 'catalog' : 'stock';
 }
 
@@ -114,6 +95,8 @@ function stockRowsFor(type: InventoryType, items: StockItemWithBalance[]): Stock
       shortName: i.shortName,
       category: i.category,
       onHand: i.onHand,
+      onOrder: i.onOrder,
+      planned: i.planned,
       defaultUnit: i.defaultUnit,
       lotCount: i.lotCount,
       reorderThreshold: i.reorderThreshold,
@@ -155,33 +138,12 @@ async function catalogRowsFor(type: InventoryType): Promise<CatalogRow[]> {
   return out.sort((a, b) => a.displayName.localeCompare(b.displayName));
 }
 
-function sprayerRows(): SprayerRow[] {
-  return listEquipment({ type: 'sprayer' }).map((eq) => {
-    const spec = (eq.spec ?? {}) as { tankGal?: number; nozzle?: string };
-    const lastUsed = eq.state.lastUsedAt;
-    const lastDecon = eq.state.lastDeconAt;
-    const deconRequired = !!(lastUsed && (!lastDecon || lastDecon < lastUsed));
-    return {
-      id: eq.id,
-      label: eq.label,
-      nozzleType: spec.nozzle,
-      tankGal: spec.tankGal,
-      measuredGpa: eq.state.calibratedGpa,
-      lastCalibratedAt: eq.state.calibrationDate,
-      lastChemistryClass: eq.state.lastChemistryClass,
-      lastDeconAt: lastDecon,
-      deconRequired
-    };
-  });
-}
-
 async function buildCounts(items: StockItemWithBalance[]): Promise<Record<InventoryType, number>> {
   const counts = {
     pesticide: 0,
     fertility: 0,
     seed: 0,
-    crop: 0,
-    sprayer: 0
+    crop: 0
   } as Record<InventoryType, number>;
 
   for (const i of items) {
@@ -200,11 +162,11 @@ async function buildCounts(items: StockItemWithBalance[]): Promise<Record<Invent
     if (t === 'crop') counts.crop++;
   }
 
-  counts.sprayer = listEquipment({ type: 'sprayer' }).length;
   return counts;
 }
 
 export const load: PageServerLoad = async ({ url, locals }) => {
+  if (url.searchParams.get('type') === 'sprayer') throw redirect(308, '/equipment');
   const type = parseType(url.searchParams.get('type'));
   const mode = parseMode(url.searchParams.get('mode'), type);
 
@@ -212,12 +174,17 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const counts = await buildCounts(items);
 
   let rows: InventoryRow[];
-  if (type === 'sprayer') {
-    rows = sprayerRows().map((r) => ({ ...r, kind: 'sprayer' as const }));
-  } else if (mode === 'catalog' || type === 'crop') {
+  if (mode === 'catalog' || type === 'crop') {
     rows = (await catalogRowsFor(type)).map((r) => ({ ...r, kind: 'catalog' as const }));
   } else {
-    rows = stockRowsFor(type, items).map((r) => ({ ...r, kind: 'stock' as const }));
+    const stock = stockRowsFor(type, items);
+    if (type === 'seed' && stock.some((r) => r.pluginId)) {
+      const registry = await getRegistry();
+      for (const r of stock) {
+        if (r.pluginId) r.cropName = registry.get(r.pluginId)?.plugin.displayName;
+      }
+    }
+    rows = stock.map((r) => ({ ...r, kind: 'stock' as const }));
   }
 
   return {

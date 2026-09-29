@@ -1,5 +1,7 @@
 /** Client-safe Card model shared by the pure builders, the renderer and print. */
 
+import type { GlyphKey } from '$lib/garden/familyGlyph';
+
 export const CARD_KINDS = [
   'planting',
   'area',
@@ -51,6 +53,22 @@ export interface CardProvenance {
 
 /** One bed on a garden Area's bed map, in the Area's feet grid. `crops`
  *  lists what is in the bed on the card's date. */
+/** One planting drawn inside its bed on the printed map (#481), in the
+ *  Area's feet like the bed. `placed` is false for a planting with no spot
+ *  yet, drawn where it would fit; `later` is one scheduled after the day. */
+export interface CardBedMapPlanting {
+  name: string;
+  glyph: GlyphKey;
+  x: number;
+  y: number;
+  w: number;
+  l: number;
+  placed: boolean;
+  later: boolean;
+  /** Planting date for a later one, `YYYY-MM-DD`. */
+  from?: string | null;
+}
+
 export interface CardBedMapBed {
   name: string;
   kind: 'bed' | 'container';
@@ -59,6 +77,8 @@ export interface CardBedMapBed {
   w: number;
   l: number;
   crops: string[];
+  /** Absent on cards built before #481. */
+  plantings?: CardBedMapPlanting[];
 }
 
 /** Garden and greenhouse Areas carry a to-scale sketch of their beds. */

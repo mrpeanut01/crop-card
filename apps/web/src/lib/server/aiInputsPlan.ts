@@ -422,6 +422,7 @@ function applySubstitutions(
       rateAmount: sub.rateAmount,
       rateUnit: sub.rateUnit,
       totalAmount: Math.round(sub.rateAmount * app.acres * 100) / 100,
+      productSource: 'ai' as const,
       rationale: `${app.rationale} (AI: ${sub.rationale})`
     };
   });

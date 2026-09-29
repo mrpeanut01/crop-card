@@ -12,8 +12,7 @@
     pesticide: 'Herbicides, insecticides and fungicides on the shelf.',
     fertility: 'Fertilizer, compost and other amendments.',
     seed: 'Seed packets and bags, with their lot numbers.',
-    crop: "A crop the library doesn't have yet.",
-    sprayer: 'Backpack, ATV or boom sprayers.'
+    crop: "A crop the library doesn't have yet."
   };
 </script>
 

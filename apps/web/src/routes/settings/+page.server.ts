@@ -27,7 +27,8 @@ import { usersForOwner } from '$lib/db/users';
 import { listInvitesForOwner } from '$lib/server/invites';
 import { listTokensForOwner } from '$lib/server/apiTokens';
 import { RULES_VERSION } from '$lib/safety/version';
-import { getRegistry } from '$lib/server/registry';
+import { needsDecon } from '$lib/equipment/decon';
+import { getRegistry, getRegistryStats } from '$lib/server/registry';
 import { getApiKey } from '$lib/server/scanResult';
 
 export const load: ServerLoad = async ({ locals }) => {
@@ -50,17 +51,11 @@ export const load: ServerLoad = async ({ locals }) => {
 
   const pendingInvites = invites.filter((i) => i.status === 'pending').length;
 
-  const dirtySprayers = sprayers.filter(
-    (e) =>
-      e.state.lastChemistryClass != null &&
-      ['synthetic-auxin', 'sulfonylurea', 'imidazolinone'].includes(e.state.lastChemistryClass)
-  ).length;
+  const dirtySprayers = sprayers.filter((e) => needsDecon(e.state)).length;
 
   // ─── Plugins — counts + failures ────────────────────────────────────
   const registry = await getRegistry();
   const allPlugins = registry.all();
-  // Future: surface registry.failures() if we add a load-failure log;
-  // today the loader filters before populating.
 
   const aiEnabled = isOwner && getApiKey() !== '';
 
@@ -114,9 +109,9 @@ export const load: ServerLoad = async ({ locals }) => {
     },
     aiEnabled,
     advanced: {
-      buildVersion: 'phase-25c',
+      buildVersion: process.env.BUILD_SHA || 'dev',
       rulesVersion: RULES_VERSION,
-      pluginFailures: 0,
+      pluginFailures: getRegistryStats().failures.length,
       tenantId: ownerRow?.slug ?? '—',
       lastBackup: 'Litestream · live'
     }

@@ -45,7 +45,7 @@ describe('area detail form', () => {
   });
 
   it('round-trips a coop capacity and shows it with its unit', () => {
-    expect(draftFromDetails('coop_pen', { capacity: 24 })).toEqual({ capacity: 24 });
+    expect(draftFromDetails('coop_pen', { capacity: 24 })).toMatchObject({ capacity: 24 });
     expect(detailsFromDraft('coop_pen', { capacity: '24' })).toEqual({
       ok: true,
       details: { capacity: 24 }

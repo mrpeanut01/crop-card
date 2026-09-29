@@ -166,8 +166,13 @@ const PARTIAL_SESSION_PATHS = new Set([
   '/onboarding',
   '/signout',
   '/api/session/switch-owner',
-  '/api/geocode'
+  '/api/geocode',
+  '/api/feedback' // #466: anyone signed in can send feedback, farm or not.
 ]);
+
+/** API writes open to every role, inspector included: they touch no farm
+ *  data. Feedback (#466) lands in a global triage queue. */
+export const ANY_ROLE_API_WRITES = new Set(['/api/feedback']);
 
 export function allowsPartialSession(pathname: string, isSuperadmin: boolean): boolean {
   if (PARTIAL_SESSION_PATHS.has(pathname)) return true;
@@ -270,6 +275,7 @@ export function suspendedTenantGate(
 ): SuspendedTenantGate {
   if (billingStatus !== 'suspended') return 'allow';
   if (pathname.startsWith('/api/billing/')) return 'allow';
+  if (ANY_ROLE_API_WRITES.has(pathname)) return 'allow';
   if (underPath(pathname, '/settings/billing') || pathname === '/signout') return 'allow';
   const read = method === 'GET' || method === 'HEAD';
   if (read) {
@@ -421,7 +427,8 @@ const handleRequest: Handle = async ({ event, resolve }) => {
     user &&
     !canMutate(user.role) &&
     MUTATION_METHODS.has(event.request.method) &&
-    path.startsWith('/api/')
+    path.startsWith('/api/') &&
+    !ANY_ROLE_API_WRITES.has(path)
   ) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
   }

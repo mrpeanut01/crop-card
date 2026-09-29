@@ -1,5 +1,7 @@
 import type { LayoutServerLoad } from './$types';
 import { listSprayers } from '$lib/server/sprayers';
+import { needsDecon } from '$lib/equipment/decon';
+import { getRegistryStats } from '$lib/server/registry';
 import { activeAssignmentsForUser } from '$lib/db/users';
 import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
@@ -28,12 +30,13 @@ export const load: LayoutServerLoad = ({ locals }) => {
   const sprayers = locals.user?.activeOwnerId ? listSprayers() : [];
   const dirtySprayers = locals.user?.activeOwnerId
     ? sprayers
-        .filter((s) => {
-          if (!s.lastChemistryClass) return false;
-          if (!s.lastSprayedAt) return false;
-          if (s.lastDeconAt && s.lastDeconAt >= s.lastSprayedAt) return false;
-          return true;
-        })
+        .filter((s) =>
+          needsDecon({
+            lastChemistryClass: s.lastChemistryClass,
+            lastUsedAt: s.lastSprayedAt,
+            lastDeconAt: s.lastDeconAt
+          })
+        )
         .map((s) => ({
           id: s.id,
           label: s.label,
@@ -136,7 +139,13 @@ export const load: LayoutServerLoad = ({ locals }) => {
 
   const profile = locals.user ? profileFor(locals.user.id) : null;
 
+  const pluginLoadFailures =
+    locals.user && (locals.user.role === 'owner' || locals.user.isSuperadmin)
+      ? getRegistryStats().failures.length
+      : 0;
+
   return {
+    pluginLoadFailures,
     user: locals.user
       ? {
           id: locals.user.id,

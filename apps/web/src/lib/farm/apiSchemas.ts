@@ -71,17 +71,22 @@ export const blockPatchSchema = blockLayoutPatchSchema.extend({
   lengthFt: sketchFt.nullable().optional()
 });
 
+const mapFeatureAreaIds = z.array(z.string().min(1)).max(50);
+
 export const mapFeatureCreateSchema = z.strictObject({
   kind: z.enum(MAP_FEATURE_KINDS),
   name: z.string().trim().min(1).max(120),
   geometry: z.unknown(),
   fieldId: z.string().min(1).nullable().optional(),
-  details: z.unknown().optional()
+  details: z.unknown().optional(),
+  /** Hydrants and waterers only: every Area served, primary first. */
+  areaIds: mapFeatureAreaIds.optional()
 });
 
 export const mapFeaturePatchSchema = z.strictObject({
   name: z.string().trim().min(1).max(120).optional(),
   geometry: z.unknown().optional(),
   fieldId: z.string().min(1).nullable().optional(),
-  details: z.unknown().optional()
+  details: z.unknown().optional(),
+  areaIds: mapFeatureAreaIds.optional()
 });

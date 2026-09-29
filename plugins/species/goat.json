@@ -14,5 +14,9 @@
   "tile": {
     "icon": "milk",
     "label": "Goats"
+  },
+  "housingSpace": {
+    "indoorSqFtPerAnimal": 15,
+    "sourceName": "UMass Extension"
   }
 }

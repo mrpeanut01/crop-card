@@ -16,7 +16,32 @@ export function sketchAcres(
 ): number | undefined {
   if (widthFt == null || lengthFt == null) return undefined;
   if (!(widthFt > 0) || !(lengthFt > 0)) return undefined;
-  return Number(((widthFt * lengthFt) / SQFT_PER_ACRE).toFixed(3));
+  return Number(((widthFt * lengthFt) / SQFT_PER_ACRE).toPrecision(6));
+}
+
+/** Sketch acres used to be rounded to 3 decimals, so a 4 x 8 ft bed was
+ *  stored as 0.001 ac (about 44 sq ft). A stored value that matches that
+ *  old rounding of its own width and length reads as the exact figure. */
+export function storedSketchAcres(
+  stored: number | null | undefined,
+  widthFt: number | null | undefined,
+  lengthFt: number | null | undefined
+): number | null | undefined {
+  if (stored == null) return stored;
+  const exact = sketchAcres(widthFt, lengthFt);
+  if (exact === undefined) return stored;
+  const legacy = Number(((widthFt! * lengthFt!) / SQFT_PER_ACRE).toFixed(3));
+  return Math.abs(stored - legacy) < 1e-9 ? exact : stored;
+}
+
+/** Acres measured from a drawn shape, rounded for `POST /api/fields` and
+ *  `POST /api/blocks`. A shape under about 0.005 acres (a coop, a raised
+ *  bed) rounds to 0, which the API rejects, so it is left out and the
+ *  server measures the drawn shape itself. */
+export function acresForApi(acres: number | null | undefined): number | undefined {
+  if (acres == null || !Number.isFinite(acres)) return undefined;
+  const rounded = Number(acres.toFixed(2));
+  return rounded > 0 ? rounded : undefined;
 }
 
 export interface SketchInput {

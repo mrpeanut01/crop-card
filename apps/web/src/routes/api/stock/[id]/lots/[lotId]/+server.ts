@@ -1,11 +1,51 @@
 /**
+ * PATCH  /api/stock/:id/lots/:lotId — owner moves an ordered or planned lot
+ *        between those states, or marks it received (on hand).
  * DELETE /api/stock/:id/lots/:lotId — drop a single lot + its movements.
  */
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
+import { z } from 'zod';
 import { deleteStockLotCascade } from '$lib/db/admin';
-import { currentUser } from '$lib/server/auth';
+import {
+  listLotsForItem,
+  LotStatusError,
+  QUANTITY_STATUSES,
+  setLotQuantityStatus
+} from '$lib/db/stock';
+import { currentUser, requireOwner } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
+
+const patchSchema = z.object({
+  quantityStatus: z.enum(QUANTITY_STATUSES),
+  receivedQuantity: z.number().positive().optional()
+});
+
+export const PATCH: RequestHandler = async (event) => {
+  const user = requireOwner(event);
+  const { id, lotId } = event.params;
+  if (!id || !lotId) throw error(400, 'lotId required');
+  if (!listLotsForItem(id).some((l) => l.id === lotId)) {
+    return json({ error: 'lot not found' }, { status: 404 });
+  }
+  let body: unknown;
+  try {
+    body = await event.request.json();
+  } catch {
+    return json({ error: 'invalid JSON body' }, { status: 400 });
+  }
+  const parsed = patchSchema.safeParse(body);
+  if (!parsed.success) {
+    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+  }
+  try {
+    const lot = setLotQuantityStatus({ lotId, ...parsed.data, performedById: user.id });
+    return json({ lot });
+  } catch (e) {
+    if (e instanceof LotStatusError) return json({ error: e.message }, { status: 409 });
+    throw e;
+  }
+};
 
 export const DELETE: RequestHandler = (event) => {
   if (!event.params.lotId) throw error(400, 'lotId required');

@@ -38,6 +38,18 @@ describe('CropPluginDetail — Phase 27C', () => {
     expect(getAllByText('continuous-harvest-fruit').length).toBeGreaterThanOrEqual(1);
   });
 
+  it('never says plugin outside the raw JSON preview (#472)', () => {
+    const { container } = render(CropPluginDetail, {
+      plugin: basePlugin,
+      resolvedArchetype: 'continuous-harvest-fruit',
+      hash: 'abc123'
+    });
+    const copy = container.cloneNode(true) as HTMLElement;
+    copy.querySelectorAll('pre').forEach((el) => el.remove());
+    expect(copy.textContent).not.toMatch(/plugin/i);
+    expect(container.textContent).toContain('Crop category');
+  });
+
   it('formats {min, max} ranges instead of "[object Object]" (#237 fix)', () => {
     const { container } = render(CropPluginDetail, {
       plugin: {

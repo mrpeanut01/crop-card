@@ -34,6 +34,34 @@ export function defaultSpotArea(areas: readonly SetupArea[], kind: CropAreaKind)
   return areas.find((a) => a.kind === kind) ?? (areas.length === 1 ? areas[0] : null);
 }
 
+/** The Area the planning wizard's "Add a block" puts a new block in: the
+ *  only crop Area, else the first one that is not a pasture, else none
+ *  (the server then makes a Home Field). */
+export function defaultWizardArea(areas: readonly SetupArea[]): SetupArea | null {
+  if (areas.length === 1) return areas[0];
+  return areas.find((a) => a.kind !== 'pasture') ?? areas[0] ?? null;
+}
+
+/** Body for POST /api/blocks from the wizard, inside `area` when given. */
+export function wizardBlockBody(
+  input: { name: string; widthFt?: number | null; lengthFt?: number | null; acres?: number | null },
+  area: SetupArea | null
+): Record<string, unknown> {
+  const body: Record<string, unknown> = { name: input.name.trim() };
+  if (area) {
+    body.fieldId = area.id;
+    body.kind = defaultBlockKindFor(area.kind);
+  }
+  const { widthFt: w, lengthFt: l, acres } = input;
+  if (w && w > 0 && l && l > 0) {
+    body.widthFt = w;
+    body.lengthFt = l;
+  } else if (acres != null && acres > 0) {
+    body.acres = acres;
+  }
+  return body;
+}
+
 /** Placeholder for a spot's name inside an Area of this kind. */
 export const SPOT_NAME_PLACEHOLDER: Readonly<Record<CropAreaKind, string>> = {
   field: 'e.g. North half',

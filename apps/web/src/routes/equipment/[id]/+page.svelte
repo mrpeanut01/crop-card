@@ -10,6 +10,92 @@
   let logging = $state(false);
   let logError = $state<string | null>(null);
 
+  let editingNotes = $state(false);
+  let notesDraft = $state('');
+  let savingNotes = $state(false);
+  let notesError = $state<string | null>(null);
+
+  const spec = $derived((eq.spec ?? {}) as { tankGal?: number; nozzle?: string });
+
+  function startEditNotes() {
+    notesDraft = eq.notes ?? '';
+    notesError = null;
+    editingNotes = true;
+  }
+
+  async function saveNotes() {
+    savingNotes = true;
+    notesError = null;
+    try {
+      const res = await fetch(`/api/equipment/${encodeURIComponent(eq.id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: notesDraft.trim() })
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        notesError = out.error ?? `HTTP ${res.status}`;
+        return;
+      }
+      editingNotes = false;
+      await invalidateAll();
+    } catch (e) {
+      notesError = e instanceof Error ? e.message : String(e);
+    } finally {
+      savingNotes = false;
+    }
+  }
+
+  let editingSpec = $state(false);
+  let tankDraft = $state<number | null>(null);
+  let nozzleDraft = $state('');
+  let savingSpec = $state(false);
+  let specError = $state<string | null>(null);
+  let recalibrateNotice = $state(false);
+  const nozzleWillChange = $derived(
+    editingSpec && nozzleDraft.trim() !== (spec.nozzle ?? '').trim()
+  );
+
+  function startEditSpec() {
+    tankDraft = spec.tankGal ?? null;
+    nozzleDraft = spec.nozzle ?? '';
+    specError = null;
+    editingSpec = true;
+  }
+
+  async function saveSpec() {
+    if (tankDraft != null && !(tankDraft > 0)) {
+      specError = 'Tank size must be more than 0, or leave it blank.';
+      return;
+    }
+    savingSpec = true;
+    specError = null;
+    try {
+      const res = await fetch(`/api/equipment/${encodeURIComponent(eq.id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          spec: {
+            tankGal: tankDraft == null || Number.isNaN(tankDraft) ? null : tankDraft,
+            nozzle: nozzleDraft.trim() || null
+          }
+        })
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        specError = out.error ?? `HTTP ${res.status}`;
+        return;
+      }
+      editingSpec = false;
+      recalibrateNotice = out.calibrationCleared === true;
+      await invalidateAll();
+    } catch (e) {
+      specError = e instanceof Error ? e.message : String(e);
+    } finally {
+      savingSpec = false;
+    }
+  }
+
   let editingLabel = $state(false);
   let labelDraft = $state('');
   let savingLabel = $state(false);
@@ -161,6 +247,10 @@
       </dd>
       <dt>Last decon</dt>
       <dd>{fmtTs(eq.state.lastDeconAt)}</dd>
+      <dt>Tank</dt>
+      <dd>{spec.tankGal != null ? fmt.label(spec.tankGal, 'volume') : '—'}</dd>
+      <dt>Nozzle</dt>
+      <dd>{spec.nozzle ?? '—'}</dd>
       {#if eq.state.winterizedAt}
         <dt>Winterized</dt>
         <dd>
@@ -175,11 +265,79 @@
       <dd>{fmtTs(eq.state.lastUsedAt)}</dd>
     {/if}
   </dl>
-  {#if eq.notes}<p class="notes">{eq.notes}</p>{/if}
+  {#if editingSpec}
+    <div class="spec-edit" data-testid="sprayer-spec-edit">
+      <label>
+        <span>Tank size (gallons)</span>
+        <input
+          type="number"
+          min="0"
+          step="any"
+          inputmode="decimal"
+          bind:value={tankDraft}
+          disabled={savingSpec}
+        />
+      </label>
+      <label>
+        <span>Nozzle</span>
+        <input
+          type="text"
+          maxlength="80"
+          placeholder="e.g. TeeJet 8002 flat fan"
+          bind:value={nozzleDraft}
+          disabled={savingSpec}
+        />
+      </label>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick={saveSpec} disabled={savingSpec}>
+        {savingSpec ? 'Saving…' : 'Save tank and nozzle'}
+      </button>
+      <button class="btn" onclick={() => (editingSpec = false)} disabled={savingSpec}>
+        Cancel
+      </button>
+    </div>
+    {#if nozzleWillChange && eq.state.calibratedGpa != null}
+      <p class="warn-note" data-testid="nozzle-recalibrate-warning">
+        A new nozzle changes how much the sprayer puts out. Saving clears the {eq.state
+          .calibratedGpa} GPA calibration, so calibrate again before the next spray.
+      </p>
+    {/if}
+    {#if specError}<p class="error" role="alert">{specError}</p>{/if}
+  {/if}
+  {#if recalibrateNotice}
+    <p class="warn-note" role="status" data-testid="nozzle-recalibrate-notice">
+      The nozzle changed, so the old calibration was cleared.
+      <a href="/calibrate?sprayer={encodeURIComponent(eq.id)}">Calibrate now</a>
+    </p>
+  {/if}
+  {#if editingNotes}
+    <label class="notes-edit">
+      <span>Notes</span>
+      <textarea rows="3" maxlength="500" bind:value={notesDraft} disabled={savingNotes}></textarea>
+    </label>
+    <div class="actions">
+      <button class="primary" onclick={saveNotes} disabled={savingNotes}>
+        {savingNotes ? 'Saving…' : 'Save notes'}
+      </button>
+      <button class="btn" onclick={() => (editingNotes = false)} disabled={savingNotes}>
+        Cancel
+      </button>
+    </div>
+    {#if notesError}<p class="error">{notesError}</p>{/if}
+  {:else if eq.notes}
+    <p class="notes">{eq.notes}</p>
+  {/if}
 
   <div class="actions">
+    {#if data.canRename && !editingNotes}
+      <button class="btn" onclick={startEditNotes}>{eq.notes ? 'Edit notes' : 'Add notes'}</button>
+    {/if}
+    {#if eq.type === 'sprayer' && data.canRename && !editingSpec}
+      <button class="btn" onclick={startEditSpec}>Edit tank and nozzle</button>
+    {/if}
     {#if eq.type === 'sprayer'}
-      <a class="btn" href="/calibrate">Calibrate</a>
+      <a class="btn" href="/calibrate?sprayer={encodeURIComponent(eq.id)}">Calibrate</a>
       <a class="btn" href="/spray/decon?sprayer={encodeURIComponent(eq.id)}">Decon wizard</a>
       <a class="btn" href="/equipment/{encodeURIComponent(eq.id)}/winterize">Winterize</a>
     {/if}
@@ -261,8 +419,30 @@
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
-    min-height: 36px;
+    min-height: 48px;
     font-size: 0.85rem;
+  }
+  .spec-edit {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 0.75rem;
+    margin: 0.75rem 0 0.5rem;
+  }
+  .spec-edit label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-weight: 600;
+    min-width: 0;
+  }
+  .spec-edit input {
+    min-height: 48px;
+    font: inherit;
+    padding: 0 0.5rem;
+    border: 1px solid #cbd5cb;
+    border-radius: 6px;
+    box-sizing: border-box;
+    width: 100%;
   }
   .label-edit {
     display: flex;
@@ -368,9 +548,28 @@
     padding: 0.6rem 1rem;
     border-radius: 6px;
     text-decoration: none;
+    font: inherit;
     font-weight: 600;
-    min-height: 44px;
+    min-height: 48px;
     line-height: 1.4;
+    cursor: pointer;
+  }
+  .notes-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.75rem;
+    font-weight: 600;
+  }
+  .notes-edit textarea {
+    font: inherit;
+    font-weight: 400;
+    padding: 0.6rem;
+    border: 2px solid #d0d7d0;
+    border-radius: 4px;
+    min-height: 72px;
+    box-sizing: border-box;
+    width: 100%;
   }
   .row {
     display: flex;
@@ -422,6 +621,20 @@
   .log-entry.kind-decon {
     border-left-color: #b00020;
     background: #fef0f0;
+  }
+  .warn-note {
+    margin: 8px 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--color-wheat-soft);
+    color: var(--color-ink);
+    font-size: 0.9rem;
+  }
+  .warn-note a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-weight: 600;
   }
   .log-entry.kind-calibration {
     border-left-color: #b35900;

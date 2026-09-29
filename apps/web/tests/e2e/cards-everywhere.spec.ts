@@ -179,7 +179,7 @@ test.describe('cards everywhere', () => {
     await expect(page.getByRole('list', { name: 'At-a-glance metrics' })).toBeVisible();
     const card = cards.locator('article[data-card-kind="stock"]');
     await expect(card).toHaveCount(1);
-    await expect(card.locator('dt')).toHaveText(['Category', 'On hand', 'Lots', 'Expires']);
+    await expect(card.locator('dt')).toHaveText(['Kind', 'On hand', 'Lots', 'Expires']);
     await noHorizontalOverflow(page);
 
     await page.getByRole('searchbox', { name: 'Search inventory' }).fill('zzz');
@@ -189,11 +189,8 @@ test.describe('cards everywhere', () => {
     await expect(page).toHaveURL(new RegExp(`/inventory/pesticide/${item.id}$`));
 
     await page.goto('/inventory?type=sprayer');
-    const sprayer = page
-      .getByTestId('inventory-cards')
-      .locator('article[data-card-kind="equipment"]');
-    await expect(sprayer).toContainText('Pull 50');
-    await expect(sprayer.locator('[data-card-status]')).toHaveText('New');
+    await expect(page).toHaveURL(/\/equipment$/);
+    await expect(page.getByRole('link', { name: 'Pull 50' })).toBeVisible();
 
     await page.setViewportSize(DESKTOP);
     await page.goto('/inventory?type=pesticide');

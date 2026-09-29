@@ -13,8 +13,7 @@ describe('InventoryEmptyGrid', () => {
       '/inventory/pesticide/add',
       '/inventory/fertility/add',
       '/inventory/seed/add',
-      '/inventory/crop/add',
-      '/inventory/sprayer/add'
+      '/inventory/crop/add'
     ]);
     expect(screen.getByRole('link', { current: true })).toHaveAttribute(
       'href',
@@ -24,7 +23,7 @@ describe('InventoryEmptyGrid', () => {
   });
 
   it('tells a helper to ask the owner instead of linking to add pages', () => {
-    render(InventoryEmptyGrid, { activeType: 'sprayer', canAdd: false });
+    render(InventoryEmptyGrid, { activeType: 'fertility', canAdd: false });
     expect(screen.queryAllByRole('link')).toHaveLength(0);
     expect(screen.getByText(/Ask the owner to add some/)).toBeInTheDocument();
   });

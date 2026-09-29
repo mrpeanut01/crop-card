@@ -16,7 +16,7 @@
   {/if}
 </nav>
 
-<A_InventoryEditForm type={data.type} existing={data.existing} />
+<A_InventoryEditForm type={data.type} existing={data.existing} library={data.library} />
 
 <style>
   .breadcrumb {

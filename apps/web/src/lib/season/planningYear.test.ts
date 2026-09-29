@@ -8,6 +8,7 @@ import {
   isSelectablePlanningYear,
   pastPlanningYears,
   resolvePlanningYear,
+  rolloverDateForSeason,
   selectablePlanningYears,
   suggestPlanningYear,
   suggestionReason
@@ -160,5 +161,27 @@ describe('planning year repo', () => {
     runWithTenant(OWNER_B, () => {
       expect(loadPlanningYearView(SEPT_2026).pastYears).not.toContain(2024);
     });
+  });
+});
+
+describe('rolloverDateForSeason', () => {
+  it('is eight weeks before the first fall frost, matching the suggestion rule', () => {
+    const frost = { lastSpring: '04-15', firstFall: '10-20' };
+    const r = rolloverDateForSeason(2026, frost);
+    expect([r.getFullYear(), r.getMonth(), r.getDate()]).toEqual([2026, 7, 25]);
+    const dayBefore = new Date(2026, 7, 24);
+    expect(suggestPlanningYear(dayBefore, frost)).toBe(2026);
+    expect(suggestPlanningYear(r, frost)).toBe(2027);
+  });
+
+  it('is July 1 with no saved frost dates', () => {
+    const r = rolloverDateForSeason(2026, null);
+    expect([r.getFullYear(), r.getMonth(), r.getDate()]).toEqual([2026, 6, 1]);
+  });
+
+  it('follows a first fall frost that lands in the next calendar year', () => {
+    const r = rolloverDateForSeason(2026, { lastSpring: '02-01', firstFall: '01-10' });
+    expect(r.getTime()).toBeLessThan(new Date(2027, 0, 10).getTime());
+    expect(r.getTime()).toBeGreaterThan(new Date(2026, 9, 1).getTime());
   });
 });

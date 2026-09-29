@@ -29,9 +29,13 @@ import {
 import { SQFT_PER_ACRE, formatAreaAcres, formatFeet, formatSize, sizeBasis } from './size';
 import { areaCareLinks } from './careGuide';
 import { DEFAULT_AREA_KIND, isDesignable } from '$lib/farm/areaKinds';
+import { watererNamesFor } from '$lib/farm/mapFeatures';
 import { designFromSnapshot, designerHref } from '$lib/garden/design';
 import { bedOccupancyOn, occupancyIntervals, scrubRange, utcDayStart } from '$lib/garden/occupancy';
-import type { CardBedMap } from '../model';
+import type { CardBedMap, CardBedMapPlanting } from '../model';
+import { displayFootprints } from '$lib/garden/displayPack';
+import { familyGlyph } from '$lib/garden/familyGlyph';
+import { footprintBounds } from '$lib/garden/geometry';
 
 const MAX_LIST = 8;
 const BLOCK_KIND_ORDER: SnapshotBlockKind[] = ['bed', 'row', 'container', 'block'];
@@ -153,6 +157,11 @@ export function buildAreaCard(
       facts.push({ label: 'Planned', value: `${planned.length}`, provenance: 'data' });
     }
   }
+  const water = watererNamesFor(area.id, snapshot.mapFeatures ?? []);
+  if (water.length) {
+    facts.push({ label: 'Water', value: water.join(', '), provenance: 'manual' });
+    provenance.push({ source: 'manual', detail: 'hydrants you placed' });
+  }
   if (facts.some((f) => f.provenance === 'data')) provenance.push({ source: 'data' });
 
   const sections: CardSection[] = [];
@@ -240,11 +249,14 @@ export function buildBedMap(
   });
   const range = scrubRange(design.seasonYear, intervals, onMs, design.frost);
   const byId = new Map(design.plantings.map((p) => [p.cropId, p]));
+  const day = utcDayStart(onMs);
+  const ivById = new Map(intervals.map((i) => [i.cropId, i]));
+  const display = displayFootprints(design.beds, design.plantings, intervals, design.crops);
   return {
     widthFt: design.canvas.widthFt,
     lengthFt: design.canvas.lengthFt,
     hasNorth: design.canvas.hasNorth,
-    onMs: utcDayStart(onMs),
+    onMs: day,
     beds: design.beds.map((b) => ({
       name: b.name,
       kind: b.kind,
@@ -252,9 +264,34 @@ export function buildBedMap(
       y: b.rect.y,
       w: b.rect.w,
       l: b.rect.l,
-      crops: bedOccupancyOn(b, intervals, utcDayStart(onMs), range)
+      crops: bedOccupancyOn(b, intervals, day, range)
         .occupants.map((o) => byId.get(o.cropId)?.varietyDisplayName)
-        .filter((n): n is string => !!n)
+        .filter((n): n is string => !!n),
+      plantings: design.plantings
+        .filter((p) => p.blockId === b.blockId)
+        .flatMap((p): CardBedMapPlanting[] => {
+          const iv = ivById.get(p.cropId);
+          if (!iv) return [];
+          const now = day >= iv.startMs && day < iv.endMs;
+          const later = !now && iv.startMs > day && iv.startMs <= range.endMs;
+          const fp = p.footprint ?? display.get(p.cropId);
+          if ((!now && !later) || !fp) return [];
+          const r = footprintBounds(fp, b);
+          return [
+            {
+              name: p.varietyDisplayName.split(/[—(]/)[0].trim() || p.varietyDisplayName,
+              glyph: familyGlyph(p.cropFamily).key,
+              x: r.x,
+              y: r.y,
+              w: r.w,
+              l: r.l,
+              placed: !!p.footprint,
+              later,
+              from: later ? new Date(iv.startMs).toISOString().slice(0, 10) : null
+            }
+          ];
+        })
+        .sort((a, c) => Number(c.later) - Number(a.later) || a.x - c.x || a.y - c.y)
     }))
   };
 }

@@ -181,7 +181,7 @@
               <div class="block-name">{b.name}</div>
               <div class="block-sub mono">{b.fieldName ?? '(no field)'}</div>
             </div>
-            <span class="block-acres mono">{fmt.qty(b.acres ?? 0, 'area', { digits: 1 })}</span>
+            <span class="block-acres mono">{fmt.area(b.acres ?? 0, { digits: 1 })}</span>
             <ChevronRight size={13} />
           </a>
         {/each}

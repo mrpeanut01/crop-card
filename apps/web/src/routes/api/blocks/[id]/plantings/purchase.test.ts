@@ -104,4 +104,19 @@ describe('POST /api/blocks/[id]/plantings purchase', () => {
     expect(m.createStockItem).not.toHaveBeenCalled();
     expect(m.decrementForUse).not.toHaveBeenCalled();
   });
+
+  it("passes the plan's plant count through for a fill-to-bed planting (#471)", async () => {
+    const res = await POST(
+      ev({
+        cropPluginId: 'tomato-sungold',
+        varietyDisplayName: 'Sungold',
+        quantityUnit: 'seeds',
+        plannedPlants: 8,
+        stockItemId: 'stock-1'
+      })
+    );
+    expect(res.status).toBe(201);
+    expect(m.addPlanting).toHaveBeenCalledWith(expect.objectContaining({ plannedPlants: 8 }));
+    expect(m.decrementForUse).not.toHaveBeenCalled();
+  });
 });

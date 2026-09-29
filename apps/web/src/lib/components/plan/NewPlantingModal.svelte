@@ -17,6 +17,7 @@
     amountInStockUnit,
     optionLabel,
     searchCrops,
+    seedAvailable,
     unitLabel,
     unitsCompatibleWith,
     type PickerCrop,
@@ -31,6 +32,7 @@
     type PlantingWindow
   } from '$lib/plan/plantingWindow';
   import type { StockUnit } from '$lib/stock/units';
+  import { availableQuantityText } from '$lib/stock/quantityStatus';
 
   type CropCatalogEntry = PickerCrop & {
     soilTempMinF?: number | null;
@@ -102,7 +104,7 @@
     if (!pickedSeed || !plantQty || plantQty <= 0) return null;
     const inStock = amountInStockUnit(plantQty, plantUnit, pickedSeed.defaultUnit);
     if (inStock === null) return 'mismatch' as const;
-    return inStock > pickedSeed.onHand + 1e-9 ? ('short' as const) : ('ok' as const);
+    return inStock > seedAvailable(pickedSeed) + 1e-9 ? ('short' as const) : ('ok' as const);
   });
 
   const boughtUse = $derived.by(() => {
@@ -116,8 +118,11 @@
     windowState && plantingDate ? dateFit(plantingDate, windowState.window) : null
   );
 
-  function fmtQty(n: number): string {
-    return String(Number(n.toFixed(2)));
+  function seedAmountText(seed: PickerSeed): string {
+    return availableQuantityText(
+      { existing: seed.onHand, ordered: seed.onOrder ?? 0, planned: seed.planned ?? 0 },
+      seed.defaultUnit
+    );
   }
 
   function resetForm(): void {
@@ -334,8 +339,8 @@
             aria-activedescendant={listOpen && flat[activeIndex]
               ? optionId(activeIndex)
               : undefined}
-            placeholder={seedStock.some((s) => s.onHand > 0 && s.cropPluginId)
-              ? 'Seed on hand, or type any crop'
+            placeholder={seedStock.some((s) => s.cropPluginId)
+              ? 'Your seed, or type any crop'
               : 'Type a crop, e.g. tomato'}
             bind:value={query}
             oninput={onQueryInput}
@@ -346,7 +351,7 @@
           {#if listOpen}
             <ul id="np-crop-list" class="options" role="listbox" aria-label="Crops">
               {#if results.seeds.length}
-                <li class="group" role="presentation">Seed on hand</li>
+                <li class="group" role="presentation">Your seed</li>
                 {#each results.seeds as opt, i (opt.seed.stockItemId)}
                   <li
                     id={optionId(i)}
@@ -361,9 +366,7 @@
                     onmouseenter={() => (activeIndex = i)}
                   >
                     <span class="opt-name">{optionLabel(opt)}</span>
-                    <span class="opt-meta"
-                      >{fmtQty(opt.seed.onHand)} {unitLabel(opt.seed.defaultUnit)}</span
-                    >
+                    <span class="opt-meta">{seedAmountText(opt.seed)}</span>
                   </li>
                 {/each}
               {/if}
@@ -403,12 +406,9 @@
             </ul>
           {/if}
           {#if pickedSeed}
-            <span class="hint seed-tag"
-              >Using seed on hand: {fmtQty(pickedSeed.onHand)}
-              {unitLabel(pickedSeed.defaultUnit)} available</span
-            >
+            <span class="hint seed-tag">Using your seed: {seedAmountText(pickedSeed)}</span>
           {:else if pickedCrop}
-            <span class="hint">No seed on hand for this crop.</span>
+            <span class="hint">None of your seed is linked to this crop.</span>
           {/if}
         </div>
 
@@ -497,13 +497,14 @@
             <span class="hint">
               {#if seedUse === 'short'}
                 <span class="warn-inline"
-                  >More than the {fmtQty(pickedSeed.onHand)}
-                  {unitLabel(pickedSeed.defaultUnit)} on hand; the shortfall is noted.</span
+                  >More than the {seedAmountText(pickedSeed)}; the shortfall is noted.</span
                 >
               {:else if seedUse === 'mismatch'}
                 Seed is stocked in {unitLabel(pickedSeed.defaultUnit)}, so inventory won't change.
+              {:else if pickedSeed.onHand > 0}
+                Comes out of your seed on hand first, then what is ordered or planned.
               {:else}
-                Comes out of your seed on hand.
+                Set aside from the seed you have ordered or planned.
               {/if}
             </span>
           {:else if pickedCrop}

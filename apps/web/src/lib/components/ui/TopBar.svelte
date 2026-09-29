@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { tick } from 'svelte';
   import {
     Leaf,
     Sun,
@@ -13,11 +14,15 @@
     Bell,
     Settings,
     Ellipsis,
-    PawPrint
+    PawPrint,
+    Tractor,
+    MessageSquare,
+    Inbox
   } from 'lucide-svelte';
   import IconButton from './IconButton.svelte';
   import Avatar from './Avatar.svelte';
   import OfflineIndicator from './OfflineIndicator.svelte';
+  import FeedbackSheet from '$lib/components/feedback/FeedbackSheet.svelte';
   import type { NavAlert } from '$lib/today/navAlerts';
 
   // lucide-svelte ships class components that don't match Svelte 5's Component
@@ -85,10 +90,11 @@
     allAlerts.length === 0 ? 'Alerts, none active' : `Alerts, ${allAlerts.length} active`
   );
 
-  // 7-item nav per design (collapsed from 13) plus Cards (Phase 30F, the
-  // offline deck). Map / Calendar fold into Plan,
-  // Insecticides into Spray, Fertility under Records, Equipment under
-  // /inventory?type=sprayer, Hay into archetype renderers.
+  // 7-item nav per design (collapsed from 13) plus Equipment (#474:
+  // sprayers and other gear are equipment, not inventory) and Cards
+  // (Phase 30F, the offline deck). Map / Calendar fold into Plan,
+  // Insecticides into Spray, Fertility under Records, Hay into archetype
+  // renderers.
   // Sprint 9 / Phase 27E: legacy /stock, /settings/plugins, /settings/sprayers
   // now 308-redirect to /inventory; the transitional active-state branch
   // below is kept short-term so a 308 still lights up the Inventory chip.
@@ -100,6 +106,7 @@
     { href: '/harvest', label: 'Harvest', icon: Wheat },
     ...(animalsLabel ? [{ href: '/animals', label: animalsLabel, icon: PawPrint }] : []),
     { href: '/inventory', label: 'Inventory', icon: Box },
+    { href: '/equipment', label: 'Equipment', icon: Tractor },
     { href: '/records', label: 'Records', icon: FileText },
     { href: '/cards', label: 'Cards', icon: Layers }
   ]);
@@ -117,25 +124,75 @@
         path === '/stock' ||
         path.startsWith('/stock/') ||
         path === '/settings/plugins' ||
-        path.startsWith('/settings/plugins/') ||
-        path === '/settings/sprayers' ||
-        path.startsWith('/settings/sprayers/')
+        path.startsWith('/settings/plugins/')
       );
     }
     return path === href || path.startsWith(`${href}/`);
   }
 
-  // Below 400px the bottom bar keeps the five field tabs and folds the rest
-  // into More, so every tab stays a 48px target.
+  // Up to 600px the bottom bar keeps the five field tabs and folds the rest
+  // into More, so every tab stays a 48px target. More is shown at every width
+  // because it also holds Send feedback (#466).
   const PRIMARY_COUNT = 5;
   const moreItems = $derived(items.slice(PRIMARY_COUNT));
   const moreActive = $derived(moreItems.some((i) => isActive(i.href)));
   let moreOpen = $state(false);
+  let feedbackOpen = $state(false);
+
+  // Above 768px the top nav keeps as many pages inline as fit and folds the
+  // rest into More, so nothing (More included) is scrolled out of sight.
+  let navEl = $state<HTMLElement | null>(null);
+  let headerEl = $state<HTMLElement | null>(null);
+  let fit = $state<number>(Number.POSITIVE_INFINITY);
+  const foldedActive = $derived(items.some((it, i) => i >= fit && isActive(it.href)));
+
+  async function measure() {
+    const nav = navEl;
+    if (!nav || typeof window === 'undefined') return;
+    fit = Number.POSITIVE_INFINITY;
+    if (window.innerWidth <= 768) return;
+    await tick();
+    const links = [...nav.querySelectorAll<HTMLElement>(':scope > a.nav-link')];
+    const more = nav.querySelector<HTMLElement>(':scope > .more-nav');
+    if (!more || nav.scrollWidth <= nav.clientWidth + 1) return;
+    const gap = parseFloat(getComputedStyle(nav).columnGap) || 0;
+    let used = more.getBoundingClientRect().width;
+    let n = 0;
+    for (const link of links) {
+      const w = link.getBoundingClientRect().width + gap;
+      if (used + w > nav.clientWidth - 1) break;
+      used += w;
+      n += 1;
+    }
+    fit = n;
+  }
+
+  $effect(() => {
+    const header = headerEl;
+    void items.length;
+    if (!header || typeof ResizeObserver === 'undefined') return;
+    let frame = 0;
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => void measure());
+    });
+    ro.observe(header);
+    void measure();
+    return () => {
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+    };
+  });
+
+  function openFeedback() {
+    moreOpen = false;
+    feedbackOpen = true;
+  }
 
   const avatarName = $derived(user?.name ?? user?.email ?? (user?.phone ? '#' : '?'));
 </script>
 
-<header class="topbar">
+<header class="topbar" bind:this={headerEl}>
   <div class="brand-cluster">
     <span class="brand-mark" aria-hidden="true">
       <Leaf size={16} />
@@ -147,7 +204,7 @@
     {/if}
   </div>
 
-  <nav aria-label="Primary" class="primary-nav">
+  <nav aria-label="Primary" class="primary-nav" bind:this={navEl}>
     {#each items as item, i (item.href)}
       {@const Icon = item.icon}
       {@const active = isActive(item.href)}
@@ -155,6 +212,7 @@
         href={item.href}
         class="nav-link"
         class:secondary={i >= PRIMARY_COUNT}
+        class:folded={i >= fit}
         class:active
         aria-current={active ? 'page' : undefined}
       >
@@ -163,16 +221,23 @@
       </a>
     {/each}
     <details class="more-nav" bind:open={moreOpen}>
-      <summary class="nav-link" class:active={moreActive} aria-label="More pages">
+      <summary
+        class="nav-link"
+        class:overflow-active={moreActive}
+        class:folded-active={foldedActive}
+        aria-label="More pages"
+      >
         <Ellipsis size={15} strokeWidth={1.75} />
         <span>More</span>
       </summary>
       <div class="more-menu">
-        {#each moreItems as item (item.href)}
+        {#each items as item, i (item.href)}
           {@const Icon = item.icon}
           <a
             href={item.href}
-            class="more-link"
+            class="more-link page-link"
+            class:overflow={i >= PRIMARY_COUNT}
+            class:folded={i >= fit}
             aria-current={isActive(item.href) ? 'page' : undefined}
             onclick={() => (moreOpen = false)}
           >
@@ -180,6 +245,16 @@
             <span>{item.label}</span>
           </a>
         {/each}
+        {#if user?.isSuperadmin}
+          <a href="/admin/feedback" class="more-link" onclick={() => (moreOpen = false)}>
+            <Inbox size={16} strokeWidth={1.75} />
+            <span>Feedback inbox</span>
+          </a>
+        {/if}
+        <button type="button" class="more-link" onclick={openFeedback}>
+          <MessageSquare size={16} strokeWidth={1.75} />
+          <span>Send feedback</span>
+        </button>
       </div>
     </details>
   </nav>
@@ -247,6 +322,12 @@
     <OfflineIndicator {online} {pendingCount} />
   </div>
 </header>
+
+<FeedbackSheet
+  open={feedbackOpen}
+  pathname={page.url.pathname}
+  onClose={() => (feedbackOpen = false)}
+/>
 
 <style>
   .topbar {
@@ -549,52 +630,105 @@
   }
 
   .more-nav {
+    display: flex;
+    position: relative;
+  }
+  .more-nav summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  .more-nav summary::-webkit-details-marker {
     display: none;
   }
-  @media (max-width: 400px) {
+  .more-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    min-width: 200px;
+    background: var(--color-paper);
+    border: 1px solid var(--color-divider);
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(26, 31, 26, 0.18);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+  }
+  .more-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 12px;
+    border-radius: 6px;
+    color: var(--color-ink);
+    text-decoration: none;
+    font: inherit;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .more-link:hover {
+    background: var(--color-divider-soft);
+  }
+  .more-link[aria-current='page'] {
+    background: var(--pill-forest-bg);
+    color: var(--pill-forest-fg);
+  }
+  .more-link.overflow {
+    display: none;
+  }
+  .more-link.page-link:not(.overflow):not(.folded) {
+    display: none;
+  }
+  /* Pages that do not fit the top nav move into More. The nav is a
+     scrolling strip as a last resort, which would clip a dropdown, so the
+     open menu is placed against the viewport. */
+  @media (min-width: 769px) {
+    .nav-link.folded {
+      display: none;
+    }
+    .more-link.folded {
+      display: flex;
+    }
+    .more-nav summary.folded-active {
+      color: var(--color-forest-deep);
+      font-weight: 600;
+    }
+    .more-nav[open] .more-menu {
+      position: fixed;
+      top: 64px;
+      right: 16px;
+    }
+  }
+  @media (max-width: 768px) {
+    .more-nav {
+      flex: 1;
+    }
+    .more-nav summary {
+      width: 100%;
+    }
+    .more-menu {
+      position: fixed;
+      top: auto;
+      right: 8px;
+      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+  @media (max-width: 600px) {
     .nav-link.secondary {
       display: none;
     }
-    .more-nav {
+    .more-link.overflow {
       display: flex;
-      flex: 1;
-      position: relative;
     }
-    .more-nav summary {
-      list-style: none;
-      cursor: pointer;
-      width: 100%;
-    }
-    .more-nav summary::-webkit-details-marker {
-      display: none;
-    }
-    .more-menu {
-      position: absolute;
-      right: 0;
-      bottom: calc(100% + 8px);
-      min-width: 180px;
-      background: var(--color-paper);
-      border: 1px solid var(--color-divider);
-      border-radius: 10px;
-      box-shadow: 0 6px 18px rgba(26, 31, 26, 0.18);
-      padding: 6px;
-      display: flex;
-      flex-direction: column;
-    }
-    .more-link {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-height: 48px;
-      padding: 0 12px;
-      border-radius: 6px;
-      color: var(--color-ink);
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .more-link[aria-current='page'] {
+    .more-nav summary.overflow-active {
       background: var(--pill-forest-bg);
       color: var(--pill-forest-fg);
+      font-weight: 600;
     }
   }
 

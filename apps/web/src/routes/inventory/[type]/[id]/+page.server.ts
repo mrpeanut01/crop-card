@@ -6,18 +6,18 @@
  *   /inventory/fertility/<stockItemId>
  *   /inventory/seed/<stockItemId>
  *   /inventory/crop/<pluginId>
- *   /inventory/sprayer/<equipmentId>
+ *
+ * /inventory/sprayer/<equipmentId> 308s to /equipment/<id> (#474).
  *
  * For lot-bearing types (pesticide/fertility/seed) `id` is the
  * stock_item.id; the loader also looks up the bound plugin from the
  * registry when `pluginId` is set so kernel-locked fields render with
- * authoritative data. For crops `id` is the pluginId. For sprayers
- * `id` is the equipment.id.
+ * authoritative data. For crops `id` is the pluginId.
  *
  * Returns a discriminated payload the page component dispatches on.
  */
 
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import {
   getStockItem,
@@ -27,7 +27,6 @@ import {
   type StockItem,
   type StockMovement
 } from '$lib/db/stock';
-import { getEquipment, type EquipmentWithState } from '$lib/db/equipment';
 import { getRegistry } from '$lib/server/registry';
 import { INVENTORY_TYPES, type InventoryType } from '$lib/inventory/types';
 import { resolveArchetype } from '$lib/plugins/schemas';
@@ -95,17 +94,8 @@ export interface CropDetailPayload {
   hash: string;
 }
 
-export interface SprayerDetailPayload {
-  type: 'sprayer';
-  equipment: EquipmentWithState;
-}
-
 export type DetailPayload =
-  | PesticideDetailPayload
-  | FertilityDetailPayload
-  | SeedDetailPayload
-  | CropDetailPayload
-  | SprayerDetailPayload;
+  PesticideDetailPayload | FertilityDetailPayload | SeedDetailPayload | CropDetailPayload;
 
 function parseType(raw: string): InventoryType {
   if (!(INVENTORY_TYPES as readonly string[]).includes(raw)) {
@@ -115,16 +105,11 @@ function parseType(raw: string): InventoryType {
 }
 
 export const load: PageServerLoad = async ({ params }): Promise<DetailPayload> => {
+  if (params.type === 'sprayer') {
+    throw redirect(308, `/equipment/${encodeURIComponent(params.id)}`);
+  }
   const type = parseType(params.type);
   const id = params.id;
-
-  if (type === 'sprayer') {
-    const equipment = getEquipment(id);
-    if (!equipment || equipment.type !== 'sprayer') {
-      throw error(404, `sprayer not found: ${id}`);
-    }
-    return { type: 'sprayer', equipment };
-  }
 
   if (type === 'crop') {
     const registry = await getRegistry();

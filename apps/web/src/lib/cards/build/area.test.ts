@@ -223,6 +223,40 @@ describe('garden bed map', () => {
     expect(beds.find((b) => b.name === 'Bed 1')!.crops).toEqual([]);
   });
 
+  it('draws each planting in its bed with a family icon, packing ones with no spot (#481)', () => {
+    const card = buildAreaCard(sampleSnapshot(), 'f_garden')!;
+    const bed3 = card.bedMap!.beds.find((b) => b.name === 'Bed 3')!;
+    expect(bed3.plantings).toEqual([
+      expect.objectContaining({
+        name: 'Cherokee Purple tomato',
+        glyph: 'nightshade',
+        placed: false,
+        later: false
+      })
+    ]);
+    const p = bed3.plantings![0];
+    expect(p.x).toBeGreaterThanOrEqual(bed3.x);
+    expect(p.x + p.w).toBeLessThanOrEqual(bed3.x + bed3.w + 1e-9);
+    expect(p.y + p.l).toBeLessThanOrEqual(bed3.y + bed3.l + 1e-9);
+    const bed1 = card.bedMap!.beds.find((b) => b.name === 'Bed 1')!;
+    expect(bed1.plantings).toEqual([
+      expect.objectContaining({ name: 'Provider bush bean', glyph: 'legume', later: true })
+    ]);
+    expect(bed1.plantings![0].from).toMatch(/^2026-\d\d-\d\d$/);
+  });
+
+  it('uses the saved spot when a planting has one', () => {
+    const snap = sampleSnapshot();
+    const tomato = snap.plantings.find((p) => p.varietyDisplayName === 'Cherokee Purple tomato')!;
+    Object.assign(tomato, { footprint: { x_in: 12, y_in: 0, w_in: 24, l_in: 24 } });
+    const bed3 = buildAreaCard(snap, 'f_garden')!.bedMap!.beds.find((b) => b.name === 'Bed 3')!;
+    const p = bed3.plantings![0];
+    expect(p).toMatchObject({ w: 2, l: 2, placed: true });
+    expect(p.x).toBeGreaterThanOrEqual(bed3.x);
+    expect(p.x + p.w).toBeLessThanOrEqual(bed3.x + bed3.w);
+    expect(p.y + p.l).toBeLessThanOrEqual(bed3.y + bed3.l);
+  });
+
   it('lists later plantings once the card date reaches them', () => {
     const card = buildAreaCard(sampleSnapshot(), 'f_garden', { now: Date.UTC(2026, 5, 20) })!;
     expect(card.bedMap!.beds.find((b) => b.name === 'Bed 1')!.crops).toEqual([

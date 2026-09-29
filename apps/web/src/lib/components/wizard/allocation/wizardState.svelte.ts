@@ -1,7 +1,8 @@
 import { getContext, setContext, untrack } from 'svelte';
 import { currentPrefs } from '$lib/prefsState.svelte';
 import type { Prefs } from '$lib/prefs';
-import { seedsToPlants, type SeedPluginShape } from '$lib/seed/quantity';
+import { seedStockUnit, seedsToPlants, type SeedPluginShape } from '$lib/seed/quantity';
+import { footprintSqFt } from '$lib/layout/sufficiency';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { SeasonSetup } from '$lib/season/setup';
 import type { InputsPlanProvisionalPlanting } from '$lib/plan/inputsPlan';
@@ -22,8 +23,10 @@ import type {
   ScheduleResponse,
   ScheduledPlanting,
   SeedStockEntry,
+  CropCatalogItem,
   Step
 } from './types';
+import type { SetupArea } from '$lib/setup/types';
 
 /** Live (reactive) wizard props. Callers pass getters so prop updates from
  *  `onRefreshParent` (e.g. fresh seed stock after linking a plugin) flow
@@ -31,9 +34,13 @@ import type {
 export interface WizardInputs {
   readonly seedStock: SeedStockEntry[];
   readonly blocks: BlockEntry[];
+  /** Crop-bearing Areas a block added on the Blocks step can go in. */
+  readonly areas?: ReadonlyArray<SetupArea>;
   /** Last season's crops per block, shown as carry-forward context. */
   readonly priorSeason: PriorSeason | null;
   readonly plantingGuides: Record<string, NonNullable<CropPlugin['plantingGuide']>>;
+  /** Crop categories a seed added from the Seeds step can link to (#472). */
+  readonly cropCatalog?: ReadonlyArray<CropCatalogItem>;
   readonly aiEnabled: boolean;
   readonly wizardPlanId: string | undefined;
   readonly onClose: () => void;
@@ -123,6 +130,12 @@ export class AllocationWizardState {
   seedSearch = $state('');
 
   selectedSeeds = $state<Map<string, number>>(new Map());
+  /** #471 — selected seeds with no quantity set anywhere (on hand, ordered
+   *  or planned). They go to allocate as "fill the bed" and are sized by
+   *  the space they get, tagged `fallback`. */
+  fillToBedSeeds = $state<Set<string>>(new Set());
+  /** #480 — Inputs step product picks (application id → product id). */
+  inputOverrides = $state<Record<string, string>>({});
   selectedBlockIds = $state<Set<string>>(new Set());
 
   response = $state<AllocationResponse | null>(null);
@@ -211,9 +224,9 @@ export class AllocationWizardState {
     this.step === 'schedule' ? this.scheduleChatMessages : this.allocationChatMessages
   );
 
-  readonly eligibleStock = $derived.by(() =>
-    this.props.seedStock.filter((s) => !!s.cropPluginId && s.onHand > 0)
-  );
+  // #471 — every linked seed shows, even at zero: a lot the farmer has not
+  // counted yet (or only ordered or planned) still belongs in the plan.
+  readonly eligibleStock = $derived.by(() => this.props.seedStock.filter((s) => !!s.cropPluginId));
 
   // #252 / CT-W-007 — surface seeds the operator added without a crop
   // plugin (Manual entry path; or Search/Barcode/Label where the
@@ -223,8 +236,11 @@ export class AllocationWizardState {
   // section with an inline picker that hits /api/plugins/search-by-name
   // and PATCHes /api/stock/[id] with the chosen pluginId. The seed
   // then migrates to eligibleStock on the next render.
-  readonly noPluginStock = $derived.by(() =>
-    this.props.seedStock.filter((s) => !s.cropPluginId && s.onHand > 0)
+  readonly noPluginStock = $derived.by(() => this.props.seedStock.filter((s) => !s.cropPluginId));
+
+  /** Something to plan: a seed with a quantity or a fill-the-bed seed. */
+  readonly hasSeedSelection = $derived(
+    [...this.selectedSeeds.values()].some((v) => v > 0) || this.fillToBedSeeds.size > 0
   );
 
   readonly totalPlantsSelected = $derived(
@@ -232,6 +248,23 @@ export class AllocationWizardState {
       .filter(([, qty]) => qty > 0)
       .reduce((sum, [stockItemId, quantity]) => {
         return sum + (this.plantsFor(stockItemId, quantity) ?? 0);
+      }, 0)
+  );
+
+  /** #475 — rough square feet the counted seed needs at plugin spacing, so
+   *  the Blocks step can say when the picked blocks are too small. Seeds
+   *  sized to the bed are left out. */
+  readonly seedSpaceNeededSqft = $derived(
+    [...this.selectedSeeds.entries()]
+      .filter(([id, qty]) => qty > 0 && !this.fillToBedSeeds.has(id))
+      .reduce((sum, [id, qty]) => {
+        const plants = this.plantsFor(id, qty) ?? 0;
+        const shape = this.pluginShapeFor(id);
+        if (!plants || !shape) return sum;
+        return (
+          sum +
+          plants * footprintSqFt({ plantingGuide: shape.plantingGuide } as unknown as CropPlugin)
+        );
       }, 0)
   );
 
@@ -292,23 +325,50 @@ export class AllocationWizardState {
     const entry = this.props.seedStock.find((s) => s.stockItemId === stockItemId);
     if (!entry) return null;
     const result = seedsToPlants({
-      unit: entry.defaultUnit,
+      unit: seedStockUnit(entry.defaultUnit),
       quantity,
       plugin: this.pluginShapeFor(stockItemId)
     });
     return result?.plants ?? null;
   }
 
+  #select(s: SeedStockEntry) {
+    const total = planningTotal(s);
+    this.selectedSeeds.set(s.stockItemId, total);
+    if (total <= 0) this.fillToBedSeeds.add(s.stockItemId);
+    else this.fillToBedSeeds.delete(s.stockItemId);
+  }
+
+  #commitSelection() {
+    this.selectedSeeds = new Map(this.selectedSeeds);
+    this.fillToBedSeeds = new Set(this.fillToBedSeeds);
+  }
+
+  isFillToBed(stockItemId: string): boolean {
+    return this.fillToBedSeeds.has(stockItemId);
+  }
+
   selectAllInFamily(items: ReadonlyArray<SeedStockEntry>) {
     for (const s of items) {
-      if (!this.selectedSeeds.has(s.stockItemId)) this.selectedSeeds.set(s.stockItemId, s.onHand);
+      if (!this.selectedSeeds.has(s.stockItemId)) this.#select(s);
     }
-    this.selectedSeeds = new Map(this.selectedSeeds);
+    this.#commitSelection();
+  }
+
+  /** Selects a seed the farmer just added from the wizard's add sheet. */
+  selectNewSeed(stockItemId: string) {
+    const s = this.props.seedStock.find((e) => e.stockItemId === stockItemId);
+    if (!s || !s.cropPluginId) return;
+    this.#select(s);
+    this.#commitSelection();
   }
 
   clearFamily(items: ReadonlyArray<SeedStockEntry>) {
-    for (const s of items) this.selectedSeeds.delete(s.stockItemId);
-    this.selectedSeeds = new Map(this.selectedSeeds);
+    for (const s of items) {
+      this.selectedSeeds.delete(s.stockItemId);
+      this.fillToBedSeeds.delete(s.stockItemId);
+    }
+    this.#commitSelection();
   }
 
   familySelectedCount(items: ReadonlyArray<SeedStockEntry>): number {
@@ -320,18 +380,25 @@ export class AllocationWizardState {
   toggleSeed(s: SeedStockEntry) {
     if (this.selectedSeeds.has(s.stockItemId)) {
       this.selectedSeeds.delete(s.stockItemId);
+      this.fillToBedSeeds.delete(s.stockItemId);
     } else {
-      this.selectedSeeds.set(s.stockItemId, s.onHand);
+      this.#select(s);
     }
-    this.selectedSeeds = new Map(this.selectedSeeds);
+    this.#commitSelection();
   }
 
+  /** Quantity is capped at on hand + ordered + planned. A seed with none of
+   *  those takes any typed amount; clearing it back to 0 sizes it to the bed. */
   setSeedQuantity(stockItemId: string, quantity: number) {
     const entry = this.props.seedStock.find((s) => s.stockItemId === stockItemId);
     if (!entry) return;
-    const clamped = Math.max(0, Math.min(entry.onHand, quantity));
+    const total = planningTotal(entry);
+    const q = Number.isFinite(quantity) ? Math.max(0, quantity) : 0;
+    const clamped = total > 0 ? Math.min(total, q) : q;
     this.selectedSeeds.set(stockItemId, clamped);
-    this.selectedSeeds = new Map(this.selectedSeeds);
+    if (total <= 0 && clamped <= 0) this.fillToBedSeeds.add(stockItemId);
+    else this.fillToBedSeeds.delete(stockItemId);
+    this.#commitSelection();
   }
 
   toggleBlock(id: string) {
@@ -422,6 +489,11 @@ export class AllocationWizardState {
   hydrateDraft(): void {
     this.#draft.hydrateDraft();
   }
+}
+
+/** On hand + ordered + planned: what the farmer can plan with (#475). */
+export function planningTotal(s: Pick<SeedStockEntry, 'onHand' | 'onOrder' | 'planned'>): number {
+  return Math.max(0, s.onHand) + Math.max(0, s.onOrder ?? 0) + Math.max(0, s.planned ?? 0);
 }
 
 const CONTEXT_KEY = Symbol('allocation-wizard');

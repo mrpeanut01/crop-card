@@ -12,7 +12,7 @@ import { helperAssignments, owners, users } from '$lib/db/schema';
 import { runWithTenant } from '$lib/db/tenant';
 import { setSetting } from '$lib/db/settings';
 import { SETTINGS_KEYS } from '$lib/schedule/constants';
-import type { PlanId } from '$lib/billing/plans';
+import { PLANS, type PlanId } from '$lib/billing/plans';
 import { checkGuard, recordCall, resetFreePoolCache, spendSnapshot } from './aiGuard';
 import { issueToken } from './apiTokens';
 
@@ -44,7 +44,7 @@ function spend(
   ownerId: string,
   userId: string | null,
   usd: number,
-  extra: { tokenId?: string; endpoint?: 'inputs' | 'suggest' } = {}
+  extra: { tokenId?: string; endpoint?: 'inputs' | 'suggest' | 'allocate' } = {}
 ) {
   runWithTenant(ownerId, () =>
     recordCall({
@@ -132,11 +132,11 @@ describe('the meter agrees with the guard', () => {
     });
   });
 
-  it('with less left than a full plan needs, the meter says quick help only', () => {
+  it('with less left than a web lookup needs, the meter says quick help only', () => {
     const f = farm(null);
     spend(f.ownerId, f.userId, 0.3);
     runWithTenant(f.ownerId, () => {
-      expect(checkGuard(f.userId, 'allocate').ok).toBe(false);
+      expect(checkGuard(f.userId, 'plugin-search').ok).toBe(false);
       expect(checkGuard(f.userId, 'suggest').ok).toBe(true);
       expect(spendSnapshot()).toMatchObject({ exhausted: false, quickOnly: true });
     });
@@ -148,7 +148,7 @@ describe('reserve before each call', () => {
     const f = farm('grower');
     spend(f.ownerId, f.userId, 3.8);
     runWithTenant(f.ownerId, () => {
-      const plan = checkGuard(f.userId, 'allocate');
+      const plan = checkGuard(f.userId, 'plugin-search');
       expect(plan.ok).toBe(false);
       if (!plan.ok) expect(plan.detail).toBe('monthly-budget');
       expect(checkGuard(f.userId, 'suggest').ok).toBe(true);
@@ -237,6 +237,88 @@ describe('daily caps', () => {
       );
     }
     runWithTenant(f.ownerId, () => expect(checkGuard(f.userId, 'succession').ok).toBe(false));
+  });
+});
+
+describe('AI planning runs on its daily cap, not the monthly budget (#479)', () => {
+  it('a Free farm with its month used up still gets 5 planning runs a day', () => {
+    const f = farm(null);
+    spend(f.ownerId, f.userId, 0.5);
+    runWithTenant(f.ownerId, () => {
+      expect(checkGuard(f.userId, 'suggest').ok).toBe(false);
+      expect(spendSnapshot().planning).toMatchObject({ perDay: 5, usedToday: 0 });
+    });
+    for (let i = 0; i < 5; i++) {
+      runWithTenant(f.ownerId, () => expect(checkGuard(f.userId, 'allocate').ok).toBe(true));
+      spend(f.ownerId, f.userId, 0.1, { endpoint: 'allocate' });
+    }
+    runWithTenant(f.ownerId, () => {
+      const g = checkGuard(f.userId, 'allocate');
+      expect(g.ok).toBe(false);
+      if (!g.ok) expect(g.detail).toBe('daily-quota');
+      expect(spendSnapshot().planning).toMatchObject({ perDay: 5, usedToday: 5 });
+    });
+  });
+
+  it('planning spend never uses up the other AI help', () => {
+    const f = farm(null);
+    for (let i = 0; i < 5; i++) spend(f.ownerId, f.userId, 0.2, { endpoint: 'allocate' });
+    runWithTenant(f.ownerId, () => {
+      expect(spendSnapshot().monthlyUsdSoFar).toBe(0);
+      expect(checkGuard(f.userId, 'suggest').ok).toBe(true);
+    });
+  });
+
+  it('planning has its own monthly budget, so one farm cannot drain the global cap', () => {
+    const f = farm('farm');
+    spend(f.ownerId, f.userId, PLANS.farm.planningMonthlyUsd - 0.2, { endpoint: 'allocate' });
+    runWithTenant(f.ownerId, () => {
+      const g = checkGuard(f.userId, 'allocate');
+      expect(g.ok).toBe(false);
+      if (!g.ok) {
+        expect(g.detail).toBe('monthly-budget');
+        expect(g.message).toContain("This month's AI planning is used up");
+      }
+      expect(spendSnapshot().planning.monthlyExhausted).toBe(true);
+      expect(checkGuard(f.userId, 'suggest').ok).toBe(true);
+    });
+  });
+
+  it("an owner's lower monthly limit covers planning too", () => {
+    const f = farm('farm');
+    runWithTenant(f.ownerId, () => setSetting(SETTINGS_KEYS.aiMonthlyUsdCap, '1'));
+    spend(f.ownerId, f.userId, 0.8, { endpoint: 'allocate' });
+    runWithTenant(f.ownerId, () => {
+      const g = checkGuard(f.userId, 'allocate');
+      expect(g.ok).toBe(false);
+      if (!g.ok) {
+        expect(g.detail).toBe('monthly-budget');
+        expect(g.message).toContain('you set');
+      }
+      expect(checkGuard(f.userId, 'plugin-search').ok).toBe(false);
+      expect(checkGuard(f.userId, 'photo-help').ok).toBe(true);
+      const snap = spendSnapshot();
+      expect(snap.ownerLimited).toBe(true);
+      expect(snap.monthlyUsdSoFar).toBeCloseTo(0.8);
+      expect(snap.planning.monthlyExhausted).toBe(true);
+    });
+  });
+
+  it('the free pool still stops Free planning, and AI off still means off', () => {
+    const f = farm(null);
+    spend(f.ownerId, f.userId, 0.01, { endpoint: 'allocate' });
+    process.env.AI_FREE_POOL_MONTHLY_USD = '0.005';
+    resetFreePoolCache();
+    runWithTenant(f.ownerId, () => {
+      const g = checkGuard(f.userId, 'allocate');
+      expect(g.ok).toBe(false);
+      if (!g.ok) expect(g.detail).toBe('free-pool');
+    });
+    const off = farm('farm');
+    runWithTenant(off.ownerId, () => {
+      setSetting(SETTINGS_KEYS.aiMonthlyUsdCap, '0');
+      expect(checkGuard(off.userId, 'allocate').ok).toBe(false);
+    });
   });
 });
 

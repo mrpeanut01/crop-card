@@ -1,12 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildCalendarDeck,
   buildTaskDeck,
-  calendarItems,
-  clampView,
-  clampWindow,
   deckCounts,
   eventsForWindow,
-  periodForWindow,
   type DeckTaskLike
 } from './deck';
 
@@ -99,22 +96,6 @@ describe('buildTaskDeck', () => {
 });
 
 describe('window helpers', () => {
-  it('clamps unknown values to the defaults', () => {
-    expect(clampWindow('7d')).toBe('7d');
-    expect(clampWindow('season')).toBe('season');
-    expect(clampWindow('bogus')).toBe('today');
-    expect(clampWindow(null)).toBe('today');
-    expect(clampView('calendar')).toBe('calendar');
-    expect(clampView('grid')).toBe('list');
-  });
-
-  it('maps each window onto a WeekStrip period', () => {
-    expect(periodForWindow('today')).toBe('week');
-    expect(periodForWindow('7d')).toBe('week');
-    expect(periodForWindow('30d')).toBe('month');
-    expect(periodForWindow('season')).toBe('season');
-  });
-
   it('events: today uses the open-today list, wider windows overlap the range', () => {
     const DAY = 86_400_000;
     const soon = { startMs: now + 2 * DAY, endMs: now + 3 * DAY };
@@ -140,27 +121,38 @@ describe('window helpers', () => {
     ]);
     const week = buildTaskDeck(dated, { window: '7d', now, timeZone: NY });
     expect(week.find((e) => e.task.id === 'dueTomorrow')?.status).toBe('planned');
-    expect(
-      calendarItems(
-        dated.map((t) => ({ at: t.scheduledFor, value: t.id })),
-        '2026-06-04',
-        NY,
-        (v) => v,
-        7
-      )
-    ).toEqual({ '2026-06-04': ['dueToday'], '2026-06-05': ['dueTomorrow'] });
+  });
+});
+
+describe('buildCalendarDeck', () => {
+  const range = { fromYmd: '2026-05-31', toYmd: '2026-06-06', now, timeZone: NY };
+
+  it('keeps every task due in the grid, open or closed, on its due day', () => {
+    const deck = buildCalendarDeck(tasks, range);
+    const byId = new Map(deck.map((e) => [e.task.id, e.status]));
+    expect(byId.get('late')).toBe('late');
+    expect(byId.get('today')).toBe('due-today');
+    expect(byId.get('tomorrow')).toBe('planned');
+    expect(byId.get('doneYesterday')).toBe('done');
+    expect(byId.get('skippedToday')).toBe('skipped');
+    expect(byId.has('in10')).toBe(false);
+    expect(byId.has('in60')).toBe(false);
   });
 
-  it('calendar items key on the owner calendar day and stay inside the range', () => {
-    const rows = [
-      { at: at('2026-06-05T02:00:00Z'), value: 'late evening' },
-      { at: at('2026-06-03T12:00:00Z'), value: 'yesterday' },
-      { at: at('2026-06-10T12:00:00Z'), value: 'next week' },
-      { at: at('2026-06-12T12:00:00Z'), value: 'too far' }
-    ];
-    expect(calendarItems(rows, '2026-06-04', NY, (v) => v.toUpperCase(), 7)).toEqual({
-      '2026-06-04': ['LATE EVENING'],
-      '2026-06-10': ['NEXT WEEK']
+  it('prep sits under a job in range, and stands alone when its job is out of range', () => {
+    const deck = buildCalendarDeck(tasks, range);
+    expect(deck.find((e) => e.task.id === 'today')!.linked.map((l) => l.task.id)).toEqual(['prep']);
+    expect(deck.some((e) => e.task.id === 'orphanPrep')).toBe(true);
+    expect(deck.some((e) => e.task.id === 'prep')).toBe(false);
+  });
+
+  it('a later grid shows past work as done or late, not hidden', () => {
+    const later = buildCalendarDeck(tasks, {
+      ...range,
+      fromYmd: '2026-06-14',
+      toYmd: '2026-06-20'
     });
+    expect(later.map((e) => e.task.id)).toEqual(['in10']);
+    expect(later[0].linked.map((l) => l.task.id)).toEqual(['cleanup']);
   });
 });

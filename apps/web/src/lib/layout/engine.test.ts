@@ -125,7 +125,7 @@ describe('layout engine — capacity split', () => {
 });
 
 describe('layout engine — no fit', () => {
-  it('places seed into unplaced when total capacity is insufficient', () => {
+  it('fills the block and reports the rest as left over when seed is bigger than every block', () => {
     const corn = plugin({
       pluginId: 'corn-bb',
       cropFamily: 'corn',
@@ -140,8 +140,42 @@ describe('layout engine — no fit', () => {
       pluginIndex: { 'corn-bb': corn }
     });
     const result = planLayout(input);
+    expect(result.assignments).toHaveLength(1);
+    const placed = result.assignments[0].plants;
+    expect(placed).toBeGreaterThan(100);
     expect(result.unplaced).toHaveLength(1);
+    expect(result.unplaced[0].quantityPlants).toBe(10_000 - placed);
+    expect(result.diagnostics[0]?.reason).toMatch(/left over/);
+  });
+
+  it('regression: 26 counted tomatoes in a 3-plant bed places 3, not 0', () => {
+    const tomato = plugin({
+      pluginId: 'tomato-cp',
+      cropFamily: 'solanaceae',
+      defaultRowSpacingInches: 48,
+      plantingGuide: { rowSpacingIn: 48, inRowSpacingIn: { min: 24, max: 36 } }
+    });
+    const input = buildInput({
+      seeds: [seed({ stockItemId: 's', cropPluginId: 'tomato-cp', quantityPlants: 26 })],
+      blocks: [block({ id: 'bed', acres: 40 / 43_560 })],
+      pluginIndex: { 'tomato-cp': tomato }
+    });
+    const result = planLayout(input);
+    const placed = result.assignments.reduce((n, a) => n + a.plants, 0);
+    expect(placed).toBeGreaterThan(0);
+    expect(placed + result.unplaced[0].quantityPlants).toBe(26);
+  });
+
+  it('places nothing when no block has any room', () => {
+    const corn = plugin({ pluginId: 'corn-full', cropFamily: 'corn' });
+    const input = buildInput({
+      seeds: [seed({ stockItemId: 's', cropPluginId: 'corn-full', quantityPlants: 10 })],
+      blocks: [block({ id: 'A', acres: 0 })],
+      pluginIndex: { 'corn-full': corn }
+    });
+    const result = planLayout(input);
     expect(result.assignments).toHaveLength(0);
+    expect(result.unplaced[0].quantityPlants).toBe(10);
     expect(result.diagnostics[0]?.reason).toMatch(/capacity/);
   });
 });

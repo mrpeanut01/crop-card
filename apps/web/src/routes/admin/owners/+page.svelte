@@ -1,5 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { page } from '$app/state';
+  import { untrack } from 'svelte';
   import { fmt } from '$lib/prefsState.svelte';
   import type { ActionData, PageData } from './$types';
 
@@ -8,7 +10,7 @@
   // #225 / CT-ADM-005 — client-side search + status filter. URL-state
   // intentionally deferred; the dataset on /admin/owners is small enough
   // that loader pagination isn't yet needed.
-  let query = $state('');
+  let query = $state(untrack(() => page.url.searchParams.get('q') ?? ''));
   let statusFilter = $state<'all' | 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended'>(
     'all'
   );
@@ -37,6 +39,7 @@
 </svelte:head>
 
 <div class="admin">
+  <p class="admin-links"><a href="/admin/feedback">Feedback inbox →</a></p>
   <h1>All Owners</h1>
   <p class="hint">
     Cross-tenant view. Every action you take is appended to the superadmin audit log.
@@ -152,6 +155,12 @@
 </div>
 
 <style>
+  .admin-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-weight: 600;
+  }
   .admin {
     max-width: 80rem;
     margin: 1rem auto;

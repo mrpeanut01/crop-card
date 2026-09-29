@@ -53,11 +53,11 @@ describe('A_InventoryEditForm — Sprint 8 add flow', () => {
     expect(label?.textContent).toMatch(/REQUIRED/);
   });
 
-  it('shows the plugin section as FROM PLUGIN (optional) for pesticide', () => {
+  it('shows the product link as FROM LIBRARY (optional) for pesticide', () => {
     const { container } = render(A_InventoryEditForm, { type: 'pesticide' });
     const pluginField = container.querySelector('#pluginId');
     const label = pluginField?.closest('.inv-field')?.querySelector('.chip');
-    expect(label?.textContent).toMatch(/FROM PLUGIN/);
+    expect(label?.textContent).toMatch(/FROM LIBRARY/);
   });
 
   it('blocks submit when displayName is empty', async () => {
@@ -121,24 +121,27 @@ describe('A_InventoryEditForm — Sprint 8 add flow', () => {
     expect((callArgs[1] as { method: string }).method).toBe('PATCH');
   });
 
-  it('sprayer add hits POST /api/equipment with type:sprayer', async () => {
-    const { container } = render(A_InventoryEditForm, { type: 'sprayer' });
-    const input = container.querySelector('#displayName') as HTMLInputElement;
-    await fireEvent.input(input, { target: { value: '4-gal backpack' } });
-    const form = container.querySelector('form');
-    await fireEvent.submit(form!);
-    await new Promise((r) => setTimeout(r, 0));
-    const callArgs = (globalThis.fetch as unknown as { mock: { calls: unknown[][] } }).mock
-      .calls[0];
-    expect(callArgs[0]).toBe('/api/equipment');
-    const body = JSON.parse((callArgs[1] as { body: string }).body);
-    expect(body.type).toBe('sprayer');
-    expect(body.label).toBe('4-gal backpack');
+  it('an edited seed shows its saved category as saved, never as "You picked"', () => {
+    const { getByTestId } = render(A_InventoryEditForm, {
+      type: 'seed',
+      library: [{ id: 'tomato-cherokee-purple', name: 'Tomato, Cherokee Purple' }],
+      existing: {
+        id: 'sk_seed',
+        displayName: 'Cherokee Purple',
+        category: 'seed',
+        defaultUnit: 'seeds',
+        pluginId: 'tomato-cherokee-purple'
+      } as never
+    });
+    const current = getByTestId('pluginId-current');
+    expect(current.textContent).not.toMatch(/You picked/i);
+    expect(current.querySelector('[data-provenance="plugin"]')).toBeInTheDocument();
+    expect(current.textContent).toMatch(/Saved/);
   });
 
   it('crop type renders the deferred-banner and refuses submit', async () => {
     const { container, getByText } = render(A_InventoryEditForm, { type: 'crop' });
-    expect(getByText(/Crop plugin editing is versioned/)).toBeInTheDocument();
+    expect(getByText(/Crop categories are versioned/)).toBeInTheDocument();
     const input = container.querySelector('#displayName') as HTMLInputElement;
     await fireEvent.input(input, { target: { value: 'New crop' } });
     const form = container.querySelector('form');
@@ -164,7 +167,7 @@ describe('A_InventoryEditForm — #296 type-aware placeholders + prefill', () =>
   });
 
   it('pre-populates fields from a scan/search draft and shows a provenance banner', () => {
-    const { container, getByRole } = render(A_InventoryEditForm, {
+    const { container, getByRole, getByTestId } = render(A_InventoryEditForm, {
       type: 'seed',
       prefill: {
         source: 'ai',
@@ -175,9 +178,8 @@ describe('A_InventoryEditForm — #296 type-aware placeholders + prefill', () =>
       }
     });
     const name = container.querySelector('#displayName') as HTMLInputElement;
-    const plugin = container.querySelector('#pluginId') as HTMLInputElement;
     expect(name.value).toBe('Cherokee Purple Tomato');
-    expect(plugin.value).toBe('tomato-cherokee-purple');
+    expect(getByTestId('pluginId-current').textContent).toMatch(/tomato-cherokee-purple/);
     // Provenance banner present for a non-manual source.
     expect(getByRole('status').textContent).toMatch(/review/i);
   });
@@ -231,7 +233,7 @@ describe('A_InventoryEditForm — canonical save path for batch review (#249)', 
   });
 
   it('edit still sends null so PATCH can clear the plugin link', async () => {
-    const { container } = render(A_InventoryEditForm, {
+    const { container, getByRole } = render(A_InventoryEditForm, {
       type: 'pesticide',
       existing: {
         id: 'stk1',
@@ -241,8 +243,7 @@ describe('A_InventoryEditForm — canonical save path for batch review (#249)', 
         pluginId: 'x'
       }
     });
-    const plugin = container.querySelector('#pluginId') as HTMLInputElement;
-    await fireEvent.input(plugin, { target: { value: '' } });
+    await fireEvent.click(getByRole('button', { name: 'Clear the product' }));
     await fireEvent.submit(container.querySelector('form')!);
     await new Promise((r) => setTimeout(r, 0));
     expect(lastBody().pluginId).toBeNull();
@@ -261,6 +262,43 @@ describe('A_InventoryEditForm — canonical save path for batch review (#249)', 
     expect(goto).not.toHaveBeenCalled();
   });
 
+  it('records the first quantity as an ordered lot and hands back the new id (#475)', async () => {
+    const onSaved = vi.fn();
+    const { container } = render(A_InventoryEditForm, {
+      type: 'seed',
+      prefill: { source: 'manual', displayName: 'Cherokee Purple', pluginId: 'tomato' },
+      onSaved
+    });
+    const qty = container.querySelector('#quantity') as HTMLInputElement;
+    await fireEvent.input(qty, { target: { value: '40' } });
+    const status = container.querySelector('#initialStatus') as HTMLSelectElement;
+    await fireEvent.change(status, { target: { value: 'ordered' } });
+    await fireEvent.submit(container.querySelector('form')!);
+    await vi.waitFor(() => expect(onSaved).toHaveBeenCalledWith({ id: 'new' }));
+    const calls = (globalThis.fetch as unknown as { mock: { calls: [string, RequestInit][] } }).mock
+      .calls;
+    expect(calls.map((c) => c[0])).toEqual(['/api/stock', '/api/stock/new/lots']);
+    expect(JSON.parse(calls[1][1].body as string)).toEqual({
+      receivedQuantity: 40,
+      unit: 'seeds',
+      quantityStatus: 'ordered'
+    });
+  });
+
+  it('skips the lot when no quantity is typed', async () => {
+    const onSaved = vi.fn();
+    const { container } = render(A_InventoryEditForm, {
+      type: 'seed',
+      prefill: { source: 'manual', displayName: 'Uncounted', pluginId: 'tomato' },
+      onSaved
+    });
+    await fireEvent.submit(container.querySelector('form')!);
+    await vi.waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+    expect((globalThis.fetch as unknown as { mock: { calls: unknown[] } }).mock.calls).toHaveLength(
+      1
+    );
+  });
+
   it('surfaces an honest message when a helper hits the owner-only gate', async () => {
     globalThis.fetch = vi.fn(
       async () =>
@@ -276,5 +314,217 @@ describe('A_InventoryEditForm — canonical save path for batch review (#249)', 
     await fireEvent.submit(container.querySelector('form')!);
     const alert = await findByRole('alert');
     expect(alert.textContent).toMatch(/Only the farm owner can save/);
+  });
+});
+
+describe('A_InventoryEditForm — seed quantity and crop category (#472, #473)', () => {
+  const library = [
+    { id: 'tomato-cherokee-purple', name: 'Tomato — Cherokee Purple (heirloom)' },
+    { id: 'tomato-sungold', name: 'Tomato Sungold F1' },
+    { id: 'basil-genovese', name: 'Basil — Genovese' }
+  ];
+
+  function calls(): Array<[string, { method: string; body: string }]> {
+    return (globalThis.fetch as unknown as { mock: { calls: never[] } }).mock.calls;
+  }
+
+  it('offers Seeds first plus weights, and no pesticide units', () => {
+    const { container } = render(A_InventoryEditForm, { type: 'seed', library });
+    const select = container.querySelector('#defaultUnit') as HTMLSelectElement;
+    expect([...select.options].map((o) => o.value)).toEqual(['seeds', 'oz', 'lb', 'g']);
+    expect([...select.options].map((o) => o.textContent?.trim())).toEqual([
+      'Seeds',
+      'oz',
+      'lb',
+      'g'
+    ]);
+    expect(select.value).toBe('seeds');
+  });
+
+  it('reads a scanned "count" seed unit as Seeds', () => {
+    const { container } = render(A_InventoryEditForm, {
+      type: 'seed',
+      library,
+      prefill: { source: 'ai', displayName: 'X', defaultUnit: 'count' }
+    });
+    expect((container.querySelector('#defaultUnit') as HTMLSelectElement).value).toBe('seeds');
+  });
+
+  it('auto-matches the category from the name and tags it as data', async () => {
+    const { container, getByTestId } = render(A_InventoryEditForm, { type: 'seed', library });
+    await fireEvent.input(container.querySelector('#displayName')!, {
+      target: { value: 'Cherokee Purple Heirloom Tomato Seeds' }
+    });
+    const current = getByTestId('pluginId-current');
+    expect(current.textContent).toMatch(/Cherokee Purple/);
+    expect(current.querySelector('[data-provenance="data"]')).not.toBeNull();
+  });
+
+  it('leaves the category for the operator when the name fits more than one entry (#472 review)', async () => {
+    const { container, queryByTestId } = render(A_InventoryEditForm, { type: 'seed', library });
+    await fireEvent.input(container.querySelector('#displayName')!, {
+      target: { value: 'Tomato' }
+    });
+    expect(queryByTestId('pluginId-current')).toBeNull();
+    await fireEvent.submit(container.querySelector('form')!);
+    expect(container.textContent).toMatch(/Pick a crop category/);
+  });
+
+  it('points an owner with ordered seed to Mark received instead of On hand (#475 review)', () => {
+    const { getByTestId } = render(A_InventoryEditForm, {
+      type: 'seed',
+      library,
+      existing: {
+        id: 'bean',
+        displayName: 'Provider Bush Bean',
+        category: 'seed',
+        defaultUnit: 'seeds',
+        pluginId: 'tomato-sungold',
+        onHand: 0,
+        onOrder: 200,
+        lotCount: 1
+      }
+    });
+    const note = getByTestId('expected-note');
+    expect(note.textContent).toMatch(/200 seeds ordered/);
+    expect(note.textContent).toMatch(/Mark received/);
+    expect(note.querySelector('a')?.getAttribute('href')).toBe('/inventory/seed/bean');
+  });
+
+  it('shows no ordered note when nothing is expected', () => {
+    const { queryByTestId } = render(A_InventoryEditForm, {
+      type: 'seed',
+      library,
+      existing: {
+        id: 'bean',
+        displayName: 'Provider Bush Bean',
+        category: 'seed',
+        defaultUnit: 'seeds',
+        pluginId: 'tomato-sungold',
+        onHand: 10,
+        lotCount: 1
+      }
+    });
+    expect(queryByTestId('expected-note')).toBeNull();
+  });
+
+  it('creates the item, then its first lot with the quantity and lot number', async () => {
+    const { container } = render(A_InventoryEditForm, { type: 'seed', library });
+    await fireEvent.input(container.querySelector('#displayName')!, {
+      target: { value: 'Sungold Tomato' }
+    });
+    await fireEvent.input(container.querySelector('#quantity')!, { target: { value: '250' } });
+    await fireEvent.input(container.querySelector('#lotNumber')!, { target: { value: 'L-42' } });
+    await fireEvent.submit(container.querySelector('form')!);
+    await vi.waitFor(() => expect(calls()).toHaveLength(2));
+    const [create, lot] = calls();
+    expect(create[0]).toBe('/api/stock');
+    expect(JSON.parse(create[1].body)).toMatchObject({
+      category: 'seed',
+      defaultUnit: 'seeds',
+      pluginId: 'tomato-sungold'
+    });
+    expect(lot[0]).toBe('/api/stock/new/lots');
+    expect(JSON.parse(lot[1].body)).toEqual({
+      receivedQuantity: 250,
+      unit: 'seeds',
+      lotNumber: 'L-42'
+    });
+  });
+
+  it('skips the lot when no quantity is entered', async () => {
+    const { container } = render(A_InventoryEditForm, { type: 'seed', library });
+    await fireEvent.input(container.querySelector('#displayName')!, {
+      target: { value: 'Genovese Basil' }
+    });
+    await fireEvent.submit(container.querySelector('form')!);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(calls()).toHaveLength(1);
+  });
+
+  it('a picked category wins over the auto-match and is tagged manual', async () => {
+    const { container, getByRole, getByTestId } = render(A_InventoryEditForm, {
+      type: 'seed',
+      library
+    });
+    await fireEvent.input(container.querySelector('#displayName')!, {
+      target: { value: 'Sungold Tomato' }
+    });
+    const box = container.querySelector('#pluginId') as HTMLInputElement;
+    await fireEvent.focus(box);
+    await fireEvent.input(box, { target: { value: 'basil' } });
+    await fireEvent.mouseDown(getByRole('option', { name: /Basil/ }));
+    expect(getByTestId('pluginId-current').textContent).toMatch(/Basil/);
+    await fireEvent.input(container.querySelector('#displayName')!, {
+      target: { value: 'Sungold Tomato F1' }
+    });
+    expect(getByTestId('pluginId-current').textContent).toMatch(/Basil/);
+  });
+
+  it('retries only the lot when the first lot failed', async () => {
+    let n = 0;
+    globalThis.fetch = vi.fn(async (url: string) => {
+      n++;
+      if (url.endsWith('/lots') && n === 2) {
+        return new Response(JSON.stringify({ error: 'boom' }), { status: 500 });
+      }
+      return new Response(JSON.stringify({ item: { id: 'new' } }), { status: 201 });
+    }) as never;
+    const { container, findByRole } = render(A_InventoryEditForm, { type: 'seed', library });
+    await fireEvent.input(container.querySelector('#displayName')!, {
+      target: { value: 'Sungold Tomato' }
+    });
+    await fireEvent.input(container.querySelector('#quantity')!, { target: { value: '10' } });
+    await fireEvent.submit(container.querySelector('form')!);
+    expect((await findByRole('alert')).textContent).toMatch(/quantity did not save/);
+    await fireEvent.submit(container.querySelector('form')!);
+    await vi.waitFor(() => expect(calls()).toHaveLength(3));
+    expect(calls().map((c) => c[0])).toEqual([
+      '/api/stock',
+      '/api/stock/new/lots',
+      '/api/stock/new/lots'
+    ]);
+  });
+
+  const existingSeed = {
+    id: 'sk1',
+    displayName: 'Sungold',
+    category: 'seed' as const,
+    defaultUnit: 'count' as const,
+    pluginId: 'tomato-sungold',
+    onHand: 100,
+    lotCount: 1
+  };
+
+  it('edit posts a set-quantity adjustment when on hand changes', async () => {
+    const { container } = render(A_InventoryEditForm, {
+      type: 'seed',
+      library,
+      existing: existingSeed
+    });
+    const qty = container.querySelector('#quantity') as HTMLInputElement;
+    expect(qty.value).toBe('100');
+    await fireEvent.input(qty, { target: { value: '60' } });
+    await fireEvent.submit(container.querySelector('form')!);
+    await vi.waitFor(() => expect(calls()).toHaveLength(2));
+    expect(calls()[0][0]).toBe('/api/stock/sk1');
+    expect(calls()[1][0]).toBe('/api/stock/sk1/set-quantity');
+    expect(JSON.parse(calls()[1][1].body)).toMatchObject({ quantity: 60 });
+  });
+
+  it('edit leaves the quantity alone when unchanged, and locks the unit once stocked', async () => {
+    const { container } = render(A_InventoryEditForm, {
+      type: 'seed',
+      library,
+      existing: existingSeed
+    });
+    const unit = container.querySelector('#defaultUnit') as HTMLSelectElement;
+    expect(unit.disabled).toBe(true);
+    expect(unit.options[0].value).toBe('count');
+    expect(unit.options[0].textContent?.trim()).toBe('Seeds');
+    expect(container.querySelector('#lotNumber')).toBeNull();
+    await fireEvent.submit(container.querySelector('form')!);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(calls()).toHaveLength(1);
   });
 });

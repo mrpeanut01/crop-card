@@ -74,3 +74,37 @@ describe('TopBar animals entry (Phase 32B)', () => {
     expect(links[0].textContent).toContain('Pets & animals');
   });
 });
+
+describe('TopBar equipment entry (#474)', () => {
+  it('links Equipment right after Inventory', () => {
+    const { container } = render(TopBar, { online: true, pendingCount: 0 });
+    const nav = container.querySelector('nav.primary-nav') as HTMLElement;
+    const hrefs = [...nav.querySelectorAll(':scope > a')].map((a) => a.getAttribute('href'));
+    const more = [...nav.querySelectorAll('.more-menu a')].map((a) => a.getAttribute('href'));
+    const all = [...hrefs, ...more.filter((h) => !hrefs.includes(h))];
+    const i = all.indexOf('/inventory');
+    expect(i).toBeGreaterThan(-1);
+    expect(all[i + 1]).toBe('/equipment');
+    expect(within(nav).getAllByText('Equipment').length).toBeGreaterThan(0);
+  });
+});
+
+describe('TopBar feedback entry (#466)', () => {
+  it('offers Send feedback in the More menu at every width', () => {
+    const { container } = render(TopBar, { online: true, pendingCount: 0 });
+    const menu = container.querySelector('.more-menu') as HTMLElement;
+    expect(within(menu).getByRole('button', { name: 'Send feedback' })).toBeInTheDocument();
+    expect(container.querySelector('a[href="/admin/feedback"]')).toBeNull();
+  });
+
+  it('adds the Feedback inbox for superadmins', () => {
+    const { container } = render(TopBar, {
+      online: true,
+      pendingCount: 0,
+      user: { email: 'a@b.c', role: 'owner', isSuperadmin: true }
+    });
+    expect(container.querySelector('a[href="/admin/feedback"]')?.textContent).toContain(
+      'Feedback inbox'
+    );
+  });
+});

@@ -12,6 +12,7 @@
    */
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
+  import LotQuantities from '../LotQuantities.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatRateText, formatStockQuantity } from '$lib/stock/units';
   import type { PesticideDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
@@ -38,16 +39,19 @@
 
 <div class="detail-grid">
   <div class="col">
-    <InvSection title="Catalog plugin" kicker="Source">
+    <InvSection title="Product label" kicker="Library">
       {#if plugin}
-        <InvKVP label="Plugin id" value={plugin.pluginId} tone="mono" />
-        <InvKVP label="Display name" value={plugin.displayName} />
+        <InvKVP label="Product" value={plugin.displayName} />
+        <InvKVP label="Product id" value={plugin.pluginId} tone="mono" />
       {:else}
-        <p class="empty">No plugin bound — Manual / OCR entry. Link via Edit.</p>
+        <p class="warn-empty" role="note" data-testid="no-product-link">
+          No product label linked. This item has no EPA registration number, REI, PHI or label rate,
+          so the safety checks cannot use its label data. Link the product with Edit.
+        </p>
       {/if}
     </InvSection>
 
-    <InvSection title="Safety kernel" kicker="Plugin-bound">
+    <InvSection title="Safety kernel" kicker="From the product label">
       <InvKVP label="EPA reg" value={plugin?.epaRegistrationNumber ?? '—'} tone="locked" />
       <InvKVP
         label="Re-entry interval"
@@ -85,28 +89,14 @@
           tone="mono"
         />
       {:else}
-        <p class="empty">No default rate declared on plugin.</p>
+        <p class="empty">No default rate on the product label.</p>
       {/if}
     </InvSection>
   </div>
 
   <div class="col">
-    <InvSection title="On hand">
-      <InvKVP label="Total" value={stockQty(lots.reduce((s, l) => s + l.balance, 0))} />
-      <InvKVP label="Lots" value={lots.length} />
-      {#if lots.length > 0}
-        <ul class="lot-list">
-          {#each lots as lot (lot.id)}
-            <li>
-              <span class="mono">{lot.lotNumber ?? '—'}</span>
-              <span class="muted">{stockQty(lot.balance)}</span>
-              {#if lot.expiresAt}
-                <span class="muted small">exp {fmt.day(lot.expiresAt)}</span>
-              {/if}
-            </li>
-          {/each}
-        </ul>
-      {/if}
+    <InvSection title="Quantity" kicker="On hand, ordered, planned">
+      <LotQuantities itemId={item.id} unit={item.defaultUnit} {lots} />
     </InvSection>
 
     <InvSection title="Storage & reorder">
@@ -146,6 +136,12 @@
     gap: 12px;
   }
   .edit-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    min-width: 48px;
+    box-sizing: border-box;
     background: var(--color-forest, #1f5e3a);
     color: var(--color-cream, #fff8e1);
     padding: 8px 14px;
@@ -189,6 +185,14 @@
     flex-direction: column;
     gap: 14px;
   }
+  .warn-empty {
+    margin: 0;
+    padding: 8px 10px;
+    border-left: 4px solid var(--color-rust, #a23a3a);
+    background: var(--color-rust-tint, #fce8e8);
+    color: var(--color-rust, #a23a3a);
+    font-size: 0.9rem;
+  }
   .empty {
     color: var(--color-ink-muted, #6a6f63);
     font-style: italic;
@@ -207,7 +211,6 @@
     font-size: 0.8rem;
     color: var(--color-forest-deep, #1f3522);
   }
-  .lot-list,
   .movement-list {
     list-style: none;
     padding: 0;
@@ -216,7 +219,6 @@
     flex-direction: column;
     gap: 4px;
   }
-  .lot-list li,
   .movement-list li {
     display: flex;
     gap: 8px;

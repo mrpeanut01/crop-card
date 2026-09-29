@@ -35,6 +35,17 @@ function firstFallFrost(now: Date, frost: PlanningFrost | null | undefined): Dat
   return new Date(year, fall.month, fall.day);
 }
 
+/**
+ * The day planning for season `year + 1` starts: eight weeks before season
+ * `year`'s first fall frost, or July 1 of `year` with no saved dates. Season
+ * `year` runs from `rolloverDateForSeason(year - 1)` up to this day.
+ */
+export function rolloverDateForSeason(year: number, frost: PlanningFrost | null | undefined): Date {
+  const fall = firstFallFrost(new Date(year, PLANNING_ROLLOVER_MONTH, 1), frost);
+  if (!fall) return new Date(year, PLANNING_ROLLOVER_MONTH, 1);
+  return new Date(fall.getFullYear(), fall.getMonth(), fall.getDate() - ROLLOVER_LEAD_DAYS);
+}
+
 function rollsOver(now: Date, frost: PlanningFrost | null | undefined): boolean {
   const fall = firstFallFrost(now, frost);
   if (!fall) return now.getMonth() >= PLANNING_ROLLOVER_MONTH;

@@ -2,33 +2,46 @@
   /**
    * Sprint 8 / Phase 27D (#257) — unified inventory edit form.
    *
-   * One canonical form chrome for create + update across all 5 inventory
+   * One canonical form chrome for create + update across the inventory
    * types per CLAUDE.md Invariant 8. Per-type *fields* differ; per-type
    * *chrome* (identity section, sticky save footer, error surface,
-   * unsaved-changes guard) does not.
+   * unsaved-changes guard) does not. Sprayers are equipment and are
+   * edited on /equipment (#474).
    *
-   * Submit flow:
-   *   - For pesticide/fertility/seed lot-bearing types: POST `/api/stock`
-   *     (create) or PATCH `/api/stock/[id]` (update).
-   *   - For sprayer: POST `/api/equipment` or PATCH `/api/equipment/[id]`.
-   *   - For crop: catalog-only — Sprint 8 surfaces a deep-link to the
-   *     existing upload flow at `/settings/plugins/upload`; consolidation
-   *     into this form is deferred (crop plugin editing has its own
-   *     versioning + hash-chain workflow).
+   * Submit flow for pesticide / fertility / seed: POST `/api/stock` then,
+   * when a quantity was entered, POST `/api/stock/[id]/lots` for the first
+   * lot (received today); on edit, PATCH `/api/stock/[id]` then, when the
+   * on-hand quantity changed, POST `/api/stock/[id]/set-quantity` so the
+   * change is an adjustment in the stock history (#473). Crop categories
+   * are catalog only and are versioned through /plugins.
    *
    * Closes:
    *   - #199 — defaultUnit is REQUIRED on every lot-bearing payload
-   *   - #253 — category=seed requires a bound plugin (REQUIRED chip)
-   *   - #201 — error state resets on type / mode switch (the parent route
-   *     remounts the form on navigation so stale errors can't survive)
+   *   - #253 — category=seed requires a linked crop category
+   *   - #472 — the link is a type-ahead picker; seeds auto-match a category
+   *   - #473 — quantity on add and edit; seeds count in Seeds by default
    */
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import InvSection from './InvSection.svelte';
   import InvField from './InvField.svelte';
+  import LibraryPicker from './LibraryPicker.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { InventoryType } from '$lib/inventory/types';
   import type { StockEntryDraft } from '$lib/stock/normalizeStockEntry';
+  import {
+    confidentLibraryMatch,
+    rankLibraryMatches,
+    type LibraryOption
+  } from '$lib/plugins/libraryMatch';
+  import {
+    ALL_STOCK_UNITS,
+    SEED_UNITS,
+    formatStockQuantity,
+    stockUnitLabel,
+    type StockUnit
+  } from '$lib/stock/units';
+  import { QUANTITY_STATUS_LABELS, type QuantityStatus } from '$lib/stock/quantityStatus';
 
   type StockCategory =
     | 'herbicide'
@@ -40,19 +53,7 @@
     | 'fuel'
     | 'part';
 
-  type StockUnit =
-    | 'fl-oz'
-    | 'pt'
-    | 'qt'
-    | 'gal'
-    | 'oz'
-    | 'lb'
-    | 'kg'
-    | 'g'
-    | 'count'
-    | 'seeds'
-    | 'bag-50lb'
-    | 'bag-25kg';
+  type LinkSource = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
   interface ExistingItem {
     id: string;
@@ -64,99 +65,82 @@
     reorderThreshold?: number;
     notes?: string;
     barcode?: string;
-  }
-
-  interface ExistingEquipment {
-    id: string;
-    label: string;
-    notes?: string;
-    spec?: Record<string, unknown>;
+    /** Current on-hand balance across lots, in `defaultUnit`. */
+    onHand?: number;
+    /** Expected quantity on ordered and planned lots (#475). */
+    onOrder?: number;
+    planned?: number;
+    lotCount?: number;
   }
 
   interface Props {
     type: InventoryType;
     /** When defined, the form is in `edit` mode prefilled from this row.
      *  When undefined, the form is in `add` mode (empty defaults). */
-    existing?: ExistingItem | ExistingEquipment;
+    existing?: ExistingItem;
     /** Add-mode pre-population produced by a scan / search / lookup
      *  method (barcode, label OCR, AI photo, web). The operator reviews
      *  + edits these values before save — "AI assists, never gates".
      *  A non-`manual` source renders a provenance banner so the operator
      *  knows where the draft came from. Ignored in edit mode. */
     prefill?: StockEntryDraft;
+    /** Library entries this item can link to: crop categories for seed,
+     *  product labels for pesticide and fertility. */
+    library?: ReadonlyArray<LibraryOption>;
     /** Replaces the post-save navigation — the batch label queue (#249)
      *  saves one reviewed draft, then returns to the queue. */
-    onSaved?: () => void;
+    onSaved?: (saved: { id: string | null }) => void;
     onCancel?: () => void;
   }
 
-  const { type, existing, prefill, onSaved, onCancel }: Props = $props();
+  const { type, existing, prefill, library = [], onSaved, onCancel }: Props = $props();
 
   const isEdit = $derived(!!existing);
+  const isSeed = $derived(type === 'seed');
+  const lotBearing = $derived(type !== 'crop');
 
-  // Show a provenance banner only when add-mode values were pre-populated
-  // by a non-manual method (scan / search / web). Pure manual entry needs
-  // no banner — the operator typed everything themselves.
   const showPrefillBanner = $derived(!isEdit && !!prefill && prefill.source !== 'manual');
 
-  // For sprayer the existing shape is different — narrow + reshape.
-  const existingItem = $derived(
-    type === 'sprayer' ? undefined : (existing as ExistingItem | undefined)
-  );
-  const existingEquipment = $derived(
-    type === 'sprayer' ? (existing as ExistingEquipment | undefined) : undefined
-  );
-
-  // ─── Form state ────────────────────────────────────────────────────────
-  // Form state is initialized from the prop at MOUNT and intentionally
+  // Form state is initialized from the props at MOUNT and intentionally
   // does NOT re-sync when the parent's `existing` changes — that would
-  // erase in-progress operator edits. `untrack()` silences svelte-check's
-  // `state_referenced_locally` warning while preserving that intent.
-  // The parent route component already remounts the form via {#key} on
-  // route navigation so a new edit target gets a fresh form.
-  let displayName = $state(
-    untrack(
-      () => existingItem?.displayName ?? existingEquipment?.label ?? prefill?.displayName ?? ''
+  // erase in-progress operator edits. The parent route remounts the form
+  // via {#key} on navigation so a new edit target gets a fresh form.
+  let displayName = $state(untrack(() => existing?.displayName ?? prefill?.displayName ?? ''));
+  let shortName = $state(untrack(() => existing?.shortName ?? prefill?.shortName ?? ''));
+  let category = $state<StockCategory>(
+    untrack(() => existing?.category ?? prefillCategory() ?? defaultCategoryFor(type))
+  );
+  let defaultUnit = $state<StockUnit>(untrack(() => initialUnit()));
+  let pluginId = $state(untrack(() => existing?.pluginId ?? prefill?.pluginId ?? ''));
+  // An edit does not know whether the saved link was matched or picked, so
+  // it reads as the saved library entry (`plugin`), never as `manual`.
+  let pluginSource = $state<LinkSource>(
+    untrack(() =>
+      existing ? (existing.pluginId ? 'plugin' : 'manual') : prefill?.pluginId ? 'data' : 'manual'
     )
   );
-  let shortName = $state(untrack(() => existingItem?.shortName ?? prefill?.shortName ?? ''));
-  let category = $state<StockCategory>(
-    untrack(() => prefillCategory() ?? defaultCategoryFor(type))
-  );
-  let defaultUnit = $state<StockUnit>(
-    untrack(() => existingItem?.defaultUnit ?? prefill?.defaultUnit ?? defaultUnitFor(type))
-  );
-  let pluginId = $state(untrack(() => existingItem?.pluginId ?? prefill?.pluginId ?? ''));
   let reorderThreshold = $state<number | null>(
-    untrack(() => existingItem?.reorderThreshold ?? prefill?.reorderThreshold ?? null)
+    untrack(() => existing?.reorderThreshold ?? prefill?.reorderThreshold ?? null)
   );
-  let notes = $state(
-    untrack(() => existingItem?.notes ?? existingEquipment?.notes ?? prefill?.notes ?? '')
+  let notes = $state(untrack(() => existing?.notes ?? prefill?.notes ?? ''));
+  let barcode = $state(untrack(() => existing?.barcode ?? prefill?.barcode ?? ''));
+  const initialOnHand = untrack(() => existing?.onHand ?? null);
+  let quantity = $state<number | null>(
+    untrack(() => existing?.onHand ?? prefill?.quantity ?? null)
   );
-  let barcode = $state(untrack(() => existingItem?.barcode ?? prefill?.barcode ?? ''));
-
-  // Sprayer-specific spec fields (free-form on equipment.spec JSON column).
-  const initialSprayerSpec = untrack(() =>
-    type === 'sprayer'
-      ? (((existing as ExistingEquipment | undefined)?.spec ?? {}) as {
-          tankGal?: number;
-          nozzle?: string;
-        })
-      : ({} as { tankGal?: number; nozzle?: string })
-  );
-  let tankGal = $state<number | null>(initialSprayerSpec.tankGal ?? null);
-  let nozzle = $state(initialSprayerSpec.nozzle ?? '');
+  let lotNumber = $state('');
+  // #475: add mode records the first quantity as on hand, ordered or planned.
+  let initialStatus = $state<QuantityStatus>('existing');
 
   let submitting = $state(false);
   let error = $state<string | null>(null);
   let fieldErrors = $state<Record<string, string>>({});
   let dirty = $state(false);
+  /** Set once POST /api/stock succeeded, so a retry after a failed first
+   *  lot only posts the lot instead of creating the item twice. */
+  let createdId = $state<string | null>(null);
 
   $effect(() => {
-    // Tracking dirty state: any user-input field assignment flips this.
-    // Init touch is suppressed by referencing all signals once then
-    // immediately resetting — Svelte 5's $effect runs after first state
-    // read so we set dirty=false on next microtask.
     void [
       displayName,
       shortName,
@@ -166,10 +150,29 @@
       reorderThreshold,
       notes,
       barcode,
-      tankGal,
-      nozzle
+      quantity,
+      lotNumber
     ];
     dirty = true;
+  });
+
+  // #472: a new seed auto-matches its crop category from the name until
+  // the operator picks one themselves, but only when the name clearly means
+  // one entry; otherwise the ranked hits are offered as suggestions. The
+  // match is tagged `data`.
+  let lastMatchedName = untrack(() => (pluginId ? displayName : null));
+  const suggestions = $derived(
+    isSeed && displayName.trim() ? rankLibraryMatches(displayName, library) : []
+  );
+  $effect(() => {
+    if (!isSeed || isEdit || library.length === 0) return;
+    const name = displayName;
+    if (name === lastMatchedName) return;
+    if (untrack(() => pluginSource) === 'manual' && untrack(() => pluginId)) return;
+    lastMatchedName = name;
+    const top = confidentLibraryMatch(name, library);
+    pluginId = top ? top.id : '';
+    pluginSource = top ? 'data' : 'manual';
   });
 
   // ─── Per-type field map ───────────────────────────────────────────────
@@ -194,39 +197,58 @@
   function defaultUnitFor(t: InventoryType): StockUnit {
     if (t === 'pesticide') return 'fl-oz';
     if (t === 'fertility') return 'lb';
-    if (t === 'seed') return 'count';
-    return 'count';
+    return 'seeds';
   }
-  // Type-aware examples — a seed form must never read as a pesticide form.
+  // #473: a new seed counts in Seeds; a scan that says "count" means seeds.
+  function initialUnit(): StockUnit {
+    if (existing) return existing.defaultUnit;
+    const u = prefill?.defaultUnit;
+    if (type === 'seed') {
+      if (u === 'count' || u === 'seeds' || !u) return 'seeds';
+      return SEED_UNITS.includes(u) ? u : 'seeds';
+    }
+    return u && u !== 'seeds' ? u : defaultUnitFor(type);
+  }
   function placeholdersFor(t: InventoryType): { displayName: string; shortName: string } {
     if (t === 'seed')
       return { displayName: 'e.g. Cherokee Purple Tomato', shortName: 'e.g. Cherokee Purple' };
     if (t === 'fertility')
       return { displayName: 'e.g. Calcium Nitrate 15.5-0-0', shortName: 'e.g. CalNit' };
-    if (t === 'sprayer') return { displayName: 'e.g. Boom sprayer 25 gal', shortName: '' };
     return { displayName: 'e.g. Roundup PowerMAX', shortName: 'e.g. Roundup PM' };
   }
   const placeholders = $derived(placeholdersFor(type));
   const categoryOptions = $derived(categoryOptionsFor(type));
 
-  const unitOptions: StockUnit[] = [
-    'fl-oz',
-    'pt',
-    'qt',
-    'gal',
-    'oz',
-    'lb',
-    'kg',
-    'g',
-    'count',
-    'seeds',
-    'bag-50lb',
-    'bag-25kg'
-  ];
+  const unitOptions = $derived.by((): StockUnit[] => {
+    const base: StockUnit[] = isSeed
+      ? [...SEED_UNITS]
+      : ALL_STOCK_UNITS.filter((u) => u !== 'seeds');
+    const current = existing?.defaultUnit;
+    if (current && !base.includes(current)) {
+      if (isSeed && current === 'count') base.splice(0, 1, 'count');
+      else base.unshift(current);
+    }
+    return base;
+  });
+  // Stored quantities are in the item's unit; changing the unit once stock
+  // is on hand would silently reinterpret every lot.
+  const unitLocked = $derived(isEdit && (existing?.lotCount ?? 0) > 0);
+  const unitLabel = $derived(stockUnitLabel(defaultUnit, category).toLowerCase());
 
-  // #253 — category=seed requires a bound plugin. The kernel-locked chip
-  // signals that to the operator + the validator blocks save without one.
-  const requiresPlugin = $derived(type === 'seed');
+  // #475 review: an arrived order is received on the item page, never typed
+  // into On hand here, or the planner counts the seed twice.
+  const expectedNote = $derived.by((): string | null => {
+    if (!existing) return null;
+    const parts: string[] = [];
+    const fmt = (n: number) =>
+      formatStockQuantity(n, existing.defaultUnit, undefined, { category, digits: 2 });
+    if ((existing.onOrder ?? 0) > 0) parts.push(`${fmt(existing.onOrder ?? 0)} ordered`);
+    if ((existing.planned ?? 0) > 0) parts.push(`${fmt(existing.planned ?? 0)} planned`);
+    return parts.length ? parts.join(' and ') : null;
+  });
+
+  // #253 — seed requires a linked crop category.
+  const requiresLink = $derived(isSeed);
 
   // ─── Validation ────────────────────────────────────────────────────────
   function validate(): boolean {
@@ -234,14 +256,15 @@
     if (!displayName.trim()) {
       fieldErrors.displayName = 'Display name is required';
     }
-    if (type !== 'sprayer' && type !== 'crop') {
+    if (lotBearing) {
       if (!defaultUnit) {
-        // #199: defaultUnit must always be present on the lot-bearing payload.
-        fieldErrors.defaultUnit = 'Default unit is required';
+        fieldErrors.defaultUnit = 'Pick a unit';
       }
-      if (requiresPlugin && !pluginId.trim()) {
-        // #253: seed-category needs a plugin link.
-        fieldErrors.pluginId = 'Seed entries must link to a crop plugin';
+      if (requiresLink && !pluginId.trim()) {
+        fieldErrors.pluginId = 'Pick a crop category for this seed so the planner can use it';
+      }
+      if (quantity != null && (!Number.isFinite(quantity) || quantity < 0)) {
+        fieldErrors.quantity = 'On hand cannot be negative';
       }
     }
     if (reorderThreshold != null && reorderThreshold < 0) {
@@ -256,18 +279,15 @@
     error = null;
     if (!validate()) return;
     submitting = true;
+    let savedId: string | null = null;
     try {
-      if (type === 'sprayer') {
-        await submitSprayer();
-      } else if (type === 'crop') {
-        // Crop catalog editing has its own versioning + hash flow.
-        error = 'Crop plugins are edited via the upload flow — Sprint 9 cutover wires it here.';
+      if (type === 'crop') {
+        error = 'Crop categories are versioned. Upload a new version in the crop library.';
         return;
-      } else {
-        await submitLotBearing();
       }
+      savedId = await submitLotBearing();
       dirty = false;
-      if (onSaved) onSaved();
+      if (onSaved) onSaved({ id: savedId });
       else goto(`/inventory?type=${type}`);
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
@@ -276,9 +296,17 @@
     }
   }
 
+  async function postJson(url: string, method: string, body: unknown): Promise<Response> {
+    return fetch(url, {
+      method,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  }
+
   // POST /api/stock rejects null (fields are optional); PATCH uses null to clear.
-  async function submitLotBearing(): Promise<void> {
-    const unset = existingItem ? null : undefined;
+  async function submitLotBearing(): Promise<string | null> {
+    const unset = existing ? null : undefined;
     const payload = {
       displayName: displayName.trim(),
       shortName: shortName.trim() || undefined,
@@ -289,14 +317,45 @@
       notes: notes.trim() || undefined,
       barcode: barcode.trim() || undefined
     };
-    const url = existingItem ? `/api/stock/${existingItem.id}` : '/api/stock';
-    const method = existingItem ? 'PATCH' : 'POST';
-    const res = await fetch(url, {
-      method,
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error(await apiError(res));
+    if (existing) {
+      const res = await postJson(`/api/stock/${existing.id}`, 'PATCH', payload);
+      if (!res.ok) throw new Error(await apiError(res));
+      if (quantity != null && quantity !== initialOnHand) {
+        const q = await postJson(`/api/stock/${existing.id}/set-quantity`, 'POST', {
+          quantity,
+          notes: 'Changed on the edit form'
+        });
+        if (!q.ok) {
+          throw new Error(
+            `Saved the details, but the quantity did not change: ${await apiError(q)}`
+          );
+        }
+      }
+      return existing.id;
+    }
+
+    let id = createdId;
+    if (!id) {
+      const res = await postJson('/api/stock', 'POST', payload);
+      if (!res.ok) throw new Error(await apiError(res));
+      const body = await res.json().catch(() => null);
+      id = (body?.item?.id as string | undefined) ?? null;
+      createdId = id;
+    }
+    if (id && quantity != null && quantity > 0) {
+      const lot = await postJson(`/api/stock/${id}/lots`, 'POST', {
+        receivedQuantity: quantity,
+        unit: defaultUnit,
+        lotNumber: lotNumber.trim() || undefined,
+        quantityStatus: initialStatus === 'existing' ? undefined : initialStatus
+      });
+      if (!lot.ok) {
+        throw new Error(
+          `Saved ${displayName.trim()}, but the quantity did not save: ${await apiError(lot)}. Save again to retry the quantity.`
+        );
+      }
+    }
+    return id;
   }
 
   async function apiError(res: Response): Promise<string> {
@@ -306,38 +365,9 @@
     }
     const issue = body?.issues?.[0];
     const detail = issue?.message
-      ? ` — ${issue.path?.length ? `${issue.path.join('.')}: ` : ''}${issue.message}`
+      ? `: ${issue.path?.length ? `${issue.path.join('.')}: ` : ''}${issue.message}`
       : '';
     return `${body?.error ?? body?.message ?? `HTTP ${res.status}`}${detail}`;
-  }
-
-  async function submitSprayer(): Promise<void> {
-    if (existingEquipment) {
-      const res = await fetch(`/api/equipment/${existingEquipment.id}`, {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          label: displayName.trim(),
-          notes: notes.trim() || undefined
-        })
-      });
-      if (!res.ok) throw new Error(await apiError(res));
-    } else {
-      const spec: Record<string, unknown> = {};
-      if (tankGal != null && tankGal > 0) spec.tankGal = tankGal;
-      if (nozzle.trim()) spec.nozzle = nozzle.trim();
-      const res = await fetch('/api/equipment', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          type: 'sprayer',
-          label: displayName.trim(),
-          notes: notes.trim() || undefined,
-          spec: Object.keys(spec).length > 0 ? spec : undefined
-        })
-      });
-      if (!res.ok) throw new Error(await apiError(res));
-    }
   }
 
   function handleCancel(): void {
@@ -346,12 +376,8 @@
       onCancel();
       return;
     }
-    if (existing && type !== 'crop') {
-      const id = (existing as { id: string }).id;
-      goto(`/inventory/${type}/${id}`);
-    } else {
-      goto(`/inventory?type=${type}`);
-    }
+    if (existing) goto(`/inventory/${type}/${existing.id}`);
+    else goto(`/inventory?type=${type}`);
   }
 
   function onBeforeUnload(e: BeforeUnloadEvent): void {
@@ -374,7 +400,7 @@
   <div class="prefill-banner" role="status">
     <Provenance source={prefill.source} />
     <span
-      >Pre-filled for your review — check each field, then save. Nothing is recorded until you do.</span
+      >Pre-filled for your review. Check each field, then save. Nothing is recorded until you do.</span
     >
   </div>
 {/if}
@@ -392,7 +418,7 @@
       />
     </InvField>
 
-    {#if type !== 'sprayer' && type !== 'crop'}
+    {#if lotBearing}
       <InvField id="shortName" label="Short label" hint="Compact UI label (optional)">
         <input
           id="shortName"
@@ -404,7 +430,7 @@
       </InvField>
 
       {#if categoryOptions.length > 1}
-        <InvField id="category" label="Category" chip="required">
+        <InvField id="category" label="Kind" chip="required">
           <select id="category" bind:value={category}>
             {#each categoryOptions as opt (opt)}
               <option value={opt}>{opt}</option>
@@ -412,67 +438,106 @@
           </select>
         </InvField>
       {/if}
-
-      <InvField
-        id="defaultUnit"
-        label="Default unit"
-        chip="required"
-        error={fieldErrors.defaultUnit}
-      >
-        <select id="defaultUnit" bind:value={defaultUnit}>
-          {#each unitOptions as u (u)}
-            <option value={u}>{u}</option>
-          {/each}
-        </select>
-      </InvField>
     {/if}
   </InvSection>
 
-  {#if type !== 'sprayer' && type !== 'crop'}
-    <InvSection title="Plugin link" kicker={requiresPlugin ? 'Required' : 'Optional'}>
+  {#if lotBearing}
+    <InvSection
+      title={isSeed ? 'Crop category' : 'Product label'}
+      kicker={requiresLink ? 'Required' : 'Optional'}
+    >
       <InvField
         id="pluginId"
-        label="Plugin id"
-        chip={requiresPlugin ? 'required' : 'from-plugin'}
-        hint={requiresPlugin
-          ? 'Seed entries must link to a registered crop plugin so the planner can use them.'
-          : 'Bind to a registered catalog plugin so kernel-locked safety fields stay in sync.'}
+        label={isSeed ? 'Category' : 'Product'}
+        chip={requiresLink ? 'required' : 'from-plugin'}
+        hint={isSeed
+          ? 'The crop this seed grows. We match it from the name; search to change it.'
+          : 'Link the product in the library so its label and safety data stay in sync.'}
         error={fieldErrors.pluginId}
       >
-        <input
+        <LibraryPicker
           id="pluginId"
-          type="text"
+          options={library}
           bind:value={pluginId}
-          placeholder="e.g. tomato-cherokee-purple"
-          maxlength="120"
+          bind:source={pluginSource}
+          {suggestions}
+          noun={isSeed ? 'category' : 'product'}
+          placeholder={isSeed ? 'Search crops, e.g. tomato' : 'Search products'}
         />
       </InvField>
     </InvSection>
-  {/if}
 
-  {#if type === 'sprayer' && !isEdit}
-    <InvSection title="Sprayer spec" kicker="Optional">
-      <InvField id="tankGal" label="Tank (gal)" hint="Used for sizing single-tank applications">
-        <input id="tankGal" type="number" step="0.5" min="0" bind:value={tankGal} />
+    <InvSection title="On hand" kicker={isEdit ? 'Stock' : 'Optional'}>
+      <InvField
+        id="defaultUnit"
+        label="Unit"
+        chip="required"
+        error={fieldErrors.defaultUnit}
+        hint={unitLocked
+          ? 'The unit is fixed once stock is on hand.'
+          : isSeed
+            ? 'Count seeds, or use a weight for bulk seed bought by the ounce or pound.'
+            : undefined}
+      >
+        <select id="defaultUnit" bind:value={defaultUnit} disabled={unitLocked}>
+          {#each unitOptions as u (u)}
+            <option value={u}>{stockUnitLabel(u, category)}</option>
+          {/each}
+        </select>
       </InvField>
-      <InvField id="nozzle" label="Nozzle">
+      <InvField
+        id="quantity"
+        label={isEdit ? `On hand (${unitLabel})` : `How much do you have? (${unitLabel})`}
+        error={fieldErrors.quantity}
+        hint={isEdit
+          ? expectedNote
+            ? 'Only what is in the shed now. Changing this records an adjustment in the stock history.'
+            : 'Changing this records an adjustment in the stock history.'
+          : 'Saved as the first lot. Leave blank if you have not counted it yet; the planner sizes it to the bed.'}
+      >
         <input
-          id="nozzle"
-          type="text"
-          bind:value={nozzle}
-          placeholder="e.g. TeeJet XR110015"
-          maxlength="60"
+          id="quantity"
+          type="number"
+          inputmode="decimal"
+          step="any"
+          min="0"
+          bind:value={quantity}
         />
       </InvField>
+      {#if expectedNote && existing}
+        <p class="expected-note" data-testid="expected-note">
+          You also have {expectedNote}. When it arrives, tap Mark received on
+          <a href={`/inventory/${type}/${existing.id}`}>the item page</a> instead of changing On hand
+          here, so it is not counted twice.
+        </p>
+      {/if}
+      {#if !isEdit}
+        <InvField
+          id="lotNumber"
+          label="Lot number"
+          hint="Optional. Printed on the label or packet."
+        >
+          <input id="lotNumber" type="text" bind:value={lotNumber} maxlength="80" />
+        </InvField>
+        <InvField
+          id="initialStatus"
+          label="Status"
+          hint="Ordered and planned amounts help the planner lay out beds, but only on-hand stock counts as in the shed."
+        >
+          <select id="initialStatus" bind:value={initialStatus}>
+            <option value="existing">{QUANTITY_STATUS_LABELS.existing}</option>
+            <option value="ordered">{QUANTITY_STATUS_LABELS.ordered}</option>
+            <option value="planned">{QUANTITY_STATUS_LABELS.planned}</option>
+          </select>
+        </InvField>
+      {/if}
     </InvSection>
-  {/if}
 
-  {#if type !== 'sprayer' && type !== 'crop'}
     <InvSection title="Storage & reorder" kicker="Optional">
       <InvField
         id="reorderThreshold"
         label="Reorder at"
-        hint="Trigger a Reorder Soon flag when on-hand drops below this number"
+        hint="Flag it as Reorder Soon when on hand drops below this number"
         error={fieldErrors.reorderThreshold}
       >
         <input
@@ -483,7 +548,7 @@
           bind:value={reorderThreshold}
         />
       </InvField>
-      <InvField id="barcode" label="Barcode" hint="EAN / UPC / GTIN — used by the Barcode method">
+      <InvField id="barcode" label="Barcode" hint="EAN / UPC / GTIN, used by the Barcode method">
         <input id="barcode" type="text" bind:value={barcode} maxlength="100" />
       </InvField>
     </InvSection>
@@ -497,8 +562,8 @@
 
   {#if type === 'crop'}
     <div class="banner">
-      <strong>Crop plugin editing is versioned.</strong>
-      Use <a href="/plugins">/plugins</a> to upload a new version of this plugin.
+      <strong>Crop categories are versioned.</strong>
+      Upload a new version in the <a href="/plugins">crop library</a>.
     </div>
   {/if}
 
@@ -517,6 +582,19 @@
 </form>
 
 <style>
+  .expected-note {
+    margin: 4px 0 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--color-wheat-50, #fbf5e6);
+    color: var(--color-ink, #1f2a1c);
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  .expected-note a {
+    color: inherit;
+    font-weight: 600;
+  }
   .form-header {
     margin-bottom: 16px;
   }
@@ -560,6 +638,11 @@
     border-radius: 6px;
     font: inherit;
     background: var(--color-paper, #fff);
+    min-height: 48px;
+    box-sizing: border-box;
+  }
+  select:disabled {
+    opacity: 0.7;
   }
   input:focus,
   select:focus,
@@ -598,6 +681,14 @@
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+  }
+  @media (max-width: 768px) {
+    .save-footer {
+      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
+    :global(dialog) .save-footer {
+      bottom: 0;
+    }
   }
   .btn-primary,
   .btn-secondary {

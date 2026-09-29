@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { BlockWithPlantings } from '$lib/db/blocks';
 import type { PlanInput } from '$lib/layout/engine';
-import { buildAllocationPrompt, buildCandidacyMatrix, validateAiPlan } from './aiAllocation';
+import {
+  allocateDeterministic,
+  buildAllocationPrompt,
+  buildCandidacyMatrix,
+  validateAiPlan
+} from './aiAllocation';
 
 function plugin(over: Partial<CropPlugin> & { pluginId: string }): CropPlugin {
   return {
@@ -521,5 +526,157 @@ describe('validateAiPlan — block space shared across crops', () => {
   it('tells Claude that crops share a block', () => {
     const input = mixedBedInput();
     expect(buildAllocationPrompt(buildCandidacyMatrix(input), input)).toContain('BLOCK SPACE CAP');
+  });
+});
+
+describe('shared garden beds split by area (#440)', () => {
+  function bedInput(): PlanInput {
+    const crops = {
+      tomato: plugin({
+        pluginId: 'tomato',
+        cropFamily: 'solanaceae',
+        plantingGuide: { rowSpacingIn: 24, inRowSpacingIn: { min: 24, max: 24 } }
+      }),
+      lettuce: plugin({
+        pluginId: 'lettuce',
+        cropFamily: 'leafy-green',
+        plantingGuide: { rowSpacingIn: 12, inRowSpacingIn: { min: 12, max: 12 } }
+      })
+    };
+    const bed: BlockWithPlantings = {
+      ...block('bed', 32 / 43_560),
+      widthFt: 4,
+      lengthFt: 8
+    };
+    return {
+      seeds: [
+        { stockItemId: 't', cropPluginId: 'tomato', varietyDisplayName: 't', quantityPlants: 100 },
+        {
+          stockItemId: 'l',
+          cropPluginId: 'lettuce',
+          varietyDisplayName: 'l',
+          quantityPlants: 64,
+          fillToCapacity: true
+        }
+      ],
+      blocks: [bed],
+      axes: [{ blockId: 'bed', east: 0, north: 0 }],
+      existingCrops: [],
+      pluginIndex: crops,
+      companions: {},
+      bedBlockIds: ['bed']
+    };
+  }
+
+  it('sizes a shared bed with no perimeter buffer and full free share', () => {
+    const matrix = buildCandidacyMatrix(bedInput());
+    const t = matrix.find((r) => r.stockItemId === 't')!;
+    expect(t.sharedBed).toBe(true);
+    expect(t.fullFit).toBe(8);
+    expect(t.plantsFit).toBe(8);
+    expect(t.freeShare).toBe(1);
+  });
+
+  it('turns areaShare into plants and accepts shares that add up to 1', () => {
+    const input = bedInput();
+    const matrix = buildCandidacyMatrix(input);
+    const result = validateAiPlan(
+      {
+        rationale: 'r',
+        assignments: [
+          { stockItemId: 't', blockId: 'bed', areaShare: 0.5, rationale: 'x' },
+          { stockItemId: 'l', blockId: 'bed', areaShare: 0.5, rationale: 'x' }
+        ]
+      },
+      input,
+      matrix
+    );
+    expect(result.valid).toBe(true);
+    if (result.valid) {
+      expect(result.plan.assignments.map((a) => a.plants)).toEqual([4, 16]);
+    }
+  });
+
+  it('rejects shares over 1.0 on a shared bed, with no 1.25 slack', () => {
+    const input = bedInput();
+    const matrix = buildCandidacyMatrix(input);
+    const result = validateAiPlan(
+      {
+        rationale: 'r',
+        assignments: [
+          { stockItemId: 't', blockId: 'bed', areaShare: 0.6, rationale: 'x' },
+          { stockItemId: 'l', blockId: 'bed', areaShare: 0.55, rationale: 'x' }
+        ]
+      },
+      input,
+      matrix
+    );
+    expect(result.valid).toBe(false);
+    if (!result.valid) expect(result.violations.join(' ')).toMatch(/shared bed bed is over-packed/);
+  });
+
+  it('checks plain plant counts against the bed share too', () => {
+    const input = bedInput();
+    const matrix = buildCandidacyMatrix(input);
+    const result = validateAiPlan(
+      {
+        rationale: 'r',
+        assignments: [
+          { stockItemId: 't', blockId: 'bed', plants: 8, rationale: 'x' },
+          { stockItemId: 'l', blockId: 'bed', plants: 32, rationale: 'x' }
+        ]
+      },
+      input,
+      matrix
+    );
+    expect(result.valid).toBe(false);
+  });
+
+  it('rejects an areaShare outside (0, 1]', () => {
+    const input = bedInput();
+    const matrix = buildCandidacyMatrix(input);
+    const result = validateAiPlan(
+      {
+        rationale: 'r',
+        assignments: [{ stockItemId: 't', blockId: 'bed', areaShare: 1.5, rationale: 'x' }]
+      },
+      input,
+      matrix
+    );
+    expect(result.valid).toBe(false);
+  });
+
+  it('keeps the 1.25 slack on field blocks', () => {
+    const input = { ...bedInput(), bedBlockIds: [] };
+    const matrix = buildCandidacyMatrix(input);
+    const t = matrix.find((r) => r.stockItemId === 't')!;
+    expect(t.sharedBed).toBe(false);
+  });
+
+  it('tells Claude about shared beds and uncounted seed', () => {
+    const input = bedInput();
+    const prompt = buildAllocationPrompt(buildCandidacyMatrix(input), input);
+    expect(prompt).toContain('SHARED BEDS');
+    expect(prompt).toContain('shared_bed=Y');
+    expect(prompt).toContain('available_plants=not set');
+    expect(prompt).toContain('"areaShare"');
+  });
+});
+
+describe('engine advisories for blocks with no size (review)', () => {
+  it('says to size the beds, not to carve out a new one', () => {
+    const input = { ...makeInput(), blocks: [block('A', 0)] };
+    const result = allocateDeterministic(input, 'no-api-key');
+    expect(result.assignments).toHaveLength(0);
+    expect(result.advisories.join(' ')).toMatch(/no size yet.*width and length/);
+    expect(result.advisories.join(' ')).not.toMatch(/carving out/);
+  });
+
+  it('still suggests more space when a sized block ran out of room', () => {
+    const input = makeInput();
+    input.seeds = [{ ...input.seeds[0], quantityPlants: 10_000_000 }];
+    const result = allocateDeterministic(input, 'no-api-key');
+    expect(result.unplaced.length).toBeGreaterThan(0);
+    expect(result.advisories.join(' ')).not.toMatch(/no size yet/);
   });
 });

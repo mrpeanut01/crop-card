@@ -1,0 +1,128 @@
+import { json, type RequestHandler } from '@sveltejs/kit';
+import { getStockItem } from '$lib/db/stock';
+import { resolveSpacing } from '$lib/garden/plantCount';
+import { bedLayoutRequestSchema } from '$lib/plan/bedLayoutApi';
+import {
+  checkBedProposal,
+  MAX_SUGGESTED_BEDS,
+  planBeds,
+  type BedLayoutCrop,
+  type SuggestedBed
+} from '$lib/plan/bedLayout';
+import { requireOwner } from '$lib/server/auth';
+import { aiLimitOf, recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
+import { recordCall } from '$lib/server/aiGuard';
+import { aiLimitReason } from '$lib/billing/aiLimit';
+import { suggestBedLayout } from '$lib/server/aiBedLayout';
+import { getRegistry } from '$lib/server/registry';
+
+export const _requestSchema = bedLayoutRequestSchema;
+
+const BED_LAYOUT_TIMEOUT_MS = 8000;
+
+const WHY: Record<string, string> = {
+  'no-key': 'Claude is off',
+  'over-cap': "This month's AI help for your farm is used up",
+  quota: "Today's AI help for this is used up",
+  'rate-limit': "Claude isn't answering right now",
+  offline: "Claude can't be reached right now",
+  timeout: 'Claude took too long',
+  invalid: "Claude's beds didn't fit your seed",
+  'too-many-beds': `This seed needs more than ${MAX_SUGGESTED_BEDS} beds`
+};
+
+/** POST /api/plan/beds/suggest (#475). Beds sized for the seed being
+ *  planted: Claude's grouping when it is available and checks out, else a
+ *  plain plan from plugin spacing. Never saves anything; the wizard adds
+ *  the beds the owner keeps through POST /api/blocks. Counts against the
+ *  Fill this bed allowance. */
+export const POST: RequestHandler = async (event) => {
+  const user = requireOwner(event);
+  let raw: unknown;
+  try {
+    raw = await event.request.json();
+  } catch {
+    return json({ error: 'invalid JSON body' }, { status: 400 });
+  }
+  const parsed = bedLayoutRequestSchema.safeParse(raw);
+  if (!parsed.success) {
+    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+  }
+  const registry = await getRegistry();
+  const crops: BedLayoutCrop[] = [];
+  const seen = new Set<string>();
+  for (const s of parsed.data.seeds) {
+    if (seen.has(s.stockItemId)) continue;
+    seen.add(s.stockItemId);
+    const item = getStockItem(s.stockItemId);
+    if (!item || item.category !== 'seed') {
+      return json({ error: 'unknown seed', stockItemId: s.stockItemId }, { status: 404 });
+    }
+    const plugin = item.pluginId ? registry.get(item.pluginId)?.plugin : undefined;
+    const crop = plugin && plugin.type === 'crop' ? plugin : undefined;
+    const spacing = resolveSpacing(crop as never, 'square');
+    crops.push({
+      key: item.id,
+      name: item.shortName ?? item.displayName,
+      family: crop?.cropFamily ?? null,
+      plants: s.plants,
+      inRowIn: spacing.inRowIn,
+      rowIn: spacing.rowIn
+    });
+  }
+  const opts = { bedWidthFt: parsed.data.bedWidthFt, maxBedLengthFt: parsed.data.maxBedLengthFt };
+  const { beds: plain, unplaced } = planBeds(crops, opts);
+  const leftover = unplaced.length
+    ? ` These ${MAX_SUGGESTED_BEDS} beds leave out ${unplaced
+        .map((u) => `${u.plants} ${u.name} ${u.plants === 1 ? 'plant' : 'plants'}`)
+        .join(', ')}. Use longer or wider beds, or plant less.`
+    : '';
+
+  const fallback = (why: string, limit: ReturnType<typeof aiLimitOf> = null) => ({
+    beds: plain,
+    provenance: 'fallback' as const,
+    note: null,
+    message: `${limit ? aiLimitReason(limit) : WHY[why]}, so these beds come from each crop's spacing.${leftover}`,
+    unplaced,
+    aiLimit: limit
+  });
+
+  if (unplaced.length > 0) return json(fallback('too-many-beds'));
+
+  const tried = await tryAiWithGuard({
+    endpoint: 'garden-fill',
+    userId: user.id,
+    timeoutMs: BED_LAYOUT_TIMEOUT_MS,
+    prompt: (signal) => suggestBedLayout(crops, opts, signal)
+  });
+
+  if (tried.provenance === 'fallback') {
+    recordFallback(user.id, 'garden-fill', tried.fallbackReason, 'bed-layout');
+    const why =
+      !tried.guard.ok && tried.guard.reason === 'quota-exceeded' ? 'quota' : tried.fallbackReason;
+    return json(fallback(why, aiLimitOf(tried.guard)));
+  }
+
+  const { beds: proposal, note, meta } = tried.value;
+  const checked = proposal ? checkBedProposal(proposal, crops, opts) : null;
+  const ok = checked?.ok === true;
+  try {
+    recordCall({
+      userId: user.id,
+      endpoint: 'garden-fill',
+      model: meta.model,
+      inputTokens: meta.inputTokens,
+      cachedInputTokens: meta.cachedInputTokens,
+      outputTokens: meta.outputTokens,
+      usdEstimate: meta.usdEstimate,
+      success: ok,
+      errorClass: ok ? undefined : proposal ? 'bed-layout-invalid' : 'invalid-json',
+      provenance: ok ? 'ai' : 'fallback'
+    });
+  } catch (err) {
+    console.error('[ai] bed-layout recordCall failed', err);
+  }
+  if (!checked || !checked.ok) return json(fallback('invalid'));
+  const beds: SuggestedBed[] = checked.beds;
+  return json({ beds, provenance: 'ai', note, message: null, unplaced: [], aiLimit: null });
+};

@@ -85,6 +85,38 @@ describe('DesignerCanvas', () => {
     const fp = getAllByTestId('footprint');
     expect(fp).toHaveLength(1);
     expect(fp[0].getAttribute('aria-label')).toMatch(/3 plants, harvesting/);
+    expect(fp[0]).toHaveAttribute('data-placed', 'true');
+    expect(fp[0]).toHaveAttribute('data-family-glyph', 'nightshade');
+  });
+
+  it('shows a scheduled planting with no spot as a dashed outline, not placed yet (#481)', async () => {
+    const { d, calls } = state({
+      design: kitchenGarden({
+        plantings: [
+          plantingRow({ id: 'tom', footprint: null }),
+          plantingRow({
+            id: 'lettuce',
+            blockId: 'bed2',
+            cropPluginId: 'lettuce-buttercrunch',
+            varietyDisplayName: 'Lettuce — Buttercrunch (Bibb)'
+          })
+        ]
+      })
+    });
+    d.setDate(Date.UTC(2026, 5, 1));
+    const { getAllByTestId } = mount(DesignerCanvas, d, {});
+    const fp = getAllByTestId('footprint');
+    expect(fp).toHaveLength(2);
+    for (const el of fp) {
+      expect(el).toHaveAttribute('data-placed', 'false');
+      expect(el.getAttribute('aria-label')).toMatch(/not placed yet/);
+      expect(el.classList.contains('notplaced')).toBe(true);
+    }
+    expect(fp.map((el) => el.getAttribute('data-family-glyph')).sort()).toEqual([
+      'leafy',
+      'nightshade'
+    ]);
+    expect(calls).toHaveLength(0);
   });
 });
 

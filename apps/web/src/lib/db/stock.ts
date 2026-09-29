@@ -13,6 +13,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, desc, eq, gt, isNull, or, sql } from 'drizzle-orm';
 import { fromHundredths, toHundredths, toStorage, type StockUnit } from '$lib/stock/units';
+import type { QuantityStatus } from '$lib/stock/quantityStatus';
 import { db } from './client';
 import { stockItems, stockLots, stockMovements } from './schema';
 import { preparedOnce, requestMemo } from './requestMemo';
@@ -60,8 +61,13 @@ export interface StockItem {
   pendingRefreshAt?: number;
 }
 
+export { QUANTITY_STATUSES, type QuantityStatus } from '$lib/stock/quantityStatus';
+
 export interface StockLot {
   id: string;
+  /** `existing` lots are on hand. `ordered` and `planned` lots record an
+   *  expected quantity only and never count toward `onHand`. */
+  quantityStatus: QuantityStatus;
   stockItemId: string;
   lotNumber?: string;
   expiresAt?: number;
@@ -88,6 +94,10 @@ export interface StockMovement {
 
 export interface StockItemWithBalance extends StockItem {
   onHand: number;
+  /** Expected quantity on `ordered` lots, not yet received. */
+  onOrder: number;
+  /** Expected quantity on `planned` lots, not yet bought. */
+  planned: number;
   isLow: boolean;
   earliestExpiry?: number;
   lotCount: number;
@@ -376,8 +386,24 @@ function stockSnapshot(): StockSnapshot {
 
 function withBalance(item: StockItem, lots: LotBalanceRow[]): StockItemWithBalance {
   let totalHundredths = 0;
+  let orderedHundredths = 0;
+  let plannedHundredths = 0;
   let earliestExpiry: number | undefined;
   for (const { lot, balanceHundredths } of lots) {
+    if (lot.quantityStatus === 'ordered') {
+      orderedHundredths += expectedLeftHundredths(
+        lot.receivedQuantityHundredths,
+        balanceHundredths
+      );
+      continue;
+    }
+    if (lot.quantityStatus === 'planned') {
+      plannedHundredths += expectedLeftHundredths(
+        lot.receivedQuantityHundredths,
+        balanceHundredths
+      );
+      continue;
+    }
     totalHundredths += balanceHundredths;
     if (lot.expiresAt) {
       const ts = lot.expiresAt.getTime();
@@ -391,6 +417,8 @@ function withBalance(item: StockItem, lots: LotBalanceRow[]): StockItemWithBalan
   return {
     ...item,
     onHand,
+    onOrder: fromHundredths(orderedHundredths),
+    planned: fromHundredths(plannedHundredths),
     isLow,
     earliestExpiry,
     lotCount: lots.length
@@ -398,6 +426,13 @@ function withBalance(item: StockItem, lots: LotBalanceRow[]): StockItemWithBalan
 }
 
 /** One lot's balance, read fresh for the write paths below. */
+/** An ordered or planned lot has no receipt movement, so its movements are
+ *  only plantings that set part of it aside; what is left to plan with is the
+ *  expected quantity less those. */
+function expectedLeftHundredths(expectedHundredths: number, balanceHundredths: number): number {
+  return Math.max(0, expectedHundredths + balanceHundredths);
+}
+
 function lotBalanceHundredths(lotId: string): number {
   const sum = db
     .select({ total: sql<number>`coalesce(sum(${stockMovements.deltaHundredths}), 0)` })
@@ -428,6 +463,9 @@ export interface ReceiveLotInput {
   receivedCostCents?: number;
   notes?: string;
   performedById?: string;
+  /** Defaults to `existing`. `ordered` and `planned` lots get no receipt
+   *  movement until `markLotReceived`. */
+  quantityStatus?: QuantityStatus;
 }
 
 export class IncompatibleUnitError extends Error {
@@ -446,6 +484,7 @@ export function receiveLot(input: ReceiveLotInput): StockLot {
 
   const lotId = randomUUID();
   const receivedAt = Date.now();
+  const quantityStatus = input.quantityStatus ?? 'existing';
   const lotRow = db
     .insert(stockLots)
     .values(
@@ -458,11 +497,14 @@ export function receiveLot(input: ReceiveLotInput): StockLot {
         receivedQuantityHundredths: hundredths,
         receivedCostCents: input.receivedCostCents ?? null,
         supplier: input.supplier ?? null,
-        notes: input.notes ?? null
+        notes: input.notes ?? null,
+        quantityStatus
       })
     )
     .returning()
     .get();
+
+  if (quantityStatus !== 'existing') return rowToLot(lotRow);
 
   // Sprint 4 (#200 / CT-HS-004) — the receipt movement now carries the
   // POSITIVE received quantity, not 0. The movement ledger on /stock/[id]
@@ -488,6 +530,7 @@ export function receiveLot(input: ReceiveLotInput): StockLot {
 function rowToLot(row: typeof stockLots.$inferSelect): StockLot {
   return {
     id: row.id,
+    quantityStatus: row.quantityStatus,
     stockItemId: row.stockItemId,
     lotNumber: row.lotNumber ?? undefined,
     expiresAt: row.expiresAt?.getTime(),
@@ -499,9 +542,84 @@ function rowToLot(row: typeof stockLots.$inferSelect): StockLot {
   };
 }
 
+/** One item with the same on-hand, ordered and planned figures the list,
+ *  detail page and planner use: ordered and planned lots never count toward
+ *  `onHand`, even after a planting set part of them aside. */
+export function getStockItemWithBalance(id: string): StockItemWithBalance | undefined {
+  const item = getStockItem(id);
+  if (!item) return undefined;
+  return withBalance(item, lotsWithBalances(item.id));
+}
+
 export function listLotsForItem(stockItemId: string): LotWithBalance[] {
   const now = Date.now();
   return lotsWithBalances(stockItemId).map((row) => toLotWithBalance(row, now));
+}
+
+export class LotStatusError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'LotStatusError';
+  }
+}
+
+/** Moves an `ordered` or `planned` lot between those two states, or marks it
+ *  received (`existing`), which writes the receipt movement so the expected
+ *  quantity (or `receivedQuantity`, when given) becomes on hand. An
+ *  `existing` lot never goes back: its balance is ledger history. */
+export function setLotQuantityStatus(input: {
+  lotId: string;
+  quantityStatus: QuantityStatus;
+  receivedQuantity?: number;
+  performedById?: string;
+}): StockLot {
+  const lot = db
+    .select()
+    .from(stockLots)
+    .where(withTenant(stockLots, eq(stockLots.id, input.lotId)))
+    .get();
+  if (!lot) throw new LotStatusError('lot not found');
+  if (lot.quantityStatus === input.quantityStatus) return rowToLot(lot);
+  if (lot.quantityStatus === 'existing') {
+    throw new LotStatusError('a lot already on hand cannot go back to ordered or planned');
+  }
+  if (input.quantityStatus !== 'existing') {
+    const row = db
+      .update(stockLots)
+      .set({ quantityStatus: input.quantityStatus })
+      .where(withTenant(stockLots, eq(stockLots.id, lot.id)))
+      .returning()
+      .get();
+    return rowToLot(row);
+  }
+  const hundredths =
+    input.receivedQuantity !== undefined
+      ? toHundredths(input.receivedQuantity)
+      : lot.receivedQuantityHundredths;
+  if (hundredths <= 0) throw new LotStatusError('receivedQuantity must be positive');
+  const now = new Date();
+  return db.transaction(() => {
+    const row = db
+      .update(stockLots)
+      .set({ quantityStatus: 'existing', receivedAt: now, receivedQuantityHundredths: hundredths })
+      .where(withTenant(stockLots, eq(stockLots.id, lot.id)))
+      .returning()
+      .get();
+    db.insert(stockMovements)
+      .values(
+        tenantValues({
+          id: randomUUID(),
+          stockLotId: lot.id,
+          occurredAt: now,
+          deltaHundredths: hundredths,
+          reason: 'receipt',
+          performedById: input.performedById ?? null,
+          notes: `lot received (was ${lot.quantityStatus})`
+        })
+      )
+      .run();
+    return rowToLot(row);
+  });
 }
 
 // ─── Movements / decrement ───────────────────────────────────────────────
@@ -525,6 +643,11 @@ export function recordMovement(input: RecordMovementInput): StockMovement {
     .where(withTenant(stockLots, eq(stockLots.id, input.stockLotId)))
     .get();
   if (!lot) throw new Error(`unknown lot: ${input.stockLotId}`);
+  if ((lot.quantityStatus ?? 'existing') !== 'existing') {
+    throw new LotStatusError(
+      'This lot is not on hand yet. Mark it received before recording a change.'
+    );
+  }
   const item = getStockItem(lot.stockItemId);
   if (!item) throw new Error(`stock item missing for lot ${input.stockLotId}`);
 
@@ -612,7 +735,12 @@ export function setOnHandQuantity(input: SetQuantityInput): SetQuantityResult {
   const lots = db
     .select()
     .from(stockLots)
-    .where(withTenant(stockLots, eq(stockLots.stockItemId, item.id)))
+    .where(
+      withTenant(
+        stockLots,
+        and(eq(stockLots.stockItemId, item.id), eq(stockLots.quantityStatus, 'existing'))
+      )
+    )
     .orderBy(desc(stockLots.receivedAt))
     .all();
 
@@ -683,6 +811,9 @@ export function decrementForUse(input: {
   reason?: MovementReason;
   performedById?: string;
   occurredAt?: number;
+  /** Plantings only: after on-hand lots, set aside seed from ordered and then
+   *  planned lots, so it cannot be planned twice and arrives already used. */
+  drawExpected?: boolean;
   notes?: string;
 }): DecrementResult {
   const item = getStockItem(input.stockItemId);
@@ -710,6 +841,7 @@ export function decrementForUse(input: {
         stockLots,
         and(
           eq(stockLots.stockItemId, item.id),
+          eq(stockLots.quantityStatus, 'existing'),
           or(isNull(stockLots.expiresAt), gt(stockLots.expiresAt, new Date(now)))
         )
       )
@@ -717,10 +849,30 @@ export function decrementForUse(input: {
     .orderBy(asc(stockLots.receivedAt))
     .all();
 
+  const expectedLots = input.drawExpected
+    ? (['ordered', 'planned'] as const).flatMap((status) =>
+        db
+          .select()
+          .from(stockLots)
+          .where(
+            withTenant(
+              stockLots,
+              and(eq(stockLots.stockItemId, item.id), eq(stockLots.quantityStatus, status))
+            )
+          )
+          .orderBy(asc(stockLots.receivedAt))
+          .all()
+      )
+    : [];
+
   let remaining = requestedHundredths;
-  for (const lot of lots) {
+  for (const lot of [...lots, ...expectedLots]) {
     if (remaining <= 0) break;
-    const balance = lotBalanceHundredths(lot.id);
+    const expected = lot.quantityStatus !== 'existing';
+    const movementSum = lotBalanceHundredths(lot.id);
+    const balance = expected
+      ? expectedLeftHundredths(lot.receivedQuantityHundredths, movementSum)
+      : movementSum;
     if (balance <= 0) continue;
     const take = Math.min(balance, remaining);
     const id = randomUUID();
@@ -748,7 +900,11 @@ export function decrementForUse(input: {
           fertilityApplicationId: input.fertilityApplicationId ?? null,
           cropId: input.cropId ?? null,
           performedById: input.performedById ?? null,
-          notes: input.notes ?? `auto-decrement from ${reason}`
+          notes:
+            input.notes ??
+            (expected
+              ? `set aside for ${reason} before the lot was received`
+              : `auto-decrement from ${reason}`)
         })
       )
       .returning()

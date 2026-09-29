@@ -456,6 +456,8 @@
                 : chosen.foodProducingDefault
                   ? 'barn'
                   : 'residence'}
+              speciesId={chosen.id}
+              speciesName={chosen.displayName.toLowerCase()}
               submitLabel="Add this place"
               embedded
               onDone={placeAdded}

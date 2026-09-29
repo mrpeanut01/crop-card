@@ -1,9 +1,42 @@
 <script lang="ts">
-  import { getWizardContext } from '../wizardState.svelte';
+  import { getWizardContext, planningTotal } from '../wizardState.svelte';
+  import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import A_InventoryAddFlow from '$lib/components/inventory/A_InventoryAddFlow.svelte';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
+  import { availableQuantityText } from '$lib/stock/quantityStatus';
+  import type { SeedStockEntry } from '../types';
 
   const w = getWizardContext();
   const onRefreshParent = $derived(w.props.onRefreshParent);
   const onClose = () => w.props.onClose();
+
+  // #475 — add a seed lot without leaving the plan: the canonical 5-method
+  // add flow in a sheet, writing through /api/stock like /inventory does.
+  let addOpen = $state(false);
+  let addNotice = $state<string | null>(null);
+
+  async function onSeedSaved(saved: { id: string | null }) {
+    addOpen = false;
+    await onRefreshParent?.();
+    if (saved.id) {
+      w.selectNewSeed(saved.id);
+      const entry = w.props.seedStock.find((s) => s.stockItemId === saved.id);
+      addNotice = entry
+        ? `Added ${entry.shortName ?? entry.displayName} and picked it for this plan.`
+        : 'Seed added.';
+    }
+  }
+
+  const seedLibrary = $derived(
+    (w.props.cropCatalog ?? []).map((c) => ({ id: c.pluginId, name: c.displayName }))
+  );
+
+  function availableText(s: SeedStockEntry): string {
+    return availableQuantityText(
+      { existing: s.onHand, ordered: s.onOrder ?? 0, planned: s.planned ?? 0 },
+      s.defaultUnit
+    );
+  }
 
   const filteredEligibleStock = $derived.by(() => {
     const q = w.seedSearch.trim().toLowerCase();
@@ -37,9 +70,40 @@
   });
 </script>
 
-<p class="aw-intro">
-  Pick the seed lots you want to plant. Adjust quantity per row — defaults to on-hand.
-</p>
+<div class="aw-seeds-head">
+  <p class="aw-intro">
+    Pick the seed lots you want to plant. The quantity starts at what you have on hand plus what is
+    ordered or planned, and you can change it on each row.
+  </p>
+  <button
+    type="button"
+    class="btn-secondary aw-add-seed"
+    onclick={() => {
+      addNotice = null;
+      addOpen = true;
+    }}
+    disabled={!onRefreshParent}
+    data-action="add-seed-inline"
+  >
+    + Add seed
+  </button>
+</div>
+{#if addNotice}<p class="aw-notice" role="status">{addNotice}</p>{/if}
+
+<SetupSheet
+  open={addOpen}
+  title="Add seed to inventory"
+  kicker="Planning"
+  onClose={() => (addOpen = false)}
+>
+  <A_InventoryAddFlow
+    type="seed"
+    library={seedLibrary}
+    aiEnabled={w.props.aiEnabled}
+    onSaved={onSeedSaved}
+    onCancel={() => (addOpen = false)}
+  />
+</SetupSheet>
 
 <!-- #252 / CT-W-007 — surface no-plugin seeds so the operator
      can link them inline without leaving the wizard. Hits
@@ -50,19 +114,20 @@
 {#if w.noPluginStock.length > 0}
   <div class="needs-plugin-section" data-empty-state="needs-plugin">
     <h3 class="needs-plugin-title">
-      {w.noPluginStock.length} seed{w.noPluginStock.length === 1 ? '' : 's'} need a crop plugin
+      {w.noPluginStock.length}
+      {w.noPluginStock.length === 1 ? 'seed needs' : 'seeds need'} a crop category
     </h3>
     <p class="needs-plugin-lede">
-      These seed lots are in your inventory but aren’t linked to a crop plugin yet. Link each one to
-      a known crop so the planner can match planting guides, days-to-maturity, and companion rules.
-      Picking a plugin is local-only — no Anthropic key needed.
+      These seed lots are in your inventory but don't have a crop category yet. Pick the crop each
+      one is, so the planner can match planting guides, days to maturity and companion rules. This
+      search stays on your farm and needs no AI.
     </p>
     <ul class="needs-plugin-list">
       {#each w.noPluginStock as s (s.stockItemId)}
         <li class="needs-plugin-row">
           <div class="needs-plugin-name">
             <strong>{s.shortName ?? s.displayName}</strong>
-            <span class="muted"> · {s.onHand} {s.defaultUnit}</span>
+            <span class="muted"> · {availableText(s)}</span>
           </div>
           <button
             type="button"
@@ -71,29 +136,30 @@
             disabled={!!w.seedLink.linkAssigningId}
             data-action="open-link-picker"
           >
-            {w.seedLink.linkPickerOpenFor === s.stockItemId ? 'Picking…' : 'Link to crop plugin →'}
+            {w.seedLink.linkPickerOpenFor === s.stockItemId ? 'Picking…' : 'Pick a crop category →'}
           </button>
           {#if w.seedLink.linkPickerOpenFor === s.stockItemId}
-            <div class="link-picker" role="dialog" aria-label="Pick a crop plugin">
+            <div class="link-picker" role="dialog" aria-label="Pick a crop category">
               <input
                 type="search"
                 class="aw-search"
                 placeholder="Search by crop name (e.g. corn, lettuce, basil)…"
                 bind:value={w.seedLink.linkQuery}
                 oninput={() => w.seedLink.onLinkQueryChange()}
-                aria-label="Search crop plugin library"
+                aria-label="Search crop categories"
               />
               {#if w.seedLink.linkSearching}
-                <p class="muted">Searching plugin library…</p>
+                <p class="muted">Searching crops…</p>
               {:else if w.seedLink.linkError}
                 <p class="error" role="alert">{w.seedLink.linkError}</p>
               {:else if w.seedLink.linkQuery.trim().length < 2}
-                <p class="muted">Type at least 2 characters to search your local plugin library.</p>
+                <p class="muted">Type at least 2 letters to search your crops.</p>
               {:else if w.seedLink.linkResults.length === 0}
                 <p class="muted">
-                  No matches in your plugin library. Try a different search, or open
-                  <a href="/plugins" target="_blank" rel="noopener">/plugins</a> to add a new crop plugin
-                  first.
+                  No crops match. Try a different search, or
+                  <a href="/inventory?type=crop&mode=catalog" target="_blank" rel="noopener"
+                    >add the crop in Inventory</a
+                  > first.
                 </p>
               {:else}
                 <ul class="link-results">
@@ -143,20 +209,20 @@
   <div class="aw-seed-empty" data-empty-state="seed-stock">
     <h3 class="aw-seed-empty-title">No seed stock yet</h3>
     <p class="aw-seed-empty-lede">
-      Seed lots are tracked in Inventory — packets, bulk orders, and saved seed all belong there.
-      Add at least one lot with a known crop plugin and on-hand greater than zero, then come back
-      here to plan the season.
+      Seed is tracked in Inventory: packets, bulk orders and saved seed all belong there. Add what
+      you have, what you have ordered, or what you plan to buy. You can add it here without leaving
+      the plan.
     </p>
     <div class="aw-seed-empty-actions">
-      <a
+      <button
+        type="button"
         class="btn-primary"
-        href="/inventory/seed/add"
-        target="_blank"
-        rel="noopener"
+        onclick={() => (addOpen = true)}
+        disabled={!onRefreshParent}
         data-action="add-seed-stock"
       >
-        Add seed stock ↗
-      </a>
+        Add seed
+      </button>
       <a
         class="btn-secondary"
         href="/inventory?type=seed"
@@ -185,7 +251,7 @@
     </div>
   </div>
 {:else if w.eligibleStock.length === 0 && w.noPluginStock.length > 0}
-  <p class="empty">Link a crop plugin to a seed above to make it available for planning.</p>
+  <p class="empty">Pick a crop category for a seed above to make it available for planning.</p>
 {:else}
   <div class="aw-search-row">
     <input
@@ -209,7 +275,7 @@
         <tr>
           <th></th>
           <th>Variety</th>
-          <th>On hand</th>
+          <th>Available</th>
           <th>Quantity</th>
           <th>
             ≈ plants
@@ -217,7 +283,7 @@
               type="button"
               class="aw-info"
               aria-label="Why is this less than the seed count?"
-              title="Estimated plants the seed will yield, applying an 85% germination assumption.&#10;&#10;• Seeds: count × 0.85 (e.g. 25 seeds → ~21 plants)&#10;• lb / oz / g: converted to seeds via the crop's seeds-per-lb (from the plugin if known, else a family default), then × 0.85&#10;• Count: treated 1:1 (no germination discount — already discrete plants like transplants or plugs)&#10;&#10;Real germination varies by lot and conditions; treat this as a sizing estimate, not a guarantee."
+              title="Estimated plants the seed will yield, applying an 85% germination assumption.&#10;&#10;• Seeds: count × 0.85 (e.g. 25 seeds → about 21 plants)&#10;• lb / oz / g: converted to seeds using the crop's seeds per pound (from the crop if known, else a family default), then × 0.85&#10;&#10;Real germination varies by lot and conditions; treat this as a sizing estimate, not a guarantee."
               >ⓘ</button
             >
           </th>
@@ -251,40 +317,57 @@
           </tr>
           {#each g.items as s (s.stockItemId)}
             {@const checked = w.selectedSeeds.has(s.stockItemId)}
-            {@const qty = w.selectedSeeds.get(s.stockItemId) ?? s.onHand}
+            {@const total = planningTotal(s)}
+            {@const qty = w.selectedSeeds.get(s.stockItemId) ?? total}
+            {@const fill = checked && w.isFillToBed(s.stockItemId)}
             {@const plants = w.plantsFor(s.stockItemId, qty)}
             <tr class:row-checked={checked}>
               <td>
-                <input
-                  type="checkbox"
-                  aria-label={`Select ${s.shortName ?? s.displayName}`}
-                  {checked}
-                  onchange={() => w.toggleSeed(s)}
-                />
+                <label class="seed-pick">
+                  <input
+                    id={`aw-seed-${s.stockItemId}`}
+                    type="checkbox"
+                    aria-label={`Select ${s.shortName ?? s.displayName}`}
+                    {checked}
+                    onchange={() => w.toggleSeed(s)}
+                  />
+                </label>
               </td>
               <td title={s.displayName}>
-                <div class="seed-name-cell">
+                <label class="seed-name-cell" for={`aw-seed-${s.stockItemId}`}>
                   <span class="seed-name-primary">{s.shortName ?? s.displayName}</span>
                   {#if s.shortName && s.shortName !== s.displayName}
                     <span class="seed-name-sub">{s.displayName}</span>
                   {/if}
-                </div>
+                </label>
               </td>
-              <td>{s.onHand} {s.defaultUnit}</td>
-              <td>
+              <td class="aw-avail" data-testid="seed-available" data-label="Available">
+                {availableText(s)}
+              </td>
+              <td class="aw-qty" data-label="Quantity">
                 <input
                   type="number"
                   min="0"
-                  max={s.onHand}
+                  max={total > 0 ? total : undefined}
                   step="0.25"
-                  value={qty}
+                  value={fill ? '' : qty}
+                  placeholder={fill ? 'Not set' : undefined}
                   disabled={!checked}
+                  aria-label={`Quantity of ${s.shortName ?? s.displayName}`}
                   oninput={(e) =>
                     w.setSeedQuantity(s.stockItemId, Number((e.target as HTMLInputElement).value))}
                 />
                 {s.defaultUnit}
+                {#if fill}
+                  <span class="aw-fill" data-testid="fill-to-bed">
+                    <Provenance source="fallback" compact />
+                    Quantity not set, will size to bed
+                  </span>
+                {/if}
               </td>
-              <td>{plants !== null ? plants.toLocaleString() : '—'}</td>
+              <td data-label="≈ plants">
+                {fill ? '—' : plants !== null ? plants.toLocaleString() : '—'}
+              </td>
             </tr>
           {/each}
         {/each}
@@ -297,6 +380,39 @@
   .aw-intro {
     margin: 0 0 0.75rem;
     color: #4a5d4a;
+  }
+  .aw-seeds-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .aw-seeds-head .aw-intro {
+    flex: 1 1 16rem;
+  }
+  .aw-add-seed {
+    min-height: 48px;
+  }
+  .aw-notice {
+    margin: 0 0 0.6rem;
+    padding: 0.5rem 0.7rem;
+    background: #eef4ef;
+    border-radius: 6px;
+    color: var(--color-forest-deep, #1f3522);
+    font-size: 0.9rem;
+  }
+  .aw-avail {
+    font-size: 0.85rem;
+    color: #4a5d4a;
+  }
+  .aw-fill {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.25rem;
+    font-size: 0.78rem;
+    color: #7a3f22;
   }
   .aw-table {
     width: 100%;
@@ -326,7 +442,24 @@
   .row-checked {
     background: #f3f9f4;
   }
+  .seed-pick {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    min-height: 48px;
+    cursor: pointer;
+  }
+  .seed-pick input {
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    accent-color: var(--color-forest);
+  }
   .seed-name-cell {
+    cursor: pointer;
+    min-height: 48px;
+    justify-content: center;
     display: flex;
     flex-direction: column;
     gap: 0.05rem;
@@ -342,7 +475,54 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 320px;
+    max-width: min(320px, 100%);
+  }
+  /* Phone width: each seed becomes a stacked card so nothing is cut off. */
+  @media (max-width: 560px) {
+    .aw-table,
+    .aw-table tbody,
+    .aw-table tr,
+    .aw-table td {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .aw-table thead {
+      display: none;
+    }
+    .aw-table tr:not(.family-row) {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr);
+      border-bottom: 1px solid #e4e9e4;
+    }
+    .aw-table tr:not(.family-row) td {
+      border-bottom: none;
+      padding: 0.35rem 0.5rem;
+      grid-column: 2;
+    }
+    .aw-table tr:not(.family-row) td:first-child {
+      grid-column: 1;
+      grid-row: 1 / span 4;
+      padding: 0;
+    }
+    .aw-table td[data-label]::before {
+      content: attr(data-label) ': ';
+      font-weight: 600;
+      color: var(--color-forest);
+    }
+    .family-row td {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .seed-name-sub {
+      white-space: normal;
+    }
+    .family-row .family-action-btn,
+    .aw-table td input[type='number'] {
+      min-height: 48px;
+    }
   }
   .muted {
     color: #6a7d6a;

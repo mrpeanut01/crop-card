@@ -73,6 +73,7 @@ vi.mock('$lib/db/crops', () => ({
   getCrop: vi.fn(() => DRAFT)
 }));
 vi.mock('$lib/db/stock', () => ({ listStockItems: vi.fn(() => []) }));
+vi.mock('$lib/db/fields', () => ({ listFields: () => [] }));
 vi.mock('$lib/db/fertility', () => ({
   listSoilTestsForBlock: vi.fn(() => []),
   listFertilityCreditsForBlock: vi.fn(() => [])

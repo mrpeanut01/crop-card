@@ -37,6 +37,9 @@ export interface WeatherSummary {
   rainHint?: string;
 }
 
+/** Rain chance at or above which the strip and the calendar mention rain. */
+export const RAIN_POP_PCT = 30;
+
 function dayLabel(iso: string): string {
   return formatCalendarDate(iso, 'weekday').toLowerCase();
 }
@@ -63,7 +66,7 @@ export function summarizeForecast(days: ForecastDay[]): WeatherSummary | null {
     windMph: today.windMph !== undefined ? Math.round(today.windMph) : undefined,
     shortForecast: today.shortForecast
   };
-  const next = days.slice(0, 3).filter((d) => d.popPct >= 30);
+  const next = days.slice(0, 3).filter((d) => d.popPct >= RAIN_POP_PCT);
   if (next.length === 1) {
     summary.rainHint = `${next[0].popPct}% rain ${dayLabel(next[0].date)}`;
   } else if (next.length >= 2) {
@@ -84,9 +87,55 @@ export function summarizeForecastSafely(
   }
 }
 
+/** One forecast day as the calendar cells and the forecast sheet show it. */
+export interface DayWeather {
+  date: string;
+  sky: WeatherSky;
+  highF: number;
+  lowF: number;
+  popPct: number;
+  windMph?: number;
+  shortForecast?: string;
+  /** Only tonight is left in the forecast, so there is no daytime high. */
+  overnightOnly: boolean;
+}
+
+export function forecastDays(days: ForecastDay[] | null | undefined): DayWeather[] {
+  if (!days) return [];
+  const out: DayWeather[] = [];
+  for (const d of days) {
+    if (!d || typeof d.date !== 'string') continue;
+    if (!Number.isFinite(d.highF) || !Number.isFinite(d.lowF)) continue;
+    const night = d.overnightOnly === true;
+    out.push({
+      date: d.date,
+      sky: skyFor(d.shortForecast, night),
+      highF: Math.round(d.highF),
+      lowF: Math.round(d.lowF),
+      popPct: Number.isFinite(d.popPct) ? Math.round(d.popPct) : 0,
+      windMph: d.windMph !== undefined ? Math.round(d.windMph) : undefined,
+      shortForecast: d.shortForecast,
+      overnightOnly: night
+    });
+  }
+  return out;
+}
+
+export function weatherByDate(days: readonly DayWeather[]): Record<string, DayWeather> {
+  const out: Record<string, DayWeather> = {};
+  for (const d of days) out[d.date] = d;
+  return out;
+}
+
 export type TodayWeatherSource = 'block' | 'farm';
 
 export type TodayWeather =
-  | { status: 'ok'; summary: WeatherSummary; source: TodayWeatherSource }
+  | {
+      status: 'ok';
+      summary: WeatherSummary;
+      source: TodayWeatherSource;
+      days: DayWeather[];
+      fetchedAt: number;
+    }
   | { status: 'needs-location' }
   | { status: 'unavailable' };

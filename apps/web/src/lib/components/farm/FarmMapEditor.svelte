@@ -22,7 +22,7 @@
   import MapFeatureList from '$lib/components/farm/MapFeatureList.svelte';
   import Hint from '$lib/components/ui/Hint.svelte';
   import { markHintSeen } from '$lib/client/hints';
-  import { SQFT_PER_ACRE, formatFt, sketchAcres } from '$lib/farm/sketch';
+  import { SQFT_PER_ACRE, acresForApi, formatFt, sketchAcres } from '$lib/farm/sketch';
   import {
     AREA_KINDS,
     AREA_KIND_LABELS,
@@ -53,8 +53,12 @@
   } from '$lib/farm/mapFeatures';
   import { detailsFromDraft, draftFromDetails, type DetailsDraft } from '$lib/farm/areaDetailsForm';
   import { snapshotFromMapData } from '$lib/farm/mapSnapshot';
+  import type { FeatureBody } from '$lib/farm/mapFeatureForm';
   import type { FarmSnapshot } from '$lib/cards/snapshot';
   import type { HousingByArea } from '$lib/farm/housedAnimals';
+  import { areaSqFt, defaultCoopSpecies, type CoopSpeciesOption } from '$lib/farm/coopCapacity';
+  import { setCoopContext } from '$lib/farm/coopContext';
+  import type { FarmAnimalChoice } from '$lib/onboarding/profile';
   import type { GrazingByArea } from '$lib/farm/areaGrazing';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import type { FieldWithBlocks } from '$lib/db/fields';
@@ -79,6 +83,8 @@
     housing = {},
     grazing = {},
     petsLayout = false,
+    coopSpecies = [],
+    farmAnimals = [],
     exportHref = '/plan/farm-map'
   }: {
     blocks: BlockWithPlantings[];
@@ -100,9 +106,21 @@
     /** Grazing and hay holds on each Area (Phase 32C). */
     grazing?: GrazingByArea;
     petsLayout?: boolean;
+    /** Species the coop or pen form can pick, with sourced space figures. */
+    coopSpecies?: CoopSpeciesOption[];
+    /** The onboarding animals answer, for the coop form's first species. */
+    farmAnimals?: FarmAnimalChoice[];
     /** Where Export goes: the printable Farm Map Card. */
     exportHref?: string | null;
   } = $props();
+
+  setCoopContext(() => ({
+    options: coopSpecies,
+    farmDefault: defaultCoopSpecies({ farmAnimals }),
+    housedByArea: Object.fromEntries(
+      Object.entries(housing).map(([id, h]) => [id, h.speciesIds ?? []])
+    )
+  }));
 
   // ─── Filter (per Owner, this browser only) ─────────────────────────────────
   let filter = $state<MapFilter>({ ...DEFAULT_MAP_FILTER, hidden: [], hiddenFeatures: [] });
@@ -141,7 +159,7 @@
   let selectedAreaId = $state<string | null>(null);
   const selectedArea = $derived(fields.find((f) => f.id === selectedAreaId) ?? null);
   const cardSnapshot = $derived(
-    snapshot ?? snapshotFromMapData({ ownerId: ownerId ?? 'local', fields, blocks })
+    snapshot ?? snapshotFromMapData({ ownerId: ownerId ?? 'local', fields, blocks, mapFeatures })
   );
   function openArea(id: string) {
     selectedAreaId = id;
@@ -225,7 +243,7 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name,
-        acres: suggestedAcres !== null ? Number(suggestedAcres.toFixed(2)) : undefined,
+        acres: acresForApi(suggestedAcres),
         fieldId,
         geometryGeojson: geom
       })
@@ -270,7 +288,7 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: name.trim(),
-        acres: suggestedAcres !== null ? Number(suggestedAcres.toFixed(2)) : undefined,
+        acres: acresForApi(suggestedAcres),
         geometryGeojson: geom,
         kind: extra?.kind,
         details: extra?.details ?? undefined
@@ -318,15 +336,23 @@
     await invalidateAll();
   }
 
-  async function deleteShadeSource(id: string, name: string) {
-    if (!confirm(`Delete shade source "${name}"?`)) return;
+  /** The map asks first (its Delete confirm), so this only deletes. */
+  async function deleteShadeSource(id: string) {
     const res = await fetch(`/api/shade-sources/${encodeURIComponent(id)}`, { method: 'DELETE' });
     if (!res.ok) {
       const out = await res.json().catch(() => ({}));
-      alert(out.error ?? `HTTP ${res.status}`);
-      return;
+      throw new Error(out.error ?? `HTTP ${res.status}`);
     }
     await invalidateAll();
+  }
+
+  async function deleteShadeFromList(id: string, name: string) {
+    if (!confirm(`Delete shade source "${name}"?`)) return;
+    try {
+      await deleteShadeSource(id);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : String(e));
+    }
   }
 
   async function updateShadeGeometry(id: string, geometryGeojson: string) {
@@ -361,6 +387,7 @@
     geometry: FeatureGeometry;
     fieldId: string | null;
     details: MapFeatureDetails | null;
+    areaIds?: string[];
   }) {
     return featureRequest('/api/map-features', 'POST', input);
   }
@@ -369,10 +396,7 @@
     return featureRequest(`/api/map-features/${encodeURIComponent(id)}`, 'PATCH', { geometry });
   }
 
-  function saveMapFeature(
-    id: string,
-    body: { name: string; fieldId: string | null; details: MapFeatureDetails | null }
-  ) {
+  function saveMapFeature(id: string, body: FeatureBody) {
     return featureRequest(`/api/map-features/${encodeURIComponent(id)}`, 'PATCH', body);
   }
 
@@ -1006,7 +1030,8 @@
       id: selectedArea.id,
       name: selectedArea.name,
       kind: selectedArea.kind ?? 'field',
-      details: selectedArea.details ?? null
+      details: selectedArea.details ?? null,
+      sqFt: areaSqFt(selectedArea)
     }}
     {canEdit}
     housing={housing[selectedArea.id] ?? null}
@@ -1039,6 +1064,7 @@
       {mapFeatures}
       onCreateMapFeature={createMapFeature}
       onUpdateMapFeatureGeometry={updateMapFeatureGeometry}
+      onDeleteMapFeature={deleteMapFeature}
       onBusyChange={(b) => (mapBusy = b)}
     />
   {:else}
@@ -1106,7 +1132,12 @@
             /></label
           >
         </div>
-        <AreaDetailsFields kind={newFieldKind} bind:draft={newFieldDetails} idPrefix="sketch-new" />
+        <AreaDetailsFields
+          kind={newFieldKind}
+          bind:draft={newFieldDetails}
+          idPrefix="sketch-new"
+          areaSqFt={newFieldWidth && newFieldLength ? newFieldWidth * newFieldLength : null}
+        />
         <div class="row">
           <button
             type="submit"
@@ -1505,7 +1536,7 @@
                   >
                   <button
                     class="row-action danger"
-                    onclick={() => deleteShadeSource(s.id, s.name)}
+                    onclick={() => deleteShadeFromList(s.id, s.name)}
                     aria-label="Delete {s.name}"
                     title="Delete shade source">🗑</button
                   >
@@ -1546,7 +1577,7 @@
                 >
                 <button
                   class="row-action danger"
-                  onclick={() => deleteShadeSource(s.id, s.name)}
+                  onclick={() => deleteShadeFromList(s.id, s.name)}
                   aria-label="Delete {s.name}"
                   title="Delete shade source">🗑</button
                 >
@@ -1635,7 +1666,12 @@
             /></label
           >
         </div>
-        <AreaDetailsFields kind={newFieldKind} bind:draft={newFieldDetails} idPrefix="nodraw-new" />
+        <AreaDetailsFields
+          kind={newFieldKind}
+          bind:draft={newFieldDetails}
+          idPrefix="nodraw-new"
+          areaSqFt={newFieldAcres && newFieldAcres > 0 ? newFieldAcres * SQFT_PER_ACRE : null}
+        />
         <button
           class="primary"
           onclick={createField}

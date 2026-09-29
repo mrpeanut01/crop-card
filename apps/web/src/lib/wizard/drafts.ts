@@ -27,7 +27,11 @@ export const draftPayloadSchema = z.object({
   /** stockItemId → selected quantity. Persisted as a tuple list so JSON
    *  round-trip is order-stable. */
   selectedSeeds: z.array(z.tuple([z.string(), z.number()])).default([]),
+  /** #471 — selected seeds with no quantity, sized to the bed. */
+  fillToBedSeeds: z.array(z.string()).default([]),
   selectedBlockIds: z.array(z.string()).default([]),
+  /** #480 — Inputs step product picks, keyed by application slot id. */
+  inputOverrides: z.record(z.string(), z.string()).default({}),
   /** Optional last-seen chat draft so the user doesn't lose half a
    *  sentence when stepping away. */
   chatDraft: z.string().default(''),

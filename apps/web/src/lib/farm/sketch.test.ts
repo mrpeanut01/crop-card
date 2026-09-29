@@ -1,11 +1,31 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { formatFt, layoutSketch, sketchAcres, withSketchAcres, SQFT_PER_ACRE } from './sketch';
+import {
+  formatFt,
+  layoutSketch,
+  sketchAcres,
+  storedSketchAcres,
+  withSketchAcres,
+  SQFT_PER_ACRE
+} from './sketch';
 
 describe('sketchAcres', () => {
   it('converts width × length in feet to acres', () => {
     expect(sketchAcres(208.71, 208.71)).toBeCloseTo(1, 3);
     expect(sketchAcres(100, 435.6)).toBe(1);
+  });
+
+  it('keeps a 4 x 8 ft bed at 32 sq ft instead of rounding it to 0.001 ac', () => {
+    const acres = sketchAcres(4, 8)!;
+    expect(acres * SQFT_PER_ACRE).toBeCloseTo(32, 1);
+    expect(Math.round(acres * SQFT_PER_ACRE)).toBe(32);
+  });
+
+  it('reads an old 3-decimal value as the exact figure, and leaves typed acres alone', () => {
+    expect(storedSketchAcres(0.001, 4, 8)! * SQFT_PER_ACRE).toBeCloseTo(32, 1);
+    expect(storedSketchAcres(0.5, 4, 8)).toBe(0.5);
+    expect(storedSketchAcres(0.001, null, 8)).toBe(0.001);
+    expect(storedSketchAcres(null, 4, 8)).toBeNull();
   });
 
   it('is undefined unless both sides are positive', () => {

@@ -51,6 +51,10 @@ import { getActiveSession, markSessionCompleted } from '$lib/db/wizardChat';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 import { DEFAULT_PREFS, formatCalendarDate, type Prefs } from '$lib/prefs';
 import { formatApplicationRateLine, localizeRationale } from '$lib/plan/inputsPlanFormat';
+import { getRegistry } from '$lib/server/registry';
+import { loadSeasonSetup } from '$lib/season/setup.server';
+import { validateManualChoices } from '$lib/server/inputsChoiceValidate';
+import type { CropPlugin } from '$lib/plugins/schemas';
 
 const INPUTS_PLAN_TEMPLATE_KEY = 'inputs-plan';
 
@@ -68,7 +72,10 @@ const applicationSchema = z.object({
   rateUnit: z.string().nullable(),
   acres: z.number().nonnegative(),
   totalAmount: z.number().nullable(),
-  rationale: z.string()
+  rationale: z.string(),
+  /** #480 — `manual` rows are products the farmer picked on the Inputs
+   *  step; they are re-checked below before any task is written. */
+  productSource: z.enum(['plugin', 'data', 'ai', 'manual']).optional()
 });
 
 const scoutTaskSchema = z.object({
@@ -168,6 +175,27 @@ export const POST: RequestHandler = async (event) => {
     ...Array.from(blockIds, (id) => ['blockId', id, getBlock] as const)
   );
   if (foreign) return foreign;
+
+  if (parsed.data.applications.some((a) => a.productPluginId)) {
+    const registry = await getRegistry();
+    const products = new Map<string, { type: string; pluginId: string; displayName: string }>();
+    const cropPlugins: Record<string, CropPlugin> = {};
+    for (const r of registry.all()) {
+      if (r.plugin.type === 'crop') cropPlugins[r.plugin.pluginId] = r.plugin as CropPlugin;
+      else products.set(r.plugin.pluginId, r.plugin);
+    }
+    const problems = validateManualChoices(parsed.data.applications, {
+      products,
+      cropPlugins,
+      philosophy: loadSeasonSetup(getActivePlanningYear())?.philosophy ?? null
+    });
+    if (problems.length > 0) {
+      return json(
+        { error: `Some picked products cannot be used: ${problems.join(' ')}`, problems },
+        { status: 422 }
+      );
+    }
+  }
 
   // Idempotency — delete OPEN inputs-plan tasks for the affected
   // blocks. Completed / aborted tasks survive: their executed history

@@ -66,4 +66,27 @@ describe('SetupAnimalHousing', () => {
     expect(screen.getByRole('alert').textContent).toMatch(/Give the place a name/);
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it('saves the species on a new coop made while adding animals (r6, #477)', async () => {
+    render(SetupAnimalHousing, {
+      areas: [],
+      canEdit: true,
+      defaultKind: 'coop_pen',
+      speciesId: 'chicken',
+      speciesName: 'chicken',
+      onDone: vi.fn()
+    });
+    expect(screen.getByTestId('coop-species-note').textContent).toMatch(/suggested number/);
+    await fireEvent.input(screen.getByLabelText('What do you call it?'), {
+      target: { value: 'Hen house' }
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Use this place' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({
+      name: 'Hen house',
+      kind: 'coop_pen',
+      details: { speciesId: 'chicken' }
+    });
+  });
 });

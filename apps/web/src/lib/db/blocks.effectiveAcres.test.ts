@@ -66,3 +66,17 @@ describe('effectiveAcresFor', () => {
     expect(effectiveAcresFor({ acres: undefined, geometryGeojson: undefined })).toBeUndefined();
   });
 });
+
+describe('small sketched beds keep their true area', () => {
+  it('a 4 x 8 ft bed reads back as 32 sq ft, including one saved with the old rounding', async () => {
+    const { createBlock, getBlock, updateBlock } = await import('./blocks');
+    const { runWithTenant } = await import('./tenant');
+    const { SQFT_PER_ACRE } = await import('$lib/farm/sketch');
+    runWithTenant('owner_home_farm', () => {
+      const fresh = createBlock({ name: `bed-${Date.now()}`, widthFt: 4, lengthFt: 8 });
+      expect(Math.round(getBlock(fresh.id)!.acres! * SQFT_PER_ACRE)).toBe(32);
+      updateBlock(fresh.id, { acres: 0.001 });
+      expect(Math.round(getBlock(fresh.id)!.acres! * SQFT_PER_ACRE)).toBe(32);
+    });
+  });
+});

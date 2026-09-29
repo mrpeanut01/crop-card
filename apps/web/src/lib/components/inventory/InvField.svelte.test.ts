@@ -31,14 +31,14 @@ describe('InvField — Phase 27A labeled form field with chip taxonomy', () => {
     expect(getByText('REQUIRED')).toBeInTheDocument();
   });
 
-  it('renders FROM PLUGIN chip', () => {
+  it('renders FROM LIBRARY chip', () => {
     const { getByText } = render(InvField, {
       id: 'x',
       label: 'Active ingredients',
       chip: 'from-plugin',
       children: inputSnippet
     });
-    expect(getByText('FROM PLUGIN')).toBeInTheDocument();
+    expect(getByText('FROM LIBRARY')).toBeInTheDocument();
   });
 
   it('renders KERNEL-LOCKED chip with the lock icon', () => {

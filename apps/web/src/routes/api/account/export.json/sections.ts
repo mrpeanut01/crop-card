@@ -22,7 +22,7 @@ import {
 } from '$lib/db/schema';
 import { type TenantScopedTable, withTenant } from '$lib/db/tenant';
 import { listFields } from '$lib/db/fields';
-import { listMapFeatures } from '$lib/db/mapFeatures';
+import { listMapFeatureAreaLinks, listMapFeatures } from '$lib/db/mapFeatures';
 import { listShadeSources } from '$lib/db/shadeSources';
 
 /** Every Phase 32 table, grouped the way the export file shows them. */
@@ -104,6 +104,11 @@ export function areaSection() {
 
 export function mapFeatureSection() {
   return listMapFeatures().map((f) => ({ ...f, createdAt: iso(f.createdAt) }));
+}
+
+/** Which Areas each hydrant or waterer serves (#478). */
+export function mapFeatureAreaSection() {
+  return listMapFeatureAreaLinks();
 }
 
 export function shadeSourceSection() {

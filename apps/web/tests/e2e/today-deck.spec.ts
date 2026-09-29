@@ -65,12 +65,6 @@ test.describe('/today task deck', () => {
     await expect(card(page, ids.planned)).toHaveCount(0);
     await expect(page.getByTestId('deck-summary')).toHaveText('1 late · 2 due today');
 
-    await deck.getByRole('button', { name: 'Next 7 days' }).click();
-    await expect(page).toHaveURL(/tab=7d/);
-    await expect(card(page, ids.planned).locator('[data-card-status="planned"]')).toHaveText(
-      'Planned'
-    );
-
     await card(page, ids.today).getByRole('button', { name: 'Done: Stake the tomatoes' }).click();
     await expect(card(page, ids.today).locator('[data-card-status="done"]')).toHaveText('Done');
 
@@ -86,26 +80,10 @@ test.describe('/today task deck', () => {
 
     await page.reload();
     await page.waitForLoadState('networkidle');
-    await expect(page.getByTestId('deck-summary')).toContainText('1 planned');
-    await expect(page.getByTestId('deck-summary')).toContainText('1 done');
-    await expect(page.getByTestId('deck-summary')).toContainText('1 skipped');
+    await expect(page.getByTestId('deck-summary')).toHaveText('1 due today · 1 done · 1 skipped');
 
-    await deck.getByRole('button', { name: 'Calendar' }).click();
-    await expect(page.getByRole('heading', { name: 'This week' })).toBeVisible();
-    await expect(page.locator('.grid .item', { hasText: 'Sow fall peas' })).toBeVisible();
-    await deck.getByRole('button', { name: 'Next 30 days' }).click();
-    await expect(page.getByRole('heading', { name: 'Next 4 weeks' })).toBeVisible();
-    await deck.getByRole('button', { name: 'Season' }).click();
-    await expect(page.getByRole('heading', { name: 'This season' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Season by crop' })).toBeVisible();
-    await page.getByRole('tab', { name: 'Week' }).click();
-    await expect(page.getByRole('heading', { name: 'This week' })).toBeVisible();
-
-    const gear = page.getByTestId('today-gear');
-    await expect(gear).not.toHaveAttribute('open', '');
-    await gear.getByText('Sprayers and app info').click();
-    await expect(gear.getByText('Rules version')).toBeVisible();
-    await expect(gear).toContainText('Beds and blocks');
+    await expect(page.getByTestId('today-gear')).toHaveCount(0);
+    await expect(page.getByText('Rules version')).toHaveCount(0);
   });
 
   test('a task picked by day is due on that day, with its notes on the card', async ({ page }) => {
@@ -137,7 +115,6 @@ test.describe('/today task deck', () => {
     await expect(empty.getByRole('link', { name: 'Plan a crop' })).toHaveAttribute('href', '/plan');
     await expect(empty.getByRole('link', { name: 'Plan a spray' })).toHaveCount(0);
     await expect(empty).not.toContainText('suggestions are below');
-    await expect(page.getByTestId('today-gear').getByText('Rules version')).toBeHidden();
   });
 
   test('a Done with no signal waits on the card and saves when back online', async ({

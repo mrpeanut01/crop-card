@@ -5,13 +5,25 @@ import { MAP_FEATURE_KINDS, WATER_SOURCE_TYPES } from './mapFeatures';
 
 describe('map feature form', () => {
   it('starts blank and round-trips a saved water source', () => {
-    expect(draftFromFeature()).toEqual({ name: '', fieldId: '', source: '', flowRate: '' });
+    expect(draftFromFeature()).toEqual({
+      name: '',
+      fieldId: '',
+      areaIds: [],
+      source: '',
+      flowRate: ''
+    });
     const draft = draftFromFeature({
       name: 'Barn well',
       fieldId: 'f1',
       details: { source: 'well', flowRateGpm: 7.5 }
     });
-    expect(draft).toEqual({ name: 'Barn well', fieldId: 'f1', source: 'well', flowRate: '7.5' });
+    expect(draft).toEqual({
+      name: 'Barn well',
+      fieldId: 'f1',
+      areaIds: ['f1'],
+      source: 'well',
+      flowRate: '7.5'
+    });
     expect(bodyFromDraft('water_source', draft)).toEqual({
       ok: true,
       body: { name: 'Barn well', fieldId: 'f1', details: { source: 'well', flowRateGpm: 7.5 } }
@@ -31,6 +43,7 @@ describe('map feature form', () => {
       const res = bodyFromDraft(kind, {
         name: 'x',
         fieldId: '',
+        areaIds: [],
         source: 'pond',
         flowRate: '4'
       });
@@ -47,6 +60,7 @@ describe('map feature form', () => {
           const res = bodyFromDraft('water_source', {
             name: 'Tank',
             fieldId: '',
+            areaIds: [],
             source,
             flowRate: String(flow)
           });
@@ -59,13 +73,42 @@ describe('map feature form', () => {
       const res = bodyFromDraft('water_source', {
         name: 'Tank',
         fieldId: '',
+        areaIds: [],
         source: '',
         flowRate: bad
       });
       expect(res.ok).toBe(false);
     }
     expect(
-      bodyFromDraft('water_source', { name: 'Tank', fieldId: '', source: '', flowRate: ' ' })
+      bodyFromDraft('water_source', {
+        name: 'Tank',
+        fieldId: '',
+        areaIds: [],
+        source: '',
+        flowRate: ' '
+      })
     ).toEqual({ ok: true, body: { name: 'Tank', fieldId: null, details: null } });
+  });
+
+  it('a hydrant or waterer serves every ticked Area, the first one primary (#478)', () => {
+    const draft = {
+      ...draftFromFeature({
+        name: 'North hydrant',
+        fieldId: 'a',
+        areaIds: ['a', 'b'],
+        details: null
+      }),
+      areaIds: ['b', 'a', 'b']
+    };
+    expect(bodyFromDraft('hydrant', draft)).toEqual({
+      ok: true,
+      body: { name: 'North hydrant', fieldId: 'b', details: null, areaIds: ['b', 'a'] }
+    });
+    expect(bodyFromDraft('hydrant', { ...draft, areaIds: [] })).toEqual({
+      ok: true,
+      body: { name: 'North hydrant', fieldId: null, details: null, areaIds: [] }
+    });
+    const gate = bodyFromDraft('gate', { ...draft, fieldId: 'a' });
+    expect(gate.ok && 'areaIds' in gate.body).toBe(false);
   });
 });

@@ -5,10 +5,10 @@
 
   /**
    * Phase 27A primitive (#257). Labeled form field with the
-   * REQUIRED / FROM PLUGIN / KERNEL-LOCKED chip taxonomy that
+   * REQUIRED / FROM LIBRARY / KERNEL-LOCKED chip taxonomy that
    * `A_InventoryEditForm` (Phase 27D) renders against. The chip is the
    * authoring-source signal — REQUIRED means the operator must fill it,
-   * FROM PLUGIN means it pre-filled from the bound plugin (overridable),
+   * FROM LIBRARY means it pre-filled from the bound plugin (overridable),
    * KERNEL-LOCKED means the safety kernel owns the value and editing
    * routes through `/settings/plugins/[id]/propose-change`.
    *
@@ -39,7 +39,7 @@
     {#if chip === 'required'}
       <span class="chip chip-required">REQUIRED</span>
     {:else if chip === 'from-plugin'}
-      <span class="chip chip-plugin">FROM PLUGIN</span>
+      <span class="chip chip-plugin">FROM LIBRARY</span>
     {:else if chip === 'kernel-locked'}
       <span class="chip chip-locked">
         <Lock size={10} strokeWidth={2} aria-hidden="true" />

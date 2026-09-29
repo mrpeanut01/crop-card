@@ -173,7 +173,7 @@
 
 <div class="search-panel">
   <p class="lede">
-    Matches from your plugin library appear as you type.{#if aiEnabled}
+    Matches from the crop and product library appear as you type.{#if aiEnabled}
       No match? Ask Claude to search the web (uses your daily AI quota — see /settings/ai).{/if}
   </p>
 

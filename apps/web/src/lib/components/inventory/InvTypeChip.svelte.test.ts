@@ -5,13 +5,13 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import InvTypeChip from './InvTypeChip.svelte';
 
-describe('InvTypeChip — Phase 27A 5-chip type-swap row', () => {
-  it('renders all 5 canonical inventory types', () => {
+describe('InvTypeChip — Phase 27A type-swap row', () => {
+  it('renders the four canonical inventory types (no Sprayers, #474)', () => {
     const { getByRole } = render(InvTypeChip, {
       activeType: 'pesticide',
       onTypeChange: () => {}
     });
-    for (const label of ['Pesticides', 'Fertility', 'Seeds', 'Crops', 'Sprayers']) {
+    for (const label of ['Pesticides', 'Fertility', 'Seeds', 'Crops']) {
       expect(getByRole('tab', { name: new RegExp(label) })).toBeInTheDocument();
     }
   });

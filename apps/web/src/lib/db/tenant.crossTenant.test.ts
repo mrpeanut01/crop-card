@@ -787,6 +787,55 @@ describe('cross-tenant isolation', () => {
     expect(after?.fieldId).toBe(b.areaId);
   });
 
+  // #478 — the hydrant/waterer to Area links (map_feature_areas).
+  it('map_feature_areas links are owner-scoped for reads, filters, updates and unlinks', () => {
+    const seed = (ownerId: string) =>
+      runWithTenant(ownerId, () => {
+        const north = fieldsRepo.createField({ name: `${ownerId}-north` });
+        const south = fieldsRepo.createField({ name: `${ownerId}-south` });
+        const hydrant = mapFeaturesRepo.createMapFeature({
+          kind: 'hydrant',
+          name: `${ownerId}-hydrant`,
+          geometry: { type: 'Point', coordinates: [-77.5, 39.1] },
+          areaIds: [north.id, south.id]
+        });
+        return { north: north.id, south: south.id, hydrant: hydrant.id };
+      });
+    const a = seed(OWNER_A);
+    const b = seed(OWNER_B);
+
+    fc.assert(
+      fc.property(
+        fc.constantFrom(a.north, a.south, b.north, b.south),
+        fc.constantFrom(OWNER_A, OWNER_B),
+        (fieldId, owner) => {
+          const [mine, theirs] = owner === OWNER_A ? [a, b] : [b, a];
+          runWithTenant(owner, () => {
+            const rows = mapFeaturesRepo.listMapFeatures({ kind: 'hydrant', fieldId });
+            expect(rows.some((r) => r.id === theirs.hydrant)).toBe(false);
+            const expected = fieldId === mine.north || fieldId === mine.south ? 1 : 0;
+            expect(rows.filter((r) => r.id === mine.hydrant)).toHaveLength(expected);
+            for (const link of mapFeaturesRepo.listMapFeatureAreaLinks()) {
+              expect(link.featureId).not.toBe(theirs.hydrant);
+            }
+          });
+        }
+      ),
+      { numRuns: 30 }
+    );
+
+    runWithTenant(OWNER_A, () => {
+      expect(mapFeaturesRepo.getMapFeature(b.hydrant)).toBeUndefined();
+      expect(mapFeaturesRepo.updateMapFeature(b.hydrant, { areaIds: [a.north] })).toBeUndefined();
+      mapFeaturesRepo.unlinkMapFeaturesFromField(b.south);
+      expect(mapFeaturesRepo.getMapFeature(a.hydrant)?.areaIds).toEqual([a.north, a.south]);
+    });
+    runWithTenant(OWNER_B, () => {
+      expect(mapFeaturesRepo.getMapFeature(b.hydrant)?.areaIds).toEqual([b.north, b.south]);
+      expect(mapFeaturesRepo.listMapFeatureAreaLinks()).toHaveLength(2);
+    });
+  });
+
   // Phase 30E — garden-bed footprints and date moves stay inside the tenant.
   it('garden placement writes and date moves are owner-scoped', () => {
     const placement = (x: number) => ({

@@ -121,7 +121,7 @@
       {#if data.isOwner}
         <form method="POST" action="?/setCap" class="cap-form">
           <label class="cap-field">
-            <span>Your monthly limit (up to {formatUsd(data.spend.planBudget)})</span>
+            <span>Lower your monthly AI limit (optional)</span>
             <input
               class="s-input mono"
               type="number"
@@ -132,6 +132,13 @@
               value={data.ownerCapSetting ?? data.spend.planBudget}
             />
           </label>
+          <p class="cap-note" data-testid="ai-cap-planning-note">
+            The meter above is everyday AI help. Planning a season with AI is counted apart, with up
+            to {formatUsd(data.spend.planning.monthlyUsd)} a month of its own, so planning never uses
+            up the {formatUsd(data.spend.planBudget)} above. Leave this at {formatUsd(
+              data.spend.planBudget
+            )} to keep both. A lower limit caps everything together, planning included.
+          </p>
           <div class="cap-actions">
             <button type="submit" class="cap-btn primary" name="mode" value="set">Save limit</button
             >
@@ -226,6 +233,11 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+  .cap-note {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-ink-soft);
   }
   .cap-field {
     display: flex;

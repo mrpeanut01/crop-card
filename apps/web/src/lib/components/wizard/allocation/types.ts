@@ -6,6 +6,10 @@ export type SeedStockEntry = {
   /** Phase 15d — short label; falls back to displayName when absent. */
   shortName?: string;
   onHand: number;
+  /** #475 — quantity on `ordered` lots (not received yet). */
+  onOrder?: number;
+  /** #475 — quantity on `planned` lots (not bought yet). */
+  planned?: number;
   defaultUnit: string;
   cropPluginId: string | null;
   cropFamily: string | null;
@@ -17,8 +21,18 @@ export type BlockEntry = {
   blockLabel?: string;
   acres?: number;
   sunExposure?: 'full' | 'partial' | 'shade';
+  /** #475 — sketch size, edited inline on the Blocks step. */
+  widthFt?: number;
+  lengthFt?: number;
   plantings: Array<{ varietyDisplayName: string }>;
 };
+
+/** A block the plan can size seed to: typed width and length, or an area
+ *  (typed, or measured from a drawn shape). */
+export function blockHasSize(b: Pick<BlockEntry, 'acres' | 'widthFt' | 'lengthFt'>): boolean {
+  if (b.widthFt && b.lengthFt && b.widthFt > 0 && b.lengthFt > 0) return true;
+  return b.acres != null && b.acres > 0;
+}
 
 export type PriorSeason = {
   year: number;

@@ -15,7 +15,12 @@
 
 {#if data.aiEnabled}<AiUsageChip />{/if}
 
-<A_InventoryAddFlow type={data.type} aiEnabled={data.aiEnabled} canSave={data.canSave} />
+<A_InventoryAddFlow
+  type={data.type}
+  aiEnabled={data.aiEnabled}
+  canSave={data.canSave}
+  library={data.library}
+/>
 
 <style>
   .breadcrumb {

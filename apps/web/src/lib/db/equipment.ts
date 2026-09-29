@@ -160,10 +160,34 @@ export function createEquipment(input: CreateEquipmentInput): Equipment {
   return rowToEquipment(row);
 }
 
-export function updateEquipment(id: string, patch: { label?: string; notes?: string }): Equipment {
+export interface EquipmentSpecPatch {
+  tankGal?: number | null;
+  nozzle?: string | null;
+}
+
+export function updateEquipment(
+  id: string,
+  patch: { label?: string; notes?: string; spec?: EquipmentSpecPatch }
+): Equipment {
   const set: Partial<typeof equipment.$inferInsert> = {};
   if (patch.label !== undefined) set.label = patch.label;
   if (patch.notes !== undefined) set.notes = patch.notes || null;
+  if (patch.spec !== undefined) {
+    const row = db
+      .select({ specJson: equipment.specJson })
+      .from(equipment)
+      .where(withTenant(equipment, eq(equipment.id, id)))
+      .get();
+    if (!row) throw new Error(`unknown equipment: ${id}`);
+    const spec: Record<string, unknown> = row.specJson ? (safeJson(row.specJson) ?? {}) : {};
+    for (const key of ['tankGal', 'nozzle'] as const) {
+      const v = patch.spec[key];
+      if (v === undefined) continue;
+      if (v === null || v === '') delete spec[key];
+      else spec[key] = v;
+    }
+    set.specJson = Object.keys(spec).length > 0 ? JSON.stringify(spec) : null;
+  }
   if (Object.keys(set).length === 0) {
     const row = db
       .select()

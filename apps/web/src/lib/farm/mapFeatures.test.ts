@@ -253,7 +253,7 @@ describe('describeFeature and featureCounts', () => {
       })
     ).toBe('Barn well · Well, 12 gal/min');
     expect(describeFeature({ kind: 'hydrant', name: '  ', details: null, lengthFt: null })).toBe(
-      'Hydrant'
+      'Hydrant / Waterer'
     );
   });
 

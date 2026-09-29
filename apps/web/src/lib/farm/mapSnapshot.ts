@@ -95,6 +95,7 @@ export function snapshotFromMapData(input: {
   blocks: readonly MapBlockInput[];
   farmName?: string | null;
   now?: number;
+  mapFeatures?: FarmSnapshot['mapFeatures'];
 }): FarmSnapshot {
   const plantings: SnapshotPlanting[] = input.blocks.flatMap((b) =>
     (b.plantings ?? []).map((p) => ({
@@ -128,6 +129,7 @@ export function snapshotFromMapData(input: {
     equipment: [],
     stock: [],
     cropPlugins: {},
-    frost: null
+    frost: null,
+    ...(input.mapFeatures ? { mapFeatures: input.mapFeatures } : {})
   };
 }

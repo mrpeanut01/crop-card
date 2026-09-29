@@ -1,3 +1,4 @@
+import { needsDecon } from '$lib/equipment/decon';
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { listEquipment } from '$lib/db/equipment';
@@ -20,11 +21,7 @@ export const load: PageServerLoad = ({ locals }) => {
         calibratedGpa: e.state.calibratedGpa ?? null,
         calibrationDate: e.state.calibrationDate ?? null,
         winterizedAt: e.state.winterizedAt ?? null,
-        needsDecon: !!(
-          lastChemistryClass &&
-          lastUsedAt &&
-          !(lastDeconAt && lastDeconAt >= lastUsedAt)
-        )
+        needsDecon: needsDecon({ lastChemistryClass, lastUsedAt, lastDeconAt })
       };
     });
 

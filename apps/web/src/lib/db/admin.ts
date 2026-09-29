@@ -44,6 +44,7 @@ import {
   insecticideEvents,
   irrigationEvents,
   ledgerEntries,
+  mapFeatureAreas,
   mapFeatures,
   pendingCalibrations,
   rainGaugeReadings,
@@ -709,6 +710,7 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
     removed.sprayers = del(sprayers, isNotNull(sprayers.id));
   }
   removed.blocks = del(blocks, isNotNull(blocks.id));
+  removed.map_feature_areas = del(mapFeatureAreas, isNotNull(mapFeatureAreas.featureId));
   removed.map_features = del(mapFeatures, isNotNull(mapFeatures.id));
   removed.fields = del(fields, isNotNull(fields.id));
   // Null out any orphan task.linkedToTaskId references (rare but possible

@@ -136,10 +136,11 @@
     {
       href: '/settings/advanced',
       icon: AlertTriangle,
-      label: 'Advanced & export-all',
-      sub: 'Bulk export · transfer ownership · delete account',
-      danger: true,
-      ownerOnly: true
+      label: data.isOwner ? 'Advanced & export-all' : 'App info',
+      sub: data.isOwner
+        ? 'App info · bulk export · transfer ownership · delete account'
+        : 'Build and rules version, plugin counts',
+      danger: data.isOwner
     }
   ]);
 
@@ -160,11 +161,11 @@
       <form method="POST" action="/today?/showSetup">
         <button class="ghost-btn" type="submit">Re-show setup checklist</button>
       </form>
+      <a class="ghost-btn" href="/settings/advanced">
+        <FileDown size={14} />
+        Export account data
+      </a>
     {/if}
-    <a class="ghost-btn" href="/settings/advanced">
-      <FileDown size={14} />
-      Export account data
-    </a>
   </div>
 </header>
 

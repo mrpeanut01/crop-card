@@ -16,7 +16,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db } from './client';
 import { blocks, fields } from './schema';
 import { effectiveAcresFor } from './blocks';
-import { sketchAcres } from '$lib/farm/sketch';
+import { sketchAcres, storedSketchAcres } from '$lib/farm/sketch';
 import {
   DEFAULT_AREA_KIND,
   GRAZING_AREA_KINDS,
@@ -52,7 +52,8 @@ function acresSourceFor(row: typeof fields.$inferSelect): AcresSource | undefine
   }
   if (row.acres == null) return undefined;
   const fromDims = sketchAcres(row.widthFt, row.lengthFt);
-  return fromDims !== undefined && Math.abs(fromDims - row.acres) < 1e-9 ? 'dimensions' : 'typed';
+  const stored = storedSketchAcres(row.acres, row.widthFt, row.lengthFt) ?? row.acres;
+  return fromDims !== undefined && Math.abs(fromDims - stored) < 1e-9 ? 'dimensions' : 'typed';
 }
 
 export interface FieldWithBlocks extends Field {
@@ -65,7 +66,10 @@ function rowToField(row: typeof fields.$inferSelect): Field {
   return {
     id: row.id,
     name: row.name,
-    acres: effectiveAcresFor({ acres: row.acres, geometryGeojson: row.geometryGeojson }),
+    acres: effectiveAcresFor({
+      acres: storedSketchAcres(row.acres, row.widthFt, row.lengthFt),
+      geometryGeojson: row.geometryGeojson
+    }),
     location: row.location ?? undefined,
     notes: row.notes ?? undefined,
     geometryGeojson: row.geometryGeojson ?? undefined,
@@ -94,6 +98,8 @@ export function listFields(opts: { kinds?: readonly AreaKind[] } = {}): FieldWit
     .select({
       fieldId: blocks.fieldId,
       acres: blocks.acres,
+      widthFt: blocks.widthFt,
+      lengthFt: blocks.lengthFt,
       geometryGeojson: blocks.geometryGeojson
     })
     .from(blocks)
@@ -104,7 +110,11 @@ export function listFields(opts: { kinds?: readonly AreaKind[] } = {}): FieldWit
     if (!b.fieldId) continue;
     const cur = counts.get(b.fieldId) ?? { count: 0, acres: 0 };
     cur.count += 1;
-    cur.acres += effectiveAcresFor({ acres: b.acres, geometryGeojson: b.geometryGeojson }) ?? 0;
+    cur.acres +=
+      effectiveAcresFor({
+        acres: storedSketchAcres(b.acres, b.widthFt, b.lengthFt),
+        geometryGeojson: b.geometryGeojson
+      }) ?? 0;
     counts.set(b.fieldId, cur);
   }
   return fieldRows

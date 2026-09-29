@@ -2,10 +2,10 @@
   /**
    * Sprint 7 / Phase 27B (#257) — unified inventory list.
    *
-   * One canonical list chrome for all 5 inventory types per CLAUDE.md
+   * One canonical list chrome for every inventory type per CLAUDE.md
    * Invariant 8. Per-type columns + KPIs swap; the chrome (search row,
-   * 5-chip type-swap, Stock/Catalog toggle, table shell) does not.
-   * Old shells stay live until Sprint 9 cutover.
+   * type-swap chips, Stock/Catalog toggle, table shell) does not.
+   * Sprayers are equipment and live on /equipment (#474).
    *
    * Server loader: `apps/web/src/routes/inventory/+page.server.ts`.
    * Detail dispatch: `apps/web/src/routes/inventory/[type]/[id]/`.
@@ -15,16 +15,11 @@
   import InvTypeChip from './InvTypeChip.svelte';
   import InventoryEmptyGrid from './InventoryEmptyGrid.svelte';
   import CardView from '$lib/components/cards/CardView.svelte';
-  import { inventoryRowCard, inventoryRowId } from '$lib/inventory/rowCards';
+  import { expectedQuantityText, inventoryRowCard, inventoryRowId } from '$lib/inventory/rowCards';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatStockQuantity, isLabelUnitCategory } from '$lib/stock/units';
   import type { InventoryType } from '$lib/inventory/types';
-  import type {
-    CatalogRow,
-    InventoryRow,
-    SprayerRow,
-    StockRow
-  } from '../../../routes/inventory/+page.server';
+  import type { CatalogRow, InventoryRow, StockRow } from '../../../routes/inventory/+page.server';
 
   interface Props {
     type: InventoryType;
@@ -44,9 +39,7 @@
     if (!q) return rows;
     return rows.filter((r) => {
       if (r.kind === 'stock') return r.displayName.toLowerCase().includes(q);
-      if (r.kind === 'catalog')
-        return r.displayName.toLowerCase().includes(q) || r.pluginId.toLowerCase().includes(q);
-      return r.label.toLowerCase().includes(q);
+      return r.displayName.toLowerCase().includes(q) || r.pluginId.toLowerCase().includes(q);
     });
   });
 
@@ -54,7 +47,7 @@
     const url = new URL($page.url);
     url.searchParams.set('type', next);
     // Reset mode when switching: pesticide/fertility/seed default to stock,
-    // crop forces catalog, sprayer forces stock (sole mode).
+    // crop forces catalog.
     url.searchParams.delete('mode');
     goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
   }
@@ -66,36 +59,18 @@
   }
 
   function navigateTo(row: InventoryRow): void {
-    const id = row.kind === 'stock' ? row.id : row.kind === 'catalog' ? row.pluginId : row.id;
+    const id = row.kind === 'stock' ? row.id : row.pluginId;
     goto(`/inventory/${type}/${encodeURIComponent(id)}`);
   }
 
   // Per-type KPI shape. Returns 4 cards; types swap based on `mode`.
   const kpis: Array<{ label: string; value: string | number }> = $derived.by(() => {
-    if (type === 'sprayer') {
-      const sprayers = rows as Array<SprayerRow & { kind: 'sprayer' }>;
-      const calibrated = sprayers.filter((s) => s.lastCalibratedAt).length;
-      const deconNeeded = sprayers.filter((s) => s.deconRequired).length;
-      const lastCal = sprayers
-        .map((s) => s.lastCalibratedAt)
-        .filter((n): n is number => !!n)
-        .sort((a, b) => b - a)[0];
-      return [
-        { label: 'Total', value: sprayers.length },
-        { label: 'Calibrated', value: calibrated },
-        { label: 'Decon needed', value: deconNeeded },
-        {
-          label: 'Most recent cal',
-          value: lastCal ? fmt.instant(lastCal, 'date') : '—'
-        }
-      ];
-    }
     if (type === 'crop' || mode === 'catalog') {
       const catalog = rows as Array<CatalogRow & { kind: 'catalog' }>;
       const withArchetype = catalog.filter((c) => c.archetype).length;
       const archetypes = new Set(catalog.map((c) => c.archetype).filter(Boolean));
       return [
-        { label: 'Plugins loaded', value: catalog.length },
+        { label: 'In the catalog', value: catalog.length },
         { label: 'With archetype', value: withArchetype },
         { label: 'Distinct archetypes', value: archetypes.size },
         { label: 'Source', value: 'core' }
@@ -117,12 +92,7 @@
     ];
   });
 
-  function gpaText(gpa: number): string {
-    const metric = currentPrefs().units === 'metric' ? ` (${fmt.qty(gpa, 'volumePerArea')})` : '';
-    return `${gpa.toFixed(1)}${metric}`;
-  }
-
-  const showCatalogToggle = $derived(type !== 'crop' && type !== 'sprayer');
+  const showCatalogToggle = $derived(type !== 'crop');
 
   const rowCards = $derived(filteredRows.map((r) => inventoryRowCard(r, type, currentPrefs())));
 </script>
@@ -132,7 +102,8 @@
     <span class="kicker">Inventory</span>
     <h1 class="serif">All inventory</h1>
     <p class="lede">
-      Pesticides, fertility, seeds, crop plugins, and sprayers — one surface, per-type fields.
+      Pesticides, fertility, seeds and crops in one place. Sprayers and other gear live in
+      <a href="/equipment">Equipment</a>.
     </p>
   </div>
   {#if type !== 'crop'}
@@ -189,21 +160,14 @@
     <table class="inv-table">
       <thead>
         <tr>
-          {#if type === 'sprayer'}
-            <th>Sprayer</th>
-            <th>Nozzle</th>
-            <th>Tank</th>
-            <th>Last cal</th>
-            <th>GPA</th>
-            <th>Status</th>
-          {:else if type === 'crop' || mode === 'catalog'}
-            <th>Plugin id</th>
+          {#if type === 'crop' || mode === 'catalog'}
+            <th>Id</th>
             <th>{type === 'crop' ? 'Archetype' : 'Type'}</th>
             <th>{type === 'crop' ? 'Family' : 'Source'}</th>
             <th>{type === 'crop' ? 'DTM' : 'Version'}</th>
           {:else}
             <th>Item</th>
-            <th>Category</th>
+            <th>{type === 'seed' ? 'Crop' : 'Kind'}</th>
             <th class="num">On hand</th>
             <th class="num">Lots</th>
             <th>Expires</th>
@@ -216,28 +180,9 @@
             <td colspan="6" class="empty">Nothing matches that search.</td>
           </tr>
         {:else}
-          {#each filteredRows as row (row.kind === 'catalog' ? row.pluginId : row.kind === 'stock' ? row.id : row.id)}
+          {#each filteredRows as row (row.kind === 'catalog' ? row.pluginId : row.id)}
             <tr class="clickable" onclick={() => navigateTo(row)}>
-              {#if row.kind === 'sprayer'}
-                <td>{row.label}</td>
-                <td class="muted">{row.nozzleType ?? '—'}</td>
-                <td class="num muted"
-                  >{row.tankGal != null ? fmt.label(row.tankGal, 'volume') : '—'}</td
-                >
-                <td class="muted">
-                  {row.lastCalibratedAt ? fmt.instant(row.lastCalibratedAt, 'date') : '—'}
-                </td>
-                <td class="num">{row.measuredGpa != null ? gpaText(row.measuredGpa) : '—'}</td>
-                <td>
-                  {#if row.deconRequired}
-                    <span class="pill pill-warn">Decon</span>
-                  {:else if row.lastCalibratedAt}
-                    <span class="pill pill-ok">OK</span>
-                  {:else}
-                    <span class="pill pill-muted">New</span>
-                  {/if}
-                </td>
-              {:else if row.kind === 'catalog'}
+              {#if row.kind === 'catalog'}
                 <td class="mono">{row.pluginId}</td>
                 <td>{row.archetype ?? row.pluginType}</td>
                 <td class="muted">{row.cropFamily ?? '—'}</td>
@@ -250,11 +195,15 @@
                 </td>
               {:else}
                 <td>{row.displayName}</td>
-                <td class="muted">{row.category}</td>
+                <td class="muted">{type === 'seed' ? (row.cropName ?? '—') : row.category}</td>
                 <td class="num" class:low={row.isLow}>
                   {formatStockQuantity(row.onHand, row.defaultUnit, currentPrefs(), {
-                    labelUnit: isLabelUnitCategory(row.category)
+                    labelUnit: isLabelUnitCategory(row.category),
+                    category: row.category
                   })}
+                  {#if expectedQuantityText(row, currentPrefs())}
+                    <span class="expected">+ {expectedQuantityText(row, currentPrefs())}</span>
+                  {/if}
                 </td>
                 <td class="num muted">{row.lotCount}</td>
                 <td class="muted">
@@ -329,6 +278,13 @@
     margin: 4px 0 0;
     font-size: 0.9rem;
     color: var(--color-ink-muted, #6a6f63);
+  }
+  .lede a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--color-forest, #1f5e3a);
+    font-weight: 600;
   }
   .mode-toggle {
     margin-top: 10px;
@@ -456,6 +412,12 @@
   .inv-table td.muted {
     color: var(--color-ink-muted, #6a6f63);
   }
+  .inv-table td .expected {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--color-ink-muted, #6a6f63);
+  }
   .inv-table td.low {
     color: var(--color-rust, #a23a3a);
     font-weight: 600;
@@ -470,25 +432,5 @@
     text-align: center;
     color: var(--color-ink-muted, #6a6f63);
     padding: 24px 12px;
-  }
-  .pill {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    padding: 2px 8px;
-    border-radius: 99px;
-    text-transform: uppercase;
-  }
-  .pill-ok {
-    background: var(--color-forest-tint, #e8f1ea);
-    color: var(--color-forest-deep, #1f3522);
-  }
-  .pill-warn {
-    background: var(--color-rust-tint, #fce8e8);
-    color: var(--color-rust, #a23a3a);
-  }
-  .pill-muted {
-    background: var(--color-divider, #e5e7e0);
-    color: var(--color-ink-muted, #6a6f63);
   }
 </style>

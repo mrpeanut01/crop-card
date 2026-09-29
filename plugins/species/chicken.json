@@ -13,5 +13,10 @@
   "tile": {
     "icon": "egg",
     "label": "Chickens"
+  },
+  "housingSpace": {
+    "indoorSqFtPerAnimal": 3.5,
+    "outdoorSqFtPerAnimal": 10,
+    "sourceName": "eXtension Small and Backyard Poultry"
   }
 }

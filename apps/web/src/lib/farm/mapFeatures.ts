@@ -41,7 +41,7 @@ export const MAP_FEATURE_LABELS: Readonly<Record<MapFeatureKind, string>> = {
   fence: 'Fence',
   gate: 'Gate',
   water_source: 'Water source',
-  hydrant: 'Hydrant',
+  hydrant: 'Hydrant / Waterer',
   irrigation_line: 'Irrigation line',
   path: 'Path'
 };
@@ -50,7 +50,7 @@ export const MAP_FEATURE_PLURAL: Readonly<Record<MapFeatureKind, string>> = {
   fence: 'Fences',
   gate: 'Gates',
   water_source: 'Water sources',
-  hydrant: 'Hydrants',
+  hydrant: 'Hydrants / Waterers',
   irrigation_line: 'Irrigation lines',
   path: 'Paths'
 };
@@ -59,7 +59,7 @@ export const MAP_FEATURE_HINT: Readonly<Record<MapFeatureKind, string>> = {
   fence: 'Draw along the fence line',
   gate: 'Tap where the gate is',
   water_source: 'Well, spigot, pond pump or rain tank',
-  hydrant: 'Tap where the hydrant is',
+  hydrant: 'Tap where the hydrant or waterer is',
   irrigation_line: 'Draw along the main line',
   path: 'Lane, track or walkway'
 };
@@ -68,7 +68,7 @@ export const MAP_FEATURE_NAME_PLACEHOLDER: Readonly<Record<MapFeatureKind, strin
   fence: 'e.g. Pasture fence',
   gate: 'e.g. Lane gate',
   water_source: 'e.g. Barn well',
-  hydrant: 'e.g. Garden hydrant',
+  hydrant: 'e.g. North hydrant',
   irrigation_line: 'e.g. Main drip line',
   path: 'e.g. Farm lane'
 };
@@ -256,7 +256,11 @@ export interface MapFeatureView {
   id: string;
   kind: MapFeatureKind;
   name: string;
+  /** The primary Area; for a hydrant the first of `areaIds`. */
   fieldId: string | null;
+  /** Every Area a hydrant or waterer serves (#478). Other kinds carry just
+   *  their one Area. Absent on bundles saved before it existed. */
+  areaIds?: string[];
   geometry: FeatureGeometry | null;
   details: MapFeatureDetails | null;
   lengthFt: number | null;
@@ -292,4 +296,28 @@ export function describeFeature(
 
 function trimFlow(n: number): string {
   return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10);
+}
+
+/** Kinds that can serve more than one Area. */
+export const MULTI_AREA_FEATURE_KINDS = ['hydrant'] as const satisfies readonly MapFeatureKind[];
+
+export function servesManyAreas(kind: MapFeatureKind): boolean {
+  return (MULTI_AREA_FEATURE_KINDS as readonly string[]).includes(kind);
+}
+
+/** The Areas a feature serves, reading bundles saved before `areaIds`. */
+export function servedAreaIds(feature: Pick<MapFeatureView, 'fieldId' | 'areaIds'>): string[] {
+  if (feature.areaIds && feature.areaIds.length) return feature.areaIds;
+  return feature.fieldId ? [feature.fieldId] : [];
+}
+
+/** Hydrants and waterers that serve this Area, by name. */
+export function watererNamesFor(
+  areaId: string,
+  features: ReadonlyArray<Pick<MapFeatureView, 'kind' | 'name' | 'fieldId' | 'areaIds'>>
+): string[] {
+  return features
+    .filter((f) => f.kind === 'hydrant' && servedAreaIds(f).includes(areaId))
+    .map((f) => f.name.trim() || MAP_FEATURE_LABELS.hydrant)
+    .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
 }

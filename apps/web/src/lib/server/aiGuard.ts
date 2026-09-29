@@ -27,8 +27,10 @@ import {
   AI_PLAN_RESERVE_USD,
   AI_RESERVE_USD,
   DEFAULT_FREE_POOL_MONTHLY_USD,
+  PLANNING_ENDPOINTS,
   PLANS,
   effectiveDailyQuota,
+  isPlanningEndpoint,
   effectiveMonthlyCap,
   formatUsd,
   nextPlanUp,
@@ -238,15 +240,28 @@ export function guardLedgerSize(): number {
   return liveHolds().length;
 }
 
-/** This Owner's spend this month, whoever on the farm made the call. */
-function monthlyUsdSpent(): number {
+interface MonthlySpend {
+  planning: number;
+  other: number;
+}
+
+/** This Owner's spend this month, whoever on the farm made the call, split
+ *  into AI planning and the rest of the AI help. */
+function monthlyUsdSpent(): MonthlySpend {
   const monthStart = utcMonthStart();
+  const planningList = sql.join(
+    [...PLANNING_ENDPOINTS].map((e) => sql`${e}`),
+    sql`, `
+  );
   const row = db
-    .select({ total: sum(aiCallLog.usdEstimate) })
+    .select({
+      planning: sql<number>`coalesce(sum(case when ${aiCallLog.endpoint} in (${planningList}) then ${aiCallLog.usdEstimate} else 0 end), 0)`,
+      other: sql<number>`coalesce(sum(case when ${aiCallLog.endpoint} in (${planningList}) then 0 else ${aiCallLog.usdEstimate} end), 0)`
+    })
     .from(aiCallLog)
     .where(withTenant(aiCallLog, gte(aiCallLog.createdAt, new Date(monthStart))))
     .get();
-  return Number(row?.total ?? 0);
+  return { planning: Number(row?.planning ?? 0), other: Number(row?.other ?? 0) };
 }
 
 /** Deployment-wide brake on the shared Anthropic key, set by the operator
@@ -429,10 +444,20 @@ function evaluate(
   }
 
   const cap = effectiveMonthlyCap(plan.aiMonthlyUsd, ownerSetting);
-  const held = ownerId ? heldUsd((h) => h.ownerId === ownerId) : 0;
-  const spent = monthlyUsdSpent() + held + pendingUsd;
-  if (spent + AI_RESERVE_USD[endpoint] > cap) {
-    const ownerLowered = cap < plan.aiMonthlyUsd;
+  const ownerLowered = cap < plan.aiMonthlyUsd;
+  const planning = isPlanningEndpoint(endpoint);
+  const logged = monthlyUsdSpent();
+  const heldOther = ownerId
+    ? heldUsd((h) => h.ownerId === ownerId && !isPlanningEndpoint(h.endpoint))
+    : 0;
+  const heldPlanning = ownerId
+    ? heldUsd((h) => h.ownerId === ownerId && isPlanningEndpoint(h.endpoint))
+    : 0;
+  const otherSpent = logged.other + heldOther + (planning ? 0 : pendingUsd);
+  const planningSpent = logged.planning + heldPlanning + (planning ? pendingUsd : 0);
+  const spent = ownerLowered ? otherSpent + planningSpent : otherSpent;
+  const reserve = AI_RESERVE_USD[endpoint];
+  if (spent + reserve > cap && (!planning || ownerLowered)) {
     return verdict(
       blocked(
         'cap-exceeded',
@@ -442,6 +467,16 @@ function evaluate(
           ? `This farm's AI help for the month is used up (${formatUsd(spent)} of the ${formatUsd(cap)} you set). ${WITHOUT_AI} It resets on the 1st.`
           : `You've used this month's AI help (${formatUsd(spent)} of ${formatUsd(cap)}). ${WITHOUT_AI} It resets on the 1st.${upsell(plan.plan)}`,
         ownerLowered ? null : nextPlanUp(plan.plan)
+      )
+    );
+  }
+  if (planning && planningSpent + reserve > plan.planningMonthlyUsd) {
+    return verdict(
+      blocked(
+        'cap-exceeded',
+        'monthly-budget',
+        plan.plan,
+        `This month's AI planning is used up (${formatUsd(planningSpent)} of ${formatUsd(plan.planningMonthlyUsd)}). ${WITHOUT_AI} It resets on the 1st.${upsell(plan.plan)}`
       )
     );
   }
@@ -629,7 +664,9 @@ export function spendSnapshot(): SpendSnapshot {
   const plan = activePlan();
   const ownerSetting = getAiMonthlyUsdCapSetting();
   const cap = effectiveMonthlyCap(plan.aiMonthlyUsd, ownerSetting);
-  const spent = monthlyUsdSpent();
+  const ownerLimited = cap < plan.aiMonthlyUsd;
+  const logged = monthlyUsdSpent();
+  const spent = ownerLimited ? logged.other + logged.planning : logged.other;
   const pct = cap > 0 ? Math.min(1, spent / cap) : 1;
   const left = cap - spent;
   const exhausted = cap <= 0 || left < AI_MIN_RESERVE_USD;
@@ -641,6 +678,16 @@ export function spendSnapshot(): SpendSnapshot {
     warnAt80: pct >= 0.8,
     exhausted,
     quickOnly: !exhausted && left < AI_PLAN_RESERVE_USD,
+    planning: {
+      perDay: effectiveDailyQuota(plan.dailyQuota, getAiDailyCallQuotaOverrides()).allocate,
+      usedToday: callsTodayOnFarm('allocate'),
+      monthlyUsd: plan.planningMonthlyUsd,
+      monthlyUsdSoFar: logged.planning,
+      monthlyExhausted:
+        logged.planning + AI_RESERVE_USD.allocate > plan.planningMonthlyUsd ||
+        (ownerLimited && spent + AI_RESERVE_USD.allocate > cap)
+    },
+    ownerLimited,
     aiOff: ownerSetting === 0,
     plan: plan.plan,
     planName: PLANS[plan.plan].name,

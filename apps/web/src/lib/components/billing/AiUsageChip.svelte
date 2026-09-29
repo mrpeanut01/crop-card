@@ -7,9 +7,11 @@
     /** Show the meter only once the month's AI help has run out. */
     onlyWhenOut?: boolean;
     refreshKey?: unknown;
+    /** Show the day's AI planning runs instead of the monthly budget. */
+    planning?: boolean;
   }
 
-  const { onlyWhenOut = false, refreshKey }: Props = $props();
+  const { onlyWhenOut = false, refreshKey, planning = false }: Props = $props();
 
   let usage = $state<AiUsageSnapshot | null>(null);
   let isOwner = $state(false);
@@ -50,7 +52,24 @@
   );
 </script>
 
-{#if visible && usage}
+{#if planning && usage && aiAvailable && !usage.aiOff}
+  {@const left = Math.max(0, usage.planning.perDay - usage.planning.usedToday)}
+  <p
+    class="chip planning"
+    data-testid="ai-planning-left"
+    data-left={usage.planning.monthlyExhausted ? 0 : left}
+  >
+    {#if usage.planning.monthlyExhausted}
+      This month's AI planning is used up. Plans still work without AI, and it resets on the 1st.
+    {:else if left > 0}
+      AI planning today: {left} of {usage.planning.perDay}
+      {usage.planning.perDay === 1 ? 'run' : 'runs'} left.
+    {:else}
+      Today's {usage.planning.perDay} AI planning runs are used up. Plans still work without AI, and it
+      resets at midnight UTC.
+    {/if}
+  </p>
+{:else if !planning && visible && usage}
   <div class="chip">
     <AiBudgetMeter {usage} {isOwner} compact />
   </div>
@@ -60,5 +79,9 @@
   .chip {
     margin: 8px 0;
     max-width: 420px;
+  }
+  .planning {
+    font-size: 0.85rem;
+    color: var(--color-ink-soft);
   }
 </style>

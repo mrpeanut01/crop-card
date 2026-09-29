@@ -56,6 +56,7 @@ test('an owner adds 24 layers, a helper moves them offline and the move replays 
   const helper = await provisionHelper(page, browser);
   await helper.goto(`/animals/groups/${groupId}`);
   await helper.waitForLoadState('networkidle');
+  await helper.waitForLoadState('networkidle');
   await expect(helper.getByRole('heading', { name: 'Owner settings' })).toHaveCount(0);
 
   await helper.context().setOffline(true);
@@ -146,6 +147,7 @@ test('an owner records an animal as rehomed and can undo it inside the lock wind
 
   await page.goBack();
   await page.waitForLoadState('networkidle');
+  await expect(page.getByRole('heading', { level: 1, name: 'Duke' })).toBeVisible();
   page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(page.getByRole('button', { name: 'Move' })).toBeVisible();

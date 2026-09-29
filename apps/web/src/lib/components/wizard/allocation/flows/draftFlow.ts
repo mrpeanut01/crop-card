@@ -33,6 +33,8 @@ export class DraftFlow {
           payload: {
             step: this.#w.step,
             selectedSeeds: [...this.#w.selectedSeeds.entries()],
+            fillToBedSeeds: [...this.#w.fillToBedSeeds],
+            inputOverrides: this.#w.inputOverrides,
             selectedBlockIds: [...this.#w.selectedBlockIds],
             chatDraft: this.#w.chatDraft
           }
@@ -72,6 +74,8 @@ export class DraftFlow {
             step: string;
             payload: {
               selectedSeeds: Array<[string, number]>;
+              fillToBedSeeds?: string[];
+              inputOverrides?: Record<string, string>;
               selectedBlockIds: string[];
               chatDraft: string;
             };
@@ -80,6 +84,12 @@ export class DraftFlow {
         if (!body.draft) return;
         if (body.draft.payload.selectedSeeds.length > 0) {
           this.#w.selectedSeeds = new Map(body.draft.payload.selectedSeeds);
+        }
+        if (body.draft.payload.inputOverrides) {
+          this.#w.inputOverrides = body.draft.payload.inputOverrides;
+        }
+        if (body.draft.payload.fillToBedSeeds?.length) {
+          this.#w.fillToBedSeeds = new Set(body.draft.payload.fillToBedSeeds);
         }
         if (body.draft.payload.selectedBlockIds.length > 0) {
           this.#w.selectedBlockIds = new Set(body.draft.payload.selectedBlockIds);

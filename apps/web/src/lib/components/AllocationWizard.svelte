@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { CropPlugin } from '$lib/plugins/schemas';
   import { untrack } from 'svelte';
+  import type { SetupArea } from '$lib/setup/types';
   import type { SeasonSetup } from '$lib/season/setup';
   import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
   import SeasonSetupChip from '$lib/components/SeasonSetupChip.svelte';
@@ -35,8 +36,9 @@
   const {
     seedStock,
     blocks,
+    areas = [],
     plantingGuides,
-    cropCatalog: _cropCatalog,
+    cropCatalog,
     seasonSetup = null,
     lastYearSetup = null,
     priorSeason = null,
@@ -52,6 +54,8 @@
   }: {
     seedStock: SeedStockEntry[];
     blocks: BlockEntry[];
+    /** Crop-bearing Areas, so a new block lands in the owner's garden or field. */
+    areas?: SetupArea[];
     plantingGuides: Record<string, NonNullable<CropPlugin['plantingGuide']>>;
     cropCatalog: CropCatalogItem[];
     seasonSetup?: SeasonSetup | null;
@@ -98,11 +102,17 @@
         get blocks() {
           return blocks;
         },
+        get areas() {
+          return areas;
+        },
         get priorSeason() {
           return priorSeason;
         },
         get plantingGuides() {
           return plantingGuides;
+        },
+        get cropCatalog() {
+          return cropCatalog;
         },
         get aiEnabled() {
           return aiEnabled;
@@ -181,6 +191,9 @@
   });
 
   function onKeydown(e: KeyboardEvent) {
+    // A sheet or modal opened from a step (add seed, edit block) owns its
+    // own Escape and focus trap; the wizard stays open underneath it.
+    if (modalEl?.querySelector('dialog[open], [role="dialog"][aria-modal="true"]')) return;
     if (e.key === 'Escape' && w.step !== 'commit') {
       onClose();
       return;
@@ -273,6 +286,8 @@
           {aiEnabled}
           onCommit={(accepted) => w.handleInputsAccepted(accepted)}
           onBack={() => (w.step = 'schedule')}
+          choices={w.inputOverrides}
+          onChoicesChange={(c) => (w.inputOverrides = c)}
         />
       {:else if w.step === 'commit'}
         <CommitStep />
@@ -296,10 +311,12 @@
         <button class="btn-secondary" onclick={onClose}>Cancel</button>
         <button
           class="btn-primary"
-          disabled={[...w.selectedSeeds.values()].every((v) => v <= 0)}
+          disabled={!w.hasSeedSelection}
           onclick={() => (w.step = 'blocks')}
         >
-          Next: blocks ({w.totalPlantsSelected.toLocaleString()} plants)
+          Next: blocks ({w.totalPlantsSelected.toLocaleString()} plants{w.fillToBedSeeds.size > 0
+            ? `, ${w.fillToBedSeeds.size} sized to bed`
+            : ''})
         </button>
       {:else if w.step === 'blocks'}
         <button class="btn-secondary" onclick={() => (w.step = 'seeds')}>Back</button>

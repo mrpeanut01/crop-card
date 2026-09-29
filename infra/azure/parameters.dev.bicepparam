@@ -43,6 +43,7 @@ param vapidSubject = 'mailto:hello@cropcard.io'
 // as free pool + (paid owners x plan budget) x 0.6 + 25 and alert at 80%.
 param aiGlobalMonthlyUsdCap = '150'
 param aiFreePoolMonthlyUsd = '50'
+param githubFeedbackRepo = 'mrpeanut01/crop-card'
 
 // Supplied at deploy time by scripts/deploy-azure.sh:
 //   image, containerRegistryServer, keyVaultName, hasPingramKey, hasPostmarkToken,

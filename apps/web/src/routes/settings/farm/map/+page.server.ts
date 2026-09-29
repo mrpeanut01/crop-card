@@ -12,6 +12,7 @@ import { listShadeSources } from '$lib/db/shadeSources';
 import { listMapFeatures } from '$lib/db/mapFeatures';
 import { buildMapSnapshot } from '$lib/server/mapSnapshot';
 import { loadAreaHousing } from '$lib/server/areaHousing';
+import { loadCoopSpecies } from '$lib/server/coopSpecies';
 import { loadAreaGrazing } from '$lib/server/areaGrazing';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
@@ -23,6 +24,7 @@ export const load: ServerLoad = async ({ locals }) => {
   const blocks = listBlocks();
   const fields = listFields();
   const { housing, petsLayout } = await loadAreaHousing(fields);
+  const { coopSpecies, farmAnimals } = await loadCoopSpecies();
   const grazing = await loadAreaGrazing(blocks, farmTimeZone());
   return {
     refused: false as const,
@@ -35,6 +37,8 @@ export const load: ServerLoad = async ({ locals }) => {
     housing,
     grazing,
     petsLayout,
+    coopSpecies,
+    farmAnimals,
     canEdit: true,
     isFirstRun: blocks.length === 0,
     initialCenter: hasFarmLatLon() ? getFarmLatLon() : null

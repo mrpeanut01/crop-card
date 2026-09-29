@@ -173,10 +173,7 @@ test.describe('allocation wizard', () => {
 
     const empty = body(page).locator('[data-empty-state="seed-stock"]');
     await expect(empty.getByRole('heading', { name: 'No seed stock yet' })).toBeVisible();
-    await expect(empty.getByRole('link', { name: /Add seed stock/ })).toHaveAttribute(
-      'href',
-      '/inventory/seed/add'
-    );
+    await expect(empty.getByRole('button', { name: 'Add seed', exact: true })).toBeEnabled();
     await expect(footer(page).getByRole('button', { name: /^Next: blocks/ })).toBeDisabled();
     await empty.getByRole('button', { name: /Skip — I’ll add seed stock later/ }).click();
     await expect(wizard(page)).toHaveCount(0);

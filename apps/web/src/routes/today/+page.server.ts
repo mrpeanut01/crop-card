@@ -10,17 +10,16 @@ import { loadGettingStartedFacts } from '$lib/onboarding/gettingStarted.server';
 import { getFarmProfile } from '$lib/onboarding/state.server';
 import { currentUser } from '$lib/server/auth';
 import { countPlantings, listBlocks } from '$lib/db/blocks';
-import { listCrops } from '$lib/db/crops';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { expiringSoon, lowStockItems } from '$lib/db/stock';
-import { listTasks } from '$lib/db/tasks';
+import { existingTemplateKeys, listTasks } from '$lib/db/tasks';
+import { suggestionTemplateKey } from '$lib/today/calendar';
 import {
   eventsForHarvest,
   eventsForPlanting,
-  eventsInRange,
   eventsToday,
   upcomingEvents,
   type CalendarEvent
@@ -28,9 +27,8 @@ import {
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { PluginRegistry } from '$lib/plugins';
 import { listPlantingsForCardsByIds } from '$lib/db/cardSnapshot';
-import { getRegistry, getRegistryStats } from '$lib/server/registry';
+import { getRegistry } from '$lib/server/registry';
 import { listSprayers } from '$lib/server/sprayers';
-import { RULES_VERSION } from '$lib/safety/version';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { loadTodayWeather } from '$lib/server/todayWeather';
 import { derivePriorityAction } from '$lib/today/priorityAction';
@@ -39,11 +37,20 @@ import { deriveWinterizeAlerts, startOfSeason } from '$lib/today/winterizeAlert'
 import { equipmentIdsActiveBefore, listEquipment } from '$lib/db/equipment';
 import { prefsFor, farmTimeZone } from '$lib/db/userProfile';
 import { todayYmd, ymdInZone } from '$lib/prefs';
-import { SEASON_DAYS, clampView, clampWindow } from '$lib/today/deck';
+import { addDaysYmd, calendarGrid, isYmd, resolveTodayParams } from '$lib/today/views';
+import { firstDayOfWeek } from '$lib/intlCache';
+import { loadSeasonView } from '$lib/today/seasonView.server';
+import { needsDecon } from '$lib/equipment/decon';
+import { todaySetupPrompts } from '$lib/onboarding/pageSetup';
+import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
+import { getSetting } from '$lib/db/settings';
+import { SETTINGS_KEYS } from '$lib/schedule/constants';
 import { coveredLogAlerts, healthPlugins } from '$lib/server/animalRecords';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const OVERDUE_LOOKBACK_DAYS = 30;
+/** Work closed today can be scheduled well ahead (a skipped fall job). */
+const DAY_DECK_HORIZON_DAYS = 200;
 
 const curingDaysByRegistry = new WeakMap<PluginRegistry, number>();
 
@@ -71,13 +78,13 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   ) {
     throw redirect(303, '/onboarding');
   }
-  const deckWindow = clampWindow(url.searchParams.get('tab'));
-  const view = clampView(url.searchParams.get('view'));
+  const resolved = resolveTodayParams(url.searchParams);
+  if (resolved.redirect !== null) throw redirect(308, `${url.pathname}${resolved.redirect}`);
+  const view = resolved.view;
   // Phase 25d v2-addendum (#89 / #80 partial) — drives AI-on vs AI-off
   // variant on /today's recommendations card + provenance legend strip.
   const aiEnabled = getUserAiEnabled(locals.user?.id);
   const registry = await getRegistry();
-  const stats = getRegistryStats();
   const now = Date.now();
   const blocks = listBlocks({ plantings: 'current', now });
 
@@ -112,15 +119,56 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const prefs = prefsFor(locals.user?.id);
   const today = todayYmd(prefs, now);
   const dayStart = Date.parse(today);
-  const seasonEnd = dayStart + SEASON_DAYS * DAY_MS;
 
-  const deckTasks = listTasks({
-    fromMs: dayStart - OVERDUE_LOOKBACK_DAYS * DAY_MS,
-    toMs: seasonEnd
-  }).filter((t) => {
-    const closedAt = t.completedAt ?? t.abortedAt;
-    return closedAt === undefined || ymdInZone(closedAt, prefs.timeZone) === today;
-  });
+  let deckTasks: ReturnType<typeof listTasks> = [];
+  let calendar: {
+    view: 'week' | 'month';
+    anchor: string;
+    grid: ReturnType<typeof calendarGrid>;
+    tasks: ReturnType<typeof listTasks>;
+    suggestions: CalendarEvent[];
+    scheduledKeys: string[];
+  } | null = null;
+  let season: ReturnType<typeof loadSeasonView> | null = null;
+
+  if (view === 'day') {
+    deckTasks = listTasks({
+      fromMs: dayStart - OVERDUE_LOOKBACK_DAYS * DAY_MS,
+      toMs: dayStart + DAY_DECK_HORIZON_DAYS * DAY_MS
+    }).filter((t) => {
+      const closedAt = t.completedAt ?? t.abortedAt;
+      return closedAt === undefined || ymdInZone(closedAt, prefs.timeZone) === today;
+    });
+  } else if (view === 'week' || view === 'month') {
+    const rawAt = url.searchParams.get('at');
+    const anchor = isYmd(rawAt) ? rawAt : today;
+    const grid = calendarGrid(view, anchor, firstDayOfWeek('en-US'));
+    const fromMs = Date.parse(grid.fromYmd);
+    const toMs = Date.parse(addDaysYmd(grid.toYmd, 1));
+    const rangeTasks = listTasks({
+      fromMs: fromMs - OVERDUE_LOOKBACK_DAYS * DAY_MS,
+      toMs: toMs + DAY_MS
+    });
+    calendar = {
+      view,
+      anchor,
+      grid,
+      tasks: rangeTasks.filter((t) => t.scheduledFor >= fromMs - DAY_MS),
+      suggestions: allEvents.filter(
+        (e) => e.endMs >= Math.max(fromMs, dayStart) && e.startMs < toMs + DAY_MS
+      ),
+      scheduledKeys: []
+    };
+    calendar.scheduledKeys = [
+      ...new Set([
+        ...rangeTasks.flatMap((t) => (t.pluginTemplateKey ? [t.pluginTemplateKey] : [])),
+        ...existingTemplateKeys(calendar.suggestions.map(suggestionTemplateKey))
+      ])
+    ];
+    deckTasks = calendar.tasks;
+  } else {
+    season = loadSeasonView(registry, url.searchParams.get('season'), now);
+  }
 
   const sprayers = listSprayers();
   const isOwner = locals.user?.role === 'owner' && !!locals.user.activeOwnerId;
@@ -134,10 +182,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         dismissed: getGettingStartedDismissedAt() !== null
       }
     : null;
-
-  // Active crops summary — fuels the Season tab and the equipment-readiness
-  // panel.
-  const activeCrops = listCrops({ status: 'active', limit: 100 });
 
   // Phase 25e (#97) — priorityAction + weather + seasonGlance.
   const blockNameById = new Map(blocks.map((b) => [b.id, b.name]));
@@ -172,6 +216,17 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     now
   });
 
+  // Same predicate as the layout's decon banner (#470).
+  const deconAlerts = sprayers
+    .filter((s) =>
+      needsDecon({
+        lastChemistryClass: s.lastChemistryClass,
+        lastUsedAt: s.lastSprayedAt,
+        lastDeconAt: s.lastDeconAt
+      })
+    )
+    .map((s) => ({ id: s.id, label: s.label, lastChemistryClass: s.lastChemistryClass ?? '' }));
+
   // UC-45 — next-spring reminder for sprayers used this season but not
   // winterized after the prior one. Informational (assists, never gates).
   const winterizeAlerts = deriveWinterizeAlerts(
@@ -192,40 +247,35 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   for (const p of listPlantingsForCardsByIds(olderPlantingIds))
     plantingNames[p.id] = { name: p.varietyDisplayName, blockId: p.blockId };
 
+  const dayCandidates = view === 'day' ? eventsToday(allEvents, now) : [];
+  const upcomingCandidates = upcomingEvents(allEvents, 14, now);
+  const alreadyScheduled = existingTemplateKeys(
+    [...dayCandidates, ...upcomingCandidates].map(suggestionTemplateKey)
+  );
+  const notScheduled = (e: CalendarEvent) => !alreadyScheduled.has(suggestionTemplateKey(e));
+  const dayEvents = dayCandidates.filter(notScheduled);
+  const upcoming = upcomingCandidates.filter(notScheduled);
+
+  const hasLocation = hasFarmLatLon();
   return {
     today,
     nowMs: now,
-    deckWindow,
     view,
     aiEnabled,
-    rulesVersion: RULES_VERSION,
     counts: {
-      crops: registry.crops().length,
-      herbicides: registry.herbicides().length,
-      pluginFailures: stats.failures.length,
       blocks: blocks.length,
-      activeCrops: activeCrops.length,
       plantings: totalPlantings
     },
-    sprayers,
     farmProfile: getFarmProfile(),
     gettingStarted,
-    pluginFailures: stats.failures,
-    eventsToday: eventsToday(allEvents, now),
-    upcoming: upcomingEvents(allEvents, 14, now),
-    seasonEvents: eventsInRange(allEvents, now, now + SEASON_DAYS * DAY_MS),
+    eventsToday: dayEvents,
+    upcoming,
     deckTasks,
+    calendar,
+    season,
     blockNames: Object.fromEntries(blocks.map((b) => [b.id, b.name])),
     plantingNames,
     equipmentLabels: Object.fromEntries(listEquipment().map((e) => [e.id, e.label])),
-    activeCrops,
-    seasonCrops: blocks.flatMap((b) =>
-      b.plantings.map((p) => ({
-        id: p.id,
-        varietyDisplayName: p.varietyDisplayName,
-        blockId: b.id
-      }))
-    ),
     // #280 — lift `category` into the projection so the /today template
     // can resolve a /inventory/[type]/[id] link via the canonical
     // STOCK_CATEGORY_TO_INVENTORY_TYPE map (no 308-redirect RTT).
@@ -252,6 +302,19 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     canSetFarmLocation: locals.user?.role === 'owner',
     seasonGlance,
     winterizeAlerts,
+    deconAlerts,
+    setupLatLon: hasLocation ? getFarmLatLon() : null,
+    // #475 — ask the farm location and frost dates here too; the weather,
+    // frost alerts and calendar all read them.
+    setupPrompts: todaySetupPrompts(
+      {
+        // The Getting Started card already lists the location while it shows.
+        hasLocation: hasLocation || (!!gettingStarted && !gettingStarted.dismissed),
+        hasFrostDates:
+          !!getSetting(SETTINGS_KEYS.lastFrost) && !!getSetting(SETTINGS_KEYS.firstFrost)
+      },
+      locals.user?.role ?? 'helper'
+    ),
     coveredLogs
   };
 };

@@ -290,3 +290,39 @@ describe('buildFarmMapCard lines and points', () => {
     expect(card.sections.find((s) => s.title === 'Legend')?.items).toHaveLength(3);
   });
 });
+
+describe('hydrants and waterers that serve several Areas (#478)', () => {
+  const waterer = {
+    id: 'mf-h',
+    kind: 'hydrant' as const,
+    name: 'North hydrant',
+    fieldId: 'f_hay',
+    areaIds: ['f_hay', 'f_garden'],
+    geometry: { type: 'Point' as const, coordinates: [-77.55, 39.1] as [number, number] },
+    details: null,
+    lengthFt: null
+  };
+
+  it('prints which Areas each one serves on the Farm Map Card', () => {
+    const card = buildFarmMapCard(sampleSnapshot({ mapFeatures: [waterer] }), { prefs });
+    expect(card.sections.find((s) => s.title === 'Hydrants / Waterers')?.items).toEqual([
+      'North hydrant · serves Hayfield, Kitchen Garden'
+    ]);
+    expect(card.sections.find((s) => s.title === 'Legend')!.items).toContain(
+      'Hydrant / Waterer: red dot marked H'
+    );
+  });
+
+  it("shows on each linked Area's card as Water", () => {
+    const snap = sampleSnapshot({ mapFeatures: [waterer] });
+    for (const id of ['f_hay', 'f_garden']) {
+      const card = buildCard(snap, cardKey('area', id), { prefs })!;
+      expect(card.facts.find((f) => f.label === 'Water')).toMatchObject({
+        value: 'North hydrant',
+        provenance: 'manual'
+      });
+    }
+    const barn = buildCard(snap, cardKey('area', 'f_barn'), { prefs })!;
+    expect(barn.facts.find((f) => f.label === 'Water')).toBeUndefined();
+  });
+});

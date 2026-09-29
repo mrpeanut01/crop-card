@@ -49,6 +49,7 @@ import {
   successionRequestSchema
 } from '../src/lib/garden/api.ts';
 import { hintsPostSchema } from '../src/lib/hints.ts';
+import { bedLayoutRequestSchema } from '../src/lib/plan/bedLayoutApi.ts';
 import {
   journalEntrySchema,
   photoHelpSchema,
@@ -1410,6 +1411,31 @@ const paths = {
           }
         }),
         ...GARDEN_ERRORS
+      }
+    }
+  },
+
+  '/api/plan/beds/suggest': {
+    post: {
+      summary: 'Suggest beds sized for the seed being planted',
+      description:
+        "Owner only. Never saves anything; the planning wizard adds the beds the owner keeps through `POST /api/blocks`. Claude groups the seed when it is available (through `aiTry()`, on the Fill this bed allowance); every bed is checked against each crop's plugin spacing and every plant must be placed. Otherwise the beds come from a plain spacing plan and are tagged `fallback`. `bedWidthFt` and `maxBedLengthFt` are the owner's own choice.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(bedLayoutRequestSchema),
+      responses: {
+        200: jsonResponse('Suggested beds.', {
+          type: 'object',
+          required: ['beds', 'provenance', 'message'],
+          properties: {
+            beds: { type: 'array', items: { type: 'object' } },
+            provenance: { type: 'string', enum: ['ai', 'fallback'] },
+            note: { type: ['string', 'null'] },
+            message: { type: ['string', 'null'] }
+          }
+        }),
+        400: { description: 'Invalid body.' },
+        403: { description: 'Not the owner.' },
+        404: { description: 'A seed id is not a seed on this farm.' }
       }
     }
   },

@@ -23,6 +23,7 @@ import { rotationLookbackForFamily } from '$lib/calendar/rotation';
 import type { BlockWithPlantings, SunExposure } from '$lib/db/blocks';
 import type { Crop } from '$lib/db/crops';
 import { plantsFitUsable, footprintSqFt } from './sufficiency';
+import { bedPlantsFit, freeBedShare, plantsForShare, SHARE_EPSILON } from './bedSharing';
 
 const SQFT_PER_ACRE = 43_560;
 const FT_PER_INCH = 1 / 12;
@@ -35,6 +36,10 @@ export interface SeedRequest {
   /** Optional sun preference for this seed — when present, overrides the
    *  family fallback. Sourced from stock metadata `sunRequirement`. */
   sunRequirement?: SunExposure;
+  /** #471 — the farmer set no quantity: size the crop to the space it gets
+   *  (one field block, or a fair share of one bed). `quantityPlants` then
+   *  only caps it. */
+  fillToCapacity?: boolean;
 }
 
 export interface Assignment {
@@ -78,6 +83,9 @@ export interface PlanInput {
   companions: Readonly<
     Record<string, { goodWith: ReadonlyArray<string>; badWith: ReadonlyArray<string> }>
   >;
+  /** #440 — blocks in garden or greenhouse Areas. Their crops share the bed
+   *  by area (see `bedSharing.ts`); every other block keeps the field model. */
+  bedBlockIds?: ReadonlyArray<string>;
 }
 
 export const SCORE_WEIGHTS = {
@@ -102,6 +110,30 @@ const MIN_SCORE_LOOSE = 0;
 // ─── Public API ──────────────────────────────────────────────────────────
 
 export function planLayout(input: PlanInput): PlanResult {
+  const bedIds = new Set(input.bedBlockIds ?? []);
+  const beds = input.blocks.filter((b) => bedIds.has(b.id));
+  if (beds.length === 0) return planFieldLayout(input);
+
+  const fieldBlocks = input.blocks.filter((b) => !bedIds.has(b.id));
+  const onFields: PlanResult =
+    fieldBlocks.length > 0
+      ? planFieldLayout({ ...input, blocks: fieldBlocks, bedBlockIds: [] })
+      : { assignments: [], unplaced: [...input.seeds], diagnostics: [] };
+  const left = new Set(onFields.unplaced.map((s) => s.stockItemId));
+  const bedResult = packSharedBeds(
+    input.seeds.filter((s) => left.has(s.stockItemId)),
+    beds,
+    { ...input, blocks: beds },
+    onFields.assignments
+  );
+  return {
+    assignments: [...onFields.assignments, ...bedResult.assignments],
+    unplaced: bedResult.unplaced,
+    diagnostics: bedResult.diagnostics
+  };
+}
+
+function planFieldLayout(input: PlanInput): PlanResult {
   const seedsSorted = sortByTightness(input);
   const blockState = initBlockState(input);
 
@@ -109,11 +141,31 @@ export function planLayout(input: PlanInput): PlanResult {
   const unplaced: SeedRequest[] = [];
   const diagnostics: PlanDiagnostic[] = [];
 
-  const tryPlace = (seed: SeedRequest, floor: number): boolean => {
+  /** Places what fits. On the last pass a seed that only partly fits keeps
+   *  the plants that fit and reports the rest as left over, so counted seed
+   *  bigger than the picked blocks still fills them instead of placing none. */
+  const tryPlace = (seed: SeedRequest, floor: number, keepPartial: boolean): number | null => {
+    if (seed.fillToCapacity) {
+      // One whole field block for a crop with no quantity: the best block
+      // that still has room, never a partial rollback.
+      const candidate = bestBlock(seed, seed.quantityPlants, blockState, input, floor);
+      if (!candidate) return null;
+      const take = Math.min(seed.quantityPlants, candidate.fit);
+      assignments.push({
+        stockItemId: seed.stockItemId,
+        cropPluginId: seed.cropPluginId,
+        varietyDisplayName: seed.varietyDisplayName,
+        blockId: candidate.blockId,
+        plants: take,
+        score: candidate.score
+      });
+      blockState.consume(candidate.blockId, seed.cropPluginId, take);
+      return 0;
+    }
     let remainingPlants = seed.quantityPlants;
     const placedThisSeed: Assignment[] = [];
     while (remainingPlants > 0) {
-      const candidate = bestBlock(seed, remainingPlants, blockState, input, floor);
+      const candidate = bestBlock(seed, remainingPlants, blockState, input, floor, keepPartial);
       if (!candidate) break;
       const take = Math.min(remainingPlants, candidate.fit);
       placedThisSeed.push({
@@ -127,30 +179,34 @@ export function planLayout(input: PlanInput): PlanResult {
       blockState.consume(candidate.blockId, seed.cropPluginId, take);
       remainingPlants -= take;
     }
-    if (remainingPlants === 0 && placedThisSeed.length > 0) {
+    if (placedThisSeed.length > 0 && (remainingPlants === 0 || keepPartial)) {
       assignments.push(...placedThisSeed);
-      return true;
+      return remainingPlants;
     }
     // Roll back partial placements before falling through to the next pass.
     for (const a of placedThisSeed) blockState.release(a.blockId, seed.cropPluginId, a.plants);
-    return false;
+    return null;
   };
 
-  // Pass A — tight floor.
+  // Pass A — tight floor, whole seed only.
   const passB: SeedRequest[] = [];
   for (const seed of seedsSorted) {
-    if (!tryPlace(seed, MIN_SCORE_TIGHT)) passB.push(seed);
+    if (tryPlace(seed, MIN_SCORE_TIGHT, false) === null) passB.push(seed);
   }
-  // Pass B — relaxed floor.
+  // Pass B — relaxed floor; keeps a partial fit and reports the rest.
   for (const seed of passB) {
-    if (!tryPlace(seed, MIN_SCORE_LOOSE)) {
-      unplaced.push(seed);
-      diagnostics.push({
-        stockItemId: seed.stockItemId,
-        cropPluginId: seed.cropPluginId,
-        reason: noFitReason(seed, blockState, input)
-      });
-    }
+    const left = tryPlace(seed, MIN_SCORE_LOOSE, true);
+    if (left === 0) continue;
+    const rest = left === null ? seed : { ...seed, quantityPlants: left };
+    unplaced.push(rest);
+    diagnostics.push({
+      stockItemId: seed.stockItemId,
+      cropPluginId: seed.cropPluginId,
+      reason:
+        left === null
+          ? noFitReason(seed, blockState, input)
+          : `${seed.quantityPlants - left} of ${seed.quantityPlants} plants fit; ${left} left over`
+    });
   }
 
   return { assignments, unplaced, diagnostics };
@@ -164,6 +220,11 @@ function sortByTightness(input: PlanInput): SeedRequest[] {
     tightness: tightnessOf(seed, input)
   }));
   scored.sort((a, b) => {
+    // Seeds with a real quantity place before fill-to-capacity seeds, so a
+    // crop the farmer counted is never crowded out by one they did not.
+    const fa = a.seed.fillToCapacity ? 1 : 0;
+    const fb = b.seed.fillToCapacity ? 1 : 0;
+    if (fa !== fb) return fa - fb;
     if (b.tightness !== a.tightness) return b.tightness - a.tightness;
     if (a.seed.cropPluginId !== b.seed.cropPluginId) {
       return a.seed.cropPluginId < b.seed.cropPluginId ? -1 : 1;
@@ -319,7 +380,10 @@ function bestBlock(
   remainingPlants: number,
   state: BlockState,
   input: PlanInput,
-  floor: number
+  floor: number,
+  /** Score each block on the plants it can take, so a seed bigger than
+   *  every block is judged on sun, companions and rotation, not on size. */
+  partial = false
 ): Candidate | null {
   const plugin = input.pluginIndex[seed.cropPluginId];
   if (!plugin) return null;
@@ -328,7 +392,8 @@ function bestBlock(
   for (const block of input.blocks) {
     const fit = state.remaining(block.id, seed.cropPluginId, plugin);
     if (fit <= 0) continue;
-    const score = scoreBlock(seed, plugin, block, remainingPlants, fit, state, input);
+    const needed = partial ? Math.min(remainingPlants, fit) : remainingPlants;
+    const score = scoreBlock(seed, plugin, block, needed, fit, state, input);
     if (score < floor) continue;
     if (!best || score > best.score || (score === best.score && block.id < best.blockId)) {
       best = { blockId: block.id, score, fit };
@@ -511,6 +576,192 @@ function extractCoords(g: unknown): number[][] | null {
     if (Array.isArray(poly) && Array.isArray(poly[0])) return poly[0] as number[][];
   }
   return null;
+}
+
+// ─── Shared beds (#440) ──────────────────────────────────────────────────
+
+/** A fill-to-capacity crop is steered away from beds that already hold
+ *  other fill crops, so several uncounted seeds spread over the beds
+ *  instead of all landing on the lowest-id one. */
+const FILL_CROWDING_PENALTY = 25;
+
+/**
+ * Packs seeds onto garden and greenhouse beds by area share.
+ *
+ * Counted seeds go first, smallest need first. Each takes what it needs
+ * from its best bed, but never more than a fair split of that bed's free
+ * share with the counted seeds still waiting for it (water-filling), and
+ * spills onto its next best bed. Seed left over once the beds are full is
+ * normal in a garden and stays in the packet rather than making the seed
+ * unplaced.
+ *
+ * Uncounted (fill-to-capacity) seeds come next: each picks one bed, and the
+ * free share of every bed is then split evenly among the fill seeds on it.
+ */
+function packSharedBeds(
+  seeds: ReadonlyArray<SeedRequest>,
+  beds: ReadonlyArray<BlockWithPlantings>,
+  input: PlanInput,
+  priorAssignments: ReadonlyArray<Assignment>
+): PlanResult {
+  const state = initBlockState(input);
+  for (const a of priorAssignments) {
+    if (beds.some((b) => b.id === a.blockId)) state.consume(a.blockId, a.cropPluginId, a.plants);
+  }
+  const free = new Map<string, number>();
+  for (const bed of beds)
+    free.set(bed.id, freeBedShare(bed, input.existingCrops, input.pluginIndex));
+
+  const assignments: Assignment[] = [];
+  const unplaced: SeedRequest[] = [];
+  const diagnostics: PlanDiagnostic[] = [];
+  const tightOrder = new Map(sortByTightness(input).map((s, i) => [s.stockItemId, i]));
+  const byTightness = (a: SeedRequest, b: SeedRequest) =>
+    (tightOrder.get(a.stockItemId) ?? 0) - (tightOrder.get(b.stockItemId) ?? 0);
+
+  const fitOn = (bed: BlockWithPlantings, plugin: CropPlugin) => bedPlantsFit(bed, plugin);
+
+  const rankBeds = (seed: SeedRequest, plugin: CropPlugin, needed: number) => {
+    const ranked: Array<{ bed: BlockWithPlantings; score: number; fit: number }> = [];
+    for (const bed of beds) {
+      const fit = fitOn(bed, plugin);
+      const share = free.get(bed.id) ?? 0;
+      if (fit <= 0 || share <= SHARE_EPSILON) continue;
+      const room = Math.floor(share * fit);
+      if (room < 1) continue;
+      const score = scoreBlock(seed, plugin, bed, Math.max(1, needed), room, state, input);
+      if (score < MIN_SCORE_LOOSE) continue;
+      ranked.push({ bed, score, fit });
+    }
+    ranked.sort((x, y) => y.score - x.score || (x.bed.id < y.bed.id ? -1 : 1));
+    return ranked;
+  };
+
+  const place = (seed: SeedRequest, bed: BlockWithPlantings, fit: number, share: number) => {
+    const plants = plantsForShare(share, fit);
+    if (plants < 1) return 0;
+    assignments.push({
+      stockItemId: seed.stockItemId,
+      cropPluginId: seed.cropPluginId,
+      varietyDisplayName: seed.varietyDisplayName,
+      blockId: bed.id,
+      plants,
+      score: 0
+    });
+    free.set(bed.id, Math.max(0, (free.get(bed.id) ?? 0) - plants / fit));
+    state.consume(bed.id, seed.cropPluginId, plants);
+    return plants;
+  };
+
+  const counted = seeds.filter((s) => !s.fillToCapacity);
+  const fills = seeds.filter((s) => s.fillToCapacity);
+
+  // Phase 1 — counted seeds.
+  const firstChoice = new Map<string, string>();
+  const contenders = new Map<string, number>();
+  const needShare = new Map<string, number>();
+  for (const seed of counted) {
+    const plugin = input.pluginIndex[seed.cropPluginId];
+    if (!plugin) continue;
+    const best = rankBeds(seed, plugin, seed.quantityPlants)[0];
+    if (!best) continue;
+    firstChoice.set(seed.stockItemId, best.bed.id);
+    contenders.set(best.bed.id, (contenders.get(best.bed.id) ?? 0) + 1);
+    needShare.set(seed.stockItemId, seed.quantityPlants / best.fit);
+  }
+  const countedOrder = [...counted].sort(
+    (a, b) =>
+      (needShare.get(a.stockItemId) ?? Infinity) - (needShare.get(b.stockItemId) ?? Infinity) ||
+      byTightness(a, b)
+  );
+  for (const seed of countedOrder) {
+    const plugin = input.pluginIndex[seed.cropPluginId];
+    const first = firstChoice.get(seed.stockItemId);
+    if (first) contenders.set(first, Math.max(0, (contenders.get(first) ?? 1) - 1));
+    let remaining = seed.quantityPlants;
+    let placed = 0;
+    if (plugin) {
+      for (const { bed, fit } of rankBeds(seed, plugin, remaining)) {
+        if (remaining <= 0) break;
+        const fair = (free.get(bed.id) ?? 0) / (1 + (contenders.get(bed.id) ?? 0));
+        const share = Math.min(remaining / fit, fair);
+        const got = place(seed, bed, fit, share);
+        remaining -= got;
+        placed += got;
+      }
+    }
+    if (placed === 0) {
+      unplaced.push(seed);
+      diagnostics.push({
+        stockItemId: seed.stockItemId,
+        cropPluginId: seed.cropPluginId,
+        reason: bedNoFitReason(seed, beds, free, input)
+      });
+    }
+  }
+
+  // Phase 2 — fill-to-capacity seeds.
+  const fillOn = new Map<string, Array<{ seed: SeedRequest; fit: number }>>();
+  for (const seed of [...fills].sort(byTightness)) {
+    const plugin = input.pluginIndex[seed.cropPluginId];
+    let chosen: { bed: BlockWithPlantings; fit: number } | null = null;
+    let chosenScore = -Infinity;
+    if (plugin) {
+      for (const r of rankBeds(seed, plugin, seed.quantityPlants)) {
+        const s = r.score - FILL_CROWDING_PENALTY * (fillOn.get(r.bed.id)?.length ?? 0);
+        if (s > chosenScore) {
+          chosenScore = s;
+          chosen = { bed: r.bed, fit: r.fit };
+        }
+      }
+    }
+    if (!chosen) {
+      unplaced.push(seed);
+      diagnostics.push({
+        stockItemId: seed.stockItemId,
+        cropPluginId: seed.cropPluginId,
+        reason: bedNoFitReason(seed, beds, free, input)
+      });
+      continue;
+    }
+    const list = fillOn.get(chosen.bed.id) ?? [];
+    list.push({ seed, fit: chosen.fit });
+    fillOn.set(chosen.bed.id, list);
+    state.consume(chosen.bed.id, seed.cropPluginId, 0);
+  }
+  for (const bed of beds) {
+    const list = fillOn.get(bed.id);
+    if (!list) continue;
+    const each = (free.get(bed.id) ?? 0) / list.length;
+    for (const { seed, fit } of list) {
+      const share = Math.min(each, seed.quantityPlants / fit);
+      if (place(seed, bed, fit, share) === 0) {
+        unplaced.push(seed);
+        diagnostics.push({
+          stockItemId: seed.stockItemId,
+          cropPluginId: seed.cropPluginId,
+          reason: `${bed.name} is too full for another crop`
+        });
+      }
+    }
+  }
+
+  return { assignments, unplaced, diagnostics };
+}
+
+function bedNoFitReason(
+  seed: SeedRequest,
+  beds: ReadonlyArray<BlockWithPlantings>,
+  free: Map<string, number>,
+  input: PlanInput
+): string {
+  const plugin = input.pluginIndex[seed.cropPluginId];
+  if (!plugin) return 'crop plugin not registered';
+  const roomy = beds.filter(
+    (b) => (free.get(b.id) ?? 0) > SHARE_EPSILON && bedPlantsFit(b, plugin) > 0
+  );
+  if (roomy.length === 0) return 'every selected bed is already full';
+  return 'no selected bed suits this crop (sun, rotation or a bad companion)';
 }
 
 // ─── Diagnostics ─────────────────────────────────────────────────────────

@@ -9,6 +9,7 @@
 
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
+  import { showLayoutDeconBanner } from '$lib/equipment/decon';
   import { fmt } from '$lib/prefsState.svelte';
   import TopBar from '$lib/components/ui/TopBar.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
@@ -229,12 +230,24 @@
   </Banner>
 {/if}
 
-{#if data.dirtySprayers.length > 0}
+{#if data.pluginLoadFailures > 0}
+  <Banner tone="wheat">
+    <span data-testid="plugin-failure-banner">
+      {data.pluginLoadFailures === 1
+        ? '1 plugin file did not load'
+        : `${data.pluginLoadFailures} plugin files did not load`}, so some crops or products may be
+      missing from the pickers.
+      <a class="decon-cta" href="/settings/advanced">See which files</a>
+    </span>
+  </Banner>
+{/if}
+
+{#if showLayoutDeconBanner(page.url.pathname, data.dirtySprayers.length)}
   <Banner tone="rust" urgent>
     {data.dirtySprayers.length} sprayer{data.dirtySprayers.length === 1 ? '' : 's'} need{data
       .dirtySprayers.length === 1
       ? 's'
-      : ''} decontamination —
+      : ''} decontamination:
     {#each data.dirtySprayers as s, i (s.id)}
       {i > 0 ? ', ' : ''}<strong>{s.label}</strong> ({s.lastChemistryClass}){/each}
     {#if data.user?.role === 'owner'}

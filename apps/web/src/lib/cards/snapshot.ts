@@ -10,6 +10,7 @@
 import type { EmergencyContact } from '$lib/farm/emergencyContacts';
 import type { AreaKind, BedStyle, BlockKind } from '$lib/farm/areaKinds';
 import type { MapFeatureView } from '$lib/farm/mapFeatures';
+import type { Footprint, SpacingPattern } from '$lib/farm/footprint';
 import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/soilInterpret';
 
 export const FARM_SNAPSHOT_VERSION = 1 as const;
@@ -82,6 +83,10 @@ export interface SnapshotPlanting {
   /** The calendar engine's harvest window (the one /plan shows), as UTC
    *  days. Absent on older bundles; cards then count days to maturity. */
   harvestWindow?: { start: string; end: string } | null;
+  /** Where it sits in its bed (garden designer), for the printed bed map.
+   *  Absent on older bundles and when it has no spot yet. */
+  footprint?: Footprint | null;
+  spacingPattern?: SpacingPattern | null;
 }
 
 export type SnapshotTaskCategory =

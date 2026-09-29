@@ -16,6 +16,14 @@ function data(source: 'env' | 'setting' | 'none', isOwner = true) {
       warnAt80: false,
       exhausted: false,
       quickOnly: false,
+      planning: {
+        perDay: 5,
+        usedToday: 0,
+        monthlyUsd: 1.5,
+        monthlyUsdSoFar: 0,
+        monthlyExhausted: false
+      },
+      ownerLimited: false,
       aiOff: false,
       plan: 'free',
       planName: 'Free',
@@ -57,5 +65,15 @@ describe('/settings/ai', () => {
   it('a helper never sees the key form', () => {
     const { container } = render(Page, { data: data('setting', false) as never, form: null });
     expect(container.querySelector('input[name="apiKey"]')).toBeNull();
+  });
+
+  it('says only a lower limit caps planning, so the full-plan value keeps both budgets (r6)', () => {
+    const { getByTestId, getByText } = render(Page, { data: data('env') as never, form: null });
+    const note = getByTestId('ai-cap-planning-note').textContent!.replace(/\s+/g, ' ');
+    expect(note).toContain('up to $1.50 a month of its own');
+    expect(note).toContain('Leave this at $0.50 to keep both.');
+    expect(note).toContain('A lower limit caps everything together, planning included.');
+    expect(note).not.toContain('If you save a limit here');
+    expect(getByText('Lower your monthly AI limit (optional)')).toBeInTheDocument();
   });
 });

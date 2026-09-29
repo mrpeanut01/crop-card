@@ -51,6 +51,9 @@ test.describe('email alerts are opt-in, with a working unsubscribe', () => {
     await signInByLink(page, owner);
     await createOnboardedFarm(page, { growing: ['garden'] });
     await page.goto('/settings/notifications');
+    // The toggles and the test-email button only work once the page has
+    // hydrated; a click before that does nothing under a loaded suite.
+    await page.waitForLoadState('networkidle');
 
     const section = page.locator('section', { hasText: 'Email alerts' }).last();
     await expect(section.getByText('Off unless you turn them on.')).toBeVisible();
@@ -61,6 +64,7 @@ test.describe('email alerts are opt-in, with a working unsubscribe', () => {
     await decon.check();
     await expect(page.getByText('Saved.')).toBeVisible();
     await page.reload();
+    await page.waitForLoadState('networkidle');
     await expect(page.getByRole('checkbox', { name: /Email me: Decon due/ })).toBeChecked();
     await expect(page.getByRole('checkbox', { name: /Email me: Frost tonight/ })).not.toBeChecked();
 

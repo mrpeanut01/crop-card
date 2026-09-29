@@ -11,7 +11,7 @@
  *   - `addAssignment` / `revokeAssignment` — invitation acceptance / revocation
  */
 
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { db } from './client';
 import { helperAssignments, users } from './schema';
 import { unscopedQueryNote } from './tenant';
@@ -88,6 +88,7 @@ export function addAssignment(input: {
   userId: string;
   roleWithinOwner: AssignmentRow['roleWithinOwner'];
   invitedByUserId?: string;
+  fromInvite?: boolean;
 }): AssignmentRow {
   unscopedQueryNote('inserting an assignment row is cross-tenant by design');
   const row = db
@@ -102,8 +103,13 @@ export function addAssignment(input: {
     })
     .onConflictDoUpdate({
       target: [helperAssignments.ownerId, helperAssignments.userId],
+      // An invite never demotes an active owner: accepting a helper invite
+      // to one's own farm would leave it with no owner and move its hold
+      // clock (review round 5).
       set: {
-        roleWithinOwner: input.roleWithinOwner,
+        roleWithinOwner: input.fromInvite
+          ? sql`CASE WHEN ${helperAssignments.roleWithinOwner} = 'owner' AND ${helperAssignments.status} = 'active' THEN 'owner' ELSE ${input.roleWithinOwner} END`
+          : input.roleWithinOwner,
         status: 'active',
         acceptedAt: new Date(Date.now())
       }
@@ -113,12 +119,22 @@ export function addAssignment(input: {
   return rowToAssignment(row);
 }
 
+/** Revokes a helper, operator or inspector. An active owner assignment is
+ *  never revoked here: the farm's hold clock is the owner's saved zone
+ *  (C-35), so dropping it would move every hold's midnight without the
+ *  zone check (review round 7). */
 export function revokeAssignment(ownerId: string, userId: string): boolean {
   unscopedQueryNote('revoking an assignment is a cross-tenant write keyed by composite PK');
   const r = db
     .update(helperAssignments)
     .set({ status: 'revoked' })
-    .where(and(eq(helperAssignments.ownerId, ownerId), eq(helperAssignments.userId, userId)))
+    .where(
+      and(
+        eq(helperAssignments.ownerId, ownerId),
+        eq(helperAssignments.userId, userId),
+        sql`NOT (${helperAssignments.roleWithinOwner} = 'owner' AND ${helperAssignments.status} = 'active')`
+      )
+    )
     .run();
   return r.changes > 0;
 }

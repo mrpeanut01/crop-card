@@ -11,6 +11,18 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
+// The C-35 hold guard has its own suites (holdGuard.*.test.ts); this file
+// pins the endpoint's other gates, so the guard only runs the write.
+vi.mock('$lib/server/holdGuard', async () => {
+  const { writeRecord } = await import('$lib/server/recordWrite');
+  const run = (event: { request: Request }, _user: unknown, fn: () => unknown) =>
+    writeRecord(event, fn);
+  return {
+    guardedHoldWrite: async (...a: Parameters<typeof run>) => run(...a),
+    tryGuardedHoldWrite: async (...a: Parameters<typeof run>) => ({ ok: true, value: run(...a) })
+  };
+});
+
 const {
   currentUser,
   deleteInsecticideEvent,
@@ -26,6 +38,7 @@ const {
 }));
 
 vi.mock('$lib/server/auth', () => ({ currentUser }));
+vi.mock('$lib/server/areaGrazing', () => ({ applicationHoldsGrazing: vi.fn(async () => false) }));
 vi.mock('$lib/db/admin', async () => {
   const actual = await vi.importActual<typeof import('$lib/db/admin')>('$lib/db/admin');
   return {

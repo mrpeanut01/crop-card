@@ -12,7 +12,8 @@ import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
 import { activeAssignmentsForUser } from '$lib/db/users';
-import { avatarUrl, avatarVersion, updateProfile } from '$lib/db/userProfile';
+import { avatarUrl, avatarVersion, prefsFor, updateProfile } from '$lib/db/userProfile';
+import { changeOwnerZone } from '$lib/server/holdGuard';
 import {
   DEFAULT_TIME_ZONE,
   normalizeDisplayName,
@@ -83,11 +84,28 @@ export const actions: Actions = {
     if (!name.ok) return fail(400, { error: name.error, submitted });
     if (!timeZone.ok) return fail(400, { error: timeZone.error, submitted });
     if (!displayUnits.ok) return fail(400, { error: displayUnits.error, submitted });
-    updateProfile(locals.user.id, {
-      displayName: name.value,
-      timeZone: timeZone.value,
-      displayUnits: displayUnits.value
-    });
+    const userId = locals.user.id;
+    const fromZone = prefsFor(userId).timeZone;
+    const result = await changeOwnerZone(userId, fromZone, timeZone.value, () =>
+      updateProfile(userId, {
+        displayName: name.value,
+        timeZone: timeZone.value,
+        displayUnits: displayUnits.value
+      })
+    );
+    if (result === 'shortens') {
+      return fail(409, {
+        error:
+          'Your time zone is the farm’s clock for withdrawal, grazing and hay holds, and this change would end one of them earlier, or would free hours a recent hold covered, which records can still be dated into. Holds never get shorter.',
+        submitted
+      });
+    }
+    if (result === 'stale') {
+      return fail(409, {
+        error: 'Your settings changed while this was saving. Check them and save again.',
+        submitted
+      });
+    }
     return { ok: true };
   }
 };

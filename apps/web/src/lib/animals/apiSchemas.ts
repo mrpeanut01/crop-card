@@ -9,6 +9,7 @@ import {
   MAX_HEAD_COUNT,
   MAX_NOTES,
   MAX_REASON,
+  MEAT_USED_STATUSES,
   STATUS_EVENT_STATUSES
 } from './model';
 
@@ -171,10 +172,12 @@ export const animalMoveSchema = z
     { message: 'move at least one animal', path: ['count'] }
   );
 
-/** `POST /api/animals/status`. `sold-for-meat` and `slaughtered` are
- *  refused until the withdrawal gate lands (32C). On a group, outcomes need
- *  a negative `headCountDelta` for the unnamed animals that left; `active`
- *  with a positive delta records a hatch or purchase. */
+/** `POST /api/animals/status`. `slaughtered` and `sold-for-meat` run the
+ *  32C food gate and are refused with 422 while a withdrawal or grazing
+ *  hold runs; so is `sold`, `died` or `culled` with `meatUsed: true`.
+ *  Recording the same change with the meat not used always saves. On a
+ *  group, outcomes need a negative `headCountDelta` for the unnamed animals
+ *  that left; `active` with a positive delta records a hatch or purchase. */
 export const animalStatusSchema = z
   .strictObject({
     subjectType: z.enum(ANIMAL_SUBJECT_TYPES),
@@ -182,8 +185,13 @@ export const animalStatusSchema = z
     status: z.enum(STATUS_EVENT_STATUSES),
     occurredAt: ms.optional(),
     reason: optionalText(MAX_REASON),
-    headCountDelta: z.number().int().min(-MAX_HEAD_COUNT).max(MAX_HEAD_COUNT).optional()
+    headCountDelta: z.number().int().min(-MAX_HEAD_COUNT).max(MAX_HEAD_COUNT).optional(),
+    meatUsed: z.boolean().optional()
   })
+  .refine(
+    (v) => v.meatUsed === undefined || (MEAT_USED_STATUSES as readonly string[]).includes(v.status),
+    { message: 'meatUsed applies to sold, died or culled', path: ['meatUsed'] }
+  )
   .refine((v) => v.subjectType === 'group' || v.headCountDelta === undefined, {
     message: 'headCountDelta applies to a group',
     path: ['headCountDelta']

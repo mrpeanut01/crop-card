@@ -28,6 +28,7 @@
   import { designerHref, designerState } from '$lib/farm/designerRoute';
   import { kindStyle } from '$lib/farm/kindStyle';
   import { withHousing, type AreaHousing } from '$lib/farm/housedAnimals';
+  import { needsLabelTime, withGrazing, type AreaGrazing } from '$lib/farm/areaGrazing';
   import { currentPrefs } from '$lib/prefsState.svelte';
 
   type Tab = 'details' | 'plantings' | 'tasks' | 'history';
@@ -39,6 +40,7 @@
     area,
     canEdit,
     housing = null,
+    grazing = null,
     petsLayout = false,
     onEditShape
   }: {
@@ -48,6 +50,7 @@
     area: { id: string; name: string; kind: AreaKind; details: AreaDetails | null };
     canEdit: boolean;
     housing?: AreaHousing | null;
+    grazing?: AreaGrazing | null;
     petsLayout?: boolean;
     onEditShape?: () => void;
   } = $props();
@@ -64,7 +67,9 @@
   // The sheet shows its own primary Open designer button, so the card's copy is dropped.
   const card = $derived.by(() => {
     const built = buildAreaCard(snapshot, area.id, { prefs });
-    return built ? { ...withHousing(built, housing, { petsLayout }), links: undefined } : null;
+    if (!built) return null;
+    const housed = withHousing(built, housing, { petsLayout });
+    return { ...withGrazing(housed, grazing, prefs.timeZone), links: undefined };
   });
   const title = $derived(areaDisplayName(area));
   const style = $derived(kindStyle(area.kind));
@@ -196,6 +201,11 @@
 
     {#if designer === 'available'}
       <a class="designer primary" href={designerHref(area.id)}>Open designer</a>
+    {/if}
+    {#if canEdit && needsLabelTime(grazing)}
+      <a class="designer grazing-time" href="/plan/areas/{encodeURIComponent(area.id)}/grazing">
+        Add grazing times from the label
+      </a>
     {/if}
 
     <div class="tabs" role="tablist" aria-label="Area card sections">
@@ -385,6 +395,11 @@
   }
   .designer {
     align-self: flex-start;
+  }
+  .grazing-time {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
   }
   .tabs {
     display: flex;

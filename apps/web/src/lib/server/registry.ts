@@ -22,6 +22,7 @@ import { runtimeCatalogOverlay } from './pluginCatalogOverlay';
 let cached: { registry: PluginRegistry; loadedAt: number; failures: string[] } | null = null;
 let cachedRecipes: BedRecipeRegistry | null = null;
 let cachedDataKinds: Phase32DataKinds | null = null;
+let baseGeneration = 0;
 const ownerViews = new Map<string, { key: string; registry: PluginRegistry }>();
 
 function pluginsDir(): string {
@@ -59,6 +60,36 @@ export async function getRegistry(): Promise<PluginRegistry> {
   return registry;
 }
 
+/** The active Owner's view built from the overrides on file right now,
+ *  synchronously and uncached. The hold guard reads it inside a plugin
+ *  write's transaction to project the farm's holds after the write. */
+export function ownerRegistryNow(base: PluginRegistry): PluginRegistry {
+  if (!currentOwnerId()) return base;
+  const hidden: string[] = [];
+  const payloads: unknown[] = [];
+  for (const o of listEffectiveOverrides().values()) {
+    if (o.payloadJson === HIDDEN_PAYLOAD) hidden.push(o.pluginId);
+    else payloads.push(JSON.parse(o.payloadJson));
+  }
+  if (hidden.length === 0 && payloads.length === 0) return base;
+  return base.withOverlay(hidden, payloads).registry;
+}
+
+/** The active Owner's plugin overlay revision (0 outside a tenant). The
+ *  hold guard reads it before and inside its transaction to tell whether
+ *  the registry it loaded is still the one on file. */
+export function ownerOverlayRevision(): number {
+  const ownerId = currentOwnerId();
+  return ownerId ? overridesRevision(ownerId) : 0;
+}
+
+/** Which load of the shared library is cached now, or null after a reset.
+ *  Synchronous, so a transaction can check that an awaited registry is
+ *  still current. */
+export function baseRegistryGeneration(): number | null {
+  return cached ? baseGeneration : null;
+}
+
 /** Click-through test fixtures stay out of real farms' lists. */
 function showTestPlugins(): boolean {
   return dev || process.env.VITEST === 'true' || process.env.SHOW_TEST_PLUGINS === '1';
@@ -80,6 +111,7 @@ export async function getBaseRegistry(): Promise<PluginRegistry> {
           .filter(isTestPluginId),
         []
       ).registry;
+  baseGeneration += 1;
   cached = {
     registry,
     loadedAt: Date.now(),

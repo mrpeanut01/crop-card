@@ -14,6 +14,7 @@ async function addPlace(page: Page, name: string, kind: string): Promise<string>
 
 async function addFlockOf24(page: Page): Promise<string> {
   await page.goto('/animals/add');
+  await page.waitForLoadState('networkidle');
   await page.getByLabel('Chickens').check();
   await expect(page.getByText('Food animal', { exact: true })).toBeVisible();
   await page.getByLabel('How many?').fill('24');
@@ -43,6 +44,7 @@ test('an owner adds 24 layers, a helper moves them offline and the move replays 
   const pastureId = await addPlace(page, 'Back pasture', 'pasture');
 
   await page.goto('/animals');
+  await page.waitForLoadState('networkidle');
   await expect(page.getByRole('heading', { level: 1, name: 'Animals' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Layers/ })).toBeVisible();
   await expect(
@@ -93,11 +95,14 @@ test('a helper can move and record changes but not add, edit or change flags', a
   const helper = await provisionHelper(page, browser);
 
   await helper.goto('/animals/add');
+  await helper.waitForLoadState('networkidle');
   await expect(helper.getByText(/Ask the owner to add animals/)).toBeVisible();
   await helper.goto('/animals');
+  await helper.waitForLoadState('networkidle');
   await expect(helper.getByRole('link', { name: 'Add', exact: true })).toHaveCount(0);
 
   await helper.goto(`/animals/groups/${groupId}`);
+  await helper.waitForLoadState('networkidle');
   await expect(helper.getByRole('button', { name: 'Move' })).toBeVisible();
   await expect(helper.getByRole('button', { name: 'Record a change' })).toBeVisible();
   await expect(helper.getByRole('button', { name: 'Edit' })).toHaveCount(0);
@@ -120,6 +125,7 @@ test('an owner records an animal as rehomed and can undo it inside the lock wind
 }) => {
   await provisionEmptyFarm(page);
   await page.goto('/animals/add');
+  await page.waitForLoadState('networkidle');
   await page.getByLabel('Horses').check();
   await page.getByLabel('One animal').check();
   await page.getByLabel('Name', { exact: true }).fill('Duke');
@@ -135,9 +141,11 @@ test('an owner records an animal as rehomed and can undo it inside the lock wind
   await expect(page.getByRole('button', { name: 'Move' })).toHaveCount(0);
 
   await page.goto('/animals');
+  await page.waitForLoadState('networkidle');
   await expect(page.getByText('No longer here (1)')).toBeVisible();
 
   await page.goBack();
+  await page.waitForLoadState('networkidle');
   page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(page.getByRole('button', { name: 'Move' })).toBeVisible();
@@ -150,6 +158,7 @@ test('a garden household sees Pets & animals, no tag field and never the word li
   await createOnboardedFarm(page, { growing: ['garden'] });
 
   await page.goto('/animals');
+  await page.waitForLoadState('networkidle');
   await expect(page.getByRole('heading', { level: 1, name: 'Pets & animals' })).toBeVisible();
   await page.getByRole('button', { name: 'Add your first animal' }).click();
   const sheet = page.getByRole('dialog', { name: 'Add an animal' });
@@ -163,6 +172,7 @@ test('a garden household sees Pets & animals, no tag field and never the word li
   await expect(page.getByRole('heading', { level: 1, name: 'Biscuit' })).toBeVisible();
 
   await page.goto('/animals/add');
+  await page.waitForLoadState('networkidle');
   await page.getByLabel('Chickens').check();
   await expect(page.getByText(/because people eat their eggs/)).toBeVisible();
   await page.getByLabel('How many?').fill('4');
@@ -171,6 +181,7 @@ test('a garden household sees Pets & animals, no tag field and never the word li
   await expect(page.getByTestId('food-chip')).toBeVisible();
 
   await page.goto('/animals');
+  await page.waitForLoadState('networkidle');
   await expect(
     page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Pets & animals' })
   ).toHaveCount(1);
@@ -180,6 +191,7 @@ test('a garden household sees Pets & animals, no tag field and never the word li
   expect(a!.y).toBeLessThan(b!.y);
   for (const path of ['/animals', '/animals/add']) {
     await page.goto(path);
+    await page.waitForLoadState('networkidle');
     expect((await page.locator('body').innerText()).toLowerCase()).not.toContain('livestock');
   }
 });

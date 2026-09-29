@@ -36,7 +36,8 @@ export type MovementReason =
   | 'planting'
   | 'adjustment'
   | 'spill'
-  | 'expiry';
+  | 'expiry'
+  | 'animal-treatment';
 
 export interface StockItem {
   id: string;
@@ -682,6 +683,7 @@ export function decrementForUse(input: {
   reason?: MovementReason;
   performedById?: string;
   occurredAt?: number;
+  notes?: string;
 }): DecrementResult {
   const item = getStockItem(input.stockItemId);
   if (!item) throw new Error(`unknown stock item: ${input.stockItemId}`);
@@ -746,7 +748,7 @@ export function decrementForUse(input: {
           fertilityApplicationId: input.fertilityApplicationId ?? null,
           cropId: input.cropId ?? null,
           performedById: input.performedById ?? null,
-          notes: `auto-decrement from ${reason}`
+          notes: input.notes ?? `auto-decrement from ${reason}`
         })
       )
       .returning()

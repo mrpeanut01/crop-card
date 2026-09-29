@@ -29,7 +29,7 @@ import { loadSeasonSetup } from '$lib/season/setup.server';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { deriveSeasonWorkflow } from '$lib/plan/seasonWorkflow';
 import { planV2EventsFor } from '$lib/plan/planV2Derive';
-import { prefsFor } from '$lib/db/userProfile';
+import { prefsFor, farmTimeZone } from '$lib/db/userProfile';
 import { formatCalendarDate, todayYmd } from '$lib/prefs';
 import { listPlanRevisions } from '$lib/plan/revisions';
 import { getActiveSession, listMessages } from '$lib/db/wizardChat';
@@ -63,6 +63,7 @@ import {
 import { listEquipment, type EquipmentWithState } from '$lib/db/equipment';
 import { listFields, type FieldWithBlocks } from '$lib/db/fields';
 import { loadAreaHousing } from '$lib/server/areaHousing';
+import { loadAreaGrazing } from '$lib/server/areaGrazing';
 import { buildMapSnapshot } from '$lib/server/mapSnapshot';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listStockItems, type StockItemWithBalance } from '$lib/db/stock';
@@ -153,6 +154,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const isFirstRun = blocks.length === 0 && fields.length === 0;
   const canEdit = locals.user?.role === 'owner';
   const { housing: areaHousing, petsLayout } = await loadAreaHousing(fields);
+  const areaGrazing = await loadAreaGrazing(blocks, farmTimeZone());
 
   // Common (Overview / Crops / Equipment / Stock all need crop catalog).
   const registry = await getRegistry();
@@ -228,6 +230,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     focusAreaId: url.searchParams.get('area'),
     areaSnapshot: buildMapSnapshot({ fields, blocks }),
     areaHousing,
+    areaGrazing,
     petsLayout,
     cropCatalog,
     plantingGuides,

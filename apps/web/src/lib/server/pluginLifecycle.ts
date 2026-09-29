@@ -48,6 +48,7 @@ import {
   unhideForOwner
 } from '$lib/db/pluginOverrides';
 import { getBaseRegistry, resetRegistry } from './registry';
+import { backfillHoldParamsEverywhere, guardedHoldWrite, type HoldWriteContext } from './holdGuard';
 
 export class PluginLifecycleError extends Error {
   constructor(
@@ -156,16 +157,24 @@ export function countReferences(pluginId: string, kind: PluginKind): ReferenceSu
 /** Owner-level retire: hides the plugin for the active Owner only (a
  *  `plugin_overrides` marker). The shared library and other farms are
  *  untouched; historical replay still resolves by hash. */
-export async function retirePluginForOwner(pluginId: string): Promise<void> {
+export async function retirePluginForOwner(
+  pluginId: string,
+  hold: HoldWriteContext
+): Promise<void> {
   const kind =
     ((await getBaseRegistry()).get(pluginId)?.plugin.type as PluginKind | undefined) ??
     effectiveOverride(pluginId)?.kind ??
     (currentVersionOf(pluginId)?.kind as PluginKind | undefined);
   if (!kind) throw new PluginLifecycleError(`no plugin '${pluginId}' on record`, 'not-found');
-  hideForOwner(pluginId, kind);
+  await guardedHoldWrite(hold.event, hold.user, () => hideForOwner(pluginId, kind), {
+    reloadRegistry: true
+  });
 }
 
-export async function unretirePluginForOwner(pluginId: string): Promise<void> {
+export async function unretirePluginForOwner(
+  pluginId: string,
+  hold: HoldWriteContext
+): Promise<void> {
   if (!isHiddenForOwner(pluginId)) {
     const known =
       (await getBaseRegistry()).has(pluginId) ||
@@ -174,7 +183,10 @@ export async function unretirePluginForOwner(pluginId: string): Promise<void> {
     if (!known) throw new PluginLifecycleError(`no plugin '${pluginId}' on record`, 'not-found');
     return;
   }
-  unhideForOwner(pluginId);
+  await guardedHoldWrite(hold.event, hold.user, () => unhideForOwner(pluginId), {
+    reloadRegistry: true,
+    resolvesUnknown: true
+  });
 }
 
 export async function retirePlugin(pluginId: string): Promise<void> {
@@ -183,6 +195,7 @@ export async function retirePlugin(pluginId: string): Promise<void> {
     throw new PluginLifecycleError(`no plugin '${pluginId}' on record`, 'not-found');
   }
   if (current.retiredAt) return; // already retired — no-op
+  await backfillHoldParamsEverywhere();
 
   // Move file from live → _retired. If the file is missing (manual
   // delete out-of-band) we still set the DB flag.
@@ -209,6 +222,7 @@ export async function unretirePlugin(pluginId: string): Promise<void> {
     throw new PluginLifecycleError(`no plugin '${pluginId}' on record`, 'not-found');
   }
   if (!current.retiredAt) return; // already active — no-op
+  await backfillHoldParamsEverywhere();
 
   const from = retiredPath(current.kind as PluginKind, pluginId);
   const to = livePath(current.kind as PluginKind, pluginId);

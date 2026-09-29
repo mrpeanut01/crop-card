@@ -1,6 +1,7 @@
 import { isContactOrganic } from '$lib/plugins/contactOrganic';
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
+import { loadSprayPastureContext } from '$lib/server/pastureAnimals';
 import { getRegistry } from '$lib/server/registry';
 import { listSprayers } from '$lib/server/sprayers';
 import { canSetUp, setupAreas, setupBlocks, setupSprayerTemplates } from '$lib/server/setupContext';
@@ -167,6 +168,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   return {
     blocks,
+    pasture: await loadSprayPastureContext(dbBlocks, registry),
     herbicides,
     allHerbicides,
     sprayers: listSprayers(),

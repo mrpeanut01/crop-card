@@ -7,6 +7,18 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+// The C-35 hold guard has its own suites (holdGuard.*.test.ts); this file
+// pins the endpoint's other gates, so the guard only runs the write.
+vi.mock('$lib/server/holdGuard', async () => {
+  const { writeRecord } = await import('$lib/server/recordWrite');
+  const run = (event: { request: Request }, _user: unknown, fn: () => unknown) =>
+    writeRecord(event, fn);
+  return {
+    guardedHoldWrite: async (...a: Parameters<typeof run>) => run(...a),
+    tryGuardedHoldWrite: async (...a: Parameters<typeof run>) => ({ ok: true, value: run(...a) })
+  };
+});
+
 const m = vi.hoisted(() => ({
   insertSprayEvent: vi.fn(),
   recordSpray: vi.fn(),

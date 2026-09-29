@@ -20,6 +20,7 @@ import { plantingInGround } from '$lib/garden/inGround';
 import {
   animalCarePlans,
   animalFlagChanges,
+  holdCorrections,
   animalGroups,
   animalHealthEvents,
   animalLocations,
@@ -59,6 +60,7 @@ import {
 } from './schema';
 import { type TenantScopedTable, tenantValues, withTenant } from './tenant';
 import { unlinkMapFeaturesFromField } from './mapFeatures';
+import { liveHoldParams } from './holdParams';
 import { evaluateLock as evaluateSprayLock, getSprayEvent } from './sprayEvents';
 import { evaluateLock as evaluateInsecticideLock, getInsecticideEvent } from './insecticideEvents';
 import { evaluateLock as evaluateHarvestLock, getHarvestEvent } from './harvestEvents';
@@ -87,6 +89,11 @@ export interface DeleteSprayEventOptions {
   /** #329 — acting user + reason recorded on the force-delete tombstone. */
   deletedBy?: string;
   reason?: string;
+  /** Phase 32C: write a tombstone even for an unlocked record, so the
+   *  grazing and hay holds of the application survive the delete (C-26). */
+  tombstone?: boolean;
+  /** The owner says the product was never applied, so its holds drop. */
+  neverApplied?: boolean;
 }
 
 export class RecordLockedError extends Error {
@@ -105,8 +112,24 @@ function writeDeletionTombstone(
   kind: 'spray' | 'insecticide' | 'harvest',
   recordId: string,
   snapshot: unknown,
-  opts: { deletedBy?: string; reason?: string }
+  opts: {
+    deletedBy?: string;
+    reason?: string;
+    neverApplied?: boolean;
+    /** The Area of a block deleted with this record (see `deleteBlockCascade`). */
+    deletedFromFieldId?: string | null;
+  }
 ): void {
+  if (opts.neverApplied && snapshot && typeof snapshot === 'object') {
+    snapshot = { ...snapshot, neverApplied: true };
+  }
+  if (opts.deletedFromFieldId && snapshot && typeof snapshot === 'object') {
+    snapshot = { ...snapshot, deletedFromFieldId: opts.deletedFromFieldId };
+  }
+  if (kind !== 'harvest' && snapshot && typeof snapshot === 'object') {
+    const holdParamsJson = liveHoldParams(kind, recordId);
+    if (holdParamsJson) snapshot = { ...snapshot, holdParamsJson };
+  }
   db.insert(recordDeletions)
     .values(
       tenantValues({
@@ -121,6 +144,59 @@ function writeDeletionTombstone(
     .run();
 }
 
+export interface ApplicationTombstone {
+  source: 'spray' | 'insecticide' | 'fungicide';
+  id: string;
+  blockId: string;
+  occurredAt: number;
+  products: Array<{ pluginId?: string | null; displayName?: string }>;
+  /** Set when the application's block was deleted: the Area the block was
+   *  in. The ground is still there, so the application still counts on
+   *  that Area (review round 4). */
+  formerFieldId?: string;
+}
+
+/**
+ * Phase 32C (C-26): deleted herbicide, insecticide and fungicide
+ * applications that still count for grazing and hay holds. Only an owner's
+ * "never applied" delete drops one.
+ */
+export function listApplicationTombstones(fromMs: number): ApplicationTombstone[] {
+  const rows = db
+    .select()
+    .from(recordDeletions)
+    .where(
+      withTenant(
+        recordDeletions,
+        inArray(recordDeletions.recordKind, ['spray', 'insecticide', 'fungicide'])
+      )
+    )
+    .all();
+  const out: ApplicationTombstone[] = [];
+  for (const row of rows) {
+    let snap: unknown;
+    try {
+      snap = JSON.parse(row.snapshotJson);
+    } catch {
+      continue;
+    }
+    if (!snap || typeof snap !== 'object') continue;
+    const e = snap as Record<string, unknown>;
+    if (e.neverApplied === true) continue;
+    if (typeof e.blockId !== 'string' || typeof e.occurredAt !== 'number') continue;
+    if (e.occurredAt < fromMs) continue;
+    out.push({
+      source: row.recordKind as ApplicationTombstone['source'],
+      id: row.recordId,
+      blockId: e.blockId,
+      occurredAt: e.occurredAt,
+      products: Array.isArray(e.products) ? (e.products as ApplicationTombstone['products']) : [],
+      ...(typeof e.deletedFromFieldId === 'string' ? { formerFieldId: e.deletedFromFieldId } : {})
+    });
+  }
+  return out;
+}
+
 export function deleteSprayEvent(id: string, opts: DeleteSprayEventOptions = {}): DeleteSummary {
   const event = getSprayEvent(id);
   if (!event) return { removed: {} };
@@ -130,6 +206,8 @@ export function deleteSprayEvent(id: string, opts: DeleteSprayEventOptions = {})
   const lockedAt = evaluateSprayLock(event);
   if (lockedAt !== undefined) {
     if (!opts.force) throw new RecordLockedError('spray');
+    writeDeletionTombstone('spray', id, event, opts);
+  } else if (opts.tombstone) {
     writeDeletionTombstone('spray', id, event, opts);
   }
   const removed: Record<string, number> = {};
@@ -160,6 +238,8 @@ export function deleteInsecticideEvent(
   const lockedAt = evaluateInsecticideLock(event);
   if (lockedAt !== undefined) {
     if (!opts.force) throw new RecordLockedError('insecticide');
+    writeDeletionTombstone('insecticide', id, event, opts);
+  } else if (opts.tombstone) {
     writeDeletionTombstone('insecticide', id, event, opts);
   }
   const removed: Record<string, number> = {};
@@ -198,7 +278,10 @@ export function deleteTask(id: string): DeleteSummary {
 
 // ─── Per-crop (cascades through every event tied to that planting) ──────
 
-export function deleteCropCascade(id: string): DeleteSummary {
+export function deleteCropCascade(
+  id: string,
+  opts: { deletedFromFieldId?: string | null } = {}
+): DeleteSummary {
   const removed: Record<string, number> = {};
 
   const sprayIds = db
@@ -258,6 +341,24 @@ export function deleteCropCascade(id: string): DeleteSummary {
 
   removed.crop_equipment = del(cropEquipment, eq(cropEquipment.cropId, id));
 
+  for (const sid of sprayIds) {
+    const e = getSprayEvent(sid);
+    if (e) {
+      writeDeletionTombstone('spray', sid, e, {
+        reason: 'planting deleted',
+        deletedFromFieldId: opts.deletedFromFieldId
+      });
+    }
+  }
+  for (const iid of insecticideIds) {
+    const e = getInsecticideEvent(iid);
+    if (e) {
+      writeDeletionTombstone('insecticide', iid, e, {
+        reason: 'planting deleted',
+        deletedFromFieldId: opts.deletedFromFieldId
+      });
+    }
+  }
   removed.spray_events = del(sprayEvents, eq(sprayEvents.cropId, id));
   removed.insecticide_events = del(insecticideEvents, eq(insecticideEvents.cropId, id));
   removed.fertility_applications = del(fertilityApplications, eq(fertilityApplications.cropId, id));
@@ -324,8 +425,53 @@ export function blockHasRecords(id: string, nowMs: number = Date.now()): boolean
   return taskRows.some((t) => !t.cropId || !plannedIds.has(t.cropId));
 }
 
+/**
+ * Applications deleted before their block (a spray or planting delete) were
+ * tombstoned while the block still placed them on its Area. Once the block
+ * goes too, the tombstone is all that places them, so it gets the block's
+ * Area now (review round 5).
+ */
+function placeEarlierTombstones(blockId: string, fieldId: string): void {
+  const rows = db
+    .select({ id: recordDeletions.id, json: recordDeletions.snapshotJson })
+    .from(recordDeletions)
+    .where(
+      withTenant(
+        recordDeletions,
+        inArray(recordDeletions.recordKind, ['spray', 'insecticide', 'fungicide'])
+      )
+    )
+    .all();
+  for (const row of rows) {
+    let snap: unknown;
+    try {
+      snap = JSON.parse(row.json);
+    } catch {
+      continue;
+    }
+    if (!snap || typeof snap !== 'object') continue;
+    const e = snap as Record<string, unknown>;
+    if (e.blockId !== blockId || e.deletedFromFieldId === fieldId) continue;
+    db.update(recordDeletions)
+      .set({ snapshotJson: JSON.stringify({ ...e, deletedFromFieldId: fieldId }) })
+      .where(withTenant(recordDeletions, eq(recordDeletions.id, row.id)))
+      .run();
+  }
+}
+
 export function deleteBlockCascade(id: string): DeleteSummary {
   const removed: Record<string, number> = {};
+  // Deleting a block removes its record, not its ground: every spray and
+  // insecticide on it keeps a tombstone naming the Area it was in, so the
+  // grazing rules still count it there (review round 4).
+  const deletedFromFieldId =
+    db
+      .select({ fieldId: blocks.fieldId })
+      .from(blocks)
+      .where(withTenant(blocks, eq(blocks.id, id)))
+      .get()?.fieldId ?? null;
+
+  if (deletedFromFieldId) placeEarlierTombstones(id, deletedFromFieldId);
 
   const cropIds = db
     .select({ id: crops.id })
@@ -334,10 +480,52 @@ export function deleteBlockCascade(id: string): DeleteSummary {
     .all()
     .map((r) => r.id);
   for (const cid of cropIds) {
-    const r = deleteCropCascade(cid);
+    const r = deleteCropCascade(cid, { deletedFromFieldId });
     for (const [k, v] of Object.entries(r.removed)) {
       removed[k] = (removed[k] ?? 0) + v;
     }
+  }
+
+  const blockSprayIds = db
+    .select({ id: sprayEvents.id })
+    .from(sprayEvents)
+    .where(withTenant(sprayEvents, eq(sprayEvents.blockId, id)))
+    .all()
+    .map((r) => r.id);
+  const blockInsecticideIds = db
+    .select({ id: insecticideEvents.id })
+    .from(insecticideEvents)
+    .where(withTenant(insecticideEvents, eq(insecticideEvents.blockId, id)))
+    .all()
+    .map((r) => r.id);
+  for (const sid of blockSprayIds) {
+    const e = getSprayEvent(sid);
+    if (e) {
+      writeDeletionTombstone('spray', sid, e, { reason: 'block deleted', deletedFromFieldId });
+    }
+  }
+  for (const iid of blockInsecticideIds) {
+    const e = getInsecticideEvent(iid);
+    if (e) {
+      writeDeletionTombstone('insecticide', iid, e, {
+        reason: 'block deleted',
+        deletedFromFieldId
+      });
+    }
+  }
+  if (blockSprayIds.length) {
+    removed.stock_movements_block_spray = db
+      .delete(stockMovements)
+      .where(withTenant(stockMovements, inArray(stockMovements.sprayEventId, blockSprayIds)))
+      .run().changes;
+  }
+  if (blockInsecticideIds.length) {
+    removed.stock_movements_block_insecticide = db
+      .delete(stockMovements)
+      .where(
+        withTenant(stockMovements, inArray(stockMovements.insecticideEventId, blockInsecticideIds))
+      )
+      .run().changes;
   }
 
   removed.spray_events_block = del(sprayEvents, eq(sprayEvents.blockId, id));
@@ -359,6 +547,7 @@ export function deleteBlockCascade(id: string): DeleteSummary {
 
 // ─── Per-equipment ──────────────────────────────────────────────────────
 
+/** @hold-exempt: only clears the sprayer link on insecticide records; no hold reads it */
 export function deleteEquipmentCascade(id: string): DeleteSummary {
   const removed: Record<string, number> = {};
   removed.pending_calibrations = del(pendingCalibrations, eq(pendingCalibrations.equipmentId, id));
@@ -401,27 +590,29 @@ export function deleteFieldCascade(id: string): DeleteSummary {
 
 // ─── Per-sprayer (legacy `sprayers` table) ─────────────────────────────
 
-export function deleteSprayerCascade(id: string): DeleteSummary {
-  const removed: Record<string, number> = {};
-  const sprayIds = db
+/** Spray records carry the FR-09 lock, the grazing and hay holds (C-19,
+ *  C-26) and the tombstone rule, so they are only removed one at a time
+ *  through the spray-record delete. This returns how many reference the id
+ *  (`spray_events.sprayer_id` points at `equipment`, so an equipment id
+ *  finds them). */
+export function countSprayEventsForSprayer(id: string): number {
+  return db
     .select({ id: sprayEvents.id })
     .from(sprayEvents)
     .where(withTenant(sprayEvents, eq(sprayEvents.sprayerId, id)))
-    .all()
-    .map((r) => r.id);
-  if (sprayIds.length) {
-    removed.stock_movements = db
-      .delete(stockMovements)
-      .where(withTenant(stockMovements, inArray(stockMovements.sprayEventId, sprayIds)))
-      .run().changes;
-  }
-  removed.spray_events = del(sprayEvents, eq(sprayEvents.sprayerId, id));
+    .all().length;
+}
+
+/** Removes a legacy `sprayers` row. Never touches spray records. */
+export function deleteSprayerCascade(id: string): DeleteSummary {
+  const removed: Record<string, number> = {};
   removed.sprayers = del(sprayers, eq(sprayers.id, id));
   return { removed };
 }
 
 // ─── Per-stock-item ─────────────────────────────────────────────────────
 
+/** @hold-exempt: only clears the stock link on health records; holds read the product, not the bottle */
 export function deleteStockItemCascade(id: string): DeleteSummary {
   const removed: Record<string, number> = {};
   const lotIds = db
@@ -475,6 +666,7 @@ export interface WipeOptions {
   keepWeatherCache?: boolean;
 }
 
+/** @hold-exempt: the owner wipes the whole farm, every record with it (GDPR erase) */
 export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
   const removed: Record<string, number> = {};
   // Order: leaf rows first. Each `del(table, ...)` filters by active Owner.
@@ -487,6 +679,7 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
   removed.animal_production_logs = del(animalProductionLogs, isNotNull(animalProductionLogs.id));
   removed.animal_status_events = del(animalStatusEvents, isNotNull(animalStatusEvents.id));
   removed.animal_flag_changes = del(animalFlagChanges, isNotNull(animalFlagChanges.id));
+  removed.hold_corrections = del(holdCorrections, isNotNull(holdCorrections.id));
   removed.animal_locations = del(animalLocations, isNotNull(animalLocations.id));
   removed.grazing_attestations = del(grazingAttestations, isNotNull(grazingAttestations.id));
   removed.animals = del(animals, isNotNull(animals.id));
@@ -561,6 +754,7 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
  * Note: `plantingRecords` from schema.ts is an alias for `crops` —
  * the wizard's addPlanting() writes to the same table. We only need
  * one pass.
+ * @hold-exempt: removes only plantings with no spray, harvest or hay record
  */
 export function wipeCurrentPlan(): DeleteSummary {
   const removed: Record<string, number> = {};

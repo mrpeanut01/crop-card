@@ -57,6 +57,7 @@ import type {
 import { capacityState, type CapacityState } from '$lib/animals/counts';
 import {
   MAX_FUTURE_SKEW_MS,
+  animalStatusAfter,
   isHousingAreaKind,
   isOutcomeStatus,
   type AnimalPurpose
@@ -68,6 +69,7 @@ export interface SpeciesInfo {
   name: string;
   foodProducingDefault: boolean;
   notForSlaughterToggle: boolean;
+  products: readonly string[];
 }
 
 export async function getSpecies(speciesId: string): Promise<SpeciesInfo | undefined> {
@@ -77,7 +79,8 @@ export async function getSpecies(speciesId: string): Promise<SpeciesInfo | undef
     pluginId: plugin.pluginId,
     name: plugin.displayName,
     foodProducingDefault: plugin.foodProducingDefault,
-    notForSlaughterToggle: plugin.notForSlaughterToggle === true
+    notForSlaughterToggle: plugin.notForSlaughterToggle === true,
+    products: plugin.products ?? []
   };
 }
 
@@ -86,14 +89,16 @@ export class AnimalRuleError extends Error {
   constructor(
     readonly code: string,
     readonly status: number,
-    message: string
+    message: string,
+    /** More of the answer body (the hold guard's diff, say). */
+    readonly extra: Record<string, unknown> = {}
   ) {
     super(message);
     this.name = 'AnimalRuleError';
   }
 
   toResponse(): Response {
-    return json({ error: this.message, code: this.code }, { status: this.status });
+    return json({ ...this.extra, error: this.message, code: this.code }, { status: this.status });
   }
 }
 
@@ -191,11 +196,20 @@ function activeGroup(groupId: string, speciesId: string): AnimalGroup {
   return group;
 }
 
+/** What the placement gate that let a create through stores with its stay,
+ *  as `applyMove` stores it with a move (C-18). */
+export interface PlacementGated {
+  rulesVersion?: string | null;
+  exposureFloor?: string | null;
+}
+
+/** @holdWriter (C-35: callers run it inside guardedHoldWrite) */
 export function createAnimalWithHousing(
   input: AnimalCreateInput,
   species: SpeciesInfo,
   userId: string | null,
-  now = Date.now()
+  now = Date.now(),
+  gated: PlacementGated = {}
 ): { animal: Animal; warnings: Warning[] } {
   const group = input.groupId ? activeGroup(input.groupId, species.pluginId) : null;
   const field = input.housingFieldId ? housingArea(input.housingFieldId) : null;
@@ -225,7 +239,9 @@ export function createAnimalWithHousing(
         subject: { subjectType: 'animal', subjectId: created.id },
         fieldId: field.id,
         atMs: now,
-        movedBy: userId
+        movedBy: userId,
+        rulesVersion: gated.rulesVersion ?? null,
+        exposureFloor: gated.exposureFloor ?? null
       });
     }
     return created;
@@ -233,11 +249,13 @@ export function createAnimalWithHousing(
   return { animal, warnings };
 }
 
+/** @holdWriter (C-35: callers run it inside guardedHoldWrite) */
 export function createGroupWithMembers(
   input: AnimalGroupCreateInput,
   species: SpeciesInfo,
   userId: string | null,
-  now = Date.now()
+  now = Date.now(),
+  gated: PlacementGated = {}
 ): { group: AnimalGroup; members: Animal[]; warnings: Warning[] } {
   const field = input.housingFieldId ? housingArea(input.housingFieldId) : null;
   const members = input.members ?? [];
@@ -261,7 +279,9 @@ export function createGroupWithMembers(
         subject: { subjectType: 'group', subjectId: group.id },
         fieldId: field.id,
         atMs: now,
-        movedBy: userId
+        movedBy: userId,
+        rulesVersion: gated.rulesVersion ?? null,
+        exposureFloor: gated.exposureFloor ?? null
       });
     }
     const created = members.map((m) =>
@@ -457,6 +477,10 @@ export interface MoveResult {
 export interface MoveContext {
   movedBy: string | null;
   clientRecordId?: string | null;
+  /** Set when the grazing gate ran on this move (C-18 for grazing). */
+  rulesVersion?: string | null;
+  /** The gate's dated exposure holds, stored on the new stay as a floor. */
+  exposureFloor?: string | null;
 }
 
 function staySaved(result: ReturnType<typeof insertStay>): AnimalLocation {
@@ -465,14 +489,20 @@ function staySaved(result: ReturnType<typeof insertStay>): AnimalLocation {
 }
 
 /** Writes a planned move. Run inside `writeRecord` so the stay, the housing
- *  cache and the replay receipt commit together. */
+ *  cache and the replay receipt commit together.
+ * @holdWriter (C-35: callers run it inside guardedHoldWrite)
+ */
 export function applyMove(plan: MovePlan, ctx: MoveContext, now = Date.now()): MoveResult {
   const base = { movedBy: ctx.movedBy, clientRecordId: ctx.clientRecordId ?? null };
+  const gated = {
+    rulesVersion: ctx.rulesVersion ?? null,
+    exposureFloor: ctx.exposureFloor ?? null
+  };
   switch (plan.kind) {
     case 'group': {
       const subject: Subject = { subjectType: 'group', subjectId: plan.group.id };
       const location = staySaved(
-        insertStay({ ...base, subject, fieldId: plan.field.id, atMs: plan.movedAt })
+        insertStay({ ...base, ...gated, subject, fieldId: plan.field.id, atMs: plan.movedAt })
       );
       const fieldId = refreshHousingCache(subject, now);
       return {
@@ -502,6 +532,7 @@ export function applyMove(plan: MovePlan, ctx: MoveContext, now = Date.now()): M
       const location = staySaved(
         insertStay({
           ...base,
+          ...gated,
           subject,
           fieldId: field.id,
           atMs: plan.movedAt,
@@ -536,6 +567,7 @@ export function applyMove(plan: MovePlan, ctx: MoveContext, now = Date.now()): M
       const location = staySaved(
         insertStay({
           ...base,
+          ...gated,
           subject,
           fieldId: field.id,
           atMs: plan.movedAt,
@@ -590,9 +622,15 @@ export interface StatusResult {
   emptied: boolean;
 }
 
+/** @holdWriter (C-35: callers run it inside guardedHoldWrite) */
 export function recordStatus(
   input: AnimalStatusInput,
-  ctx: { recordedBy: string | null; clientRecordId?: string | null },
+  ctx: {
+    recordedBy: string | null;
+    clientRecordId?: string | null;
+    /** The rules version when the food gate ran on this change. */
+    rulesVersion?: string | null;
+  },
   now = Date.now()
 ): StatusResult {
   const occurredAt = input.occurredAt ?? now;
@@ -607,6 +645,7 @@ export function recordStatus(
     reason: input.reason,
     recordedById: ctx.recordedBy,
     clientRecordId: ctx.clientRecordId ?? null,
+    rulesVersion: ctx.rulesVersion ?? null,
     createdAt: now
   };
 
@@ -665,7 +704,7 @@ export function recordStatus(
     );
   }
   const event = insertStatusEvent(common);
-  setAnimalStatus(animal.id, input.status, occurredAt, event.reason, now);
+  setAnimalStatus(animal.id, animalStatusAfter(input.status), occurredAt, event.reason, now);
   if (!animal.groupId) endStayAt(subject, occurredAt);
   setAnimalGroupAndHousing(animal.id, animal.groupId, null, now);
   return { event, emptied: false };
@@ -696,8 +735,14 @@ export function statusEventsWithLocks(
 
 /** Owner-only: removes the latest status change inside the lock window and
  *  puts the subject back the way it was. Older changes are corrected by
- *  recording a new one. */
-export function undoStatus(eventId: string, now = Date.now()): { removed: AnimalStatusEvent } {
+ *  recording a new one.
+ * @holdWriter (C-35: callers run it inside guardedHoldWrite)
+ */
+export function undoStatus(
+  eventId: string,
+  now = Date.now(),
+  by: string | null = null
+): { removed: AnimalStatusEvent } {
   const event = getStatusEvent(eventId);
   if (!event) throw new AnimalRuleError('NOT_FOUND', 404, 'Status change not found.');
   const history = listStatusEvents(event.subjectType, event.subjectId);
@@ -733,7 +778,7 @@ export function undoStatus(eventId: string, now = Date.now()): { removed: Animal
           'Removing this change would leave the group with fewer than zero animals.'
         );
       }
-      deleteStatusEvent(event.id);
+      deleteStatusEvent(event.id, by);
       setGroupHeadCount(group.id, next, now);
       return { removed: event };
     }
@@ -742,7 +787,7 @@ export function undoStatus(eventId: string, now = Date.now()): { removed: Animal
     if (animal.status === 'archived') {
       throw new AnimalRuleError('NOT_ACTIVE', 409, 'This animal is archived. Restore it first.');
     }
-    deleteStatusEvent(event.id);
+    deleteStatusEvent(event.id, by);
     const prior = history.at(-2);
     const subject: Subject = { subjectType: 'animal', subjectId: animal.id };
     if (prior && prior.status !== 'active') {

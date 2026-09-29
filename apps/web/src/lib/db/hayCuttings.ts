@@ -107,7 +107,8 @@ export function createCutting(input: CreateCuttingInput): HayCutting {
         weatherForecastJson: input.weatherForecastJson ?? null,
         performedById: input.performedById ?? null,
         rulesVersion: input.rulesVersion,
-        notes: input.notes ?? null
+        notes: input.notes ?? null,
+        recordedLate: (input.mowAt ?? Date.now()) < Date.now() - 48 * 60 * 60 * 1000
       })
     )
     .returning()
@@ -191,4 +192,9 @@ export function listCuttings(filters: {
   q = q.orderBy(desc(hayCuttings.year), asc(hayCuttings.cuttingNumber));
   if (filters.limit) q = q.limit(filters.limit);
   return q.all().map(rowToCutting);
+}
+
+/** Every cutting on the farm, for the hold ledger (C-35). */
+export function listAllCuttings(): HayCutting[] {
+  return db.select().from(hayCuttings).where(withTenant(hayCuttings)).all().map(rowToCutting);
 }

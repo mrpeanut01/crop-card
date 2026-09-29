@@ -8,20 +8,31 @@
 
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { bestEffort, writeRecord } from '$lib/server/recordWrite';
+import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { harvestRecordSchema } from '$lib/records/apiSchemas';
 import { getBlock } from '$lib/db/blocks';
-import { getCrop } from '$lib/db/crops';
-import { insertHarvestEvent } from '$lib/db/harvestEvents';
+import { harvestOnGrazingLand } from '$lib/server/areaGrazing';
+import { getCrop, listCrops, type Crop } from '$lib/db/crops';
+import {
+  insertCropHarvestEvent,
+  insertHarvestEvent,
+  type HarvestEvent
+} from '$lib/db/harvestEvents';
 import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
-import { getRegistry } from '$lib/server/registry';
+import { getBaseRegistry, getRegistry } from '$lib/server/registry';
 import type { PluginRegistry } from '$lib/plugins';
 import { evaluateHarvestMoisture, HARVEST_MOISTURE_BLOCK } from '$lib/safety/harvestMoisture';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { evaluateHarvestPhi, type AppliedSpray } from '$lib/schedule/harvestPhi';
+import { resolveArchetype } from '$lib/plugins/schemas';
+import { hayCutGate } from '$lib/server/grazingGate';
+import { RULES_VERSION } from '$lib/safety/version';
+import { currentUser } from '$lib/server/auth';
+import { farmTimeZone } from '$lib/db/userProfile';
 
 const PHI_LOOKBACK_MS = 120 * 24 * 60 * 60 * 1000;
 
@@ -87,7 +98,54 @@ function gatherAppliedSprays(
 export const _requestSchema = harvestRecordSchema;
 const requestSchema = harvestRecordSchema;
 
-export const POST: RequestHandler = withClientRecordId(async ({ request }) => {
+type CropPluginShape = Parameters<typeof resolveArchetype>[0] & {
+  hayOperations?: unknown;
+  cropFamily?: string;
+};
+
+/** A forage by any reading of its data: hay operations, the forage family
+ *  or the forage archetype. */
+function isForage(plugin: CropPluginShape | undefined, override?: string | null): boolean {
+  if (override === 'forage-cutting-cycle') return true;
+  if (!plugin) return false;
+  if (plugin.hayOperations || plugin.cropFamily === 'forage') return true;
+  return resolveArchetype(plugin) === 'forage-cutting-cycle';
+}
+
+/**
+ * C-28: whether this harvest is a hay cut, decided from what is growing and
+ * not only from the label the client sends. The farm's copy of a plugin
+ * and the shared one are both read, so a farm copy can only turn the gate
+ * on (Invariant 1); a planting's archetype override can only turn it on
+ * too. A block with a forage planting on it is gated unless the declared
+ * crop is itself planted there. Anything cut on grazing land (a pasture
+ * kind, or an Area animals have stayed on when the declared crop is not
+ * planted on the block, `harvestOnGrazingLand`) is a hay cut whatever
+ * crop it names (C-35 §0: a harvest on a grazeable block is a declaration).
+ */
+function isHayCut(input: {
+  cropPluginId: string;
+  planting: Crop | undefined;
+  blockPlantings: readonly Crop[];
+  farm: PluginRegistry;
+  base: PluginRegistry;
+  onGrazingLand: boolean;
+}): boolean {
+  if (input.onGrazingLand) return true;
+  const both = (pluginId: string, override?: string | null) =>
+    isForage(input.farm.get(pluginId)?.plugin as CropPluginShape | undefined, override) ||
+    isForage(input.base.get(pluginId)?.plugin as CropPluginShape | undefined, override);
+  if (both(input.cropPluginId)) return true;
+  if (input.planting && both(input.planting.cropPluginId, input.planting.archetypeOverride)) {
+    return true;
+  }
+  const forageHere = input.blockPlantings.some((c) => both(c.cropPluginId, c.archetypeOverride));
+  const declaredHere = input.blockPlantings.some((c) => c.cropPluginId === input.cropPluginId);
+  return forageHere && !declaredHere;
+}
+
+export const POST: RequestHandler = withClientRecordId(async (requestEvent) => {
+  const { request } = requestEvent;
   let body: unknown;
   try {
     body = await request.json();
@@ -98,7 +156,8 @@ export const POST: RequestHandler = withClientRecordId(async ({ request }) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
-  if (!getBlock(parsed.data.blockId)) {
+  const block = getBlock(parsed.data.blockId);
+  if (!block) {
     return json({ error: 'unknown block' }, { status: 404 });
   }
   const foreign = rejectForeignRefs(['cropId', parsed.data.cropId, getCrop]);
@@ -107,6 +166,22 @@ export const POST: RequestHandler = withClientRecordId(async ({ request }) => {
   const plugin = registry.get(parsed.data.cropPluginId);
   if (!plugin || plugin.plugin.type !== 'crop') {
     return json({ error: 'unknown crop plugin' }, { status: 404 });
+  }
+  const planting = parsed.data.cropId ? getCrop(parsed.data.cropId) : undefined;
+  if (planting && planting.cropPluginId !== parsed.data.cropPluginId) {
+    return json(
+      {
+        error: 'CROP_MISMATCH',
+        message: 'That planting is a different crop. Pick the crop that was harvested.'
+      },
+      { status: 400 }
+    );
+  }
+  if (planting && planting.blockId !== block.id) {
+    return json(
+      { error: 'CROP_MISMATCH', message: 'That planting is on a different block.' },
+      { status: 400 }
+    );
   }
   // UC-16 — harvest-moisture kernel gate (Phase 26A, RULES_VERSION 0.5.2).
   // Only fires when moisturePct is supplied and the resolved archetype
@@ -141,6 +216,42 @@ export const POST: RequestHandler = withClientRecordId(async ({ request }) => {
     );
   }
 
+  const base = await getBaseRegistry();
+  const tasks = parsed.data.taskId ? await import('$lib/db/tasks') : null;
+  // Every await is above this line: the hay-or-not decision reads the
+  // block and its Area as they are now, and a harvest that is not a hay
+  // cut is written with no await in between, so a concurrent Area kind
+  // change or block move cannot slip a hay cut past the gate and guard.
+  const here = getBlock(block.id);
+  if (!here) {
+    return json({ error: 'unknown block' }, { status: 404 });
+  }
+  let hayRulesVersion: string | undefined;
+  const blockPlantings = listCrops({ blockId: here.id, statuses: ['planned', 'active'] });
+  const declaredPlantedHere =
+    planting?.blockId === here.id ||
+    blockPlantings.some((c) => c.cropPluginId === parsed.data.cropPluginId);
+  const hayCut = isHayCut({
+    cropPluginId: parsed.data.cropPluginId,
+    planting,
+    blockPlantings,
+    farm: registry,
+    base,
+    onGrazingLand: harvestOnGrazingLand(here.fieldId, declaredPlantedHere)
+  });
+  if (hayCut) {
+    const auth = currentUser(requestEvent);
+    const hayGate = await hayCutGate(
+      here.id,
+      here.fieldId ?? null,
+      Math.min(occurredAt, Date.now()),
+      auth?.role ?? 'helper',
+      farmTimeZone()
+    );
+    if (!hayGate.ok) return json(hayGate.body, { status: hayGate.status });
+    hayRulesVersion = RULES_VERSION;
+  }
+
   // #324 — PHI (pre-harvest interval) check. Consults recent spray /
   // insecticide / fungicide events on the block against each applied
   // product's PHI. v1 decision: WARN (non-blocking, acknowledgeable) —
@@ -152,17 +263,16 @@ export const POST: RequestHandler = withClientRecordId(async ({ request }) => {
     occurredAt
   );
 
-  const tasks = parsed.data.taskId ? await import('$lib/db/tasks') : null;
-  const event = writeRecord({ request }, () => {
-    const event = insertHarvestEvent({
-      blockId: parsed.data.blockId,
-      cropId: parsed.data.cropId,
-      cropPluginId: parsed.data.cropPluginId,
-      occurredAt,
-      quantity: parsed.data.quantity,
-      lotNumber: parsed.data.lotNumber,
-      moisturePct: parsed.data.moisturePct
-    });
+  const input = {
+    blockId: parsed.data.blockId,
+    cropId: parsed.data.cropId,
+    cropPluginId: parsed.data.cropPluginId,
+    occurredAt,
+    quantity: parsed.data.quantity,
+    lotNumber: parsed.data.lotNumber,
+    moisturePct: parsed.data.moisturePct
+  };
+  const closeTask = (event: HarvestEvent) => {
     const taskId = parsed.data.taskId;
     // Non-fatal; the harvest is recorded even if the task can't be closed.
     if (tasks && taskId) {
@@ -171,7 +281,22 @@ export const POST: RequestHandler = withClientRecordId(async ({ request }) => {
       );
     }
     return event;
-  });
+  };
+  // C-35: a harvest on a forage block is a hay declaration, checked by the
+  // hold guard like a hay cut. Any other harvest is no hold fact.
+  let event;
+  if (hayCut) {
+    const guarded = await tryGuardedHoldWrite(
+      requestEvent,
+      currentUser(requestEvent),
+      () => closeTask(insertHarvestEvent({ ...input, rulesVersion: hayRulesVersion })),
+      { dated: true }
+    );
+    if (!guarded.ok) return guarded.response;
+    event = guarded.value;
+  } else {
+    event = writeRecord({ request }, () => closeTask(insertCropHarvestEvent(input)));
+  }
   return json({
     event,
     phiWarning: phi.decision === 'warn' ? { message: phi.message, conflicts: phi.conflicts } : null

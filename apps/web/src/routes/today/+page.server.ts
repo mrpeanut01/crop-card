@@ -37,9 +37,10 @@ import { derivePriorityAction } from '$lib/today/priorityAction';
 import { deriveSeasonGlance, startOfYear } from '$lib/today/seasonGlance';
 import { deriveWinterizeAlerts, startOfSeason } from '$lib/today/winterizeAlert';
 import { equipmentIdsActiveBefore, listEquipment } from '$lib/db/equipment';
-import { prefsFor } from '$lib/db/userProfile';
+import { prefsFor, farmTimeZone } from '$lib/db/userProfile';
 import { todayYmd, ymdInZone } from '$lib/prefs';
 import { SEASON_DAYS, clampView, clampWindow } from '$lib/today/deck';
+import { coveredLogAlerts, healthPlugins } from '$lib/server/animalRecords';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const OVERDUE_LOOKBACK_DAYS = 30;
@@ -179,6 +180,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     equipmentIdsActiveBefore(startOfSeason(now))
   );
 
+  const coveredLogs = isOwner ? coveredLogAlerts(await healthPlugins(), farmTimeZone(), now) : [];
+
   const plantingNames: Record<string, { name: string; blockId: string }> = {};
   for (const b of blocks)
     for (const p of b.plantings)
@@ -248,7 +251,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     weather,
     canSetFarmLocation: locals.user?.role === 'owner',
     seasonGlance,
-    winterizeAlerts
+    winterizeAlerts,
+    coveredLogs
   };
 };
 

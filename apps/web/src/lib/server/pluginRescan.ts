@@ -50,6 +50,7 @@ import {
   setSupersededAt
 } from '$lib/db/pluginVersions';
 import { resetRegistry } from './registry';
+import { backfillHoldParamsEverywhere } from './holdGuard';
 
 export interface RescanFailure {
   file: string;
@@ -118,6 +119,9 @@ function zodReparse(payloadJson: string): Plugin | null {
 export async function rescanPluginsFromDisk(
   options: { changedByUserId?: string } = {}
 ): Promise<RescanResult> {
+  // C-35 §2: snapshot records saved before C-35 from the data loaded now,
+  // before any change on disk reaches the registry.
+  await backfillHoldParamsEverywhere();
   const probe = new PluginRegistry();
   const load = await loadPluginsFromDirectory(probe, pluginsRoot());
 

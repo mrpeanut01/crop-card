@@ -23,7 +23,7 @@ export interface HistoryStatus {
 
 export interface HistoryFlag {
   id: string;
-  flag: 'food_producing' | 'not_for_slaughter';
+  flag: 'food_producing' | 'not_for_slaughter' | 'presumed_lactating';
   newValue: boolean;
   reason: string;
   changedAt: number;
@@ -63,6 +63,9 @@ function statusText(e: HistoryStatus): string {
 function flagText(f: HistoryFlag): string {
   if (f.flag === 'food_producing') {
     return f.newValue ? 'Marked as a food animal' : 'Marked as not a food animal';
+  }
+  if (f.flag === 'presumed_lactating') {
+    return f.newValue ? 'Counted as possibly in milk again' : 'No longer counted as in milk';
   }
   return f.newValue ? 'Marked not for slaughter' : 'Not-for-slaughter mark removed';
 }

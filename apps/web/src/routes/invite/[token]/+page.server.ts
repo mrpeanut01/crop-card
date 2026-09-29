@@ -57,10 +57,11 @@ export const actions: Actions = {
     const match = user.email ? findRedeemableInvite(token, user.email) : null;
     if (!match) throw error(400, 'invite is no longer valid');
 
-    addAssignment({
+    const assignment = addAssignment({
       ownerId: match.ownerId,
       userId: user.id,
-      roleWithinOwner: match.roleWithinOwner
+      roleWithinOwner: match.roleWithinOwner,
+      fromInvite: true
     });
     markInviteAccepted(match.id);
 
@@ -73,7 +74,7 @@ export const actions: Actions = {
       phone: user.phone,
       isSuperadmin: user.isSuperadmin,
       activeOwnerId: match.ownerId,
-      activeRole: match.roleWithinOwner
+      activeRole: assignment.roleWithinOwner
     });
     throw redirect(303, '/today');
   }

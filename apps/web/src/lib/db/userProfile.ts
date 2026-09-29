@@ -1,7 +1,7 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db } from './client';
 import { helperAssignments, userAvatars, users } from './schema';
-import { unscopedQueryNote } from './tenant';
+import { currentOwnerId, unscopedQueryNote } from './tenant';
 import type { AvatarMime, DisplayUnits } from '$lib/profile';
 import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
 
@@ -119,4 +119,55 @@ export function prefsFor(userId: string | null | undefined): Prefs {
     .where(eq(users.id, userId))
     .get();
   return row ?? DEFAULT_PREFS;
+}
+
+/** The account whose saved zone the active farm's holds are rounded in:
+ *  the earliest active owner assignment. Null outside a farm or for a farm
+ *  with no owner account. */
+export function farmZoneSource(): { userId: string; timeZone: string } | null {
+  const ownerId = currentOwnerId();
+  if (!ownerId) return null;
+  unscopedQueryNote('the farm time zone is the owning account’s saved zone');
+  return (
+    db
+      .select({ userId: users.id, timeZone: users.timeZone })
+      .from(helperAssignments)
+      .innerJoin(users, eq(users.id, helperAssignments.userId))
+      .where(
+        and(
+          eq(helperAssignments.ownerId, ownerId),
+          eq(helperAssignments.roleWithinOwner, 'owner'),
+          eq(helperAssignments.status, 'active')
+        )
+      )
+      .orderBy(asc(helperAssignments.createdAt), asc(helperAssignments.userId))
+      .get() ?? null
+  );
+}
+
+/**
+ * C-35: the time zone every hold on the active farm is rounded in. It is
+ * the saved zone of the account that owns the farm (`farmZoneSource`),
+ * never the zone of whoever is writing, so a helper cannot move a hold's
+ * midnight by changing their own setting.
+ */
+export function farmTimeZone(): string {
+  return farmZoneSource()?.timeZone || DEFAULT_PREFS.timeZone;
+}
+
+/** The farms this account owns (active owner assignments). */
+export function farmsOwnedBy(userId: string): string[] {
+  unscopedQueryNote('a time zone change is checked on every farm this account owns');
+  return db
+    .select({ ownerId: helperAssignments.ownerId })
+    .from(helperAssignments)
+    .where(
+      and(
+        eq(helperAssignments.userId, userId),
+        eq(helperAssignments.roleWithinOwner, 'owner'),
+        eq(helperAssignments.status, 'active')
+      )
+    )
+    .all()
+    .map((r) => r.ownerId);
 }

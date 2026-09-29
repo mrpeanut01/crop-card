@@ -1,0 +1,19 @@
+[
+  "animalGroups",
+  "animalHealthEvents",
+  "animalLocations",
+  "animalProductionLogs",
+  "animalStatusEvents",
+  "animals",
+  "blocks",
+  "fields",
+  "fungicideEvents",
+  "grazingAttestations",
+  "harvestEvents",
+  "hayCuttings",
+  "holdCorrections",
+  "insecticideEvents",
+  "pluginOverrides",
+  "recordDeletions",
+  "sprayEvents"
+]

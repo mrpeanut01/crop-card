@@ -90,8 +90,11 @@ test.describe('animals on onboarding and Areas', () => {
     await form.getByLabel('Holds up to').fill('24');
     await form.getByRole('button', { name: 'Add coop or pen' }).click();
 
+    // The click posts the Area; read it back once the save has landed.
+    await expect
+      .poll(async () => (await areas(page)).find((a) => a.name === 'Hen House'))
+      .toMatchObject({ kind: 'coop_pen', details: { capacity: 24 } });
     const coop = (await areas(page)).find((a) => a.name === 'Hen House');
-    expect(coop).toMatchObject({ kind: 'coop_pen', details: { capacity: 24 } });
 
     const flock = await page.request.post('/api/animal-groups', {
       data: { name: 'Layers', speciesId: 'chicken', headCount: 26, housingFieldId: coop!.id },

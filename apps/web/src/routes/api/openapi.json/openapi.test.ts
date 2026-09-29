@@ -31,6 +31,11 @@ import { _requestSchema as animalMove } from '../animals/move/+server';
 import { _requestSchema as animalStatus } from '../animals/status/+server';
 import { _requestSchema as animalGroupCreate } from '../animal-groups/+server';
 import { _requestSchema as animalGroupPatch } from '../animal-groups/[id]/+server';
+import { _requestSchema as healthRecord } from '../animals/health/record/+server';
+import { _requestSchema as healthEntry } from '../animals/health/[id]/entries/+server';
+import { _requestSchema as productionRecord } from '../animals/production/record/+server';
+import { _requestSchema as productionPatch } from '../animals/production/[id]/+server';
+import { _requestSchema as grazingAttestation } from '../animals/grazing-attestations/+server';
 
 interface Operation {
   parameters?: { $ref?: string; name?: string; in?: string }[];
@@ -88,7 +93,12 @@ describe('openapi.json', () => {
     ['/api/animals/move', 'post', animalMove],
     ['/api/animals/status', 'post', animalStatus],
     ['/api/animal-groups', 'post', animalGroupCreate],
-    ['/api/animal-groups/{id}', 'patch', animalGroupPatch]
+    ['/api/animal-groups/{id}', 'patch', animalGroupPatch],
+    ['/api/animals/health/record', 'post', healthRecord],
+    ['/api/animals/health/{id}/entries', 'post', healthEntry],
+    ['/api/animals/production/record', 'post', productionRecord],
+    ['/api/animals/production/{id}', 'patch', productionPatch],
+    ['/api/animals/grazing-attestations', 'post', grazingAttestation]
   ] as const)('%s %s publishes the schema the route validates with', (path, method, schema) => {
     expect(published(path, method)).toEqual(generated(schema));
   });

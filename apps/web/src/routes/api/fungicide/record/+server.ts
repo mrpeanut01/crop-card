@@ -13,7 +13,8 @@
  */
 
 import { withClientRecordId } from '$lib/server/clientRecordId';
-import { bestEffort, errorText, writeRecord } from '$lib/server/recordWrite';
+import { bestEffort, errorText } from '$lib/server/recordWrite';
+import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { fungicideRecordSchema } from '$lib/records/apiSchemas';
 import { computeRatedDilution } from '$lib/dilution/calculator';
@@ -330,90 +331,97 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
 
   // One transaction: record, sprayer state, stock movements, task close and
   // the replay receipt commit together or not at all.
-  const { persisted, stockResults, stockWarnings } = writeRecord(event, () => {
-    const persisted = insertFungicideEvent({
-      blockId: parsed.data.blockId,
-      cropId: parsed.data.cropId,
-      sprayerId: parsed.data.sprayerId,
-      performedById: performer.id,
-      occurredAt,
-      products: products.map((p) => ({
-        pluginId: p.pluginId,
-        displayName: p.displayName,
-        fracCodes: Array.from(new Set(p.activeIngredients.map((ai) => ai.fracCode))),
-        rate: p.ratePerAcre
-      })),
-      diseaseObservation: parsed.data.disease as DiseaseObservation | undefined,
-      conditions: parsed.data.conditions,
-      reEntryClearAt,
-      preHarvestClearAt,
-      rulesVersion: RULES_VERSION,
-      pluginHashes
-    });
+  const guarded = await tryGuardedHoldWrite(
+    event,
+    auth,
+    () => {
+      const persisted = insertFungicideEvent({
+        blockId: parsed.data.blockId,
+        cropId: parsed.data.cropId,
+        sprayerId: parsed.data.sprayerId,
+        performedById: performer.id,
+        occurredAt,
+        products: products.map((p) => ({
+          pluginId: p.pluginId,
+          displayName: p.displayName,
+          fracCodes: Array.from(new Set(p.activeIngredients.map((ai) => ai.fracCode))),
+          rate: p.ratePerAcre
+        })),
+        diseaseObservation: parsed.data.disease as DiseaseObservation | undefined,
+        conditions: parsed.data.conditions,
+        reEntryClearAt,
+        preHarvestClearAt,
+        rulesVersion: RULES_VERSION,
+        pluginHashes
+      });
 
-    // #321 — update sprayer chemistry history so the next different-chemistry
-    // pass trips the cross-contamination gate. Mirrors the herbicide path's
-    // post-persist recordSpray call.
-    if (sprayer) recordSpray(sprayer.id, FUNGICIDE_LOAD_CLASS, occurredAt);
+      // #321 — update sprayer chemistry history so the next different-chemistry
+      // pass trips the cross-contamination gate. Mirrors the herbicide path's
+      // post-persist recordSpray call.
+      if (sprayer) recordSpray(sprayer.id, FUNGICIDE_LOAD_CLASS, occurredAt);
 
-    const stockResults: DecrementResult[] = [];
-    const stockWarnings: string[] = [];
-    if (parsed.data.tankSizeGallons) {
-      // #319 — scale the decrement by the sprayer's stored calibrated GPA, not
-      // the plugin default. `computeRatedDilution` coalesces null/undefined
-      // calibratedGpa to the plugin's `gpaCalibration` fallback, matching the
-      // herbicide path.
-      const effectiveGpa = sprayer?.calibratedGpa ?? undefined;
-      for (const p of products) {
-        const line = computeRatedDilution(
-          {
-            pluginId: p.pluginId,
-            displayName: p.displayName,
-            ratePerAcre: p.ratePerAcre,
-            gpaCalibration: p.gpaCalibration ?? 15
-          },
-          parsed.data.tankSizeGallons,
-          effectiveGpa
-        );
-        const stockItem = stockByPluginId.get(p.pluginId);
-        if (!stockItem) {
-          stockWarnings.push(
-            `${p.pluginId}: not tracked in stock — add a SKU on /inventory to enable auto-decrement`
+      const stockResults: DecrementResult[] = [];
+      const stockWarnings: string[] = [];
+      if (parsed.data.tankSizeGallons) {
+        // #319 — scale the decrement by the sprayer's stored calibrated GPA, not
+        // the plugin default. `computeRatedDilution` coalesces null/undefined
+        // calibratedGpa to the plugin's `gpaCalibration` fallback, matching the
+        // herbicide path.
+        const effectiveGpa = sprayer?.calibratedGpa ?? undefined;
+        for (const p of products) {
+          const line = computeRatedDilution(
+            {
+              pluginId: p.pluginId,
+              displayName: p.displayName,
+              ratePerAcre: p.ratePerAcre,
+              gpaCalibration: p.gpaCalibration ?? 15
+            },
+            parsed.data.tankSizeGallons,
+            effectiveGpa
           );
-          continue;
+          const stockItem = stockByPluginId.get(p.pluginId);
+          if (!stockItem) {
+            stockWarnings.push(
+              `${p.pluginId}: not tracked in stock — add a SKU on /inventory to enable auto-decrement`
+            );
+            continue;
+          }
+          const dec = bestEffort(() =>
+            decrementForUse({
+              stockItemId: stockItem.id,
+              amount: line.productAmount,
+              unit: line.unit as StockUnit,
+              fungicideEventId: persisted.id,
+              performedById: performer.id,
+              occurredAt
+            })
+          );
+          if (dec.ok) {
+            stockResults.push(dec.value);
+            for (const note of dec.value.notes) stockWarnings.push(`${p.pluginId}: ${note}`);
+          } else {
+            stockWarnings.push(`${p.pluginId}: stock decrement failed — ${errorText(dec.error)}`);
+          }
         }
-        const dec = bestEffort(() =>
-          decrementForUse({
-            stockItemId: stockItem.id,
-            amount: line.productAmount,
-            unit: line.unit as StockUnit,
-            fungicideEventId: persisted.id,
-            performedById: performer.id,
+      }
+
+      const taskId = parsed.data.taskId;
+      if (tasks && taskId) {
+        const closed = bestEffort(() =>
+          tasks.completeTask(taskId, {
+            eventTable: 'fungicide_event',
+            eventId: persisted.id,
             occurredAt
           })
         );
-        if (dec.ok) {
-          stockResults.push(dec.value);
-          for (const note of dec.value.notes) stockWarnings.push(`${p.pluginId}: ${note}`);
-        } else {
-          stockWarnings.push(`${p.pluginId}: stock decrement failed — ${errorText(dec.error)}`);
-        }
+        if (!closed.ok) stockWarnings.push(`task ${taskId} not closed: ${errorText(closed.error)}`);
       }
-    }
-
-    const taskId = parsed.data.taskId;
-    if (tasks && taskId) {
-      const closed = bestEffort(() =>
-        tasks.completeTask(taskId, {
-          eventTable: 'fungicide_event',
-          eventId: persisted.id,
-          occurredAt
-        })
-      );
-      if (!closed.ok) stockWarnings.push(`task ${taskId} not closed: ${errorText(closed.error)}`);
-    }
-    return { persisted, stockResults, stockWarnings };
-  });
+      return { persisted, stockResults, stockWarnings };
+    },
+    { dated: true }
+  );
+  if (!guarded.ok) return guarded.response;
+  const { persisted, stockResults, stockWarnings } = guarded.value;
 
   return json({
     event: persisted,

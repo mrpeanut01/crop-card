@@ -248,6 +248,7 @@ export function getBlock(id: string): BlockWithPlantings | undefined {
   return { ...rowToBlock(row), plantings };
 }
 
+/** @hold-exempt: a new block has no applications, so it holds nothing */
 export function createBlock(input: {
   name: string;
   acres?: number;
@@ -309,6 +310,7 @@ export function createBlock(input: {
   return fresh ? rowToBlock(fresh) : rowToBlock(row);
 }
 
+/** @hold-exempt: geometry only; holds key on the block and its Area, not its shape */
 export function setBlockGeometry(
   blockId: string,
   geometryGeojson: string | null
@@ -578,6 +580,7 @@ export function inferBlockAxes(
   return out;
 }
 
+/** @hold-exempt: layout columns only */
 export function recomputeBlockAxes(): void {
   const rows = db.select().from(blocks).where(tenantWhere(blocks)).all().map(rowToBlock);
   const next = inferBlockAxes(rows);

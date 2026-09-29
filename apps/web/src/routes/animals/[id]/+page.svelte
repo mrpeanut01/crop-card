@@ -5,6 +5,7 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import SpeciesIcon from '$lib/components/animals/SpeciesIcon.svelte';
   import FoodChip from '$lib/components/animals/FoodChip.svelte';
+  import HoldChips from '$lib/components/animals/HoldChips.svelte';
   import FactList from '$lib/components/animals/FactList.svelte';
   import PhotoField from '$lib/components/animals/PhotoField.svelte';
   import MoveForm from '$lib/components/animals/MoveForm.svelte';
@@ -32,7 +33,7 @@
   const animal = $derived(data.animal);
   const layout = $derived(data.profile.layout);
   const label = $derived(animalLabel(animal));
-  const gone = $derived(isOutcomeStatus(animal.status) || animal.status === 'slaughtered');
+  const gone = $derived(isOutcomeStatus(animal.status));
   const archived = $derived(animal.status === 'archived');
   const areaNames = $derived(new Map(data.areas.map((a) => [a.id, a.name])));
   const groupNames = $derived(new Map(data.groupNames.map((g) => [g.id, g.name])));
@@ -162,6 +163,18 @@
       {#if archived}<Pill tone="neutral">Archived</Pill>{/if}
     </div>
 
+    <HoldChips
+      holds={data.holds}
+      foods={data.foods}
+      timeZone={prefs.timeZone}
+      isOwner={data.canEdit}
+      healthHref="/animals/{animal.id}/health"
+    />
+    <nav class="record-links" aria-label="Records">
+      <a class="af-ghost" href="/animals/{animal.id}/health">Health</a>
+      <a class="af-ghost" href="/animals/{animal.id}/log">Eggs, milk and weights</a>
+    </nav>
+
     <FactList {facts} />
 
     <PhotoField
@@ -235,6 +248,7 @@
         <StatusForm
           subjectType="animal"
           subjectId={animal.id}
+          meatChoices={animal.foodProducing}
           onDone={(_, text) => refresh(text)}
         />
       {/if}
@@ -418,5 +432,15 @@
   .warn-list {
     margin: 0;
     padding-left: 2em;
+  }
+  .record-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .record-links a {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
   }
 </style>

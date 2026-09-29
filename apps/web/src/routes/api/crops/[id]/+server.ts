@@ -10,6 +10,7 @@
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { deleteCropCascade } from '$lib/db/admin';
+import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { getBlock } from '$lib/db/blocks';
 import {
   getCrop,
@@ -159,7 +160,7 @@ export const PATCH: RequestHandler = async (event) => {
  * plus any tasks (and their pre/post-tasks) and any stock_movements
  * pointing at the deleted events.
  */
-export const DELETE: RequestHandler = (event) => {
+export const DELETE: RequestHandler = async (event) => {
   if (!event.params.id) throw error(400, 'id required');
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
@@ -167,5 +168,8 @@ export const DELETE: RequestHandler = (event) => {
   }
   const c = getCrop(event.params.id);
   if (!c) throw error(404, 'crop not found');
-  return json(deleteCropCascade(event.params.id));
+  const id = event.params.id;
+  const guarded = await tryGuardedHoldWrite(event, auth, () => deleteCropCascade(id));
+  if (!guarded.ok) return guarded.response;
+  return json(guarded.value);
 };

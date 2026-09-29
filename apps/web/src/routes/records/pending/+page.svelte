@@ -126,6 +126,7 @@
             <span class="attempts">{p.attempts} attempt{p.attempts === 1 ? '' : 's'}</span>
             {#if p.status === 'rejected'}
               <span class="rejected-pill">Rejected{p.lastStatus ? ` (${p.lastStatus})` : ''}</span>
+              {#if p.holdMarker}<span class="rejected-pill">{p.holdMarker}</span>{/if}
             {/if}
             <span class="row-actions">
               {#if p.status === 'rejected'}

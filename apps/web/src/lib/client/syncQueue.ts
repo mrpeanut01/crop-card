@@ -44,6 +44,7 @@ import {
   fetchServerActiveOwner,
   type SubmitFailure
 } from './ownerSync';
+import { holdQueueMarker, type HoldQueueMarker } from '$lib/animals/holdGuardCopy';
 
 export type DrainHalt = 'offline' | 'no-active-owner' | 'owner-unverified' | 'owner-mismatch';
 
@@ -85,7 +86,9 @@ export const ENDPOINT_BY_KIND: Record<PendingRecordKind, string> = {
   scout: '/api/scout/record',
   task: '/api/tasks/close',
   journal: '/api/journal/record',
-  'animal-move': '/api/animals/move'
+  'animal-move': '/api/animals/move',
+  'animal-health': '/api/animals/health/record',
+  'animal-production': '/api/animals/production/record'
 };
 
 /** Rows written before the v3 Dexie upgrade lack `kind`; they were all
@@ -159,19 +162,35 @@ export function primeActiveOwnerId(ownerId: string | null | undefined): void {
   }
 }
 
-/** Kinds whose server gates depend on the application time of day
- *  (insecticide pollinator dusk-to-dawn / residual). Their payloads must
- *  carry the moment the operator recorded, not the drain time. */
-const TIME_GATED_KINDS: ReadonlySet<PendingRecordKind> = new Set(['insecticide']);
+/** Kinds whose server gates and holds depend on when the work was done
+ *  (insecticide pollinator dusk-to-dawn, the grazing and hay rules that
+ *  count from an application or a cut). Their payloads must carry the
+ *  moment the operator recorded, not the drain time. The value is the
+ *  field the endpoint reads that moment from. */
+const TIME_GATED_KINDS: ReadonlyMap<PendingRecordKind, 'occurredAt' | 'mowAt'> = new Map([
+  ['herbicide', 'occurredAt'],
+  ['insecticide', 'occurredAt'],
+  ['fungicide', 'occurredAt'],
+  ['harvest', 'occurredAt'],
+  ['hay-cutting', 'mowAt']
+]);
 
-/** Stamps `occurredAt` on a time-gated payload that lacks one. Pure; other
- *  kinds and payloads that already carry a timestamp pass through as-is. */
+/** Stamps the recorded moment on a time-gated payload that lacks one.
+ *  Pure; other kinds and payloads that already carry it pass through. */
 export function withOccurredAt(kind: PendingRecordKind, payload: unknown, now: number): unknown {
-  if (!TIME_GATED_KINDS.has(kind)) return payload;
+  const field = TIME_GATED_KINDS.get(kind);
+  if (!field) return payload;
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload;
-  const existing = (payload as { occurredAt?: unknown }).occurredAt;
+  const existing = (payload as Record<string, unknown>)[field];
   if (typeof existing === 'number' && Number.isFinite(existing)) return payload;
-  return { ...(payload as Record<string, unknown>), occurredAt: now };
+  return { ...(payload as Record<string, unknown>), [field]: now };
+}
+
+function recordedAt(payload: unknown): number | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const p = payload as { occurredAt?: unknown; mowAt?: unknown };
+  const v = typeof p.occurredAt === 'number' ? p.occurredAt : p.mowAt;
+  return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }
 
 /**
@@ -193,10 +212,7 @@ export async function enqueueRecord(
     id,
     ownerId,
     kind,
-    occurredAt:
-      payload && typeof payload === 'object' && 'occurredAt' in payload
-        ? (payload as { occurredAt: number }).occurredAt
-        : Date.now(),
+    occurredAt: recordedAt(payload) ?? Date.now(),
     payload,
     attempts: 0,
     createdAt: Date.now()
@@ -274,7 +290,14 @@ export async function retryRejectedForActiveOwner(id: string): Promise<boolean> 
 }
 
 type SubmitOutcome =
-  { ok: true } | { ok: false; kind: SubmitFailure; status: number; error: string };
+  | { ok: true }
+  | {
+      ok: false;
+      kind: SubmitFailure;
+      status: number;
+      error: string;
+      holdMarker?: HoldQueueMarker | null;
+    };
 
 async function submitOne(rec: PendingSprayRecord): Promise<SubmitOutcome> {
   let res: Response;
@@ -303,7 +326,8 @@ async function submitOne(rec: PendingSprayRecord): Promise<SubmitOutcome> {
     ok: false,
     kind: classifySubmitFailure(res.status, body),
     status: res.status,
-    error: `HTTP ${res.status}: ${body.slice(0, 240)}`
+    error: `HTTP ${res.status}: ${body.slice(0, 240)}`,
+    holdMarker: holdQueueMarker(res.status, body)
   };
 }
 
@@ -378,7 +402,8 @@ async function drainOnce(): Promise<DrainResult> {
       attempts: rec.attempts + 1,
       lastErrorAt: Date.now(),
       lastError: outcome.error,
-      lastStatus: outcome.status
+      lastStatus: outcome.status,
+      holdMarker: outcome.holdMarker ?? undefined
     };
     if (outcome.kind === 'rejected') {
       patch.status = 'rejected';

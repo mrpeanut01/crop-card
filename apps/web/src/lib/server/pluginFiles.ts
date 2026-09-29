@@ -25,6 +25,19 @@ import {
 } from '$lib/db/pluginVersions';
 import { effectiveOverride, HIDDEN_PAYLOAD, insertOverridePayload } from '$lib/db/pluginOverrides';
 import { getBaseRegistry, getRegistry, resetRegistry } from './registry';
+import { pluginShortensHold, type HoldFieldChange } from '$lib/plugins/holdFields';
+import { backfillHoldParamsEverywhere, guardedHoldWrite, type HoldWriteContext } from './holdGuard';
+
+/** C-35 §3: a farm copy that would shorten a hold on the shared plugin. */
+export class PluginShortensHoldError extends Error {
+  readonly code = 'PLUGIN_SHORTENS_HOLD';
+  constructor(readonly changes: HoldFieldChange[]) {
+    super(
+      `This farm copy would shorten a hold (${changes[0].field}: ${changes[0].shared} → ${changes[0].farm}). Farm copies can only keep or lengthen holds.`
+    );
+    this.name = 'PluginShortensHoldError';
+  }
+}
 
 export class PluginAuthorError extends Error {
   constructor(
@@ -119,6 +132,10 @@ export async function writePluginFile(
     };
   }
 
+  // C-35 §2: records with no snapshot keep this plugin's current data as
+  // their floor before the shared library changes.
+  await backfillHoldParamsEverywhere();
+
   const candidateVersion = data.version || '1.0.0';
   let effectiveVersion = candidateVersion;
   let bumped = false;
@@ -183,7 +200,17 @@ async function dryRunRegister(live: PluginRegistry, data: Plugin): Promise<void>
  * Owner's `plugin_overrides` and replaces the shared plugin for that Owner
  * only. The shared library on disk is untouched (Invariant 6).
  */
-export async function writeOwnerPlugin(plugin: unknown): Promise<WritePluginResult> {
+export async function writeOwnerPlugin(
+  plugin: unknown,
+  hold: HoldWriteContext
+): Promise<WritePluginResult> {
+  const pluginId =
+    plugin && typeof plugin === 'object' && 'pluginId' in plugin
+      ? String((plugin as { pluginId: unknown }).pluginId)
+      : null;
+  const shared = pluginId ? (await getBaseRegistry()).get(pluginId)?.plugin : undefined;
+  const shortens = shared ? pluginShortensHold(shared, plugin) : [];
+  if (shortens.length > 0) throw new PluginShortensHoldError(shortens);
   const parsed = pluginSchema.safeParse(plugin);
   if (!parsed.success) {
     throw new PluginAuthorError(
@@ -226,7 +253,12 @@ export async function writeOwnerPlugin(plugin: unknown): Promise<WritePluginResu
     bumped = true;
   }
   const payloadForWrite: Plugin = { ...data, version: effectiveVersion };
-  const row = insertOverridePayload(data.pluginId, data.type, JSON.stringify(payloadForWrite));
+  const row = await guardedHoldWrite(
+    hold.event,
+    hold.user,
+    () => insertOverridePayload(data.pluginId, data.type, JSON.stringify(payloadForWrite)),
+    { reloadRegistry: true, resolvesUnknown: true }
+  );
   return {
     path: overridePath(data.pluginId),
     pluginId: data.pluginId,

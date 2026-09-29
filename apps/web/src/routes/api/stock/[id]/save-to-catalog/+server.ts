@@ -13,7 +13,12 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { getStockItem, updateStockItem } from '$lib/db/stock';
 import { getTaxonomyTerm } from '$lib/db/taxonomy';
-import { PluginAuthorError, writeOwnerPlugin } from '$lib/server/pluginFiles';
+import {
+  PluginAuthorError,
+  PluginShortensHoldError,
+  writeOwnerPlugin
+} from '$lib/server/pluginFiles';
+import { AnimalRuleError } from '$lib/server/animals';
 import { requireOwner } from '$lib/server/auth';
 import { prefsFor } from '$lib/db/userProfile';
 import { todayYmd } from '$lib/prefs';
@@ -98,13 +103,17 @@ export const POST: RequestHandler = async (event) => {
   if (Object.keys(plantingGuide).length > 0) plugin.plantingGuide = plantingGuide;
 
   try {
-    const written = await writeOwnerPlugin(plugin);
+    const written = await writeOwnerPlugin(plugin, { event, user: owner });
     const updated = updateStockItem(item.id, { pluginId: written.pluginId });
     return json({ ok: true, pluginId: written.pluginId, path: written.path, item: updated });
   } catch (e) {
     if (e instanceof PluginAuthorError) {
       return json({ error: e.message, code: e.code, issues: e.issues }, { status: 400 });
     }
+    if (e instanceof PluginShortensHoldError) {
+      return json({ error: e.message, code: e.code, changes: e.changes }, { status: 422 });
+    }
+    if (e instanceof AnimalRuleError) return e.toResponse();
     return json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 };

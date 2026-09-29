@@ -1,7 +1,8 @@
 /**
  * POST /api/admin/wipe
  *
- * Owner-only "start from zero" reset. Wipes every farm-scoped row
+ * Owner-only "start from zero" reset (interactive owner only: no API
+ * token, no impersonation). Wipes every farm-scoped row
  * (events, tasks, crops, blocks, equipment, stock, sprayers,
  * weather cache) but preserves users + plugins (which live on disk).
  *
@@ -15,6 +16,7 @@ import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { wipeAllData } from '$lib/db/admin';
 import { currentUser } from '$lib/server/auth';
+import { isInteractiveOwner } from '$lib/server/interactiveOwner';
 
 const inputSchema = z.object({
   confirm: z.literal('WIPE-EVERYTHING'),
@@ -26,6 +28,17 @@ export const POST: RequestHandler = async (event) => {
   const auth = currentUser(event);
   if (!auth) throw error(401, 'sign-in required');
   if (auth.role !== 'owner') throw error(403, 'owner role required for wipe');
+  // C-35 §0: wiping erases every withdrawal and grazing hold with the
+  // records, so an API token or an impersonating superadmin never can.
+  if (!isInteractiveOwner(event, auth)) {
+    return json(
+      {
+        error: 'Only the owner, signed in on their own account, can wipe the farm.',
+        code: 'INTERACTIVE_OWNER_ONLY'
+      },
+      { status: 403 }
+    );
+  }
 
   let body: unknown;
   try {

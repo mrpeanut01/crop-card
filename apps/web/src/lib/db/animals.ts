@@ -267,6 +267,7 @@ export function setMembersHousing(groupId: string, housingFieldId: string | null
     .run().changes;
 }
 
+/** @hold-exempt: writes the photo reference only; no hold reads it */
 export function setAnimalPhoto(id: string, photoRef: string | null, now = Date.now()): boolean {
   return (
     db
@@ -286,7 +287,9 @@ export function getAnimalPhoto(id: string): string | null {
   return row?.photoRef ?? null;
 }
 
-export type AnimalFlag = 'food_producing' | 'not_for_slaughter';
+/** `presumed_lactating` records a sex change that ends the lactating
+ *  presumption (C-10), which shortens grazing holds. */
+export type AnimalFlag = 'food_producing' | 'not_for_slaughter' | 'presumed_lactating';
 
 export interface FlagChange {
   id: string;
@@ -343,10 +346,12 @@ export function insertFlagChange(input: {
 }
 
 /** Changes an animal's flag and writes its audit row. Returns null when the
- *  value is unchanged (nothing is written). */
+ *  value is unchanged (nothing is written).
+ * @hold-exempt: the food-producing flag is never read by a hold (32C ruling)
+ */
 export function setAnimalFlag(
   id: string,
-  flag: AnimalFlag,
+  flag: 'food_producing' | 'not_for_slaughter',
   value: boolean,
   reason: string,
   changedBy: string | null,

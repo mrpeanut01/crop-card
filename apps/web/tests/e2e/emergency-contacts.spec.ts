@@ -30,6 +30,10 @@ test.describe('emergency contacts', () => {
     await page.getByRole('button', { name: 'Save changes' }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
     await expect(page.getByLabel('Contact 2 name')).toHaveValue('Dr. Reyes');
+    // The save reloads the page data and redraws the form; typing before
+    // that lands would be appended to the old value.
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByLabel('Contact 2 phone')).toHaveValue('540-555-0101');
 
     // Saving re-renders the form from the reloaded data; edit only once it has settled.
     await page.waitForLoadState('networkidle');

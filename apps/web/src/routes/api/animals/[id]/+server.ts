@@ -1,8 +1,8 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { db } from '$lib/db/client';
 import {
   deleteAnimalIfEmpty,
   getAnimal,
+  insertFlagChange,
   listFlagChanges,
   setAnimalFlag,
   setAnimalPhoto,
@@ -15,7 +15,10 @@ import { animalPatchSchema } from '$lib/animals/apiSchemas';
 import { isOutcomeStatus } from '$lib/animals/model';
 import { sanitizePhotoDataUrl } from '$lib/journal/photo';
 import { requireMutator, requireOwner } from '$lib/server/auth';
+import { isInteractiveOwner } from '$lib/server/interactiveOwner';
+import { presumeLactating } from '$lib/safety/grazingInterval';
 import { getSpecies, parseBody, statusEventsWithLocks, tagWarnings } from '$lib/server/animals';
+import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 
 const notFound = () => json({ error: 'animal not found' }, { status: 404 });
 
@@ -53,7 +56,7 @@ export const PATCH: RequestHandler = async (event) => {
       { status: 403 }
     );
   }
-  const gone = isOutcomeStatus(animal.status) || animal.status === 'slaughtered';
+  const gone = isOutcomeStatus(animal.status);
   if (gone && keys.some((k) => !GONE_KEYS.has(k))) {
     return json(
       {
@@ -77,8 +80,37 @@ export const PATCH: RequestHandler = async (event) => {
       { status: 409 }
     );
   }
+  const species = await getSpecies(animal.speciesId);
+  const speciesProducts = species?.products ?? ['milk'];
+  const lactatingBefore = presumeLactating({ speciesProducts, sex: animal.sex });
+  const lactatingAfter =
+    input.sex === undefined
+      ? lactatingBefore
+      : presumeLactating({ speciesProducts, sex: input.sex });
+  const endsLactating = lactatingBefore && !lactatingAfter;
+  if (endsLactating) {
+    if (!isInteractiveOwner(event, user)) {
+      return json(
+        {
+          error:
+            'Changing this animal to male ends the "may be in milk" reading, which shortens grazing holds. Only the owner, signed in on their own account, can do that.',
+          code: 'OWNER_ONLY'
+        },
+        { status: 403 }
+      );
+    }
+    if (!input.flagReason) {
+      return json(
+        {
+          error:
+            'Changing this animal to male shortens grazing holds on its milk and meat. Say why the sex is changing.',
+          code: 'REASON_REQUIRED'
+        },
+        { status: 400 }
+      );
+    }
+  }
   if (input.notForSlaughter !== undefined) {
-    const species = await getSpecies(animal.speciesId);
     if (!species?.notForSlaughterToggle) {
       return json(
         { error: 'This species has no "not for slaughter" setting.', code: 'NOT_OFFERED' },
@@ -109,7 +141,7 @@ export const PATCH: RequestHandler = async (event) => {
   }
 
   const flagChanges: FlagChange[] = [];
-  db.transaction(() => {
+  const guarded = await tryGuardedHoldWrite(event, user, () => {
     const { photo: _photo, foodProducing, notForSlaughter, flagReason, ...rest } = input;
     updateAnimal(animal.id, rest);
     if (rest.status !== undefined && rest.status !== animal.status) {
@@ -136,7 +168,21 @@ export const PATCH: RequestHandler = async (event) => {
       if (change) flagChanges.push(change);
     }
     if (photo !== undefined) setAnimalPhoto(animal.id, photo);
+    if (lactatingBefore !== lactatingAfter) {
+      flagChanges.push(
+        insertFlagChange({
+          subjectType: 'animal',
+          subjectId: animal.id,
+          flag: 'presumed_lactating',
+          oldValue: lactatingBefore,
+          newValue: lactatingAfter,
+          reason: flagReason ?? `Sex changed to ${input.sex}`,
+          changedBy: user.id
+        })
+      );
+    }
   });
+  if (!guarded.ok) return guarded.response;
 
   return json({
     animal: getAnimal(animal.id),
@@ -146,11 +192,13 @@ export const PATCH: RequestHandler = async (event) => {
 };
 
 /** Deletes a mistaken entry. Anything with a record is archived instead. */
-export const DELETE: RequestHandler = (event) => {
-  requireOwner(event);
+export const DELETE: RequestHandler = async (event) => {
+  const user = requireOwner(event);
   const id = event.params.id;
   if (!id) return notFound();
-  const outcome = deleteAnimalIfEmpty(id);
+  const guarded = await tryGuardedHoldWrite(event, user, () => deleteAnimalIfEmpty(id));
+  if (!guarded.ok) return guarded.response;
+  const outcome = guarded.value;
   if (outcome === 'not-found') return notFound();
   if (outcome === 'has-records') {
     return json(

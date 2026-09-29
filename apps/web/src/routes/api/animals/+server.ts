@@ -5,6 +5,10 @@ import { animalCreateSchema } from '$lib/animals/apiSchemas';
 import { requireOwner } from '$lib/server/auth';
 import { assertAnimalSubject, rejectForeignRefs } from '$lib/server/foreignRefs';
 import { createAnimalWithHousing, getSpecies, parseBody, ruleResponse } from '$lib/server/animals';
+import { getAnimalGroupSummary } from '$lib/db/animalGroups';
+import { farmTimeZone } from '$lib/db/userProfile';
+import { grazingPlacementGate } from '$lib/server/grazingGate';
+import { guardedHoldWrite } from '$lib/server/holdGuard';
 
 const LIST_STATUSES: readonly AnimalListStatus[] = ['active', 'gone', 'archived', 'all'];
 
@@ -37,9 +41,29 @@ export const POST: RequestHandler = async (event) => {
   if (foreign) return foreign;
   const species = await getSpecies(input.speciesId);
   if (!species) return json({ error: 'unknown speciesId' }, { status: 400 });
+  const group = input.groupId ? getAnimalGroupSummary(input.groupId) : undefined;
+  const now = Date.now();
+  const gate = await grazingPlacementGate(
+    {
+      fieldId: group ? group.housingFieldId : (input.housingFieldId ?? null),
+      speciesId: species.pluginId,
+      sex: input.sex ?? null,
+      foodProducing: species.foodProducingDefault || (group?.effectiveFoodProducing ?? false),
+      kind: 'animal'
+    },
+    user.role,
+    farmTimeZone(),
+    now
+  );
+  if (!gate.ok) return json(gate.body, { status: gate.status });
   try {
-    const { animal, warnings } = createAnimalWithHousing(input, species, user.id);
-    return json({ animal, warnings }, { status: 201 });
+    const { animal, warnings } = await guardedHoldWrite(event, user, () =>
+      createAnimalWithHousing(input, species, user.id, now, {
+        rulesVersion: gate.rulesVersion ?? null,
+        exposureFloor: gate.exposureFloor ?? null
+      })
+    );
+    return json({ animal, warnings, grazingWarnings: gate.warnings }, { status: 201 });
   } catch (e) {
     return ruleResponse(e);
   }

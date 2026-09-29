@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './lib/test';
+import { reloadUnderServiceWorker } from './lib/serviceWorker';
 import { createOnboardedFarm, originOf, signInNewUser } from './lib/newOwner';
 
 // Phase 32A: a garden household with no soil test sees one "Add a soil
@@ -96,11 +97,7 @@ test.describe('soil tests', () => {
     const soilId = decodeURIComponent(href.split('/so_')[1]);
 
     await page.goto('/today');
-    await page.evaluate(async () => {
-      await navigator.serviceWorker.ready;
-    });
-    await page.reload();
-    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    await reloadUnderServiceWorker(page);
     await expect.poll(() => snapshotHas(page, soilId), { timeout: 30_000 }).toBe(true);
     await expect.poll(() => cardsDataCached(page), { timeout: 30_000 }).toBeGreaterThan(0);
 

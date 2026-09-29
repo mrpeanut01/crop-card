@@ -18,6 +18,7 @@ import { listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { activeFungicideReEntryRestrictions, listFungicideEvents } from '$lib/db/fungicideEvents';
 import { getRegistry } from '$lib/server/registry';
+import { loadSprayPastureContext } from '$lib/server/pastureAnimals';
 import { listSprayers } from '$lib/server/sprayers';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { canSetUp, setupAreas } from '$lib/server/setupContext';
@@ -72,6 +73,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   return {
     fungicides: fungicidePlugins,
+    pasture: await loadSprayPastureContext(blocks, registry),
     priorFungicideByBlock,
     blocks: blocks.map((b) => ({
       id: b.id,

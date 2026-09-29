@@ -163,6 +163,7 @@ export function getSprayEvent(id: string): SprayEvent | undefined {
  * The 48-hour lock kicks in on first read after the window passes — recording
  * the lockedAt timestamp once and refusing future edits. Returns the lock
  * timestamp if locked, undefined if still mutable.
+ * @hold-exempt: stamps locked_at only
  */
 export function evaluateLock(event: SprayEvent, now: number = Date.now()): number | undefined {
   if (event.lockedAt) return event.lockedAt;

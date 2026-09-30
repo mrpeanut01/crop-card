@@ -1,4 +1,100 @@
 {
   "$comment": "Phase 32A. Quotes for every withdrawal value on plugins/animal-health/*.json, keyed pluginId → withdrawal.<speciesId>.<class>.<meatDays|milkHours|eggsDays|doNotUseFor>. Each entry is { url, publisher, date, quote, note? } read from the product label (FDA Animal Drugs @ FDA, DailyMed or the manufacturer label). A product ships only once every food species on its label has a sourced withdrawal. See docs/research/label-research-prompt.md Task 9.",
+  "prohibitedExtraLabel": {
+    "url": "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-E/part-530/subpart-E/section-530.41",
+    "publisher": "eCFR, 21 CFR 530.41 Drugs prohibited for extralabel use in animals",
+    "date": "2026-09-28",
+    "quote": "(a) The following drugs, families of drugs, and substances are prohibited for extralabel animal and human drug uses in food-producing animals. (1) Chloramphenicol; (2) Clenbuterol; (3) Diethylstilbestrol (DES); (4) Dimetridazole; (5) Ipronidazole; (6) Other nitroimidazoles; (7) Furazolidone. (8) Nitrofurazone. (9) Sulfonamide drugs in lactating dairy cattle (except approved use of sulfadimethoxine, sulfabromomethazine, and sulfaethoxypyridazine); (10) Fluoroquinolones; and (11) Glycopeptides. (12) Phenylbutazone in female dairy cattle 20 months of age or older. (13) Cephalosporins (not including cephapirin) in cattle, swine, chickens, or turkeys: (i) For disease prevention purposes; (ii) At unapproved doses, frequencies, durations, or routes of administration; or (iii) If the drug is not approved for that species and production class. (b) ... [Reserved] (c) [Reserved] (d) The following drugs, or classes of drugs, that are approved for treating or preventing influenza A, are prohibited from extralabel use in chickens, turkeys, and ducks: (1) Adamantanes. (2) Neuraminidase inhibitors.",
+    "note": "Text fetched from the eCFR versioner API (title 21, part 530, section 530.41), current through 2026-09-28; last substantive amendment 2016-12-31 (77 FR 745, Jan. 6, 2012 is the last cited rulemaking). Paragraph (b) is [Reserved] (nonfood animals); the influenza A drugs are paragraph (d), not (b).",
+    "drugs": [
+      {
+        "cfr": "(a)(1)",
+        "name": "Chloramphenicol"
+      },
+      {
+        "cfr": "(a)(2)",
+        "name": "Clenbuterol"
+      },
+      {
+        "cfr": "(a)(3)",
+        "name": "Diethylstilbestrol (DES)"
+      },
+      {
+        "cfr": "(a)(4)",
+        "name": "Dimetridazole"
+      },
+      {
+        "cfr": "(a)(5)",
+        "name": "Ipronidazole"
+      },
+      {
+        "cfr": "(a)(6)",
+        "name": "Other nitroimidazoles"
+      },
+      {
+        "cfr": "(a)(7)",
+        "name": "Furazolidone"
+      },
+      {
+        "cfr": "(a)(8)",
+        "name": "Nitrofurazone"
+      },
+      {
+        "cfr": "(a)(9)",
+        "name": "Sulfonamide drugs",
+        "species": [
+          "cattle"
+        ],
+        "conditions": "lactating dairy cattle; except approved use of sulfadimethoxine, sulfabromomethazine and sulfaethoxypyridazine"
+      },
+      {
+        "cfr": "(a)(10)",
+        "name": "Fluoroquinolones"
+      },
+      {
+        "cfr": "(a)(11)",
+        "name": "Glycopeptides"
+      },
+      {
+        "cfr": "(a)(12)",
+        "name": "Phenylbutazone",
+        "species": [
+          "cattle"
+        ],
+        "conditions": "female dairy cattle 20 months of age or older"
+      },
+      {
+        "cfr": "(a)(13)",
+        "name": "Cephalosporins (not including cephapirin)",
+        "species": [
+          "cattle",
+          "swine",
+          "chickens",
+          "turkeys"
+        ],
+        "conditions": "for disease prevention; at unapproved doses, frequencies, durations or routes; or if not approved for that species and production class"
+      },
+      {
+        "cfr": "(d)(1)",
+        "name": "Adamantanes",
+        "species": [
+          "chickens",
+          "turkeys",
+          "ducks"
+        ],
+        "conditions": "approved for treating or preventing influenza A"
+      },
+      {
+        "cfr": "(d)(2)",
+        "name": "Neuraminidase inhibitors",
+        "species": [
+          "chickens",
+          "turkeys",
+          "ducks"
+        ],
+        "conditions": "approved for treating or preventing influenza A"
+      }
+    ]
+  },
   "entries": {}
 }

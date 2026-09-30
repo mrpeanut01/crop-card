@@ -5,6 +5,7 @@ import { farmTimeZone } from '$lib/db/userProfile';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { withClientRecordId } from '$lib/server/clientRecordId';
+import { afterSeedStartTaskDone } from '$lib/server/seedStartTasks';
 import { writeRecord } from '$lib/server/recordWrite';
 import { careMetaOf, closeCareTask } from '$lib/server/carePlans';
 
@@ -63,10 +64,12 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   }
   const now = Date.now();
   const at = Math.min(now, Math.max(now - 30 * DAY_MS, parsed.data.occurredAt ?? now));
-  const task = writeRecord(event, () =>
-    action === 'complete'
-      ? completeTask(taskId, { occurredAt: at })
-      : abortTask(taskId, reason?.trim() || undefined, true, at)
-  );
-  return json({ task, alreadyClosed: false });
+  const { task, seedStart } = writeRecord(event, () => {
+    if (action !== 'complete') {
+      return { task: abortTask(taskId, reason?.trim() || undefined, true, at), seedStart: null };
+    }
+    const task = completeTask(taskId, { occurredAt: at });
+    return { task, seedStart: afterSeedStartTaskDone(task, at) };
+  });
+  return json({ task, alreadyClosed: false, ...(seedStart ? { seedStart } : {}) });
 });

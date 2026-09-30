@@ -13,12 +13,17 @@ import {
 } from '$lib/server/aiPlantingWindow';
 import { currentOwnerId } from '$lib/db/tenant';
 import { frostDatesIsoForYear, getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
-import { deterministicPlantingWindow } from '$lib/plan/plantingWindow';
+import { deterministicPlantingWindow, type FrostDatesIso } from '$lib/plan/plantingWindow';
+import { getBlock } from '$lib/db/blocks';
+import { loadEffectiveFrostByBlock, localDay } from '$lib/server/blockFrost.server';
+import { effectiveFrostSummary, type EffectiveFrost } from '$lib/climate/effectiveFrost';
 import type { CropPlugin } from '$lib/plugins/schemas';
 
 const bodySchema = z.object({
   cropPluginId: z.string().min(1),
-  year: z.number().int().min(2000).max(2100)
+  year: z.number().int().min(2000).max(2100),
+  /** Phase 32E: the bed, so its covers shift the window. */
+  blockId: z.string().min(1).optional()
 });
 
 export const POST: RequestHandler = async (event) => {
@@ -33,7 +38,10 @@ export const POST: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
-  const { cropPluginId, year } = parsed.data;
+  const { cropPluginId, year, blockId } = parsed.data;
+  if (blockId && !getBlock(blockId)) {
+    return json({ error: 'unknown blockId' }, { status: 400 });
+  }
 
   const registry = await getRegistry();
   const entry = registry.get(cropPluginId);
@@ -42,7 +50,13 @@ export const POST: RequestHandler = async (event) => {
   }
   const crop = entry.plugin as CropPlugin;
 
-  const frost = frostDatesIsoForYear(year);
+  const farmFrost = frostDatesIsoForYear(year);
+  const bed = blockId ? loadEffectiveFrostByBlock([blockId], year)[blockId] : null;
+  const frost: FrostDatesIso & { frostFree?: boolean } = bed
+    ? bed.frostFree
+      ? { lastSpring: `${year}-01-01`, firstFall: `${year}-12-31`, frostFree: true }
+      : { lastSpring: localDay(bed.lastSpringFrostMs), firstFall: localDay(bed.firstFallFrostMs) }
+    : farmFrost;
   const cropFacts = {
     cropFamily: crop.cropFamily ?? null,
     soilTempMinF: crop.plantingGuide?.soilTempMinF ?? null,
@@ -55,13 +69,15 @@ export const POST: RequestHandler = async (event) => {
     ...cropFacts,
     year,
     frost,
+    coverNote: bed ? effectiveFrostSummary(bed) : null,
     latLon: hasFarmLatLon() ? getFarmLatLon() : null,
     baseline
   };
 
   const cacheKey = plantingWindowCacheKey(currentOwnerId() ?? user.id, input);
   const cached = getCachedWindow(cacheKey);
-  if (cached) return json({ window: cached, provenance: 'ai', cached: true });
+  const frostView = { ...frost, farm: farmFrost, cover: bed ? bedCover(bed) : null };
+  if (cached) return json({ window: cached, frost: frostView, provenance: 'ai', cached: true });
 
   const tried = await tryAiWithGuard({
     endpoint: 'planting-window',
@@ -74,6 +90,7 @@ export const POST: RequestHandler = async (event) => {
     recordFallback(user.id, 'planting-window', tried.fallbackReason);
     return json({
       window: baseline,
+      frost: frostView,
       provenance: 'fallback',
       fallbackReason: tried.fallbackReason,
       message: tried.fallbackMessage
@@ -93,5 +110,18 @@ export const POST: RequestHandler = async (event) => {
     provenance: 'ai'
   });
   setCachedWindow(cacheKey, window);
-  return json({ window, provenance: 'ai' });
+  return json({ window, frost: frostView, provenance: 'ai' });
 };
+
+function bedCover(e: EffectiveFrost) {
+  return {
+    summary: effectiveFrostSummary(e),
+    springShiftDays: e.springShiftDays,
+    fallShiftDays: e.fallShiftDays,
+    springBy: e.springBy,
+    fallBy: e.fallBy,
+    provenance: e.provenance,
+    unknownShift: e.unknownShift,
+    frostFree: e.frostFree
+  };
+}

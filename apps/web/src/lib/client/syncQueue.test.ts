@@ -68,7 +68,10 @@ describe('#316 — kind → endpoint routing', () => {
       'animal-move': '/api/animals/move',
       'animal-health': '/api/animals/health/record',
       'animal-production': '/api/animals/production/record',
-      'feed-use': '/api/stock/:id/use'
+      'feed-use': '/api/stock/:id/use',
+      'seed-start': '/api/seed-starts/:id/progress',
+      irrigation: '/api/irrigation',
+      'rain-gauge': '/api/rain-gauge'
     });
     const endpoints = Object.values(ENDPOINT_BY_KIND);
     expect(new Set(endpoints).size).toBe(endpoints.length);

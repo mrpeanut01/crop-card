@@ -303,6 +303,11 @@ export function pendingSummary(kind: string | undefined, payload: unknown): stri
   if (kind === 'feed-use') {
     return typeof p.lb === 'number' ? `Feed used, ${p.lb} lb` : 'Feed used';
   }
+  if (kind === 'seed-start') {
+    return typeof p.germinatedCount === 'number'
+      ? `${p.germinatedCount} seedlings up`
+      : 'Tray progress';
+  }
   return null;
 }
 
@@ -318,5 +323,8 @@ export const KIND_LABEL: Record<string, string> = {
   'animal-move': 'Animal move',
   'animal-health': 'Animal treatment',
   'animal-production': 'Eggs, milk or weight',
-  'feed-use': 'Feed use'
+  'feed-use': 'Feed use',
+  'seed-start': 'Seed tray',
+  irrigation: 'Watering',
+  'rain-gauge': 'Rain gauge reading'
 };

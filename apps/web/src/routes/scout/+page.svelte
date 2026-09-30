@@ -34,6 +34,7 @@
   import { emptyAreas } from '$lib/setup/spot';
   import type { SetupSpotResult } from '$lib/setup/types';
   import QueuedBadge from '$lib/components/ui/QueuedBadge.svelte';
+  import WatchForStrip from '$lib/components/scout/WatchForStrip.svelte';
 
   interface QueuedObservation {
     id: string;
@@ -275,6 +276,14 @@
   Jot down what you notice on a walk. Counting weeds? The weed count below tells you whether it's
   time to spray.
 </p>
+
+{#await data.degreeDays then degreeDays}
+  <WatchForStrip
+    result={degreeDays}
+    canRecordCatch={data.canRecordCatch}
+    todayYmd={data.todayYmd}
+  />
+{/await}
 
 {#if showPicker}
   <div class="card-wrap">

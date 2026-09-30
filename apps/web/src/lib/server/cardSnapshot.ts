@@ -4,6 +4,7 @@
  * pesticide plugins come from the Owner's registry view.
  */
 
+import { listOpenSeedStarts } from '$lib/db/seedStarts';
 import { createHash } from 'node:crypto';
 import {
   FARM_SNAPSHOT_VERSION,
@@ -200,7 +201,12 @@ export function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
           rowSpacingIn: p.plantingGuide.rowSpacingIn,
           inRowSpacingIn: p.plantingGuide.inRowSpacingIn,
           seedDepthIn: p.plantingGuide.seedDepthIn,
-          soilTempMinF: p.plantingGuide.soilTempMinF
+          soilTempMinF: p.plantingGuide.soilTempMinF,
+          establishment: p.plantingGuide.establishment,
+          startIndoorsWeeks: p.plantingGuide.startIndoorsWeeks,
+          hardenOffDays: p.plantingGuide.hardenOffDays,
+          germinationTempF: p.plantingGuide.germinationTempF,
+          dtmFrom: p.plantingGuide.dtmFrom
         }
       : undefined,
     harvestIndicators: p.harvestIndicators,
@@ -447,7 +453,9 @@ export function engineHarvestWindow(
       blockId: p.blockId,
       cropPluginId: p.cropPluginId,
       varietyDisplayName: p.varietyDisplayName,
-      plantingDate
+      plantingDate,
+      establishment: p.establishment ?? null,
+      sownIndoorsAt: p.sownIndoorsAt ?? null
     },
     crop
   ).filter((e) => e.kind === 'harvest-window');
@@ -463,6 +471,23 @@ export function engineHarvestWindow(
  *  the hour, and `snapshotStateKey` can name it without building. */
 export function snapshotWindowTime(now: number): number {
   return Math.floor(now / HOUR_MS) * HOUR_MS;
+}
+
+/** Open trays (not transplanted) on each planting, in one query (E1-18). */
+export function attachOpenTrays(plantings: SnapshotPlanting[]): void {
+  const byCrop = new Map<string, SnapshotPlanting>(plantings.map((p) => [p.id, p]));
+  for (const t of listOpenSeedStarts()) {
+    const p = byCrop.get(t.cropId);
+    if (!p) continue;
+    (p.trays ??= []).push({
+      id: t.id,
+      trayLabel: t.trayLabel,
+      cells: t.cells,
+      seedsPerCell: t.seedsPerCell,
+      germinatedCount: t.germinatedCount,
+      sownAt: t.sownAt
+    });
+  }
 }
 
 export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promise<FarmSnapshot> {
@@ -482,6 +507,7 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     const rec = registry.get(p.cropPluginId);
     if (rec?.plugin.type === 'crop') p.harvestWindow = engineHarvestWindow(p, rec.plugin);
   }
+  attachOpenTrays(plantings);
 
   const stockItems = listStockItems();
   const sprayProducts: Record<string, SnapshotSprayProduct> = {};

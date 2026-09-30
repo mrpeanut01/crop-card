@@ -11,7 +11,7 @@ import type { RecipeRequest, RecipeResponse } from '$lib/garden/api';
 import { occupancyIntervals } from '$lib/garden/occupancy';
 import { applyRecipe } from '$lib/garden/recipes';
 import type { BedRecipePlugin, CropPlugin } from '$lib/plugins/schemas';
-import { designFrostForYear } from '$lib/server/gardenDesignLoad';
+import { designFrostForBed } from '$lib/server/gardenDesignLoad';
 import {
   createPlacedPlantings,
   gardenFailure,
@@ -46,7 +46,7 @@ export function applyBedRecipe(
   const recipe = findRecipe(req.recipePluginId);
   if (!recipe) return gardenFailure(404, `There's no bed recipe called ${req.recipePluginId}.`);
 
-  const frost = designFrostForYear(req.seasonYear);
+  const frost = designFrostForBed(bed.block.id, req.seasonYear);
   const intervals = occupancyIntervals(
     listCrops({ blockId: bed.block.id }).map((c) =>
       placedPlantingFromCrop(c, crops[c.cropPluginId])

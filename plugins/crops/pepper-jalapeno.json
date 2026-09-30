@@ -14,7 +14,8 @@
     "inRowSpacingIn": {
       "min": 18,
       "max": 24
-    }
+    },
+    "establishment": "transplant"
   },
   "harvestIndicators": [
     "Dark green firm fruit (4 in)",

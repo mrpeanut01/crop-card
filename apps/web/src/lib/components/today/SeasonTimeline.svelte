@@ -105,6 +105,9 @@
     Prep for {year} starts around {fmt.instant(timeline.prepStartMs, 'date')}, and prep for {year +
       1} around {fmt.instant(timeline.nextPrepMs, 'date')}.
   </p>
+  <a class="plan-link" href="/plan/calendar?year={year}" data-testid="season-print-calendar"
+    >Print sowing calendar</a
+  >
   <ul class="legend" aria-label="Key">
     {#each LEGEND as k (k)}
       <li><span class="sw" data-kind={k}></span>{SEASON_SPAN_LABEL[k]}</li>

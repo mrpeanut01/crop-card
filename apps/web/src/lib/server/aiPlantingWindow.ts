@@ -18,7 +18,11 @@ export interface PlantingWindowPromptInput {
   dtmMaxDays: number | null;
   soilTempMinF: number | null;
   year: number;
-  frost: FrostDatesIso;
+  /** The bed's effective frost (Phase 32E covers); `frostFree` for a
+   *  heated greenhouse. */
+  frost: FrostDatesIso & { frostFree?: boolean };
+  /** Plain line on the bed's covers, when it has any. */
+  coverNote?: string | null;
   /** Null when the owner never saved coordinates; the prompt then leans on
    *  the frost dates alone instead of a guessed location. */
   latLon: { lat: number; lon: number } | null;
@@ -39,7 +43,12 @@ export function buildPlantingWindowPrompt(input: PlantingWindowPromptInput): str
   return [
     `Give planting dates for ${input.cropName} on a small farm in ${input.year}.`,
     where,
-    `Average last spring frost: ${formatDay(input.frost.lastSpring)}. First fall frost: ${formatDay(input.frost.firstFall)}.`,
+    input.frost.frostFree
+      ? 'This bed has no frost limit (a heated greenhouse or a cover). Ignore outdoor frost timing.'
+      : `Average last spring frost: ${formatDay(input.frost.lastSpring)}. First fall frost: ${formatDay(input.frost.firstFall)}.`,
+    ...(input.coverNote && !input.frost.frostFree
+      ? [`${input.coverNote} These frost dates already include the cover.`]
+      : []),
     `Crop family: ${input.cropFamily ?? 'unknown'}. Days to maturity (max): ${input.dtmMaxDays ?? 'unknown'}. Min soil temp: ${input.soilTempMinF != null ? `${input.soilTempMinF}°F` : 'unknown'}.`,
     `A frost-date rule of thumb gives earliest ${input.baseline.earliest}, prime ${input.baseline.prime}, latest ${input.baseline.latest}. Adjust for this location and crop.`,
     '',
@@ -124,7 +133,8 @@ export function plantingWindowCacheKey(ownerId: string, input: PlantingWindowPro
     input.year,
     loc,
     input.frost.lastSpring,
-    input.frost.firstFall
+    input.frost.firstFall,
+    input.frost.frostFree ? 'frost-free' : 'frost'
   ].join('|');
 }
 

@@ -365,6 +365,7 @@ export function deleteCropCascade(
   removed.fertility_applications = del(fertilityApplications, eq(fertilityApplications.cropId, id));
   removed.harvest_events = del(harvestEvents, eq(harvestEvents.cropId, id));
   removed.hay_cuttings = del(hayCuttings, eq(hayCuttings.cropId, id));
+  removed.seed_starts = del(seedStarts, eq(seedStarts.cropId, id));
 
   removed.crops = del(crops, eq(crops.id, id));
 

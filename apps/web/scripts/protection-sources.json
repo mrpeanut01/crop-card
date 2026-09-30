@@ -1,0 +1,31 @@
+{
+  "$comment": "Phase 32E (E2). Quotes for every non-null default cover shift in apps/web/src/lib/climate/protection.ts PROTECTION_DEFAULTS, keyed kind → springShiftDays | fallShiftDays. Each entry is { url, publisher, date, quote, note?, value } and value must equal the shipped default. Rules in docs/design/PHASE_32_PLAN.md, section 32E rulings E0-3 and E2-1: one checked extension source is enough, a second checked source more than one day apart drops the value. The gate is apps/web/src/lib/climate/protection.sources.gate.test.ts. `researched` records sources read and why no default ships, so label research can pick them up.",
+  "entries": {},
+  "researched": [
+    {
+      "kind": "high-tunnel",
+      "reason": "Extension sources disagree by weeks: search excerpts (2026-09-29, not yet checked word for word) gave 30 to 45 days at each end, 4 to 8 weeks, and 2 to 4 weeks. Ranges also give no single day count. Left unset; the owner types the shift.",
+      "sources": [
+        "https://www.nrcs.usda.gov/plantmaterials/mipmcar9778.pdf",
+        "https://extension.illinois.edu/blogs/garden-scoop/2017-11-29-high-tunnels",
+        "https://extension.psu.edu/high-tunnel-production"
+      ]
+    },
+    {
+      "kind": "row-cover",
+      "reason": "Extension pages state row cover protection in degrees (about 2°F for light fabric up to 6 to 10°F for heavy fabric) or as 'several weeks', not a day shift. Left unset.",
+      "sources": [
+        "https://extension.umd.edu/resource/row-covers",
+        "https://extension.illinois.edu/blogs/good-growing/2021-03-12-use-row-cover-protect-plants-more-just-frost"
+      ]
+    },
+    {
+      "kind": "low-tunnel",
+      "reason": "Sources say 'a few extra weeks'; no day count found. Left unset.",
+      "sources": [
+        "https://extension.illinois.edu/blogs/green-speak/2017-11-06-extend-your-growing-season-low-tunnels",
+        "https://yardandgarden.extension.iastate.edu/how-to/using-low-tunnels-extend-season-your-vegetable-garden"
+      ]
+    }
+  ]
+}

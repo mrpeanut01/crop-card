@@ -1,0 +1,92 @@
+/**
+ * What `GET/POST /api/blocks/:id/protections` return, and the client calls
+ * behind the cover chips and the SetupProtection sheet. Client-safe.
+ */
+
+import type { BlockProtection, ProtectionKind } from './protection';
+import type { EffectiveFrost } from './effectiveFrost';
+
+export interface BlockProtectionView extends BlockProtection {
+  notes: string | null;
+  createdAt: number;
+}
+
+export interface BedFrostView {
+  /** Local calendar days, yyyy-mm-dd. */
+  lastSpring: string;
+  firstFall: string;
+  frostFree: boolean;
+  /** The farm's own dates, for "3 weeks earlier than the farm". */
+  farmLastSpring: string;
+  farmFirstFall: string;
+  summary: string | null;
+}
+
+export interface BlockCoversResponse {
+  protections: BlockProtectionView[];
+  seasonYear: number;
+  effectiveFrost: EffectiveFrost;
+  frost: BedFrostView;
+}
+
+export interface NewCoverInput {
+  kind: ProtectionKind;
+  springShiftDays?: number | null;
+  fallShiftDays?: number | null;
+  installedOn?: number | null;
+  removedOn?: number | null;
+  seasonYear?: number | null;
+  notes?: string | null;
+}
+
+async function readError(res: Response): Promise<string> {
+  const body = (await res.json().catch(() => null)) as { error?: string; message?: string } | null;
+  return body?.error ?? body?.message ?? `Could not save (HTTP ${res.status}).`;
+}
+
+export async function fetchBlockCovers(
+  blockId: string,
+  year?: number,
+  fetcher: typeof fetch = fetch
+): Promise<BlockCoversResponse> {
+  const q = year ? `?year=${year}` : '';
+  const res = await fetcher(`/api/blocks/${encodeURIComponent(blockId)}/protections${q}`);
+  if (!res.ok) throw new Error(await readError(res));
+  return (await res.json()) as BlockCoversResponse;
+}
+
+export async function addBlockCover(
+  blockId: string,
+  input: NewCoverInput,
+  year?: number,
+  fetcher: typeof fetch = fetch
+): Promise<BlockCoversResponse> {
+  const q = year ? `?year=${year}` : '';
+  const res = await fetcher(`/api/blocks/${encodeURIComponent(blockId)}/protections${q}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(input)
+  });
+  if (!res.ok) throw new Error(await readError(res));
+  return (await res.json()) as BlockCoversResponse;
+}
+
+export async function removeBlockCover(
+  blockId: string,
+  protectionId: string,
+  fetcher: typeof fetch = fetch
+): Promise<void> {
+  const res = await fetcher(
+    `/api/blocks/${encodeURIComponent(blockId)}/protections/${encodeURIComponent(protectionId)}`,
+    { method: 'DELETE' }
+  );
+  if (!res.ok) throw new Error(await readError(res));
+}
+
+/** "Spring 21 days earlier" style line for one side of a cover. */
+export function shiftText(side: 'spring' | 'fall', days: number | null): string {
+  if (days === null) return side === 'spring' ? 'Spring shift not known' : 'Fall shift not known';
+  if (days === 0) return side === 'spring' ? 'No spring shift' : 'No fall shift';
+  const unit = days === 1 ? 'day' : 'days';
+  return side === 'spring' ? `Spring ${days} ${unit} earlier` : `Fall ${days} ${unit} later`;
+}

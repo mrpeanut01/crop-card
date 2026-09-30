@@ -7,6 +7,7 @@ import type { AiLimit } from '$lib/billing/aiLimit';
  */
 
 import { z } from 'zod';
+import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
 import { footprintSchema, SPACING_PATTERNS, spacingInSchema } from '$lib/farm/footprint';
 import type { DesignableAreaKind } from '$lib/farm/areaKinds';
 import type { BedRecipePlugin, CompanionPlugin } from '$lib/plugins/schemas';
@@ -119,7 +120,8 @@ export const plantingCreateItemSchema = z.strictObject({
   spacingIn: spacingInSchema.nullable().optional(),
   rowSpacingIn: spacingInSchema.nullable().optional(),
   plantCount: plantCount.nullable().optional(),
-  source: z.enum(['manual', 'plugin', 'ai', 'fallback'])
+  source: z.enum(['manual', 'plugin', 'ai', 'fallback']),
+  ...plantingEstablishmentFields
 });
 export const plantingCreateSchema = z.strictObject({
   plantings: z.array(plantingCreateItemSchema).min(1).max(50)
@@ -128,6 +130,8 @@ export type PlantingCreateRequest = z.infer<typeof plantingCreateSchema>;
 
 export interface PlantingCreateResponse {
   plantings: PlacedPlanting[];
+  /** Phase 32E: plain "not known" lines from seed starting, if any. */
+  seedStartNotes?: string[];
 }
 
 /** `POST /api/garden/beds/[blockId]/succession`. `commit: false` previews. */
@@ -135,7 +139,10 @@ export const successionRequestSchema = z.strictObject({
   cropId: id,
   count: z.number().int().min(1).max(5),
   intervalDays: z.number().int().min(1).max(90).optional(),
-  commit: z.boolean()
+  commit: z.boolean(),
+  /** Phase 32E. Left out, each sowing takes the anchor's answer. */
+  establishment: plantingEstablishmentFields.establishment,
+  startIndoors: plantingEstablishmentFields.startIndoors
 });
 export type SuccessionRequest = z.infer<typeof successionRequestSchema>;
 

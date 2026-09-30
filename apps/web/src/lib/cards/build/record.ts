@@ -251,3 +251,64 @@ export function frameLiveCard(card: CardModel, recordKind: string, rowId: string
     links: [...(card.links ?? []).filter((l) => l.href !== link.href), link]
   };
 }
+
+export interface IrrigationRecordCardInput {
+  rowId: string;
+  occurredAt: number;
+  areaLabel: string | null;
+  bedLabel: string | null;
+  inches: number | null;
+  gallons: number | null;
+  durationMin: number | null;
+  method: string | null;
+  notes: string | null;
+  performerLabel: string | null;
+}
+
+export const IRRIGATION_RECORD_NOTICE =
+  'A watering log. It is not a compliance record and can be removed if it was entered by mistake.';
+
+/** Phase 32E (E4-14): a watering log's read-only card. */
+export function buildIrrigationRecordCard(
+  input: IrrigationRecordCardInput,
+  opts: RecordCardOptions
+): CardModel {
+  const facts: CardFact[] = [
+    {
+      label: 'Watered',
+      value: formatInstant(input.occurredAt, opts.prefs, 'datetime'),
+      provenance: 'manual'
+    }
+  ];
+  const amount =
+    input.inches !== null
+      ? `${trimNumber(input.inches, 2)} in`
+      : input.gallons !== null
+        ? `${trimNumber(input.gallons, 1)} gal`
+        : input.durationMin !== null
+          ? `${input.durationMin} min, amount not logged`
+          : 'Not logged';
+  facts.push({ label: 'Amount', value: amount, provenance: 'manual' });
+  if (input.areaLabel) facts.push({ label: 'Area', value: input.areaLabel, provenance: 'data' });
+  facts.push({ label: 'Where', value: input.bedLabel ?? 'Whole Area', provenance: 'data' });
+  if (input.method) facts.push({ label: 'How', value: input.method, provenance: 'manual' });
+  if (input.performerLabel) {
+    facts.push({ label: 'Logged by', value: input.performerLabel, provenance: 'data' });
+  }
+  const sections: CardSection[] = input.notes?.trim()
+    ? [{ title: 'Notes', items: [input.notes.trim()] }]
+    : [];
+  return {
+    kind: 'irrigation',
+    key: recordCardKey('irrigation', input.rowId),
+    kicker: ['Watering', input.areaLabel].filter(Boolean).join(' · '),
+    title: input.bedLabel ? `Watered ${input.bedLabel}` : 'Watered',
+    facts,
+    sections,
+    asOf: opts.now,
+    provenance: [{ source: 'manual', detail: 'your watering log' }],
+    href: recordHref('irrigation', input.rowId),
+    notices: [IRRIGATION_RECORD_NOTICE],
+    links: [openRecordLink('irrigation', input.rowId)]
+  };
+}

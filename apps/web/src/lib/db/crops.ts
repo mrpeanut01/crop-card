@@ -72,6 +72,10 @@ export interface Crop {
   /** Where a proposed planting came from (wizard, recipe, Claude). Absent
    *  for plantings made by hand. */
   sourceProvenance?: PlantingSource;
+  /** Phase 32E: "Seed or seedling?". Absent when not answered. */
+  establishment?: 'direct-seed' | 'transplant';
+  /** Earliest recorded tray sowing (Phase 32E, E1-16). */
+  sownIndoorsAt?: number;
 }
 
 export type PlantingSource = 'ai' | 'fallback' | 'plugin';
@@ -125,6 +129,8 @@ function rowToCrop(row: typeof crops.$inferSelect): Crop {
   if (row.plantCountProvenance) out.plantCountProvenance = row.plantCountProvenance;
   if (row.sourceProvenance) out.sourceProvenance = row.sourceProvenance;
   if (row.archetypeOverride) out.archetypeOverride = row.archetypeOverride;
+  if (row.establishment) out.establishment = row.establishment;
+  if (row.sownIndoorsAt) out.sownIndoorsAt = row.sownIndoorsAt.getTime();
   if (row.harvestUseCases) {
     try {
       const parsed = JSON.parse(row.harvestUseCases);
@@ -166,6 +172,17 @@ export function listCrops(filters: ListFilters = {}): Crop[] {
   q = q.orderBy(desc(crops.plantingDate));
   if (filters.limit) q = q.limit(filters.limit);
   return q.all().map(rowToCrop);
+}
+
+/** Phase 32E: writes the "Seed or seedling?" answer; null clears it. */
+export function setEstablishment(
+  id: string,
+  establishment: 'direct-seed' | 'transplant' | null
+): void {
+  db.update(crops)
+    .set({ establishment })
+    .where(withTenant(crops, eq(crops.id, id)))
+    .run();
 }
 
 export function getCrop(id: string): Crop | undefined {

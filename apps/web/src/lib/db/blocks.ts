@@ -82,6 +82,12 @@ export interface PlantingRecord {
    *  badge instead of the catch-all "Manual entry". */
   sourceProvenance?: 'ai' | 'fallback' | 'plugin' | null;
   groupRole?: 'anchor' | 'companion';
+  /** Phase 32E: "Seed or seedling?" and the earliest tray sowing. Only the
+   *  harvest-window estimate reads them (`maturityStartMs`). */
+  establishment?: 'direct-seed' | 'transplant' | null;
+  sownIndoorsAt?: number | null;
+  /** Set by `listBlocks`; watering advice counts only active plantings. */
+  status?: 'planned' | 'active' | 'harvested' | 'failed' | 'archived';
 }
 
 export interface BlockWithPlantings extends Block {
@@ -214,7 +220,10 @@ export function listBlocks(opts: ListBlocksOptions = {}): BlockWithPlantings[] {
         p.quantityPlantedHundredths != null ? p.quantityPlantedHundredths / 100 : undefined,
       quantityUnit: p.quantityUnit ?? undefined,
       sourceProvenance: p.sourceProvenance ?? null,
-      groupRole: p.groupRole ?? undefined
+      groupRole: p.groupRole ?? undefined,
+      establishment: p.establishment ?? null,
+      sownIndoorsAt: p.sownIndoorsAt?.getTime() ?? null,
+      status: p.status
     });
     grouped.set(p.blockId, list);
   }
@@ -246,7 +255,9 @@ export function getBlock(id: string): BlockWithPlantings | undefined {
         p.quantityPlantedHundredths != null ? p.quantityPlantedHundredths / 100 : undefined,
       quantityUnit: p.quantityUnit ?? undefined,
       sourceProvenance: p.sourceProvenance ?? null,
-      groupRole: p.groupRole ?? undefined
+      groupRole: p.groupRole ?? undefined,
+      establishment: p.establishment ?? null,
+      sownIndoorsAt: p.sownIndoorsAt?.getTime() ?? null
     }));
   return { ...rowToBlock(row), plantings };
 }

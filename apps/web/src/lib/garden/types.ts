@@ -92,6 +92,12 @@ export interface GardenCrop {
     rowSpacingIn?: number;
     inRowSpacingIn?: { min: number; max: number };
     soilTempMinF?: number;
+    /** Phase 32E seed starting (E1). */
+    establishment?: 'direct-seed' | 'transplant' | 'either';
+    startIndoorsWeeks?: { min: number; max: number };
+    hardenOffDays?: { min: number; max: number };
+    dtmFrom?: 'direct-seed' | 'transplant';
+    transplantOffsetDays?: number;
   };
 }
 
@@ -134,6 +140,9 @@ export interface PlacedPlanting {
   /** Where a proposed planting came from once saved; null or absent when
    *  it was placed by hand. */
   sourceProvenance?: PlantingSourceProvenance | null;
+  /** Phase 32E. Only the harvest estimate reads them (`maturityStartMs`). */
+  establishment?: 'direct-seed' | 'transplant' | null;
+  sownIndoorsAtMs?: number | null;
 }
 
 export type PlantingSourceProvenance = 'ai' | 'fallback' | 'plugin';
@@ -253,6 +262,13 @@ export interface RecipeApplication {
   warnings: string[];
 }
 
+export interface BedFrost {
+  lastSpringFrostMs: number;
+  firstFallFrostMs: number;
+  frostFree: boolean;
+  summary: string | null;
+}
+
 /** Everything the designer page renders, built from the server loader or
  *  from the offline snapshot. */
 export interface GardenDesign {
@@ -261,6 +277,9 @@ export interface GardenDesign {
   plantings: PlacedPlanting[];
   crops: Record<string, GardenCrop>;
   frost: { lastSpringFrostMs: number; firstFallFrostMs: number; provenance: ProvenanceTag };
+  /** Phase 32E: beds whose covers (or heated greenhouse) move their frost
+   *  dates, as UTC days like `frost`. Beds not listed use `frost`. */
+  frostByBed?: Record<string, BedFrost>;
   seasonYear: number;
   asOf: number;
   readOnly: boolean;

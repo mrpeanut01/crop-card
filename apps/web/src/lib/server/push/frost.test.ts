@@ -86,3 +86,53 @@ describe('isInGroundOrImminent', () => {
     expect(isInGroundOrImminent({ ...planned, plantingDate: null }, NOW)).toBe(false);
   });
 });
+
+describe('frostTonightAlerts with covers (Phase 32E, E2-12)', () => {
+  const pepper: FrostPlantingSnapshot = {
+    status: 'active',
+    plantingDate: NOW - 60 * DAY,
+    name: 'Jimmy Nardello',
+    blockName: 'Bed 3',
+    hardiness: 'tender',
+    cover: 'covered'
+  };
+
+  it('keeps uncovered copy byte-identical', () => {
+    const plain = frostTonightAlerts(advisory, [tomato], NOW);
+    const withNull = frostTonightAlerts(advisory, [{ ...tomato, cover: null }], NOW);
+    expect(withNull).toEqual(plain);
+    expect(plain[0].body).toContain('Cover or harvest before the cold sets in.');
+  });
+
+  it('a heated greenhouse drops the planting out of the alert', () => {
+    expect(frostTonightAlerts(advisory, [{ ...tomato, cover: 'heated' }], NOW)).toEqual([]);
+  });
+
+  it('a covered bed stays in and names the bed instead of going silent', () => {
+    const [alert] = frostTonightAlerts(advisory, [pepper], NOW);
+    expect(alert.body).toContain('Jimmy Nardello is at risk.');
+    expect(alert.body).toContain('Check covers on Bed 3.');
+    expect(alert.body).not.toContain('Cover or harvest');
+  });
+
+  it('mixed covered and uncovered keeps the cover line and lists up to three beds', () => {
+    const beds = ['Bed 1', 'Bed 2', 'Bed 3', 'Bed 4', 'Bed 5'].map((b, i) => ({
+      ...pepper,
+      name: `Pepper ${i}`,
+      blockName: b
+    }));
+    const [alert] = frostTonightAlerts(advisory, [tomato, ...beds], NOW);
+    expect(alert.body).toContain('Cover or harvest before the cold sets in.');
+    expect(alert.body).toContain('Check covers on Bed 1, Bed 2, Bed 3 and 2 more.');
+  });
+
+  it('a hard freeze never lets a cover stand in for covering or harvesting', () => {
+    for (const event of ['Hard Freeze Warning', 'Hard Freeze Watch'] as const) {
+      const hard: FrostAlert = { ...advisory[0], event, productKey: event };
+      const [alert] = frostTonightAlerts([hard], [pepper], NOW);
+      expect(alert.body).toContain('Check covers on Bed 3.');
+      expect(alert.body).toContain("Covers buy a few degrees. They don't stop a hard freeze.");
+      expect(alert.body).toContain('Harvest or add more cover before the cold sets in.');
+    }
+  });
+});

@@ -11,6 +11,9 @@
  * The station is the nearest ICAO-bearing GHCNh site within
  * OBSERVED_MAX_STATION_MILES (bundled list `stations/ghcnh-stations-us.json`, `scripts/build-ghcnh-stations.mjs`).
  * Precipitation is left null: GHCNh "hourly" totals mix intermediate reports.
+ * Past rain for watering (Phase 32E, E4-2) is a separate series,
+ * `getObservedRain()`, decoded from the raw METAR of NWS observations and
+ * cached under `observed-rain:<ICAO>`; it never touches `HourlyPoint.precipMm`.
  * Values carry `data` provenance with the station name; no station, or a
  * failed feed, yields `fallback` with no hours. Server-only; never throws.
  */
@@ -23,6 +26,7 @@ import { haversineFt } from '$lib/blocks/distance';
 import { NWS_BASE, nwsFetch, USER_AGENT } from '$lib/server/weather';
 import { safeFetch, type SafeFetchOptions } from '$lib/server/safeFetch';
 import { floorHour, HOUR_MS, type HourlyPoint, type WeatherProvenance } from '$lib/weather/leafWet';
+import { routineRainHours, type RainHour } from '$lib/weather/metarRain';
 import stationData from './stations/ghcnh-stations-us.json';
 
 export const NCEI_ADS_BASE = 'https://www.ncei.noaa.gov/access/services/data/v1';
@@ -31,6 +35,8 @@ export const OBSERVED_MAX_SPAN_DAYS = 400;
 export const NCEI_TIMEOUT_MS = 20_000;
 export const NCEI_MAX_BYTES = 3_000_000;
 export const NWS_OBS_TTL_MS = 60 * 60 * 1000;
+/** A failed rain feed is remembered briefly so /today does not wait on it every load. */
+export const RAIN_FAILURE_TTL_MS = 10 * 60 * 1000;
 export const OPEN_MONTH_TTL_MS = 6 * 60 * 60 * 1000;
 export const CLOSED_MONTH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 /** GHCNh is still revised for a while after a month ends. */
@@ -185,6 +191,7 @@ export interface NwsObservationsResponse {
   features?: Array<{
     properties?: {
       timestamp?: string;
+      rawMessage?: string;
       temperature?: NwsQuantity;
       dewpoint?: NwsQuantity;
       relativeHumidity?: NwsQuantity;
@@ -296,7 +303,7 @@ function defaultNwsObservations(icao: string, startMs: number) {
 
 // ─── Cache ─────────────────────────────────────────────────────────────
 
-function readCache(key: string, now: number): HourlyPoint[] | null {
+function readCache<T = HourlyPoint>(key: string, now: number): T[] | null {
   const row = db
     .select()
     .from(weatherForecastCache)
@@ -304,14 +311,14 @@ function readCache(key: string, now: number): HourlyPoint[] | null {
     .get();
   if (!row || row.expiresAt.getTime() <= now) return null;
   try {
-    const hours = JSON.parse(row.payloadJson) as HourlyPoint[];
+    const hours = JSON.parse(row.payloadJson) as T[];
     return Array.isArray(hours) ? hours : null;
   } catch {
     return null;
   }
 }
 
-function writeCache(key: string, now: number, ttlMs: number, hours: HourlyPoint[]): void {
+function writeCache(key: string, now: number, ttlMs: number, hours: unknown[]): void {
   const expiresAt = new Date(now + ttlMs);
   const payloadJson = JSON.stringify(hours);
   db.insert(weatherForecastCache)
@@ -380,6 +387,7 @@ async function nwsRecent(
   const body = await fetchObs(station.icao, now - NWS_OBS_WINDOW_MS);
   const hours = nwsObservationsToHourly(body).filter((h) => h.t <= now);
   writeCache(key, now, NWS_OBS_TTL_MS, hours);
+  writeCache(observedRainKey(station.icao), now, NWS_OBS_TTL_MS, nwsObservationsToRain(body, now));
   return hours.filter((h) => h.t >= startMs);
 }
 
@@ -464,4 +472,67 @@ export async function getObservedHours(
     };
   }
   return empty(lastError ?? 'No observations returned', stations[0]);
+}
+
+// ─── Observed rain (Phase 32E watering) ─────────────────────────────────
+
+export function observedRainKey(icao: string): string {
+  return `observed-rain:${icao}`;
+}
+
+/** Routine-report rain per hour from an NWS observations body (E4-2). */
+export function nwsObservationsToRain(body: NwsObservationsResponse, now: number): RainHour[] {
+  const obs = [];
+  for (const f of body.features ?? []) {
+    const p = f.properties;
+    const ms = p?.timestamp ? Date.parse(p.timestamp) : NaN;
+    if (!p || Number.isNaN(ms) || typeof p.rawMessage !== 'string') continue;
+    obs.push({ ms, raw: p.rawMessage });
+  }
+  return routineRainHours(obs).filter((h) => h.t < now);
+}
+
+export interface ObservedRain {
+  station: ObservedStation;
+  hours: RainHour[];
+  error: string | null;
+}
+
+/** Cached rain for a station, or null on a miss. No network. */
+export function readObservedRainCache(icao: string, now: number): RainHour[] | null {
+  return readCache<RainHour>(observedRainKey(icao), now);
+}
+
+/**
+ * Past rain at one station for the last 7 days (NWS keeps about that much).
+ * Cached 1 h; a cache hit never fetches. Never throws: a failed feed returns
+ * no hours, which the watering advice reads as unknown.
+ */
+export async function getObservedRain(
+  station: ObservedStation,
+  now: number = Date.now(),
+  deps: ObservedDeps = {}
+): Promise<ObservedRain> {
+  const cached = readObservedRainCache(station.icao, now);
+  if (cached) return { station, hours: cached, error: null };
+  try {
+    const fetchObs = deps.nwsObservations ?? defaultNwsObservations;
+    const body = await fetchObs(station.icao, now - NWS_OBS_WINDOW_MS);
+    const hours = nwsObservationsToRain(body, now);
+    writeCache(observedRainKey(station.icao), now, NWS_OBS_TTL_MS, hours);
+    writeCache(
+      `observed-nws:${station.icao}`,
+      now,
+      NWS_OBS_TTL_MS,
+      nwsObservationsToHourly(body).filter((h) => h.t <= now)
+    );
+    return { station, hours, error: null };
+  } catch (e) {
+    try {
+      writeCache(observedRainKey(station.icao), now, RAIN_FAILURE_TTL_MS, []);
+    } catch {
+      /* a failed write only means the next request tries the feed again */
+    }
+    return { station, hours: [], error: e instanceof Error ? e.message : String(e) };
+  }
 }

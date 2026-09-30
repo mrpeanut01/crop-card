@@ -14,6 +14,8 @@ import { prefsFor } from '$lib/db/userProfile';
 import { parseExportDateRange } from '$lib/exports/dateRange';
 import { todayYmd } from '$lib/prefs';
 import { pageOf, parseShow } from '$lib/records/pagination';
+import { listIrrigationEvents } from '$lib/db/irrigation';
+import { listFields } from '$lib/db/fields';
 import {
   RECORD_KINDS,
   listUnifiedRecords,
@@ -83,7 +85,30 @@ export const load: PageServerLoad = async (event) => {
       ? blocks.map((b) => ({ id: b.id, name: b.name }))
       : null;
 
+  // Phase 32E (E4-14): watering logs are a light record, listed only
+  // behind their own chip and never counted with the compliance ledger.
+  const wateringActive = url.searchParams.get('watering') === '1';
+  const wateringRows = listIrrigationEvents({ fromMs, toMs, limit: 200 });
+  const areaNames = wateringActive ? new Map(listFields().map((f) => [f.id, f.name])) : null;
+  const bedNames = new Map(blocks.map((b) => [b.id, b.blockLabel ?? b.name]));
+  const watering = {
+    active: wateringActive,
+    count: wateringRows.length,
+    rows: areaNames
+      ? wateringRows.map((w) => ({
+          id: w.id,
+          occurredAt: w.occurredAt,
+          areaName: areaNames.get(w.fieldId) ?? 'Area',
+          bedName: w.blockId ? (bedNames.get(w.blockId) ?? null) : null,
+          inches: w.inches,
+          gallons: w.gallons,
+          durationMin: w.durationMin
+        }))
+      : []
+  };
+
   return {
+    watering,
     chrome,
     soilNudgePlaces,
     records: page.rows,

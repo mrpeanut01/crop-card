@@ -13,6 +13,7 @@ import { dev } from '$app/environment';
 import { loadPluginsFromDirectory, PluginRegistry } from '$lib/plugins';
 import { loadBedRecipes, type BedRecipeRegistry } from '$lib/plugins/bedRecipes';
 import { loadPhase32DataKinds, type Phase32DataKinds } from '$lib/plugins/registryDataKinds';
+import { degreeDayFixtureEnabled, E2E_PEST_MODELS } from '$lib/ipm/pestModel.fixtures';
 import { isTestPluginId } from '$lib/plugins/testPlugins';
 import { currentOwnerId } from '$lib/db/tenant';
 import { HIDDEN_PAYLOAD, listEffectiveOverrides, overridesRevision } from '$lib/db/pluginOverrides';
@@ -199,6 +200,19 @@ export async function getDataKinds(): Promise<Phase32DataKinds> {
       kinds.failed.map((f) => `${path.basename(f.file)}: ${f.error.message}`)
     );
   }
+  if (degreeDayFixtureEnabled(process.env)) {
+    for (const m of E2E_PEST_MODELS)
+      if (!kinds.pestModels.has(m.pluginId)) kinds.pestModels.register(m);
+  }
   cachedDataKinds = kinds;
   return kinds;
+}
+
+/** Test hook: registers a pest model into the loaded data kinds. Tests and
+ *  e2e use fixtures here, never a file in plugins/. */
+export async function registerTestPestModel(raw: unknown): Promise<void> {
+  const kinds = await getDataKinds();
+  const id = (raw as { pluginId?: unknown } | null)?.pluginId;
+  if (typeof id === 'string' && kinds.pestModels.has(id)) return;
+  kinds.pestModels.register(raw);
 }

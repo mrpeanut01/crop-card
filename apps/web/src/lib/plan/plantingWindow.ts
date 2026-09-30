@@ -72,10 +72,11 @@ export function formatDay(iso: string): string {
  *  path and the baseline the AI refinement is checked against. */
 export function deterministicPlantingWindow(
   crop: PlantingWindowCrop,
-  frost: FrostDatesIso
+  frost: FrostDatesIso & { frostFree?: boolean }
 ): PlantingWindow {
   const hardiness = hardinessFrom(crop.soilTempMinF, crop.cropFamily);
   const dtm = crop.dtmMaxDays ?? defaultDtmFor(hardiness);
+  if (frost.frostFree) return frostFreeWindow(frost, dtm);
   const earliest = addDays(frost.lastSpring, EARLIEST_OFFSET_DAYS[hardiness]);
   const naturalLatest = addDays(frost.firstFall, -(dtm + MATURITY_BUFFER_DAYS));
 
@@ -92,6 +93,18 @@ export function deterministicPlantingWindow(
   if (prime < earliest) prime = earliest;
   if (prime > naturalLatest) prime = naturalLatest;
   return { earliest, prime, latest: naturalLatest, note: HARDINESS_NOTE[hardiness] };
+}
+
+export const FROST_FREE_NOTE = 'No frost limit for this bed.';
+
+/** Frost-free bed (E2-6): Jan 1 to Dec 31 minus DTM and the buffer, no
+ *  hardiness offsets. The Jan 1 floor at tomorrow is applied by callers
+ *  that know "now" (scheduleCandidacy). */
+function frostFreeWindow(frost: FrostDatesIso, dtm: number): PlantingWindow {
+  const earliest = frost.lastSpring;
+  const naturalLatest = addDays(frost.firstFall, -(dtm + MATURITY_BUFFER_DAYS));
+  const latest = naturalLatest < earliest ? earliest : naturalLatest;
+  return { earliest, prime: earliest, latest, note: FROST_FREE_NOTE };
 }
 
 /** True when the three dates parse, are ordered, and sit in `year`. With

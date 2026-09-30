@@ -19,6 +19,9 @@
   } from '$lib/garden/types';
   import { PLANTING_CARE_LINK_LABEL, cardHref, cardKey, plantingCardHref } from '$lib/cards/model';
   import { getDesigner } from './designerState.svelte';
+  import CoverChips from '$lib/components/setup/CoverChips.svelte';
+  import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import SetupProtection from '$lib/components/setup/SetupProtection.svelte';
   import { PATTERN_LABELS, ft, parseYmd, plural, sizeLabel, ymd } from './format';
 
   interface Props {
@@ -31,6 +34,8 @@
 
   type Tab = 'details' | 'plantings' | 'history';
   let tab = $state<Tab>('details');
+  let coverSheetOpen = $state(false);
+  const coverSummary = $derived(d.bedFrostSummary(bed.blockId));
   let nameInput = $state<HTMLInputElement | null>(null);
   let widthInput = $state<HTMLInputElement | null>(null);
 
@@ -479,6 +484,19 @@
           >
         </div>
       {/if}
+      {#if d.offline}
+        {#if coverSummary}<p class="cover-summary">{coverSummary}</p>{/if}
+      {:else}
+        {#key bed.blockId}
+          <CoverChips
+            blockId={bed.blockId}
+            blockName={bed.name}
+            canEdit={d.roleCanEdit && !d.design.readOnly}
+            seasonYear={d.design.seasonYear}
+            onChange={(r) => d.applyBedFrost(bed.blockId, r.frost)}
+          />
+        {/key}
+      {/if}
       <a class="link" href={cardHref('area', cardKey('area', d.canvas.areaId))}>Area Card</a>
     </div>
   {:else if tab === 'plantings'}
@@ -556,6 +574,15 @@
               <p class="pmeta">Not placed in the bed yet.</p>
             {/if}
             {#if early}<p class="chip warn">{early}</p>{/if}
+            {#if early && early.startsWith('Early') && !d.offline}
+              {#if d.canEdit}
+                <button type="button" class="btn cover-btn" onclick={() => (coverSheetOpen = true)}
+                  >Too early for this bed. Add a cover?</button
+                >
+              {:else}
+                <p class="chip">Too early for this bed. Ask the owner about a cover.</p>
+              {/if}
+            {/if}
             {#each rot as w (w.family)}
               <p class="chip {w.severity}">{w.message}</p>
             {/each}
@@ -993,7 +1020,33 @@
   {/if}
 </section>
 
+<SetupSheet
+  open={coverSheetOpen}
+  title="Add a cover"
+  kicker={bed.name}
+  onClose={() => (coverSheetOpen = false)}
+>
+  <SetupProtection
+    blockId={bed.blockId}
+    blockName={bed.name}
+    canEdit={d.canEdit}
+    seasonYear={d.design.seasonYear}
+    onDone={(r) => {
+      coverSheetOpen = false;
+      d.applyBedFrost(bed.blockId, r.frost);
+    }}
+  />
+</SetupSheet>
+
 <style>
+  .cover-summary {
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-forest-deep);
+  }
+  .cover-btn {
+    min-height: 48px;
+  }
   .sheet {
     display: flex;
     flex-direction: column;

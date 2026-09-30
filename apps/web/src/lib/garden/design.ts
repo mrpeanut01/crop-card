@@ -83,6 +83,7 @@ export interface DesignInput {
   plantings: readonly DesignPlantingInput[];
   crops: Readonly<Record<string, GardenCrop>>;
   frost: GardenDesign['frost'];
+  frostByBed?: GardenDesign['frostByBed'];
   seasonYear: number;
   asOf: number;
   readOnlyReason: GardenDesign['readOnlyReason'];
@@ -219,8 +220,8 @@ export function buildGardenDesign(input: DesignInput): GardenDesign | null {
       },
       input.crops[p.cropPluginId],
       {
-        firstFallFrostMs: input.frost.firstFallFrostMs,
-        lastSpringFrostMs: input.frost.lastSpringFrostMs
+        firstFallFrostMs: (input.frostByBed?.[p.blockId] ?? input.frost).firstFallFrostMs,
+        lastSpringFrostMs: (input.frostByBed?.[p.blockId] ?? input.frost).lastSpringFrostMs
       }
     )?.harvestEndMs ?? null;
   const plantings = input.plantings
@@ -242,6 +243,9 @@ export function buildGardenDesign(input: DesignInput): GardenDesign | null {
     plantings,
     crops,
     frost: input.frost,
+    ...(input.frostByBed && Object.keys(input.frostByBed).length
+      ? { frostByBed: input.frostByBed }
+      : {}),
     seasonYear: input.seasonYear,
     asOf: input.asOf,
     readOnly: input.readOnlyReason !== null,

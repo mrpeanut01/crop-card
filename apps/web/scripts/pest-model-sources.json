@@ -1,4 +1,21 @@
 {
   "$comment": "Phase 32A. Quotes for every number on plugins/pest-models/*.json, keyed pluginId → fact path (baseTempF, upperCutoffF, biofix.date, stages.<key>.gddFrom, stages.<key>.gddTo). Each entry is { url, publisher, date, quote, note? } from an extension or university source. A model ships only where the sources agree.",
-  "entries": {}
+  "entries": {},
+  "$research": [
+    {
+      "date": "2026-09-30",
+      "model": "squash vine borer (Melittia cucurbitae)",
+      "outcome": "not shipped",
+      "why": "Ruling E5-6 needs base temperature, cutoff, method, biofix and every stage threshold quoted word for word from an extension or university page, with a stated method that matches simple-average or single-sine. The build environment could not open any extension page (vegento.russell.wisc.edu, extension.sdstate.edu, hort.extension.wisc.edu, ipm.ucanr.edu all blocked), so only search-engine summaries were seen. Those summaries name base 50°F from January 1 with no upper cutoff and put adult emergence at roughly 750 to 1000, 900 to 1000 or about 1000 degree days depending on the page, but none of them states the calculation method, and none could be checked word for word.",
+      "leads": [
+        "https://vegento.russell.wisc.edu/pests/squash-vine-borer/",
+        "https://hort.extension.wisc.edu/degree-days-for-common-insect-pests",
+        "https://datcp.wi.gov/Documents2/DegreeDays2026.pdf",
+        "https://extension.sdstate.edu/squash-vine-borer-activity-estimate-june-16-2023",
+        "https://rvpadmin.cce.cornell.edu/pdf/veg_edge/pdf204_pdf.pdf",
+        "https://entomology.mgcafe.uky.edu/ef314"
+      ],
+      "next": "A local agent with web access opens these pages, copies the base, cutoff, start date, method and stage thresholds word for word, drops the model if two checked sources disagree on base or method, and adds plugins/pest-models/squash-vine-borer.json with an entry here for every number."
+    }
+  ]
 }

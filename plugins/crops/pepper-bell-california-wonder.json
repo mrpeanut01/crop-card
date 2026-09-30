@@ -16,7 +16,8 @@
     "inRowSpacingIn": {
       "min": 18,
       "max": 24
-    }
+    },
+    "establishment": "transplant"
   },
   "harvestIndicators": [
     "Glossy skin",

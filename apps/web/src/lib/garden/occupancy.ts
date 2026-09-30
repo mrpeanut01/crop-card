@@ -4,6 +4,7 @@
  * agree: see docs/design/GARDEN_DESIGNER.md ("Occupancy").
  */
 
+import { maturityStartMs } from '$lib/schedule/seedStart';
 import { ARCHETYPES, resolveArchetype, type Archetype } from '$lib/plugins/schemas';
 import { frostSeasonShape, monthDayOfYear } from '$lib/schedule/frostSeason';
 import type {
@@ -51,7 +52,8 @@ export type OccupancyPlanting = Pick<
   | 'plantingDateMs'
   | 'harvestedAtMs'
   | 'footprint'
->;
+> &
+  Partial<Pick<PlacedPlanting, 'establishment' | 'sownIndoorsAtMs'>>;
 
 export const ONE_DAY_MS = 86_400_000;
 
@@ -149,8 +151,18 @@ export function plantingOccupancy(
   if (rawStart == null || !Number.isFinite(rawStart)) return null;
   const startMs = plantingDay(rawStart);
   const dtm = maturityDays(crop);
-  const maturityEnd = startMs + dtm.max * ONE_DAY_MS;
-  let harvestStartMs = startMs + dtm.min * ONE_DAY_MS;
+  const maturityFrom = plantingDay(
+    maturityStartMs(
+      {
+        plantingDate: rawStart,
+        establishment: planting.establishment ?? null,
+        sownIndoorsAt: planting.sownIndoorsAtMs ?? null
+      },
+      crop
+    ) ?? rawStart
+  );
+  const maturityEnd = Math.max(startMs, maturityFrom + dtm.max * ONE_DAY_MS);
+  let harvestStartMs = Math.max(startMs, maturityFrom + dtm.min * ONE_DAY_MS);
   let harvestEndMs: number;
   const tail = harvestTailFor(crop);
   if (typeof tail === 'number') {

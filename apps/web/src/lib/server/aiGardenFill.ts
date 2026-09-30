@@ -39,7 +39,8 @@ export interface GardenFillPromptInput {
   bed: { name: string; widthFt: number; lengthFt: number };
   seasonYear: number;
   dateIso: string;
-  frost: FrostDatesIso;
+  /** The bed's effective frost (Phase 32E covers). */
+  frost: FrostDatesIso & { frostFree?: boolean; coverNote?: string | null };
   occupied: Array<{ name: string; fromIso: string; untilIso: string; footprint: Footprint | null }>;
   history: Array<{ year: number; name: string; family: string }>;
   plannedCrops: GardenFillCropFact[];
@@ -71,7 +72,12 @@ export function buildGardenFillPrompt(input: GardenFillPromptInput): string {
   const lines = [
     `Suggest what to plant in one garden bed for the ${input.seasonYear} season, starting on or after ${input.dateIso}.`,
     `Bed "${input.bed.name}": ${widthIn} in wide (x) by ${lengthIn} in long (y), origin at the top-left corner.`,
-    `Average last spring frost: ${input.frost.lastSpring}. First fall frost: ${input.frost.firstFall}.`,
+    input.frost.frostFree
+      ? 'This bed has no frost limit (a heated greenhouse or a cover).'
+      : `Average last spring frost: ${input.frost.lastSpring}. First fall frost: ${input.frost.firstFall}.`,
+    ...(input.frost.coverNote && !input.frost.frostFree
+      ? [`${input.frost.coverNote}. These frost dates already include the cover.`]
+      : []),
     '',
     'Already in this bed (do not overlap these in both space and time):',
     ...(input.occupied.length

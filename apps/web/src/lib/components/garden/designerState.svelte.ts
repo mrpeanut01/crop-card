@@ -81,6 +81,7 @@ import type {
 import { feet, ft, longDate, parseYmd, plural, ymd } from './format';
 import { plantingInGround } from '$lib/garden/inGround';
 import { deterministicPlantingWindow } from '$lib/plan/plantingWindow';
+import type { BedFrostView } from '$lib/climate/protectionView';
 
 export type CropChoice =
   | { source: 'planting'; cropId: string; label: string }
@@ -126,6 +127,41 @@ export interface DesignerInit {
   initialDateMs?: number | null;
   initialBedId?: string | null;
   fetch?: typeof fetch;
+}
+
+/** Occupancy for every planting, each on its own bed's frost dates. */
+export function bedAwareIntervals(design: GardenDesign): OccupancyInterval[] {
+  const farm = {
+    firstFallFrostMs: design.frost.firstFallFrostMs,
+    lastSpringFrostMs: design.frost.lastSpringFrostMs
+  };
+  const byBed = design.frostByBed;
+  if (!byBed || Object.keys(byBed).length === 0) {
+    return occupancyIntervals(design.plantings, design.crops, farm);
+  }
+  const groups = new Map<string, PlacedPlanting[]>();
+  for (const p of design.plantings) {
+    const key = byBed[p.blockId] ? p.blockId : '';
+    const list = groups.get(key) ?? [];
+    list.push(p);
+    groups.set(key, list);
+  }
+  const out: OccupancyInterval[] = [];
+  for (const [key, list] of groups) {
+    const f = key ? byBed[key] : farm;
+    out.push(
+      ...occupancyIntervals(list, design.crops, {
+        firstFallFrostMs: f.firstFallFrostMs,
+        lastSpringFrostMs: f.lastSpringFrostMs
+      })
+    );
+  }
+  return out.sort(
+    (a, b) =>
+      (a.blockId < b.blockId ? -1 : a.blockId > b.blockId ? 1 : 0) ||
+      a.startMs - b.startMs ||
+      (a.cropId < b.cropId ? -1 : a.cropId > b.cropId ? 1 : 0)
+  );
 }
 
 export class WriteError extends Error {
@@ -231,12 +267,7 @@ export class DesignerState {
   canvas = $derived.by<AreaCanvas>(() => this.design.canvas);
   beds = $derived.by<BedLayout[]>(() => this.design.beds);
   unplaced = $derived.by(() => new Set(this.design.unplacedBedIds ?? []));
-  intervals = $derived.by<OccupancyInterval[]>(() =>
-    occupancyIntervals(this.design.plantings, this.design.crops, {
-      firstFallFrostMs: this.design.frost.firstFallFrostMs,
-      lastSpringFrostMs: this.design.frost.lastSpringFrostMs
-    })
-  );
+  intervals = $derived.by<OccupancyInterval[]>(() => bedAwareIntervals(this.design));
   intervalById = $derived.by(() => new Map(this.intervals.map((i) => [i.cropId, i])));
   /** Where scheduled plantings with no spot yet are drawn (#481). Display
    *  only; nothing is saved until the owner drags one or taps Place. */
@@ -295,10 +326,7 @@ export class DesignerState {
     this.nowMs = init.nowMs ?? Date.now();
     const range = scrubRange(
       init.design.seasonYear,
-      occupancyIntervals(init.design.plantings, init.design.crops, {
-        firstFallFrostMs: init.design.frost.firstFallFrostMs,
-        lastSpringFrostMs: init.design.frost.lastSpringFrostMs
-      }),
+      bedAwareIntervals(init.design),
       this.nowMs,
       init.design.frost
     );
@@ -445,10 +473,53 @@ export class DesignerState {
     return plantingInGround(p, this.nowMs);
   }
 
+  /** The bed's frost dates: its covers' effective frost, else the farm's. */
+  frostFor(blockId: string | null | undefined): {
+    lastSpringFrostMs: number;
+    firstFallFrostMs: number;
+    frostFree: boolean;
+  } {
+    const bed = blockId ? this.design.frostByBed?.[blockId] : undefined;
+    return bed ?? { ...this.design.frost, frostFree: false };
+  }
+
+  /** "Covered: frost ends Mar 30" for a bed with covers, else null. */
+  bedFrostSummary(blockId: string): string | null {
+    return this.design.frostByBed?.[blockId]?.summary ?? null;
+  }
+
+  /** Phase 32E: a cover was added or removed on a bed. */
+  applyBedFrost(blockId: string, frost: BedFrostView): void {
+    const next = { ...(this.design.frostByBed ?? {}) };
+    const lastMs = parseYmd(frost.lastSpring);
+    const firstMs = parseYmd(frost.firstFall);
+    const farmSame =
+      !frost.frostFree &&
+      frost.lastSpring === frost.farmLastSpring &&
+      frost.firstFall === frost.farmFirstFall;
+    if (farmSame || lastMs == null || firstMs == null) {
+      if (frost.summary) {
+        next[blockId] = { ...this.design.frost, frostFree: false, summary: frost.summary };
+      } else delete next[blockId];
+    } else {
+      next[blockId] = {
+        lastSpringFrostMs: lastMs,
+        firstFallFrostMs: firstMs,
+        frostFree: frost.frostFree,
+        summary: frost.summary
+      };
+    }
+    this.design = { ...this.design, frostByBed: next };
+  }
+
   /** The plugin's planting window for a crop in this season, from the
-   *  farm's frost dates. */
-  plantingWindowFor(pluginId: string): { startMs: number; endMs: number; note: string | null } {
+   *  bed's frost dates (its covers), else the farm's. */
+  plantingWindowFor(
+    pluginId: string,
+    blockId?: string | null
+  ): { startMs: number; endMs: number; note: string | null } {
     const crop = this.crop(pluginId);
+    const frost = this.frostFor(blockId);
     const w = deterministicPlantingWindow(
       {
         cropFamily: crop?.cropFamily ?? null,
@@ -456,25 +527,28 @@ export class DesignerState {
         dtmMaxDays: crop?.daysToMaturity?.max ?? null
       },
       {
-        lastSpring: ymd(this.design.frost.lastSpringFrostMs),
-        firstFall: ymd(this.design.frost.firstFallFrostMs)
+        lastSpring: ymd(frost.lastSpringFrostMs),
+        firstFall: ymd(frost.firstFallFrostMs),
+        frostFree: frost.frostFree
       }
     );
     return {
-      startMs: parseYmd(w.earliest) ?? this.design.frost.lastSpringFrostMs,
-      endMs: parseYmd(w.latest) ?? this.design.frost.firstFallFrostMs,
+      startMs: parseYmd(w.earliest) ?? frost.lastSpringFrostMs,
+      endMs: parseYmd(w.latest) ?? frost.firstFallFrostMs,
       note: w.note
     };
   }
 
   /** A warning when an outdoor planting is dated outside its crop's
    *  window by more than a week. */
-  windowWarning(p: Pick<PlacedPlanting, 'cropPluginId' | 'plantingDateMs'>): string | null {
+  windowWarning(
+    p: Pick<PlacedPlanting, 'cropPluginId' | 'plantingDateMs'> & { blockId?: string }
+  ): string | null {
     if (p.plantingDateMs == null || !this.outdoors) return null;
     const crop = this.crop(p.cropPluginId);
     if (!crop) return null;
     const day = utcDayStart(p.plantingDateMs);
-    const w = this.plantingWindowFor(p.cropPluginId);
+    const w = this.plantingWindowFor(p.cropPluginId, p.blockId);
     if (day < w.startMs - WINDOW_GRACE_MS) {
       return `Early for ${crop.displayName}. Its window opens ${this.dateText(w.startMs)}.`;
     }
@@ -1018,7 +1092,8 @@ export class DesignerState {
       .filter((f): f is Footprint => f !== null);
   }
 
-  private spanFor(pluginId: string, dateMs: number) {
+  private spanFor(pluginId: string, dateMs: number, blockId?: string) {
+    const frost = this.frostFor(blockId);
     return plantingOccupancy(
       {
         cropId: '__new__',
@@ -1031,8 +1106,8 @@ export class DesignerState {
       },
       this.crop(pluginId),
       {
-        firstFallFrostMs: this.design.frost.firstFallFrostMs,
-        lastSpringFrostMs: this.design.frost.lastSpringFrostMs
+        firstFallFrostMs: frost.firstFallFrostMs,
+        lastSpringFrostMs: frost.lastSpringFrostMs
       }
     )!;
   }
@@ -1101,11 +1176,11 @@ export class DesignerState {
     let dateMs = forceDateMs ?? existing?.plantingDateMs ?? this.dateMs;
     let movedForWindow: string | null = null;
     if (!existing && forceDateMs === undefined && crop && this.outdoors) {
-      const w = this.plantingWindowFor(pluginId);
+      const w = this.plantingWindowFor(pluginId, blockId);
       if (dateMs < w.startMs - WINDOW_GRACE_MS) {
         dateMs = w.startMs;
         movedForWindow = `${this.dateText(dateMs)}, ${
-          w.startMs >= this.design.frost.lastSpringFrostMs
+          w.startMs >= this.frostFor(blockId).lastSpringFrostMs
             ? 'after your last frost'
             : 'when its planting window opens'
         }`;
@@ -1115,7 +1190,7 @@ export class DesignerState {
       }
     }
     const want = this.wantedSize(existing, crop, bed);
-    const span = this.spanFor(pluginId, dateMs);
+    const span = this.spanFor(pluginId, dateMs, blockId);
     const taken = this.busyFootprints(blockId, span, existing?.cropId);
     const fp = fitFootprint(bed, want, taken, at);
     const label = existing?.varietyDisplayName ?? choice.label;
@@ -1218,7 +1293,11 @@ export class DesignerState {
     const crop = this.crop(pluginId);
     const want = this.wantedSize(existing, crop, bed);
     const dateMs = existing?.plantingDateMs ?? this.dateMs;
-    const taken = this.busyFootprints(blockId, this.spanFor(pluginId, dateMs), existing?.cropId);
+    const taken = this.busyFootprints(
+      blockId,
+      this.spanFor(pluginId, dateMs, blockId),
+      existing?.cropId
+    );
     const fp = fitFootprint(bed, want, taken, at);
     if (fp) return { footprint: fp, fits: true };
     return {
@@ -1554,7 +1633,7 @@ export class DesignerState {
     if (p.plantingDateMs == null) {
       return wanted ?? fitFootprint(bed, size, [], at);
     }
-    const span = this.spanFor(p.cropPluginId, p.plantingDateMs);
+    const span = this.spanFor(p.cropPluginId, p.plantingDateMs, bed.blockId);
     const taken = this.busyFootprints(bed.blockId, span, p.cropId);
     if (wanted && !taken.some((t) => footprintsOverlap(t, wanted))) return wanted;
     return fitFootprint(bed, size, taken, at);
@@ -1659,8 +1738,8 @@ export class DesignerState {
       count,
       intervalDays,
       intervals: this.intervals.filter((i) => i.blockId === bed.blockId),
-      firstFallFrostMs: this.design.frost.firstFallFrostMs,
-      lastSpringFrostMs: this.design.frost.lastSpringFrostMs,
+      firstFallFrostMs: this.frostFor(bed.blockId).firstFallFrostMs,
+      lastSpringFrostMs: this.frostFor(bed.blockId).lastSpringFrostMs,
       afterMs: this.seriesOf(anchor).reduce<number | null>(
         (m, q) =>
           q.plantingDateMs != null && (m == null || q.plantingDateMs > m) ? q.plantingDateMs : m,
@@ -1745,8 +1824,8 @@ export class DesignerState {
     const application = applyRecipe(recipe, {
       bed,
       crops,
-      lastSpringFrostMs: this.design.frost.lastSpringFrostMs,
-      firstFallFrostMs: this.design.frost.firstFallFrostMs,
+      lastSpringFrostMs: this.frostFor(blockId).lastSpringFrostMs,
+      firstFallFrostMs: this.frostFor(blockId).firstFallFrostMs,
       intervals: this.intervals.filter((i) => i.blockId === blockId),
       seasonYear: this.design.seasonYear
     });
@@ -1853,6 +1932,41 @@ export class DesignerState {
     } catch (e) {
       this.fail(e);
       return false;
+    }
+  }
+
+  /** Phase 32E "Seed or seedling?" on a placed planting (owner only).
+   *  Started indoors writes the sow, harden-off and transplant tasks on the
+   *  server; seed or bought seedlings skip them. */
+  async setEstablishment(
+    cropId: string,
+    establishment: 'direct-seed' | 'transplant',
+    startIndoors: boolean
+  ): Promise<string[]> {
+    if (!this.guard()) return [];
+    const since = this.mark();
+    try {
+      const res = await this.request<{
+        crop: { establishment?: 'direct-seed' | 'transplant' };
+        seedStart: { notes: string[]; startedIndoors: boolean };
+      }>(`/api/crops/${encodeURIComponent(cropId)}`, {
+        method: 'PATCH',
+        json: { action: 'set-establishment', establishment, startIndoors }
+      });
+      this.design.plantings = this.design.plantings.map((p) =>
+        p.cropId === cropId ? { ...p, establishment: res.crop.establishment ?? null } : p
+      );
+      const what =
+        establishment === 'direct-seed'
+          ? 'Seeded in the ground.'
+          : startIndoors
+            ? 'Seedlings started indoors. Sow and transplant tasks are on your list.'
+            : 'Bought seedlings. No indoor tasks.';
+      this.say([what, ...res.seedStart.notes].join(' '), since);
+      return res.seedStart.notes;
+    } catch (e) {
+      this.fail(e);
+      return [];
     }
   }
 

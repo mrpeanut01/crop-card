@@ -22,6 +22,9 @@ import {
   resolveDesignableBed,
   resolvePlacement
 } from '$lib/server/garden/placement';
+import { db } from '$lib/db/client';
+import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
+import { applyPlantingEstablishment } from '$lib/server/seedStartTasks';
 
 const stockUnit = z.enum(ALL_STOCK_UNITS as unknown as [StockUnit, ...StockUnit[]]);
 
@@ -53,8 +56,12 @@ const plantingSchema = z.object({
   /** Plants the planning wizard gave this planting, recorded without
    *  placing it in a bed. Keeps a fill-to-bed planting's size on record so
    *  later plans see how much of a shared bed it takes. */
-  plannedPlants: z.number().int().positive().max(100_000).optional()
+  plannedPlants: z.number().int().positive().max(100_000).optional(),
+  /** Phase 32E "Seed or seedling?" (E1-10). */
+  ...plantingEstablishmentFields
 });
+
+export const _requestSchema = plantingSchema;
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
@@ -116,17 +123,29 @@ export const POST: RequestHandler = async (event) => {
     );
   }
 
-  const planting = addPlanting({
-    blockId,
-    cropPluginId: parsed.data.cropPluginId,
-    varietyDisplayName: parsed.data.varietyDisplayName ?? plugin.plugin.displayName,
-    plantingDate: parsed.data.plantingDate ?? null,
-    quantityPlanted: parsed.data.quantityPlanted,
-    quantityUnit: parsed.data.quantityUnit,
-    sourceProvenance: parsed.data.sourceProvenance,
-    placement,
-    plannedPlants: placement ? undefined : parsed.data.plannedPlants,
-    status: placement ? 'planned' : undefined
+  const { planting, seedStart } = db.transaction(() => {
+    const planting = addPlanting({
+      blockId,
+      cropPluginId: parsed.data.cropPluginId,
+      varietyDisplayName: parsed.data.varietyDisplayName ?? plugin.plugin.displayName,
+      plantingDate: parsed.data.plantingDate ?? null,
+      quantityPlanted: parsed.data.quantityPlanted,
+      quantityUnit: parsed.data.quantityUnit,
+      sourceProvenance: parsed.data.sourceProvenance,
+      placement,
+      plannedPlants: placement ? undefined : parsed.data.plannedPlants,
+      status: placement ? 'planned' : undefined
+    });
+    const seedStart = applyPlantingEstablishment(
+      planting.id,
+      {
+        establishment: parsed.data.establishment,
+        startIndoors: parsed.data.startIndoors,
+        sowIndoorsOn: parsed.data.sowIndoorsOn
+      },
+      plugin.plugin.type === 'crop' ? plugin.plugin : undefined
+    );
+    return { planting, seedStart };
   });
 
   let stockItemId = parsed.data.stockItemId;
@@ -188,5 +207,5 @@ export const POST: RequestHandler = async (event) => {
   const placed = saved
     ? placedPlantingFromCrop(saved, cropLookupFrom(registry)(saved.cropPluginId))
     : undefined;
-  return json({ planting, decrement, purchased, placed }, { status: 201 });
+  return json({ planting, decrement, purchased, placed, seedStart }, { status: 201 });
 };

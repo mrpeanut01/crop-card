@@ -1,0 +1,12 @@
+{
+  "$comment": "Phase 32E (E3). Quotes behind the sowing calendar's short-day band (apps/web/src/lib/calendar/persephone.ts). The daylight span itself is astronomy (NOAA sunrise and sunset at -0.833 degrees, lib/safety/sunTimes.ts); only the name \"Persephone period\" and its 10-hour line need a source. Each entry is { url, publisher, date, quote, note? }. Rules in docs/design/PHASE_32_PLAN.md, section 32E rulings E0-3 and E3-6. The gate is apps/web/src/lib/calendar/calendar.sources.gate.test.ts.",
+  "entries": {
+    "persephone": {
+      "url": "https://ucanr.edu/node/100288",
+      "publisher": "University of California Agriculture and Natural Resources, UC Master Gardeners of Napa County (column \"The Persephone Period\", Helen Dake)",
+      "date": "2026-09-29",
+      "quote": "Elliot Coleman uses the term \"Persephone period\" or \"Persephone days\" to describe the time of year when the days have 10 or fewer hours of light.",
+      "note": "Taken from a search excerpt on 2026-09-29; ucanr.edu is blocked by the network proxy, so the sentence may be a close paraphrase and the column's publication date is not known (the date field is the access date). A second extension page agrees on the 10-hour line: University of Illinois Extension, https://extension.illinois.edu/blogs/learn-grow-food-eat-it/2019-09-23-fall-and-winter-protected-culture-growing (2019-09-23), excerpt: \"The start of this low light winter period corresponds roughly with 10 hours of day length or less\". Label research should check both word for word. The calendar uses only the name and the 10-hour line and makes no claim about growth."
+    }
+  }
+}

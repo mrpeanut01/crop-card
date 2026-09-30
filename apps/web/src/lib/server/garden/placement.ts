@@ -30,10 +30,11 @@ import { footprintsOverlap } from '$lib/garden/geometry';
 import { intervalsOverlapInTime, plantingOccupancy, shortDate } from '$lib/garden/occupancy';
 import { plantCount, resolveSpacing } from '$lib/garden/plantCount';
 import type { GardenCrop, PlacedPlanting, PlantingStatus } from '$lib/garden/types';
-import { frostDatesForYear } from '$lib/schedule/settings';
+import { bedFrostMs } from '$lib/server/blockFrost.server';
 import { db } from '$lib/db/client';
 import { plantingInGround } from '$lib/garden/inGround';
 import type { PluginRegistry } from '$lib/plugins';
+import { applyPlantingEstablishment, seedStartTasksOnFirstDate } from '$lib/server/seedStartTasks';
 
 export type CropLookup = (pluginId: string) => GardenCrop | undefined;
 
@@ -168,7 +169,9 @@ export function placedPlantingFromCrop(crop: Crop, plugin: GardenCrop | undefine
     groupId: crop.groupId ?? null,
     groupSystemKind: crop.groupSystemKind ?? null,
     groupRole: crop.groupRole ?? null,
-    sourceProvenance: crop.sourceProvenance ?? null
+    sourceProvenance: crop.sourceProvenance ?? null,
+    establishment: crop.establishment ?? null,
+    sownIndoorsAtMs: crop.sownIndoorsAt ?? null
   };
 }
 
@@ -178,7 +181,7 @@ export function placedPlantingFromCrop(crop: Crop, plugin: GardenCrop | undefine
 export function sharedSpaceWarnings(crop: Crop, lookup: CropLookup): string[] {
   if (!crop.footprint || crop.plantingDate == null) return [];
   const year = new Date(crop.plantingDate).getFullYear();
-  const { firstFallFrostMs, lastSpringFrostMs } = frostDatesForYear(year);
+  const { firstFallFrostMs, lastSpringFrostMs } = bedFrostMs(crop.blockId, year);
   const mine = plantingOccupancy(
     placedPlantingFromCrop(crop, lookup(crop.cropPluginId)),
     lookup(crop.cropPluginId),
@@ -219,7 +222,7 @@ export function linkedSowingClash(
   if (target.plantingDateMs == null) return null;
   const plugin = lookup(current.cropPluginId);
   const year = new Date(target.plantingDateMs).getFullYear();
-  const { firstFallFrostMs, lastSpringFrostMs } = frostDatesForYear(year);
+  const { firstFallFrostMs, lastSpringFrostMs } = bedFrostMs(target.blockId, year);
   const mine = plantingOccupancy(
     {
       ...placedPlantingFromCrop(current, plugin),
@@ -374,6 +377,7 @@ export function writeFootprint(
         if (current.plantingDate != null) unscheduleCrop(cropId);
       } else if (req.plantingDateMs !== current.plantingDate) {
         const moved = movePlantingDate(cropId, req.plantingDateMs, nowMs);
+        if (current.plantingDate == null) seedStartTasksOnFirstDate(cropId, plugin, nowMs);
         reanchored = moved?.reanchored ?? null;
         followers = (moved?.followers ?? []).map((f) =>
           placedPlantingFromCrop(f, lookup(f.cropPluginId))
@@ -393,7 +397,8 @@ export function writeFootprint(
   });
 }
 
-export type PlantingCreateResult = { ok: true; plantings: PlacedPlanting[] } | GardenFailure;
+export type PlantingCreateResult =
+  { ok: true; plantings: PlacedPlanting[]; seedStartNotes: string[] } | GardenFailure;
 
 /** Creates `planned` plantings straight into beds. Every item is checked
  *  before anything is written, so a bad item writes nothing. */
@@ -416,20 +421,29 @@ export function createPlacedPlantings(
     }
     checked.push({ item, plugin });
   }
-  return db.transaction(() => ({
-    ok: true as const,
-    plantings: checked.map(({ item, plugin }) =>
-      placedPlantingFromCrop(
-        createPlanned({
-          blockId: item.blockId,
-          cropPluginId: item.cropPluginId,
-          varietyDisplayName: item.varietyDisplayName,
-          plantingDate: item.plantingDateMs,
-          placement: resolvePlacement(item, plugin),
-          sourceProvenance: item.source === 'manual' ? undefined : item.source
-        }),
+  return db.transaction(() => {
+    const seedStartNotes: string[] = [];
+    const plantings = checked.map(({ item, plugin }) => {
+      const created = createPlanned({
+        blockId: item.blockId,
+        cropPluginId: item.cropPluginId,
+        varietyDisplayName: item.varietyDisplayName,
+        plantingDate: item.plantingDateMs,
+        placement: resolvePlacement(item, plugin),
+        sourceProvenance: item.source === 'manual' ? undefined : item.source
+      });
+      const outcome = applyPlantingEstablishment(
+        created.id,
+        {
+          establishment: item.establishment,
+          startIndoors: item.startIndoors,
+          sowIndoorsOn: item.sowIndoorsOn
+        },
         plugin
-      )
-    )
-  }));
+      );
+      for (const n of outcome.notes) if (!seedStartNotes.includes(n)) seedStartNotes.push(n);
+      return placedPlantingFromCrop(getCrop(created.id) ?? created, plugin);
+    });
+    return { ok: true as const, plantings, seedStartNotes };
+  });
 }

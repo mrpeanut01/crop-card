@@ -32,6 +32,7 @@ import { getApiKey } from './scanResult';
 import { extractJsonObject } from './aiJsonExtract';
 import {
   scheduleCandidacy,
+  type ScheduleWindowInput,
   formatDateMs,
   type ScheduleAssignmentInput,
   type ScheduleWindow
@@ -71,6 +72,8 @@ export interface ScheduleInput {
   pollinationConstraints: ReadonlyArray<PollinationConstraint>;
   companionGroups: ReadonlyArray<CompanionGroupMarker>;
   frostDates: { lastSpringFrostMs: number; firstFallFrostMs: number };
+  /** Phase 32E: beds whose covers move their frost. */
+  frostByBlock?: ScheduleWindowInput['frostByBlock'];
   year: number;
 }
 
@@ -155,6 +158,7 @@ export async function refineSchedule(
     pluginIndex: input.pluginIndex,
     existingCrops: input.existingCrops,
     frostDates: input.frostDates,
+    frostByBlock: input.frostByBlock,
     year: input.year
   });
   const windowsByKey = new Map<string, ScheduleWindow>();
@@ -438,6 +442,7 @@ export async function schedulePlantings(
     pluginIndex: input.pluginIndex,
     existingCrops: input.existingCrops,
     frostDates: input.frostDates,
+    frostByBlock: input.frostByBlock,
     year: input.year
   });
   const windowsByKey = new Map<string, ScheduleWindow>();

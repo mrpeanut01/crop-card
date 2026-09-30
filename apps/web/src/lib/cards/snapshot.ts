@@ -13,8 +13,9 @@ import type { MapFeatureView } from '$lib/farm/mapFeatures';
 import type { Footprint, SpacingPattern } from '$lib/farm/footprint';
 import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/soilInterpret';
 
-/** 2 since 32D: animals, flocks, care plans and precomputed holds. */
-export const FARM_SNAPSHOT_VERSION = 2 as const;
+/** 2 since 32D: animals, flocks, care plans and precomputed holds.
+ *  3 since 32E: open seed-starting trays on each planting. */
+export const FARM_SNAPSHOT_VERSION = 3 as const;
 
 export type SnapshotProvenance = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
@@ -88,6 +89,22 @@ export interface SnapshotPlanting {
    *  Absent on older bundles and when it has no spot yet. */
   footprint?: Footprint | null;
   spacingPattern?: SpacingPattern | null;
+  /** Phase 32E "Seed or seedling?". Absent on older bundles. */
+  establishment?: 'direct-seed' | 'transplant' | null;
+  /** Earliest tray sowing, epoch ms. */
+  sownIndoorsAt?: number | null;
+  /** Trays not yet transplanted, for the offline germination stepper
+   *  (E1-18). Absent on bundles saved before version 3. */
+  trays?: SnapshotSeedTray[];
+}
+
+export interface SnapshotSeedTray {
+  id: string;
+  trayLabel: string | null;
+  cells: number | null;
+  seedsPerCell: number | null;
+  germinatedCount: number | null;
+  sownAt: number;
 }
 
 export type SnapshotTaskCategory =
@@ -178,6 +195,12 @@ export interface SnapshotCropPlugin {
     inRowSpacingIn?: SnapshotMinMax;
     seedDepthIn?: SnapshotMinMax;
     soilTempMinF?: number;
+    /** Phase 32E seed starting, sourced values only. */
+    establishment?: 'direct-seed' | 'transplant' | 'either';
+    startIndoorsWeeks?: SnapshotMinMax;
+    hardenOffDays?: SnapshotMinMax;
+    germinationTempF?: SnapshotMinMax;
+    dtmFrom?: 'direct-seed' | 'transplant';
   };
   harvestIndicators?: string[];
   notes?: string;
@@ -376,7 +399,7 @@ export interface SnapshotAreaHold {
 }
 
 export interface FarmSnapshot {
-  version: typeof FARM_SNAPSHOT_VERSION | 1;
+  version: typeof FARM_SNAPSHOT_VERSION | 2 | 1;
   ownerId: string;
   farmName: string | null;
   generatedAt: number;

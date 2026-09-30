@@ -17,7 +17,8 @@
     "inRowSpacingIn": {
       "min": 12,
       "max": 18
-    }
+    },
+    "establishment": "transplant"
   },
   "agronomy": {
     "lifecycle": "annual",

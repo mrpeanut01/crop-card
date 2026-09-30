@@ -26,3 +26,24 @@ export function colderFrostDates(
   }
   return out;
 }
+
+/** A covered spot: spring frost ends earlier and fall frost comes later.
+ *  Only the light-frost dates move; hard-frost dates stay as saved. */
+export function warmerFrostDates(
+  values: Partial<Record<FrostField, string | null>>,
+  shift: { springDays: number; fallDays: number }
+): Partial<Record<FrostField, string>> {
+  const out: Partial<Record<FrostField, string>> = {};
+  for (const [f, v] of Object.entries(values) as Array<[FrostField, string | null]>) {
+    if (!v) continue;
+    const days =
+      f === 'lastFrost'
+        ? -Math.max(0, shift.springDays)
+        : f === 'firstFrost'
+          ? Math.max(0, shift.fallDays)
+          : 0;
+    const moved = shiftMmdd(v, days);
+    if (moved) out[f] = moved;
+  }
+  return out;
+}

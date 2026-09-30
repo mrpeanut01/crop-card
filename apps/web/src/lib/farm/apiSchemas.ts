@@ -3,6 +3,7 @@ import { AREA_KINDS } from './areaKinds';
 import { blockLayoutPatchSchema, blockLayoutSchema } from './blockLayout';
 import { MAX_SKETCH_FT } from './sketch';
 import { MAP_FEATURE_KINDS } from './mapFeatures';
+import { MAX_SHIFT_DAYS, PROTECTION_KINDS } from '$lib/climate/protection';
 
 const polygonType = z.enum(['Polygon', 'MultiPolygon']);
 
@@ -90,3 +91,20 @@ export const mapFeaturePatchSchema = z.strictObject({
   details: z.unknown().optional(),
   areaIds: mapFeatureAreaIds.optional()
 });
+
+/** `POST /api/blocks/:id/protections` (Phase 32E). Omitted shifts take the
+ *  kind's sourced default; typed shifts are the owner's. Dates are epoch ms. */
+export const blockProtectionCreateSchema = z
+  .object({
+    kind: z.enum(PROTECTION_KINDS),
+    springShiftDays: z.number().int().min(0).max(MAX_SHIFT_DAYS).nullable().optional(),
+    fallShiftDays: z.number().int().min(0).max(MAX_SHIFT_DAYS).nullable().optional(),
+    installedOn: z.number().int().nonnegative().nullable().optional(),
+    removedOn: z.number().int().nonnegative().nullable().optional(),
+    seasonYear: z.number().int().min(2000).max(2100).nullable().optional(),
+    notes: z.string().max(500).nullable().optional()
+  })
+  .refine((v) => v.installedOn == null || v.removedOn == null || v.removedOn > v.installedOn, {
+    message: 'removedOn must come after installedOn',
+    path: ['removedOn']
+  });

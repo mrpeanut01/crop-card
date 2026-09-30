@@ -28,6 +28,12 @@ import type {
 } from './types';
 import type { SetupArea } from '$lib/setup/types';
 
+export interface EstablishmentAnswer {
+  establishment: 'direct-seed' | 'transplant' | null;
+  startIndoors: boolean;
+  sowIndoorsOn: string;
+}
+
 /** Live (reactive) wizard props. Callers pass getters so prop updates from
  *  `onRefreshParent` (e.g. fresh seed stock after linking a plugin) flow
  *  through without re-creating the store. */
@@ -168,6 +174,8 @@ export class AllocationWizardState {
   });
 
   scheduleResponse = $state<ScheduleResponse | null>(null);
+  /** Phase 32E "Seed or seedling?" per crop, forwarded by the commit. */
+  establishmentByCrop = $state<Record<string, EstablishmentAnswer>>({});
 
   // Phase 21b / B-28 — inputs plan state held across the inputs →
   // commit transition. `acceptedInputs` is populated by

@@ -14,6 +14,7 @@
  *   Stock has been promoted to its own /stock route.
  */
 
+import { seedStartGuide } from '$lib/schedule/seedStart';
 import type { PageServerLoad } from './$types';
 import {
   eventsForHarvest,
@@ -170,7 +171,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         cropFamily: c.cropFamily,
         daysToMaturity: c.daysToMaturity,
         soilTempMinF: c.plantingGuide?.soilTempMinF ?? null,
-        archetype: resolveArchetype(c)
+        archetype: resolveArchetype(c),
+        seedStart: seedStartGuide(c)
       };
     })
     .sort((a, b) => a.displayName.localeCompare(b.displayName));

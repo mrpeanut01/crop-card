@@ -17,6 +17,15 @@
     "inRowSpacingIn": {
       "min": 12,
       "max": 18
+    },
+    "establishment": "transplant",
+    "startIndoorsWeeks": {
+      "min": 4,
+      "max": 6
+    },
+    "hardenOffDays": {
+      "min": 5,
+      "max": 14
     }
   },
   "agronomy": {

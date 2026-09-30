@@ -1787,7 +1787,8 @@ export const PEST_MODEL_ACTIONS = [
   "hand-pick",
 ] as const;
 
-const SPRAY_WORDS = /spray|insecticide|pesticide|fungicide|\bapply/i;
+/** Words pest-model advice may never use. Shared with the app copy tests. */
+export const SPRAY_WORDS = /spray|insecticide|pesticide|fungicide|\bapply/i;
 
 export const pestModelPluginSchema = z
   .strictObject({

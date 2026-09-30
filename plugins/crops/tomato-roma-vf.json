@@ -20,7 +20,8 @@
     "seedDepthIn": {
       "min": 0.25,
       "max": 0.5
-    }
+    },
+    "establishment": "transplant"
   },
   "traits": [
     "native-halosulfuron-tolerant"

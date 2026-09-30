@@ -1,0 +1,30 @@
+{
+  "pluginId": "gordons-livestock-backrubber-pour-on",
+  "displayName": "Gordon's Livestock Backrubber & Pour-On (permethrin 0.25%, EI-792)",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "external-parasiticide",
+  "activeIngredients": [
+    {
+      "name": "Permethrin"
+    }
+  ],
+  "approval": {
+    "kind": "EPA",
+    "number": "2217-861"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "pig",
+      "class": "all",
+      "routes": [
+        "pour-on"
+      ],
+      "withdrawal": {
+        "meatDays": 5
+      }
+    }
+  ],
+  "notes": "Label (2024-05-20) also covers beef and dairy cattle, calves and sheep but states no slaughter or milk interval for them, so only swine is recorded; other species stay unknown."
+}

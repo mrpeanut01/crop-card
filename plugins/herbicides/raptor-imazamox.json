@@ -22,5 +22,12 @@
   "requiresAMS": true,
   "deconRequired": true,
   "epaRegistrationNumber": "241-379",
-  "notes": "BASF POST imidazolinone (Group 2 ALS). Standard tool for alfalfa, soybean, dry bean, peas, Clearfield wheat/sunflower."
+  "notes": "BASF POST imidazolinone (Group 2 ALS). Standard tool for alfalfa, soybean, dry bean, peas, Clearfield wheat/sunflower.",
+  "grazingRestrictions": {
+    "grazeDays": 0,
+    "hayDays": 0,
+    "lactatingDairyGrazeDays": 0,
+    "meatAnimalRemovalBeforeSlaughterDays": 0,
+    "source": "Raptor herbicide, EPA Reg. No. 241-379, label accepted 2021-04-30"
+  }
 }

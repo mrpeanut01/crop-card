@@ -22,5 +22,6 @@
   "requiresAMS": false,
   "deconRequired": false,
   "epaRegistrationNumber": "34704-746",
+  "grazingRestrictions": {"grazeDays": 0, "hayDays": 0, "lactatingDairyGrazeDays": 0, "meatAnimalRemovalBeforeSlaughterDays": 0, "source": "Balan DF (benefin), EPA Reg. No. 34704-746, EPA-accepted label 2025-11-05; label states no grazing, haying, dairy or slaughter interval, recorded 0 per owner ruling 2026-09-30"},
   "notes": "Corteva Group 3 dinitroaniline PRE. Mechanical incorporation required. Labeled for lettuce, peanut, alfalfa, clover."
 }

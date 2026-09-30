@@ -1,7 +1,8 @@
 {
   "pluginId": "banvel",
   "type": "herbicide",
-  "displayName": "Banvel (BASF dicamba DMA salt, generic)",
+  "displayName": "Banvel Herbicide (UPL dicamba DMA 4 lb/gal)",
+  "epaRegistrationNumber": "70506-461",
   "version": "1.0.0",
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
@@ -32,5 +33,12 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "grazingRestrictions": {
+    "grazeDays": 0,
+    "hayDays": 70,
+    "lactatingDairyGrazeDays": 40,
+    "meatAnimalRemovalBeforeSlaughterDays": 30,
+    "source": "Banvel Herbicide / Dicamba DMA 4# AG, EPA Reg. No. 70506-461 (label stamped as 66330-276, EPA notice 2009-09-11); lactating-dairy and hay values are the highest labelled rate (2 qt/acre)"
+  }
 }

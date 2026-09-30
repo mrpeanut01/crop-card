@@ -227,11 +227,6 @@
       "reason": "Generic plugin: PPLS lists many active \"Atrazine 4L\" registrations (e.g. 33270-10, 2749-657, 94730-23, 35915-4, 5905-470), so the number depends on the jug on hand."
     },
     {
-      "pluginId": "banvel",
-      "field": "epaRegistrationNumber",
-      "reason": "Still ambiguous. BASF's DMA dicamba 7969-131 label names only 'BAS 183 06 H' (no Banvel). The Banvel name sits on UPL registrations (ex-BASF 51036-289): 70506-461 'Banvel Herbicide', 70506-505 'Banvel 4 SL', 70506-503 'Banvel 480'. None is BASF; pick by jug."
-    },
-    {
       "pluginId": "clethodim-2e-generic",
       "field": "epaRegistrationNumber",
       "reason": "Generic plugin: PPLS lists many active clethodim 2EC registrations (e.g. 228-735, 38167-39, 87290-11, 92647-31, 34704-864), so the number depends on the jug on hand."

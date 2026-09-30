@@ -1,0 +1,40 @@
+{
+  "pluginId": "cydectin-pour-on",
+  "displayName": "Cydectin Pour-On (moxidectin) for Cattle",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "dewormer",
+  "activeIngredients": [
+    {
+      "name": "Moxidectin"
+    }
+  ],
+  "approval": {
+    "kind": "NADA",
+    "number": "141-099"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "pour-on"
+      ],
+      "withdrawal": {
+        "meatDays": 0
+      }
+    },
+    {
+      "speciesId": "cattle",
+      "class": "lactating-dairy",
+      "routes": [
+        "pour-on"
+      ],
+      "withdrawal": {
+        "milkHours": 0
+      }
+    }
+  ],
+  "notes": "Internal and external parasites of beef and dairy cattle. The label also says a withdrawal period has not been established in preruminating calves and not to use in calves to be processed for veal."
+}

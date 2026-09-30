@@ -6,6 +6,13 @@
   "defaultUnit": "oz",
   "formulation": "SG",
   "pluginSchemaVersion": "1.1",
+  "grazingRestrictions": {
+    "grazeDays": 30,
+    "hayDays": 30,
+    "lactatingDairyGrazeDays": 30,
+    "meatAnimalRemovalBeforeSlaughterDays": 0,
+    "source": "Harmony SG herbicide, EPA Reg. No. 279-9595, label accepted 2020-04-17"
+  },
   "displayName": "Harmony SG (thifensulfuron)",
   "activeIngredients": [
     {
@@ -22,5 +29,5 @@
   "requiresAMS": false,
   "deconRequired": true,
   "epaRegistrationNumber": "279-9595",
-  "notes": "FMC POST broadleaf herbicide for soybeans, cereals, corn, pasture. Group 2 ALS-inhibitor."
+  "notes": "FMC POST broadleaf herbicide for soybeans, cereals and field corn; the label has no pasture or rangeland use. Group 2 ALS-inhibitor."
 }

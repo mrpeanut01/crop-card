@@ -1,0 +1,74 @@
+{
+  "pluginId": "valbazen-suspension",
+  "displayName": "Valbazen Suspension 11.36% (albendazole)",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "dewormer",
+  "activeIngredients": [
+    {
+      "name": "Albendazole"
+    }
+  ],
+  "approval": {
+    "kind": "NADA",
+    "number": "110-048"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "meatDays": 27
+      }
+    },
+    {
+      "speciesId": "cattle",
+      "class": "lactating-dairy",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "doNotUseFor": [
+          "milk"
+        ]
+      }
+    },
+    {
+      "speciesId": "sheep",
+      "class": "all",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "meatDays": 7
+      }
+    },
+    {
+      "speciesId": "goat",
+      "class": "all",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "meatDays": 7
+      }
+    },
+    {
+      "speciesId": "goat",
+      "class": "lactating-dairy",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "doNotUseFor": [
+          "milk"
+        ]
+      }
+    }
+  ],
+  "notes": "For cattle, sheep and (liver flukes only) nonlactating goats. The label also says not to use in female dairy cattle of breeding age or in lactating does. It gives no milk time for sheep, so sheep milk is left unrecorded on purpose."
+}

@@ -1,5 +1,5 @@
 {
-  "$comment": "Phase 32A. Quotes for every withdrawal value on plugins/animal-health/*.json, keyed pluginId → withdrawal.<speciesId>.<class>.<meatDays|milkHours|eggsDays|doNotUseFor>. Each entry is { url, publisher, date, quote, note? } read from the product label (FDA Animal Drugs @ FDA, DailyMed or the manufacturer label). A product ships only once every food species on its label has a sourced withdrawal. See docs/research/label-research-prompt.md Task 9.",
+  "$comment": "Phase 32A. Quotes for every withdrawal value on plugins/animal-health/*.json, keyed pluginId \u2192 withdrawal.<speciesId>.<class>.<meatDays|milkHours|eggsDays|doNotUseFor>. Each entry is { url, publisher, date, quote, note? } read from the product label (FDA Animal Drugs @ FDA, DailyMed or the manufacturer label). A product ships only once every food species on its label has a sourced withdrawal. See docs/research/label-research-prompt.md Task 9.",
   "prohibitedExtraLabel": {
     "url": "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-E/part-530/subpart-E/section-530.41",
     "publisher": "eCFR, 21 CFR 530.41 Drugs prohibited for extralabel use in animals",
@@ -201,6 +201,151 @@
         "date": "2026-05-21",
         "quote": "No withdrawal period is required when used according to labeling.",
         "note": "The label names laying hens among the animals it is for."
+      }
+    },
+    "valbazen-suspension": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=94cf5818-f27d-4374-87ad-54a2d9ce6ef1",
+        "publisher": "Zoetis Inc., Valbazen (albendazole) Suspension label, DailyMed",
+        "date": "2020-06-26",
+        "quote": "Cattle must not be slaughtered within 27 days following last treatment."
+      },
+      "withdrawal.cattle.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=94cf5818-f27d-4374-87ad-54a2d9ce6ef1",
+        "publisher": "Zoetis Inc., Valbazen (albendazole) Suspension label, DailyMed",
+        "date": "2020-06-26",
+        "quote": "Because a withdrawal time in milk has not been established, do not use in female dairy cattle of breeding age.",
+        "note": "The label says female dairy cattle of breeding age; read here as lactating dairy, the stricter of the two."
+      },
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=94cf5818-f27d-4374-87ad-54a2d9ce6ef1",
+        "publisher": "Zoetis Inc., Valbazen (albendazole) Suspension label, DailyMed",
+        "date": "2020-06-26",
+        "quote": "Sheep and Goats must not be slaughtered within 7 days following last treatment."
+      },
+      "withdrawal.goat.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=94cf5818-f27d-4374-87ad-54a2d9ce6ef1",
+        "publisher": "Zoetis Inc., Valbazen (albendazole) Suspension label, DailyMed",
+        "date": "2020-06-26",
+        "quote": "Sheep and Goats must not be slaughtered within 7 days following last treatment."
+      },
+      "withdrawal.goat.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=94cf5818-f27d-4374-87ad-54a2d9ce6ef1",
+        "publisher": "Zoetis Inc., Valbazen (albendazole) Suspension label, DailyMed",
+        "date": "2020-06-26",
+        "quote": "Do not use in lactating does."
+      }
+    },
+    "cydectin-injectable": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=933980d5-8495-4ff3-b543-349b5994626f",
+        "publisher": "Elanco US Inc., Cydectin (moxidectin) Injectable Solution label, DailyMed",
+        "date": "2026-07-22",
+        "quote": "Cattle must not be slaughtered for human consumption within 21 days of treatment."
+      },
+      "withdrawal.cattle.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=933980d5-8495-4ff3-b543-349b5994626f",
+        "publisher": "Elanco US Inc., Cydectin (moxidectin) Injectable Solution label, DailyMed",
+        "date": "2026-07-22",
+        "quote": "This drug product is not approved for use in female dairy cattle 20 months of age or older, including dry dairy cows.",
+        "note": "Read here as lactating dairy, the stricter of the two."
+      }
+    },
+    "cydectin-sheep-drench": {
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=aa2d9a4d-a442-4d1c-a7bd-17b09d8ab718",
+        "publisher": "Elanco US Inc., Cydectin (moxidectin) Oral Drench for Sheep label, DailyMed",
+        "date": "2026-07-22",
+        "quote": "Sheep must not be slaughtered for human consumption within 7 days of treatment."
+      },
+      "withdrawal.sheep.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=aa2d9a4d-a442-4d1c-a7bd-17b09d8ab718",
+        "publisher": "Elanco US Inc., Cydectin (moxidectin) Oral Drench for Sheep label, DailyMed",
+        "date": "2026-07-22",
+        "quote": "Because a withholding time in milk has not been established for this product, do not use in female sheep providing milk for human consumption."
+      }
+    },
+    "cydectin-pour-on": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=b9b31948-0fad-4666-bba3-d31e1c38779e",
+        "publisher": "Elanco US Inc., Cydectin (moxidectin) Pour-On for Beef and Dairy Cattle label, DailyMed",
+        "date": "2025-01-24",
+        "quote": "neither a pre-slaughter drug withdrawal period nor a milk discard time are required. Meat and milk from cattle treated with CYDECTIN (moxidectin) Pour-On may be used for human consumption at any time following treatment."
+      },
+      "withdrawal.cattle.lactating-dairy.milkHours": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=b9b31948-0fad-4666-bba3-d31e1c38779e",
+        "publisher": "Elanco US Inc., Cydectin (moxidectin) Pour-On for Beef and Dairy Cattle label, DailyMed",
+        "date": "2025-01-24",
+        "quote": "neither a pre-slaughter drug withdrawal period nor a milk discard time are required. Meat and milk from cattle treated with CYDECTIN (moxidectin) Pour-On may be used for human consumption at any time following treatment."
+      }
+    },
+    "eprinex-pour-on": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=7cf8669c-c000-4645-962e-891946c0e54b",
+        "publisher": "Boehringer Ingelheim Animal Health USA Inc., Eprinex Pour-On (eprinomectin) label, DailyMed",
+        "date": "2025-04-23",
+        "quote": "When used according to label directions, neither a pre-slaughter drug withdrawal period nor a milk discard time is required, therefore, meat and milk from cattle treated with EPRINEX (eprinomectin) Pour-On may be used for human consumption at any time following treatment."
+      },
+      "withdrawal.cattle.lactating-dairy.milkHours": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=7cf8669c-c000-4645-962e-891946c0e54b",
+        "publisher": "Boehringer Ingelheim Animal Health USA Inc., Eprinex Pour-On (eprinomectin) label, DailyMed",
+        "date": "2025-04-23",
+        "quote": "When used according to label directions, neither a pre-slaughter drug withdrawal period nor a milk discard time is required, therefore, meat and milk from cattle treated with EPRINEX (eprinomectin) Pour-On may be used for human consumption at any time following treatment."
+      }
+    },
+    "synanthic-bovine": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=152cde64-ff22-4a3e-bb78-65e159dbe6b6",
+        "publisher": "Boehringer Ingelheim Animal Health USA Inc., Synanthic Bovine Dewormer (oxfendazole) label, DailyMed",
+        "date": "2025-05-01",
+        "quote": "Cattle must not be slaughtered until 7 days after treatment."
+      },
+      "withdrawal.cattle.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=152cde64-ff22-4a3e-bb78-65e159dbe6b6",
+        "publisher": "Boehringer Ingelheim Animal Health USA Inc., Synanthic Bovine Dewormer (oxfendazole) label, DailyMed",
+        "date": "2025-05-01",
+        "quote": "Because a withdrawal time in milk has not been established, do not use in female dairy cattle of breeding age.",
+        "note": "The label says female dairy cattle of breeding age; read here as lactating dairy, the stricter of the two."
+      }
+    },
+    "vision-7-with-spur": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://www.merck-animal-health-usa.com/products/bovilis-vision-7-with-spur/",
+        "publisher": "Merck Animal Health, Bovilis Vision 7 with Spur product page reproducing the label (merck-animal-health-usa.com)",
+        "date": "2026-09-30",
+        "quote": "Do not vaccinate within 21 days before slaughter.",
+        "note": "Safety section of the manufacturer product page; the linked PDF label was not reachable."
+      },
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://www.merck-animal-health-usa.com/products/bovilis-vision-7-with-spur/",
+        "publisher": "Merck Animal Health, Bovilis Vision 7 with Spur product page reproducing the label (merck-animal-health-usa.com)",
+        "date": "2026-09-30",
+        "quote": "Do not vaccinate within 21 days before slaughter.",
+        "note": "Safety section of the manufacturer product page; the linked PDF label was not reachable."
+      }
+    },
+    "covexin-8": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://www.merck-animal-health-usa.com/products/bovilis-covexin-8/",
+        "publisher": "Merck Animal Health, Bovilis Covexin 8 product page reproducing the label (merck-animal-health-usa.com)",
+        "date": "2026-09-30",
+        "quote": "Do not vaccinate within 21 days before slaughter.",
+        "note": "Caution section of the manufacturer product page; the linked PDF label was not reachable."
+      },
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://www.merck-animal-health-usa.com/products/bovilis-covexin-8/",
+        "publisher": "Merck Animal Health, Bovilis Covexin 8 product page reproducing the label (merck-animal-health-usa.com)",
+        "date": "2026-09-30",
+        "quote": "Do not vaccinate within 21 days before slaughter.",
+        "note": "Caution section of the manufacturer product page; the linked PDF label was not reachable."
+      }
+    },
+    "gordons-livestock-backrubber-pour-on": {
+      "withdrawal.pig.all.meatDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/002217-00861-20240520.pdf",
+        "publisher": "PBI/Gordon Corporation, EI-792 Insecticide (alt. brand Livestock Backrubber & Pour-On), EPA Reg. No. 2217-861, EPA-stamped label",
+        "date": "2024-05-20",
+        "quote": "Do not slaughter swine within 5 days of last treatment."
       }
     }
   }

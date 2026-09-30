@@ -5,6 +5,14 @@
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'DuraCor'; 'aminopyralid'). Conventional synthetic herbicide; label carries no organic-production statement."},
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
+  "grazingRestrictions": {
+    "grazeDays": 0,
+    "hayDays": 14,
+    "lactatingDairyGrazeDays": 0,
+    "meatAnimalRemovalBeforeSlaughterDays": 0,
+    "manureCarryover": true,
+    "source": "GF-3850 (DuraCor), EPA Reg. No. 62719-739, label accepted 2019-11-26 (stamped 11-22-19)"
+  },
   "displayName": "DuraCor (aminopyralid + florpyrauxifen-benzyl)",
   "activeIngredients": [
     {

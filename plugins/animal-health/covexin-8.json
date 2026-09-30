@@ -1,0 +1,37 @@
+{
+  "pluginId": "covexin-8",
+  "displayName": "Bovilis Covexin 8 (clostridial bacterin-toxoid)",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "vaccine",
+  "activeIngredients": [
+    {
+      "name": "Clostridium chauvoei-septicum-haemolyticum-novyi-tetani-perfringens Types C & D bacterin-toxoid"
+    }
+  ],
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "injection-sc",
+        "injection-im"
+      ],
+      "withdrawal": {
+        "meatDays": 21
+      }
+    },
+    {
+      "speciesId": "sheep",
+      "class": "all",
+      "routes": [
+        "injection-sc"
+      ],
+      "withdrawal": {
+        "meatDays": 21
+      }
+    }
+  ],
+  "notes": "Clostridial 8-way vaccine for healthy cattle and sheep. The label states one slaughter restriction and no milk or egg restriction, so none is recorded and milk stays unknown."
+}

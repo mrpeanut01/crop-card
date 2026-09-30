@@ -5,6 +5,14 @@
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'GrazonNext', 'aminopyralid'; hits were unrelated products). Label (62719-628 master label accepted 2017-03-13) makes no organic-production claim; conventional synthetic herbicide."},
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
+  "grazingRestrictions": {
+    "grazeDays": 0,
+    "hayDays": 14,
+    "lactatingDairyGrazeDays": 0,
+    "meatAnimalRemovalBeforeSlaughterDays": 0,
+    "manureCarryover": true,
+    "source": "GrazonNext HL, EPA Reg. No. 62719-628, label accepted 2017-03-13"
+  },
   "displayName": "GrazonNext HL (aminopyralid + 2,4-D)",
   "activeIngredients": [
     {

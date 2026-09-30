@@ -42,9 +42,7 @@
       {
         "cfr": "(a)(9)",
         "name": "Sulfonamide drugs",
-        "species": [
-          "cattle"
-        ],
+        "species": ["cattle"],
         "conditions": "lactating dairy cattle; except approved use of sulfadimethoxine, sulfabromomethazine and sulfaethoxypyridazine"
       },
       {
@@ -58,40 +56,25 @@
       {
         "cfr": "(a)(12)",
         "name": "Phenylbutazone",
-        "species": [
-          "cattle"
-        ],
+        "species": ["cattle"],
         "conditions": "female dairy cattle 20 months of age or older"
       },
       {
         "cfr": "(a)(13)",
         "name": "Cephalosporins (not including cephapirin)",
-        "species": [
-          "cattle",
-          "swine",
-          "chickens",
-          "turkeys"
-        ],
+        "species": ["cattle", "swine", "chickens", "turkeys"],
         "conditions": "for disease prevention; at unapproved doses, frequencies, durations or routes; or if not approved for that species and production class"
       },
       {
         "cfr": "(d)(1)",
         "name": "Adamantanes",
-        "species": [
-          "chickens",
-          "turkeys",
-          "ducks"
-        ],
+        "species": ["chickens", "turkeys", "ducks"],
         "conditions": "approved for treating or preventing influenza A"
       },
       {
         "cfr": "(d)(2)",
         "name": "Neuraminidase inhibitors",
-        "species": [
-          "chickens",
-          "turkeys",
-          "ducks"
-        ],
+        "species": ["chickens", "turkeys", "ducks"],
         "conditions": "approved for treating or preventing influenza A"
       }
     ]

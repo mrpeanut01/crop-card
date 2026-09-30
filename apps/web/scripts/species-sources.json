@@ -5,9 +5,9 @@
       "foodProducingDefault": {
         "url": "https://www.law.cornell.edu/cfr/text/9/381.1",
         "publisher": "USDA Food Safety and Inspection Service, 9 CFR 381.1 (Poultry Products Inspection Regulations), via Cornell LII",
-        "date": "2026-09-27",
-        "quote": "9 CFR 381.1: \"Poultry means any domesticated bird (chickens, turkeys, ducks, geese, guineas, ratites, or squabs, also termed young pigeons from one to about thirty days of age), whether live or dead.\"",
-        "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+        "date": "2026-09-30",
+        "quote": "9 CFR 381.1: “Poultry” means any domesticated bird (chickens, turkeys, ducks, geese, guineas, ratites, or squabs, also termed young pigeons from one to about thirty days of age), whether live or dead.",
+        "note": "Checked word for word on 2026-09-30 against the Cornell LII page and the eCFR text of 9 CFR 381.1 (current through 2026-09-28). The only change from the earlier search excerpt is the typographic quotation marks around the defined term. The definition covers chickens and ducks."
       },
       "housingSpace.indoorSqFtPerAnimal": {
         "url": "https://poultry.extension.org/articles/getting-started-with-small-and-backyard-poultry/housing-for-small-and-backyard-poultry-flocks/space-allowances-in-housing-for-small-and-backyard-poultry-flocks/",
@@ -28,9 +28,9 @@
       "foodProducingDefault": {
         "url": "https://www.law.cornell.edu/cfr/text/9/381.1",
         "publisher": "USDA Food Safety and Inspection Service, 9 CFR 381.1 (Poultry Products Inspection Regulations), via Cornell LII",
-        "date": "2026-09-27",
-        "quote": "9 CFR 381.1: \"Poultry means any domesticated bird (chickens, turkeys, ducks, geese, guineas, ratites, or squabs, also termed young pigeons from one to about thirty days of age), whether live or dead.\"",
-        "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+        "date": "2026-09-30",
+        "quote": "9 CFR 381.1: “Poultry” means any domesticated bird (chickens, turkeys, ducks, geese, guineas, ratites, or squabs, also termed young pigeons from one to about thirty days of age), whether live or dead.",
+        "note": "Checked word for word on 2026-09-30 against the Cornell LII page and the eCFR text of 9 CFR 381.1 (current through 2026-09-28). The only change from the earlier search excerpt is the typographic quotation marks around the defined term. The definition covers chickens and ducks."
       },
       "housingSpace.indoorSqFtPerAnimal": {
         "url": "https://poultry.extension.org/articles/getting-started-with-small-and-backyard-poultry/housing-for-small-and-backyard-poultry-flocks/space-allowances-in-housing-for-small-and-backyard-poultry-flocks/",
@@ -44,9 +44,9 @@
       "foodProducingDefault": {
         "url": "https://www.law.cornell.edu/cfr/text/9/301.2",
         "publisher": "USDA Food Safety and Inspection Service, 9 CFR 301.2 (Mandatory Meat Inspection definitions), via Cornell LII",
-        "date": "2026-09-27",
-        "quote": "9 CFR 301.2: \"Livestock. Cattle, sheep, swine, goat, horse, mule, or other equine.\"",
-        "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+        "date": "2026-09-30",
+        "quote": "9 CFR 301.2: Livestock. Cattle, sheep, swine, goat, horse, mule, or other equine.",
+        "note": "Checked word for word on 2026-09-30 against the Cornell LII page and the eCFR text of 9 CFR 301.2 (current through 2026-09-28). The earlier quotation marks were added by hand; the regulation prints the definition without them."
       },
       "housingSpace.indoorSqFtPerAnimal": {
         "url": "https://www.umass.edu/agriculture-food-environment/crops-dairy-livestock-equine/fact-sheets/housing-working-facilites-for-goats",
@@ -60,9 +60,9 @@
       "foodProducingDefault": {
         "url": "https://www.law.cornell.edu/cfr/text/9/301.2",
         "publisher": "USDA Food Safety and Inspection Service, 9 CFR 301.2 (Mandatory Meat Inspection definitions), via Cornell LII",
-        "date": "2026-09-27",
-        "quote": "9 CFR 301.2: \"Livestock. Cattle, sheep, swine, goat, horse, mule, or other equine.\"",
-        "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+        "date": "2026-09-30",
+        "quote": "9 CFR 301.2: Livestock. Cattle, sheep, swine, goat, horse, mule, or other equine.",
+        "note": "Checked word for word on 2026-09-30 against the Cornell LII page and the eCFR text of 9 CFR 301.2 (current through 2026-09-28). The earlier quotation marks were added by hand; the regulation prints the definition without them."
       },
       "housingSpace.indoorSqFtPerAnimal": {
         "url": "https://www.umass.edu/agriculture-food-environment/crops-dairy-livestock-equine/fact-sheets/housing-working-facilities-for-sheep",
@@ -76,36 +76,36 @@
       "foodProducingDefault": {
         "url": "https://www.law.cornell.edu/cfr/text/9/301.2",
         "publisher": "USDA Food Safety and Inspection Service, 9 CFR 301.2 (Mandatory Meat Inspection definitions), via Cornell LII",
-        "date": "2026-09-27",
-        "quote": "9 CFR 301.2: \"Livestock. Cattle, sheep, swine, goat, horse, mule, or other equine.\"",
-        "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+        "date": "2026-09-30",
+        "quote": "9 CFR 301.2: Livestock. Cattle, sheep, swine, goat, horse, mule, or other equine.",
+        "note": "Checked word for word on 2026-09-30 against the Cornell LII page and the eCFR text of 9 CFR 301.2 (current through 2026-09-28). The earlier quotation marks were added by hand; the regulation prints the definition without them."
       }
     },
     "pig": {
       "foodProducingDefault": {
         "url": "https://www.law.cornell.edu/cfr/text/9/301.2",
         "publisher": "USDA Food Safety and Inspection Service, 9 CFR 301.2 (Mandatory Meat Inspection definitions), via Cornell LII",
-        "date": "2026-09-27",
-        "quote": "9 CFR 301.2: \"Livestock. Cattle, sheep, swine, goat, horse, mule, or other equine.\"",
-        "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+        "date": "2026-09-30",
+        "quote": "9 CFR 301.2: Livestock. Cattle, sheep, swine, goat, horse, mule, or other equine.",
+        "note": "Checked word for word on 2026-09-30 against the Cornell LII page and the eCFR text of 9 CFR 301.2 (current through 2026-09-28). The earlier quotation marks were added by hand; the regulation prints the definition without them."
       }
     },
     "horse": {
       "foodProducingDefault": {
         "url": "https://www.law.cornell.edu/cfr/text/9/301.2",
         "publisher": "USDA Food Safety and Inspection Service, 9 CFR 301.2 (Mandatory Meat Inspection definitions), via Cornell LII",
-        "date": "2026-09-27",
-        "quote": "9 CFR 301.2: \"Livestock. Cattle, sheep, swine, goat, horse, mule, or other equine.\"",
-        "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag. Horse drug labels such as phenylbutazone also carry \"Do not use in horses intended for human consumption.\" (DailyMed), which is why the not-for-slaughter toggle never clears the flag."
+        "date": "2026-09-30",
+        "quote": "9 CFR 301.2: Livestock. Cattle, sheep, swine, goat, horse, mule, or other equine.",
+        "note": "Checked word for word on 2026-09-30 against the Cornell LII page and the eCFR text of 9 CFR 301.2 (current through 2026-09-28). The earlier quotation marks were added by hand; the regulation prints the definition without them."
       }
     },
     "rabbit": {
       "foodProducingDefault": {
         "url": "https://www.law.cornell.edu/cfr/text/9/354.1",
         "publisher": "USDA Food Safety and Inspection Service, 9 CFR 354.1 (Voluntary Inspection of Rabbits and Edible Products Thereof), via Cornell LII",
-        "date": "2026-09-27",
-        "quote": "9 CFR 354.1: \"Rabbit means any domesticated rabbit, whether live or dead.\" Part 354 sets out USDA inspection of rabbits and their edible products.",
-        "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+        "date": "2026-09-30",
+        "quote": "9 CFR 354.1: Rabbit means any domesticated rabbit, whether live or dead.",
+        "note": "Checked word for word on 2026-09-30 against the Cornell LII page and the eCFR text of 9 CFR 354.1 (current through 2026-09-28). Part 354 sets out USDA inspection of rabbits and their edible products."
       }
     },
     "dog": {
@@ -113,8 +113,8 @@
         "url": "https://www.fda.gov/media/133411/download",
         "publisher": "U.S. Food and Drug Administration, Center for Veterinary Medicine, 2018 Summary Report on Antimicrobials Sold or Distributed for Use in Food-Producing Animals",
         "date": "2019-12",
-        "quote": "\"Some antimicrobial drug applications include approved products that are labeled for use in both food-producing animal species (e.g., cattle and swine) and nonfood-producing animal species (e.g., dogs and cats).\"",
-        "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+        "quote": "Includes antimicrobial drug applications that are approved and labeled for use in both food-producing animals (e.g., cattle and swine) and nonfood-producing animals (e.g., dogs and horses).",
+        "note": "Checked word for word on 2026-09-30 against the PDF (Figure and table footnotes). The earlier quote (\"...nonfood-producing animal species (e.g., dogs and cats)\") does not appear in the report; it was a search-excerpt paraphrase. The report names dogs and horses as nonfood-producing examples, never cats. It supports the dog flag. It does not name cats, so the cat flag (nonfood by default) rests on cats not being a food animal in 9 CFR 301.2, 381.1 or 354.1, not on this page; the flag is unchanged. Note that the same footnote lists horses as nonfood-producing while the CropCard horse plugin uses 9 CFR 301.2, which lists horse as livestock; the stricter food flag is the one shipped, so nothing changes."
       }
     },
     "cat": {
@@ -122,8 +122,8 @@
         "url": "https://www.fda.gov/media/133411/download",
         "publisher": "U.S. Food and Drug Administration, Center for Veterinary Medicine, 2018 Summary Report on Antimicrobials Sold or Distributed for Use in Food-Producing Animals",
         "date": "2019-12",
-        "quote": "\"Some antimicrobial drug applications include approved products that are labeled for use in both food-producing animal species (e.g., cattle and swine) and nonfood-producing animal species (e.g., dogs and cats).\"",
-        "note": "Quote taken from a web search excerpt on 2026-09-27. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md Task 11) before 32C reads the flag."
+        "quote": "Includes antimicrobial drug applications that are approved and labeled for use in both food-producing animals (e.g., cattle and swine) and nonfood-producing animals (e.g., dogs and horses).",
+        "note": "Checked word for word on 2026-09-30 against the PDF (Figure and table footnotes). The earlier quote (\"...nonfood-producing animal species (e.g., dogs and cats)\") does not appear in the report; it was a search-excerpt paraphrase. The report names dogs and horses as nonfood-producing examples, never cats. It supports the dog flag. It does not name cats, so the cat flag (nonfood by default) rests on cats not being a food animal in 9 CFR 301.2, 381.1 or 354.1, not on this page; the flag is unchanged. Note that the same footnote lists horses as nonfood-producing while the CropCard horse plugin uses 9 CFR 301.2, which lists horse as livestock; the stricter food flag is the one shipped, so nothing changes."
       }
     }
   }

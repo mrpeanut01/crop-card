@@ -59,6 +59,9 @@ export const users = sqliteTable('users', {
   /** Self-chosen name shown in the app chrome and to farm members. Null
    *  falls back to the email local-part or the formatted phone. */
   displayName: text('display_name'),
+  /** Chosen app language (32F, F5-3). Null follows the cookie or the
+   *  browser. Only locales listed in `CROPCARD_LOCALES` are honoured. */
+  locale: text('locale'),
   /** IANA zone for dates and times this user reads. */
   timeZone: text('time_zone').notNull().default('America/New_York'),
   displayUnits: text('display_units', { enum: ['us', 'metric'] })
@@ -2006,7 +2009,8 @@ export const pushDeliveries = tenantScoped(
           'spring-calibration',
           'frost-tonight',
           'animal-care-due',
-          'withdrawal-clears'
+          'withdrawal-clears',
+          'weekly-digest'
         ]
       }).notNull(),
       subjectId: text('subject_id').notNull(),
@@ -2048,7 +2052,8 @@ export const emailAlertConsents = tenantScoped(
           'spring-calibration',
           'frost-tonight',
           'animal-care-due',
-          'withdrawal-clears'
+          'withdrawal-clears',
+          'weekly-digest'
         ]
       }).notNull(),
       status: text('status', { enum: ['opted-in', 'opted-out'] }).notNull(),
@@ -2090,11 +2095,9 @@ export const contactSuppressions = sqliteTable(
       .default(sql`(unixepoch() * 1000)`)
   },
   (table) => ({
-    addressChannelReasonUq: uniqueIndex('contact_suppressions_address_channel_reason_uq').on(
-      table.address,
-      table.channel,
-      table.reason
-    )
+    addressChannelReasonTypeUq: uniqueIndex(
+      'contact_suppressions_address_channel_reason_type_uq'
+    ).on(table.address, table.channel, table.reason, sql`coalesce(${table.notificationType}, '')`)
   })
 );
 
@@ -2845,6 +2848,38 @@ export const ledgerEntries = tenantScoped(
       ownerStockLotIdx: index('ledger_entries_owner_stock_lot_idx').on(
         table.ownerId,
         table.stockLotId
+      )
+    })
+  )
+);
+
+export const LEDGER_CHANGE_ACTIONS = ['create', 'update', 'delete', 'restore'] as const;
+
+/** F2-9: every change to a ledger entry, written in the same transaction.
+ *  Owner-only like the ledger itself; never in `record_deletions`, which
+ *  helpers and inspectors can read. */
+export const ledgerEntryChanges = tenantScoped(
+  sqliteTable(
+    'ledger_entry_changes',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      entryId: text('entry_id')
+        .notNull()
+        .references(() => ledgerEntries.id, { onDelete: 'cascade' }),
+      action: text('action', { enum: LEDGER_CHANGE_ACTIONS }).notNull(),
+      changedById: text('changed_by_id').references(() => users.id),
+      changedAt: integer('changed_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      beforeJson: text('before_json'),
+      afterJson: text('after_json')
+    },
+    (table) => ({
+      ownerEntryIdx: index('ledger_entry_changes_owner_entry_idx').on(
+        table.ownerId,
+        table.entryId,
+        table.changedAt
       )
     })
   )

@@ -44,6 +44,7 @@ import {
   type FeedMeta
 } from '$lib/stock/animalStock';
 import { getStockItemWithBalance } from '$lib/db/stock';
+import { lotsForRole } from '$lib/finance/redact';
 
 export interface PesticideDetailPayload {
   type: 'pesticide';
@@ -185,7 +186,7 @@ async function animalHealthPayload(
     return {
       type: 'animal-health',
       item,
-      lots: listLotsForItem(id),
+      lots: lotsForRole(listLotsForItem(id), role),
       movements: listMovementsForItem(id, 25),
       meta: animalHealthMeta(item.metadataJson),
       plugin: item.pluginId ? kinds.animalHealth.get(item.pluginId) : undefined,
@@ -263,7 +264,7 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
     return {
       type,
       item,
-      lots: listLotsForItem(id),
+      lots: lotsForRole(listLotsForItem(id), role),
       movements: listMovementsForItem(id, 25),
       feed: feedMeta(item.metadataJson),
       onHand,
@@ -274,7 +275,7 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
     };
   }
 
-  const lots = listLotsForItem(id);
+  const lots = lotsForRole(listLotsForItem(id), locals.user?.role);
   const movements = listMovementsForItem(id, 25);
 
   let plugin: Record<string, unknown> | undefined;

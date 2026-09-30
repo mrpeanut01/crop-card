@@ -185,3 +185,24 @@ export function eventsForWindow<E extends WindowEvent>(
   const to = now + windowDays(window) * DAY_MS;
   return upcoming.filter((e) => e.endMs >= now && e.startMs <= to);
 }
+
+export interface AssigneeFilterResult<T extends DeckTaskLike> {
+  shown: DeckEntry<T>[];
+  /** Cards Mine hid, for the "N more tasks for everyone" line. */
+  hiddenCount: number;
+}
+
+/**
+ * F1-8. "Mine" keeps a card when its job, or any of its prep and follow-up
+ * tasks, is assigned to this person. "Everyone" keeps everything.
+ */
+export function filterByAssignee<T extends DeckTaskLike & { assigneeUserId?: string | null }>(
+  entries: readonly DeckEntry<T>[],
+  who: 'mine' | 'all',
+  userId: string
+): AssigneeFilterResult<T> {
+  if (who === 'all') return { shown: [...entries], hiddenCount: 0 };
+  const mine = (t: T) => !!userId && t.assigneeUserId === userId;
+  const shown = entries.filter((e) => mine(e.task) || e.linked.some((l) => mine(l.task)));
+  return { shown, hiddenCount: entries.length - shown.length };
+}

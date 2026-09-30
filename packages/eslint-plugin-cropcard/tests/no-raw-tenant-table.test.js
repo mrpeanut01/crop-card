@@ -147,6 +147,10 @@ describe('eslint-plugin-cropcard', () => {
   it('exposes the rule under its public name with flat-config meta', () => {
     assert.equal(plugin.meta.name, 'eslint-plugin-cropcard');
     assert.equal(rule.meta.type, 'problem');
-    assert.deepEqual(Object.keys(plugin.rules), ['no-raw-tenant-table', 'no-unguarded-hold-write']);
+    assert.deepEqual(Object.keys(plugin.rules), [
+      'no-raw-tenant-table',
+      'no-unguarded-hold-write',
+      'no-raw-text'
+    ]);
   });
 });

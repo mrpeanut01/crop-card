@@ -44,6 +44,7 @@ import {
   insecticideEvents,
   irrigationEvents,
   ledgerEntries,
+  ledgerEntryChanges,
   mapFeatureAreas,
   mapFeatures,
   pendingCalibrations,
@@ -674,6 +675,7 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
   // Order: leaf rows first. Each `del(table, ...)` filters by active Owner.
   // The `isNotNull(table.id)` predicate is a tautology that lets the helper
   // run a tenant-scoped DELETE without a more specific filter.
+  removed.ledger_entry_changes = del(ledgerEntryChanges, isNotNull(ledgerEntryChanges.id));
   removed.ledger_entries = del(ledgerEntries, isNotNull(ledgerEntries.id));
   removed.task_time_entries = del(taskTimeEntries, isNotNull(taskTimeEntries.id));
   removed.animal_care_plans = del(animalCarePlans, isNotNull(animalCarePlans.id));

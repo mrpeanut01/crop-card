@@ -547,6 +547,27 @@
       "when": 1790706795806,
       "tag": "0077_animal_pet_card_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "6",
+      "when": 1790735468566,
+      "tag": "0078_ledger_entry_changes",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "6",
+      "when": 1790740619618,
+      "tag": "0079_user_locale",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "6",
+      "when": 1790746639756,
+      "tag": "0080_contact_suppression_type_uq",
+      "breakpoints": true
     }
   ]
 }

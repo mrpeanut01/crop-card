@@ -96,6 +96,10 @@ describe('selectEmailRecipients (pure)', () => {
     fc.record({
       kind: fc.constant('owners-and' as const),
       userIds: fc.subarray(['u1', 'u2', 'u3', 'u4', 'u5'])
+    }),
+    fc.record({
+      kind: fc.constant('only' as const),
+      userIds: fc.subarray(['u1', 'u2', 'u3', 'u4', 'u5'])
     })
   );
 
@@ -128,6 +132,7 @@ describe('selectEmailRecipients (pure)', () => {
             if (audience.kind === 'owners-and' && m!.roleWithinOwner !== 'owner') {
               expect(audience.userIds).toContain(r.userId);
             }
+            if (audience.kind === 'only') expect(audience.userIds).toContain(r.userId);
           }
         }
       )

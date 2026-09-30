@@ -40,6 +40,9 @@ export interface PriorityAction {
   overdueDays?: number;
   /** Task row id when kind==='task' — drives the Skip-with-reason flow (#104). */
   taskId?: string;
+  /** A plain task with no flow of its own: the CTA opens the Done sheet
+   *  instead of following `ctaHref` (F1-12). */
+  markDone?: boolean;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -61,7 +64,7 @@ function startOfToday(now = Date.now()): number {
   return d.getTime();
 }
 
-function ctaForTask(task: Task): { href: string; label: string } {
+function ctaForTask(task: Task): { href: string; label: string; markDone?: boolean } {
   switch (task.relatedEventTable) {
     case 'spray_event':
       return { href: '/spray', label: 'Open spray flow' };
@@ -74,7 +77,7 @@ function ctaForTask(task: Task): { href: string; label: string } {
     case 'hay_cutting':
       return { href: '/hay', label: 'Open hay flow' };
     default:
-      return { href: '/today', label: 'Mark done' };
+      return { href: '/today', label: 'Mark done', markDone: true };
   }
 }
 
@@ -147,7 +150,8 @@ export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityActi
       ctaLabel: cta.label,
       blockId: top.blockId,
       overdueDays,
-      taskId: top.id
+      taskId: top.id,
+      ...(cta.markDone ? { markDone: true } : {})
     };
   }
 

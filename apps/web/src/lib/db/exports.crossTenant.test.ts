@@ -200,8 +200,12 @@ describe('export endpoints cross-tenant isolation', () => {
     seedOwnerWithSpray(ownerB, userB);
     const year = new Date().getFullYear();
 
-    const aSummary = await runWithTenantAsync(ownerA, () => buildYearSummary(year, ownerA));
-    const bSummary = await runWithTenantAsync(ownerB, () => buildYearSummary(year, ownerB));
+    const aSummary = await runWithTenantAsync(ownerA, () =>
+      buildYearSummary(year, ownerA, undefined, { includeCosts: true })
+    );
+    const bSummary = await runWithTenantAsync(ownerB, () =>
+      buildYearSummary(year, ownerB, undefined, { includeCosts: true })
+    );
 
     // Each Owner sees exactly their own two applications — never the other's,
     // and never the accumulated sum across tenants (Invariant 6).

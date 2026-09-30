@@ -7,7 +7,8 @@
 import { and, asc, eq, isNull, like, sql } from 'drizzle-orm';
 import { db } from './client';
 import { tasks } from './schema';
-import { tenantValues, withTenant } from './tenant';
+import { requireOwnerId, tenantValues, withTenant } from './tenant';
+import { ASSIGNABLE_ROLES } from '$lib/tasks/assignee';
 import { rowToTask, type Task } from './tasks';
 import {
   ENGINE_ABORT_REASONS,
@@ -29,10 +30,37 @@ export interface CareTaskWrite {
  * ended and is back): then it is reopened with the current title. Returns
  * true when a row was written or reopened.
  */
+/**
+ * F1-7: a care task written for a plan's next due day keeps the person the
+ * plan's latest task was given to, while they are still a working member
+ * of the farm. A subquery inside the insert, so /today reads nothing extra.
+ */
+function inheritedAssignee(planId: string) {
+  const ownerId = requireOwnerId();
+  const pattern = `care:${planId}:%`;
+  const roles = sql.join(
+    ASSIGNABLE_ROLES.map((r) => sql`${r}`),
+    sql`, `
+  );
+  const from = sql`from tasks prior
+    left join helper_assignments h
+      on h.owner_id = prior.owner_id and h.user_id = prior.assignee_user_id
+    where prior.owner_id = ${ownerId}
+      and prior.plugin_template_key like ${pattern}
+    order by prior.scheduled_for desc, prior.id desc
+    limit 1`;
+  const working = sql`h.status = 'active' and h.role_within_owner in (${roles})`;
+  return {
+    assigneeUserId: sql`(select case when ${working} then prior.assignee_user_id end ${from})`,
+    assignedAt: sql`(select case when ${working} then prior.assigned_at end ${from})`
+  };
+}
+
 export function upsertCareTask(input: CareTaskWrite): boolean {
   const { meta } = input;
   const id = careTaskId(meta.planId, meta.dueOn);
   const recurrenceJson = careMetaJson(meta);
+  const inherited = inheritedAssignee(meta.planId);
   const res = db
     .insert(tasks)
     .values(
@@ -44,7 +72,9 @@ export function upsertCareTask(input: CareTaskWrite): boolean {
         category: 'animal-care' as const,
         pluginTemplateKey: careTemplateKey(meta.planId, meta.dueOn),
         recurrenceJson,
-        createdById: null
+        createdById: null,
+        assigneeUserId: inherited.assigneeUserId,
+        assignedAt: inherited.assignedAt
       })
     )
     .onConflictDoUpdate({

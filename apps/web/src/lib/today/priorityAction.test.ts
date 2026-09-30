@@ -154,5 +154,17 @@ describe('derivePriorityAction', () => {
     });
     expect(result?.ctaHref).toBe('/harvest');
     expect(result?.toneTag).toBe('harvest');
+    expect(result?.markDone).toBeUndefined();
+  });
+
+  it('marks a plain task for the Done sheet (F1-12)', () => {
+    const result = derivePriorityAction({
+      openPrimaries: [task({ relatedEventTable: undefined })],
+      derivedEvents: [],
+      blockNameById: blocks,
+      now: NOW
+    });
+    expect(result?.ctaLabel).toBe('Mark done');
+    expect(result?.markDone).toBe(true);
   });
 });

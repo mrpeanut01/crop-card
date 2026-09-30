@@ -18,8 +18,13 @@ declare global {
        *  is true. aiGuard reads this to decide whether to charge the
        *  human owner's daily quota or the token's own quota. */
       isServiceAccountToken?: boolean;
+      /** The request's resolved language (32F, F5-3). Always an enabled
+       *  locale; `en` unless `CROPCARD_LOCALES` lists more. */
+      locale: string;
     }
     interface PageData {
+      /** Resolved language from the root layout (32F, F5-3). */
+      locale?: string;
       user?: {
         id: string;
         email: string | null;

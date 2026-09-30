@@ -10,6 +10,9 @@ const TEST_DB_PATH =
 // so the magic-link spec exercises the production auth mode while every
 // other spec keeps the direct/demo sign-in. EMAIL_TRANSPORT=memory +
 // E2E_OUTBOX=1 expose sent links at /_dev/outbox on that server only.
+// CROPCARD_LOCALES=en,es turns the unreviewed Spanish catalog on there
+// only (32F, F5-1), so i18n.spec.ts can walk the language picker while the
+// main server keeps production's English-only default.
 const MAGIC_PORT = Number(process.env.E2E_MAGIC_PORT ?? PORT + 1);
 const MAGIC_DB_PATH = `./.playwright-data/test-magic-${MAGIC_PORT}.db`;
 // Unique per run so the magic server never starts against a stale marker.
@@ -69,7 +72,7 @@ export default defineConfig({
         `DATABASE_URL=file:${MAGIC_DB_PATH} node ./scripts/migrate.mjs && ` +
         `DATABASE_URL=file:${MAGIC_DB_PATH} node ./scripts/seed-test-data.mjs && ` +
         `DATABASE_URL=file:${MAGIC_DB_PATH} AUTH_MODE=magic-link AUTH_SECRET=e2e-only-not-secret EMAIL_TRANSPORT=memory SMS_TRANSPORT=memory E2E_OUTBOX=1 ` +
-        `ORIGIN=http://localhost:${MAGIC_PORT} PLUGINS_DIR=${PLUGINS_DIR} ` +
+        `ORIGIN=http://localhost:${MAGIC_PORT} PLUGINS_DIR=${PLUGINS_DIR} CROPCARD_LOCALES=en,es ` +
         `pnpm exec vite preview --host 0.0.0.0 --port ${MAGIC_PORT} --strictPort`,
       port: MAGIC_PORT,
       reuseExistingServer: !process.env.CI,

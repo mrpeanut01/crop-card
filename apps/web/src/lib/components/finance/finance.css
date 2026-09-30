@@ -1,0 +1,133 @@
+/* Shared styles for the owner-only money pages. Every control is at least
+   48px tall so it works with gloves. */
+.fin-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.fin-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.fin-header h1 {
+  margin: 4px 0 0;
+}
+.fin-lede {
+  margin: 0;
+  color: var(--color-ink-soft);
+  max-width: 70ch;
+}
+.fin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.fin-primary,
+.fin-ghost,
+.fin-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 18px;
+  border-radius: var(--radius-input);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+.fin-primary {
+  background: var(--color-forest);
+  color: var(--color-cream);
+}
+.fin-ghost {
+  background: var(--color-paper);
+  color: var(--color-forest-deep);
+  border-color: var(--color-divider);
+}
+.fin-danger {
+  background: var(--color-paper);
+  color: var(--color-rust);
+  border-color: var(--color-rust);
+}
+.fin-primary:disabled,
+.fin-ghost:disabled,
+.fin-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.fin-panel {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  min-width: 0;
+}
+.fin-panel h2 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-card-title);
+}
+.fin-input {
+  min-height: 48px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  background: var(--color-paper);
+  font: inherit;
+  font-size: 16px;
+  color: var(--color-ink);
+}
+.fin-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+  min-width: 0;
+}
+.fin-help {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  color: var(--color-ink-soft);
+}
+.fin-error {
+  margin: 0;
+  color: var(--color-rust);
+}
+.fin-note {
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-card);
+  background: var(--pill-wheat-bg);
+  color: var(--color-ink);
+}
+.fin-segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+.fin-segment a,
+.fin-segment button {
+  min-height: 48px;
+}
+.fin-segment .on {
+  border-color: var(--color-forest);
+  background: var(--pill-forest-bg);
+}
+.fin-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-2);
+}
+.fin-money {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

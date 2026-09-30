@@ -13,8 +13,12 @@ import { buildSprayCard, buildSprayCards } from './spray';
 import { buildSoilTestCard, buildSoilTestCards } from './soilTest';
 import { buildStockCard, buildStockCards } from './stock';
 import { buildTaskCard, buildTaskCardFromSnapshot } from './task';
+import type { CalendarBuildOptions } from './calendar';
+import { buildWeekCard } from './week';
+import { buildMonthCard } from './month';
 
 export type { BuildOptions } from './common';
+export type { CalendarBuildOptions, CalendarFilters } from './calendar';
 export type { EmergencyContact, FarmMapBuildOptions } from './farmMap';
 export {
   barnPinKeys,
@@ -40,14 +44,16 @@ export {
   buildStockCard,
   buildStockCards,
   buildTaskCard,
-  buildTaskCardFromSnapshot
+  buildTaskCardFromSnapshot,
+  buildWeekCard,
+  buildMonthCard
 };
 
 /** Builds any card kind that has a builder yet; null for unknown keys. */
 export function buildCard(
   snapshot: FarmSnapshot,
   key: string,
-  options: BuildOptions = {}
+  options: CalendarBuildOptions = {}
 ): CardModel | null {
   const parsed = parseCardKey(key);
   if (!parsed) return null;
@@ -76,6 +82,10 @@ export function buildCard(
       return buildAnimalCard(snapshot, parsed.id, options);
     case 'flock':
       return buildFlockCard(snapshot, parsed.id, options);
+    case 'week':
+      return buildWeekCard(snapshot, parsed.id, options);
+    case 'month':
+      return buildMonthCard(snapshot, parsed.id, options);
     default:
       return null;
   }

@@ -4,6 +4,8 @@
  * degree days append one provider there (E5).
  */
 
+import type { DigestTask } from '$lib/digest/weekly';
+
 export type AdviceProvenance = 'data' | 'manual' | 'fallback';
 
 export type AdviceSheet = 'log-watering' | 'rain-gauge';
@@ -15,7 +17,7 @@ export type TodayAdviceAction =
 export interface TodayAdviceCard {
   /** Stable, e.g. `water:<fieldId>` or `pest:<modelId>`. */
   id: string;
-  kind: 'watering' | 'degree-days';
+  kind: 'watering' | 'degree-days' | 'digest';
   title: string;
   lines: string[];
   provenance: AdviceProvenance;
@@ -38,6 +40,18 @@ export interface TodayAdvicePlanting {
   plantingDate?: number | null;
 }
 
+/** Phase 32F (F4-8). Rows the /today loader already read; the Monday
+ *  card is built from these and nothing else. */
+export interface TodayDigestInput {
+  openTasks: DigestTask[];
+  careDue: DigestTask[];
+  lowStockCount: number;
+  viewerId: string;
+  isOwner: boolean;
+  /** The viewer's zone; the card shows only on their Monday. */
+  viewerTimeZone?: string;
+}
+
 export interface TodayAdviceContext {
   nowMs: number;
   seasonYear: number;
@@ -48,6 +62,8 @@ export interface TodayAdviceContext {
   timeZone?: string;
   /** Owners set the water target; helpers cannot. */
   isOwner?: boolean;
+  /** The Monday summary card (F4-8). */
+  digest?: TodayDigestInput;
 }
 
 export type TodayAdviceProvider = (ctx: TodayAdviceContext) => Promise<TodayAdviceCard[]>;

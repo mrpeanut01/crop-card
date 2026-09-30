@@ -7,11 +7,13 @@ import {
   blocks,
   crops,
   fields,
+  harvestEvents,
   helperAssignments,
   stockLots,
   type ANIMAL_SUBJECT_TYPES
 } from '$lib/db/schema';
 import { requireOwnerId, withTenant } from '$lib/db/tenant';
+import { ASSIGNABLE_ROLES } from '$lib/tasks/assignee';
 
 /**
  * Invariant 6 — a row stamped with the caller's owner_id must not reference
@@ -78,8 +80,6 @@ export function assertAnimalSubject(
           : false
   ];
 }
-
-const ASSIGNABLE_ROLES = ['owner', 'helper', 'custom-operator'] as const;
 
 /** A user with an active, working (non-inspector) assignment on this Owner. */
 export function assertAssignableUser(field: string, userId: string | null | undefined): ForeignRef {
@@ -153,6 +153,20 @@ export function assertBlock(field: string, blockId: string | null | undefined): 
         .select({ id: blocks.id })
         .from(blocks)
         .where(withTenant(blocks, eq(blocks.id, id)))
+        .get() !== undefined
+  ];
+}
+
+/** A harvest record of this Owner. */
+export function assertHarvestEvent(field: string, eventId: string | null | undefined): ForeignRef {
+  return [
+    field,
+    eventId,
+    (id) =>
+      db
+        .select({ id: harvestEvents.id })
+        .from(harvestEvents)
+        .where(withTenant(harvestEvents, eq(harvestEvents.id, id)))
         .get() !== undefined
   ];
 }

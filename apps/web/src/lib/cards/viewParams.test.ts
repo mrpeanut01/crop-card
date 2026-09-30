@@ -19,6 +19,18 @@ describe('cardViewParams', () => {
   });
 });
 
+describe('Week and Month filters', () => {
+  it('reads area and who for calendar cards only, and drops odd values', () => {
+    const q = new URLSearchParams('area=f_garden&who=u_1&print=1');
+    expect(cardViewParams(q, 'week')).toEqual({ autoPrint: true, area: 'f_garden', who: 'u_1' });
+    expect(cardViewParams(q, 'month')).toMatchObject({ area: 'f_garden', who: 'u_1' });
+    expect(cardViewParams(q, 'planting')).toEqual({ autoPrint: true });
+    expect(cardViewParams(new URLSearchParams('who=<script>'), 'week')).toEqual({
+      autoPrint: false
+    });
+  });
+});
+
 describe('print freshness', () => {
   it('reads the last saved change and compares the saved copy against it', () => {
     const q = new URLSearchParams('on=2026-07-15&print=1&after=1780000000000');

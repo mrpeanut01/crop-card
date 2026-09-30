@@ -129,6 +129,11 @@ export interface YearSummary {
   compliance: ComplianceStats;
 }
 
+/** What a viewer gets: input costs are money and owner-only (F2-2). */
+export type YearSummaryForViewer = Omit<YearSummary, 'inputCosts'> & {
+  inputCosts: YearSummary['inputCosts'] | null;
+};
+
 // ─── Input rows (repo-shaped subsets — kept narrow for testability) ──────
 
 export interface SprayApplicationRow {

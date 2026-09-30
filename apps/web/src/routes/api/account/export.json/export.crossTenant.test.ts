@@ -255,12 +255,15 @@ describe('GET /api/account/export.json', () => {
       const { text, json } = await exportFor(farm.ownerId, role);
       const operations = json.operations as Record<string, Array<{ id: string }> | undefined>;
       expect(operations.ledgerEntries).toBeUndefined();
+      expect(operations.ledgerEntryChanges).toBeUndefined();
       expect(text).not.toContain(farm.phase32.rowIds.ledger_entries);
+      expect(text).not.toContain(farm.phase32.rowIds.ledger_entry_changes);
       expect(operations.taskTimeEntries?.map((r) => r.id)).toEqual([mine]);
       expect(text).not.toContain(farm.phase32.rowIds.task_time_entries);
 
       const owner = await exportFor(farm.ownerId, 'owner');
       expect(owner.text).toContain(farm.phase32.rowIds.ledger_entries);
+      expect(owner.text).toContain(farm.phase32.rowIds.ledger_entry_changes);
       expect(owner.text).toContain(farm.phase32.rowIds.task_time_entries);
     }
   );

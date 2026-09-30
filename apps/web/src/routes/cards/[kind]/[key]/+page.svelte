@@ -11,13 +11,15 @@
   import { OfflineCards } from '$lib/components/cards/offlineCards.svelte';
   import { barnPinKeys, buildCard } from '$lib/cards/build';
   import { CARD_KIND_LABEL, isCardKind, type CardPrintLayout } from '$lib/cards/model';
-  import { FULL_PAGE_NOTE, PRINT_HELP, PRINT_LAYOUTS, needsFullPage } from '$lib/cards/print';
+  import { PRINT_HELP, PRINT_LAYOUTS, fullPageNote, needsFullPage } from '$lib/cards/print';
   import { installNudgeWanted } from '$lib/client/offlineStorage';
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { cardViewParams, snapshotOlderThan, withoutPrintParam } from '$lib/cards/viewParams';
   import { formatInstant } from '$lib/prefs';
+  import { OUTSIDE_WINDOW_NOTE } from '$lib/cards/build/calendar';
   import FlockQuickActions from '$lib/components/animals/FlockQuickActions.svelte';
   import SeedStartPanel from '$lib/components/cards/SeedStartPanel.svelte';
+  import PlantingHours from '$lib/components/cards/PlantingHours.svelte';
 
   const cards = new OfflineCards();
   const FRESH_PRINT_WAIT_MS = 5000;
@@ -47,7 +49,9 @@
       prefs,
       now,
       bedMapOnMs: view.bedMapOnMs,
-      unsyncedAnimalSubjects: unsynced
+      unsyncedAnimalSubjects: unsynced,
+      area: view.area,
+      who: view.who
     });
     return built && built.kind === kind ? built : null;
   });
@@ -154,7 +158,7 @@
     {/if}
     {#if needsFullPage(card)}
       <p class="hint" data-testid="full-page-note">
-        {FULL_PAGE_NOTE} Choose Letter paper in the print dialog.
+        {fullPageNote(card)}
       </p>
     {:else}
       <fieldset>
@@ -182,11 +186,17 @@
     {/if}
     {#if card.kind === 'planting' && snapshot}
       <SeedStartPanel {snapshot} plantingId={key.slice(key.indexOf('_') + 1)} {role} />
+      <PlantingHours plantingId={key.slice(key.indexOf('_') + 1)} {role} />
     {/if}
     <CareGuideList cards={careCards} {prefs} {now} />
     {#key key}
       <PhotoHelp targets={helpTargets} {role} {prefs} sprayTerms={snapshot?.sprayTerms ?? []} />
     {/key}
+  {:else if snapshot && (kind === 'week' || kind === 'month')}
+    <p class="status" role="status" data-testid="calendar-outside-window">
+      {OUTSIDE_WINDOW_NOTE} <a href="/today">Back to Today</a> ·
+      <a href="/cards">Back to your cards</a>
+    </p>
   {:else if snapshot}
     <p class="status" role="status">
       This card is not in the copy saved on this device. It may be new since the last save, or it no

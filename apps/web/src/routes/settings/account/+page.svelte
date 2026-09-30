@@ -8,8 +8,11 @@
   import AvatarUpload from '$lib/components/settings/AvatarUpload.svelte';
   import { DISPLAY_NAME_MAX, DISPLAY_UNITS, TIME_ZONES } from '$lib/profile';
   import Pill from '$lib/components/ui/Pill.svelte';
+  import { createT } from '$lib/i18n';
 
-  let { data, form } = $props();
+  const { data, form } = $props();
+
+  const tr = $derived(createT(data.locale));
 
   const timeZoneOptions = $derived(
     TIME_ZONES.some((tz) => tz.id === data.account.timeZone)
@@ -22,22 +25,25 @@
   // UX honest until the sessions table lands.
   const sessions = $derived([
     {
-      device: 'This browser session',
-      where: 'current',
+      device: tr('account.sessions.thisBrowser'),
+      where: tr('account.sessions.current'),
       when: data.account.lastLogin,
       current: true
     }
   ]);
 </script>
 
-<svelte:head><title>Account & sign-in · CropCard</title></svelte:head>
+<svelte:head><title>{tr('account.pageTitle')}</title></svelte:head>
 
-<SettingsShell title="Account & sign-in" kicker="Owner profile" saveAction="?/save">
-  <SettingsSection title="Profile" sub="Visible to helpers in your farm.">
+<SettingsShell title={tr('account.title')} kicker={tr('account.kicker')} saveAction="?/save">
+  <SettingsSection title={tr('account.profile.title')} sub={tr('account.profile.sub')}>
     <div class="profile-grid">
       <AvatarUpload name={data.account.name} avatarUrl={data.account.avatarUrl} />
       <div class="fields">
-        <SettingsField label="Display name" hint="Leave blank to use your sign-in name.">
+        <SettingsField
+          label={tr('account.profile.displayName')}
+          hint={tr('account.profile.displayNameHint')}
+        >
           <input
             class="s-input"
             type="text"
@@ -49,7 +55,7 @@
             disabled={data.account.impersonating}
           />
         </SettingsField>
-        <SettingsField label="Time zone">
+        <SettingsField label={tr('account.profile.timeZone')}>
           <select
             class="s-input"
             name="timeZone"
@@ -61,7 +67,7 @@
             {/each}
           </select>
         </SettingsField>
-        <SettingsField label="Display units">
+        <SettingsField label={tr('account.profile.displayUnits')}>
           <select
             class="s-input"
             name="displayUnits"
@@ -78,26 +84,63 @@
     {#if form?.error}
       <p class="form-msg error" role="alert">{form.error}</p>
     {:else if form?.ok}
-      <p class="form-msg" role="status">Profile saved.</p>
+      <p class="form-msg" role="status">{tr('account.profile.saved')}</p>
     {/if}
   </SettingsSection>
 
-  <SettingsSection
-    title="Sign-in methods"
-    sub="No passwords. Email is the main way in: one message carries a sign-in link and a 6-digit backup code. A verified mobile number works too."
-  >
+  {#if data.language}
+    <SettingsSection title={tr('account.language.title')} sub={tr('account.language.sub')}>
+      <div class="language-row">
+        <div class="language-field">
+          <SettingsField label={tr('account.language.label')}>
+            <select
+              class="s-input tall"
+              name="locale"
+              form="locale-form"
+              value={data.language.current}
+              disabled={data.account.impersonating}
+            >
+              {#each data.language.choices as l (l.id)}
+                <option value={l.id} lang={l.id}>{l.name}</option>
+              {/each}
+            </select>
+          </SettingsField>
+        </div>
+        <button
+          type="submit"
+          class="ghost tall"
+          form="locale-form"
+          disabled={data.account.impersonating}
+        >
+          {tr('account.language.save')}
+        </button>
+      </div>
+      {#if form?.localeError}
+        <p class="form-msg error" role="alert">{form.localeError}</p>
+      {:else if form?.localeSaved}
+        <p class="form-msg" role="status">{tr('account.language.saved')}</p>
+      {/if}
+    </SettingsSection>
+  {/if}
+
+  <SettingsSection title={tr('account.signIn.title')} sub={tr('account.signIn.sub')}>
     <SignInMethods email={data.account.email} phone={data.account.phone} />
   </SettingsSection>
 
-  <SettingsSection title="Sessions" sub="Signed-in devices.">
+  <SettingsSection title={tr('account.sessions.title')} sub={tr('account.sessions.sub')}>
     <div class="security-grid">
-      <SettingsField label="Last sign-in" hint="HMAC cookie session">
+      <SettingsField
+        label={tr('account.sessions.lastSignIn')}
+        hint={tr('account.sessions.lastSignInHint')}
+      >
         <input class="s-input mono" value={data.account.lastLogin} disabled />
       </SettingsField>
     </div>
 
     <div class="sessions">
-      <div class="sessions-kicker">Active sessions · {sessions.length}</div>
+      <div class="sessions-kicker">
+        {tr('account.sessions.active', { count: sessions.length })}
+      </div>
       <ul class="session-list">
         {#each sessions as s (s.device)}
           <li class="session-row">
@@ -107,9 +150,9 @@
               <div class="s-meta mono">{s.where} · {s.when}</div>
             </div>
             {#if s.current}
-              <Pill tone="forest">This device</Pill>
+              <Pill tone="forest">{tr('account.sessions.thisDevice')}</Pill>
             {:else}
-              <button type="button" class="ghost-sm">Sign out</button>
+              <button type="button" class="ghost-sm">{tr('account.sessions.signOut')}</button>
             {/if}
           </li>
         {/each}
@@ -121,26 +164,29 @@
                error). Render client-side only to skip SSR until a
                lucide-svelte bump. -->
           {#if browser}<Lock size={11} strokeWidth={1.75} />{/if}
-          Sign out everywhere
+          {tr('account.sessions.signOutEverywhere')}
         </button>
       </form>
     </div>
   </SettingsSection>
 
-  <SettingsSection
-    title="Data export"
-    sub="GDPR-style download · JSON manifest + linked PDF/CSV downloads."
-  >
+  <SettingsSection title={tr('account.export.title')} sub={tr('account.export.sub')}>
     <div class="export-row">
       <a class="ghost" href="/api/account/export.json" download>
-        <FileText size={13} /> Download account data (JSON)
+        <FileText size={13} />
+        {tr('account.export.json')}
       </a>
       <a class="ghost" href="/api/records/export.vdacs.pdf" download>
-        <FileText size={13} /> Download VDACS audit pack
+        <FileText size={13} />
+        {tr('account.export.vdacs')}
       </a>
     </div>
   </SettingsSection>
 </SettingsShell>
+
+{#if data.language}
+  <form id="locale-form" method="POST" action="?/locale" hidden></form>
+{/if}
 
 <style>
   .profile-grid {
@@ -253,6 +299,20 @@
     margin-top: 4px;
     padding: 6px 12px;
     font-size: 12px;
+  }
+  .language-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .language-field {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+  .s-input.tall,
+  .ghost.tall {
+    min-height: 48px;
   }
   .export-row {
     display: flex;

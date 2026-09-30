@@ -11,11 +11,13 @@ export interface QueuedTaskPayload {
   nextDueOn?: string;
   careSkip?: 'skip-this' | 'snooze';
   snoozeDays?: number;
+  /** Phase 32F (F1-13): time picked on the Done sheet, whole minutes. */
+  minutes?: number;
 }
 
 export type CareCloseExtra = Pick<
   QueuedTaskPayload,
-  'healthEvent' | 'nextDueOn' | 'careSkip' | 'snoozeDays'
+  'healthEvent' | 'nextDueOn' | 'careSkip' | 'snoozeDays' | 'minutes'
 >;
 
 export interface QueuedTaskRow {
@@ -33,7 +35,8 @@ export function parseQueuedTask(payload: unknown): Omit<QueuedTaskPayload, 'occu
   return {
     taskId: p.taskId,
     action: p.action,
-    ...(typeof p.reason === 'string' ? { reason: p.reason } : {})
+    ...(typeof p.reason === 'string' ? { reason: p.reason } : {}),
+    ...(typeof p.minutes === 'number' ? { minutes: p.minutes } : {})
   };
 }
 

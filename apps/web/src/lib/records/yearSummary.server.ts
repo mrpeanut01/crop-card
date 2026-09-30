@@ -14,6 +14,7 @@ import { and, eq, gte, lt } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { stockItems, stockLots, stockMovements } from '$lib/db/schema';
 import { withTenant } from '$lib/db/tenant';
+import { lotCostCentsPerUnit } from '$lib/finance/unitCost';
 import { zonedDayStartMs } from '$lib/exports/dateRange';
 import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
 import { listBlocks } from '$lib/db/blocks';
@@ -33,7 +34,7 @@ import {
   computeYearSummary,
   type MovementCostRow,
   type SprayApplicationRow,
-  type YearSummary
+  type YearSummaryForViewer
 } from './yearSummary';
 
 const FILTERABLE_PLUGIN_TYPES = new Set(['herbicide', 'insecticide', 'fungicide', 'fertilizer']);
@@ -45,18 +46,6 @@ function yearBounds(year: number, timeZone: string): { fromMs: number; toMs: num
     fromMs: zonedDayStartMs(year, 1, 1, timeZone),
     toMs: zonedDayStartMs(year + 1, 1, 1, timeZone) - 1
   };
-}
-
-/** Cost, in cents per whole default-unit, for a lot. `receivedCostCents` is
- *  the total cost of the received quantity; divide by that quantity to get a
- *  per-unit rate the consumption movements can be priced against. */
-function lotCostCentsPerUnit(
-  receivedCostCents: number | null,
-  receivedQuantityHundredths: number
-): number | null {
-  if (receivedCostCents === null || receivedQuantityHundredths <= 0) return null;
-  const units = receivedQuantityHundredths / 100;
-  return receivedCostCents / units;
 }
 
 /** Consumption-movement rows for a year, joined to their lot's cost + the
@@ -94,13 +83,16 @@ function movementCostRows(fromMs: number, toMs: number): MovementCostRow[] {
 
 /**
  * Build the deterministic Year-end summary for the active tenant + year.
- * Everything here is a tenant-scoped read; there is no write path.
+ * Everything here is a tenant-scoped read; there is no write path. Input
+ * costs are money, so only an owner gets them (F2-2); for anyone else the
+ * lot costs are never read and `inputCosts` is null.
  */
 export async function buildYearSummary(
   year: number,
   ownerId: string | null,
-  prefs: Pick<Prefs, 'timeZone'> = DEFAULT_PREFS
-): Promise<YearSummary> {
+  prefs: Pick<Prefs, 'timeZone'> = DEFAULT_PREFS,
+  opts: { includeCosts: boolean }
+): Promise<YearSummaryForViewer> {
   const { fromMs, toMs } = yearBounds(year, prefs.timeZone);
 
   const sprayEvents = listSprayEvents({ fromMs, toMs, limit: 100_000 });
@@ -165,7 +157,7 @@ export async function buildYearSummary(
 
   const acresByBlock = new Map(blocks.map((b) => [b.id, b.acres ?? 0]));
 
-  return computeYearSummary({
+  const summary = computeYearSummary({
     year,
     ownerId,
     generatedAtMs: Date.now(),
@@ -182,7 +174,7 @@ export async function buildYearSummary(
       occurredAtMs: o.occurredAt,
       value: o.value
     })),
-    movements: movementCostRows(fromMs, toMs),
+    movements: opts.includeCosts ? movementCostRows(fromMs, toMs) : [],
     sprayers: sprayers.map((s) => ({
       calibratedGpa: s.calibratedGpa,
       calibrationDateMs: s.calibrationDate,
@@ -192,6 +184,7 @@ export async function buildYearSummary(
     archetypeForPlugin: (cropPluginId) => archetypeForPlugin(registry, cropPluginId),
     productAllowed: (productId) => productAllowedUnder(registry, productId, philosophy)
   });
+  return opts.includeCosts ? summary : { ...summary, inputCosts: null };
 }
 
 function archetypeForPlugin(

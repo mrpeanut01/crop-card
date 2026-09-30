@@ -12,10 +12,12 @@ import {
 } from '$lib/today/advice';
 import { wateringAdvice } from './waterAdvice.server';
 import { degreeDayAdvice } from './degreeDays.server';
+import { digestAdvice } from '$lib/digest/todayCard';
 
 export const TODAY_ADVICE_PROVIDERS: readonly TodayAdviceProvider[] = [
   wateringAdvice,
-  degreeDayAdvice
+  degreeDayAdvice,
+  digestAdvice
 ];
 
 export async function runAdviceProviders(

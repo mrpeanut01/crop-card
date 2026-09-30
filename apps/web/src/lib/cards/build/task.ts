@@ -54,6 +54,8 @@ export interface TaskCardContext {
   asOf: number;
   /** Where the title opens. Defaults to the offline card page. */
   href?: string;
+  /** The assignee's name through `memberName`, when the task has one. */
+  assignee?: string | null;
 }
 
 const KIND_KICKER: Record<NonNullable<TaskCardInput['kind']>, string> = {
@@ -112,6 +114,7 @@ export function buildTaskCardFrom(
   const facts: CardFact[] = [{ label: 'When', value: whenText(task, status, opts) }];
   if (ctx.where) facts.push({ label: 'Where', value: ctx.where, provenance: 'data' });
   if (ctx.equipmentLabel) facts.push({ label: 'Equipment', value: ctx.equipmentLabel });
+  if (ctx.assignee?.trim()) facts.push({ label: 'Assigned to', value: ctx.assignee.trim() });
   if (status === 'skipped' && task.abortReason?.trim())
     facts.push({ label: 'Why skipped', value: task.abortReason.trim(), provenance: 'manual' });
 
@@ -176,7 +179,22 @@ export function buildTaskCardFromSnapshot(
       blockId,
       cropId: planting?.id ?? null
     },
-    { where: where || null, equipmentLabel: equipment?.label ?? null, asOf: snapshot.generatedAt },
+    {
+      where: where || null,
+      equipmentLabel: equipment?.label ?? null,
+      asOf: snapshot.generatedAt,
+      assignee: snapshotAssigneeName(snapshot, task.assigneeUserId)
+    },
     opts
   );
+}
+
+/** The name of a snapshot task's assignee (F1-11). Absent or unknown ids
+ *  read as unassigned. */
+export function snapshotAssigneeName(
+  snapshot: Pick<FarmSnapshot, 'people'>,
+  assigneeUserId: string | null | undefined
+): string | null {
+  if (!assigneeUserId) return null;
+  return snapshot.people?.find((p) => p.id === assigneeUserId)?.name ?? null;
 }

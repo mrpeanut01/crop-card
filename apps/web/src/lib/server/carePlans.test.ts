@@ -64,6 +64,7 @@ import { addDaysYmd, careTaskId, msToYmd } from '$lib/animals/carePlans';
 import { ymdInZone } from '$lib/prefs';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { materializeCareTasks } from './carePlans';
+import { listTimeEntriesForTask } from '$lib/db/taskTime';
 
 import { POST as CREATE } from '../../routes/api/animals/+server';
 import { DELETE as DELETE_ANIMAL } from '../../routes/api/animals/[id]/+server';
@@ -467,6 +468,49 @@ describe('closing a care task (D0-5)', () => {
       expect(res.status).toBe(200);
       expect(listHealthEvents('group', groupId)).toEqual([]);
       expect(getCarePlan(p.id)?.nextDueOn).toBe(addDaysYmd(today(), 60));
+    });
+  });
+});
+
+describe('time on a care Done (32F, F1-12)', () => {
+  it('saves the minutes once for the person closing, with and without a dose', async () => {
+    await runWithTenantAsync(seedOwner(), async () => {
+      const rex = await dog();
+      const visit = plan('animal', rex, 'vet-visit', 0);
+      const shot = plan('animal', rex, 'vaccination', 3);
+      tick();
+      const visitTask = careTaskId(visit.id, visit.nextDueOn!);
+      const shotTask = careTaskId(shot.id, shot.nextDueOn!);
+      const headers = { [CLIENT_RECORD_HEADER]: `care-time-${randomUUID()}` };
+      const quick = await close({ taskId: visitTask, action: 'complete', minutes: 30 }, headers);
+      expect(quick.status).toBe(200);
+      expect(quick.body.timeSaved).toBe(true);
+      const replay = await close({ taskId: visitTask, action: 'complete', minutes: 30 }, headers);
+      expect(replay.status).toBe(200);
+      expect(listTimeEntriesForTask(visitTask).map((r) => [r.userId, r.minutes])).toEqual([
+        ['care-user', 30]
+      ]);
+
+      const at = Date.now() - 60_000;
+      const dosed = await close({
+        taskId: shotTask,
+        action: 'complete',
+        occurredAt: at,
+        minutes: 15,
+        healthEvent: {
+          subjectType: 'animal',
+          subjectId: rex,
+          kind: 'vaccination',
+          productName: 'Rabies shot',
+          administeredAt: at
+        }
+      });
+      expect(dosed.status).toBe(200);
+      expect(dosed.body.timeSaved).toBe(true);
+      expect(listTimeEntriesForTask(shotTask)[0]).toMatchObject({
+        minutes: 15,
+        startedAt: at - 15 * 60_000
+      });
     });
   });
 });

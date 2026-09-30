@@ -279,6 +279,11 @@
         >
           <FileText size={13} /> Year summary PDF
         </a>
+        {#if data.showMoneyLink}
+          <a class="btn-ghost money-link" href="/finance?year={yearSummary.year}"
+            >Money for {yearSummary.year}</a
+          >
+        {/if}
       </div>
     </div>
 
@@ -295,10 +300,12 @@
         <span class="kpi-num mono">{yearSummary.totals.blocksTreated}</span>
         <span class="kpi-label">Blocks treated</span>
       </div>
-      <div class="kpi">
-        <span class="kpi-num mono">{fmtCents(yearSummary.inputCosts.totalCents)}</span>
-        <span class="kpi-label">Input costs</span>
-      </div>
+      {#if yearSummary.inputCosts}
+        <div class="kpi">
+          <span class="kpi-num mono">{fmtCents(yearSummary.inputCosts.totalCents)}</span>
+          <span class="kpi-label">Input costs</span>
+        </div>
+      {/if}
       <div class="kpi">
         <span class="kpi-num mono">{yearSummary.scoutFunnel.spraysAvoided}</span>
         <span class="kpi-label">Sprays avoided</span>
@@ -949,6 +956,9 @@
     border: 1px solid var(--color-divider);
     background: var(--color-paper);
     color: var(--color-ink);
+  }
+  .money-link {
+    min-height: 48px;
   }
   .btn-primary {
     background: var(--color-forest-deep, #1f3a28);

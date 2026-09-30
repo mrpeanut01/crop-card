@@ -18,6 +18,8 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import QueuedBadge from '$lib/components/ui/QueuedBadge.svelte';
   import SkipReasonForm from './SkipReasonForm.svelte';
+  import DoneSheet from '$lib/components/tasks/DoneSheet.svelte';
+  import AssignSheet from '$lib/components/tasks/AssignSheet.svelte';
   import type { CardModel } from '$lib/cards/model';
   import type { Prefs } from '$lib/prefs';
   import type { TaskStart } from '$lib/tasks/start';
@@ -35,8 +37,13 @@
     busy?: boolean;
     prefs?: Prefs;
     now?: number;
-    onDone: (taskId: string) => void;
+    /** Owners give the job to someone from the card (F1-1). */
+    canAssign?: boolean;
+    assigneeUserId?: string | null;
+    /** `minutes` is the time picked on the Done sheet, if any (F1-12). */
+    onDone: (taskId: string, minutes?: number) => void;
     onSkip: (taskId: string, reason: string) => void;
+    onAssigned?: (assigneeName: string | null) => void;
   }
   const {
     card,
@@ -50,11 +57,22 @@
     busy = false,
     prefs,
     now,
+    canAssign = false,
+    assigneeUserId = null,
     onDone,
-    onSkip
+    onSkip,
+    onAssigned
   }: Props = $props();
 
   let skipOpen = $state(false);
+  let doneFor = $state<{ id: string; title: string } | null>(null);
+  let assignOpen = $state(false);
+
+  function finishDone(minutes: number | undefined) {
+    const target = doneFor;
+    doneFor = null;
+    if (target) onDone(target.id, minutes);
+  }
   const open = $derived(status !== 'done' && status !== 'skipped');
 
   function saveSkip(reason: string) {
@@ -98,7 +116,7 @@
                   class="btn ghost"
                   aria-label="Done: {l.title}"
                   disabled={busy}
-                  onclick={() => onDone(l.id)}>Done</button
+                  onclick={() => (doneFor = { id: l.id, title: l.title })}>Done</button
                 >
               {/if}
             </li>
@@ -117,7 +135,7 @@
             class="btn {start ? 'ghost' : 'primary'}"
             aria-label="Done: {card.title}"
             disabled={busy}
-            onclick={() => onDone(taskId)}>Done</button
+            onclick={() => (doneFor = { id: taskId, title: card.title })}>Done</button
           >
           <button
             type="button"
@@ -127,6 +145,15 @@
             disabled={busy}
             onclick={() => (skipOpen = !skipOpen)}>Skip</button
           >
+          {#if canAssign}
+            <button
+              type="button"
+              class="btn ghost"
+              aria-label="Assign: {card.title}"
+              disabled={busy}
+              onclick={() => (assignOpen = true)}>{assigneeUserId ? 'Reassign' : 'Assign'}</button
+            >
+          {/if}
         </div>
         {#if skipOpen}
           <SkipReasonForm
@@ -139,6 +166,28 @@
       {/if}
     {/snippet}
   </CardView>
+  {#if doneFor}
+    <DoneSheet
+      open={true}
+      title={doneFor.title}
+      {busy}
+      onDone={finishDone}
+      onClose={() => (doneFor = null)}
+    />
+  {/if}
+  {#if canAssign && assignOpen}
+    <AssignSheet
+      open={true}
+      {taskId}
+      title={card.title}
+      currentAssigneeId={assigneeUserId}
+      onClose={() => (assignOpen = false)}
+      onAssigned={(name) => {
+        assignOpen = false;
+        onAssigned?.(name);
+      }}
+    />
+  {/if}
 </div>
 
 <style>

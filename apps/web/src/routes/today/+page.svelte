@@ -2,6 +2,12 @@
   import { onMount } from 'svelte';
   import PageSetupQuestions from '$lib/components/setup/PageSetupQuestions.svelte';
   import { goto, invalidateAll } from '$app/navigation';
+  import { page } from '$app/state';
+  import {
+    PRINT_RANGE_NOTE,
+    periodCardPrintHref,
+    periodPrintable
+  } from '$lib/cards/build/calendar';
   import type { CalendarEvent } from '$lib/calendar/engine';
   import type { Task } from '$lib/db/tasks';
   import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
@@ -32,6 +38,7 @@
     buildCalendarDeck,
     buildTaskDeck,
     deckCounts,
+    filterByAssignee,
     eventsForWindow,
     type DeckEntry
   } from '$lib/today/deck';
@@ -48,6 +55,10 @@
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatDueDay } from '$lib/prefs';
   import { dateTimeFormat } from '$lib/intlCache';
+  import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
+  import { formatHours } from '$lib/labour/hours';
+  import { isClosedStatus } from '$lib/tasks/status';
+  import { defaultAssigneeWho, resolveAssigneeWho, type AssigneeWho } from '$lib/tasks/assignee';
 
   const { data } = $props();
 
@@ -96,7 +107,32 @@
           queued
         })
   );
-  const counts = $derived(deckCounts(view === 'day' ? entries : []));
+  const userId = $derived(data.user?.id ?? '');
+  const defaultWho = $derived(
+    defaultAssigneeWho(
+      data.user?.role,
+      userId,
+      entries
+        .flatMap((e) => [e, ...e.linked])
+        .flatMap((i) => (isClosedStatus(i.status) ? [] : [i.task]))
+    )
+  );
+  const othersAssigned = $derived(
+    entries.some((e) => !!e.task.assigneeUserId && e.task.assigneeUserId !== userId)
+  );
+  /** A solo farm or garden household has nobody to hand work to. */
+  const hasTeam = $derived(!!data.hasTeam || othersAssigned);
+  const who = $derived<AssigneeWho>(
+    hasTeam ? resolveAssigneeWho(page.url.searchParams.get('who'), defaultWho) : 'all'
+  );
+  const filtered = $derived(filterByAssignee(entries, who, userId));
+  const shownEntries = $derived(filtered.shown);
+  const canAssign = $derived(data.user?.role === 'owner' && !data.user?.impersonating && hasTeam);
+  function setWho(next: AssigneeWho) {
+    if (next === who) return;
+    navigate({ who: next === defaultWho ? null : next });
+  }
+  const counts = $derived(deckCounts(view === 'day' ? shownEntries : []));
   const summary = $derived.by(() => {
     const parts: string[] = [];
     if (counts.late) parts.push(`${counts.late} late`);
@@ -138,6 +174,7 @@
         after: linked.filter((l) => l.kind === 'post-task').map((l) => l.title),
         queued: queued.get(t.id) ?? null,
         asOf: data.nowMs,
+        assignee: t.assignee?.name ?? null,
         href: taskPlanHref(t.blockId ?? planting?.blockId ?? null)
       },
       { now: data.nowMs, prefs }
@@ -145,7 +182,7 @@
   }
 
   const deck = $derived(
-    entries.map((e) => ({
+    shownEntries.map((e) => ({
       entry: e,
       card: cardFor(
         e.task,
@@ -176,7 +213,7 @@
   const cells = $derived.by(() => {
     if (!data.calendar) return {};
     return calendarCells({
-      entries,
+      entries: shownEntries,
       suggestions,
       scheduledKeys: new Set(data.calendar.scheduledKeys),
       fromYmd: data.calendar.grid.fromYmd,
@@ -256,35 +293,50 @@
     return () => clearInterval(timer);
   });
 
-  async function queueAction(taskId: string, action: QueuedTaskAction, reason?: string) {
+  async function queueAction(
+    taskId: string,
+    action: QueuedTaskAction,
+    reason: string | undefined,
+    minutes: number | undefined,
+    clientId: string
+  ) {
     const { queueTaskAction } = await import('$lib/client/taskQueue');
-    await queueTaskAction(taskId, action, reason);
+    await queueTaskAction(taskId, action, reason, minutes ? { minutes } : {}, clientId);
     await refreshQueued();
     liveMessage = 'Saved on this phone. It will upload when you have signal.';
   }
 
-  async function closeTask(taskId: string, action: QueuedTaskAction, reason?: string) {
+  /** Done and Skip go through the replayable close endpoint with one client
+   *  record id, so a lost answer followed by the offline replay never logs
+   *  the time twice (F1-15). */
+  async function closeTask(
+    taskId: string,
+    action: QueuedTaskAction,
+    reason?: string,
+    minutes?: number
+  ) {
     busy = true;
     actionError = null;
     liveMessage = '';
+    const clientId = crypto.randomUUID();
     const body =
       action === 'complete'
-        ? { action: 'complete', occurredAt: Date.now() }
-        : { action: 'abort', reason: reason || undefined };
+        ? { taskId, action: 'complete', occurredAt: Date.now(), ...(minutes ? { minutes } : {}) }
+        : { taskId, action: 'abort', reason: reason || undefined };
     try {
       if (navigator.onLine === false) {
-        await queueAction(taskId, action, reason);
+        await queueAction(taskId, action, reason, minutes, clientId);
         return;
       }
       let res: Response;
       try {
-        res = await fetch(`/api/tasks/${encodeURIComponent(taskId)}`, {
-          method: 'PATCH',
-          headers: { 'content-type': 'application/json' },
+        res = await fetch('/api/tasks/close', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', [CLIENT_RECORD_HEADER]: clientId },
           body: JSON.stringify(body)
         });
       } catch {
-        await queueAction(taskId, action, reason);
+        await queueAction(taskId, action, reason, minutes, clientId);
         return;
       }
       if (!res.ok) {
@@ -292,11 +344,22 @@
         actionError = `That did not save. ${out.error ?? `The server said ${res.status}.`}`;
         return;
       }
-      liveMessage = action === 'complete' ? 'Marked done.' : 'Skipped.';
+      const out = (await res.json().catch(() => null)) as {
+        seedStart?: { step?: string; cropId?: string } | null;
+        alreadyClosed?: boolean;
+        timeSaved?: boolean;
+      } | null;
+      liveMessage =
+        action !== 'complete'
+          ? 'Skipped.'
+          : out?.alreadyClosed
+            ? out.timeSaved
+              ? 'Someone already closed this job. Your time was saved.'
+              : 'Someone already closed this job.'
+            : minutes
+              ? `Marked done. ${formatHours(minutes)} logged.`
+              : 'Marked done.';
       if (action === 'complete') {
-        const out = (await res.json().catch(() => null)) as {
-          seedStart?: { step?: string; cropId?: string } | null;
-        } | null;
         const seed = out?.seedStart;
         trayPrompt =
           seed?.step === 'sow' && seed.cropId && data.user?.role === 'owner'
@@ -438,6 +501,17 @@
   </div>
 {/snippet}
 
+{#snippet moreForEveryone()}
+  <button
+    type="button"
+    class="more-all"
+    data-testid="more-for-everyone"
+    onclick={() => setWho('all')}
+    >{filtered.hiddenCount}
+    {filtered.hiddenCount === 1 ? 'more task' : 'more tasks'} for everyone</button
+  >
+{/snippet}
+
 {#snippet taskCard(taskId: string)}
   {@const d = deckById.get(taskId)}
   {#if d}
@@ -453,8 +527,14 @@
       {busy}
       {prefs}
       now={data.nowMs}
-      onDone={(id) => closeTask(id, 'complete')}
+      {canAssign}
+      assigneeUserId={d.entry.task.assigneeUserId ?? null}
+      onDone={(id, minutes) => closeTask(id, 'complete', undefined, minutes)}
       onSkip={(id, reason) => closeTask(id, 'abort', reason)}
+      onAssigned={async (name) => {
+        liveMessage = name ? `Given to ${name}.` : 'Given to nobody in particular.';
+        await invalidateAll();
+      }}
     />
   {/if}
 {/snippet}
@@ -494,6 +574,10 @@
     action={data.priorityAction}
     {aiEnabled}
     onSkip={canAct ? (taskId, reason) => closeTask(taskId, 'abort', reason) : undefined}
+    onDone={canAct
+      ? (taskId, minutes) => closeTask(taskId, 'complete', undefined, minutes)
+      : undefined}
+    {busy}
   />
   <QuickActions profile={data.farmProfile} />
 </div>
@@ -606,6 +690,23 @@
     {/each}
   </div>
 
+  {#if view !== 'season' && hasTeam}
+    <div class="who" role="group" aria-label="Whose jobs" data-testid="who-filter">
+      <button
+        type="button"
+        class="who-seg"
+        aria-pressed={who === 'mine'}
+        onclick={() => setWho('mine')}>Mine</button
+      >
+      <button
+        type="button"
+        class="who-seg"
+        aria-pressed={who === 'all'}
+        onclick={() => setWho('all')}>Everyone</button
+      >
+    </div>
+  {/if}
+
   <p class="sr-only" role="status" aria-live="polite">{liveMessage}</p>
   {#if trayPrompt}
     <div class="tray-prompt" data-testid="log-tray-prompt">
@@ -635,6 +736,23 @@
       onOpenChip={(day, chip) => (sheet = { kind: 'day', day, only: chip.key })}
       onOpenDay={(day) => (sheet = { kind: 'day', day, only: null })}
     />
+    {#if who === 'mine' && filtered.hiddenCount > 0}
+      {@render moreForEveryone()}
+    {/if}
+    <div class="print-row">
+      {#if periodPrintable(data.calendar.view, data.calendar.anchor, data.today)}
+        <a
+          class="print-btn"
+          data-testid="print-calendar"
+          href={periodCardPrintHref(data.calendar.view, data.calendar.anchor, {
+            who,
+            viewerId: data.user?.id ?? null
+          })}>{data.calendar.view === 'week' ? 'Print week' : 'Print month'}</a
+        >
+      {:else}
+        <p class="print-range" data-testid="print-calendar-range">{PRINT_RANGE_NOTE}</p>
+      {/if}
+    </div>
   {:else if data.season}
     <SeasonTimeline
       year={data.season.year}
@@ -645,7 +763,11 @@
       onOpenRow={(i) => (sheet = { kind: 'season-row', index: i })}
     />
   {:else}
-    {#if deck.length === 0}
+    {#if deck.length === 0 && who === 'mine' && filtered.hiddenCount > 0}
+      <div class="empty" data-testid="deck-empty-mine">
+        <p class="serif empty-title">Nothing is given to you today.</p>
+      </div>
+    {:else if deck.length === 0}
       <div class="empty" data-testid="deck-empty">
         <p class="serif empty-title">Nothing on the list for today.</p>
         {#if nothingPlanted}
@@ -669,6 +791,10 @@
           <li>{@render taskCard(d.entry.task.id)}</li>
         {/each}
       </ul>
+    {/if}
+
+    {#if who === 'mine' && filtered.hiddenCount > 0}
+      {@render moreForEveryone()}
     {/if}
 
     {#if todayEvents.length > 0}
@@ -797,6 +923,51 @@
 </div>
 
 <style>
+  .who {
+    display: inline-flex;
+    align-self: flex-start;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input);
+    overflow: hidden;
+    margin-bottom: var(--space-2);
+  }
+  .who-seg {
+    min-height: 48px;
+    min-width: 88px;
+    padding: 0 var(--space-4);
+    border: 0;
+    background: var(--color-paper);
+    color: var(--color-forest-deep);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .who-seg + .who-seg {
+    border-left: 1px solid var(--color-divider);
+  }
+  .who-seg[aria-pressed='true'] {
+    background: var(--color-forest);
+    color: var(--color-cream);
+  }
+  .who-seg:focus-visible,
+  .more-all:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+  .more-all {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    margin-top: var(--space-2);
+    padding: 0 var(--space-3);
+    border: 1px dashed var(--color-divider);
+    border-radius: var(--radius-input);
+    background: transparent;
+    color: var(--color-forest-deep);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
   .animal-care {
     display: flex;
     flex-direction: column;
@@ -1176,6 +1347,34 @@
     color: var(--color-cream);
   }
   .tray-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+  .print-range {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-ink-soft);
+  }
+  .print-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--space-2);
+  }
+  .print-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-divider);
+    background: var(--color-paper);
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .print-btn:focus-visible {
     outline: none;
     box-shadow: var(--focus-ring);
   }

@@ -9,6 +9,7 @@
  */
 
 import type { PushAlertKind } from '$lib/push/prefs';
+import { digestPushBody, type WeeklyDigest } from '$lib/digest/weekly';
 
 export const HOUR_MS = 60 * 60 * 1000;
 export const LOCK_WINDOW_MS = 48 * HOUR_MS;
@@ -60,7 +61,16 @@ export interface LockableRecordSnapshot {
   blockName?: string;
 }
 
-export type PushAudience = { kind: 'all' } | { kind: 'owners-and'; userIds: string[] };
+/** `only` reaches exactly these users; owners are not added (F4-4). */
+export type PushAudience =
+  { kind: 'all' } | { kind: 'owners-and'; userIds: string[] } | { kind: 'only'; userIds: string[] };
+
+/** Whether a member with this role is inside the audience. */
+export function inAudience(audience: PushAudience, userId: string, role: string): boolean {
+  if (audience.kind === 'all') return true;
+  if (audience.kind === 'only') return audience.userIds.includes(userId);
+  return role === 'owner' || audience.userIds.includes(userId);
+}
 
 export interface PushAlert {
   kind: PushAlertKind;
@@ -156,4 +166,46 @@ export function selectDueAlerts(input: {
     ...lockWindowClosingAlerts(input.records, input.now),
     ...springCalibrationAlerts(input.sprayers, input.now)
   ];
+}
+
+/**
+ * F4-2. The Monday summary goes out on the first tick at or after Monday
+ * 10:00 UTC and no later than the end of Tuesday UTC; a week missed past
+ * that is skipped, never sent late.
+ */
+export const DIGEST_SEND_FROM_UTC_MINUTES = 10 * 60;
+
+export function isDigestSendWindow(now: number): boolean {
+  const d = new Date(now);
+  const day = d.getUTCDay();
+  if (day === 2) return true;
+  return day === 1 && d.getUTCHours() * 60 + d.getUTCMinutes() >= DIGEST_SEND_FROM_UTC_MINUTES;
+}
+
+/** The Monday of the send, `YYYY-MM-DD` (F4-1). */
+export function digestMondayYmd(now: number): string {
+  const d = new Date(now);
+  const back = (d.getUTCDay() + 6) % 7;
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - back))
+    .toISOString()
+    .slice(0, 10);
+}
+
+export function digestSubjectId(userId: string, mondayYmd: string): string {
+  return `${userId}:${mondayYmd}`;
+}
+
+/** One alert per person (F4-4): content differs per person, so none are
+ *  batched. The body never carries money (F4-7). */
+export function weeklyDigestAlerts(
+  digests: ReadonlyArray<{ userId: string; digest: WeeklyDigest }>
+): PushAlert[] {
+  return digests.map(({ userId, digest }) => ({
+    kind: 'weekly-digest' as const,
+    subjectId: digestSubjectId(userId, digest.weekStartYmd),
+    title: 'Monday summary',
+    body: digestPushBody(digest),
+    url: '/today',
+    audience: { kind: 'only' as const, userIds: [userId] }
+  }));
 }

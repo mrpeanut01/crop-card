@@ -12,7 +12,13 @@ import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
 import { activeAssignmentsForUser } from '$lib/db/users';
-import { avatarUrl, avatarVersion, prefsFor, updateProfile } from '$lib/db/userProfile';
+import {
+  avatarUrl,
+  avatarVersion,
+  prefsFor,
+  setUserLocale,
+  updateProfile
+} from '$lib/db/userProfile';
 import { changeOwnerZone } from '$lib/server/holdGuard';
 import {
   DEFAULT_TIME_ZONE,
@@ -22,6 +28,8 @@ import {
 } from '$lib/profile';
 import { identityName } from '$lib/identity';
 import { formatInstant } from '$lib/prefs';
+import { LOCALE_NAMES, enabledLocales, isKnownLocale, t } from '$lib/i18n';
+import { LOCALE_COOKIE } from '$lib/i18n/resolve';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => {
@@ -41,7 +49,10 @@ export const load: PageServerLoad = ({ locals }) => {
   const memberSince = userRow?.createdAt
     ? formatInstant(userRow.createdAt, prefs, 'date', { day: undefined })
     : '—';
-  const lastLogin = `today · ${formatInstant(new Date(), prefs, 'time', { timeZoneName: 'short' })}`;
+  const lastLogin = t(locals.locale, 'account.sessions.lastSignInValue', {
+    time: formatInstant(new Date(), prefs, 'time', { timeZoneName: 'short' })
+  });
+  const enabled = enabledLocales();
 
   return {
     account: {
@@ -62,7 +73,14 @@ export const load: PageServerLoad = ({ locals }) => {
     activeOwner: activeOwner
       ? { id: activeOwner.id, name: activeOwner.name, slug: activeOwner.slug }
       : null,
-    otherOwnerCount: Math.max(0, assignments.length - (user.activeOwnerId ? 1 : 0))
+    otherOwnerCount: Math.max(0, assignments.length - (user.activeOwnerId ? 1 : 0)),
+    language:
+      enabled.length > 1
+        ? {
+            current: locals.locale,
+            choices: enabled.map((id) => ({ id, name: LOCALE_NAMES[id] }))
+          }
+        : null
   };
 };
 
@@ -107,5 +125,31 @@ export const actions: Actions = {
       });
     }
     return { ok: true };
+  },
+
+  /** F5-9. Cookie sessions only, like the other identity settings. */
+  locale: async ({ request, locals, cookies }) => {
+    if (!locals.user) throw error(401, 'sign-in required');
+    if (locals.authVia !== 'cookie' || locals.user.impersonating) {
+      throw error(403, 'not available for this session');
+    }
+    const fd = await request.formData();
+    const choice = String(fd.get('locale') ?? '')
+      .trim()
+      .toLowerCase();
+    const enabled = enabledLocales();
+    if (enabled.length <= 1 || !isKnownLocale(choice) || !enabled.includes(choice)) {
+      return fail(400, { localeError: t(locals.locale, 'account.language.unavailable') });
+    }
+    setUserLocale(locals.user.id, choice);
+    cookies.set(LOCALE_COOKIE, choice, {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 365
+    });
+    locals.locale = choice;
+    return { localeSaved: true };
   }
 };

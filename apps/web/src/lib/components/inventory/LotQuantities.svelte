@@ -116,6 +116,14 @@
               Mark received
             </button>
           {/if}
+          {#if owner && lot.quantityStatus === 'existing'}
+            <a
+              class="btn-small ghost expense-link"
+              href="/finance/new?kind=expense&stockLotId={encodeURIComponent(lot.id)}"
+            >
+              Record purchase as expense
+            </a>
+          {/if}
         </li>
       {/each}
     </ul>
@@ -222,6 +230,12 @@
     background: transparent;
     color: var(--color-forest-deep, #1f3522);
     align-self: flex-start;
+  }
+  .expense-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    box-sizing: border-box;
   }
   .btn-small:disabled {
     opacity: 0.5;

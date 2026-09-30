@@ -2075,6 +2075,7 @@
     label: p.varietyDisplayName
   }))}
   defaultPlantingId={addTaskTarget?.plantingId ?? null}
+  canAssign={data.user?.role === 'owner' && !data.user?.impersonating}
   onClose={() => (addTaskTarget = null)}
   onCreated={async () => {
     addTaskTarget = null;

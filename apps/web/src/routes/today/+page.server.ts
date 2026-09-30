@@ -36,6 +36,7 @@ import { deriveSeasonGlance, startOfYear } from '$lib/today/seasonGlance';
 import { deriveWinterizeAlerts, startOfSeason } from '$lib/today/winterizeAlert';
 import { equipmentIdsActiveBefore, listEquipment } from '$lib/db/equipment';
 import { prefsFor, farmTimeZone } from '$lib/db/userProfile';
+import { hasOtherAssignableMember } from '$lib/db/users';
 import { todayYmd, ymdInZone } from '$lib/prefs';
 import { addDaysYmd, calendarGrid, isYmd, resolveTodayParams } from '$lib/today/views';
 import { firstDayOfWeek } from '$lib/intlCache';
@@ -50,6 +51,7 @@ import { materializeCareTasks } from '$lib/server/carePlans';
 import { loadTodayAdvice } from '$lib/server/todayAdvice.server';
 import type { TodayAdviceCard } from '$lib/today/advice';
 import { careCards, careCloseFormData } from '$lib/server/careView';
+import { todayDigestInput } from '$lib/digest/todayInput';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const OVERDUE_LOOKBACK_DAYS = 30;
@@ -273,6 +275,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const upcoming = upcomingCandidates.filter(notScheduled);
 
   const hasLocation = hasFarmLatLon();
+  const lowStock = lowStockItems();
   // Phase 32E (E4-15): watering and degree-day cards, Day view only.
   let advice: TodayAdviceCard[] = [];
   if (view === 'day') {
@@ -282,6 +285,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       farmLatLon: hasLocation ? getFarmLatLon() : null,
       timeZone: careTimeZone,
       isOwner,
+      // Phase 32F (F4-8): the Monday card, from rows already read here.
+      digest: todayDigestInput({
+        openPrimaries: allOpenPrimaries,
+        careOpen: care.open,
+        lowStockCount: lowStock.length,
+        blockNameById,
+        viewerId: locals.user?.id ?? '',
+        isOwner,
+        viewerTimeZone: prefs.timeZone
+      }),
       plantings: blocks.flatMap((b) =>
         b.plantings.map((p) => {
           const rec = registry.get(p.cropPluginId);
@@ -302,10 +315,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       )
     });
   }
+  const ownerIdForTeam = locals.user?.activeOwnerId;
+  const hasTeam =
+    !!ownerIdForTeam &&
+    !!locals.user?.id &&
+    hasOtherAssignableMember(ownerIdForTeam, locals.user.id);
   return {
     advice,
     today,
     nowMs: now,
+    hasTeam,
     view,
     aiEnabled,
     counts: {
@@ -325,7 +344,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     // #280 — lift `category` into the projection so the /today template
     // can resolve a /inventory/[type]/[id] link via the canonical
     // STOCK_CATEGORY_TO_INVENTORY_TYPE map (no 308-redirect RTT).
-    lowStock: lowStockItems().map((i) => ({
+    lowStock: lowStock.map((i) => ({
       id: i.id,
       displayName: i.displayName,
       onHand: i.onHand,

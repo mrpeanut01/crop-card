@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import TodayHero from './TodayHero.svelte';
 import type { PriorityAction } from '$lib/today/priorityAction';
@@ -16,6 +16,15 @@ const action: PriorityAction = {
   taskId: 't9'
 };
 
+beforeEach(() => {
+  HTMLDialogElement.prototype.showModal = vi.fn(function (this: HTMLDialogElement) {
+    this.setAttribute('open', '');
+  });
+  HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
+    this.removeAttribute('open');
+  });
+});
+
 describe('TodayHero skip', () => {
   it('asks why and hands the reason to the same skip flow the task cards use', async () => {
     const onSkip = vi.fn();
@@ -27,6 +36,30 @@ describe('TodayHero skip', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Save skip' }));
     expect(onSkip).toHaveBeenCalledWith('t9', 'soil too wet');
     expect(screen.queryByLabelText('Why are you skipping this?')).toBeNull();
+  });
+
+  it("a plain task's Mark done opens the Done sheet and closes the task with the time", async () => {
+    const onDone = vi.fn();
+    const plain: PriorityAction = {
+      ...action,
+      ctaHref: '/today',
+      ctaLabel: 'Mark done',
+      markDone: true
+    };
+    render(TodayHero, { action: plain, aiEnabled: false, onDone });
+    expect(screen.queryByRole('link', { name: /Mark done/ })).toBeNull();
+    await fireEvent.click(screen.getByRole('button', { name: /Mark done/ }));
+    expect(screen.getByTestId('done-sheet')).toBeInTheDocument();
+    await fireEvent.click(screen.getByRole('button', { name: 'Done, 30 min' }));
+    expect(onDone).toHaveBeenCalledWith('t9', 30);
+  });
+
+  it('a read-only viewer gets no Mark done that just reloads the page', () => {
+    render(TodayHero, {
+      action: { ...action, ctaHref: '/today', ctaLabel: 'Mark done', markDone: true },
+      aiEnabled: false
+    });
+    expect(screen.queryByText('Mark done')).toBeNull();
   });
 
   it('read-only viewers get no skip button', () => {

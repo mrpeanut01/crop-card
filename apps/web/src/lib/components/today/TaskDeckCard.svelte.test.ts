@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import TaskDeckCard from './TaskDeckCard.svelte';
 import { buildTaskCard } from '$lib/cards/build/task';
@@ -16,6 +16,15 @@ const task = {
   scheduledFor: Date.parse('2026-06-02T14:00:00Z'),
   blockId: 'b1'
 };
+
+beforeEach(() => {
+  HTMLDialogElement.prototype.showModal = vi.fn(function (this: HTMLDialogElement) {
+    this.setAttribute('open', '');
+  });
+  HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
+    this.removeAttribute('open');
+  });
+});
 
 function setup(overrides: Record<string, unknown> = {}) {
   const onDone = vi.fn();
@@ -54,7 +63,43 @@ describe('TaskDeckCard', () => {
       '/spray?task=t1&block=b1'
     );
     await fireEvent.click(screen.getByRole('button', { name: 'Done: Spray the kale' }));
-    expect(onDone).toHaveBeenCalledWith('t1');
+    expect(onDone).not.toHaveBeenCalled();
+    await fireEvent.click(screen.getByRole('button', { name: 'Done, skip time' }));
+    expect(onDone).toHaveBeenCalledWith('t1', undefined);
+  });
+
+  it('Done opens the time sheet; one chip completes it with that time (F1-12)', async () => {
+    const { onDone } = setup();
+    await fireEvent.click(screen.getByRole('button', { name: 'Done: Spray the kale' }));
+    const sheet = screen.getByTestId('done-sheet');
+    for (const label of ['15 m', '30 m', '1 h', '2 h', 'Other'])
+      expect(within(sheet).getByText(label, { selector: 'button' })).toBeInTheDocument();
+    await fireEvent.click(within(sheet).getByRole('button', { name: 'Done, 30 min' }));
+    expect(onDone).toHaveBeenCalledWith('t1', 30);
+  });
+
+  it('Other takes whole minutes and shows them as hours', async () => {
+    const { onDone } = setup();
+    await fireEvent.click(screen.getByRole('button', { name: 'Done: Spray the kale' }));
+    const sheet = screen.getByTestId('done-sheet');
+    await fireEvent.click(within(sheet).getByRole('button', { name: 'Other' }));
+    const input = within(sheet).getByLabelText('Minutes');
+    const save = within(sheet).getByRole('button', { name: 'Save' });
+    await fireEvent.input(input, { target: { value: '900' } });
+    expect(save).toBeDisabled();
+    await fireEvent.input(input, { target: { value: '90' } });
+    expect(sheet).toHaveTextContent('1.5 h');
+    await fireEvent.click(save);
+    expect(onDone).toHaveBeenCalledWith('t1', 90);
+  });
+
+  it('only owners get the Assign button', () => {
+    setup();
+    expect(screen.queryByRole('button', { name: /^Assign/ })).toBeNull();
+    setup({ canAssign: true, assigneeUserId: 'u1' });
+    expect(screen.getByRole('button', { name: 'Assign: Spray the kale' })).toHaveTextContent(
+      'Reassign'
+    );
   });
 
   it('keeps the notes, the equipment and the skip reason on the deck card', () => {
@@ -148,7 +193,8 @@ describe('TaskDeckCard', () => {
     expect(within(items[1]).getByText('Will save when online')).toBeInTheDocument();
     expect(within(items[1]).queryByRole('button')).toBeNull();
     await fireEvent.click(within(items[0]).getByRole('button', { name: 'Done: Check nozzles' }));
-    expect(onDone).toHaveBeenCalledWith('p1');
+    await fireEvent.click(screen.getByRole('button', { name: 'Done, 1 h' }));
+    expect(onDone).toHaveBeenCalledWith('p1', 60);
   });
 
   it('a rejected replay points at Pending records', () => {

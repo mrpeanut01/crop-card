@@ -10,6 +10,7 @@ import {
   readOutbox,
   unsubscribeHeaders,
   type AlertEmail,
+  type DigestEmail,
   type OutboundEmail
 } from './email';
 import { unsubscribeLinks, verifyUnsubscribeToken } from './emailUnsubscribe';
@@ -72,7 +73,7 @@ afterEach(() => {
 describe('email classification', () => {
   it('classifies every kind, and only sign-in, invite and address codes skip consent', () => {
     expect(Object.keys(EMAIL_KIND_CLASS).sort()).toEqual(
-      ['contact-code', 'field-alert', 'helper-invite', 'magic-link'].sort()
+      ['contact-code', 'field-alert', 'helper-invite', 'magic-link', 'weekly-digest'].sort()
     );
     const transactionalKinds = Object.entries(EMAIL_KIND_CLASS)
       .filter(([, c]) => c === 'transactional')
@@ -92,6 +93,49 @@ describe('email classification', () => {
         expect(optInTypes.has(t)).toBe(false);
       }
     }
+  });
+});
+
+function digestMail(to = 'helper@example.com'): DigestEmail {
+  return {
+    kind: 'weekly-digest',
+    to,
+    farmName: 'Safe Haven Farm',
+    weekOf: 'Mon Sep 28',
+    body: 'Week of Mon Sep 28\nTasks this week: 3',
+    actionUrl: `${ORIGIN}/today`,
+    settingsUrl: `${ORIGIN}/settings/notifications`,
+    unsubscribe: unsubscribeLinks(ORIGIN, {
+      userId: 'user-1',
+      ownerId: 'owner-1',
+      scope: 'weekly-digest'
+    })
+  };
+}
+
+describe('the Monday summary email (F4-11)', () => {
+  it('is opt-in, has its own Pingram type and carries the category unsubscribe', async () => {
+    expect(EMAIL_KIND_CLASS['weekly-digest']).toBe('opt-in');
+    expect(PINGRAM_TYPE['weekly-digest']).toBe('weekly-digest');
+    expect(PINGRAM_TYPE['weekly-digest']).not.toBe(PINGRAM_TYPE['field-alert']);
+    const email = digestMail();
+    expect(isOptInEmail(email)).toBe(true);
+    await dispatchEmail(email);
+    const [sent] = readOutbox(email.to);
+    expect(sent.subject).toBe('Your week of Mon Sep 28 · Safe Haven Farm');
+    expect(sent.headers['List-Unsubscribe']).toBe(`<${email.unsubscribe.oneClickUrl}>`);
+    expect(sent.headers['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click');
+    expect(sent.body).toContain(email.unsubscribe.pageUrl);
+    expect(sent.body).toContain('Monday summary');
+    expect(sent.body).not.toMatch(/\u2014/);
+    const token = new URL(email.unsubscribe.oneClickUrl).searchParams.get('t');
+    expect(verifyUnsubscribeToken(token)?.scope).toBe('weekly-digest');
+  });
+
+  it('refuses to send without absolute unsubscribe links', async () => {
+    await expect(
+      dispatchEmail({ ...digestMail(), unsubscribe: { pageUrl: '/u/x', oneClickUrl: 'x' } })
+    ).rejects.toMatchObject({ name: 'EmailTransportError' });
   });
 });
 

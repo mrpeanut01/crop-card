@@ -57,7 +57,7 @@ import {
   queuedJournalSchema
 } from '../src/lib/journal/apiSchemas.ts';
 import { JOURNAL_KINDS, JOURNAL_PROVENANCE } from '../src/lib/journal/model.ts';
-import { taskCloseSchema } from '../src/lib/tasks/apiSchemas.ts';
+import { taskCloseSchema, taskCreateSchema, taskPatchSchema } from '../src/lib/tasks/apiSchemas.ts';
 import {
   carePlanCreateSchema,
   carePlanPatchSchema
@@ -103,6 +103,11 @@ import {
   rainGaugeCreateSchema,
   waterTargetSchema
 } from '../src/lib/irrigation/apiSchemas.ts';
+import {
+  labourRateSchema,
+  ledgerEntryCreateSchema,
+  ledgerEntryPatchSchema
+} from '../src/lib/finance/apiSchemas.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const APP_ROOT = resolve(__dirname, '..');
@@ -2190,7 +2195,7 @@ const paths = {
     post: {
       summary: 'Close a task (offline replay of Done or Skip)',
       description:
-        "The offline queue's replay of a Done or Skip made on /today with no signal. Owners and helpers can close any task of the active Owner; inspectors are read-only. Idempotent: a task that is already closed answers 200 with `alreadyClosed: true` and is left as it was, and a replay of a client record id that was already saved writes nothing. `occurredAt` keeps the moment of the tap, clamped to no later than now and no earlier than 30 days back. An animal-care task (category `animal-care`) closes through its care plan: a vaccine, wormer or treatment must carry `healthEvent` (the body of `POST /api/animals/health/record`, for the task's own animal or group), which is saved with the kernel verdict, stock deduction and hold guard in the same transaction as the close; without it the answer is 422 `CARE_NEEDS_RECORD`. A vet visit with no `healthEvent` saves a plain vet-visit record. Done rolls the plan forward from the day it was done, or to `nextDueOn` when the signed-in owner gives one (stored as `manual`; a helper's is ignored with a `NEXT_DUE_OWNER` warning). Skip on a vaccine, wormer or treatment must say `careSkip`: `skip-this` rolls from the due day, `snooze` with `snoozeDays` (1, 3 or 7) keeps the task open and moves it; otherwise 422 `CARE_SKIP_CHOICE`. Not gated by the season close-out.",
+        "The offline queue's replay of a Done or Skip made on /today with no signal. Owners and helpers can close any task of the active Owner; inspectors are read-only. Idempotent: a task that is already closed answers 200 with `alreadyClosed: true` and is left as it was, and a replay of a client record id that was already saved writes nothing. `occurredAt` keeps the moment of the tap, clamped to no later than now and no earlier than 30 days back. An animal-care task (category `animal-care`) closes through its care plan: a vaccine, wormer or treatment must carry `healthEvent` (the body of `POST /api/animals/health/record`, for the task's own animal or group), which is saved with the kernel verdict, stock deduction and hold guard in the same transaction as the close; without it the answer is 422 `CARE_NEEDS_RECORD`. A vet visit with no `healthEvent` saves a plain vet-visit record. Done may carry `minutes` (whole minutes, 1 to 720; refused with `abort`), saved as a time row for the person closing in the same transaction, with the task's planting, block and field; the answer then carries `timeSaved: true`. Time sent for a task someone else already closed is still saved (`alreadyClosed: true, timeSaved: true`). Done rolls the plan forward from the day it was done, or to `nextDueOn` when the signed-in owner gives one (stored as `manual`; a helper's is ignored with a `NEXT_DUE_OWNER` warning). Skip on a vaccine, wormer or treatment must say `careSkip`: `skip-this` rolls from the due day, `snooze` with `snoozeDays` (1, 3 or 7) keeps the task open and moves it; otherwise 422 `CARE_SKIP_CHOICE`. Not gated by the season close-out.",
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
       parameters: [clientRecordRef],
       requestBody: jsonBody(taskCloseSchema),
@@ -2200,6 +2205,7 @@ const paths = {
           properties: {
             task: { type: 'object' },
             alreadyClosed: { type: 'boolean' },
+            timeSaved: { type: 'boolean' },
             nextDueOn: { type: ['string', 'null'] },
             snoozedUntil: { type: 'string' },
             event: { type: 'object' },
@@ -2219,6 +2225,168 @@ const paths = {
         503: errorResponse(
           'The same client record id is being saved by another request right now. Retry shortly.'
         )
+      }
+    }
+  },
+
+  '/api/tasks': {
+    get: {
+      summary: 'List tasks',
+      description:
+        'Tasks of the active Owner, oldest scheduled first. Each carries `assigneeUserId` and `assignee` (`{ id, name }` or null), the name shown as the chosen name, else the email local-part, else "phone ending 1234".',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'from',
+          in: 'query',
+          description: 'Earliest scheduled time, epoch ms.',
+          schema: { type: 'integer' }
+        },
+        {
+          name: 'to',
+          in: 'query',
+          description: 'Latest scheduled time, epoch ms.',
+          schema: { type: 'integer' }
+        },
+        { name: 'cropId', in: 'query', schema: { type: 'string' } },
+        { name: 'blockId', in: 'query', schema: { type: 'string' } },
+        { name: 'equipmentId', in: 'query', schema: { type: 'string' } },
+        {
+          name: 'status',
+          in: 'query',
+          schema: { type: 'string', enum: ['open', 'completed', 'aborted'] }
+        },
+        {
+          name: 'kind',
+          in: 'query',
+          schema: { type: 'string', enum: ['primary', 'pre-task', 'post-task'] }
+        },
+        { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 1000 } }
+      ],
+      responses: {
+        200: jsonResponse('The tasks.', {
+          type: 'object',
+          properties: { tasks: { type: 'array', items: { type: 'object' } } }
+        }),
+        401: errorResponse('Authentication required.')
+      }
+    },
+    post: {
+      summary: 'Create a task',
+      description:
+        "Owners and helpers create tasks; inspectors are read-only. A primary that names a planting or implement gets its plugin prep and follow-up tasks. `assigneeUserId` gives the task (and its prep and follow-up tasks) to an active owner, helper or custom operator of this farm; only an owner may send one (403 `OWNER_ONLY` with `askOwner: true` otherwise, and a superadmin impersonating is not the owner). Anyone else, including another farm's users and inspectors, is 400 `FOREIGN_REF`. Not gated by the season close-out.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(taskCreateSchema),
+      responses: {
+        201: jsonResponse('The task and the ids of the prep and follow-up tasks written.', {
+          type: 'object',
+          properties: { task: { type: 'object' }, materialized: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body, an id from another Owner, or `FOREIGN_REF`.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Inspector role is read-only, or `OWNER_ONLY` for an assignee.')
+      }
+    }
+  },
+
+  '/api/tasks/{id}': {
+    parameters: [idPath('id', 'Task id.')],
+    get: {
+      summary: 'A task with its prep and follow-up tasks',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The task and its linked tasks.', {
+          type: 'object',
+          properties: {
+            primary: { type: 'object' },
+            linked: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        404: errorResponse('Task not found for the active Owner.')
+      }
+    },
+    patch: {
+      summary: 'Complete, skip, reschedule, edit or assign a task',
+      description:
+        '`complete` may carry `minutes` (1 to 720), saved as a time row for the person closing; completing a task that is already closed changes nothing but still saves the time (`alreadyClosed: true, timeSaved: true`). `abort` refuses `minutes`. `assign` is owner only (403 `OWNER_ONLY` with `askOwner: true` for helpers, custom operators, inspectors and impersonation), only on an open task (409 `TASK_CLOSED`), and only to an active owner, helper or custom operator of this farm (400 `FOREIGN_REF`); `null` gives it to nobody. Assigning a primary also assigns its open prep and follow-up tasks. Not gated by the season close-out.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(taskPatchSchema),
+      responses: {
+        200: jsonResponse('The task after the change.', {
+          type: 'object',
+          properties: {
+            task: { type: 'object' },
+            alreadyClosed: { type: 'boolean' },
+            timeSaved: { type: 'boolean' }
+          }
+        }),
+        400: errorResponse('Invalid body, or `FOREIGN_REF` for an assignee.'),
+        403: errorResponse('Inspector role is read-only, or `OWNER_ONLY` for assign.'),
+        404: errorResponse('Task not found for the active Owner.'),
+        409: errorResponse('`TASK_CLOSED`: only open tasks can be assigned.')
+      }
+    }
+  },
+
+  '/api/tasks/assignees': {
+    get: {
+      summary: 'Farm members a task can be given to',
+      description:
+        'Owner only. Active owners, helpers and custom operators of the active Owner, by display name (never a full email or phone number). Inspectors are never listed.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The members.', {
+          type: 'object',
+          required: ['assignees'],
+          properties: {
+            assignees: {
+              type: 'array',
+              items: {
+                type: 'object',
+                required: ['id', 'name', 'role'],
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                  role: { type: 'string', enum: ['owner', 'helper', 'custom-operator'] }
+                }
+              }
+            }
+          }
+        }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`OWNER_ONLY`.')
+      }
+    }
+  },
+
+  '/api/plantings/{id}/hours': {
+    parameters: [idPath('id', 'Planting (crop) id.')],
+    get: {
+      summary: 'Time logged on a planting, per person',
+      description:
+        'Owner only. Minutes logged on Done for this planting\'s tasks, in total and per person. Everyone else sees only the total, as "Time logged" on the Planting Card.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Totals.', {
+          type: 'object',
+          properties: {
+            totalMinutes: { type: 'integer' },
+            byPerson: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                  minutes: { type: 'integer' }
+                }
+              }
+            }
+          }
+        }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Owner role required.'),
+        404: errorResponse('Planting not found for the active Owner.')
       }
     }
   },
@@ -2490,6 +2658,184 @@ const paths = {
         400: errorResponse('Invalid body, `BIOFIX_NOT_TRAP` or `IN_THE_FUTURE`.'),
         ...AUTH_ERRORS,
         404: errorResponse('Pest model not found.')
+      }
+    }
+  },
+
+  '/api/finance/entries': {
+    get: {
+      summary: 'List money entries for a season',
+      description:
+        "Owner only (helpers, custom operators and inspectors get 403). The season is the calendar year in the farm's time zone. `state=deleted` lists soft-deleted entries. Each entry carries `linkedTo`, `enterpriseLabel` and `enteredBy` names.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        { name: 'year', in: 'query', required: false, schema: { type: 'integer' } },
+        {
+          name: 'state',
+          in: 'query',
+          required: false,
+          schema: { type: 'string', enum: ['live', 'deleted'] }
+        }
+      ],
+      responses: {
+        200: jsonResponse('Entries, newest first.', {
+          type: 'object',
+          required: ['year', 'entries'],
+          properties: {
+            year: { type: 'integer' },
+            entries: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        400: errorResponse('Bad year or state.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Money is only shown to the farm owner.')
+      }
+    },
+    post: {
+      summary: 'Add an expense or income',
+      description:
+        'Owner only; impersonation may not write. Link at most one of crop, Area (with an optional bed inside it), animal or group; `stockLotId` only on an expense and `harvestEventId` only on income. A lot may have one live purchase expense (409 `LOT_ALREADY_EXPENSED`). The date may be at most a day ahead. Never gated by the season close-out. Writes an audit row in the same transaction.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(ledgerEntryCreateSchema),
+      responses: {
+        201: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['entry'],
+          properties: { entry: { type: 'object' } }
+        }),
+        400: errorResponse(
+          "Invalid body, another Owner's id, a bed outside its Area, or a date more than a day ahead."
+        ),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Not the owner, or impersonating.'),
+        409: errorResponse(
+          '`LOT_ALREADY_EXPENSED`: that stock lot already has a live purchase expense.'
+        )
+      }
+    }
+  },
+
+  '/api/finance/entries/{id}': {
+    parameters: [idPath('id', 'Money entry id.')],
+    get: {
+      summary: 'Read a money entry and its history',
+      description: 'Owner only. `changes` lists every create, update, delete and restore.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Entry and history.', {
+          type: 'object',
+          required: ['entry', 'changes'],
+          properties: {
+            entry: { type: 'object' },
+            changes: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Money is only shown to the farm owner.'),
+        404: errorResponse('No such entry for the active Owner.')
+      }
+    },
+    patch: {
+      summary: 'Change a money entry',
+      description:
+        'Owner only. No lock. The patch is merged over the stored entry and checked with the same rules as a new one.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(ledgerEntryPatchSchema),
+      responses: {
+        200: jsonResponse('Saved.', { type: 'object', properties: { entry: { type: 'object' } } }),
+        400: errorResponse('Invalid change.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Not the owner, or impersonating.'),
+        404: errorResponse('No such entry for the active Owner.'),
+        409: errorResponse('`LOT_ALREADY_EXPENSED`.')
+      }
+    },
+    delete: {
+      summary: 'Delete a money entry',
+      description:
+        'Owner only. A soft delete: the entry leaves the totals, the Profit Card and the CSV, and can be restored.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Deleted.', {
+          type: 'object',
+          properties: { entry: { type: 'object' } }
+        }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Not the owner, or impersonating.'),
+        404: errorResponse('No such entry for the active Owner.')
+      }
+    }
+  },
+
+  '/api/finance/entries/{id}/restore': {
+    parameters: [idPath('id', 'Money entry id.')],
+    post: {
+      summary: 'Restore a deleted money entry',
+      description: 'Owner only.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Restored.', {
+          type: 'object',
+          properties: { entry: { type: 'object' } }
+        }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Not the owner, or impersonating.'),
+        404: errorResponse('No such entry for the active Owner.'),
+        409: errorResponse('`LOT_ALREADY_EXPENSED`: another live expense already names that lot.')
+      }
+    }
+  },
+
+  '/api/finance/summary': {
+    get: {
+      summary: 'Season profit by enterprise',
+      description:
+        'Owner only. `cash` sums the live entries. Each enterprise (a crop, animal group, animal, tag or Area) adds derived input cost from stock use times lot cost, with uses of unknown cost counted, never priced at zero, and labour from logged minutes times the owner rate. Derived cost and labour are never part of `cash`; a lot purchase is counted in `lotPurchaseCents` and never again as an enterprise cost.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [{ name: 'year', in: 'query', required: false, schema: { type: 'integer' } }],
+      responses: {
+        200: jsonResponse('Season profit.', {
+          type: 'object',
+          required: ['year', 'profit'],
+          properties: { year: { type: 'integer' }, profit: { type: 'object' } }
+        }),
+        400: errorResponse('Bad year.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Money is only shown to the farm owner.')
+      }
+    }
+  },
+
+  '/api/finance/export.csv': {
+    get: {
+      summary: 'Download the season ledger as CSV',
+      description:
+        'Owner only. Live entries with columns date, kind, category, amount, description, linked to, enterprise, quantity, unit, entered by. Cells that start with =, +, -, or @ get a leading quote.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [{ name: 'year', in: 'query', required: false, schema: { type: 'integer' } }],
+      responses: {
+        200: { description: 'CSV file.', content: { 'text/csv': { schema: { type: 'string' } } } },
+        400: errorResponse('Bad year.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Money is only shown to the farm owner.')
+      }
+    }
+  },
+
+  '/api/finance/labour-rate': {
+    put: {
+      summary: 'Set the labour rate',
+      description: 'Owner only. One rate for everyone, in cents an hour; null clears it.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(labourRateSchema),
+      responses: {
+        200: jsonResponse('Saved.', {
+          type: 'object',
+          properties: { centsPerHour: { type: ['integer', 'null'] } }
+        }),
+        400: errorResponse('Invalid rate.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Not the owner, or impersonating.')
       }
     }
   }

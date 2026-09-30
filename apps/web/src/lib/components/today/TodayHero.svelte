@@ -18,16 +18,28 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { PriorityAction } from '$lib/today/priorityAction';
   import SkipReasonForm from './SkipReasonForm.svelte';
+  import DoneSheet from '$lib/components/tasks/DoneSheet.svelte';
 
   interface Props {
     action: PriorityAction | null;
     aiEnabled: boolean;
     /** Called when user records a skip-with-reason on a task action (#104). */
     onSkip?: (taskId: string, reason: string) => void;
+    /** Closes a plain task through the shared Done sheet (F1-12). */
+    onDone?: (taskId: string, minutes: number | undefined) => void;
+    busy?: boolean;
   }
-  const { action, aiEnabled, onSkip }: Props = $props();
+  const { action, aiEnabled, onSkip, onDone, busy = false }: Props = $props();
 
   let skipOpen = $state(false);
+  let doneOpen = $state(false);
+  const doneHere = $derived(!!(action?.markDone && action.taskId && onDone));
+
+  function finishDone(minutes: number | undefined) {
+    if (!action?.taskId || !onDone) return;
+    onDone(action.taskId, minutes);
+    doneOpen = false;
+  }
 
   function submitSkip(reason: string) {
     if (!action?.taskId || !onSkip) return;
@@ -82,10 +94,17 @@
         <p class="action-body">{action.body}</p>
       {/if}
       <div class="cta-row">
-        <a class="primary" href={action.ctaHref}>
-          {action.ctaLabel}
-          <ArrowRight size={15} strokeWidth={1.75} />
-        </a>
+        {#if doneHere}
+          <button type="button" class="primary" disabled={busy} onclick={() => (doneOpen = true)}>
+            {action.ctaLabel}
+            <Check size={15} strokeWidth={1.75} />
+          </button>
+        {:else if !action.markDone}
+          <a class="primary" href={action.ctaHref}>
+            {action.ctaLabel}
+            <ArrowRight size={15} strokeWidth={1.75} />
+          </a>
+        {/if}
         {#if action.taskId && onSkip}
           <button type="button" class="ghost" onclick={() => (skipOpen = !skipOpen)}>
             Skip, note why
@@ -99,6 +118,15 @@
         {/if}
       </div>
     </div>
+    {#if doneHere && doneOpen}
+      <DoneSheet
+        open={true}
+        title={action.title}
+        {busy}
+        onDone={finishDone}
+        onClose={() => (doneOpen = false)}
+      />
+    {/if}
     {#if skipOpen}
       <div class="skip-wrap">
         <SkipReasonForm id="skip-reason" onSave={submitSkip} onCancel={() => (skipOpen = false)} />

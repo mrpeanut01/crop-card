@@ -13,10 +13,10 @@ import { users } from '$lib/db/schema';
 import { listOptedIn } from '$lib/db/emailAlertConsents';
 import { isEmailSuppressed } from '$lib/db/contactSuppressions';
 import type { EmailAlertCategory } from '$lib/email/alertCategories';
-import { dispatchEmail } from '$lib/server/email';
+import { dispatchEmail, PINGRAM_TYPE } from '$lib/server/email';
 import { unsubscribeLinks } from '$lib/server/emailUnsubscribe';
 import type { MemberRole } from './dispatch';
-import type { PushAlert } from './triggers';
+import { inAudience, type PushAlert } from './triggers';
 
 export interface EmailRecipient {
   userId: string;
@@ -47,14 +47,7 @@ export function selectEmailRecipients(input: {
     const email = input.emails.get(m.userId);
     if (!email) continue;
     if (input.isSuppressed(email)) continue;
-    const audience = input.alert.audience;
-    if (
-      audience.kind !== 'all' &&
-      m.roleWithinOwner !== 'owner' &&
-      !audience.userIds.includes(m.userId)
-    ) {
-      continue;
-    }
+    if (!inAudience(input.alert.audience, m.userId, m.roleWithinOwner)) continue;
     out.push({ userId: m.userId, email });
   }
   return out;
@@ -105,7 +98,7 @@ export async function sendAlertEmails(
     members,
     emails: emailsForUsers(members.map((m) => m.userId)),
     consents,
-    isSuppressed: isEmailSuppressed,
+    isSuppressed: (email) => isEmailSuppressed(email, PINGRAM_TYPE['field-alert']),
     alert
   });
   for (const r of recipients) {

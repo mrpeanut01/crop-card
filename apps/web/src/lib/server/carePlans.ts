@@ -56,6 +56,7 @@ import { writeRecord } from './recordWrite';
 import { tryGuardedHoldWrite } from './holdGuard';
 import { healthRecordResponse, prepareHealthRecord, writeHealthRecord } from './healthRecordWrite';
 import { getDataKinds } from './registry';
+import { recordTaskTime } from './taskTime';
 
 const DAY_MS = 86_400_000;
 
@@ -420,7 +421,14 @@ export interface CloseContext {
   meta: CareTaskMeta;
   input: Pick<
     TaskCloseInput,
-    'action' | 'reason' | 'occurredAt' | 'healthEvent' | 'nextDueOn' | 'careSkip' | 'snoozeDays'
+    | 'action'
+    | 'reason'
+    | 'occurredAt'
+    | 'healthEvent'
+    | 'nextDueOn'
+    | 'careSkip'
+    | 'snoozeDays'
+    | 'minutes'
   >;
   timeZone: string;
   now?: number;
@@ -507,13 +515,15 @@ export async function closeCareTask(ctx: CloseContext): Promise<Response> {
         }
         const closed = completeTask(task.id, { occurredAt: at });
         const rolled = rollPlan(meta, next, manual, now);
-        return { closed, rolled };
+        const time = logTime(ctx, at);
+        return { closed, rolled, time };
       });
       return json({
         task: out.closed,
         alreadyClosed: false,
         nextDueOn: out.rolled?.nextDueOn ?? null,
-        warnings
+        warnings,
+        ...(out.time ? { timeSaved: true } : {})
       });
     } catch (e) {
       if (e instanceof AlreadyClosed) return json({ task: getTask(task.id), alreadyClosed: true });
@@ -547,14 +557,15 @@ export async function closeCareTask(ctx: CloseContext): Promise<Response> {
           if (prior) throw new DuplicateDose(prior);
         }
         const saved = writeHealthRecord(prepared);
-        if (!open) return { saved, closed: fresh ?? null, rolled: null, late: true };
+        const time = logTime(ctx, at);
+        if (!open) return { saved, closed: fresh ?? null, rolled: null, late: true, time };
         const closed = completeTask(task.id, {
           eventTable: 'animal_health_event',
           eventId: saved.row.id,
           occurredAt: at
         });
         const rolled = rollPlan(meta, next, manual, now);
-        return { saved, closed, rolled, late: false };
+        return { saved, closed, rolled, late: false, time };
       },
       { dated: true }
     );
@@ -571,7 +582,7 @@ export async function closeCareTask(ctx: CloseContext): Promise<Response> {
     throw e;
   }
   if (!guarded.ok) return guarded.response;
-  const { saved, closed, rolled, late } = guarded.value;
+  const { saved, closed, rolled, late, time } = guarded.value;
   if (late) warnings.push({ code: 'TASK_ALREADY_CLOSED', message: CARE_COPY.TASK_ALREADY_CLOSED });
   const body = healthRecordResponse(prepared, saved);
   return json({
@@ -579,7 +590,19 @@ export async function closeCareTask(ctx: CloseContext): Promise<Response> {
     warnings: [...((body.warnings as unknown[]) ?? []), ...warnings],
     task: closed,
     alreadyClosed: late,
-    nextDueOn: rolled?.nextDueOn ?? null
+    nextDueOn: rolled?.nextDueOn ?? null,
+    ...(time ? { timeSaved: true } : {})
+  });
+}
+
+/** Time on Done (32F, F1-12): the person closing, inside the close. */
+function logTime(ctx: CloseContext, at: number) {
+  return recordTaskTime({
+    task: ctx.task,
+    userId: ctx.user.id,
+    minutes: ctx.input.minutes,
+    occurredAt: at,
+    request: ctx.event.request
   });
 }
 

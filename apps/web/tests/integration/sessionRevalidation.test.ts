@@ -81,4 +81,11 @@ describe('revalidateCookieUser', () => {
     const { cookieUser } = seed();
     expect(revalidateCookieUser({ ...cookieUser, id: 'rv-missing-user' })).toBeNull();
   });
+
+  it('reads the language from the user row, never from the cookie (F5-3)', () => {
+    const { userId, cookieUser } = seed();
+    expect(revalidateCookieUser({ ...cookieUser, locale: 'es' })?.locale).toBeNull();
+    db.update(users).set({ locale: 'es' }).where(eq(users.id, userId)).run();
+    expect(revalidateCookieUser(cookieUser)?.locale).toBe('es');
+  });
 });

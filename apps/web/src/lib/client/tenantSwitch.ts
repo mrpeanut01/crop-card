@@ -40,14 +40,15 @@ async function activeServiceWorker(): Promise<ServiceWorker | null> {
 
 export async function announceActiveOwner(
   ownerId: string | null | undefined,
-  opts: { wipe?: boolean } = {}
+  opts: { wipe?: boolean; locale?: string } = {}
 ): Promise<boolean> {
   const sw = await activeServiceWorker();
   if (!sw) return false;
   const message = {
     type: SET_ACTIVE_OWNER_MESSAGE,
     ownerId: isValidOwnerId(ownerId) ? ownerId : null,
-    wipe: opts.wipe === true
+    wipe: opts.wipe === true,
+    ...(opts.locale ? { locale: opts.locale } : {})
   };
   if (typeof MessageChannel === 'undefined') {
     sw.postMessage(message);
@@ -154,6 +155,8 @@ export async function syncServiceWorkerTenant(opts: {
   register: boolean;
   signedIn: boolean;
   ownerId: string | null | undefined;
+  /** The page's language, so the SW keys its caches by it (F5-4). */
+  locale?: string;
 }): Promise<void> {
   if (!opts.signedIn) await Promise.all([wipeTenantCaches(), unsubscribeDevicePush()]);
   else if (!isValidOwnerId(opts.ownerId)) await forgetActiveOwner();
@@ -166,10 +169,11 @@ export async function syncServiceWorkerTenant(opts: {
     }
   }
   if (!opts.signedIn) return;
-  await announceActiveOwner(opts.ownerId);
+  const announce = { locale: opts.locale };
+  await announceActiveOwner(opts.ownerId, announce);
   if (!navigator.serviceWorker.controller) {
     navigator.serviceWorker.ready
-      .then(() => announceActiveOwner(opts.ownerId))
+      .then(() => announceActiveOwner(opts.ownerId, announce))
       .catch(() => undefined);
   }
 }

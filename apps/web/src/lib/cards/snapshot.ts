@@ -93,6 +93,9 @@ export interface SnapshotPlanting {
   establishment?: 'direct-seed' | 'transplant' | null;
   /** Earliest tray sowing, epoch ms. */
   sownIndoorsAt?: number | null;
+  /** Phase 32F (F1-17): minutes logged on this planting's tasks by
+   *  everyone. Absent on older bundles and when nothing was logged. */
+  minutesLogged?: number;
   /** Trays not yet transplanted, for the offline germination stepper
    *  (E1-18). Absent on bundles saved before version 3. */
   trays?: SnapshotSeedTray[];
@@ -127,6 +130,16 @@ export interface SnapshotTask {
   cropId: string | null;
   blockId: string | null;
   equipmentId: string | null;
+  /** Phase 32F (F1-11). Absent on older bundles; absent means unassigned. */
+  assigneeUserId?: string | null;
+  /** The record the task becomes, when it names one. Absent on older bundles. */
+  relatedEventTable?: string | null;
+}
+
+/** A farm member who can be given tasks, by name only (F1-11). */
+export interface SnapshotPerson {
+  id: string;
+  name: string;
 }
 
 export type SnapshotEquipmentType =
@@ -406,10 +419,15 @@ export interface FarmSnapshot {
   rulesVersion: string;
   /** Server-provided `ORIGIN` for printed QR links; never the Host header. */
   origin: string | null;
+  /** Language the bundle was built for (32F, F5-4). Absent before 32F. */
+  locale?: string;
   areas: SnapshotArea[];
   blocks: SnapshotBlock[];
   plantings: SnapshotPlanting[];
   tasks: SnapshotTask[];
+  /** Phase 32F (F1-11): active working members, names only. Never hours
+   *  or money, since one snapshot serves every role. */
+  people?: SnapshotPerson[];
   equipment: SnapshotEquipment[];
   stock: SnapshotStockItem[];
   cropPlugins: Record<string, SnapshotCropPlugin>;
@@ -444,6 +462,9 @@ export interface FarmSnapshot {
   /** Holds are projected as if every open stay and course ran to this
    *  moment, so an offline chip can only read longer than the server's. */
   holdsProjectedTo?: number;
+  /** The span `tasks` covers, so Week and Month Cards know which days are
+   *  complete. Absent on bundles saved before 32F. */
+  taskWindow?: { fromMs: number; toMs: number };
 }
 
 /** One map line or point, as the map and the Farm Map Card read it. */

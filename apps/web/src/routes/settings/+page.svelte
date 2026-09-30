@@ -15,7 +15,8 @@
     LayoutGrid,
     FileDown,
     Bell,
-    Heart
+    Heart,
+    Wallet
   } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
@@ -108,6 +109,13 @@
       icon: FileText,
       label: 'Records & retention',
       sub: 'VDACS audit tier · 2-year hold · bulk exports',
+      ownerOnly: true
+    },
+    {
+      href: '/finance',
+      icon: Wallet,
+      label: 'Money',
+      sub: 'Income and expenses · season profit by crop and animal · CSV',
       ownerOnly: true
     },
     {

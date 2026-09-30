@@ -15,6 +15,7 @@ import {
   holdCorrections,
   irrigationEvents,
   ledgerEntries,
+  ledgerEntryChanges,
   rainGaugeReadings,
   seedStarts,
   taskTimeEntries
@@ -43,6 +44,7 @@ export const PHASE_32_TABLES = {
   rain_gauge_readings: rainGaugeReadings,
   task_time_entries: taskTimeEntries,
   ledger_entries: ledgerEntries,
+  ledger_entry_changes: ledgerEntryChanges,
   hold_corrections: holdCorrections
 } as const;
 
@@ -187,7 +189,7 @@ export function seedPhase32Rows(label: string): Phase32Seed {
     fieldId: field.id,
     minutes: 30
   });
-  put('ledger_entries', {
+  const ledgerId = put('ledger_entries', {
     kind: 'expense',
     occurredAt: new Date(now),
     amountCents: 1299,
@@ -197,6 +199,11 @@ export function seedPhase32Rows(label: string): Phase32Seed {
     animalId,
     animalGroupId: groupId,
     stockLotId: lot.id
+  });
+  put('ledger_entry_changes', {
+    entryId: ledgerId,
+    action: 'create',
+    afterJson: JSON.stringify({ amountCents: 1299 })
   });
 
   put('hold_corrections', {

@@ -24,6 +24,8 @@
   import OfflineIndicator from './OfflineIndicator.svelte';
   import FeedbackSheet from '$lib/components/feedback/FeedbackSheet.svelte';
   import type { NavAlert } from '$lib/today/navAlerts';
+  import { createT } from '$lib/i18n';
+  import { animalsTitle } from '$lib/animals/profile';
 
   // lucide-svelte ships class components that don't match Svelte 5's Component
   // signature; type them loosely so {@const Icon = item.icon} works.
@@ -71,6 +73,8 @@
     onSwitchOwner
   }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
+
   let alertsOpen = $state(false);
 
   const allAlerts = $derived<NavAlert[]>(
@@ -79,7 +83,7 @@
           {
             id: 'pending',
             tone: 'wheat',
-            label: `${pendingCount} offline record${pendingCount === 1 ? '' : 's'} waiting to sync`,
+            label: tr('nav.pendingRecords', { count: pendingCount ?? 0 }),
             href: '/records/pending'
           },
           ...alerts
@@ -87,7 +91,9 @@
       : alerts
   );
   const alertsLabel = $derived(
-    allAlerts.length === 0 ? 'Alerts, none active' : `Alerts, ${allAlerts.length} active`
+    allAlerts.length === 0
+      ? tr('nav.alertsNone')
+      : tr('nav.alertsActive', { count: allAlerts.length })
   );
 
   // 7-item nav per design (collapsed from 13) plus Equipment (#474:
@@ -99,16 +105,25 @@
   // now 308-redirect to /inventory; the transitional active-state branch
   // below is kept short-term so a 308 still lights up the Inventory chip.
   const items: Array<{ href: string; label: string; icon: LucideIcon }> = $derived([
-    { href: '/today', label: 'Today', icon: Sun },
-    { href: '/plan', label: 'Plan', icon: Sprout },
-    { href: '/spray', label: 'Spray', icon: SprayCan },
-    { href: '/scout', label: 'Scout', icon: Eye },
-    { href: '/harvest', label: 'Harvest', icon: Wheat },
-    ...(animalsLabel ? [{ href: '/animals', label: animalsLabel, icon: PawPrint }] : []),
-    { href: '/inventory', label: 'Inventory', icon: Box },
-    { href: '/equipment', label: 'Equipment', icon: Tractor },
-    { href: '/records', label: 'Records', icon: FileText },
-    { href: '/cards', label: 'Cards', icon: Layers }
+    { href: '/today', label: tr('nav.today'), icon: Sun },
+    { href: '/plan', label: tr('nav.plan'), icon: Sprout },
+    { href: '/spray', label: tr('nav.spray'), icon: SprayCan },
+    { href: '/scout', label: tr('nav.scout'), icon: Eye },
+    { href: '/harvest', label: tr('nav.harvest'), icon: Wheat },
+    ...(animalsLabel
+      ? [
+          {
+            href: '/animals',
+            label:
+              animalsLabel === animalsTitle('pets') ? tr('nav.petsAndAnimals') : tr('nav.animals'),
+            icon: PawPrint
+          }
+        ]
+      : []),
+    { href: '/inventory', label: tr('nav.inventory'), icon: Box },
+    { href: '/equipment', label: tr('nav.equipment'), icon: Tractor },
+    { href: '/records', label: tr('nav.records'), icon: FileText },
+    { href: '/cards', label: tr('nav.cards'), icon: Layers }
   ]);
 
   function isActive(href: string): boolean {
@@ -197,14 +212,14 @@
     <span class="brand-mark" aria-hidden="true">
       <Leaf size={16} />
     </span>
-    <a href="/" class="brand serif" aria-label="CropCard home">CropCard</a>
+    <a href="/" class="brand serif" aria-label={tr('nav.home')}>CropCard</a>
     {#if activeOwner}
       <span class="divider" aria-hidden="true"></span>
       <span class="farm mono" title={activeOwner.name}>{activeOwner.name}</span>
     {/if}
   </div>
 
-  <nav aria-label="Primary" class="primary-nav" bind:this={navEl}>
+  <nav aria-label={tr('nav.primary')} class="primary-nav" bind:this={navEl}>
     {#each items as item, i (item.href)}
       {@const Icon = item.icon}
       {@const active = isActive(item.href)}
@@ -225,10 +240,10 @@
         class="nav-link"
         class:overflow-active={moreActive}
         class:folded-active={foldedActive}
-        aria-label="More pages"
+        aria-label={tr('nav.morePages')}
       >
         <Ellipsis size={15} strokeWidth={1.75} />
-        <span>More</span>
+        <span>{tr('nav.more')}</span>
       </summary>
       <div class="more-menu">
         {#each items as item, i (item.href)}
@@ -248,12 +263,12 @@
         {#if user?.isSuperadmin}
           <a href="/admin/feedback" class="more-link" onclick={() => (moreOpen = false)}>
             <Inbox size={16} strokeWidth={1.75} />
-            <span>Feedback inbox</span>
+            <span>{tr('nav.feedbackInbox')}</span>
           </a>
         {/if}
         <button type="button" class="more-link" onclick={openFeedback}>
           <MessageSquare size={16} strokeWidth={1.75} />
-          <span>Send feedback</span>
+          <span>{tr('nav.sendFeedback')}</span>
         </button>
       </div>
     </details>
@@ -268,9 +283,9 @@
         {/if}
       </summary>
       <div class="alerts-popover">
-        <div class="popover-label">Alerts</div>
+        <div class="popover-label">{tr('nav.alerts')}</div>
         {#if allAlerts.length === 0}
-          <p class="alerts-empty">No active alerts.</p>
+          <p class="alerts-empty">{tr('nav.alertsEmpty')}</p>
         {:else}
           <ul class="alerts-list">
             {#each allAlerts as a (a.id)}
@@ -282,23 +297,25 @@
             {/each}
           </ul>
         {/if}
-        <a href="/today" class="alerts-today" onclick={() => (alertsOpen = false)}>Open Today →</a>
+        <a href="/today" class="alerts-today" onclick={() => (alertsOpen = false)}
+          >{tr('nav.alertsOpenToday')}</a
+        >
       </div>
     </details>
     <IconButton
       href="/settings"
-      ariaLabel="Settings"
+      ariaLabel={tr('nav.settings')}
       aria-current={page.url.pathname.startsWith('/settings') ? 'page' : undefined}
     >
       {#snippet icon()}<Settings size={16} strokeWidth={1.75} />{/snippet}
     </IconButton>
     {#if availableOwners.length > 1 && activeOwner}
       <details class="owner-chip">
-        <summary aria-label="Switch farm" title={activeOwner.name}>
+        <summary aria-label={tr('nav.switchFarm')} title={activeOwner.name}>
           <Avatar name={avatarName} src={user?.avatarUrl} />
         </summary>
         <div class="owner-popover" role="menu">
-          <div class="owner-popover-label">Switch farm</div>
+          <div class="owner-popover-label">{tr('nav.switchFarm')}</div>
           {#each availableOwners as o (o.id)}
             <button
               type="button"

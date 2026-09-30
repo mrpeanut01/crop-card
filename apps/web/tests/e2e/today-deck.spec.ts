@@ -66,6 +66,7 @@ test.describe('/today task deck', () => {
     await expect(page.getByTestId('deck-summary')).toHaveText('1 late · 2 due today');
 
     await card(page, ids.today).getByRole('button', { name: 'Done: Stake the tomatoes' }).click();
+    await page.getByRole('button', { name: 'Done, skip time' }).click();
     await expect(card(page, ids.today).locator('[data-card-status="done"]')).toHaveText('Done');
 
     await card(page, ids.late)
@@ -127,6 +128,7 @@ test.describe('/today task deck', () => {
 
     await context.setOffline(true);
     await card(page, ids.today).getByRole('button', { name: 'Done: Stake the tomatoes' }).click();
+    await page.getByRole('button', { name: 'Done, skip time' }).click();
     await expect(card(page, ids.today).getByText('Will save when online')).toBeVisible();
     await expect(card(page, ids.today).locator('[data-card-status="done"]')).toHaveText('Done');
 
@@ -148,6 +150,7 @@ test.describe('/today task deck', () => {
     await expect(card(helper, ids.today)).toBeVisible();
     await expect(helper.getByTestId('getting-started')).toHaveCount(0);
     await card(helper, ids.today).getByRole('button', { name: 'Done: Stake the tomatoes' }).click();
+    await helper.getByRole('button', { name: 'Done, skip time' }).click();
     await expect(card(helper, ids.today).locator('[data-card-status="done"]')).toHaveText('Done');
     await helper.context().close();
   });

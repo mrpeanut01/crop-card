@@ -81,7 +81,27 @@ export interface AlertEmail {
   unsubscribe: UnsubscribeLinks;
 }
 
-export type OutboundEmail = InviteEmail | MagicLinkEmail | ContactCodeEmail | AlertEmail;
+/** The Monday summary (F4-11). Opt-in per farm under its own category, so
+ *  unsubscribing from it leaves field alerts alone. English only. */
+export interface DigestEmail {
+  kind: 'weekly-digest';
+  to: string;
+  farmName: string;
+  /** "Mon Sep 28". */
+  weekOf: string;
+  /** Plain text of the digest Card. */
+  body: string;
+  /** Absolute link to /today. */
+  actionUrl: string;
+  /** Absolute link to /settings/notifications. */
+  settingsUrl: string;
+  unsubscribe: UnsubscribeLinks;
+}
+
+export type OutboundEmail =
+  InviteEmail | MagicLinkEmail | ContactCodeEmail | AlertEmail | DigestEmail;
+
+export type OptInEmail = AlertEmail | DigestEmail;
 
 /**
  * Transactional mail answers something the person just did (asked to sign
@@ -93,7 +113,8 @@ export const EMAIL_KIND_CLASS: Record<OutboundEmail['kind'], 'transactional' | '
   'helper-invite': 'transactional',
   'magic-link': 'transactional',
   'contact-code': 'transactional',
-  'field-alert': 'opt-in'
+  'field-alert': 'opt-in',
+  'weekly-digest': 'opt-in'
 };
 
 /** Pingram notification type per kind. Unsubscribes on Pingram's side apply
@@ -102,10 +123,11 @@ export const PINGRAM_TYPE: Record<OutboundEmail['kind'], string> = {
   'helper-invite': 'helper-invite',
   'magic-link': 'magic-link',
   'contact-code': 'contact-code',
-  'field-alert': 'field-alerts'
+  'field-alert': 'field-alerts',
+  'weekly-digest': 'weekly-digest'
 };
 
-export function isOptInEmail(email: OutboundEmail): email is AlertEmail {
+export function isOptInEmail(email: OutboundEmail): email is OptInEmail {
   return EMAIL_KIND_CLASS[email.kind] === 'opt-in';
 }
 
@@ -119,7 +141,7 @@ export function unsubscribeHeaders(email: OutboundEmail): Record<string, string>
   };
 }
 
-function assertUnsubscribable(email: AlertEmail): void {
+function assertUnsubscribable(email: OptInEmail): void {
   for (const url of [email.unsubscribe.pageUrl, email.unsubscribe.oneClickUrl]) {
     let parsed: URL;
     try {
@@ -363,6 +385,8 @@ function subjectFor(email: OutboundEmail): string {
       return `Your CropCard verification code is ${email.code}`;
     case 'field-alert':
       return `${email.title} · ${email.farmName}`;
+    case 'weekly-digest':
+      return `Your week of ${email.weekOf} · ${email.farmName}`;
   }
 }
 
@@ -383,6 +407,24 @@ function alertBody(email: AlertEmail): string {
     stop,
     email.unsubscribe.pageUrl,
     `Change which alerts you get:`,
+    email.settingsUrl,
+    ``,
+    `CropCard`
+  ].join('\n');
+}
+
+function digestBody(email: DigestEmail): string {
+  const label = emailAlertLabel('weekly-digest');
+  return [
+    email.body,
+    ``,
+    `Open in CropCard:`,
+    email.actionUrl,
+    ``,
+    `You're getting this because you turned on "${label}" emails for ${email.farmName} in CropCard.`,
+    `Stop "${label}" emails:`,
+    email.unsubscribe.pageUrl,
+    `Change which emails you get:`,
     email.settingsUrl,
     ``,
     `CropCard`
@@ -446,5 +488,7 @@ function bodyFor(email: OutboundEmail): string {
     }
     case 'field-alert':
       return alertBody(email);
+    case 'weekly-digest':
+      return digestBody(email);
   }
 }

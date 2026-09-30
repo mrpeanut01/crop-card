@@ -42,5 +42,8 @@
  * moment or covered record would go (`HOLD_WOULD_SHORTEN`); declarations
  * and terminal events are dated in order, and hold parameters are
  * snapshotted so later data can only lengthen a hold.
+ * Issue #469 — 0.7.1: the prohibited-drug table was checked against 21 CFR
+ * 530.41 (eCFR, 2026-09-28). The influenza A paragraphs are (d)(1) and
+ * (d)(2), not (b)(1) and (b)(2); no drug was added or removed.
  */
-export const RULES_VERSION = '0.7.0' as const;
+export const RULES_VERSION = '0.7.1' as const;

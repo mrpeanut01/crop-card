@@ -1,0 +1,42 @@
+{
+  "pluginId": "ivomec-pour-on",
+  "displayName": "Ivomec Pour-On (ivermectin) for Cattle",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "external-parasiticide",
+  "activeIngredients": [
+    {
+      "name": "Ivermectin"
+    }
+  ],
+  "approval": {
+    "kind": "NADA",
+    "number": "140-841"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "pour-on"
+      ],
+      "withdrawal": {
+        "meatDays": 48
+      }
+    },
+    {
+      "speciesId": "cattle",
+      "class": "lactating-dairy",
+      "routes": [
+        "pour-on"
+      ],
+      "withdrawal": {
+        "doNotUseFor": [
+          "milk"
+        ]
+      }
+    }
+  ],
+  "notes": "The label also says a withdrawal period has not been established in pre-ruminating calves and not to use in calves to be processed for veal."
+}

@@ -1,9 +1,9 @@
 /**
  * 21 CFR 530.41: drugs prohibited from extra-label use in food-producing
- * animals (RULES_VERSION 0.6.0). Written from knowledge, not from a fetched
- * eCFR page, so it errs toward including a drug when unsure: over-blocking
- * is the safe side. docs/research/label-research-prompt.md Task 9 requires
- * checking it against the current eCFR before launch.
+ * animals. Written from knowledge, then checked paragraph by paragraph
+ * against the eCFR text of 2026-09-28 (issue #469; the text is recorded in
+ * apps/web/scripts/animal-health-sources.json). It errs toward including a
+ * drug when unsure: over-blocking is the safe side.
  *
  * `onLabelExempt` is true only where FDA has approved food-animal labels,
  * so a plugin product used on its own label (C-13) proves the use was not
@@ -289,7 +289,7 @@ export const PROHIBITED_EXTRA_LABEL_DRUGS: readonly ProhibitedDrugEntry[] = [
   },
   {
     id: 'adamantanes-poultry',
-    cfr: '21 CFR 530.41(b)(1)',
+    cfr: '21 CFR 530.41(d)(1)',
     label: 'Adamantanes in chickens, turkeys and ducks',
     names: ['adamantane', 'amantadine', 'rimantadine', 'symmetrel', 'flumadine'],
     species: ['chicken', 'duck'],
@@ -297,7 +297,7 @@ export const PROHIBITED_EXTRA_LABEL_DRUGS: readonly ProhibitedDrugEntry[] = [
   },
   {
     id: 'neuraminidase-inhibitors-poultry',
-    cfr: '21 CFR 530.41(b)(2)',
+    cfr: '21 CFR 530.41(d)(2)',
     label: 'Neuraminidase inhibitors in chickens, turkeys and ducks',
     names: [
       'neuraminidase inhibitor',

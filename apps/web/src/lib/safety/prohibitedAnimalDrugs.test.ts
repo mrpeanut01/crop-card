@@ -12,7 +12,7 @@ const ids = (q: Parameters<typeof matchProhibitedDrugs>[0]) =>
 describe('PROHIBITED_EXTRA_LABEL_DRUGS table', () => {
   it('cites a 21 CFR 530.41 paragraph on every entry', () => {
     for (const entry of PROHIBITED_EXTRA_LABEL_DRUGS) {
-      expect(entry.cfr).toMatch(/^21 CFR 530\.41\((a|b)\)\(\d+\)$/);
+      expect(entry.cfr).toMatch(/^21 CFR 530\.41\((a|d)\)\(\d+\)$/);
       expect(entry.names.length).toBeGreaterThan(0);
       expect(entry.label.length).toBeGreaterThan(0);
     }
@@ -39,8 +39,8 @@ describe('PROHIBITED_EXTRA_LABEL_DRUGS table', () => {
     ['glycopeptides', '21 CFR 530.41(a)(11)'],
     ['phenylbutazone-female-dairy', '21 CFR 530.41(a)(12)'],
     ['cephalosporins', '21 CFR 530.41(a)(13)'],
-    ['adamantanes-poultry', '21 CFR 530.41(b)(1)'],
-    ['neuraminidase-inhibitors-poultry', '21 CFR 530.41(b)(2)']
+    ['adamantanes-poultry', '21 CFR 530.41(d)(1)'],
+    ['neuraminidase-inhibitors-poultry', '21 CFR 530.41(d)(2)']
   ])('lists %s under %s', (id, cfr) => {
     expect(PROHIBITED_EXTRA_LABEL_DRUGS.find((e) => e.id === id)?.cfr).toBe(cfr);
   });

@@ -1,4 +1,207 @@
 {
   "$comment": "Phase 32A. Quotes for every withdrawal value on plugins/animal-health/*.json, keyed pluginId → withdrawal.<speciesId>.<class>.<meatDays|milkHours|eggsDays|doNotUseFor>. Each entry is { url, publisher, date, quote, note? } read from the product label (FDA Animal Drugs @ FDA, DailyMed or the manufacturer label). A product ships only once every food species on its label has a sourced withdrawal. See docs/research/label-research-prompt.md Task 9.",
-  "entries": {}
+  "prohibitedExtraLabel": {
+    "url": "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-E/part-530/subpart-E/section-530.41",
+    "publisher": "eCFR, 21 CFR 530.41 Drugs prohibited for extralabel use in animals",
+    "date": "2026-09-28",
+    "quote": "(a) The following drugs, families of drugs, and substances are prohibited for extralabel animal and human drug uses in food-producing animals. (1) Chloramphenicol; (2) Clenbuterol; (3) Diethylstilbestrol (DES); (4) Dimetridazole; (5) Ipronidazole; (6) Other nitroimidazoles; (7) Furazolidone. (8) Nitrofurazone. (9) Sulfonamide drugs in lactating dairy cattle (except approved use of sulfadimethoxine, sulfabromomethazine, and sulfaethoxypyridazine); (10) Fluoroquinolones; and (11) Glycopeptides. (12) Phenylbutazone in female dairy cattle 20 months of age or older. (13) Cephalosporins (not including cephapirin) in cattle, swine, chickens, or turkeys: (i) For disease prevention purposes; (ii) At unapproved doses, frequencies, durations, or routes of administration; or (iii) If the drug is not approved for that species and production class. (b) ... [Reserved] (c) [Reserved] (d) The following drugs, or classes of drugs, that are approved for treating or preventing influenza A, are prohibited from extralabel use in chickens, turkeys, and ducks: (1) Adamantanes. (2) Neuraminidase inhibitors.",
+    "note": "Text fetched from the eCFR versioner API (title 21, part 530, section 530.41), current through 2026-09-28; last substantive amendment 2016-12-31 (77 FR 745, Jan. 6, 2012 is the last cited rulemaking). Paragraph (b) is [Reserved] (nonfood animals); the influenza A drugs are paragraph (d), not (b).",
+    "drugs": [
+      {
+        "cfr": "(a)(1)",
+        "name": "Chloramphenicol"
+      },
+      {
+        "cfr": "(a)(2)",
+        "name": "Clenbuterol"
+      },
+      {
+        "cfr": "(a)(3)",
+        "name": "Diethylstilbestrol (DES)"
+      },
+      {
+        "cfr": "(a)(4)",
+        "name": "Dimetridazole"
+      },
+      {
+        "cfr": "(a)(5)",
+        "name": "Ipronidazole"
+      },
+      {
+        "cfr": "(a)(6)",
+        "name": "Other nitroimidazoles"
+      },
+      {
+        "cfr": "(a)(7)",
+        "name": "Furazolidone"
+      },
+      {
+        "cfr": "(a)(8)",
+        "name": "Nitrofurazone"
+      },
+      {
+        "cfr": "(a)(9)",
+        "name": "Sulfonamide drugs",
+        "species": ["cattle"],
+        "conditions": "lactating dairy cattle; except approved use of sulfadimethoxine, sulfabromomethazine and sulfaethoxypyridazine"
+      },
+      {
+        "cfr": "(a)(10)",
+        "name": "Fluoroquinolones"
+      },
+      {
+        "cfr": "(a)(11)",
+        "name": "Glycopeptides"
+      },
+      {
+        "cfr": "(a)(12)",
+        "name": "Phenylbutazone",
+        "species": ["cattle"],
+        "conditions": "female dairy cattle 20 months of age or older"
+      },
+      {
+        "cfr": "(a)(13)",
+        "name": "Cephalosporins (not including cephapirin)",
+        "species": ["cattle", "swine", "chickens", "turkeys"],
+        "conditions": "for disease prevention; at unapproved doses, frequencies, durations or routes; or if not approved for that species and production class"
+      },
+      {
+        "cfr": "(d)(1)",
+        "name": "Adamantanes",
+        "species": ["chickens", "turkeys", "ducks"],
+        "conditions": "approved for treating or preventing influenza A"
+      },
+      {
+        "cfr": "(d)(2)",
+        "name": "Neuraminidase inhibitors",
+        "species": ["chickens", "turkeys", "ducks"],
+        "conditions": "approved for treating or preventing influenza A"
+      }
+    ]
+  },
+  "entries": {
+    "safe-guard-suspension": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=9188886a-54bc-4c68-9f1d-37a20e031076",
+        "publisher": "Merck Animal Health, Safe-Guard (fenbendazole) Suspension 10% label, DailyMed",
+        "date": "2026-06-17",
+        "quote": "Cattle must not be slaughtered for human consumption within 8 days following last treatment with this drug product."
+      },
+      "withdrawal.cattle.lactating-dairy.milkHours": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=9188886a-54bc-4c68-9f1d-37a20e031076",
+        "publisher": "Merck Animal Health, Safe-Guard (fenbendazole) Suspension 10% label, DailyMed",
+        "date": "2026-06-17",
+        "quote": "Milk taken from cows during treatment and for 48 hours after the last treatment must not be used for human consumption."
+      },
+      "withdrawal.goat.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=9188886a-54bc-4c68-9f1d-37a20e031076",
+        "publisher": "Merck Animal Health, Safe-Guard (fenbendazole) Suspension 10% label, DailyMed",
+        "date": "2026-06-17",
+        "quote": "Goats must not be slaughtered for human consumption within 6 days following last treatment with this drug product."
+      },
+      "withdrawal.goat.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=9188886a-54bc-4c68-9f1d-37a20e031076",
+        "publisher": "Merck Animal Health, Safe-Guard (fenbendazole) Suspension 10% label, DailyMed",
+        "date": "2026-06-17",
+        "quote": "Because a milk discard time has not been established, do not use in lactating goats."
+      }
+    },
+    "ivomec-injection": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=84fe39b2-0423-479a-b81f-198e2fb4e826",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec (ivermectin) Injection label, DailyMed",
+        "date": "2026-07-01",
+        "quote": "Do not treat cattle within 35 days of slaughter."
+      },
+      "withdrawal.cattle.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=84fe39b2-0423-479a-b81f-198e2fb4e826",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec (ivermectin) Injection label, DailyMed",
+        "date": "2026-07-01",
+        "quote": "Because a withdrawal time in milk has not been established, do not use in female dairy cattle of breeding age.",
+        "note": "The label says female dairy cattle of breeding age; read here as lactating dairy, the stricter of the two."
+      },
+      "withdrawal.pig.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=84fe39b2-0423-479a-b81f-198e2fb4e826",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec (ivermectin) Injection label, DailyMed",
+        "date": "2026-07-01",
+        "quote": "Do not treat swine within 18 days of slaughter."
+      }
+    },
+    "ivomec-pour-on": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=a3ee24dc-527f-4880-a55e-acd33b833192",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec Pour-On (ivermectin topical solution) label, DailyMed",
+        "date": "2024-07-18",
+        "quote": "Cattle must not be treated within 48 days of slaughter for human consumption."
+      },
+      "withdrawal.cattle.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=a3ee24dc-527f-4880-a55e-acd33b833192",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec Pour-On (ivermectin topical solution) label, DailyMed",
+        "date": "2024-07-18",
+        "quote": "Because a withdrawal time in milk has not been established, do not use in female dairy cattle of breeding age.",
+        "note": "The label says female dairy cattle of breeding age; read here as lactating dairy, the stricter of the two."
+      }
+    },
+    "ivomec-sheep-drench": {
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=42685f13-73db-413b-bc6e-43431f098f8e",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec (ivermectin) Drench label, DailyMed",
+        "date": "2025-10-31",
+        "quote": "Do not treat sheep within 11 days of slaughter."
+      }
+    },
+    "prohibit-levamisole": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=baf0da35-573e-4abb-bdef-18870d5f5f72",
+        "publisher": "Huvepharma, Prohibit (levamisole hydrochloride) Soluble Drench Powder label, DailyMed",
+        "date": "2026-07-07",
+        "quote": "Do not administer to cattle within 48 hours of slaughter for food."
+      },
+      "withdrawal.cattle.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=baf0da35-573e-4abb-bdef-18870d5f5f72",
+        "publisher": "Huvepharma, Prohibit (levamisole hydrochloride) Soluble Drench Powder label, DailyMed",
+        "date": "2026-07-07",
+        "quote": "To prevent residues in milk, do not administer to dairy animals of breeding age.",
+        "note": "The label says dairy animals of breeding age; read here as lactating dairy, the stricter of the two."
+      },
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=baf0da35-573e-4abb-bdef-18870d5f5f72",
+        "publisher": "Huvepharma, Prohibit (levamisole hydrochloride) Soluble Drench Powder label, DailyMed",
+        "date": "2026-07-07",
+        "quote": "Do not administer to sheep within 72 hours of slaughter for food."
+      },
+      "withdrawal.sheep.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=baf0da35-573e-4abb-bdef-18870d5f5f72",
+        "publisher": "Huvepharma, Prohibit (levamisole hydrochloride) Soluble Drench Powder label, DailyMed",
+        "date": "2026-07-07",
+        "quote": "To prevent residues in milk, do not administer to dairy animals of breeding age.",
+        "note": "The label says dairy animals of breeding age without naming a species; applied to sheep as the stricter reading."
+      }
+    },
+    "corid-solution": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=f542114b-d049-4921-96a4-4047ecc07e13",
+        "publisher": "Huvepharma, Corid (amprolium oral solution) 9.6% label, DailyMed",
+        "date": "2026-09-22",
+        "quote": "No withdrawal period is required when used according to labeling.",
+        "note": "The label states no withdrawal period at all; only meat is recorded because the label's uses are calves, growing beef cattle and replacement heifers under one year, and it names no milk time."
+      }
+    },
+    "amprol-poultry": {
+      "withdrawal.chicken.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=831141f7-9458-4de5-9ddc-d183e220fbb7",
+        "publisher": "Huvepharma, Amprol (amprolium oral solution) 9.6% label, DailyMed",
+        "date": "2026-05-21",
+        "quote": "No withdrawal period is required when used according to labeling.",
+        "note": "The label names growing chickens, turkeys and laying hens."
+      },
+      "withdrawal.chicken.all.eggsDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=831141f7-9458-4de5-9ddc-d183e220fbb7",
+        "publisher": "Huvepharma, Amprol (amprolium oral solution) 9.6% label, DailyMed",
+        "date": "2026-05-21",
+        "quote": "No withdrawal period is required when used according to labeling.",
+        "note": "The label names laying hens among the animals it is for."
+      }
+    }
+  }
 }

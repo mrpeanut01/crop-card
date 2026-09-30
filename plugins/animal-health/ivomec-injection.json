@@ -1,0 +1,52 @@
+{
+  "pluginId": "ivomec-injection",
+  "displayName": "Ivomec Injection 1% (ivermectin) for Cattle and Swine",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "external-parasiticide",
+  "activeIngredients": [
+    {
+      "name": "Ivermectin"
+    }
+  ],
+  "approval": {
+    "kind": "NADA",
+    "number": "128-409"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "injection-sc"
+      ],
+      "withdrawal": {
+        "meatDays": 35
+      }
+    },
+    {
+      "speciesId": "cattle",
+      "class": "lactating-dairy",
+      "routes": [
+        "injection-sc"
+      ],
+      "withdrawal": {
+        "doNotUseFor": [
+          "milk"
+        ]
+      }
+    },
+    {
+      "speciesId": "pig",
+      "class": "all",
+      "routes": [
+        "injection-sc"
+      ],
+      "withdrawal": {
+        "meatDays": 18
+      }
+    }
+  ],
+  "notes": "The label also says a withdrawal period has not been established in pre-ruminating calves and not to use in calves to be processed for veal, and gives 56 days for reindeer and American bison (not modelled). The New World screwworm EUA section repeats 35 days for cattle."
+}

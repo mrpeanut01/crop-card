@@ -1,0 +1,30 @@
+{
+  "pluginId": "ivomec-sheep-drench",
+  "displayName": "Ivomec Drench 0.08% (ivermectin) for Sheep",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "dewormer",
+  "activeIngredients": [
+    {
+      "name": "Ivermectin"
+    }
+  ],
+  "approval": {
+    "kind": "NADA",
+    "number": "131-392"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "sheep",
+      "class": "all",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "meatDays": 11
+      }
+    }
+  ],
+  "notes": "The label gives no milk withdrawal for sheep, so milk stays unknown."
+}

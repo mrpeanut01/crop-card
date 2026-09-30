@@ -53,3 +53,13 @@ export const KIND_LABEL: Record<RecordKind, string> = {
 
 /** FR-09 — records become immutable 48 hours after `occurredAt`. */
 export const LOCK_WINDOW_MS = 48 * 60 * 60 * 1000;
+
+/** Phase 32E (E4-14): light records that get a record card and a /records
+ *  chip but stay out of the compliance ledger, its counts, the lock, the
+ *  exports and `RETENTION_RULES`. */
+export const LIGHT_RECORD_KINDS = ['irrigation'] as const;
+
+export type LightRecordKind = (typeof LIGHT_RECORD_KINDS)[number];
+
+/** Every record kind a record card (`rc_<kind>.<id>`) can name. */
+export const CARD_RECORD_KINDS: readonly string[] = [...RECORD_KINDS, ...LIGHT_RECORD_KINDS];

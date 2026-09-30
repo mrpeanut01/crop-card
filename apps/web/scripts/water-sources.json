@@ -1,0 +1,33 @@
+{
+  "$comment": "Phase 32E (E4 watering). Quotes for every number and decoding rule the watering advice uses, keyed by the constant name in apps/web/src/lib/weather/waterSources.ts. Each entry is { url, publisher, date, quote, note? }. apps/web/src/lib/weather/water.sources.gate.test.ts fails when a constant loses its entry. Unit conversions are listed for the reader but are arithmetic, not agronomy.",
+  "entries": {
+    "weeklyTargetIn": {
+      "url": "https://content.ces.ncsu.edu/home-vegetable-gardening-a-quick-reference-guide",
+      "publisher": "NC State Extension Publications, Vegetable Gardening: A Beginner's Guide",
+      "date": "2026-09-29",
+      "quote": "On average, vegetables need one inch of water per week, and you need to provide only what is not supplied by rain.",
+      "note": "Quote taken from a web search excerpt on 2026-09-29. This environment could not open the page itself, so check the wording against the URL (docs/research/label-research-prompt.md) before launch. Confirmed in substance by NC State Extension, Pender County Center (https://pender.ces.ncsu.edu/news/how-to-water-vegetables-and-herbs/): 'For most vegetable and fruit crops, this requires at least one inch of water per week from rainfall or irrigation during the growing season', also from a search excerpt. Used as the fallback weekly target; the owner can change it per Area."
+    },
+    "metarHourlyPrecipGroup": {
+      "url": "https://www.icams-portal.gov/resources/ofcm/fmh/FMH1/fmh1_2019.pdf",
+      "publisher": "Office of the Federal Coordinator for Meteorology, Federal Meteorological Handbook No. 1, Surface Weather Observations and Reports (2019)",
+      "date": "2026-09-29",
+      "quote": "The hourly precipitation amount is coded in the format Prrrr, where P is the group indicator and rrrr is the water equivalent of all precipitation that has occurred since the last METAR. The amount is coded in hundredths of an inch. ... P0000 would indicate that less than 1/100 of an inch of precipitation fell in the past hour. ... The group is omitted if no precipitation occurred since the last METAR.",
+      "note": "Wording from a web search excerpt on 2026-09-29 that summarised FMH-1 and the NWS METAR decode key (https://www.weather.gov/media/wrh/mesowest/metar_decode_key.pdf). This environment could not open either file, so check the wording against FMH-1 section 12.7 before launch. CropCard counts P0000 (a trace) as 0 and, for an automated station (AO1 or AO2), a routine report with no P group as 0."
+    },
+    "metarPrecipSensorOut": {
+      "url": "https://www.faa.gov/documentLibrary/media/Notice/N_JO_7900.12.pdf",
+      "publisher": "Federal Aviation Administration, Notice JO 7900.12 (surface weather observing, ASOS remarks)",
+      "date": "2026-09-29",
+      "quote": "PNO ... is present only when the tipping bucket rain gauge is inoperative.",
+      "note": "Wording from a web search excerpt on 2026-09-29; this environment could not open the file. CropCard treats an hour whose routine report carries PNO as unknown rain, never as zero."
+    },
+    "gallonsPerSqFtInch": {
+      "url": "https://pender.ces.ncsu.edu/news/how-to-water-vegetables-and-herbs/",
+      "publisher": "Unit conversion (1 inch over 1 square foot is 144 cubic inches; a US gallon is 231 cubic inches)",
+      "date": "2026-09-29",
+      "quote": "144 / 231 = 0.623 gallons per square foot per inch of water.",
+      "note": "Arithmetic, not agronomy. Used only to turn logged gallons into inches over a bed or Area of known size."
+    }
+  }
+}

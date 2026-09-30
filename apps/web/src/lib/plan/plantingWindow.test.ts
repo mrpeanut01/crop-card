@@ -115,3 +115,21 @@ describe('a season that crosses the new year', () => {
     expect(isValidWindow(w, 2027, GULF)).toBe(true);
   });
 });
+
+describe('deterministicPlantingWindow frostFree (Phase 32E)', () => {
+  it('ignores hardiness in a heated greenhouse', () => {
+    const w = deterministicPlantingWindow(
+      { cropFamily: 'solanaceae', soilTempMinF: 70, dtmMaxDays: 80 },
+      { lastSpring: '2027-01-01', firstFall: '2027-12-31', frostFree: true }
+    );
+    expect(w.earliest).toBe('2027-01-01');
+    expect(w.latest).toBe('2027-09-28');
+    expect(w.note).toBe('No frost limit for this bed.');
+  });
+  it('is unchanged with frostFree false', () => {
+    const f = { lastSpring: '2027-04-20', firstFall: '2027-10-15' };
+    expect(
+      deterministicPlantingWindow({ cropFamily: 'brassica' }, { ...f, frostFree: false })
+    ).toEqual(deterministicPlantingWindow({ cropFamily: 'brassica' }, f));
+  });
+});

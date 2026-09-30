@@ -5,9 +5,26 @@
   import ChatPanel from '../ChatPanel.svelte';
   import { fmtDateMs } from '../format';
   import { getWizardContext } from '../wizardState.svelte';
+  import SeedOrSeedling from '$lib/components/plan/SeedOrSeedling.svelte';
 
   const w = getWizardContext();
   const aiEnabled = $derived(w.props.aiEnabled);
+
+  const scheduledCrops = $derived.by(() => {
+    const seen = new Map<string, string>();
+    for (const p of w.scheduleResponse?.scheduled ?? []) {
+      if (!seen.has(p.cropPluginId)) seen.set(p.cropPluginId, p.varietyDisplayName);
+    }
+    return [...seen.entries()].map(([id, name]) => ({ id, name }));
+  });
+
+  $effect(() => {
+    for (const c of scheduledCrops) {
+      if (!w.establishmentByCrop[c.id]) {
+        w.establishmentByCrop[c.id] = { establishment: null, startIndoors: true, sowIndoorsOn: '' };
+      }
+    }
+  });
 </script>
 
 {#if w.response}
@@ -82,11 +99,59 @@
         </ul>
       </section>
     {/if}
+    {#if scheduledCrops.length}
+      <section class="aw-sos" aria-labelledby="aw-sos-title" data-testid="wizard-seed-or-seedling">
+        <h3 id="aw-sos-title">Seed or seedling?</h3>
+        <p class="aw-sos-lede">
+          Seedlings you start indoors get Sow, Harden off and Transplant tasks, counted back from
+          each planting date.
+        </p>
+        {#each scheduledCrops as c (c.id)}
+          {#if w.establishmentByCrop[c.id]}
+            <div class="aw-sos-row">
+              <strong>{c.name}</strong>
+              <SeedOrSeedling
+                plugin={{ plantingGuide: w.props.plantingGuides[c.id] }}
+                dated={true}
+                idPrefix="aw-{c.id}"
+                compact
+                bind:establishment={w.establishmentByCrop[c.id].establishment}
+                bind:startIndoors={w.establishmentByCrop[c.id].startIndoors}
+                bind:sowIndoorsOn={w.establishmentByCrop[c.id].sowIndoorsOn}
+              />
+            </div>
+          {/if}
+        {/each}
+      </section>
+    {/if}
     <ChatPanel />
   {/if}
 {/if}
 
 <style>
+  .aw-sos {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0.75rem 0;
+  }
+  .aw-sos h3 {
+    margin: 0;
+    color: var(--color-forest);
+  }
+  .aw-sos-lede {
+    margin: 0;
+    font-size: 0.92rem;
+    color: #4a5d4a;
+  }
+  .aw-sos-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.6rem 0;
+    border-top: 1px solid #e4e9e4;
+    min-width: 0;
+  }
   .aw-table {
     width: 100%;
     border-collapse: collapse;

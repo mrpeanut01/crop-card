@@ -12,7 +12,7 @@ import fc from 'fast-check';
 import { db, type PendingRecordKind, type PendingSprayRecord } from './dexie';
 import { ACTIVE_OWNER_ENDPOINT, EXPECTED_OWNER_HEADER } from './ownerSync';
 import {
-  ENDPOINT_BY_KIND,
+  endpointForRecord,
   UNASSIGNED_OWNER_ID,
   discardPendingForActiveOwner,
   drainQueue,
@@ -35,7 +35,10 @@ const KINDS: PendingRecordKind[] = [
   'journal',
   'animal-move',
   'animal-health',
-  'animal-production'
+  'animal-production',
+  'seed-start',
+  'irrigation',
+  'rain-gauge'
 ];
 
 /** 0 = accepted; 503 = transient (retried); 400/422 = definitive (parked). */
@@ -295,7 +298,7 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
           for (const call of calls) {
             const src = byId.get(call.payload.marker);
             expect(src?.ownerId).toBe(active);
-            expect(call.url).toBe(ENDPOINT_BY_KIND[kindOfSeed(src!)]);
+            expect(call.url).toBe(endpointForRecord({ kind: kindOfSeed(src!), payload: {} }));
           }
           expect(
             new Set([
@@ -416,7 +419,7 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
             for (const c of newCalls) {
               const entry = [...model].find(([, m]) => m.marker === c.payload.marker);
               expect(entry?.[1].ownerId).toBe(active);
-              expect(c.url).toBe(ENDPOINT_BY_KIND[entry![1].kind]);
+              expect(c.url).toBe(endpointForRecord({ kind: entry![1].kind, payload: {} }));
             }
             for (const id of result.succeeded) model.delete(id);
             for (const { id } of result.rejected) model.get(id)!.rejected = true;

@@ -394,3 +394,86 @@ describe('scheduleCandidacy for a season that crosses the new year', () => {
     }
   });
 });
+
+describe('scheduleCandidacy frostByBlock (Phase 32E)', () => {
+  const frost = { lastSpringFrostMs: lastSpring(), firstFallFrostMs: firstFall() };
+  const tomato = fakePlugin({
+    id: 'tomato',
+    family: 'solanaceae',
+    soilTempMinF: 70,
+    dtm: [70, 80]
+  });
+  const assignment = {
+    stockItemId: 's1',
+    blockId: 'b1',
+    cropPluginId: 'tomato',
+    varietyDisplayName: 'Tomato',
+    plants: 4
+  };
+  const nowMs = new Date(PLAN_YEAR - 1, 11, 1).getTime();
+  const DAY = 86_400_000;
+
+  it('is byte-identical when no per-block frost is passed', () => {
+    const a = scheduleCandidacy({
+      assignments: [assignment],
+      pluginIndex: { tomato },
+      existingCrops: [],
+      frostDates: frost,
+      year: PLAN_YEAR,
+      nowMs
+    });
+    const b = scheduleCandidacy({
+      assignments: [assignment],
+      pluginIndex: { tomato },
+      existingCrops: [],
+      frostDates: frost,
+      frostByBlock: {},
+      year: PLAN_YEAR,
+      nowMs
+    });
+    expect(b).toEqual(a);
+  });
+
+  it('moves a covered bed earlier by the shift', () => {
+    const base = scheduleCandidacy({
+      assignments: [assignment],
+      pluginIndex: { tomato },
+      existingCrops: [],
+      frostDates: frost,
+      year: PLAN_YEAR,
+      nowMs
+    })[0];
+    const covered = scheduleCandidacy({
+      assignments: [assignment],
+      pluginIndex: { tomato },
+      existingCrops: [],
+      frostDates: frost,
+      frostByBlock: {
+        b1: {
+          lastSpringFrostMs: frost.lastSpringFrostMs - 21 * DAY,
+          firstFallFrostMs: frost.firstFallFrostMs + 14 * DAY
+        }
+      },
+      year: PLAN_YEAR,
+      nowMs
+    })[0];
+    expect(covered.earliestMs).toBe(base.earliestMs - 21 * DAY);
+    expect(covered.latestMs).toBe(base.latestMs + 14 * DAY);
+  });
+
+  it('skips hardiness offsets for a frost-free bed', () => {
+    const jan1 = new Date(PLAN_YEAR, 0, 1).getTime();
+    const dec31 = new Date(PLAN_YEAR, 11, 31).getTime();
+    const [w] = scheduleCandidacy({
+      assignments: [assignment],
+      pluginIndex: { tomato },
+      existingCrops: [],
+      frostDates: frost,
+      frostByBlock: { b1: { lastSpringFrostMs: jan1, firstFallFrostMs: dec31, frostFree: true } },
+      year: PLAN_YEAR,
+      nowMs
+    });
+    expect(w.earliestMs).toBe(jan1);
+    expect(w.latestMs).toBe(dec31 - (80 + 14) * DAY);
+  });
+});

@@ -9,6 +9,7 @@ import { recordCall } from '$lib/server/aiGuard';
 import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import type { FallbackReason } from '$lib/server/aiTry';
 import { frostDatesForYear } from '$lib/schedule/settings';
+import { plannerFrostByBlock } from '$lib/server/blockFrost.server';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
@@ -92,14 +93,22 @@ export const POST: RequestHandler = async (event) => {
 
   const year = parsed.data.year ?? getActivePlanningYear();
   const frostDates = frostDatesForYear(year);
+  const existing = listCrops();
   const built = await buildFarmContextWithCache(year);
   const scheduleInput = {
     assignments: parsed.data.assignments,
     pluginIndex,
-    existingCrops: listCrops(),
+    existingCrops: existing,
     pollinationConstraints: parsed.data.pollinationConstraints,
     companionGroups: parsed.data.companionGroups,
     frostDates,
+    frostByBlock: plannerFrostByBlock(
+      [
+        ...parsed.data.assignments.map((a) => a.blockId),
+        ...existing.map((c) => c.blockId).filter((b): b is string => !!b)
+      ],
+      year
+    ),
     year
   };
   const options = { planningSessionId: parsed.data.planningSessionId };

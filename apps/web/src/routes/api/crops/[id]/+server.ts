@@ -28,6 +28,8 @@ import { canMutate } from '$lib/server/session';
 import { cropPatchSchema } from '$lib/crops/apiSchemas';
 import { cropLookupFrom, failureResponse, writeFootprint } from '$lib/server/garden/placement';
 import { getRegistry } from '$lib/server/registry';
+import { db } from '$lib/db/client';
+import { applyPlantingEstablishment, seedStartTasksOnFirstDate } from '$lib/server/seedStartTasks';
 
 export const _requestSchema = cropPatchSchema;
 const patchSchema = cropPatchSchema;
@@ -80,6 +82,29 @@ export const PATCH: RequestHandler = async (event) => {
     const result = writeFootprint(event.params.id, request, cropLookupFrom(await getRegistry()));
     if (!result.ok) return failureResponse(result);
     return json(result.response);
+  }
+
+  if (parsed.data.action === 'set-establishment') {
+    if (auth?.role !== 'owner') {
+      return json({ error: 'Ask the owner.', code: 'READ_ONLY' }, { status: 403 });
+    }
+    const crop = getCrop(event.params.id);
+    if (!crop) throw error(404, 'crop not found');
+    const plugin = cropLookupFrom(await getRegistry())(crop.cropPluginId);
+    const { establishment, startIndoors, sowIndoorsOn } = parsed.data;
+    const id = event.params.id;
+    const outcome = db.transaction(() =>
+      applyPlantingEstablishment(
+        id,
+        {
+          establishment,
+          startIndoors: establishment === 'transplant' ? (startIndoors ?? true) : false,
+          sowIndoorsOn
+        },
+        plugin
+      )
+    );
+    return json({ crop: getCrop(id), seedStart: outcome });
   }
 
   if (parsed.data.action === 'unschedule') {
@@ -143,6 +168,10 @@ export const PATCH: RequestHandler = async (event) => {
     const newMs = parsed.data.plantingDate;
     if (oldMs != null && newMs != null && oldMs !== newMs) {
       reanchorCropTasks(event.params.id, oldMs, newMs);
+    }
+    if (oldMs == null && newMs != null) {
+      const plugin = cropLookupFrom(await getRegistry())(before.cropPluginId);
+      seedStartTasksOnFirstDate(event.params.id, plugin);
     }
     return json({ crop: result });
   }

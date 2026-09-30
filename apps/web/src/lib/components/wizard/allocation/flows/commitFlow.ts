@@ -1,5 +1,6 @@
 import type { InputsPlanApplication, InputsPlanScoutTask } from '$lib/plan/inputsPlan';
 import { fmtDateMs } from '../format';
+import { establishmentPayload } from '$lib/schedule/seedStart';
 import type { AllocationWizardState } from '../wizardState.svelte';
 import type { AllocationResponse, ScheduledPlanting } from '../types';
 
@@ -16,6 +17,13 @@ export class CommitFlow {
 
   constructor(w: AllocationWizardState) {
     this.#w = w;
+  }
+
+  /** The grower's "Seed or seedling?" answer for a crop, as request fields.
+   *  The server writes any seed-start tasks (E1-10). */
+  answerFor(cropPluginId: string) {
+    const a = this.#w.establishmentByCrop[cropPluginId];
+    return a ? establishmentPayload(a.establishment, a.startIndoors, a.sowIndoorsOn) : {};
   }
 
   async handleInputsAccepted(accepted: AcceptedInputs) {
@@ -65,7 +73,8 @@ export class CommitFlow {
             quantityUnit: unit,
             plannedPlants: a.plants > 0 ? Math.round(a.plants) : undefined,
             stockItemId: a.stockItemId,
-            sourceProvenance: planProvenance
+            sourceProvenance: planProvenance,
+            ...this.answerFor(a.cropPluginId)
           })
         });
         if (!res.ok) {
@@ -138,7 +147,8 @@ export class CommitFlow {
             plannedPlants: p.plants > 0 ? Math.round(p.plants) : undefined,
             stockItemId: p.stockItemId,
             plantingDate: p.plantingDateMs,
-            sourceProvenance: planProvenance
+            sourceProvenance: planProvenance,
+            ...this.answerFor(p.cropPluginId)
           })
         });
         if (!res.ok) {

@@ -32,11 +32,25 @@
     type PlantingWindow
   } from '$lib/plan/plantingWindow';
   import type { StockUnit } from '$lib/stock/units';
+  import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import SetupProtection from '$lib/components/setup/SetupProtection.svelte';
+  import {
+    fetchBlockCovers,
+    type BedFrostView,
+    type BlockCoversResponse
+  } from '$lib/climate/protectionView';
   import { availableQuantityText } from '$lib/stock/quantityStatus';
+  import SeedOrSeedling from './SeedOrSeedling.svelte';
+  import {
+    establishmentPayload,
+    type Establishment,
+    type SeedStartPluginSlice
+  } from '$lib/schedule/seedStart';
 
   type CropCatalogEntry = PickerCrop & {
     soilTempMinF?: number | null;
     dtmMaxDays?: number | null;
+    seedStart?: SeedStartPluginSlice['plantingGuide'];
   };
 
   interface Props {
@@ -48,6 +62,8 @@
     frostDates?: FrostDatesIso | null;
     seasonYear?: number;
     aiEnabled?: boolean;
+    /** Phase 32E: owners may add a cover when a date is too early. */
+    canEditCovers?: boolean;
     onClose: () => void;
     onCreated: (plantingId: string) => void;
   }
@@ -61,6 +77,7 @@
     frostDates = null,
     seasonYear = new Date().getFullYear(),
     aiEnabled = false,
+    canEditCovers = true,
     onClose,
     onCreated
   }: Props = $props();
@@ -86,6 +103,12 @@
   let submitting = $state(false);
   let error = $state<string | null>(null);
   let cropInput = $state<HTMLInputElement | null>(null);
+  let establishment = $state<Establishment | null>(null);
+  let startIndoors = $state(true);
+  let sowIndoorsOn = $state('');
+  let bedFrost = $state<BedFrostView | null>(null);
+  let coverSheetOpen = $state(false);
+  let bedFrostSeq = 0;
 
   const aiCache = new Map<string, { window: PlantingWindow; source: 'ai' | 'fallback' }>();
 
@@ -93,6 +116,11 @@
   const flat = $derived<PickerOption[]>([...results.seeds, ...results.crops]);
   const pickedSeed = $derived(picked?.kind === 'seed' ? picked.seed : null);
   const pickedCrop = $derived(picked?.crop ?? null);
+  const seedStartPlugin = $derived.by<SeedStartPluginSlice | null>(() => {
+    if (!pickedCrop) return null;
+    const entry = cropCatalog.find((c) => c.pluginId === pickedCrop.pluginId);
+    return { cropFamily: entry?.cropFamily ?? undefined, plantingGuide: entry?.seedStart };
+  });
   const seedUnits = $derived(pickedSeed ? unitsCompatibleWith(pickedSeed.defaultUnit) : []);
   const plantUnitOptions = $derived(
     pickedSeed && seedUnits.length > 0
@@ -138,6 +166,9 @@
     boughtQty = null;
     boughtUnit = 'seeds';
     windowState = null;
+    establishment = null;
+    startIndoors = true;
+    sowIndoorsOn = '';
     error = null;
   }
 
@@ -147,6 +178,51 @@
     listOpen = true;
     tick().then(() => cropInput?.focus());
   });
+
+  $effect(() => {
+    bedFrost = null;
+    if (!open || !blockId) return;
+    const seq = ++bedFrostSeq;
+    const id = blockId;
+    fetchBlockCovers(id, seasonYear)
+      .then((r) => {
+        if (seq !== bedFrostSeq) return;
+        applyBedFrost(r);
+      })
+      .catch(() => {
+        /* no bed frost: the farm dates stand */
+      });
+  });
+
+  function applyBedFrost(r: BlockCoversResponse): void {
+    const next = r.frost;
+    const changed =
+      !bedFrost ||
+      bedFrost.lastSpring !== next.lastSpring ||
+      bedFrost.firstFall !== next.firstFall ||
+      bedFrost.frostFree !== next.frostFree;
+    bedFrost = next;
+    if (changed) {
+      aiCache.clear();
+      if (picked) void loadWindow(picked.crop.pluginId);
+    }
+  }
+
+  const bedCovered = $derived(
+    !!bedFrost &&
+      (bedFrost.frostFree ||
+        bedFrost.lastSpring !== bedFrost.farmLastSpring ||
+        bedFrost.firstFall !== bedFrost.farmFirstFall)
+  );
+  const effectiveFrost = $derived<(FrostDatesIso & { frostFree?: boolean }) | null>(
+    bedFrost
+      ? {
+          lastSpring: bedFrost.lastSpring,
+          firstFall: bedFrost.firstFall,
+          frostFree: bedFrost.frostFree
+        }
+      : frostDates
+  );
 
   function choose(opt: PickerOption): void {
     picked = opt;
@@ -174,7 +250,8 @@
 
   async function loadWindow(pluginId: string): Promise<void> {
     const entry = cropCatalog.find((c) => c.pluginId === pluginId);
-    if (!entry || !frostDates) {
+    const frost = effectiveFrost;
+    if (!entry || !frost) {
       windowState = null;
       return;
     }
@@ -189,7 +266,7 @@
         soilTempMinF: entry.soilTempMinF,
         dtmMaxDays: entry.dtmMaxDays
       },
-      frostDates
+      frost
     );
     windowState = { window: baseline, source: 'data', loading: aiEnabled };
     if (!aiEnabled) return;
@@ -197,7 +274,11 @@
       const res = await fetch('/api/plan/planting-window', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ cropPluginId: pluginId, year: seasonYear })
+        body: JSON.stringify({
+          cropPluginId: pluginId,
+          year: seasonYear,
+          ...(blockId ? { blockId } : {})
+        })
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const body = (await res.json()) as {
@@ -272,6 +353,7 @@
       payload.quantityPlanted = plantQty;
       payload.quantityUnit = plantUnit;
     }
+    Object.assign(payload, establishmentPayload(establishment, startIndoors, sowIndoorsOn));
     if (pickedSeed) {
       payload.stockItemId = pickedSeed.stockItemId;
     } else if (boughtQty != null && boughtQty > 0) {
@@ -299,6 +381,7 @@
   }
 
   function onKey(e: KeyboardEvent): void {
+    if ((e.target as Element | null)?.closest?.('dialog[open]')) return;
     if (e.key === 'Escape' && !submitting) onClose();
   }
 </script>
@@ -425,7 +508,7 @@
 
         <div class="field">
           <label class="label" for="np-date">Planting date</label>
-          <input id="np-date" type="date" bind:value={plantingDate} />
+          <input id="np-date" type="date" data-season-year={seasonYear} bind:value={plantingDate} />
           {#if windowState}
             <div class="window" aria-live="polite">
               <div class="chips" role="group" aria-label="Suggested planting dates">
@@ -455,10 +538,26 @@
                   <span class="hint note">{windowState.window.note}</span>
                 {/if}
               </div>
+              {#if bedCovered && bedFrost?.summary}
+                <span class="hint" data-testid="np-bed-frost">{bedFrost.summary}</span>
+              {/if}
               {#if fit === 'early'}
                 <p class="warn">
                   That's before the earliest date, so expect frost or cold-soil risk.
                 </p>
+                {#if blockId}
+                  {#if canEditCovers}
+                    <button
+                      type="button"
+                      class="btn-secondary add-cover"
+                      onclick={() => (coverSheetOpen = true)}
+                    >
+                      Too early for this bed. Add a cover?
+                    </button>
+                  {:else}
+                    <p class="hint">Too early for this bed. Ask the owner about a cover.</p>
+                  {/if}
+                {/if}
               {:else if fit === 'late'}
                 <p class="warn">That's after the latest date; it may not mature before frost.</p>
               {/if}
@@ -467,6 +566,18 @@
             <span class="hint">Leave empty to plan as undated.</span>
           {/if}
         </div>
+
+        {#if pickedCrop}
+          <SeedOrSeedling
+            plugin={seedStartPlugin}
+            dated={!!plantingDate}
+            inGroundOn={plantingDate}
+            idPrefix="np"
+            bind:establishment
+            bind:startIndoors
+            bind:sowIndoorsOn
+          />
+        {/if}
 
         <fieldset class="amounts">
           <legend class="label">How much</legend>
@@ -559,7 +670,31 @@
   </div>
 {/if}
 
+{#if blockId}
+  <SetupSheet
+    open={coverSheetOpen}
+    title="Add a cover"
+    kicker={blockName}
+    onClose={() => (coverSheetOpen = false)}
+  >
+    <SetupProtection
+      blockId={blockId!}
+      {blockName}
+      canEdit={canEditCovers}
+      {seasonYear}
+      onDone={(r) => {
+        coverSheetOpen = false;
+        applyBedFrost(r);
+      }}
+    />
+  </SetupSheet>
+{/if}
+
 <style>
+  .add-cover {
+    min-height: 48px;
+    align-self: flex-start;
+  }
   .backdrop {
     position: fixed;
     inset: 0;

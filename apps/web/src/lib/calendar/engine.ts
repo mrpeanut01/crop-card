@@ -11,6 +11,7 @@
 
 import type { CropPlugin, CompanionPlugin } from '$lib/plugins/schemas';
 import type { Block, PlantingRecord } from '$lib/db/blocks';
+import { maturityStartMs } from '$lib/schedule/seedStart';
 import type { HarvestEvent } from '$lib/db/harvestEvents';
 import type { ShadeSource } from '$lib/db/shadeSources';
 import {
@@ -51,7 +52,36 @@ export type CalendarEventKind =
   | 'seasonal-task'
   | 'curing-progress'
   | 'curing-ready'
-  | 'shade-window';
+  | 'shade-window'
+  | 'indoor-sow'
+  | 'transplant'
+  | 'direct-sow';
+
+/**
+ * Kinds only the sowing calendar shows (E3-4). Seed-start tasks already
+ * reach /today as tasks, so `upcomingEvents()` drops these and only the
+ * /plan/calendar loader passes `EventContext.seedStart`.
+ */
+export const CALENDAR_ONLY_EVENT_KINDS: ReadonlySet<CalendarEventKind> = new Set([
+  'indoor-sow',
+  'transplant',
+  'direct-sow'
+]);
+
+export type SeedStartTaskStep = 'sow' | 'harden' | 'transplant';
+
+/** One planting's seed-start facts: its trays and `seedstart:` tasks. */
+export interface SeedStartFacts {
+  establishment: 'direct-seed' | 'transplant' | null;
+  /** When the tray was sown (`crops.sown_indoors_at`). */
+  sownIndoorsAt: number | null;
+  tasks: ReadonlyArray<{
+    step: SeedStartTaskStep;
+    scheduledFor: number;
+    completedAt?: number;
+    abortedAt?: number;
+  }>;
+}
 
 export interface CalendarEvent {
   kind: CalendarEventKind;
@@ -96,6 +126,11 @@ export interface EventContext {
    * (yet) thread the registry through.
    */
   companionSystems?: ReadonlyArray<CompanionPlugin>;
+  /**
+   * E3 sowing calendar only. When passed, the engine adds `indoor-sow`,
+   * `transplant` and `direct-sow` events for the planting.
+   */
+  seedStart?: SeedStartFacts;
 }
 
 /**
@@ -151,6 +186,8 @@ export function eventsForPlanting(
     title: `Plant ${planting.varietyDisplayName}`,
     detail: { cropFamily: crop.cropFamily }
   });
+
+  if (ctx.seedStart) events.push(...seedStartEvents(planting, plant, ctx.seedStart));
 
   // Emergence (B9 — resolver merges plugin plantingGuide.emergenceDays
   // with the global default).
@@ -487,6 +524,18 @@ export function eventsForPlanting(
   //      harvest target (dual-purpose corn yields two: R3 sweet, R6 dent).
   //   2. Perennial template — one harvest-window event per season year.
   //   3. Legacy DTM-only fallback when neither stage data resolves.
+  // Phase 32E (E1-11): a transplant whose days to maturity count from
+  // seeding, with its indoor sowing on record, ripens that much earlier.
+  // Every other event stays on the in-ground date.
+  const maturityShift =
+    (maturityStartMs(
+      {
+        plantingDate: plant,
+        establishment: planting.establishment ?? null,
+        sownIndoorsAt: planting.sownIndoorsAt ?? null
+      },
+      crop
+    ) ?? plant) - plant;
   if (stageTable && projected.length) {
     const harvestTargets = projectHarvestTargets(projected, stageTable);
     for (const t of harvestTargets) {
@@ -496,8 +545,8 @@ export function eventsForPlanting(
         cropId: planting.id,
         cropPluginId: planting.cropPluginId,
         varietyDisplayName: planting.varietyDisplayName,
-        startMs: t.startMs,
-        endMs: t.endMs,
+        startMs: Math.max(plant, t.startMs + maturityShift),
+        endMs: Math.max(plant, t.endMs + maturityShift),
         title: `Harvest target — ${t.label}: ${planting.varietyDisplayName}`,
         body: 'Use crop-specific readiness indicators before harvest.',
         detail: {
@@ -527,14 +576,15 @@ export function eventsForPlanting(
   } else {
     const dtm = crop.daysToMaturity;
     if (dtm) {
+      const from = plant + maturityShift;
       events.push({
         kind: 'harvest-window',
         blockId: planting.blockId,
         cropId: planting.id,
         cropPluginId: planting.cropPluginId,
         varietyDisplayName: planting.varietyDisplayName,
-        startMs: plant + dtm.min * DAY_MS,
-        endMs: plant + dtm.max * DAY_MS,
+        startMs: from + dtm.min * DAY_MS,
+        endMs: from + dtm.max * DAY_MS,
         title: `Harvest window: ${planting.varietyDisplayName}`,
         body: 'Use crop-specific readiness indicators before harvest.',
         detail: { dtmMin: dtm.min, dtmMax: dtm.max }
@@ -877,5 +927,64 @@ export function upcomingEvents(
   windowDays: number = 14,
   now: number = Date.now()
 ): CalendarEvent[] {
-  return eventsInRange(events, now, now + windowDays * DAY_MS);
+  return eventsInRange(
+    events.filter((e) => !CALENDAR_ONLY_EVENT_KINDS.has(e.kind)),
+    now,
+    now + windowDays * DAY_MS
+  );
+}
+
+/**
+ * Indoor sow runs from the tray's sow date (recorded) or the open Sow task
+ * (planned) to the in-ground date; nothing is recomputed, so a bought
+ * seedling with no tray and no task gets no indoor bar. The in-ground date
+ * is a transplant for `transplant` establishment, or when a tray or Sow task
+ * exists and establishment was never set; otherwise it is a direct sow.
+ */
+function seedStartEvents(
+  planting: PlantingRecord,
+  inGroundMs: number,
+  facts: SeedStartFacts
+): CalendarEvent[] {
+  const base = {
+    blockId: planting.blockId,
+    cropId: planting.id,
+    cropPluginId: planting.cropPluginId,
+    varietyDisplayName: planting.varietyDisplayName
+  };
+  const out: CalendarEvent[] = [];
+  const sowTasks = facts.tasks.filter((t) => t.step === 'sow' && t.abortedAt === undefined);
+  const done = sowTasks.find((t) => t.completedAt !== undefined);
+  const open = sowTasks.find((t) => t.completedAt === undefined);
+  let indoor: { startMs: number; recorded: boolean; from: 'tray' | 'task' } | null = null;
+  if (facts.sownIndoorsAt !== null) {
+    indoor = { startMs: facts.sownIndoorsAt, recorded: true, from: 'tray' };
+  } else if (done?.completedAt !== undefined) {
+    indoor = { startMs: done.completedAt, recorded: true, from: 'task' };
+  } else if (open) {
+    indoor = { startMs: open.scheduledFor, recorded: false, from: 'task' };
+  }
+  if (indoor && indoor.startMs <= inGroundMs) {
+    out.push({
+      ...base,
+      kind: 'indoor-sow',
+      startMs: indoor.startMs,
+      endMs: inGroundMs,
+      title: `Sow ${planting.varietyDisplayName} indoors`,
+      detail: { recorded: indoor.recorded, from: indoor.from }
+    });
+  }
+  const transplant =
+    facts.establishment === 'transplant' ||
+    (facts.establishment === null && (indoor !== null || sowTasks.length > 0));
+  out.push({
+    ...base,
+    kind: transplant ? 'transplant' : 'direct-sow',
+    startMs: inGroundMs,
+    endMs: inGroundMs,
+    title: transplant
+      ? `Transplant ${planting.varietyDisplayName}`
+      : `Sow ${planting.varietyDisplayName}`
+  });
+  return out;
 }

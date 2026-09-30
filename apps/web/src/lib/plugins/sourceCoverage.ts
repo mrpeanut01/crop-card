@@ -122,7 +122,8 @@ export const CROP_SOURCED_GUIDE_FIELDS = [
   'startIndoorsWeeks',
   'transplantOffsetDays',
   'hardenOffDays',
-  'germinationTempF'
+  'germinationTempF',
+  'dtmFrom'
 ] as const;
 
 export function cropFactPaths(c: CropPlugin): string[] {

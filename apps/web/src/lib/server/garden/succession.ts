@@ -18,7 +18,9 @@ import { ONE_DAY_MS, occupancyIntervals, shortDate } from '$lib/garden/occupancy
 import { proposeSuccession } from '$lib/garden/succession';
 import type { GardenCrop } from '$lib/garden/types';
 import type { CropPlugin } from '$lib/plugins/schemas';
-import { frostDatesForYear } from '$lib/schedule/settings';
+import { db } from '$lib/db/client';
+import { applyPlantingEstablishment, hasSeedStartTasks } from '$lib/server/seedStartTasks';
+import { bedFrostMs } from '$lib/server/blockFrost.server';
 import {
   gardenFailure,
   isFailure,
@@ -71,7 +73,7 @@ export function addSuccession(
   const plugin: GardenCrop | undefined = crops[anchorCrop.cropPluginId];
   const anchor = placedPlantingFromCrop(anchorCrop, plugin);
   const year = new Date(anchor.plantingDateMs ?? Date.now()).getUTCFullYear();
-  const { firstFallFrostMs, lastSpringFrostMs } = frostDatesForYear(year);
+  const { firstFallFrostMs, lastSpringFrostMs } = bedFrostMs(bed.block.id, year);
   const intervals = occupancyIntervals(
     listCrops({ blockId: bed.block.id }).map((c) =>
       placedPlantingFromCrop(c, crops[c.cropPluginId])
@@ -112,44 +114,56 @@ export function addSuccession(
       plugin
     )
   }));
-  if (extending) {
-    const added = appendToPlantingGroup({
-      groupId: anchorCrop.groupId!,
-      anchor: anchorCrop,
+  const establishment = req.establishment ?? anchorCrop.establishment;
+  const startIndoors = req.startIndoors ?? hasSeedStartTasks(anchorCrop.id);
+  const seedStartFor = (ids: string[]) => {
+    if (!establishment) return;
+    for (const id of ids) {
+      applyPlantingEstablishment(id, { establishment, startIndoors }, plugin);
+    }
+  };
+  return db.transaction((): SuccessionResult => {
+    if (extending) {
+      const added = appendToPlantingGroup({
+        groupId: anchorCrop.groupId!,
+        anchor: anchorCrop,
+        companions,
+        resolvePlugin: (id) => crops[id]
+      });
+      seedStartFor(added.map((m) => m.crop.id));
+      return {
+        ok: true,
+        response: {
+          proposal,
+          groupId: anchorCrop.groupId!,
+          anchor: placedPlantingFromCrop(getCrop(anchorCrop.id)!, plugin),
+          created: added.map((m) => placedPlantingFromCrop(getCrop(m.crop.id) ?? m.crop, plugin))
+        }
+      };
+    }
+    const result = createPlantingGroup({
+      blockId: bed.block.id,
+      anchor: {
+        cropPluginId: anchorCrop.cropPluginId,
+        varietyDisplayName: anchorCrop.varietyDisplayName,
+        existingCropId: anchorCrop.id,
+        keepExistingTasks: true
+      },
       companions,
+      anchorPlantingDateMs: anchorDateMs,
+      systemKind: 'succession',
       resolvePlugin: (id) => crops[id]
     });
+    const [anchorOut, ...members] = result.members;
+    seedStartFor(members.map((m) => m.crop.id));
     return {
       ok: true,
       response: {
         proposal,
-        groupId: anchorCrop.groupId!,
-        anchor: placedPlantingFromCrop(getCrop(anchorCrop.id)!, plugin),
-        created: added.map((m) => placedPlantingFromCrop(m.crop, plugin))
+        groupId: result.groupId,
+        anchor: placedPlantingFromCrop(anchorOut.crop, plugin),
+        created: members.map((m) => placedPlantingFromCrop(getCrop(m.crop.id) ?? m.crop, plugin))
       }
     };
-  }
-  const result = createPlantingGroup({
-    blockId: bed.block.id,
-    anchor: {
-      cropPluginId: anchorCrop.cropPluginId,
-      varietyDisplayName: anchorCrop.varietyDisplayName,
-      existingCropId: anchorCrop.id,
-      keepExistingTasks: true
-    },
-    companions,
-    anchorPlantingDateMs: anchorDateMs,
-    systemKind: 'succession',
-    resolvePlugin: (id) => crops[id]
   });
-  const [anchorOut, ...members] = result.members;
-  return {
-    ok: true,
-    response: {
-      proposal,
-      groupId: result.groupId,
-      anchor: placedPlantingFromCrop(anchorOut.crop, plugin),
-      created: members.map((m) => placedPlantingFromCrop(m.crop, plugin))
-    }
-  };
 }

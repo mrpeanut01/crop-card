@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import Dexie from 'dexie';
-import { PHASE_32_RECORD_KINDS, db, type PendingRecordKind } from './dexie';
+import { db } from './dexie';
 import { ENDPOINT_BY_KIND } from './syncQueue';
 
 const V3_STORES = {
@@ -83,24 +83,12 @@ describe('Dexie v5 upgrade', () => {
 });
 
 describe('Phase 32 queue kinds', () => {
-  it('are declared once, unique, and not yet routed to an endpoint', () => {
-    expect(new Set(PHASE_32_RECORD_KINDS).size).toBe(PHASE_32_RECORD_KINDS.length);
-    const routed = Object.keys(ENDPOINT_BY_KIND) as PendingRecordKind[];
-    for (const kind of PHASE_32_RECORD_KINDS) {
-      expect(routed as string[]).not.toContain(kind);
-    }
-  });
-
-  it('routes animal-move once 32B wired it', () => {
-    expect(PHASE_32_RECORD_KINDS as readonly string[]).not.toContain('animal-move');
+  it('routes every Phase 32 kind', () => {
     expect(ENDPOINT_BY_KIND['animal-move']).toBe('/api/animals/move');
-  });
-
-  it('routes animal-health and animal-production once 32C wired them', () => {
-    for (const kind of ['animal-health', 'animal-production'] as const) {
-      expect(PHASE_32_RECORD_KINDS as readonly string[]).not.toContain(kind);
-    }
     expect(ENDPOINT_BY_KIND['animal-health']).toBe('/api/animals/health/record');
     expect(ENDPOINT_BY_KIND['animal-production']).toBe('/api/animals/production/record');
+    expect(ENDPOINT_BY_KIND['seed-start']).toBe('/api/seed-starts/:id/progress');
+    expect(ENDPOINT_BY_KIND.irrigation).toBe('/api/irrigation');
+    expect(ENDPOINT_BY_KIND['rain-gauge']).toBe('/api/rain-gauge');
   });
 });

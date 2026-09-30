@@ -16,6 +16,7 @@
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { Crop } from '$lib/db/crops';
 import { plantingOccupancy } from '$lib/garden/occupancy';
+import type { SeasonFrostMs } from '$lib/climate/effectiveFrost';
 
 const ONE_DAY_MS = 86_400_000;
 
@@ -67,6 +68,9 @@ export interface ScheduleWindowInput {
     /** `Date.UTC` ms — first fall frost. */
     firstFallFrostMs: number;
   };
+  /** Per-block effective frost (Phase 32E covers). A block missing here
+   *  uses `frostDates`. `frostFree` skips the hardiness offsets. */
+  frostByBlock?: Readonly<Record<string, SeasonFrostMs & { frostFree?: boolean }>>;
   /** Year being planned for. Used as the calendar frame. */
   year: number;
   /** Override "now" for tests. Production callers omit and we read Date.now(). */
@@ -97,7 +101,12 @@ export interface ScheduleWindow {
 export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] {
   const { assignments, pluginIndex, existingCrops, frostDates } = input;
   const out: ScheduleWindow[] = [];
-  const occupiedByBlock = computeBlockOccupancy(existingCrops, pluginIndex, frostDates);
+  const occupiedByBlock = computeBlockOccupancy(
+    existingCrops,
+    pluginIndex,
+    frostDates,
+    input.frostByBlock
+  );
 
   // Earliest plantable date is floored at "tomorrow" regardless of the
   // agronomic earliest — operators don't want the AI or the deterministic
@@ -113,13 +122,17 @@ export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] 
     const hardiness = hardinessOf(plug);
     const dtmMax = plug?.daysToMaturity?.max ?? HARDINESS_DEFAULT_DTM[hardiness];
 
-    const naturalEarliest = earliestPlantingMs(hardiness, frostDates.lastSpringFrostMs);
+    const blockFrost = input.frostByBlock?.[a.blockId] ?? frostDates;
+    const frostFree = input.frostByBlock?.[a.blockId]?.frostFree === true;
+    const naturalEarliest = frostFree
+      ? blockFrost.lastSpringFrostMs
+      : earliestPlantingMs(hardiness, blockFrost.lastSpringFrostMs);
     const earliestMs = Math.max(naturalEarliest, tomorrowMs);
     // latestMs guards against unfit DTM; if the season has already passed
     // (today is past the natural latest), keep the floor at tomorrow so the
     // operator sees a future date with a clear "won't mature this year"
     // signal via the chat rather than a date in the past.
-    const naturalLatest = frostDates.firstFallFrostMs - dtmMax * ONE_DAY_MS - 14 * ONE_DAY_MS;
+    const naturalLatest = blockFrost.firstFallFrostMs - dtmMax * ONE_DAY_MS - 14 * ONE_DAY_MS;
     const latestMs = Math.max(earliestMs + ONE_DAY_MS, naturalLatest);
 
     const free = freeSubWindowsForBlock(occupiedByBlock[a.blockId] ?? [], earliestMs, latestMs);
@@ -184,11 +197,13 @@ interface OccupiedWindow {
 function computeBlockOccupancy(
   crops: ReadonlyArray<Crop>,
   pluginIndex: Record<string, CropPlugin>,
-  frost: { firstFallFrostMs: number; lastSpringFrostMs: number }
+  frost: { firstFallFrostMs: number; lastSpringFrostMs: number },
+  frostByBlock?: Readonly<Record<string, SeasonFrostMs>>
 ): Record<string, OccupiedWindow[]> {
   const byBlock: Record<string, OccupiedWindow[]> = {};
   for (const c of crops) {
     if (!c.blockId || c.status === 'harvested') continue;
+    const f = frostByBlock?.[c.blockId] ?? frost;
     const interval = plantingOccupancy(
       {
         cropId: c.id,
@@ -200,7 +215,7 @@ function computeBlockOccupancy(
         footprint: null
       },
       pluginIndex[c.cropPluginId],
-      { firstFallFrostMs: frost.firstFallFrostMs, lastSpringFrostMs: frost.lastSpringFrostMs }
+      { firstFallFrostMs: f.firstFallFrostMs, lastSpringFrostMs: f.lastSpringFrostMs }
     );
     if (!interval) continue;
     const list = byBlock[c.blockId] ?? [];

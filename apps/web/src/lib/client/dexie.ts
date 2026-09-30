@@ -30,9 +30,7 @@
  * indexed).
  *
  * Phase 32 (v5): the queue gains a `[ownerId+kind]` index so the pending
- * list can group rows per kind for the replay recovery UX, and every Phase
- * 32 queue kind is declared up front in `PHASE_32_RECORD_KINDS`. They stay
- * out of `PendingRecordKind` until their endpoint exists: moving one over
+ * list can group rows per kind for the replay recovery UX. Adding a kind
  * is a type change plus an `ENDPOINT_BY_KIND` entry, never another bump.
  */
 
@@ -54,11 +52,10 @@ export type PendingRecordKind =
   | 'animal-move'
   | 'animal-health'
   | 'animal-production'
-  | 'feed-use';
-
-export const PHASE_32_RECORD_KINDS = ['seed-start', 'irrigation'] as const;
-
-export type Phase32RecordKind = (typeof PHASE_32_RECORD_KINDS)[number];
+  | 'feed-use'
+  | 'seed-start'
+  | 'irrigation'
+  | 'rain-gauge';
 
 export interface PendingSprayRecord {
   id: string;

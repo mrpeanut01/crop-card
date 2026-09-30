@@ -41,3 +41,27 @@ describe('SEASON_CLOSED gate wiring', () => {
     }
   });
 });
+
+/** Phase 32E (E0-6): planning aids that must never read SEASON_CLOSED. The
+ *  behavior is pinned in each cluster's endpoint test. */
+const EXEMPT = [
+  'seed-starts/+server.ts',
+  'seed-starts/[id]/+server.ts',
+  'seed-starts/[id]/progress/+server.ts',
+  'blocks/[id]/protections/+server.ts',
+  'blocks/[id]/protections/[pid]/+server.ts',
+  'irrigation/+server.ts',
+  'rain-gauge/+server.ts',
+  'pest-models/[id]/biofix/+server.ts'
+];
+
+describe('SEASON_CLOSED exemptions (Phase 32E)', () => {
+  for (const rel of EXEMPT) {
+    it(`${rel} never reads the season-closed gate`, () => {
+      const src = readFileSync(path.join(here, rel), 'utf8');
+      expect(src).not.toContain('checkSeasonClosed(');
+      expect(src).not.toContain('getActiveCloseout(');
+      expect(src).not.toContain("from '$lib/server/seasonClose'");
+    });
+  }
+});

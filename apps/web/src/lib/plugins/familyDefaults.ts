@@ -258,3 +258,19 @@ export function resolveCastsShade(crop: {
 /** Re-exported for tests + callers that want to know the global emergence
  *  window without resolving an entire crop. */
 export { DEFAULT_EMERGENCE_DAYS, DEFAULT_COVER_TERMINATION_LEAD_DAYS };
+
+export interface FamilySeedStartDefaults {
+  startIndoorsWeeks?: { min: number; max: number };
+  hardenOffDays?: { min: number; max: number };
+}
+
+/** Phase 32E (E1-6). Seed-start fallbacks for families an extension source
+ *  covers as a group, each quoted in `crop-data-sources.json` under
+ *  `family:<cropFamily>`. No checked source covers a whole family yet, so
+ *  the table is empty and those crops show "not known". */
+export const SEED_START_BY_FAMILY: Readonly<Record<string, FamilySeedStartDefaults>> = {};
+
+export function familySeedStartDefaults(family: string | undefined): FamilySeedStartDefaults {
+  if (!family) return {};
+  return SEED_START_BY_FAMILY[family] ?? {};
+}

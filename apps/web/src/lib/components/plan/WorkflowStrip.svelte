@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { Check, ChevronRight, TriangleAlert, Sprout, ArrowRight } from 'lucide-svelte';
+  import {
+    Check,
+    ChevronRight,
+    TriangleAlert,
+    Sprout,
+    ArrowRight,
+    CalendarDays
+  } from 'lucide-svelte';
 
   /**
    * Phase 25 v2 (#81 partial) — horizontal workflow strip mapping the
@@ -36,9 +43,11 @@
     onOpenWizard?: () => void;
     /** When provided, clicking a step fires with that step's id. */
     onSelectStep?: (id: string) => void;
+    /** When set, a "Sowing calendar" link to the printable calendar. */
+    calendarHref?: string;
   }
 
-  const { seasonYear, steps, onOpenWizard, onSelectStep }: Props = $props();
+  const { seasonYear, steps, onOpenWizard, onSelectStep, calendarHref }: Props = $props();
 
   type LucideIcon = typeof Check;
   const STATE_META: Record<
@@ -135,6 +144,13 @@
       </li>
     {/each}
   </ol>
+
+  {#if calendarHref}
+    <a class="cal-link" href={calendarHref}>
+      <CalendarDays size={13} strokeWidth={1.75} aria-hidden="true" />
+      Sowing calendar
+    </a>
+  {/if}
 
   {#if onOpenWizard}
     <button
@@ -283,6 +299,25 @@
     font-size: 12.5px;
     font-weight: 600;
     cursor: pointer;
+  }
+  .cal-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    min-height: 48px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 6px);
+    background: var(--color-paper);
+    color: var(--color-forest-deep);
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .cal-link:focus-visible {
+    outline: 2px solid var(--color-forest);
+    outline-offset: 2px;
   }
   .cta:hover {
     filter: brightness(1.1);

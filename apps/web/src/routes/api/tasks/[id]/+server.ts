@@ -15,6 +15,8 @@ import { farmTimeZone } from '$lib/db/userProfile';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { careMetaOf, closeCareTask } from '$lib/server/carePlans';
+import { db } from '$lib/db/client';
+import { afterSeedStartTaskDone } from '$lib/server/seedStartTasks';
 
 const patchSchema = z.discriminatedUnion('action', [
   z.object({
@@ -94,7 +96,12 @@ export const PATCH: RequestHandler = async (event) => {
   }
   try {
     if (parsed.data.action === 'complete') {
-      return json({ task: completeTask(id, { occurredAt: parsed.data.occurredAt }) });
+      const at = parsed.data.occurredAt ?? Date.now();
+      const out = db.transaction(() => {
+        const task = completeTask(id, { occurredAt: at });
+        return { task, seedStart: afterSeedStartTaskDone(task, at) };
+      });
+      return json(out.seedStart ? out : { task: out.task });
     }
     if (parsed.data.action === 'abort') {
       return json({ task: abortTask(id, parsed.data.reason) });

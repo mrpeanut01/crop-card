@@ -9,6 +9,7 @@
 import { and, eq } from 'drizzle-orm';
 import { buildEquipmentCard, buildPlantingCard } from '$lib/cards/build';
 import {
+  buildIrrigationRecordCard,
   buildScoutRecordCard,
   buildSprayRecordCard,
   frameLiveCard,
@@ -25,6 +26,8 @@ import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { LOCK_WINDOW_MS, RECORD_KINDS, type RecordKind } from '$lib/db/recordKinds';
 import { equipmentLog, fertilityApplications, users } from '$lib/db/schema';
+import { getIrrigationEvent } from '$lib/db/irrigation';
+import { getField } from '$lib/db/fields';
 import { listScoutObservations } from '$lib/db/scoutObservations';
 import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listSprayers } from '$lib/db/sprayers';
@@ -259,4 +262,39 @@ export async function buildRecordCards(
   }
 
   return null;
+}
+
+const METHOD_LABEL: Record<string, string> = {
+  drip: 'Drip line',
+  soaker: 'Soaker hose',
+  sprinkler: 'Sprinkler',
+  hand: 'By hand',
+  flood: 'Flood or furrow',
+  other: 'Other'
+};
+
+/** Phase 32E (E4-14): a watering log's card. Null when the active Owner has no such log. */
+export function buildIrrigationRecordCards(
+  rowId: string,
+  opts: { prefs: Prefs; now?: number; origin?: string | null }
+): RecordCards | null {
+  const ev = getIrrigationEvent(rowId);
+  if (!ev) return null;
+  const now = opts.now ?? Date.now();
+  const card = buildIrrigationRecordCard(
+    {
+      rowId,
+      occurredAt: ev.occurredAt,
+      areaLabel: getField(ev.fieldId)?.name ?? null,
+      bedLabel: ev.blockId ? (blockLabels().get(ev.blockId) ?? null) : null,
+      inches: ev.inches,
+      gallons: ev.gallons,
+      durationMin: ev.durationMin,
+      method: ev.method ? (METHOD_LABEL[ev.method] ?? ev.method) : null,
+      notes: ev.notes,
+      performerLabel: performer(ev.performedById)
+    },
+    { prefs: opts.prefs, now }
+  );
+  return { cards: [card], origin: opts.origin ?? null };
 }

@@ -1882,6 +1882,7 @@
     steps={withStepRoutes(data.seasonWorkflow)}
     onOpenWizard={() => openWizard()}
     onSelectStep={handleWorkflowStep}
+    calendarHref="/plan/calendar?year={data.currentYear ?? new Date().getFullYear()}"
   />
 {/if}
 
@@ -2022,6 +2023,9 @@
   open={editBlockTargetId !== null}
   block={editBlockTargetId ? (data.blocks.find((b) => b.id === editBlockTargetId) ?? null) : null}
   legacyEditorHref={`${tabHref('layout')}#legacy-plan`}
+  canEditCovers={data.canEdit}
+  seasonYear={data.currentYear ?? undefined}
+  onCoversChanged={() => invalidateAll()}
   onClose={() => (editBlockTargetId = null)}
   onSaved={async () => {
     editBlockTargetId = null;
@@ -2038,7 +2042,8 @@
     displayName: c.displayName,
     cropFamily: c.cropFamily ?? undefined,
     soilTempMinF: c.soilTempMinF,
-    dtmMaxDays: c.daysToMaturity?.max ?? null
+    dtmMaxDays: c.daysToMaturity?.max ?? null,
+    seedStart: c.seedStart
   }))}
   seedStock={seedStockData.map((s) => ({
     stockItemId: s.stockItemId,
@@ -2053,6 +2058,7 @@
   frostDates={data.frostDatesIso}
   seasonYear={data.currentYear}
   aiEnabled={data.aiEnabled}
+  canEditCovers={data.canEdit}
   onClose={() => (showNewPlantingModal = false)}
   onCreated={async () => {
     showNewPlantingModal = false;

@@ -8,6 +8,7 @@
 import type { Hardiness } from '$lib/schedule/scheduleCandidacy';
 import type { FrostAlert, FrostEvent } from '../nwsAlerts';
 import { HOUR_MS, type PushAlert } from './triggers';
+import { HARD_FREEZE_NOTE } from '$lib/climate/protection';
 
 /** Only products whose cold period starts within this lead are "tonight". */
 export const FROST_ALERT_LEAD_MS = 36 * HOUR_MS;
@@ -24,12 +25,20 @@ const AT_RISK: Record<FrostEvent, ReadonlySet<Hardiness>> = {
   'Hard Freeze Warning': new Set(['tender', 'half-hardy'])
 };
 
+const HARD_FREEZE_EVENTS: ReadonlySet<FrostEvent> = new Set([
+  'Hard Freeze Watch',
+  'Hard Freeze Warning'
+]);
+
 export interface FrostPlantingSnapshot {
   status: 'planned' | 'active';
   plantingDate: number | null;
   name: string;
   blockName?: string;
   hardiness: Hardiness;
+  /** Phase 32E: a cover active on the bed now. Heat keeps the planting out
+   *  of the alert; other covers can blow off, so they only change the copy. */
+  cover?: 'heated' | 'covered' | null;
 }
 
 /** Planted (active) plantings, and planned ones dated close to now. */
@@ -56,23 +65,37 @@ export function frostTonightAlerts(
   plantings: FrostPlantingSnapshot[],
   now: number
 ): PushAlert[] {
-  const candidates = plantings.filter((p) => isInGroundOrImminent(p, now));
+  const candidates = plantings.filter((p) => p.cover !== 'heated' && isInGroundOrImminent(p, now));
   if (candidates.length === 0) return [];
   const out: PushAlert[] = [];
   for (const product of products) {
     if (product.onsetMs !== null && product.onsetMs > now + FROST_ALERT_LEAD_MS) continue;
     if (product.endsMs !== null && product.endsMs <= now) continue;
     const atRisk = AT_RISK[product.event];
-    const names = [
-      ...new Set(candidates.filter((p) => atRisk.has(p.hardiness)).map((p) => p.name))
-    ];
+    const hit = candidates.filter((p) => atRisk.has(p.hardiness));
+    const names = [...new Set(hit.map((p) => p.name))];
     if (names.length === 0) continue;
     const when = product.nwsHeadline ? ` ${sentenceCase(product.nwsHeadline)}.` : '';
+    const coveredBeds = [
+      ...new Set(
+        hit.filter((p) => p.cover === 'covered').map((p) => p.blockName ?? 'the covered beds')
+      )
+    ];
+    const anyUncovered = hit.some((p) => p.cover !== 'covered');
+    const hardFreeze = HARD_FREEZE_EVENTS.has(product.event);
+    const action = [
+      anyUncovered ? ' Cover or harvest before the cold sets in.' : '',
+      coveredBeds.length ? ` Check covers on ${listNames(coveredBeds)}.` : '',
+      hardFreeze && coveredBeds.length ? ` ${HARD_FREEZE_NOTE}` : '',
+      hardFreeze && coveredBeds.length && !anyUncovered
+        ? ' Harvest or add more cover before the cold sets in.'
+        : ''
+    ].join('');
     out.push({
       kind: 'frost-tonight',
       subjectId: product.productKey,
       title: `${product.event} · protect tender crops`,
-      body: `${listNames(names)} ${names.length === 1 ? 'is' : 'are'} at risk.${when} Cover or harvest before the cold sets in. (NWS${product.senderName ? `, ${product.senderName.replace(/^NWS\s+/, '')}` : ''})`,
+      body: `${listNames(names)} ${names.length === 1 ? 'is' : 'are'} at risk.${when}${action} (NWS${product.senderName ? `, ${product.senderName.replace(/^NWS\s+/, '')}` : ''})`,
       url: '/today',
       audience: { kind: 'all' }
     });

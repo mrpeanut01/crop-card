@@ -20,11 +20,13 @@
     type RecommendationItem
   } from '$lib/components/today/Recommendations.svelte';
   import SeasonGlance from '$lib/components/today/SeasonGlance.svelte';
+  import AdviceCards from '$lib/components/today/AdviceCards.svelte';
   import GettingStartedCard from '$lib/components/today/GettingStartedCard.svelte';
   import AlphaWelcome from '$lib/components/feedback/AlphaWelcome.svelte';
   import { buildTaskCard } from '$lib/cards/build/task';
   import { taskPlanHref } from '$lib/cards/build/common';
   import { taskStart } from '$lib/tasks/start';
+  import { plantingCardHref } from '$lib/cards/model';
   import type { QueuedTaskAction } from '$lib/tasks/status';
   import {
     buildCalendarDeck,
@@ -233,6 +235,7 @@
   let actionError = $state<string | null>(null);
   let liveMessage = $state('');
   let careMessage = $state('');
+  let trayPrompt = $state<{ cropId: string } | null>(null);
 
   async function refreshQueued(): Promise<void> {
     try {
@@ -290,6 +293,17 @@
         return;
       }
       liveMessage = action === 'complete' ? 'Marked done.' : 'Skipped.';
+      if (action === 'complete') {
+        const out = (await res.json().catch(() => null)) as {
+          seedStart?: { step?: string; cropId?: string } | null;
+        } | null;
+        const seed = out?.seedStart;
+        trayPrompt =
+          seed?.step === 'sow' && seed.cropId && data.user?.role === 'owner'
+            ? { cropId: seed.cropId }
+            : null;
+        if (trayPrompt) liveMessage = 'Marked done. Log the tray so the calendar shows it.';
+      }
       await invalidateAll();
     } catch (err) {
       actionError = err instanceof Error ? err.message : String(err);
@@ -551,6 +565,10 @@
   </section>
 {/if}
 
+{#if view === 'day'}
+  <AdviceCards cards={data.advice} onSaved={() => invalidateAll()} />
+{/if}
+
 {#if data.animalCare.length > 0 || careMessage}
   <section class="animal-care" aria-labelledby="care-heading" data-testid="today-animal-care">
     <h2 id="care-heading" class="serif">Animal care</h2>
@@ -589,6 +607,17 @@
   </div>
 
   <p class="sr-only" role="status" aria-live="polite">{liveMessage}</p>
+  {#if trayPrompt}
+    <div class="tray-prompt" data-testid="log-tray-prompt">
+      <p>Sown? Log the tray so the calendar shows it as sown.</p>
+      <div class="tray-actions">
+        <a class="tray-btn primary" href="{plantingCardHref(trayPrompt.cropId)}#log-tray"
+          >Log the tray</a
+        >
+        <button type="button" class="tray-btn" onclick={() => (trayPrompt = null)}>Not now</button>
+      </div>
+    </div>
+  {/if}
   {#if actionError}
     <Banner tone="rust" urgent>{actionError}</Banner>
   {/if}
@@ -1109,5 +1138,45 @@
     color: #6e2413;
     font-weight: 600;
     overflow-wrap: anywhere;
+  }
+  .tray-prompt {
+    margin: 8px 0;
+    padding: 10px 12px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-card);
+    background: var(--color-paper);
+  }
+  .tray-prompt p {
+    margin: 0 0 8px;
+  }
+  .tray-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tray-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 6px);
+    background: var(--color-paper);
+    color: var(--color-forest-deep);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .tray-btn.primary {
+    background: var(--color-forest);
+    border-color: var(--color-forest);
+    color: var(--color-cream);
+  }
+  .tray-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
   }
 </style>

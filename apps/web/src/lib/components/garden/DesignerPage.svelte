@@ -8,6 +8,7 @@
   import DesignerListView from '$lib/components/garden/DesignerListView.svelte';
   import CropPanel from '$lib/components/garden/CropPanel.svelte';
   import BedInspector from '$lib/components/garden/BedInspector.svelte';
+  import PlantingEstablishment from '$lib/components/garden/PlantingEstablishment.svelte';
   import TimeScrubber from '$lib/components/garden/TimeScrubber.svelte';
   import { DesignerState, setDesigner } from '$lib/components/garden/designerState.svelte';
   import { ft, longDate, parseYmd, plural, ymd } from '$lib/components/garden/format';
@@ -380,6 +381,7 @@
         <CropPanel />
         {#if d.selectedBed}
           <BedInspector bed={d.selectedBed} />
+          <PlantingEstablishment />
         {:else}
           <p class="side-empty">Tap a bed to see what's in it, its size and its history.</p>
         {/if}

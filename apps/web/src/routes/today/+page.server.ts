@@ -47,6 +47,8 @@ import { getSetting } from '$lib/db/settings';
 import { SETTINGS_KEYS } from '$lib/schedule/constants';
 import { coveredLogAlerts, healthPlugins } from '$lib/server/animalRecords';
 import { materializeCareTasks } from '$lib/server/carePlans';
+import { loadTodayAdvice } from '$lib/server/todayAdvice.server';
+import type { TodayAdviceCard } from '$lib/today/advice';
 import { careCards, careCloseFormData } from '$lib/server/careView';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -271,7 +273,37 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const upcoming = upcomingCandidates.filter(notScheduled);
 
   const hasLocation = hasFarmLatLon();
+  // Phase 32E (E4-15): watering and degree-day cards, Day view only.
+  let advice: TodayAdviceCard[] = [];
+  if (view === 'day') {
+    advice = await loadTodayAdvice({
+      nowMs: now,
+      seasonYear: Number(today.slice(0, 4)),
+      farmLatLon: hasLocation ? getFarmLatLon() : null,
+      timeZone: careTimeZone,
+      isOwner,
+      plantings: blocks.flatMap((b) =>
+        b.plantings.map((p) => {
+          const rec = registry.get(p.cropPluginId);
+          const family =
+            rec && rec.plugin.type === 'crop'
+              ? ((rec.plugin as CropPlugin).cropFamily ?? null)
+              : null;
+          return {
+            id: p.id,
+            blockId: b.id,
+            fieldId: b.fieldId ?? null,
+            cropPluginId: p.cropPluginId,
+            cropFamily: family,
+            status: p.status ?? 'active',
+            plantingDate: p.plantingDate
+          };
+        })
+      )
+    });
+  }
   return {
+    advice,
     today,
     nowMs: now,
     view,

@@ -4,6 +4,8 @@ import { db } from '$lib/db/client';
 import {
   animalGroups,
   animals,
+  blocks,
+  crops,
   fields,
   helperAssignments,
   stockLots,
@@ -123,6 +125,34 @@ export function assertField(field: string, fieldId: string | null | undefined): 
         .select({ id: fields.id })
         .from(fields)
         .where(withTenant(fields, eq(fields.id, id)))
+        .get() !== undefined
+  ];
+}
+
+/** A planting (`crops` row) of this Owner. */
+export function assertCrop(field: string, cropId: string | null | undefined): ForeignRef {
+  return [
+    field,
+    cropId,
+    (id) =>
+      db
+        .select({ id: crops.id })
+        .from(crops)
+        .where(withTenant(crops, eq(crops.id, id)))
+        .get() !== undefined
+  ];
+}
+
+/** A block or bed of this Owner. */
+export function assertBlock(field: string, blockId: string | null | undefined): ForeignRef {
+  return [
+    field,
+    blockId,
+    (id) =>
+      db
+        .select({ id: blocks.id })
+        .from(blocks)
+        .where(withTenant(blocks, eq(blocks.id, id)))
         .get() !== undefined
   ];
 }

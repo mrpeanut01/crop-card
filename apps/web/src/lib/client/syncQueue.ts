@@ -103,7 +103,10 @@ export const ENDPOINT_BY_KIND: Record<PendingRecordKind, string> = {
   'animal-move': '/api/animals/move',
   'animal-health': '/api/animals/health/record',
   'animal-production': '/api/animals/production/record',
-  'feed-use': '/api/stock/:id/use'
+  'feed-use': '/api/stock/:id/use',
+  'seed-start': '/api/seed-starts/:id/progress',
+  irrigation: '/api/irrigation',
+  'rain-gauge': '/api/rain-gauge'
 };
 
 const STOCK_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
@@ -125,15 +128,25 @@ export function endpointForRecord(
     const safe = typeof id === 'string' && STOCK_ID_PATTERN.test(id) ? id : '_';
     return `/api/stock/${safe}/use`;
   }
+  if (kind === 'seed-start') {
+    const id = (rec.payload as { seedStartId?: unknown } | null | undefined)?.seedStartId;
+    const safe = typeof id === 'string' && STOCK_ID_PATTERN.test(id) ? id : '_';
+    return `/api/seed-starts/${safe}/progress`;
+  }
   return ENDPOINT_BY_KIND[kind] ?? ENDPOINT_BY_KIND.herbicide;
 }
 
-/** The body a row replays with. `feed-use` carries its stock item in the
- *  path, not the body. */
+/** The body a row replays with. `feed-use` carries its stock item and
+ *  `seed-start` its tray in the path, not the body. */
 export function bodyForRecord(rec: Pick<PendingSprayRecord, 'kind' | 'payload'>): unknown {
-  if (kindOf(rec) !== 'feed-use') return rec.payload;
+  const kind = kindOf(rec);
+  if (kind !== 'feed-use' && kind !== 'seed-start') return rec.payload;
   if (!rec.payload || typeof rec.payload !== 'object') return rec.payload;
-  const { stockItemId: _drop, ...rest } = rec.payload as Record<string, unknown>;
+  const {
+    stockItemId: _drop,
+    seedStartId: _tray,
+    ...rest
+  } = rec.payload as Record<string, unknown>;
   return rest;
 }
 
@@ -210,7 +223,8 @@ const TIME_GATED_KINDS: ReadonlyMap<PendingRecordKind, 'occurredAt' | 'mowAt' | 
     ['hay-cutting', 'mowAt'],
     ['animal-production', 'occurredAt'],
     ['animal-move', 'movedAt'],
-    ['feed-use', 'occurredAt']
+    ['feed-use', 'occurredAt'],
+    ['irrigation', 'occurredAt']
   ]);
 
 /** Stamps the recorded moment on a time-gated payload that lacks one.
@@ -231,8 +245,11 @@ function recordedAt(payload: unknown): number | null {
     mowAt?: unknown;
     movedAt?: unknown;
     administeredAt?: unknown;
+    readAt?: unknown;
   };
-  const v = [p.occurredAt, p.mowAt, p.movedAt, p.administeredAt].find((x) => typeof x === 'number');
+  const v = [p.occurredAt, p.mowAt, p.movedAt, p.administeredAt, p.readAt].find(
+    (x) => typeof x === 'number'
+  );
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }
 

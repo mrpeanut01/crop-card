@@ -3,6 +3,10 @@ import { listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { listScoutObservations } from '$lib/db/scoutObservations';
 import { canSetUp, setupAreas } from '$lib/server/setupContext';
+import { loadDegreeDays, SCOUT_FETCH_TIMEOUT_MS } from '$lib/server/degreeDays.server';
+import { canMutate } from '$lib/server/session';
+import { farmTimeZone } from '$lib/db/userProfile';
+import { ymdInZone } from '$lib/prefs';
 
 export const load: PageServerLoad = ({ url, locals }) => {
   const cropId = url.searchParams.get('crop');
@@ -50,6 +54,15 @@ export const load: PageServerLoad = ({ url, locals }) => {
     preselectedCropId: cropId,
     windowStage: url.searchParams.get('windowStage') ?? null,
     observationsByBlock,
-    setup: { canEdit: canSetUp(locals.user?.role), areas: setupAreas() }
+    setup: { canEdit: canSetUp(locals.user?.role), areas: setupAreas() },
+    todayYmd: ymdInZone(Date.now(), farmTimeZone()),
+    canRecordCatch: !!locals.user && canMutate(locals.user.role),
+    // Phase 32E (E5): streamed so a cold weather fetch never holds the page.
+    degreeDays: loadDegreeDays({
+      deps: { timeoutMs: SCOUT_FETCH_TIMEOUT_MS }
+    }).catch((e) => {
+      console.warn('[scout] degree days failed', e);
+      return null;
+    })
   };
 };

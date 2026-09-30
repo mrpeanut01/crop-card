@@ -4,6 +4,7 @@
  * plus the side data the page needs (bed history, crop catalog, companions).
  */
 
+import { seedStartGuide } from '$lib/schedule/seedStart';
 import { inArray } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { crops as cropsTable } from '$lib/db/schema';
@@ -14,6 +15,8 @@ import { listShadeSources } from '$lib/db/shadeSources';
 import { getBedRecipes, getRegistry } from '$lib/server/registry';
 import type { BedRecipePlugin } from '$lib/plugins/schemas';
 import { frostDatesForYear } from '$lib/schedule/settings';
+import { effectiveFrostContext, loadEffectiveFrostByBlock } from '$lib/server/blockFrost.server';
+import { effectiveFrostSummary } from '$lib/climate/effectiveFrost';
 import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
 import { rotationLookbackForFamily } from '$lib/plugins/familyDefaults';
 import { resolveArchetype, type CompanionPlugin, type CropPlugin } from '$lib/plugins/schemas';
@@ -25,7 +28,7 @@ import {
   type DesignBlockInput,
   type DesignPlantingInput
 } from '$lib/garden/design';
-import type { BedHistoryEntry, GardenCrop, GardenDesign } from '$lib/garden/types';
+import type { BedFrost, BedHistoryEntry, GardenCrop, GardenDesign } from '$lib/garden/types';
 import type { DesignerCompanion, GardenDesignResponse } from '$lib/garden/api';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 import { selectablePlanningYears } from '$lib/season/planningYear';
@@ -59,6 +62,8 @@ export function gardenCropOf(p: CropPlugin): GardenCrop {
     if (guide.inRowSpacingIn) out.plantingGuide.inRowSpacingIn = { ...guide.inRowSpacingIn };
     if (guide.soilTempMinF) out.plantingGuide.soilTempMinF = guide.soilTempMinF;
   }
+  const seedStart = seedStartGuide(p);
+  if (seedStart) out.plantingGuide = { ...out.plantingGuide, ...seedStart };
   return out;
 }
 
@@ -78,6 +83,41 @@ export function designFrostForYear(seasonYear: number): {
     lastSpringFrostMs: utcDayOfLocal(frost.lastSpringFrostMs),
     firstFallFrostMs: utcDayOfLocal(frost.firstFallFrostMs)
   };
+}
+
+/** Beds whose covers move their frost, as UTC days like the designer's
+ *  `frost`. Beds that match the farm are left out. */
+export function designFrostByBed(
+  blockIds: readonly string[],
+  seasonYear: number
+): Record<string, BedFrost> {
+  const ctx = effectiveFrostContext(seasonYear);
+  const eff = loadEffectiveFrostByBlock(blockIds, seasonYear, ctx);
+  const out: Record<string, BedFrost> = {};
+  for (const [id, e] of Object.entries(eff)) {
+    const summary = effectiveFrostSummary(e);
+    const moved =
+      e.frostFree ||
+      e.lastSpringFrostMs !== ctx.farm.lastSpringFrostMs ||
+      e.firstFallFrostMs !== ctx.farm.firstFallFrostMs;
+    if (!moved && !summary) continue;
+    out[id] = {
+      lastSpringFrostMs: utcDayOfLocal(e.lastSpringFrostMs),
+      firstFallFrostMs: utcDayOfLocal(e.firstFallFrostMs),
+      frostFree: e.frostFree,
+      summary
+    };
+  }
+  return out;
+}
+
+/** One bed's frost as UTC days, for the server garden writers. */
+export function designFrostForBed(
+  blockId: string,
+  seasonYear: number
+): { lastSpringFrostMs: number; firstFallFrostMs: number; frostFree: boolean } {
+  const bed = designFrostByBed([blockId], seasonYear)[blockId];
+  return bed ?? { ...designFrostForYear(seasonYear), frostFree: false };
 }
 
 /** Null when the Area is not the active Owner's or is not a garden or
@@ -156,6 +196,7 @@ export async function loadGardenDesign(
       ...frost,
       provenance: snapshotFrostFromSettings().provenance
     },
+    frostByBed: designFrostByBed(blockIds, opts.seasonYear),
     seasonYear: opts.seasonYear,
     asOf: opts.now ?? Date.now(),
     readOnlyReason: opts.readOnlyReason

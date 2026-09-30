@@ -28,5 +28,11 @@ export const POST: RequestHandler = async (event) => {
   }
   const result = createPlacedPlantings(parsed.data.plantings, cropLookupFrom(await getRegistry()));
   if (isFailure(result)) return failureResponse(result);
-  return json({ plantings: result.plantings } satisfies PlantingCreateResponse, { status: 201 });
+  return json(
+    {
+      plantings: result.plantings,
+      ...(result.seedStartNotes.length ? { seedStartNotes: result.seedStartNotes } : {})
+    } satisfies PlantingCreateResponse,
+    { status: 201 }
+  );
 };

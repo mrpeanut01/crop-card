@@ -71,6 +71,25 @@
 
   const isAllKinds = $derived(data.activeKinds.length === RECORD_KINDS.length);
 
+  const wateringHref = $derived.by(() => {
+    const params = new URLSearchParams(page.url.searchParams);
+    if (data.watering.active) params.delete('watering');
+    else params.set('watering', '1');
+    const qs = params.toString();
+    return qs ? `/records?${qs}` : '/records';
+  });
+
+  function wateringAmount(w: {
+    inches: number | null;
+    gallons: number | null;
+    durationMin: number | null;
+  }): string {
+    if (w.inches !== null) return `${w.inches} in`;
+    if (w.gallons !== null) return `${w.gallons} gal`;
+    if (w.durationMin !== null) return `${w.durationMin} min, amount not logged`;
+    return 'Amount not logged';
+  }
+
   const loadMoreHref = $derived.by(() => {
     if (data.nextShow === null) return null;
     const params = new URLSearchParams(page.url.searchParams);
@@ -441,6 +460,17 @@
           <span class="kind-count mono">{count}</span>
         </button>
       {/each}
+      <button
+        type="button"
+        class="kind-chip watering-chip"
+        class:active={data.watering.active}
+        aria-pressed={data.watering.active}
+        onclick={() => goto(wateringHref, { noScroll: true, keepFocus: true })}
+        data-testid="watering-chip"
+      >
+        <Pill tone="sky">Watering</Pill>
+        <span class="kind-count mono">{data.watering.count}</span>
+      </button>
       <span class="sep" aria-hidden="true"></span>
       <label class="inline-input">
         <Calendar size={12} />
@@ -495,6 +525,60 @@
         </select>
       </label>
     </div>
+
+    {#if data.watering.active}
+      <section
+        class="watering-log"
+        aria-labelledby="watering-log-heading"
+        data-testid="watering-log"
+      >
+        <h2 id="watering-log-heading">Watering log</h2>
+        <p class="watering-note">
+          Watering logs help the watering advice. They are not compliance records and are not in the
+          exports.
+        </p>
+        {#if data.watering.rows.length === 0}
+          <p class="watering-note">No watering logged in this range.</p>
+        {:else}
+          <ul class="watering-rows">
+            {#each data.watering.rows as w (w.id)}
+              {@const key = `irrigation:${w.id}`}
+              {@const open = openCards.includes(key)}
+              <li>
+                <div class="watering-row">
+                  <span class="mono">{fmtDate(w.occurredAt)}</span>
+                  <span>{w.areaName}{w.bedName ? ` · ${w.bedName}` : ''}</span>
+                  <span>{wateringAmount(w)}</span>
+                  <button
+                    type="button"
+                    class="card-toggle"
+                    aria-expanded={open}
+                    onclick={() => toggleCard(key)}
+                  >
+                    Card
+                  </button>
+                  <a
+                    class="drill"
+                    href={`/records/irrigation/${w.id}`}
+                    aria-label="Open watering log"
+                  >
+                    <ChevronRight size={14} />
+                  </a>
+                </div>
+                {#if open}
+                  <RecordCardPanel
+                    recordKind="irrigation"
+                    rowId={w.id}
+                    prefs={currentPrefs()}
+                    onPrint={printCards}
+                  />
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </section>
+    {/if}
 
     <div class="retention-strip">
       <Lock size={13} />
@@ -1167,6 +1251,43 @@
     font-size: 13px;
   }
 
+  .watering-chip {
+    text-decoration: none;
+    min-height: 48px;
+    padding: 0 4px;
+  }
+  .watering-row .drill {
+    min-width: 48px;
+    min-height: 48px;
+    justify-content: center;
+  }
+  .watering-log {
+    margin: 0.75rem 0;
+    padding: 0.75rem;
+    border: 1px solid var(--color-divider-soft);
+    border-radius: 8px;
+  }
+  .watering-log h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+  }
+  .watering-note {
+    margin: 0 0 0.5rem;
+    color: var(--color-ink-soft);
+  }
+  .watering-rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .watering-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid var(--color-divider-soft);
+  }
   .footer-cards {
     display: grid;
     grid-template-columns: 1fr 1fr;

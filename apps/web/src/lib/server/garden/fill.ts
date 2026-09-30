@@ -22,7 +22,7 @@ import {
 import type { GardenCrop } from '$lib/garden/types';
 import { deterministicPlantingWindow, type PlantingWindow } from '$lib/plan/plantingWindow';
 import type { BedRecipePlugin, CropPlugin } from '$lib/plugins/schemas';
-import { frostDatesForYear, frostDatesIsoForYear } from '$lib/schedule/settings';
+import { bedFrostIso, bedFrostMs } from '$lib/server/blockFrost.server';
 import { aiLimitReason, type AiLimit } from '$lib/billing/aiLimit';
 import { aiLimitOf, recordFallback, tryAiWithGuard } from '../aiDegrade';
 import type { FallbackReason } from '../aiTry';
@@ -65,7 +65,7 @@ export function loadFillInputs(
   crops: Readonly<Record<string, CropPlugin>>,
   recipes: readonly BedRecipePlugin[]
 ): FillInputs {
-  const { lastSpringFrostMs, firstFallFrostMs } = frostDatesForYear(req.seasonYear);
+  const { lastSpringFrostMs, firstFallFrostMs } = bedFrostMs(bed.block.id, req.seasonYear);
   const bedCrops = listCrops({ blockId: bed.block.id });
   const intervals = occupancyIntervals(
     bedCrops.map((c) => placedPlantingFromCrop(c, crops[c.cropPluginId])),
@@ -164,7 +164,7 @@ export function buildPromptInput(
     bed: { name: bed.block.name, widthFt: bed.widthFt, lengthFt: bed.lengthFt },
     seasonYear: ctx.seasonYear,
     dateIso: isoDay(dateMs),
-    frost: frostDatesIsoForYear(ctx.seasonYear),
+    frost: bedFrostIso(ctx.bed.blockId, ctx.seasonYear),
     occupied: ctx.intervals.map((i) => ({
       name: names.get(i.cropId) ?? 'a planting',
       fromIso: isoDay(i.startMs),
@@ -201,7 +201,7 @@ function listCropNames(inputs: FillInputs): Array<[string, string]> {
 }
 
 function windowLookup(inputs: FillInputs): (id: string) => PlantingWindow | null {
-  const frost = frostDatesIsoForYear(inputs.ctx.seasonYear);
+  const frost = bedFrostIso(inputs.ctx.bed.blockId, inputs.ctx.seasonYear);
   return (id) => {
     const crop = inputs.crops[id];
     if (!crop) return null;

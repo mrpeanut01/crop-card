@@ -39,7 +39,9 @@ function toSnapshotPlanting(r: typeof crops.$inferSelect): SnapshotPlanting {
     plantCount: r.plantCount ?? null,
     plantCountProvenance: r.plantCountProvenance ?? null,
     sourceProvenance: r.sourceProvenance ?? null,
-    ...layoutOf(r)
+    ...layoutOf(r),
+    ...(r.establishment ? { establishment: r.establishment } : {}),
+    ...(r.sownIndoorsAt ? { sownIndoorsAt: r.sownIndoorsAt.getTime() } : {})
   };
 }
 

@@ -308,3 +308,24 @@ describe('feed use (D1-16)', () => {
     );
   });
 });
+
+describe('seed-start germination (E1-18)', () => {
+  it('routes to its tray and keeps the tray id out of the body', async () => {
+    const sent = installServer();
+    await enqueue(
+      'seed-start',
+      { seedStartId: 'tray_1', germinatedCount: 12, observedAt: 1_700_000_000_000 },
+      'rec-tray'
+    );
+    const result = await drainQueue();
+    expect(result.succeeded).toEqual(['rec-tray']);
+    expect(sent[0].url).toBe('/api/seed-starts/tray_1/progress');
+    expect(sent[0].body).toEqual({ germinatedCount: 12, observedAt: 1_700_000_000_000 });
+  });
+
+  it('never builds a path from an unsafe id', () => {
+    expect(endpointForRecord({ kind: 'seed-start', payload: { seedStartId: '../x' } })).toBe(
+      '/api/seed-starts/_/progress'
+    );
+  });
+});

@@ -2,6 +2,7 @@
   import { X } from 'lucide-svelte';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import { areaFromDimensions, blockSizePatch } from '$lib/plan/editBlockSize';
+  import CoverChips from '$lib/components/setup/CoverChips.svelte';
 
   interface BlockSeed {
     id: string;
@@ -21,6 +22,11 @@
     /** #475 — the planning wizard edits a block's size by its sketch
      *  dimensions too, so a bed can be resized without leaving the plan. */
     showDimensions?: boolean;
+    /** Phase 32E: owners add and remove covers; others read them. */
+    canEditCovers?: boolean;
+    seasonYear?: number;
+    /** Called when the bed's covers change. */
+    onCoversChanged?: () => void;
   }
 
   const {
@@ -29,7 +35,10 @@
     legacyEditorHref,
     onClose,
     onSaved,
-    showDimensions = false
+    showDimensions = false,
+    canEditCovers = true,
+    seasonYear,
+    onCoversChanged
   }: Props = $props();
 
   let name = $state('');
@@ -116,6 +125,7 @@
   }
 
   function onKey(e: KeyboardEvent): void {
+    if ((e.target as Element | null)?.closest?.('dialog[open]')) return;
     if (e.key === 'Escape' && !submitting) {
       onClose();
       return;
@@ -227,11 +237,24 @@
           </button>
         </footer>
       </form>
+      <div class="covers">
+        <CoverChips
+          blockId={block.id}
+          blockName={block.name}
+          canEdit={canEditCovers}
+          {seasonYear}
+          onChange={() => onCoversChanged?.()}
+        />
+      </div>
     </div>
   </div>
 {/if}
 
 <style>
+  .covers {
+    padding: var(--space-3) var(--space-4) var(--space-4);
+    border-top: 1px solid var(--color-divider-soft, #e6e0d4);
+  }
   .backdrop {
     position: fixed;
     inset: 0;

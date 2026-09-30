@@ -44,6 +44,26 @@ vi.mock('$lib/schedule/settings', () => ({
   hasFarmLatLon: () => true
 }));
 
+vi.mock('$lib/db/blocks', () => ({
+  getBlock: (id: string) => (id === 'bed-covered' ? { id } : undefined)
+}));
+vi.mock('$lib/server/blockFrost.server', () => ({
+  localDay: (ms: number) => new Date(ms).toISOString().slice(0, 10),
+  loadEffectiveFrostByBlock: () => ({
+    'bed-covered': {
+      lastSpringFrostMs: Date.parse('2027-03-25T00:00:00Z'),
+      firstFallFrostMs: Date.parse('2027-10-15T00:00:00Z'),
+      frostFree: false,
+      springShiftDays: 21,
+      fallShiftDays: 0,
+      springBy: 'low-tunnel',
+      fallBy: null,
+      provenance: 'manual',
+      unknownShift: []
+    }
+  })
+}));
+
 import { POST } from './+server';
 import {
   clearPlantingWindowCache,
@@ -152,5 +172,34 @@ describe('parsePlantingWindowResponse', () => {
     expect(() =>
       parsePlantingWindowResponse(JSON.stringify({ ...AI_WINDOW, latest: '2028-06-01' }), 2027)
     ).toThrow();
+  });
+});
+
+describe('POST /api/plan/planting-window with a covered bed (Phase 32E)', () => {
+  it('moves the window earlier by the cover and says so', async () => {
+    const farm = await (await POST(ev({ cropPluginId: CROP.pluginId, year: 2027 }))).json();
+    const bed = await (
+      await POST(ev({ cropPluginId: CROP.pluginId, year: 2027, blockId: 'bed-covered' }))
+    ).json();
+    expect(bed.window.earliest < farm.window.earliest).toBe(true);
+    expect(bed.window.earliest).toBe('2027-04-01');
+    expect(bed.frost.cover.springBy).toBe('low-tunnel');
+  });
+
+  it('refuses an unknown bed', async () => {
+    const res = await POST(ev({ cropPluginId: CROP.pluginId, year: 2027, blockId: 'nope' }));
+    expect(res.status).toBe(400);
+  });
+
+  it('keys the AI cache on the bed frost, so a covered bed never reuses an uncovered answer', async () => {
+    m.getApiKey.mockReturnValue('sk-test');
+    m.create.mockResolvedValue(aiReply(JSON.stringify(AI_WINDOW)));
+    await POST(ev({ cropPluginId: CROP.pluginId, year: 2027 }));
+    const covered = await (
+      await POST(ev({ cropPluginId: CROP.pluginId, year: 2027, blockId: 'bed-covered' }))
+    ).json();
+    expect(covered.cached).toBeUndefined();
+    expect(m.create).toHaveBeenCalledTimes(2);
+    expect(m.create.mock.calls[1][0].messages[0].content).toMatch(/Covered: frost ends/);
   });
 });

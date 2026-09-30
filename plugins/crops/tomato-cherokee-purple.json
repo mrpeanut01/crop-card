@@ -16,7 +16,8 @@
     "inRowSpacingIn": {
       "min": 24,
       "max": 36
-    }
+    },
+    "establishment": "transplant"
   },
   "traits": [
     "native-halosulfuron-tolerant"

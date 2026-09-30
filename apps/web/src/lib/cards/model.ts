@@ -15,11 +15,12 @@ export const CARD_KINDS = [
   'scout',
   'soilTest',
   'animal',
-  'flock'
+  'flock',
+  'irrigation'
 ] as const;
 
 /** Kinds built only from a saved record, never from the offline snapshot. */
-export const RECORD_ONLY_CARD_KINDS: readonly CardKind[] = ['scout'];
+export const RECORD_ONLY_CARD_KINDS: readonly CardKind[] = ['scout', 'irrigation'];
 
 export type CardKind = (typeof CARD_KINDS)[number];
 
@@ -157,7 +158,8 @@ export const CARD_KIND_LABEL: Record<CardKind, string> = {
   scout: 'Scout',
   soilTest: 'Soil test',
   animal: 'Animal',
-  flock: 'Flock'
+  flock: 'Flock',
+  irrigation: 'Watering'
 };
 
 export const CARD_KEY_PREFIX: Record<CardKind, string> = {
@@ -175,7 +177,8 @@ export const CARD_KEY_PREFIX: Record<CardKind, string> = {
   soilTest: 'so',
   animal: 'an',
   /** Any herd, flock or litter (one animal group). */
-  flock: 'fl'
+  flock: 'fl',
+  irrigation: 'ir'
 };
 
 const KIND_BY_PREFIX = new Map<string, CardKind>(

@@ -257,6 +257,54 @@
       "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
+  "broccoli-arcadia-f1": {
+    "startIndoorsWeeks": {
+      "url": "https://extension.umd.edu/resource/starting-vegetable-seeds-indoors",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Starting Vegetable Seeds Indoors: \"Broccoli, cabbage, and cauliflower transplants take about 4 to 6 weeks from seeding to setting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. Iowa State Yard and Garden (Growing Broccoli / Growing Cauliflower in the Home Garden) gives 4 to 5 weeks, within one week of this range. A summer-sown fall crop may be ready sooner; the back-off uses the midpoint."
+    },
+    "hardenOffDays": {
+      "url": "https://extension.umd.edu/resource/hardening-vegetable-seedlings-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Hardening Off Vegetable Seedlings for the Home Garden: hardening off \"can be done over a 5- to 14-day period, depending on the crop, before transplanting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. The page gives one range for all crops, so the whole range is used and the hardening task starts at its longest end."
+    }
+  },
+  "broccoli-de-cicco": {
+    "startIndoorsWeeks": {
+      "url": "https://extension.umd.edu/resource/starting-vegetable-seeds-indoors",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Starting Vegetable Seeds Indoors: \"Broccoli, cabbage, and cauliflower transplants take about 4 to 6 weeks from seeding to setting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. Iowa State Yard and Garden (Growing Broccoli / Growing Cauliflower in the Home Garden) gives 4 to 5 weeks, within one week of this range. A summer-sown fall crop may be ready sooner; the back-off uses the midpoint."
+    },
+    "hardenOffDays": {
+      "url": "https://extension.umd.edu/resource/hardening-vegetable-seedlings-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Hardening Off Vegetable Seedlings for the Home Garden: hardening off \"can be done over a 5- to 14-day period, depending on the crop, before transplanting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. The page gives one range for all crops, so the whole range is used and the hardening task starts at its longest end."
+    }
+  },
+  "broccoli-romanesco": {
+    "startIndoorsWeeks": {
+      "url": "https://extension.umd.edu/resource/starting-vegetable-seeds-indoors",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Starting Vegetable Seeds Indoors: \"Broccoli, cabbage, and cauliflower transplants take about 4 to 6 weeks from seeding to setting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. Iowa State Yard and Garden (Growing Broccoli / Growing Cauliflower in the Home Garden) gives 4 to 5 weeks, within one week of this range. A summer-sown fall crop may be ready sooner; the back-off uses the midpoint."
+    },
+    "hardenOffDays": {
+      "url": "https://extension.umd.edu/resource/hardening-vegetable-seedlings-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Hardening Off Vegetable Seedlings for the Home Garden: hardening off \"can be done over a 5- to 14-day period, depending on the crop, before transplanting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. The page gives one range for all crops, so the whole range is used and the hardening task starts at its longest end."
+    }
+  },
   "brussels-sprouts-long-island": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-403/426-403.html",
@@ -274,6 +322,54 @@
       "quote": "UMD HGIC, Cover Crops For Gardens: Selection chart: \"Buckwheat (Fagopyrum esculentum) | buckwheat | 3 to 4 | spring or summer | any time | not winter-hardy; grows quickly; willreseed\" \"Cover crops are mown, flattened, and/or turned into the soil before going to seed, usually in late April or early May.\""
     }
   },
+  "cabbage-early-jersey-wakefield": {
+    "startIndoorsWeeks": {
+      "url": "https://extension.umd.edu/resource/starting-vegetable-seeds-indoors",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Starting Vegetable Seeds Indoors: \"Broccoli, cabbage, and cauliflower transplants take about 4 to 6 weeks from seeding to setting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. Iowa State Yard and Garden (Growing Broccoli / Growing Cauliflower in the Home Garden) gives 4 to 5 weeks, within one week of this range. A summer-sown fall crop may be ready sooner; the back-off uses the midpoint."
+    },
+    "hardenOffDays": {
+      "url": "https://extension.umd.edu/resource/hardening-vegetable-seedlings-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Hardening Off Vegetable Seedlings for the Home Garden: hardening off \"can be done over a 5- to 14-day period, depending on the crop, before transplanting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. The page gives one range for all crops, so the whole range is used and the hardening task starts at its longest end."
+    }
+  },
+  "cabbage-pointed-caraflex": {
+    "startIndoorsWeeks": {
+      "url": "https://extension.umd.edu/resource/starting-vegetable-seeds-indoors",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Starting Vegetable Seeds Indoors: \"Broccoli, cabbage, and cauliflower transplants take about 4 to 6 weeks from seeding to setting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. Iowa State Yard and Garden (Growing Broccoli / Growing Cauliflower in the Home Garden) gives 4 to 5 weeks, within one week of this range. A summer-sown fall crop may be ready sooner; the back-off uses the midpoint."
+    },
+    "hardenOffDays": {
+      "url": "https://extension.umd.edu/resource/hardening-vegetable-seedlings-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Hardening Off Vegetable Seedlings for the Home Garden: hardening off \"can be done over a 5- to 14-day period, depending on the crop, before transplanting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. The page gives one range for all crops, so the whole range is used and the hardening task starts at its longest end."
+    }
+  },
+  "cabbage-red-acre": {
+    "startIndoorsWeeks": {
+      "url": "https://extension.umd.edu/resource/starting-vegetable-seeds-indoors",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Starting Vegetable Seeds Indoors: \"Broccoli, cabbage, and cauliflower transplants take about 4 to 6 weeks from seeding to setting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. Iowa State Yard and Garden (Growing Broccoli / Growing Cauliflower in the Home Garden) gives 4 to 5 weeks, within one week of this range. A summer-sown fall crop may be ready sooner; the back-off uses the midpoint."
+    },
+    "hardenOffDays": {
+      "url": "https://extension.umd.edu/resource/hardening-vegetable-seedlings-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Hardening Off Vegetable Seedlings for the Home Garden: hardening off \"can be done over a 5- to 14-day period, depending on the crop, before transplanting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. The page gives one range for all crops, so the whole range is used and the hardening task starts at its longest end."
+    }
+  },
   "cabbage-savoy-king": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-403/426-403.html",
@@ -281,6 +377,36 @@
       "date": "2026-02-17",
       "quote": "VCE 426-403, Cole Crops or Brassicas (Cabbage): \"Spacing: 15 to 18 inches by 30 to 36 inches.\"",
       "note": "Cross-check VCE 426-331 Table 5 gives 12-18 in; overlapping range, crop-specific publication used."
+    },
+    "startIndoorsWeeks": {
+      "url": "https://extension.umd.edu/resource/starting-vegetable-seeds-indoors",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Starting Vegetable Seeds Indoors: \"Broccoli, cabbage, and cauliflower transplants take about 4 to 6 weeks from seeding to setting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. Iowa State Yard and Garden (Growing Broccoli / Growing Cauliflower in the Home Garden) gives 4 to 5 weeks, within one week of this range. A summer-sown fall crop may be ready sooner; the back-off uses the midpoint."
+    },
+    "hardenOffDays": {
+      "url": "https://extension.umd.edu/resource/hardening-vegetable-seedlings-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Hardening Off Vegetable Seedlings for the Home Garden: hardening off \"can be done over a 5- to 14-day period, depending on the crop, before transplanting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. The page gives one range for all crops, so the whole range is used and the hardening task starts at its longest end."
+    }
+  },
+  "cabbage-storage-no-4-f1": {
+    "startIndoorsWeeks": {
+      "url": "https://extension.umd.edu/resource/starting-vegetable-seeds-indoors",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Starting Vegetable Seeds Indoors: \"Broccoli, cabbage, and cauliflower transplants take about 4 to 6 weeks from seeding to setting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. Iowa State Yard and Garden (Growing Broccoli / Growing Cauliflower in the Home Garden) gives 4 to 5 weeks, within one week of this range. A summer-sown fall crop may be ready sooner; the back-off uses the midpoint."
+    },
+    "hardenOffDays": {
+      "url": "https://extension.umd.edu/resource/hardening-vegetable-seedlings-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Hardening Off Vegetable Seedlings for the Home Garden: hardening off \"can be done over a 5- to 14-day period, depending on the crop, before transplanting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. The page gives one range for all crops, so the whole range is used and the hardening task starts at its longest end."
     }
   },
   "cantaloupe-hales-best": {
@@ -307,6 +433,22 @@
       "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule. Extension figures disagree for carrots generally (VCE 426-331 thin to 1.5-2 in; VCE 426-422 1/2 in; UMD thin to 1-2 in)."
     }
   },
+  "cauliflower-cheddar-f1": {
+    "startIndoorsWeeks": {
+      "url": "https://extension.umd.edu/resource/starting-vegetable-seeds-indoors",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Starting Vegetable Seeds Indoors: \"Broccoli, cabbage, and cauliflower transplants take about 4 to 6 weeks from seeding to setting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. Iowa State Yard and Garden (Growing Broccoli / Growing Cauliflower in the Home Garden) gives 4 to 5 weeks, within one week of this range. A summer-sown fall crop may be ready sooner; the back-off uses the midpoint."
+    },
+    "hardenOffDays": {
+      "url": "https://extension.umd.edu/resource/hardening-vegetable-seedlings-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Hardening Off Vegetable Seedlings for the Home Garden: hardening off \"can be done over a 5- to 14-day period, depending on the crop, before transplanting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. The page gives one range for all crops, so the whole range is used and the hardening task starts at its longest end."
+    }
+  },
   "cauliflower-snowball-y": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-403/426-403.html",
@@ -314,6 +456,20 @@
       "date": "2026-02-17",
       "quote": "VCE 426-403, Cole Crops or Brassicas (Cauliflower): \"Spacing: 15 to 24 inches by 24 to 36 inches.\"",
       "note": "Cross-check VCE 426-331 Table 5 gives 12-24 in; overlapping range, crop-specific publication used."
+    },
+    "startIndoorsWeeks": {
+      "url": "https://extension.umd.edu/resource/starting-vegetable-seeds-indoors",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Starting Vegetable Seeds Indoors: \"Broccoli, cabbage, and cauliflower transplants take about 4 to 6 weeks from seeding to setting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. Iowa State Yard and Garden (Growing Broccoli / Growing Cauliflower in the Home Garden) gives 4 to 5 weeks, within one week of this range. A summer-sown fall crop may be ready sooner; the back-off uses the midpoint."
+    },
+    "hardenOffDays": {
+      "url": "https://extension.umd.edu/resource/hardening-vegetable-seedlings-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-09-29 (accessed via search excerpt; page date not seen)",
+      "quote": "UMD HGIC, Hardening Off Vegetable Seedlings for the Home Garden: hardening off \"can be done over a 5- to 14-day period, depending on the crop, before transplanting into the garden.\"",
+      "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment, so label research must check it word for word. The page gives one range for all crops, so the whole range is used and the hardening task starts at its longest end."
     }
   },
   "celery-tall-utah-52-70": {

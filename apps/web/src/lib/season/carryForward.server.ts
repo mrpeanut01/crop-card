@@ -21,6 +21,7 @@ import { resolveArchetype } from '$lib/plugins/schemas';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
 import { frostDatesForYear } from '$lib/schedule/settings';
+import { plannerFrostByBlock } from '$lib/server/blockFrost.server';
 import { scheduleCandidacy, type ScheduleAssignmentInput } from '$lib/schedule/scheduleCandidacy';
 import { saveDraft } from '$lib/wizard/drafts';
 import { carryForward as carryForwardPhilosophy } from './setup.server';
@@ -305,6 +306,13 @@ function scheduleWindowsFor(
     pluginIndex,
     existingCrops,
     frostDates,
+    frostByBlock: plannerFrostByBlock(
+      [
+        ...assignments.map((a) => a.blockId),
+        ...existingCrops.map((c) => c.blockId).filter((b): b is string => !!b)
+      ],
+      toYear
+    ),
     year: toYear,
     nowMs
   });

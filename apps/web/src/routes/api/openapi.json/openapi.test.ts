@@ -7,6 +7,7 @@ import { _requestSchema as fieldCreate } from '../fields/+server';
 import { _requestSchema as fieldPatch } from '../fields/[id]/+server';
 import { _requestSchema as blockCreate } from '../blocks/+server';
 import { _requestSchema as blockPatch } from '../blocks/[id]/+server';
+import { _requestSchema as blockProtection } from '../blocks/[id]/protections/+server';
 import { _requestSchema as hintsPost } from '../me/hints/+server';
 import { _requestSchema as gardenPlantings } from '../garden/plantings/+server';
 import { _requestSchema as gardenSuccession } from '../garden/beds/[blockId]/succession/+server';
@@ -36,6 +37,12 @@ import { _requestSchema as healthEntry } from '../animals/health/[id]/entries/+s
 import { _requestSchema as productionRecord } from '../animals/production/record/+server';
 import { _requestSchema as productionPatch } from '../animals/production/[id]/+server';
 import { _requestSchema as grazingAttestation } from '../animals/grazing-attestations/+server';
+import { _requestSchema as seedStartCreate } from '../seed-starts/+server';
+import { _requestSchema as seedStartPatch } from '../seed-starts/[id]/+server';
+import { _requestSchema as seedStartProgress } from '../seed-starts/[id]/progress/+server';
+import { _requestSchema as irrigationCreate } from '../irrigation/+server';
+import { _requestSchema as waterTarget } from '../irrigation/target/+server';
+import { _requestSchema as rainGauge } from '../rain-gauge/+server';
 
 interface Operation {
   parameters?: { $ref?: string; name?: string; in?: string }[];
@@ -70,6 +77,7 @@ describe('openapi.json', () => {
     ['/api/fields/{id}', 'patch', fieldPatch],
     ['/api/blocks', 'post', blockCreate],
     ['/api/blocks/{id}', 'patch', blockPatch],
+    ['/api/blocks/{id}/protections', 'post', blockProtection],
     ['/api/me/hints', 'post', hintsPost],
     ['/api/garden/plantings', 'post', gardenPlantings],
     ['/api/garden/beds/{blockId}/succession', 'post', gardenSuccession],
@@ -98,7 +106,13 @@ describe('openapi.json', () => {
     ['/api/animals/health/{id}/entries', 'post', healthEntry],
     ['/api/animals/production/record', 'post', productionRecord],
     ['/api/animals/production/{id}', 'patch', productionPatch],
-    ['/api/animals/grazing-attestations', 'post', grazingAttestation]
+    ['/api/animals/grazing-attestations', 'post', grazingAttestation],
+    ['/api/seed-starts', 'post', seedStartCreate],
+    ['/api/seed-starts/{id}', 'patch', seedStartPatch],
+    ['/api/seed-starts/{id}/progress', 'post', seedStartProgress],
+    ['/api/irrigation', 'post', irrigationCreate],
+    ['/api/irrigation/target', 'post', waterTarget],
+    ['/api/rain-gauge', 'post', rainGauge]
   ] as const)('%s %s publishes the schema the route validates with', (path, method, schema) => {
     expect(published(path, method)).toEqual(generated(schema));
   });
@@ -113,6 +127,8 @@ describe('openapi.json', () => {
       ['/api/blocks', 'get'],
       ['/api/blocks/{id}', 'get'],
       ['/api/blocks/{id}', 'delete'],
+      ['/api/blocks/{id}/protections', 'get'],
+      ['/api/blocks/{id}/protections/{pid}', 'delete'],
       ['/api/map-features', 'get'],
       ['/api/map-features/{id}', 'get'],
       ['/api/map-features/{id}', 'delete'],
@@ -169,7 +185,8 @@ describe('openapi.json', () => {
         'edit-details',
         'unschedule',
         'split',
-        'set-placement'
+        'set-placement',
+        'set-establishment'
       ])
     );
     expect(JSON.stringify(doc.paths['/api/crops/{id}'].patch)).not.toContain('not yet published');

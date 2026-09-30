@@ -55,7 +55,7 @@ export default defineConfig({
         `touch ${BUILD_MARKER} && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} node ./scripts/migrate.mjs && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} node ./scripts/seed-test-data.mjs && ` +
-        `DATABASE_URL=file:${TEST_DB_PATH} AUTH_MODE=direct AUTH_SECRET=e2e-only-not-secret ENABLE_DEV_ROUTES=1 PLUGINS_DIR=${PLUGINS_DIR} ${STRIPE_E2E_ENV} pnpm exec vite preview --host 0.0.0.0 --port ${PORT} --strictPort`,
+        `DATABASE_URL=file:${TEST_DB_PATH} AUTH_MODE=direct AUTH_SECRET=e2e-only-not-secret ENABLE_DEV_ROUTES=1 E2E_DEGREE_DAY_FIXTURE=1 PLUGINS_DIR=${PLUGINS_DIR} ${STRIPE_E2E_ENV} pnpm exec vite preview --host 0.0.0.0 --port ${PORT} --strictPort`,
       port: PORT,
       reuseExistingServer: !process.env.CI,
       timeout: 300_000

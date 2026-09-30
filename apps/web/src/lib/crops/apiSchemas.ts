@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { setPlacementPatchSchema } from '$lib/garden/api';
+import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
 
 /** Request body of `PATCH /api/crops/:id`, one variant per `action`. Kept free
  *  of server imports so the OpenAPI generator can publish it. */
@@ -63,7 +64,19 @@ export const cropSplitPatchSchema = z
   })
   .describe('Split the planting into 2 to 12 parts on the same date and block.');
 
+export const cropSetEstablishmentPatchSchema = z
+  .object({
+    action: z.literal('set-establishment'),
+    establishment: z.enum(['direct-seed', 'transplant']).nullable(),
+    startIndoors: plantingEstablishmentFields.startIndoors,
+    sowIndoorsOn: plantingEstablishmentFields.sowIndoorsOn
+  })
+  .describe(
+    'Owner only. Change "Seed or seedling?". Seed or bought seedlings skip the open seed-start tasks; seedlings started indoors write them again.'
+  );
+
 export const cropPatchSchema = z.discriminatedUnion('action', [
+  cropSetEstablishmentPatchSchema,
   cropStatusPatchSchema,
   cropSchedulePatchSchema,
   cropChangePluginPatchSchema,

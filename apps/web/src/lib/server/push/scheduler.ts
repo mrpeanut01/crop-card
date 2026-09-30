@@ -40,6 +40,7 @@ import { listOwnerIdsWithEmailOptIns, listOptedIn } from '$lib/db/emailAlertCons
 import { selectRecipients, sendToSubscriptions } from './dispatch';
 import { emailAlertOrigin, sendAlertEmails } from './emailAlerts';
 import { frostTonightAlerts, isInGroundOrImminent, type FrostPlantingSnapshot } from './frost';
+import { activeCoverByBlock } from '$lib/server/blockFrost.server';
 import {
   LOCK_WINDOW_MS,
   selectDueAlerts,
@@ -155,6 +156,10 @@ async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<Pus
   if (crops.length === 0) return [];
   const registry = await getRegistry();
   const blockName = new Map(listBlocks({ plantings: 'none' }).map((b) => [b.id, b.name]));
+  const coverByBlock = activeCoverByBlock(
+    crops.map((c) => c.blockId),
+    now
+  );
   const plantings: FrostPlantingSnapshot[] = [];
   for (const c of crops) {
     const plugin = registry.get(c.cropPluginId)?.plugin;
@@ -164,7 +169,8 @@ async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<Pus
       plantingDate: c.plantingDate,
       name: c.varietyDisplayName || crop?.displayName || c.cropPluginId,
       blockName: blockName.get(c.blockId),
-      hardiness: hardinessOf(crop)
+      hardiness: hardinessOf(crop),
+      cover: coverByBlock.get(c.blockId) ?? null
     };
     if (snapshot.hardiness !== 'hardy' && isInGroundOrImminent(snapshot, now)) {
       plantings.push(snapshot);

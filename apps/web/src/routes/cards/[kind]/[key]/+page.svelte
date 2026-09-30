@@ -17,6 +17,7 @@
   import { cardViewParams, snapshotOlderThan, withoutPrintParam } from '$lib/cards/viewParams';
   import { formatInstant } from '$lib/prefs';
   import FlockQuickActions from '$lib/components/animals/FlockQuickActions.svelte';
+  import SeedStartPanel from '$lib/components/cards/SeedStartPanel.svelte';
 
   const cards = new OfflineCards();
   const FRESH_PRINT_WAIT_MS = 5000;
@@ -178,6 +179,9 @@
         {unsynced}
         onChange={refreshUnsynced}
       />
+    {/if}
+    {#if card.kind === 'planting' && snapshot}
+      <SeedStartPanel {snapshot} plantingId={key.slice(key.indexOf('_') + 1)} {role} />
     {/if}
     <CareGuideList cards={careCards} {prefs} {now} />
     {#key key}

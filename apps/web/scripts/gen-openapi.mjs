@@ -35,6 +35,7 @@ import { z } from 'zod';
 import {
   blockCreateSchema,
   blockPatchSchema,
+  blockProtectionCreateSchema,
   fieldCreateSchema,
   fieldPatchSchema,
   mapFeatureCreateSchema,
@@ -87,10 +88,21 @@ import {
   withdrawalEntrySchema
 } from '../src/lib/animals/recordApiSchemas.ts';
 import { holdVoidSchema } from '../src/lib/animals/holdVoidSchema.ts';
-import { RECORD_KINDS } from '../src/lib/db/recordKinds.ts';
+import { biofixPutSchema } from '../src/lib/ipm/apiSchemas.ts';
+import { CARD_RECORD_KINDS } from '../src/lib/db/recordKinds.ts';
 import { emergencyContactSchema } from '../src/lib/farm/emergencyContacts.ts';
 import { CLIENT_RECORD_HEADER } from '../src/lib/clientRecordHeader.ts';
 import { feedUseSchema } from '../src/lib/stock/apiSchemas.ts';
+import {
+  seedStartCreateSchema,
+  seedStartPatchSchema,
+  seedStartProgressSchema
+} from '../src/lib/seedStart/apiSchemas.ts';
+import {
+  irrigationCreateSchema,
+  rainGaugeCreateSchema,
+  waterTargetSchema
+} from '../src/lib/irrigation/apiSchemas.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const APP_ROOT = resolve(__dirname, '..');
@@ -745,6 +757,65 @@ const paths = {
     }
   },
 
+  '/api/blocks/{id}/protections': {
+    parameters: [idPath('id', 'Block (bed) id.')],
+    get: {
+      summary: "List a bed's covers and its effective frost",
+      description:
+        'Phase 32E season extension. Any member. Returns the covers on the bed and its frost dates for the planning year (`?year=` to pick another) after covers: the largest single shift per side wins, shifts never add, a heated greenhouse is frost-free. Covers move planning windows only.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [{ name: 'year', in: 'query', required: false, schema: { type: 'integer' } }],
+      responses: {
+        200: jsonResponse('Covers and effective frost.', {
+          type: 'object',
+          required: ['protections', 'seasonYear', 'effectiveFrost', 'frost'],
+          properties: {
+            protections: { type: 'array', items: { type: 'object' } },
+            seasonYear: { type: 'integer' },
+            effectiveFrost: { type: 'object' },
+            frost: { type: 'object' }
+          }
+        }),
+        404: errorResponse('Block not found for the active Owner.')
+      }
+    },
+    post: {
+      summary: 'Add a cover to a bed',
+      description:
+        "Owner only. Omitted shifts take the kind's sourced default (`data`), or stay unknown when no source is on file; typed shifts are `manual`. Shifts are whole days, 0 to 120. Dates are epoch ms. Never gated by a closed season.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(blockProtectionCreateSchema),
+      responses: {
+        201: jsonResponse('Cover saved; the body is the refreshed list and frost.', {
+          type: 'object',
+          required: ['protection', 'protections', 'frost'],
+          properties: {
+            protection: { type: 'object' },
+            protections: { type: 'array', items: { type: 'object' } },
+            frost: { type: 'object' }
+          }
+        }),
+        400: errorResponse('Invalid body.'),
+        ...OWNER_ERRORS,
+        404: errorResponse('Block not found for the active Owner.')
+      }
+    }
+  },
+
+  '/api/blocks/{id}/protections/{pid}': {
+    parameters: [idPath('id', 'Block (bed) id.'), idPath('pid', 'Cover id.')],
+    delete: {
+      summary: 'Remove a cover',
+      description: 'Owner only. A hard delete: a cover is planning data, not a record.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Removed.', { type: 'object' }),
+        ...OWNER_ERRORS,
+        404: errorResponse('Block or cover not found for the active Owner.')
+      }
+    }
+  },
+
   '/api/map-features': {
     get: {
       summary: 'List map lines and points',
@@ -1331,6 +1402,113 @@ const paths = {
     }
   },
 
+  '/api/seed-starts': {
+    get: {
+      summary: "List a planting's seed-starting trays",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'cropId',
+          in: 'query',
+          required: true,
+          description: 'Planting id.',
+          schema: { type: 'string' }
+        }
+      ],
+      responses: {
+        200: jsonResponse('Trays, oldest sowing first.', {
+          type: 'object',
+          properties: { trays: { type: 'array', items: { type: 'object' } } }
+        }),
+        400: errorResponse('cropId missing.'),
+        ...AUTH_ERRORS
+      }
+    },
+    post: {
+      summary: 'Log a seed-starting tray',
+      description:
+        "Owner only. One row per tray for a planting. The planting's indoor sowing date becomes the earliest tray's sowing. Not gated by the season close-out. Safe to replay from the offline queue with the client record id header.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [clientRecordRef],
+      requestBody: jsonBody(seedStartCreateSchema),
+      responses: {
+        200: jsonResponse(
+          'A replay of a client record id that was already saved.',
+          DUPLICATE_SCHEMA
+        ),
+        201: jsonResponse('Tray saved.', {
+          type: 'object',
+          properties: { tray: { type: 'object' } }
+        }),
+        400: errorResponse(
+          'Invalid body, a planting, Area or stock lot that is not on this farm, or a future sowing (`IN_THE_FUTURE`).'
+        ),
+        ...AUTH_ERRORS
+      }
+    }
+  },
+
+  '/api/seed-starts/{id}': {
+    get: {
+      summary: 'Get one tray',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Tray id.')],
+      responses: {
+        200: jsonResponse('The tray.', {
+          type: 'object',
+          properties: { tray: { type: 'object' } }
+        }),
+        ...AUTH_ERRORS,
+        404: errorResponse('No such tray on this farm.')
+      }
+    },
+    patch: {
+      summary: 'Edit a tray',
+      description: 'Owner only, online only.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Tray id.')],
+      requestBody: jsonBody(seedStartPatchSchema),
+      responses: {
+        200: jsonResponse('Tray saved.', {
+          type: 'object',
+          properties: { tray: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body or a future sowing.'),
+        ...AUTH_ERRORS,
+        404: errorResponse('No such tray on this farm.')
+      }
+    }
+  },
+
+  '/api/seed-starts/{id}/progress': {
+    post: {
+      summary: 'Record germination or tray progress',
+      description:
+        'Owners and helpers. The germinated count is absolute; the value with the latest `observedAt` wins, so an older replay never overwrites a newer count (`countApplied: false`). Hardening and transplant dates keep the earliest value sent. Not gated by the season close-out. The `seed-start` offline queue kind replays here with the client record id header.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Tray id.'), clientRecordRef],
+      requestBody: jsonBody(seedStartProgressSchema),
+      responses: {
+        200: jsonResponse(
+          'A replay of a client record id that was already saved.',
+          DUPLICATE_SCHEMA
+        ),
+        201: jsonResponse('Saved.', {
+          type: 'object',
+          properties: { tray: { type: 'object' }, countApplied: { type: 'boolean' } }
+        }),
+        400: errorResponse(
+          'Invalid body, a count above the seeds in the tray (`OVER_TRAY`) or a future date.'
+        ),
+        ...AUTH_ERRORS,
+        404: errorResponse('No such tray on this farm.'),
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
+      }
+    }
+  },
+
   '/api/animals/production/record': {
     post: {
       summary: 'Log eggs, milk or a weight',
@@ -1416,6 +1594,161 @@ const paths = {
         ),
         ...OWNER_ERRORS,
         409: errorResponse('The label forbids grazing (`LABEL_FORBIDS_GRAZING`).')
+      }
+    }
+  },
+
+  '/api/irrigation': {
+    post: {
+      summary: 'Log a watering',
+      description:
+        'Owners and helpers; inspectors are read-only. Give `inches`, `gallons` or `durationMin` (minutes alone have no amount, so the watering advice cannot count them). `blockId` must be a bed of `fieldId`. `occurredAt` defaults to now and may not be in the future or more than a year back. A light record: no lock, not in compliance exports, never gated by the season close-out. Safe to replay from the offline queue with the client record id header.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [clientRecordRef],
+      requestBody: jsonBody(irrigationCreateSchema),
+      responses: {
+        200: jsonResponse(
+          'A replay of a client record id that was already saved.',
+          DUPLICATE_SCHEMA
+        ),
+        201: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['irrigation'],
+          properties: { irrigation: { type: 'object' } }
+        }),
+        400: errorResponse(
+          "Invalid body, another Owner's Area or bed, a bed outside the Area, or a time in the future (`IN_THE_FUTURE`) or over a year ago (`TOO_OLD`)."
+        ),
+        ...AUTH_ERRORS,
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
+      }
+    },
+    get: {
+      summary: 'List watering logs',
+      description:
+        "The active Owner's watering logs, newest first, at most 500. Every member can read them.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        { name: 'fieldId', in: 'query', required: false, schema: { type: 'string' } },
+        {
+          name: 'from',
+          in: 'query',
+          required: false,
+          description: 'Epoch ms.',
+          schema: { type: 'integer' }
+        },
+        {
+          name: 'to',
+          in: 'query',
+          required: false,
+          description: 'Epoch ms.',
+          schema: { type: 'integer' }
+        }
+      ],
+      responses: {
+        200: jsonResponse('Watering logs.', {
+          type: 'object',
+          required: ['irrigation'],
+          properties: { irrigation: { type: 'array', items: { type: 'object' } } }
+        }),
+        400: errorResponse('`from` or `to` is not epoch milliseconds.'),
+        401: errorResponse('Authentication required.')
+      }
+    }
+  },
+
+  '/api/irrigation/{id}': {
+    parameters: [idPath('id', 'Watering log id.')],
+    delete: {
+      summary: 'Remove a watering log',
+      description:
+        'The owner, or the member who logged it. No lock and no tombstone: a mistyped amount would mislead the watering advice for a week.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Removed.', { type: 'object', properties: { ok: { const: true } } }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Only the owner or the person who logged it can remove it.'),
+        404: errorResponse('No such watering log for the active Owner.')
+      }
+    }
+  },
+
+  '/api/irrigation/target': {
+    post: {
+      summary: "Set an Area's weekly water target",
+      description:
+        'Owner only. Stored as `manual`; `inches: null` goes back to the sourced default (1 inch a week, tagged `fallback`).',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(waterTargetSchema),
+      responses: {
+        200: jsonResponse('The target now in force.', {
+          type: 'object',
+          required: ['target'],
+          properties: { target: { type: ['object', 'null'] } }
+        }),
+        400: errorResponse("Invalid body or another Owner's Area."),
+        ...OWNER_ERRORS
+      }
+    }
+  },
+
+  '/api/irrigation/summary': {
+    get: {
+      summary: "One Area's watering summary",
+      description:
+        'Beds, the weekly target and where it came from, watering this week, recent gauge readings and every garden or field Area with its latest reading. Every member can read it.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [{ name: 'fieldId', in: 'query', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: jsonResponse('Summary.', { type: 'object' }),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('No such Area for the active Owner.')
+      }
+    }
+  },
+
+  '/api/rain-gauge': {
+    post: {
+      summary: 'Enter a rain-gauge reading',
+      description:
+        "Owners and helpers. A reading is the rain since that Area's previous reading, or the 24 hours before it when there is none in the last 7 days; each Area in `fieldIds` gets its own row and the answer says where each one counts from (`countsFrom`). Hours inside a gauge period take the gauge and ignore the weather station. Never gated by the season close-out. Safe to replay from the offline queue with the client record id header.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [clientRecordRef],
+      requestBody: jsonBody(rainGaugeCreateSchema),
+      responses: {
+        200: jsonResponse(
+          'A replay of a client record id that was already saved.',
+          DUPLICATE_SCHEMA
+        ),
+        201: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['readings'],
+          properties: { readings: { type: 'array', items: { type: 'object' } } }
+        }),
+        400: errorResponse(
+          "Invalid body, another Owner's Area, or a time in the future or over a year ago."
+        ),
+        ...AUTH_ERRORS,
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
+      }
+    }
+  },
+
+  '/api/rain-gauge/{id}': {
+    parameters: [idPath('id', 'Gauge reading id.')],
+    delete: {
+      summary: 'Remove a rain-gauge reading',
+      description: 'The owner, or the member who entered it.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Removed.', { type: 'object', properties: { ok: { const: true } } }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Only the owner or the person who entered it can remove it.'),
+        404: errorResponse('No such reading for the active Owner.')
       }
     }
   },
@@ -1896,8 +2229,9 @@ const paths = {
         name: 'kind',
         in: 'path',
         required: true,
-        description: 'Record kind.',
-        schema: { type: 'string', enum: [...RECORD_KINDS] }
+        description:
+          'Record kind. `irrigation` is a watering log, which is not a compliance record.',
+        schema: { type: 'string', enum: [...CARD_RECORD_KINDS] }
       },
       idPath('id', 'Record id.')
     ],
@@ -2094,6 +2428,68 @@ const paths = {
         400: errorResponse('Invalid body.'),
         401: errorResponse('Authentication required.'),
         409: errorResponse('Too many hints recorded for this user.')
+      }
+    }
+  },
+  '/api/weather/degree-days': {
+    get: {
+      summary: 'Degree days for the farm pest models',
+      description:
+        'Any member of the farm. For each degree-day pest model (or the one named by `model`): the weather station (nearest NOAA GHCN-Daily `USW` station within 30 miles), method, base and upper cutoff, the biofix with its provenance (`plugin` for January 1, `fallback` for the model date, `manual` for a recorded trap catch), the running total, the days missing and the last day counted, and the stage. Gaps are never filled, so a total with missing days is a lower bound. No location or no station within 30 miles answers 200 with `location` and a plain `message`. Advice is about scouting, trapping or covering only.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'model',
+          in: 'query',
+          required: false,
+          description: 'One pest model id. An unknown id answers 404.',
+          schema: { type: 'string', pattern: '^[a-z0-9][a-z0-9-]{0,63}$' }
+        },
+        {
+          name: 'year',
+          in: 'query',
+          required: false,
+          description: 'Calendar year; defaults to this year. A future year answers 400.',
+          schema: { type: 'integer', minimum: 2000, maximum: 2100 }
+        }
+      ],
+      responses: {
+        200: jsonResponse('Degree days per model.', {
+          type: 'object',
+          required: ['year', 'location', 'message', 'station', 'models'],
+          properties: {
+            year: { type: 'integer' },
+            location: { type: 'string', enum: ['ok', 'no-location', 'no-station'] },
+            message: { type: ['string', 'null'] },
+            station: { type: ['object', 'null'] },
+            dataError: { type: ['string', 'null'] },
+            models: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        400: errorResponse('Invalid query or a future year.'),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('Pest model not found.')
+      }
+    }
+  },
+
+  '/api/pest-models/{id}/biofix': {
+    parameters: [idPath('id', 'Pest model id.')],
+    put: {
+      summary: 'Record or clear the first trap catch',
+      description:
+        'Owners and helpers; inspectors are read-only. Sets the biofix of a trap-catch pest model for a year to the date of the first catch (`manual`), or clears it with `date: null` so the model date applies again. Models that count from a fixed date answer 400 `BIOFIX_NOT_TRAP`; a date after today answers 400 `IN_THE_FUTURE`. Never gated by a closed season.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(biofixPutSchema),
+      responses: {
+        200: jsonResponse('Saved or cleared.', {
+          type: 'object',
+          required: ['biofix'],
+          properties: { biofix: { type: ['object', 'null'] } }
+        }),
+        400: errorResponse('Invalid body, `BIOFIX_NOT_TRAP` or `IN_THE_FUTURE`.'),
+        ...AUTH_ERRORS,
+        404: errorResponse('Pest model not found.')
       }
     }
   }

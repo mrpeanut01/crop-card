@@ -12,7 +12,7 @@ const ids = (q: Parameters<typeof matchProhibitedDrugs>[0]) =>
 describe('PROHIBITED_EXTRA_LABEL_DRUGS table', () => {
   it('cites a 21 CFR 530.41 paragraph on every entry', () => {
     for (const entry of PROHIBITED_EXTRA_LABEL_DRUGS) {
-      expect(entry.cfr).toMatch(/^21 CFR 530\.41\((a|b)\)\(\d+\)$/);
+      expect(entry.cfr).toMatch(/^21 CFR 530\.41\((a|d)\)\(\d+\)$/);
       expect(entry.names.length).toBeGreaterThan(0);
       expect(entry.label.length).toBeGreaterThan(0);
     }

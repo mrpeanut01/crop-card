@@ -3,6 +3,34 @@ import fc from 'fast-check';
 import { LEDGER_CSV_HEADER, csvSafe, ledgerCsv } from './csv';
 import { personName } from './people';
 
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let value = '';
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === '"' && text[i + 1] === '"') {
+        value += '"';
+        i++;
+      } else if (ch === '"') quoted = false;
+      else value += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === ',') {
+      row.push(value);
+      value = '';
+    } else if (ch === '\r' && text[i + 1] === '\n') {
+      row.push(value);
+      rows.push(row);
+      row = [];
+      value = '';
+      i++;
+    } else value += ch;
+  }
+  return rows;
+}
+
 describe('ledgerCsv (F2-16)', () => {
   it('writes the fixed header and one row per entry', () => {
     const csv = ledgerCsv([
@@ -50,8 +78,9 @@ describe('ledgerCsv (F2-16)', () => {
             enteredBy: null
           }
         ]);
-        const cells = csv.split('\r\n')[1];
-        expect(cells.includes(',=') || cells.includes(',+') || cells.includes(',@')).toBe(false);
+        const rows = parseCsv(csv);
+        expect(rows).toHaveLength(2);
+        for (const value of rows[1]) expect(/^[=+\-@\t\r]/.test(value)).toBe(false);
       })
     );
   });

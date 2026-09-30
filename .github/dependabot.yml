@@ -8,8 +8,22 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     groups:
+      # Every npm minor and patch update in one weekly PR.
       minor-and-patch:
+        patterns: ['*']
         update-types: [minor, patch]
+    ignore:
+      # typescript 7 is the native compiler with no classic compiler API:
+      # svelte-check 4.7.x needs TS 6 alongside it plus --tsgo, and no
+      # typescript-eslint release allows >=6.1. TS 6 majors still come through.
+      - dependency-name: typescript
+        versions: ['>=7.0.0']
+      # jsdom 30 keeps a Blob's internals in a private #impl field; vitest
+      # 5.0.2's jsdom environment finds them through a Symbol that no longer
+      # exists, so URL.createObjectURL throws. Needs a vitest release that
+      # supports jsdom 30.
+      - dependency-name: jsdom
+        versions: ['>=30.0.0']
   - package-ecosystem: github-actions
     directory: /
     schedule:

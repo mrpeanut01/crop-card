@@ -31,8 +31,7 @@
     bind:value
     aria-invalid={error ? 'true' : undefined}
     aria-describedby={describedBy}
-    {...rest}
-  ></textarea>
+    {...rest}></textarea>
   {#if hint && !error}<div id={hintId} class="hint">{hint}</div>{/if}
   {#if error}<div id={errId} class="error" role="alert">{error}</div>{/if}
 </div>

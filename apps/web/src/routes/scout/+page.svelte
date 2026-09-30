@@ -348,8 +348,7 @@
       rows="3"
       maxlength="400"
       placeholder="Aphids on the kale, leaves chewed on the beans"
-      bind:value={note}
-    ></textarea>
+      bind:value={note}></textarea>
   </Card>
 </div>
 

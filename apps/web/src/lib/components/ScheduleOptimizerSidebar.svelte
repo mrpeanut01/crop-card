@@ -338,8 +338,7 @@
         bind:value={draft}
         onkeydown={onChatKeydown}
         disabled={busy}
-        aria-label="Chat input"
-      ></textarea>
+        aria-label="Chat input"></textarea>
       <button type="submit" class="send-btn" disabled={busy || !draft.trim()}>
         {busy ? '…' : 'Send'}
       </button>

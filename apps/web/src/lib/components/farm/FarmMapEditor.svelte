@@ -1850,8 +1850,7 @@
             <textarea
               bind:value={pasteText}
               rows="10"
-              placeholder={'{"type":"FeatureCollection","features":[...]}'}
-            ></textarea>
+              placeholder={'{"type":"FeatureCollection","features":[...]}'}></textarea>
           </label>
         {/if}
 

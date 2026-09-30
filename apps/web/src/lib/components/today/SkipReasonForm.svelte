@@ -28,8 +28,7 @@
     bind:this={box}
     bind:value={reason}
     rows="2"
-    placeholder="e.g. weather window closed · stock out · re-evaluated"
-  ></textarea>
+    placeholder="e.g. weather window closed · stock out · re-evaluated"></textarea>
   <div class="skip-actions">
     <button type="button" class="ghost" onclick={onCancel}>Cancel</button>
     <button type="button" class="primary" onclick={save} disabled={busy}>Save skip</button>

@@ -98,8 +98,7 @@
         bind:value={w.chatDraft}
         onkeydown={onChatKeydown}
         disabled={w.chatBusy}
-        aria-label="Refinement request"
-      ></textarea>
+        aria-label="Refinement request"></textarea>
       <button
         type="submit"
         class="btn-primary chat-send"

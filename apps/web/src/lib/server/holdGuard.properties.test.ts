@@ -580,14 +580,27 @@ describe('C-35 P1/P3/P4 through guardedHoldWrite', () => {
       }),
       {
         numRuns: 120,
-        // An attestation needs a spray before it in the same run, which
-        // random sequences reach only a handful of times; this example
-        // makes the coverage check below independent of the seed.
+        // An attestation needs a spray before it in the same run, and a
+        // withdrawal entry needs a dose before it, which random sequences
+        // reach only a handful of times; these examples make the coverage
+        // check below independent of the seed.
         examples: [
           [
             [
               { op: { t: 'spray', back: 2 * DAY, known: false, block: 0 }, tier: 'owner' },
               { op: { t: 'attest', pick: 0, days: 400 }, tier: 'owner' }
+            ]
+          ],
+          [
+            [
+              {
+                op: { t: 'dose', back: 2 * DAY, hen: true, known: true, course: false },
+                tier: 'owner'
+              },
+              {
+                op: { t: 'entry', pick: 0, back: 0, food: 'eggs', days: 40, end: false },
+                tier: 'owner'
+              }
             ]
           ]
         ]

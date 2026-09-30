@@ -99,8 +99,7 @@
           rows="5"
           maxlength={FEEDBACK_MESSAGE_MAX}
           required
-          name="message"
-        ></textarea>
+          name="message"></textarea>
       </label>
       <p class="context">
         We also send the page you are on (<code>{path}</code>), the app version and your browser

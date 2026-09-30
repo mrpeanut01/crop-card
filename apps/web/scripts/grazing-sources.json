@@ -100,36 +100,296 @@
         "quote": "DO NOT feed, graze, or harvest alfalfa or clover for 30 days following an application of Pursuit to alfalfa or clover.",
         "note": "The label states no slaughter withdrawal, so 0; animals cannot graze the treated stand for 30 days in any case. The grazing statement is the only support; no sentence says 'no slaughter restriction'."
       }
+    },
+    "balan-benefin": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/034704-00746-20251105.pdf",
+        "publisher": "Loveland Products (EPA PPLS stamped label)",
+        "date": "2025-11-05",
+        "quote": "CROPS Alfalfa, Birdsfoot Trefoil, Clover Apply and incorporate BALAN DF before seeding.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30"
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/034704-00746-20251105.pdf",
+        "publisher": "Loveland Products (EPA PPLS stamped label)",
+        "date": "2025-11-05",
+        "quote": "CROPS Alfalfa, Birdsfoot Trefoil, Clover Apply and incorporate BALAN DF before seeding.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30"
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/034704-00746-20251105.pdf",
+        "publisher": "Loveland Products (EPA PPLS stamped label)",
+        "date": "2025-11-05",
+        "quote": "CROPS Alfalfa, Birdsfoot Trefoil, Clover Apply and incorporate BALAN DF before seeding.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30"
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/034704-00746-20251105.pdf",
+        "publisher": "Loveland Products (EPA PPLS stamped label)",
+        "date": "2025-11-05",
+        "quote": "CROPS Alfalfa, Birdsfoot Trefoil, Clover Apply and incorporate BALAN DF before seeding.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30"
+      }
+    },
+    "dimilin-2l": {
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00461-20201102.pdf",
+        "publisher": "UPL NA / MacDermid Agricultural Solutions (EPA PPLS stamped label)",
+        "date": "2020-11-02",
+        "quote": "x DO NOT cut grass within 1 day of application.",
+        "note": "Grassland use restriction. Other hay intervals on this label: alfalfa forage or hay 1 day; barley/oats/triticale/wheat hay 15 days (western states only, grain 50 days, forage 3 days). Grassland governs pasture and hay-grass use, so 1 recorded; owner may prefer 15 as the stricter crop reading."
+      },
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00461-20201102.pdf",
+        "publisher": "UPL NA / MacDermid Agricultural Solutions (EPA PPLS stamped label)",
+        "date": "2020-11-02",
+        "quote": "GRASSLAND[**]: rangeland; pastures; improved pastures and similar areas used for production of native, domesticated forage grasses for harvest for livestock primarily for grazing or mechanical harvest",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30. The grassland section lists no grazing restriction. The only grazing statement ('DO NOT harvest cover crops for animal feed or graze livestock in treated groves') applies to citrus groves."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00461-20201102.pdf",
+        "publisher": "UPL NA / MacDermid Agricultural Solutions (EPA PPLS stamped label)",
+        "date": "2020-11-02",
+        "quote": "GRASSLAND[**]: rangeland; pastures; improved pastures and similar areas used for production of native, domesticated forage grasses for harvest for livestock primarily for grazing or mechanical harvest",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30. No dairy statement in the grassland section."
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00461-20201102.pdf",
+        "publisher": "UPL NA / MacDermid Agricultural Solutions (EPA PPLS stamped label)",
+        "date": "2020-11-02",
+        "quote": "GRASSLAND[**]: rangeland; pastures; improved pastures and similar areas used for production of native, domesticated forage grasses for harvest for livestock primarily for grazing or mechanical harvest",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30. No slaughter statement anywhere on the label."
+      }
+    },
+    "banvel": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "publisher": "Arysta LifeScience North America (EPA PPLS stamped label, reg. 66330-276, now 70506-461)",
+        "date": "2009-09-11",
+        "quote": "Animals cannot be removed from treated area for slaughter prior to 30 days after last applictions. • There is no waiting period between treatment and grazing for non-lactating dairy animals.",
+        "note": "No waiting period before grazing by non-lactating animals (small-grain pasture statement; the pasture section's table is headed for lactating dairy animals only)."
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "publisher": "Arysta LifeScience North America (EPA PPLS stamped label, reg. 66330-276, now 70506-461)",
+        "date": "2009-09-11",
+        "quote": "DICAMBA DMA 4# AG Rate per Treated Acre Up to 1 pint (1/2 Ib ail Up to 1 quart (1 Ib ail Up to 2 quarts (2 Ib ail TIMING RESTRICTIONS FOR LACTATING DAIRY ANIMALS FOLLOWING TREATMENT Days Before Grazing 7 days 21 days 40 days Days Before Hay Harvest 37 days 51 days 70 days",
+        "note": "Highest labelled rate (up to 2 quarts/acre): 70 days. 1 quart 51 days, up to 1 pint (plugin rate) 37 days. Small-grain pasture/hay section also says 'DO NOT harvest hay form treated areas before 37 days after treatment'."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "publisher": "Arysta LifeScience North America (EPA PPLS stamped label, reg. 66330-276, now 70506-461)",
+        "date": "2009-09-11",
+        "quote": "DICAMBA DMA 4# AG Rate per Treated Acre Up to 1 pint (1/2 Ib ail Up to 1 quart (1 Ib ail Up to 2 quarts (2 Ib ail TIMING RESTRICTIONS FOR LACTATING DAIRY ANIMALS FOLLOWING TREATMENT Days Before Grazing 7 days 21 days 40 days Days Before Hay Harvest 37 days 51 days 70 days",
+        "note": "Highest labelled rate (up to 2 quarts/acre): 40 days. 1 quart 21 days, up to 1 pint (plugin rate) 7 days."
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "publisher": "Arysta LifeScience North America (EPA PPLS stamped label, reg. 66330-276, now 70506-461)",
+        "date": "2009-09-11",
+        "quote": "Animals cannot be removed from treated area for slaughter prior to 30 days after last applictions. • There is no waiting period between treatment and grazing for non-lactating dairy animals.",
+        "note": "Stated in the small grains (wheat, barley, oats) used for pasture or hay section; the pasture/rangeland section states no slaughter interval. Applied as the stricter reading for the whole product."
+      }
+    },
+    "duracor-aminopyralid-florpyrauxifen": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00739-20191126.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label, GF-3850 alternate brand DuraCor)",
+        "date": "2019-11-26",
+        "quote": "Grazing and Haying Restrictions: Cutting hay too soon after spraying weeds can compromise the weed control. After application wait 14 days prior to cutting grass hay to allow for maximum herbicide activity.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30"
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00739-20191126.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label, GF-3850 alternate brand DuraCor)",
+        "date": "2019-11-26",
+        "quote": "Wait 14 days prior to cutting grass hay to allow for maximum herbicide activity.",
+        "note": "The label also states a 7-day preharvest interval ('Do not cut forage for hay within 7 days of application'); 14 days is the longer and is recorded. Hay from treated grass within the preceding 18 months may be used only on the farm or ranch where applied."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00739-20191126.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label, GF-3850 alternate brand DuraCor)",
+        "date": "2019-11-26",
+        "quote": "Grazing and Haying Restrictions: Cutting hay too soon after spraying weeds can compromise the weed control. After application wait 14 days prior to cutting grass hay to allow for maximum herbicide activity.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30"
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00739-20191126.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label, GF-3850 alternate brand DuraCor)",
+        "date": "2019-11-26",
+        "quote": "Grazing and Haying Restrictions: Cutting hay too soon after spraying weeds can compromise the weed control. After application wait 14 days prior to cutting grass hay to allow for maximum herbicide activity.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30"
+      },
+      "manureCarryover": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00739-20191126.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label, GF-3850 alternate brand DuraCor)",
+        "date": "2019-11-26",
+        "quote": "Do not use manure from animals that have grazed forage or eaten hay harvested from treated areas within the previous 3 days, in compost, mulch, or mushroom spawn."
+      }
+    },
+    "grazonnext-hl": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00628-20170313.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label)",
+        "date": "2017-03-13",
+        "quote": "Grazing and Haying Restrictions: Do not harvest forage for hay within 7 days of GrazonNext HL application. Cutting hay too soon after spraying weeds can compromise the weed control. Wait 14 days prior to cutting grass hay to allow for maximum herbicide activity.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30"
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00628-20170313.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label)",
+        "date": "2017-03-13",
+        "quote": "Wait 14 days prior to cutting grass hay to allow for maximum herbicide activity.",
+        "note": "The label also states 'Do not harvest forage for hay within 7 days of GrazonNext HL application'; 14 days is the longer and is recorded."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00628-20170313.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label)",
+        "date": "2017-03-13",
+        "quote": "Grazing and Haying Restrictions: Do not harvest forage for hay within 7 days of GrazonNext HL application. Cutting hay too soon after spraying weeds can compromise the weed control. Wait 14 days prior to cutting grass hay to allow for maximum herbicide activity.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30"
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00628-20170313.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label)",
+        "date": "2017-03-13",
+        "quote": "Grazing and Haying Restrictions: Do not harvest forage for hay within 7 days of GrazonNext HL application. Cutting hay too soon after spraying weeds can compromise the weed control. Wait 14 days prior to cutting grass hay to allow for maximum herbicide activity.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30"
+      },
+      "manureCarryover": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00628-20170313.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label)",
+        "date": "2017-03-13",
+        "quote": "Do not use manure from animals that have grazed forage or eaten hay harvested from treated areas within the previous 3 days, in compost, mulch or mushroom spawn."
+      }
+    },
+    "harmony-sg-thifensulfuron": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+        "publisher": "FMC Corporation (EPA PPLS stamped label)",
+        "date": "2020-04-17",
+        "quote": "Do not graze or feed forage or grain from treated field corn to livestock within 30 days of application.",
+        "note": "Cereals and soybeans: 'Allow at least 7 days between application and grazing of treated forage.' Field corn is 30 days; the longer is recorded. The label has no pasture or rangeland use."
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+        "publisher": "FMC Corporation (EPA PPLS stamped label)",
+        "date": "2020-04-17",
+        "quote": "Allow at least 30 days between application and feeding of dried hay from treated areas to livestock.",
+        "note": "Applies to dried hay from treated cereals and soybeans; the label has no pasture or grass-hay use."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+        "publisher": "FMC Corporation (EPA PPLS stamped label)",
+        "date": "2020-04-17",
+        "quote": "Do not graze or feed forage or grain from treated field corn to livestock within 30 days of application.",
+        "note": "The label names no separate dairy interval; its livestock feeding restriction has no dairy exception, so the general 30 days is recorded."
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+        "publisher": "FMC Corporation (EPA PPLS stamped label)",
+        "date": "2020-04-17",
+        "quote": "Harvested straw may be used for bedding and/or feed.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30"
+      }
+    },
+    "raptor-imazamox": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00379-20210430.pdf",
+        "publisher": "BASF Corporation (EPA PPLS stamped label)",
+        "date": "2021-04-30",
+        "quote": "has no preharvest interval (PHI) for any crop.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30. The label covers alfalfa grown for forage, hay or seed and has no grazing or haying statement; the only related sentence is the no-PHI statement."
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00379-20210430.pdf",
+        "publisher": "BASF Corporation (EPA PPLS stamped label)",
+        "date": "2021-04-30",
+        "quote": "has no preharvest interval (PHI) for any crop.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00379-20210430.pdf",
+        "publisher": "BASF Corporation (EPA PPLS stamped label)",
+        "date": "2021-04-30",
+        "quote": "has no preharvest interval (PHI) for any crop.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30."
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00379-20210430.pdf",
+        "publisher": "BASF Corporation (EPA PPLS stamped label)",
+        "date": "2021-04-30",
+        "quote": "has no preharvest interval (PHI) for any crop.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30."
+      }
+    },
+    "glyphosate-4-plus": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/081927-00009-20200224.pdf",
+        "publisher": "Alligare, LLC (EPA PPLS stamped label)",
+        "date": "2020-02-24",
+        "quote": "Remove domestic livestock before application and wait 8 weeks after application before grazing or harvesting.",
+        "note": "Strictest stated interval on the label: 8 weeks (56 days) for alfalfa/clover/forage legume preplant, preemergence and renovation, and for pasture preplant, preemergence and renovation; 'Do not feed or graze treated areas for 8 weeks following application' for forage grass seed renovation. Other uses are shorter: 14 days for pasture spot and wiper applications, 36 hours for dormant and preharvest alfalfa. Recorded the longest."
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/081927-00009-20200224.pdf",
+        "publisher": "Alligare, LLC (EPA PPLS stamped label)",
+        "date": "2020-02-24",
+        "quote": "Remove domestic livestock before application and wait 8 weeks after application before grazing or harvesting.",
+        "note": "Strictest stated interval on the label: 8 weeks (56 days) for alfalfa/clover/forage legume preplant, preemergence and renovation, and for pasture preplant, preemergence and renovation; 'Do not feed or graze treated areas for 8 weeks following application' for forage grass seed renovation. Other uses are shorter: 14 days for pasture spot and wiper applications, 36 hours for dormant and preharvest alfalfa. Recorded the longest. The label applies the same wait to harvesting."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/081927-00009-20200224.pdf",
+        "publisher": "Alligare, LLC (EPA PPLS stamped label)",
+        "date": "2020-02-24",
+        "quote": "Remove domestic livestock before application and wait 8 weeks after application before grazing or harvesting.",
+        "note": "The label names no separate interval for lactating dairy animals; the wait applies to all domestic livestock, so 56."
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/081927-00009-20200224.pdf",
+        "publisher": "Alligare, LLC (EPA PPLS stamped label)",
+        "date": "2020-02-24",
+        "quote": "Remove domestic livestock before application and wait 8 weeks after application before grazing or harvesting.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30. The label has no slaughter statement; the quote is the closest sentence on pasture use."
+      }
+    },
+    "stinger": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20190311.pdf",
+        "publisher": "Dow AgroSciences LLC (EPA PPLS stamped label)",
+        "date": "2019-03-11",
+        "quote": "Do not allow livestock to graze treated areas or harvest treated corn silage as feed within 40 days after last treatment.",
+        "note": "Longest stated interval across uses: 40 days for field corn. The rangeland and permanent grass pasture use has none ('There are no further restrictions on grazing or hay harvest following application of Stinger at labeled rates.'). Corn rate is the highest labelled rate for this restriction (2/3 pint per acre per year)."
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20190311.pdf",
+        "publisher": "Dow AgroSciences LLC (EPA PPLS stamped label)",
+        "date": "2019-03-11",
+        "quote": "Do not allow livestock to graze treated areas or harvest treated corn silage as feed within 40 days after last treatment.",
+        "note": "Longest stated interval across uses: 40 days for field corn. The rangeland and permanent grass pasture use has none ('There are no further restrictions on grazing or hay harvest following application of Stinger at labeled rates.'). Corn rate is the highest labelled rate for this restriction (2/3 pint per acre per year). The 40 days covers corn silage harvest; the label gives no hay number for corn, and for grain fields says 'Do not harvest hay from treated grain fields.'"
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20190311.pdf",
+        "publisher": "Dow AgroSciences LLC (EPA PPLS stamped label)",
+        "date": "2019-03-11",
+        "quote": "Do not permit lactating dairy animals or meat animals being finished for slaughter to forage or graze treated grain fields within 1 week after treatment.",
+        "note": "Grain fields (wheat, barley, oats) give 1 week to lactating dairy; the 40-day corn grazing/silage wait covers all livestock and is longer, so 40 is recorded. Pasture use has no restriction."
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20190311.pdf",
+        "publisher": "Dow AgroSciences LLC (EPA PPLS stamped label)",
+        "date": "2019-03-11",
+        "quote": "Do not permit lactating dairy animals or meat animals being finished for slaughter to forage or graze treated grain fields within 1 week after treatment.",
+        "note": "Grain fields: 1 week before slaughter. The corn grazing wait is 40 days and covers all livestock, so 40 is recorded. Pasture use has no restriction."
+      },
+      "manureCarryover": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20190311.pdf",
+        "publisher": "Dow AgroSciences LLC (EPA PPLS stamped label)",
+        "date": "2019-03-11",
+        "quote": "Do not spread manure from animals that have grazed or consumed forage or hay from treated areas on land used for growing susceptible broadleaf plants or apply such materials to land used for growing broadleaf crops, ornamentals, orchards, or other susceptible desirable plants.",
+        "note": "Also: 'Do not transfer livestock from treated grazing areas (or feeding of treated hay) to sensitive broadleaf crop areas without first allowing 7 days of grazing on an untreated pasture (or feeding of treated hay).' and no use of hay, straw, manure or bedding straw from treated areas for composting or mulching where susceptible plants may be grown the following season."
+      }
     }
   },
-  "pastureAllowlist": [
-    {
-      "pluginId": "balan-benefin",
-      "reason": "Balan DF (EPA 34704-746, label accepted 2025-11-05) is applied and incorporated before seeding alfalfa, birdsfoot trefoil and clover, and the label states no grazing, haying, dairy or slaughter interval anywhere. The label was read in full for Task 10; silence cannot be quoted as a 0, so no block is recorded. Needs a human decision on whether a label with no statement counts as no restriction."
-    },
-    {
-      "pluginId": "banvel",
-      "reason": "The plugin names no EPA registration number and no registrant label, so there is no single current label to read. Left for when an owner names the product or a label is chosen."
-    },
-    {
-      "pluginId": "dimilin-2l",
-      "reason": "The plugin carries EPA 70506-525, but the EPA PPLS listing for that number serves the UPL/MacDermid Dimilin 2L label for EPA 400-461 (accepted 2020-11-02), so the label does not match the plugin's number. That label gives alfalfa forage or hay a 1-day preharvest interval and grass forage a 15-day hay interval on small-grain use, and states no grazing, dairy or slaughter interval. Left until the number is reconciled and the label states the four intervals."
-    },
-    {
-      "pluginId": "duracor-aminopyralid-florpyrauxifen",
-      "reason": "DuraCor (EPA 62719-739, only PPLS label: proposed Section 3 label 11-22-19) states a 14-day wait before cutting grass hay (7-day harvest restriction on the hay supplemental label) but states no grazing, lactating dairy or slaughter interval, so the block cannot be completed from the label. It warns of manure and compost carryover (3-day transfer rule, 18 months for hay and straw)."
-    },
-    {
-      "pluginId": "grazonnext-hl",
-      "reason": "GrazonNext HL (EPA 62719-628, master label amended 01-25-17; the latest PPLS file, 2020-03-24, is an expired supplemental label) states do not harvest hay within 7 days and wait 14 days to cut grass hay, but states no grazing, lactating dairy or slaughter interval, so the block cannot be completed from the label. It warns of manure and compost carryover."
-    },
-    {
-      "pluginId": "harmony-sg-thifensulfuron",
-      "reason": "The Harmony SG label (EPA 279-9595, accepted 2020-04-17) has no pasture use, although the plugin notes say it does. It gives grazing and feeding intervals only for cereals, soybeans and field corn (7 days forage, 30 days hay, 30 days for field corn grain and forage) and no lactating dairy or slaughter interval. Left until the plugin note is corrected or a decision is made on recording crop-forage intervals."
-    },
-    {
-      "pluginId": "raptor-imazamox",
-      "reason": "Raptor (EPA 241-379, label accepted 2021-04-30) says it has no preharvest interval for any crop, but states no grazing, lactating dairy or slaughter interval for alfalfa forage or hay, so the block cannot be completed from the label."
-    }
-  ]
+  "pastureAllowlist": []
 }

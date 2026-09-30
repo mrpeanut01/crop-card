@@ -1,0 +1,42 @@
+{
+  "pluginId": "cydectin-sheep-drench",
+  "displayName": "Cydectin Oral Drench for Sheep (moxidectin)",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "dewormer",
+  "activeIngredients": [
+    {
+      "name": "Moxidectin"
+    }
+  ],
+  "approval": {
+    "kind": "NADA",
+    "number": "141-247"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "sheep",
+      "class": "all",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "meatDays": 7
+      }
+    },
+    {
+      "speciesId": "sheep",
+      "class": "lactating-dairy",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "doNotUseFor": [
+          "milk"
+        ]
+      }
+    }
+  ],
+  "notes": "Oral drench, 1 mg moxidectin/mL, for sheep only."
+}

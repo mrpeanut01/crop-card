@@ -1,0 +1,42 @@
+{
+  "pluginId": "synanthic-bovine",
+  "displayName": "Synanthic Bovine Dewormer Suspension 22.5% (oxfendazole)",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "dewormer",
+  "activeIngredients": [
+    {
+      "name": "Oxfendazole"
+    }
+  ],
+  "approval": {
+    "kind": "NADA",
+    "number": "140-854"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "meatDays": 7
+      }
+    },
+    {
+      "speciesId": "cattle",
+      "class": "lactating-dairy",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "doNotUseFor": [
+          "milk"
+        ]
+      }
+    }
+  ],
+  "notes": "Cattle only."
+}

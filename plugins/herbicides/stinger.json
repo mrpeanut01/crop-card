@@ -41,5 +41,13 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "grazingRestrictions": {
+    "grazeDays": 40,
+    "hayDays": 40,
+    "lactatingDairyGrazeDays": 40,
+    "meatAnimalRemovalBeforeSlaughterDays": 40,
+    "manureCarryover": true,
+    "source": "Stinger herbicide, EPA Reg. No. 62719-73, label accepted 2019-03-11"
+  }
 }

@@ -1,0 +1,40 @@
+{
+  "pluginId": "eprinex-pour-on",
+  "displayName": "Eprinex Pour-On (eprinomectin) for Beef and Dairy Cattle",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "external-parasiticide",
+  "activeIngredients": [
+    {
+      "name": "Eprinomectin"
+    }
+  ],
+  "approval": {
+    "kind": "NADA",
+    "number": "141-079"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "pour-on"
+      ],
+      "withdrawal": {
+        "meatDays": 0
+      }
+    },
+    {
+      "speciesId": "cattle",
+      "class": "lactating-dairy",
+      "routes": [
+        "pour-on"
+      ],
+      "withdrawal": {
+        "milkHours": 0
+      }
+    }
+  ],
+  "notes": "Internal and external parasites of beef and dairy cattle, including lactating dairy cattle. The label also says a withdrawal period has not been established for pre-ruminating calves and not to use in calves to be processed for veal."
+}

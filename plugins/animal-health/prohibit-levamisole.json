@@ -1,0 +1,64 @@
+{
+  "pluginId": "prohibit-levamisole",
+  "displayName": "Prohibit Soluble Drench Powder (levamisole hydrochloride)",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "dewormer",
+  "activeIngredients": [
+    {
+      "name": "Levamisole hydrochloride"
+    }
+  ],
+  "approval": {
+    "kind": "ANADA",
+    "number": "200-225"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "meatDays": 2
+      }
+    },
+    {
+      "speciesId": "cattle",
+      "class": "lactating-dairy",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "doNotUseFor": [
+          "milk"
+        ]
+      }
+    },
+    {
+      "speciesId": "sheep",
+      "class": "all",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "meatDays": 3
+      }
+    },
+    {
+      "speciesId": "sheep",
+      "class": "lactating-dairy",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "doNotUseFor": [
+          "milk"
+        ]
+      }
+    }
+  ],
+  "notes": "Cattle and sheep dewormer, oral drench."
+}

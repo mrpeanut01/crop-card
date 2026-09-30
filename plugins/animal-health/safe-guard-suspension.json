@@ -1,0 +1,62 @@
+{
+  "pluginId": "safe-guard-suspension",
+  "displayName": "Safe-Guard Suspension 10% (fenbendazole)",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "dewormer",
+  "activeIngredients": [
+    {
+      "name": "Fenbendazole"
+    }
+  ],
+  "approval": {
+    "kind": "NADA",
+    "number": "128-620"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "meatDays": 8
+      }
+    },
+    {
+      "speciesId": "cattle",
+      "class": "lactating-dairy",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "milkHours": 48
+      }
+    },
+    {
+      "speciesId": "goat",
+      "class": "all",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "meatDays": 6
+      }
+    },
+    {
+      "speciesId": "goat",
+      "class": "lactating-dairy",
+      "routes": [
+        "oral"
+      ],
+      "withdrawal": {
+        "doNotUseFor": [
+          "milk"
+        ]
+      }
+    }
+  ],
+  "notes": "Safe-Guard Suspension 10% (100 mg/mL) for beef and dairy cattle and goats. The label also says not for use in beef calves less than 2 months of age, dairy calves and veal calves, and gives no withdrawal for pre-ruminating calves. The Safe-Guard Paste has a different milk time (96 hours) and is a different product."
+}

@@ -1,0 +1,31 @@
+{
+  "pluginId": "amprol-poultry",
+  "displayName": "Amprol 9.6% Oral Solution (amprolium) for Poultry",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "coccidiostat",
+  "activeIngredients": [
+    {
+      "name": "Amprolium"
+    }
+  ],
+  "approval": {
+    "kind": "NADA",
+    "number": "013-149"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "chicken",
+      "class": "all",
+      "routes": [
+        "drinking-water"
+      ],
+      "withdrawal": {
+        "meatDays": 0,
+        "eggsDays": 0
+      }
+    }
+  ],
+  "notes": "For growing chickens, turkeys and laying hens. Turkeys have no species plugin, so only chickens are recorded."
+}

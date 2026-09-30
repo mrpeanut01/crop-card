@@ -96,5 +96,129 @@
       }
     ]
   },
-  "entries": {}
+  "entries": {
+    "safe-guard-suspension": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=9188886a-54bc-4c68-9f1d-37a20e031076",
+        "publisher": "Merck Animal Health, Safe-Guard (fenbendazole) Suspension 10% label, DailyMed",
+        "date": "2026-06-17",
+        "quote": "Cattle must not be slaughtered for human consumption within 8 days following last treatment with this drug product."
+      },
+      "withdrawal.cattle.lactating-dairy.milkHours": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=9188886a-54bc-4c68-9f1d-37a20e031076",
+        "publisher": "Merck Animal Health, Safe-Guard (fenbendazole) Suspension 10% label, DailyMed",
+        "date": "2026-06-17",
+        "quote": "Milk taken from cows during treatment and for 48 hours after the last treatment must not be used for human consumption."
+      },
+      "withdrawal.goat.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=9188886a-54bc-4c68-9f1d-37a20e031076",
+        "publisher": "Merck Animal Health, Safe-Guard (fenbendazole) Suspension 10% label, DailyMed",
+        "date": "2026-06-17",
+        "quote": "Goats must not be slaughtered for human consumption within 6 days following last treatment with this drug product."
+      },
+      "withdrawal.goat.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=9188886a-54bc-4c68-9f1d-37a20e031076",
+        "publisher": "Merck Animal Health, Safe-Guard (fenbendazole) Suspension 10% label, DailyMed",
+        "date": "2026-06-17",
+        "quote": "Because a milk discard time has not been established, do not use in lactating goats."
+      }
+    },
+    "ivomec-injection": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=84fe39b2-0423-479a-b81f-198e2fb4e826",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec (ivermectin) Injection label, DailyMed",
+        "date": "2026-07-01",
+        "quote": "Do not treat cattle within 35 days of slaughter."
+      },
+      "withdrawal.cattle.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=84fe39b2-0423-479a-b81f-198e2fb4e826",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec (ivermectin) Injection label, DailyMed",
+        "date": "2026-07-01",
+        "quote": "Because a withdrawal time in milk has not been established, do not use in female dairy cattle of breeding age.",
+        "note": "The label says female dairy cattle of breeding age; read here as lactating dairy, the stricter of the two."
+      },
+      "withdrawal.pig.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=84fe39b2-0423-479a-b81f-198e2fb4e826",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec (ivermectin) Injection label, DailyMed",
+        "date": "2026-07-01",
+        "quote": "Do not treat swine within 18 days of slaughter."
+      }
+    },
+    "ivomec-pour-on": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=a3ee24dc-527f-4880-a55e-acd33b833192",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec Pour-On (ivermectin topical solution) label, DailyMed",
+        "date": "2024-07-18",
+        "quote": "Cattle must not be treated within 48 days of slaughter for human consumption."
+      },
+      "withdrawal.cattle.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=a3ee24dc-527f-4880-a55e-acd33b833192",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec Pour-On (ivermectin topical solution) label, DailyMed",
+        "date": "2024-07-18",
+        "quote": "Because a withdrawal time in milk has not been established, do not use in female dairy cattle of breeding age.",
+        "note": "The label says female dairy cattle of breeding age; read here as lactating dairy, the stricter of the two."
+      }
+    },
+    "ivomec-sheep-drench": {
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=42685f13-73db-413b-bc6e-43431f098f8e",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec (ivermectin) Drench label, DailyMed",
+        "date": "2025-10-31",
+        "quote": "Do not treat sheep within 11 days of slaughter."
+      }
+    },
+    "prohibit-levamisole": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=baf0da35-573e-4abb-bdef-18870d5f5f72",
+        "publisher": "Huvepharma, Prohibit (levamisole hydrochloride) Soluble Drench Powder label, DailyMed",
+        "date": "2026-07-07",
+        "quote": "Do not administer to cattle within 48 hours of slaughter for food."
+      },
+      "withdrawal.cattle.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=baf0da35-573e-4abb-bdef-18870d5f5f72",
+        "publisher": "Huvepharma, Prohibit (levamisole hydrochloride) Soluble Drench Powder label, DailyMed",
+        "date": "2026-07-07",
+        "quote": "To prevent residues in milk, do not administer to dairy animals of breeding age.",
+        "note": "The label says dairy animals of breeding age; read here as lactating dairy, the stricter of the two."
+      },
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=baf0da35-573e-4abb-bdef-18870d5f5f72",
+        "publisher": "Huvepharma, Prohibit (levamisole hydrochloride) Soluble Drench Powder label, DailyMed",
+        "date": "2026-07-07",
+        "quote": "Do not administer to sheep within 72 hours of slaughter for food."
+      },
+      "withdrawal.sheep.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=baf0da35-573e-4abb-bdef-18870d5f5f72",
+        "publisher": "Huvepharma, Prohibit (levamisole hydrochloride) Soluble Drench Powder label, DailyMed",
+        "date": "2026-07-07",
+        "quote": "To prevent residues in milk, do not administer to dairy animals of breeding age.",
+        "note": "The label says dairy animals of breeding age without naming a species; applied to sheep as the stricter reading."
+      }
+    },
+    "corid-solution": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=f542114b-d049-4921-96a4-4047ecc07e13",
+        "publisher": "Huvepharma, Corid (amprolium oral solution) 9.6% label, DailyMed",
+        "date": "2026-09-22",
+        "quote": "No withdrawal period is required when used according to labeling.",
+        "note": "The label states no withdrawal period at all; only meat is recorded because the label's uses are calves, growing beef cattle and replacement heifers under one year, and it names no milk time."
+      }
+    },
+    "amprol-poultry": {
+      "withdrawal.chicken.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=831141f7-9458-4de5-9ddc-d183e220fbb7",
+        "publisher": "Huvepharma, Amprol (amprolium oral solution) 9.6% label, DailyMed",
+        "date": "2026-05-21",
+        "quote": "No withdrawal period is required when used according to labeling.",
+        "note": "The label names growing chickens, turkeys and laying hens."
+      },
+      "withdrawal.chicken.all.eggsDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=831141f7-9458-4de5-9ddc-d183e220fbb7",
+        "publisher": "Huvepharma, Amprol (amprolium oral solution) 9.6% label, DailyMed",
+        "date": "2026-05-21",
+        "quote": "No withdrawal period is required when used according to labeling.",
+        "note": "The label names laying hens among the animals it is for."
+      }
+    }
+  }
 }

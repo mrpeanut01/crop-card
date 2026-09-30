@@ -1,0 +1,31 @@
+{
+  "pluginId": "corid-solution",
+  "displayName": "Corid 9.6% Oral Solution (amprolium)",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "coccidiostat",
+  "activeIngredients": [
+    {
+      "name": "Amprolium"
+    }
+  ],
+  "approval": {
+    "kind": "NADA",
+    "number": "013-149"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "drinking-water",
+        "oral"
+      ],
+      "withdrawal": {
+        "meatDays": 0
+      }
+    }
+  ],
+  "notes": "For calves, growing beef steers and heifers, and replacement beef and dairy heifers under one year. Not for use in veal calves, and no withdrawal period has been established for pre-ruminating calves. Milk is left unrecorded on purpose."
+}

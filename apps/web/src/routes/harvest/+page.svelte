@@ -14,6 +14,7 @@
   import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
   import SetupPlantingBackfill from '$lib/components/setup/SetupPlantingBackfill.svelte';
   import type { SetupPlantingResult } from '$lib/setup/types';
+  import { RECORD_SALE_OFFLINE, recordSaleHref, type SaleLink } from '$lib/finance/harvestSale';
 
   let { data } = $props();
 
@@ -26,6 +27,22 @@
   let lastNotice = $state<string | null>(null);
   // #324 — PHI warning surfaced after a successful commit (non-blocking).
   let phiWarning = $state<string | null>(null);
+  // F2-15: after a saved harvest, owners get a secondary "Record a sale".
+  let lastSale = $state<(SaleLink & { name: string }) | null>(null);
+  let saleQueued = $state<string | null>(null);
+  let online = $state(true);
+
+  $effect(() => {
+    online = navigator.onLine !== false;
+    const up = () => (online = true);
+    const down = () => (online = false);
+    window.addEventListener('online', up);
+    window.addEventListener('offline', down);
+    return () => {
+      window.removeEventListener('online', up);
+      window.removeEventListener('offline', down);
+    };
+  });
 
   onMount(async () => {
     if (data.focusPlantingId) {
@@ -92,6 +109,8 @@
         const queueId = await enqueueRecord('harvest', body);
         recordingFor = null;
         lastNotice = '☁ Offline — harvest queued. Will sync when the connection returns.';
+        lastSale = null;
+        saleQueued = planting.varietyDisplayName;
         return queueId;
       }
       const res = await fetch('/api/harvest/record', {
@@ -120,8 +139,17 @@
       // the label-interval caution so the operator can act on it.
       phiWarning = out?.phiWarning?.message ?? null;
       recordingFor = null;
+      const eventId = (out?.event?.id as string | undefined) ?? null;
+      lastSale = eventId
+        ? {
+            harvestEventId: eventId,
+            cropId: planting.plantingId,
+            name: planting.varietyDisplayName
+          }
+        : null;
+      saleQueued = null;
       await invalidateAll();
-      return (out?.event?.id as string | undefined) ?? null;
+      return eventId;
     } catch (e) {
       // #316 — transient network failure while "online": queue instead of
       // losing the harvest.
@@ -242,6 +270,16 @@
 
 {#if lastNotice}
   <Banner tone="wheat">{lastNotice}</Banner>
+{/if}
+{#if data.canRecordSale && (lastSale || saleQueued)}
+  <div class="sale-strip" data-testid="record-sale">
+    <span>Harvest saved{lastSale ? ` for ${lastSale.name}` : ''}. Sold some?</span>
+    {#if lastSale && online}
+      <a class="sale-link" href={recordSaleHref(lastSale)}>Record a sale</a>
+    {:else}
+      <span class="sale-offline">{RECORD_SALE_OFFLINE}</span>
+    {/if}
+  </div>
 {/if}
 {#if phiWarning}
   <div class="phi-banner">
@@ -545,6 +583,31 @@
 </SetupSheet>
 
 <style>
+  .sale-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2, 8px);
+    margin: 0 0 var(--space-3, 12px);
+    padding: var(--space-2, 8px) var(--space-3, 12px);
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-card, 10px);
+    background: var(--color-paper);
+  }
+  .sale-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 16px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 8px);
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .sale-offline {
+    color: var(--color-ink-soft);
+  }
   .panel-head {
     display: flex;
     flex-wrap: wrap;

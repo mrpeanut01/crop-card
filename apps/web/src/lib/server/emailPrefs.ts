@@ -23,6 +23,12 @@ import {
   type EmailAlertPrefs
 } from '$lib/email/alertCategories';
 import type { UnsubscribeClaims } from './emailUnsubscribe';
+import { PINGRAM_TYPE } from './email';
+
+/** The Pingram notification type an alert category is sent under. */
+export function pingramTypeForCategory(category: EmailAlertCategory): string {
+  return PINGRAM_TYPE[category === 'weekly-digest' ? 'weekly-digest' : 'field-alert'];
+}
 
 export function requestIp(event: Pick<RequestEvent, 'getClientAddress'>): string | null {
   try {
@@ -43,7 +49,7 @@ export function setEmailAlertPref(input: {
 }): EmailAlertPrefs {
   if (input.enabled) {
     optIn(input.userId, input.category, { source: 'settings', ip: input.ip });
-    if (input.email) clearEmailUnsubscribe(input.email);
+    if (input.email) clearEmailUnsubscribe(input.email, pingramTypeForCategory(input.category));
   } else {
     optOut(input.userId, input.category, { source: 'settings' });
   }

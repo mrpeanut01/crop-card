@@ -326,6 +326,7 @@ test('Done on a Sow indoors task offers Log the tray, which saves with the defau
   const done = page.getByRole('button', { name: /^Done: Sow .*indoors/ }).first();
   await expect(done).toBeVisible();
   await done.click();
+  await page.getByRole('button', { name: 'Done, skip time' }).click();
   const prompt = page.getByTestId('log-tray-prompt');
   await expect(prompt).toBeVisible();
   const link = prompt.getByRole('link', { name: 'Log the tray' });

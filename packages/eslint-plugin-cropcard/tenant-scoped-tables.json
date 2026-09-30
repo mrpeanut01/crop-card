@@ -30,6 +30,7 @@
   "irrigationEvents",
   "kernelDryRunLog",
   "ledgerEntries",
+  "ledgerEntryChanges",
   "mapFeatureAreas",
   "mapFeatures",
   "pendingCalibrations",

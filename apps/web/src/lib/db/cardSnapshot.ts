@@ -136,7 +136,9 @@ export function listOpenTasksForCards(fromMs: number, toMs: number): SnapshotTas
       scheduledFor: t.scheduledFor.getTime(),
       cropId: t.cropId ?? null,
       blockId: t.blockId ?? null,
-      equipmentId: t.equipmentId ?? null
+      equipmentId: t.equipmentId ?? null,
+      ...(t.assigneeUserId ? { assigneeUserId: t.assigneeUserId } : {}),
+      ...(t.relatedEventTable ? { relatedEventTable: t.relatedEventTable } : {})
     }))
     .sort((a, b) => a.scheduledFor - b.scheduledFor || a.id.localeCompare(b.id));
 }

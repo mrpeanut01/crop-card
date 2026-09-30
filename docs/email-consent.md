@@ -8,6 +8,7 @@ CropCard sends two kinds of email, and the difference decides whether consent is
 | `contact-code`              | transactional | `contact-code`  | The person is adding this address.                                                              |
 | `helper-invite`             | transactional | `helper-invite` | An owner invited this address to their farm.                                                    |
 | `field-alert`               | opt-in        | `field-alerts`  | Decon due, record lock closing, spring calibration, frost tonight, and the Settings test email. |
+| `weekly-digest`             | opt-in        | `weekly-digest` | The Monday summary (Phase 32F), under its own consent category `weekly-digest`.                 |
 
 Billing receipts come from Stripe, not from CropCard. There is no marketing mail. The class table lives in `EMAIL_KIND_CLASS` (`apps/web/src/lib/server/email.ts`); a test fails if a new kind is added without a class.
 
@@ -36,6 +37,7 @@ Findings from the Pingram SDK (`pingram@1.0.34`) and its public docs as of 2026-
 
 - `POST /email` has no field for custom headers, so CropCard cannot set its own `List-Unsubscribe` on Pingram sends. Pingram says it adds RFC 2369/8058 headers pointing at its own hosted unsubscribe page, scoped to the notification `type`. That is why alert mail uses its own type (`field-alerts`): unsubscribing from alerts on Pingram's page never blocks sign-in mail.
 - Pingram has no hosted opt-in or sign-up form, only the hosted unsubscribe page and an embeddable preferences widget. Opt-in therefore lives in CropCard, and CropCard's database is the authority: nothing is sent without a consent row, whatever Pingram's defaults are.
+- The Monday summary has its own Pingram type. An `EMAIL_UNSUBSCRIBE` whose notification type is `weekly-digest` stops only that email, and one typed `field-alerts` stops only field alerts (`isEmailSuppressed(address, pingramType)`); bounces, complaints and untyped unsubscribes stop both.
 - Pingram reports unsubscribes back through its events webhook. `POST /api/email/pingram-webhook` verifies `X-Pingram-Signature` (`v1,<hex>` HMAC-SHA256 over `id.timestamp.body`, 300 s tolerance) with `PINGRAM_WEBHOOK_SECRET` and records `EMAIL_UNSUBSCRIBE`, bounce or complaint `EMAIL_FAILED`, `SMS_UNSUBSCRIBE` and `SMS_SUBSCRIBE` in the global `contact_suppressions` table, keyed by address. An unsubscribed, bounced or complained address gets no alert email; a plain delivery failure is only logged. Ticking a box in Settings again is a fresh opt-in and lifts an earlier unsubscribe (not a bounce or complaint).
 
 ### Launch checklist

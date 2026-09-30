@@ -14,6 +14,7 @@ import {
   grazingAttestations,
   irrigationEvents,
   ledgerEntries,
+  ledgerEntryChanges,
   rainGaugeReadings,
   recordDeletions,
   seedStarts,
@@ -47,7 +48,8 @@ export const RECORD_TABLE_GROUPS = {
   },
   operations: {
     taskTimeEntries,
-    ledgerEntries
+    ledgerEntries,
+    ledgerEntryChanges
   }
 } as const satisfies Record<string, Record<string, TenantScopedTable>>;
 

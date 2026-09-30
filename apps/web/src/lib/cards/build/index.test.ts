@@ -26,10 +26,10 @@ describe('buildCard / buildDeck', () => {
     }
   });
 
-  it('covers every snapshot card kind but single tasks, with exactly one farm map', () => {
+  it('covers every snapshot card kind but single tasks, weeks and months, with exactly one farm map', () => {
     const kinds = new Set(deck.map((c) => c.kind));
     const snapshotKinds = CARD_KINDS.filter((k) => !RECORD_ONLY_CARD_KINDS.includes(k));
-    expect(snapshotKinds.filter((k) => !kinds.has(k))).toEqual(['task']);
+    expect(snapshotKinds.filter((k) => !kinds.has(k))).toEqual(['task', 'week', 'month']);
     expect(deck.filter((c) => RECORD_ONLY_CARD_KINDS.includes(c.kind))).toEqual([]);
     expect(deck.filter((c) => c.kind === 'farmMap')).toHaveLength(1);
   });

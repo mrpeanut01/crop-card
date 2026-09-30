@@ -9,16 +9,32 @@ export interface CardViewParams {
    *  than this may be missing it, so the print waits a little for a fresher
    *  one and then says which copy it printed. */
   afterMs?: number;
+  /** Week and Month Cards: `?area=<fieldId>`. */
+  area?: string;
+  /** Week and Month Cards: `?who=<userId>|unassigned`. */
+  who?: string;
+}
+
+const FILTER_VALUE = /^[A-Za-z0-9_.:-]{1,80}$/;
+
+function filterParam(search: URLSearchParams, name: string): string | undefined {
+  const v = search.get(name);
+  return v && FILTER_VALUE.test(v) ? v : undefined;
 }
 
 /** Reads the query the garden designer's Print button sends to a card. */
 export function cardViewParams(search: URLSearchParams, kind: string): CardViewParams {
   const on = kind === 'area' ? ymdToUtcMs(search.get('on')) : null;
   const after = Number(search.get('after'));
+  const calendar = kind === 'week' || kind === 'month';
+  const area = calendar ? filterParam(search, 'area') : undefined;
+  const who = calendar ? filterParam(search, 'who') : undefined;
   return {
     ...(on != null ? { bedMapOnMs: on } : {}),
     autoPrint: search.get('print') === '1',
-    ...(Number.isSafeInteger(after) && after > 0 ? { afterMs: after } : {})
+    ...(Number.isSafeInteger(after) && after > 0 ? { afterMs: after } : {}),
+    ...(area ? { area } : {}),
+    ...(who ? { who } : {})
   };
 }
 

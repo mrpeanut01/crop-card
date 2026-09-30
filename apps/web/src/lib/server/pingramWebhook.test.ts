@@ -3,7 +3,12 @@ import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
-import { isEmailSuppressed, listSuppressions } from '$lib/db/contactSuppressions';
+import {
+  clearEmailUnsubscribe,
+  isEmailSuppressed,
+  listSuppressions
+} from '$lib/db/contactSuppressions';
+import { pingramTypeForCategory } from './emailPrefs';
 import {
   applyPingramEvent,
   failureReason,
@@ -49,6 +54,41 @@ describe('verifyPingramSignature', () => {
 });
 
 describe('applyPingramEvent', () => {
+  it('keeps a second typed unsubscribe for the same address (either order)', () => {
+    for (const order of [
+      ['weekly-digest', 'field-alerts'],
+      ['field-alerts', 'weekly-digest']
+    ]) {
+      const addr = `pg-${randomUUID()}@example.test`;
+      order.forEach((t, i) =>
+        applyPingramEvent(
+          { eventType: 'EMAIL_UNSUBSCRIBE', userId: addr, notificationId: t },
+          `evt-${i}`
+        )
+      );
+      expect(listSuppressions(addr, 'email')).toHaveLength(2);
+      expect(isEmailSuppressed(addr, 'field-alerts')).toBe(true);
+      expect(isEmailSuppressed(addr, 'weekly-digest')).toBe(true);
+    }
+  });
+
+  it('a fresh opt-in lifts only the unsubscribe for that category', () => {
+    const addr = `pg-${randomUUID()}@example.test`;
+    applyPingramEvent(
+      { eventType: 'EMAIL_UNSUBSCRIBE', userId: addr, notificationId: 'weekly-digest' },
+      'e1'
+    );
+    applyPingramEvent(
+      { eventType: 'EMAIL_UNSUBSCRIBE', userId: addr, notificationId: 'field-alerts' },
+      'e2'
+    );
+    clearEmailUnsubscribe(addr, pingramTypeForCategory('frost-tonight'));
+    expect(isEmailSuppressed(addr, 'field-alerts')).toBe(false);
+    expect(isEmailSuppressed(addr, 'weekly-digest')).toBe(true);
+    clearEmailUnsubscribe(addr, pingramTypeForCategory('weekly-digest'));
+    expect(isEmailSuppressed(addr, 'weekly-digest')).toBe(false);
+  });
+
   it('records an email unsubscribe by address, idempotently', () => {
     const addr = `pg-${randomUUID()}@Example.test`;
     const e = { eventType: 'EMAIL_UNSUBSCRIBE', userId: addr, notificationId: 'field-alerts' };

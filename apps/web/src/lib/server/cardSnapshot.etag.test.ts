@@ -35,9 +35,10 @@ function newOwner(): string {
   return id;
 }
 
-function get(ownerId: string, etag?: string) {
+function get(ownerId: string, etag?: string, locale?: string) {
   const event = {
     locals: {
+      locale,
       user: {
         id: `user-${ownerId}`,
         email: null,
@@ -150,5 +151,29 @@ describe('snapshot ETag short-circuit', () => {
     expect(new Set([ka, kb, ko]).size).toBe(3);
     const etagA = (await get(a)).headers.get('etag')!;
     expect(runWithTenant(b, () => knownSnapshotEtag(kb))).not.toBe(etagA);
+  });
+
+  it('keys on the locale, and the body names it (F5-4)', async () => {
+    const owner = newOwner();
+    const en = await runWithTenantAsync(owner, () =>
+      snapshotStateKey({ now: NOW, origin: null, locale: 'en' })
+    );
+    const dflt = await runWithTenantAsync(owner, () =>
+      snapshotStateKey({ now: NOW, origin: null })
+    );
+    const es = await runWithTenantAsync(owner, () =>
+      snapshotStateKey({ now: NOW, origin: null, locale: 'es' })
+    );
+    expect(dflt).toBe(en);
+    expect(es).not.toBe(en);
+
+    const english = await get(owner);
+    const englishEtag = english.headers.get('etag')!;
+    expect(((await english.json()) as FarmSnapshot).locale).toBe('en');
+    const spanish = await get(owner, englishEtag, 'es');
+    expect(spanish.status).toBe(200);
+    expect(spanish.headers.get('etag')).not.toBe(englishEtag);
+    expect(((await spanish.json()) as FarmSnapshot).locale).toBe('es');
+    expect(spanish.headers.get('vary')).toContain('Accept-Language');
   });
 });

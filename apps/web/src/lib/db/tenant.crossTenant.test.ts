@@ -505,7 +505,8 @@ describe('cross-tenant isolation', () => {
           'spring-calibration': false,
           'frost-tonight': false,
           'animal-care-due': false,
-          'withdrawal-clears': false
+          'withdrawal-clears': false,
+          'weekly-digest': false
         })
       )
     ).toBeNull();

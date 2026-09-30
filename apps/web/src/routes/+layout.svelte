@@ -67,7 +67,12 @@
     const activeOwnerId = data.activeOwner?.id ?? data.user?.activeOwnerId ?? null;
     import('$lib/client/tenantSwitch')
       .then(({ syncServiceWorkerTenant }) =>
-        syncServiceWorkerTenant({ register: !dev, signedIn: !!data.user, ownerId: activeOwnerId })
+        syncServiceWorkerTenant({
+          register: !dev,
+          signedIn: !!data.user,
+          ownerId: activeOwnerId,
+          locale: data.locale
+        })
       )
       .catch(() => undefined);
 
@@ -145,7 +150,9 @@
       window.location.href = '/today';
     } else {
       const previous = data.activeOwner?.id ?? data.user?.activeOwnerId ?? null;
-      await tenantSwitch?.announceActiveOwner(previous).catch(() => undefined);
+      await tenantSwitch
+        ?.announceActiveOwner(previous, { locale: data.locale })
+        .catch(() => undefined);
     }
   }
 </script>

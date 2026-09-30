@@ -8,6 +8,7 @@ import { withClientRecordId } from '$lib/server/clientRecordId';
 import { afterSeedStartTaskDone } from '$lib/server/seedStartTasks';
 import { writeRecord } from '$lib/server/recordWrite';
 import { careMetaOf, closeCareTask } from '$lib/server/carePlans';
+import { recordTaskTime, timeOnClosedTask } from '$lib/server/taskTime';
 
 const DAY_MS = 86_400_000;
 
@@ -27,6 +28,11 @@ export const _requestSchema = taskCloseSchema;
  * A dose sent for a task that was already closed another way (a plan edit,
  * the subject leaving, another device) is still saved, never dropped, so
  * the withdrawal hold it starts is on file.
+ *
+ * Phase 32F (F1-13 to F1-15): Done may carry `minutes`, saved as a time row
+ * for the person closing in the same transaction. Time sent for a task
+ * someone else already closed is still saved (`timeSaved: true`); a replay
+ * of the same client record id writes nothing.
  */
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
@@ -44,13 +50,17 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request' }, { status: 400 });
   }
-  const { taskId, action, reason } = parsed.data;
+  const { taskId, action, reason, minutes } = parsed.data;
   const existing = getTask(taskId);
   if (!existing) return json({ error: 'task not found' }, { status: 404 });
   const meta = careMetaOf(existing);
   const carriesDose = !!meta && action === 'complete' && !!parsed.data.healthEvent;
+  const now = Date.now();
+  const at = Math.min(now, Math.max(now - 30 * DAY_MS, parsed.data.occurredAt ?? now));
   if ((existing.completedAt !== undefined || existing.abortedAt !== undefined) && !carriesDose) {
-    return json({ task: existing, alreadyClosed: true });
+    return action === 'complete'
+      ? timeOnClosedTask(event, auth, existing, minutes, at)
+      : json({ task: existing, alreadyClosed: true });
   }
   if (meta) {
     return closeCareTask({
@@ -62,14 +72,28 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
       timeZone: farmTimeZone()
     });
   }
-  const now = Date.now();
-  const at = Math.min(now, Math.max(now - 30 * DAY_MS, parsed.data.occurredAt ?? now));
-  const { task, seedStart } = writeRecord(event, () => {
+  const { task, seedStart, timeSaved } = writeRecord(event, () => {
     if (action !== 'complete') {
-      return { task: abortTask(taskId, reason?.trim() || undefined, true, at), seedStart: null };
+      return {
+        task: abortTask(taskId, reason?.trim() || undefined, true, at),
+        seedStart: null,
+        timeSaved: false
+      };
     }
     const task = completeTask(taskId, { occurredAt: at });
-    return { task, seedStart: afterSeedStartTaskDone(task, at) };
+    const time = recordTaskTime({
+      task,
+      userId: auth.id,
+      minutes,
+      occurredAt: at,
+      request: event.request
+    });
+    return { task, seedStart: afterSeedStartTaskDone(task, at), timeSaved: !!time };
   });
-  return json({ task, alreadyClosed: false, ...(seedStart ? { seedStart } : {}) });
+  return json({
+    task,
+    alreadyClosed: false,
+    ...(seedStart ? { seedStart } : {}),
+    ...(timeSaved ? { timeSaved: true } : {})
+  });
 });

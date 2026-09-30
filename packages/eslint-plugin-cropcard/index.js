@@ -1,5 +1,6 @@
 import noRawTenantTable from './rules/no-raw-tenant-table.js';
 import noUnguardedHoldWrite from './rules/no-unguarded-hold-write.js';
+import noRawText from './rules/no-raw-text.js';
 
 const plugin = {
   meta: {
@@ -8,7 +9,8 @@ const plugin = {
   },
   rules: {
     'no-raw-tenant-table': noRawTenantTable,
-    'no-unguarded-hold-write': noUnguardedHoldWrite
+    'no-unguarded-hold-write': noUnguardedHoldWrite,
+    'no-raw-text': noRawText
   }
 };
 

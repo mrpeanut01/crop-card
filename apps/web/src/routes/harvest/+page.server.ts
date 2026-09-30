@@ -6,6 +6,26 @@ import type { RendererData } from '$lib/components/harvest/renderers/types';
 import { forageCutWindow, plantingHarvestKey } from '$lib/harvest/forageWindow';
 import { getRegistry } from '$lib/server/registry';
 import { canSetUp, setupAreas, setupBlocks } from '$lib/server/setupContext';
+import { canSeeMoney } from '$lib/finance/redact';
+import { hasAnyLedgerEntry } from '$lib/db/ledger';
+import { complianceChromeLevel } from '$lib/records/complianceChrome';
+import { getFarmProfile } from '$lib/onboarding/state.server';
+import { listSprayEvents } from '$lib/db/sprayEvents';
+import { listInsecticideEvents } from '$lib/db/insecticideEvents';
+import { listFungicideEvents } from '$lib/db/fungicideEvents';
+
+/** F2-15: owners see "Record a sale"; a quiet garden household only once
+ *  the farm has any ledger entry. Helpers never see it. */
+function canRecordSale(role: string | undefined): boolean {
+  if (!canSeeMoney(role)) return false;
+  if (hasAnyLedgerEntry()) return true;
+  const chrome = complianceChromeLevel(getFarmProfile(), {
+    sprays: listSprayEvents({ limit: 1 }).length,
+    insecticides: listInsecticideEvents({ limit: 1 }).length,
+    fungicides: listFungicideEvents({ limit: 1 }).length
+  });
+  return chrome === 'full';
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -207,6 +227,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     plantings,
     recordedHarvests,
     focusPlantingId,
+    canRecordSale: canRecordSale(locals.user?.role),
     setup: {
       canEdit: canSetUp(locals.user?.role),
       areas: setupAreas(),

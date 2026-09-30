@@ -23,6 +23,8 @@ import { _requestSchema as hayCutting } from '../hay/cuttings/+server';
 import { _requestSchema as mapFeatureCreate } from '../map-features/+server';
 import { _requestSchema as mapFeaturePatch } from '../map-features/[id]/+server';
 import { _requestSchema as taskClose } from '../tasks/close/+server';
+import { _requestSchema as taskCreate } from '../tasks/+server';
+import { _requestSchema as taskPatch } from '../tasks/[id]/+server';
 import { _requestSchema as journalEntry } from '../plantings/[id]/journal/+server';
 import { _requestSchema as journalRecord } from '../journal/record/+server';
 import { _requestSchema as photoHelp } from '../plantings/[id]/photo-help/+server';
@@ -43,6 +45,9 @@ import { _requestSchema as seedStartProgress } from '../seed-starts/[id]/progres
 import { _requestSchema as irrigationCreate } from '../irrigation/+server';
 import { _requestSchema as waterTarget } from '../irrigation/target/+server';
 import { _requestSchema as rainGauge } from '../rain-gauge/+server';
+import { _requestSchema as ledgerCreate } from '../finance/entries/+server';
+import { _requestSchema as ledgerPatch } from '../finance/entries/[id]/+server';
+import { _requestSchema as labourRate } from '../finance/labour-rate/+server';
 
 interface Operation {
   parameters?: { $ref?: string; name?: string; in?: string }[];
@@ -93,6 +98,8 @@ describe('openapi.json', () => {
     ['/api/map-features', 'post', mapFeatureCreate],
     ['/api/map-features/{id}', 'patch', mapFeaturePatch],
     ['/api/tasks/close', 'post', taskClose],
+    ['/api/tasks', 'post', taskCreate],
+    ['/api/tasks/{id}', 'patch', taskPatch],
     ['/api/plantings/{id}/journal', 'post', journalEntry],
     ['/api/journal/record', 'post', journalRecord],
     ['/api/plantings/{id}/photo-help', 'post', photoHelp],
@@ -112,9 +119,25 @@ describe('openapi.json', () => {
     ['/api/seed-starts/{id}/progress', 'post', seedStartProgress],
     ['/api/irrigation', 'post', irrigationCreate],
     ['/api/irrigation/target', 'post', waterTarget],
-    ['/api/rain-gauge', 'post', rainGauge]
+    ['/api/rain-gauge', 'post', rainGauge],
+    ['/api/finance/entries', 'post', ledgerCreate],
+    ['/api/finance/entries/{id}', 'patch', ledgerPatch],
+    ['/api/finance/labour-rate', 'put', labourRate]
   ] as const)('%s %s publishes the schema the route validates with', (path, method, schema) => {
     expect(published(path, method)).toEqual(generated(schema));
+  });
+
+  it('lists the Phase 32F task reads', () => {
+    for (const [path, method] of [
+      ['/api/tasks', 'get'],
+      ['/api/tasks/{id}', 'get'],
+      ['/api/tasks/assignees', 'get'],
+      ['/api/plantings/{id}/hours', 'get']
+    ]) {
+      expect(doc.paths[path]?.[method], `${method.toUpperCase()} ${path}`).toBeDefined();
+    }
+    const patch = JSON.stringify(doc.paths['/api/tasks/{id}'].patch.responses);
+    for (const code of ['OWNER_ONLY', 'TASK_CLOSED', 'FOREIGN_REF']) expect(patch).toContain(code);
   });
 
   it('lists every Phase 30 read endpoint', () => {

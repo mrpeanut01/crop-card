@@ -14,6 +14,8 @@
     plantings?: AddTaskPlantingOption[];
     /** Preselects the planting when a planting tab is active. */
     defaultPlantingId?: string | null;
+    /** Owners pick who does it (F1-2); the list loads when the form opens. */
+    canAssign?: boolean;
     onClose: () => void;
     onCreated: (taskId: string) => void | Promise<void>;
   }
@@ -24,6 +26,7 @@
     blockName,
     plantings = [],
     defaultPlantingId = null,
+    canAssign = false,
     onClose,
     onCreated
   }: Props = $props();
@@ -36,6 +39,8 @@
   let date = $state(todayIso());
   let plantingId = $state('');
   let notes = $state('');
+  let assigneeId = $state('');
+  let members = $state<{ id: string; name: string }[] | null>(null);
   let submitting = $state(false);
   let error = $state<string | null>(null);
 
@@ -45,9 +50,22 @@
       date = todayIso();
       plantingId = defaultPlantingId ?? '';
       notes = '';
+      assigneeId = '';
       error = null;
+      if (canAssign && members === null) void loadMembers();
     }
   });
+
+  async function loadMembers() {
+    try {
+      const res = await fetch('/api/tasks/assignees');
+      if (!res.ok) return;
+      const body = (await res.json()) as { assignees?: { id: string; name: string }[] };
+      members = body.assignees ?? [];
+    } catch {
+      members = null;
+    }
+  }
 
   function close() {
     if (!submitting) onClose();
@@ -79,6 +97,7 @@
     };
     if (plantingId) payload.cropId = plantingId;
     if (notes.trim()) payload.body = notes.trim();
+    if (canAssign && assigneeId) payload.assigneeUserId = assigneeId;
     try {
       const res = await fetch('/api/tasks', {
         method: 'POST',
@@ -125,6 +144,17 @@
           <option value="">Whole block</option>
           {#each plantings as p (p.id)}
             <option value={p.id}>{p.label}</option>
+          {/each}
+        </select>
+      </label>
+    {/if}
+    {#if canAssign && members && members.length > 0}
+      <label class="field">
+        <span class="label">Who does it</span>
+        <select name="assignee" bind:value={assigneeId}>
+          <option value="">Nobody in particular</option>
+          {#each members as m (m.id)}
+            <option value={m.id}>{m.name}</option>
           {/each}
         </select>
       </label>

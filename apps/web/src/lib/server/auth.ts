@@ -37,6 +37,9 @@ export interface AuthenticatedUser {
   activeOwnerId: string | null;
   isSuperadmin: boolean;
   impersonating: boolean;
+  /** `users.locale`, filled when the request boundary re-reads the user
+   *  row (32F, F5-3). Never read from the cookie. */
+  locale?: string | null;
 }
 
 export function currentUser(event: RequestEvent): AuthenticatedUser | null {

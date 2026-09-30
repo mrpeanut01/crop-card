@@ -65,3 +65,46 @@ describe('SEASON_CLOSED exemptions (Phase 32E)', () => {
     });
   }
 });
+
+/** Phase 32F (F0-5, F1): closing a task with time, assigning and the time
+ *  rows never read the season-closed gate. The behavior is pinned in
+ *  `tasks/assignTime.test.ts`. */
+const EXEMPT_32F_F1 = [
+  'tasks/+server.ts',
+  'tasks/[id]/+server.ts',
+  'tasks/close/+server.ts',
+  'tasks/assignees/+server.ts',
+  'plantings/[id]/hours/+server.ts'
+];
+
+describe('SEASON_CLOSED exemptions (Phase 32F, F1)', () => {
+  for (const rel of EXEMPT_32F_F1) {
+    it(`${rel} never reads the season-closed gate`, () => {
+      const src = readFileSync(path.join(here, rel), 'utf8');
+      expect(src).not.toContain('checkSeasonClosed(');
+      expect(src).not.toContain('getActiveCloseout(');
+      expect(src).not.toContain("from '$lib/server/seasonClose'");
+    });
+  }
+});
+
+/** Phase 32F (F0-5): accounting trails the season, so no ledger write
+ *  (create, edit, delete, restore, Record a sale) reads the gate. Record a
+ *  sale posts to the same create endpoint. */
+const FINANCE_EXEMPT = [
+  'finance/entries/+server.ts',
+  'finance/entries/[id]/+server.ts',
+  'finance/entries/[id]/restore/+server.ts',
+  'finance/labour-rate/+server.ts'
+];
+
+describe('SEASON_CLOSED exemptions (Phase 32F finance)', () => {
+  for (const rel of FINANCE_EXEMPT) {
+    it(`${rel} never reads the season-closed gate`, () => {
+      const src = readFileSync(path.join(here, rel), 'utf8');
+      expect(src).not.toContain('checkSeasonClosed(');
+      expect(src).not.toContain('getActiveCloseout(');
+      expect(src).not.toContain("from '$lib/server/seasonClose'");
+    });
+  }
+});

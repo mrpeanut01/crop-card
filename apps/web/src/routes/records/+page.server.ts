@@ -71,7 +71,9 @@ export const load: PageServerLoad = async (event) => {
   const availableYears = Array.from(
     new Set<number>([currentYear, ...listYearsWithCrops(), selectedYear])
   ).sort((a, b) => b - a);
-  const yearSummary = await buildYearSummary(selectedYear, user.activeOwnerId, prefs);
+  const yearSummary = await buildYearSummary(selectedYear, user.activeOwnerId, prefs, {
+    includeCosts: user.role === 'owner'
+  });
 
   const chrome = complianceChromeLevel(getFarmProfile(), {
     sprays: listSprayEvents({ limit: 1 }).length,
@@ -125,6 +127,7 @@ export const load: PageServerLoad = async (event) => {
     activeToIso: toMsRaw ?? null,
     yearSummary,
     selectedYear,
-    availableYears
+    availableYears,
+    showMoneyLink: user.role === 'owner'
   };
 };

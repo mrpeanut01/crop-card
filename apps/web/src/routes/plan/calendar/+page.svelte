@@ -4,7 +4,9 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { cardHref, cardKey } from '$lib/cards/model';
   import { PROVENANCE_LABEL } from '$lib/provenanceLabels';
-  import { fmt } from '$lib/prefsState.svelte';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { ymdInZone } from '$lib/prefs';
+  import { periodCardPrintHref } from '$lib/cards/build/calendar';
   import { SHORT_DAY_HOURS, shortDayBandLabel } from '$lib/calendar/persephone';
   import {
     FROST_LINE_LABEL,
@@ -51,6 +53,9 @@
 
   const shortSpans = $derived(cal.shortDays.status === 'spans' ? cal.shortDays.spans : []);
   const printedOn = $derived(date(data.nowMs));
+  const monthTasksHref = $derived(
+    periodCardPrintHref('month', ymdInZone(data.nowMs, currentPrefs().timeZone))
+  );
 
   function pickYear(y: number) {
     goto(`/plan/calendar?year=${y}`, { noScroll: true });
@@ -129,6 +134,9 @@
         <Printer size={16} aria-hidden="true" /> Print
       </button>
       <a class="secondary" href="/today?view=season&season={data.year}">Season view</a>
+      <a class="secondary" href={monthTasksHref} data-testid="print-month-tasks"
+        >Print this month's tasks</a
+      >
     </div>
     <p class="hint">
       Choose landscape paper in the print dialog if it does not pick it for you, and turn off

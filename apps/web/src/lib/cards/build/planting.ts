@@ -1,3 +1,4 @@
+import { formatHours } from '$lib/labour/hours';
 import {
   cardHref,
   cardKey,
@@ -153,6 +154,9 @@ export function buildPlantingCard(
   facts.push(...spacingFacts(p, plugin, opts));
   const count = countFact(p);
   if (count) facts.push(count);
+  if (p.minutesLogged && p.minutesLogged > 0) {
+    facts.push({ label: 'Time logged', value: formatHours(p.minutesLogged), provenance: 'data' });
+  }
 
   const phi = plugin?.preHarvestIntervalDays;
   if (phi && phi > 0 && p.status !== 'harvested') {

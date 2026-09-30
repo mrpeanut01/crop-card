@@ -201,6 +201,7 @@ export const POST: RequestHandler = async (event) => {
   // blocks. Completed / aborted tasks survive: their executed history
   // is load-bearing.
   const deletedIds: string[] = [];
+  const keptAssignee = new Map<string, { id: string; at: number | null }>();
   for (const blockId of blockIds) {
     const deleted = db
       .delete(tasks)
@@ -215,17 +216,34 @@ export const POST: RequestHandler = async (event) => {
           )
         )
       )
-      .returning({ id: tasks.id })
+      .returning({
+        id: tasks.id,
+        title: tasks.title,
+        assigneeUserId: tasks.assigneeUserId,
+        assignedAt: tasks.assignedAt
+      })
       .all();
-    for (const row of deleted) deletedIds.push(row.id);
+    for (const row of deleted) {
+      deletedIds.push(row.id);
+      if (row.assigneeUserId) {
+        keptAssignee.set(`${blockId}\u0000${row.title}`, {
+          id: row.assigneeUserId,
+          at: row.assignedAt?.getTime() ?? null
+        });
+      }
+    }
   }
 
   const created: string[] = [];
 
   for (const app of parsed.data.applications) {
     const cropId = cropByBlockAndPluginId.get(`${app.blockId}:${app.cropPluginId}`);
+    const title = applicationTitle(app);
+    const kept = keptAssignee.get(`${app.blockId}\u0000${title}`);
     const task = createTask({
-      title: applicationTitle(app),
+      title,
+      assigneeUserId: kept?.id ?? null,
+      assignedAt: kept?.at ?? null,
       body: applicationBody(app, prefs),
       kind: 'primary',
       blockId: app.blockId,
@@ -240,8 +258,11 @@ export const POST: RequestHandler = async (event) => {
 
   for (const scout of parsed.data.scoutTasks) {
     const cropId = cropByBlockAndPluginId.get(`${scout.blockId}:${scout.cropPluginId}`);
+    const keptScout = keptAssignee.get(`${scout.blockId}\u0000${scout.title}`);
     const task = createTask({
       title: scout.title,
+      assigneeUserId: keptScout?.id ?? null,
+      assignedAt: keptScout?.at ?? null,
       body: `${scout.body}\n\nRepeats every ${scout.recurrenceDays} days through ${formatCalendarDate(scout.windowEndMs)}.`,
       kind: 'primary',
       blockId: scout.blockId,

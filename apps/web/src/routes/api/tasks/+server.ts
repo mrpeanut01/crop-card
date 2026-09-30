@@ -9,14 +9,18 @@
  * Creating a primary task that names a `cropPluginId` and/or `equipmentId`
  * runs `materializePluginPrePost` to auto-attach matching plugin templates.
  * The newly created task IDs are returned so the UI can scroll to them.
+ *
+ * Phase 32F (F1-2): an owner may give the task to a farm member with
+ * `assigneeUserId`; its prep and follow-up tasks go to the same person.
+ * Anyone else sending a person gets 403 "Ask the owner.".
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { getEquipment } from '$lib/db/equipment';
 import {
+  assignTask,
   createTask,
   getTask,
   listTasks,
@@ -27,22 +31,10 @@ import { ensureSystemUser } from '$lib/db/users';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
+import { assignRefusal, canAssignTasks, rejectUnassignable } from '$lib/server/taskAssign';
+import { taskCreateSchema } from '$lib/tasks/apiSchemas';
 
-const inputSchema = z
-  .object({
-    title: z.string().min(1).max(120),
-    body: z.string().max(500).optional(),
-    kind: z.enum(['primary', 'pre-task', 'post-task']),
-    linkedToTaskId: z.string().optional(),
-    cropId: z.string().optional(),
-    blockId: z.string().optional(),
-    equipmentId: z.string().optional(),
-    scheduledFor: z.number().int(),
-    pluginTemplateKey: z.string().optional()
-  })
-  .refine((v) => v.kind === 'primary' || !!v.linkedToTaskId, {
-    message: 'pre-task / post-task requires linkedToTaskId'
-  });
+export const _requestSchema = taskCreateSchema;
 
 export const GET: RequestHandler = ({ url }) => {
   const fromMs = Number(url.searchParams.get('from')) || undefined;
@@ -79,7 +71,7 @@ export const POST: RequestHandler = async (event) => {
   } catch {
     return json({ error: 'invalid JSON' }, { status: 400 });
   }
-  const parsed = inputSchema.safeParse(body);
+  const parsed = taskCreateSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
@@ -105,9 +97,17 @@ export const POST: RequestHandler = async (event) => {
     return json({ error: `unknown ${foreign}` }, { status: 400 });
   }
 
+  const assigneeUserId = d.assigneeUserId ?? null;
+  if (assigneeUserId) {
+    if (!canAssignTasks(auth)) return assignRefusal();
+    const refused = rejectUnassignable(assigneeUserId);
+    if (refused) return refused;
+  }
+
   const performer = auth ?? (await ensureSystemUser());
+  const { assigneeUserId: _assignee, ...fields } = d;
   const created = createTask({
-    ...parsed.data,
+    ...fields,
     createdById: performer.id
   });
 
@@ -138,5 +138,6 @@ export const POST: RequestHandler = async (event) => {
     });
   }
 
-  return json({ task: created, materialized }, { status: 201 });
+  const task = assigneeUserId ? (assignTask(created.id, assigneeUserId) ?? created) : created;
+  return json({ task, materialized }, { status: 201 });
 };

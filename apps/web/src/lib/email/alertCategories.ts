@@ -14,7 +14,8 @@ export const DEFAULT_EMAIL_ALERT_PREFS: EmailAlertPrefs = {
   'spring-calibration': false,
   'frost-tonight': false,
   'animal-care-due': false,
-  'withdrawal-clears': false
+  'withdrawal-clears': false,
+  'weekly-digest': false
 };
 
 export function isEmailAlertCategory(value: unknown): value is EmailAlertCategory {

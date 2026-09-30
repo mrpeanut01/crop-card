@@ -13,7 +13,7 @@ import {
   markSubscriptionSuccess,
   type PushSubscriptionRecord
 } from '$lib/db/pushSubscriptions';
-import type { PushAlert } from './triggers';
+import { inAudience, type PushAlert } from './triggers';
 import { sendWebPush, type SendOptions, type VapidConfig } from './webPush';
 
 export interface NotificationMessage {
@@ -83,7 +83,6 @@ export function selectRecipients(
     const role = roleByUser.get(s.userId);
     if (!role) return false;
     if (!s.prefs[alert.kind]) return false;
-    if (alert.audience.kind === 'all') return true;
-    return role === 'owner' || alert.audience.userIds.includes(s.userId);
+    return inAudience(alert.audience, s.userId, role);
   });
 }

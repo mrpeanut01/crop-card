@@ -145,6 +145,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
       : 0;
 
   return {
+    locale: locals.locale ?? 'en',
     pluginLoadFailures,
     user: locals.user
       ? {

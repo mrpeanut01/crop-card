@@ -4,7 +4,8 @@ export const PUSH_ALERT_KINDS = [
   'spring-calibration',
   'frost-tonight',
   'animal-care-due',
-  'withdrawal-clears'
+  'withdrawal-clears',
+  'weekly-digest'
 ] as const;
 
 export type PushAlertKind = (typeof PUSH_ALERT_KINDS)[number];
@@ -35,6 +36,10 @@ export const PUSH_ALERT_LABELS: Record<PushAlertKind, { label: string; sub: stri
   'withdrawal-clears': {
     label: 'Hold cleared',
     sub: 'An egg, milk or meat hold on an animal or group has ended. Owner only.'
+  },
+  'weekly-digest': {
+    label: 'Monday summary',
+    sub: "One summary of the week's tasks every Monday morning. Safety alerts still come on their own."
   }
 };
 
@@ -43,7 +48,8 @@ export const PUSH_ALERT_LABELS: Record<PushAlertKind, { label: string; sub: stri
  *  on (D0-16). */
 export const PUSH_KINDS_ADDED_LATER: readonly PushAlertKind[] = [
   'animal-care-due',
-  'withdrawal-clears'
+  'withdrawal-clears',
+  'weekly-digest'
 ];
 
 /** Kinds only an owner receives, so helpers never see the toggle. */
@@ -58,7 +64,8 @@ export const DEFAULT_PUSH_PREFS: PushPrefs = {
   'spring-calibration': true,
   'frost-tonight': false,
   'animal-care-due': true,
-  'withdrawal-clears': false
+  'withdrawal-clears': false,
+  'weekly-digest': false
 };
 
 export function isPushAlertKind(value: unknown): value is PushAlertKind {

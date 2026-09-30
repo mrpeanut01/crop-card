@@ -18,12 +18,13 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, count, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
 import { db } from './client';
-import { equipment, equipmentState, tasks } from './schema';
+import { equipment, equipmentState, tasks, users } from './schema';
 import { tenantValues, withTenant } from './tenant';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { TaskCategory } from '$lib/plan/taskCategory';
 import type { EquipmentPreTaskTemplate, EquipmentTemplate } from '$lib/server/equipmentTemplates';
 import { SEED_EQUIPMENT_TEMPLATES } from '$lib/server/equipmentTemplates';
+import { memberName } from '$lib/tasks/assignee';
 
 export type TaskKind = 'primary' | 'pre-task' | 'post-task';
 export type TaskStatus = 'open' | 'completed' | 'aborted';
@@ -59,7 +60,22 @@ export interface Task {
   supersededByTaskId?: string;
   createdById?: string;
   createdAt: number;
+  /** Phase 32F (F1-1). Null or absent means nobody in particular. */
+  assigneeUserId?: string | null;
+  assignedAt?: number;
+  /** Filled by `listTasks` from a join, never a second read (F1-9). */
+  assignee?: TaskAssignee | null;
 }
+
+export interface TaskAssignee {
+  id: string;
+  name: string;
+}
+
+export type TaskWithAssignee = Task & {
+  assigneeUserId: string | null;
+  assignee: TaskAssignee | null;
+};
 
 export function rowToTask(row: typeof tasks.$inferSelect): Task {
   return {
@@ -84,7 +100,9 @@ export function rowToTask(row: typeof tasks.$inferSelect): Task {
     staleAnchor: row.staleAnchor ?? false,
     supersededByTaskId: row.supersededByTaskId ?? undefined,
     createdById: row.createdById ?? undefined,
-    createdAt: row.createdAt.getTime()
+    createdAt: row.createdAt.getTime(),
+    assigneeUserId: row.assigneeUserId ?? null,
+    ...(row.assignedAt ? { assignedAt: row.assignedAt.getTime() } : {})
   };
 }
 
@@ -119,15 +137,35 @@ function taskConditions(filters: ListFilters) {
   return conds.length ? and(...conds) : undefined;
 }
 
-export function listTasks(filters: ListFilters = {}): Task[] {
+/** Tasks with the assignee's name joined in the same read (F1-9). */
+export function listTasks(filters: ListFilters = {}): TaskWithAssignee[] {
   let q = db
-    .select()
+    .select({
+      task: tasks,
+      displayName: users.displayName,
+      email: users.email,
+      phone: users.phone
+    })
     .from(tasks)
+    .leftJoin(users, eq(users.id, tasks.assigneeUserId))
     .where(withTenant(tasks, taskConditions(filters)))
     .$dynamic();
   q = q.orderBy(asc(tasks.scheduledFor));
   if (filters.limit) q = q.limit(filters.limit);
-  return q.all().map(rowToTask);
+  return q.all().map((r) => {
+    const t = rowToTask(r.task);
+    const id = r.task.assigneeUserId;
+    return {
+      ...t,
+      assigneeUserId: id ?? null,
+      assignee: id
+        ? {
+            id,
+            name: memberName({ email: r.email, phone: r.phone, displayName: r.displayName })
+          }
+        : null
+    };
+  });
 }
 
 /** Which of these template keys already have a task on the farm, whatever
@@ -193,6 +231,9 @@ export interface CreateTaskInput {
   relatedEventId?: string;
   pluginTemplateKey?: string;
   createdById?: string;
+  /** Carried over when a task is rewritten (F1-7). */
+  assigneeUserId?: string | null;
+  assignedAt?: number | null;
 }
 
 export function createTask(input: CreateTaskInput): Task {
@@ -213,12 +254,54 @@ export function createTask(input: CreateTaskInput): Task {
         relatedEventTable: input.relatedEventTable ?? null,
         relatedEventId: input.relatedEventId ?? null,
         pluginTemplateKey: input.pluginTemplateKey ?? null,
-        createdById: input.createdById ?? null
+        createdById: input.createdById ?? null,
+        assigneeUserId: input.assigneeUserId ?? null,
+        assignedAt: input.assigneeUserId && input.assignedAt ? new Date(input.assignedAt) : null
       })
     )
     .returning()
     .get();
   return rowToTask(row);
+}
+
+/**
+ * Gives an open task to a farm member, or to nobody with `null` (F1-1).
+ * A primary's open prep and follow-up tasks go with it in the same
+ * transaction (F1-4). Closed tasks keep whoever they had. Returns the
+ * updated primary, or undefined when the task is not this Owner's.
+ */
+export function assignTask(
+  id: string,
+  assigneeUserId: string | null,
+  now: number = Date.now()
+): Task | undefined {
+  const set = {
+    assigneeUserId,
+    assignedAt: assigneeUserId ? new Date(now) : null
+  };
+  return db.transaction(() => {
+    const row = db
+      .update(tasks)
+      .set(set)
+      .where(
+        withTenant(tasks, and(eq(tasks.id, id), isNull(tasks.completedAt), isNull(tasks.abortedAt)))
+      )
+      .returning()
+      .get();
+    if (!row) return undefined;
+    if (row.kind === 'primary') {
+      db.update(tasks)
+        .set(set)
+        .where(
+          withTenant(
+            tasks,
+            and(eq(tasks.linkedToTaskId, id), isNull(tasks.completedAt), isNull(tasks.abortedAt))
+          )
+        )
+        .run();
+    }
+    return rowToTask(row);
+  });
 }
 
 export interface UpdateTaskInput {

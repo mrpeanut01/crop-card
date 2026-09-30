@@ -16,11 +16,20 @@ export const CARD_KINDS = [
   'soilTest',
   'animal',
   'flock',
-  'irrigation'
+  'irrigation',
+  'week',
+  'month',
+  'profit',
+  'digest'
 ] as const;
 
 /** Kinds built only from a saved record, never from the offline snapshot. */
-export const RECORD_ONLY_CARD_KINDS: readonly CardKind[] = ['scout', 'irrigation'];
+export const RECORD_ONLY_CARD_KINDS: readonly CardKind[] = [
+  'scout',
+  'irrigation',
+  'profit',
+  'digest'
+];
 
 export type CardKind = (typeof CARD_KINDS)[number];
 
@@ -97,6 +106,41 @@ export interface CardBedMap {
   beds: CardBedMapBed[];
 }
 
+/** One open task on a Week or Month Card. Spray tasks carry no title or
+ *  body, only "Spray task" and the Spray Card's short link (F3-4). */
+export interface CardCalendarEntry {
+  text: string;
+  where?: string;
+  who?: string;
+  overdue?: boolean;
+  /** "See the Spray Card" and its short link, for spray tasks. */
+  see?: string;
+  seeUrl?: string | null;
+}
+
+export interface CardCalendarDay {
+  ymd: string;
+  /** "Mon Oct 5" on a week, "5" on a month. */
+  label: string;
+  /** False for the neighbouring months' days on a month grid. */
+  inPeriod: boolean;
+  /** Earlier than the saved task window, so its tasks are not on the card. */
+  earlier: boolean;
+  today: boolean;
+  entries: CardCalendarEntry[];
+}
+
+export interface CardCalendar {
+  period: 'week' | 'month';
+  /** Short weekday names in grid order. */
+  weekdays: string[];
+  weeks: CardCalendarDay[][];
+  /** How many entries a day shows before "+N more". */
+  perDay: number;
+  /** Some day has more than `perDay`; print adds a page listing them all. */
+  overflow: boolean;
+}
+
 export type CardStatusTone = 'forest' | 'sky' | 'wheat' | 'rust' | 'neutral';
 
 /** A derived status pill beside the title, built with the card and never stored.
@@ -127,6 +171,8 @@ export interface CardModel {
   /** Extra screen links, e.g. "Open designer" on a garden Area. */
   links?: CardAction[];
   bedMap?: CardBedMap;
+  /** Week and Month Cards: the days and their open tasks. */
+  calendar?: CardCalendar;
   status?: CardStatus;
   /** Strip color that matches the item elsewhere on the page (a planting's
    *  swatch on /plan). Defaults to the kind color. */
@@ -143,7 +189,7 @@ export function isCardStale(card: Pick<CardModel, 'asOf' | 'staleAfterMs'>, now:
 
 export type CardVariant = 'screen' | 'compact' | 'print';
 
-export type CardPrintLayout = 'letter-4up' | 'index-3x5' | 'index-4x6';
+export type CardPrintLayout = 'letter-4up' | 'index-3x5' | 'index-4x6' | 'letter-landscape';
 
 export const CARD_KIND_LABEL: Record<CardKind, string> = {
   planting: 'Planting',
@@ -159,7 +205,11 @@ export const CARD_KIND_LABEL: Record<CardKind, string> = {
   soilTest: 'Soil test',
   animal: 'Animal',
   flock: 'Flock',
-  irrigation: 'Watering'
+  irrigation: 'Watering',
+  week: 'Week',
+  month: 'Month',
+  profit: 'Season profit',
+  digest: 'Weekly digest'
 };
 
 export const CARD_KEY_PREFIX: Record<CardKind, string> = {
@@ -178,7 +228,11 @@ export const CARD_KEY_PREFIX: Record<CardKind, string> = {
   animal: 'an',
   /** Any herd, flock or litter (one animal group). */
   flock: 'fl',
-  irrigation: 'ir'
+  irrigation: 'ir',
+  week: 'wk',
+  month: 'mo',
+  profit: 'pf',
+  digest: 'dg'
 };
 
 const KIND_BY_PREFIX = new Map<string, CardKind>(

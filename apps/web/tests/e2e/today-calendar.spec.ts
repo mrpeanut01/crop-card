@@ -83,6 +83,7 @@ test.describe('/today views', () => {
     const sheet = page.getByTestId('today-sheet');
     await expect(sheet.locator(`.deck-card[data-task-id="${ids.today}"]`)).toBeVisible();
     await sheet.getByRole('button', { name: 'Done: Stake the tomatoes' }).click();
+    await page.getByRole('button', { name: 'Done, skip time' }).click();
     await expect(
       sheet.locator(`.deck-card[data-task-id="${ids.today}"] [data-card-status="done"]`)
     ).toHaveText('Done');

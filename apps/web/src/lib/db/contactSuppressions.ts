@@ -5,7 +5,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or } from 'drizzle-orm';
 import { db } from './client';
 import { contactSuppressions } from './schema';
 
@@ -50,9 +50,18 @@ export function recordSuppression(input: {
   return res.changes > 0;
 }
 
-export function isEmailSuppressed(address: string): boolean {
-  const row = db
-    .select({ id: contactSuppressions.id })
+/**
+ * Whether opt-in email to this address is stopped. With `pingramType`, an
+ * unsubscribe Pingram reported for a different notification type does not
+ * count, so leaving the Monday summary on Pingram's page leaves field alerts
+ * alone (F4-11). Bounces, complaints and untyped unsubscribes always count.
+ */
+export function isEmailSuppressed(address: string, pingramType?: string): boolean {
+  const rows = db
+    .select({
+      reason: contactSuppressions.reason,
+      notificationType: contactSuppressions.notificationType
+    })
     .from(contactSuppressions)
     .where(
       and(
@@ -61,14 +70,38 @@ export function isEmailSuppressed(address: string): boolean {
         inArray(contactSuppressions.reason, [...BLOCKING_EMAIL_REASONS])
       )
     )
-    .get();
-  return !!row;
+    .all();
+  return rows.some(
+    (r) =>
+      !pingramType ||
+      r.reason !== 'unsubscribe' ||
+      !r.notificationType ||
+      r.notificationType === pingramType
+  );
 }
 
 /** A fresh, explicit opt-in in CropCard lifts an earlier unsubscribe. Bounces
- *  and complaints stay: those need a person to look at them. */
-export function clearEmailUnsubscribe(address: string): void {
-  clearUnsubscribe('email', address);
+ *  and complaints stay: those need a person to look at them. With
+ *  `pingramType`, only an untyped unsubscribe or one for that type is lifted,
+ *  so turning on a field alert leaves a Monday summary unsubscribe in place. */
+export function clearEmailUnsubscribe(address: string, pingramType?: string): void {
+  if (!pingramType) {
+    clearUnsubscribe('email', address);
+    return;
+  }
+  db.delete(contactSuppressions)
+    .where(
+      and(
+        eq(contactSuppressions.address, normalizeAddress('email', address)),
+        eq(contactSuppressions.channel, 'email'),
+        eq(contactSuppressions.reason, 'unsubscribe'),
+        or(
+          isNull(contactSuppressions.notificationType),
+          eq(contactSuppressions.notificationType, pingramType)
+        )
+      )
+    )
+    .run();
 }
 
 export function clearUnsubscribe(channel: SuppressionChannel, address: string): void {

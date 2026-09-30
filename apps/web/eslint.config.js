@@ -73,6 +73,14 @@ export default tseslint.config(
     }
   },
   {
+    // 32F (F5-5): files that have moved onto the i18n catalog. Add a glob
+    // here when a page moves onto t(); everything else still writes English.
+    files: ['src/lib/components/ui/TopBar.svelte', 'src/routes/settings/account/**/*.svelte'],
+    rules: {
+      'cropcard/no-raw-text': ['warn', { allow: ['CropCard'] }]
+    }
+  },
+  {
     files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
     languageOptions: {
       parserOptions: {

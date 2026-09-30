@@ -3,6 +3,7 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import BedMapThumb from './BedMapThumb.svelte';
+  import CardCalendarView from './CardCalendarView.svelte';
   import {
     CARD_KIND_LABEL,
     STALE_NOTICE,
@@ -35,6 +36,9 @@
     actions?: Snippet;
     /** Screen and compact only: badges beside the kicker. */
     badges?: Snippet;
+    /** Print only: every item is on the card and the page flows onto more
+     *  sheets, so there is no "Cut short?" line. */
+    complete?: boolean;
   }
 
   const COMPACT_FACTS = 2;
@@ -50,7 +54,8 @@
     compactSections = [],
     showAsOf = true,
     actions,
-    badges
+    badges,
+    complete = false
   }: Props = $props();
 
   const stale = $derived(isCardStale(card, now));
@@ -182,6 +187,10 @@
         </section>
       {/if}
 
+      {#if card.calendar && variant !== 'compact'}
+        <CardCalendarView calendar={card.calendar} mode={variant === 'print' ? 'grid' : 'agenda'} />
+      {/if}
+
       {#if card.links?.length && variant === 'screen'}
         <div class="links">
           {#each card.links as l (l.href)}
@@ -226,7 +235,7 @@
         {/if}
       {/each}
     </div>
-    {#if variant === 'print' && bodySections.length}
+    {#if variant === 'print' && bodySections.length && !complete}
       <p class="more">
         {card.kind === 'spray'
           ? 'Cut short? The label and the live card have the full directions.'
@@ -328,7 +337,9 @@
   .kind-equipment {
     --strip: var(--color-sky);
   }
-  .kind-day {
+  .kind-day,
+  .kind-week,
+  .kind-month {
     --strip: var(--color-ink-soft);
   }
   .kind-task {
@@ -629,5 +640,22 @@
   }
   .v-print .qr-row {
     flex: 0 0 auto;
+  }
+  .v-print.kind-week .content,
+  .v-print.kind-month .content {
+    -webkit-mask-image: none;
+    mask-image: none;
+    padding-bottom: 0;
+  }
+  .v-print.kind-week .facts,
+  .v-print.kind-month .facts {
+    grid-template-columns: repeat(4, auto);
+    justify-content: start;
+    padding: 0.03in 0;
+  }
+  .v-print.kind-week .qr,
+  .v-print.kind-month .qr {
+    width: 0.6in;
+    height: 0.6in;
   }
 </style>

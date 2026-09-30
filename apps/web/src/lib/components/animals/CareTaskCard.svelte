@@ -1,6 +1,7 @@
 <script lang="ts">
   import './animalForms.css';
   import HealthForm from './HealthForm.svelte';
+  import TimeChipRow from '$lib/components/tasks/TimeChipRow.svelte';
   import { CareCloser, type CareCloseRun } from '$lib/animals/careClose';
   import {
     CARE_KIND_LABEL,
@@ -32,6 +33,7 @@
   let mode = $state<'idle' | 'some' | 'done' | 'skip'>('idle');
   let picked = $state<string[]>([]);
   let nextDue = $state('');
+  let minutes = $state<number | undefined>(undefined);
   let busy = $state(false);
   let error = $state<string | null>(null);
 
@@ -65,6 +67,7 @@
   function openDone() {
     error = null;
     nextDue = suggestedNext ?? '';
+    minutes = undefined;
     mode = 'done';
   }
 
@@ -115,11 +118,21 @@
   const nextDueExtra = (): CareCloseExtra =>
     isOwner && nextDue && nextDue !== suggestedNext ? { nextDueOn: nextDue } : {};
 
+  /** The time is for the whole job, so it rides on the first task only and
+   *  a "Done for all" is not counted once per animal. */
+  function timeExtra(item: CareItemView): CareCloseExtra {
+    const firstOpen = chosen[0];
+    return minutes && firstOpen && item.taskId === firstOpen.taskId ? { minutes } : {};
+  }
+
   async function quickDone() {
     busy = true;
     error = null;
     try {
-      report(await closeAll('complete', () => nextDueExtra()), 'Marked done:');
+      report(
+        await closeAll('complete', (item) => ({ ...nextDueExtra(), ...timeExtra(item) })),
+        'Marked done:'
+      );
     } finally {
       busy = false;
     }
@@ -128,6 +141,7 @@
   async function submitHealth(body: HealthRecordInput): Promise<Response> {
     const r = await closeAll('complete', (item) => ({
       ...nextDueExtra(),
+      ...timeExtra(item),
       healthEvent: {
         ...body,
         kind: CARE_TO_HEALTH_KIND[card.careKind] ?? body.kind,
@@ -258,6 +272,7 @@
           </p>
         {/if}
       {/if}
+      <TimeChipRow value={minutes} onChange={(m) => (minutes = m)} disabled={busy} />
       {#if holdBearing}
         <HealthForm
           subjectType={first.subjectType}

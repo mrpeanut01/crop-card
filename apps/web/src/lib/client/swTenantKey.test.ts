@@ -3,6 +3,10 @@ import fc from 'fast-check';
 import {
   BYPASS_KEY_PARAM,
   LEGACY_TENANT_CACHE_NAMES,
+  LOCALE_HEADER,
+  LOCALE_KEY_PARAM,
+  SW_META_LOCALE_URL,
+  localeOfCacheKey,
   OWNER_HEADER,
   OWNER_KEY_PARAM,
   SET_ACTIVE_OWNER_MESSAGE,
@@ -48,11 +52,19 @@ interface FakeResponse {
   text(): Promise<string>;
 }
 
-function res(body: string, owner: string | null, status = 200): FakeResponse {
+function res(
+  body: string,
+  owner: string | null,
+  status = 200,
+  locale: string | null = null
+): FakeResponse {
   return {
     status,
     body,
-    headers: { get: (n: string) => (n.toLowerCase() === OWNER_HEADER ? owner : null) },
+    headers: {
+      get: (n: string) =>
+        n.toLowerCase() === OWNER_HEADER ? owner : n.toLowerCase() === LOCALE_HEADER ? locale : null
+    },
     text: async () => body
   };
 }
@@ -78,14 +90,22 @@ function fakeCacheStorage() {
   };
 }
 
-function memoryStore(initial: string | null = null): OwnerStore & { value: string | null } {
+function memoryStore(
+  initial: string | null = null,
+  initialLocale = 'en'
+): OwnerStore & { value: string | null; locale: string } {
   const s = {
     value: initial,
+    locale: initialLocale,
     async get() {
       return s.value;
     },
-    async set(v: string | null) {
+    async set(v: string | null, locale?: string) {
       s.value = v;
+      if (locale !== undefined) s.locale = locale;
+    },
+    async getLocale() {
+      return s.locale;
     }
   };
   return s;
@@ -477,5 +497,114 @@ describe('installSwTenant', () => {
     for (const n of LEGACY_TENANT_CACHE_NAMES) expect(scope.caches.stores.has(n)).toBe(false);
     expect(scope.caches.stores.has('cropcard-tenant-data')).toBe(true);
     expect(scope.caches.stores.has('osm-tiles')).toBe(true);
+  });
+});
+
+describe('locale in the cache key (32F, F5-4)', () => {
+  it('leaves English keys unchanged and adds any other language', () => {
+    const plain = tenantCacheKey('https://x.test/today/__data.json', 'a');
+    expect(tenantCacheKey('https://x.test/today/__data.json', 'a', 'en')).toBe(plain);
+    const es = tenantCacheKey('https://x.test/today/__data.json', 'a', 'es');
+    expect(new URL(es).searchParams.get(LOCALE_KEY_PARAM)).toBe('es');
+    expect(ownerOfCacheKey(es)).toBe('a');
+    expect(localeOfCacheKey(es)).toBe('es');
+    expect(localeOfCacheKey(plain)).toBe('en');
+  });
+
+  it('strips a forged locale param and never adds one to a bypass key', () => {
+    const forged = `https://x.test/api/plugins?${LOCALE_KEY_PARAM}=es`;
+    expect(localeOfCacheKey(tenantCacheKey(forged, 'a'))).toBe('en');
+    const bypass = tenantCacheKey(forged, null, 'es');
+    expect(new URL(bypass).searchParams.has(LOCALE_KEY_PARAM)).toBe(false);
+  });
+
+  it('reads only a same-language entry', () => {
+    const key = tenantCacheKey('https://x.test/p', 'a', 'es');
+    expect(readDecision('a', key, 'a', 'es', 'es')).toBe('serve');
+    expect(readDecision('a', key, 'a', 'en', 'es')).toBe('bypass');
+    expect(readDecision('a', key, 'a', 'es', null)).toBe('bypass');
+    const en = tenantCacheKey('https://x.test/p', 'a');
+    expect(readDecision('a', en, 'a')).toBe('serve');
+    expect(readDecision('a', en, 'a', 'en', 'es')).toBe('bypass');
+  });
+
+  it('writes only a response rendered in the key language', () => {
+    const base = { activeOwnerId: 'a', keyOwnerId: 'a', responseOwnerId: 'a', status: 200 };
+    expect(writeDecision({ ...base })).toBe('write');
+    expect(
+      writeDecision({ ...base, activeLocale: 'es', keyLocale: 'es', responseLocale: 'es' })
+    ).toBe('write');
+    expect(
+      writeDecision({ ...base, activeLocale: 'es', keyLocale: 'es', responseLocale: 'en' })
+    ).toBe('skip');
+    expect(
+      writeDecision({ ...base, activeLocale: 'en', keyLocale: 'es', responseLocale: 'es' })
+    ).toBe('skip');
+  });
+
+  it('parses the locale from the page message, and keeps it absent when not sent', () => {
+    expect(
+      parseSetActiveOwnerMessage({ type: SET_ACTIVE_OWNER_MESSAGE, ownerId: 'a', locale: 'es' })
+    ).toEqual({ ownerId: 'a', wipe: false, locale: 'es' });
+    expect(
+      parseSetActiveOwnerMessage({ type: SET_ACTIVE_OWNER_MESSAGE, ownerId: 'a', locale: '<x>' })
+    ).toEqual({ ownerId: 'a', wipe: false, locale: 'en' });
+    expect(parseSetActiveOwnerMessage({ type: SET_ACTIVE_OWNER_MESSAGE, ownerId: 'a' })).toEqual({
+      ownerId: 'a',
+      wipe: false
+    });
+  });
+
+  it('persists the language across a SW restart', async () => {
+    const cs = fakeCacheStorage();
+    const make = (b: string) => res(b, null);
+    await createOwnerStore(cs, make).set('a', 'es');
+    expect(cs.stores.get(SW_META_CACHE)?.has(SW_META_LOCALE_URL)).toBe(true);
+    const restarted = createOwnerStore(cs, make);
+    expect(await restarted.getLocale()).toBe('es');
+    await restarted.set('a');
+    expect(await restarted.getLocale()).toBe('es');
+    await restarted.set('a', 'en');
+    expect(await createOwnerStore(cs, make).getLocale()).toBe('en');
+  });
+
+  it('property: a read never returns another owner or another language', async () => {
+    const op = fc.oneof(
+      fc.record({
+        kind: fc.constant('set' as const),
+        owner: fc.option(fc.constantFrom('a', 'b')),
+        locale: fc.constantFrom('en', 'es')
+      }),
+      fc.record({
+        kind: fc.constant('write' as const),
+        url: pathArb,
+        respOwner: fc.option(fc.constantFrom('a', 'b')),
+        respLocale: fc.option(fc.constantFrom('en', 'es'))
+      }),
+      fc.record({ kind: fc.constant('read' as const), url: pathArb })
+    );
+    await fc.assert(
+      fc.asyncProperty(fc.array(op, { maxLength: 40 }), async (ops) => {
+        const store = memoryStore(null);
+        const wb = workboxSim(store);
+        const full = (p: string) => new URL(p, 'https://x.test').toString();
+        for (const o of ops) {
+          if (o.kind === 'set') {
+            store.value = o.owner;
+            store.locale = o.locale;
+          } else if (o.kind === 'write') {
+            const lang = o.respLocale ?? 'en';
+            await wb.write(
+              full(o.url),
+              res(`${o.respOwner}:${lang}:${o.url}`, o.respOwner, 200, o.respLocale)
+            );
+          } else {
+            const hit = await wb.read(full(o.url));
+            if (hit) expect(hit.body).toBe(`${store.value}:${store.locale}:${o.url}`);
+          }
+        }
+      }),
+      { numRuns: 300 }
+    );
   });
 });

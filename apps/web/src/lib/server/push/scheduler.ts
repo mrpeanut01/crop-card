@@ -41,8 +41,10 @@ import { selectRecipients, sendToSubscriptions } from './dispatch';
 import { emailAlertOrigin, sendAlertEmails } from './emailAlerts';
 import { frostTonightAlerts, isInGroundOrImminent, type FrostPlantingSnapshot } from './frost';
 import { activeCoverByBlock } from '$lib/server/blockFrost.server';
+import { weeklyDigestForOwner } from './weeklyDigest';
 import {
   LOCK_WINDOW_MS,
+  isDigestSendWindow,
   selectDueAlerts,
   type LockableRecordSnapshot,
   type PushAlert,
@@ -240,6 +242,21 @@ export async function processOwnerAlerts(
     ...(await frostAlertsForOwner(now, deps)),
     ...(await animalAlertsForOwner(now, deps))
   ];
+  if (isDigestSendWindow(now)) {
+    const d = await weeklyDigestForOwner(
+      ownerId,
+      ownerRow(ownerId)?.name ?? 'your farm',
+      usersForOwner(ownerId),
+      now,
+      deps
+    );
+    summary.alerts += d.alerts;
+    summary.sent += d.sent;
+    summary.removed += d.removed;
+    summary.failed += d.failed;
+    summary.emailed += d.emailed;
+    summary.emailFailed += d.emailFailed;
+  }
   if (alerts.length === 0) return summary;
   const members = usersForOwner(ownerId);
   const farmName = ownerRow(ownerId)?.name ?? 'your farm';

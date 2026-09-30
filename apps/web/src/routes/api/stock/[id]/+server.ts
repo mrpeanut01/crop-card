@@ -16,6 +16,7 @@ import { canMutate } from '$lib/server/session';
 import { requireOwner } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { checkAnimalStockWrite } from '$lib/server/animalStockRules';
+import { lotsForRole } from '$lib/finance/redact';
 
 const updateSchema = z.object({
   displayName: z.string().min(1).max(120).optional(),
@@ -38,13 +39,14 @@ const updateSchema = z.object({
   formulationJson: z.string().max(2000).nullable().optional()
 });
 
-export const GET: RequestHandler = ({ params }) => {
+export const GET: RequestHandler = (event) => {
+  const { params } = event;
   if (!params.id) return json({ error: 'id required' }, { status: 400 });
   const item = getStockItem(params.id);
   if (!item) return json({ error: 'not found' }, { status: 404 });
   return json({
     item,
-    lots: listLotsForItem(params.id),
+    lots: lotsForRole(listLotsForItem(params.id), currentUser(event)?.role),
     movements: listMovementsForItem(params.id, 100)
   });
 };

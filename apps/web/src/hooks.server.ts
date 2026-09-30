@@ -13,7 +13,7 @@ import { db } from '$lib/db/client';
 import { owners, users, helperAssignments } from '$lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { lookupByPlaintext, touchToken } from '$lib/server/apiTokens';
-import { OWNER_HEADER } from '$lib/client/swTenantKey';
+import { LOCALE_HEADER, OWNER_HEADER } from '$lib/client/swTenantKey';
 import {
   EXPECTED_OWNER_HEADER,
   OWNER_MISMATCH_CODE,
@@ -26,6 +26,8 @@ import { fenceResponse } from '$lib/server/ops/fenceResponse';
 import { startRuntimeMetrics, withServerTiming } from '$lib/server/runtimeMetrics';
 import { scheduleBootMaintenance } from '$lib/server/dbMaintenance';
 import { scheduleBootHoldBackfill } from '$lib/server/holdParamsBoot';
+import { DEFAULT_LOCALE, enabledLocales } from '$lib/i18n/locales';
+import { LOCALE_COOKIE, fillHtmlLang, resolveLocale } from '$lib/i18n/resolve';
 
 /** Deploy handoff fence: hold the writer lease and release it to a newer
  *  container (docs/ops/restore-runbook.md). No-op outside Azure. Also starts
@@ -321,7 +323,16 @@ const handleFenced: Handle = async (input) => {
   return handleRequest(input);
 };
 
-const handleRequest: Handle = async ({ event, resolve }) => {
+const handleRequest: Handle = async ({ event, resolve: resolvePage }) => {
+  event.locals.locale = DEFAULT_LOCALE;
+  const resolve: typeof resolvePage = (ev, opts) =>
+    resolvePage(ev, {
+      ...opts,
+      transformPageChunk: async (chunk) => {
+        const html = opts?.transformPageChunk ? await opts.transformPageChunk(chunk) : chunk.html;
+        return html === undefined ? html : fillHtmlLang(html, ev.locals.locale);
+      }
+    });
   const canonical = hostRedirectTarget({
     host: event.request.headers.get('host'),
     url: event.url,
@@ -391,6 +402,7 @@ const handleRequest: Handle = async ({ event, resolve }) => {
       event.locals.authVia = 'cookie';
     }
   }
+  event.locals.locale = requestLocale(event, user);
   const path = event.url.pathname;
   const anonymous = isAnonymousRequest(path, event.isDataRequest);
 
@@ -490,8 +502,23 @@ const handleRequest: Handle = async ({ event, resolve }) => {
     );
   }
   const response = await runWithTenantAsync(activeOwnerId, () => Promise.resolve(resolve(event)));
-  return withOwnerHeader(response, activeOwnerId);
+  return withOwnerHeader(response, activeOwnerId, event.locals.locale);
 };
+
+/** F5-3. With English alone enabled (the default) nothing is read. */
+export function requestLocale(
+  event: Parameters<Handle>[0]['event'],
+  user: import('$lib/server/auth').AuthenticatedUser | null
+): string {
+  const enabled = enabledLocales();
+  if (enabled.length <= 1) return DEFAULT_LOCALE;
+  return resolveLocale({
+    enabled,
+    userLocale: user?.locale ?? null,
+    cookie: event.cookies.get(LOCALE_COOKIE) ?? null,
+    acceptLanguage: event.request.headers.get('accept-language')
+  });
+}
 
 /**
  * Tag every tenant-resolved response with the Owner it was rendered for.
@@ -499,14 +526,16 @@ const handleRequest: Handle = async ({ event, resolve }) => {
  * whose tag disagrees with the Owner baked into its cache key
  * (`lib/client/swTenantKey.ts`).
  */
-export function withOwnerHeader(response: Response, ownerId: string): Response {
+export function withOwnerHeader(response: Response, ownerId: string, locale?: string): Response {
+  const tag = (r: Response) => {
+    r.headers.set(OWNER_HEADER, ownerId);
+    if (locale) r.headers.set(LOCALE_HEADER, locale);
+    return r;
+  };
   try {
-    response.headers.set(OWNER_HEADER, ownerId);
-    return response;
+    return tag(response);
   } catch {
-    const copy = new Response(response.body, response);
-    copy.headers.set(OWNER_HEADER, ownerId);
-    return copy;
+    return tag(new Response(response.body, response));
   }
 }
 
@@ -524,12 +553,23 @@ export function revalidateCookieUser(
   user: import('$lib/server/auth').AuthenticatedUser
 ): import('$lib/server/auth').AuthenticatedUser | null {
   const row = db
-    .select({ email: users.email, phone: users.phone, isSuperadmin: users.isSuperadmin })
+    .select({
+      email: users.email,
+      phone: users.phone,
+      isSuperadmin: users.isSuperadmin,
+      locale: users.locale
+    })
     .from(users)
     .where(eq(users.id, user.id))
     .get();
   if (!row) return null;
-  const fresh = { ...user, email: row.email, phone: row.phone, isSuperadmin: row.isSuperadmin };
+  const fresh = {
+    ...user,
+    email: row.email,
+    phone: row.phone,
+    isSuperadmin: row.isSuperadmin,
+    locale: row.locale
+  };
   if (!fresh.activeOwnerId) return { ...fresh, impersonating: false };
   if (fresh.impersonating) {
     return fresh.isSuperadmin ? fresh : { ...fresh, activeOwnerId: null, impersonating: false };
@@ -564,7 +604,12 @@ function buildBearerUser(resolved: {
 }): import('$lib/server/auth').AuthenticatedUser | null {
   try {
     const userRow = db
-      .select({ email: users.email, phone: users.phone, isSuperadmin: users.isSuperadmin })
+      .select({
+        email: users.email,
+        phone: users.phone,
+        isSuperadmin: users.isSuperadmin,
+        locale: users.locale
+      })
       .from(users)
       .where(eq(users.id, resolved.userId))
       .get();
@@ -588,7 +633,8 @@ function buildBearerUser(resolved: {
       role: assignment.roleWithinOwner as SessionRole,
       activeOwnerId: resolved.ownerId,
       isSuperadmin: userRow.isSuperadmin,
-      impersonating: false
+      impersonating: false,
+      locale: userRow.locale
     };
   } catch (err) {
     console.error('[bearer-auth] failed to build user from token', err);

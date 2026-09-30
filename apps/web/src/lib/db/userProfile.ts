@@ -12,6 +12,12 @@ export function updateProfile(
   db.update(users).set(fields).where(eq(users.id, userId)).run();
 }
 
+/** The user's chosen app language, or null to follow the cookie and the
+ *  browser (32F, F5-9). */
+export function setUserLocale(userId: string, locale: string | null): void {
+  db.update(users).set({ locale }).where(eq(users.id, userId)).run();
+}
+
 export function avatarVersion(userId: string): number | null {
   const row = db
     .select({ updatedAt: userAvatars.updatedAt })

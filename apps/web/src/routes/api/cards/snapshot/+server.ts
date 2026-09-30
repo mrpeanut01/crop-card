@@ -20,7 +20,7 @@ import {
 
 const CACHE_HEADERS = {
   'cache-control': 'private, no-cache',
-  vary: 'Cookie, Authorization'
+  vary: 'Cookie, Authorization, Accept-Language'
 };
 
 function configuredOrigin(): string | null {
@@ -32,12 +32,13 @@ export const GET: RequestHandler = async (event) => {
   const now = Date.now();
   const origin = configuredOrigin();
   const ifNoneMatch = event.request.headers.get('if-none-match');
-  const key = await snapshotStateKey({ now, origin });
+  const locale = event.locals.locale;
+  const key = await snapshotStateKey({ now, origin, locale });
   const known = knownSnapshotEtag(key);
   if (known && etagMatches(ifNoneMatch, known)) {
     return new Response(null, { status: 304, headers: { ...CACHE_HEADERS, etag: known } });
   }
-  const snapshot = await buildFarmSnapshot({ now, origin });
+  const snapshot = await buildFarmSnapshot({ now, origin, locale });
   const etag = snapshotEtag(snapshot);
   rememberSnapshotEtag(key, etag);
   if (etagMatches(ifNoneMatch, etag)) {

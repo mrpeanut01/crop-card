@@ -43,29 +43,65 @@ export function paginate<T>(items: readonly T[], layout: CardPrintLayout): T[][]
 
 /** Cards with a map (the Farm Map Card, an Area Card with a bed map) are
  *  too much for an index card or a quarter sheet, so each prints on its own
- *  letter page whatever paper the other cards use. */
+ *  letter page whatever paper the other cards use. Week and Month Cards
+ *  always print on their own Letter landscape page (F3-6). */
 export function needsFullPage(card: Pick<CardModel, 'kind' | 'bedMap'>): boolean {
-  return card.kind === 'farmMap' || (card.kind === 'area' && !!card.bedMap);
+  return (
+    card.kind === 'farmMap' ||
+    card.kind === 'profit' ||
+    (card.kind === 'area' && !!card.bedMap) ||
+    isCalendarKind(card.kind)
+  );
+}
+
+export function isCalendarKind(kind: CardModel['kind']): boolean {
+  return kind === 'week' || kind === 'month';
+}
+
+/** The paper a card that prints on its own page uses. */
+export function fullPageLayout(card: Pick<CardModel, 'kind'>): 'letter' | 'letter-landscape' {
+  return isCalendarKind(card.kind) ? 'letter-landscape' : 'letter';
 }
 
 export const FULL_PAGE_NOTE = 'This card prints on its own letter page so the whole map fits.';
+export const LANDSCAPE_PAGE_NOTE =
+  'This card prints on Letter paper turned sideways. Choose Letter and Landscape in the print dialog.';
+
+export function fullPageNote(card: Pick<CardModel, 'kind'>): string {
+  return isCalendarKind(card.kind)
+    ? LANDSCAPE_PAGE_NOTE
+    : `${FULL_PAGE_NOTE} Choose Letter paper in the print dialog.`;
+}
 
 export interface PrintPage<T> {
   full: boolean;
+  /** Letter landscape (Week and Month Cards). */
+  landscape?: boolean;
+  /** `list`: the extra page that names every task of a crowded calendar. */
+  part?: 'list';
   items: T[];
 }
 
-/** `paginate` for the chosen paper, then one letter page per map card. */
-export function paginateCards<T extends { card: Pick<CardModel, 'kind' | 'bedMap'> }>(
-  items: readonly T[],
-  layout: CardPrintLayout
-): PrintPage<T>[] {
+/** `paginate` for the chosen paper, then one page per full-page card, plus
+ *  a task list page after a Week or Month Card whose days overflow. */
+export function paginateCards<
+  T extends { card: Pick<CardModel, 'kind' | 'bedMap'> & { calendar?: CardModel['calendar'] } }
+>(items: readonly T[], layout: CardPrintLayout): PrintPage<T>[] {
   const small = items.filter((i) => !needsFullPage(i.card));
   const full = items.filter((i) => needsFullPage(i.card));
-  return [
-    ...paginate(small, layout).map((page) => ({ full: false, items: page })),
-    ...full.map((item) => ({ full: true, items: [item] }))
-  ];
+  const pages: PrintPage<T>[] = paginate(small, layout).map((page) => ({
+    full: false,
+    items: page
+  }));
+  for (const item of full) {
+    const landscape = isCalendarKind(item.card.kind);
+    pages.push(
+      landscape ? { full: true, landscape, items: [item] } : { full: true, items: [item] }
+    );
+    if (landscape && item.card.calendar?.overflow)
+      pages.push({ full: true, landscape, part: 'list', items: [item] });
+  }
+  return pages;
 }
 
 export interface PrintLink {

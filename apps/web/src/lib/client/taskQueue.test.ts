@@ -108,3 +108,49 @@ describe('task actions in the offline queue', () => {
     expect([...map]).toEqual([['t2', 'abort']]);
   });
 });
+
+describe('time on Done in the offline queue (F1-13)', () => {
+  it('a queued Done carries its minutes once, under the client id the online try used', async () => {
+    const fc = (await import('fast-check')).default;
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 1, max: 720 }),
+        fc.stringMatching(/^[A-Za-z0-9_-]{8,40}$/),
+        async (minutes, clientId) => {
+          await db().pendingSprayRecords.clear();
+          sessionStorage.setItem(ACTIVE_KEY, 'owner_a');
+          const id = await queueTaskAction('t_time', 'complete', undefined, { minutes }, clientId);
+          expect(id).toBe(clientId);
+          expect(parseQueuedTask((await db().pendingSprayRecords.get(id))!.payload)).toEqual({
+            taskId: 't_time',
+            action: 'complete',
+            minutes
+          });
+          const sent: { body: Record<string, unknown>; clientId: string | null }[] = [];
+          vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string, init?: RequestInit) => {
+              if (url.includes('active-owner') || url.includes('/api/session'))
+                return new Response(JSON.stringify({ activeOwnerId: 'owner_a' }), {
+                  status: 200
+                });
+              const headers = new Headers(init?.headers);
+              sent.push({
+                body: JSON.parse(String(init?.body)),
+                clientId: headers.get('x-cropcard-client-record-id')
+              });
+              return new Response('{}', { status: 200 });
+            })
+          );
+          await drainQueue();
+          await drainQueue();
+          expect(sent).toHaveLength(1);
+          expect(sent[0].body).toMatchObject({ taskId: 't_time', action: 'complete', minutes });
+          expect(sent[0].clientId).toBe(clientId);
+          vi.unstubAllGlobals();
+        }
+      ),
+      { numRuns: 20 }
+    );
+  });
+});

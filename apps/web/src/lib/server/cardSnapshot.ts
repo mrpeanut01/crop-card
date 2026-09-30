@@ -4,6 +4,7 @@
  * pesticide plugins come from the Owner's registry view.
  */
 
+import { DEFAULT_LOCALE } from '$lib/i18n/locales';
 import { listOpenSeedStarts } from '$lib/db/seedStarts';
 import { createHash } from 'node:crypto';
 import {
@@ -44,6 +45,8 @@ import { loadAnimalsProfile } from '$lib/animals/profile.server';
 import { splitHoldMapKey, type HoldProjection, type Span } from '$lib/safety/holdLedger';
 import { projectActiveFarm } from './holdGuard';
 import { listEquipment } from '$lib/db/equipment';
+import { minutesByCrop } from '$lib/db/taskTime';
+import { listAssignableMembers } from '$lib/db/users';
 import { listSoilTests, type SoilTest } from '$lib/db/fertility';
 import { listStockItems } from '$lib/db/stock';
 import { dbChangeMarker } from '$lib/db/requestMemo';
@@ -60,7 +63,7 @@ import { listMapFeatureViews } from '$lib/db/mapFeatures';
 const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
 export const SNAPSHOT_TASK_PAST_DAYS = 14;
-export const SNAPSHOT_TASK_FUTURE_DAYS = 30;
+export const SNAPSHOT_TASK_FUTURE_DAYS = 62;
 
 const PESTICIDE_TYPES = new Set(['herbicide', 'insecticide', 'fungicide']);
 
@@ -432,6 +435,8 @@ export async function animalSnapshotPart(windowNow: number): Promise<AnimalSnaps
 export interface BuildSnapshotOptions {
   now?: number;
   origin?: string | null;
+  /** The reader's language (F5-4); English when absent. */
+  locale?: string;
 }
 
 function utcDay(ms: number): string {
@@ -508,6 +513,11 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     if (rec?.plugin.type === 'crop') p.harvestWindow = engineHarvestWindow(p, rec.plugin);
   }
   attachOpenTrays(plantings);
+  const minutes = minutesByCrop(plantings.map((p) => p.id));
+  for (const p of plantings) {
+    const m = minutes.get(p.id);
+    if (m) p.minutesLogged = m;
+  }
 
   const stockItems = listStockItems();
   const sprayProducts: Record<string, SnapshotSprayProduct> = {};
@@ -525,6 +535,7 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     generatedAt: now,
     rulesVersion: RULES_VERSION,
     origin: opts.origin ?? null,
+    locale: opts.locale ?? DEFAULT_LOCALE,
     areas: listAreas().map(toArea),
     blocks: listBlocks({ plantings: 'none' })
       .map(toBlock)
@@ -534,6 +545,11 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
       windowNow - SNAPSHOT_TASK_PAST_DAYS * DAY_MS,
       windowNow + SNAPSHOT_TASK_FUTURE_DAYS * DAY_MS
     ),
+    people: listAssignableMembers(ownerId).map((m) => ({ id: m.id, name: m.name })),
+    taskWindow: {
+      fromMs: windowNow - SNAPSHOT_TASK_PAST_DAYS * DAY_MS,
+      toMs: windowNow + SNAPSHOT_TASK_FUTURE_DAYS * DAY_MS
+    },
     equipment: listEquipment()
       .filter((e) => e.retiredAt === undefined)
       .map(toEquipment)
@@ -581,6 +597,7 @@ function registryIdentity(registry: object): number {
 export async function snapshotStateKey(opts: {
   now: number;
   origin: string | null;
+  locale?: string;
 }): Promise<string> {
   const ownerId = requireOwnerId();
   const registry = await getRegistry();
@@ -590,6 +607,7 @@ export async function snapshotStateKey(opts: {
     registryIdentity(registry),
     snapshotWindowTime(opts.now),
     opts.origin,
+    opts.locale ?? DEFAULT_LOCALE,
     RULES_VERSION,
     FARM_SNAPSHOT_VERSION
   ]);

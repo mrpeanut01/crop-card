@@ -107,7 +107,8 @@ test('a medicine is saved by hand with its NADA number and no withdrawal from an
   await expect(page.getByRole('tab', { name: /Animal health/ })).toBeVisible();
   await page.getByRole('button', { name: 'Catalog' }).click();
   await page.waitForURL(/mode=catalog/);
-  await expect(page.getByTestId('animal-health-catalog-empty')).toBeVisible();
+  await expect(page.getByTestId('animal-health-catalog-empty')).toHaveCount(0);
+  await expect(page.getByText(/Safe-Guard Suspension/).first()).toBeVisible();
 
   await page.goto('/inventory/animal-health/add');
   await page.waitForLoadState('networkidle');
@@ -115,7 +116,7 @@ test('a medicine is saved by hand with its NADA number and no withdrawal from an
   await expect(page.getByText(/Claude key required/)).toBeVisible();
   await page.getByRole('tab', { name: /Type it in/ }).click();
 
-  await expect(page.getByTestId('no-health-library')).toBeVisible();
+  await expect(page.getByTestId('no-health-library')).toHaveCount(0);
   await page.getByLabel(/Display name/).fill('Poultry dewormer');
   await page.getByLabel('NADA or ANADA number').fill('nada 141-061');
   await page.getByLabel(/How much do you have/).fill('100');

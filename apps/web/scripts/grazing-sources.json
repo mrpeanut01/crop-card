@@ -1,46 +1,135 @@
 {
   "$comment": "Phase 32A. Quotes for every grazingRestrictions value on herbicide, insecticide and fungicide plugins, keyed pluginId → fact path (grazeDays, hayDays, lactatingDairyGrazeDays, meatAnimalRemovalBeforeSlaughterDays, notForPasture, manureCarryover, speciesExceptions.<speciesId>[.lactating].grazeDays|hayDays). Each entry is { url, publisher, date, quote, note? } read from the product label. `pastureAllowlist` lists pasture-labelled products that have no grazingRestrictions yet, each with a reason. The gate in apps/web/src/lib/plugins/sourceCoverage.gate.test.ts fails on a pasture-labelled product that is neither covered nor listed, and on a listed product that is no longer a gap.",
-  "entries": {},
+  "entries": {
+    "chaparral-aminopyralid-metsulfuron": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2024-09-24",
+        "quote": "Grazing and Haying Restrictions: There are no restrictions on grazing or grass hay harvest intervals following application of Chaparral at labeled rates. However, cutting hay too soon after spraying weeds will reduce weed control. Wait 14 days after herbicide application to cut grass hay to allow herbicide to work."
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2024-09-24",
+        "quote": "Grazing and Haying Restrictions: There are no restrictions on grazing or grass hay harvest intervals following application of Chaparral at labeled rates. However, cutting hay too soon after spraying weeds will reduce weed control. Wait 14 days after herbicide application to cut grass hay to allow herbicide to work.",
+        "note": "The label sets no hay interval; the 14 days is advice for weed control. Recorded as 14 (stricter reading) rather than 0."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2024-09-24",
+        "quote": "Grazing and Haying Restrictions: There are no restrictions on grazing or grass hay harvest intervals following application of Chaparral at labeled rates. However, cutting hay too soon after spraying weeds will reduce weed control. Wait 14 days after herbicide application to cut grass hay to allow herbicide to work.",
+        "note": "The label names no separate interval for lactating dairy animals and its no-restriction grazing statement has no dairy exception, so 0."
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2024-09-24",
+        "quote": "Grazing and Haying Restrictions: There are no restrictions on grazing or grass hay harvest intervals following application of Chaparral at labeled rates. However, cutting hay too soon after spraying weeds will reduce weed control. Wait 14 days after herbicide application to cut grass hay to allow herbicide to work.",
+        "note": "The label states no slaughter withdrawal anywhere and says there are no grazing interval restrictions, so 0. The grazing statement is the only support; no sentence says 'no slaughter restriction'."
+      },
+      "manureCarryover": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2024-09-24",
+        "quote": "Do not plant a broadleaf crop in fields treated in the previous year with manure from animals that have grazed forage or eaten hay harvested from treated areas until an adequately sensitive field bioassay is conducted to determine that the aminopyralid concentration in the soil is at level that is not injurious to the crop to be planted."
+      }
+    },
+    "crossbow": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00260-20250204.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2025-02-03",
+        "quote": "Grazing and Haying Restrictions: Except for lactating dairy animals, there are no grazing restrictions following application of this product."
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00260-20250204.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2025-02-03",
+        "quote": "Do not harvest hay for 14 days after application.",
+        "note": "Same 14 days in the Rangeland and Permanent Pastures section: 'Do not cut forage for hay within 14 days of application.' The label also says the product may not be applied to forage that is to be cut and sold for commercial purposes."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00260-20250204.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2025-02-03",
+        "quote": "Grazing Lactating Dairy Animals: Do not allow lactating dairy animals to graze treated areas until the next growing season following application of this product.",
+        "note": "The label gives no day count. Recorded as 365 days, the stricter reading of 'until the next growing season'."
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00260-20250204.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2025-02-03",
+        "quote": "Slaughter Restrictions: During the season of application, withdraw livestock from grazing treated grass at least 3 days before slaughter."
+      },
+      "manureCarryover": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00260-20250204.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2025-02-03",
+        "quote": "Animals that have been fed triclopyr treated forage must be fed forage free of triclopyr for at least 3 days before movement to an area where manure may be collected, or sensitive crops are grown.",
+        "note": "The label also bars selling or moving treated plant material, or manure from animals that grazed it, off-site for compost or bedding/feed for 30 days after application."
+      }
+    },
+    "pursuit": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00310-20150929.pdf",
+        "publisher": "BASF (EPA PPLS label)",
+        "date": "2015-09-29",
+        "quote": "DO NOT feed, graze, or harvest alfalfa or clover for 30 days following an application of Pursuit to alfalfa or clover.",
+        "note": "Interval is for alfalfa and clover. The birdsfoot trefoil section also says 30 days; the Clearfield corn section says 45 days for corn forage, silage, fodder and grain, which is not a pasture use."
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00310-20150929.pdf",
+        "publisher": "BASF (EPA PPLS label)",
+        "date": "2015-09-29",
+        "quote": "DO NOT feed, graze, or harvest alfalfa or clover for 30 days following an application of Pursuit to alfalfa or clover.",
+        "note": "Same 30 days for birdsfoot trefoil."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00310-20150929.pdf",
+        "publisher": "BASF (EPA PPLS label)",
+        "date": "2015-09-29",
+        "quote": "DO NOT feed, graze, or harvest alfalfa or clover for 30 days following an application of Pursuit to alfalfa or clover.",
+        "note": "The label names no separate interval for lactating dairy animals and its 30-day no-feed/no-graze statement has no dairy exception, so the same 30 days."
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00310-20150929.pdf",
+        "publisher": "BASF (EPA PPLS label)",
+        "date": "2015-09-29",
+        "quote": "DO NOT feed, graze, or harvest alfalfa or clover for 30 days following an application of Pursuit to alfalfa or clover.",
+        "note": "The label states no slaughter withdrawal, so 0; animals cannot graze the treated stand for 30 days in any case. The grazing statement is the only support; no sentence says 'no slaughter restriction'."
+      }
+    }
+  },
   "pastureAllowlist": [
     {
       "pluginId": "balan-benefin",
-      "reason": "The plugin notes list alfalfa and clover, forage crops that are cut for hay or grazed, among the Balan sites. Grazing and haying intervals have not been read from a label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+      "reason": "Balan DF (EPA 34704-746, label accepted 2025-11-05) is applied and incorporated before seeding alfalfa, birdsfoot trefoil and clover, and the label states no grazing, haying, dairy or slaughter interval anywhere. The label was read in full for Task 10; silence cannot be quoted as a 0, so no block is recorded. Needs a human decision on whether a label with no statement counts as no restriction."
     },
     {
       "pluginId": "banvel",
-      "reason": "The plugin notes list pasture use, but the plugin does not name one Banvel label (see the EPA-number allowlist). Grazing and haying intervals have not been read from a label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
-    },
-    {
-      "pluginId": "chaparral-aminopyralid-metsulfuron",
-      "reason": "Chaparral (EPA 62719-597) is labelled for pasture and rangeland. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
-    },
-    {
-      "pluginId": "crossbow",
-      "reason": "Crossbow (EPA 62719-260) is labelled for pasture and hay fence lines. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+      "reason": "The plugin names no EPA registration number and no registrant label, so there is no single current label to read. Left for when an owner names the product or a label is chosen."
     },
     {
       "pluginId": "dimilin-2l",
-      "reason": "The plugin targets alfalfa weevil, so it is used on alfalfa, a forage crop that is cut for hay or grazed, but the plugin does not list the label's crops. Grazing and haying intervals have not been read from a label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+      "reason": "The plugin carries EPA 70506-525, but the EPA PPLS listing for that number serves the UPL/MacDermid Dimilin 2L label for EPA 400-461 (accepted 2020-11-02), so the label does not match the plugin's number. That label gives alfalfa forage or hay a 1-day preharvest interval and grass forage a 15-day hay interval on small-grain use, and states no grazing, dairy or slaughter interval. Left until the number is reconciled and the label states the four intervals."
     },
     {
       "pluginId": "duracor-aminopyralid-florpyrauxifen",
-      "reason": "DuraCor (EPA 62719-739) is labelled for pasture and rangeland. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+      "reason": "DuraCor (EPA 62719-739, only PPLS label: proposed Section 3 label 11-22-19) states a 14-day wait before cutting grass hay (7-day harvest restriction on the hay supplemental label) but states no grazing, lactating dairy or slaughter interval, so the block cannot be completed from the label. It warns of manure and compost carryover (3-day transfer rule, 18 months for hay and straw)."
     },
     {
       "pluginId": "grazonnext-hl",
-      "reason": "GrazonNext HL (EPA 62719-628) is labelled for pasture, hay and rangeland. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+      "reason": "GrazonNext HL (EPA 62719-628, master label amended 01-25-17; the latest PPLS file, 2020-03-24, is an expired supplemental label) states do not harvest hay within 7 days and wait 14 days to cut grass hay, but states no grazing, lactating dairy or slaughter interval, so the block cannot be completed from the label. It warns of manure and compost carryover."
     },
     {
       "pluginId": "harmony-sg-thifensulfuron",
-      "reason": "The plugin notes list pasture among the Harmony SG (EPA 279-9595) sites. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
-    },
-    {
-      "pluginId": "pursuit",
-      "reason": "Pursuit (EPA 241-310) claims safety on alfalfa, a forage crop that is cut for hay or grazed. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+      "reason": "The Harmony SG label (EPA 279-9595, accepted 2020-04-17) has no pasture use, although the plugin notes say it does. It gives grazing and feeding intervals only for cereals, soybeans and field corn (7 days forage, 30 days hay, 30 days for field corn grain and forage) and no lactating dairy or slaughter interval. Left until the plugin note is corrected or a decision is made on recording crop-forage intervals."
     },
     {
       "pluginId": "raptor-imazamox",
-      "reason": "The plugin notes call Raptor a standard tool for alfalfa, a forage crop that is cut for hay or grazed. Grazing and haying intervals have not been read from a label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+      "reason": "Raptor (EPA 241-379, label accepted 2021-04-30) says it has no preharvest interval for any crop, but states no grazing, lactating dairy or slaughter interval for alfalfa forage or hay, so the block cannot be completed from the label."
     }
   ]
 }

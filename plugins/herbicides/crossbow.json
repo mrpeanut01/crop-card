@@ -30,5 +30,13 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "grazingRestrictions": {
+    "grazeDays": 0,
+    "hayDays": 14,
+    "lactatingDairyGrazeDays": 365,
+    "meatAnimalRemovalBeforeSlaughterDays": 3,
+    "manureCarryover": true,
+    "source": "Crossbow herbicide, EPA Reg. No. 62719-260, label amended 02-03-2025 (accepted 2025-02-04)"
+  }
 }

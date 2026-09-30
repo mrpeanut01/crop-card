@@ -4,6 +4,14 @@
   "version": "1.0.0",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Chaparral'; only unrelated copper product returned). Conventional synthetic auxin + sulfonylurea premix (Corteva EPA 62719-597); label makes no organic-production claim."},
   "pluginSchemaVersion": "1.1",
+  "grazingRestrictions": {
+    "grazeDays": 0,
+    "hayDays": 14,
+    "lactatingDairyGrazeDays": 0,
+    "meatAnimalRemovalBeforeSlaughterDays": 0,
+    "manureCarryover": true,
+    "source": "Chaparral herbicide, EPA Reg. No. 62719-597, label stamped 09-24-2024 (accepted 2024-09-27)"
+  },
   "displayName": "Chaparral (aminopyralid + metsulfuron-methyl)",
   "activeIngredients": [
     {

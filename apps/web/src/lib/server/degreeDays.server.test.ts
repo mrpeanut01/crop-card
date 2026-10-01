@@ -25,7 +25,15 @@ import {
   passesGhcndQc,
   type NceiDailyRow
 } from './degreeDays.server';
-import { OPEN_MONTH_TTL_MS, CLOSED_MONTH_TTL_MS } from './weatherObserved';
+import { OPEN_MONTH_TTL_MS, CLOSED_MONTH_TTL_MS, type FetchText } from './weatherObserved';
+
+// degreeDayAdvice builds its own NCEI fetcher; any call that reaches it must fail fast,
+// never wait on the real network.
+const realNcei = vi.hoisted(() => ({ fetch: vi.fn<FetchText>() }));
+vi.mock('$lib/server/weatherObserved', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('$lib/server/weatherObserved')>();
+  return { ...mod, nceiFetchText: () => realNcei.fetch };
+});
 
 const LEESBURG = { lat: 39.1157, lon: -77.5636 };
 const MID_ATLANTIC_OCEAN = { lat: 30, lon: -40 };
@@ -61,7 +69,10 @@ function seedOwner(): string {
 beforeAll(async () => {
   await registerTestPestModel(E2E_TRAP_MODEL);
 });
-beforeEach(clearCache);
+beforeEach(() => {
+  clearCache();
+  realNcei.fetch.mockReset().mockRejectedValue(new Error('network disabled in tests'));
+});
 
 describe('NCEI daily summaries', () => {
   it('asks for TMAX and TMIN in Fahrenheit with attributes', () => {
@@ -287,8 +298,13 @@ describe('/today degree-day card', () => {
 
   it('shows nothing before a catch is recorded', async () => {
     await runWithTenantAsync(seedOwner(), async () => {
+      const station = degreeDayStations(LEESBURG.lat, LEESBURG.lon)[0];
+      await getDailyTemps(station, 2026, NOW, {
+        fetchText: fetchOf(rows('2026-01-01', '2026-06-30', 80, 60))
+      });
       const cards = await degreeDayAdvice(ctx(['cucurbit']));
       expect(cards.filter((c) => c.id === `pest:${MODEL}`)).toEqual([]);
+      expect(realNcei.fetch).not.toHaveBeenCalled();
     });
   });
 

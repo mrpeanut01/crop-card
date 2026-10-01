@@ -5,6 +5,7 @@ export const PUSH_ALERT_KINDS = [
   'frost-tonight',
   'animal-care-due',
   'withdrawal-clears',
+  'hold-covers-sale',
   'weekly-digest'
 ] as const;
 
@@ -37,6 +38,10 @@ export const PUSH_ALERT_LABELS: Record<PushAlertKind, { label: string; sub: stri
     label: 'Hold cleared',
     sub: 'An egg, milk or meat hold on an animal or group has ended. Owner only.'
   },
+  'hold-covers-sale': {
+    label: 'Hold now covers a sale',
+    sub: 'A later record put egg, milk or meat records you already saved inside a hold. Owner only.'
+  },
   'weekly-digest': {
     label: 'Monday summary',
     sub: "One summary of the week's tasks every Monday morning. Safety alerts still come on their own."
@@ -45,7 +50,8 @@ export const PUSH_ALERT_LABELS: Record<PushAlertKind, { label: string; sub: stri
 
 /** Kinds added after devices had already saved their choices. A device
  *  that saved before a kind existed keeps it off until the user turns it
- *  on (D0-16). */
+ *  on (D0-16). `hold-covers-sale` is a food-safety alert, so it is not
+ *  here and saved devices get it on (G3-06). */
 export const PUSH_KINDS_ADDED_LATER: readonly PushAlertKind[] = [
   'animal-care-due',
   'withdrawal-clears',
@@ -53,10 +59,17 @@ export const PUSH_KINDS_ADDED_LATER: readonly PushAlertKind[] = [
 ];
 
 /** Kinds only an owner receives, so helpers never see the toggle. */
-export const OWNER_ONLY_PUSH_KINDS: readonly PushAlertKind[] = ['withdrawal-clears'];
+export const OWNER_ONLY_PUSH_KINDS: readonly PushAlertKind[] = [
+  'withdrawal-clears',
+  'hold-covers-sale'
+];
 
 /** Kinds about animals, shown once the farm has animals. */
-export const ANIMAL_PUSH_KINDS: readonly PushAlertKind[] = ['animal-care-due', 'withdrawal-clears'];
+export const ANIMAL_PUSH_KINDS: readonly PushAlertKind[] = [
+  'animal-care-due',
+  'withdrawal-clears',
+  'hold-covers-sale'
+];
 
 export const DEFAULT_PUSH_PREFS: PushPrefs = {
   'decon-due': true,
@@ -65,6 +78,7 @@ export const DEFAULT_PUSH_PREFS: PushPrefs = {
   'frost-tonight': false,
   'animal-care-due': true,
   'withdrawal-clears': false,
+  'hold-covers-sale': true,
   'weekly-digest': false
 };
 

@@ -267,7 +267,14 @@ describe('the hen withdrawal and discard journey', () => {
       );
       const alerts = coveredLogAlerts(await healthPlugins(), 'America/New_York');
       expect(alerts).toEqual([
-        { subjectType: 'group', subjectId: groupId, name: 'Layers', count: 1, meatCount: 0 }
+        {
+          subjectType: 'group',
+          subjectId: groupId,
+          name: 'Layers',
+          count: 1,
+          meatCount: 0,
+          href: `/animals/${groupId}/log`
+        }
       ]);
       expect(
         coveredLogAlerts(await healthPlugins(), 'America/New_York', Date.now() + 15 * DAY)
@@ -308,7 +315,14 @@ describe('the hen withdrawal and discard journey', () => {
         administeredAt: Date.now() - 3 * DAY
       });
       expect(coveredLogAlerts(await healthPlugins(), 'America/New_York')).toEqual([
-        { subjectType: 'group', subjectId: groupId, name: 'Layers', count: 1, meatCount: 0 }
+        {
+          subjectType: 'group',
+          subjectId: groupId,
+          name: 'Layers',
+          count: 1,
+          meatCount: 0,
+          href: `/animals/${groupId}/log`
+        }
       ]);
     });
   }, 20_000);
@@ -317,7 +331,11 @@ describe('the hen withdrawal and discard journey', () => {
     await runWithTenantAsync(seedOwner(), async () => {
       const { groupId } = await flock();
       const late = await produce(eggs(groupId, 'food', Date.now() - 4 * DAY));
-      expect(late.body.warnings[0]).toMatchObject({ code: 'LOGGED_LATE' });
+      expect(late.body.warnings[0]).toMatchObject({
+        code: 'LOGGED_LATE',
+        message: 'Saved 4 days after its date.'
+      });
+      expect(late.body.log).toMatchObject({ recordedLate: true });
     });
   });
 
@@ -998,7 +1016,14 @@ describe('round 4: C-06 reaches split-off groups, meat, and relabelled logs', ()
       expect(t.body.coveredMeat.map((e: Json) => e.id)).toEqual([sold.body.event.id]);
       expect(t.body.warnings.map((w: Json) => w.code)).toContain('MEAT_COVERED');
       expect(coveredLogAlerts(await healthPlugins(), 'America/New_York')).toEqual([
-        { subjectType: 'animal', subjectId: id, name: 'Steer', count: 0, meatCount: 1 }
+        {
+          subjectType: 'animal',
+          subjectId: id,
+          name: 'Steer',
+          count: 0,
+          meatCount: 1,
+          href: `/animals/${id}`
+        }
       ]);
     });
   });

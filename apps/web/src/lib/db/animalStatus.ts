@@ -161,8 +161,13 @@ export function evaluateStatusLock(
 }
 
 /** Removes a status change, leaving a tombstone (C-35): a slaughter or
- *  sale for meat a hold covered stays covered after an undo. */
-export function deleteStatusEvent(id: string, deletedBy: string | null = null): boolean {
+ *  sale for meat a hold covered stays covered after an undo. An owner void
+ *  (32G G4-07) marks the tombstone `voided`, so it stops counting. */
+export function deleteStatusEvent(
+  id: string,
+  deletedBy: string | null = null,
+  opts: { voided?: boolean; reason?: string } = {}
+): boolean {
   const event = getStatusEvent(id);
   const removed =
     db
@@ -177,8 +182,10 @@ export function deleteStatusEvent(id: string, deletedBy: string | null = null): 
           recordKind: 'animal-status' as const,
           recordId: id,
           deletedBy,
-          reason: 'Undone',
-          snapshotJson: JSON.stringify({ action: 'undo', event })
+          reason: opts.voided ? (opts.reason ?? 'Voided') : 'Undone',
+          snapshotJson: JSON.stringify(
+            opts.voided ? { action: 'undo', voided: true, event } : { action: 'undo', event }
+          )
         })
       )
       .run();
@@ -197,7 +204,8 @@ export function listAllStatusEvents(): AnimalStatusEvent[] {
     .map(rowToEvent);
 }
 
-/** Undone status changes, for the hold ledger's covered set (C-35). */
+/** Undone status changes, for the hold ledger's covered set (C-35). An
+ *  owner void drops out (32G G4-05). */
 export function listUndoneStatusEvents(): AnimalStatusEvent[] {
   const out: AnimalStatusEvent[] = [];
   for (const row of db
@@ -211,9 +219,30 @@ export function listUndoneStatusEvents(): AnimalStatusEvent[] {
     } catch {
       continue;
     }
-    const e = (snap as { event?: AnimalStatusEvent } | null)?.event;
+    const s = snap as { voided?: boolean; event?: AnimalStatusEvent } | null;
+    if (s?.voided === true) continue;
+    const e = s?.event;
     if (!e || typeof e.occurredAt !== 'number' || typeof e.subjectId !== 'string') continue;
     out.push(e);
+  }
+  return out;
+}
+
+/** Status changes the owner voided (32G G4-15), for the subject's
+ *  "Owner-corrected" list. */
+export function listVoidedStatusEvents(): AnimalStatusEvent[] {
+  const out: AnimalStatusEvent[] = [];
+  for (const row of db
+    .select()
+    .from(recordDeletions)
+    .where(withTenant(recordDeletions, eq(recordDeletions.recordKind, 'animal-status')))
+    .all()) {
+    try {
+      const s = JSON.parse(row.snapshotJson) as { voided?: boolean; event?: AnimalStatusEvent };
+      if (s?.voided === true && s.event) out.push(s.event);
+    } catch {
+      continue;
+    }
   }
   return out;
 }

@@ -110,6 +110,31 @@ export function insertFungicideEvent(input: FungicideEventInput): FungicideEvent
   return rowToEvent(row);
 }
 
+export function getFungicideEvent(id: string): FungicideEvent | undefined {
+  const row = db
+    .select()
+    .from(fungicideEvents)
+    .where(withTenant(fungicideEvents, eq(fungicideEvents.id, id)))
+    .get();
+  return row ? rowToEvent(row) : undefined;
+}
+
+/**
+ * FR-09: the 48-hour lock, stamped once on first read after the window.
+ * Mirrors insecticideEvents.evaluateLock.
+ * @hold-exempt: stamps locked_at only
+ */
+export function evaluateLock(event: FungicideEvent, now: number = Date.now()): number | undefined {
+  if (event.lockedAt) return event.lockedAt;
+  if (now - event.occurredAt < FUNGICIDE_LOCK_WINDOW_MS) return undefined;
+  const lockedAt = event.occurredAt + FUNGICIDE_LOCK_WINDOW_MS;
+  db.update(fungicideEvents)
+    .set({ lockedAt: new Date(lockedAt) })
+    .where(withTenant(fungicideEvents, eq(fungicideEvents.id, event.id)))
+    .run();
+  return lockedAt;
+}
+
 export interface ListFilters {
   blockId?: string;
   fromMs?: number;

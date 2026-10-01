@@ -10,6 +10,7 @@
   "deleteBlockCascade",
   "deleteCropCascade",
   "deleteFieldCascade",
+  "deleteFungicideEvent",
   "deleteGroupIfEmpty",
   "deleteHarvestEvent",
   "deleteHayCutting",
@@ -52,6 +53,7 @@
   "updateAnimalGroup",
   "updateBlock",
   "updateSprayEvent",
+  "voidCutting",
   "voidStay",
   "writeHealthRecord",
   "writeHoldParams"

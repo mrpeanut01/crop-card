@@ -5262,6 +5262,486 @@
         }
       }
     },
+    "/api/fungicide/{id}/void": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Fungicide record id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Void a fungicide application entered by mistake",
+        "description": "Interactive owner only: a cookie session with the owner role that is not impersonating. API tokens, helpers and impersonating superadmins get 403 `OWNER_ONLY`. Only within 48 hours of when the entry was saved (`VOID_TOO_LATE` after that, and for entries saved before holds were snapshotted). The first call answers 409 `HOLD_WOULD_SHORTEN` with the holds that would shorten and a `diffHash`; resubmit with `confirmShorten` set to it. A changed diff answers 409 `HOLD_DIFF_STALE`. A hold from a prohibited drug, an unknown label or with no end is never shortened (403 `HOLD_NOT_VOIDABLE`). An accepted void leaves a tombstone and a `hold_corrections` audit row.",
+        "security": [
+          {
+            "cookieSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "confirmShorten": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Voided.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "voided",
+                    "kind"
+                  ],
+                  "properties": {
+                    "voided": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body: a reason is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`OWNER_ONLY` or `HOLD_NOT_VOIDABLE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Record not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`HOLD_WOULD_SHORTEN` (with `holds`, `coverage` and `diffHash`), `HOLD_DIFF_STALE` or `VOID_TOO_LATE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/animals/production/{id}/void": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Production log id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Void an eggs, milk or weight log entered by mistake",
+        "description": "Interactive owner only: a cookie session with the owner role that is not impersonating. API tokens, helpers and impersonating superadmins get 403 `OWNER_ONLY`. Only within 48 hours of when the entry was saved (`VOID_TOO_LATE` after that, and for entries saved before holds were snapshotted). The first call answers 409 `HOLD_WOULD_SHORTEN` with the holds that would shorten and a `diffHash`; resubmit with `confirmShorten` set to it. A changed diff answers 409 `HOLD_DIFF_STALE`. A hold from a prohibited drug, an unknown label or with no end is never shortened (403 `HOLD_NOT_VOIDABLE`). An accepted void leaves a tombstone and a `hold_corrections` audit row.",
+        "security": [
+          {
+            "cookieSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "confirmShorten": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Voided.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "voided",
+                    "kind"
+                  ],
+                  "properties": {
+                    "voided": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body: a reason is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`OWNER_ONLY` or `HOLD_NOT_VOIDABLE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Record not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`HOLD_WOULD_SHORTEN` (with `holds`, `coverage` and `diffHash`), `HOLD_DIFF_STALE` or `VOID_TOO_LATE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/animals/status/{id}/void": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Status change id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Void a status change entered by mistake (latest change only)",
+        "description": "Interactive owner only: a cookie session with the owner role that is not impersonating. API tokens, helpers and impersonating superadmins get 403 `OWNER_ONLY`. Only within 48 hours of when the entry was saved (`VOID_TOO_LATE` after that, and for entries saved before holds were snapshotted). The first call answers 409 `HOLD_WOULD_SHORTEN` with the holds that would shorten and a `diffHash`; resubmit with `confirmShorten` set to it. A changed diff answers 409 `HOLD_DIFF_STALE`. A hold from a prohibited drug, an unknown label or with no end is never shortened (403 `HOLD_NOT_VOIDABLE`). An accepted void leaves a tombstone and a `hold_corrections` audit row.",
+        "security": [
+          {
+            "cookieSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "confirmShorten": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Voided.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "voided",
+                    "kind"
+                  ],
+                  "properties": {
+                    "voided": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body: a reason is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`OWNER_ONLY` or `HOLD_NOT_VOIDABLE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Record not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`HOLD_WOULD_SHORTEN` (with `holds`, `coverage` and `diffHash`), `HOLD_DIFF_STALE` or `VOID_TOO_LATE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/hay/cuttings/{id}/void": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Hay cutting id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Void a hay cutting entered by mistake",
+        "description": "Interactive owner only: a cookie session with the owner role that is not impersonating. API tokens, helpers and impersonating superadmins get 403 `OWNER_ONLY`. Only within 48 hours of when the entry was saved (`VOID_TOO_LATE` after that, and for entries saved before holds were snapshotted). The first call answers 409 `HOLD_WOULD_SHORTEN` with the holds that would shorten and a `diffHash`; resubmit with `confirmShorten` set to it. A changed diff answers 409 `HOLD_DIFF_STALE`. A hold from a prohibited drug, an unknown label or with no end is never shortened (403 `HOLD_NOT_VOIDABLE`). An accepted void leaves a tombstone and a `hold_corrections` audit row.",
+        "security": [
+          {
+            "cookieSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "confirmShorten": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Voided.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "voided",
+                    "kind"
+                  ],
+                  "properties": {
+                    "voided": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body: a reason is required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`OWNER_ONLY` or `HOLD_NOT_VOIDABLE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Record not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`HOLD_WOULD_SHORTEN` (with `holds`, `coverage` and `diffHash`), `HOLD_DIFF_STALE` or `VOID_TOO_LATE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/animals/{id}/care-plans": {
       "parameters": [
         {
@@ -12527,7 +13007,9 @@
                   "type": "object",
                   "required": [
                     "cards",
-                    "origin"
+                    "origin",
+                    "voidableUntilMs",
+                    "canVoidHolds"
                   ],
                   "properties": {
                     "cards": {
@@ -12541,6 +13023,17 @@
                         "string",
                         "null"
                       ]
+                    },
+                    "voidableUntilMs": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "description": "Spray, insecticide and fungicide records: until when the owner may void the entry (save time plus 48 hours); null for other kinds and for entries with no save time."
+                    },
+                    "canVoidHolds": {
+                      "type": "boolean",
+                      "description": "Whether the viewer is the owner signed in on their own account (not a helper, an API token or an impersonating superadmin)."
                     }
                   }
                 }

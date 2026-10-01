@@ -149,7 +149,7 @@ export const GET: RequestHandler = async (event) => {
     : [];
 
   const payload = {
-    schemaVersion: '1.2.0',
+    schemaVersion: '1.3.0',
     generatedAt: new Date().toISOString(),
     generator: `CropCard v${APP_VERSION}`,
     rulesVersion: RULES_VERSION,

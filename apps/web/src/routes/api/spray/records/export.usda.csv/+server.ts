@@ -43,7 +43,12 @@
  *   target_pest, weather_wind_mph, weather_temp_f, warning,
  *   crop_commodity, applicator_cert_no, total_amount_applied, moisture_pct,
  *   record_kind, bloom_status, bloom_status_source, attested_no_foragers,
- *   pollinator_verdict
+ *   pollinator_verdict, recorded_late, days_after_date
+ *
+ * Phase 32G (G2-07, G2-08): hay cuttings are `record_kind = hay` rows (mow
+ * date, block, performer, crop, bale moisture). `recorded_late` is yes, no,
+ * or blank when the kind does not track it; `days_after_date` is the whole
+ * days between the record's date and its server save time when late.
  */
 
 import { type RequestHandler } from '@sveltejs/kit';
@@ -70,6 +75,8 @@ import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import { identityLabel } from '$lib/identity';
+import { listHayForExport, type HayExportRow } from '$lib/records/hayExport.server';
+import { lateCells, UNTRACKED_LATE_CELLS, type LateCells } from '$lib/records/lateLabel';
 
 function applicatorMap(userIds: string[]): Map<string, string> {
   const ids = Array.from(new Set(userIds.filter(Boolean)));
@@ -110,6 +117,7 @@ export const GET: RequestHandler = async (event) => {
   const insecticides = listInsecticideEvents({ blockId, fromMs, toMs, limit: 10_000 });
   const fungicides = listFungicideEvents({ blockId, fromMs, toMs, limit: 10_000 });
   const harvests = listHarvestEvents({ blockId, fromMs, toMs });
+  const hay = listHayForExport({ blockId, fromMs, toMs });
   const blocks = new Map(listBlocks().map((b) => [b.id, b]));
   const registry = await getRegistry();
 
@@ -137,7 +145,8 @@ export const GET: RequestHandler = async (event) => {
   const applicatorIds = [
     ...sprays.map((e) => e.performedById),
     ...insecticides.map((e) => e.performedById),
-    ...fungicides.map((e) => e.performedById)
+    ...fungicides.map((e) => e.performedById),
+    ...hay.flatMap((h) => (h.cutting.performedById ? [h.cutting.performedById] : []))
   ];
   const applicators = applicatorMap(applicatorIds);
 
@@ -161,7 +170,8 @@ export const GET: RequestHandler = async (event) => {
     total_amount_applied: string;
     moisture_pct: string;
     record_kind: string;
-  } & PollinatorAttestationCells;
+  } & PollinatorAttestationCells &
+    LateCells;
   const rows: Row[] = [];
 
   // Data-gap (#326): no applicator pesticide-certification number is
@@ -206,7 +216,8 @@ export const GET: RequestHandler = async (event) => {
         total_amount_applied: totalAmountApplied(p.rate?.amount, acres),
         moisture_pct: '',
         record_kind: 'application',
-        ...EMPTY_POLLINATOR_CELLS
+        ...EMPTY_POLLINATOR_CELLS,
+        ...UNTRACKED_LATE_CELLS
       });
     }
   }
@@ -244,7 +255,8 @@ export const GET: RequestHandler = async (event) => {
         total_amount_applied: totalAmountApplied(p.rate?.amount, acres),
         moisture_pct: '',
         record_kind: 'application',
-        ...pollinatorAttestationCells(e)
+        ...pollinatorAttestationCells(e),
+        ...UNTRACKED_LATE_CELLS
       });
     }
   }
@@ -278,7 +290,8 @@ export const GET: RequestHandler = async (event) => {
         total_amount_applied: totalAmountApplied(p.rate?.amount, acres),
         moisture_pct: '',
         record_kind: 'application',
-        ...EMPTY_POLLINATOR_CELLS
+        ...EMPTY_POLLINATOR_CELLS,
+        ...UNTRACKED_LATE_CELLS
       });
     }
   }
@@ -309,7 +322,38 @@ export const GET: RequestHandler = async (event) => {
       total_amount_applied: e.quantity ?? '',
       moisture_pct: e.moisturePct !== undefined ? String(e.moisturePct) : '',
       record_kind: 'harvest',
-      ...EMPTY_POLLINATOR_CELLS
+      ...EMPTY_POLLINATOR_CELLS,
+      ...UNTRACKED_LATE_CELLS
+    });
+  }
+
+  // G2-07: a hay cutting is cut off ground an inspector checks against
+  // haying intervals. Application columns stay blank; record_kind = 'hay'.
+  function rowsForHayCutting(h: HayExportRow) {
+    const c = h.cutting;
+    const block = blocks.get(c.blockId);
+    const plugin = registry.get(c.cropPluginId)?.plugin as { displayName?: string } | undefined;
+    rows.push({
+      date_iso: localDay(h.occurredAt, prefs),
+      block_label: block?.blockLabel ?? block?.name ?? c.blockId,
+      applicator: c.performedById ? applicatorLabel(c.performedById) : '',
+      product_name: '',
+      epa_reg_no: '',
+      active_ingredients: '',
+      rate_per_acre: '',
+      rate_unit: '',
+      area_acres: block?.acres !== undefined ? String(block.acres) : '',
+      target_pest: '',
+      weather_wind_mph: '',
+      weather_temp_f: '',
+      warning: '',
+      crop_commodity: plugin?.displayName ?? c.cropPluginId,
+      applicator_cert_no: '',
+      total_amount_applied: '',
+      moisture_pct: c.baleMoisturePct !== undefined ? String(c.baleMoisturePct) : '',
+      record_kind: 'hay',
+      ...EMPTY_POLLINATOR_CELLS,
+      ...lateCells(c.recordedLate, h.daysLate)
     });
   }
 
@@ -317,6 +361,7 @@ export const GET: RequestHandler = async (event) => {
   for (const e of insecticides) rowsForInsecticideEvent(e);
   for (const e of fungicides) rowsForFungicideEvent(e);
   for (const e of harvests) rowsForHarvestEvent(e);
+  for (const h of hay) rowsForHayCutting(h);
 
   rows.sort((a, b) => a.date_iso.localeCompare(b.date_iso));
 

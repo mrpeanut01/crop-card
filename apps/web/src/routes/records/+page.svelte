@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
   import { onMount, tick } from 'svelte';
   import CardPrintSheet from '$lib/components/cards/CardPrintSheet.svelte';
@@ -10,6 +10,7 @@
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import LockPill from '$lib/components/ui/LockPill.svelte';
+  import { lateLabel } from '$lib/records/lateLabel';
   import { KIND_LABEL, KIND_TONE, RECORD_KINDS, type RecordKind } from '$lib/db/recordKinds';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { localStamp } from '$lib/exports/localTime';
@@ -18,6 +19,7 @@
 
   let pendingCount = $state<number | null>(null);
   let openCards = $state<string[]>([]);
+  let voidedNote = $state<string | null>(null);
   let printJob = $state<{
     cards: CardModel[];
     layout: CardPrintLayout;
@@ -595,6 +597,8 @@
       </span>
     </div>
 
+    <p class="void-status" role="status" aria-live="polite">{voidedNote ?? ''}</p>
+
     {#if data.records.length === 0}
       <div class="empty">
         <h2>No records match these filters</h2>
@@ -622,6 +626,7 @@
           <tbody>
             {#each data.records as r (r.id)}
               {@const cardOpen = openCards.includes(r.id)}
+              {@const late = lateLabel(r.recordedLate === true, r.daysLate ?? null)}
               <tr>
                 <td class="mono ts">{fmtRowTime(r)}</td>
                 <td>
@@ -637,6 +642,9 @@
                   {r.detail}
                   {#if r.customRateOverride}
                     <span class="override-pill">custom rate</span>
+                  {/if}
+                  {#if late}
+                    <span class="late-pill"><Pill tone="wheat">{late}</Pill></span>
                   {/if}
                 </td>
                 <td class="performer">{r.performerLabel ?? '—'}</td>
@@ -671,6 +679,10 @@
                       rowId={r.rowId}
                       prefs={currentPrefs()}
                       onPrint={printCards}
+                      onVoided={async () => {
+                        voidedNote = 'Voided. The entry is gone from your records.';
+                        await invalidateAll();
+                      }}
                     />
                   </td>
                 </tr>
@@ -1222,6 +1234,10 @@
     margin-left: 6px;
     font-weight: 600;
   }
+  .late-pill {
+    display: inline-block;
+    margin-left: 6px;
+  }
   .open-cell {
     text-align: right;
     white-space: nowrap;
@@ -1364,5 +1380,8 @@
     .detail-cell {
       max-width: 220px;
     }
+  }
+  .void-status {
+    margin: 0;
   }
 </style>

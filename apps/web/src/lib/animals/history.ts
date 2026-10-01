@@ -2,6 +2,7 @@
  *  changes, status changes and flag changes. Pure and client-safe. */
 
 import { STATUS_LABEL } from './display';
+import { lateLabel } from '$lib/records/lateLabel';
 
 export interface HistoryLocation {
   id: string;
@@ -19,6 +20,14 @@ export interface HistoryStatus {
   reason: string | null;
   headCountDelta: number | null;
   locked: boolean;
+  /** Meat declared as food that a hold now covers (G3-03). */
+  inHold?: boolean;
+  /** Server save time + 48 hours (32G G4-13); null when it has none. */
+  voidableUntilMs?: number | null;
+  /** Saved more than 48 hours after its date (32G G2-01). */
+  recordedLate?: boolean;
+  /** Server save time, for the days in the late marker. */
+  createdAt?: number;
 }
 
 export interface HistoryFlag {
@@ -37,6 +46,13 @@ export interface HistoryEntry {
   /** Owner-only undo: the endpoint to DELETE. */
   undo: string | null;
   locked: boolean;
+  /** A meat declaration inside a hold, so the owner can tell the buyer. */
+  inHold?: boolean;
+  /** Owner void (32G G4): the endpoint to POST and until when it is open. */
+  voidUrl?: string;
+  voidableUntilMs?: number | null;
+  /** "Saved N days after its date" (32G G2-01), or absent. */
+  late?: string;
 }
 
 export interface HistoryInput {
@@ -46,6 +62,8 @@ export interface HistoryInput {
   areaName: (id: string) => string;
   groupName: (id: string) => string;
   canUndo: boolean;
+  /** The viewer is the interactive owner (32G G4-13). */
+  canVoid?: boolean;
 }
 
 function isMarker(l: HistoryLocation): boolean {
@@ -58,6 +76,16 @@ function statusText(e: HistoryStatus): string {
   if (delta > 0) return `${delta} added`;
   if (delta < 0) return `${-delta} ${label.toLowerCase()}`;
   return e.status === 'active' ? 'Marked as still here' : label;
+}
+
+const DAY_MS = 86_400_000;
+
+function statusLate(e: HistoryStatus): string | null {
+  const days =
+    e.createdAt !== undefined && e.createdAt > e.occurredAt
+      ? Math.floor((e.createdAt - e.occurredAt) / DAY_MS)
+      : null;
+  return lateLabel(e.recordedLate === true, days);
 }
 
 function flagText(f: HistoryFlag): string {
@@ -99,6 +127,7 @@ export function buildHistory(input: HistoryInput): HistoryEntry[] {
   }
   const lastStatus = input.statusEvents.at(-1);
   for (const e of input.statusEvents) {
+    const late = statusLate(e);
     entries.push({
       id: `st:${e.id}`,
       at: e.occurredAt,
@@ -108,7 +137,15 @@ export function buildHistory(input: HistoryInput): HistoryEntry[] {
         input.canUndo && e.id === lastStatus?.id && !e.locked
           ? `/api/animals/status/${e.id}`
           : null,
-      locked: e.locked
+      locked: e.locked,
+      ...(e.inHold ? { inHold: true } : {}),
+      ...(late ? { late } : {}),
+      ...(input.canVoid && e.id === lastStatus?.id
+        ? {
+            voidUrl: `/api/animals/status/${e.id}/void`,
+            voidableUntilMs: e.voidableUntilMs ?? null
+          }
+        : {})
     });
   }
   for (const f of input.flagChanges ?? []) {

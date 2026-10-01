@@ -37,7 +37,7 @@ import {
   setDeliveryRecipientCount
 } from '$lib/db/pushSubscriptions';
 import { listOwnerIdsWithEmailOptIns, listOptedIn } from '$lib/db/emailAlertConsents';
-import { selectRecipients, sendToSubscriptions } from './dispatch';
+import { selectRecipients, sendToSubscriptions, type MemberRole } from './dispatch';
 import { emailAlertOrigin, sendAlertEmails } from './emailAlerts';
 import { frostTonightAlerts, isInGroundOrImminent, type FrostPlantingSnapshot } from './frost';
 import { activeCoverByBlock } from '$lib/server/blockFrost.server';
@@ -59,10 +59,12 @@ import { msToYmd, parseCareMeta } from '$lib/animals/carePlans';
 import type { PushAlertKind } from '$lib/push/prefs';
 import { materializeCareTasks } from '$lib/server/carePlans';
 import { projectActiveFarm } from '$lib/server/holdGuard';
+import { coveredRecordsHref } from '$lib/server/animalRecords';
 import {
   batchMessage,
   careDueAlerts,
   clearedHolds,
+  holdCoversSaleAlerts,
   withdrawalClearsAlerts,
   type OpenCareTask
 } from './animalAlerts';
@@ -196,11 +198,43 @@ function someoneWants(kind: PushAlertKind, deps: PushTickDeps): boolean {
 }
 
 /**
+ * G3-07: an owner-only kind is worth selecting only when a current owner
+ * (from today's assignments) would receive it, so a helper's device that
+ * keeps the default on never uses up the once-only delivery.
+ */
+export function anOwnerWants(
+  kind: PushAlertKind,
+  deps: Pick<PushTickDeps, 'config' | 'emailOrigin'>,
+  members: readonly MemberRole[]
+): boolean {
+  const owners = new Set(
+    members
+      .filter((m) => m.status === 'active' && m.roleWithinOwner === 'owner')
+      .map((m) => m.userId)
+  );
+  if (owners.size === 0) return false;
+  if (
+    deps.config !== null &&
+    listSubscriptions().some((s) => owners.has(s.userId) && s.prefs[kind])
+  ) {
+    return true;
+  }
+  return (
+    !!deps.emailOrigin && listOptedIn().some((c) => c.category === kind && owners.has(c.userId))
+  );
+}
+
+/**
  * Phase 32D. The tick writes this farm's care tasks (D0-2) whether or not
  * anyone wants the push, so /today and the Cards agree with it. The hold
- * ledger is only projected when someone wants hold-cleared alerts.
+ * ledger is projected once, only when someone wants hold-cleared alerts or
+ * an owner wants hold-covers-sale alerts (G3-10).
  */
-async function animalAlertsForOwner(now: number, deps: PushTickDeps): Promise<PushAlert[]> {
+async function animalAlertsForOwner(
+  now: number,
+  deps: PushTickDeps,
+  members: readonly MemberRole[]
+): Promise<PushAlert[]> {
   const timeZone = farmTimeZone();
   const care = materializeCareTasks(now, timeZone);
   const out: PushAlert[] = [];
@@ -218,10 +252,17 @@ async function animalAlertsForOwner(now: number, deps: PushTickDeps): Promise<Pu
     }
     out.push(...careDueAlerts(tasks, ymdInZone(now, timeZone)));
   }
-  if (someoneWants('withdrawal-clears', deps) && hasAnyAnimalRecord()) {
+  const wantsCleared = someoneWants('withdrawal-clears', deps);
+  const wantsCovers = anOwnerWants('hold-covers-sale', deps, members);
+  if ((wantsCleared || wantsCovers) && hasAnyAnimalRecord()) {
     try {
       const { loaded, projection } = await projectActiveFarm(timeZone, now);
-      out.push(...withdrawalClearsAlerts(clearedHolds(projection.holds, now), loaded.labels));
+      if (wantsCleared) {
+        out.push(...withdrawalClearsAlerts(clearedHolds(projection.holds, now), loaded.labels));
+      }
+      if (wantsCovers) {
+        out.push(...holdCoversSaleAlerts(projection, loaded, coveredRecordsHref));
+      }
     } catch (err) {
       console.warn('[push] hold projection unavailable this tick', err);
     }
@@ -237,16 +278,17 @@ export async function processOwnerAlerts(
   const now = (deps.now ?? Date.now)();
   const summary = { alerts: 0, sent: 0, removed: 0, failed: 0, emailed: 0, emailFailed: 0 };
   const { sprayers, records } = ownerSnapshot(now);
+  const members = usersForOwner(ownerId);
   const alerts = [
     ...selectDueAlerts({ sprayers, records, now }),
     ...(await frostAlertsForOwner(now, deps)),
-    ...(await animalAlertsForOwner(now, deps))
+    ...(await animalAlertsForOwner(now, deps, members))
   ];
   if (isDigestSendWindow(now)) {
     const d = await weeklyDigestForOwner(
       ownerId,
       ownerRow(ownerId)?.name ?? 'your farm',
-      usersForOwner(ownerId),
+      members,
       now,
       deps
     );
@@ -258,7 +300,6 @@ export async function processOwnerAlerts(
     summary.emailFailed += d.emailFailed;
   }
   if (alerts.length === 0) return summary;
-  const members = usersForOwner(ownerId);
   const farmName = ownerRow(ownerId)?.name ?? 'your farm';
   const batches = new Map<string, PushAlert[]>();
   for (const alert of alerts) {

@@ -7,6 +7,8 @@ import { loadRecordPageBase } from '$lib/animals/recordPages.server';
 import { daysLate } from '$lib/server/animalProductionGate';
 import { carriesHold, computeWithdrawalClear, FOODS } from '$lib/safety/animalWithdrawal';
 import { listHoldCorrections } from '$lib/db/holdCorrections';
+import { listVoidedProductionLogs } from '$lib/db/animalProduction';
+import { listVoidedStatusEvents } from '$lib/db/animalStatus';
 import { correctionTouches } from '$lib/animals/holdGuardCopy';
 
 export const load: PageServerLoad = async (event) => {
@@ -48,11 +50,27 @@ export const load: PageServerLoad = async (event) => {
           : [],
         entryCount: entries.length,
         daysLate: daysLate(e.administeredAt, e.createdAt),
+        recordedLate: e.recordedLate === true,
         rulesVersion: e.rulesVersion
       };
     });
-  const corrections = listHoldCorrections()
-    .filter((c) => correctionTouches(c.diffJson, `${subject.type}:${subject.id}`))
+  const allCorrections = listHoldCorrections();
+  const voidedHere = new Set(
+    allCorrections.some(
+      (c) => c.recordKind === 'animal-production' || c.recordKind === 'animal-status'
+    )
+      ? [...listVoidedProductionLogs(), ...listVoidedStatusEvents()]
+          .filter((r) => r.subjectType === subject.type && r.subjectId === subject.id)
+          .map((r) => r.id)
+      : []
+  );
+  const corrections = allCorrections
+    .filter(
+      (c) =>
+        correctionTouches(c.diffJson, `${subject.type}:${subject.id}`) ||
+        ((c.recordKind === 'animal-production' || c.recordKind === 'animal-status') &&
+          voidedHere.has(c.recordId))
+    )
     .map((c) => ({ id: c.id, recordKind: c.recordKind, reason: c.reason, createdAt: c.createdAt }));
   return {
     ...base,

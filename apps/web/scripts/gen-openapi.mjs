@@ -1096,6 +1096,22 @@ const paths = {
     'Void an insecticide application entered by mistake',
     'Insecticide record'
   ),
+  '/api/fungicide/{id}/void': voidEndpoint(
+    'Void a fungicide application entered by mistake',
+    'Fungicide record'
+  ),
+  '/api/animals/production/{id}/void': voidEndpoint(
+    'Void an eggs, milk or weight log entered by mistake',
+    'Production log'
+  ),
+  '/api/animals/status/{id}/void': voidEndpoint(
+    'Void a status change entered by mistake (latest change only)',
+    'Status change'
+  ),
+  '/api/hay/cuttings/{id}/void': voidEndpoint(
+    'Void a hay cutting entered by mistake',
+    'Hay cutting'
+  ),
 
   '/api/animals/{id}/care-plans': {
     parameters: [
@@ -2411,10 +2427,20 @@ const paths = {
       responses: {
         200: jsonResponse('The cards for the record.', {
           type: 'object',
-          required: ['cards', 'origin'],
+          required: ['cards', 'origin', 'voidableUntilMs', 'canVoidHolds'],
           properties: {
             cards: { type: 'array', items: { type: 'object' } },
-            origin: { type: ['string', 'null'] }
+            origin: { type: ['string', 'null'] },
+            voidableUntilMs: {
+              type: ['integer', 'null'],
+              description:
+                'Spray, insecticide and fungicide records: until when the owner may void the entry (save time plus 48 hours); null for other kinds and for entries with no save time.'
+            },
+            canVoidHolds: {
+              type: 'boolean',
+              description:
+                'Whether the viewer is the owner signed in on their own account (not a helper, an API token or an impersonating superadmin).'
+            }
           }
         }),
         401: errorResponse('Authentication required.'),

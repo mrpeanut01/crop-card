@@ -10,6 +10,7 @@
   import { HEALTH_KIND_LABEL, ROUTE_CHOICES } from '$lib/animals/healthCopy';
   import { holdLine } from '$lib/animals/holdCopy';
   import { formatInstant } from '$lib/prefs';
+  import { lateLabel } from '$lib/records/lateLabel';
   import { holdRefusalOf, shorteningLine, type HoldShortenBody } from '$lib/animals/holdGuardCopy';
 
   const { data } = $props();
@@ -157,7 +158,7 @@
             <div class="row-head">
               <strong>{HEALTH_KIND_LABEL[e.kind]}{e.product ? `: ${e.product}` : ''}</strong>
               {#if e.carriesHold && e.locked}<Pill tone="neutral">Locked</Pill>{/if}
-              {#if e.daysLate !== null}<Pill tone="wheat">Entered {e.daysLate} days late</Pill>{/if}
+              {#if e.recordedLate}<Pill tone="wheat">{lateLabel(true, e.daysLate)}</Pill>{/if}
             </div>
             <p class="meta">
               {formatInstant(e.administeredAt, prefs)}

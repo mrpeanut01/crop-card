@@ -49,3 +49,17 @@ export async function voidRecord(
   if (!guarded.ok) return guarded.response;
   return json({ voided: target.id, kind: target.kind });
 }
+
+/** 32G G4-13: until when the owner may void an entry saved at
+ *  `createdAtMs` (null when it has no save time and can never be voided). */
+export function voidableUntilMs(createdAtMs: number | null): number | null {
+  return createdAtMs === null ? null : createdAtMs + LOCK_WINDOW_MS;
+}
+
+/** 32G G4-13: the void button shows only for the interactive owner. */
+export function canVoidHolds(
+  event: Pick<RequestEvent, 'locals'>,
+  user: Parameters<typeof isInteractiveOwner>[1] | null
+): boolean {
+  return user ? isInteractiveOwner(event, user) : false;
+}

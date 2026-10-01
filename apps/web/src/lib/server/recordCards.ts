@@ -36,8 +36,19 @@ import { identityLabel } from '$lib/identity';
 import type { Prefs } from '$lib/prefs';
 import { buildFarmSnapshot, toCropPlugin, toSprayProduct } from './cardSnapshot';
 import { getRegistry } from './registry';
+import { lateLabel } from '$lib/records/lateLabel';
+import { hayDaysLate } from '$lib/records/hayExport.server';
 
 const LOOKUP_LIMIT = 10_000;
+
+/** G2-06: the hay record card's "Saved N days after its date" line. */
+export function hayLateNotice(cuttingNumber: number, label: string): string {
+  return `Hay cutting ${cuttingNumber}: ${label}.`;
+}
+
+function withNotice(card: CardModel, notice: string): CardModel {
+  return { ...card, notices: [...(card.notices ?? []), notice] };
+}
 
 export interface RecordCards {
   cards: CardModel[];
@@ -229,7 +240,14 @@ export async function buildRecordCards(
     if (!c) return null;
     const at = c.mowAt ?? c.baleAt ?? c.storedAt ?? c.createdAt;
     const plantingId = c.cropId ?? plantingIdForRecord(c.blockId, c.cropPluginId, at);
-    return { cards: await plantingCard(plantingId, kind, rowId, ctx), origin };
+    const late = lateLabel(c.recordedLate, hayDaysLate(c));
+    const cards = await plantingCard(plantingId, kind, rowId, ctx);
+    return {
+      cards: late
+        ? cards.map((card) => withNotice(card, hayLateNotice(c.cuttingNumber, late)))
+        : cards,
+      origin
+    };
   }
 
   if (kind === 'planting') {

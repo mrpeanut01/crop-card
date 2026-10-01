@@ -48,6 +48,7 @@ vi.mock('$lib/db/insecticideEvents', () => ({
 }));
 vi.mock('$lib/db/fungicideEvents', () => ({ listFungicideEvents: () => [] }));
 vi.mock('$lib/db/harvestEvents', () => ({ listHarvestEvents: () => [] }));
+vi.mock('$lib/records/hayExport.server', () => ({ listHayForExport: () => [] }));
 vi.mock('$lib/db/tenant', () => ({ unscopedQueryNote: () => undefined }));
 const prefs = vi.hoisted(() => ({ timeZone: 'America/New_York', units: 'us' as const }));
 vi.mock('$lib/db/userProfile', () => ({ prefsFor: () => prefs }));
@@ -70,7 +71,7 @@ async function rows() {
 }
 
 describe('USDA CSV — #130 pollinator columns', () => {
-  it('appends the four columns after record_kind', async () => {
+  it('appends the four columns after record_kind, then the two G2 columns', async () => {
     const { meta } = await rows();
     const f = meta.fields ?? [];
     expect(f.slice(f.indexOf('record_kind'))).toEqual([
@@ -78,7 +79,9 @@ describe('USDA CSV — #130 pollinator columns', () => {
       'bloom_status',
       'bloom_status_source',
       'attested_no_foragers',
-      'pollinator_verdict'
+      'pollinator_verdict',
+      'recorded_late',
+      'days_after_date'
     ]);
   });
 

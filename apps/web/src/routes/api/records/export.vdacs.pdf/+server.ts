@@ -3,7 +3,7 @@
  *
  * VDACS-formatted audit-pack PDF (#161, extended #326). Strictly broader
  * than the existing /api/spray/records/export.pdf — covers spray +
- * insecticide + fungicide + harvest + decon + fertility events in one
+ * insecticide + fungicide + harvest + hay + decon + fertility events in one
  * document, with the active Owner's identity, the rules version, and an
  * integrity hash of the canonical row set. Harvest rows carry stored
  * moisture (UC-16) so a VDACS/NRCS reviewer can accept the pack without a
@@ -55,6 +55,9 @@ import { parseExportDateRange } from '$lib/exports/dateRange';
 import { localDay, localStamp, zoneCaption } from '$lib/exports/localTime';
 import { prefsFor } from '$lib/db/userProfile';
 import { formatInstant, zoneAbbrev } from '$lib/prefs';
+import { LOCK_WINDOW_MS } from '$lib/db/recordKinds';
+import { listHayForExport } from '$lib/records/hayExport.server';
+import { LATE_LEGEND, lateLabel } from '$lib/records/lateLabel';
 
 function ownerNameOf(ownerId: string | null): string {
   if (!ownerId) return '(unknown farm)';
@@ -153,7 +156,7 @@ function listFertilityForExport(filters: {
 }
 
 interface UnifiedRow {
-  kind: 'spray' | 'insecticide' | 'fungicide' | 'harvest' | 'decon' | 'fertility';
+  kind: 'spray' | 'insecticide' | 'fungicide' | 'harvest' | 'hay' | 'decon' | 'fertility';
   id: string;
   occurredAt: number;
   blockLabel: string;
@@ -216,6 +219,7 @@ export const GET: RequestHandler = async (event) => {
     fromMs,
     toMs
   });
+  const hays = listHayForExport({ blockId, fromMs, toMs });
   const decons = listDeconForExport({
     fromMs,
     toMs
@@ -364,6 +368,39 @@ export const GET: RequestHandler = async (event) => {
       pollinatorLine: ''
     });
   }
+  // G2-07: hay cuttings, so haying intervals can be checked against the
+  // applications above. A late save is noted in the detail cell (G2-08).
+  for (const { cutting: c, occurredAt, daysLate } of hays) {
+    const plugin = registry.get(c.cropPluginId)?.plugin;
+    const cropName = plugin && 'displayName' in plugin ? plugin.displayName : c.cropPluginId;
+    const bale =
+      c.balesQuantity !== undefined && c.baleType
+        ? `${c.balesQuantity} ${c.baleType}`
+        : (c.baleType ?? '');
+    const late = lateLabel(c.recordedLate, daysLate);
+    const parts = [
+      cropName,
+      `cutting ${c.cuttingNumber}`,
+      c.status,
+      bale,
+      c.baleMoisturePct !== undefined ? `${c.baleMoisturePct}% moisture` : ''
+    ].filter(Boolean);
+    unified.push({
+      kind: 'hay',
+      id: c.id,
+      occurredAt,
+      blockLabel: blockLabelById.get(c.blockId) ?? c.blockId,
+      sprayerLabel: '—',
+      performer: c.performedById ? performerNameOf(c.performedById) : '—',
+      productLines: parts.join(' · ') + (late ? `\n${late}.` : ''),
+      conditionLine: '—',
+      rulesVersion: c.rulesVersion,
+      pluginHashes: {},
+      locked: Date.now() - occurredAt >= LOCK_WINDOW_MS,
+      customRateOverride: false,
+      pollinatorLine: ''
+    });
+  }
   // #326 — decon (tank clean-out) events between pesticide classes.
   for (const ev of decons) {
     unified.push({
@@ -503,7 +540,7 @@ export const GET: RequestHandler = async (event) => {
     content: [
       { text: 'VDACS audit pack', style: 'h1' },
       {
-        text: `${unified.length} record(s) — spray/insecticide/fungicide + harvest/decon/fertility · rules ${RULES_VERSION} · app v${APP_VERSION}`,
+        text: `${unified.length} record(s) — spray/insecticide/fungicide + harvest/hay/decon/fertility · rules ${RULES_VERSION} · app v${APP_VERSION}`,
         style: 'sub'
       },
       {
@@ -532,7 +569,8 @@ export const GET: RequestHandler = async (event) => {
         text: '\nRetention: minimum 2 years from occurrence (NFR-05). Records are immutable after the 48-hour FR-09 lock window. Plugin hashes embedded per record allow tamper-evident auditing.',
         style: 'sub',
         margin: [0, 16, 0, 0]
-      }
+      },
+      { text: LATE_LEGEND, style: 'sub', margin: [0, 6, 0, 0] }
     ],
     styles: {
       h1: { fontSize: 16, bold: true, color: '#1f5e3a', margin: [0, 0, 0, 4] },

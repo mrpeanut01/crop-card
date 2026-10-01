@@ -1,6 +1,7 @@
 <script lang="ts">
   import './animalForms.css';
   import Pill from '$lib/components/ui/Pill.svelte';
+  import HoldVoidPanel from '$lib/components/records/HoldVoidPanel.svelte';
   import { OFFLINE_MESSAGE, errorFromResponse } from '$lib/animals/display';
   import type { HistoryEntry } from '$lib/animals/history';
   import { DEFAULT_PREFS, formatInstant, type Prefs } from '$lib/prefs';
@@ -9,9 +10,11 @@
     entries: HistoryEntry[];
     prefs?: Prefs;
     onChanged: () => void | Promise<void>;
+    /** After the owner voids a status change (32G G4). */
+    onVoided?: () => void | Promise<void>;
   }
 
-  const { entries, prefs = DEFAULT_PREFS, onChanged }: Props = $props();
+  const { entries, prefs = DEFAULT_PREFS, onChanged, onVoided }: Props = $props();
 
   let busy = $state<string | null>(null);
   let error = $state<string | null>(null);
@@ -46,6 +49,8 @@
           <span class="when mono">{formatInstant(e.at, prefs, 'date')}</span>
           <span class="what">{e.text}</span>
           {#if e.locked}<Pill tone="neutral">Locked</Pill>{/if}
+          {#if e.inHold}<Pill tone="rust">Inside a hold</Pill>{/if}
+          {#if e.late}<Pill tone="wheat">{e.late}</Pill>{/if}
         </div>
         {#if e.detail}<p class="detail">{e.detail}</p>{/if}
         {#if e.undo}
@@ -57,6 +62,15 @@
           >
             {busy === e.id ? 'Removing…' : 'Undo'}
           </button>
+        {/if}
+        {#if e.voidUrl}
+          <HoldVoidPanel
+            url={e.voidUrl}
+            canVoidHolds
+            voidableUntilMs={e.voidableUntilMs ?? null}
+            timeZone={prefs.timeZone}
+            onVoided={() => (onVoided ?? onChanged)()}
+          />
         {/if}
       </li>
     {/each}

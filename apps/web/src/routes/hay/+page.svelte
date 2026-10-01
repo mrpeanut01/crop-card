@@ -4,6 +4,8 @@
   import { untrack } from 'svelte';
   import { fmt } from '$lib/prefsState.svelte';
   import { grazingTimeHref } from '$lib/animals/holdCopy';
+  import HoldVoidPanel from '$lib/components/records/HoldVoidPanel.svelte';
+  import { invalidateAll } from '$app/navigation';
 
   let { data } = $props();
 
@@ -407,6 +409,15 @@
           </div>
         {/if}
         {#if c.notes}<p class="hint">{c.notes}</p>{/if}
+        <HoldVoidPanel
+          url="/api/hay/cuttings/{c.id}/void"
+          canVoidHolds={data.canVoidHolds}
+          voidableUntilMs={c.voidableUntilMs}
+          onVoided={async () => {
+            banner = `Cutting #${c.cuttingNumber} voided.`;
+            await invalidateAll();
+          }}
+        />
       </article>
     {/each}
   {/if}

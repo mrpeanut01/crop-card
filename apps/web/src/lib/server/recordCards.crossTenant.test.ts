@@ -7,9 +7,18 @@
 import { randomUUID } from 'node:crypto';
 import type { RequestEvent } from '@sveltejs/kit';
 import { describe, expect, it } from 'vitest';
-import { runWithTenant, runWithTenantAsync, tenantValues } from '$lib/db/tenant';
+import { runWithTenant, runWithTenantAsync, tenantValues, withTenant } from '$lib/db/tenant';
 import { db } from '$lib/db/client';
-import { crops, equipment, equipmentLog, equipmentState, owners, users } from '$lib/db/schema';
+import {
+  crops,
+  equipment,
+  equipmentLog,
+  equipmentState,
+  owners,
+  sprayEvents,
+  users
+} from '$lib/db/schema';
+import { eq } from 'drizzle-orm';
 import { createField } from '$lib/db/fields';
 import { createBlock } from '$lib/db/blocks';
 import { insertSprayEvent } from '$lib/db/sprayEvents';
@@ -237,5 +246,33 @@ describe('record cards cross-tenant isolation', () => {
         GET(eventFor(x, 'nope', scoutId) as Parameters<typeof GET>[0])
       )
     ).rejects.toMatchObject({ status: 404 });
+  });
+
+  it('GET says until when the owner may void an application, and only to the owner (32G G4-13)', async () => {
+    const [, sprayId] = x.records[0];
+    const get = (kind: string, id: string, role: 'owner' | 'helper') =>
+      runWithTenantAsync(x.ownerId, async () => {
+        const res = await GET(eventFor(x, kind, id, role) as Parameters<typeof GET>[0]);
+        return (await res.json()) as { voidableUntilMs: number | null; canVoidHolds: boolean };
+      });
+    expect(await get('spray', sprayId, 'owner')).toMatchObject({
+      voidableUntilMs: null,
+      canVoidHolds: true
+    });
+    const savedAt = Date.now() - 1000;
+    runWithTenant(x.ownerId, () =>
+      db
+        .update(sprayEvents)
+        .set({ holdParamsJson: JSON.stringify({ recordedAtMs: savedAt }) })
+        .where(withTenant(sprayEvents, eq(sprayEvents.id, sprayId)))
+        .run()
+    );
+    expect(await get('spray', sprayId, 'owner')).toMatchObject({
+      voidableUntilMs: savedAt + 2 * DAY,
+      canVoidHolds: true
+    });
+    expect(await get('spray', sprayId, 'helper')).toMatchObject({ canVoidHolds: false });
+    const [, scoutId] = x.records[1];
+    expect(await get('scout', scoutId, 'owner')).toMatchObject({ voidableUntilMs: null });
   });
 });

@@ -106,10 +106,19 @@ import {
   heldAt,
   holdMapKey,
   isEmptyDiff,
+  projectHolds,
   shortenings,
   type HoldProjection
 } from '$lib/safety/holdLedger';
-import { diffHashOf, guardedHoldWrite, projectAsGuard, type GuardOptions } from './holdGuard';
+import {
+  NOW_SLACK_MS,
+  diffHashOf,
+  guardedHoldWrite,
+  loadHoldFacts,
+  prepareHoldGuard,
+  projectAsGuard,
+  type GuardOptions
+} from './holdGuard';
 import {
   DAY,
   HOUR,
@@ -504,6 +513,26 @@ function plan(op: Op, farm: Farm, nowMs: number, before: HoldProjection | null):
   }
 }
 
+/** The farm projected with no verdict cache, so none of the ledger's
+ *  caches kept across projections (G1-03) can take part. */
+async function projectFresh(timeZone: string, nowMs: number): Promise<HoldProjection> {
+  const loaded = loadHoldFacts(await prepareHoldGuard(timeZone), nowMs);
+  return projectHolds(loaded.facts, nowMs - NOW_SLACK_MS, {
+    ...loaded.ctx,
+    verdictCache: undefined
+  });
+}
+
+function plainProjection(p: HoldProjection) {
+  const byKey = <V>(m: Map<string, V>) =>
+    [...m.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return {
+    holds: byKey(p.holds).map(([k, spans]) => [k, spans.map((s) => [s.fromMs, s.toMs, s.basis])]),
+    covered: byKey(p.covered),
+    blocks: p.blocks ? [...p.blocks].sort() : null
+  };
+}
+
 function sameHolds(a: HoldProjection, b: HoldProjection): boolean {
   return isEmptyDiff(shortenings(a, b)) && isEmptyDiff(shortenings(b, a));
 }
@@ -539,6 +568,10 @@ describe('C-35 P1/P3/P4 through guardedHoldWrite', () => {
             const corrections = listHoldCorrections().length;
             const outcome = await attempt(tier, step.fn, opts, nowMs);
             const after = await projectAsGuard(TZ, nowMs);
+            // G1-03: the guard's projection, which reuses what earlier
+            // projections in this run cached, equals a projection made
+            // from nothing, so its diff is the full-projection diff.
+            expect(plainProjection(after)).toEqual(plainProjection(await projectFresh(TZ, nowMs)));
             for (const [k, spans] of after.holds) {
               if (
                 /^(animal|group):.*\|(eggs|meat)$/.test(k) &&

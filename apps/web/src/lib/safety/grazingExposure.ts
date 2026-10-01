@@ -275,27 +275,89 @@ interface AppProfile {
 /** Memo for `exposureSpansFast`, shared across the subjects of one
  *  projection (same attestations, zone and registry maximum). */
 export interface ExposureSpanCache {
-  profiles: WeakMap<GrazingApplication, Map<string, AppProfile>>;
-  rounded: Map<string, number>;
+  /** By subject reading, then application. */
+  profiles: Map<string, WeakMap<GrazingApplication, AppProfile>>;
+  /** By days, then the moment counted from. */
+  rounded: Map<number, Map<number, number>>;
+  /**
+   * Optional profiles kept across caches, keyed by content: `env` must
+   * name the zone, attestations and registry maximum the inputs carry,
+   * and `appKey` the whole application, so a hit is the profile the
+   * kernel would compute.
+   */
+  shared?: ExposureProfileStore;
+}
+
+export interface ExposureProfileStore {
+  env: string;
+  appKey: (app: GrazingApplication) => string;
+  profiles: Map<string, unknown>;
+  maxEntries: number;
 }
 
 export function newExposureSpanCache(): ExposureSpanCache {
-  return { profiles: new WeakMap(), rounded: new Map() };
+  return { profiles: new Map(), rounded: new Map() };
+}
+
+interface ReadingProfiles {
+  reading: string;
+  byApp: WeakMap<GrazingApplication, AppProfile>;
+  shared: ExposureProfileStore | undefined;
+}
+
+function profilesFor(
+  input: Pick<GrazingExposureInput, 'subject'>,
+  cache: ExposureSpanCache
+): ReadingProfiles {
+  const reading = `${input.subject.speciesId}|${input.subject.lactating !== false}`;
+  let byApp = cache.profiles.get(reading);
+  if (!byApp) {
+    byApp = new WeakMap();
+    cache.profiles.set(reading, byApp);
+  }
+  return { reading, byApp, shared: cache.shared };
+}
+
+/**
+ * The end of an application's lookback window, as `exposureSpansFast`
+ * reads it. A stay that starts after it gets no grazing hold and no
+ * removal from the application, so a caller may leave that pair out
+ * (stays with a stored floor excepted).
+ */
+export function applicationWindowEndsMs(
+  input: Pick<GrazingExposureInput, 'attestations' | 'registryMaxIntervalDays' | 'timeZone'>,
+  app: GrazingApplication
+): number {
+  const look = lookbackDays(
+    {
+      stays: [],
+      applicationsByField: new Map(),
+      attestations: input.attestations,
+      subject: { speciesId: null },
+      food: 'meat',
+      atMs: 0,
+      timeZone: input.timeZone,
+      registryMaxIntervalDays: input.registryMaxIntervalDays
+    },
+    app
+  );
+  return startOfNextLocalDay(app.appliedAtMs + look * DAY_MS, input.timeZone);
 }
 
 function profileOf(
   input: Omit<GrazingExposureInput, 'atMs' | 'stays' | 'food'>,
   app: GrazingApplication,
-  cache: ExposureSpanCache
+  memo: ReadingProfiles
 ): AppProfile {
-  const key = `${input.subject.speciesId}|${input.subject.lactating !== false}`;
-  let byReading = cache.profiles.get(app);
-  if (!byReading) {
-    byReading = new Map();
-    cache.profiles.set(app, byReading);
-  }
-  const hit = byReading.get(key);
+  const hit = memo.byApp.get(app);
   if (hit) return hit;
+  const shared = memo.shared;
+  const contentKey = shared ? `${shared.env}\u0001${memo.reading}\u0001${shared.appKey(app)}` : '';
+  const stored = shared?.profiles.get(contentKey) as AppProfile | undefined;
+  if (stored) {
+    memo.byApp.set(app, stored);
+    return stored;
+  }
   const look = lookbackDays({ ...input, stays: [], food: 'meat', atMs: 0 }, app);
   const verdict = evaluateGrazing({
     applications: [app],
@@ -313,7 +375,7 @@ function profileOf(
   const attestations = input.attestations ?? [];
   const profile: AppProfile = {
     lookMs: look * DAY_MS,
-    windowEndsAtMs: startOfNextLocalDay(app.appliedAtMs + look * DAY_MS, input.timeZone),
+    windowEndsAtMs: applicationWindowEndsMs(input, app),
     graze: {
       days: f ? f.days : null,
       clearsAtMs: f ? f.clearsAtMs : null,
@@ -324,16 +386,24 @@ function profileOf(
       app.restrictions?.notForPasture !== true &&
       (app.restrictions !== null || matchingAttestations(app, attestations).length > 0)
   };
-  byReading.set(key, profile);
+  memo.byApp.set(app, profile);
+  if (shared) {
+    if (shared.profiles.size >= shared.maxEntries) shared.profiles.clear();
+    shared.profiles.set(contentKey, profile);
+  }
   return profile;
 }
 
 function roundedCached(cache: ExposureSpanCache, fromMs: number, days: number, tz: string): number {
-  const key = `${fromMs}|${days}`;
-  let v = cache.rounded.get(key);
+  let byFrom = cache.rounded.get(days);
+  if (!byFrom) {
+    byFrom = new Map();
+    cache.rounded.set(days, byFrom);
+  }
+  let v = byFrom.get(fromMs);
   if (v === undefined) {
     v = roundedClearMs(fromMs, days, tz);
-    cache.rounded.set(key, v);
+    byFrom.set(fromMs, v);
   }
   return v;
 }
@@ -351,6 +421,7 @@ export function exposureSpansFast(
 ): ExposureSpan[] {
   const out: ExposureSpan[] = [];
   const lactating = input.subject.lactating !== false;
+  const profiles = profilesFor(input, cache);
   for (const stay of input.stays) {
     const apps = input.applicationsByField.get(stay.fieldId) ?? [];
     const to = stay.toMs ?? Number.POSITIVE_INFINITY;
@@ -358,7 +429,7 @@ export function exposureSpansFast(
       if (!Number.isFinite(app.appliedAtMs)) continue;
       const exposed = Math.max(stay.fromMs, app.appliedAtMs);
       if (exposed >= to) continue;
-      const p = profileOf(input, app, cache);
+      const p = profileOf(input, app, profiles);
       const push = (toMs: number, basis: ExposureSpan['basis'], fromMs = exposed) => {
         if (toMs > fromMs) out.push({ fieldId: stay.fieldId, ref: app.ref, fromMs, toMs, basis });
       };

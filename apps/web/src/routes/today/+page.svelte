@@ -615,11 +615,7 @@
     <ul>
       {#each data.coveredLogs as c (c.subjectType + c.subjectId)}
         <li>
-          <a
-            href={c.count > 0
-              ? `/animals/${encodeURIComponent(c.subjectId)}/log`
-              : `/animals/${encodeURIComponent(c.subjectId)}`}>{c.name}</a
-          >:
+          <a href={c.href}>{c.name}</a>:
           {#if c.count > 0}{c.count}
             {c.count === 1 ? 'log' : 'logs'}{/if}{#if c.count > 0 && c.meatCount > 0},
           {/if}{#if c.meatCount > 0}meat recorded as food{/if}

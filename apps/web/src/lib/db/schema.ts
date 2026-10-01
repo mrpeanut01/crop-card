@@ -484,7 +484,8 @@ export const recordDeletions = tenantScoped(
           'harvest',
           'animal-health',
           'animal-production',
-          'animal-status'
+          'animal-status',
+          'hay'
         ]
       }).notNull(),
       recordId: text('record_id').notNull(),
@@ -2010,6 +2011,7 @@ export const pushDeliveries = tenantScoped(
           'frost-tonight',
           'animal-care-due',
           'withdrawal-clears',
+          'hold-covers-sale',
           'weekly-digest'
         ]
       }).notNull(),
@@ -2053,6 +2055,7 @@ export const emailAlertConsents = tenantScoped(
           'frost-tonight',
           'animal-care-due',
           'withdrawal-clears',
+          'hold-covers-sale',
           'weekly-digest'
         ]
       }).notNull(),

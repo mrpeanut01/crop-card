@@ -30,6 +30,7 @@ import { listFungicideEvents } from './fungicideEvents';
 import { listScoutObservations } from './scoutObservations';
 import { listHarvestEvents } from './harvestEvents';
 import { listCuttings } from './hayCuttings';
+import { hayDaysLate } from '$lib/records/hayExport.server';
 import { listBlocks } from './blocks';
 import { fertilityApplications } from './schema';
 import type { FertilityApplication } from './fertility';
@@ -69,6 +70,9 @@ export interface UnifiedRecord {
   lockedAt?: number;
   /** Surfaced for the rates-overridden indicator on spray events. */
   customRateOverride?: boolean;
+  /** G2: set only on kinds that store `recorded_late` (hay on /records). */
+  recordedLate?: boolean;
+  daysLate?: number | null;
 }
 
 export interface UnifiedFilters {
@@ -414,7 +418,9 @@ export function listUnifiedRecords(
         performedById: c.performedById,
         detail: `${c.cropPluginId} · cutting ${c.cuttingNumber} · ${c.status}${bale}${moisture}`,
         hash: shortHash({ k: 'hay', id: c.id, o: occurredAt, n: c.cuttingNumber, s: c.status }),
-        locked: isLocked(occurredAt, undefined, now)
+        locked: isLocked(occurredAt, undefined, now),
+        recordedLate: c.recordedLate,
+        daysLate: hayDaysLate(c)
       });
     }
   }

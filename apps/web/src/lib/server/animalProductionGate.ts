@@ -57,8 +57,9 @@ export function warningsFor(check: FoodCheck | null): RecordWarning[] {
   return (check?.warnings ?? []).map((message) => ({ code: 'FOOD_USE_WARNING', message }));
 }
 
-/** C-05, C-35: a record saved more than 48 hours after the date it
- *  records ("Entered N days late"). A label only; no gate reads it. */
+/** C-05, C-35, G2-02: whole days between a record's date and its server
+ *  save time, when that is more than 48 hours (shown through `lateLabel`).
+ *  A label only; no gate reads it. */
 export function daysLate(occurredAt: number, createdAt: number): number | null {
   const late = createdAt - occurredAt;
   return late > LOCK_WINDOW_MS ? Math.floor(late / 86_400_000) : null;

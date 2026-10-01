@@ -157,7 +157,7 @@ describe('push scheduler', () => {
     const now = Date.now();
     dirtySprayer(a.ownerId, now - 2 * HOUR);
     const fetchImpl = mockFetch();
-    await runPushTick({ config, now: () => now, fetchImpl });
+    await runPushTick({ config, now: () => now, fetchImpl, owners: [a.ownerId, b.ownerId] });
     const endpoints = fetchImpl.mock.calls.map((c) => String(c[0]));
     expect(endpoints).toContain(subA.b.endpoint);
     expect(endpoints).not.toContain(subB.b.endpoint);
@@ -170,7 +170,7 @@ describe('push scheduler', () => {
     const now = Date.now();
     dirtySprayer(s.ownerId, now - 2 * HOUR);
     const fetchImpl = mockFetch();
-    await runPushTick({ config, now: () => now, fetchImpl });
+    await runPushTick({ config, now: () => now, fetchImpl, owners: [s.ownerId] });
     expect(fetchImpl.mock.calls.map((c) => String(c[0]))).not.toContain(b.endpoint);
   });
 
@@ -180,7 +180,7 @@ describe('push scheduler', () => {
     const now = Date.now();
     dirtySprayer(s.ownerId, now - 2 * HOUR);
     const fetchImpl = mockFetch();
-    await runPushTick({ config, now: () => now, fetchImpl });
+    await runPushTick({ config, now: () => now, fetchImpl, owners: [s.ownerId] });
     expect(fetchImpl.mock.calls.map((c) => String(c[0]))).toContain(b.endpoint);
     const decon = runWithTenant(s.ownerId, () => listDeliveries()).filter(
       (d) => d.kind === 'decon-due'
@@ -194,10 +194,10 @@ describe('push scheduler', () => {
     const now = Date.now();
     dirtySprayer(ownerId, now - 2 * HOUR);
     const fetchImpl = mockFetch();
-    await runPushTick({ config, now: () => now, fetchImpl });
+    await runPushTick({ config, now: () => now, fetchImpl, owners: [ownerId] });
     const sentFirst = fetchImpl.mock.calls.length;
     expect(sentFirst).toBeGreaterThan(0);
-    await runPushTick({ config, now: () => now + 12 * HOUR, fetchImpl });
+    await runPushTick({ config, now: () => now + 12 * HOUR, fetchImpl, owners: [ownerId] });
     const decon = runWithTenant(ownerId, () => listDeliveries()).filter(
       (d) => d.kind === 'decon-due'
     );

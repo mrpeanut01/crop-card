@@ -79,6 +79,9 @@ export interface PushTickDeps {
   now?: () => number;
   fetchImpl?: typeof fetch;
   frostAlerts?: FrostAlertFetcher;
+  /** Visit only these farms (unset: every farm). Test files share one
+   *  database, so a tick over every farm would claim other files' alerts. */
+  owners?: readonly string[];
 }
 
 export interface PushTickSummary {
@@ -363,6 +366,7 @@ export async function runPushTick(deps: PushTickDeps): Promise<PushTickSummary> 
     emailFailed: 0
   };
   for (const ownerId of ownerIdsToVisit(deps)) {
+    if (deps.owners && !deps.owners.includes(ownerId)) continue;
     if (SKIPPED_BILLING.has(ownerRow(ownerId)?.billingStatus ?? '')) continue;
     try {
       const s = await runWithTenantAsync(ownerId, () => processOwnerAlerts(ownerId, deps));

@@ -308,19 +308,47 @@ function verdictsFor(
   };
   const zoneText = JSON.stringify(ctx.timeZone);
   for (const t of doses) {
-    let key = '';
-    if (ctx.verdictCache) {
-      key = `${zoneText}\u0001${JSON.stringify(t)}`;
-      for (const id of pluginIdsOf(t)) key += `\u0001${dataOf(id)}`;
-    }
-    let clear = ctx.verdictCache?.get(key);
-    if (!clear) {
-      clear = computeWithdrawalClear(t, ctx.plugins, { timeZone: ctx.timeZone });
-      ctx.verdictCache?.set(key, clear);
+    let clear: WithdrawalClear | undefined;
+    let num = -1;
+    if (side && ctx.verdictCache) {
+      let tail = '';
+      for (const id of pluginIdsOf(t)) tail += `\u0001${dataOf(id)}`;
+      // The last verdict seen under this id, reused while the treatment
+      // is the same data as then (a private copy, compared field by field
+      // instead of building and hashing the key) and the rest of the key
+      // is unchanged. Content numbers are never reused, so `num` still
+      // names only that content after `ids` starts over.
+      const seen = side.doses.get(t.id);
+      if (seen && seen.tail === tail && seen.zone === zoneText && samePlainData(seen.data, t)) {
+        clear = seen.clear;
+        num = seen.num;
+      } else {
+        const key = `${zoneText}\u0001${JSON.stringify(t)}${tail}`;
+        clear = ctx.verdictCache.get(key);
+        if (!clear) {
+          clear = computeWithdrawalClear(t, ctx.plugins, { timeZone: ctx.timeZone });
+          ctx.verdictCache.set(key, clear);
+        }
+        num = internId(side, key);
+        const data = plainCopy(t);
+        if (data !== NOT_PLAIN)
+          remember(side.doses, t.id, { data, tail, zone: zoneText, clear, num });
+      }
+    } else {
+      let key = '';
+      if (ctx.verdictCache) {
+        key = `${zoneText}\u0001${JSON.stringify(t)}`;
+        for (const id of pluginIdsOf(t)) key += `\u0001${dataOf(id)}`;
+      }
+      clear = ctx.verdictCache?.get(key);
+      if (!clear) {
+        clear = computeWithdrawalClear(t, ctx.plugins, { timeZone: ctx.timeZone });
+        ctx.verdictCache?.set(key, clear);
+      }
     }
     if (out.has(t.id)) doseIds = null;
     out.set(t.id, clear);
-    if (doseIds && side) doseIds.set(t, internId(side, key));
+    if (doseIds) doseIds.set(t, num);
   }
   return { clears: out, doseIds };
 }
@@ -842,6 +870,14 @@ interface SideCache {
   areaHolds: Map<string, { k: SubjectKey; kind: HoldKind; spans: Span[] }[]>;
   reach: Map<string, number>;
   profiles: Map<string, unknown>;
+  /** `verdictsFor`'s last verdict and content number per treatment id,
+   *  with the key's parts it was made from. */
+  doses: Map<
+    string,
+    { data: unknown; tail: string; zone: string; clear: WithdrawalClear; num: number }
+  >;
+  /** `appId`'s last content number per application ref, with its data. */
+  apps: Map<string, { data: unknown; id: string }>;
   /** Content text to a number never reused for other content. */
   ids: Map<string, number>;
   nextId: number;
@@ -896,6 +932,67 @@ function keptSpans(side: SideCache, spans: Span[]): Span[] {
   return frozenSpans(spans);
 }
 
+const NOT_PLAIN: unique symbol = Symbol('not plain');
+
+function isPlainObject(v: object): boolean {
+  const proto = Object.getPrototypeOf(v);
+  return proto === Object.prototype || proto === null;
+}
+
+/** A deep copy of JSON-like data (primitives, arrays, plain objects), or
+ *  NOT_PLAIN when anything else is in it. */
+function plainCopy(v: unknown): unknown {
+  if (v === null || typeof v !== 'object') {
+    return typeof v === 'function' || typeof v === 'symbol' || typeof v === 'bigint'
+      ? NOT_PLAIN
+      : v;
+  }
+  if (Array.isArray(v)) {
+    const out: unknown[] = [];
+    for (let i = 0; i < v.length; i++) {
+      if (!(i in v)) return NOT_PLAIN;
+      const c = plainCopy(v[i]);
+      if (c === NOT_PLAIN) return NOT_PLAIN;
+      out.push(c);
+    }
+    return out;
+  }
+  if (!isPlainObject(v) || Object.getOwnPropertySymbols(v).length > 0) return NOT_PLAIN;
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(v)) {
+    const c = plainCopy((v as Record<string, unknown>)[k]);
+    if (c === NOT_PLAIN) return NOT_PLAIN;
+    out[k] = c;
+  }
+  return out;
+}
+
+/** `b` is the same data as `a`, a `plainCopy`: the same keys in the same
+ *  order, `Object.is` leaves, nothing but arrays and plain objects. */
+function samePlainData(a: unknown, b: unknown): boolean {
+  if (a === null || typeof a !== 'object') return Object.is(a, b);
+  if (b === null || typeof b !== 'object') return false;
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!(i in b) || !samePlainData(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  if (Array.isArray(b) || !isPlainObject(b)) return false;
+  const ka = Object.keys(a);
+  const kb = Object.keys(b);
+  if (ka.length !== kb.length || Object.getOwnPropertySymbols(b).length > 0) return false;
+  for (let i = 0; i < ka.length; i++) {
+    const k = ka[i];
+    if (k !== kb[i]) return false;
+    if (!samePlainData((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function sideCache(ctx: ProjectionContext): SideCache | null {
   if (!ctx.verdictCache) return null;
   let c = SIDE_CACHES.get(ctx.verdictCache);
@@ -905,6 +1002,8 @@ function sideCache(ctx: ProjectionContext): SideCache | null {
       areaHolds: new Map(),
       reach: new Map(),
       profiles: new Map(),
+      doses: new Map(),
+      apps: new Map(),
       ids: new Map(),
       nextId: 0,
       spans: new Map(),
@@ -1085,15 +1184,23 @@ interface Model {
   appId: (app: GrazingApplication) => string;
 }
 
+function byType<V>(
+  maps: { animal: Map<string, V>; group: Map<string, V> },
+  type: string
+): Map<string, V> | null {
+  return type === 'animal' ? maps.animal : type === 'group' ? maps.group : null;
+}
+
 function model(b: Buckets, nowMs: number, ctx: ProjectionContext): Model {
-  const byRef = new Map<string, StayFact[]>();
+  const byRef = { animal: new Map<string, StayFact[]>(), group: new Map<string, StayFact[]>() };
   for (const s of b.stays) {
-    const k = subjectRef(s.subjectType, s.subjectId);
-    const list = byRef.get(k) ?? [];
-    list.push(s);
-    byRef.set(k, list);
+    const byId = byType(byRef, s.subjectType);
+    if (!byId) continue;
+    const list = byId.get(s.subjectId);
+    if (list) list.push(s);
+    else byId.set(s.subjectId, [s]);
   }
-  const staysOf = (type: 'animal' | 'group', id: string) => byRef.get(subjectRef(type, id)) ?? [];
+  const staysOf = (type: 'animal' | 'group', id: string) => byRef[type].get(id) ?? [];
   const lineageCache = new Map<string, GroupMembership[]>();
   const lineage = (groupId: string) => {
     let l = lineageCache.get(groupId);
@@ -1147,12 +1254,16 @@ function model(b: Buckets, nowMs: number, ctx: ProjectionContext): Model {
     list.push(a);
     appsByField.set(fieldId, list);
   }
-  const doses = new Map<string, TreatmentRecord[]>();
+  const doses = {
+    animal: new Map<string, TreatmentRecord[]>(),
+    group: new Map<string, TreatmentRecord[]>()
+  };
   for (const t of b.doses) {
-    const k = subjectRef(t.subjectType, t.subjectId);
-    const list = doses.get(k) ?? [];
-    list.push(t);
-    doses.set(k, list);
+    const byId = byType(doses, t.subjectType);
+    if (!byId) continue;
+    const list = byId.get(t.subjectId);
+    if (list) list.push(t);
+    else byId.set(t.subjectId, [t]);
   }
   const side = sideCache(ctx);
   // Content numbers stand in for long texts in the side cache keys: the
@@ -1164,7 +1275,15 @@ function model(b: Buckets, nowMs: number, ctx: ProjectionContext): Model {
   const appId = (app: GrazingApplication) => {
     let id = appIds.get(app);
     if (id === undefined) {
-      id = side ? `a${internId(side, JSON.stringify(app))}` : '';
+      if (side) {
+        const seen = side.apps.get(app.ref);
+        if (seen && samePlainData(seen.data, app)) id = seen.id;
+        else {
+          id = `a${internId(side, JSON.stringify(app))}`;
+          const data = plainCopy(app);
+          if (data !== NOT_PLAIN) remember(side.apps, app.ref, { data, id });
+        }
+      } else id = '';
       appIds.set(app, id);
     }
     return id;
@@ -1184,7 +1303,7 @@ function model(b: Buckets, nowMs: number, ctx: ProjectionContext): Model {
     env,
     appId,
     groupDoseSpans: new Map(),
-    dosesOf: (type, id) => doses.get(subjectRef(type, id)) ?? [],
+    dosesOf: (type, id) => doses[type].get(id) ?? [],
     staysOf,
     memberships,
     lineage,
@@ -1382,7 +1501,14 @@ interface AnimalPlan {
   memberships: GroupMembership[];
   /** Its windows in each group, with a key for the group's dose spans
    *  and the group's treatments. */
-  byGroup: { groupId: string; windows: GroupMembership[]; key: string; doses: TreatmentRecord[] }[];
+  byGroup: {
+    groupId: string;
+    windows: GroupMembership[];
+    key: string;
+    doses: TreatmentRecord[];
+    /** Its `groupDoseSpans` entry, once looked up. */
+    byFood?: Partial<Record<Food, Span[]>>;
+  }[];
   /** Its own treatments. */
   own: TreatmentRecord[];
   /** Its physical windows, with the window's key. */
@@ -1397,6 +1523,8 @@ interface AnimalPlan {
 interface KeyedWindow {
   w: GroupMembership;
   key: string;
+  /** Its `windowStays` entry, once looked up. */
+  set?: StaySet;
 }
 
 function windowKey(w: GroupMembership): string {
@@ -1537,13 +1665,14 @@ function withdrawalAnimal(
   for (const g of plan.byGroup) {
     const doses = g.doses;
     if (doses.length === 0) continue;
-    let byFood = m.groupDoseSpans.get(g.key);
+    let byFood = (g.byFood ??= m.groupDoseSpans.get(g.key));
     if (!byFood) {
       byFood = byFoodCache(
         m,
         () => `windows:${windowsText(g.windows)}|${groupDosesText(m, g.groupId, doses)}`
       );
       m.groupDoseSpans.set(g.key, byFood);
+      g.byFood = byFood;
     }
     let spans = byFood[food];
     if (!spans) {
@@ -1644,7 +1773,8 @@ interface StaySet {
   /** The applications each stay can meet (`appsReaching`), once needed. */
   apps?: ReadonlyMap<string, readonly GrazingApplication[]>;
   floors: boolean;
-  spans: Map<string, Span[]>;
+  /** Exposure by `readingKey`, then by food. */
+  spans: Map<string, Partial<Record<Food, Span[]>>>;
   /** `staySetId`, once. */
   id?: string;
 }
@@ -1689,9 +1819,15 @@ function setExposure(
   food: Food
 ): Span[] {
   const f = exposureFood(food, set.floors);
-  const key = `${readingKey(m, reading)}|${f}`;
-  let spans = set.spans.get(key);
+  const rk = readingKey(m, reading);
+  let byFood = set.spans.get(rk);
+  if (!byFood) {
+    byFood = {};
+    set.spans.set(rk, byFood);
+  }
+  let spans = byFood[f];
   if (spans) return spans;
+  const key = `${rk}|${f}`;
   const side = m.side;
   const contentKey = side ? `x${m.env}|${key}|${staySetId(m, set)}` : '';
   spans = side?.spans.get(contentKey);
@@ -1715,7 +1851,7 @@ function setExposure(
       remember(side.spans, contentKey, spans);
     }
   }
-  set.spans.set(key, spans);
+  byFood[f] = spans;
   return spans;
 }
 
@@ -1768,10 +1904,11 @@ function windowExposure(
   reading: SubjectFact | undefined,
   food: Food
 ): Span[] {
-  let ws = m.windowStays.get(kw.key);
+  let ws = (kw.set ??= m.windowStays.get(kw.key));
   if (!ws) {
     ws = staySet(m, ctx, b, kw.w.groupId, clip(m, m.staysOf('group', kw.w.groupId), kw.w));
     m.windowStays.set(kw.key, ws);
+    kw.set = ws;
   }
   return setExposure(m, b, ctx, ws, reading, food);
 }

@@ -324,7 +324,7 @@ describe('weekly digest on the push tick', () => {
     addTask(ownerId, 'Job', '2026-09-29');
     emailIn(ownerId, u.userId);
     vi.stubEnv('ORIGIN', ORIGIN);
-    await runPushTick({ config: null, emailOrigin: ORIGIN, now: () => MONDAY });
+    await runPushTick({ config: null, emailOrigin: ORIGIN, now: () => MONDAY, owners: [ownerId] });
     expect(readOutbox(u.email)).toHaveLength(0);
   });
 });

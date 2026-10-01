@@ -658,4 +658,34 @@ describe('projection matches 0.7.1 on the dense perf farm', () => {
     const after = expectSameProjection(dropped, BIG_NOW, c);
     expect(next.shortenings(b, after.b)).toEqual(ref.shortenings(a, after.a));
   }, 120_000);
+
+  it('a treatment or application changed in place under the same id is read again', () => {
+    const facts = bigFarm();
+    const c = bigFarmContext();
+    expectSameProjection(facts, BIG_NOW, c);
+    for (const f of facts) {
+      if (f.kind === 'dose' && f.treatment.subjectType === 'animal') {
+        f.treatment.administeredAtMs = BIG_NOW - 86_400_000;
+        f.treatment.entries = [
+          {
+            kind: 'vet',
+            food: 'meat',
+            amount: 30,
+            unit: 'days',
+            vetName: 'V',
+            enteredAtMs: BIG_NOW
+          }
+        ];
+        break;
+      }
+    }
+    for (const f of facts) {
+      if (f.kind === 'application' && f.application.restrictions) {
+        f.application.appliedAtMs = BIG_NOW - 86_400_000;
+        (f.application.restrictions as { grazeDays?: number }).grazeDays = 60;
+        break;
+      }
+    }
+    expectSameProjection(facts, BIG_NOW, c);
+  }, 120_000);
 });

@@ -255,7 +255,7 @@ describe('email channel in the alert scheduler', () => {
       expect.arrayContaining([a, b, s])
     );
     expect(ownerIdsToVisit({ config: null, emailOrigin: null })).toEqual([]);
-    await runPushTick({ config: null, emailOrigin: ORIGIN, now: () => now });
+    await runPushTick({ config: null, emailOrigin: ORIGIN, now: () => now, owners: [a, b, s] });
     expect(readOutbox(ua.email!)).toHaveLength(1);
     expect(readOutbox(ub.email!)).toHaveLength(0);
     expect(readOutbox(us.email!)).toHaveLength(0);
@@ -276,7 +276,10 @@ describe('email alert configuration', () => {
   });
 
   it('the scheduled tick runs for email alone and skips when neither channel is set', async () => {
-    const withEmail = await runScheduledTick({ env: { EMAIL_TRANSPORT: 'memory', ORIGIN } });
+    const withEmail = await runScheduledTick({
+      env: { EMAIL_TRANSPORT: 'memory', ORIGIN },
+      owners: []
+    });
     expect(withEmail.push).toHaveProperty('emailed');
     const neither = await runScheduledTick({ env: { EMAIL_TRANSPORT: 'none' } });
     expect(neither.push).toEqual({ skipped: 'alerts-not-configured' });

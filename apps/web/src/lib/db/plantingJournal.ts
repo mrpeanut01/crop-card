@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { db } from './client';
 import { plantingJournal } from './schema';
 import { tenantValues, withTenant } from './tenant';
@@ -17,6 +17,8 @@ export interface JournalInput {
   kind: JournalKind;
   text: string;
   photoRef?: string | null;
+  /** The photo in the vault; when set, `photoRef` is left empty. */
+  photoDocumentId?: string | null;
   answer?: JournalAnswer | null;
   provenance: JournalProvenance;
   createdAt?: number;
@@ -42,7 +44,8 @@ function toEntry(row: Row): JournalEntry {
     createdBy: row.createdBy ?? null,
     kind: row.kind,
     text: row.text,
-    hasPhoto: !!row.photoRef,
+    hasPhoto: !!row.photoRef || !!row.photoDocumentId,
+    photoDocumentId: row.photoDocumentId ?? null,
     answer: parseAnswer(row.answerJson),
     provenance: row.provenance
   };
@@ -59,7 +62,8 @@ export function insertJournalEntry(input: JournalInput): JournalEntry {
         createdBy: input.createdBy,
         kind: input.kind,
         text: input.text,
-        photoRef: input.photoRef ?? null,
+        photoRef: input.photoDocumentId ? null : (input.photoRef ?? null),
+        photoDocumentId: input.photoDocumentId ?? null,
         answerJson: input.answer ? JSON.stringify(input.answer) : null,
         provenance: input.provenance,
         ...(input.createdAt !== undefined ? { createdAt: new Date(input.createdAt) } : {})
@@ -95,9 +99,16 @@ export function getJournalEntry(cropId: string, id: string): JournalEntry | unde
   return row ? toEntry(row) : undefined;
 }
 
-export function getJournalPhoto(cropId: string, id: string): string | null {
+export type StoredPhoto = { documentId: string } | { inline: string };
+
+/** Where an entry's photo lives: the vault document, or the inline data URL
+ *  of a row the migration has not moved yet. */
+export function getJournalPhoto(cropId: string, id: string): StoredPhoto | null {
   const row = db
-    .select({ photoRef: plantingJournal.photoRef })
+    .select({
+      photoRef: plantingJournal.photoRef,
+      photoDocumentId: plantingJournal.photoDocumentId
+    })
     .from(plantingJournal)
     .where(
       withTenant(
@@ -106,11 +117,44 @@ export function getJournalPhoto(cropId: string, id: string): string | null {
       )
     )
     .get();
-  return row?.photoRef ?? null;
+  if (!row) return null;
+  if (row.photoDocumentId) return { documentId: row.photoDocumentId };
+  return row.photoRef ? { inline: row.photoRef } : null;
 }
 
-export function deleteJournalEntry(cropId: string, id: string): boolean {
-  const res = db
+/** Moves one inline photo to its vault document (A-47). Changes the row only
+ *  while `photo_ref` still holds `expectedRef` and no document is set, so a
+ *  photo changed during the move is never overwritten. */
+export function moveJournalPhotoToDocument(
+  id: string,
+  expectedRef: string,
+  documentId: string
+): boolean {
+  return (
+    db
+      .update(plantingJournal)
+      .set({ photoDocumentId: documentId, photoRef: null })
+      .where(
+        withTenant(
+          plantingJournal,
+          and(
+            eq(plantingJournal.id, id),
+            eq(plantingJournal.photoRef, expectedRef),
+            isNull(plantingJournal.photoDocumentId)
+          )
+        )
+      )
+      .run().changes > 0
+  );
+}
+
+/** Deletes the entry. Returns the vault document its photo was in (null
+ *  when it had none or it was inline), or undefined when nothing matched. */
+export function deleteJournalEntry(
+  cropId: string,
+  id: string
+): { photoDocumentId: string | null } | undefined {
+  const row = db
     .delete(plantingJournal)
     .where(
       withTenant(
@@ -118,8 +162,9 @@ export function deleteJournalEntry(cropId: string, id: string): boolean {
         and(eq(plantingJournal.cropId, cropId), eq(plantingJournal.id, id))
       )
     )
-    .run();
-  return res.changes > 0;
+    .returning({ photoDocumentId: plantingJournal.photoDocumentId })
+    .get();
+  return row ? { photoDocumentId: row.photoDocumentId ?? null } : undefined;
 }
 
 /** Every entry for the GDPR export, photos included. */

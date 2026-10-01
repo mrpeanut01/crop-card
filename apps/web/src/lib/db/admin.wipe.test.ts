@@ -2,7 +2,15 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { db } from './client';
-import { owners } from './schema';
+import { eq } from 'drizzle-orm';
+import { blobDeletions, owners } from './schema';
+import {
+  PHASE_33_TABLES,
+  listPhase33Ids,
+  seedPhase33,
+  type Phase33Table
+} from './phase33.fixtures';
+import { getDocument, ownerStoragePrefix } from './documents';
 import { runWithTenant } from './tenant';
 import { createField, listFields } from './fields';
 import { createMapFeature, listMapFeatures } from './mapFeatures';
@@ -89,5 +97,55 @@ describe('wipeAllData', () => {
         expect(listPhase32Ids(table), table).toEqual([kept.rowIds[table]]);
       }
     });
+  });
+
+  it('removes every Phase 33 row, queues the storage prefix with it, and leaves other Owners alone', () => {
+    const other = seedOwner();
+    const kept = seedPhase33(other, 'wipe33-other');
+    const mine = seedOwner();
+    seedPhase33(mine, 'wipe33-mine');
+    runWithTenant(mine, () => {
+      const out = wipeAllData();
+      for (const table of Object.keys(PHASE_33_TABLES) as Phase33Table[]) {
+        expect(out.removed[table], table).toBe(1);
+        expect(listPhase33Ids(table), table).toEqual([]);
+      }
+    });
+    const queued = db
+      .select()
+      .from(blobDeletions)
+      .where(eq(blobDeletions.storagePrefix, ownerStoragePrefix(mine)))
+      .all();
+    expect(queued).toHaveLength(1);
+    expect(queued[0].attempts).toBe(0);
+    expect(
+      db
+        .select()
+        .from(blobDeletions)
+        .where(eq(blobDeletions.storagePrefix, ownerStoragePrefix(other)))
+        .all()
+    ).toEqual([]);
+    runWithTenant(other, () => {
+      for (const table of Object.keys(PHASE_33_TABLES) as Phase33Table[]) {
+        expect(listPhase33Ids(table), table).toEqual([kept.rowIds[table]]);
+      }
+      expect(getDocument(kept.documentId)?.storageKey).toBe(kept.storageKey);
+    });
+  });
+
+  it('a second wipe of the same farm keeps one queued prefix', () => {
+    const mine = seedOwner();
+    seedPhase33(mine, 'wipe33-twice');
+    runWithTenant(mine, () => {
+      wipeAllData();
+      wipeAllData();
+    });
+    expect(
+      db
+        .select()
+        .from(blobDeletions)
+        .where(eq(blobDeletions.storagePrefix, ownerStoragePrefix(mine)))
+        .all()
+    ).toHaveLength(1);
   });
 });

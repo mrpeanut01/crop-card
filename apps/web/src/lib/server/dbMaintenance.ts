@@ -15,6 +15,9 @@ import { unscopedQueryNote } from '$lib/db/tenant';
 import { STALE_CLAIM_MS } from '$lib/db/clientRecords';
 import { isFenced, trackMutation } from '$lib/server/ops/handoff';
 import { recomputeAllStorageUsage } from '$lib/server/storageUsage';
+import { drainBlobDeletions, sweepOrphans } from '$lib/server/vault/blobQueue';
+import { migrateInlinePhotos, retireUnreferencedPhotos } from '$lib/server/vault/photoMigration';
+import { vaultStore } from '$lib/server/vault/store';
 
 const DAY_MS = 86_400_000;
 
@@ -86,7 +89,54 @@ export interface MaintenanceResult {
   pruned: Record<string, number>;
   /** Owners whose cached storage total was recomputed from source. */
   storageOwners?: number;
+  /** Document vault upkeep; absent when the vault is off. */
+  vault?: VaultMaintenance;
   durationMs: number;
+}
+
+export interface VaultMaintenance {
+  photosMoved: number;
+  photosSkipped: number;
+  photosRemaining: number;
+  photosRetired: number;
+  wipesCleared: number;
+  wipesFailed: number;
+  orphansDeleted: number;
+  error?: string;
+}
+
+/** Moves inline photos into the vault, retires photo documents no row
+ *  points at, works the wipe queue and sweeps orphan files (A-46, A-50,
+ *  A-51). Runs before the storage recompute so the totals include the move.
+ *  A failure here is logged and never stops the rest of maintenance. */
+async function vaultUpkeep(now: number): Promise<VaultMaintenance | undefined> {
+  if (!vaultStore()) return undefined;
+  const out: VaultMaintenance = {
+    photosMoved: 0,
+    photosSkipped: 0,
+    photosRemaining: 0,
+    photosRetired: 0,
+    wipesCleared: 0,
+    wipesFailed: 0,
+    orphansDeleted: 0
+  };
+  try {
+    const moved = await migrateInlinePhotos({ now });
+    out.photosMoved = moved.moved;
+    out.photosSkipped = moved.skipped;
+    out.photosRemaining = moved.remaining;
+    if (!isFenced()) out.photosRetired = await retireUnreferencedPhotos(now);
+    if (!isFenced()) {
+      const drained = await drainBlobDeletions(now);
+      out.wipesCleared = drained.cleared;
+      out.wipesFailed = drained.failed;
+    }
+    if (!isFenced()) out.orphansDeleted = (await sweepOrphans(now)).deleted;
+  } catch (err) {
+    out.error = (err as Error)?.message ?? String(err);
+    console.error('[vault] maintenance failed', err);
+  }
+  return out;
 }
 
 export interface MaintenanceOptions {
@@ -150,11 +200,12 @@ async function run(opts: MaintenanceOptions): Promise<MaintenanceResult> {
     pruned[rule.name] = await pruneRule(rule, now, batch);
     await yieldToEventLoop();
   }
+  const vault = isFenced() ? undefined : await vaultUpkeep(now);
   const storageOwners = isFenced() ? 0 : recomputeAllStorageUsage(now);
   if (!isFenced()) sqliteHandle().pragma('optimize');
   const durationMs = Math.round(performance.now() - started);
-  console.log('[db-maintenance]', JSON.stringify({ pruned, storageOwners, ms: durationMs }));
-  return { ran: true, pruned, storageOwners, durationMs };
+  console.log('[db-maintenance]', JSON.stringify({ pruned, storageOwners, vault, ms: durationMs }));
+  return { ran: true, pruned, storageOwners, ...(vault ? { vault } : {}), durationMs };
 }
 
 /** Runs at most once per 24 h (tracked in system_state) and never twice

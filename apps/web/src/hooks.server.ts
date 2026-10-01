@@ -309,12 +309,66 @@ export function suspendedTenantGate(
  */
 const redirectHosts = parseRedirectHosts(process.env.REDIRECT_HOSTS);
 
+/** A-30. `BODY_SIZE_LIMIT` is raised for the document upload only; every
+ *  other request keeps the old 512 KB ceiling. */
+export const DEFAULT_BODY_LIMIT_BYTES = 512 * 1024;
+
+export function bodyTooLarge(
+  method: string,
+  pathname: string,
+  contentLength: string | null
+): Response | null {
+  if (contentLength === null) return null;
+  const n = Number(contentLength);
+  if (!Number.isFinite(n) || n <= DEFAULT_BODY_LIMIT_BYTES) return null;
+  if (method === 'POST' && pathname === '/api/documents') return null;
+  return json(
+    { error: 'This request is too large.', code: 'TOO_LARGE' },
+    { status: 413, headers: { 'cache-control': 'no-store' } }
+  );
+}
+
+/** A-30 for bodies sent without a Content-Length (chunked): the 512 KB
+ *  ceiling is enforced while the stream is read, since adapter-node only
+ *  applies the process-wide BODY_SIZE_LIMIT to them. */
+export function capChunkedBody(request: Request, pathname: string): Request {
+  if (request.body === null || request.headers.get('content-length') !== null) return request;
+  if (request.method === 'POST' && pathname === '/api/documents') return request;
+  let seen = 0;
+  const capped = request.body.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        seen += chunk.byteLength;
+        if (seen > DEFAULT_BODY_LIMIT_BYTES) {
+          controller.error(new Error('This request is too large.'));
+          return;
+        }
+        controller.enqueue(chunk);
+      }
+    })
+  );
+  return new Request(request.url, {
+    method: request.method,
+    headers: request.headers,
+    body: capped,
+    signal: request.signal,
+    duplex: 'half'
+  } as RequestInit & { duplex: 'half' });
+}
+
 /**
  * Deploy handoff fence (docs/ops/restore-runbook.md): once a newer container
  * has asked for the database, writes get 503 + Retry-After before anything
  * else runs, and admitted writes are counted so the release can wait for them.
  */
 const handleFenced: Handle = async (input) => {
+  const tooLarge = bodyTooLarge(
+    input.event.request.method,
+    input.event.url.pathname,
+    input.event.request.headers.get('content-length')
+  );
+  if (tooLarge) return tooLarge;
+  input.event.request = capChunkedBody(input.event.request, input.event.url.pathname);
   const fenced = fenceResponse(input.event.request, isFenced());
   if (fenced) return fenced;
   if (MUTATION_METHODS.has(input.event.request.method)) {

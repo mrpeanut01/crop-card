@@ -42,6 +42,8 @@ export interface JournalEntry {
   kind: JournalKind;
   text: string;
   hasPhoto: boolean;
+  /** Set once the photo lives in the document vault (Phase 33A). */
+  photoDocumentId?: string | null;
   answer: JournalAnswer | null;
   provenance: JournalProvenance;
 }

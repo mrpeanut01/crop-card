@@ -6,7 +6,14 @@ import { db } from '$lib/db/client';
 import { helperAssignments, owners, users } from '$lib/db/schema';
 import { runWithTenant } from '$lib/db/tenant';
 import { seedPhase32Rows, type Phase32Seed } from '$lib/db/phase32.fixtures';
+import { DOCUMENT_SUBJECT_TYPES } from '$lib/db/schema';
+import { markDocumentDeleted } from '$lib/db/documents';
+import { seedPhase33, type Phase33Seed } from '$lib/db/phase33.fixtures';
 import {
+  assertAmendmentBatch,
+  assertDocument,
+  assertDocumentSubject,
+  assertHayCutting,
   assertAnimalSubject,
   assertAssignableUser,
   assertField,
@@ -147,5 +154,70 @@ describe('rejectForeignRefs with the Phase 32 checkers', () => {
     );
     expect(res?.status).toBe(400);
     expect(await res?.json()).toEqual({ error: 'unknown stockLotId' });
+  });
+});
+
+describe('Phase 33 checkers (A-16)', () => {
+  let a33: Phase33Seed;
+  let b33: Phase33Seed;
+  beforeAll(() => {
+    a33 = seedPhase33(OWNER_A, `refs33-a-${tag}`);
+    b33 = seedPhase33(OWNER_B, `refs33-b-${tag}`);
+  });
+
+  it.each([...DOCUMENT_SUBJECT_TYPES])(
+    "resolves this Owner's %s and refuses another Owner's",
+    (subjectType) => {
+      inA(() => {
+        const mine = a33.subjects[subjectType];
+        const theirs = b33.subjects[subjectType];
+        expect(firstUnknownRef(assertDocumentSubject('subjectId', subjectType, mine))).toBe(null);
+        expect(firstUnknownRef(assertDocumentSubject('subjectId', subjectType, theirs))).toBe(
+          'subjectId'
+        );
+      });
+    }
+  );
+
+  it('refuses an id sent under the wrong or an unknown subject type', () => {
+    inA(() => {
+      const ref = (t: string, id: string) =>
+        firstUnknownRef(assertDocumentSubject('subjectId', t, id));
+      expect(ref('field', a33.subjects.block)).toBe('subjectId');
+      expect(ref('animal', a33.subjects['animal-group'])).toBe('subjectId');
+      expect(ref('group', a33.subjects['animal-group'])).toBe('subjectId');
+      expect(ref('toString', a33.subjects.block)).toBe('subjectId');
+      expect(ref('farm', OWNER_B)).toBe('subjectId');
+      expect(firstUnknownRef(assertDocumentSubject('subjectId', null, a33.subjects.block))).toBe(
+        'subjectId'
+      );
+      expect(firstUnknownRef(assertDocumentSubject('subjectId', 'block', null))).toBe(null);
+    });
+  });
+
+  it('accepts only a live document of this Owner', () => {
+    inA(() => {
+      expect(firstUnknownRef(assertDocument('documentId', a33.documentId))).toBe(null);
+      expect(firstUnknownRef(assertDocument('documentId', b33.documentId))).toBe('documentId');
+      expect(firstUnknownRef(assertDocument('documentId', undefined))).toBe(null);
+    });
+    const deleted = seedPhase33(OWNER_A, `refs33-del-${tag}`);
+    inA(() => {
+      markDocumentDeleted(deleted.documentId, null);
+      expect(firstUnknownRef(assertDocument('documentId', deleted.documentId))).toBe('documentId');
+    });
+  });
+
+  it('checks batches and hay cuttings by Owner', () => {
+    inA(() => {
+      expect(
+        firstUnknownRef(assertAmendmentBatch('batchId', a33.subjects['amendment-batch']))
+      ).toBe(null);
+      expect(
+        firstUnknownRef(assertAmendmentBatch('batchId', b33.subjects['amendment-batch']))
+      ).toBe('batchId');
+      expect(firstUnknownRef(assertHayCutting('cuttingId', a33.hayCuttingId))).toBe(null);
+      expect(firstUnknownRef(assertHayCutting('cuttingId', b33.hayCuttingId))).toBe('cuttingId');
+    });
   });
 });

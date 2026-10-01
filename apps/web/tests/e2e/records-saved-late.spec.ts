@@ -85,7 +85,7 @@ test.describe('records saved after their date (32G G2)', () => {
       schemaVersion: string;
       hayCuttings: Array<{ id: string; recordedLate: boolean }>;
     };
-    expect(json.schemaVersion).toBe('1.3.0');
+    expect(json.schemaVersion).toBe('1.4.0');
     expect(json.hayCuttings.find((c) => c.id === lateId)?.recordedLate).toBe(true);
   });
 

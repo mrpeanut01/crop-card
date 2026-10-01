@@ -39,12 +39,16 @@ export interface CardFact {
   label: string;
   value: string;
   provenance?: ProvenanceSource;
+  /** Printed in place of `value` (a link that only works on screen). */
+  printValue?: string;
 }
 
 export interface CardAction {
   label: string;
   href: string;
   due?: string;
+  /** A link to another site, opened with `noopener noreferrer nofollow`. */
+  external?: boolean;
 }
 
 export interface CardSection {

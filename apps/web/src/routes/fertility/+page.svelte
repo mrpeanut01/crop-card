@@ -6,6 +6,7 @@
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import SetupSoilTest from '$lib/components/setup/SetupSoilTest.svelte';
   import type { SetupSoilTestResult } from '$lib/fertility/soilTestForm';
+  import DocumentAttach from '$lib/components/documents/DocumentAttach.svelte';
 
   let { data } = $props();
 
@@ -104,6 +105,34 @@
       error = e2 instanceof Error ? e2.message : String(e2);
     } finally {
       busy = false;
+    }
+  }
+
+  let labReports = $state<Record<string, string | null>>({});
+
+  function labReportOf(t: { id: string; documentId?: string | null }): string | null {
+    return t.id in labReports ? labReports[t.id] : (t.documentId ?? null);
+  }
+
+  async function setLabReport(soilTestId: string, documentId: string | null): Promise<boolean> {
+    error = null;
+    message = null;
+    try {
+      const res = await fetch(`/api/fertility/soil-tests/${encodeURIComponent(soilTestId)}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ documentId })
+      });
+      if (!res.ok) {
+        error = "We couldn't save the lab report on this soil test. Try again.";
+        return false;
+      }
+      labReports[soilTestId] = documentId;
+      message = documentId ? 'Lab report attached.' : 'Lab report removed from this soil test.';
+      return true;
+    } catch {
+      error = 'Attaching a lab report needs a connection.';
+      return false;
     }
   }
 
@@ -297,6 +326,17 @@
           ) ?? '?'}%, NO₃ {t.nitratePpm ?? '?'}, P {t.phosphorusPpm ?? '?'}, K {t.potassiumPpm ??
             '?'}
           {t.unitsBasis === 'lb-per-acre' ? 'lb/A' : 'ppm'}
+          {#if labReportOf(t) || data.canAddSoilTest}
+            <div class="lab-report" data-testid="soil-test-lab-report">
+              <span class="lab-report-label">Lab report</span>
+              <DocumentAttach
+                documentId={labReportOf(t)}
+                kind="lab-report"
+                canEdit={data.canAddSoilTest}
+                onchange={(id) => setLabReport(t.id, id)}
+              />
+            </div>
+          {/if}
         </li>
       {/each}
     </ul>
@@ -304,6 +344,16 @@
 </section>
 
 <style>
+  .lab-report {
+    margin: var(--space-2) 0 var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .lab-report-label {
+    font-weight: 600;
+    font-size: var(--font-size-caption);
+  }
   .card {
     background: white;
     padding: 1.25rem;

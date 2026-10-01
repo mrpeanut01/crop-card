@@ -37,7 +37,12 @@ import { insertSoilTest } from '$lib/db/fertility';
 import { insertJournalEntry } from '$lib/db/plantingJournal';
 import { PHASE_32_TABLES, seedPhase32Rows, type Phase32Seed } from '$lib/db/phase32.fixtures';
 import { GET } from './+server';
-import { RECORD_TABLE_GROUPS } from './sections';
+import {
+  PHASE_33_TABLE_GROUPS,
+  RECORD_TABLE_GROUPS,
+  dataUrlBytes
+} from '$lib/server/accountExportSections';
+import { PHASE_33_TABLES, seedPhase33, type Phase33Seed } from '$lib/db/phase33.fixtures';
 
 interface Seeded {
   ownerId: string;
@@ -48,6 +53,7 @@ interface Seeded {
   soilTestId: string;
   journalId: string;
   phase32: Phase32Seed;
+  phase33: Phase33Seed;
 }
 
 function seed(label: string): Seeded {
@@ -55,7 +61,8 @@ function seed(label: string): Seeded {
   db.insert(owners)
     .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
     .run();
-  return runWithTenant(ownerId, () => {
+  const phase33 = seedPhase33(ownerId, `${label}-p33`);
+  const farm = runWithTenant(ownerId, () => {
     const area = createField({
       name: `${label} kitchen garden`,
       kind: 'garden',
@@ -113,6 +120,7 @@ function seed(label: string): Seeded {
       phase32: seedPhase32Rows(`${label}-p32`)
     };
   });
+  return { ...farm, phase33 };
 }
 
 async function exportFor(
@@ -137,7 +145,8 @@ function idsOf(s: Seeded): string[] {
     s.hydrantId,
     s.soilTestId,
     s.journalId,
-    ...Object.values(s.phase32.rowIds)
+    ...Object.values(s.phase32.rowIds),
+    ...Object.values(s.phase33.rowIds)
   ];
 }
 
@@ -154,6 +163,64 @@ describe('GET /api/account/export.json', () => {
       .sort();
     expect(exported).toEqual(Object.keys(PHASE_32_TABLES).sort());
   });
+
+  it('lists every Phase 33 table exactly once (documents and links in their own section)', () => {
+    const exported = Object.values(PHASE_33_TABLE_GROUPS)
+      .flatMap((g) => Object.values(g))
+      .map((t) => getTableName(t))
+      .concat(['documents', 'document_links'])
+      .sort();
+    expect(exported).toEqual(Object.keys(PHASE_33_TABLES).sort());
+  });
+
+  it('counts decoded photo bytes, not data URL characters', () => {
+    expect(dataUrlBytes('data:image/jpeg;base64,AAAA')).toBe(3);
+    expect(dataUrlBytes('data:image/jpeg;base64,AAA=')).toBe(2);
+    expect(dataUrlBytes('data:image/jpeg;base64,AA==')).toBe(1);
+    expect(dataUrlBytes(null)).toBe(0);
+    expect(dataUrlBytes('not a data url')).toBe(0);
+  });
+
+  it("exports Phase 33 rows and document metadata without storage keys, and no other Owner's", async () => {
+    const a = seed('p33-a');
+    const b = seed('p33-b');
+    const { text, json } = await exportFor(a.ownerId);
+    const docs = json.documents as Array<Record<string, unknown>>;
+    expect(docs).toHaveLength(1);
+    expect(docs[0]).toMatchObject({
+      id: a.phase33.documentId,
+      kind: 'lab-report',
+      mime: 'application/pdf',
+      sha256: 'a'.repeat(64),
+      deletedAt: null,
+      links: [
+        expect.objectContaining({
+          subjectType: 'soil-test',
+          subjectId: a.phase33.subjects['soil-test']
+        })
+      ]
+    });
+    expect(docs[0]).not.toHaveProperty('storageKey');
+    expect(text).not.toContain(a.phase33.storageKey);
+    const organic = json.organic as Record<string, Array<{ id: string }>>;
+    expect(organic.harvestDispositions.map((r) => r.id)).toEqual([
+      a.phase33.rowIds.harvest_dispositions
+    ]);
+    const amendments = json.amendments as Record<string, Array<{ id: string }>>;
+    expect(amendments.forageTests.map((r) => r.id)).toEqual([a.phase33.rowIds.forage_tests]);
+    for (const id of Object.values(b.phase33.rowIds)) expect(text).not.toContain(id);
+  });
+
+  it.each(['helper', 'inspector'])(
+    "leaves documents out of a %s's export so owner-only titles never leak",
+    async (role) => {
+      const farm = seed(`p33-${role}`);
+      const { text, json } = await exportFor(farm.ownerId, role);
+      expect(json).not.toHaveProperty('documents');
+      expect(text).not.toContain('soil report');
+      expect(text).not.toContain(farm.phase33.storageKey);
+    }
+  );
 
   it("contains Areas, map features, soil tests, the journal and Phase 32 rows, and no other Owner's", async () => {
     const a = seed('a');
@@ -190,16 +257,18 @@ describe('GET /api/account/export.json', () => {
         expect.objectContaining({ featureId: self.hydrantId, fieldId: self.areaId })
       ]);
       const soil = json.soilTests as Array<{ id: string; ph: number }>;
-      expect(soil).toEqual([expect.objectContaining({ id: self.soilTestId, ph: 6.4 })]);
+      expect(soil.find((t) => t.id === self.soilTestId)).toMatchObject({ ph: 6.4 });
       const journal = json.plantingJournal as Array<{ id: string; photoBytes: number }>;
-      expect(journal.find((j) => j.id === self.journalId)?.photoBytes).toBe(27);
+      expect(journal.find((j) => j.id === self.journalId)?.photoBytes).toBe(3);
 
       const animals = json.animals as Record<string, Array<{ id: string }>>;
-      expect(animals.groups.map((r) => r.id)).toEqual([self.phase32.rowIds.animal_groups]);
+      expect(animals.groups.map((r) => r.id).sort()).toEqual(
+        [self.phase32.rowIds.animal_groups, self.phase33.phase32.rowIds.animal_groups].sort()
+      );
       const operations = json.operations as Record<string, Array<{ id: string }>>;
-      expect(operations.ledgerEntries.map((r) => r.id)).toEqual([
-        self.phase32.rowIds.ledger_entries
-      ]);
+      expect(operations.ledgerEntries.map((r) => r.id).sort()).toEqual(
+        [self.phase32.rowIds.ledger_entries, self.phase33.phase32.rowIds.ledger_entries].sort()
+      );
     }
   });
 
@@ -282,7 +351,7 @@ describe('GET /api/account/export.json', () => {
     });
 
     const { json } = await exportFor(farm.ownerId);
-    expect(json.schemaVersion).toBe('1.3.0');
+    expect(json.schemaVersion).toBe('1.4.0');
     const hay = json.hayCuttings as Array<{ id: string; recordedLate: boolean }>;
     expect(hay.find((c) => c.id === late)?.recordedLate).toBe(true);
     expect(hay.find((c) => c.id === onTime)?.recordedLate).toBe(false);

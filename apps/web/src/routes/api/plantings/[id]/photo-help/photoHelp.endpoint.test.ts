@@ -43,6 +43,8 @@ import { createPlanned } from '$lib/db/crops';
 import { EXIF_SECRET, fakeJpeg, toDataUrl } from '$lib/journal/jpegFixture';
 import type { PhotoHelpResponse } from '$lib/server/photoHelp';
 import { PHOTO_HELP_TIMEOUT_MS } from '$lib/server/photoHelp';
+import { getDocument } from '$lib/db/documents';
+import { useTestVault } from '$lib/server/vault/testing';
 import { POST } from './+server';
 
 const OK = { ok: true, spend: { monthlyUsdSoFar: 0, cap: 5, warnAt80: false } };
@@ -157,6 +159,28 @@ describe('POST /api/plantings/[id]/photo-help', () => {
       { provenance: 'fallback', fallbackReason: 'no-key', inputTokens: 0 }
     ]);
     expect(aiCalls(owner)).toBe(1);
+  });
+
+  it('with the vault on, saves the photo as a journal-photo document', async () => {
+    const vault = useTestVault();
+    try {
+      const owner = seedOwner();
+      await runWithTenant(owner, async () => {
+        const crop = seedPlanting();
+        const res = await call(crop.id, { question: 'ready', text: '', photo: PHOTO });
+        expect(res.status).toBe(200);
+        const body = (await res.json()) as PhotoHelpResponse;
+        expect(body.entry.hasPhoto).toBe(true);
+        const [row] = journal(owner);
+        expect(row.photoRef).toBeNull();
+        expect(getDocument(row.photoDocumentId!)).toMatchObject({
+          kind: 'journal-photo',
+          uploadedBy: 'photo-help-user'
+        });
+      });
+    } finally {
+      await vault.cleanup();
+    }
   });
 
   it('gives the pruning and common-problem sections for those chips', async () => {

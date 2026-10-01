@@ -7,6 +7,7 @@ import {
 } from '$lib/fertility/soilInterpret';
 import { formatCalendarDate, ymdInZone } from '$lib/prefs';
 import {
+  type CardAction,
   cardHref,
   cardKey,
   mergeProvenance,
@@ -34,6 +35,46 @@ function nutrientFact(
     value: `${trimNumber(raw, 1)} ${unit}${rated}`,
     provenance: reading.provenance ?? 'manual'
   };
+}
+
+/** A typed-by-hand report link is shown only when it is http or https. */
+export function safeReportUrl(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  try {
+    const u = new URL(raw);
+    return u.protocol === 'https:' || u.protocol === 'http:' ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+
+/** A-38. The lab report line and its screen link. Vault files are never in
+ *  the offline snapshot, so the link says it needs a connection. */
+export function labReportParts(
+  test: SnapshotSoilTest,
+  timeZone: string
+): { fact: CardFact | null; links: CardAction[] } {
+  const links: CardAction[] = [];
+  let fact: CardFact | null = null;
+  const r = test.labReport;
+  if (r && r.deletedAt !== null) {
+    const day = formatCalendarDate(ymdInZone(r.deletedAt, timeZone), 'date');
+    fact = { label: 'Lab report', value: `Deleted on ${day}`, provenance: 'manual' };
+  } else if (r) {
+    fact = {
+      label: 'Lab report',
+      value: 'Attached',
+      printValue: 'On file',
+      provenance: 'manual'
+    };
+    links.push({
+      label: 'Open lab report when online',
+      href: `/api/documents/${encodeURIComponent(r.documentId)}/file`
+    });
+  }
+  const typed = safeReportUrl(test.reportPdfUrl);
+  if (typed) links.push({ label: 'Lab report link (typed by hand)', href: typed, external: true });
+  return { fact, links };
 }
 
 export function buildSoilTestCard(
@@ -101,6 +142,9 @@ export function buildSoilTestCard(
     });
   }
 
+  const report = labReportParts(test, opts.prefs.timeZone);
+  if (report.fact) facts.push(report.fact);
+
   const sections: CardSection[] = [];
   if (read.lime.status !== 'unknown') {
     sections.push({ title: 'Lime', items: [read.lime.text], provenance: 'fallback' });
@@ -133,6 +177,7 @@ export function buildSoilTestCard(
     provenance: mergeProvenance(provenance),
     href: cardHref('soilTest', key),
     notices: [FOLLOW_LAB_NOTICE],
+    ...(report.links.length ? { links: report.links } : {}),
     status: read.stale
       ? { id: 'stale', label: 'Due for a new test', tone: 'rust' }
       : { id: 'current', label: 'Current', tone: 'forest' }

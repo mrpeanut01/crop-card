@@ -9,11 +9,17 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fc from 'fast-check';
-import { db, type PendingRecordKind, type PendingSprayRecord } from './dexie';
+import {
+  PHASE_33_RECORD_KINDS,
+  db,
+  type PendingRecordKind,
+  type PendingSprayRecord
+} from './dexie';
 import { ACTIVE_OWNER_ENDPOINT, EXPECTED_OWNER_HEADER } from './ownerSync';
 import {
   endpointForRecord,
   UNASSIGNED_OWNER_ID,
+  UNSENDABLE_KIND_NOTE,
   discardPendingForActiveOwner,
   drainQueue,
   enqueueRecord,
@@ -444,5 +450,66 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
       }),
       { numRuns: 60 }
     );
+  });
+});
+
+describe('A-10: Phase 33 kinds are declared, not routed', () => {
+  it('a row of an unrouted kind is never posted and stays pending; routed rows still drain', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.array(
+          fc.record({
+            ownerId: fc.constantFrom<string>(...OWNERS),
+            kind: fc.constantFrom<string>(...PHASE_33_RECORD_KINDS, 'scout', 'harvest'),
+            createdAt: fc.integer({ min: 0, max: 1_000_000 })
+          }),
+          { minLength: 1, maxLength: 12 }
+        ),
+        fc.constantFrom<string>(...OWNERS),
+        async (rows, active) => {
+          await freshQueue();
+          await db().pendingSprayRecords.bulkPut(
+            rows.map((r, i) => ({
+              id: `row_${i}`,
+              ownerId: r.ownerId,
+              kind: r.kind as PendingRecordKind,
+              occurredAt: r.createdAt,
+              payload: { marker: `row_${i}`, fail: 0 },
+              attempts: 0,
+              createdAt: r.createdAt
+            }))
+          );
+          setActive(active);
+          const calls = installFetch();
+          await drainQueue();
+          const after = await snapshot();
+          const unrouted = (k: string) => (PHASE_33_RECORD_KINDS as readonly string[]).includes(k);
+          for (const [i, r] of rows.entries()) {
+            const id = `row_${i}`;
+            const posted = calls.some((c) => c.payload.marker === id);
+            if (unrouted(r.kind)) {
+              expect(posted, id).toBe(false);
+              expect(after.has(id), id).toBe(true);
+              if (r.ownerId === active) {
+                expect(after.get(id)?.lastError).toBe(UNSENDABLE_KIND_NOTE);
+                expect(after.get(id)?.status).toBeUndefined();
+              }
+            } else {
+              expect(posted, id).toBe(r.ownerId === active);
+              expect(after.has(id), id).toBe(r.ownerId !== active);
+            }
+          }
+          for (const c of calls) expect(c.url).not.toBe('/api/spray/record');
+          vi.unstubAllGlobals();
+        }
+      ),
+      { numRuns: 30 }
+    );
+  });
+
+  it('endpointForRecord answers null for an unrouted kind', () => {
+    for (const kind of PHASE_33_RECORD_KINDS) {
+      expect(endpointForRecord({ kind: kind as PendingRecordKind })).toBeNull();
+    }
   });
 });

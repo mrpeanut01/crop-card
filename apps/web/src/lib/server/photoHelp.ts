@@ -29,6 +29,7 @@ import { aiLimitOf, recordFallback, tryAiWithGuard } from './aiDegrade';
 import { recordCall } from './aiGuard';
 import { askPhotoHelp, type PhotoHelpPromptInput } from './aiPhotoHelp';
 import type { FallbackReason } from './aiTry';
+import { discardPhoto, storePhoto, type StoredPhotoRef } from './vault/photoWrite';
 
 export const PHOTO_HELP_TIMEOUT_MS = 20_000;
 const DAY_MS = 86_400_000;
@@ -144,6 +145,9 @@ export async function answerPhotoHelp(args: {
   const asked = questionText(req.question, req.text);
   const careSections = careAnswerSections(plugin, req.question, req.text, sprayTerms);
 
+  const stored: StoredPhotoRef | null = req.photo
+    ? await storePhoto('journal-photo', req.photo, { title: 'Journal photo', uploadedBy: userId })
+    : null;
   const save = (answer: JournalAnswer, provenance: 'ai' | 'fallback') =>
     insertJournalEntry({
       cropId: crop.id,
@@ -151,7 +155,8 @@ export async function answerPhotoHelp(args: {
       createdBy: userId,
       kind: 'photo_help',
       text: asked,
-      photoRef: req.photo,
+      photoRef: stored && 'inline' in stored ? stored.inline : null,
+      photoDocumentId: stored && 'documentId' in stored ? stored.documentId : null,
       answer,
       provenance
     });
@@ -179,63 +184,68 @@ export async function answerPhotoHelp(args: {
     };
   };
 
-  if (asksForSprayAdvice(asked, sprayTerms)) return fallback('spray', null);
-
-  const tried = await tryAiWithGuard({
-    endpoint: 'photo-help',
-    userId,
-    timeoutMs: PHOTO_HELP_TIMEOUT_MS,
-    prompt: (signal) =>
-      askPhotoHelp(
-        promptInputFor(crop, plugin, asked, now, sprayTerms, !!req.photo),
-        req.photo,
-        signal
-      )
-  });
-
-  if (tried.provenance === 'fallback') {
-    recordFallback(userId, 'photo-help', tried.fallbackReason);
-    const why: Why =
-      !tried.guard.ok && tried.guard.reason === 'quota-exceeded' ? 'quota' : tried.fallbackReason;
-    return fallback(why, tried.fallbackReason, false, aiLimitOf(tried.guard));
-  }
-
-  const { meta } = tried.value;
-  const text = plainAnswer(tried.value.text);
-  const filtered = filterSprayAdvice(text, sprayTerms);
-  const mostlySpray =
-    filtered.removed && answerSentences(filtered.text).length * 2 < answerSentences(text).length;
-  const usable = filtered.text.trim().length > 0 && !mostlySpray;
   try {
-    recordCall({
-      userId,
-      endpoint: 'photo-help',
-      model: meta.model,
-      inputTokens: meta.inputTokens,
-      cachedInputTokens: meta.cachedInputTokens,
-      outputTokens: meta.outputTokens,
-      usdEstimate: meta.usdEstimate,
-      success: usable,
-      errorClass: usable ? (filtered.removed ? 'spray-advice-removed' : undefined) : 'unusable',
-      provenance: usable ? 'ai' : 'fallback'
-    });
-  } catch (err) {
-    console.error('[ai] photo-help recordCall failed', err);
-  }
-  if (!usable) return fallback('invalid', null, filtered.removed);
+    if (asksForSprayAdvice(asked, sprayTerms)) return fallback('spray', null);
 
-  const answer: JournalAnswer = {
-    question: req.question,
-    text: filtered.text,
-    source: 'ai',
-    sections: [],
-    sprayRedirect: filtered.removed
-  };
-  return {
-    provenance: 'ai',
-    fallbackReason: null,
-    message: filtered.removed ? SPRAY_REDIRECT : null,
-    answer,
-    entry: save(answer, 'ai')
-  };
+    const tried = await tryAiWithGuard({
+      endpoint: 'photo-help',
+      userId,
+      timeoutMs: PHOTO_HELP_TIMEOUT_MS,
+      prompt: (signal) =>
+        askPhotoHelp(
+          promptInputFor(crop, plugin, asked, now, sprayTerms, !!req.photo),
+          req.photo,
+          signal
+        )
+    });
+
+    if (tried.provenance === 'fallback') {
+      recordFallback(userId, 'photo-help', tried.fallbackReason);
+      const why: Why =
+        !tried.guard.ok && tried.guard.reason === 'quota-exceeded' ? 'quota' : tried.fallbackReason;
+      return fallback(why, tried.fallbackReason, false, aiLimitOf(tried.guard));
+    }
+
+    const { meta } = tried.value;
+    const text = plainAnswer(tried.value.text);
+    const filtered = filterSprayAdvice(text, sprayTerms);
+    const mostlySpray =
+      filtered.removed && answerSentences(filtered.text).length * 2 < answerSentences(text).length;
+    const usable = filtered.text.trim().length > 0 && !mostlySpray;
+    try {
+      recordCall({
+        userId,
+        endpoint: 'photo-help',
+        model: meta.model,
+        inputTokens: meta.inputTokens,
+        cachedInputTokens: meta.cachedInputTokens,
+        outputTokens: meta.outputTokens,
+        usdEstimate: meta.usdEstimate,
+        success: usable,
+        errorClass: usable ? (filtered.removed ? 'spray-advice-removed' : undefined) : 'unusable',
+        provenance: usable ? 'ai' : 'fallback'
+      });
+    } catch (err) {
+      console.error('[ai] photo-help recordCall failed', err);
+    }
+    if (!usable) return fallback('invalid', null, filtered.removed);
+
+    const answer: JournalAnswer = {
+      question: req.question,
+      text: filtered.text,
+      source: 'ai',
+      sections: [],
+      sprayRedirect: filtered.removed
+    };
+    return {
+      provenance: 'ai',
+      fallbackReason: null,
+      message: filtered.removed ? SPRAY_REDIRECT : null,
+      answer,
+      entry: save(answer, 'ai')
+    };
+  } catch (err) {
+    if (stored && 'documentId' in stored) await discardPhoto(stored.documentId, userId);
+    throw err;
+  }
 }

@@ -81,7 +81,7 @@ function rowToAnimal(row: AnimalRow): Animal {
     statusDate: msOf(row.statusDate),
     statusReason: row.statusReason ?? null,
     housingFieldId: row.housingFieldId ?? null,
-    hasPhoto: !!row.photoRef,
+    hasPhoto: hasPhoto(row),
     notes: row.notes ?? null,
     microchipId: row.microchipId ?? null,
     feedingNote: row.feedingNote ?? null,
@@ -291,24 +291,83 @@ export function setMembersHousing(groupId: string, housingFieldId: string | null
     .run().changes;
 }
 
-/** @hold-exempt: writes the photo reference only; no hold reads it */
+/** An animal has a photo when either column holds one: the vault document,
+ *  or the inline data URL of a row the migration has not moved yet. */
+export function hasPhoto(row: {
+  photoRef: string | null;
+  photoDocumentId: string | null;
+}): boolean {
+  return !!row.photoRef || !!row.photoDocumentId;
+}
+
+/** Stores an inline photo (the vault is off or failed, A-45) or clears the
+ *  photo, and clears any vault reference. False when no animal of this
+ *  Owner matched.
+ *  @hold-exempt: photo columns carry no hold facts */
 export function setAnimalPhoto(id: string, photoRef: string | null, now = Date.now()): boolean {
+  return writePhoto(id, { photoRef, photoDocumentId: null }, now);
+}
+
+/** Points the animal at its photo in the vault (null clears it) and clears
+ *  the inline column. False when no animal of this Owner matched.
+ *  @hold-exempt: photo columns carry no hold facts */
+export function setAnimalPhotoDocument(
+  id: string,
+  documentId: string | null,
+  now = Date.now()
+): boolean {
+  return writePhoto(id, { photoRef: null, photoDocumentId: documentId }, now);
+}
+
+/** @hold-exempt: photo columns carry no hold facts */
+function writePhoto(
+  id: string,
+  set: { photoRef: string | null; photoDocumentId: string | null },
+  now: number
+): boolean {
   return (
     db
       .update(animals)
-      .set({ photoRef, updatedAt: new Date(now) })
+      .set({ ...set, updatedAt: new Date(now) })
       .where(withTenant(animals, eq(animals.id, id)))
       .run().changes > 0
   );
 }
 
-export function getAnimalPhoto(id: string): string | null {
+/** Moves one inline photo to its vault document (A-47): only while
+ *  `photo_ref` still holds `expectedRef` and no document is set. Leaves
+ *  `updated_at` alone, since nothing the farmer sees changed.
+ *  @hold-exempt: photo columns carry no hold facts */
+export function moveAnimalPhotoToDocument(
+  id: string,
+  expectedRef: string,
+  documentId: string
+): boolean {
+  return (
+    db
+      .update(animals)
+      .set({ photoDocumentId: documentId, photoRef: null })
+      .where(
+        withTenant(
+          animals,
+          eq(animals.id, id),
+          eq(animals.photoRef, expectedRef),
+          isNull(animals.photoDocumentId)
+        )
+      )
+      .run().changes > 0
+  );
+}
+
+export function getAnimalPhoto(id: string): { documentId: string } | { inline: string } | null {
   const row = db
-    .select({ photoRef: animals.photoRef })
+    .select({ photoRef: animals.photoRef, photoDocumentId: animals.photoDocumentId })
     .from(animals)
     .where(withTenant(animals, eq(animals.id, id)))
     .get();
-  return row?.photoRef ?? null;
+  if (!row) return null;
+  if (row.photoDocumentId) return { documentId: row.photoDocumentId };
+  return row.photoRef ? { inline: row.photoRef } : null;
 }
 
 /** `presumed_lactating` records a sex change that ends the lactating

@@ -8,6 +8,7 @@ import { sanitizePhotoDataUrl } from '$lib/journal/photo';
 import { currentUser } from './auth';
 import { writeRecord } from './recordWrite';
 import { canMutate } from './session';
+import { discardPhoto, storePhoto } from './vault/photoWrite';
 
 export { journalEntrySchema, photoHelpSchema, queuedJournalSchema };
 
@@ -71,17 +72,30 @@ export async function addJournalEntry(
   if (crop instanceof Response) return crop;
   const photo = cleanPhoto(data.photo);
   if (!photo.ok) return photo.response;
-  const entry = writeRecord(event, () =>
-    insertJournalEntry({
-      cropId: crop.id,
-      blockId: crop.blockId,
-      createdBy: userId,
-      kind: data.kind,
-      text: data.text.trim(),
-      photoRef: photo.photo,
-      provenance: 'manual',
-      createdAt: data.occurredAt !== undefined ? Math.min(data.occurredAt, Date.now()) : undefined
-    })
-  );
+  const stored = photo.photo
+    ? await storePhoto('journal-photo', photo.photo, {
+        title: 'Journal photo',
+        uploadedBy: userId
+      })
+    : null;
+  let entry;
+  try {
+    entry = writeRecord(event, () =>
+      insertJournalEntry({
+        cropId: crop.id,
+        blockId: crop.blockId,
+        createdBy: userId,
+        kind: data.kind,
+        text: data.text.trim(),
+        photoRef: stored && 'inline' in stored ? stored.inline : null,
+        photoDocumentId: stored && 'documentId' in stored ? stored.documentId : null,
+        provenance: 'manual',
+        createdAt: data.occurredAt !== undefined ? Math.min(data.occurredAt, Date.now()) : undefined
+      })
+    );
+  } catch (err) {
+    if (stored && 'documentId' in stored) await discardPhoto(stored.documentId, userId);
+    throw err;
+  }
   return json({ entry }, { status: 201 });
 }

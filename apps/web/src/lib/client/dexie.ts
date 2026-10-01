@@ -32,6 +32,12 @@
  * Phase 32 (v5): the queue gains a `[ownerId+kind]` index so the pending
  * list can group rows per kind for the replay recovery UX. Adding a kind
  * is a type change plus an `ENDPOINT_BY_KIND` entry, never another bump.
+ *
+ * Phase 33 (v6): `recordCards` keeps opened record cards per Owner (33D
+ * fills and prunes it) and `taskTimers` holds one running timer per Owner
+ * and user on this device. `PHASE_33_RECORD_KINDS` are declared, not
+ * routed: they stay out of `PendingRecordKind` until their sprint wires
+ * them, so nothing can enqueue them yet.
  */
 
 import Dexie, { type Table } from 'dexie';
@@ -56,6 +62,11 @@ export type PendingRecordKind =
   | 'seed-start'
   | 'irrigation'
   | 'rain-gauge';
+
+/** Phase 33 queue kinds, declared ahead of their sprints (A-10). Move a
+ *  kind into `PendingRecordKind` and `ENDPOINT_BY_KIND` when it is routed. */
+export const PHASE_33_RECORD_KINDS = ['harvest-disposition', 'time-entry'] as const;
+export type Phase33RecordKind = (typeof PHASE_33_RECORD_KINDS)[number];
 
 export interface PendingSprayRecord {
   id: string;
@@ -105,11 +116,31 @@ export interface PinnedCardRow {
   pinnedAt: number;
 }
 
+/** A record card opened on this device. `key` is `rc_<kind>.<id>`; 33D
+ *  types `model`. Pins live in `pinnedCards`. */
+export interface RecordCardRow {
+  ownerId: string;
+  key: string;
+  model: unknown;
+  savedAt: number;
+  lastOpenedAt: number;
+}
+
+/** The running task timer, one per Owner and user on this device (D-03). */
+export interface TaskTimerRow {
+  ownerId: string;
+  userId: string;
+  taskId: string;
+  startedAt: number;
+}
+
 export class CropCardDb extends Dexie {
   pendingSprayRecords!: Table<PendingSprayRecord, string>;
   cachedCatalogs!: Table<CachedCatalog, string>;
   farmSnapshots!: Table<FarmSnapshotRow, string>;
   pinnedCards!: Table<PinnedCardRow, [string, string]>;
+  recordCards!: Table<RecordCardRow, [string, string]>;
+  taskTimers!: Table<TaskTimerRow, [string, string]>;
 
   constructor() {
     super('cropcard');
@@ -178,6 +209,14 @@ export class CropCardDb extends Dexie {
       cachedCatalogs: 'key, ownerId, [ownerId+catalogKind]',
       farmSnapshots: 'ownerId',
       pinnedCards: '[ownerId+key], ownerId, [ownerId+pinnedAt]'
+    });
+    this.version(6).stores({
+      pendingSprayRecords: 'id, ownerId, createdAt, [ownerId+createdAt], [ownerId+kind]',
+      cachedCatalogs: 'key, ownerId, [ownerId+catalogKind]',
+      farmSnapshots: 'ownerId',
+      pinnedCards: '[ownerId+key], ownerId, [ownerId+pinnedAt]',
+      recordCards: '[ownerId+key], ownerId, [ownerId+lastOpenedAt]',
+      taskTimers: '[ownerId+userId], ownerId'
     });
   }
 }

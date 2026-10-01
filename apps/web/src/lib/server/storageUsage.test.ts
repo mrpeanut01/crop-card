@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { db, sqliteHandle } from '$lib/db/client';
-import { owners } from '$lib/db/schema';
-import { runWithTenant } from '$lib/db/tenant';
+import { documents, owners } from '$lib/db/schema';
+import { runWithTenant, unscopedQueryNote } from '$lib/db/tenant';
 import { createField } from '$lib/db/fields';
 import { createBlock } from '$lib/db/blocks';
 import { createPlanned } from '$lib/db/crops';
@@ -16,6 +16,8 @@ import {
   recomputeAllStorageUsage,
   storageUsage
 } from './storageUsage';
+
+unscopedQueryNote('test fixtures write vault rows for one seeded Owner');
 
 function seedOwner(): string {
   const id = `storage-${randomUUID()}`;
@@ -111,5 +113,62 @@ describe('storage computed from source', () => {
       .run(a, yyyymm(Date.now()), 999_999_999, Date.now());
     const row = listAllOwners().find((o) => o.id === a);
     expect(row?.storageBytes).toBe(4096);
+  });
+
+  it('a cached total from before the vault (no documentBytes) is recomputed', () => {
+    const a = seedOwner();
+    addPhoto(a, 100);
+    sqliteHandle()
+      .prepare('INSERT INTO app_settings (owner_id, key, value, updated_at) VALUES (?, ?, ?, ?)')
+      .run(
+        a,
+        STORAGE_SETTING_KEY,
+        JSON.stringify({ bytes: 5, journalPhotoBytes: 5, animalPhotoBytes: 0, computedAt: 1 }),
+        Date.now()
+      );
+    expect(runWithTenant(a, () => storageUsage())).toMatchObject({
+      bytes: 100,
+      documentBytes: 0
+    });
+  });
+
+  it('adds vault photos to their bucket and other live files to documentBytes', () => {
+    const a = seedOwner();
+    addPhoto(a, 40);
+    const doc = (kind: string, byteSize: number, deleted = false) =>
+      db
+        .insert(documents)
+        .values({
+          id: randomUUID(),
+          ownerId: a,
+          kind: kind as 'other',
+          title: kind,
+          mime: 'image/jpeg',
+          byteSize,
+          sha256: '0'.repeat(64),
+          crc32: 0,
+          storageKey: `owners/${a}/${randomUUID()}`,
+          deletedAt: deleted ? new Date() : null
+        })
+        .run();
+    doc('journal-photo', 1000);
+    doc('animal-photo', 300);
+    doc('lab-report', 7000);
+    doc('certificate', 9, true);
+    const usage = runWithTenant(a, () => computeStorageUsage());
+    expect(usage).toMatchObject({
+      journalPhotoBytes: 1040,
+      animalPhotoBytes: 300,
+      documentBytes: 7000,
+      bytes: 8340
+    });
+    recomputeAllStorageUsage(5000);
+    expect(runWithTenant(a, () => storageUsage())).toMatchObject({
+      journalPhotoBytes: 1040,
+      animalPhotoBytes: 300,
+      documentBytes: 7000,
+      bytes: 8340,
+      computedAt: 5000
+    });
   });
 });

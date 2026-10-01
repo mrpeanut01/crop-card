@@ -100,11 +100,12 @@ describe('#316 — kind → endpoint routing', () => {
     expect(endpointForRecord({ kind: undefined })).toBe('/api/spray/record');
   });
 
-  it('falls back to the herbicide endpoint for an unknown kind value', () => {
-    // Defensive: a corrupted/forward-incompatible kind never throws — it
-    // routes to the safest existing endpoint rather than crashing the drain.
+  it('never routes an unknown kind value (A-10)', () => {
+    // A corrupted or forward-incompatible kind must not replay to another
+    // record's endpoint; the drain keeps the row and never posts it.
     const rogue = { kind: 'not-a-real-kind' as unknown as PendingRecordKind };
-    expect(endpointForRecord(rogue)).toBe('/api/spray/record');
+    expect(endpointForRecord(rogue)).toBeNull();
+    expect(endpointForRecord({ kind: 'toString' as unknown as PendingRecordKind })).toBeNull();
   });
 });
 

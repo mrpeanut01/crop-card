@@ -296,6 +296,11 @@ export interface SnapshotSoilTest {
   extractionMethod: ExtractionMethod | null;
   unitsBasis: UnitsBasis | null;
   labRatings: LabRatings | null;
+  /** The lab report in the document vault (A-38). Its bytes are never in
+   *  the snapshot; the card links to the file route for when online. */
+  labReport?: { documentId: string; title: string; deletedAt: number | null } | null;
+  /** A report link typed by hand before the vault existed. */
+  reportPdfUrl?: string | null;
 }
 
 /** A species' display facts for Animal and Flock Cards. */

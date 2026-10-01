@@ -1,0 +1,144 @@
+{
+  "$comment": "Phase 33 R4. Land-grant extension pot bioassay methods for testing compost, manure or soil for persistent growth-regulator herbicide residue (picloram, clopyralid, aminopyralid) with a pea or bean. Each entry is { url, publisher, date, quote, note? }, quotes word for word from the fetched page or PDF text. The app shows the method as a linked guide and never as a pass/fail verdict. The sources DISAGREE on mix ratio and duration (see `disagreements`); they are recorded side by side and not merged.",
+  "fetchedOn": "2026-10-01",
+  "entries": {
+    "osu-em9307.crop": {
+      "url": "https://extension.oregonstate.edu/sites/default/files/documents/em9307.pdf",
+      "publisher": "Oregon State University Extension Service, EM 9307 (Weston Miller and Kaci Buhl); procedure developed by Washington State University Extension, Whatcom County and adapted by Montana State University",
+      "date": "February 2021",
+      "quote": "Garden pea seeds",
+      "note": "Materials list. Crop is garden pea."
+    },
+    "osu-em9307.mixRatio": {
+      "url": "https://extension.oregonstate.edu/sites/default/files/documents/em9307.pdf",
+      "publisher": "Oregon State University Extension Service, EM 9307",
+      "date": "February 2021",
+      "quote": "If testing compost, mix two parts test material to one part potting mix in a clean plastic bag."
+    },
+    "osu-em9307.potSetup": {
+      "url": "https://extension.oregonstate.edu/sites/default/files/documents/em9307.pdf",
+      "publisher": "Oregon State University Extension Service, EM 9307",
+      "date": "February 2021",
+      "quote": "New 4-inch plastic planting pots",
+      "note": "Materials: purchased, peat-based potting mix without compost as an ingredient."
+    },
+    "osu-em9307.controls": {
+      "url": "https://extension.oregonstate.edu/sites/default/files/documents/em9307.pdf",
+      "publisher": "Oregon State University Extension Service, EM 9307",
+      "date": "February 2021",
+      "quote": "Set up control pots. Fill three pots with potting mix.",
+      "note": "Then \"Fill three pots with test material.\" Plant \"three pea seeds in each pot. Plant the seeds 1 inch deep.\""
+    },
+    "osu-em9307.duration": {
+      "url": "https://extension.oregonstate.edu/sites/default/files/documents/em9307.pdf",
+      "publisher": "Oregon State University Extension Service, EM 9307",
+      "date": "February 2021",
+      "quote": "Grow the pea plants until three sets of leaves appear (14–21 days after seeds germinate).",
+      "note": "Also: \"Ensure all plants have consistent light, temperature and water.\""
+    },
+    "osu-em9307.injury": {
+      "url": "https://extension.oregonstate.edu/sites/default/files/documents/em9307.pdf",
+      "publisher": "Oregon State University Extension Service, EM 9307",
+      "date": "February 2021",
+      "quote": "Look for distorted or cupped leaves. The damage occurs in new growth, including the ends of the shoots.",
+      "note": "Figure captions: \"After three weeks of growth, pea leaves show slight cupping.\" and \"pea plants are stunted and leaves show severe cupping, a sign of herbicide damage.\""
+    },
+    "osu-em9307.interpretation": {
+      "url": "https://extension.oregonstate.edu/sites/default/files/documents/em9307.pdf",
+      "publisher": "Oregon State University Extension Service, EM 9307",
+      "date": "February 2021",
+      "quote": "If you observe damage, the compost or soil mix is likely contaminated."
+    },
+    "osu-em9307.limits": {
+      "url": "https://extension.oregonstate.edu/sites/default/files/documents/em9307.pdf",
+      "publisher": "Oregon State University Extension Service, EM 9307",
+      "date": "February 2021",
+      "quote": "Chemical lab testing might not indicate herbicide contamination.",
+      "note": "The source names clopyralid and aminopyralid as herbicides that \"persist through the composting process\" and says the procedure \"is also used to test for contaminated manure or animal bedding.\" It gives no minimum detection level and does not discuss false negatives."
+    },
+    "osu-em9307.retest": {
+      "url": "https://extension.oregonstate.edu/sites/default/files/documents/em9307.pdf",
+      "publisher": "Oregon State University Extension Service, EM 9307",
+      "date": "February 2021",
+      "quote": "Perform the bioassay test one to two times per year until there are no signs of damage.",
+      "note": "Followed by: \"When a bioassay test shows no damage, it is likely you can grow broadleaf crops such as tomatoes and beans without damage from the contaminated soil.\" Also: \"It can take from two to five years for the herbicide to completely degrade.\""
+    },
+    "osu-smallfarms-2009.method": {
+      "url": "https://smallfarms.oregonstate.edu/smallfarms/herbicide-carryover-hay-manure-compost-and-grass-clippings",
+      "publisher": "Oregon State University Small Farms Program (Jeanine Davis, NC State, and Sue Ellen Johnson, as listed on the page)",
+      "date": "Fall 09",
+      "quote": "Prepare 3 to 6 small (4- to 5-inch) pots with a 2:1 mix of manure or compost and a commercial potting mix with fertilizer. Fill several control pots with only the commercial potting mix.",
+      "note": "Continues: \"Plant three pea or bean seeds in each pot, water, and let them grow for two to three weeks until there are three sets of true leaves.\" Page date taken from the page's own \"Fall 09\" label."
+    },
+    "osu-smallfarms-2009.limits": {
+      "url": "https://smallfarms.oregonstate.edu/smallfarms/herbicide-carryover-hay-manure-compost-and-grass-clippings",
+      "publisher": "Oregon State University Small Farms Program",
+      "date": "Fall 09",
+      "quote": "the test will be only as good as the samples you take.",
+      "note": "The page recommends \"at least 20 per pile\" samples. It lists picloram, clopyralid and aminopyralid as of greatest concern and says breakdown \"can take as long as three to four years\" in some field reports. It gives no detection limit and no false-negative statement."
+    },
+    "osu-smallfarms-2009.retest": {
+      "url": "https://smallfarms.oregonstate.edu/smallfarms/herbicide-carryover-hay-manure-compost-and-grass-clippings",
+      "publisher": "Oregon State University Small Farms Program",
+      "date": "Fall 09",
+      "quote": "Test again the following year. If the test plants grow normally, it should be safe to grow broadleaf crops.",
+      "note": "Applies to a field site where contaminated material was applied."
+    },
+    "montana-montguide.method": {
+      "url": "https://extension-store.montana.edu/montguides/how-to-prevent-non-target-injury-of-broadleaf-crops-and-vegetables-by-residual-herbicides",
+      "publisher": "Montana State University Extension MontGuide (page title: how to prevent non-target injury of broadleaf crops and vegetables by residual herbicides)",
+      "date": "Revised September 2016",
+      "quote": "1:1 ratio with non-contaminated soil",
+      "note": "Quote fragments as returned by the page reader, not a contiguous paragraph: three bean or pea seeds in each pot, grown \"for three weeks, or until there are three sets of true leaves\"; \"two or three pots with just non-contaminated soil to serve as the 'control'\"; 3-6 test pots. Re-read the MontGuide PDF before using these as a contiguous method."
+    },
+    "montana-montguide.interpretation": {
+      "url": "https://extension-store.montana.edu/montguides/how-to-prevent-non-target-injury-of-broadleaf-crops-and-vegetables-by-residual-herbicides",
+      "publisher": "Montana State University Extension MontGuide",
+      "date": "Revised September 2016",
+      "quote": "If you do not see a difference between the control pots and the pots with the amendment, the amendment is likely not contaminated.",
+      "note": "Page also says laboratory testing \"is also expensive\" and that plant sensitivity \"can be as low as 1 part per billion (ppb)\"."
+    },
+    "ncstate-caldwell-2020.method": {
+      "url": "https://caldwell.ces.ncsu.edu/2020/07/herbicide-damage-in-the-garden",
+      "publisher": "NC State Extension, Caldwell County (Seth Nagy)",
+      "date": "July 11, 2020 (updated December 18, 2024)",
+      "quote": "Prepare three to six small (4- to 5-inch) pots with a 1:1 mix of the manure or compost with a commercial potting mix containing fertilizer. Fill several control pots with only the commercial potting mix.",
+      "note": "Continues: \"Plant three pea or bean seeds in each pot, water, and let them grow for two to three weeks. There should be at least three sets of true leaves on the peas or beans.\" The page states no test limitations."
+    }
+  },
+  "disagreements": [
+    {
+      "field": "mixRatio",
+      "values": {
+        "osu-em9307": "2 parts test material : 1 part potting mix (compost)",
+        "osu-smallfarms-2009": "2:1 manure or compost to potting mix",
+        "montana-montguide": "1:1 with non-contaminated soil",
+        "ncstate-caldwell-2020": "1:1 manure or compost to potting mix",
+        "wsu-via-search": "25 percent compost, 75 percent soil (search-result summary only, WSU PDF returned 403; not recorded as an entry)"
+      },
+      "note": "Not merged. The app should link the guide and not pick a ratio."
+    },
+    {
+      "field": "duration",
+      "values": {
+        "osu-em9307": "until three sets of leaves, 14 to 21 days after germination",
+        "osu-smallfarms-2009": "two to three weeks until three sets of true leaves",
+        "montana-montguide": "three weeks or until three sets of true leaves",
+        "ncstate-caldwell-2020": "two to three weeks, at least three sets of true leaves"
+      },
+      "note": "Not merged. All four stop at three sets of true leaves; the day counts differ."
+    },
+    {
+      "field": "crop",
+      "values": {
+        "osu-em9307": "garden pea only",
+        "others": "pea or bean"
+      }
+    }
+  ],
+  "gaps": [
+    "No source opened states which herbicides the test misses, a false-negative rate or a minimum detection concentration. The only sensitivity statement is Montana's \"as low as 1 part per billion (ppb)\" for plant sensitivity, not for the test.",
+    "WSU Puyallup CloBioassay.pdf (the origin of the OSU EM 9307 procedure) returned HTTP 403, and WSU's Paper_Clopyralid_QandA PDF had no usable method text, so no WSU entry is recorded.",
+    "No source opened gives a safe-to-use date for manure or compost; only OSU's retest and 'likely' statements above."
+  ]
+}

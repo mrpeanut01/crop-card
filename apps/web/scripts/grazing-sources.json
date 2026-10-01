@@ -34,6 +34,27 @@
         "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
         "date": "2024-09-24",
         "quote": "Do not plant a broadleaf crop in fields treated in the previous year with manure from animals that have grazed forage or eaten hay harvested from treated areas until an adequately sensitive field bioassay is conducted to determine that the aminopyralid concentration in the soil is at level that is not injurious to the crop to be planted."
+      },
+      "carryoverManureWindow": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2024-09-24",
+        "quote": "Do not use manure from animals that have grazed forage or eaten hay harvested from treated areas within the previous 3 days, in compost, mulch, or mushroom spawn.",
+        "note": "Quote only for the 3-day figure. The label also says: 'This product is persistent and may be present in treated plant materials for months to years after application.' and 'Do not sell or transport treated plant materials or manure from animals that have grazed on treated plant materials off-site for compost distribution or for use as animal bedding/feed for 18 months after application.' Also: 'Do not transfer grazing animals from areas treated with Chaparral to areas where sensitive broadleaf crops occur without first allowing 3 days of grazing on an untreated pasture. Otherwise, urine and manure may contain enough aminopyralid to cause injury to sensitive broadleaf plants.'; and a broadleaf crop may not be planted in fields treated with such manure 'until an adequately sensitive field bioassay is conducted to determine that the aminopyralid concentration in the soil is at level that is not injurious to the crop to be planted.' A registrant bulletin giving a longer or different window was not read; none is recorded."
+      },
+      "carryoverHayOffFarm": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2024-09-24",
+        "quote": "Hay can only be used on the farm or ranch where product is applied.",
+        "note": "Also: 'Do not use grasses treated with Chaparral in the preceding 18 months for hay intended for export outside the United States.' and, off-site: 'Do not sell or transport treated plant materials or manure from animals that have grazed on treated plant materials off-site for compost distribution or for use as animal bedding/feed for 18 months after application.'"
+      },
+      "carryoverCompostWarning": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2024-09-24",
+        "quote": "Do not use treated plant residues , including hay or straw from areas treated within the preceding 18 months, in compost, mulch, or mushroom spawn.",
+        "note": "Also: 'Do not use hay or straw from areas treated with Chaparral within the preceding 18 months or manure from animals feeding on hay treated with Chaparral in compost.' The label points to EPA's aminopyralid compost-contamination page. The space before the comma in the quote is as extracted from the PDF."
       }
     },
     "crossbow": {
@@ -225,6 +246,26 @@
         "publisher": "Dow AgroSciences (EPA PPLS stamped label, GF-3850 alternate brand DuraCor)",
         "date": "2019-11-26",
         "quote": "Do not use manure from animals that have grazed forage or eaten hay harvested from treated areas within the previous 3 days, in compost, mulch, or mushroom spawn."
+      },
+      "carryoverManureWindow": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00739-20191126.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label, GF-3850 alternate brand DuraCor)",
+        "date": "2019-11-26",
+        "quote": "Do not use manure from animals that have grazed forage or eaten hay harvested from treated areas within the previous 3 days, in compost, mulch, or mushroom spawn.",
+        "note": "Quote only; the label states no window for how long manure stays hazardous. Also: 'Do not use aminopyralid-treated or florpyrauxifen-benzyl-treated plant residues, including hay or straw from areas treated within the preceding 18 months, in compost, mulch, or mushroom spawn.'; 'Do not transfer animals grazing or feeding on hay to areas where sensitive broadleaf crops occur without first allowing 3 days of grazing on an untreated pasture. Otherwise, urine and manure may contain enough aminopyralid and florpyrauxifen-benzyl to cause injury to sensitive broadleaf plants.'; 'Do not plant a broadleaf crop (including soybeans, sunflower, tobacco, vegetables, field beans, peanuts, and potatoes) in fields treated in the previous year with manure from animals that have grazed forage or eaten hay harvested from aminopyralid-treated or florpyrauxifen-benzyl-treated areas until an adequately sensitive field bioassay is conducted to determine that the aminopyralid and florpyrauxifen-benzyl residue in the soil is at level that is not injurious to the crop to be planted.' A registrant bulletin giving a longer or different window was not read; none is recorded."
+      },
+      "carryoverHayOffFarm": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00739-20191126.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label, GF-3850 alternate brand DuraCor)",
+        "date": "2019-11-26",
+        "quote": "Hay from areas treated with GF-3850 in the preceding 18 months can NOT be distributed or made available for sale off the farm or ranch where harvested unless allowed by supplemental labeling.",
+        "note": "Also: 'Hay can only be used on the farm or ranch where product is applied unless allowed by supplemental labeling.'; 'Do not move hay and silage made from grass treated with GF-3850 within the preceding 18 months off farm unless allowed by supplemental labeling.'; 'Hay from areas treated with this product in the preceding 18 months can NOT be used for silage, haylage, baylage, and green chop unless allowed by supplemental labeling.'"
+      },
+      "carryoverCompostWarning": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00739-20191126.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label, GF-3850 alternate brand DuraCor)",
+        "date": "2019-11-26",
+        "quote": "Do not use hay, silage, and manure from areas treated with GF-3850 within the preceding 18 months or manure from animals feeding on hay treated with GF-3850 in compost."
       }
     },
     "grazonnext-hl": {
@@ -261,6 +302,26 @@
         "publisher": "Dow AgroSciences (EPA PPLS stamped label)",
         "date": "2017-03-13",
         "quote": "Do not use manure from animals that have grazed forage or eaten hay harvested from treated areas within the previous 3 days, in compost, mulch or mushroom spawn."
+      },
+      "carryoverManureWindow": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00628-20170313.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label)",
+        "date": "2017-03-13",
+        "quote": "Do not use manure from animals that have grazed forage or eaten hay harvested from treated areas within the previous 3 days, in compost, mulch or mushroom spawn.",
+        "note": "Quote only; the label states no window for how long manure stays hazardous. Also: 'Do not use aminopyralid-treated plant residues, including hay or straw from areas treated within the preceding 18-months, in compost, mulch or mushroom spawn.'; 'Do not transfer animals grazing or feeding on hay to areas where sensitive broadleaf crop occur without first allowing 3 days of grazing on an untreated pasture. Otherwise, urine and manure may contain enough aminopyralid to cause injury to sensitive broadleaf plants.'; and 'Do not plant a broadleaf crop (including soybeans, sunflower, tobacco, vegetables, field beans, peanuts, and potatoes) in fields treated in the previous year with manure from animals that have grazed forage or eaten hay harvested from aminopyralid-treated areas until an adequately sensitive field bioassay is conducted to determine that the aminopyralid residues in the soil is at level that is not injurious to the crop to be planted.' A registrant bulletin giving a longer or different window was not read; none is recorded."
+      },
+      "carryoverHayOffFarm": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00628-20170313.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label)",
+        "date": "2017-03-13",
+        "quote": "Hay from areas treated with GrazonNext HL in the preceding 18-months CANNOT be distributed or made available for sale off the farm or ranch where harvested unless allowed by supplemental labeling.",
+        "note": "Also: 'Hay can only be used on the farm or ranch where product is applied unless allowed by supplemental labeling.'; 'Do not move hay made from grass treated with GrazonNext HL within the preceding 18-months off farm unless allowed by supplemental labeling.'; 'Hay from areas treated with GrazonNext HL in the preceding 18-months CANNOT be used for silage, haylage, baylage and green chop unless allowed by supplemental labeling.'"
+      },
+      "carryoverCompostWarning": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00628-20170313.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label)",
+        "date": "2017-03-13",
+        "quote": "Do not use hay or straw from areas treated with GrazonNext HL within the preceding 18-months or manure from animals feeding on hay treated with GrazonNext HL in compost."
       }
     },
     "harmony-sg-thifensulfuron": {
@@ -388,6 +449,80 @@
         "date": "2019-03-11",
         "quote": "Do not spread manure from animals that have grazed or consumed forage or hay from treated areas on land used for growing susceptible broadleaf plants or apply such materials to land used for growing broadleaf crops, ornamentals, orchards, or other susceptible desirable plants.",
         "note": "Also: 'Do not transfer livestock from treated grazing areas (or feeding of treated hay) to sensitive broadleaf crop areas without first allowing 7 days of grazing on an untreated pasture (or feeding of treated hay).' and no use of hay, straw, manure or bedding straw from treated areas for composting or mulching where susceptible plants may be grown the following season."
+      },
+      "carryoverManureWindow": {
+        "value": "silent",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20190311.pdf",
+        "publisher": "Dow AgroSciences LLC (EPA PPLS stamped label)",
+        "date": "2019-03-11",
+        "quote": "Do not transfer livestock from treated grazing areas (or feeding of treated hay) to sensitive broadleaf crop areas without first allowing 7 days of grazing on an untreated pasture (or feeding of treated hay). If livestock are transferred within less than 7 days of grazing untreated pasture or eating untreated hay, urine and manure may contain enough clopyralid to cause injury to sensitive broadleaf plants.",
+        "note": "The label gives a 7-day livestock transfer wait, not a window for how long manure stays hazardous; it states no manure-hazard duration. Plant-residue wording: 'To promote herbicidal decomposition, plant residues should be evenly incorporated or burned.' A registrant bulletin giving a longer or different window was not read; none is recorded."
+      },
+      "carryoverHayOffFarm": {
+        "value": "silent",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20190311.pdf",
+        "publisher": "Dow AgroSciences LLC (EPA PPLS stamped label)",
+        "date": "2019-03-11",
+        "quote": "Do not use hay or straw from treated areas for composting or mulching on susceptible broadleaf crops.",
+        "note": "No limit on moving, selling or distributing treated hay off the farm was found in the label text; the nearest statements concern composting and mulching (turnip use, with a pointer to 'Residues in Plants or Manure'). Peppermint and spearmint: 'Do not feed spent peppermint and spearmint hay slugs to livestock.'"
+      },
+      "carryoverCompostWarning": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20190311.pdf",
+        "publisher": "Dow AgroSciences LLC (EPA PPLS stamped label)",
+        "date": "2019-03-11",
+        "quote": "Do not use plant residues, including hay or straw from treated areas, or manure or bedding straw from animals that have grazed or consumed forage from treated areas, for composting or mulching where susceptible plants may be grown the following season.",
+        "note": "Also: 'Do not spread manure from animals that have grazed or consumed forage or hay from treated areas on land used for growing susceptible broadleaf plants or apply such materials to land used for growing broadleaf crops, ornamentals, orchards, or other susceptible desirable plants.'"
+      }
+    },
+    "resicore-rev": {
+      "carryoverManureWindow": {
+        "value": "silent",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00756-20220725.pdf",
+        "publisher": "Corteva Agriscience / Dow AgroSciences (EPA PPLS stamped label, GF-4556 alternate brand ResiCore REV)",
+        "date": "2022-07-25",
+        "quote": "Do not graze or harvest rotational cover crops for food or animal feed for 18 months following the last application of GF-4556.",
+        "note": "The label text (EPA registration notice dated 7/25/22, label GF-4556) has no manure, urine, compost, mulch or off-farm hay statement; the nearest livestock-feed statement is the quoted cover-crop rule."
+      },
+      "carryoverHayOffFarm": {
+        "value": "silent",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00756-20220725.pdf",
+        "publisher": "Corteva Agriscience / Dow AgroSciences (EPA PPLS stamped label, GF-4556 alternate brand ResiCore REV)",
+        "date": "2022-07-25",
+        "quote": "Do not graze or harvest rotational cover crops for food or animal feed for 18 months following the last application of GF-4556.",
+        "note": "The label text (EPA registration notice dated 7/25/22, label GF-4556) has no manure, urine, compost, mulch or off-farm hay statement; the nearest livestock-feed statement is the quoted cover-crop rule."
+      },
+      "carryoverCompostWarning": {
+        "value": "silent",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00756-20220725.pdf",
+        "publisher": "Corteva Agriscience / Dow AgroSciences (EPA PPLS stamped label, GF-4556 alternate brand ResiCore REV)",
+        "date": "2022-07-25",
+        "quote": "Do not graze or harvest rotational cover crops for food or animal feed for 18 months following the last application of GF-4556.",
+        "note": "The label text (EPA registration notice dated 7/25/22, label GF-4556) has no manure, urine, compost, mulch or off-farm hay statement; the nearest livestock-feed statement is the quoted cover-crop rule."
+      }
+    },
+    "method-aminocyclopyrachlor": {
+      "carryoverManureWindow": {
+        "value": "silent",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/101563-00177-20231116.pdf",
+        "publisher": "Environmental Science U.S., LLC / Envu (EPA PPLS stamped label, Method 240SL)",
+        "date": "2023-11-16",
+        "quote": "Do not graze or feed forage, hay, or straw from treated areas to livestock.",
+        "note": "The Method 240SL label (non-crop use) has no manure or urine carryover statement or window; it forbids feeding treated forage, hay or straw to livestock instead. The label also says: 'There are no grazing restrictions where this product is used to treat undesirable woody plants (brush) by individual plant treatment (IPT) methods.'"
+      },
+      "carryoverHayOffFarm": {
+        "value": "silent",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/101563-00177-20231116.pdf",
+        "publisher": "Environmental Science U.S., LLC / Envu (EPA PPLS stamped label, Method 240SL)",
+        "date": "2023-11-16",
+        "quote": "Do not graze or feed forage, hay, or straw from treated areas to livestock.",
+        "note": "No limit on moving or selling hay was found; the label bars feeding treated hay to livestock at all."
+      },
+      "carryoverCompostWarning": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/101563-00177-20231116.pdf",
+        "publisher": "Environmental Science U.S., LLC / Envu (EPA PPLS stamped label, Method 240SL)",
+        "date": "2023-11-16",
+        "quote": "Do not use plant material treated with this product for mulch or compost.",
+        "note": "Also on the front panel: 'DO NOT USE PLANT MATERIAL TREATED WITH METHOD® 240SL HERBICIDE FOR MULCH OR COMPOST'."
       }
     }
   },

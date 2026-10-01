@@ -91,4 +91,69 @@ describe('buildHistory', () => {
     ]);
     expect(out.find((e) => e.id === 'loc:split')?.undo).toBeNull();
   });
+
+  it('offers the owner void on the latest status change only, even once locked (32G G4)', () => {
+    const out = buildHistory({
+      ...base,
+      canVoid: true,
+      locations: [],
+      statusEvents: [
+        st('old', 100, { voidableUntilMs: 9 }),
+        st('new', 200, { locked: true, voidableUntilMs: 5000 })
+      ]
+    });
+    const latest = out.find((e) => e.id === 'st:new');
+    const older = out.find((e) => e.id === 'st:old');
+    expect(latest).toMatchObject({
+      voidUrl: '/api/animals/status/new/void',
+      voidableUntilMs: 5000,
+      undo: null
+    });
+    expect(older?.voidUrl).toBeUndefined();
+    const helper = buildHistory({
+      ...base,
+      canUndo: false,
+      locations: [],
+      statusEvents: [st('new', 200, { voidableUntilMs: 5000 })]
+    });
+    expect(helper[0].voidUrl).toBeUndefined();
+  });
+});
+
+describe('buildHistory meat inside a hold (G3-03)', () => {
+  it('marks only the status changes the page loader marked', () => {
+    const out = buildHistory({
+      ...base,
+      locations: [],
+      statusEvents: [st('s1', 50, { status: 'sold-for-meat', inHold: true }), st('s2', 60)]
+    });
+    const marks = Object.fromEntries(out.map((e) => [e.id, e.inHold ?? false]));
+    expect(marks).toEqual({ 'st:s1': true, 'st:s2': false });
+  });
+});
+
+describe('buildHistory late marker (G2-01)', () => {
+  const DAY = 86_400_000;
+  it('shows "Saved N days after its date" on a status change saved late', () => {
+    const out = buildHistory({
+      ...base,
+      locations: [],
+      statusEvents: [
+        st('late', 10 * DAY, { recordedLate: true, createdAt: 13 * DAY + 5 }),
+        st('ontime', 20 * DAY, { recordedLate: false, createdAt: 20 * DAY + 60_000 })
+      ]
+    });
+    const late = Object.fromEntries(out.map((e) => [e.id, e.late]));
+    expect(late['st:late']).toBe('Saved 3 days after its date');
+    expect(late['st:ontime']).toBeUndefined();
+  });
+
+  it('falls back to "Saved late" when the save time is unknown', () => {
+    const out = buildHistory({
+      ...base,
+      locations: [],
+      statusEvents: [st('x', 100, { recordedLate: true })]
+    });
+    expect(out[0].late).toBe('Saved late');
+  });
 });

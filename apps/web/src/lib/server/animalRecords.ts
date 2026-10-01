@@ -407,6 +407,8 @@ export interface CoveredLogAlert {
   count: number;
   /** Meat declarations (slaughter or sale for meat). */
   meatCount: number;
+  /** The page that marks them (`coveredRecordsHref`). */
+  href: string;
 }
 
 const COVERED_ALERT_DAYS = 14;
@@ -451,23 +453,34 @@ export function coveredLogAlerts(
   for (const { ref, logs, meat } of bySubject.values()) {
     const subject = resolveSubject(ref.subjectType, ref.subjectId);
     if (!subject) continue;
-    out.push({ ...ref, name: subject.name, count: logs.size, meatCount: meat.size });
+    out.push({
+      ...ref,
+      name: subject.name,
+      count: logs.size,
+      meatCount: meat.size,
+      href: coveredRecordsHref(ref.subjectType, ref.subjectId, { logs: logs.size > 0 })
+    });
   }
   return out;
 }
 
 /** C-06 on a log page: which of this subject's saved food or sale logs fall
- *  inside a treatment hold, so the owner can find them. A log changed to
- *  discarded after it was saved as food or for sale is still marked. */
+ *  inside a hold, so the owner can find them. A log changed to discarded
+ *  after it was saved as food or for sale is still marked. `ledgerCovered`
+ *  is the hold ledger's covered set (`ledgerCoveredIds`), which also holds
+ *  grazing exposure; the page a `hold-covers-sale` push opens must mark
+ *  every record the push names (G3-03). */
 export function coveredLogIds(
   type: AnimalSubjectType,
   id: string,
   logs: readonly AnimalProductionLog[],
   plugins: PluginLookup,
-  timeZone: string
+  timeZone: string,
+  ledgerCovered: ReadonlySet<string> = new Set()
 ): Set<string> {
+  const out = new Set(logs.filter((l) => ledgerCovered.has(`log:${l.id}`)).map((l) => l.id));
   const ctx = foodSubjectFor(type, id);
-  if (!ctx) return new Set();
+  if (!ctx) return out;
   const saved: SavedProductionLog[] = [];
   for (const log of logs) {
     const food = foodOf(log.kind);
@@ -480,9 +493,33 @@ export function coveredLogIds(
       subject: ctx.subject
     });
   }
-  if (!saved.some((l) => l.use === 'food' || l.use === 'sale')) return new Set();
+  if (!saved.some((l) => l.use === 'food' || l.use === 'sale')) return out;
   const treatments = loadTreatments(ctx.related);
-  return new Set(logsCoveredByHolds(saved, treatments, plugins, timeZone).map((l) => l.id));
+  for (const l of logsCoveredByHolds(saved, treatments, plugins, timeZone)) out.add(l.id);
+  return out;
+}
+
+/** G3-03 on an animal or group page: the meat declarations (slaughter, sale
+ *  for meat, meat used) that a hold covers, from the ledger's covered set. */
+export function coveredMeatIds(
+  events: readonly Pick<AnimalStatusEvent, 'id'>[],
+  ledgerCovered: ReadonlySet<string>
+): Set<string> {
+  return new Set(events.filter((e) => ledgerCovered.has(`meat:${e.id}`)).map((e) => e.id));
+}
+
+/** The page that lists a subject's covered records, for the /today alert
+ *  and the `hold-covers-sale` push alike: the food log page when any egg or
+ *  milk log is covered, else the animal or group page, whose history marks
+ *  the covered meat declarations. */
+export function coveredRecordsHref(
+  subjectType: AnimalSubjectType,
+  subjectId: string,
+  has: { logs: boolean }
+): string {
+  const id = encodeURIComponent(subjectId);
+  if (has.logs) return `/animals/${id}/log`;
+  return subjectType === 'group' ? `/animals/groups/${id}` : `/animals/${id}`;
 }
 
 export interface RecordWarning {

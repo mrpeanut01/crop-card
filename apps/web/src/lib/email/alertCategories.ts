@@ -15,6 +15,7 @@ export const DEFAULT_EMAIL_ALERT_PREFS: EmailAlertPrefs = {
   'frost-tonight': false,
   'animal-care-due': false,
   'withdrawal-clears': false,
+  'hold-covers-sale': false,
   'weekly-digest': false
 };
 

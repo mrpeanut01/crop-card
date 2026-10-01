@@ -208,23 +208,34 @@ function offsetAt(ms: number, timeZone: string): number {
 }
 
 const QUARTER_HOUR_MS = 15 * 60 * 1000;
-const NEXT_DAY_CACHE = new Map<string, number>();
+/** By zone, then quarter hour. */
+const NEXT_DAY_CACHE = new Map<string, Map<number, number>>();
+let nextDayEntries = 0;
 
 /** The first instant after `ms` that falls on a later farm-local day.
  *  Answers are cached per UTC quarter hour, and only when the whole quarter
  *  hour lies inside one local day, so the cache never changes an answer. */
 export function startOfNextLocalDay(ms: number, timeZone: string): number {
   const bucket = Math.floor(ms / QUARTER_HOUR_MS);
-  const key = `${timeZone}|${bucket}`;
-  const hit = NEXT_DAY_CACHE.get(key);
+  const byBucket = NEXT_DAY_CACHE.get(timeZone);
+  const hit = byBucket?.get(bucket);
   if (hit !== undefined) return hit;
   const next = computeStartOfNextLocalDay(ms, timeZone);
   const zone = safeZone(timeZone);
   const b0 = bucket * QUARTER_HOUR_MS;
   const b1 = b0 + QUARTER_HOUR_MS;
   if (next >= b1 && dayKey(wallAt(b0, zone)) === dayKey(wallAt(ms, zone))) {
-    if (NEXT_DAY_CACHE.size > 200_000) NEXT_DAY_CACHE.clear();
-    NEXT_DAY_CACHE.set(key, next);
+    if (nextDayEntries > 200_000) {
+      NEXT_DAY_CACHE.clear();
+      nextDayEntries = 0;
+    }
+    let zoneCache = NEXT_DAY_CACHE.get(timeZone);
+    if (!zoneCache) {
+      zoneCache = new Map();
+      NEXT_DAY_CACHE.set(timeZone, zoneCache);
+    }
+    zoneCache.set(bucket, next);
+    nextDayEntries++;
   }
   return next;
 }

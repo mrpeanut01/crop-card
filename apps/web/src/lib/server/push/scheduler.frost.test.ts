@@ -201,7 +201,13 @@ describe('frost-tonight push alerts', () => {
     plant(a.ownerId, 'tomato-amish-paste');
     plant(b.ownerId, 'garlic-music-hardneck');
     const push = mockPush();
-    await runPushTick({ config, now: () => NOW, fetchImpl: push, frostAlerts: nws() });
+    await runPushTick({
+      config,
+      now: () => NOW,
+      fetchImpl: push,
+      frostAlerts: nws(),
+      owners: [a.ownerId, b.ownerId]
+    });
     const endpoints = push.mock.calls.map(([u]) => String(u));
     expect(endpoints).not.toContain(subB.endpoint);
     expect(runWithTenant(b.ownerId, () => listDeliveries())).toEqual([]);

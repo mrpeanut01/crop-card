@@ -12,7 +12,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, desc, eq, max } from 'drizzle-orm';
 import { db } from './client';
-import { hayCuttings } from './schema';
+import { hayCuttings, recordDeletions } from './schema';
 import { tenantValues, withTenant } from './tenant';
 import type { BaleType, HayStatus } from '$lib/hay/types';
 
@@ -37,6 +37,7 @@ export interface HayCutting {
   rulesVersion: string;
   notes?: string;
   createdAt: number;
+  recordedLate: boolean;
 }
 
 function rowToCutting(row: typeof hayCuttings.$inferSelect): HayCutting {
@@ -61,7 +62,8 @@ function rowToCutting(row: typeof hayCuttings.$inferSelect): HayCutting {
     performedById: row.performedById ?? undefined,
     rulesVersion: row.rulesVersion,
     notes: row.notes ?? undefined,
-    createdAt: row.createdAt.getTime()
+    createdAt: row.createdAt.getTime(),
+    recordedLate: row.recordedLate
   };
 }
 
@@ -197,4 +199,33 @@ export function listCuttings(filters: {
 /** Every cutting on the farm, for the hold ledger (C-35). */
 export function listAllCuttings(): HayCutting[] {
   return db.select().from(hayCuttings).where(withTenant(hayCuttings)).all().map(rowToCutting);
+}
+
+/** C-35 §5 (32G G4-08): the owner voids a cutting entered by mistake. The
+ *  row goes and a voided tombstone keeps the audit trace; a voided cutting
+ *  no longer counts as a hay declaration. */
+export function voidCutting(id: string, opts: { by: string | null; reason: string }): boolean {
+  return db.transaction(() => {
+    const cutting = getCutting(id);
+    if (!cutting) return false;
+    const removed =
+      db
+        .delete(hayCuttings)
+        .where(withTenant(hayCuttings, eq(hayCuttings.id, id)))
+        .run().changes > 0;
+    if (!removed) return false;
+    db.insert(recordDeletions)
+      .values(
+        tenantValues({
+          id: randomUUID(),
+          recordKind: 'hay' as const,
+          recordId: id,
+          deletedBy: opts.by,
+          reason: opts.reason,
+          snapshotJson: JSON.stringify({ action: 'void', voided: true, cutting })
+        })
+      )
+      .run();
+    return true;
+  });
 }

@@ -65,6 +65,7 @@ import { unlinkMapFeaturesFromField } from './mapFeatures';
 import { liveHoldParams } from './holdParams';
 import { evaluateLock as evaluateSprayLock, getSprayEvent } from './sprayEvents';
 import { evaluateLock as evaluateInsecticideLock, getInsecticideEvent } from './insecticideEvents';
+import { evaluateLock as evaluateFungicideLock, getFungicideEvent } from './fungicideEvents';
 import { evaluateLock as evaluateHarvestLock, getHarvestEvent } from './harvestEvents';
 
 export interface DeleteSummary {
@@ -99,7 +100,7 @@ export interface DeleteSprayEventOptions {
 }
 
 export class RecordLockedError extends Error {
-  constructor(kind: 'spray' | 'insecticide' | 'harvest' = 'spray') {
+  constructor(kind: 'spray' | 'insecticide' | 'fungicide' | 'harvest' = 'spray') {
     super(`${kind} record is locked (FR-09); pass force=true (owner-only) to override`);
     this.name = 'RecordLockedError';
   }
@@ -111,7 +112,7 @@ export class RecordLockedError extends Error {
  * are the only surviving trace. Tenant-scoped via `tenantValues`.
  */
 function writeDeletionTombstone(
-  kind: 'spray' | 'insecticide' | 'harvest',
+  kind: 'spray' | 'insecticide' | 'fungicide' | 'harvest',
   recordId: string,
   snapshot: unknown,
   opts: {
@@ -247,6 +248,27 @@ export function deleteInsecticideEvent(
   const removed: Record<string, number> = {};
   removed.stock_movements = del(stockMovements, eq(stockMovements.insecticideEventId, id));
   removed.insecticide_events = del(insecticideEvents, eq(insecticideEvents.id, id));
+  return { removed };
+}
+
+/** 32G G4-04: a mirror of `deleteInsecticideEvent`, used only by the
+ *  owner's fungicide void. */
+export function deleteFungicideEvent(
+  id: string,
+  opts: DeleteSprayEventOptions = {}
+): DeleteSummary {
+  const event = getFungicideEvent(id);
+  if (!event) return { removed: {} };
+  const lockedAt = evaluateFungicideLock(event);
+  if (lockedAt !== undefined) {
+    if (!opts.force) throw new RecordLockedError('fungicide');
+    writeDeletionTombstone('fungicide', id, event, opts);
+  } else if (opts.tombstone) {
+    writeDeletionTombstone('fungicide', id, event, opts);
+  }
+  const removed: Record<string, number> = {};
+  removed.stock_movements = del(stockMovements, eq(stockMovements.fungicideEventId, id));
+  removed.fungicide_events = del(fungicideEvents, eq(fungicideEvents.id, id));
   return { removed };
 }
 

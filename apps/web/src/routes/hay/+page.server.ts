@@ -5,8 +5,11 @@ import { listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { listCuttings } from '$lib/db/hayCuttings';
 import { getRegistry } from '$lib/server/registry';
+import { currentUser } from '$lib/server/auth';
+import { canVoidHolds, voidableUntilMs } from '$lib/server/holdVoid';
 
-export const load: PageServerLoad = async ({ url, locals }) => {
+export const load: PageServerLoad = async (event) => {
+  const { url, locals } = event;
   const registry = await getRegistry();
   const blocks = listBlocks();
   const cropId = url.searchParams.get('crop');
@@ -54,6 +57,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     selectedBlockId,
     selectedCropId: crop?.id ?? null,
     year,
-    cuttings: selectedBlockId ? listCuttings({ blockId: selectedBlockId, year }) : []
+    cuttings: (selectedBlockId ? listCuttings({ blockId: selectedBlockId, year }) : []).map(
+      (c) => ({ ...c, voidableUntilMs: voidableUntilMs(c.createdAt) })
+    ),
+    canVoidHolds: canVoidHolds(event, currentUser(event))
   };
 };

@@ -6,6 +6,8 @@ import { listLocationsForSubject } from '$lib/db/animalLocations';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { statusEventsWithLocks } from '$lib/server/animals';
+import { withMeatHoldMarks } from '$lib/server/coveredRecords';
+import { canVoidHolds, voidableUntilMs } from '$lib/server/holdVoid';
 import { loadAnimalsProfile } from '$lib/animals/profile.server';
 import { pageHoldsFor } from '$lib/server/animalFoodGate';
 import { farmTimeZone } from '$lib/db/userProfile';
@@ -29,7 +31,10 @@ export const load: PageServerLoad = async (event) => {
     species: species.find((s) => s.id === animal.speciesId) ?? null,
     group: animal.groupId ? (getAnimalGroupSummary(animal.groupId) ?? null) : null,
     locations: listLocationsForSubject('animal', animal.id),
-    statusEvents: statusEventsWithLocks('animal', animal.id),
+    statusEvents: (
+      await withMeatHoldMarks(statusEventsWithLocks('animal', animal.id), farmTimeZone())
+    ).map((e) => ({ ...e, voidableUntilMs: voidableUntilMs(e.createdAt) })),
+    canVoidHolds: canVoidHolds(event, user),
     flagChanges: listFlagChanges('animal', animal.id),
     areas,
     housingAreas: housingAreaOptions(areas),

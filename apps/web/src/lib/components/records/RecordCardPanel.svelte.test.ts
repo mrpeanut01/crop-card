@@ -86,4 +86,52 @@ describe('RecordCardPanel', () => {
       await screen.findByText('This record is no longer here.', { exact: false })
     ).toBeInTheDocument();
   });
+
+  it('offers the owner void on a fresh application and hides it from a helper (32G G4)', async () => {
+    const r = render(RecordCardPanel, {
+      recordKind: 'fungicide',
+      rowId: 'fu-1',
+      prefs,
+      onPrint: vi.fn(),
+      fetcher: respond(200, {
+        cards: [card],
+        origin: null,
+        voidableUntilMs: Date.now() + 3_600_000,
+        canVoidHolds: true
+      })
+    });
+    expect(await screen.findByRole('button', { name: 'Void this entry…' })).toBeInTheDocument();
+    r.unmount();
+    render(RecordCardPanel, {
+      recordKind: 'fungicide',
+      rowId: 'fu-1',
+      prefs,
+      onPrint: vi.fn(),
+      fetcher: respond(200, {
+        cards: [card],
+        origin: null,
+        voidableUntilMs: Date.now() + 3_600_000,
+        canVoidHolds: false
+      })
+    });
+    await screen.findByRole('button', { name: 'Print card' });
+    expect(screen.queryByRole('button', { name: 'Void this entry…' })).toBeNull();
+  });
+
+  it('never offers a void on a kind with no void route', async () => {
+    render(RecordCardPanel, {
+      recordKind: 'scout',
+      rowId: 'sc-1',
+      prefs,
+      onPrint: vi.fn(),
+      fetcher: respond(200, {
+        cards: [card],
+        origin: null,
+        voidableUntilMs: Date.now() + 3_600_000,
+        canVoidHolds: true
+      })
+    });
+    await screen.findByRole('button', { name: 'Print card' });
+    expect(screen.queryByRole('button', { name: 'Void this entry…' })).toBeNull();
+  });
 });

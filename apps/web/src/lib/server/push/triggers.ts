@@ -83,6 +83,8 @@ export interface PushAlert {
   batchKey?: string;
   /** This alert's line in a batched push. */
   batchLabel?: string;
+  /** The animal or group it is about, when one batch counts subjects. */
+  batchSubject?: string;
 }
 
 const RECORD_LABEL: Record<LockableRecordKind, string> = {

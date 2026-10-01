@@ -18,8 +18,17 @@ vi.mock('$lib/server/auth', () => {
 });
 
 import { db } from '$lib/db/client';
-import { owners, recordDeletions, taskTimeEntries, users } from '$lib/db/schema';
-import { runWithTenantAsync, runWithTenant, tenantValues } from '$lib/db/tenant';
+import {
+  animalHealthEvents,
+  animalProductionLogs,
+  owners,
+  recordDeletions,
+  taskTimeEntries,
+  users
+} from '$lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { createCutting } from '$lib/db/hayCuttings';
+import { runWithTenantAsync, runWithTenant, tenantValues, withTenant } from '$lib/db/tenant';
 import { createField } from '$lib/db/fields';
 import { createBlock } from '$lib/db/blocks';
 import { createPlanned } from '$lib/db/crops';
@@ -238,6 +247,57 @@ describe('GET /api/account/export.json', () => {
       ]);
       expect(text).not.toContain(theirs);
     }
+  });
+
+  it('carries recordedLate on hay cuttings and animal records (G2-10)', async () => {
+    const farm = seed('late');
+    const DAY = 86_400_000;
+    const [late, onTime] = runWithTenant(farm.ownerId, () => {
+      const make = (mowAt: number) =>
+        createCutting({
+          blockId: farm.bedId,
+          cropPluginId: 'alfalfa-vernema',
+          year: 2026,
+          mowAt,
+          rulesVersion: 'test'
+        });
+      const ids = [make(Date.now() - 5 * DAY).id, make(Date.now()).id];
+      const ids32 = farm.phase32.rowIds;
+      db.update(animalHealthEvents)
+        .set({ recordedLate: true })
+        .where(
+          withTenant(animalHealthEvents, eq(animalHealthEvents.id, ids32.animal_health_events))
+        )
+        .run();
+      db.update(animalProductionLogs)
+        .set({ recordedLate: true })
+        .where(
+          withTenant(
+            animalProductionLogs,
+            eq(animalProductionLogs.id, ids32.animal_production_logs)
+          )
+        )
+        .run();
+      return ids;
+    });
+
+    const { json } = await exportFor(farm.ownerId);
+    expect(json.schemaVersion).toBe('1.3.0');
+    const hay = json.hayCuttings as Array<{ id: string; recordedLate: boolean }>;
+    expect(hay.find((c) => c.id === late)?.recordedLate).toBe(true);
+    expect(hay.find((c) => c.id === onTime)?.recordedLate).toBe(false);
+
+    const animals = json.animals as Record<string, Array<{ id: string; recordedLate: boolean }>>;
+    const ids32 = farm.phase32.rowIds;
+    expect(animals.healthEvents.find((r) => r.id === ids32.animal_health_events)).toMatchObject({
+      recordedLate: true
+    });
+    expect(animals.productionLogs.find((r) => r.id === ids32.animal_production_logs)).toMatchObject(
+      { recordedLate: true }
+    );
+    expect(animals.statusEvents.find((r) => r.id === ids32.animal_status_events)).toMatchObject({
+      recordedLate: false
+    });
   });
 
   it.each(['helper', 'inspector'])(

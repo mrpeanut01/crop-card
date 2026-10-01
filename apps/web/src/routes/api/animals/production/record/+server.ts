@@ -1,3 +1,4 @@
+import { lateLabel } from '$lib/records/lateLabel';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { productionRecordSchema } from '$lib/animals/recordApiSchemas';
 import { MAX_FUTURE_SKEW_MS } from '$lib/animals/model';
@@ -75,7 +76,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (late !== null) {
     warnings.push({
       code: 'LOGGED_LATE',
-      message: `Entered ${late} days late.`
+      message: `${lateLabel(true, late)}.`
     });
   }
   return json({ log, warnings }, { status: 201 });

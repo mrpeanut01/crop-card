@@ -60,7 +60,8 @@
       flagChanges: data.flagChanges,
       areaName: (id) => areaNames.get(id) ?? 'a place that was removed',
       groupName: (id) => groupNames.get(id) ?? 'another group',
-      canUndo: data.canEdit
+      canUndo: data.canEdit,
+      canVoid: data.canVoidHolds
     })
   );
 
@@ -347,7 +348,12 @@
 
   <section aria-labelledby="history-h">
     <h2 id="history-h" class="section-title">History</h2>
-    <History entries={history} {prefs} onChanged={() => refresh('Removed.')} />
+    <History
+      entries={history}
+      {prefs}
+      onChanged={() => refresh('Removed.')}
+      onVoided={() => refresh('Voided.')}
+    />
   </section>
 </div>
 

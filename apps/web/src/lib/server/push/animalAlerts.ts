@@ -8,6 +8,10 @@
  * - `withdrawal-clears`: a food hold on an animal or group ended since the
  *   last tick. Owner only, off by default, informational. Sent only after
  *   the hold's local-midnight end has passed, never before.
+ * - `hold-covers-sale` (G3): a later write lengthened a hold over egg or
+ *   milk logs saved as food or for sale, or over meat declared as food.
+ *   Read from the ledger's covered set at the tick, so any lengthening
+ *   counts; each record is pushed once. Owner only, on by default.
  *
  * Lock-screen and email text names the animal or group and the care kind
  * only, never a product or hold detail. Several alerts of one kind in the
@@ -21,7 +25,12 @@ import {
   isSurfaced,
   type CareTaskMeta
 } from '$lib/animals/carePlans';
-import { splitHoldMapKey, type Span } from '$lib/safety/holdLedger';
+import {
+  splitHoldMapKey,
+  type HoldFact,
+  type HoldProjection,
+  type Span
+} from '$lib/safety/holdLedger';
 import { HOUR_MS, type PushAlert } from './triggers';
 
 export interface OpenCareTask {
@@ -151,6 +160,81 @@ export function withdrawalClearsAlerts(
   });
 }
 
+type Subject = { subjectType: 'animal' | 'group'; subjectId: string };
+
+/**
+ * G3: one alert per covered egg or milk log (`log:<id>`) and meat
+ * declaration (`meat:<id>`) in the projection, with the covered id as the
+ * delivery subject so each is pushed at most once. Deleted records are left
+ * out: their page cannot show them. `hrefFor` is `coveredRecordsHref`, the
+ * page the /today covered-logs alert opens for that subject.
+ */
+export function holdCoversSaleAlerts(
+  projection: Pick<HoldProjection, 'covered'>,
+  loaded: { facts: readonly HoldFact[]; labels: ReadonlyMap<string, string> },
+  hrefFor: (
+    subjectType: Subject['subjectType'],
+    subjectId: string,
+    has: { logs: boolean }
+  ) => string
+): PushAlert[] {
+  const records = new Map<string, Subject>();
+  for (const f of loaded.facts) {
+    if (f.kind === 'production' && !f.deleted && f.declaredUse && f.food !== 'meat') {
+      records.set(`log:${f.id}`, f);
+    } else if (f.kind === 'status' && !f.deleted && f.declaresMeat) {
+      records.set(`meat:${f.id}`, f);
+    }
+  }
+  const hits: Array<{ coveredId: string; key: string; subject: Subject }> = [];
+  const withLogs = new Set<string>();
+  for (const coveredId of projection.covered.keys()) {
+    const subject = records.get(coveredId);
+    if (!subject) continue;
+    const key = `${subject.subjectType}:${subject.subjectId}`;
+    hits.push({ coveredId, key, subject });
+    if (coveredId.startsWith('log:')) withLogs.add(key);
+  }
+  const nameOf = (key: string) => loaded.labels.get(key) ?? 'An animal';
+  hits.sort(
+    (a, b) =>
+      nameOf(a.key).localeCompare(nameOf(b.key)) ||
+      a.key.localeCompare(b.key) ||
+      a.coveredId.localeCompare(b.coveredId)
+  );
+  return hits.map(({ coveredId, key, subject }) => {
+    const name = nameOf(key);
+    return {
+      kind: 'hold-covers-sale' as const,
+      subjectId: coveredId,
+      ...holdCoversSaleText(name, 1, 0),
+      url: hrefFor(subject.subjectType, subject.subjectId, { logs: withLogs.has(key) }),
+      audience: { kind: 'owners-and' as const, userIds: [] },
+      batchKey: 'hold-covers-sale',
+      batchLabel: name,
+      batchSubject: key
+    };
+  });
+}
+
+/** G3-09 lock-screen text: no product, dose or dates. */
+export function holdCoversSaleText(
+  firstName: string,
+  records: number,
+  otherSubjects: number
+): { title: string; body: string } {
+  return {
+    title:
+      otherSubjects > 0
+        ? `Check sales from ${firstName} and ${otherSubjects} more`
+        : `Check sales from ${firstName}`,
+    body:
+      records === 1
+        ? '1 saved egg, milk or meat record is now inside a hold. If it was sold, tell the buyer.'
+        : `${records} saved egg, milk or meat records are now inside a hold. If any were sold, tell the buyer.`
+  };
+}
+
 /** One push for several alerts of a kind (D0-16: "3 holds cleared"). */
 export function batchMessage(alerts: readonly PushAlert[]): {
   title: string;
@@ -159,6 +243,17 @@ export function batchMessage(alerts: readonly PushAlert[]): {
 } {
   if (alerts.length === 1) {
     return { title: alerts[0].title, body: alerts[0].body, url: alerts[0].url };
+  }
+  if (alerts[0].kind === 'hold-covers-sale') {
+    const subjects = [...new Set(alerts.map((a) => a.batchSubject ?? a.url))];
+    return {
+      ...holdCoversSaleText(
+        alerts[0].batchLabel ?? 'An animal',
+        alerts.length,
+        subjects.length - 1
+      ),
+      url: subjects.length === 1 ? alerts[0].url : '/today'
+    };
   }
   const labels = [...new Set(alerts.map((a) => a.batchLabel ?? a.title))];
   const shown = labels.slice(0, 3).join('; ');

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import CardView from '$lib/components/cards/CardView.svelte';
+  import HoldVoidPanel from './HoldVoidPanel.svelte';
   import type { CardModel, CardPrintLayout } from '$lib/cards/model';
   import { PRINT_LAYOUTS } from '$lib/cards/print';
   import type { Prefs } from '$lib/prefs';
@@ -11,13 +12,29 @@
     prefs: Prefs;
     onPrint: (job: { cards: CardModel[]; layout: CardPrintLayout; origin: string | null }) => void;
     fetcher?: typeof fetch;
+    /** After the owner voids the record (32G G4). */
+    onVoided?: () => void | Promise<void>;
   }
-  const { recordKind, rowId, prefs, onPrint, fetcher }: Props = $props();
+  const { recordKind, rowId, prefs, onPrint, fetcher, onVoided }: Props = $props();
 
   type Load =
     | { state: 'loading' }
-    | { state: 'ready'; cards: CardModel[]; origin: string | null }
+    | {
+        state: 'ready';
+        cards: CardModel[];
+        origin: string | null;
+        voidableUntilMs: number | null;
+        canVoidHolds: boolean;
+      }
+    | { state: 'voided' }
     | { state: 'error'; message: string };
+
+  const VOID_URL: Record<string, (id: string) => string> = {
+    spray: (id) => `/api/spray/records/${encodeURIComponent(id)}/void`,
+    insecticide: (id) => `/api/insecticide/${encodeURIComponent(id)}/void`,
+    fungicide: (id) => `/api/fungicide/${encodeURIComponent(id)}/void`
+  };
+  const voidUrl = $derived(VOID_URL[recordKind]?.(rowId) ?? null);
 
   let load = $state<Load>({ state: 'loading' });
   let layout = $state<CardPrintLayout>('index-4x6');
@@ -38,8 +55,19 @@
           };
           return;
         }
-        const body = (await res.json()) as { cards: CardModel[]; origin: string | null };
-        load = { state: 'ready', cards: body.cards, origin: body.origin };
+        const body = (await res.json()) as {
+          cards: CardModel[];
+          origin: string | null;
+          voidableUntilMs?: number | null;
+          canVoidHolds?: boolean;
+        };
+        load = {
+          state: 'ready',
+          cards: body.cards,
+          origin: body.origin,
+          voidableUntilMs: body.voidableUntilMs ?? null,
+          canVoidHolds: body.canVoidHolds === true
+        };
       })
       .catch(() => {
         load = {
@@ -53,6 +81,8 @@
 <div class="record-card" data-testid="record-card-panel" aria-live="polite">
   {#if load.state === 'loading'}
     <p class="note">Loading the card…</p>
+  {:else if load.state === 'voided'}
+    <p class="note" role="status">Voided. This entry is no longer in your records.</p>
   {:else if load.state === 'error'}
     <p class="note">{load.message} <a href="/cards">Open your card deck</a></p>
   {:else if load.cards.length === 0}
@@ -80,6 +110,20 @@
         Print card
       </button>
     </div>
+  {/if}
+  {#if load.state === 'ready' && voidUrl}
+    <HoldVoidPanel
+      url={voidUrl}
+      canVoidHolds={load.canVoidHolds}
+      voidableUntilMs={load.voidableUntilMs}
+      timeZone={prefs.timeZone}
+      application
+      {fetcher}
+      onVoided={async () => {
+        load = { state: 'voided' };
+        await onVoided?.();
+      }}
+    />
   {/if}
 </div>
 

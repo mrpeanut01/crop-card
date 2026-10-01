@@ -5,10 +5,12 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import HoldChips from '$lib/components/animals/HoldChips.svelte';
   import ProductionForm from '$lib/components/animals/ProductionForm.svelte';
+  import HoldVoidPanel from '$lib/components/records/HoldVoidPanel.svelte';
   import { OFFLINE_MESSAGE, errorFromResponse } from '$lib/animals/display';
   import { USE_LABEL } from '$lib/animals/healthCopy';
   import type { FoodStop } from '$lib/animals/holdCopy';
   import { formatInstant } from '$lib/prefs';
+  import { lateLabel } from '$lib/records/lateLabel';
 
   const { data } = $props();
 
@@ -112,11 +114,11 @@
             <div class="row-main">
               <strong>{l.quantity} {l.unit}</strong>
               <span>{l.kind === 'weight' ? 'Weight' : USE_LABEL[l.use]}</span>
-              {#if l.daysLate !== null}
-                <Pill tone="wheat">Entered {l.daysLate} days late</Pill>
+              {#if l.recordedLate}
+                <Pill tone="wheat">{lateLabel(true, l.daysLate)}</Pill>
               {/if}
               {#if l.inHold}
-                <Pill tone="rust">Inside a treatment hold</Pill>
+                <Pill tone="rust">Inside a hold</Pill>
               {/if}
             </div>
             <p class="meta">{formatInstant(l.occurredAt, prefs)}</p>
@@ -125,6 +127,13 @@
                 Mark as thrown out
               </button>
             {/if}
+            <HoldVoidPanel
+              url="/api/animals/production/{l.id}/void"
+              canVoidHolds={data.canVoidHolds}
+              voidableUntilMs={l.voidableUntilMs}
+              timeZone={data.timeZone}
+              onVoided={() => done('Voided.', [])}
+            />
           </li>
         {/each}
       </ul>

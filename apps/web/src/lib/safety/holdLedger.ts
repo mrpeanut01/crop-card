@@ -18,7 +18,19 @@
  * record dated now can never shorten a hold, and a backdated record that
  * only adds holds always passes.
  *
- * Pure: no DB, env or clock reads.
+ * Speed (32G G1): the kernels run once per distinct input, not once per
+ * subject. Within a projection, animals share their flock's dose spans and
+ * stay-set exposure, eggs share milk's exposure when no stay has a stored
+ * floor, and stays are only paired with applications whose lookback can
+ * reach them. Across projections that share a `verdictCache` (the guard's
+ * before and after, and later writes), kernel results are kept beside it,
+ * keyed by the full content they read (treatments, applications, stays,
+ * attestations, zone and registry maximum), so a hit is exactly what the
+ * kernel would return; kept spans are frozen. The output equals the 0.7.1
+ * ledger on every farm (`holdLedger.equivalence.test.ts`), for fact times
+ * that are finite or null, as stored times always are.
+ *
+ * Pure: no DB, env or clock reads (the kept results are a cache).
  */
 
 import {
@@ -39,6 +51,7 @@ import {
   type MembershipStay
 } from '$lib/animals/membership';
 import {
+  applicationWindowEndsMs,
   exposureSpansFast,
   newExposureSpanCache,
   type ExposureFloorEntry,
@@ -54,7 +67,8 @@ import {
   applicationIntervalDays,
   presumeLactating,
   type GrazingApplication,
-  type GrazingAttestationInput
+  type GrazingAttestationInput,
+  type GrazingVerdict
 } from './grazingInterval';
 
 // ─── Vocabulary ─────────────────────────────────────────────────────────
@@ -269,21 +283,74 @@ function pluginIdsOf(t: TreatmentRecord): string[] {
   return ids;
 }
 
-/** One verdict per treatment for the whole projection. */
-function verdictsFor(doses: readonly TreatmentRecord[], ctx: ProjectionContext) {
+/** One verdict per treatment for the whole projection. The cache key is
+ *  the zone, the treatment and the plugin data its verdict reads, so a
+ *  verdict is reused only while all three are unchanged. With a side
+ *  cache, each treatment also gets a content number (null when two
+ *  treatments share an id, since verdicts are looked up by id). */
+function verdictsFor(
+  doses: readonly TreatmentRecord[],
+  ctx: ProjectionContext,
+  side: SideCache | null
+): { clears: Map<string, WithdrawalClear>; doseIds: Map<TreatmentRecord, number> | null } {
   const out = new Map<string, WithdrawalClear>();
-  for (const t of doses) {
-    const key = ctx.verdictCache
-      ? JSON.stringify([ctx.timeZone, t, pluginIdsOf(t).map((id) => ctx.plugins(id) ?? null)])
-      : '';
-    let clear = ctx.verdictCache?.get(key);
-    if (!clear) {
-      clear = computeWithdrawalClear(t, ctx.plugins, { timeZone: ctx.timeZone });
-      ctx.verdictCache?.set(key, clear);
+  let doseIds: Map<TreatmentRecord, number> | null = side ? new Map() : null;
+  const pluginJson = new Map<string, string>();
+  const dataOf = (id: string) => {
+    let j = pluginJson.get(id);
+    if (j === undefined) {
+      j = JSON.stringify(ctx.plugins(id) ?? null);
+      // A content number in place of the plugin text when there is one.
+      if (side) j = `p${internId(side, j)}`;
+      pluginJson.set(id, j);
     }
+    return j;
+  };
+  const zoneText = JSON.stringify(ctx.timeZone);
+  for (const t of doses) {
+    let clear: WithdrawalClear | undefined;
+    let num = -1;
+    if (side && ctx.verdictCache) {
+      let tail = '';
+      for (const id of pluginIdsOf(t)) tail += `\u0001${dataOf(id)}`;
+      // The last verdict seen under this id, reused while the treatment
+      // is the same data as then (a private copy, compared field by field
+      // instead of building and hashing the key) and the rest of the key
+      // is unchanged. Content numbers are never reused, so `num` still
+      // names only that content after `ids` starts over.
+      const seen = side.doses.get(t.id);
+      if (seen && seen.tail === tail && seen.zone === zoneText && samePlainData(seen.data, t)) {
+        clear = seen.clear;
+        num = seen.num;
+      } else {
+        const key = `${zoneText}\u0001${JSON.stringify(t)}${tail}`;
+        clear = ctx.verdictCache.get(key);
+        if (!clear) {
+          clear = computeWithdrawalClear(t, ctx.plugins, { timeZone: ctx.timeZone });
+          ctx.verdictCache.set(key, clear);
+        }
+        num = internId(side, key);
+        const data = plainCopy(t);
+        if (data !== NOT_PLAIN)
+          remember(side.doses, t.id, { data, tail, zone: zoneText, clear, num });
+      }
+    } else {
+      let key = '';
+      if (ctx.verdictCache) {
+        key = `${zoneText}\u0001${JSON.stringify(t)}`;
+        for (const id of pluginIdsOf(t)) key += `\u0001${dataOf(id)}`;
+      }
+      clear = ctx.verdictCache?.get(key);
+      if (!clear) {
+        clear = computeWithdrawalClear(t, ctx.plugins, { timeZone: ctx.timeZone });
+        ctx.verdictCache?.set(key, clear);
+      }
+    }
+    if (out.has(t.id)) doseIds = null;
     out.set(t.id, clear);
+    if (doseIds) doseIds.set(t, num);
   }
-  return out;
+  return { clears: out, doseIds };
 }
 
 export interface HoldProjection {
@@ -327,7 +394,25 @@ const SCRATCH: Float64Array[] = Array.from({ length: 6 }, () => new Float64Array
 function scratch(slot: number, size: number): Float64Array {
   if (SCRATCH[slot].length < size)
     SCRATCH[slot] = new Float64Array(Math.max(size, SCRATCH[slot].length * 2));
-  return SCRATCH[slot].subarray(0, size);
+  return SCRATCH[slot];
+}
+
+/** Sorts the first `n` values ascending as `TypedArray#sort` does (minus
+ *  zero before zero), by insertion while small. */
+function sortPrefix(a: Float64Array, n: number): void {
+  if (n > 24) {
+    a.subarray(0, n).sort();
+    return;
+  }
+  for (let i = 1; i < n; i++) {
+    const v = a[i];
+    let j = i - 1;
+    while (j >= 0 && (a[j] > v || (v === 0 && a[j] === 0 && 1 / v < 0 && 1 / a[j] > 0))) {
+      a[j + 1] = a[j];
+      j--;
+    }
+    a[j + 1] = v;
+  }
 }
 
 export function normalizeSpans(spans: readonly Span[]): Span[] {
@@ -337,62 +422,357 @@ export function normalizeSpans(spans: readonly Span[]): Span[] {
     NORMALIZED.add(out);
     return out;
   }
-  const counts = [0, 0, 0];
+  let c0 = 0;
+  let c1 = 0;
+  let c2 = 0;
+  let minFrom = Number.POSITIVE_INFINITY;
   for (let i = 0; i < n; i++) {
     const s = spans[i];
-    if (s.toMs > s.fromMs) counts[BASIS_INDEX[s.basis]]++;
+    if (!(s.toMs > s.fromMs)) continue;
+    if (s.fromMs < minFrom) minFrom = s.fromMs;
+    const b = BASIS_INDEX[s.basis];
+    if (b === 0) c0++;
+    else if (b === 1) c1++;
+    else c2++;
   }
-  const starts = counts.map((c, b) => scratch(b * 2, c));
-  const ends = counts.map((c, b) => scratch(b * 2 + 1, c));
-  const fill = [0, 0, 0];
+  const out: Span[] = [];
+  NORMALIZED.add(out);
+  // The event sweep this replaced never started when the earliest start
+  // was not finite, and so returned nothing; kept for identical output.
+  if (minFrom === Number.NEGATIVE_INFINITY) return out;
+  if (c0 + c1 + c2 === 0) return out;
+  const s0 = scratch(0, c0);
+  const e0 = scratch(1, c0);
+  const s1 = scratch(2, c1);
+  const e1 = scratch(3, c1);
+  const s2 = scratch(4, c2);
+  const e2 = scratch(5, c2);
+  let f0 = 0;
+  let f1 = 0;
+  let f2 = 0;
   for (let i = 0; i < n; i++) {
     const s = spans[i];
     if (!(s.toMs > s.fromMs)) continue;
     const b = BASIS_INDEX[s.basis];
-    starts[b][fill[b]] = s.fromMs;
-    ends[b][fill[b]] = s.toMs;
-    fill[b]++;
+    if (b === 0) {
+      s0[f0] = s.fromMs;
+      e0[f0++] = s.toMs;
+    } else if (b === 1) {
+      s1[f1] = s.fromMs;
+      e1[f1++] = s.toMs;
+    } else {
+      s2[f2] = s.fromMs;
+      e2[f2++] = s.toMs;
+    }
   }
-  for (let b = 0; b < 3; b++) {
-    starts[b].sort();
-    ends[b].sort();
+  if (c0 === 0 && c2 === 0) {
+    unionInto(s1, e1, c1, 'known', out);
+    return out;
   }
-  const si = [0, 0, 0];
-  const ei = [0, 0, 0];
-  const open = [0, 0, 0];
+  if (c1 === 0 && c2 === 0) {
+    unionInto(s0, e0, c0, 'unknown', out);
+    return out;
+  }
+  if (c0 === 0 && c1 === 0) {
+    unionInto(s2, e2, c2, 'prohibited', out);
+    return out;
+  }
+  const u0: Span[] = [];
+  const u1: Span[] = [];
+  const u2: Span[] = [];
+  if (c0 > 0) unionInto(s0, e0, c0, 'unknown', u0);
+  if (c1 > 0) unionInto(s1, e1, c1, 'known', u1);
+  if (c2 > 0) unionInto(s2, e2, c2, 'prohibited', u2);
+  overlay(u0, u1, u2, out);
+  return out;
+}
+
+/** The union of `[starts[i], ends[i])` for the first `n` entries on one
+ *  basis, touching spans merged, appended to `out`. Sorts both in place. */
+function unionInto(
+  starts: Float64Array,
+  ends: Float64Array,
+  n: number,
+  basis: HoldBasis,
+  out: Span[]
+) {
+  sortPrefix(starts, n);
+  sortPrefix(ends, n);
+  let i = 0;
+  let j = 0;
+  let open = 0;
+  let from = 0;
+  while (j < n) {
+    if (i < n && starts[i] <= ends[j]) {
+      if (open++ === 0) from = starts[i];
+      i++;
+    } else {
+      if (--open === 0) out.push({ fromMs: from, toMs: ends[j], basis });
+      j++;
+    }
+  }
+}
+
+/** Three disjoint sorted span lists (unknown, known, prohibited) laid
+ *  over each other: where they overlap the strongest basis wins, and runs
+ *  of one basis merge. */
+function overlay(l0: readonly Span[], l1: readonly Span[], l2: readonly Span[], out: Span[]) {
+  const INF = Number.POSITIVE_INFINITY;
+  const n0 = l0.length;
+  const n1 = l1.length;
+  const n2 = l2.length;
+  let i0 = 0;
+  let i1 = 0;
+  let i2 = 0;
+  let at = INF;
+  if (n0 && l0[0].fromMs < at) at = l0[0].fromMs;
+  if (n1 && l1[0].fromMs < at) at = l1[0].fromMs;
+  if (n2 && l2[0].fromMs < at) at = l2[0].fromMs;
+  let last: Span | null = null;
+  while (at !== INF) {
+    let basis = -1;
+    let next = INF;
+    while (i0 < n0 && l0[i0].toMs <= at) i0++;
+    if (i0 < n0) {
+      const s = l0[i0];
+      if (s.fromMs <= at) {
+        basis = 0;
+        next = s.toMs;
+      } else next = s.fromMs;
+    }
+    while (i1 < n1 && l1[i1].toMs <= at) i1++;
+    if (i1 < n1) {
+      const s = l1[i1];
+      if (s.fromMs <= at) {
+        basis = 1;
+        if (s.toMs < next) next = s.toMs;
+      } else if (s.fromMs < next) next = s.fromMs;
+    }
+    while (i2 < n2 && l2[i2].toMs <= at) i2++;
+    if (i2 < n2) {
+      const s = l2[i2];
+      if (s.fromMs <= at) {
+        basis = 2;
+        if (s.toMs < next) next = s.toMs;
+      } else if (s.fromMs < next) next = s.fromMs;
+    }
+    if (basis >= 0) {
+      const name = BASES[basis];
+      if (last !== null && last.toMs === at && last.basis === name) last.toMs = next;
+      else {
+        last = { fromMs: at, toMs: next, basis: name };
+        out.push(last);
+      }
+    }
+    at = next;
+  }
+}
+
+/**
+ * The union of two normalized span lists, normalized: at every moment the
+ * stronger basis of the two, in maximal runs. A span that comes through
+ * unchanged is reused, never copied, so neither input may be mutated
+ * afterwards (nothing mutates a normalized list).
+ */
+function merge2(a: readonly Span[], b: readonly Span[]): Span[] {
+  if (b.length === 0) return a as Span[];
+  if (a.length === 0) return b as Span[];
+  const INF = Number.POSITIVE_INFINITY;
+  const na = a.length;
+  const nb = b.length;
   const out: Span[] = [];
-  const nextEvent = () => {
-    let at = Number.POSITIVE_INFINITY;
-    for (let b = 0; b < 3; b++) {
-      if (si[b] < starts[b].length && starts[b][si[b]] < at) at = starts[b][si[b]];
-      if (ei[b] < ends[b].length && ends[b][ei[b]] < at) at = ends[b][ei[b]];
+  let i = 0;
+  let j = 0;
+  let at = a[0].fromMs < b[0].fromMs ? a[0].fromMs : b[0].fromMs;
+  let last: Span | null = null;
+  let lastOwned = false;
+  while (at !== INF) {
+    while (i < na && a[i].toMs <= at) i++;
+    while (j < nb && b[j].toMs <= at) j++;
+    let next = INF;
+    let cover: Span | null = null;
+    let rank = -1;
+    if (i < na) {
+      const x = a[i];
+      if (x.fromMs <= at) {
+        cover = x;
+        rank = BASIS_RANK[x.basis];
+        next = x.toMs;
+      } else next = x.fromMs;
     }
-    return at;
-  };
-  let at = nextEvent();
-  while (Number.isFinite(at)) {
-    for (let b = 0; b < 3; b++) {
-      while (si[b] < starts[b].length && starts[b][si[b]] === at) {
-        open[b]++;
-        si[b]++;
-      }
-      while (ei[b] < ends[b].length && ends[b][ei[b]] === at) {
-        open[b]--;
-        ei[b]++;
-      }
+    if (j < nb) {
+      const y = b[j];
+      if (y.fromMs <= at) {
+        const r = BASIS_RANK[y.basis];
+        if (r > rank) {
+          cover = y;
+          rank = r;
+        }
+        if (y.toMs < next) next = y.toMs;
+      } else if (y.fromMs < next) next = y.fromMs;
     }
-    const next = nextEvent();
-    const b = open[2] > 0 ? 2 : open[1] > 0 ? 1 : open[0] > 0 ? 0 : -1;
-    if (b >= 0) {
-      const basis = BASES[b];
-      const last = out[out.length - 1];
-      if (last && last.toMs === at && last.basis === basis) last.toMs = next;
-      else out.push({ fromMs: at, toMs: next, basis });
+    if (cover !== null) {
+      const basis = cover.basis;
+      if (last !== null && last.toMs === at && last.basis === basis) {
+        if (lastOwned) last.toMs = next;
+        else {
+          last = { fromMs: last.fromMs, toMs: next, basis };
+          out[out.length - 1] = last;
+          lastOwned = true;
+        }
+      } else if (cover.fromMs === at && cover.toMs === next) {
+        last = cover;
+        lastOwned = false;
+        out.push(cover);
+      } else {
+        last = { fromMs: at, toMs: next, basis };
+        lastOwned = true;
+        out.push(last);
+      }
     }
     at = next;
   }
   NORMALIZED.add(out);
   return out;
+}
+
+function hasNegInfStart(spans: readonly Span[]): boolean {
+  for (let i = 0; i < spans.length; i++) {
+    const s = spans[i];
+    if (s.fromMs === Number.NEGATIVE_INFINITY && s.toMs > s.fromMs) return true;
+  }
+  return false;
+}
+
+/**
+ * `normalizeSpans(chunks.flat())`, built from the chunks: lists already
+ * normalized are merged as they are and only raw chunks are sorted. A
+ * span starting at minus infinity takes the flat path, whose sweep never
+ * starts and returns nothing.
+ */
+function mergeChunks(
+  chunks: readonly (readonly Span[])[],
+  memo?: WeakMap<readonly Span[], WeakMap<readonly Span[], Span[]>>
+): Span[] {
+  const n = chunks.length;
+  if (n === 1 && NORMALIZED.has(chunks[0])) return chunks[0] as Span[];
+  let acc: Span[] | null = null;
+  let raw: (readonly Span[])[] | null = null;
+  for (let i = 0; i < n; i++) {
+    const c = chunks[i];
+    if (!NORMALIZED.has(c)) {
+      if (c.length === 0) continue;
+      if (hasNegInfStart(c)) return normalizeSpans(chunks.flat());
+      (raw ??= []).push(c);
+      continue;
+    }
+    if (c.length > 0 && c[0].fromMs === Number.NEGATIVE_INFINITY) {
+      return normalizeSpans(chunks.flat());
+    }
+    if (acc === null) acc = c as Span[];
+    else if (memo && Object.isFrozen(acc) && Object.isFrozen(c)) {
+      // Both lists outlive this projection, so their union is kept too.
+      let byB = memo.get(acc);
+      if (!byB) {
+        byB = new WeakMap();
+        memo.set(acc, byB);
+      }
+      let merged = byB.get(c);
+      if (!merged) {
+        merged = merge2(acc, c);
+        if (!Object.isFrozen(merged)) merged = frozenSpans(merged);
+        byB.set(c, merged);
+      }
+      acc = merged;
+    } else acc = merge2(acc, c);
+  }
+  if (raw !== null) {
+    const normalized = normalizeSpans(raw.length === 1 ? raw[0] : raw.flat());
+    acc = acc === null ? normalized : merge2(acc, normalized);
+  }
+  if (acc === null) {
+    acc = [];
+    NORMALIZED.add(acc);
+  }
+  return acc;
+}
+
+/** The parts of normalized `spans` inside any of `windows` (each window
+ *  intersected on its own, as the withdrawal kernel does). */
+function intersectNormalized(
+  spans: readonly Span[],
+  windows: readonly GroupMembership[],
+  out: Span[]
+): void {
+  for (const w of windows) {
+    const wFrom = w.fromMs ?? Number.NEGATIVE_INFINITY;
+    const wTo = w.toMs ?? Number.POSITIVE_INFINITY;
+    for (const s of spans) {
+      if (s.fromMs >= wTo) break;
+      const fromMs = s.fromMs > wFrom ? s.fromMs : wFrom;
+      const toMs = s.toMs < wTo ? s.toMs : wTo;
+      if (toMs > fromMs) out.push({ fromMs, toMs, basis: s.basis });
+    }
+  }
+}
+
+/** A normalized list cut to some windows, normalized; kept across
+ *  projections when the list itself is (frozen). */
+function cutTo(
+  m: Model,
+  spans: Span[],
+  windows: readonly GroupMembership[],
+  windowsKey: string
+): Span[] {
+  const keep = m.side !== null && Object.isFrozen(spans);
+  let byWindows = keep ? m.side!.cuts.get(spans) : undefined;
+  const hit = byWindows?.get(windowsKey);
+  if (hit) return hit;
+  const cut: Span[] = [];
+  intersectNormalized(spans, windows, cut);
+  let out = normalizeSpans(cut);
+  if (keep) {
+    out = frozenSpans(out);
+    if (!byWindows) {
+      byWindows = new Map();
+      m.side!.cuts.set(spans, byWindows);
+    }
+    byWindows.set(windowsKey, out);
+  }
+  return out;
+}
+
+/** The basis of the one span of a normalized list containing `atMs`. */
+function containsSorted(spans: readonly Span[], atMs: number): HoldBasis | null {
+  let lo = 0;
+  let hi = spans.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (spans[mid].toMs <= atMs) lo = mid + 1;
+    else hi = mid;
+  }
+  if (lo < spans.length && spans[lo].fromMs <= atMs) return spans[lo].basis;
+  return null;
+}
+
+/** The strongest basis of a normalized list over `[fromMs, toMs)`. */
+function overlapsSorted(spans: readonly Span[], fromMs: number, toMs: number): HoldBasis | null {
+  let lo = 0;
+  let hi = spans.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (spans[mid].toMs <= fromMs) lo = mid + 1;
+    else hi = mid;
+  }
+  let basis: HoldBasis | null = null;
+  for (let k = lo; k < spans.length; k++) {
+    const sp = spans[k];
+    if (!(sp.fromMs < toMs)) break;
+    if (Math.max(sp.fromMs, fromMs) < Math.min(sp.toMs, toMs)) {
+      basis = basis === null ? sp.basis : stronger(basis, sp.basis);
+    }
+  }
+  return basis;
 }
 
 /**
@@ -402,6 +782,47 @@ export function normalizeSpans(spans: readonly Span[]): Span[] {
  * prohibition, and an unknown hold can later be resolved away.
  */
 export function subtractSpans(a: readonly Span[], b: readonly Span[]): Span[] {
+  if (!sortedDisjoint(b)) return subtractSpansSlow(a, b);
+  const out: Span[] = [];
+  for (const s of a) {
+    if (!(s.toMs > s.fromMs)) {
+      for (const p of subtractSpansSlow([s], b)) out.push(p);
+      continue;
+    }
+    const rank = BASIS_RANK[s.basis];
+    // `b` is sorted and its spans never overlap, so cutting `s` by every
+    // span of `b` at least as strong, in order, leaves these pieces.
+    let lo = 0;
+    let hi = b.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (b[mid].toMs <= s.fromMs) lo = mid + 1;
+      else hi = mid;
+    }
+    let cur = s.fromMs;
+    for (let k = lo; k < b.length; k++) {
+      const c = b[k];
+      if (c.fromMs >= s.toMs) break;
+      if (BASIS_RANK[c.basis] < rank) continue;
+      if (c.fromMs > cur) out.push({ ...s, fromMs: cur, toMs: c.fromMs });
+      if (c.toMs > cur) cur = c.toMs;
+      if (cur >= s.toMs) break;
+    }
+    if (cur < s.toMs) out.push({ ...s, fromMs: cur, toMs: s.toMs });
+  }
+  return out;
+}
+
+function sortedDisjoint(spans: readonly Span[]): boolean {
+  for (let i = 0; i < spans.length; i++) {
+    const s = spans[i];
+    if (!(s.fromMs < s.toMs)) return false;
+    if (i > 0 && !(spans[i - 1].toMs <= s.fromMs)) return false;
+  }
+  return true;
+}
+
+function subtractSpansSlow(a: readonly Span[], b: readonly Span[]): Span[] {
   const out: Span[] = [];
   for (const s of a) {
     let pieces: Span[] = [{ ...s }];
@@ -434,6 +855,167 @@ export function spansContain(spans: readonly Span[], atMs: number): HoldBasis | 
 }
 
 // ─── Projection ─────────────────────────────────────────────────────────
+
+/**
+ * Grazing and haying verdicts of single applications, kept beside a
+ * context's `verdictCache` (the guard keeps one for every farm) so the
+ * before and after projections of a write, and later writes, reuse them.
+ * Keyed by the zone, every attestation on file, the registry maximum and
+ * the application itself: everything the verdict reads, so nothing is
+ * shared that is not already in the key.
+ */
+interface SideCache {
+  area: Map<string, readonly [GrazingVerdict, GrazingVerdict]>;
+  /** `areaHolds` by everything it reads. */
+  areaHolds: Map<string, { k: SubjectKey; kind: HoldKind; spans: Span[] }[]>;
+  reach: Map<string, number>;
+  profiles: Map<string, unknown>;
+  /** `verdictsFor`'s last verdict and content number per treatment id,
+   *  with the key's parts it was made from. */
+  doses: Map<
+    string,
+    { data: unknown; tail: string; zone: string; clear: WithdrawalClear; num: number }
+  >;
+  /** `appId`'s last content number per application ref, with its data. */
+  apps: Map<string, { data: unknown; id: string }>;
+  /** Content text to a number never reused for other content. */
+  ids: Map<string, number>;
+  nextId: number;
+  /** Frozen normalized spans: exposure of a stay set, withdrawal chunks. */
+  spans: Map<string, Span[]>;
+  /** Frozen withdrawal spans by food (`byFoodCache`). */
+  byFood: Map<string, Partial<Record<Food, Span[]>>>;
+  /** Spans held by `spans` and `byFood`. */
+  spanCount: number;
+  /** `merge2` by its two inputs; only frozen inputs are ever met again. */
+  merges: WeakMap<readonly Span[], WeakMap<readonly Span[], Span[]>>;
+  /** `cutTo` by the frozen list and the windows. */
+  cuts: WeakMap<readonly Span[], Map<string, Span[]>>;
+}
+const SIDE_CACHES = new WeakMap<object, SideCache>();
+const MAX_SIDE_ENTRIES = 50_000;
+const MAX_SIDE_SPANS = 300_000;
+
+function internId(side: SideCache, text: string): number {
+  let id = side.ids.get(text);
+  if (id === undefined) {
+    if (side.ids.size >= MAX_SIDE_ENTRIES) side.ids.clear();
+    id = side.nextId++;
+    side.ids.set(text, id);
+  }
+  return id;
+}
+
+function remember<V>(map: Map<string, V>, key: string, value: V): void {
+  if (map.size >= MAX_SIDE_ENTRIES) map.clear();
+  map.set(key, value);
+}
+
+/** Spans kept across projections are frozen, so no reader can change
+ *  what a later projection is handed. */
+function frozenSpans(spans: Span[]): Span[] {
+  for (const s of spans) Object.freeze(s);
+  return Object.freeze(spans) as Span[];
+}
+
+/** Frozen spans about to be held by the side cache's maps, counted
+ *  against a total so the cache stays small; past it, those maps start
+ *  over (a projection still using an entry keeps its own reference). */
+function keptSpans(side: SideCache, spans: Span[]): Span[] {
+  side.spanCount += spans.length;
+  if (side.spanCount > MAX_SIDE_SPANS) {
+    side.spans.clear();
+    side.byFood.clear();
+    side.areaHolds.clear();
+    side.spanCount = spans.length;
+  }
+  return frozenSpans(spans);
+}
+
+const NOT_PLAIN: unique symbol = Symbol('not plain');
+
+function isPlainObject(v: object): boolean {
+  const proto = Object.getPrototypeOf(v);
+  return proto === Object.prototype || proto === null;
+}
+
+/** A deep copy of JSON-like data (primitives, arrays, plain objects), or
+ *  NOT_PLAIN when anything else is in it. */
+function plainCopy(v: unknown): unknown {
+  if (v === null || typeof v !== 'object') {
+    return typeof v === 'function' || typeof v === 'symbol' || typeof v === 'bigint'
+      ? NOT_PLAIN
+      : v;
+  }
+  if (Array.isArray(v)) {
+    const out: unknown[] = [];
+    for (let i = 0; i < v.length; i++) {
+      if (!(i in v)) return NOT_PLAIN;
+      const c = plainCopy(v[i]);
+      if (c === NOT_PLAIN) return NOT_PLAIN;
+      out.push(c);
+    }
+    return out;
+  }
+  if (!isPlainObject(v) || Object.getOwnPropertySymbols(v).length > 0) return NOT_PLAIN;
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(v)) {
+    const c = plainCopy((v as Record<string, unknown>)[k]);
+    if (c === NOT_PLAIN) return NOT_PLAIN;
+    out[k] = c;
+  }
+  return out;
+}
+
+/** `b` is the same data as `a`, a `plainCopy`: the same keys in the same
+ *  order, `Object.is` leaves, nothing but arrays and plain objects. */
+function samePlainData(a: unknown, b: unknown): boolean {
+  if (a === null || typeof a !== 'object') return Object.is(a, b);
+  if (b === null || typeof b !== 'object') return false;
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!(i in b) || !samePlainData(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  if (Array.isArray(b) || !isPlainObject(b)) return false;
+  const ka = Object.keys(a);
+  const kb = Object.keys(b);
+  if (ka.length !== kb.length || Object.getOwnPropertySymbols(b).length > 0) return false;
+  for (let i = 0; i < ka.length; i++) {
+    const k = ka[i];
+    if (k !== kb[i]) return false;
+    if (!samePlainData((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function sideCache(ctx: ProjectionContext): SideCache | null {
+  if (!ctx.verdictCache) return null;
+  let c = SIDE_CACHES.get(ctx.verdictCache);
+  if (!c) {
+    c = {
+      area: new Map(),
+      areaHolds: new Map(),
+      reach: new Map(),
+      profiles: new Map(),
+      doses: new Map(),
+      apps: new Map(),
+      ids: new Map(),
+      nextId: 0,
+      spans: new Map(),
+      byFood: new Map(),
+      spanCount: 0,
+      merges: new WeakMap(),
+      cuts: new WeakMap()
+    };
+    SIDE_CACHES.set(ctx.verdictCache, c);
+  }
+  return c;
+}
 
 interface Buckets {
   subjects: Map<string, SubjectFact>;
@@ -544,16 +1126,27 @@ export function hayKeysOfBlock(fieldId: string | null | undefined, blockId: stri
   return fieldId ? [`area:${fieldId}`, `block:${blockId}`] : [`block:${blockId}`];
 }
 
+/** `applicationIntervalDays`, through the side cache (the attestations
+ *  are part of `env`). */
+function intervalDays(m: Model, b: Buckets, a: GrazingApplication): number {
+  const key = m.side ? `i${m.env}|${m.appId(a)}` : '';
+  let d = m.side?.reach.get(key);
+  if (d === undefined) {
+    d = applicationIntervalDays(a, b.attestations);
+    if (m.side) remember(m.side.reach, key, d);
+  }
+  return d;
+}
+
 function grazedArea(b: Buckets, key: SubjectKey): boolean {
   return !(key.startsWith('area:') && b.notGrazed.has(key.slice(5)));
 }
 
 interface Model {
   exposureCache: ExposureSpanCache;
-  /** Normalized exposure of one group window, by group, window, reading and food. */
-  windowSpans: Map<string, Span[]>;
-  /** Normalized withdrawal holds of a group's doses over some windows. */
-  groupDoseSpans: Map<string, Span[]>;
+  /** Normalized withdrawal holds of a group's doses over some windows,
+   *  by food. */
+  groupDoseSpans: Map<string, Partial<Record<Food, Span[]>>>;
   /** Treatments recorded on a subject, by `type:id`. */
   dosesOf: (type: 'animal' | 'group', id: string) => TreatmentRecord[];
   staysOf: (type: 'animal' | 'group', id: string) => StayFact[];
@@ -561,17 +1154,53 @@ interface Model {
   lineage: (groupId: string) => GroupMembership[];
   membersEver: (groupId: string) => string[];
   appsByField: Map<string, GrazingApplication[]>;
+  /** Each application's lookback window end (`applicationWindowEndsMs`). */
+  reach: Map<GrazingApplication, number>;
+  /** `groupDosesText` per group. */
+  groupDoseTexts: Map<string, string>;
+  /** `stayText` per stay as the kernel reads it. */
+  stayTexts: WeakMap<ClippedStay, string>;
+  /** `fieldAppsText` per Area. */
+  fieldAppTexts: Map<string, string>;
+  /** A stay no window cuts, as the kernel reads it, once. */
+  wholeStays: Map<StayFact, ClippedStay>;
+  /** `relevantApps` per stay. */
+  relevant: Map<StayFact, readonly GrazingApplication[]>;
+  /** The stay set of each group window, by window key. */
+  windowStays: Map<string, StaySet>;
+  /** Distinct stay sets per group, so equal ones share their exposure. */
+  staySets: Map<string, StaySet[]>;
+  /** `merge2` of two normalized lists, by the lists. */
+  mergeMemo: WeakMap<readonly Span[], WeakMap<readonly Span[], Span[]>>;
+  /** Content numbers of the treatments (`verdictsFor`). */
+  doseIds: Map<TreatmentRecord, number> | null;
+  plans: Map<string, AnimalPlan>;
+  readingKeys: WeakMap<SubjectFact, string>;
+  /** Content caches kept beside the context's verdict cache, if any. */
+  side: SideCache | null;
+  /** The zone, attestations and registry maximum, as a content number. */
+  env: string;
+  /** An application's content number as text (side cache only). */
+  appId: (app: GrazingApplication) => string;
 }
 
-function model(b: Buckets, nowMs: number): Model {
-  const byRef = new Map<string, StayFact[]>();
+function byType<V>(
+  maps: { animal: Map<string, V>; group: Map<string, V> },
+  type: string
+): Map<string, V> | null {
+  return type === 'animal' ? maps.animal : type === 'group' ? maps.group : null;
+}
+
+function model(b: Buckets, nowMs: number, ctx: ProjectionContext): Model {
+  const byRef = { animal: new Map<string, StayFact[]>(), group: new Map<string, StayFact[]>() };
   for (const s of b.stays) {
-    const k = subjectRef(s.subjectType, s.subjectId);
-    const list = byRef.get(k) ?? [];
-    list.push(s);
-    byRef.set(k, list);
+    const byId = byType(byRef, s.subjectType);
+    if (!byId) continue;
+    const list = byId.get(s.subjectId);
+    if (list) list.push(s);
+    else byId.set(s.subjectId, [s]);
   }
-  const staysOf = (type: 'animal' | 'group', id: string) => byRef.get(subjectRef(type, id)) ?? [];
+  const staysOf = (type: 'animal' | 'group', id: string) => byRef[type].get(id) ?? [];
   const lineageCache = new Map<string, GroupMembership[]>();
   const lineage = (groupId: string) => {
     let l = lineageCache.get(groupId);
@@ -625,51 +1254,115 @@ function model(b: Buckets, nowMs: number): Model {
     list.push(a);
     appsByField.set(fieldId, list);
   }
-  const doses = new Map<string, TreatmentRecord[]>();
+  const doses = {
+    animal: new Map<string, TreatmentRecord[]>(),
+    group: new Map<string, TreatmentRecord[]>()
+  };
   for (const t of b.doses) {
-    const k = subjectRef(t.subjectType, t.subjectId);
-    const list = doses.get(k) ?? [];
-    list.push(t);
-    doses.set(k, list);
+    const byId = byType(doses, t.subjectType);
+    if (!byId) continue;
+    const list = byId.get(t.subjectId);
+    if (list) list.push(t);
+    else byId.set(t.subjectId, [t]);
+  }
+  const side = sideCache(ctx);
+  // Content numbers stand in for long texts in the side cache keys: the
+  // zone, attestations and registry maximum (env), and each application.
+  const env = side
+    ? `e${internId(side, JSON.stringify([ctx.timeZone, b.attestations, ctx.registryMaxIntervalDays]))}`
+    : '';
+  const appIds = new Map<GrazingApplication, string>();
+  const appId = (app: GrazingApplication) => {
+    let id = appIds.get(app);
+    if (id === undefined) {
+      if (side) {
+        const seen = side.apps.get(app.ref);
+        if (seen && samePlainData(seen.data, app)) id = seen.id;
+        else {
+          id = `a${internId(side, JSON.stringify(app))}`;
+          const data = plainCopy(app);
+          if (data !== NOT_PLAIN) remember(side.apps, app.ref, { data, id });
+        }
+      } else id = '';
+      appIds.set(app, id);
+    }
+    return id;
+  };
+  const exposureCache = newExposureSpanCache();
+  if (side) {
+    exposureCache.shared = {
+      env,
+      appKey: appId,
+      profiles: side.profiles,
+      maxEntries: MAX_SIDE_ENTRIES
+    };
   }
   return {
-    exposureCache: newExposureSpanCache(),
-    windowSpans: new Map(),
+    exposureCache,
+    side,
+    env,
+    appId,
     groupDoseSpans: new Map(),
-    dosesOf: (type, id) => doses.get(subjectRef(type, id)) ?? [],
+    dosesOf: (type, id) => doses[type].get(id) ?? [],
     staysOf,
     memberships,
     lineage,
     membersEver: (groupId) => [...(everIn.get(groupId) ?? [])],
-    appsByField
+    appsByField,
+    reach: new Map(),
+    relevant: new Map(),
+    wholeStays: new Map(),
+    stayTexts: new WeakMap(),
+    groupDoseTexts: new Map(),
+    fieldAppTexts: new Map(),
+    windowStays: new Map(),
+    staySets: new Map(),
+    plans: new Map(),
+    readingKeys: new WeakMap(),
+    mergeMemo: side ? side.merges : new WeakMap(),
+    doseIds: null
   };
 }
 
-function clip(stays: readonly StayFact[], w: GroupMembership): ExposureStay[] {
-  const out: ExposureStay[] = [];
+/** A stay cut to a membership window, with the stay it came from. */
+interface ClippedStay extends ExposureStay {
+  src: StayFact;
+}
+
+function clip(m: Model, stays: readonly StayFact[], w: GroupMembership): ClippedStay[] {
+  const out: ClippedStay[] = [];
   for (const s of stays) {
     if (s.toMs !== null && s.toMs === s.fromMs) continue;
     const fromMs = w.fromMs === null ? s.fromMs : Math.max(s.fromMs, w.fromMs);
-    const ends = [s.toMs, w.toMs].filter((v): v is number => v !== null);
-    const toMs = ends.length ? Math.min(...ends) : null;
+    const toMs = s.toMs === null ? w.toMs : w.toMs === null ? s.toMs : Math.min(s.toMs, w.toMs);
     if (toMs !== null && toMs <= fromMs) continue;
-    out.push({ fieldId: s.fieldId, fromMs, toMs, ...(s.floor.length ? { floor: s.floor } : {}) });
+    if (fromMs === s.fromMs && toMs === s.toMs) {
+      let whole = m.wholeStays.get(s);
+      if (!whole) {
+        whole = {
+          fieldId: s.fieldId,
+          fromMs,
+          toMs,
+          ...(s.floor.length ? { floor: s.floor } : {}),
+          src: s
+        };
+        m.wholeStays.set(s, whole);
+      }
+      out.push(whole);
+      continue;
+    }
+    out.push({
+      fieldId: s.fieldId,
+      fromMs,
+      toMs,
+      ...(s.floor.length ? { floor: s.floor } : {}),
+      src: s
+    });
   }
   return out;
 }
 
 const ALL: GroupMembership = { groupId: '', fromMs: null, toMs: null };
-
-/** An animal's own exposure: its stays and its groups' stays while it was
- *  a member (the food gate's `exposureStays`). */
-function animalExposureStays(m: Model, animalId: string, skipGroup?: string): ExposureStay[] {
-  const out = clip(m.staysOf('animal', animalId), ALL);
-  for (const w of m.memberships(animalId).map(physicalWindow)) {
-    if (w.groupId === skipGroup) continue;
-    out.push(...clip(m.staysOf('group', w.groupId), w));
-  }
-  return out;
-}
 
 function lactatingOf(s: SubjectFact | undefined): boolean {
   if (!s) return true;
@@ -681,18 +1374,93 @@ function exposureInputFor(
   ctx: ProjectionContext,
   b: Buckets,
   subject: SubjectFact | undefined,
-  stays: ExposureStay[],
-  food: Food
+  stays: ClippedStay[],
+  food: Food,
+  appsByField: ReadonlyMap<string, readonly GrazingApplication[]> = appsReaching(m, ctx, b, stays)
 ) {
   return {
     stays,
-    applicationsByField: m.appsByField,
+    applicationsByField: appsByField,
     attestations: b.attestations,
     subject: { speciesId: subject?.speciesId ?? null, lactating: lactatingOf(subject) },
     food,
     timeZone: ctx.timeZone,
     registryMaxIntervalDays: ctx.registryMaxIntervalDays
   };
+}
+
+/**
+ * The applications each stay's Area can get a hold from: those applied
+ * before the stay ends whose lookback window reaches its start. Every
+ * other pair yields nothing in `exposureSpansFast`, so leaving it out
+ * changes no span (a stay with a stored floor keeps all its Area's).
+ */
+function appsReaching(
+  m: Model,
+  ctx: ProjectionContext,
+  b: Buckets,
+  stays: readonly ClippedStay[]
+): ReadonlyMap<string, readonly GrazingApplication[]> {
+  const out = new Map<string, readonly GrazingApplication[]>();
+  for (const st of stays) {
+    const apps = relevantApps(m, ctx, b, st.src);
+    if (apps.length === 0) continue;
+    const have = out.get(st.fieldId);
+    if (!have) out.set(st.fieldId, apps);
+    else if (have !== apps) {
+      const merged = [...have];
+      for (const app of apps) if (!merged.includes(app)) merged.push(app);
+      out.set(st.fieldId, merged);
+    }
+  }
+  return out;
+}
+
+/** The applications on a stay's Area applied before it ended whose
+ *  lookback window reaches its start, once per stay and projection (a
+ *  clipped stay only narrows this); every application for a stay with a
+ *  stored floor. */
+function relevantApps(
+  m: Model,
+  ctx: ProjectionContext,
+  b: Buckets,
+  stay: StayFact
+): readonly GrazingApplication[] {
+  let list = m.relevant.get(stay);
+  if (list) return list;
+  const apps = m.appsByField.get(stay.fieldId) ?? [];
+  if (stay.floor.length > 0) list = apps;
+  else {
+    const found: GrazingApplication[] = [];
+    list = found;
+    const to = stay.toMs ?? Number.POSITIVE_INFINITY;
+    for (const app of apps) {
+      if (!(app.appliedAtMs < to)) continue;
+      let reach = m.reach.get(app);
+      if (reach === undefined) {
+        const contentKey = m.side ? `r${m.env}|${m.appId(app)}` : '';
+        reach = m.side?.reach.get(contentKey);
+        if (reach === undefined) {
+          reach = applicationWindowEndsMs(
+            {
+              attestations: b.attestations,
+              registryMaxIntervalDays: ctx.registryMaxIntervalDays,
+              timeZone: ctx.timeZone
+            },
+            app
+          );
+          if (m.side) {
+            if (m.side.reach.size >= MAX_SIDE_ENTRIES) m.side.reach.clear();
+            m.side.reach.set(contentKey, reach);
+          }
+        }
+        m.reach.set(app, reach);
+      }
+      if (reach >= stay.fromMs) found.push(app);
+    }
+  }
+  m.relevant.set(stay, list);
+  return list;
 }
 
 function intersect(spans: readonly Span[], windows: readonly GroupMembership[]): Span[] {
@@ -707,13 +1475,12 @@ function intersect(spans: readonly Span[], windows: readonly GroupMembership[]):
   return out;
 }
 
-/** The treatments that can reach a group: its own, its parents' and, for
- *  eggs and milk, its members' own and their other groups'. */
+/** The treatments that can reach a group's own holds: its own and its
+ *  parents'. */
 function groupDoses(
   m: Model,
   groupId: string,
-  lineage: readonly GroupMembership[],
-  members: readonly { animalId: string; memberships: readonly GroupMembership[] }[]
+  lineage: readonly GroupMembership[]
 ): TreatmentRecord[] {
   const seen = new Set<string>();
   const out: TreatmentRecord[] = [];
@@ -726,63 +1493,224 @@ function groupDoses(
   };
   addAll(m.dosesOf('group', groupId));
   for (const l of lineage) addAll(m.dosesOf('group', l.groupId));
-  for (const member of members) addAll(animalDoses(m, member.animalId, member.memberships));
   return out;
 }
 
-/** The treatments that can reach an animal: its own and its groups'. */
-function animalDoses(
+/** What an animal's projection reads about it, worked out once. */
+interface AnimalPlan {
+  memberships: GroupMembership[];
+  /** Its windows in each group, with a key for the group's dose spans
+   *  and the group's treatments. */
+  byGroup: {
+    groupId: string;
+    windows: GroupMembership[];
+    key: string;
+    doses: TreatmentRecord[];
+    /** Its `groupDoseSpans` entry, once looked up. */
+    byFood?: Partial<Record<Food, Span[]>>;
+  }[];
+  /** Its own treatments. */
+  own: TreatmentRecord[];
+  /** Its physical windows, with the window's key. */
+  physical: KeyedWindow[];
+  ownStays: StayFact[];
+  /** Its withdrawal chunks (`withdrawalAnimal`) by food, once. */
+  withdrawal: Partial<Record<Food, Span[][]>>;
+  /** Its own treatments' normalized spans by food (`byFoodCache`). */
+  ownSpans?: Partial<Record<Food, Span[]>>;
+}
+
+interface KeyedWindow {
+  w: GroupMembership;
+  key: string;
+  /** Its `windowStays` entry, once looked up. */
+  set?: StaySet;
+}
+
+function windowKey(w: GroupMembership): string {
+  return `${w.groupId}|${w.fromMs}|${w.toMs}`;
+}
+
+function animalPlan(m: Model, animalId: string): AnimalPlan {
+  let plan = m.plans.get(animalId);
+  if (plan) return plan;
+  const memberships = m.memberships(animalId);
+  const grouped = new Map<string, GroupMembership[]>();
+  for (const w of memberships) {
+    const list = grouped.get(w.groupId);
+    if (list) list.push(w);
+    else grouped.set(w.groupId, [w]);
+  }
+  const byGroup: AnimalPlan['byGroup'] = [];
+  for (const [groupId, windows] of grouped) {
+    byGroup.push({
+      groupId,
+      windows,
+      doses: m.dosesOf('group', groupId),
+      key: `${groupId}|${windows.map((w) => `${w.fromMs}-${w.toMs}-${w.inheritedUntilMs ?? ''}`).join(',')}`
+    });
+  }
+  plan = {
+    memberships,
+    byGroup,
+    physical: memberships.map((x) => {
+      const w = physicalWindow(x);
+      return { w, key: windowKey(w) };
+    }),
+    ownStays: m.staysOf('animal', animalId),
+    own: m.dosesOf('animal', animalId),
+    withdrawal: {}
+  };
+  m.plans.set(animalId, plan);
+  return plan;
+}
+
+/**
+ * `treatmentHoldSpans` normalized, through the side cache when every
+ * treatment has a content number: the spans depend only on the subject
+ * text (`subjectText`, everything of the subject the kernel reads), the
+ * food and the treatments with their verdicts, which the content numbers
+ * stand for.
+ */
+function holdSpansCached(
   m: Model,
-  animalId: string,
-  memberships: readonly GroupMembership[]
-): TreatmentRecord[] {
-  const out = [...m.dosesOf('animal', animalId)];
-  for (const g of new Set(memberships.map((w) => w.groupId))) out.push(...m.dosesOf('group', g));
-  return out;
+  food: Food,
+  input: () => Parameters<typeof treatmentHoldSpans>[0],
+  clears: Map<string, WithdrawalClear>,
+  subjectText: string,
+  doseText: string
+): Span[] {
+  const key = holdSpansKey(m, food, subjectText, doseText);
+  const hit = key === null ? undefined : m.side!.spans.get(key);
+  if (hit) return hit;
+  let spans = normalizeSpans(treatmentHoldSpans(input(), clears));
+  if (key !== null) {
+    spans = keptSpans(m.side!, spans);
+    remember(m.side!.spans, key, spans);
+  }
+  return spans;
+}
+
+function holdSpansKey(m: Model, food: Food, subjectText: string, doseText: string): string | null {
+  return m.side && m.doseIds ? `w${m.env}|${food}|${subjectText}|${doseText}` : null;
+}
+
+/** `dosesText` of a group's own treatments, once per projection. */
+function groupDosesText(m: Model, groupId: string, doses: readonly TreatmentRecord[]): string {
+  let t = m.groupDoseTexts.get(groupId);
+  if (t === undefined) {
+    t = dosesText(m, doses);
+    m.groupDoseTexts.set(groupId, t);
+  }
+  return t;
+}
+
+/** The treatments' content numbers, as text (side cache only). */
+function dosesText(m: Model, doses: readonly TreatmentRecord[]): string {
+  const ids = m.doseIds;
+  if (!m.side || !ids) return '';
+  let t = '';
+  for (const d of doses) t += `${ids.get(d)},`;
+  return t;
+}
+
+function windowsText(windows: readonly GroupMembership[]): string {
+  let t = '';
+  for (const w of windows) {
+    t += `${JSON.stringify(w.groupId)},${w.fromMs},${w.toMs},${w.inheritedUntilMs};`;
+  }
+  return t;
 }
 
 /** An animal's withdrawal holds, in chunks: its own doses, then each
  *  group's doses over its windows in that group. The group chunk depends
- *  only on the group and the windows, so flock members share it. */
+ *  only on the group and the windows, so flock members share it. Every
+ *  chunk is normalized. */
 function withdrawalAnimal(
   m: Model,
-  b: Buckets,
   ctx: ProjectionContext,
   clears: Map<string, WithdrawalClear>,
   animalId: string,
   food: Food
 ): Span[][] {
-  const memberships = m.memberships(animalId);
-  const base = { food, plugins: ctx.plugins, timeZone: ctx.timeZone };
-  const chunks: Span[][] = [
-    treatmentHoldSpans(
-      {
-        ...base,
-        subject: { type: 'animal', id: animalId, memberships },
-        treatments: m.dosesOf('animal', animalId)
-      },
-      clears
-    )
-  ];
-  const byGroup = new Map<string, GroupMembership[]>();
-  for (const w of memberships) byGroup.set(w.groupId, [...(byGroup.get(w.groupId) ?? []), w]);
-  for (const [groupId, windows] of byGroup) {
-    const doses = m.dosesOf('group', groupId);
-    if (doses.length === 0) continue;
-    const key = `${groupId}|${food}|${windows.map((w) => `${w.fromMs}-${w.toMs}-${w.inheritedUntilMs ?? ''}`).join(',')}`;
-    let spans = m.groupDoseSpans.get(key);
+  const plan = animalPlan(m, animalId);
+  const chunks: Span[][] = [];
+  const own = plan.own;
+  const keep = m.side !== null && m.doseIds !== null;
+  if (own.length > 0) {
+    // Own doses are all direct, so the memberships are never read.
+    const byFood = (plan.ownSpans ??= byFoodCache(
+      m,
+      () => `animal:${JSON.stringify(animalId)}|${dosesText(m, own)}`
+    ));
+    let spans = byFood[food];
     if (!spans) {
       spans = normalizeSpans(
         treatmentHoldSpans(
-          { ...base, subject: { type: 'animal', id: '', memberships: windows }, treatments: doses },
+          {
+            food,
+            plugins: ctx.plugins,
+            timeZone: ctx.timeZone,
+            subject: { type: 'animal', id: animalId, memberships: plan.memberships },
+            treatments: own
+          },
           clears
         )
       );
-      m.groupDoseSpans.set(key, spans);
+      if (keep) spans = keptSpans(m.side!, spans);
+      byFood[food] = spans;
+    }
+    chunks.push(spans);
+  }
+  for (const g of plan.byGroup) {
+    const doses = g.doses;
+    if (doses.length === 0) continue;
+    let byFood = (g.byFood ??= m.groupDoseSpans.get(g.key));
+    if (!byFood) {
+      byFood = byFoodCache(
+        m,
+        () => `windows:${windowsText(g.windows)}|${groupDosesText(m, g.groupId, doses)}`
+      );
+      m.groupDoseSpans.set(g.key, byFood);
+      g.byFood = byFood;
+    }
+    let spans = byFood[food];
+    if (!spans) {
+      spans = normalizeSpans(
+        treatmentHoldSpans(
+          {
+            food,
+            plugins: ctx.plugins,
+            timeZone: ctx.timeZone,
+            subject: { type: 'animal', id: '', memberships: g.windows },
+            treatments: doses
+          },
+          clears
+        )
+      );
+      if (keep) spans = keptSpans(m.side!, spans);
+      byFood[food] = spans;
     }
     chunks.push(spans);
   }
   return chunks;
+}
+
+/**
+ * Normalized withdrawal spans by food for one subject and set of
+ * treatments: through the side cache when every treatment has a content
+ * number (`text` then names everything else the kernel reads), else for
+ * this projection only.
+ */
+function byFoodCache(m: Model, text: () => string): Partial<Record<Food, Span[]>> {
+  if (!m.side || !m.doseIds) return {};
+  const key = `w${m.env}|${text()}`;
+  let byFood = m.side.byFood.get(key);
+  if (!byFood) {
+    byFood = {};
+    remember(m.side.byFood, key, byFood);
+  }
+  return byFood;
 }
 
 /** Exposure from the stays of the animal itself and of every group it was
@@ -792,22 +1720,22 @@ function memberExposure(
   m: Model,
   b: Buckets,
   ctx: ProjectionContext,
-  animalId: string,
+  plan: AnimalPlan,
   reading: SubjectFact | undefined,
   food: Food,
   skipGroup?: string
 ): Span[] {
   if (m.appsByField.size === 0) return [];
-  const own = m.staysOf('animal', animalId);
-  const windows = m
-    .memberships(animalId)
-    .filter((w) => w.groupId !== skipGroup)
-    .map(physicalWindow);
-  if (own.length === 0 && windows.length === 1) {
-    return windowExposure(m, b, ctx, windows[0], reading, food);
+  const windows =
+    skipGroup === undefined
+      ? plan.physical
+      : plan.physical.filter((x) => x.w.groupId !== skipGroup);
+  if (plan.ownStays.length === 0) {
+    if (windows.length === 0) return [];
+    if (windows.length === 1) return windowExposure(m, b, ctx, windows[0], reading, food);
   }
   const out: Span[] = exposureSpansFast(
-    exposureInputFor(m, ctx, b, reading, clip(m.staysOf('animal', animalId), ALL), food),
+    exposureInputFor(m, ctx, b, reading, clip(m, plan.ownStays, ALL), food),
     m.exposureCache
   );
   for (const w of windows) {
@@ -816,37 +1744,253 @@ function memberExposure(
   return out;
 }
 
+/** Eggs read exactly as milk when no stay carries a stored floor (the
+ *  floor is the only part of the exposure kernel that reads the food
+ *  for anything but meat), so the two share one computation. */
+function exposureFood(food: Food, floors: boolean): Food {
+  return food === 'eggs' && !floors ? 'milk' : food;
+}
+
+function hasFloors(stays: readonly ExposureStay[]): boolean {
+  for (const s of stays) if (s.floor && s.floor.length > 0) return true;
+  return false;
+}
+
+function readingKey(m: Model, reading: SubjectFact | undefined): string {
+  if (!reading) return `${JSON.stringify(null)}|true`;
+  let k = m.readingKeys.get(reading);
+  if (k === undefined) {
+    k = `${JSON.stringify(reading.speciesId)}|${lactatingOf(reading)}`;
+    m.readingKeys.set(reading, k);
+  }
+  return k;
+}
+
+/** Clipped stays of a group with the applications they can meet, and
+ *  their normalized exposure by reading and food. */
+interface StaySet {
+  stays: ClippedStay[];
+  /** The applications each stay can meet (`appsReaching`), once needed. */
+  apps?: ReadonlyMap<string, readonly GrazingApplication[]>;
+  floors: boolean;
+  /** Exposure by `readingKey`, then by food. */
+  spans: Map<string, Partial<Record<Food, Span[]>>>;
+  /** `staySetId`, once. */
+  id?: string;
+}
+
+function sameStays(a: readonly ClippedStay[], b: readonly ClippedStay[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i];
+    const y = b[i];
+    if (x.src !== y.src || x.fromMs !== y.fromMs || x.toMs !== y.toMs) return false;
+  }
+  return true;
+}
+
+/** The group's stay set equal to `stays`, made once. */
+function staySet(
+  m: Model,
+  ctx: ProjectionContext,
+  b: Buckets,
+  groupId: string,
+  stays: ClippedStay[]
+): StaySet {
+  let list = m.staySets.get(groupId);
+  if (!list) {
+    list = [];
+    m.staySets.set(groupId, list);
+  }
+  for (const set of list) if (sameStays(set.stays, stays)) return set;
+  const set: StaySet = { stays, floors: hasFloors(stays), spans: new Map() };
+  list.push(set);
+  return set;
+}
+
+/** A stay set's exposure for one reading and food, normalized, once; with
+ *  a side cache, once for the same content across projections. */
+function setExposure(
+  m: Model,
+  b: Buckets,
+  ctx: ProjectionContext,
+  set: StaySet,
+  reading: SubjectFact | undefined,
+  food: Food
+): Span[] {
+  const f = exposureFood(food, set.floors);
+  const rk = readingKey(m, reading);
+  let byFood = set.spans.get(rk);
+  if (!byFood) {
+    byFood = {};
+    set.spans.set(rk, byFood);
+  }
+  let spans = byFood[f];
+  if (spans) return spans;
+  const key = `${rk}|${f}`;
+  const side = m.side;
+  const contentKey = side ? `x${m.env}|${key}|${staySetId(m, set)}` : '';
+  spans = side?.spans.get(contentKey);
+  if (!spans) {
+    spans = normalizeSpans(
+      exposureSpansFast(
+        exposureInputFor(
+          m,
+          ctx,
+          b,
+          reading,
+          set.stays,
+          f,
+          (set.apps ??= appsReaching(m, ctx, b, set.stays))
+        ),
+        m.exposureCache
+      )
+    );
+    if (side) {
+      spans = keptSpans(side, spans);
+      remember(side.spans, contentKey, spans);
+    }
+  }
+  byFood[f] = spans;
+  return spans;
+}
+
+/** Everything about a stay set the exposure kernel reads (each stay's
+ *  Area, times and stored floor, and the applications it is given), as a
+ *  content number. */
+function staySetId(m: Model, set: StaySet): string {
+  if (set.id !== undefined) return set.id;
+  if (!m.side) return (set.id = '');
+  let t = '';
+  const fields: string[] = [];
+  for (const st of set.stays) {
+    t += stayText(m, st);
+    if (!fields.includes(st.fieldId)) fields.push(st.fieldId);
+  }
+  // Every application on the stays' Areas: the ones the kernel is given
+  // are picked from these by the stays and `env` alone.
+  t += '#';
+  for (const fieldId of fields) t += fieldAppsText(m, fieldId);
+  set.id = `s${internId(m.side, t)}`;
+  return set.id;
+}
+
+function stayText(m: Model, st: ClippedStay): string {
+  let t = m.stayTexts.get(st);
+  if (t === undefined) {
+    t = `${JSON.stringify(st.fieldId)},${st.fromMs},${st.toMs},${st.floor && st.floor.length ? JSON.stringify(st.floor) : ''};`;
+    m.stayTexts.set(st, t);
+  }
+  return t;
+}
+
+function fieldAppsText(m: Model, fieldId: string): string {
+  let t = m.fieldAppTexts.get(fieldId);
+  if (t === undefined) {
+    t = `${JSON.stringify(fieldId)}:`;
+    for (const app of m.appsByField.get(fieldId) ?? []) t += `${m.appId(app)},`;
+    t = m.side ? `f${internId(m.side, t)};` : `${t};`;
+    m.fieldAppTexts.set(fieldId, t);
+  }
+  return t;
+}
+
 /** One group window's exposure, normalized, computed once per projection. */
 function windowExposure(
   m: Model,
   b: Buckets,
   ctx: ProjectionContext,
-  w: GroupMembership,
+  kw: KeyedWindow,
   reading: SubjectFact | undefined,
   food: Food
 ): Span[] {
-  const key = `${w.groupId}|${w.fromMs}|${w.toMs}|${reading?.speciesId ?? null}|${lactatingOf(reading)}|${food}`;
-  let spans = m.windowSpans.get(key);
-  if (!spans) {
-    spans = normalizeSpans(
-      exposureSpansFast(
-        exposureInputFor(m, ctx, b, reading, clip(m.staysOf('group', w.groupId), w), food),
-        m.exposureCache
-      )
-    );
-    m.windowSpans.set(key, spans);
+  let ws = (kw.set ??= m.windowStays.get(kw.key));
+  if (!ws) {
+    ws = staySet(m, ctx, b, kw.w.groupId, clip(m, m.staysOf('group', kw.w.groupId), kw.w));
+    m.windowStays.set(kw.key, ws);
+    kw.set = ws;
   }
-  return spans;
+  return setExposure(m, b, ctx, ws, reading, food);
 }
 
-function exposureAnimal(
+/** The grazing and haying holds one Area's (or one Area-less block's)
+ *  applications put on it and on its blocks, normalized, in the order the
+ *  keys first get a span. */
+function areaHolds(
   m: Model,
   b: Buckets,
   ctx: ProjectionContext,
-  animalId: string,
-  food: Food
-): Span[] {
-  return memberExposure(m, b, ctx, animalId, b.subjects.get(subjectRef('animal', animalId)), food);
+  key: SubjectKey,
+  apps: readonly GrazingApplication[],
+  grazed: boolean,
+  registryMax: number
+): { k: SubjectKey; kind: HoldKind; spans: Span[] }[] {
+  const side = m.side;
+  const look = Math.max(GRAZING_LOOKBACK_DAYS, registryMax);
+  const found = new Map<string, { k: SubjectKey; kind: HoldKind; spans: Span[] }>();
+  for (const app of apps) {
+    if (!Number.isFinite(app.appliedAtMs)) continue;
+    const verdictKey = side ? `v${m.env}|${registryMax}|${m.appId(app)}` : '';
+    let pair = side?.area.get(verdictKey);
+    if (!pair) {
+      const base = {
+        applications: [app],
+        attestations: b.attestations,
+        atMs: app.appliedAtMs,
+        timeZone: ctx.timeZone,
+        registryMaxIntervalDays: registryMax
+      };
+      pair = [evaluateGrazing({ ...base, subject: STRICTEST_SUBJECT }), evaluateHayCut(base)];
+      if (side) remember(side.area, verdictKey, pair);
+    }
+    const verdicts = [
+      ['graze', pair[0]],
+      ['hay', pair[1]]
+    ] as const;
+    const blockKey = `block:${app.blockId}`;
+    // A block in no Area holds no grazing: animals are only ever moved
+    // onto Areas, so no gate could read it (review round 5).
+    for (const [kind, verdict] of verdicts) {
+      const keys =
+        kind === 'hay'
+          ? grazed && key !== blockKey
+            ? [key, blockKey]
+            : [blockKey]
+          : grazed && key !== blockKey
+            ? [key]
+            : [];
+      if (keys.length === 0) continue;
+      for (const f of verdict.findings) {
+        if (f.ref !== app.ref) continue;
+        let span: Span | null;
+        if (f.days !== null) {
+          span =
+            f.clearsAtMs !== null && f.clearsAtMs > app.appliedAtMs && f.days > 0
+              ? { fromMs: app.appliedAtMs, toMs: f.clearsAtMs, basis: 'known' }
+              : null;
+        } else {
+          span = {
+            fromMs: app.appliedAtMs,
+            toMs: app.appliedAtMs + look * DAY_MS + 1,
+            basis: f.reason === 'GRAZING_PROHIBITED' ? 'prohibited' : 'unknown'
+          };
+        }
+        if (!span) continue;
+        for (const k of keys) {
+          const id = holdMapKey(k, kind);
+          const entry = found.get(id);
+          if (entry) entry.spans.push(span);
+          else found.set(id, { k, kind, spans: [span] });
+        }
+      }
+    }
+  }
+  const out: { k: SubjectKey; kind: HoldKind; spans: Span[] }[] = [];
+  for (const entry of found.values()) {
+    const spans = normalizeSpans(entry.spans);
+    out.push({ k: entry.k, kind: entry.kind, spans: side ? keptSpans(side, spans) : spans });
+  }
+  return out;
 }
 
 /**
@@ -859,59 +2003,126 @@ export function projectHolds(
   ctx: ProjectionContext
 ): HoldProjection {
   const b = bucket(facts, nowMs);
-  const m = model(b, nowMs);
-  const clears = verdictsFor(b.doses, ctx);
-  const raw = new Map<string, (readonly Span[])[]>();
+  const m = model(b, nowMs, ctx);
+  const { clears, doseIds } = verdictsFor(b.doses, ctx, m.side);
+  m.doseIds = doseIds;
+  // Chunks per hold key, in the order keys first get a span (the order
+  // of `holds`), with each subject's keys held in its own slots.
+  type Entry = { k: string; chunks: (readonly Span[])[]; spans?: Span[] };
+  const order: Entry[] = [];
+  let slots: Partial<Record<HoldKind, Entry>> = {};
+  let slotsKey = '';
+  const areaSlots = new Map<string, typeof slots>();
   const add = (key: SubjectKey, kind: HoldKind, spans: readonly Span[]) => {
     if (spans.length === 0) return;
-    const k = holdMapKey(key, kind);
-    const list = raw.get(k);
-    if (list) list.push(spans);
-    else raw.set(k, [spans]);
+    if (key !== slotsKey) {
+      slots = areaSlots.get(key) ?? {};
+      areaSlots.set(key, slots);
+      slotsKey = key;
+    }
+    const entry = slots[kind];
+    if (entry) entry.chunks.push(spans);
+    else {
+      const created = { k: holdMapKey(key, kind), chunks: [spans] };
+      slots[kind] = created;
+      order.push(created);
+    }
+  };
+
+  const withdrawalOf = (animalId: string, food: Food): Span[][] => {
+    const plan = animalPlan(m, animalId);
+    return (plan.withdrawal[food] ??= withdrawalAnimal(m, ctx, clears, animalId, food));
   };
 
   for (const s of b.subjects.values()) {
     const key = subjectRef(s.subjectType, s.id);
-    for (const food of FOODS) {
-      if (s.subjectType === 'animal') {
-        for (const chunk of withdrawalAnimal(m, b, ctx, clears, s.id, food)) add(key, food, chunk);
-        const exposed = exposureAnimal(m, b, ctx, s.id, food);
-        add(key, food === 'meat' ? 'preSlaughter' : food, exposed);
-        continue;
+    if (s.subjectType === 'animal') {
+      const plan = animalPlan(m, s.id);
+      for (const food of FOODS) {
+        for (const chunk of withdrawalOf(s.id, food)) add(key, food, chunk);
+        add(key, food === 'meat' ? 'preSlaughter' : food, memberExposure(m, b, ctx, plan, s, food));
       }
-      const lineage = m.lineage(s.id);
-      const members = m.membersEver(s.id).map((animalId) => ({
+      continue;
+    }
+    const lineage = m.lineage(s.id);
+    const groupTreatments = groupDoses(m, s.id, lineage);
+    const groupText = `group:${JSON.stringify(s.id)}:${windowsText(lineage)}`;
+    const groupTreatmentsText = dosesText(m, groupTreatments);
+    const members: { animalId: string; windows: GroupMembership[]; windowsKey: string }[] = [];
+    for (const animalId of m.membersEver(s.id)) {
+      const windows = m
+        .memberships(animalId)
+        .filter((w) => w.groupId === s.id)
+        .map(physicalWindow);
+      if (windows.length === 0) continue;
+      members.push({
         animalId,
-        memberships: m.memberships(animalId)
-      }));
-      add(
-        key,
+        windows,
+        windowsKey: windows.map((x) => `${x.fromMs},${x.toMs}`).join(';')
+      });
+    }
+    let gs: StaySet | null = null;
+    for (const food of FOODS) {
+      // The group's own and lineage treatments, then (for eggs and milk)
+      // each member's withdrawal while it was in this group: the reach
+      // rules of `treatmentHoldSpans` for a group, with each member's
+      // spans taken from its own (shared) withdrawal projection.
+      const own = holdSpansCached(
+        m,
         food,
-        treatmentHoldSpans(
-          {
-            subject: { type: 'group', id: s.id, lineage, members },
-            food,
-            treatments: groupDoses(m, s.id, lineage, members),
-            plugins: ctx.plugins,
-            timeZone: ctx.timeZone
-          },
-          clears
-        )
+        () => ({
+          subject: { type: 'group', id: s.id, lineage, members: [] },
+          food,
+          treatments: groupTreatments,
+          plugins: ctx.plugins,
+          timeZone: ctx.timeZone
+        }),
+        clears,
+        groupText,
+        groupTreatmentsText
       );
+      if (food === 'meat') add(key, food, own);
+      else {
+        // Members in this group over the same windows share one union of
+        // their withdrawal, cut to those windows once.
+        const byWindows = new Map<
+          string,
+          { windows: GroupMembership[]; shared: Span[][]; raw: Span[] }
+        >();
+        for (const member of members) {
+          const w = withdrawalOf(member.animalId, food);
+          let entry = byWindows.get(member.windowsKey);
+          if (!entry) {
+            entry = { windows: member.windows, shared: [], raw: [] };
+            byWindows.set(member.windowsKey, entry);
+          }
+          for (const chunk of w) {
+            if (chunk.length === 0) continue;
+            if (NORMALIZED.has(chunk)) {
+              if (!entry.shared.includes(chunk)) entry.shared.push(chunk);
+            } else for (const sp of chunk) entry.raw.push(sp);
+          }
+        }
+        const chunks: Span[][] = [own];
+        byWindows.forEach((entry, windowsKey) => {
+          if (entry.shared.length === 0 && entry.raw.length === 0) return;
+          if (entry.raw.length) entry.shared.push(entry.raw);
+          chunks.push(cutTo(m, mergeChunks(entry.shared, m.mergeMemo), entry.windows, windowsKey));
+        });
+        add(key, food, chunks.length === 1 ? own : mergeChunks(chunks, m.mergeMemo));
+      }
       if (m.appsByField.size === 0) continue;
-      const own = clip(m.staysOf('group', s.id), ALL);
-      for (const l of lineage) own.push(...clip(m.staysOf('group', l.groupId), l));
-      const groupSpans = exposureSpansFast(
-        exposureInputFor(m, ctx, b, s, own, food),
-        m.exposureCache
-      );
+      if (!gs) {
+        const stays = clip(m, m.staysOf('group', s.id), ALL);
+        for (const l of lineage) stays.push(...clip(m, m.staysOf('group', l.groupId), l));
+        gs = staySet(m, ctx, b, s.id, stays);
+      }
+      const groupSpans = setExposure(m, b, ctx, gs, s, food);
       add(key, food === 'meat' ? 'preSlaughter' : food, groupSpans);
       if (food === 'meat') continue;
       for (const member of members) {
-        const windows = member.memberships.filter((w) => w.groupId === s.id).map(physicalWindow);
-        if (windows.length === 0) continue;
-        const spans = memberExposure(m, b, ctx, member.animalId, s, food, s.id);
-        add(key, food, intersect(spans, windows));
+        const spans = memberExposure(m, b, ctx, animalPlan(m, member.animalId), s, food, s.id);
+        if (spans.length > 0) add(key, food, intersect(spans, member.windows));
       }
     }
   }
@@ -923,107 +2134,94 @@ export function projectHolds(
     list.push(a);
     areaApps.set(key, list);
   }
+  const side = m.side;
   for (const [key, apps] of areaApps) {
     const grazed = grazedArea(b, key);
     let registryMax = ctx.registryMaxIntervalDays;
     for (const a of apps) {
-      const d = applicationIntervalDays(a, b.attestations);
+      const d = intervalDays(m, b, a);
       if (d > registryMax) registryMax = d;
     }
-    const look = Math.max(GRAZING_LOOKBACK_DAYS, registryMax);
-    for (const app of apps) {
-      if (!Number.isFinite(app.appliedAtMs)) continue;
-      const base = {
-        applications: [app],
-        attestations: b.attestations,
-        atMs: app.appliedAtMs,
-        timeZone: ctx.timeZone,
-        registryMaxIntervalDays: registryMax
-      };
-      const verdicts = [
-        ['graze', evaluateGrazing({ ...base, subject: STRICTEST_SUBJECT })],
-        ['hay', evaluateHayCut(base)]
-      ] as const;
-      const blockKey = `block:${app.blockId}`;
-      // A block in no Area holds no grazing: animals are only ever moved
-      // onto Areas, so no gate could read it (review round 5).
-      for (const [kind, verdict] of verdicts) {
-        const keys =
-          kind === 'hay'
-            ? grazed && key !== blockKey
-              ? [key, blockKey]
-              : [blockKey]
-            : grazed && key !== blockKey
-              ? [key]
-              : [];
-        if (keys.length === 0) continue;
-        for (const f of verdict.findings) {
-          if (f.ref !== app.ref) continue;
-          let span: Span | null;
-          if (f.days !== null) {
-            span =
-              f.clearsAtMs !== null && f.clearsAtMs > app.appliedAtMs && f.days > 0
-                ? { fromMs: app.appliedAtMs, toMs: f.clearsAtMs, basis: 'known' }
-                : null;
-          } else {
-            span = {
-              fromMs: app.appliedAtMs,
-              toMs: app.appliedAtMs + look * DAY_MS + 1,
-              basis: f.reason === 'GRAZING_PROHIBITED' ? 'prohibited' : 'unknown'
-            };
-          }
-          if (span) for (const k of keys) add(k, kind, [span]);
-        }
+    // An Area's grazing and haying holds depend only on its applications,
+    // whether it is grazing land, the registry maximum and `env`.
+    let groupKey = '';
+    if (side) {
+      groupKey = `g${m.env}|${registryMax}|${grazed}|${JSON.stringify(key)}|`;
+      for (const app of apps) groupKey += `${m.appId(app)},`;
+      const kept = side.areaHolds.get(groupKey);
+      if (kept) {
+        for (const o of kept) add(o.k, o.kind, o.spans);
+        continue;
       }
     }
+    const made = areaHolds(m, b, ctx, key, apps, grazed, registryMax);
+    if (side) remember(side.areaHolds, groupKey, made);
+    for (const o of made) add(o.k, o.kind, o.spans);
   }
 
   const holds = new Map<string, Span[]>();
-  for (const [k, chunks] of raw) {
-    const only = chunks.length === 1 ? chunks[0] : null;
-    const n = only && NORMALIZED.has(only) ? (only as Span[]) : normalizeSpans(chunks.flat());
-    if (n.length) holds.set(k, n);
+  for (const entry of order) {
+    const n = mergeChunks(entry.chunks, m.mergeMemo);
+    if (n.length) {
+      holds.set(entry.k, n);
+      entry.spans = n;
+    }
   }
 
   const covered = new Map<string, HoldBasis>();
-  const coverAt = (id: string, keys: readonly string[], atMs: number) => {
-    let basis: HoldBasis | null = null;
-    for (const k of keys) {
-      const hit = spansContain(holds.get(k) ?? [], atMs);
-      if (hit) basis = basis === null ? hit : stronger(basis, hit);
+  // Each subject's merged holds by kind, looked up without building keys.
+  const subjectHolds = new Map<string, Map<string, Partial<Record<HoldKind, Span[]>>>>();
+  for (const s of b.subjects.values()) {
+    const slotsOf = areaSlots.get(subjectRef(s.subjectType, s.id));
+    if (!slotsOf) continue;
+    let byId = subjectHolds.get(s.subjectType);
+    if (!byId) {
+      byId = new Map();
+      subjectHolds.set(s.subjectType, byId);
     }
-    if (basis) covered.set(id, basis);
+    const kinds: Partial<Record<HoldKind, Span[]>> = {};
+    for (const kind of HOLD_KINDS) {
+      const entry = slotsOf[kind];
+      if (entry?.spans) kinds[kind] = entry.spans;
+    }
+    byId.set(s.id, kinds);
+  }
+  const heldOn = (type: string, id: string, kind: HoldKind, atMs: number): HoldBasis | null => {
+    const spans = subjectHolds.get(type)?.get(id)?.[kind];
+    return spans ? containsSorted(spans, atMs) : null;
   };
   for (const p of b.production) {
     if (!p.declaredUse || p.food === 'meat') continue;
-    const key = subjectRef(p.subjectType, p.subjectId);
-    coverAt(`log:${p.id}`, [holdMapKey(key, p.food)], p.occurredAtMs);
+    const hit = heldOn(p.subjectType, p.subjectId, p.food, p.occurredAtMs);
+    if (hit) covered.set(`log:${p.id}`, hit);
   }
   for (const s of b.status) {
     if (!s.declaresMeat) continue;
-    const key = subjectRef(s.subjectType, s.subjectId);
-    coverAt(
-      `meat:${s.id}`,
-      [holdMapKey(key, 'meat'), holdMapKey(key, 'preSlaughter')],
-      s.occurredAtMs
-    );
+    const meat = heldOn(s.subjectType, s.subjectId, 'meat', s.occurredAtMs);
+    const pre = heldOn(s.subjectType, s.subjectId, 'preSlaughter', s.occurredAtMs);
+    const basis = meat && pre ? stronger(meat, pre) : (meat ?? pre);
+    if (basis) covered.set(`meat:${s.id}`, basis);
   }
   for (const h of b.hay) {
-    const keys = hayKeysOfBlock(b.fieldOfBlock.get(h.blockId), h.blockId).map((k) =>
-      holdMapKey(k, 'hay')
-    );
     const mow = h.datesMs[0];
-    if (mow !== undefined) coverAt(`${h.source ?? 'hay'}:${h.id}`, keys, mow);
-  }
-  for (const s of b.stays) {
-    const spans = holds.get(holdMapKey(`area:${s.fieldId}`, 'graze')) ?? [];
-    const to = s.toMs ?? nowMs;
+    if (mow === undefined) continue;
     let basis: HoldBasis | null = null;
-    for (const sp of spans) {
-      if (Math.max(sp.fromMs, s.fromMs) < Math.min(sp.toMs, to)) {
-        basis = basis === null ? sp.basis : stronger(basis, sp.basis);
-      }
+    for (const k of hayKeysOfBlock(b.fieldOfBlock.get(h.blockId), h.blockId)) {
+      const spans = holds.get(holdMapKey(k, 'hay'));
+      const hit = spans ? containsSorted(spans, mow) : null;
+      if (hit) basis = basis === null ? hit : stronger(basis, hit);
     }
+    if (basis) covered.set(`${h.source ?? 'hay'}:${h.id}`, basis);
+  }
+  const grazeOf = new Map<string, Span[] | undefined>();
+  for (const s of b.stays) {
+    let spans = grazeOf.get(s.fieldId);
+    if (!grazeOf.has(s.fieldId)) {
+      spans = holds.get(holdMapKey(`area:${s.fieldId}`, 'graze'));
+      grazeOf.set(s.fieldId, spans);
+    }
+    if (!spans) continue;
+    const basis = overlapsSorted(spans, s.fromMs, s.toMs ?? nowMs);
     if (basis) covered.set(`stay:${s.id}`, basis);
   }
   return { holds, covered, blocks: new Set(b.fieldOfBlock.keys()) };
@@ -1075,6 +2273,9 @@ export function shortenings(
   for (const [k, spans] of before.holds) {
     if (blockDeleted(k, before, after)) continue;
     const next = after.holds.get(k) ?? [];
+    // The same normalized list on both sides (a kept projection result)
+    // loses nothing.
+    if (next === spans && sortedDisjoint(spans)) continue;
     let lost = subtractSpans(spans, next);
     if (opts.resolvesUnknown) lost = lost.filter((s) => s.basis !== 'unknown');
     if (lost.length === 0) continue;

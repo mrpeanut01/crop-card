@@ -255,10 +255,11 @@ export function setProductionUse(
   });
 }
 
-/** Deletes a log. A locked one leaves a tombstone. */
+/** Deletes a log. A locked one leaves a tombstone. An owner void (32G
+ *  G4-05) marks its tombstone `voided`, so the log stops counting as covered. */
 export function deleteProductionLog(
   log: AnimalProductionLog,
-  opts: { by: string | null; reason: string | null; tombstone: boolean }
+  opts: { by: string | null; reason: string | null; tombstone: boolean; voided?: boolean }
 ): boolean {
   return db.transaction(() => {
     const removed =
@@ -267,7 +268,11 @@ export function deleteProductionLog(
         .where(withTenant(animalProductionLogs, eq(animalProductionLogs.id, log.id)))
         .run().changes > 0;
     if (removed && opts.tombstone) {
-      writeAudit(log, { by: opts.by, reason: opts.reason, snapshot: { action: 'delete', log } });
+      writeAudit(log, {
+        by: opts.by,
+        reason: opts.reason,
+        snapshot: opts.voided ? { action: 'delete', voided: true, log } : { action: 'delete', log }
+      });
     }
     return removed;
   });
@@ -284,7 +289,8 @@ export function listAllProductionLogs(): AnimalProductionLog[] {
 }
 
 /** Deleted production logs on the farm (their tombstones), for the hold
- *  ledger: a food or sale log a hold covered stays covered (C-06, C-35). */
+ *  ledger: a food or sale log a hold covered stays covered (C-06, C-35).
+ *  An owner void drops out (32G G4-05). */
 export function listDeletedProductionLogs(): AnimalProductionLog[] {
   const out: AnimalProductionLog[] = [];
   for (const row of db
@@ -298,9 +304,29 @@ export function listDeletedProductionLogs(): AnimalProductionLog[] {
     } catch {
       continue;
     }
-    const s = snap as { action?: string; log?: AnimalProductionLog } | null;
+    const s = snap as { action?: string; voided?: boolean; log?: AnimalProductionLog } | null;
     if (!s || s.action !== 'delete' || !s.log || typeof s.log.occurredAt !== 'number') continue;
+    if (s.voided === true) continue;
     out.push(s.log);
+  }
+  return out;
+}
+
+/** Production logs the owner voided (32G G4-15), for the subject's
+ *  "Owner-corrected" list. */
+export function listVoidedProductionLogs(): AnimalProductionLog[] {
+  const out: AnimalProductionLog[] = [];
+  for (const row of db
+    .select()
+    .from(recordDeletions)
+    .where(withTenant(recordDeletions, eq(recordDeletions.recordKind, 'animal-production')))
+    .all()) {
+    try {
+      const s = JSON.parse(row.snapshotJson) as { voided?: boolean; log?: AnimalProductionLog };
+      if (s?.voided === true && s.log) out.push(s.log);
+    } catch {
+      continue;
+    }
   }
   return out;
 }

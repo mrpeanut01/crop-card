@@ -745,7 +745,11 @@ export function statusEventsWithLocks(
 export function undoStatus(
   eventId: string,
   now = Date.now(),
-  by: string | null = null
+  by: string | null = null,
+  /** An owner void (32G G4-07): the tombstone is marked voided, and like
+   *  the other voids it is not stopped by the 48-hour lock (the void route
+   *  already limits it to 48 hours after the entry was saved). */
+  voided: { reason: string } | null = null
 ): { removed: AnimalStatusEvent } {
   const event = getStatusEvent(eventId);
   if (!event) throw new AnimalRuleError('NOT_FOUND', 404, 'Status change not found.');
@@ -762,7 +766,7 @@ export function undoStatus(
     subjectFoodProducing(event.subjectType, event.subjectId),
     now
   );
-  if (locked !== undefined) {
+  if (locked !== undefined && !voided) {
     throw new AnimalRuleError(
       'RECORD_LOCKED',
       409,
@@ -770,6 +774,7 @@ export function undoStatus(
     );
   }
 
+  const tombstoneOpts = voided ? { voided: true, reason: voided.reason } : {};
   return db.transaction(() => {
     if (event.subjectType === 'group') {
       const group = getAnimalGroup(event.subjectId);
@@ -782,7 +787,7 @@ export function undoStatus(
           'Removing this change would leave the group with fewer than zero animals.'
         );
       }
-      deleteStatusEvent(event.id, by);
+      deleteStatusEvent(event.id, by, tombstoneOpts);
       setGroupHeadCount(group.id, next, now);
       return { removed: event };
     }
@@ -791,7 +796,7 @@ export function undoStatus(
     if (animal.status === 'archived') {
       throw new AnimalRuleError('NOT_ACTIVE', 409, 'This animal is archived. Restore it first.');
     }
-    deleteStatusEvent(event.id, by);
+    deleteStatusEvent(event.id, by, tombstoneOpts);
     const prior = history.at(-2);
     const subject: Subject = { subjectType: 'animal', subjectId: animal.id };
     if (prior && prior.status !== 'active') {

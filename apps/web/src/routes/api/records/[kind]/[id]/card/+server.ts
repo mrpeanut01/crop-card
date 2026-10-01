@@ -11,6 +11,11 @@ import {
   buildRecordCards,
   isRecordKind
 } from '$lib/server/recordCards';
+import { recordedAtOf } from '$lib/db/holdParams';
+import { canVoidHolds, voidableUntilMs } from '$lib/server/holdVoid';
+
+const VOIDABLE_KINDS = ['spray', 'insecticide', 'fungicide'] as const;
+type VoidableKind = (typeof VOIDABLE_KINDS)[number];
 
 export const GET: RequestHandler = async (event) => {
   const user = requireUser(event);
@@ -25,7 +30,17 @@ export const GET: RequestHandler = async (event) => {
   else if (isRecordKind(kind)) result = await buildRecordCards(kind, id, opts);
   else throw error(404, 'No such record');
   if (!result) throw error(404, 'No such record');
-  return json(result, {
-    headers: { 'cache-control': 'private, no-store', vary: 'Cookie, Authorization' }
-  });
+  const voidKind = (VOIDABLE_KINDS as readonly string[]).includes(kind)
+    ? (kind as VoidableKind)
+    : null;
+  return json(
+    {
+      ...result,
+      voidableUntilMs: voidKind ? voidableUntilMs(recordedAtOf(voidKind, id)) : null,
+      canVoidHolds: canVoidHolds(event, user)
+    },
+    {
+      headers: { 'cache-control': 'private, no-store', vary: 'Cookie, Authorization' }
+    }
+  );
 };

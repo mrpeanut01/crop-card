@@ -613,10 +613,12 @@ describe('C-35 P1/P3/P4 through guardedHoldWrite', () => {
       }),
       {
         numRuns: 120,
-        // An attestation needs a spray before it in the same run, and a
-        // withdrawal entry needs a dose before it, which random sequences
-        // reach only a handful of times; these examples make the coverage
-        // check below independent of the seed.
+        // An attestation needs a spray before it in the same run, a
+        // withdrawal entry needs a dose before it, a join needs the hen to
+        // have left first, and a refused shortening needs a running hold
+        // deleted without a void, which random sequences reach only a
+        // handful of times; these examples make the coverage check below
+        // independent of the seed.
         examples: [
           [
             [
@@ -634,6 +636,18 @@ describe('C-35 P1/P3/P4 through guardedHoldWrite', () => {
                 op: { t: 'entry', pick: 0, back: 0, food: 'eggs', days: 40, end: false },
                 tier: 'owner'
               }
+            ]
+          ],
+          [
+            [
+              { op: { t: 'leave', back: 2 * DAY, field: 1 }, tier: 'owner' },
+              { op: { t: 'join', back: DAY }, tier: 'owner' }
+            ]
+          ],
+          [
+            [
+              { op: { t: 'spray', back: 2 * DAY, known: true, block: 0 }, tier: 'owner' },
+              { op: { t: 'deleteSpray', pick: 0, neverApplied: true }, tier: 'owner' }
             ]
           ]
         ]
@@ -715,7 +729,13 @@ describe('C-35 P1/P3/P4 through guardedHoldWrite', () => {
           });
         }
       ),
-      { numRuns: 40 }
+      {
+        numRuns: 40,
+        // Only an owner voiding a spray whose grazing hold is still running
+        // shortens anything, and a seed can draw 40 runs with none; this
+        // example keeps the voided check below independent of the seed.
+        examples: [[[DAY], 0, 'owner']]
+      }
     );
     expect(voided).toBeGreaterThan(0);
   }, 300_000);

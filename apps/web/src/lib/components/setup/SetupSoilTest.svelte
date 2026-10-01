@@ -17,6 +17,7 @@
     type SetupSoilTestResult,
     type SoilTestPlace
   } from '$lib/fertility/soilTestForm';
+  import DocumentAttach from '$lib/components/documents/DocumentAttach.svelte';
 
   interface Props {
     places: SoilTestPlace[];
@@ -61,6 +62,7 @@
     mg: null
   });
   let ratings = $state<Record<RatedNutrient, LabRating | ''>>({ p: '', k: '', ca: '', mg: '' });
+  let documentId = $state<string | null>(null);
   let saving = $state(false);
   let error = $state<string | null>(null);
 
@@ -89,13 +91,16 @@
       const res = await fetch('/api/fertility/soil-tests', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(built.body)
+        body: JSON.stringify(documentId ? { ...built.body, documentId } : built.body)
       });
       if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { code?: string; error?: string };
         error =
           res.status === 403
             ? 'Only the owner can add a soil test.'
-            : "We couldn't save this soil test. Check the numbers and try again.";
+            : res.status === 409 && body.error
+              ? body.error
+              : "We couldn't save this soil test. Check the numbers and try again.";
         return;
       }
       const out = (await res.json()) as { soilTest: { id: string; blockId: string } };
@@ -225,6 +230,22 @@
         bind:value={organicMatterPct}
       />
     </label>
+
+    <fieldset>
+      <legend>Lab report <span class="optional">(optional)</span></legend>
+      <p class="help">Attach the PDF or a photo of the report so you can find it later.</p>
+      <DocumentAttach
+        {documentId}
+        kind="lab-report"
+        {canEdit}
+        onchange={(id) => {
+          documentId = id;
+        }}
+        ondelete={(id) => {
+          if (documentId === id) documentId = null;
+        }}
+      />
+    </fieldset>
 
     {#if error}<p class="error" role="alert">{error}</p>{/if}
 

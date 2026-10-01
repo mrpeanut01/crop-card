@@ -76,3 +76,64 @@ describe('buildSoilTestCard', () => {
     expect(buildSoilTestCards(sampleGearSnapshot({ soilTests: undefined }))).toEqual([]);
   });
 });
+
+describe('soil test lab report (A-38)', () => {
+  it('says the report is attached and links to it for when online', () => {
+    const snap = sampleGearSnapshot({
+      soilTests: [
+        { ...SAMPLE_SOIL_TEST, labReport: { documentId: 'doc 1', title: 'VT report', deletedAt: null } }
+      ]
+    });
+    const card = buildSoilTestCard(snap, 'soil_hay')!;
+    expect(card.facts.at(-1)).toEqual({
+      label: 'Lab report',
+      value: 'Attached',
+      printValue: 'On file',
+      provenance: 'manual'
+    });
+    expect(card.links).toEqual([
+      { label: 'Open lab report when online', href: '/api/documents/doc%201/file' }
+    ]);
+  });
+
+  it('says when the report was deleted and offers no link', () => {
+    const snap = sampleGearSnapshot({
+      soilTests: [
+        {
+          ...SAMPLE_SOIL_TEST,
+          labReport: {
+            documentId: 'd',
+            title: 'VT report',
+            deletedAt: Date.parse('2026-06-02T15:00:00Z')
+          }
+        }
+      ]
+    });
+    const card = buildSoilTestCard(snap, 'soil_hay')!;
+    expect(card.facts.at(-1)).toMatchObject({ label: 'Lab report', value: 'Deleted on Jun 2, 2026' });
+    expect(card.links).toBeUndefined();
+  });
+
+  it('shows a typed report link only when it is http or https', () => {
+    const typed = (reportPdfUrl: string) =>
+      buildSoilTestCard(
+        sampleGearSnapshot({ soilTests: [{ ...SAMPLE_SOIL_TEST, reportPdfUrl }] }),
+        'soil_hay'
+      )!;
+    expect(typed('https://lab.example/report.pdf').links).toEqual([
+      {
+        label: 'Lab report link (typed by hand)',
+        href: 'https://lab.example/report.pdf',
+        external: true
+      }
+    ]);
+    expect(typed('javascript:alert(1)').links).toBeUndefined();
+    expect(typed('not a url').links).toBeUndefined();
+  });
+
+  it('has no lab report line when nothing is attached', () => {
+    const card = buildSoilTestCard(sampleGearSnapshot(), 'soil_hay')!;
+    expect(card.facts.some((f) => f.label === 'Lab report')).toBe(false);
+    expect(card.links).toBeUndefined();
+  });
+});

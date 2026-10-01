@@ -16,7 +16,8 @@
     FileDown,
     Bell,
     Heart,
-    Wallet
+    Wallet,
+    FolderOpen
   } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
@@ -109,6 +110,13 @@
       icon: FileText,
       label: 'Records & retention',
       sub: 'VDACS audit tier · 2-year hold · bulk exports',
+      ownerOnly: true
+    },
+    {
+      href: '/settings/documents',
+      icon: FolderOpen,
+      label: 'Documents',
+      sub: 'Lab reports · certificates · labels · receipts · storage used',
       ownerOnly: true
     },
     {

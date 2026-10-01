@@ -9,6 +9,7 @@ import {
 } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import {
+  PLANS,
   resolvePlanFrom,
   starterBoostWindowOpen,
   type PlanId,
@@ -128,6 +129,11 @@ export function resolvePlan(ownerId: string, now = Date.now()): ResolvedPlan {
     boostEligible: starterBoostEligible(ownerId, owner, now),
     now
   });
+}
+
+/** The farm's document vault cap in bytes, from its current plan. */
+export function storageCapBytes(ownerId: string, now = Date.now()): number {
+  return PLANS[resolvePlan(ownerId, now).plan].storageBytes;
 }
 
 export interface SeatUsage {

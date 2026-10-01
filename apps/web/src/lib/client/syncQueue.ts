@@ -117,12 +117,22 @@ export function kindOf(rec: Pick<PendingSprayRecord, 'kind'>): PendingRecordKind
   return rec.kind ?? 'herbicide';
 }
 
-/** #316 — resolve the replay endpoint for a row, defaulting a missing/
- *  unknown kind to the herbicide endpoint (matches the pre-v3 shape). */
+/** Shown on a queued row whose kind this build does not route (A-10). */
+export const UNSENDABLE_KIND_NOTE = "This app version can't send this record yet.";
+
+function isRoutedKind(kind: string): kind is PendingRecordKind {
+  return Object.hasOwn(ENDPOINT_BY_KIND, kind);
+}
+
+/** #316 — resolve the replay endpoint for a row. A row with no `kind` predates
+ *  v3 and was a herbicide spray. A row whose kind this build does not route
+ *  gets null and is never posted (A-10): it must not replay to the wrong
+ *  endpoint. */
 export function endpointForRecord(
   rec: Pick<PendingSprayRecord, 'kind'> & { payload?: unknown }
-): string {
+): string | null {
   const kind = kindOf(rec);
+  if (!isRoutedKind(kind)) return null;
   if (kind === 'feed-use') {
     const id = (rec.payload as { stockItemId?: unknown } | null | undefined)?.stockItemId;
     const safe = typeof id === 'string' && STOCK_ID_PATTERN.test(id) ? id : '_';
@@ -133,7 +143,7 @@ export function endpointForRecord(
     const safe = typeof id === 'string' && STOCK_ID_PATTERN.test(id) ? id : '_';
     return `/api/seed-starts/${safe}/progress`;
   }
-  return ENDPOINT_BY_KIND[kind] ?? ENDPOINT_BY_KIND.herbicide;
+  return ENDPOINT_BY_KIND[kind];
 }
 
 /** The body a row replays with. `feed-use` carries its stock item and
@@ -431,10 +441,10 @@ type SubmitOutcome =
       rejectInfo?: RejectInfo;
     };
 
-async function submitOne(rec: PendingSprayRecord): Promise<SubmitOutcome> {
+async function submitOne(rec: PendingSprayRecord, endpoint: string): Promise<SubmitOutcome> {
   let res: Response;
   try {
-    res = await fetch(endpointForRecord(rec), {
+    res = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -534,7 +544,17 @@ async function drainOnce(): Promise<DrainResult> {
       result.heldBehindRejected.push(rec.id);
       continue;
     }
-    const outcome = await submitOne(rec);
+    const endpoint = endpointForRecord(rec);
+    if (endpoint === null) {
+      // A-10: kept, never posted, until an app version that routes it loads.
+      await db().pendingSprayRecords.update(rec.id, {
+        lastErrorAt: Date.now(),
+        lastError: UNSENDABLE_KIND_NOTE
+      });
+      result.failed.push({ id: rec.id, error: UNSENDABLE_KIND_NOTE });
+      continue;
+    }
+    const outcome = await submitOne(rec, endpoint);
     if (outcome.ok) {
       await db().pendingSprayRecords.delete(rec.id);
       result.succeeded.push(rec.id);

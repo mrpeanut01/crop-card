@@ -5,7 +5,9 @@ import {
   insertFlagChange,
   listFlagChanges,
   setAnimalFlag,
+  getAnimalPhoto,
   setAnimalPhoto,
+  setAnimalPhotoDocument,
   updateAnimal,
   type FlagChange
 } from '$lib/db/animals';
@@ -20,6 +22,12 @@ import { presumeLactating } from '$lib/safety/grazingInterval';
 import { getSpecies, parseBody, statusEventsWithLocks, tagWarnings } from '$lib/server/animals';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { endCareForSubject } from '$lib/server/carePlans';
+import {
+  animalPhotoTitle,
+  discardPhoto,
+  storePhoto,
+  type StoredPhotoRef
+} from '$lib/server/vault/photoWrite';
 
 const notFound = () => json({ error: 'animal not found' }, { status: 404 });
 
@@ -141,6 +149,15 @@ export const PATCH: RequestHandler = async (event) => {
     }
   }
 
+  const before = photo !== undefined ? getAnimalPhoto(animal.id) : null;
+  const stored: StoredPhotoRef | null = photo
+    ? await storePhoto('animal-photo', photo, {
+        title: animalPhotoTitle(animal),
+        uploadedBy: user.id
+      })
+    : null;
+  const newDocumentId = stored && 'documentId' in stored ? stored.documentId : null;
+
   const flagChanges: FlagChange[] = [];
   const guarded = await tryGuardedHoldWrite(event, user, () => {
     const { photo: _photo, foodProducing, notForSlaughter, flagReason, ...rest } = input;
@@ -168,7 +185,10 @@ export const PATCH: RequestHandler = async (event) => {
       );
       if (change) flagChanges.push(change);
     }
-    if (photo !== undefined) setAnimalPhoto(animal.id, photo);
+    if (newDocumentId) setAnimalPhotoDocument(animal.id, newDocumentId);
+    else if (photo !== undefined) {
+      setAnimalPhoto(animal.id, stored && 'inline' in stored ? stored.inline : null);
+    }
     if (lactatingBefore !== lactatingAfter) {
       flagChanges.push(
         insertFlagChange({
@@ -183,7 +203,13 @@ export const PATCH: RequestHandler = async (event) => {
       );
     }
   });
-  if (!guarded.ok) return guarded.response;
+  if (!guarded.ok) {
+    await discardPhoto(newDocumentId, user.id);
+    return guarded.response;
+  }
+  if (before && 'documentId' in before && before.documentId !== newDocumentId) {
+    await discardPhoto(before.documentId, user.id);
+  }
   if (input.status === 'archived') endCareForSubject('animal', animal.id);
 
   return json({
@@ -198,9 +224,13 @@ export const DELETE: RequestHandler = async (event) => {
   const user = requireOwner(event);
   const id = event.params.id;
   if (!id) return notFound();
+  const before = getAnimalPhoto(id);
   const guarded = await tryGuardedHoldWrite(event, user, () => deleteAnimalIfEmpty(id));
   if (!guarded.ok) return guarded.response;
   const outcome = guarded.value;
+  if (outcome === 'deleted' && before && 'documentId' in before) {
+    await discardPhoto(before.documentId, user.id);
+  }
   if (outcome === 'not-found') return notFound();
   if (outcome === 'has-records') {
     return json(

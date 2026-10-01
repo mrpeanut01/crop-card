@@ -1,32 +1,63 @@
 /**
  * Storage a farm uses, computed from the rows that hold it rather than kept
- * as a running counter: planting journal photos and animal photos (both
- * stored inline as JPEG data URLs). The total is cached per Owner in `app_settings` and
+ * as a running counter: planting journal photos and animal photos (the
+ * vault documents plus the inline data URLs not moved yet) and the other
+ * files in the document vault (A-52). The total is cached per Owner in `app_settings` and
  * recomputed nightly by `runDbMaintenance`; `owner_usage_counters.storage_bytes`
  * is never read.
  */
 
-import { sql } from 'drizzle-orm';
+import { isNull, sql } from 'drizzle-orm';
 import { db } from '$lib/db/client';
-import { animals, owners, plantingJournal } from '$lib/db/schema';
+import { animals, documents, owners, plantingJournal } from '$lib/db/schema';
 import { getSetting, setSetting } from '$lib/db/settings';
 import { runWithTenant, unscopedQueryNote, withTenant } from '$lib/db/tenant';
 
 export const STORAGE_SETTING_KEY = 'storage_usage';
 
 export interface StorageUsage {
+  /** Everything below added up; what /admin/owners shows. */
   bytes: number;
   journalPhotoBytes: number;
   animalPhotoBytes: number;
+  /** Live vault files that are not journal or animal photos. */
+  documentBytes: number;
   computedAt: number;
 }
 
-function usageFrom(journalPhotoBytes: number, animalPhotoBytes: number, now: number): StorageUsage {
+interface Parts {
+  journalPhotoBytes: number;
+  animalPhotoBytes: number;
+  documentBytes: number;
+}
+
+const NO_PARTS: Parts = { journalPhotoBytes: 0, animalPhotoBytes: 0, documentBytes: 0 };
+
+function usageFrom(parts: Parts, now: number): StorageUsage {
   return {
-    bytes: journalPhotoBytes + animalPhotoBytes,
-    journalPhotoBytes,
-    animalPhotoBytes,
+    bytes: parts.journalPhotoBytes + parts.animalPhotoBytes + parts.documentBytes,
+    ...parts,
     computedAt: now
+  };
+}
+
+/** Live vault bytes by kind, split into journal photos, animal photos and
+ *  every other document. */
+function vaultParts(rows: { kind: string; bytes: number }[]): Parts {
+  const parts = { ...NO_PARTS };
+  for (const r of rows) {
+    if (r.kind === 'journal-photo') parts.journalPhotoBytes += r.bytes;
+    else if (r.kind === 'animal-photo') parts.animalPhotoBytes += r.bytes;
+    else parts.documentBytes += r.bytes;
+  }
+  return parts;
+}
+
+function addParts(a: Parts, b: Parts): Parts {
+  return {
+    journalPhotoBytes: a.journalPhotoBytes + b.journalPhotoBytes,
+    animalPhotoBytes: a.animalPhotoBytes + b.animalPhotoBytes,
+    documentBytes: a.documentBytes + b.documentBytes
   };
 }
 
@@ -38,6 +69,7 @@ function parseUsage(raw: string | undefined): StorageUsage | null {
       typeof v.bytes !== 'number' ||
       typeof v.journalPhotoBytes !== 'number' ||
       typeof v.animalPhotoBytes !== 'number' ||
+      typeof v.documentBytes !== 'number' ||
       typeof v.computedAt !== 'number'
     ) {
       return null;
@@ -46,6 +78,7 @@ function parseUsage(raw: string | undefined): StorageUsage | null {
       bytes: v.bytes,
       journalPhotoBytes: v.journalPhotoBytes,
       animalPhotoBytes: v.animalPhotoBytes,
+      documentBytes: v.documentBytes,
       computedAt: v.computedAt
     };
   } catch {
@@ -65,7 +98,21 @@ export function computeStorageUsage(now = Date.now()): StorageUsage {
     .from(animals)
     .where(withTenant(animals))
     .get();
-  return usageFrom(Number(row?.bytes ?? 0), Number(animalRow?.bytes ?? 0), now);
+  const vault = vaultParts(
+    db
+      .select({ kind: documents.kind, bytes: sql<number>`coalesce(sum(${documents.byteSize}), 0)` })
+      .from(documents)
+      .where(withTenant(documents, isNull(documents.deletedAt)))
+      .groupBy(documents.kind)
+      .all()
+      .map((r) => ({ kind: r.kind, bytes: Number(r.bytes) }))
+  );
+  const inline: Parts = {
+    journalPhotoBytes: Number(row?.bytes ?? 0),
+    animalPhotoBytes: Number(animalRow?.bytes ?? 0),
+    documentBytes: 0
+  };
+  return usageFrom(addParts(inline, vault), now);
 }
 
 /** Recomputes and caches the active Owner's total. */
@@ -106,13 +153,33 @@ export function recomputeAllStorageUsage(now = Date.now()): number {
       .all()
       .map((r) => [r.ownerId, Number(r.bytes)] as const)
   );
+  const vaultRows = new Map<string, { kind: string; bytes: number }[]>();
+  for (const r of db
+    .select({
+      ownerId: documents.ownerId,
+      kind: documents.kind,
+      bytes: sql<number>`coalesce(sum(${documents.byteSize}), 0)`
+    })
+    .from(documents)
+    .where(isNull(documents.deletedAt))
+    .groupBy(documents.ownerId, documents.kind)
+    .all()) {
+    const list = vaultRows.get(r.ownerId) ?? [];
+    list.push({ kind: r.kind, bytes: Number(r.bytes) });
+    vaultRows.set(r.ownerId, list);
+  }
   const ownerIds = db
     .select({ id: owners.id })
     .from(owners)
     .all()
     .map((r) => r.id);
   for (const ownerId of ownerIds) {
-    const usage = usageFrom(sums.get(ownerId) ?? 0, animalSums.get(ownerId) ?? 0, now);
+    const inline: Parts = {
+      journalPhotoBytes: sums.get(ownerId) ?? 0,
+      animalPhotoBytes: animalSums.get(ownerId) ?? 0,
+      documentBytes: 0
+    };
+    const usage = usageFrom(addParts(inline, vaultParts(vaultRows.get(ownerId) ?? [])), now);
     runWithTenant(ownerId, () => setSetting(STORAGE_SETTING_KEY, JSON.stringify(usage)));
   }
   return ownerIds.length;

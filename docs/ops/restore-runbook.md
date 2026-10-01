@@ -216,3 +216,41 @@ wrote in between is in its generation, not the new one. Restore that
 generation to a copy (`-generation <old id>`) and re-enter the missing rows
 through the app. Then find why the old one did not release (its log shows
 `fencing writes` and either `released` or `RELEASE_UNVERIFIED`).
+
+## One-off: shrink the database after the photo move (Phase 33A)
+
+Nightly maintenance moves journal and animal photos out of SQLite into the
+document vault. The freed pages are reused for new rows but the file does
+not get smaller on its own (A-49). Shrinking it is a one-off owner step,
+done once the move has finished.
+
+1. Check the move is done: the latest `[db-maintenance]` log line shows
+   `"photosRemaining":0` under `vault` (rows that are not valid JPEGs stay
+   inline and are counted as skipped; they can stay).
+2. Pick a quiet hour (no one recording in the field, no deploy running).
+   `VACUUM` rewrites the whole file, and Litestream ships the rewrite as one
+   full-size WAL, so expect a burst of replica traffic.
+3. Run it from a shell in the app container. `temp_store=FILE` keeps the
+   copy on disk instead of in the 1 GiB container's memory, and the
+   checkpoint afterwards lets the file shrink:
+
+```sh
+az containerapp exec -g cropcard-dev-rg -n cropcard-dev-app --command sh
+# inside the container:
+df -h /data /tmp   # needs free space about the size of /data/cropcard.db
+node -e "
+const db = require('better-sqlite3')('/data/cropcard.db');
+db.pragma('busy_timeout = 30000');
+db.pragma('temp_store = FILE');
+const before = require('fs').statSync('/data/cropcard.db').size;
+db.exec('VACUUM');
+db.pragma('wal_checkpoint(TRUNCATE)');
+console.log('before', before, 'after', require('fs').statSync('/data/cropcard.db').size);
+db.close();
+"
+```
+
+4. Watch the next `[perf]` lines and `/api/health/ready`, and check
+   Litestream is still replicating (`litestream generations` above). If the
+   container restarts during the step, the restore brings back the last
+   replicated state; nothing is lost, the file is simply not smaller yet.

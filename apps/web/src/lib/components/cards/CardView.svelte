@@ -159,7 +159,9 @@
             <div class="fact">
               <dt>{f.label}</dt>
               <dd>
-                <span class="value">{f.value}</span>
+                <span class="value"
+                  >{variant === 'print' && f.printValue ? f.printValue : f.value}</span
+                >
                 {#if f.provenance && variant === 'screen'}
                   <Provenance source={f.provenance} compact />
                 {/if}
@@ -194,7 +196,13 @@
       {#if card.links?.length && variant === 'screen'}
         <div class="links">
           {#each card.links as l (l.href)}
-            <a class="next" href={l.href}>{l.label}</a>
+            {#if l.external}
+              <a class="next" href={l.href} rel="noopener noreferrer nofollow" target="_blank"
+                >{l.label}</a
+              >
+            {:else}
+              <a class="next" href={l.href}>{l.label}</a>
+            {/if}
           {/each}
         </div>
       {/if}

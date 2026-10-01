@@ -1,20 +1,11 @@
-import { error, type RequestHandler } from '@sveltejs/kit';
+import type { RequestHandler } from '@sveltejs/kit';
 import { getJournalPhoto } from '$lib/db/plantingJournal';
-import { JPEG_DATA_URL_PREFIX, decodeBase64 } from '$lib/journal/photo';
 import { requireUser } from '$lib/server/auth';
+import { photoResponse } from '$lib/server/vault/photoWrite';
 
-/** GET the journal entry's photo as image/jpeg. */
+/** GET the journal entry's photo as image/jpeg, from the vault or, for a
+ *  row not moved yet, from its inline data URL. */
 export const GET: RequestHandler = (event) => {
   requireUser(event);
-  const ref = getJournalPhoto(event.params.id ?? '', event.params.entryId ?? '');
-  if (!ref || !ref.startsWith(JPEG_DATA_URL_PREFIX)) throw error(404, 'photo not found');
-  const bytes = decodeBase64(ref.slice(JPEG_DATA_URL_PREFIX.length));
-  if (!bytes) throw error(404, 'photo not found');
-  return new Response(bytes.buffer as ArrayBuffer, {
-    headers: {
-      'content-type': 'image/jpeg',
-      'cache-control': 'private, max-age=86400',
-      'x-content-type-options': 'nosniff'
-    }
-  });
+  return photoResponse(getJournalPhoto(event.params.id ?? '', event.params.entryId ?? ''));
 };

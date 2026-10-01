@@ -32,6 +32,11 @@ services:
       AUTH_TRUST_HOST: "true"
       AUTH_URL: http://localhost:5173
       AZURE_BLOB_CONTAINER: cropcard-dev
+      # Document vault (Phase 33A) on the persistent /data volume. Azure uses
+      # VAULT_BACKEND=blob; the filesystem backend refuses to run there.
+      VAULT_BACKEND: filesystem
+      VAULT_DIR: /data/vault
+      BODY_SIZE_LIMIT: 21M
       # Set in infra/.env.dev to enable Claude AI fallback for barcode lookup.
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     depends_on:

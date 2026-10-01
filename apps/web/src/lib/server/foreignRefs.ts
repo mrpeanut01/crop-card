@@ -1,18 +1,28 @@
 import { json } from '@sveltejs/kit';
-import { and, eq, inArray } from 'drizzle-orm';
+import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import {
+  amendmentBatches,
   animalGroups,
+  animalHealthEvents,
   animals,
   blocks,
   crops,
   fields,
+  forageTests,
   harvestEvents,
+  hayCuttings,
   helperAssignments,
+  ledgerEntries,
+  organicStatusEvents,
+  soilTests,
   stockLots,
-  type ANIMAL_SUBJECT_TYPES
+  type ANIMAL_SUBJECT_TYPES,
+  type DocumentSubjectType
 } from '$lib/db/schema';
-import { requireOwnerId, withTenant } from '$lib/db/tenant';
+import { documentExists } from '$lib/db/documents';
+import { type TenantScopedTable, requireOwnerId, withTenant } from '$lib/db/tenant';
 import { ASSIGNABLE_ROLES } from '$lib/tasks/assignee';
 
 /**
@@ -169,4 +179,80 @@ export function assertHarvestEvent(field: string, eventId: string | null | undef
         .where(withTenant(harvestEvents, eq(harvestEvents.id, id)))
         .get() !== undefined
   ];
+}
+
+function ownRowExists<T extends TenantScopedTable & { id: AnySQLiteColumn }>(
+  table: T,
+  id: string
+): boolean {
+  return (
+    db
+      .select({ id: table.id })
+      .from(table)
+      .where(withTenant(table, eq(table.id, id)))
+      .get() !== undefined
+  );
+}
+
+function liveLedgerEntryExists(id: string): boolean {
+  return (
+    db
+      .select({ id: ledgerEntries.id })
+      .from(ledgerEntries)
+      .where(
+        withTenant(ledgerEntries, and(eq(ledgerEntries.id, id), isNull(ledgerEntries.deletedAt)))
+      )
+      .get() !== undefined
+  );
+}
+
+const SUBJECT_EXISTS: Record<DocumentSubjectType, (id: string) => boolean> = {
+  'soil-test': (id) => ownRowExists(soilTests, id),
+  'stock-lot': (id) => ownRowExists(stockLots, id),
+  animal: animalExists,
+  'animal-group': animalGroupExists,
+  'animal-health': (id) => ownRowExists(animalHealthEvents, id),
+  field: (id) => ownRowExists(fields, id),
+  block: (id) => ownRowExists(blocks, id),
+  'harvest-event': (id) => ownRowExists(harvestEvents, id),
+  'ledger-entry': liveLedgerEntryExists,
+  'organic-status': (id) => ownRowExists(organicStatusEvents, id),
+  'amendment-batch': (id) => ownRowExists(amendmentBatches, id),
+  'forage-test': (id) => ownRowExists(forageTests, id),
+  farm: (id) => id === requireOwnerId()
+};
+
+/** A live (not deleted) document of this Owner (A-16). */
+export function assertDocument(field: string, documentId: string | null | undefined): ForeignRef {
+  return [field, documentId, documentExists];
+}
+
+/** A document link target of this Owner, matched against its subject type.
+ *  `farm` must name the active Owner. */
+export function assertDocumentSubject(
+  field: string,
+  subjectType: string | null | undefined,
+  subjectId: string | null | undefined
+): ForeignRef {
+  return [
+    field,
+    subjectId,
+    (id) =>
+      subjectType != null &&
+      Object.hasOwn(SUBJECT_EXISTS, subjectType) &&
+      SUBJECT_EXISTS[subjectType as DocumentSubjectType](id)
+  ];
+}
+
+/** A manure, compost or bedding-pack batch of this Owner. */
+export function assertAmendmentBatch(
+  field: string,
+  batchId: string | null | undefined
+): ForeignRef {
+  return [field, batchId, (id) => ownRowExists(amendmentBatches, id)];
+}
+
+/** A hay cutting of this Owner. */
+export function assertHayCutting(field: string, cuttingId: string | null | undefined): ForeignRef {
+  return [field, cuttingId, (id) => ownRowExists(hayCuttings, id)];
 }

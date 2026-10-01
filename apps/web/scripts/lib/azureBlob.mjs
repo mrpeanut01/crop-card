@@ -58,23 +58,28 @@ export function sign(key, toSign) {
 }
 
 /**
+ * Sign and send one request; the caller owns the response body.
  * @param {BlobConfig} cfg
  * @param {string} method
  * @param {string} blobPath path under the container, '' for the container itself
- * @param {{ query?: Record<string, string>, headers?: Record<string, string>, body?: string }} [opts]
- * @returns {Promise<BlobResult>}
+ * @param {{ query?: Record<string, string>, headers?: Record<string, string>, body?: string | Uint8Array, signal?: AbortSignal }} [opts]
+ * @returns {Promise<Response>}
  */
-async function request(cfg, method, blobPath, opts = {}) {
+async function send(cfg, method, blobPath, opts = {}) {
   const query = opts.query ?? {};
   const body = opts.body;
-  const path = `/${cfg.container}${blobPath ? `/${blobPath}` : ''}`;
+  const path = `/${cfg.container}${blobPath ? `/${encodeBlobPath(blobPath)}` : ''}`;
   /** @type {Record<string, string>} */
   const headers = {
     'x-ms-date': new Date().toUTCString(),
     'x-ms-version': API_VERSION,
     ...(opts.headers ?? {})
   };
-  if (body !== undefined) headers['content-length'] = String(Buffer.byteLength(body));
+  if (body !== undefined) {
+    headers['content-length'] = String(
+      typeof body === 'string' ? Buffer.byteLength(body) : body.byteLength
+    );
+  }
   const signature = sign(
     cfg.key,
     stringToSign({ method, account: cfg.account, path, query, headers })
@@ -83,12 +88,33 @@ async function request(cfg, method, blobPath, opts = {}) {
   const qs = new URLSearchParams(query).toString();
   const base = cfg.endpoint ?? `https://${cfg.account}.blob.core.windows.net`;
   const doFetch = cfg.fetchImpl ?? fetch;
-  const res = await doFetch(`${base}${path}${qs ? `?${qs}` : ''}`, {
+  return doFetch(`${base}${path}${qs ? `?${qs}` : ''}`, {
     method,
     headers,
-    body,
-    signal: AbortSignal.timeout(cfg.timeoutMs ?? 10_000)
+    body: /** @type {BodyInit | undefined} */ (body),
+    signal: opts.signal ?? AbortSignal.timeout(cfg.timeoutMs ?? 10_000)
   });
+}
+
+/** Blob names here are plain ASCII path segments; encode each one the same
+ *  way the signature's canonical resource sees it.
+ *  @param {string} p */
+function encodeBlobPath(p) {
+  return p
+    .split('/')
+    .map((seg) => encodeURIComponent(seg))
+    .join('/');
+}
+
+/**
+ * @param {BlobConfig} cfg
+ * @param {string} method
+ * @param {string} blobPath path under the container, '' for the container itself
+ * @param {{ query?: Record<string, string>, headers?: Record<string, string>, body?: string }} [opts]
+ * @returns {Promise<BlobResult>}
+ */
+async function request(cfg, method, blobPath, opts = {}) {
+  const res = await send(cfg, method, blobPath, opts);
   const text = method === 'HEAD' ? null : await res.text();
   return { status: res.status, etag: res.headers.get('etag'), body: text };
 }
@@ -159,4 +185,197 @@ export function configFromEnv(env) {
   const container = env.AZURE_BLOB_CONTAINER;
   if (!account || !key || !container) return null;
   return { account, key, container, endpoint: env.AZURE_BLOB_ENDPOINT || undefined };
+}
+
+// Streaming helpers for the document vault. They never read a whole file
+// into memory: uploads go up in blocks and downloads come back as a stream.
+
+export const BLOCK_BYTES = 4 * 1024 * 1024;
+const BLOCK_TIMEOUT_MS = 60_000;
+const GET_HEADERS_TIMEOUT_MS = 30_000;
+
+/**
+ * Block ids must all have the same length before base64, so pad the index.
+ * @param {number} index
+ */
+export function blockId(index) {
+  return Buffer.from(`block-${String(index).padStart(6, '0')}`).toString('base64');
+}
+
+/** @param {Response} res @param {string} what */
+async function failRes(res, what) {
+  const text = await res.text().catch(() => '');
+  return fail({ status: res.status, etag: null, body: text }, what);
+}
+
+/**
+ * Stage one block of a block blob (Put Block).
+ * @param {BlobConfig} cfg
+ * @param {string} blobPath
+ * @param {string} id base64 block id from `blockId`
+ * @param {Uint8Array} bytes
+ */
+export async function putBlock(cfg, blobPath, id, bytes) {
+  const res = await send(cfg, 'PUT', blobPath, {
+    query: { comp: 'block', blockid: id },
+    body: bytes,
+    signal: AbortSignal.timeout(BLOCK_TIMEOUT_MS)
+  });
+  if (res.status !== 201) throw await failRes(res, `PUT BLOCK ${blobPath}`);
+  await res.body?.cancel();
+}
+
+/**
+ * Commit staged blocks in order (Put Block List).
+ * @param {BlobConfig} cfg
+ * @param {string} blobPath
+ * @param {string[]} ids
+ * @param {string} contentType stored as the blob's Content-Type
+ */
+export async function putBlockList(cfg, blobPath, ids, contentType) {
+  const xml =
+    '<?xml version="1.0" encoding="utf-8"?><BlockList>' +
+    ids.map((id) => `<Latest>${id}</Latest>`).join('') +
+    '</BlockList>';
+  const res = await send(cfg, 'PUT', blobPath, {
+    query: { comp: 'blocklist' },
+    headers: { 'content-type': 'application/xml', 'x-ms-blob-content-type': contentType },
+    body: xml,
+    signal: AbortSignal.timeout(BLOCK_TIMEOUT_MS)
+  });
+  if (res.status !== 201) throw await failRes(res, `PUT BLOCKLIST ${blobPath}`);
+  await res.body?.cancel();
+}
+
+/**
+ * Upload a whole stream as a block blob, `BLOCK_BYTES` at a time.
+ * @param {BlobConfig} cfg
+ * @param {string} blobPath
+ * @param {AsyncIterable<Uint8Array>} chunks
+ * @param {string} contentType
+ * @returns {Promise<{ bytes: number, blocks: number }>}
+ */
+export async function putStream(cfg, blobPath, chunks, contentType) {
+  /** @type {string[]} */
+  const ids = [];
+  let buf = new Uint8Array(BLOCK_BYTES);
+  let fill = 0;
+  let bytes = 0;
+  const flush = async () => {
+    if (fill === 0) return;
+    const id = blockId(ids.length);
+    await putBlock(cfg, blobPath, id, buf.subarray(0, fill));
+    ids.push(id);
+    buf = new Uint8Array(BLOCK_BYTES);
+    fill = 0;
+  };
+  for await (const chunk of chunks) {
+    let off = 0;
+    while (off < chunk.byteLength) {
+      const n = Math.min(BLOCK_BYTES - fill, chunk.byteLength - off);
+      buf.set(chunk.subarray(off, off + n), fill);
+      fill += n;
+      off += n;
+      bytes += n;
+      if (fill === BLOCK_BYTES) await flush();
+    }
+  }
+  await flush();
+  await putBlockList(cfg, blobPath, ids, contentType);
+  return { bytes, blocks: ids.length };
+}
+
+/**
+ * Streamed Get Blob. Null when the blob does not exist.
+ * @param {BlobConfig} cfg
+ * @param {string} blobPath
+ * @returns {Promise<{ body: ReadableStream<Uint8Array>, bytes: number, contentType: string | null } | null>}
+ */
+export async function getStream(cfg, blobPath) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(
+    () => ctrl.abort(new Error('blob GET timed out')),
+    GET_HEADERS_TIMEOUT_MS
+  );
+  let res;
+  try {
+    res = await send(cfg, 'GET', blobPath, { signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+  if (res.status === 404) {
+    await res.body?.cancel();
+    return null;
+  }
+  if (res.status !== 200 || !res.body) throw await failRes(res, `GET ${blobPath}`);
+  return {
+    body: res.body,
+    bytes: Number(res.headers.get('content-length') ?? '0'),
+    contentType: res.headers.get('content-type')
+  };
+}
+
+/**
+ * Delete a blob and its snapshots. A missing blob counts as deleted.
+ * @param {BlobConfig} cfg
+ * @param {string} blobPath
+ */
+export async function deleteBlob(cfg, blobPath) {
+  const res = await send(cfg, 'DELETE', blobPath, {
+    headers: { 'x-ms-delete-snapshots': 'include' }
+  });
+  await res.body?.cancel();
+  if (res.status === 202 || res.status === 404) return;
+  throw fail({ status: res.status, etag: null, body: '' }, `DELETE ${blobPath}`);
+}
+
+/** @param {string} s */
+function xmlText(s) {
+  return s
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * One page of List Blobs.
+ * @param {BlobConfig} cfg
+ * @param {string} prefix
+ * @param {string | null} marker
+ * @returns {Promise<{ blobs: { name: string, bytes: number, lastModified: number }[], next: string | null }>}
+ */
+export async function listPage(cfg, prefix, marker = null) {
+  /** @type {Record<string, string>} */
+  const query = { comp: 'list', maxresults: '5000', prefix, restype: 'container' };
+  if (marker) query.marker = marker;
+  const r = await request(cfg, 'GET', '', { query });
+  if (r.status !== 200) throw fail(r, `LIST ${prefix}`);
+  const body = r.body ?? '';
+  const blobs = [...body.matchAll(/<Blob>([\s\S]*?)<\/Blob>/g)].map((m) => {
+    const part = m[1];
+    const name = xmlText(/<Name>([^<]*)<\/Name>/.exec(part)?.[1] ?? '');
+    const bytes = Number(/<Content-Length>(\d+)<\/Content-Length>/.exec(part)?.[1] ?? '0');
+    const lm = /<Last-Modified>([^<]*)<\/Last-Modified>/.exec(part)?.[1];
+    return { name, bytes, lastModified: lm ? Date.parse(lm) : 0 };
+  });
+  const nm = /<NextMarker>([^<]*)<\/NextMarker>/.exec(body)?.[1];
+  return { blobs, next: nm ? xmlText(nm) : null };
+}
+
+/**
+ * Every blob under `prefix`, following NextMarker.
+ * @param {BlobConfig} cfg
+ * @param {string} prefix
+ * @returns {AsyncGenerator<{ name: string, bytes: number, lastModified: number }>}
+ */
+export async function* listAll(cfg, prefix) {
+  /** @type {string | null} */
+  let marker = null;
+  do {
+    const page = await listPage(cfg, prefix, marker);
+    for (const b of page.blobs) yield b;
+    marker = page.next;
+  } while (marker);
 }

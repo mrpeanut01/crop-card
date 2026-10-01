@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { wipeAllData } from '$lib/db/admin';
 import { currentUser } from '$lib/server/auth';
 import { isInteractiveOwner } from '$lib/server/interactiveOwner';
+import { drainBlobDeletions } from '$lib/server/vault/blobQueue';
 
 const inputSchema = z.object({
   confirm: z.literal('WIPE-EVERYTHING'),
@@ -61,5 +62,6 @@ export const POST: RequestHandler = async (event) => {
     keepEquipment: parsed.data.keepEquipment,
     keepWeatherCache: parsed.data.keepWeatherCache
   });
+  drainBlobDeletions().catch((err) => console.error('[vault] wipe cleanup failed', err));
   return json(result);
 };

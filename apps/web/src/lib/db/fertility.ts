@@ -47,6 +47,8 @@ export interface SoilTestInput {
 
 export interface SoilTest extends SoilTestInput {
   id: string;
+  /** The lab report in the document vault (A-36), deleted or not. */
+  documentId?: string;
 }
 
 function rowToSoilTest(row: typeof soilTests.$inferSelect): SoilTest {
@@ -70,7 +72,8 @@ function rowToSoilTest(row: typeof soilTests.$inferSelect): SoilTest {
     mgPpm: row.mgPpm ?? undefined,
     bufferPh: row.bufferPhHundredths !== null ? row.bufferPhHundredths / 100 : undefined,
     labRatings: row.labRatingJson ? parseLabRatings(row.labRatingJson) : undefined,
-    provenance: row.provenance ?? undefined
+    provenance: row.provenance ?? undefined,
+    documentId: row.documentId ?? undefined
   };
 }
 

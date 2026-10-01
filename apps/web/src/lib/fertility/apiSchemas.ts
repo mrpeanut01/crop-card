@@ -32,7 +32,9 @@ export const soilTestCreateSchema = z.object({
     })
     .strict()
     .optional(),
-  notes: z.string().max(500).optional()
+  notes: z.string().max(500).optional(),
+  /** A lab report already in the farm's documents (A-36). */
+  documentId: z.string().min(1).max(200).optional()
 });
 
 export type SoilTestCreate = z.infer<typeof soilTestCreateSchema>;

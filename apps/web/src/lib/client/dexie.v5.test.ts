@@ -40,7 +40,7 @@ describe('Dexie v5 upgrade', () => {
 
     const d = db();
     await d.open();
-    expect(d.verno).toBe(5);
+    expect(d.verno).toBe(6);
     expect(await d.pendingSprayRecords.get('r1')).toMatchObject({
       kind: 'fungicide',
       ownerId: 'owner_a'
@@ -70,7 +70,7 @@ describe('Dexie v5 upgrade', () => {
 
     const d = db();
     await d.open();
-    expect(d.verno).toBe(5);
+    expect(d.verno).toBe(6);
     expect(await d.pendingSprayRecords.count()).toBe(3);
     expect(await d.pinnedCards.get(['owner_a', 'sp_1'])).toMatchObject({ pinnedAt: 5 });
     expect(await d.farmSnapshots.get('owner_a')).toMatchObject({ etag: 'W/"1"' });

@@ -48,6 +48,7 @@ import { listEquipment } from '$lib/db/equipment';
 import { minutesByCrop } from '$lib/db/taskTime';
 import { listAssignableMembers } from '$lib/db/users';
 import { listSoilTests, type SoilTest } from '$lib/db/fertility';
+import { labReportForSoilTests, type SoilTestLabReport } from '$lib/db/documents';
 import { listStockItems } from '$lib/db/stock';
 import { dbChangeMarker } from '$lib/db/requestMemo';
 import { requireOwnerId } from '$lib/db/tenant';
@@ -142,8 +143,12 @@ function toStock(i: ReturnType<typeof listStockItems>[number]): SnapshotStockIte
   };
 }
 
-/** Newest test per block; `tests` arrive newest first. */
-export function latestSoilTestsPerBlock(tests: readonly SoilTest[]): SnapshotSoilTest[] {
+/** Newest test per block; `tests` arrive newest first. `labReports` is
+ *  keyed by soil test id (`labReportForSoilTests`). */
+export function latestSoilTestsPerBlock(
+  tests: readonly SoilTest[],
+  labReports: ReadonlyMap<string, SoilTestLabReport> = new Map()
+): SnapshotSoilTest[] {
   const seen = new Set<string>();
   const out: SnapshotSoilTest[] = [];
   for (const t of tests) {
@@ -165,10 +170,16 @@ export function latestSoilTestsPerBlock(tests: readonly SoilTest[]): SnapshotSoi
       mgPpm: t.mgPpm ?? null,
       extractionMethod: t.extractionMethod ?? null,
       unitsBasis: t.unitsBasis ?? null,
-      labRatings: t.labRatings ?? null
+      labRatings: t.labRatings ?? null,
+      labReport: labReportOf(labReports.get(t.id)),
+      reportPdfUrl: t.reportPdfUrl ?? null
     });
   }
   return out.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function labReportOf(r: SoilTestLabReport | undefined): SnapshotSoilTest['labReport'] {
+  return r ? { documentId: r.documentId, title: r.title, deletedAt: r.deletedAt } : null;
 }
 
 const CARE_TASK_KINDS: ReadonlySet<string> = new Set(['pruning', 'thinning']);
@@ -562,7 +573,7 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     sprayTerms: sprayTermsFor(registry),
     mapFeatures: listMapFeatureViews(),
     emergencyContacts: loadEmergencyContacts(),
-    soilTests: latestSoilTestsPerBlock(listSoilTests()),
+    soilTests: latestSoilTestsPerBlock(listSoilTests(), labReportForSoilTests()),
     ...(await animalSnapshotPart(windowNow))
   };
 }

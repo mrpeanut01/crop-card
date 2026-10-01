@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 import { _requestSchema as fieldCreate } from '../fields/+server';
+import { _requestSchema as documentLink } from '../documents/[id]/links/+server';
+import { _requestSchema as soilTestDocument } from '../fertility/soil-tests/[id]/+server';
 import { _requestSchema as fieldPatch } from '../fields/[id]/+server';
 import { _requestSchema as blockCreate } from '../blocks/+server';
 import { _requestSchema as blockPatch } from '../blocks/[id]/+server';
@@ -122,9 +124,48 @@ describe('openapi.json', () => {
     ['/api/rain-gauge', 'post', rainGauge],
     ['/api/finance/entries', 'post', ledgerCreate],
     ['/api/finance/entries/{id}', 'patch', ledgerPatch],
-    ['/api/finance/labour-rate', 'put', labourRate]
+    ['/api/finance/labour-rate', 'put', labourRate],
+    ['/api/documents/{id}/links', 'post', documentLink],
+    ['/api/fertility/soil-tests/{id}', 'patch', soilTestDocument]
   ] as const)('%s %s publishes the schema the route validates with', (path, method, schema) => {
     expect(published(path, method)).toEqual(generated(schema));
+  });
+
+  it('lists every Phase 33A document endpoint with its refusals', () => {
+    for (const [path, method] of [
+      ['/api/documents', 'post'],
+      ['/api/documents', 'get'],
+      ['/api/documents/{id}', 'get'],
+      ['/api/documents/{id}', 'delete'],
+      ['/api/documents/{id}/file', 'get'],
+      ['/api/documents/{id}/links', 'post'],
+      ['/api/documents/{id}/links/{linkId}', 'delete'],
+      ['/api/account/export.zip', 'get'],
+      ['/api/fertility/soil-tests/{id}', 'patch']
+    ]) {
+      expect(doc.paths[path]?.[method], `${method.toUpperCase()} ${path}`).toBeDefined();
+    }
+    const upload = JSON.stringify(doc.paths['/api/documents'].post);
+    for (const code of [
+      'OWNER_ONLY',
+      'LENGTH_REQUIRED',
+      'TOO_LARGE',
+      'STORAGE_FULL',
+      'UNSUPPORTED_TYPE',
+      'EMPTY',
+      'TRUNCATED',
+      'VAULT_OFF',
+      'FENCED'
+    ]) {
+      expect(upload).toContain(code);
+    }
+    expect(JSON.stringify(doc.paths['/api/documents/{id}'].delete)).toContain(
+      'INTERACTIVE_OWNER_ONLY'
+    );
+    expect(JSON.stringify(doc.paths['/api/documents/{id}/file'].get)).toContain('nosniff');
+    const schemas = (doc.components as unknown as { schemas: Record<string, unknown> }).schemas;
+    expect(schemas.DocumentMeta).toBeDefined();
+    expect(JSON.stringify(schemas.DocumentMeta)).not.toContain('storage');
   });
 
   it('lists the Phase 32F task reads', () => {

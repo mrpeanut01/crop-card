@@ -19,7 +19,7 @@ export interface TimeEntryRow {
   fieldId: string | null;
   startedAt: number | null;
   minutes: number;
-  source: 'task-close' | 'manual';
+  source: 'task-close' | 'manual' | 'timer';
   note: string | null;
   clientRecordId: string | null;
   createdAt: number;

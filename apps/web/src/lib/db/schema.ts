@@ -485,7 +485,8 @@ export const recordDeletions = tenantScoped(
           'animal-health',
           'animal-production',
           'animal-status',
-          'hay'
+          'hay',
+          'harvest-disposition'
         ]
       }).notNull(),
       recordId: text('record_id').notNull(),
@@ -1134,7 +1135,16 @@ export const stockLots = tenantScoped(
        *  never count toward on-hand until they are marked received. */
       quantityStatus: text('quantity_status', { enum: ['existing', 'ordered', 'planned'] })
         .notNull()
-        .default('existing')
+        .default('existing'),
+      /** Phase 33B: seed lots only. Null means not recorded. */
+      seedOrganicStatus: text('seed_organic_status', {
+        enum: ['organic', 'untreated', 'treated', 'unknown']
+      }),
+      /** JSON `[{ supplier, checkedAt, result }]` (Q-ORG-SEED-FIELDS). */
+      seedSourcesCheckedJson: text('seed_sources_checked_json'),
+      seedUnavailabilityNote: text('seed_unavailability_note'),
+      /** Phase 33C: hay put into feed inventory from this cutting. No SQL FK. */
+      sourceHayCuttingId: text('source_hay_cutting_id')
     },
     (table) => ({
       ownerItemIdx: index('stock_lots_owner_item_idx').on(table.ownerId, table.stockItemId),
@@ -1205,7 +1215,11 @@ export const fertilityApplications = tenantScoped(
       pDeliveredHundredths: integer('p_delivered_hundredths').notNull().default(0),
       kDeliveredHundredths: integer('k_delivered_hundredths').notNull().default(0),
       performedById: text('performed_by_id').references(() => users.id),
-      notes: text('notes')
+      notes: text('notes'),
+      /** Phase 33C: the manure or compost batch spread. No SQL FK (A-05). */
+      amendmentBatchId: text('amendment_batch_id'),
+      /** Phase 33C: the carryover facts confirmed at save, and who confirmed. */
+      carryoverAckJson: text('carryover_ack_json')
     },
     (table) => ({
       ownerBlockIdx: index('fertility_applications_owner_block_idx').on(
@@ -1762,6 +1776,9 @@ export const plantingJournal = tenantScoped(
       kind: text('kind', { enum: ['note', 'photo_help', 'observation'] }).notNull(),
       text: text('text').notNull().default(''),
       photoRef: text('photo_ref'),
+      /** Phase 33A: the photo in the vault. No SQL FK (A-05); reads accept
+       *  either column while `photo_ref` rows move over. */
+      photoDocumentId: text('photo_document_id'),
       answerJson: text('answer_json'),
       provenance: text('provenance', { enum: ['manual', 'ai', 'fallback'] }).notNull()
     },
@@ -2230,6 +2247,8 @@ export const animals = tenantScoped(
         onDelete: 'set null'
       }),
       photoRef: text('photo_ref'),
+      /** Phase 33A: the photo in the vault. No SQL FK (A-05). */
+      photoDocumentId: text('photo_document_id'),
       notes: text('notes'),
       /** 32D (D2-12): shown on a pet's Animal Card. Free text, owner-typed. */
       microchipId: text('microchip_id'),
@@ -2783,7 +2802,7 @@ export const taskTimeEntries = tenantScoped(
       fieldId: text('field_id').references(() => fields.id, { onDelete: 'set null' }),
       startedAt: integer('started_at', { mode: 'timestamp_ms' }),
       minutes: integer('minutes').notNull(),
-      source: text('source', { enum: ['task-close', 'manual'] })
+      source: text('source', { enum: ['task-close', 'manual', 'timer'] })
         .notNull()
         .default('task-close'),
       note: text('note'),
@@ -2884,6 +2903,383 @@ export const ledgerEntryChanges = tenantScoped(
         table.entryId,
         table.changedAt
       )
+    })
+  )
+);
+
+// ─── Phase 33A: document vault ──────────────────────────────────────────
+
+export const DOCUMENT_KINDS = [
+  'lab-report',
+  'certificate',
+  'label',
+  'receipt',
+  'seed-search',
+  'forage-test',
+  'photo',
+  'other',
+  'journal-photo',
+  'animal-photo'
+] as const;
+export const PHOTO_DOCUMENT_KINDS = ['journal-photo', 'animal-photo'] as const;
+export const DOCUMENT_SUBJECT_TYPES = [
+  'soil-test',
+  'stock-lot',
+  'animal',
+  'animal-group',
+  'animal-health',
+  'field',
+  'block',
+  'harvest-event',
+  'ledger-entry',
+  'organic-status',
+  'amendment-batch',
+  'forage-test',
+  'farm'
+] as const;
+export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
+export type DocumentSubjectType = (typeof DOCUMENT_SUBJECT_TYPES)[number];
+
+/** A stored file. Bytes live in the vault under `storage_key`
+ *  (`owners/<ownerId>/<id>`); a deleted row keeps its metadata (V-12). */
+export const documents = tenantScoped(
+  sqliteTable(
+    'documents',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      kind: text('kind', { enum: DOCUMENT_KINDS }).notNull(),
+      title: text('title').notNull(),
+      mime: text('mime').notNull(),
+      byteSize: integer('byte_size').notNull(),
+      sha256: text('sha256').notNull(),
+      crc32: integer('crc32').notNull(),
+      storageKey: text('storage_key').notNull(),
+      originalName: text('original_name'),
+      uploadedBy: text('uploaded_by').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
+      deletedBy: text('deleted_by').references(() => users.id)
+    },
+    (table) => ({
+      ownerKindCreatedIdx: index('documents_owner_kind_created_idx').on(
+        table.ownerId,
+        table.kind,
+        table.createdAt
+      ),
+      ownerDeletedIdx: index('documents_owner_deleted_idx').on(table.ownerId, table.deletedAt),
+      storageKeyUq: uniqueIndex('documents_storage_key_uq').on(table.storageKey)
+    })
+  )
+);
+
+/** Attaches a document to a subject. `farm` links use the Owner id. */
+export const documentLinks = tenantScoped(
+  sqliteTable(
+    'document_links',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      documentId: text('document_id')
+        .notNull()
+        .references(() => documents.id, { onDelete: 'cascade' }),
+      subjectType: text('subject_type', { enum: DOCUMENT_SUBJECT_TYPES }).notNull(),
+      subjectId: text('subject_id').notNull(),
+      createdBy: text('created_by').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerDocSubjectUq: uniqueIndex('document_links_owner_doc_subject_uq').on(
+        table.ownerId,
+        table.documentId,
+        table.subjectType,
+        table.subjectId
+      ),
+      ownerSubjectIdx: index('document_links_owner_subject_idx').on(
+        table.ownerId,
+        table.subjectType,
+        table.subjectId
+      )
+    })
+  )
+);
+
+/** Operations queue of storage prefixes to delete (farm wipes). Global:
+ *  read only by `runDbMaintenance`, holds no farm data beyond the prefix,
+ *  and is not in the GDPR export. */
+export const blobDeletions = sqliteTable('blob_deletions', {
+  storagePrefix: text('storage_prefix').primaryKey(),
+  requestedAt: integer('requested_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+  attempts: integer('attempts').notNull().default(0),
+  lastError: text('last_error')
+});
+
+// ─── Phase 33B: organic records ─────────────────────────────────────────
+
+export const ORGANIC_SUBJECT_TYPES = ['field', 'block', 'animal', 'group'] as const;
+export const ORGANIC_STATUSES = ['organic', 'transitioning', 'not-organic'] as const;
+export const SEED_ORGANIC_STATUSES = ['organic', 'untreated', 'treated', 'unknown'] as const;
+export const HARVEST_DISPOSITION_KINDS = ['sold', 'kept', 'donated', 'discarded'] as const;
+
+/** Owner-entered organic status history. Append-only; the current status is
+ *  the latest `effective_at`, then the latest `created_at`. */
+export const organicStatusEvents = tenantScoped(
+  sqliteTable(
+    'organic_status_events',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      subjectType: text('subject_type', { enum: ORGANIC_SUBJECT_TYPES }).notNull(),
+      subjectId: text('subject_id').notNull(),
+      status: text('status', { enum: ORGANIC_STATUSES }).notNull(),
+      effectiveAt: integer('effective_at', { mode: 'timestamp_ms' }).notNull(),
+      certifier: text('certifier'),
+      note: text('note'),
+      createdBy: text('created_by').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerSubjectEffectiveIdx: index('organic_status_events_owner_subject_effective_idx').on(
+        table.ownerId,
+        table.subjectType,
+        table.subjectId,
+        table.effectiveAt
+      )
+    })
+  )
+);
+
+/** The owner's answer on whether one treatment ends an organic status. */
+export const organicTreatmentReviews = tenantScoped(
+  sqliteTable(
+    'organic_treatment_reviews',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      healthEventId: text('health_event_id')
+        .notNull()
+        .references(() => animalHealthEvents.id, { onDelete: 'cascade' }),
+      outcome: text('outcome', { enum: ['status-lost', 'not-affected'] }).notNull(),
+      reason: text('reason').notNull(),
+      createdBy: text('created_by').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerHealthEventUq: uniqueIndex('organic_treatment_reviews_owner_health_event_uq').on(
+        table.ownerId,
+        table.healthEventId
+      )
+    })
+  )
+);
+
+/** Where a harvest went. Takes the FR-09 lock and tombstones; never a hold
+ *  fact. `sold_as_organic` is set only for `sold`. */
+export const harvestDispositions = tenantScoped(
+  sqliteTable(
+    'harvest_dispositions',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      harvestEventId: text('harvest_event_id')
+        .notNull()
+        .references(() => harvestEvents.id, { onDelete: 'cascade' }),
+      kind: text('kind', { enum: HARVEST_DISPOSITION_KINDS }).notNull(),
+      quantityHundredths: integer('quantity_hundredths').notNull(),
+      unit: text('unit').notNull(),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      recipient: text('recipient'),
+      soldAsOrganic: integer('sold_as_organic', { mode: 'boolean' }),
+      ledgerEntryId: text('ledger_entry_id').references(() => ledgerEntries.id, {
+        onDelete: 'set null'
+      }),
+      clientRecordId: text('client_record_id'),
+      createdBy: text('created_by').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerHarvestIdx: index('harvest_dispositions_owner_harvest_idx').on(
+        table.ownerId,
+        table.harvestEventId
+      ),
+      ownerOccurredIdx: index('harvest_dispositions_owner_occurred_idx').on(
+        table.ownerId,
+        table.occurredAt
+      )
+    })
+  )
+);
+
+// ─── Phase 33C: manure and compost carryover chain ─────────────────────
+
+export const AMENDMENT_BATCH_KINDS = ['manure', 'compost', 'bedding-pack'] as const;
+export const AMENDMENT_INPUT_TYPES = ['animal', 'group', 'batch', 'stock-lot'] as const;
+export const SUPPLIER_STATEMENTS = ['says-none', 'unknown', 'none-asked'] as const;
+export const NITRATE_UNITS = ['ppm-nitrate', 'ppm-nitrate-n', 'pct-nitrate', 'pct-kno3'] as const;
+
+/** A manure pile, compost batch or bedding pack. `supplier_statement` is for
+ *  `origin = bought` batches only. */
+export const amendmentBatches = tenantScoped(
+  sqliteTable(
+    'amendment_batches',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      kind: text('kind', { enum: AMENDMENT_BATCH_KINDS }).notNull(),
+      name: text('name').notNull(),
+      origin: text('origin', { enum: ['on-farm', 'bought'] }).notNull(),
+      supplier: text('supplier'),
+      supplierStatement: text('supplier_statement', { enum: SUPPLIER_STATEMENTS }),
+      startedAt: integer('started_at', { mode: 'timestamp_ms' }).notNull(),
+      closedAt: integer('closed_at', { mode: 'timestamp_ms' }),
+      notes: text('notes'),
+      createdBy: text('created_by').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerStartedIdx: index('amendment_batches_owner_started_idx').on(
+        table.ownerId,
+        table.startedAt
+      )
+    })
+  )
+);
+
+/** What went into a batch. `input_id` names an animal, group, batch or stock
+ *  lot by `input_type`; it is checked in `foreignRefs.ts`, not by SQL.
+ *  `from_at` is the date added for batch and stock-lot inputs. */
+export const amendmentBatchInputs = tenantScoped(
+  sqliteTable(
+    'amendment_batch_inputs',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      batchId: text('batch_id')
+        .notNull()
+        .references(() => amendmentBatches.id, { onDelete: 'cascade' }),
+      inputType: text('input_type', { enum: AMENDMENT_INPUT_TYPES }).notNull(),
+      inputId: text('input_id').notNull(),
+      fromAt: integer('from_at', { mode: 'timestamp_ms' }).notNull(),
+      toAt: integer('to_at', { mode: 'timestamp_ms' }),
+      supplierStatement: text('supplier_statement', { enum: SUPPLIER_STATEMENTS }),
+      createdBy: text('created_by').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerBatchInputUq: uniqueIndex('amendment_batch_inputs_owner_batch_input_uq').on(
+        table.ownerId,
+        table.batchId,
+        table.inputType,
+        table.inputId,
+        table.fromAt
+      ),
+      ownerInputIdx: index('amendment_batch_inputs_owner_input_idx').on(
+        table.ownerId,
+        table.inputType,
+        table.inputId
+      )
+    })
+  )
+);
+
+/** A bean or pea test on a batch or a block. One of the two is set. */
+export const amendmentBioassays = tenantScoped(
+  sqliteTable(
+    'amendment_bioassays',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      batchId: text('batch_id').references(() => amendmentBatches.id, { onDelete: 'cascade' }),
+      blockId: text('block_id').references(() => blocks.id, { onDelete: 'cascade' }),
+      testedAt: integer('tested_at', { mode: 'timestamp_ms' }).notNull(),
+      result: text('result', { enum: ['no-damage', 'damage'] }).notNull(),
+      note: text('note'),
+      createdBy: text('created_by').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerBlockIdx: index('amendment_bioassays_owner_block_idx').on(table.ownerId, table.blockId),
+      ownerBatchIdx: index('amendment_bioassays_owner_batch_idx').on(table.ownerId, table.batchId)
+    })
+  )
+);
+
+/** The owner dismissing an after-spread carryover line, with a reason (M-08). */
+export const amendmentDismissals = tenantScoped(
+  sqliteTable(
+    'amendment_dismissals',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      fertilityApplicationId: text('fertility_application_id')
+        .notNull()
+        .references(() => fertilityApplications.id, { onDelete: 'cascade' }),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id, { onDelete: 'cascade' }),
+      reason: text('reason').notNull(),
+      createdBy: text('created_by').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerBlockIdx: index('amendment_dismissals_owner_block_idx').on(table.ownerId, table.blockId)
+    })
+  )
+);
+
+/** A forage lab result on a block, hay cutting or feed lot (one is set,
+ *  checked in Zod and the repo). The lab's rating wins as `manual`. */
+export const forageTests = tenantScoped(
+  sqliteTable(
+    'forage_tests',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id').references(() => blocks.id, { onDelete: 'cascade' }),
+      hayCuttingId: text('hay_cutting_id').references(() => hayCuttings.id, {
+        onDelete: 'cascade'
+      }),
+      stockLotId: text('stock_lot_id').references(() => stockLots.id, { onDelete: 'cascade' }),
+      sampledAt: integer('sampled_at', { mode: 'timestamp_ms' }).notNull(),
+      lab: text('lab'),
+      nitrateValueHundredths: integer('nitrate_value_hundredths'),
+      nitrateUnits: text('nitrate_units', { enum: NITRATE_UNITS }),
+      hcnPpmHundredths: integer('hcn_ppm_hundredths'),
+      labRatingJson: text('lab_rating_json'),
+      documentId: text('document_id').references(() => documents.id, { onDelete: 'set null' }),
+      provenance: text('provenance', { enum: ['manual', 'ai', 'fallback'] })
+        .notNull()
+        .default('manual'),
+      createdBy: text('created_by').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerBlockIdx: index('forage_tests_owner_block_idx').on(table.ownerId, table.blockId),
+      ownerSampledIdx: index('forage_tests_owner_sampled_idx').on(table.ownerId, table.sampledAt)
     })
   )
 );

@@ -73,6 +73,13 @@ import {
 import { cropPatchSchema } from '../src/lib/crops/apiSchemas.ts';
 import { soilTestCreateSchema } from '../src/lib/fertility/apiSchemas.ts';
 import {
+  documentLinkCreateSchema,
+  documentListQuerySchema,
+  documentMetaSchema,
+  documentUploadQuerySchema,
+  soilTestDocumentPatchSchema
+} from '../src/lib/documents/apiSchemas.ts';
+import {
   animalCreateSchema,
   animalGroupCreateSchema,
   animalGroupPatchSchema,
@@ -2207,6 +2214,220 @@ const paths = {
     }
   },
 
+  '/api/fertility/soil-tests/{id}': {
+    parameters: [idPath('id', 'Soil test id.')],
+    patch: {
+      summary: "Attach, replace or remove a soil test's lab report",
+      description:
+        'Owner only. `documentId` names a live, non-photo document of the active Owner (upload it first with `POST /api/documents`); `null` removes the report. The soil test pointer and its `soil-test` document link change in one transaction. A deleted document is 409 `DOCUMENT_DELETED`; a journal or animal photo is 409 `PHOTO_DOCUMENT`. Not gated by the season close-out.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(soilTestDocumentPatchSchema),
+      responses: {
+        200: jsonResponse('Saved.', {
+          type: 'object',
+          properties: {
+            soilTest: {
+              type: 'object',
+              properties: { id: { type: 'string' }, documentId: { type: ['string', 'null'] } }
+            }
+          }
+        }),
+        400: errorResponse('Invalid body, or a `documentId` the active Owner does not have.'),
+        ...OWNER_ERRORS,
+        404: errorResponse('Soil test not found for the active Owner.'),
+        409: errorResponse('`DOCUMENT_DELETED` or `PHOTO_DOCUMENT`.')
+      }
+    },
+    delete: {
+      summary: 'Delete a soil test',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Deleted.', { type: 'object' }),
+        ...OWNER_ERRORS
+      }
+    }
+  },
+
+  '/api/documents': {
+    post: {
+      summary: "Upload a file to the farm's document vault",
+      description:
+        "Owner only (cookie session or the owner's API token); helpers and inspectors get 403 `OWNER_ONLY`. The request body is the raw file and `Content-Length` is required (411 `LENGTH_REQUIRED`). The declared `Content-Type` is ignored: the type is read from the bytes, and only PDF, JPEG, PNG, WebP and UTF-8 CSV are stored (415 `UNSUPPORTED_TYPE` otherwise). Over 20,000,000 bytes is 413 `TOO_LARGE`; an upload that would take the farm past its plan's storage cap is 413 `STORAGE_FULL` and stores nothing. Zero bytes is 400 `EMPTY`; a body shorter or longer than `Content-Length` is 400 `TRUNCATED`. JPEG, PNG and WebP metadata (EXIF, XMP, GPS, text chunks) is removed before storage. With no storage configured the answer is 503 `VAULT_OFF`; during a deploy handoff 503 `FENCED` with `Retry-After`. An optional `subjectType` + `subjectId` attaches the new file in the same transaction (another Owner's subject is 400 `FOREIGN_REF`). Not gated by the season close-out.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: Object.entries(fromZod(documentUploadQuerySchema).properties ?? {}).map(
+        ([name, schema]) => ({
+          name,
+          in: 'query',
+          required: name === 'kind',
+          schema
+        })
+      ),
+      requestBody: {
+        required: true,
+        content: {
+          'application/octet-stream': {
+            schema: { type: 'string', format: 'binary', maxLength: 20000000 }
+          }
+        }
+      },
+      responses: {
+        201: jsonResponse('The stored document.', {
+          type: 'object',
+          required: ['document'],
+          properties: { document: { $ref: '#/components/schemas/DocumentMeta' } }
+        }),
+        400: errorResponse('`EMPTY`, `TRUNCATED`, `FOREIGN_REF` or an invalid query.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`OWNER_ONLY`.'),
+        411: errorResponse('`LENGTH_REQUIRED`.'),
+        413: errorResponse('`TOO_LARGE` or `STORAGE_FULL`.'),
+        415: errorResponse('`UNSUPPORTED_TYPE`.'),
+        503: errorResponse('`VAULT_OFF` or `FENCED`.')
+      }
+    },
+    get: {
+      summary: 'List documents the caller may read',
+      description:
+        'Newest first, 100 per page; pass `nextBefore` and `nextBeforeId` back as `before` and `beforeId` for the next page. Owners see every document; helpers and inspectors see only files linked to subjects their role can read (a money record is owner only; a farm or organic status link is owner and inspector). Journal and animal photos are listed only for the owner and only when `kind` asks for them. `includeDeleted=1` is honoured for the owner only. `vault.enabled` says whether uploads can be stored; `canDelete` is true for the signed-in owner.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: Object.entries(fromZod(documentListQuerySchema).properties ?? {}).map(
+        ([name, schema]) => ({ name, in: 'query', required: false, schema })
+      ),
+      responses: {
+        200: jsonResponse('A page of documents.', {
+          type: 'object',
+          properties: {
+            documents: { type: 'array', items: { $ref: '#/components/schemas/DocumentMeta' } },
+            nextBefore: { type: ['integer', 'null'] },
+            nextBeforeId: { type: ['string', 'null'] },
+            vault: { type: 'object', properties: { enabled: { type: 'boolean' } } },
+            canDelete: { type: 'boolean' }
+          }
+        }),
+        400: errorResponse('Invalid query.'),
+        401: errorResponse('Authentication required.')
+      }
+    }
+  },
+
+  '/api/documents/{id}': {
+    parameters: [idPath('id', 'Document id.')],
+    get: {
+      summary: "A document's metadata",
+      description:
+        'Same access as the file. A deleted document still answers, with `deletedAt` and `deletedBy`, to anyone who could read it. A missing, foreign or unreadable id is 404 with an identical body. Storage keys are never returned.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The document.', {
+          type: 'object',
+          properties: { document: { $ref: '#/components/schemas/DocumentMeta' } }
+        }),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('`NOT_FOUND`.')
+      }
+    },
+    delete: {
+      summary: 'Delete a file',
+      description:
+        "Interactive owner only: a cookie session with the owner role that is not impersonating; API tokens, helpers and impersonating superadmins get 403 `INTERACTIVE_OWNER_ONLY`. The bytes are deleted at once and the row keeps its metadata with `deletedAt` and `deletedBy`, so records that point at the file say when it was deleted. Links stay. Journal and animal photos are removed from their entry or animal instead (409 `PHOTO_DOCUMENT`). The storage provider's backup copies are removed within 30 days.",
+      security: [{ cookieSession: [] }],
+      responses: {
+        200: jsonResponse('The deleted document.', {
+          type: 'object',
+          properties: { document: { $ref: '#/components/schemas/DocumentMeta' } }
+        }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`INTERACTIVE_OWNER_ONLY`.'),
+        404: errorResponse('`NOT_FOUND`.'),
+        409: errorResponse('`PHOTO_DOCUMENT`.')
+      }
+    }
+  },
+
+  '/api/documents/{id}/file': {
+    parameters: [idPath('id', 'Document id.')],
+    get: {
+      summary: "A document's bytes",
+      description:
+        "Streamed with the stored type, `Content-Length`, `X-Content-Type-Options: nosniff`, `Content-Security-Policy: sandbox; default-src 'none'; img-src 'self'; style-src 'unsafe-inline'`, `Cache-Control: private, no-store` and `Cross-Origin-Resource-Policy: same-origin`. Images are served `inline`; PDF and CSV as `attachment`, named from the title. No range requests. A missing, deleted, foreign or unreadable id is the same 404. With storage switched off a readable file answers 503 `VAULT_OFF`.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: {
+          description: 'The file.',
+          content: {
+            'application/pdf': { schema: { type: 'string', format: 'binary' } },
+            'image/jpeg': { schema: { type: 'string', format: 'binary' } },
+            'image/png': { schema: { type: 'string', format: 'binary' } },
+            'image/webp': { schema: { type: 'string', format: 'binary' } },
+            'text/csv': { schema: { type: 'string' } }
+          }
+        },
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('`NOT_FOUND`.'),
+        503: errorResponse('`VAULT_OFF`.')
+      }
+    }
+  },
+
+  '/api/documents/{id}/links': {
+    parameters: [idPath('id', 'Document id.')],
+    post: {
+      summary: 'Attach a file to a record',
+      description:
+        "Owner only. A repeated link is a no-op. `farm` links name the active Owner's id. The subject must belong to the active Owner (400 `FOREIGN_REF`). A deleted file is 409 `DOCUMENT_DELETED`; journal and animal photos are 409 `PHOTO_DOCUMENT`. Links decide who else can read the file.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(documentLinkCreateSchema),
+      responses: {
+        201: jsonResponse('The link and the document.', {
+          type: 'object',
+          properties: {
+            link: { type: 'object' },
+            document: { $ref: '#/components/schemas/DocumentMeta' }
+          }
+        }),
+        400: errorResponse('Invalid body or `FOREIGN_REF`.'),
+        ...OWNER_ERRORS,
+        404: errorResponse('`NOT_FOUND`.'),
+        409: errorResponse('`DOCUMENT_DELETED` or `PHOTO_DOCUMENT`.')
+      }
+    }
+  },
+
+  '/api/documents/{id}/links/{linkId}': {
+    parameters: [idPath('id', 'Document id.'), idPath('linkId', 'Link id.')],
+    delete: {
+      summary: 'Detach a file from a record',
+      description:
+        "Owner only. Removing a soil test's link to its own lab report also clears the soil test's report.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The document after the change.', {
+          type: 'object',
+          properties: { document: { $ref: '#/components/schemas/DocumentMeta' } }
+        }),
+        ...OWNER_ERRORS,
+        404: errorResponse('`NOT_FOUND`.')
+      }
+    }
+  },
+
+  '/api/account/export.zip': {
+    get: {
+      summary: 'Download every record and file as one ZIP',
+      description:
+        'Interactive owner only (API tokens and impersonation get 403 `INTERACTIVE_OWNER_ONLY`). Streams `export.json` (the same object as `GET /api/account/export.json`) and every live document, photos included, as `documents/<id>-<slug>.<ext>`. Store-only ZIP with ZIP64 when needed. A file whose bytes cannot be read is left out and named in `documents/MISSING.txt`.',
+      security: [{ cookieSession: [] }],
+      responses: {
+        200: {
+          description: 'The ZIP file.',
+          content: { 'application/zip': { schema: { type: 'string', format: 'binary' } } }
+        },
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`INTERACTIVE_OWNER_ONLY`.')
+      }
+    }
+  },
+
   '/api/tasks/close': {
     post: {
       summary: 'Close a task (offline replay of Done or Skip)',
@@ -2910,7 +3131,8 @@ const doc = {
       GardenError: GARDEN_ERROR_SCHEMA,
       PlacedPlanting: PLACED_PLANTING_SCHEMA,
       JournalEntry: JOURNAL_ENTRY_SCHEMA,
-      TokenSummary: TOKEN_SUMMARY_SCHEMA
+      TokenSummary: TOKEN_SUMMARY_SCHEMA,
+      DocumentMeta: fromZod(documentMetaSchema)
     }
   },
   // Default security: Bearer OR cookie. Endpoints that override security

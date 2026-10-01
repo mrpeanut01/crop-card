@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { helperAssignments, helperInvites, owners, users } from '$lib/db/schema';
-import { resolvePlan, roleTakesSeat, seatUsage, setPlanOverride } from './plans';
+import { PLANS } from '$lib/billing/plans';
+import { resolvePlan, roleTakesSeat, seatUsage, setPlanOverride, storageCapBytes } from './plans';
 
 const DAY = 86_400_000;
 
@@ -151,5 +152,24 @@ describe('seatUsage', () => {
     expect(roleTakesSeat('helper')).toBe(true);
     expect(roleTakesSeat('custom-operator')).toBe(true);
     expect(roleTakesSeat('inspector')).toBe(false);
+  });
+});
+
+describe('storageCapBytes', () => {
+  it('uses decimal caps per plan and ignores the starter boost', () => {
+    expect(PLANS.free.storageBytes).toBe(100_000_000);
+    expect(PLANS.grower.storageBytes).toBe(1_000_000_000);
+    expect(PLANS.farm.storageBytes).toBe(5_000_000_000);
+    const ownerId = seedOwner();
+    expect(resolvePlan(ownerId).starterBoost).toBe(true);
+    expect(storageCapBytes(ownerId)).toBe(100_000_000);
+    setPlanOverride(ownerId, 'grower');
+    expect(storageCapBytes(ownerId)).toBe(1_000_000_000);
+    setPlanOverride(ownerId, 'farm');
+    expect(storageCapBytes(ownerId)).toBe(5_000_000_000);
+  });
+
+  it('falls back to the Free cap for an unknown owner', () => {
+    expect(storageCapBytes('no-such-owner')).toBe(100_000_000);
   });
 });

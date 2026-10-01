@@ -568,6 +568,27 @@
       "when": 1790746639756,
       "tag": "0080_contact_suppression_type_uq",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "6",
+      "when": 1790870208696,
+      "tag": "0081_document_vault",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "6",
+      "when": 1790870230963,
+      "tag": "0082_organic_records",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "6",
+      "when": 1790870262797,
+      "tag": "0083_amendment_chain",
+      "breakpoints": true
     }
   ]
 }

@@ -18,6 +18,17 @@ import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
 import { plantingInGround } from '$lib/garden/inGround';
 import {
+  amendmentBatchInputs,
+  amendmentBatches,
+  amendmentBioassays,
+  amendmentDismissals,
+  blobDeletions,
+  documentLinks,
+  documents,
+  forageTests,
+  harvestDispositions,
+  organicStatusEvents,
+  organicTreatmentReviews,
   animalCarePlans,
   animalFlagChanges,
   holdCorrections,
@@ -60,7 +71,14 @@ import {
   taskTimeEntries,
   tasks
 } from './schema';
-import { type TenantScopedTable, tenantValues, withTenant } from './tenant';
+import {
+  type TenantScopedTable,
+  requireOwnerId,
+  tenantValues,
+  unscopedQueryNote,
+  withTenant
+} from './tenant';
+import { ownerStoragePrefix } from './documents';
 import { unlinkMapFeaturesFromField } from './mapFeatures';
 import { liveHoldParams } from './holdParams';
 import { evaluateLock as evaluateSprayLock, getSprayEvent } from './sprayEvents';
@@ -691,12 +709,41 @@ export interface WipeOptions {
   keepWeatherCache?: boolean;
 }
 
+/** A-13: the rows and the queued prefix delete land together, so files are
+ *  unreachable at once and maintenance removes the bytes (V-13). */
+function wipeDocuments(): Record<string, number> {
+  const ownerId = requireOwnerId();
+  return db.transaction(() => {
+    unscopedQueryNote('blob deletion queue');
+    db.insert(blobDeletions)
+      .values({ storagePrefix: ownerStoragePrefix(ownerId) })
+      .onConflictDoNothing()
+      .run();
+    return {
+      document_links: del(documentLinks, isNotNull(documentLinks.id)),
+      documents: del(documents, isNotNull(documents.id))
+    };
+  });
+}
+
 /** @hold-exempt: the owner wipes the whole farm, every record with it (GDPR erase) */
 export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
   const removed: Record<string, number> = {};
   // Order: leaf rows first. Each `del(table, ...)` filters by active Owner.
   // The `isNotNull(table.id)` predicate is a tautology that lets the helper
   // run a tenant-scoped DELETE without a more specific filter.
+  removed.harvest_dispositions = del(harvestDispositions, isNotNull(harvestDispositions.id));
+  removed.organic_treatment_reviews = del(
+    organicTreatmentReviews,
+    isNotNull(organicTreatmentReviews.id)
+  );
+  removed.organic_status_events = del(organicStatusEvents, isNotNull(organicStatusEvents.id));
+  removed.amendment_dismissals = del(amendmentDismissals, isNotNull(amendmentDismissals.id));
+  removed.amendment_bioassays = del(amendmentBioassays, isNotNull(amendmentBioassays.id));
+  removed.amendment_batch_inputs = del(amendmentBatchInputs, isNotNull(amendmentBatchInputs.id));
+  removed.amendment_batches = del(amendmentBatches, isNotNull(amendmentBatches.id));
+  removed.forage_tests = del(forageTests, isNotNull(forageTests.id));
+  Object.assign(removed, wipeDocuments());
   removed.ledger_entry_changes = del(ledgerEntryChanges, isNotNull(ledgerEntryChanges.id));
   removed.ledger_entries = del(ledgerEntries, isNotNull(ledgerEntries.id));
   removed.task_time_entries = del(taskTimeEntries, isNotNull(taskTimeEntries.id));

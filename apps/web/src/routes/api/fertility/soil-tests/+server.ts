@@ -3,12 +3,15 @@ import { getBlock } from '$lib/db/blocks';
 import { insertSoilTest, listSoilTestsForBlock } from '$lib/db/fertility';
 import { requireOwner } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { db } from '$lib/db/client';
+import { setSoilTestDocument } from '$lib/db/documents';
+import { checkLabReport } from '$lib/server/soilTestDocument';
 import { soilTestCreateSchema } from '$lib/fertility/apiSchemas';
 
 export const _requestSchema = soilTestCreateSchema;
 
 export const POST: RequestHandler = async (event) => {
-  requireOwner(event);
+  const user = requireOwner(event);
   let body: unknown;
   try {
     body = await event.request.json();
@@ -27,12 +30,21 @@ export const POST: RequestHandler = async (event) => {
   }
   const foreign = rejectForeignRefs(['blockId', parsed.data.blockId, getBlock]);
   if (foreign) return foreign;
-  const persisted = insertSoilTest({
-    ...parsed.data,
-    sampledAt: parsed.data.sampledAt ?? Date.now(),
-    provenance: 'manual'
+  const { documentId, ...fields } = parsed.data;
+  if (documentId) {
+    const refused = checkLabReport(documentId);
+    if (refused) return refused;
+  }
+  const persisted = db.transaction(() => {
+    const test = insertSoilTest({
+      ...fields,
+      sampledAt: fields.sampledAt ?? Date.now(),
+      provenance: 'manual'
+    });
+    if (documentId) setSoilTestDocument(test.id, documentId, user.id);
+    return test;
   });
-  return json({ soilTest: persisted }, { status: 201 });
+  return json({ soilTest: { ...persisted, documentId: documentId ?? null } }, { status: 201 });
 };
 
 export const GET: RequestHandler = ({ url }) => {

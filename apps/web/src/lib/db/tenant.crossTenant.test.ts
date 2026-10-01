@@ -68,6 +68,20 @@ import {
   seedPhase32Rows,
   type Phase32Table
 } from './phase32.fixtures';
+import * as documentsRepo from './documents';
+import {
+  PHASE_33_TABLES,
+  listPhase33Ids,
+  seedPhase33,
+  type Phase33Table
+} from './phase33.fixtures';
+import {
+  assertAmendmentBatch,
+  assertDocument,
+  assertDocumentSubject,
+  assertHayCutting
+} from '$lib/server/foreignRefs';
+import { DOCUMENT_SUBJECT_TYPES } from './schema';
 import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
 import { users, helperAssignments, recordDeletions, cropEquipment, equipmentLog } from './schema';
 import { listUnifiedRecords } from './recordsUnified';
@@ -933,9 +947,12 @@ describe('cross-tenant isolation', () => {
               plantingJournalRepo.getJournalEntry(theirs.cropId, theirs.entryId)
             ).toBeUndefined();
             expect(plantingJournalRepo.getJournalPhoto(theirs.cropId, theirs.entryId)).toBeNull();
-            expect(plantingJournalRepo.deleteJournalEntry(theirs.cropId, theirs.entryId)).toBe(
-              false
-            );
+            expect(
+              plantingJournalRepo.deleteJournalEntry(theirs.cropId, theirs.entryId)
+            ).toBeUndefined();
+            expect(
+              plantingJournalRepo.moveJournalPhotoToDocument(theirs.entryId, 'x', 'doc-x')
+            ).toBe(false);
             const exported = plantingJournalRepo.listJournalForExport().map((e) => e.id);
             expect(exported).toContain(mine.entryId);
             expect(exported).not.toContain(theirs.entryId);
@@ -1091,6 +1108,14 @@ describe('cross-tenant isolation', () => {
             ).toBe(false);
             expect(animalsRepo.updateAnimal(theirs.henId, { name: 'stolen' })).toBeUndefined();
             expect(animalsRepo.setAnimalPhoto(theirs.henId, null)).toBe(false);
+            expect(animalsRepo.setAnimalPhotoDocument(theirs.henId, 'doc-x')).toBe(false);
+            expect(
+              animalsRepo.moveAnimalPhotoToDocument(
+                theirs.henId,
+                'data:image/jpeg;base64,/9j/',
+                'doc-x'
+              )
+            ).toBe(false);
             expect(
               animalsRepo.setAnimalFlag(theirs.henId, 'food_producing', true, 'x', null)
             ).toBeNull();
@@ -1406,6 +1431,101 @@ describe('cross-tenant isolation', () => {
     });
   });
 
+  it('every Phase 33 table is owner-scoped: list and read-by-id never cross Owners', () => {
+    const tag = randomUUID().slice(0, 8);
+    seedOwnerRow(OWNER_A);
+    seedOwnerRow(OWNER_B);
+    const a = seedPhase33(OWNER_A, `p33a-${tag}`);
+    const b = seedPhase33(OWNER_B, `p33b-${tag}`);
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...(Object.keys(PHASE_33_TABLES) as Phase33Table[])),
+        fc.boolean(),
+        (table, aIsReader) => {
+          const [reader, mine, theirs] = aIsReader ? [OWNER_A, a, b] : [OWNER_B, b, a];
+          runWithTenant(reader, () => {
+            const seen = listPhase33Ids(table);
+            expect(seen).toContain(mine.rowIds[table]);
+            expect(seen).not.toContain(theirs.rowIds[table]);
+            expect(listPhase33Ids(table, theirs.rowIds[table])).toEqual([]);
+          });
+        }
+      ),
+      { numRuns: 60 }
+    );
+  });
+
+  it("document repo and Phase 33 reference checks never read, count or change another Owner's rows", () => {
+    const tag = randomUUID().slice(0, 8);
+    seedOwnerRow(OWNER_A);
+    seedOwnerRow(OWNER_B);
+    const a = seedPhase33(OWNER_A, `p33ra-${tag}`);
+    const b = seedPhase33(OWNER_B, `p33rb-${tag}`);
+    const extra = (ownerId: string, size: number) =>
+      runWithTenant(ownerId, () => {
+        const id = randomUUID();
+        documentsRepo.insertDocument({
+          id,
+          kind: 'receipt',
+          title: 'Seed receipt',
+          mime: 'image/png',
+          byteSize: size,
+          sha256: 'b'.repeat(64),
+          crc32: 7,
+          storageKey: documentsRepo.documentStorageKey(ownerId, id),
+          originalName: null,
+          uploadedBy: null
+        });
+        return id;
+      });
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...DOCUMENT_SUBJECT_TYPES),
+        fc.integer({ min: 1, max: 5_000_000 }),
+        fc.boolean(),
+        (subjectType, size, aIsReader) => {
+          const [reader, mine, theirs] = aIsReader ? [OWNER_A, a, b] : [OWNER_B, b, a];
+          const before = runWithTenant(theirs.ownerId, () => documentsRepo.liveDocumentBytes());
+          const theirExtra = extra(theirs.ownerId, size);
+          runWithTenant(reader, () => {
+            const mineBytes = documentsRepo.liveDocumentBytes();
+            expect(documentsRepo.getDocument(theirs.documentId)).toBeUndefined();
+            expect(documentsRepo.getDocument(theirExtra, { includeDeleted: true })).toBeUndefined();
+            expect(documentsRepo.documentExists(theirExtra)).toBe(false);
+            expect(documentsRepo.markDocumentDeleted(theirExtra, null)).toBeUndefined();
+            expect(documentsRepo.liveDocumentBytes()).toBe(mineBytes);
+            expect(documentsRepo.getDocument(mine.documentId)?.id).toBe(mine.documentId);
+
+            expect(refResolves(assertDocument('documentId', mine.documentId))).toBe(true);
+            expect(refResolves(assertDocument('documentId', theirs.documentId))).toBe(false);
+            expect(
+              refResolves(
+                assertDocumentSubject('subjectId', subjectType, mine.subjects[subjectType])
+              )
+            ).toBe(true);
+            expect(
+              refResolves(
+                assertDocumentSubject('subjectId', subjectType, theirs.subjects[subjectType])
+              )
+            ).toBe(false);
+            expect(
+              refResolves(assertAmendmentBatch('batchId', theirs.subjects['amendment-batch']))
+            ).toBe(false);
+            expect(refResolves(assertHayCutting('cutId', theirs.hayCuttingId))).toBe(false);
+            expect(refResolves(assertHayCutting('cutId', mine.hayCuttingId))).toBe(true);
+          });
+          runWithTenant(theirs.ownerId, () => {
+            expect(documentsRepo.documentExists(theirExtra)).toBe(true);
+            expect(documentsRepo.liveDocumentBytes()).toBe(before + size);
+            expect(documentsRepo.markDocumentDeleted(theirExtra, null)?.deletedAt).toBeTruthy();
+            expect(documentsRepo.liveDocumentBytes()).toBe(before);
+          });
+        }
+      ),
+      { numRuns: 40 }
+    );
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -1444,10 +1564,17 @@ describe('cross-tenant isolation', () => {
       animalHealthRepo,
       animalProductionRepo,
       carePlansRepo,
-      careTasksRepo
+      careTasksRepo,
+      documentsRepo
     ];
     for (const m of auditedModules) {
       expect(m).toBeTruthy();
     }
   });
 });
+
+function refResolves(
+  ref: readonly [string, string | null | undefined, (id: string) => unknown]
+): boolean {
+  return !!ref[1] && !!ref[2](ref[1]);
+}

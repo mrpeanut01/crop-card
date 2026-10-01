@@ -27,6 +27,11 @@ const CHROMIUM_PATH = process.env.PW_CHROMIUM_PATH;
 // Without it the crop registry is empty and the allocation wizard can't run.
 const PLUGINS_DIR = fileURLToPath(new URL('../../plugins', import.meta.url));
 
+// Phase 33A (A-56): a per-port filesystem vault, wiped with the DB, and the
+// 21 MB body limit production sets for document uploads.
+const VAULT_DIR = `./.playwright-data/vault-${PORT}`;
+const VAULT_ENV = `VAULT_BACKEND=filesystem VAULT_DIR=${VAULT_DIR} BODY_SIZE_LIMIT=21M`;
+
 // The blocking CI e2e job skips visual specs; the separate non-blocking
 // `visual` CI job sets E2E_VISUAL=1. Linux baselines are captured with a
 // different chromium build than CI's, so pixel parity isn't guaranteed yet.
@@ -53,12 +58,12 @@ export default defineConfig({
       // spec (production never sets this flag — the dev page stays gated).
       command:
         `mkdir -p ./.playwright-data && ` +
-        `rm -f ${TEST_DB_PATH} ./.playwright-data/.build-done-${PORT}-* && ` +
+        `rm -rf ${TEST_DB_PATH} ${VAULT_DIR} ./.playwright-data/.build-done-${PORT}-* && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} pnpm build && ` +
         `touch ${BUILD_MARKER} && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} node ./scripts/migrate.mjs && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} node ./scripts/seed-test-data.mjs && ` +
-        `DATABASE_URL=file:${TEST_DB_PATH} AUTH_MODE=direct AUTH_SECRET=e2e-only-not-secret ENABLE_DEV_ROUTES=1 E2E_DEGREE_DAY_FIXTURE=1 PLUGINS_DIR=${PLUGINS_DIR} ${STRIPE_E2E_ENV} pnpm exec vite preview --host 0.0.0.0 --port ${PORT} --strictPort`,
+        `DATABASE_URL=file:${TEST_DB_PATH} AUTH_MODE=direct AUTH_SECRET=e2e-only-not-secret ENABLE_DEV_ROUTES=1 E2E_DEGREE_DAY_FIXTURE=1 PLUGINS_DIR=${PLUGINS_DIR} ${STRIPE_E2E_ENV} ${VAULT_ENV} pnpm exec vite preview --host 0.0.0.0 --port ${PORT} --strictPort`,
       port: PORT,
       reuseExistingServer: !process.env.CI,
       timeout: 300_000

@@ -22,6 +22,9 @@ export interface PlanDefinition {
   webSearchAi: boolean;
   prioritySupport: boolean;
   dailyQuota: DailyQuota;
+  /** Document vault cap in bytes (decimal: 1 MB = 1,000,000 bytes). The
+   *  starter boost never touches it. */
+  storageBytes: number;
 }
 
 const FREE_QUOTA: DailyQuota = {
@@ -95,7 +98,8 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     helperSeats: 2,
     webSearchAi: false,
     prioritySupport: false,
-    dailyQuota: FREE_QUOTA
+    dailyQuota: FREE_QUOTA,
+    storageBytes: 100_000_000
   },
   grower: {
     id: 'grower',
@@ -107,7 +111,8 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     helperSeats: 5,
     webSearchAi: true,
     prioritySupport: false,
-    dailyQuota: GROWER_QUOTA
+    dailyQuota: GROWER_QUOTA,
+    storageBytes: 1_000_000_000
   },
   farm: {
     id: 'farm',
@@ -119,7 +124,8 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     helperSeats: 15,
     webSearchAi: true,
     prioritySupport: true,
-    dailyQuota: FARM_QUOTA
+    dailyQuota: FARM_QUOTA,
+    storageBytes: 5_000_000_000
   }
 };
 

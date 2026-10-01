@@ -114,6 +114,7 @@ var identityName = '${prefix}-id'
 var marketplaceAppName = '${prefix}-marketplace'
 var blobContainerName = 'cropcard'
 var marketplaceBlobContainerName = 'cropcard-marketplace'
+var documentsContainerName = 'documents'
 var useRegistry = !empty(containerRegistryServer)
 var acrName = useRegistry ? split(containerRegistryServer, '.')[0] : 'none'
 var kvSecretsUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
@@ -164,7 +165,9 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01'
 
 // Previous versions are kept 30 days (longer than Litestream's 7-day
 // retention and the 14-day soft delete), except the handoff lease records,
-// which are rewritten every 20 s while the app runs.
+// which are rewritten every 20 s while the app runs, and farm documents: a
+// deleted or wiped file's previous version goes after 1 day, then the
+// account-wide 14-day soft delete. /settings/documents promises 30 days.
 resource blobLifecycle 'Microsoft.Storage/storageAccounts/managementPolicies@2023-05-01' = {
   parent: storage
   name: 'default'
@@ -189,6 +192,15 @@ resource blobLifecycle 'Microsoft.Storage/storageAccounts/managementPolicies@202
             actions: { version: { delete: { daysAfterCreationGreaterThan: 1 } } }
           }
         }
+        {
+          name: 'expire-document-versions'
+          enabled: true
+          type: 'Lifecycle'
+          definition: {
+            filters: { blobTypes: ['blockBlob'], prefixMatch: ['${documentsContainerName}/'] }
+            actions: { version: { delete: { daysAfterCreationGreaterThan: 1 } } }
+          }
+        }
       ]
     }
   }
@@ -197,6 +209,14 @@ resource blobLifecycle 'Microsoft.Storage/storageAccounts/managementPolicies@202
 resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   parent: blobService
   name: blobContainerName
+}
+
+// Farm documents (Phase 33A vault), private and apart from the database
+// replica so a Litestream restore or retention pass never touches a file.
+resource documentsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: documentsContainerName
+  properties: { publicAccess: 'None' }
 }
 
 // Separate blob container so the two apps' WAL frames can't collide.
@@ -444,6 +464,12 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
               { name: 'AZURE_BLOB_CONTAINER', value: blobContainerName }
               // Deploy handoff fence (infra/entrypoint.sh, docs/ops/restore-runbook.md).
               { name: 'HANDOFF_FENCE', value: '1' }
+              // Document vault: same account and key, its own container.
+              { name: 'VAULT_BACKEND', value: 'blob' }
+              { name: 'VAULT_BLOB_CONTAINER', value: documentsContainerName }
+              // adapter-node refuses bodies over 512 KB by default; uploads go
+              // to 20 MB and hooks.server.ts keeps every other route at 512 KB.
+              { name: 'BODY_SIZE_LIMIT', value: '21M' }
             ],
             optionalEnv
           )

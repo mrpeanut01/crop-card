@@ -1,0 +1,568 @@
+{
+  "$comment": "Phase 33 R5. Prussic acid (cyanogenic glycoside, HCN) and nitrate facts for forage crops, from land-grant extension publications. Each entry is { gateEligible, value?, sources: [{ url, publisher, date, quote, note? }], note? }. gateEligible is true only when two independent sources agree on the value; where sources disagree both are recorded, gateEligible is false and `note` lists the disagreement. Units are exactly as printed; nothing is converted. Quotes are word for word from fetched page or PDF text (items marked 'page reader' came from the fetch tool's quoted extraction of an HTML page and should be re-read against the live page before shipping). Kansas State MF3607 and Purdue AY-378-W share text and count as ONE source. Nothing here may be read by a gate until a human re-checks each quote.",
+  "fetchedOn": "2026-10-01",
+  "entries": {
+    "prussicAcid.crops.sorghumFamily": {
+      "gateEligible": true,
+      "value": [
+        "forage sorghum",
+        "grain sorghum",
+        "sudangrass",
+        "sorghum-sudangrass hybrids",
+        "Johnsongrass"
+      ],
+      "pluginIds": [
+        "sorghum-grain-pioneer",
+        "sudangrass-piper",
+        "sorghum-sudangrass-cover",
+        "bmr-sorghum-sudan"
+      ],
+      "sources": [
+        {
+          "url": "https://carroll.ext.vt.edu/content/dam/carroll_ext_vt_edu/teutsch_nitrates_prussic_acid_forages_09aug2010.pdf",
+          "publisher": "Virginia Tech Extension (Chris Teutsch, Southern Piedmont AREC)",
+          "date": "2010-08-09 (from file name; no date printed in text)",
+          "quote": "prussic acid or hydrogen cyanide can be formed in commonly used sorghum species such as forage sorghum, sorghum-sudangrass hybrids, sudangrass, and Johnsongrass."
+        },
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/MF3040.pdf",
+          "publisher": "Kansas State University Research and Extension, MF3040 (Roozeboom et al.)",
+          "date": "March 2012",
+          "quote": "Crop species most commonly involved with prussic acid poisoning are forage and grain sorghums, Johnsongrass, shattercane, sudangrass, and sorghum-sudangrass crosses."
+        },
+        {
+          "url": "https://utbeef.tennessee.edu/?p=6396",
+          "publisher": "University of Tennessee Extension (Hannah Wright-Smith)",
+          "date": "2025-11-11",
+          "quote": "withhold grazing of sorghum species for 10 to 14 days following frost",
+          "note": "Page reader. Page names johnsongrass, sudangrass and sorghum-sudangrass hybrids."
+        }
+      ],
+      "note": "broomcorn-mennonite (broomcorn is a sorghum) was NOT named by any source opened; left unmapped. Johnsongrass and shattercane have no plugin."
+    },
+    "prussicAcid.crops.relativeRisk": {
+      "gateEligible": false,
+      "value": {
+        "sudangrass": "low to intermediate",
+        "sorghum-sudangrass": "intermediate",
+        "forage sorghum": "intermediate to high",
+        "grain sorghum": "high to very high"
+      },
+      "sources": [
+        {
+          "url": "https://cropwatch.unl.edu/2019/forage-hazards-following-freeze-event",
+          "publisher": "University of Nebraska-Lincoln CropWatch (Ben Beckman, Megan Taylor)",
+          "date": "October 6, 2023 (originally October 10, 2019)",
+          "quote": "Sorghum-Sudangrass hybrids",
+          "note": "Page reader returned a risk list, not a sentence: sudangrass low to intermediate, sorghum-sudangrass intermediate, forage sorghums intermediate to high, grain sorghum high to very high."
+        },
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/MF3040.pdf",
+          "publisher": "Kansas State University Research and Extension, MF3040",
+          "date": "March 2012",
+          "quote": "Grain sorghum and forage sorghum tend to be more toxic than sudangrass or sorghum-sudangrass."
+        }
+      ],
+      "note": "Ordering agrees but the UNL values come from the page reader's list; advisory only."
+    },
+    "prussicAcid.crops.notCyanogenic": {
+      "gateEligible": true,
+      "value": ["pearl millet"],
+      "pluginIds": ["pearl-millet-tifleaf"],
+      "sources": [
+        {
+          "url": "https://carroll.ext.vt.edu/content/dam/carroll_ext_vt_edu/teutsch_nitrates_prussic_acid_forages_09aug2010.pdf",
+          "publisher": "Virginia Tech Extension (Chris Teutsch)",
+          "date": "2010-08-09 (from file name)",
+          "quote": "Pearl millet, corn, crabgrass and most other commonly used forages DO NOT form prussic acid."
+        },
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/MF3040.pdf",
+          "publisher": "Kansas State University Research and Extension, MF3040",
+          "date": "March 2012",
+          "quote": "Hybrid pearl millet and foxtail millet are generally considered to not have high prussic acid concentrations."
+        }
+      ],
+      "note": "Foxtail millet (foxtail-millet-japanese) has only the K-State source, so it is advisory only. K-State's wording is 'not have high', VT's is 'DO NOT form'; the stricter reading is K-State's."
+    },
+    "prussicAcid.crops.otherNamedByOneSource": {
+      "gateEligible": false,
+      "value": [
+        "Indiangrass",
+        "flax",
+        "chokecherry",
+        "black cherry",
+        "elderberry",
+        "some varieties of white clover",
+        "some varieties of birdsfoot trefoil"
+      ],
+      "pluginIds": ["flax-grain-omega", "white-clover-cover"],
+      "sources": [
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/MF3040.pdf",
+          "publisher": "Kansas State University Research and Extension, MF3040",
+          "date": "March 2012",
+          "quote": "Indiangrass, flax, choke-cherry, black cherry, elderberry, and some varieties of white clover and birdsfoot trefoil also can cause prussic acid poisoning."
+        }
+      ],
+      "note": "Single source, so advisory only. Flax and white clover do have plugins (flax-grain-omega, white-clover-cover); the source says only 'some varieties' of white clover. No second source was found."
+    },
+    "prussicAcid.frostWait.killingFrostDays": {
+      "gateEligible": false,
+      "value": null,
+      "sources": [
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/MF3040.pdf",
+          "publisher": "Kansas State University Research and Extension, MF3040",
+          "date": "March 2012",
+          "quote": "After a killing frost, wait at least five days or until the frozen leaf tissue has completely dried out before grazing to allow the released HCN gas to dissipate."
+        },
+        {
+          "url": "https://cropwatch.unl.edu/2019/forage-hazards-following-freeze-event",
+          "publisher": "University of Nebraska-Lincoln CropWatch",
+          "date": "October 6, 2023",
+          "quote": "Keeping livestock out of these areas for five to seven days after a frost can limit the risk associated with prussic acid."
+        },
+        {
+          "url": "https://crops.extension.iastate.edu/post/frosted-forages-and-fall-risks-managing-prussic-acid-and-bloat-grazing-systems",
+          "publisher": "Iowa State University Extension (Shelby Gruss)",
+          "date": "2025-10-22",
+          "quote": "Don't graze for at least 7 days after a frost. If another frost occurs during that week, restart the clock.",
+          "note": "Page reader."
+        },
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/MF3607.pdf",
+          "publisher": "Kansas State University Research and Extension, MF3607 (shares text with Purdue AY-378-W)",
+          "date": "June 2022",
+          "quote": "After a frost, keep livestock off frosted sorghum plants for at least one week."
+        },
+        {
+          "url": "https://www.extension.purdue.edu/extmedia/AY/AY-378-W.pdf",
+          "publisher": "Purdue Extension, AY-378-W (Shelby Gruss, Keith Johnson)",
+          "date": "not printed in extracted text",
+          "quote": "Wait to graze 7 to 10 days after a killing freeze."
+        },
+        {
+          "url": "https://fyi.extension.wisc.edu/forage/files/2014/01/SorghumsFOF.pdf",
+          "publisher": "University of Wisconsin Extension, Focus on Forage Vol 5 No 5 (Dan Undersander)",
+          "date": "not printed in extracted text (URL path 2014/01)",
+          "quote": "do not graze or green chop for 10 days after a killing frost."
+        },
+        {
+          "url": "https://utbeef.tennessee.edu/?p=6396",
+          "publisher": "University of Tennessee Extension",
+          "date": "2025-11-11",
+          "quote": "withhold grazing of sorghum species for 10 to 14 days following frost",
+          "note": "Page reader."
+        },
+        {
+          "url": "https://carroll.ext.vt.edu/content/dam/carroll_ext_vt_edu/teutsch_nitrates_prussic_acid_forages_09aug2010.pdf",
+          "publisher": "Virginia Tech Extension (Chris Teutsch)",
+          "date": "2010-08-09 (from file name)",
+          "quote": "Plants that have been frosted should not be grazed for 7-14 days or until the leaves are dead and dried out."
+        }
+      ],
+      "note": "DISAGREEMENT, recorded not merged: 5 days (K-State MF3040), 5 to 7 days (UNL), 7 days (ISU, K-State MF3607), 7 to 10 days (Purdue), 10 days (Wisconsin), 10 to 14 days (Tennessee), 7 to 14 days (Virginia Tech). The stricter reading would be 14 days, but no gate may read any number from here. Several sources also add 'or until leaves are dry'."
+    },
+    "prussicAcid.frostWait.nonKillingFrost": {
+      "gateEligible": false,
+      "value": null,
+      "sources": [
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/MF3607.pdf",
+          "publisher": "Kansas State University Research and Extension, MF3607 (shares text with Purdue AY-378-W)",
+          "date": "June 2022",
+          "quote": "After a non-killing frost, sorghum should be scouted for regrowth because it can contain a large amount of HCN. If regrowth is apparent, you should wait 10 to 14 days or until the regrowth has reached 24 inches tall before grazing or chopping."
+        },
+        {
+          "url": "https://crops.extension.iastate.edu/post/frosted-forages-and-fall-risks-managing-prussic-acid-and-bloat-grazing-systems",
+          "publisher": "Iowa State University Extension (Shelby Gruss)",
+          "date": "2025-10-22",
+          "quote": "After a light frost, new tillers may emerge and contain high dhurrin levels. Wait until regrowth is over 18 inches tall or until a killing frost halts growth.",
+          "note": "Page reader."
+        }
+      ],
+      "note": "DISAGREEMENT on the regrowth height inside the non-killing-frost rule: 24 inches (K-State) vs over 18 inches (ISU). Both agree that the wait is for regrowth, not a fixed day count alone. K-State also says a frost 'is a rolling suggestion': 'every time another frost occurs, livestock should be removed from the frosted plants for another week.'"
+    },
+    "prussicAcid.regrowth.tillers": {
+      "gateEligible": true,
+      "value": "new growth, tillers or regrowth after frost or drought is high in HCN",
+      "sources": [
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/MF3040.pdf",
+          "publisher": "Kansas State University Research and Extension, MF3040",
+          "date": "March 2012",
+          "quote": "New sorghum growth, especially \"suckers\" or tillers, following drought or frost are dangerously high in cyanide."
+        },
+        {
+          "url": "https://cropwatch.unl.edu/2019/forage-hazards-following-freeze-event",
+          "publisher": "University of Nebraska-Lincoln CropWatch",
+          "date": "October 6, 2023",
+          "quote": "New shoots and especially regrowth on previously frost-damaged plants have the highest concentrations of prussic acid."
+        }
+      ]
+    },
+    "prussicAcid.minHeight.sorghumFamily": {
+      "gateEligible": false,
+      "value": null,
+      "sources": [
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/MF3607.pdf",
+          "publisher": "Kansas State University Research and Extension, MF3607",
+          "date": "June 2022",
+          "quote": "Delay grazing until the plants have reached a height of 18 to 24 inches to avoid HCN toxicity under good growing conditions."
+        },
+        {
+          "url": "https://fyi.extension.wisc.edu/forage/files/2014/01/SorghumsFOF.pdf",
+          "publisher": "University of Wisconsin Extension, Focus on Forage Vol 5 No 5 (Dan Undersander)",
+          "date": "not printed in extracted text",
+          "quote": "the recommendation is not to graze or cut for green chop until the plant is 18 to 20 inches tall.",
+          "note": "Also: \"Sudangrass or sudangrass hybrids can be grazed any time after the plant has reached a height of 18 inches.\""
+        },
+        {
+          "url": "https://carroll.ext.vt.edu/content/dam/carroll_ext_vt_edu/teutsch_nitrates_prussic_acid_forages_09aug2010.pdf",
+          "publisher": "Virginia Tech Extension (Chris Teutsch)",
+          "date": "2010-08-09 (from file name)",
+          "quote": "should not be grazed until plants have reached a height of 20-30 inches."
+        },
+        {
+          "url": "https://cropwatch.unl.edu/2019/forage-hazards-following-freeze-event",
+          "publisher": "University of Nebraska-Lincoln CropWatch",
+          "date": "October 6, 2023",
+          "quote": "animals should not be allowed to graze until the regrowth is 15-18 inches tall or a frost completely kills the plant",
+          "note": "Page reader. About regrowth after frost."
+        },
+        {
+          "url": "https://utbeef.tennessee.edu/?p=6396",
+          "publisher": "University of Tennessee Extension",
+          "date": "2025-11-11",
+          "quote": "until leaves dry down after a killing frost or regrowth reaches 18 to 24 inches tall.",
+          "note": "Page reader."
+        }
+      ],
+      "note": "DISAGREEMENT: 15-18 (UNL, regrowth after frost), 18 (ISU regrowth, Wisconsin sudangrass), 18 to 20 (Wisconsin), 18 to 24 (K-State, Tennessee), 20-30 (Virginia Tech). No source opened separated sudangrass from sorghum-sudangrass in a sentence I could quote; a search-result summary attributed '18 to 20 inches (sudangrass) vs 24 to 30 inches (sorghum-sudangrass hybrids)' to Iowa State and Nebraska material, which could not be verified word for word and is NOT recorded as a value."
+    },
+    "nitrate.crops.smallGrains": {
+      "gateEligible": true,
+      "value": ["oats", "wheat", "rye", "barley"],
+      "pluginIds": [
+        "oats-cover-spring",
+        "oats-grain-jerry",
+        "oats-hulless-streaker",
+        "wheat-hard-red-spring",
+        "wheat-hard-white-winter",
+        "wheat-soft-red-winter",
+        "cereal-rye-cover",
+        "rye-grain-aroostook",
+        "barley-grain-thoroughbred",
+        "barley-hulless-streaker"
+      ],
+      "sources": [
+        {
+          "url": "https://extension.colostate.edu/resource/nitrate-poisoning/",
+          "publisher": "Colorado State University Extension",
+          "date": "published January 1992, reviewed January 2025",
+          "quote": "Other annuals that less frequently accumulate nitrate are small grains (wheat, oats, rye and barley) and millet.",
+          "note": "Page reader's extraction."
+        },
+        {
+          "url": "https://fdn.montana.edu/extension/carbon/documents/ag%20nit%20tox%20mt.pdf",
+          "publisher": "Montana State University Extension MontGuide MT 200205 AG (Cash, Funston, King, Wichman)",
+          "date": "reviewed 5/06",
+          "quote": "High nitrate has been reported in cereal grains (oats, rye, wheat, barley, triticale, etc.), bromegrass, orchardgrass, fescue, sorghum, sudangrass, millet, corn, sweetclover and alfalfa."
+        },
+        {
+          "url": "https://carroll.ext.vt.edu/content/dam/carroll_ext_vt_edu/teutsch_nitrates_prussic_acid_forages_09aug2010.pdf",
+          "publisher": "Virginia Tech Extension (Chris Teutsch)",
+          "date": "2010-08-09 (from file name)",
+          "quote": "Some plants tend to accumulate nitrates at greater rate; these include, but are not limited to commonly used summer annual grasses, corn, crabgrass, small grains, annual ryegrass, bermudagrass, Johnsongrass, tall fescue,"
+        }
+      ],
+      "note": "triticale-fridge is named only by Montana (VT says 'small grains'), so it is advisory only."
+    },
+    "nitrate.crops.sorghumSudangrassMillet": {
+      "gateEligible": true,
+      "value": ["sorghum", "sudangrass", "millet"],
+      "pluginIds": [
+        "sorghum-grain-pioneer",
+        "sudangrass-piper",
+        "sorghum-sudangrass-cover",
+        "bmr-sorghum-sudan",
+        "pearl-millet-tifleaf",
+        "foxtail-millet-japanese",
+        "millet-japanese-cover",
+        "proso-millet-cope"
+      ],
+      "sources": [
+        {
+          "url": "https://extension.colostate.edu/resource/nitrate-poisoning/",
+          "publisher": "Colorado State University Extension",
+          "date": "reviewed January 2025",
+          "quote": "the most notorious accumulators of nitrate are the sorghums.",
+          "note": "Page reader's extraction."
+        },
+        {
+          "url": "https://fdn.montana.edu/extension/carbon/documents/ag%20nit%20tox%20mt.pdf",
+          "publisher": "Montana State University Extension MontGuide MT 200205 AG",
+          "date": "reviewed 5/06",
+          "quote": "High nitrate has been reported in cereal grains (oats, rye, wheat, barley, triticale, etc.), bromegrass, orchardgrass, fescue, sorghum, sudangrass, millet, corn, sweetclover and alfalfa."
+        },
+        {
+          "url": "https://cropwatch.unl.edu/2019/forage-hazards-following-freeze-event",
+          "publisher": "University of Nebraska-Lincoln CropWatch",
+          "date": "October 6, 2023",
+          "quote": "Slower metabolism following a stress like freezing allows nitrates to accumulate within the plant, specifically oats, sudangrass, and millets.",
+          "note": "Page reader."
+        }
+      ]
+    },
+    "nitrate.crops.corn": {
+      "gateEligible": true,
+      "value": ["corn"],
+      "pluginIds": [
+        "corn",
+        "corn-feed-dent-pioneer",
+        "corn-bloody-butcher",
+        "corn-painted-mountain",
+        "corn-bantam-sweet",
+        "corn-sweet-bodacious"
+      ],
+      "sources": [
+        {
+          "url": "https://carroll.ext.vt.edu/content/dam/carroll_ext_vt_edu/teutsch_nitrates_prussic_acid_forages_09aug2010.pdf",
+          "publisher": "Virginia Tech Extension (Chris Teutsch)",
+          "date": "2010-08-09 (from file name)",
+          "quote": "commonly used summer annual grasses, corn, crabgrass, small grains,"
+        },
+        {
+          "url": "https://fdn.montana.edu/extension/carbon/documents/ag%20nit%20tox%20mt.pdf",
+          "publisher": "Montana State University Extension MontGuide MT 200205 AG",
+          "date": "reviewed 5/06",
+          "quote": "sorghum, sudangrass, millet, corn, sweetclover and alfalfa."
+        }
+      ],
+      "note": "Both sources mean forage (silage, fodder or green) corn. Sweet corn, popcorn and ornamental corn plugins are not named; the other corn plugins (sweet-corn-*, popcorn-*, ornamental-corn-*) are left unmapped. VT: 'For corn silage and forage sorghum, raising the cutting height even more (12-16 inches) can help avoid high levels of nitrates.'"
+    },
+    "nitrate.crops.brassicas": {
+      "gateEligible": false,
+      "value": ["brassica forage crops"],
+      "pluginIds": [
+        "turnip-hakurei",
+        "turnip-purple-top-white-globe",
+        "kale-lacinato",
+        "kale-red-russian",
+        "kale-winterbor-f1",
+        "daikon-radish-cover",
+        "tillage-radish-driller",
+        "mustard-tillage-cover"
+      ],
+      "sources": [
+        {
+          "url": "https://publications.ca.uky.edu/files/ID223.pdf",
+          "publisher": "University of Kentucky Cooperative Extension, ID-223 (Michelle Arnold, Jeff Lehmkuhler)",
+          "date": "Issued 8-2014",
+          "quote": "Brassica crops may accumulate high concentrations of nitrates."
+        }
+      ],
+      "note": "One source. The publication is about forage brassicas (rape, turnip, kale, radish); the quoted sentence names no individual crop, so the plugin mapping is the app's inference and is advisory only. It also says 'Nitrate poisoning has been documented from excessive nitrogen fertilization.'"
+    },
+    "nitrate.crops.alfalfaSweetclover": {
+      "gateEligible": false,
+      "value": ["alfalfa", "sweetclover"],
+      "pluginIds": ["alfalfa-hi-gest-660", "alfalfa-vernema"],
+      "sources": [
+        {
+          "url": "https://fdn.montana.edu/extension/carbon/documents/ag%20nit%20tox%20mt.pdf",
+          "publisher": "Montana State University Extension MontGuide MT 200205 AG",
+          "date": "reviewed 5/06",
+          "quote": "High nitrate has been reported in cereal grains (oats, rye, wheat, barley, triticale, etc.), bromegrass, orchardgrass, fescue, sorghum, sudangrass, millet, corn, sweetclover and alfalfa."
+        }
+      ],
+      "note": "One source."
+    },
+    "nitrate.classes.vt": {
+      "gateEligible": false,
+      "unitBasis": "NO3 ppm and percent, as printed; footnote 'Nitrate concentration is expressed as NO3. To convert these values to NO3-N multiply by 0.23.' Dry matter basis is NOT stated in the table.",
+      "sources": [
+        {
+          "url": "https://carroll.ext.vt.edu/content/dam/carroll_ext_vt_edu/teutsch_nitrates_prussic_acid_forages_09aug2010.pdf",
+          "publisher": "Virginia Tech Extension (Chris Teutsch), adapted from Southern Forages, 4th ed. 2007",
+          "date": "2010-08-09 (from file name)",
+          "quote": "0-0.25 0-2,500 SAFE Generally considered safe. 0.25-0.5 2,500-5,000 CAUTION Generally safe when fed with a balanced ration. Can be a problem for pregnant and young animals. Limit to 1/2 of ration. Do not feed with non-protein N. Check water for nitrates. 0.5-1.5 5,000-15,000 DANGER Limit to 1/4 of ration. Supplement with energy, minerals, and vitamin A. Over 1.5 Over 15,000 TOXIC Forage should not be fed. If forage must be fed, limit to less than 15% of ration.",
+          "note": "Table 1 rows flattened onto one line; the table prints '%' and 'ppm' columns and a fraction sign for 1/2 and 1/4. Applies to forage fed to cattle; separate sentence for horses: 'forages are generally considered safe for horses if the nitrate concentration in the plant material is below 1.5 to 2.0%.'"
+        }
+      ],
+      "note": "Part of the nitrate-band disagreement; see nitrate.classes.disagreement."
+    },
+    "nitrate.classes.csu": {
+      "gateEligible": false,
+      "unitBasis": "NO3 ppm, dry matter basis",
+      "sources": [
+        {
+          "url": "https://extension.colostate.edu/resource/nitrate-poisoning/",
+          "publisher": "Colorado State University Extension",
+          "date": "published January 1992, reviewed January 2025",
+          "quote": "forage containing less than 5,000 ppm NO3 on a dry matter basis is safe",
+          "note": "Page reader extraction. Same source: 5,000 to 10,000 potentially toxic 'when provided as the only feed'; over 10,000 dangerous and 'often can be fed safely after proper dilution with other feeds'. These last two fragments were paraphrased by the page reader and should be re-read on the live page."
+        }
+      ]
+    },
+    "nitrate.classes.montana": {
+      "gateEligible": false,
+      "unitBasis": "NO3-N ppm and NO3 ppm, reported on 100% dry matter basis; 'If nitrate content of a feed is reported on an \"as is\" basis, convert to 100% dry matter basis to compare it to levels in this table.'",
+      "sources": [
+        {
+          "url": "https://fdn.montana.edu/extension/carbon/documents/ag%20nit%20tox%20mt.pdf",
+          "publisher": "Montana State University Extension MontGuide MT 200205 AG, Table 3",
+          "date": "reviewed 5/06",
+          "quote": "<350 <1500 Generally safe for all conditions and livestock 350-1130 1500-5000 Generally safe for nonpregnant livestock. 1130-2260 5000-10,00 Limit feed to 25-50% of ration for nonpregnant livestock. DO NOT FEED TO PREGNANT ANIMALS >2260 >10,000 DO NOT FEED. Acute symptoms and death.",
+          "note": "Columns are NO3-N ppm then NO3 ppm. The PDF prints '10,00' (typo) for 10,000. Quote elides the sentences 'Potential early-term abortions or reduced breeding performance. Limit use to bred animals to 50% of the total ration.' and the abortion/weak calves sentence. The table carries its own note: 'These guidelines for Montana are more conservative than those published from other states.'"
+        }
+      ]
+    },
+    "nitrate.classes.disagreement": {
+      "gateEligible": false,
+      "value": null,
+      "sources": [],
+      "note": "DISAGREEMENT, recorded not merged. 'Safe' tops out at 2,500 NO3 ppm (Virginia Tech), 1,500 NO3 ppm (Montana, which labels itself more conservative) or 5,000 NO3 ppm (Colorado State). The 'danger or do not feed' line is 5,000-15,000 / over 15,000 (VT), over 10,000 (Montana 'DO NOT FEED') or over 10,000 'dangerous' but dilutable (CSU). The unit bases also differ in what the page states (CSU and Montana: dry matter; VT: NO3, basis not stated in the table). Animal groups: VT bands are for cattle ration limits; Montana separates pregnant from nonpregnant livestock; CSU says 'Cattle producers should be concerned if rations contain over 5,000 ppm nitrate on a dry matter basis' per the search result, not verified on the page. The stricter reading is Montana's. No gate may read these."
+    },
+    "nitrate.conversion.no3ToNo3N": {
+      "gateEligible": true,
+      "value": "NO3-N = NO3 x 0.23; NO3 = NO3-N x 4.4",
+      "sources": [
+        {
+          "url": "https://carroll.ext.vt.edu/content/dam/carroll_ext_vt_edu/teutsch_nitrates_prussic_acid_forages_09aug2010.pdf",
+          "publisher": "Virginia Tech Extension (Chris Teutsch)",
+          "date": "2010-08-09 (from file name)",
+          "quote": "To convert these values to NO3-N multiply by 0.23."
+        },
+        {
+          "url": "https://fdn.montana.edu/extension/carbon/documents/ag%20nit%20tox%20mt.pdf",
+          "publisher": "Montana State University Extension MontGuide MT 200205 AG, Table 2",
+          "date": "reviewed 5/06",
+          "quote": "Nitrate-nitrogen (NO3-N) (1) 4.4 Nitrate (NO3) 0.23 (1)",
+          "note": "Table 2 rows: reported as NO3-N, multiply by 4.4 to get NO3; reported as NO3, multiply by 0.23 to get NO3-N. Included only to read a lab report; the app was told not to convert."
+        }
+      ]
+    },
+    "nitrate.drought.afterRain": {
+      "gateEligible": false,
+      "value": null,
+      "sources": [
+        {
+          "url": "https://carroll.ext.vt.edu/content/dam/carroll_ext_vt_edu/teutsch_nitrates_prussic_acid_forages_09aug2010.pdf",
+          "publisher": "Virginia Tech Extension (Chris Teutsch)",
+          "date": "2010-08-09 (from file name)",
+          "quote": "Grazing or harvesting should be delayed for 7 days after a drought ending rain."
+        },
+        {
+          "url": "https://fdn.montana.edu/extension/carbon/documents/ag%20nit%20tox%20mt.pdf",
+          "publisher": "Montana State University Extension MontGuide MT 200205 AG",
+          "date": "reviewed 5/06",
+          "quote": "toxic levels of nitrate can accumulate in forages immediately after a drought-ending rain or irrigation."
+        }
+      ],
+      "note": "Only Virginia Tech gives a number (7 days); Montana gives none. Advisory only. For prussic acid the same VT page says drought stressed plants 'should not be grazed until growth has resumed after a drought breaking rainfall (usually 7 days).'"
+    },
+    "nitrate.fertilizer.nPerCutting": {
+      "gateEligible": false,
+      "value": null,
+      "sources": [
+        {
+          "url": "https://extension.colostate.edu/resource/nitrate-poisoning/",
+          "publisher": "Colorado State University Extension",
+          "date": "reviewed January 2025",
+          "quote": "split nitrogen into two or three applications, with a maximum of about 50 pounds of actual nitrogen applied per cutting.",
+          "note": "Page reader extraction."
+        },
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/MF3607.pdf",
+          "publisher": "Kansas State University Research and Extension, MF3607",
+          "date": "June 2022",
+          "quote": "Limit nitrogen fertilizer to 50 pounds per acre (soil nitrate residual plus fertilizer) per cutting to reduce risk of nitrate and HCN toxicity"
+        }
+      ],
+      "note": "Both say about 50 lb N per cutting, but the bases differ (CSU: applied N; K-State: soil nitrate residual plus fertilizer) and 'about' is not a threshold, so not gate-eligible."
+    },
+    "nitrate.hay.stability": {
+      "gateEligible": false,
+      "value": null,
+      "sources": [
+        {
+          "url": "https://carroll.ext.vt.edu/content/dam/carroll_ext_vt_edu/teutsch_nitrates_prussic_acid_forages_09aug2010.pdf",
+          "publisher": "Virginia Tech Extension (Chris Teutsch)",
+          "date": "2010-08-09 (from file name)",
+          "quote": "Nitrates do NOT decrease over time in dry hay."
+        },
+        {
+          "url": "https://fdn.montana.edu/extension/carbon/documents/ag%20nit%20tox%20mt.pdf",
+          "publisher": "Montana State University Extension MontGuide MT 200205 AG",
+          "date": "reviewed 5/06",
+          "quote": "The nitrate level in hay will usually remain constant or decline slightly in storage."
+        }
+      ],
+      "note": "Qualitative; VT is stricter. Advisory only. Both say test suspect forage."
+    },
+    "nitrate.cutting.height": {
+      "gateEligible": false,
+      "value": null,
+      "sources": [
+        {
+          "url": "https://carroll.ext.vt.edu/content/dam/carroll_ext_vt_edu/teutsch_nitrates_prussic_acid_forages_09aug2010.pdf",
+          "publisher": "Virginia Tech Extension (Chris Teutsch)",
+          "date": "2010-08-09 (from file name)",
+          "quote": "Raising your cutting or grazing height from 2-4 inches to 6-8 inches can significantly reduce nitrate concentrations in the forage tissue that is being conserved or ingested."
+        },
+        {
+          "url": "https://cropwatch.unl.edu/2019/forage-hazards-following-freeze-event",
+          "publisher": "University of Nebraska-Lincoln CropWatch",
+          "date": "October 6, 2023",
+          "quote": "Waiting five days before haying or chopping and keeping a cutting height of 6 to 8 inches will help mitigate risk.",
+          "note": "Page reader. Same source says nitrates 'do not dissipate like prussic acid' so haying after a freeze 'is not recommended'."
+        }
+      ],
+      "note": "The 6-8 inch cutting height agrees across two sources but is a mitigation, not a hold, so it is not marked gate-eligible."
+    },
+    "prussicAcid.hcnPpm.ksu": {
+      "gateEligible": false,
+      "unitBasis": "ppm HCN; dry matter basis in Table 1; wet weight (as is) basis for the 200 ppm statement",
+      "sources": [
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/MF3040.pdf",
+          "publisher": "Kansas State University Research and Extension, MF3040",
+          "date": "March 2012",
+          "quote": "HCN levels in forages exceeding 200 parts per million on a wet weight (as is) basis are dangerous. On a dry weight basis, forages with more than 500 ppm HCN should be considered potentially toxic (Table 1)."
+        }
+      ],
+      "note": "Table 1 (dry matter basis): 0-500 'Generally safe; should not cause toxicity.'; 500-1,000 'Potentially toxic; should not be the only source of feed.'; 1,000 and above 'Dangerous to cattle and usually will cause death.' Single source. Virginia Tech (1998 Livestock Update, John Hall) says '25 mg/100 g of dry matter are considered safe' per the page reader, which is 250 ppm and does not match K-State's 500, recorded here as a disagreement and not as an entry."
+    }
+  },
+  "pluginIdsWithoutSource": [
+    "broomcorn-mennonite (sorghum type; no source opened names broomcorn)",
+    "triticale-fridge (nitrate: Montana only)",
+    "sweet-corn-*, popcorn-*, ornamental-corn-* (sources mean forage corn)"
+  ],
+  "cropsWithoutPlugin": [
+    "Johnsongrass",
+    "shattercane",
+    "Indiangrass",
+    "chokecherry",
+    "black cherry",
+    "elderberry",
+    "bromegrass",
+    "orchardgrass",
+    "tall fescue",
+    "annual ryegrass",
+    "crabgrass",
+    "bermudagrass",
+    "sweetclover",
+    "birdsfoot trefoil",
+    "rape"
+  ],
+  "gaps": [
+    "No source opened separates sudangrass from sorghum-sudangrass minimum heights in a quotable sentence (see prussicAcid.minHeight.sorghumFamily).",
+    "Iowa State, UNL and Tennessee pages were read through the fetch tool's quoted extraction, not raw HTML; re-read before shipping.",
+    "Kansas State MF3607 lists 'Cope 2021' as a source and its text contains no nitrate band table; Purdue AY-378-W duplicates it.",
+    "Colorado State's table text came from the page reader and was paraphrased in places; the 5,000 / 10,000 bands should be re-read on the live page."
+  ]
+}

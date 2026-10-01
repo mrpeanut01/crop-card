@@ -25,6 +25,8 @@ declare global {
     interface PageData {
       /** Resolved language from the root layout (32F, F5-3). */
       locale?: string;
+      /** Enabled languages, English first; one entry hides every picker. */
+      locales?: string[];
       user?: {
         id: string;
         email: string | null;

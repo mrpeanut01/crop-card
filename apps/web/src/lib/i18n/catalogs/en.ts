@@ -29,8 +29,14 @@ export const en = {
   'nav.alertsActive.other': 'Alerts, {count} active',
   'nav.alertsEmpty': 'No active alerts.',
   'nav.alertsOpenToday': 'Open Today →',
+  'nav.language': 'Language',
+  'nav.languageFailed': "Couldn't change the language. Try again.",
   'nav.pendingRecords.one': '{count} offline record waiting to sync',
   'nav.pendingRecords.other': '{count} offline records waiting to sync',
+
+  'onboarding.language.question': 'Which language should CropCard use?',
+  'onboarding.language.note':
+    'You can change it any time in Settings or with the EN / ES button at the top.',
 
   'account.pageTitle': 'Account & sign-in · CropCard',
   'account.title': 'Account & sign-in',

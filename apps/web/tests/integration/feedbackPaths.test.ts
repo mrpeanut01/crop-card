@@ -11,8 +11,8 @@ describe('feedback reaches every signed-in person (#466)', () => {
     expect(allowsPartialSession('/api/feedback/extra', false)).toBe(false);
   });
 
-  it('is the only API write open to the read-only inspector role', () => {
-    expect([...ANY_ROLE_API_WRITES]).toEqual(['/api/feedback']);
+  it('and the language choice are the only API writes open to the read-only inspector role', () => {
+    expect([...ANY_ROLE_API_WRITES]).toEqual(['/api/feedback', '/api/me/locale']);
   });
 
   it('still works on a suspended farm', () => {

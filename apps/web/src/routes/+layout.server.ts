@@ -17,6 +17,7 @@ import { buildNavAlerts, type NavAlert } from '$lib/today/navAlerts';
 import { PLANS } from '$lib/billing/plans';
 import { resolvePlan } from '$lib/server/billing/plans';
 import { animalsNavLabel } from '$lib/animals/profile.server';
+import { enabledLocales } from '$lib/i18n/locales';
 
 export const load: LayoutServerLoad = ({ locals }) => {
   // A sprayer is "dirty" when it has carried chemistry that has not yet been
@@ -146,6 +147,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
 
   return {
     locale: locals.locale ?? 'en',
+    locales: [...enabledLocales()],
     pluginLoadFailures,
     user: locals.user
       ? {

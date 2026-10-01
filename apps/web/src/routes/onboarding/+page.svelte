@@ -2,12 +2,18 @@
   import { enhance } from '$app/forms';
   import { browser } from '$app/environment';
   import { untrack } from 'svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
+  import LanguageToggle from '$lib/components/ui/LanguageToggle.svelte';
   import { ArrowRight, Check, Crosshair, MapPin, Search, Sun } from 'lucide-svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import FrostPanel from '$lib/components/onboarding/FrostPanel.svelte';
   import type { ActionData, PageData } from './$types';
 
   const { data, form }: { data: PageData; form: ActionData } = $props();
+
+  const tr = $derived(createT(page.data?.locale));
+  const showLanguage = $derived((page.data?.locales?.length ?? 0) > 1);
 
   let farmName = $state(untrack(() => data.suggestedName));
   let lat = $state<number | null>(null);
@@ -124,6 +130,13 @@
         you're in. Your location sets the weather, frost dates and planting times, so we ask for it
         first.
       </p>
+      {#if showLanguage}
+        <div class="lang-q">
+          <p class="lang-q-text">{tr('onboarding.language.question')}</p>
+          <LanguageToggle />
+          <p class="lang-q-note">{tr('onboarding.language.note')}</p>
+        </div>
+      {/if}
     </header>
 
     <form method="POST" action="?/farm" use:enhance={submitEnhance} class="form">
@@ -643,5 +656,22 @@
     .choice {
       min-height: 96px;
     }
+  }
+  .lang-q {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+  }
+  .lang-q-text {
+    margin: 0;
+    font-weight: 600;
+  }
+  .lang-q-note {
+    margin: 0;
+    flex-basis: 100%;
+    font-size: 13px;
+    color: var(--color-ink-muted);
   }
 </style>

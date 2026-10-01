@@ -22,6 +22,7 @@
   import IconButton from './IconButton.svelte';
   import Avatar from './Avatar.svelte';
   import OfflineIndicator from './OfflineIndicator.svelte';
+  import LanguageToggle from './LanguageToggle.svelte';
   import FeedbackSheet from '$lib/components/feedback/FeedbackSheet.svelte';
   import type { NavAlert } from '$lib/today/navAlerts';
   import { createT } from '$lib/i18n';
@@ -275,6 +276,7 @@
   </nav>
 
   <div class="right">
+    <LanguageToggle />
     <details class="alerts-menu" bind:open={alertsOpen}>
       <summary class="alerts-trigger" aria-label={alertsLabel} title={alertsLabel}>
         <Bell size={16} strokeWidth={1.75} />

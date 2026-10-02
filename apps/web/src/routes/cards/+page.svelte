@@ -18,54 +18,79 @@
   } from '$lib/cards/deck';
   import { parseCardKey } from '$lib/cards/model';
   import type { CardPrintLayout } from '$lib/cards/model';
-  import { PRINT_HELP, PRINT_LAYOUTS } from '$lib/cards/print';
+  import { PRINT_LAYOUTS } from '$lib/cards/print';
   import { installNudgeWanted } from '$lib/client/offlineStorage';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
 
+  const tr = $derived(createT(page.data?.locale));
   const cards = new OfflineCards();
-  const EMPTY_STATE: Record<DeckFilter, { text: string; href?: string; action?: string }> = {
-    all: {
-      text: 'No cards yet. Add a planting on the Plan page to get your first one.',
-      href: '/plan',
-      action: 'Open Plan'
+  const FILTER_LABEL_KEYS = {
+    all: 'cardsui.filter.all',
+    pinned: 'cardsui.filter.pinned',
+    today: 'cardsui.filter.today',
+    animals: 'cardsui.filter.animals',
+    planting: 'cardsui.filter.planting',
+    area: 'cardsui.filter.area',
+    equipment: 'cardsui.filter.equipment',
+    spray: 'cardsui.filter.spray',
+    careGuide: 'cardsui.filter.careGuide'
+  } as const;
+  const LAYOUT_KEYS = {
+    'letter-4up': {
+      label: 'cardsui.layout.letter4up.label',
+      hint: 'cardsui.layout.letter4up.hint'
     },
-    pinned: { text: 'Nothing pinned yet. Pin a card to keep it at the top.' },
-    today: {
-      text: 'Nothing due today or overdue. New tasks from your plan show up here.',
+    'index-3x5': { label: 'cardsui.layout.index3x5.label', hint: 'cardsui.layout.index3x5.hint' },
+    'index-4x6': { label: 'cardsui.layout.index4x6.label', hint: 'cardsui.layout.index4x6.hint' },
+    'letter-landscape': {
+      label: 'cardsui.layout.landscape.label',
+      hint: 'cardsui.layout.landscape.hint'
+    }
+  } as const;
+  const EMPTY_STATE = {
+    all: {
+      text: 'cardsui.empty.all',
       href: '/plan',
-      action: 'Open Plan'
+      action: 'cardsui.empty.openPlan'
+    },
+    pinned: { text: 'cardsui.empty.pinned' },
+    today: {
+      text: 'cardsui.empty.today',
+      href: '/plan',
+      action: 'cardsui.empty.openPlan'
     },
     animals: {
-      text: 'No animals yet. Add a flock, a herd or a pet and its card shows up here.',
+      text: 'cardsui.empty.animals',
       href: '/animals/add',
-      action: 'Add animals'
+      action: 'cardsui.empty.addAnimals'
     },
     spray: {
-      text: 'Spray cards appear for pesticides you have in stock, one for each calibrated sprayer.',
+      text: 'cardsui.empty.spray',
       href: '/inventory/pesticide/add',
-      action: 'Add a pesticide'
+      action: 'cardsui.empty.addPesticide'
     },
     planting: {
-      text: 'No plantings yet. Add one and its card shows up here.',
+      text: 'cardsui.empty.planting',
       href: '/plan',
-      action: 'Add a planting'
+      action: 'cardsui.empty.addPlanting'
     },
     area: {
-      text: 'No areas yet. Draw your farm to get area cards.',
+      text: 'cardsui.empty.area',
       href: '/plan/farm',
-      action: 'Draw your farm'
+      action: 'cardsui.empty.drawFarm'
     },
     equipment: {
-      text: 'No equipment yet.',
+      text: 'cardsui.empty.equipment',
       href: '/equipment?add=sprayer',
-      action: 'Add a sprayer'
+      action: 'cardsui.empty.addSprayer'
     },
     careGuide: {
-      text: 'Care guides come with the crops you plant. Add a planting to get its guide.',
+      text: 'cardsui.empty.careGuide',
       href: '/plan',
-      action: 'Add a planting'
+      action: 'cardsui.empty.addPlanting'
     }
-  };
+  } as const;
   const FILTER_KEY = 'cropcard.cardsFilter';
 
   let now = $state(Date.now());
@@ -143,10 +168,10 @@
     now = Date.now();
     notice =
       outcome === 'updated' || outcome === 'unchanged'
-        ? 'Saved. These cards now open on this device with no signal.'
+        ? tr('cardsui.saved')
         : outcome === 'offline'
-          ? 'No signal right now. The cards you already saved still work.'
-          : 'Could not refresh the cards just now. Try again in a moment.';
+          ? tr('cardsui.noSignal')
+          : tr('cardsui.refreshFailed');
     showNudge = installNudgeWanted();
   }
 
@@ -172,21 +197,21 @@
 
   function printSelected() {
     const previous = document.title;
-    document.title = 'CropCard cards';
+    document.title = tr('cardsui.printTitle');
     window.print();
     document.title = previous;
   }
 </script>
 
-<svelte:head><title>Cards · CropCard</title></svelte:head>
+<svelte:head><title>{tr('cardsui.title')}</title></svelte:head>
 
 <div class="no-print">
   <header class="head">
     <div>
-      <Kicker>Field cards</Kicker>
-      <h1 class="serif">Cards</h1>
+      <Kicker>{tr('cardsui.kicker')}</Kicker>
+      <h1 class="serif">{tr('cardsui.h1')}</h1>
       <p class="lede">
-        Your farm on cards. They open with no signal and print onto index cards or plain paper.
+        {tr('cardsui.lede')}
       </p>
     </div>
     <button
@@ -196,34 +221,35 @@
       onclick={saveForOffline}
       disabled={cards.syncing || !online}
     >
-      {cards.syncing ? 'Saving…' : 'Save for offline'}
+      {cards.syncing ? tr('cardsui.saving') : tr('cardsui.saveOffline')}
     </button>
   </header>
 
   <p class="status" role="status" data-testid="cards-status">
     {#if !cards.loaded}
-      Loading your cards…
+      {tr('cardsui.loading')}
     {:else if cards.row}
-      Saved on this device · as of {fmt.instant(cards.row.bundle.generatedAt, 'datetime')}
-      {#if !online}· you are offline{/if}
+      {tr('cardsui.savedOnDevice', {
+        date: fmt.instant(cards.row.bundle.generatedAt, 'datetime')
+      })}
+      {#if !online}{tr('cardsui.youAreOffline')}{/if}
     {:else if online}
-      Not saved on this device yet. Tap Save for offline to keep them here.
+      {tr('cardsui.notSaved')}
     {:else}
-      These cards have not been saved on this device yet. Open CropCard once with signal and they
-      will be ready.
+      {tr('cardsui.notSavedOffline')}
     {/if}
   </p>
   {#if notice}<p class="notice" role="status">{notice}</p>{/if}
   {#if cards.storageKept === false}
     <p class="notice">
-      This browser may clear saved cards when space runs low. Printing a copy is the safe bet.
+      {tr('cardsui.storageWarn')}
     </p>
   {/if}
   {#if online}
     <Hint
       key="cards_offline"
       anchor="[data-hint-anchor=cards_offline]"
-      text="Save for offline keeps these cards on this phone, so they open in the field with no signal. Pin the ones you use most."
+      text={tr('cardsui.hint')}
       suppressed={showNudge}
     />
   {/if}
@@ -231,7 +257,7 @@
     <InstallNudge onDismiss={() => (showNudge = false)} />
   {/if}
 
-  <div class="filters" role="group" aria-label="Show cards">
+  <div class="filters" role="group" aria-label={tr('cardsui.showCards')}>
     {#each DECK_FILTERS as f (f.id)}
       <button
         type="button"
@@ -240,16 +266,16 @@
         aria-pressed={filter === f.id}
         onclick={() => pickFilter(f.id)}
       >
-        {f.label}
+        {tr(FILTER_LABEL_KEYS[f.id])}
       </button>
     {/each}
   </div>
 
   {#if snapshot && visible.length === 0}
     {@const empty = EMPTY_STATE[filter]}
-    <p class="empty">{empty.text}</p>
-    {#if empty.href && empty.action && online}
-      <a class="empty-action" href={empty.href}>{empty.action}</a>
+    <p class="empty">{tr(empty.text)}</p>
+    {#if 'href' in empty && online}
+      <a class="empty-action" href={empty.href}>{tr(empty.action)}</a>
     {/if}
   {/if}
 
@@ -261,24 +287,24 @@
         type="button"
         class="btn ghost"
         aria-pressed={pinned}
-        aria-label="{pinned ? 'Unpin' : 'Pin'} {card.title}"
+        aria-label={tr(pinned ? 'cardsui.unpinNamed' : 'cardsui.pinNamed', { title: card.title })}
         onclick={() => togglePin(card.key)}
       >
-        {pinned ? 'Pinned' : 'Pin'}
+        {pinned ? tr('cardsui.pinned') : tr('cardsui.pin')}
       </button>
       <label class="select">
         <input
           type="checkbox"
           checked={isSelected}
           onchange={() => toggleSelected(card.key)}
-          aria-label="Select {card.title} for printing"
+          aria-label={tr('cardsui.selectForPrint', { title: card.title })}
         />
-        <span>Select</span>
+        <span>{tr('cardsui.select')}</span>
       </label>
     </div>
   {/snippet}
 
-  <ul class="deck" aria-label="Cards">
+  <ul class="deck" aria-label={tr('cardsui.h1')}>
     {#each slots as slot (slot.card.key)}
       {@const card = slot.card}
       {@const isSelected = selected.includes(card.key)}
@@ -294,13 +320,13 @@
             data-testid="pin-barn"
             onclick={() => toggleBarn(card.key)}
           >
-            {barn ? 'Pinned for the barn' : 'Pin for the barn'}
+            {barn ? tr('cardsui.barnPinned') : tr('cardsui.barnPin')}
           </button>
         {/if}
         {#if slot.members.length}
           <details class="members" data-testid="flock-members">
-            <summary>Members ({slot.members.length})</summary>
-            <ul class="member-list" aria-label="Members of {card.title}">
+            <summary>{tr('cardsui.members', { count: slot.members.length })}</summary>
+            <ul class="member-list" aria-label={tr('cardsui.membersOf', { title: card.title })}>
               {#each slot.members as member (member.key)}
                 <li class="slot" class:selected={selected.includes(member.key)}>
                   <CardView card={member} {prefs} {now} variant="compact" />
@@ -316,28 +342,30 @@
 
   {#if deck.length}
     <section class="print-panel" aria-labelledby="print-heading">
-      <h2 id="print-heading">Print</h2>
+      <h2 id="print-heading">{tr('cardsui.print')}</h2>
       <p class="hint">
         {selected.length
-          ? `${selected.length} selected.`
-          : 'Nothing selected, so every card shown above prints.'}
-        {PRINT_HELP}
+          ? tr('cardsui.nSelected', { count: selected.length })
+          : tr('cardsui.nothingSelected')}
+        {tr('cardsui.printHelp')}
       </p>
       <fieldset>
-        <legend>Paper</legend>
+        <legend>{tr('cardsui.paper')}</legend>
         {#each PRINT_LAYOUTS as l (l.id)}
           <label class="opt">
             <input type="radio" name="layout" value={l.id} bind:group={layout} />
-            <span>{l.label}</span>
-            <span class="hint">{l.hint}</span>
+            <span>{tr(LAYOUT_KEYS[l.id].label)}</span>
+            <span class="hint">{tr(LAYOUT_KEYS[l.id].hint)}</span>
           </label>
         {/each}
       </fieldset>
       <div class="print-actions">
-        <button type="button" class="btn primary" onclick={printSelected}>Print selected</button>
+        <button type="button" class="btn primary" onclick={printSelected}
+          >{tr('cardsui.printSelected')}</button
+        >
         {#if selected.length}
           <button type="button" class="btn ghost" onclick={() => (selected = [])}>
-            Clear selection
+            {tr('cardsui.clearSelection')}
           </button>
         {/if}
       </div>

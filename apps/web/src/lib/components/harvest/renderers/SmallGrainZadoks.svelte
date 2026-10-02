@@ -1,11 +1,14 @@
 <script lang="ts">
   import { Wheat } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
   import { fmtRange } from './format';
   import { stageForDaysFromPlanting, zadoksNumber } from '$lib/plan/smallGrain';
 
   const props: RendererProps = $props();
+  const tr = $derived(createT(page.data?.locale));
   const DAY_MS = 24 * 60 * 60 * 1000;
 
   const zadoks = $derived(props.rendererData?.zadoksStages);
@@ -42,9 +45,9 @@
   <header class="archetype-head">
     <Wheat size={18} strokeWidth={1.75} />
     <div>
-      <span class="archetype-name">Small-grain harvest</span>
+      <span class="archetype-name">{tr('harvestui.r.grain.name')}</span>
       <span class="archetype-sub">
-        Single cut at Z89 (full ripeness). Check moisture before binning.
+        {tr('harvestui.r.grain.sub')}
       </span>
     </div>
   </header>
@@ -52,9 +55,9 @@
   {#if zadoks && zadoks.length > 0}
     <div class="zadoks-block">
       <div class="block-head">
-        <span class="block-title">Zadoks staging</span>
+        <span class="block-title">{tr('harvestui.r.grain.zadoks')}</span>
         {#if daysFromPlanting !== null}
-          <span class="mono muted">day {daysFromPlanting} since planting</span>
+          <span class="mono muted">{tr('harvestui.r.grain.day', { n: daysFromPlanting })}</span>
         {/if}
       </div>
       <ol class="stage-list">
@@ -97,7 +100,7 @@
 
   <div class="moisture-capture">
     <label class="qfield">
-      <span>Stored moisture (%)</span>
+      <span>{tr('harvestui.r.grain.stored')}</span>
       <input type="text" inputmode="decimal" placeholder="13.0" bind:value={moisturePct} />
     </label>
     <p class="hint">Binning above the family threshold is blocked — dry down first.</p>

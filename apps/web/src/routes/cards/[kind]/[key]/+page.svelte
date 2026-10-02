@@ -10,8 +10,10 @@
   import { careGuideCardsFor, photoHelpTargets } from '$lib/journal/targets';
   import { OfflineCards } from '$lib/components/cards/offlineCards.svelte';
   import { barnPinKeys, buildCard } from '$lib/cards/build';
-  import { CARD_KIND_LABEL, isCardKind, type CardPrintLayout } from '$lib/cards/model';
-  import { PRINT_HELP, PRINT_LAYOUTS, fullPageNote, needsFullPage } from '$lib/cards/print';
+  import { isCardKind, type CardPrintLayout } from '$lib/cards/model';
+  import { PRINT_LAYOUTS, isCalendarKind, needsFullPage } from '$lib/cards/print';
+  import { CARD_KIND_LABEL_KEYS } from '$lib/components/cards/kindLabels';
+  import { createT } from '$lib/i18n';
   import { installNudgeWanted } from '$lib/client/offlineStorage';
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { cardViewParams, snapshotOlderThan, withoutPrintParam } from '$lib/cards/viewParams';
@@ -21,6 +23,19 @@
   import SeedStartPanel from '$lib/components/cards/SeedStartPanel.svelte';
   import PlantingHours from '$lib/components/cards/PlantingHours.svelte';
 
+  const tr = $derived(createT(page.data?.locale));
+  const LAYOUT_KEYS = {
+    'letter-4up': {
+      label: 'cardsui.layout.letter4up.label',
+      hint: 'cardsui.layout.letter4up.hint'
+    },
+    'index-3x5': { label: 'cardsui.layout.index3x5.label', hint: 'cardsui.layout.index3x5.hint' },
+    'index-4x6': { label: 'cardsui.layout.index4x6.label', hint: 'cardsui.layout.index4x6.hint' },
+    'letter-landscape': {
+      label: 'cardsui.layout.landscape.label',
+      hint: 'cardsui.layout.landscape.hint'
+    }
+  } as const;
   const cards = new OfflineCards();
   const FRESH_PRINT_WAIT_MS = 5000;
 
@@ -65,7 +80,9 @@
     if (older && !freshWaitOver) return;
     autoPrinted = true;
     printNotice = older
-      ? `Printing the copy saved at ${formatInstant(snapshot.generatedAt, prefs, 'time')}. Your latest change may not be on it yet.`
+      ? tr('cardsui.one.printingCopy', {
+          time: formatInstant(snapshot.generatedAt, prefs, 'time')
+        })
       : '';
     replaceState(withoutPrintParam(page.url), page.state);
     void tick().then(print);
@@ -117,17 +134,23 @@
   }
 </script>
 
-<svelte:head><title>{card ? `${card.title} · Cards` : 'Card'} · CropCard</title></svelte:head>
+<svelte:head
+  ><title
+    >{card
+      ? tr('cardsui.one.titleNamed', { title: card.title })
+      : tr('cardsui.one.titleBare')}</title
+  ></svelte:head
+>
 
 <div class="no-print">
-  <nav class="crumbs" aria-label="Breadcrumb">
-    <a href="/cards">Cards</a>
+  <nav class="crumbs" aria-label={tr('cardsui.one.breadcrumb')}>
+    <a href="/cards">{tr('cardsui.h1')}</a>
     {#if isCardKind(kind)}<span aria-hidden="true">›</span>
-      <span>{CARD_KIND_LABEL[kind]}</span>{/if}
+      <span>{tr(CARD_KIND_LABEL_KEYS[kind])}</span>{/if}
   </nav>
 
   {#if !cards.loaded}
-    <p class="status" role="status">Loading the card…</p>
+    <p class="status" role="status">{tr('cardsui.one.loading')}</p>
   {:else if card}
     <div class="one">
       <CardView {card} {prefs} {now} />
@@ -135,22 +158,24 @@
     {#if printNotice}
       <p class="status" role="status" data-testid="print-notice">{printNotice}</p>
     {:else if view.autoPrint && !autoPrinted && snapshot && snapshotOlderThan(snapshot.generatedAt, view.afterMs)}
-      <p class="status" role="status">Getting the latest copy before printing…</p>
+      <p class="status" role="status">{tr('cardsui.one.gettingLatest')}</p>
     {/if}
     <div class="actions">
       <button type="button" class="btn ghost" aria-pressed={pinned} onclick={togglePin}>
-        {pinned ? 'Pinned' : 'Pin'}
+        {pinned ? tr('cardsui.pinned') : tr('cardsui.pin')}
       </button>
       {#if barnKeys.length > 1}
         <button type="button" class="btn ghost" aria-pressed={barnPinned} onclick={toggleBarn}>
-          {barnPinned ? 'Pinned for the barn' : 'Pin for the barn'}
+          {barnPinned ? tr('cardsui.barnPinned') : tr('cardsui.barnPin')}
         </button>
       {/if}
-      <button type="button" class="btn primary" onclick={print}>Print this card</button>
+      <button type="button" class="btn primary" onclick={print}
+        >{tr('cardsui.one.printThis')}</button
+      >
     </div>
     {#if cards.storageKept === false}
       <p class="status">
-        This browser may clear saved cards when space runs low. Printing a copy is the safe bet.
+        {tr('cardsui.storageWarn')}
       </p>
     {/if}
     {#if showNudge}
@@ -158,21 +183,23 @@
     {/if}
     {#if needsFullPage(card)}
       <p class="hint" data-testid="full-page-note">
-        {fullPageNote(card)}
+        {isCalendarKind(card.kind)
+          ? tr('cardsui.one.landscapeNote')
+          : tr('cardsui.one.fullPageNote')}
       </p>
     {:else}
       <fieldset>
-        <legend>Paper</legend>
+        <legend>{tr('cardsui.paper')}</legend>
         {#each PRINT_LAYOUTS as l (l.id)}
           <label class="opt">
             <input type="radio" name="layout" value={l.id} bind:group={layout} />
-            <span>{l.label}</span>
-            <span class="hint">{l.hint}</span>
+            <span>{tr(LAYOUT_KEYS[l.id].label)}</span>
+            <span class="hint">{tr(LAYOUT_KEYS[l.id].hint)}</span>
           </label>
         {/each}
       </fieldset>
     {/if}
-    <p class="hint">{PRINT_HELP}</p>
+    <p class="hint">{tr('cardsui.printHelp')}</p>
     {#if card.kind === 'flock' && snapshot}
       <FlockQuickActions
         {snapshot}
@@ -194,18 +221,16 @@
     {/key}
   {:else if snapshot && (kind === 'week' || kind === 'month')}
     <p class="status" role="status" data-testid="calendar-outside-window">
-      {OUTSIDE_WINDOW_NOTE} <a href="/today">Back to Today</a> ·
-      <a href="/cards">Back to your cards</a>
+      {OUTSIDE_WINDOW_NOTE} <a href="/today">{tr('cardsui.one.backToday')}</a> ·
+      <a href="/cards">{tr('cardsui.one.backCards')}</a>
     </p>
   {:else if snapshot}
     <p class="status" role="status">
-      This card is not in the copy saved on this device. It may be new since the last save, or it no
-      longer exists. <a href="/cards">Back to your cards</a>
+      {tr('cardsui.one.notInCopy')} <a href="/cards">{tr('cardsui.one.backCards')}</a>
     </p>
   {:else}
     <p class="status" role="status">
-      Your cards have not been saved on this device yet. Open CropCard once with signal and they
-      will be ready. <a href="/cards">Go to Cards</a>
+      {tr('cardsui.one.notSavedYet')} <a href="/cards">{tr('cardsui.one.goCards')}</a>
     </p>
   {/if}
 </div>

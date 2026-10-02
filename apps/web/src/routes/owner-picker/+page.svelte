@@ -1,19 +1,27 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import type { PageData } from './$types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   let { data }: { data: PageData } = $props();
+  const tr = $derived(createT(page.data?.locale));
+  function roleLabel(role: string): string {
+    if (role === 'owner') return tr('entry.role.owner');
+    if (role === 'helper') return tr('entry.role.helper');
+    if (role === 'inspector') return tr('entry.role.inspector');
+    return role;
+  }
 </script>
 
 <svelte:head>
-  <title>Choose farm — CropCard</title>
+  <title>{tr('entry.picker.title')}</title>
 </svelte:head>
 
 <div class="picker">
-  <h1>Choose a farm</h1>
+  <h1>{tr('entry.picker.h1')}</h1>
   <p class="hint">
-    You're assigned to multiple farms. Pick the one you want to work on; you can switch later from
-    the top nav.
+    {tr('entry.picker.hint')}
   </p>
 
   <form method="POST" action="?/pick" use:enhance>
@@ -22,7 +30,7 @@
         <li>
           <button class="choice" type="submit" name="ownerId" value={choice.ownerId}>
             <span class="name">{choice.name}</span>
-            <span class="role">{choice.roleWithinOwner}</span>
+            <span class="role">{roleLabel(choice.roleWithinOwner)}</span>
           </button>
         </li>
       {/each}

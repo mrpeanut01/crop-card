@@ -1,5 +1,7 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import Card from '$lib/components/ui/Card.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
@@ -14,6 +16,7 @@
 
   const { result, canRecordCatch, todayYmd }: Props = $props();
   const view = $derived(watchForView(result));
+  const tr = $derived(createT(page.data?.locale));
 
   let catchDates = $state<Record<string, string>>({});
   let busy = $state<string | null>(null);
@@ -34,13 +37,15 @@
         errors = {
           ...errors,
           [modelId]:
-            res.status === 403 ? 'Ask the owner.' : (body?.error ?? 'Could not save the catch.')
+            res.status === 403
+              ? tr('scout.watch.askOwner')
+              : (body?.error ?? tr('scout.watch.errSaveCatch'))
         };
         return;
       }
       await invalidateAll();
     } catch {
-      errors = { ...errors, [modelId]: 'Could not save. Check your connection and try again.' };
+      errors = { ...errors, [modelId]: tr('scout.watch.errOffline') };
     } finally {
       busy = null;
     }
@@ -50,7 +55,7 @@
 {#if view.show}
   <section class="watch-for" aria-labelledby="watch-for-title" data-testid="watch-for">
     <Card>
-      <h2 id="watch-for-title">Watch for</h2>
+      <h2 id="watch-for-title">{tr('scout.watch.title')}</h2>
       {#if view.message}
         <p class="message">{view.message}</p>
       {/if}
@@ -69,7 +74,7 @@
             <p class="meta">
               {m.method}
               {#if m.station}
-                <Provenance source="data" detail={m.station} label="Station" />
+                <Provenance source="data" detail={m.station} label={tr('scout.watch.station')} />
               {/if}
             </p>
             {#if m.biofix}
@@ -87,7 +92,7 @@
                   void saveCatch(m.id, d);
                 }}
               >
-                <label for="catch-{m.id}">First trap catch</label>
+                <label for="catch-{m.id}">{tr('scout.watch.firstCatch')}</label>
                 <div class="catch-row">
                   <input
                     id="catch-{m.id}"
@@ -100,13 +105,15 @@
                         [m.id]: (e.target as HTMLInputElement).value
                       })}
                   />
-                  <button type="submit" disabled={busy === m.id}>Save first catch</button>
+                  <button type="submit" disabled={busy === m.id}
+                    >{tr('scout.watch.saveCatch')}</button
+                  >
                   {#if m.catchDate}
                     <button
                       type="button"
                       class="ghost"
                       disabled={busy === m.id}
-                      onclick={() => saveCatch(m.id, null)}>Clear catch</button
+                      onclick={() => saveCatch(m.id, null)}>{tr('scout.watch.clearCatch')}</button
                     >
                   {/if}
                 </div>

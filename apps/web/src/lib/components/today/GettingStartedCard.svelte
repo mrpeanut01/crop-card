@@ -2,6 +2,7 @@
   import { onMount, tick } from 'svelte';
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { Check, ChevronRight } from 'lucide-svelte';
   import {
     gettingStartedItems,
@@ -34,6 +35,7 @@
     return (await listPinned()).length > 0;
   }
 
+  const tr = $derived(createT(page.data?.locale));
   let pinned = $state<boolean | null>(null);
   let expanded = $state(false);
   let hiddenNow = $state(false);
@@ -97,7 +99,7 @@
       };
     }}
   >
-    <button type="submit" class="dismiss">Dismiss</button>
+    <button type="submit" class="dismiss">{tr('today.gs.dismiss')}</button>
   </form>
 {/snippet}
 
@@ -108,9 +110,11 @@
       <div class="gs-body">
         <header class="gs-head">
           <div>
-            <div class="kicker">Getting started · {summary.done} of {summary.total}</div>
+            <div class="kicker">
+              {tr('today.gs.kicker', { done: summary.done, total: summary.total })}
+            </div>
             <h2 id="gs-title" class="serif" tabindex="-1" bind:this={titleEl}>
-              A few things, when you're ready
+              {tr('today.gs.heading')}
             </h2>
           </div>
           <svg
@@ -119,7 +123,7 @@
             height="52"
             viewBox="0 0 52 52"
             role="img"
-            aria-label="{summary.done} of {summary.total} done"
+            aria-label={tr('today.gs.ringAria', { done: summary.done, total: summary.total })}
           >
             <circle cx="26" cy="26" r={R} class="ring-bg" />
             <circle
@@ -142,11 +146,11 @@
                 <span class="text">
                   <span class="title">
                     {item.title}
-                    {#if item.done}<span class="sr-only">(done)</span>{/if}
+                    {#if item.done}<span class="sr-only">({tr('today.gs.doneSr')})</span>{/if}
                   </span>
                   <span class="blurb">{item.blurb}</span>
                 </span>
-                {#if item.optional}<span class="opt">Optional</span>{/if}
+                {#if item.optional}<span class="opt">{tr('today.gs.optional')}</span>{/if}
                 <ChevronRight size={16} aria-hidden="true" />
               </a>
             </li>
@@ -154,7 +158,9 @@
         </ol>
         <footer class="gs-foot">
           {#if mode === 'strip'}
-            <button type="button" class="dismiss" onclick={collapse}> Show less </button>
+            <button type="button" class="dismiss" onclick={collapse}>
+              {tr('today.gs.showLess')}
+            </button>
           {/if}
           {@render dismissForm()}
         </footer>
@@ -163,12 +169,14 @@
   {:else}
     <section
       class="gs-slim"
-      aria-label="Getting started"
+      aria-label={tr('today.gs.aria')}
       data-testid="getting-started-strip"
       bind:this={rootEl}
     >
-      <span>Setup {summary.done} of {summary.total}</span>
-      <button type="button" class="show" onclick={expand} bind:this={showEl}>Show</button>
+      <span>{tr('today.gs.setup', { done: summary.done, total: summary.total })}</span>
+      <button type="button" class="show" onclick={expand} bind:this={showEl}
+        >{tr('today.gs.show')}</button
+      >
       {@render dismissForm()}
     </section>
   {/if}

@@ -1,8 +1,9 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { featurePlaceholder, waterSourceLabel } from './farmLabels';
   import {
-    MAP_FEATURE_NAME_PLACEHOLDER,
     servesManyAreas,
-    WATER_SOURCE_LABELS,
     WATER_SOURCE_TYPES,
     type MapFeatureKind,
     type WaterSourceType
@@ -20,24 +21,26 @@
     areas?: ReadonlyArray<{ id: string; name: string }>;
     idPrefix?: string;
   } = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <div class="feature-fields" data-testid="map-feature-fields">
   <label class="field" for="{idPrefix}-name">
-    <span>Name</span>
+    <span>{tr('farm.sheet.name')}</span>
     <input
       id="{idPrefix}-name"
       type="text"
       maxlength="120"
-      placeholder={MAP_FEATURE_NAME_PLACEHOLDER[kind]}
+      placeholder={featurePlaceholder(tr, kind)}
       value={draft.name}
       oninput={(e) => (draft = { ...draft, name: e.currentTarget.value })}
     />
   </label>
   {#if areas.length && servesManyAreas(kind)}
     <fieldset class="serves" data-testid="feature-serves">
-      <legend>Serves these Areas</legend>
-      <p class="hint">Tick every Area this one reaches. Areas next to it start ticked.</p>
+      <legend>{tr('farm.feature.servesTitle')}</legend>
+      <p class="hint">{tr('farm.feature.servesHint')}</p>
       <ul>
         {#each areas as a (a.id)}
           <li>
@@ -61,13 +64,13 @@
     </fieldset>
   {:else if areas.length}
     <label class="field" for="{idPrefix}-area">
-      <span>Belongs to (optional)</span>
+      <span>{tr('farm.feature.belongs')}</span>
       <select
         id="{idPrefix}-area"
         value={draft.fieldId}
         onchange={(e) => (draft = { ...draft, fieldId: e.currentTarget.value })}
       >
-        <option value="">The whole farm</option>
+        <option value="">{tr('farm.feature.wholeFarm')}</option>
         {#each areas as a (a.id)}
           <option value={a.id}>{a.name}</option>
         {/each}
@@ -76,21 +79,21 @@
   {/if}
   {#if kind === 'water_source'}
     <label class="field" for="{idPrefix}-source">
-      <span>Where the water comes from</span>
+      <span>{tr('farm.feature.waterFrom')}</span>
       <select
         id="{idPrefix}-source"
         value={draft.source}
         onchange={(e) =>
           (draft = { ...draft, source: e.currentTarget.value as '' | WaterSourceType })}
       >
-        <option value="">Not sure yet</option>
+        <option value="">{tr('farm.feature.notSure')}</option>
         {#each WATER_SOURCE_TYPES as t (t)}
-          <option value={t}>{WATER_SOURCE_LABELS[t]}</option>
+          <option value={t}>{waterSourceLabel(tr, t)}</option>
         {/each}
       </select>
     </label>
     <label class="field" for="{idPrefix}-flow">
-      <span>Flow rate, gallons per minute (optional)</span>
+      <span>{tr('farm.feature.flow')}</span>
       <input
         id="{idPrefix}-flow"
         type="number"

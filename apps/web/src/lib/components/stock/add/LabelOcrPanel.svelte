@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Camera, Image as ImageIcon, X } from 'lucide-svelte';
   import { onMount } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import LabelCapture from '$lib/components/LabelCapture.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import {
@@ -67,6 +69,7 @@
     onBatch,
     target
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let fileInput = $state<HTMLInputElement | null>(null);
   let preview = $state<string | null>(null); // data: URL for the preview card
@@ -153,12 +156,12 @@
       });
       const body = await res.json();
       if (!res.ok) {
-        extractError = body.message ?? body.error ?? `HTTP ${res.status}`;
+        extractError =
+          body.message ?? body.error ?? tr('stockui.httpStatus', { status: res.status });
         return;
       }
       if (!body.found) {
-        extractError =
-          'Claude could not identify the product. Try a clearer photo, the Barcode scanner, or Manual entry.';
+        extractError = tr('stockui.ocr.notIdentified');
         return;
       }
       const draft = target ? draftFromMedScan(body) : draftFromScanResult(body, 'ai');
@@ -184,8 +187,7 @@
     </p>
   {:else}
     <p class="lede">
-      Snap the front of the package or the ingredient block. Claude Vision extracts the structured
-      fields — every output gets a provenance tag so you can spot-check before save.
+      {tr('stockui.ocr.lede')}
     </p>
   {/if}
 
@@ -199,11 +201,9 @@
          entry (no AI dependency).
          Spec: docs/design/almanac/AI_PROVENANCE_ADDENDUM.md §no-key. -->
     <div class="no-key-empty" data-empty-state="no-ai-key">
-      <h3 class="no-key-empty-title">Claude key required for label extraction</h3>
+      <h3 class="no-key-empty-title">{tr('stockui.ocr.keyRequired')}</h3>
       <p class="no-key-empty-lede">
-        Scan Label uses Claude Vision to read product labels and pre-populate the inventory fields.
-        Add an Anthropic API key on the Settings page to enable this method, or switch to Manual
-        entry to type the fields in yourself.
+        {tr('stockui.ocr.keyLede')}
       </p>
       <div class="no-key-empty-actions">
         <a
@@ -213,7 +213,7 @@
           rel="noopener"
           data-action="configure-ai"
         >
-          Configure AI key ↗
+          {tr('stockui.configureKey')}
         </a>
         {#if onSwitchToManual}
           <button
@@ -222,7 +222,7 @@
             onclick={onSwitchToManual}
             data-action="switch-to-manual"
           >
-            Switch to Manual entry →
+            {tr('stockui.switchManual')}
           </button>
         {/if}
       </div>
@@ -244,8 +244,8 @@
         data-action="open-camera"
       >
         <Camera size={32} strokeWidth={1.5} aria-hidden="true" />
-        <span class="capture-tile-label">Take photo</span>
-        <span class="capture-tile-hint">Live camera · rear-facing</span>
+        <span class="capture-tile-label">{tr('stockui.ocr.takePhoto')}</span>
+        <span class="capture-tile-hint">{tr('stockui.ocr.liveCamera')}</span>
       </button>
     {/if}
     <!-- #249 — gallery fallback takes several photos at once for
@@ -258,10 +258,10 @@
     >
       <ImageIcon size={cameraSupported ? 24 : 32} strokeWidth={1.5} aria-hidden="true" />
       <span class="upload-label"
-        >{cameraSupported ? 'Or upload from gallery' : 'Upload photos'}</span
+        >{cameraSupported ? tr('stockui.ocr.uploadGallery') : tr('stockui.ocr.uploadPhotos')}</span
       >
       <span class="upload-hint"
-        >JPG / PNG / HEIC, ≤ 10 MB each{onBatch ? ' · pick several to batch an unboxing' : ''}</span
+        >{tr('stockui.ocr.formats')}{onBatch ? tr('stockui.ocr.pickSeveral') : ''}</span
       >
       <input
         bind:this={fileInput}
@@ -281,15 +281,17 @@
 
   {#if preview}
     <figure class="preview">
-      <img src={preview} alt="Label preview" />
+      <img src={preview} alt={tr('stockui.ocr.preview')} />
       <figcaption>
         <span class="prov-row">
-          Image source <Provenance source="manual" compact />
-          → extraction <Provenance source="ai" compact />
+          {tr('stockui.ocr.imageSource')}
+          <Provenance source="manual" compact />
+          {tr('stockui.ocr.extraction')}
+          <Provenance source="ai" compact />
         </span>
         <button
           type="button"
-          aria-label="Clear preview"
+          aria-label={tr('stockui.ocr.clearPreview')}
           onclick={clear}
           disabled={busy || extracting}
         >
@@ -301,7 +303,7 @@
 
   {#if extracting}
     <div class="status" aria-live="polite">
-      Reading the label with Claude Vision… this can take 5-15 seconds.
+      {tr('stockui.ocr.reading')}
     </div>
   {/if}
 
@@ -321,7 +323,7 @@
           rel="noopener"
           data-action="configure-ai-from-error"
         >
-          Add Claude key ↗
+          {tr('stockui.batch.addKey')}
         </a>
         {#if onSwitchToManual}
           <button
@@ -334,13 +336,13 @@
             disabled={busy}
             data-action="switch-to-manual-from-error"
           >
-            Use Manual entry instead →
+            {tr('stockui.batch.useManual')}
           </button>
         {/if}
       </div>
     {:else}
       <button type="button" class="ghost" onclick={clear} disabled={busy || extracting}>
-        Try another photo
+        {tr('stockui.ocr.tryAnother')}
       </button>
     {/if}
   {/if}

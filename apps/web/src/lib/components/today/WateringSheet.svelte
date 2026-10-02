@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import { onMount } from 'svelte';
   import { submitGauge, submitWatering } from '$lib/irrigation/client';
   import { IRRIGATION_METHOD_VALUES } from '$lib/irrigation/apiSchemas';
@@ -41,14 +43,14 @@
   const uid = $props.id();
   const doFetch = (...args: Parameters<typeof fetch>) => (fetcher ?? fetch)(...args);
 
-  const METHOD_LABEL: Record<(typeof IRRIGATION_METHOD_VALUES)[number], string> = {
-    drip: 'Drip line',
-    soaker: 'Soaker hose',
-    sprinkler: 'Sprinkler',
-    hand: 'Hose or can by hand',
-    flood: 'Flood or furrow',
-    other: 'Other'
-  };
+  const METHOD_LABEL = {
+    drip: 'today.watering.method.drip',
+    soaker: 'today.watering.method.soaker',
+    sprinkler: 'today.watering.method.sprinkler',
+    hand: 'today.watering.method.hand',
+    flood: 'today.watering.method.flood',
+    other: 'today.watering.method.other'
+  } as const satisfies Record<(typeof IRRIGATION_METHOD_VALUES)[number], string>;
 
   function localNow(): string {
     const d = new Date();
@@ -84,13 +86,13 @@
     try {
       const res = await doFetch(`/api/irrigation/summary?fieldId=${encodeURIComponent(fieldId)}`);
       if (!res.ok) {
-        loadError = 'This Area could not load. Try again in a moment.';
+        loadError = tr('today.watering.loadFailed');
         return;
       }
       summary = (await res.json()) as Summary;
       targetInput = summary.target?.inches ?? null;
     } catch {
-      loadError = 'No connection. You can still save; it sends when you have signal.';
+      loadError = tr('today.watering.noConnection');
     }
   }
 
@@ -113,7 +115,7 @@
     e.preventDefault();
     error = null;
     if (amount === null || !Number.isFinite(amount) || amount <= 0) {
-      error = 'Enter how much you watered.';
+      error = tr('today.watering.enterAmount');
       return;
     }
     saving = true;
@@ -131,9 +133,7 @@
       if (out.status === 'error') error = out.message;
       else
         onDone(
-          out.status === 'queued'
-            ? 'Watering saved on this phone. It sends when you have signal.'
-            : 'Watering saved.'
+          out.status === 'queued' ? tr('today.watering.savedQueued') : tr('today.watering.saved')
         );
     } finally {
       saving = false;
@@ -144,11 +144,11 @@
     e.preventDefault();
     error = null;
     if (gaugeInches === null || !Number.isFinite(gaugeInches) || gaugeInches < 0) {
-      error = 'Enter the inches in the gauge. Enter 0 if it is dry.';
+      error = tr('today.watering.enterGauge');
       return;
     }
     if (gaugeInches > 15) {
-      error = 'That is more than 15 inches. Check the reading.';
+      error = tr('today.watering.gaugeTooHigh');
       return;
     }
     saving = true;
@@ -162,8 +162,8 @@
       else
         onDone(
           out.status === 'queued'
-            ? 'Gauge reading saved on this phone. It sends when you have signal.'
-            : 'Gauge reading saved.'
+            ? tr('today.watering.gaugeSavedQueued')
+            : tr('today.watering.gaugeSaved')
         );
     } finally {
       saving = false;
@@ -174,7 +174,7 @@
     targetMessage = null;
     const inches = reset ? null : targetInput;
     if (!reset && (inches === null || inches < 0.1 || inches > 5)) {
-      targetMessage = 'Enter between 0.1 and 5 inches a week.';
+      targetMessage = tr('today.watering.targetRange');
       return;
     }
     const res = await doFetch('/api/irrigation/target', {
@@ -183,13 +183,13 @@
       body: JSON.stringify({ fieldId, inches })
     }).catch(() => null);
     if (!res || !res.ok) {
-      targetMessage = 'The target did not save. Try again with signal.';
+      targetMessage = tr('today.watering.targetFailed');
       return;
     }
     const body = (await res.json()) as { target: Summary['target'] };
     if (summary) summary = { ...summary, target: body.target };
     targetInput = body.target?.inches ?? null;
-    targetMessage = 'Target saved.';
+    targetMessage = tr('today.watering.targetSaved');
   }
 
   async function remove(kind: 'irrigation' | 'rain-gauge', id: string) {
@@ -197,7 +197,7 @@
       () => null
     );
     if (!res || !res.ok) {
-      error = 'That could not be removed. Try again with signal.';
+      error = tr('today.watering.removeFailed');
       return;
     }
     await load();
@@ -206,50 +206,51 @@
   function logAmount(l: Summary['logs'][number]): string {
     if (l.inches !== null) return inchesText(l.inches);
     if (l.gallons !== null) return `${l.gallons} gal`;
-    if (l.durationMin !== null) return `${l.durationMin} min, amount not logged`;
-    return 'amount not logged';
+    if (l.durationMin !== null) return tr('today.watering.minNotLogged', { min: l.durationMin });
+    return tr('today.watering.notLogged');
   }
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <div class="watering-sheet" data-testid="watering-sheet">
   {#if loadError}<p class="note" role="status">{loadError}</p>{/if}
   {#if summary && !summary.canLog}
-    <p class="note" role="note">You can read this Area's watering. Inspectors can't log it.</p>
+    <p class="note" role="note">{tr('today.watering.readOnly')}</p>
   {:else if mode === 'log-watering'}
     <form onsubmit={saveWatering} data-testid="log-watering-form">
       {#if summary && summary.beds.length > 0}
-        <label for="{uid}-bed">Where</label>
+        <label for="{uid}-bed">{tr('today.watering.where')}</label>
         <select id="{uid}-bed" bind:value={blockId} data-autofocus>
-          <option value="">All of {summary.area.name}</option>
+          <option value="">{tr('today.watering.allOf', { name: summary.area.name })}</option>
           {#each summary.beds as b (b.id)}
             <option value={b.id}>{b.name}</option>
           {/each}
         </select>
       {/if}
-      <label for="{uid}-when">When</label>
+      <label for="{uid}-when">{tr('today.watering.when')}</label>
       <input id="{uid}-when" type="datetime-local" bind:value={when} required />
       <fieldset>
-        <legend>How much?</legend>
+        <legend>{tr('today.watering.howMuch')}</legend>
         <div class="choices">
           <label class="choice" class:on={amountKind === 'inches'}>
             <input type="radio" name="{uid}-kind" value="inches" bind:group={amountKind} />
-            Inches
+            {tr('today.watering.inches')}
           </label>
           <label class="choice" class:on={amountKind === 'gallons'}>
             <input type="radio" name="{uid}-kind" value="gallons" bind:group={amountKind} />
-            Gallons
+            {tr('today.watering.gallons')}
           </label>
           <label class="choice" class:on={amountKind === 'minutes'}>
             <input type="radio" name="{uid}-kind" value="minutes" bind:group={amountKind} />
-            Minutes
+            {tr('today.watering.minutes')}
           </label>
         </div>
         <input
           aria-label={amountKind === 'inches'
-            ? 'Inches of water'
+            ? tr('today.watering.inchesOfWater')
             : amountKind === 'gallons'
-              ? 'Gallons'
-              : 'Minutes'}
+              ? tr('today.watering.gallons')
+              : tr('today.watering.minutes')}
           type="number"
           min="0"
           step="any"
@@ -258,32 +259,39 @@
         />
         {#if amountKind === 'minutes'}
           <p class="help">
-            Minutes alone don't say how much water went on, so the advice can't count it.
+            {tr('today.watering.minutesHelp')}
           </p>
         {:else if amountKind === 'gallons' && !targetSized}
           <p class="help" data-testid="gallons-no-size">
-            {blockId ? 'This bed' : 'This Area'} has no size yet, so gallons can't be turned into inches.
-            Add its size on the farm map, or log inches instead.
+            {tr('today.watering.noSize', {
+              where: blockId ? tr('today.watering.thisBed') : tr('today.watering.thisArea')
+            })}
           </p>
         {/if}
       </fieldset>
-      <label for="{uid}-method">How <span class="optional">(optional)</span></label>
+      <label for="{uid}-method"
+        >{tr('today.watering.how')}
+        <span class="optional">({tr('today.watering.optional')})</span></label
+      >
       <select id="{uid}-method" bind:value={method}>
-        <option value="">Not saying</option>
+        <option value="">{tr('today.watering.notSaying')}</option>
         {#each IRRIGATION_METHOD_VALUES as m (m)}
-          <option value={m}>{METHOD_LABEL[m]}</option>
+          <option value={m}>{tr(METHOD_LABEL[m])}</option>
         {/each}
       </select>
-      <label for="{uid}-notes">Notes <span class="optional">(optional)</span></label>
+      <label for="{uid}-notes"
+        >{tr('today.watering.notes')}
+        <span class="optional">({tr('today.watering.optional')})</span></label
+      >
       <input id="{uid}-notes" type="text" maxlength="500" bind:value={notes} />
       {#if error}<p class="error" role="alert">{error}</p>{/if}
       <button class="primary" type="submit" disabled={saving}>
-        {saving ? 'Saving…' : 'Save watering'}
+        {saving ? tr('today.watering.saving') : tr('today.watering.save')}
       </button>
     </form>
   {:else}
     <form onsubmit={saveGauge} data-testid="rain-gauge-form">
-      <label for="{uid}-gauge">Inches in the gauge</label>
+      <label for="{uid}-gauge">{tr('today.watering.inchesInGauge')}</label>
       <input
         id="{uid}-gauge"
         type="number"
@@ -294,17 +302,16 @@
         bind:value={gaugeInches}
         data-autofocus
       />
-      <label for="{uid}-read">When you read it</label>
+      <label for="{uid}-read">{tr('today.watering.whenRead')}</label>
       <input id="{uid}-read" type="datetime-local" bind:value={when} required />
       <p class="help" data-testid="gauge-counts-from">
-        Counts as rain since {whenText(countsFrom)}{summary?.lastGaugeAt &&
-        countsFrom === summary.lastGaugeAt
-          ? ', your last reading'
-          : ', the 24 hours before you read it'}. Empty the gauge after you read it.
+        {summary?.lastGaugeAt && countsFrom === summary.lastGaugeAt
+          ? tr('today.watering.countsLast', { when: whenText(countsFrom) })
+          : tr('today.watering.countsWindow', { when: whenText(countsFrom) })}
       </p>
       {#if otherAreas.length > 0}
         <fieldset>
-          <legend>Also count it for</legend>
+          <legend>{tr('today.watering.alsoCount')}</legend>
           {#each otherAreas as a (a.id)}
             <label class="check">
               <input type="checkbox" value={a.id} bind:group={alsoAreas} />
@@ -315,31 +322,31 @@
       {/if}
       {#if error}<p class="error" role="alert">{error}</p>{/if}
       <button class="primary" type="submit" disabled={saving}>
-        {saving ? 'Saving…' : 'Save gauge reading'}
+        {saving ? tr('today.watering.saving') : tr('today.watering.saveGauge')}
       </button>
     </form>
   {/if}
 
   {#if summary}
     <section class="target" aria-labelledby="{uid}-target">
-      <h3 id="{uid}-target">Weekly water target</h3>
+      <h3 id="{uid}-target">{tr('today.watering.targetHeading')}</h3>
       {#if summary.target}
         <p>
-          {inchesText(summary.target.inches)} a week
+          {tr('today.watering.aWeek', { inches: inchesText(summary.target.inches) })}
           <Provenance
             source={summary.target.provenance}
             detail={summary.target.provenance === 'manual'
-              ? 'your setting'
+              ? tr('today.watering.yourSetting')
               : (summary.targetSource ?? undefined)}
           />
         </p>
       {:else}
-        <p>No weekly water target set.</p>
+        <p>{tr('today.watering.noTarget')}</p>
       {/if}
       {#if summary.canSetTarget}
         <div class="target-row">
           <input
-            aria-label="Inches a week"
+            aria-label={tr('today.watering.inchesAWeek')}
             type="number"
             min="0.1"
             max="5"
@@ -347,32 +354,35 @@
             inputmode="decimal"
             bind:value={targetInput}
           />
-          <button type="button" class="ghost" onclick={() => saveTarget(false)}>Save target</button>
+          <button type="button" class="ghost" onclick={() => saveTarget(false)}
+            >{tr('today.watering.saveTarget')}</button
+          >
           {#if summary.target?.provenance === 'manual'}
-            <button type="button" class="ghost" onclick={() => saveTarget(true)}>Use default</button
+            <button type="button" class="ghost" onclick={() => saveTarget(true)}
+              >{tr('today.watering.useDefault')}</button
             >
           {/if}
         </div>
         {#if targetMessage}<p class="help" role="status">{targetMessage}</p>{/if}
       {:else}
-        <p class="help">Ask the owner to change the target.</p>
+        <p class="help">{tr('today.watering.askOwner')}</p>
       {/if}
     </section>
 
     {#if mode === 'log-watering' && summary.logs.length > 0}
       <section aria-labelledby="{uid}-logs">
-        <h3 id="{uid}-logs">Watering this week</h3>
+        <h3 id="{uid}-logs">{tr('today.watering.thisWeek')}</h3>
         <ul class="history">
           {#each summary.logs as l (l.id)}
             <li>
               <span>
                 {whenText(l.occurredAt)}: {logAmount(l)}{l.blockId
-                  ? `, ${summary.beds.find((b) => b.id === l.blockId)?.name ?? 'one bed'}`
+                  ? `, ${summary.beds.find((b) => b.id === l.blockId)?.name ?? tr('today.watering.oneBed')}`
                   : ''}
               </span>
               {#if l.canRemove}
                 <button type="button" class="ghost" onclick={() => remove('irrigation', l.id)}>
-                  Remove
+                  {tr('today.watering.remove')}
                 </button>
               {/if}
             </li>
@@ -382,14 +392,14 @@
     {/if}
     {#if mode === 'rain-gauge' && summary.gauges.length > 0}
       <section aria-labelledby="{uid}-gauges">
-        <h3 id="{uid}-gauges">Recent gauge readings</h3>
+        <h3 id="{uid}-gauges">{tr('today.watering.recentGauges')}</h3>
         <ul class="history">
           {#each summary.gauges as g (g.id)}
             <li>
               <span>{whenText(g.readAt)}: {inchesText(g.inches)}</span>
               {#if g.canRemove}
                 <button type="button" class="ghost" onclick={() => remove('rain-gauge', g.id)}>
-                  Remove
+                  {tr('today.watering.remove')}
                 </button>
               {/if}
             </li>

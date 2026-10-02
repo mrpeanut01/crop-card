@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Map as MapIcon, Ruler, PencilLine, Sprout } from 'lucide-svelte';
   import type { SetupArea } from '$lib/setup/types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     onName: () => void;
@@ -21,34 +23,35 @@
     busy = false,
     error = null
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const wholeChoices = $derived(focusArea ? [focusArea] : emptyAreas);
 
   function listNames(names: string[]): string {
     if (names.length <= 1) return names[0] ?? '';
-    return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+    return tr('planui.where.listAnd', {
+      head: names.slice(0, -1).join(', '),
+      last: names[names.length - 1]
+    });
   }
 </script>
 
 <section class="where" aria-labelledby="where-title" data-testid="plan-where">
-  <p class="kicker">Plan</p>
+  <p class="kicker">{tr('planui.where.kicker')}</p>
   {#if focusArea}
-    <h2 id="where-title" class="serif">Where in {focusArea.name} will this grow?</h2>
+    <h2 id="where-title" class="serif">{tr('planui.where.titleIn', { name: focusArea.name })}</h2>
     <p class="lede">
-      Nothing is inside {focusArea.name} yet. Plant the whole thing as one bed, or give a smaller spot
-      a name.
+      {tr('planui.where.ledeIn', { name: focusArea.name })}
     </p>
   {:else}
-    <h2 id="where-title" class="serif">Where will this grow?</h2>
+    <h2 id="where-title" class="serif">{tr('planui.where.title')}</h2>
     {#if emptyAreas.length > 0}
       <p class="lede">
-        You already have {listNames(emptyAreas.map((a) => a.name))}. Plant one as a whole, or name a
-        smaller spot inside it.
+        {tr('planui.where.ledeHave', { names: listNames(emptyAreas.map((a) => a.name)) })}
       </p>
     {:else}
       <p class="lede">
-        Crops need a spot on the farm before they can be planned. Pick whichever way suits you. A
-        name is enough to start, and you can draw it properly later.
+        {tr('planui.where.ledeNone')}
       </p>
     {/if}
   {/if}
@@ -58,8 +61,8 @@
         <li>
           <button type="button" class="choice primary" disabled={busy} onclick={() => onWhole(a)}>
             <Sprout size={22} strokeWidth={1.75} aria-hidden="true" />
-            <span class="choice-title">Plant the whole {a.name} as one bed</span>
-            <span class="choice-hint">You can split it into beds later.</span>
+            <span class="choice-title">{tr('planui.where.wholeTitle', { name: a.name })}</span>
+            <span class="choice-hint">{tr('planui.where.wholeHint')}</span>
           </button>
         </li>
       {/each}
@@ -70,24 +73,26 @@
     <li>
       <a class="choice" href="/plan/farm">
         <MapIcon size={22} strokeWidth={1.75} aria-hidden="true" />
-        <span class="choice-title">Draw it on the map</span>
-        <span class="choice-hint">Trace your fields and beds over the satellite view.</span>
+        <span class="choice-title">{tr('planui.where.drawTitle')}</span>
+        <span class="choice-hint">{tr('planui.where.drawHint')}</span>
       </a>
     </li>
     <li>
       <a class="choice" href="/plan/farm?mode=sketch">
         <Ruler size={22} strokeWidth={1.75} aria-hidden="true" />
-        <span class="choice-title">Sketch it by size</span>
-        <span class="choice-hint">Type the width and length and CropCard draws a box.</span>
+        <span class="choice-title">{tr('planui.where.sketchTitle')}</span>
+        <span class="choice-hint">{tr('planui.where.sketchHint')}</span>
       </a>
     </li>
     <li>
       <button type="button" class="choice" onclick={onName}>
         <PencilLine size={22} strokeWidth={1.75} aria-hidden="true" />
         <span class="choice-title"
-          >{focusArea ? `Name a bed inside ${focusArea.name}` : 'Just give it a name'}</span
+          >{focusArea
+            ? tr('planui.where.nameBedIn', { name: focusArea.name })
+            : tr('planui.where.justName')}</span
         >
-        <span class="choice-hint">No map, no measuring. Draw it later if you like.</span>
+        <span class="choice-hint">{tr('planui.where.nameHint')}</span>
       </button>
     </li>
   </ul>

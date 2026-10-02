@@ -11,6 +11,8 @@
    * %s from the plugin's `analysis` field (which is kernel-locked — these
    * come from the registered fertilizer label, not free-form user input).
    */
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
   import LotQuantities from '../LotQuantities.svelte';
@@ -20,6 +22,7 @@
 
   type Props = Omit<FertilityDetailPayload, 'type'>;
   const { item, lots, movements, plugin }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const stockQty = (v: number, digits?: number) =>
     formatStockQuantity(v, item.defaultUnit, currentPrefs(), { digits });
@@ -30,7 +33,7 @@
 
 <header class="detail-header">
   <div>
-    <span class="kicker">Fertility</span>
+    <span class="kicker">{tr('inv.fert.kicker')}</span>
     <h1 class="serif">{item.displayName}</h1>
     {#if plugin}
       <p class="sub">
@@ -39,16 +42,15 @@
       </p>
     {/if}
   </div>
-  <a class="edit-cta" href="/inventory/fertility/{item.id}/edit">Edit</a>
+  <a class="edit-cta" href="/inventory/fertility/{item.id}/edit">{tr('inv.edit')}</a>
 </header>
 
 <div class="detail-grid">
   <div class="col">
-    <InvSection title="Guaranteed analysis" kicker="Label">
+    <InvSection title={tr('inv.fert.analysis')} kicker={tr('inv.fert.label')}>
       {#if !plugin}
         <p class="empty" data-testid="no-product-link">
-          No product label linked, so the analysis below is unknown and nutrient plans cannot use
-          it. Link the product with Edit.
+          {tr('inv.fert.noLabel')}
         </p>
       {/if}
       <div class="npk-bars">
@@ -76,10 +78,10 @@
       </div>
     </InvSection>
 
-    <InvSection title="Application" kicker="Label-derived">
+    <InvSection title={tr('inv.fert.application')} kicker={tr('inv.pest.labelDerived')}>
       {#if plugin?.applicationRange}
         <InvKVP
-          label="Default rate"
+          label={tr('inv.pest.defaultRate')}
           value={formatRateText(
             plugin.applicationRange.amount,
             plugin.applicationRange.unit,
@@ -88,35 +90,37 @@
           tone="mono"
         />
       {:else}
-        <p class="empty">No application range declared.</p>
+        <p class="empty">{tr('inv.fert.noRange')}</p>
       {/if}
-      <InvKVP label="Approach class" value={plugin?.organic ? 'OMRI / organic' : 'Conventional'} />
+      <InvKVP
+        label={tr('inv.fert.approachClass')}
+        value={plugin?.organic ? tr('inv.fert.organic') : tr('inv.fert.conventional')}
+      />
     </InvSection>
 
-    <InvSection title="Nutrient-plan impact" kicker="Phase 21b">
+    <InvSection title={tr('inv.fert.impact')} kicker="Phase 21b">
       <p class="empty small">
-        Per-acre delivery rates flow through `inputsPlan.ts` when this product is the
-        philosophy-allowed choice for the season's fertility approach.
+        {tr('inv.fert.impactNote')}
       </p>
     </InvSection>
   </div>
 
   <div class="col">
-    <InvSection title="Quantity" kicker="On hand, ordered, planned">
+    <InvSection title={tr('inv.seed.quantity')} kicker={tr('inv.seed.quantityKicker')}>
       <LotQuantities itemId={item.id} unit={item.defaultUnit} {lots} />
     </InvSection>
 
-    <InvSection title="Storage & reorder">
+    <InvSection title={tr('inv.storageReorder')}>
       <InvKVP
-        label="Reorder at"
+        label={tr('inv.reorderAt')}
         value={item.reorderThreshold != null ? stockQty(item.reorderThreshold, 2) : '—'}
       />
-      <InvKVP label="Notes" value={item.notes ?? '—'} />
+      <InvKVP label={tr('inv.seed.notes')} value={item.notes ?? '—'} />
     </InvSection>
 
-    <InvSection title="Application history" kicker="Last 8">
+    <InvSection title={tr('inv.fert.history')} kicker={tr('inv.seed.last8')}>
       {#if movements.length === 0}
-        <p class="empty">No fertility applications recorded yet.</p>
+        <p class="empty">{tr('inv.fert.noHistory')}</p>
       {:else}
         <ul class="movement-list">
           {#each movements.slice(0, 8) as m (m.id)}

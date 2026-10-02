@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Lock } from 'lucide-svelte';
   import type { Snippet } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   /**
    * Phase 27A primitive (#257). Read-only key/value pair for inventory
@@ -20,13 +22,14 @@
   }
 
   const { label, value, tone = 'tight', children }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <div class="inv-kvp" class:locked={tone === 'locked'}>
   <span class="inv-kvp-label">
     {label}
     {#if tone === 'locked'}
-      <Lock size={11} strokeWidth={2} aria-label="Kernel-locked" />
+      <Lock size={11} strokeWidth={2} aria-label={tr('inv.kernelLocked')} />
     {/if}
   </span>
   <span class="inv-kvp-value" class:mono={tone === 'mono' || tone === 'locked'}>

@@ -2,12 +2,14 @@
   import { isUpdatingResponse, retryAfterSeconds, UPDATING_QUEUED_NOTICE } from '$lib/updating';
   import type { ForecastDay, HayViolation } from '$lib/hay';
   import { untrack } from 'svelte';
+  import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
   import { grazingTimeHref } from '$lib/animals/holdCopy';
   import HoldVoidPanel from '$lib/components/records/HoldVoidPanel.svelte';
   import { invalidateAll } from '$app/navigation';
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   let blockId = $state(untrack(() => data.selectedBlockId));
   let year = $state(untrack(() => data.year));
@@ -53,7 +55,7 @@
       const res = await fetch(`/api/hay/forecast?blockId=${encodeURIComponent(blockId)}`);
       const out = await res.json();
       if (!res.ok) {
-        forecastError = out.error ?? 'forecast fetch failed';
+        forecastError = out.error ?? tr('hayui.errForecast');
         forecast = null;
         return;
       }
@@ -98,7 +100,7 @@
       if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         const { enqueueRecord } = await import('$lib/client/syncQueue');
         await enqueueRecord('hay-cutting', body);
-        banner = '☁ Offline — cutting queued. Will sync when the connection returns.';
+        banner = tr('hayui.queued');
         return;
       }
       const res = await fetch('/api/hay/cuttings', {
@@ -115,7 +117,7 @@
       }
       const out = await res.json();
       if (!res.ok) {
-        error = out.error ?? 'failed to start cutting';
+        error = out.error ?? tr('hayui.errStart');
         attestHref =
           out.ownerCanAttest && !out.askOwner && out.fieldId ? grazingTimeHref(out.fieldId) : null;
         if (out.violations) {
@@ -123,7 +125,7 @@
         }
         return;
       }
-      banner = `Cutting #${out.cutting.cuttingNumber} recorded.`;
+      banner = tr('hayui.recorded', { n: out.cutting.cuttingNumber });
       reload();
     } catch (e) {
       // #316 — transient network failure while "online": queue instead of
@@ -134,11 +136,11 @@
         try {
           const { enqueueRecord } = await import('$lib/client/syncQueue');
           await enqueueRecord('hay-cutting', body);
-          banner = '☁ Offline — cutting queued. Will sync when the connection returns.';
+          banner = tr('hayui.queued');
         } catch (queueErr) {
-          error = `offline queue failed: ${
-            queueErr instanceof Error ? queueErr.message : queueErr
-          }`;
+          error = tr('hayui.errQueue', {
+            msg: queueErr instanceof Error ? queueErr.message : String(queueErr)
+          });
         }
       } else {
         error = msg;
@@ -174,7 +176,7 @@
           out.ownerCanAttest && !out.askOwner && out.fieldId ? grazingTimeHref(out.fieldId) : null;
         error = out.violations
           ? `${out.error}: ${out.violations.map((v: HayViolation) => v.message).join(' • ')}`
-          : (out.error ?? 'advance failed');
+          : (out.error ?? tr('hayui.errAdvance'));
         return;
       }
       reload();
@@ -186,7 +188,7 @@
   }
 
   async function abortCutting(cuttingId: string) {
-    if (!confirm('Abort this cutting? Use only if mow → bale was scrapped.')) return;
+    if (!confirm(tr('hayui.abortConfirm'))) return;
     busy = true;
     try {
       await fetch(`/api/hay/cuttings/${cuttingId}`, {
@@ -212,16 +214,32 @@
     return map[c.status] ?? null;
   }
 
+  const STATUS_KEY = {
+    mowing: 'hayui.status.mowing',
+    tedding: 'hayui.status.tedding',
+    raking: 'hayui.status.raking',
+    baling: 'hayui.status.baling',
+    complete: 'hayui.status.complete',
+    aborted: 'hayui.status.aborted'
+  } as const;
+  function statusLabel(s: string): string {
+    return s in STATUS_KEY ? tr(STATUS_KEY[s as keyof typeof STATUS_KEY]) : s;
+  }
+  const STEP_KEY = {
+    ted: 'hayui.step.ted',
+    rake: 'hayui.step.rake',
+    bale: 'hayui.step.bale',
+    store: 'hayui.step.store'
+  } as const;
+
   function fmtTs(ms: number | undefined): string {
     return ms ? fmt.instant(ms, 'datetime') : '—';
   }
 </script>
 
-<h1>Hay & Forage</h1>
+<h1>{tr('hayui.title')}</h1>
 <p class="lede">
-  Multi-step cutting workflow with weather-window gate and bale-moisture safety check (FR-19, FR-21,
-  FR-22). Each cutting records mow → ted → rake → bale → store; the kernel enforces the plugin's
-  moisture thresholds at the bale step.
+  {tr('hayui.lede')}
 </p>
 
 <form
@@ -232,7 +250,7 @@
   }}
 >
   <label>
-    Block
+    {tr('hayui.block')}
     <select bind:value={blockId}>
       {#each data.blocks as b (b.id)}
         <option value={b.id}>
@@ -242,62 +260,67 @@
     </select>
   </label>
   <label>
-    Year
+    {tr('hayui.year')}
     <input type="number" min="1900" max="3000" bind:value={year} />
   </label>
   <label>
-    Hay variety
+    {tr('hayui.variety')}
     <select bind:value={cropPluginId}>
       {#each data.hayCrops as c (c.pluginId)}
         <option value={c.pluginId}>{c.displayName}</option>
       {/each}
     </select>
   </label>
-  <button type="submit" class="primary">Load</button>
+  <button type="submit" class="primary">{tr('hayui.load')}</button>
 </form>
 
 {#if banner}<p class="success" role="status" aria-live="polite">{banner}</p>{/if}
 {#if error}<p class="error" role="alert" aria-live="polite">{error}</p>{/if}
 {#if error && attestHref}
-  <a class="attest-link" href={attestHref}>Add the haying time from the label</a>
+  <a class="attest-link" href={attestHref}>{tr('hayui.attestLink')}</a>
 {/if}
 
 <section class="card">
-  <h2>1 — Mow decision</h2>
+  <h2>{tr('hayui.mowDecision')}</h2>
   {#if !selectedCrop}
-    <p>Select a hay variety above.</p>
+    <p>{tr('hayui.selectVariety')}</p>
   {:else}
     {@const planted = data.blocks.find((b) => b.id === blockId)?.hayPlanting}
     {#if planted && planted.cropPluginId !== selectedCrop.pluginId}
       <p class="hint" data-testid="hay-thresholds-note">
-        Using {selectedCrop.displayName} thresholds, not {planted.varietyDisplayName}.
+        {tr('hayui.thresholdsNote', {
+          crop: selectedCrop.displayName,
+          planted: planted.varietyDisplayName
+        })}
       </p>
     {/if}
     <p class="hint">
-      Mow trigger: <strong>{selectedCrop.hayOperations?.mowTrigger ?? '—'}</strong>. Plugin requires
-      a {selectedCrop.hayOperations?.weatherWindowDays}-day dry window.
+      {tr('hayui.mowTrigger')} <strong>{selectedCrop.hayOperations?.mowTrigger ?? '—'}</strong>{tr(
+        'hayui.dryWindow',
+        { days: selectedCrop.hayOperations?.weatherWindowDays ?? '' }
+      )}
     </p>
     <button class="secondary" onclick={fetchForecast} disabled={busy || !blockId}>
-      {busy ? 'Fetching…' : 'Check NOAA forecast'}
+      {busy ? tr('hayui.fetching') : tr('hayui.checkForecast')}
     </button>
     {#if forecastError}<p class="error">{forecastError}</p>{/if}
     {#if forecast}
       {#if forecastSource === 'farm'}
-        <p class="hint">This block isn't mapped, so this is the forecast for your farm location.</p>
+        <p class="hint">{tr('hayui.forecastFarm')}</p>
       {:else if forecastSource === 'farm-block'}
         <p class="hint">
-          This block isn't mapped, so this is the forecast for your nearest mapped block.
+          {tr('hayui.forecastNearest')}
         </p>
       {/if}
       <table class="forecast">
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Hi {fmt.unit('temperature')}</th>
-            <th>Lo {fmt.unit('temperature')}</th>
-            <th>Rain %</th>
-            <th>Wind</th>
-            <th>Note</th>
+            <th>{tr('hayui.th.date')}</th>
+            <th>{tr('hayui.th.hi', { unit: fmt.unit('temperature') })}</th>
+            <th>{tr('hayui.th.lo', { unit: fmt.unit('temperature') })}</th>
+            <th>{tr('hayui.th.rain')}</th>
+            <th>{tr('hayui.th.wind')}</th>
+            <th>{tr('hayui.th.note')}</th>
           </tr>
         </thead>
         <tbody>
@@ -325,7 +348,7 @@
         onclick={() => startCutting()}
         disabled={busy || !blockId || !cropPluginId}
       >
-        {busy ? 'Saving…' : 'Record cutting now (mow done)'}
+        {busy ? tr('hayui.saving') : tr('hayui.recordCutting')}
       </button>
       {#if mowViolations.length > 0}
         <button
@@ -333,7 +356,7 @@
           onclick={() => startCutting({ override: true })}
           disabled={busy}
         >
-          {busy ? 'Saving…' : 'Override + record anyway'}
+          {busy ? tr('hayui.saving') : 'Override + record anyway'}
         </button>
       {/if}
     </div>
@@ -341,9 +364,14 @@
 </section>
 
 <section class="card">
-  <h2>Cuttings · {data.blocks.find((b) => b.id === blockId)?.name ?? 'Pick a block'} · {year}</h2>
+  <h2>
+    {tr('hayui.cuttingsHeading', {
+      block: data.blocks.find((b) => b.id === blockId)?.name ?? tr('hayui.pickBlock'),
+      year
+    })}
+  </h2>
   {#if data.cuttings.length === 0}
-    <p>No cuttings recorded for this block + year.</p>
+    <p>{tr('hayui.noCuttings')}</p>
   {:else}
     {#each data.cuttings as c (c.id)}
       <article
@@ -352,39 +380,39 @@
         class:aborted={c.status === 'aborted'}
       >
         <header>
-          <strong>Cutting #{c.cuttingNumber}</strong>
-          <span class="status status-{c.status}">{c.status}</span>
+          <strong>{tr('hayui.cuttingN', { n: c.cuttingNumber })}</strong>
+          <span class="status status-{c.status}">{statusLabel(c.status)}</span>
         </header>
         <ul class="timeline">
-          <li>Mow: {fmtTs(c.mowAt)}</li>
+          <li>{tr('hayui.tl.mow', { ts: fmtTs(c.mowAt) })}</li>
           {#if selectedCrop?.hayOperations?.steps.includes('ted')}
-            <li>Ted: {fmtTs(c.tedAt)}</li>
+            <li>{tr('hayui.tl.ted', { ts: fmtTs(c.tedAt) })}</li>
           {/if}
-          <li>Rake: {fmtTs(c.rakeAt)}</li>
+          <li>{tr('hayui.tl.rake', { ts: fmtTs(c.rakeAt) })}</li>
           <li>
-            Bale: {fmtTs(c.baleAt)}{c.baleType
+            {tr('hayui.tl.bale', { ts: fmtTs(c.baleAt) })}{c.baleType
               ? ` (${c.baleType}, ${c.baleMoisturePct ?? '?'}%)`
               : ''}
           </li>
-          <li>Store: {fmtTs(c.storedAt)}</li>
+          <li>{tr('hayui.tl.store', { ts: fmtTs(c.storedAt) })}</li>
         </ul>
         {#if c.status === 'baling' || nextStep(c) === 'bale'}
           <fieldset class="bale-form">
-            <legend>Bale step — moisture gate</legend>
+            <legend>{tr('hayui.baleStep')}</legend>
             <label>
-              Bale type
+              {tr('hayui.baleType')}
               <select bind:value={baleType}>
-                <option value="small-square">small square</option>
-                <option value="large-round">large round</option>
-                <option value="large-square">large square</option>
+                <option value="small-square">{tr('hayui.baleSmallSquare')}</option>
+                <option value="large-round">{tr('hayui.baleLargeRound')}</option>
+                <option value="large-square">{tr('hayui.baleLargeSquare')}</option>
               </select>
             </label>
             <label>
-              Moisture %
+              {tr('hayui.moisture')}
               <input type="number" min="0" max="100" step="0.1" bind:value={baleMoisture} />
             </label>
             <label>
-              Bales
+              {tr('hayui.bales')}
               <input type="number" min="0" bind:value={balesQuantity} />
             </label>
           </fieldset>
@@ -392,7 +420,9 @@
         {#if nextStep(c)}
           <div class="row">
             <button class="primary" onclick={() => advance(c.id, nextStep(c)!)} disabled={busy}>
-              {busy ? 'Saving…' : `Advance — ${nextStep(c)}`}
+              {busy
+                ? tr('hayui.saving')
+                : tr('hayui.advance', { step: tr(STEP_KEY[nextStep(c)!]) })}
             </button>
             {#if nextStep(c) === 'bale'}
               <button
@@ -400,11 +430,11 @@
                 onclick={() => advance(c.id, 'bale', { override: true })}
                 disabled={busy}
               >
-                {busy ? 'Saving…' : 'Override bale gate'}
+                {busy ? tr('hayui.saving') : 'Override bale gate'}
               </button>
             {/if}
             <button class="secondary" onclick={() => abortCutting(c.id)} disabled={busy}>
-              Abort
+              {tr('hayui.abort')}
             </button>
           </div>
         {/if}
@@ -414,7 +444,7 @@
           canVoidHolds={data.canVoidHolds}
           voidableUntilMs={c.voidableUntilMs}
           onVoided={async () => {
-            banner = `Cutting #${c.cuttingNumber} voided.`;
+            banner = tr('hayui.voided', { n: c.cuttingNumber });
             await invalidateAll();
           }}
         />

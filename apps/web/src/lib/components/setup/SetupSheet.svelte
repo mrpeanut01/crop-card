@@ -1,5 +1,7 @@
 <script lang="ts" generics="T">
   import { onMount, tick, type Snippet } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     open: boolean;
@@ -12,6 +14,7 @@
   }
 
   const { open, title, kicker, onClose, onDone, children }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
   const uid = $props.id();
   const titleId = `setup-sheet-title-${uid}`;
 
@@ -94,7 +97,8 @@
         {#if kicker}<p class="kicker">{kicker}</p>{/if}
         <h2 id={titleId} class="serif">{title}</h2>
       </div>
-      <button type="button" class="close" aria-label="Close" onclick={onClose}>×</button>
+      <button type="button" class="close" aria-label={tr('setup.close')} onclick={onClose}>×</button
+      >
     </header>
     <div class="body">
       {#if open}{@render children(done)}{/if}

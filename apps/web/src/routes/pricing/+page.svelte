@@ -11,55 +11,47 @@
     type PlanId
   } from '$lib/billing/plans';
 
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let interval = $state<BillingInterval>('year');
 
   function cta(plan: PlanId) {
     if (data.signedIn) {
       return {
-        label: plan === 'free' ? 'Go to CropCard' : 'Choose in Plan & billing',
+        label: plan === 'free' ? tr('pricing.ctaGo') : tr('pricing.ctaChoose'),
         href: plan === 'free' ? '/today' : '/settings/billing',
         primary: plan === 'grower'
       };
     }
     return {
-      label: plan === 'free' ? 'Start free' : 'Start free, upgrade any time',
+      label: plan === 'free' ? tr('pricing.ctaStartFree') : tr('pricing.ctaStartUpgrade'),
       href: '/',
       primary: plan === 'free'
     };
   }
 
-  const FAQ = [
+  const FAQ = $derived([
     {
-      q: 'Do I need a card to start?',
-      a: `No. Every farm starts on Free, with no card and no end date. Your first ${STARTER_BOOST_DAYS} days include ${formatUsd(STARTER_BOOST_USD)} of AI help so you can try it properly.`
+      q: tr('pricing.faq1.q'),
+      a: tr('pricing.faq1.a', {
+        days: STARTER_BOOST_DAYS,
+        amount: formatUsd(STARTER_BOOST_USD)
+      })
     },
-    {
-      q: 'What happens when the AI help runs out?',
-      a: 'Nothing breaks. Plans, schedules, scans and fills fall back to the same deterministic result CropCard gives without AI, and the monthly amount resets on the 1st, on yearly billing too.'
-    },
-    {
-      q: 'What if a payment fails or I cancel?',
-      a: `A failed payment keeps your plan for ${PAST_DUE_GRACE_DAYS} days while the card is retried. If you cancel, the plan runs to the end of the period you paid for. Either way you land on Free with every record, export and helper still in place.`
-    },
-    {
-      q: 'Can I get my money back?',
-      a: `Yes. Paid plans carry a ${MONEY_BACK_DAYS}-day money-back guarantee on the first payment. Email hello@cropcard.io and we refund it.`
-    },
-    {
-      q: 'Do helpers cost extra?',
-      a: 'No. Seats are included: 2 helpers on Free, 5 on Grower, 15 on Farm. Inspectors never take a seat. If you move to a smaller plan, helpers already on the farm keep their access.'
-    }
-  ];
+    { q: tr('pricing.faq2.q'), a: tr('pricing.faq2.a') },
+    { q: tr('pricing.faq3.q'), a: tr('pricing.faq3.a', { days: PAST_DUE_GRACE_DAYS }) },
+    { q: tr('pricing.faq4.q'), a: tr('pricing.faq4.a', { days: MONEY_BACK_DAYS }) },
+    { q: tr('pricing.faq5.q'), a: tr('pricing.faq5.a') }
+  ]);
 </script>
 
 <svelte:head>
-  <title>Plans and pricing · CropCard</title>
-  <meta
-    name="description"
-    content="CropCard is free for records, safety checks and exports. Grower and Farm plans add more AI help and helper seats."
-  />
+  <title>{tr('pricing.title')}</title>
+  <meta name="description" content={tr('pricing.description')} />
 </svelte:head>
 
 <main class="pricing" aria-labelledby="pricing-title">
@@ -68,11 +60,10 @@
   </nav>
 
   <header class="hero">
-    <p class="kicker">Plans and pricing</p>
-    <h1 id="pricing-title">Free for every farm. Pay only for more AI help.</h1>
+    <p class="kicker">{tr('pricing.kicker')}</p>
+    <h1 id="pricing-title">{tr('pricing.h1')}</h1>
     <p class="lede">
-      Keep spray, harvest and compliance records on the Free plan for as long as you farm. Grower
-      and Farm add more AI planning help, web lookups and helper seats.
+      {tr('pricing.lede')}
     </p>
   </header>
 
@@ -81,7 +72,7 @@
   <FreeForever />
 
   <section class="faq" aria-labelledby="faq-title">
-    <h2 id="faq-title">Questions</h2>
+    <h2 id="faq-title">{tr('pricing.faqTitle')}</h2>
     {#each FAQ as item (item.q)}
       <details>
         <summary>{item.q}</summary>
@@ -91,8 +82,7 @@
   </section>
 
   <p class="fine">
-    Prices in US dollars. Taxes may apply. Payments are handled by Stripe; CropCard never sees your
-    card number.
+    {tr('pricing.fine')}
   </p>
 </main>
 

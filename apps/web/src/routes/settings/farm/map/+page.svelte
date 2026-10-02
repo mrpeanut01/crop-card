@@ -2,27 +2,30 @@
   import { browser } from '$app/environment';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import FarmMapEditor from '$lib/components/farm/FarmMapEditor.svelte';
+  import { createT } from '$lib/i18n';
 
   let { data } = $props();
+
+  const tr = $derived(createT(data.locale));
 </script>
 
-<svelte:head><title>Farm map · CropCard</title></svelte:head>
+<svelte:head><title>{tr('settings.farmMap.pageTitle')}</title></svelte:head>
 
-<SettingsShell title="Farm map" kicker="Areas & blocks" backHref="/settings/farm" hideFooter>
+<SettingsShell
+  title={tr('settings.farmMap.title')}
+  kicker={tr('settings.farmMap.kicker')}
+  backHref="/settings/farm"
+  hideFooter
+>
   {#if data.refused}
     <section class="refused" data-testid="farm-map-owner-only">
-      <h2>Only the owner can change the farm map</h2>
-      <p>
-        You can still see every area and block on the Farm Map Card. Ask the owner if something
-        needs to move or change.
-      </p>
-      <a class="primary" href="/plan/farm-map">Open the Farm Map Card</a>
+      <h2>{tr('settings.farmMap.ownerOnlyTitle')}</h2>
+      <p>{tr('settings.farmMap.ownerOnlyBody')}</p>
+      <a class="primary" href="/plan/farm-map">{tr('settings.farmMap.openCard')}</a>
     </section>
   {:else}
     <p class="lede">
-      Put your fields, gardens, greenhouses, barns and woods on the map, with the blocks inside them
-      and any shade sources. What you draw here feeds planning, pollination distances and the shade
-      model. Tap an area to open its card. Changes save as you go.
+      {tr('settings.farmMap.lede')}
     </p>
 
     {#if browser}
@@ -43,7 +46,7 @@
         initialCenter={data.initialCenter}
       />
     {:else}
-      <section class="loading"><p>Loading map…</p></section>
+      <section class="loading"><p>{tr('settings.farmMap.loading')}</p></section>
     {/if}
   {/if}
 </SettingsShell>

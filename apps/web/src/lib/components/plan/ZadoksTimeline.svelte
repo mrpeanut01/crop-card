@@ -2,6 +2,8 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { DecisionKind, SmallGrainStage } from '$lib/plan/smallGrain';
   import { formatCalendarDate } from '$lib/prefs';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     stages: SmallGrainStage[];
@@ -10,6 +12,7 @@
   }
 
   const { stages, currentIndex, nowMs }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const DAY = 24 * 60 * 60 * 1000;
 
@@ -32,15 +35,23 @@
     harvest: { label: 'Harvest', detail: 'Combine when grain is hard; bin at ≤ 13.5% moisture.' }
   };
 
+  function decisionCopy(kind: DecisionKind): { label: string; detail: string } {
+    if (kind === 'heading')
+      return { label: tr('planui.zad.headingLabel'), detail: tr('planui.zad.headingDetail') };
+    if (kind === 'harvest')
+      return { label: tr('planui.zad.harvestLabel'), detail: tr('planui.zad.harvestDetail') };
+    return DECISION_COPY[kind];
+  }
+
   function fmt(ms: number): string {
     return formatCalendarDate(ms, 'month-day');
   }
 
   function relative(ms: number): string {
     const d = Math.round((ms - nowMs) / DAY);
-    if (d === 0) return 'today';
-    if (d > 0) return `in ${d} d`;
-    return `${-d} d ago`;
+    if (d === 0) return tr('planui.zad.today');
+    if (d > 0) return tr('planui.zad.inDays', { d });
+    return tr('planui.zad.daysAgo', { d: -d });
   }
 
   const current = $derived(currentIndex >= 0 ? stages[currentIndex] : null);
@@ -52,22 +63,27 @@
 <section class="card" aria-labelledby="zadoks-title" data-testid="zadoks-timeline">
   <header class="head">
     <div>
-      <h2 id="zadoks-title" class="serif">Zadoks growth stages</h2>
+      <h2 id="zadoks-title" class="serif">{tr('planui.zad.title')}</h2>
       <p class="sub">
         {#if current}
-          <strong>{current.name}</strong> ({current.code}) since {fmt(current.startMs)}
+          <strong>{current.name}</strong> ({current.code})
+          {tr('planui.zad.since', { date: fmt(current.startMs) })}
         {:else if stages.length > 0}
-          Not sown yet — first stage {fmt(stages[0].startMs)}
+          {tr('planui.zad.notSown', { date: fmt(stages[0].startMs) })}
         {/if}
-        {#if next}· next: {next.code} {next.name} ~{fmt(next.startMs)}{/if}
+        {#if next}{tr('planui.zad.next', {
+            code: next.code,
+            name: next.name,
+            date: fmt(next.startMs)
+          })}{/if}
       </p>
     </div>
     <div class="prov">
       {#if sources.has('plugin')}
-        <Provenance source="plugin" detail="crop plugin stage table" />
+        <Provenance source="plugin" detail={tr('planui.zad.detailPlugin')} />
       {/if}
       {#if sources.has('fallback')}
-        <Provenance source="fallback" detail="typical Mid-Atlantic timing" />
+        <Provenance source="fallback" detail={tr('planui.zad.detailFallback')} />
       {/if}
     </div>
   </header>
@@ -100,9 +116,9 @@
   </div>
 
   {#if decisions.length > 0}
-    <ul class="decisions" aria-label="Key decision points">
+    <ul class="decisions" aria-label={tr('planui.zad.decisionsAria')}>
       {#each decisions as s (s.code)}
-        {@const copy = DECISION_COPY[s.decision!]}
+        {@const copy = decisionCopy(s.decision!)}
         <li class:passed={s.startMs < nowMs && s.decision !== 'fhb-window'}>
           <span class="d-label">{copy.label}</span>
           <span class="d-when mono">{s.code} · ~{fmt(s.startMs)} · {relative(s.startMs)}</span>
@@ -113,8 +129,7 @@
   {/if}
   {#if sources.has('fallback')}
     <p class="foot">
-      "~" dates are typical timings, not a growth-degree model. Confirm stage in the field — dissect
-      a main stem for nodes before the herbicide cutoff.
+      {tr('planui.zad.foot')}
     </p>
   {/if}
 </section>

@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import type { PendingSprayRecord } from '$lib/client/dexie';
   import type { DrainHalt } from '$lib/client/syncQueue';
   import { fmt } from '$lib/prefsState.svelte';
@@ -16,6 +18,7 @@
   import { localInputToMs, msToLocalInput } from '$lib/animals/display';
   import type { FarmSnapshot } from '$lib/cards/snapshot';
 
+  const tr = $derived(createT(page.data?.locale));
   let pending = $state<PendingSprayRecord[]>([]);
   let otherOwnerCount = $state(0);
   let busy = $state(false);
@@ -44,14 +47,12 @@
   });
   const retryableCount = $derived(pending.length - rejectedCount);
 
-  const HALT_MESSAGES: Record<DrainHalt, string> = {
-    offline: 'Offline. Records will sync when the connection returns.',
-    'no-active-owner': 'No active farm in this tab. Reload the page and try again.',
-    'owner-unverified':
-      'Could not confirm which farm you are signed in to. Check your connection or sign in again.',
-    'owner-mismatch':
-      'Your session is on a different farm than this tab (you switched in another tab). Reload this tab; these records will sync when their farm is active.'
-  };
+  const HALT_MESSAGES = $derived<Record<DrainHalt, string>>({
+    offline: tr('records.pending.halt.offline'),
+    'no-active-owner': tr('records.pending.halt.noOwner'),
+    'owner-unverified': tr('records.pending.halt.unverified'),
+    'owner-mismatch': tr('records.pending.halt.mismatch')
+  });
 
   async function refresh() {
     try {
@@ -79,22 +80,24 @@
       // #315 — surface skippedOtherOwner so the operator understands why a
       // drain that "succeeded 0" still left records behind: they belong to
       // another farm and only drain when that Owner is active.
-      const parts = [`Synced ${result.succeeded.length}; ${result.failed.length} still pending`];
+      const parts = [
+        tr('records.pending.synced', { ok: result.succeeded.length, failed: result.failed.length })
+      ];
       if (result.rejected.length > 0) {
-        parts.push(`${result.rejected.length} rejected by the server and need review`);
+        parts.push(tr('records.pending.rejectedReview', { n: result.rejected.length }));
       }
       if (result.heldBehindRejected.length > 0) {
-        parts.push(
-          `${result.heldBehindRejected.length} waiting for a refused record for the same animals`
-        );
+        parts.push(tr('records.pending.heldBehind', { n: result.heldBehindRejected.length }));
       }
       if (result.skippedOtherOwner > 0) {
-        parts.push(`${result.skippedOtherOwner} skipped from another farm`);
+        parts.push(tr('records.pending.skipped', { n: result.skippedOtherOwner }));
       }
       lastDrainResult = result.halted ? HALT_MESSAGES[result.halted] : `${parts.join('; ')}.`;
       await refresh();
     } catch (e) {
-      lastDrainResult = `error: ${e instanceof Error ? e.message : e}`;
+      lastDrainResult = tr('records.pending.error', {
+        msg: e instanceof Error ? e.message : String(e)
+      });
     } finally {
       busy = false;
     }
@@ -117,7 +120,7 @@
     if (action === 'redate') {
       const ms = localInputToMs(redateValue);
       if (ms === null) {
-        lastDrainResult = 'Pick a date and time.';
+        lastDrainResult = tr('records.pending.errDate');
         return;
       }
       at = ms;
@@ -126,17 +129,17 @@
     const ok = await recoverRejectedForActiveOwner(p.id, action, { at });
     redating = null;
     if (!ok) {
-      lastDrainResult = 'That record changed. Reload and try again.';
+      lastDrainResult = tr('records.pending.errChanged');
       await refresh();
       return;
     }
     if (action === 'keep-here') {
-      lastDrainResult = 'The move was dropped. The animals stay where they are.';
+      lastDrainResult = tr('records.pending.moveDropped');
       await refresh();
       return;
     }
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      lastDrainResult = 'Saved on this phone. It will sync when you have signal.';
+      lastDrainResult = tr('records.pending.savedPhone');
       await refresh();
       return;
     }
@@ -160,21 +163,19 @@
   }
 </script>
 
-<h1>Pending sync queue</h1>
+<h1>{tr('records.pending.title')}</h1>
 <p class="lede">
-  Records saved on this phone with no signal wait here: sprays, harvests, hay cuttings, animal
-  moves, treatments, eggs and milk, and feed use. Each one is sent when the phone is back online,
-  and the server checks it again. Records the server refuses stay here with what you can do next.
+  {tr('records.pending.lede')}
 </p>
 
 {#if !dexieAvailable}
-  <p class="warn">IndexedDB unavailable in this context. Open the app in a real browser tab.</p>
+  <p class="warn">{tr('records.pending.noIdb')}</p>
 {:else}
   <div class="actions">
     <button class="primary" onclick={drainNow} disabled={busy || retryableCount === 0}>
-      {busy ? 'Syncing…' : `Sync now (${retryableCount})`}
+      {busy ? tr('records.pending.syncing') : tr('records.pending.syncNow', { n: retryableCount })}
     </button>
-    <a href="/records">All records →</a>
+    <a href="/records">{tr('records.pending.allRecords')}</a>
   </div>
   <!-- #242 — persistent aria-live region so screen readers announce the drain
        outcome even when the message body changes between drains. Must stay
@@ -182,42 +183,50 @@
   <p class="result" role="status" aria-live="polite">{lastDrainResult ?? ''}</p>
   {#if otherOwnerCount > 0}
     <p class="other-owner-badge">
-      {otherOwnerCount} record{otherOwnerCount === 1 ? '' : 's'} queued from another farm — switch Owner
-      to see {otherOwnerCount === 1 ? 'it' : 'them'}.
+      {tr('records.pending.otherFarm', { count: otherOwnerCount })}
     </p>
   {/if}
   {#if rejectedCount > 0}
     <p class="rejected-note">
-      {rejectedCount} record{rejectedCount === 1 ? ' was' : 's were'} refused by the server and won't
-      retry on their own. Each one shows what you can do next.
+      {tr('records.pending.refused', { count: rejectedCount })}
     </p>
   {/if}
   {#if pending.length === 0}
-    <p class="empty">Queue is empty.</p>
+    <p class="empty">{tr('records.pending.empty')}</p>
   {:else}
     <ul class="pending">
       {#each pending as p (p.id)}
         <li class:rejected={p.status === 'rejected'}>
           <header>
             <strong>{fmt.instant(p.occurredAt)}</strong>
-            <span class="meta">queued {fmt.instant(p.createdAt, 'time')}</span>
-            <span class="attempts">{p.attempts} attempt{p.attempts === 1 ? '' : 's'}</span>
+            <span class="meta"
+              >{tr('records.pending.queuedAt', { time: fmt.instant(p.createdAt, 'time') })}</span
+            >
+            <span class="attempts">{tr('records.pending.attempts', { count: p.attempts })}</span>
             {#if p.status === 'rejected'}
-              <span class="rejected-pill">Rejected{p.lastStatus ? ` (${p.lastStatus})` : ''}</span>
+              <span class="rejected-pill"
+                >{tr('records.pending.rejected')}{p.lastStatus ? ` (${p.lastStatus})` : ''}</span
+              >
               {#if p.holdMarker}<span class="rejected-pill">{p.holdMarker}</span>{/if}
             {/if}
             <span class="row-actions">
               {#if p.status === 'rejected' && recoveryFor(p).actions.includes('retry')}
-                <button class="retry" onclick={() => retry(p.id)}>Retry</button>
+                <button class="retry" onclick={() => retry(p.id)}
+                  >{tr('records.pending.retry')}</button
+                >
               {/if}
               <details class="more">
-                <summary aria-label="More actions">More</summary>
-                <button class="discard" onclick={() => discard(p)}>Delete from phone</button>
+                <summary aria-label={tr('records.pending.moreActions')}
+                  >{tr('records.pending.more')}</summary
+                >
+                <button class="discard" onclick={() => discard(p)}
+                  >{tr('records.pending.delete')}</button
+                >
               </details>
             </span>
           </header>
           <p class="what">
-            <strong>{KIND_LABEL[p.kind ?? 'herbicide'] ?? 'Record'}</strong
+            <strong>{KIND_LABEL[p.kind ?? 'herbicide'] ?? tr('records.pending.record')}</strong
             >{#if pendingSummary(p.kind, p.payload)}
               · {pendingSummary(p.kind, p.payload)}{/if}
           </p>
@@ -247,18 +256,18 @@
                 {/each}
                 {#if redating === p.id}
                   <label class="redate">
-                    New date and time
+                    {tr('records.pending.newDate')}
                     <input type="datetime-local" bind:value={redateValue} />
                   </label>
                   <button class="primary wide" onclick={() => recover(p, 'redate')}>
-                    Save the new date
+                    {tr('records.pending.saveDate')}
                   </button>
                 {/if}
               </div>
             {/if}
           {/if}
           <details>
-            <summary>Payload</summary>
+            <summary>{tr('records.pending.payload')}</summary>
             <pre>{JSON.stringify(p.payload, hidePhotoData, 2)}</pre>
           </details>
         </li>

@@ -1,6 +1,8 @@
 <script lang="ts">
   import './animalForms.css';
-  import { OFFLINE_MESSAGE, errorFromResponse } from '$lib/animals/display';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { errorText } from './labels';
 
   interface Props {
     subjectType: 'animal' | 'group';
@@ -12,6 +14,7 @@
 
   const { subjectType, subjectId, flag, current, onDone }: Props = $props();
   const uid = $props.id();
+  const tr = $derived(createT(page.data?.locale));
 
   let open = $state(false);
   let reason = $state('');
@@ -22,11 +25,11 @@
   const title = $derived(
     flag === 'foodProducing'
       ? next
-        ? 'Mark as a food animal'
-        : 'Mark as not a food animal'
+        ? tr('animals.flag.markFood')
+        : tr('animals.flag.markNotFood')
       : next
-        ? 'Mark not for slaughter'
-        : 'Remove the not-for-slaughter mark'
+        ? tr('animals.flag.markNoSlaughter')
+        : tr('animals.flag.removeNoSlaughter')
   );
   const warning = $derived(
     flag === 'foodProducing'
@@ -41,7 +44,7 @@
     e.preventDefault();
     error = null;
     if (!reason.trim()) {
-      error = 'Say why, so the record shows it.';
+      error = tr('animals.flag.sayWhy');
       return;
     }
     saving = true;
@@ -54,14 +57,14 @@
         body: JSON.stringify({ [flag]: next, flagReason: reason.trim() })
       });
       if (!res.ok) {
-        error = await errorFromResponse(res);
+        error = await errorText(res, tr);
         return;
       }
       open = false;
       reason = '';
-      await onDone('Saved. The change is in the history.');
+      await onDone(tr('animals.flag.saved'));
     } catch {
-      error = OFFLINE_MESSAGE;
+      error = tr('animals.offline');
     } finally {
       saving = false;
     }
@@ -73,7 +76,7 @@
 {:else}
   <form class="af-form flag-form" onsubmit={submit} novalidate aria-label={title}>
     <p class={strong ? 'strong' : 'af-note'} role={strong ? 'alert' : 'note'}>{warning}</p>
-    <label class="af-label" for="{uid}-reason">Why?</label>
+    <label class="af-label" for="{uid}-reason">{tr('animals.why')}</label>
     <input
       id="{uid}-reason"
       class="af-input"
@@ -85,9 +88,11 @@
     {#if error}<p class="af-error" role="alert">{error}</p>{/if}
     <div class="buttons">
       <button class="af-primary" type="submit" disabled={saving}>
-        {saving ? 'Saving…' : title}
+        {saving ? tr('animals.saving') : title}
       </button>
-      <button type="button" class="af-ghost" onclick={() => (open = false)}>Cancel</button>
+      <button type="button" class="af-ghost" onclick={() => (open = false)}
+        >{tr('animals.cancel')}</button
+      >
     </div>
   </form>
 {/if}

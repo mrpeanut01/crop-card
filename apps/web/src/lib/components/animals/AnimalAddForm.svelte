@@ -5,11 +5,8 @@
   import FoodChip from './FoodChip.svelte';
   import SetupAnimalHousing from '$lib/components/setup/SetupAnimalHousing.svelte';
   import {
-    OFFLINE_MESSAGE,
-    areaKindLabel,
     birthFromAgeYears,
     dateInputToMs,
-    errorFromResponse,
     housingOptions,
     type AddedAnimals,
     type AreaOption,
@@ -19,6 +16,9 @@
   import { showsFarmFields, type AnimalsLayout } from '$lib/animals/profile';
   import { ANIMAL_PURPOSES, type AnimalPurpose } from '$lib/animals/model';
   import { sexOptions, type AnimalSex } from '$lib/plugins/species';
+  import { areaKindName, errorText, groupNoun } from './labels';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface GroupOption {
     id: string;
@@ -56,12 +56,13 @@
     onCreated
   }: Props = $props();
   const uid = $props.id();
+  const tr = $derived(createT(page.data?.locale));
 
-  const PURPOSE_LABEL: Record<AnimalPurpose, string> = {
-    production: 'For eggs, milk, meat or work',
-    pet: 'As a pet',
-    mixed: 'Both'
-  };
+  const PURPOSE_LABEL = $derived<Record<AnimalPurpose, string>>({
+    production: tr('animals.purpose.forProduction'),
+    pet: tr('animals.purpose.forPet'),
+    mixed: tr('animals.purpose.mixed')
+  });
 
   function defaultMode(s: SpeciesOption | undefined): 'one' | 'group' {
     if (!s) return 'one';
@@ -121,7 +122,10 @@
   const unnamedLeft = $derived(
     headCount === null ? null : Math.max(0, headCount - namedMembers.length)
   );
-  const groupWord = $derived(chosen?.groupNoun ?? 'group');
+  const groupWord = $derived(groupNoun(tr, chosen?.groupNoun ?? 'group'));
+  const unnamedSuffix = $derived(
+    unnamedLeft !== null ? tr('animals.add.unnamedSuffix', { count: unnamedLeft }) : ''
+  );
 
   function pickSpecies(id: string) {
     speciesId = id;
@@ -170,7 +174,7 @@
     error = null;
     needsIdentifier = false;
     if (!chosen) {
-      error = 'Pick what kind of animal first.';
+      error = tr('animals.add.pickKind');
       return;
     }
     let url: string;
@@ -205,11 +209,11 @@
     } else {
       const gName = trimmed(groupName) ?? chosen.label;
       if (headCount === null || !Number.isInteger(headCount) || headCount < 1) {
-        error = 'How many are there? Enter a whole number.';
+        error = tr('animals.add.howManyError');
         return;
       }
       if (namedMembers.length > headCount) {
-        error = 'More named animals than the count. Raise the count or remove a name.';
+        error = tr('animals.add.tooManyNamed');
         return;
       }
       url = '/api/animal-groups';
@@ -238,7 +242,7 @@
         body: JSON.stringify(body)
       });
       if (!res.ok) {
-        error = await errorFromResponse(res);
+        error = await errorText(res, tr);
         return;
       }
       const out = (await res.json()) as {
@@ -257,12 +261,12 @@
         onCreated({
           kind: 'animal',
           id: out.animal.id,
-          label: out.animal.name ?? `Tag ${out.animal.tag}`,
+          label: out.animal.name ?? tr('animals.tagLabel', { tag: String(out.animal.tag) }),
           warnings: out.warnings ?? []
         });
       }
     } catch {
-      error = OFFLINE_MESSAGE;
+      error = tr('animals.offline');
     } finally {
       saving = false;
     }
@@ -270,13 +274,11 @@
 </script>
 
 {#if !canEdit}
-  <p class="af-note" role="note">
-    Ask the owner to add animals. Once they are on the farm you can move them and record changes.
-  </p>
+  <p class="af-note" role="note">{tr('animals.add.askOwner')}</p>
 {:else}
   <form class="af-form add-form" onsubmit={submit} novalidate>
     <fieldset class="af-fieldset">
-      <legend class="af-legend">What kind of animal?</legend>
+      <legend class="af-legend">{tr('animals.add.whatKind')}</legend>
       <div class="af-tiles">
         {#each species as s (s.id)}
           <label class="af-tile" class:on={speciesId === s.id}>
@@ -298,7 +300,7 @@
       <FoodChip foodProducing={chosen.foodProducingDefault} explanation={chosen.explanation} />
 
       <fieldset class="af-fieldset">
-        <legend class="af-legend">One animal or a {groupWord}?</legend>
+        <legend class="af-legend">{tr('animals.add.oneOrGroup', { groupWord })}</legend>
         <div class="af-segment">
           <label class="af-tile" class:on={mode === 'one'}>
             <input
@@ -308,7 +310,7 @@
               checked={mode === 'one'}
               onchange={() => setMode('one')}
             />
-            <span>One animal</span>
+            <span>{tr('animals.add.oneAnimal')}</span>
           </label>
           <label class="af-tile" class:on={mode === 'group'}>
             <input
@@ -318,47 +320,49 @@
               checked={mode === 'group'}
               onchange={() => setMode('group')}
             />
-            <span>A {groupWord} with a count</span>
+            <span>{tr('animals.add.groupWithCount', { groupWord })}</span>
           </label>
         </div>
       </fieldset>
 
       {#if mode === 'one'}
-        <label class="af-label" for="{uid}-name">Name</label>
+        <label class="af-label" for="{uid}-name">{tr('animals.name')}</label>
         <input
           id="{uid}-name"
           class="af-input"
           type="text"
           maxlength="80"
           autocomplete="off"
-          placeholder={farmFields ? 'e.g. Daisy' : 'e.g. Biscuit'}
+          placeholder={farmFields ? tr('animals.add.phDaisy') : tr('animals.add.phBiscuit')}
           bind:value={name}
         />
         {#if farmFields}
-          <label class="af-label" for="{uid}-tag">Tag</label>
+          <label class="af-label" for="{uid}-tag">{tr('animals.tag')}</label>
           <input
             id="{uid}-tag"
             class="af-input"
             type="text"
             maxlength="40"
             autocomplete="off"
-            placeholder="e.g. 14"
+            placeholder={tr('animals.add.phTag')}
             bind:value={tag}
           />
-          <p class="af-help">A name or a tag is enough. Put an ear tag number here, not in Name.</p>
+          <p class="af-help">{tr('animals.add.nameOrTagHelp')}</p>
         {/if}
         {#if needsIdentifier}
           <div class="af-note" role="alert">
             <p class="needs">
-              Give {farmFields ? 'a name or a tag' : 'a name'}, or add them as a {groupWord} with a count.
+              {farmFields
+                ? tr('animals.add.needIdFarm', { groupWord })
+                : tr('animals.add.needIdPet', { groupWord })}
             </p>
             <button type="button" class="af-ghost" onclick={() => setMode('group')}>
-              Add as a {groupWord} with a count
+              {tr('animals.add.addAsGroup', { groupWord })}
             </button>
           </div>
         {/if}
         <label class="af-label" for="{uid}-sex"
-          >Sex <span class="af-optional">(optional)</span></label
+          >{tr('animals.sex')} <span class="af-optional">{tr('animals.optional')}</span></label
         >
         <select id="{uid}-sex" class="af-input" bind:value={sex}>
           {#each sexOptions(chosen.id) as o (o.value)}
@@ -366,7 +370,7 @@
           {/each}
         </select>
       {:else}
-        <label class="af-label" for="{uid}-count">How many?</label>
+        <label class="af-label" for="{uid}-count">{tr('animals.howMany')}</label>
         <input
           id="{uid}-count"
           class="af-input"
@@ -377,7 +381,8 @@
           bind:value={headCount}
         />
         <label class="af-label" for="{uid}-gname">
-          What do you call this {groupWord}? <span class="af-optional">(optional)</span>
+          {tr('animals.add.groupName', { groupWord })}
+          <span class="af-optional">{tr('animals.optional')}</span>
         </label>
         <input
           id="{uid}-gname"
@@ -397,42 +402,45 @@
               if (members.length === 0) addMemberRow();
             }}
           >
-            Name some of them
+            {tr('animals.add.nameSome')}
           </button>
         {:else}
           <fieldset class="af-fieldset">
-            <legend class="af-legend">Named ones <span class="af-optional">(optional)</span></legend
+            <legend class="af-legend"
+              >{tr('animals.add.namedOnes')}
+              <span class="af-optional">{tr('animals.optional')}</span></legend
             >
             <p class="af-help">
-              Named animals get their own page. The rest stay in the count{unnamedLeft !== null
-                ? ` (${unnamedLeft} unnamed)`
-                : ''}.
+              {tr('animals.add.namedHelp', { suffix: unnamedSuffix })}
             </p>
             {#each members as m, i (i)}
               <div class="af-row">
                 <label>
-                  <span>Name {i + 1}</span>
+                  <span>{tr('animals.add.nameN', { n: i + 1 })}</span>
                   <input class="af-input" type="text" maxlength="80" bind:value={m.name} />
                 </label>
                 {#if farmFields}
                   <label>
-                    <span>Tag {i + 1}</span>
+                    <span>{tr('animals.add.tagN', { n: i + 1 })}</span>
                     <input class="af-input" type="text" maxlength="40" bind:value={m.tag} />
                   </label>
                 {/if}
               </div>
             {/each}
-            <button type="button" class="af-ghost" onclick={addMemberRow}>Add another name</button>
+            <button type="button" class="af-ghost" onclick={addMemberRow}
+              >{tr('animals.add.addAnotherName')}</button
+            >
           </fieldset>
         {/if}
       {/if}
 
       {#if mode === 'one' && full && sameSpeciesGroups.length > 0}
         <label class="af-label" for="{uid}-group">
-          Part of a {groupWord}? <span class="af-optional">(optional)</span>
+          {tr('animals.add.partOfGroup', { groupWord })}
+          <span class="af-optional">{tr('animals.optional')}</span>
         </label>
         <select id="{uid}-group" class="af-input" bind:value={groupId}>
-          <option value="">No, on its own</option>
+          <option value="">{tr('animals.add.onItsOwn')}</option>
           {#each sameSpeciesGroups as g (g.id)}
             <option value={g.id}>{g.name}</option>
           {/each}
@@ -441,13 +449,13 @@
 
       {#if !(mode === 'one' && groupId)}
         <label class="af-label" for="{uid}-home">
-          Where {mode === 'one' ? 'does it' : 'do they'} live?
-          <span class="af-optional">(optional)</span>
+          {mode === 'one' ? tr('animals.add.whereLivesOne') : tr('animals.add.whereLivesMany')}
+          <span class="af-optional">{tr('animals.optional')}</span>
         </label>
         <select id="{uid}-home" class="af-input" bind:value={housingFieldId}>
-          <option value="">Not set</option>
+          <option value="">{tr('animals.add.notSet')}</option>
           {#each allAreas as a (a.id)}
-            <option value={a.id}>{a.name} ({areaKindLabel(a.kind)})</option>
+            <option value={a.id}>{a.name} ({areaKindName(tr, a.kind)})</option>
           {/each}
         </select>
         {#if addingPlace}
@@ -462,17 +470,17 @@
                   : 'residence'}
               speciesId={chosen.id}
               speciesName={chosen.displayName.toLowerCase()}
-              submitLabel="Add this place"
+              submitLabel={tr('animals.add.addThisPlace')}
               embedded
               onDone={placeAdded}
             />
             <button type="button" class="af-ghost" onclick={() => (addingPlace = false)}>
-              Cancel
+              {tr('animals.cancel')}
             </button>
           </div>
         {:else}
           <button type="button" class="af-ghost" onclick={() => (addingPlace = true)}>
-            Add a new place
+            {tr('animals.add.addNewPlace')}
           </button>
         {/if}
       {/if}
@@ -480,23 +488,26 @@
       {#if full}
         {#if mode === 'one'}
           <fieldset class="af-fieldset">
-            <legend class="af-legend">Age <span class="af-optional">(optional)</span></legend>
+            <legend class="af-legend"
+              >{tr('animals.add.age')}
+              <span class="af-optional">{tr('animals.optional')}</span></legend
+            >
             <div class="af-segment three">
               <label class="af-tile" class:on={ageMode === 'none'}>
                 <input type="radio" name="{uid}-age" value="none" bind:group={ageMode} />
-                <span>Skip</span>
+                <span>{tr('animals.add.skip')}</span>
               </label>
               <label class="af-tile" class:on={ageMode === 'age'}>
                 <input type="radio" name="{uid}-age" value="age" bind:group={ageMode} />
-                <span>About how old</span>
+                <span>{tr('animals.add.aboutHowOld')}</span>
               </label>
               <label class="af-tile" class:on={ageMode === 'date'}>
                 <input type="radio" name="{uid}-age" value="date" bind:group={ageMode} />
-                <span>Birth date</span>
+                <span>{tr('animals.birthDate')}</span>
               </label>
             </div>
             {#if ageMode === 'age'}
-              <label class="af-label" for="{uid}-years">Years old</label>
+              <label class="af-label" for="{uid}-years">{tr('animals.add.yearsOld')}</label>
               <input
                 id="{uid}-years"
                 class="af-input"
@@ -508,39 +519,50 @@
                 bind:value={ageYears}
               />
             {:else if ageMode === 'date'}
-              <label class="af-label" for="{uid}-born">Born on</label>
+              <label class="af-label" for="{uid}-born">{tr('animals.add.bornOn')}</label>
               <input id="{uid}-born" class="af-input" type="date" bind:value={birthDate} />
             {/if}
           </fieldset>
           {#if farmFields}
             <div class="af-row">
               <label>
-                <span>Breed <span class="af-optional">(optional)</span></span>
+                <span
+                  >{tr('animals.breed')}
+                  <span class="af-optional">{tr('animals.optional')}</span></span
+                >
                 <input class="af-input" type="text" maxlength="80" bind:value={breed} />
               </label>
               <label>
-                <span>Came from <span class="af-optional">(optional)</span></span>
+                <span
+                  >{tr('animals.cameFrom')}
+                  <span class="af-optional">{tr('animals.optional')}</span></span
+                >
                 <input class="af-input" type="text" maxlength="200" bind:value={acquiredFrom} />
               </label>
               <label>
-                <span>Arrived on <span class="af-optional">(optional)</span></span>
+                <span
+                  >{tr('animals.add.arrivedOn')}
+                  <span class="af-optional">{tr('animals.optional')}</span></span
+                >
                 <input class="af-input" type="date" bind:value={acquiredDate} />
               </label>
             </div>
           {/if}
           <label class="af-label" for="{uid}-feeding"
-            >How much food <span class="af-optional">(optional)</span></label
+            >{tr('animals.howMuchFood')}
+            <span class="af-optional">{tr('animals.optional')}</span></label
           >
           <input
             id="{uid}-feeding"
             class="af-input"
             type="text"
             maxlength="200"
-            placeholder="1 cup twice a day"
+            placeholder={tr('animals.feedingPlaceholder')}
             bind:value={feedingNote}
           />
           <label class="af-label" for="{uid}-chip"
-            >Microchip ID <span class="af-optional">(optional)</span></label
+            >{tr('animals.microchip')}
+            <span class="af-optional">{tr('animals.optional')}</span></label
           >
           <input
             id="{uid}-chip"
@@ -553,17 +575,17 @@
         {/if}
         {#if layout === 'farm'}
           <label class="af-label" for="{uid}-purpose">
-            Kept for <span class="af-optional">(optional)</span>
+            {tr('animals.keptFor')} <span class="af-optional">{tr('animals.optional')}</span>
           </label>
           <select id="{uid}-purpose" class="af-input" bind:value={purpose}>
-            <option value="">Usual for this kind</option>
+            <option value="">{tr('animals.add.usualForKind')}</option>
             {#each ANIMAL_PURPOSES as p (p)}
               <option value={p}>{PURPOSE_LABEL[p]}</option>
             {/each}
           </select>
         {/if}
         <label class="af-label" for="{uid}-notes"
-          >Notes <span class="af-optional">(optional)</span></label
+          >{tr('animals.notes')} <span class="af-optional">{tr('animals.optional')}</span></label
         >
         <textarea id="{uid}-notes" class="af-input" maxlength="2000" bind:value={notes}></textarea>
       {/if}
@@ -573,8 +595,11 @@
 
     <button class="af-primary" type="submit" disabled={saving || !chosen}>
       {saving
-        ? 'Saving…'
-        : (submitLabel ?? (mode === 'group' ? `Add this ${groupWord}` : 'Add this animal'))}
+        ? tr('animals.saving')
+        : (submitLabel ??
+          (mode === 'group'
+            ? tr('animals.add.addThisGroup', { groupWord })
+            : tr('animals.add.addThisAnimal')))}
     </button>
   </form>
 {/if}

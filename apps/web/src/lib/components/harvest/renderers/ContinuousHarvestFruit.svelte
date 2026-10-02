@@ -1,5 +1,7 @@
 <script lang="ts">
   import { Apple } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
@@ -7,6 +9,7 @@
   import { fmtQtyRange, usText } from './format';
 
   const props: RendererProps = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const priorPicks = $derived(props.rendererData?.priorPickCount ?? 0);
   const visitNumber = $derived(priorPicks + 1);
@@ -30,19 +33,18 @@
   <header class="archetype-head">
     <Apple size={18} strokeWidth={1.75} />
     <div>
-      <span class="archetype-name">Continuous-bearing harvest</span>
+      <span class="archetype-name">{tr('harvestui.r.cont.name')}</span>
       <span class="archetype-sub">
-        Pick {visitNumber}. Plants will keep producing — record this visit's pick; the planting
-        stays open until you terminate the row.
+        {tr('harvestui.r.cont.sub', { n: visitNumber })}
       </span>
     </div>
   </header>
 
   <div class="pick-block">
-    <span class="block-title">This pick</span>
+    <span class="block-title">{tr('harvestui.r.cont.block')}</span>
     <div class="pick-grid">
       <label class="qfield">
-        <span>Pick weight ({fmt.unit('weight')})</span>
+        <span>{tr('harvestui.r.cont.weight', { unit: fmt.unit('weight') })}</span>
         <UnitInput
           quantity="weight"
           suffix={false}
@@ -51,7 +53,7 @@
         />
       </label>
       <label class="qfield">
-        <span>Marketable % (optional)</span>
+        <span>{tr('harvestui.r.cont.marketable')}</span>
         <input type="text" inputmode="decimal" placeholder="92" bind:value={gradePct} />
       </label>
     </div>

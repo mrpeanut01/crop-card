@@ -14,8 +14,11 @@
   import EmergencyContactsEditor from '$lib/components/settings/EmergencyContactsEditor.svelte';
   import LocationPickerModal from '$lib/components/farm/LocationPickerModal.svelte';
   import { LOUDOUN_DEFAULT_LAT_LON } from '$lib/schedule/constants';
+  import { createT } from '$lib/i18n';
 
   const { data, form } = $props();
+
+  const tr = $derived(createT(data.locale));
 
   const round4 = (n: number | undefined) => (n == null ? null : Number(n.toFixed(4)));
   let lat = $state<number | null>(untrack(() => round4(data.farmLatLon?.lat)));
@@ -46,23 +49,24 @@
   const total = $derived(data.blocks.reduce((s, b) => s + (b.acres ?? 0), 0));
 </script>
 
-<svelte:head><title>Farm & blocks · CropCard</title></svelte:head>
+<svelte:head><title>{tr('settings.farm.pageTitle')}</title></svelte:head>
 
-<SettingsShell title="Farm & blocks" kicker="Field geometry" saveAction="?/save">
-  <SettingsSection
-    title="Farm details"
-    sub="Your farm location drives the weather, frost dates and spray windows."
-  >
+<SettingsShell
+  title={tr('settings.farm.title')}
+  kicker={tr('settings.farm.kicker')}
+  saveAction="?/save"
+>
+  <SettingsSection title={tr('settings.farm.detailsTitle')} sub={tr('settings.farm.detailsSub')}>
     {#if form && 'error' in form && form.error}
       <p class="error" role="alert">{form.error}</p>
     {:else if form && 'ok' in form && form.ok}
-      <p class="saved" role="status">Saved.</p>
+      <p class="saved" role="status">{tr('settings.farm.saved')}</p>
     {/if}
     <div class="grid grid-3">
-      <SettingsField label="Farm name">
+      <SettingsField label={tr('settings.farm.name')}>
         <input class="s-input" name="farmName" value={data.farmName} />
       </SettingsField>
-      <SettingsField label="Latitude" hint="your farm location">
+      <SettingsField label={tr('settings.farm.lat')} hint={tr('settings.farm.locHint')}>
         <input
           class="s-input mono"
           name="lat"
@@ -74,7 +78,7 @@
           bind:value={lat}
         />
       </SettingsField>
-      <SettingsField label="Longitude" hint="your farm location">
+      <SettingsField label={tr('settings.farm.lon')} hint={tr('settings.farm.locHint')}>
         <input
           class="s-input mono"
           name="lon"
@@ -94,7 +98,8 @@
         onclick={() => (pickerOpen = true)}
         data-testid="open-location-picker"
       >
-        <Crosshair size={13} /> Find lat/long with GPS or map
+        <Crosshair size={13} />
+        {tr('settings.farm.findLatLon')}
       </button>
     </div>
     <LocationPickerModal
@@ -127,12 +132,16 @@
   </SettingsSection>
 
   <SettingsSection
-    title={`Blocks · ${data.blocks.length} · ${fmt.qty(total, 'area', { digits: 1 })} total`}
-    sub="Click a block to edit boundary, soil zone, irrigation, or rotation history."
+    title={tr('settings.farm.blocksTitle', {
+      count: data.blocks.length,
+      area: fmt.qty(total, 'area', { digits: 1 })
+    })}
+    sub={tr('settings.farm.blocksSub')}
   >
     {#snippet right()}
       <a class="primary-sm" href="/settings/farm/map">
-        <Plus size={11} /> New block
+        <Plus size={11} />
+        {tr('settings.farm.newBlock')}
       </a>
     {/snippet}
 
@@ -152,25 +161,30 @@
             onCreateFieldWithGeometry={noop}
           />
           <a class="map-edit-link" href="/settings/farm/map">
-            <Map size={12} /> Edit the farm map
+            <Map size={12} />
+            {tr('settings.farm.editMap')}
           </a>
         {:else if browser}
           <div class="map-empty">
             <MapPin size={22} />
-            <p class="map-empty-title">Nothing drawn on the map yet</p>
+            <p class="map-empty-title">{tr('settings.farm.nothingDrawn')}</p>
             <a class="primary-sm" href="/settings/farm/map">
-              <Plus size={11} /> Draw your blocks
+              <Plus size={11} />
+              {tr('settings.farm.drawBlocks')}
             </a>
           </div>
         {:else}
-          <div class="map-loading mono">Loading map…</div>
+          <div class="map-loading mono">{tr('settings.farm.loadingMap')}</div>
         {/if}
       </div>
 
       <!-- Block list -->
       <div class="block-list">
         {#if data.blocks.length === 0}
-          <p class="empty">No blocks yet. <a href="/settings/farm/map">Draw one on the map</a>.</p>
+          <p class="empty">
+            {tr('settings.farm.noBlocks')}
+            <a href="/settings/farm/map">{tr('settings.farm.drawOne')}</a>.
+          </p>
         {/if}
         {#each data.blocks as b (b.id)}
           <a class="block-row" href="/settings/farm/map">
@@ -179,7 +193,7 @@
             </div>
             <div class="block-text">
               <div class="block-name">{b.name}</div>
-              <div class="block-sub mono">{b.fieldName ?? '(no field)'}</div>
+              <div class="block-sub mono">{b.fieldName ?? tr('settings.farm.noField')}</div>
             </div>
             <span class="block-acres mono">{fmt.area(b.acres ?? 0, { digits: 1 })}</span>
             <ChevronRight size={13} />
@@ -189,20 +203,18 @@
     </div>
   </SettingsSection>
 
-  <SettingsSection
-    title="Emergency contacts"
-    sub="Printed at the top of your Farm Map Card, so anyone on the farm can call for help."
-  >
+  <SettingsSection title={tr('settings.farm.contactsTitle')} sub={tr('settings.farm.contactsSub')}>
     {#key contactRows}
       <EmergencyContactsEditor initial={contactRows} error={contactsError} />
     {/key}
-    <a class="card-link" href="/plan/farm-map">See the Farm Map Card</a>
+    <a class="card-link" href="/plan/farm-map">{tr('settings.farm.seeCard')}</a>
   </SettingsSection>
 
-  <SettingsSection title={`Season ${data.currentYear} setup`}>
+  <SettingsSection title={tr('settings.farm.seasonTitle', { year: data.currentYear })}>
     <p class="lede">
-      Season setup is wizard-synced — edit at
-      <a href="/settings/season">/settings/season</a> or via the planning wizard.
+      {tr('settings.farm.seasonLedeA')}
+      <a href="/settings/season">/settings/season</a>
+      {tr('settings.farm.seasonLedeB')}
     </p>
   </SettingsSection>
 </SettingsShell>

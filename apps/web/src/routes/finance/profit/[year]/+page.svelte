@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createT } from '$lib/i18n';
   import '$lib/components/finance/finance.css';
   import CardView from '$lib/components/cards/CardView.svelte';
   import CardPrintSheet from '$lib/components/cards/CardPrintSheet.svelte';
@@ -8,6 +9,7 @@
   import { currentPrefs } from '$lib/prefsState.svelte';
 
   const { data } = $props();
+  const tr = $derived(createT(data.locale));
   const prefs = $derived(currentPrefs());
 
   function print() {
@@ -22,21 +24,22 @@
   });
 </script>
 
-<svelte:head><title>Season profit {data.year} · CropCard</title></svelte:head>
+<svelte:head><title>{tr('finance.profit.pageTitle', { year: data.year })}</title></svelte:head>
 
 <div class="fin-page wrap">
   <div class="no-print">
     <header>
-      <Kicker>Money · owner only</Kicker>
-      <h1 class="serif">Season profit, {data.year}.</h1>
+      <Kicker>{tr('finance.kicker')}</Kicker>
+      <h1 class="serif">{tr('finance.profit.h1', { year: data.year })}</h1>
       <p class="fin-lede">
-        One block per crop, animal group and Area. Print it or save it as a PDF.
+        {tr('finance.profit.lede')}
       </p>
     </header>
     <CardView card={data.card} {prefs} />
     <div class="fin-actions actions">
-      <button class="fin-primary" type="button" onclick={print}>Print or save as PDF</button>
-      <a class="fin-ghost" href="/finance?year={data.year}">Back to Money</a>
+      <button class="fin-primary" type="button" onclick={print}>{tr('finance.profit.print')}</button
+      >
+      <a class="fin-ghost" href="/finance?year={data.year}">{tr('finance.profit.back')}</a>
     </div>
     <p class="fin-help">{PRINT_HELP}</p>
   </div>

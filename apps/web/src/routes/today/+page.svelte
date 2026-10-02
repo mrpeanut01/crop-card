@@ -3,6 +3,7 @@
   import PageSetupQuestions from '$lib/components/setup/PageSetupQuestions.svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
+  import { createT, type MessageKey } from '$lib/i18n';
   import {
     PRINT_RANGE_NOTE,
     periodCardPrintHref,
@@ -48,7 +49,7 @@
     suggestionTemplateKey,
     type CalendarChip
   } from '$lib/today/calendar';
-  import { SEASON_SPAN_LABEL, type SeasonSpan } from '$lib/today/seasonTimeline';
+  import type { SeasonSpan, SeasonSpanKind } from '$lib/today/seasonTimeline';
   import { TODAY_VIEWS, type TodayView } from '$lib/today/views';
   import { weatherByDate } from '$lib/today/weatherSummary';
   import type { QueuedTaskRow } from '$lib/client/taskQueue';
@@ -61,6 +62,7 @@
   import { defaultAssigneeWho, resolveAssigneeWho, type AssigneeWho } from '$lib/tasks/assignee';
 
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const aiEnabled = $derived(data.aiEnabled);
   const gardenOnly = $derived(data.farmProfile === 'garden');
@@ -79,7 +81,13 @@
       }).format(new Date(data.nowMs))
     );
     const part = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
-    return `Good ${part}.`;
+    return tr(
+      part === 'morning'
+        ? 'today.greeting.morning'
+        : part === 'afternoon'
+          ? 'today.greeting.afternoon'
+          : 'today.greeting.evening'
+    );
   });
 
   let queuedRows = $state<QueuedTaskRow[]>([]);
@@ -135,11 +143,11 @@
   const counts = $derived(deckCounts(view === 'day' ? shownEntries : []));
   const summary = $derived.by(() => {
     const parts: string[] = [];
-    if (counts.late) parts.push(`${counts.late} late`);
-    if (counts.dueToday) parts.push(`${counts.dueToday} due today`);
-    if (counts.planned) parts.push(`${counts.planned} planned`);
-    if (counts.done) parts.push(`${counts.done} done`);
-    if (counts.skipped) parts.push(`${counts.skipped} skipped`);
+    if (counts.late) parts.push(tr('today.sum.late', { count: counts.late }));
+    if (counts.dueToday) parts.push(tr('today.sum.dueToday', { count: counts.dueToday }));
+    if (counts.planned) parts.push(tr('today.sum.planned', { count: counts.planned }));
+    if (counts.done) parts.push(tr('today.sum.done', { count: counts.done }));
+    if (counts.skipped) parts.push(tr('today.sum.skipped', { count: counts.skipped }));
     return parts.join(' · ');
   });
 
@@ -147,12 +155,10 @@
     const open = counts.late + counts.dueToday;
     if (data.priorityAction) {
       return open > 1
-        ? `One thing to do first, then ${open - 1} more on the list.`
-        : 'One thing to do today.';
+        ? tr('today.subtitle.firstThen', { count: open - 1 })
+        : tr('today.subtitle.one');
     }
-    return view === 'day'
-      ? 'Nothing scheduled today. Check the list below for what is coming.'
-      : 'Nothing scheduled today.';
+    return view === 'day' ? tr('today.subtitle.noneDay') : tr('today.subtitle.none');
   });
 
   function whereFor(t: Task): string | null {
@@ -303,7 +309,7 @@
     const { queueTaskAction } = await import('$lib/client/taskQueue');
     await queueTaskAction(taskId, action, reason, minutes ? { minutes } : {}, clientId);
     await refreshQueued();
-    liveMessage = 'Saved on this phone. It will upload when you have signal.';
+    liveMessage = tr('today.msg.savedOffline');
   }
 
   /** Done and Skip go through the replayable close endpoint with one client
@@ -341,7 +347,9 @@
       }
       if (!res.ok) {
         const out = await res.json().catch(() => ({}));
-        actionError = `That did not save. ${out.error ?? `The server said ${res.status}.`}`;
+        actionError = tr('today.err.saveFailed', {
+          detail: out.error ?? tr('today.err.serverSaid', { status: res.status })
+        });
         return;
       }
       const out = (await res.json().catch(() => null)) as {
@@ -351,21 +359,21 @@
       } | null;
       liveMessage =
         action !== 'complete'
-          ? 'Skipped.'
+          ? tr('today.msg.skipped')
           : out?.alreadyClosed
             ? out.timeSaved
-              ? 'Someone already closed this job. Your time was saved.'
-              : 'Someone already closed this job.'
+              ? tr('today.msg.alreadyClosedTime')
+              : tr('today.msg.alreadyClosed')
             : minutes
-              ? `Marked done. ${formatHours(minutes)} logged.`
-              : 'Marked done.';
+              ? tr('today.msg.doneLogged', { time: formatHours(minutes) })
+              : tr('today.msg.done');
       if (action === 'complete') {
         const seed = out?.seedStart;
         trayPrompt =
           seed?.step === 'sow' && seed.cropId && data.user?.role === 'owner'
             ? { cropId: seed.cropId }
             : null;
-        if (trayPrompt) liveMessage = 'Marked done. Log the tray so the calendar shows it.';
+        if (trayPrompt) liveMessage = tr('today.msg.doneLogTray');
       }
       await invalidateAll();
     } catch (err) {
@@ -394,16 +402,18 @@
       });
       if (!res.ok) {
         const out = await res.json().catch(() => ({}));
-        actionError = `That did not schedule. ${out.error ?? `The server said ${res.status}.`}`;
+        actionError = tr('today.err.scheduleFailed', {
+          detail: out.error ?? tr('today.err.serverSaid', { status: res.status })
+        });
         return;
       }
-      liveMessage = 'Added to your list.';
+      liveMessage = tr('today.msg.added');
       sheet = null;
       await invalidateAll();
     } catch (err) {
       actionError =
         navigator.onLine === false
-          ? 'Scheduling needs signal. Try again when you are back online.'
+          ? tr('today.err.needsSignal')
           : err instanceof Error
             ? err.message
             : String(err);
@@ -415,54 +425,70 @@
   function fmtRange(startMs: number, endMs: number) {
     const a = fmt.day(startMs);
     if (startMs === endMs) return a;
-    return `${a} to ${fmt.day(endMs)}`;
+    return tr('today.cal.range', { from: a, to: fmt.day(endMs) });
   }
 
-  const EVENT_KIND_LABEL: Record<string, string> = {
-    'spray-window': 'Spray window',
-    'harvest-window': 'Harvest window',
-    planting: 'Planting',
-    'cover-termination': 'Cover crop',
-    'orchard-task': 'Orchard',
-    'seasonal-task': 'Seasonal',
-    'curing-progress': 'Curing',
-    'curing-ready': 'Curing',
-    'companion-trigger': 'Companion',
-    emergence: 'Emergence',
-    'stage-window': 'Growth stage',
-    'shade-window': 'Shade'
+  const EVENT_KIND_LABEL: Record<string, MessageKey> = {
+    'spray-window': 'today.event.sprayWindow',
+    'harvest-window': 'today.event.harvestWindow',
+    planting: 'today.event.planting',
+    'cover-termination': 'today.event.cover',
+    'orchard-task': 'today.event.orchard',
+    'seasonal-task': 'today.event.seasonal',
+    'curing-progress': 'today.event.curing',
+    'curing-ready': 'today.event.curing',
+    'companion-trigger': 'today.event.companion',
+    emergence: 'today.event.emergence',
+    'stage-window': 'today.event.stage',
+    'shade-window': 'today.event.shade'
   };
 
-  function ctaFor(e: CalendarEvent): { href: string; label: string } | null {
+  const SPAN_KEY = {
+    grow: 'today.season.span.grow',
+    plant: 'today.season.span.plant',
+    till: 'today.season.span.till',
+    fertilize: 'today.season.span.fertilize',
+    spray: 'today.season.span.spray',
+    harvest: 'today.season.span.harvest'
+  } as const satisfies Record<SeasonSpanKind, string>;
+
+  const VIEW_KEY = {
+    day: 'today.view.day',
+    week: 'today.view.week',
+    month: 'today.view.month',
+    season: 'today.view.season'
+  } as const satisfies Record<TodayView, string>;
+
+  function ctaFor(e: CalendarEvent): { href: string; label: MessageKey } | null {
     switch (e.kind) {
       case 'spray-window': {
         const stage = (e.detail?.stage as string | undefined) ?? null;
         const params = new URLSearchParams();
         params.set('block', e.blockId);
         if (stage) params.set('windowStage', stage);
-        return { href: `/scout?${params.toString()}`, label: 'Scout this block' };
+        return { href: `/scout?${params.toString()}`, label: 'today.cta.scout' };
       }
       case 'companion-trigger':
       case 'planting':
       case 'seasonal-task':
-        return { href: `/plan#block-${e.blockId}`, label: 'Open block plan' };
+        return { href: `/plan#block-${e.blockId}`, label: 'today.cta.blockPlan' };
       case 'harvest-window':
       case 'curing-progress':
       case 'curing-ready':
-        return { href: '/harvest', label: 'Open harvest' };
+        return { href: '/harvest', label: 'today.cta.harvest' };
       case 'cover-termination':
         return {
           href: `/spray?block=${encodeURIComponent(e.blockId)}&windowStage=BURNDOWN`,
-          label: 'Plan burndown'
+          label: 'today.cta.burndown'
         };
       case 'orchard-task': {
         const taskKey = (e.detail?.taskKey as string | undefined) ?? '';
-        if (taskKey === 'harvest') return { href: '/harvest', label: 'Open harvest' };
+        if (taskKey === 'harvest') return { href: '/harvest', label: 'today.cta.harvest' };
         if (/spray|fungicide|oil/.test(taskKey)) {
           const params = new URLSearchParams({ block: e.blockId });
-          return { href: `/spray?${params.toString()}`, label: 'Plan this orchard spray' };
+          return { href: `/spray?${params.toString()}`, label: 'today.cta.orchardSpray' };
         }
-        return { href: `/plan#block-${e.blockId}`, label: 'Open block plan' };
+        return { href: `/plan#block-${e.blockId}`, label: 'today.cta.blockPlan' };
       }
     }
     return null;
@@ -473,7 +499,7 @@
   }
 </script>
 
-<svelte:head><title>Today · CropCard</title></svelte:head>
+<svelte:head><title>{tr('today.title')} · CropCard</title></svelte:head>
 
 {#snippet suggestionCard(e: CalendarEvent, dayYmd: string | null = null)}
   {@const cta = ctaFor(e)}
@@ -482,19 +508,23 @@
       <strong>{e.title}</strong>
       <span class="s-meta"
         >{fmtRange(e.startMs, e.endMs)} · {e.varietyDisplayName} ·
-        <span class="s-kind">{EVENT_KIND_LABEL[e.kind] ?? e.kind.replace(/-/g, ' ')}</span></span
+        <span class="s-kind"
+          >{EVENT_KIND_LABEL[e.kind]
+            ? tr(EVENT_KIND_LABEL[e.kind])
+            : e.kind.replace(/-/g, ' ')}</span
+        ></span
       >
       {#if e.body}<span class="s-body">{e.body}</span>{/if}
     </div>
     <div class="s-actions">
-      {#if cta}<a class="btn ghost" href={cta.href}>{cta.label}</a>{/if}
+      {#if cta}<a class="btn ghost" href={cta.href}>{tr(cta.label)}</a>{/if}
       {#if canAct}
         <button
           type="button"
           class="btn ghost"
-          aria-label="Schedule: {e.title}"
+          aria-label={tr('today.sugg.scheduleAria', { title: e.title })}
           disabled={busy}
-          onclick={() => scheduleFromEvent(e, dayYmd)}>Schedule</button
+          onclick={() => scheduleFromEvent(e, dayYmd)}>{tr('today.sugg.schedule')}</button
         >
       {/if}
     </div>
@@ -507,8 +537,7 @@
     class="more-all"
     data-testid="more-for-everyone"
     onclick={() => setWho('all')}
-    >{filtered.hiddenCount}
-    {filtered.hiddenCount === 1 ? 'more task' : 'more tasks'} for everyone</button
+    >{tr('today.who.moreForEveryone', { count: filtered.hiddenCount })}</button
   >
 {/snippet}
 
@@ -532,7 +561,7 @@
       onDone={(id, minutes) => closeTask(id, 'complete', undefined, minutes)}
       onSkip={(id, reason) => closeTask(id, 'abort', reason)}
       onAssigned={async (name) => {
-        liveMessage = name ? `Given to ${name}.` : 'Given to nobody in particular.';
+        liveMessage = name ? tr('today.msg.givenTo', { name }) : tr('today.msg.givenToNobody');
         await invalidateAll();
       }}
     />
@@ -564,7 +593,7 @@
   <PageSetupQuestions
     nudges={data.setupPrompts.nudges}
     scope={`today:${data.user?.activeOwnerId ?? ''}`}
-    kicker="Today"
+    kicker={tr('today.title')}
     latLon={data.setupLatLon}
   />
 {/if}
@@ -651,7 +680,7 @@
 
 {#if data.animalCare.length > 0 || careMessage}
   <section class="animal-care" aria-labelledby="care-heading" data-testid="today-animal-care">
-    <h2 id="care-heading" class="serif">Animal care</h2>
+    <h2 id="care-heading" class="serif">{tr('today.animalCare')}</h2>
     {#if careMessage}<p class="care-ok" role="status">{careMessage}</p>{/if}
     {#each data.animalCare as card (card.key)}
       <CareTaskCard
@@ -674,31 +703,35 @@
 <section class="deck" aria-labelledby="deck-heading" data-testid="today-deck" data-view={view}>
   <div class="deck-head">
     <h2 id="deck-heading" class="serif">
-      {view === 'day' ? "Today's work" : view === 'season' ? 'Season timeline' : 'Calendar'}
+      {view === 'day'
+        ? tr('today.deck.dayHeading')
+        : view === 'season'
+          ? tr('today.deck.seasonHeading')
+          : tr('today.deck.calendarHeading')}
     </h2>
     {#if view === 'day' && summary}<p class="deck-sum" data-testid="deck-summary">{summary}</p>{/if}
   </div>
-  <div class="chips" role="group" aria-label="Show">
+  <div class="chips" role="group" aria-label={tr('today.deck.show')}>
     {#each TODAY_VIEWS as v (v.id)}
       <button type="button" class="chip" aria-pressed={view === v.id} onclick={() => setView(v.id)}
-        >{v.label}</button
+        >{tr(VIEW_KEY[v.id])}</button
       >
     {/each}
   </div>
 
   {#if view !== 'season' && hasTeam}
-    <div class="who" role="group" aria-label="Whose jobs" data-testid="who-filter">
+    <div class="who" role="group" aria-label={tr('today.who.aria')} data-testid="who-filter">
       <button
         type="button"
         class="who-seg"
         aria-pressed={who === 'mine'}
-        onclick={() => setWho('mine')}>Mine</button
+        onclick={() => setWho('mine')}>{tr('today.who.mine')}</button
       >
       <button
         type="button"
         class="who-seg"
         aria-pressed={who === 'all'}
-        onclick={() => setWho('all')}>Everyone</button
+        onclick={() => setWho('all')}>{tr('today.who.everyone')}</button
       >
     </div>
   {/if}
@@ -706,12 +739,14 @@
   <p class="sr-only" role="status" aria-live="polite">{liveMessage}</p>
   {#if trayPrompt}
     <div class="tray-prompt" data-testid="log-tray-prompt">
-      <p>Sown? Log the tray so the calendar shows it as sown.</p>
+      <p>{tr('today.tray.prompt')}</p>
       <div class="tray-actions">
         <a class="tray-btn primary" href="{plantingCardHref(trayPrompt.cropId)}#log-tray"
-          >Log the tray</a
+          >{tr('today.tray.log')}</a
         >
-        <button type="button" class="tray-btn" onclick={() => (trayPrompt = null)}>Not now</button>
+        <button type="button" class="tray-btn" onclick={() => (trayPrompt = null)}
+          >{tr('today.tray.notNow')}</button
+        >
       </div>
     </div>
   {/if}
@@ -743,7 +778,7 @@
           href={periodCardPrintHref(data.calendar.view, data.calendar.anchor, {
             who,
             viewerId: data.user?.id ?? null
-          })}>{data.calendar.view === 'week' ? 'Print week' : 'Print month'}</a
+          })}>{data.calendar.view === 'week' ? tr('today.print.week') : tr('today.print.month')}</a
         >
       {:else}
         <p class="print-range" data-testid="print-calendar-range">{PRINT_RANGE_NOTE}</p>
@@ -761,28 +796,27 @@
   {:else}
     {#if deck.length === 0 && who === 'mine' && filtered.hiddenCount > 0}
       <div class="empty" data-testid="deck-empty-mine">
-        <p class="serif empty-title">Nothing is given to you today.</p>
+        <p class="serif empty-title">{tr('today.empty.mine')}</p>
       </div>
     {:else if deck.length === 0}
       <div class="empty" data-testid="deck-empty">
-        <p class="serif empty-title">Nothing on the list for today.</p>
+        <p class="serif empty-title">{tr('today.empty.none')}</p>
         {#if nothingPlanted}
           <p>
-            Add an Area on the Plan page and plant something, and the jobs it needs will show up
-            here.
+            {tr('today.empty.nothingPlanted')}
           </p>
-          <a class="btn primary" href="/plan">Plan a crop</a>
+          <a class="btn primary" href="/plan">{tr('today.empty.planCrop')}</a>
         {:else if todayEvents.length > 0}
-          <p>Your crop calendar suggestions are below.</p>
+          <p>{tr('today.empty.suggestionsBelow')}</p>
         {:else}
-          <p>Nothing is due today. Week and Month show what is coming.</p>
+          <p>{tr('today.empty.nothingDue')}</p>
         {/if}
         {#if !gardenOnly}
           <a class="empty-link" href="/spray">Plan a spray</a>
         {/if}
       </div>
     {:else}
-      <ul class="cards" aria-label="Tasks">
+      <ul class="cards" aria-label={tr('today.deck.tasksAria')}>
         {#each deck as d (d.entry.task.id)}
           <li>{@render taskCard(d.entry.task.id)}</li>
         {/each}
@@ -794,12 +828,11 @@
     {/if}
 
     {#if todayEvents.length > 0}
-      <h3 class="sub-head">From your crop calendar</h3>
+      <h3 class="sub-head">{tr('today.sugg.heading')}</h3>
       <p class="hint">
-        Your crops suggest these. Schedule one to add it to your list, where it can get its own prep
-        and follow-up jobs.
+        {tr('today.sugg.hint')}
       </p>
-      <ul class="suggestions" aria-label="Crop calendar suggestions">
+      <ul class="suggestions" aria-label={tr('today.sugg.aria')}>
         {#each todayEvents as e (e.kind + e.blockId + e.startMs + e.title)}
           <li>{@render suggestionCard(e)}</li>
         {/each}
@@ -812,7 +845,7 @@
   <div class="sheet" data-testid="today-sheet">
     {#if sheet?.kind === 'day'}
       {#if sheetChips.length === 0}
-        <p class="hint">Nothing scheduled on this day.</p>
+        <p class="hint">{tr('today.sheet.nothingDay')}</p>
       {:else}
         <ul class="sheet-list">
           {#each sheetChips as c (c.key)}
@@ -820,7 +853,7 @@
               {#if c.type === 'task'}
                 {@render taskCard(c.taskId)}
               {:else if suggestions[c.index]}
-                <p class="sheet-kicker">Suggested by your crop calendar</p>
+                <p class="sheet-kicker">{tr('today.sheet.suggestedBy')}</p>
                 {@render suggestionCard(suggestions[c.index], sheet.day)}
               {/if}
             </li>
@@ -829,7 +862,7 @@
       {/if}
     {:else if sheetRow && data.season}
       {#if sheetRow.spans.length === 0}
-        <p class="hint">No dates yet. Give it a planting date on the Plan page.</p>
+        <p class="hint">{tr('today.sheet.noDates')}</p>
       {:else}
         <ul class="sheet-list">
           {#each sheetRow.spans as s, k (k)}
@@ -841,9 +874,9 @@
                 <div class="span-line">
                   <strong>{s.label}</strong>
                   <span class="s-meta"
-                    >{SEASON_SPAN_LABEL[s.kind]} · {spanDates(s)} · {s.recorded
-                      ? 'Done'
-                      : 'Planned'}</span
+                    >{tr(SPAN_KEY[s.kind])} · {spanDates(s)} · {s.recorded
+                      ? tr('today.sheet.done')
+                      : tr('today.sheet.planned')}</span
                   >
                 </div>
               {/if}
@@ -871,16 +904,17 @@
 
 {#if data.lowStock.length > 0}
   <Banner tone="wheat">
-    <strong>{data.lowStock.length} item{data.lowStock.length === 1 ? '' : 's'} low on stock:</strong
-    >
+    <strong>{tr('today.stock.low', { count: data.lowStock.length })}</strong>
     <ul class="alert-list">
       {#each data.lowStock as i (i.id)}
         <li>
           <a href="/inventory/{STOCK_CATEGORY_TO_INVENTORY_TYPE[i.category] ?? 'pesticide'}/{i.id}"
             >{i.displayName}</a
-          >: {i.onHand}
-          {i.defaultUnit} on hand (reorder at {i.reorderThreshold}
-          {i.defaultUnit})
+          >: {tr('today.stock.lowLine', {
+            onHand: i.onHand,
+            unit: i.defaultUnit,
+            threshold: i.reorderThreshold
+          })}
         </li>
       {/each}
     </ul>
@@ -888,10 +922,7 @@
 {/if}
 {#if data.expiringStock.length > 0}
   <Banner tone="wheat">
-    <strong
-      >{data.expiringStock.length} lot{data.expiringStock.length === 1 ? '' : 's'} expiring within 30
-      days:</strong
-    >
+    <strong>{tr('today.stock.expiring', { count: data.expiringStock.length })}</strong>
     <ul class="alert-list">
       {#each data.expiringStock as e (e.itemId + (e.lotNumber ?? ''))}
         <li>
@@ -899,8 +930,11 @@
             href="/inventory/{STOCK_CATEGORY_TO_INVENTORY_TYPE[e.category] ??
               'pesticide'}/{e.itemId}">{e.itemName}</a
           >
-          {#if e.lotNumber}<code>{e.lotNumber}</code>{/if}: {e.balance}
-          {e.unit}, {e.daysUntilExpiry} day{e.daysUntilExpiry === 1 ? '' : 's'} left
+          {#if e.lotNumber}<code>{e.lotNumber}</code>{/if}: {tr('today.stock.expiryLine', {
+            balance: e.balance,
+            unit: e.unit,
+            count: e.daysUntilExpiry
+          })}
         </li>
       {/each}
     </ul>
@@ -912,9 +946,7 @@
     shown={aiEnabled
       ? ['plugin', 'data', 'ai', 'manual']
       : ['plugin', 'data', 'fallback', 'manual']}
-    note={aiEnabled
-      ? 'AI on · plugin + your records · all editable'
-      : 'AI off · plugin + your records · all editable'}
+    note={aiEnabled ? tr('today.legend.aiOn') : tr('today.legend.aiOff')}
   />
 </div>
 

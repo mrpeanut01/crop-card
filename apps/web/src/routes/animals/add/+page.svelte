@@ -5,9 +5,14 @@
   import AnimalAddForm from '$lib/components/animals/AnimalAddForm.svelte';
   import AddedWarnings from '$lib/components/animals/AddedWarnings.svelte';
   import { addedHref, type AddedAnimals } from '$lib/animals/display';
+  import { pageTitle } from '$lib/components/animals/labels';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
+  const title = $derived(pageTitle(tr, data.profile.layout));
   let created = $state<AddedAnimals | null>(null);
 
   function onCreated(result: AddedAnimals) {
@@ -20,18 +25,18 @@
 </script>
 
 <svelte:head>
-  <title>Add · {data.profile.title} · CropCard</title>
+  <title>{tr('animals.add.link')} · {title} · CropCard</title>
 </svelte:head>
 
 <div class="add-page">
-  <nav class="crumbs" aria-label="Breadcrumb">
-    <a href="/animals">{data.profile.title}</a>
+  <nav class="crumbs" aria-label={tr('animals.breadcrumb')}>
+    <a href="/animals">{title}</a>
     <span aria-hidden="true">›</span>
-    <span>Add</span>
+    <span>{tr('animals.add.link')}</span>
   </nav>
   <header>
-    <Kicker>{data.profile.title}</Kicker>
-    <h1 class="serif">Add animals</h1>
+    <Kicker>{title}</Kicker>
+    <h1 class="serif">{tr('animals.add.heading')}</h1>
   </header>
 
   {#if created}

@@ -12,8 +12,11 @@
   import { formatInstant } from '$lib/prefs';
   import { lateLabel } from '$lib/records/lateLabel';
   import { holdRefusalOf, shorteningLine, type HoldShortenBody } from '$lib/animals/holdGuardCopy';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const subject = $derived(data.subject);
   const showHolds = $derived(data.foods.length > 0);
@@ -85,17 +88,17 @@
 </script>
 
 <svelte:head>
-  <title>Health · {subject.name} · CropCard</title>
+  <title>{tr('animals.health')} · {subject.name} · CropCard</title>
 </svelte:head>
 
 <div class="record-page">
-  <nav class="crumbs" aria-label="Breadcrumb">
+  <nav class="crumbs" aria-label={tr('animals.breadcrumb')}>
     <a href={subject.detailHref}>{subject.name}</a>
-    <a href="/animals/{subject.id}/log">Eggs, milk and weights</a>
+    <a href="/animals/{subject.id}/log">{tr('animals.eggsMilkWeights')}</a>
   </nav>
 
   <header>
-    <Kicker>{subject.speciesName} · Health</Kicker>
+    <Kicker>{subject.speciesName} · {tr('animals.health')}</Kicker>
     <h1 class="serif">{subject.name}</h1>
   </header>
 
@@ -155,19 +158,21 @@
           stock={data.stock}
           onDone={saved}
         />
-        <button type="button" class="af-ghost" onclick={() => (adding = false)}>Cancel</button>
+        <button type="button" class="af-ghost" onclick={() => (adding = false)}
+          >{tr('animals.cancel')}</button
+        >
       </section>
     {:else}
       <button type="button" class="af-primary" onclick={() => (adding = true)}>
-        Record a treatment or visit
+        {tr('animals.health.recordVisit')}
       </button>
     {/if}
   {/if}
 
   <section aria-labelledby="records-h">
-    <h2 id="records-h" class="section-title">Records</h2>
+    <h2 id="records-h" class="section-title">{tr('animals.records')}</h2>
     {#if data.events.length === 0}
-      <p class="af-help">Nothing recorded yet.</p>
+      <p class="af-help">{tr('animals.history.empty')}</p>
     {:else}
       <ul class="rows">
         {#each data.events as e (e.id)}

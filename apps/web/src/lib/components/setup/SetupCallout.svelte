@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     kicker?: string;
@@ -12,15 +14,8 @@
     actions?: Snippet;
   }
 
-  const {
-    kicker,
-    title,
-    canEdit = true,
-    askOwner = 'Ask the owner to set this up.',
-    testId,
-    children,
-    actions
-  }: Props = $props();
+  const { kicker, title, canEdit = true, askOwner, testId, children, actions }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
   const uid = $props.id();
 </script>
 
@@ -31,7 +26,7 @@
   {#if canEdit}
     {#if actions}<div class="actions">{@render actions()}</div>{/if}
   {:else}
-    <p class="ask-owner" role="note">{askOwner}</p>
+    <p class="ask-owner" role="note">{askOwner ?? tr('setup.callout.askOwner')}</p>
   {/if}
 </section>
 

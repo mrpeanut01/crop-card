@@ -1,5 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import {
     EXTRACTION_METHODS,
     EXTRACTION_METHOD_LABEL,
@@ -27,14 +29,15 @@
   }
 
   const { places, canEdit, initialBlockId, onDone }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
   const uid = $props.id();
 
-  const NUTRIENTS: Array<{ id: RatedNutrient; label: string }> = [
-    { id: 'p', label: 'Phosphorus (P)' },
-    { id: 'k', label: 'Potassium (K)' },
-    { id: 'ca', label: 'Calcium (Ca)' },
-    { id: 'mg', label: 'Magnesium (Mg)' }
-  ];
+  const NUTRIENTS: Array<{ id: RatedNutrient; label: string }> = $derived([
+    { id: 'p', label: tr('setup.soil.nP') },
+    { id: 'k', label: tr('setup.soil.nK') },
+    { id: 'ca', label: tr('setup.soil.nCa') },
+    { id: 'mg', label: tr('setup.soil.nMg') }
+  ]);
 
   function todayLocal(): string {
     const d = new Date();
@@ -97,16 +100,16 @@
         const body = (await res.json().catch(() => ({}))) as { code?: string; error?: string };
         error =
           res.status === 403
-            ? 'Only the owner can add a soil test.'
+            ? tr('setup.soil.errOwner')
             : res.status === 409 && body.error
               ? body.error
-              : "We couldn't save this soil test. Check the numbers and try again.";
+              : tr('setup.soil.errSave');
         return;
       }
       const out = (await res.json()) as { soilTest: { id: string; blockId: string } };
       onDone({ soilTestId: out.soilTest.id, blockId: out.soilTest.blockId });
     } catch {
-      error = "We couldn't reach CropCard. Soil tests save online, so try again with signal.";
+      error = tr('setup.soil.errNetwork');
     } finally {
       saving = false;
     }
@@ -115,19 +118,19 @@
 
 {#if !canEdit}
   <p class="ask-owner" role="note">
-    Ask the owner to add the soil test. Once it's saved it shows up on the Cards page.
+    {tr('setup.soil.askOwner')}
   </p>
 {:else if places.length === 0}
   <p class="ask-owner" role="note">
-    Add a bed or block first, so the soil test has somewhere to go.
+    {tr('setup.soil.needPlace')}
   </p>
 {:else}
   <form class="setup-soil" onsubmit={submit} data-testid="setup-soil-test">
     <p class="lede">
-      Copy the numbers from your lab report. Leave anything blank that your report doesn't show.
+      {tr('setup.soil.lede')}
     </p>
 
-    <label for="{uid}-place">Where was the sample taken?</label>
+    <label for="{uid}-place">{tr('setup.soil.where')}</label>
     <select id="{uid}-place" bind:value={blockId} data-autofocus>
       {#each places as p (p.id)}
         <option value={p.id}>{p.name}</option>
@@ -136,18 +139,18 @@
 
     <div class="pair">
       <label>
-        <span>Date sampled</span>
+        <span>{tr('setup.soil.dateSampled')}</span>
         <input type="date" bind:value={sampledOn} required />
       </label>
       <label>
-        <span>Lab <span class="optional">(optional)</span></span>
+        <span>{tr('setup.soil.lab')} <span class="optional">{tr('setup.optional')}</span></span>
         <input type="text" maxlength="120" autocomplete="off" bind:value={lab} />
       </label>
     </div>
 
     <fieldset>
-      <legend>How does your report list nutrients?</legend>
-      <p class="help">Look at the column heading next to phosphorus and potassium.</p>
+      <legend>{tr('setup.soil.unitsLegend')}</legend>
+      <p class="help">{tr('setup.soil.unitsHelp')}</p>
       <div class="units">
         {#each UNITS_BASES as u (u)}
           <label class="unit" class:on={unitsBasis === u}>
@@ -158,9 +161,11 @@
       </div>
     </fieldset>
 
-    <label for="{uid}-method">Test method <span class="optional">(optional)</span></label>
+    <label for="{uid}-method"
+      >{tr('setup.soil.method')} <span class="optional">{tr('setup.optional')}</span></label
+    >
     <select id="{uid}-method" bind:value={extractionMethod}>
-      <option value="">Not listed</option>
+      <option value="">{tr('setup.soil.notListed')}</option>
       {#each EXTRACTION_METHODS as m (m)}
         <option value={m}>{EXTRACTION_METHOD_LABEL[m]}</option>
       {/each}
@@ -168,11 +173,12 @@
 
     <div class="pair">
       <label>
-        <span>Soil pH</span>
+        <span>{tr('setup.soil.ph')}</span>
         <input type="number" min="0" max="14" step="0.01" inputmode="decimal" bind:value={ph} />
       </label>
       <label>
-        <span>Buffer pH <span class="optional">(optional)</span></span>
+        <span>{tr('setup.soil.bufferPh')} <span class="optional">{tr('setup.optional')}</span></span
+        >
         <input
           type="number"
           min="0"
@@ -185,8 +191,8 @@
     </div>
 
     <fieldset>
-      <legend>Nutrients</legend>
-      <p class="help">If the lab rated a nutrient low, medium or high, pick that rating too.</p>
+      <legend>{tr('setup.soil.nutrients')}</legend>
+      <p class="help">{tr('setup.soil.ratingHelp')}</p>
       {#each NUTRIENTS as n (n.id)}
         <div class="nutrient">
           <label>
@@ -200,9 +206,9 @@
             />
           </label>
           <label>
-            <span>Lab's rating</span>
+            <span>{tr('setup.soil.labRating')}</span>
             <select bind:value={ratings[n.id]}>
-              <option value="">None</option>
+              <option value="">{tr('setup.soil.none')}</option>
               {#each LAB_RATINGS as r (r)}
                 <option value={r}>{LAB_RATING_LABEL[r]}</option>
               {/each}
@@ -212,15 +218,15 @@
       {/each}
       <label class="nitrate">
         <span>
-          Nitrate (NO₃-N, {unitsBasis === 'ppm' ? 'ppm' : 'lb/A'})
-          <span class="optional">(optional)</span>
+          {tr('setup.soil.nitrate', { unit: unitsBasis === 'ppm' ? 'ppm' : 'lb/A' })}
+          <span class="optional">{tr('setup.optional')}</span>
         </span>
         <input type="number" min="0" step="any" inputmode="decimal" bind:value={nitrate} />
       </label>
     </fieldset>
 
     <label>
-      <span>Organic matter (%) <span class="optional">(optional)</span></span>
+      <span>{tr('setup.soil.om')} <span class="optional">{tr('setup.optional')}</span></span>
       <input
         type="number"
         min="0"
@@ -232,8 +238,10 @@
     </label>
 
     <fieldset>
-      <legend>Lab report <span class="optional">(optional)</span></legend>
-      <p class="help">Attach the PDF or a photo of the report so you can find it later.</p>
+      <legend
+        >{tr('setup.soil.labReport')} <span class="optional">{tr('setup.optional')}</span></legend
+      >
+      <p class="help">{tr('setup.soil.attachHelp')}</p>
       <DocumentAttach
         {documentId}
         kind="lab-report"
@@ -250,7 +258,7 @@
     {#if error}<p class="error" role="alert">{error}</p>{/if}
 
     <button class="primary" type="submit" disabled={saving}>
-      {saving ? 'Saving…' : 'Save soil test'}
+      {saving ? tr('setup.saving') : tr('setup.soil.save')}
     </button>
   </form>
 {/if}

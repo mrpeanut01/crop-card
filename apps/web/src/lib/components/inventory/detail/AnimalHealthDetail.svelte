@@ -5,6 +5,8 @@
    * sets them (D0-15). With no link, or no label data, the treatment page
    * treats the withdrawal as unknown until the owner enters it.
    */
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
   import LotQuantities from '../LotQuantities.svelte';
@@ -16,6 +18,7 @@
 
   type Props = Omit<AnimalHealthDetailPayload, 'type'>;
   const { item, lots, movements, meta, plugin, speciesNames, canEdit }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const qty = (v: number) =>
     formatStockQuantity(v, item?.defaultUnit ?? 'count', currentPrefs(), { digits: 2 });
@@ -46,7 +49,7 @@
 
 <header class="detail-header">
   <div>
-    <span class="kicker">Animal health{item ? '' : ' · library'}</span>
+    <span class="kicker">{tr('inv.ah.kicker')}{item ? '' : tr('inv.ah.librarySuffix')}</span>
     <h1 class="serif">{title}</h1>
     {#if meta.nada}
       <p class="sub" data-testid="nada">
@@ -58,7 +61,7 @@
     {/if}
   </div>
   {#if item && canEdit}
-    <a class="edit-cta" href="/inventory/animal-health/{item.id}/edit">Edit</a>
+    <a class="edit-cta" href="/inventory/animal-health/{item.id}/edit">{tr('inv.edit')}</a>
   {/if}
 </header>
 
@@ -89,9 +92,9 @@
     </InvSection>
 
     {#if item}
-      <InvSection title="History" kicker="Last 12">
+      <InvSection title={tr('inv.feed.history')} kicker={tr('inv.feed.last12')}>
         {#if movements.length === 0}
-          <p class="empty">Nothing recorded yet.</p>
+          <p class="empty">{tr('inv.feed.nothingYet')}</p>
         {:else}
           <ul class="movement-list">
             {#each movements.slice(0, 12) as m (m.id)}
@@ -111,22 +114,22 @@
 
   <div class="col">
     {#if item}
-      <InvSection title="Quantity" kicker="On hand, ordered, planned">
+      <InvSection title={tr('inv.seed.quantity')} kicker={tr('inv.seed.quantityKicker')}>
         <LotQuantities itemId={item.id} unit={item.defaultUnit} category={item.category} {lots} />
       </InvSection>
-      <InvSection title="Storage & reorder">
+      <InvSection title={tr('inv.storageReorder')}>
         <InvKVP
-          label="Reorder at"
+          label={tr('inv.reorderAt')}
           value={item.reorderThreshold != null ? qty(item.reorderThreshold) : '—'}
         />
-        <InvKVP label="Notes" value={item.notes ?? '—'} />
+        <InvKVP label={tr('inv.seed.notes')} value={item.notes ?? '—'} />
       </InvSection>
     {:else if plugin}
-      <InvSection title="Product">
-        <InvKVP label="Kind" value={plugin.productKind} />
-        <InvKVP label="Sold as" value={plugin.marketingStatus.toUpperCase()} />
+      <InvSection title={tr('inv.pest.product')}>
+        <InvKVP label={tr('inv.list.col.kind')} value={plugin.productKind} />
+        <InvKVP label={tr('inv.ah.soldAs')} value={plugin.marketingStatus.toUpperCase()} />
         <InvKVP
-          label="Active ingredients"
+          label={tr('inv.ah.activeIngredients')}
           value={plugin.activeIngredients.map((a) => a.name).join(', ')}
         />
       </InvSection>

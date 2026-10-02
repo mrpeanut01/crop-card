@@ -2,8 +2,12 @@
   import { invalidateAll } from '$app/navigation';
   import { formatPhone, parseIdentifier } from '$lib/identity';
   import Pill from '$lib/components/ui/Pill.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   let { email, phone }: { email: string | null; phone: string | null } = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   type Kind = 'email' | 'phone';
   let adding = $state<Kind | null>(null);
@@ -15,11 +19,11 @@
   let notice = $state<string | null>(null);
 
   const methods = $derived([
-    { kind: 'email' as const, value: email, label: 'Email', shown: email },
+    { kind: 'email' as const, value: email, label: tr('settings.signIn.email'), shown: email },
     {
       kind: 'phone' as const,
       value: phone,
-      label: 'Mobile',
+      label: tr('settings.signIn.mobile'),
       shown: phone ? formatPhone(phone) : null
     }
   ]);
@@ -51,12 +55,12 @@
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        error = data.error ?? 'Something went wrong. Try again.';
+        error = data.error ?? tr('settings.signIn.genericError');
         return null;
       }
       return data;
     } catch {
-      error = "Couldn't reach the server. Check your connection.";
+      error = tr('settings.signIn.offline');
       return null;
     } finally {
       busy = false;
@@ -66,7 +70,10 @@
   async function sendCode() {
     const id = parseIdentifier(entered);
     if (!id || id.kind !== adding) {
-      error = adding === 'email' ? 'Enter a valid email address.' : 'Enter a valid mobile number.';
+      error =
+        adding === 'email'
+          ? tr('settings.signIn.invalidEmail')
+          : tr('settings.signIn.invalidMobile');
       return;
     }
     const r = await call('/api/account/identity', 'POST', { identifier: id.value });
@@ -79,7 +86,8 @@
       code
     });
     if (!r) return;
-    notice = `${r.kind === 'email' ? 'Email' : 'Mobile number'} added. You can sign in with it now.`;
+    notice =
+      r.kind === 'email' ? tr('settings.signIn.emailAdded') : tr('settings.signIn.mobileAdded');
     adding = null;
     pendingIdentifier = null;
     await invalidateAll();
@@ -88,7 +96,8 @@
   async function remove(kind: Kind) {
     const r = await call('/api/account/identity', 'DELETE', { kind });
     if (!r) return;
-    notice = `${kind === 'email' ? 'Email' : 'Mobile number'} removed.`;
+    notice =
+      kind === 'email' ? tr('settings.signIn.emailRemoved') : tr('settings.signIn.mobileRemoved');
     await invalidateAll();
   }
 
@@ -103,31 +112,34 @@
 
 <div class="methods">
   {#if !email && phone && adding !== 'email'}
-    <div class="nudge" role="note" aria-label="Add an email">
+    <div class="nudge" role="note" aria-label={tr('settings.signIn.nudgeAria')}>
       <p>
-        <strong>Add an email to sign in faster.</strong> Email is the main way into CropCard: one message
-        carries a sign-in link and a 6-digit backup code. Farm invites go to email too. Your mobile number
-        keeps working.
+        <strong>{tr('settings.signIn.nudgeLead')}</strong>
+        {tr('settings.signIn.nudgeBody')}
       </p>
-      <button type="button" class="primary-sm" onclick={() => start('email')}>Add an email</button>
+      <button type="button" class="primary-sm" onclick={() => start('email')}
+        >{tr('settings.signIn.addEmail')}</button
+      >
     </div>
   {/if}
   {#each methods as m (m.kind)}
     <div class="method-row">
       <div class="m-text">
         <div class="m-label">{m.label}</div>
-        <div class="m-value mono">{m.shown ?? 'Not added'}</div>
+        <div class="m-value mono">{m.shown ?? tr('settings.signIn.notAdded')}</div>
       </div>
       {#if m.value}
-        <Pill tone="forest">Verified</Pill>
+        <Pill tone="forest">{tr('settings.signIn.verified')}</Pill>
         {#if linkedCount > 1}
           <button type="button" class="ghost-sm" disabled={busy} onclick={() => remove(m.kind)}>
-            Remove
+            {tr('settings.signIn.remove')}
           </button>
         {/if}
       {:else if adding !== m.kind}
         <button type="button" class="ghost-sm" onclick={() => start(m.kind)}>
-          + Add {m.kind === 'email' ? 'email' : 'mobile'}
+          {m.kind === 'email'
+            ? tr('settings.signIn.addEmailShort')
+            : tr('settings.signIn.addMobileShort')}
         </button>
       {/if}
     </div>
@@ -136,7 +148,11 @@
       <div class="add-panel">
         {#if !pendingIdentifier}
           <label class="add-field">
-            <span>{m.kind === 'email' ? 'Email address' : 'Mobile number'}</span>
+            <span
+              >{m.kind === 'email'
+                ? tr('settings.signIn.emailAddress')
+                : tr('settings.signIn.mobileNumber')}</span
+            >
             <input
               class="s-input"
               type={m.kind === 'email' ? 'email' : 'tel'}
@@ -149,16 +165,22 @@
           </label>
           <div class="add-actions">
             <button type="button" class="primary-sm" disabled={busy} onclick={sendCode}>
-              {busy ? 'Sending…' : m.kind === 'email' ? 'Email me a code' : 'Text me a code'}
+              {busy
+                ? tr('settings.signIn.sending')
+                : m.kind === 'email'
+                  ? tr('settings.signIn.emailCode')
+                  : tr('settings.signIn.textCode')}
             </button>
-            <button type="button" class="ghost-sm" onclick={cancel}>Cancel</button>
+            <button type="button" class="ghost-sm" onclick={cancel}
+              >{tr('settings.signIn.cancel')}</button
+            >
           </div>
         {:else}
           <label class="add-field">
             <span>
-              6-digit code sent to {m.kind === 'phone'
-                ? formatPhone(pendingIdentifier)
-                : pendingIdentifier}
+              {tr('settings.signIn.codeSent', {
+                to: m.kind === 'phone' ? formatPhone(pendingIdentifier) : pendingIdentifier
+              })}
             </span>
             <input
               class="s-input mono code"
@@ -172,11 +194,14 @@
           </label>
           <div class="add-actions">
             <button type="button" class="primary-sm" disabled={busy} onclick={verify}>
-              {busy ? 'Checking…' : 'Verify'}
+              {busy ? tr('settings.signIn.checking') : tr('settings.signIn.verify')}
             </button>
-            <button type="button" class="ghost-sm" disabled={busy} onclick={sendCode}>Resend</button
+            <button type="button" class="ghost-sm" disabled={busy} onclick={sendCode}
+              >{tr('settings.signIn.resend')}</button
             >
-            <button type="button" class="ghost-sm" onclick={cancel}>Cancel</button>
+            <button type="button" class="ghost-sm" onclick={cancel}
+              >{tr('settings.signIn.cancel')}</button
+            >
           </div>
         {/if}
       </div>

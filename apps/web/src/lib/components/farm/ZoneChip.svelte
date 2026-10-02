@@ -2,6 +2,8 @@
   import { untrack } from 'svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import {
     farmZoneFrom,
     lookupZone,
@@ -25,6 +27,7 @@
 
   const { lat, lon, manualZone, editable = false }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   let lookup = $state<ZoneLookup | null>(null);
   let elevationKnown = $state(false);
   let loaded = $state(false);
@@ -64,7 +67,7 @@
 
 <div class="zone" data-testid="zone-chip">
   <div class="line">
-    <span class="lbl">Hardiness zone</span>
+    <span class="lbl">{tr('farm.zone.label')}</span>
     {#if shown}
       <span class="serif value" data-testid="zone-value">{zoneValueLabel(shown)}</span>
       {#if zoneReachNote(shown)}
@@ -73,47 +76,45 @@
       <Provenance
         source={shown.provenance}
         detail={zoneSourceDetail(shown)}
-        label={shown.provenance === 'data' ? 'Weather service' : undefined}
+        label={shown.provenance === 'data' ? tr('farm.zone.weatherService') : undefined}
         long={zoneEstimateLong(shown)}
       />
     {:else if lat == null || lon == null}
-      <span class="muted">Set the location to estimate it.</span>
+      <span class="muted">{tr('farm.zone.setLocation')}</span>
     {:else if loaded}
       <span class="muted" data-testid="zone-none"
         >{elevationKnown
-          ? `No station with enough winters within ${ZONE_WIDE_MAX_MI} mi at a similar elevation.`
-          : `No station with enough winters within ${ZONE_NEAR_MAX_MI} mi.`}</span
+          ? tr('farm.zone.noneWide', { mi: ZONE_WIDE_MAX_MI })
+          : tr('farm.zone.noneNear', { mi: ZONE_NEAR_MAX_MI })}</span
       >
     {:else}
-      <span class="muted">Looking it up…</span>
+      <span class="muted">{tr('farm.zone.looking')}</span>
     {/if}
   </div>
   {#if estimate && estimate.extremeMinF !== null}
     <p class="muted small">
       {shown?.provenance === 'manual'
-        ? 'Station estimate: zone ' + estimate.zone + '. '
-        : ''}Average coldest night of the year, 1991-2020: {fmt.qty(
-        estimate.extremeMinF,
-        'temperature'
-      )}. {estimate.reach === 'wide'
-        ? 'A rougher estimate from one farther station at a similar elevation'
-        : 'An estimate from one station'}, not the USDA map. Nothing in CropCard is limited by it.
+        ? tr('farm.zone.stationEstimate', { zone: estimate.zone }) + ' '
+        : ''}{tr('farm.zone.note', {
+        temp: fmt.qty(estimate.extremeMinF, 'temperature'),
+        est: estimate.reach === 'wide' ? tr('farm.zone.estWide') : tr('farm.zone.estOne')
+      })}
     </p>
   {/if}
   {#if editable}
     <label class="row">
-      <span class="lbl">Your zone (optional)</span>
+      <span class="lbl">{tr('farm.zone.yours')}</span>
       <input
         name="hardinessZone"
         type="text"
         inputmode="text"
         autocomplete="off"
-        placeholder={estimate ? estimate.zone : 'e.g. 7a'}
+        placeholder={estimate ? estimate.zone : tr('farm.zone.ph')}
         maxlength="8"
         bind:value={typed}
         data-testid="zone-input"
       />
-      <span class="muted small">Leave blank to use the estimate.</span>
+      <span class="muted small">{tr('farm.zone.blank')}</span>
     </label>
   {/if}
 </div>

@@ -1,35 +1,43 @@
 <script lang="ts">
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
 
+  import { createT } from '$lib/i18n';
+
   let { data } = $props();
+
+  const tr = $derived(createT(data.locale));
 </script>
 
-<svelte:head><title>Planning assistant · CropCard</title></svelte:head>
+<svelte:head><title>{tr('settings.aiAbout.pageTitle')}</title></svelte:head>
 
-<SettingsShell title="Planning assistant" kicker="Optional" backHref="/today" hideFooter>
+<SettingsShell
+  title={tr('settings.aiAbout.title')}
+  kicker={tr('settings.aiAbout.kicker')}
+  backHref="/today"
+  hideFooter
+>
   <div class="about" data-testid="assistant-about">
     <p class="lede">
-      CropCard can ask Claude, an AI assistant, for planning ideas: which crop fits which spot, what
-      to sow when, and how to read a product label from a photo.
+      {tr('settings.aiAbout.lede')}
     </p>
     <ul>
-      <li>Everything in CropCard works without it. You won't lose anything by skipping.</li>
-      <li>Suggestions are always marked as AI and you can change any of them.</li>
-      <li>It needs an Anthropic account and key, which has its own small cost.</li>
+      <li>{tr('settings.aiAbout.b1')}</li>
+      <li>{tr('settings.aiAbout.b2')}</li>
+      <li>{tr('settings.aiAbout.b3')}</li>
     </ul>
 
     {#if data.canDecide}
       <div class="actions">
         <form method="POST" action="?/skip">
-          <button type="submit" class="primary">Skip, everything works without it</button>
+          <button type="submit" class="primary">{tr('settings.aiAbout.skip')}</button>
         </form>
-        <a class="secondary" href="/settings/ai">Set it up</a>
+        <a class="secondary" href="/settings/ai">{tr('settings.aiAbout.setup')}</a>
       </div>
       {#if data.skipped}
-        <p class="note" role="status">You skipped this. You can set it up here any time.</p>
+        <p class="note" role="status">{tr('settings.aiAbout.skipped')}</p>
       {/if}
     {:else}
-      <p class="note" role="note">The farm owner decides whether to turn this on.</p>
+      <p class="note" role="note">{tr('settings.aiAbout.ownerDecides')}</p>
     {/if}
   </div>
 </SettingsShell>

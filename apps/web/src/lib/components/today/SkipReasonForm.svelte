@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   interface Props {
     /** Unique per form on the page, so the label points at its own box. */
     id: string;
@@ -19,19 +21,22 @@
     onSave(reason.trim());
     reason = '';
   }
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
-<div class="skip-form" role="region" aria-label="Skip reason">
-  <label for={id}>Why are you skipping this?</label>
+<div class="skip-form" role="region" aria-label={tr('today.skip.reasonAria')}>
+  <label for={id}>{tr('today.skip.why')}</label>
   <textarea
     {id}
     bind:this={box}
     bind:value={reason}
     rows="2"
-    placeholder="e.g. weather window closed · stock out · re-evaluated"></textarea>
+    placeholder={tr('today.skip.placeholder')}></textarea>
   <div class="skip-actions">
-    <button type="button" class="ghost" onclick={onCancel}>Cancel</button>
-    <button type="button" class="primary" onclick={save} disabled={busy}>Save skip</button>
+    <button type="button" class="ghost" onclick={onCancel}>{tr('today.skip.cancel')}</button>
+    <button type="button" class="primary" onclick={save} disabled={busy}
+      >{tr('today.skip.save')}</button
+    >
   </div>
 </div>
 

@@ -21,6 +21,7 @@
   } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
+  import { createT, type MessageKey } from '$lib/i18n';
 
   /**
    * Phase 25c (#88) — /settings index.
@@ -32,6 +33,13 @@
    */
 
   let { data } = $props();
+
+  const tr = $derived(createT(data.locale));
+  const ROLE_KEYS: Record<string, MessageKey> = {
+    owner: 'settings.role.owner',
+    helper: 'settings.role.helper',
+    inspector: 'settings.role.inspector'
+  };
 
   type LucideIcon = typeof User;
   interface Section {
@@ -48,52 +56,55 @@
     {
       href: '/settings/account',
       icon: User,
-      label: 'Account & sign-in',
-      sub: 'Email · password · 2FA · active sessions'
+      label: tr('account.title'),
+      sub: tr('settings.index.account.sub')
     },
     {
       href: '/settings/notifications',
       icon: Bell,
-      label: 'Notifications',
-      sub: 'Push and email alerts · decon due · record lock closing · spring calibration'
+      label: tr('settings.index.notifications.label'),
+      sub: tr('settings.index.notifications.sub')
     },
     {
       href: '/settings/season',
       icon: Sprout,
-      label: 'Season setup',
-      sub: 'Philosophy · tillage · fertility · irrigation · re-walk the 6-step wizard',
-      badge: { tone: 'neutral', text: 'Synced from wizard' },
+      label: tr('settings.index.season.label'),
+      sub: tr('settings.index.season.sub'),
+      badge: { tone: 'neutral', text: tr('settings.index.season.badge') },
       ownerOnly: true
     },
     {
       href: '/settings/farm',
       icon: LayoutGrid,
-      label: 'Farm & blocks',
-      sub: `${data.counts.blocks} block${data.counts.blocks === 1 ? '' : 's'} · acreage · soil zones · field map`,
+      label: tr('settings.index.farm.label'),
+      sub: tr('settings.index.farm.sub', { count: data.counts.blocks }),
       ownerOnly: true
     },
     {
       href: '/settings/helpers',
       icon: Users,
-      label: 'Helpers & invites',
+      label: tr('settings.index.helpers.label'),
       sub: [
-        `${data.counts.owners} owner${data.counts.owners === 1 ? '' : 's'}`,
-        `${data.counts.helpers} helper${data.counts.helpers === 1 ? '' : 's'}`,
-        `${data.counts.pendingInvites} pending invite${data.counts.pendingInvites === 1 ? '' : 's'}`
+        tr('settings.index.owners', { count: data.counts.owners }),
+        tr('settings.index.helpers', { count: data.counts.helpers }),
+        tr('settings.index.invites', { count: data.counts.pendingInvites })
       ].join(' · '),
       badge:
         data.counts.pendingInvites > 0
-          ? { tone: 'wheat', text: `${data.counts.pendingInvites} pending` }
+          ? {
+              tone: 'wheat',
+              text: tr('settings.index.pendingBadge', { count: data.counts.pendingInvites })
+            }
           : undefined,
       ownerOnly: true
     },
     {
       href: '/settings/equipment',
       icon: Tractor,
-      label: 'Equipment',
+      label: tr('settings.index.equipment.label'),
       sub: [
-        `${data.counts.equipment} piece${data.counts.equipment === 1 ? '' : 's'}`,
-        `${data.counts.sprayers} sprayer${data.counts.sprayers === 1 ? '' : 's'} & calibration`,
+        tr('settings.index.pieces', { count: data.counts.equipment }),
+        tr('settings.index.sprayers', { count: data.counts.sprayers }),
         ...(data.counts.dirtySprayers > 0 ? [`${data.counts.dirtySprayers} needs decon`] : [])
       ].join(' · '),
       badge: data.counts.dirtySprayers > 0 ? { tone: 'rust', text: 'Decon needed' } : undefined,
@@ -102,60 +113,65 @@
     {
       href: '/inventory?type=crop&mode=catalog',
       icon: Box,
-      label: 'Plugins & crop library',
-      sub: `${data.counts.plugins} loaded · ${data.advanced.pluginFailures} failed`
+      label: tr('settings.index.plugins.label'),
+      sub: tr('settings.index.plugins.sub', {
+        loaded: data.counts.plugins,
+        failed: data.advanced.pluginFailures
+      })
     },
     {
       href: '/settings/records',
       icon: FileText,
-      label: 'Records & retention',
-      sub: 'VDACS audit tier · 2-year hold · bulk exports',
+      label: tr('settings.index.records.label'),
+      sub: tr('settings.index.records.sub'),
       ownerOnly: true
     },
     {
       href: '/settings/documents',
       icon: FolderOpen,
-      label: 'Documents',
-      sub: 'Lab reports · certificates · labels · receipts · storage used',
+      label: tr('settings.index.documents.label'),
+      sub: tr('settings.index.documents.sub'),
       ownerOnly: true
     },
     {
       href: '/finance',
       icon: Wallet,
-      label: 'Money',
-      sub: 'Income and expenses · season profit by crop and animal · CSV',
+      label: tr('settings.index.money.label'),
+      sub: tr('settings.index.money.sub'),
       ownerOnly: true
     },
     {
       href: '/settings/integrations',
       icon: Plug,
-      label: 'Integrations',
-      sub: `Claude API key · ${data.counts.apiTokens} API token${data.counts.apiTokens === 1 ? '' : 's'} · weather · USDA`,
+      label: tr('settings.index.integrations.label'),
+      sub: tr('settings.index.tokens', { count: data.counts.apiTokens }),
       badge: data.aiEnabled
-        ? { tone: 'forest', text: 'AI on' }
-        : { tone: 'neutral', text: 'AI off' },
+        ? { tone: 'forest', text: tr('settings.index.aiOn') }
+        : { tone: 'neutral', text: tr('settings.index.aiOff') },
       ownerOnly: true
     },
     {
       href: '/settings/billing',
       icon: CreditCard,
-      label: 'Plan & billing',
-      sub: `${data.owner?.planName ?? 'Free'} plan · compare plans and manage billing`,
+      label: tr('settings.index.billing.label'),
+      sub: tr('settings.index.billing.sub', { plan: data.owner?.planName ?? 'Free' }),
       ownerOnly: true
     },
     {
       href: '/settings/about',
       icon: Heart,
-      label: 'About CropCard',
-      sub: 'Why this exists · open source (MIT) · help build it'
+      label: tr('settings.index.about.label'),
+      sub: tr('settings.index.about.sub')
     },
     {
       href: '/settings/advanced',
       icon: AlertTriangle,
-      label: data.isOwner ? 'Advanced & export-all' : 'App info',
+      label: data.isOwner
+        ? tr('settings.index.advanced.ownerLabel')
+        : tr('settings.index.advanced.appInfo'),
       sub: data.isOwner
-        ? 'App info · bulk export · transfer ownership · delete account'
-        : 'Build and rules version, plugin counts',
+        ? tr('settings.index.advanced.ownerSub')
+        : tr('settings.index.advanced.helperSub'),
       danger: data.isOwner
     }
   ]);
@@ -164,22 +180,22 @@
 </script>
 
 <svelte:head>
-  <title>Settings · CropCard</title>
+  <title>{tr('settings.index.title')}</title>
 </svelte:head>
 
 <header class="page-head">
   <div>
-    <Kicker>Settings</Kicker>
-    <h1>Configure CropCard.</h1>
+    <Kicker>{tr('settings.index.kicker')}</Kicker>
+    <h1>{tr('settings.index.h1')}</h1>
   </div>
   <div class="header-actions">
     {#if data.isOwner}
       <form method="POST" action="/today?/showSetup">
-        <button class="ghost-btn" type="submit">Re-show setup checklist</button>
+        <button class="ghost-btn" type="submit">{tr('settings.index.reshowSetup')}</button>
       </form>
       <a class="ghost-btn" href="/settings/advanced">
         <FileDown size={14} />
-        Export account data
+        {tr('settings.index.exportAccount')}
       </a>
     {/if}
   </div>
@@ -192,21 +208,23 @@
     <div class="name">{data.user.name}</div>
     <div class="email">{identityLabel(data.user)}</div>
     <div class="pills">
-      <Pill tone="forest">{data.user.role}</Pill>
-      <Pill tone="neutral">Member since {data.user.since}</Pill>
+      <Pill tone="forest"
+        >{ROLE_KEYS[data.user.role] ? tr(ROLE_KEYS[data.user.role]) : data.user.role}</Pill
+      >
+      <Pill tone="neutral">{tr('settings.index.memberSince', { date: data.user.since })}</Pill>
     </div>
   </div>
   <div class="identity-meta">
-    <div class="meta-label">Last sign-in</div>
+    <div class="meta-label">{tr('settings.index.lastSignIn')}</div>
     <div class="meta-value mono">{data.user.lastLogin}</div>
     <div class="meta-sub">
-      {data.user.sessions} active session{data.user.sessions === 1 ? '' : 's'}
+      {tr('settings.index.sessions', { count: data.user.sessions })}
     </div>
   </div>
 </section>
 
 <!-- ─── 2-column section grid ──────────────────────────────────── -->
-<ul class="section-grid" aria-label="Settings sections">
+<ul class="section-grid" aria-label={tr('settings.index.sectionsAria')}>
   {#each visibleSections as s (s.href)}
     {@const Icon = s.icon}
     <li>
@@ -231,30 +249,30 @@
 
 <!-- ─── Advanced diagnostics footer ────────────────────────────── -->
 <section class="card advanced-footer">
-  <Kicker>Advanced · diagnostics</Kicker>
+  <Kicker>{tr('settings.index.diag.kicker')}</Kicker>
   <dl class="diag-grid">
     <div>
-      <dt>Build version</dt>
+      <dt>{tr('settings.index.diag.build')}</dt>
       <dd class="mono">{data.advanced.buildVersion}</dd>
     </div>
     <div>
-      <dt>Rules version</dt>
+      <dt>{tr('settings.index.diag.rules')}</dt>
       <dd class="mono">{data.advanced.rulesVersion}</dd>
     </div>
     <div>
-      <dt>Plugin failures</dt>
+      <dt>{tr('settings.index.diag.pluginFailures')}</dt>
       <dd class="mono">{data.advanced.pluginFailures}</dd>
     </div>
     <div>
-      <dt>Tenant ID</dt>
+      <dt>{tr('settings.index.diag.tenant')}</dt>
       <dd class="mono">{data.advanced.tenantId}</dd>
     </div>
     <div>
-      <dt>Last backup</dt>
+      <dt>{tr('settings.index.diag.backup')}</dt>
       <dd class="mono">{data.advanced.lastBackup}</dd>
     </div>
     <div>
-      <dt>Storage tier</dt>
+      <dt>{tr('settings.index.diag.storage')}</dt>
       <dd class="mono">SQLite · Litestream → Azure Blob</dd>
     </div>
   </dl>

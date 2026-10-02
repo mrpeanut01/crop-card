@@ -5,6 +5,8 @@
   import { germinationMax, germinationText } from '$lib/schedule/seedStart';
   import { submitGermination } from '$lib/seedStart/germinationClient';
   import type { SnapshotSeedTray } from '$lib/cards/snapshot';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     tray: SnapshotSeedTray;
@@ -12,6 +14,7 @@
   }
 
   const { tray, canWrite }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const max = $derived(germinationMax(tray.cells, tray.seedsPerCell));
   let count = $state(0);
@@ -45,7 +48,7 @@
 
 <div class="stepper" data-testid="germination-stepper">
   <p class="label">
-    <strong>{tray.trayLabel ?? 'Tray'}</strong>
+    <strong>{tray.trayLabel ?? tr('cardsui.germ.tray')}</strong>
     <span aria-live="polite" data-testid="germination-text"
       >{germinationText(count, tray.cells, tray.seedsPerCell)}</span
     >
@@ -56,7 +59,7 @@
       <button
         type="button"
         class="btn"
-        aria-label="One fewer up"
+        aria-label={tr('cardsui.germ.fewer')}
         disabled={busy || count <= 0}
         onclick={() => step(-1)}>−</button
       >
@@ -65,13 +68,15 @@
         inputmode="numeric"
         min="0"
         {max}
-        aria-label="Seedlings up in {tray.trayLabel ?? 'this tray'}"
+        aria-label={tr('cardsui.germ.upIn', {
+          tray: tray.trayLabel ?? tr('cardsui.germ.thisTray')
+        })}
         bind:value={count}
       />
       <button
         type="button"
         class="btn"
-        aria-label="One more up"
+        aria-label={tr('cardsui.germ.more')}
         disabled={busy || count >= max}
         onclick={() => step(1)}>+</button
       >
@@ -79,7 +84,7 @@
         type="button"
         class="btn primary"
         disabled={busy || count == null || count === saved}
-        onclick={save}>Save count</button
+        onclick={save}>{tr('cardsui.germ.save')}</button
       >
     </div>
   {/if}

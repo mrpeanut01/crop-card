@@ -1,5 +1,7 @@
 <script lang="ts">
   import { formatHours } from '$lib/labour/hours';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     plantingId: string;
@@ -7,6 +9,7 @@
     role: string | null;
   }
   const { plantingId, role }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let rows = $state<{ id: string; name: string; minutes: number }[]>([]);
 
@@ -35,13 +38,13 @@
 
 {#if rows.length > 0}
   <section class="hours" aria-labelledby="hours-{plantingId}" data-testid="planting-hours">
-    <h2 id="hours-{plantingId}">Time by person</h2>
+    <h2 id="hours-{plantingId}">{tr('cardsui.hours.title')}</h2>
     <ul>
       {#each rows as r (r.id)}
         <li><span class="name">{r.name}</span><span>{formatHours(r.minutes)}</span></li>
       {/each}
     </ul>
-    <p class="hint">Only you see this split. Helpers see the total on the card.</p>
+    <p class="hint">{tr('cardsui.hours.hint')}</p>
   </section>
 {/if}
 

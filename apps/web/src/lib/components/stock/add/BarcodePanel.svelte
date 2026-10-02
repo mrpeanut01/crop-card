@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import { ScanBarcode } from 'lucide-svelte';
   import BarcodeScanner from '$lib/components/BarcodeScanner.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
@@ -29,6 +31,7 @@
   }
 
   const { onSubmit, busy = false, type }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let scannerOpen = $state(false);
   let lookingUp = $state(false);
@@ -51,7 +54,8 @@
       });
       const body = await res.json();
       if (!res.ok) {
-        lookupError = body.message ?? body.error ?? `HTTP ${res.status}`;
+        lookupError =
+          body.message ?? body.error ?? tr('stockui.httpStatus', { status: res.status });
         return;
       }
       if (body.existingStockItemId) {
@@ -61,8 +65,7 @@
         return;
       }
       if (!body.found) {
-        lookupError =
-          'Barcode not in OpenFoodFacts or Claude could not identify it. Try the Label scan tab next, or use Manual.';
+        lookupError = tr('stockui.barcode.notFound');
         return;
       }
       // Bridge ScanResult → StockEntryDraft. The barcode tier carries
@@ -88,14 +91,13 @@
 
 <div class="barcode-panel">
   <p class="lede">
-    Point your camera at the package barcode (UPC / EAN). The lookup uses OpenFoodFacts first (free,
-    deterministic) and falls back to Claude when the product isn't in their database.
+    {tr('stockui.barcode.lede')}
   </p>
 
   {#if !scannerOpen && !lookingUp && !lastBarcode}
     <button type="button" class="open-cam" onclick={() => (scannerOpen = true)} disabled={busy}>
       <ScanBarcode size={20} strokeWidth={1.75} />
-      Open camera
+      {tr('stockui.openCamera')}
     </button>
   {/if}
 
@@ -107,23 +109,25 @@
 
   {#if lookingUp && lastBarcode}
     <div class="status looking" aria-live="polite">
-      Looking up <span class="mono">{lastBarcode}</span>…
+      {tr('stockui.barcode.lookingUp')} <span class="mono">{lastBarcode}</span>…
     </div>
   {/if}
 
   {#if existingItemId}
     <div class="existing">
       <p>
-        This barcode is already in your inventory.
+        {tr('stockui.barcode.existing')}
         <Provenance source="data" compact />
       </p>
       <div class="existing-actions">
         {#if existingType}
           <a class="primary" href="/inventory/{existingType}/{existingItemId}">
-            Open that item →
+            {tr('stockui.barcode.openItem')}
           </a>
         {/if}
-        <button type="button" class="ghost" onclick={startOver}>Scan another</button>
+        <button type="button" class="ghost" onclick={startOver}
+          >{tr('stockui.barcode.scanAnother')}</button
+        >
       </div>
     </div>
   {/if}
@@ -131,7 +135,7 @@
   {#if lookupError}
     <p class="error" aria-live="polite">{lookupError}</p>
     {#if !scannerOpen}
-      <button type="button" class="ghost" onclick={startOver}>Try again</button>
+      <button type="button" class="ghost" onclick={startOver}>{tr('stockui.tryAgain')}</button>
     {/if}
   {/if}
 </div>

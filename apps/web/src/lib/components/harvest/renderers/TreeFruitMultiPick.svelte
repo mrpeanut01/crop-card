@@ -1,19 +1,28 @@
 <script lang="ts">
   import { TreeDeciduous } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
 
   const props: RendererProps = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   // Family-keyed pick-pass guidance pending #181 schema lift onto cropPlugin.
-  const FAMILY_PASS_GUIDANCE: Record<
-    string,
-    { typical: number; spreadDays: number; note: string }
-  > = {
-    pome: { typical: 3, spreadDays: 21, note: 'Pick over 3 passes ~7 days apart.' },
-    'stone-fruit': { typical: 2, spreadDays: 10, note: 'Two passes, ~5 days apart by color.' },
-    bramble: { typical: 4, spreadDays: 21, note: 'Pick every 3–5 days through the window.' }
+  const FAMILY_PASS_GUIDANCE: Record<string, { typical: number; spreadDays: number }> = {
+    pome: { typical: 3, spreadDays: 21 },
+    'stone-fruit': { typical: 2, spreadDays: 10 },
+    bramble: { typical: 4, spreadDays: 21 }
   };
+  const guidanceNote = $derived(
+    props.cropFamily === 'pome'
+      ? tr('harvestui.r.tree.notePome')
+      : props.cropFamily === 'stone-fruit'
+        ? tr('harvestui.r.tree.noteStone')
+        : props.cropFamily === 'bramble'
+          ? tr('harvestui.r.tree.noteBramble')
+          : ''
+  );
 
   const priorPicks = $derived(props.rendererData?.priorPickCount ?? 0);
   const guidance = $derived(props.cropFamily ? FAMILY_PASS_GUIDANCE[props.cropFamily] : undefined);
@@ -24,10 +33,9 @@
   <header class="archetype-head">
     <TreeDeciduous size={18} strokeWidth={1.75} />
     <div>
-      <span class="archetype-name">Tree-fruit multi-pick harvest</span>
+      <span class="archetype-name">{tr('harvestui.r.tree.name')}</span>
       <span class="archetype-sub">
-        Multiple ripening passes — pick only what's at color/firmness target each pass. Record this
-        pass's yield; the planting stays open across the window.
+        {tr('harvestui.r.tree.sub')}
       </span>
     </div>
   </header>
@@ -35,10 +43,12 @@
   <div class="pick-timeline">
     <div class="pick-head">
       <span class="pick-badge mono"
-        >Pick {currentPick}{guidance ? ` of ~${guidance.typical}` : ''}</span
+        >{guidance
+          ? tr('harvestui.r.tree.pickOf', { n: currentPick, total: guidance.typical })
+          : tr('harvestui.r.tree.pick', { n: currentPick })}</span
       >
       {#if guidance}
-        <span class="pick-note">{guidance.note}</span>
+        <span class="pick-note">{guidanceNote}</span>
       {/if}
     </div>
     {#if guidance && guidance.typical > 1}
@@ -50,7 +60,9 @@
           <li class:done={isDone} class:now={isNow}>
             <span class="pass-num mono">#{passNum}</span>
             <span class="pass-state">
-              {#if isDone}logged{:else if isNow}this pass{:else}upcoming{/if}
+              {#if isDone}{tr('harvestui.r.tree.logged')}{:else if isNow}{tr(
+                  'harvestui.r.tree.now'
+                )}{:else}{tr('harvestui.r.tree.upcoming')}{/if}
             </span>
           </li>
         {/each}

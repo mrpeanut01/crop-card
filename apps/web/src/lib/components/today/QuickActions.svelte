@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   /**
    * Phase 25e (#97) — /today quick actions card.
    *
@@ -9,9 +11,10 @@
   import { ChevronRight, SprayCan, Wheat, Eye } from 'lucide-svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
+  import type { MessageKey } from '$lib/i18n';
 
   type LucideIcon = typeof Eye;
-  type Action = { label: string; href: string; icon: LucideIcon };
+  type Action = { label: MessageKey; href: string; icon: LucideIcon };
 
   interface Props {
     /** Garden households see picking and notes first, spraying last. */
@@ -20,21 +23,22 @@
   const { profile = null }: Props = $props();
 
   const FARM: Action[] = [
-    { label: 'Spray', href: '/spray', icon: SprayCan },
-    { label: 'Record harvest', href: '/harvest', icon: Wheat },
-    { label: 'Log scout note', href: '/scout', icon: Eye }
+    { label: 'today.quick.spray', href: '/spray', icon: SprayCan },
+    { label: 'today.quick.recordHarvest', href: '/harvest', icon: Wheat },
+    { label: 'today.quick.logScout', href: '/scout', icon: Eye }
   ];
   const GARDEN: Action[] = [
-    { label: 'Record what you picked', href: '/harvest', icon: Wheat },
-    { label: 'Jot down what you saw', href: '/scout', icon: Eye },
-    { label: 'Spray', href: '/spray', icon: SprayCan }
+    { label: 'today.quick.recordPicked', href: '/harvest', icon: Wheat },
+    { label: 'today.quick.jotSaw', href: '/scout', icon: Eye },
+    { label: 'today.quick.spray', href: '/spray', icon: SprayCan }
   ];
   const ACTIONS = $derived(profile === 'garden' ? GARDEN : FARM);
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <Card padded={false}>
   <div class="head">
-    <Kicker>Quick actions</Kicker>
+    <Kicker>{tr('today.quick.title')}</Kicker>
   </div>
   <div class="rows">
     {#each ACTIONS as { label, href, icon: Icon } (label)}
@@ -42,7 +46,7 @@
         <span class="row-icon">
           <Icon size={16} strokeWidth={1.75} />
         </span>
-        <span class="row-label">{label}</span>
+        <span class="row-label">{tr(label)}</span>
         <ChevronRight size={14} strokeWidth={1.75} class="row-arrow" />
       </a>
     {/each}

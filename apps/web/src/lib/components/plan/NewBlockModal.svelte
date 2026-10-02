@@ -13,6 +13,8 @@
    */
   import { X } from 'lucide-svelte';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     open: boolean;
@@ -21,6 +23,7 @@
   }
 
   const { open, onClose, onCreated }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let name = $state('');
   let blockLabel = $state('');
@@ -31,7 +34,7 @@
   async function handleSubmit(e: SubmitEvent): Promise<void> {
     e.preventDefault();
     if (!name.trim()) {
-      error = 'Block name is required';
+      error = tr('planui.newblock.nameRequired');
       return;
     }
     submitting = true;
@@ -80,46 +83,57 @@
   >
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="new-block-title">
       <header class="modal-header">
-        <h2 id="new-block-title" class="serif">New block</h2>
-        <button type="button" class="close" onclick={onClose} aria-label="Close">
+        <h2 id="new-block-title" class="serif">{tr('planui.newblock.title')}</h2>
+        <button
+          type="button"
+          class="close"
+          onclick={onClose}
+          aria-label={tr('planui.newblock.close')}
+        >
           <X size={16} strokeWidth={1.75} />
         </button>
       </header>
       <form onsubmit={handleSubmit} class="modal-form">
         <label class="field">
-          <span class="label">Name <span class="req" aria-hidden="true">*</span></span>
+          <span class="label"
+            >{tr('planui.newblock.name')} <span class="req" aria-hidden="true">*</span></span
+          >
           <input
             type="text"
             bind:value={name}
-            placeholder="e.g. East Field"
+            placeholder={tr('planui.newblock.namePlaceholder')}
             required
             maxlength="120"
           />
         </label>
         <label class="field">
-          <span class="label">Short label</span>
+          <span class="label">{tr('planui.newblock.shortLabel')}</span>
           <input
             type="text"
             bind:value={blockLabel}
-            placeholder="e.g. EF (used in compact UI)"
+            placeholder={tr('planui.newblock.shortPlaceholder')}
             maxlength="60"
           />
         </label>
         <label class="field">
-          <span class="label">Area</span>
-          <UnitInput quantity="area" min={0} bind:value={acres} placeholder="Optional" />
+          <span class="label">{tr('planui.newblock.area')}</span>
+          <UnitInput
+            quantity="area"
+            min={0}
+            bind:value={acres}
+            placeholder={tr('planui.newblock.optional')}
+          />
           <span class="hint">
-            Geometry (polygon shape) can be drawn on the legacy map editor after the block is
-            created.
+            {tr('planui.newblock.geomHint')}
           </span>
         </label>
         {#if error}<p class="error" role="alert">{error}</p>{/if}
         <footer class="modal-footer">
           <button type="button" class="btn-secondary" onclick={onClose} disabled={submitting}>
-            Cancel
+            {tr('planui.newblock.cancel')}
           </button>
           <button type="submit" class="btn-primary" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create block'}
+            {submitting ? tr('planui.newblock.creating') : tr('planui.newblock.create')}
           </button>
         </footer>
       </form>

@@ -7,6 +7,8 @@
     ArrowRight,
     CalendarDays
   } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   /**
    * Phase 25 v2 (#81 partial) — horizontal workflow strip mapping the
@@ -48,6 +50,7 @@
   }
 
   const { seasonYear, steps, onOpenWizard, onSelectStep, calendarHref }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   type LucideIcon = typeof Check;
   const STATE_META: Record<
@@ -83,27 +86,29 @@
   function whenLabel(s: WorkflowStep): string {
     switch (s.state) {
       case 'done':
-        return s.when ? `✓ ${s.when}` : 'Done';
+        return s.when ? tr('planui.wf.doneWhen', { when: s.when }) : tr('planui.wf.done');
       case 'in-progress':
-        return s.when ? `${s.when} · in progress` : 'In progress';
+        return s.when
+          ? tr('planui.wf.inProgressWhen', { when: s.when })
+          : tr('planui.wf.inProgress');
       case 'stale':
-        return 'Stale · refresh';
+        return tr('planui.wf.stale');
       case 'pending':
-        return s.when ?? 'Pending';
+        return s.when ?? tr('planui.wf.pending');
     }
   }
 </script>
 
-<div class="strip" role="group" aria-label={`Season ${seasonYear} workflow`}>
+<div class="strip" role="group" aria-label={tr('planui.wf.groupAria', { year: seasonYear })}>
   <div class="label">
-    <div class="kicker">Season {seasonYear} plan</div>
+    <div class="kicker">{tr('planui.wf.kicker', { year: seasonYear })}</div>
     <div class="title">
       <Sprout size={13} strokeWidth={1.75} aria-hidden="true" />
-      <span>Workflow</span>
+      <span>{tr('planui.wf.workflow')}</span>
     </div>
   </div>
 
-  <ol class="trail" aria-label="Workflow steps">
+  <ol class="trail" aria-label={tr('planui.wf.stepsAria')}>
     {#each steps as s, i (s.id)}
       {@const meta = STATE_META[s.state]}
       {@const Icon = meta.icon}
@@ -148,19 +153,14 @@
   {#if calendarHref}
     <a class="cal-link" href={calendarHref}>
       <CalendarDays size={13} strokeWidth={1.75} aria-hidden="true" />
-      Sowing calendar
+      {tr('planui.wf.calendar')}
     </a>
   {/if}
 
   {#if onOpenWizard}
-    <button
-      class="cta"
-      type="button"
-      onclick={onOpenWizard}
-      title="Re-run any step or chat with the planning assistant"
-    >
+    <button class="cta" type="button" onclick={onOpenWizard} title={tr('planui.wf.openTitle')}>
       <ArrowRight size={13} strokeWidth={1.75} aria-hidden="true" />
-      Open wizard
+      {tr('planui.wf.open')}
     </button>
   {/if}
 </div>

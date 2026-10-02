@@ -5,9 +5,12 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import Avatar from '$lib/components/ui/Avatar.svelte';
   import { fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
+
+  const tr = $derived(createT(data.locale));
 
   const activeOwners = $derived(
     data.members.filter((m) => m.status === 'active' && m.roleWithinOwner === 'owner')
@@ -33,40 +36,39 @@
   });
 </script>
 
-<svelte:head><title>Helpers & invites · CropCard</title></svelte:head>
+<svelte:head><title>{tr('settings.helpers.pageTitle')}</title></svelte:head>
 
-<SettingsShell title="Helpers & invites" kicker="Tenant access">
+<SettingsShell title={tr('settings.helpers.title')} kicker={tr('settings.helpers.kicker')}>
   {#snippet badge()}
     {#if pendingInvites.length > 0}
-      <Pill tone="wheat">{pendingInvites.length} pending</Pill>
+      <Pill tone="wheat"
+        >{tr('settings.helpers.pendingBadge', { count: pendingInvites.length })}</Pill
+      >
     {/if}
   {/snippet}
 
-  <SettingsSection
-    title="Roles"
-    sub="Server-enforced. Helpers can't edit locked records or override custom rates."
-  >
+  <SettingsSection title={tr('settings.helpers.rolesTitle')} sub={tr('settings.helpers.rolesSub')}>
     <div class="role-grid">
       <div class="role-card">
         <div class="role-head">
-          <span class="role-label">Owner</span>
+          <span class="role-label">{tr('settings.helpers.roleOwner')}</span>
           <span class="role-count mono" data-tone="forest">{activeOwners.length}</span>
         </div>
-        <p class="role-blurb">Full edit. Manages safety bypasses, helpers and billing.</p>
+        <p class="role-blurb">{tr('settings.helpers.ownerBlurb')}</p>
       </div>
       <div class="role-card">
         <div class="role-head">
-          <span class="role-label">Helper</span>
+          <span class="role-label">{tr('settings.helpers.roleHelper')}</span>
           <span class="role-count mono" data-tone="sky">{activeMembers.length}</span>
         </div>
-        <p class="role-blurb">Spray, scout and harvest. No bypasses. No billing.</p>
+        <p class="role-blurb">{tr('settings.helpers.helperBlurb')}</p>
       </div>
     </div>
   </SettingsSection>
 
   <SettingsSection
-    title={`Active helpers · ${activeMembers.length}`}
-    sub={`${data.seats.used} of ${data.seats.limit} helper seats in use, counting pending invites. Inspectors never take a seat.`}
+    title={tr('settings.helpers.activeTitle', { count: activeMembers.length })}
+    sub={tr('settings.helpers.seatsSub', { used: data.seats.used, limit: data.seats.limit })}
   >
     {#snippet right()}
       <button
@@ -75,17 +77,17 @@
         disabled={!data.seats.canInvite}
         onclick={() => (showInviteForm = !showInviteForm)}
       >
-        <Plus size={11} /> Invite helper
+        <Plus size={11} />
+        {tr('settings.helpers.invite')}
       </button>
     {/snippet}
 
     {#if !data.seats.canInvite}
       <div class="seat-limit" data-testid="seat-limit" role="status">
-        <strong>Seat limit reached (grandfathered helpers stay active)</strong>
+        <strong>{tr('settings.helpers.seatLimit')}</strong>
         <p>
-          All {data.seats.limit} helper seats on your plan are in use. Everyone already on the farm keeps
-          working and logging sprays. To invite someone new, revoke a pending invite or
-          <a href="/settings/billing">move to a plan with more seats</a>.
+          {tr('settings.helpers.seatLimitBody', { limit: data.seats.limit })}
+          <a href="/settings/billing">{tr('settings.helpers.moreSeats')}</a>.
         </p>
       </div>
     {/if}
@@ -93,7 +95,7 @@
     {#if showInviteForm && data.seats.canInvite}
       <form method="POST" action="?/invite" class="invite-form">
         <label class="iv-field">
-          <span>Email</span>
+          <span>{tr('settings.helpers.email')}</span>
           <input
             type="email"
             name="email"
@@ -103,7 +105,7 @@
             class="s-input"
           />
         </label>
-        <button type="submit" class="primary-sm">Send invite</button>
+        <button type="submit" class="primary-sm">{tr('settings.helpers.sendInvite')}</button>
       </form>
       {#if form && 'error' in form && form.error}
         <p class="err">{form.error}</p>
@@ -111,17 +113,20 @@
       {#if form && 'acceptUrl' in form && form.acceptUrl}
         {#if 'emailSent' in form && form.emailSent === false}
           <p class="err" role="alert">
-            Invite created, but the email could not be delivered. Send this link to your helper
-            yourself: <span class="mono">{form.acceptUrl}</span>
+            {tr('settings.helpers.emailFailed')}
+            <span class="mono">{form.acceptUrl}</span>
           </p>
         {:else}
-          <p class="ok">Invite sent. Accept URL: <span class="mono">{form.acceptUrl}</span></p>
+          <p class="ok">
+            {tr('settings.helpers.inviteSent')}
+            <span class="mono">{form.acceptUrl}</span>
+          </p>
         {/if}
       {/if}
     {/if}
 
     {#if activeMembers.length === 0}
-      <p class="empty">No helpers yet. Click "Invite helper" to send the first invite.</p>
+      <p class="empty">{tr('settings.helpers.none')}</p>
     {/if}
     {#each activeMembers as m (m.userId)}
       <div class="row member">
@@ -130,37 +135,37 @@
           <div class="row-title">{m.name}</div>
           {#if m.name !== m.email}<div class="row-sub">{m.email}</div>{/if}
         </div>
-        <Pill tone="sky">Helper</Pill>
+        <Pill tone="sky">{tr('settings.helpers.roleHelper')}</Pill>
         <form method="POST" action="?/remove">
           <input type="hidden" name="userId" value={m.userId} />
-          <button type="submit" class="ghost-sm">Remove</button>
+          <button type="submit" class="ghost-sm">{tr('settings.helpers.remove')}</button>
         </form>
       </div>
     {/each}
   </SettingsSection>
 
   <SettingsSection
-    title={`Pending invites · ${pendingInvites.length}`}
-    sub="Tokens are SHA-256 hashed in the DB. Plain token shows once at send."
+    title={tr('settings.helpers.pendingTitle', { count: pendingInvites.length })}
+    sub={tr('settings.helpers.pendingSub')}
   >
     {#if pendingInvites.length === 0}
-      <p class="empty">No pending invites.</p>
+      <p class="empty">{tr('settings.helpers.noPending')}</p>
     {/if}
     {#each pendingInvites as inv (inv.id)}
       <div class="invite-row">
         <div class="row-text">
           <div class="row-title mono">{inv.id}</div>
           <div class="row-sub mono">
-            email hashed (SHA-256) · sent {fmt.instant(inv.createdAt, 'month-day')}
+            {tr('settings.helpers.emailHashed', { date: fmt.instant(inv.createdAt, 'month-day') })}
           </div>
         </div>
-        <Pill tone="wheat">Helper</Pill>
+        <Pill tone="wheat">{tr('settings.helpers.roleHelper')}</Pill>
         <span class="expires mono">
-          expires {fmt.instant(inv.expiresAt, 'month-day')}
+          {tr('settings.helpers.expires', { date: fmt.instant(inv.expiresAt, 'month-day') })}
         </span>
         <form method="POST" action="?/revoke">
           <input type="hidden" name="inviteId" value={inv.id} />
-          <button type="submit" class="ghost-sm rust">Revoke</button>
+          <button type="submit" class="ghost-sm rust">{tr('settings.helpers.revoke')}</button>
         </form>
       </div>
     {/each}

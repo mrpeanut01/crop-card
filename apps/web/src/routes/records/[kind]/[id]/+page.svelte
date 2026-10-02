@@ -1,8 +1,10 @@
 <script lang="ts">
   import { ChevronLeft, Lock, Pencil } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import Pill from '$lib/components/ui/Pill.svelte';
   import LockPill from '$lib/components/ui/LockPill.svelte';
-  import { KIND_LABEL, KIND_TONE } from '$lib/db/recordKinds';
+  import { KIND_TONE } from '$lib/db/recordKinds';
   import {
     BLOOM_SOURCE_LABEL,
     BLOOM_STATUS_LABEL,
@@ -11,8 +13,11 @@
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { localStamp } from '$lib/exports/localTime';
   import type { Quantity } from '$lib/prefs';
+  import { kindLabel } from '$lib/components/records/kindLabel';
 
   let { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
+  const kindName = $derived(kindLabel(tr, data.kind));
 
   function fmtTimestamp(ms: number): string {
     return localStamp(ms, currentPrefs());
@@ -24,21 +29,26 @@
     kLbPerAcre: 'weightPerArea'
   };
   const INSTANT_KEYS = new Set(['reEntryClearAt', 'preHarvestClearAt']);
-  const KEY_LABEL: Record<string, string> = {
-    nLbPerAcre: 'N delivered',
-    pLbPerAcre: 'P delivered',
-    kLbPerAcre: 'K delivered',
+  const KEY_LABEL = $derived<Record<string, string>>({
+    nLbPerAcre: tr('records.detail.nDelivered'),
+    pLbPerAcre: tr('records.detail.pDelivered'),
+    kLbPerAcre: tr('records.detail.kDelivered'),
     reEntryClearAt: 'Re-entry clear',
     preHarvestClearAt: 'Pre-harvest clear'
-  };
+  });
 
   function fmtConditions(c: Record<string, unknown>): string {
     const parts: string[] = [];
-    if (typeof c.windMph === 'number') parts.push(`wind ${fmt.qty(c.windMph, 'speed')}`);
+    if (typeof c.windMph === 'number')
+      parts.push(tr('records.detail.wind', { value: fmt.qty(c.windMph, 'speed') }));
     if (typeof c.tempF === 'number') parts.push(fmt.qty(c.tempF, 'temperature'));
     if (typeof c.rainForecastMmNext24h === 'number')
-      parts.push(`rain next 24 h ${fmt.qty(c.rainForecastMmNext24h / 25.4, 'precip')}`);
-    if (c.conditionsProvenance === 'default') parts.push('default readings');
+      parts.push(
+        tr('records.detail.rainNext', {
+          value: fmt.qty(c.rainForecastMmNext24h / 25.4, 'precip')
+        })
+      );
+    if (c.conditionsProvenance === 'default') parts.push(tr('records.detail.defaultReadings'));
     return parts.join(' · ');
   }
 
@@ -80,18 +90,18 @@
   }
 </script>
 
-<svelte:head><title>{KIND_LABEL[data.kind]} record · CropCard</title></svelte:head>
+<svelte:head><title>{tr('records.detail.title', { kind: kindName })}</title></svelte:head>
 
 <header class="head">
-  <a class="back" href="/records" aria-label="Back to Records">
+  <a class="back" href="/records" aria-label={tr('records.detail.back')}>
     <ChevronLeft size={16} />
   </a>
   <div class="head-text">
-    <div class="kicker">Records · {KIND_LABEL[data.kind]}</div>
-    <h1 class="serif">{KIND_LABEL[data.kind]} record</h1>
+    <div class="kicker">{tr('records.detail.kicker', { kind: kindName })}</div>
+    <h1 class="serif">{tr('records.detail.h1', { kind: kindName })}</h1>
   </div>
   <div class="head-meta">
-    <Pill tone={KIND_TONE[data.kind]}>{KIND_LABEL[data.kind]}</Pill>
+    <Pill tone={KIND_TONE[data.kind]}>{kindName}</Pill>
     <LockPill locked={data.locked} />
   </div>
 </header>
@@ -115,7 +125,8 @@
     </span>
     {#if data.canEdit && editHref(data.kind)}
       <a class="edit-cta" href={editHref(data.kind)!}>
-        <Pencil size={13} /> Edit in {data.kind}
+        <Pencil size={13} />
+        {tr('records.detail.editIn', { kind: kindName.toLowerCase() })}
       </a>
     {/if}
   </section>
@@ -123,7 +134,7 @@
 
 <section class="card">
   <div class="card-row">
-    <div class="card-label">When</div>
+    <div class="card-label">{tr('records.detail.when')}</div>
     <div class="card-value mono">
       {data.kind === 'planting'
         ? fmt.day(data.occurredAt)
@@ -132,12 +143,12 @@
   </div>
   {#if data.performerLabel}
     <div class="card-row">
-      <div class="card-label">Performed by</div>
+      <div class="card-label">{tr('records.detail.performedBy')}</div>
       <div class="card-value">{data.performerLabel}</div>
     </div>
   {/if}
   <div class="card-row">
-    <div class="card-label">Row id</div>
+    <div class="card-label">{tr('records.detail.rowId')}</div>
     <div class="card-value mono">{data.rowId}</div>
   </div>
 </section>
@@ -175,7 +186,7 @@
 {/if}
 
 <section class="card">
-  <h2 class="card-title">Detail</h2>
+  <h2 class="card-title">{tr('records.detail.detail')}</h2>
   <dl class="kv">
     {#each entries(data.detail) as [k, v] (k)}
       {@const shown = fmtField(k, v)}

@@ -1,20 +1,23 @@
 <script lang="ts">
   import { getWizardContext } from '../wizardState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const w = getWizardContext();
+  const tr = $derived(createT(page.data?.locale));
   const blocks = $derived(w.props.blocks);
 </script>
 
 <section class="aw-plan-state">
-  <h3>You have a plan in place</h3>
+  <h3>{tr('wizard.planState.title')}</h3>
   <p class="aw-plan-state-lede">
     {#each blocks.filter((b) => b.plantings.length > 0) as b, i (b.id)}
       {#if i > 0},
       {/if}
-      <strong>{b.name}</strong>: {b.plantings.length} planting{b.plantings.length === 1 ? '' : 's'}
+      <strong>{b.name}</strong>: {tr('wizard.planState.plantings', { count: b.plantings.length })}
     {/each}
   </p>
-  <p>Pick what to do next:</p>
+  <p>{tr('wizard.planState.pick')}</p>
   <div class="aw-plan-state-actions">
     <button
       type="button"
@@ -22,8 +25,8 @@
       onclick={() => w.planReset.continueExistingPlan()}
     >
       <span class="aw-plan-state-icon" aria-hidden="true">✚</span>
-      <span class="aw-plan-state-title">Continue planning</span>
-      <span class="aw-plan-state-sub">Add more plantings to the current plan.</span>
+      <span class="aw-plan-state-title">{tr('wizard.planState.continue')}</span>
+      <span class="aw-plan-state-sub">{tr('wizard.planState.continueSub')}</span>
     </button>
     <button
       type="button"
@@ -31,15 +34,16 @@
       onclick={() => w.planReset.openResetConfirm()}
     >
       <span class="aw-plan-state-icon" aria-hidden="true">↻</span>
-      <span class="aw-plan-state-title">Start over</span>
+      <span class="aw-plan-state-title">{tr('wizard.planState.startOver')}</span>
       <span class="aw-plan-state-sub">
-        Clear the current plan and start fresh. Historical (planted / harvested) crops are
-        preserved.
+        {tr('wizard.planState.startOverSub')}
       </span>
     </button>
   </div>
   {#if w.planReset.resetError}
-    <p class="aw-error" role="alert">Reset failed: {w.planReset.resetError}</p>
+    <p class="aw-error" role="alert">
+      {tr('wizard.planState.resetFailed', { error: w.planReset.resetError })}
+    </p>
   {/if}
 
   {#if w.planReset.resetConfirmOpen}
@@ -50,17 +54,18 @@
       aria-labelledby="aw-reset-title"
     >
       <div class="aw-confirm-card">
-        <h4 id="aw-reset-title">Clear the current plan?</h4>
+        <h4 id="aw-reset-title">{tr('wizard.planState.confirmTitle')}</h4>
         <p>
-          This deletes every <strong>planned</strong> crop on your blocks and any open Inputs Plan tasks.
-          Active and harvested crops are kept. This cannot be undone.
+          {tr('wizard.planState.confirmBefore')}
+          <strong>{tr('wizard.planState.confirmPlanned')}</strong>
+          {tr('wizard.planState.confirmAfter')}
         </p>
         <div class="aw-confirm-actions">
           <button
             type="button"
             class="btn-secondary"
             onclick={() => w.planReset.cancelReset()}
-            disabled={w.planReset.resetting}>Cancel</button
+            disabled={w.planReset.resetting}>{tr('wizard.planState.cancel')}</button
           >
           <button
             type="button"
@@ -68,7 +73,9 @@
             onclick={() => w.planReset.confirmReset()}
             disabled={w.planReset.resetting}
           >
-            {w.planReset.resetting ? 'Clearing…' : 'Yes — clear the plan'}
+            {w.planReset.resetting
+              ? tr('wizard.planState.clearing')
+              : tr('wizard.planState.confirmYes')}
           </button>
         </div>
       </div>

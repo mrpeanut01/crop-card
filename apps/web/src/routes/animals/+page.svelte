@@ -6,20 +6,24 @@
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import SetupAnimal from '$lib/components/setup/SetupAnimal.svelte';
   import AddedWarnings from '$lib/components/animals/AddedWarnings.svelte';
+  import { addedHref, type AddedAnimals } from '$lib/animals/display';
   import {
-    STATUS_LABEL,
-    ageText,
-    animalLabel,
-    addedHref,
-    countText,
-    type AddedAnimals
-  } from '$lib/animals/display';
+    ageLabel,
+    animalName,
+    countLabel,
+    pageTitle,
+    statusLabel
+  } from '$lib/components/animals/labels';
   import { individualsFirst, showsFarmFields, suggestedSpecies } from '$lib/animals/profile';
   import { DEFAULT_PREFS, formatInstant } from '$lib/prefs';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const prefs = $derived(data.prefs ?? DEFAULT_PREFS);
+  const title = $derived(pageTitle(tr, data.profile.layout));
   const layout = $derived(data.profile.layout);
   const speciesById = $derived(new Map(data.species.map((s) => [s.id, s])));
   const areaName = $derived(new Map(data.areas.map((a) => [a.id, a.name])));
@@ -51,23 +55,29 @@
 </script>
 
 <svelte:head>
-  <title>{data.profile.title} · CropCard</title>
+  <title>{title} · CropCard</title>
 </svelte:head>
 
 <div class="animals-page">
   <header class="page-header">
     <div class="titles">
-      <Kicker>{data.showArchived ? 'Archived' : layout === 'pets' ? 'Household' : 'Farm'}</Kicker>
-      <h1 class="serif">{data.profile.title}</h1>
+      <Kicker
+        >{data.showArchived
+          ? tr('animals.archived')
+          : layout === 'pets'
+            ? tr('animals.list.household')
+            : tr('animals.list.farm')}</Kicker
+      >
+      <h1 class="serif">{title}</h1>
       {#if !empty && !data.showArchived}
         <p class="stat-line">
           <strong>{hereCount}</strong>
-          {hereCount === 1 ? 'animal' : 'animals'} here
+          {tr('animals.list.here', { count: hereCount })}
         </p>
       {/if}
     </div>
     {#if data.canEdit && !empty}
-      <a class="af-primary add" href="/animals/add">Add</a>
+      <a class="af-primary add" href="/animals/add">{tr('animals.add.link')}</a>
     {/if}
   </header>
 
@@ -77,16 +87,16 @@
 
   {#if empty}
     <section class="empty">
-      <p>Nothing here yet. Add each animal you keep, or a whole flock with a count.</p>
+      <p>{tr('animals.list.empty')}</p>
       {#if data.canEdit}
         <div class="empty-actions">
           <button type="button" class="af-primary" onclick={() => (setupOpen = true)}>
-            Add your first animal
+            {tr('animals.list.addFirst')}
           </button>
-          <a class="af-ghost link-button" href="/animals/add">Open the full form</a>
+          <a class="af-ghost link-button" href="/animals/add">{tr('animals.list.fullForm')}</a>
         </div>
       {:else}
-        <p class="af-note" role="note">Ask the owner to add the animals.</p>
+        <p class="af-note" role="note">{tr('animals.list.askOwner')}</p>
       {/if}
     </section>
   {:else}
@@ -94,7 +104,7 @@
       {#if data.groups.length > 0}
         <section aria-labelledby="groups-h">
           <h2 id="groups-h" class="section-title">
-            {layout === 'pets' ? 'Flocks and groups' : 'Herds and flocks'}
+            {layout === 'pets' ? tr('animals.list.flocksGroups') : tr('animals.list.herdsFlocks')}
           </h2>
           <ul class="rows">
             {#each data.groups as g (g.id)}
@@ -105,11 +115,11 @@
                   icon={sp?.icon}
                   title={g.name}
                   meta={[
-                    countText(g.total, sp),
+                    countLabel(tr, g.total, sp),
                     g.housingFieldId ? areaName.get(g.housingFieldId) : null
                   ]}
                   foodProducing={g.effectiveFoodProducing}
-                  status={g.status === 'archived' ? 'Archived' : null}
+                  status={g.status === 'archived' ? tr('animals.archived') : null}
                 />
               </li>
             {/each}
@@ -122,7 +132,7 @@
       {#if individuals.length > 0}
         <section aria-labelledby="individuals-h">
           <h2 id="individuals-h" class="section-title">
-            {layout === 'pets' ? 'Your animals' : 'Individual animals'}
+            {layout === 'pets' ? tr('animals.list.yourAnimals') : tr('animals.list.individuals')}
           </h2>
           <ul class="rows">
             {#each individuals as a (a.id)}
@@ -132,19 +142,19 @@
                 <AnimalRow
                   href="/animals/{a.id}"
                   icon={sp?.icon}
-                  title={farm || !a.name ? animalLabel(a) : a.name}
+                  title={farm || !a.name ? animalName(tr, a) : a.name}
                   meta={[
                     sp?.displayName,
-                    ageText(a.birthDate, a.birthDateEstimated),
+                    ageLabel(tr, a.birthDate, a.birthDateEstimated),
                     a.groupId
                       ? groupName.get(a.groupId)
                       : a.housingFieldId
                         ? areaName.get(a.housingFieldId)
                         : null,
-                    farm && a.tag && a.name ? `Tag ${a.tag}` : null
+                    farm && a.tag && a.name ? tr('animals.tagLabel', { tag: a.tag }) : null
                   ]}
                   foodProducing={a.foodProducing}
-                  status={a.status === 'archived' ? 'Archived' : null}
+                  status={a.status === 'archived' ? tr('animals.archived') : null}
                 />
               </li>
             {/each}
@@ -163,7 +173,7 @@
 
     {#if data.gone.length > 0}
       <details class="gone">
-        <summary>No longer here ({data.gone.length})</summary>
+        <summary>{tr('animals.list.noLongerHere', { count: data.gone.length })}</summary>
         <ul class="rows">
           {#each data.gone as a (a.id)}
             {@const sp = speciesById.get(a.speciesId)}
@@ -171,13 +181,13 @@
               <AnimalRow
                 href="/animals/{a.id}"
                 icon={sp?.icon}
-                title={animalLabel(a)}
+                title={animalName(tr, a)}
                 meta={[
                   sp?.displayName,
                   a.statusDate ? formatInstant(a.statusDate, prefs, 'date') : null
                 ]}
                 foodProducing={a.foodProducing}
-                status={STATUS_LABEL[a.status]}
+                status={statusLabel(tr, a.status)}
               />
             </li>
           {/each}
@@ -187,12 +197,12 @@
 
     {#if data.showArchived}
       {#if data.groups.length === 0 && data.animals.length === 0}
-        <p class="af-help">Nothing is archived.</p>
+        <p class="af-help">{tr('animals.list.nothingArchived')}</p>
       {/if}
-      <a class="af-ghost link-button" href="/animals">Back to the animals here</a>
+      <a class="af-ghost link-button" href="/animals">{tr('animals.list.backToHere')}</a>
     {:else if data.archivedCount > 0}
       <a class="af-ghost link-button" href="/animals?archived=1">
-        Show archived ({data.archivedCount})
+        {tr('animals.list.showArchived', { count: data.archivedCount })}
       </a>
     {/if}
   {/if}
@@ -200,8 +210,8 @@
 
 <SetupSheet
   open={setupOpen}
-  title="Add an animal"
-  kicker={data.profile.title}
+  title={tr('animals.list.addAnimal')}
+  kicker={title}
   onClose={() => (setupOpen = false)}
   onDone={added}
 >

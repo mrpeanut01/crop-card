@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import {
     DONE_TIME_CHIPS,
     MAX_TASK_MINUTES,
@@ -32,10 +34,11 @@
         : undefined
     );
   }
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <div class="time-row">
-  <span class="label" id="time-label-{uid}">Time spent (optional)</span>
+  <span class="label" id="time-label-{uid}">{tr('tasks.time.label')}</span>
   <div class="chips" role="group" aria-labelledby="time-label-{uid}">
     {#each DONE_TIME_CHIPS as c (c.minutes)}
       <button
@@ -54,12 +57,12 @@
       onclick={() => {
         other = !other;
         if (!other) typed('');
-      }}>Other</button
+      }}>{tr('tasks.time.other')}</button
     >
   </div>
   {#if other}
     <div class="other">
-      <label for="time-minutes-{uid}">Minutes</label>
+      <label for="time-minutes-{uid}">{tr('tasks.time.minutes')}</label>
       <input
         id="time-minutes-{uid}"
         type="number"

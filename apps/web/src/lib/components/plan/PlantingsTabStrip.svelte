@@ -9,6 +9,8 @@
    * blocks skip this and go straight to the deep view.
    */
   import type { PlantingRecord } from '$lib/db/blocks';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     plantings: PlantingRecord[];
@@ -17,6 +19,7 @@
     onSelect: (idx: number) => void;
   }
   const { plantings, activeIdx, onSelect }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   function plantingColor(plantingId: string): string {
     const PALETTE = [
@@ -39,9 +42,9 @@
   }
 </script>
 
-<nav class="tabs" aria-label="Plantings">
+<nav class="tabs" aria-label={tr('planui.tabs.aria')}>
   <button type="button" class="tab" class:active={activeIdx === -1} onclick={() => onSelect(-1)}>
-    All plantings
+    {tr('planui.tabs.all')}
     <span class="count" class:on={activeIdx === -1}>{plantings.length}</span>
   </button>
   {#each plantings as p, i (p.id)}

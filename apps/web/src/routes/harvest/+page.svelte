@@ -1,5 +1,6 @@
 <script lang="ts">
   import { isUpdatingResponse, retryAfterSeconds, UPDATING_QUEUED_NOTICE } from '$lib/updating';
+  import { createT } from '$lib/i18n';
   import { onMount, tick, untrack } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import type { PlantingHarvestStatus } from './+page.server';
@@ -18,6 +19,7 @@
   import DispositionPanel from '$lib/components/harvest/DispositionPanel.svelte';
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   let recordingFor = $state<string | null>(untrack(() => data.focusPlantingId ?? null));
   // Phase 25c (#88) — HarvestRouter owns the in-form state now; we
@@ -117,7 +119,7 @@
         const { enqueueRecord } = await import('$lib/client/syncQueue');
         const queueId = await enqueueRecord('harvest', body);
         recordingFor = null;
-        lastNotice = '☁ Offline — harvest queued. Will sync when the connection returns.';
+        lastNotice = tr('harvestui.queued');
         lastSale = null;
         saleQueued = planting.varietyDisplayName;
         return queueId;
@@ -169,12 +171,12 @@
           const { enqueueRecord } = await import('$lib/client/syncQueue');
           const queueId = await enqueueRecord('harvest', body);
           recordingFor = null;
-          lastNotice = '☁ Offline — harvest queued. Will sync when the connection returns.';
+          lastNotice = tr('harvestui.queued');
           return queueId;
         } catch (queueErr) {
-          lastError = `offline queue failed: ${
-            queueErr instanceof Error ? queueErr.message : queueErr
-          }`;
+          lastError = tr('harvestui.errQueue', {
+            msg: queueErr instanceof Error ? queueErr.message : String(queueErr)
+          });
           return null;
         }
       }
@@ -196,7 +198,7 @@
   }
 
   function fmtRange(p: PlantingHarvestStatus) {
-    if (!p.windowStartMs || !p.windowEndMs) return 'unknown';
+    if (!p.windowStartMs || !p.windowEndMs) return tr('harvestui.unknown');
     return `${fmtWindowDay(p.windowStartMs, p)} – ${fmtWindowDay(p.windowEndMs, p)}`;
   }
 
@@ -234,6 +236,13 @@
   const yearStart = $derived(new Date(seasonYear, 0, 1).getTime());
   const eventsYtd = $derived(data.recordedHarvests.filter((e) => e.occurredAt >= yearStart));
 
+  function reLabel(a: NonNullable<ReturnType<typeof reHarvestArchetype>>): string {
+    if (a === 'cut-and-come-again-leafy') return tr('harvestui.reLabel.leafy');
+    if (a === 'continuous-harvest-fruit') return tr('harvestui.reLabel.fruit');
+    if (a === 'tree-fruit-multi-pick') return tr('harvestui.reLabel.tree');
+    return reHarvestLabel(a);
+  }
+
   function exportYtdCsv() {
     const rows = [
       ['Date', 'Block', 'Crop plugin', 'Quantity', 'Lot #'],
@@ -259,20 +268,23 @@
 </script>
 
 <svelte:head>
-  <title>Harvest — CropCard</title>
+  <title>{tr('harvestui.pageTitle')}</title>
 </svelte:head>
 
 <header class="page-header">
-  <Kicker>Harvest · {seasonYear} season</Kicker>
-  <h1 class="serif">Harvest.</h1>
+  <Kicker>{tr('harvestui.kickerSeason', { year: seasonYear })}</Kicker>
+  <h1 class="serif">{tr('harvestui.h1')}</h1>
   <p class="stat-line">
-    <strong>{readyPlantings.length}</strong> ready today ·
-    <strong>{upcomingPlantings.length}</strong> upcoming windows ·
-    <strong>{eventsYtd.length}</strong> events logged YTD
+    <strong>{readyPlantings.length}</strong>
+    {tr('harvestui.readyToday')}
+    <strong>{upcomingPlantings.length}</strong>
+    {tr('harvestui.upcomingWindows')}
+    <strong>{eventsYtd.length}</strong>
+    {tr('harvestui.eventsYtd')}
   </p>
   <div class="page-actions">
     <button class="ghost" type="button" onclick={exportYtdCsv} disabled={eventsYtd.length === 0}>
-      Export YTD ↓
+      {tr('harvestui.exportYtd')}
     </button>
   </div>
 </header>
@@ -302,7 +314,7 @@
     {#if data.canRecordSale}
       <span class="record-sale" data-testid="record-sale">
         {#if lastSale && online}
-          <a class="sale-link" href={recordSaleHref(lastSale)}>Record a sale</a>
+          <a class="sale-link" href={recordSaleHref(lastSale)}>{tr('harvestui.recordSale')}</a>
         {:else}
           <span class="sale-offline">{RECORD_SALE_OFFLINE}</span>
         {/if}
@@ -324,30 +336,32 @@
 
 {#if data.plantings.length === 0}
   <SetupCallout
-    kicker="Harvest"
-    title="What are you picking?"
+    kicker={tr('harvestui.callout.kicker')}
+    title={tr('harvestui.callout.title')}
     canEdit={data.setup.canEdit}
-    askOwner="Ask the owner to add what's growing. Once it's on the farm you can record the harvest here."
+    askOwner={tr('harvestui.callout.askOwner')}
     testId="harvest-what"
   >
     <p>
-      Tell CropCard what it is, where it grew and roughly when it went in. Then record the harvest
-      right here.
+      {tr('harvestui.callout.body')}
     </p>
     {#snippet actions()}
       <button type="button" class="primary" onclick={() => (plantingSheetOpen = true)}>
-        Add what you're picking
+        {tr('harvestui.callout.add')}
       </button>
-      <a href="/plan">Plan a crop instead</a>
+      <a href="/plan">{tr('harvestui.callout.planInstead')}</a>
     {/snippet}
   </SetupCallout>
 {:else}
   <section class="card panel ready">
     <div class="panel-head">
-      <h2>Plantings <span class="panel-count">{readyPlantings.length} ready</span></h2>
+      <h2>
+        {tr('harvestui.plantings')}
+        <span class="panel-count">{tr('harvestui.nReady', { n: readyPlantings.length })}</span>
+      </h2>
       {#if data.setup.canEdit}
         <button type="button" class="add-more" onclick={() => (plantingSheetOpen = true)}>
-          + Add something else you're picking
+          {tr('harvestui.addMore')}
         </button>
       {/if}
     </div>
@@ -366,34 +380,38 @@
               <span class="family">{p.cropFamily}</span>
             {/if}
             {#if p.alreadyHarvested}
-              <span class="badge harvested">✓ harvested</span>
+              <span class="badge harvested">{tr('harvestui.badge.harvested')}</span>
             {:else if p.status === 'in-window'}
-              <span class="badge in-window">⛏ ready now</span>
+              <span class="badge in-window">{tr('harvestui.badge.ready')}</span>
             {:else if p.status === 'past'}
-              <span class="badge past">⚠ past window</span>
+              <span class="badge past">{tr('harvestui.badge.past')}</span>
             {:else if p.status === 'too-early'}
-              <span class="badge too-early">⏳ too early</span>
+              <span class="badge too-early">{tr('harvestui.badge.early')}</span>
             {/if}
           </header>
           <div class="meta">
-            {#if p.plantingDate}Planted {fmt.day(p.plantingDate)} ·
-            {/if}Window {fmtRange(p)}
-            {#if p.status === 'too-early'}· {p.daysUntilWindow}d until window{/if}
-            {#if p.status === 'in-window'}· {p.daysIntoWindow}d into window{/if}
-            {#if p.status === 'past'}· {p.daysPastWindow}d past{/if}
+            {#if p.plantingDate}{tr('harvestui.planted', { date: fmt.day(p.plantingDate) })}
+            {/if}{tr('harvestui.windowRange', { range: fmtRange(p) })}
+            {#if p.status === 'too-early'}{tr('harvestui.dUntil', {
+                n: p.daysUntilWindow ?? ''
+              })}{/if}
+            {#if p.status === 'in-window'}{tr('harvestui.dInto', {
+                n: p.daysIntoWindow ?? ''
+              })}{/if}
+            {#if p.status === 'past'}{tr('harvestui.dPast', { n: p.daysPastWindow ?? '' })}{/if}
           </div>
 
           {#if p.harvestIndicators.length > 0}
             {#if p.status === 'in-window' && !p.alreadyHarvested}
               <div class="indicators-inline">
-                <strong>Readiness indicators</strong>
+                <strong>{tr('harvestui.indicators')}</strong>
                 <ul class="indicators">
                   {#each p.harvestIndicators as ind, idx (idx)}<li>{ind}</li>{/each}
                 </ul>
               </div>
             {:else}
               <details>
-                <summary>Readiness indicators</summary>
+                <summary>{tr('harvestui.indicators')}</summary>
                 <ul class="indicators">
                   {#each p.harvestIndicators as ind, idx (idx)}<li>{ind}</li>{/each}
                 </ul>
@@ -408,8 +426,8 @@
           {#if p.harvestStyle === 'forage-cutting-cycle'}
             <div class="forage-banner">
               <Banner tone="sky">
-                Hay &amp; forage plantings use the cutting workflow.
-                <a href="/hay?block={p.blockId}">Open /hay for this block →</a>
+                {tr('harvestui.forageBanner')}
+                <a href="/hay?block={p.blockId}">{tr('harvestui.forageLink')}</a>
               </Banner>
             </div>
           {:else if showHarvestForm(p)}
@@ -420,19 +438,18 @@
             {#if p.status === 'too-early'}
               <div class="window-banner">
                 <Banner tone="wheat">
-                  Plugin DTM suggests this isn't ready yet ({p.daysUntilWindow}d to window). Record
-                  anyway?
+                  {tr('harvestui.tooEarlyBanner', { n: p.daysUntilWindow ?? '' })}
                 </Banner>
               </div>
             {:else if p.status === 'past'}
               <div class="window-banner">
                 <Banner tone="sky">
-                  Window closed {p.daysPastWindow}d ago — logging late?
+                  {tr('harvestui.pastBanner', { n: p.daysPastWindow ?? '' })}
                 </Banner>
               </div>
             {:else if p.status === 'unknown'}
               <div class="window-banner" data-testid="no-window-banner">
-                <Banner tone="sky">No harvest window on file for this crop. Record anyway.</Banner>
+                <Banner tone="sky">{tr('harvestui.noWindowBanner')}</Banner>
               </div>
             {/if}
             <!-- #197 — re-harvest archetypes keep the form available
@@ -443,8 +460,7 @@
             {#if reArch}
               <div class="window-banner">
                 <Banner tone="sky">
-                  This {reHarvestLabel(reArch)} planting supports repeat harvest — log additional picks
-                  here.
+                  {tr('harvestui.reBanner', { label: reLabel(reArch) })}
                 </Banner>
               </div>
             {/if}
@@ -472,7 +488,7 @@
               </div>
             {:else}
               <button class="primary" onclick={() => startRecord(p.plantingId)}>
-                {p.alreadyHarvested ? 'Record another pick' : 'Record harvest'}
+                {p.alreadyHarvested ? tr('harvestui.recordAnother') : tr('harvestui.record')}
               </button>
             {/if}
           {/if}
@@ -484,7 +500,9 @@
 
 {#if upcomingPlantings.length > 0}
   <section class="card panel upcoming">
-    <h2>Upcoming windows <span class="panel-count">{upcomingPlantings.length}</span></h2>
+    <h2>
+      {tr('harvestui.upcoming')} <span class="panel-count">{upcomingPlantings.length}</span>
+    </h2>
     <ul class="upcoming-list">
       {#each upcomingPlantings.slice(0, 8) as p (p.plantingId)}
         <li>
@@ -492,13 +510,16 @@
           <span class="up-block">· {p.blockName}</span>
           {#if p.windowStartMs}
             <span class="up-when">
-              opens {fmtWindowDay(p.windowStartMs, p)} ({p.daysUntilWindow}d)
+              {tr('harvestui.opens', {
+                date: fmtWindowDay(p.windowStartMs, p),
+                n: p.daysUntilWindow ?? ''
+              })}
             </span>
           {/if}
         </li>
       {/each}
       {#if upcomingPlantings.length > 8}
-        <li class="more">+ {upcomingPlantings.length - 8} more upcoming.</li>
+        <li class="more">{tr('harvestui.moreUpcoming', { n: upcomingPlantings.length - 8 })}</li>
       {/if}
     </ul>
   </section>
@@ -508,41 +529,51 @@
   {@const inCuring = data.recordedHarvests.filter((h) => h.curing && h.curing.phase !== 'overdue')}
   {#if inCuring.length > 0}
     <section class="card curing-card">
-      <h2>Curing in progress (FR-08)</h2>
+      <h2>{tr('harvestui.curing.title')}</h2>
       <ul class="curing-list">
         {#each inCuring as h (h.id)}
           <li class="curing-item phase-{h.curing!.phase}">
             <header>
               <strong>{h.cropPluginId}</strong>
-              {#if h.lotNumber}<span class="lot">lot {h.lotNumber}</span>{/if}
+              {#if h.lotNumber}<span class="lot"
+                  >{tr('harvestui.curing.lot', { lot: h.lotNumber })}</span
+                >{/if}
               <span class="phase-badge phase-{h.curing!.phase}">
-                {h.curing!.phase === 'in-progress' ? '⏳ in progress' : '✓ ready window'}
+                {h.curing!.phase === 'in-progress'
+                  ? tr('harvestui.curing.inProgress')
+                  : tr('harvestui.curing.readyWindow')}
               </span>
             </header>
             <p class="meta">
-              Harvested {fmt.instant(h.occurredAt, 'date')} · method: {h.curing!.method ?? '—'} ·
-              {h.curing!.minWeeks}–{h.curing!.maxWeeks} wk
+              {tr('harvestui.curing.meta', {
+                date: fmt.instant(h.occurredAt, 'date'),
+                method: h.curing!.method ?? '—',
+                min: h.curing!.minWeeks,
+                max: h.curing!.maxWeeks
+              })}
             </p>
             {#if h.curing!.phase === 'in-progress'}
               <p class="countdown">
-                <strong>{h.curing!.daysRemaining}</strong> day{h.curing!.daysRemaining === 1
-                  ? ''
-                  : 's'}
-                until ready window opens
+                <strong>{h.curing!.daysRemaining}</strong>
+                {tr('harvestui.curing.untilOpens', { count: h.curing!.daysRemaining })}
               </p>
             {:else}
               <p class="countdown ready">
-                <strong>Ready now</strong> — verify
+                <strong>{tr('harvestui.curing.readyNow')}</strong>
+                {tr('harvestui.curing.verify')}
                 {#if h.curing!.targetMoisturePercent}
-                  moisture {h.curing!.targetMoisturePercent.min}–{h.curing!.targetMoisturePercent
-                    .max}%
+                  {tr('harvestui.curing.moisture', {
+                    min: h.curing!.targetMoisturePercent.min,
+                    max: h.curing!.targetMoisturePercent.max
+                  })}
                 {:else}
-                  by feel + visual check
+                  {tr('harvestui.curing.byFeel')}
                 {/if}
-                · {h.curing!.daysRemaining} day{h.curing!.daysRemaining === 1 ? '' : 's'} until window
-                closes
+                {tr('harvestui.curing.untilCloses', {
+                  count: h.curing!.daysRemaining
+                })}
                 {#if h.curing!.storageLocation}
-                  · then move to <em>{h.curing!.storageLocation}</em>
+                  {tr('harvestui.curing.thenMove')} <em>{h.curing!.storageLocation}</em>
                 {/if}
               </p>
             {/if}
@@ -553,17 +584,17 @@
   {/if}
 
   <section class="card">
-    <h2>Recorded harvests</h2>
+    <h2>{tr('harvestui.recorded')}</h2>
     <div class="table-scroll">
       <table class="recorded">
         <thead>
           <tr>
-            <th>When</th>
-            <th>Block</th>
-            <th>Variety</th>
-            <th>Quantity</th>
-            <th>Lot</th>
-            <th>Curing</th>
+            <th>{tr('harvestui.th.when')}</th>
+            <th>{tr('harvestui.th.block')}</th>
+            <th>{tr('harvestui.th.variety')}</th>
+            <th>{tr('harvestui.th.quantity')}</th>
+            <th>{tr('harvestui.th.lot')}</th>
+            <th>{tr('harvestui.th.curing')}</th>
             <th>Where it went</th>
           </tr>
         </thead>
@@ -637,8 +668,8 @@
 
 <SetupSheet
   open={plantingSheetOpen}
-  kicker="Harvest"
-  title="What are you picking?"
+  kicker={tr('harvestui.sheet.kicker')}
+  title={tr('harvestui.sheet.title')}
   onClose={() => (plantingSheetOpen = false)}
   onDone={onPlantingAdded}
 >
@@ -647,7 +678,7 @@
       blocks={data.setup.blocks}
       areas={data.setup.areas}
       canEdit={data.setup.canEdit}
-      submitLabel="Save and record the harvest"
+      submitLabel={tr('harvestui.sheet.submit')}
       onDone={done}
     />
   {/snippet}

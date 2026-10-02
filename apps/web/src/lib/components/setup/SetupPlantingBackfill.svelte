@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import SetupSpot from './SetupSpot.svelte';
   import SpotSelect from './SpotSelect.svelte';
@@ -36,11 +38,12 @@
     areas,
     canEdit,
     initialBlockId,
-    submitLabel = 'Save planting',
+    submitLabel,
     onDone,
     catalog: catalogProp,
     now: nowProp
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
   const uid = $props.id();
   const now = untrack(() => nowProp ?? new Date());
   const months = [...recentMonths(now, 12), OLDER_OPTION];
@@ -85,7 +88,7 @@
         cropFamily: c.cropFamily
       }));
     } catch {
-      catalogError = "We couldn't load the crop list. Check your signal and try again.";
+      catalogError = tr('setup.plant.errCatalog');
     }
   });
 
@@ -119,16 +122,16 @@
     e.preventDefault();
     error = null;
     if (!crop) {
-      error = 'Pick a crop from the list first.';
+      error = tr('setup.plant.errCrop');
       return;
     }
     if (!blockId) {
-      error = 'Pick where it is growing.';
+      error = tr('setup.plant.errBlock');
       return;
     }
     const ms = plantingDateMs(date, now);
     if (ms === null) {
-      error = 'Pick a planting date on or before today.';
+      error = tr('setup.plant.errDate');
       return;
     }
     saving = true;
@@ -145,7 +148,7 @@
       }
       onDone(out.result);
     } catch {
-      error = "We couldn't reach CropCard. Check your signal and try again.";
+      error = tr('setup.plant.errNetwork');
     } finally {
       saving = false;
     }
@@ -154,27 +157,27 @@
 
 {#if !canEdit}
   <p class="ask-owner" role="note">
-    Ask the owner to add what's growing. Once it's on the farm it shows up here.
+    {tr('setup.plant.askOwner')}
   </p>
 {:else if addingSpot}
   <div class="spot-step">
-    <p class="step-kicker">First, where is it growing?</p>
-    <SetupSpot {areas} canEdit submitLabel="Save and continue" onDone={onSpotAdded} />
+    <p class="step-kicker">{tr('setup.plant.firstWhere')}</p>
+    <SetupSpot {areas} canEdit submitLabel={tr('setup.plant.saveContinue')} onDone={onSpotAdded} />
     {#if allBlocks.length > 0}
       <button type="button" class="ghost" onclick={() => (addingSpot = false)}>
-        Pick an existing spot instead
+        {tr('setup.plant.pickExisting')}
       </button>
     {/if}
   </div>
 {:else}
   <form class="backfill" onsubmit={submit}>
-    <label for="{uid}-crop">What is it?</label>
+    <label for="{uid}-crop">{tr('setup.plant.what')}</label>
     <div class="crop-row">
       <input
         id="{uid}-crop"
         type="search"
         autocomplete="off"
-        placeholder="Tomato, sweet corn, alfalfa"
+        placeholder={tr('setup.plant.cropPh')}
         bind:value={query}
         oninput={() => (crop = null)}
         readonly={!!crop}
@@ -182,7 +185,9 @@
         data-autofocus
       />
       {#if crop}
-        <button type="button" class="ghost small" onclick={clearCrop}>Change</button>
+        <button type="button" class="ghost small" onclick={clearCrop}
+          >{tr('setup.plant.change')}</button
+        >
       {/if}
     </div>
     <p id="{uid}-crop-help" class="help">
@@ -191,11 +196,11 @@
       {:else if crop}
         {crop.displayName}{crop.cropFamily ? ` · ${crop.cropFamily}` : ''}
       {:else}
-        Start typing and pick a match.
+        {tr('setup.plant.typing')}
       {/if}
     </p>
     {#if matches.length > 0}
-      <ul class="matches" aria-label="Matching crops">
+      <ul class="matches" aria-label={tr('setup.plant.matchesAria')}>
         {#each matches as m (m.pluginId)}
           <li>
             <button type="button" class="match" onclick={() => pickCrop(m)}>
@@ -206,13 +211,15 @@
         {/each}
       </ul>
     {:else if query.trim() && !crop && catalog.length > 0}
-      <p class="help">No crop by that name yet. Try a shorter word.</p>
+      <p class="help">{tr('setup.plant.noMatch')}</p>
     {/if}
 
-    <label for="{uid}-variety">Variety <span class="optional">(optional)</span></label>
+    <label for="{uid}-variety"
+      >{tr('setup.plant.variety')} <span class="optional">{tr('setup.optional')}</span></label
+    >
     <input id="{uid}-variety" type="text" maxlength="160" bind:value={variety} />
 
-    <label for="{uid}-block">Where is it growing?</label>
+    <label for="{uid}-block">{tr('setup.plant.whereGrowing')}</label>
     <SpotSelect
       id="{uid}-block"
       blocks={spotOptions}
@@ -223,25 +230,25 @@
       onNewSpot={() => (addingSpot = true)}
     />
 
-    <label for="{uid}-month">Planted around</label>
+    <label for="{uid}-month">{tr('setup.plant.plantedAround')}</label>
     <select id="{uid}-month" value={month} onchange={(e) => pickMonth(e.currentTarget.value)}>
       {#each months as m (m.key)}
         <option value={m.key}>{m.label}</option>
       {/each}
     </select>
     <div class="date-row">
-      <label for="{uid}-date">Planting date</label>
-      <Provenance source="manual" detail="your pick" />
+      <label for="{uid}-date">{tr('setup.plant.date')}</label>
+      <Provenance source="manual" detail={tr('setup.plant.yourPick')} />
     </div>
     <input id="{uid}-date" type="date" max={ymd(now)} bind:value={date} />
     <p class="help">
-      A best guess is fine. It sets the harvest window, and you can change it later.
+      {tr('setup.plant.guess')}
     </p>
 
     {#if error}<p class="error" role="alert">{error}</p>{/if}
 
     <button class="primary" type="submit" disabled={saving || !crop}>
-      {saving ? 'Saving…' : submitLabel}
+      {saving ? tr('setup.saving') : (submitLabel ?? tr('setup.plant.submit'))}
     </button>
   </form>
 {/if}

@@ -169,12 +169,13 @@ const PARTIAL_SESSION_PATHS = new Set([
   '/signout',
   '/api/session/switch-owner',
   '/api/geocode',
-  '/api/feedback' // #466: anyone signed in can send feedback, farm or not.
+  '/api/feedback', // #466: anyone signed in can send feedback, farm or not.
+  '/api/me/locale' // language choice touches no farm data.
 ]);
 
 /** API writes open to every role, inspector included: they touch no farm
  *  data. Feedback (#466) lands in a global triage queue. */
-export const ANY_ROLE_API_WRITES = new Set(['/api/feedback']);
+export const ANY_ROLE_API_WRITES = new Set(['/api/feedback', '/api/me/locale']);
 
 export function allowsPartialSession(pathname: string, isSuperadmin: boolean): boolean {
   if (PARTIAL_SESSION_PATHS.has(pathname)) return true;

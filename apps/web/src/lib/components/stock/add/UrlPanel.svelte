@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import { Globe } from 'lucide-svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { draftFromScanResult, type StockEntryDraft } from '$lib/stock/normalizeStockEntry';
@@ -33,6 +35,7 @@
   }
 
   const { onSubmit, busy = false, type, aiEnabled = true, onSwitchToManual }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let url = $state('');
   let lookingUp = $state(false);
@@ -43,7 +46,7 @@
   async function runLookup(): Promise<void> {
     const u = url.trim();
     if (!/^https?:\/\//i.test(u)) {
-      lookupError = 'Enter a full http(s) product-page URL.';
+      lookupError = tr('stockui.url.enterFull');
       return;
     }
     lookingUp = true;
@@ -57,7 +60,8 @@
       });
       const body = await res.json();
       if (!res.ok) {
-        lookupError = body.message ?? body.error ?? `HTTP ${res.status}`;
+        lookupError =
+          body.message ?? body.error ?? tr('stockui.httpStatus', { status: res.status });
         return;
       }
       if (body.existingStockItemId) {
@@ -67,8 +71,7 @@
         return;
       }
       if (!body.found) {
-        lookupError =
-          'Could not read a product from that page. Try the label scanner, or use Manual entry.';
+        lookupError = tr('stockui.url.couldNotRead');
         return;
       }
       await onSubmit(draftFromScanResult(body, 'ai'));
@@ -89,17 +92,14 @@
 
 <div class="url-panel">
   <p class="lede">
-    Paste a link to the product page (a retailer, the manufacturer, a seed catalog). Claude reads
-    the page into a draft you can review.
+    {tr('stockui.url.lede')}
   </p>
 
   {#if !aiEnabled}
     <div class="no-key-empty" data-empty-state="no-ai-key">
-      <h3 class="no-key-empty-title">Claude key required for web lookup</h3>
+      <h3 class="no-key-empty-title">{tr('stockui.url.keyRequired')}</h3>
       <p class="no-key-empty-lede">
-        From URL uses Claude to read a product page and pre-populate the inventory fields. Add an
-        Anthropic API key on the Settings page to enable this method, or switch to Manual entry to
-        type the fields in yourself.
+        {tr('stockui.url.keyLede')}
       </p>
       <div class="no-key-empty-actions">
         <a
@@ -109,7 +109,7 @@
           rel="noopener"
           data-action="configure-ai"
         >
-          Configure AI key ↗
+          {tr('stockui.configureKey')}
         </a>
         {#if onSwitchToManual}
           <button
@@ -118,7 +118,7 @@
             onclick={onSwitchToManual}
             data-action="switch-to-manual"
           >
-            Switch to Manual entry →
+            {tr('stockui.switchManual')}
           </button>
         {/if}
       </div>
@@ -126,7 +126,7 @@
   {:else}
     <div class="url-row">
       <span class="url-icon" aria-hidden="true"><Globe size={18} strokeWidth={1.75} /></span>
-      <label class="visually-hidden" for="url-input">Product page URL</label>
+      <label class="visually-hidden" for="url-input">{tr('stockui.url.label')}</label>
       <input
         id="url-input"
         type="url"
@@ -136,18 +136,20 @@
         disabled={busy || lookingUp}
       />
       <button type="button" onclick={runLookup} disabled={busy || lookingUp}>
-        {lookingUp ? 'Reading…' : 'Read page'}
+        {lookingUp ? tr('stockui.url.reading') : tr('stockui.url.readPage')}
       </button>
     </div>
 
     {#if existingItemId}
       <div class="existing">
         <p>
-          That product is already in your inventory.
+          {tr('stockui.url.existing')}
           <Provenance source="data" compact />
         </p>
         {#if existingType}
-          <a class="primary" href="/inventory/{existingType}/{existingItemId}">Open that item →</a>
+          <a class="primary" href="/inventory/{existingType}/{existingItemId}"
+            >{tr('stockui.barcode.openItem')}</a
+          >
         {/if}
       </div>
     {/if}

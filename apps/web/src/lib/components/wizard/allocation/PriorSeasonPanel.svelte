@@ -1,14 +1,16 @@
 <script lang="ts">
   import type { PriorSeason } from './types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const { priorSeason }: { priorSeason: PriorSeason } = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <section class="aw-prior" aria-labelledby="aw-prior-title" data-testid="prior-season-panel">
-  <h3 id="aw-prior-title">Last season ({priorSeason.year})</h3>
+  <h3 id="aw-prior-title">{tr('wizard.prior.title', { year: priorSeason.year })}</h3>
   <p class="aw-prior-lede">
-    Here's what you grew. Keep it in mind for rotation as you plan; nothing carries over until you
-    choose it.
+    {tr('wizard.prior.lede')}
   </p>
   <ul>
     {#each priorSeason.blocks as b (b.blockId)}
@@ -19,7 +21,7 @@
     {/each}
   </ul>
   <a class="aw-prior-link" href="/settings/season/carry-forward" target="_blank" rel="noopener">
-    Review the full carry-forward (stock, rotation, calibration) ↗
+    {tr('wizard.prior.link')}
   </a>
 </section>
 

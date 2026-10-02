@@ -3,8 +3,12 @@
   import type { SignInChannel } from '$lib/identity';
   import AlphaBanner from '$lib/components/feedback/AlphaBanner.svelte';
   import type { ActionData, PageData } from './$types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   let showDemo = $state(false);
   let submitting = $state(false);
@@ -29,26 +33,31 @@
     };
   }
 
-  const demoRoles = [
-    { role: 'owner', label: 'Owner', sub: 'Full access' },
-    { role: 'helper', label: 'Helper', sub: 'Field actions' },
-    { role: 'inspector', label: 'Inspector', sub: 'Read-only' },
-    { role: 'custom-operator', label: 'Custom op', sub: 'Block-scoped' }
-  ] as const;
+  const demoRoles = $derived([
+    { role: 'owner', label: tr('entry.land.demoOwner'), sub: tr('entry.land.demoOwnerSub') },
+    { role: 'helper', label: tr('entry.land.demoHelper'), sub: tr('entry.land.demoHelperSub') },
+    {
+      role: 'inspector',
+      label: tr('entry.land.demoInspector'),
+      sub: tr('entry.land.demoInspectorSub')
+    },
+    {
+      role: 'custom-operator',
+      label: tr('entry.land.demoCustom'),
+      sub: tr('entry.land.demoCustomSub')
+    }
+  ]);
 </script>
 
 <svelte:head>
-  <title>CropCard — Plan, spray, harvest in one card</title>
-  <meta
-    name="description"
-    content="The offline-first farm record system: spray planning, calibration, planting calendar, harvest log."
-  />
+  <title>{tr('entry.land.title')}</title>
+  <meta name="description" content={tr('entry.land.description')} />
 </svelte:head>
 
 <section class="landing" aria-labelledby="hero-title">
   <section class="hero">
     <div class="hero-inner">
-      <a href="/" class="brand" aria-label="CropCard home">
+      <a href="/" class="brand" aria-label={tr('entry.land.homeAria')}>
         <svg class="brand-mark" viewBox="0 0 32 32" width="40" height="40" aria-hidden="true">
           <!-- Stylized seedling — two leaves on a stem. -->
           <path
@@ -65,46 +74,39 @@
       </a>
 
       <h1 id="hero-title">
-        The field card,<br />
-        <span class="hero-accent">modernized.</span>
+        {tr('entry.land.h1a')}<br />
+        <span class="hero-accent">{tr('entry.land.h1b')}</span>
       </h1>
       <p class="lede">
-        Plan sprays, record harvests, calibrate equipment — offline-first, glove-friendly, compliant
-        with the 2-year retention rule. Built for small-plot growers who keep notes on the truck
-        dash.
+        {tr('entry.land.lede')}
       </p>
 
-      <ul class="bullets" aria-label="What CropCard does">
+      <ul class="bullets" aria-label={tr('entry.land.bulletsAria')}>
         <li>
           <span class="bullet-mark" aria-hidden="true">✓</span>
-          Safety-kernel spray checks that won't let you spray a contaminated tank
+          {tr('entry.land.b1')}
         </li>
         <li>
           <span class="bullet-mark" aria-hidden="true">✓</span>
-          1/128-acre calibration wizard with helper-submit + owner-approve flow
+          {tr('entry.land.b2')}
         </li>
         <li>
           <span class="bullet-mark" aria-hidden="true">✓</span>
-          Offline-first PWA — record sprays in the field, sync when you're back at the truck
+          {tr('entry.land.b3')}
         </li>
         <li>
           <span class="bullet-mark" aria-hidden="true">✓</span>
-          CSV + PDF exports ready for cost-share inspectors and USDA reporting
+          {tr('entry.land.b4')}
         </li>
       </ul>
 
       <p class="pricing-link">
-        Free forever for records, safety and exports. <a href="/pricing">See plans and pricing</a>
+        {tr('entry.land.freePre')} <a href="/pricing">{tr('entry.land.freeLink')}</a>
       </p>
 
       <!-- Decorative agricultural scene. Pure SVG so it ships offline; no
            external image asset. Three planted rows, a sun, and a barn silhouette. -->
-      <svg
-        class="hero-art"
-        viewBox="0 0 600 220"
-        role="img"
-        aria-label="A stylized field with planted rows, a sun, and a barn"
-      >
+      <svg class="hero-art" viewBox="0 0 600 220" role="img" aria-label={tr('entry.land.artAria')}>
         <defs>
           <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stop-color="#dbecf5" />
@@ -187,15 +189,14 @@
   <section class="auth" aria-labelledby="signin-title">
     <div class="auth-card">
       <AlphaBanner />
-      <h2 id="signin-title">Sign in</h2>
+      <h2 id="signin-title">{tr('entry.land.signIn')}</h2>
       {#if !sent && via === 'phone'}
         <p class="auth-hint">
-          Sign in with a text message. New here? We'll set up your farm in the next step.
+          {tr('entry.land.hintPhone')}
         </p>
       {:else if !sent}
         <p class="auth-hint">
-          Enter your email and we'll send you a sign-in link. New here? We'll set up your farm in
-          the next step.
+          {tr('entry.land.hintEmail')}
         </p>
       {/if}
 
@@ -204,20 +205,18 @@
       {/if}
 
       {#if data.inviteToken}
-        <p class="invite-banner" role="status">You've been invited to a farm. Sign in to accept.</p>
+        <p class="invite-banner" role="status">{tr('entry.land.invited')}</p>
       {/if}
 
       {#if data.authMode === 'magic-link' && sent}
         <div class="sent" role="status" aria-live="polite">
           {#if sent.channel === 'sms'}
-            <p><strong>Check your texts.</strong></p>
-            <p>We sent a 6-digit code to {sent.sentTo}. It expires in 10 minutes.</p>
+            <p><strong>{tr('entry.land.checkTexts')}</strong></p>
+            <p>{tr('entry.land.sentSms', { to: sent.sentTo })}</p>
           {:else}
-            <p><strong>Check your email.</strong></p>
+            <p><strong>{tr('entry.land.checkEmail')}</strong></p>
             <p>
-              We sent a sign-in link and a 6-digit backup code to {sent.sentTo}, in the same email.
-              Tap the link on this device, or type the code below if you opened the email somewhere
-              else.
+              {tr('entry.land.sentEmail', { to: sent.sentTo })}
             </p>
           {/if}
         </div>
@@ -228,7 +227,7 @@
 
         <form method="POST" action="?/code" use:enhance={pending}>
           <label class="row">
-            <span class="lbl">6-digit code</span>
+            <span class="lbl">{tr('entry.land.codeLabel')}</span>
             <input
               class="code-input"
               type="text"
@@ -245,7 +244,7 @@
             <input type="hidden" name="invite" value={inviteToken} />
           {/if}
           <button class="primary" type="submit" disabled={submitting}>
-            {submitting ? 'Checking…' : 'Sign in →'}
+            {submitting ? tr('entry.land.checking') : tr('entry.land.signInBtn')}
           </button>
         </form>
 
@@ -261,17 +260,19 @@
               <input type="hidden" name="invite" value={inviteToken} />
             {/if}
             <button class="link-btn" type="submit" disabled={submitting}>
-              {sent.channel === 'sms' ? 'Send a new code' : 'Send a new email'}
+              {sent.channel === 'sms' ? tr('entry.land.newCode') : tr('entry.land.newEmail')}
             </button>
           </form>
           {#if sent.channel === 'sms'}
             <a class="link-btn" href={hrefFor('phone')} data-sveltekit-reload>
-              Use a different number
+              {tr('entry.land.otherNumber')}
             </a>
-            <a class="link-btn" href={hrefFor('email')} data-sveltekit-reload>Use email instead</a>
+            <a class="link-btn" href={hrefFor('email')} data-sveltekit-reload
+              >{tr('entry.land.useEmail')}</a
+            >
           {:else}
             <a class="link-btn" href={hrefFor('email')} data-sveltekit-reload>
-              Use a different email
+              {tr('entry.land.otherEmail')}
             </a>
           {/if}
         </div>
@@ -284,7 +285,7 @@
           <input type="hidden" name="channel" value={via} />
           {#if via === 'phone'}
             <label class="row">
-              <span class="lbl">Mobile number</span>
+              <span class="lbl">{tr('entry.land.mobile')}</span>
               <input
                 type="tel"
                 name="identifier"
@@ -301,7 +302,7 @@
             </p>
           {:else}
             <label class="row">
-              <span class="lbl">Email</span>
+              <span class="lbl">{tr('entry.land.email')}</span>
               <input
                 type="email"
                 name="identifier"
@@ -317,8 +318,7 @@
             </label>
             {#if data.authMode === 'magic-link'}
               <p class="field-note">
-                One email holds both a sign-in link and a 6-digit backup code. No password to
-                remember.
+                {tr('entry.land.noPassword')}
               </p>
             {/if}
           {/if}
@@ -327,30 +327,32 @@
           {/if}
           <button class="primary" type="submit" disabled={submitting}>
             {#if submitting}
-              {data.authMode === 'magic-link' ? 'Sending…' : 'Signing in…'}
+              {data.authMode === 'magic-link'
+                ? tr('entry.land.sending')
+                : tr('entry.land.signingIn')}
             {:else if data.authMode !== 'magic-link'}
-              Continue →
+              {tr('entry.land.continue')}
             {:else if via === 'phone'}
-              Text me a code →
+              {tr('entry.land.textMe')}
             {:else}
-              Email me a sign-in link →
+              {tr('entry.land.emailMe')}
             {/if}
           </button>
         </form>
 
         <div class="alt-path">
           {#if via === 'phone'}
-            <a class="link-btn" href={hrefFor('email')}>Use email instead</a>
+            <a class="link-btn" href={hrefFor('email')}>{tr('entry.land.useEmail')}</a>
           {:else}
-            <a class="link-btn" href={hrefFor('phone')}>Use a phone number instead</a>
+            <a class="link-btn" href={hrefFor('phone')}>{tr('entry.land.usePhone')}</a>
           {/if}
         </div>
 
         {#if data.authMode !== 'magic-link'}
           <details class="demo" bind:open={showDemo}>
-            <summary>Try the demo</summary>
+            <summary>{tr('entry.land.demo')}</summary>
             <p class="demo-hint">
-              One-tap sign-in to a sandbox tenant. Pick a role to feel the surface area.
+              {tr('entry.land.demoHint')}
             </p>
             <div class="demo-grid">
               {#each demoRoles as r (r.role)}
@@ -373,8 +375,7 @@
 
     <footer class="auth-footer">
       <small>
-        CropCard is offline-first — your records live on your device first, sync to the cloud
-        second.
+        {tr('entry.land.footer')}
       </small>
     </footer>
   </section>

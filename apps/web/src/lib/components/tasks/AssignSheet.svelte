@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import Modal from '$lib/components/ui/Modal.svelte';
 
   interface Member {
@@ -22,10 +24,13 @@
   let saveError = $state<string | null>(null);
   let busy = $state(false);
 
-  const ROLE_LABEL: Record<string, string> = {
-    owner: 'Owner',
-    helper: 'Helper',
-    'custom-operator': 'Custom operator'
+  const ROLE_KEY: Record<
+    string,
+    'tasks.assign.roleOwner' | 'tasks.assign.roleHelper' | 'tasks.assign.roleCustom'
+  > = {
+    owner: 'tasks.assign.roleOwner',
+    helper: 'tasks.assign.roleHelper',
+    'custom-operator': 'tasks.assign.roleCustom'
   };
 
   async function load() {
@@ -37,12 +42,12 @@
         error?: string;
       };
       if (!res.ok) {
-        loadError = body.error ?? 'Could not load the farm members.';
+        loadError = body.error ?? tr('tasks.assign.loadFailed');
         return;
       }
       members = body.assignees ?? [];
     } catch {
-      loadError = 'Giving out jobs needs signal. Try again when you are back online.';
+      loadError = tr('tasks.assign.needsSignal');
     }
   }
 
@@ -62,27 +67,28 @@
       });
       if (!res.ok) {
         const out = (await res.json().catch(() => ({}))) as { error?: string };
-        saveError = out.error ?? `That did not save. The server said ${res.status}.`;
+        saveError = out.error ?? tr('tasks.assign.saveFailed', { status: res.status });
         return;
       }
       onAssigned(name);
     } catch {
-      saveError = 'Giving out jobs needs signal. Try again when you are back online.';
+      saveError = tr('tasks.assign.needsSignal');
     } finally {
       busy = false;
     }
   }
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
-<Modal {open} {onClose} title="Who is doing this?">
+<Modal {open} {onClose} title={tr('tasks.assign.title')}>
   <div class="assign" data-testid="assign-sheet">
     <p class="job">{title}</p>
     {#if loadError}
       <p class="error" role="alert">{loadError}</p>
     {:else if members === null}
-      <p class="hint" role="status">Loading the farm members…</p>
+      <p class="hint" role="status">{tr('tasks.assign.loading')}</p>
     {:else}
-      <ul class="people" aria-label="Farm members">
+      <ul class="people" aria-label={tr('tasks.assign.members')}>
         {#each members as m (m.id)}
           <li>
             <button
@@ -92,7 +98,7 @@
               disabled={busy}
               onclick={() => assign(m.id, m.name)}
               ><span class="name">{m.name}</span><span class="role"
-                >{ROLE_LABEL[m.role] ?? m.role}</span
+                >{ROLE_KEY[m.role] ? tr(ROLE_KEY[m.role]) : m.role}</span
               ></button
             >
           </li>
@@ -104,7 +110,7 @@
             aria-pressed={currentAssigneeId === null}
             disabled={busy}
             onclick={() => assign(null, null)}
-            ><span class="name">Nobody in particular</span></button
+            ><span class="name">{tr('tasks.assign.nobody')}</span></button
           >
         </li>
       </ul>

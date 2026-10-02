@@ -9,6 +9,7 @@
 
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { showLayoutDeconBanner } from '$lib/equipment/decon';
   import { fmt } from '$lib/prefsState.svelte';
   import TopBar from '$lib/components/ui/TopBar.svelte';
@@ -16,6 +17,7 @@
   import UpdateToast from '$lib/components/ui/UpdateToast.svelte';
 
   const { data, children } = $props();
+  const tr = $derived(createT(data.locale));
 
   let pendingCount = $state<number | null>(null);
   let online = $state(true);
@@ -25,7 +27,7 @@
   // tab still shows (and queues records for) the Owner it rendered for.
   let staleOwnerId = $state<string | null>(null);
   const staleOwnerName = $derived(
-    data.availableOwners?.find((o) => o.id === staleOwnerId)?.name ?? 'another farm'
+    data.availableOwners?.find((o) => o.id === staleOwnerId)?.name ?? tr('entry.layout.anotherFarm')
   );
   const currentOwnerId = $derived(data.activeOwner?.id ?? data.user?.activeOwnerId ?? null);
 
@@ -172,12 +174,12 @@
 
 {#if staleOwnerId}
   <Banner tone="rust" urgent>
-    You switched to <strong>{staleOwnerName}</strong> in another tab. This tab still shows
-    <strong>{data.activeOwner?.name ?? 'the previous farm'}</strong>; queued records wait until you
-    reload.
+    {tr('entry.layout.staleA')}<strong>{staleOwnerName}</strong>{tr('entry.layout.staleB')}<strong
+      >{data.activeOwner?.name ?? tr('entry.layout.previousFarm')}</strong
+    >{tr('entry.layout.staleC')}
     {#snippet action()}
       <button type="button" class="banner-link-btn" onclick={() => window.location.reload()}>
-        Reload tab
+        {tr('entry.layout.reloadTab')}
       </button>
     {/snippet}
   </Banner>
@@ -185,13 +187,13 @@
 
 {#if !online}
   <Banner tone="rust" urgent>
-    You're offline. Changes save on this phone and sync when you're back online.
+    {tr('entry.layout.offline')}
   </Banner>
 {:else if (pendingCount ?? 0) > 0}
   <Banner tone="wheat">
-    {pendingCount} pending record{pendingCount === 1 ? '' : 's'} queued.
+    {tr('entry.layout.pending', { count: pendingCount ?? 0 })}
     {#snippet action()}
-      <a href="/records/pending" class="banner-link">Review queue</a>
+      <a href="/records/pending" class="banner-link">{tr('entry.layout.reviewQueue')}</a>
     {/snippet}
   </Banner>
 {/if}
@@ -220,31 +222,33 @@
 
 {#if data.billingGrace && !page.url.pathname.startsWith('/settings/billing')}
   <Banner tone="wheat">
-    Your last payment didn't go through. {data.billingGrace.planName} stays on until
-    {fmt.instant(data.billingGrace.graceEndsAt, 'date')} while the card is retried; your records are safe
-    either way.
+    {tr('entry.layout.pastDue', {
+      plan: data.billingGrace.planName,
+      date: fmt.instant(data.billingGrace.graceEndsAt, 'date')
+    })}
     {#snippet action()}
-      <a class="decon-cta" href="/settings/billing" data-testid="past-due-link">Update payment</a>
+      <a class="decon-cta" href="/settings/billing" data-testid="past-due-link"
+        >{tr('entry.layout.updatePayment')}</a
+      >
     {/snippet}
   </Banner>
 {/if}
 
 {#if data.user?.role === 'inspector'}
-  <Banner tone="neutral">Inspector mode — read-only across all records, plans, and exports.</Banner>
+  <Banner tone="neutral">{tr('entry.layout.inspector')}</Banner>
 {:else if data.user?.role === 'custom-operator'}
   <Banner tone="sky">
-    Custom Operator — can record sprays on assigned blocks; stock financials are hidden.
+    {tr('entry.layout.customOp')}
   </Banner>
 {/if}
 
 {#if data.pluginLoadFailures > 0}
   <Banner tone="wheat">
     <span data-testid="plugin-failure-banner">
-      {data.pluginLoadFailures === 1
-        ? '1 plugin file did not load'
-        : `${data.pluginLoadFailures} plugin files did not load`}, so some crops or products may be
-      missing from the pickers.
-      <a class="decon-cta" href="/settings/advanced">See which files</a>
+      {tr('entry.layout.pluginFail', { count: data.pluginLoadFailures })}{tr(
+        'entry.layout.pluginFailTail'
+      )}
+      <a class="decon-cta" href="/settings/advanced">{tr('entry.layout.seeFiles')}</a>
     </span>
   </Banner>
 {/if}
@@ -276,7 +280,7 @@
   </Banner>
 {/if}
 
-<a class="skip-link" href="#main-content">Skip to main content</a>
+<a class="skip-link" href="#main-content">{tr('entry.layout.skip')}</a>
 
 <main id="main-content" tabindex="-1">
   {@render children()}

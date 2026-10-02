@@ -2,17 +2,29 @@
   import { ChevronRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import { fmt as prefsFmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
 
   const { data } = $props();
+  const tr = $derived(createT(data.locale));
+
+  const STATUS_KEY = {
+    planned: 'crops.status.planned',
+    active: 'crops.status.active',
+    harvested: 'crops.status.harvested',
+    failed: 'crops.status.failed',
+    archived: 'crops.status.archived'
+  } as const;
+  const statusLabel = (s: string) =>
+    s in STATUS_KEY ? tr(STATUS_KEY[s as keyof typeof STATUS_KEY]) : s;
 
   const blockHref = $derived(`/plan?block=${encodeURIComponent(data.block.id)}`);
   const kicker = $derived(
     [
-      'Planting',
+      tr('crops.kickerPlanting'),
       data.cropPlugin?.displayName ?? data.crop.cropPluginId,
       data.crop.plantingDate
         ? new Date(data.crop.plantingDate).toISOString().slice(0, 4)
-        : 'planned'
+        : tr('crops.kickerPlanned')
     ].join(' · ')
   );
 
@@ -42,7 +54,7 @@
       });
       if (!res.ok) {
         const out = await res.json().catch(() => ({}));
-        actionError = out.error ?? 'failed';
+        actionError = out.error ?? tr('crops.failed');
         return;
       }
       window.location.reload();
@@ -60,11 +72,7 @@
   }
 
   async function deleteCrop() {
-    if (
-      !confirm(
-        `Delete crop "${data.crop.varietyDisplayName}" and all attached events? This cascades through every spray, harvest, insecticide, hay cutting, and fertility application tied to this crop, plus all tasks. This cannot be undone.`
-      )
-    ) {
+    if (!confirm(tr('crops.confirmDelete', { name: data.crop.varietyDisplayName }))) {
       return;
     }
     busy = true;
@@ -73,7 +81,7 @@
       const res = await fetch(`/api/crops/${data.crop.id}`, { method: 'DELETE' });
       if (!res.ok) {
         const out = await res.json().catch(() => ({}));
-        actionError = out.error ?? 'delete failed';
+        actionError = out.error ?? tr('crops.deleteFailed');
         return;
       }
       window.location.href = blockHref;
@@ -89,8 +97,8 @@
   <title>{data.crop.varietyDisplayName} · CropCard</title>
 </svelte:head>
 
-<nav class="breadcrumb" aria-label="Breadcrumb">
-  <a href="/plan">Plan</a>
+<nav class="breadcrumb" aria-label={tr('crops.breadcrumb')}>
+  <a href="/plan">{tr('crops.plan')}</a>
   <ChevronRight size={13} aria-hidden="true" />
   <a href={blockHref}>{data.block.name}</a>
   <ChevronRight size={13} aria-hidden="true" />
@@ -102,14 +110,15 @@
     <Kicker>{kicker}</Kicker>
     <h1 class="serif">{data.crop.varietyDisplayName}</h1>
     <p class="meta">
-      Block <strong>{data.block.name}</strong>
+      {tr('crops.block')} <strong>{data.block.name}</strong>
       {#if data.block.acres}— {prefsFmt.qty(data.block.acres, 'area')}{/if}
-      {#if data.crop.plantingDate}· Planted {fmtDay(data.crop.plantingDate)}{:else}· Planned — no
-        date set{/if}
+      {#if data.crop.plantingDate}· {tr('crops.planted', {
+          date: fmtDay(data.crop.plantingDate)
+        })}{:else}· {tr('crops.plannedNoDate')}{/if}
     </p>
   </div>
   <div class="status-row">
-    <span class="status status-{data.crop.status}">{data.crop.status}</span>
+    <span class="status status-{data.crop.status}">{statusLabel(data.crop.status)}</span>
   </div>
 </header>
 
@@ -118,70 +127,65 @@
 {/if}
 
 <section class="card actions">
-  <h2>Status</h2>
+  <h2>{tr('crops.statusTitle')}</h2>
   {#if data.crop.status === 'active'}
     <div class="row">
       <button class="primary" onclick={() => changeStatus('mark-harvested')} disabled={busy}>
-        ✓ Mark harvested
+        {tr('crops.markHarvested')}
       </button>
       <button class="secondary" onclick={() => changeStatus('mark-failed')} disabled={busy}>
-        Mark failed
+        {tr('crops.markFailed')}
       </button>
       <button class="secondary" onclick={() => changeStatus('archive')} disabled={busy}>
-        Archive
+        {tr('crops.archive')}
       </button>
     </div>
   {:else if data.crop.status === 'planned'}
     <div class="row">
       <button class="primary" onclick={() => changeStatus('reactivate')} disabled={busy}>
-        Activate (move to active)
+        {tr('crops.activate')}
       </button>
       <button class="secondary" onclick={() => changeStatus('archive')} disabled={busy}>
-        Archive
+        {tr('crops.archive')}
       </button>
     </div>
   {:else}
     <div class="row">
       <button class="secondary" onclick={() => changeStatus('reactivate')} disabled={busy}>
-        Re-activate
+        {tr('crops.reactivate')}
       </button>
       {#if data.crop.status !== 'archived'}
         <button class="secondary" onclick={() => changeStatus('archive')} disabled={busy}>
-          Archive
+          {tr('crops.archive')}
         </button>
       {/if}
     </div>
   {/if}
   {#if data.crop.harvestedAt}
-    <p class="meta-row">Harvested: {fmtDateTime(data.crop.harvestedAt)}</p>
+    <p class="meta-row">{tr('crops.harvestedAt', { when: fmtDateTime(data.crop.harvestedAt) })}</p>
   {/if}
   {#if data.crop.archivedAt}
-    <p class="meta-row">Archived: {fmtDateTime(data.crop.archivedAt)}</p>
+    <p class="meta-row">{tr('crops.archivedAt', { when: fmtDateTime(data.crop.archivedAt) })}</p>
   {/if}
   <hr />
   <details class="danger-zone">
-    <summary>⚠ Danger zone</summary>
-    <p class="hint">
-      Permanently deletes this crop AND every event attached to it (spray records, insecticide
-      records, harvest events, hay cuttings, fertility apps, tasks, plus stock movements that cite
-      those events). Block-level data (the block itself, soil tests, fertility credits) is not
-      affected.
-    </p>
+    <summary>{tr('crops.dangerZone')}</summary>
+    <p class="hint">{tr('crops.dangerHint')}</p>
     <button class="danger" onclick={deleteCrop} disabled={busy}>
-      🗑 Delete crop + all attached events
+      {tr('crops.deleteCrop')}
     </button>
   </details>
 </section>
 
 {#if data.cropPlugin?.daysToMaturity}
   <section class="card metrics">
-    <h2>Plan</h2>
+    <h2>{tr('crops.plan')}</h2>
     <dl>
-      <dt>Variety plugin</dt>
+      <dt>{tr('crops.variety')}</dt>
       <dd>{data.cropPlugin.displayName}</dd>
-      <dt>Family</dt>
+      <dt>{tr('crops.family')}</dt>
       <dd>{data.cropPlugin.cropFamily}</dd>
-      <dt>Days to maturity</dt>
+      <dt>{tr('crops.dtm')}</dt>
       <dd>{data.cropPlugin.daysToMaturity.min}–{data.cropPlugin.daysToMaturity.max} d</dd>
     </dl>
   </section>
@@ -189,11 +193,11 @@
 
 <section class="card section">
   <header>
-    <h2>Tasks ({data.tasks.length})</h2>
-    <a class="add" href="/today">+ Schedule from /today</a>
+    <h2>{tr('crops.tasks', { count: data.tasks.length })}</h2>
+    <a class="add" href="/today">{tr('crops.scheduleFromToday')}</a>
   </header>
   {#if data.tasks.length === 0}
-    <p class="hint">No tasks attached. Schedule one from /today's calendar suggestions.</p>
+    <p class="hint">{tr('crops.noTasks')}</p>
   {:else}
     <ul>
       {#each data.tasks as t (t.id)}
@@ -201,8 +205,8 @@
           <span class="when">{fmtDay(t.scheduledFor)}</span>
           <strong>{t.title}</strong>
           <span class="kind-chip">{t.kind}</span>
-          {#if t.completedAt}<span class="status status-harvested">done</span>{/if}
-          {#if t.abortedAt}<span class="status status-failed">aborted</span>{/if}
+          {#if t.completedAt}<span class="status status-harvested">{tr('crops.done')}</span>{/if}
+          {#if t.abortedAt}<span class="status status-failed">{tr('crops.aborted')}</span>{/if}
         </li>
       {/each}
     </ul>
@@ -211,18 +215,22 @@
 
 <section class="card section">
   <header>
-    <h2>Spray events ({data.sprays.length})</h2>
-    <a class="add" href={deepLink('/spray')}>+ Record spray</a>
+    <h2>{tr('crops.sprays', { count: data.sprays.length })}</h2>
+    <a class="add" href={deepLink('/spray')}>{tr('crops.recordSpray')}</a>
   </header>
   {#if data.sprays.length === 0}
-    <p class="hint">No sprays for this crop yet.</p>
+    <p class="hint">{tr('crops.noSprays')}</p>
   {:else}
     <ul>
       {#each data.sprays as s (s.id)}
         <li>
           <span class="when">{fmt(s.occurredAt)}</span>
           <strong>{s.products.map((p) => p.pluginId).join(', ')}</strong>
-          <small>chemistry: {s.products.flatMap((p) => p.chemistryClasses).join(' / ')}</small>
+          <small
+            >{tr('crops.chemistry', {
+              list: s.products.flatMap((p) => p.chemistryClasses).join(' / ')
+            })}</small
+          >
         </li>
       {/each}
     </ul>
@@ -231,18 +239,20 @@
 
 <section class="card section">
   <header>
-    <h2>Insecticide events ({data.insecticides.length})</h2>
-    <a class="add" href={deepLink('/spray/insecticide')}>+ Record</a>
+    <h2>{tr('crops.insecticides', { count: data.insecticides.length })}</h2>
+    <a class="add" href={deepLink('/spray/insecticide')}>{tr('crops.record')}</a>
   </header>
   {#if data.insecticides.length === 0}
-    <p class="hint">No insecticide events.</p>
+    <p class="hint">{tr('crops.noInsecticides')}</p>
   {:else}
     <ul>
       {#each data.insecticides as e (e.id)}
         <li>
           <span class="when">{fmt(e.occurredAt)}</span>
           <strong>{e.products.map((p) => p.displayName).join(', ')}</strong>
-          {#if e.scoutObservation}<small>(triggered by {e.scoutObservation.pest})</small>{/if}
+          {#if e.scoutObservation}<small
+              >{tr('crops.triggeredBy', { pest: e.scoutObservation.pest })}</small
+            >{/if}
         </li>
       {/each}
     </ul>
@@ -251,11 +261,11 @@
 
 <section class="card section">
   <header>
-    <h2>Fertility applications ({data.fertilityApps.length})</h2>
-    <a class="add" href={deepLink('/fertility')}>+ Record</a>
+    <h2>{tr('crops.fertility', { count: data.fertilityApps.length })}</h2>
+    <a class="add" href={deepLink('/fertility')}>{tr('crops.record')}</a>
   </header>
   {#if data.fertilityApps.length === 0}
-    <p class="hint">No fertility applications.</p>
+    <p class="hint">{tr('crops.noFertility')}</p>
   {:else}
     <ul>
       {#each data.fertilityApps as f (f.id)}
@@ -277,18 +287,18 @@
 {#if data.cropPlugin?.hayOperations}
   <section class="card section">
     <header>
-      <h2>Hay cuttings ({data.cuttings.length})</h2>
-      <a class="add" href={deepLink('/hay')}>+ Record cutting</a>
+      <h2>{tr('crops.hay', { count: data.cuttings.length })}</h2>
+      <a class="add" href={deepLink('/hay')}>{tr('crops.recordCutting')}</a>
     </header>
     {#if data.cuttings.length === 0}
-      <p class="hint">No cuttings recorded for this crop.</p>
+      <p class="hint">{tr('crops.noCuttings')}</p>
     {:else}
       <ul>
         {#each data.cuttings as c (c.id)}
           <li>
-            <strong>Cutting #{c.cuttingNumber} ({c.year})</strong>
+            <strong>{tr('crops.cutting', { n: c.cuttingNumber, year: c.year })}</strong>
             <span class="status status-{c.status}">{c.status}</span>
-            {#if c.balesQuantity}<small>{c.balesQuantity} bales</small>{/if}
+            {#if c.balesQuantity}<small>{tr('crops.bales', { n: c.balesQuantity })}</small>{/if}
           </li>
         {/each}
       </ul>
@@ -298,18 +308,18 @@
 
 <section class="card section">
   <header>
-    <h2>Harvest events ({data.harvests.length})</h2>
-    <a class="add" href={deepLink('/harvest')}>+ Record</a>
+    <h2>{tr('crops.harvests', { count: data.harvests.length })}</h2>
+    <a class="add" href={deepLink('/harvest')}>{tr('crops.record')}</a>
   </header>
   {#if data.harvests.length === 0}
-    <p class="hint">No harvest events.</p>
+    <p class="hint">{tr('crops.noHarvests')}</p>
   {:else}
     <ul>
       {#each data.harvests as h (h.id)}
         <li>
           <span class="when">{fmt(h.occurredAt)}</span>
           {#if h.quantity}<strong>{h.quantity}</strong>{/if}
-          {#if h.lotNumber}<small>lot {h.lotNumber}</small>{/if}
+          {#if h.lotNumber}<small>{tr('crops.lot', { lot: h.lotNumber })}</small>{/if}
         </li>
       {/each}
     </ul>
@@ -318,11 +328,11 @@
 
 <section class="card section">
   <header>
-    <h2>Soil tests ({data.soilTests.length})</h2>
-    <small class="hint">Block-scoped — shared across all crops on the block.</small>
+    <h2>{tr('crops.soilTests', { count: data.soilTests.length })}</h2>
+    <small class="hint">{tr('crops.soilScope')}</small>
   </header>
   {#if data.soilTests.length === 0}
-    <p class="hint">No soil tests for this block.</p>
+    <p class="hint">{tr('crops.noSoilTests')}</p>
   {:else}
     <ul>
       {#each data.soilTests as t (t.id)}
@@ -338,10 +348,8 @@
 
 {#if data.projected.length > 0}
   <section class="card section projected">
-    <h2>Projected ({data.projected.length})</h2>
-    <p class="hint">
-      From the calendar engine — not yet promoted to tasks. Visit /today to schedule.
-    </p>
+    <h2>{tr('crops.projected', { count: data.projected.length })}</h2>
+    <p class="hint">{tr('crops.projectedHint')}</p>
     <ul>
       {#each data.projected as p (p.kind + p.startMs + p.title)}
         <li>

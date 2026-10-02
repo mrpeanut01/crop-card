@@ -3,8 +3,8 @@
   import HealthForm from './HealthForm.svelte';
   import TimeChipRow from '$lib/components/tasks/TimeChipRow.svelte';
   import { CareCloser, type CareCloseRun } from '$lib/animals/careClose';
+  import { careKindLabel } from './labels';
   import {
-    CARE_KIND_LABEL,
     CARE_TO_HEALTH_KIND,
     SNOOZE_DAYS,
     addDaysYmd,
@@ -15,6 +15,8 @@
   import type { HealthRecordInput } from '$lib/animals/recordApiSchemas';
   import { formatCalendarDate } from '$lib/prefs';
   import type { CareCloseExtra } from '$lib/client/taskQueue';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     card: CareCardView;
@@ -29,6 +31,7 @@
 
   const { card, todayYmd, isOwner, canAct, products, stock, onChanged }: Props = $props();
   const uid = $props.id();
+  const tr = $derived(createT(page.data?.locale));
 
   let mode = $state<'idle' | 'some' | 'done' | 'skip'>('idle');
   let picked = $state<string[]>([]);
@@ -59,9 +62,9 @@
 
   function dueText(item: CareItemView): string {
     const day = formatCalendarDate(item.scheduledOn, 'month-day');
-    if (item.status === 'late') return `Was due ${day}`;
-    if (item.status === 'due') return 'Due today';
-    return `Due ${day}`;
+    if (item.status === 'late') return tr('animals.care.wasDue', { day });
+    if (item.status === 'due') return tr('animals.care.dueToday');
+    return tr('animals.care.due', { day });
   }
 
   function openDone() {
@@ -93,12 +96,22 @@
 
   function partialError(r: CareCloseRun): string {
     const done = r.saved + r.queued;
-    return done > 0
-      ? `Saved for ${done} of them. ${r.error} Fix it and save again for the rest.`
-      : (r.error ?? '');
+    return done > 0 ? tr('animals.care.partial', { done, error: r.error ?? '' }) : (r.error ?? '');
   }
 
-  function report(r: CareCloseRun, verb: string) {
+  function reportText(how: 'done' | 'recorded', saved: number): string {
+    const what = careKindLabel(tr, card.careKind).toLowerCase();
+    if (mode === 'done') {
+      return saved === 1
+        ? tr('animals.care.doneOne', { what })
+        : tr('animals.care.doneMany', { count: saved });
+    }
+    return saved === 1
+      ? tr('animals.care.recordedOne', { what })
+      : tr('animals.care.recordedMany', { count: saved });
+  }
+
+  function report(r: CareCloseRun, how: 'done' | 'recorded') {
     if (r.error) {
       error = partialError(r);
       return;
@@ -106,12 +119,7 @@
     mode = 'idle';
     picked = [];
     onChanged(
-      withWarnings(
-        r.queued > 0
-          ? 'Saved on this phone. It will upload when you have signal.'
-          : `${verb} ${r.saved === 1 ? '' : `${r.saved} `}${r.saved === 1 ? CARE_KIND_LABEL[card.careKind].toLowerCase() : 'jobs'}.`,
-        r.warnings
-      )
+      withWarnings(r.queued > 0 ? tr('animals.care.queued') : reportText(how, r.saved), r.warnings)
     );
   }
 
@@ -131,7 +139,7 @@
     try {
       report(
         await closeAll('complete', (item) => ({ ...nextDueExtra(), ...timeExtra(item) })),
-        'Marked done:'
+        'done'
       );
     } finally {
       busy = false;
@@ -155,7 +163,7 @@
         headers: { 'content-type': 'application/json' }
       });
     }
-    report(r, 'Recorded');
+    report(r, 'recorded');
     return new Response(JSON.stringify({ warnings: [] }), {
       status: 200,
       headers: { 'content-type': 'application/json' }
@@ -178,10 +186,10 @@
       onChanged(
         withWarnings(
           r.queued > 0
-            ? 'Saved on this phone. It will upload when you have signal.'
+            ? tr('animals.care.queued')
             : choice === 'snooze'
-              ? `We will remind you in ${days === 1 ? '1 day' : `${days} days`}.`
-              : 'Skipped this one.',
+              ? tr('animals.care.remindIn', { days: tr('animals.age.days', { count: days ?? 0 }) })
+              : tr('animals.care.skipped'),
           r.warnings
         )
       );
@@ -193,14 +201,14 @@
 
 <article class="care-card" data-status={status} data-testid="care-card" aria-labelledby="{uid}-t">
   <header class="head">
-    <span class="kind">{CARE_KIND_LABEL[card.careKind]}</span>
+    <span class="kind">{careKindLabel(tr, card.careKind)}</span>
     <h3 id="{uid}-t" class="title">{card.title}</h3>
     <p class="when" class:late={status === 'late'}>{dueText(first)}</p>
   </header>
 
   {#if mode === 'some'}
     <fieldset class="af-fieldset">
-      <legend class="af-legend">Which ones?</legend>
+      <legend class="af-legend">{tr('animals.care.whichOnes')}</legend>
       {#each card.items as item (item.taskId)}
         <label class="af-check pick">
           <input
@@ -222,10 +230,16 @@
         disabled={busy || (mode === 'some' && picked.length === 0)}
         onclick={openDone}
       >
-        {mode === 'some' ? `Done for ${picked.length}` : many ? 'Done for all' : 'Done'}
+        {mode === 'some'
+          ? tr('animals.care.doneFor', { count: picked.length })
+          : many
+            ? tr('animals.care.doneAll')
+            : tr('animals.care.done')}
       </button>
       {#if many && mode !== 'some'}
-        <button type="button" class="af-ghost" onclick={() => (mode = 'some')}>Some</button>
+        <button type="button" class="af-ghost" onclick={() => (mode = 'some')}
+          >{tr('animals.care.some')}</button
+        >
       {/if}
       <button
         type="button"
@@ -236,39 +250,41 @@
           mode = 'skip';
         }}
       >
-        Skip
+        {tr('animals.care.skip')}
       </button>
     </div>
   {/if}
 
   {#if mode === 'skip'}
-    <div class="sheet" role="group" aria-label="Skip">
+    <div class="sheet" role="group" aria-label={tr('animals.care.skip')}>
       <button type="button" class="af-ghost wide" disabled={busy} onclick={() => skip('skip-this')}>
-        Skip this one
+        {tr('animals.care.skipThis')}
       </button>
-      <p class="af-help">Or remind me again in</p>
+      <p class="af-help">{tr('animals.care.remindAgain')}</p>
       <div class="actions">
         {#each SNOOZE_DAYS as d (d)}
           <button type="button" class="af-ghost" disabled={busy} onclick={() => skip('snooze', d)}>
-            {d === 1 ? '1 day' : `${d} days`}
+            {tr('animals.age.days', { count: d })}
           </button>
         {/each}
       </div>
-      <button type="button" class="af-ghost" onclick={() => (mode = 'idle')}>Back</button>
+      <button type="button" class="af-ghost" onclick={() => (mode = 'idle')}
+        >{tr('animals.back')}</button
+      >
     </div>
   {/if}
 
   {#if mode === 'done'}
     <div class="sheet">
       {#if first.intervalDays || isOwner}
-        <label class="af-label" for="{uid}-next">Next due</label>
+        <label class="af-label" for="{uid}-next">{tr('animals.care.nextDueLabel')}</label>
         {#if isOwner}
           <input id="{uid}-next" class="af-input" type="date" bind:value={nextDue} />
-          <p class="af-help">Set from the plan. Change it if your vet said otherwise.</p>
+          <p class="af-help">{tr('animals.care.nextHelp')}</p>
         {:else}
           <p id="{uid}-next" class="af-help">
-            {suggestedNext ? formatCalendarDate(suggestedNext, 'date') : 'Not set'}. The owner can
-            change it.
+            {suggestedNext ? formatCalendarDate(suggestedNext, 'date') : tr('animals.care.notSet')}.
+            {tr('animals.care.ownerCanChange')}
           </p>
         {/if}
       {/if}
@@ -285,15 +301,19 @@
           lockedKind={CARE_TO_HEALTH_KIND[card.careKind] ?? undefined}
           initialProductPluginId={first.productPluginId}
           submit={submitHealth}
-          submitLabel={chosen.length > 1 ? `Save for ${chosen.length}` : 'Save'}
+          submitLabel={chosen.length > 1
+            ? tr('animals.care.saveFor', { count: chosen.length })
+            : tr('animals.save')}
           onDone={() => {}}
         />
       {:else}
         <button type="button" class="af-primary wide" disabled={busy} onclick={quickDone}>
-          {busy ? 'Saving…' : 'Mark done'}
+          {busy ? tr('animals.saving') : tr('animals.care.markDone')}
         </button>
       {/if}
-      <button type="button" class="af-ghost" onclick={() => (mode = 'idle')}>Cancel</button>
+      <button type="button" class="af-ghost" onclick={() => (mode = 'idle')}
+        >{tr('animals.cancel')}</button
+      >
     </div>
   {/if}
 

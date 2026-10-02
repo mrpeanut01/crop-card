@@ -3,16 +3,14 @@
   import FoodStopModal from './FoodStopModal.svelte';
   import HoldGuardNotice from './HoldGuardNotice.svelte';
   import { holdRefusalOf, type HoldShortenBody } from '$lib/animals/holdGuardCopy';
-  import {
-    OFFLINE_MESSAGE,
-    errorFromResponse,
-    localInputToMs,
-    msToLocalInput
-  } from '$lib/animals/display';
+  import { localInputToMs, msToLocalInput } from '$lib/animals/display';
+  import { errorText, unitLabel } from './labels';
   import { USE_CHOICES } from '$lib/animals/healthCopy';
   import { isFoodStop, type FoodStop } from '$lib/animals/holdCopy';
   import type { ProductionRecordInput, ProductionKind } from '$lib/animals/recordApiSchemas';
   import type { ProductionUse } from '$lib/safety/animalWithdrawal';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     subjectType: 'animal' | 'group';
@@ -25,22 +23,12 @@
 
   const { subjectType, subjectId, defaultKind, isOwner, onStopped, onDone }: Props = $props();
   const uid = $props.id();
+  const tr = $derived(createT(page.data?.locale));
 
-  const UNITS: Record<ProductionKind, { value: ProductionRecordInput['unit']; label: string }[]> = {
-    eggs: [
-      { value: 'eggs', label: 'Eggs' },
-      { value: 'dozen', label: 'Dozen' }
-    ],
-    milk: [
-      { value: 'gal', label: 'Gallons' },
-      { value: 'qt', label: 'Quarts' },
-      { value: 'l', label: 'Liters' },
-      { value: 'lb', label: 'Pounds' }
-    ],
-    weight: [
-      { value: 'lb', label: 'Pounds' },
-      { value: 'kg', label: 'Kilograms' }
-    ]
+  const UNITS: Record<ProductionKind, { value: ProductionRecordInput['unit'] }[]> = {
+    eggs: [{ value: 'eggs' }, { value: 'dozen' }],
+    milk: [{ value: 'gal' }, { value: 'qt' }, { value: 'l' }, { value: 'lb' }],
+    weight: [{ value: 'lb' }, { value: 'kg' }]
   };
 
   // svelte-ignore state_referenced_locally
@@ -81,13 +69,13 @@
           return;
         }
         const msg = (out as { error?: unknown } | null)?.error;
-        error = typeof msg === 'string' ? msg : 'That could not be saved.';
+        error = typeof msg === 'string' ? msg : tr('animals.prod.couldNotSave');
         return;
       }
       if (!res.ok) {
         refusal = await holdRefusalOf(res);
         refused = refusal ? body : null;
-        error = refusal ? null : await errorFromResponse(res);
+        error = refusal ? null : await errorText(res, tr);
         return;
       }
       const out = (await res.json()) as { warnings?: { message: string }[] };
@@ -95,11 +83,11 @@
       pending = null;
       quantity = null;
       onDone(
-        body.use === 'discard' ? 'Saved as thrown out.' : 'Saved.',
+        body.use === 'discard' ? 'Saved as thrown out.' : tr('animals.saved'),
         (out.warnings ?? []).map((w) => w.message)
       );
     } catch {
-      error = OFFLINE_MESSAGE;
+      error = tr('animals.offline');
     } finally {
       saving = false;
     }
@@ -109,11 +97,11 @@
     e.preventDefault();
     const occurredAt = localInputToMs(at);
     if (occurredAt === null) {
-      error = 'Pick when it was collected.';
+      error = tr('animals.prod.pickWhen');
       return;
     }
     if (quantity === null || !(quantity >= 0)) {
-      error = 'Enter how much.';
+      error = tr('animals.prod.enterHowMuch');
       return;
     }
     await post({
@@ -138,7 +126,7 @@
   }
 </script>
 
-<form class="af-form" onsubmit={submit} novalidate aria-label="Log eggs, milk or a weight">
+<form class="af-form" onsubmit={submit} novalidate aria-label={tr('animals.prod.logAria')}>
   <div class="af-segment three">
     {#each ['eggs', 'milk', 'weight'] as const as k (k)}
       <label class="af-tile" class:on={kind === k}>
@@ -149,14 +137,20 @@
           checked={kind === k}
           onchange={() => pickKind(k)}
         />
-        <span>{k === 'eggs' ? 'Eggs' : k === 'milk' ? 'Milk' : 'Weight'}</span>
+        <span
+          >{k === 'eggs'
+            ? tr('animals.unit.eggs')
+            : k === 'milk'
+              ? tr('animals.prod.milk')
+              : tr('animals.prod.weight')}</span
+        >
       </label>
     {/each}
   </div>
 
   <div class="af-row">
     <label>
-      How much
+      {tr('animals.prod.howMuch')}
       <input
         class="af-input"
         type="number"
@@ -167,9 +161,10 @@
       />
     </label>
     <label>
-      Unit
+      {tr('animals.prod.unit')}
       <select class="af-input" bind:value={unit}>
-        {#each UNITS[kind] as u (u.value)}<option value={u.value}>{u.label}</option>{/each}
+        {#each UNITS[kind] as u (u.value)}<option value={u.value}>{unitLabel(tr, u.value)}</option
+          >{/each}
       </select>
     </label>
   </div>
@@ -188,13 +183,13 @@
     </fieldset>
   {/if}
 
-  <label class="af-label" for="{uid}-at">Collected</label>
+  <label class="af-label" for="{uid}-at">{tr('animals.prod.collected')}</label>
   <input id="{uid}-at" class="af-input" type="datetime-local" bind:value={at} />
 
   {#if error}<p class="af-error" role="alert">{error}</p>{/if}
   <HoldGuardNotice {refusal} {saving} onToday={saveToday} />
   <button class="af-primary" type="submit" disabled={saving}>
-    {saving ? 'Saving…' : 'Save'}
+    {saving ? tr('animals.saving') : tr('animals.save')}
   </button>
 </form>
 

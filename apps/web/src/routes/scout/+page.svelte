@@ -1,5 +1,6 @@
 <script lang="ts">
   import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
+  import { createT } from '$lib/i18n';
   /**
    * /scout — FR-07 threshold-driven scouting + observation persistence.
    *
@@ -47,6 +48,7 @@
   }
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   let selectedBlockId = $state(untrack(() => data.preselectedBlockId ?? data.blocks[0]?.id ?? ''));
 
@@ -166,11 +168,11 @@
 
   async function saveObservation(): Promise<void> {
     if (!selectedBlockId) {
-      saveError = 'Pick a spot first.';
+      saveError = tr('scout.errPickSpot');
       return;
     }
     if (!canSave) {
-      saveError = 'Write a note or count at least one spot before saving.';
+      saveError = tr('scout.errCanSave');
       return;
     }
     saving = true;
@@ -244,9 +246,9 @@
           await queueObservation(payload);
           return;
         } catch (queueErr) {
-          saveError = `Could not keep it on this device: ${
-            queueErr instanceof Error ? queueErr.message : queueErr
-          }`;
+          saveError = tr('scout.errKeep', {
+            msg: queueErr instanceof Error ? queueErr.message : String(queueErr)
+          });
           return;
         }
       }
@@ -262,19 +264,18 @@
 </script>
 
 <svelte:head>
-  <title>Scout · CropCard</title>
+  <title>{tr('scout.pageTitle')}</title>
 </svelte:head>
 
 <header class="page-header">
   <div class="page-header-titles">
-    <Kicker>Scout</Kicker>
-    <h1 class="serif">What did you see?</h1>
+    <Kicker>{tr('scout.kicker')}</Kicker>
+    <h1 class="serif">{tr('scout.h1')}</h1>
   </div>
-  <Pill tone="forest">SCOUT</Pill>
+  <Pill tone="forest">{tr('scout.pill')}</Pill>
 </header>
 <p class="lede">
-  Jot down what you notice on a walk. Counting weeds? The weed count below tells you whether it's
-  time to spray.
+  {tr('scout.lede')}
 </p>
 
 {#await data.degreeDays then degreeDays}
@@ -288,8 +289,8 @@
 {#if showPicker}
   <div class="card-wrap">
     <Card>
-      <h2>Where</h2>
-      <label for="scout-block">Which spot are you scouting?</label>
+      <h2>{tr('scout.where')}</h2>
+      <label for="scout-block">{tr('scout.whichSpot')}</label>
       <SpotSelect
         id="scout-block"
         blocks={data.blocks.map((b) => ({ id: b.id, label: b.name }))}
@@ -303,25 +304,27 @@
         onNewSpot={() => (spotSheetOpen = true)}
       />
       {#if data.windowStage}
-        <p class="meta">Window: <strong>{data.windowStage}</strong> (from today's calendar)</p>
+        <p class="meta">
+          {tr('scout.window')} <strong>{data.windowStage}</strong>
+          {tr('scout.windowFrom')}
+        </p>
       {/if}
     </Card>
   </div>
 {:else}
   <SetupCallout
-    kicker="Where?"
-    title="Where are you scouting?"
+    kicker={tr('scout.callout.kicker')}
+    title={tr('scout.callout.title')}
     canEdit={data.setup.canEdit}
-    askOwner="Ask the owner to add the spot you're scouting. Once it's on the farm it shows up here."
+    askOwner={tr('scout.callout.askOwner')}
     testId="scout-where"
   >
     <p>
-      Counts are saved against a spot so you can see the trend next time. Give this one a name, no
-      map needed.
+      {tr('scout.callout.body')}
     </p>
     {#snippet actions()}
       <button type="button" class="primary" onclick={() => (spotSheetOpen = true)}>
-        Name a new spot
+        {tr('scout.callout.nameSpot')}
       </button>
     {/snippet}
   </SetupCallout>
@@ -329,8 +332,8 @@
 
 <SetupSheet
   open={spotSheetOpen}
-  kicker="Scout"
-  title="Where?"
+  kicker={tr('scout.kicker')}
+  title={tr('scout.sheet.title')}
   onClose={() => (spotSheetOpen = false)}
   onDone={onSpotAdded}
 >
@@ -341,30 +344,28 @@
 
 <div class="card-wrap">
   <Card>
-    <h2>Note</h2>
-    <label for="scout-note">What did you notice? <span class="optional">(optional)</span></label>
+    <h2>{tr('scout.note.title')}</h2>
+    <label for="scout-note"
+      >{tr('scout.note.label')} <span class="optional">{tr('scout.optional')}</span></label
+    >
     <textarea
       id="scout-note"
       rows="3"
       maxlength="400"
-      placeholder="Aphids on the kale, leaves chewed on the beans"
+      placeholder={tr('scout.note.placeholder')}
       bind:value={note}></textarea>
   </Card>
 </div>
 
 <div class="card-wrap">
   <Card>
-    <h2>Weed count</h2>
+    <h2>{tr('scout.weed.title')}</h2>
     <p class="meta">
-      For deciding on a weed spray: count broadleaves in 4 or 5 random 10 sq ft spots and note the
-      tallest weed. Spray when the average is 3 or more per 10 sq ft, or any weed is taller than {fmt.qty(
-        2,
-        'length'
-      )}.
+      {tr('scout.weed.help', { height: fmt.qty(2, 'length') })}
     </p>
     {#each spots as _, i (i)}
       <label class="spot">
-        Spot {i + 1}: weeds in 10 sq ft
+        {tr('scout.weed.spotLabel', { n: i + 1 })}
         <input
           type="number"
           min="0"
@@ -377,14 +378,14 @@
         {/if}
       </label>
     {/each}
-    <button type="button" onclick={addSpot}>+ Add another spot</button>
+    <button type="button" onclick={addSpot}>{tr('scout.weed.addSpot')}</button>
   </Card>
 </div>
 
 <div class="card-wrap">
   <Card>
     <div class="height-field">
-      <label for="scout-max-height">Tallest weed observed ({fmt.unit('length')})</label>
+      <label for="scout-max-height">{tr('scout.tallest', { unit: fmt.unit('length') })}</label>
       <UnitInput
         id="scout-max-height"
         quantity="length"
@@ -394,7 +395,7 @@
         bind:value={maxHeight}
       />
       <div id="scout-max-height-hint" class="hint">
-        Leave blank if you didn't measure. Example: {fmt.qty(1.5, 'length', { bare: true })}
+        {tr('scout.tallestHint', { example: fmt.qty(1.5, 'length', { bare: true }) })}
       </div>
     </div>
   </Card>
@@ -408,9 +409,9 @@
   {/if}
   <p>{result.reason}</p>
   <dl>
-    <dt>Spots counted</dt>
+    <dt>{tr('scout.spotsCounted')}</dt>
     <dd>{result.spotsCounted}</dd>
-    <dt>Average / 10 sq ft</dt>
+    <dt>{tr('scout.avg')}</dt>
     <dd>{result.averagePer10SqFt.toFixed(2)}</dd>
   </dl>
   <div class="result-actions">
@@ -421,28 +422,30 @@
       disabled={saving || !canSave || !selectedBlockId}
     >
       {saving
-        ? 'Saving…'
+        ? tr('scout.saving')
         : uploaded
-          ? '✓ Uploaded. Save another?'
+          ? tr('scout.uploadedAgain')
           : saveSuccess
-            ? '✓ Saved. Save another?'
+            ? tr('scout.savedAgain')
             : saveQueued
-              ? 'Kept on this phone. Save another?'
-              : 'Save observation'}
+              ? tr('scout.keptAgain')
+              : tr('scout.save')}
     </button>
     {#if result.decision === 'SPRAY'}
       <a href={planSprayHref} class="primary">
-        Plan the spray{selectedBlock ? ` for ${selectedBlock.name}` : ''} →
+        {selectedBlock
+          ? tr('scout.planSprayFor', { name: selectedBlock.name })
+          : tr('scout.planSpray')}
       </a>
     {/if}
   </div>
   {#if saveQueued}
     <p class="queued-note" role="status">
-      No signal, so this observation is saved on this phone. It uploads when you are back online.
+      {tr('scout.queuedNote')}
     </p>
   {:else if uploaded}
     <p class="queued-note" role="status" data-testid="scout-uploaded">
-      Uploaded. Your observation is saved to the farm.
+      {tr('scout.uploadedNote')}
     </p>
   {/if}
   {#if saveError}
@@ -453,16 +456,18 @@
 <div class="card-wrap">
   <Card>
     <div class="history-head">
-      <h2>Recent observations{selectedBlock ? ` — ${selectedBlock.name}` : ''}</h2>
+      <h2>
+        {selectedBlock ? tr('scout.recentFor', { name: selectedBlock.name }) : tr('scout.recent')}
+      </h2>
       <Provenance source="data" detail="your scout log" compact />
     </div>
     {#if queuedForBlock.length > 0}
-      <ul class="history queued-list" aria-label="Saved on this device">
+      <ul class="history queued-list" aria-label={tr('scout.savedOnDevice')}>
         {#each queuedForBlock as q (q.id)}
           <li>
             <span class="hist-date">{fmtDate(q.occurredAt)}</span>
             {#if q.metric === 'note'}
-              <span class="hist-note">Note</span>
+              <span class="hist-note">{tr('scout.noteWord')}</span>
             {:else}
               <span class="hist-pest">{q.pest}</span>
               <span class="hist-value">
@@ -471,7 +476,7 @@
               </span>
             {/if}
             {#if q.rejected}
-              <a class="not-saved" href="/records/pending">Not saved - see Pending records</a>
+              <a class="not-saved" href="/records/pending">{tr('scout.notSaved')}</a>
             {:else}
               <QueuedBadge />
             {/if}
@@ -481,8 +486,7 @@
     {/if}
     {#if observationsForBlock.length === 0 && queuedForBlock.length === 0}
       <p class="muted">
-        No observations recorded for this block yet — count a few spots above and save to start
-        building the trend.
+        {tr('scout.noObs')}
       </p>
     {:else}
       <ul class="history">
@@ -490,7 +494,7 @@
           <li>
             <span class="hist-date">{fmtDate(o.occurredAt)}</span>
             {#if o.metric === 'note'}
-              <span class="hist-note">{o.note ?? 'Note'}</span>
+              <span class="hist-note">{o.note ?? tr('scout.noteWord')}</span>
             {:else}
               <span class="hist-pest">{o.pest}</span>
               <span class="hist-value">
@@ -498,7 +502,7 @@
                 <span class="hist-metric">{o.metric}</span>
               </span>
               {#if o.value >= 3}
-                <Pill tone="rust">over threshold</Pill>
+                <Pill tone="rust">{tr('scout.overThreshold')}</Pill>
               {/if}
             {/if}
           </li>

@@ -9,6 +9,8 @@
   } from '$lib/plan/smallGrain';
   import { localDateKey } from '$lib/weather/leafWet';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface FungicideNote {
     occurredAt: number;
@@ -33,9 +35,12 @@
     fungicides = [],
     observedLabel = null
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const dataDetail = $derived(
-    observedLabel ? `NOAA observed · ${observedLabel} + NWS forecast` : 'NWS hourly forecast'
+    observedLabel
+      ? tr('planui.fhb.dataObserved', { label: observedLabel })
+      : tr('planui.fhb.dataForecast')
   );
 
   const DAY = 24 * 60 * 60 * 1000;
@@ -50,46 +55,62 @@
     `${fmt.qty(59, 'temperature', { bare: true })}–${fmt.qty(86, 'temperature')}`
   );
   function dayLabel(date: string): string {
-    return new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', {
-      weekday: 'short',
-      timeZone: 'UTC'
-    });
+    return new Date(`${date}T12:00:00Z`).toLocaleDateString(
+      page.data?.locale === 'es' ? 'es-US' : 'en-US',
+      {
+        weekday: 'short',
+        timeZone: 'UTC'
+      }
+    );
   }
 
-  const LEVEL_WORD = { low: 'Low', moderate: 'Moderate', high: 'High' } as const;
+  const LEVEL_WORD = $derived({
+    low: tr('planui.fhb.low'),
+    moderate: tr('planui.fhb.moderate'),
+    high: tr('planui.fhb.high')
+  } as const);
   const headline = $derived.by(() => {
-    if (loading) return 'Checking…';
+    if (loading) return tr('planui.fhb.checking');
     if (assessment.level) return LEVEL_WORD[assessment.level];
     switch (assessment.status) {
       case 'too-early':
-        return 'Not in window';
+        return tr('planui.fhb.tooEarly');
       case 'past':
-        return 'Window closed';
+        return tr('planui.fhb.past');
       case 'no-anthesis':
-        return 'No flowering date';
+        return tr('planui.fhb.noAnthesis');
       default:
-        return 'Unknown';
+        return tr('planui.fhb.unknown');
     }
   });
 
   const message = $derived.by(() => {
     const a = assessment;
-    if (loading) return 'Loading the hourly forecast…';
+    if (loading) return tr('planui.fhb.loadingForecast');
     switch (a.status) {
       case 'no-anthesis':
-        return 'Set a planting date to project flowering (Z61).';
+        return tr('planui.fhb.setDate');
       case 'too-early': {
         const days = Math.max(0, Math.ceil(((a.windowStartMs ?? nowMs) - nowMs) / DAY));
-        return `Flowering ~${fmtDay(a.anthesisMs!)}. The 7-day pre-flowering window opens in ~${days} days — beyond the forecast.`;
+        return tr('planui.fhb.msgTooEarly', { date: fmtDay(a.anthesisMs!), days });
       }
       case 'past':
-        return `Flowering was ~${fmtDay(a.anthesisMs!)}; the FHB fungicide window (Z61 + ~6 d) has passed.`;
+        return tr('planui.fhb.msgPast', { date: fmtDay(a.anthesisMs!) });
       case 'no-data':
-        return 'Weather unavailable — risk can’t be estimated. Check the national scab forecast before flowering.';
+        return tr('planui.fhb.msgNoData');
       case 'insufficient-data':
-        return `Only ${a.coveredHours} h of the 7-day pre-flowering window is in the forecast so far.`;
+        return tr('planui.fhb.msgInsufficient', { covered: a.coveredHours });
       case 'assessed':
-        return `${a.favorableHours} of ${a.coveredHours} forecast hours before flowering are wet at ${scabRange} (≈${a.index} h per 7 days${a.meanTempF !== null ? `, mean ${fmt.qty(a.meanTempF, 'temperature')}` : ''}).`;
+        return tr('planui.fhb.msgAssessed', {
+          fav: a.favorableHours,
+          covered: a.coveredHours,
+          range: scabRange,
+          index: a.index,
+          mean:
+            a.meanTempF !== null
+              ? tr('planui.fhb.msgMean', { temp: fmt.qty(a.meanTempF, 'temperature') })
+              : ''
+        });
     }
     return '';
   });
@@ -102,8 +123,10 @@
   const barW = $derived(daily.length > 0 ? (W - GAP * (daily.length - 1)) / daily.length : 0);
   const summary = $derived(
     daily.length === 0
-      ? 'Scab-favorable hours unavailable.'
-      : `Scab-favorable hours per day: ${daily.map((d) => `${dayLabel(d.date)} ${d.favorableHours}`).join(', ')}.`
+      ? tr('planui.fhb.summaryNone')
+      : tr('planui.fhb.summary', {
+          list: daily.map((d) => `${dayLabel(d.date)} ${d.favorableHours}`).join(', ')
+        })
   );
   const windowDates = $derived.by(() => {
     if (assessment.windowStartMs === null || assessment.windowEndMs === null)
@@ -126,29 +149,31 @@
   <header class="head">
     <div class="title-row">
       <CloudRain size={16} strokeWidth={1.75} aria-hidden="true" />
-      <h2 id="fhb-title" class="serif">Fusarium head blight (scab)</h2>
+      <h2 id="fhb-title" class="serif">{tr('planui.fhb.title')}</h2>
     </div>
     <Provenance
       source={assessment.provenance}
-      detail={assessment.provenance === 'data' ? dataDetail : 'weather unavailable'}
+      detail={assessment.provenance === 'data' ? dataDetail : tr('planui.fhb.detailNoWeather')}
     />
   </header>
   <p class="sub">
-    Spray timing is critical at early flowering (Z61–Z65)
-    {#if assessment.anthesisMs !== null}· flowering ~{fmtDay(assessment.anthesisMs)}{/if}
+    {tr('planui.fhb.sub')}
+    {#if assessment.anthesisMs !== null}{tr('planui.fhb.flowering', {
+        date: fmtDay(assessment.anthesisMs)
+      })}{/if}
   </p>
 
   <div class="body">
     <div class="risk" aria-live="polite">
-      <div class="kicker">Estimated risk</div>
+      <div class="kicker">{tr('planui.fhb.risk')}</div>
       <div class="level serif {tone}" data-testid="fhb-level">{headline}</div>
       <p class="msg">{message}</p>
     </div>
 
     <div class="curve">
-      <div class="kicker">Scab-favorable hours / day</div>
+      <div class="kicker">{tr('planui.fhb.curve')}</div>
       {#if daily.length === 0}
-        <p class="empty">{loading ? '…' : 'No hourly data.'}</p>
+        <p class="empty">{loading ? '…' : tr('planui.fhb.noHourly')}</p>
       {:else}
         <svg viewBox="0 0 {W} {H + 30}" role="img" aria-label={summary}>
           {#each daily as d, i (d.date)}
@@ -167,31 +192,35 @@
           {/each}
         </svg>
         {#if daily.some((d) => windowDates.has(d.date))}
-          <p class="legend"><span class="swatch"></span> 7 days before flowering</p>
+          <p class="legend"><span class="swatch"></span> {tr('planui.fhb.legend')}</p>
         {/if}
       {/if}
     </div>
   </div>
 
   {#if fungicides.length > 0}
-    <ul class="fungicides" aria-label="Fungicide records near flowering">
+    <ul class="fungicides" aria-label={tr('planui.fhb.fungAria')}>
       {#each fungicides as f (f.occurredAt)}
         <li>
-          <Provenance source="data" detail="your spray record" compact />
-          Fungicide {fmt.instant(f.occurredAt, 'month-day')} — {f.products.join(' + ') ||
-            'product not recorded'}
+          <Provenance source="data" detail={tr('planui.fhb.fungDetail')} compact />
+          {tr('planui.fhb.fungRecord', {
+            date: fmt.instant(f.occurredAt, 'month-day'),
+            products: f.products.join(' + ') || tr('planui.fhb.notRecorded')
+          })}
         </li>
       {/each}
     </ul>
   {/if}
 
   <p class="foot">
-    Proxy model: hours with RH ≥ 90% or rain at {scabRange} in the 7 days before flowering (low &lt; {FHB_MODERATE_HOURS}
-    h, moderate &lt; {FHB_HIGH_HOURS} h, high ≥ {FHB_HIGH_HOURS} h). It is not the calibrated national
-    model — before spraying, consult
+    {tr('planui.fhb.footA', {
+      range: scabRange,
+      moderate: FHB_MODERATE_HOURS,
+      high: FHB_HIGH_HOURS
+    })}
     <a href="https://www.wheatscab.psu.edu/" target="_blank" rel="noopener noreferrer"
       >wheatscab.psu.edu ↗</a
-    >. Advisory only; it never blocks a record.
+    >{tr('planui.fhb.footB')}
   </p>
 </section>
 

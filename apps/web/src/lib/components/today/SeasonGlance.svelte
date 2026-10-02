@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   /**
    * Phase 25e (#97) — /today "Season at a glance" card.
    *
@@ -9,6 +11,7 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import type { SeasonGlance } from '$lib/today/seasonGlance';
+  import type { MessageKey } from '$lib/i18n';
 
   interface Props {
     glance: SeasonGlance;
@@ -16,22 +19,23 @@
   const { glance }: Props = $props();
 
   const cells = $derived([
-    [String(glance.activePlantings), 'active plantings'],
-    [String(glance.spraysYTD), 'sprays YTD'],
+    [String(glance.activePlantings), 'today.glance.active' as MessageKey],
+    [String(glance.spraysYTD), 'today.glance.sprays' as MessageKey],
     [
       glance.daysToNextHarvest === null ? '—' : String(glance.daysToNextHarvest),
-      'days to next harvest'
+      'today.glance.nextHarvest' as MessageKey
     ]
   ] as const);
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <Card>
-  <Kicker>Season at a glance</Kicker>
+  <Kicker>{tr('today.glance.title')}</Kicker>
   <div class="grid">
     {#each cells as [n, label] (label)}
       <div class="cell">
         <div class="num serif">{n}</div>
-        <div class="label">{label}</div>
+        <div class="label">{tr(label)}</div>
       </div>
     {/each}
   </div>

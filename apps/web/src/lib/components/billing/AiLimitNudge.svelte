@@ -1,6 +1,8 @@
 <script lang="ts">
   import { PLANS } from '$lib/billing/plans';
   import { aiLimitUpgrade, type AiLimit } from '$lib/billing/aiLimit';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   interface Props {
     limit: AiLimit | null | undefined;
@@ -9,6 +11,8 @@
 
   const { limit, isOwner }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
+
   const upgrade = $derived(aiLimitUpgrade(limit));
   const upgradeName = $derived(upgrade ? PLANS[upgrade].name : null);
 </script>
@@ -16,15 +20,16 @@
 {#if limit && upgradeName}
   <div class="nudge" data-testid="ai-limit-nudge">
     {#if isOwner}
-      <a class="upsell" href="/settings/billing" data-testid="ai-upsell">More AI on {upgradeName}</a
+      <a class="upsell" href="/settings/billing" data-testid="ai-upsell"
+        >{tr('billing.nudge.more', { plan: upgradeName })}</a
       >
     {:else}
-      <p class="note">Ask the farm owner about more AI on {upgradeName}.</p>
+      <p class="note">{tr('billing.nudge.askOwner', { plan: upgradeName })}</p>
     {/if}
   </div>
 {:else if limit?.detail === 'owner-disabled' && isOwner}
   <div class="nudge" data-testid="ai-limit-nudge">
-    <a class="upsell quiet" href="/settings/ai">Turn AI help back on</a>
+    <a class="upsell quiet" href="/settings/ai">{tr('billing.nudge.turnOn')}</a>
   </div>
 {/if}
 

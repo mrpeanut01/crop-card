@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   /**
    * Phase 25e (#97) — /today recommendations card.
    *
@@ -24,18 +26,19 @@
 
   const visible = $derived(items.slice(0, 2));
   const remaining = $derived(Math.max(0, items.length - visible.length));
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <Card>
   <div class="head">
-    <Kicker>Recommended</Kicker>
+    <Kicker>{tr('today.rec.title')}</Kicker>
     {#if remaining > 0}
-      <a class="see-all" href="/plan">See all {items.length} →</a>
+      <a class="see-all" href="/plan">{tr('today.rec.seeAll', { count: items.length })} →</a>
     {/if}
   </div>
   {#if visible.length === 0}
     <div class="empty">
-      No recommendations in the next 2 weeks. Add a planting or open the planning wizard.
+      {tr('today.rec.empty')}
     </div>
   {:else}
     {#each visible as s (s.id)}
@@ -47,7 +50,7 @@
         </div>
         {#if onSchedule}
           <button type="button" class="schedule" onclick={() => onSchedule(s.id)}>
-            + Schedule task
+            {tr('today.rec.scheduleTask')}
           </button>
         {/if}
       </div>

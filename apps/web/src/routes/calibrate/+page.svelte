@@ -1,9 +1,11 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
+  import { createT } from '$lib/i18n';
   import CalibrationWizard from '$lib/components/calibration/CalibrationWizard.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
 
   const { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   let pendingActionId = $state<string | null>(null);
   let pendingActionError = $state<string | null>(null);
@@ -33,11 +35,9 @@
   }
 </script>
 
-<h1>Sprayer calibration</h1>
+<h1>{tr('calib.pageTitle')}</h1>
 <p class="lede">
-  1/128-acre method (UC-10, FR-12). Walk the calibration distance at your normal spray speed,
-  collect output in a jug, and the fluid ounces you collect equals your gallons-per-acre. The
-  dilution calculator uses this GPA to scale every product rate.
+  {tr('calib.lede')}
 </p>
 
 <CalibrationWizard
@@ -49,11 +49,10 @@
 {#if data.canSave && data.pendingCalibrations.length > 0}
   <section class="card pending-review" aria-labelledby="pending-review-title">
     <h2 id="pending-review-title">
-      Pending calibrations from helpers ({data.pendingCalibrations.length})
+      {tr('calib.pending.title', { n: data.pendingCalibrations.length })}
     </h2>
     <p class="hint">
-      Helpers ran the 1/128-acre wizard and submitted these GPAs for your approval. Approve to
-      apply; reject to discard.
+      {tr('calib.pending.hint')}
     </p>
     <ul class="pending-list">
       {#each data.pendingCalibrations as p (p.id)}
@@ -63,9 +62,9 @@
             <strong>{eq?.label ?? p.equipmentId}</strong>
             <span class="gpa-stamp">{gpaText(p.calibratedGpa)}</span>
             <small>
-              from {p.submittedByEmail} ·
+              {tr('calib.pending.from', { email: p.submittedByEmail })}
               {fmt.instant(p.submittedAt)}
-              {#if p.spreadInches}· {p.spreadInches} in spread{/if}
+              {#if p.spreadInches}{tr('calib.pending.spread', { n: p.spreadInches })}{/if}
               {#if p.ouncesCollected !== undefined}· {p.ouncesCollected} oz{/if}
             </small>
           </div>
@@ -75,14 +74,14 @@
               onclick={() => actOnPending(p.id, 'approve')}
               disabled={pendingActionId === p.id}
             >
-              {pendingActionId === p.id ? 'Working…' : 'Approve & apply'}
+              {pendingActionId === p.id ? tr('calib.working') : tr('calib.approve')}
             </button>
             <button
               class="reject"
               onclick={() => actOnPending(p.id, 'reject')}
               disabled={pendingActionId === p.id}
             >
-              {pendingActionId === p.id ? 'Working…' : 'Reject'}
+              {pendingActionId === p.id ? tr('calib.working') : tr('calib.reject')}
             </button>
           </div>
         </li>

@@ -1,26 +1,23 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { createT } from '$lib/i18n';
   import { ChevronLeft, ChevronRight, Printer } from 'lucide-svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { cardHref, cardKey } from '$lib/cards/model';
-  import { PROVENANCE_LABEL } from '$lib/provenanceLabels';
+  import type { ProvenanceSourceName } from '$lib/provenanceLabels';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { ymdInZone } from '$lib/prefs';
   import { periodCardPrintHref } from '$lib/cards/build/calendar';
-  import { SHORT_DAY_HOURS, shortDayBandLabel } from '$lib/calendar/persephone';
-  import {
-    FROST_LINE_LABEL,
-    SOWING_BAR_LABEL,
-    rowNoteText,
-    type SowingBar
-  } from '$lib/calendar/sowingCalendar';
+  import { SHORT_DAY_HOURS, PERSEPHONE_NAME_SOURCED } from '$lib/calendar/persephone';
+  import type { RowNote, SowingBar } from '$lib/calendar/sowingCalendar';
 
   const { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   const DAY_MS = 86_400_000;
   const cal = $derived(data.calendar);
   const farmName = $derived(
-    (data as { activeOwner?: { name: string } | null }).activeOwner?.name ?? 'Your farm'
+    (data as { activeOwner?: { name: string } | null }).activeOwner?.name ?? tr('plan.cal.yourFarm')
   );
   const span = $derived(Math.max(DAY_MS, cal.toMs - cal.fromMs));
   const pos = (ms: number) => Math.min(100, Math.max(0, ((ms - cal.fromMs) / span) * 100));
@@ -61,9 +58,55 @@
     goto(`/plan/calendar?year=${y}`, { noScroll: true });
   }
 
+  const FROST_KEY = {
+    'last-spring': 'plan.cal.frost.last-spring',
+    'first-fall': 'plan.cal.frost.first-fall',
+    'hard-last-spring': 'plan.cal.frost.hard-last-spring',
+    'hard-first-fall': 'plan.cal.frost.hard-first-fall'
+  } as const;
+  const BAR_KEY = {
+    'indoor-sow': 'plan.cal.bar.indoor-sow',
+    transplant: 'plan.cal.bar.transplant',
+    'direct-sow': 'plan.cal.bar.direct-sow',
+    window: 'plan.cal.bar.window'
+  } as const;
+  const PROV_KEY = {
+    plugin: 'plan.cal.prov.plugin',
+    data: 'plan.cal.prov.data',
+    ai: 'plan.cal.prov.ai',
+    manual: 'plan.cal.prov.manual',
+    fallback: 'plan.cal.prov.fallback'
+  } as const satisfies Record<ProvenanceSourceName, string>;
+
+  const shortBandLabel = $derived(
+    tr(PERSEPHONE_NAME_SOURCED ? 'plan.cal.shortBandSourced' : 'plan.cal.shortBand', {
+      hours: SHORT_DAY_HOURS
+    })
+  );
+
+  function noteText(note: RowNote, fmtDay: (ms: number) => string): string {
+    switch (note.kind) {
+      case 'heated':
+        return tr('plan.cal.note.heated');
+      case 'cover-unknown':
+        return tr('plan.cal.note.coverUnknown');
+      case 'covered':
+        if (note.springMs !== null && note.fallMs !== null) {
+          return tr('plan.cal.note.coveredBoth', {
+            from: fmtDay(note.springMs),
+            to: fmtDay(note.fallMs)
+          });
+        }
+        if (note.springMs !== null) {
+          return tr('plan.cal.note.coveredSpring', { from: fmtDay(note.springMs) });
+        }
+        return tr('plan.cal.note.coveredFall', { date: fmtDay(note.fallMs as number) });
+    }
+  }
+
   function print() {
     const previous = document.title;
-    document.title = `${farmName} sowing calendar ${data.year}`;
+    document.title = tr('plan.cal.docTitle', { farm: farmName, year: data.year });
     window.print();
     document.title = previous;
   }
@@ -73,57 +116,59 @@
     return `left:${pos(b.startMs)}%; width:${width(b.startMs, b.endMs)}%`;
   }
 
-  function barText(b: SowingBar): string {
+  function barFmt(b: SowingBar, d: (ms: number) => string): string {
+    const label = tr(BAR_KEY[b.kind]);
     if (b.kind === 'transplant' || b.kind === 'direct-sow') {
-      return `${SOWING_BAR_LABEL[b.kind]} ${date(b.startMs)}${b.recorded ? '' : ' (planned)'}`;
+      return tr(b.recorded ? 'plan.cal.barPoint' : 'plan.cal.barPointPlanned', {
+        label,
+        date: d(b.startMs)
+      });
     }
-    if (b.kind === 'window') return `Window ${date(b.startMs)} to ${date(b.endMs)}`;
-    return `${SOWING_BAR_LABEL[b.kind]} ${date(b.startMs)} to ${date(b.endMs)}${b.recorded ? '' : ' (planned)'}`;
+    if (b.kind === 'window') {
+      return tr('plan.cal.windowRange', { start: d(b.startMs), end: d(b.endMs) });
+    }
+    return tr(b.recorded ? 'plan.cal.barRange' : 'plan.cal.barRangePlanned', {
+      label,
+      start: d(b.startMs),
+      end: d(b.endMs)
+    });
   }
 
-  function barLine(b: SowingBar): string {
-    if (b.kind === 'transplant' || b.kind === 'direct-sow') {
-      return `${SOWING_BAR_LABEL[b.kind]} ${shortDate(b.startMs)}${b.recorded ? '' : ' (planned)'}`;
-    }
-    if (b.kind === 'window') return `Window ${shortDate(b.startMs)} to ${shortDate(b.endMs)}`;
-    return `${SOWING_BAR_LABEL[b.kind]} ${shortDate(b.startMs)} to ${shortDate(b.endMs)}${b.recorded ? '' : ' (planned)'}`;
-  }
+  const barText = (b: SowingBar) => barFmt(b, date);
+  const barLine = (b: SowingBar) => barFmt(b, shortDate);
 </script>
 
-<svelte:head><title>Sowing calendar · CropCard</title></svelte:head>
+<svelte:head><title>{tr('plan.cal.pageTitle')}</title></svelte:head>
 
 <div class="wrap sowing-calendar" data-testid="sowing-calendar">
   <header class="no-print">
-    <p class="kicker">Plan</p>
-    <h1 class="serif">Sowing calendar</h1>
-    <p class="lede">
-      When each planting of the season is sown indoors, set out or sown in the ground, against your
-      frost dates. Print it for the barn wall or the seed-starting shelf.
-    </p>
+    <p class="kicker">{tr('plan.cal.kicker')}</p>
+    <h1 class="serif">{tr('plan.cal.title')}</h1>
+    <p class="lede">{tr('plan.cal.lede')}</p>
     <div class="controls">
       <div class="pick">
         <button
           type="button"
           class="nav-btn"
-          aria-label="Earlier season"
+          aria-label={tr('plan.cal.earlier')}
           disabled={earlier === null}
           onclick={() => earlier !== null && pickYear(earlier)}
         >
           <ChevronLeft size={18} aria-hidden="true" />
         </button>
         <select
-          aria-label="Season"
+          aria-label={tr('plan.cal.season')}
           value={data.year}
           onchange={(e) => pickYear(Number(e.currentTarget.value))}
         >
           {#each data.years as y (y)}
-            <option value={y}>Season {y}</option>
+            <option value={y}>{tr('plan.cal.seasonOption', { year: y })}</option>
           {/each}
         </select>
         <button
           type="button"
           class="nav-btn"
-          aria-label="Later season"
+          aria-label={tr('plan.cal.later')}
           disabled={later === null}
           onclick={() => later !== null && pickYear(later)}
         >
@@ -131,51 +176,53 @@
         </button>
       </div>
       <button type="button" class="primary" onclick={print}>
-        <Printer size={16} aria-hidden="true" /> Print
+        <Printer size={16} aria-hidden="true" />
+        {tr('plan.cal.print')}
       </button>
-      <a class="secondary" href="/today?view=season&season={data.year}">Season view</a>
+      <a class="secondary" href="/today?view=season&season={data.year}"
+        >{tr('plan.cal.seasonView')}</a
+      >
       <a class="secondary" href={monthTasksHref} data-testid="print-month-tasks"
-        >Print this month's tasks</a
+        >{tr('plan.cal.printMonth')}</a
       >
     </div>
-    <p class="hint">
-      Choose landscape paper in the print dialog if it does not pick it for you, and turn off
-      headers and footers.
-    </p>
+    <p class="hint">{tr('plan.cal.printHint')}</p>
   </header>
 
-  <section class="facts" aria-label="Frost and daylight">
+  <section class="facts" aria-label={tr('plan.cal.frostDaylight')}>
     <ul class="frost-list">
       {#each cal.frostLines as l (l.kind)}
         <li data-frost={l.kind}>
           <span class="sw frost" class:hard={l.kind.startsWith('hard')}></span>
-          {FROST_LINE_LABEL[l.kind]}: <strong>{date(l.ms)}</strong>
+          {tr(FROST_KEY[l.kind])}: <strong>{date(l.ms)}</strong>
           <span class="screen-only"><Provenance source={l.provenance} compact /></span>
-          <span class="print-only prov">({PROVENANCE_LABEL[l.provenance]})</span>
+          <span class="print-only prov">({tr(PROV_KEY[l.provenance])})</span>
         </li>
       {/each}
     </ul>
     <p class="daylight" data-testid="daylight-note">
       {#if cal.shortDays.status === 'no-location'}
-        Set your farm location to show daylight.
-        <a class="no-print inline" href="/settings/farm">Set location</a>
+        {tr('plan.cal.noLocation')}
+        <a class="no-print inline" href="/settings/farm">{tr('plan.cal.setLocation')}</a>
       {:else if cal.shortDays.status === 'never'}
-        Days never drop under {SHORT_DAY_HOURS} hours here.
+        {tr('plan.cal.neverShort', { hours: SHORT_DAY_HOURS })}
       {:else if shortSpans.length === 0}
-        No days under {SHORT_DAY_HOURS} hours of daylight fall in this season.
+        {tr('plan.cal.noShort', { hours: SHORT_DAY_HOURS })}
       {:else}
         <span class="sw short"></span>
-        {shortDayBandLabel()}:
-        {shortSpans.map((s) => `${date(s.startMs)} to ${date(s.endMs)}`).join('; ')}.
+        {shortBandLabel}:
+        {shortSpans
+          .map((s) => tr('plan.cal.range', { start: date(s.startMs), end: date(s.endMs) }))
+          .join('; ')}.
       {/if}
     </p>
   </section>
 
   {#if cal.rows.length === 0}
     <p class="empty" data-testid="sowing-empty">
-      Nothing is planted or planned for {data.year} yet. Plan a crop on the Plan page to see it here.
+      {tr('plan.cal.empty', { year: data.year })}
     </p>
-    <a class="secondary no-print" href="/plan">Open the Plan page</a>
+    <a class="secondary no-print" href="/plan">{tr('plan.cal.openPlan')}</a>
   {:else}
     <div class="frame" tabindex="-1">
       <table class="grid">
@@ -187,22 +234,22 @@
           <tr class="print-only print-head">
             <th colspan="2">
               <span class="farm">{farmName}</span>
-              <span>Sowing calendar, Season {data.year}</span>
-              <span class="printed">Printed {printedOn}</span>
+              <span>{tr('plan.cal.printTitle', { year: data.year })}</span>
+              <span class="printed">{tr('plan.cal.printedOn', { date: printedOn })}</span>
             </th>
           </tr>
           <tr class="legend-row">
             <th colspan="2">
-              <ul class="legend" aria-label="Key">
-                <li><span class="sw bar-solid"></span>Sown indoors (tray on record)</li>
-                <li><span class="sw bar-dashed"></span>Sow indoors (planned)</li>
-                <li><span class="sw mark transplant"></span>Transplant</li>
-                <li><span class="sw mark direct"></span>Direct sow</li>
-                <li><span class="sw mark hollow"></span>Planned date</li>
-                <li><span class="sw window"></span>Window (no date yet)</li>
-                <li><span class="sw frost"></span>Frost date</li>
+              <ul class="legend" aria-label={tr('plan.cal.key')}>
+                <li><span class="sw bar-solid"></span>{tr('plan.cal.legend.sown')}</li>
+                <li><span class="sw bar-dashed"></span>{tr('plan.cal.legend.sowPlanned')}</li>
+                <li><span class="sw mark transplant"></span>{tr('plan.cal.legend.transplant')}</li>
+                <li><span class="sw mark direct"></span>{tr('plan.cal.legend.direct')}</li>
+                <li><span class="sw mark hollow"></span>{tr('plan.cal.legend.planned')}</li>
+                <li><span class="sw window"></span>{tr('plan.cal.legend.window')}</li>
+                <li><span class="sw frost"></span>{tr('plan.cal.legend.frost')}</li>
                 {#if shortSpans.length > 0}<li>
-                    <span class="sw short"></span>{shortDayBandLabel()}
+                    <span class="sw short"></span>{shortBandLabel}
                   </li>{/if}
               </ul>
             </th>
@@ -228,8 +275,7 @@
                   </span>
                 {/if}
                 {#if row.note}
-                  <span class="note" data-testid="row-note">{rowNoteText(row.note, shortDate)}</span
-                  >
+                  <span class="note" data-testid="row-note">{noteText(row.note, shortDate)}</span>
                 {/if}
               </th>
               <td class="track">
@@ -254,12 +300,16 @@
                     data-kind={b.kind}
                     title={barText(b)}
                     style={barStyle(b)}
-                    >{#if b.kind === 'window'}<span class="bar-text">Window</span>{/if}</span
+                    >{#if b.kind === 'window'}<span class="bar-text"
+                        >{tr('plan.cal.bar.window')}</span
+                      >{/if}</span
                   >
                 {/each}
                 {#if row.bars.length === 0}
                   <span class="undated">
-                    {row.plantingDate === null ? 'No planting date yet' : 'No sowing dates'}
+                    {row.plantingDate === null
+                      ? tr('plan.cal.noPlantingDate')
+                      : tr('plan.cal.noSowDates')}
                   </span>
                 {/if}
               </td>

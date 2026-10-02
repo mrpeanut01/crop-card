@@ -2,15 +2,18 @@
   import { ChevronRight, FileText, Plus } from 'lucide-svelte';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
+  import { createT } from '$lib/i18n';
 
   let { data } = $props();
+
+  const tr = $derived(createT(data.locale));
 
   const totalRecords = $derived(
     data.counts.sprays + data.counts.insecticides + data.counts.fungicides + data.counts.harvests
   );
 </script>
 
-<svelte:head><title>Records & retention · CropCard</title></svelte:head>
+<svelte:head><title>{tr('settings.records.pageTitle')}</title></svelte:head>
 
 {#snippet tier()}
   <SettingsSection
@@ -74,7 +77,7 @@
   </SettingsSection>
 {/snippet}
 
-<SettingsShell title="Records & retention" kicker="Compliance & audit">
+<SettingsShell title={tr('settings.records.title')} kicker={tr('settings.records.kicker')}>
   {#if data.chrome === 'quiet'}
     <details class="quiet-tier" data-testid="quiet-compliance">
       <summary>

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   /**
    * /today Week and Month calendars. Calendar-aligned, paged with
    * Previous / Next / Today. Each day shows its forecast (the NWS 7 days
@@ -7,11 +9,10 @@
   import { ChevronLeft, ChevronRight } from 'lucide-svelte';
   import WeatherIcon from './WeatherIcon.svelte';
   import type { CalendarChip } from '$lib/today/calendar';
-  import { CALENDAR_KIND_LABEL } from '$lib/today/calendar';
+  import type { CalendarKind } from '$lib/today/calendar';
   import type { CalendarGrid } from '$lib/today/views';
   import { shiftAnchor } from '$lib/today/views';
   import { RAIN_POP_PCT, type DayWeather } from '$lib/today/weatherSummary';
-  import { TASK_STATUS_LABEL } from '$lib/tasks/status';
   import { fmt } from '$lib/prefsState.svelte';
 
   interface Props {
@@ -39,32 +40,45 @@
     onOpenDay
   }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const MONTH_CHIPS = 3;
-  const unit = $derived(view === 'week' ? 'week' : 'month');
   const title = $derived(
     view === 'month'
       ? fmt.day(`${grid.month}-01`, 'date', { day: undefined, month: 'long' })
-      : `Week of ${fmt.day(grid.fromYmd, 'month-day')}`
+      : tr('today.cal.weekOf', { date: fmt.day(grid.fromYmd, 'month-day') })
   );
   const range = $derived(
-    `${fmt.day(grid.fromYmd, 'month-day')} to ${fmt.day(grid.toYmd, 'month-day')}`
+    tr('today.cal.range', {
+      from: fmt.day(grid.fromYmd, 'month-day'),
+      to: fmt.day(grid.toYmd, 'month-day')
+    })
   );
   const showsToday = $derived(todayYmd >= grid.fromYmd && todayYmd <= grid.toYmd);
   const weekdays = $derived(grid.weeks[0].map((d) => fmt.day(d, 'weekday')));
+
+  const KIND_KEY = {
+    scout: 'today.cal.kind.scout',
+    spray: 'today.cal.kind.spray',
+    harvest: 'today.cal.kind.harvest',
+    fertility: 'today.cal.kind.fertility',
+    planting: 'today.cal.kind.planting',
+    task: 'today.cal.kind.task'
+  } as const satisfies Record<CalendarKind, string>;
 
   function chipLabel(c: CalendarChip): string {
     const where = c.blockId ? blockNames[c.blockId] : undefined;
     const state =
       c.type === 'suggestion'
-        ? 'suggested by your crop calendar'
-        : `${TASK_STATUS_LABEL[c.status]}${c.queued ? ', waiting to upload' : ''}`;
+        ? tr('today.cal.suggestedAria')
+        : `${tr(`tasks.status.${c.status}`)}${c.queued ? `, ${tr('today.cal.waitingUpload')}` : ''}`;
     return [c.title, where, state].filter(Boolean).join(', ');
   }
   function chipMeta(c: CalendarChip): string {
-    const parts: string[] = [CALENDAR_KIND_LABEL[c.kind]];
+    const parts: string[] = [tr(KIND_KEY[c.kind])];
     if (c.blockId && blockNames[c.blockId]) parts.push(blockNames[c.blockId]);
-    if (c.type === 'suggestion') parts.push('Suggested');
-    else if (c.status === 'late' || c.status === 'skipped') parts.push(TASK_STATUS_LABEL[c.status]);
+    if (c.type === 'suggestion') parts.push(tr('today.cal.suggested'));
+    else if (c.status === 'late' || c.status === 'skipped')
+      parts.push(tr(`tasks.status.${c.status}`));
     return parts.join(' · ');
   }
   function dayLabel(d: string): string {
@@ -72,12 +86,16 @@
     const w = weather[d];
     const parts = [fmt.day(d, 'date-long', { year: undefined })];
     if (w) parts.push(w.shortForecast ?? '');
-    parts.push(n === 0 ? 'nothing scheduled' : n === 1 ? '1 item' : `${n} items`);
+    parts.push(n === 0 ? tr('today.cal.nothingScheduledLc') : tr('today.cal.items', { count: n }));
     return parts.filter(Boolean).join(', ');
   }
 </script>
 
-<section class="cal" data-testid="calendar-{view}" aria-label="{title} calendar">
+<section
+  class="cal"
+  data-testid="calendar-{view}"
+  aria-label={tr('today.cal.calendarAria', { title })}
+>
   <div class="head">
     <div class="title">
       <h3 class="serif">{title}</h3>
@@ -87,7 +105,7 @@
       <button
         type="button"
         class="nav-btn"
-        aria-label="Previous {unit}"
+        aria-label={view === 'week' ? tr('today.cal.prevWeek') : tr('today.cal.prevMonth')}
         onclick={() => onPage(shiftAnchor(view, anchor, -1))}
       >
         <ChevronLeft size={18} aria-hidden="true" />
@@ -96,12 +114,12 @@
         type="button"
         class="nav-btn today-btn"
         disabled={showsToday && anchor === todayYmd}
-        onclick={() => onPage(null)}>Today</button
+        onclick={() => onPage(null)}>{tr('today.cal.today')}</button
       >
       <button
         type="button"
         class="nav-btn"
-        aria-label="Next {unit}"
+        aria-label={view === 'week' ? tr('today.cal.nextWeek') : tr('today.cal.nextMonth')}
         onclick={() => onPage(shiftAnchor(view, anchor, 1))}
       >
         <ChevronRight size={18} aria-hidden="true" />
@@ -133,7 +151,7 @@
             {/if}
           </div>
           {#if chips.length === 0}
-            <span class="none">Nothing scheduled</span>
+            <span class="none">{tr('today.cal.nothingScheduled')}</span>
           {:else}
             <ul class="chips">
               {#each chips as c (c.key)}
@@ -209,7 +227,9 @@
                 >
               {/each}
               {#if chips.length > MONTH_CHIPS}
-                <span class="more">+{chips.length - MONTH_CHIPS} more</span>
+                <span class="more"
+                  >{tr('today.cal.more', { count: chips.length - MONTH_CHIPS })}</span
+                >
               {/if}
             </button>
           {/each}

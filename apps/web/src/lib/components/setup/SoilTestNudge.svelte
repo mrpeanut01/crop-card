@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { hintState, initHints, markHintSeen } from '$lib/client/hints';
   import { cardHref, cardKey } from '$lib/cards/model';
   import type { SetupSoilTestResult, SoilTestPlace } from '$lib/fertility/soilTestForm';
@@ -12,6 +13,7 @@
   }
 
   const { places }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const KEY = 'soil_test_nudge';
   let mounted = $state(false);
@@ -41,23 +43,25 @@
 {#if visible}
   <aside class="soil-nudge" aria-labelledby="soil-nudge-title" data-testid="soil-test-nudge">
     {#if saved}
-      <p id="soil-nudge-title" class="title" role="status">Soil test saved.</p>
+      <p id="soil-nudge-title" class="title" role="status">{tr('setup.soil.saved')}</p>
       <p class="body">
-        It has its own card, which works offline and prints.
-        <a href={cardHref('soilTest', cardKey('soilTest', saved.soilTestId))}>Open the soil card</a>
+        {tr('setup.soil.savedBody')}
+        <a href={cardHref('soilTest', cardKey('soilTest', saved.soilTestId))}
+          >{tr('setup.soil.openCard')}</a
+        >
       </p>
-      <button type="button" class="ghost" onclick={() => (saved = null)}>Close</button>
+      <button type="button" class="ghost" onclick={() => (saved = null)}>{tr('setup.close')}</button
+      >
     {:else}
-      <p id="soil-nudge-title" class="title">Have a soil test?</p>
+      <p id="soil-nudge-title" class="title">{tr('setup.soil.have')}</p>
       <p class="body">
-        Add it once and your plan can use it. A soil test every few years tells you what your beds
-        need.
+        {tr('setup.soil.haveBody')}
       </p>
       <div class="actions">
         <button type="button" class="primary" onclick={() => (sheetOpen = true)}>
-          Add a soil test
+          {tr('setup.soil.add')}
         </button>
-        <button type="button" class="ghost" onclick={dismiss}>Not now</button>
+        <button type="button" class="ghost" onclick={dismiss}>{tr('setup.nudges.notNow')}</button>
       </div>
     {/if}
   </aside>
@@ -65,8 +69,8 @@
 
 <SetupSheet
   open={sheetOpen}
-  kicker="Soil"
-  title="Add a soil test"
+  kicker={tr('setup.soil.kicker')}
+  title={tr('setup.soil.add')}
   onClose={() => (sheetOpen = false)}
   onDone={onSaved}
 >

@@ -1,5 +1,7 @@
 <script lang="ts">
   import SetupCalibration from './SetupCalibration.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import { saveSprayerFromTile } from '$lib/setup/sprayer';
   import type {
     SetupCalibrationResult,
@@ -16,6 +18,7 @@
   }
 
   const { templates, canEdit, onDone, onCreated }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
   const uid = $props.id();
 
   let name = $state('');
@@ -38,7 +41,7 @@
       createdTile = tile;
       onCreated?.(out.result);
     } catch {
-      error = "We couldn't reach CropCard. Check your signal and try again.";
+      error = tr('setup.sprayer.errNetwork');
     } finally {
       savingId = null;
     }
@@ -55,12 +58,11 @@
 
 {#if !canEdit}
   <p class="ask-owner" role="note">
-    Ask the owner to add a sprayer. Once it's on the farm it shows up here.
+    {tr('setup.sprayer.askOwner')}
   </p>
 {:else if created}
   <div class="added" role="status">
-    <strong>{created.label}</strong> is on the farm. It needs calibrating before CropCard can work out
-    a rate for it.
+    <strong>{created.label}</strong>{tr('setup.sprayer.isOnFarm')}
   </div>
   <SetupCalibration
     sprayer={{
@@ -74,20 +76,22 @@
     onDone={calibrated}
   />
   <button type="button" class="ghost" onclick={() => created && onDone(created)}>
-    Calibrate later
+    {tr('setup.sprayer.later')}
   </button>
 {:else}
-  <p class="lede">Tap the one closest to yours. You can rename it or change the details later.</p>
-  <label for="{uid}-name">Name it <span class="optional">(optional)</span></label>
+  <p class="lede">{tr('setup.sprayer.lede')}</p>
+  <label for="{uid}-name"
+    >{tr('setup.sprayer.nameIt')} <span class="optional">{tr('setup.optional')}</span></label
+  >
   <input
     id="{uid}-name"
     type="text"
     maxlength="120"
     autocomplete="off"
-    placeholder="Old blue rig"
+    placeholder={tr('setup.sprayer.namePh')}
     bind:value={name}
   />
-  <ul class="tiles" aria-label="Sprayer types">
+  <ul class="tiles" aria-label={tr('setup.sprayer.typesAria')}>
     {#each templates as t (t.templateId)}
       <li>
         <button
@@ -101,14 +105,15 @@
         >
           <span class="tile-kicker">{t.category}</span>
           <span class="tile-title serif">{t.tankGal != null ? `${t.tankGal} gal` : t.label}</span>
-          <span class="tile-desc">{savingId === t.templateId ? 'Adding…' : t.label}</span>
+          <span class="tile-desc">{savingId === t.templateId ? tr('setup.adding') : t.label}</span>
         </button>
       </li>
     {/each}
   </ul>
   {#if error}<p class="error" role="alert">{error}</p>{/if}
   <p class="help">
-    Something else? <a href="/equipment?add=sprayer">Describe it in full on the Equipment page</a>.
+    {tr('setup.sprayer.somethingElse')}
+    <a href="/equipment?add=sprayer">{tr('setup.sprayer.describe')}</a>.
   </p>
 {/if}
 

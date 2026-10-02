@@ -6,6 +6,8 @@
   import type { CardModel, CardPrintLayout } from '$lib/cards/model';
   import { paginateCards, printLinkFor } from '$lib/cards/print';
   import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
+  import { createT } from '$lib/i18n';
+  import { page as pageState } from '$app/state';
 
   interface Props {
     cards: CardModel[];
@@ -30,6 +32,7 @@
     figure
   }: Props = $props();
 
+  const tr = $derived(createT(pageState.data?.locale));
   const pages = $derived(
     paginateCards(
       cards.map((card) => ({ card, link: printLinkFor(origin, card.key) })),
@@ -51,9 +54,14 @@
       {#each page.items as { card, link } (card.key)}
         <div class="print-cell">
           {#if page.part === 'list' && card.calendar}
-            <article class="calendar-list-page" aria-label="{card.title}, every task">
+            <article
+              class="calendar-list-page"
+              aria-label={tr('cardsui.sheet.everyTask', { title: card.title })}
+            >
               <div class="list-kicker">{card.kicker}</div>
-              <h3 class="list-title">{card.title}: every task by day</h3>
+              <h3 class="list-title">
+                {tr('cardsui.sheet.everyTaskByDay', { title: card.title })}
+              </h3>
               <CardCalendarView calendar={card.calendar} mode="list" />
             </article>
           {:else}

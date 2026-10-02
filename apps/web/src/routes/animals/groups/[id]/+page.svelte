@@ -16,18 +16,22 @@
   import History from '$lib/components/animals/History.svelte';
   import CarePlansPanel from '$lib/components/animals/CarePlansPanel.svelte';
   import {
-    OFFLINE_MESSAGE,
-    STATUS_LABEL,
-    animalLabel,
-    errorFromResponse
-  } from '$lib/animals/display';
+    animalName,
+    errorText,
+    groupNoun,
+    pageTitle,
+    statusLabel
+  } from '$lib/components/animals/labels';
   import { groupFacts } from '$lib/animals/facts';
   import { buildHistory } from '$lib/animals/history';
   import { activeMembers } from '$lib/animals/counts';
   import { DEFAULT_PREFS } from '$lib/prefs';
   import type { MoveOutcome } from '$lib/animals/moveClient';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   type Init = NonNullable<Parameters<typeof fetch>[1]>;
 
@@ -35,6 +39,8 @@
   const group = $derived(data.group);
   const layout = $derived(data.profile.layout);
   const noun = $derived(data.species?.groupNoun ?? 'group');
+  const nounText = $derived(groupNoun(tr, noun));
+  const title = $derived(pageTitle(tr, layout));
   const archived = $derived(group.status === 'archived');
   const areaNames = $derived(new Map(data.areas.map((a) => [a.id, a.name])));
   const groupNames = $derived(new Map(data.groupNames.map((g) => [g.id, g.name])));
@@ -89,13 +95,13 @@
     try {
       const res = await fetch(url, init);
       if (!res.ok) {
-        actionError = await errorFromResponse(res);
+        actionError = await errorText(res, tr);
         return;
       }
       if (typeof done === 'string') await refresh(done);
       else done();
     } catch {
-      actionError = OFFLINE_MESSAGE;
+      actionError = tr('animals.offline');
     } finally {
       busy = false;
     }
@@ -109,11 +115,15 @@
 
   function archive() {
     emptied = false;
-    void send(`/api/animal-groups/${group.id}`, patch({ status: 'archived' }), 'Archived.');
+    void send(
+      `/api/animal-groups/${group.id}`,
+      patch({ status: 'archived' }),
+      tr('animals.archivedDone')
+    );
   }
 
   function remove() {
-    if (!confirm(`Delete ${group.name}? Use this only for a mistaken entry.`)) return;
+    if (!confirm(tr('animals.detail.confirmDelete', { name: group.name }))) return;
     void send(`/api/animal-groups/${group.id}`, { method: 'DELETE' }, () => {
       void goto('/animals');
     });
@@ -121,12 +131,12 @@
 </script>
 
 <svelte:head>
-  <title>{group.name} · {data.profile.title} · CropCard</title>
+  <title>{group.name} · {title} · CropCard</title>
 </svelte:head>
 
 <div class="detail-page">
-  <nav class="crumbs" aria-label="Breadcrumb">
-    <a href="/animals">{data.profile.title}</a>
+  <nav class="crumbs" aria-label={tr('animals.breadcrumb')}>
+    <a href="/animals">{title}</a>
   </nav>
 
   <article class="sheet" aria-labelledby="group-title">
@@ -134,7 +144,9 @@
       <span class="badge"><SpeciesIcon icon={data.species?.icon} size={26} /></span>
       <div class="titles">
         <Kicker>
-          {data.species?.label ?? 'Animals'} · {noun}{archived ? ' · Archived' : ''}
+          {data.species?.label ?? tr('animals.detail.animals')} · {nounText}{archived
+            ? ` · ${tr('animals.archived')}`
+            : ''}
         </Kicker>
         <h1 id="group-title" class="serif">{group.name}</h1>
       </div>
@@ -144,9 +156,9 @@
         foodProducing={group.effectiveFoodProducing}
         explanation={flagIsDefault
           ? (data.species?.explanation ?? null)
-          : 'The owner changed this or a member counts as a food animal. The history shows why.'}
+          : tr('animals.detail.groupOwnerChanged')}
       />
-      {#if archived}<Pill tone="neutral">Archived</Pill>{/if}
+      {#if archived}<Pill tone="neutral">{tr('animals.archived')}</Pill>{/if}
     </div>
 
     <HoldChips
@@ -163,9 +175,9 @@
         speciesPlural={data.speciesPlural}
       />
     {/if}
-    <nav class="record-links" aria-label="Records">
-      <a class="af-ghost" href="/animals/{group.id}/health">Health</a>
-      <a class="af-ghost" href="/animals/{group.id}/log">Eggs, milk and weights</a>
+    <nav class="record-links" aria-label={tr('animals.records')}>
+      <a class="af-ghost" href="/animals/{group.id}/health">{tr('animals.health')}</a>
+      <a class="af-ghost" href="/animals/{group.id}/log">{tr('animals.eggsMilkWeights')}</a>
     </nav>
     <FactList {facts} />
     {#if group.notes}
@@ -192,19 +204,21 @@
   {/if}
   {#if emptied && data.canEdit && !archived}
     <div class="af-note" role="status">
-      <p class="emptied">No animals left. Archive this {noun}?</p>
+      <p class="emptied">{tr('animals.detail.noneLeft', { noun: nounText })}</p>
       <div class="action-row">
         <button type="button" class="af-primary" disabled={busy} onclick={archive}>
-          Archive this {noun}
+          {tr('animals.detail.archiveThis', { noun: nounText })}
         </button>
-        <button type="button" class="af-ghost" onclick={() => (emptied = false)}>Keep it</button>
+        <button type="button" class="af-ghost" onclick={() => (emptied = false)}
+          >{tr('animals.detail.keepIt')}</button
+        >
       </div>
     </div>
   {/if}
   {#if actionError}<p class="af-error" role="alert">{actionError}</p>{/if}
 
   {#if data.canLog && !archived}
-    <section class="actions" aria-label="Actions">
+    <section class="actions" aria-label={tr('animals.actions')}>
       <div class="action-row">
         <button
           type="button"
@@ -212,7 +226,7 @@
           aria-expanded={panel === 'move'}
           onclick={() => (panel = panel === 'move' ? 'none' : 'move')}
         >
-          Move
+          {tr('animals.moveAction')}
         </button>
         <button
           type="button"
@@ -220,7 +234,7 @@
           aria-expanded={panel === 'status'}
           onclick={() => (panel = panel === 'status' ? 'none' : 'status')}
         >
-          Record a change
+          {tr('animals.recordChange')}
         </button>
         {#if data.canEdit}
           <button
@@ -229,7 +243,7 @@
             aria-expanded={panel === 'edit'}
             onclick={() => (panel = panel === 'edit' ? 'none' : 'edit')}
           >
-            Edit
+            {tr('animals.edit')}
           </button>
         {/if}
       </div>
@@ -243,7 +257,7 @@
             headCount: group.headCount,
             total: group.total,
             noun,
-            members: here.map((m) => ({ id: m.id, label: animalLabel(m) }))
+            members: here.map((m) => ({ id: m.id, label: animalName(tr, m) }))
           }}
           toxic={{
             byArea: data.toxicPlants,
@@ -265,21 +279,23 @@
           }}
         />
       {:else if panel === 'edit' && data.canEdit}
-        <GroupEditForm {group} {noun} onDone={() => refresh('Saved.')} />
+        <GroupEditForm {group} {noun} onDone={() => refresh(tr('animals.saved'))} />
       {/if}
     </section>
   {/if}
 
   {#if here.length > 0}
     <section aria-labelledby="members-h">
-      <h2 id="members-h" class="section-title">Named in this {noun}</h2>
+      <h2 id="members-h" class="section-title">
+        {tr('animals.detail.namedIn', { noun: nounText })}
+      </h2>
       <ul class="rows">
         {#each here as m (m.id)}
           <li>
             <AnimalRow
               href="/animals/{m.id}"
               icon={data.species?.icon}
-              title={animalLabel(m)}
+              title={animalName(tr, m)}
               meta={[data.species?.displayName]}
               foodProducing={m.foodProducing}
             />
@@ -290,16 +306,16 @@
   {/if}
   {#if goneMembers.length > 0}
     <details class="gone">
-      <summary>No longer here ({goneMembers.length})</summary>
+      <summary>{tr('animals.list.noLongerHere', { count: goneMembers.length })}</summary>
       <ul class="rows">
         {#each goneMembers as m (m.id)}
           <li>
             <AnimalRow
               href="/animals/{m.id}"
               icon={data.species?.icon}
-              title={animalLabel(m)}
+              title={animalName(tr, m)}
               foodProducing={m.foodProducing}
-              status={STATUS_LABEL[m.status]}
+              status={statusLabel(tr, m.status)}
             />
           </li>
         {/each}
@@ -309,7 +325,7 @@
 
   {#if data.canEdit}
     <section class="owner" aria-labelledby="owner-h">
-      <h2 id="owner-h" class="section-title">Owner settings</h2>
+      <h2 id="owner-h" class="section-title">{tr('animals.ownerSettings')}</h2>
       <div class="action-col">
         {#if !archived}
           <FlagForm
@@ -327,31 +343,36 @@
               class="af-ghost"
               disabled={busy}
               onclick={() =>
-                send(`/api/animal-groups/${group.id}`, patch({ status: 'active' }), 'Restored.')}
+                send(
+                  `/api/animal-groups/${group.id}`,
+                  patch({ status: 'active' }),
+                  tr('animals.restored')
+                )}
             >
-              Restore
+              {tr('animals.restore')}
             </button>
           {:else}
             <button type="button" class="af-ghost" disabled={busy} onclick={archive}>
-              Archive
+              {tr('animals.archive')}
             </button>
           {/if}
-          <button type="button" class="af-danger" disabled={busy} onclick={remove}>Delete</button>
+          <button type="button" class="af-danger" disabled={busy} onclick={remove}
+            >{tr('animals.delete')}</button
+          >
         </div>
         <p class="af-help">
-          Archive keeps the history; an empty coop between batches can stay as it is. Delete is only
-          for a mistaken entry with no records.
+          {tr('animals.detail.groupArchiveHelp')}
         </p>
       </div>
     </section>
   {/if}
 
   <section aria-labelledby="history-h">
-    <h2 id="history-h" class="section-title">History</h2>
+    <h2 id="history-h" class="section-title">{tr('animals.history')}</h2>
     <History
       entries={history}
       {prefs}
-      onChanged={() => refresh('Removed.')}
+      onChanged={() => refresh(tr('animals.removed'))}
       onVoided={() => refresh('Voided.')}
     />
   </section>

@@ -1,9 +1,12 @@
 <script lang="ts">
   import { Zap } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
 
   const props: RendererProps = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   type TerminationMethod = '' | 'roller-crimp' | 'mow' | 'mow-flame' | 'burndown' | 'incorporate';
   let method = $state<TerminationMethod>('');
@@ -27,34 +30,33 @@
   <header class="archetype-head">
     <Zap size={18} strokeWidth={1.75} />
     <div>
-      <span class="archetype-name">Cover-crop termination</span>
+      <span class="archetype-name">{tr('harvestui.r.cover.name')}</span>
       <span class="archetype-sub">
-        Kill-and-roll pass 14-21 days before the next cash crop. Method + residue cover drive the
-        cover-credit fertility math (Phase 21).
+        {tr('harvestui.r.cover.sub')}
       </span>
     </div>
   </header>
 
   <div class="terminate-block">
-    <span class="block-title">Termination + residue</span>
+    <span class="block-title">{tr('harvestui.r.cover.block')}</span>
     <div class="terminate-grid">
       <label class="qfield wide">
-        <span>Method</span>
+        <span>{tr('harvestui.r.cover.method')}</span>
         <select bind:value={method}>
-          <option value="">— pick method —</option>
-          <option value="roller-crimp">Roller-crimp</option>
-          <option value="mow">Mow only</option>
-          <option value="mow-flame">Mow + flame</option>
-          <option value="burndown">Herbicide burndown</option>
-          <option value="incorporate">Tillage incorporate</option>
+          <option value="">{tr('harvestui.r.cover.pick')}</option>
+          <option value="roller-crimp">{tr('harvestui.r.cover.roller')}</option>
+          <option value="mow">{tr('harvestui.r.cover.mow')}</option>
+          <option value="mow-flame">{tr('harvestui.r.cover.mowFlame')}</option>
+          <option value="burndown">{tr('harvestui.r.cover.burndown')}</option>
+          <option value="incorporate">{tr('harvestui.r.cover.incorporate')}</option>
         </select>
       </label>
       <label class="qfield">
-        <span>Residue cover (%)</span>
+        <span>{tr('harvestui.r.cover.residue')}</span>
         <input type="text" inputmode="decimal" placeholder="85" bind:value={residueCoverPct} />
       </label>
       <label class="qfield">
-        <span>Biomass est. (t/ac)</span>
+        <span>{tr('harvestui.r.cover.biomass')}</span>
         <input type="text" inputmode="decimal" placeholder="3.5" bind:value={biomassEstimate} />
       </label>
     </div>

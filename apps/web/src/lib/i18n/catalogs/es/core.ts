@@ -20,6 +20,8 @@ export const esCore: Partial<Record<MessageKey, string>> = {
   'nav.feedbackInbox': 'Buzón de comentarios',
   'nav.sendFeedback': 'Enviar comentarios',
   'nav.settings': 'Configuración',
+  'nav.account': 'Cuenta',
+  'nav.signOut': 'Cerrar sesión',
   'nav.switchFarm': 'Cambiar de granja',
   'nav.alerts': 'Alertas',
   'nav.alertsNone': 'Alertas, ninguna activa',

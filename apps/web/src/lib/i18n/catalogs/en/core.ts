@@ -24,6 +24,8 @@ export const enCore = {
   'nav.feedbackInbox': 'Feedback inbox',
   'nav.sendFeedback': 'Send feedback',
   'nav.settings': 'Settings',
+  'nav.account': 'Account',
+  'nav.signOut': 'Sign out',
   'nav.switchFarm': 'Switch farm',
   'nav.alerts': 'Alerts',
   'nav.alertsNone': 'Alerts, none active',

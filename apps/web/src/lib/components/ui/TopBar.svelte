@@ -19,8 +19,11 @@
     MessageSquare,
     Inbox,
     ChevronDown,
-    Zap
+    Zap,
+    User,
+    LogOut
   } from 'lucide-svelte';
+  import { identityLabel } from '$lib/identity';
   import IconButton from './IconButton.svelte';
   import Avatar from './Avatar.svelte';
   import OfflineIndicator from './OfflineIndicator.svelte';
@@ -43,7 +46,7 @@
     name: string;
     role: string;
   }
-  interface User {
+  interface SessionUser {
     email: string | null;
     phone?: string | null;
     name?: string;
@@ -53,7 +56,7 @@
   }
 
   interface Props {
-    user?: User | null;
+    user?: SessionUser | null;
     activeOwner?: ActiveOwner | null;
     availableOwners?: AvailableOwner[];
     online: boolean;
@@ -184,12 +187,14 @@
     const target = e.target as Node | null;
     if (actionsOpen && actionsEl && target && !actionsEl.contains(target)) actionsOpen = false;
     if (moreOpen && moreEl && target && !moreEl.contains(target)) moreOpen = false;
+    if (accountOpen && accountEl && target && !accountEl.contains(target)) accountOpen = false;
   }
 
   function closeMenusOnEscape(e: KeyboardEvent) {
-    if (e.key !== 'Escape' || (!actionsOpen && !moreOpen)) return;
+    if (e.key !== 'Escape' || (!actionsOpen && !moreOpen && !accountOpen)) return;
     actionsOpen = false;
     moreOpen = false;
+    accountOpen = false;
   }
 
   // Up to 600px the bottom bar keeps the five field tabs and folds the rest
@@ -200,6 +205,8 @@
   const moreActive = $derived(moreItems.some((i) => isActive(i.href)));
   let moreOpen = $state(false);
   let feedbackOpen = $state(false);
+  let accountOpen = $state(false);
+  let accountEl = $state<HTMLDetailsElement | null>(null);
 
   // Above 768px the top nav keeps as many pages inline as fit and folds the
   // rest into More, so nothing (More included) is scrolled out of sight.
@@ -398,31 +405,54 @@
     >
       {#snippet icon()}<Settings size={16} strokeWidth={1.75} />{/snippet}
     </IconButton>
-    {#if availableOwners.length > 1 && activeOwner}
-      <details class="owner-chip">
-        <summary aria-label={tr('nav.switchFarm')} title={activeOwner.name}>
-          <Avatar name={avatarName} src={user?.avatarUrl} />
+    {#if user}
+      <details class="owner-chip" bind:open={accountOpen} bind:this={accountEl}>
+        <summary aria-label={tr('nav.account')} title={user.name}>
+          <Avatar name={avatarName} src={user.avatarUrl} />
         </summary>
-        <div class="owner-popover" role="menu">
-          <div class="owner-popover-label">{tr('nav.switchFarm')}</div>
-          {#each availableOwners as o (o.id)}
-            <button
-              type="button"
-              class="owner-choice"
-              class:active={o.id === activeOwner.id}
-              role="menuitemradio"
-              aria-checked={o.id === activeOwner.id}
-              onclick={() => onSwitchOwner?.(o.id)}
+        <div class="owner-popover">
+          <div class="account-id">
+            {#if user.name}<span class="account-name">{user.name}</span>{/if}
+            <span class="account-handle mono"
+              >{identityLabel({ email: user.email, phone: user.phone ?? null })}</span
             >
-              <span>{o.name}</span>
-              <span class="owner-role mono">{o.role}</span>
-            </button>
-          {/each}
+          </div>
+          {#if availableOwners.length > 1 && activeOwner}
+            <div class="owner-popover-label">{tr('nav.switchFarm')}</div>
+            <div role="menu" aria-label={tr('nav.switchFarm')}>
+              {#each availableOwners as o (o.id)}
+                <button
+                  type="button"
+                  class="owner-choice"
+                  class:active={o.id === activeOwner.id}
+                  role="menuitemradio"
+                  aria-checked={o.id === activeOwner.id}
+                  onclick={() => onSwitchOwner?.(o.id)}
+                >
+                  <span>{o.name}</span>
+                  <span class="owner-role mono">{o.role}</span>
+                </button>
+              {/each}
+            </div>
+          {/if}
+          <div class="account-actions">
+            <a href="/settings/account" class="owner-choice" onclick={() => (accountOpen = false)}>
+              <span class="with-icon"><User size={15} strokeWidth={1.75} />{tr('nav.account')}</span
+              >
+            </a>
+            <form method="POST" action="/signout">
+              <button type="submit" class="owner-choice">
+                <span class="with-icon"
+                  ><LogOut size={15} strokeWidth={1.75} />{tr('nav.signOut')}</span
+                >
+              </button>
+            </form>
+          </div>
         </div>
       </details>
     {:else}
-      <span class="standalone" title={user?.name}>
-        <Avatar name={avatarName} src={user?.avatarUrl} />
+      <span class="standalone">
+        <Avatar name={avatarName} />
       </span>
     {/if}
     <OfflineIndicator {online} {pendingCount} />
@@ -668,6 +698,50 @@
   .owner-choice.active {
     color: var(--color-forest-deep);
     font-weight: 600;
+  }
+  .owner-choice:focus-visible {
+    outline: 2px solid var(--color-forest);
+    outline-offset: -2px;
+  }
+  a.owner-choice,
+  form > .owner-choice {
+    min-height: 48px;
+    text-decoration: none;
+    font: inherit;
+  }
+  .with-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .account-id {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--color-divider);
+    margin-bottom: 4px;
+  }
+  .account-name {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  .account-handle {
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-muted);
+    overflow-wrap: anywhere;
+  }
+  .account-actions {
+    border-top: 1px solid var(--color-divider);
+    margin-top: 4px;
+    padding-top: 4px;
+  }
+  .account-id + .account-actions {
+    border-top: none;
+    margin-top: 0;
+  }
+  .account-actions form {
+    margin: 0;
   }
   .owner-role {
     font-size: var(--font-size-meta);

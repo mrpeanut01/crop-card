@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { BED_PRESETS } from '$lib/garden/geometry';
   import type { BedPresetId } from '$lib/garden/types';
+  import type { MessageKey } from '$lib/i18n';
   import { getDesigner } from './designerState.svelte';
 
   interface Props {
@@ -17,13 +17,9 @@
     'container-5gal',
     'custom'
   ];
-  const PRESET_LABEL: Record<BedPresetId, string> = {
-    'raised-4x8': '4×8 raised',
-    'in-ground-3x10': '3×10 in-ground',
-    'row-30in': '30 in row',
-    'container-5gal': '5 gal container',
-    custom: 'Custom'
-  };
+  const tr = $derived(d.tr);
+  const presetShort = (id: BedPresetId): string => tr(`garden.preset.short.${id}` as MessageKey);
+  const presetThe = (id: BedPresetId): string => tr(`garden.preset.the.${id}` as MessageKey);
 
   const bed = $derived(d.selectedBed);
   const planting = $derived(d.selectedPlanting);
@@ -36,18 +32,19 @@
 
 {#if d.canEdit}
   {#if d.mode.kind === 'place-bed' || d.mode.kind === 'move-bed' || d.mode.kind === 'place-crop' || d.mode.kind === 'move-planting'}
-    <div class="bar banner floating" role="region" aria-label="Placing">
+    <div class="bar banner floating" role="region" aria-label={tr('garden.placing.aria')}>
       <span class="banner-text" data-testid="placing-banner">
         {#if d.mode.kind === 'place-bed'}
-          Tap the garden where the {BED_PRESETS[d.mode.presetId].label} goes, or choose {PRESET_LABEL[
-            d.mode.presetId
-          ]} again for the first open spot.
+          {tr('garden.placing.bed', {
+            preset: presetThe(d.mode.presetId),
+            short: presetShort(d.mode.presetId)
+          })}
         {:else if d.mode.kind === 'move-bed'}
-          Tap where {d.bed(d.mode.blockId)?.name}'s top-left corner should go.
+          {tr('garden.placing.moveBed', { name: d.bed(d.mode.blockId)?.name ?? '' })}
         {:else if d.mode.kind === 'place-crop'}
-          Tap a bed to place {d.mode.crop.label}
+          {tr('garden.placing.crop', { label: d.mode.crop.label })}
         {:else}
-          Tap where the planting should go.
+          {tr('garden.placing.planting')}
         {/if}
       </span>
       {#if d.mode.kind === 'place-bed'}
@@ -58,48 +55,62 @@
             d.mode.kind === 'place-bed' &&
             d.choosePreset(d.mode.presetId, { widthFt: d.mode.widthFt, lengthFt: d.mode.lengthFt })}
         >
-          First open spot
+          {tr('garden.toolbar.firstSpot')}
         </button>
       {/if}
-      <button type="button" class="tb" onclick={() => d.cancelMode()}>Cancel</button>
+      <button type="button" class="tb" onclick={() => d.cancelMode()}
+        >{tr('garden.common.cancel')}</button
+      >
     </div>
   {/if}
   {#if bed && (d.mode.kind === 'idle' || d.mode.kind === 'carry-bed')}
     <div
       class="bar floating"
       role="toolbar"
-      aria-label="{bed.name} actions"
+      aria-label={tr('garden.toolbar.actions', { name: bed.name })}
       data-testid="bed-toolbar"
     >
       {#if planting && planting.blockId === bed.blockId}
         <span class="what">{planting.varietyDisplayName}</span>
         <button type="button" class="tb" onclick={() => d.startMovePlanting(planting.cropId)}
-          >Move</button
+          >{tr('garden.common.move')}</button
         >
-        <button type="button" class="tb" onclick={() => (d.selectedCropId = null)}>Bed</button>
+        <button type="button" class="tb" onclick={() => (d.selectedCropId = null)}
+          >{tr('garden.toolbar.bed')}</button
+        >
       {:else}
         <span class="what">{bed.name}</span>
-        <button type="button" class="tb" onclick={() => d.startMove(bed.blockId)}>Move</button>
-        <button type="button" class="tb" onclick={() => d.turnBed(bed.blockId)}>Turn</button>
-        <button type="button" class="tb" onclick={() => d.duplicateBed(bed.blockId)}
-          >Duplicate</button
+        <button type="button" class="tb" onclick={() => d.startMove(bed.blockId)}
+          >{tr('garden.common.move')}</button
         >
-        <button type="button" class="tb" onclick={() => d.sizeRequest++}>Size</button>
-        <button type="button" class="tb" onclick={() => d.renameRequest++}>Rename</button>
+        <button type="button" class="tb" onclick={() => d.turnBed(bed.blockId)}
+          >{tr('garden.common.turn')}</button
+        >
+        <button type="button" class="tb" onclick={() => d.duplicateBed(bed.blockId)}
+          >{tr('garden.common.duplicate')}</button
+        >
+        <button type="button" class="tb" onclick={() => d.sizeRequest++}
+          >{tr('garden.common.size')}</button
+        >
+        <button type="button" class="tb" onclick={() => d.renameRequest++}
+          >{tr('garden.common.rename')}</button
+        >
         <button type="button" class="tb" onclick={() => d.openCropPanel(bed.blockId)}
-          >Add crop</button
+          >{tr('garden.common.addCrop')}</button
         >
         <button type="button" class="tb danger" onclick={() => d.askDelete(bed.blockId)}
-          >Delete</button
+          >{tr('garden.common.delete')}</button
         >
       {/if}
-      <button type="button" class="tb" onclick={() => d.selectBed(null)}>Done</button>
+      <button type="button" class="tb" onclick={() => d.selectBed(null)}
+        >{tr('garden.common.done')}</button
+      >
     </div>
   {:else if !bed && (d.mode.kind === 'idle' || d.mode.kind === 'place-bed')}
     <div
       class="bar"
       role="toolbar"
-      aria-label="Add a bed"
+      aria-label={tr('garden.toolbar.addBed')}
       data-testid="preset-bar"
       data-hint-anchor="garden_designer"
     >
@@ -110,10 +121,12 @@
           aria-pressed={d.mode.kind === 'place-bed' && d.mode.presetId === id}
           onclick={() => preset(id)}
         >
-          {PRESET_LABEL[id]}
+          {presetShort(id)}
         </button>
       {/each}
-      <button type="button" class="tb" onclick={() => d.openCropPanel(null)}>Add crop</button>
+      <button type="button" class="tb" onclick={() => d.openCropPanel(null)}
+        >{tr('garden.common.addCrop')}</button
+      >
     </div>
   {/if}
 {/if}

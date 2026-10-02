@@ -1,7 +1,11 @@
 <script lang="ts">
-  import { ONE_DAY_MS, shortDate } from '$lib/garden/occupancy';
+  import { page } from '$app/state';
+  import { ONE_DAY_MS } from '$lib/garden/occupancy';
   import type { ScrubRange } from '$lib/garden/types';
-  import { longDate } from './format';
+  import { createT, type MessageKey } from '$lib/i18n';
+  import { longDate, shortDate } from './format';
+
+  const tr = $derived(createT(page.data?.locale));
 
   interface Tick {
     ms: number;
@@ -43,21 +47,21 @@
   const span = $derived(Math.max(ONE_DAY_MS, range.endMs - range.startMs));
   const year = $derived(new Date(value).getUTCFullYear());
   const dateLabel = $derived(
-    seasonYear !== undefined ? `${longDate(value)}, ${year}` : longDate(value)
+    seasonYear !== undefined ? `${longDate(value, tr)}, ${year}` : longDate(value, tr)
   );
   const ticks = $derived.by<Tick[]>(() => {
     const out: Tick[] = [];
     for (const ms of changeDays) {
       if (ms >= range.startMs && ms <= range.endMs)
-        out.push({ ms, kind: 'change', label: 'A bed changes' });
+        out.push({ ms, kind: 'change', label: tr('garden.scrub.bedChanges') });
     }
     return out;
   });
   const frostMarks = $derived(
     (
       [
-        [lastSpringFrostMs, 'Last frost'],
-        [firstFallFrostMs, 'First frost']
+        [lastSpringFrostMs, tr('garden.scrub.lastFrost')],
+        [firstFallFrostMs, tr('garden.scrub.firstFrost')]
       ] as const
     )
       .filter(([ms]) => ms >= range.startMs && ms <= range.endMs)
@@ -71,7 +75,13 @@
     for (;;) {
       const ms = Date.UTC(y, m, 1);
       if (ms > range.endMs) break;
-      if (ms >= range.startMs) out.push({ ms, label: 'JFMAMJJASOND'[m] });
+      if (ms >= range.startMs)
+        out.push({
+          ms,
+          label: tr(`garden.monthShort.${m}` as MessageKey)
+            .charAt(0)
+            .toUpperCase()
+        });
       m += 1;
       if (m > 11) {
         m = 0;
@@ -108,14 +118,14 @@
 <div class="scrubber" data-testid="time-scrubber" data-hint-anchor="designer_scrubber">
   <div class="row">
     <label for="designer-scrubber" class="label">
-      <span class="on">On </span><strong>{dateLabel}</strong>
+      <span class="on">{tr('garden.scrub.on')} </span><strong>{dateLabel}</strong>
     </label>
     <button
       type="button"
       class="chip more"
       aria-expanded={menuOpen}
       aria-controls="scrubber-controls"
-      onclick={() => (menuOpen = !menuOpen)}>Options</button
+      onclick={() => (menuOpen = !menuOpen)}>{tr('garden.scrub.options')}</button
     >
     <div class="controls" class:open={menuOpen} id="scrubber-controls">
       <button
@@ -126,8 +136,8 @@
           menuOpen = false;
         }}
         disabled={value === todayTarget}
-        title={todayInRange ? undefined : 'Today is outside this season'}
-        >{todayInRange ? 'Today' : 'Last frost'}</button
+        title={todayInRange ? undefined : tr('garden.scrub.todayOutside')}
+        >{todayInRange ? tr('garden.scrub.today') : tr('garden.scrub.lastFrost')}</button
       >
       <label class="whole">
         <input
@@ -135,7 +145,7 @@
           checked={wholeSeason}
           onchange={(e) => onwholeseason((e.currentTarget as HTMLInputElement).checked)}
         />
-        Whole season
+        {tr('garden.scrub.wholeSeason')}
       </label>
     </div>
   </div>
@@ -147,7 +157,7 @@
       max={range.endMs}
       step={ONE_DAY_MS}
       {value}
-      aria-valuetext={longDate(value)}
+      aria-valuetext={longDate(value, tr)}
       oninput={(e) => onchange(Number((e.currentTarget as HTMLInputElement).value))}
       onkeydown={onKey}
     />
@@ -166,7 +176,7 @@
     </div>
     <div class="scale frosts" aria-hidden="true">
       {#each frostMarks as f (f.label)}
-        <span class="frost-label" style:left="{pct(f.ms)}%">{f.label} {shortDate(f.ms)}</span>
+        <span class="frost-label" style:left="{pct(f.ms)}%">{f.label} {shortDate(f.ms, tr)}</span>
       {/each}
     </div>
   </div>

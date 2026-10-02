@@ -2,10 +2,9 @@
   import { tick } from 'svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import AiLimitNudge from '$lib/components/billing/AiLimitNudge.svelte';
-  import { BED_STYLES, BED_STYLE_LABELS, type BedStyle } from '$lib/farm/areaKinds';
-  import { familyLabel } from '$lib/garden/rotation';
-  import { bedOccupancyOn, shortDate } from '$lib/garden/occupancy';
-  import { plantingInGround, plantingStatusText } from '$lib/garden/inGround';
+  import { BED_STYLES, type BedStyle } from '$lib/farm/areaKinds';
+  import { bedOccupancyOn } from '$lib/garden/occupancy';
+  import { plantingInGround } from '$lib/garden/inGround';
   import { successionIntervalDays } from '$lib/schedule/succession';
   import { MAX_SUCCESSIONS } from '$lib/garden/succession';
   import type { FillResponse } from '$lib/garden/api';
@@ -22,7 +21,19 @@
   import CoverChips from '$lib/components/setup/CoverChips.svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import SetupProtection from '$lib/components/setup/SetupProtection.svelte';
-  import { PATTERN_LABELS, ft, parseYmd, plural, sizeLabel, ymd } from './format';
+  import {
+    PATTERN_LABELS,
+    bedStyleLabel,
+    countOf,
+    familyName,
+    ft,
+    parseYmd,
+    patternLabel,
+    shortDate,
+    sizeLabel,
+    statusLabel,
+    ymd
+  } from './format';
 
   interface Props {
     bed: BedLayout;
@@ -31,6 +42,7 @@
 
   const { bed, idPrefix = 'sheet' }: Props = $props();
   const d = getDesigner();
+  const tr = $derived(d.tr);
 
   type Tab = 'details' | 'plantings' | 'history';
   let tab = $state<Tab>('details');
@@ -136,16 +148,16 @@
     const bn = `${b?.varietyDisplayName ?? h.b.cropPluginId} (${d.bed(h.b.blockId)?.name ?? ''})`;
     if (h.relation === 'keep-apart') {
       const why = h.benefit ? ` ${/[.!?]$/.test(h.benefit) ? h.benefit : `${h.benefit}.`}` : '';
-      return `Keep apart: ${an} and ${bn}.${why}`;
+      return `${tr('garden.insp.keepApart', { a: an, b: bn })}${why}`;
     }
-    return `Good neighbours: ${an} and ${bn}.${h.benefit ? ` ${h.benefit}` : ''}`;
+    return `${tr('garden.insp.goodNeighbours', { a: an, b: bn })}${h.benefit ? ` ${h.benefit}` : ''}`;
   }
 
   function countDetail(p: PlacedPlanting): string | undefined {
     if (p.plantCountProvenance === 'fallback') {
-      return `No spacing on this crop, used ${Math.round(p.spacing.inRowIn)} in rows`;
+      return tr('garden.insp.noSpacing', { n: Math.round(p.spacing.inRowIn) });
     }
-    if (p.plantCountProvenance === 'data') return 'from its spacing';
+    if (p.plantCountProvenance === 'data') return tr('garden.insp.fromSpacing');
     return undefined;
   }
 
@@ -159,11 +171,13 @@
   function spotText(fp: { x_in: number; y_in: number; w_in: number }): string {
     const across =
       fp.x_in <= 0
-        ? 'left side'
+        ? tr('garden.insp.leftSide')
         : fp.x_in + fp.w_in >= bed.widthFt * 12 - 1e-6
-          ? 'right side'
-          : `${ft(fp.x_in / 12)} ft from the left`;
-    return fp.y_in > 0 ? `${across}, ${ft(fp.y_in / 12)} ft in` : `${across}, at the top`;
+          ? tr('garden.insp.rightSide')
+          : tr('garden.insp.fromLeft', { n: ft(fp.x_in / 12) });
+    return fp.y_in > 0
+      ? tr('garden.insp.spotIn', { across, n: ft(fp.y_in / 12) })
+      : tr('garden.insp.spotTop', { across });
   }
 
   function nextOpenAfter(dateMs: number): number | null {
@@ -258,16 +272,16 @@
     );
   }
 
-  const tabs: Array<{ id: Tab; label: string }> = [
-    { id: 'details', label: 'Details' },
-    { id: 'plantings', label: 'Plantings' },
-    { id: 'history', label: 'History' }
-  ];
+  const tabs = $derived<Array<{ id: Tab; label: string }>>([
+    { id: 'details', label: tr('garden.insp.tab.details') },
+    { id: 'plantings', label: tr('garden.insp.tab.plantings') },
+    { id: 'history', label: tr('garden.insp.tab.history') }
+  ]);
 </script>
 
 <section
   class="sheet"
-  aria-label="{bed.name} details"
+  aria-label={tr('garden.insp.details', { name: bed.name })}
   data-testid="bed-sheet"
   data-bed-name={bed.name}
 >
@@ -275,14 +289,14 @@
     <h2>{bed.name}</h2>
     <span class="sub"
       >{sizeLabel(bed.widthFt, bed.lengthFt)} · {bed.kind === 'container'
-        ? 'Container'
+        ? tr('garden.bedStyle.container')
         : bed.bedStyle
-          ? BED_STYLE_LABELS[bed.bedStyle]
-          : 'Bed'}</span
+          ? bedStyleLabel(bed.bedStyle, tr)
+          : tr('garden.toolbar.bed')}</span
     >
   </header>
 
-  <div class="tabs" role="tablist" aria-label="{bed.name} sections">
+  <div class="tabs" role="tablist" aria-label={tr('garden.insp.sections', { name: bed.name })}>
     {#each tabs as t (t.id)}
       <button
         type="button"
@@ -291,7 +305,7 @@
         aria-selected={tab === t.id}
         aria-controls="{idPrefix}-{bed.blockId}-panel-{t.id}"
         class="tab"
-        onclick={() => (tab = t.id)}>{t.id === 'history' ? 'History' : t.label}</button
+        onclick={() => (tab = t.id)}>{t.label}</button
       >
     {/each}
   </div>
@@ -310,7 +324,7 @@
           void saveName();
         }}
       >
-        <label for="{idPrefix}-{bed.blockId}-name">Name</label>
+        <label for="{idPrefix}-{bed.blockId}-name">{tr('garden.insp.name')}</label>
         <input
           id="{idPrefix}-{bed.blockId}-name"
           bind:this={nameInput}
@@ -321,13 +335,13 @@
         {#if d.canEdit}<button
             type="submit"
             class="btn"
-            disabled={name.trim() === bed.name || !name.trim()}>Rename</button
+            disabled={name.trim() === bed.name || !name.trim()}>{tr('garden.common.rename')}</button
           >{/if}
       </form>
 
       {#if bed.kind !== 'container'}
         <div class="fieldrow">
-          <label for="{idPrefix}-{bed.blockId}-style">Style</label>
+          <label for="{idPrefix}-{bed.blockId}-style">{tr('garden.insp.style')}</label>
           <select
             id="{idPrefix}-{bed.blockId}-style"
             value={bed.bedStyle ?? 'raised'}
@@ -336,20 +350,20 @@
               d.setBedStyle(bed.blockId, (e.currentTarget as HTMLSelectElement).value as BedStyle)}
           >
             {#each BED_STYLES as s (s)}
-              <option value={s}>{BED_STYLE_LABELS[s]}</option>
+              <option value={s}>{bedStyleLabel(s, tr)}</option>
             {/each}
           </select>
         </div>
       {/if}
 
       <fieldset class="size">
-        <legend>Size (feet)</legend>
+        <legend>{tr('garden.insp.sizeFeet')}</legend>
         <div class="pair">
-          <label for="{idPrefix}-{bed.blockId}-w">Width</label>
+          <label for="{idPrefix}-{bed.blockId}-w">{tr('garden.insp.width')}</label>
           {#if d.canEdit}<button
               type="button"
               class="step"
-              aria-label="Width 6 inches less"
+              aria-label={tr('garden.insp.widthLess')}
               onclick={() => step('w', -0.5)}>−</button
             >{/if}
           <input
@@ -366,16 +380,16 @@
           {#if d.canEdit}<button
               type="button"
               class="step"
-              aria-label="Width 6 inches more"
+              aria-label={tr('garden.insp.widthMore')}
               onclick={() => step('w', 0.5)}>+</button
             >{/if}
         </div>
         <div class="pair">
-          <label for="{idPrefix}-{bed.blockId}-l">Length</label>
+          <label for="{idPrefix}-{bed.blockId}-l">{tr('garden.insp.length')}</label>
           {#if d.canEdit}<button
               type="button"
               class="step"
-              aria-label="Length 6 inches less"
+              aria-label={tr('garden.insp.lengthLess')}
               onclick={() => step('l', -0.5)}>−</button
             >{/if}
           <input
@@ -391,16 +405,16 @@
           {#if d.canEdit}<button
               type="button"
               class="step"
-              aria-label="Length 6 inches more"
+              aria-label={tr('garden.insp.lengthMore')}
               onclick={() => step('l', 0.5)}>+</button
             >{/if}
         </div>
       </fieldset>
 
       <fieldset class="size">
-        <legend>Position (feet)</legend>
+        <legend>{tr('garden.insp.positionFeet')}</legend>
         <div class="pair">
-          <label for="{idPrefix}-{bed.blockId}-x">From west</label>
+          <label for="{idPrefix}-{bed.blockId}-x">{tr('garden.insp.fromWest')}</label>
           <input
             id="{idPrefix}-{bed.blockId}-x"
             type="number"
@@ -413,7 +427,7 @@
           />
         </div>
         <div class="pair">
-          <label for="{idPrefix}-{bed.blockId}-y">From north</label>
+          <label for="{idPrefix}-{bed.blockId}-y">{tr('garden.insp.fromNorth')}</label>
           <input
             id="{idPrefix}-{bed.blockId}-y"
             type="number"
@@ -426,29 +440,29 @@
           />
         </div>
         {#if d.canEdit}
-          <div class="nudge" role="group" aria-label="Nudge {bed.name} 6 inches">
+          <div class="nudge" role="group" aria-label={tr('garden.insp.nudge', { name: bed.name })}>
             <button
               type="button"
               class="step"
-              aria-label="Nudge west"
+              aria-label={tr('garden.insp.nudgeWest')}
               onclick={() => d.nudgeBed(bed.blockId, -0.5, 0)}>←</button
             >
             <button
               type="button"
               class="step"
-              aria-label="Nudge north"
+              aria-label={tr('garden.insp.nudgeNorth')}
               onclick={() => d.nudgeBed(bed.blockId, 0, -0.5)}>↑</button
             >
             <button
               type="button"
               class="step"
-              aria-label="Nudge south"
+              aria-label={tr('garden.insp.nudgeSouth')}
               onclick={() => d.nudgeBed(bed.blockId, 0, 0.5)}>↓</button
             >
             <button
               type="button"
               class="step"
-              aria-label="Nudge east"
+              aria-label={tr('garden.insp.nudgeEast')}
               onclick={() => d.nudgeBed(bed.blockId, 0.5, 0)}>→</button
             >
           </div>
@@ -457,30 +471,32 @@
 
       {#if d.canEdit}
         <div class="actions">
-          <button type="button" class="btn" onclick={() => d.turnBed(bed.blockId)}>Turn</button>
+          <button type="button" class="btn" onclick={() => d.turnBed(bed.blockId)}
+            >{tr('garden.common.turn')}</button
+          >
           <button type="button" class="btn" onclick={() => d.duplicateBed(bed.blockId)}
-            >Duplicate</button
+            >{tr('garden.common.duplicate')}</button
           >
           <button type="button" class="btn" onclick={() => d.openCropPanel(bed.blockId)}
-            >Add crop</button
+            >{tr('garden.common.addCrop')}</button
           >
           <button type="button" class="btn danger" onclick={() => d.askDelete(bed.blockId)}
-            >Delete</button
+            >{tr('garden.common.delete')}</button
           >
         </div>
       {/if}
       {#if d.confirmDeleteBedId === bed.blockId}
         <div class="confirm" role="alertdialog" aria-labelledby="{idPrefix}-{bed.blockId}-del">
           <p id="{idPrefix}-{bed.blockId}-del">
-            Delete {bed.name}?{plannedHere.length
-              ? ` These planned plantings go with it: ${plannedHere.map((p) => p.varietyDisplayName).join(', ')}.`
+            {tr('garden.insp.deleteQ', { name: bed.name })}{plannedHere.length
+              ? ` ${tr('garden.insp.goWithIt', { names: plannedHere.map((p) => p.varietyDisplayName).join(', ') })}`
               : ''}
           </p>
           <button type="button" class="btn danger" onclick={() => d.deleteBed(bed.blockId)}
-            >Delete {bed.name}</button
+            >{tr('garden.insp.deleteBed', { name: bed.name })}</button
           >
           <button type="button" class="btn" onclick={() => (d.confirmDeleteBedId = null)}
-            >Keep it</button
+            >{tr('garden.insp.keepIt')}</button
           >
         </div>
       {/if}
@@ -497,7 +513,9 @@
           />
         {/key}
       {/if}
-      <a class="link" href={cardHref('area', cardKey('area', d.canvas.areaId))}>Area Card</a>
+      <a class="link" href={cardHref('area', cardKey('area', d.canvas.areaId))}
+        >{tr('garden.page.areaCard')}</a
+      >
     </div>
   {:else if tab === 'plantings'}
     <div
@@ -507,7 +525,7 @@
       aria-labelledby="{idPrefix}-{bed.blockId}-tab-plantings"
     >
       {#if plantings.length === 0}
-        <p class="empty">Nothing planned here this season yet.</p>
+        <p class="empty">{tr('garden.insp.nothingPlanned')}</p>
       {/if}
       <ul class="plist">
         {#each plantings as p (p.cropId)}
@@ -519,7 +537,8 @@
           {@const series = d.seriesOf(p)}
           {@const place = series.findIndex((q) => q.cropId === p.cropId)}
           {@const first = series[0]}
-          {@const when = p.plantingDateMs != null ? d.dateText(p.plantingDateMs) : 'No date'}
+          {@const when =
+            p.plantingDateMs != null ? d.dateText(p.plantingDateMs) : tr('garden.insp.noDate')}
           {@const who = `${p.varietyDisplayName}, ${when}`}
           {@const thisYear = d.inSeasonYear(p)}
           <li
@@ -540,22 +559,28 @@
               {#if p.sourceProvenance}<span class="prov-inline"
                   ><Provenance
                     source={p.sourceProvenance}
-                    detail={p.sourceProvenance === 'plugin' ? 'bed recipe' : undefined}
+                    detail={p.sourceProvenance === 'plugin'
+                      ? tr('garden.insp.bedRecipe')
+                      : undefined}
                     compact
                   /></span
                 >{/if}
               <span class="pmeta">
-                {when} · {plantingStatusText(
+                {when} · {statusLabel(
                   p,
                   d.nowMs,
-                  d.stageOf(p.cropId)
+                  d.stageOf(p.cropId),
+                  tr
                 )}{#if series.length > 1 && place >= 0}
-                  · sowing {place + 1} of {series.length}{/if}
+                  · {tr('garden.insp.sowingOf', { n: place + 1, total: series.length })}{/if}
               </span>
             </div>
             {#if p.footprint}
               <div class="count" data-testid="plant-count">
-                <span>{p.plantCount != null ? plural(p.plantCount, 'plant') : 'Count not set'}</span
+                <span
+                  >{p.plantCount != null
+                    ? countOf('plant', p.plantCount, tr)
+                    : tr('garden.insp.countNotSet')}</span
                 >
                 {#if p.plantCountProvenance}<span class="prov-inline"
                     ><Provenance
@@ -565,26 +590,27 @@
                     /></span
                   >{/if}
                 <span class="pmeta"
-                  >{sizeLabel(p.footprint.w_in / 12, p.footprint.l_in / 12)} · {PATTERN_LABELS[
-                    p.spacing.pattern
-                  ]}</span
+                  >{sizeLabel(p.footprint.w_in / 12, p.footprint.l_in / 12)} · {patternLabel(
+                    p.spacing.pattern,
+                    tr
+                  )}</span
                 >
               </div>
             {:else}
-              <p class="pmeta">Not placed in the bed yet.</p>
+              <p class="pmeta">{tr('garden.insp.notInBed')}</p>
             {/if}
             {#if early}<p class="chip warn">{early}</p>{/if}
-            {#if early && early.startsWith('Early') && !d.offline}
+            {#if early && d.windowKind(p) === 'early' && !d.offline}
               {#if d.canEdit}
                 <button type="button" class="btn cover-btn" onclick={() => (coverSheetOpen = true)}
-                  >Too early for this bed. Add a cover?</button
+                  >{tr('garden.insp.tooEarlyAdd')}</button
                 >
               {:else}
-                <p class="chip">Too early for this bed. Ask the owner about a cover.</p>
+                <p class="chip">{tr('garden.insp.tooEarlyAsk')}</p>
               {/if}
             {/if}
             {#each rot as w (w.family)}
-              <p class="chip {w.severity}">{w.message}</p>
+              <p class="chip {w.severity}">{d.rotationText(w)}</p>
             {/each}
             {#if shares}<p class="chip warn">{shares}</p>{/if}
 
@@ -592,13 +618,13 @@
               {#if p.footprint}
                 <div class="edit">
                   <label>
-                    W ft
+                    {tr('garden.insp.wFt')}
                     <input
                       type="number"
                       min="0.5"
                       step="0.5"
                       value={ft(sz.w)}
-                      aria-label="{p.varietyDisplayName} width in feet"
+                      aria-label={tr('garden.insp.widthInFeet', { name: p.varietyDisplayName })}
                       onchange={(e) =>
                         (editSize[p.cropId] = {
                           ...sz,
@@ -607,13 +633,13 @@
                     />
                   </label>
                   <label>
-                    L ft
+                    {tr('garden.insp.lFt')}
                     <input
                       type="number"
                       min="0.5"
                       step="0.5"
                       value={ft(sz.l)}
-                      aria-label="{p.varietyDisplayName} length in feet"
+                      aria-label={tr('garden.insp.lengthInFeet', { name: p.varietyDisplayName })}
                       onchange={(e) =>
                         (editSize[p.cropId] = {
                           ...sz,
@@ -628,32 +654,32 @@
                       const s = sizeOf(p);
                       await d.setPlantingSize(p.cropId, s.w, s.l);
                       delete editSize[p.cropId];
-                    }}>Set size</button
+                    }}>{tr('garden.insp.setSize')}</button
                   >
                   <label>
-                    Pattern
+                    {tr('garden.insp.pattern')}
                     <select
                       value={p.spacing.pattern}
-                      aria-label="{p.varietyDisplayName} spacing pattern"
+                      aria-label={tr('garden.insp.spacingPattern', { name: p.varietyDisplayName })}
                       onchange={(e) =>
                         d.setPlantingPattern(
                           p.cropId,
                           (e.currentTarget as HTMLSelectElement).value as SpacingPattern
                         )}
                     >
-                      {#each Object.entries(PATTERN_LABELS) as [value, label] (value)}
-                        <option {value}>{label}</option>
+                      {#each Object.keys(PATTERN_LABELS) as value (value)}
+                        <option {value}>{patternLabel(value as SpacingPattern, tr)}</option>
                       {/each}
                     </select>
                   </label>
                   <label>
-                    Plants
+                    {tr('garden.insp.plants')}
                     <input
                       type="number"
                       min="1"
                       step="1"
                       value={p.plantCount ?? ''}
-                      aria-label="{p.varietyDisplayName} plant count"
+                      aria-label={tr('garden.insp.plantCount', { name: p.varietyDisplayName })}
                       onchange={(e) => {
                         const n = Math.round(Number((e.currentTarget as HTMLInputElement).value));
                         if (n >= 1) void d.setPlantCount(p.cropId, n);
@@ -664,7 +690,8 @@
                     <button
                       type="button"
                       class="btn"
-                      onclick={() => d.setPlantCount(p.cropId, null)}>Recount from spacing</button
+                      onclick={() => d.setPlantCount(p.cropId, null)}
+                      >{tr('garden.insp.recount')}</button
                     >
                   {/if}
                 </div>
@@ -677,60 +704,68 @@
                 }}
               >
                 <label>
-                  Date
+                  {tr('garden.insp.date')}
                   <input
                     type="date"
                     name="date"
                     value={p.plantingDateMs != null ? ymd(p.plantingDateMs) : ''}
-                    aria-label="{p.varietyDisplayName} planting date"
+                    aria-label={tr('garden.insp.plantingDate', { name: p.varietyDisplayName })}
                     onblur={(e) => commitDate(p, e.currentTarget)}
                   />
                 </label>
-                <button type="submit" class="btn">Change date</button>
+                <button type="submit" class="btn">{tr('garden.insp.changeDate')}</button>
               </form>
               <div class="actions">
                 {#if p.footprint}
                   <button
                     type="button"
                     class="btn"
-                    aria-label="Move {who}"
-                    onclick={() => d.startMovePlanting(p.cropId)}>Move</button
+                    aria-label={tr('garden.insp.moveWho', { who })}
+                    onclick={() => d.startMovePlanting(p.cropId)}>{tr('garden.common.move')}</button
                   >
                   {#if series.length > 1 && place > 0 && first}
                     <p class="pmeta series">
-                      Part of a succession of {series.length} sowings.
+                      {tr('garden.insp.partOfSeries', { count: series.length })}
                     </p>
                     <button
                       type="button"
                       class="btn"
-                      aria-label="Go to the first sowing, {d.dateText(first.plantingDateMs ?? 0)}"
-                      onclick={() => d.selectPlanting(first.cropId)}>First sowing</button
+                      aria-label={tr('garden.insp.goFirst', {
+                        date: d.dateText(first.plantingDateMs ?? 0)
+                      })}
+                      onclick={() => d.selectPlanting(first.cropId)}
+                      >{tr('garden.insp.firstSowing')}</button
                     >
                   {:else}
                     <button
                       type="button"
                       class="btn"
-                      aria-label="{series.length > 1 ? 'Add more sowings' : 'Add succession'} {who}"
+                      aria-label="{series.length > 1
+                        ? tr('garden.insp.addMore')
+                        : tr('garden.insp.addSuccession')} {who}"
                       onclick={() => openSuccession(p)}
-                      >{series.length > 1 ? 'Add more sowings' : 'Add succession'}</button
+                      >{series.length > 1
+                        ? tr('garden.insp.addMore')
+                        : tr('garden.insp.addSuccession')}</button
                     >
                   {/if}
                   <button
                     type="button"
                     class="btn"
-                    aria-label="Remove {who} from bed"
-                    onclick={() => d.removeFromBed(p.cropId)}>Remove from bed</button
+                    aria-label={tr('garden.insp.removeWho', { who })}
+                    onclick={() => d.removeFromBed(p.cropId)}
+                    >{tr('garden.insp.removeFromBed')}</button
                   >
                 {:else if thisYear}
                   <button
                     type="button"
                     class="btn"
-                    aria-label="Place {who} in {bed.name}"
+                    aria-label={tr('garden.insp.placeWho', { who, name: bed.name })}
                     onclick={() =>
                       d.placeCrop(
                         { source: 'planting', cropId: p.cropId, label: p.varietyDisplayName },
                         bed.blockId
-                      )}>Place in {bed.name}</button
+                      )}>{tr('garden.insp.placeIn', { name: bed.name })}</button
                   >
                 {/if}
               </div>
@@ -745,9 +780,9 @@
                   }}
                 >
                   <label>
-                    Move to
+                    {tr('garden.insp.moveTo')}
                     <select
-                      aria-label="Bed to move {who} to"
+                      aria-label={tr('garden.insp.bedToMove', { who })}
                       value={moveTarget[p.cropId] ?? otherBeds[0].blockId}
                       onchange={(e) =>
                         (moveTarget[p.cropId] = (e.currentTarget as HTMLSelectElement).value)}
@@ -757,9 +792,9 @@
                       {/each}
                     </select>
                   </label>
-                  <button type="submit" class="btn">Move to bed</button>
+                  <button type="submit" class="btn">{tr('garden.insp.moveToBed')}</button>
                   {#if series.length > 1}
-                    <p class="pmeta">It stays linked with its other sowings.</p>
+                    <p class="pmeta">{tr('garden.insp.staysLinked')}</p>
                   {/if}
                 </form>
               {/if}
@@ -770,19 +805,22 @@
               <div class="succ" data-testid="succession-sheet">
                 {#if familyDays === 0 && succInterval == null}
                   <p>
-                    {cropName(p.cropPluginId, p.varietyDisplayName)} doesn't usually succession-sow here.
-                    Plant once.
+                    {tr('garden.insp.noSuccession', {
+                      name: cropName(p.cropPluginId, p.varietyDisplayName)
+                    })}
                   </p>
-                  <button type="button" class="btn" onclick={closeSuccession}>Close</button>
+                  <button type="button" class="btn" onclick={closeSuccession}
+                    >{tr('garden.common.close')}</button
+                  >
                 {:else}
                   <label>
-                    Sow again every
+                    {tr('garden.insp.sowEvery')}
                     <input
                       type="number"
                       min="1"
                       max="90"
                       value={succInterval ?? familyDays}
-                      aria-label="Days between sowings"
+                      aria-label={tr('garden.insp.daysBetween')}
                       onchange={(e) => {
                         succInterval = Math.max(
                           1,
@@ -791,15 +829,15 @@
                         refreshSuccession();
                       }}
                     />
-                    days
+                    {tr('garden.insp.days')}
                     <Provenance source={succInterval == null ? 'plugin' : 'manual'} compact />
                   </label>
                   <label>
-                    How many more?
+                    {tr('garden.insp.howMany')}
                     <select
                       class="count-select"
                       value={succCount}
-                      aria-label="How many more sowings"
+                      aria-label={tr('garden.insp.howManySowings')}
                       onchange={(e) => {
                         succCount = Number((e.currentTarget as HTMLSelectElement).value);
                         refreshSuccession();
@@ -815,10 +853,10 @@
                       {#each succProposal.sowings as s (s.index)}
                         {@const opens = s.conflict ? nextOpenAfter(s.plantingDateMs) : null}
                         <li class:conflict={!!s.conflict}>
-                          {shortDate(s.plantingDateMs)}{s.plantCount
-                            ? ` · ${plural(s.plantCount, 'plant')}`
+                          {shortDate(s.plantingDateMs, tr)}{s.plantCount
+                            ? ` · ${countOf('plant', s.plantCount, tr)}`
                             : ''}{s.conflict ? ` · ${s.conflict}` : ''}{opens
-                            ? ` ${bed.name} opens ${shortDate(opens)}, so a longer gap between sowings may fit.`
+                            ? ` ${tr('garden.insp.opensGap', { name: bed.name, date: shortDate(opens, tr) })}`
                             : ''}
                         </li>
                       {/each}
@@ -831,9 +869,11 @@
                       disabled={succBusy || succOk === 0}
                       onclick={commitSuccession}
                     >
-                      Add {plural(succOk, 'sowing')}
+                      {tr('garden.insp.addN', { what: countOf('sowing', succOk, tr) })}
                     </button>
-                    <button type="button" class="btn" onclick={closeSuccession}>Cancel</button>
+                    <button type="button" class="btn" onclick={closeSuccession}
+                      >{tr('garden.common.cancel')}</button
+                    >
                   </div>
                 {/if}
               </div>
@@ -855,7 +895,7 @@
       {#if d.canEdit}
         <div class="actions">
           <button type="button" class="btn" onclick={() => d.openCropPanel(bed.blockId)}
-            >Add crop</button
+            >{tr('garden.common.addCrop')}</button
           >
           {#if d.recipes.length}
             <button
@@ -864,11 +904,11 @@
               aria-expanded={recipesOpen}
               onclick={() => (recipesOpen ? closeRecipes() : (recipesOpen = true))}
             >
-              Use a bed recipe
+              {tr('garden.insp.useRecipe')}
             </button>
           {/if}
           <button type="button" class="btn" disabled={fillBusy} onclick={requestFill}
-            >Fill this bed</button
+            >{tr('garden.insp.fillBed')}</button
           >
         </div>
       {/if}
@@ -886,25 +926,29 @@
                   >
                     <strong>{recipe.displayName}</strong>
                     <span class="pmeta">
-                      {fit.fits ? 'Fits your season' : fit.reason} · made for {sizeLabel(
-                        recipe.bedSize.widthFt,
-                        recipe.bedSize.lengthFt
+                      {fit.fits ? tr('garden.insp.fitsSeason') : fit.reason} · {tr(
+                        'garden.insp.madeFor',
+                        {
+                          size: sizeLabel(recipe.bedSize.widthFt, recipe.bedSize.lengthFt)
+                        }
                       )}
                     </span>
                   </button>
                 </li>
               {/each}
             </ul>
-            <button type="button" class="btn" onclick={closeRecipes}>Close</button>
+            <button type="button" class="btn" onclick={closeRecipes}
+              >{tr('garden.common.close')}</button
+            >
           {:else}
             <ul class="plist">
               {#each recipePreview.plantings as prop (prop.key)}
                 <li class="prow">
                   <span>
-                    {prop.varietyDisplayName} · {shortDate(prop.plantingDateMs)} · {sizeLabel(
+                    {prop.varietyDisplayName} · {shortDate(prop.plantingDateMs, tr)} · {sizeLabel(
                       prop.footprint.w_in / 12,
                       prop.footprint.l_in / 12
-                    )} · {plural(prop.plantCount, 'plant')}
+                    )} · {countOf('plant', prop.plantCount, tr)}
                   </span>
                   <span class="prov-inline"><Provenance source={prop.provenance} compact /></span>
                   <label class="accept">
@@ -914,13 +958,15 @@
                       onchange={(e) =>
                         (skipped[prop.key] = !(e.currentTarget as HTMLInputElement).checked)}
                     />
-                    Keep
+                    {tr('garden.common.keep')}
                   </label>
                 </li>
               {/each}
             </ul>
             {#each recipePreview.skipped as s (s.stepIndex)}
-              <p class="chip suggest">Step {s.stepIndex + 1} left out: {s.reason}</p>
+              <p class="chip suggest">
+                {tr('garden.insp.stepLeftOut', { n: s.stepIndex + 1, reason: s.reason })}
+              </p>
             {/each}
             {#each recipePreview.warnings as w, i (i)}
               <p class="chip warn">{w}</p>
@@ -932,7 +978,7 @@
                 disabled={keptCount === 0}
                 onclick={addRecipe}
               >
-                Add {plural(keptCount, 'planting')}
+                {tr('garden.insp.addN', { what: countOf('planting', keptCount, tr) })}
               </button>
               <button
                 type="button"
@@ -940,7 +986,7 @@
                 onclick={() => {
                   recipePreview = null;
                   d.ghosts = [];
-                }}>Back</button
+                }}>{tr('garden.common.back')}</button
               >
             </div>
           {/if}
@@ -951,22 +997,22 @@
           {#if fill.message}<p class="banner">{fill.message}</p>{/if}
           <AiLimitNudge limit={fill.aiLimit} isOwner={d.canEdit} />
           {#if fill.proposals.length === 0}
-            <p class="empty">Nothing fits the open space on this date.</p>
+            <p class="empty">{tr('garden.insp.nothingFits')}</p>
           {/if}
           <ul class="plist">
             {#each fill.proposals as prop (prop.key)}
               <li class="prow">
                 <span
-                  >{prop.varietyDisplayName} · {shortDate(prop.plantingDateMs)} · {sizeLabel(
+                  >{prop.varietyDisplayName} · {shortDate(prop.plantingDateMs, tr)} · {sizeLabel(
                     prop.footprint.w_in / 12,
                     prop.footprint.l_in / 12
-                  )} · {plural(prop.plantCount, 'plant')}</span
+                  )} · {countOf('plant', prop.plantCount, tr)}</span
                 >
                 <span class="pmeta">{prop.note ?? spotText(prop.footprint)}</span>
                 <span class="prov-inline"><Provenance source={prop.provenance} compact /></span>
                 <label class="accept">
                   <input type="checkbox" bind:checked={accepted[prop.key]} />
-                  Keep
+                  {tr('garden.common.keep')}
                 </label>
               </li>
             {/each}
@@ -976,7 +1022,8 @@
               type="button"
               class="btn primary"
               disabled={acceptedCount === 0}
-              onclick={addAccepted}>Add {plural(acceptedCount, 'planting')}</button
+              onclick={addAccepted}
+              >{tr('garden.insp.addN', { what: countOf('planting', acceptedCount, tr) })}</button
             >
             <button
               type="button"
@@ -984,7 +1031,7 @@
               onclick={() => {
                 fill = null;
                 d.ghosts = [];
-              }}>Close</button
+              }}>{tr('garden.common.close')}</button
             >
           </div>
         </div>
@@ -997,9 +1044,9 @@
       id="{idPrefix}-{bed.blockId}-panel-history"
       aria-labelledby="{idPrefix}-{bed.blockId}-tab-history"
     >
-      <h3>Bed history</h3>
+      <h3>{tr('garden.insp.bedHistory')}</h3>
       {#if history.length === 0}
-        <p class="empty">Nothing has grown in {bed.name} yet.</p>
+        <p class="empty">{tr('garden.insp.nothingGrown', { name: bed.name })}</p>
       {/if}
       {#each historyYears as year (year)}
         <h4>{year}</h4>
@@ -1008,9 +1055,9 @@
             <li>
               {h.varietyDisplayName}
               <span class="pmeta"
-                >· {familyLabel(h.cropFamily)}{h.plantingDateMs != null
+                >· {familyName(h.cropFamily, tr)}{h.plantingDateMs != null
                   ? ` · ${d.dateText(h.plantingDateMs)}`
-                  : ''} · {plantingStatusText(h, d.nowMs)}</span
+                  : ''} · {statusLabel(h, d.nowMs, null, tr)}</span
               >
             </li>
           {/each}
@@ -1022,7 +1069,7 @@
 
 <SetupSheet
   open={coverSheetOpen}
-  title="Add a cover"
+  title={tr('garden.insp.addCover')}
   kicker={bed.name}
   onClose={() => (coverSheetOpen = false)}
 >

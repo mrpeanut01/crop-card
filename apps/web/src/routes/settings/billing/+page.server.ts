@@ -6,10 +6,11 @@ import {
   billingConfig,
   getBillingSummary
 } from '$lib/server/billing/stripeApi';
+import { t } from '$lib/i18n';
 
 export const load: ServerLoad = ({ locals, url }) => {
   if (!locals.user) throw redirect(303, '/');
-  if (locals.user.role !== 'owner') throw error(403, 'owner-only');
+  if (locals.user.role !== 'owner') throw error(403, t(locals.locale, 'settings.err.ownerOnly'));
   const ownerId = locals.user.activeOwnerId;
   if (!ownerId) throw redirect(303, '/owner-picker');
 

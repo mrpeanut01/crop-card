@@ -692,5 +692,18 @@ export const esFarm: Partial<Record<MessageKey, string>> = {
   'climate.shift.fallLater.one': 'Otoño {count} día después',
   'climate.shift.fallLater.other': 'Otoño {count} días después',
   'map.zoomIn': 'Acercar',
-  'map.zoomOut': 'Alejar'
+  'map.zoomOut': 'Alejar',
+  'tools.plate.rec.stand': '{n} plantas{per}',
+  'tools.plate.rec.low':
+    '{stand} es una población baja. Un plato de 16 celdas coincide con los piñones estándar.',
+  'tools.plate.rec.high':
+    '{stand} es una población normal o alta. Un plato de 24 celdas coincide con los piñones estándar.',
+  'tools.plate.rec.mid':
+    '{stand} está entre {from} y {to}. Cualquiera sirve, pero un plato de 24 celdas deja más margen para bajar a un piñón más chico.',
+  'climate.cover.err.http': 'No se pudo guardar (HTTP {status}).',
+  'climate.cover.err.ownerAdd':
+    'Solo el propietario puede agregar cubiertas. Pídeselo al propietario.',
+  'climate.cover.err.ownerRemove':
+    'Solo el propietario puede quitar cubiertas. Pídeselo al propietario.',
+  'farm.editor.codePlaceholder': 'A'
 };

@@ -73,16 +73,18 @@
 </div>
 
 {#if activeREI.length > 0}
-  <Banner tone="wheat">
-    <strong>Active {chemistry} re-entry intervals:</strong>
-    <ul class="rei-list">
-      {#each activeREI as e (e.id)}
-        <li>
-          Block {e.blockId} — re-entry clear {fmt.instant(e.reEntryClearAt ?? 0)}
-        </li>
-      {/each}
-    </ul>
-  </Banner>
+  <div lang="en" data-english-only="safety">
+    <Banner tone="wheat">
+      <strong>Active {chemistry} re-entry intervals:</strong>
+      <ul class="rei-list">
+        {#each activeREI as e (e.id)}
+          <li>
+            Block {e.blockId} — re-entry clear {fmt.instant(e.reEntryClearAt ?? 0)}
+          </li>
+        {/each}
+      </ul>
+    </Banner>
+  </div>
 {/if}
 
 <style>

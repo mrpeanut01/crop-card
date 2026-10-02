@@ -33,7 +33,7 @@ import { getRegistry, getRegistryStats } from '$lib/server/registry';
 import { getApiKey } from '$lib/server/scanResult';
 
 export const load: ServerLoad = async ({ locals }) => {
-  if (!locals.user) throw error(401, 'sign-in required');
+  if (!locals.user) throw error(401, t(locals.locale, 'settings.err.signIn'));
   const isOwner = locals.user.role === 'owner';
   const ownerId = locals.user.activeOwnerId;
 

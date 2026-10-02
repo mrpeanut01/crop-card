@@ -81,7 +81,7 @@ export const POST: RequestHandler = async (event) => {
     return refusal(400, 'IN_THE_FUTURE', t(event.locals?.locale, 'amend.api.future'));
   }
   if (input.documentId) {
-    const refused = checkLabReport(input.documentId);
+    const refused = checkLabReport(input.documentId, event.locals?.locale);
     if (refused) return refused;
   }
   const test = insertForageTest({

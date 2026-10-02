@@ -585,7 +585,7 @@
                 </div>{/if}
               {#if 'delta' in p && p.delta !== undefined}<div>
                   <dt>{tr('tools.plate.score')}</dt>
-                  <dd><strong>Δ = {p.delta}</strong></dd>
+                  <dd><strong>∆ = {p.delta}</strong></dd>
                 </div>{/if}
             </dl>
 

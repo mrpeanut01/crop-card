@@ -58,7 +58,7 @@ export const load: PageServerLoad = (event) => {
 export const actions: Actions = {
   invite: async (event) => {
     const u = requireOwner(event);
-    if (!u.activeOwnerId) throw error(400, 'no active owner');
+    if (!u.activeOwnerId) throw error(400, t(event.locals.locale, 'settings.err.noActiveOwner'));
     const fd = await event.request.formData();
     const inviteeEmail = String(fd.get('email') ?? '').trim();
     if (!inviteeEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteeEmail)) {
@@ -108,19 +108,19 @@ export const actions: Actions = {
   },
   revoke: async (event) => {
     const u = requireOwner(event);
-    if (!u.activeOwnerId) throw error(400, 'no active owner');
+    if (!u.activeOwnerId) throw error(400, t(event.locals.locale, 'settings.err.noActiveOwner'));
     const fd = await event.request.formData();
     const inviteId = String(fd.get('inviteId') ?? '');
-    if (!inviteId) return fail(400, { error: 'inviteId required' });
+    if (!inviteId) return fail(400, { error: t(event.locals.locale, 'settings.err.missing') });
     revokeInvite(u.activeOwnerId, inviteId);
     return { ok: true };
   },
   remove: async (event) => {
     const u = requireOwner(event);
-    if (!u.activeOwnerId) throw error(400, 'no active owner');
+    if (!u.activeOwnerId) throw error(400, t(event.locals.locale, 'settings.err.noActiveOwner'));
     const fd = await event.request.formData();
     const userId = String(fd.get('userId') ?? '');
-    if (!userId) return fail(400, { error: 'userId required' });
+    if (!userId) return fail(400, { error: t(event.locals.locale, 'settings.err.missing') });
     if (userId === u.id) {
       return fail(400, { error: t(event.locals?.locale, 'settings.helpers.err.removeSelf') });
     }

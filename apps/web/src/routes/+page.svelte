@@ -10,6 +10,7 @@
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   const tr = $derived(createT(page.data?.locale));
+  const isEnglish = $derived((page.data?.locale ?? 'en') === 'en');
 
   let showDemo = $state(false);
   let submitting = $state(false);
@@ -315,10 +316,15 @@
                 placeholder="(571) 555-0123"
               />
             </label>
-            <p class="consent">
+            <p class="consent" lang="en" data-english-only="regulatory">
               CropCard will text you a sign-in code. Msg &amp; data rates may apply. Reply STOP to
               opt out, HELP for help.
             </p>
+            {#if !isEnglish}
+              <p class="consent" data-testid="sms-consent-translation">
+                {tr('entry.land.smsConsentTranslation')}
+              </p>
+            {/if}
           {:else}
             <label class="row">
               <span class="lbl">{tr('entry.land.email')}</span>

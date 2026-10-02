@@ -1111,5 +1111,71 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'fert.lime.noPh': 'Este análisis no tiene pH, así que no hay sugerencia de cal.',
   'fert.lime.likely':
     'El pH {ph} es {cls}. La mayoría de las hortalizas y cultivos de campo crecen mejor en suelo ligeramente ácido, así que probablemente se necesita cal. Los cultivos que prefieren suelo ácido, como los arándanos, son la excepción.',
-  'fert.lime.notNeeded': 'El pH {ph} es {cls}, así que probablemente no se necesita cal.'
+  'fert.lime.notNeeded': 'El pH {ph} es {cls}, así que probablemente no se necesita cal.',
+  'finance.people.phoneEnding': 'teléfono que termina en {digits}',
+  'finance.people.someone': 'Alguien de la granja',
+  'finance.access.ownerOnly': 'El dinero solo lo ve el propietario de la granja.',
+  'finance.profit.stockPurchase': 'Compra de inventario (se cuenta al usarse)',
+  'finance.profit.unnamedAnimal': 'Animal sin nombre',
+  'recui.updatingMessage':
+    'CropCard se está actualizando. No se guardó nada. Inténtalo de nuevo en un momento.',
+  'recui.updatingTitle': 'Actualizando',
+  'recui.updatingBack': 'Volver',
+  'harvestui.disp.locked': 'Bloqueado',
+  'harvestui.disp.lockedReason': '¿Por qué eliminas un registro bloqueado?',
+  'harvestui.disp.deleteWithReason': 'Eliminar con este motivo',
+  'harvestui.disp.err.reasonNeeded': 'Di por qué se elimina este registro bloqueado.',
+  'recui.year.covered.title': 'Comida o ventas durante una retención',
+  'recui.year.covered.date': 'Fecha',
+  'recui.year.covered.subject': 'Animal o grupo',
+  'recui.year.covered.what': 'Qué',
+  'recui.year.covered.hold': 'Retención',
+  'recui.year.covered.meat': 'Carne',
+  'recui.year.covered.line': '{what}, {use}',
+  'recui.year.covered.none':
+    'Este año ninguna comida o venta registrada cayó dentro de una retención.',
+  'records.card.voided': 'Anulado. Esta entrada ya no está en tus registros.',
+  'organic.api.impersonating':
+    'No se pueden registrar estados orgánicos mientras suplantas una granja.',
+  'organic.api.ownerOnly': 'Solo el dueño puede registrar estados y revisiones orgánicas.',
+  'organic.api.notGrowingArea':
+    'Solo las áreas de cultivo (campos, huertos, invernaderos, huertas de frutales y pastizales) tienen un estado orgánico.',
+  'organic.api.realDate': 'Usa una fecha real entre {min} y {max}.',
+  'organic.api.libraryDecides': 'La biblioteca ya decide este tratamiento.',
+  'organic.api.notReached':
+    'Este tratamiento no llegó a ningún animal bajo manejo orgánico, así que no hay nada que responder.',
+  'organic.api.reviewLocked':
+    'Esta respuesta se dio hace más de 48 horas y ya no se puede cambiar.',
+  'organic.api.packBusy':
+    'Ya se está armando un paquete para esta granja. Vuelve a intentarlo en unos segundos.',
+  'harvestui.disp.err.checkFields': 'Revisa los campos e inténtalo de nuevo.',
+  'harvestui.disp.err.recipientKind': 'Solo una venta o un regalo tiene destinatario.',
+  'harvestui.disp.err.organicKind': 'Solo una venta se puede marcar como vendida como orgánica.',
+  'harvestui.disp.err.locked':
+    'Este registro se bloquea 48 horas después de su fecha. El dueño puede eliminarlo con un motivo.',
+  'harvestui.disp.err.ownerDeleteLocked':
+    'Solo el dueño de la granja puede eliminar un registro bloqueado.',
+  'harvestui.disp.err.moneyImpersonating':
+    'El dinero no se puede cambiar mientras suplantas una granja.',
+  'records.export.vdacsTitle':
+    'Paquete de auditoría VDACS: registros de herbicida, insecticida y fungicida, identidad del propietario y hash de integridad',
+  'records.export.vdacsPdf': 'PDF de auditoría VDACS',
+  'records.export.usdaCsv': 'CSV para USDA / NRCS',
+  'records.review.deconCalib': 'Descontaminación y calibración',
+  'records.review.deconEvents': 'descontaminaciones',
+  'records.retention.locked':
+    '{locked}/{total} registros bloqueados por la regla FR-09 de 48 horas. Registro más antiguo: {oldest}.',
+  'records.ledger.hash': 'Hash',
+  'records.integrity.kicker': 'Hash de integridad',
+  'records.integrity.body':
+    'Cada registro lleva hashes del contenido de cada complemento, y cada exportación imprime un SHA-256 de su conjunto canónico de filas. Volver a exportar los mismos registros da el mismo hash; un cambio después del bloqueo FR-09 lo altera.',
+  'records.integrity.download': 'Descargar el paquete de auditoría VDACS',
+  'records.detail.lockedTitle': 'Bloqueado.',
+  'records.detail.lockedOn':
+    'Este registro pasó la ventana de edición FR-09 de 48 horas el {date} y ya no puede cambiar. Editarlo rompería la cadena de auditoría.',
+  'records.detail.lockedBody':
+    'Este registro pasó la ventana de edición FR-09 de 48 horas y ya no puede cambiar. Editarlo rompería la cadena de auditoría.',
+  'records.detail.editableUntil': 'Se puede editar hasta {date}.',
+  'records.detail.editableBody':
+    'Haz las correcciones antes de que cierre la ventana FR-09 de 48 horas. Después, esta fila queda bloqueada para proteger la auditoría.'
 };

@@ -99,11 +99,7 @@
     <h1 class="serif">{tr('carry.section.title')}</h1>
   </header>
 
-  <p class="lede">
-    Some weed killers pass through animals and compost and can damage tomatoes, beans, peas and
-    other broadleaf crops. These lines come from your records. A pea or bean test in pots is the
-    usual way to check before planting.
-  </p>
+  <p class="lede">{tr('carry.page.lede')}</p>
 
   <div class="live" aria-live="polite" role="status">
     {#if status}<p class="af-ok">{status}</p>{/if}
@@ -119,7 +115,9 @@
     {:else}
       <ul class="lines">
         {#each data.lines as l (l.applicationId)}
-          <li class="line" class:warn={l.tone === 'warn'} data-testid="carryover-line">{l.text}</li>
+          <li class="line" class:warn={l.tone === 'warn'} data-testid="carryover-line">
+            <span lang="en" data-english-only="safety">{l.text}</span>
+          </li>
         {/each}
       </ul>
     {/if}

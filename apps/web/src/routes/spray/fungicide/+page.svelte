@@ -569,7 +569,9 @@
               })}
               · {e.products.map((p) => p.displayName).join(', ')}
               {#if e.preHarvestClearAt}
-                <span class="phi">· PHI clear {fmt.instant(e.preHarvestClearAt)}</span>
+                <span class="phi" lang="en" data-english-only="safety"
+                  >· PHI clear {fmt.instant(e.preHarvestClearAt)}</span
+                >
               {/if}
             </li>
           {/each}

@@ -602,7 +602,13 @@
         </label>
       </InvField>
       {#if medicated}
-        <p class="banner" role="alert" data-testid="medicated-refusal">
+        <p
+          class="banner"
+          role="alert"
+          data-testid="medicated-refusal"
+          lang="en"
+          data-english-only="safety"
+        >
           {MEDICATED_FEED_MESSAGE} That way every feeding goes through the treatment record and its hold
           on eggs, milk and meat.
           <a href="/inventory/animal-health/add">Add it as animal health</a>
@@ -673,7 +679,7 @@
       >
         {#if suggestedLink}
           <div class="suggest" data-testid="suggested-link">
-            <p>
+            <p lang="en" data-english-only="safety">
               The approval number matches <strong>{suggestedLink.displayName}</strong> in the library.
               Link it so treatments use its label withdrawal?
             </p>
@@ -683,7 +689,12 @@
           </div>
         {/if}
         {#if isMed && library.length === 0}
-          <p class="muted-note" data-testid="no-health-library">
+          <p
+            class="muted-note"
+            data-testid="no-health-library"
+            lang="en"
+            data-english-only="safety"
+          >
             No animal-health products are in the library yet. You can still save this bottle; its
             withdrawal stays unknown until you enter it on a treatment.
           </p>

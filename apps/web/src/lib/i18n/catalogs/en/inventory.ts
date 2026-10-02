@@ -701,5 +701,16 @@ export const enInventory = {
   'equip.typeDesc.rake': 'hay rake (rotary, parallel-bar)',
   'equip.typeDesc.baler': 'small-square, large-round, or large-square',
   'equip.typeDesc.mower': 'mower or mower-conditioner',
-  'equip.typeDesc.irrigation': 'drip, overhead, or pivot system'
+  'equip.typeDesc.irrigation': 'drip, overhead, or pivot system',
+  'inv.fert.npkLabel': 'N–P₂O₅–K₂O',
+  'inv.fert.p2o5': 'P₂O₅',
+  'inv.fert.k2o': 'K₂O',
+  'equip.add.nozzlePlaceholder': 'TeeJet XR110015',
+  'equip.deconLink': 'Decon →',
+  'equip.lastDecon': 'Last decon',
+  'equip.d.deconWizard': 'Decon wizard',
+  'equip.w.ledeStrict':
+    "End-of-season storage prep. Confirm each step before the next one opens. The final decon uses the class-specific protocol for this sprayer's last load.",
+  'equip.w.ledeStandard':
+    "End-of-season storage prep. Confirm each step before the next one opens. The final decon uses the standard protocol for this sprayer's last load."
 } as const;

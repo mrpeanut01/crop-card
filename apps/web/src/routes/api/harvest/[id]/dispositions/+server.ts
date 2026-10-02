@@ -8,7 +8,7 @@
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { dispositionCreateSchema } from '$lib/harvest/apiSchemas';
+import { dispositionCreateSchema, dispositionIssueText } from '$lib/harvest/apiSchemas';
 import { dispositionDateProblem } from '$lib/harvest/dispositions';
 import { getHarvestEvent } from '$lib/db/harvestEvents';
 import { insertHarvestDisposition } from '$lib/db/harvestDispositions';
@@ -56,7 +56,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     return json(
       {
         error: 'INVALID_BODY',
-        message: parsed.error.issues[0]?.message ?? 'Check the fields and try again.',
+        message: dispositionIssueText(parsed.error.issues, event.locals?.locale),
         issues: parsed.error.issues
       },
       { status: 400 }

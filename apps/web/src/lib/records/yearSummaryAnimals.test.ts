@@ -182,8 +182,22 @@ describe('computeYearAnimalSection', () => {
           { food: 'milk', use: 'food', useLabel: 'For the table', unit: 'gal', quantity: 3 }
         ],
         covered: [
-          { atMs: Y0 + DAY, subject: 'Nanny', what: 'milk', use: 'For sale', basis: 'unknown' },
-          { atMs: Y0 - DAY, subject: 'Nanny', what: 'milk', use: 'For sale', basis: 'known' }
+          {
+            atMs: Y0 + DAY,
+            subject: 'Nanny',
+            what: 'milk',
+            use: 'For sale',
+            useCode: 'sale',
+            basis: 'unknown'
+          },
+          {
+            atMs: Y0 - DAY,
+            subject: 'Nanny',
+            what: 'milk',
+            use: 'For sale',
+            useCode: 'sale',
+            basis: 'known'
+          }
         ]
       })
     )!;
@@ -197,5 +211,6 @@ describe('computeYearAnimalSection', () => {
     ]);
     expect(s.covered).toHaveLength(1);
     expect(s.covered[0].basisText).toContain('not known');
+    expect(s.covered[0].useCode).toBe('sale');
   });
 });

@@ -257,7 +257,9 @@
           <span class="asof">{tr('cardsui.asOf', { date: asOf })}</span>
         {/if}
         {#if card.rulesVersion}
-          <span class="rules mono">Rules {card.rulesVersion}</span>
+          <span class="rules mono"
+            >{tr('cardsui.rulesVersion', { version: card.rulesVersion })}</span
+          >
         {/if}
         {#if variant === 'print'}
           <span class="prov-text">{provText}</span>

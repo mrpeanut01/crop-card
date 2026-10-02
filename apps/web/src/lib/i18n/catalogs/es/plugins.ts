@@ -788,5 +788,6 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'pluginui.sex.rabbit.female': 'Coneja',
   'pluginui.sex.rabbit.male': 'Conejo macho',
   'pluginui.sex.rabbit.neutered-male': 'Conejo castrado',
-  'pluginui.sex.rabbit.spayed-female': 'Coneja esterilizada'
+  'pluginui.sex.rabbit.spayed-female': 'Coneja esterilizada',
+  'cardsui.rulesVersion': 'Reglas {version}'
 };

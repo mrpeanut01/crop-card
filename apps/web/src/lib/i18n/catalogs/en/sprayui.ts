@@ -311,5 +311,7 @@ export const enSprayui = {
   'sprayui.dc.next': 'Next →',
   'sprayui.dc.allSteps': 'All steps',
   'sprayui.dc.recorded': '✓ Decon recorded',
-  'sprayui.dc.backSpray': 'Back to spray plan'
+  'sprayui.dc.backSpray': 'Back to spray plan',
+  'sprayui.groupBadge.title': 'Mode-of-action group. Rotate across groups to slow resistance.',
+  'sprayui.corn.inchUnit': 'in'
 } as const;

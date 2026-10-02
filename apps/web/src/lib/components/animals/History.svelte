@@ -52,7 +52,9 @@
           <span class="when mono">{formatInstant(e.at, prefs, 'date')}</span>
           <span class="what">{e.text}</span>
           {#if e.locked}<Pill tone="neutral">{tr('animals.locked')}</Pill>{/if}
-          {#if e.inHold}<Pill tone="rust">Inside a hold</Pill>{/if}
+          {#if e.inHold}<span lang="en" data-english-only="safety"
+              ><Pill tone="rust">Inside a hold</Pill></span
+            >{/if}
           {#if e.late}<Pill tone="wheat">{e.late}</Pill>{/if}
         </div>
         {#if e.detail}<p class="detail">{e.detail}</p>{/if}

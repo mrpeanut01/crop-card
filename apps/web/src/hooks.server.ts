@@ -378,7 +378,9 @@ const handleFenced: Handle = async (input) => {
   );
   if (tooLarge) return tooLarge;
   input.event.request = capChunkedBody(input.event.request, input.event.url.pathname);
-  const fenced = fenceResponse(input.event.request, isFenced());
+  const fenced = isFenced()
+    ? fenceResponse(input.event.request, true, requestLocale(input.event, null))
+    : null;
   if (fenced) return fenced;
   if (MUTATION_METHODS.has(input.event.request.method)) {
     return trackMutation(async () => handleRequest(input));

@@ -74,7 +74,7 @@
       <Provenance source="data" detail={tr('sprayui.nwsGridpoint')} compact />
     </p>
   {:else}
-    <p class="msg" role="alert">
+    <p class="msg" role="alert" lang="en" data-english-only="safety">
       Rain forecast {rainfast.firstRiskMs ? `from ${when(rainfast.firstRiskMs)}` : ''} (max PoP {rainfast.maxPopPct ??
         0}%, {fmt.qty(rainfast.totalPrecipMm / 25.4, 'precip')}) could wash product off before it is
       rainfast.

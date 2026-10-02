@@ -38,7 +38,7 @@
       {/each}
     </ul>
     {#if withdrawalUnknown}
-      <p class="hint">
+      <p class="hint" lang="en" data-english-only="safety">
         {#if isOwner}
           Add the withdrawal from the label or your vet
           {#if healthHref}on the <a href={healthHref}>health page</a>{/if}.
@@ -48,7 +48,7 @@
       </p>
     {/if}
     {#if grazingUnknown}
-      <p class="hint">
+      <p class="hint" lang="en" data-english-only="safety">
         {#if isOwner && grazingArea}
           <a href={grazingTimeHref(grazingArea)}>Add the grazing time from the label</a>.
         {:else}

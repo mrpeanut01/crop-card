@@ -319,5 +319,8 @@ export const esSprayui: Partial<Record<MessageKey, string>> = {
   'sprayui.dc.next': 'Siguiente →',
   'sprayui.dc.allSteps': 'Todos los pasos',
   'sprayui.dc.recorded': '✓ Descontaminación registrada',
-  'sprayui.dc.backSpray': 'Volver al plan de aplicación'
+  'sprayui.dc.backSpray': 'Volver al plan de aplicación',
+  'sprayui.groupBadge.title':
+    'Grupo de modo de acción. Rota entre grupos para frenar la resistencia.',
+  'sprayui.corn.inchUnit': 'pulg'
 };

@@ -18,23 +18,27 @@
 {#snippet tier()}
   <SettingsSection
     title={tr('settings.records.retentionTitle')}
-    sub="VDACS requires a 2-year minimum for pesticide records. CropCard never auto-deletes — near-expiry rows surface an alert and only the owner can remove them (NFR-05)."
+    sub={tr('settings.records.retentionSub')}
   >
     <div class="tile-grid">
       <div class="tile">
-        <div class="tile-v serif">{data.retention.sprayYears} yr</div>
+        <div class="tile-v serif">
+          {tr('settings.records.yearsShort', { n: data.retention.sprayYears })}
+        </div>
         <div class="tile-k">{tr('settings.records.minRetention')}</div>
-        <div class="tile-note">Spray, insecticide, fungicide (FR-09 / NFR-05)</div>
+        <div class="tile-note">{tr('settings.records.retentionKinds')}</div>
       </div>
       <div class="tile">
         <div class="tile-v serif">{data.retention.sprayInRetention}</div>
         <div class="tile-k">{tr('settings.records.inRetention')}</div>
-        <div class="tile-note">Within the last {data.retention.sprayYears} years</div>
+        <div class="tile-note">
+          {tr('settings.records.withinYears', { n: data.retention.sprayYears })}
+        </div>
       </div>
       <div class="tile">
         <div class="tile-v serif">{data.retention.approachingRetention}</div>
         <div class="tile-k">{tr('settings.records.approaching')}</div>
-        <div class="tile-note">Aged into the 30-day pre-expiry window</div>
+        <div class="tile-note">{tr('settings.records.preExpiry')}</div>
       </div>
       <div class="tile">
         <div class="tile-v serif">{totalRecords}</div>
@@ -51,26 +55,23 @@
     </div>
   </SettingsSection>
 
-  <SettingsSection
-    title={tr('settings.records.lockTitle')}
-    sub="FR-09 · spray records become immutable after this window closes. Server-enforced regardless of UI; not user-configurable."
-  >
+  <SettingsSection title={tr('settings.records.lockTitle')} sub={tr('settings.records.lockSub')}>
     <div class="lock-grid">
       <div class="tile">
         <div class="tile-v serif">{data.lockWindowHours} h</div>
         <div class="tile-k">{tr('settings.records.immutableAfter')}</div>
-        <div class="tile-note">Measured from the time of application</div>
+        <div class="tile-note">{tr('settings.records.measuredFrom')}</div>
       </div>
       <div class="warn-card">
-        <strong>How it works:</strong> a record is editable for {data.lockWindowHours} hours after it's
-        entered. After that the server refuses any edit or delete, so the audit trail stays tamper-evident.
+        <strong>{tr('settings.records.howItWorks')}</strong>
+        {tr('settings.records.howItWorksBody', { hours: data.lockWindowHours })}
       </div>
     </div>
   </SettingsSection>
 
   <SettingsSection
     title={tr('settings.records.integrityTitle')}
-    sub="Each record carries per-plugin content hashes; every export prints a SHA-256 of its canonical row set so an inspector can confirm the records haven't changed since export."
+    sub={tr('settings.records.integritySub')}
   >
     <div class="action-row">
       <a class="ghost" href="/api/records/export.vdacs.pdf">
@@ -92,10 +93,10 @@
         <span>{tr('settings.records.quietSummary')}</span>
       </summary>
       <p class="quiet-lede">
-        Anything you spray, whether copper, sulfur, Bt or spinosad, comes with label rules and
-        record-keeping duties. When you record a spray, CropCard keeps the record, locks it after
-        {data.lockWindowHours} hours and holds it for at least {data.retention.sprayYears} years. Here
-        is how that works.
+        {tr('settings.records.quietLede', {
+          hours: data.lockWindowHours,
+          years: data.retention.sprayYears
+        })}
       </p>
       {@render tier()}
     </details>

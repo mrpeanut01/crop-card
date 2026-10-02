@@ -73,11 +73,64 @@ export default tseslint.config(
     }
   },
   {
-    // 32F (F5-5): files that have moved onto the i18n catalog. Add a glob
-    // here when a page moves onto t(); everything else still writes English.
-    files: ['src/lib/components/ui/TopBar.svelte', 'src/routes/settings/account/**/*.svelte'],
+    // 34B (B34-27): every translated surface. User-facing template text goes
+    // through the i18n catalog. English that stays English by rule (safety and
+    // regulatory wording, CLAUDE.md invariant 9) sits inside a native element
+    // with lang="en" data-english-only="safety|regulatory"; the reasons must
+    // match ENGLISH_ONLY_REASONS in src/lib/i18n/englishOnly.ts. No
+    // eslint-disable for this rule (englishOnly.test.ts fails on one).
+    files: ['src/routes/**/*.svelte', 'src/lib/components/**/*.svelte'],
+    ignores: [
+      // dev-only, 404 in production
+      'src/routes/_dev/**',
+      // superadmin operator console, not a farm surface
+      'src/routes/admin/**'
+    ],
     rules: {
-      'cropcard/no-raw-text': ['warn', { allow: ['CropCard'] }]
+      'cropcard/no-raw-text': [
+        'error',
+        {
+          allow: ['CropCard'],
+          allowWords: [
+            'CropCard',
+            'Claude',
+            'CSV',
+            'PDF',
+            'JSON',
+            'OMRI',
+            'EPA',
+            'USDA',
+            'NOAA',
+            'NWS',
+            'FRAC',
+            'IRAC',
+            'CFR',
+            'REI',
+            'PHI',
+            'GPA',
+            'pH',
+            'Brix',
+            'N',
+            'P',
+            'K',
+            'ppm',
+            'd',
+            'h',
+            'min',
+            'ft',
+            'oz',
+            'lb',
+            'gal',
+            'mm',
+            'cm',
+            'm',
+            'mph',
+            '°F',
+            'v'
+          ],
+          reasons: ['safety', 'regulatory']
+        }
+      ]
     }
   },
   {

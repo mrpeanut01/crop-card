@@ -24,7 +24,7 @@ export const load: PageServerLoad = (event) => {
 export const actions: Actions = {
   mint: async (event) => {
     const u = requireOwner(event);
-    if (!u.activeOwnerId) throw error(400, 'no active owner');
+    if (!u.activeOwnerId) throw error(400, t(event.locals.locale, 'settings.err.noActiveOwner'));
     if (event.locals.authVia === 'bearer') {
       return fail(403, { error: t(event.locals?.locale, 'settings.tokens.err.cookie') });
     }
@@ -54,10 +54,10 @@ export const actions: Actions = {
   },
   revoke: async (event) => {
     const u = requireOwner(event);
-    if (!u.activeOwnerId) throw error(400, 'no active owner');
+    if (!u.activeOwnerId) throw error(400, t(event.locals.locale, 'settings.err.noActiveOwner'));
     const fd = await event.request.formData();
     const tokenId = String(fd.get('tokenId') ?? '');
-    if (!tokenId) return fail(400, { error: 'tokenId required' });
+    if (!tokenId) return fail(400, { error: t(event.locals.locale, 'settings.err.missing') });
     const ok = revokeToken(u.activeOwnerId, tokenId);
     if (!ok) return fail(404, { error: t(event.locals?.locale, 'settings.tokens.err.notFound') });
     return { ok: true };

@@ -1078,5 +1078,66 @@ export const enRecords = {
   'fert.lime.noPh': 'No pH on this test, so there is no lime hint.',
   'fert.lime.likely':
     'pH {ph} is {cls}. Most vegetables and field crops grow best in slightly acid soil, so lime is likely needed. Acid-loving crops such as blueberries are the exception.',
-  'fert.lime.notNeeded': 'pH {ph} is {cls}, so lime is not likely needed.'
+  'fert.lime.notNeeded': 'pH {ph} is {cls}, so lime is not likely needed.',
+  'finance.people.phoneEnding': 'phone ending {digits}',
+  'finance.people.someone': 'Someone on the farm',
+  'finance.access.ownerOnly': 'Money is only shown to the farm owner.',
+  'finance.profit.stockPurchase': 'Stock purchase (counted as used)',
+  'finance.profit.unnamedAnimal': 'Unnamed animal',
+  'recui.updatingMessage': 'CropCard is updating. Nothing was saved. Try again in a moment.',
+  'recui.updatingTitle': 'Updating',
+  'recui.updatingBack': 'Go back',
+  'harvestui.disp.locked': 'Locked',
+  'harvestui.disp.lockedReason': 'Why delete a locked record?',
+  'harvestui.disp.deleteWithReason': 'Delete with this reason',
+  'harvestui.disp.err.reasonNeeded': 'Say why this locked record is being deleted.',
+  'recui.year.covered.title': 'Food or sales inside a hold',
+  'recui.year.covered.date': 'Date',
+  'recui.year.covered.subject': 'Animal or group',
+  'recui.year.covered.what': 'What',
+  'recui.year.covered.hold': 'Hold',
+  'recui.year.covered.meat': 'Meat',
+  'recui.year.covered.line': '{what}, {use}',
+  'recui.year.covered.none': 'No food or sale on file fell inside a hold this year.',
+  'records.card.voided': 'Voided. This entry is no longer in your records.',
+  'organic.api.impersonating': 'Organic statuses cannot be entered while impersonating a farm.',
+  'organic.api.ownerOnly': 'Only the owner can enter organic statuses and reviews.',
+  'organic.api.notGrowingArea':
+    'Only growing Areas (fields, gardens, greenhouses, orchards and pastures) carry an organic status.',
+  'organic.api.realDate': 'Use a real date from {min} to {max}.',
+  'organic.api.libraryDecides': 'The library already decides this treatment.',
+  'organic.api.notReached':
+    'This treatment did not reach an animal under organic management, so there is nothing to answer.',
+  'organic.api.reviewLocked':
+    'This answer was given more than 48 hours ago and can no longer change.',
+  'organic.api.packBusy':
+    'A pack for this farm is already being built. Try again in a few seconds.',
+  'harvestui.disp.err.checkFields': 'Check the fields and try again.',
+  'harvestui.disp.err.recipientKind': 'Only a sale or a gift has a recipient.',
+  'harvestui.disp.err.organicKind': 'Only a sale can be marked sold as organic.',
+  'harvestui.disp.err.locked':
+    'This record is locked 48 hours after its date. The owner can delete it with a reason.',
+  'harvestui.disp.err.ownerDeleteLocked': 'Only the farm owner can delete a locked record.',
+  'harvestui.disp.err.moneyImpersonating': 'Money cannot be changed while impersonating.',
+  'records.export.vdacsTitle':
+    'VDACS audit pack: spray, insecticide and fungicide records, owner identity and integrity hash',
+  'records.export.vdacsPdf': 'VDACS audit PDF',
+  'records.export.usdaCsv': 'USDA / NRCS CSV',
+  'records.review.deconCalib': 'Decon + calibration',
+  'records.review.deconEvents': 'decon events',
+  'records.retention.locked':
+    '{locked}/{total} records locked under the 48-hour FR-09 rule. Oldest record: {oldest}.',
+  'records.ledger.hash': 'Hash',
+  'records.integrity.kicker': 'Integrity hash',
+  'records.integrity.body':
+    'Each record carries per-plugin content hashes, and every export prints a SHA-256 of its canonical row set. Re-exporting the same records gives the same hash; a change after the FR-09 lock alters it.',
+  'records.integrity.download': 'Download VDACS audit pack',
+  'records.detail.lockedTitle': 'Locked.',
+  'records.detail.lockedOn':
+    'This record passed the 48-hour FR-09 edit window on {date} and can no longer change. Edits would break the audit chain.',
+  'records.detail.lockedBody':
+    'This record passed the 48-hour FR-09 edit window and can no longer change. Edits would break the audit chain.',
+  'records.detail.editableUntil': 'Editable until {date}.',
+  'records.detail.editableBody':
+    'Make corrections before the 48-hour FR-09 window closes. After that this row is locked for audit integrity.'
 } as const;

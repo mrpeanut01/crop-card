@@ -270,7 +270,7 @@
     </div>
     <div>
       <dt>{tr('settings.index.diag.storage')}</dt>
-      <dd class="mono">SQLite · Litestream → Azure Blob</dd>
+      <dd class="mono">{tr('settings.index.diag.storageValue')}</dd>
     </div>
   </dl>
 </section>

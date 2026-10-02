@@ -39,7 +39,7 @@ import { loadEmergencyContacts, saveEmergencyContacts } from '$lib/farm/emergenc
 
 export const load: ServerLoad = async ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
-  if (locals.user.role !== 'owner') throw error(403, 'owner-only');
+  if (locals.user.role !== 'owner') throw error(403, t(locals.locale, 'settings.err.ownerOnly'));
 
   const blocks = listBlocks();
   const fields = listFields();
@@ -91,9 +91,10 @@ export const load: ServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   save: async ({ request, locals }) => {
-    if (!locals.user) throw error(401, 'sign-in required');
-    if (locals.user.role !== 'owner') throw error(403, 'owner-only');
-    if (!locals.user.activeOwnerId) throw error(400, 'no active owner');
+    if (!locals.user) throw error(401, t(locals.locale, 'settings.err.signIn'));
+    if (locals.user.role !== 'owner') throw error(403, t(locals.locale, 'settings.err.ownerOnly'));
+    if (!locals.user.activeOwnerId)
+      throw error(400, t(locals.locale, 'settings.err.noActiveOwner'));
     const form = await request.formData();
     const hasContacts = form.get('contactsPresent') === '1';
     let rows = contactRowsFromForm(form);

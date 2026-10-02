@@ -36,7 +36,7 @@
 
   async function load() {
     try {
-      data = await fetchBlockCovers(blockId, seasonYear);
+      data = await fetchBlockCovers(blockId, seasonYear, fetch, page.data?.locale);
       loadError = null;
     } catch (e) {
       loadError = e instanceof Error ? e.message : String(e);
@@ -72,7 +72,7 @@
     removing = p.id;
     actionError = null;
     try {
-      await removeBlockCover(blockId, p.id);
+      await removeBlockCover(blockId, p.id, fetch, page.data?.locale);
       await load();
       if (data) onChange?.(data);
     } catch (e) {

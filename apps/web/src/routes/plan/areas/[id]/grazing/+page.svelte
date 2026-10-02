@@ -5,8 +5,11 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { OFFLINE_MESSAGE, errorFromResponse } from '$lib/animals/display';
   import { formatClearDate } from '$lib/safety/animalWithdrawal';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let graze = $state<Record<string, number | null | undefined>>({});
   let hay = $state<Record<string, number | null | undefined>>({});
@@ -99,20 +102,20 @@
 </script>
 
 <svelte:head>
-  <title>Grazing times · {data.field.name} · CropCard</title>
+  <title>{tr('plan.grazing.docTitle', { area: data.field.name })}</title>
 </svelte:head>
 
 <div class="grazing-page">
-  <nav class="crumbs" aria-label="Breadcrumb">
+  <nav class="crumbs" aria-label={tr('plan.grazing.breadcrumb')}>
     <a href="/plan?area={encodeURIComponent(data.field.id)}">{data.field.name}</a>
   </nav>
 
   <header>
-    <Kicker>{data.field.name} · Grazing and haying</Kicker>
-    <h1 class="serif">Grazing and haying times</h1>
+    <Kicker>{tr('plan.grazing.kicker', { area: data.field.name })}</Kicker>
+    <h1 class="serif">{tr('plan.grazing.title')}</h1>
   </header>
 
-  <p class="lede">
+  <p class="lede" lang="en" data-english-only="safety">
     Every product sprayed here in the last year is listed. Food animals can't graze here, and hay
     can't be cut, while a product's waiting time is not on file. Read each time off the product's
     label and type it in. Labels often give separate times for grazing, for milking animals, for
@@ -125,9 +128,16 @@
   </div>
 
   {#if data.rows.length === 0}
-    <p class="af-help">Nothing has been sprayed here in the last year.</p>
+    <p class="af-help">{tr('plan.grazing.empty')}</p>
   {:else}
-    <form class="af-form" onsubmit={save} novalidate aria-label="Grazing and haying times">
+    <form
+      class="af-form"
+      onsubmit={save}
+      novalidate
+      aria-label="Grazing and haying times"
+      lang="en"
+      data-english-only="safety"
+    >
       <ul class="rows">
         {#each data.rows as r (r.key)}
           <li class="row" data-testid="grazing-row">

@@ -184,7 +184,7 @@
     const params = new URLSearchParams();
     if (d.locked) {
       if (deleteReason.trim().length < DISPOSITION_FORCE_REASON_MIN) {
-        error = 'Say why this locked record is being deleted.';
+        error = tr('harvestui.disp.err.reasonNeeded');
         return;
       }
       params.set('force', 'true');
@@ -221,7 +221,7 @@
             {dispositionLine(d, fmt.instant(d.occurredAt, 'date'), page.data?.locale)}
           </p>
           <p class="meta">
-            {#if d.locked}<span class="pill">Locked</span>{/if}
+            {#if d.locked}<span class="pill">{tr('harvestui.disp.locked')}</span>{/if}
             {#if isOwner && d.sale === 'live'}<span class="pill"
                 >{tr('harvestui.disp.saleRecorded')}</span
               >{/if}
@@ -264,12 +264,12 @@
             <div class="confirm">
               {#if d.locked}
                 <label>
-                  Why delete a locked record?
+                  {tr('harvestui.disp.lockedReason')}
                   <input type="text" bind:value={deleteReason} maxlength="500" />
                 </label>
               {/if}
               <button type="button" class="danger" onclick={() => remove(d)}>
-                {d.locked ? 'Delete with this reason' : tr('harvestui.disp.deleteThis')}
+                {d.locked ? tr('harvestui.disp.deleteWithReason') : tr('harvestui.disp.deleteThis')}
               </button>
             </div>
           {/if}

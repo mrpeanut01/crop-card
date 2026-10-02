@@ -481,7 +481,7 @@
           </div>
         {/if}
         {#if asNum(plugin.preHarvestIntervalDays) !== undefined}
-          <div class="stat">
+          <div class="stat" lang="en" data-english-only="safety">
             <dt>Default PHI</dt>
             <dd>{plugin.preHarvestIntervalDays} d</dd>
           </div>
@@ -594,13 +594,13 @@
           <dt>{tr('pluginui.detail.requiresAms')}</dt>
           <dd>{asBool(plugin.requiresAMS) ? tr('plugins.detail.yes') : tr('plugins.detail.no')}</dd>
         </div>
-        <div class="stat">
+        <div class="stat" lang="en" data-english-only="safety">
           <dt>Decon required</dt>
           <dd>{asBool(plugin.deconRequired) ? 'Yes' : 'No'}</dd>
         </div>
       </dl>
       {#if safeFor.length > 0}
-        <div class="chip-row">
+        <div class="chip-row" lang="en" data-english-only="safety">
           <span class="row-label">Label-safe crops</span>
           {#each safeFor as id, idx (idx)}<PluginRef
               pluginId={id}
@@ -609,7 +609,7 @@
         </div>
       {/if}
       {#if traitGated.length > 0}
-        <div class="bullet-list">
+        <div class="bullet-list" lang="en" data-english-only="safety">
           <strong class="row-label">Trait-gated safety</strong>
           <ul>
             {#each traitGated as tg, idx (idx)}
@@ -679,7 +679,7 @@
           </div>
         {/if}
         {#if asStr(plugin.pollinatorRisk)}
-          <div class="stat">
+          <div class="stat" lang="en" data-english-only="safety">
             <dt>Pollinator risk</dt>
             <dd>{plugin.pollinatorRisk}</dd>
           </div>
@@ -698,7 +698,7 @@
         </div>
       {/if}
       {#if safeFor.length > 0}
-        <div class="chip-row">
+        <div class="chip-row" lang="en" data-english-only="safety">
           <span class="row-label">Label-safe crops</span>
           {#each safeFor as id, idx (idx)}<PluginRef
               pluginId={id}
@@ -711,7 +711,7 @@
           <strong class="row-label">{tr('pluginui.detail.scoutThresholds')}</strong>
           <ul>
             {#each thresholds as t, idx (idx)}
-              <li>
+              <li lang="en" data-english-only="safety">
                 <strong>{t.pest}</strong>: spray at {t.threshold}
                 {t.metric}
                 {#if t.warnAt}· warn at {t.warnAt}{/if}
@@ -786,12 +786,12 @@
           </div>
         {/if}
         {#if asStr(plugin.pollinatorRisk)}
-          <div class="stat">
+          <div class="stat" lang="en" data-english-only="safety">
             <dt>Pollinator risk</dt>
             <dd>{plugin.pollinatorRisk}</dd>
           </div>
         {/if}
-        <div class="stat">
+        <div class="stat" lang="en" data-english-only="safety">
           <dt>Decon required</dt>
           <dd>{asBool(plugin.deconRequired) ? 'Yes' : 'No'}</dd>
         </div>
@@ -803,7 +803,7 @@
         </div>
       {/if}
       {#if safeFor.length > 0}
-        <div class="chip-row">
+        <div class="chip-row" lang="en" data-english-only="safety">
           <span class="row-label">Label-safe crops</span>
           {#each safeFor as id, idx (idx)}<PluginRef
               pluginId={id}

@@ -77,7 +77,10 @@ export interface CoveredInput {
   atMs: number;
   subject: string;
   what: 'eggs' | 'milk' | 'meat';
+  /** English display label, for the PDF and exports. */
   use: string;
+  /** Production use code for eggs and milk, status code for meat. */
+  useCode: string;
   basis: HoldBasisText;
 }
 
@@ -115,6 +118,7 @@ export interface CoveredDeclarationLine {
   subject: string;
   what: 'eggs' | 'milk' | 'meat';
   use: string;
+  useCode: string;
   basis: HoldBasisText;
   basisText: string;
 }

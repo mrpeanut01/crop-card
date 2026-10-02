@@ -6,9 +6,10 @@ import { readVapidConfig } from '$lib/server/push/webPush';
 import { resolveWeatherLocation } from '$lib/server/weatherHourly';
 import { hasAnyAnimalRecord } from '$lib/db/animals';
 import type { PageServerLoad } from './$types';
+import { t } from '$lib/i18n';
 
 export const load: PageServerLoad = ({ locals }) => {
-  if (!locals.user) throw error(401, 'sign-in required');
+  if (!locals.user) throw error(401, t(locals.locale, 'settings.err.signIn'));
   const config = readVapidConfig();
   return {
     configured: config !== null,

@@ -25,7 +25,7 @@ export const load: PageServerLoad = async (event) => {
   const user = requireMoneyReader(event);
   const year = parseYear(event.params.year, currentSeasonYear());
   if (year === null) throw error(404, t(event.locals.locale, 'finance.err.noSeason'));
-  const money = await loadSeasonMoney(year);
+  const money = await loadSeasonMoney(year, event.locals.locale);
   const card = buildProfitCard(year, money.profit, {
     asOf: Date.now(),
     farmName: farmName(user.activeOwnerId),

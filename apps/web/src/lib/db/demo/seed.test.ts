@@ -176,17 +176,26 @@ describe.each(NOWS)('seedDemoFarm on %s', (ymd) => {
 
   it('seeds a believable farm that every main page can read', async () => {
     const { ownerId, userId } = createDemoOwner(now);
-    const before = strayRows();
-    const started = performance.now();
-    const summary = runWithTenant(ownerId, () => seedDemoFarm({ ownerId, userId, now }));
-    const elapsed = performance.now() - started;
+    // Other test files write to the same database; holding the write lock
+    // keeps their rows out of the before and after counts.
+    let started = 0;
+    let elapsed = 0;
+    const { before, after, summary } = db.$client
+      .transaction(() => {
+        const before = strayRows();
+        started = performance.now();
+        const summary = runWithTenant(ownerId, () => seedDemoFarm({ ownerId, userId, now }));
+        elapsed = performance.now() - started;
+        return { before, after: strayRows(), summary };
+      })
+      .immediate();
 
     expect(summary.farmName).toBe('Willow Run Farm');
     expect(summary.seasonYear).toBe(demoSeason(now).current);
     expect(elapsed).toBeLessThan(3000);
 
     // Every row the seed wrote is this owner's.
-    expect(strayRows()).toEqual(before);
+    expect(after).toEqual(before);
     const mine = countByOwner(ownerId);
     const total = Object.values(mine).reduce((a, b) => a + b, 0);
     expect(total).toBeGreaterThan(250);

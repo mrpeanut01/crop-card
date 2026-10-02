@@ -83,7 +83,7 @@
       </label>
     </div>
     {#if moistureWarn}
-      <p class="moisture-warn">
+      <p class="moisture-warn" lang="en" data-english-only="safety">
         ⚠ Above 15% moisture — beans will heat and rot in the bin. Dry to 13–15% before storage.
       </p>
     {/if}

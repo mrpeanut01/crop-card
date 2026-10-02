@@ -592,7 +592,7 @@
     <div class="reject-modal {reject.code}">
       <h2 id="reject-title">⛔ {reject.title}</h2>
       {#if reject.code === 'bypass'}
-        <p class="why">
+        <p class="why" lang="en" data-english-only="safety">
           The plugin's declared chemistry would kill a crop family it claims safety on. The kernel's
           kill matrix is hardcoded in
           <code>cropFamilyLethality.ts</code> and cannot be overridden by any plugin file (NFR-09).

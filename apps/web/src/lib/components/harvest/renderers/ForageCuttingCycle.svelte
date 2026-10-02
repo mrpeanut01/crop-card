@@ -61,7 +61,7 @@
         </div>
       {/if}
       {#if baleEntries.length > 0}
-        <div class="moisture-block">
+        <div class="moisture-block" lang="en" data-english-only="safety">
           <span class="detail-label block">Bale moisture danger</span>
           <ul class="moisture-list">
             {#each baleEntries as [baleType, thresholds] (baleType)}

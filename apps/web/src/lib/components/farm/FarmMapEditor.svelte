@@ -1406,7 +1406,7 @@
                       <label
                         >{tr('farm.editor.code')}<input
                           type="text"
-                          placeholder="A"
+                          placeholder={tr('farm.editor.codePlaceholder')}
                           bind:value={editBlockLabel}
                         /></label
                       >

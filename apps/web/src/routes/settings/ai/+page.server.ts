@@ -29,7 +29,7 @@ import { unscopedQueryNote } from '$lib/db/tenant';
 import { withTenant } from '$lib/db/tenant';
 
 export const load: PageServerLoad = ({ locals }) => {
-  if (!locals.user) throw error(401, 'sign-in required');
+  if (!locals.user) throw error(401, t(locals.locale, 'settings.err.signIn'));
 
   const status = aiKeyStatus();
   const isOwner = locals.user.role === 'owner';

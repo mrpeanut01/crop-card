@@ -21,7 +21,7 @@
 </script>
 
 {#if refusal}
-  <div class="hold-guard" role="alert" aria-live="assertive">
+  <div class="hold-guard" role="alert" aria-live="assertive" lang="en" data-english-only="safety">
     <p class="title">Holds never get shorter.</p>
     <ul>
       {#each lines as line, i (i)}<li>{line}</li>{/each}

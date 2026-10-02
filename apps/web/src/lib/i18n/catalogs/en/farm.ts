@@ -673,5 +673,16 @@ export const enFarm = {
   'climate.shift.fallLater.one': 'Fall {count} day later',
   'climate.shift.fallLater.other': 'Fall {count} days later',
   'map.zoomIn': 'Zoom in',
-  'map.zoomOut': 'Zoom out'
+  'map.zoomOut': 'Zoom out',
+  'tools.plate.rec.stand': '{n} plants{per}',
+  'tools.plate.rec.low':
+    '{stand} is a sparse stand. A 16-cell plate matches at standard sprockets.',
+  'tools.plate.rec.high':
+    '{stand} is a typical or high stand. A 24-cell plate matches at standard sprockets.',
+  'tools.plate.rec.mid':
+    '{stand} is between {from} and {to}. Either works, but a 24-cell plate leaves more room to drop to a smaller sprocket.',
+  'climate.cover.err.http': 'Could not save (HTTP {status}).',
+  'climate.cover.err.ownerAdd': 'Only the owner can add covers. Ask the owner.',
+  'climate.cover.err.ownerRemove': 'Only the owner can remove covers. Ask the owner.',
+  'farm.editor.codePlaceholder': 'A'
 } as const;

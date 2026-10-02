@@ -685,5 +685,12 @@ export const enPlan = {
     "You're offline, and this garden isn't saved on this device yet. Open it once with signal, or open your saved Cards.",
   'plan.design.notInCopy': "This garden isn't in the copy saved on this device.",
   'plan.design.didNotLoad': "The garden designer didn't load. Try again.",
-  'plan.design.notDesignable': 'This Area has no garden designer. Only gardens and greenhouses do.'
+  'plan.design.notDesignable': 'This Area has no garden designer. Only gardens and greenhouses do.',
+  'crops.err.missingBlock': "This planting's bed or block is missing.",
+  'plan.swimlane.eastIndex': 'E{n}',
+  'plan.grazing.docTitle': 'Grazing times · {area} · CropCard',
+  'plan.grazing.breadcrumb': 'Breadcrumb',
+  'plan.grazing.kicker': '{area} · Grazing and haying',
+  'plan.grazing.title': 'Grazing and haying times',
+  'plan.grazing.empty': 'Nothing has been sprayed here in the last year.'
 } as const;

@@ -111,7 +111,14 @@
   }
 </script>
 
-<form class="af-form" onsubmit={submit} novalidate aria-label="Add a withdrawal">
+<form
+  class="af-form"
+  onsubmit={submit}
+  novalidate
+  aria-label="Add a withdrawal"
+  lang="en"
+  data-english-only="safety"
+>
   <fieldset class="af-fieldset">
     <legend class="af-legend">What are you adding?</legend>
     <div class="af-tiles">

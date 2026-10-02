@@ -412,11 +412,11 @@
 
 <section class="result {result.decision === 'SPRAY' ? 'spray' : 'skip'}" aria-live="polite">
   {#if result.decision === 'SPRAY'}
-    <h2>SPRAY</h2>
+    <h2 lang="en" data-english-only="safety">SPRAY</h2>
   {:else}
-    <h2>SKIP</h2>
+    <h2 lang="en" data-english-only="safety">SKIP</h2>
   {/if}
-  <p>{result.reason}</p>
+  <p lang="en" data-english-only="safety">{result.reason}</p>
   <dl>
     <dt>{tr('scout.spotsCounted')}</dt>
     <dd>{result.spotsCounted}</dd>

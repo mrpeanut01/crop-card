@@ -168,7 +168,7 @@
   {#if load.state === 'loading'}
     <p class="note">{tr('records.card.loading')}</p>
   {:else if load.state === 'voided'}
-    <p class="note" role="status">Voided. This entry is no longer in your records.</p>
+    <p class="note" role="status">{tr('records.card.voided')}</p>
   {:else if load.state === 'error'}
     <p class="note">{load.message} <a href="/cards">{tr('records.card.openDeck')}</a></p>
   {:else if load.state === 'saved'}

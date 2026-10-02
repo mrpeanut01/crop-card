@@ -819,5 +819,15 @@ export const enEntry = {
   'entry.demoFarm.p.eggs': '{count} dozen eggs, farm stand',
   'entry.demoFarm.p.grain': '{amount} bu {crop} to the Purcellville elevator',
   'entry.demoFarm.p.hayBales': '{count} small squares, {nth} cutting',
-  'entry.demoFarm.p.diesel': 'Off-road diesel, {amount} gal'
+  'entry.demoFarm.p.diesel': 'Off-road diesel, {amount} gal',
+  'entry.invite.err.missingToken': 'This invite link is incomplete. Ask for a new invite.',
+  'entry.picker.err.pickFarm': 'Pick a farm.',
+  'entry.picker.err.notMember': "You aren't a member of that farm.",
+  'setup.calibration.lede':
+    'Spray a short, measured course with {sprayer} and catch what comes out in a jug. The ounces you catch are your gallons per acre, and CropCard scales every rate from that number.',
+  'entry.layout.impersonating': 'Impersonating {owner} as superadmin. Every change is audited.',
+  'entry.layout.impersonatingThisOwner': 'this Owner',
+  'entry.layout.exitImpersonation': 'Exit impersonation',
+  'entry.land.smsConsentTranslation':
+    'CropCard will text you a sign-in code. Message and data rates may apply. Reply STOP to opt out, HELP for help.'
 } as const;

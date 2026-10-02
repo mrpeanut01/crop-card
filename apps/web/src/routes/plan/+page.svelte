@@ -3401,7 +3401,9 @@
             <dl class="wizard-meta">
               {#if m.daysToMaturity}<dt>{tr('plan.page.guide.dtmLabel')}</dt>
                 <dd>{m.daysToMaturity.min}–{m.daysToMaturity.max} d</dd>{/if}
-              {#if m.preHarvestIntervalDays}<dt>Pre-harvest interval</dt>
+              {#if m.preHarvestIntervalDays}<dt lang="en" data-english-only="safety">
+                  Pre-harvest interval
+                </dt>
                 <dd>{m.preHarvestIntervalDays} d</dd>{/if}
               {#if m.soilTempMinF !== undefined}<dt>{tr('plan.page.w.minSoil')}</dt>
                 <dd>{prefsFmt.qty(m.soilTempMinF, 'temperature')}</dd>{/if}
@@ -3524,7 +3526,11 @@
           {/if}
           <details class="wizard-advanced">
             <summary>{tr('plan.page.w.advanced')}</summary>
-            <label class="wizard-label" style="margin-top:0.5rem"
+            <label
+              class="wizard-label"
+              style="margin-top:0.5rem"
+              lang="en"
+              data-english-only="safety"
               >PHI enforcement
               <select bind:value={wPhiMode}>
                 <option value="strict">Strict (plugin PHI only)</option>
@@ -3583,7 +3589,11 @@
                         date: prefsFmt.day(row.targetHarvestMs, 'date')
                       })}</span
                     >
-                    {#if row.phiConflict}<span class="phi-badge">⚠ PHI conflict</span>{/if}
+                    {#if row.phiConflict}<span
+                        class="phi-badge"
+                        lang="en"
+                        data-english-only="safety">⚠ PHI conflict</span
+                      >{/if}
                     {#if row.soilTooEarly}<span class="warn">{tr('plan.page.w.soilCold')}</span
                       >{/if}
                   </div>

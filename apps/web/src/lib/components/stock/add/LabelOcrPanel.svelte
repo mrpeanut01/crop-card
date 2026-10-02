@@ -181,7 +181,7 @@
 
 <div class="ocr-panel">
   {#if target === 'animal-health'}
-    <p class="lede" data-testid="med-scan-lede">
+    <p class="lede" data-testid="med-scan-lede" lang="en" data-english-only="safety">
       Snap the bottle's label. Claude reads the product name and the NADA number only. Withdrawal
       times always come from the label or your vet, never from a scan.
     </p>

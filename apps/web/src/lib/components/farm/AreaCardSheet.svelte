@@ -232,7 +232,7 @@
     {/if}
     {#if canEdit && needsLabelTime(grazing)}
       <a class="designer grazing-time" href="/plan/areas/{encodeURIComponent(area.id)}/grazing">
-        Add grazing times from the label
+        <span lang="en" data-english-only="safety">Add grazing times from the label</span>
       </a>
     {/if}
 

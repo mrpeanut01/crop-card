@@ -21,7 +21,7 @@ const MONTH_MS = 30 * 86_400_000;
 
 export const load: PageServerLoad = ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
-  if (locals.user.role !== 'owner') throw error(403, 'owner-only');
+  if (locals.user.role !== 'owner') throw error(403, t(locals.locale, 'settings.err.ownerOnly'));
   const ownerId = locals.user.activeOwnerId;
   const key = aiKeyStatus();
   const spend = spendSnapshot();

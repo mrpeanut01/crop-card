@@ -234,8 +234,8 @@
         <tr>
           <th></th>
           <th>N ({rateUnit})</th>
-          <th>P₂O₅ ({rateUnit})</th>
-          <th>K₂O ({rateUnit})</th>
+          <th>{tr('inv.fert.p2o5')} ({rateUnit})</th>
+          <th>{tr('inv.fert.k2o')} ({rateUnit})</th>
         </tr>
       </thead>
       <tbody>

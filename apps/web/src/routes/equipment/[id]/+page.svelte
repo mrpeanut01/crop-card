@@ -250,7 +250,7 @@
           <span class="ok">{tr('equip.clean')}</span>
         {/if}
       </dd>
-      <dt>Last decon</dt>
+      <dt>{tr('equip.lastDecon')}</dt>
       <dd>{fmtTs(eq.state.lastDeconAt)}</dd>
       <dt>{tr('equip.d.tank')}</dt>
       <dd>{spec.tankGal != null ? fmt.label(spec.tankGal, 'volume') : '—'}</dd>
@@ -346,7 +346,9 @@
       <a class="btn" href="/calibrate?sprayer={encodeURIComponent(eq.id)}"
         >{tr('equip.d.calibrate')}</a
       >
-      <a class="btn" href="/spray/decon?sprayer={encodeURIComponent(eq.id)}">Decon wizard</a>
+      <a class="btn" href="/spray/decon?sprayer={encodeURIComponent(eq.id)}"
+        >{tr('equip.d.deconWizard')}</a
+      >
       <a class="btn" href="/equipment/{encodeURIComponent(eq.id)}/winterize"
         >{tr('equip.d.winterize')}</a
       >

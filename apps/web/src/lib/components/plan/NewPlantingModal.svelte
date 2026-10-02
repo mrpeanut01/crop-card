@@ -199,7 +199,7 @@
     if (!open || !blockId) return;
     const seq = ++bedFrostSeq;
     const id = blockId;
-    fetchBlockCovers(id, seasonYear)
+    fetchBlockCovers(id, seasonYear, fetch, locale)
       .then((r) => {
         if (seq !== bedFrostSeq) return;
         applyBedFrost(r);

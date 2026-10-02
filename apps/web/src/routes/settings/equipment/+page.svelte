@@ -24,13 +24,13 @@
 <SettingsShell title={tr('settings.equip.title')} kicker={tr('settings.equip.kicker')}>
   {#snippet badge()}
     {#if dirtyCount > 0}
-      <Pill tone="rust">Decon needed</Pill>
+      <Pill tone="rust">{tr('settings.equip.deconNeeded')}</Pill>
     {/if}
   {/snippet}
 
   <SettingsSection
     title={tr('settings.equip.sprayersTitle', { count: data.sprayers.length })}
-    sub="Calibrated GPA drives every tank-mix calculation. Sprayers that need decon block the next spray until cleaned."
+    sub={tr('settings.equip.sprayersSub')}
   >
     {#snippet right()}
       <a class="primary-sm" href="/equipment?add=sprayer"
@@ -62,7 +62,8 @@
         </div>
         <div class="row-actions">
           {#if s.needsDecon}
-            <a class="ghost-sm rust" href="/spray/decon?sprayer={encodeURIComponent(s.id)}">Decon</a
+            <a class="ghost-sm rust" href="/spray/decon?sprayer={encodeURIComponent(s.id)}"
+              >{tr('settings.equip.decon')}</a
             >
           {/if}
           <a class="ghost-sm" href="/calibrate?sprayer={encodeURIComponent(s.id)}"

@@ -722,7 +722,13 @@
 </div>
 
 {#if data.deconAlerts.length > 0}
-  <section class="card decon-alert" aria-label="Sprayer cleanout" data-testid="today-decon-alert">
+  <section
+    class="card decon-alert"
+    aria-label="Sprayer cleanout"
+    data-testid="today-decon-alert"
+    lang="en"
+    data-english-only="safety"
+  >
     <h2>Sprayer cleanout due</h2>
     <p>
       {data.deconAlerts.length === 1 ? 'A sprayer still holds' : 'Sprayers still hold'} the last load.
@@ -744,7 +750,13 @@
 {/if}
 
 {#if data.coveredLogs.length > 0}
-  <section class="card covered-alert" role="alert" aria-label="Treated food already logged">
+  <section
+    class="card covered-alert"
+    role="alert"
+    aria-label="Treated food already logged"
+    lang="en"
+    data-english-only="safety"
+  >
     <h2>Food logged during a treatment hold</h2>
     <p>
       Eggs, milk or meat were saved as food or for sale while a treatment hold applied. If any of

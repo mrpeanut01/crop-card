@@ -8,6 +8,7 @@
  */
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { getBlock } from '$lib/db/blocks';
 import { insertBlockProtection, listBlockProtections } from '$lib/db/blockProtections';
 import { blockProtectionCreateSchema } from '$lib/farm/apiSchemas';
@@ -49,7 +50,7 @@ export const GET: RequestHandler = (event) => {
 export const POST: RequestHandler = async (event) => {
   const user = currentUser(event);
   if (user && user.role !== 'owner' && user.role !== 'inspector') {
-    return json({ error: 'Only the owner can add covers. Ask the owner.' }, { status: 403 });
+    return json({ error: t(event.locals?.locale, 'climate.cover.err.ownerAdd') }, { status: 403 });
   }
   requireOwner(event);
   const block = getBlock(event.params.id!);

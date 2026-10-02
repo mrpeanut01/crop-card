@@ -177,7 +177,13 @@
 
   {#if error}<p class="af-error" role="alert">{error}</p>{/if}
   {#if canCullInstead}
-    <button class="af-ghost" type="button" onclick={cullInstead}>
+    <button
+      class="af-ghost"
+      type="button"
+      onclick={cullInstead}
+      lang="en"
+      data-english-only="safety"
+    >
       Record as culled, meat not used
     </button>
   {/if}

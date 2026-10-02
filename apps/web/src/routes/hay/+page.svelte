@@ -363,7 +363,13 @@
       </table>
     {/if}
     {#if mowViolations.length > 0}
-      <div class="banner danger" role="alert" aria-live="assertive">
+      <div
+        class="banner danger"
+        role="alert"
+        aria-live="assertive"
+        lang="en"
+        data-english-only="safety"
+      >
         <strong>STOP</strong> — {mowViolations[0].message}
       </div>
     {/if}

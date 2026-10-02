@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { db } from '$lib/db/client';
 import { getBlock } from '$lib/db/blocks';
 import { getField } from '$lib/db/fields';
@@ -40,7 +41,7 @@ export const GET: RequestHandler = (event) => {
  *  season close-out. */
 export const POST: RequestHandler = async (event) => {
   const user = requireUser(event);
-  const refused = organicWriteRefusal(user);
+  const refused = organicWriteRefusal(user, event.locals?.locale);
   if (refused) return refused;
   let body: unknown;
   try {
@@ -59,8 +60,7 @@ export const POST: RequestHandler = async (event) => {
       return json(
         {
           error: 'NOT_GROWING_AREA',
-          message:
-            'Only growing Areas (fields, gardens, greenhouses, orchards and pastures) carry an organic status.'
+          message: t(event.locals?.locale, 'organic.api.notGrowingArea')
         },
         { status: 400 }
       );
@@ -86,7 +86,10 @@ export const POST: RequestHandler = async (event) => {
         issues: [
           {
             path: 'effectiveOn',
-            message: `Use a real date from ${EFFECTIVE_DAY_MIN} to ${latest}.`
+            message: t(event.locals?.locale, 'organic.api.realDate', {
+              min: EFFECTIVE_DAY_MIN,
+              max: latest
+            })
           }
         ]
       },
@@ -95,7 +98,7 @@ export const POST: RequestHandler = async (event) => {
   }
 
   if (input.documentId) {
-    const docRefused = checkLabReport(input.documentId);
+    const docRefused = checkLabReport(input.documentId, event.locals?.locale);
     if (docRefused) return docRefused;
   }
 

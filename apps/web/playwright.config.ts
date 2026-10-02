@@ -31,6 +31,8 @@ const PLUGINS_DIR = fileURLToPath(new URL('../../plugins', import.meta.url));
 // 21 MB body limit production sets for document uploads.
 const VAULT_DIR = `./.playwright-data/vault-${PORT}`;
 const VAULT_ENV = `VAULT_BACKEND=filesystem VAULT_DIR=${VAULT_DIR} BODY_SIZE_LIMIT=21M`;
+const MAGIC_VAULT_DIR = `./.playwright-data/vault-${MAGIC_PORT}`;
+const MAGIC_VAULT_ENV = `VAULT_BACKEND=filesystem VAULT_DIR=${MAGIC_VAULT_DIR} BODY_SIZE_LIMIT=21M`;
 
 // The blocking CI e2e job skips visual specs; the separate non-blocking
 // `visual` CI job sets E2E_VISUAL=1. Linux baselines are captured with a
@@ -73,11 +75,11 @@ export default defineConfig({
       // then serves the same build in magic-link mode on its own DB.
       command:
         `until [ -f ${BUILD_MARKER} ] || curl -sf http://localhost:${PORT}/api/health >/dev/null; do sleep 1; done && ` +
-        `mkdir -p ./.playwright-data && rm -f ${MAGIC_DB_PATH} && ` +
+        `mkdir -p ./.playwright-data && rm -rf ${MAGIC_DB_PATH} ${MAGIC_VAULT_DIR} && ` +
         `DATABASE_URL=file:${MAGIC_DB_PATH} node ./scripts/migrate.mjs && ` +
         `DATABASE_URL=file:${MAGIC_DB_PATH} node ./scripts/seed-test-data.mjs && ` +
         `DATABASE_URL=file:${MAGIC_DB_PATH} AUTH_MODE=magic-link AUTH_SECRET=e2e-only-not-secret EMAIL_TRANSPORT=memory SMS_TRANSPORT=memory E2E_OUTBOX=1 ` +
-        `ORIGIN=http://localhost:${MAGIC_PORT} PLUGINS_DIR=${PLUGINS_DIR} CROPCARD_LOCALES=en,es ` +
+        `ORIGIN=http://localhost:${MAGIC_PORT} PLUGINS_DIR=${PLUGINS_DIR} CROPCARD_LOCALES=en,es ${MAGIC_VAULT_ENV} ` +
         `pnpm exec vite preview --host 0.0.0.0 --port ${MAGIC_PORT} --strictPort`,
       port: MAGIC_PORT,
       reuseExistingServer: !process.env.CI,

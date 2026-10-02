@@ -36,6 +36,7 @@ import { getRegistry } from '$lib/server/registry';
 import { lotCostCentsPerUnit } from './unitCost';
 import {
   NOT_TIED_LABEL,
+  notTiedLabel,
   resolveEnterprise,
   seasonProfit,
   type GroupWindow,
@@ -45,6 +46,12 @@ import {
   type StockUseRow
 } from './profit';
 import { personName } from './people';
+import { cropDisplayName } from '$lib/i18n/cropName';
+
+function animalFallbackName(tag: string | null, locale?: string | null): string {
+  if (!locale) return tag ? `Tag ${tag}` : 'Unnamed animal';
+  return tag ? t(locale, 'animals.tagLabel', { tag }) : t(locale, 'finance.profit.unnamedAnimal');
+}
 
 export const LABOUR_RATE_SETTING = 'labour_rate_cents_per_hour';
 
@@ -239,8 +246,10 @@ export interface FarmNames {
   blockField: Map<string, string>;
 }
 
-/** Names for everything money can link to, read once per request. */
-export async function farmNames(): Promise<FarmNames> {
+/** Names for everything money can link to, read once per request. With a
+ *  locale, crop names and unnamed animals read in that language (pages);
+ *  without one they stay English (the CSV). */
+export async function farmNames(locale?: string | null): Promise<FarmNames> {
   const registry = await getRegistry();
   const plantings = db
     .select({
@@ -259,8 +268,12 @@ export async function farmNames(): Promise<FarmNames> {
     plantingPlugin[p.id] = p.plugin;
     const name = (registry.get(p.plugin)?.plugin as { displayName?: string } | undefined)
       ?.displayName;
-    crop[p.plugin] = name ?? p.plugin;
-    plantingLabel[p.id] = p.variety || crop[p.plugin];
+    crop[p.plugin] = locale
+      ? cropDisplayName(p.plugin, name ?? p.plugin, locale)
+      : (name ?? p.plugin);
+    plantingLabel[p.id] = locale
+      ? cropDisplayName(p.plugin, p.variety || (name ?? p.plugin), locale)
+      : p.variety || crop[p.plugin];
   }
   const group = Object.fromEntries(
     db
@@ -276,7 +289,7 @@ export async function farmNames(): Promise<FarmNames> {
       .from(animals)
       .where(withTenant(animals))
       .all()
-      .map((a) => [a.id, a.name || (a.tag ? `Tag ${a.tag}` : 'Unnamed animal')])
+      .map((a) => [a.id, a.name || animalFallbackName(a.tag, locale)])
   );
   const area = Object.fromEntries(
     db
@@ -325,9 +338,9 @@ export interface SeasonMoney {
   names: FarmNames;
 }
 
-export async function loadSeasonMoney(year: number): Promise<SeasonMoney> {
+export async function loadSeasonMoney(year: number, locale?: string | null): Promise<SeasonMoney> {
   const { fromMs, toMs } = seasonBounds(year);
-  const names = await farmNames();
+  const names = await farmNames(locale);
   const entries = listLedgerEntries({ fromMs, toMs, state: 'live' });
   const stockUses = attributeUses(useMovements(fromMs, toMs), names.blockField);
   const animalIds = new Set<string>();
@@ -347,7 +360,10 @@ export async function loadSeasonMoney(year: number): Promise<SeasonMoney> {
 }
 
 /** "Entered by" names for the list and CSV. */
-export function enteredByNames(ids: Array<string | null>): Map<string, string> {
+export function enteredByNames(
+  ids: Array<string | null>,
+  locale?: string | null
+): Map<string, string> {
   const unique = [...new Set(ids.filter((x): x is string => !!x))];
   if (unique.length === 0) return new Map();
   unscopedQueryNote('users is the global identity table; names only');
@@ -361,7 +377,7 @@ export function enteredByNames(ids: Array<string | null>): Map<string, string> {
     .from(users)
     .where(inArray(users.id, unique))
     .all();
-  return new Map(rows.map((r) => [r.id, personName(r)]));
+  return new Map(rows.map((r) => [r.id, personName(r, locale)]));
 }
 
 /** The "linked to" text for an entry: "Crop: Tomatoes", "Area: North garden". */
@@ -404,15 +420,18 @@ export interface PresentedEntry extends LedgerEntry {
 export function enterpriseLabelFor(
   e: LedgerEntry,
   names: FarmNames,
-  animalGroups: Record<string, GroupWindow[]> = {}
+  animalGroups: Record<string, GroupWindow[]> = {},
+  locale?: string | null
 ): string {
-  if (e.kind === 'expense' && e.stockLotId) return 'Stock purchase (counted as used)';
+  if (e.kind === 'expense' && e.stockLotId) {
+    return locale ? t(locale, 'finance.profit.stockPurchase') : 'Stock purchase (counted as used)';
+  }
   const r = resolveEnterprise(e, e.occurredAt, {
     plantingPlugin: names.plantingPlugin,
     animalGroups,
     labels: { crop: names.crop, group: names.group, animal: names.animal, area: names.area }
   });
-  return r?.label ?? NOT_TIED_LABEL;
+  return r?.label ?? (locale ? notTiedLabel(locale) : NOT_TIED_LABEL);
 }
 
 export function presentEntries(
@@ -420,14 +439,17 @@ export function presentEntries(
   names: FarmNames,
   locale?: string | null
 ): PresentedEntry[] {
-  const people = enteredByNames(entries.map((e) => e.createdById));
+  const people = enteredByNames(
+    entries.map((e) => e.createdById),
+    locale
+  );
   const windows = animalWindows(
     new Set(entries.map((e) => e.animalId).filter((x): x is string => !!x))
   );
   return entries.map((e) => ({
     ...e,
     linkedTo: linkedToText(e, names, locale),
-    enterpriseLabel: enterpriseLabelFor(e, names, windows),
+    enterpriseLabel: enterpriseLabelFor(e, names, windows, locale),
     enteredBy: e.createdById ? (people.get(e.createdById) ?? null) : null
   }));
 }

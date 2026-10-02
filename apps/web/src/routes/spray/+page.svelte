@@ -969,7 +969,7 @@
         >
           <strong>{h.displayName}</strong>
           {#if harmed.length > 0}
-            <small class="harm" data-testid="herbicide-harm">
+            <small class="harm" data-testid="herbicide-harm" lang="en" data-english-only="safety">
               Harms {harmed.join(', ')} crops on the picked blocks
             </small>
           {/if}
@@ -985,7 +985,7 @@
               ? tr('sprayui.herb.contact')
               : h.chemistryClasses.join(', ')}</small
           >
-          <small data-testid="herbicide-rate-preview">
+          <small data-testid="herbicide-rate-preview" lang="en" data-english-only="safety">
             {herbicideRatePreview(h.ratePerAcre, sprayer, currentPrefs()).label}
             {#if h.requiresAMS}• AMS{/if}
             {#if h.deconRequired}• decon{/if}
@@ -1213,8 +1213,8 @@
             onclick={() => (cornHeightIn = Math.max(0, (cornHeightIn ?? 0) - 1))}>−</button
           >
           <output
-            >{cornHeightIn ?? 0}<small> in</small>{#if metric}<small class="alt"
-                >≈ {fmt.qty(cornHeightIn ?? 0, 'length')}</small
+            >{cornHeightIn ?? 0}<small> {tr('sprayui.corn.inchUnit')}</small>{#if metric}<small
+                class="alt">≈ {fmt.qty(cornHeightIn ?? 0, 'length')}</small
               >{/if}</output
           >
           <button
@@ -1322,13 +1322,13 @@
           </div>
         {/if}
         {#if blocksMissingAcres.length > 0}
-          <p class="dilution-warn-line">
+          <p class="dilution-warn-line" lang="en" data-english-only="safety">
             ⚠ Acres unknown for {blocksMissingAcres.join(', ')} — totals exclude these blocks. Set acres
             in <a href="/settings/farm/map">Settings → Farm map</a> for accurate dilution.
           </p>
         {/if}
         {#if tanksNeeded > 1}
-          <p class="dilution-warn-line">
+          <p class="dilution-warn-line" lang="en" data-english-only="safety">
             ⚠ Pass exceeds one tank — plan to refill {tanksNeeded - 1} time{tanksNeeded - 1 === 1
               ? ''
               : 's'} mid-pass.
@@ -1382,7 +1382,7 @@
         {@const remainingAcresLastTank = totalAcres - (tanksNeeded - 1) * (tankSizeGallons / gpa)}
         {#if remainingAcresLastTank > 0 && remainingAcresLastTank < tankSizeGallons / gpa}
           <h3>{tanksNeeded > 1 ? tr('sprayui.card.lastPartial') : tr('sprayui.card.tankFill')}</h3>
-          <p class="fill-note">
+          <p class="fill-note" lang="en" data-english-only="safety">
             The {tanksNeeded > 1 ? 'last tank covers' : 'pass covers'}
             <strong>{fmt.label(remainingAcresLastTank, 'area', { digits: 2 })}</strong>
             — fill to one of these levels, then mix the matching chemical amount.
@@ -1454,9 +1454,13 @@
               {:else if oc?.kind === 'updated'}
                 <span class="pb-tag pb-ok">{tr('sprayui.card.updated')}</span>
               {:else if oc?.kind === 'skipped-stop'}
-                <span class="pb-tag pb-stop">⛔ skipped (STOP)</span>
+                <span class="pb-tag pb-stop" lang="en" data-english-only="safety"
+                  >⛔ skipped (STOP)</span
+                >
               {:else if oc?.kind === 'skipped-locked'}
-                <span class="pb-tag pb-stop">🔒 skipped (locked &gt; 48h)</span>
+                <span class="pb-tag pb-stop" lang="en" data-english-only="safety"
+                  >🔒 skipped (locked &gt; 48h)</span
+                >
               {:else if oc?.kind === 'failed'}
                 <span class="pb-tag pb-stop">{tr('sprayui.card.failed', { error: oc.error })}</span>
               {:else if pr?.ok}
@@ -1466,7 +1470,7 @@
                     : tr('sprayui.card.willRecord')}</span
                 >
               {:else if pr && !pr.ok}
-                <span class="pb-tag pb-stop"
+                <span class="pb-tag pb-stop" lang="en" data-english-only="safety"
                   >⛔ STOP — {pr.violations[0]?.code ?? 'see violations'}</span
                 >
               {/if}
@@ -1529,9 +1533,9 @@
         queued={queuedOffline && taskQueued}
       />
     {:else}
-      <h2>⛔ STOP — do not spray</h2>
+      <h2 lang="en" data-english-only="safety">⛔ STOP — do not spray</h2>
       {#if result.requiresDecon}
-        <p>
+        <p lang="en" data-english-only="safety">
           The selected sprayer last carried a different chemistry. Run the decontamination wizard
           before this spray will be allowed.
         </p>

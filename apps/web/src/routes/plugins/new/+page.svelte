@@ -921,7 +921,7 @@
         </label>
         <label>
           {tr('plugins.new.unit')}
-          <select bind:value={hRateUnit}>
+          <select bind:value={hRateUnit} lang="en" data-english-only="safety">
             <option value="fl-oz">fl-oz</option>
             <option value="oz">oz</option>
             <option value="pt">pt</option>
@@ -944,7 +944,7 @@
               text={tr('plugins.new.helpTimingH')}
             />
           </span>
-          <select bind:value={hApplicationTiming}>
+          <select bind:value={hApplicationTiming} lang="en" data-english-only="safety">
             <option value="">{tr('plugins.new.unspecified')}</option>
             <option value="BURNDOWN">BURNDOWN</option>
             <option value="PRE">PRE</option>
@@ -1029,7 +1029,7 @@
         </label>
         <label>
           {tr('plugins.new.unit')}
-          <select bind:value={iRateUnit}>
+          <select bind:value={iRateUnit} lang="en" data-english-only="safety">
             <option value="fl-oz">fl-oz</option>
             <option value="oz">oz</option>
             <option value="pt">pt</option>
@@ -1065,7 +1065,7 @@
               text="Risk this product poses to bees + pollinators. Drives advisory warnings on sprays scheduled during bloom windows."
             />
           </span>
-          <select bind:value={iPollinatorRisk}>
+          <select bind:value={iPollinatorRisk} lang="en" data-english-only="safety">
             <option value="none">none</option>
             <option value="low">low</option>
             <option value="moderate">moderate</option>
@@ -1119,7 +1119,7 @@
         </label>
         <label>
           {tr('plugins.new.unit')}
-          <select bind:value={fRateUnit}>
+          <select bind:value={fRateUnit} lang="en" data-english-only="safety">
             <option value="fl-oz">fl-oz</option>
             <option value="oz">oz</option>
             <option value="pt">pt</option>
@@ -1149,7 +1149,7 @@
               text="Risk this product poses to bees + pollinators. Drives advisory warnings on sprays scheduled during bloom windows."
             />
           </span>
-          <select bind:value={fPollinatorRisk}>
+          <select bind:value={fPollinatorRisk} lang="en" data-english-only="safety">
             <option value="none">none</option>
             <option value="low">low</option>
             <option value="moderate">moderate</option>
@@ -1164,7 +1164,7 @@
               text={tr('plugins.new.helpTimingF')}
             />
           </span>
-          <select bind:value={fApplicationTiming}>
+          <select bind:value={fApplicationTiming} lang="en" data-english-only="safety">
             <option value="">{tr('plugins.new.unspecified')}</option>
             <option value="DORMANT">DORMANT</option>
             <option value="PRE-BLOOM">PRE-BLOOM</option>

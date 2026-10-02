@@ -293,5 +293,23 @@ export const esAmend: Partial<Record<MessageKey, string>> = {
 
   'forage.hay.sprayed': 'Aplicado el {date}.',
   'forage.hay.labelSource': 'Etiqueta: {source}.',
-  'forage.hay.labelData': 'datos de la etiqueta'
+  'forage.hay.labelData': 'datos de la etiqueta',
+  'amend.bioassay.controls': 'Llena algunas macetas solo con sustrato para macetas, como control.',
+  'amend.bioassay.mix': 'Llena otras macetas con el material mezclado con sustrato para macetas.',
+  'amend.bioassay.plant':
+    'Siembra semillas de chícharo en cada maceta. Algunas fuentes también usan frijoles.',
+  'amend.bioassay.grow': 'Déjalas crecer hasta que salgan unos tres pares de hojas.',
+  'amend.bioassay.look':
+    'Busca hojas deformadas o acucharadas en el crecimiento nuevo y compáralas con las macetas de control.',
+  'amend.bioassay.ratio-osu':
+    'Oregon State: 2 partes de material por 1 parte de sustrato para macetas.',
+  'amend.bioassay.ratio-ncsu':
+    'NC State: 1 parte de material por 1 parte de sustrato para macetas.',
+  'amend.bioassay.days-osu': 'Oregon State: de 14 a 21 días después de que nacen las semillas.',
+  'amend.bioassay.lab':
+    'Oregon State señala que un análisis químico de laboratorio podría no detectar este tipo de herbicida.',
+  'amend.bioassay.retest':
+    'Oregon State sugiere repetir la prueba una o dos veces al año hasta que no haya señales de daño.',
+  'carry.page.lede':
+    'Algunos herbicidas pasan por los animales y la composta y pueden dañar tomates, frijoles, chícharos y otros cultivos de hoja ancha. Estas líneas salen de tus registros. Lo usual es hacer una prueba con chícharos o frijoles en macetas antes de sembrar.'
 };

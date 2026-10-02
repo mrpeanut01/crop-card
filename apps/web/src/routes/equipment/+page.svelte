@@ -2,8 +2,10 @@
   import { untrack } from 'svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { invalidateAll } from '$app/navigation';
+  import { createT } from '$lib/i18n';
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   type EquipmentType =
     | 'sprayer'
@@ -58,16 +60,14 @@
   }> {
     const name = newTypeName.trim();
     if (!name) {
-      createError = 'Type is required';
+      createError = tr('equip.err.typeRequired');
       return { ok: false, typeId: null, legacyType: 'other' };
     }
     const existing = data.types.find((t) => t.name.toLowerCase() === name.toLowerCase());
     if (existing) {
       return { ok: true, typeId: existing.id, legacyType: nameToLegacyEnum(existing.name) };
     }
-    const confirmed = confirm(
-      `"${name}" isn't in your Equipment Type list yet.\n\nAdd it as a new Type?`
-    );
+    const confirmed = confirm(tr('equip.confirmNewType', { name }));
     if (!confirmed) return { ok: false, typeId: null, legacyType: 'other' };
     const res = await fetch('/api/types', {
       method: 'POST',
@@ -76,7 +76,7 @@
     });
     const out = await res.json();
     if (!res.ok) {
-      createError = `Failed to add type: ${out.error ?? res.status}`;
+      createError = tr('equip.err.addType', { error: out.error ?? res.status });
       return { ok: false, typeId: null, legacyType: 'other' };
     }
     return { ok: true, typeId: out.type.id as string, legacyType: 'other' };
@@ -118,7 +118,7 @@
       });
       const out = await res.json();
       if (!res.ok) {
-        createError = out.error ?? `HTTP ${res.status}`;
+        createError = out.error ?? tr('stockui.httpStatus', { status: res.status });
         return;
       }
       newLabel = '';
@@ -143,11 +143,7 @@
   }
 
   async function deleteEquipment(id: string, label: string) {
-    if (
-      !confirm(
-        `Delete "${label}"? This removes its calibration history, hour-meter state, log entries, and pending calibrations. Tasks that referenced it will keep working but lose the equipment link.`
-      )
-    ) {
+    if (!confirm(tr('equip.confirmDelete', { label }))) {
       return;
     }
     try {
@@ -156,12 +152,12 @@
       });
       if (!res.ok) {
         const out = await res.json().catch(() => ({}));
-        alert(`Delete failed: ${out.error ?? res.status}`);
+        alert(tr('equip.err.delete', { error: out.error ?? res.status }));
         return;
       }
       await invalidateAll();
     } catch (e) {
-      alert(`Delete failed: ${e instanceof Error ? e.message : String(e)}`);
+      alert(tr('equip.err.delete', { error: e instanceof Error ? e.message : String(e) }));
     }
   }
 
@@ -172,20 +168,19 @@
   });
 </script>
 
-<svelte:head><title>Equipment · CropCard</title></svelte:head>
+<svelte:head><title>{tr('equip.pageTitle')}</title></svelte:head>
 
-<h1>Equipment</h1>
+<h1>{tr('equip.title')}</h1>
 <p class="lede">
-  Sprayers, tractors, planters, drills, mowers, balers and irrigation. Each sprayer keeps its
-  chemical history, decon and calibration, which every spray checks. Chemicals, fertility and seed
-  live in <a href="/inventory">Inventory</a>.
+  {tr('equip.lede')}
+  <a href="/inventory">{tr('equip.ledeLink')}</a>.
 </p>
 
 <section class="card">
-  <h2>Filter by type</h2>
+  <h2>{tr('equip.filterByType')}</h2>
   <div class="filters">
     <button class="chip" class:active={typeFilter === 'all'} onclick={() => (typeFilter = 'all')}>
-      All ({data.equipment.length})
+      {tr('equip.all', { count: data.equipment.length })}
     </button>
     {#each [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0])) as [name, c] (name)}
       <button class="chip" class:active={typeFilter === name} onclick={() => (typeFilter = name)}>
@@ -197,39 +192,39 @@
 
 {#if !data.canEdit}
   <section class="card role-notice">
-    <h2>View only</h2>
-    <p>Helper role can browse equipment + log maintenance entries. Owners create + retire.</p>
+    <h2>{tr('equip.viewOnly')}</h2>
+    <p>{tr('equip.viewOnlyNote')}</p>
   </section>
 {/if}
 
 {#if data.canEdit}
   <section class="card" id="add">
-    <h2>Add equipment</h2>
+    <h2>{tr('equip.add.title')}</h2>
     <datalist id="equipment-type-suggestions">
       {#each data.types as t (t.id)}<option value={t.name}>{t.description ?? ''}</option>{/each}
     </datalist>
     <div class="add-grid">
       <label class="field">
-        <span>Type</span>
+        <span>{tr('equip.add.type')}</span>
         <input
           type="text"
           list="equipment-type-suggestions"
-          placeholder="Tractor"
+          placeholder={tr('equip.add.typePh')}
           bind:value={newTypeName}
         />
       </label>
       <label class="field">
-        <span>Name</span>
+        <span>{tr('equip.add.name')}</span>
         <input
           type="text"
-          placeholder={addingSprayer ? 'Backpack 4 gal' : 'John Deere 4020'}
+          placeholder={addingSprayer ? tr('equip.add.namePhSprayer') : tr('equip.add.namePh')}
           bind:value={newLabel}
           bind:this={labelInput}
         />
       </label>
       {#if addingSprayer}
         <label class="field">
-          <span>Tank size in gallons (optional)</span>
+          <span>{tr('equip.add.tank')}</span>
           <input
             type="number"
             min="0"
@@ -240,18 +235,18 @@
           />
         </label>
         <label class="field">
-          <span>Nozzle (optional)</span>
+          <span>{tr('equip.add.nozzle')}</span>
           <input type="text" placeholder="TeeJet XR110015" maxlength="60" bind:value={newNozzle} />
         </label>
       {/if}
       <label class="field">
-        <span>Notes (optional)</span>
+        <span>{tr('equip.add.notes')}</span>
         <input type="text" bind:value={newNotes} />
       </label>
     </div>
     {#if addingSprayer}
       <p class="hint-new-type">
-        New sprayers start uncalibrated. Calibrate one before it can size a spray.
+        {tr('equip.add.uncalibrated')}
       </p>
     {/if}
     <button
@@ -259,13 +254,13 @@
       onclick={createEquipment}
       disabled={creating || !newLabel.trim() || !newTypeName.trim()}
     >
-      {creating ? '…' : 'Add'}
+      {creating ? '…' : tr('equip.add.button')}
     </button>
     {#if newTypeName.trim() && !data.types.find((t) => t.name.toLowerCase() === newTypeName
             .trim()
             .toLowerCase())}
       <p class="hint-new-type">
-        "{newTypeName.trim()}" is new. You'll be asked to confirm adding it when you save.
+        {tr('equip.add.newType', { name: newTypeName.trim() })}
       </p>
     {/if}
     {#if createError}<p class="error">{createError}</p>{/if}
@@ -274,7 +269,7 @@
 
 {#if filtered.length === 0}
   <section class="card empty">
-    <p>No equipment matching this filter.</p>
+    <p>{tr('equip.noMatch')}</p>
   </section>
 {:else}
   <ul class="equipment-list">
@@ -283,13 +278,15 @@
         <header>
           <a href="/equipment/{e.id}"><strong>{e.label}</strong></a>
           <span class="type-badge">{e.typeName}</span>
-          {#if e.retiredAt}<span class="retired">retired {fmtTs(e.retiredAt)}</span>{/if}
+          {#if e.retiredAt}<span class="retired"
+              >{tr('equip.retired', { date: fmtTs(e.retiredAt) })}</span
+            >{/if}
           {#if data.canEdit}
             <button
               class="delete-btn"
               onclick={() => deleteEquipment(e.id, e.label)}
-              title="Delete"
-              aria-label="Delete {e.label}"
+              title={tr('equip.delete')}
+              aria-label={tr('equip.deleteAria', { label: e.label })}
             >
               🗑
             </button>
@@ -303,21 +300,21 @@
                 ? `${e.state.calibratedGpa}${metricGpa(e.state.calibratedGpa)}`
                 : '—'}
             </dd>
-            <dt>Last load</dt>
+            <dt>{tr('equip.lastLoad')}</dt>
             <dd>
               {#if e.state.lastChemistryClass}
                 <span class="warn">{e.state.lastChemistryClass}</span>
                 <a class="link" href="/spray/decon?sprayer={encodeURIComponent(e.id)}">Decon →</a>
               {:else}
-                <span class="ok">clean</span>
+                <span class="ok">{tr('equip.clean')}</span>
               {/if}
             </dd>
             <dt>Last decon</dt>
             <dd>{fmtTs(e.state.lastDeconAt)}</dd>
           {:else}
-            <dt>Hour meter</dt>
+            <dt>{tr('equip.hourMeter')}</dt>
             <dd>{e.state.hourMeter ?? '—'}</dd>
-            <dt>Last used</dt>
+            <dt>{tr('equip.lastUsed')}</dt>
             <dd>{fmtTs(e.state.lastUsedAt)}</dd>
           {/if}
         </dl>

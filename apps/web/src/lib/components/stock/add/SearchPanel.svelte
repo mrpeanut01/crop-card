@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import { Search, Loader2, Globe, Database } from 'lucide-svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { StockEntryDraft } from '$lib/stock/normalizeStockEntry';
@@ -48,6 +50,7 @@
   }
 
   const { onSubmit, busy = false, type, aiEnabled = false }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   // Map the inventory type onto the search endpoint's hintType enum.
   // Pesticide is ambiguous (herb/insect/fungicide) so it stays unhinted.
@@ -88,7 +91,7 @@
   async function runSearch(includeWeb: boolean, silent = false): Promise<void> {
     const q = query.trim();
     if (q.length < 2) {
-      if (!silent) searchError = 'Type at least 2 characters to search.';
+      if (!silent) searchError = tr('stockui.search.min');
       return;
     }
     searching = true;
@@ -102,7 +105,7 @@
       });
       const body = await res.json();
       if (!res.ok && !Array.isArray(body.candidates)) {
-        if (!silent) searchError = body.error ?? `HTTP ${res.status}`;
+        if (!silent) searchError = body.error ?? tr('stockui.httpStatus', { status: res.status });
         return;
       }
       candidates = (body.candidates as SearchCandidate[]) ?? [];
@@ -173,12 +176,12 @@
 
 <div class="search-panel">
   <p class="lede">
-    Matches from the crop and product library appear as you type.{#if aiEnabled}
-      No match? Ask Claude to search the web (uses your daily AI quota — see /settings/ai).{/if}
+    {tr('stockui.search.lede')}{#if aiEnabled}
+      {tr('stockui.search.ledeAi')}{/if}
   </p>
 
   <div class="search-row">
-    <label class="visually-hidden" for="search-input">Product name</label>
+    <label class="visually-hidden" for="search-input">{tr('stockui.search.productName')}</label>
     <span class="search-icon" aria-hidden="true"><Search size={18} strokeWidth={1.75} /></span>
     <input
       id="search-input"
@@ -187,11 +190,11 @@
       oninput={onQueryInput}
       onkeydown={onQueryKeydown}
       maxlength="120"
-      placeholder="e.g., Engenia, Cherokee Purple, Calcium Nitrate…"
+      placeholder={tr('stockui.search.placeholder')}
       disabled={busy || searching}
     />
     <button type="button" onclick={() => runSearch(false)} disabled={busy || searching}>
-      {searching ? 'Searching…' : 'Search library'}
+      {searching ? tr('stockui.search.searching') : tr('stockui.search.searchLibrary')}
     </button>
   </div>
 
@@ -201,36 +204,34 @@
 
   {#if searchMeta?.upstreamOverloaded}
     <p class="hint" aria-live="polite">
-      Claude is overloaded right now — only library matches shown. Try again in a minute.
+      {tr('stockui.search.overloaded')}
     </p>
   {:else if searchMeta?.quotaBlocked || searchMeta?.aiUnavailable}
     <p class="hint" aria-live="polite">
-      {searchMeta.message ??
-        'Daily AI quota exhausted — only library matches shown. Try again tomorrow or upgrade from /settings/ai.'}
+      {searchMeta.message ?? tr('stockui.search.quota')}
     </p>
   {/if}
 
   {#if candidates.length === 0 && searchSource && !searching}
     <p class="empty">
-      Nothing found in your library{searchedWeb ? ' or on the web' : ''}. Try a different name or
-      use the Manual tab.
+      {searchedWeb ? tr('stockui.search.nothingWeb') : tr('stockui.search.nothingLibrary')}
     </p>
   {/if}
 
   {#if candidates.length > 0}
     <div class="src-banner">
-      Source:
+      {tr('stockui.search.source')}
       {#if searchSource === 'local'}
         <Database size={14} strokeWidth={1.75} />
-        local library
+        {tr('stockui.search.localLibrary')}
       {:else if searchSource === 'web-search'}
         <Globe size={14} strokeWidth={1.75} />
-        Claude web search
+        {tr('stockui.search.claudeWeb')}
       {:else if searchSource === 'mixed'}
         <Database size={14} strokeWidth={1.75} />
-        library +
+        {tr('stockui.search.libraryPlus')}
         <Globe size={14} strokeWidth={1.75} />
-        web
+        {tr('stockui.search.web')}
       {/if}
     </div>
 
@@ -240,7 +241,7 @@
         <li class="card" class:no-plugin={!c}>
           <div class="card-head">
             <div class="card-title">
-              {c?.displayName ?? c?.pluginId ?? '(unparsed candidate)'}
+              {c?.displayName ?? c?.pluginId ?? tr('stockui.search.unparsed')}
               <Provenance source={cand.source === 'local' ? 'plugin' : 'ai'} compact />
             </div>
             <div class="card-meta">
@@ -250,7 +251,9 @@
             </div>
           </div>
           {#if cand.guessed && cand.guessed.length > 0}
-            <p class="guessed">Inferred (not on label): {cand.guessed.join(', ')}</p>
+            <p class="guessed">
+              {tr('stockui.search.inferred', { list: cand.guessed.join(', ') })}
+            </p>
           {/if}
           <div class="card-actions">
             <button
@@ -259,7 +262,7 @@
               disabled={busy || !c}
               onclick={() => pickCandidate(cand)}
             >
-              Pick this
+              {tr('stockui.search.pick')}
             </button>
           </div>
         </li>
@@ -269,19 +272,19 @@
 
   {#if candidates.length > 0 && !hasConfidentLocal && !searchedWeb && aiEnabled}
     <div class="web-prompt">
-      <p>Nothing in your library matched confidently. Want to ask Claude to search the web?</p>
+      <p>{tr('stockui.search.webPrompt')}</p>
       <button type="button" onclick={() => runSearch(true)} disabled={busy || searching}>
         {#if searching}
-          <Loader2 size={14} class="spin" /> Searching…
+          <Loader2 size={14} class="spin" /> {tr('stockui.search.searching')}
         {:else}
-          <Globe size={14} /> Search the web
+          <Globe size={14} /> {tr('stockui.search.searchWeb')}
         {/if}
       </button>
     </div>
   {/if}
 
   {#if candidates.length > 0}
-    <button type="button" class="reset" onclick={reset}>Start over</button>
+    <button type="button" class="reset" onclick={reset}>{tr('stockui.search.startOver')}</button>
   {/if}
 </div>
 

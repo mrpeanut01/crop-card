@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { INVENTORY_TYPE_LABELS, type InventoryType } from '$lib/inventory/types';
+  import type { InventoryType } from '$lib/inventory/types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import type { MessageKey } from '$lib/i18n';
+  import { invTypeLabel, invTypeLower } from './typeLabel';
   import { visibleInventoryTypes } from '$lib/inventory/chips';
 
   interface Props {
@@ -15,22 +19,24 @@
     typesProp ?? visibleInventoryTypes({ stockCounts: {}, hasAnimals: false, active: activeType })
   );
 
-  const HINTS: Record<InventoryType, string> = {
-    pesticide: 'Herbicides, insecticides and fungicides on the shelf.',
-    fertility: 'Fertilizer, compost and other amendments.',
-    seed: 'Seed packets and bags, with their lot numbers.',
-    crop: "A crop the library doesn't have yet.",
-    feed: 'Feed, hay and bedding, by the bag or the pound.',
-    'animal-health': 'Medicines, vaccines and dewormers on the shelf.'
-  };
+  const tr = $derived(createT(page.data?.locale));
+
+  const HINT_KEYS = {
+    pesticide: 'inv.empty.hint.pesticide',
+    fertility: 'inv.empty.hint.fertility',
+    seed: 'inv.empty.hint.seed',
+    crop: 'inv.empty.hint.crop',
+    feed: 'inv.empty.hint.feed',
+    'animal-health': 'inv.empty.hint.animalHealth'
+  } as const satisfies Record<InventoryType, MessageKey>;
 </script>
 
 <section class="inv-empty" aria-labelledby="inv-empty-title" data-testid="inventory-empty">
   <h2 id="inv-empty-title" class="serif">
-    No {INVENTORY_TYPE_LABELS[activeType].toLowerCase()} yet
+    {tr('inv.empty.title', { type: invTypeLower(tr, activeType) })}
   </h2>
   {#if canAdd}
-    <p class="lede">What would you like to add? Pick a kind and CropCard walks you through it.</p>
+    <p class="lede">{tr('inv.empty.lede')}</p>
     <ul class="grid">
       {#each types as t (t)}
         <li>
@@ -40,15 +46,15 @@
             href="/inventory/{t}/add"
             aria-current={t === activeType ? 'true' : undefined}
           >
-            <span class="tile-title">{INVENTORY_TYPE_LABELS[t]}</span>
-            <span class="tile-hint">{HINTS[t]}</span>
+            <span class="tile-title">{invTypeLabel(tr, t)}</span>
+            <span class="tile-hint">{tr(HINT_KEYS[t])}</span>
           </a>
         </li>
       {/each}
     </ul>
   {:else}
     <p class="ask-owner" role="note">
-      Ask the owner to add some. Everything they add shows up here.
+      {tr('inv.empty.askOwner')}
     </p>
   {/if}
 </section>

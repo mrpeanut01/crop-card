@@ -170,6 +170,10 @@ function baseAreaCard(
       facts.push({ label: 'Planned', value: `${planned.length}`, provenance: 'data' });
     }
   }
+  if (area.organicStatus) {
+    facts.push({ label: 'Organic status', value: area.organicStatus, provenance: 'manual' });
+    provenance.push({ source: 'manual', detail: 'organic status you entered' });
+  }
   const water = watererNamesFor(area.id, snapshot.mapFeatures ?? []);
   if (water.length) {
     facts.push({ label: 'Water', value: water.join(', '), provenance: 'manual' });

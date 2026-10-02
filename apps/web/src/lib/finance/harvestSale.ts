@@ -16,6 +16,8 @@ export function parseHarvestQuantity(
 export interface SaleLink {
   harvestEventId: string;
   cropId: string;
+  /** "Also record the money" from a disposition (B-31): the sale links back. */
+  dispositionId?: string;
 }
 
 export function recordSaleHref(link: SaleLink): string {
@@ -24,6 +26,7 @@ export function recordSaleHref(link: SaleLink): string {
     harvestEventId: link.harvestEventId,
     cropId: link.cropId
   });
+  if (link.dispositionId) q.set('dispositionId', link.dispositionId);
   return `/finance/new?${q.toString()}`;
 }
 

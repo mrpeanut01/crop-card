@@ -4,6 +4,7 @@
   import { onMount, tick } from 'svelte';
   import CardPrintSheet from '$lib/components/cards/CardPrintSheet.svelte';
   import RecordCardPanel from '$lib/components/records/RecordCardPanel.svelte';
+  import YearAnimalSection from '$lib/components/records/YearAnimalSection.svelte';
   import SoilTestNudge from '$lib/components/setup/SoilTestNudge.svelte';
   import type { CardModel, CardPrintLayout } from '$lib/cards/model';
   import { ChevronRight, FileText, Lock, Calendar, Plus, ArrowRight } from 'lucide-svelte';
@@ -244,6 +245,15 @@
           <span class="pending-badge">{pendingCount}</span>
         {/if}
       </a>
+      {#if data.organicLink}
+        <a
+          class="btn-secondary organic-link"
+          href="/records/organic"
+          data-testid="organic-records-link"
+        >
+          Organic records
+        </a>
+      {/if}
     </div>
   </header>
 
@@ -450,6 +460,13 @@
         </article>
       {/if}
     </div>
+    {#if yearSummary.animals}
+      <YearAnimalSection
+        section={yearSummary.animals}
+        year={yearSummary.year}
+        canExportLog={data.canExportAnimalLog}
+      />
+    {/if}
   </section>
 
   <section class="filter-card">
@@ -976,6 +993,9 @@
     background: var(--color-forest-deep, #1f3a28);
     color: var(--color-paper, #fdfaf2);
     border-color: var(--color-forest-deep, #1f3a28);
+  }
+  .organic-link {
+    min-height: 48px;
   }
   .btn-primary:hover,
   .btn-ghost:hover,

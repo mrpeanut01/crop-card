@@ -44,6 +44,23 @@ describe('fact paths', () => {
     ]);
   });
 
+  it('asks for a source for an organicUse (33B, B-03)', () => {
+    const withUse = animalHealthPluginSchema.parse({
+      ...FIXTURE_ANIMAL_HEALTH,
+      organicUse: { status: 'allowed-with-conditions', citation: '205.603(a)(1)' }
+    });
+    expect(animalHealthFactPaths(withUse)).toContain('organicUse');
+    expect(checkSources([{ pluginId: withUse.pluginId, paths: ['organicUse'] }], {})).toEqual([
+      { pluginId: withUse.pluginId, path: 'organicUse', problem: 'missing' }
+    ]);
+    expect(
+      animalHealthPluginSchema.safeParse({
+        ...FIXTURE_ANIMAL_HEALTH,
+        organicUse: { status: 'fine', citation: '205.603' }
+      }).success
+    ).toBe(false);
+  });
+
   it('lists every pest-model number', () => {
     expect(pestModelFactPaths(pestModel)).toEqual([
       'baseTempF',

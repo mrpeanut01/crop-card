@@ -256,3 +256,8 @@ export function assertAmendmentBatch(
 export function assertHayCutting(field: string, cuttingId: string | null | undefined): ForeignRef {
   return [field, cuttingId, (id) => ownRowExists(hayCuttings, id)];
 }
+
+/** A live (not deleted) ledger entry of this Owner (Phase 33B, B-31). */
+export function assertLedgerEntry(field: string, entryId: string | null | undefined): ForeignRef {
+  return [field, entryId, liveLedgerEntryExists];
+}

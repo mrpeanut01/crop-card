@@ -11,6 +11,7 @@ import { isInBloom } from '$lib/safety/pollinatorBloom';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { pollinatorNeighbors } from '$lib/server/pollinatorNeighbors';
 import { canSetUp, setupAreas } from '$lib/server/setupContext';
+import { organicBlocksForNotice } from '$lib/server/organicNotice';
 
 /**
  * Phase 25d (#95) — IPM-gate scout data. Primary path reads from the
@@ -60,6 +61,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         pollinatorRisk: p.pollinatorRisk ?? ('unknown' as const),
         pollinator: p.pollinator ?? null,
         epaRegistrationNumber: p.epaRegistrationNumber ?? null,
+        complianceFlags: p.complianceFlags,
         iracGroups: Array.from(
           new Set(
             (p.activeIngredients ?? []).map((ai) => ai.iracGroup).filter((g): g is string => !!g)
@@ -81,6 +83,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   return {
     insecticides: insecticidePlugins,
     pasture: await loadSprayPastureContext(allBlocks, registry),
+    organicBlocks: organicBlocksForNotice(allBlocks.map((b) => b.id)),
     blocks: allBlocks.map((b) => {
       const location = (b.geometryGeojson && geometryCentroid(b.geometryGeojson)) || farm;
       const blooming = b.plantings.filter((p) => {

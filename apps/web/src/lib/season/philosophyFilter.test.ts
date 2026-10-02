@@ -201,3 +201,23 @@ describe('philosophyRejectionReason', () => {
     ).toContain('excluded');
   });
 });
+
+describe('isProductAllowed — B-18 shared organic reader', () => {
+  it('organic-transitioning never offers a product marked not allowed', () => {
+    expect(
+      isProductAllowed(
+        fertilizer('cottonseed', {
+          organic: true,
+          flags: { transitioningAllowed: true, certifiedOrganicAllowed: false }
+        }),
+        'organic-transitioning'
+      )
+    ).toBe(false);
+    expect(
+      isProductAllowed(
+        insecticide('met52', { transitioningAllowed: true, certifiedOrganicAllowed: false }),
+        'organic-transitioning'
+      )
+    ).toBe(false);
+  });
+});

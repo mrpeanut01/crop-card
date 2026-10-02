@@ -10,6 +10,35 @@ import { listHoldCorrections } from '$lib/db/holdCorrections';
 import { listVoidedProductionLogs } from '$lib/db/animalProduction';
 import { listVoidedStatusEvents } from '$lib/db/animalStatus';
 import { correctionTouches } from '$lib/animals/holdGuardCopy';
+import { farmOrganicChrome, organicDateFormatter } from '$lib/organic/status.server';
+import { animalOrganicProjection, groupMembersLost } from '$lib/organic/animalStatus.server';
+import { organicHealthPlugins } from '$lib/organic/plugins.server';
+import { treatmentOutcomeText } from '$lib/organic/animalStatus';
+import { organicStatusLine } from '$lib/organic/status';
+import { withholdTreatmentLine } from '$lib/organic/nopRules';
+
+/** 33B (B-06, B-14, B-24): the owner-entered status line, the welfare line
+ *  and each treatment's organic outcome. Nothing when the farm has no
+ *  organic status at all (B-15). */
+async function organicPart(subject: { type: 'animal' | 'group'; id: string }) {
+  if (farmOrganicChrome() !== 'full') return null;
+  const projection = animalOrganicProjection(await organicHealthPlugins());
+  const status = projection.statusAt(subject, Date.now());
+  const outcomes: Record<string, { text: string; needsAnswer: boolean }> = {};
+  for (const r of projection.rows) {
+    if (!r.subjects.some((s) => s.type === subject.type && s.id === subject.id)) continue;
+    outcomes[r.healthEventId] = {
+      text: treatmentOutcomeText(r),
+      needsAnswer: r.outcome === 'needs-review' && !r.deleted
+    };
+  }
+  return {
+    statusLine: organicStatusLine(status, organicDateFormatter()),
+    welfareLine: status && status.status !== 'not-organic' ? withholdTreatmentLine() : null,
+    membersLost: subject.type === 'group' ? groupMembersLost(projection, subject.id) : 0,
+    outcomes
+  };
+}
 
 export const load: PageServerLoad = async (event) => {
   const base = await loadRecordPageBase(event);
@@ -74,6 +103,7 @@ export const load: PageServerLoad = async (event) => {
     .map((c) => ({ id: c.id, recordKind: c.recordKind, reason: c.reason, createdAt: c.createdAt }));
   return {
     ...base,
+    organic: await organicPart({ type: subject.type, id: subject.id }),
     events,
     corrections,
     products: library

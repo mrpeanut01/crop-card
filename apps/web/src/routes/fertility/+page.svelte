@@ -7,6 +7,8 @@
   import SetupSoilTest from '$lib/components/setup/SetupSoilTest.svelte';
   import type { SetupSoilTestResult } from '$lib/fertility/soilTestForm';
   import DocumentAttach from '$lib/components/documents/DocumentAttach.svelte';
+  import OrganicInputNotice from '$lib/components/organic/OrganicInputNotice.svelte';
+  import { organicInputClass } from '$lib/organic/inputCompliance';
 
   let { data } = $props();
 
@@ -31,6 +33,25 @@
   let creditUseDefaults = $state(true);
 
   let soilSheetOpen = $state(false);
+
+  const organicProducts = $derived.by(() => {
+    const source = appSource.trim();
+    if (!source) return [];
+    const mark = data.fertilizerMarks[source];
+    return [
+      {
+        name: mark?.displayName ?? source,
+        inputClass: mark
+          ? organicInputClass({ type: 'fertilizer', complianceFlags: mark.complianceFlags })
+          : ('not-marked' as const)
+      }
+    ];
+  });
+  const fertilizerChoices = $derived(
+    Object.entries(data.fertilizerMarks).sort((a, b) =>
+      a[1].displayName.localeCompare(b[1].displayName)
+    )
+  );
 
   const rateUnit = $derived(fmt.unit('weightPerArea'));
   const npk = (v: number | null | undefined) =>
@@ -216,7 +237,20 @@
 <details class="card">
   <summary><h2>Record fertilizer application</h2></summary>
   <form onsubmit={recordApplication}>
-    <label>Source <input type="text" bind:value={appSource} /></label>
+    <label
+      >Source <input
+        type="text"
+        bind:value={appSource}
+        list={fertilizerChoices.length ? 'fertilizer-plugins' : undefined}
+      /></label
+    >
+    {#if fertilizerChoices.length}
+      <datalist id="fertilizer-plugins">
+        {#each fertilizerChoices as [id, m] (id)}
+          <option value={id}>{m.displayName}</option>
+        {/each}
+      </datalist>
+    {/if}
     <label>Rate <input type="number" min="0" step="any" bind:value={appRate} /></label>
     <label>Unit <input type="text" bind:value={appUnit} /></label>
     <label
@@ -231,6 +265,12 @@
       >K₂O delivered ({rateUnit})
       <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={appK} /></label
     >
+    <OrganicInputNotice
+      organicBlocks={data.organicBlocks}
+      selectedBlockIds={blockId ? [blockId] : []}
+      products={organicProducts}
+      blockNames={Object.fromEntries(data.blocks.map((b) => [b.id, b.name]))}
+    />
     <button type="submit" class="primary" disabled={busy}>Record</button>
   </form>
 </details>

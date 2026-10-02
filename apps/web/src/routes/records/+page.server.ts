@@ -16,6 +16,7 @@ import { todayYmd } from '$lib/prefs';
 import { pageOf, parseShow } from '$lib/records/pagination';
 import { listIrrigationEvents } from '$lib/db/irrigation';
 import { listFields } from '$lib/db/fields';
+import { farmOrganicChrome } from '$lib/organic/status.server';
 import {
   RECORD_KINDS,
   listUnifiedRecords,
@@ -109,7 +110,12 @@ export const load: PageServerLoad = async (event) => {
       : []
   };
 
+  const organicChrome = farmOrganicChrome();
+  const organicLink =
+    organicChrome === 'full' || (organicChrome === 'entry' && user.role === 'owner');
+
   return {
+    organicLink,
     watering,
     chrome,
     soilNudgePlaces,
@@ -128,6 +134,7 @@ export const load: PageServerLoad = async (event) => {
     yearSummary,
     selectedYear,
     availableYears,
-    showMoneyLink: user.role === 'owner'
+    showMoneyLink: user.role === 'owner',
+    canExportAnimalLog: user.role === 'owner' || user.role === 'inspector'
   };
 };

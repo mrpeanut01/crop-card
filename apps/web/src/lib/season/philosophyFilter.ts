@@ -30,13 +30,17 @@
  * silently substituting the wrong product.
  *
  * Fertilizer plugins additionally honor their existing `organic: boolean`
- * flag: when philosophy demands organic, `organic === true` is required
- * even when `complianceFlags` are missing. This keeps the existing
- * fertilizer library usable under organic philosophies without a
- * mass-backfill of `complianceFlags`.
+ * flag under `organic-transitioning`, which keeps the existing fertilizer
+ * library usable without a mass-backfill of `complianceFlags`.
+ *
+ * Phase 33B (B-18): the flags are read through
+ * `$lib/organic/inputCompliance`, the same reader organic records use, and
+ * an `organic-transitioning` plan never offers a product the library marks
+ * `not-allowed`. The certified-organic planner stays stricter (OMRI).
  */
 
 import type { Philosophy } from './setup';
+import { organicInputClass } from '$lib/organic/inputCompliance';
 import type {
   FertilizerPlugin,
   FungicidePlugin,
@@ -62,6 +66,7 @@ export function isProductAllowed(plugin: FilterableInputPlugin, philosophy: Phil
   }
 
   if (philosophy === 'organic-transitioning') {
+    if (organicInputClass(plugin) === 'not-allowed') return false;
     if (flags?.transitioningAllowed === true) return true;
     if (flags?.omriListed === true) return true;
     // Fertilizer-specific escape: `organic: true` is the historical
@@ -72,8 +77,7 @@ export function isProductAllowed(plugin: FilterableInputPlugin, philosophy: Phil
   }
 
   if (philosophy === 'certified-organic') {
-    if (flags?.omriListed === true && flags?.certifiedOrganicAllowed !== false) return true;
-    return false;
+    return flags?.omriListed === true && organicInputClass(plugin) === 'allowed';
   }
 
   // Exhaustiveness check — TS catches missing branches at compile time;
@@ -111,6 +115,9 @@ export function philosophyRejectionReason(
   }
 
   if (philosophy === 'organic-transitioning') {
+    if (organicInputClass(plugin) === 'not-allowed') {
+      return `${plugin.displayName} is marked not allowed for organic use in the library.`;
+    }
     return `${plugin.displayName} is not OMRI-listed and not flagged transitioning-allowed.`;
   }
 
@@ -118,7 +125,7 @@ export function philosophyRejectionReason(
     if (flags?.omriListed !== true) {
       return `${plugin.displayName} is not OMRI-listed.`;
     }
-    if (flags?.certifiedOrganicAllowed === false) {
+    if (organicInputClass(plugin) === 'not-allowed') {
       return `${plugin.displayName} is explicitly excluded from certified-organic use.`;
     }
   }

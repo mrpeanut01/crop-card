@@ -21,7 +21,9 @@ const ENDPOINTS = [
   'insecticide/record/+server.ts',
   'fungicide/record/+server.ts',
   'harvest/record/+server.ts',
-  'hay/cuttings/[id]/+server.ts'
+  'hay/cuttings/[id]/+server.ts',
+  'harvest/[id]/dispositions/+server.ts',
+  'harvest/dispositions/[id]/+server.ts'
 ];
 
 describe('SEASON_CLOSED gate wiring', () => {
@@ -100,6 +102,38 @@ const FINANCE_EXEMPT = [
 
 describe('SEASON_CLOSED exemptions (Phase 32F finance)', () => {
   for (const rel of FINANCE_EXEMPT) {
+    it(`${rel} never reads the season-closed gate`, () => {
+      const src = readFileSync(path.join(here, rel), 'utf8');
+      expect(src).not.toContain('checkSeasonClosed(');
+      expect(src).not.toContain('getActiveCloseout(');
+      expect(src).not.toContain("from '$lib/server/seasonClose'");
+    });
+  }
+});
+
+/** Phase 33B (B1): organic status entries and treatment reviews never read
+ *  the season-closed gate. The behavior is pinned in
+ *  `organic/organic.endpoints.test.ts`. */
+const EXEMPT_33B_STATUS = ['organic/status/+server.ts', 'organic/treatment-reviews/+server.ts'];
+
+describe('SEASON_CLOSED exemptions (Phase 33B, organic status)', () => {
+  for (const rel of EXEMPT_33B_STATUS) {
+    it(`${rel} never reads the season-closed gate`, () => {
+      const src = readFileSync(path.join(here, rel), 'utf8');
+      expect(src).not.toContain('checkSeasonClosed(');
+      expect(src).not.toContain('getActiveCloseout(');
+      expect(src).not.toContain("from '$lib/server/seasonClose'");
+    });
+  }
+});
+
+/** Phase 33B (B-38): seed sourcing is inventory metadata, a statement to
+ *  the certifier, and never reads the season-closed gate. The behavior is
+ *  pinned in `seedSourcing.endpoint.test.ts`. */
+const EXEMPT_33B_SEED = ['stock/[id]/lots/[lotId]/seed-sourcing/+server.ts'];
+
+describe('SEASON_CLOSED exemptions (Phase 33B, B3)', () => {
+  for (const rel of EXEMPT_33B_SEED) {
     it(`${rel} never reads the season-closed gate`, () => {
       const src = readFileSync(path.join(here, rel), 'utf8');
       expect(src).not.toContain('checkSeasonClosed(');

@@ -83,6 +83,7 @@ export function animalHealthFactPaths(p: AnimalHealthPlugin): string[] {
     paths.push(...present(prefix, use.withdrawal, ['meatDays', 'milkHours', 'eggsDays']));
     if (use.withdrawal.doNotUseFor) paths.push(`${prefix}doNotUseFor`);
   }
+  if (p.organicUse) paths.push('organicUse');
   return paths;
 }
 

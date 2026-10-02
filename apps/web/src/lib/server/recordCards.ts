@@ -23,6 +23,9 @@ import { db } from '$lib/db/client';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { listCuttings } from '$lib/db/hayCuttings';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
+import { listDispositionsForHarvests, type HarvestDisposition } from '$lib/db/harvestDispositions';
+import { dispositionLine } from '$lib/harvest/dispositions';
+import { formatInstant } from '$lib/prefs';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { LOCK_WINDOW_MS, RECORD_KINDS, type RecordKind } from '$lib/db/recordKinds';
 import { equipmentLog, fertilityApplications, users } from '$lib/db/schema';
@@ -48,6 +51,22 @@ export function hayLateNotice(cuttingNumber: number, label: string): string {
 
 function withNotice(card: CardModel, notice: string): CardModel {
   return { ...card, notices: [...(card.notices ?? []), notice] };
+}
+
+/** Phase 33B (B-36): the harvest record card lists where it went,
+ *  read-only. No money: the card is shown to helpers too. */
+function withWhereItWent(card: CardModel, went: HarvestDisposition[], prefs: Prefs): CardModel {
+  return {
+    ...card,
+    sections: [
+      ...card.sections,
+      {
+        title: 'Where it went',
+        items: went.map((d) => dispositionLine(d, formatInstant(d.occurredAt, prefs, 'date'))),
+        provenance: 'manual'
+      }
+    ]
+  };
 }
 
 export interface RecordCards {
@@ -232,7 +251,12 @@ export async function buildRecordCards(
     const ev = listHarvestEvents().find((e) => e.id === rowId);
     if (!ev) return null;
     const plantingId = ev.cropId ?? plantingIdForRecord(ev.blockId, ev.cropPluginId, ev.occurredAt);
-    return { cards: await plantingCard(plantingId, kind, rowId, ctx), origin };
+    const went = listDispositionsForHarvests([ev.id]).get(ev.id) ?? [];
+    const cards = await plantingCard(plantingId, kind, rowId, ctx);
+    return {
+      cards: went.length ? cards.map((card) => withWhereItWent(card, went, ctx.prefs)) : cards,
+      origin
+    };
   }
 
   if (kind === 'hay') {

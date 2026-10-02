@@ -61,11 +61,12 @@ export type PendingRecordKind =
   | 'feed-use'
   | 'seed-start'
   | 'irrigation'
-  | 'rain-gauge';
+  | 'rain-gauge'
+  | 'harvest-disposition';
 
 /** Phase 33 queue kinds, declared ahead of their sprints (A-10). Move a
  *  kind into `PendingRecordKind` and `ENDPOINT_BY_KIND` when it is routed. */
-export const PHASE_33_RECORD_KINDS = ['harvest-disposition', 'time-entry'] as const;
+export const PHASE_33_RECORD_KINDS = ['time-entry'] as const;
 export type Phase33RecordKind = (typeof PHASE_33_RECORD_KINDS)[number];
 
 export interface PendingSprayRecord {

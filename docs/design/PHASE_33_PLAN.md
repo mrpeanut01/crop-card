@@ -345,6 +345,346 @@ B1 merges first, since B3 and B4 read its helpers. B2 is independent of B1 and c
 
 ---
 
+### 33B rulings
+
+Binding for every 33B cluster (2026-10-01). These rulings fill the gaps a builder would otherwise guess in the 33B section above. Where a ruling differs from the plan, the ruling wins and its row says why. The plan's own "33 rulings" (O-01 to O-16, Q-ORG-\*, Q-SALES-SCOPE) still stand.
+
+33B adds no safety-kernel rule and no AI call; `RULES_VERSION` stays 0.7.1. No regulatory number or citation ships without a verified entry in `apps/web/scripts/nop-sources.json`. At the time of these rulings that file does not exist and research Task R1 has not landed, so every rule in it ships switched off.
+
+Code facts these rulings rest on (checked on `p33b` at `32034b7`):
+
+- Migration 0082 already created `organic_status_events`, `organic_treatment_reviews` (unique on `owner_id, health_event_id`, FK to `animal_health_events` with `ON DELETE CASCADE`), `harvest_dispositions` (FK to `harvest_events` with `ON DELETE CASCADE`, FK to `ledger_entries` with `ON DELETE SET NULL`) and the three `stock_lots` seed columns. They are in the GDPR export (`accountExportSections.ts`), the farm wipe (`admin.ts`) and the cross-tenant fixtures (`phase33.fixtures.ts`). `record_deletions.record_kind` already lists `harvest-disposition`.
+- `FACT_EFFECT` is keyed by hold fact kind and has no `none` value. Every hold loader filters `record_deletions` by an explicit kind list (`spray`, `insecticide`, `fungicide`, `animal-health`, `animal-production`, `animal-status`), so a `harvest-disposition` tombstone is invisible to the hold ledger without any entry.
+- `harvest_events` and `record_deletions` are hold-fact tables; `stock_lots`, `ledger_entries` and the three new tables are not.
+- Health deletes are hard deletes plus a tombstone whose snapshot is `{ event, dosed }`. A void deletes with `dosed: false`. A review row cascades away with its treatment.
+- Harvest ids are server generated; a harvest queued offline has no id until it syncs.
+- `ledger_entries` is owner only (F2-1, `requireMoneyReader`/`requireMoneyWriter`) and already carries `harvest_event_id`. The existing sale flow is `/finance/new?kind=income&harvestEventId=&cropId=` (`recordSaleHref`).
+- `complianceFlags` on the 245 shipped input plugins: 5 fertilizers carry `certifiedOrganicAllowed: true` with `omriListed: false` (composted manures, biochar, molasses, Chilean nitrate); 4 plugins carry `certifiedOrganicAllowed: false` yet pass the planner's `organic-transitioning` branch (cottonseed meal, soybean meal, K-Mag, Met52 EC). Fertilizer `organic: true` means "organic-source amendment", not "allowed under the NOP" (schema comment).
+- `syncQueue.endpointForRecord` already rewrites `:id` paths for `feed-use` and `seed-start` from a payload field and strips it from the body.
+- Health event kinds that carry a product are `HOLD_BEARING_KINDS` (`treatment`, `vaccination`, `deworm`).
+- `canReadDocument` (A-31) lets owners and inspectors read `organic-status` documents and helpers read `stock-lot` documents; `ledger-entry` documents are owner only.
+
+#### Regulatory sources (B1)
+
+| ID   | Question                                                                             | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Reason                                                                                                         |
+| ---- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| B-01 | What shape is `nop-sources.json`, and what counts as "verified"?                     | `{ "$comment", "ecfrAsOf": string \| null, "entries": { "<key>": { url, publisher, date, quote, note?, value? } }, "researched": [] }`, keys as in research Task R1. An entry is verified when it parses with `sourceEntrySchema` and its `url` is on `ecfr.gov` or `govinfo.gov`. B1 ships the file with `entries: {}`.                                                                                                                                                                                                              | Same pattern as `protection-sources.json`. Restricting the host keeps the quote tied to the regulation itself. |
+| B-02 | How do rule constants read the sources?                                              | One object, `NOP_RULES` in `lib/organic/nopRules.ts`, with every rule the code reads: `landTransitionMonths: number \| null`, `treatedAnimalRule: boolean`, `withholdTreatmentCitation: string \| null`, `seedSourcingCitation: string \| null`. All ship `null` or `false`. Code reads only `NOP_RULES`, never the JSON at runtime.                                                                                                                                                                                                  | One place to switch a rule on, and the gate can check every field.                                             |
+| B-03 | What does the coverage gate check?                                                   | `lib/organic/nopRules.sources.gate.test.ts` fails when a `NOP_RULES` field is non-null or `true` without a verified entry for its key, when an entry's `value` differs from the constant (`landTransition.value` must equal `landTransitionMonths`; a citation constant must equal the entry's `value`), and when an entry exists for a rule that ships off. B1 also extends `sourceCoverage.gate.test.ts`: an `organicUse` on an animal-health plugin needs a valid `entries.<pluginId>.organicUse` in `animal-health-sources.json`. | Mirrors the protection and pest-model gates; a stale entry is as misleading as a missing one.                  |
+| B-04 | What does the app show where the plan says "(verify)" and the rule is off?           | Facts only. No citation text, no month count, no "205.xxx" anywhere in UI, PDF or CSV. Each place a rule would speak gets a neutral line: "Ask your certifier." The plan's "Your certifier decides." copy is kept once the rule is on.                                                                                                                                                                                                                                                                                                | A citation is a regulatory claim. Showing an unverified one is the exact error the ground rules forbid.        |
+| B-05 | Does the 36-month default fact window count as a regulatory claim?                   | No, if labelled as a date range only: "Showing records from <date> to <date>" with a picker, default the last 3 years. Never "transition period" or "36 months" while `landTransitionMonths` is null.                                                                                                                                                                                                                                                                                                                                 | A display default is fine; naming it after the rule is not.                                                    |
+| B-06 | What does the "treat a sick animal" line say before `withholdTreatment` is verified? | "Treat a sick animal first. Ask your certifier how a treatment affects organic status." After verification: the plan's O-11 line with the citation from `NOP_RULES.withholdTreatmentCitation`.                                                                                                                                                                                                                                                                                                                                        | Telling a farmer to treat a sick animal is never wrong; attributing it to a paragraph needs a source.          |
+
+#### Organic status (B1)
+
+| ID   | Question                                                               | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Reason                                                                                                                                     |
+| ---- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| B-07 | Which Areas can carry a status?                                        | Crop Area kinds only (`isCropAreaKind`: field, garden, greenhouse, orchard, pasture). Any other kind answers 400 `NOT_GROWING_AREA`. Blocks, animals and groups always can.                                                                                                                                                                                                                                                                                                        | A house, barn, pond or boundary is not certified land.                                                                                     |
+| B-08 | What is `effective_at`?                                                | A farm-local date (`YYYY-MM-DD` in the request), stored as that day's start in the owner's saved zone (`zonedDayStartMs`, default America/New_York as elsewhere). Allowed from 1970 to one year ahead; a future entry is shown as "Starts <date>" and is not current until then.                                                                                                                                                                                                   | Certifiers state statuses by date, and owners record a certification that starts next month.                                               |
+| B-09 | How does inheritance work when both a block and its Area have entries? | Nearest scope wins at a date: the block's latest own entry on or before the date, else its Area's latest entry on or before that date, else none. A later Area entry never overrides an earlier block entry; the block page says "This block has its own entry; the Area's entry of <date> does not apply." Inheritance uses the block's current Area (there is no block move history).                                                                                            | Predictable, matches "a block override" in the plan's acceptance, and needs no merge logic.                                                |
+| B-10 | Does an animal with no entry inherit from its group?                   | Yes, from the group it belonged to at that date (`lib/animals/membership.ts`), and it inherits the group's effective status including a loss, labelled "from group <name>". Nearest scope wins, as in B-09. An animal's own entry never clears its own loss (O-10).                                                                                                                                                                                                                | Owners enter status on the flock. Inheriting a loss errs toward never showing "Organic" for an animal that might not be.                   |
+| B-11 | Can a status entry be edited or deleted?                               | No. A correction is a new entry; same-day entries resolve by latest `created_at` (plan), and the history shows both with their notes. A delete path is a follow-up, not 33B.                                                                                                                                                                                                                                                                                                       | Append-only history is what a certifier reads; a silent edit would undermine it.                                                           |
+| B-12 | Who can write statuses and reviews?                                    | The owner, by cookie session or the owner's Bearer token. Helpers 403 `OWNER_ONLY`, inspectors 403, impersonation 403 `NOT_WHILE_IMPERSONATING`. Reads (`GET /api/organic/status`, `/records/organic`) are open to owner, helper and inspector.                                                                                                                                                                                                                                    | O-07, plus the money pattern for impersonation: a superadmin must not make statements to a certifier on the farm's behalf.                 |
+| B-13 | How does a certificate attach to a status entry?                       | As in A-36: the form uploads through `DocumentAttach` first, then the status `POST` sends `documentId` (or none). The server checks it with `assertDocument` and writes the `organic-status` link in the same transaction as the entry.                                                                                                                                                                                                                                            | Reuses the soil test path; one transaction means no orphan link.                                                                           |
+| B-14 | What does the status line say?                                         | `organicStatusLine()`: "Organic (owner-entered, effective <date>, certifier <name>)", "Transitioning (owner-entered, …)" and "Not organic (owner-entered, …)". The certifier clause is omitted when blank; " from <Area or group name>" is added when inherited. A subject with no effective status gets `null` and the caller renders nothing (O-01).                                                                                                                             | One function so the page, cards, notice and pack all say the same words.                                                                   |
+| B-15 | When does organic chrome appear at all?                                | `organicChromeLevel({ hasStatusRows, profile, philosophy })`: `full` when the farm has any `organic_status_events` row; `entry` (one owner-only "Organic records" link on /records) when there are none and the farm profile is not `garden` or the Season Setup philosophy is `organic-transitioning` or `certified-organic`; `none` otherwise. `/records/organic` itself always loads. Notices, the "sold as organic" question, seed sourcing and Card status lines need `full`. | A garden household with no status sees nothing (plan acceptance), yet an owner always has a way in. Philosophy only opens the door (O-02). |
+| B-16 | Do Cards and the offline snapshot carry the status?                    | B1 adds `organicStatus: string \| null` (the B-14 line) to the Area Card and Animal Card builders and to the snapshot, and bumps `FARM_SNAPSHOT_VERSION`. `dbChangeMarker()` already invalidates the ETag.                                                                                                                                                                                                                                                                         | Plan: "The Area Card and Animal Card gain the owner-entered status line."                                                                  |
+
+#### Input compliance (B1, B3)
+
+| ID   | Question                                                   | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Reason                                                                                                                                                                                          |
+| ---- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B-17 | What exactly is "marked organic-allowed"?                  | `organicInputClass(plugin)`: `not-allowed` when `complianceFlags.certifiedOrganicAllowed === false`; otherwise `allowed` when `certifiedOrganicAllowed === true` or `omriListed === true`; otherwise `not-marked`. `transitioningAllowed`, `nonGmoCompliant` and fertilizer `organic` are never read for organic records. A product with no plugin (free text, retired, unknown id) is `not-marked`.                                                                                                                                                  | The 5 composted or mined fertilizers marked `certifiedOrganicAllowed: true` must not be reported as "not marked". The fertilizer `organic` flag means organic source, not NOP-allowed.          |
+| B-18 | Must `philosophyFilter` agree with records exactly?        | It keeps its planner matrix (the certified-organic planner may stay stricter and require OMRI), but it reads the flags through `inputCompliance.ts` and one change is made: an `organic-transitioning` plan never offers a `not-allowed` product. That drops 4 plugins from transitioning plans (cottonseed meal, soybean meal, K-Mag, Met52 EC). The agreement test pins, on every shipped plugin: planner allows under `certified-organic` implies class `allowed`; class `not-allowed` implies the planner denies under both organic philosophies. | A transitioning farm following the planner must never be steered to a product the same app then lists as not allowed on its organic record. Planner strictness above that is a planning choice. |
+| B-19 | Which library is read, the one at record time or now?      | The farm's current registry view (`getRegistry()`, farm copies included). Every place the class is shown says "Library mark" and the pack states the build date. The flags are not snapshotted.                                                                                                                                                                                                                                                                                                                                                       | No snapshot column exists, and stating the date keeps it honest.                                                                                                                                |
+| B-20 | When does `OrganicInputNotice` show, and what does it say? | Before save, when any selected block's effective status today is `organic` or `transitioning` and any selected product is not `allowed`. `not-marked`: the plan's copy. `not-allowed`: "The library marks this product as not allowed for organic use. It will show on this block's organic record." It names each product and block, never blocks or delays the save, is shown to helpers too, and renders nothing when chrome is not `full`.                                                                                                        | Q-ORG-WARN and O-04. Today's status is what the person can act on; the record itself is classed by its own date.                                                                                |
+| B-21 | Where does the notice get its data?                        | Each page's server loader adds `organicBlocks: Record<blockId, string>` (the B-14 line, organic or transitioning blocks only) from `blockOrganicStatuses()`. The client classifies products with the client-safe `organicInputClass()` from plugin data the page already has. Fertility products resolve stock item `plugin_id`, then `source` as a fertilizer plugin id, else `not-marked`.                                                                                                                                                          | No new endpoint, no extra round trip, and the same classifier as the record.                                                                                                                    |
+
+#### Animal status after treatment (B1)
+
+| ID   | Question                                                     | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                       | Reason                                                                                                                                                       |
+| ---- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| B-22 | Which health events need an outcome?                         | Kinds in `HOLD_BEARING_KINDS` (treatment, vaccination, deworm) whose subject's effective status at `administered_at` is `organic` or `transitioning`. A dose before the status took effect is not considered. Vet visits, injuries and notes never are.                                                                                                                                                                                      | Only a dose can end status, and only for a subject that had one.                                                                                             |
+| B-23 | When is a loss automatic?                                    | Only when `NOP_RULES.treatedAnimalRule` is `true` (B-02), and then for plugin `productKind: "antibiotic"` or a sourced `organicUse.status: "not-allowed"`. Everything else, and everything while the rule is off, is "needs review". A sourced `allowed` or `allowed-with-conditions` is shown beside the review question as a fact and never decides it (O-09).                                                                             | Plan items 4 and O-08, with the 205.238(c)(1) "not allowed under 205.603" half made explicit.                                                                |
+| B-24 | Who does a group treatment reach?                            | The group itself and every animal that was a member at any moment from `administered_at` to `course_end_at` (or `administered_at` when there is no course end). A later joiner is not reached. An individual's treatment reaches only that animal; the group line then reads "1 member lost status" without changing the group.                                                                                                              | Matches the plan's acceptance, and differs on purpose from withdrawal holds, which follow food not status.                                                   |
+| B-25 | How do review answers change, and when do they lock?         | `POST /api/organic/treatment-reviews` upserts the one row per treatment. Within 48 hours of its first `created_at` the owner may change the answer (a new reason is required; `created_at` stays). After that, 409 `REVIEW_LOCKED`; `locked_at` is stamped on the first read past the window, as harvests do. Reason: 3 to 500 characters.                                                                                                   | The plan says reviews lock after 48 h; a fresh mistake gets the same window as a void.                                                                       |
+| B-26 | What happens to a loss when the treatment record is deleted? | A void (`dosed: false`) removes the loss (O-10). A delete that keeps the dose (`dosed: true`) keeps it: B1 changes `deleteHealthEvent` to copy the live review into the tombstone snapshot as `organicReview`, inside the same transaction, and `animalStatus.ts` reads dosed tombstones like live treatments. A dosed tombstone with no review reads "Treatment record deleted before review. Tell your certifier." and cannot be answered. | The review row cascades away with its treatment, so without the snapshot a given dose would silently stop counting. Mirrors the hold rule for deleted doses. |
+
+#### Harvest dispositions (B2)
+
+| ID   | Question                                                    | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Reason                                                                                                                             |
+| ---- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| B-27 | What does a disposition body hold?                          | `kind`; `quantity` (a number above 0 and at most 10,000,000, stored as hundredths, rounded half up); `unit` (trimmed, 1 to 20 characters, with suggestions lb, kg, bu, dozen, each, bunch, bale, pint, quart); `occurredAt` (ms); `recipient` (up to 120 characters, only for `sold` and `donated`, else 400); `soldAsOrganic` (boolean, only for `sold`, else 400; null when chrome is not `full`).                                                                                                                                                                        | Harvest quantity is free text, so the disposition carries its own number and unit (plan data model).                               |
+| B-28 | Which dates are allowed?                                    | From the start of the harvest's farm-local day to now plus 5 minutes. Earlier answers 400 `BEFORE_HARVEST`; later 400 `IN_THE_FUTURE`. `SEASON_CLOSED` is checked on `occurredAt` like the harvest endpoint.                                                                                                                                                                                                                                                                                                                                                                | Food cannot go anywhere before it was picked; ground rules put dispositions under the season gate.                                 |
+| B-29 | When does a disposition lock?                               | FR-09: 48 hours after its own `occurred_at`, with `locked_at` stamped on first read past the window, mirroring `harvestEvents.evaluateLock`. Inside the window owner and helper may PATCH and DELETE; after it PATCH is refused for everyone (409 `RECORD_LOCKED`) except B-31's ledger link, and DELETE needs owner `force=true` plus a reason and writes a tombstone. An unlocked delete writes no tombstone, as harvests do. Inspectors never write.                                                                                                                     | Same lock basis and force path as the harvest record it hangs off.                                                                 |
+| B-30 | What happens to dispositions when their harvest is deleted? | `DELETE /api/harvest/records/:id` answers 409 `HARVEST_HAS_DISPOSITIONS` while any exist ("Remove where it went first."). Cascades that delete harvests (planting delete, block delete) delete the dispositions explicitly first in the same transaction and write a disposition tombstone for each locked one. The farm wipe is unchanged. B2 owns these call sites in `admin.ts` and the harvest records route.                                                                                                                                                           | The SQL cascade would drop locked records with no trace; the explicit order also works when foreign keys are off (`migrate.mjs`).  |
+| B-31 | How does "Also record the money" link back?                 | Owner only (helpers never see it, and the panel never shows amounts). It opens `recordSaleHref` with an added `dispositionId`. `/finance/new` forwards it, and on save its server action sets `harvest_dispositions.ledger_entry_id` in the same transaction when the disposition is the owner's, belongs to the same harvest and has no link yet. A `PATCH { ledgerEntryId }` from the owner may also set or clear the link, even after the lock; `assertLedgerEntry` (B2 adds it to `foreignRefs.ts`) checks it. A soft-deleted ledger entry shows "Linked sale deleted". | Q-SALES-SCOPE: money stays in the ledger. Linking money changes nothing about where the food went, so the lock need not freeze it. |
+| B-32 | What does the "sold as organic" notice check?               | On save, the server calls B1's `blockOrganicStatusAt(harvest.blockId, harvest.occurredAt)`. When `soldAsOrganic` is true and that status is not `organic` (including none), the response carries `organicNotice`: "This block had no organic status on file on <date>." or "This block was <status line> on <date>." The save always succeeds.                                                                                                                                                                                                                              | Plan item 5 and Q-ORG-WARN. The harvest date is "at harvest".                                                                      |
+| B-33 | What does O-12's over-quantity notice compare?              | `parseHarvestQuantity(harvest.quantity)`; only when it parses with a unit equal (case-insensitive, trimmed) to the disposition unit, and the sum of live dispositions in that unit exceeds it. Notice only: "Where it went adds up to more than this harvest's <quantity>."                                                                                                                                                                                                                                                                                                 | O-12, reusing the parser the sale flow already uses.                                                                               |
+| B-34 | How does the offline kind replay?                           | `harvest-disposition` routes to `/api/harvest/:id/dispositions`, with `harvestEventId` in the payload rewritten into the path and stripped from the body, the same way as `feed-use`. Only `POST` is queued; PATCH and DELETE are online only. A harvest that is itself still queued has no id, so its row shows "Add where it went once this harvest syncs." instead of the panel.                                                                                                                                                                                         | The existing `:id` rewrite needs no new mechanism, and a disposition cannot point at an id that does not exist yet.                |
+| B-35 | Is a disposition tombstone a hold fact?                     | No. `deleteHarvestDisposition` in `admin.ts` is marked `@hold-exempt: dispositions never change a hold (O-13)` and writes `record_kind: 'harvest-disposition'`. No `FACT_EFFECT` entry is added (the type has no `none`; hold loaders filter tombstones by kind). A test pins that writing one leaves `loadHoldFacts` unchanged. `gen:tables` is rerun.                                                                                                                                                                                                                     | The plan's "`FACT_EFFECT` `none`" cannot be expressed in the code; the kind filter already gives the intended effect.              |
+| B-36 | Where does the panel appear?                                | On /harvest: in the "Harvest saved" strip after a save ("Where did it go?") and on each row of the recorded harvests list, opening one sheet with the list, add, edit and delete. The harvest record card (`rc_harvest.<id>`) lists dispositions read-only. Dispositions are not a new `RECORD_KINDS` entry and are not in the VDACS export.                                                                                                                                                                                                                                | The panel sits where the sale link already is; a new record kind would change pesticide exports and counts.                        |
+
+#### Seed sourcing (B3)
+
+| ID   | Question                                                | Ruling                                                                                                                                                                                                                                                                                                                                                      | Reason                                                                                           |
+| ---- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| B-37 | What does a source check hold?                          | `{ supplier: 1 to 120 characters, checkedAt: YYYY-MM-DD not in the future, result: 1 to 200 characters }`, at most 30 per lot. `result` is free text with plain suggestions ("No organic seed of this variety", "Out of stock", "Not in the quantity needed"). No enum.                                                                                     | An enum would encode the 205.2 "commercially available" definition before it is verified (B-04). |
+| B-38 | Which lots can be edited, and by whom?                  | Owner only (as the plan's route table), not while impersonating. The lot must belong to the stock item (else 404) and the item's category must be `seed` (else 400 `NOT_SEED`). The PATCH replaces all three fields at once. Search evidence attaches through the existing document link API with subject `stock-lot`. Not gated by `SEASON_CLOSED` (test). | Inventory metadata, owner statement to the certifier, same attach path as everything else.       |
+| B-39 | When is a lot flagged?                                  | `seedSearchFlag()`: "No search on file" when status is `untreated`, `treated` or `unknown` and the list is empty; "Seed status not recorded" when status is null; nothing for `organic` or a non-empty list. The app never says a search was enough (O-14).                                                                                                 | The plan's flag, plus an honest line for lots nobody answered.                                   |
+| B-40 | Which lots does the sourcing list (and the pack) cover? | Seed lots received in the window, plus seed lots that a `planting` stock movement or a seed start used in the window.                                                                                                                                                                                                                                       | An inspector asks about seed planted this season, including seed bought earlier.                 |
+| B-41 | How does B1 find "plantings from a treated seed lot"?   | A `stock_movements` row with reason `planting` and a `crop_id` on the block, or a `seed_starts` row with `stock_lot_id`, whose lot's `seed_organic_status` is `treated`. The fact date is the movement's `occurred_at` or the seed start's `sown_at`.                                                                                                       | These are the only two links from a planting to a lot today.                                     |
+
+#### Exports (B4)
+
+| ID   | Question                                                       | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Reason                                                                                                                   |
+| ---- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| B-42 | How are `from` and `to` given?                                 | Farm-local `YYYY-MM-DD`, both required, `to` not before `from`, span at most 10 years, parsed with the existing `lib/exports/dateRange.ts`. Status history is always complete, not windowed. Bad input answers 400 with the field named.                                                                                                                                                                                                                                        | Same parser as every export; a status history cut by a window would hide the entry still in force.                       |
+| B-43 | What are the pack's files?                                     | `README.txt`, `summary.pdf`, `01-statuses.csv`, `02-activity.csv`, `03-inputs.csv`, `04-seed-sourcing.csv`, `05-animal-treatments.csv`, `06-harvests.csv`, `07-documents.csv`, and with `?documents=1` the files under `documents/<id>-<slug>.<ext>` (A-40 naming). Document entries stream with their stored `byte_size` and `crc32`; CSVs and the PDF are built in memory first.                                                                                              | The A-27 writer needs size and CRC before each entry, which the vault already stores.                                    |
+| B-44 | Where does "This is not a certification" go in a CSV?          | In the pack, every CSV's first row is one cell: "Prepared from records kept in CropCard. This is not a certification." The column header is row 2; `README.txt` says so. Every PDF page carries it in the footer. The standalone `treatments.csv` has no preamble row (one header row, then one row per dose); `treatments.pdf` carries "Prepared from records kept in CropCard." in every footer.                                                                              | Plan item 7 applies to the pack. The standalone log must open in a spreadsheet as one row per dose (persona acceptance). |
+| B-45 | Which rows go in the activity log and status sections?         | Activity is farm-wide, every block, each row tagged with the block's B-14 line at its date (blank when none). Statuses list every crop Area, block, live animal and group, with a blank status cell when there is no entry (never "conventional"). Amendment spreads are fertility rows until 33C adds `amendment_batch_id`.                                                                                                                                                    | Certifiers look at split operations; O-01 forbids inventing a status for the rest.                                       |
+| B-46 | Which input data goes in `03-inputs.csv`?                      | Each input used in the window: name, plugin id, EPA registration number, the raw `complianceFlags` as stored, the B-17 class labelled "Library mark", and a provenance column (`plugin` for library values, `manual` for typed products).                                                                                                                                                                                                                                       | Plan item 7, Invariant 7 provenance.                                                                                     |
+| B-47 | Who sees money in the pack?                                    | Only an owner download includes ledger amounts in `06-harvests.csv`. An inspector's pack has the column "Sale recorded" (yes or no) and no amount, and never includes `ledger-entry` documents. Every document in the pack and its index passes `canReadDocument` for the downloader.                                                                                                                                                                                           | F2-1 keeps money owner only and A-31 decides document access; the pack must not become a way around either.              |
+| B-48 | Who can call the pack and treatment log?                       | Owner (cookie or Bearer) and inspector, impersonation reads as the owner; helpers 403. Free on every plan, never gated by `SEASON_CLOSED` or billing suspension (it is a record export).                                                                                                                                                                                                                                                                                        | O-15 and the Go-live rule that a suspended farm keeps its record exports.                                                |
+| B-49 | How is a heavy build kept from starving the event loop?        | A per-Owner single flight: a second pack request while one is building answers 429 with `Retry-After: 10`. The PDF uses the existing pdfmake pipeline.                                                                                                                                                                                                                                                                                                                          | The hold projection plus a PDF is the heaviest request in the app on a 0.5 vCPU replica.                                 |
+| B-50 | Which rows and values does the treatment log hold?             | One row per health event of a `HOLD_BEARING_KINDS` kind, course start and end in their own columns, plus dosed tombstones (state "Deleted, still counted as given") and voids (state "Voided, never given"). Withdrawal per food comes from the same `toTreatment` and `computeWithdrawalClear` the health page uses, never new logic. The organic column reads `organicTreatmentOutcomes()`. Dates use the downloader's saved zone and prefs. The late label is `lateLabel()`. | One table for the page, the log and the pack, so they cannot disagree.                                                   |
+| B-51 | How are head counts at the start and end of the year computed? | Named animals: arrival is `acquired_date`, else `birth_date`, else `created_at`; departure is the first non-`active` status event. Unnamed head in groups: the group's `head_count` walked back through `head_count_delta` on later status events. When a group's count cannot be rebuilt (null `head_count`), the cell reads "Count not known". The section header says "From records on file".                                                                                | No guessing (ground rules); the delta column is the only head count history there is.                                    |
+| B-52 | Which holds count as "covered a declared food or sale"?        | The hold projection's `covered` set restricted to production logs with use `food` or `sale`, meat declarations and sales in the year, shown with their basis (`known`, `unknown`, `prohibited`) as worded on the health page.                                                                                                                                                                                                                                                   | Plan item 8, without inventing a new classification.                                                                     |
+| B-53 | Who sees the animal section of the year summary?               | Anyone who can see the year summary today, when the farm has any animal or group ever (archived included) touching the year. It holds no money.                                                                                                                                                                                                                                                                                                                                 | Helpers already read animal health pages; money stays in `inputCosts`, which is already hidden from non-owners.          |
+
+#### Shared
+
+| ID   | Question                                    | Ruling                                                                                                                                                                                                                                                                                               | Reason                                     |
+| ---- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| B-54 | Where do request schemas live?              | B1 `lib/organic/apiSchemas.ts`, B2 a new `lib/harvest/apiSchemas.ts`, B3 appends to `lib/stock/apiSchemas.ts`, B4 `lib/records/apiSchemas.ts` (query schemas). Each route exports `_requestSchema` so the OpenAPI drift test covers it; `gen:openapi` is rerun.                                      | Ground rules.                              |
+| B-55 | Which shared files does each cluster touch? | `foreignRefs.ts`: B2 appends `assertLedgerEntry` only. `admin.ts`: B2 only (B-30, B-35). `lib/db/animalHealth.ts`: B1 only (B-26). Season-closed wiring test: B2 adds its endpoint; B1 and B3 add "not gated" cases. CLAUDE.md: nobody inside a cluster (A-57).                                      | Avoids merge conflicts in hot files.       |
+| B-56 | What error codes are new?                   | `NOT_GROWING_AREA` 400, `OWNER_ONLY` 403, `NOT_WHILE_IMPERSONATING` 403, `REVIEW_LOCKED` 409 (B1); `BEFORE_HARVEST` 400, `IN_THE_FUTURE` 400, `RECORD_LOCKED` 409, `HARVEST_HAS_DISPOSITIONS` 409 (B2); `NOT_SEED` 400 (B3); `PACK_BUSY` 429 (B4). Bodies are `{ error, message }` in plain English. | One list so copy and tests agree.          |
+| B-57 | Copy rules                                  | Plain English, no em dashes, no "safe", "clear", "compliant", "certified" or "eligible" on the app's own authority. Every status line says "owner-entered". Every new button is at least 48 dp and every new page passes the 375 px overflow guard.                                                  | Ground rules: report facts, never certify. |
+
+#### Shared contracts (33B)
+
+B1 publishes its helpers first, as a small commit on its branch that the other clusters build against; B2 and B3 then merge in either order, and B4 merges last. If B2 lands before B1, it rebases onto B1 before merge (only B-32 needs B1).
+
+#### C-B1. Status and compliance (owner B1)
+
+```ts
+// lib/organic/status.ts (client-safe)
+export type OrganicStatus = "organic" | "transitioning" | "not-organic";
+export type OrganicSubjectType = "field" | "block" | "animal" | "group";
+export interface EffectiveOrganicStatus {
+  status: OrganicStatus;
+  effectiveAt: number;
+  certifier: string | null;
+  entryId: string;
+  inheritedFrom: {
+    subjectType: "field" | "group";
+    subjectId: string;
+    name: string;
+  } | null;
+  /** Animals and groups only; always null for land. */
+  lost: {
+    at: number;
+    healthEventId: string;
+    basis: "rule" | "owner-review";
+  } | null;
+}
+export function organicStatusLine(
+  s: EffectiveOrganicStatus | null,
+  fmtDate: (ms: number) => string,
+): string | null;
+export type OrganicChromeLevel = "none" | "entry" | "full";
+export function organicChromeLevel(input: {
+  hasStatusRows: boolean;
+  profile: FarmProfile | null;
+  philosophy: Philosophy | null;
+}): OrganicChromeLevel;
+
+// lib/organic/status.server.ts
+export function blockOrganicStatusAt(
+  blockId: string,
+  atMs: number,
+): EffectiveOrganicStatus | null;
+export function blockOrganicStatuses(
+  blockIds: readonly string[],
+  atMs: number,
+): Map<string, EffectiveOrganicStatus>;
+export function animalOrganicStatusAt(
+  subject: { type: "animal" | "group"; id: string },
+  atMs: number,
+): EffectiveOrganicStatus | null;
+export function listOrganicStatusHistory(): OrganicStatusEntry[]; // every entry, oldest first, with documentIds
+export function farmOrganicChrome(): OrganicChromeLevel;
+
+// lib/organic/inputCompliance.ts (client-safe)
+export type OrganicInputClass = "allowed" | "not-allowed" | "not-marked";
+export function organicInputClass(
+  plugin:
+    { type: string; complianceFlags?: ComplianceFlags } | null | undefined,
+): OrganicInputClass;
+
+// lib/organic/animalStatus.server.ts
+export interface TreatmentOrganicRow {
+  healthEventId: string;
+  administeredAt: number;
+  subjects: { type: "animal" | "group"; id: string }[];
+  product: string;
+  outcome: "status-lost" | "needs-review" | "not-affected";
+  basis: "rule" | "owner-review" | null;
+  review: {
+    outcome: "status-lost" | "not-affected";
+    reason: string;
+    createdAt: number;
+    lockedAt: number | null;
+    by: { id: string; label: string } | null;
+  } | null;
+  deleted: boolean;
+}
+export function organicTreatmentOutcomes(opts?: {
+  fromMs?: number;
+  toMs?: number;
+}): TreatmentOrganicRow[];
+
+// lib/organic/blockFacts.server.ts
+export interface BlockOrganicFacts {
+  blockId: string;
+  applications: {
+    kind: "spray" | "insecticide" | "fungicide" | "fertility";
+    id: string;
+    occurredAt: number;
+    product: string;
+    pluginId: string | null;
+    inputClass: "not-allowed" | "not-marked";
+  }[];
+  treatedSeedPlantings: { cropId: string; stockLotId: string; at: number }[];
+  lastNonAllowedAt: number | null;
+  /** Null while NOP_RULES.landTransitionMonths is null (O-03, B-04). */
+  transitionLine: string | null;
+}
+export function blockOrganicFacts(
+  blockIds: readonly string[],
+  window: { fromMs: number; toMs: number },
+): Map<string, BlockOrganicFacts>;
+```
+
+B1 also owns `lib/organic/nopRules.ts` (`NOP_RULES`), `nop-sources.json` and its gate, `lib/db/organicStatus.ts`, `lib/db/organicReviews.ts`, the `philosophyFilter.ts` switch, the Area and Animal Card status lines and snapshot field (B-16), the `/records` entry link, the status line, welfare line (B-06) and review link on `/animals/[id]/health`, and the `deleteHealthEvent` snapshot change (B-26).
+
+#### C-B2. Dispositions (owner B2)
+
+```ts
+// lib/harvest/apiSchemas.ts (client-safe)
+export const dispositionCreateSchema; // B-27 fields
+export const dispositionPatchSchema; // partial of create plus ledgerEntryId: string | null
+
+// lib/db/harvestDispositions.ts
+export interface HarvestDisposition {
+  id: string;
+  harvestEventId: string;
+  kind: "sold" | "kept" | "donated" | "discarded";
+  quantity: number; // from quantity_hundredths
+  unit: string;
+  occurredAt: number;
+  recipient: string | null;
+  soldAsOrganic: boolean | null;
+  ledgerEntryId: string | null;
+  createdBy: string | null;
+  createdAt: number;
+  lockedAt: number | null;
+}
+export function listDispositionsForHarvests(
+  harvestIds: readonly string[],
+): Map<string, HarvestDisposition[]>;
+export function listDispositions(window: {
+  fromMs: number;
+  toMs: number;
+}): HarvestDisposition[];
+
+// lib/db/admin.ts
+/** @hold-exempt: dispositions never change a hold (O-13) */
+export function deleteHarvestDisposition(
+  id: string,
+  opts: { force?: boolean; deletedBy?: string; reason?: string },
+): DeleteSummary;
+```
+
+Queue payload for `harvest-disposition`: the create body plus `harvestEventId`, which `endpointForRecord` moves into the path.
+
+#### C-B3. Seed sourcing and the notice (owner B3)
+
+```ts
+// lib/stock/seedSourcing.ts (client-safe)
+export interface SeedSourceCheck {
+  supplier: string;
+  checkedAt: string;
+  result: string;
+}
+export interface SeedSourcing {
+  status: "organic" | "untreated" | "treated" | "unknown" | null;
+  sourcesChecked: SeedSourceCheck[];
+  unavailabilityNote: string | null;
+}
+/** Tolerant: bad JSON or bad items yield []. Never throws. */
+export function parseSourcesChecked(json: string | null): SeedSourceCheck[];
+export function seedSearchFlag(
+  s: SeedSourcing,
+): "no-search-on-file" | "not-recorded" | null;
+
+// lib/stock/seedSourcing.server.ts
+export interface SeedSourcingRow extends SeedSourcing {
+  stockItemId: string;
+  stockLotId: string;
+  itemName: string;
+  lotNumber: string | null;
+  supplier: string | null;
+  receivedAt: number;
+  documentIds: string[];
+}
+export function listSeedSourcing(window: {
+  fromMs: number;
+  toMs: number;
+}): SeedSourcingRow[]; // B-40
+```
+
+`components/organic/OrganicInputNotice.svelte` props: `{ organicBlocks: Record<string, string>; selectedBlockIds: string[]; products: { name: string; inputClass: OrganicInputClass }[] }`. It renders nothing when no selected block is in `organicBlocks` or every product is `allowed`. The four page loaders add `organicBlocks` (B-21), only when `farmOrganicChrome() === 'full'`.
+
+#### C-B4. Exports (owner B4)
+
+```ts
+// lib/records/animalTreatmentLog.ts (pure) + animalTreatmentLog.server.ts
+export interface TreatmentLogRow {
+  date: string;
+  courseEnd: string | null;
+  subject: string;
+  species: string;
+  product: string;
+  approvalNumber: string | null;
+  lot: string | null;
+  dose: string | null;
+  route: string | null;
+  givenBy: string | null;
+  vet: string | null;
+  labelUse: string | null;
+  withdrawal: {
+    food: "meat" | "milk" | "eggs";
+    clearOn: string | null;
+    source: string;
+  }[];
+  state:
+    "live" | "locked" | "voided" | "deleted-still-given" | "owner-corrected";
+  enteredLate: string | null;
+  organicOutcome: string | null;
+}
+export function buildTreatmentLog(
+  window: { fromMs: number; toMs: number },
+  prefs: Prefs,
+): TreatmentLogRow[];
+export function treatmentLogCsv(
+  rows: TreatmentLogRow[],
+  opts: { preamble: boolean },
+): string;
+```
+
+`lib/server/organicPack.ts` exports `streamOrganicPack(opts: { fromMs: number; toMs: number; documents: boolean; viewer: AuthenticatedUser }): ReadableStream<Uint8Array>` and reads only the C-B1, C-B2 and C-B3 functions above plus existing repos. `YearSummary` gains `animals: YearAnimalSection | null`, null when the farm has no animals (B-53).
+
 ## 33C: Manure and compost carryover chain, and the forage advisory
 
 **Goal.** Follow manure, bedding and compost from animals that grazed or ate forage treated with a carryover herbicide to the block where it is spread, and warn before it reaches a crop that herbicide damages. Give prussic acid and nitrate risk a sourced advisory and a place to record forage tests, without a gate.

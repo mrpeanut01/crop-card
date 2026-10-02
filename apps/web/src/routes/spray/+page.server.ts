@@ -5,6 +5,7 @@ import { loadSprayPastureContext } from '$lib/server/pastureAnimals';
 import { getRegistry } from '$lib/server/registry';
 import { listSprayers } from '$lib/server/sprayers';
 import { canSetUp, setupAreas, setupBlocks, setupSprayerTemplates } from '$lib/server/setupContext';
+import { organicBlocksForNotice } from '$lib/server/organicNotice';
 
 /**
  * Load real blocks from DB. Deep-link query params:
@@ -114,7 +115,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         ratePerAcre: h.ratePerAcre,
         gpaCalibration: h.gpaCalibration,
         requiresAMS: h.requiresAMS ?? false,
-        deconRequired: h.deconRequired ?? false
+        deconRequired: h.deconRequired ?? false,
+        complianceFlags: h.complianceFlags
       };
     })
     .sort((a, b) => a.displayName.localeCompare(b.displayName));
@@ -169,6 +171,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   return {
     blocks,
     pasture: await loadSprayPastureContext(dbBlocks, registry),
+    organicBlocks: organicBlocksForNotice(blocks.map((b) => b.id)),
     herbicides,
     allHerbicides,
     sprayers: listSprayers(),

@@ -7,6 +7,8 @@
     wholeAreaPlan
   } from '$lib/setup/spot';
   import type { SetupArea, SetupSpotResult } from '$lib/setup/types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     id: string;
@@ -21,6 +23,8 @@
   }
 
   let { id, blocks, areas, canEdit, value = $bindable(), onSpotAdded, onNewSpot }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   const wholeAreas = $derived(canEdit ? emptyAreas(areas) : []);
   let saving = $state(false);
@@ -48,7 +52,7 @@
         await onSpotAdded(out.result);
         value = out.result.blockId;
       } catch {
-        error = "We couldn't reach CropCard. Check your signal and try again.";
+        error = tr('setup.plant.errNetwork');
       } finally {
         saving = false;
       }
@@ -60,23 +64,25 @@
 
 <select {id} {value} onchange={onChange} disabled={saving} aria-busy={saving}>
   {#if !value}
-    <option value="" disabled>Pick a spot</option>
+    <option value="" disabled>{tr('setup.spotSelect.pick')}</option>
   {/if}
   {#each blocks as b (b.id)}
     <option value={b.id}>{b.label}</option>
   {/each}
   {#if wholeAreas.length > 0}
-    <optgroup label="Areas with nothing in them yet">
+    <optgroup label={tr('setup.spotSelect.emptyAreas')}>
       {#each wholeAreas as a (a.id)}
-        <option value="{WHOLE_AREA_PREFIX}{a.id}">{a.name} (the whole area)</option>
+        <option value="{WHOLE_AREA_PREFIX}{a.id}"
+          >{tr('setup.spotSelect.wholeArea', { name: a.name })}</option
+        >
       {/each}
     </optgroup>
   {/if}
   {#if canEdit}
-    <option value={NEW_SPOT}>+ New spot…</option>
+    <option value={NEW_SPOT}>{tr('setup.spotSelect.newSpot')}</option>
   {/if}
 </select>
-{#if saving}<p class="status" role="status">Adding it…</p>{/if}
+{#if saving}<p class="status" role="status">{tr('setup.spotSelect.adding')}</p>{/if}
 {#if error}<p class="error" role="alert">{error}</p>{/if}
 
 <style>

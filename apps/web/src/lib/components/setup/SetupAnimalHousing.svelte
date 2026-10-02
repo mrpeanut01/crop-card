@@ -1,6 +1,8 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import '$lib/components/animals/animalForms.css';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import {
     OFFLINE_MESSAGE,
     areaKindLabel,
@@ -32,12 +34,13 @@
     areas,
     canEdit,
     defaultKind,
-    submitLabel = 'Use this place',
+    submitLabel,
     embedded = false,
     speciesId,
     speciesName,
     onDone
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
   const uid = $props.id();
   const NEW = '__new__';
 
@@ -55,12 +58,12 @@
 
   const placeholder = $derived(
     kind === 'pasture'
-      ? 'e.g. Back pasture'
+      ? tr('setup.housing.phPasture')
       : kind === 'barn'
-        ? 'e.g. Red barn'
+        ? tr('setup.housing.phBarn')
         : kind === 'residence'
-          ? 'e.g. The house'
-          : 'e.g. Hen house'
+          ? tr('setup.housing.phHouse')
+          : tr('setup.housing.phCoop')
   );
 
   function submit(e: SubmitEvent) {
@@ -85,7 +88,7 @@
     }
     const trimmed = name.trim();
     if (!trimmed) {
-      error = 'Give the place a name.';
+      error = tr('setup.housing.errName');
       return;
     }
     saving = true;
@@ -115,20 +118,20 @@
 
 {#if !canEdit}
   <p class="af-note" role="note">
-    Ask the owner to add a place for animals. Once it is on the farm it shows up here.
+    {tr('setup.housing.askOwner')}
   </p>
 {:else}
   <svelte:element
     this={embedded ? 'div' : 'form'}
     class="af-form"
     role={embedded ? 'group' : undefined}
-    aria-label={embedded ? 'New place' : undefined}
+    aria-label={embedded ? tr('setup.housing.newAria') : undefined}
     onsubmit={embedded ? undefined : submit}
     onkeydown={embedded ? enterSaves : undefined}
   >
     {#if options.length > 0}
       <fieldset class="af-fieldset">
-        <legend class="af-legend">Where do they live?</legend>
+        <legend class="af-legend">{tr('setup.housing.where')}</legend>
         <div class="af-tiles">
           {#each options as a (a.id)}
             <label class="af-tile" class:on={picked === a.id}>
@@ -139,7 +142,7 @@
           {/each}
           <label class="af-tile" class:on={picked === NEW}>
             <input type="radio" name="{uid}-place" value={NEW} bind:group={picked} />
-            <span>Somewhere new</span>
+            <span>{tr('setup.housing.somewhereNew')}</span>
           </label>
         </div>
       </fieldset>
@@ -147,7 +150,7 @@
 
     {#if picked === NEW}
       <fieldset class="af-fieldset">
-        <legend class="af-legend">What kind of place?</legend>
+        <legend class="af-legend">{tr('setup.housing.whatKind')}</legend>
         <div class="af-tiles">
           {#each kinds as k (k.kind)}
             <label class="af-tile" class:on={kind === k.kind}>
@@ -158,7 +161,7 @@
           {/each}
         </div>
       </fieldset>
-      <label class="af-label" for="{uid}-name">What do you call it?</label>
+      <label class="af-label" for="{uid}-name">{tr('setup.housing.callIt')}</label>
       <input
         id="{uid}-name"
         class="af-input"
@@ -170,12 +173,14 @@
         data-autofocus
       />
       <p class="af-help">
-        A name is enough. You can draw it on the <a href="/plan/farm">farm map</a> later.
+        {tr('setup.housing.nameEnoughPre')}<a href="/plan/farm">{tr('setup.housing.farmMap')}</a
+        >{tr('setup.housing.nameEnoughPost')}.
       </p>
       {#if kind === 'coop_pen' && speciesId}
         <p class="af-help" data-testid="coop-species-note">
-          Saved as a {speciesName ?? 'animal'} coop or pen. Add its size in the place's details on the
-          farm map to get a suggested number of animals it holds.
+          {tr('setup.housing.coopNote', {
+            species: speciesName ?? tr('setup.housing.animalFallback')
+          })}
         </p>
       {/if}
     {/if}
@@ -188,7 +193,7 @@
       disabled={saving}
       onclick={embedded ? () => void save() : undefined}
     >
-      {saving ? 'Saving…' : submitLabel}
+      {saving ? tr('setup.saving') : (submitLabel ?? tr('setup.housing.useThis'))}
     </button>
   </svelte:element>
 {/if}

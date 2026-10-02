@@ -1,6 +1,8 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { deserialize } from '$app/forms';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import FrostPanel from '$lib/components/onboarding/FrostPanel.svelte';
 
   interface Props {
@@ -10,6 +12,7 @@
   }
 
   const { latLon, onDone }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const round5 = (n: number) => Number(n.toFixed(5));
   let lat = $state<number | null>(untrack(() => (latLon ? round5(latLon.lat) : null)));
@@ -38,7 +41,7 @@
     const q = query.trim();
     note = null;
     if (q.length < 3) {
-      note = 'Type at least three letters of the address.';
+      note = tr('setup.climate.errShort');
       return;
     }
     searching = true;
@@ -49,11 +52,9 @@
         : {};
       const first = body.matches?.[0];
       if (first) setPoint(first.lat, first.lon);
-      else
-        note =
-          "We couldn't find that address. The lookup needs a house number and street. Use your location or type the coordinates instead.";
+      else note = tr('setup.climate.errNoMatch');
     } catch {
-      note = "The address lookup isn't working right now. Use your location instead.";
+      note = tr('setup.climate.errLookup');
     } finally {
       searching = false;
     }
@@ -62,7 +63,7 @@
   function useMyLocation() {
     note = null;
     if (!('geolocation' in navigator)) {
-      note = "This browser can't share its location. Type the coordinates instead.";
+      note = tr('setup.climate.errNoGeo');
       return;
     }
     geoBusy = true;
@@ -72,7 +73,7 @@
         geoBusy = false;
       },
       () => {
-        note = "We couldn't get your location. Type the coordinates or search an address.";
+        note = tr('setup.climate.errGeo');
         geoBusy = false;
       },
       { enableHighAccuracy: false, timeout: 15_000 }
@@ -82,7 +83,7 @@
   async function submit(e: SubmitEvent) {
     e.preventDefault();
     if (!hasPoint) {
-      error = 'Set the farm location first.';
+      error = tr('setup.climate.errNeedPoint');
       return;
     }
     saving = true;
@@ -99,9 +100,9 @@
         return;
       }
       const data = result.type === 'failure' ? (result.data as { error?: string }) : null;
-      error = data?.error ?? "That didn't save. Try again, or use Settings, Farm.";
+      error = data?.error ?? tr('setup.climate.errSave');
     } catch {
-      error = "That didn't save. Check your connection and try again.";
+      error = tr('setup.climate.errOffline');
     } finally {
       saving = false;
     }
@@ -110,14 +111,14 @@
 
 <form class="climate" onsubmit={submit} data-testid="setup-farm-climate">
   <p class="lede">
-    Your location sets the weather, frost dates and planting times. It stays on your farm record.
+    {tr('setup.climate.lede')}
   </p>
 
   <div class="search">
     <input
       type="search"
-      aria-label="Search for an address"
-      placeholder="Street address, e.g. 12 Main St, Leesburg VA"
+      aria-label={tr('onboard.searchAria')}
+      placeholder={tr('onboard.searchPlaceholder')}
       autocomplete="street-address"
       bind:value={query}
       onkeydown={(e) => {
@@ -128,17 +129,17 @@
       }}
     />
     <button type="button" class="ghost" onclick={searchAddress} disabled={searching}>
-      {searching ? 'Searching…' : 'Search'}
+      {searching ? tr('onboard.searching') : tr('onboard.search')}
     </button>
   </div>
   <button type="button" class="ghost wide" onclick={useMyLocation} disabled={geoBusy}>
-    {geoBusy ? 'Finding you…' : 'Use my location'}
+    {geoBusy ? tr('onboard.findingYou') : tr('onboard.useMyLocation')}
   </button>
   {#if note}<p class="note" role="status">{note}</p>{/if}
 
   <div class="coords">
     <label>
-      <span>Latitude</span>
+      <span>{tr('onboard.latitude')}</span>
       <input
         type="number"
         name="lat"
@@ -150,7 +151,7 @@
       />
     </label>
     <label>
-      <span>Longitude</span>
+      <span>{tr('onboard.longitude')}</span>
       <input
         type="number"
         name="lon"
@@ -171,9 +172,9 @@
 
   <div class="actions">
     <button type="submit" class="primary" disabled={saving || !hasPoint || frostBlocked}>
-      {saving ? 'Saving…' : 'Save location and frost dates'}
+      {saving ? tr('setup.saving') : tr('setup.climate.save')}
     </button>
-    <a class="ghost" href="/settings/farm">Use the map in Settings</a>
+    <a class="ghost" href="/settings/farm">{tr('setup.climate.useMap')}</a>
   </div>
 </form>
 

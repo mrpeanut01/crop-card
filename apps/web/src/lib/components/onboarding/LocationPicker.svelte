@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import 'leaflet/dist/leaflet.css';
   import type { CircleMarker, Map as LMap } from 'leaflet';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   let {
     lat,
@@ -14,6 +16,8 @@
     fallback: { lat: number; lon: number };
     onPick: (lat: number, lon: number) => void;
   } = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   let mapEl: HTMLDivElement;
   let map: LMap | null = null;
@@ -75,12 +79,7 @@
   });
 </script>
 
-<div
-  class="picker"
-  bind:this={mapEl}
-  role="application"
-  aria-label="Map. Tap your farm to drop a pin."
-></div>
+<div class="picker" bind:this={mapEl} role="application" aria-label={tr('onboard.map.aria')}></div>
 
 <style>
   .picker {

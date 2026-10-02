@@ -14,6 +14,9 @@
    *   note:  optional right-aligned italic context line
    */
 
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+
   type ProvenanceSource = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
   interface Props {
@@ -22,18 +25,19 @@
   }
 
   const { shown = ['plugin', 'data', 'ai', 'manual'], note }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
-  const META: Record<ProvenanceSource, { label: string; swatchVar: string }> = {
-    plugin: { label: 'Plugin', swatchVar: '--prov-plugin-swatch' },
-    data: { label: 'Your data', swatchVar: '--prov-data-swatch' },
-    ai: { label: 'AI', swatchVar: '--prov-ai-swatch' },
-    manual: { label: 'You typed', swatchVar: '--prov-manual-swatch' },
-    fallback: { label: 'Fallback', swatchVar: '--prov-fallback-swatch' }
-  };
+  const META: Record<ProvenanceSource, { label: string; swatchVar: string }> = $derived({
+    plugin: { label: tr('ui.prov.plugin'), swatchVar: '--prov-plugin-swatch' },
+    data: { label: tr('ui.prov.data'), swatchVar: '--prov-data-swatch' },
+    ai: { label: tr('ui.prov.ai'), swatchVar: '--prov-ai-swatch' },
+    manual: { label: tr('ui.prov.manual'), swatchVar: '--prov-manual-swatch' },
+    fallback: { label: tr('ui.prov.fallback'), swatchVar: '--prov-fallback-swatch' }
+  });
 </script>
 
 <div class="legend">
-  <span class="title">Where this data came from</span>
+  <span class="title">{tr('ui.provLegend.title')}</span>
   <span class="rule" aria-hidden="true"></span>
   {#each shown as src (src)}
     {@const m = META[src]}

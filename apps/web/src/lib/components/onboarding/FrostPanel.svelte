@@ -1,6 +1,8 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { Snowflake } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import {
     lookupFrostDates,
@@ -50,12 +52,14 @@
     blocked = $bindable(false)
   }: Props = $props();
 
-  const LABEL: Record<FrostField, string> = {
-    lastFrost: 'Last spring frost',
-    firstFrost: 'First fall frost',
-    lastHardFrost: 'Last hard frost',
-    firstHardFrost: 'First hard frost'
-  };
+  const tr = $derived(createT(page.data?.locale));
+
+  const LABEL: Record<FrostField, string> = $derived({
+    lastFrost: tr('onboard.frost.lastFrost'),
+    firstFrost: tr('onboard.frost.firstFrost'),
+    lastHardFrost: tr('onboard.frost.lastHardFrost'),
+    firstHardFrost: tr('onboard.frost.firstHardFrost')
+  });
 
   const MAIN_FIELDS: FrostField[] = ['lastFrost', 'firstFrost'];
 
@@ -114,16 +118,15 @@
   });
 
   function pretty(mmdd: string | null): string {
-    return mmdd ? formatCalendarDate(`2000-${mmdd}`, 'month-day') : 'None on record';
+    return mmdd ? formatCalendarDate(`2000-${mmdd}`, 'month-day') : tr('onboard.frost.none');
   }
 
-  const REFERENCE_LONG =
-    'Published weather-station averages for your area, not something you entered';
+  const REFERENCE_LONG = $derived(tr('onboard.frost.refLong'));
 
   function detail(p: FrostValueProvenance): string {
-    if (p === 'data') return suggestion?.sourceLabel ?? 'NOAA 1991-2020 normals';
-    if (p === 'fallback') return 'Loudoun County averages';
-    return 'You set this';
+    if (p === 'data') return suggestion?.sourceLabel ?? tr('onboard.frost.noaaNormals');
+    if (p === 'fallback') return tr('onboard.frost.loudoun');
+    return tr('onboard.frost.youSet');
   }
 
   function posted(f: FrostField): string {
@@ -166,7 +169,8 @@
 <section class="frost" aria-labelledby="frost-title">
   <div class="frost-head">
     <h3 id="frost-title" class="serif">
-      <Snowflake size={16} aria-hidden="true" /> Frost dates
+      <Snowflake size={16} aria-hidden="true" />
+      {tr('onboard.frost.title')}
     </h3>
     {#if mode === 'manual' && canEdit}
       <button
@@ -175,7 +179,7 @@
         onclick={suggestFromLocation}
         disabled={lat == null || lon == null}
       >
-        Suggest from my location
+        {tr('onboard.frost.suggest')}
       </button>
     {/if}
   </div>
@@ -190,9 +194,9 @@
 
   <div aria-live="polite">
     {#if basis === 'lookup' && (lat == null || lon == null)}
-      <p class="muted">Set the location above and your frost dates fill in here.</p>
+      <p class="muted">{tr('onboard.frost.setLocation')}</p>
     {:else if basis === 'lookup' && (loading || !suggestion)}
-      <p class="muted">Looking up the nearest weather station…</p>
+      <p class="muted">{tr('onboard.frost.lookingUp')}</p>
     {:else if suggestion}
       {#if !editing}
         <dl class="dates">
@@ -205,7 +209,7 @@
                 <Provenance
                   source={v.provenance}
                   detail={detail(v.provenance)}
-                  label={v.provenance === 'data' ? 'Weather service' : undefined}
+                  label={v.provenance === 'data' ? tr('onboard.frost.weatherService') : undefined}
                   long={v.provenance === 'data' ? REFERENCE_LONG : undefined}
                 />
               </dd>
@@ -221,7 +225,7 @@
           <Provenance
             source={suggestion.values.lastHardFrost.provenance}
             label={suggestion.values.lastHardFrost.provenance === 'data'
-              ? 'Weather service'
+              ? tr('onboard.frost.weatherService')
               : undefined}
             long={suggestion.values.lastHardFrost.provenance === 'data'
               ? REFERENCE_LONG
@@ -239,7 +243,7 @@
                 type="text"
                 name={f}
                 inputmode="numeric"
-                placeholder="MM-DD"
+                placeholder={tr('onboard.frost.mmdd')}
                 autocomplete="off"
                 value={edits[f] ?? ''}
                 oninput={(e) => (edits = { ...edits, [f]: e.currentTarget.value })}
@@ -250,13 +254,13 @@
           {/each}
         </div>
         <p class="muted">
-          Month and day, like 04-20. Leave a hard-frost date blank if you don't know it.
+          {tr('onboard.frost.editNote')}
         </p>
       {/if}
 
       {#if basis === 'lookup' && suggestion.sourceLabel}
         <p class="src">
-          From {suggestion.sourceLabel}, using NOAA's 1991-2020 climate normals.
+          {tr('onboard.frost.from', { source: suggestion.sourceLabel })}
         </p>
       {:else if basis === 'lookup' && suggestion.fallbackReason}
         <p class="src">{suggestion.fallbackReason}</p>
@@ -276,22 +280,21 @@
               onchange={(e) => (probability = e.currentTarget.checked ? 'cautious' : 'median')}
               disabled={!canEdit}
             />
-            <span>Cautious dates (90%). Nine years in ten, frost is gone by then.</span>
+            <span>{tr('onboard.frost.cautious')}</span>
           </label>
         {/if}
         {#if !editing && canEdit && !colderOpen}
           <button type="button" class="ghost" onclick={() => (colderOpen = true)}>
-            My place runs colder
+            {tr('onboard.frost.colder')}
           </button>
         {/if}
       </div>
 
       {#if colderOpen && !editing && canEdit}
         <fieldset class="colder">
-          <legend>How much colder?</legend>
+          <legend>{tr('onboard.frost.howMuch')}</legend>
           <p class="muted">
-            Low spots and north slopes often frost later in spring and earlier in fall than the
-            weather station.
+            {tr('onboard.frost.colderNote')}
           </p>
           <div class="colder-options">
             <button
@@ -300,7 +303,7 @@
               aria-pressed={colderDays === 7}
               onclick={() => runColder(7)}
             >
-              About a week colder
+              {tr('onboard.frost.week')}
             </button>
             <button
               type="button"
@@ -308,23 +311,25 @@
               aria-pressed={colderDays === 14}
               onclick={() => runColder(14)}
             >
-              About two weeks colder
+              {tr('onboard.frost.twoWeeks')}
             </button>
             {#if colderDays}
               <button type="button" class="ghost" onclick={resetColder}>
-                Use the station dates
+                {tr('onboard.frost.useStation')}
               </button>
             {/if}
           </div>
           <details class="exact">
-            <summary>Enter exact dates</summary>
-            <button type="button" class="ghost" onclick={startEditing}>Type my own dates</button>
+            <summary>{tr('onboard.frost.exact')}</summary>
+            <button type="button" class="ghost" onclick={startEditing}
+              >{tr('onboard.frost.typeOwn')}</button
+            >
           </details>
         </fieldset>
       {/if}
 
       {#if reason}
-        <div class="confirm" role="group" aria-label="Confirm frost dates">
+        <div class="confirm" role="group" aria-label={tr('onboard.frost.confirmAria')}>
           <p>{FROST_CONFIRM_COPY[reason]}</p>
           <label class="check">
             <input
@@ -334,7 +339,7 @@
               bind:checked={confirmed}
               disabled={!canEdit}
             />
-            <span>These dates are fine for now</span>
+            <span>{tr('onboard.frost.fine')}</span>
           </label>
         </div>
       {/if}

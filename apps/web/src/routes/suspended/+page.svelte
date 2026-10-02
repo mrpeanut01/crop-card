@@ -1,20 +1,28 @@
-<svelte:head><title>Farm paused · CropCard</title></svelte:head>
+<script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  const tr = $derived(createT(page.data?.locale));
+</script>
+
+<svelte:head><title>{tr('entry.suspended.title')}</title></svelte:head>
 
 <section class="suspended" data-testid="suspended">
-  <h1>This farm is paused</h1>
+  <h1>{tr('entry.suspended.h1')}</h1>
   <p>
-    CropCard support has paused this farm. Your records and exports are still here, and you can read
-    and download them any time.
+    {tr('entry.suspended.body')}
   </p>
   <div class="cta-row">
-    <a class="primary" href="/records" data-testid="suspended-records">Open your records</a>
-    <a class="ghost" href="/api/account/export.json" data-testid="suspended-export"
-      >Download all your data</a
+    <a class="primary" href="/records" data-testid="suspended-records"
+      >{tr('entry.suspended.records')}</a
     >
-    <a class="ghost" href="mailto:hello@cropcard.io">Email CropCard support</a>
+    <a class="ghost" href="/api/account/export.json" data-testid="suspended-export"
+      >{tr('entry.suspended.export')}</a
+    >
+    <a class="ghost" href="mailto:hello@cropcard.io">{tr('entry.suspended.email')}</a>
   </div>
   <p class="small">
-    Questions about a payment? <a href="/settings/billing">See plan and billing</a>.
+    {tr('entry.suspended.billingQ')}
+    <a href="/settings/billing">{tr('entry.suspended.billingLink')}</a>.
   </p>
 </section>
 

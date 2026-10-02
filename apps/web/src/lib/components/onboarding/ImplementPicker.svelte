@@ -1,6 +1,8 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { Check, Plus, X } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import {
     IMPLEMENT_GROUPS,
     IMPLEMENT_TYPES,
@@ -20,17 +22,19 @@
     onCountChange?: (n: number) => void;
   } = $props();
 
-  const TYPE_LABELS: Record<string, string> = {
-    tractor: 'Tractor',
-    sprayer: 'Sprayer',
-    planter: 'Planter / seeder',
-    drill: 'Drill',
-    mower: 'Mower',
-    rake: 'Rake / tedder',
-    baler: 'Baler',
-    irrigation: 'Irrigation',
-    other: 'Other implement'
-  };
+  const tr = $derived(createT(page.data?.locale));
+
+  const TYPE_LABELS: Record<string, string> = $derived({
+    tractor: tr('onboard.impl.tractor'),
+    sprayer: tr('onboard.impl.sprayer'),
+    planter: tr('onboard.impl.planter'),
+    drill: tr('onboard.impl.drill'),
+    mower: tr('onboard.impl.mower'),
+    rake: tr('onboard.impl.rake'),
+    baler: tr('onboard.impl.baler'),
+    irrigation: tr('onboard.impl.irrigation'),
+    other: tr('onboard.impl.other')
+  });
 
   let selected = $state<string[]>([]);
   let custom = $state<{ key: number; type: string; label: string }[]>([]);
@@ -75,8 +79,8 @@
 </script>
 
 {#if owned.length > 0}
-  <section class="owned" aria-label="Already on your farm">
-    <h3>Already on your farm</h3>
+  <section class="owned" aria-label={tr('onboard.impl.owned')}>
+    <h3>{tr('onboard.impl.owned')}</h3>
     <ul>
       {#each owned as o (o.id)}
         <li><Check size={13} aria-hidden="true" /> {o.label}</li>
@@ -91,7 +95,7 @@
     <details class="group" bind:open={openGroups[g.id]}>
       <summary>
         <span class="g-label">{g.label}</span>
-        {#if n > 0}<span class="g-count">{n} picked</span>{/if}
+        {#if n > 0}<span class="g-count">{tr('onboard.impl.picked', { n })}</span>{/if}
       </summary>
       <div class="items">
         {#each g.items as t (t.templateId)}
@@ -106,7 +110,7 @@
               onchange={() => toggle(t.templateId)}
             />
             <span class="item-body">
-              <span class="item-cat">{t.category}{isOwned ? ' · on your farm' : ''}</span>
+              <span class="item-cat">{t.category}{isOwned ? tr('onboard.impl.onFarm') : ''}</span>
               <span class="item-label">{t.label}</span>
               <span class="item-desc">{t.description}</span>
             </span>
@@ -117,11 +121,11 @@
   {/each}
 </div>
 
-<section class="custom" aria-label="Something not on the list">
-  <h3>Something not on the list?</h3>
+<section class="custom" aria-label={tr('onboard.impl.notListed')}>
+  <h3>{tr('onboard.impl.notListed')}</h3>
   {#each custom as c (c.key)}
     <div class="custom-row">
-      <select name="customType" bind:value={c.type} aria-label="Implement type">
+      <select name="customType" bind:value={c.type} aria-label={tr('onboard.impl.typeAria')}>
         {#each IMPLEMENT_TYPES as t (t)}
           <option value={t}>{TYPE_LABELS[t]}</option>
         {/each}
@@ -131,16 +135,22 @@
         name="customLabel"
         bind:value={c.label}
         maxlength="120"
-        placeholder="e.g. Cultivator with S-tine sweeps"
-        aria-label="Implement name"
+        placeholder={tr('onboard.impl.placeholder')}
+        aria-label={tr('onboard.impl.nameAria')}
       />
-      <button type="button" class="icon" onclick={() => removeCustom(c.key)} aria-label="Remove">
+      <button
+        type="button"
+        class="icon"
+        onclick={() => removeCustom(c.key)}
+        aria-label={tr('onboard.impl.remove')}
+      >
         <X size={16} />
       </button>
     </div>
   {/each}
   <button type="button" class="add" onclick={addCustom}>
-    <Plus size={14} aria-hidden="true" /> Add your own
+    <Plus size={14} aria-hidden="true" />
+    {tr('onboard.impl.addOwn')}
   </button>
 </section>
 

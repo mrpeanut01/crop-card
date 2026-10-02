@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Lock, FileText, Sparkles, Pencil, RefreshCw } from 'lucide-svelte';
-  import { PROVENANCE_LABEL, PROVENANCE_LONG } from '$lib/provenanceLabels';
+  import { PROVENANCE_LONG } from '$lib/provenanceLabels';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   /**
    * Phase 25 v2 addendum (#89, prop contract first shipped under #90).
@@ -45,9 +47,29 @@
     fallback: RefreshCw
   };
 
+  const tr = $derived(createT(page.data?.locale));
+
+  const LABEL_KEY = {
+    plugin: 'ui.prov.plugin',
+    data: 'ui.prov.data',
+    ai: 'ui.prov.ai',
+    manual: 'ui.prov.manual',
+    fallback: 'ui.prov.fallback'
+  } as const;
+  // The plugin and manual explanations mention the safety kernel, so they stay English.
+  const LONG_KEY = {
+    data: 'ui.prov.dataLong',
+    ai: 'ui.prov.aiLong',
+    fallback: 'ui.prov.fallbackLong'
+  } as const;
+
   const meta = $derived({
-    label: label ?? PROVENANCE_LABEL[source],
-    long: long ?? PROVENANCE_LONG[source],
+    label: label ?? tr(LABEL_KEY[source]),
+    long:
+      long ??
+      (source in LONG_KEY
+        ? tr(LONG_KEY[source as keyof typeof LONG_KEY])
+        : PROVENANCE_LONG[source]),
     icon: ICON[source]
   });
   const showConf = $derived(source === 'ai' && typeof confidence === 'number');

@@ -3,7 +3,7 @@
   import { browser } from '$app/environment';
   import { untrack } from 'svelte';
   import { page } from '$app/state';
-  import { createT } from '$lib/i18n';
+  import { createT, type MessageKey } from '$lib/i18n';
   import LanguageToggle from '$lib/components/ui/LanguageToggle.svelte';
   import { ArrowRight, Check, Crosshair, MapPin, Search, Sun } from 'lucide-svelte';
   import Card from '$lib/components/ui/Card.svelte';
@@ -43,7 +43,7 @@
     const q = query.trim();
     matches = [];
     if (q.length < 3) {
-      searchNote = 'Type at least three letters of the address.';
+      searchNote = tr('onboard.errShort');
       return;
     }
     searching = true;
@@ -59,8 +59,7 @@
     }
     searching = false;
     if (matches.length === 0) {
-      searchNote =
-        "We couldn't find that address. The lookup needs a house number and street (not a town, zip, PO box or rural route). Use your location or tap the map instead.";
+      searchNote = tr('onboard.errNoMatch');
     } else if (matches.length === 1) {
       choose(matches[0]);
     }
@@ -74,22 +73,20 @@
 
   function useMyLocation() {
     if (!browser || !navigator.geolocation) {
-      geoError = "This browser can't share its location. Search or tap the map instead.";
+      geoError = tr('onboard.errNoGeo');
       return;
     }
     geoBusy = true;
     geoError = null;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setPoint(pos.coords.latitude, pos.coords.longitude, 'Your current location');
+        setPoint(pos.coords.latitude, pos.coords.longitude, tr('onboard.currentLocation'));
         geoBusy = false;
       },
       (err) => {
         geoBusy = false;
         geoError =
-          err.code === err.PERMISSION_DENIED
-            ? 'Location permission was declined. Search or tap the map instead.'
-            : "Couldn't get a GPS fix. Search or tap the map instead.";
+          err.code === err.PERMISSION_DENIED ? tr('onboard.errDenied') : tr('onboard.errNoFix');
       },
       { enableHighAccuracy: true, timeout: 15000 }
     );
@@ -117,18 +114,21 @@
 </script>
 
 <svelte:head>
-  <title>Set up your farm · CropCard</title>
+  <title>{tr('onboard.title')}</title>
 </svelte:head>
 
 <div class="ob-wrap">
   {#if data.screen === 'farm'}
     <header class="intro">
-      <div class="kicker-row"><Sun size={12} strokeWidth={2} aria-hidden="true" /> Step 1 of 2</div>
-      <h1 class="serif">Tell us about your farm</h1>
+      <div class="kicker-row">
+        <Sun size={12} strokeWidth={2} aria-hidden="true" />
+        {tr('onboard.step', { n: 1 })}
+      </div>
+      <h1 class="serif">{tr('onboard.farm.h1')}</h1>
       <p class="lede">
-        {data.firstName ? `Welcome, ${data.firstName}. ` : 'Welcome. '}Two quick questions and
-        you're in. Your location sets the weather, frost dates and planting times, so we ask for it
-        first.
+        {data.firstName
+          ? tr('onboard.farm.welcomeNamed', { name: data.firstName })
+          : tr('onboard.farm.welcome')}{tr('onboard.farm.lede')}
       </p>
       {#if showLanguage}
         <div class="lang-q">
@@ -146,26 +146,26 @@
 
       <Card loose>
         <label class="row">
-          <span class="lbl">Farm name</span>
+          <span class="lbl">{tr('onboard.farm.nameLabel')}</span>
           <input
             type="text"
             name="farmName"
             required
             maxlength="120"
             autocomplete="organization"
-            placeholder="Hilltop Acres"
+            placeholder={tr('onboard.farm.namePlaceholder')}
             bind:value={farmName}
           />
         </label>
       </Card>
 
       <Card loose>
-        <h2 class="serif sub">Where is it?</h2>
+        <h2 class="serif sub">{tr('onboard.where')}</h2>
         <div class="search">
           <input
             type="search"
-            aria-label="Search for an address"
-            placeholder="Street address, e.g. 12 Main St, Leesburg VA"
+            aria-label={tr('onboard.searchAria')}
+            placeholder={tr('onboard.searchPlaceholder')}
             autocomplete="street-address"
             bind:value={query}
             onkeydown={(e) => {
@@ -177,11 +177,11 @@
           />
           <button type="button" class="ghost" onclick={searchAddress} disabled={searching}>
             <Search size={15} aria-hidden="true" />
-            {searching ? 'Searching…' : 'Search'}
+            {searching ? tr('onboard.searching') : tr('onboard.search')}
           </button>
         </div>
         {#if matches.length > 1}
-          <ul class="matches" aria-label="Matching addresses">
+          <ul class="matches" aria-label={tr('onboard.matchesAria')}>
             {#each matches as m (m.label)}
               <li>
                 <button type="button" class="match" onclick={() => choose(m)}>
@@ -197,29 +197,27 @@
         <div class="or-row">
           <button type="button" class="ghost" onclick={useMyLocation} disabled={geoBusy}>
             <Crosshair size={15} aria-hidden="true" />
-            {geoBusy ? 'Finding you…' : 'Use my location'}
+            {geoBusy ? tr('onboard.findingYou') : tr('onboard.useMyLocation')}
           </button>
-          <span class="muted">or tap the map to drop a pin</span>
+          <span class="muted">{tr('onboard.orTapMap')}</span>
         </div>
         {#if geoError}<p class="note warn" role="status">{geoError}</p>{/if}
 
         {#if browser}
           {#await import('$lib/components/onboarding/LocationPicker.svelte')}
-            <div class="map-loading">Loading map…</div>
+            <div class="map-loading">{tr('onboard.loadingMap')}</div>
           {:then { default: LocationPicker }}
             <LocationPicker
               {lat}
               {lon}
               fallback={data.fallbackCenter}
-              onPick={(la, lo) => setPoint(la, lo, 'Pin on the map')}
+              onPick={(la, lo) => setPoint(la, lo, tr('onboard.pinOnMap'))}
             />
           {:catch}
-            <div class="map-loading">
-              The map couldn't load. Search or use your location instead.
-            </div>
+            <div class="map-loading">{tr('onboard.mapFailed')}</div>
           {/await}
         {:else}
-          <div class="map-loading">Loading map…</div>
+          <div class="map-loading">{tr('onboard.loadingMap')}</div>
         {/if}
 
         <p class="picked" role="status" data-testid="picked-location">
@@ -227,15 +225,15 @@
             <Check size={15} aria-hidden="true" />
             {placeLabel ? `${placeLabel} · ` : ''}{lat.toFixed(4)}, {lon.toFixed(4)}
           {:else}
-            No location yet.
+            {tr('onboard.noLocation')}
           {/if}
         </p>
 
         <details class="advanced">
-          <summary>Type the coordinates instead</summary>
+          <summary>{tr('onboard.typeCoords')}</summary>
           <div class="two">
             <label class="row">
-              <span class="lbl">Latitude</span>
+              <span class="lbl">{tr('onboard.latitude')}</span>
               <input
                 type="number"
                 name="lat"
@@ -248,7 +246,7 @@
               />
             </label>
             <label class="row">
-              <span class="lbl">Longitude</span>
+              <span class="lbl">{tr('onboard.longitude')}</span>
               <input
                 type="number"
                 name="lon"
@@ -269,24 +267,27 @@
       </Card>
 
       <p class="why">
-        Your coordinates stay on your farm record. They're only sent to the National Weather Service
-        for your forecast.
+        {tr('onboard.why')}
       </p>
 
       <div class="actions">
         <button class="primary" type="submit" disabled={!canContinue}>
-          Continue <ArrowRight size={15} aria-hidden="true" />
+          {tr('onboard.continue')}
+          <ArrowRight size={15} aria-hidden="true" />
         </button>
       </div>
     </form>
   {:else}
     <header class="intro">
-      <div class="kicker-row"><Sun size={12} strokeWidth={2} aria-hidden="true" /> Step 2 of 2</div>
-      <h1 class="serif">What are you growing on?</h1>
+      <div class="kicker-row">
+        <Sun size={12} strokeWidth={2} aria-hidden="true" />
+        {tr('onboard.step', { n: 2 })}
+      </div>
+      <h1 class="serif">{tr('onboard.grow.h1')}</h1>
       <p class="lede">
-        Pick any that apply. We'll set up a starting spot for each one{data.farmName
-          ? ` on ${data.farmName}`
-          : ''}, and you can put them on the map whenever you like.
+        {data.farmName
+          ? tr('onboard.grow.ledeNamed', { farm: data.farmName })
+          : tr('onboard.grow.ledePlain')}
       </p>
     </header>
 
@@ -295,28 +296,28 @@
         <p class="error" role="alert">{form.error}</p>
       {/if}
       <fieldset class="choices">
-        <legend class="sr-only">What are you growing on?</legend>
+        <legend class="sr-only">{tr('onboard.grow.h1')}</legend>
         {#each data.options ?? [] as o (o.id)}
           <label class="choice" class:on={picked.includes(o.id)}>
             <input type="checkbox" name="growing" value={o.id} bind:group={picked} />
-            <span class="choice-title serif">{o.title}</span>
-            <span class="choice-blurb">{o.blurb}</span>
+            <span class="choice-title serif">{tr(`onboard.opt.${o.id}.title` as MessageKey)}</span>
+            <span class="choice-blurb">{tr(`onboard.opt.${o.id}.blurb` as MessageKey)}</span>
             <span class="tick" aria-hidden="true"><Check size={16} /></span>
           </label>
         {/each}
       </fieldset>
       {#if data.animalOptions?.length}
         <fieldset class="choices animals" aria-describedby="animals-note">
-          <legend class="choices-legend serif">Any animals?</legend>
+          <legend class="choices-legend serif">{tr('onboard.anyAnimals')}</legend>
           <p class="choices-note" id="animals-note">
-            Pick these too if they apply. Chickens get a coop and other animals get a barn. Pets
-            need nothing set up.
+            {tr('onboard.animalsNote')}
           </p>
           {#each data.animalOptions as o (o.id)}
             <label class="choice" class:on={pickedAnimals.includes(o.id)}>
               <input type="checkbox" name="animals" value={o.id} bind:group={pickedAnimals} />
-              <span class="choice-title serif">{o.title}</span>
-              <span class="choice-blurb">{o.blurb}</span>
+              <span class="choice-title serif">{tr(`onboard.opt.${o.id}.title` as MessageKey)}</span
+              >
+              <span class="choice-blurb">{tr(`onboard.opt.${o.id}.blurb` as MessageKey)}</span>
               <span class="tick" aria-hidden="true"><Check size={16} /></span>
             </label>
           {/each}
@@ -324,14 +325,15 @@
       {/if}
       <div class="actions">
         <button class="link" type="submit" name="skip" value="1" disabled={submitting}>
-          Not sure yet
+          {tr('onboard.notSure')}
         </button>
         <button
           class="primary"
           type="submit"
           disabled={(picked.length === 0 && pickedAnimals.length === 0) || submitting}
         >
-          Take me to Today <ArrowRight size={15} aria-hidden="true" />
+          {tr('onboard.takeMe')}
+          <ArrowRight size={15} aria-hidden="true" />
         </button>
       </div>
     </form>

@@ -9,6 +9,7 @@
  */
 
 import type { FarmSnapshot } from '$lib/cards/snapshot';
+import { DISPOSITION_KIND_LABEL } from '$lib/harvest/apiSchemas';
 
 /** The kinds this module knows about. Other kinds get Retry and Delete. */
 export type AnimalQueueKind = 'animal-production' | 'animal-health' | 'animal-move';
@@ -303,6 +304,13 @@ export function pendingSummary(kind: string | undefined, payload: unknown): stri
   if (kind === 'feed-use') {
     return typeof p.lb === 'number' ? `Feed used, ${p.lb} lb` : 'Feed used';
   }
+  if (kind === 'harvest-disposition') {
+    const labels: Record<string, string> = DISPOSITION_KIND_LABEL;
+    const verb = (typeof p.kind === 'string' && labels[p.kind]) || 'Where it went';
+    return typeof p.quantity === 'number' && typeof p.unit === 'string'
+      ? `${verb}, ${p.quantity} ${p.unit}`
+      : verb;
+  }
   if (kind === 'seed-start') {
     return typeof p.germinatedCount === 'number'
       ? `${p.germinatedCount} seedlings up`
@@ -326,5 +334,6 @@ export const KIND_LABEL: Record<string, string> = {
   'feed-use': 'Feed use',
   'seed-start': 'Seed tray',
   irrigation: 'Watering',
-  'rain-gauge': 'Rain gauge reading'
+  'rain-gauge': 'Rain gauge reading',
+  'harvest-disposition': 'Where a harvest went'
 };

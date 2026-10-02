@@ -30,6 +30,7 @@ import { farmZone } from '$lib/climate/zoneSettings.server';
 import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
 import { loadEmergencyContacts } from '$lib/farm/emergencyContacts.server';
 import { listAreas } from '$lib/db/areas';
+import { organicSnapshotLines, type OrganicSnapshotLines } from '$lib/organic/status.server';
 import { listBlocks } from '$lib/db/blocks';
 import {
   activeOwnerName,
@@ -301,7 +302,11 @@ export const SNAPSHOT_TREATMENT_DAYS = 90;
  */
 export const SNAPSHOT_HOLD_HORIZON_MS = 25 * HOUR_MS;
 
-function toSnapshotAnimal(a: Animal, groups: Map<string, AnimalGroupSummary>): SnapshotAnimal {
+function toSnapshotAnimal(
+  a: Animal,
+  groups: Map<string, AnimalGroupSummary>,
+  organic: OrganicSnapshotLines
+): SnapshotAnimal {
   const group = a.groupId ? groups.get(a.groupId) : undefined;
   return {
     id: a.id,
@@ -318,11 +323,15 @@ function toSnapshotAnimal(a: Animal, groups: Map<string, AnimalGroupSummary>): S
     notForSlaughter: a.notForSlaughter,
     housingFieldId: group ? group.housingFieldId : a.housingFieldId,
     microchipId: a.microchipId,
-    feedingNote: a.feedingNote
+    feedingNote: a.feedingNote,
+    organicStatus: organic.line('animal', a.id)
   };
 }
 
-function toSnapshotGroup(g: AnimalGroupSummary): SnapshotAnimalGroup {
+function toSnapshotGroup(
+  g: AnimalGroupSummary,
+  organic: OrganicSnapshotLines
+): SnapshotAnimalGroup {
   return {
     id: g.id,
     name: g.name,
@@ -332,7 +341,8 @@ function toSnapshotGroup(g: AnimalGroupSummary): SnapshotAnimalGroup {
     namedCount: g.namedCount,
     total: g.total,
     foodProducing: g.effectiveFoodProducing,
-    housingFieldId: g.housingFieldId
+    housingFieldId: g.housingFieldId,
+    organicStatus: organic.line('group', g.id)
   };
 }
 
@@ -427,11 +437,14 @@ export async function animalSnapshotPart(windowNow: number): Promise<AnimalSnaps
   const projectedTo = windowNow + SNAPSHOT_HOLD_HORIZON_MS;
   const { projection } = await projectActiveFarm(timeZone, projectedTo);
   const holds = snapshotHolds(projection, windowNow, subjects);
+  const organic = await organicSnapshotLines(windowNow);
   return {
     animals: animalRows
-      .map((a) => toSnapshotAnimal(a, groups))
+      .map((a) => toSnapshotAnimal(a, groups, organic))
       .sort((a, b) => a.id.localeCompare(b.id)),
-    animalGroups: groupRows.map(toSnapshotGroup).sort((a, b) => a.id.localeCompare(b.id)),
+    animalGroups: groupRows
+      .map((g) => toSnapshotGroup(g, organic))
+      .sort((a, b) => a.id.localeCompare(b.id)),
     species,
     animalsLayout: loadAnimalsProfile().layout,
     carePlans: listCarePlansForCards(),
@@ -530,6 +543,7 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     if (m) p.minutesLogged = m;
   }
 
+  const organic = await organicSnapshotLines(windowNow);
   const stockItems = listStockItems();
   const sprayProducts: Record<string, SnapshotSprayProduct> = {};
   for (const item of stockItems) {
@@ -547,7 +561,7 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     rulesVersion: RULES_VERSION,
     origin: opts.origin ?? null,
     locale: opts.locale ?? DEFAULT_LOCALE,
-    areas: listAreas().map(toArea),
+    areas: listAreas().map((a) => ({ ...toArea(a), organicStatus: organic.line('field', a.id) })),
     blocks: listBlocks({ plantings: 'none' })
       .map(toBlock)
       .sort((a, b) => a.id.localeCompare(b.id)),

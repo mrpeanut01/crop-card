@@ -105,6 +105,9 @@
       animalGroupId: linkKind === 'group' ? linkId : null,
       stockLotId: kind === 'expense' ? start.stockLotId : null,
       harvestEventId: kind === 'income' ? start.harvestEventId : null,
+      ...(!start.id && kind === 'income' && start.harvestEventId && start.dispositionId
+        ? { dispositionId: start.dispositionId }
+        : {}),
       enterprise: tagUsed ? enterprise.trim() || null : null,
       quantity: qty,
       unit: unit.trim() || null

@@ -2,7 +2,8 @@
  * /finance/new: add an expense or income. Owner only. Query parameters
  * prefill it: `kind`, `cropId`, `fieldId`, `animalId`, `animalGroupId`,
  * `quantity`, `unit`, plus `stockLotId` ("Record purchase as expense",
- * F2-11) or `harvestEventId` ("Record a sale", F2-15).
+ * F2-11) or `harvestEventId` ("Record a sale", F2-15), with an optional
+ * `dispositionId` ("Also record the money", Phase 33B B-31).
  */
 
 import { error } from '@sveltejs/kit';
@@ -15,6 +16,7 @@ import { entryFormOptions, harvestSummary, lotSummary } from '$lib/finance/formO
 import type { EntryFormValue } from '$lib/finance/formTypes';
 import { liveExpenseForLot } from '$lib/db/ledger';
 import { parseHarvestQuantity } from '$lib/finance/harvestSale';
+import { getHarvestDisposition } from '$lib/db/harvestDispositions';
 
 export const load: PageServerLoad = async (event) => {
   const user = requireMoneyWriter(event);
@@ -81,6 +83,19 @@ export const load: PageServerLoad = async (event) => {
       value.unit = value.unit ?? parsed.unit;
     }
     linkNote = 'A sale from this harvest. Several sales from one harvest are fine.';
+    const disposition = getHarvestDisposition(q.get('dispositionId') ?? '');
+    if (
+      disposition &&
+      disposition.harvestEventId === h.id &&
+      disposition.kind === 'sold' &&
+      !disposition.ledgerEntryId
+    ) {
+      value.dispositionId = disposition.id;
+      value.quantity = disposition.quantity;
+      value.unit = disposition.unit.slice(0, 30);
+      value.occurredAt = disposition.occurredAt;
+      linkNote = `The sale of ${disposition.quantity} ${disposition.unit} from this harvest. Saving links it to where the harvest went.`;
+    }
   }
 
   const year = new Date(value.occurredAt).getUTCFullYear();

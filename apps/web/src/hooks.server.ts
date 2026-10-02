@@ -285,6 +285,9 @@ export function suspendedTenantGate(
     if (pathname.startsWith('/api/records/')) return 'allow';
     if (pathname.startsWith('/api/spray/records/export.')) return 'allow';
     if (pathname === '/api/account/export.json') return 'allow';
+    if (pathname === '/api/organic/pack.zip') return 'allow';
+    if (pathname === '/api/animals/treatments.csv') return 'allow';
+    if (pathname === '/api/animals/treatments.pdf') return 'allow';
   }
   return pathname.startsWith('/api/') ? 'json-402' : 'redirect';
 }

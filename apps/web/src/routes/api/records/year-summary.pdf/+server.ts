@@ -26,6 +26,7 @@ import { RULES_VERSION } from '$lib/safety/version';
 import { APP_VERSION } from '$lib/version';
 import { buildYearSummary } from '$lib/records/yearSummary.server';
 import { PHILOSOPHY_LABELS } from '$lib/season/setup';
+import { animalSectionPdf } from '$lib/records/yearSummaryAnimalsPdf';
 import { identityLabel } from '$lib/identity';
 import { prefsFor } from '$lib/db/userProfile';
 import {
@@ -236,6 +237,10 @@ export const GET: RequestHandler = async (event) => {
         text: `${summary.compliance.calibratedSprayerCount} of ${summary.compliance.sprayerCount} sprayer(s) calibrated · ${summary.compliance.calibratedThisYear} calibrated this year · ${summary.compliance.deconEventsThisYear} decon event(s) this year.`,
         style: 'body'
       },
+
+      ...(summary.animals
+        ? animalSectionPdf(summary.animals, year, (ms) => formatInstant(ms, prefs, 'date'))
+        : []),
 
       {
         text: '\nDeterministic aggregate — read-only over recorded events. Retention: minimum 2 years from occurrence (NFR-05). Records are immutable after the 48-hour lock window (FR-09).',

@@ -140,6 +140,10 @@ function flockCard(
     });
   }
 
+  if (group.organicStatus) {
+    facts.push({ label: 'Organic status', value: group.organicStatus, provenance: 'manual' });
+  }
+
   const groupPlans = sortPlans(plansFor(snapshot, 'group', group.id));
   const memberPlans = members.flatMap((m) =>
     plansFor(snapshot, 'animal', m.id).map((plan) => ({ plan, memberName: animalLabel(m) }))
@@ -179,7 +183,7 @@ function flockCard(
   const provenance: CardProvenance[] = [{ source: 'data', detail: 'your animal records' }];
   if (species) provenance.push({ source: 'plugin', detail: 'species library' });
   provenance.push(...planProvenance(allPlans));
-  if (treated || vet.section) provenance.push({ source: 'manual' });
+  if (treated || vet.section || group.organicStatus) provenance.push({ source: 'manual' });
 
   const noun = species?.groupNoun ?? 'group';
   const key = cardKey('flock', group.id);

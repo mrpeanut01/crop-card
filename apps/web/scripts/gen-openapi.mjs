@@ -58,20 +58,28 @@ import {
 } from '../src/lib/journal/apiSchemas.ts';
 import { JOURNAL_KINDS, JOURNAL_PROVENANCE } from '../src/lib/journal/model.ts';
 import { taskCloseSchema, taskCreateSchema, taskPatchSchema } from '../src/lib/tasks/apiSchemas.ts';
+import { dispositionCreateSchema, dispositionPatchSchema } from '../src/lib/harvest/apiSchemas.ts';
 import {
   carePlanCreateSchema,
   carePlanPatchSchema
 } from '../src/lib/animals/carePlanApiSchemas.ts';
 import {
+  exportWindowQuerySchema,
   fungicideRecordSchema,
   harvestRecordSchema,
   hayCuttingSchema,
   insecticideRecordSchema,
+  organicPackQuerySchema,
   scoutRecordSchema,
   sprayRecordSchema
 } from '../src/lib/records/apiSchemas.ts';
 import { cropPatchSchema } from '../src/lib/crops/apiSchemas.ts';
 import { soilTestCreateSchema } from '../src/lib/fertility/apiSchemas.ts';
+import {
+  organicStatusCreateSchema,
+  organicStatusQuerySchema,
+  treatmentReviewSchema
+} from '../src/lib/organic/apiSchemas.ts';
 import {
   documentLinkCreateSchema,
   documentListQuerySchema,
@@ -99,7 +107,7 @@ import { biofixPutSchema } from '../src/lib/ipm/apiSchemas.ts';
 import { CARD_RECORD_KINDS } from '../src/lib/db/recordKinds.ts';
 import { emergencyContactSchema } from '../src/lib/farm/emergencyContacts.ts';
 import { CLIENT_RECORD_HEADER } from '../src/lib/clientRecordHeader.ts';
-import { feedUseSchema } from '../src/lib/stock/apiSchemas.ts';
+import { feedUseSchema, seedSourcingPatchSchema } from '../src/lib/stock/apiSchemas.ts';
 import {
   seedStartCreateSchema,
   seedStartPatchSchema,
@@ -584,6 +592,107 @@ const paths = {
       'Checks stored moisture against the crop archetype and the pre-harvest interval of recent sprays. Safe to replay from the offline queue with the client record id header.',
     schema: harvestRecordSchema
   }),
+
+  '/api/harvest/{id}/dispositions': {
+    get: {
+      summary: 'List where a harvest went',
+      description:
+        'Every member can read them. The ledger link (`ledgerEntryId`, `sale`) is shown to the owner only and is null for everyone else.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Harvest record id.')],
+      responses: {
+        200: jsonResponse('Dispositions, oldest first.', {
+          type: 'object',
+          required: ['dispositions'],
+          properties: { dispositions: { type: 'array', items: { type: 'object' } } }
+        }),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('No such harvest record on this farm.')
+      }
+    },
+    post: {
+      summary: 'Record where a harvest went',
+      description:
+        'Owners and helpers; inspectors are read-only. One of `sold`, `kept`, `donated` or `discarded`, with its own quantity and unit. `recipient` is only for sold and donated; `soldAsOrganic` only for sold, and stored as null while the farm has no organic status on file. The date runs from the start of the harvest day (`BEFORE_HARVEST`) to now (`IN_THE_FUTURE`) and is gated by the season close-out. A sale marked sold as organic from a block whose status at harvest was not organic saves with an `organicNotice`; dispositions adding up to more than the harvest in the same unit save with a `quantityNotice`. Never a hold fact. Locks 48 hours after its date. The `harvest-disposition` offline queue kind replays here with the client record id header.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Harvest record id.'), clientRecordRef],
+      requestBody: jsonBody(dispositionCreateSchema),
+      responses: {
+        200: jsonResponse(
+          'A replay of a client record id that was already saved.',
+          DUPLICATE_SCHEMA
+        ),
+        201: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['disposition'],
+          properties: {
+            disposition: { type: 'object' },
+            organicNotice: { type: ['string', 'null'] },
+            quantityNotice: { type: ['string', 'null'] }
+          }
+        }),
+        400: errorResponse('Invalid body, `BEFORE_HARVEST` or `IN_THE_FUTURE`.'),
+        ...AUTH_ERRORS,
+        404: errorResponse('No such harvest record on this farm.'),
+        422: errorResponse('`SEASON_CLOSED`: the date is inside a closed season.'),
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
+      }
+    }
+  },
+
+  '/api/harvest/dispositions/{id}': {
+    patch: {
+      summary: 'Change where a harvest went',
+      description:
+        'Owners and helpers inside the 48-hour lock; after it every field change is refused with 409 `RECORD_LOCKED`. `ledgerEntryId` links or unlinks a live ledger entry and is owner only (403 `OWNER_ONLY`, `NOT_WHILE_IMPERSONATING`), allowed after the lock. Online only.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Disposition id.')],
+      requestBody: jsonBody(dispositionPatchSchema),
+      responses: {
+        200: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['disposition'],
+          properties: {
+            disposition: { type: 'object' },
+            organicNotice: { type: ['string', 'null'] },
+            quantityNotice: { type: ['string', 'null'] }
+          }
+        }),
+        400: errorResponse(
+          "Invalid body, `BEFORE_HARVEST`, `IN_THE_FUTURE` or another Owner's ledger entry."
+        ),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Inspectors are read-only; `OWNER_ONLY` for the ledger link.'),
+        404: errorResponse('No such disposition on this farm.'),
+        409: errorResponse('`RECORD_LOCKED`: 48 hours after its date.'),
+        422: errorResponse('`SEASON_CLOSED`: the date is inside a closed season.')
+      }
+    },
+    delete: {
+      summary: 'Delete where a harvest went',
+      description:
+        'Owners and helpers inside the 48-hour lock, with no trace. After it only the owner, with `force=true` and a `reason` (3 to 500 characters), and a tombstone keeps the record. Never changes a hold.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        idPath('id', 'Disposition id.'),
+        { name: 'force', in: 'query', required: false, schema: { type: 'string', enum: ['true'] } },
+        { name: 'reason', in: 'query', required: false, schema: { type: 'string', maxLength: 500 } }
+      ],
+      responses: {
+        200: jsonResponse('Deleted.', {
+          type: 'object',
+          properties: { removed: { type: 'object' }, tombstone: { type: 'boolean' } }
+        }),
+        400: errorResponse('`REASON_REQUIRED` for a locked record.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Inspectors are read-only; `OWNER_ONLY` for a locked record.'),
+        404: errorResponse('No such disposition on this farm.'),
+        409: errorResponse('`RECORD_LOCKED` without `force`.')
+      }
+    }
+  },
 
   '/api/scout/record': recordEndpoint({
     summary: 'Record a scouting observation',
@@ -1430,6 +1539,37 @@ const paths = {
     }
   },
 
+  '/api/stock/{id}/lots/{lotId}/seed-sourcing': {
+    patch: {
+      summary: 'Record organic seed sourcing on a seed lot',
+      description:
+        "Owner only (cookie or the owner's Bearer token); refused while impersonating (403 `NOT_WHILE_IMPERSONATING`). Replaces the lot's owner-entered seed status (`organic`, `untreated`, `treated`, `unknown`, or null for not recorded), the suppliers checked (at most 30, each a supplier, a farm-local date not after today and what was found) and a commercial unavailability note. Seed lots only (400 `NOT_SEED`). The app records what was checked and never judges whether a search was enough. Search evidence attaches through `POST /api/documents/{id}/links` with subject `stock-lot`. Not gated by the season close-out.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Stock item id.'), idPath('lotId', 'Stock lot id.')],
+      requestBody: jsonBody(seedSourcingPatchSchema),
+      responses: {
+        200: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['sourcing'],
+          properties: {
+            sourcing: {
+              type: 'object',
+              properties: {
+                status: { type: ['string', 'null'] },
+                sourcesChecked: { type: 'array', items: { type: 'object' } },
+                unavailabilityNote: { type: ['string', 'null'] }
+              }
+            }
+          }
+        }),
+        400: errorResponse(
+          'Invalid body, a supplier check dated after today, or a lot that is not seed (`NOT_SEED`).'
+        ),
+        ...AUTH_ERRORS,
+        404: errorResponse('No such lot on this stock item for the active Owner.')
+      }
+    }
+  },
   '/api/seed-starts': {
     get: {
       summary: "List a planting's seed-starting trays",
@@ -2248,6 +2388,134 @@ const paths = {
     }
   },
 
+  '/api/organic/pack.zip': {
+    get: {
+      summary: 'Download the certifier pack',
+      description:
+        'Phase 33B. A store-only ZIP of records for an organic inspector: `README.txt`, `summary.pdf`, `01-statuses.csv` (every growing Area, block, animal and group with its owner-entered status history, never windowed), `02-activity.csv`, `03-inputs.csv` (EPA registration numbers and the library compliance flags as stored, with provenance), `04-seed-sourcing.csv`, `05-animal-treatments.csv`, `06-harvests.csv` and `07-documents.csv`, plus the linked files under `documents/` with `documents=1`. Every CSV starts with the one-cell row "Prepared from records kept in CropCard. This is not a certification." and every PDF page carries it. `from` and `to` are farm-local days, both required, at most 10 years apart. Owner (cookie or Bearer) and inspector; helpers 403. Only an owner download carries sale amounts; an inspector never gets a money document. Free on every plan and never gated by the season close-out or a billing suspension. One build per farm at a time.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: Object.entries(fromZod(organicPackQuerySchema).properties ?? {}).map(
+        ([name, schema]) => ({ name, in: 'query', required: name !== 'documents', schema })
+      ),
+      responses: {
+        200: {
+          description: 'The pack.',
+          content: { 'application/zip': { schema: { type: 'string', format: 'binary' } } }
+        },
+        400: errorResponse('A missing or bad `from` or `to`; `issues[0].path` names it.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`OWNER_OR_INSPECTOR_ONLY`.'),
+        429: errorResponse(
+          '`PACK_BUSY`: a pack for this farm is already being built. `Retry-After: 10`.'
+        )
+      }
+    }
+  },
+
+  '/api/animals/treatments.csv': {
+    get: {
+      summary: 'Animal treatment log as CSV',
+      description:
+        'Phase 33B. One header row, then one row per dose of a treatment, vaccine or wormer given from `from` to `to` (farm-local days): date, course end, animal or group, species, product, approval number, lot, dose, route, given by, vet, label use, withdrawal end and its source per food, record state (locked, voided, deleted but still counted as given, owner-corrected), the saved-late label and the organic review outcome when there is one. Withdrawal dates are the ones the health page shows. Owner and inspector; helpers 403.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: Object.entries(fromZod(exportWindowQuerySchema).properties ?? {}).map(
+        ([name, schema]) => ({ name, in: 'query', required: true, schema })
+      ),
+      responses: {
+        200: {
+          description: 'The log.',
+          content: { 'text/csv': { schema: { type: 'string' } } }
+        },
+        400: errorResponse('A missing or bad `from` or `to`; `issues[0].path` names it.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`OWNER_OR_INSPECTOR_ONLY`.')
+      }
+    }
+  },
+
+  '/api/animals/treatments.pdf': {
+    get: {
+      summary: 'Animal treatment log as PDF',
+      description:
+        'Phase 33B. The same rows as `treatments.csv`; every page footer reads "Prepared from records kept in CropCard." Owner and inspector; helpers 403.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: Object.entries(fromZod(exportWindowQuerySchema).properties ?? {}).map(
+        ([name, schema]) => ({ name, in: 'query', required: true, schema })
+      ),
+      responses: {
+        200: {
+          description: 'The log.',
+          content: { 'application/pdf': { schema: { type: 'string', format: 'binary' } } }
+        },
+        400: errorResponse('A missing or bad `from` or `to`; `issues[0].path` names it.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`OWNER_OR_INSPECTOR_ONLY`.')
+      }
+    }
+  },
+
+  '/api/organic/status': {
+    get: {
+      summary: 'Owner-entered organic status history',
+      description:
+        'Every organic status entry of the active Owner, oldest first, optionally for one subject, with the live documents linked to each. Owners, helpers and inspectors can read it. A subject with no entry has no organic status; nothing is inferred.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: Object.entries(fromZod(organicStatusQuerySchema).properties ?? {}).map(
+        ([name, schema]) => ({ name, in: 'query', required: false, schema })
+      ),
+      responses: {
+        200: jsonResponse('The entries.', {
+          type: 'object',
+          required: ['entries'],
+          properties: { entries: { type: 'array', items: { type: 'object' } } }
+        }),
+        400: errorResponse('Invalid query.'),
+        401: errorResponse('Authentication required.')
+      }
+    },
+    post: {
+      summary: 'Add an organic status entry',
+      description:
+        "Owner only, by cookie session or the owner's API token; helpers and inspectors get 403 `OWNER_ONLY`, a superadmin impersonating the farm 403 `NOT_WHILE_IMPERSONATING`. Entries are append-only: a correction is a new entry, and the latest saved entry wins on the same day. `effectiveOn` is a farm-local day from 1970-01-01 to one year ahead; a future entry applies from that day. Only growing Areas (field, garden, greenhouse, orchard, pasture) take a status; any other kind is 400 `NOT_GROWING_AREA`. `documentId` names a live, non-photo document uploaded first, linked in the same transaction. Not gated by the season close-out.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(organicStatusCreateSchema),
+      responses: {
+        201: jsonResponse('The saved entry.', {
+          type: 'object',
+          required: ['entry'],
+          properties: { entry: { type: 'object' } }
+        }),
+        400: errorResponse(
+          'Invalid body, a subject the active Owner does not have, or `NOT_GROWING_AREA`.'
+        ),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`OWNER_ONLY` or `NOT_WHILE_IMPERSONATING`.'),
+        409: errorResponse('`DOCUMENT_DELETED` or `PHOTO_DOCUMENT`.')
+      }
+    }
+  },
+
+  '/api/organic/treatment-reviews': {
+    post: {
+      summary: "Answer whether a treatment ends an animal's organic status",
+      description:
+        'Owner only (same gate as organic status entries). One answer per treatment, which the owner may change for 48 hours after first giving it; after that 409 `REVIEW_LOCKED`. A treatment that reached no animal or group under organic management, or one the library already decides, is 409 `REVIEW_NOT_NEEDED`. The app never decides that a treatment leaves status alone; only this answer can. Not gated by the season close-out; online only.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(treatmentReviewSchema),
+      responses: {
+        200: jsonResponse('The changed answer.', { type: 'object' }),
+        201: jsonResponse('The saved answer and the treatment outcome.', {
+          type: 'object',
+          properties: { review: { type: 'object' }, treatment: { type: ['object', 'null'] } }
+        }),
+        400: errorResponse('Invalid body or a treatment the active Owner does not have.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`OWNER_ONLY` or `NOT_WHILE_IMPERSONATING`.'),
+        409: errorResponse('`REVIEW_LOCKED` or `REVIEW_NOT_NEEDED`.')
+      }
+    }
+  },
+
   '/api/documents': {
     post: {
       summary: "Upload a file to the farm's document vault",
@@ -2941,7 +3209,7 @@ const paths = {
     post: {
       summary: 'Add an expense or income',
       description:
-        'Owner only; impersonation may not write. Link at most one of crop, Area (with an optional bed inside it), animal or group; `stockLotId` only on an expense and `harvestEventId` only on income. A lot may have one live purchase expense (409 `LOT_ALREADY_EXPENSED`). The date may be at most a day ahead. Never gated by the season close-out. Writes an audit row in the same transaction.',
+        'Owner only; impersonation may not write. Link at most one of crop, Area (with an optional bed inside it), animal or group; `stockLotId` only on an expense and `harvestEventId` only on income. A lot may have one live purchase expense (409 `LOT_ALREADY_EXPENSED`). The date may be at most a day ahead. Never gated by the season close-out. Writes an audit row in the same transaction. `dispositionId` (income from a harvest) links the new sale to that record of where the harvest went, in the same transaction, when it belongs to the same harvest and has no sale yet (`dispositionLinked`).',
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
       requestBody: jsonBody(ledgerEntryCreateSchema),
       responses: {

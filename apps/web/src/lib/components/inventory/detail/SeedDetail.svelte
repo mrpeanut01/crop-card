@@ -14,12 +14,25 @@
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
   import LotQuantities from '../LotQuantities.svelte';
+  import SeedSourcingSection from '../SeedSourcingSection.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatStockQuantity } from '$lib/stock/units';
   import type { SeedDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
 
-  type Props = Omit<SeedDetailPayload, 'type'>;
-  const { item, lots, movements, plugin }: Props = $props();
+  type Props = Omit<
+    SeedDetailPayload,
+    'type' | 'seedSourcing' | 'showSeedSourcing' | 'canEditSeedSourcing'
+  > &
+    Partial<Pick<SeedDetailPayload, 'seedSourcing' | 'showSeedSourcing' | 'canEditSeedSourcing'>>;
+  const {
+    item,
+    lots,
+    movements,
+    plugin,
+    seedSourcing = {},
+    showSeedSourcing = false,
+    canEditSeedSourcing = false
+  }: Props = $props();
 
   const stockQty = (v: number, digits?: number) =>
     formatStockQuantity(v, item.defaultUnit, currentPrefs(), { digits, category: item.category });
@@ -73,6 +86,26 @@
     <InvSection title="Quantity" kicker="On hand, ordered, planned">
       <LotQuantities itemId={item.id} unit={item.defaultUnit} category={item.category} {lots} />
     </InvSection>
+
+    {#if showSeedSourcing}
+      <InvSection title="Organic seed sourcing" kicker="Owner-entered, per lot">
+        {#if lots.length === 0}
+          <p class="empty">Add a lot above to record how this seed was sourced.</p>
+        {:else}
+          {#each lots as lot (lot.id)}
+            {@const s = seedSourcing[lot.id]}
+            {#if s}
+              <SeedSourcingSection
+                itemId={item.id}
+                {lot}
+                sourcing={s}
+                canEdit={canEditSeedSourcing}
+              />
+            {/if}
+          {/each}
+        {/if}
+      </InvSection>
+    {/if}
 
     <InvSection title="Saving / sowing history" kicker="Last 8">
       {#if movements.length === 0}

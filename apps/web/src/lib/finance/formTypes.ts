@@ -30,6 +30,8 @@ export interface EntryFormValue {
   animalGroupId: string | null;
   stockLotId: string | null;
   harvestEventId: string | null;
+  /** "Also record the money" from a disposition (Phase 33B, B-31). */
+  dispositionId?: string | null;
   enterprise: string | null;
   quantity: number | null;
   unit: string | null;

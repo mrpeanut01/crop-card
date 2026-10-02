@@ -15,6 +15,7 @@
   import SetupPlantingBackfill from '$lib/components/setup/SetupPlantingBackfill.svelte';
   import type { SetupPlantingResult } from '$lib/setup/types';
   import { RECORD_SALE_OFFLINE, recordSaleHref, type SaleLink } from '$lib/finance/harvestSale';
+  import DispositionPanel from '$lib/components/harvest/DispositionPanel.svelte';
 
   let { data } = $props();
 
@@ -31,6 +32,14 @@
   let lastSale = $state<(SaleLink & { name: string }) | null>(null);
   let saleQueued = $state<string | null>(null);
   let online = $state(true);
+  // Phase 33B (B-36): the "Where did it go?" sheet, for one saved harvest.
+  let dispositionFor = $state<string | null>(null);
+  const dispositionHarvest = $derived(
+    dispositionFor ? (data.recordedHarvests.find((h) => h.id === dispositionFor) ?? null) : null
+  );
+  function whereCount(id: string): number {
+    return data.dispositions[id]?.length ?? 0;
+  }
 
   $effect(() => {
     online = navigator.onLine !== false;
@@ -271,13 +280,33 @@
 {#if lastNotice}
   <Banner tone="wheat">{lastNotice}</Banner>
 {/if}
-{#if data.canRecordSale && (lastSale || saleQueued)}
-  <div class="sale-strip" data-testid="record-sale">
-    <span>Harvest saved{lastSale ? ` for ${lastSale.name}` : ''}. Sold some?</span>
-    {#if lastSale && online}
-      <a class="sale-link" href={recordSaleHref(lastSale)}>Record a sale</a>
-    {:else}
-      <span class="sale-offline">{RECORD_SALE_OFFLINE}</span>
+{#if lastSale || saleQueued}
+  <div class="sale-strip" data-testid="harvest-saved-strip">
+    <span
+      >Harvest saved{lastSale ? ` for ${lastSale.name}` : ''}.{data.canRecordSale
+        ? ' Sold some?'
+        : ''}</span
+    >
+    {#if lastSale && data.canWriteRecords}
+      <button
+        type="button"
+        class="sale-link"
+        data-testid="where-did-it-go"
+        onclick={() => (dispositionFor = lastSale?.harvestEventId ?? null)}>Where did it go?</button
+      >
+    {:else if saleQueued && data.canWriteRecords}
+      <span class="sale-offline" data-testid="where-after-sync"
+        >Add where it went once this harvest syncs.</span
+      >
+    {/if}
+    {#if data.canRecordSale}
+      <span class="record-sale" data-testid="record-sale">
+        {#if lastSale && online}
+          <a class="sale-link" href={recordSaleHref(lastSale)}>Record a sale</a>
+        {:else}
+          <span class="sale-offline">{RECORD_SALE_OFFLINE}</span>
+        {/if}
+      </span>
     {/if}
   </div>
 {/if}
@@ -525,44 +554,86 @@
 
   <section class="card">
     <h2>Recorded harvests</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>When</th>
-          <th>Block</th>
-          <th>Variety</th>
-          <th>Quantity</th>
-          <th>Lot</th>
-          <th>Curing</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each data.recordedHarvests as h (h.id)}
+    <div class="table-scroll">
+      <table class="recorded">
+        <thead>
           <tr>
-            <td>{fmt.instant(h.occurredAt, 'date')}</td>
-            <td>{h.blockName ?? `(deleted block)`}</td>
-            <td><code>{h.cropPluginId}</code></td>
-            <td>{h.quantity ?? '—'}</td>
-            <td>{h.lotNumber ?? '—'}</td>
-            <td>
-              {#if h.curing}
-                <span class="phase-badge phase-{h.curing.phase}">
-                  {h.curing.phase === 'in-progress'
-                    ? `${h.curing.daysRemaining}d → ready`
-                    : h.curing.phase === 'ready'
-                      ? `ready (${h.curing.daysRemaining}d left)`
-                      : 'overdue — store now'}
-                </span>
-              {:else}
-                <span class="muted">no curing data</span>
-              {/if}
-            </td>
+            <th>When</th>
+            <th>Block</th>
+            <th>Variety</th>
+            <th>Quantity</th>
+            <th>Lot</th>
+            <th>Curing</th>
+            <th>Where it went</th>
           </tr>
-        {/each}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {#each data.recordedHarvests as h (h.id)}
+            <tr>
+              <td data-label="When">{fmt.instant(h.occurredAt, 'date')}</td>
+              <td data-label="Block">{h.blockName ?? `(deleted block)`}</td>
+              <td data-label="Variety"><code>{h.cropPluginId}</code></td>
+              <td data-label="Quantity">{h.quantity ?? '—'}</td>
+              <td data-label="Lot">{h.lotNumber ?? '—'}</td>
+              <td data-label="Curing">
+                {#if h.curing}
+                  <span class="phase-badge phase-{h.curing.phase}">
+                    {h.curing.phase === 'in-progress'
+                      ? `${h.curing.daysRemaining}d → ready`
+                      : h.curing.phase === 'ready'
+                        ? `ready (${h.curing.daysRemaining}d left)`
+                        : 'overdue — store now'}
+                  </span>
+                {:else}
+                  <span class="muted">no curing data</span>
+                {/if}
+              </td>
+              <td data-label="Where it went">
+                <button
+                  type="button"
+                  class="where-btn"
+                  data-testid="where-it-went-{h.id}"
+                  onclick={() => (dispositionFor = h.id)}
+                >
+                  {whereCount(h.id) > 0
+                    ? `${whereCount(h.id)} recorded`
+                    : data.canWriteRecords
+                      ? 'Add'
+                      : 'None'}
+                </button>
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
   </section>
 {/if}
+
+<SetupSheet
+  open={dispositionHarvest !== null}
+  kicker="Harvest"
+  title="Where did it go?"
+  onClose={() => (dispositionFor = null)}
+>
+  {#if dispositionHarvest}
+    <DispositionPanel
+      harvest={{
+        id: dispositionHarvest.id,
+        cropId: dispositionHarvest.cropId ?? null,
+        occurredAt: dispositionHarvest.occurredAt,
+        quantity: dispositionHarvest.quantity ?? null
+      }}
+      dispositions={data.dispositions[dispositionHarvest.id] ?? []}
+      canWrite={data.canWriteRecords}
+      isOwner={data.isOwner}
+      canRecordSale={data.canRecordSale}
+      askSoldAsOrganic={data.askSoldAsOrganic}
+      {online}
+      onChanged={() => invalidateAll()}
+    />
+  {/if}
+</SetupSheet>
 
 <SetupSheet
   open={plantingSheetOpen}
@@ -607,6 +678,64 @@
   }
   .sale-offline {
     color: var(--color-ink-soft);
+  }
+  button.sale-link {
+    background: var(--color-paper);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .record-sale {
+    display: inline-flex;
+    align-items: center;
+  }
+  .table-scroll {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  @media (max-width: 640px) {
+    .recorded thead {
+      display: none;
+    }
+    .recorded,
+    .recorded tbody,
+    .recorded tr,
+    .recorded td {
+      display: block;
+      width: 100%;
+    }
+    .recorded tr {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--color-divider);
+    }
+    .recorded td {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 0;
+      padding: 4px 0;
+      overflow-wrap: anywhere;
+    }
+    .recorded td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: var(--color-ink-soft, inherit);
+      flex: none;
+    }
+  }
+  .where-btn {
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0 12px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 8px);
+    background: var(--color-paper);
+    color: var(--color-forest-deep);
+    font: inherit;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
   }
   .panel-head {
     display: flex;

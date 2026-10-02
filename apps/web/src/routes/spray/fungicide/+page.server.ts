@@ -22,6 +22,7 @@ import { loadSprayPastureContext } from '$lib/server/pastureAnimals';
 import { listSprayers } from '$lib/server/sprayers';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { canSetUp, setupAreas } from '$lib/server/setupContext';
+import { organicBlocksForNotice } from '$lib/server/organicNotice';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
   const cropId = url.searchParams.get('crop');
@@ -47,6 +48,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         ratePerAcre: p.ratePerAcre,
         gpaCalibration: p.gpaCalibration,
         deconRequired: p.deconRequired ?? false,
+        complianceFlags: p.complianceFlags,
         epaRegistrationNumber: null as string | null
       };
     })
@@ -74,6 +76,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   return {
     fungicides: fungicidePlugins,
     pasture: await loadSprayPastureContext(blocks, registry),
+    organicBlocks: organicBlocksForNotice(blocks.map((b) => b.id)),
     priorFungicideByBlock,
     blocks: blocks.map((b) => ({
       id: b.id,

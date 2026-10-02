@@ -1740,6 +1740,12 @@ export const animalLabelUseSchema = z.strictObject({
 });
 export type AnimalLabelUse = z.infer<typeof animalLabelUseSchema>;
 
+export const ANIMAL_ORGANIC_USE_STATUSES = [
+  "allowed",
+  "allowed-with-conditions",
+  "not-allowed",
+] as const;
+
 export const animalHealthPluginSchema = z
   .strictObject({
     ...pluginBase.shape,
@@ -1757,6 +1763,17 @@ export const animalHealthPluginSchema = z
       .optional(),
     marketingStatus: z.enum(["otc", "rx", "vfd"]),
     labelUses: z.array(animalLabelUseSchema).min(1).max(40),
+    /** Phase 33B: how 7 CFR 205.603 treats the product, from research
+     *  Task R2. Needs a quote under `entries.<pluginId>.organicUse` in
+     *  animal-health-sources.json. Shown as a fact; it never decides that
+     *  a treatment leaves organic status alone (O-09). */
+    organicUse: z
+      .strictObject({
+        status: z.enum(ANIMAL_ORGANIC_USE_STATUSES),
+        citation: z.string().trim().min(3).max(60),
+        conditions: z.string().trim().min(1).max(1000).optional(),
+      })
+      .optional(),
     notes: z.string().max(1000).optional(),
   })
   .refine(

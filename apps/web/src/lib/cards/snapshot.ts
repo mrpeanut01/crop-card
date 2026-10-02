@@ -14,8 +14,10 @@ import type { Footprint, SpacingPattern } from '$lib/farm/footprint';
 import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/soilInterpret';
 
 /** 2 since 32D: animals, flocks, care plans and precomputed holds.
- *  3 since 32E: open seed-starting trays on each planting. */
-export const FARM_SNAPSHOT_VERSION = 3 as const;
+ *  3 since 32E: open seed-starting trays on each planting.
+ *  4 since 33B: the owner-entered organic status line on Areas, animals
+ *  and groups. */
+export const FARM_SNAPSHOT_VERSION = 4 as const;
 
 export type SnapshotProvenance = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
@@ -38,6 +40,9 @@ export interface SnapshotArea {
    *  typed value. Null when there are no acres. */
   acresSource: SnapshotAcresSource | null;
   notes: string | null;
+  /** 33B (B-14, B-16): the owner-entered status line, or null when the
+   *  Area has no entry. Absent on bundles saved before version 4. */
+  organicStatus?: string | null;
 }
 
 export type SnapshotAcresSource = 'geometry' | 'dimensions' | 'typed';
@@ -334,6 +339,8 @@ export interface SnapshotAnimal {
   housingFieldId: string | null;
   microchipId: string | null;
   feedingNote: string | null;
+  /** 33B: the owner-entered status line, or null. */
+  organicStatus?: string | null;
 }
 
 /** An active herd, flock or litter. */
@@ -350,6 +357,8 @@ export interface SnapshotAnimalGroup {
   /** The group's flag or any active member's. */
   foodProducing: boolean;
   housingFieldId: string | null;
+  /** 33B: the owner-entered status line, or null. */
+  organicStatus?: string | null;
 }
 
 export type SnapshotCareKind =
@@ -417,7 +426,7 @@ export interface SnapshotAreaHold {
 }
 
 export interface FarmSnapshot {
-  version: typeof FARM_SNAPSHOT_VERSION | 2 | 1;
+  version: typeof FARM_SNAPSHOT_VERSION | 3 | 2 | 1;
   ownerId: string;
   farmName: string | null;
   generatedAt: number;

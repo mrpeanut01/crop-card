@@ -20,6 +20,8 @@ import { _requestSchema as sprayRecord } from '../spray/record/+server';
 import { _requestSchema as insecticideRecord } from '../insecticide/record/+server';
 import { _requestSchema as fungicideRecord } from '../fungicide/record/+server';
 import { _requestSchema as harvestRecord } from '../harvest/record/+server';
+import { _requestSchema as dispositionCreate } from '../harvest/[id]/dispositions/+server';
+import { _requestSchema as dispositionPatch } from '../harvest/dispositions/[id]/+server';
 import { _requestSchema as scoutRecord } from '../scout/record/+server';
 import { _requestSchema as hayCutting } from '../hay/cuttings/+server';
 import { _requestSchema as mapFeatureCreate } from '../map-features/+server';
@@ -49,7 +51,13 @@ import { _requestSchema as waterTarget } from '../irrigation/target/+server';
 import { _requestSchema as rainGauge } from '../rain-gauge/+server';
 import { _requestSchema as ledgerCreate } from '../finance/entries/+server';
 import { _requestSchema as ledgerPatch } from '../finance/entries/[id]/+server';
+import { _requestSchema as seedSourcingPatch } from '../stock/[id]/lots/[lotId]/seed-sourcing/+server';
 import { _requestSchema as labourRate } from '../finance/labour-rate/+server';
+import { _requestSchema as organicStatus } from '../organic/status/+server';
+import { _requestSchema as organicReview } from '../organic/treatment-reviews/+server';
+import { _requestSchema as organicPack } from '../organic/pack.zip/+server';
+import { _requestSchema as treatmentLogCsv } from '../animals/treatments.csv/+server';
+import { _requestSchema as treatmentLogPdf } from '../animals/treatments.pdf/+server';
 
 interface Operation {
   parameters?: { $ref?: string; name?: string; in?: string }[];
@@ -81,6 +89,7 @@ function generated(schema: z.ZodType): Record<string, unknown> {
 describe('openapi.json', () => {
   it.each([
     ['/api/fields', 'post', fieldCreate],
+    ['/api/stock/{id}/lots/{lotId}/seed-sourcing', 'patch', seedSourcingPatch],
     ['/api/fields/{id}', 'patch', fieldPatch],
     ['/api/blocks', 'post', blockCreate],
     ['/api/blocks/{id}', 'patch', blockPatch],
@@ -95,6 +104,8 @@ describe('openapi.json', () => {
     ['/api/insecticide/record', 'post', insecticideRecord],
     ['/api/fungicide/record', 'post', fungicideRecord],
     ['/api/harvest/record', 'post', harvestRecord],
+    ['/api/harvest/{id}/dispositions', 'post', dispositionCreate],
+    ['/api/harvest/dispositions/{id}', 'patch', dispositionPatch],
     ['/api/scout/record', 'post', scoutRecord],
     ['/api/hay/cuttings', 'post', hayCutting],
     ['/api/map-features', 'post', mapFeatureCreate],
@@ -126,7 +137,9 @@ describe('openapi.json', () => {
     ['/api/finance/entries/{id}', 'patch', ledgerPatch],
     ['/api/finance/labour-rate', 'put', labourRate],
     ['/api/documents/{id}/links', 'post', documentLink],
-    ['/api/fertility/soil-tests/{id}', 'patch', soilTestDocument]
+    ['/api/fertility/soil-tests/{id}', 'patch', soilTestDocument],
+    ['/api/organic/status', 'post', organicStatus],
+    ['/api/organic/treatment-reviews', 'post', organicReview]
   ] as const)('%s %s publishes the schema the route validates with', (path, method, schema) => {
     expect(published(path, method)).toEqual(generated(schema));
   });
@@ -166,6 +179,18 @@ describe('openapi.json', () => {
     const schemas = (doc.components as unknown as { schemas: Record<string, unknown> }).schemas;
     expect(schemas.DocumentMeta).toBeDefined();
     expect(JSON.stringify(schemas.DocumentMeta)).not.toContain('storage');
+  });
+
+  it.each([
+    ['/api/organic/pack.zip', organicPack],
+    ['/api/animals/treatments.csv', treatmentLogCsv],
+    ['/api/animals/treatments.pdf', treatmentLogPdf]
+  ] as const)('%s publishes the query the route validates with (33B, B4)', (path, schema) => {
+    const params = doc.paths[path]?.get?.parameters ?? [];
+    const names = params.filter((p) => p.in === 'query').map((p) => p.name);
+    expect(names.sort()).toEqual(Object.keys(schema.shape).sort());
+    const responses = JSON.stringify(doc.paths[path].get.responses);
+    expect(responses).toContain('OWNER_OR_INSPECTOR_ONLY');
   });
 
   it('lists the Phase 32F task reads', () => {

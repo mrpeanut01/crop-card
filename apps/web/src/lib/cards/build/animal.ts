@@ -117,6 +117,9 @@ function animalCard(
     opts.now
   );
   const facts: CardFact[] = base.map((f) => ({ ...f, provenance: FACT_PROVENANCE[f.label] ?? 'data' }));
+  if (animal.organicStatus) {
+    facts.push({ label: 'Organic status', value: animal.organicStatus, provenance: 'manual' });
+  }
   if (!pet) {
     facts.push({
       label: 'Food animal',
@@ -170,7 +173,13 @@ function animalCard(
   const provenance: CardProvenance[] = [{ source: 'data', detail: 'your animal records' }];
   if (species) provenance.push({ source: 'plugin', detail: 'species library' });
   provenance.push(...planProvenance(plans));
-  if (treatments.length || vet.section || animal.feedingNote || animal.microchipId) {
+  if (
+    treatments.length ||
+    vet.section ||
+    animal.feedingNote ||
+    animal.microchipId ||
+    animal.organicStatus
+  ) {
     provenance.push({ source: 'manual' });
   }
 

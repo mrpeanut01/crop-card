@@ -309,6 +309,33 @@ describe('feed use (D1-16)', () => {
   });
 });
 
+describe('harvest disposition (Phase 33B, B-34)', () => {
+  it('routes to its harvest, keeps the id out of the body and replays once', async () => {
+    const sent = installServer();
+    await enqueue(
+      'harvest-disposition',
+      { harvestEventId: 'h_1', kind: 'sold', quantity: 4, unit: 'lb' },
+      'rec-disp'
+    );
+    const result = await drainQueue();
+    expect(result.succeeded).toEqual(['rec-disp']);
+    expect(sent).toHaveLength(1);
+    expect(sent[0].url).toBe('/api/harvest/h_1/dispositions');
+    expect(sent[0].body).toMatchObject({ kind: 'sold', quantity: 4, unit: 'lb' });
+    expect(sent[0].body.harvestEventId).toBeUndefined();
+    expect(typeof sent[0].body.occurredAt).toBe('number');
+    const again = await drainQueue();
+    expect(again.succeeded).toEqual([]);
+    expect(sent).toHaveLength(1);
+  });
+
+  it('never builds a path from an unsafe id', () => {
+    expect(
+      endpointForRecord({ kind: 'harvest-disposition', payload: { harvestEventId: '../x' } })
+    ).toBe('/api/harvest/_/dispositions');
+  });
+});
+
 describe('seed-start germination (E1-18)', () => {
   it('routes to its tray and keeps the tray id out of the body', async () => {
     const sent = installServer();

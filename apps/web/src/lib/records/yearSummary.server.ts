@@ -36,6 +36,7 @@ import {
   type SprayApplicationRow,
   type YearSummaryForViewer
 } from './yearSummary';
+import { buildYearAnimalSection } from './yearSummaryAnimals.server';
 
 const FILTERABLE_PLUGIN_TYPES = new Set(['herbicide', 'insecticide', 'fungicide', 'fertilizer']);
 
@@ -182,7 +183,8 @@ export async function buildYearSummary(
     })),
     acresForBlock: (blockId) => acresByBlock.get(blockId) ?? 0,
     archetypeForPlugin: (cropPluginId) => archetypeForPlugin(registry, cropPluginId),
-    productAllowed: (productId) => productAllowedUnder(registry, productId, philosophy)
+    productAllowed: (productId) => productAllowedUnder(registry, productId, philosophy),
+    animals: await buildYearAnimalSection({ fromMs, toMs })
   });
   return opts.includeCosts ? summary : { ...summary, inputCosts: null };
 }

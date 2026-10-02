@@ -25,6 +25,8 @@
     type CompatibilityState
   } from '$lib/components/spray/SprayContextStrip.svelte';
   import { pastureNotice } from '$lib/farm/pastureNotice';
+  import OrganicInputNotice from '$lib/components/organic/OrganicInputNotice.svelte';
+  import { organicInputClass } from '$lib/organic/inputCompliance';
 
   // Stepper + context-strip $derived inputs computed below the rest of
   // the herbicide flow's state (selectedBlocks / sprayer / herbicides /
@@ -724,6 +726,15 @@
       context: data.pasture
     })
   );
+  const organicProducts = $derived(
+    data.allHerbicides
+      .filter((h) => selectedHerbicideIds.includes(h.pluginId))
+      .map((h) => ({
+        name: h.displayName,
+        inputClass: organicInputClass({ type: 'herbicide', complianceFlags: h.complianceFlags })
+      }))
+  );
+  const blockNames = $derived(Object.fromEntries(data.blocks.map((b) => [b.id, b.label])));
   const ctxBlocks = $derived<SprayContextBlock[]>(
     selectedBlocks.map((b) => ({ id: b.id, label: b.label, acres: b.acres ?? 0 }))
   );
@@ -812,6 +823,12 @@
     cropSubtitle={ctxCropSubtitle}
     compatibility={ctxCompatibility}
     pastureNotice={ctxPasture}
+  />
+  <OrganicInputNotice
+    organicBlocks={data.organicBlocks}
+    selectedBlockIds={selectedBlocks.map((b) => b.id)}
+    products={organicProducts}
+    {blockNames}
   />
 </div>
 

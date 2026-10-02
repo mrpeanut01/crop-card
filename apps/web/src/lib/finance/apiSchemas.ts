@@ -82,10 +82,22 @@ const entryFields = {
 };
 
 export const ledgerEntryCreateSchema = z
-  .object({ kind: z.enum(LEDGER_KINDS), ...entryFields })
+  .object({
+    kind: z.enum(LEDGER_KINDS),
+    ...entryFields,
+    dispositionId: optionalId.describe(
+      'Income from a harvest only: the record of where the harvest went that this sale is for. Linked when it has no sale yet (Phase 33B).'
+    )
+  })
   .superRefine((v, ctx) => {
     const problem = ledgerEntryProblem(v);
     if (problem) ctx.addIssue({ code: 'custom', message: problem });
+    if (v.dispositionId && (v.kind !== 'income' || !v.harvestEventId)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Only income from a harvest can name where it went.'
+      });
+    }
   });
 
 export type LedgerEntryCreate = z.infer<typeof ledgerEntryCreateSchema>;

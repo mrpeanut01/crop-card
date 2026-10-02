@@ -1614,6 +1614,576 @@
         }
       }
     },
+    "/api/harvest/{id}/dispositions": {
+      "get": {
+        "summary": "List where a harvest went",
+        "description": "Every member can read them. The ledger link (`ledgerEntryId`, `sale`) is shown to the owner only and is null for everyone else.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Harvest record id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dispositions, oldest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "dispositions"
+                  ],
+                  "properties": {
+                    "dispositions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such harvest record on this farm.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Record where a harvest went",
+        "description": "Owners and helpers; inspectors are read-only. One of `sold`, `kept`, `donated` or `discarded`, with its own quantity and unit. `recipient` is only for sold and donated; `soldAsOrganic` only for sold, and stored as null while the farm has no organic status on file. The date runs from the start of the harvest day (`BEFORE_HARVEST`) to now (`IN_THE_FUTURE`) and is gated by the season close-out. A sale marked sold as organic from a block whose status at harvest was not organic saves with an `organicNotice`; dispositions adding up to more than the harvest in the same unit save with a `quantityNotice`. Never a hold fact. Locks 48 hours after its date. The `harvest-disposition` offline queue kind replays here with the client record id header.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Harvest record id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/ClientRecordId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "sold",
+                      "kept",
+                      "donated",
+                      "discarded"
+                    ]
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 10000000,
+                    "description": "How much, in `unit`. Stored to two decimal places."
+                  },
+                  "unit": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20,
+                    "description": "Free text, for example lb, kg, bu, dozen, each, bunch, bale, pint or quart."
+                  },
+                  "occurredAt": {
+                    "description": "Epoch ms. From the start of the harvest day to now. Defaults to now.",
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "recipient": {
+                    "description": "Who got it. Only for sold and donated.",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "soldAsOrganic": {
+                    "description": "Only for sold. Ignored (stored as null) when the farm has no organic status on file.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "quantity",
+                  "unit"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replay of a client record id that was already saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Either the saved record, or `{ ok: true, duplicate: true }` when the client record id was already saved and nothing new was written.",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "duplicate": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "disposition"
+                  ],
+                  "properties": {
+                    "disposition": {
+                      "type": "object"
+                    },
+                    "organicNotice": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "quantityNotice": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, `BEFORE_HARVEST` or `IN_THE_FUTURE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such harvest record on this farm.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`SEASON_CLOSED`: the date is inside a closed season.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The same client record id is being saved by another request right now. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/harvest/dispositions/{id}": {
+      "patch": {
+        "summary": "Change where a harvest went",
+        "description": "Owners and helpers inside the 48-hour lock; after it every field change is refused with 409 `RECORD_LOCKED`. `ledgerEntryId` links or unlinks a live ledger entry and is owner only (403 `OWNER_ONLY`, `NOT_WHILE_IMPERSONATING`), allowed after the lock. Online only.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Disposition id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "sold",
+                      "kept",
+                      "donated",
+                      "discarded"
+                    ]
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 10000000,
+                    "description": "How much, in `unit`. Stored to two decimal places."
+                  },
+                  "unit": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20,
+                    "description": "Free text, for example lb, kg, bu, dozen, each, bunch, bale, pint or quart."
+                  },
+                  "occurredAt": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "recipient": {
+                    "description": "Who got it. Only for sold and donated.",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "soldAsOrganic": {
+                    "description": "Only for sold. Ignored (stored as null) when the farm has no organic status on file.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "ledgerEntryId": {
+                    "description": "Owner only. Links or unlinks a sale in the ledger, even after the lock.",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "disposition"
+                  ],
+                  "properties": {
+                    "disposition": {
+                      "type": "object"
+                    },
+                    "organicNotice": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "quantityNotice": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, `BEFORE_HARVEST`, `IN_THE_FUTURE` or another Owner's ledger entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Inspectors are read-only; `OWNER_ONLY` for the ledger link.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such disposition on this farm.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`RECORD_LOCKED`: 48 hours after its date.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`SEASON_CLOSED`: the date is inside a closed season.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete where a harvest went",
+        "description": "Owners and helpers inside the 48-hour lock, with no trace. After it only the owner, with `force=true` and a `reason` (3 to 500 characters), and a tombstone keeps the record. Never changes a hold.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Disposition id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ]
+            }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "removed": {
+                      "type": "object"
+                    },
+                    "tombstone": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`REASON_REQUIRED` for a locked record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Inspectors are read-only; `OWNER_ONLY` for a locked record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such disposition on this farm.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`RECORD_LOCKED` without `force`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/scout/record": {
       "post": {
         "summary": "Record a scouting observation",
@@ -7593,6 +8163,191 @@
         }
       }
     },
+    "/api/stock/{id}/lots/{lotId}/seed-sourcing": {
+      "patch": {
+        "summary": "Record organic seed sourcing on a seed lot",
+        "description": "Owner only (cookie or the owner's Bearer token); refused while impersonating (403 `NOT_WHILE_IMPERSONATING`). Replaces the lot's owner-entered seed status (`organic`, `untreated`, `treated`, `unknown`, or null for not recorded), the suppliers checked (at most 30, each a supplier, a farm-local date not after today and what was found) and a commercial unavailability note. Seed lots only (400 `NOT_SEED`). The app records what was checked and never judges whether a search was enough. Search evidence attaches through `POST /api/documents/{id}/links` with subject `stock-lot`. Not gated by the season close-out.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Stock item id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lotId",
+            "in": "path",
+            "required": true,
+            "description": "Stock lot id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "organic",
+                          "untreated",
+                          "treated",
+                          "unknown"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "sourcesChecked": {
+                    "maxItems": 30,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "supplier": {
+                          "type": "string",
+                          "maxLength": 480
+                        },
+                        "checkedAt": {
+                          "type": "string"
+                        },
+                        "result": {
+                          "type": "string",
+                          "maxLength": 800
+                        }
+                      },
+                      "required": [
+                        "supplier",
+                        "checkedAt",
+                        "result"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "unavailabilityNote": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 4000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "status",
+                  "sourcesChecked",
+                  "unavailabilityNote"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "sourcing"
+                  ],
+                  "properties": {
+                    "sourcing": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "sourcesChecked": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "unavailabilityNote": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, a supplier check dated after today, or a lot that is not seed (`NOT_SEED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such lot on this stock item for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/seed-starts": {
       "get": {
         "summary": "List a planting's seed-starting trays",
@@ -12254,6 +13009,614 @@
         }
       }
     },
+    "/api/organic/pack.zip": {
+      "get": {
+        "summary": "Download the certifier pack",
+        "description": "Phase 33B. A store-only ZIP of records for an organic inspector: `README.txt`, `summary.pdf`, `01-statuses.csv` (every growing Area, block, animal and group with its owner-entered status history, never windowed), `02-activity.csv`, `03-inputs.csv` (EPA registration numbers and the library compliance flags as stored, with provenance), `04-seed-sourcing.csv`, `05-animal-treatments.csv`, `06-harvests.csv` and `07-documents.csv`, plus the linked files under `documents/` with `documents=1`. Every CSV starts with the one-cell row \"Prepared from records kept in CropCard. This is not a certification.\" and every PDF page carries it. `from` and `to` are farm-local days, both required, at most 10 years apart. Owner (cookie or Bearer) and inspector; helpers 403. Only an owner download carries sale amounts; an inspector never gets a money document. Free on every plan and never gated by the season close-out or a billing suspension. One build per farm at a time.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "name": "documents",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The pack.",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A missing or bad `from` or `to`; `issues[0].path` names it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`OWNER_OR_INSPECTOR_ONLY`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`PACK_BUSY`: a pack for this farm is already being built. `Retry-After: 10`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/animals/treatments.csv": {
+      "get": {
+        "summary": "Animal treatment log as CSV",
+        "description": "Phase 33B. One header row, then one row per dose of a treatment, vaccine or wormer given from `from` to `to` (farm-local days): date, course end, animal or group, species, product, approval number, lot, dose, route, given by, vet, label use, withdrawal end and its source per food, record state (locked, voided, deleted but still counted as given, owner-corrected), the saved-late label and the organic review outcome when there is one. Withdrawal dates are the ones the health page shows. Owner and inspector; helpers 403.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The log.",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A missing or bad `from` or `to`; `issues[0].path` names it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`OWNER_OR_INSPECTOR_ONLY`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/animals/treatments.pdf": {
+      "get": {
+        "summary": "Animal treatment log as PDF",
+        "description": "Phase 33B. The same rows as `treatments.csv`; every page footer reads \"Prepared from records kept in CropCard.\" Owner and inspector; helpers 403.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The log.",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A missing or bad `from` or `to`; `issues[0].path` names it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`OWNER_OR_INSPECTOR_ONLY`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/organic/status": {
+      "get": {
+        "summary": "Owner-entered organic status history",
+        "description": "Every organic status entry of the active Owner, oldest first, optionally for one subject, with the live documents linked to each. Owners, helpers and inspectors can read it. A subject with no entry has no organic status; nothing is inferred.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subjectType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "field",
+                "block",
+                "animal",
+                "group"
+              ]
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The entries.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "entries"
+                  ],
+                  "properties": {
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add an organic status entry",
+        "description": "Owner only, by cookie session or the owner's API token; helpers and inspectors get 403 `OWNER_ONLY`, a superadmin impersonating the farm 403 `NOT_WHILE_IMPERSONATING`. Entries are append-only: a correction is a new entry, and the latest saved entry wins on the same day. `effectiveOn` is a farm-local day from 1970-01-01 to one year ahead; a future entry applies from that day. Only growing Areas (field, garden, greenhouse, orchard, pasture) take a status; any other kind is 400 `NOT_GROWING_AREA`. `documentId` names a live, non-photo document uploaded first, linked in the same transaction. Not gated by the season close-out.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "subjectType": {
+                    "type": "string",
+                    "enum": [
+                      "field",
+                      "block",
+                      "animal",
+                      "group"
+                    ]
+                  },
+                  "subjectId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "organic",
+                      "transitioning",
+                      "not-organic"
+                    ]
+                  },
+                  "effectiveOn": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "certifier": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "note": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 1000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "documentId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "subjectType",
+                  "subjectId",
+                  "status",
+                  "effectiveOn"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The saved entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "entry"
+                  ],
+                  "properties": {
+                    "entry": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, a subject the active Owner does not have, or `NOT_GROWING_AREA`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`OWNER_ONLY` or `NOT_WHILE_IMPERSONATING`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`DOCUMENT_DELETED` or `PHOTO_DOCUMENT`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/organic/treatment-reviews": {
+      "post": {
+        "summary": "Answer whether a treatment ends an animal's organic status",
+        "description": "Owner only (same gate as organic status entries). One answer per treatment, which the owner may change for 48 hours after first giving it; after that 409 `REVIEW_LOCKED`. A treatment that reached no animal or group under organic management, or one the library already decides, is 409 `REVIEW_NOT_NEEDED`. The app never decides that a treatment leaves status alone; only this answer can. Not gated by the season close-out; online only.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "healthEventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "status-lost",
+                      "not-affected"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "healthEventId",
+                  "outcome",
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The changed answer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "The saved answer and the treatment outcome.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "review": {
+                      "type": "object"
+                    },
+                    "treatment": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or a treatment the active Owner does not have.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`OWNER_ONLY` or `NOT_WHILE_IMPERSONATING`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`REVIEW_LOCKED` or `REVIEW_NOT_NEEDED`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/documents": {
       "post": {
         "summary": "Upload a file to the farm's document vault",
@@ -15475,7 +16838,7 @@
       },
       "post": {
         "summary": "Add an expense or income",
-        "description": "Owner only; impersonation may not write. Link at most one of crop, Area (with an optional bed inside it), animal or group; `stockLotId` only on an expense and `harvestEventId` only on income. A lot may have one live purchase expense (409 `LOT_ALREADY_EXPENSED`). The date may be at most a day ahead. Never gated by the season close-out. Writes an audit row in the same transaction.",
+        "description": "Owner only; impersonation may not write. Link at most one of crop, Area (with an optional bed inside it), animal or group; `stockLotId` only on an expense and `harvestEventId` only on income. A lot may have one live purchase expense (409 `LOT_ALREADY_EXPENSED`). The date may be at most a day ahead. Never gated by the season close-out. Writes an audit row in the same transaction. `dispositionId` (income from a harvest) links the new sale to that record of where the harvest went, in the same transaction, when it belongs to the same harvest and has no sale yet (`dispositionLinked`).",
         "security": [
           {
             "cookieSession": []
@@ -15644,6 +17007,19 @@
                       {
                         "type": "string",
                         "maxLength": 30
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "dispositionId": {
+                    "description": "Income from a harvest only: the record of where the harvest went that this sale is for. Linked when it has no sale yet (Phase 33B).",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
                       },
                       {
                         "type": "null"

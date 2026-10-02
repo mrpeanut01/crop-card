@@ -37,7 +37,8 @@ async function organicPart(
   }
   return {
     statusLine: organicStatusLine(status, organicDateFormatter(locale), locale),
-    welfareLine: status && status.status !== 'not-organic' ? withholdTreatmentLine() : null,
+    welfareLine:
+      status && status.status !== 'not-organic' ? withholdTreatmentLine(undefined, locale) : null,
     membersLost: subject.type === 'group' ? groupMembersLost(projection, subject.id) : 0,
     outcomes
   };

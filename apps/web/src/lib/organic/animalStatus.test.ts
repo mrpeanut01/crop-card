@@ -9,7 +9,7 @@ import {
   type AnimalOrganicWorld,
   type OrganicTreatmentInput
 } from './animalStatus';
-import { NOP_RULES } from './nopRules';
+import { NOP_RULES, NOP_RULES_OFF } from './nopRules';
 import { isUnderOrganic, type OrganicStatus, type OrganicStatusEntry } from './status';
 
 const DAY = 86_400_000;
@@ -132,14 +132,16 @@ describe('outcomes (B-22, B-23, O-08, O-09)', () => {
 
   it('antibiotics still need review while the rule is off', () => {
     const w = world([entry('animal', 'cow', 'organic', 0)], [], {
-      plugin: () => ({ productKind: 'antibiotic' })
+      plugin: () => ({ productKind: 'antibiotic' }),
+      rules: NOP_RULES_OFF
     });
     const p = projectAnimalOrganic([dose('h1', 'animal', 'cow', 5, { pluginId: 'x' })], w);
     expect(p.rows[0].outcome).toBe('needs-review');
   });
 
   it('antibiotics and sourced not-allowed products are a loss once the rule is on', () => {
-    const rules = { ...NOP_RULES, treatedAnimalRule: true };
+    const rules = NOP_RULES;
+    expect(rules.treatedAnimalRule).toBe(true);
     const abx = world([entry('animal', 'cow', 'organic', 0)], [], {
       plugin: () => ({ productKind: 'antibiotic' }),
       rules
@@ -148,7 +150,17 @@ describe('outcomes (B-22, B-23, O-08, O-09)', () => {
       [dose('h1', 'animal', 'cow', 5, { pluginId: 'x', review: review('not-affected') })],
       abx
     );
-    expect(p.rows[0]).toMatchObject({ outcome: 'status-lost', basis: 'rule' });
+    expect(p.rows[0]).toMatchObject({
+      outcome: 'status-lost',
+      basis: 'rule',
+      ruleReason: 'antibiotic'
+    });
+    expect(treatmentOutcomeText(p.rows[0])).toBe(
+      'Status lost (the library lists this product as an antibiotic, 7 CFR 205.238(c)(1))'
+    );
+    expect(treatmentOutcomeText(p.rows[0], 'es')).toBe(
+      'Estado perdido (la biblioteca registra este producto como antibiótico, 7 CFR 205.238(c)(1))'
+    );
 
     const notAllowed = world([entry('animal', 'cow', 'organic', 0)], [], {
       plugin: () => ({
@@ -184,6 +196,106 @@ describe('outcomes (B-22, B-23, O-08, O-09)', () => {
   it('ignores a not-organic status', () => {
     const w = world([entry('animal', 'hen', 'not-organic', 0)]);
     expect(projectAnimalOrganic([dose('h1', 'animal', 'hen', 10)], w).rows).toEqual([]);
+  });
+});
+
+describe('the treated-animal rule, switched on (7 CFR 205.238(c)(1))', () => {
+  const cow = (plugin: AnimalOrganicWorld['plugin']) =>
+    world([entry('animal', 'cow', 'organic', 0)], [], { plugin });
+
+  it('names the library mark for a not-allowed product', () => {
+    const p = projectAnimalOrganic(
+      [dose('h1', 'animal', 'cow', 5, { pluginId: 'x' })],
+      cow(() => ({ productKind: 'dewormer', organicUse: { status: 'not-allowed', citation: 'x' } }))
+    );
+    expect(p.rows[0]).toMatchObject({ basis: 'rule', ruleReason: 'not-allowed' });
+    expect(treatmentOutcomeText(p.rows[0])).toBe(
+      'Status lost (the library marks this product as not allowed for organic use, 7 CFR 205.238(c)(1))'
+    );
+    expect(p.statusAt({ type: 'animal', id: 'cow' }, T0 + 5 * DAY)?.lost).toMatchObject({
+      healthEventId: 'h1',
+      basis: 'rule'
+    });
+  });
+
+  it('leaves everything the app cannot tell for the owner to review', () => {
+    const cases: [string | null, AnimalOrganicWorld['plugin']][] = [
+      [null, () => ({ productKind: 'antibiotic' })],
+      ['gone', () => undefined],
+      ['amprol', () => ({ productKind: 'coccidiostat' })],
+      ['wormer', () => ({ productKind: 'dewormer' })],
+      ['vax', () => ({ productKind: 'vaccine', organicUse: { status: 'allowed', citation: 'x' } })],
+      [
+        'moxi',
+        () => ({
+          productKind: 'dewormer',
+          organicUse: { status: 'allowed-with-conditions', citation: 'x', conditions: 'Dairy only' }
+        })
+      ]
+    ];
+    for (const [pluginId, plugin] of cases) {
+      const p = projectAnimalOrganic([dose('h1', 'animal', 'cow', 5, { pluginId })], cow(plugin));
+      expect(p.rows[0], String(pluginId)).toMatchObject({
+        outcome: 'needs-review',
+        basis: null,
+        ruleReason: null
+      });
+      expect(p.losses.size).toBe(0);
+      expect(treatmentOutcomeText(p.rows[0])).toBe('Needs review');
+    }
+  });
+
+  it('never decides "not affected" on its own (O-09)', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom('antibiotic', 'dewormer', 'vaccine', 'coccidiostat', 'other'),
+        fc.constantFrom(undefined, 'allowed', 'allowed-with-conditions', 'not-allowed'),
+        (productKind, status) => {
+          const p = projectAnimalOrganic(
+            [dose('h1', 'animal', 'cow', 5, { pluginId: 'x' })],
+            cow(() => ({
+              productKind,
+              ...(status
+                ? { organicUse: { status: status as 'allowed', citation: '205.603' } }
+                : {})
+            }))
+          );
+          const byRule = productKind === 'antibiotic' || status === 'not-allowed';
+          expect(p.rows[0].outcome).toBe(byRule ? 'status-lost' : 'needs-review');
+          expect(p.rows[0].basis).toBe(byRule ? 'rule' : null);
+        }
+      )
+    );
+  });
+
+  it('a dosed deleted antibiotic still ends status, and the owner cannot answer it away', () => {
+    const p = projectAnimalOrganic(
+      [
+        dose('h1', 'animal', 'cow', 5, {
+          pluginId: 'x',
+          deleted: true,
+          review: review('not-affected', 5)
+        })
+      ],
+      cow(() => ({ productKind: 'antibiotic' }))
+    );
+    expect(p.rows[0]).toMatchObject({ outcome: 'status-lost', basis: 'rule', deleted: true });
+    expect(isUnderOrganic(p.statusAt({ type: 'animal', id: 'cow' }, T0 + 6 * DAY))).toBe(false);
+  });
+
+  it('a group antibiotic reaches the members at the time', () => {
+    const w = world(
+      [entry('group', 'herd', 'organic', 0)],
+      [
+        { animalId: 'a', groupId: 'herd', fromDay: 0, toDay: null },
+        { animalId: 'late', groupId: 'herd', fromDay: 30, toDay: null }
+      ],
+      { plugin: () => ({ productKind: 'antibiotic' }) }
+    );
+    const p = projectAnimalOrganic([dose('h1', 'group', 'herd', 10, { pluginId: 'x' })], w);
+    expect(p.losses.has('group:herd')).toBe(true);
+    expect(p.losses.has('animal:a')).toBe(true);
+    expect(p.losses.has('animal:late')).toBe(false);
   });
 });
 

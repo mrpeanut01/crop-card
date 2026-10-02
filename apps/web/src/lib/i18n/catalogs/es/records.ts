@@ -701,7 +701,8 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'organic.line.certifier': 'certificador {name}',
   'organic.line.fromGroup': ' del grupo {name}',
   'organic.line.from': ' de {name}',
-  'organic.line.lost': 'Estado perdido tras un tratamiento el {date}. Antes: {base}',
+  'organic.line.lost':
+    'Estado perdido tras un tratamiento el {date}, según {citation}. Antes: {base}',
   'organic.line.lostOwner':
     'Estado perdido tras un tratamiento el {date}, según respondió el propietario. Antes: {base}',
   'organic.outcome.statusLost': 'Estado perdido',
@@ -711,6 +712,26 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
     'El registro del tratamiento se eliminó antes de la revisión. Avísale a tu certificador.',
   'organic.outcome.lostOwnerAnswered':
     'Estado perdido (el propietario respondió: termina el estado orgánico)',
+  'organic.outcome.lostRuleAntibiotic':
+    'Estado perdido (la biblioteca registra este producto como antibiótico, {citation})',
+  'organic.outcome.lostRuleNotAllowed':
+    'Estado perdido (la biblioteca marca este producto como no permitido para uso orgánico, {citation})',
+  'organic.welfare.cited':
+    'Trata a un animal enfermo. Las normas orgánicas prohíben negar un tratamiento para conservar el estado ({citation}).',
+  'organic.welfare.ask':
+    'Primero trata a un animal enfermo. Pregúntale a tu certificador cómo afecta un tratamiento al estado orgánico.',
+  'organic.seed.ruleCited':
+    'Las normas orgánicas exigen semillas, plántulas anuales y material de siembra de cultivo orgánico, salvo lo que permite {citation}. Tu certificador decide si una búsqueda fue suficiente.',
+  'organic.seed.ruleAsk': 'Pregúntale a tu certificador si una búsqueda fue suficiente.',
+  'organic.transition.ruleYears': 'la regla de {years} años de {citation}',
+  'organic.transition.ruleMonths': 'la regla de {months} meses de {citation}',
+  'organic.transition.fromNotAllowed':
+    'Según estos registros, la fecha de cosecha más temprana bajo {rule} es el {date}, {months} meses después del último insumo que la biblioteca marca como no permitido ({last}).',
+  'organic.transition.laterUnmarked':
+    'Después se usó un insumo que la biblioteca no marca en ningún sentido ({last}). Si está prohibido, la fecha más temprana es el {date}.',
+  'organic.transition.onlyUnmarked':
+    'Según estos registros, no hay ningún insumo que la biblioteca marque como no permitido. Se usó un insumo que la biblioteca no marca en ningún sentido el {last}. Si ese insumo está prohibido, la fecha de cosecha más temprana bajo {rule} es el {date}, {months} meses después.',
+  'organic.transition.certifierDecides': 'Tu certificador decide.',
   'organic.review.endsStatus': 'Termina el estado orgánico',
   'organic.review.doesNotEnd': 'No lo termina',
   'organic.inputClass.allowed': 'Marca de la biblioteca: permitido para uso orgánico',

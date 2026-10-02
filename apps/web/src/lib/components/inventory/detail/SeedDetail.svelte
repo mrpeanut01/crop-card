@@ -20,6 +20,7 @@
   import InvKVP from '../InvKVP.svelte';
   import LotQuantities from '../LotQuantities.svelte';
   import SeedSourcingSection from '../SeedSourcingSection.svelte';
+  import { NOP_RULES, seedSourcingLine } from '$lib/organic/nopRules';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatStockQuantity } from '$lib/stock/units';
   import type { SeedDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
@@ -107,6 +108,9 @@
 
     {#if showSeedSourcing}
       <InvSection title={tr('stockui.seedsrc.title')} kicker={tr('stockui.seedsrc.kicker')}>
+        <p class="rule-line" data-testid="seed-sourcing-rule">
+          {seedSourcingLine(NOP_RULES, page.data?.locale)}
+        </p>
         {#if lots.length === 0}
           <p class="empty">{tr('stockui.seedsrc.noLots')}</p>
         {:else}
@@ -218,6 +222,11 @@
     min-height: 48px;
     color: var(--color-forest, #1f5e3a);
     font-weight: 600;
+  }
+  .rule-line {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    color: var(--color-ink-muted, #6a6f63);
   }
   .empty {
     color: var(--color-ink-muted, #6a6f63);

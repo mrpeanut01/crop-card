@@ -1,6 +1,8 @@
 import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import { requireOwner } from '$lib/server/auth';
 import { dispatchEmail } from '$lib/server/email';
+import { t } from '$lib/i18n';
+import { localeField } from '$lib/server/messageLocale';
 import { issueInvite, listInvitesForOwner, revokeInvite } from '$lib/server/invites';
 import { seatUsage, SEAT_LIMIT_MESSAGE } from '$lib/server/billing/plans';
 import { usersForOwner, revokeAssignment } from '$lib/db/users';
@@ -86,9 +88,10 @@ export const actions: Actions = {
     const emailSent = await dispatchEmail({
       kind: 'helper-invite',
       to: inviteeEmail,
-      ownerName: ownerRow?.name ?? 'a CropCard farm',
+      ownerName: ownerRow?.name ?? t(event.locals.locale, 'email.invite.ownerFallback'),
       acceptUrl,
-      expiresAt: issued.expiresAt
+      expiresAt: issued.expiresAt,
+      ...localeField(event.locals.locale)
     }).then(
       () => true,
       (err) => {

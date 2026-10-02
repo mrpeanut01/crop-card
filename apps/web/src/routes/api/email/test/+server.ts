@@ -3,6 +3,8 @@ import { requireInteractiveUser } from '$lib/server/auth';
 import { getEmailPrefsForUser } from '$lib/db/emailAlertConsents';
 import { isEmailSuppressed } from '$lib/db/contactSuppressions';
 import { dispatchEmail } from '$lib/server/email';
+import { t } from '$lib/i18n';
+import { localeField } from '$lib/server/messageLocale';
 import { farmNameForOwner } from '$lib/server/emailPrefs';
 import { unsubscribeLinks } from '$lib/server/emailUnsubscribe';
 import { magicLinkOrigin } from '$lib/server/magicLink';
@@ -30,21 +32,23 @@ export const POST: RequestHandler = async (event) => {
   if (!testEmailLimiter.tryTake(u.id)) {
     throw error(429, "That's enough test emails for now. Try again in an hour.");
   }
+  const loc = event.locals.locale;
   try {
     await dispatchEmail({
       kind: 'field-alert',
       to: u.email,
       category: null,
-      farmName: farmNameForOwner(u.activeOwnerId) ?? 'your farm',
-      title: 'CropCard test email',
-      body: 'Alert emails are working. Real alerts look like this one.',
+      farmName: farmNameForOwner(u.activeOwnerId) ?? t(loc, 'email.yourFarm'),
+      title: t(loc, 'email.test.title'),
+      body: t(loc, 'email.test.body'),
       actionUrl: new URL('/today', origin).toString(),
       settingsUrl: new URL('/settings/notifications', origin).toString(),
       unsubscribe: unsubscribeLinks(origin, {
         userId: u.id,
         ownerId: u.activeOwnerId,
         scope: 'all'
-      })
+      }),
+      ...localeField(loc)
     });
   } catch (e) {
     console.error('[email] test send failed', e instanceof Error ? e.message : e);

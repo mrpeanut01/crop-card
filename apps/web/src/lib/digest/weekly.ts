@@ -11,13 +11,9 @@
  */
 
 import { dueYmd, ymdInZone } from '$lib/prefs';
+import { t } from '$lib/i18n';
 import { addDaysYmd, weekdayOfYmd } from '$lib/today/views';
-import {
-  TASK_DETAILS_HINT,
-  TASK_DETAILS_TEXT,
-  isSprayTaskLike,
-  unsafeOnPaper
-} from '$lib/tasks/printSafe';
+import { isSprayTaskLike, unsafeOnPaper } from '$lib/tasks/printSafe';
 
 /** Lines listed per section before "and N more". */
 export const DIGEST_LIST_LIMIT = 8;
@@ -81,6 +77,8 @@ export interface WeeklyDigestInput {
   people?: Readonly<Record<string, string>>;
   /** Owner email only: last week's cash from the ledger. Ignored for anyone else. */
   cash?: { incomeCents: number; expenseCents: number; netCents: number } | null;
+  /** Language of the built text (task labels, names); unset is English. */
+  locale?: string | null;
 }
 
 export interface DigestLine {
@@ -147,22 +145,23 @@ function isOpen(t: DigestTask): boolean {
 }
 
 function lineFor(
-  t: DigestTask,
+  task: DigestTask,
   timeZone: string,
   people: Readonly<Record<string, string>>,
+  locale: string | null | undefined,
   care = false
 ) {
-  const assignee = t.assigneeUserId
-    ? (t.assigneeName ?? people[t.assigneeUserId] ?? 'Farm member')
+  const assignee = task.assigneeUserId
+    ? (task.assigneeName ?? people[task.assigneeUserId] ?? t(locale, 'digest.farmMember'))
     : null;
-  const spray = !care && (!!t.isSpray || isSprayTaskLike({ title: t.title }));
-  const hidden = !spray && unsafeOnPaper(t.title);
-  const where = t.where && !unsafeOnPaper(t.where) ? t.where : null;
-  const safeText = care ? 'Animal care task' : TASK_DETAILS_TEXT;
+  const spray = !care && (!!task.isSpray || isSprayTaskLike({ title: task.title }));
+  const hidden = !spray && unsafeOnPaper(task.title);
+  const where = task.where && !unsafeOnPaper(task.where) ? task.where : null;
+  const safeText = care ? t(locale, 'digest.careTask') : t(locale, 'digest.taskDetails');
   return {
-    id: t.id,
-    text: spray ? SPRAY_TASK_LABEL : hidden ? safeText : t.title,
-    dueYmd: dueYmd(t.scheduledFor, timeZone),
+    id: task.id,
+    text: spray ? t(locale, 'digest.sprayTask') : hidden ? safeText : task.title,
+    dueYmd: dueYmd(task.scheduledFor, timeZone),
     where,
     assignee,
     spray,
@@ -175,8 +174,10 @@ function byDue(a: DigestLine, b: DigestLine): number {
 }
 
 export function buildWeeklyDigest(input: WeeklyDigestInput): WeeklyDigest {
-  const { timeZone, viewerId, isOwner } = input;
+  const { timeZone, viewerId, isOwner, locale } = input;
   const people = input.people ?? {};
+  const tr = (key: 'digest.farmMember' | 'digest.notAssigned' | 'digest.formerMember') =>
+    t(locale, key);
   const weekStartYmd = input.weekStartYmd;
   const weekEndYmd = addDaysYmd(weekStartYmd, 6);
   const todayYmd = ymdInZone(input.nowMs, timeZone);
@@ -202,7 +203,9 @@ export function buildWeeklyDigest(input: WeeklyDigestInput): WeeklyDigest {
       else
         counts.set(id, {
           userId: id,
-          name: id ? (t.assigneeName ?? people[id] ?? 'Farm member') : 'Not assigned',
+          name: id
+            ? (t.assigneeName ?? people[id] ?? tr('digest.farmMember'))
+            : tr('digest.notAssigned'),
           count: 1
         });
     }
@@ -251,7 +254,7 @@ export function buildWeeklyDigest(input: WeeklyDigestInput): WeeklyDigest {
       ? [...perPerson.entries()]
           .map(([userId, count]) => ({
             userId,
-            name: userId ? (people[userId] ?? 'Farm member') : 'Someone no longer on the farm',
+            name: userId ? (people[userId] ?? tr('digest.farmMember')) : tr('digest.formerMember'),
             count
           }))
           .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
@@ -268,7 +271,7 @@ export function buildWeeklyDigest(input: WeeklyDigestInput): WeeklyDigest {
   }
 
   const lines = (list: readonly DigestTask[]) =>
-    list.map((t) => lineFor(t, timeZone, people)).sort(byDue);
+    list.map((task) => lineFor(task, timeZone, people, locale)).sort(byDue);
 
   return {
     viewerId,
@@ -282,7 +285,7 @@ export function buildWeeklyDigest(input: WeeklyDigestInput): WeeklyDigest {
     overdueCount: visibleOverdue.length,
     byPerson,
     unassignedCount: isOwner ? 0 : weekAll.filter((t) => !t.assigneeUserId).length,
-    careDue: careAll.map((t) => lineFor(t, timeZone, people, true)).sort(byDue),
+    careDue: careAll.map((task) => lineFor(task, timeZone, people, locale, true)).sort(byDue),
     careDueCount: careAll.length,
     lastWeek,
     lowStockCount: Math.max(0, input.lowStockCount),
@@ -290,16 +293,14 @@ export function buildWeeklyDigest(input: WeeklyDigestInput): WeeklyDigest {
   };
 }
 
-function plural(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
-}
-
 /** F4-7: short and never about money, since it shows on a lock screen. */
-export function digestPushBody(d: WeeklyDigest): string {
-  const parts = [plural(d.dueThisWeekCount, 'task', 'tasks')];
-  if (d.overdueCount > 0) parts.push(`${d.overdueCount} overdue`);
-  if (d.careDueCount > 0) parts.push(plural(d.careDueCount, 'animal care job', 'animal care jobs'));
-  return `Your week: ${parts.join(', ')}`;
+export function digestPushBody(d: WeeklyDigest, locale?: string | null): string {
+  const parts = [t(locale, 'push.digest.tasks', { count: d.dueThisWeekCount })];
+  if (d.overdueCount > 0) parts.push(t(locale, 'push.digest.overdue', { count: d.overdueCount }));
+  if (d.careDueCount > 0) {
+    parts.push(t(locale, 'push.digest.care', { count: d.careDueCount }));
+  }
+  return t(locale, 'push.digest.body', { parts: parts.join(', ') });
 }
 
 /** Cash in and out over the farm-local days `[fromYmd, toYmd]`. */
@@ -322,33 +323,44 @@ export function cashForDays(
 
 /** "45 min", "1.5 h": whole minutes under an hour, else hours to the
  *  nearest quarter. */
-export function digestHours(minutes: number): string {
-  if (minutes < 60) return `${Math.round(minutes)} min`;
+export function digestHours(minutes: number, locale?: string | null): string {
+  if (minutes < 60) return t(locale, 'digest.minutes', { minutes: Math.round(minutes) });
   const quarters = Math.round(minutes / 15) / 4;
-  return `${quarters} h`;
+  return t(locale, 'digest.hours', { hours: quarters });
 }
 
-/** "Mon Sep 28" from a `YYYY-MM-DD`, without a locale lookup. */
-export function shortDay(ymd: string): string {
+const WEEKDAY_KEYS = [0, 1, 2, 3, 4, 5, 6].map((i) => `digest.weekday.${i}` as const);
+const MONTH_KEYS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => `digest.month.${i}` as const);
+
+/** "Mon Sep 28" from a `YYYY-MM-DD`, without an Intl lookup. */
+export function shortDay(ymd: string, locale?: string | null): string {
   const d = new Date(`${ymd}T00:00:00Z`);
-  const wd = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getUTCDay()];
-  const mo = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][
-    d.getUTCMonth()
-  ];
-  return `${wd} ${mo} ${d.getUTCDate()}`;
+  return t(locale, 'digest.shortDay', {
+    weekday: t(locale, WEEKDAY_KEYS[d.getUTCDay()] as 'digest.weekday.0'),
+    month: t(locale, MONTH_KEYS[d.getUTCMonth()] as 'digest.month.0'),
+    day: d.getUTCDate()
+  });
 }
 
 /** One printed or emailed line for a task. */
-export function digestLineText(l: DigestLine, opts: { withAssignee: boolean }): string {
-  const parts = [`${shortDay(l.dueYmd)}: ${l.text}`];
+export function digestLineText(
+  l: DigestLine,
+  opts: { withAssignee: boolean },
+  locale?: string | null
+): string {
+  const parts = [`${shortDay(l.dueYmd, locale)}: ${l.text}`];
   if (l.where) parts.push(l.where);
-  if (l.spray) parts.push(SPRAY_TASK_HINT);
-  else if (l.details) parts.push(TASK_DETAILS_HINT);
+  if (l.spray) parts.push(t(locale, 'digest.sprayHint'));
+  else if (l.details) parts.push(t(locale, 'digest.taskDetailsHint'));
   if (opts.withAssignee && l.assignee) parts.push(l.assignee);
   return parts.join(', ');
 }
 
-export function limited(items: string[], limit = DIGEST_LIST_LIMIT): string[] {
+export function limited(
+  items: string[],
+  limit = DIGEST_LIST_LIMIT,
+  locale?: string | null
+): string[] {
   if (items.length <= limit) return items;
-  return [...items.slice(0, limit), `And ${items.length - limit} more`];
+  return [...items.slice(0, limit), t(locale, 'digest.andMore', { count: items.length - limit })];
 }

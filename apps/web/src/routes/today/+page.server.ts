@@ -285,6 +285,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       farmLatLon: hasLocation ? getFarmLatLon() : null,
       timeZone: careTimeZone,
       isOwner,
+      locale: locals.locale,
       // Phase 32F (F4-8): the Monday card, from rows already read here.
       digest: todayDigestInput({
         openPrimaries: allOpenPrimaries,

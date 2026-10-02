@@ -15,6 +15,9 @@ import { isEmailSuppressed } from '$lib/db/contactSuppressions';
 import type { EmailAlertCategory } from '$lib/email/alertCategories';
 import { dispatchEmail, PINGRAM_TYPE } from '$lib/server/email';
 import { unsubscribeLinks } from '$lib/server/emailUnsubscribe';
+import { DEFAULT_LOCALE, type Locale } from '$lib/i18n';
+import { recipientLocales } from '$lib/server/recipientLocale';
+import { localeField } from '$lib/server/messageLocale';
 import type { MemberRole } from './dispatch';
 import { inAudience, type PushAlert } from './triggers';
 
@@ -84,12 +87,20 @@ export interface EmailAlertSummary {
   failed: number;
 }
 
+export interface AlertEmailLocales {
+  /** Message language per user; read here when absent. */
+  localeOf?: Map<string, Locale>;
+  /** The alert in another language; English uses `alert` itself. */
+  alertIn?: (locale: Locale) => PushAlert;
+}
+
 export async function sendAlertEmails(
   ownerId: string,
   farmName: string,
   alert: PushAlert,
   members: MemberRole[],
-  origin: string
+  origin: string,
+  locales: AlertEmailLocales = {}
 ): Promise<EmailAlertSummary> {
   const summary: EmailAlertSummary = { sent: 0, failed: 0 };
   const consents = listOptedIn();
@@ -101,18 +112,23 @@ export async function sendAlertEmails(
     isSuppressed: (email) => isEmailSuppressed(email, PINGRAM_TYPE['field-alert']),
     alert
   });
+  if (recipients.length === 0) return summary;
+  const localeOf = locales.localeOf ?? recipientLocales(recipients.map((r) => r.userId));
   for (const r of recipients) {
+    const locale = localeOf.get(r.userId) ?? DEFAULT_LOCALE;
+    const message = locale === DEFAULT_LOCALE || !locales.alertIn ? alert : locales.alertIn(locale);
     try {
       await dispatchEmail({
         kind: 'field-alert',
         to: r.email,
         category: alert.kind,
         farmName,
-        title: alert.title,
-        body: alert.body,
-        actionUrl: new URL(alert.url, origin).toString(),
+        title: message.title,
+        body: message.body,
+        actionUrl: new URL(message.url, origin).toString(),
         settingsUrl: new URL('/settings/notifications', origin).toString(),
-        unsubscribe: unsubscribeLinks(origin, { userId: r.userId, ownerId, scope: alert.kind })
+        unsubscribe: unsubscribeLinks(origin, { userId: r.userId, ownerId, scope: alert.kind }),
+        ...localeField(locale)
       });
       summary.sent++;
     } catch (err) {

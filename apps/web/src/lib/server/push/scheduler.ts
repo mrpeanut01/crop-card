@@ -51,6 +51,8 @@ import {
   type SprayerSnapshot
 } from './triggers';
 import type { VapidConfig } from './webPush';
+import { DEFAULT_LOCALE, type Locale } from '$lib/i18n';
+import { recipientLocales } from '$lib/server/recipientLocale';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { hasAnyAnimalRecord } from '$lib/db/animals';
 import { careSubjectKey } from '$lib/db/animalCarePlans';
@@ -153,14 +155,18 @@ function ownerSnapshot(now: number): {
  * the alert turned on, the farm has a real location, and something frost-tender
  * is planted or about to be. An NWS failure skips this tick; it never throws.
  */
-async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<PushAlert[]> {
+type AlertBuilder = (locale?: Locale) => PushAlert[];
+
+const NO_ALERTS: AlertBuilder = () => [];
+
+async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<AlertBuilder> {
   const pushWants =
     deps.config !== null && listSubscriptions().some((s) => s.prefs['frost-tonight']);
   const emailWants =
     !!deps.emailOrigin && listOptedIn().some((c) => c.category === 'frost-tonight');
-  if (!pushWants && !emailWants) return [];
+  if (!pushWants && !emailWants) return NO_ALERTS;
   const crops = listCrops({ statuses: ['active', 'planned'] });
-  if (crops.length === 0) return [];
+  if (crops.length === 0) return NO_ALERTS;
   const registry = await getRegistry();
   const blockName = new Map(listBlocks({ plantings: 'none' }).map((b) => [b.id, b.name]));
   const coverByBlock = activeCoverByBlock(
@@ -183,15 +189,15 @@ async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<Pus
       plantings.push(snapshot);
     }
   }
-  if (plantings.length === 0) return [];
+  if (plantings.length === 0) return NO_ALERTS;
   const location = resolveWeatherLocation(null);
-  if (!location || location.source === 'farm-default') return [];
+  if (!location || location.source === 'farm-default') return NO_ALERTS;
   try {
     const products = await (deps.frostAlerts ?? fetchFrostAlerts)(location.lat, location.lon, now);
-    return frostTonightAlerts(products, plantings, now);
+    return (locale) => frostTonightAlerts(products, plantings, now, locale);
   } catch (err) {
     console.warn('[push] NWS frost alerts unavailable this tick', err);
-    return [];
+    return NO_ALERTS;
   }
 }
 
@@ -237,10 +243,10 @@ async function animalAlertsForOwner(
   now: number,
   deps: PushTickDeps,
   members: readonly MemberRole[]
-): Promise<PushAlert[]> {
+): Promise<AlertBuilder> {
   const timeZone = farmTimeZone();
   const care = materializeCareTasks(now, timeZone);
-  const out: PushAlert[] = [];
+  const parts: AlertBuilder[] = [];
   if (care.open.length > 0 && someoneWants('animal-care-due', deps)) {
     const tasks: OpenCareTask[] = [];
     for (const t of care.open) {
@@ -250,10 +256,11 @@ async function animalAlertsForOwner(
       tasks.push({
         meta,
         scheduledOn: msToYmd(t.scheduledFor),
-        subjectName: subject?.name ?? 'An animal'
+        subjectName: subject?.name ?? null
       });
     }
-    out.push(...careDueAlerts(tasks, ymdInZone(now, timeZone)));
+    const today = ymdInZone(now, timeZone);
+    parts.push((locale) => careDueAlerts(tasks, today, locale));
   }
   const wantsCleared = someoneWants('withdrawal-clears', deps);
   const wantsCovers = anOwnerWants('hold-covers-sale', deps, members);
@@ -261,16 +268,41 @@ async function animalAlertsForOwner(
     try {
       const { loaded, projection } = await projectActiveFarm(timeZone, now);
       if (wantsCleared) {
-        out.push(...withdrawalClearsAlerts(clearedHolds(projection.holds, now), loaded.labels));
+        const cleared = clearedHolds(projection.holds, now);
+        parts.push((locale) => withdrawalClearsAlerts(cleared, loaded.labels, locale));
       }
       if (wantsCovers) {
-        out.push(...holdCoversSaleAlerts(projection, loaded, coveredRecordsHref));
+        parts.push((locale) =>
+          holdCoversSaleAlerts(projection, loaded, coveredRecordsHref, locale)
+        );
       }
     } catch (err) {
       console.warn('[push] hold projection unavailable this tick', err);
     }
   }
-  return out;
+  return (locale) => parts.flatMap((build) => build(locale));
+}
+
+function alertKey(a: Pick<PushAlert, 'kind' | 'subjectId'>): string {
+  return `${a.kind}|${a.subjectId}`;
+}
+
+/** Each user id grouped by message language, English first. */
+function byLocale<T>(
+  items: readonly T[],
+  userOf: (item: T) => string,
+  localeOf: Map<string, Locale>
+) {
+  const groups = new Map<Locale, T[]>();
+  for (const item of items) {
+    const locale = localeOf.get(userOf(item)) ?? DEFAULT_LOCALE;
+    const list = groups.get(locale);
+    if (list) list.push(item);
+    else groups.set(locale, [item]);
+  }
+  return [...groups.entries()].sort(([a], [b]) =>
+    a === DEFAULT_LOCALE ? -1 : b === DEFAULT_LOCALE ? 1 : a.localeCompare(b)
+  );
 }
 
 /** Process one Owner. Caller must already be inside that Owner's tenant context. */
@@ -282,11 +314,14 @@ export async function processOwnerAlerts(
   const summary = { alerts: 0, sent: 0, removed: 0, failed: 0, emailed: 0, emailFailed: 0 };
   const { sprayers, records } = ownerSnapshot(now);
   const members = usersForOwner(ownerId);
-  const alerts = [
-    ...selectDueAlerts({ sprayers, records, now }),
-    ...(await frostAlertsForOwner(now, deps)),
-    ...(await animalAlertsForOwner(now, deps, members))
+  const frost = await frostAlertsForOwner(now, deps);
+  const animal = await animalAlertsForOwner(now, deps, members);
+  const build: AlertBuilder = (locale) => [
+    ...selectDueAlerts({ sprayers, records, now, locale }),
+    ...frost(locale),
+    ...animal(locale)
   ];
+  const alerts = build();
   if (isDigestSendWindow(now)) {
     const d = await weeklyDigestForOwner(
       ownerId,
@@ -304,6 +339,18 @@ export async function processOwnerAlerts(
   }
   if (alerts.length === 0) return summary;
   const farmName = ownerRow(ownerId)?.name ?? 'your farm';
+  const localeOf = recipientLocales(members.map((m) => m.userId));
+  const translated = new Map<Locale, Map<string, PushAlert>>();
+  const inLocale = (batch: PushAlert[], locale: Locale): PushAlert => {
+    if (locale === DEFAULT_LOCALE) return { ...batch[0], ...batchMessage(batch) };
+    let table = translated.get(locale);
+    if (!table) {
+      table = new Map(build(locale).map((a) => [alertKey(a), a]));
+      translated.set(locale, table);
+    }
+    const local = batch.map((a) => table.get(alertKey(a)) ?? a);
+    return { ...local[0], ...batchMessage(local, locale) };
+  };
   const batches = new Map<string, PushAlert[]>();
   for (const alert of alerts) {
     if (!claimDelivery(alert.kind, alert.subjectId, now)) continue;
@@ -315,18 +362,20 @@ export async function processOwnerAlerts(
   }
   for (const batch of batches.values()) {
     const first = batch[0];
-    const alert: PushAlert = { ...first, ...batchMessage(batch) };
+    const alert: PushAlert = inLocale(batch, DEFAULT_LOCALE);
     let delivered = 0;
     const recipients = deps.config ? selectRecipients(listSubscriptions(), members, alert) : [];
-    if (deps.config && recipients.length > 0) {
+    for (const [locale, group] of byLocale(recipients, (r) => r.userId, localeOf)) {
+      if (!deps.config) break;
+      const message = inLocale(batch, locale);
       const result = await sendToSubscriptions(
-        recipients,
+        group,
         {
-          title: alert.title,
-          body: alert.body,
-          url: alert.url,
-          tag: `${alert.kind}:${alert.batchKey ?? alert.subjectId}`,
-          kind: alert.kind
+          title: message.title,
+          body: message.body,
+          url: message.url,
+          tag: `${first.kind}:${first.batchKey ?? first.subjectId}`,
+          kind: first.kind
         },
         deps.config,
         { fetchImpl: deps.fetchImpl, nowMs: now, urgency: 'high' }
@@ -337,7 +386,10 @@ export async function processOwnerAlerts(
       summary.failed += result.failed;
     }
     if (deps.emailOrigin) {
-      const mail = await sendAlertEmails(ownerId, farmName, alert, members, deps.emailOrigin);
+      const mail = await sendAlertEmails(ownerId, farmName, alert, members, deps.emailOrigin, {
+        localeOf,
+        alertIn: (locale) => inLocale(batch, locale)
+      });
       delivered += mail.sent;
       summary.emailed += mail.sent;
       summary.emailFailed += mail.failed;

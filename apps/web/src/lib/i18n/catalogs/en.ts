@@ -12,6 +12,7 @@ import { enAnimals } from './en/animals';
 import { enRecords } from './en/records';
 import { enPlugins } from './en/plugins';
 import { enEntry } from './en/entry';
+import { enNotify } from './en/notify';
 
 /**
  * The English catalog is the source of every message key (F5-2). Keys are
@@ -33,7 +34,8 @@ export const EN_PARTS = [
   enAnimals,
   enRecords,
   enPlugins,
-  enEntry
+  enEntry,
+  enNotify
 ] as const;
 
 export const en = {
@@ -50,7 +52,8 @@ export const en = {
   ...enAnimals,
   ...enRecords,
   ...enPlugins,
-  ...enEntry
+  ...enEntry,
+  ...enNotify
 } as const;
 
 export type MessageKey = keyof typeof en;

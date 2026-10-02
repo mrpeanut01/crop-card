@@ -64,6 +64,8 @@ export interface TodayAdviceContext {
   isOwner?: boolean;
   /** The Monday summary card (F4-8). */
   digest?: TodayDigestInput;
+  /** The viewer's language for card text; unset is English. */
+  locale?: string | null;
 }
 
 export type TodayAdviceProvider = (ctx: TodayAdviceContext) => Promise<TodayAdviceCard[]>;

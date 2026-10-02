@@ -23,13 +23,14 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
     withCash: false
   });
   const isOwner = user.role === 'owner';
-  const digest = source.digestFor(user.id, isOwner, false);
+  const digest = source.digestFor(user.id, isOwner, false, locals.locale);
   return {
     card: buildDigestCard(digest, {
       asOf: now,
       farmName: activeOwner?.name ?? null,
       viewerName: source.people[user.id] ?? null,
-      listLimit: Number.POSITIVE_INFINITY
+      listLimit: Number.POSITIVE_INFINITY,
+      locale: locals.locale
     })
   };
 };

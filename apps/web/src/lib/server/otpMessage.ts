@@ -14,6 +14,9 @@
  * - The code field itself carries `autocomplete="one-time-code"`.
  */
 
+import { t } from '$lib/i18n';
+import { effectiveLocale } from './messageLocale';
+
 const WORDS = [
   'zero',
   'one',
@@ -38,14 +41,39 @@ const WORDS = [
   'twenty'
 ];
 
+const WORDS_ES = [
+  'cero',
+  'un',
+  'dos',
+  'tres',
+  'cuatro',
+  'cinco',
+  'seis',
+  'siete',
+  'ocho',
+  'nueve',
+  'diez',
+  'once',
+  'doce',
+  'trece',
+  'catorce',
+  'quince',
+  'dieciséis',
+  'diecisiete',
+  'dieciocho',
+  'diecinueve',
+  'veinte'
+];
+
 /** "fifteen minutes"; past twenty, "about half an hour"-style wording keeps
  *  digits out of the message. */
-export function minutesInWords(ms: number): string {
+export function minutesInWords(ms: number, locale?: string | null): string {
+  const loc = effectiveLocale(locale);
   const n = Math.max(1, Math.round(ms / 60_000));
-  if (n === 1) return 'one minute';
-  if (n <= 20) return `${WORDS[n]} minutes`;
-  if (n <= 45) return 'about half an hour';
-  return 'about an hour';
+  if (n === 1) return t(loc, 'sms.minutes.one');
+  if (n <= 20) return t(loc, 'sms.minutes.words', { words: (loc === 'es' ? WORDS_ES : WORDS)[n] });
+  if (n <= 45) return t(loc, 'sms.minutes.halfHour');
+  return t(loc, 'sms.minutes.hour');
 }
 
 /** `@host #code`, or null when there is no usable origin (e.g. local dev
@@ -65,21 +93,29 @@ export function withOriginBoundLine(lines: string[], origin: string | null, code
   return (bound ? [...lines, '', bound] : lines).join('\n');
 }
 
-export function smsLoginBody(code: string, ttlMs: number, origin: string | null): string {
+export function smsLoginBody(
+  code: string,
+  ttlMs: number,
+  origin: string | null,
+  locale?: string | null
+): string {
+  const loc = effectiveLocale(locale);
   return withOriginBoundLine(
-    [
-      `Your CropCard sign-in code is ${code}. It expires in ${minutesInWords(ttlMs)}. Don't share it with anyone.`
-    ],
+    [t(loc, 'sms.login', { code, expires: minutesInWords(ttlMs, loc) })],
     origin,
     code
   );
 }
 
-export function smsLinkBody(code: string, ttlMs: number, origin: string | null): string {
+export function smsLinkBody(
+  code: string,
+  ttlMs: number,
+  origin: string | null,
+  locale?: string | null
+): string {
+  const loc = effectiveLocale(locale);
   return withOriginBoundLine(
-    [
-      `Your CropCard verification code is ${code}. Enter it to add this number to your account. It expires in ${minutesInWords(ttlMs)}.`
-    ],
+    [t(loc, 'sms.link', { code, expires: minutesInWords(ttlMs, loc) })],
     origin,
     code
   );

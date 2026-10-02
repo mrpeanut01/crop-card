@@ -18,6 +18,7 @@ import { PLANS } from '$lib/billing/plans';
 import { resolvePlan } from '$lib/server/billing/plans';
 import { animalsNavLabel } from '$lib/animals/profile.server';
 import { enabledLocales } from '$lib/i18n/locales';
+import { demoExpiryFor } from '$lib/server/demo/lifecycle';
 
 export const load: LayoutServerLoad = ({ locals }) => {
   // A sprayer is "dirty" when it has carried chemistry that has not yet been
@@ -140,6 +141,14 @@ export const load: LayoutServerLoad = ({ locals }) => {
 
   const profile = locals.user ? profileFor(locals.user.id) : null;
 
+  let demo: { expiresAt: number } | null = null;
+  try {
+    const expiresAt = demoExpiryFor(locals.user);
+    if (expiresAt !== null) demo = { expiresAt };
+  } catch (err) {
+    console.error('[demo] layout failed to read the demo expiry', err);
+  }
+
   const pluginLoadFailures =
     locals.user && (locals.user.role === 'owner' || locals.user.isSuperadmin)
       ? getRegistryStats().failures.length
@@ -168,6 +177,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
     animalsNavLabel: animalsLabel,
     activeOwner,
     availableOwners,
-    billingGrace
+    billingGrace,
+    demo
   };
 };

@@ -8,6 +8,7 @@
  * the tables listed in RETENTION_RULES are pruned, each on its own clock.
  */
 
+import { purgeExpiredDemoOwners } from '$lib/db/demo/purge';
 import { eq } from 'drizzle-orm';
 import { db, sqliteHandle } from '$lib/db/client';
 import { systemState } from '$lib/db/schema';
@@ -200,11 +201,21 @@ async function run(opts: MaintenanceOptions): Promise<MaintenanceResult> {
     pruned[rule.name] = await pruneRule(rule, now, batch);
     await yieldToEventLoop();
   }
+  let demoFarms = 0;
+  while (!isFenced()) {
+    const n = purgeExpiredDemoOwners(now, 10);
+    demoFarms += n;
+    if (n < 10) break;
+    await yieldToEventLoop();
+  }
   const vault = isFenced() ? undefined : await vaultUpkeep(now);
   const storageOwners = isFenced() ? 0 : recomputeAllStorageUsage(now);
   if (!isFenced()) sqliteHandle().pragma('optimize');
   const durationMs = Math.round(performance.now() - started);
-  console.log('[db-maintenance]', JSON.stringify({ pruned, storageOwners, vault, ms: durationMs }));
+  console.log(
+    '[db-maintenance]',
+    JSON.stringify({ pruned, storageOwners, demoFarms, vault, ms: durationMs })
+  );
   return { ran: true, pruned, storageOwners, ...(vault ? { vault } : {}), durationMs };
 }
 

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import type { SubmitFunction } from '@sveltejs/kit';
   import type { SignInChannel } from '$lib/identity';
   import AlphaBanner from '$lib/components/feedback/AlphaBanner.svelte';
   import type { ActionData, PageData } from './$types';
@@ -12,6 +13,24 @@
 
   let showDemo = $state(false);
   let submitting = $state(false);
+  let startingDemo = $state(false);
+  let demoError = $state<string | null>(null);
+
+  const startDemo: SubmitFunction = () => {
+    startingDemo = true;
+    demoError = null;
+    return async ({ result }) => {
+      if (result.type === 'redirect') {
+        window.location.href = result.location;
+        return;
+      }
+      startingDemo = false;
+      demoError =
+        result.type === 'failure' && typeof result.data?.demoError === 'string'
+          ? result.data.demoError
+          : tr('entry.demo.errOff');
+    };
+  };
   const via = $derived<SignInChannel>(form && 'via' in form && form.via ? form.via : data.via);
   const enteredBefore = $derived(form && 'entered' in form ? (form.entered ?? '') : '');
   const sent = $derived(form && 'sent' in form && form.sent ? form : null);
@@ -373,6 +392,25 @@
       {/if}
     </div>
 
+    {#if data.demoEnabled && !data.inviteToken}
+      <div class="tour-card" data-testid="demo-card">
+        {#if data.demoExpired}
+          <p class="tour-note" role="status">{tr('entry.demo.expired')}</p>
+        {/if}
+        <p class="tour-kicker">{tr('entry.demo.kicker')}</p>
+        <h2 class="tour-title">{tr('entry.demo.title')}</h2>
+        <p class="tour-body">{tr('entry.demo.body')}</p>
+        {#if demoError}
+          <p class="error" role="alert">{demoError}</p>
+        {/if}
+        <form method="POST" action="/demo?/start" use:enhance={startDemo}>
+          <button class="tour-btn" type="submit" disabled={startingDemo} data-testid="demo-start">
+            {startingDemo ? tr('entry.demo.starting') : tr('entry.demo.cta')}
+          </button>
+        </form>
+      </div>
+    {/if}
+
     <footer class="auth-footer">
       <small>
         {tr('entry.land.footer')}
@@ -382,6 +420,55 @@
 </section>
 
 <style>
+  .tour-card {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 26rem;
+    margin: 1.5rem auto 0;
+    padding: 20px 22px;
+    border-radius: 14px;
+    background: #eaf3e4;
+    border: 1px solid #c4dcb6;
+    color: #1d3a24;
+  }
+  .tour-kicker {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #2f6b3e;
+  }
+  .tour-title {
+    margin: 4px 0 6px;
+    font-size: 20px;
+  }
+  .tour-body {
+    margin: 0 0 14px;
+    line-height: 1.45;
+  }
+  .tour-note {
+    margin: 0 0 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #fff7e0;
+    color: #6b4e12;
+  }
+  .tour-btn {
+    width: 100%;
+    min-height: 48px;
+    border: none;
+    border-radius: 10px;
+    background: #1f5e3a;
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .tour-btn:disabled {
+    opacity: 0.7;
+    cursor: progress;
+  }
   /* Layout — split-screen on desktop, stacked on mobile (form first). */
   .landing {
     min-height: 100vh;

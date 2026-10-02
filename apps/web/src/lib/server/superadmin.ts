@@ -8,6 +8,7 @@
  * action and writes an audit row per mutation.
  */
 
+import { isDemoOwnerId } from '$lib/demo/identity';
 import { randomUUID } from 'node:crypto';
 import { db } from '$lib/db/client';
 import { owners, ownerUsageCounters, superadminAudit, users } from '$lib/db/schema';
@@ -45,7 +46,8 @@ export function listAllOwners(): OwnerSummary[] {
     })
     .from(owners)
     .orderBy(desc(owners.createdAt))
-    .all();
+    .all()
+    .filter((r) => !isDemoOwnerId(r.id));
   if (ownerRows.length === 0) return [];
 
   unscopedQueryNote('per-tenant usage counters for the superadmin dashboard');

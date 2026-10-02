@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy, onMount, untrack } from 'svelte';
   import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { claimHint, hintState, initHints, markHintSeen, releaseHint } from '$lib/client/hints';
   import type { HintKey } from '$lib/hints';
 
@@ -14,6 +15,7 @@
   }
 
   const { key, text, anchor, suppressed = false }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const SAFETY_STOP = '[data-safety-stop], [role="alertdialog"], .stop[role="alert"]';
   const WIDTH = 280;
@@ -134,14 +136,14 @@
     class:above={pos.above}
     bind:this={bubble}
     role="note"
-    aria-label="Tip"
+    aria-label={tr('ui.hint.tip')}
     data-hint={key}
     style:top="{pos.top}px"
     style:left="{pos.left}px"
     style:--arrow-x="{pos.arrow}px"
   >
     <p>{text}</p>
-    <button type="button" onclick={gotIt}>Got it</button>
+    <button type="button" onclick={gotIt}>{tr('ui.hint.gotIt')}</button>
   </div>
 {/if}
 

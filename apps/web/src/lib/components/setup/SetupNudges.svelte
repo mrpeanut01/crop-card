@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import type { SetupAsk, SetupNudge } from '$lib/onboarding/pageSetup';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     nudges: SetupNudge[];
@@ -11,6 +13,8 @@
   }
 
   const { nudges, scope, onAsk }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   const SAFETY_STOP = '[data-safety-stop], [role="alertdialog"], .stop[role="alert"]';
   const storageKey = $derived(`setup-nudges:${scope}`);
@@ -54,11 +58,13 @@
 </script>
 
 {#if shown.length > 0}
-  <details class="setup-nudges" aria-label="Finish setting up" data-testid="setup-nudges">
+  <details class="setup-nudges" aria-label={tr('setup.nudges.aria')} data-testid="setup-nudges">
     <summary>
       <span class="head">
         <span class="kicker"
-          >Finish setting up{shown.length > 1 ? ` · ${shown.length} questions` : ''}</span
+          >{shown.length > 1
+            ? tr('setup.nudges.kickerCount', { count: shown.length })
+            : tr('setup.nudges.kicker')}</span
         >
         <span class="lead">{shown[0].title}</span>
       </span>
@@ -82,9 +88,9 @@
             type="button"
             class="later"
             onclick={() => dismiss(n.id)}
-            aria-label={`Not now: ${n.title}`}
+            aria-label={tr('setup.nudges.notNowAria', { title: n.title })}
           >
-            Not now
+            {tr('setup.nudges.notNow')}
           </button>
         </div>
       </div>

@@ -1,32 +1,36 @@
 <script lang="ts">
   import type { ActionData, PageData } from './$types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  const REASON_COPY = {
-    invalid: "This sign-in link isn't valid. It may have been copied incompletely.",
-    expired: 'This sign-in link has expired. Links work for 15 minutes.',
-    used: 'This sign-in link has already been used. Each link works once.'
-  } as const;
+  const tr = $derived(createT(page.data?.locale));
+
+  const REASON_COPY = $derived({
+    invalid: tr('signin.verify.invalid'),
+    expired: tr('signin.verify.expired'),
+    used: tr('signin.verify.used')
+  });
 
   const reason = $derived(form?.reason ?? (data.status === 'invalid' ? data.reason : null));
 </script>
 
-<svelte:head><title>Sign in · CropCard</title></svelte:head>
+<svelte:head><title>{tr('signin.verify.title')}</title></svelte:head>
 
 <section class="verify" aria-labelledby="verify-title">
   {#if form?.sent}
-    <h1 id="verify-title">Check your email</h1>
+    <h1 id="verify-title">{tr('signin.verify.checkEmail')}</h1>
     <p role="status" aria-live="polite">{form.message}</p>
   {:else if reason || data.status !== 'ready'}
-    <h1 id="verify-title">Link can't be used</h1>
+    <h1 id="verify-title">{tr('signin.verify.unusable')}</h1>
     <p role="alert">{REASON_COPY[reason ?? 'invalid']}</p>
     {#if form?.resendError}
       <p class="error" role="alert">{form.resendError}</p>
     {/if}
     <form method="POST" action="?/resend">
       <label class="row">
-        <span class="lbl">Email</span>
+        <span class="lbl">{tr('signin.verify.email')}</span>
         <input
           type="email"
           name="email"
@@ -41,21 +45,21 @@
       {#if data.invite}
         <input type="hidden" name="invite" value={data.invite} />
       {/if}
-      <button class="primary" type="submit">Send a new link →</button>
+      <button class="primary" type="submit">{tr('signin.verify.sendNew')}</button>
     </form>
-    <a class="ghost" href="/">Back to sign in</a>
+    <a class="ghost" href="/">{tr('signin.verify.back')}</a>
   {:else}
-    <h1 id="verify-title">Finish signing in</h1>
-    <p>Signing in as <strong>{data.email}</strong>.</p>
+    <h1 id="verify-title">{tr('signin.verify.finish')}</h1>
+    <p>{tr('signin.verify.signingInAs')} <strong>{data.email}</strong>.</p>
     <form method="POST" action="?/confirm">
       <input type="hidden" name="token" value={data.token} />
       {#if data.invite}
         <input type="hidden" name="invite" value={data.invite} />
       {/if}
       <!-- svelte-ignore a11y_autofocus -->
-      <button class="primary" type="submit" autofocus>Continue to CropCard →</button>
+      <button class="primary" type="submit" autofocus>{tr('signin.verify.continue')}</button>
     </form>
-    <p class="hint">Not you? Close this tab — nothing happens until you continue.</p>
+    <p class="hint">{tr('signin.verify.notYou')}</p>
   {/if}
 </section>
 

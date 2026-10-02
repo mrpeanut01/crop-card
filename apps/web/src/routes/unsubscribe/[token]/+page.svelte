@@ -1,14 +1,17 @@
 <script lang="ts">
   import { emailAlertLabel, type EmailAlertCategory } from '$lib/email/alertCategories';
   import type { ActionData, PageData } from './$types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const { data, form }: { data: PageData; form: ActionData } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
-  const farm = $derived((data.status === 'ready' && data.farmName) || 'this farm');
+  const farm = $derived((data.status === 'ready' && data.farmName) || tr('entry.unsub.thisFarm'));
   const scopeLabel = $derived(
     data.status === 'ready' && data.scope !== 'all'
-      ? `"${emailAlertLabel(data.scope as EmailAlertCategory)}" emails`
-      : 'every alert email'
+      ? tr('entry.unsub.scopeOne', { label: emailAlertLabel(data.scope as EmailAlertCategory) })
+      : tr('entry.unsub.scopeAll')
   );
   const alreadyOff = $derived(
     data.status === 'ready' &&
@@ -31,36 +34,34 @@
   const done = $derived(form && 'done' in form ? form.done : null);
 </script>
 
-<svelte:head><title>Email alerts · CropCard</title></svelte:head>
+<svelte:head><title>{tr('entry.unsub.title')}</title></svelte:head>
 
 <section class="card" aria-labelledby="unsub-title">
   {#if data.status !== 'ready'}
-    <h1 id="unsub-title">Link can't be used</h1>
+    <h1 id="unsub-title">{tr('entry.unsub.unusable')}</h1>
     <p role="alert">
-      This unsubscribe link isn't valid. It may have been copied incompletely. You can turn alert
-      emails off in CropCard under Settings, Notifications.
+      {tr('entry.unsub.invalidBody')}
     </p>
-    <a class="ghost" href="/settings/notifications">Open notification settings</a>
+    <a class="ghost" href="/settings/notifications">{tr('entry.unsub.openSettings')}</a>
   {:else if done === 'resubscribed' && form && 'turnedOn' in form}
-    <h1 id="unsub-title">Emails are back on</h1>
-    <p role="status">You'll get these emails from {farm} again:</p>
+    <h1 id="unsub-title">{tr('entry.unsub.backOn')}</h1>
+    <p role="status">{tr('entry.unsub.backOnBody', { farm })}</p>
     <ul>
       {#each form.turnedOn as c (c)}<li>{emailAlertLabel(c as EmailAlertCategory)}</li>{/each}
     </ul>
-    <a class="ghost" href="/settings/notifications">Manage alerts in CropCard</a>
+    <a class="ghost" href="/settings/notifications">{tr('entry.unsub.manage')}</a>
   {:else if done === 'unsubscribed'}
-    <h1 id="unsub-title">You're unsubscribed</h1>
+    <h1 id="unsub-title">{tr('entry.unsub.done')}</h1>
     {#if turnedOff.length > 0}
-      <p role="status">We turned off these emails from {farm}:</p>
+      <p role="status">{tr('entry.unsub.turnedOff', { farm })}</p>
       <ul>
         {#each turnedOff as c (c)}<li>{emailAlertLabel(c)}</li>{/each}
       </ul>
     {:else}
-      <p role="status">Those emails were already off, so nothing changed.</p>
+      <p role="status">{tr('entry.unsub.alreadyOff')}</p>
     {/if}
     <p class="hint">
-      Push notifications on your devices are separate and still follow their own settings. Sign-in
-      emails still arrive whenever you ask for one.
+      {tr('entry.unsub.pushNote')}
     </p>
     {#if form && 'error' in form && form.error}
       <p class="error" role="alert">{form.error}</p>
@@ -68,32 +69,36 @@
     {#if data.isMember && restorable.length > 0}
       <form method="POST" action="?/resubscribe">
         {#each restorable as c (c)}<input type="hidden" name="category" value={c} />{/each}
-        <button class="secondary" type="submit">Changed your mind? Turn them back on</button>
+        <button class="secondary" type="submit">{tr('entry.unsub.undo')}</button>
       </form>
     {/if}
-    <a class="ghost" href="/settings/notifications">Manage alerts in CropCard</a>
+    <a class="ghost" href="/settings/notifications">{tr('entry.unsub.manage')}</a>
   {:else}
-    <h1 id="unsub-title">Stop alert emails?</h1>
-    <p>This turns off {scopeLabel} from <strong>{farm}</strong>.</p>
+    <h1 id="unsub-title">{tr('entry.unsub.stop')}</h1>
+    <p>
+      {tr('entry.unsub.turnsOffPre')}{scopeLabel}{tr('entry.unsub.turnsOffMid')}<strong
+        >{farm}</strong
+      >.
+    </p>
     {#if alreadyOff}
-      <p class="hint" role="status">They're already off. Nothing more will be sent.</p>
+      <p class="hint" role="status">{tr('entry.unsub.nowOff')}</p>
     {/if}
     {#if form && 'error' in form && form.error}
       <p class="error" role="alert">{form.error}</p>
       {#if 'signIn' in form && form.signIn}
-        <a class="ghost" href="/settings/notifications">Open notification settings</a>
+        <a class="ghost" href="/settings/notifications">{tr('entry.unsub.openSettings')}</a>
       {/if}
     {/if}
     <form method="POST" action="?/unsubscribe">
-      <button class="primary" type="submit">Unsubscribe</button>
+      <button class="primary" type="submit">{tr('entry.unsub.submit')}</button>
     </form>
     {#if data.scope !== 'all'}
       <form method="POST" action="?/unsubscribe">
         <input type="hidden" name="everything" value="1" />
-        <button class="secondary" type="submit">Turn off every alert email from this farm</button>
+        <button class="secondary" type="submit">{tr('entry.unsub.everything')}</button>
       </form>
     {/if}
-    <p class="hint">No sign-in needed. Nothing changes until you press a button.</p>
+    <p class="hint">{tr('entry.unsub.noSignIn')}</p>
   {/if}
 </section>
 

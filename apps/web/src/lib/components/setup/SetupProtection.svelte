@@ -1,5 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import {
     HARD_FREEZE_NOTE,
@@ -22,6 +24,7 @@
   }
 
   const { blockId, blockName, canEdit, seasonYear, initialKind, onDone }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
   const uid = $props.id();
 
   let kind = $state<ProtectionKind>(untrack(() => initialKind ?? 'row-cover'));
@@ -61,13 +64,13 @@
     e.preventDefault();
     error = null;
     if (!heated && (!validDays(springDays) || !validDays(fallDays))) {
-      error = `Enter whole days from 0 to ${MAX_SHIFT_DAYS}.`;
+      error = tr('setup.cover.errDays', { max: MAX_SHIFT_DAYS });
       return;
     }
     const inst = dayMs(installedOn);
     const rem = dayMs(removedOn);
     if (inst !== null && rem !== null && rem <= inst) {
-      error = 'The removal date has to come after the install date.';
+      error = tr('setup.cover.errDates');
       return;
     }
     saving = true;
@@ -93,14 +96,15 @@
 </script>
 
 {#if !canEdit}
-  <p class="ask-owner" role="note">Ask the owner to add a cover to {blockName}.</p>
+  <p class="ask-owner" role="note">{tr('setup.cover.askOwner', { name: blockName })}</p>
 {:else}
   <form class="setup-protection" onsubmit={submit}>
     <p class="lede">
-      A cover moves this bed's frost dates for planning only. {HARD_FREEZE_NOTE}
+      {tr('setup.cover.lede')}
+      {HARD_FREEZE_NOTE}
     </p>
 
-    <label for="sp-kind-{uid}">Kind of cover</label>
+    <label for="sp-kind-{uid}">{tr('setup.cover.kind')}</label>
     <select id="sp-kind-{uid}" bind:value={kind} data-autofocus>
       {#each PROTECTION_KINDS as k (k)}
         <option value={k}>{PROTECTION_LABEL[k]}</option>
@@ -108,14 +112,14 @@
     </select>
 
     {#if heated}
-      <p class="help">A heated greenhouse has no frost limit, so frost alerts skip this bed.</p>
+      <p class="help">{tr('setup.cover.heatedHelp')}</p>
     {:else}
       {#if defaults.springShiftDays === null || defaults.fallShiftDays === null}
         <p class="help" role="note">{SHIFT_UNKNOWN_NOTE}</p>
       {/if}
       <div class="shift-row">
         <label>
-          <span>Spring: days earlier</span>
+          <span>{tr('setup.cover.spring')}</span>
           <input
             type="number"
             inputmode="numeric"
@@ -135,7 +139,7 @@
           </span>
         </label>
         <label>
-          <span>Fall: days later</span>
+          <span>{tr('setup.cover.fall')}</span>
           <input
             type="number"
             inputmode="numeric"
@@ -158,24 +162,26 @@
 
     <label class="check">
       <input type="checkbox" bind:checked={thisSeasonOnly} />
-      <span>Only for the {seasonYear} season</span>
+      <span>{tr('setup.cover.seasonOnly', { year: seasonYear })}</span>
     </label>
-    <p class="help">Leave this off for a structure that stays up every year.</p>
+    <p class="help">{tr('setup.cover.everyYear')}</p>
 
     <div class="shift-row">
       <label>
-        <span>Goes on <span class="optional">(optional)</span></span>
+        <span>{tr('setup.cover.goesOn')} <span class="optional">{tr('setup.optional')}</span></span>
         <input type="date" bind:value={installedOn} />
       </label>
       <label>
-        <span>Comes off <span class="optional">(optional)</span></span>
+        <span
+          >{tr('setup.cover.comesOff')} <span class="optional">{tr('setup.optional')}</span></span
+        >
         <input type="date" bind:value={removedOn} />
       </label>
     </div>
 
     {#if error}<p class="error" role="alert">{error}</p>{/if}
     <button class="primary" type="submit" disabled={saving}>
-      {saving ? 'Saving…' : 'Add cover'}
+      {saving ? tr('setup.saving') : tr('setup.cover.add')}
     </button>
   </form>
 {/if}

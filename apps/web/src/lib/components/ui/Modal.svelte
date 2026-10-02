@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     open: boolean;
@@ -14,6 +16,7 @@
   }
 
   let { open, onClose, title, children, footer, closeOnBackdrop = true }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
   const uid = $props.id();
   const titleId = `modal-title-${uid}`;
 
@@ -55,7 +58,7 @@
   <div class="shell" role="document">
     <header>
       <h2 id={titleId} class="serif">{title}</h2>
-      <button type="button" class="close" aria-label="Close" onclick={onClose}>×</button>
+      <button type="button" class="close" aria-label={tr('ui.close')} onclick={onClose}>×</button>
     </header>
     <div class="body">{@render children()}</div>
     {#if footer}<footer>{@render footer()}</footer>{/if}

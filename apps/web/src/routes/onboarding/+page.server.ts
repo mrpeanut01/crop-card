@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { helperAssignments, ownerSubscriptions, owners } from '$lib/db/schema';
 import { currentUser } from '$lib/server/auth';
+import { t } from '$lib/i18n';
 import { writeSession } from '$lib/server/session';
 import { runWithTenant, unscopedQueryNote } from '$lib/db/tenant';
 import { createField, listFields } from '$lib/db/fields';
@@ -113,22 +114,22 @@ export const actions: Actions = {
     // not mint a duplicate owner and silently switch the session to it.
     if (user.activeOwnerId) {
       return fail(400, {
-        error: 'Your farm is already set up. You can rename it any time in Settings.'
+        error: t(event.locals.locale, 'onboard.errAlready')
       });
     }
 
     const fd = await event.request.formData();
     const farmName = String(fd.get('farmName') ?? '').trim();
-    if (!farmName) return fail(400, { error: 'Give your farm a name to continue.' });
-    if (farmName.length > 120) return fail(400, { error: 'Keep the farm name under 120 letters.' });
+    if (!farmName) return fail(400, { error: t(event.locals.locale, 'onboard.errNameRequired') });
+    if (farmName.length > 120)
+      return fail(400, { error: t(event.locals.locale, 'onboard.errNameLong') });
 
     const hasLatLon =
       String(fd.get('lat') ?? '').trim() !== '' || String(fd.get('lon') ?? '').trim() !== '';
     const latLon = parseLatLon(fd.get('lat'), fd.get('lon'));
     if (hasLatLon && !latLon) {
       return fail(400, {
-        error:
-          'That location did not read as a latitude and longitude. Search, use GPS or tap the map.'
+        error: t(event.locals.locale, 'onboard.errLatLon')
       });
     }
     if (latLon) fd.set('frostBasis', 'lookup');
@@ -203,7 +204,7 @@ export const actions: Actions = {
     const profile = profileForAnswers(choices, animals);
     const farmAnimals = farmAnimalsFor(animals);
     if (!profile) {
-      return fail(400, { error: 'Pick at least one, or choose "Not sure yet".' });
+      return fail(400, { error: t(event.locals.locale, 'onboard.errPickOne') });
     }
     const existing = listFields();
     db.transaction(() => {

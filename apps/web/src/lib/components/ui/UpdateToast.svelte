@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+
   interface Props {
     visible: boolean;
     onReload: () => void;
@@ -6,15 +9,16 @@
   }
 
   const { visible, onReload, onDismiss }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <div class="update-region" role="status" aria-live="polite">
   {#if visible}
     <div class="toast">
-      <span class="msg">New version available</span>
+      <span class="msg">{tr('ui.update.msg')}</span>
       <div class="actions">
-        <button type="button" class="later" onclick={onDismiss}>Later</button>
-        <button type="button" class="reload" onclick={onReload}>Reload</button>
+        <button type="button" class="later" onclick={onDismiss}>{tr('ui.update.later')}</button>
+        <button type="button" class="reload" onclick={onReload}>{tr('ui.update.reload')}</button>
       </div>
     </div>
   {/if}

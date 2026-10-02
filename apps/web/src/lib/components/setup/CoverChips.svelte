@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import SetupSheet from './SetupSheet.svelte';
   import SetupProtection from './SetupProtection.svelte';
@@ -23,6 +25,8 @@
   }
 
   const { blockId, blockName, canEdit, seasonYear, onChange }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   let data = $state<BlockCoversResponse | null>(null);
   let loadError = $state<string | null>(null);
@@ -53,10 +57,13 @@
   function datesText(p: BlockProtectionView): string {
     const on = dayOf(p.installedOn);
     const off = dayOf(p.removedOn);
-    const season = p.seasonYear === null ? 'every year' : `${p.seasonYear} season`;
-    if (on && off) return `${on} to ${off}, ${season}`;
-    if (on) return `from ${on}, ${season}`;
-    if (off) return `until ${off}, ${season}`;
+    const season =
+      p.seasonYear === null
+        ? tr('setup.chips.everyYear')
+        : tr('setup.chips.seasonOf', { year: p.seasonYear });
+    if (on && off) return tr('setup.chips.range', { on, off, season });
+    if (on) return tr('setup.chips.from', { on, season });
+    if (off) return tr('setup.chips.until', { off, season });
     return season;
   }
 
@@ -82,15 +89,15 @@
   }
 </script>
 
-<section class="cover-chips" aria-label="Covers on {blockName}">
-  <h3 class="title">Covers</h3>
+<section class="cover-chips" aria-label={tr('setup.chips.aria', { name: blockName })}>
+  <h3 class="title">{tr('setup.chips.title')}</h3>
   {#if loadError}
     <p class="error" role="alert">{loadError}</p>
   {:else if !data}
-    <p class="muted">Loading covers…</p>
+    <p class="muted">{tr('setup.chips.loading')}</p>
   {:else}
     {#if data.protections.length === 0}
-      <p class="muted">No covers on this bed.</p>
+      <p class="muted">{tr('setup.chips.none')}</p>
     {:else}
       <ul class="chips">
         {#each data.protections as p (p.id)}
@@ -98,7 +105,7 @@
             <div class="chip-main">
               <strong>{PROTECTION_LABEL[p.kind]}</strong>
               {#if p.kind === 'greenhouse-heated'}
-                <span>No frost limit</span>
+                <span>{tr('setup.chips.noLimit')}</span>
               {:else}
                 <span>
                   {shiftText('spring', p.springShiftDays)} · {shiftText('fall', p.fallShiftDays)}
@@ -113,9 +120,9 @@
               <button
                 type="button"
                 class="remove"
-                aria-label="Remove {PROTECTION_LABEL[p.kind]}"
+                aria-label={tr('setup.chips.removeAria', { name: PROTECTION_LABEL[p.kind] })}
                 disabled={removing === p.id}
-                onclick={() => remove(p)}>Remove</button
+                onclick={() => remove(p)}>{tr('setup.chips.remove')}</button
               >
             {/if}
           </li>
@@ -130,16 +137,18 @@
     {/if}
     {#if actionError}<p class="error" role="alert">{actionError}</p>{/if}
     {#if canEdit}
-      <button type="button" class="add" onclick={() => (sheetOpen = true)}>+ Add a cover</button>
+      <button type="button" class="add" onclick={() => (sheetOpen = true)}
+        >{tr('setup.chips.add')}</button
+      >
     {:else}
-      <p class="muted small">Ask the owner to add or remove covers.</p>
+      <p class="muted small">{tr('setup.chips.askOwner')}</p>
     {/if}
   {/if}
 </section>
 
 <SetupSheet
   open={sheetOpen}
-  title="Add a cover"
+  title={tr('setup.chips.sheetTitle')}
   kicker={blockName}
   onClose={() => (sheetOpen = false)}
 >

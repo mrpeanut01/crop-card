@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import type { PillTone } from '$lib/styles/tokens';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     tone?: PillTone;
@@ -22,6 +24,8 @@
     action
   }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
+
   // Banners get either status or alert per WCAG: alert for blocking errors,
   // status for everything else. Defaults to status; consumers opt into alert
   // via `urgent`.
@@ -34,8 +38,11 @@
     <div class="action">{@render action()}</div>
   {/if}
   {#if dismissible}
-    <button type="button" class="dismiss" aria-label="Dismiss" onclick={() => onDismiss?.()}
-      >×</button
+    <button
+      type="button"
+      class="dismiss"
+      aria-label={tr('ui.dismiss')}
+      onclick={() => onDismiss?.()}>×</button
     >
   {/if}
 </div>

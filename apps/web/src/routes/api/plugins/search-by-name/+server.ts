@@ -17,6 +17,7 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { t } from '$lib/i18n';
 import { requireOwner } from '$lib/server/auth';
 import { recordCall } from '$lib/server/aiGuard';
 import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
@@ -96,7 +97,7 @@ export const POST: RequestHandler = async (event) => {
         quotaBlocked: !tried.guard.ok,
         upstreamOverloaded: tried.error instanceof AnthropicOverloadedError,
         aiUnavailable: true,
-        message: `${tried.fallbackMessage} Showing local registry matches only.`
+        message: `${tried.fallbackMessage} ${t(event.locals.locale, 'pluginui.api.localOnly')}`
       }
     });
   }

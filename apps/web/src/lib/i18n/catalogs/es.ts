@@ -1,5 +1,7 @@
 import type { MessageKey } from './en';
 import { esCore } from './es/core';
+import { esGarden } from './es/garden';
+import { esWizard } from './es/wizard';
 import { esToday } from './es/today';
 import { esPlan } from './es/plan';
 import { esFarm } from './es/farm';
@@ -20,6 +22,8 @@ export const reviewed = false;
 
 export const ES_PARTS: ReadonlyArray<Partial<Record<MessageKey, string>>> = [
   esCore,
+  esGarden,
+  esWizard,
   esToday,
   esPlan,
   esFarm,

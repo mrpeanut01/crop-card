@@ -1,4 +1,6 @@
 import { enCore } from './en/core';
+import { enGarden } from './en/garden';
+import { enWizard } from './en/wizard';
 import { enToday } from './en/today';
 import { enPlan } from './en/plan';
 import { enFarm } from './en/farm';
@@ -17,6 +19,8 @@ import { enEntry } from './en/entry';
  */
 export const EN_PARTS = [
   enCore,
+  enGarden,
+  enWizard,
   enToday,
   enPlan,
   enFarm,
@@ -30,6 +34,8 @@ export const EN_PARTS = [
 
 export const en = {
   ...enCore,
+  ...enGarden,
+  ...enWizard,
   ...enToday,
   ...enPlan,
   ...enFarm,

@@ -11,6 +11,7 @@
  * overlap.
  */
 
+import { calendarEventTitle } from '$lib/calendar/eventTitle';
 import { frostDatesFromMmDd } from '$lib/schedule/frostSeason';
 import { rolloverDateForSeason, type PlanningFrost } from '$lib/season/planningYear';
 import type { TaskCategory } from '$lib/plan/taskCategory';
@@ -290,7 +291,7 @@ export function buildSeasonTimeline(input: SeasonTimelineInput): SeasonTimeline 
         startMs: e.startMs,
         endMs: Math.max(e.startMs, e.endMs),
         recorded: false,
-        label: e.title,
+        label: calendarEventTitle({ ...e, varietyDisplayName: p.name }, input.locale),
         suggestion: index
       });
     });

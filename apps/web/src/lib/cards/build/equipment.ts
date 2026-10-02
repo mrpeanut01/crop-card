@@ -82,12 +82,12 @@ function sprayerFacts(e: SnapshotEquipment, opts: ResolvedOptions): CardFact[] {
   }
   facts.push({
     label: 'Last decon',
-    value: day(s?.lastDeconAt, opts) ?? 'None on record',
+    value: day(s?.lastDeconAt, opts) ?? tr('cards.eq.noneOnRecord'),
     provenance: 'data'
   });
   if (s?.lastChemistryClass) {
     facts.push({
-      label: 'Last load',
+      label: tr('cards.eq.lastLoad'),
       value: needsDecon(e) ? `${s.lastChemistryClass}, decon due` : s.lastChemistryClass,
       provenance: 'data'
     });

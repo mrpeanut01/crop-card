@@ -330,6 +330,8 @@ export const enCards = {
     "Follow your lab's recommendation for lime and fertilizer. The classes here are a quick read, not a replacement for it.",
   'cards.soil.statusStale': 'Due for a new test',
   'cards.soil.statusCurrent': 'Current',
+  'cards.eq.lastLoad': 'Last load',
+  'cards.eq.noneOnRecord': 'None on record',
   'cards.eq.calibration': 'Calibration',
   'cards.eq.notCalibrated': 'Not calibrated',
   'cards.eq.calibrated': 'Calibrated',

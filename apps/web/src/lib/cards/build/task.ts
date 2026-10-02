@@ -23,7 +23,8 @@ import {
   resolveOptions,
   resolvedFrom,
   type BuildOptions,
-  type ResolvedOptions
+  type ResolvedOptions,
+  plantingName
 } from './common';
 
 export interface TaskCardInput {
@@ -182,7 +183,10 @@ export function buildTaskCardFromSnapshot(
   const planting = task.cropId ? snapshot.plantings.find((p) => p.id === task.cropId) : undefined;
   const blockId = task.blockId ?? planting?.blockId ?? null;
   const block = blockId ? snapshot.blocks.find((b) => b.id === blockId) : undefined;
-  const where = [planting?.varietyDisplayName, block && blockDisplayName(block, opts.prefs.locale)]
+  const where = [
+    planting && plantingName(planting, opts.prefs.locale),
+    block && blockDisplayName(block, opts.prefs.locale)
+  ]
     .filter(Boolean)
     .join(' · ');
   const equipment = task.equipmentId

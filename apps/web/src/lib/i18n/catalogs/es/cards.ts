@@ -352,6 +352,8 @@ export const esCards: Partial<Record<MessageKey, string>> = {
     'Sigue la recomendación de tu laboratorio sobre cal y fertilizante. Las clases que ves aquí son una lectura rápida, no la reemplazan.',
   'cards.soil.statusStale': 'Toca un análisis nuevo',
   'cards.soil.statusCurrent': 'Vigente',
+  'cards.eq.lastLoad': 'Última carga',
+  'cards.eq.noneOnRecord': 'Ninguna registrada',
   'cards.eq.calibration': 'Calibración',
   'cards.eq.notCalibrated': 'Sin calibrar',
   'cards.eq.calibrated': 'Calibrada',

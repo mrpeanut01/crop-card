@@ -360,3 +360,33 @@ export interface CarePlanView {
   /** The species suggestion's note ("Ask your vet."), if any. */
   note: string | null;
 }
+
+const DEFAULT_TITLE_KEYS: Record<string, MessageKey> = {
+  'Rabies vaccine': 'animallib.careDefault.rabies',
+  'Core vaccines': 'animallib.careDefault.coreVaccines'
+};
+
+const DEFAULT_NOTE_KEYS: Record<string, MessageKey> = {
+  'How often depends on the vaccine and local law. Ask your vet.':
+    'animallib.careDefault.rabiesNote',
+  'Which ones and how often depend on age and risk. Ask your vet.':
+    'animallib.careDefault.coreVaccinesNote'
+};
+
+/** A care plan title for display. The built-in dog and cat defaults (seeded
+ *  with plugin provenance) read in `locale`; owner-typed titles as stored. */
+export function carePlanTitleIn(
+  plan: { title: string; provenance?: string | null },
+  locale?: string | null
+): string {
+  if (!locale || plan.provenance !== 'plugin') return plan.title;
+  const key = DEFAULT_TITLE_KEYS[plan.title];
+  return key ? t(locale, key) : plan.title;
+}
+
+/** A built-in species care note in `locale`; anything else as is. */
+export function careNoteIn(note: string | null | undefined, locale?: string | null): string {
+  if (!note) return '';
+  const key = locale ? DEFAULT_NOTE_KEYS[note] : undefined;
+  return key ? t(locale, key) : note;
+}

@@ -11,12 +11,14 @@ import {
 } from '../model';
 import type { FarmSnapshot, SnapshotCareTask, SnapshotCropPlugin } from '../snapshot';
 import { t, type MessageKey } from '$lib/i18n';
+import { cropDisplayName } from '$lib/i18n/cropName';
 import {
   blockDisplayName,
   daysText,
   resolveOptions,
   type BuildOptions,
-  type ResolvedOptions
+  type ResolvedOptions,
+  plantingName
 } from './common';
 import { formatInches } from './size';
 import { familyCareTips, type FamilyCareTips } from './careTips';
@@ -157,7 +159,8 @@ export function buildCareGuideCard(
     .filter((p) => p.cropPluginId === cropPluginId && p.status !== 'harvested')
     .map((p) => {
       const b = blocks.get(p.blockId);
-      return b ? `${p.varietyDisplayName} · ${blockDisplayName(b, loc)}` : p.varietyDisplayName;
+      const name = plantingName(p, loc);
+      return b ? `${name} · ${blockDisplayName(b, loc)}` : name;
     });
   if (growing.length) {
     sections.push({
@@ -183,7 +186,7 @@ export function buildCareGuideCard(
     kind: 'careGuide',
     key,
     kicker: tr('cards.care.kicker', { family: familyLabel(plugin.cropFamily, opts) }),
-    title: plugin.displayName,
+    title: cropDisplayName(plugin.pluginId, plugin.displayName, loc),
     facts,
     sections,
     asOf: snapshot.generatedAt,
@@ -253,7 +256,9 @@ export function areaCareLinks(
   return careGuidePluginIds(snapshot, cardKey('area', areaId))
     .slice(0, MAX_AREA_CARE_LINKS)
     .map((id) => ({
-      label: t(locale, 'cards.care.linkFor', { name: snapshot.cropPlugins[id].displayName }),
+      label: t(locale, 'cards.care.linkFor', {
+        name: cropDisplayName(id, snapshot.cropPlugins[id].displayName, locale)
+      }),
       href: careGuideHref(id)
     }));
 }

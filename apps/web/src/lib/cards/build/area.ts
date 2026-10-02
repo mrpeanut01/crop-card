@@ -24,7 +24,8 @@ import {
   resolveOptions,
   sortTasks,
   type BuildOptions,
-  type ResolvedOptions
+  type ResolvedOptions,
+  plantingName
 } from './common';
 import { SQFT_PER_ACRE, formatAreaAcres, formatFeet, formatSize, sizeBasis } from './size';
 import { areaCareLinks } from './careGuide';
@@ -83,7 +84,7 @@ function plantingLine(
 ): string {
   const where = block ? ` · ${blockDisplayName(block, locale)}` : '';
   const when = showDate && p.plantingDate ? ` · ${monthDay(p.plantingDate, locale)}` : '';
-  return `${p.varietyDisplayName}${where}${when}`;
+  return `${plantingName(p, locale)}${where}${when}`;
 }
 
 /** A bed's own width by length when it has them; stored acres are rounded
@@ -255,7 +256,7 @@ function baseAreaCard(
   const kicker = size ? `${kindLabel} · ${size}` : kindLabel;
   const key = cardKey('area', area.id);
   const bedMap = isDesignable(area.kind)
-    ? buildBedMap(snapshot, area.id, options.bedMapOnMs ?? opts.now)
+    ? buildBedMap(snapshot, area.id, options.bedMapOnMs ?? opts.now, loc)
     : null;
 
   return {
@@ -286,7 +287,8 @@ function baseAreaCard(
 export function buildBedMap(
   snapshot: FarmSnapshot,
   areaId: string,
-  onMs: number
+  onMs: number,
+  loc?: string | null
 ): CardBedMap | null {
   const design = designFromSnapshot(snapshot, areaId, {
     seasonYear: new Date(onMs).getUTCFullYear(),
@@ -315,7 +317,10 @@ export function buildBedMap(
       w: b.rect.w,
       l: b.rect.l,
       crops: bedOccupancyOn(b, intervals, day, range)
-        .occupants.map((o) => byId.get(o.cropId)?.varietyDisplayName)
+        .occupants.map((o) => {
+          const hit = byId.get(o.cropId);
+          return hit ? plantingName(hit, loc) : undefined;
+        })
         .filter((n): n is string => !!n),
       plantings: design.plantings
         .filter((p) => p.blockId === b.blockId)
@@ -329,7 +334,10 @@ export function buildBedMap(
           const r = footprintBounds(fp, b);
           return [
             {
-              name: p.varietyDisplayName.split(/[—(]/)[0].trim() || p.varietyDisplayName,
+              name: (() => {
+                const shown = plantingName(p, loc);
+                return shown.split(/[—(]/)[0].trim() || shown;
+              })(),
               glyph: familyGlyph(p.cropFamily).key,
               x: r.x,
               y: r.y,

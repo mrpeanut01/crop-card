@@ -6,6 +6,8 @@
 
 import { animalLabel, animalLabelIn, countText } from '$lib/animals/display';
 import { groupFacts, type GroupFactsInput } from '$lib/animals/facts';
+import { speciesGroupTitle, speciesWordsIn } from '$lib/i18n/speciesName';
+import { carePlanTitleIn } from '$lib/animals/carePlans';
 import { displayFoods } from '$lib/animals/holdCopy';
 import { ymdInZone } from '$lib/prefs';
 import {
@@ -74,12 +76,16 @@ export function memberCareLines(
         a.plan.title.localeCompare(b.plan.title)
     )
     .map(({ plan, names }) => {
-      const who = names.length === 1 ? names[0] : countText(names.length, species, opts.prefs.locale);
+      const who = names.length === 1 ? names[0] : countText(
+              names.length,
+              species,
+              opts.prefs.locale
+            );
       const when =
         plan.nextDueAt === null
           ? askYourVet(opts.prefs.locale)
           : dueLabel(plan.nextDueAt, opts.now, opts.prefs);
-      return `${plan.title}: ${who}, ${when}`;
+      return `${carePlanTitleIn(plan, opts.prefs.locale)}: ${who}, ${when}`;
     });
 }
 
@@ -138,7 +144,17 @@ function flockCard(
     livesAt: livesAt(snapshot, group.housingFieldId, loc)
   };
   const layout = pet ? 'pets' : 'farm';
-  const localValues = loc ? groupFacts(factsInput, layout, loc).map((f) => f.value) : null;
+  const shownWords = species ? speciesWordsIn(species, loc) : undefined;
+  const localValues = loc
+    ? groupFacts(
+        {
+          ...factsInput,
+          species: shownWords && { label: shownWords.label, displayName: shownWords.displayName }
+        },
+        layout,
+        loc
+      ).map((f) => f.value)
+    : null;
   const facts: CardFact[] = groupFacts(factsInput, layout).map((f, i) => ({
     ...f,
     ...(localValues ? { value: localValues[i] } : {}),
@@ -167,7 +183,11 @@ function flockCard(
   const sections: CardSection[] = [];
   const careItems = [
     ...groupPlans.map((p) => planLine(p, opts.now, opts.prefs)),
-    ...memberCareLines(memberPlans, speciesWords, opts)
+    ...memberCareLines(
+      memberPlans,
+      shownWords && { label: shownWords.label, displayName: shownWords.displayName },
+      opts
+    )
   ];
   const allPlans = [...groupPlans, ...memberPlans.map((m) => m.plan)];
   if (careItems.length) {
@@ -226,7 +246,7 @@ function flockCard(
   return {
     kind: 'flock',
     key,
-    kicker: species ? `${species.displayName} ${noun}` : tr('cards.animal.group'),
+    kicker: species ? speciesGroupTitle({ ...species, groupNoun: noun }, loc) : tr('cards.animal.group'),
     title: group.name,
     facts: localizeFacts(facts, loc),
     next: nextCare(allPlans, opts.now, opts.prefs, pageHref),

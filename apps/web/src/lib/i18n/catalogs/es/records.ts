@@ -155,6 +155,7 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'finance.form.errDate': 'Elige la fecha.',
   'finance.form.errOffline': 'Sin señal. Guarda esto cuando vuelvas a tener conexión.',
   'finance.form.errQty': 'La cantidad debe ser un número mayor que cero, o quedar vacía.',
+  'finance.form.bedFallback': 'Cama de cultivo',
   'finance.form.errSave': 'No se guardó. Inténtalo de nuevo.',
   'finance.form.expense': 'Gasto',
   'finance.form.groups': 'Grupos de animales',

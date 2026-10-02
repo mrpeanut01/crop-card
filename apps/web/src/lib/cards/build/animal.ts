@@ -6,6 +6,8 @@
  */
 
 import { animalLabelIn } from '$lib/animals/display';
+import { speciesWordsIn } from '$lib/i18n/speciesName';
+import { carePlanTitleIn } from '$lib/animals/carePlans';
 import { animalFacts, type AnimalFactsInput } from '$lib/animals/facts';
 import { displayFoods } from '$lib/animals/holdCopy';
 import type { AnimalSex } from '$lib/plugins/species';
@@ -78,6 +80,7 @@ function animalCard(
   const { tr } = opts;
   const loc = opts.prefs.locale;
   const species = speciesOf(snapshot, animal.speciesId);
+  const shownSpecies = species ? speciesWordsIn(species, loc) : null;
   const group = animal.groupId
     ? (snapshot.animalGroups?.find((g) => g.id === animal.groupId) ?? null)
     : null;
@@ -116,7 +119,14 @@ function animalCard(
       microchipId: animal.microchipId
   };
   const base = animalFacts(factsInput, layout, opts.now);
-  const localValues = loc ? animalFacts(factsInput, layout, opts.now, loc).map((f) => f.value) : null;
+  const localValues = loc
+    ? animalFacts(
+        { ...factsInput, speciesName: shownSpecies?.displayName ?? factsInput.speciesName },
+        layout,
+        opts.now,
+        loc
+      ).map((f) => f.value)
+    : null;
   const facts: CardFact[] = base.map((f, i) => ({
     ...f,
     ...(localValues ? { value: localValues[i] } : {}),
@@ -140,7 +150,7 @@ function animalCard(
         value:
           vaccine.nextDueAt === null
             ? tr('cards.animal.askVetSentence')
-            : `${vaccine.title}, ${dueLabel(vaccine.nextDueAt, opts.now, opts.prefs)}`,
+            : `${carePlanTitleIn(vaccine, loc)}, ${dueLabel(vaccine.nextDueAt, opts.now, opts.prefs)}`,
         provenance: vaccine.provenance
       });
     }
@@ -205,8 +215,8 @@ function animalCard(
 
   const key = cardKey('animal', animal.id);
   const kicker = group
-    ? `${species?.displayName ?? tr('cards.animal.animal')} · ${group.name}`
-    : (species?.displayName ?? tr('cards.animal.animal'));
+    ? `${shownSpecies?.displayName ?? tr('cards.animal.animal')} · ${group.name}`
+    : (shownSpecies?.displayName ?? tr('cards.animal.animal'));
   const notices = holdNotices(snapshot, reading, opts.prefs, foods);
   return {
     kind: 'animal',

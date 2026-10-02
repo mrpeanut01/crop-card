@@ -1,3 +1,4 @@
+import { formatStockQuantity, isSeedCountUnit } from '$lib/stock/units';
 import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
 import {
   cardHref,
@@ -15,7 +16,8 @@ import {
   monthDay,
   resolveOptions,
   trimNumber,
-  type BuildOptions
+  type BuildOptions,
+  plantingName
 } from './common';
 import { ymdInZone } from '$lib/prefs';
 
@@ -70,18 +72,22 @@ export function buildStockCard(
   const { tr } = opts;
   const loc = opts.prefs.locale;
   const today = ymdInZone(opts.now, opts.prefs.timeZone);
+  const qty = (n: number) =>
+    loc && loc !== 'en' && (isSeedCountUnit(item.unit, item.category) || item.unit === 'bag')
+      ? formatStockQuantity(n, item.unit, opts.prefs, { category: item.category, digits: 2 })
+      : `${trimNumber(n, 2)} ${item.unit}`;
 
   const facts: CardFact[] = [
     {
       label: tr('cards.stock.onHand'),
-      value: `${trimNumber(item.onHand, 2)} ${item.unit}`,
+      value: qty(item.onHand),
       provenance: 'data'
     }
   ];
   if (item.reorderThreshold !== null) {
     facts.push({
       label: tr('cards.stock.reorderAt'),
-      value: `${trimNumber(item.reorderThreshold, 2)} ${item.unit}`,
+      value: qty(item.reorderThreshold),
       provenance: 'manual'
     });
   }
@@ -116,7 +122,7 @@ export function buildStockCard(
       .map((p) => {
         const b = blocks.get(p.blockId);
         const when = p.plantingDate ? ` · ${monthDay(p.plantingDate, loc)}` : '';
-        return `${p.varietyDisplayName}${b ? ` · ${blockDisplayName(b, loc)}` : ''}${when}`;
+        return `${plantingName(p, loc)}${b ? ` · ${blockDisplayName(b, loc)}` : ''}${when}`;
       });
     if (planned.length) {
       sections.push({

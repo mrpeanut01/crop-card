@@ -27,6 +27,7 @@ import { listSprayEvents, evaluateLock as evaluateSprayLock } from './sprayEvent
 import { listInsecticideEvents } from './insecticideEvents';
 import { pollinatorAttestationSummary } from '$lib/records/pollinatorAttestation';
 import { t, type MessageKey } from '$lib/i18n';
+import { cropDisplayName } from '$lib/i18n/cropName';
 import { listFungicideEvents } from './fungicideEvents';
 import { listScoutObservations } from './scoutObservations';
 import { listHarvestEvents } from './harvestEvents';
@@ -503,7 +504,7 @@ export function listUnifiedRecords(
         blockId: p.blockId,
         blockLabel: blockLabelById.get(p.blockId),
         cropPluginId: p.cropPluginId,
-        detail: `${p.varietyDisplayName} (${p.cropPluginId})`,
+        detail: `${cropDisplayName(p.cropPluginId, p.varietyDisplayName, prefs.locale)} (${p.cropPluginId})`,
         hash: shortHash({ k: 'planting', id: p.id, o: p.plantingDate, c: p.cropPluginId }),
         locked: isLocked(p.plantingDate, undefined, now)
       });

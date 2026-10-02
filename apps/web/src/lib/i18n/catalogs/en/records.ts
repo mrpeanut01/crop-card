@@ -146,6 +146,7 @@ export const enRecords = {
   'finance.form.errDate': 'Pick the date.',
   'finance.form.errOffline': 'No signal. Save this when you are back online.',
   'finance.form.errQty': 'Quantity must be a number above zero, or empty.',
+  'finance.form.bedFallback': 'Bed',
   'finance.form.errSave': 'That did not save. Try again.',
   'finance.form.expense': 'Expense',
   'finance.form.groups': 'Animal groups',

@@ -8,6 +8,7 @@ import {
 } from '$lib/farm/emergencyContacts';
 import { formatInstant, type Prefs } from '$lib/prefs';
 import { t, type MessageKey } from '$lib/i18n';
+import { carePlanTitleIn } from '$lib/animals/carePlans';
 import type { HealthEventKind } from '$lib/safety/animalWithdrawal';
 import type { CardAction, CardProvenance, CardSection } from '../model';
 import type {
@@ -103,8 +104,9 @@ export function plansFor(
 }
 
 export function planLine(p: SnapshotCarePlan, now: number, prefs: Prefs): string {
-  if (p.nextDueAt === null) return `${p.title}: ${askYourVet(prefs.locale)}`;
-  return `${p.title}: ${dueLabel(p.nextDueAt, now, prefs)}`;
+  const title = carePlanTitleIn(p, prefs.locale);
+  if (p.nextDueAt === null) return `${title}: ${askYourVet(prefs.locale)}`;
+  return `${title}: ${dueLabel(p.nextDueAt, now, prefs)}`;
 }
 
 /** Dated plans soonest first, then undated ones. */
@@ -149,7 +151,11 @@ export function nextCare(
 ): CardAction | undefined {
   const first = sortPlans(plans).find((p) => p.nextDueAt !== null);
   if (!first || first.nextDueAt === null) return undefined;
-  return { label: first.title, href, due: dueLabel(first.nextDueAt, now, prefs) };
+  return {
+    label: carePlanTitleIn(first, prefs.locale),
+    href,
+    due: dueLabel(first.nextDueAt, now, prefs)
+  };
 }
 
 export function treatmentsFor(

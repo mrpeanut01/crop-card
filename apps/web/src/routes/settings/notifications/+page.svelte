@@ -4,14 +4,13 @@
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
-  import { createT, type MessageKey } from '$lib/i18n';
-  import { localizedLine } from '$lib/components/billing/localize';
+  import { createT } from '$lib/i18n';
   import {
     ANIMAL_PUSH_KINDS,
     DEFAULT_PUSH_PREFS,
     OWNER_ONLY_PUSH_KINDS,
     PUSH_ALERT_KINDS,
-    PUSH_ALERT_LABELS,
+    pushAlertText,
     type PushAlertKind,
     type PushPrefs
   } from '$lib/push/prefs';
@@ -26,16 +25,8 @@
   const { data } = $props();
 
   const tr = $derived(createT(data.locale));
-  const TRANSLATED_KINDS: readonly PushAlertKind[] = [
-    'spring-calibration',
-    'frost-tonight',
-    'animal-care-due',
-    'weekly-digest'
-  ];
   function kindText(kind: PushAlertKind, part: 'label' | 'sub'): string {
-    const english = PUSH_ALERT_LABELS[kind][part];
-    if (!TRANSLATED_KINDS.includes(kind)) return english;
-    return localizedLine(tr, english, `settings.notif.${kind}.${part}` as MessageKey);
+    return pushAlertText(kind, part, data.locale);
   }
 
   function shown(kind: PushAlertKind): boolean {

@@ -10,7 +10,9 @@
   const farm = $derived((data.status === 'ready' && data.farmName) || tr('entry.unsub.thisFarm'));
   const scopeLabel = $derived(
     data.status === 'ready' && data.scope !== 'all'
-      ? tr('entry.unsub.scopeOne', { label: emailAlertLabel(data.scope as EmailAlertCategory) })
+      ? tr('entry.unsub.scopeOne', {
+          label: emailAlertLabel(data.scope as EmailAlertCategory, page.data?.locale)
+        })
       : tr('entry.unsub.scopeAll')
   );
   const alreadyOff = $derived(
@@ -47,7 +49,9 @@
     <h1 id="unsub-title">{tr('entry.unsub.backOn')}</h1>
     <p role="status">{tr('entry.unsub.backOnBody', { farm })}</p>
     <ul>
-      {#each form.turnedOn as c (c)}<li>{emailAlertLabel(c as EmailAlertCategory)}</li>{/each}
+      {#each form.turnedOn as c (c)}<li>
+          {emailAlertLabel(c as EmailAlertCategory, page.data?.locale)}
+        </li>{/each}
     </ul>
     <a class="ghost" href="/settings/notifications">{tr('entry.unsub.manage')}</a>
   {:else if done === 'unsubscribed'}
@@ -55,7 +59,7 @@
     {#if turnedOff.length > 0}
       <p role="status">{tr('entry.unsub.turnedOff', { farm })}</p>
       <ul>
-        {#each turnedOff as c (c)}<li>{emailAlertLabel(c)}</li>{/each}
+        {#each turnedOff as c (c)}<li>{emailAlertLabel(c, page.data?.locale)}</li>{/each}
       </ul>
     {:else}
       <p role="status">{tr('entry.unsub.alreadyOff')}</p>

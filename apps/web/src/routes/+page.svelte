@@ -310,7 +310,7 @@
                 defaultValue={enteredBefore}
                 autocomplete="email"
                 inputmode="email"
-                placeholder="you@example.com"
+                placeholder={tr('signin.placeholderEmail')}
                 autocapitalize="off"
                 autocorrect="off"
                 spellcheck="false"

@@ -34,7 +34,12 @@ export const actions: Actions = {
   },
   resend: async (event) => {
     const fd = await event.request.formData();
-    const result = await handleMagicLinkRequest(event, fd.get('email'), fd.get('invite'));
+    const result = await handleMagicLinkRequest(
+      event,
+      fd.get('email'),
+      fd.get('invite'),
+      event.locals?.locale
+    );
     if (!result.ok) return fail(result.status, { resendError: result.error });
     return { sent: true, message: result.message };
   }

@@ -6,6 +6,7 @@ import {
   unsubscribeContext
 } from '$lib/server/emailPrefs';
 import { verifyUnsubscribeToken } from '$lib/server/emailUnsubscribe';
+import { t } from '$lib/i18n';
 import type { PageServerLoad } from './$types';
 
 /**
@@ -28,9 +29,9 @@ export const load: PageServerLoad = ({ params }) => {
 };
 
 export const actions: Actions = {
-  unsubscribe: async ({ params, request }) => {
+  unsubscribe: async ({ params, request, locals }) => {
     const claims = verifyUnsubscribeToken(params.token);
-    if (!claims) return fail(400, { error: 'This unsubscribe link is not valid.' });
+    if (!claims) return fail(400, { error: t(locals?.locale, 'entry.unsub.err.invalid') });
     const fd = await request.formData();
     const everything = fd.get('everything') === '1';
     const turnedOff = applyUnsubscribe(claims, 'unsubscribe-page', { everything });
@@ -38,22 +39,21 @@ export const actions: Actions = {
   },
   resubscribe: async (event) => {
     const claims = verifyUnsubscribeToken(event.params.token);
-    if (!claims) return fail(400, { error: 'This unsubscribe link is not valid.' });
+    if (!claims) return fail(400, { error: t(event.locals?.locale, 'entry.unsub.err.invalid') });
     const fd = await event.request.formData();
     const requested = fd.getAll('category').filter((v): v is string => typeof v === 'string');
     const result = applyResubscribe(claims, requested, requestIp(event));
     if (!result.ok) {
       if (result.reason === 'not-member') {
         return fail(409, {
-          error: 'You are no longer on this farm in CropCard, so its alerts cannot be turned on.'
+          error: t(event.locals?.locale, 'entry.unsub.err.notMember')
         });
       }
       if (result.reason === 'nothing-requested') {
-        return fail(400, { error: 'Pick at least one email to turn back on.' });
+        return fail(400, { error: t(event.locals?.locale, 'entry.unsub.err.pickOne') });
       }
       return fail(400, {
-        error:
-          'This link can only undo an unsubscribe for a few minutes. Sign in to CropCard and turn alerts back on under Settings, Notifications.',
+        error: t(event.locals?.locale, 'entry.unsub.err.expired'),
         signIn: true
       });
     }

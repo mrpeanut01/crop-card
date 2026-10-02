@@ -89,7 +89,7 @@ export const POST: RequestHandler = async (event) => {
   if (tried.provenance === 'fallback') {
     recordFallback(user.id, 'planting-window', tried.fallbackReason);
     return json({
-      window: baseline,
+      window: deterministicPlantingWindow(cropFacts, frost, event.locals.locale),
       frost: frostView,
       provenance: 'fallback',
       fallbackReason: tried.fallbackReason,

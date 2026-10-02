@@ -13,8 +13,8 @@
   import { X } from 'lucide-svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import {
-    PLANTING_UNITS,
     amountInStockUnit,
+    plantingUnits,
     optionLabel,
     searchCrops,
     seedAvailable,
@@ -84,6 +84,8 @@
     onCreated
   }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
+  const locale = $derived(page.data?.locale);
+  const unitOptions = $derived(plantingUnits(locale));
 
   type WindowState = {
     window: PlantingWindow;
@@ -127,8 +129,8 @@
   const seedUnits = $derived(pickedSeed ? unitsCompatibleWith(pickedSeed.defaultUnit) : []);
   const plantUnitOptions = $derived(
     pickedSeed && seedUnits.length > 0
-      ? PLANTING_UNITS.filter((u) => seedUnits.includes(u.value))
-      : PLANTING_UNITS
+      ? unitOptions.filter((u) => seedUnits.includes(u.value))
+      : unitOptions
   );
 
   const seedUse = $derived.by(() => {
@@ -269,7 +271,8 @@
         soilTempMinF: entry.soilTempMinF,
         dtmMaxDays: entry.dtmMaxDays
       },
-      frost
+      frost,
+      locale
     );
     windowState = { window: baseline, source: 'data', loading: aiEnabled };
     if (!aiEnabled) return;
@@ -537,7 +540,7 @@
                     onclick={() => (plantingDate = day)}
                   >
                     <span class="chip-k">{labelText}</span>
-                    <span class="chip-v">{formatDay(day)}</span>
+                    <span class="chip-v">{formatDay(day, locale)}</span>
                   </button>
                 {/each}
               </div>
@@ -631,7 +634,7 @@
                   >{tr('planui.np.moreThan', { amount: seedAmountText(pickedSeed) })}</span
                 >
               {:else if seedUse === 'mismatch'}
-                {tr('planui.np.stockedIn', { unit: unitLabel(pickedSeed.defaultUnit) })}
+                {tr('planui.np.stockedIn', { unit: unitLabel(pickedSeed.defaultUnit, locale) })}
               {:else if pickedSeed.onHand > 0}
                 {tr('planui.np.fromOnHand')}
               {:else}
@@ -657,7 +660,7 @@
               <label class="field unit">
                 <span class="sub">{tr('planui.np.unit')}</span>
                 <select bind:value={boughtUnit} aria-label={tr('planui.np.boughtUnitAria')}>
-                  {#each PLANTING_UNITS as u (u.value)}
+                  {#each unitOptions as u (u.value)}
                     <option value={u.value}>{u.label}</option>
                   {/each}
                 </select>

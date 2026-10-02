@@ -1,4 +1,5 @@
 import { error } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import type { PageServerLoad } from './$types';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
@@ -12,9 +13,9 @@ import { eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
   const crop = getCrop(params.id);
-  if (!crop) throw error(404, 'crop not found');
+  if (!crop) throw error(404, t(locals.locale, 'crops.notFound'));
 
   const block = getBlock(crop.blockId);
   if (!block) throw error(500, 'crop references missing block');

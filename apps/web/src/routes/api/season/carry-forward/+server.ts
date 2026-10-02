@@ -41,7 +41,8 @@ export async function POST(event) {
     fromYear: parsed.data.fromYear,
     toYear: parsed.data.toYear,
     apply: parsed.data.apply,
-    actingUserId: user.id
+    actingUserId: user.id,
+    locale: event.locals.locale
   });
 
   return json(result);

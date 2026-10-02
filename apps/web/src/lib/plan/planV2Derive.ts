@@ -1,6 +1,7 @@
 import { eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
 import type { BlockWithPlantings, PlantingRecord } from '$lib/db/blocks';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { t } from '$lib/i18n';
 import { DEFAULT_PREFS, formatCalendarDate, formatQuantity, type Prefs } from '$lib/prefs';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -19,10 +20,13 @@ export function plantingStatus(
   return 'active';
 }
 
-export function plantingRoleLabel(p: Pick<PlantingRecord, 'groupRole'>): string {
-  if (p.groupRole === 'anchor') return 'Anchor';
-  if (p.groupRole === 'companion') return 'Companion';
-  return 'Primary';
+export function plantingRoleLabel(
+  p: Pick<PlantingRecord, 'groupRole'>,
+  locale?: string | null
+): string {
+  if (p.groupRole === 'anchor') return t(locale, 'plantui.role.anchor');
+  if (p.groupRole === 'companion') return t(locale, 'plantui.role.companion');
+  return t(locale, 'plantui.role.primary');
 }
 
 function stageText(e: CalendarEvent): string {
@@ -40,7 +44,8 @@ function stageText(e: CalendarEvent): string {
 export function currentStageLabel(
   events: readonly CalendarEvent[],
   planting: Pick<PlantingRecord, 'id' | 'plantingDate'>,
-  now: number = Date.now()
+  now: number = Date.now(),
+  locale?: string | null
 ): string | undefined {
   if (planting.plantingDate == null) return undefined;
   const stages = events
@@ -49,16 +54,17 @@ export function currentStageLabel(
   if (stages.length === 0) return undefined;
   const containing = stages.filter((e) => e.startMs <= now && now <= e.endMs);
   if (containing.length > 0) return stageText(containing[containing.length - 1]);
-  if (now < planting.plantingDate) return 'Not yet planted';
+  if (now < planting.plantingDate) return t(locale, 'plantui.stage.notPlanted');
   const past = stages.filter((e) => e.endMs < now);
   const future = stages.filter((e) => e.startMs > now);
-  if (past.length === 0) return 'Pre-emergence';
-  if (future.length === 0) return `${stageText(past[past.length - 1])} (past)`;
+  if (past.length === 0) return t(locale, 'plantui.stage.preEmergence');
+  if (future.length === 0)
+    return t(locale, 'plantui.stage.past', { stage: stageText(past[past.length - 1]) });
   return stageText(past[past.length - 1]);
 }
 
-function fmtMonthDay(ms: number): string {
-  return formatCalendarDate(ms, 'month-day');
+function fmtMonthDay(ms: number, locale?: string | null): string {
+  return formatCalendarDate(ms, 'month-day', {}, locale);
 }
 
 /**
@@ -68,26 +74,28 @@ function fmtMonthDay(ms: number): string {
  */
 export function blockHarvestWindowLabel(
   events: readonly CalendarEvent[],
-  now: number = Date.now()
+  now: number = Date.now(),
+  locale?: string | null
 ): string | undefined {
   const open = events.filter((e) => e.kind === 'harvest-window' && e.endMs >= now);
   if (open.length === 0) return undefined;
   const start = Math.min(...open.map((e) => e.startMs));
   const end = Math.max(...open.map((e) => e.endMs));
-  const a = fmtMonthDay(start);
-  const b = fmtMonthDay(end);
+  const a = fmtMonthDay(start, locale);
+  const b = fmtMonthDay(end, locale);
   return a === b ? a : `${a} – ${b}`;
 }
 
 /** Start of the planting's earliest harvest window from the engine. */
 export function plantingHarvestLabel(
   events: readonly CalendarEvent[],
-  plantingId: string
+  plantingId: string,
+  locale?: string | null
 ): string | undefined {
   const starts = events
     .filter((e) => e.kind === 'harvest-window' && e.cropId === plantingId)
     .map((e) => e.startMs);
-  return starts.length ? fmtMonthDay(Math.min(...starts)) : undefined;
+  return starts.length ? fmtMonthDay(Math.min(...starts), locale) : undefined;
 }
 
 export type BlockStatus = 'empty' | 'planned' | 'active' | 'mature';
@@ -97,6 +105,11 @@ export function blockStatus(statuses: readonly PlantingStatus[]): BlockStatus {
   if (statuses.includes('active')) return 'active';
   if (statuses.every((s) => s === 'mature')) return 'mature';
   return 'planned';
+}
+
+/** The block status pill's text: English keeps the status code. */
+export function blockStatusLabel(s: BlockStatus, locale?: string | null): string {
+  return locale && locale !== 'en' ? t(locale, `plantui.blockStatus.${s}`) : s;
 }
 
 export function blockStatusTone(s: BlockStatus): 'forest' | 'sky' | 'wheat' | 'neutral' {

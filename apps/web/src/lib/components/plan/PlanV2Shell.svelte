@@ -34,6 +34,7 @@
   import {
     blockHarvestWindowLabel,
     blockStatus,
+    blockStatusLabel,
     blockStatusTone,
     currentStageLabel,
     plantingRoleLabel,
@@ -107,6 +108,7 @@
   }: Props = $props();
 
   const tr = $derived(createT($page.data?.locale));
+  const locale = $derived($page.data?.locale);
   const prefs = $derived(currentPrefs());
   const areas = $derived<PlanAreaEntry[]>(
     fields.map((f) => ({ id: f.id, name: f.name, kind: (f.kind ?? 'field') as AreaKind }))
@@ -195,7 +197,7 @@
       plantings.map((p) => plantingStatus(p.plantingDate, cropMeta[p.cropPluginId]?.daysToMaturity))
     )
   );
-  const harvestWindowLabel = $derived(blockHarvestWindowLabel(blockEvents));
+  const harvestWindowLabel = $derived(blockHarvestWindowLabel(blockEvents, Date.now(), locale));
 
   const daysToMaturityById = $derived.by<Record<string, number>>(() => {
     const out: Record<string, number> = {};
@@ -359,7 +361,7 @@
     {:else if selectedBlock}
       <PlanBlockHeader
         block={selectedBlock}
-        statusLabel={headerStatus}
+        statusLabel={blockStatusLabel(headerStatus, locale)}
         statusTone={blockStatusTone(headerStatus)}
         {harvestWindowLabel}
         {geometryEditHref}
@@ -392,9 +394,9 @@
               planting={p}
               daysToMaturity={meta?.daysToMaturity}
               cropName={meta?.displayName}
-              role={plantingRoleLabel(p)}
-              stage={currentStageLabel(blockEvents, p)}
-              harvestStart={plantingHarvestLabel(blockEvents, p.id)}
+              role={plantingRoleLabel(p, locale)}
+              stage={currentStageLabel(blockEvents, p, Date.now(), locale)}
+              harvestStart={plantingHarvestLabel(blockEvents, p.id, locale)}
               detailHref={smallGrainHref(p.id, meta?.archetype)}
               companions={companionsFor(p.id)}
               sourceTag={p.sourceProvenance === 'ai'
@@ -413,9 +415,9 @@
             planting={activePlanting}
             daysToMaturity={meta?.daysToMaturity}
             cropName={meta?.displayName}
-            role={plantingRoleLabel(activePlanting)}
-            stage={currentStageLabel(blockEvents, activePlanting)}
-            harvestStart={plantingHarvestLabel(blockEvents, activePlanting.id)}
+            role={plantingRoleLabel(activePlanting, locale)}
+            stage={currentStageLabel(blockEvents, activePlanting, Date.now(), locale)}
+            harvestStart={plantingHarvestLabel(blockEvents, activePlanting.id, locale)}
             detailHref={smallGrainHref(activePlanting.id, meta?.archetype)}
             companions={companionsFor(activePlanting.id)}
             sourceTag={activePlanting.sourceProvenance === 'ai'

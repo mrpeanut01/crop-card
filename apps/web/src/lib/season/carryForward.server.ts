@@ -54,6 +54,8 @@ export interface CarryForwardSeasonInput {
   nowMs?: number;
   /** Optional acting user id, stamped on the wizard draft. */
   actingUserId?: string;
+  /** Language of the returned display messages (rotation, stock). */
+  locale?: string | null;
 }
 
 export interface CarryForwardSeasonOutput extends CarryForwardSeasonResult {
@@ -157,7 +159,7 @@ export function runCarryForward(
       blockName: b.name,
       priorPlantings
     };
-    return buildRotationSuggestion(rotInput, lookbackByFamily, fromYear, toYear);
+    return buildRotationSuggestion(rotInput, lookbackByFamily, fromYear, toYear, input.locale);
   });
 
   // ─── 2. Stock roll-forward ────────────────────────────────────────────
@@ -176,7 +178,7 @@ export function runCarryForward(
     }
   }
   const { lastSpringFrostMs } = frostDatesForYear(toYear);
-  const stock = classifyStockCarry(lots, nowMs, lastSpringFrostMs);
+  const stock = classifyStockCarry(lots, nowMs, lastSpringFrostMs, undefined, input.locale);
 
   // ─── 3. Planting-template clone ───────────────────────────────────────
   // Re-validate shifted dates against the schedule candidacy window for the

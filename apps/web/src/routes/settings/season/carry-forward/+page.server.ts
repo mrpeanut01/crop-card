@@ -13,7 +13,12 @@ export const load: PageServerLoad = async (event) => {
 
   // Dry-run preview — no side effects. The operator confirms + applies from
   // the UI, which POSTs /api/season/carry-forward with apply:true.
-  const preview = await carryForwardSeasonAsync({ fromYear, toYear, apply: false });
+  const preview = await carryForwardSeasonAsync({
+    fromYear,
+    toYear,
+    apply: false,
+    locale: event.locals.locale
+  });
 
   return { fromYear, toYear, preview };
 };

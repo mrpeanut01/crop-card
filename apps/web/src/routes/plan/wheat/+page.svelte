@@ -14,8 +14,10 @@
     type WeatherProvenance
   } from '$lib/weather/leafWet';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
 
   const { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   interface WeatherState {
     hours: HourlyPoint[];
@@ -110,47 +112,54 @@
   const harvestStage = $derived(plan?.stages.find((s) => s.decision === 'harvest') ?? null);
 </script>
 
-<svelte:head><title>Small-grain plan · CropCard</title></svelte:head>
+<svelte:head><title>{tr('plan.wheat.pageTitle')}</title></svelte:head>
 
 <div class="page">
-  <a class="back" href="/plan"><ArrowLeft size={16} strokeWidth={1.75} /> Plan</a>
+  <a class="back" href="/plan"><ArrowLeft size={16} strokeWidth={1.75} /> {tr('plan.wheat.back')}</a
+  >
 
   {#if !plan}
     <section class="empty" data-testid="small-grain-empty">
       <Wheat size={28} strokeWidth={1.5} aria-hidden="true" />
-      <h1 class="serif">No small-grain plantings</h1>
-      <p>
-        Add a wheat, barley, rye, oat or other small-grain planting on the Plan page to see its
-        Zadoks timeline, scab risk and vernalization progress here.
-      </p>
-      <a class="btn primary" href="/plan">Open Plan</a>
+      <h1 class="serif">{tr('plan.wheat.emptyTitle')}</h1>
+      <p>{tr('plan.wheat.emptyBody')}</p>
+      <a class="btn primary" href="/plan">{tr('plan.wheat.openPlan')}</a>
     </section>
   {:else}
     {@const c = plan.candidate}
     <header class="page-head">
       <div class="kicker">
-        {c.blockName}{plan.acres ? ` · ${fmt.area(plan.acres)}` : ''} · small grain ·
-        {plan.habit} habit · stage scale: Zadoks
+        {c.blockName}{plan.acres ? ` · ${fmt.area(plan.acres)}` : ''} · {tr(
+          'plan.wheat.kickerRest',
+          {
+            habit: tr(
+              plan.habit === 'winter' ? 'plan.wheat.habit.winter' : 'plan.wheat.habit.spring'
+            )
+          }
+        )}
       </div>
       <h1 class="serif">{c.displayName}</h1>
       <p class="lede">
-        {c.varietyDisplayName} · planted {fmtDate(c.plantingDate, true)}
-        {#if harvestStage}· harvest target ~{fmtDate(harvestStage.startMs, true)} ({harvestStage.code}){/if}
+        {c.varietyDisplayName} · {tr('plan.wheat.planted', { date: fmtDate(c.plantingDate, true) })}
+        {#if harvestStage}· {tr('plan.wheat.harvestTarget', {
+            date: fmtDate(harvestStage.startMs, true),
+            code: harvestStage.code
+          })}{/if}
       </p>
       <div class="actions">
         {#if data.canRecord}
           <a class="btn primary" href="/harvest?planting={encodeURIComponent(c.plantingId)}"
-            >Record harvest</a
+            >{tr('plan.wheat.recordHarvest')}</a
           >
           <a class="btn ghost" href="/spray/fungicide?crop={encodeURIComponent(c.plantingId)}"
-            >Record fungicide</a
+            >{tr('plan.wheat.recordFungicide')}</a
           >
         {/if}
       </div>
     </header>
 
     {#if data.candidates.length > 1}
-      <nav class="switcher" aria-label="Small-grain plantings">
+      <nav class="switcher" aria-label={tr('plan.wheat.switcher')}>
         {#each data.candidates as o (o.plantingId)}
           <a
             href="/plan/wheat?planting={encodeURIComponent(o.plantingId)}"
@@ -165,8 +174,7 @@
 
     {#if c.plantingDate === null}
       <p class="notice" role="status">
-        This planting has no sowing date yet — set one on the Plan page to project stages, flowering
-        and vernalization.
+        {tr('plan.wheat.noSowDate')}
       </p>
     {:else}
       <ZadoksTimeline stages={plan.stages} currentIndex={plan.currentIndex} nowMs={data.nowMs} />

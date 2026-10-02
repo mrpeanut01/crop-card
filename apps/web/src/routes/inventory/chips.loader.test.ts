@@ -8,6 +8,7 @@ import { owners } from '$lib/db/schema';
 import { runWithTenantAsync } from '$lib/db/tenant';
 import { createStockItem } from '$lib/db/stock';
 import { insertAnimalGroup } from '$lib/db/animalGroups';
+import { insertBatch } from '$lib/db/amendments';
 import { load } from './+page.server';
 
 function seedOwner(): string {
@@ -60,6 +61,40 @@ describe('/inventory chip visibility', () => {
   it('asking for an empty animal type still shows its chip', async () => {
     await runWithTenantAsync(seedOwner(), async () => {
       expect(await visible('animal-health')).toEqual([...CROP_ONLY, 'animal-health']);
+    });
+  });
+
+  it('the manure and compost chip shows once the farm has a batch, with its rows (M-41)', async () => {
+    const other = seedOwner();
+    await runWithTenantAsync(other, async () => {
+      insertBatch({
+        kind: 'manure',
+        name: 'Their pile',
+        origin: 'on-farm',
+        startedAt: Date.now(),
+        createdBy: null
+      });
+    });
+    await runWithTenantAsync(seedOwner(), async () => {
+      expect(await visible()).not.toContain('amendment');
+      insertBatch({
+        kind: 'compost',
+        name: 'Our compost',
+        origin: 'on-farm',
+        startedAt: Date.now(),
+        createdBy: null
+      });
+      expect(await visible()).toContain('amendment');
+      const url = new URL('http://localhost/inventory?type=amendment');
+      const out = (await load({ url, locals: { user: { role: 'helper' } } } as never)) as {
+        amendments: Array<{ name: string; state: string }>;
+        canAdd: boolean;
+        canAddAmendment: boolean;
+      };
+      expect(out.amendments.map((a) => a.name)).toEqual(['Our compost']);
+      expect(out.amendments[0].state).toBe('none-on-file');
+      expect(out.canAdd).toBe(false);
+      expect(out.canAddAmendment).toBe(true);
     });
   });
 });

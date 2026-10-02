@@ -40,7 +40,7 @@ export function topicFor(question: PhotoQuestion, text = ''): CareTopic {
 
 export const NO_SECTION_TEXT: Record<CareTopic, string> = {
   harvest: 'This crop has no harvest cues yet. Count days from planting and check the seed packet.',
-  prune: 'This crop has no pruning steps yet. Most plants only need dead or damaged parts removed.',
+  prune: 'This crop has no pruning steps yet. Check the seed packet or your extension office.',
   problems:
     'This crop has no common problems listed yet. Take a close photo of both sides of a leaf and compare it next week.',
   general: 'This crop has no growing guide yet. Check the seed packet for the basics.'

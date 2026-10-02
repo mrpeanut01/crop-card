@@ -195,6 +195,25 @@ describe('AreaCardSheet', () => {
     expect(screen.getByText(/harvested Aug 20/)).toBeInTheDocument();
   });
 
+  it('adds the forage check once it loads, and says so when it cannot', async () => {
+    const fetchMock = vi.fn(async (url: string) =>
+      url.startsWith('/api/forage/advisory')
+        ? new Response('{}', { status: 500 })
+        : new Response('{}', { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    render(AreaCardSheet, {
+      open: true,
+      onClose: vi.fn(),
+      snapshot: sampleSnapshot(),
+      area: garden,
+      canEdit: true
+    });
+    expect(fetchMock).toHaveBeenCalledWith('/api/forage/advisory?fieldId=f_garden');
+    expect(await screen.findByText('Could not load the forage check.')).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
   it('edits kind-aware details in place', async () => {
     const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
@@ -214,9 +233,10 @@ describe('AreaCardSheet', () => {
       '/api/fields/f_garden',
       expect.objectContaining({ method: 'PATCH' })
     );
-    const body = JSON.parse(
-      (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string
-    );
+    const patch = (fetchMock.mock.calls as unknown as Array<[string, RequestInit?]>).find(
+      ([, init]) => init?.method === 'PATCH'
+    )!;
+    const body = JSON.parse(patch[1]!.body as string);
     expect(body).toEqual({
       name: 'Kitchen Garden',
       kind: 'garden',

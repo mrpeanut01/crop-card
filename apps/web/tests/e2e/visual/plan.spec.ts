@@ -1,11 +1,9 @@
 /**
- * Phase 25b (#81) — Plan v2 Almanac shell visual baselines.
- *
- * Captures the rebuilt /plan page (left rail + block header +
- * plantings grid + season timeline + scheduled tasks) at 3 viewports.
- * Auth via the Phase 25b demo-sign-in helper; live data (block name,
- * planting metadata, harvest dates) is masked so baselines stay
- * deterministic across days.
+ * /plan visual baselines at three viewports (Phase 33D, D-36): the workflow
+ * strip, the Area rail, the selected Area with its Block cards, the block
+ * header, planting cards, the season timeline and scheduled tasks on the
+ * seeded demo farm. Names, dates, the season year and the today marker are
+ * masked so the Linux baselines stay stable across days and seasons.
  */
 import { test, expect, settleForScreenshot } from '../lib/test';
 import { signInAsDemoOwner } from '../lib/auth';
@@ -17,32 +15,37 @@ const VIEWPORTS = [
 ];
 
 for (const vp of VIEWPORTS) {
-  test(`plan v2 Almanac shell at ${vp.name} (${vp.width}x${vp.height})`, async ({ page }) => {
+  test(`plan at ${vp.name} (${vp.width}x${vp.height})`, async ({ page }) => {
     await signInAsDemoOwner(page);
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto('/plan');
     await page.waitForLoadState('networkidle');
-    // An empty planning season opens the wizard; the baseline is the shell.
+    // An empty planning season opens the wizard; the baseline is the page.
     if (await page.locator('.aw-modal').isVisible()) await page.keyboard.press('Escape');
     await expect(page.getByPlaceholder('Filter Areas, beds or crops…')).toBeVisible();
+    await expect(page.getByTestId('plan-area-view')).toBeVisible();
 
     await settleForScreenshot(page);
     await expect(page).toHaveScreenshot(`plan-${vp.name}.png`, {
       fullPage: true,
       mask: [
-        // Area card rail (names + crops vary by seed).
+        // "Season <year> plan" moves with the planning year.
+        page.locator('[role="group"][aria-label$="workflow"] .kicker'),
+        // Area cards in the rail and the selected Area's Block cards.
         page.locator('[data-testid="plan-area-cards"] article'),
-        // Area card and Block cards over the selected block.
         page.locator('[data-testid="plan-area-view"] article'),
-        // Block header title (block name + crop summary vary).
+        // Block header: name, crop summary and harvest window pills.
         page.locator('.bh-left'),
-        // Planting cards' inner content (variety, dates, amount, status).
-        page.locator('article[data-card-kind="planting"] .body'),
-        // Season timeline rows (vary with current date + plantings).
+        // Planting cards: variety, stage, planted and harvest dates.
+        page.locator('article[data-card-kind="planting"]'),
+        // Season timeline: year label, month axis with the today pin, rows.
+        page.locator('.cap'),
+        page.locator('.axis-row'),
+        page.locator('.today-pin'),
         page.locator('.gantt-row'),
-        // Scheduled-tasks rows.
-        page.locator('table tbody')
-        // Legacy details summary (stable so don't mask).
+        // Scheduled tasks for the current window.
+        page.locator('table tbody'),
+        page.locator('.empty')
       ]
     });
   });

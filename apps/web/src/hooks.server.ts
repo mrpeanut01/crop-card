@@ -27,6 +27,10 @@ import { startRuntimeMetrics, withServerTiming } from '$lib/server/runtimeMetric
 import { scheduleBootMaintenance } from '$lib/server/dbMaintenance';
 import { scheduleBootHoldBackfill } from '$lib/server/holdParamsBoot';
 import { DEFAULT_LOCALE, enabledLocales } from '$lib/i18n/locales';
+import { demoSessionExpired, isDemoUser } from '$lib/server/demo/lifecycle';
+import { demoBlockedResponse, demoBlocksWrite } from '$lib/server/demo/guard';
+import { purgeDemoOwner } from '$lib/db/demo/purge';
+import { isDemoOwnerId } from '$lib/demo/identity';
 import { LOCALE_COOKIE, fillHtmlLang, resolveLocale } from '$lib/i18n/resolve';
 
 /** Deploy handoff fence: hold the writer lease and release it to a newer
@@ -106,6 +110,7 @@ const ANONYMOUS_PATHS = new Set([
   '/api/openapi.json', // Phase 24 — external agents fetch the OpenAPI doc pre-auth.
   '/api/billing/stripe-webhook', // Stripe POSTs without a session; the signature is the auth.
   '/pricing', // Public plan comparison; static content, no tenant data.
+  '/demo', // Starts a throwaway demo farm; rate limited in lib/server/demo/lifecycle.ts.
   '/api/email/pingram-webhook', // Pingram POSTs delivery events; the signature is the auth.
   '/api/email/unsubscribe', // RFC 8058 one-click from the mail client; the signed token is the auth.
   // Phase 30F — the /cards route renders with ssr=false, so this path is a
@@ -460,6 +465,23 @@ const handleRequest: Handle = async ({ event, resolve: resolvePage }) => {
       event.locals.authVia = 'cookie';
     }
   }
+  if (user && event.locals.authVia === 'cookie' && isDemoUser(user) && demoSessionExpired(user)) {
+    if (isDemoOwnerId(user.activeOwnerId)) {
+      try {
+        purgeDemoOwner(user.activeOwnerId!);
+      } catch (err) {
+        console.error('[demo] failed to purge an expired demo farm', err);
+      }
+    }
+    clearSession(event.cookies);
+    user = null;
+    event.locals.user = undefined;
+    event.locals.authVia = undefined;
+    if (event.url.pathname.startsWith('/api/')) {
+      return json({ error: 'demo expired', code: 'DEMO_EXPIRED' }, { status: 401 });
+    }
+    if (event.url.pathname !== '/demo') throw redirect(303, '/?demo=expired');
+  }
   event.locals.locale = requestLocale(event, user);
   const path = event.url.pathname;
   const anonymous = isAnonymousRequest(path, event.isDataRequest);
@@ -491,6 +513,10 @@ const handleRequest: Handle = async ({ event, resolve: resolvePage }) => {
         }
       );
     }
+  }
+
+  if (user && isDemoUser(user) && demoBlocksWrite(event.request.method, path)) {
+    return demoBlockedResponse(path, event.request.headers.get('x-sveltekit-action') === 'true');
   }
 
   if (
@@ -603,8 +629,8 @@ export function withOwnerHeader(response: Response, ownerId: string, locale?: st
  * revoked helper, a changed role or a withdrawn superadmin flag takes effect
  * immediately instead of when the 7-day cookie expires.
  *
- * Returns null when the user no longer exists (the session is cleared).
- * A lost membership downgrades to a partial session, which routes the user
+ * Returns null when the user no longer exists or signed out everywhere after
+ * this cookie was issued (the session is cleared). A lost membership downgrades to a partial session, which routes the user
  * to the Owner-picker or onboarding rather than into the old farm.
  */
 export function revalidateCookieUser(
@@ -615,12 +641,16 @@ export function revalidateCookieUser(
       email: users.email,
       phone: users.phone,
       isSuperadmin: users.isSuperadmin,
-      locale: users.locale
+      locale: users.locale,
+      sessionsValidAfter: users.sessionsValidAfter
     })
     .from(users)
     .where(eq(users.id, user.id))
     .get();
   if (!row) return null;
+  if (row.sessionsValidAfter && (user.sessionIssuedAt ?? 0) < row.sessionsValidAfter.getTime()) {
+    return null;
+  }
   const fresh = {
     ...user,
     email: row.email,

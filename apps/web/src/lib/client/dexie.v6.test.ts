@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import Dexie from 'dexie';
-import { PHASE_33_RECORD_KINDS, db } from './dexie';
+import { db } from './dexie';
 import { ENDPOINT_BY_KIND } from './syncQueue';
 
 const V5_STORES = {
@@ -95,10 +95,8 @@ describe('Dexie v6 upgrade (A-12)', () => {
   });
 });
 
-describe('Phase 33 queue kinds (A-10)', () => {
-  it('are declared but not routed', () => {
-    for (const kind of PHASE_33_RECORD_KINDS) {
-      expect(Object.hasOwn(ENDPOINT_BY_KIND, kind), kind).toBe(false);
-    }
+describe('Phase 33 queue kinds', () => {
+  it('routes time-entry now that 33D wires the task timer (D-29)', () => {
+    expect(ENDPOINT_BY_KIND['time-entry']).toBe('/api/tasks/:id/time');
   });
 });

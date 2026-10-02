@@ -15,7 +15,8 @@ const counts = {
   seed: 27,
   crop: 376,
   feed: 0,
-  'animal-health': 0
+  'animal-health': 0,
+  amendment: 0
 };
 
 describe('A_InventoryList — Phase 27B', () => {

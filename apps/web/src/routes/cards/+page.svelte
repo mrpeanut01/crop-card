@@ -21,6 +21,8 @@
   import { PRINT_LAYOUTS } from '$lib/cards/print';
   import { installNudgeWanted } from '$lib/client/offlineStorage';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { recordKindLabel, savedRecordHref } from '$lib/cards/recordCard';
+  import type { SavedRecordCardRow } from '$lib/client/recordCardStore';
   import { createT } from '$lib/i18n';
 
   const tr = $derived(createT(page.data?.locale));
@@ -101,6 +103,23 @@
   let showNudge = $state(false);
   let notice = $state<string | null>(null);
   let unsynced = $state<ReadonlySet<string>>(new Set());
+  let savedRecords = $state<{ row: SavedRecordCardRow; pinned: boolean }[]>([]);
+
+  async function loadSavedRecords() {
+    try {
+      const { listSavedRecordCards } = await import('$lib/client/recordCardStore');
+      const { pinned, recent } = await listSavedRecordCards();
+      savedRecords = [
+        ...pinned.map((row) => ({ row, pinned: true })),
+        ...recent.map((row) => ({ row, pinned: false }))
+      ];
+    } catch {
+      savedRecords = [];
+    }
+  }
+  $effect(() => {
+    if (cards.loaded) void loadSavedRecords();
+  });
 
   async function refreshUnsynced() {
     const { loadUnsyncedSubjects } = await import('$lib/client/animalHold');
@@ -117,6 +136,9 @@
     snapshot ? buildDeck(snapshot, { prefs, now, unsyncedAnimalSubjects: unsynced }) : []
   );
   const visible = $derived(filterDeck(deck, filter, cards.pinned));
+  const shownRecords = $derived(
+    filter === 'pinned' ? savedRecords.filter((r) => r.pinned) : savedRecords
+  );
   const slots = $derived(foldMembers(visible));
   const printCards = $derived.by(() => {
     const chosen = new Set(selected);
@@ -271,7 +293,7 @@
     {/each}
   </div>
 
-  {#if snapshot && visible.length === 0}
+  {#if snapshot && visible.length === 0 && !(filter === 'pinned' && shownRecords.length)}
     {@const empty = EMPTY_STATE[filter]}
     <p class="empty">{tr(empty.text)}</p>
     {#if 'href' in empty && online}
@@ -339,6 +361,30 @@
       </li>
     {/each}
   </ul>
+
+  {#if shownRecords.length}
+    <section class="saved-records" aria-labelledby="saved-records-heading">
+      <h2 id="saved-records-heading">{tr('cardsui.rec.heading')}</h2>
+      <ul class="saved-list" data-testid="saved-records">
+        {#each shownRecords as item (item.row.key)}
+          {@const meta = {
+            kind: recordKindLabel(item.row.model.recordKind, tr),
+            date: fmt.instant(item.row.savedAt, 'date')
+          }}
+          <li>
+            <a class="saved-link" href={savedRecordHref(item.row.key)}>
+              <span class="saved-title"
+                >{item.row.model.cards[0]?.title ?? tr('cardsui.rec.untitled')}</span
+              >
+              <span class="saved-meta">
+                {item.pinned ? tr('cardsui.rec.metaPinned', meta) : tr('cardsui.rec.meta', meta)}
+              </span>
+            </a>
+          </li>
+        {/each}
+      </ul>
+    </section>
+  {/if}
 
   {#if deck.length}
     <section class="print-panel" aria-labelledby="print-heading">
@@ -524,6 +570,45 @@
     width: 22px;
     height: 22px;
     accent-color: var(--color-forest);
+  }
+  .saved-records {
+    margin-top: var(--space-6);
+  }
+  .saved-records h2 {
+    margin: 0 0 var(--space-2);
+    font-size: var(--font-size-card-title);
+  }
+  .saved-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+  .saved-link {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 48px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .saved-link:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+  .saved-title {
+    font-weight: 600;
+    color: var(--color-forest-deep);
+  }
+  .saved-meta {
+    color: var(--color-ink-soft);
+    font-size: var(--font-size-caption);
   }
   .print-panel {
     margin-top: var(--space-6);

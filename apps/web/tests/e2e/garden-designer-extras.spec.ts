@@ -117,6 +117,48 @@ test.describe('drag a crop onto a bed', () => {
   });
 });
 
+test.describe('drag a bed preset onto the canvas', () => {
+  test.describe.configure({ timeout: 120_000 });
+  test.use({ viewport: DESKTOP });
+
+  test('drag a 4x8 bed onto an empty garden, then refuse one on top of it', async ({ page }) => {
+    const { areaId } = await gardenWithBeds(page, []);
+    await openDesigner(page, areaId, '?view=canvas');
+    await page.waitForLoadState('networkidle');
+    const chip = page.getByTestId('preset-bar').getByRole('button', { name: '4×8 raised' });
+    const ground = page.getByTestId('designer-ground');
+    await ground.scrollIntoViewIfNeeded();
+
+    async function dragTo(xFt: number, yFt: number) {
+      const from = (await chip.boundingBox())!;
+      await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(from.x + from.width / 2 + 10, from.y + from.height / 2, { steps: 3 });
+      const g = (await ground.boundingBox())!;
+      await page.mouse.move(g.x + (xFt / 20) * g.width, g.y + (yFt / 30) * g.height, {
+        steps: 12
+      });
+    }
+
+    await dragTo(10, 15);
+    await expect(page.getByTestId('bed-drag-ghost')).toHaveAttribute('data-fits', 'true');
+    await expect(page.getByTestId('bed-drag-chip')).toHaveText('4×8 raised');
+    await page.mouse.up();
+    await expect(page.getByTestId('designer-status')).toContainText(/added at/);
+    await expect(page.getByTestId('bed-drag-ghost')).toHaveCount(0);
+    await expect(page.getByTestId('bed')).toHaveCount(1);
+
+    await page.getByTestId('bed-toolbar').getByRole('button', { name: 'Done' }).click();
+    await dragTo(10, 15);
+    await expect(page.getByTestId('bed-drag-ghost')).toHaveAttribute('data-fits', 'false');
+    await expect(page.getByTestId('bed-drag-chip')).toHaveText('No room here');
+    await page.mouse.up();
+    await expect(page.getByTestId('designer-alert')).toHaveText("Beds can't overlap");
+    await expect(page.getByTestId('bed')).toHaveCount(1);
+    await noHorizontalOverflow(page);
+  });
+});
+
 test.describe('drag a crop onto a bed by touch on a phone', () => {
   test.describe.configure({ timeout: 120_000 });
   test.use({ viewport: PHONE, hasTouch: true });
@@ -174,6 +216,32 @@ test.describe('drag a crop onto a bed by touch on a phone', () => {
 
     await expect(page.getByTestId('designer-status')).toContainText(/placed in Bed 2/);
     await noHorizontalOverflow(page);
+  });
+});
+
+test.describe('a slow gloved tap on a bed preset', () => {
+  test.describe.configure({ timeout: 120_000 });
+  test.use({ viewport: PHONE, hasTouch: true });
+
+  test('a hold released without moving still arms tap to place', async ({ page }) => {
+    const { areaId } = await gardenWithBeds(page, []);
+    await openDesigner(page, areaId, '?view=canvas');
+    await page.waitForLoadState('networkidle');
+    const chip = page.getByTestId('preset-bar').getByRole('button', { name: '4×8 raised' });
+    await chip.scrollIntoViewIfNeeded();
+    const cdp = await page.context().newCDPSession(page);
+    const b = (await chip.boundingBox())!;
+    const x = b.x + b.width / 2;
+    const y = b.y + b.height / 2;
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x, y, id: 1 }]
+    });
+    await page.waitForTimeout(600);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await expect(chip).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('designer-status')).not.toHaveText('Put back.');
+    await expect(page.getByTestId('bed')).toHaveCount(0);
   });
 });
 

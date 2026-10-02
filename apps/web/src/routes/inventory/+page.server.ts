@@ -22,6 +22,11 @@ import { getDataKinds, getRegistry } from '$lib/server/registry';
 import { farmHasAnimals } from '$lib/animals/profile.server';
 import { visibleInventoryTypes } from '$lib/inventory/chips';
 import { INVENTORY_TYPES, type InventoryType } from '$lib/inventory/types';
+import { countBatches } from '$lib/db/amendments';
+import { loadCarryoverData } from '$lib/server/amendmentChain';
+import { batchView, dayContext } from '$lib/server/amendmentRoutes';
+import { canMutate } from '$lib/server/session';
+import type { AmendmentRow } from '$lib/amendments/view';
 
 /** Row shape consumed by `A_InventoryList`. Per-type columns are
  *  selected at render time via the `kind` discriminator. */
@@ -66,7 +71,8 @@ const TYPE_TO_STOCK_CATEGORIES: Record<InventoryType, StockCategory[] | null> = 
   seed: ['seed'],
   crop: null,
   feed: ['feed', 'bedding'],
-  'animal-health': ['animal-health']
+  'animal-health': ['animal-health'],
+  amendment: null
 };
 
 const TYPE_TO_PLUGIN_TYPES: Record<InventoryType, ReadonlyArray<CatalogRow['pluginType']> | null> =
@@ -76,7 +82,8 @@ const TYPE_TO_PLUGIN_TYPES: Record<InventoryType, ReadonlyArray<CatalogRow['plug
     seed: ['crop'],
     crop: ['crop'],
     feed: null,
-    'animal-health': ['animal-health']
+    'animal-health': ['animal-health'],
+    amendment: null
   };
 
 function parseType(raw: string | null): InventoryType {
@@ -88,7 +95,7 @@ function parseType(raw: string | null): InventoryType {
 
 function parseMode(raw: string | null, type: InventoryType): 'stock' | 'catalog' {
   if (type === 'crop') return 'catalog';
-  if (type === 'feed') return 'stock';
+  if (type === 'feed' || type === 'amendment') return 'stock';
   return raw === 'catalog' ? 'catalog' : 'stock';
 }
 
@@ -167,7 +174,8 @@ async function buildCounts(items: StockItemWithBalance[]): Promise<Record<Invent
     seed: 0,
     crop: 0,
     feed: 0,
-    'animal-health': 0
+    'animal-health': 0,
+    amendment: countBatches()
   } as Record<InventoryType, number>;
 
   for (const i of items) {
@@ -202,7 +210,26 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const counts = await buildCounts(items);
 
   let rows: InventoryRow[];
-  if (mode === 'catalog' || type === 'crop') {
+  let amendments: AmendmentRow[] = [];
+  if (type === 'amendment') {
+    rows = [];
+    const data = await loadCarryoverData();
+    const { timeZone } = dayContext();
+    amendments = data.batches.map((b) => {
+      const v = batchView(data, b, timeZone);
+      return {
+        id: v.id,
+        name: v.name,
+        kind: v.kind,
+        origin: v.origin,
+        state: v.state,
+        startedAt: v.startedAt,
+        closedAt: v.closedAt,
+        inputCount: v.inputs.length,
+        supplier: v.supplier
+      };
+    });
+  } else if (mode === 'catalog' || type === 'crop') {
     rows = (await catalogRowsFor(type)).map((r) => ({ ...r, kind: 'catalog' as const }));
   } else {
     const stock = stockRowsFor(type, items);
@@ -227,6 +254,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     counts,
     visibleTypes,
     rows,
+    amendments,
+    canAddAmendment: !!locals.user && canMutate(locals.user.role),
     canAdd: locals.user?.role === 'owner'
   };
 };

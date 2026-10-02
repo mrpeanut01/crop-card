@@ -9,7 +9,8 @@ const PLUGIN_TYPES: Record<InventoryType, ReadonlyArray<string>> = {
   fertility: ['fertilizer'],
   crop: [],
   feed: [],
-  'animal-health': []
+  'animal-health': [],
+  amendment: []
 };
 
 /** Library entries an inventory item of `type` can link to: crop categories

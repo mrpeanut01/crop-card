@@ -2,7 +2,7 @@
   import { pageCropName } from '$lib/i18n/pageCropName';
   import type { BedPresetId } from '$lib/garden/types';
   import type { MessageKey } from '$lib/i18n';
-  import { getDesigner } from './designerState.svelte';
+  import { getDesigner, type DesignerMode } from './designerState.svelte';
 
   interface Props {
     oncustom: () => void;
@@ -25,11 +25,216 @@
   const bed = $derived(d.selectedBed);
   const planting = $derived(d.selectedPlanting);
 
+  const DRAG_START_PX = 6;
+  const HOLD_MS = 350;
+  const EDGE_PX = 56;
+  const MAX_SCROLL_PX = 18;
+  const CHIP_GAP_PX = 12;
+  const GUTTER_PX = 16;
+
+  const draggable = $derived(d.canEdit && d.view === 'canvas');
+  let press: {
+    id: number;
+    touch: boolean;
+    x: number;
+    y: number;
+    presetId: BedPresetId;
+    timer: ReturnType<typeof setTimeout> | null;
+    ox: number;
+    oy: number;
+    travelled: boolean;
+    prior: DesignerMode;
+  } | null = null;
+  let suppressClick = false;
+
   function preset(id: BedPresetId): void {
+    if (suppressClick) {
+      suppressClick = false;
+      return;
+    }
     if (id === 'custom') oncustom();
     else d.choosePreset(id);
   }
+
+  function onChipPointerDown(e: PointerEvent, id: BedPresetId): void {
+    if (!draggable || press || id === 'custom') return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const touch = e.pointerType !== 'mouse';
+    press = {
+      id: e.pointerId,
+      touch,
+      x: e.clientX,
+      y: e.clientY,
+      presetId: id,
+      timer: null,
+      ox: e.clientX,
+      oy: e.clientY,
+      travelled: false,
+      prior: d.mode
+    };
+    if (touch) {
+      press.timer = setTimeout(onHold, HOLD_MS);
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+    }
+    window.addEventListener('pointermove', onMove, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+    window.addEventListener('keydown', onKey);
+  }
+
+  function onHold(): void {
+    if (!press) return;
+    press.timer = null;
+    if (!d.startBedDrag(press.presetId, press.x, press.y)) end();
+  }
+
+  function onTouchMove(e: TouchEvent): void {
+    if (d.bedDrag && e.cancelable) e.preventDefault();
+  }
+
+  function onMove(e: PointerEvent): void {
+    if (!press || e.pointerId !== press.id) return;
+    if (!d.bedDrag) {
+      const moved = Math.hypot(e.clientX - press.x, e.clientY - press.y) >= DRAG_START_PX;
+      if (press.touch) {
+        if (moved) end();
+        else {
+          press.x = e.clientX;
+          press.y = e.clientY;
+        }
+        return;
+      }
+      if (!moved) return;
+      if (!d.startBedDrag(press.presetId, e.clientX, e.clientY)) return end();
+    }
+    e.preventDefault();
+    if (Math.hypot(e.clientX - press.ox, e.clientY - press.oy) >= DRAG_START_PX) {
+      press.travelled = true;
+    }
+    d.moveBedDrag(e.clientX, e.clientY);
+    edgeX = e.clientX;
+    edgeY = e.clientY;
+    if (edgeSpeed(edgeY) !== 0 && scrollFrame === null) {
+      scrollFrame = requestAnimationFrame(autoScroll);
+    }
+  }
+
+  let edgeX = 0;
+  let edgeY = 0;
+  let scrollFrame: number | null = null;
+
+  function edgeSpeed(y: number): number {
+    const bottom = window.innerHeight - bottomInset();
+    if (y < EDGE_PX) return -Math.ceil(((EDGE_PX - y) / EDGE_PX) * MAX_SCROLL_PX);
+    if (y > bottom - EDGE_PX)
+      return Math.ceil(((y - (bottom - EDGE_PX)) / EDGE_PX) * MAX_SCROLL_PX);
+    return 0;
+  }
+
+  function bottomInset(): number {
+    const nav = document.querySelector('.primary-nav');
+    if (!nav || getComputedStyle(nav).position !== 'fixed') return 0;
+    return Math.max(0, window.innerHeight - nav.getBoundingClientRect().top);
+  }
+
+  function autoScroll(): void {
+    scrollFrame = null;
+    if (!press || !d.bedDrag) return;
+    const dy = edgeSpeed(edgeY);
+    if (dy === 0) return;
+    const before = window.scrollY;
+    window.scrollBy(0, dy);
+    if (window.scrollY === before) return;
+    d.moveBedDrag(edgeX, edgeY);
+    scrollFrame = requestAnimationFrame(autoScroll);
+  }
+
+  function onUp(e: PointerEvent): void {
+    if (!press || e.pointerId !== press.id) return;
+    if (d.bedDrag) {
+      suppressNextClick();
+      const still = Math.hypot(e.clientX - press.ox, e.clientY - press.oy) < DRAG_START_PX;
+      if (press.touch && !press.travelled && still) {
+        d.tapAfterHold(press.presetId, press.prior);
+        return end();
+      }
+      d.moveBedDrag(e.clientX, e.clientY);
+      void d.dropBed();
+    }
+    end();
+  }
+
+  function onCancel(e: PointerEvent): void {
+    if (!press || e.pointerId !== press.id) return;
+    d.cancelBedDrag();
+    end();
+  }
+
+  function onKey(e: KeyboardEvent): void {
+    if (e.key !== 'Escape' || !d.bedDrag) return;
+    e.preventDefault();
+    d.cancelBedDrag();
+    suppressClick = true;
+    window.addEventListener('pointerup', () => setTimeout(() => (suppressClick = false), 0), {
+      once: true
+    });
+    end();
+  }
+
+  function suppressNextClick(): void {
+    suppressClick = true;
+    setTimeout(() => (suppressClick = false), 0);
+  }
+
+  function onContextMenu(e: Event): void {
+    if (press?.touch || d.bedDrag) e.preventDefault();
+  }
+
+  function end(): void {
+    if (press?.timer) clearTimeout(press.timer);
+    press = null;
+    if (scrollFrame !== null) cancelAnimationFrame(scrollFrame);
+    scrollFrame = null;
+    window.removeEventListener('touchmove', onTouchMove);
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onCancel);
+    window.removeEventListener('keydown', onKey);
+  }
+
+  $effect(() => () => {
+    end();
+    d.cancelBedDrag();
+  });
+
+  let viewportW = $state(0);
+  let chipW = $state(0);
+
+  function chipLeft(x: number): number {
+    const max = viewportW - GUTTER_PX - chipW;
+    const right = x + CHIP_GAP_PX;
+    const left = right <= max ? right : x - CHIP_GAP_PX - chipW;
+    return Math.max(GUTTER_PX, Math.min(left, max));
+  }
 </script>
+
+<svelte:window bind:innerWidth={viewportW} />
+
+{#if d.bedDrag}
+  <div
+    class="drag-chip"
+    class:nofit={!!d.bedDrag.rect && !d.bedDrag.fits}
+    aria-hidden="true"
+    data-testid="bed-drag-chip"
+    bind:offsetWidth={chipW}
+    style:left="{chipLeft(d.bedDrag.clientX)}px"
+    style:top="{d.bedDrag.clientY}px"
+  >
+    {d.bedDrag.rect && !d.bedDrag.fits
+      ? tr('garden.crop.noRoomHere')
+      : presetShort(d.bedDrag.presetId)}
+  </div>
+{/if}
 
 {#if d.canEdit}
   {#if d.mode.kind === 'place-bed' || d.mode.kind === 'move-bed' || d.mode.kind === 'place-crop' || d.mode.kind === 'move-planting'}
@@ -119,8 +324,12 @@
         <button
           type="button"
           class="tb"
+          class:chip={id !== 'custom'}
+          data-preset-id={id}
           aria-pressed={d.mode.kind === 'place-bed' && d.mode.presetId === id}
           onclick={() => preset(id)}
+          onpointerdown={(e) => onChipPointerDown(e, id)}
+          oncontextmenu={onContextMenu}
         >
           {presetShort(id)}
         </button>
@@ -172,6 +381,31 @@
     background: var(--pill-forest-bg);
     border-color: var(--pill-forest-bd);
     color: var(--pill-forest-fg);
+  }
+  .tb.chip {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .drag-chip {
+    position: fixed;
+    z-index: 60;
+    transform: translateY(-140%);
+    max-width: min(260px, calc(100vw - 32px));
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-input);
+    background: var(--color-forest);
+    color: #fff;
+    font-weight: 600;
+    font-size: var(--font-size-caption);
+    pointer-events: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .drag-chip.nofit {
+    background: var(--color-rust);
   }
   .tb.danger {
     color: var(--color-rust);

@@ -7,7 +7,16 @@
  */
 
 import { z } from 'zod';
+import {
+  FORAGE_CROP_ENTRIES_NEVER_COUNTED,
+  FORAGE_CROP_ENTRY_PREFIX,
+  FORAGE_PLUGIN_EXCLUSIONS,
+  FORAGE_TRIGGER_SOURCE_KEYS,
+  isPageReaderSource
+} from '$lib/forage/hazardSources';
 import type {
+  ForageHazard,
+  ForageHazardKind,
   AnimalHealthPlugin,
   CropPlugin,
   FungicidePlugin,
@@ -64,10 +73,12 @@ export function grazingFactPaths(g: GrazingRestrictions): string[] {
     'grazeDays',
     'hayDays',
     'lactatingDairyGrazeDays',
-    'meatAnimalRemovalBeforeSlaughterDays'
+    'meatAnimalRemovalBeforeSlaughterDays',
+    'manureCarryoverDays'
   ]);
   if (g.notForPasture === true) paths.push('notForPasture');
   if (g.manureCarryover === true) paths.push('manureCarryover');
+  if (g.hayOffFarmRestricted === true) paths.push('hayOffFarmRestricted');
   for (const e of g.speciesExceptions ?? []) {
     const prefix = `speciesExceptions.${e.speciesId}${e.lactating ? '.lactating' : ''}.`;
     paths.push(...present(prefix, e, ['grazeDays', 'hayDays']));
@@ -188,4 +199,113 @@ export function checkPastureCoverage(
       .filter((id) => !gaps.has(id))
       .sort()
   };
+}
+
+/**
+ * Phase 33C (M-17): a `manureCarryoverDays` value must appear in its quote
+ * as "<n> days". Returns "pluginId: problem" lines.
+ */
+export function carryoverDaysQuoteGaps(
+  plugins: Array<{ pluginId: string; grazingRestrictions?: GrazingRestrictions }>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const p of plugins) {
+    const n = p.grazingRestrictions?.manureCarryoverDays;
+    if (n === undefined) continue;
+    const entry = sourceEntrySchema.safeParse(sources[p.pluginId]?.manureCarryoverDays);
+    if (!entry.success) {
+      gaps.push(`${p.pluginId}: manureCarryoverDays has no complete source`);
+      continue;
+    }
+    if (!new RegExp(`\\b${n} days\\b`).test(entry.data.quote)) {
+      gaps.push(`${p.pluginId}: quote does not say "${n} days"`);
+    }
+  }
+  return gaps;
+}
+
+/** One entry of apps/web/scripts/forage-toxicity-sources.json. */
+export interface ForageSourceEntry {
+  pluginIds?: string[];
+  sources?: unknown[];
+}
+
+function hasShippableSource(entry: ForageSourceEntry | undefined): boolean {
+  return (entry?.sources ?? []).some((raw) => {
+    const s = sourceEntrySchema.safeParse(raw);
+    return s.success && !isPageReaderSource(s.data);
+  });
+}
+
+function countedCropEntries(
+  entries: Record<string, ForageSourceEntry>,
+  kind: ForageHazardKind
+): Array<[string, ForageSourceEntry]> {
+  return Object.entries(entries).filter(
+    ([key]) =>
+      key.startsWith(FORAGE_CROP_ENTRY_PREFIX[kind]) &&
+      !FORAGE_CROP_ENTRIES_NEVER_COUNTED.includes(key)
+  );
+}
+
+/**
+ * Phase 33C (M-23): every crop forage hazard and trigger rests on a source
+ * that is not a page-reader extraction, and every crop research mapped to
+ * a hazard either carries it or is excluded with a reason. Returns
+ * "pluginId: problem" lines; empty means covered.
+ */
+export function forageHazardGaps(
+  crops: Array<{ pluginId: string; forageHazards?: ForageHazard[] }>,
+  entries: Record<string, ForageSourceEntry>,
+  exclusions: Readonly<Record<string, string>> = FORAGE_PLUGIN_EXCLUSIONS
+): string[] {
+  const gaps: string[] = [];
+  const byId = new Map(crops.map((c) => [c.pluginId, c]));
+  const kinds = Object.keys(FORAGE_CROP_ENTRY_PREFIX) as ForageHazardKind[];
+
+  for (const kind of kinds) {
+    for (const [trigger, key] of Object.entries(FORAGE_TRIGGER_SOURCE_KEYS[kind])) {
+      if (!hasShippableSource(entries[key])) {
+        gaps.push(`${kind} ${trigger}: ${key} has no source that is not a page reader`);
+      }
+    }
+  }
+
+  for (const c of crops) {
+    for (const h of c.forageHazards ?? []) {
+      const backed = countedCropEntries(entries, h.kind).some(
+        ([, e]) => (e.pluginIds ?? []).includes(c.pluginId) && hasShippableSource(e)
+      );
+      if (!backed) gaps.push(`${c.pluginId}: ${h.kind} is not named by a shippable source`);
+      for (const t of h.triggers) {
+        if (!FORAGE_TRIGGER_SOURCE_KEYS[h.kind][t]) {
+          gaps.push(`${c.pluginId}: ${h.kind} trigger ${t} has no source`);
+        }
+      }
+    }
+    if (c.forageHazards && exclusions[c.pluginId]) {
+      gaps.push(`${c.pluginId}: excluded but carries forageHazards`);
+    }
+  }
+
+  const mapped = new Set<string>();
+  for (const kind of kinds) {
+    for (const [key, e] of countedCropEntries(entries, kind)) {
+      for (const id of e.pluginIds ?? []) {
+        mapped.add(id);
+        if (exclusions[id]) continue;
+        const crop = byId.get(id);
+        if (!crop) gaps.push(`${id}: named in ${key} but no crop plugin has that id`);
+        else if (!(crop.forageHazards ?? []).some((h) => h.kind === kind)) {
+          gaps.push(`${id}: named in ${key} but carries no ${kind} hazard and is not excluded`);
+        }
+      }
+    }
+  }
+  for (const [id, reason] of Object.entries(exclusions)) {
+    if (!mapped.has(id)) gaps.push(`${id}: excluded but not named in any crop entry`);
+    if (reason.trim().length <= 10) gaps.push(`${id}: exclusion reason is too short`);
+  }
+  return gaps;
 }

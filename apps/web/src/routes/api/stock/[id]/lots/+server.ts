@@ -5,25 +5,18 @@
 
 import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
-import { getStockItem, IncompatibleUnitError, QUANTITY_STATUSES, receiveLot } from '$lib/db/stock';
-import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
+import { getStockItem, IncompatibleUnitError, receiveLot } from '$lib/db/stock';
 import { requireOwner } from '$lib/server/auth';
+import { stockLotCreateSchema } from '$lib/stock/apiSchemas';
+import { HAY_LOT_CATEGORIES } from '$lib/amendments/model';
+import { assertHayCutting, rejectForeignRefs } from '$lib/server/foreignRefs';
 
-const schema = z.object({
-  receivedQuantity: z.number().positive(),
-  unit: z.enum(ALL_STOCK_UNITS as unknown as [StockUnit, ...StockUnit[]]),
-  lotNumber: z.string().max(80).optional(),
-  expiresAt: z.number().int().optional(),
-  supplier: z.string().max(120).optional(),
-  receivedCostCents: z.number().int().nonnegative().optional(),
-  notes: z.string().max(500).optional(),
-  quantityStatus: z.enum(QUANTITY_STATUSES).optional()
-});
+export const _requestSchema = stockLotCreateSchema;
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
-  if (!event.params.id || !getStockItem(event.params.id)) {
+  const item = event.params.id ? getStockItem(event.params.id) : undefined;
+  if (!item) {
     return json({ error: t(event.locals?.locale, 'stockui.api.unknownItem') }, { status: 404 });
   }
   let body: unknown;
@@ -32,16 +25,31 @@ export const POST: RequestHandler = async (event) => {
   } catch {
     return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
-  const parsed = schema.safeParse(body);
+  const parsed = stockLotCreateSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
       { status: 400 }
     );
   }
+  if (parsed.data.sourceHayCuttingId) {
+    if (!(HAY_LOT_CATEGORIES as readonly string[]).includes(item.category)) {
+      return json(
+        {
+          error: 'NOT_FEED_LOT',
+          message: 'Only feed and bedding lots can come from a hay cutting.'
+        },
+        { status: 400 }
+      );
+    }
+    const bad = rejectForeignRefs(
+      assertHayCutting('sourceHayCuttingId', parsed.data.sourceHayCuttingId)
+    );
+    if (bad) return bad;
+  }
   try {
     const lot = receiveLot({
-      stockItemId: event.params.id,
+      stockItemId: item.id,
       ...parsed.data,
       performedById: user.id
     });

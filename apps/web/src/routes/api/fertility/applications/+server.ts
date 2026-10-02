@@ -1,27 +1,17 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { insertFertilityApplication, listFertilityApplicationsForBlock } from '$lib/db/fertility';
 import { getStockItem } from '$lib/db/stock';
-import { ensureSystemUser } from '$lib/db/users';
+import { ensureSystemUser, memberNamesByIds } from '$lib/db/users';
 import { currentUser, requireOwner } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertAmendmentBatch, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { fertilityApplicationCreateSchema } from '$lib/fertility/apiSchemas';
+import { decideSpread } from '$lib/server/spreadCarryover';
+import type { CarryoverAck } from '$lib/amendments/spreadPrompt';
 
-const inputSchema = z.object({
-  blockId: z.string().min(1),
-  cropId: z.string().optional(),
-  taskId: z.string().optional(),
-  occurredAt: z.number().int().optional(),
-  source: z.string().min(1).max(120),
-  stockItemId: z.string().optional(),
-  ratePerAcre: z.number().nonnegative(),
-  rateUnit: z.string().min(1).max(40),
-  nLbPerAcre: z.number().nonnegative().optional(),
-  pLbPerAcre: z.number().nonnegative().optional(),
-  kLbPerAcre: z.number().nonnegative().optional(),
-  notes: z.string().max(500).optional()
-});
+export const _requestSchema = fertilityApplicationCreateSchema;
+const inputSchema = fertilityApplicationCreateSchema;
 
 export const POST: RequestHandler = async (event) => {
   requireOwner(event);
@@ -45,15 +35,35 @@ export const POST: RequestHandler = async (event) => {
   const foreign = rejectForeignRefs(
     ['blockId', parsed.data.blockId, getBlock],
     ['cropId', parsed.data.cropId, getCrop],
-    ['stockItemId', parsed.data.stockItemId, getStockItem]
+    ['stockItemId', parsed.data.stockItemId, getStockItem],
+    assertAmendmentBatch('amendmentBatchId', parsed.data.amendmentBatchId)
   );
   if (foreign) return foreign;
   const performer = auth ?? (await ensureSystemUser());
   const occurredAt = parsed.data.occurredAt ?? Date.now();
+  const { confirmCarryover, ...fields } = parsed.data;
+  let carryoverAck: CarryoverAck | null = null;
+  if (fields.amendmentBatchId) {
+    const decision = await decideSpread({
+      blockId: fields.blockId,
+      batchId: fields.amendmentBatchId,
+      confirm: confirmCarryover
+    });
+    if (decision.kind === 'confirm') return json(decision.body, { status: 409 });
+    if (decision.kind === 'confirmed') {
+      carryoverAck = {
+        ...decision.ack,
+        confirmedById: performer.id,
+        confirmedByName: memberNamesByIds([performer.id]).get(performer.id) ?? 'Someone',
+        confirmedAt: Date.now()
+      };
+    }
+  }
   const persisted = insertFertilityApplication({
-    ...parsed.data,
+    ...fields,
     occurredAt,
-    performedById: performer.id
+    performedById: performer.id,
+    carryoverAckJson: carryoverAck ? JSON.stringify(carryoverAck) : undefined
   });
   if (parsed.data.taskId) {
     try {
@@ -67,7 +77,7 @@ export const POST: RequestHandler = async (event) => {
       // Non-fatal; the application is recorded.
     }
   }
-  return json({ application: persisted }, { status: 201 });
+  return json({ application: persisted, carryoverAck }, { status: 201 });
 };
 
 export const GET: RequestHandler = ({ url }) => {

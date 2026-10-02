@@ -75,7 +75,8 @@ export const actions: Actions = {
       phone: user.phone,
       isSuperadmin: user.isSuperadmin,
       activeOwnerId: match.ownerId,
-      activeRole: assignment.roleWithinOwner
+      activeRole: assignment.roleWithinOwner,
+      iat: user.sessionIssuedAt
     });
     throw redirect(303, '/today');
   }

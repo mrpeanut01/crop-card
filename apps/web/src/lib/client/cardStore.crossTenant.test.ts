@@ -23,6 +23,15 @@ import { resetTenantCaches, syncServiceWorkerTenant, wipeTenantCaches } from './
 import { OfflineCards } from '$lib/components/cards/offlineCards.svelte';
 import { UNASSIGNED_OWNER_ID } from './syncQueue';
 import { sampleSnapshot } from '$lib/cards/build/fixtures';
+import {
+  listSavedRecordCards,
+  openRecordCard,
+  pinRecordCard,
+  saveRecordCard,
+  unpinRecordCard
+} from './recordCardStore';
+import { recordCardKey, type CardModel } from '$lib/cards/model';
+import type { SavedRecordCard } from '$lib/cards/recordCard';
 
 const ACTIVE_KEY = 'cropcard.activeOwnerId';
 const OWNERS = ['owner_home_farm', 'owner_a', 'owner_b', 'owner_c'] as const;
@@ -167,9 +176,12 @@ describe('cardStore — cross-tenant isolation (Invariant 6, client)', () => {
       setActive('owner_b');
       await saveSnapshot(sampleSnapshot({ ownerId: 'owner_b' }), 'e');
       await pinCard('pl_2');
+      await saveRecordCard(recordModel('spray', 'b1'));
+      await pinRecordCard(recordCardKey('spray', 'b1'));
       await reset();
       expect(await db().farmSnapshots.count()).toBe(0);
       expect(await db().pinnedCards.count()).toBe(0);
+      expect(await db().recordCards.count()).toBe(0);
       expect(await db().pendingSprayRecords.get('q1')).toBeDefined();
     }
     await db().pendingSprayRecords.clear();
@@ -195,5 +207,118 @@ describe('cardStore — cross-tenant isolation (Invariant 6, client)', () => {
     await syncServiceWorkerTenant({ register: false, signedIn: true, ownerId: null });
     expect(sessionStorage.getItem(ACTIVE_KEY)).toBeNull();
     expect(await db().farmSnapshots.count()).toBe(0);
+  });
+});
+
+function recordModel(recordKind: string, rowId: string, owner = 'x'): SavedRecordCard {
+  const card = {
+    kind: 'spray',
+    key: recordCardKey(recordKind, rowId),
+    kicker: 'Spray record',
+    title: `${owner} ${rowId}`,
+    facts: [],
+    sections: [],
+    asOf: 1,
+    provenance: [],
+    href: `/records/${recordKind}/${rowId}`
+  } as CardModel;
+  return { v: 1, recordKind, rowId, cards: [card], origin: null };
+}
+
+type RecordOp =
+  | { t: 'save'; as: Owner | null; row: string; at: number }
+  | { t: 'pin'; as: Owner | null; row: string; at: number }
+  | { t: 'unpin'; as: Owner | null; row: string }
+  | { t: 'open'; as: Owner | null; row: string; at: number };
+
+const rowArb = fc.constantFrom('r1', 'r2', 'r3', 'r4');
+const asArb = fc.option(ownerArb, { nil: null });
+const recordOpArb: fc.Arbitrary<RecordOp> = fc.oneof(
+  fc.record({
+    t: fc.constant('save' as const),
+    as: asArb,
+    row: rowArb,
+    at: fc.integer({ min: 0, max: 1_000_000 })
+  }),
+  fc.record({
+    t: fc.constant('pin' as const),
+    as: asArb,
+    row: rowArb,
+    at: fc.integer({ min: 0, max: 1_000_000 })
+  }),
+  fc.record({ t: fc.constant('unpin' as const), as: asArb, row: rowArb }),
+  fc.record({
+    t: fc.constant('open' as const),
+    as: asArb,
+    row: rowArb,
+    at: fc.integer({ min: 0, max: 1_000_000 })
+  })
+);
+
+describe('recordCardStore — cross-tenant isolation (33D, Invariant 6, client)', () => {
+  beforeEach(fresh);
+  afterEach(fresh);
+
+  it('an Owner never reads another Owner’s saved record cards or record pins', async () => {
+    await fc.assert(
+      fc.asyncProperty(fc.array(recordOpArb, { maxLength: 30 }), ownerArb, async (ops, reader) => {
+        await fresh();
+        const saved = new Map<Owner, Set<string>>();
+        const pins = new Map<Owner, Set<string>>();
+        for (const op of ops) {
+          setActive(op.as);
+          const key = recordCardKey('spray', op.row);
+          if (op.t === 'save') {
+            const ok = await saveRecordCard(recordModel('spray', op.row, op.as ?? 'none'), op.at);
+            expect(ok).toBe(op.as !== null);
+            if (op.as) saved.set(op.as, (saved.get(op.as) ?? new Set()).add(op.row));
+          } else if (op.t === 'pin') {
+            const outcome = await pinRecordCard(key, op.at);
+            if (!op.as) {
+              expect(outcome).toBe('no-owner');
+            } else if (saved.get(op.as)?.has(op.row)) {
+              expect(outcome).toBe('pinned');
+              pins.set(op.as, (pins.get(op.as) ?? new Set()).add(op.row));
+            } else {
+              expect(outcome).toBe('missing');
+            }
+          } else if (op.t === 'unpin') {
+            await unpinRecordCard(key);
+            if (op.as) pins.get(op.as)?.delete(op.row);
+          } else {
+            const opened = await openRecordCard(key, op.at);
+            if (!op.as) expect(opened).toBeNull();
+            else {
+              expect(opened !== null).toBe(saved.get(op.as)?.has(op.row) ?? false);
+              if (opened) expect(opened.model.cards[0].title).toBe(`${op.as} ${op.row}`);
+            }
+          }
+        }
+
+        setActive(reader);
+        const { pinned, recent } = await listSavedRecordCards();
+        const all = [...pinned, ...recent];
+        expect(all.every((r) => r.ownerId === reader)).toBe(true);
+        expect(all.every((r) => r.model.cards[0].title.startsWith(`${reader} `))).toBe(true);
+        expect(new Set(all.map((r) => r.model.rowId))).toEqual(saved.get(reader) ?? new Set());
+        expect(new Set(pinned.map((r) => r.model.rowId))).toEqual(pins.get(reader) ?? new Set());
+        for (const row of ['r1', 'r2']) {
+          const opened = await openRecordCard(recordCardKey('spray', row));
+          expect(opened !== null).toBe(saved.get(reader)?.has(row) ?? false);
+        }
+      }),
+      { numRuns: 60 }
+    );
+  });
+
+  it('an Owner switch drops every saved record card and pin', async () => {
+    setActive('owner_a');
+    await saveRecordCard(recordModel('spray', 'r1', 'owner_a'));
+    await pinRecordCard(recordCardKey('spray', 'r1'));
+    await resetTenantCaches('owner_b');
+    expect(await db().recordCards.count()).toBe(0);
+    setActive('owner_a');
+    expect(await openRecordCard(recordCardKey('spray', 'r1'))).toBeNull();
+    expect(await listSavedRecordCards()).toEqual({ pinned: [], recent: [] });
   });
 });

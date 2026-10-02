@@ -11,6 +11,8 @@
     "lactatingDairyGrazeDays": 0,
     "meatAnimalRemovalBeforeSlaughterDays": 0,
     "manureCarryover": true,
+    "manureCarryoverDays": 3,
+    "hayOffFarmRestricted": true,
     "source": "GrazonNext HL, EPA Reg. No. 62719-628, label accepted 2017-03-13"
   },
   "displayName": "GrazonNext HL (aminopyralid + 2,4-D)",

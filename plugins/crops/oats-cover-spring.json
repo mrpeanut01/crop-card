@@ -25,5 +25,14 @@
     ],
     "beeAttractive": false
   },
-  "archetype": "cover-crop.termination"
+  "archetype": "cover-crop.termination",
+  "forageHazards": [
+    {
+      "kind": "nitrate",
+      "triggers": [
+        "drought",
+        "heavy-nitrogen"
+      ]
+    }
+  ]
 }

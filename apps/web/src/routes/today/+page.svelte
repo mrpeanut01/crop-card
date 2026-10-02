@@ -20,6 +20,8 @@
   import SeasonTimeline from '$lib/components/today/SeasonTimeline.svelte';
   import TaskDeckCard, { type LinkedTaskItem } from '$lib/components/today/TaskDeckCard.svelte';
   import CareTaskCard from '$lib/components/animals/CareTaskCard.svelte';
+  import TaskTimer from '$lib/components/tasks/TaskTimer.svelte';
+  import type { TaskTimerRow } from '$lib/client/dexie';
   import Recommendations, {
     type RecommendationItem
   } from '$lib/components/today/Recommendations.svelte';
@@ -296,6 +298,7 @@
   let actionError = $state<string | null>(null);
   let liveMessage = $state('');
   let careMessage = $state('');
+  let stripMessage = $state('');
   let trayPrompt = $state<{ cropId: string } | null>(null);
 
   async function refreshQueued(): Promise<void> {
@@ -317,6 +320,31 @@
     return () => clearInterval(timer);
   });
 
+  let runningRow = $state<TaskTimerRow | null>(null);
+  async function refreshRunning(): Promise<void> {
+    if (!userId) return;
+    try {
+      const [{ runningTimer }, { primeActiveOwnerId }] = await Promise.all([
+        import('$lib/client/taskTimer'),
+        import('$lib/client/syncQueue')
+      ]);
+      primeActiveOwnerId(data.user?.activeOwnerId ?? null);
+      runningRow = await runningTimer(userId);
+    } catch {
+      runningRow = null;
+    }
+  }
+  onMount(() => {
+    void refreshRunning();
+    const onChange = () => void refreshRunning();
+    window.addEventListener('cropcard:task-timer', onChange);
+    return () => window.removeEventListener('cropcard:task-timer', onChange);
+  });
+  /** D-28: a running timer whose card is not in view gets a strip. */
+  const timerStrip = $derived(
+    canAct && runningRow && !(view === 'day' && deckById.has(runningRow.taskId)) ? runningRow : null
+  );
+
   async function queueAction(
     taskId: string,
     action: QueuedTaskAction,
@@ -333,12 +361,13 @@
   /** Done and Skip go through the replayable close endpoint with one client
    *  record id, so a lost answer followed by the offline replay never logs
    *  the time twice (F1-15). */
+  /** True when the close saved or waits in the offline queue. */
   async function closeTask(
     taskId: string,
     action: QueuedTaskAction,
     reason?: string,
     minutes?: number
-  ) {
+  ): Promise<boolean> {
     busy = true;
     actionError = null;
     liveMessage = '';
@@ -350,7 +379,7 @@
     try {
       if (navigator.onLine === false) {
         await queueAction(taskId, action, reason, minutes, clientId);
-        return;
+        return true;
       }
       let res: Response;
       try {
@@ -361,14 +390,14 @@
         });
       } catch {
         await queueAction(taskId, action, reason, minutes, clientId);
-        return;
+        return true;
       }
       if (!res.ok) {
         const out = await res.json().catch(() => ({}));
         actionError = tr('today.err.saveFailed', {
           detail: out.error ?? tr('today.err.serverSaid', { status: res.status })
         });
-        return;
+        return false;
       }
       const out = (await res.json().catch(() => null)) as {
         seedStart?: { step?: string; cropId?: string } | null;
@@ -394,8 +423,10 @@
         if (trayPrompt) liveMessage = tr('today.msg.doneLogTray');
       }
       await invalidateAll();
+      return true;
     } catch (err) {
       actionError = err instanceof Error ? err.message : String(err);
+      return false;
     } finally {
       busy = false;
     }
@@ -579,6 +610,7 @@
       now={data.nowMs}
       {canAssign}
       assigneeUserId={d.entry.task.assigneeUserId ?? null}
+      {userId}
       onDone={(id, minutes) => closeTask(id, 'complete', undefined, minutes)}
       onSkip={(id, reason) => closeTask(id, 'abort', reason)}
       onAssigned={async (name) => {
@@ -756,6 +788,22 @@
   {/if}
 
   <p class="sr-only" role="status" aria-live="polite">{liveMessage}</p>
+  {#if timerStrip}
+    <TaskTimer
+      variant="strip"
+      taskId={timerStrip.taskId}
+      taskTitle={timerStrip.taskTitle?.trim() || tr('tasks.timer.aTask')}
+      {userId}
+      {canAct}
+      open={false}
+      onStatus={(text) => {
+        liveMessage = text;
+        stripMessage = text;
+      }}
+    />
+  {:else if stripMessage}
+    <p class="strip-note" data-testid="timer-strip-status">{stripMessage}</p>
+  {/if}
   {#if trayPrompt}
     <div class="tray-prompt" data-testid="log-tray-prompt">
       <p>{tr('today.tray.prompt')}</p>
@@ -1355,6 +1403,11 @@
     min-height: 48px;
     color: #6e2413;
     font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .strip-note {
+    margin: 8px 0;
+    color: var(--color-ink-soft);
     overflow-wrap: anywhere;
   }
   .tray-prompt {

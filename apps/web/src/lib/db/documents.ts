@@ -7,6 +7,7 @@ import {
   type DocumentSubjectType,
   documentLinks,
   documents,
+  forageTests,
   soilTests,
   users
 } from './schema';
@@ -381,7 +382,7 @@ export function setSoilTestDocument(
 
 /** Removes one link. A `soil-test` link to the test's own lab report also
  *  clears `soil_tests.document_id`, so the pointer and the link stay
- *  together (A-36). */
+ *  together (A-36); a `forage-test` link does the same for its test. */
 export function removeDocumentLink(
   documentId: string,
   link: DocumentLinkRow,
@@ -403,5 +404,17 @@ export function removeDocumentLink(
         .get() !== undefined;
     if (pointsHere) setSoilTestDocument(link.subjectId, null, actingUserId);
     else deleteDocumentLink(documentId, link.id);
+    if (link.subjectType === 'forage-test') {
+      db.update(forageTests)
+        .set({ documentId: null })
+        .where(
+          withTenant(
+            forageTests,
+            eq(forageTests.id, link.subjectId),
+            eq(forageTests.documentId, documentId)
+          )
+        )
+        .run();
+    }
   });
 }

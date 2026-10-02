@@ -59,6 +59,9 @@ export interface GrazingApplication {
    *  in. Deleting the block does not remove the sprayed ground, so the
    *  application keeps counting on that Area. */
   formerFieldId?: string;
+  /** M-16, M-19: set when the shared plugin or the farm's own copy says the
+   *  label limits moving hay off the farm. A notice only; never a gate. */
+  hayOffFarm?: { source: string | null };
 }
 
 /**
@@ -406,6 +409,13 @@ function longerDays(base: number | undefined, farm: number | undefined): number 
  * exceptions come from the shared plugin, and `notForPasture` and
  * `manureCarryover` stay set once either side sets them. With no shared
  * plugin the farm copy counts only for `notForPasture`.
+ *
+ * Phase 33C (M-19): `manureCarryoverDays` takes the longer value but a farm
+ * copy cannot fill it in (absent already reads as the longest), and
+ * `hayOffFarmRestricted` stays set once either side sets it. With no shared
+ * plugin the farm's hay flag rides only on the `notForPasture` block, so a
+ * farm-only plugin never gains a restrictions block it did not have; read
+ * `hayOffFarmRestrictedFor` for the notice itself.
  */
 export function farmCopyRestrictions(
   base: GrazingRestrictions | null | undefined,
@@ -416,7 +426,8 @@ export function farmCopyRestrictions(
     return {
       source: farm.source,
       notForPasture: true,
-      ...(farm.manureCarryover === true ? { manureCarryover: true } : {})
+      ...(farm.manureCarryover === true ? { manureCarryover: true } : {}),
+      ...(farm.hayOffFarmRestricted === true ? { hayOffFarmRestricted: true } : {})
     };
   }
   if (!farm) return base;
@@ -444,8 +455,23 @@ export function farmCopyRestrictions(
     ...(base.notForPasture === true || farm.notForPasture === true ? { notForPasture: true } : {}),
     ...(base.manureCarryover === true || farm.manureCarryover === true
       ? { manureCarryover: true }
+      : {}),
+    ...(base.manureCarryoverDays !== undefined
+      ? { manureCarryoverDays: longerDays(base.manureCarryoverDays, farm.manureCarryoverDays) }
+      : {}),
+    ...(base.hayOffFarmRestricted === true || farm.hayOffFarmRestricted === true
+      ? { hayOffFarmRestricted: true }
       : {})
   };
+}
+
+/** M-16, M-19: whether the label limits moving hay off the farm, by either
+ *  the shared plugin or the farm's own copy. Only adds caution. */
+export function hayOffFarmRestrictedFor(
+  base: GrazingRestrictions | null | undefined,
+  farm: GrazingRestrictions | null | undefined
+): boolean {
+  return base?.hayOffFarmRestricted === true || farm?.hayOffFarmRestricted === true;
 }
 
 /** C-10: a milk species is read as lactating unless the animal is male. */

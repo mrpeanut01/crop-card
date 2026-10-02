@@ -74,11 +74,13 @@ export async function listPinned(): Promise<PinnedCardRow[]> {
   return rows.filter((r) => r.ownerId === ownerId);
 }
 
-/** Owner switch and logout: drop every Owner's snapshots and pins. */
+/** Owner switch and logout: drop every Owner's snapshots, pins and saved
+ *  record cards. */
 export async function clearCardCaches(): Promise<void> {
   const d = db();
-  await d.transaction('rw', d.farmSnapshots, d.pinnedCards, async () => {
+  await d.transaction('rw', d.farmSnapshots, d.pinnedCards, d.recordCards, async () => {
     await d.farmSnapshots.clear();
     await d.pinnedCards.clear();
+    await d.recordCards.clear();
   });
 }

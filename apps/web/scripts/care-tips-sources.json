@@ -1,5 +1,5 @@
 {
-  "$comment": "Phase 33 R6. One entry per tip in apps/web/src/lib/cards/build/careTips.ts, keyed family.<field>.<index>. Quotes are verbatim from pages fetched 2026-10-01; unsupported entries have null url/quote. Several fetches went through a summarizing tool, so re-check any quote that ends in an ellipsis. Verdict: supported | partly | unsupported | contradicted.",
+  "$comment": "Phase 33 R6. One entry per tip in apps/web/src/lib/cards/build/careTips.ts, keyed family.<field>.<index>. Quotes are verbatim from pages fetched 2026-10-01; unsupported entries have null url/quote. Several fetches went through a summarizing tool, so re-check any quote that ends in an ellipsis. Verdict: supported | partly | unsupported | contradicted. Phase 33D: \"shipped\" is the exact text careTips.ts shows for that id, or null when the tip was removed; careTips.sources.gate.test.ts checks it.",
   "solanaceae.water.0": {
     "tip": "Water deeply once or twice a week so about an inch reaches the roots.",
     "url": "https://extension.umn.edu/vegetables/growing-tomatoes",
@@ -8,7 +8,8 @@
     "quote": "One inch of rainfall or irrigation per week is ideal.",
     "verdict": "partly",
     "suggestedText": "Water deeply so about an inch reaches the roots each week, counting rain.",
-    "note": "\"Once or twice a week\" is not in the source."
+    "note": "\"Once or twice a week\" is not in the source.",
+    "shipped": "Aim for about an inch of water a week, from rain or watering."
   },
   "solanaceae.water.1": {
     "tip": "Keep watering even. Dry spells followed by a soaking crack the fruit.",
@@ -18,7 +19,8 @@
     "quote": "When soil moisture levels fluctuate during fruit growth, blossom-end rot can develop.",
     "verdict": "partly",
     "suggestedText": "Keep watering even. Swings between dry and wet soil during fruit growth cause blossom-end rot.",
-    "note": "Cracking is not mentioned in the captured quote."
+    "note": "Cracking is not mentioned in the captured quote.",
+    "shipped": null
   },
   "solanaceae.feed.0": {
     "tip": "Mix compost into the planting hole.",
@@ -28,7 +30,8 @@
     "quote": "Improve your soil by adding composted manure or other compost in spring or fall.",
     "verdict": "partly",
     "suggestedText": "Work compost into the bed in spring or fall.",
-    "note": "\"Planting hole\" is not in the source."
+    "note": "\"Planting hole\" is not in the source.",
+    "shipped": "Add compost to the soil in spring or fall."
   },
   "solanaceae.feed.1": {
     "tip": "Side-dress with compost when the first fruit sets.",
@@ -38,7 +41,8 @@
     "quote": "Side dress 1 pound of calcium nitrate (15.5-0-0) per 100 square feet three to four weeks after planting.",
     "verdict": "unsupported",
     "suggestedText": "Remove this tip, or reword to compost only once a source for compost side-dressing at first fruit set is found.",
-    "note": "Closest source side-dresses a fertilizer product with a rate 3 to 4 weeks after planting, not compost at first fruit set. Do not copy that wording (product and rate)."
+    "note": "Closest source side-dresses a fertilizer product with a rate 3 to 4 weeks after planting, not compost at first fruit set. Do not copy that wording (product and rate).",
+    "shipped": null
   },
   "solanaceae.prune.0": {
     "tip": "Stake or cage at planting so roots are not damaged later.",
@@ -47,7 +51,8 @@
     "date": "2024 (page reviewed)",
     "quote": "It is best to install plant supports—stakes, cages, spirals, or trellises—at the time of planting.",
     "verdict": "supported",
-    "note": "\"So roots are not damaged later\" is a reasonable inference, not quoted."
+    "note": "\"So roots are not damaged later\" is a reasonable inference, not quoted.",
+    "shipped": "Put in stakes or cages at planting time."
   },
   "solanaceae.prune.1": {
     "tip": "On tall vining tomatoes, pinch the small shoots that grow between the stem and a branch.",
@@ -56,7 +61,8 @@
     "date": "2022-03-02",
     "quote": "Prune tomatoes to one or two main stems...remove all other shoots, called suckers, weekly to maintain",
     "verdict": "supported",
-    "note": "Clemson quote is abridged with an ellipsis in the fetched text; re-check before relying on it."
+    "note": "Clemson quote is abridged with an ellipsis in the fetched text; re-check before relying on it.",
+    "shipped": null
   },
   "solanaceae.prune.2": {
     "tip": "Remove leaves touching the soil.",
@@ -66,7 +72,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove the lowest leaves once the plant is established, so none touch the soil.",
-    "note": "No verbatim quote captured. Search summaries of extension pages (WSU, UNH, Colorado State) mention it, but the fetched UNH article did not contain it. Needs a verbatim source."
+    "note": "No verbatim quote captured. Search summaries of extension pages (WSU, UNH, Colorado State) mention it, but the fetched UNH article did not contain it. Needs a verbatim source.",
+    "shipped": null
   },
   "solanaceae.problems.0": {
     "tip": "Yellow lower leaves with dark rings: remove them, mulch, and keep water off the leaves.",
@@ -76,7 +83,8 @@
     "quote": "Mulching is yet another practice that can help prevent fungal infection by keeping soil from splashing onto foliage.",
     "verdict": "partly",
     "suggestedText": "Spotted older leaves: mulch under the plants and water at the base to keep the leaves dry.",
-    "note": "Source describes \"circular irregular black or brown spots\" on older leaves, not \"dark rings\"; removing the leaves is not in the captured quote."
+    "note": "Source describes \"circular irregular black or brown spots\" on older leaves, not \"dark rings\"; removing the leaves is not in the captured quote.",
+    "shipped": "Mulch keeps soil from splashing onto the leaves, which helps prevent fungal infection."
   },
   "solanaceae.problems.1": {
     "tip": "Dark sunken spot on the bottom of the fruit: uneven watering. Water more evenly.",
@@ -86,7 +94,8 @@
     "quote": "When soil moisture levels fluctuate during fruit growth, blossom-end rot can develop.",
     "verdict": "partly",
     "suggestedText": "Dark sunken spot on the bottom of the fruit is blossom-end rot. Keep soil moisture even.",
-    "note": "Source ties it to fluctuating moisture; the symptom description was not in the captured quote."
+    "note": "Source ties it to fluctuating moisture; the symptom description was not in the captured quote.",
+    "shipped": "Blossom-end rot can develop when soil moisture swings while the fruit grows."
   },
   "solanaceae.problems.2": {
     "tip": "Leaves chewed overnight: look under the leaves for large green caterpillars and pick them off.",
@@ -95,7 +104,8 @@
     "date": "2019-05-31",
     "quote": "Fortunately, hornworms are easily removed by hand.",
     "verdict": "partly",
-    "note": "Hand-picking supported; the \"chewed overnight\" and \"under the leaves\" identification wording is not in the quote."
+    "note": "Hand-picking supported; the \"chewed overnight\" and \"under the leaves\" identification wording is not in the quote.",
+    "shipped": "Hornworms are easily removed by hand."
   },
   "cucurbit.water.0": {
     "tip": "Water deeply once or twice a week so about an inch reaches the roots.",
@@ -105,7 +115,8 @@
     "quote": "Cucumbers need about one inch of water from rainfall or irrigation each week during the growing season.",
     "verdict": "partly",
     "suggestedText": "Water deeply so about an inch reaches the roots each week, counting rain.",
-    "note": "\"Once or twice a week\" is not in the source."
+    "note": "\"Once or twice a week\" is not in the source.",
+    "shipped": "Cucumbers need about an inch of water a week, from rain or watering."
   },
   "cucurbit.water.1": {
     "tip": "Water at the base in the morning so the leaves dry by evening.",
@@ -114,7 +125,8 @@
     "date": "2019-05-31",
     "quote": "Early morning watering is a cultural practice that allows foliage plenty of time to dry. Another is watering at the base of the plants, as opposed to overhead watering, to avoid leaving wet leaves that are inviting to fungi.",
     "verdict": "supported",
-    "note": "General practice, quoted from a tomato article. UMN cucumber says \"Water the plants with a drip hose, soaker hose or a careful watering of the soil, so that the leaves stay dry.\""
+    "note": "General practice, quoted from a tomato article. UMN cucumber says \"Water the plants with a drip hose, soaker hose or a careful watering of the soil, so that the leaves stay dry.\"",
+    "shipped": "Water at the base in the early morning so the leaves have time to dry."
   },
   "cucurbit.feed.0": {
     "tip": "Work compost into the bed before planting. Most gardens need little else.",
@@ -124,7 +136,8 @@
     "quote": "Improve your soil by adding well-rotted manure or compost in spring or fall.",
     "verdict": "partly",
     "suggestedText": "Work compost into the bed in spring or fall.",
-    "note": "\"Most gardens need little else\" is not in the source."
+    "note": "\"Most gardens need little else\" is not in the source.",
+    "shipped": "Add compost to the soil in spring or fall."
   },
   "cucurbit.feed.1": {
     "tip": "Side-dress with compost when the vines start to run.",
@@ -134,7 +147,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No source found for compost side-dressing when vines run."
+    "note": "No source found for compost side-dressing when vines run.",
+    "shipped": null
   },
   "cucurbit.prune.0": {
     "tip": "Trellis cucumbers to keep fruit clean and straight.",
@@ -143,7 +157,8 @@
     "date": "2024 (page reviewed)",
     "quote": "You may also train the vines to climb a three- to four-foot trellis, allowing you to space garden rows more closely, and producing perfectly straight fruit.",
     "verdict": "supported",
-    "note": "\"Clean\" fruit is not quoted."
+    "note": "\"Clean\" fruit is not quoted.",
+    "shipped": "Training cucumbers up a trellis gives straight fruit."
   },
   "cucurbit.prune.1": {
     "tip": "Pinch vine tips late in the season so the plant ripens the fruit it has.",
@@ -153,7 +168,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No source found for pinching vine tips late in the season."
+    "note": "No source found for pinching vine tips late in the season.",
+    "shipped": null
   },
   "cucurbit.problems.0": {
     "tip": "White powder on leaves: improve air flow and remove the worst leaves.",
@@ -163,7 +179,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "White powder on leaves is powdery mildew. Water at the base and give the plants room.",
-    "note": "No verbatim source captured for improving air flow or removing leaves; sources found only state the disease exists."
+    "note": "No verbatim source captured for improving air flow or removing leaves; sources found only state the disease exists.",
+    "shipped": null
   },
   "cucurbit.problems.1": {
     "tip": "Whole vine wilts suddenly: check the base of the stem for a hole with sawdust-like frass.",
@@ -172,7 +189,8 @@
     "date": "2026-07-22",
     "quote": "Tunneling larvae push greenish white sawdust-like frass (excrement) out the entrance hole.",
     "verdict": "supported",
-    "note": "Also: \"Sudden wilting of a runner or entire vine warrants action.\""
+    "note": "Also: \"Sudden wilting of a runner or entire vine warrants action.\"",
+    "shipped": "Vine wilts suddenly: look for a hole with sawdust-like frass pushed out of it."
   },
   "cucurbit.problems.2": {
     "tip": "Small fruit that shrivels: flowers were not pollinated. Leave room for bees.",
@@ -182,7 +200,8 @@
     "quote": "Poor fruit set could be due to not enough pollination. Cold, rain or cloudy weather can reduce pollination.",
     "verdict": "partly",
     "suggestedText": "Small fruit that shrivels: the flowers were not pollinated. Cold or rainy weather can cause this.",
-    "note": "\"Leave room for bees\" is not in the source."
+    "note": "\"Leave room for bees\" is not in the source.",
+    "shipped": "Poor fruit set can come from too little pollination. Cold, rain or cloudy weather can reduce it."
   },
   "brassica.water.0": {
     "tip": "Keep the soil evenly moist. Heat and dry soil make them bolt or turn bitter.",
@@ -192,7 +211,8 @@
     "quote": "Water the garden to provide a uniform moisture supply to the crop.",
     "verdict": "partly",
     "suggestedText": "Keep the soil evenly moist.",
-    "note": "Bolting and bitterness from heat and dry soil are not in the captured brassica quote (the Clemson lettuce page has them for lettuce)."
+    "note": "Bolting and bitterness from heat and dry soil are not in the captured brassica quote (the Clemson lettuce page has them for lettuce).",
+    "shipped": "Keep soil moisture even."
   },
   "brassica.feed.0": {
     "tip": "Work compost into the bed before planting. Most gardens need little else.",
@@ -202,7 +222,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No brassica source captured for compost-only feeding."
+    "note": "No brassica source captured for compost-only feeding.",
+    "shipped": null
   },
   "brassica.feed.1": {
     "tip": "They are hungry plants. Side-dress with compost a month after planting.",
@@ -212,7 +233,8 @@
     "quote": "Three to four weeks after transplanting, side-dress established plants with calcium nitrate (15.5-0-0) at 2 pounds per 100 feet of row.",
     "verdict": "partly",
     "suggestedText": "Side-dress a few weeks after transplanting.",
-    "note": "Source supports the timing (3 to 4 weeks), but names a fertilizer product and a rate. The tip says compost; no source for compost. Do not copy the product or rate."
+    "note": "Source supports the timing (3 to 4 weeks), but names a fertilizer product and a rate. The tip says compost; no source for compost. Do not copy the product or rate.",
+    "shipped": "Side-dress established plants three to four weeks after transplanting."
   },
   "brassica.prune.0": {
     "tip": "No pruning needed. Pick outer kale leaves and leave the center to keep growing.",
@@ -222,7 +244,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip, or find a source for picking outer kale leaves.",
-    "note": "Nothing captured on picking outer kale leaves."
+    "note": "Nothing captured on picking outer kale leaves.",
+    "shipped": null
   },
   "brassica.problems.0": {
     "tip": "Holes in leaves with green droppings: look for small green caterpillars and pick them off.",
@@ -231,7 +254,8 @@
     "date": "2026-01-30",
     "quote": "In small-scale settings, hand-picking, squishing, or knocking caterpillars into a container of soapy water can be a consideration.",
     "verdict": "supported",
-    "note": "Also: \"Feeding occurs primarily on the upper leaf surface near the midrib producing large, irregular holes.\" and \"The copious quantity of greenish-brown frass (droppings)...\""
+    "note": "Also: \"Feeding occurs primarily on the upper leaf surface near the midrib producing large, irregular holes.\" and \"The copious quantity of greenish-brown frass (droppings)...\"",
+    "shipped": "Large ragged holes and green-brown droppings mean caterpillars. Pick them off by hand."
   },
   "brassica.problems.1": {
     "tip": "Tiny round holes on young plants: flea beetles. Row cover keeps them off.",
@@ -240,7 +264,8 @@
     "date": "2022 (page reviewed)",
     "quote": "They create shallow pits and small rounded, irregular holes (usually less than 1/8 inch) in the leaves. This type of damage is unique to flea beetles.",
     "verdict": "supported",
-    "note": "Row cover: \"As long as crops are being rotated, row covers can exclude flea beetles feeding.\""
+    "note": "Row cover: \"As long as crops are being rotated, row covers can exclude flea beetles feeding.\"",
+    "shipped": "Small round holes in the leaves: flea beetles. Row cover keeps them off."
   },
   "brassica.problems.2": {
     "tip": "Broccoli flowers open yellow: it waited too long. Pick heads while the buds are tight.",
@@ -249,7 +274,8 @@
     "date": "2023-01-20",
     "quote": "Harvest broccoli when the main head is 3 to 6 inches in diameter, and the flower buds are still tightly closed.",
     "verdict": "partly",
-    "note": "Supports harvesting with tight buds; \"open yellow\" is not quoted."
+    "note": "Supports harvesting with tight buds; \"open yellow\" is not quoted.",
+    "shipped": "Pick broccoli while the flower buds are still tightly closed."
   },
   "allium.water.0": {
     "tip": "Keep evenly moist until the tops start to fall over, then let them dry.",
@@ -258,7 +284,8 @@
     "date": "2024 (page reviewed)",
     "quote": "Stop watering when bulbs have reached full size and the tops begin to fall.",
     "verdict": "partly",
-    "note": "Source says stop when tops begin to fall; \"evenly moist until then\" is not quoted. Garlic page says stop watering two weeks before harvest."
+    "note": "Source says stop when tops begin to fall; \"evenly moist until then\" is not quoted. Garlic page says stop watering two weeks before harvest.",
+    "shipped": "Stop watering when the bulbs reach full size and the tops begin to fall."
   },
   "allium.feed.0": {
     "tip": "Work compost into the bed before planting. Most gardens need little else.",
@@ -268,7 +295,8 @@
     "quote": "You can increase your soil's organic matter content by adding well-rotted manure or compost in spring or fall.",
     "verdict": "partly",
     "suggestedText": "Work compost into the bed in spring or fall.",
-    "note": "\"Most gardens need little else\" is not in the source."
+    "note": "\"Most gardens need little else\" is not in the source.",
+    "shipped": "Add compost to the soil in spring or fall."
   },
   "allium.prune.0": {
     "tip": "Cut garlic flower stalks (scapes) when they curl so the bulb grows bigger.",
@@ -277,7 +305,8 @@
     "date": "2026-09 (last reviewed)",
     "quote": "Removing the scape is advised, as it will help the bulb grow larger because the plant will put energy into bulb production rather than flower and bulbils/bulblets production.",
     "verdict": "supported",
-    "note": "Curl timing also quoted: \"...have begun to curl but before the stalk straightens...\""
+    "note": "Curl timing also quoted: \"...have begun to curl but before the stalk straightens...\"",
+    "shipped": "Cut garlic flower stalks (scapes) when they curl so the bulb grows bigger."
   },
   "allium.problems.0": {
     "tip": "Tops yellow and fall over late in the season: that is normal and means harvest is near.",
@@ -286,7 +315,8 @@
     "date": "2024 (page reviewed)",
     "quote": "Harvest onions when about half the tops are falling over and dry.",
     "verdict": "partly",
-    "note": "Supports harvest when tops fall; the \"yellow\" wording and \"that is normal\" are not quoted. Garlic page uses lower-leaf browning instead."
+    "note": "Supports harvest when tops fall; the \"yellow\" wording and \"that is normal\" are not quoted. Garlic page uses lower-leaf browning instead.",
+    "shipped": "Harvest onions when about half the tops are falling over and dry."
   },
   "allium.problems.1": {
     "tip": "Weeds crowd them out fast. Keep the bed weeded, since onions cannot shade weeds.",
@@ -296,7 +326,8 @@
     "quote": "Unless you control weeds early, they can easily overtake young garlic plants.",
     "verdict": "partly",
     "suggestedText": "Weeds crowd them out fast. Keep the bed weeded.",
-    "note": "Quote is about garlic. The \"onions cannot shade weeds\" reason was only a tool paraphrase of the UMN onion page (\"shallow-rooted... poor competitors\"), not a verbatim quote."
+    "note": "Quote is about garlic. The \"onions cannot shade weeds\" reason was only a tool paraphrase of the UMN onion page (\"shallow-rooted... poor competitors\"), not a verbatim quote.",
+    "shipped": "Control weeds early. They can easily overtake young garlic."
   },
   "leafy-green.water.0": {
     "tip": "Water lightly and often. Shallow roots dry out quickly.",
@@ -305,7 +336,8 @@
     "date": "2026-03-25",
     "quote": "Cultivate carefully, as lettuce is shallow-rooted. Organic mulches are helpful in conserving soil moisture, maintaining even soil temperatures, and limiting weed growth.",
     "verdict": "partly",
-    "note": "Shallow roots supported; \"water lightly and often\" is not quoted."
+    "note": "Shallow roots supported; \"water lightly and often\" is not quoted.",
+    "shipped": "Lettuce has shallow roots. Organic mulch helps hold soil moisture."
   },
   "leafy-green.feed.0": {
     "tip": "Work compost into the bed before planting. Most gardens need little else.",
@@ -315,7 +347,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No leafy-green source captured for compost."
+    "note": "No leafy-green source captured for compost.",
+    "shipped": null
   },
   "leafy-green.prune.0": {
     "tip": "Pick outer leaves and leave the center to keep growing.",
@@ -324,7 +357,8 @@
     "date": "2026-03-25",
     "quote": "Use the older, outer leaves which contain high levels of calcium first.",
     "verdict": "partly",
-    "note": "Supports using outer leaves; \"leave the center to keep growing\" is not quoted."
+    "note": "Supports using outer leaves; \"leave the center to keep growing\" is not quoted.",
+    "shipped": "Pick the older outer leaves first."
   },
   "leafy-green.problems.0": {
     "tip": "Plant shoots up and turns bitter: heat makes it bolt. Sow again in cooler weather.",
@@ -333,7 +367,8 @@
     "date": "2023-01-24",
     "quote": "High summer temperatures usually cause seed stalk formation (bolting) and bitter flavor.",
     "verdict": "partly",
-    "note": "\"Sow again in cooler weather\" is not quoted."
+    "note": "\"Sow again in cooler weather\" is not quoted.",
+    "shipped": "High summer heat usually causes bolting (a seed stalk) and bitter flavor."
   },
   "leafy-green.problems.1": {
     "tip": "Ragged holes and slime trails: slugs. Check under boards at dawn.",
@@ -343,7 +378,8 @@
     "quote": "Slugs and snails may feed on the foliage.",
     "verdict": "partly",
     "suggestedText": "Ragged holes in leaves can be slugs or snails.",
-    "note": "Source goes on to recommend a bait product; do not copy that. \"Slime trails\" and \"check under boards\" not quoted."
+    "note": "Source goes on to recommend a bait product; do not copy that. \"Slime trails\" and \"check under boards\" not quoted.",
+    "shipped": "Slugs and snails may feed on the leaves."
   },
   "root.water.0": {
     "tip": "Keep the top inch moist until seedlings are up, then water deeply.",
@@ -353,7 +389,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No source captured for keeping the top inch moist until seedlings are up."
+    "note": "No source captured for keeping the top inch moist until seedlings are up.",
+    "shipped": null
   },
   "root.feed.0": {
     "tip": "Skip fresh manure. It makes forked roots.",
@@ -363,7 +400,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No source captured linking fresh manure to forked roots. Clemson only says heavy clay soils give forked or misshaped roots."
+    "note": "No source captured linking fresh manure to forked roots. Clemson only says heavy clay soils give forked or misshaped roots.",
+    "shipped": null
   },
   "root.prune.0": {
     "tip": "Thin seedlings to their final spacing early. Crowded roots stay small.",
@@ -372,7 +410,8 @@
     "date": "2016-08-21",
     "quote": "Thin the carrots to 2 to 3 inches between plants",
     "verdict": "partly",
-    "note": "Thinning supported; \"early\" and \"crowded roots stay small\" are not quoted."
+    "note": "Thinning supported; \"early\" and \"crowded roots stay small\" are not quoted.",
+    "shipped": "Thin carrots to 2 to 3 inches between plants."
   },
   "root.problems.0": {
     "tip": "Forked or twisted roots: stones or clumps in the soil. Loosen the bed deeper next time.",
@@ -381,7 +420,8 @@
     "date": "2016-08-21",
     "quote": "Carrots prefer a good-textured, loamy or sandy soil that is free of stones and clods.",
     "verdict": "partly",
-    "note": "Supports stones and clods; fork wording not quoted. Clemson separately says heavy clay may give forked roots."
+    "note": "Supports stones and clods; fork wording not quoted. Clemson separately says heavy clay may give forked roots.",
+    "shipped": "Carrots prefer loamy or sandy soil free of stones and clods."
   },
   "root.problems.1": {
     "tip": "Cracked roots: uneven watering.",
@@ -389,7 +429,8 @@
     "publisher": "Clemson HGIC",
     "date": "2016-08-21",
     "quote": "If a uniform supply is not provided for carrot growth, then cracks, strong flavor, and coarseness in the roots may develop.",
-    "verdict": "supported"
+    "verdict": "supported",
+    "shipped": "Cracked roots: uneven watering."
   },
   "apiaceae.water.0": {
     "tip": "Keep the soil surface moist until seeds sprout. They can take two weeks.",
@@ -399,7 +440,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No source captured for keeping the surface moist until sprouting or the two-week figure. Clemson notes parsnip is slow to germinate."
+    "note": "No source captured for keeping the surface moist until sprouting or the two-week figure. Clemson notes parsnip is slow to germinate.",
+    "shipped": null
   },
   "apiaceae.feed.0": {
     "tip": "Work compost into the bed before planting. Most gardens need little else.",
@@ -409,7 +451,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No source captured for compost on these crops."
+    "note": "No source captured for compost on these crops.",
+    "shipped": null
   },
   "apiaceae.prune.0": {
     "tip": "Thin seedlings early so each plant has room.",
@@ -418,7 +461,8 @@
     "date": "2016-08-21",
     "quote": "Thin the carrots to 2 to 3 inches between plants",
     "verdict": "partly",
-    "note": "Carrot only; parsley and dill not covered."
+    "note": "Carrot only; parsley and dill not covered.",
+    "shipped": "Thin carrots to 2 to 3 inches between plants."
   },
   "apiaceae.problems.0": {
     "tip": "Striped caterpillars on dill or parsley are swallowtail butterflies. Many growers share a plant with them.",
@@ -428,7 +472,8 @@
     "quote": "The parsley worm, which is the larval stage of an attractive swallowtail butterfly, will feed on carrot leaves.",
     "verdict": "partly",
     "suggestedText": "Striped caterpillars on carrot, dill or parsley are swallowtail larvae.",
-    "note": "\"Many growers share a plant with them\" is not in the source."
+    "note": "\"Many growers share a plant with them\" is not in the source.",
+    "shipped": "The parsleyworm, a swallowtail butterfly caterpillar, feeds on carrot leaves."
   },
   "legume.water.0": {
     "tip": "Water deeply when flowering and podding. Dry soil drops the flowers.",
@@ -438,7 +483,8 @@
     "quote": "Hot day and night temperatures can cause flowers to abort, reducing yield.",
     "verdict": "unsupported",
     "suggestedText": "Remove this tip, or reword: hot weather can cause beans to drop flowers.",
-    "note": "Source ties flower drop to heat, not dry soil. Nothing captured on watering during flowering."
+    "note": "Source ties flower drop to heat, not dry soil. Nothing captured on watering during flowering.",
+    "shipped": null
   },
   "legume.feed.0": {
     "tip": "Beans and peas make much of their own nitrogen. Skip extra feeding.",
@@ -448,7 +494,8 @@
     "quote": "Many soils in Minnesota have populations of the bacteria Rhizobium. This bacterium forms a beneficial relationship with beans. This relationship helps plant growth and bean yield.",
     "verdict": "partly",
     "suggestedText": "Beans and peas work with soil bacteria that help them grow. Test the soil before adding fertilizer.",
-    "note": "Source does not say to skip feeding; it recommends a soil test."
+    "note": "Source does not say to skip feeding; it recommends a soil test.",
+    "shipped": "Beans team up with Rhizobium bacteria in the soil, which helps growth and yield."
   },
   "legume.prune.0": {
     "tip": "Give peas and pole beans a trellis at planting.",
@@ -457,7 +504,8 @@
     "date": "2024 (page reviewed)",
     "quote": "Install pole bean supports in place at planting time.",
     "verdict": "partly",
-    "note": "Pole beans only; peas not confirmed (UMN peas page was fetched, no matching sentence)."
+    "note": "Pole beans only; peas not confirmed (UMN peas page was fetched, no matching sentence).",
+    "shipped": "Put pole bean supports in place at planting time."
   },
   "legume.problems.0": {
     "tip": "Pods get tough and stringy: pick every few days to keep them tender.",
@@ -466,7 +514,8 @@
     "date": "2024 (page reviewed)",
     "quote": "regularly harvest them",
     "verdict": "partly",
-    "note": "Fragment only, as returned by the fetch tool; \"tender\" and \"stringy\" not quoted. Re-check before relying on it."
+    "note": "Fragment only, as returned by the fetch tool; \"tender\" and \"stringy\" not quoted. Re-check before relying on it.",
+    "shipped": null
   },
   "legume.problems.1": {
     "tip": "Leaves skeletonized by yellow spiny larvae: hand-pick and check under the leaves.",
@@ -476,7 +525,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "Mexican bean beetle is not on the UMN bean page; the Clemson snap-bean page 404ed."
+    "note": "Mexican bean beetle is not on the UMN bean page; the Clemson snap-bean page 404ed.",
+    "shipped": null
   },
   "corn.water.0": {
     "tip": "Water deeply when the tassels and silks appear. That is when it matters most.",
@@ -485,7 +535,8 @@
     "date": "2023-01-23",
     "quote": "The critical periods for water are during pollination and ear filling.",
     "verdict": "supported",
-    "note": "Tassel and silk timing equals pollination."
+    "note": "Tassel and silk timing equals pollination.",
+    "shipped": "Water matters most during pollination, when tassels and silks appear, and while the ears fill."
   },
   "corn.feed.0": {
     "tip": "Side-dress with compost when plants are knee high.",
@@ -494,7 +545,8 @@
     "date": "2023-01-23",
     "quote": "Side-dress monthly during the growing season with calcium nitrate at 2 pounds per 100 feet of row",
     "verdict": "unsupported",
-    "note": "Source side-dresses monthly with a fertilizer product and rate, not compost at knee height. Do not copy that wording."
+    "note": "Source side-dresses monthly with a fertilizer product and rate, not compost at knee height. Do not copy that wording.",
+    "shipped": null
   },
   "corn.prune.0": {
     "tip": "Plant in blocks of short rows, not one long row, so the ears fill out.",
@@ -502,7 +554,8 @@
     "publisher": "Clemson HGIC",
     "date": "2023-01-23",
     "quote": "This crop is wind-pollinated; therefore, plant in blocks of several rows rather than 1 or 2 long rows to ensure full ears.",
-    "verdict": "supported"
+    "verdict": "supported",
+    "shipped": "Plant in blocks of short rows, not one long row, so the ears fill out."
   },
   "corn.problems.0": {
     "tip": "Ears with missing kernels: poor pollination. Plant in blocks next time.",
@@ -511,7 +564,8 @@
     "date": "2023-01-23",
     "quote": "Common cultural problems of sweet corn include poor kernel development caused by dry weather during silking, planting too close, poor fertility, too few rows in a block resulting in poor pollination...",
     "verdict": "supported",
-    "note": "Quote ends in an ellipsis in the fetched text."
+    "note": "Quote ends in an ellipsis in the fetched text.",
+    "shipped": null
   },
   "herb-culinary.water.0": {
     "tip": "Let the top inch dry between waterings. Most herbs dislike wet feet.",
@@ -520,7 +574,8 @@
     "date": "not shown on page",
     "quote": "Avoid soggy soil. Constant moisture encourages root rot, especially indoors",
     "verdict": "partly",
-    "note": "Supports not keeping it wet; \"top inch dry between waterings\" is not quoted for outdoor herbs."
+    "note": "Supports not keeping it wet; \"top inch dry between waterings\" is not quoted for outdoor herbs.",
+    "shipped": "Avoid soggy soil. Constant moisture encourages root rot."
   },
   "herb-culinary.feed.0": {
     "tip": "Go easy on feeding. Lean soil gives stronger flavor.",
@@ -529,7 +584,8 @@
     "date": "not shown on page",
     "quote": "Rich soils promote fast, lush growth but reduce essential oil production, which lowers flavor and aroma",
     "verdict": "supported",
-    "note": "Source also gives a fertilizer product and rate; do not copy it."
+    "note": "Source also gives a fertilizer product and rate; do not copy it.",
+    "shipped": "Go easy on feeding. Lean soil gives stronger flavor."
   },
   "herb-culinary.prune.0": {
     "tip": "Pinch tips often to keep plants bushy, and pinch off flower buds on basil.",
@@ -538,7 +594,8 @@
     "date": "2026-02-25",
     "quote": "Pinch stems as they lengthen to promote bushy, compact growth.",
     "verdict": "partly",
-    "note": "Basil only. Pinching off basil flower buds was in search summaries but not in the fetched UMD text."
+    "note": "Basil only. Pinching off basil flower buds was in search summaries but not in the fetched UMD text.",
+    "shipped": "Pinch basil stems as they lengthen to keep the plant bushy and compact."
   },
   "herb-culinary.problems.0": {
     "tip": "Leggy, floppy plants: not enough sun or not enough pinching.",
@@ -547,7 +604,8 @@
     "date": "not shown on page",
     "quote": "Inadequate light results in thin, spindly growth",
     "verdict": "partly",
-    "note": "Light supported; \"not enough pinching\" not quoted. UMD basil: \"Plant basil in a full sun location, where it receives 6 or more hours of direct sun daily in summer.\""
+    "note": "Light supported; \"not enough pinching\" not quoted. UMD basil: \"Plant basil in a full sun location, where it receives 6 or more hours of direct sun daily in summer.\"",
+    "shipped": "Thin, spindly growth: not enough light."
   },
   "small-fruit.water.0": {
     "tip": "Water deeply once or twice a week so about an inch reaches the roots.",
@@ -557,7 +615,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No source captured for DEEP_WATER on strawberries or blueberries. Clemson blueberry only mentions watering \"two to three times per week during dry spells\" for raised beds."
+    "note": "No source captured for DEEP_WATER on strawberries or blueberries. Clemson blueberry only mentions watering \"two to three times per week during dry spells\" for raised beds.",
+    "shipped": null
   },
   "small-fruit.water.1": {
     "tip": "Mulch to keep roots cool and moist.",
@@ -567,7 +626,8 @@
     "quote": "Organic material such as bark, wood chips, sawdust or pine straw as a 2- to 3-inch mulch on the surface after planting results in more uniform soil moisture",
     "verdict": "partly",
     "suggestedText": "Mulch to keep soil moisture even.",
-    "note": "\"Cool\" roots not in the quote. Blueberry source only."
+    "note": "\"Cool\" roots not in the quote. Blueberry source only.",
+    "shipped": "A 2 to 3 inch mulch around blueberries keeps soil moisture more even."
   },
   "small-fruit.feed.0": {
     "tip": "Feed lightly after harvest, not before.",
@@ -577,7 +637,8 @@
     "quote": "Wait until the first leaves have reached full size, then apply 1 tablespoon of a special azalea fertilizer...Repeat at about six-week intervals...until mid-August in the Sandhills and Coastal Plain, and mid-July in the Piedmont.",
     "verdict": "contradicted",
     "suggestedText": "Strawberries: feed lightly after harvest. Blueberries: feed in spring as growth starts.",
-    "note": "Contradicts the tip for blueberries (feed starts when leaves reach full size, not after harvest). UMD strawberry: \"Fertilize June-bearing plants after the harvest season, and day-neutral plants once a month, May through September.\" Both sources name products or rates; do not copy."
+    "note": "Contradicts the tip for blueberries (feed starts when leaves reach full size, not after harvest). UMD strawberry: \"Fertilize June-bearing plants after the harvest season, and day-neutral plants once a month, May through September.\" Both sources name products or rates; do not copy.",
+    "shipped": null
   },
   "small-fruit.prune.0": {
     "tip": "Trim strawberry runners you do not want to root.",
@@ -586,7 +647,8 @@
     "date": "not shown on page",
     "quote": "Remove runners throughout the growing season",
     "verdict": "partly",
-    "note": "Source: day-neutral cultivars; hill system June-bearing: \"remove all runners to encourage more flower stalks\". Tip wording \"you do not want to root\" is looser than the source."
+    "note": "Source: day-neutral cultivars; hill system June-bearing: \"remove all runners to encourage more flower stalks\". Tip wording \"you do not want to root\" is looser than the source.",
+    "shipped": null
   },
   "small-fruit.prune.1": {
     "tip": "Cut out the oldest blueberry canes in late winter.",
@@ -596,7 +658,8 @@
     "quote": "Generally up to seven canes are left each year after pruning mature rabbiteyes, with the oldest or largest cane removed each winter beginning in the fifth year.",
     "verdict": "partly",
     "suggestedText": "Remove the oldest blueberry canes each winter once the plants are mature.",
-    "note": "Source says winter and from the fifth year; the tip says late winter. Rabbiteye focus."
+    "note": "Source says winter and from the fifth year; the tip says late winter. Rabbiteye focus.",
+    "shipped": "On mature rabbiteye blueberries, remove the oldest or largest cane each winter from the fifth year on."
   },
   "small-fruit.problems.0": {
     "tip": "Birds find ripe berries first. Net the plants as fruit starts to color.",
@@ -605,7 +668,8 @@
     "date": "2023-03-28",
     "quote": "Plastic or cloth netting draped over the bushes or supported on a framework is the only practical control.",
     "verdict": "supported",
-    "note": "\"As fruit starts to color\" is not quoted."
+    "note": "\"As fruit starts to color\" is not quoted.",
+    "shipped": "Birds take ripe berries. Netting over the bushes is the only practical control."
   },
   "bramble.water.0": {
     "tip": "Water deeply once or twice a week so about an inch reaches the roots.",
@@ -615,7 +679,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No source captured for watering brambles."
+    "note": "No source captured for watering brambles.",
+    "shipped": null
   },
   "bramble.feed.0": {
     "tip": "Work compost into the bed before planting. Most gardens need little else.",
@@ -625,7 +690,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No source captured for compost on brambles (UMD page had no fertilizer sentence)."
+    "note": "No source captured for compost on brambles (UMD page had no fertilizer sentence).",
+    "shipped": null
   },
   "bramble.prune.0": {
     "tip": "After harvest, cut canes that fruited down to the ground.",
@@ -635,7 +701,8 @@
     "quote": "Floricanes die after fruiting and must eventually be removed because they will not produce another harvest or survive a second winter.",
     "verdict": "partly",
     "suggestedText": "After harvest, cut out canes that fruited. On fall-bearing types, follow the type-specific pruning.",
-    "note": "Source says \"eventually\", not \"down to the ground right after harvest\"; only applies to floricane types."
+    "note": "Source says \"eventually\", not \"down to the ground right after harvest\"; only applies to floricane types.",
+    "shipped": "Canes die after they fruit and will not bear again, so cut them out."
   },
   "bramble.prune.1": {
     "tip": "Keep the row narrow so air moves through.",
@@ -643,7 +710,8 @@
     "publisher": "University of Maryland Extension",
     "date": "2026-07-30",
     "quote": "Red raspberry rows should be kept under 18 inches in width to help maximize airflow and keep the lower canopy dry.",
-    "verdict": "supported"
+    "verdict": "supported",
+    "shipped": "Keep raspberry rows under 18 inches wide so air moves through and the lower canopy stays dry."
   },
   "bramble.problems.0": {
     "tip": "Fruit that molds on the cane: pick often and remove overripe berries.",
@@ -652,7 +720,8 @@
     "date": "2026-07-30",
     "quote": "Harvest fruit regularly to reduce the incidence of fruit rot and to prevent sap beetles and plant bugs from feeding on ripening berries.",
     "verdict": "supported",
-    "note": "\"Remove overripe berries\" not quoted."
+    "note": "\"Remove overripe berries\" not quoted.",
+    "shipped": "Pick ripe fruit often to cut down on fruit rot."
   },
   "vine-fruit.water.0": {
     "tip": "Water young vines deeply. Established vines need little extra.",
@@ -662,7 +731,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No source captured. Missouri only says irrigation is generally needed during dry periods in July and August."
+    "note": "No source captured. Missouri only says irrigation is generally needed during dry periods in July and August.",
+    "shipped": null
   },
   "vine-fruit.feed.0": {
     "tip": "Work compost into the bed before planting. Most gardens need little else.",
@@ -672,7 +742,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No source captured for compost on grapes."
+    "note": "No source captured for compost on grapes.",
+    "shipped": null
   },
   "vine-fruit.prune.0": {
     "tip": "Prune hard in late winter. Most of last year's growth comes off.",
@@ -682,7 +753,8 @@
     "quote": "In the dormant season (early March), prune the lateral growth on the cordons, leaving a cane or \"spur\" every 8 to 12 inches.",
     "verdict": "partly",
     "suggestedText": "Prune in the dormant season, in late winter. Most of last year's growth comes off.",
-    "note": "Supports dormant pruning timing; \"hard\" and \"most of last year's growth\" are not quoted."
+    "note": "Supports dormant pruning timing; \"hard\" and \"most of last year's growth\" are not quoted.",
+    "shipped": "Prune while dormant in early March. Leave a spur every 8 to 12 inches along each cordon."
   },
   "vine-fruit.prune.1": {
     "tip": "Pull a few leaves around the clusters in summer so they get light and air.",
@@ -692,7 +764,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip, or reword once a verbatim source for cluster-zone leaf removal is found.",
-    "note": "Only paraphrased search summaries (UC IPM) mention basal leaf removal, and they tie it to fungicide coverage. No verbatim quote captured."
+    "note": "Only paraphrased search summaries (UC IPM) mention basal leaf removal, and they tie it to fungicide coverage. No verbatim quote captured.",
+    "shipped": null
   },
   "vine-fruit.problems.0": {
     "tip": "White powder on leaves or fruit: open the canopy so it dries faster.",
@@ -702,7 +775,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "White powder on leaves or fruit is powdery mildew. Prune so air moves through the vine.",
-    "note": "No verbatim source captured; only search paraphrase that good air movement helps."
+    "note": "No verbatim source captured; only search paraphrase that good air movement helps.",
+    "shipped": null
   },
   "stone-fruit.water.0": {
     "tip": "Water deeply every week or two in dry spells, especially as fruit sizes.",
@@ -712,7 +786,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "No source captured for watering mature stone fruit."
+    "note": "No source captured for watering mature stone fruit.",
+    "shipped": null
   },
   "stone-fruit.feed.0": {
     "tip": "Feed in early spring only.",
@@ -722,7 +797,8 @@
     "quote": "Apply fertilizer in late winter. In areas with sandy soils, apply half of the recommended amount of fertilizer in late winter and the remainder in May.",
     "verdict": "partly",
     "suggestedText": "Feed in late winter or early spring.",
-    "note": "Source says late winter, plus a May split on sandy soils; \"early spring only\" is narrower."
+    "note": "Source says late winter, plus a May split on sandy soils; \"early spring only\" is narrower.",
+    "shipped": "Feed in late winter. On sandy soil, give half in late winter and the rest in May."
   },
   "stone-fruit.prune.0": {
     "tip": "Prune in late winter to an open center so light reaches the middle.",
@@ -731,7 +807,8 @@
     "date": "not shown on page",
     "quote": "With the open-center system, the leader is removed, leaving an open center.",
     "verdict": "supported",
-    "note": "Also: \"avoid winter injury by delaying dormant pruning until late winter.\""
+    "note": "Also: \"avoid winter injury by delaying dormant pruning until late winter.\"",
+    "shipped": "Train to an open center by removing the leader. Prune in late winter."
   },
   "stone-fruit.prune.1": {
     "tip": "Thin young fruit so they are a hand-width apart.",
@@ -741,7 +818,8 @@
     "quote": "Thin fruits when they are about the size of a nickel. Remove enough fruit so that the remaining ones are spaced approximately 6 inches to 8 inches apart along the branch.",
     "verdict": "partly",
     "suggestedText": "Thin young fruit to about 6 to 8 inches apart.",
-    "note": "A hand-width is about 4 inches, shorter than the source spacing."
+    "note": "A hand-width is about 4 inches, shorter than the source spacing.",
+    "shipped": "Thin fruit when it is about the size of a nickel so the rest hang 6 to 8 inches apart."
   },
   "stone-fruit.problems.0": {
     "tip": "Fruit with brown, fuzzy rot: pick up and remove fallen and rotten fruit.",
@@ -750,7 +828,8 @@
     "date": "not shown on page",
     "quote": "Remove infected fruit immediately from the tree and the ground to maintain orchard sanitation.",
     "verdict": "supported",
-    "note": "Brown rot not named in the quote."
+    "note": "Brown rot not named in the quote.",
+    "shipped": "Remove rotten fruit from the tree and the ground right away."
   },
   "orchard.water.0": {
     "tip": "Water young trees deeply each week in their first two summers.",
@@ -760,7 +839,8 @@
     "quote": null,
     "verdict": "unsupported",
     "suggestedText": "Remove this tip.",
-    "note": "NCSU handbook has no young-tree watering sentence."
+    "note": "NCSU handbook has no young-tree watering sentence.",
+    "shipped": null
   },
   "orchard.feed.0": {
     "tip": "Feed in early spring only.",
@@ -770,7 +850,8 @@
     "quote": "Apply fertilizer in late winter. In areas with sandy soils, apply half of the recommended amount of fertilizer in late winter and the remainder in May.",
     "verdict": "partly",
     "suggestedText": "Feed in late winter or early spring.",
-    "note": "Same as stone-fruit feed tip."
+    "note": "Same as stone-fruit feed tip.",
+    "shipped": "Feed in late winter. On sandy soil, give half in late winter and the rest in May."
   },
   "orchard.prune.0": {
     "tip": "Prune in late winter while dormant. Remove dead, crossing and inward branches.",
@@ -779,7 +860,8 @@
     "date": "not shown on page",
     "quote": "Remove dead, diseased, and broken branches",
     "verdict": "partly",
-    "note": "Also: \"Eliminate competition between branches that grow into each other or toward the center of the tree.\" \"Late winter\" is quoted for stone fruit only; \"inward\" not quoted."
+    "note": "Also: \"Eliminate competition between branches that grow into each other or toward the center of the tree.\" \"Late winter\" is quoted for stone fruit only; \"inward\" not quoted.",
+    "shipped": "Remove dead, diseased and broken branches."
   },
   "orchard.prune.1": {
     "tip": "Thin young fruit so they are a hand-width apart.",
@@ -789,7 +871,8 @@
     "quote": "Thin fruits when they are about the size of a nickel. Remove enough fruit so that the remaining ones are spaced approximately 6 inches to 8 inches apart along the branch.",
     "verdict": "partly",
     "suggestedText": "Thin young fruit to about 6 to 8 inches apart.",
-    "note": "Source is general tree fruit; a hand-width is shorter than 6 to 8 inches."
+    "note": "Source is general tree fruit; a hand-width is shorter than 6 to 8 inches.",
+    "shipped": "Thin fruit when it is about the size of a nickel so the rest hang 6 to 8 inches apart."
   },
   "orchard.problems.0": {
     "tip": "Fallen fruit spreads trouble. Pick it up through the season.",
@@ -797,6 +880,7 @@
     "publisher": "NC State Extension",
     "date": "not shown on page",
     "quote": "Remove and dispose of damaged or fallen fruit",
-    "verdict": "supported"
+    "verdict": "supported",
+    "shipped": "Pick up and remove damaged or fallen fruit."
   }
 }

@@ -67,6 +67,9 @@ export const users = sqliteTable('users', {
   displayUnits: text('display_units', { enum: ['us', 'metric'] })
     .notNull()
     .default('us'),
+  /** "Sign out everywhere": session cookies issued before this instant are
+   *  refused by `revalidateCookieUser`. Null accepts every unexpired cookie. */
+  sessionsValidAfter: integer('sessions_valid_after', { mode: 'timestamp_ms' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)

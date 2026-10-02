@@ -11,6 +11,8 @@
     "lactatingDairyGrazeDays": 0,
     "meatAnimalRemovalBeforeSlaughterDays": 0,
     "manureCarryover": true,
+    "manureCarryoverDays": 3,
+    "hayOffFarmRestricted": true,
     "source": "GF-3850 (DuraCor), EPA Reg. No. 62719-739, label accepted 2019-11-26 (stamped 11-22-19)"
   },
   "displayName": "DuraCor (aminopyralid + florpyrauxifen-benzyl)",

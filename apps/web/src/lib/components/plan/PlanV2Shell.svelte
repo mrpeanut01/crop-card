@@ -13,7 +13,11 @@
   import type { FarmSnapshot } from '$lib/cards/snapshot';
   import { withHousing, type HousingByArea } from '$lib/farm/housedAnimals';
   import { withGrazing, withGrazingTimeLink, type GrazingByArea } from '$lib/farm/areaGrazing';
+  import { ForageAdvisoryCache } from '$lib/client/forageAdvisory.svelte';
   import { snapshotFromMapData } from '$lib/farm/mapSnapshot';
+  import { snapshotCarryoverLines, withSnapshotCarryover } from '$lib/cards/build/area';
+  import { CARRYOVER_SECTION_TITLES, withCarryover } from '$lib/farm/areaCarryover';
+  import { isSensitiveFamily } from '$lib/amendments/spreadPrompt';
   import { isCropBearing, type AreaKind } from '$lib/farm/areaKinds';
   import {
     NO_AREA,
@@ -159,7 +163,21 @@
       locale
     });
     const g = areaGrazing[selectedArea.id];
-    return withGrazingTimeLink(withGrazing(housed, g, prefs.timeZone), g, selectedArea.id, canEdit);
+    const held = withGrazingTimeLink(
+      withGrazing(housed, g, prefs.timeZone),
+      g,
+      selectedArea.id,
+      canEdit
+    );
+    return forage.decorate(
+      withSnapshotCarryover(snapshot, selectedArea.id, held, { link: true }),
+      selectedArea.id
+    );
+  });
+  const forage = new ForageAdvisoryCache();
+  $effect(() => {
+    if (selectedArea && isCropBearing(selectedArea.kind))
+      void forage.load({ fieldId: selectedArea.id });
   });
   const cropDays = $derived.by<Record<string, number | undefined>>(() => {
     const out: Record<string, number | undefined> = {};
@@ -169,11 +187,20 @@
   const blockCards = $derived(
     selectedAreaId
       ? areaBlocks.map((b) =>
-          planBlockCard(b, $page.url.searchParams, selectedAreaId, cropDays, prefs)
+          withCarryover(
+            planBlockCard(b, $page.url.searchParams, selectedAreaId, cropDays, prefs),
+            snapshotCarryoverLines(snapshot, [b.id])
+          )
         )
       : []
   );
   const plantings = $derived(selectedBlock?.plantings ?? []);
+  const blockCarryover = $derived(
+    selectedBlock ? snapshotCarryoverLines(snapshot, [selectedBlock.id]) : []
+  );
+  function plantingCarryover(cropPluginId: string) {
+    return isSensitiveFamily(cropMeta[cropPluginId]?.cropFamily) ? blockCarryover : [];
+  }
   const isPoly = $derived(plantings.length > 1);
 
   /** Active planting tab index; defaults to -1 (all) for poly, 0 otherwise. */
@@ -320,6 +347,7 @@
                   variant="compact"
                   {prefs}
                   factLimit={3}
+                  compactSections={CARRYOVER_SECTION_TITLES}
                   showAsOf={false}
                   selected={areaBlocks[i]?.id === selectedBlockId}
                 />
@@ -404,6 +432,7 @@
               stage={currentStageLabel(blockEvents, p, Date.now(), locale)}
               harvestStart={plantingHarvestLabel(blockEvents, p.id, locale)}
               detailHref={smallGrainHref(p.id, meta?.archetype)}
+              carryover={plantingCarryover(p.cropPluginId)}
               companions={companionsFor(p.id)}
               sourceTag={p.sourceProvenance === 'ai'
                 ? 'AI plan'
@@ -425,6 +454,7 @@
             stage={currentStageLabel(blockEvents, activePlanting, Date.now(), locale)}
             harvestStart={plantingHarvestLabel(blockEvents, activePlanting.id, locale)}
             detailHref={smallGrainHref(activePlanting.id, meta?.archetype)}
+            carryover={plantingCarryover(activePlanting.cropPluginId)}
             companions={companionsFor(activePlanting.id)}
             sourceTag={activePlanting.sourceProvenance === 'ai'
               ? 'AI plan'

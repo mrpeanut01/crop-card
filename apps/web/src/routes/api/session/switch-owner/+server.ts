@@ -36,7 +36,8 @@ export const POST: RequestHandler = async (event) => {
     phone: user.phone,
     isSuperadmin: user.isSuperadmin,
     activeOwnerId: ownerId,
-    activeRole: match.roleWithinOwner
+    activeRole: match.roleWithinOwner,
+    iat: user.sessionIssuedAt
   });
   return json({ ok: true, activeOwnerId: ownerId, activeRole: match.roleWithinOwner });
 };

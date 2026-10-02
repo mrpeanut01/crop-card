@@ -37,6 +37,7 @@
     "lactatingDairyGrazeDays": 365,
     "meatAnimalRemovalBeforeSlaughterDays": 3,
     "manureCarryover": true,
+    "manureCarryoverDays": 3,
     "source": "Crossbow herbicide, EPA Reg. No. 62719-260, label amended 02-03-2025 (accepted 2025-02-04)"
   }
 }

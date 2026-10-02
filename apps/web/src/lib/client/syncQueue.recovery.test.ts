@@ -356,3 +356,28 @@ describe('seed-start germination (E1-18)', () => {
     );
   });
 });
+
+describe('task time (Phase 33D, D-29)', () => {
+  it('routes to its task, keeps the id out of the body, adds no occurredAt and replays once', async () => {
+    const sent = installServer();
+    await enqueue(
+      'time-entry',
+      { taskId: 'tk_1', startedAt: 1_700_000_000_000, minutes: 25 },
+      'rec-time'
+    );
+    const result = await drainQueue();
+    expect(result.succeeded).toEqual(['rec-time']);
+    expect(sent).toHaveLength(1);
+    expect(sent[0].url).toBe('/api/tasks/tk_1/time');
+    expect(sent[0].body).toEqual({ startedAt: 1_700_000_000_000, minutes: 25 });
+    const again = await drainQueue();
+    expect(again.succeeded).toEqual([]);
+    expect(sent).toHaveLength(1);
+  });
+
+  it('never builds a path from an unsafe id', () => {
+    expect(endpointForRecord({ kind: 'time-entry', payload: { taskId: '../x' } })).toBe(
+      '/api/tasks/_/time'
+    );
+  });
+});

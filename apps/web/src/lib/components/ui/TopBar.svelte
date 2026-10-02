@@ -1,6 +1,5 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { tick } from 'svelte';
   import {
     Leaf,
     Sun,
@@ -13,12 +12,17 @@
     Layers,
     Bell,
     Settings,
-    Ellipsis,
     PawPrint,
     Tractor,
     MessageSquare,
-    Inbox
+    Inbox,
+    ChevronDown,
+    Zap,
+    Warehouse,
+    User,
+    LogOut
   } from 'lucide-svelte';
+  import { identityLabel } from '$lib/identity';
   import IconButton from './IconButton.svelte';
   import Avatar from './Avatar.svelte';
   import OfflineIndicator from './OfflineIndicator.svelte';
@@ -41,7 +45,7 @@
     name: string;
     role: string;
   }
-  interface User {
+  interface SessionUser {
     email: string | null;
     phone?: string | null;
     name?: string;
@@ -51,7 +55,7 @@
   }
 
   interface Props {
-    user?: User | null;
+    user?: SessionUser | null;
     activeOwner?: ActiveOwner | null;
     availableOwners?: AvailableOwner[];
     online: boolean;
@@ -97,42 +101,69 @@
       : tr('nav.alertsActive', { count: allAlerts.length })
   );
 
-  // 7-item nav per design (collapsed from 13) plus Equipment (#474:
-  // sprayers and other gear are equipment, not inventory) and Cards
-  // (Phase 30F, the offline deck). Map / Calendar fold into Plan,
-  // Insecticides into Spray, Fertility under Records, Hay into archetype
-  // renderers.
-  // Sprint 9 / Phase 27E: legacy /stock, /settings/plugins, /settings/sprayers
-  // now 308-redirect to /inventory; the transitional active-state branch
-  // below is kept short-term so a 308 still lights up the Inventory chip.
-  const items: Array<{ href: string; label: string; icon: LucideIcon }> = $derived([
-    { href: '/today', label: tr('nav.today'), icon: Sun },
-    { href: '/plan', label: tr('nav.plan'), icon: Sprout },
-    { href: '/spray', label: tr('nav.spray'), icon: SprayCan },
-    { href: '/scout', label: tr('nav.scout'), icon: Eye },
-    { href: '/harvest', label: tr('nav.harvest'), icon: Wheat },
-    ...(animalsLabel
-      ? [
-          {
-            href: '/animals',
-            label:
-              animalsLabel === animalsTitle('pets') ? tr('nav.petsAndAnimals') : tr('nav.animals'),
-            icon: PawPrint
-          }
-        ]
-      : []),
-    { href: '/inventory', label: tr('nav.inventory'), icon: Box },
-    { href: '/equipment', label: tr('nav.equipment'), icon: Tractor },
-    { href: '/records', label: tr('nav.records'), icon: FileText },
-    { href: '/cards', label: tr('nav.cards'), icon: Layers }
+  type NavLink = { href: string; label: string; icon: LucideIcon };
+  type NavEntry =
+    | ({ kind: 'link' } & NavLink)
+    | { kind: 'group'; id: string; label: string; icon: LucideIcon; items: NavLink[] };
+
+  // Five entries at every width, so neither the top row nor the phone bottom
+  // bar needs an overflow menu: field work, the farm's animals, stock and gear
+  // (Equipment right after Inventory, #474), and records each open a short
+  // menu. Map / Calendar live under Plan, Insecticides under Spray, Fertility
+  // under Records.
+  const entries: NavEntry[] = $derived([
+    { kind: 'link', href: '/today', label: tr('nav.today'), icon: Sun },
+    { kind: 'link', href: '/plan', label: tr('nav.plan'), icon: Sprout },
+    {
+      kind: 'group',
+      id: 'actions',
+      label: tr('nav.actions'),
+      icon: Zap,
+      items: [
+        { href: '/spray', label: tr('nav.spray'), icon: SprayCan },
+        { href: '/scout', label: tr('nav.scout'), icon: Eye },
+        { href: '/harvest', label: tr('nav.harvest'), icon: Wheat }
+      ]
+    },
+    {
+      kind: 'group',
+      id: 'farm',
+      label: tr('nav.farm'),
+      icon: Warehouse,
+      items: [
+        ...(animalsLabel
+          ? [
+              {
+                href: '/animals',
+                label:
+                  animalsLabel === animalsTitle('pets')
+                    ? tr('nav.petsAndAnimals')
+                    : tr('nav.animals'),
+                icon: PawPrint
+              }
+            ]
+          : []),
+        { href: '/inventory', label: tr('nav.inventory'), icon: Box },
+        { href: '/equipment', label: tr('nav.equipment'), icon: Tractor }
+      ]
+    },
+    {
+      kind: 'group',
+      id: 'records',
+      label: tr('nav.records'),
+      icon: FileText,
+      items: [
+        { href: '/records', label: tr('nav.records'), icon: FileText },
+        { href: '/cards', label: tr('nav.cards'), icon: Layers }
+      ]
+    }
   ]);
 
   function isActive(href: string): boolean {
     const path = page.url.pathname;
     if (href === '/today') return path === '/today' || path === '/';
-    // Sprint 7 transitional active-state: /inventory entry also lights
-    // up for the legacy /stock + /settings/plugins + /settings/sprayers
-    // shells until Sprint 9 redirects them.
+    // Legacy /stock and /settings/plugins 308 to /inventory; keep the
+    // Inventory entry lit while the redirect is in flight.
     if (href === '/inventory') {
       return (
         path === '/inventory' ||
@@ -146,133 +177,118 @@
     return path === href || path.startsWith(`${href}/`);
   }
 
-  // Up to 600px the bottom bar keeps the five field tabs and folds the rest
-  // into More, so every tab stays a 48px target. More is shown at every width
-  // because it also holds Send feedback (#466).
-  const PRIMARY_COUNT = 5;
-  const moreItems = $derived(items.slice(PRIMARY_COUNT));
-  const moreActive = $derived(moreItems.some((i) => isActive(i.href)));
-  let moreOpen = $state(false);
+  const MENU_WIDTH = 220;
+  let openGroup = $state<string | null>(null);
+  let menuPos = $state('');
+  let accountOpen = $state(false);
   let feedbackOpen = $state(false);
 
-  // Above 768px the top nav keeps as many pages inline as fit and folds the
-  // rest into More, so nothing (More included) is scrolled out of sight.
-  let navEl = $state<HTMLElement | null>(null);
-  let headerEl = $state<HTMLElement | null>(null);
-  let fit = $state<number>(Number.POSITIVE_INFINITY);
-  const foldedActive = $derived(items.some((it, i) => i >= fit && isActive(it.href)));
-
-  async function measure() {
-    const nav = navEl;
-    if (!nav || typeof window === 'undefined') return;
-    fit = Number.POSITIVE_INFINITY;
-    if (window.innerWidth <= 768) return;
-    await tick();
-    const links = [...nav.querySelectorAll<HTMLElement>(':scope > a.nav-link')];
-    const more = nav.querySelector<HTMLElement>(':scope > .more-nav');
-    if (!more || nav.scrollWidth <= nav.clientWidth + 1) return;
-    const gap = parseFloat(getComputedStyle(nav).columnGap) || 0;
-    let used = more.getBoundingClientRect().width;
-    let n = 0;
-    for (const link of links) {
-      const w = link.getBoundingClientRect().width + gap;
-      if (used + w > nav.clientWidth - 1) break;
-      used += w;
-      n += 1;
+  // The open menu is placed against the viewport: below its button in the
+  // top row, above it in the phone bottom bar, and kept on screen.
+  function toggleGroup(e: MouseEvent, id: string) {
+    e.preventDefault();
+    if (openGroup === id) {
+      openGroup = null;
+      return;
     }
-    fit = n;
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const vw = window.innerWidth;
+    const clampLeft = (x: number) => Math.round(Math.min(Math.max(8, x), vw - MENU_WIDTH - 8));
+    menuPos =
+      vw <= 768
+        ? `left: ${clampLeft(r.left + r.width / 2 - MENU_WIDTH / 2)}px; bottom: ${Math.round(window.innerHeight - r.top + 6)}px;`
+        : `left: ${clampLeft(r.left)}px; top: ${Math.round(r.bottom + 6)}px;`;
+    openGroup = id;
+    accountOpen = false;
+    alertsOpen = false;
   }
 
-  $effect(() => {
-    const header = headerEl;
-    void items.length;
-    if (!header || typeof ResizeObserver === 'undefined') return;
-    let frame = 0;
-    const ro = new ResizeObserver(() => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => void measure());
-    });
-    ro.observe(header);
-    void measure();
-    return () => {
-      cancelAnimationFrame(frame);
-      ro.disconnect();
-    };
-  });
+  function closeMenusOnOutsideClick(e: MouseEvent) {
+    const target = e.target as Element | null;
+    if (!target?.closest) return;
+    if (openGroup && !target.closest('.nav-group')) openGroup = null;
+    if (accountOpen && !target.closest('.account-menu')) accountOpen = false;
+    if (alertsOpen && !target.closest('.alerts-menu')) alertsOpen = false;
+  }
+
+  function closeMenusOnEscape(e: KeyboardEvent) {
+    if (e.key !== 'Escape') return;
+    openGroup = null;
+    accountOpen = false;
+    alertsOpen = false;
+  }
 
   function openFeedback() {
-    moreOpen = false;
+    accountOpen = false;
     feedbackOpen = true;
   }
 
   const avatarName = $derived(user?.name ?? user?.email ?? (user?.phone ? '#' : '?'));
 </script>
 
-<header class="topbar" bind:this={headerEl}>
+<svelte:window
+  onclick={closeMenusOnOutsideClick}
+  onkeydown={closeMenusOnEscape}
+  onresize={() => (openGroup = null)}
+  onscroll={() => (openGroup = null)}
+/>
+
+<header class="topbar">
   <div class="brand-cluster">
-    <span class="brand-mark" aria-hidden="true">
-      <Leaf size={16} />
-    </span>
-    <a href="/" class="brand serif" aria-label={tr('nav.home')}>CropCard</a>
+    <a href="/" class="brand-link" aria-label={tr('nav.home')}>
+      <span class="brand-mark" aria-hidden="true">
+        <Leaf size={16} />
+      </span>
+      <span class="brand serif">CropCard</span>
+    </a>
     {#if activeOwner}
       <span class="divider" aria-hidden="true"></span>
       <span class="farm mono" title={activeOwner.name}>{activeOwner.name}</span>
     {/if}
   </div>
 
-  <nav aria-label={tr('nav.primary')} class="primary-nav" bind:this={navEl}>
-    {#each items as item, i (item.href)}
-      {@const Icon = item.icon}
-      {@const active = isActive(item.href)}
-      <a
-        href={item.href}
-        class="nav-link"
-        class:secondary={i >= PRIMARY_COUNT}
-        class:folded={i >= fit}
-        class:active
-        aria-current={active ? 'page' : undefined}
-      >
-        <Icon size={15} strokeWidth={1.75} />
-        <span>{item.label}</span>
-      </a>
-    {/each}
-    <details class="more-nav" bind:open={moreOpen}>
-      <summary
-        class="nav-link"
-        class:overflow-active={moreActive}
-        class:folded-active={foldedActive}
-        aria-label={tr('nav.morePages')}
-      >
-        <Ellipsis size={15} strokeWidth={1.75} />
-        <span>{tr('nav.more')}</span>
-      </summary>
-      <div class="more-menu">
-        {#each items as item, i (item.href)}
-          {@const Icon = item.icon}
-          <a
-            href={item.href}
-            class="more-link page-link"
-            class:overflow={i >= PRIMARY_COUNT}
-            class:folded={i >= fit}
-            aria-current={isActive(item.href) ? 'page' : undefined}
-            onclick={() => (moreOpen = false)}
+  <nav aria-label={tr('nav.primary')} class="primary-nav">
+    {#each entries as entry (entry.kind === 'link' ? entry.href : entry.id)}
+      {@const Icon = entry.icon}
+      {#if entry.kind === 'link'}
+        {@const active = isActive(entry.href)}
+        <a
+          href={entry.href}
+          class="nav-link"
+          class:active
+          aria-current={active ? 'page' : undefined}
+        >
+          <Icon size={15} strokeWidth={1.75} />
+          <span>{entry.label}</span>
+        </a>
+      {:else}
+        <details class="nav-group" data-group={entry.id} open={openGroup === entry.id}>
+          <summary
+            class="nav-link"
+            class:active={entry.items.some((i) => isActive(i.href))}
+            onclick={(e) => toggleGroup(e, entry.id)}
           >
-            <Icon size={16} strokeWidth={1.75} />
-            <span>{item.label}</span>
-          </a>
-        {/each}
-        {#if user?.isSuperadmin}
-          <a href="/admin/feedback" class="more-link" onclick={() => (moreOpen = false)}>
-            <Inbox size={16} strokeWidth={1.75} />
-            <span>{tr('nav.feedbackInbox')}</span>
-          </a>
-        {/if}
-        <button type="button" class="more-link" onclick={openFeedback}>
-          <MessageSquare size={16} strokeWidth={1.75} />
-          <span>{tr('nav.sendFeedback')}</span>
-        </button>
-      </div>
-    </details>
+            <Icon size={15} strokeWidth={1.75} />
+            <span>{entry.label}</span>
+            <ChevronDown size={14} strokeWidth={1.75} class="caret" />
+          </summary>
+          <div class="group-menu" style={menuPos}>
+            {#each entry.items as item (item.href)}
+              {@const ItemIcon = item.icon}
+              <a
+                href={item.href}
+                class="menu-link"
+                aria-current={isActive(item.href) ? 'page' : undefined}
+                onclick={() => (openGroup = null)}
+              >
+                <ItemIcon size={16} strokeWidth={1.75} />
+                <span>{item.label}</span>
+              </a>
+            {/each}
+          </div>
+        </details>
+      {/if}
+    {/each}
   </nav>
 
   <div class="right">
@@ -311,35 +327,70 @@
     >
       {#snippet icon()}<Settings size={16} strokeWidth={1.75} />{/snippet}
     </IconButton>
-    {#if availableOwners.length > 1 && activeOwner}
-      <details class="owner-chip">
-        <summary aria-label={tr('nav.switchFarm')} title={activeOwner.name}>
-          <Avatar name={avatarName} src={user?.avatarUrl} />
+    {#if user}
+      <details class="account-menu" bind:open={accountOpen}>
+        <summary aria-label={tr('nav.account')} title={user.name}>
+          <Avatar name={avatarName} src={user.avatarUrl} />
         </summary>
-        <div class="owner-popover" role="menu">
-          <div class="owner-popover-label">{tr('nav.switchFarm')}</div>
-          {#each availableOwners as o (o.id)}
-            <button
-              type="button"
-              class="owner-choice"
-              class:active={o.id === activeOwner.id}
-              role="menuitemradio"
-              aria-checked={o.id === activeOwner.id}
-              onclick={() => onSwitchOwner?.(o.id)}
+        <div class="owner-popover">
+          <div class="account-id">
+            {#if user.name}<span class="account-name">{user.name}</span>{/if}
+            <span class="account-handle mono"
+              >{identityLabel({ email: user.email, phone: user.phone ?? null })}</span
             >
-              <span>{o.name}</span>
-              <span class="owner-role mono"
-                >{o.role === 'owner' || o.role === 'helper' || o.role === 'inspector'
-                  ? tr(`settings.role.${o.role}`)
-                  : o.role}</span
+          </div>
+          {#if availableOwners.length > 1 && activeOwner}
+            <div class="owner-popover-label">{tr('nav.switchFarm')}</div>
+            <div role="menu" aria-label={tr('nav.switchFarm')}>
+              {#each availableOwners as o (o.id)}
+                <button
+                  type="button"
+                  class="owner-choice"
+                  class:active={o.id === activeOwner.id}
+                  role="menuitemradio"
+                  aria-checked={o.id === activeOwner.id}
+                  onclick={() => onSwitchOwner?.(o.id)}
+                >
+                  <span>{o.name}</span>
+                  <span class="owner-role mono"
+                    >{o.role === 'owner' || o.role === 'helper' || o.role === 'inspector'
+                      ? tr(`settings.role.${o.role}`)
+                      : o.role}</span
+                  >
+                </button>
+              {/each}
+            </div>
+          {/if}
+          <div class="account-actions">
+            <a href="/settings/account" class="owner-choice" onclick={() => (accountOpen = false)}>
+              <span class="with-icon"><User size={15} strokeWidth={1.75} />{tr('nav.account')}</span
+              >
+            </a>
+            {#if user.isSuperadmin}
+              <a href="/admin/feedback" class="owner-choice" onclick={() => (accountOpen = false)}>
+                <span class="with-icon"
+                  ><Inbox size={15} strokeWidth={1.75} />{tr('nav.feedbackInbox')}</span
+                >
+              </a>
+            {/if}
+            <button type="button" class="owner-choice" onclick={openFeedback}>
+              <span class="with-icon"
+                ><MessageSquare size={15} strokeWidth={1.75} />{tr('nav.sendFeedback')}</span
               >
             </button>
-          {/each}
+            <form method="POST" action="/signout">
+              <button type="submit" class="owner-choice">
+                <span class="with-icon"
+                  ><LogOut size={15} strokeWidth={1.75} />{tr('nav.signOut')}</span
+                >
+              </button>
+            </form>
+          </div>
         </div>
       </details>
     {:else}
-      <span class="standalone" title={user?.name}>
-        <Avatar name={avatarName} src={user?.avatarUrl} />
+      <span class="standalone">
+        <Avatar name={avatarName} />
       </span>
     {/if}
     <OfflineIndicator {online} {pendingCount} />
@@ -365,6 +416,13 @@
     display: flex;
     align-items: center;
     gap: 10px;
+  }
+  .brand-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    text-decoration: none;
   }
   .brand-mark {
     width: 28px;
@@ -526,10 +584,10 @@
     border-radius: 0;
     margin-top: 4px;
   }
-  .owner-chip {
+  .account-menu {
     position: relative;
   }
-  .owner-chip > summary {
+  .account-menu > summary {
     list-style: none;
     cursor: pointer;
     padding: 0;
@@ -540,7 +598,7 @@
     display: grid;
     place-items: center;
   }
-  .owner-chip > summary::-webkit-details-marker {
+  .account-menu > summary::-webkit-details-marker {
     display: none;
   }
   .standalone {
@@ -586,6 +644,50 @@
     color: var(--color-forest-deep);
     font-weight: 600;
   }
+  .owner-choice:focus-visible {
+    outline: 2px solid var(--color-forest);
+    outline-offset: -2px;
+  }
+  a.owner-choice,
+  .account-actions .owner-choice {
+    min-height: 48px;
+    text-decoration: none;
+    font: inherit;
+  }
+  .with-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .account-id {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--color-divider);
+    margin-bottom: 4px;
+  }
+  .account-name {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  .account-handle {
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-muted);
+    overflow-wrap: anywhere;
+  }
+  .account-actions {
+    border-top: 1px solid var(--color-divider);
+    margin-top: 4px;
+    padding-top: 4px;
+  }
+  .account-id + .account-actions {
+    border-top: none;
+    margin-top: 0;
+  }
+  .account-actions form {
+    margin: 0;
+  }
   .owner-role {
     font-size: var(--font-size-meta);
     color: var(--color-ink-muted);
@@ -594,8 +696,7 @@
 
   /* The header row degrades in steps so it never widens the page: the sync
      label collapses to its dot first (text stays in the a11y tree), then the
-     farm name. Between 769px and ~1030px the primary nav scrolls within
-     itself as a fallback. */
+     farm name. */
   @media (max-width: 1280px) {
     .right :global(.indicator .label) {
       position: absolute;
@@ -619,9 +720,23 @@
     }
   }
 
+  /* Narrow laptops and tablets in landscape: the leaf stands in for the
+     wordmark and the group arrows go, so the five entries still fit. */
+  @media (max-width: 960px) {
+    .brand {
+      display: none;
+    }
+    .nav-group :global(.caret) {
+      display: none;
+    }
+  }
+
   /* Mobile: collapse nav into a bottom strip below 768px so primary-nav row
      stays uncluttered. Bottom nav is one-glove non-negotiable per CLAUDE.md. */
   @media (max-width: 768px) {
+    .brand {
+      display: inline;
+    }
     .primary-nav {
       position: fixed;
       bottom: 0;
@@ -652,21 +767,24 @@
     }
   }
 
-  .more-nav {
+  .nav-group {
     display: flex;
-    position: relative;
   }
-  .more-nav summary {
+  .nav-group > summary {
     list-style: none;
     cursor: pointer;
   }
-  .more-nav summary::-webkit-details-marker {
+  .nav-group > summary::-webkit-details-marker {
     display: none;
   }
-  .more-menu {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 6px);
+  .nav-group :global(.caret) {
+    transition: transform 0.15s ease;
+  }
+  .nav-group[open] :global(.caret) {
+    transform: rotate(180deg);
+  }
+  .group-menu {
+    position: fixed;
     min-width: 200px;
     background: var(--color-paper);
     border: 1px solid var(--color-divider);
@@ -677,10 +795,12 @@
     flex-direction: column;
     z-index: 50;
   }
-  .more-link {
+  .menu-link {
     display: flex;
     align-items: center;
     gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
     min-height: 48px;
     padding: 0 12px;
     border-radius: 6px;
@@ -694,68 +814,30 @@
     text-align: left;
     white-space: nowrap;
   }
-  .more-link:hover {
+  .menu-link:hover {
     background: var(--color-divider-soft);
   }
-  .more-link[aria-current='page'] {
+  .menu-link[aria-current='page'] {
     background: var(--pill-forest-bg);
     color: var(--pill-forest-fg);
   }
-  .more-link.overflow {
-    display: none;
-  }
-  .more-link.page-link:not(.overflow):not(.folded) {
-    display: none;
-  }
-  /* Pages that do not fit the top nav move into More. The nav is a
-     scrolling strip as a last resort, which would clip a dropdown, so the
-     open menu is placed against the viewport. */
-  @media (min-width: 769px) {
-    .nav-link.folded {
-      display: none;
-    }
-    .more-link.folded {
-      display: flex;
-    }
-    .more-nav summary.folded-active {
-      color: var(--color-forest-deep);
-      font-weight: 600;
-    }
-    .more-nav[open] .more-menu {
-      position: fixed;
-      top: 64px;
-      right: 16px;
-    }
-  }
   @media (max-width: 768px) {
-    .more-nav {
+    .nav-group {
       flex: 1;
     }
-    .more-nav summary {
+    .nav-group > summary {
       width: 100%;
     }
-    .more-menu {
-      position: fixed;
-      top: auto;
-      right: 8px;
-      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-    }
-  }
-  @media (max-width: 600px) {
-    .nav-link.secondary {
+    .nav-group :global(.caret) {
       display: none;
     }
-    .more-link.overflow {
-      display: flex;
-    }
-    .more-nav summary.overflow-active {
-      background: var(--pill-forest-bg);
-      color: var(--pill-forest-fg);
-      font-weight: 600;
+    .group-menu {
+      width: 220px;
+      box-sizing: border-box;
     }
   }
 
-  /* 375px phones: tighter chrome; Settings + the owner switcher keep their
+  /* 375px phones: tighter chrome; Settings and the account menu keep their
      48px targets. */
   @media (max-width: 600px) {
     .topbar {

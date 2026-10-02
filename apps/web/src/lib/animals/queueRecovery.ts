@@ -346,6 +346,9 @@ export function pendingSummary(
       ? `${verb}, ${p.quantity} ${p.unit}`
       : verb;
   }
+  if (kind === 'time-entry') {
+    return typeof p.minutes === 'number' ? `Task time, ${p.minutes} min` : 'Task time';
+  }
   if (kind === 'seed-start') {
     return typeof p.germinatedCount === 'number'
       ? t(locale, 'recui.sum.seedlingsUp', { n: p.germinatedCount })
@@ -370,7 +373,8 @@ export const KIND_LABEL: Record<string, string> = {
   'seed-start': 'Seed tray',
   irrigation: 'Watering',
   'rain-gauge': 'Rain gauge reading',
-  'harvest-disposition': 'Where a harvest went'
+  'harvest-disposition': 'Where a harvest went',
+  'time-entry': 'Task time'
 };
 
 const KIND_KEY: Record<string, MessageKey> = {

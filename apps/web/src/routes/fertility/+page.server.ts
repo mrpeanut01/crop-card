@@ -7,6 +7,10 @@ import { canSetUp } from '$lib/server/setupContext';
 import { organicBlocksForNotice } from '$lib/server/organicNotice';
 import { getRegistry } from '$lib/server/registry';
 import type { OrganicComplianceFlags } from '$lib/organic/inputCompliance';
+import { loadCarryoverData } from '$lib/server/amendmentChain';
+import { countBatches } from '$lib/db/amendments';
+import { stateChip } from '$lib/amendments/carryover';
+import { carryoverHref } from '$lib/farm/areaCarryover';
 
 export interface FertilizerMark {
   displayName: string;
@@ -48,8 +52,17 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   );
   const hasOrganicBlock = !!organicBlocks && Object.keys(organicBlocks).length > 0;
 
+  const carry = countBatches() > 0 ? await loadCarryoverData() : null;
+  const amendmentBatches = (carry?.batches ?? []).map((b) => {
+    const state = carry?.chains.get(b.id)?.state ?? 'none-on-file';
+    return { id: b.id, name: b.name, state, stateText: stateChip(state) };
+  });
+  const batchNames = new Map((carry?.batches ?? []).map((b) => [b.id, b.name]));
+
   return {
     organicBlocks,
+    amendmentBatches,
+    carryoverHref: blockId ? carryoverHref(blockId) : null,
     fertilizerMarks: hasOrganicBlock ? await fertilizerMarks() : {},
     selectedCropId: crop?.id ?? null,
     blocks: blocks.map((b) => ({
@@ -64,7 +77,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     selectedBlockId: blockId,
     year,
     budget: blockId ? fertilityBudgetForBlock(blockId, year) : null,
-    applications: blockId ? listFertilityApplicationsForBlock(blockId) : [],
+    applications: (blockId ? listFertilityApplicationsForBlock(blockId) : []).map((a) => ({
+      ...a,
+      batchName: a.amendmentBatchId ? (batchNames.get(a.amendmentBatchId) ?? null) : null,
+      confirmed: !!a.carryoverAckJson
+    })),
     credits: blockId ? listFertilityCreditsForBlock(blockId) : [],
     soilTests: blockId ? listSoilTestsForBlock(blockId) : [],
     canAddSoilTest: canSetUp(locals.user?.role)

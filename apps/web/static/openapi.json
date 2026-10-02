@@ -8163,6 +8163,1406 @@
         }
       }
     },
+    "/api/stock/{id}/lots": {
+      "post": {
+        "summary": "Receive a new lot of a stock item",
+        "description": "Owner only. Records a lot on hand, or one that is ordered or planned (#475; no receipt movement until it is marked received). `sourceHayCuttingId` (Phase 33C) names the hay cutting these bales came from, so feed used from the lot is traced back to that cutting by the manure carryover chain; it is allowed only on feed and bedding items (400 `NOT_FEED_LOT`), must be a cutting of the active Owner, and is set at creation only.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Stock item id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "receivedQuantity": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "unit": {
+                    "type": "string",
+                    "enum": [
+                      "fl-oz",
+                      "pt",
+                      "qt",
+                      "gal",
+                      "ml",
+                      "oz",
+                      "lb",
+                      "kg",
+                      "g",
+                      "count",
+                      "seeds",
+                      "bag",
+                      "bag-50lb",
+                      "bag-25kg"
+                    ]
+                  },
+                  "lotNumber": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "expiresAt": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "supplier": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "receivedCostCents": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "quantityStatus": {
+                    "type": "string",
+                    "enum": [
+                      "existing",
+                      "ordered",
+                      "planned"
+                    ]
+                  },
+                  "sourceHayCuttingId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  }
+                },
+                "required": [
+                  "receivedQuantity",
+                  "unit"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The new lot.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "lot"
+                  ],
+                  "properties": {
+                    "lot": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, a unit that does not convert to the item unit, `NOT_FEED_LOT`, or an unknown `sourceHayCuttingId`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such stock item on this farm.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/amendments/batches": {
+      "get": {
+        "summary": "List manure and compost batches with their carryover state",
+        "description": "Phase 33C. Every role, inspectors included. Each batch comes with its carryover state computed on read from the farm records (`may-carry`, `not-known` or `none-on-file`, provenance `data`), the first 20 paths that led there as plain sentences (may carry first, then newest), `morePaths`, standing notes (for example that bought hay and feed are not traced) and, for a not known bought source, the advice to ask the supplier or run a pea or bean test. The state never says a batch is safe. Free on every plan.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The batches.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "batches"
+                  ],
+                  "properties": {
+                    "batches": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Start a manure pile, compost batch or bedding pack, or record a bought load",
+        "description": "Phase 33C. Owner, helper and custom operator; inspectors 403. `startedOn` is a farm-local day, not in the future (400 `IN_THE_FUTURE`). A supplier and the supplier statement (`says-none`, `unknown`, `none-asked`) belong to bought loads only. Not gated by the season close-out; online only.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "manure",
+                      "compost",
+                      "bedding-pack"
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 320
+                  },
+                  "origin": {
+                    "type": "string",
+                    "enum": [
+                      "on-farm",
+                      "bought"
+                    ]
+                  },
+                  "startedOn": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "supplier": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 480
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "supplierStatement": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "says-none",
+                          "unknown",
+                          "none-asked"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 4000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name",
+                  "origin",
+                  "startedOn"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The new batch with its state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "batch"
+                  ],
+                  "properties": {
+                    "batch": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or `IN_THE_FUTURE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/amendments/batches/{id}": {
+      "get": {
+        "summary": "One batch with its carryover state",
+        "description": "Phase 33C. Every role. The same shape as one entry of the list.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Batch id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The batch.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "batch": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`NOT_FOUND`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Rename, note, close or reopen a batch",
+        "description": "Phase 33C. Owner, helper and custom operator. `closedOn` (a farm-local day, not in the future) closes the batch through the end of that day and `null` reopens it; a closed batch takes no new inputs. `supplier` and `supplierStatement` change only on bought loads (400 `NOT_BOUGHT`). There is no batch delete.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Batch id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 320
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 4000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "closedOn": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "supplier": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 480
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "supplierStatement": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "says-none",
+                          "unknown",
+                          "none-asked"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The batch.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "batch": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, `IN_THE_FUTURE`, `BAD_RANGE` or `NOT_BOUGHT`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`NOT_FOUND`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/amendments/batches/{id}/inputs": {
+      "post": {
+        "summary": "Add what went into a batch",
+        "description": "Phase 33C. Owner, helper and custom operator. An animal or group with its collection window (`from`, optional `to`, farm-local days; the end is exclusive at the start of the next day), another batch, or a feed, bedding or fertilizer stock lot (400 `NOT_AMENDMENT_LOT` otherwise) with the supplier statement. A batch that is the batch itself or already contains it is 409 `BATCH_CYCLE`; a closed batch 409 `BATCH_CLOSED`; a bought load 409 `BOUGHT_BATCH_NO_INPUTS`; the same input on the same day 409 `INPUT_EXISTS`. Days may not be in the future (400 `IN_THE_FUTURE`) and `to` may not come before `from` (400 `BAD_RANGE`).",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Batch id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "inputType": {
+                    "type": "string",
+                    "enum": [
+                      "animal",
+                      "group",
+                      "batch",
+                      "stock-lot"
+                    ]
+                  },
+                  "inputId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "from": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "to": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "supplierStatement": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "says-none",
+                          "unknown",
+                          "none-asked"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "inputType",
+                  "inputId",
+                  "from"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The input and the batch with its new state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "input": {
+                      "type": "object"
+                    },
+                    "batch": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, an animal, group, batch or lot the active Owner does not have, `NOT_AMENDMENT_LOT`, `IN_THE_FUTURE` or `BAD_RANGE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`NOT_FOUND`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`BATCH_CYCLE`, `BATCH_CLOSED`, `BOUGHT_BATCH_NO_INPUTS` or `INPUT_EXISTS`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/amendments/batches/{id}/inputs/{inputId}": {
+      "delete": {
+        "summary": "Remove an input added by mistake",
+        "description": "Phase 33C. Owner only.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Batch id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "inputId",
+            "in": "path",
+            "required": true,
+            "description": "Input id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The batch with its new state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "batch": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`NOT_FOUND`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/amendments/bioassays": {
+      "get": {
+        "summary": "Pea or bean tests on a block or batch",
+        "description": "Phase 33C. Every role. Filter with `blockId` or `batchId`. A test is a fact the person reported, tagged as entered by them; it never clears a block on its own.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The tests, newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bioassays": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Record a pea or bean test of a batch or a block",
+        "description": "Phase 33C (M-48, M-49). Owner, helper and custom operator. Exactly one of `batchId` or `blockId`; `testedOn` is a farm-local day, not in the future (400 `IN_THE_FUTURE`); `result` is `no-damage` or `damage`; `note` up to 500 characters. A block test counts for spreads on or before its day; a batch test counts from the day of the batch's newest input. `no-damage` mutes the block line, `damage` keeps it as a warning citing Oregon State Extension. Not gated by the season close-out.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "batchId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "blockId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "testedOn": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "result": {
+                    "type": "string",
+                    "enum": [
+                      "no-damage",
+                      "damage"
+                    ]
+                  },
+                  "note": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "testedOn",
+                  "result"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The saved test.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bioassay": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, a batch or block the active Owner does not have, or `IN_THE_FUTURE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/amendments/bioassays/{id}": {
+      "delete": {
+        "summary": "Remove a pea or bean test entered by mistake",
+        "description": "Phase 33C. Owner only.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Bioassay id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`NOT_FOUND`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/amendments/dismissals": {
+      "get": {
+        "summary": "Dismissed carryover lines",
+        "description": "Phase 33C. Every role. Filter with `blockId`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The dismissals.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dismissals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Dismiss one spread's carryover line with a reason",
+        "description": "Phase 33C (M-47, M-49). Owner only. `fertilityApplicationId` must be an application of the active Owner that spread a manure or compost batch (400 `NOT_A_SPREAD`) on `blockId` (400 `BLOCK_MISMATCH`). The reason is 3 to 500 characters. One per application (409 `ALREADY_DISMISSED`). The facts stay on file; deleting the dismissal brings the line back.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fertilityApplicationId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "blockId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "fertilityApplicationId",
+                  "blockId",
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The dismissal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dismissal": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, an unknown application, `BLOCK_MISMATCH` or `NOT_A_SPREAD`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`ALREADY_DISMISSED`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/amendments/dismissals/{id}": {
+      "delete": {
+        "summary": "Bring a dismissed carryover line back",
+        "description": "Phase 33C. Owner only.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Dismissal id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`NOT_FOUND`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fertility/applications": {
+      "post": {
+        "summary": "Record a fertilizer, manure or compost application on a block",
+        "description": "Owner only. `amendmentBatchId` names the manure or compost batch spread (33C). When that batch reads \"may carry a weed killer\" or \"not known\" now and the block is sensitive (a garden or greenhouse Area, or a planned or active crop in a family the synthetic-auxin class damages, or one with no known family), the answer is 409 `CARRYOVER_CONFIRM` with the batch, its state, the paths as sentences, the reasons, the families, any counting batch tests and `factsHash`. Send the request again with `confirmCarryover` set to that `factsHash` to save; the confirmation, the facts and who confirmed are stored with the application. A stale or different hash gets a fresh 409. A batch with no carryover weed killer on file, or a block that is not sensitive, saves with no prompt. Advisory, never a gate.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "blockId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "cropId": {
+                    "type": "string"
+                  },
+                  "taskId": {
+                    "type": "string"
+                  },
+                  "occurredAt": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "source": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "stockItemId": {
+                    "type": "string"
+                  },
+                  "ratePerAcre": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "rateUnit": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 40
+                  },
+                  "nLbPerAcre": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "pLbPerAcre": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "kLbPerAcre": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "amendmentBatchId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "confirmCarryover": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "blockId",
+                  "source",
+                  "ratePerAcre",
+                  "rateUnit"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The saved application and any stored confirmation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "application": {
+                      "type": "object"
+                    },
+                    "carryoverAck": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or a block, crop, stock item or batch the active Owner does not have.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`CARRYOVER_CONFIRM`, with the facts to confirm.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/stock/{id}/lots/{lotId}/seed-sourcing": {
       "patch": {
         "summary": "Record organic seed sourcing on a seed lot",
@@ -12835,6 +14235,435 @@
         }
       }
     },
+    "/api/forage/tests": {
+      "post": {
+        "summary": "Record a forage lab result",
+        "description": "Phase 33C. Owner, helper and custom operator; inspectors 403. Exactly one of `blockId`, `hayCuttingId` or `stockLotId` (a feed lot, else 400 `NOT_FEED_LOT`). `sampledOn` is a farm-local day, not in the future (400 `IN_THE_FUTURE`). `nitrateValue` needs `nitrateUnits` (`ppm-nitrate`, `ppm-nitrate-n`, `pct-nitrate`, `pct-kno3`) and the reverse; at least one value or lab rating is required. `labRating` holds the lab's own words as printed and is what the app shows; provenance is always `manual`. Attaching a lab report (`documentId`) is owner only (403 `OWNER_ONLY`) and links it as a `forage-test` document in the same write. Another Owner's ids are refused. Online only, free, not gated by the season close-out.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "blockId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "hayCuttingId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "stockLotId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sampledOn": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "lab": {
+                    "type": "string",
+                    "maxLength": 480
+                  },
+                  "nitrateValue": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000000
+                  },
+                  "nitrateUnits": {
+                    "type": "string",
+                    "enum": [
+                      "ppm-nitrate",
+                      "ppm-nitrate-n",
+                      "pct-nitrate",
+                      "pct-kno3"
+                    ]
+                  },
+                  "hcnPpm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100000
+                  },
+                  "labRating": {
+                    "type": "object",
+                    "properties": {
+                      "nitrate": {
+                        "type": "string",
+                        "maxLength": 320
+                      },
+                      "hcn": {
+                        "type": "string",
+                        "maxLength": 320
+                      },
+                      "basis": {
+                        "type": "string",
+                        "enum": [
+                          "dry-matter",
+                          "as-fed",
+                          "not-stated"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "documentId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "sampledOn"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The saved forage test.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "test"
+                  ],
+                  "properties": {
+                    "test": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, an id the active Owner does not have, `NOT_FEED_LOT` or `IN_THE_FUTURE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Read-only role, or `OWNER_ONLY` for a lab report from a helper.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The lab report was deleted (`DOCUMENT_DELETED`) or is a photo (`PHOTO_DOCUMENT`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List forage lab results",
+        "description": "Phase 33C. Every role. Tests on the named block, hay cutting or feed lot, newest sample first. One query parameter is required.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "query",
+            "required": false,
+            "description": "A block id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hayCuttingId",
+            "in": "query",
+            "required": false,
+            "description": "A hay cutting id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stockLotId",
+            "in": "query",
+            "required": false,
+            "description": "A feed lot id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Forage tests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "tests"
+                  ],
+                  "properties": {
+                    "tests": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No target named.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/forage/tests/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Forage test id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "delete": {
+        "summary": "Delete a forage lab result",
+        "description": "Phase 33C. Owner only (403 `OWNER_ONLY`). Removes the test and its document links; the lab report stays in the farm documents.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`OWNER_ONLY`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Forage test not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/forage/advisory": {
+      "get": {
+        "summary": "Prussic acid and nitrate advisory for an Area or hay cutting",
+        "description": "Phase 33C. Every role. Exactly one of `fieldId` or `hayCuttingId`. Lists each flagged crop (from the shipped plugin library's sourced `forageHazards`) with the triggers on file: a reading at or below freezing at the nearest NOAA station or a `frost-tonight` alert in the last 14 days (the weather read gets 3 seconds; a failed read sets `frostUnknown`), nitrogen applied since the later of planting and the last cut, and young regrowth. Advice lines quote a named extension source; no other numbers appear. The latest forage test shows the owner-entered lab rating. Advisory only: it never blocks a move or a hay cut and shows for every species. Fetched in the browser when a card or sheet opens.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "fieldId",
+            "in": "query",
+            "required": false,
+            "description": "An Area id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hayCuttingId",
+            "in": "query",
+            "required": false,
+            "description": "A hay cutting id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The advisory.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "advisory"
+                  ],
+                  "properties": {
+                    "advisory": {
+                      "type": "object",
+                      "required": [
+                        "items",
+                        "provenance",
+                        "recordHref",
+                        "targetTest"
+                      ],
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "provenance": {
+                          "type": "string",
+                          "enum": [
+                            "plugin",
+                            "data"
+                          ]
+                        },
+                        "recordHref": {
+                          "type": "string"
+                        },
+                        "targetTest": {
+                          "type": [
+                            "object",
+                            "null"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not exactly one of `fieldId` and `hayCuttingId`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Area or hay cutting not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/fertility/soil-tests/{id}": {
       "parameters": [
         {
@@ -14806,6 +16635,294 @@
           },
           "503": {
             "description": "The same client record id is being saved by another request right now. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks/{id}/time": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Task id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Time saved on a task",
+        "description": "Owners get every entry with the person's name; everyone else gets the farm total and only their own entries. Each entry says whether the caller may remove it (`canDelete`). Not gated by the season close-out.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The total and the entries, oldest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "totalMinutes",
+                    "entries"
+                  ],
+                  "properties": {
+                    "totalMinutes": {
+                      "type": "integer"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Save time from the task timer",
+        "description": "The task timer's Save time, and the replay of the `time-entry` offline queue kind with the client record id header. Owners and helpers; inspectors are read-only. Saved as a time row with `source: \"timer\"` and the task's planting, block and field. `userId` logs someone else's time and is owner only (403 `OWNER_ONLY` with `askOwner: true`; another farm's user or an inspector is 400 `FOREIGN_REF`). `startedAt` no more than 30 days back and `startedAt + minutes` no more than 5 minutes past the server clock, else 400 `TIME_OUT_OF_RANGE`. The task may be open or closed. Not gated by the season close-out.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ClientRecordId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "startedAt": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "minutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 720
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "userId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "startedAt",
+                  "minutes"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replay of a client record id that was already saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Either the saved record, or `{ ok: true, duplicate: true }` when the client record id was already saved and nothing new was written.",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "duplicate": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "entry"
+                  ],
+                  "properties": {
+                    "entry": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, `TIME_OUT_OF_RANGE` or `FOREIGN_REF`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Inspector role is read-only, or `OWNER_ONLY`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The same client record id is being saved by another request right now. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks/time/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Time entry id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "delete": {
+        "summary": "Remove saved task time",
+        "description": "Owners remove any entry at any time. Everyone else removes only their own, within 48 hours of saving it (403 `NOT_YOURS` or `TOO_LATE`, with `askOwner: true`); inspectors are read-only. A hard delete: task time is neither a compliance record nor a hold fact. Online only and not gated by the season close-out.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`READ_ONLY`, `NOT_YOURS` or `TOO_LATE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such time entry for the active Owner.",
             "content": {
               "application/json": {
                 "schema": {

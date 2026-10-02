@@ -57,7 +57,12 @@ import {
   queuedJournalSchema
 } from '../src/lib/journal/apiSchemas.ts';
 import { JOURNAL_KINDS, JOURNAL_PROVENANCE } from '../src/lib/journal/model.ts';
-import { taskCloseSchema, taskCreateSchema, taskPatchSchema } from '../src/lib/tasks/apiSchemas.ts';
+import {
+  taskCloseSchema,
+  taskCreateSchema,
+  taskPatchSchema,
+  taskTimeEntrySchema
+} from '../src/lib/tasks/apiSchemas.ts';
 import { dispositionCreateSchema, dispositionPatchSchema } from '../src/lib/harvest/apiSchemas.ts';
 import {
   carePlanCreateSchema,
@@ -74,7 +79,11 @@ import {
   sprayRecordSchema
 } from '../src/lib/records/apiSchemas.ts';
 import { cropPatchSchema } from '../src/lib/crops/apiSchemas.ts';
-import { soilTestCreateSchema } from '../src/lib/fertility/apiSchemas.ts';
+import {
+  fertilityApplicationCreateSchema,
+  soilTestCreateSchema
+} from '../src/lib/fertility/apiSchemas.ts';
+import { forageTestCreateSchema } from '../src/lib/forage/apiSchemas.ts';
 import {
   organicStatusCreateSchema,
   organicStatusQuerySchema,
@@ -107,7 +116,18 @@ import { biofixPutSchema } from '../src/lib/ipm/apiSchemas.ts';
 import { CARD_RECORD_KINDS } from '../src/lib/db/recordKinds.ts';
 import { emergencyContactSchema } from '../src/lib/farm/emergencyContacts.ts';
 import { CLIENT_RECORD_HEADER } from '../src/lib/clientRecordHeader.ts';
-import { feedUseSchema, seedSourcingPatchSchema } from '../src/lib/stock/apiSchemas.ts';
+import {
+  feedUseSchema,
+  seedSourcingPatchSchema,
+  stockLotCreateSchema
+} from '../src/lib/stock/apiSchemas.ts';
+import {
+  batchCreateSchema,
+  batchInputCreateSchema,
+  batchPatchSchema,
+  bioassayCreateSchema,
+  dismissalCreateSchema
+} from '../src/lib/amendments/apiSchemas.ts';
 import {
   seedStartCreateSchema,
   seedStartPatchSchema,
@@ -1539,6 +1559,262 @@ const paths = {
     }
   },
 
+  '/api/stock/{id}/lots': {
+    post: {
+      summary: 'Receive a new lot of a stock item',
+      description:
+        'Owner only. Records a lot on hand, or one that is ordered or planned (#475; no receipt movement until it is marked received). `sourceHayCuttingId` (Phase 33C) names the hay cutting these bales came from, so feed used from the lot is traced back to that cutting by the manure carryover chain; it is allowed only on feed and bedding items (400 `NOT_FEED_LOT`), must be a cutting of the active Owner, and is set at creation only.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Stock item id.')],
+      requestBody: jsonBody(stockLotCreateSchema),
+      responses: {
+        201: jsonResponse('The new lot.', {
+          type: 'object',
+          required: ['lot'],
+          properties: { lot: { type: 'object' } }
+        }),
+        400: errorResponse(
+          'Invalid body, a unit that does not convert to the item unit, `NOT_FEED_LOT`, or an unknown `sourceHayCuttingId`.'
+        ),
+        ...OWNER_ERRORS,
+        404: errorResponse('No such stock item on this farm.')
+      }
+    }
+  },
+
+  '/api/amendments/batches': {
+    get: {
+      summary: 'List manure and compost batches with their carryover state',
+      description:
+        'Phase 33C. Every role, inspectors included. Each batch comes with its carryover state computed on read from the farm records (`may-carry`, `not-known` or `none-on-file`, provenance `data`), the first 20 paths that led there as plain sentences (may carry first, then newest), `morePaths`, standing notes (for example that bought hay and feed are not traced) and, for a not known bought source, the advice to ask the supplier or run a pea or bean test. The state never says a batch is safe. Free on every plan.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The batches.', {
+          type: 'object',
+          required: ['batches'],
+          properties: { batches: { type: 'array', items: { type: 'object' } } }
+        }),
+        401: errorResponse('Authentication required.')
+      }
+    },
+    post: {
+      summary: 'Start a manure pile, compost batch or bedding pack, or record a bought load',
+      description:
+        'Phase 33C. Owner, helper and custom operator; inspectors 403. `startedOn` is a farm-local day, not in the future (400 `IN_THE_FUTURE`). A supplier and the supplier statement (`says-none`, `unknown`, `none-asked`) belong to bought loads only. Not gated by the season close-out; online only.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(batchCreateSchema),
+      responses: {
+        201: jsonResponse('The new batch with its state.', {
+          type: 'object',
+          required: ['batch'],
+          properties: { batch: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body or `IN_THE_FUTURE`.'),
+        ...AUTH_ERRORS
+      }
+    }
+  },
+
+  '/api/amendments/batches/{id}': {
+    get: {
+      summary: 'One batch with its carryover state',
+      description: 'Phase 33C. Every role. The same shape as one entry of the list.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Batch id.')],
+      responses: {
+        200: jsonResponse('The batch.', {
+          type: 'object',
+          properties: { batch: { type: 'object' } }
+        }),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('`NOT_FOUND`.')
+      }
+    },
+    patch: {
+      summary: 'Rename, note, close or reopen a batch',
+      description:
+        'Phase 33C. Owner, helper and custom operator. `closedOn` (a farm-local day, not in the future) closes the batch through the end of that day and `null` reopens it; a closed batch takes no new inputs. `supplier` and `supplierStatement` change only on bought loads (400 `NOT_BOUGHT`). There is no batch delete.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Batch id.')],
+      requestBody: jsonBody(batchPatchSchema),
+      responses: {
+        200: jsonResponse('The batch.', {
+          type: 'object',
+          properties: { batch: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body, `IN_THE_FUTURE`, `BAD_RANGE` or `NOT_BOUGHT`.'),
+        ...AUTH_ERRORS,
+        404: errorResponse('`NOT_FOUND`.')
+      }
+    }
+  },
+
+  '/api/amendments/batches/{id}/inputs': {
+    post: {
+      summary: 'Add what went into a batch',
+      description:
+        'Phase 33C. Owner, helper and custom operator. An animal or group with its collection window (`from`, optional `to`, farm-local days; the end is exclusive at the start of the next day), another batch, or a feed, bedding or fertilizer stock lot (400 `NOT_AMENDMENT_LOT` otherwise) with the supplier statement. A batch that is the batch itself or already contains it is 409 `BATCH_CYCLE`; a closed batch 409 `BATCH_CLOSED`; a bought load 409 `BOUGHT_BATCH_NO_INPUTS`; the same input on the same day 409 `INPUT_EXISTS`. Days may not be in the future (400 `IN_THE_FUTURE`) and `to` may not come before `from` (400 `BAD_RANGE`).',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Batch id.')],
+      requestBody: jsonBody(batchInputCreateSchema),
+      responses: {
+        201: jsonResponse('The input and the batch with its new state.', {
+          type: 'object',
+          properties: { input: { type: 'object' }, batch: { type: 'object' } }
+        }),
+        400: errorResponse(
+          'Invalid body, an animal, group, batch or lot the active Owner does not have, `NOT_AMENDMENT_LOT`, `IN_THE_FUTURE` or `BAD_RANGE`.'
+        ),
+        ...AUTH_ERRORS,
+        404: errorResponse('`NOT_FOUND`.'),
+        409: errorResponse(
+          '`BATCH_CYCLE`, `BATCH_CLOSED`, `BOUGHT_BATCH_NO_INPUTS` or `INPUT_EXISTS`.'
+        )
+      }
+    }
+  },
+
+  '/api/amendments/batches/{id}/inputs/{inputId}': {
+    delete: {
+      summary: 'Remove an input added by mistake',
+      description: 'Phase 33C. Owner only.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Batch id.'), idPath('inputId', 'Input id.')],
+      responses: {
+        200: jsonResponse('The batch with its new state.', {
+          type: 'object',
+          properties: { batch: { type: 'object' } }
+        }),
+        ...OWNER_ERRORS,
+        404: errorResponse('`NOT_FOUND`.')
+      }
+    }
+  },
+
+  '/api/amendments/bioassays': {
+    get: {
+      summary: 'Pea or bean tests on a block or batch',
+      description:
+        'Phase 33C. Every role. Filter with `blockId` or `batchId`. A test is a fact the person reported, tagged as entered by them; it never clears a block on its own.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The tests, newest first.', {
+          type: 'object',
+          properties: { bioassays: { type: 'array', items: { type: 'object' } } }
+        }),
+        401: errorResponse('Authentication required.')
+      }
+    },
+    post: {
+      summary: 'Record a pea or bean test of a batch or a block',
+      description:
+        "Phase 33C (M-48, M-49). Owner, helper and custom operator. Exactly one of `batchId` or `blockId`; `testedOn` is a farm-local day, not in the future (400 `IN_THE_FUTURE`); `result` is `no-damage` or `damage`; `note` up to 500 characters. A block test counts for spreads on or before its day; a batch test counts from the day of the batch's newest input. `no-damage` mutes the block line, `damage` keeps it as a warning citing Oregon State Extension. Not gated by the season close-out.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(bioassayCreateSchema),
+      responses: {
+        201: jsonResponse('The saved test.', {
+          type: 'object',
+          properties: { bioassay: { type: 'object' } }
+        }),
+        400: errorResponse(
+          'Invalid body, a batch or block the active Owner does not have, or `IN_THE_FUTURE`.'
+        ),
+        ...AUTH_ERRORS
+      }
+    }
+  },
+
+  '/api/amendments/bioassays/{id}': {
+    delete: {
+      summary: 'Remove a pea or bean test entered by mistake',
+      description: 'Phase 33C. Owner only.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Bioassay id.')],
+      responses: {
+        200: jsonResponse('Removed.', {
+          type: 'object',
+          properties: { deleted: { type: 'string' } }
+        }),
+        ...OWNER_ERRORS,
+        404: errorResponse('`NOT_FOUND`.')
+      }
+    }
+  },
+
+  '/api/amendments/dismissals': {
+    get: {
+      summary: 'Dismissed carryover lines',
+      description: 'Phase 33C. Every role. Filter with `blockId`.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The dismissals.', {
+          type: 'object',
+          properties: { dismissals: { type: 'array', items: { type: 'object' } } }
+        }),
+        401: errorResponse('Authentication required.')
+      }
+    },
+    post: {
+      summary: "Dismiss one spread's carryover line with a reason",
+      description:
+        'Phase 33C (M-47, M-49). Owner only. `fertilityApplicationId` must be an application of the active Owner that spread a manure or compost batch (400 `NOT_A_SPREAD`) on `blockId` (400 `BLOCK_MISMATCH`). The reason is 3 to 500 characters. One per application (409 `ALREADY_DISMISSED`). The facts stay on file; deleting the dismissal brings the line back.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(dismissalCreateSchema),
+      responses: {
+        201: jsonResponse('The dismissal.', {
+          type: 'object',
+          properties: { dismissal: { type: 'object' } }
+        }),
+        400: errorResponse(
+          'Invalid body, an unknown application, `BLOCK_MISMATCH` or `NOT_A_SPREAD`.'
+        ),
+        ...OWNER_ERRORS,
+        409: errorResponse('`ALREADY_DISMISSED`.')
+      }
+    }
+  },
+
+  '/api/amendments/dismissals/{id}': {
+    delete: {
+      summary: 'Bring a dismissed carryover line back',
+      description: 'Phase 33C. Owner only.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Dismissal id.')],
+      responses: {
+        200: jsonResponse('Removed.', {
+          type: 'object',
+          properties: { deleted: { type: 'string' } }
+        }),
+        ...OWNER_ERRORS,
+        404: errorResponse('`NOT_FOUND`.')
+      }
+    }
+  },
+
+  '/api/fertility/applications': {
+    post: {
+      summary: 'Record a fertilizer, manure or compost application on a block',
+      description:
+        'Owner only. `amendmentBatchId` names the manure or compost batch spread (33C). When that batch reads "may carry a weed killer" or "not known" now and the block is sensitive (a garden or greenhouse Area, or a planned or active crop in a family the synthetic-auxin class damages, or one with no known family), the answer is 409 `CARRYOVER_CONFIRM` with the batch, its state, the paths as sentences, the reasons, the families, any counting batch tests and `factsHash`. Send the request again with `confirmCarryover` set to that `factsHash` to save; the confirmation, the facts and who confirmed are stored with the application. A stale or different hash gets a fresh 409. A batch with no carryover weed killer on file, or a block that is not sensitive, saves with no prompt. Advisory, never a gate.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(fertilityApplicationCreateSchema),
+      responses: {
+        201: jsonResponse('The saved application and any stored confirmation.', {
+          type: 'object',
+          properties: {
+            application: { type: 'object' },
+            carryoverAck: { type: ['object', 'null'] }
+          }
+        }),
+        400: errorResponse(
+          'Invalid body, or a block, crop, stock item or batch the active Owner does not have.'
+        ),
+        ...OWNER_ERRORS,
+        409: errorResponse('`CARRYOVER_CONFIRM`, with the facts to confirm.')
+      }
+    }
+  },
+
   '/api/stock/{id}/lots/{lotId}/seed-sourcing': {
     patch: {
       summary: 'Record organic seed sourcing on a seed lot',
@@ -2354,6 +2630,131 @@ const paths = {
     }
   },
 
+  '/api/forage/tests': {
+    post: {
+      summary: 'Record a forage lab result',
+      description:
+        "Phase 33C. Owner, helper and custom operator; inspectors 403. Exactly one of `blockId`, `hayCuttingId` or `stockLotId` (a feed lot, else 400 `NOT_FEED_LOT`). `sampledOn` is a farm-local day, not in the future (400 `IN_THE_FUTURE`). `nitrateValue` needs `nitrateUnits` (`ppm-nitrate`, `ppm-nitrate-n`, `pct-nitrate`, `pct-kno3`) and the reverse; at least one value or lab rating is required. `labRating` holds the lab's own words as printed and is what the app shows; provenance is always `manual`. Attaching a lab report (`documentId`) is owner only (403 `OWNER_ONLY`) and links it as a `forage-test` document in the same write. Another Owner's ids are refused. Online only, free, not gated by the season close-out.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(forageTestCreateSchema),
+      responses: {
+        201: jsonResponse('The saved forage test.', {
+          type: 'object',
+          required: ['test'],
+          properties: { test: { type: 'object' } }
+        }),
+        400: errorResponse(
+          'Invalid body, an id the active Owner does not have, `NOT_FEED_LOT` or `IN_THE_FUTURE`.'
+        ),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Read-only role, or `OWNER_ONLY` for a lab report from a helper.'),
+        409: errorResponse(
+          'The lab report was deleted (`DOCUMENT_DELETED`) or is a photo (`PHOTO_DOCUMENT`).'
+        )
+      }
+    },
+    get: {
+      summary: 'List forage lab results',
+      description:
+        'Phase 33C. Every role. Tests on the named block, hay cutting or feed lot, newest sample first. One query parameter is required.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'blockId',
+          in: 'query',
+          required: false,
+          description: 'A block id.',
+          schema: { type: 'string' }
+        },
+        {
+          name: 'hayCuttingId',
+          in: 'query',
+          required: false,
+          description: 'A hay cutting id.',
+          schema: { type: 'string' }
+        },
+        {
+          name: 'stockLotId',
+          in: 'query',
+          required: false,
+          description: 'A feed lot id.',
+          schema: { type: 'string' }
+        }
+      ],
+      responses: {
+        200: jsonResponse('Forage tests.', {
+          type: 'object',
+          required: ['tests'],
+          properties: { tests: { type: 'array', items: { type: 'object' } } }
+        }),
+        400: errorResponse('No target named.'),
+        401: errorResponse('Authentication required.')
+      }
+    }
+  },
+
+  '/api/forage/tests/{id}': {
+    parameters: [idPath('id', 'Forage test id.')],
+    delete: {
+      summary: 'Delete a forage lab result',
+      description:
+        'Phase 33C. Owner only (403 `OWNER_ONLY`). Removes the test and its document links; the lab report stays in the farm documents.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Deleted.', { type: 'object', properties: { ok: { type: 'boolean' } } }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`OWNER_ONLY`.'),
+        404: errorResponse('Forage test not found for the active Owner.')
+      }
+    }
+  },
+
+  '/api/forage/advisory': {
+    get: {
+      summary: 'Prussic acid and nitrate advisory for an Area or hay cutting',
+      description:
+        "Phase 33C. Every role. Exactly one of `fieldId` or `hayCuttingId`. Lists each flagged crop (from the shipped plugin library's sourced `forageHazards`) with the triggers on file: a reading at or below freezing at the nearest NOAA station or a `frost-tonight` alert in the last 14 days (the weather read gets 3 seconds; a failed read sets `frostUnknown`), nitrogen applied since the later of planting and the last cut, and young regrowth. Advice lines quote a named extension source; no other numbers appear. The latest forage test shows the owner-entered lab rating. Advisory only: it never blocks a move or a hay cut and shows for every species. Fetched in the browser when a card or sheet opens.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'fieldId',
+          in: 'query',
+          required: false,
+          description: 'An Area id.',
+          schema: { type: 'string' }
+        },
+        {
+          name: 'hayCuttingId',
+          in: 'query',
+          required: false,
+          description: 'A hay cutting id.',
+          schema: { type: 'string' }
+        }
+      ],
+      responses: {
+        200: jsonResponse('The advisory.', {
+          type: 'object',
+          required: ['advisory'],
+          properties: {
+            advisory: {
+              type: 'object',
+              required: ['items', 'provenance', 'recordHref', 'targetTest'],
+              properties: {
+                items: { type: 'array', items: { type: 'object' } },
+                provenance: { type: 'string', enum: ['plugin', 'data'] },
+                recordHref: { type: 'string' },
+                targetTest: { type: ['object', 'null'] }
+              }
+            }
+          }
+        }),
+        400: errorResponse('Not exactly one of `fieldId` and `hayCuttingId`.'),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('Area or hay cutting not found for the active Owner.')
+      }
+    }
+  },
+
   '/api/fertility/soil-tests/{id}': {
     parameters: [idPath('id', 'Soil test id.')],
     patch: {
@@ -2730,6 +3131,73 @@ const paths = {
         503: errorResponse(
           'The same client record id is being saved by another request right now. Retry shortly.'
         )
+      }
+    }
+  },
+
+  '/api/tasks/{id}/time': {
+    parameters: [idPath('id', 'Task id.')],
+    get: {
+      summary: 'Time saved on a task',
+      description:
+        "Owners get every entry with the person's name; everyone else gets the farm total and only their own entries. Each entry says whether the caller may remove it (`canDelete`). Not gated by the season close-out.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The total and the entries, oldest first.', {
+          type: 'object',
+          required: ['totalMinutes', 'entries'],
+          properties: {
+            totalMinutes: { type: 'integer' },
+            entries: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('Task not found for the active Owner.')
+      }
+    },
+    post: {
+      summary: 'Save time from the task timer',
+      description:
+        "The task timer's Save time, and the replay of the `time-entry` offline queue kind with the client record id header. Owners and helpers; inspectors are read-only. Saved as a time row with `source: \"timer\"` and the task's planting, block and field. `userId` logs someone else's time and is owner only (403 `OWNER_ONLY` with `askOwner: true`; another farm's user or an inspector is 400 `FOREIGN_REF`). `startedAt` no more than 30 days back and `startedAt + minutes` no more than 5 minutes past the server clock, else 400 `TIME_OUT_OF_RANGE`. The task may be open or closed. Not gated by the season close-out.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [clientRecordRef],
+      requestBody: jsonBody(taskTimeEntrySchema),
+      responses: {
+        200: jsonResponse(
+          'A replay of a client record id that was already saved.',
+          DUPLICATE_SCHEMA
+        ),
+        201: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['entry'],
+          properties: { entry: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body, `TIME_OUT_OF_RANGE` or `FOREIGN_REF`.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Inspector role is read-only, or `OWNER_ONLY`.'),
+        404: errorResponse('Task not found for the active Owner.'),
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
+      }
+    }
+  },
+
+  '/api/tasks/time/{id}': {
+    parameters: [idPath('id', 'Time entry id.')],
+    delete: {
+      summary: 'Remove saved task time',
+      description:
+        'Owners remove any entry at any time. Everyone else removes only their own, within 48 hours of saving it (403 `NOT_YOURS` or `TOO_LATE`, with `askOwner: true`); inspectors are read-only. A hard delete: task time is neither a compliance record nor a hold fact. Online only and not gated by the season close-out.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Removed.', {
+          type: 'object',
+          properties: { ok: { type: 'boolean' }, id: { type: 'string' } }
+        }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`READ_ONLY`, `NOT_YOURS` or `TOO_LATE`.'),
+        404: errorResponse('No such time entry for the active Owner.')
       }
     }
   },

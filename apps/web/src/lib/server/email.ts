@@ -1,3 +1,4 @@
+import { isDemoEmail } from '$lib/demo/identity';
 import { minutesInWords, withOriginBoundLine } from './otpMessage';
 import type { UnsubscribeLinks } from './emailUnsubscribe';
 import { emailAlertLabel, type EmailAlertCategory } from '$lib/email/alertCategories';
@@ -217,6 +218,7 @@ export class EmailTransportError extends Error {
 export async function dispatchEmail(email: OutboundEmail): Promise<void> {
   const transport = process.env.EMAIL_TRANSPORT ?? 'stdout';
   if (transport === 'none') return;
+  if (isDemoEmail(email.to)) return;
 
   if (isOptInEmail(email)) assertUnsubscribable(email);
   const subject = subjectFor(email);

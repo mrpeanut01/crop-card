@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { MAX_FEED_USE_LB } from './animalStock';
+import { ALL_STOCK_UNITS, type StockUnit } from './units';
+import { QUANTITY_STATUSES } from './quantityStatus';
 import {
   isValidYmd,
   MAX_SOURCES_CHECKED,
@@ -62,3 +64,20 @@ export const seedSourcingPatchSchema = z
   .strict();
 
 export type SeedSourcingPatch = z.infer<typeof seedSourcingPatchSchema>;
+
+/** POST /api/stock/{id}/lots. Owner only. `sourceHayCuttingId` (33C, M-39)
+ *  links bales to the hay cutting they came from; feed and bedding only,
+ *  set at creation. */
+export const stockLotCreateSchema = z.object({
+  receivedQuantity: z.number().positive(),
+  unit: z.enum(ALL_STOCK_UNITS as unknown as [StockUnit, ...StockUnit[]]),
+  lotNumber: z.string().max(80).optional(),
+  expiresAt: z.number().int().optional(),
+  supplier: z.string().max(120).optional(),
+  receivedCostCents: z.number().int().nonnegative().optional(),
+  notes: z.string().max(500).optional(),
+  quantityStatus: z.enum(QUANTITY_STATUSES).optional(),
+  sourceHayCuttingId: z.string().min(1).max(80).optional()
+});
+
+export type StockLotCreate = z.infer<typeof stockLotCreateSchema>;

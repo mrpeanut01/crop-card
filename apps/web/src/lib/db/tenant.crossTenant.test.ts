@@ -69,6 +69,8 @@ import {
   type Phase32Table
 } from './phase32.fixtures';
 import * as documentsRepo from './documents';
+import * as amendmentsRepo from './amendments';
+import * as forageTestsRepo from './forageTests';
 import {
   PHASE_33_TABLES,
   listPhase33Ids,
@@ -1526,6 +1528,130 @@ describe('cross-tenant isolation', () => {
     );
   });
 
+  it("amendment repo never reads, counts or changes another Owner's batches, inputs, bioassays or dismissals", () => {
+    const tag = randomUUID().slice(0, 8);
+    seedOwnerRow(OWNER_A);
+    seedOwnerRow(OWNER_B);
+    const a = seedPhase33(OWNER_A, `p33ca-${tag}`);
+    const b = seedPhase33(OWNER_B, `p33cb-${tag}`);
+    fc.assert(
+      fc.property(fc.boolean(), fc.string({ minLength: 1, maxLength: 20 }), (aIsReader, name) => {
+        const [reader, mine, theirs] = aIsReader ? [OWNER_A, a, b] : [OWNER_B, b, a];
+        runWithTenant(reader, () => {
+          const theirBatch = theirs.rowIds.amendment_batches;
+          const theirInput = theirs.rowIds.amendment_batch_inputs;
+          expect(amendmentsRepo.getBatch(theirBatch)).toBeUndefined();
+          expect(amendmentsRepo.listBatches().map((x) => x.id)).not.toContain(theirBatch);
+          expect(amendmentsRepo.listBatches().map((x) => x.id)).toContain(
+            mine.rowIds.amendment_batches
+          );
+          expect(amendmentsRepo.updateBatch(theirBatch, { name })).toBeUndefined();
+          expect(amendmentsRepo.listBatchInputs(theirBatch)).toEqual([]);
+          expect(amendmentsRepo.listBatchInputs().map((x) => x.id)).not.toContain(theirInput);
+          expect(amendmentsRepo.getBatchInput(theirInput)).toBeUndefined();
+          expect(amendmentsRepo.deleteBatchInput(theirInput)).toBe(false);
+          expect(amendmentsRepo.listBioassays().map((x) => x.id)).not.toContain(
+            theirs.rowIds.amendment_bioassays
+          );
+          expect(amendmentsRepo.getBioassay(theirs.rowIds.amendment_bioassays)).toBeUndefined();
+          expect(amendmentsRepo.deleteBioassay(theirs.rowIds.amendment_bioassays)).toBe(false);
+          expect(amendmentsRepo.listDismissals().map((x) => x.id)).not.toContain(
+            theirs.rowIds.amendment_dismissals
+          );
+          expect(amendmentsRepo.getDismissal(theirs.rowIds.amendment_dismissals)).toBeUndefined();
+          expect(amendmentsRepo.deleteDismissal(theirs.rowIds.amendment_dismissals)).toBe(false);
+          expect(amendmentsRepo.listBatchSpreads(theirBatch)).toEqual([]);
+          expect(amendmentsRepo.getAmendmentLot(theirs.phase32.stockLotId)).toBeUndefined();
+          expect(amendmentsRepo.listLotsById([theirs.phase32.stockLotId]).map((l) => l.id)).toEqual(
+            []
+          );
+          expect(
+            amendmentsRepo
+              .listAmendmentLots(['feed', 'bedding', 'fertilizer', 'animal-health'])
+              .map((l) => l.id)
+          ).not.toContain(theirs.phase32.stockLotId);
+          expect(
+            amendmentsRepo.listHayLots().every((l) => l.id !== theirs.phase32.stockLotId)
+          ).toBe(true);
+          expect(
+            amendmentsRepo.findBatchInput({
+              batchId: theirBatch,
+              inputType: 'group',
+              inputId: theirs.phase32.groupId,
+              fromAt: 0
+            })
+          ).toBeUndefined();
+        });
+        runWithTenant(theirs.ownerId, () => {
+          expect(amendmentsRepo.getBatch(theirs.rowIds.amendment_batches)?.name).toBe(
+            `${theirs === a ? 'p33ca' : 'p33cb'}-${tag} pile`
+          );
+          expect(amendmentsRepo.getBatchInput(theirs.rowIds.amendment_batch_inputs)).toBeDefined();
+          expect(amendmentsRepo.getBioassay(theirs.rowIds.amendment_bioassays)).toBeDefined();
+          expect(amendmentsRepo.getDismissal(theirs.rowIds.amendment_dismissals)).toBeDefined();
+        });
+      }),
+      { numRuns: 30 }
+    );
+    runWithTenant(OWNER_A, () => {
+      expect(amendmentsRepo.getBatch(a.rowIds.amendment_batches)?.name).toBe(`p33ca-${tag} pile`);
+    });
+    runWithTenant(OWNER_B, () => {
+      expect(amendmentsRepo.getBatch(b.rowIds.amendment_batches)?.name).toBe(`p33cb-${tag} pile`);
+    });
+  });
+
+  it("forage test repo and advisory facts never read, count or change another Owner's rows", () => {
+    const tag = randomUUID().slice(0, 8);
+    seedOwnerRow(OWNER_A);
+    seedOwnerRow(OWNER_B);
+    const a = seedPhase33(OWNER_A, `p33fa-${tag}`);
+    const b = seedPhase33(OWNER_B, `p33fb-${tag}`);
+    for (const s of [a, b]) {
+      runWithTenant(s.ownerId, () => {
+        pushSubscriptionsRepo.claimDelivery('frost-tonight', `frost-${s.ownerId}-${tag}`);
+      });
+    }
+    const theirAlert = (ownerId: string) =>
+      runWithTenant(ownerId, () => forageTestsRepo.frostAlertTimes(0).length);
+    fc.assert(
+      fc.property(fc.boolean(), (aIsReader) => {
+        const [reader, mine, theirs] = aIsReader ? [OWNER_A, a, b] : [OWNER_B, b, a];
+        const theirTest = theirs.rowIds.forage_tests;
+        const theirAlerts = theirAlert(theirs.ownerId);
+        runWithTenant(reader, () => {
+          expect(forageTestsRepo.getForageTest(theirTest)).toBeUndefined();
+          expect(forageTestsRepo.getForageTest(mine.rowIds.forage_tests)?.id).toBe(
+            mine.rowIds.forage_tests
+          );
+          const all = forageTestsRepo.listForageTests().map((t) => t.id);
+          expect(all).toContain(mine.rowIds.forage_tests);
+          expect(all).not.toContain(theirTest);
+          expect(forageTestsRepo.listForageTests({ hayCuttingId: theirs.hayCuttingId })).toEqual(
+            []
+          );
+          expect(forageTestsRepo.listForageTests({ blockIds: [theirs.subjects.block] })).toEqual(
+            []
+          );
+          expect(forageTestsRepo.deleteForageTest(theirTest)).toBe(false);
+          expect(forageTestsRepo.forageFactsForArea(theirs.subjects.field).area).toBeNull();
+          expect(forageTestsRepo.forageFactsForBlock(theirs.subjects.block).blocks).toEqual([]);
+          expect(forageTestsRepo.getForageArea(theirs.subjects.field)).toBeUndefined();
+          expect(forageTestsRepo.stockLotCategory(theirs.phase32.stockLotId)).toBeUndefined();
+          const mineFacts = forageTestsRepo.forageFactsForBlock(mine.subjects.block);
+          expect(mineFacts.cuts.map((c) => c.id)).toContain(mine.hayCuttingId);
+          expect(mineFacts.cuts.map((c) => c.id)).not.toContain(theirs.hayCuttingId);
+          expect(forageTestsRepo.frostAlertTimes(0).length).toBeGreaterThan(0);
+        });
+        expect(theirAlert(theirs.ownerId)).toBe(theirAlerts);
+        runWithTenant(theirs.ownerId, () => {
+          expect(forageTestsRepo.getForageTest(theirTest)?.id).toBe(theirTest);
+        });
+      }),
+      { numRuns: 20 }
+    );
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -1565,7 +1691,9 @@ describe('cross-tenant isolation', () => {
       animalProductionRepo,
       carePlansRepo,
       careTasksRepo,
-      documentsRepo
+      documentsRepo,
+      amendmentsRepo,
+      forageTestsRepo
     ];
     for (const m of auditedModules) {
       expect(m).toBeTruthy();

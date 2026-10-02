@@ -42,7 +42,7 @@ test.describe('AUTH_MODE=magic-link', () => {
 
   test('request link → email → confirm → /today with the owner session', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('Try the demo')).toHaveCount(0);
+    await expect(page.getByText('Try the demo', { exact: true })).toHaveCount(0);
 
     await page.getByLabel('Email', { exact: true }).fill('owner@cropcard.local');
     await page.getByRole('button', { name: /email me a sign-in link/i }).click();
@@ -167,7 +167,7 @@ test.describe('AUTH_MODE=magic-link', () => {
 test.describe('AUTH_MODE=direct (default)', () => {
   test('email form signs straight in', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('Try the demo')).toBeVisible();
+    await expect(page.getByText('Try the demo', { exact: true })).toBeVisible();
     await page.getByLabel('Email', { exact: true }).fill('owner@cropcard.local');
     await page.getByRole('button', { name: 'Continue →' }).click();
     await expect(page).toHaveURL(/\/today$/);

@@ -35,9 +35,7 @@
  *
  * Phase 33 (v6): `recordCards` keeps opened record cards per Owner (33D
  * fills and prunes it) and `taskTimers` holds one running timer per Owner
- * and user on this device. `PHASE_33_RECORD_KINDS` are declared, not
- * routed: they stay out of `PendingRecordKind` until their sprint wires
- * them, so nothing can enqueue them yet.
+ * and user on this device. 33D routes `time-entry`, the timer's saved time.
  */
 
 import Dexie, { type Table } from 'dexie';
@@ -62,12 +60,8 @@ export type PendingRecordKind =
   | 'seed-start'
   | 'irrigation'
   | 'rain-gauge'
-  | 'harvest-disposition';
-
-/** Phase 33 queue kinds, declared ahead of their sprints (A-10). Move a
- *  kind into `PendingRecordKind` and `ENDPOINT_BY_KIND` when it is routed. */
-export const PHASE_33_RECORD_KINDS = ['time-entry'] as const;
-export type Phase33RecordKind = (typeof PHASE_33_RECORD_KINDS)[number];
+  | 'harvest-disposition'
+  | 'time-entry';
 
 export interface PendingSprayRecord {
   id: string;
@@ -133,6 +127,8 @@ export interface TaskTimerRow {
   userId: string;
   taskId: string;
   startedAt: number;
+  /** The task's title when the timer started (D-20). Not indexed. */
+  taskTitle?: string;
 }
 
 export class CropCardDb extends Dexie {

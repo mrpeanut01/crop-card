@@ -48,6 +48,7 @@ import { getStockItemWithBalance } from '$lib/db/stock';
 import { lotsForRole } from '$lib/finance/redact';
 import { farmOrganicChrome } from '$lib/organic/status.server';
 import { seedSourcingForLots, type LotSeedSourcing } from '$lib/stock/seedSourcing.server';
+import { amendmentDetail, type AmendmentDetailPayload } from '$lib/server/amendmentDetail';
 
 export interface PesticideDetailPayload {
   type: 'pesticide';
@@ -154,7 +155,8 @@ export type DetailPayload =
   | SeedDetailPayload
   | CropDetailPayload
   | FeedDetailPayload
-  | AnimalHealthDetailPayload;
+  | AnimalHealthDetailPayload
+  | AmendmentDetailPayload;
 
 function parseType(raw: string): InventoryType {
   if (!(INVENTORY_TYPES as readonly string[]).includes(raw)) {
@@ -242,6 +244,7 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
   }
 
   if (type === 'animal-health') return animalHealthPayload(id, locals.user?.role);
+  if (type === 'amendment') return amendmentDetail(id, locals.user?.role);
 
   // Lot-bearing types: pesticide / fertility / seed / feed
   const item = getStockItem(id);

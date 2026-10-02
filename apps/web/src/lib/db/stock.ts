@@ -77,6 +77,8 @@ export interface StockLot {
   receivedCostCents?: number;
   supplier?: string;
   notes?: string;
+  /** 33C: the hay cutting these bales came from. */
+  sourceHayCuttingId?: string;
 }
 
 export interface StockMovement {
@@ -467,6 +469,8 @@ export interface ReceiveLotInput {
   /** Defaults to `existing`. `ordered` and `planned` lots get no receipt
    *  movement until `markLotReceived`. */
   quantityStatus?: QuantityStatus;
+  /** 33C (M-39): bales from this hay cutting. */
+  sourceHayCuttingId?: string;
 }
 
 export class IncompatibleUnitError extends Error {
@@ -499,7 +503,8 @@ export function receiveLot(input: ReceiveLotInput): StockLot {
         receivedCostCents: input.receivedCostCents ?? null,
         supplier: input.supplier ?? null,
         notes: input.notes ?? null,
-        quantityStatus
+        quantityStatus,
+        sourceHayCuttingId: input.sourceHayCuttingId ?? null
       })
     )
     .returning()
@@ -539,7 +544,8 @@ function rowToLot(row: typeof stockLots.$inferSelect): StockLot {
     receivedQuantity: fromHundredths(row.receivedQuantityHundredths),
     receivedCostCents: row.receivedCostCents ?? undefined,
     supplier: row.supplier ?? undefined,
-    notes: row.notes ?? undefined
+    notes: row.notes ?? undefined,
+    sourceHayCuttingId: row.sourceHayCuttingId ?? undefined
   };
 }
 

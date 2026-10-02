@@ -5,6 +5,7 @@
   import type { AnimalMoveInput } from '$lib/animals/apiSchemas';
   import type { ToxicPlantsByArea } from '$lib/animals/toxicAdjacency';
   import ToxicPlantsCallout from './ToxicPlantsCallout.svelte';
+  import ForageAdvisoryCallout from './ForageAdvisoryCallout.svelte';
   import { areaKindName, groupNoun } from './labels';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
@@ -32,6 +33,9 @@
       speciesIds: string[];
       speciesPlural: Record<string, string>;
     } | null;
+    /** The prussic acid and nitrate advisory for the destination, fetched
+     *  when one is picked. Never blocks; shown for every species (M-10). */
+    forage?: boolean;
     onDone: (outcome: MoveOutcome, text: string) => void;
   }
 
@@ -44,6 +48,7 @@
     joinGroups = [],
     inGroup = null,
     toxic = null,
+    forage = false,
     onDone
   }: Props = $props();
   const uid = $props.id();
@@ -190,6 +195,11 @@
         speciesPlural={toxic.speciesPlural}
         where={areaName(fieldId)}
       />
+    {/if}
+    {#if forage && fieldId}
+      {#key fieldId}
+        <ForageAdvisoryCallout {fieldId} where={areaName(fieldId)} />
+      {/key}
     {/if}
     {#if destinations.length === 0}
       <p class="af-help">{tr('animals.move.nowhere')}</p>

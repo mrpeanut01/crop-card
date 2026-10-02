@@ -1,6 +1,6 @@
 <script lang="ts">
   import { browser } from '$app/environment';
-  import { User, Lock, FileText } from 'lucide-svelte';
+  import { Lock, FileText } from 'lucide-svelte';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import SettingsField from '$lib/components/settings/SettingsField.svelte';
@@ -24,18 +24,6 @@
       ? TIME_ZONES
       : [{ id: data.account.timeZone, label: data.account.timeZone }, ...TIME_ZONES]
   );
-
-  // Active sessions — we don't track concurrent sessions yet; the
-  // current cookie is "this device". Sticking to one row keeps the
-  // UX honest until the sessions table lands.
-  const sessions = $derived([
-    {
-      device: tr('account.sessions.thisBrowser'),
-      where: tr('account.sessions.current'),
-      when: data.account.lastLogin,
-      current: true
-    }
-  ]);
 </script>
 
 <svelte:head><title>{tr('account.pageTitle')}</title></svelte:head>
@@ -143,27 +131,14 @@
     </div>
 
     <div class="sessions">
-      <div class="sessions-kicker">
-        {tr('account.sessions.active', { count: sessions.length })}
-      </div>
-      <ul class="session-list">
-        {#each sessions as s (s.device)}
-          <li class="session-row">
-            <User size={15} strokeWidth={1.75} />
-            <div class="s-text">
-              <div class="s-device">{s.device}</div>
-              <div class="s-meta mono">{s.where} · {s.when}</div>
-            </div>
-            {#if s.current}
-              <Pill tone="forest">{tr('account.sessions.thisDevice')}</Pill>
-            {:else}
-              <button type="button" class="ghost-sm">{tr('account.sessions.signOut')}</button>
-            {/if}
-          </li>
-        {/each}
-      </ul>
-      <form method="POST" action="/signout">
-        <button type="submit" class="ghost-sm with-icon">
+      <p class="sessions-hint">{tr('account.sessions.everywhereHint')}</p>
+      <form method="POST" action="?/signOutEverywhere">
+        <button
+          type="submit"
+          class="ghost-sm with-icon"
+          disabled={data.account.impersonating}
+          aria-describedby={data.account.impersonating ? 'signout-everywhere-note' : undefined}
+        >
           <!-- #258 / CT-004 — lucide@^1.0.1 <Lock> has an SSR/hydration
                edge case in this slot (element.getAttribute() runtime
                error). Render client-side only to skip SSR until a
@@ -171,6 +146,11 @@
           {#if browser}<Lock size={11} strokeWidth={1.75} />{/if}
           {tr('account.sessions.signOutEverywhere')}
         </button>
+        {#if data.account.impersonating}
+          <p id="signout-everywhere-note" class="sessions-hint">
+            {tr('account.sessions.impersonating')}
+          </p>
+        {/if}
       </form>
     </div>
   </SettingsSection>
@@ -243,43 +223,11 @@
   .sessions {
     margin-top: 14px;
   }
-  .sessions-kicker {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--color-ink-muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .session-list {
-    list-style: none;
-    margin: 8px 0 10px;
-    padding: 0;
-    border: 1px solid var(--color-divider-soft, var(--color-divider));
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .session-row {
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  .sessions-hint {
+    margin: 0 0 8px;
+    font-size: 12.5px;
     color: var(--color-ink-soft);
-  }
-  .session-row + .session-row {
-    border-top: 1px solid var(--color-divider-soft, var(--color-divider));
-  }
-  .s-text {
-    flex: 1;
-    min-width: 0;
-  }
-  .s-device {
-    font-size: 13px;
-    color: var(--color-ink);
-    font-weight: 600;
-  }
-  .s-meta {
-    font-size: 11.5px;
-    color: var(--color-ink-muted);
+    max-width: 60ch;
   }
   .mono {
     font-family: var(--font-mono, ui-monospace, monospace);
@@ -304,6 +252,11 @@
     margin-top: 4px;
     padding: 6px 12px;
     font-size: 12px;
+    min-height: 48px;
+  }
+  .ghost-sm:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
   }
   .language-row {
     display: flex;

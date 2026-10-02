@@ -23,6 +23,12 @@ const SW_MODULES = [
     fileName: 'sw-push.js',
     globalName: '__cropcardSwPushLib',
     install: '__cropcardSwPushLib.installSwPush(self);'
+  },
+  {
+    source: fileURLToPath(new URL('./src/lib/client/swCardLinks.ts', import.meta.url)),
+    fileName: 'sw-card-links.js',
+    globalName: '__cropcardSwCardLinksLib',
+    install: '__cropcardSwCardLinksLib.installSwCardLinks(self);'
   }
 ];
 
@@ -124,7 +130,7 @@ export default defineConfig({
         additionalManifestEntries: [{ url: '/cards', revision: SHELL_REVISION }],
         navigateFallback: '/cards',
         navigateFallbackAllowlist: [/^\/cards(?:\/|$)/],
-        importScripts: ['sw-tenant.js', 'sw-push.js'],
+        importScripts: ['sw-tenant.js', 'sw-push.js', 'sw-card-links.js'],
         // Tenant-scoped runtime caches are keyed per active Owner by
         // `tenantCachePlugin` (logic in src/lib/client/swTenantKey.ts), so an
         // Owner switch keeps every farm's entries and never cross-serves.

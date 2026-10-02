@@ -48,6 +48,7 @@
     "lactatingDairyGrazeDays": 40,
     "meatAnimalRemovalBeforeSlaughterDays": 40,
     "manureCarryover": true,
+    "manureCarryoverDays": 7,
     "source": "Stinger herbicide, EPA Reg. No. 62719-73, label accepted 2019-03-11"
   }
 }

@@ -244,6 +244,7 @@ export const enGarden = {
     '{name} is already in the ground in {bed}. Record a new planting instead.',
   'garden.warn.pickDate': 'Pick a date near the {year} season.',
   'garden.say.putBack': '{name} put back.',
+  'garden.say.draggingBed': 'Dragging {preset}. Drop it on the garden.',
   'garden.say.putBackShort': 'Put back.',
   'garden.say.choosePreset':
     "Tap the garden where {preset}'s top-left corner goes, or choose it again to drop it in the first open spot.",

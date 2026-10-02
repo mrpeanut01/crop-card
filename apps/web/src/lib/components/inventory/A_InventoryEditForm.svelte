@@ -97,15 +97,19 @@
      *  saves one reviewed draft, then returns to the queue. */
     onSaved?: (saved: { id: string | null }) => void;
     onCancel?: () => void;
+    /** 33C (M-39): bales from this hay cutting. The first lot stores the
+     *  link, so feed use from it is traced back to the cutting. */
+    hayCutting?: { id: string; label: string };
   }
 
-  const { type, existing, prefill, library = [], onSaved, onCancel }: Props = $props();
+  const { type, existing, prefill, library = [], onSaved, onCancel, hayCutting }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
 
   const isEdit = $derived(!!existing);
   const isSeed = $derived(type === 'seed');
   const lotBearing = $derived(type !== 'crop');
   const isFeed = $derived(type === 'feed');
+  const linksHayCutting = $derived(!!hayCutting && type === 'feed' && !existing);
   const isMed = $derived(type === 'animal-health');
 
   const showPrefillBanner = $derived(!isEdit && !!prefill && prefill.source !== 'manual');
@@ -372,6 +376,9 @@
         fieldErrors.lbPerBag = tr('inv.form.err.lbPerBag');
       }
       if (scoopLb != null && !(scoopLb > 0)) fieldErrors.scoopLb = tr('inv.form.err.scoop');
+      if (linksHayCutting && !(quantity != null && Number.isFinite(quantity) && quantity > 0)) {
+        fieldErrors.quantity = tr('inv.form.err.hayQuantity');
+      }
     }
     if (isMed && nadaText.trim() && !normalizeNada(nadaText)) {
       fieldErrors.nada = tr('inv.form.err.nada');
@@ -473,7 +480,8 @@
         receivedQuantity: quantity,
         unit: defaultUnit,
         lotNumber: lotNumber.trim() || undefined,
-        quantityStatus: initialStatus === 'existing' ? undefined : initialStatus
+        quantityStatus: initialStatus === 'existing' ? undefined : initialStatus,
+        sourceHayCuttingId: hayCutting && isFeed ? hayCutting.id : undefined
       });
       if (!lot.ok) {
         throw new Error(
@@ -536,6 +544,11 @@
 {/if}
 
 <form onsubmit={handleSubmit} class="form-body">
+  {#if hayCutting && linksHayCutting}
+    <p class="hay-source" role="note" data-testid="hay-source">
+      {tr('inv.form.haySource', { cutting: hayCutting.label })}
+    </p>
+  {/if}
   <InvSection title={tr('inv.form.identity')} kicker={tr('inv.form.required')}>
     <InvField
       id="displayName"
@@ -991,5 +1004,13 @@
   .btn-secondary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+  .hay-source {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--pill-wheat-bg, #e8d9b5);
+    color: var(--color-ink, #1c1c1c);
+    line-height: 1.45;
   }
 </style>

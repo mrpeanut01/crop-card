@@ -161,3 +161,28 @@ describe('animal-health form map', () => {
     expect(calls).toHaveLength(0);
   });
 });
+
+describe('bales from a hay cutting', () => {
+  const hayCutting = { id: 'cut-1', label: 'Back hay cutting 1' };
+
+  it('needs a quantity so the cutting link is saved', async () => {
+    const { container, getByTestId } = render(A_InventoryEditForm, { type: 'feed', hayCutting });
+    expect(getByTestId('hay-source')).toHaveTextContent('Back hay cutting 1');
+    await type(container, '#displayName', 'Back hay bales');
+    await type(container, '#lbPerBag', '40');
+    await fireEvent.submit(container.querySelector('form')!);
+    expect(container.querySelector('#quantity')?.closest('.inv-field')).toHaveClass('has-error');
+    expect(calls).toHaveLength(0);
+  });
+
+  it('sends the cutting with the first lot', async () => {
+    const { container } = render(A_InventoryEditForm, { type: 'feed', hayCutting });
+    await type(container, '#displayName', 'Back hay bales');
+    await type(container, '#lbPerBag', '40');
+    await type(container, '#quantity', '12');
+    await fireEvent.submit(container.querySelector('form')!);
+    await vi.waitFor(() => expect(calls.length).toBe(2));
+    expect(calls[1].url).toBe('/api/stock/new/lots');
+    expect(calls[1].body).toMatchObject({ receivedQuantity: 12, sourceHayCuttingId: 'cut-1' });
+  });
+});

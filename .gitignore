@@ -52,3 +52,5 @@ vite.config.ts.timestamp-*.mjs
 *.vite.config.ts.timestamp-*.mjs
 apps/web/.agent-data/
 apps/web/i18n-crawl-report.json
+# Phase 33D (D-39): Linux is the only committed visual baseline set.
+apps/web/tests/e2e/visual/**/*-darwin.png

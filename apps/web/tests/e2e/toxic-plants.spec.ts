@@ -107,7 +107,9 @@ test.describe('toxic-plant advisory', () => {
     const area = page
       .getByTestId('plan-area-view')
       .locator('article[data-card-kind="area"][data-variant="screen"]');
-    const fold = area.locator('details[data-collapsible-section]');
+    const fold = area
+      .locator('details[data-collapsible-section]')
+      .filter({ hasText: 'plant here can harm' });
     await expect(fold.locator('summary')).toContainText('1 plant here can harm goats');
     await fold.locator('summary').click();
     await expect(fold).toContainText('prussic acid');

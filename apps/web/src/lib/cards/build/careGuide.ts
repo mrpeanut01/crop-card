@@ -21,8 +21,8 @@ import {
   plantingName
 } from './common';
 import { formatInches } from './size';
-import { familyCareTips, type FamilyCareTips } from './careTips';
-import { filterSprayAdviceItems, growerFacingText } from '$lib/journal/photoHelp';
+import { familyCareTips, type CareTip, type FamilyCareTips } from './careTips';
+import { CARE_SECTION, filterSprayAdviceItems, growerFacingText } from '$lib/journal/photoHelp';
 import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
 
 const MAX_PLANTINGS = 6;
@@ -63,10 +63,10 @@ export function careGuideSections(
   const family = familyCareTips(plugin.cropFamily, locale);
   let usedTips = false;
   const sections: CardSection[] = [];
-  const fromTips = (title: string, items: string[] | undefined) => {
-    if (!items?.length) return;
+  const fromTips = (title: string, tips: readonly CareTip[] | undefined) => {
+    if (!tips?.length) return;
     usedTips = true;
-    sections.push({ title, items: [...items], provenance: 'fallback' });
+    sections.push({ title, items: tips.map((t) => t.text), provenance: 'fallback' });
   };
   fromTips(CARE_SECTION.water, family?.water);
   fromTips(CARE_SECTION.feed, family?.feed);

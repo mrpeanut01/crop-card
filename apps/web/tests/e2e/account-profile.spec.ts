@@ -53,11 +53,14 @@ test.describe('/settings/account profile', () => {
     await name.fill('  Dale   Ridge ');
     await save(page);
     await expect(name).toHaveValue('Dale Ridge');
-    await expect(page.locator('header.topbar .standalone')).toHaveAttribute('title', 'Dale Ridge');
+    await expect(page.locator('header.topbar .account-menu > summary')).toHaveAttribute(
+      'title',
+      'Dale Ridge'
+    );
 
     await name.fill('');
     await save(page);
-    await expect(page.locator('header.topbar .standalone')).not.toHaveAttribute(
+    await expect(page.locator('header.topbar .account-menu > summary')).not.toHaveAttribute(
       'title',
       'Dale Ridge'
     );
@@ -78,7 +81,7 @@ test.describe('/settings/account profile', () => {
     await page.reload();
     await expect(tz).toHaveValue('America/Chicago');
     await expect(units).toHaveValue('metric');
-    await expect(page.getByLabel(/last sign-in/i)).toHaveValue(/C[SD]T$/);
+    await expect(page.getByLabel(/signed in on this browser/i)).toHaveValue(/C[SD]T$/);
 
     await tz.selectOption('America/New_York');
     await units.selectOption('us');

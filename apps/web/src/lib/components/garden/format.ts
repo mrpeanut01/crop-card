@@ -1,20 +1,10 @@
-import { BED_STYLE_LABELS } from '$lib/farm/areaKinds';
+import type { BedStyle } from '$lib/farm/areaKinds';
+import { createT, type MessageKey, type Translator, type TranslateKey } from '$lib/i18n';
+import { plantingInGround, type GroundFacts } from '$lib/garden/inGround';
+import { familyLabel } from '$lib/garden/rotation';
 import type { BedLayout, PlacedPlanting, SpacingPattern } from '$lib/garden/types';
 
-const MONTHS_LONG = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December'
-];
+const EN = createT('en');
 
 export const PATTERN_LABELS: Record<SpacingPattern, string> = {
   square: 'Rows',
@@ -22,10 +12,26 @@ export const PATTERN_LABELS: Record<SpacingPattern, string> = {
   sfg: 'Square foot'
 };
 
+export function patternLabel(pattern: SpacingPattern, tr: Translator = EN): string {
+  return tr(`garden.pattern.${pattern}` as MessageKey);
+}
+
 /** "July 15" for a UTC day. */
-export function longDate(ms: number): string {
+export function longDate(ms: number, tr: Translator = EN): string {
   const d = new Date(ms);
-  return `${MONTHS_LONG[d.getUTCMonth()]} ${d.getUTCDate()}`;
+  return tr('garden.date.long', {
+    month: tr(`garden.month.${d.getUTCMonth()}` as MessageKey),
+    day: d.getUTCDate()
+  });
+}
+
+/** "Jul 1" for a UTC day. */
+export function shortDate(ms: number, tr: Translator = EN): string {
+  const d = new Date(ms);
+  return tr('garden.date.short', {
+    month: tr(`garden.monthShort.${d.getUTCMonth()}` as MessageKey),
+    day: d.getUTCDate()
+  });
 }
 
 /** `YYYY-MM-DD` for a UTC day. */
@@ -46,22 +52,62 @@ export function ft(n: number): string {
 }
 
 /** "1 foot", "2.5 feet". */
-export function feet(n: number): string {
-  return `${ft(n)} ${ft(n) === '1' ? 'foot' : 'feet'}`;
+export function feet(n: number, tr: Translator = EN): string {
+  return tr('garden.feet', { count: Number(ft(n)), n: ft(n) });
 }
 
 export function sizeLabel(widthFt: number, lengthFt: number): string {
   return `${ft(widthFt)}×${ft(lengthFt)} ft`;
 }
 
-export function bedKindLabel(bed: Pick<BedLayout, 'kind' | 'bedStyle'>): string {
-  if (bed.kind === 'container') return 'container';
-  const style = bed.bedStyle ? BED_STYLE_LABELS[bed.bedStyle].toLowerCase() : null;
-  return style ? `${style} bed` : 'bed';
+export function bedStyleLabel(style: BedStyle, tr: Translator = EN): string {
+  return tr(`garden.bedStyle.${style}` as MessageKey);
 }
 
-export function plural(n: number, word: string): string {
-  return `${n} ${word}${n === 1 ? '' : 's'}`;
+export function bedKindLabel(
+  bed: Pick<BedLayout, 'kind' | 'bedStyle'>,
+  tr: Translator = EN
+): string {
+  if (bed.kind === 'container') return tr('garden.bedKind.container');
+  const style = bed.bedStyle ? bedStyleLabel(bed.bedStyle, tr).toLowerCase() : null;
+  return style ? tr('garden.bedKind.styled', { style }) : tr('garden.bedKind.bed');
+}
+
+export function countOf(
+  kind: 'plant' | 'sowing' | 'planting',
+  n: number,
+  tr: Translator = EN
+): string {
+  return tr(`garden.count.${kind}` as TranslateKey, { count: n });
+}
+
+/** The family's plain name, translated when the catalog knows it. */
+export function familyName(family: string, tr: Translator = EN): string {
+  const key = `garden.family.${family}` as MessageKey;
+  const hit = tr(key);
+  return hit === key ? familyLabel(family) : hit;
+}
+
+export function stageLabel(stage: 'Growing' | 'Harvesting', tr: Translator = EN): string {
+  return tr(`garden.stage.${stage}` as MessageKey);
+}
+
+/** The planting row's status; mirrors `plantingStatusText`. */
+export function statusLabel(
+  p: GroundFacts,
+  nowMs: number,
+  stage: 'Growing' | 'Harvesting' | null | undefined,
+  tr: Translator = EN
+): string {
+  if (p.status === 'harvested') return tr('garden.status.harvested');
+  if (p.status === 'failed') return tr('garden.status.failed');
+  if (p.status === 'archived') return tr('garden.status.archived');
+  if (!plantingInGround(p, nowMs)) {
+    return p.plantingDateMs != null
+      ? tr('garden.status.planned', { date: shortDate(p.plantingDateMs, tr) })
+      : tr('garden.status.notDated');
+  }
+  return stage ? stageLabel(stage, tr) : tr('garden.status.inGround');
 }
 
 export function plantingLabel(p: Pick<PlacedPlanting, 'varietyDisplayName'>): string {

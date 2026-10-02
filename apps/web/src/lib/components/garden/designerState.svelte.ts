@@ -30,7 +30,6 @@ import {
   occupancyIntervals,
   plantingOccupancy,
   scrubRange,
-  shortDate,
   utcDayStart
 } from '$lib/garden/occupancy';
 import { displayFootprints } from '$lib/garden/displayPack';
@@ -78,7 +77,18 @@ import type {
   SpacingPattern,
   SuccessionProposal
 } from '$lib/garden/types';
-import { feet, ft, longDate, parseYmd, plural, ymd } from './format';
+import {
+  countOf,
+  familyName,
+  feet,
+  ft,
+  longDate,
+  parseYmd,
+  shortDate,
+  stageLabel,
+  ymd
+} from './format';
+import { createT, type MessageKey, type Translator } from '$lib/i18n';
 import { plantingInGround } from '$lib/garden/inGround';
 import { deterministicPlantingWindow } from '$lib/plan/plantingWindow';
 import type { BedFrostView } from '$lib/climate/protectionView';
@@ -174,22 +184,26 @@ export class WriteError extends Error {
   }
 }
 
-const OFFLINE_WRITE = "That change didn't save because you're offline.";
 const DEFAULT_CROP_LENGTH_IN = 24;
 const WINDOW_GRACE_MS = 7 * 86_400_000;
 const ALERT_MS = 6000;
 const DATE_SUMMARY_DELAY_MS = 500;
 
-function errorText(body: GardenErrorResponse | null, status: number, url: string): string {
+function errorText(
+  body: GardenErrorResponse | null,
+  status: number,
+  url: string,
+  tr: Translator
+): string {
   const bedWrite = url.startsWith('/api/blocks');
-  if (body?.code === 'OVERLAP' && (bedWrite || !body.error)) return "Beds can't overlap";
+  if (body?.code === 'OVERLAP' && (bedWrite || !body.error)) return tr('garden.warn.overlap');
   if (body?.code === 'OUTSIDE_AREA' && (bedWrite || !body.error)) {
-    return 'Beds stay inside the garden.';
+    return tr('garden.err.outside');
   }
   if (body?.code === 'READ_ONLY' || status === 403) {
-    return 'View only. The farm owner changes the layout.';
+    return tr('garden.page.viewOnly');
   }
-  return body?.error ?? `That didn't save (${status}).`;
+  return body?.error ?? tr('garden.err.saveStatus', { status });
 }
 
 export function nextBedName(
@@ -214,6 +228,10 @@ function sameRect(a: RectFt, b: RectFt): boolean {
 
 export class DesignerState {
   design = $state() as GardenDesign;
+  locale = $state<string | null>(null);
+  get tr(): Translator {
+    return createT(this.locale);
+  }
   history: Record<string, BedHistoryEntry[]>;
   catalog: GardenCrop[];
   companions: CompanionPlugin[];
@@ -401,8 +419,16 @@ export class DesignerState {
   }
 
   bedLabel(bed: BedLayout): string {
-    const pos = `${feet(bed.rect.x)} from west, ${feet(bed.rect.y)} from north`;
-    const kind = bed.kind === 'container' ? 'container' : `${bed.bedStyle ?? 'garden'} bed`;
+    const tr = this.tr;
+    const pos = tr('garden.aria.pos', { x: feet(bed.rect.x, tr), y: feet(bed.rect.y, tr) });
+    const kind =
+      bed.kind === 'container'
+        ? tr('garden.bedKind.container')
+        : tr('garden.bedKind.styled', {
+            style: bed.bedStyle
+              ? tr(`garden.bedStyle.${bed.bedStyle}` as MessageKey).toLowerCase()
+              : tr('garden.aria.gardenStyle')
+          });
     const occ = this.occupancy.get(bed.blockId);
     const on = occ?.occupants.length
       ? occ.occupants
@@ -410,15 +436,23 @@ export class DesignerState {
             const p = this.design.plantings.find((q) => q.cropId === o.cropId);
             if (!p) return '';
             return p.plantCount
-              ? `${p.varietyDisplayName}, ${plural(p.plantCount, 'plant')}`
+              ? `${p.varietyDisplayName}, ${countOf('plant', p.plantCount, tr)}`
               : p.varietyDisplayName;
           })
           .filter(Boolean)
           .join('; ')
       : occ?.openSinceMs != null
-        ? `open from ${longDate(occ.openSinceMs)}`
-        : 'open';
-    return `${bed.name}, ${ft(bed.widthFt)} by ${ft(bed.lengthFt)} foot ${kind}, ${pos}. On ${longDate(this.dateMs)}: ${on}.`;
+        ? tr('garden.aria.openFrom', { date: longDate(occ.openSinceMs, tr) })
+        : tr('garden.aria.open');
+    return tr('garden.aria.bed', {
+      name: bed.name,
+      w: ft(bed.widthFt),
+      l: ft(bed.lengthFt),
+      kind,
+      pos,
+      date: longDate(this.dateMs, tr),
+      on
+    });
   }
 
   stageOf(cropId: string): 'Growing' | 'Harvesting' | null {
@@ -427,26 +461,35 @@ export class DesignerState {
     return this.dateMs >= i.harvestStartMs ? 'Harvesting' : 'Growing';
   }
 
+  /** The stage on the scrubbed date, in the reader's language. */
+  stageText(cropId: string): string | null {
+    const stage = this.stageOf(cropId);
+    return stage ? stageLabel(stage, this.tr) : null;
+  }
+
   bedSummary(bed: BedLayout): string {
+    const tr = this.tr;
     const occ = this.occupancy.get(bed.blockId);
     if (!occ || occ.occupants.length === 0) {
-      return occ?.openSinceMs != null ? `open from ${longDate(occ.openSinceMs)}` : 'open';
+      return occ?.openSinceMs != null
+        ? tr('garden.aria.openFrom', { date: longDate(occ.openSinceMs, tr) })
+        : tr('garden.aria.open');
     }
     return occ.occupants
       .map((o) => {
         const p = this.design.plantings.find((q) => q.cropId === o.cropId);
-        const stage = this.stageOf(o.cropId);
+        const stage = this.stageText(o.cropId);
         return p ? `${p.varietyDisplayName}${stage ? `, ${stage.toLowerCase()}` : ''}` : '';
       })
       .filter(Boolean)
-      .join(' and ');
+      .join(tr('garden.aria.and'));
   }
 
   dateSummary(): string {
     const parts = [...this.beds]
       .sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }))
       .map((b) => `${b.name}: ${this.bedSummary(b)}.`);
-    return `${longDate(this.dateMs)}. ${parts.join(' ')}`.trim();
+    return `${longDate(this.dateMs, this.tr)}. ${parts.join(' ')}`.trim();
   }
 
   setDate(ms: number): void {
@@ -457,7 +500,8 @@ export class DesignerState {
   /** "May 15, 2027" or "May 15" when the date is in the season year. */
   dateText(ms: number): string {
     const y = new Date(ms).getUTCFullYear();
-    return y === this.design.seasonYear ? shortDate(ms) : `${shortDate(ms)}, ${y}`;
+    const short = shortDate(ms, this.tr);
+    return y === this.design.seasonYear ? short : `${short}, ${y}`;
   }
 
   /** Undated, or dated in the season year. Plantings from another year
@@ -541,21 +585,43 @@ export class DesignerState {
 
   /** A warning when an outdoor planting is dated outside its crop's
    *  window by more than a week. */
+  windowKind(
+    p: Pick<PlacedPlanting, 'cropPluginId' | 'plantingDateMs'> & { blockId?: string }
+  ): 'early' | 'late' | null {
+    if (p.plantingDateMs == null || !this.outdoors) return null;
+    if (!this.crop(p.cropPluginId)) return null;
+    const day = utcDayStart(p.plantingDateMs);
+    const w = this.plantingWindowFor(p.cropPluginId, p.blockId);
+    if (day < w.startMs - WINDOW_GRACE_MS) return 'early';
+    if (day > w.endMs + WINDOW_GRACE_MS) return 'late';
+    return null;
+  }
+
   windowWarning(
     p: Pick<PlacedPlanting, 'cropPluginId' | 'plantingDateMs'> & { blockId?: string }
   ): string | null {
-    if (p.plantingDateMs == null || !this.outdoors) return null;
-    const crop = this.crop(p.cropPluginId);
-    if (!crop) return null;
-    const day = utcDayStart(p.plantingDateMs);
+    const kind = this.windowKind(p);
+    if (!kind) return null;
+    const crop = this.crop(p.cropPluginId)!;
     const w = this.plantingWindowFor(p.cropPluginId, p.blockId);
-    if (day < w.startMs - WINDOW_GRACE_MS) {
-      return `Early for ${crop.displayName}. Its window opens ${this.dateText(w.startMs)}.`;
-    }
-    if (day > w.endMs + WINDOW_GRACE_MS) {
-      return `Late for ${crop.displayName}. It needs to go in by ${this.dateText(w.endMs)} to finish before frost.`;
-    }
-    return null;
+    return kind === 'early'
+      ? this.tr('garden.window.early', { crop: crop.displayName, date: this.dateText(w.startMs) })
+      : this.tr('garden.window.late', { crop: crop.displayName, date: this.dateText(w.endMs) });
+  }
+
+  /** A rotation warning's sentence, built from its parts so it follows the
+   *  language. */
+  rotationText(w: RotationWarning): string {
+    const tr = this.tr;
+    const when =
+      w.lastSeasonYear === this.design.seasonYear
+        ? tr('garden.rot.earlier')
+        : tr('garden.rot.inYear', { year: w.lastSeasonYear });
+    return tr('garden.rot.msg', {
+      family: familyName(w.family, tr),
+      when,
+      span: tr('garden.rot.span', { count: w.lookbackYears })
+    });
   }
 
   selectBed(blockId: string | null): void {
@@ -577,7 +643,11 @@ export class DesignerState {
     if (this.mode.kind === 'carry-bed') {
       const { blockId, origin } = this.mode;
       this.replaceBed(blockId, (b) => ({ ...b, rect: origin }));
-      this.say(`${this.bed(blockId)?.name ?? 'Bed'} put back.`);
+      this.say(
+        this.tr('garden.say.putBack', {
+          name: this.bed(blockId)?.name ?? this.tr('garden.toolbar.bed')
+        })
+      );
     }
     this.mode = { kind: 'idle' };
     this.conflict = null;
@@ -608,11 +678,11 @@ export class DesignerState {
         });
       } catch {
         this.offline = true;
-        throw new WriteError(OFFLINE_WRITE, 'OFFLINE', true);
+        throw new WriteError(this.tr('garden.err.offlineWrite'), 'OFFLINE', true);
       }
       const body = (await res.json().catch(() => null)) as (T & GardenErrorResponse) | null;
       if (!res.ok)
-        throw new WriteError(errorText(body, res.status, url), body?.code ?? null, false);
+        throw new WriteError(errorText(body, res.status, url, this.tr), body?.code ?? null, false);
       if (write) this.lastSavedAt = Date.now();
       return body as T;
     } finally {
@@ -644,16 +714,12 @@ export class DesignerState {
   }
 
   private fail(e: unknown): void {
-    this.warn(e instanceof WriteError ? e.message : "That didn't save. Try again.");
+    this.warn(e instanceof WriteError ? e.message : this.tr('garden.err.saveRetry'));
   }
 
   private guard(): boolean {
     if (this.canEdit) return true;
-    this.warn(
-      this.offline
-        ? "You're offline. Editing needs a connection."
-        : 'View only. The farm owner changes the layout.'
-    );
+    this.warn(this.offline ? this.tr('garden.err.offlineEdit') : this.tr('garden.page.viewOnly'));
     return false;
   }
 
@@ -676,7 +742,7 @@ export class DesignerState {
         this.spotSpacing(presetId)
       );
       if (!spot) {
-        this.warn('The garden is full. Make it bigger or remove a bed.');
+        this.warn(this.tr('garden.warn.gardenFull'));
         return;
       }
       void this.createBed(presetId, spot, widthFt, lengthFt);
@@ -685,7 +751,9 @@ export class DesignerState {
     this.selectBed(null);
     this.mode = { kind: 'place-bed', presetId, widthFt, lengthFt };
     this.say(
-      `Tap the garden where the ${preset.label}'s top-left corner goes, or choose it again to drop it in the first open spot.`
+      this.tr('garden.say.choosePreset', {
+        preset: this.tr(`garden.preset.the.${presetId}` as MessageKey)
+      })
     );
   }
 
@@ -714,7 +782,7 @@ export class DesignerState {
       this.spotSpacing(presetId)
     );
     if (!spot) {
-      this.warn('The garden is full. Make it bigger or remove a bed.');
+      this.warn(this.tr('garden.warn.gardenFull'));
       return Promise.resolve();
     }
     return this.createBed(presetId, spot, widthFt, lengthFt);
@@ -728,11 +796,11 @@ export class DesignerState {
       this.canvas
     );
     if (!rect) {
-      this.warn("That bed is bigger than the garden. Set the garden's size on the farm map.");
+      this.warn(this.tr('garden.warn.bedTooBig'));
       return Promise.resolve();
     }
     if (overlappingBeds(rect, this.beds).length) {
-      this.warn("Beds can't overlap");
+      this.warn(this.tr('garden.warn.overlap'));
       return Promise.resolve();
     }
     this.mode = { kind: 'idle' };
@@ -781,7 +849,14 @@ export class DesignerState {
       this.history[res.block.id] = [];
       this.selectedBedId = res.block.id;
       this.selectedCropId = null;
-      this.say(`${name} added at ${feet(rect.x)} from west, ${feet(rect.y)} from north.`, since);
+      this.say(
+        this.tr('garden.say.addedAt', {
+          name,
+          x: feet(rect.x, this.tr),
+          y: feet(rect.y, this.tr)
+        }),
+        since
+      );
     } catch (e) {
       this.design.beds = this.design.beds.filter((b) => b.blockId !== tempId);
       this.fail(e);
@@ -796,7 +871,7 @@ export class DesignerState {
     const others = this.beds.filter((b) => b.blockId !== next.blockId);
     if (overlappingBeds(next.rect, others).length) {
       this.replaceBed(next.blockId, () => prev);
-      this.warn("Beds can't overlap");
+      this.warn(this.tr('garden.warn.overlap'));
       return false;
     }
     this.replaceBed(next.blockId, () => next);
@@ -849,7 +924,11 @@ export class DesignerState {
     return this.commitBed(
       { ...bed, rect },
       bed,
-      `${bed.name} moved to ${feet(rect.x)} from west, ${feet(rect.y)} from north.`
+      this.tr('garden.say.movedTo', {
+        name: bed.name,
+        x: feet(rect.x, this.tr),
+        y: feet(rect.y, this.tr)
+      })
     );
   }
 
@@ -857,7 +936,11 @@ export class DesignerState {
     if (!this.guard()) return;
     this.selectedBedId = blockId;
     this.mode = { kind: 'move-bed', blockId };
-    this.say(`Tap where ${this.bed(blockId)?.name ?? 'the bed'}'s top-left corner should go.`);
+    this.say(
+      this.tr('garden.placing.moveBed', {
+        name: this.bed(blockId)?.name ?? this.tr('garden.say.theBed')
+      })
+    );
   }
 
   pickUp(blockId: string): void {
@@ -866,7 +949,7 @@ export class DesignerState {
     if (!bed) return;
     this.selectedBedId = blockId;
     this.mode = { kind: 'carry-bed', blockId, origin: bed.rect };
-    this.say(`${bed.name} picked up. Use arrow keys to move, Enter to drop.`);
+    this.say(this.tr('garden.say.pickedUp', { name: bed.name }));
   }
 
   carry(dxFt: number, dyFt: number): void {
@@ -894,13 +977,17 @@ export class DesignerState {
     if (!bed) return;
     const prev = { ...bed, rect: origin };
     if (sameRect(bed.rect, origin) && !this.unplaced.has(blockId)) {
-      this.say(`${bed.name} dropped where it was.`);
+      this.say(this.tr('garden.say.droppedBack', { name: bed.name }));
       return;
     }
     await this.commitBed(
       bed,
       prev,
-      `${bed.name} moved to ${feet(bed.rect.x)} from west, ${feet(bed.rect.y)} from north.`
+      this.tr('garden.say.movedTo', {
+        name: bed.name,
+        x: feet(bed.rect.x, this.tr),
+        y: feet(bed.rect.y, this.tr)
+      })
     );
   }
 
@@ -915,10 +1002,14 @@ export class DesignerState {
     if (!bed || !this.guard()) return Promise.resolve(false);
     const turned = rotate90(bed, this.canvas);
     if (!turned) {
-      this.warn(`${bed.name} won't fit turned. Make the garden bigger or the bed shorter.`);
+      this.warn(this.tr('garden.warn.wontFitTurned', { name: bed.name }));
       return Promise.resolve(false);
     }
-    return this.commitBed(turned, bed, `${bed.name} turned to ${turned.rotationDeg} degrees.`);
+    return this.commitBed(
+      turned,
+      bed,
+      this.tr('garden.say.turned', { name: bed.name, deg: turned.rotationDeg })
+    );
   }
 
   resizeBed(blockId: string, widthFt: number, lengthFt: number): Promise<boolean> {
@@ -938,19 +1029,23 @@ export class DesignerState {
     if (inTheWay.length) {
       const names = [...new Set(inTheWay.map((p) => p.varietyDisplayName))].join(', ');
       this.warn(
-        `${bed.name} can't get that small. ${names} would sit past the new edge. Move or shrink ${inTheWay.length === 1 ? 'it' : 'them'} first.`
+        this.tr('garden.warn.tooSmall', {
+          name: bed.name,
+          names,
+          them: inTheWay.length === 1 ? this.tr('garden.warn.it') : this.tr('garden.warn.them')
+        })
       );
       return Promise.resolve(false);
     }
     const rect = clampToArea(bedRect(bed.rect.x, bed.rect.y, w, l, bed.rotationDeg), this.canvas);
     if (!rect) {
-      this.warn(`${bed.name} can't be that big in this garden.`);
+      this.warn(this.tr('garden.warn.tooBig', { name: bed.name }));
       return Promise.resolve(false);
     }
     return this.commitBed(
       { ...bed, widthFt: w, lengthFt: l, rect },
       bed,
-      `${bed.name} is now ${ft(w)} by ${ft(l)} feet.`
+      this.tr('garden.say.nowSize', { name: bed.name, w: ft(w), l: ft(l) })
     );
   }
 
@@ -967,13 +1062,21 @@ export class DesignerState {
     const bed = this.bed(blockId);
     const clean = name.trim().slice(0, 120);
     if (!bed || !clean || clean === bed.name) return Promise.resolve(false);
-    return this.commitBed({ ...bed, name: clean }, bed, `Renamed to ${clean}.`);
+    return this.commitBed(
+      { ...bed, name: clean },
+      bed,
+      this.tr('garden.say.renamed', { name: clean })
+    );
   }
 
   setBedStyle(blockId: string, style: NonNullable<BedLayout['bedStyle']>): Promise<boolean> {
     const bed = this.bed(blockId);
     if (!bed || bed.bedStyle === style) return Promise.resolve(false);
-    return this.commitBed({ ...bed, bedStyle: style }, bed, `${bed.name} style saved.`);
+    return this.commitBed(
+      { ...bed, bedStyle: style },
+      bed,
+      this.tr('garden.say.styleSaved', { name: bed.name })
+    );
   }
 
   async duplicateBed(blockId: string): Promise<void> {
@@ -989,7 +1092,7 @@ export class DesignerState {
       this.spotSpacing(bed.kind === 'container' ? 'container-5gal' : 'raised-4x8')
     );
     if (!spot) {
-      this.warn('No room for a copy. Make the garden bigger or remove a bed.');
+      this.warn(this.tr('garden.warn.noRoomCopy'));
       return;
     }
     const name = nextBedName(this.beds, bed.kind);
@@ -1014,7 +1117,7 @@ export class DesignerState {
       this.replaceBed(tempId, (b) => ({ ...b, blockId: res.block.id }));
       this.history[res.block.id] = [];
       this.selectedBedId = res.block.id;
-      this.say(`${name} added next to ${bed.name}.`, since);
+      this.say(this.tr('garden.say.addedNext', { name, other: bed.name }), since);
     } catch (e) {
       this.design.beds = this.design.beds.filter((b) => b.blockId !== tempId);
       this.fail(e);
@@ -1039,12 +1142,10 @@ export class DesignerState {
       this.design.beds = this.design.beds.filter((b) => b.blockId !== blockId);
       this.design.plantings = this.design.plantings.filter((p) => p.blockId !== blockId);
       if (this.selectedBedId === blockId) this.selectBed(null);
-      this.say(`${bed.name} deleted.`, since);
+      this.say(this.tr('garden.say.deleted', { name: bed.name }), since);
     } catch (e) {
       if (e instanceof WriteError && e.code === 'BED_HAS_RECORDS') {
-        this.warn(
-          `${bed.name} has records, so it stays. Delete it from the Plan page if you really mean it.`
-        );
+        this.warn(this.tr('garden.warn.hasRecords', { name: bed.name }));
       } else {
         this.fail(e);
       }
@@ -1074,7 +1175,7 @@ export class DesignerState {
     }
     this.cropPanelOpen = false;
     this.mode = { kind: 'place-crop', crop: choice };
-    this.say(`Tap a bed to place ${choice.label}.`);
+    this.say(this.tr('garden.say.tapBed', { label: choice.label }));
   }
 
   /** Footprints on this bed that share time with `span`, other than
@@ -1169,7 +1270,10 @@ export class DesignerState {
     if (!pluginId) return;
     if (existing && existing.blockId !== blockId && this.inGround(existing)) {
       this.warn(
-        `${existing.varietyDisplayName} is already in the ground in ${this.bed(existing.blockId)?.name ?? 'its bed'}. Record a new planting instead.`
+        this.tr('garden.warn.alreadyInGround', {
+          name: existing.varietyDisplayName,
+          bed: this.bed(existing.blockId)?.name ?? this.tr('garden.say.itsBed')
+        })
       );
       return;
     }
@@ -1179,14 +1283,19 @@ export class DesignerState {
       const w = this.plantingWindowFor(pluginId, blockId);
       if (dateMs < w.startMs - WINDOW_GRACE_MS) {
         dateMs = w.startMs;
-        movedForWindow = `${this.dateText(dateMs)}, ${
-          w.startMs >= this.frostFor(blockId).lastSpringFrostMs
-            ? 'after your last frost'
-            : 'when its planting window opens'
-        }`;
+        movedForWindow = this.tr('garden.say.dateWhy', {
+          date: this.dateText(dateMs),
+          why:
+            w.startMs >= this.frostFor(blockId).lastSpringFrostMs
+              ? this.tr('garden.say.afterFrost')
+              : this.tr('garden.say.windowOpens')
+        });
       } else if (dateMs > w.endMs + WINDOW_GRACE_MS && w.endMs >= w.startMs) {
         dateMs = w.endMs;
-        movedForWindow = `${this.dateText(dateMs)}, the last date it can finish before frost`;
+        movedForWindow = this.tr('garden.say.dateWhy', {
+          date: this.dateText(dateMs),
+          why: this.tr('garden.say.lastDate')
+        });
       }
     }
     const want = this.wantedSize(existing, crop, bed);
@@ -1198,7 +1307,7 @@ export class DesignerState {
       const occ = bedOccupancyOn(bed, this.intervals, dateMs, this.range);
       const retry = occ.nextOpenMs;
       this.conflict = {
-        text: `No room in ${bed.name} on ${shortDate(dateMs)}.${retry ? ` It opens ${shortDate(retry)}.` : ''}`,
+        text: `${this.tr('garden.say.noRoomIn', { bed: bed.name, date: shortDate(dateMs, this.tr) })}${retry ? ` ${this.tr('garden.say.itOpens', { date: shortDate(retry, this.tr) })}` : ''}`,
         retryDateMs: retry,
         crop: choice,
         blockId,
@@ -1244,15 +1353,23 @@ export class DesignerState {
       const warn = crop
         ? this.rotationFor(blockId, crop.cropFamily, placed?.cropId, dateMs)[0]
         : undefined;
-      const when = movedForWindow ? ` for ${movedForWindow}` : '';
+      const when = movedForWindow
+        ? ` ${this.tr('garden.say.forWhen', { what: movedForWindow })}`
+        : '';
       this.say(
-        `${label} placed in ${bed.name}${when}${placed?.plantCount ? `, ${plural(placed.plantCount, 'plant')}` : ''}.${warn ? ` ${warn.message}` : ''}`,
+        this.tr('garden.say.placed', {
+          label,
+          bed: bed.name,
+          when,
+          count: placed?.plantCount ? `, ${countOf('plant', placed.plantCount, this.tr)}` : '',
+          warn: warn ? ` ${this.rotationText(warn)}` : ''
+        }),
         since
       );
       if (utcDayStart(dateMs) !== this.dateMs) {
         this.jumpTo = {
           dateMs: utcDayStart(dateMs),
-          text: `${label} starts ${this.dateText(dateMs)}.`
+          text: this.tr('garden.say.starts', { label, date: this.dateText(dateMs) })
         };
       }
       if (placed) this.focusRequest = { kind: 'planting', id: placed.cropId, n: Date.now() };
@@ -1316,7 +1433,7 @@ export class DesignerState {
     this.conflict = null;
     this.mode = { kind: 'idle' };
     this.cropDrag = { choice, clientX, clientY, bedId: null, at: null, ghost: null };
-    this.say(`Dragging ${choice.label}. Drop it on a bed.`);
+    this.say(this.tr('garden.say.dragging', { label: choice.label }));
     return true;
   }
 
@@ -1339,7 +1456,7 @@ export class DesignerState {
   cancelCropDrag(): void {
     if (!this.cropDrag) return;
     this.cropDrag = null;
-    this.say('Put back.');
+    this.say(this.tr('garden.say.putBackShort'));
   }
 
   async dropCrop(): Promise<void> {
@@ -1347,7 +1464,7 @@ export class DesignerState {
     this.cropDrag = null;
     if (!drag) return;
     if (!drag.bedId || !drag.at) {
-      this.say(`${drag.choice.label} not placed. Drop it on a bed, or tap it and then a bed.`);
+      this.say(this.tr('garden.say.notPlaced', { label: drag.choice.label }));
       return;
     }
     this.cropPanelOpen = false;
@@ -1516,7 +1633,7 @@ export class DesignerState {
     if (!p) return null;
     const year = new Date(dateMs).getUTCFullYear();
     if (Math.abs(year - this.design.seasonYear) > 1) {
-      this.warn(`Pick a date near the ${this.design.seasonYear} season.`);
+      this.warn(this.tr('garden.warn.pickDate', { year: this.design.seasonYear }));
       return null;
     }
     const since = this.mark();
@@ -1529,9 +1646,17 @@ export class DesignerState {
     if (res) {
       const iv = this.intervalById.get(cropId);
       const visible = iv ? this.dateMs >= iv.startMs && this.dateMs < iv.endMs : false;
-      const text = `${p.varietyDisplayName} now starts ${this.dateText(dateMs)}.`;
+      const text = this.tr('garden.say.nowStarts', {
+        name: p.varietyDisplayName,
+        date: this.dateText(dateMs)
+      });
       if (!visible) this.jumpTo = { dateMs: utcDayStart(dateMs), text };
-      this.say(visible ? text : `${text} Slide to ${this.dateText(dateMs)} to see it.`, since);
+      this.say(
+        visible
+          ? text
+          : `${text} ${this.tr('garden.say.slideTo', { date: this.dateText(dateMs) })}`,
+        since
+      );
     }
     return res;
   }
@@ -1552,7 +1677,11 @@ export class DesignerState {
     this.selectPlanting(cropId);
     this.mode = { kind: 'move-planting', cropId };
     const p = this.design.plantings.find((q) => q.cropId === cropId);
-    this.say(`Tap where ${p?.varietyDisplayName ?? 'the planting'} should go.`);
+    this.say(
+      this.tr('garden.say.tapWhere', {
+        name: p?.varietyDisplayName ?? this.tr('garden.say.thePlanting')
+      })
+    );
   }
 
   async movePlantingTo(
@@ -1567,7 +1696,10 @@ export class DesignerState {
     if (!p || !bed) return;
     if (p.blockId !== blockId && this.inGround(p)) {
       this.warn(
-        `${p.varietyDisplayName} is already in the ground in ${this.bed(p.blockId)?.name ?? 'its bed'}. Record a new planting instead.`
+        this.tr('garden.warn.alreadyInGround', {
+          name: p.varietyDisplayName,
+          bed: this.bed(p.blockId)?.name ?? this.tr('garden.say.itsBed')
+        })
       );
       return;
     }
@@ -1602,7 +1734,10 @@ export class DesignerState {
     if (!p || !bed || p.blockId === blockId || !this.guard()) return;
     if (this.inGround(p)) {
       this.warn(
-        `${p.varietyDisplayName} is already in the ground in ${this.bed(p.blockId)?.name ?? 'its bed'}. Record a new planting instead.`
+        this.tr('garden.warn.alreadyInGround', {
+          name: p.varietyDisplayName,
+          bed: this.bed(p.blockId)?.name ?? this.tr('garden.say.itsBed')
+        })
       );
       return;
     }
@@ -1642,7 +1777,8 @@ export class DesignerState {
   private noRoomText(p: PlacedPlanting, bed: BedLayout): string {
     const when = p.plantingDateMs ?? this.dateMs;
     const next = bedOccupancyOn(bed, this.intervals, when, this.range).nextOpenMs;
-    return `No room for ${p.varietyDisplayName} in ${bed.name} on ${shortDate(when)}.${next ? ` It opens ${shortDate(next)}.` : ''}`;
+    const date = shortDate(when, this.tr);
+    return `${this.tr('garden.say.noRoomFor', { name: p.varietyDisplayName, bed: bed.name, date })}${next ? ` ${this.tr('garden.say.itOpens', { date: shortDate(next, this.tr) })}` : ''}`;
   }
 
   private async commitMove(
@@ -1660,9 +1796,17 @@ export class DesignerState {
     });
     if (!res) return;
     const shares = this.sharesSpaceText(res.planting);
-    const where = from !== bed.blockId ? ` to ${bed.name}` : '';
-    const link = linked && from !== bed.blockId ? ' It stays linked with its other sowings.' : '';
-    this.say(`${p.varietyDisplayName} moved${where}.${link}${shares ? ` ${shares}` : ''}`, since);
+    const where = from !== bed.blockId ? ` ${this.tr('garden.say.toBed', { name: bed.name })}` : '';
+    const link = linked && from !== bed.blockId ? ` ${this.tr('garden.insp.staysLinked')}` : '';
+    this.say(
+      this.tr('garden.say.movedPlanting', {
+        name: p.varietyDisplayName,
+        where,
+        link,
+        shares: shares ? ` ${shares}` : ''
+      }),
+      since
+    );
     if (from !== bed.blockId) {
       this.selectPlanting(p.cropId);
       this.focusRequest = { kind: 'planting', id: p.cropId, n: Date.now() };
@@ -1679,7 +1823,10 @@ export class DesignerState {
       const oi = this.intervalById.get(other.cropId);
       if (!oi || !intervalsOverlapInTime(mine, oi)) continue;
       if (footprintsOverlap(p.footprint, other.footprint)) {
-        return `Shares space with ${other.varietyDisplayName} until ${shortDate(Math.min(mine.endMs, oi.endMs))}.`;
+        return this.tr('garden.say.sharesSpace', {
+          name: other.varietyDisplayName,
+          date: shortDate(Math.min(mine.endMs, oi.endMs), this.tr)
+        });
       }
     }
     return null;
@@ -1698,7 +1845,7 @@ export class DesignerState {
         return;
       case 'place-crop': {
         if (!bedId) {
-          this.say(`Tap a bed to place ${mode.crop.label}.`);
+          this.say(this.tr('garden.say.tapBed', { label: mode.crop.label }));
           return;
         }
         const bed = this.bed(bedId);
@@ -1791,7 +1938,10 @@ export class DesignerState {
         });
       }
       this.ghosts = [];
-      this.say(`${plural(res.created.length, 'sowing')} added.`, since);
+      this.say(
+        this.tr('garden.say.nAdded', { what: countOf('sowing', res.created.length, this.tr) }),
+        since
+      );
       return true;
     } catch (e) {
       this.fail(e);
@@ -1833,7 +1983,7 @@ export class DesignerState {
       key: p.key,
       blockId,
       footprint: p.footprint,
-      label: shortDate(p.plantingDateMs)
+      label: shortDate(p.plantingDateMs, this.tr)
     }));
     return application;
   }
@@ -1868,8 +2018,11 @@ export class DesignerState {
       this.absorbCreated(res.created);
       this.ghosts = [];
       const recipe = this.recipes.find((r) => r.pluginId === recipePluginId);
+      const what = countOf('planting', res.created.length, this.tr);
       this.say(
-        `${plural(res.created.length, 'planting')} added${recipe ? ` from ${recipe.displayName}` : ''}.`,
+        recipe
+          ? this.tr('garden.say.addedFromRecipe', { what, recipe: recipe.displayName })
+          : this.tr('garden.say.nAdded', { what }),
         since
       );
       if (res.created[0]) {
@@ -1924,7 +2077,10 @@ export class DesignerState {
       );
       this.absorbCreated(created);
       this.ghosts = [];
-      this.say(`${plural(created.length, 'planting')} added.`, since);
+      this.say(
+        this.tr('garden.say.nAdded', { what: countOf('planting', created.length, this.tr) }),
+        since
+      );
       if (created[0]) {
         this.focusRequest = { kind: 'planting', id: created[0].cropId, n: Date.now() };
       }
@@ -1958,10 +2114,10 @@ export class DesignerState {
       );
       const what =
         establishment === 'direct-seed'
-          ? 'Seeded in the ground.'
+          ? this.tr('garden.say.estDirect')
           : startIndoors
-            ? 'Seedlings started indoors. Sow and transplant tasks are on your list.'
-            : 'Bought seedlings. No indoor tasks.';
+            ? this.tr('garden.say.estIndoors')
+            : this.tr('garden.say.estBought');
       this.say([what, ...res.seedStart.notes].join(' '), since);
       return res.seedStart.notes;
     } catch (e) {

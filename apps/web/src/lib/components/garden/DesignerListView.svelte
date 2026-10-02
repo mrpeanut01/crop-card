@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { BED_PRESETS } from '$lib/garden/geometry';
-  import { shortDate } from '$lib/garden/occupancy';
   import type { BedPresetId } from '$lib/garden/types';
+  import type { MessageKey } from '$lib/i18n';
   import BedInspector from './BedInspector.svelte';
   import { getDesigner } from './designerState.svelte';
-  import { bedKindLabel, ft, sizeLabel } from './format';
+  import { bedKindLabel, ft, shortDate, sizeLabel } from './format';
 
   interface Props {
     oncustom: () => void;
@@ -12,6 +11,7 @@
 
   const { oncustom }: Props = $props();
   const d = getDesigner();
+  const tr = $derived(d.tr);
 
   const beds = $derived(
     [...d.beds].sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }))
@@ -29,17 +29,21 @@
     const occ = d.occupancy.get(blockId);
     if (!occ) return '';
     if (occ.occupants.length === 0)
-      return occ.openSinceMs != null ? `Open from ${shortDate(occ.openSinceMs)}` : 'Open';
-    return occ.nextOpenMs != null ? `Opens ${shortDate(occ.nextOpenMs)}` : 'Full';
+      return occ.openSinceMs != null
+        ? tr('garden.list.openFrom', { date: shortDate(occ.openSinceMs, tr) })
+        : tr('garden.list.open');
+    return occ.nextOpenMs != null
+      ? tr('garden.list.opens', { date: shortDate(occ.nextOpenMs, tr) })
+      : tr('garden.list.full');
   }
 
   function inIt(blockId: string): string {
     const occ = d.occupancy.get(blockId);
-    if (!occ || occ.occupants.length === 0) return 'Nothing';
+    if (!occ || occ.occupants.length === 0) return tr('garden.list.nothing');
     return occ.occupants
       .map((o) => {
         const p = d.design.plantings.find((q) => q.cropId === o.cropId);
-        const stage = d.stageOf(o.cropId);
+        const stage = d.stageText(o.cropId);
         return p ? `${p.varietyDisplayName}${stage ? ` (${stage.toLowerCase()})` : ''}` : '';
       })
       .filter(Boolean)
@@ -61,13 +65,13 @@
   {#if d.canEdit}
     <div class="add">
       <button type="button" class="btn" aria-expanded={addOpen} onclick={() => (addOpen = !addOpen)}
-        >Add bed</button
+        >{tr('garden.list.addBed')}</button
       >
       {#if addOpen}
-        <div class="presets" role="group" aria-label="Bed size">
+        <div class="presets" role="group" aria-label={tr('garden.list.bedSize')}>
           {#each PRESETS as id (id)}
             <button type="button" class="btn" onclick={() => add(id)}
-              >{BED_PRESETS[id].label}</button
+              >{tr(`garden.preset.long.${id}` as MessageKey)}</button
             >
           {/each}
         </div>
@@ -76,7 +80,9 @@
   {/if}
 
   {#if beds.length === 0}
-    <p class="empty">No beds yet.{d.canEdit ? ' Add one to start.' : ''}</p>
+    <p class="empty">
+      {tr('garden.list.noBeds')}{d.canEdit ? ` ${tr('garden.list.addOne')}` : ''}
+    </p>
   {:else}
     <ul class="beds">
       {#each beds as bed (bed.blockId)}
@@ -91,13 +97,16 @@
           >
             <span class="name">{bed.name}</span>
             <span class="cells">
-              <span>{bedKindLabel(bed)}</span>
+              <span>{bedKindLabel(bed, tr)}</span>
               <span>{sizeLabel(bed.widthFt, bed.lengthFt)}</span>
-              <span>{ft(bed.rect.x)} ft from west, {ft(bed.rect.y)} ft from north</span>
-              {#if bed.rotationDeg}<span>turned {bed.rotationDeg}°</span>{/if}
-              <span data-testid="list-in-it">In it: {inIt(bed.blockId)}</span>
+              <span>{tr('garden.list.position', { x: ft(bed.rect.x), y: ft(bed.rect.y) })}</span>
+              {#if bed.rotationDeg}<span>{tr('garden.list.turned', { deg: bed.rotationDeg })}</span
+                >{/if}
+              <span data-testid="list-in-it"
+                >{tr('garden.list.inIt', { what: inIt(bed.blockId) })}</span
+              >
               <span data-testid="list-open">{openFrom(bed.blockId)}</span>
-              {#if d.unplaced.has(bed.blockId)}<span>Not placed yet</span>{/if}
+              {#if d.unplaced.has(bed.blockId)}<span>{tr('garden.list.notPlaced')}</span>{/if}
             </span>
           </button>
           {#if open}

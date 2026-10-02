@@ -9,6 +9,7 @@
  */
 
 import { error, fail, redirect, type Actions, type ServerLoad } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
@@ -104,11 +105,18 @@ export const actions: Actions = {
 
     const latLon = parseLatLon(form.get('lat'), form.get('lon'));
     const frost = await resolveFrostForm(form, latLon);
-    if (!frost.ok) return fail(400, { error: frost.error, contactRows: rows });
+    if (!frost.ok) {
+      return fail(400, {
+        error: frost.reason
+          ? t(locals.locale, `onboard.frostConfirm.${frost.reason}`)
+          : frost.error,
+        contactRows: rows
+      });
+    }
     const zoneRaw = form.get('hardinessZone');
     if (zoneRaw !== null && String(zoneRaw).trim() !== '' && !parseZone(zoneRaw)) {
       return fail(400, {
-        error: 'Enter a zone like 7a or 6b, or leave it blank.',
+        error: t(locals.locale, 'settings.farm.err.zone'),
         contactRows: rows
       });
     }

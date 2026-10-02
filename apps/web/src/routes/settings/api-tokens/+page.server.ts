@@ -8,6 +8,7 @@
  */
 
 import { error, fail, redirect, type Actions } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { requireOwner } from '$lib/server/auth';
 import { issueToken, listTokensForOwner, revokeToken } from '$lib/server/apiTokens';
 import type { PageServerLoad } from './$types';
@@ -25,13 +26,13 @@ export const actions: Actions = {
     const u = requireOwner(event);
     if (!u.activeOwnerId) throw error(400, 'no active owner');
     if (event.locals.authVia === 'bearer') {
-      return fail(403, { error: 'minting new tokens requires a cookie session' });
+      return fail(403, { error: t(event.locals?.locale, 'settings.tokens.err.cookie') });
     }
     const fd = await event.request.formData();
     const label = String(fd.get('label') ?? '').trim();
     const isServiceAccount = fd.get('isServiceAccount') === 'on';
     if (!label || label.length > 64) {
-      return fail(400, { error: 'label required (max 64 chars)' });
+      return fail(400, { error: t(event.locals?.locale, 'settings.tokens.err.label') });
     }
     const issued = issueToken({
       ownerId: u.activeOwnerId,
@@ -58,7 +59,7 @@ export const actions: Actions = {
     const tokenId = String(fd.get('tokenId') ?? '');
     if (!tokenId) return fail(400, { error: 'tokenId required' });
     const ok = revokeToken(u.activeOwnerId, tokenId);
-    if (!ok) return fail(404, { error: 'token not found' });
+    if (!ok) return fail(404, { error: t(event.locals?.locale, 'settings.tokens.err.notFound') });
     return { ok: true };
   }
 };

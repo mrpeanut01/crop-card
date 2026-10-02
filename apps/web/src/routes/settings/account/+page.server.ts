@@ -39,7 +39,7 @@ export const load: PageServerLoad = ({ locals }) => {
 
   const timeZone = userRow?.timeZone ?? DEFAULT_TIME_ZONE;
   const displayUnits = userRow?.displayUnits ?? 'us';
-  const prefs = { timeZone, units: displayUnits };
+  const prefs = { timeZone, units: displayUnits, locale: locals.locale };
   const memberSince = userRow?.createdAt
     ? formatInstant(userRow.createdAt, prefs, 'date', { day: undefined })
     : '—';
@@ -90,9 +90,9 @@ export const actions: Actions = {
       timeZone: String(fd.get('timeZone') ?? ''),
       displayUnits: String(fd.get('displayUnits') ?? '')
     };
-    const name = normalizeDisplayName(fd.get('name'));
-    const timeZone = normalizeTimeZone(fd.get('timeZone'));
-    const displayUnits = normalizeDisplayUnits(fd.get('displayUnits'));
+    const name = normalizeDisplayName(fd.get('name'), locals.locale);
+    const timeZone = normalizeTimeZone(fd.get('timeZone'), locals.locale);
+    const displayUnits = normalizeDisplayUnits(fd.get('displayUnits'), locals.locale);
     if (!name.ok) return fail(400, { error: name.error, submitted });
     if (!timeZone.ok) return fail(400, { error: timeZone.error, submitted });
     if (!displayUnits.ok) return fail(400, { error: displayUnits.error, submitted });
@@ -114,7 +114,7 @@ export const actions: Actions = {
     }
     if (result === 'stale') {
       return fail(409, {
-        error: 'Your settings changed while this was saving. Check them and save again.',
+        error: t(locals.locale, 'settings.account.err.stale'),
         submitted
       });
     }

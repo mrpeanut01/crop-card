@@ -36,7 +36,7 @@
           name="email"
           required
           autocomplete="email"
-          placeholder="you@example.com"
+          placeholder={tr('signin.placeholderEmail')}
           inputmode="email"
           autocapitalize="off"
           spellcheck="false"

@@ -48,6 +48,7 @@
   } from '$lib/schedule/seedStart';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { cropDisplayName } from '$lib/i18n/cropName';
 
   type CropCatalogEntry = PickerCrop & {
     soilTempMinF?: number | null;
@@ -115,7 +116,15 @@
 
   const aiCache = new Map<string, { window: PlantingWindow; source: 'ai' | 'fallback' }>();
 
-  const results = $derived(searchCrops(query, seedStock, cropCatalog));
+  const results = $derived(
+    searchCrops(query, seedStock, cropCatalog, undefined, page.data?.locale)
+  );
+  const pickLabel = (opt: PickerOption) =>
+    cropDisplayName(
+      opt.kind === 'seed' ? opt.seed.cropPluginId : opt.crop.pluginId,
+      optionLabel(opt),
+      page.data?.locale
+    );
   const flat = $derived<PickerOption[]>([...results.seeds, ...results.crops]);
   const pickedSeed = $derived(picked?.kind === 'seed' ? picked.seed : null);
   const pickedCrop = $derived(picked?.crop ?? null);
@@ -229,7 +238,7 @@
 
   function choose(opt: PickerOption): void {
     picked = opt;
-    query = optionLabel(opt);
+    query = pickLabel(opt);
     listOpen = false;
     error = null;
     if (!varietyEdited) varietyDisplayName = optionLabel(opt);
@@ -304,7 +313,7 @@
   function onQueryInput(): void {
     listOpen = true;
     activeIndex = 0;
-    if (picked && query !== optionLabel(picked)) clearPick();
+    if (picked && query !== pickLabel(picked)) clearPick();
   }
 
   function onComboKey(e: KeyboardEvent): void {
@@ -456,7 +465,7 @@
                     }}
                     onmouseenter={() => (activeIndex = i)}
                   >
-                    <span class="opt-name">{optionLabel(opt)}</span>
+                    <span class="opt-name">{pickLabel(opt)}</span>
                     <span class="opt-meta">{seedAmountText(opt.seed)}</span>
                   </li>
                 {/each}
@@ -479,7 +488,7 @@
                     }}
                     onmouseenter={() => (activeIndex = i)}
                   >
-                    <span class="opt-name">{opt.crop.displayName}</span>
+                    <span class="opt-name">{pickLabel(opt)}</span>
                     {#if opt.crop.cropFamily}<span class="opt-meta">{opt.crop.cropFamily}</span
                       >{/if}
                   </li>

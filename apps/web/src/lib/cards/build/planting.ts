@@ -28,6 +28,7 @@ import {
 import { formatInches } from './size';
 import { CARE_LINK_LABEL, careGuideHref } from './careGuide';
 import { ymdInZone } from '$lib/prefs';
+import { cropDisplayName } from '$lib/i18n/cropName';
 import { filterSprayAdviceItems } from '$lib/journal/photoHelp';
 
 const MAX_UPCOMING = 3;
@@ -201,7 +202,12 @@ export function buildPlantingCard(
     kind: 'planting',
     key,
     kicker,
-    title: p.varietyDisplayName.trim() || plugin?.displayName || 'Planting',
+    title:
+      cropDisplayName(
+        p.cropPluginId,
+        p.varietyDisplayName.trim() || plugin?.displayName || '',
+        opts.prefs.locale
+      ) || 'Planting',
     facts,
     next: nextAction(tasks, opts, snapshot.plantings),
     sections,

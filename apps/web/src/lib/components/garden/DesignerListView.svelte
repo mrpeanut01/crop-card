@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { pageCropName } from '$lib/i18n/pageCropName';
   import type { BedPresetId } from '$lib/garden/types';
   import type { MessageKey } from '$lib/i18n';
   import BedInspector from './BedInspector.svelte';
@@ -44,7 +45,9 @@
       .map((o) => {
         const p = d.design.plantings.find((q) => q.cropId === o.cropId);
         const stage = d.stageText(o.cropId);
-        return p ? `${p.varietyDisplayName}${stage ? ` (${stage.toLowerCase()})` : ''}` : '';
+        return p
+          ? `${pageCropName(p.cropPluginId, p.varietyDisplayName)}${stage ? ` (${stage.toLowerCase()})` : ''}`
+          : '';
       })
       .filter(Boolean)
       .join(', ');

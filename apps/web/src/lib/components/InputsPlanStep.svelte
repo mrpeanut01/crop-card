@@ -1,5 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { pageCropName } from '$lib/i18n/pageCropName';
   import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
   /**
    * Inputs Plan wizard step (Phase 21 / B-28 / UC-37d).
@@ -376,7 +377,9 @@
               onclick={() => toggleExpanded(planting.id)}
               aria-expanded={expanded.has(planting.id)}
             >
-              <span class="planting-name">{planting.varietyDisplayName}</span>
+              <span class="planting-name"
+                >{pageCropName(planting.cropPluginId, planting.varietyDisplayName)}</span
+              >
               <span class="planting-meta">
                 {planting.plantingDate ? fmtDate(planting.plantingDate) : 'no date'} ·
                 {acceptedHere} task{acceptedHere === 1 ? '' : 's'}

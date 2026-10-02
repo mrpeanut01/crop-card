@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   /**
    * /today Season view: timelines only. A farm-wide growing-season band,
    * then one row per planting with its grow period and jobs, and a Field
@@ -177,7 +178,9 @@
             {#if row.blockWork}
               <span class="work-name">{row.name}</span>
             {:else}
-              <a href={cardHref('planting', cardKey('planting', row.plantingId))}>{row.name}</a>
+              <a href={cardHref('planting', cardKey('planting', row.plantingId))}
+                >{cropDisplayNameByEnglish(row.name, page.data?.locale)}</a
+              >
             {/if}
             <span class="block">{row.blockName}</span>
           </span>

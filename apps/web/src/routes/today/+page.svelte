@@ -4,6 +4,7 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
   import { createT, type MessageKey } from '$lib/i18n';
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import {
     PRINT_RANGE_NOTE,
     periodCardPrintHref,
@@ -165,7 +166,9 @@
     const planting = t.cropId ? data.plantingNames[t.cropId] : undefined;
     const blockId = t.blockId ?? planting?.blockId;
     const block = blockId ? data.blockNames[blockId] : undefined;
-    const parts = [planting?.name, block].filter(Boolean);
+    const parts = [planting && cropDisplayNameByEnglish(planting.name, data.locale), block].filter(
+      Boolean
+    );
     return parts.length ? parts.join(' · ') : null;
   }
 

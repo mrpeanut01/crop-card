@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { pageCropName } from '$lib/i18n/pageCropName';
   import type { BedPresetId } from '$lib/garden/types';
   import type { MessageKey } from '$lib/i18n';
   import { getDesigner } from './designerState.svelte';
@@ -71,7 +72,7 @@
       data-testid="bed-toolbar"
     >
       {#if planting && planting.blockId === bed.blockId}
-        <span class="what">{planting.varietyDisplayName}</span>
+        <span class="what">{pageCropName(planting.cropPluginId, planting.varietyDisplayName)}</span>
         <button type="button" class="tb" onclick={() => d.startMovePlanting(planting.cropId)}
           >{tr('garden.common.move')}</button
         >

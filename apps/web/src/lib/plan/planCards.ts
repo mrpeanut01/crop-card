@@ -22,6 +22,7 @@ import { kindStyle } from '$lib/farm/kindStyle';
 import { designerHref } from '$lib/garden/design';
 import { isDesignable, type AreaKind } from '$lib/farm/areaKinds';
 import { DEFAULT_PREFS, formatCalendarDate, type Prefs } from '$lib/prefs';
+import { cropDisplayName } from '$lib/i18n/cropName';
 import { plantingStatus, type PlantingStatus } from './planV2Derive';
 
 const DAY_MS = 86_400_000;
@@ -46,10 +47,13 @@ export function plantingColor(plantingId: string): string {
 
 /** "Tomato · Basil · +2", or null when nothing is planted. */
 export function growingSummary(
-  plantings: readonly { varietyDisplayName: string }[]
+  plantings: readonly { varietyDisplayName: string; cropPluginId?: string }[],
+  locale?: string | null
 ): string | null {
   if (!plantings.length) return null;
-  const names = plantings.slice(0, MAX_NAMES).map((p) => p.varietyDisplayName);
+  const names = plantings
+    .slice(0, MAX_NAMES)
+    .map((p) => cropDisplayName(p.cropPluginId, p.varietyDisplayName, locale));
   const more = plantings.length - MAX_NAMES;
   return more > 0 ? `${names.join(' · ')} · +${more}` : names.join(' · ');
 }
@@ -57,18 +61,27 @@ export function growingSummary(
 /** "Growing" for what is in the ground and "Planned" for what is not yet
  *  sown, so the rail and block cards agree with the Area card. */
 export function growingFacts(
-  plantings: readonly { varietyDisplayName: string; plantingDate: number | null }[],
-  now: number = Date.now()
+  plantings: readonly {
+    varietyDisplayName: string;
+    cropPluginId?: string;
+    plantingDate: number | null;
+  }[],
+  now: number = Date.now(),
+  locale?: string | null
 ): CardFact[] {
   const planned = plantings.filter(
     (p) => plantingStatus(p.plantingDate, undefined, now) === 'planned'
   );
   const growing = plantings.filter((p) => !planned.includes(p));
   const facts: CardFact[] = [
-    { label: 'Growing', value: growingSummary(growing) ?? 'Nothing yet', provenance: 'data' }
+    {
+      label: 'Growing',
+      value: growingSummary(growing, locale) ?? 'Nothing yet',
+      provenance: 'data'
+    }
   ];
   if (planned.length) {
-    facts.push({ label: 'Planned', value: growingSummary(planned)!, provenance: 'data' });
+    facts.push({ label: 'Planned', value: growingSummary(planned, locale)!, provenance: 'data' });
   }
   return facts;
 }
@@ -127,7 +140,7 @@ export function planRailCards(
     const built = buildAreaCard(snapshot, area.id, { prefs });
     if (!built) continue;
     const inArea = blocks.filter((b) => b.fieldId === area.id);
-    out.push(railCard(built, area.id, area.kind, inArea, current, now));
+    out.push(railCard(built, area.id, area.kind, inArea, current, now, prefs.locale));
   }
   const loose = blocks.filter((b) => !b.fieldId || !areas.some((a) => a.id === b.fieldId));
   if (loose.length) {
@@ -136,7 +149,7 @@ export function planRailCards(
     const size = acres > 0 ? formatSize({ acres, widthFt: null, lengthFt: null }, prefs) : null;
     const facts: CardFact[] = [];
     if (size) facts.push({ label: 'Size', value: size, provenance: 'data' });
-    facts.push(...growingFacts(plantings, now));
+    facts.push(...growingFacts(plantings, now, prefs.locale));
     const card: CardModel = {
       kind: 'area',
       key: 'ar_none',
@@ -152,17 +165,26 @@ export function planRailCards(
       areaId: NO_AREA,
       card,
       designer: null,
-      searchText: searchText('Not in an Area', loose)
+      searchText: searchText('Not in an Area', loose, prefs.locale)
     });
   }
   return out;
 }
 
-function searchText(name: string, blocks: readonly BlockWithPlantings[]): string {
+function searchText(
+  name: string,
+  blocks: readonly BlockWithPlantings[],
+  locale?: string | null
+): string {
   return [
     name,
     ...blocks.map((b) => b.name),
-    ...blocks.flatMap((b) => b.plantings.map((p) => p.varietyDisplayName))
+    ...blocks.flatMap((b) => b.plantings.map((p) => p.varietyDisplayName)),
+    ...blocks.flatMap((b) =>
+      b.plantings
+        .map((p) => cropDisplayName(p.cropPluginId, p.varietyDisplayName, locale))
+        .filter((n, i) => n !== b.plantings[i].varietyDisplayName)
+    )
   ]
     .join(' ')
     .toLowerCase();
@@ -174,7 +196,8 @@ function railCard(
   kind: AreaKind,
   blocks: readonly BlockWithPlantings[],
   current: URLSearchParams,
-  now: number
+  now: number,
+  locale?: string | null
 ): RailAreaCard {
   const size = built.facts.find((f) => f.label === 'Size');
   const facts: CardFact[] = [];
@@ -182,7 +205,8 @@ function railCard(
   facts.push(
     ...growingFacts(
       blocks.flatMap((b) => b.plantings),
-      now
+      now,
+      locale
     )
   );
   return {
@@ -199,7 +223,7 @@ function railCard(
       href: planSelectHref(current, areaId)
     },
     designer: isDesignable(kind) ? designerHref(areaId) : null,
-    searchText: searchText(built.title, blocks)
+    searchText: searchText(built.title, blocks, locale)
   };
 }
 
@@ -244,7 +268,7 @@ export function planBlockCard(
     prefs
   );
   if (size) facts.push({ label: 'Size', value: size, provenance: 'data' });
-  facts.push(...growingFacts(block.plantings, now));
+  facts.push(...growingFacts(block.plantings, now, prefs.locale));
   const statuses = block.plantings.map((p) =>
     plantingStatus(p.plantingDate, cropDays[p.cropPluginId], now)
   );
@@ -297,6 +321,7 @@ export interface PlanPlantingCardInput {
   seededAtLabel?: string;
   detailHref?: string;
   now?: number;
+  locale?: string | null;
 }
 
 export const NO_VALUE = '—';
@@ -319,7 +344,9 @@ export function planPlantingCard(input: PlanPlantingCardInput): CardModel {
       ? `${planting.quantityPlanted} ${planting.quantityUnit}`
       : NO_VALUE;
   const sub = [
-    input.cropName && input.cropName !== planting.varietyDisplayName ? input.cropName : undefined,
+    input.cropName && input.cropName !== planting.varietyDisplayName
+      ? cropDisplayName(planting.cropPluginId, input.cropName, input.locale)
+      : undefined,
     input.role
   ]
     .filter(Boolean)
@@ -344,7 +371,7 @@ export function planPlantingCard(input: PlanPlantingCardInput): CardModel {
     kind: 'planting',
     key: cardKey('planting', planting.id),
     kicker: sub || 'Planting',
-    title: planting.varietyDisplayName,
+    title: cropDisplayName(planting.cropPluginId, planting.varietyDisplayName, input.locale),
     status: { label: status, tone: STATUS_TONE[status] },
     facts: [
       { label: 'Role', value: input.role ?? NO_VALUE },

@@ -1,4 +1,5 @@
 import { convert, type StockUnit } from '$lib/stock/units';
+import { cropDisplayName } from '$lib/i18n/cropName';
 
 export interface PickerCrop {
   pluginId: string;
@@ -65,7 +66,8 @@ export function searchCrops(
   query: string,
   seeds: ReadonlyArray<PickerSeed>,
   catalog: ReadonlyArray<PickerCrop>,
-  limit = 8
+  limit = 8,
+  locale?: string | null
 ): PickerResults {
   const q = query.trim().toLowerCase();
   const byId = new Map(catalog.map((c) => [c.pluginId, c]));
@@ -78,7 +80,16 @@ export function searchCrops(
     if (!crop) continue;
     seededIds.add(crop.pluginId);
     const s = q
-      ? score([seed.shortName, seed.displayName, crop.displayName, crop.cropFamily], q)
+      ? score(
+          [
+            seed.shortName,
+            seed.displayName,
+            crop.displayName,
+            crop.cropFamily,
+            localName(crop, locale)
+          ],
+          q
+        )
       : 0;
     if (s >= 0) seedRows.push({ opt: { kind: 'seed', seed, crop }, s });
   }
@@ -94,7 +105,7 @@ export function searchCrops(
   const cropRows: Array<{ opt: Extract<PickerOption, { kind: 'crop' }>; s: number }> = [];
   for (const crop of catalog) {
     if (seededIds.has(crop.pluginId)) continue;
-    const s = q ? score([crop.displayName, crop.cropFamily], q) : 0;
+    const s = q ? score([crop.displayName, crop.cropFamily, localName(crop, locale)], q) : 0;
     if (s >= 0) cropRows.push({ opt: { kind: 'crop', crop }, s });
   }
   cropRows.sort(
@@ -108,6 +119,11 @@ export function searchCrops(
     crops: cropRows.slice(0, cropLimit).map((r) => r.opt),
     moreCrops: Math.max(0, cropRows.length - cropLimit)
   };
+}
+
+function localName(crop: PickerCrop, locale?: string | null): string | null {
+  const name = cropDisplayName(crop.pluginId, crop.displayName, locale);
+  return name === crop.displayName ? null : name;
 }
 
 export function optionLabel(opt: PickerOption): string {

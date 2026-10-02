@@ -14,6 +14,7 @@
    */
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { cropDisplayName } from '$lib/i18n/cropName';
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
   import { currentPrefs } from '$lib/prefsState.svelte';
@@ -72,7 +73,7 @@
   <span class="kicker"
     >{tr('inv.crop.kicker', { family: plugin.cropFamily ?? tr('inv.seed.unknownFamily') })}</span
   >
-  <h1 class="serif">{plugin.displayName}</h1>
+  <h1 class="serif">{cropDisplayName(plugin.pluginId, plugin.displayName, page.data?.locale)}</h1>
   <p class="sub mono">{plugin.pluginId}</p>
 </header>
 

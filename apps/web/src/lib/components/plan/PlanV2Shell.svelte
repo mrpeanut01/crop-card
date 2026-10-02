@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { createT } from '$lib/i18n';
+  import { cropDisplayName } from '$lib/i18n/cropName';
   import { Sparkle } from 'lucide-svelte';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import type { CalendarEvent } from '$lib/calendar/engine';
@@ -107,6 +108,8 @@
   }: Props = $props();
 
   const tr = $derived(createT($page.data?.locale));
+  const cropName = (p: { cropPluginId: string; varietyDisplayName: string }) =>
+    cropDisplayName(p.cropPluginId, p.varietyDisplayName, $page.data?.locale);
   const prefs = $derived(currentPrefs());
   const areas = $derived<PlanAreaEntry[]>(
     fields.map((f) => ({ id: f.id, name: f.name, kind: (f.kind ?? 'field') as AreaKind }))
@@ -223,7 +226,7 @@
           id: t.id,
           dateLabel: fmt.day(t.scheduledFor, 'month-day'),
           title: t.title,
-          plantingLabel: planting?.varietyDisplayName?.split(' ').slice(0, 2).join(' '),
+          plantingLabel: planting ? cropName(planting).split(' ').slice(0, 2).join(' ') : undefined,
           plantingColor: planting ? plantingColor(planting.id) : undefined,
           source: t.pluginTemplateKey ?? tr('planui.shell.manual'),
           status:
@@ -436,7 +439,7 @@
         <ScheduledTasksCard
           rows={scheduledRows}
           titleSuffix={activePlanting
-            ? `· ${activePlanting.varietyDisplayName.split(' ').slice(0, 2).join(' ')}`
+            ? `· ${cropName(activePlanting).split(' ').slice(0, 2).join(' ')}`
             : undefined}
           onAddTask={onAddTask
             ? () => onAddTask(selectedBlock.id, activePlanting?.id ?? null)

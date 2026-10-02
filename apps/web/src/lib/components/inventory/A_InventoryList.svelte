@@ -12,6 +12,7 @@
    */
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import { createT } from '$lib/i18n';
   import { invTypeWord } from './typeLabel';
   import InvTypeChip from './InvTypeChip.svelte';
@@ -230,7 +231,9 @@
                 <td>{row.displayName}</td>
                 <td class="muted">
                   {type === 'seed'
-                    ? (row.cropName ?? '—')
+                    ? row.cropName
+                      ? cropDisplayNameByEnglish(row.cropName, $page.data?.locale)
+                      : '—'
                     : stockCategoryLabel(row.category, $page.data?.locale)}
                 </td>
                 <td class="num" class:low={row.isLow}>

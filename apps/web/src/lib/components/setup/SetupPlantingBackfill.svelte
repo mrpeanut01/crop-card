@@ -2,6 +2,7 @@
   import { onMount, untrack } from 'svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { cropDisplayName } from '$lib/i18n/cropName';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import SetupSpot from './SetupSpot.svelte';
   import SpotSelect from './SpotSelect.svelte';
@@ -44,6 +45,7 @@
     now: nowProp
   }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
+  const cropName = (c: CropOption) => cropDisplayName(c.pluginId, c.displayName, page.data?.locale);
   const uid = $props.id();
   const now = untrack(() => nowProp ?? new Date());
   const months = [...recentMonths(now, 12), OLDER_OPTION];
@@ -74,7 +76,7 @@
   let saving = $state(false);
   let error = $state<string | null>(null);
 
-  const matches = $derived(crop ? [] : searchCrops(catalog, query));
+  const matches = $derived(crop ? [] : searchCrops(catalog, query, undefined, page.data?.locale));
 
   onMount(async () => {
     if (catalogProp || !canEdit) return;
@@ -99,7 +101,7 @@
 
   function pickCrop(c: CropOption) {
     crop = c;
-    query = c.displayName;
+    query = cropName(c);
   }
 
   function clearCrop() {
@@ -194,7 +196,7 @@
       {#if catalogError}
         {catalogError}
       {:else if crop}
-        {crop.displayName}{crop.cropFamily ? ` · ${crop.cropFamily}` : ''}
+        {cropName(crop)}{crop.cropFamily ? ` · ${crop.cropFamily}` : ''}
       {:else}
         {tr('setup.plant.typing')}
       {/if}
@@ -204,7 +206,7 @@
         {#each matches as m (m.pluginId)}
           <li>
             <button type="button" class="match" onclick={() => pickCrop(m)}>
-              <span>{m.displayName}</span>
+              <span>{cropName(m)}</span>
               {#if m.cropFamily}<small>{m.cropFamily}</small>{/if}
             </button>
           </li>

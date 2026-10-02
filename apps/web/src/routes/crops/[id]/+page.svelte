@@ -3,9 +3,13 @@
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import { fmt as prefsFmt } from '$lib/prefsState.svelte';
   import { createT, type TranslateKey } from '$lib/i18n';
+  import { cropDisplayName } from '$lib/i18n/cropName';
 
   const { data } = $props();
   const tr = $derived(createT(data.locale));
+  const plantingName = $derived(
+    cropDisplayName(data.crop.cropPluginId, data.crop.varietyDisplayName, data.locale)
+  );
 
   const STATUS_KEY = {
     planned: 'crops.status.planned',
@@ -26,7 +30,9 @@
   const kicker = $derived(
     [
       tr('crops.kickerPlanting'),
-      data.cropPlugin?.displayName ?? data.crop.cropPluginId,
+      data.cropPlugin
+        ? cropDisplayName(data.crop.cropPluginId, data.cropPlugin.displayName, data.locale)
+        : data.crop.cropPluginId,
       data.crop.plantingDate
         ? new Date(data.crop.plantingDate).toISOString().slice(0, 4)
         : tr('crops.kickerPlanned')
@@ -77,7 +83,7 @@
   }
 
   async function deleteCrop() {
-    if (!confirm(tr('crops.confirmDelete', { name: data.crop.varietyDisplayName }))) {
+    if (!confirm(tr('crops.confirmDelete', { name: plantingName }))) {
       return;
     }
     busy = true;
@@ -99,7 +105,7 @@
 </script>
 
 <svelte:head>
-  <title>{tr('crops.pageTitle', { name: data.crop.varietyDisplayName })}</title>
+  <title>{tr('crops.pageTitle', { name: plantingName })}</title>
 </svelte:head>
 
 <nav class="breadcrumb" aria-label={tr('crops.breadcrumb')}>
@@ -107,13 +113,13 @@
   <ChevronRight size={13} aria-hidden="true" />
   <a href={blockHref}>{data.block.name}</a>
   <ChevronRight size={13} aria-hidden="true" />
-  <span aria-current="page">{data.crop.varietyDisplayName}</span>
+  <span aria-current="page">{plantingName}</span>
 </nav>
 
 <header class="crop-header">
   <div>
     <Kicker>{kicker}</Kicker>
-    <h1 class="serif">{data.crop.varietyDisplayName}</h1>
+    <h1 class="serif">{plantingName}</h1>
     <p class="meta">
       {tr('crops.block')} <strong>{data.block.name}</strong>
       {#if data.block.acres}— {prefsFmt.qty(data.block.acres, 'area')}{/if}
@@ -187,7 +193,7 @@
     <h2>{tr('crops.plan')}</h2>
     <dl>
       <dt>{tr('crops.variety')}</dt>
-      <dd>{data.cropPlugin.displayName}</dd>
+      <dd>{cropDisplayName(data.crop.cropPluginId, data.cropPlugin.displayName, data.locale)}</dd>
       <dt>{tr('crops.family')}</dt>
       <dd>{data.cropPlugin.cropFamily}</dd>
       <dt>{tr('crops.dtm')}</dt>

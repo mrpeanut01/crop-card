@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { pageCropName } from '$lib/i18n/pageCropName';
   import { onMount, tick, untrack } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
@@ -74,7 +75,7 @@
           const p = d.design.plantings.find((q) => q.cropId === o.cropId);
           const count = p?.plantCount ? `, ${countOf('plant', p.plantCount, tr)}` : '';
           return tr('garden.page.legendRow', {
-            name: `${p?.varietyDisplayName ?? tr('garden.page.planting')}${count}`,
+            name: `${p ? pageCropName(p.cropPluginId, p.varietyDisplayName) : tr('garden.page.planting')}${count}`,
             from: shortDate(o.startMs, tr),
             to: shortDate(o.harvestEndMs, tr)
           });

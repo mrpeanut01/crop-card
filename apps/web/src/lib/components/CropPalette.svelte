@@ -7,6 +7,9 @@
   Keyboard "grab" via Space remains for catalog cards.
 -->
 <script lang="ts">
+  import { page } from '$app/state';
+  import { cropDisplayName } from '$lib/i18n/cropName';
+
   export interface PaletteCard {
     pluginId: string;
     displayName: string;
@@ -94,6 +97,7 @@
   }
 
   const props: Props = $props();
+  const cropLocale = $derived(page.data?.locale as string | undefined);
 </script>
 
 <div class="palette" aria-label="Crop palette">
@@ -133,7 +137,9 @@
                   onclick={() => props.onSeedStockClick?.(s.stockItemId)}
                   aria-label="Seed: {s.displayName}, on hand {s.onHand} {s.defaultUnit}, click to assign to a block"
                 >
-                  <span class="card-title">{s.displayName}</span>
+                  <span class="card-title"
+                    >{cropDisplayName(s.cropPluginId, s.displayName, cropLocale)}</span
+                  >
                   <span class="card-meta">
                     {s.onHand}
                     {s.defaultUnit}

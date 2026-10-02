@@ -8,6 +8,7 @@
   import SeedOrSeedling from '$lib/components/plan/SeedOrSeedling.svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { pageCropName } from '$lib/i18n/pageCropName';
 
   const w = getWizardContext();
   const tr = $derived(createT(page.data?.locale));
@@ -79,7 +80,7 @@
         {#each w.scheduleResponse.scheduled as p, i (i)}
           <tr>
             <td>
-              {p.varietyDisplayName}
+              {pageCropName(p.cropPluginId, p.varietyDisplayName)}
               {#if p.successionIndex}
                 <span class="chip chip-succession" title={tr('wizard.schedule.succession')}>
                   {p.successionIndex.i}/{p.successionIndex.n}
@@ -111,7 +112,7 @@
         {#each scheduledCrops as c (c.id)}
           {#if w.establishmentByCrop[c.id]}
             <div class="aw-sos-row">
-              <strong>{c.name}</strong>
+              <strong>{pageCropName(c.id, c.name)}</strong>
               <SeedOrSeedling
                 plugin={{ plantingGuide: w.props.plantingGuides[c.id] }}
                 dated={true}

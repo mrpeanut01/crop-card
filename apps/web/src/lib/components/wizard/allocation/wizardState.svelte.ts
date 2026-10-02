@@ -15,6 +15,7 @@ import { humanizeAllocationViolation as humanizeViolation } from './flows/violat
 import { PlanResetState } from './steps/planResetState.svelte';
 import { SeedLinkState } from './steps/seedLinkState.svelte';
 import { wt } from './wt';
+import { pageCropName } from '$lib/i18n/pageCropName';
 import type {
   AllocationResponse,
   BlockEntry,
@@ -500,7 +501,8 @@ export class AllocationWizardState {
 
   varietyDisplayFor(stockItemId: string): string {
     const entry = this.props.seedStock.find((s) => s.stockItemId === stockItemId);
-    return entry?.shortName ?? entry?.displayName ?? stockItemId;
+    const name = entry?.shortName ?? entry?.displayName ?? stockItemId;
+    return entry ? pageCropName(entry.cropPluginId, name) : name;
   }
 
   saveAndResumeLater(): Promise<void> {

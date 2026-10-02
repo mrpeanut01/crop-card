@@ -14,6 +14,7 @@
   import { createT } from '$lib/i18n';
   import { movementReasonText } from '$lib/stock/animalStock';
   import { page } from '$app/state';
+  import { cropDisplayName } from '$lib/i18n/cropName';
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
   import LotQuantities from '../LotQuantities.svelte';
@@ -62,7 +63,10 @@
   <div class="col">
     <InvSection title={tr('inv.seed.cropCategory')} kicker={tr('inv.seed.linked')}>
       {#if plugin}
-        <InvKVP label={tr('inv.seed.category')} value={plugin.displayName} />
+        <InvKVP
+          label={tr('inv.seed.category')}
+          value={cropDisplayName(plugin.pluginId, plugin.displayName, page.data?.locale)}
+        />
         <InvKVP label={tr('inv.seed.cropFamily')} value={plugin.cropFamily ?? '—'} />
         <InvKVP label={tr('inv.seed.archetype')} value={plugin.archetype ?? '—'} tone="locked" />
         <p class="cta-row">

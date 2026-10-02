@@ -1,4 +1,5 @@
 import type { SetupPlantingResult } from './types';
+import { cropDisplayName } from '$lib/i18n/cropName';
 
 export interface CropOption {
   pluginId: string;
@@ -20,18 +21,23 @@ function norm(s: string): string {
 export function searchCrops(
   catalog: readonly CropOption[],
   query: string,
-  limit = 8
+  limit = 8,
+  locale?: string | null
 ): CropOption[] {
   const q = norm(query);
   if (!q) return [];
   const terms = q.split(' ');
   const scored: Array<{ c: CropOption; rank: number }> = [];
   for (const c of catalog) {
-    const name = norm(c.displayName);
-    const words = name.split(' ');
-    const matches = terms.every((t) => words.some((w) => w.startsWith(t)));
-    if (!matches) continue;
-    scored.push({ c, rank: name.startsWith(q) ? 0 : 1 });
+    const names = [norm(c.displayName)];
+    const local = cropDisplayName(c.pluginId, c.displayName, locale);
+    if (local !== c.displayName) names.push(norm(local));
+    const hit = names.find((name) => {
+      const words = name.split(' ');
+      return terms.every((t) => words.some((w) => w.startsWith(t)));
+    });
+    if (hit === undefined) continue;
+    scored.push({ c, rank: names.some((name) => name.startsWith(q)) ? 0 : 1 });
   }
   scored.sort((a, b) => a.rank - b.rank || a.c.displayName.localeCompare(b.c.displayName));
   return scored.slice(0, limit).map((s) => s.c);

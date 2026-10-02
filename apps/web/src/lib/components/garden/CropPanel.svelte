@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { pageCropName } from '$lib/i18n/pageCropName';
   import { resolveSpacing } from '$lib/garden/plantCount';
   import type { GardenCrop } from '$lib/garden/types';
   import { getDesigner, type CropChoice } from './designerState.svelte';
@@ -140,10 +141,13 @@
 
   function rank(c: GardenCrop, q: string): number {
     if (!q) return 0;
-    const name = c.displayName.toLowerCase();
-    if (name.startsWith(q)) return 0;
-    if (name.split(/[\s—(),-]+/).some((w) => w.startsWith(q))) return 1;
-    if (name.includes(q)) return 2;
+    const names = [
+      c.displayName.toLowerCase(),
+      pageCropName(c.pluginId, c.displayName).toLowerCase()
+    ];
+    if (names.some((name) => name.startsWith(q))) return 0;
+    if (names.some((name) => name.split(/[\s—(),-]+/).some((w) => w.startsWith(q)))) return 1;
+    if (names.some((name) => name.includes(q))) return 2;
     if (
       c.cropFamily.toLowerCase().includes(q) ||
       familyName(c.cropFamily, tr).toLowerCase().includes(q)
@@ -249,7 +253,7 @@
                   aria-hidden="true"
                   title={tr('garden.crop.dragTitle')}
                 ></span>{/if}
-              <span class="name">{p.varietyDisplayName}</span>
+              <span class="name">{pageCropName(p.cropPluginId, p.varietyDisplayName)}</span>
               <span class="meta">
                 {d.bed(p.blockId)?.name ?? ''}{p.plantingDateMs != null
                   ? ` · ${d.dateText(p.plantingDateMs)}`
@@ -307,7 +311,7 @@
                   aria-hidden="true"
                   title={tr('garden.crop.dragTitle')}
                 ></span>{/if}
-              <span class="name">{c.displayName}</span>
+              <span class="name">{pageCropName(c.pluginId, c.displayName)}</span>
               <span class="meta">
                 {c.daysToMaturity
                   ? tr('garden.crop.days', {

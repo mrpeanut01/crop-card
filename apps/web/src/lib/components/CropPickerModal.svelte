@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { cropDisplayName } from '$lib/i18n/cropName';
+
   type CatalogItem = {
     pluginId: string;
     displayName: string;
@@ -69,6 +72,9 @@
   let selectedPluginId = $state<string | null>(null);
   let plantingDate = $state('');
 
+  const cropLocale = $derived(page.data?.locale as string | undefined);
+  const nameOf = (c: CatalogItem) => cropDisplayName(c.pluginId, c.displayName, cropLocale);
+
   const families = $derived([...new Set(catalog.map((c) => c.cropFamily ?? 'other'))].sort());
 
   const filtered = $derived(
@@ -77,6 +83,7 @@
       const matchSearch =
         !q ||
         c.displayName.toLowerCase().includes(q) ||
+        nameOf(c).toLowerCase().includes(q) ||
         (c.cropFamily ?? '').toLowerCase().includes(q);
       const matchFamily = !familyFilter || c.cropFamily === familyFilter;
       return matchSearch && matchFamily;
@@ -161,7 +168,7 @@
                 selectedPluginId = selectedPluginId === item.pluginId ? null : item.pluginId;
               }}
             >
-              <span class="variety-name">{item.displayName}</span>
+              <span class="variety-name">{nameOf(item)}</span>
               {#if item.daysToMaturity}
                 <span class="variety-days">{dtLabel(item.daysToMaturity)}</span>
               {/if}
@@ -174,7 +181,7 @@
     {#if selectedItem}
       <div class="picker-footer">
         <div class="footer-crop">
-          <strong>{selectedItem.displayName}</strong>
+          <strong>{nameOf(selectedItem)}</strong>
           <span class="footer-arrow">→ {blockName}</span>
         </div>
         <div class="footer-actions">

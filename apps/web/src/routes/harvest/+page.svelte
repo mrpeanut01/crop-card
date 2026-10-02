@@ -1,6 +1,7 @@
 <script lang="ts">
   import { isUpdatingResponse, retryAfterSeconds, updatingQueuedNotice } from '$lib/updating';
   import { createT } from '$lib/i18n';
+  import { cropDisplayName } from '$lib/i18n/cropName';
   import { onMount, tick, untrack } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import type { PlantingHarvestStatus } from './+page.server';
@@ -379,7 +380,7 @@
           class:focused={data.focusPlantingId === p.plantingId}
         >
           <header>
-            <strong>{p.varietyDisplayName}</strong>
+            <strong>{cropDisplayName(p.cropPluginId, p.varietyDisplayName, data.locale)}</strong>
             <span class="block">{p.blockName}</span>
             {#if p.cropFamily}
               <span class="family">{p.cropFamily}</span>
@@ -511,7 +512,7 @@
     <ul class="upcoming-list">
       {#each upcomingPlantings.slice(0, 8) as p (p.plantingId)}
         <li>
-          <strong>{p.varietyDisplayName}</strong>
+          <strong>{cropDisplayName(p.cropPluginId, p.varietyDisplayName, data.locale)}</strong>
           <span class="up-block">· {p.blockName}</span>
           {#if p.windowStartMs}
             <span class="up-when">

@@ -7,6 +7,7 @@
 import type { CardFact, CardModel, CardStatus } from '$lib/cards/model';
 import type { InventoryType } from '$lib/inventory/types';
 import { DEFAULT_PREFS, formatCalendarDate, type Prefs } from '$lib/prefs';
+import { cropDisplayName, cropDisplayNameByEnglish } from '$lib/i18n/cropName';
 import { formatStockQuantity, isLabelUnitCategory } from '$lib/stock/units';
 import { stockCategoryLabel } from '$lib/stock/categories';
 import { t } from '$lib/i18n';
@@ -74,7 +75,7 @@ export function inventoryRowCard(
       ...base,
       kind: crop ? 'careGuide' : 'stock',
       kicker: crop ? tr('inv.list.col.crop') : tr('inv.list.catalog'),
-      title: row.displayName,
+      title: crop ? cropDisplayName(row.pluginId, row.displayName, prefs.locale) : row.displayName,
       facts,
       provenance: [{ source: 'plugin', detail: row.pluginId }]
     };
@@ -83,7 +84,10 @@ export function inventoryRowCard(
   const expected = expectedQuantityText(row, prefs);
   const facts: CardFact[] = [
     type === 'seed'
-      ? { label: tr('inv.list.col.crop'), value: row.cropName ?? NONE }
+      ? {
+          label: tr('inv.list.col.crop'),
+          value: row.cropName ? cropDisplayNameByEnglish(row.cropName, prefs.locale) : NONE
+        }
       : { label: tr('inv.list.col.kind'), value: stockCategoryLabel(row.category, prefs.locale) },
     {
       label: tr('inv.list.col.onHand'),

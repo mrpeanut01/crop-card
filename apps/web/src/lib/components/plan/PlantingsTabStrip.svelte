@@ -11,6 +11,7 @@
   import type { PlantingRecord } from '$lib/db/blocks';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { cropDisplayName } from '$lib/i18n/cropName';
 
   interface Props {
     plantings: PlantingRecord[];
@@ -50,7 +51,7 @@
   {#each plantings as p, i (p.id)}
     <button type="button" class="tab" class:active={activeIdx === i} onclick={() => onSelect(i)}>
       <span class="swatch" style:background={plantingColor(p.id)}></span>
-      {shortName(p.varietyDisplayName)}
+      {shortName(cropDisplayName(p.cropPluginId, p.varietyDisplayName, page.data?.locale))}
     </button>
   {/each}
 </nav>

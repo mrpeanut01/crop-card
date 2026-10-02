@@ -1,22 +1,24 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { parseIdentifier } from '$lib/identity';
+import { t, type MessageKey } from '$lib/i18n';
 import { refreshSessionIdentity, requireInteractiveUser } from '$lib/server/auth';
 import { requestLinkCode, unlinkIdentity } from '$lib/server/loginCodes';
 import { magicLinkOrigin } from '$lib/server/magicLink';
 
-const LINK_ERROR_COPY = {
-  'in-use': 'That is already the sign-in for a different CropCard account.',
-  'already-yours': 'That is already on your account.',
-  'rate-limited': 'Too many codes requested. Wait a few minutes and try again.'
-} as const;
+const LINK_ERROR_KEY = {
+  'in-use': 'signin.link.inUse',
+  'already-yours': 'signin.link.alreadyYours',
+  'rate-limited': 'signin.link.rateLimited'
+} as const satisfies Record<string, MessageKey>;
 
 /** POST { identifier } — send a verification code to a new email or phone. */
 export const POST: RequestHandler = async (event) => {
   const user = requireInteractiveUser(event);
+  const locale = event.locals.locale;
   const body = (await event.request.json().catch(() => null)) as { identifier?: unknown } | null;
   const id = parseIdentifier(body?.identifier);
   if (!id) {
-    return json({ error: 'Enter an email address or a phone number.' }, { status: 400 });
+    return json({ error: t(locale, 'signin.err.emailOrPhone') }, { status: 400 });
   }
   try {
     let origin: string | null = null;
@@ -33,7 +35,7 @@ export const POST: RequestHandler = async (event) => {
     });
     if (!r.ok) {
       return json(
-        { error: LINK_ERROR_COPY[r.error] },
+        { error: t(locale, LINK_ERROR_KEY[r.error]) },
         { status: r.error === 'rate-limited' ? 429 : 409 }
       );
     }
@@ -41,7 +43,9 @@ export const POST: RequestHandler = async (event) => {
   } catch (e) {
     console.error('[identity] link code dispatch failed', e instanceof Error ? e.message : e);
     return json(
-      { error: `We couldn't send the ${id.kind === 'email' ? 'email' : 'text'} just now.` },
+      {
+        error: t(locale, id.kind === 'email' ? 'signin.link.emailFailed' : 'signin.link.textFailed')
+      },
       { status: 503 }
     );
   }
@@ -56,10 +60,7 @@ export const DELETE: RequestHandler = async (event) => {
   }
   const r = unlinkIdentity(user.id, body.kind);
   if (!r.ok) {
-    return json(
-      { error: "You can't remove your only way to sign in. Add the other one first." },
-      { status: 409 }
-    );
+    return json({ error: t(event.locals.locale, 'signin.link.lastIdentity') }, { status: 409 });
   }
   refreshSessionIdentity(event, user);
   return json({ ok: true });

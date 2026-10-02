@@ -19,6 +19,7 @@ import { owners, users } from '$lib/db/schema';
 import { identityName } from '$lib/identity';
 import { prefsFor, profileFor } from '$lib/db/userProfile';
 import { formatInstant } from '$lib/prefs';
+import { t } from '$lib/i18n';
 import { eq } from 'drizzle-orm';
 import { listBlocks } from '$lib/db/blocks';
 import { listEquipment } from '$lib/db/equipment';
@@ -60,14 +61,16 @@ export const load: ServerLoad = async ({ locals }) => {
   const aiEnabled = isOwner && getApiKey() !== '';
 
   // ─── User identity metadata ─────────────────────────────────────────
-  const prefs = prefsFor(locals.user.id);
+  const prefs = { ...prefsFor(locals.user.id), locale: locals.locale };
   const memberSince = userRow?.createdAt
     ? formatInstant(userRow.createdAt, prefs, 'date', { day: undefined })
     : '—';
   // Last sign-in is the HMAC cookie's issuance time; we don't persist
   // sign-in events as DB rows yet, so use "today" as a placeholder
   // when the user is currently authenticated.
-  const lastLogin = `today · ${formatInstant(new Date(), prefs, 'time', { timeZoneName: 'short' })}`;
+  const lastLogin = t(locals.locale, 'account.sessions.lastSignInValue', {
+    time: formatInstant(new Date(), prefs, 'time', { timeZoneName: 'short' })
+  });
 
   const profile = profileFor(locals.user.id);
 
@@ -113,7 +116,7 @@ export const load: ServerLoad = async ({ locals }) => {
       rulesVersion: RULES_VERSION,
       pluginFailures: getRegistryStats().failures.length,
       tenantId: ownerRow?.slug ?? '—',
-      lastBackup: 'Litestream · live'
+      lastBackup: t(locals.locale, 'settings.diag.backupLive')
     }
   };
 };

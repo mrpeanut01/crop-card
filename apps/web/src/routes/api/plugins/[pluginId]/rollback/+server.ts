@@ -17,6 +17,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { requireSuperadmin } from '$lib/server/auth';
 import { PluginAuthorError, rollbackTo } from '$lib/server/pluginFiles';
 import { historyOf } from '$lib/db/pluginVersions';
+import { t } from '$lib/i18n';
 
 export const POST: RequestHandler = async (event) => {
   const session = requireSuperadmin(event);
@@ -40,7 +41,15 @@ export const POST: RequestHandler = async (event) => {
   const history = historyOf(pluginId);
   const target = history.find((r) => r.version === toVersion);
   if (!target) {
-    return json({ error: `no version ${toVersion} on record for ${pluginId}` }, { status: 404 });
+    return json(
+      {
+        error: t(event.locals.locale, 'pluginui.api.noVersion', {
+          version: toVersion,
+          id: pluginId
+        })
+      },
+      { status: 404 }
+    );
   }
 
   try {

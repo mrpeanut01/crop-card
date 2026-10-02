@@ -17,44 +17,48 @@
 
 {#snippet tier()}
   <SettingsSection
-    title="Retention policy"
+    title={tr('settings.records.retentionTitle')}
     sub="VDACS requires a 2-year minimum for pesticide records. CropCard never auto-deletes — near-expiry rows surface an alert and only the owner can remove them (NFR-05)."
   >
     <div class="tile-grid">
       <div class="tile">
         <div class="tile-v serif">{data.retention.sprayYears} yr</div>
-        <div class="tile-k">Minimum retention</div>
+        <div class="tile-k">{tr('settings.records.minRetention')}</div>
         <div class="tile-note">Spray, insecticide, fungicide (FR-09 / NFR-05)</div>
       </div>
       <div class="tile">
         <div class="tile-v serif">{data.retention.sprayInRetention}</div>
-        <div class="tile-k">Spray records in retention</div>
+        <div class="tile-k">{tr('settings.records.inRetention')}</div>
         <div class="tile-note">Within the last {data.retention.sprayYears} years</div>
       </div>
       <div class="tile">
         <div class="tile-v serif">{data.retention.approachingRetention}</div>
-        <div class="tile-k">Approaching expiry</div>
+        <div class="tile-k">{tr('settings.records.approaching')}</div>
         <div class="tile-note">Aged into the 30-day pre-expiry window</div>
       </div>
       <div class="tile">
         <div class="tile-v serif">{totalRecords}</div>
-        <div class="tile-k">Records retained</div>
+        <div class="tile-k">{tr('settings.records.retained')}</div>
         <div class="tile-note">
-          {data.counts.sprays} spray · {data.counts.insecticides} insecticide · {data.counts
-            .fungicides} fungicide · {data.counts.harvests} harvest
+          {tr('settings.records.counts', {
+            sprays: data.counts.sprays,
+            insecticides: data.counts.insecticides,
+            fungicides: data.counts.fungicides,
+            harvests: data.counts.harvests
+          })}
         </div>
       </div>
     </div>
   </SettingsSection>
 
   <SettingsSection
-    title="Lock window"
+    title={tr('settings.records.lockTitle')}
     sub="FR-09 · spray records become immutable after this window closes. Server-enforced regardless of UI; not user-configurable."
   >
     <div class="lock-grid">
       <div class="tile">
         <div class="tile-v serif">{data.lockWindowHours} h</div>
-        <div class="tile-k">Immutable after</div>
+        <div class="tile-k">{tr('settings.records.immutableAfter')}</div>
         <div class="tile-note">Measured from the time of application</div>
       </div>
       <div class="warn-card">
@@ -65,14 +69,17 @@
   </SettingsSection>
 
   <SettingsSection
-    title="Integrity & export"
+    title={tr('settings.records.integrityTitle')}
     sub="Each record carries per-plugin content hashes; every export prints a SHA-256 of its canonical row set so an inspector can confirm the records haven't changed since export."
   >
     <div class="action-row">
       <a class="ghost" href="/api/records/export.vdacs.pdf">
-        <FileText size={12} /> Download VDACS audit pack
+        <FileText size={12} />
+        {tr('settings.records.downloadVdacs')}
       </a>
-      <a class="ghost" href="/settings/helpers"><Plus size={12} /> Invite an inspector</a>
+      <a class="ghost" href="/settings/helpers"
+        ><Plus size={12} /> {tr('settings.records.inviteInspector')}</a
+      >
     </div>
   </SettingsSection>
 {/snippet}
@@ -82,7 +89,7 @@
     <details class="quiet-tier" data-testid="quiet-compliance">
       <summary>
         <ChevronRight size={18} class="chev" aria-hidden="true" />
-        <span>Pesticide record-keeping (applies if you spray)</span>
+        <span>{tr('settings.records.quietSummary')}</span>
       </summary>
       <p class="quiet-lede">
         Anything you spray, whether copper, sulfur, Bt or spinosad, comes with label rules and

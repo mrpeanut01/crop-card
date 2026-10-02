@@ -7,6 +7,7 @@
  */
 
 import { error, fail, redirect } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { and, count, gte } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/db/client';
@@ -48,8 +49,8 @@ export const load: PageServerLoad = ({ locals }) => {
 export const actions: Actions = {
   saveKey: ({ locals, request }) => {
     if (aiKeyStatus().source === 'env') {
-      return fail(400, { error: 'AI help is included with your plan, so no key is needed.' });
+      return fail(400, { error: t(locals.locale, 'settings.ai.msg.included') });
     }
-    return saveAiKey(locals.user, request);
+    return saveAiKey(locals.user, request, locals.locale);
   }
 };

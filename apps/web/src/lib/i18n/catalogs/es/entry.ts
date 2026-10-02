@@ -522,5 +522,52 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'ui.queued.title': 'Guardado en este dispositivo. Se sube cuando tengas señal.',
   'ui.update.later': 'Después',
   'ui.update.msg': 'Hay una versión nueva',
-  'ui.update.reload': 'Recargar'
+  'ui.update.reload': 'Recargar',
+  'signin.placeholderEmail': 'tu@ejemplo.com',
+  'signin.err.emailOrPhone': 'Escribe un correo electrónico o un número de teléfono.',
+  'signin.err.emailOrPhoneUs':
+    'Escribe un correo electrónico o un número de teléfono (en EE. UU. puedes omitir el +1).',
+  'signin.err.looksPhone':
+    'Eso parece un número de teléfono. Toca "Usar un número de teléfono" abajo.',
+  'signin.err.enterEmail': 'Escribe tu correo electrónico, por ejemplo tu@ejemplo.com.',
+  'signin.err.looksEmail':
+    'Eso parece un correo electrónico. Toca "Usar correo electrónico" abajo.',
+  'signin.err.enterMobile':
+    'Escribe un número de celular. En EE. UU. puedes omitir el +1, por ejemplo (571) 555-0123.',
+  'signin.err.validEmail': 'Escribe un correo electrónico válido.',
+  'signin.err.notConfigured': 'El inicio de sesión no está configurado en este servidor.',
+  'signin.err.emailSendFailed':
+    'No pudimos enviar el correo en este momento. Inténtalo de nuevo en un minuto.',
+  'signin.err.smsSendFailed':
+    'No pudimos enviar el mensaje de texto en este momento. Inténtalo de nuevo en un minuto o usa tu correo.',
+  'signin.err.startAgain': 'Empieza de nuevo con tu correo o tu número de teléfono.',
+  'signin.msg.linkSent':
+    'Si esa dirección puede iniciar sesión, ya va en camino un enlace para entrar. Vence en 15 minutos.',
+  'signin.msg.codeSent':
+    'Si ese número puede recibir mensajes de texto, ya va en camino un código de 6 dígitos. Vence en 10 minutos.',
+  'signin.code.invalid': 'Ese código no coincide. Revísalo e inténtalo de nuevo.',
+  'signin.code.expired': 'Ese código ya venció. Pide uno nuevo.',
+  'signin.code.tooManyAttempts': 'Demasiados intentos fallidos con ese código. Pide uno nuevo.',
+  'signin.link.inUse': 'Eso ya es el inicio de sesión de otra cuenta de CropCard.',
+  'signin.link.alreadyYours': 'Eso ya está en tu cuenta.',
+  'signin.link.rateLimited':
+    'Pediste demasiados códigos. Espera unos minutos e inténtalo de nuevo.',
+  'signin.link.emailFailed': 'No pudimos enviar el correo en este momento.',
+  'signin.link.textFailed': 'No pudimos enviar el mensaje de texto en este momento.',
+  'signin.link.lastIdentity':
+    'No puedes quitar tu única forma de iniciar sesión. Agrega la otra primero.',
+  'entry.unsub.err.invalid': 'Este enlace para cancelar la suscripción no es válido.',
+  'entry.unsub.err.notMember':
+    'Ya no estás en esta granja en CropCard, así que no se pueden activar sus alertas.',
+  'entry.unsub.err.pickOne': 'Elige al menos un correo para volver a activarlo.',
+  'entry.unsub.err.expired':
+    'Este enlace solo puede deshacer la cancelación durante unos minutos. Inicia sesión en CropCard y vuelve a activar las alertas en Configuración, Notificaciones.',
+  'onboard.frostConfirm.fallback':
+    'No encontramos una estación meteorológica a menos de 50 millas, así que estos son los promedios del condado de Loudoun. Compáralos con la oficina de extensión de tu condado, o consérvalos por ahora.',
+  'onboard.frostConfirm.frost-free':
+    'La estación más cercana casi nunca registra heladas. El calendario de siembra igual necesita una fecha de primavera y una de otoño, así que escribe las tuyas, o conserva por ahora los promedios del condado de Loudoun.',
+  'onboard.frostConfirm.missing':
+    'El calendario de siembra necesita una fecha de helada de primavera y una de otoño. Escríbelas, o conserva por ahora los promedios del condado de Loudoun.',
+  'entry.invite.someFarm': 'una granja de CropCard',
+  'entry.invite.noLongerValid': 'la invitación ya no es válida'
 };

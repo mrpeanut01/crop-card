@@ -43,7 +43,19 @@ const KNOWN_COPY: Record<string, MessageKey> = {
   'Uploads need a connection.': 'docs.copy.needsConnection',
   'Only the farm owner can upload files.': 'docs.copy.ownerOnly',
   'This file is bigger than 20 MB. Use a smaller file.': 'docs.copy.tooBig',
-  "We couldn't save this file. Try again.": 'docs.copy.saveFailed'
+  "We couldn't save this file. Try again.": 'docs.copy.saveFailed',
+  'The app is updating. Try again in a minute.': 'docs.copy.fenced',
+  "The upload didn't say how big the file is. Try again from the app.": 'docs.copy.lengthRequired',
+  "Your farm's file storage is full. Delete files or move to a bigger plan to upload more.":
+    'docs.copy.storageFull',
+  'This file is empty.': 'docs.copy.empty',
+  'Nothing was saved because the record changed during the upload. Try again.': 'docs.copy.aborted',
+  "The upload didn't arrive in one piece. Check your connection and try again.":
+    'docs.copy.truncated',
+  "This file type can't be stored. Use a PDF, JPEG, PNG, WebP or CSV file.":
+    'docs.copy.unsupported',
+  "This file couldn't be read. Save it again as a PDF, JPEG, PNG, WebP or CSV file and retry.":
+    'docs.copy.unreadable'
 };
 
 export function localizeDocCopy(tr: Translator, message: string): string {

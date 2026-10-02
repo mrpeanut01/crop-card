@@ -496,5 +496,48 @@ export const enEntry = {
   'ui.queued.title': 'Saved on this device. It uploads when you have signal.',
   'ui.update.later': 'Later',
   'ui.update.msg': 'New version available',
-  'ui.update.reload': 'Reload'
+  'ui.update.reload': 'Reload',
+  'signin.placeholderEmail': 'you@example.com',
+  'signin.err.emailOrPhone': 'Enter an email address or a phone number.',
+  'signin.err.emailOrPhoneUs':
+    'Enter an email address or a phone number (US numbers can skip the +1).',
+  'signin.err.looksPhone':
+    'That looks like a phone number. Tap "Use a phone number instead" below.',
+  'signin.err.enterEmail': 'Enter your email address, like you@example.com.',
+  'signin.err.looksEmail': 'That looks like an email address. Tap "Use email instead" below.',
+  'signin.err.enterMobile':
+    'Enter a mobile number. US numbers can skip the +1, like (571) 555-0123.',
+  'signin.err.validEmail': 'Enter a valid email address.',
+  'signin.err.notConfigured': 'Sign-in is not configured on this server.',
+  'signin.err.emailSendFailed': "We couldn't send the email just now. Try again in a minute.",
+  'signin.err.smsSendFailed':
+    "We couldn't send the text just now. Try again in a minute, or use your email.",
+  'signin.err.startAgain': 'Start again with your email or phone number.',
+  'signin.msg.linkSent':
+    'If that address can sign in, a sign-in link is on its way. It expires in 15 minutes.',
+  'signin.msg.codeSent':
+    'If that number can receive texts, a 6-digit code is on its way. It expires in 10 minutes.',
+  'signin.code.invalid': "That code didn't match. Check it and try again.",
+  'signin.code.expired': 'That code has expired. Send a new one.',
+  'signin.code.tooManyAttempts': 'Too many wrong tries for that code. Send a new one.',
+  'signin.link.inUse': 'That is already the sign-in for a different CropCard account.',
+  'signin.link.alreadyYours': 'That is already on your account.',
+  'signin.link.rateLimited': 'Too many codes requested. Wait a few minutes and try again.',
+  'signin.link.emailFailed': "We couldn't send the email just now.",
+  'signin.link.textFailed': "We couldn't send the text just now.",
+  'signin.link.lastIdentity': "You can't remove your only way to sign in. Add the other one first.",
+  'entry.unsub.err.invalid': 'This unsubscribe link is not valid.',
+  'entry.unsub.err.notMember':
+    'You are no longer on this farm in CropCard, so its alerts cannot be turned on.',
+  'entry.unsub.err.pickOne': 'Pick at least one email to turn back on.',
+  'entry.unsub.err.expired':
+    'This link can only undo an unsubscribe for a few minutes. Sign in to CropCard and turn alerts back on under Settings, Notifications.',
+  'onboard.frostConfirm.fallback':
+    "We couldn't find a weather station within 50 miles, so these are the Loudoun County averages. Check them against your county extension office, or keep them for now.",
+  'onboard.frostConfirm.frost-free':
+    'The nearest station almost never records frost. The planting calendar still needs a spring and a fall date, so type your own, or keep the Loudoun County averages for now.',
+  'onboard.frostConfirm.missing':
+    'The planting calendar needs a spring and a fall frost date. Type them in, or keep the Loudoun County averages for now.',
+  'entry.invite.someFarm': 'a CropCard farm',
+  'entry.invite.noLongerValid': 'invite is no longer valid'
 } as const;

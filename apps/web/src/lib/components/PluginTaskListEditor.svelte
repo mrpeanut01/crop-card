@@ -15,12 +15,19 @@
    * actually accepts.
    */
   import HelpIcon from '$lib/components/HelpIcon.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import {
     TASK_CATEGORY_VALUES,
     glyphForTaskCategory,
-    labelForTaskCategory,
     type TaskCategory
   } from '$lib/plan/taskCategory';
+
+  const tr = $derived(createT(page.data?.locale));
+
+  function categoryLabel(c: TaskCategory): string {
+    return tr(`pluginui.taskCategory.${c}`);
+  }
 
   function slugify(s: string): string {
     return s
@@ -133,98 +140,98 @@
   </header>
 
   {#if props.rows.length === 0}
-    <p class="empty">No {props.variant} defined yet.</p>
+    <p class="empty">{tr('pluginui.tasks.empty', { variant: props.variant })}</p>
   {:else}
     {#each props.rows as row, i (i)}
       <div class="row card-tight">
         <div class="row-top">
           <label class="field flex-grow">
-            <span class="label-text">Title</span>
+            <span class="label-text">{tr('pluginui.tasks.title')}</span>
             <input
               type="text"
               bind:value={row.title}
               oninput={() => {
                 row.key = resolveKey(row, i, props.rows);
               }}
-              placeholder="e.g. Test germination"
+              placeholder={tr('pluginui.tasks.titlePh')}
             />
           </label>
           <button
             type="button"
             class="remove-btn"
             onclick={() => removeRow(i)}
-            aria-label="Remove task">×</button
+            aria-label={tr('pluginui.tasks.remove')}>×</button
           >
         </div>
 
         <div class="row-mid">
           <label class="field">
             <span class="label-text-row">
-              <span class="label-text">Category (pip glyph)</span>
+              <span class="label-text">{tr('pluginui.tasks.category')}</span>
               <HelpIcon
-                label="What is task category?"
-                text="Glyph displayed on the Plan swim-lane: ◆ till, ✚ fertilize, ✦ spray, ◉ scout, ⚑ companion-check. Drives the visual lane on /plan."
+                label={tr('pluginui.tasks.categoryHelpLabel')}
+                text={tr('pluginui.tasks.categoryHelp')}
               />
             </span>
             <select bind:value={row.category}>
-              <option value="">— Select —</option>
+              <option value="">{tr('pluginui.tasks.select')}</option>
               {#each TASK_CATEGORY_VALUES as v (v)}
-                <option value={v}>{glyphForTaskCategory(v)} {labelForTaskCategory(v)}</option>
+                <option value={v}>{glyphForTaskCategory(v)} {categoryLabel(v)}</option>
               {/each}
             </select>
           </label>
 
           {#if props.variant === 'preTasks'}
             <label class="field">
-              <span class="label-text">Days before plant</span>
+              <span class="label-text">{tr('pluginui.tasks.daysBeforePlant')}</span>
               <input type="number" min="0" bind:value={row.daysBeforePlant} />
             </label>
             <label class="field">
-              <span class="label-text">Days before first harvest</span>
+              <span class="label-text">{tr('pluginui.tasks.daysBeforeHarvest')}</span>
               <input type="number" min="0" bind:value={row.daysBeforeFirstHarvest} />
             </label>
           {:else if props.variant === 'postTasks'}
             <label class="field">
-              <span class="label-text">Days after plant</span>
+              <span class="label-text">{tr('pluginui.tasks.daysAfterPlant')}</span>
               <input type="number" min="0" bind:value={row.daysAfterPlant} />
             </label>
             <label class="field">
-              <span class="label-text">Days after harvest</span>
+              <span class="label-text">{tr('pluginui.tasks.daysAfterHarvest')}</span>
               <input type="number" min="0" bind:value={row.daysAfterHarvest} />
             </label>
           {:else}
             <label class="field">
-              <span class="label-text">Kind (engine routing)</span>
+              <span class="label-text">{tr('pluginui.tasks.kind')}</span>
               <select bind:value={row.kind}>
                 {#each SEASONAL_KINDS as k (k)}
-                  <option value={k}>{k}</option>
+                  <option value={k}>{tr(`pluginui.seasonalKind.${k}`)}</option>
                 {/each}
               </select>
             </label>
             <label class="field">
-              <span class="label-text">Day of year (1–366)</span>
+              <span class="label-text">{tr('pluginui.tasks.dayOfYear')}</span>
               <input type="number" min="1" max="366" bind:value={row.dayOfYear} />
             </label>
             <label class="field">
-              <span class="label-text">Days after planting</span>
+              <span class="label-text">{tr('pluginui.tasks.daysAfterPlanting')}</span>
               <input type="number" min="0" max="3650" bind:value={row.daysAfterPlanting} />
             </label>
             <label class="field">
-              <span class="label-text">Window (days)</span>
+              <span class="label-text">{tr('pluginui.tasks.window')}</span>
               <input type="number" min="1" max="120" bind:value={row.windowDays} />
             </label>
           {/if}
         </div>
 
         <label class="field full">
-          <span class="label-text">Body (optional operator note)</span>
+          <span class="label-text">{tr('pluginui.tasks.body')}</span>
           <textarea rows="2" bind:value={row.body}></textarea>
         </label>
       </div>
     {/each}
   {/if}
 
-  <button type="button" class="add-btn" onclick={addRow}>+ Add task</button>
+  <button type="button" class="add-btn" onclick={addRow}>{tr('pluginui.tasks.add')}</button>
 </section>
 
 <style>

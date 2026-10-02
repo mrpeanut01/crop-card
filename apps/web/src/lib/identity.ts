@@ -8,6 +8,8 @@
  * else must be typed with a leading `+` and country code.
  */
 
+import { t } from '$lib/i18n';
+
 export type Identifier = { kind: 'email'; value: string } | { kind: 'phone'; value: string };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -81,25 +83,23 @@ export type ChannelParse = { ok: true; id: Identifier } | { ok: false; error: st
 /** Sign-in is email-first: the email field only takes an email and the
  *  phone field only takes a phone, so a mistyped value gets a clear hint
  *  instead of a text message nobody asked for. */
-export function parseForChannel(input: unknown, channel: SignInChannel): ChannelParse {
+export function parseForChannel(
+  input: unknown,
+  channel: SignInChannel,
+  locale?: string | null
+): ChannelParse {
   if (channel === 'email') {
     const email = normalizeEmail(input);
     if (email) return { ok: true, id: { kind: 'email', value: email } };
     if (normalizePhone(input)) {
-      return {
-        ok: false,
-        error: 'That looks like a phone number. Tap "Use a phone number instead" below.'
-      };
+      return { ok: false, error: t(locale, 'signin.err.looksPhone') };
     }
-    return { ok: false, error: 'Enter your email address, like you@example.com.' };
+    return { ok: false, error: t(locale, 'signin.err.enterEmail') };
   }
   const phone = normalizePhone(input);
   if (phone) return { ok: true, id: { kind: 'phone', value: phone } };
   if (normalizeEmail(input)) {
-    return { ok: false, error: 'That looks like an email address. Tap "Use email instead" below.' };
+    return { ok: false, error: t(locale, 'signin.err.looksEmail') };
   }
-  return {
-    ok: false,
-    error: 'Enter a mobile number. US numbers can skip the +1, like (571) 555-0123.'
-  };
+  return { ok: false, error: t(locale, 'signin.err.enterMobile') };
 }

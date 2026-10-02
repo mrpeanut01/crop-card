@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
 import { getSetting, setSetting } from '$lib/db/settings';
+import { t } from '$lib/i18n';
 import type { AuthenticatedUser } from '$lib/server/auth';
 
 export const AI_KEY_SETTING = 'anthropic_api_key';
@@ -20,21 +21,23 @@ export function aiKeyStatus(): { source: 'env' | 'setting' | 'none'; masked: str
   return { source: 'none', masked: '' };
 }
 
-export async function saveAiKey(user: AuthenticatedUser | null | undefined, request: Request) {
-  if (!user) return fail(401, { error: 'sign-in required' });
+export async function saveAiKey(
+  user: AuthenticatedUser | null | undefined,
+  request: Request,
+  locale?: string | null
+) {
+  if (!user) return fail(401, { error: t(locale, 'settings.ai.msg.signInRequired') });
   if (user.role !== 'owner') {
-    return fail(403, { error: 'only the Owner role can set the AI key' });
+    return fail(403, { error: t(locale, 'settings.ai.msg.ownerSetKey') });
   }
   const form = await request.formData();
   const raw = (form.get('apiKey') ?? '').toString().trim();
-  if (!raw) return fail(400, { error: 'API key cannot be empty' });
+  if (!raw) return fail(400, { error: t(locale, 'settings.ai.msg.keyEmpty') });
   if (!raw.startsWith('sk-ant-')) {
-    return fail(400, {
-      error: 'expected an Anthropic key (starts with "sk-ant-"). Paste from console.anthropic.com.'
-    });
+    return fail(400, { error: t(locale, 'settings.ai.msg.keyFormat') });
   }
   setSetting(AI_KEY_SETTING, raw);
   // Flip the saver's opt-in on so the AI-on variant takes effect on the next loader run.
   db.update(users).set({ aiEnabled: true }).where(eq(users.id, user.id)).run();
-  return { success: true, message: 'API key saved. AI proposals enabled.' };
+  return { success: true, message: t(locale, 'settings.ai.msg.keySaved') };
 }

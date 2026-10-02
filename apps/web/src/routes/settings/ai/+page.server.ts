@@ -13,6 +13,7 @@
  */
 
 import { error, fail } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { and, count, desc, eq, gte, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/db/client';
@@ -120,51 +121,61 @@ export const load: PageServerLoad = ({ locals }) => {
 export const actions: Actions = {
   saveKey: ({ locals, request }) => {
     if (aiKeyStatus().source === 'env') {
-      return fail(400, { error: 'AI help is included with your plan, so no key is needed.' });
+      return fail(400, { error: t(locals.locale, 'settings.ai.msg.included') });
     }
-    return saveAiKey(locals.user, request);
+    return saveAiKey(locals.user, request, locals.locale);
   },
 
   clearKey: async ({ locals }) => {
-    if (!locals.user) return fail(401, { error: 'sign-in required' });
+    if (!locals.user) {
+      return fail(401, { error: t(locals.locale, 'settings.ai.msg.signInRequired') });
+    }
     if (locals.user.role !== 'owner') {
-      return fail(403, { error: 'only the Owner role can clear the AI key' });
+      return fail(403, { error: t(locals.locale, 'settings.ai.msg.ownerClearKey') });
     }
     setSetting(AI_KEY_SETTING, '');
-    return { success: true, message: 'API key cleared. AI proposals disabled.' };
+    return { success: true, message: t(locals.locale, 'settings.ai.msg.keyCleared') };
   },
 
   setCap: async ({ locals, request }) => {
-    if (!locals.user) return fail(401, { error: 'sign-in required' });
+    if (!locals.user) {
+      return fail(401, { error: t(locals.locale, 'settings.ai.msg.signInRequired') });
+    }
     if (locals.user.role !== 'owner') {
-      return fail(403, { error: 'only the Owner role can change the AI limit' });
+      return fail(403, { error: t(locals.locale, 'settings.ai.msg.ownerCap') });
     }
     const form = await request.formData();
     const mode = String(form.get('mode') ?? 'set');
     if (mode === 'plan') {
       deleteSetting(SETTINGS_KEYS.aiMonthlyUsdCap);
-      return { success: true, message: 'AI help is back to your full plan budget.' };
+      return { success: true, message: t(locals.locale, 'settings.ai.msg.backToPlan') };
     }
     if (mode === 'off') {
       setSetting(SETTINGS_KEYS.aiMonthlyUsdCap, '0');
-      return { success: true, message: 'AI help is off. Everything still works without it.' };
+      return { success: true, message: t(locals.locale, 'settings.ai.msg.off') };
     }
     const n = Number(form.get('cap'));
-    if (!Number.isFinite(n) || n < 0) return fail(400, { error: 'Enter a dollar amount.' });
+    if (!Number.isFinite(n) || n < 0)
+      return fail(400, { error: t(locals.locale, 'settings.ai.msg.enterDollar') });
     const plan = locals.user.activeOwnerId ? resolvePlan(locals.user.activeOwnerId) : null;
     if (plan && n >= plan.aiMonthlyUsd) {
       deleteSetting(SETTINGS_KEYS.aiMonthlyUsdCap);
-      return { success: true, message: 'AI help is set to your full plan budget.' };
+      return { success: true, message: t(locals.locale, 'settings.ai.msg.fullPlan') };
     }
     setSetting(SETTINGS_KEYS.aiMonthlyUsdCap, String(Math.round(n * 100) / 100));
-    return { success: true, message: 'Monthly AI limit saved.' };
+    return { success: true, message: t(locals.locale, 'settings.ai.msg.capSaved') };
   },
 
   toggleOptIn: async ({ locals, request }) => {
-    if (!locals.user) return fail(401, { error: 'sign-in required' });
+    if (!locals.user) {
+      return fail(401, { error: t(locals.locale, 'settings.ai.msg.signInRequired') });
+    }
     const form = await request.formData();
     const next = form.get('next') === 'true';
     db.update(users).set({ aiEnabled: next }).where(eq(users.id, locals.user.id)).run();
-    return { success: true, message: next ? 'AI proposals enabled.' : 'AI proposals paused.' };
+    return {
+      success: true,
+      message: t(locals.locale, next ? 'settings.ai.msg.optInOn' : 'settings.ai.msg.optInOff')
+    };
   }
 };

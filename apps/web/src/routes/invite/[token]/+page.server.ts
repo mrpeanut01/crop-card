@@ -7,6 +7,7 @@ import { writeSession } from '$lib/server/session';
 import { addAssignment } from '$lib/db/users';
 import { diagnoseInvite, findRedeemableInvite, markInviteAccepted } from '$lib/server/invites';
 import { unscopedQueryNote } from '$lib/db/tenant';
+import { t } from '$lib/i18n';
 import type { PageServerLoad } from './$types';
 
 /**
@@ -41,7 +42,7 @@ export const load: PageServerLoad = async (event) => {
     token,
     status: 'ready' as const,
     ownerId: match.ownerId,
-    ownerName: ownerRow?.name ?? 'a CropCard farm',
+    ownerName: ownerRow?.name ?? t(event.locals?.locale, 'entry.invite.someFarm'),
     roleWithinOwner: match.roleWithinOwner,
     expiresAt: match.expiresAt
   };
@@ -55,7 +56,7 @@ export const actions: Actions = {
     if (!user) throw redirect(303, `/?invite=${encodeURIComponent(token)}`);
 
     const match = user.email ? findRedeemableInvite(token, user.email) : null;
-    if (!match) throw error(400, 'invite is no longer valid');
+    if (!match) throw error(400, t(event.locals?.locale, 'entry.invite.noLongerValid'));
 
     const assignment = addAssignment({
       ownerId: match.ownerId,

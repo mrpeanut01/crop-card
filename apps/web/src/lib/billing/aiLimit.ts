@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { PLANS, type PaidPlanId, type PlanId } from './plans';
 
 export type AiLimitDetail =
@@ -17,23 +18,23 @@ export interface AiLimit {
 }
 
 /** A short clause with no end punctuation, to lead a fallback sentence. */
-export function aiLimitReason(limit: AiLimit): string {
+export function aiLimitReason(limit: AiLimit, locale?: string | null): string {
   switch (limit.detail) {
     case 'monthly-budget':
-      return "This month's AI help for your farm is used up";
+      return t(locale, 'billing.limit.monthly');
     case 'owner-disabled':
-      return 'AI help is turned off for this farm';
+      return t(locale, 'billing.limit.ownerOff');
     case 'plan-excluded':
       return limit.plan
-        ? `This AI help isn't on the ${PLANS[limit.plan].name} plan`
-        : "This AI help isn't on your plan";
+        ? t(locale, 'billing.limit.planExcludedNamed', { plan: PLANS[limit.plan].name })
+        : t(locale, 'billing.limit.planExcluded');
     case 'free-pool':
-      return 'Free AI help is resting until the 1st';
+      return t(locale, 'billing.limit.freePool');
     case 'global':
-      return 'AI help is paused for this month';
+      return t(locale, 'billing.limit.global');
     case 'daily-quota':
     case 'token-quota':
-      return "Today's AI help for this is used up";
+      return t(locale, 'billing.limit.daily');
   }
 }
 

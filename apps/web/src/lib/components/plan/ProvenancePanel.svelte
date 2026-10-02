@@ -2,6 +2,8 @@
   import { Sparkles, Pencil, Sprout } from 'lucide-svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   /**
    * Phase 25d (#89, #81) — provenance panel for the Plan v2 view.
@@ -38,6 +40,7 @@
   }
 
   const { revisions, planLabel }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   function sourceToProv(s: RevisionSource): 'plugin' | 'manual' | 'ai' {
     switch (s) {
@@ -64,10 +67,10 @@
   function whenLabel(ms: number): string {
     const diff = Date.now() - ms;
     const hours = Math.floor(diff / 3_600_000);
-    if (hours < 1) return 'just now';
-    if (hours < 24) return `${hours}h ago`;
+    if (hours < 1) return tr('planui.prov.justNow');
+    if (hours < 24) return tr('planui.prov.hoursAgo', { n: hours });
     const days = Math.floor(hours / 24);
-    if (days < 7) return `${days}d ago`;
+    if (days < 7) return tr('planui.prov.daysAgo', { n: days });
     return fmt.instant(ms, 'date');
   }
 </script>
@@ -75,16 +78,15 @@
 <section class="panel" aria-labelledby="provenance-heading">
   <header>
     <div class="kicker">
-      Where this plan came from{#if planLabel}
+      {tr('planui.prov.kicker')}{#if planLabel}
         · {planLabel}{/if}
     </div>
-    <h3 id="provenance-heading" class="serif">Revisions</h3>
+    <h3 id="provenance-heading" class="serif">{tr('planui.prov.revisions')}</h3>
   </header>
 
   {#if revisions.length === 0}
     <p class="empty">
-      No revision history yet. New plan-commits, wizard refinements, and manual edits will appear
-      here automatically.
+      {tr('planui.prov.empty')}
     </p>
   {:else}
     <ol class="rev-list">
@@ -104,7 +106,7 @@
               <p class="rev-note">{r.note}</p>
             {/if}
             {#if r.createdByEmail}
-              <p class="rev-by">by {r.createdByEmail}</p>
+              <p class="rev-by">{tr('planui.prov.by', { email: r.createdByEmail })}</p>
             {/if}
           </div>
         </li>

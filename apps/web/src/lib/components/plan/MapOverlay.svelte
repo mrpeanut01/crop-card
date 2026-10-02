@@ -12,6 +12,8 @@
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import { layoutMapOverlay, type OverlayFieldInput } from '$lib/plan/mapOverlayLayout';
   import { kindStyle } from '$lib/farm/kindStyle';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     open: boolean;
@@ -35,10 +37,16 @@
     onSelect,
     canEdit = true
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const selected = $derived(blocks.find((b) => b.id === selectedBlockId));
   const titleText = $derived(
-    `${farmLabel ?? 'Field map'}${selected ? ` · ${selected.name} highlighted` : ''}`
+    selected
+      ? tr('planui.map.highlighted', {
+          farm: farmLabel ?? tr('planui.map.fieldMap'),
+          name: selected.name
+        })
+      : (farmLabel ?? tr('planui.map.fieldMap'))
   );
 
   const layout = $derived(layoutMapOverlay(fields, blocks));
@@ -70,7 +78,7 @@
 
   function plantingsLabel(id: string): string {
     const n = plantingCount.get(id) ?? 0;
-    return `${n} planting${n === 1 ? '' : 's'}`;
+    return tr('planui.map.plantings', { count: n });
   }
 </script>
 
@@ -79,7 +87,7 @@
     {#if blocks.length === 0}
       <div class="empty">
         <MapPin size={20} />
-        <p>No blocks yet. Add one in the workflow strip or via the layout editor.</p>
+        <p>{tr('planui.map.noBlocks')}</p>
       </div>
     {:else}
       {#if layout.mode === 'none'}
@@ -87,26 +95,25 @@
           <MapPin size={20} />
           {#if canEdit}
             <p>
-              None of your areas or blocks are drawn yet. Draw them on the map, or enter their width
-              and length, in the <a href="/settings/farm/map">farm map editor</a>.
+              {tr('planui.map.undrawnOwnerA')}
+              <a href="/settings/farm/map">{tr('planui.map.editorLink')}</a>.
             </p>
           {:else}
-            <p>None of the areas or blocks are drawn yet. Ask the owner to add them to the map.</p>
+            <p>{tr('planui.map.undrawnHelper')}</p>
           {/if}
         </div>
       {:else}
         <div class="map-canvas">
-          <div class="compass" title="North">
+          <div class="compass" title={tr('planui.map.north')}>
             <Compass size={11} />
-            <span class="mono">N</span>
+            <span class="mono">{tr('planui.map.northLetter')}</span>
           </div>
           <svg
             {viewBox}
             preserveAspectRatio="xMidYMid meet"
             role="group"
-            aria-label="Field and block layout{layout.mode === 'sketch'
-              ? ', sketched from entered dimensions'
-              : ''}"
+            aria-label={tr('planui.map.svgAria') +
+              (layout.mode === 'sketch' ? tr('planui.map.svgAriaSketch') : '')}
             data-testid="map-overlay-svg"
           >
             {#each layout.fields as f (f.id)}
@@ -171,7 +178,7 @@
       {/if}
       {#if layout.undrawn.length > 0 && layout.mode !== 'none'}
         <div class="undrawn">
-          <span class="undrawn-label">Not on the map yet:</span>
+          <span class="undrawn-label">{tr('planui.map.notOnMap')}</span>
           {#each layout.undrawn as u (u.id)}
             <button
               type="button"
@@ -185,15 +192,16 @@
       <div class="footer-hint">
         <Info size={13} />
         <p>
-          Click any block to jump there in Plan.
+          {tr('planui.map.clickBlock')}
           {#if layout.mode === 'sketch'}
-            Positions are packed from the widths and lengths you entered, not surveyed.
+            {tr('planui.map.packed')}
           {/if}
           {#if canEdit}
-            The <a href="/settings/farm/map">farm map editor</a> in Settings is where you draw and resize
-            them.
+            {tr('planui.map.editorHintA')}
+            <a href="/settings/farm/map">{tr('planui.map.editorLink')}</a>
+            {tr('planui.map.editorHintB')}
           {:else}
-            Ask the owner to change blocks.
+            {tr('planui.map.askOwner')}
           {/if}
         </p>
       </div>
@@ -202,11 +210,13 @@
   {#snippet footer()}
     {#if canEdit}
       <a class="ghost" href="/settings/farm/map" onclick={onClose}>
-        Open farm map editor <ArrowRight size={13} />
+        {tr('planui.map.openEditor')}
+        <ArrowRight size={13} />
       </a>
     {:else}
       <a class="ghost" href="/plan/farm-map" onclick={onClose}>
-        Open the farm map card <ArrowRight size={13} />
+        {tr('planui.map.openCard')}
+        <ArrowRight size={13} />
       </a>
     {/if}
   {/snippet}

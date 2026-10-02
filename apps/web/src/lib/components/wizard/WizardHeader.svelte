@@ -14,6 +14,8 @@
    * mechanical refactor with high regression surface, low UX value.
    */
   import { Check, X, FileText, ChevronRight, AlertTriangle, Sprout } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   export type WizardStepState = 'done' | 'active' | 'pending' | 'stale';
 
@@ -51,8 +53,9 @@
     onSaveAndResume
   }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const activeTitle = $derived(
-    title ?? steps.find((s) => s.id === activeStepId)?.label ?? 'Season plan'
+    title ?? steps.find((s) => s.id === activeStepId)?.label ?? tr('wizard.header.defaultTitle')
   );
 </script>
 
@@ -61,25 +64,27 @@
     <div>
       <div class="wh-kicker">
         <Sprout size={12} strokeWidth={1.75} class="wh-kicker-icon" />
-        Season {seasonYear} plan · wizard
+        {tr('wizard.header.kicker', { year: seasonYear })}
       </div>
       <h1 class="serif wh-title" id={titleId}>{activeTitle}</h1>
     </div>
     <div class="wh-actions">
       {#if onExit}
         <button class="ghost" type="button" onclick={onExit}>
-          <X size={13} strokeWidth={1.75} /> Exit
+          <X size={13} strokeWidth={1.75} />
+          {tr('wizard.header.exit')}
         </button>
       {/if}
       {#if onSaveAndResume}
         <button class="ghost" type="button" onclick={onSaveAndResume}>
-          <FileText size={13} strokeWidth={1.75} /> Save & resume later
+          <FileText size={13} strokeWidth={1.75} />
+          {tr('wizard.header.saveResume')}
         </button>
       {/if}
     </div>
   </div>
 
-  <ol class="wh-stepper" aria-label="Wizard steps">
+  <ol class="wh-stepper" aria-label={tr('wizard.header.stepsAria')}>
     {#each steps as s, i (s.id)}
       {@const isActive = s.id === activeStepId}
       {@const effectiveState: WizardStepState = isActive ? 'active' : s.state}

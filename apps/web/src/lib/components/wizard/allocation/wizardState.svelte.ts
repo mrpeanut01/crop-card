@@ -14,6 +14,7 @@ import { DraftFlow } from './flows/draftFlow';
 import { humanizeAllocationViolation as humanizeViolation } from './flows/violations';
 import { PlanResetState } from './steps/planResetState.svelte';
 import { SeedLinkState } from './steps/seedLinkState.svelte';
+import { wt } from './wt';
 import type {
   AllocationResponse,
   BlockEntry,
@@ -80,14 +81,30 @@ export const STEP_ORDER: Step[] = [
   'commit'
 ];
 export const STEP_LABELS: Record<Step, string> = {
-  'season-setup': '0. Season',
-  'plan-state': 'Plan state',
-  seeds: '1. Seeds',
-  blocks: '2. Blocks',
-  review: '3. Review',
-  schedule: '4. Schedule',
-  inputs: '5. Inputs',
-  commit: '6. Commit'
+  get 'season-setup'() {
+    return wt('wizard.step.season');
+  },
+  get 'plan-state'() {
+    return wt('wizard.step.planState');
+  },
+  get seeds() {
+    return wt('wizard.step.seeds');
+  },
+  get blocks() {
+    return wt('wizard.step.blocks');
+  },
+  get review() {
+    return wt('wizard.step.review');
+  },
+  get schedule() {
+    return wt('wizard.step.schedule');
+  },
+  get inputs() {
+    return wt('wizard.step.inputs');
+  },
+  get commit() {
+    return wt('wizard.step.commit');
+  }
 };
 
 /**

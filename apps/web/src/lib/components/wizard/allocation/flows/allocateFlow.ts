@@ -1,6 +1,7 @@
 import type { AllocationWizardState } from '../wizardState.svelte';
 import type { AllocationResponse } from '../types';
 import { pollinationNote } from '$lib/plan/pollinationNote';
+import { wt } from '../wt';
 
 /** Step 2 → 3: POST /api/plan/allocate and seed the allocation chat with
  *  the response's pollination notes + advisories. */
@@ -48,35 +49,27 @@ export class AllocateFlow {
     const geomMissing = (r.geometryMissingBlockIds ?? []).length;
 
     if (mustStagger.length > 0 || isolated.length > 0 || geomMissing > 0) {
-      lines.push('Cross-pollination notes:');
+      lines.push(wt('wizard.seedchat.pollHeader'));
       for (const p of isolated) lines.push(`• ${pollinationNote(p, this.#w.prefs)}`);
       for (const p of mustStagger) lines.push(`• ⚠ ${pollinationNote(p, this.#w.prefs)}`);
       if (geomMissing > 0) {
-        lines.push(
-          `• Couldn't check ${geomMissing} block${geomMissing === 1 ? '' : 's'} without geometry — add field boundaries to enable the spatial check.`
-        );
+        lines.push(wt('wizard.seedchat.geomMissing', { count: geomMissing }));
       }
       lines.push('');
     }
 
     if (r.advisories.length > 0) {
-      lines.push('Other things worth thinking about:');
+      lines.push(wt('wizard.seedchat.otherThings'));
       for (const a of r.advisories) lines.push(`• ${a}`);
       lines.push('');
     }
 
     if (mustStagger.length > 0) {
-      lines.push(
-        'These crossing pairs will be carried into the schedule step as required planting offsets. Tell me anything you\'d like to change before then — for example: "swap the Bantam onto Block C to gain more isolation" or "split the brassicas onto two beds."'
-      );
+      lines.push(wt('wizard.seedchat.pairs'));
     } else if (lines.length === 0) {
-      lines.push(
-        'Plan looks clean — nothing jumped out to flag. If you\'d like to tweak it, just tell me what to change (e.g., "move the corn off the narrow block" or "give the brassicas more room").'
-      );
+      lines.push(wt('wizard.seedchat.clean'));
     } else {
-      lines.push(
-        'Tell me anything you\'d like to change — for example: "move the corn off the narrow block" or "split the tomatoes onto two beds."'
-      );
+      lines.push(wt('wizard.seedchat.change'));
     }
 
     // Seed message is NOT persisted — it's deterministic from the

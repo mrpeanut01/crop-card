@@ -1,6 +1,8 @@
 <script lang="ts">
   import Modal from '$lib/components/ui/Modal.svelte';
   import { fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   export interface AddTaskPlantingOption {
     id: string;
@@ -30,6 +32,7 @@
     onClose,
     onCreated
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   function todayIso(): string {
     return fmt.today();
@@ -74,17 +77,17 @@
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
     if (!blockId) {
-      error = 'No block selected';
+      error = tr('planui.task.noBlock');
       return;
     }
     const trimmed = title.trim();
     if (!trimmed) {
-      error = 'Give the task a title';
+      error = tr('planui.task.needTitle');
       return;
     }
     const scheduledFor = Date.parse(date);
     if (!Number.isFinite(scheduledFor)) {
-      error = 'Pick a date';
+      error = tr('planui.task.needDate');
       return;
     }
     submitting = true;
@@ -118,30 +121,34 @@
   }
 </script>
 
-<Modal {open} onClose={close} title="Add task">
+<Modal {open} onClose={close} title={tr('planui.task.modalTitle')}>
   <form id="add-task-form" class="form" onsubmit={handleSubmit}>
-    <p class="muted">Scheduling on <strong>{blockName}</strong></p>
+    <p class="muted">{tr('planui.task.scheduling')} <strong>{blockName}</strong></p>
     <label class="field">
-      <span class="label">Task <span class="req" aria-hidden="true">*</span></span>
+      <span class="label"
+        >{tr('planui.task.task')} <span class="req" aria-hidden="true">*</span></span
+      >
       <input
         type="text"
         name="title"
         bind:value={title}
         required
         maxlength="120"
-        placeholder="e.g. Side-dress nitrogen"
+        placeholder={tr('planui.task.placeholder')}
       />
     </label>
     <label class="field">
-      <span class="label">Date <span class="req" aria-hidden="true">*</span></span>
+      <span class="label"
+        >{tr('planui.task.date')} <span class="req" aria-hidden="true">*</span></span
+      >
       <input type="date" name="date" bind:value={date} required />
-      <span class="hint">The table shows the next 30 days; later tasks appear on /today.</span>
+      <span class="hint">{tr('planui.task.dateHint')}</span>
     </label>
     {#if plantings.length > 0}
       <label class="field">
-        <span class="label">Planting</span>
+        <span class="label">{tr('planui.task.planting')}</span>
         <select name="planting" bind:value={plantingId}>
-          <option value="">Whole block</option>
+          <option value="">{tr('planui.task.wholeBlock')}</option>
           {#each plantings as p (p.id)}
             <option value={p.id}>{p.label}</option>
           {/each}
@@ -150,9 +157,9 @@
     {/if}
     {#if canAssign && members && members.length > 0}
       <label class="field">
-        <span class="label">Who does it</span>
+        <span class="label">{tr('planui.task.who')}</span>
         <select name="assignee" bind:value={assigneeId}>
-          <option value="">Nobody in particular</option>
+          <option value="">{tr('planui.task.nobody')}</option>
           {#each members as m (m.id)}
             <option value={m.id}>{m.name}</option>
           {/each}
@@ -160,16 +167,16 @@
       </label>
     {/if}
     <label class="field">
-      <span class="label">Notes</span>
+      <span class="label">{tr('planui.task.notes')}</span>
       <textarea name="notes" rows="2" maxlength="500" bind:value={notes}></textarea>
     </label>
     {#if error}<p class="error" role="alert">{error}</p>{/if}
     <div class="actions">
       <button type="button" class="btn-secondary" onclick={close} disabled={submitting}>
-        Cancel
+        {tr('planui.task.cancel')}
       </button>
       <button type="submit" class="btn-primary" disabled={submitting}>
-        {submitting ? 'Adding…' : 'Add task'}
+        {submitting ? tr('planui.task.adding') : tr('planui.task.add')}
       </button>
     </div>
   </form>

@@ -1,6 +1,7 @@
 import type { InputsPlanProvisionalPlanting } from '$lib/plan/inputsPlan';
 import type { AllocationWizardState } from '../wizardState.svelte';
 import type { ScheduleResponse } from '../types';
+import { wt } from '../wt';
 
 /** Step 3 → 4 → 5: POST /api/plan/schedule, the schedule refine chat, and
  *  the handoff into the Inputs Plan step. */
@@ -45,15 +46,11 @@ export class ScheduleFlow {
       const fb = scheduleResponse.meta.fallback;
       if (fb === 'no-api-key' || fb === 'ai-unavailable') {
         lines.push(
-          fb === 'no-api-key'
-            ? '🛟 I picked dates with the deterministic scheduler (no Anthropic API key configured). Staggers and companion offsets are honored.'
-            : '🛟 I picked dates with the deterministic scheduler (Claude is unavailable right now). Staggers and companion offsets are honored.'
+          fb === 'no-api-key' ? wt('wizard.seedchat.sNoKey') : wt('wizard.seedchat.sUnavailable')
         );
         if (scheduleResponse.rationale) lines.push(scheduleResponse.rationale);
         lines.push('');
-        lines.push(
-          'Tell me anything to change — e.g., "plant the corn the first week of May" or "push the brassicas two weeks later."'
-        );
+        lines.push(wt('wizard.seedchat.sChange'));
       } else if (fb === 'deterministic') {
         // Help-seeking chat dialogue: the server's diagnosis names specific
         // varieties + actionable suggestions in plain English. We don't show
@@ -63,42 +60,32 @@ export class ScheduleFlow {
           if (dx.summary) {
             lines.push(`🛟 ${dx.summary}`);
             lines.push('');
-            lines.push(
-              "I went with a safe-default plan above so you're not stuck — but you can probably do better. Here's what might help:"
-            );
+            lines.push(wt('wizard.seedchat.sSafeDefault'));
           } else {
-            lines.push(
-              "🛟 I couldn't fit your schedule cleanly. The deterministic plan above is a safe default, but here's what might help:"
-            );
+            lines.push(wt('wizard.seedchat.sCouldntFit'));
           }
           if (dx.suggestions.length > 0) {
             lines.push('');
             for (const s of dx.suggestions) lines.push(`  • ${s}`);
           }
           lines.push('');
-          lines.push('What would you like me to try?');
+          lines.push(wt('wizard.seedchat.sTry'));
         } else {
           // Diagnosis missing (older server, edge case) — keep a clean
           // fallback message without the technical violation list.
-          lines.push(
-            "🛟 I couldn't fit your schedule cleanly, even after a retry. The deterministic plan above honors every hard constraint but isn't necessarily the most elegant arrangement."
-          );
+          lines.push(wt('wizard.seedchat.sCouldntFitRetry'));
           lines.push('');
-          lines.push(
-            'Tell me what to adjust — for example: "drop one corn variety", "skip successions for sweet corn", or "just keep these dates and commit".'
-          );
+          lines.push(wt('wizard.seedchat.sAdjust'));
         }
       } else {
-        lines.push('📅 Planting dates proposed above.');
+        lines.push(wt('wizard.seedchat.sProposed'));
         if (scheduleResponse.rationale) lines.push(scheduleResponse.rationale);
         if (scheduleResponse.advisories.length > 0) {
           lines.push('');
           for (const a of scheduleResponse.advisories) lines.push(`• ${a}`);
         }
         lines.push('');
-        lines.push(
-          'Tell me anything to change — e.g., "plant the corn the first week of May" or "push the brassicas two weeks later."'
-        );
+        lines.push(wt('wizard.seedchat.sChange'));
       }
       // Start the schedule chat clean — don't carry allocation-step
       // pollination notes or rationale into this conversation. Anything the

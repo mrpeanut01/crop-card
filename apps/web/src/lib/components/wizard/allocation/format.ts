@@ -1,5 +1,6 @@
 import { formatCalendarDate } from '$lib/prefs';
 import type { ProgressStage, SufficiencyResult } from './types';
+import { wt } from './wt';
 
 export function fmtDateMs(ms: number): string {
   return formatCalendarDate(ms, 'date');
@@ -13,28 +14,28 @@ export function fmtDateMs(ms: number): string {
 export function aiProgressLabel(stage: ProgressStage, elapsedMs: number): string {
   const s = Math.floor(elapsedMs / 1000);
   if (stage === 'allocate') {
-    if (s < 3) return 'Building candidacy matrix…';
-    if (s < 12) return 'Asking Claude to allocate seeds across your blocks…';
-    if (s < 30) return 'Weighing sun, rotation, companions, and cross-pollination…';
-    if (s < 60) return 'Refining placements to maximize spacing…';
-    if (s < 120) return 'Still working — complex farms take a minute or two…';
-    return 'Almost there — the API is slower than usual right now…';
+    if (s < 3) return wt('wizard.ai.allocate.1');
+    if (s < 12) return wt('wizard.ai.allocate.2');
+    if (s < 30) return wt('wizard.ai.allocate.3');
+    if (s < 60) return wt('wizard.ai.allocate.4');
+    if (s < 120) return wt('wizard.ai.allocate.5');
+    return wt('wizard.ai.slow');
   }
   if (stage === 'schedule') {
-    if (s < 3) return 'Computing planting windows from frost dates and DTM…';
-    if (s < 12) return 'Asking Claude to pick planting dates…';
-    if (s < 30) return 'Honoring cross-pollination staggers and companion offsets…';
-    if (s < 60) return 'Checking succession spacing for fast-growing crops…';
-    if (s < 120) return 'Still scheduling — staggers across many varieties take time…';
-    return 'Almost there — the API is slower than usual right now…';
+    if (s < 3) return wt('wizard.ai.schedule.1');
+    if (s < 12) return wt('wizard.ai.schedule.2');
+    if (s < 30) return wt('wizard.ai.schedule.3');
+    if (s < 60) return wt('wizard.ai.schedule.4');
+    if (s < 120) return wt('wizard.ai.schedule.5');
+    return wt('wizard.ai.slow');
   }
   // Chat refinements are shorter prompts → quicker stages.
-  if (s < 2) return 'Reading your message…';
+  if (s < 2) return wt('wizard.ai.chat.1');
   if (s < 8)
-    return stage === 'chat-schedule' ? 'Reconsidering the dates…' : 'Reconsidering the plan…';
-  if (s < 20) return 'Validating against constraints…';
-  if (s < 45) return 'Still thinking — refinement turn taking longer than usual…';
-  return 'Almost there…';
+    return stage === 'chat-schedule' ? wt('wizard.ai.chat.dates') : wt('wizard.ai.chat.plan');
+  if (s < 20) return wt('wizard.ai.chat.3');
+  if (s < 45) return wt('wizard.ai.chat.4');
+  return wt('wizard.ai.chat.5');
 }
 
 export function fmtElapsed(ms: number): string {
@@ -53,21 +54,32 @@ export function sufficiencyChip(s: SufficiencyResult): {
   const pct = Math.round(s.utilizationPct * 100);
   if (s.status === 'match') {
     return {
-      label: `Fills block · ${pct}%`,
+      label: wt('wizard.suff.fills', { pct }),
       cls: 'chip-match',
-      tooltip: `Your seed quantity (${s.plantsAvailable.toLocaleString()} plants) is the right size for this block (fits ${s.plantsFit.toLocaleString()}).`
+      tooltip: wt('wizard.suff.fillsTip', {
+        available: s.plantsAvailable.toLocaleString(),
+        fit: s.plantsFit.toLocaleString()
+      })
     };
   }
   if (s.status === 'surplus') {
     return {
-      label: `${s.leftoverPlants.toLocaleString()} extra plants`,
+      label: wt('wizard.suff.extra', { n: s.leftoverPlants.toLocaleString() }),
       cls: 'chip-surplus',
-      tooltip: `You have seed for ${s.plantsAvailable.toLocaleString()} plants but the block only fits ${s.plantsFit.toLocaleString()} — about ${s.leftoverPlants.toLocaleString()} plants worth of seed will be left over.`
+      tooltip: wt('wizard.suff.extraTip', {
+        available: s.plantsAvailable.toLocaleString(),
+        fit: s.plantsFit.toLocaleString(),
+        n: s.leftoverPlants.toLocaleString()
+      })
     };
   }
   return {
-    label: `Only fills ${pct}% of block`,
+    label: wt('wizard.suff.deficit', { pct }),
     cls: 'chip-deficit',
-    tooltip: `Your seed quantity (${s.plantsAvailable.toLocaleString()} plants) only covers ${pct}% of the block's capacity (${s.plantsFit.toLocaleString()} plants).`
+    tooltip: wt('wizard.suff.deficitTip', {
+      available: s.plantsAvailable.toLocaleString(),
+      pct,
+      fit: s.plantsFit.toLocaleString()
+    })
   };
 }

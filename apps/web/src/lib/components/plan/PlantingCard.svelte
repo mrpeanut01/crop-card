@@ -4,6 +4,8 @@
   import type { PlantingRecord } from '$lib/db/blocks';
   import { planPlantingCard, plantingColor, type PlantingSourceTag } from '$lib/plan/planCards';
   import { currentPrefs } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     planting: PlantingRecord;
@@ -39,6 +41,7 @@
     onRefine,
     detailHref
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const card = $derived(
     planPlantingCard({
@@ -63,7 +66,7 @@
         <div class="companions">
           <div class="comp-head">
             <Layers size={12} strokeWidth={1.75} />
-            Companions in this block
+            {tr('planui.pcard.companions')}
           </div>
           <div class="comp-chips">
             {#each companions as c (c.id)}
@@ -71,7 +74,7 @@
                 type="button"
                 class="comp-chip"
                 onclick={() => onCompanionClick?.(c.id)}
-                title="Jump to {c.varietyDisplayName}"
+                title={tr('planui.pcard.jumpTo', { name: c.varietyDisplayName })}
               >
                 <span class="dot" style:background={plantingColor(c.id)}></span>
                 {c.varietyDisplayName.split(' ').slice(0, 2).join(' ')}
@@ -82,7 +85,7 @@
       {/if}
       {#if onRefine}
         <button class="refine" onclick={onRefine} type="button">
-          Refine
+          {tr('planui.pcard.refine')}
           <ChevronRight size={14} strokeWidth={1.75} />
         </button>
       {/if}

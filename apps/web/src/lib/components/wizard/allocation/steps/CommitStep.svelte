@@ -1,18 +1,21 @@
 <script lang="ts">
   import { getWizardContext } from '../wizardState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const w = getWizardContext();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <p class="aw-loading">
-  Committing… {w.commitProgress.done} / {w.commitProgress.total}
+  {tr('wizard.commit.progress', { done: w.commitProgress.done, total: w.commitProgress.total })}
 </p>
 <progress value={w.commitProgress.done} max={w.commitProgress.total}></progress>
 {#if w.inputsCommitError}
-  <p class="aw-error">Inputs plan tasks failed to commit: {w.inputsCommitError}</p>
+  <p class="aw-error">{tr('wizard.commit.inputsFailed', { error: w.inputsCommitError })}</p>
 {/if}
 {#if w.commitProgress.failed.length > 0}
-  <p class="aw-error">Failed: {w.commitProgress.failed.length}</p>
+  <p class="aw-error">{tr('wizard.commit.failed', { n: w.commitProgress.failed.length })}</p>
   <ul>
     {#each w.commitProgress.failed as f, idx (idx)}
       <li>{f}</li>

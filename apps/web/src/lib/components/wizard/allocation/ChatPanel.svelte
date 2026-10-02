@@ -2,8 +2,11 @@
   import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
   import { aiProgressLabel, fmtElapsed } from './format';
   import { getWizardContext } from './wizardState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const w = getWizardContext();
+  const tr = $derived(createT(page.data?.locale));
   const aiEnabled = $derived(w.props.aiEnabled);
 
   function onChatKeydown(e: KeyboardEvent) {
@@ -21,26 +24,25 @@
      follow-on refactor (touches every step's aw-body shape); the
      in-step chat panel keeps working in the meantime and now reads
      correctly across all modes. -->
-<section class="aw-chat" aria-label="Refine plan with AI">
+<section class="aw-chat" aria-label={tr('wizard.chat.aria')}>
   {#if aiEnabled}
     <header class="aw-chat-header">
-      <h3>💬 Refine with AI</h3>
-      <span class="muted aw-chat-model"> claude-haiku-4-5 · grounded on your plugins </span>
+      <h3>{tr('wizard.chat.title')}</h3>
+      <span class="muted aw-chat-model"> claude-haiku-4-5 · {tr('wizard.chat.grounded')} </span>
       <span class="muted">
-        {#if w.step === 'schedule'}Ask for date changes; the schedule above updates each turn.
-        {:else}Ask for changes; the plan above updates each turn.
+        {#if w.step === 'schedule'}{tr('wizard.chat.hintSchedule')}
+        {:else}{tr('wizard.chat.hintPlan')}
         {/if}
       </span>
     </header>
     <AiUsageChip planning refreshKey={w.chatMessages.length} />
   {:else}
     <header class="aw-chat-header aw-chat-header-off">
-      <h3>AI assistant is off</h3>
+      <h3>{tr('wizard.chat.offTitle')}</h3>
       <span class="muted">
-        Add an Anthropic API key on
-        <a href="/settings/ai" class="aw-chat-key-link">Settings → AI</a>
-        to refine this plan with Claude. Without a key, every value above is the deterministic engine's
-        output — edit by hand or regenerate.
+        {tr('wizard.chat.offBefore')}
+        <a href="/settings/ai" class="aw-chat-key-link">{tr('wizard.chat.offLink')}</a>
+        {tr('wizard.chat.offAfter')}
       </span>
     </header>
   {/if}
@@ -68,17 +70,17 @@
   </div>
   {#if w.chatError}<p class="aw-error chat-error" role="alert">{w.chatError}</p>{/if}
   {#if w.step === 'review' && w.lastRejectedAssignments && w.lastRejectedAssignments.length > 0}
-    <div class="aw-override-row" role="region" aria-label="Override validators">
+    <div class="aw-override-row" role="region" aria-label={tr('wizard.chat.overrideAria')}>
       <button
         type="button"
         class="btn-secondary btn-override"
         onclick={() => w.applyRejectedAnyway()}
-        title="Apply the AI's proposed plan even though it failed agronomic validation."
+        title={tr('wizard.chat.applyTitle')}
       >
-        🛠 Apply anyway ({w.lastRejectedAssignments.length} rows)
+        {tr('wizard.chat.apply', { n: w.lastRejectedAssignments.length })}
       </button>
       <span class="muted override-hint">
-        Bypasses density / capacity checks. Spray-time safety rules are NOT affected.
+        {tr('wizard.chat.applyHint')}
       </span>
     </div>
   {/if}
@@ -93,18 +95,18 @@
       <textarea
         rows="2"
         placeholder={w.step === 'schedule'
-          ? 'e.g. "Plant the corn the first week of May" or "Push brassicas two weeks later"'
-          : 'e.g. "Move the corn off the narrow block" or "Give the brassicas more room"'}
+          ? tr('wizard.chat.placeholderSchedule')
+          : tr('wizard.chat.placeholderPlan')}
         bind:value={w.chatDraft}
         onkeydown={onChatKeydown}
         disabled={w.chatBusy}
-        aria-label="Refinement request"></textarea>
+        aria-label={tr('wizard.chat.requestAria')}></textarea>
       <button
         type="submit"
         class="btn-primary chat-send"
         disabled={w.chatBusy || !w.chatDraft.trim()}
       >
-        {w.chatBusy ? '…' : 'Send'}
+        {w.chatBusy ? '…' : tr('wizard.chat.send')}
       </button>
     </form>
   {/if}

@@ -8,6 +8,7 @@
 
 import { z } from 'zod';
 import { haversineMeters } from '$lib/geo/area';
+import { t } from '$lib/i18n';
 
 export const CROP_AREA_KINDS = ['field', 'garden', 'greenhouse', 'orchard', 'pasture'] as const;
 export const OTHER_AREA_KINDS = [
@@ -231,6 +232,15 @@ export const BLOCK_KIND_LABELS: Record<BlockKind, string> = {
   container: 'Container'
 };
 
+/** The kind label in the viewer's language; English with no locale. */
+export function areaKindLabel(kind: AreaKind, locale?: string | null): string {
+  return t(locale, `farm.kind.${kind}`);
+}
+
+export function blockKindLabel(kind: BlockKind, locale?: string | null): string {
+  return t(locale, `farm.blockKind.${kind}`);
+}
+
 export const BED_STYLES = ['raised', 'in-ground', 'container', 'vertical'] as const;
 export type BedStyle = (typeof BED_STYLES)[number];
 
@@ -240,6 +250,10 @@ export const BED_STYLE_LABELS: Record<BedStyle, string> = {
   container: 'Container',
   vertical: 'Vertical'
 };
+
+export function bedStyleLabel(style: BedStyle, locale?: string | null): string {
+  return t(locale, `farm.bedStyle.${style}`);
+}
 
 export function isBlockKind(value: unknown): value is BlockKind {
   return typeof value === 'string' && (BLOCK_KINDS as readonly string[]).includes(value);

@@ -100,7 +100,8 @@ export function applyFrostPlan(plan: FrostSavePlan): void {
  */
 export async function resolveFrostForm(
   fd: FormData,
-  latLon: FarmLatLon | null
+  latLon: FarmLatLon | null,
+  locale?: string | null
 ): Promise<FrostSaveResult> {
   const probability: FrostProbability =
     fd.get('frostProbability') === 'cautious' ? 'cautious' : 'median';
@@ -109,17 +110,18 @@ export async function resolveFrostForm(
   let usedProbability: FrostProbability | null = probability;
   if (fd.get('frostBasis') === 'lookup' && latLon) {
     const lookup = await lookupFrostDates(latLon.lat, latLon.lon, { probability });
-    suggestion = suggestFrostValues(lookup, override);
+    suggestion = suggestFrostValues(lookup, override, locale);
   } else {
     const stored = loadStoredFrost();
     const view = storedFrostView(stored.dates, stored.provenance);
-    suggestion = suggestFromStored(view, override, stored.provenance.source);
+    suggestion = suggestFromStored(view, override, stored.provenance.source, locale);
     const changed = FROST_FIELDS.some((f) => suggestion.values[f] !== view[f]);
     if (!changed && suggestion.issues.length === 0) return { ok: true, plan: null };
     usedProbability = stored.provenance.probability;
   }
   return planFrostSave(suggestion, {
     confirmed: fd.get('frostConfirm') === '1',
-    probability: usedProbability
+    probability: usedProbability,
+    locale
   });
 }

@@ -1,5 +1,6 @@
 import { normalizeFrost } from '$lib/schedule/farmLocation';
 import { frostStationLabel, type FrostLookupResult } from './frostNormals';
+import { t, type TranslateKey } from '$lib/i18n';
 
 export type FrostValueProvenance = 'data' | 'manual' | 'fallback';
 
@@ -53,6 +54,18 @@ const FALLBACK_REASON: Record<string, string> = {
   'no-station': 'No weather station within 50 miles; using Loudoun defaults.'
 };
 
+const FALLBACK_REASON_KEY: Record<string, TranslateKey> = {
+  'no-location': 'climate.frost.reason.noLocation',
+  'no-dataset': 'climate.frost.reason.noDataset',
+  'no-station': 'climate.frost.reason.noStation'
+};
+
+function fallbackReasonText(reason: string, locale?: string | null): string | null {
+  if (!locale) return FALLBACK_REASON[reason] ?? null;
+  const key = FALLBACK_REASON_KEY[reason];
+  return key ? t(locale, key) : null;
+}
+
 /**
  * Turns a frost lookup plus whatever the owner typed into the values to save.
  * A typed value that differs from the suggestion is `manual`; one that matches
@@ -63,7 +76,8 @@ const FALLBACK_REASON: Record<string, string> = {
  */
 export function suggestFrostValues(
   lookup: FrostLookupResult,
-  override: FrostOverride = {}
+  override: FrostOverride = {},
+  locale?: string | null
 ): FrostSuggestion {
   const base = lookup.provenance;
   const values = {} as Record<FrostField, FrostSuggestedValue>;
@@ -86,7 +100,7 @@ export function suggestFrostValues(
     const typed = normalizeFrost(input);
     if (!typed) {
       values[field] = { value: suggested, provenance: base, invalid: true };
-      issues.push({ field, input, message: `"${input}" isn't a date. Use MM-DD or M/D.` });
+      issues.push({ field, input, message: t(locale, 'climate.frost.notDate', { input }) });
     } else if (typed !== suggested) {
       values[field] = { value: typed, provenance: 'manual' };
     } else {
@@ -102,7 +116,7 @@ export function suggestFrostValues(
       values.lastFrost.provenance === 'data' &&
       values.firstFrost.provenance === 'data',
     fallbackReason:
-      lookup.provenance === 'fallback' ? (FALLBACK_REASON[lookup.reason] ?? null) : null,
+      lookup.provenance === 'fallback' ? fallbackReasonText(lookup.reason, locale) : null,
     issues
   };
 }

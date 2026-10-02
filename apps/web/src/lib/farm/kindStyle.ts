@@ -13,6 +13,7 @@ import {
   geometryTypeFor,
   type MapFeatureKind
 } from './mapFeatures';
+import { t } from '$lib/i18n';
 
 /**
  * Map colors per Area kind, taken from the Almanac palette in
@@ -145,6 +146,26 @@ export const SHADE_KIND_LABELS: Readonly<Record<ShadeKind, string>> = {
   structure: 'Structure',
   other: 'Other shade'
 };
+
+export function areaKindNoun(kind: AreaKind, locale?: string | null): string {
+  return t(locale, `farm.kindNoun.${kind}`);
+}
+
+export function areaKindPlural(kind: AreaKind, locale?: string | null): string {
+  return t(locale, `farm.kindPlural.${kind}`);
+}
+
+export function areaKindHint(kind: AreaKind, locale?: string | null): string {
+  return t(locale, `farm.kindHint.${kind}`);
+}
+
+export function areaNamePlaceholder(kind: AreaKind, locale?: string | null): string {
+  return t(locale, `farm.kindPh.${kind}`);
+}
+
+export function shadeKindLabel(kind: ShadeKind, locale?: string | null): string {
+  return t(locale, `farm.shade.${kind}`);
+}
 
 export const SHADE_STYLE = {
   plant: { color: '#15803d', fill: '#86efac' },

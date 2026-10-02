@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { t, type TranslateKey } from '$lib/i18n';
 
 export const EMERGENCY_CONTACTS_KEY = 'farm_emergency_contacts';
 export const MAX_EMERGENCY_CONTACTS = 5;
@@ -64,7 +65,21 @@ export function isBlankRow(row: ContactRowInput): boolean {
   return !row.name.trim() && !row.role.trim() && !row.phone.trim();
 }
 
-export function parseContactRows(rows: readonly ContactRowInput[]): ContactsParse {
+const CONTACT_MESSAGE_KEYS: Readonly<Record<string, TranslateKey>> = {
+  'Add a name.': 'farm.contacts.addName',
+  'Keep the name under 60 characters.': 'farm.contacts.nameLong',
+  'Keep the role under 60 characters.': 'farm.contacts.roleLong',
+  'Add a phone number.': 'farm.contacts.addPhone',
+  'Keep the phone number under 30 characters.': 'farm.contacts.phoneLong',
+  'Use only digits, spaces and + ( ) - . in a phone number.': 'farm.contacts.phoneChars',
+  'A phone number needs between 3 and 20 digits.': 'farm.contacts.phoneDigits',
+  [`Save up to ${MAX_EMERGENCY_CONTACTS} contacts.`]: 'farm.contacts.max'
+};
+
+export function parseContactRows(
+  rows: readonly ContactRowInput[],
+  locale?: string | null
+): ContactsParse {
   const filled = rows.filter((r) => !isBlankRow(r));
   const parsed = emergencyContactsSchema.safeParse(
     filled.map(({ type, ...rest }) => (type === 'vet' ? { ...rest, type } : rest))
@@ -72,8 +87,16 @@ export function parseContactRows(rows: readonly ContactRowInput[]): ContactsPars
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
     const index = typeof issue?.path[0] === 'number' ? issue.path[0] : null;
-    const prefix = index === null ? '' : `Contact ${index + 1}: `;
-    return { ok: false, error: `${prefix}${issue?.message ?? 'Check the contacts.'}` };
+    const english = issue?.message ?? 'Check the contacts.';
+    const key = issue?.message ? CONTACT_MESSAGE_KEYS[issue.message] : 'farm.contacts.check';
+    const message = locale && key ? t(locale, key, { max: MAX_EMERGENCY_CONTACTS }) : english;
+    const prefix =
+      index === null
+        ? ''
+        : locale
+          ? t(locale, 'farm.contacts.prefix', { n: index + 1 })
+          : `Contact ${index + 1}: `;
+    return { ok: false, error: `${prefix}${message}` };
   }
   return { ok: true, contacts: parsed.data };
 }

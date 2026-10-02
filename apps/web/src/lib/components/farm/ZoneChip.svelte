@@ -69,15 +69,19 @@
   <div class="line">
     <span class="lbl">{tr('farm.zone.label')}</span>
     {#if shown}
-      <span class="serif value" data-testid="zone-value">{zoneValueLabel(shown)}</span>
+      <span class="serif value" data-testid="zone-value"
+        >{zoneValueLabel(shown, page.data?.locale)}</span
+      >
       {#if zoneReachNote(shown)}
-        <span class="reach" data-testid="zone-reach">· {zoneReachNote(shown)}</span>
+        <span class="reach" data-testid="zone-reach"
+          >· {zoneReachNote(shown, page.data?.locale)}</span
+        >
       {/if}
       <Provenance
         source={shown.provenance}
-        detail={zoneSourceDetail(shown)}
+        detail={zoneSourceDetail(shown, page.data?.locale)}
         label={shown.provenance === 'data' ? tr('farm.zone.weatherService') : undefined}
-        long={zoneEstimateLong(shown)}
+        long={zoneEstimateLong(shown, page.data?.locale)}
       />
     {:else if lat == null || lon == null}
       <span class="muted">{tr('farm.zone.setLocation')}</span>

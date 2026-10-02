@@ -11,6 +11,8 @@ import type { FarmAnimalChoice } from '$lib/onboarding/profile';
 import type { CoopSpaceKind } from './areaKinds';
 import { SQFT_PER_ACRE } from './sketch';
 import { numberToLocaleString } from '$lib/intlCache';
+import { t } from '$lib/i18n';
+import { intlLocale } from '$lib/prefs';
 
 export interface CoopSpeciesOption {
   id: string;
@@ -54,75 +56,80 @@ export function areaSqFt(input: {
 }
 
 /** A count or square footage for display: "67,565", "3.5". */
-export function formatCount(n: number): string {
-  return numberToLocaleString(n, 'en-US', { maximumFractionDigits: 1 });
-}
-
-function trim(n: number): string {
-  return formatCount(n);
+export function formatCount(n: number, locale?: string | null): string {
+  return numberToLocaleString(n, locale ? intlLocale(locale) : 'en-US', {
+    maximumFractionDigits: 1
+  });
 }
 
 function fits(areaFt: number, perAnimal: number): number {
   return Math.floor(areaFt / perAnimal + 1e-9);
 }
 
-export function suggestCapacity(input: {
-  option: CoopSpeciesOption | null | undefined;
-  space: CoopSpaceKind | null | undefined;
-  areaSqFt: number | null;
-  shelterSqFt?: number | null;
-  runSqFt?: number | null;
-}): CapacitySuggestion {
+export function suggestCapacity(
+  input: {
+    option: CoopSpeciesOption | null | undefined;
+    space: CoopSpaceKind | null | undefined;
+    areaSqFt: number | null;
+    shelterSqFt?: number | null;
+    runSqFt?: number | null;
+  },
+  locale?: string | null
+): CapacitySuggestion {
   const { option, space } = input;
-  if (!option) return { ok: false, reason: 'Pick the animal type to see a suggested number.' };
+  const trim = (n: number) => formatCount(n, locale);
+  const where = (s: 'indoor' | 'outdoor') =>
+    t(locale, s === 'indoor' ? 'area.coop.indoors' : 'area.coop.inRun');
+  if (!option) return { ok: false, reason: t(locale, 'area.coop.pickType') };
   if (!space) {
-    return {
-      ok: false,
-      reason: 'Say whether it is indoors, a run, or both to see a suggested number.'
-    };
+    return { ok: false, reason: t(locale, 'area.coop.sayWhere') };
   }
-  const missing = (where: string) => ({
+  const missing = (w: 'indoor' | 'outdoor') => ({
     ok: false as const,
-    reason: `CropCard has no sourced space figure for ${option.plural} ${where} yet. Type the number yourself.`
+    reason: t(locale, 'area.coop.noFigure', { plural: option.plural, where: where(w) })
   });
   const tooSmall = {
     ok: false as const,
-    reason: `This space is smaller than the guidance for one ${option.name.toLowerCase()}.`
+    reason: t(locale, 'area.coop.tooSmall', { name: option.name.toLowerCase() })
   };
 
   if (space === 'both') {
-    if (option.indoorSqFt === null) return missing('indoors');
-    if (option.outdoorSqFt === null) return missing('in a run');
+    if (option.indoorSqFt === null) return missing('indoor');
+    if (option.outdoorSqFt === null) return missing('outdoor');
     const shelter = input.shelterSqFt ?? null;
     const run = input.runSqFt ?? null;
     if (!(shelter && shelter > 0) || !(run && run > 0)) {
-      return { ok: false, reason: 'Type the shelter and run sizes to see a suggested number.' };
+      return { ok: false, reason: t(locale, 'area.coop.typeSizes') };
     }
     const count = Math.min(fits(shelter, option.indoorSqFt), fits(run, option.outdoorSqFt));
     if (count < 1) return tooSmall;
     return {
       ok: true,
       count,
-      basis: `${trim(option.indoorSqFt)} sq ft each in the shelter and ${trim(option.outdoorSqFt)} sq ft each in the run`,
+      basis: t(locale, 'area.coop.basisBoth', {
+        indoor: trim(option.indoorSqFt),
+        outdoor: trim(option.outdoorSqFt)
+      }),
       sourceName: option.sourceName ?? ''
     };
   }
 
   const perAnimal = space === 'indoor' ? option.indoorSqFt : option.outdoorSqFt;
-  if (perAnimal === null) return missing(space === 'indoor' ? 'indoors' : 'in a run');
+  if (perAnimal === null) return missing(space);
   const area = input.areaSqFt;
   if (!(area && area > 0)) {
-    return {
-      ok: false,
-      reason: 'Give it a size, or draw it on the map, to see a suggested number.'
-    };
+    return { ok: false, reason: t(locale, 'area.coop.giveSize') };
   }
   const count = fits(area, perAnimal);
   if (count < 1) return tooSmall;
   return {
     ok: true,
     count,
-    basis: `${trim(perAnimal)} sq ft each ${space === 'indoor' ? 'indoors' : 'in a run'}, ${trim(area)} sq ft in all`,
+    basis: t(locale, 'area.coop.basisOne', {
+      per: trim(perAnimal),
+      where: where(space),
+      area: trim(area)
+    }),
     sourceName: option.sourceName ?? ''
   };
 }

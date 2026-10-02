@@ -1606,8 +1606,8 @@
                 <button
                   class="row-action danger"
                   onclick={() => deleteShadeFromList(s.id, s.name)}
-                  aria-label="Delete {s.name}"
-                  title="Delete shade source">🗑</button
+                  aria-label={tr('farm.editor.deleteName', { name: s.name })}
+                  title={tr('farm.editor.deleteShade')}>🗑</button
                 >
               {/if}
             </li>

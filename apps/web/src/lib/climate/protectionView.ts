@@ -5,6 +5,7 @@
 
 import type { BlockProtection, ProtectionKind } from './protection';
 import type { EffectiveFrost } from './effectiveFrost';
+import { t } from '$lib/i18n';
 
 export interface BlockProtectionView extends BlockProtection {
   notes: string | null;
@@ -84,9 +85,16 @@ export async function removeBlockCover(
 }
 
 /** "Spring 21 days earlier" style line for one side of a cover. */
-export function shiftText(side: 'spring' | 'fall', days: number | null): string {
-  if (days === null) return side === 'spring' ? 'Spring shift not known' : 'Fall shift not known';
-  if (days === 0) return side === 'spring' ? 'No spring shift' : 'No fall shift';
-  const unit = days === 1 ? 'day' : 'days';
-  return side === 'spring' ? `Spring ${days} ${unit} earlier` : `Fall ${days} ${unit} later`;
+export function shiftText(
+  side: 'spring' | 'fall',
+  days: number | null,
+  locale?: string | null
+): string {
+  const spring = side === 'spring';
+  if (days === null)
+    return t(locale, spring ? 'climate.shift.springUnknown' : 'climate.shift.fallUnknown');
+  if (days === 0) return t(locale, spring ? 'climate.shift.springNone' : 'climate.shift.fallNone');
+  return t(locale, spring ? 'climate.shift.springEarlier' : 'climate.shift.fallLater', {
+    count: days
+  });
 }

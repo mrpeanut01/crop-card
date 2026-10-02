@@ -1,11 +1,15 @@
 <script lang="ts">
-  import { Map as MapIcon, Ruler, PencilLine, Sprout } from 'lucide-svelte';
+  import { Map as MapIcon, Ruler, PencilLine, Sprout, Sparkle } from 'lucide-svelte';
   import type { SetupArea } from '$lib/setup/types';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
 
   interface Props {
-    onName: () => void;
+    /** Helpers and inspectors get a read-only note: no choices, no wizard. */
+    variant?: 'owner' | 'helper';
+    onName?: () => void;
+    /** Opens the planning wizard (owner only). */
+    onStartWizard?: () => void;
     /** Areas already on the farm with nothing inside yet. */
     emptyAreas?: SetupArea[];
     /** The Area the person came from, when it has nothing inside yet. */
@@ -16,7 +20,9 @@
   }
 
   const {
+    variant = 'owner',
     onName,
+    onStartWizard,
     emptyAreas = [],
     focusArea = null,
     onWhole,
@@ -36,67 +42,94 @@
   }
 </script>
 
-<section class="where" aria-labelledby="where-title" data-testid="plan-where">
-  <p class="kicker">{tr('planui.where.kicker')}</p>
-  {#if focusArea}
-    <h2 id="where-title" class="serif">{tr('planui.where.titleIn', { name: focusArea.name })}</h2>
-    <p class="lede">
-      {tr('planui.where.ledeIn', { name: focusArea.name })}
-    </p>
-  {:else}
-    <h2 id="where-title" class="serif">{tr('planui.where.title')}</h2>
-    {#if emptyAreas.length > 0}
+{#if variant === 'helper'}
+  <section
+    class="where"
+    aria-labelledby="where-title"
+    data-testid="plan-where"
+    data-variant="helper"
+    role="status"
+  >
+    <p class="kicker">{tr('planui.where.kicker')}</p>
+    <h2 id="where-title" class="serif">{tr('plan.page.gate.title')}</h2>
+    <p class="lede helper">{tr('plan.page.gate.body')}</p>
+  </section>
+{:else}
+  <section
+    class="where"
+    aria-labelledby="where-title"
+    data-testid="plan-where"
+    data-variant="owner"
+  >
+    <p class="kicker">{tr('planui.where.kicker')}</p>
+    {#if focusArea}
+      <h2 id="where-title" class="serif">{tr('planui.where.titleIn', { name: focusArea.name })}</h2>
       <p class="lede">
-        {tr('planui.where.ledeHave', { names: listNames(emptyAreas.map((a) => a.name)) })}
+        {tr('planui.where.ledeIn', { name: focusArea.name })}
       </p>
     {:else}
-      <p class="lede">
-        {tr('planui.where.ledeNone')}
-      </p>
+      <h2 id="where-title" class="serif">{tr('planui.where.title')}</h2>
+      {#if emptyAreas.length > 0}
+        <p class="lede">
+          {tr('planui.where.ledeHave', { names: listNames(emptyAreas.map((a) => a.name)) })}
+        </p>
+      {:else}
+        <p class="lede">
+          {tr('planui.where.ledeNone')}
+        </p>
+      {/if}
     {/if}
-  {/if}
-  {#if onWhole && wholeChoices.length > 0}
-    <ul class="choices whole">
-      {#each wholeChoices as a (a.id)}
-        <li>
-          <button type="button" class="choice primary" disabled={busy} onclick={() => onWhole(a)}>
-            <Sprout size={22} strokeWidth={1.75} aria-hidden="true" />
-            <span class="choice-title">{tr('planui.where.wholeTitle', { name: a.name })}</span>
-            <span class="choice-hint">{tr('planui.where.wholeHint')}</span>
-          </button>
-        </li>
-      {/each}
+    {#if onWhole && wholeChoices.length > 0}
+      <ul class="choices whole">
+        {#each wholeChoices as a (a.id)}
+          <li>
+            <button type="button" class="choice primary" disabled={busy} onclick={() => onWhole(a)}>
+              <Sprout size={22} strokeWidth={1.75} aria-hidden="true" />
+              <span class="choice-title">{tr('planui.where.wholeTitle', { name: a.name })}</span>
+              <span class="choice-hint">{tr('planui.where.wholeHint')}</span>
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+    {#if error}<p class="error" role="alert">{error}</p>{/if}
+    <ul class="choices">
+      <li>
+        <a class="choice" href="/plan/farm">
+          <MapIcon size={22} strokeWidth={1.75} aria-hidden="true" />
+          <span class="choice-title">{tr('planui.where.drawTitle')}</span>
+          <span class="choice-hint">{tr('planui.where.drawHint')}</span>
+        </a>
+      </li>
+      <li>
+        <a class="choice" href="/plan/farm?mode=sketch">
+          <Ruler size={22} strokeWidth={1.75} aria-hidden="true" />
+          <span class="choice-title">{tr('planui.where.sketchTitle')}</span>
+          <span class="choice-hint">{tr('planui.where.sketchHint')}</span>
+        </a>
+      </li>
+      <li>
+        <button type="button" class="choice" onclick={() => onName?.()}>
+          <PencilLine size={22} strokeWidth={1.75} aria-hidden="true" />
+          <span class="choice-title"
+            >{focusArea
+              ? tr('planui.where.nameBedIn', { name: focusArea.name })
+              : tr('planui.where.justName')}</span
+          >
+          <span class="choice-hint">{tr('planui.where.nameHint')}</span>
+        </button>
+      </li>
     </ul>
-  {/if}
-  {#if error}<p class="error" role="alert">{error}</p>{/if}
-  <ul class="choices">
-    <li>
-      <a class="choice" href="/plan/farm">
-        <MapIcon size={22} strokeWidth={1.75} aria-hidden="true" />
-        <span class="choice-title">{tr('planui.where.drawTitle')}</span>
-        <span class="choice-hint">{tr('planui.where.drawHint')}</span>
-      </a>
-    </li>
-    <li>
-      <a class="choice" href="/plan/farm?mode=sketch">
-        <Ruler size={22} strokeWidth={1.75} aria-hidden="true" />
-        <span class="choice-title">{tr('planui.where.sketchTitle')}</span>
-        <span class="choice-hint">{tr('planui.where.sketchHint')}</span>
-      </a>
-    </li>
-    <li>
-      <button type="button" class="choice" onclick={onName}>
-        <PencilLine size={22} strokeWidth={1.75} aria-hidden="true" />
-        <span class="choice-title"
-          >{focusArea
-            ? tr('planui.where.nameBedIn', { name: focusArea.name })
-            : tr('planui.where.justName')}</span
-        >
-        <span class="choice-hint">{tr('planui.where.nameHint')}</span>
-      </button>
-    </li>
-  </ul>
-</section>
+    {#if onStartWizard}
+      <div class="wizard-row">
+        <button type="button" class="wizard" onclick={onStartWizard}>
+          <Sparkle size={16} strokeWidth={1.75} aria-hidden="true" />
+          {tr('planui.where.startWizard')}
+        </button>
+      </div>
+    {/if}
+  </section>
+{/if}
 
 <style>
   .where {
@@ -173,6 +206,33 @@
   .choice-title {
     font-weight: 600;
     font-size: var(--font-size-body-lg);
+  }
+  .lede.helper {
+    margin-bottom: 0;
+  }
+  .wizard-row {
+    margin-top: var(--space-4);
+  }
+  .wizard {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 48px;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid var(--color-forest);
+    border-radius: var(--radius-card);
+    background: transparent;
+    color: var(--color-forest-deep);
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+  .wizard:hover {
+    background: var(--pill-forest-bg);
   }
   .choice-hint {
     font-size: var(--font-size-caption);

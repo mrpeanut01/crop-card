@@ -6,6 +6,7 @@ export interface TaskStartInput {
   relatedEventTable?: string | null;
   category?: TaskCategory | null;
   blockId?: string | null;
+  cropId?: string | null;
 }
 
 export interface TaskStart {
@@ -21,45 +22,57 @@ function withParams(path: string, params: Record<string, string | null | undefin
 }
 
 /**
- * Where "Start" takes a task. The spray flows take `?task=` and close the
- * task when the record saves; the other flows open on the right block and
- * the owner taps Done afterwards. Null when there is no flow to open.
+ * Where "Start" takes a task. Every flow gets `?task=` plus the task's block
+ * and planting, and closes the task in the same transaction as the record
+ * it saves (TC-02, TC-04). Null when there is no flow to open.
  */
 export function taskStart(task: TaskStartInput, locale?: string | null): TaskStart | null {
-  const block = task.blockId ?? null;
-  const spraying = t(locale, 'tasks.start.spraying');
+  const params = { task: task.id, block: task.blockId ?? null, crop: task.cropId ?? null };
+  const spray = (path: string): TaskStart => ({
+    href: withParams(path, params),
+    label: t(locale, 'tasks.start.spraying')
+  });
+  const harvest = (): TaskStart => ({
+    href: withParams('/harvest', params),
+    label: t(locale, 'tasks.start.harvest')
+  });
+  const hay = (): TaskStart => ({
+    href: withParams('/hay', params),
+    label: t(locale, 'tasks.start.cutting')
+  });
+  const fertility = (): TaskStart => ({
+    href: withParams('/fertility', params),
+    label: t(locale, 'tasks.start.feeding')
+  });
   switch (task.relatedEventTable) {
     case 'spray_event':
-      return { href: withParams('/spray', { task: task.id, block }), label: spraying };
+      return spray('/spray');
     case 'insecticide_event':
-      return {
-        href: withParams('/spray/insecticide', { task: task.id, block }),
-        label: spraying
-      };
+      return spray('/spray/insecticide');
     case 'fungicide_event':
-      return {
-        href: withParams('/spray/fungicide', { task: task.id, block }),
-        label: spraying
-      };
+      return spray('/spray/fungicide');
     case 'harvest_event':
-      return { href: '/harvest', label: t(locale, 'tasks.start.harvest') };
+      return harvest();
     case 'hay_cutting':
-      return { href: '/hay', label: t(locale, 'tasks.start.cutting') };
+      return hay();
     case 'fertility_application':
-      return { href: '/fertility', label: t(locale, 'tasks.start.feeding') };
+      return fertility();
   }
   switch (task.category) {
     case 'spray':
-      return { href: withParams('/spray', { task: task.id, block }), label: spraying };
+      return spray('/spray');
     case 'scout':
     case 'companion-check':
-      return { href: withParams('/scout', { block }), label: t(locale, 'tasks.start.scouting') };
+      return {
+        href: withParams('/scout', params),
+        label: t(locale, 'tasks.start.scouting')
+      };
     case 'harvest':
-      return { href: '/harvest', label: t(locale, 'tasks.start.harvest') };
+      return harvest();
     case 'hay-cutting':
-      return { href: '/hay', label: t(locale, 'tasks.start.cutting') };
+      return hay();
     case 'fertilize':
-      return { href: '/fertility', label: t(locale, 'tasks.start.feeding') };
+      return fertility();
     default:
       return null;
   }

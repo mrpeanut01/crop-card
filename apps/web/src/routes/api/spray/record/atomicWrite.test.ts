@@ -24,7 +24,8 @@ const m = vi.hoisted(() => ({
   recordSpray: vi.fn(),
   decrementForUse: vi.fn(() => ({ notes: [] as string[] })),
   getStockItemByPluginId: vi.fn((): unknown => undefined),
-  completeTask: vi.fn()
+  completeTask: vi.fn(),
+  getTask: vi.fn()
 }));
 
 vi.mock('$lib/server/auth', () => ({ currentUser: () => ({ id: 'u1', role: 'owner' }) }));
@@ -63,7 +64,7 @@ vi.mock('$lib/db/stock', () => ({
   getStockItem: () => undefined,
   getStockItemByPluginId: m.getStockItemByPluginId
 }));
-vi.mock('$lib/db/tasks', () => ({ completeTask: m.completeTask }));
+vi.mock('$lib/db/tasks', () => ({ completeTask: m.completeTask, getTask: m.getTask }));
 vi.mock('$lib/db/users', () => ({ ensureSystemUser: async () => ({ id: 'sys' }) }));
 vi.mock('$lib/dilution/calculator', () => ({
   computeTankMixDilutions: () => [{ pluginId: 'herb-1', productAmount: 3, unit: 'fl-oz' }]
@@ -113,6 +114,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   m.insertSprayEvent.mockReturnValue({ id: 'evt-1' });
   m.decrementForUse.mockReturnValue({ notes: [] });
+  m.getTask.mockReturnValue({ id: 'task-1', title: 'Spray', blockId: 'blk-1' });
 });
 
 describe('spray record atomicity', () => {
@@ -151,5 +153,31 @@ describe('spray record atomicity', () => {
     expect(res.status).toBe(200);
     expect((await res.json()).stockWarnings.join(' ')).toMatch(/task task-1 not closed/);
     expect(p.exists()).toBe(true);
+  });
+});
+
+describe('Start closes the task (TC-04, TC-06, TC-07)', () => {
+  it('closes an open task on the same block and answers taskClose', async () => {
+    const res = await post();
+    expect(res.status).toBe(200);
+    expect((await res.json()).taskClose).toEqual({ taskId: 'task-1', status: 'closed' });
+    expect(m.completeTask).toHaveBeenCalledWith(
+      'task-1',
+      expect.objectContaining({ eventTable: 'spray_event', eventId: 'evt-1' })
+    );
+  });
+
+  it('leaves an already completed task as it was', async () => {
+    m.getTask.mockReturnValue({ id: 'task-1', title: 'Spray', completedAt: 1 });
+    const res = await post();
+    expect((await res.json()).taskClose.status).toBe('already-closed');
+    expect(m.completeTask).not.toHaveBeenCalled();
+  });
+
+  it('leaves a task for another block open', async () => {
+    m.getTask.mockReturnValue({ id: 'task-1', title: 'Spray', blockId: 'blk-2' });
+    const res = await post();
+    expect((await res.json()).taskClose.status).toBe('mismatch');
+    expect(m.completeTask).not.toHaveBeenCalled();
   });
 });

@@ -1,7 +1,7 @@
 {
   "pluginId": "cydectin-pour-on",
   "displayName": "Cydectin Pour-On (moxidectin) for Cattle",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "animal-health",
   "productKind": "dewormer",
   "activeIngredients": [
@@ -36,5 +36,10 @@
       }
     }
   ],
+  "organicUse": {
+    "status": "allowed-with-conditions",
+    "citation": "7 CFR 205.603(a)(23)(ii)",
+    "conditions": "Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic. (ii) Moxidectin (CAS #113507-06-5)—milk or milk products from a treated animal cannot be labeled as provided for in subpart D of this part for: 2 days following treatment of cattle; 36 days following treatment of goats, sheep, and other dairy species."
+  },
   "notes": "Internal and external parasites of beef and dairy cattle. The label also says a withdrawal period has not been established in preruminating calves and not to use in calves to be processed for veal."
 }

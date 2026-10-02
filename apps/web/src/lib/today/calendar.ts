@@ -131,6 +131,8 @@ export type CalendarChip =
       kind: CalendarKind;
       title: string;
       blockId: string;
+      /** Scheduled on this phone, waiting to save (34A SO-07). */
+      queued?: boolean;
     };
 
 export interface CalendarCellsInput<T extends CalendarTaskLike, E extends SuggestionLike> {

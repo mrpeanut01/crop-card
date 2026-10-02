@@ -102,6 +102,7 @@ export const harvestRecordSchema = z.object({
 export const scoutRecordSchema = z.object({
   blockId: z.string().min(1),
   cropId: z.string().optional(),
+  taskId: z.string().optional(),
   pest: z.string().min(1).max(80),
   metric: z.string().min(1).max(40),
   value: z.number().nonnegative(),

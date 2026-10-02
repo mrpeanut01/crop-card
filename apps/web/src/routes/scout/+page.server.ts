@@ -7,14 +7,17 @@ import { loadDegreeDays, SCOUT_FETCH_TIMEOUT_MS } from '$lib/server/degreeDays.s
 import { canMutate } from '$lib/server/session';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { ymdInZone } from '$lib/prefs';
+import { loadTaskContext } from '$lib/server/recordTaskClose';
 
 export const load: PageServerLoad = ({ url, locals }) => {
+  const taskContext = loadTaskContext(url.searchParams.get('task'));
   const cropId = url.searchParams.get('crop');
   let preselectedBlockId = url.searchParams.get('block');
   if (cropId && !preselectedBlockId) {
     const c = getCrop(cropId);
     if (c) preselectedBlockId = c.blockId;
   }
+  if (!preselectedBlockId && taskContext?.blockId) preselectedBlockId = taskContext.blockId;
 
   // Sprint 4 (#139 / CT-SC-003) — load last 30 days of scout
   // observations and group by block so the UI can render per-block
@@ -52,6 +55,7 @@ export const load: PageServerLoad = ({ url, locals }) => {
     })),
     preselectedBlockId,
     preselectedCropId: cropId,
+    taskContext,
     windowStage: url.searchParams.get('windowStage') ?? null,
     observationsByBlock,
     setup: { canEdit: canSetUp(locals.user?.role), areas: setupAreas() },

@@ -18,9 +18,24 @@
   import type { SetupPlantingResult } from '$lib/setup/types';
   import { recordSaleOffline, recordSaleHref, type SaleLink } from '$lib/finance/harvestSale';
   import DispositionPanel from '$lib/components/harvest/DispositionPanel.svelte';
+  import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
+  import {
+    taskClosedBy,
+    type RecordTaskClose,
+    type TaskRecordTarget
+  } from '$lib/tasks/recordClose';
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
+  // Kept from the first load: the reload after a save no longer finds the
+  // task open, and the saved line still has to show.
+  const taskCtx = untrack(() => data.taskContext);
+  let taskOutcome = $state<RecordTaskClose | null>(null);
+  let taskQueued = $state(false);
+  let taskRecord = $state<TaskRecordTarget>({});
+  // Once a save closed the task, later saves on this page leave it alone.
+  let taskClosed = $state(false);
+  const openTask = $derived(taskClosed ? null : taskCtx);
 
   let recordingFor = $state<string | null>(untrack(() => data.focusPlantingId ?? null));
   // Phase 25c (#88) — HarvestRouter owns the in-form state now; we
@@ -103,13 +118,19 @@
   ): Promise<string | null> {
     lastError = null;
     lastNotice = null;
+    if (!taskClosed) {
+      taskOutcome = null;
+      taskQueued = false;
+      taskRecord = { blockId: planting.blockId, cropPluginId: planting.cropPluginId };
+    }
     const body = {
       blockId: planting.blockId,
       cropPluginId: planting.cropPluginId,
       quantity: input.quantity,
       lotNumber: input.lotNumber,
       // #322 — structured moisture reaches the kernel gate.
-      moisturePct: input.moisturePct
+      moisturePct: input.moisturePct,
+      ...(openTask ? { taskId: openTask.id } : {})
     };
     try {
       // #316 (NFR-02) — offline path. Queue the harvest locally; the sync
@@ -121,6 +142,7 @@
         const queueId = await enqueueRecord('harvest', body);
         recordingFor = null;
         lastNotice = tr('harvestui.queued');
+        taskQueued = !!openTask || taskQueued;
         lastSale = null;
         saleQueued = planting.varietyDisplayName;
         return queueId;
@@ -136,6 +158,7 @@
         scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
         recordingFor = null;
         lastNotice = updatingQueuedNotice(data.locale);
+        taskQueued = !!openTask || taskQueued;
         return queueId;
       }
       const out = await res.json();
@@ -150,6 +173,10 @@
       // #324 — non-blocking PHI warning: the record committed, but surface
       // the label-interval caution so the operator can act on it.
       phiWarning = out?.phiWarning?.message ?? null;
+      if (!taskClosed) {
+        taskOutcome = out?.taskClose ?? null;
+        taskClosed = taskClosedBy(taskOutcome);
+      }
       recordingFor = null;
       const eventId = (out?.event?.id as string | undefined) ?? null;
       lastSale = eventId
@@ -173,6 +200,7 @@
           const queueId = await enqueueRecord('harvest', body);
           recordingFor = null;
           lastNotice = tr('harvestui.queued');
+          taskQueued = !!openTask || taskQueued;
           return queueId;
         } catch (queueErr) {
           lastError = tr('harvestui.errQueue', {
@@ -292,6 +320,9 @@
 
 {#if lastNotice}
   <Banner tone="wheat">{lastNotice}</Banner>
+{/if}
+{#if taskCtx && (taskOutcome || taskQueued || !recordingFor)}
+  <TaskCloseNote task={taskCtx} record={taskRecord} outcome={taskOutcome} queued={taskQueued} />
 {/if}
 {#if lastSale || saleQueued}
   <div class="sale-strip" data-testid="harvest-saved-strip">
@@ -490,6 +521,10 @@
                   onCommit={(input) => commitFromRenderer(p, input)}
                   error={lastError}
                   onCancel={cancelRecord}
+                />
+                <TaskCloseNote
+                  task={openTask}
+                  record={{ blockId: p.blockId, cropPluginId: p.cropPluginId }}
                 />
               </div>
             {:else}

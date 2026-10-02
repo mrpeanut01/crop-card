@@ -10,11 +10,13 @@ import { canVoidHolds, voidableUntilMs } from '$lib/server/holdVoid';
 import { grazingContextFrom } from '$lib/server/areaGrazing';
 import { hayOffFarmNotices } from '$lib/farm/hayOffFarm';
 import { forageAccess } from '$lib/forage/access';
+import { loadTaskContext } from '$lib/server/recordTaskClose';
 
 export const load: PageServerLoad = async (event) => {
   const { url, locals } = event;
   const registry = await getRegistry();
   const blocks = listBlocks();
+  const taskContext = loadTaskContext(url.searchParams.get('task'));
   const cropId = url.searchParams.get('crop');
   const crop = cropId ? getCrop(cropId) : undefined;
   const hayCrops = registry
@@ -48,6 +50,7 @@ export const load: PageServerLoad = async (event) => {
   const selectedBlockId =
     crop?.blockId ??
     url.searchParams.get('block') ??
+    taskContext?.blockId ??
     blockOptions.find((b) => b.hayPlanting)?.id ??
     blockOptions[0]?.id ??
     '';
@@ -71,6 +74,7 @@ export const load: PageServerLoad = async (event) => {
     hayCrops,
     selectedBlockId,
     selectedCropId: crop?.id ?? null,
+    taskContext,
     year,
     cuttings: cuttings.map((c) => ({
       ...c,

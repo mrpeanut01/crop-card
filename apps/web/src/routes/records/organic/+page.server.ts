@@ -220,7 +220,7 @@ export const load: PageServerLoad = async (event) => {
           : null,
         canAnswer: isOwner && !r.deleted && r.basis !== 'rule' && !locked,
         deleted: r.deleted,
-        organicUseLine: r.organicUse ? organicUseFactLine(r.organicUse) : null
+        organicUseLine: r.organicUse ? organicUseFactLine(r.organicUse, locale) : null
       };
     })
     .reverse();

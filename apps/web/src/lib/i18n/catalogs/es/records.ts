@@ -716,6 +716,11 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
     'Estado perdido (la biblioteca registra este producto como antibiótico, {citation})',
   'organic.outcome.lostRuleNotAllowed':
     'Estado perdido (la biblioteca marca este producto como no permitido para uso orgánico, {citation})',
+  'organic.useFact.allowed': 'permitido para uso orgánico',
+  'organic.useFact.allowedWithConditions': 'permitido para uso orgánico con condiciones',
+  'organic.useFact.conditions': ' Condiciones: {conditions}',
+  'organic.useFact.line':
+    'Dato de la biblioteca: {what} ({citation}).{conditions} Es un dato a considerar, no la respuesta.',
   'organic.welfare.cited':
     'Trata a un animal enfermo. Las normas orgánicas prohíben negar un tratamiento para conservar el estado ({citation}).',
   'organic.welfare.ask':
@@ -1007,6 +1012,7 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'recui.qkind.irrigation': 'Riego',
   'recui.qkind.rainGauge': 'Lectura del pluviómetro',
   'recui.qkind.harvestDisposition': 'A dónde fue una cosecha',
+  'recui.qkind.taskSchedule': 'Tarea programada',
   'recui.pending.waiting':
     'Esperando el registro rechazado de arriba para los mismos animales. Se sincroniza cuando ese se resuelva.',
   'recui.pending.askOwner':

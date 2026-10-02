@@ -1,6 +1,6 @@
 <script lang="ts">
   import { noteHoldWrite } from '$lib/animals/recordClient';
-  import { goto, invalidateAll } from '$app/navigation';
+  import { invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
@@ -33,6 +33,8 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { createT } from '$lib/i18n';
+  import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
+  import type { RecordTaskClose } from '$lib/tasks/recordClose';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
   let { data } = $props();
@@ -82,6 +84,8 @@
     Array<{ code: string; message: string; detail?: Record<string, unknown> }>
   >([]);
   let busy = $state(false);
+  let taskOutcome = $state<RecordTaskClose | null>(null);
+  let taskQueued = $state(false);
 
   /** Group products by FRAC code so the operator sees rotation overlap
    *  before they pick a tank mix. Same-code consecutive sprays are the
@@ -295,6 +299,8 @@
     busy = true;
     error = null;
     result = null;
+    taskOutcome = null;
+    taskQueued = false;
     warnings = [];
     violations = [];
     const body: Record<string, unknown> = {
@@ -319,6 +325,7 @@
         const { enqueueRecord } = await import('$lib/client/syncQueue');
         await enqueueRecord('fungicide', body);
         result = tr('sprayui.queuedResult');
+        taskQueued = !!body.taskId;
         return;
       }
       const res = await fetch('/api/fungicide/record', {
@@ -341,12 +348,7 @@
         : 'n/a';
       result = `Recorded — REI clear ${reiClear} · PHI clear ${phiClear}.`;
       if (Array.isArray(payload.stockWarnings)) warnings = payload.stockWarnings;
-      // Phase 21b follow-up — hop back to the swim-lane so the pip
-      // flips to green (server set completedAt + relatedEventId).
-      if (data.preselect.taskId) {
-        goto('/plan?tab=schedule&view=swimlane');
-        return;
-      }
+      taskOutcome = payload.taskClose ?? null;
     } catch (e) {
       // #316 — transient network failure while "online": fall back to the
       // offline queue instead of losing the record.
@@ -357,6 +359,7 @@
           const { enqueueRecord } = await import('$lib/client/syncQueue');
           await enqueueRecord('fungicide', body);
           result = tr('sprayui.queuedResult');
+          taskQueued = !!body.taskId;
         } catch (queueErr) {
           error = `offline queue failed: ${
             queueErr instanceof Error ? queueErr.message : queueErr
@@ -413,6 +416,18 @@
   submitLabel={tr('sprayui.fun.submit')}
   onSubmit={recordSpray}
 >
+  {#snippet afterSubmit()}
+    <TaskCloseNote
+      task={data.taskContext}
+      record={{
+        blockId: selectedBlockId,
+        cropId: selectedBlockId === data.preselect.blockId ? data.preselect.cropId : null
+      }}
+      outcome={taskOutcome}
+      queued={taskQueued}
+    />
+  {/snippet}
+
   {#snippet productSection()}
     {#if data.fungicides.length === 0}
       <p class="empty">

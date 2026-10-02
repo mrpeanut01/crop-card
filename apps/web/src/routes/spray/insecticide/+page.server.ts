@@ -12,6 +12,7 @@ import type { CropPlugin } from '$lib/plugins/schemas';
 import { pollinatorNeighbors } from '$lib/server/pollinatorNeighbors';
 import { canSetUp, setupAreas } from '$lib/server/setupContext';
 import { organicBlocksForNotice } from '$lib/server/organicNotice';
+import { loadTaskContext } from '$lib/server/recordTaskClose';
 
 /**
  * Phase 25d (#95) — IPM-gate scout data. Primary path reads from the
@@ -80,6 +81,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     return rec && rec.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : null;
   };
 
+  const taskContext = loadTaskContext(url.searchParams.get('task'));
   return {
     insecticides: insecticidePlugins,
     pasture: await loadSprayPastureContext(allBlocks, registry),
@@ -112,10 +114,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     }),
     recentEvents: listInsecticideEvents({ limit: 20 }),
     activeREI: activeReEntryRestrictions(),
-    preselectedBlockId: crop?.blockId ?? url.searchParams.get('block') ?? null,
+    preselectedBlockId:
+      crop?.blockId ?? url.searchParams.get('block') ?? taskContext?.blockId ?? null,
     preselectedCropId: crop?.id ?? null,
-    // Phase 21b follow-up — deep-link from the swim-lane pip popover.
-    taskId: url.searchParams.get('task'),
+    taskId: taskContext?.id ?? null,
+    taskContext,
     // Phase 25d (#89) v2-addendum — drives AI-on vs AI-off variant.
     aiEnabled: getUserAiEnabled(locals.user?.id),
     setup: { canEdit: canSetUp(locals.user?.role), areas: setupAreas() },

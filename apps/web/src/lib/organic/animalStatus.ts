@@ -209,13 +209,21 @@ export function projectAnimalOrganic(
 }
 
 /** B-23: the plain words for a library organic-use fact. */
-export function organicUseFactLine(fact: OrganicUseFact): string {
-  const what =
-    fact.status === 'allowed'
-      ? 'allowed for organic use'
-      : 'allowed for organic use with conditions';
-  const conditions = fact.conditions?.trim() ? ` Conditions: ${fact.conditions.trim()}.` : '';
-  return `Library entry: ${what} (${fact.citation}).${conditions} This is a fact to weigh, not the answer.`;
+/** OR-09: the citation and conditions are inserted as stored (English
+ *  regulatory text). Without a locale the sentence is the English one the
+ *  certifier pack and treatment exports print. */
+export function organicUseFactLine(fact: OrganicUseFact, locale?: string | null): string {
+  const what = t(
+    locale,
+    fact.status === 'allowed' ? 'organic.useFact.allowed' : 'organic.useFact.allowedWithConditions'
+  );
+  const trimmed = fact.conditions?.trim();
+  const conditions = trimmed
+    ? t(locale, 'organic.useFact.conditions', {
+        conditions: /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`
+      })
+    : '';
+  return t(locale, 'organic.useFact.line', { what, citation: fact.citation, conditions });
 }
 
 export const DELETED_BEFORE_REVIEW = 'Treatment record deleted before review. Tell your certifier.';

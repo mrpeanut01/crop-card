@@ -30,6 +30,8 @@
   import OrganicInputNotice from '$lib/components/organic/OrganicInputNotice.svelte';
   import { organicInputClass } from '$lib/organic/inputCompliance';
   import { createT } from '$lib/i18n';
+  import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
+  import type { RecordTaskClose } from '$lib/tasks/recordClose';
 
   // Stepper + context-strip $derived inputs computed below the rest of
   // the herbicide flow's state (selectedBlocks / sprayer / herbicides /
@@ -228,6 +230,15 @@
   /** Phase 21b follow-up — array of currently-selected blocks. Driven
    *  by the `selectedBlockIds` Set so toggling is O(1) on the cards. */
   const selectedBlocks = $derived(data.blocks.filter((b) => selectedBlockIds.has(b.id)));
+  /** The one block of this pass that carries the task id (TC-04): the task's
+   *  block when it is selected, else the first selected block. */
+  const taskBlockId = $derived(
+    data.preselect.blockId && selectedBlockIds.has(data.preselect.blockId)
+      ? data.preselect.blockId
+      : (selectedBlocks[0]?.id ?? null)
+  );
+  let taskOutcome = $state<RecordTaskClose | null>(null);
+  let taskQueued = $state(false);
   const pickedFamilies = $derived([
     ...new Set(
       selectedBlocks.flatMap((b) =>
@@ -552,9 +563,7 @@
       ...(data.preselect?.cropId && b.id === data.preselect.blockId && !b.preplant
         ? { cropId: data.preselect.cropId }
         : {}),
-      ...(data.preselect?.taskId && b.id === data.preselect.blockId
-        ? { taskId: data.preselect.taskId }
-        : {})
+      ...(data.preselect?.taskId && b.id === taskBlockId ? { taskId: data.preselect.taskId } : {})
     };
   }
 
@@ -579,6 +588,8 @@
     lastError = null;
     queuedOffline = false;
     recordedId = null;
+    taskOutcome = null;
+    taskQueued = false;
 
     saveSprayerPrefs(sprayer.id, {
       tankSizeGallons,
@@ -590,7 +601,6 @@
     });
 
     const outcomes = new Map<string, RecordOutcome>();
-    let postedTaskRedirect = false;
 
     for (const b of selectedBlocks) {
       const perBlockEval = perBlockResults.get(b.id);
@@ -608,6 +618,7 @@
           const queueId = await enqueueSprayRecord(body);
           outcomes.set(b.id, { kind: 'created', eventId: queueId });
           queuedOffline = true;
+          if ('taskId' in body) taskQueued = true;
         } catch (e) {
           outcomes.set(b.id, {
             kind: 'failed',
@@ -641,6 +652,7 @@
           scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
           outcomes.set(b.id, { kind: 'created', eventId: queueId });
           queuedOffline = true;
+          if ('taskId' in body) taskQueued = true;
           continue;
         }
         const respData = await res.json().catch(() => ({}));
@@ -660,9 +672,7 @@
           eventId: respData.event.id
         });
         await noteHoldWrite('herbicide', { blockId: b.id });
-        if (data.preselect?.taskId && b.id === data.preselect.blockId) {
-          postedTaskRedirect = true;
-        }
+        if (respData.taskClose) taskOutcome = respData.taskClose;
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         const isNetworkErr = e instanceof TypeError && /(fetch|network|failed)/i.test(msg);
@@ -672,6 +682,7 @@
             const queueId = await enqueueSprayRecord(body);
             outcomes.set(b.id, { kind: 'created', eventId: queueId });
             queuedOffline = true;
+            if ('taskId' in body) taskQueued = true;
           } catch (queueErr) {
             outcomes.set(b.id, {
               kind: 'failed',
@@ -713,10 +724,6 @@
       }
     }
     recording = false;
-
-    if (postedTaskRedirect) {
-      goto('/plan?tab=schedule&view=swimlane');
-    }
   }
 
   // Phase 25b (#85) — Almanac chrome derived state.
@@ -1512,6 +1519,15 @@
           <a href="/spray" class="secondary">{tr('sprayui.next.another')}</a>
         </div>
       {/if}
+      <TaskCloseNote
+        task={data.taskContext}
+        record={{
+          blockId: taskBlockId,
+          cropId: taskBlockId === data.preselect.blockId ? data.preselect.cropId : null
+        }}
+        outcome={taskOutcome}
+        queued={queuedOffline && taskQueued}
+      />
     {:else}
       <h2>⛔ STOP — do not spray</h2>
       {#if result.requiresDecon}

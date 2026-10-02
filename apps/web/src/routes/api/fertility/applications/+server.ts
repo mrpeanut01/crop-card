@@ -7,6 +7,8 @@ import { ensureSystemUser, memberNamesByIds } from '$lib/db/users';
 import { currentUser, requireOwner } from '$lib/server/auth';
 import { assertAmendmentBatch, rejectForeignRefs } from '$lib/server/foreignRefs';
 import { fertilityApplicationCreateSchema } from '$lib/fertility/apiSchemas';
+import { writeRecord } from '$lib/server/recordWrite';
+import { closeTaskForRecord } from '$lib/server/recordTaskClose';
 import { decideSpread } from '$lib/server/spreadCarryover';
 import type { CarryoverAck } from '$lib/amendments/spreadPrompt';
 
@@ -60,25 +62,23 @@ export const POST: RequestHandler = async (event) => {
       };
     }
   }
-  const persisted = insertFertilityApplication({
-    ...fields,
-    occurredAt,
-    performedById: performer.id,
-    carryoverAckJson: carryoverAck ? JSON.stringify(carryoverAck) : undefined
+  const { persisted, taskClose } = writeRecord(event, () => {
+    const persisted = insertFertilityApplication({
+      ...fields,
+      occurredAt,
+      performedById: performer.id,
+      carryoverAckJson: carryoverAck ? JSON.stringify(carryoverAck) : undefined
+    });
+    const taskClose = closeTaskForRecord({
+      taskId: parsed.data.taskId,
+      record: { blockId: fields.blockId, cropId: fields.cropId },
+      eventTable: 'fertility_application',
+      eventId: persisted.id,
+      occurredAt
+    });
+    return { persisted, taskClose };
   });
-  if (parsed.data.taskId) {
-    try {
-      const { completeTask } = await import('$lib/db/tasks');
-      completeTask(parsed.data.taskId, {
-        eventTable: 'fertility_application',
-        eventId: persisted.id,
-        occurredAt
-      });
-    } catch {
-      // Non-fatal; the application is recorded.
-    }
-  }
-  return json({ application: persisted, carryoverAck }, { status: 201 });
+  return json({ application: persisted, carryoverAck, taskClose }, { status: 201 });
 };
 
 export const GET: RequestHandler = ({ url }) => {

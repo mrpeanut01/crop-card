@@ -163,6 +163,68 @@ test.describe('organic status (33B, B1)', () => {
     await noHorizontalOverflow(page);
   });
 
+  test('shipped library products show their organic-use fact beside the review (34A)', async ({
+    page
+  }) => {
+    await page.setViewportSize(PHONE);
+    await provisionEmptyFarm(page);
+    const out = await post<{ group: { id: string }; members: { id: string }[] }>(
+      page,
+      '/api/animal-groups',
+      {
+        name: 'Herd',
+        speciesId: 'cattle',
+        headCount: 2,
+        members: [{ name: 'Daisy' }, { name: 'Rosie' }]
+      }
+    );
+    await post(page, '/api/organic/status', {
+      subjectType: 'group',
+      subjectId: out.group.id,
+      status: 'organic',
+      effectiveOn: '2025-01-01',
+      certifier: 'Valley Organic'
+    });
+    const [daisy, rosie] = out.members.map((m) => m.id);
+    await post(page, '/api/animals/health/record', {
+      subjectType: 'animal',
+      subjectId: daisy,
+      kind: 'deworm',
+      productPluginId: 'cydectin-pour-on',
+      route: 'pour-on',
+      labelUse: 'label',
+      administeredAt: Date.now() - DAY
+    });
+    await post(page, '/api/animals/health/record', {
+      subjectType: 'animal',
+      subjectId: rosie,
+      kind: 'deworm',
+      productPluginId: 'ivomec-injection',
+      route: 'injection-sc',
+      labelUse: 'label',
+      administeredAt: Date.now() - DAY
+    });
+
+    await open(page, '/records/organic');
+    const rows = page.getByTestId('organic-treatment');
+    const moxidectin = rows.filter({ hasText: 'Cydectin' });
+    await expect(moxidectin.getByTestId('organic-treatment-outcome')).toHaveText('Needs review');
+    await expect(moxidectin.getByTestId('organic-use-fact')).toContainText(
+      'Library entry: allowed for organic use with conditions (7 CFR 205.603(a)(23)(ii)). Conditions: Parasiticides'
+    );
+    const ivermectin = rows.filter({ hasText: 'Ivomec' });
+    await expect(ivermectin.getByTestId('organic-treatment-outcome')).toHaveText('Needs review');
+    await expect(ivermectin.getByTestId('organic-use-fact')).toHaveCount(0);
+    await noHorizontalOverflow(page);
+
+    await open(page, `/animals/${daisy}/health`);
+    await expect(page.getByTestId('organic-outcome')).toContainText('Needs review');
+
+    // The Spanish fact line is covered by routes/records/organic/page.server.test.ts;
+    // this server runs English only.
+    await noHorizontalOverflow(page);
+  });
+
   test('a garden household with no organic status sees no organic chrome', async ({ page }) => {
     await page.setViewportSize(PHONE);
     await signInNewUser(page, 'garden-organic');

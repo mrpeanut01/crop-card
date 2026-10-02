@@ -74,6 +74,11 @@ vi.mock('$lib/db/stock', () => ({
 }));
 vi.mock('$lib/db/users', () => ({ ensureSystemUser: vi.fn(async () => ({ id: 'sys' })) }));
 
+const closeTaskForRecord = vi.hoisted(() =>
+  vi.fn((i: { taskId?: string }) => (i.taskId ? { taskId: i.taskId, status: 'closed' } : null))
+);
+vi.mock('$lib/server/recordTaskClose', () => ({ closeTaskForRecord }));
+
 import { POST } from './+server';
 import { sqliteHandle } from '$lib/db/client';
 
@@ -195,5 +200,34 @@ describe('record writes are one transaction', () => {
     expect(res.status).toBe(200);
     expect((await res.json()).stockWarnings.join(' ')).toMatch(/stock decrement failed/);
     expect(p.exists()).toBe(true);
+  });
+});
+
+describe('Start closes the task in the same transaction (TC-04)', () => {
+  it('passes the task, block and event to closeTaskForRecord and answers taskClose', async () => {
+    getSprayer.mockReturnValue({ id: 'spr-1', calibratedGpa: 20, lastChemistryClass: undefined });
+    const inTx: boolean[] = [];
+    closeTaskForRecord.mockImplementationOnce((i: { taskId?: string }) => {
+      inTx.push(sqliteHandle().inTransaction);
+      return { taskId: i.taskId as string, status: 'closed' };
+    });
+    const res = await POST(makeEvent({ ...baseBody, taskId: 'task-9' }));
+    expect(res.status).toBe(200);
+    expect(closeTaskForRecord).toHaveBeenCalledWith(
+      expect.objectContaining({
+        taskId: 'task-9',
+        record: expect.objectContaining({ blockId: baseBody.blockId }),
+        eventTable: 'fungicide_event',
+        eventId: 'evt-1'
+      })
+    );
+    expect(inTx).toEqual([true]);
+    expect((await res.json()).taskClose).toEqual({ taskId: 'task-9', status: 'closed' });
+  });
+
+  it('answers taskClose null without a task id', async () => {
+    getSprayer.mockReturnValue({ id: 'spr-1', calibratedGpa: 20, lastChemistryClass: undefined });
+    const res = await POST(makeEvent(baseBody));
+    expect((await res.json()).taskClose).toBeNull();
   });
 });

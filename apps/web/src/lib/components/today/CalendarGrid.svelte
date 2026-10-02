@@ -69,15 +69,17 @@
     const where = c.blockId ? blockNames[c.blockId] : undefined;
     const state =
       c.type === 'suggestion'
-        ? tr('today.cal.suggestedAria')
+        ? `${tr('today.cal.suggestedAria')}${c.queued ? `, ${tr('today.cal.waitingUpload')}` : ''}`
         : `${tr(`tasks.status.${c.status}`)}${c.queued ? `, ${tr('today.cal.waitingUpload')}` : ''}`;
     return [c.title, where, state].filter(Boolean).join(', ');
   }
   function chipMeta(c: CalendarChip): string {
     const parts: string[] = [tr(KIND_KEY[c.kind])];
     if (c.blockId && blockNames[c.blockId]) parts.push(blockNames[c.blockId]);
-    if (c.type === 'suggestion') parts.push(tr('today.cal.suggested'));
-    else if (c.status === 'late' || c.status === 'skipped')
+    if (c.type === 'suggestion') {
+      parts.push(tr('today.cal.suggested'));
+      if (c.queued) parts.push(tr('today.cal.waitingUpload'));
+    } else if (c.status === 'late' || c.status === 'skipped')
       parts.push(tr(`tasks.status.${c.status}`));
     return parts.join(' · ');
   }

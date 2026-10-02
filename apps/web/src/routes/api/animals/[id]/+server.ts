@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import {
   deleteAnimalIfEmpty,
   getAnimal,
@@ -29,11 +30,12 @@ import {
   type StoredPhotoRef
 } from '$lib/server/vault/photoWrite';
 
-const notFound = () => json({ error: 'animal not found' }, { status: 404 });
+const notFound = (locale?: string | null) =>
+  json({ error: t(locale, 'animallib.api.animalNotFound') }, { status: 404 });
 
-export const GET: RequestHandler = ({ params }) => {
+export const GET: RequestHandler = ({ params, locals }) => {
   const animal = params.id ? getAnimal(params.id) : undefined;
-  if (!animal) return notFound();
+  if (!animal) return notFound(locals?.locale);
   return json({
     animal,
     group: animal.groupId ? (getAnimalGroupSummary(animal.groupId) ?? null) : null,
@@ -53,7 +55,7 @@ const GONE_KEYS = new Set(['notes', 'photo']);
 export const PATCH: RequestHandler = async (event) => {
   const user = requireMutator(event);
   const animal = event.params.id ? getAnimal(event.params.id) : undefined;
-  if (!animal) return notFound();
+  if (!animal) return notFound(event.locals?.locale);
   const body = await parseBody(event.request, animalPatchSchema);
   if (!body.ok) return body.response;
   const input = body.data;
@@ -78,14 +80,20 @@ export const PATCH: RequestHandler = async (event) => {
   const nextName = input.name !== undefined ? input.name : animal.name;
   const nextTag = input.tag !== undefined ? input.tag : animal.tag;
   if (!nextName?.trim() && !nextTag?.trim()) {
-    return json({ error: 'Keep a name or a tag.', code: 'NEEDS_IDENTIFIER' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'animals.edit.keepNameOrTag'), code: 'NEEDS_IDENTIFIER' },
+      { status: 400 }
+    );
   }
   if (input.status === 'archived' && animal.status !== 'active') {
-    return json({ error: 'Only an animal that is here can be archived.' }, { status: 409 });
+    return json(
+      { error: t(event.locals?.locale, 'animallib.api.archiveOnlyHere') },
+      { status: 409 }
+    );
   }
   if (input.status === 'active' && animal.status !== 'archived' && animal.status !== 'active') {
     return json(
-      { error: 'Record a status change to bring this animal back.', code: 'USE_STATUS' },
+      { error: t(event.locals?.locale, 'animallib.api.useStatus'), code: 'USE_STATUS' },
       { status: 409 }
     );
   }
@@ -122,7 +130,7 @@ export const PATCH: RequestHandler = async (event) => {
   if (input.notForSlaughter !== undefined) {
     if (!species?.notForSlaughterToggle) {
       return json(
-        { error: 'This species has no "not for slaughter" setting.', code: 'NOT_OFFERED' },
+        { error: t(event.locals?.locale, 'animallib.api.notOffered'), code: 'NOT_OFFERED' },
         { status: 400 }
       );
     }
@@ -223,7 +231,7 @@ export const PATCH: RequestHandler = async (event) => {
 export const DELETE: RequestHandler = async (event) => {
   const user = requireOwner(event);
   const id = event.params.id;
-  if (!id) return notFound();
+  if (!id) return notFound(event.locals?.locale);
   const before = getAnimalPhoto(id);
   const guarded = await tryGuardedHoldWrite(event, user, () => deleteAnimalIfEmpty(id));
   if (!guarded.ok) return guarded.response;
@@ -231,7 +239,7 @@ export const DELETE: RequestHandler = async (event) => {
   if (outcome === 'deleted' && before && 'documentId' in before) {
     await discardPhoto(before.documentId, user.id);
   }
-  if (outcome === 'not-found') return notFound();
+  if (outcome === 'not-found') return notFound(event.locals?.locale);
   if (outcome === 'has-records') {
     return json(
       { error: 'This animal has records. Archive it instead.', code: 'ANIMAL_HAS_RECORDS' },

@@ -53,7 +53,8 @@ function looksOffline(e: unknown): boolean {
 export async function submitMove(
   input: AnimalMoveInput,
   fetchFn: FetchFn = fetch,
-  online: () => boolean = () => typeof navigator === 'undefined' || navigator.onLine !== false
+  online: () => boolean = () => typeof navigator === 'undefined' || navigator.onLine !== false,
+  locale?: string | null
 ): Promise<MoveOutcome> {
   const payload: AnimalMoveInput = { ...input, movedAt: input.movedAt ?? Date.now() };
   const id = recordId();
@@ -86,7 +87,7 @@ export async function submitMove(
       code?: string;
       todayVersionPasses?: boolean;
     } | null;
-    const message = await errorFromResponse(res);
+    const message = await errorFromResponse(res, locale);
     if (stop?.code === 'HOLD_WOULD_SHORTEN' && stop.todayVersionPasses) {
       return { status: 'error', message, saveToday: true };
     }

@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { carePlanCreateSchema } from '$lib/animals/carePlanApiSchemas';
 import { listCarePlansForSubject } from '$lib/db/animalCarePlans';
 import { requireOwner, requireUser } from '$lib/server/auth';
@@ -8,13 +9,14 @@ import { createCarePlan } from '$lib/server/carePlans';
 
 export const _requestSchema = carePlanCreateSchema;
 
-const notFound = () => json({ error: 'animal or group not found' }, { status: 404 });
+const notFound = (locale?: string | null) =>
+  json({ error: t(locale, 'animallib.api.subjectNotFound') }, { status: 404 });
 
 /** Care plans of an animal or a group. Anyone on the farm can read them. */
 export const GET: RequestHandler = (event) => {
   requireUser(event);
   const subject = careRouteSubject(event.params.id);
-  if (!subject) return notFound();
+  if (!subject) return notFound(event.locals?.locale);
   return json({ plans: listCarePlansForSubject(subject.subjectType, subject.subjectId) });
 };
 
@@ -23,10 +25,10 @@ export const GET: RequestHandler = (event) => {
 export const POST: RequestHandler = async (event) => {
   requireOwner(event);
   const subject = careRouteSubject(event.params.id);
-  if (!subject) return notFound();
+  if (!subject) return notFound(event.locals?.locale);
   if (!subject.active) {
     return json(
-      { error: 'This animal or group is no longer here.', code: 'NOT_ACTIVE' },
+      { error: t(event.locals?.locale, 'animallib.api.notActive'), code: 'NOT_ACTIVE' },
       { status: 409 }
     );
   }

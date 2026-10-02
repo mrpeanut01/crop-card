@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { withdrawalEntrySchema } from '$lib/animals/recordApiSchemas';
 import { getHealthEvent, saveWithdrawalEntries } from '$lib/db/animalHealth';
 import { farmTimeZone } from '$lib/db/userProfile';
@@ -35,9 +36,17 @@ export const POST: RequestHandler = async (event) => {
   const body = await parseBody(event.request, withdrawalEntrySchema);
   if (!body.ok) return body.response;
   const record = getHealthEvent(event.params.id ?? '');
-  if (!record) return json({ error: 'Health record not found.' }, { status: 404 });
+  if (!record)
+    return json(
+      { error: t(event.locals?.locale, 'animallib.api.healthNotFound') },
+      { status: 404 }
+    );
   const subject = resolveSubject(record.subjectType, record.subjectId);
-  if (!subject) return json({ error: 'Health record not found.' }, { status: 404 });
+  if (!subject)
+    return json(
+      { error: t(event.locals?.locale, 'animallib.api.healthNotFound') },
+      { status: 404 }
+    );
 
   const plugins = await healthPlugins();
   const timeZone = farmTimeZone();

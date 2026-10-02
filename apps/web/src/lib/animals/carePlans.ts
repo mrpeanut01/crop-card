@@ -11,6 +11,7 @@
 
 import type { HealthEventKind } from '$lib/safety/animalWithdrawal';
 import type { AnimalSubjectType } from './model';
+import { t, type MessageKey } from '$lib/i18n';
 
 /** Every care kind (D0-4): the 32A table kinds plus the species plugin's
  *  `shearing` and `health-check`. */
@@ -332,10 +333,17 @@ export function careItemStatus(scheduledOn: string, todayYmd: string): CareItemV
 export function careCardTitle(
   kind: CarePlanKind,
   items: readonly Pick<CareItemView, 'planTitle' | 'subjectName'>[],
-  groupName: string | null
+  groupName: string | null,
+  locale?: string | null
 ): string {
   if (items.length === 1) return careTaskTitle(items[0].planTitle, items[0].subjectName);
-  return `${CARE_KIND_LABEL[kind]} for ${items.length} animals${groupName ? ` in ${groupName}` : ''}`;
+  if (!locale) {
+    return `${CARE_KIND_LABEL[kind]} for ${items.length} animals${groupName ? ` in ${groupName}` : ''}`;
+  }
+  const label = t(locale, `animals.careKind.${kind}` as MessageKey);
+  return groupName
+    ? t(locale, 'care.cardTitleIn', { kind: label, count: items.length, group: groupName })
+    : t(locale, 'care.cardTitle', { kind: label, count: items.length });
 }
 
 /** A plan as the animal pages show it. */

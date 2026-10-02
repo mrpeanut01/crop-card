@@ -11,6 +11,7 @@
   import { formatInstant, type Prefs } from '$lib/prefs';
   import type { Food, ProductionUse } from '$lib/safety/animalWithdrawal';
   import { createT } from '$lib/i18n';
+  import { useLabel } from './labels';
   import { page } from '$app/state';
 
   interface Props {
@@ -29,6 +30,7 @@
   const tr = $derived(createT(page.data?.locale));
 
   type Action = 'log' | 'treat' | 'move' | 'feed';
+  const USE_TILES = ['food', 'sale', 'discard'] as const;
   const group = $derived(snapshot.animalGroups?.find((g) => g.id === groupId) ?? null);
   const species = $derived(group ? snapshot.species?.[group.speciesId] : undefined);
   const food = $derived.by((): Extract<Food, 'eggs' | 'milk'> | null => {
@@ -130,16 +132,23 @@
     }
     void run(
       () =>
-        submitProduction({
-          subjectType: 'group',
-          subjectId: groupId,
-          kind: food,
-          quantity: count,
-          unit,
-          use: asUse,
-          occurredAt: Date.now()
-        }),
-      asUse === 'discard' ? `${count} ${unitLabel} thrown out:` : `${count} ${unitName}:`,
+        submitProduction(
+          {
+            subjectType: 'group',
+            subjectId: groupId,
+            kind: food,
+            quantity: count,
+            unit,
+            use: asUse,
+            occurredAt: Date.now()
+          },
+          undefined,
+          undefined,
+          page.data?.locale
+        ),
+      asUse === 'discard'
+        ? tr('animals.quick.thrownOut', { count, unit: unitName })
+        : `${count} ${unitName}:`,
       () => {
         count = 0;
         use = 'food';
@@ -156,15 +165,20 @@
     }
     void run(
       () =>
-        submitHealth({
-          subjectType: 'group',
-          subjectId: groupId,
-          kind: 'treatment',
-          productName: name,
-          route: (route || null) as never,
-          administeredAt: Date.now(),
-          labelUse: 'unknown'
-        }),
+        submitHealth(
+          {
+            subjectType: 'group',
+            subjectId: groupId,
+            kind: 'treatment',
+            productName: name,
+            route: (route || null) as never,
+            administeredAt: Date.now(),
+            labelUse: 'unknown'
+          },
+          undefined,
+          undefined,
+          page.data?.locale
+        ),
       tr('animals.quick.whatTreatment'),
       () => {
         productName = '';
@@ -187,7 +201,12 @@
     }
     saving = true;
     try {
-      const out = await submitMove({ subjectType: 'group', subjectId: groupId, fieldId });
+      const out = await submitMove(
+        { subjectType: 'group', subjectId: groupId, fieldId },
+        undefined,
+        undefined,
+        page.data?.locale
+      );
       if (out.status === 'error') error = out.message;
       else {
         message =
@@ -212,7 +231,14 @@
     }
     const lb = feedLb;
     void run(
-      () => submitFeedUse(feedItemId, { lb, subjectType: 'group', subjectId: groupId }),
+      () =>
+        submitFeedUse(
+          feedItemId,
+          { lb, subjectType: 'group', subjectId: groupId },
+          undefined,
+          undefined,
+          page.data?.locale
+        ),
       tr('animals.quick.whatFeed', { lb }),
       () => (feedLb = null)
     );
@@ -325,12 +351,12 @@
           >
         </div>
         <fieldset class="af-fieldset">
-          <legend class="af-legend">Where are they going?</legend>
+          <legend class="af-legend">{tr('animals.use.whereGoingMany')}</legend>
           <div class="af-tiles">
-            {#each [{ v: 'food', l: 'For the table' }, { v: 'sale', l: 'For sale' }, { v: 'discard', l: 'Thrown out' }] as c (c.v)}
-              <label class="af-tile" class:on={use === c.v}>
-                <input type="radio" name="{uid}-use" value={c.v} bind:group={use} />
-                <span>{c.l}</span>
+            {#each USE_TILES as v (v)}
+              <label class="af-tile" class:on={use === v}>
+                <input type="radio" name="{uid}-use" value={v} bind:group={use} />
+                <span>{useLabel(tr, v)}</span>
               </label>
             {/each}
           </div>

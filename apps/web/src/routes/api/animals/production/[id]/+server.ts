@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { productionPatchSchema } from '$lib/animals/recordApiSchemas';
 import {
   declaredFoodUse,
@@ -44,7 +45,8 @@ export const PATCH: RequestHandler = async (event) => {
   const body = await parseBody(event.request, productionPatchSchema);
   if (!body.ok) return body.response;
   const log = getProductionLog(event.params.id ?? '');
-  if (!log) return json({ error: 'Log not found.' }, { status: 404 });
+  if (!log)
+    return json({ error: t(event.locals?.locale, 'animallib.api.logNotFound') }, { status: 404 });
   const { use, reason } = body.data;
   if (log.use === use) return json({ log, warnings: [] });
 
@@ -85,7 +87,8 @@ export const PATCH: RequestHandler = async (event) => {
 export const DELETE: RequestHandler = async (event) => {
   const user = requireMutator(event);
   const log = getProductionLog(event.params.id ?? '');
-  if (!log) return json({ error: 'Log not found.' }, { status: 404 });
+  if (!log)
+    return json({ error: t(event.locals?.locale, 'animallib.api.logNotFound') }, { status: 404 });
   const subject = resolveSubject(log.subjectType, log.subjectId);
   const lockedAt = evaluateProductionLock(log, subject?.foodProducing ?? true);
   const force = event.url.searchParams.get('force') === 'true';
@@ -100,7 +103,10 @@ export const DELETE: RequestHandler = async (event) => {
     }
     if (!reason) {
       return json(
-        { error: 'Say why this locked log is being removed.', code: 'REASON_REQUIRED' },
+        {
+          error: t(event.locals?.locale, 'animallib.api.logReasonLocked'),
+          code: 'REASON_REQUIRED'
+        },
         { status: 400 }
       );
     }

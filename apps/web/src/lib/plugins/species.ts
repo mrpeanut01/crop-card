@@ -6,6 +6,7 @@
  */
 
 import type { SpeciesPlugin } from './schemas';
+import { t, type MessageKey } from '$lib/i18n';
 
 /** The ruled starter set, in tile order. There is no "Other" species. */
 export const STARTER_SPECIES_IDS = [
@@ -152,19 +153,33 @@ function wordsFor(speciesId: string): SexWords {
   return (SEX_WORDS as Record<string, SexWords>)[speciesId] ?? GENERIC_SEX_WORDS;
 }
 
-export function sexLabel(speciesId: string, sex: AnimalSex): string {
-  if (sex === 'unknown') return UNKNOWN_SEX_LABEL;
+function sexWordKey(speciesId: string, sex: Exclude<AnimalSex, 'unknown'>): MessageKey {
+  const own = (SEX_WORDS as Record<string, SexWords>)[speciesId];
+  const source = own && own !== GENERIC_SEX_WORDS && own[sex] !== undefined ? speciesId : 'generic';
+  return `animallib.sex.${source}.${sex}` as MessageKey;
+}
+
+/** A sex word in the viewer's language; English when `locale` is absent. */
+export function sexLabel(speciesId: string, sex: AnimalSex, locale?: string | null): string {
+  if (sex === 'unknown') return locale ? t(locale, 'animallib.sex.unknown') : UNKNOWN_SEX_LABEL;
+  if (locale) return t(locale, sexWordKey(speciesId, sex));
   return wordsFor(speciesId)[sex] ?? GENERIC_SEX_WORDS[sex];
 }
 
 /** Choices for the sex picker, species words first, "Not sure" last. */
-export function sexOptions(speciesId: string): { value: AnimalSex; label: string }[] {
+export function sexOptions(
+  speciesId: string,
+  locale?: string | null
+): { value: AnimalSex; label: string }[] {
   const words = wordsFor(speciesId);
   const values = ANIMAL_SEXES.filter(
     (s): s is Exclude<AnimalSex, 'unknown'> => s !== 'unknown' && words[s] !== undefined
   );
   return [
-    ...values.map((value) => ({ value, label: words[value]! })),
-    { value: 'unknown', label: UNKNOWN_SEX_LABEL }
+    ...values.map((value) => ({
+      value,
+      label: locale ? t(locale, sexWordKey(speciesId, value)) : words[value]!
+    })),
+    { value: 'unknown', label: locale ? t(locale, 'animallib.sex.unknown') : UNKNOWN_SEX_LABEL }
   ];
 }

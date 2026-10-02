@@ -10,6 +10,7 @@
 
 import type { FarmSnapshot } from '$lib/cards/snapshot';
 import { DISPOSITION_KIND_LABEL } from '$lib/harvest/apiSchemas';
+import { t, type MessageKey } from '$lib/i18n';
 
 /** The kinds this module knows about. Other kinds get Retry and Delete. */
 export type AnimalQueueKind = 'animal-production' | 'animal-health' | 'animal-move';
@@ -138,6 +139,14 @@ export const RECOVERY_LABEL: Record<RecoveryAction, string> = {
   retry: 'Retry'
 };
 
+/** A recovery button's words. The hold and grazing recoveries stay English
+ *  with the stop they answer; the plain ones read in the viewer's language. */
+export function recoveryLabel(action: RecoveryAction, locale?: string | null): string {
+  if (action === 'record-now') return t(locale, 'animallib.queue.recordNow');
+  if (action === 'retry') return t(locale, 'animallib.queue.retry');
+  return RECOVERY_LABEL[action];
+}
+
 /** The field that dates each kind's payload. */
 export const DATE_FIELD: Record<AnimalQueueKind, 'occurredAt' | 'movedAt' | 'administeredAt'> = {
   'animal-production': 'occurredAt',
@@ -207,17 +216,26 @@ export function rewriteForRecovery(
 }
 
 /** Confirm text for "Delete from phone" (D2-01). */
-export function deleteConfirmText(kind: string | undefined, payload: unknown): string {
+export function deleteConfirmText(
+  kind: string | undefined,
+  payload: unknown,
+  locale?: string | null
+): string {
   const p = (payload ?? {}) as Record<string, unknown>;
   if (kind === 'animal-production') {
-    const what =
-      p.kind === 'milk' ? 'The milk was' : p.kind === 'weight' ? 'The weight was' : 'The eggs were';
-    return `This record will be lost. ${what} still collected.`;
+    return t(
+      locale,
+      p.kind === 'milk'
+        ? 'animallib.queue.lostMilk'
+        : p.kind === 'weight'
+          ? 'animallib.queue.lostWeight'
+          : 'animallib.queue.lostEggs'
+    );
   }
   if (kind === 'animal-health' || carriedHealthEvent(kind, payload))
-    return 'This record will be lost. The treatment was still given.';
-  if (kind === 'animal-move') return 'This record will be lost. The move will not be on file.';
-  return 'This record will be lost.';
+    return t(locale, 'animallib.queue.lostTreatment');
+  if (kind === 'animal-move') return t(locale, 'animallib.queue.lostMove');
+  return t(locale, 'animallib.queue.lost');
 }
 
 /** Keys (`animal:<id>`, `group:<id>`) a queued animal payload touches. */
@@ -272,49 +290,60 @@ function splitKey(key: string): [string, string] {
 }
 
 /** A short line for the pending list. */
-export function pendingSummary(kind: string | undefined, payload: unknown): string | null {
+export function pendingSummary(
+  kind: string | undefined,
+  payload: unknown,
+  locale?: string | null
+): string | null {
   if (!payload || typeof payload !== 'object') return null;
   const p = payload as Record<string, unknown>;
   if (kind === 'animal-production') {
-    const use =
+    const useKey: MessageKey =
       p.use === 'food'
-        ? 'for food'
+        ? 'animallib.queue.use.food'
         : p.use === 'sale'
-          ? 'for sale'
+          ? 'animallib.queue.use.sale'
           : p.use === 'discard'
-            ? 'thrown out'
+            ? 'animallib.queue.use.discard'
             : p.use === 'feed-to-animals'
-              ? 'fed to animals'
-              : 'use not known';
-    return `${String(p.quantity ?? '')} ${String(p.unit ?? '')}, ${use}`.trim();
+              ? 'animallib.queue.use.feed-to-animals'
+              : 'animallib.queue.use.unknown';
+    return t(locale, 'animallib.queue.production', {
+      quantity: String(p.quantity ?? ''),
+      unit: String(p.unit ?? ''),
+      use: t(locale, useKey)
+    }).trim();
   }
   if (kind === 'animal-health') {
     const name = typeof p.productName === 'string' && p.productName ? `: ${p.productName}` : '';
-    return `Treatment${name}`;
+    return `${t(locale, 'animallib.queue.treatment')}${name}`;
   }
-  if (kind === 'animal-move') return 'Animal move';
+  if (kind === 'animal-move') return t(locale, 'animallib.queue.kind.animal-move');
   const carried = carriedHealthEvent(kind, payload);
   if (carried) {
     const name =
       typeof carried.productName === 'string' && carried.productName
         ? `: ${carried.productName}`
         : '';
-    return `Care done with a treatment${name}`;
+    return `${t(locale, 'animallib.queue.careTreatment')}${name}`;
   }
   if (kind === 'feed-use') {
-    return typeof p.lb === 'number' ? `Feed used, ${p.lb} lb` : 'Feed used';
+    return typeof p.lb === 'number'
+      ? t(locale, 'animallib.queue.feedUsedLb', { lb: p.lb })
+      : t(locale, 'animallib.queue.feedUsed');
   }
   if (kind === 'harvest-disposition') {
     const labels: Record<string, string> = DISPOSITION_KIND_LABEL;
-    const verb = (typeof p.kind === 'string' && labels[p.kind]) || 'Where it went';
+    const verb =
+      (typeof p.kind === 'string' && labels[p.kind]) || t(locale, 'animallib.queue.whereWent');
     return typeof p.quantity === 'number' && typeof p.unit === 'string'
       ? `${verb}, ${p.quantity} ${p.unit}`
       : verb;
   }
   if (kind === 'seed-start') {
     return typeof p.germinatedCount === 'number'
-      ? `${p.germinatedCount} seedlings up`
-      : 'Tray progress';
+      ? t(locale, 'animallib.queue.seedlingsUp', { count: p.germinatedCount })
+      : t(locale, 'animallib.queue.trayProgress');
   }
   return null;
 }
@@ -337,3 +366,11 @@ export const KIND_LABEL: Record<string, string> = {
   'rain-gauge': 'Rain gauge reading',
   'harvest-disposition': 'Where a harvest went'
 };
+
+/** A queued record's kind in the viewer's language, or undefined for a kind
+ *  this list does not name. */
+export function kindLabel(kind: string, locale?: string | null): string | undefined {
+  return Object.prototype.hasOwnProperty.call(KIND_LABEL, kind)
+    ? t(locale, `animallib.queue.kind.${kind}` as MessageKey)
+    : undefined;
+}

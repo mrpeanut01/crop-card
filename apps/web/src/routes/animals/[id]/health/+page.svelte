@@ -6,7 +6,7 @@
   import HoldChips from '$lib/components/animals/HoldChips.svelte';
   import HealthForm from '$lib/components/animals/HealthForm.svelte';
   import WithdrawalEntryForm from '$lib/components/animals/WithdrawalEntryForm.svelte';
-  import { OFFLINE_MESSAGE, errorFromResponse } from '$lib/animals/display';
+  import { errorFromResponse, offlineMessage } from '$lib/animals/display';
   import { HEALTH_KIND_LABEL, ROUTE_CHOICES } from '$lib/animals/healthCopy';
   import { holdLine } from '$lib/animals/holdCopy';
   import { formatInstant } from '$lib/prefs';
@@ -54,7 +54,7 @@
     if (opts.confirmShorten) q.set('confirmShorten', opts.confirmShorten);
     if (removeReason.trim()) q.set('reason', removeReason.trim());
     if (opts.locked && !removeReason.trim()) {
-      alertText = 'Say why this locked record is being removed.';
+      alertText = tr('animals.health.reasonLocked');
       return;
     }
     busy = true;
@@ -67,7 +67,7 @@
       }
       voidOffer = null;
       if (!res.ok) {
-        alertText = await errorFromResponse(res);
+        alertText = await errorFromResponse(res, page.data?.locale);
         return;
       }
       const out = (await res.json()) as { holdKept?: boolean };
@@ -76,11 +76,11 @@
       announce(
         out.holdKept
           ? 'Removed. Its withdrawal hold stays, because the dose was given.'
-          : 'Removed.'
+          : tr('animals.removed')
       );
       await invalidateAll();
     } catch {
-      alertText = OFFLINE_MESSAGE;
+      alertText = offlineMessage(page.data?.locale);
     } finally {
       busy = false;
     }
@@ -103,14 +103,13 @@
   </header>
 
   {#if data.organic?.statusLine || data.organic?.membersLost}
-    <section class="panel organic" aria-label="Organic status">
+    <section class="panel organic" aria-label={tr('animals.health.organicAria')}>
       {#if data.organic.statusLine}
         <p data-testid="organic-status-line">{data.organic.statusLine}</p>
       {/if}
       {#if data.organic.membersLost}
         <p>
-          {data.organic.membersLost}
-          {data.organic.membersLost === 1 ? 'member' : 'members'} lost status after their own treatment.
+          {tr('animals.health.membersLost', { count: data.organic.membersLost })}
         </p>
       {/if}
       {#if data.organic.welfareLine}
@@ -147,7 +146,7 @@
 
   {#if data.canLog}
     {#if adding}
-      <section aria-label="Record health" class="panel">
+      <section aria-label={tr('animals.health.recordAria')} class="panel">
         <HealthForm
           subjectType={subject.type}
           subjectId={subject.id}
@@ -179,7 +178,7 @@
           <li class="row" data-testid="health-row">
             <div class="row-head">
               <strong>{HEALTH_KIND_LABEL[e.kind]}{e.product ? `: ${e.product}` : ''}</strong>
-              {#if e.carriesHold && e.locked}<Pill tone="neutral">Locked</Pill>{/if}
+              {#if e.carriesHold && e.locked}<Pill tone="neutral">{tr('animals.locked')}</Pill>{/if}
               {#if e.recordedLate}<Pill tone="wheat">{lateLabel(true, e.daysLate)}</Pill>{/if}
             </div>
             <p class="meta">
@@ -203,13 +202,14 @@
             {#if data.organic?.outcomes[e.id]}
               {@const organic = data.organic.outcomes[e.id]}
               <p class="meta" data-testid="organic-outcome">
-                Organic: {organic.text}
+                {tr('animals.health.organic')}
+                {organic.text}
                 {#if organic.needsAnswer && data.isOwner}
                   · <a class="organic-answer" href="/records/organic#review-{e.id}"
-                    >Answer the review</a
+                    >{tr('animals.health.answerReview')}</a
                   >
                 {:else if organic.needsAnswer}
-                  · Ask the owner.
+                  · {tr('animals.health.askOwner')}
                 {/if}
               </p>
             {/if}
@@ -232,7 +232,7 @@
                   aria-expanded={removeFor === e.id}
                   onclick={() => (removeFor = removeFor === e.id ? null : e.id)}
                 >
-                  Remove
+                  {tr('animals.remove')}
                 </button>
               {/if}
             </div>
@@ -240,7 +240,7 @@
               <p class="af-help">
                 {showHolds
                   ? 'Only the owner can add a withdrawal or remove this. Ask the owner.'
-                  : 'Only the owner can remove this. Ask the owner.'}
+                  : tr('animals.health.ownerRemoves')}
               </p>
             {/if}
 
@@ -260,7 +260,8 @@
             {#if removeFor === e.id}
               <div class="remove">
                 <label class="af-label" for="reason-{e.id}">
-                  Why? <span class="af-optional">{e.locked ? '' : '(optional)'}</span>
+                  {tr('animals.why')}
+                  <span class="af-optional">{e.locked ? '' : tr('animals.optional')}</span>
                 </label>
                 <input
                   id="reason-{e.id}"
@@ -327,7 +328,7 @@
                     disabled={busy}
                     onclick={() => remove(e.id, { locked: e.locked })}
                   >
-                    Remove
+                    {tr('animals.remove')}
                   </button>
                 {/if}
               </div>

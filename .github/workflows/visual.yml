@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: Branch to test (and to commit re-captured baselines to)
-        required: true
-        default: main
+        description: Branch to test and commit baselines to (blank = the branch picked under "Use workflow from")
+        required: false
+        default: ''
       update:
         description: Re-capture and commit baselines instead of comparing
         type: boolean
@@ -25,17 +25,19 @@ jobs:
   visual:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      TARGET_BRANCH: ${{ inputs.branch || github.ref_name }}
     permissions:
       contents: write
     steps:
       - name: Refuse to re-capture on main
-        if: ${{ inputs.update && (inputs.branch == 'main' || inputs.branch == 'refs/heads/main') }}
+        if: ${{ inputs.update && (env.TARGET_BRANCH == 'main' || env.TARGET_BRANCH == 'refs/heads/main') }}
         run: |
-          echo "::error title=update needs a branch::main only takes changes through a pull request, so the commit this run makes would be refused. Cut a branch from main, dispatch again with that branch, then open a PR with the new -linux.png files (docs/ci.md)."
+          echo "::error title=update needs a branch::main only takes changes through a pull request, so the commit this run makes would be refused. Cut a branch from main, dispatch again from that branch with the branch field blank, then open a PR with the new -linux.png files (docs/ci.md)."
           exit 1
       - uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ env.TARGET_BRANCH }}
       - uses: pnpm/action-setup@v6
         with:
           version: 9.12.3
@@ -59,7 +61,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add 'apps/web/tests/e2e/visual/**/*-linux.png'
-          git diff --cached --quiet || { git commit -m "test(visual): re-capture Linux baselines on CI Chromium"; git push origin HEAD:${{ inputs.branch }}; }
+          git diff --cached --quiet || { git commit -m "test(visual): re-capture Linux baselines on CI Chromium"; git push origin "HEAD:$TARGET_BRANCH"; }
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

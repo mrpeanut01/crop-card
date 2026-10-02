@@ -48,12 +48,12 @@ The release workflow then runs:
   **Re-capturing the Linux baselines after a UI change merges** (Phase 33D, rulings D-37 and D-38):
 
   1. Cut a branch from the updated `main`, for example `git switch -c visual/rebaseline-20261002 origin/main && git push -u origin HEAD`.
-  2. Dispatch the workflow on it with `update` on: `gh workflow run visual.yml -f branch=visual/rebaseline-20261002 -f update=true`, or in the Actions tab pick **visual**, **Run workflow**, enter the branch and tick **update**.
+  2. Dispatch the workflow from it with `update` on: `gh workflow run visual.yml --ref visual/rebaseline-20261002 -f update=true`, or in the Actions tab pick **visual**, **Run workflow**, choose the branch under **Use workflow from**, leave the branch field blank and tick **update**. A blank branch field means the branch the run was dispatched from; fill it in only to test a different branch.
   3. When the run finishes it has committed `test(visual): re-capture Linux baselines on CI Chromium` to that branch. Open each changed `-linux.png` and check it by eye: the page is the current one, nothing that moves with the date, weather or seed shows through a mask, and nothing is cut off.
   4. Open a PR from the branch; it auto-merges once CI is green like any other.
   5. Optional check: dispatch again on `main` with `update` off; it should pass.
 
-  Dispatching with `update` on and the branch set to `main` fails at its first step on purpose: `main` is protected and only takes pull requests, so the commit would be refused after a full run. Use a branch and a PR. Locally, `E2E_VISUAL=1 pnpm --filter @cropcard/web exec playwright test tests/e2e/visual --update-snapshots=none` is only useful to check that a spec reaches its screenshot; a pixel mismatch there is expected, and no PNG from it is committed.
+  Dispatching with `update` on against `main` (from `main` with the field blank, or with `main` typed in) fails at its first step on purpose: `main` is protected and only takes pull requests, so the commit would be refused after a full run. Use a branch and a PR. Locally, `E2E_VISUAL=1 pnpm --filter @cropcard/web exec playwright test tests/e2e/visual --update-snapshots=none` is only useful to check that a spec reaches its screenshot; a pixel mismatch there is expected, and no PNG from it is committed.
 
 ## Dependency updates
 

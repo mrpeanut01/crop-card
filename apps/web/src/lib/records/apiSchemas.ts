@@ -133,3 +133,17 @@ export const hayCuttingSchema = z.object({
   overrideMowGate: z.boolean().optional(),
   notes: z.string().max(500).optional()
 });
+
+const farmDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date like 2026-01-31.');
+
+/** 33B (B-42): the window of the treatment log and the certifier pack, as
+ *  farm-local days. Both are required; `to` covers its whole day. */
+export const exportWindowQuerySchema = z.strictObject({
+  from: farmDay,
+  to: farmDay
+});
+
+/** `documents=1` adds the linked files themselves to the pack (B-43). */
+export const organicPackQuerySchema = exportWindowQuerySchema.extend({
+  documents: z.enum(['0', '1']).optional()
+});

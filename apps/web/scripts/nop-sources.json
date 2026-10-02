@@ -1,0 +1,317 @@
+{
+  "$comment": "Phase 33B (B1, rulings B-01 to B-03). Verified quotes for every USDA organic rule in apps/web/src/lib/organic/nopRules.ts NOP_RULES, keyed as in research Task R1 (docs/research/phase-33-research-prompt.md): landTransition, treatedAnimal, withholdTreatment, seedSourcing and the report-only keys. Each entry is { url, publisher, date, quote, note?, value? } with a url on ecfr.gov or govinfo.gov. landTransition.value must equal landTransitionMonths; withholdTreatment.value and seedSourcing.value must equal their citation constants. A rule that ships off must have no entry. The gate is apps/web/src/lib/organic/nopRules.sources.gate.test.ts. Research Tasks R1 and R2 (PR #506) landed these quotes from the eCFR full-text API, up to date as of 2026-09-29, fetched 2026-10-01; paragraph breaks inside a quote are collapsed to a single space and no words are changed. livestock.<pluginId> entries carry status (allowed | allowed-with-annotation | not-listed | prohibited | unknown) for each animal-health plugin. None of these keys switches a rule on: the four NOP_RULES stay off until their R1 keys (landTransition, treatedAnimal, withholdTreatment, seedSourcing) are written with a value.",
+  "ecfrAsOf": "2026-09-29",
+  "entries": {
+    "transition.landRequirement": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.202",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "Any field or farm parcel from which harvested crops are intended to be sold, labeled, or represented as “organic,” must: [...] (b) Have had no prohibited substances, as listed in § 205.105, applied to it for a period of 3 years immediately preceding harvest of the crop; and",
+      "note": "Phase 33 transition clock. The 36-month figure appears in the rule as \"a period of 3 years immediately preceding harvest of the crop\"; the app may show the 3-year wording and the 36-month figure only as the rule's own words, never compute eligibility from it alone."
+    },
+    "transition.thirdYearTransitionalCrop": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.2",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "Third-year transitional crop. Crops and forage from land included in the organic system plan of a producer's operation that is not certified organic but is in the third year of organic management and is eligible for organic certification in one year or less.",
+      "note": "Phase 33 transition clock. eCFR 205.2 has no definition of \"transition\" or \"transitional\" land itself; the only transition definitions are \"Third-year transitional crop\" and \"Transitioned animal\" (next key). Silent on a general definition."
+    },
+    "transition.transitionedAnimal": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.2",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "Transitioned animal. A dairy animal converted to organic milk production in accordance with § 205.236(a)(2) that has not been under continuous organic management from the last third of gestation; offspring born to a transitioned animal that, during its last third of gestation, consumes third-year transitional crops; and offspring born during the one-time transition exception that themselves consume third-year transitional crops.",
+      "note": "Phase 33 animal status loss and transition clock. Dairy-only definition."
+    },
+    "buffer.landRequirement": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.202",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(c) Have distinct, defined boundaries and buffer zones such as runoff diversions to prevent the unintended application of a prohibited substance to the crop or contact with a prohibited substance applied to adjoining land that is not under organic management.",
+      "note": "Phase 33 buffer prompt. The rule names buffer zones and boundaries but gives no distance; do not invent one."
+    },
+    "buffer.bufferZoneDefinition": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.2",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "Buffer zone. An area located between a certified production operation or portion of a production operation and an adjacent land area that is not maintained under organic management. A buffer zone must be sufficient in size or other features (e.g., windbreaks or a diversion ditch) to prevent the possibility of unintended contact by prohibited substances applied to adjacent land areas with an area that is part of a certified operation.",
+      "note": "Phase 33 buffer prompt. Definition gives no distance (\"sufficient in size or other features\")."
+    },
+    "buffer.driftDefinition": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.2",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "Drift. The physical movement of prohibited substances from the intended target site onto an organic operation or portion thereof.",
+      "note": "Phase 33 buffer prompt."
+    },
+    "seed.205204a": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.204",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(a) The producer must use organically grown seeds, annual seedlings, and planting stock: Except, That, (1) Nonorganically produced, untreated seeds and planting stock may be used to produce an organic crop when an equivalent organically produced variety is not commercially available: Except, That, organically produced seed must be used for the production of edible sprouts; (2) Nonorganically produced seeds and planting stock that have been treated with a substance included on the National List of synthetic substances allowed for use in organic crop production may be used to produce an organic crop when an equivalent organically produced or untreated variety is not commercially available; (3) Nonorganically produced annual seedlings may be used to produce an organic crop when a temporary variance has been granted in accordance with § 205.290(a)(2); (4) Nonorganically produced planting stock to be used to produce a perennial crop may be sold, labeled, or represented as organically produced only after the planting stock has been maintained under a system of organic management for a period of no less than 1 year; and (5) Seeds, annual seedlings, and planting stock treated with prohibited substances may be used to produce an organic crop when the application of the materials is a requirement of Federal or State phytosanitary regulations.",
+      "note": "Phase 33 seed sourcing fields. Treated non-organic seed is covered by (a)(2) (National List synthetic treatment) and (a)(5) (phytosanitary requirement); (a)(3) is annual seedlings with a temporary variance and (a)(4) is perennial planting stock held under organic management for 1 year."
+    },
+    "seed.commerciallyAvailableDefinition": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.2",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "Commercially available. The ability to obtain a production input in an appropriate form, quality, or quantity to fulfill an essential function in a system of organic production or handling, as determined by the certifying agent in the course of reviewing the organic plan.",
+      "note": "Phase 33 seed sourcing fields. The certifying agent determines commercial availability when reviewing the plan."
+    },
+    "seed.documentationOfCommercialAvailability": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.201",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(2) A list of each substance to be used as a production or handling input, indicating its composition, source, location(s) where it will be used, and documentation of commercial availability, as applicable;",
+      "note": "Phase 33 seed sourcing fields. The system plan must list each input with documentation of commercial availability, as applicable. This section names no further seed-search steps (silent on how many suppliers to contact)."
+    },
+    "seed.temporaryVariance": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.290",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(a) Temporary variances from the requirements in §§ 205.203 through 205.207, 205.236 through 205.240 and 205.270 through 205.272 may be established by the Administrator for the following reasons: (1) Natural disasters declared by the Secretary; (2) Damage caused by drought, wind, flood, excessive moisture, hail, tornado, earthquake, fire, or other business interruption; and (3) Practices used for the purpose of conducting research or trials of techniques, varieties, or ingredients used in organic production or handling.",
+      "note": "Phase 33 seed sourcing fields; referenced by 205.204(a)(3)."
+    },
+    "livestock.origin": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.236",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(a) Livestock products that are to be sold, labeled, or represented as organic must be from livestock under continuous organic management from the last third of gestation or hatching: Except, That: (1) Poultry. Poultry or edible poultry products must be from poultry that has been under continuous organic management beginning no later than the second day of life; (2) Dairy animals. Subject to the requirements of this paragraph, an operation that is not certified for organic livestock and that has never transitioned dairy animals may transition nonorganic animals to organic production only once. After the one-time transition is complete, the operation may not transition additional animals or source transitioned animals from other operations; the operation must source only animals that have been under continuous organic management from the last third of gestation. [...] (i) Dairy animals must be under continuous organic management for a minimum of 12 months immediately prior to production of milk or milk products that are to be sold, labeled, or represented as organic. Only certified operations may represent or sell products as organic. [...] (3) Breeder stock. Livestock used as breeder stock may be brought from a nonorganic operation onto an organic operation at any time, Provided, That the following conditions are met:",
+      "note": "Phase 33 animal status loss. The one-year rule is 205.236(a)(2)(i) (\"minimum of 12 months\")."
+    },
+    "livestock.originProhibited": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.236",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(b) The following are prohibited: (1) Livestock that are removed from an organic operation and subsequently managed or handled on a nonorganic operation may not be sold, labeled, or represented as organic. (2) Breeder stock, dairy animals, or transitioned animals that have not been under continuous organic management since the last third of gestation may not be sold, labeled, or represented as organic slaughter stock.",
+      "note": "Phase 33 animal status loss. (b)(2) is the slaughter stock rule for breeder, dairy and transitioned animals."
+    },
+    "livestock.originRecords": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.236",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(c) The producer of an organic livestock operation must maintain records sufficient to preserve the identity of all organically managed animals, including whether they are transitioned animals, and edible and nonedible animal products produced on the operation.",
+      "note": "Phase 33 animal status loss and record retention."
+    },
+    "livestock.feed": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.237",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(a) The producer of an organic livestock operation must provide livestock with a total feed ration composed of agricultural products, including pasture and forage, that are organically produced and handled by operations certified under this part, except as provided in § 205.236(a)(2)(iii) and (a)(3), except, that, synthetic substances allowed under § 205.603 and nonsynthetic substances not prohibited under § 205.604 may be used as feed additives and feed supplements, Provided, That, all agricultural ingredients included in the ingredients list, for such additives and supplements, shall have been produced and handled organically. (b) The producer of an organic operation must not: (1) Use animal drugs, including hormones, to promote growth; [...] (6) Use feed, feed additives, and feed supplements in violation of the Federal Food, Drug, and Cosmetic Act; (7) Provide feed or forage to which any antibiotic including ionophores has been added; or (8) Prevent, withhold, restrain, or otherwise restrict ruminant animals from actively obtaining feed grazed from pasture during the grazing season, except for conditions as described under § 205.239(b) and (c).",
+      "note": "Phase 33 animal status loss; 205.237(b) prohibitions."
+    },
+    "livestock.feedPasture": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.237",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(c) During the grazing season, producers shall: (1) Provide not more than an average of 70 percent of a ruminant's dry matter demand from dry matter fed (dry matter fed does not include dry matter grazed from residual forage or vegetation rooted in pasture). This shall be calculated as an average over the entire grazing season for each type and class of animal. Ruminant animals must be grazed throughout the entire grazing season for the geographical region, which shall be not less than 120 days per calendar year. Due to weather, season, and/or climate, the grazing season may or may not be continuous. (2) Provide pasture of a sufficient quality and quantity to graze throughout the grazing season and to provide all ruminants under the organic system plan with an average of not less than 30 percent of their dry matter intake from grazing throughout the grazing season: Except, That,",
+      "note": "Phase 33 animal status loss. Pasture and dry-matter rules as printed."
+    },
+    "livestock.healthCare.preventive": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.238",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(a) Preventive health care practices. The producer must establish and maintain preventive health care practices, including: [...] (6) Administration of vaccines and other veterinary biologics. [...] (b) Preventive medicines and parasiticides. Producers may administer medications that are allowed under § 205.603 of this part to alleviate pain or suffering, and when preventive practices and veterinary biologics are inadequate to prevent sickness. Parasiticides allowed under § 205.603 of this part may be used on:",
+      "note": "Phase 33 animal status loss."
+    },
+    "livestock.healthCare.prohibitedPracticesTreated": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.238",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(c) Prohibited practices. An organic livestock operation must not: (1) Sell, label, or represent as organic any animal or product derived from any animal treated with antibiotics, any substance that contains a synthetic substance not allowed under § 205.603 of this part, or any substance that contains a non-synthetic substance prohibited in § 205.604 of this part. Milk from animals undergoing treatment with synthetic substances that are allowed under § 205.603 of this part but have associated withdrawal periods cannot be sold, labeled, or represented as organic during the withdrawal period but may be fed to calves on the same operation. Milk from animals undergoing treatment with prohibited substances cannot be sold, labeled, or represented as organic or fed to organic livestock. [...] (7) Withhold medical treatment from a sick animal in an effort to preserve its organic status. All appropriate medications must be used to restore an animal to health when methods acceptable to organic production fail. Livestock treated with a prohibited substance must be clearly identified and neither the animal nor its products shall be sold, labeled, or represented as organically produced.",
+      "note": "Phase 33 animal status loss. (c)(1) and (c)(7) are the rules that a treated animal or its products cannot be sold, labeled or represented as organic. (c)(1) allows milk from animals treated with an allowed synthetic to be sold organic after the withdrawal period only in the sense that milk \"cannot be sold, labeled, or represented as organic during the withdrawal period\"; read the quote, do not summarise it."
+    },
+    "livestock.healthCare.syntheticMedications": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.238",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(2) Administer synthetic medications unless: (i) In the presence of illness or to alleviate pain and suffering, and (ii) That such medications are allowed under § 205.603 of this part. [...] (4) Administer synthetic parasiticides on a routine basis. (5) Administer synthetic parasiticides to slaughter stock.",
+      "note": "Phase 33 animal status loss. Slaughter stock may not be given synthetic parasiticides."
+    },
+    "livestock.healthCare.noWithholdingAndEuthanasia": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.238",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(8) Withhold individual treatment designed to minimize pain and suffering for injured, diseased, or sick animals, which may include forms of euthanasia as recommended by the American Veterinary Medical Association. (9) Neglect to identify and record treatment of sick and injured animals in animal health records.",
+      "note": "Phase 33 animal status loss. (c)(7) (under livestock.healthCare.prohibitedPracticesTreated) forbids withholding treatment to preserve organic status; (c)(8) names euthanasia and (c)(9) requires treatment records. 205.238(e)(1) is the next key."
+    },
+    "livestock.healthCare.euthanasiaPlan": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.238",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(e) Euthanasia. (1) Organic livestock operations must have written plans for prompt, humane euthanasia for sick or injured livestock suffering from irreversible disease or injury.",
+      "note": "Phase 33 animal status loss. In eCFR the (e) heading and (e)(1) sit on one line."
+    },
+    "livestock.healthCare.parasiteControlPlan": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.238",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(d) Parasite control plans. (1) Organic livestock operations must have comprehensive plans to minimize internal parasite problems in livestock, including preventive measures such as pasture management, fecal monitoring, and emergency measures in the event of a parasite outbreak.",
+      "note": "Phase 33 animal status loss."
+    },
+    "livestock.livingConditions.pasture": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.239",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(2) For all ruminants, management on pasture and daily grazing throughout the grazing season(s) to meet the requirements of § 205.237 of this part, except as provided for in paragraphs (b), (c), and (d) of this section.",
+      "note": "Phase 33 animal status loss. 205.239(a)(2)."
+    },
+    "livestock.livingConditions.outdoorAccess": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.239",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(1) Year-round access for all animals to the outdoors, shade, shelter, exercise areas, fresh air, clean water for drinking, and direct sunlight, suitable to the species, its stage of life, the climate, and the environment: Except, that, animals may be temporarily denied access to the outdoors in accordance with paragraphs (b) and (c) of this section. Yards, feeding pads, and feedlots may be used to provide ruminants with access to the outdoors during the non-grazing season and supplemental feeding during the grazing season. Yards, feeding pads, and feedlots shall be large enough to allow all ruminant livestock occupying the yard, feeding pad, or feedlot to feed without competition for food. Continuous total confinement of any animal indoors is prohibited. Continuous total confinement of ruminants in yards, feeding pads, and feedlots is prohibited.",
+      "note": "Phase 33 animal status loss. 205.239(a)(1)."
+    },
+    "livestock.livingConditions.slaughterStockFinishing": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.239",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(d) Ruminant slaughter stock, typically grain finished, shall be maintained on pasture for each day that the finishing period corresponds with the grazing season for the geographical location. Yards, feeding pads, or feedlots may be used to provide finish feeding rations. During the finishing period, ruminant slaughter stock shall be exempt from the minimum 30 percent DMI requirement from grazing. Yards, feeding pads, or feedlots used to provide finish feeding rations shall be large enough to allow all ruminant slaughter stock occupying the yard, feeding pad, or feed lot to feed without crowding and without competition for food. The finishing period shall not exceed one-fifth (1/5) of the animal's total life or 120 days, whichever is shorter.",
+      "note": "Phase 33 animal status loss. eCFR line-breaks \"(1/5)\" as \"(\" then \"1/5)\"; joined here without the break."
+    },
+    "records.205103": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.103",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(a) A certified operation must maintain records concerning the production, harvesting, and handling of agricultural products that are or that are intended to be sold, labeled, or represented as “100 percent organic,” “organic,” or “made with organic (specified ingredients or food group(s)).” [...] (4) Be maintained for not less than 5 years beyond their creation; and (5) Be sufficient to demonstrate compliance with the Act and the regulations in this part.",
+      "note": "Phase 33 record retention. Retention is \"not less than 5 years beyond their creation\"."
+    },
+    "records.205201OrganicSystemPlan": {
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.201",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR part 205, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(a) The producer or handler of a production or handling operation, except as exempt under § 205.101, intending to sell, label, or represent agricultural products as “100 percent organic,” “organic,” or “made with organic (specified ingredients or food group(s))” must develop an organic production or handling system plan that is agreed to by the producer or handler and an accredited certifying agent. An organic system plan must meet the requirements set forth in this section for organic production or handling. An organic production or handling system plan must include: (1) A description of practices and procedures to be performed and maintained, including the frequency with which they will be performed; (2) A list of each substance to be used as a production or handling input, indicating its composition, source, location(s) where it will be used, and documentation of commercial availability, as applicable; [...] (4) A description of the recordkeeping system implemented to comply with the requirements established in § 205.103;",
+      "note": "Phase 33 record retention and seed sourcing fields."
+    },
+    "livestock.amprol-poultry": {
+      "status": "not-listed",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic.",
+      "note": "Quote is 205.603(a)(23) as printed, which lists only fenbendazole (i) and moxidectin (ii) below it. 205.603(b) (topical, external parasiticides) names copper sulfate, elemental sulfur, formic acid, iodine, lidocaine, hydrated lime, mineral oil, oxalic acid dihydrate, acidified sodium chlorite, sucrose octanoate esters and zinc sulfate; none matches. Not named in 205.603 (a)(23) (only fenbendazole and moxidectin are listed as parasiticides) or in 205.603(b), and 205.604 lists only strychnine. Per 205.105(a), synthetic substances are allowed only as provided in 205.601 or 205.603, so a substance that is not listed is not allowed; recorded as not-listed, the app should not state anything stronger. Active ingredient amprolium is a coccidiostat, not listed in 205.603. 205.603(d) feed additives and (c) feed supplements (\"None\") do not name it either. Also see 205.237(b)(7) (no feed or forage to which an antibiotic including ionophores has been added), not applied here because the app does not classify amprolium as an antibiotic."
+    },
+    "livestock.corid-solution": {
+      "status": "not-listed",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic.",
+      "note": "Quote is 205.603(a)(23) as printed, which lists only fenbendazole (i) and moxidectin (ii) below it. 205.603(b) (topical, external parasiticides) names copper sulfate, elemental sulfur, formic acid, iodine, lidocaine, hydrated lime, mineral oil, oxalic acid dihydrate, acidified sodium chlorite, sucrose octanoate esters and zinc sulfate; none matches. Not named in 205.603 (a)(23) (only fenbendazole and moxidectin are listed as parasiticides) or in 205.603(b), and 205.604 lists only strychnine. Per 205.105(a), synthetic substances are allowed only as provided in 205.601 or 205.603, so a substance that is not listed is not allowed; recorded as not-listed, the app should not state anything stronger. Active ingredient amprolium is a coccidiostat, not listed in 205.603. 205.603(d) feed additives and (c) feed supplements (\"None\") do not name it either. Also see 205.237(b)(7) (no feed or forage to which an antibiotic including ionophores has been added), not applied here because the app does not classify amprolium as an antibiotic."
+    },
+    "livestock.covexin-8": {
+      "status": "allowed",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(4) Biologics—Vaccines. (f) Excipients—only for use in the manufacture of drugs and biologics used to treat organic livestock when the excipient is: (1) Identified by the FDA as Generally Recognized As Safe; (2) Approved by the FDA as a food additive; (3) Included in the FDA review and approval of a New Animal Drug Application or New Drug Application; or (4) Approved by APHIS for use in veterinary biologics.",
+      "note": "205.603(a)(4) lists \"Biologics—Vaccines\" with no annotation. Clostridial bacterin-toxoids are vaccines. 205.603(f) requires excipients to meet its conditions and 205.105(e) bars excluded methods except for vaccines approved under 205.600(a); the label ingredients and excipients were not checked against those conditions. 205.238(a)(6) lists vaccine administration as a preventive practice."
+    },
+    "livestock.vision-7-with-spur": {
+      "status": "allowed",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(4) Biologics—Vaccines. (f) Excipients—only for use in the manufacture of drugs and biologics used to treat organic livestock when the excipient is: (1) Identified by the FDA as Generally Recognized As Safe; (2) Approved by the FDA as a food additive; (3) Included in the FDA review and approval of a New Animal Drug Application or New Drug Application; or (4) Approved by APHIS for use in veterinary biologics.",
+      "note": "205.603(a)(4) lists \"Biologics—Vaccines\" with no annotation. Clostridial bacterin-toxoids are vaccines. 205.603(f) requires excipients to meet its conditions and 205.105(e) bars excluded methods except for vaccines approved under 205.600(a); the label ingredients and excipients were not checked against those conditions. 205.238(a)(6) lists vaccine administration as a preventive practice."
+    },
+    "livestock.safe-guard-suspension": {
+      "status": "allowed-with-annotation",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic. (i) Fenbendazole (CAS #43210-67-9)—milk or milk products from a treated animal cannot be labeled as provided for in subpart D of this part for: 2 days following treatment of cattle; 36 days following treatment of goats, sheep, and other dairy species.",
+      "note": "Fenbendazole is listed. Annotation: parasiticides are prohibited in slaughter stock and allowed in emergency treatment for dairy and breeder stock when the organic system plan preventive management does not prevent infestation (breeder stock not in the last third of gestation if progeny will be sold organic, and not during lactation). The milk discard is 2 days for cattle and 36 days for goats, sheep and other dairy species, which is separate from and in addition to the FDA label withdrawal. Species or classes on the product label outside cattle, goats and sheep are not covered by the milk wording. See 205.238(c)(4) and (c)(5)."
+    },
+    "livestock.cydectin-injectable": {
+      "status": "allowed-with-annotation",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic. (ii) Moxidectin (CAS #113507-06-5)—milk or milk products from a treated animal cannot be labeled as provided for in subpart D of this part for: 2 days following treatment of cattle; 36 days following treatment of goats, sheep, and other dairy species.",
+      "note": "Moxidectin is listed. Annotation: parasiticides are prohibited in slaughter stock and allowed in emergency treatment for dairy and breeder stock when preventive management fails; milk or milk products cannot be labeled organic for 2 days after treating cattle and 36 days after treating goats, sheep and other dairy species. This product is for cattle. The label withdrawal in the plugin is not replaced by the 205.603 figure; the longer applies. See 205.238(c)(4) and (c)(5)."
+    },
+    "livestock.cydectin-pour-on": {
+      "status": "allowed-with-annotation",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic. (ii) Moxidectin (CAS #113507-06-5)—milk or milk products from a treated animal cannot be labeled as provided for in subpart D of this part for: 2 days following treatment of cattle; 36 days following treatment of goats, sheep, and other dairy species.",
+      "note": "Moxidectin is listed. Annotation: parasiticides are prohibited in slaughter stock and allowed in emergency treatment for dairy and breeder stock when preventive management fails; milk or milk products cannot be labeled organic for 2 days after treating cattle and 36 days after treating goats, sheep and other dairy species. This product is for cattle. The label withdrawal in the plugin is not replaced by the 205.603 figure; the longer applies. See 205.238(c)(4) and (c)(5)."
+    },
+    "livestock.cydectin-sheep-drench": {
+      "status": "allowed-with-annotation",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic. (ii) Moxidectin (CAS #113507-06-5)—milk or milk products from a treated animal cannot be labeled as provided for in subpart D of this part for: 2 days following treatment of cattle; 36 days following treatment of goats, sheep, and other dairy species.",
+      "note": "Moxidectin is listed. Annotation: parasiticides are prohibited in slaughter stock and allowed in emergency treatment for dairy and breeder stock when preventive management fails; milk or milk products cannot be labeled organic for 2 days after treating cattle and 36 days after treating goats, sheep and other dairy species. This product is for sheep. The label withdrawal in the plugin is not replaced by the 205.603 figure; the longer applies. See 205.238(c)(4) and (c)(5)."
+    },
+    "livestock.ivomec-injection": {
+      "status": "not-listed",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic.",
+      "note": "Quote is 205.603(a)(23) as printed, which lists only fenbendazole (i) and moxidectin (ii) below it. 205.603(b) (topical, external parasiticides) names copper sulfate, elemental sulfur, formic acid, iodine, lidocaine, hydrated lime, mineral oil, oxalic acid dihydrate, acidified sodium chlorite, sucrose octanoate esters and zinc sulfate; none matches. Not named in 205.603 (a)(23) (only fenbendazole and moxidectin are listed as parasiticides) or in 205.603(b), and 205.604 lists only strychnine. Per 205.105(a), synthetic substances are allowed only as provided in 205.601 or 205.603, so a substance that is not listed is not allowed; recorded as not-listed, the app should not state anything stronger. Ivermectin is not named in the current 205.603 (a)(23), which lists only fenbendazole and moxidectin, and the (a)(23) text printed here has no ivermectin paragraph. Check the eCFR version history for 205.603 before telling a user ivermectin was ever allowed; this record is the current text only."
+    },
+    "livestock.ivomec-pour-on": {
+      "status": "not-listed",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic.",
+      "note": "Quote is 205.603(a)(23) as printed, which lists only fenbendazole (i) and moxidectin (ii) below it. 205.603(b) (topical, external parasiticides) names copper sulfate, elemental sulfur, formic acid, iodine, lidocaine, hydrated lime, mineral oil, oxalic acid dihydrate, acidified sodium chlorite, sucrose octanoate esters and zinc sulfate; none matches. Not named in 205.603 (a)(23) (only fenbendazole and moxidectin are listed as parasiticides) or in 205.603(b), and 205.604 lists only strychnine. Per 205.105(a), synthetic substances are allowed only as provided in 205.601 or 205.603, so a substance that is not listed is not allowed; recorded as not-listed, the app should not state anything stronger. Ivermectin is not named in the current 205.603 (a)(23), which lists only fenbendazole and moxidectin, and the (a)(23) text printed here has no ivermectin paragraph. Check the eCFR version history for 205.603 before telling a user ivermectin was ever allowed; this record is the current text only."
+    },
+    "livestock.ivomec-sheep-drench": {
+      "status": "not-listed",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic.",
+      "note": "Quote is 205.603(a)(23) as printed, which lists only fenbendazole (i) and moxidectin (ii) below it. 205.603(b) (topical, external parasiticides) names copper sulfate, elemental sulfur, formic acid, iodine, lidocaine, hydrated lime, mineral oil, oxalic acid dihydrate, acidified sodium chlorite, sucrose octanoate esters and zinc sulfate; none matches. Not named in 205.603 (a)(23) (only fenbendazole and moxidectin are listed as parasiticides) or in 205.603(b), and 205.604 lists only strychnine. Per 205.105(a), synthetic substances are allowed only as provided in 205.601 or 205.603, so a substance that is not listed is not allowed; recorded as not-listed, the app should not state anything stronger. Ivermectin is not named in the current 205.603 (a)(23), which lists only fenbendazole and moxidectin, and the (a)(23) text printed here has no ivermectin paragraph. Check the eCFR version history for 205.603 before telling a user ivermectin was ever allowed; this record is the current text only."
+    },
+    "livestock.prohibit-levamisole": {
+      "status": "not-listed",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic.",
+      "note": "Quote is 205.603(a)(23) as printed, which lists only fenbendazole (i) and moxidectin (ii) below it. 205.603(b) (topical, external parasiticides) names copper sulfate, elemental sulfur, formic acid, iodine, lidocaine, hydrated lime, mineral oil, oxalic acid dihydrate, acidified sodium chlorite, sucrose octanoate esters and zinc sulfate; none matches. Not named in 205.603 (a)(23) (only fenbendazole and moxidectin are listed as parasiticides) or in 205.603(b), and 205.604 lists only strychnine. Per 205.105(a), synthetic substances are allowed only as provided in 205.601 or 205.603, so a substance that is not listed is not allowed; recorded as not-listed, the app should not state anything stronger. Levamisole hydrochloride is a dewormer and is not named in 205.603."
+    },
+    "livestock.valbazen-suspension": {
+      "status": "not-listed",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic.",
+      "note": "Quote is 205.603(a)(23) as printed, which lists only fenbendazole (i) and moxidectin (ii) below it. 205.603(b) (topical, external parasiticides) names copper sulfate, elemental sulfur, formic acid, iodine, lidocaine, hydrated lime, mineral oil, oxalic acid dihydrate, acidified sodium chlorite, sucrose octanoate esters and zinc sulfate; none matches. Not named in 205.603 (a)(23) (only fenbendazole and moxidectin are listed as parasiticides) or in 205.603(b), and 205.604 lists only strychnine. Per 205.105(a), synthetic substances are allowed only as provided in 205.601 or 205.603, so a substance that is not listed is not allowed; recorded as not-listed, the app should not state anything stronger. Albendazole is not named in 205.603."
+    },
+    "livestock.synanthic-bovine": {
+      "status": "not-listed",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic.",
+      "note": "Quote is 205.603(a)(23) as printed, which lists only fenbendazole (i) and moxidectin (ii) below it. 205.603(b) (topical, external parasiticides) names copper sulfate, elemental sulfur, formic acid, iodine, lidocaine, hydrated lime, mineral oil, oxalic acid dihydrate, acidified sodium chlorite, sucrose octanoate esters and zinc sulfate; none matches. Not named in 205.603 (a)(23) (only fenbendazole and moxidectin are listed as parasiticides) or in 205.603(b), and 205.604 lists only strychnine. Per 205.105(a), synthetic substances are allowed only as provided in 205.601 or 205.603, so a substance that is not listed is not allowed; recorded as not-listed, the app should not state anything stronger. Oxfendazole is not named in 205.603."
+    },
+    "livestock.eprinex-pour-on": {
+      "status": "not-listed",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic.",
+      "note": "Quote is 205.603(a)(23) as printed, which lists only fenbendazole (i) and moxidectin (ii) below it. 205.603(b) (topical, external parasiticides) names copper sulfate, elemental sulfur, formic acid, iodine, lidocaine, hydrated lime, mineral oil, oxalic acid dihydrate, acidified sodium chlorite, sucrose octanoate esters and zinc sulfate; none matches. Not named in 205.603 (a)(23) (only fenbendazole and moxidectin are listed as parasiticides) or in 205.603(b), and 205.604 lists only strychnine. Per 205.105(a), synthetic substances are allowed only as provided in 205.601 or 205.603, so a substance that is not listed is not allowed; recorded as not-listed, the app should not state anything stronger. Eprinomectin is not named in 205.603."
+    },
+    "livestock.gordons-livestock-backrubber-pour-on": {
+      "status": "not-listed",
+      "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+      "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+      "date": "2026-10-01",
+      "quote": "(23) Parasiticides—prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic.",
+      "note": "Quote is 205.603(a)(23) as printed, which lists only fenbendazole (i) and moxidectin (ii) below it. 205.603(b) (topical, external parasiticides) names copper sulfate, elemental sulfur, formic acid, iodine, lidocaine, hydrated lime, mineral oil, oxalic acid dihydrate, acidified sodium chlorite, sucrose octanoate esters and zinc sulfate; none matches. Not named in 205.603 (a)(23) (only fenbendazole and moxidectin are listed as parasiticides) or in 205.603(b), and 205.604 lists only strychnine. Per 205.105(a), synthetic substances are allowed only as provided in 205.601 or 205.603, so a substance that is not listed is not allowed; recorded as not-listed, the app should not state anything stronger. Permethrin is an EPA-registered external parasiticide (EPA 2217-861) on the plugin. 205.603(b) \"As topical treatment, external parasiticide\" does not list it. A permethrin pour-on is also a synthetic parasiticide under 205.238(c)(4) and (c)(5). Whether a pesticide labelled for livestock is treated under 205.603 or under the crop-side National List (205.601) was not researched; that question is open."
+    }
+  },
+  "researched": []
+}

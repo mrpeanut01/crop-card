@@ -4,12 +4,14 @@
  * FR-09 (#308): harvest records carry the same 48-hour immutability lock
  * as spray records. The default DELETE refuses a locked row (422); owners
  * can pass `?force=true` to override, which writes a #329 tombstone before
- * the row is destroyed.
+ * the row is destroyed. A harvest with dispositions answers 409
+ * `HARVEST_HAS_DISPOSITIONS` until they are removed (Phase 33B, B-30).
  */
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { deleteHarvestEvent, RecordLockedError } from '$lib/db/admin';
 import { getHarvestEvent } from '$lib/db/harvestEvents';
+import { countDispositionsForHarvest } from '$lib/db/harvestDispositions';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
@@ -26,6 +28,12 @@ export const DELETE: RequestHandler = async (event) => {
   }
   const existing = getHarvestEvent(event.params.id);
   if (!existing) throw error(404, 'harvest record not found');
+  if (countDispositionsForHarvest(existing.id) > 0) {
+    return json(
+      { error: 'HARVEST_HAS_DISPOSITIONS', message: 'Remove where it went first.' },
+      { status: 409 }
+    );
+  }
   const reason = event.url.searchParams.get('reason') ?? undefined;
   try {
     const id = event.params.id;

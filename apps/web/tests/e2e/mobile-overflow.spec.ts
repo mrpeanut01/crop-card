@@ -12,6 +12,7 @@ const ROUTES = [
   '/equipment',
   '/animals',
   '/records?watering=1',
+  '/records/organic',
   '/harvest',
   '/finance',
   '/finance/new?kind=income',

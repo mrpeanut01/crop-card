@@ -13,6 +13,9 @@ import { getFarmProfile } from '$lib/onboarding/state.server';
 import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
+import { canMutate } from '$lib/server/session';
+import { dispositionViewsFor } from '$lib/server/harvestDispositions';
+import { farmHasOrganicStatus } from '$lib/harvest/organicAtHarvest.server';
 
 /** F2-15: owners see "Record a sale"; a quiet garden household only once
  *  the farm has any ledger entry. Helpers never see it. */
@@ -223,11 +226,19 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     };
   });
 
+  const role = locals.user?.role;
   return {
     plantings,
     recordedHarvests,
+    dispositions: dispositionViewsFor(
+      all.map((h) => h.id),
+      role
+    ),
+    askSoldAsOrganic: farmHasOrganicStatus(),
+    canWriteRecords: !!role && canMutate(role),
+    isOwner: role === 'owner',
     focusPlantingId,
-    canRecordSale: canRecordSale(locals.user?.role),
+    canRecordSale: canRecordSale(role),
     setup: {
       canEdit: canSetUp(locals.user?.role),
       areas: setupAreas(),

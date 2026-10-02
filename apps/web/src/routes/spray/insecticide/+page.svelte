@@ -15,6 +15,8 @@
     type SprayContextBlock
   } from '$lib/components/spray/SprayContextStrip.svelte';
   import { pastureNotice } from '$lib/farm/pastureNotice';
+  import OrganicInputNotice from '$lib/components/organic/OrganicInputNotice.svelte';
+  import { organicInputClass } from '$lib/organic/inputCompliance';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
   import PollinatorGatePanel from '$lib/components/spray/PollinatorGatePanel.svelte';
@@ -199,6 +201,14 @@
       context: data.pasture
     })
   );
+  const organicProducts = $derived(
+    data.insecticides
+      .filter((p) => p.pluginId === selectedPluginId)
+      .map((p) => ({
+        name: p.displayName,
+        inputClass: organicInputClass({ type: 'insecticide', complianceFlags: p.complianceFlags })
+      }))
+  );
   const ctxBlocks = $derived<SprayContextBlock[]>(
     selectedBlock ? [{ id: selectedBlock.id, label: selectedBlock.name, acres: 0 }] : []
   );
@@ -372,6 +382,12 @@
     cropLabel={ctxCropLabel}
     compatibility={ctxCompatibility}
     pastureNotice={ctxPasture}
+  />
+  <OrganicInputNotice
+    organicBlocks={data.organicBlocks}
+    selectedBlockIds={selectedBlock ? [selectedBlock.id] : []}
+    products={organicProducts}
+    blockNames={selectedBlock ? { [selectedBlock.id]: selectedBlock.name } : {}}
   />
 </div>
 

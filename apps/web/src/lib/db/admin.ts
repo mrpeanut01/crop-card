@@ -85,6 +85,11 @@ import { evaluateLock as evaluateSprayLock, getSprayEvent } from './sprayEvents'
 import { evaluateLock as evaluateInsecticideLock, getInsecticideEvent } from './insecticideEvents';
 import { evaluateLock as evaluateFungicideLock, getFungicideEvent } from './fungicideEvents';
 import { evaluateLock as evaluateHarvestLock, getHarvestEvent } from './harvestEvents';
+import {
+  evaluateDispositionLock,
+  getHarvestDisposition,
+  listDispositionsForHarvests
+} from './harvestDispositions';
 
 export interface DeleteSummary {
   /** Per-table row counts that were removed. Surfaces in the response so
@@ -118,7 +123,9 @@ export interface DeleteSprayEventOptions {
 }
 
 export class RecordLockedError extends Error {
-  constructor(kind: 'spray' | 'insecticide' | 'fungicide' | 'harvest' = 'spray') {
+  constructor(
+    kind: 'spray' | 'insecticide' | 'fungicide' | 'harvest' | 'harvest-disposition' = 'spray'
+  ) {
     super(`${kind} record is locked (FR-09); pass force=true (owner-only) to override`);
     this.name = 'RecordLockedError';
   }
@@ -130,7 +137,7 @@ export class RecordLockedError extends Error {
  * are the only surviving trace. Tenant-scoped via `tenantValues`.
  */
 function writeDeletionTombstone(
-  kind: 'spray' | 'insecticide' | 'fungicide' | 'harvest',
+  kind: 'spray' | 'insecticide' | 'fungicide' | 'harvest' | 'harvest-disposition',
   recordId: string,
   snapshot: unknown,
   opts: {
@@ -147,7 +154,12 @@ function writeDeletionTombstone(
   if (opts.deletedFromFieldId && snapshot && typeof snapshot === 'object') {
     snapshot = { ...snapshot, deletedFromFieldId: opts.deletedFromFieldId };
   }
-  if (kind !== 'harvest' && snapshot && typeof snapshot === 'object') {
+  if (
+    kind !== 'harvest' &&
+    kind !== 'harvest-disposition' &&
+    snapshot &&
+    typeof snapshot === 'object'
+  ) {
     const holdParamsJson = liveHoldParams(kind, recordId);
     if (holdParamsJson) snapshot = { ...snapshot, holdParamsJson };
   }
@@ -248,6 +260,56 @@ export function deleteHarvestEvent(id: string, opts: DeleteSprayEventOptions = {
     writeDeletionTombstone('harvest', id, event, opts);
   }
   return { removed: { harvest_events: del(harvestEvents, eq(harvestEvents.id, id)) } };
+}
+
+/**
+ * Phase 33B (B-29, B-35): removes one disposition. Inside its 48-hour window
+ * it goes with no trace, as harvests do; after it, only `force` (the owner,
+ * checked by the route) removes it and a tombstone keeps the snapshot.
+ * @hold-exempt: dispositions never change a hold (O-13)
+ */
+export function deleteHarvestDisposition(
+  id: string,
+  opts: { force?: boolean; deletedBy?: string; reason?: string } = {}
+): DeleteSummary {
+  const d = getHarvestDisposition(id);
+  if (!d) return { removed: {} };
+  const lockedAt = evaluateDispositionLock(d);
+  if (lockedAt !== undefined) {
+    if (!opts.force) throw new RecordLockedError('harvest-disposition');
+    writeDeletionTombstone('harvest-disposition', id, { ...d, lockedAt }, opts);
+  }
+  return {
+    removed: { harvest_dispositions: del(harvestDispositions, eq(harvestDispositions.id, id)) }
+  };
+}
+
+/** B-30: the dispositions of harvests a planting or block delete removes go
+ *  first, explicitly, so a locked one leaves a tombstone instead of
+ *  vanishing through the SQL cascade (which also does nothing while foreign
+ *  keys are off). */
+function deleteDispositionsOfHarvests(harvestIds: string[], reason: string): number {
+  if (harvestIds.length === 0) return 0;
+  let removed = 0;
+  for (const list of listDispositionsForHarvests(harvestIds).values()) {
+    for (const d of list) {
+      const lockedAt = evaluateDispositionLock(d);
+      if (lockedAt !== undefined) {
+        writeDeletionTombstone('harvest-disposition', d.id, { ...d, lockedAt }, { reason });
+      }
+      removed += del(harvestDispositions, eq(harvestDispositions.id, d.id));
+    }
+  }
+  return removed;
+}
+
+function harvestIdsWhere(where: SQL): string[] {
+  return db
+    .select({ id: harvestEvents.id })
+    .from(harvestEvents)
+    .where(withTenant(harvestEvents, where))
+    .all()
+    .map((r) => r.id);
 }
 
 export function deleteInsecticideEvent(
@@ -404,6 +466,10 @@ export function deleteCropCascade(
   removed.spray_events = del(sprayEvents, eq(sprayEvents.cropId, id));
   removed.insecticide_events = del(insecticideEvents, eq(insecticideEvents.cropId, id));
   removed.fertility_applications = del(fertilityApplications, eq(fertilityApplications.cropId, id));
+  removed.harvest_dispositions = deleteDispositionsOfHarvests(
+    harvestIdsWhere(eq(harvestEvents.cropId, id)),
+    'planting deleted'
+  );
   removed.harvest_events = del(harvestEvents, eq(harvestEvents.cropId, id));
   removed.hay_cuttings = del(hayCuttings, eq(hayCuttings.cropId, id));
   removed.seed_starts = del(seedStarts, eq(seedStarts.cropId, id));
@@ -573,6 +639,10 @@ export function deleteBlockCascade(id: string): DeleteSummary {
 
   removed.spray_events_block = del(sprayEvents, eq(sprayEvents.blockId, id));
   removed.insecticide_events_block = del(insecticideEvents, eq(insecticideEvents.blockId, id));
+  removed.harvest_dispositions_block = deleteDispositionsOfHarvests(
+    harvestIdsWhere(eq(harvestEvents.blockId, id)),
+    'block deleted'
+  );
   removed.harvest_events_block = del(harvestEvents, eq(harvestEvents.blockId, id));
   removed.hay_cuttings_block = del(hayCuttings, eq(hayCuttings.blockId, id));
   removed.fertility_applications_block = del(

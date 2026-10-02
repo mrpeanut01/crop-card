@@ -102,6 +102,23 @@
     <h1 class="serif">{subject.name}</h1>
   </header>
 
+  {#if data.organic?.statusLine || data.organic?.membersLost}
+    <section class="panel organic" aria-label="Organic status">
+      {#if data.organic.statusLine}
+        <p data-testid="organic-status-line">{data.organic.statusLine}</p>
+      {/if}
+      {#if data.organic.membersLost}
+        <p>
+          {data.organic.membersLost}
+          {data.organic.membersLost === 1 ? 'member' : 'members'} lost status after their own treatment.
+        </p>
+      {/if}
+      {#if data.organic.welfareLine}
+        <p class="af-help" data-testid="organic-welfare-line">{data.organic.welfareLine}</p>
+      {/if}
+    </section>
+  {/if}
+
   <HoldChips
     holds={data.holds}
     foods={data.foods}
@@ -183,6 +200,19 @@
               </ul>
             {/if}
             {#if e.notes}<p class="notes">{e.notes}</p>{/if}
+            {#if data.organic?.outcomes[e.id]}
+              {@const organic = data.organic.outcomes[e.id]}
+              <p class="meta" data-testid="organic-outcome">
+                Organic: {organic.text}
+                {#if organic.needsAnswer && data.isOwner}
+                  · <a class="organic-answer" href="/records/organic#review-{e.id}"
+                    >Answer the review</a
+                  >
+                {:else if organic.needsAnswer}
+                  · Ask the owner.
+                {/if}
+              </p>
+            {/if}
 
             <div class="action-row">
               {#if e.carriesHold && showHolds && data.isOwner}
@@ -310,6 +340,11 @@
 </div>
 
 <style>
+  .organic-answer {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+  }
   .record-page {
     display: flex;
     flex-direction: column;

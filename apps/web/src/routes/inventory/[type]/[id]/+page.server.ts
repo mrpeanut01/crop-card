@@ -45,6 +45,8 @@ import {
 } from '$lib/stock/animalStock';
 import { getStockItemWithBalance } from '$lib/db/stock';
 import { lotsForRole } from '$lib/finance/redact';
+import { farmOrganicChrome } from '$lib/organic/status.server';
+import { seedSourcingForLots, type LotSeedSourcing } from '$lib/stock/seedSourcing.server';
 
 export interface PesticideDetailPayload {
   type: 'pesticide';
@@ -88,6 +90,11 @@ export interface SeedDetailPayload {
     daysToMaturity?: { min: number; max: number };
     archetype?: string;
   };
+  /** 33B (B-15, B-38): per-lot organic seed sourcing. Empty unless the
+   *  farm's organic chrome is `full`. */
+  seedSourcing: Record<string, LotSeedSourcing>;
+  showSeedSourcing: boolean;
+  canEditSeedSourcing: boolean;
 }
 
 export interface CropDetailPayload {
@@ -291,5 +298,17 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
   if (type === 'fertility') {
     return { type, item, lots, movements, plugin: plugin as FertilityDetailPayload['plugin'] };
   }
-  return { type: 'seed', item, lots, movements, plugin: plugin as SeedDetailPayload['plugin'] };
+  const showSeedSourcing = farmOrganicChrome() === 'full';
+  return {
+    type: 'seed',
+    item,
+    lots,
+    movements,
+    plugin: plugin as SeedDetailPayload['plugin'],
+    seedSourcing: showSeedSourcing
+      ? Object.fromEntries(seedSourcingForLots(lots.map((l) => l.id)))
+      : {},
+    showSeedSourcing,
+    canEditSeedSourcing: locals.user?.role === 'owner' && !locals.user?.impersonating
+  };
 };

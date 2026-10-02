@@ -16,12 +16,25 @@
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
   import LotQuantities from '../LotQuantities.svelte';
+  import SeedSourcingSection from '../SeedSourcingSection.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatStockQuantity } from '$lib/stock/units';
   import type { SeedDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
 
-  type Props = Omit<SeedDetailPayload, 'type'>;
-  const { item, lots, movements, plugin }: Props = $props();
+  type Props = Omit<
+    SeedDetailPayload,
+    'type' | 'seedSourcing' | 'showSeedSourcing' | 'canEditSeedSourcing'
+  > &
+    Partial<Pick<SeedDetailPayload, 'seedSourcing' | 'showSeedSourcing' | 'canEditSeedSourcing'>>;
+  const {
+    item,
+    lots,
+    movements,
+    plugin,
+    seedSourcing = {},
+    showSeedSourcing = false,
+    canEditSeedSourcing = false
+  }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
 
   const stockQty = (v: number, digits?: number) =>
@@ -81,6 +94,26 @@
     <InvSection title={tr('inv.seed.quantity')} kicker={tr('inv.seed.quantityKicker')}>
       <LotQuantities itemId={item.id} unit={item.defaultUnit} category={item.category} {lots} />
     </InvSection>
+
+    {#if showSeedSourcing}
+      <InvSection title="Organic seed sourcing" kicker="Owner-entered, per lot">
+        {#if lots.length === 0}
+          <p class="empty">Add a lot above to record how this seed was sourced.</p>
+        {:else}
+          {#each lots as lot (lot.id)}
+            {@const s = seedSourcing[lot.id]}
+            {#if s}
+              <SeedSourcingSection
+                itemId={item.id}
+                {lot}
+                sourcing={s}
+                canEdit={canEditSeedSourcing}
+              />
+            {/if}
+          {/each}
+        {/if}
+      </InvSection>
+    {/if}
 
     <InvSection title={tr('inv.seed.history')} kicker={tr('inv.seed.last8')}>
       {#if movements.length === 0}

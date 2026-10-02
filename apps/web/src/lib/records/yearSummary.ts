@@ -31,6 +31,7 @@
 
 import type { Philosophy } from '$lib/season/setup';
 import type { Archetype } from '$lib/plugins/schemas';
+import type { YearAnimalSection } from './yearSummaryAnimals';
 
 // ─── Public shape ───────────────────────────────────────────────────────
 
@@ -127,6 +128,8 @@ export interface YearSummary {
   };
   scoutFunnel: ScoutFunnel;
   compliance: ComplianceStats;
+  /** 33B: null when no animal or group touches the year (B-53). */
+  animals: YearAnimalSection | null;
 }
 
 /** What a viewer gets: input costs are money and owner-only (F2-2). */
@@ -196,6 +199,8 @@ export interface ComputeYearSummaryInput {
   /** True when the product (resolved to a plugin) is allowed under the
    *  philosophy. Returns `undefined` when the product can't be resolved. */
   productAllowed: (productId: string) => boolean | undefined;
+  /** 33B: the animal section, built by `yearSummaryAnimals`. */
+  animals?: YearAnimalSection | null;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -392,7 +397,8 @@ export function computeYearSummary(input: ComputeYearSummaryInput): YearSummary 
       calibratedSprayerCount: calibrated,
       calibratedThisYear,
       deconEventsThisYear: deconThisYear
-    }
+    },
+    animals: input.animals ?? null
   };
 }
 

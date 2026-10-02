@@ -106,7 +106,8 @@ export const ENDPOINT_BY_KIND: Record<PendingRecordKind, string> = {
   'feed-use': '/api/stock/:id/use',
   'seed-start': '/api/seed-starts/:id/progress',
   irrigation: '/api/irrigation',
-  'rain-gauge': '/api/rain-gauge'
+  'rain-gauge': '/api/rain-gauge',
+  'harvest-disposition': '/api/harvest/:id/dispositions'
 };
 
 const STOCK_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
@@ -143,18 +144,27 @@ export function endpointForRecord(
     const safe = typeof id === 'string' && STOCK_ID_PATTERN.test(id) ? id : '_';
     return `/api/seed-starts/${safe}/progress`;
   }
+  if (kind === 'harvest-disposition') {
+    const id = (rec.payload as { harvestEventId?: unknown } | null | undefined)?.harvestEventId;
+    const safe = typeof id === 'string' && STOCK_ID_PATTERN.test(id) ? id : '_';
+    return `/api/harvest/${safe}/dispositions`;
+  }
   return ENDPOINT_BY_KIND[kind];
 }
 
-/** The body a row replays with. `feed-use` carries its stock item and
- *  `seed-start` its tray in the path, not the body. */
+/** The body a row replays with. `feed-use` carries its stock item,
+ *  `seed-start` its tray and `harvest-disposition` its harvest in the path,
+ *  not the body. */
 export function bodyForRecord(rec: Pick<PendingSprayRecord, 'kind' | 'payload'>): unknown {
   const kind = kindOf(rec);
-  if (kind !== 'feed-use' && kind !== 'seed-start') return rec.payload;
+  if (kind !== 'feed-use' && kind !== 'seed-start' && kind !== 'harvest-disposition') {
+    return rec.payload;
+  }
   if (!rec.payload || typeof rec.payload !== 'object') return rec.payload;
   const {
     stockItemId: _drop,
     seedStartId: _tray,
+    harvestEventId: _harvest,
     ...rest
   } = rec.payload as Record<string, unknown>;
   return rest;
@@ -234,7 +244,8 @@ const TIME_GATED_KINDS: ReadonlyMap<PendingRecordKind, 'occurredAt' | 'mowAt' | 
     ['animal-production', 'occurredAt'],
     ['animal-move', 'movedAt'],
     ['feed-use', 'occurredAt'],
-    ['irrigation', 'occurredAt']
+    ['irrigation', 'occurredAt'],
+    ['harvest-disposition', 'occurredAt']
   ]);
 
 /** Stamps the recorded moment on a time-gated payload that lacks one.

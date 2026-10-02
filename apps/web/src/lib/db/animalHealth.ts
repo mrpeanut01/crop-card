@@ -5,6 +5,7 @@ import {
   animalHealthEvents,
   animalLocations,
   animals,
+  organicTreatmentReviews,
   recordDeletions,
   stockMovements
 } from './schema';
@@ -289,6 +290,18 @@ export interface HealthTombstone {
   /** C-26: false only when the owner said the dose was never given. */
   dosed: boolean;
   event: AnimalHealthEvent;
+  /** 33B (B-26): the organic review the treatment had when deleted. Its
+   *  row cascades away with the treatment, so a dose that was given keeps
+   *  its answer here. */
+  organicReview?: TombstoneOrganicReview | null;
+}
+
+export interface TombstoneOrganicReview {
+  outcome: 'status-lost' | 'not-affected';
+  reason: string;
+  createdBy: string | null;
+  createdAt: number;
+  lockedAt: number | null;
 }
 
 /** The stock note `deductHealthStock` links a dose's movement with. */
@@ -302,6 +315,22 @@ export function deleteHealthEvent(
   opts: { deletedBy: string | null; reason: string | null; dosed: boolean }
 ): boolean {
   return db.transaction(() => {
+    const review = db
+      .select()
+      .from(organicTreatmentReviews)
+      .where(
+        withTenant(organicTreatmentReviews, eq(organicTreatmentReviews.healthEventId, event.id))
+      )
+      .get();
+    const organicReview: TombstoneOrganicReview | null = review
+      ? {
+          outcome: review.outcome,
+          reason: review.reason,
+          createdBy: review.createdBy ?? null,
+          createdAt: review.createdAt.getTime(),
+          lockedAt: review.lockedAt ? review.lockedAt.getTime() : null
+        }
+      : null;
     const removed =
       db
         .delete(animalHealthEvents)
@@ -327,7 +356,7 @@ export function deleteHealthEvent(
           recordId: event.id,
           deletedBy: opts.deletedBy,
           reason: opts.reason,
-          snapshotJson: JSON.stringify({ event, dosed: opts.dosed })
+          snapshotJson: JSON.stringify({ event, dosed: opts.dosed, organicReview })
         })
       )
       .run();
@@ -343,15 +372,26 @@ function parseTombstone(row: typeof recordDeletions.$inferSelect): HealthTombsto
     return null;
   }
   if (typeof snap !== 'object' || snap === null) return null;
-  const s = snap as { event?: AnimalHealthEvent; dosed?: unknown };
+  const s = snap as {
+    event?: AnimalHealthEvent;
+    dosed?: unknown;
+    organicReview?: TombstoneOrganicReview | null;
+  };
   if (!s.event || typeof s.event.subjectId !== 'string') return null;
+  const review = s.organicReview;
   return {
     recordId: row.recordId,
     deletedAt: row.deletedAt.getTime(),
     deletedBy: row.deletedBy ?? null,
     reason: row.reason ?? null,
     dosed: s.dosed !== false,
-    event: s.event
+    event: s.event,
+    organicReview:
+      review &&
+      (review.outcome === 'status-lost' || review.outcome === 'not-affected') &&
+      typeof review.reason === 'string'
+        ? review
+        : null
   };
 }
 

@@ -48,7 +48,15 @@
     plugin={data.plugin}
   />
 {:else if data.type === 'seed'}
-  <SeedDetail item={data.item} lots={data.lots} movements={data.movements} plugin={data.plugin} />
+  <SeedDetail
+    item={data.item}
+    lots={data.lots}
+    movements={data.movements}
+    plugin={data.plugin}
+    seedSourcing={data.seedSourcing}
+    showSeedSourcing={data.showSeedSourcing}
+    canEditSeedSourcing={data.canEditSeedSourcing}
+  />
 {:else if data.type === 'feed'}
   <FeedDetail {...data} />
 {:else if data.type === 'animal-health'}

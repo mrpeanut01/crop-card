@@ -6,6 +6,8 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { insertLedgerEntry, listLedgerEntries, LotAlreadyExpensedError } from '$lib/db/ledger';
+import { db } from '$lib/db/client';
+import { linkNewSaleToDisposition } from '$lib/db/harvestDispositions';
 import { ledgerEntryCreateSchema } from '$lib/finance/apiSchemas';
 import { requireMoneyReader, requireMoneyWriter } from '$lib/finance/access';
 import {
@@ -45,9 +47,17 @@ export const POST: RequestHandler = async (event) => {
   if (!parsed.success) return invalidBody(parsed.error);
   const refused = checkEntry(parsed.data);
   if (refused) return refused;
+  const { dispositionId, ...input } = parsed.data;
   try {
-    const entry = insertLedgerEntry(parsed.data, user.id);
-    return json({ entry }, { status: 201 });
+    const { entry, dispositionLinked } = db.transaction(() => {
+      const entry = insertLedgerEntry(input, user.id);
+      const dispositionLinked =
+        !!dispositionId &&
+        !!input.harvestEventId &&
+        linkNewSaleToDisposition(dispositionId, input.harvestEventId, entry.id);
+      return { entry, dispositionLinked };
+    });
+    return json({ entry, dispositionLinked }, { status: 201 });
   } catch (e) {
     if (e instanceof LotAlreadyExpensedError) return lotConflict(e.entryId);
     throw e;

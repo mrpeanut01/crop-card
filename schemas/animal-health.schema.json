@@ -175,6 +175,34 @@
         "additionalProperties": false
       }
     },
+    "organicUse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "allowed",
+            "allowed-with-conditions",
+            "not-allowed"
+          ]
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 60
+        },
+        "conditions": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "required": [
+        "status",
+        "citation"
+      ],
+      "additionalProperties": false
+    },
     "notes": {
       "type": "string",
       "maxLength": 1000

@@ -20,6 +20,7 @@ import { animalLabel } from '$lib/animals/display';
 import { identityLabel } from '$lib/identity';
 import { organicTreatmentOutcomes } from '$lib/organic/animalStatus.server';
 import { treatmentOutcomeText } from '$lib/organic/animalStatus';
+import { organicHealthPlugins } from '$lib/organic/plugins.server';
 import { hasOrganicStatusRows } from '$lib/db/organicStatus';
 import { formatInstant, type Prefs } from '$lib/prefs';
 import {
@@ -94,10 +95,11 @@ export async function buildTreatmentLog(
   const people = documentPeople(doses.map((d) => d.event.performedById));
   const outcomes = hasOrganicStatusRows()
     ? new Map(
-        organicTreatmentOutcomes({ fromMs: window.fromMs, toMs: window.toMs }).map((r) => [
-          r.healthEventId,
-          treatmentOutcomeText(r)
-        ])
+        organicTreatmentOutcomes({
+          fromMs: window.fromMs,
+          toMs: window.toMs,
+          plugins: await organicHealthPlugins()
+        }).map((r) => [r.healthEventId, treatmentOutcomeText(r)])
       )
     : new Map<string, string>();
 

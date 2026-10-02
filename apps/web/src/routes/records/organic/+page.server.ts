@@ -22,7 +22,7 @@ import { organicHealthPlugins } from '$lib/organic/plugins.server';
 import { loadBlockOrganicFacts } from '$lib/organic/blockFacts.server';
 import { organicUseFactLine, treatmentOutcomeText } from '$lib/organic/animalStatus';
 import { organicInputClassLabel } from '$lib/organic/inputCompliance';
-import { withholdTreatmentLine } from '$lib/organic/nopRules';
+import { NOP_RULES, withholdTreatmentLine } from '$lib/organic/nopRules';
 import { t, type MessageKey } from '$lib/i18n';
 import {
   organicStatusLabel,
@@ -138,7 +138,9 @@ export const load: PageServerLoad = async (event) => {
   const facts = await loadBlockOrganicFacts(
     statusBlocks.map((b) => b.id),
     window,
-    day
+    day,
+    NOP_RULES,
+    locale
   );
   const blockRows = statusBlocks.map((b) => {
     const status = blockStatus.get(b.id)!;
@@ -250,7 +252,8 @@ export const load: PageServerLoad = async (event) => {
     blockRows,
     animalLines,
     treatments,
-    welfareLine: animalLines.length || treatments.length ? withholdTreatmentLine() : null,
+    welfareLine:
+      animalLines.length || treatments.length ? withholdTreatmentLine(undefined, locale) : null,
     askCertifier: tr('organic.askCertifier')
   };
 };

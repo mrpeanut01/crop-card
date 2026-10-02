@@ -8,6 +8,7 @@
 
 import { csvDocument, PACK_PREAMBLE, type CsvValue } from './packCsv';
 import { treatmentLogCsv, type TreatmentLogRow } from './animalTreatmentLog';
+import { NOP_RULES, seedSourcingLine, type NopRules } from '$lib/organic/nopRules';
 
 export const PACK_FILES = {
   readme: 'README.txt',
@@ -307,7 +308,10 @@ export function packCsvFiles(data: PackData): Record<string, string> {
   };
 }
 
-export function packReadme(data: PackData, opts: { withDocuments: boolean }): string {
+export function packReadme(
+  data: PackData,
+  opts: { withDocuments: boolean; rules?: Readonly<NopRules> }
+): string {
   const lines = [
     PACK_PREAMBLE,
     '',
@@ -323,7 +327,7 @@ export function packReadme(data: PackData, opts: { withDocuments: boolean }): st
     `  ${PACK_FILES.statuses}  Every growing Area, block, animal and group with its owner-entered status history. A blank status means none is on file.`,
     `  ${PACK_FILES.activity}  Every application, planting, seed start, fertility application, harvest and hay cutting in the window.`,
     `  ${PACK_FILES.inputs}  Each input used in the window, with its EPA registration number and the library's compliance flags as stored.`,
-    `  ${PACK_FILES.seed}  Seed lots received or planted in the window, with the owner's seed status and suppliers checked.`,
+    `  ${PACK_FILES.seed}  Seed lots received or planted in the window, with the owner's seed status and suppliers checked. ${seedSourcingLine(opts.rules ?? NOP_RULES)}`,
     `  ${PACK_FILES.treatments}  The animal treatment log: one row per dose.`,
     `  ${PACK_FILES.harvests}  Harvests and where they went.`,
     `  ${PACK_FILES.documents}  An index of linked documents.`,

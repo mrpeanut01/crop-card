@@ -203,6 +203,25 @@ describe('organicStatusLine (B-14)', () => {
     expect(line).toMatch(/^Status lost after a treatment on 2026-06-02, as the owner answered\./);
   });
 
+  it('names 205.238(c)(1) when the treated-animal rule ended it', () => {
+    const line = organicStatusLine(
+      { ...base, lost: { at: Date.UTC(2026, 5, 2), healthEventId: 'h', basis: 'rule' } },
+      fmt
+    );
+    expect(line).toMatch(
+      /^Status lost after a treatment on 2026-06-02, under 7 CFR 205\.238\(c\)\(1\)\. Was: .*owner-entered/
+    );
+    expect(
+      organicStatusLine(
+        { ...base, lost: { at: Date.UTC(2026, 5, 2), healthEventId: 'h', basis: 'rule' } },
+        fmt,
+        'es'
+      )
+    ).toMatch(
+      /^Estado perdido tras un tratamiento el 2026-06-02, según 7 CFR 205\.238\(c\)\(1\)\. Antes: /
+    );
+  });
+
   it('is null with no status', () => {
     expect(organicStatusLine(null, fmt)).toBeNull();
   });

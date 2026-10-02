@@ -113,6 +113,9 @@ test.describe('organic seed sourcing', () => {
     await openSeed(helper, itemId);
     const helperLot = helper.getByTestId('seed-sourcing').first();
     await expect(helperLot.getByTestId('seed-status')).toHaveText('Untreated, not organic');
+    await expect(helper.getByTestId('seed-sourcing-rule')).toHaveText(
+      'The organic rules require organically grown seeds, annual seedlings and planting stock, except as 7 CFR 205.204(a) allows. Your certifier decides whether a search was enough.'
+    );
     await expect(helperLot.getByTestId('seed-checks')).toContainText('Johnny Seeds');
     await expect(helperLot.getByRole('link', { name: 'Seed search emails' })).toBeVisible();
     await expect(helperLot.getByRole('button', { name: 'Edit seed sourcing' })).toHaveCount(0);

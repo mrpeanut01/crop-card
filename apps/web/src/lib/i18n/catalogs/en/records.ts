@@ -681,7 +681,7 @@ export const enRecords = {
   'organic.line.certifier': 'certifier {name}',
   'organic.line.fromGroup': ' from group {name}',
   'organic.line.from': ' from {name}',
-  'organic.line.lost': 'Status lost after a treatment on {date}. Was: {base}',
+  'organic.line.lost': 'Status lost after a treatment on {date}, under {citation}. Was: {base}',
   'organic.line.lostOwner':
     'Status lost after a treatment on {date}, as the owner answered. Was: {base}',
   'organic.outcome.statusLost': 'Status lost',
@@ -690,6 +690,26 @@ export const enRecords = {
   'organic.outcome.deletedBeforeReview':
     'Treatment record deleted before review. Tell your certifier.',
   'organic.outcome.lostOwnerAnswered': 'Status lost (owner answered: ends organic status)',
+  'organic.outcome.lostRuleAntibiotic':
+    'Status lost (the library lists this product as an antibiotic, {citation})',
+  'organic.outcome.lostRuleNotAllowed':
+    'Status lost (the library marks this product as not allowed for organic use, {citation})',
+  'organic.welfare.cited':
+    'Treat a sick animal. The organic rules forbid withholding treatment to keep status ({citation}).',
+  'organic.welfare.ask':
+    'Treat a sick animal first. Ask your certifier how a treatment affects organic status.',
+  'organic.seed.ruleCited':
+    'The organic rules require organically grown seeds, annual seedlings and planting stock, except as {citation} allows. Your certifier decides whether a search was enough.',
+  'organic.seed.ruleAsk': 'Ask your certifier whether a search was enough.',
+  'organic.transition.ruleYears': 'the {years}-year rule in {citation}',
+  'organic.transition.ruleMonths': 'the {months}-month rule in {citation}',
+  'organic.transition.fromNotAllowed':
+    'By these records, the earliest harvest date under {rule} is {date}, {months} months after the last input the library marks as not allowed ({last}).',
+  'organic.transition.laterUnmarked':
+    'An input the library does not mark either way was used later ({last}). If it is prohibited, the earliest date is {date}.',
+  'organic.transition.onlyUnmarked':
+    'By these records, no input the library marks as not allowed is on file. An input it does not mark either way was used on {last}. If that input is prohibited, the earliest harvest date under {rule} is {date}, {months} months later.',
+  'organic.transition.certifierDecides': 'Your certifier decides.',
   'organic.review.endsStatus': 'Ends organic status',
   'organic.review.doesNotEnd': 'Does not end it',
   'organic.inputClass.allowed': 'Library mark: allowed for organic use',

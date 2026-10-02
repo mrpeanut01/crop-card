@@ -8,6 +8,7 @@
 import type { FarmProfile } from '$lib/onboarding/profile';
 import type { Philosophy } from '$lib/season/setup';
 import { t, type MessageKey } from '$lib/i18n';
+import { TREATED_ANIMAL_CITATION } from './nopRules';
 
 export const ORGANIC_STATUSES = ['organic', 'transitioning', 'not-organic'] as const;
 export type OrganicStatus = (typeof ORGANIC_STATUSES)[number];
@@ -185,11 +186,13 @@ export function organicStatusLine(
     : '';
   const base = `${organicStatusLabel(s.status, locale)} (${parts.join(', ')})${from}`;
   if (s.lost && s.status !== 'not-organic') {
-    return t(
-      locale,
-      s.lost.basis === 'owner-review' ? 'organic.line.lostOwner' : 'organic.line.lost',
-      { date: fmtDate(s.lost.at), base }
-    );
+    return s.lost.basis === 'owner-review'
+      ? t(locale, 'organic.line.lostOwner', { date: fmtDate(s.lost.at), base })
+      : t(locale, 'organic.line.lost', {
+          date: fmtDate(s.lost.at),
+          citation: TREATED_ANIMAL_CITATION,
+          base
+        });
   }
   return base;
 }

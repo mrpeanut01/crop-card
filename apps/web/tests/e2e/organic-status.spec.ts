@@ -74,8 +74,10 @@ test.describe('organic status (33B, B1)', () => {
     await expect(facts.getByTestId('organic-fact')).toContainText(
       'Fertility: Urea (46-0-0) · Library mark: not allowed for organic use'
     );
-    await expect(facts).toContainText('Ask your certifier.');
-    await expect(facts).not.toContainText(/205\.|36 months|transition period/);
+    await expect(facts).toContainText(
+      /By these records, the earliest harvest date under the 3-year rule in 7 CFR 205\.202\(b\) is .+, 36 months after the last input the library marks as not allowed \(.+\)\. Your certifier decides\./
+    );
+    await expect(facts).not.toContainText(/transition period|certified|eligible/i);
     await expect(page.getByText(/Showing records from \d{4}-\d{2}-\d{2} to/)).toBeVisible();
     await noHorizontalOverflow(page);
 
@@ -135,7 +137,7 @@ test.describe('organic status (33B, B1)', () => {
       'Organic (owner-entered, effective Jan 1, 2025, certifier Valley Organic) from group Layers'
     );
     await expect(page.getByTestId('organic-welfare-line')).toHaveText(
-      'Treat a sick animal first. Ask your certifier how a treatment affects organic status.'
+      'Treat a sick animal. The organic rules forbid withholding treatment to keep status (7 CFR 205.238(c)(7)).'
     );
     await expect(page.getByTestId('organic-outcome')).toContainText('Organic: Needs review');
     await noHorizontalOverflow(page);

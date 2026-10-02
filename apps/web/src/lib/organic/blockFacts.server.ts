@@ -3,7 +3,8 @@
  * inputs whose library entry is not marked organic-allowed, plantings from
  * seed recorded as treated, and the last such input on file. Facts only;
  * the derived transition line stays null while `NOP_RULES` has no
- * verified month count.
+ * verified month count, and once on it gives the earliest date by these
+ * records and leaves the decision to the certifier.
  */
 
 import { listSprayEvents } from '$lib/db/sprayEvents';
@@ -12,7 +13,8 @@ import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { listFertilityApplicationsInWindow, listTreatedSeedPlantings } from '$lib/db/organicFacts';
 import { listApplicationTombstones } from '$lib/db/admin';
 import { getRegistry } from '$lib/server/registry';
-import { NOP_RULES, type NopRules } from './nopRules';
+import { LAND_TRANSITION_CITATION, NOP_RULES, type NopRules } from './nopRules';
+import { t } from '$lib/i18n';
 import { organicInputClass, type OrganicInputClass } from './inputCompliance';
 
 export type OrganicPluginLookup = (
@@ -33,7 +35,8 @@ export interface BlockOrganicFacts {
   }[];
   treatedSeedPlantings: { cropId: string; stockLotId: string; at: number }[];
   lastNonAllowedAt: number | null;
-  /** Null while NOP_RULES.landTransitionMonths is null (O-03, B-04). */
+  /** Null while NOP_RULES.landTransitionMonths is null, or when no input
+   *  the library does not mark as allowed is on file (O-03, B-04). */
   transitionLine: string | null;
 }
 
@@ -54,16 +57,65 @@ function addMonths(ms: number, months: number): number {
   return target.getTime();
 }
 
-/** O-03: only with a verified month count, and always "Your certifier
- *  decides." */
+export interface LastInputs {
+  /** Last input the library marks as not allowed. */
+  notAllowedAt: number | null;
+  /** Last input the library does not mark either way. */
+  notMarkedAt: number | null;
+}
+
+/** O-03 and B-04: only with a verified month count, and always "Your
+ *  certifier decides." The date counts from the last input the library
+ *  marks as not allowed; an unmarked input never reads as prohibited, so a
+ *  later one is shown as an "if" with its own date. */
 export function transitionLine(
-  lastAt: number | null,
+  last: LastInputs,
   fmtDate: (ms: number) => string,
-  rules: Readonly<NopRules> = NOP_RULES
+  rules: Readonly<NopRules> = NOP_RULES,
+  locale?: string | null
 ): string | null {
-  if (rules.landTransitionMonths === null || lastAt === null) return null;
   const months = rules.landTransitionMonths;
-  return `By these records, ${months} months after ${fmtDate(lastAt)} is ${fmtDate(addMonths(lastAt, months))}. Your certifier decides.`;
+  if (months === null) return null;
+  const { notAllowedAt, notMarkedAt } = last;
+  if (notAllowedAt === null && notMarkedAt === null) return null;
+  const rule =
+    months % 12 === 0
+      ? t(locale, 'organic.transition.ruleYears', {
+          years: months / 12,
+          citation: LAND_TRANSITION_CITATION
+        })
+      : t(locale, 'organic.transition.ruleMonths', { months, citation: LAND_TRANSITION_CITATION });
+  const after = (ms: number) => fmtDate(addMonths(ms, months));
+  const parts: string[] = [];
+  if (notAllowedAt !== null) {
+    parts.push(
+      t(locale, 'organic.transition.fromNotAllowed', {
+        rule,
+        date: after(notAllowedAt),
+        months,
+        last: fmtDate(notAllowedAt)
+      })
+    );
+    if (notMarkedAt !== null && notMarkedAt > notAllowedAt) {
+      parts.push(
+        t(locale, 'organic.transition.laterUnmarked', {
+          last: fmtDate(notMarkedAt),
+          date: after(notMarkedAt)
+        })
+      );
+    }
+  } else if (notMarkedAt !== null) {
+    parts.push(
+      t(locale, 'organic.transition.onlyUnmarked', {
+        rule,
+        last: fmtDate(notMarkedAt),
+        date: after(notMarkedAt),
+        months
+      })
+    );
+  }
+  parts.push(t(locale, 'organic.transition.certifierDecides'));
+  return parts.join(' ');
 }
 
 function allApplications(toMs: number, plugin: OrganicPluginLookup): Application[] {
@@ -130,7 +182,9 @@ export function blockOrganicFacts(
   blockIds: readonly string[],
   window: { fromMs: number; toMs: number },
   plugin: OrganicPluginLookup,
-  fmtDate: (ms: number) => string = (ms) => new Date(ms).toISOString().slice(0, 10)
+  fmtDate: (ms: number) => string = (ms) => new Date(ms).toISOString().slice(0, 10),
+  rules: Readonly<NopRules> = NOP_RULES,
+  locale?: string | null
 ): Map<string, BlockOrganicFacts> {
   const wanted = new Set(blockIds);
   const out = new Map<string, BlockOrganicFacts>();
@@ -139,10 +193,15 @@ export function blockOrganicFacts(
   const seeds = listTreatedSeedPlantings(window).filter((p) => wanted.has(p.blockId));
   for (const blockId of wanted) {
     const mine = apps.filter((a) => a.blockId === blockId);
-    const last = mine.reduce<number | null>(
-      (m, a) => (m === null || a.occurredAt > m ? a.occurredAt : m),
-      null
-    );
+    const latest = (only?: Application['inputClass']) =>
+      mine.reduce<number | null>(
+        (m, a) =>
+          (only === undefined || a.inputClass === only) && (m === null || a.occurredAt > m)
+            ? a.occurredAt
+            : m,
+        null
+      );
+    const last = latest();
     out.set(blockId, {
       blockId,
       applications: mine
@@ -153,7 +212,12 @@ export function blockOrganicFacts(
         .filter((p) => p.blockId === blockId)
         .map(({ cropId, stockLotId, at }) => ({ cropId, stockLotId, at })),
       lastNonAllowedAt: last,
-      transitionLine: transitionLine(last, fmtDate)
+      transitionLine: transitionLine(
+        { notAllowedAt: latest('not-allowed'), notMarkedAt: latest('not-marked') },
+        fmtDate,
+        rules,
+        locale
+      )
     });
   }
   return out;
@@ -163,7 +227,9 @@ export function blockOrganicFacts(
 export async function loadBlockOrganicFacts(
   blockIds: readonly string[],
   window: { fromMs: number; toMs: number },
-  fmtDate?: (ms: number) => string
+  fmtDate?: (ms: number) => string,
+  rules: Readonly<NopRules> = NOP_RULES,
+  locale?: string | null
 ): Promise<Map<string, BlockOrganicFacts>> {
   const registry = await getRegistry();
   const lookup: OrganicPluginLookup = (id) => {
@@ -171,5 +237,5 @@ export async function loadBlockOrganicFacts(
       { type: string; displayName?: string; complianceFlags?: Record<string, unknown> } | undefined;
     return p;
   };
-  return blockOrganicFacts(blockIds, window, lookup, fmtDate);
+  return blockOrganicFacts(blockIds, window, lookup, fmtDate, rules, locale);
 }

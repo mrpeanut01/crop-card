@@ -11,7 +11,7 @@ import { createPlanned } from '$lib/db/crops';
 import { createStockItem, receiveLot } from '$lib/db/stock';
 import { createSeedStart } from '$lib/db/seedStarts';
 import { seedFarm } from '$lib/server/documents.testkit';
-import { NOP_RULES } from './nopRules';
+import { NOP_RULES_OFF } from './nopRules';
 import { loadBlockOrganicFacts, transitionLine } from './blockFacts.server';
 
 const DAY = 86_400_000;
@@ -59,16 +59,28 @@ describe('blockOrganicFacts', () => {
         performedById: null,
         stockLotId: lot.id
       });
-      return loadBlockOrganicFacts([farm.blockId], { fromMs: now - 3 * 365 * DAY, toMs: now }, fmt);
+      const window = { fromMs: now - 3 * 365 * DAY, toMs: now };
+      return {
+        on: await loadBlockOrganicFacts([farm.blockId], window, fmt),
+        off: await loadBlockOrganicFacts([farm.blockId], window, fmt, NOP_RULES_OFF)
+      };
     });
-    const f = facts.get(farm.blockId)!;
+    const f = facts.on.get(farm.blockId)!;
     expect(f.applications.map((a) => [a.product, a.inputClass])).toEqual([
       ['Urea (46-0-0)', 'not-allowed'],
       ['Neighbor compost', 'not-marked']
     ]);
     expect(f.lastNonAllowedAt).toBe(f.applications[1].occurredAt);
     expect(f.treatedSeedPlantings).toHaveLength(1);
-    expect(f.transitionLine).toBeNull();
+    const urea = fmt(f.applications[0].occurredAt);
+    const compost = fmt(f.applications[1].occurredAt);
+    expect(f.transitionLine).toContain(
+      `the earliest harvest date under the 3-year rule in 7 CFR 205.202(b) is`
+    );
+    expect(f.transitionLine).toContain(`marks as not allowed (${urea})`);
+    expect(f.transitionLine).toContain(`used later (${compost}). If it is prohibited`);
+    expect(f.transitionLine).toMatch(/Your certifier decides\.$/);
+    expect(facts.off.get(farm.blockId)!.transitionLine).toBeNull();
   });
 
   it('never leaks another farm records', async () => {
@@ -135,13 +147,56 @@ describe('deleted applications', () => {
 });
 
 describe('transitionLine (O-03, B-04)', () => {
+  const none = { notAllowedAt: null, notMarkedAt: null };
+
   it('is null while the month count is not verified', () => {
-    expect(transitionLine(Date.UTC(2024, 0, 15), fmt)).toBeNull();
-  });
-  it('reads as arithmetic and defers to the certifier once on', () => {
     expect(
-      transitionLine(Date.UTC(2024, 0, 31), fmt, { ...NOP_RULES, landTransitionMonths: 36 })
-    ).toBe('By these records, 36 months after 2024-01-31 is 2027-01-31. Your certifier decides.');
-    expect(transitionLine(null, fmt, { ...NOP_RULES, landTransitionMonths: 36 })).toBeNull();
+      transitionLine({ notAllowedAt: Date.UTC(2024, 0, 15), notMarkedAt: null }, fmt, NOP_RULES_OFF)
+    ).toBeNull();
+  });
+
+  it('gives the earliest date under the 3-year rule and defers to the certifier', () => {
+    expect(transitionLine({ notAllowedAt: Date.UTC(2024, 0, 31), notMarkedAt: null }, fmt)).toBe(
+      'By these records, the earliest harvest date under the 3-year rule in 7 CFR 205.202(b) is 2027-01-31, 36 months after the last input the library marks as not allowed (2024-01-31). Your certifier decides.'
+    );
+    expect(transitionLine(none, fmt)).toBeNull();
+  });
+
+  it('never reads an unmarked input as prohibited', () => {
+    expect(transitionLine({ notAllowedAt: null, notMarkedAt: Date.UTC(2025, 1, 28) }, fmt)).toBe(
+      'By these records, no input the library marks as not allowed is on file. An input it does not mark either way was used on 2025-02-28. If that input is prohibited, the earliest harvest date under the 3-year rule in 7 CFR 205.202(b) is 2028-02-28, 36 months later. Your certifier decides.'
+    );
+    expect(
+      transitionLine(
+        { notAllowedAt: Date.UTC(2024, 0, 31), notMarkedAt: Date.UTC(2024, 5, 1) },
+        fmt
+      )
+    ).toBe(
+      'By these records, the earliest harvest date under the 3-year rule in 7 CFR 205.202(b) is 2027-01-31, 36 months after the last input the library marks as not allowed (2024-01-31). An input the library does not mark either way was used later (2024-06-01). If it is prohibited, the earliest date is 2027-06-01. Your certifier decides.'
+    );
+    const earlierUnmarked = transitionLine(
+      { notAllowedAt: Date.UTC(2024, 5, 1), notMarkedAt: Date.UTC(2024, 0, 31) },
+      fmt
+    );
+    expect(earlierUnmarked).not.toContain('does not mark either way');
+  });
+
+  it('reads in Spanish with the citation verbatim', () => {
+    expect(
+      transitionLine(
+        { notAllowedAt: Date.UTC(2024, 0, 31), notMarkedAt: null },
+        fmt,
+        undefined,
+        'es'
+      )
+    ).toBe(
+      'Según estos registros, la fecha de cosecha más temprana bajo la regla de 3 años de 7 CFR 205.202(b) es el 2027-01-31, 36 meses después del último insumo que la biblioteca marca como no permitido (2024-01-31). Tu certificador decide.'
+    );
+  });
+
+  it('never claims certification (B-57)', () => {
+    const line = transitionLine({ notAllowedAt: Date.UTC(2024, 1, 29), notMarkedAt: null }, fmt);
+    expect(line).toContain('is 2027-02-28,');
+    expect(line).not.toMatch(/certified|compliant|eligible|qualif|safe|clear|—/i);
   });
 });

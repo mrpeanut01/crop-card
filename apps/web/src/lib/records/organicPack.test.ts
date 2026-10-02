@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { packCsvFiles, packReadme, PACK_FILES, type PackData } from './organicPack';
+import { NOP_RULES_OFF } from '$lib/organic/nopRules';
 import { PACK_PREAMBLE } from './packCsv';
 
 function data(over: Partial<PackData> = {}): PackData {
@@ -90,12 +91,20 @@ describe('packCsvFiles (B-43, B-44)', () => {
 
 describe('packReadme', () => {
   it('says it is not a certification and lists the files', () => {
-    const text = packReadme(data(), { withDocuments: true });
+    const text = packReadme(data(), { withDocuments: true, rules: NOP_RULES_OFF });
     expect(text.startsWith(PACK_PREAMBLE)).toBe(true);
     expect(text).toContain('Ask your certifier.');
     expect(text).toContain('documents/');
     expect(text).not.toMatch(/205\.\d/);
     expect(text).not.toMatch(/—/);
     expect(packReadme(data(), { withDocuments: false })).not.toContain('documents/  ');
+  });
+
+  it('names the seed sourcing paragraph once that rule is on, and leaves the call to the certifier', () => {
+    const text = packReadme(data(), { withDocuments: false });
+    expect(text).toContain('except as 7 CFR 205.204(a) allows');
+    expect(text).toContain('Your certifier decides whether a search was enough.');
+    expect(text).toContain('CropCard does not decide whether land, animals or crops qualify.');
+    expect(text).not.toMatch(/certified|compliant|eligible|—/i);
   });
 });

@@ -10,7 +10,7 @@
  * affected" (O-09), and a loss is one-way (O-10).
  */
 
-import type { NopRules } from './nopRules';
+import { TREATED_ANIMAL_CITATION, type NopRules } from './nopRules';
 import { t, type MessageKey } from '$lib/i18n';
 import {
   isUnderOrganic,
@@ -52,6 +52,8 @@ export interface TreatmentOrganicRow {
   product: string;
   outcome: 'status-lost' | 'needs-review' | 'not-affected';
   basis: 'rule' | 'owner-review' | null;
+  /** What the library says that made the rule decide; null otherwise. */
+  ruleReason: RuleLossReason | null;
   review: TreatmentReviewView | null;
   deleted: boolean;
   /** B-23: a sourced allowed or allowed-with-conditions library entry,
@@ -84,15 +86,29 @@ export interface AnimalOrganicProjection {
 
 export const subjectKey = (s: AnimalOrganicSubject) => `${s.type}:${s.id}`;
 
-/** B-23: the rule decides only while it is switched on. */
+export type RuleLossReason = 'antibiotic' | 'not-allowed';
+
+/** B-23: the rule decides only while it is switched on, and only from
+ *  what 205.238(c)(1) names and the library records: an antibiotic, or a
+ *  sourced organic-use entry of not allowed. A free-text product, an
+ *  unknown plugin or any other kind is left for the owner (null). */
+export function ruleLossReason(
+  pluginId: string | null,
+  world: Pick<AnimalOrganicWorld, 'plugin' | 'rules'>
+): RuleLossReason | null {
+  if (!world.rules.treatedAnimalRule || !pluginId) return null;
+  const p = world.plugin(pluginId);
+  if (!p) return null;
+  if (p.productKind === 'antibiotic') return 'antibiotic';
+  if (p.organicUse?.status === 'not-allowed') return 'not-allowed';
+  return null;
+}
+
 export function ruleLoss(
   pluginId: string | null,
   world: Pick<AnimalOrganicWorld, 'plugin' | 'rules'>
 ): boolean {
-  if (!world.rules.treatedAnimalRule || !pluginId) return false;
-  const p = world.plugin(pluginId);
-  if (!p) return false;
-  return p.productKind === 'antibiotic' || p.organicUse?.status === 'not-allowed';
+  return ruleLossReason(pluginId, world) !== null;
 }
 
 export function projectAnimalOrganic(
@@ -156,7 +172,8 @@ export function projectAnimalOrganic(
     if (considered.length === 0) continue;
     let outcome: TreatmentOrganicRow['outcome'] = 'needs-review';
     let basis: TreatmentOrganicRow['basis'] = null;
-    if (ruleLoss(t.pluginId, world)) {
+    const ruleReason = ruleLossReason(t.pluginId, world);
+    if (ruleReason) {
       outcome = 'status-lost';
       basis = 'rule';
     } else if (t.review) {
@@ -182,6 +199,7 @@ export function projectAnimalOrganic(
       product: t.product,
       outcome,
       basis,
+      ruleReason,
       review: t.review,
       deleted: t.deleted,
       organicUse: use && use.status !== 'not-allowed' ? use : null
@@ -201,6 +219,11 @@ export function organicUseFactLine(fact: OrganicUseFact): string {
 }
 
 export const DELETED_BEFORE_REVIEW = 'Treatment record deleted before review. Tell your certifier.';
+
+const RULE_REASON_KEY: Readonly<Record<RuleLossReason, MessageKey>> = {
+  antibiotic: 'organic.outcome.lostRuleAntibiotic',
+  'not-allowed': 'organic.outcome.lostRuleNotAllowed'
+};
 
 export const OUTCOME_LABEL: Readonly<Record<TreatmentOrganicRow['outcome'], string>> = {
   'status-lost': 'Status lost',
@@ -222,6 +245,9 @@ export function treatmentOutcomeText(row: TreatmentOrganicRow, locale?: string |
   }
   if (row.outcome === 'status-lost' && row.basis === 'owner-review') {
     return t(locale, 'organic.outcome.lostOwnerAnswered');
+  }
+  if (row.outcome === 'status-lost' && row.basis === 'rule' && row.ruleReason) {
+    return t(locale, RULE_REASON_KEY[row.ruleReason], { citation: TREATED_ANIMAL_CITATION });
   }
   return locale ? t(locale, OUTCOME_KEY[row.outcome]) : OUTCOME_LABEL[row.outcome];
 }

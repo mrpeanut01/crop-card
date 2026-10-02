@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cropDisplayName } from '$lib/i18n/cropName';
   import { goto, invalidateAll } from '$app/navigation';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import PluginRef from '$lib/components/PluginRef.svelte';
@@ -271,7 +272,7 @@
 {#if data.live && plugin}
   <section class="card header-card">
     <div class="title-row">
-      <h1>{data.live.displayName}</h1>
+      <h1>{cropDisplayName(data.pluginId, data.live.displayName, data.locale)}</h1>
       <span class="type-badge type-{data.live.type}">{typeLabel(data.live.type)}</span>
       {#each groupBadges as gb (gb.kind + gb.group)}
         <GroupCodeBadge kind={gb.kind} group={gb.group} />

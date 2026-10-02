@@ -690,5 +690,7 @@ export const esFarm: Partial<Record<MessageKey, string>> = {
   'climate.shift.springEarlier.one': 'Primavera {count} día antes',
   'climate.shift.springEarlier.other': 'Primavera {count} días antes',
   'climate.shift.fallLater.one': 'Otoño {count} día después',
-  'climate.shift.fallLater.other': 'Otoño {count} días después'
+  'climate.shift.fallLater.other': 'Otoño {count} días después',
+  'map.zoomIn': 'Acercar',
+  'map.zoomOut': 'Alejar'
 };

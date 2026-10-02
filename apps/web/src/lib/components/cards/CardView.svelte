@@ -76,7 +76,7 @@
       ? bodySections.filter((s) => compactSections.includes(s.title))
       : bodySections
   );
-  const provText = $derived(provenanceText(card.provenance));
+  const provText = $derived(provenanceText(card.provenance, page.data?.locale));
   const nextText = $derived(
     card.next ? `${card.next.label}${card.next.due ? ` (${card.next.due})` : ''}` : ''
   );

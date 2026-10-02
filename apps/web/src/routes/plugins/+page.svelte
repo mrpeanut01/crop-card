@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cropDisplayName } from '$lib/i18n/cropName';
   import { goto, invalidateAll } from '$app/navigation';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import LabelCapture from '$lib/components/LabelCapture.svelte';
@@ -493,11 +494,13 @@
           class="row-check"
           checked={selectedIds.has(r.pluginId)}
           onchange={() => toggleSelect(r.pluginId)}
-          aria-label={tr('plugins.list.select', { name: r.displayName })}
+          aria-label={tr('plugins.list.select', {
+            name: cropDisplayName(r.pluginId, r.displayName, data.locale)
+          })}
         />
         <a class="row-main" href="/plugins/{encodeURIComponent(r.pluginId)}">
           <div class="row-line1">
-            <strong class="name">{r.displayName}</strong>
+            <strong class="name">{cropDisplayName(r.pluginId, r.displayName, data.locale)}</strong>
             <span class="type-badge type-{r.type}">{typeLabel(r.type)}</span>
             {#each r.groupCodes as gc, idx (idx)}
               <GroupCodeBadge kind={gc.kind} group={gc.group} />
@@ -531,7 +534,9 @@
           href="/api/plugins/{encodeURIComponent(r.pluginId)}/export"
           download
           title={tr('plugins.list.downloadTitle')}
-          aria-label={tr('plugins.list.download', { name: r.displayName })}
+          aria-label={tr('plugins.list.download', {
+            name: cropDisplayName(r.pluginId, r.displayName, data.locale)
+          })}
           onclick={(e) => e.stopPropagation()}
         >
           ↓

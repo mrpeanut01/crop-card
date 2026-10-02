@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { archetypeLabel } from '$lib/plugins/familyLabel';
   /**
    * Sprint 7 / Phase 27C (#257) — seed detail.
    *
@@ -68,7 +69,11 @@
           value={cropDisplayName(plugin.pluginId, plugin.displayName, page.data?.locale)}
         />
         <InvKVP label={tr('inv.seed.cropFamily')} value={plugin.cropFamily ?? '—'} />
-        <InvKVP label={tr('inv.seed.archetype')} value={plugin.archetype ?? '—'} tone="locked" />
+        <InvKVP
+          label={tr('inv.seed.archetype')}
+          value={plugin.archetype ? archetypeLabel(plugin.archetype, page.data?.locale) : '—'}
+          tone="locked"
+        />
         <p class="cta-row">
           <a href="/inventory/crop/{encodeURIComponent(plugin.pluginId)}"
             >{tr('inv.seed.openCrop')}</a

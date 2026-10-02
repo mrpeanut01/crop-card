@@ -669,5 +669,21 @@ export const enInventory = {
   'stockui.api.seedCheckFields': 'Check the seed sourcing fields.',
   'stockui.api.seedFuture': 'A supplier check cannot be dated after today.',
   'stockui.api.invalidJsonShort': 'invalid JSON',
-  'inv.feed.unnamedAnimal': 'Unnamed animal'
+  'inv.feed.unnamedAnimal': 'Unnamed animal',
+  'equip.typeName.sprayer': 'Sprayer',
+  'equip.typeName.planter': 'Planter',
+  'equip.typeName.drill': 'Drill',
+  'equip.typeName.rake': 'Rake',
+  'equip.typeName.baler': 'Baler',
+  'equip.typeName.tractor': 'Tractor',
+  'equip.typeName.mower': 'Mower',
+  'equip.typeName.irrigation': 'Irrigation',
+  'equip.typeName.other': 'Other',
+  'equip.typeDesc.sprayer': 'boom, backpack, or handheld sprayer',
+  'equip.typeDesc.planter': 'row-crop planter or transplanter',
+  'equip.typeDesc.drill': 'grain drill or seed drill',
+  'equip.typeDesc.rake': 'hay rake (rotary, parallel-bar)',
+  'equip.typeDesc.baler': 'small-square, large-round, or large-square',
+  'equip.typeDesc.mower': 'mower or mower-conditioner',
+  'equip.typeDesc.irrigation': 'drip, overhead, or pivot system'
 } as const;

@@ -517,6 +517,8 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
     'La IA estaba apagada o no disponible, así que se usó el valor predeterminado',
   'ui.prov.manual': 'Lo escribiste',
   'ui.prov.plugin': 'Plugin',
+  'ui.prov.pluginLong': 'De un complemento de cultivo, insumo o del núcleo de seguridad',
+  'ui.prov.manualLong': 'Lo ingresaste o editaste tú · el núcleo de seguridad lo sigue revisando',
   'ui.provLegend.title': 'De dónde viene este dato',
   'ui.queued.label': 'Se guardará cuando haya conexión',
   'ui.queued.title': 'Guardado en este dispositivo. Se sube cuando tengas señal.',

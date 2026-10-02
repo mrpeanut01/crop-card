@@ -671,5 +671,7 @@ export const enFarm = {
   'climate.shift.springEarlier.one': 'Spring {count} day earlier',
   'climate.shift.springEarlier.other': 'Spring {count} days earlier',
   'climate.shift.fallLater.one': 'Fall {count} day later',
-  'climate.shift.fallLater.other': 'Fall {count} days later'
+  'climate.shift.fallLater.other': 'Fall {count} days later',
+  'map.zoomIn': 'Zoom in',
+  'map.zoomOut': 'Zoom out'
 } as const;

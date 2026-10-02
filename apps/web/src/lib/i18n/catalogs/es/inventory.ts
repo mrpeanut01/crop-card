@@ -687,5 +687,21 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'stockui.api.seedCheckFields': 'Revisa los campos del origen de la semilla.',
   'stockui.api.seedFuture': 'Una consulta a proveedor no puede tener fecha posterior a hoy.',
   'stockui.api.invalidJsonShort': 'JSON no válido',
-  'inv.feed.unnamedAnimal': 'Animal sin nombre'
+  'inv.feed.unnamedAnimal': 'Animal sin nombre',
+  'equip.typeName.sprayer': 'Aspersora',
+  'equip.typeName.planter': 'Sembradora',
+  'equip.typeName.drill': 'Sembradora de granos',
+  'equip.typeName.rake': 'Rastrillo',
+  'equip.typeName.baler': 'Empacadora',
+  'equip.typeName.tractor': 'Tractor',
+  'equip.typeName.mower': 'Segadora',
+  'equip.typeName.irrigation': 'Riego',
+  'equip.typeName.other': 'Otro',
+  'equip.typeDesc.sprayer': 'de barra, de mochila o manual',
+  'equip.typeDesc.planter': 'sembradora de surcos o trasplantadora',
+  'equip.typeDesc.drill': 'sembradora de granos o de semillas',
+  'equip.typeDesc.rake': 'rastrillo de heno (rotativo o de barras paralelas)',
+  'equip.typeDesc.baler': 'pacas cuadradas chicas, redondas grandes o cuadradas grandes',
+  'equip.typeDesc.mower': 'segadora o segadora acondicionadora',
+  'equip.typeDesc.irrigation': 'sistema por goteo, aspersión o pivote'
 };

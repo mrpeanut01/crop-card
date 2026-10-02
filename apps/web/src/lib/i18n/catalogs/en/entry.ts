@@ -491,6 +491,8 @@ export const enEntry = {
   'ui.prov.fallbackLong': 'AI was off or unavailable, so the deterministic default was used',
   'ui.prov.manual': 'You typed',
   'ui.prov.plugin': 'Plugin',
+  'ui.prov.pluginLong': 'From a crop, input, or safety-kernel plugin',
+  'ui.prov.manualLong': 'Entered or edited by you · the safety kernel still checks it',
   'ui.provLegend.title': 'Where this data came from',
   'ui.queued.label': 'Will save when online',
   'ui.queued.title': 'Saved on this device. It uploads when you have signal.',

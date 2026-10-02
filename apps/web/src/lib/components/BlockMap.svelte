@@ -546,7 +546,7 @@
       maxZoom: MAP_MAX_ZOOM,
       // Long-press fires contextmenu on every touch browser, not just Safari.
       tapHold: canEdit && !thumbnail,
-      zoomControl: !thumbnail,
+      zoomControl: false,
       dragging: !thumbnail,
       scrollWheelZoom: !thumbnail,
       doubleClickZoom: !thumbnail,
@@ -557,6 +557,9 @@
       initialCenter ? [initialCenter.lat, initialCenter.lon] : [39.1, -77.55],
       initialCenter ? 16 : 13
     );
+    if (!thumbnail) {
+      L.control.zoom({ zoomInTitle: tr('map.zoomIn'), zoomOutTitle: tr('map.zoomOut') }).addTo(map);
+    }
     markMapReady();
 
     const satellite = L.tileLayer(

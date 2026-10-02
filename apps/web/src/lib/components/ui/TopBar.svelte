@@ -328,7 +328,11 @@
               onclick={() => onSwitchOwner?.(o.id)}
             >
               <span>{o.name}</span>
-              <span class="owner-role mono">{o.role}</span>
+              <span class="owner-role mono"
+                >{o.role === 'owner' || o.role === 'helper' || o.role === 'inspector'
+                  ? tr(`settings.role.${o.role}`)
+                  : o.role}</span
+              >
             </button>
           {/each}
         </div>

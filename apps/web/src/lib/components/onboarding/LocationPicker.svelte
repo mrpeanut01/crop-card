@@ -45,7 +45,11 @@
       L = (await import('leaflet')).default;
       if (cancelled) return;
       const start = lat != null && lon != null ? { lat, lon } : fallback;
-      map = L.map(mapEl, { maxZoom: 21 }).setView([start.lat, start.lon], lat != null ? 15 : 11);
+      map = L.map(mapEl, { maxZoom: 21, zoomControl: false }).setView(
+        [start.lat, start.lon],
+        lat != null ? 15 : 11
+      );
+      L.control.zoom({ zoomInTitle: tr('map.zoomIn'), zoomOutTitle: tr('map.zoomOut') }).addTo(map);
       L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         {

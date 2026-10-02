@@ -56,8 +56,9 @@
     manual: 'ui.prov.manual',
     fallback: 'ui.prov.fallback'
   } as const;
-  // The plugin and manual explanations mention the safety kernel, so they stay English.
   const LONG_KEY = {
+    plugin: 'ui.prov.pluginLong',
+    manual: 'ui.prov.manualLong',
     data: 'ui.prov.dataLong',
     ai: 'ui.prov.aiLong',
     fallback: 'ui.prov.fallbackLong'
@@ -65,11 +66,7 @@
 
   const meta = $derived({
     label: label ?? tr(LABEL_KEY[source]),
-    long:
-      long ??
-      (source in LONG_KEY
-        ? tr(LONG_KEY[source as keyof typeof LONG_KEY])
-        : PROVENANCE_LONG[source]),
+    long: long ?? (source in LONG_KEY ? tr(LONG_KEY[source]) : PROVENANCE_LONG[source]),
     icon: ICON[source]
   });
   const showConf = $derived(source === 'ai' && typeof confidence === 'number');

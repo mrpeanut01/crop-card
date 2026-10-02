@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { equipmentTypeLabel } from '$lib/equipment/typeLabel';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { invalidateAll } from '$app/navigation';
   import { createT } from '$lib/i18n';
@@ -220,7 +221,7 @@
     </div>
   {/if}
   <p class="meta">
-    <span class="type-badge">{eq.type}</span>
+    <span class="type-badge">{equipmentTypeLabel(eq.type, data.locale)}</span>
     <code>{eq.id}</code>
   </p>
 </header>

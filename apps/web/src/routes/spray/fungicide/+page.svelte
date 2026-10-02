@@ -32,9 +32,11 @@
   } from '$lib/weather/leafWet';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   // v2 addendum (#89): sourced from `user.ai_enabled` via
   // getUserAiEnabled() in the loader. $derived so the variant
@@ -212,24 +214,24 @@
     const tankMixOk = !tankMixBlocked;
     const hasObservation = !!diseaseName && diseaseValue !== null;
     return [
-      { label: 'Block', state: hasBlock ? 'done' : 'active' },
+      { label: tr('sprayui.step.block'), state: hasBlock ? 'done' : 'active' },
       {
-        label: 'Disease + FRAC',
+        label: tr('sprayui.step.diseaseFrac'),
         state: !hasProducts ? (hasBlock ? 'active' : 'pending') : fracBlocked ? 'active' : 'done'
       },
       {
-        label: 'Tank-mix check',
+        label: tr('sprayui.step.tankMix'),
         state: !hasProducts ? 'pending' : tankMixOk ? 'done' : 'active'
       },
       {
-        label: 'Observation',
+        label: tr('sprayui.step.observation'),
         state: hasObservation ? 'done' : hasProducts && tankMixOk ? 'active' : 'pending'
       },
       {
-        label: 'Conditions',
+        label: tr('sprayui.step.conditions'),
         state: canSubmit ? 'done' : tankMixOk ? 'active' : 'pending'
       },
-      { label: 'Record', state: canSubmit ? 'active' : 'pending' }
+      { label: tr('sprayui.step.record'), state: canSubmit ? 'active' : 'pending' }
     ];
   });
 
@@ -258,7 +260,7 @@
     selectedBlock?.cropPluginIds.length
       ? selectedBlock.cropPluginIds.length === 1
         ? selectedBlock.cropPluginIds[0]
-        : `${selectedBlock.cropPluginIds.length} crops`
+        : tr('sprayui.ctx.crops', { count: selectedBlock.cropPluginIds.length })
       : '—'
   );
   const ctxCompatibility = $derived<CompatibilityState | undefined>(
@@ -316,7 +318,7 @@
       if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         const { enqueueRecord } = await import('$lib/client/syncQueue');
         await enqueueRecord('fungicide', body);
-        result = '☁ Offline — queued. Will sync to the server when the connection returns.';
+        result = tr('sprayui.queuedResult');
         return;
       }
       const res = await fetch('/api/fungicide/record', {
@@ -354,7 +356,7 @@
         try {
           const { enqueueRecord } = await import('$lib/client/syncQueue');
           await enqueueRecord('fungicide', body);
-          result = '☁ Offline — queued. Will sync to the server when the connection returns.';
+          result = tr('sprayui.queuedResult');
         } catch (queueErr) {
           error = `offline queue failed: ${
             queueErr instanceof Error ? queueErr.message : queueErr
@@ -408,17 +410,17 @@
   {warnings}
   {aiEnabled}
   {canSubmit}
-  submitLabel="Record fungicide application"
+  submitLabel={tr('sprayui.fun.submit')}
   onSubmit={recordSpray}
 >
   {#snippet productSection()}
     {#if data.fungicides.length === 0}
       <p class="empty">
-        No fungicide plugins installed. Add JSON files under <code>plugins/fungicides/</code>.
+        {tr('sprayui.fun.noPlugins')} <code>plugins/fungicides/</code>.
       </p>
     {:else}
       <fieldset class="product-grid">
-        <legend>Tank-mix products</legend>
+        <legend>{tr('sprayui.fun.products')}</legend>
         {#each productsByFrac as [frac, items] (frac)}
           <div class="frac-row">
             <GroupCodeBadge kind="FRAC" group={frac} />
@@ -447,18 +449,18 @@
 
   {#snippet diseaseGate()}
     <div class="gate-head">
-      <h2>Disease + FRAC</h2>
+      <h2>{tr('sprayui.fun.gateTitle')}</h2>
       {#if weather && weather.provenance === 'data'}
         <span class="gate-meta">
-          NWS forecast · fetched {fmt.instant(weather.fetchedAt, 'time')}
-          {#if weather.location?.source === 'farm'}· farm location (no block map){/if}
-          {#if weather.location?.source === 'farm-default'}· farm default location (no block map){/if}
-          {#if weather.location?.source === 'farm-block'}· nearest mapped block{/if}
+          {tr('sprayui.fun.fetched', { time: fmt.instant(weather.fetchedAt, 'time') })}
+          {#if weather.location?.source === 'farm'}{tr('sprayui.fun.locFarm')}{/if}
+          {#if weather.location?.source === 'farm-default'}{tr('sprayui.fun.locFarmDefault')}{/if}
+          {#if weather.location?.source === 'farm-block'}{tr('sprayui.fun.locNearest')}{/if}
         </span>
       {/if}
     </div>
     {#if weather === null}
-      <p class="gate-loading" role="status">Loading hourly forecast…</p>
+      <p class="gate-loading" role="status">{tr('sprayui.fun.loading')}</p>
     {:else}
       <div class="weather-grid">
         <LeafWetDial
@@ -490,22 +492,25 @@
       />
     </div>
     <p class="gate-note">
-      Leaf wetness is estimated from forecast humidity (RH ≥ 90%) and rain — not a disease model.
-      Disease forecast models (NEWA / FHB) are coming in Phase 26. Weather checks are advisory; FRAC
-      rotation is enforced by the server.
+      {tr('sprayui.fun.note')}
     </p>
   {/snippet}
 
   {#snippet observation()}
-    <label for="disease-name">Disease</label>
-    <input id="disease-name" type="text" bind:value={diseaseName} placeholder="e.g. early blight" />
-    <label for="disease-metric">Metric</label>
+    <label for="disease-name">{tr('sprayui.obs.disease')}</label>
+    <input
+      id="disease-name"
+      type="text"
+      bind:value={diseaseName}
+      placeholder={tr('sprayui.obs.diseasePlaceholder')}
+    />
+    <label for="disease-metric">{tr('sprayui.obs.metric')}</label>
     <select id="disease-metric" bind:value={diseaseMetric}>
-      <option value="pct-leaf-area">% leaf area affected</option>
-      <option value="lesion-count-per-leaf">lesions per leaf</option>
-      <option value="plants-infected-pct">% plants infected</option>
+      <option value="pct-leaf-area">{tr('sprayui.obs.leafArea')}</option>
+      <option value="lesion-count-per-leaf">{tr('sprayui.obs.lesions')}</option>
+      <option value="plants-infected-pct">{tr('sprayui.obs.plantsInfected')}</option>
     </select>
-    <label for="disease-value">Value</label>
+    <label for="disease-value">{tr('sprayui.obs.value')}</label>
     <input id="disease-value" type="number" min="0" step="any" bind:value={diseaseValue} />
   {/snippet}
 
@@ -516,9 +521,7 @@
       shown={aiEnabled
         ? ['plugin', 'data', 'ai', 'manual']
         : ['plugin', 'data', 'fallback', 'manual']}
-      note={aiEnabled
-        ? 'FRAC groups + rates pre-populated · all editable'
-        : 'AI off · FRAC groups from plugins · all editable'}
+      note={aiEnabled ? tr('sprayui.legend.funAi') : tr('sprayui.legend.funNoAi')}
     />
   {/snippet}
 
@@ -528,12 +531,12 @@
          the AI tier could propose a rotation-safe pairing; until #89
          lands that, the second-product badge defaults to fallback. -->
     {#if selectedFungicides.length > 0}
-      <Provenance source="plugin" detail="FRAC kernel" compact />
+      <Provenance source="plugin" detail={tr('sprayui.prov.fracKernel')} compact />
       {#if selectedFungicides.length > 1}
         {#if aiEnabled}
           <Provenance source="ai" confidence={0.84} compact />
         {:else}
-          <Provenance source="fallback" detail="deterministic rotation hint" compact />
+          <Provenance source="fallback" detail={tr('sprayui.prov.rotationHint')} compact />
         {/if}
       {/if}
     {/if}
@@ -542,11 +545,13 @@
   {#snippet recentEvents()}
     {#if data.recentEvents.length > 0}
       <section class="card recent">
-        <h2>Recent fungicide events</h2>
+        <h2>{tr('sprayui.fun.recent')}</h2>
         <ul class="recent-list">
           {#each data.recentEvents as e (e.id)}
             <li>
-              <strong>{fmt.instant(e.occurredAt)}</strong> — block {e.blockId}
+              <strong>{fmt.instant(e.occurredAt)}</strong> — {tr('sprayui.fun.block', {
+                block: e.blockId
+              })}
               · {e.products.map((p) => p.displayName).join(', ')}
               {#if e.preHarvestClearAt}
                 <span class="phi">· PHI clear {fmt.instant(e.preHarvestClearAt)}</span>
@@ -560,16 +565,16 @@
 
   {#snippet noBlocks()}
     <SetupCallout
-      kicker="Where?"
-      title="Where are you spraying?"
+      kicker={tr('sprayui.where.whereKicker')}
+      title={tr('sprayui.where.whereTitle')}
       canEdit={data.setup.canEdit}
-      askOwner="Ask the owner to add the spot you're spraying. Once it's on the farm it shows up here."
+      askOwner={tr('sprayui.where.spotAskOwner')}
       testId="spray-where"
     >
-      <p>There's nowhere on the farm to pick yet. Give the spot a name and carry on.</p>
+      <p>{tr('sprayui.where.spotBody')}</p>
       {#snippet actions()}
         <button type="button" class="primary" onclick={() => (spotSheetOpen = true)}>
-          Name a new spot
+          {tr('sprayui.where.nameSpot')}
         </button>
       {/snippet}
     </SetupCallout>
@@ -578,8 +583,8 @@
 
 <SetupSheet
   open={spotSheetOpen}
-  kicker="Spray"
-  title="Where?"
+  kicker={tr('sprayui.sheet.kicker')}
+  title={tr('sprayui.where.whereKicker')}
   onClose={() => (spotSheetOpen = false)}
   onDone={onSpotAdded}
 >

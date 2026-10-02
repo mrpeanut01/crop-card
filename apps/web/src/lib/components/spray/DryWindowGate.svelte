@@ -1,5 +1,7 @@
 <script lang="ts">
   import { fmt } from '$lib/prefsState.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import Pill from '$lib/components/ui/Pill.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { DryWindow, RainfastCheck, WeatherProvenance } from '$lib/weather/leafWet';
@@ -21,6 +23,8 @@
     acknowledged = $bindable(false)
   }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
+
   const status = $derived<'clear' | 'rain-risk' | 'unknown'>(
     provenance === 'fallback' ? 'unknown' : rainfast.status
   );
@@ -32,57 +36,61 @@
 
 <div class="tile {status}" data-testid="dry-window-gate" data-state={status}>
   <div class="head">
-    <span class="title">Rain/dew dry window</span>
+    <span class="title">{tr('sprayui.dry.title')}</span>
     {#if status === 'clear'}
-      <Pill tone="forest">Dry window OK</Pill>
+      <Pill tone="forest">{tr('sprayui.dry.ok')}</Pill>
     {:else if status === 'rain-risk'}
-      <Pill tone="wheat">Rain in rainfast window</Pill>
+      <Pill tone="wheat">{tr('sprayui.dry.risk')}</Pill>
     {:else}
-      <Pill tone="neutral">Unknown</Pill>
+      <Pill tone="neutral">{tr('sprayui.dry.unknown')}</Pill>
     {/if}
-    <span class="advisory">Advisory</span>
+    <span class="advisory">{tr('sprayui.dry.advisory')}</span>
   </div>
 
   <p class="need">
-    Needs <strong class="mono">{rainfast.rainfastHours} h</strong> dry after application
+    {tr('sprayui.dry.needs')} <strong class="mono">{rainfast.rainfastHours} h</strong>
+    {tr('sprayui.dry.needsAfter')}
     {#if rainfastFromLabel}
-      <Provenance source="plugin" detail="label rainfast interval" compact />
+      <Provenance source="plugin" detail={tr('sprayui.dry.labelInterval')} compact />
     {:else}
-      <span class="muted">(default — label rainfast interval not on file)</span>
+      <span class="muted">{tr('sprayui.dry.defaultInterval')}</span>
     {/if}
   </p>
 
   {#if status === 'unknown'}
     <p class="msg" role="status">
       {#if provenance === 'fallback'}
-        Weather unavailable — check conditions yourself.
+        {tr('sprayui.weatherUnavailable')}
       {:else}
-        Forecast covers only {rainfast.coveredHours} of the next {rainfast.rainfastHours} h — check conditions
-        yourself.
+        {tr('sprayui.dry.partial', {
+          covered: rainfast.coveredHours,
+          hours: rainfast.rainfastHours
+        })}
       {/if}
     </p>
   {:else if status === 'clear'}
     <p class="msg">
-      No rain forecast in the next {rainfast.rainfastHours} h (max PoP {rainfast.maxPopPct ?? 0}%).
-      <Provenance source="data" detail="NWS gridpoint forecast" compact />
+      {tr('sprayui.dry.noRain', { hours: rainfast.rainfastHours, pop: rainfast.maxPopPct ?? 0 })}
+      <Provenance source="data" detail={tr('sprayui.nwsGridpoint')} compact />
     </p>
   {:else}
     <p class="msg" role="alert">
       Rain forecast {rainfast.firstRiskMs ? `from ${when(rainfast.firstRiskMs)}` : ''} (max PoP {rainfast.maxPopPct ??
         0}%, {fmt.qty(rainfast.totalPrecipMm / 25.4, 'precip')}) could wash product off before it is
       rainfast.
-      <Provenance source="data" detail="NWS gridpoint forecast" compact />
+      <Provenance source="data" detail={tr('sprayui.nwsGridpoint')} compact />
     </p>
     <p class="msg">
       {#if dryWindow}
-        Next dry window: <strong>{when(dryWindow.startMs)} – {when(dryWindow.endMs)}</strong>.
+        {tr('sprayui.dry.nextWindow')}
+        <strong>{when(dryWindow.startMs)} – {when(dryWindow.endMs)}</strong>.
       {:else}
-        No {rainfast.rainfastHours}-hour dry window in the next 3 days of forecast.
+        {tr('sprayui.dry.noWindow', { hours: rainfast.rainfastHours })}
       {/if}
     </p>
     <label class="ack">
       <input type="checkbox" bind:checked={acknowledged} data-testid="dry-window-ack" />
-      <span>I've checked the forecast and still want to record this application.</span>
+      <span>{tr('sprayui.dry.ack')}</span>
     </label>
   {/if}
 </div>

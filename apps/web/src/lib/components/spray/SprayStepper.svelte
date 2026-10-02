@@ -14,6 +14,8 @@
    *   5. Confirm & record — ready to submit
    */
   import { Check } from 'lucide-svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   export type StepState = 'done' | 'active' | 'pending';
 
@@ -21,9 +23,10 @@
     steps: Array<{ label: string; state: StepState }>;
   }
   const { steps }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
-<nav class="stepper" aria-label="Spray flow progress">
+<nav class="stepper" aria-label={tr('sprayui.stepper.aria')}>
   {#each steps as s, i (s.label)}
     <div class="step" class:done={s.state === 'done'} class:active={s.state === 'active'}>
       <div class="circle" class:done={s.state === 'done'} class:active={s.state === 'active'}>

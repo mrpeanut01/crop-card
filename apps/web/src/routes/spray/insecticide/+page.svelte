@@ -24,8 +24,10 @@
   import { checkNearbyPollinatorBlocks } from '$lib/pollinator/nearbyBlocks';
   import { sunTimesFor } from '$lib/safety/sunTimes';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   // v2 addendum (#89): drives AI-on vs AI-off variant of the
   // SprayDecisionPage shell. Sourced from `user.ai_enabled` via
@@ -74,7 +76,7 @@
       const inBucket = obs.filter((o) => o.occurredAt >= startMs && o.occurredAt < endMs);
       const sum = inBucket.reduce((acc, o) => acc + o.value, 0);
       buckets.push({
-        weekLabel: i === 0 ? 'now' : `−${i}w`,
+        weekLabel: i === 0 ? tr('sprayui.ipm.now') : tr('sprayui.ipm.weeksAgo', { count: i }),
         count: sum,
         triggered: sum >= primaryThreshold.threshold
       });
@@ -173,21 +175,24 @@
     const ipmReady = !primaryThreshold || ipmTriggered;
     const hasObservation = !!scoutPest && scoutValue !== null;
     return [
-      { label: 'Block', state: hasBlock ? 'done' : 'active' },
-      { label: 'Product', state: !hasProduct ? (hasBlock ? 'active' : 'pending') : 'done' },
+      { label: tr('sprayui.step.block'), state: hasBlock ? 'done' : 'active' },
       {
-        label: 'IPM gate',
+        label: tr('sprayui.step.product'),
+        state: !hasProduct ? (hasBlock ? 'active' : 'pending') : 'done'
+      },
+      {
+        label: tr('sprayui.step.ipm'),
         state: !ipmReady ? (hasProduct ? 'active' : 'pending') : 'done'
       },
       {
-        label: 'Observation',
+        label: tr('sprayui.step.observation'),
         state: hasObservation ? 'done' : ipmReady && hasProduct ? 'active' : 'pending'
       },
       {
-        label: 'Conditions',
+        label: tr('sprayui.step.conditions'),
         state: canSubmit ? 'done' : ipmReady ? 'active' : 'pending'
       },
-      { label: 'Record', state: canSubmit ? 'active' : 'pending' }
+      { label: tr('sprayui.step.record'), state: canSubmit ? 'active' : 'pending' }
     ];
   });
 
@@ -216,7 +221,7 @@
     selectedBlock?.cropPluginIds.length
       ? selectedBlock.cropPluginIds.length === 1
         ? selectedBlock.cropPluginIds[0]
-        : `${selectedBlock.cropPluginIds.length} crops`
+        : tr('sprayui.ctx.crops', { count: selectedBlock.cropPluginIds.length })
       : '—'
   );
   const ctxCompatibility = $derived<CompatibilityState | undefined>(
@@ -277,7 +282,7 @@
       if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         const { enqueueRecord } = await import('$lib/client/syncQueue');
         await enqueueRecord('insecticide', body);
-        result = '☁ Offline — queued. Will sync to the server when the connection returns.';
+        result = tr('sprayui.queuedResult');
         return;
       }
       const res = await fetch('/api/insecticide/record', {
@@ -307,7 +312,7 @@
         try {
           const { enqueueRecord } = await import('$lib/client/syncQueue');
           await enqueueRecord('insecticide', body);
-          result = '☁ Offline — queued. Will sync to the server when the connection returns.';
+          result = tr('sprayui.queuedResult');
         } catch (queueErr) {
           error = `offline queue failed: ${
             queueErr instanceof Error ? queueErr.message : queueErr
@@ -323,10 +328,10 @@
 </script>
 
 <section class="card library">
-  <h2>Library</h2>
+  <h2>{tr('sprayui.ins.library')}</h2>
   {#if data.insecticides.length === 0}
     <p>
-      No insecticide plugins installed. Add JSON files under <code>plugins/insecticides/</code>.
+      {tr('sprayui.ins.noPlugins')} <code>plugins/insecticides/</code>.
     </p>
   {:else}
     <ul class="library-list">
@@ -351,7 +356,7 @@
           </div>
           {#if p.scoutingThresholds.length}
             <details>
-              <summary>Scouting thresholds</summary>
+              <summary>{tr('sprayui.ins.thresholds')}</summary>
               <ul>
                 {#each p.scoutingThresholds as t (t.pest + t.metric)}
                   <li>{t.pest}: spray at {t.threshold} {t.metric}</li>
@@ -361,7 +366,7 @@
           {/if}
           {#if p.applicationProtocol.length}
             <details>
-              <summary>Application protocol</summary>
+              <summary>{tr('sprayui.ins.protocol')}</summary>
               <ol>
                 {#each p.applicationProtocol as s, i (i)}
                   <li>{s.step}{s.detail ? ` — ${s.detail}` : ''}</li>
@@ -416,11 +421,11 @@
   {violations}
   {aiEnabled}
   {canSubmit}
-  submitLabel="Record application"
+  submitLabel={tr('sprayui.ins.submit')}
   onSubmit={recordSpray}
 >
   {#snippet productSection()}
-    <label for="insecticide-product">Insecticide</label>
+    <label for="insecticide-product">{tr('sprayui.ins.product')}</label>
     <select id="insecticide-product" bind:value={selectedPluginId} required>
       {#each data.insecticides as p (p.pluginId)}
         <option value={p.pluginId}>{p.displayName}</option>
@@ -429,32 +434,40 @@
   {/snippet}
 
   {#snippet observation()}
-    <label for="scout-pest">Pest</label>
-    <input id="scout-pest" type="text" bind:value={scoutPest} placeholder="e.g. squash bug, ECB" />
-    <label for="scout-metric">Metric</label>
+    <label for="scout-pest">{tr('sprayui.obs.pest')}</label>
+    <input
+      id="scout-pest"
+      type="text"
+      bind:value={scoutPest}
+      placeholder={tr('sprayui.obs.pestPlaceholder')}
+    />
+    <label for="scout-metric">{tr('sprayui.obs.metric')}</label>
     <select id="scout-metric" bind:value={scoutMetric}>
-      <option value="count-per-plant">count per plant</option>
-      <option value="pct-defoliation">% defoliation</option>
-      <option value="pct-infested-plants">% infested plants</option>
+      <option value="count-per-plant">{tr('sprayui.obs.countPerPlant')}</option>
+      <option value="pct-defoliation">{tr('sprayui.obs.defoliation')}</option>
+      <option value="pct-infested-plants">{tr('sprayui.obs.infested')}</option>
     </select>
-    <label for="scout-value">Value</label>
+    <label for="scout-value">{tr('sprayui.obs.value')}</label>
     <input id="scout-value" type="number" min="0" step="any" bind:value={scoutValue} />
   {/snippet}
 
   {#snippet recentEvents()}
     <section class="card recent">
-      <h2>Recent applications</h2>
+      <h2>{tr('sprayui.recent.title')}</h2>
       {#if data.recentEvents.length === 0}
-        <p>No insecticide events yet.</p>
+        <p>{tr('sprayui.ins.noEvents')}</p>
       {:else}
         <ul>
           {#each data.recentEvents as e (e.id)}
             <li>
               {fmt.instant(e.occurredAt, 'date')} —
               {e.products.map((p) => p.displayName).join(', ')}
-              on block {e.blockId}
+              {tr('sprayui.recent.onBlock', { block: e.blockId })}
               {#if e.scoutObservation}
-                (triggered by {e.scoutObservation.pest} {e.scoutObservation.value})
+                {tr('sprayui.ins.triggeredBy', {
+                  pest: e.scoutObservation.pest,
+                  value: e.scoutObservation.value
+                })}
               {/if}
             </li>
           {/each}
@@ -470,9 +483,7 @@
       shown={aiEnabled
         ? ['plugin', 'data', 'ai', 'manual']
         : ['plugin', 'data', 'fallback', 'manual']}
-      note={aiEnabled
-        ? 'Mix and rates pre-populated · all editable'
-        : 'AI off · plugin defaults filled · all editable'}
+      note={aiEnabled ? tr('sprayui.legend.ai') : tr('sprayui.legend.noAi')}
     />
   {/snippet}
 
@@ -482,23 +493,23 @@
          Single-product UI today renders just the plugin badge; real
          per-row wiring lands when the tank-mix calculator is on this
          shell (deferred to a follow-up). -->
-    <Provenance source="plugin" detail="rotation kernel" compact />
+    <Provenance source="plugin" detail={tr('sprayui.prov.rotationKernel')} compact />
     {#if aiEnabled}
       <Provenance source="ai" confidence={0.84} compact />
     {:else}
-      <Provenance source="fallback" detail="deterministic default" compact />
+      <Provenance source="fallback" detail={tr('sprayui.prov.deterministic')} compact />
     {/if}
   {/snippet}
 
   {#snippet ipmGate()}
     <header class="gate-header">
-      <h2>IPM threshold gate</h2>
+      <h2>{tr('sprayui.ipm.title')}</h2>
       {#if ipmTriggered}
         <span class="pill-triggered">Triggered</span>
       {:else if primaryThreshold}
         <span class="pill-pending">Below threshold</span>
       {/if}
-      <Provenance source="data" detail="your scout log" compact />
+      <Provenance source="data" detail={tr('sprayui.ipm.scoutLog')} compact />
       {#if primaryThreshold}
         <Provenance
           source="plugin"
@@ -506,29 +517,30 @@
           compact
         />
       {:else}
-        <Provenance source="plugin" detail="no threshold declared" compact />
+        <Provenance source="plugin" detail={tr('sprayui.ipm.noThreshold')} compact />
       {/if}
     </header>
 
     {#if primaryThreshold}
       <div class="ipm-grid">
         <div class="ipm-dial">
-          <div class="dial-kicker">This week</div>
+          <div class="dial-kicker">{tr('sprayui.ipm.thisWeek')}</div>
           <div class="dial-row">
             <span class="dial-num serif" class:over={ipmTriggered}>{thisWeekCount}</span>
             <span class="dial-unit">{primaryThreshold.metric.replace(/-/g, ' ')}</span>
           </div>
           <div class="dial-sub">
-            Action threshold <span class="mono">≥{primaryThreshold.threshold}</span>
+            {tr('sprayui.ipm.actionThreshold')}
+            <span class="mono">≥{primaryThreshold.threshold}</span>
             {#if ipmTriggered}
-              · <span class="over">+{overBy} over</span>
+              · <span class="over">{tr('sprayui.ipm.over', { count: overBy })}</span>
             {:else}
-              · {primaryThreshold.threshold - thisWeekCount} below
+              · {tr('sprayui.ipm.below', { count: primaryThreshold.threshold - thisWeekCount })}
             {/if}
           </div>
         </div>
         <div class="ipm-sparkline">
-          <div class="spark-kicker">5-week history</div>
+          <div class="spark-kicker">{tr('sprayui.ipm.history')}</div>
           <div class="spark-bars">
             {#each sparkline as b (b.weekLabel)}
               <div class="spark-col" title={`${b.weekLabel}: ${b.count}`}>
@@ -545,7 +557,7 @@
             {/each}
             <div class="spark-divider" aria-hidden="true"></div>
             <div class="spark-threshold">
-              <span class="spark-threshold-label">threshold</span>
+              <span class="spark-threshold-label">{tr('sprayui.ipm.thresholdLabel')}</span>
               <span class="mono spark-threshold-value">{primaryThreshold.threshold}</span>
             </div>
           </div>
@@ -553,8 +565,7 @@
       </div>
     {:else}
       <p class="gate-body">
-        Selected product declares no scouting thresholds. AI-assisted gap-fill (#87) brings this to
-        ≥95% coverage before promotion.
+        {tr('sprayui.ipm.noThresholds')}
       </p>
     {/if}
   {/snippet}
@@ -574,16 +585,16 @@
 
   {#snippet noBlocks()}
     <SetupCallout
-      kicker="Where?"
-      title="Where are you spraying?"
+      kicker={tr('sprayui.where.whereKicker')}
+      title={tr('sprayui.where.whereTitle')}
       canEdit={data.setup.canEdit}
-      askOwner="Ask the owner to add the spot you're spraying. Once it's on the farm it shows up here."
+      askOwner={tr('sprayui.where.spotAskOwner')}
       testId="spray-where"
     >
-      <p>There's nowhere on the farm to pick yet. Give the spot a name and carry on.</p>
+      <p>{tr('sprayui.where.spotBody')}</p>
       {#snippet actions()}
         <button type="button" class="primary" onclick={() => (spotSheetOpen = true)}>
-          Name a new spot
+          {tr('sprayui.where.nameSpot')}
         </button>
       {/snippet}
     </SetupCallout>
@@ -592,8 +603,8 @@
 
 <SetupSheet
   open={spotSheetOpen}
-  kicker="Spray"
-  title="Where?"
+  kicker={tr('sprayui.sheet.kicker')}
+  title={tr('sprayui.where.whereKicker')}
   onClose={() => (spotSheetOpen = false)}
   onDone={onSpotAdded}
 >

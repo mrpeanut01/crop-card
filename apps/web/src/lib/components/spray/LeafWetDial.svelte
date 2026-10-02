@@ -1,5 +1,7 @@
 <script lang="ts">
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import type { WeatherProvenance, WindowCount } from '$lib/weather/leafWet';
 
   interface Props {
@@ -10,6 +12,8 @@
   }
 
   const { past, next, threshold, provenance }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   const SIZE = 132;
   const STROKE = 12;
@@ -28,17 +32,23 @@
   });
   const label = $derived(
     available
-      ? `Leaf-wet hours: ${next.wetHours} of the next ${next.coveredHours} forecast hours; threshold ${threshold} hours${favorable ? ', infection-favorable' : ''}.`
-      : 'Leaf-wet hours unavailable — no forecast data.'
+      ? tr(favorable ? 'sprayui.leaf.ariaFavorable' : 'sprayui.leaf.aria', {
+          wet: next.wetHours,
+          covered: next.coveredHours,
+          threshold
+        })
+      : tr('sprayui.leaf.ariaNone')
   );
 </script>
 
 <div class="leaf-wet" data-testid="leaf-wet-dial">
   <div class="head">
-    <span class="kicker">Leaf-wet hours</span>
+    <span class="kicker">{tr('sprayui.leaf.kicker')}</span>
     <Provenance
       source={provenance}
-      detail={provenance === 'data' ? 'NWS gridpoint · RH ≥ 90% proxy' : 'weather unavailable'}
+      detail={provenance === 'data'
+        ? tr('sprayui.leaf.nwsProxy')
+        : tr('sprayui.weatherUnavailableShort')}
       compact
     />
   </div>
@@ -82,26 +92,32 @@
       >
         {available ? next.wetHours : '—'}
       </text>
-      <text x={SIZE / 2} y={SIZE / 2 + 24} text-anchor="middle" class="unit">hrs · next 24h</text>
+      <text x={SIZE / 2} y={SIZE / 2 + 24} text-anchor="middle" class="unit"
+        >{tr('sprayui.leaf.unit')}</text
+      >
     </svg>
     <div class="facts">
       {#if available}
         <p class="status" class:favorable>
-          {favorable ? 'Infection-favorable wetness ahead' : 'Below wetness threshold'}
+          {favorable ? tr('sprayui.leaf.favorable') : tr('sprayui.leaf.below')}
         </p>
-        <p>Threshold <strong class="mono">≥{threshold} h</strong> (generic foliar-fungus guide)</p>
         <p>
-          Last 24h:
+          {tr('sprayui.leaf.threshold')} <strong class="mono">≥{threshold} h</strong>
+          {tr('sprayui.leaf.guide')}
+        </p>
+        <p>
+          {tr('sprayui.leaf.last24')}
           {#if past.coveredHours > 0}
             <strong class="mono">{past.wetHours} h</strong>
-            {#if past.coveredHours < 24}<span class="muted">({past.coveredHours} h of data)</span
+            {#if past.coveredHours < 24}<span class="muted"
+                >{tr('sprayui.leaf.hoursOfData', { hours: past.coveredHours })}</span
               >{/if}
           {:else}
-            <span class="muted">not in forecast feed</span>
+            <span class="muted">{tr('sprayui.leaf.notInFeed')}</span>
           {/if}
         </p>
       {:else}
-        <p class="status">Weather unavailable — check conditions yourself.</p>
+        <p class="status">{tr('sprayui.weatherUnavailable')}</p>
       {/if}
     </div>
   </div>

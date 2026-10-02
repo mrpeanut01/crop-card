@@ -1,5 +1,7 @@
 <script lang="ts">
   import { fmt } from '$lib/prefsState.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { DailyTotal, WeatherProvenance } from '$lib/weather/leafWet';
 
@@ -10,6 +12,8 @@
   }
 
   const { rain, leafWet = [], provenance }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   const W = 260;
   const H = 72;
@@ -29,23 +33,27 @@
 
   const summary = $derived(
     rain.length === 0
-      ? 'Five-day rain forecast unavailable.'
-      : `Five-day rain forecast: ${rain.map((d) => `${dayLabel(d.date)} ${rainText(d.value)}`).join(', ')}.`
+      ? tr('sprayui.rain.unavailable')
+      : tr('sprayui.rain.summary', {
+          days: rain.map((d) => `${dayLabel(d.date)} ${rainText(d.value)}`).join(', ')
+        })
   );
 </script>
 
 <div class="rain" data-testid="rain-sparkline">
   <div class="head">
-    <span class="kicker">5-day rain</span>
+    <span class="kicker">{tr('sprayui.rain.kicker')}</span>
     <Provenance
       source={provenance}
-      detail={provenance === 'data' ? 'NWS QPF' : 'weather unavailable'}
+      detail={provenance === 'data' ? 'NWS QPF' : tr('sprayui.weatherUnavailableShort')}
       compact
     />
-    {#if rain.length > 0}<span class="total mono">{rainText(totalMm)} total</span>{/if}
+    {#if rain.length > 0}<span class="total mono"
+        >{tr('sprayui.rain.total', { amount: rainText(totalMm) })}</span
+      >{/if}
   </div>
   {#if rain.length === 0}
-    <p class="empty">Weather unavailable — check conditions yourself.</p>
+    <p class="empty">{tr('sprayui.weatherUnavailable')}</p>
   {:else}
     <svg viewBox="0 0 {W} {H + 42}" role="img" aria-label={summary}>
       {#each rain as d, i (d.date)}
@@ -66,7 +74,7 @@
         </text>
         {#if wetByDate.has(d.date)}
           <text x={i * (barW + GAP) + barW / 2} y={H + 39} text-anchor="middle" class="wet">
-            {wetByDate.get(d.date)}h wet
+            {tr('sprayui.rain.wet', { hours: wetByDate.get(d.date) ?? 0 })}
           </text>
         {/if}
       {/each}

@@ -9,6 +9,8 @@
 
 <script lang="ts">
   import { fmt } from '$lib/prefsState.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
@@ -25,6 +27,7 @@
 
   const { violations, prior, proposedFracCodes, tankOverlapCode = null }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const blocked = $derived(violations.length > 0);
   const warn = $derived(!blocked && !!tankOverlapCode);
   const status = $derived<'pass' | 'warn' | 'block' | 'idle'>(
@@ -44,7 +47,7 @@
 
 <div class="tile {status}" data-testid="frac-rotation-tile" data-state={status}>
   <div class="head">
-    <span class="title">FRAC rotation</span>
+    <span class="title">{tr('sprayui.frac.title')}</span>
     {#if status === 'block'}
       <Pill tone="rust">Same group as last spray</Pill>
     {:else if status === 'warn'}
@@ -52,20 +55,20 @@
     {:else if status === 'pass'}
       <Pill tone="forest">Group cleared</Pill>
     {:else}
-      <Pill tone="neutral">Pick a product</Pill>
+      <Pill tone="neutral">{tr('sprayui.frac.pick')}</Pill>
     {/if}
-    <span class="enforced">Kernel-enforced</span>
+    <span class="enforced">{tr('sprayui.frac.enforced')}</span>
   </div>
 
   <div class="groups">
-    <span class="lbl">Last</span>
+    <span class="lbl">{tr('sprayui.frac.last')}</span>
     {#if prior}
       {#each prior.fracCodes as code (code)}<GroupCodeBadge kind="FRAC" group={code} />{/each}
     {:else}
-      <span class="muted">none on record</span>
+      <span class="muted">{tr('sprayui.frac.none')}</span>
     {/if}
     <span class="arrow" aria-hidden="true">→</span>
-    <span class="lbl">Next</span>
+    <span class="lbl">{tr('sprayui.frac.next')}</span>
     {#each proposedFracCodes as code (code)}<GroupCodeBadge kind="FRAC" group={code} />{/each}
     {#if proposedFracCodes.length === 0}<span class="muted">—</span>{/if}
   </div>
@@ -86,10 +89,10 @@
     {:else if status === 'pass'}
       No prior fungicide recorded on this block — nothing to rotate against.
     {:else}
-      Select a product to check rotation against this block's spray history.
+      {tr('sprayui.frac.idle')}
     {/if}
-    <Provenance source="plugin" detail="FRAC codes from plugin label" compact />
-    {#if prior}<Provenance source="data" detail="your fungicide records" compact />{/if}
+    <Provenance source="plugin" detail={tr('sprayui.frac.codesFromLabel')} compact />
+    {#if prior}<Provenance source="data" detail={tr('sprayui.frac.yourRecords')} compact />{/if}
   </p>
 </div>
 

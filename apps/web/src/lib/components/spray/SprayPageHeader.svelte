@@ -1,5 +1,7 @@
 <script lang="ts">
   import { fmt } from '$lib/prefsState.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
@@ -42,30 +44,10 @@
 
   const { chemistry, title, lede, activeREI = [], gates }: Props = $props();
 
-  const KICKER: Record<Chemistry, string> = {
-    herbicide: 'Spray · Herbicide · Kernel-gated',
-    insecticide: 'IPM · IRAC-grouped library',
-    fungicide: 'Spray · FRAC-rotated · weather-aware'
-  };
-
-  const DEFAULT_TITLE: Record<Chemistry, string> = {
-    herbicide: 'Plan a spray',
-    insecticide: 'Insecticides',
-    fungicide: 'Fungicide application'
-  };
-
-  const DEFAULT_LEDE: Record<Chemistry, string> = {
-    herbicide:
-      'Pick a block, herbicide(s), sprayer, and conditions. The safety kernel decides whether the dilution table renders or you get a STOP card.',
-    insecticide:
-      "The kernel enforces environmental gates + REI / PHI; safety rules for crop tolerance live in the herbicide kill matrix and don't apply to insecticides.",
-    fungicide:
-      'Records an immutable fungicide event with REI / PHI lockouts. FRAC code rotation hints help prevent resistance — avoid two consecutive sprays sharing the same code on the same block.'
-  };
-
-  const kickerText = $derived(KICKER[chemistry]);
-  const titleText = $derived(title ?? DEFAULT_TITLE[chemistry]);
-  const ledeText = $derived(lede ?? DEFAULT_LEDE[chemistry]);
+  const tr = $derived(createT(page.data?.locale));
+  const kickerText = $derived(tr(`sprayui.header.kicker.${chemistry}`));
+  const titleText = $derived(title ?? tr(`sprayui.header.title.${chemistry}`));
+  const ledeText = $derived(lede ?? tr(`sprayui.header.lede.${chemistry}`));
 </script>
 
 <header class="page-header">
@@ -78,15 +60,15 @@
   {#if gates}
     {@render gates()}
   {:else if chemistry === 'herbicide'}
-    <Pill tone="forest">IPM threshold gate · enforced</Pill>
-    <Pill tone="forest">Pollinator-bloom gate · enforced</Pill>
+    <Pill tone="forest">{tr('sprayui.header.gate.ipm')}</Pill>
+    <Pill tone="forest">{tr('sprayui.header.gate.pollinator')}</Pill>
   {:else if chemistry === 'insecticide'}
-    <Pill tone="forest">IPM threshold gate · enforced</Pill>
-    <Pill tone="forest">Pollinator-bloom gate · enforced</Pill>
+    <Pill tone="forest">{tr('sprayui.header.gate.ipm')}</Pill>
+    <Pill tone="forest">{tr('sprayui.header.gate.pollinator')}</Pill>
   {:else if chemistry === 'fungicide'}
-    <Pill tone="forest">FRAC rotation · enforced</Pill>
-    <Pill tone="sky">Rain/dew dry window · advisory</Pill>
-    <Pill tone="neutral">Disease forecast (NEWA / FHB) · coming in Phase 26</Pill>
+    <Pill tone="forest">{tr('sprayui.header.gate.frac')}</Pill>
+    <Pill tone="sky">{tr('sprayui.header.gate.dryWindow')}</Pill>
+    <Pill tone="neutral">{tr('sprayui.header.gate.forecast')}</Pill>
   {/if}
 </div>
 

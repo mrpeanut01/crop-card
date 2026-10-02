@@ -25,6 +25,8 @@
   } from 'lucide-svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import { fmt } from '$lib/prefsState.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   export type CompatibilityTone = 'forest' | 'wheat' | 'rust';
   export interface CompatibilityState {
@@ -73,6 +75,7 @@
     pastureNotice = null
   }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const totalAc = $derived(blocks.reduce((sum, b) => sum + (b.acres ?? 0), 0));
   const primaryTargets = $derived(targets.filter((t) => t.pressure === 'heavy'));
   const otherTargets = $derived(targets.filter((t) => t.pressure !== 'heavy'));
@@ -83,17 +86,20 @@
     <div class="cs-cell">
       <div class="cs-k">
         <MapIcon size={12} strokeWidth={1.75} />
-        {blocks.length === 1 ? 'Block' : `Blocks · ${blocks.length}`}
+        {blocks.length === 1
+          ? tr('sprayui.ctx.block')
+          : tr('sprayui.ctx.blocks', { count: blocks.length })}
       </div>
       {#if blocks.length === 0}
-        <div class="cs-empty">No block selected yet</div>
+        <div class="cs-empty">{tr('sprayui.ctx.noBlock')}</div>
       {:else if blocks.length === 1}
         <div class="cs-line">
           {blocks[0].label} · <span class="mono">{fmt.label(totalAc, 'area', { digits: 1 })}</span>
         </div>
       {:else}
         <div class="cs-line strong">
-          <span class="mono">{fmt.label(totalAc, 'area', { digits: 1 })}</span> combined
+          <span class="mono">{fmt.label(totalAc, 'area', { digits: 1 })}</span>
+          {tr('sprayui.ctx.combined')}
         </div>
         <div class="cs-chips">
           {#each blocks as b (b.id)}
@@ -108,7 +114,7 @@
           {#if onAddBlock}
             <button class="chip dashed" onclick={onAddBlock} type="button">
               <Plus size={9} strokeWidth={2.5} />
-              Add block
+              {tr('sprayui.ctx.addBlock')}
             </button>
           {/if}
         </div>
@@ -118,7 +124,7 @@
     <div class="cs-cell">
       <div class="cs-k">
         <Sprout size={12} strokeWidth={1.75} />
-        Crop
+        {tr('sprayui.ctx.crop')}
       </div>
       <div class="cs-line">{cropLabel || '—'}</div>
       {#if cropSubtitle}
@@ -129,7 +135,7 @@
     <div class="cs-cell">
       <div class="cs-k">
         <Layers size={12} strokeWidth={1.75} />
-        Stage
+        {tr('sprayui.ctx.stage')}
       </div>
       <div class="cs-line">{stageLabel || '—'}</div>
       {#if stageHint}
@@ -140,7 +146,7 @@
     <div class="cs-cell">
       <div class="cs-k">
         <Compass size={12} strokeWidth={1.75} />
-        Target weeds{#if targets.length > 0}
+        {tr('sprayui.ctx.targetWeeds')}{#if targets.length > 0}
           · {targets.length}{/if}
       </div>
       {#if targets.length === 0}
@@ -154,7 +160,9 @@
             <span class="chip wheat">{t.name.split(' ')[0]}</span>
           {/each}
           {#if otherTargets.length > 2}
-            <span class="chip dashed">+ {otherTargets.length - 2} more</span>
+            <span class="chip dashed"
+              >{tr('sprayui.ctx.more', { count: otherTargets.length - 2 })}</span
+            >
           {/if}
         </div>
       {/if}
@@ -162,7 +170,7 @@
   </div>
 
   {#if pastureNotice && pastureNotice.length}
-    <div class="cs-pasture" role="note" aria-label="Animals on this Area">
+    <div class="cs-pasture" role="note" aria-label={tr('sprayui.ctx.animalsAria')}>
       <PawPrint size={15} strokeWidth={1.75} aria-hidden="true" />
       <ul>
         {#each pastureNotice as line, i (i)}
@@ -182,12 +190,12 @@
       <span>
         <strong>{compatibility.label}.</strong>
         {#if compatibility.reason}
-          <span class="why" title={compatibility.reason}>Why?</span>
+          <span class="why" title={compatibility.reason}>{tr('sprayui.ctx.why')}</span>
         {/if}
       </span>
       {#if onChangeSelection}
         <button class="change" onclick={onChangeSelection} type="button">
-          Change selection →
+          {tr('sprayui.ctx.change')}
         </button>
       {/if}
     </div>

@@ -493,7 +493,7 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'plugins.new.helpPhiDefault':
     'Días entre la última aplicación y una cosecha legal. Se aplican por defecto a todos los químicos; cada aplicación puede reemplazarlo por producto.',
   'plugins.new.helpPhiF': 'Días entre la última aplicación y una cosecha legal.',
-  'plugins.new.helpPhiLabel': '¿Qué es el IPC?',
+  'plugins.new.helpPhiLabel': '¿Qué es el PHI?',
   'plugins.new.helpPollLabel': '¿Qué es el riesgo para polinizadores?',
   'plugins.new.helpPost':
     'Se activan después de una fase de referencia (p. ej. «Pasar rastra a los residuos 7 d después de la cosecha»).',
@@ -509,11 +509,11 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'plugins.new.helpRateLabel': '¿Qué es la dosis por acre?',
   'plugins.new.helpReiF':
     'Los trabajadores de campo deben esperar estas horas después de aplicar antes de volver a entrar al área tratada.',
-  'plugins.new.helpReiLabel': '¿Qué es el IRE?',
+  'plugins.new.helpReiLabel': '¿Qué es el REI?',
   'plugins.new.helpSeasonal':
     'Tareas recurrentes ancladas al calendario o relativas a la siembra (p. ej. «Monitorear SWD cada semana durante el cuajado del fruto»).',
   'plugins.new.helpTimingF':
-    'DORMANT = cobre de invierno / cal azufrada. PRE-BLOOM / BLOOM / POST-BLOOM = ventanas de fuego bacteriano y sarna en huertos. COVER = protector del follaje. PRE-HARVEST = protección contra enfermedades a fin de temporada dentro del IPC.',
+    'DORMANT = cobre de invierno / cal azufrada. PRE-BLOOM / BLOOM / POST-BLOOM = ventanas de fuego bacteriano y sarna en huertos. COVER = protector del follaje. PRE-HARVEST = protección contra enfermedades a fin de temporada dentro del PHI.',
   'plugins.new.helpTimingH':
     'BURNDOWN = eliminación no selectiva de la vegetación existente antes de sembrar. PRE = residual de preemergencia. POST = posemergencia sobre el cultivo establecido. POST-DIRECTED = aplicación dirigida entre hileras, protegiendo el cultivo.',
   'plugins.new.helpTimingLabel': '¿Qué es el momento de aplicación?',

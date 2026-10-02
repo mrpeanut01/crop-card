@@ -10,6 +10,8 @@
   import { isHousingAreaKind } from '$lib/animals/model';
   import { formatInstant, type Prefs } from '$lib/prefs';
   import type { Food, ProductionUse } from '$lib/safety/animalWithdrawal';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     snapshot: FarmSnapshot;
@@ -24,6 +26,7 @@
 
   const { snapshot, groupId, role, prefs, now, unsynced, onChange }: Props = $props();
   const uid = $props.id();
+  const tr = $derived(createT(page.data?.locale));
 
   type Action = 'log' | 'treat' | 'move' | 'feed';
   const group = $derived(snapshot.animalGroups?.find((g) => g.id === groupId) ?? null);
@@ -36,6 +39,9 @@
   });
   const unit = $derived(food === 'milk' ? 'qt' : 'eggs');
   const unitLabel = $derived(food === 'milk' ? 'quarts' : 'eggs');
+  const unitName = $derived(
+    food === 'milk' ? tr('animals.quick.quarts') : tr('animals.unit.eggs').toLowerCase()
+  );
   const feedItems = $derived(
     (snapshot.stock ?? []).filter(
       (s) => (s.category as string) === 'feed' || (s.category as string) === 'bedding'
@@ -85,9 +91,10 @@
   }
 
   function outcomeText(out: RecordOutcome, what: string): string | null {
-    if (out.status === 'queued')
-      return `${what} saved on this phone. It will sync when you have signal.`;
-    if (out.status === 'saved') return [`${what} saved.`, ...out.warnings].join(' ');
+    if (out.status === 'queued') return tr('animals.quick.whatQueued', { what });
+    if (out.status === 'saved') {
+      return [tr('animals.quick.whatSaved', { what }), ...out.warnings].join(' ');
+    }
     return null;
   }
 
@@ -110,7 +117,7 @@
       reset();
       onChange?.();
     } catch {
-      error = 'That could not be saved. Try again.';
+      error = tr('animals.quick.saveFailed');
     } finally {
       saving = false;
     }
@@ -118,7 +125,7 @@
 
   function logProduction(asUse: ProductionUse) {
     if (!food || !(count > 0)) {
-      error = `Enter how many ${unitLabel}.`;
+      error = tr('animals.quick.enterHowMany', { unit: unitName });
       return;
     }
     void run(
@@ -132,7 +139,7 @@
           use: asUse,
           occurredAt: Date.now()
         }),
-      asUse === 'discard' ? `${count} ${unitLabel} thrown out:` : `${count} ${unitLabel}:`,
+      asUse === 'discard' ? `${count} ${unitLabel} thrown out:` : `${count} ${unitName}:`,
       () => {
         count = 0;
         use = 'food';
@@ -144,7 +151,7 @@
     e.preventDefault();
     const name = productName.trim();
     if (!name) {
-      error = 'Enter what was given.';
+      error = tr('animals.quick.enterGiven');
       return;
     }
     void run(
@@ -158,7 +165,7 @@
           administeredAt: Date.now(),
           labelUse: 'unknown'
         }),
-      'Treatment',
+      tr('animals.quick.whatTreatment'),
       () => {
         productName = '';
         route = '';
@@ -171,7 +178,7 @@
     error = null;
     message = null;
     if (!fieldId) {
-      error = 'Pick where they are going.';
+      error = tr('animals.quick.pickWhere');
       return;
     }
     if (movePre.verdict === 'stop') {
@@ -185,13 +192,13 @@
       else {
         message =
           out.status === 'queued'
-            ? 'Move saved on this phone. It will sync when you have signal.'
-            : ['Moved.', ...(out.warnings ?? [])].join(' ');
+            ? tr('animals.quick.moveQueued')
+            : [tr('animals.quick.moved'), ...(out.warnings ?? [])].join(' ');
         fieldId = '';
         onChange?.();
       }
     } catch {
-      error = 'That could not be saved. Try again.';
+      error = tr('animals.quick.saveFailed');
     } finally {
       saving = false;
     }
@@ -200,13 +207,13 @@
   function logFeed(e: SubmitEvent) {
     e.preventDefault();
     if (!feedItemId || !(feedLb && feedLb > 0)) {
-      error = 'Pick the feed and enter the pounds used.';
+      error = tr('animals.quick.pickFeed');
       return;
     }
     const lb = feedLb;
     void run(
       () => submitFeedUse(feedItemId, { lb, subjectType: 'group', subjectId: groupId }),
-      `${lb} lb of feed`,
+      tr('animals.quick.whatFeed', { lb }),
       () => (feedLb = null)
     );
   }
@@ -214,7 +221,7 @@
 
 {#if group}
   <section class="qa" aria-labelledby="{uid}-h" data-testid="flock-quick-actions">
-    <h2 id="{uid}-h">Quick actions</h2>
+    <h2 id="{uid}-h">{tr('animals.quick.title')}</h2>
     {#if food}
       <p
         class="chip"
@@ -247,7 +254,7 @@
           aria-expanded={open === 'log'}
           onclick={() => toggle('log')}
         >
-          Log {unitLabel}
+          {tr('animals.quick.log', { unit: unitName })}
         </button>
       {/if}
       <button
@@ -256,7 +263,7 @@
         aria-expanded={open === 'treat'}
         onclick={() => toggle('treat')}
       >
-        Log treatment
+        {tr('animals.quick.logTreatment')}
       </button>
       <button
         type="button"
@@ -264,7 +271,7 @@
         aria-expanded={open === 'move'}
         onclick={() => toggle('move')}
       >
-        Move
+        {tr('animals.moveAction')}
       </button>
       {#if feedItems.length}
         <button
@@ -273,17 +280,22 @@
           aria-expanded={open === 'feed'}
           onclick={() => toggle('feed')}
         >
-          Feed
+          {tr('animals.quick.feed')}
         </button>
       {/if}
     </div>
 
     {#if open === 'log' && food}
-      <div class="af-form" role="group" aria-label="Log {unitLabel}">
-        <span class="af-label" id="{uid}-count">How many {unitLabel}</span>
+      <div class="af-form" role="group" aria-label={tr('animals.quick.log', { unit: unitName })}>
+        <span class="af-label" id="{uid}-count"
+          >{tr('animals.quick.howMany', { unit: unitName })}</span
+        >
         <div class="stepper" aria-labelledby="{uid}-count">
-          <button type="button" class="af-ghost sq" aria-label="One fewer" onclick={() => step(-1)}
-            >−</button
+          <button
+            type="button"
+            class="af-ghost sq"
+            aria-label={tr('animals.quick.oneFewer')}
+            onclick={() => step(-1)}>−</button
           >
           {#if typing}
             <!-- svelte-ignore a11y_autofocus -->
@@ -292,7 +304,7 @@
               type="number"
               min="0"
               inputmode="numeric"
-              aria-label="How many {unitLabel}"
+              aria-label={tr('animals.quick.howMany', { unit: unitName })}
               autofocus
               bind:value={count}
               onblur={() => (typing = false)}
@@ -301,12 +313,15 @@
             <button
               type="button"
               class="af-ghost num"
-              aria-label="{count} {unitLabel}. Tap to type."
-              onclick={() => (typing = true)}>{count} <small>{unitLabel}</small></button
+              aria-label={tr('animals.quick.tapToType', { count, unit: unitName })}
+              onclick={() => (typing = true)}>{count} <small>{unitName}</small></button
             >
           {/if}
-          <button type="button" class="af-ghost sq" aria-label="One more" onclick={() => step(1)}
-            >+</button
+          <button
+            type="button"
+            class="af-ghost sq"
+            aria-label={tr('animals.quick.oneMore')}
+            onclick={() => step(1)}>+</button
           >
         </div>
         <fieldset class="af-fieldset">
@@ -342,19 +357,25 @@
             disabled={saving}
             onclick={() => logProduction(use)}
           >
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? tr('animals.saving') : tr('animals.save')}
           </button>
         {/if}
       </div>
     {:else if open === 'treat'}
-      <form class="af-form" onsubmit={logTreatment} aria-label="Log a treatment" novalidate>
-        <label class="af-label" for="{uid}-prod">What was given</label>
+      <form
+        class="af-form"
+        onsubmit={logTreatment}
+        aria-label={tr('animals.quick.logTreatmentAria')}
+        novalidate
+      >
+        <label class="af-label" for="{uid}-prod">{tr('animals.quick.whatGiven')}</label>
         <input id="{uid}-prod" class="af-input" bind:value={productName} maxlength="200" />
         <label class="af-label" for="{uid}-route"
-          >How it was given <span class="af-optional">(optional)</span></label
+          >{tr('animals.quick.howGiven')}
+          <span class="af-optional">{tr('animals.optional')}</span></label
         >
         <select id="{uid}-route" class="af-input" bind:value={route}>
-          <option value="">Not sure</option>
+          <option value="">{tr('animals.quick.notSure')}</option>
           {#each ROUTE_CHOICES as r (r.value)}<option value={r.value}>{r.label}</option>{/each}
         </select>
         <p class="af-help">
@@ -362,14 +383,14 @@
           or the vet. The owner can add this when online.
         </p>
         <button class="af-primary wide" type="submit" disabled={saving}
-          >{saving ? 'Saving…' : 'Save'}</button
+          >{saving ? tr('animals.saving') : tr('animals.save')}</button
         >
       </form>
     {:else if open === 'move'}
-      <form class="af-form" onsubmit={move} aria-label="Move the flock" novalidate>
-        <label class="af-label" for="{uid}-area">Move them to</label>
+      <form class="af-form" onsubmit={move} aria-label={tr('animals.quick.moveFlock')} novalidate>
+        <label class="af-label" for="{uid}-area">{tr('animals.quick.moveThemTo')}</label>
         <select id="{uid}-area" class="af-input" bind:value={fieldId}>
-          <option value="">Pick an Area</option>
+          <option value="">{tr('animals.quick.pickArea')}</option>
           {#each areas as a (a.id)}<option value={a.id}>{a.name}</option>{/each}
         </select>
         {#if movePre.verdict === 'stop'}
@@ -382,17 +403,22 @@
           type="submit"
           disabled={saving || movePre.verdict === 'stop'}
         >
-          {saving ? 'Saving…' : 'Move'}
+          {saving ? tr('animals.saving') : tr('animals.moveAction')}
         </button>
       </form>
     {:else if open === 'feed'}
-      <form class="af-form" onsubmit={logFeed} aria-label="Log feed used" novalidate>
-        <label class="af-label" for="{uid}-feed">Feed</label>
+      <form
+        class="af-form"
+        onsubmit={logFeed}
+        aria-label={tr('animals.quick.logFeedAria')}
+        novalidate
+      >
+        <label class="af-label" for="{uid}-feed">{tr('animals.quick.feed')}</label>
         <select id="{uid}-feed" class="af-input" bind:value={feedItemId}>
-          <option value="">Pick the feed</option>
+          <option value="">{tr('animals.quick.pickTheFeed')}</option>
           {#each feedItems as f (f.id)}<option value={f.id}>{f.displayName}</option>{/each}
         </select>
-        <label class="af-label" for="{uid}-lb">Pounds used</label>
+        <label class="af-label" for="{uid}-lb">{tr('animals.quick.poundsUsed')}</label>
         <input
           id="{uid}-lb"
           class="af-input"
@@ -403,7 +429,7 @@
           bind:value={feedLb}
         />
         <button class="af-primary wide" type="submit" disabled={saving}
-          >{saving ? 'Saving…' : 'Save'}</button
+          >{saving ? tr('animals.saving') : tr('animals.save')}</button
         >
       </form>
     {/if}

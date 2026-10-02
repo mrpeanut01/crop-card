@@ -6,13 +6,16 @@
   import HoldChips from '$lib/components/animals/HoldChips.svelte';
   import ProductionForm from '$lib/components/animals/ProductionForm.svelte';
   import HoldVoidPanel from '$lib/components/records/HoldVoidPanel.svelte';
-  import { OFFLINE_MESSAGE, errorFromResponse } from '$lib/animals/display';
+  import { errorText } from '$lib/components/animals/labels';
   import { USE_LABEL } from '$lib/animals/healthCopy';
   import type { FoodStop } from '$lib/animals/holdCopy';
   import { formatInstant } from '$lib/prefs';
   import { lateLabel } from '$lib/records/lateLabel';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const subject = $derived(data.subject);
   const prefs = $derived({ timeZone: data.timeZone, units: 'us' as const });
@@ -50,29 +53,29 @@
         body: JSON.stringify({ use: 'discard' })
       });
       if (!res.ok) {
-        actionError = await errorFromResponse(res);
+        actionError = await errorText(res, tr);
         return;
       }
       status = 'Changed to thrown out.';
       await invalidateAll();
     } catch {
-      actionError = OFFLINE_MESSAGE;
+      actionError = tr('animals.offline');
     }
   }
 </script>
 
 <svelte:head>
-  <title>Eggs, milk and weights · {subject.name} · CropCard</title>
+  <title>{tr('animals.eggsMilkWeights')} · {subject.name} · CropCard</title>
 </svelte:head>
 
 <div class="record-page">
-  <nav class="crumbs" aria-label="Breadcrumb">
+  <nav class="crumbs" aria-label={tr('animals.breadcrumb')}>
     <a href={subject.detailHref}>{subject.name}</a>
-    <a href="/animals/{subject.id}/health">Health</a>
+    <a href="/animals/{subject.id}/health">{tr('animals.health')}</a>
   </nav>
 
   <header>
-    <Kicker>{subject.speciesName} · Eggs, milk and weights</Kicker>
+    <Kicker>{subject.speciesName} · {tr('animals.eggsMilkWeights')}</Kicker>
     <h1 class="serif">{subject.name}</h1>
   </header>
 
@@ -91,7 +94,7 @@
   {#if actionError}<p class="af-error" role="alert">{actionError}</p>{/if}
 
   {#if data.canLog}
-    <section aria-label="Log">
+    <section aria-label={tr('animals.log.aria')}>
       <ProductionForm
         subjectType={subject.type}
         subjectId={subject.id}
@@ -104,16 +107,16 @@
   {/if}
 
   <section aria-labelledby="logs-h">
-    <h2 id="logs-h" class="section-title">Recent</h2>
+    <h2 id="logs-h" class="section-title">{tr('animals.log.recent')}</h2>
     {#if data.logs.length === 0}
-      <p class="af-help">Nothing logged yet.</p>
+      <p class="af-help">{tr('animals.log.none')}</p>
     {:else}
       <ul class="rows">
         {#each data.logs as l (l.id)}
           <li class="row">
             <div class="row-main">
               <strong>{l.quantity} {l.unit}</strong>
-              <span>{l.kind === 'weight' ? 'Weight' : USE_LABEL[l.use]}</span>
+              <span>{l.kind === 'weight' ? tr('animals.prod.weight') : USE_LABEL[l.use]}</span>
               {#if l.recordedLate}
                 <Pill tone="wheat">{lateLabel(true, l.daysLate)}</Pill>
               {/if}

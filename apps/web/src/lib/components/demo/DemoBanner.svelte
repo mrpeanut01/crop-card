@@ -26,8 +26,8 @@
 
   /** A fresh farm is a different Owner, so reload the whole app rather than
    *  keep this tab's caches for the old one. */
-  const fullReload: SubmitFunction = ({ cancel, formAction }) => {
-    if (formAction.search.includes('reset') && !confirm(tr('entry.demo.resetConfirm'))) {
+  const fullReload: SubmitFunction = ({ cancel, action }) => {
+    if (action.search.includes('reset') && !confirm(tr('entry.demo.resetConfirm'))) {
       cancel();
       return;
     }

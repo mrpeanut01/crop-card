@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { FAMILY_CARE_TIPS } from '$lib/cards/build/careTips';
+import { allCareTips } from '$lib/cards/build/careTips';
 import { careGuideSections } from '$lib/cards/build/careGuide';
 import { NO_SECTION_TEXT, asksForSprayAdvice, isSprayAdvice } from '$lib/journal/photoHelp';
 import { eventsForPlanting } from '$lib/calendar/engine';
@@ -28,10 +28,8 @@ describe('sprayTermsFor (the real plugin library)', () => {
 
   it('never flags the general care tips or the plain Care Guide lines', async () => {
     const terms = sprayTermsFor(await getRegistry());
-    for (const tips of Object.values(FAMILY_CARE_TIPS)) {
-      for (const line of [...tips.water, ...tips.feed, ...tips.prune, ...tips.problems]) {
-        expect(isSprayAdvice(line, terms), line).toBe(false);
-      }
+    for (const { id, text } of allCareTips()) {
+      expect(isSprayAdvice(text, terms), `${id}: ${text}`).toBe(false);
     }
     for (const line of Object.values(NO_SECTION_TEXT)) {
       expect(isSprayAdvice(line, terms), line).toBe(false);

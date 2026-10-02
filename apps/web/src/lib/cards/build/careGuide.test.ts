@@ -7,7 +7,7 @@ import {
   careGuidePluginIds,
   careGuideSections
 } from './careGuide';
-import { FAMILY_CARE_TIPS } from './careTips';
+import { allCareTips, FAMILY_CARE_TIPS } from './careTips';
 import { buildAreaCard } from './area';
 import { buildPlantingCard } from './planting';
 import { sampleSnapshot } from './fixtures';
@@ -126,10 +126,18 @@ describe('buildCareGuideCard', () => {
 
 describe('family care tips', () => {
   it('never name a pesticide, a spray or a mix rate', () => {
+    for (const { id, text } of allCareTips()) {
+      expect(isSprayAdvice(text), `${id}: ${text}`).toBe(false);
+      expect(text, id).not.toMatch(/—/);
+    }
+  });
+
+  it('give every tip an id under its own family and field', () => {
     for (const [family, tips] of Object.entries(FAMILY_CARE_TIPS)) {
-      for (const line of [...tips.water, ...tips.feed, ...tips.prune, ...tips.problems]) {
-        expect(isSprayAdvice(line), `${family}: ${line}`).toBe(false);
-        expect(line).not.toMatch(/—/);
+      for (const field of ['water', 'feed', 'prune', 'problems'] as const) {
+        for (const tip of tips[field]) {
+          expect(tip.id).toMatch(new RegExp(`^${family}\\.${field}\\.\\d+$`));
+        }
       }
     }
   });
@@ -163,5 +171,18 @@ describe('How to care for it', () => {
     expect(links[0].label).toBe('Open designer');
     expect(links.slice(1)).toEqual(areaCareLinks(snap, 'f_garden'));
     expect(links.map((l) => l.href)).toContain(careGuideHref('bean-provider'));
+  });
+});
+
+describe('family tips with empty sections', () => {
+  it('leaves a section out when the family has no sourced tip for it', () => {
+    const { sections, tips } = careGuideSections({
+      pluginId: 'bean-x',
+      displayName: 'Bean',
+      version: '1',
+      cropFamily: 'legume'
+    });
+    expect(sections.map((s) => s.title)).toEqual(['Feed', 'Stake and prune']);
+    expect(tips?.label).toBe('beans and peas');
   });
 });

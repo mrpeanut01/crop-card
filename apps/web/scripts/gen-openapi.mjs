@@ -57,7 +57,12 @@ import {
   queuedJournalSchema
 } from '../src/lib/journal/apiSchemas.ts';
 import { JOURNAL_KINDS, JOURNAL_PROVENANCE } from '../src/lib/journal/model.ts';
-import { taskCloseSchema, taskCreateSchema, taskPatchSchema } from '../src/lib/tasks/apiSchemas.ts';
+import {
+  taskCloseSchema,
+  taskCreateSchema,
+  taskPatchSchema,
+  taskTimeEntrySchema
+} from '../src/lib/tasks/apiSchemas.ts';
 import { dispositionCreateSchema, dispositionPatchSchema } from '../src/lib/harvest/apiSchemas.ts';
 import {
   carePlanCreateSchema,
@@ -3126,6 +3131,73 @@ const paths = {
         503: errorResponse(
           'The same client record id is being saved by another request right now. Retry shortly.'
         )
+      }
+    }
+  },
+
+  '/api/tasks/{id}/time': {
+    parameters: [idPath('id', 'Task id.')],
+    get: {
+      summary: 'Time saved on a task',
+      description:
+        "Owners get every entry with the person's name; everyone else gets the farm total and only their own entries. Each entry says whether the caller may remove it (`canDelete`). Not gated by the season close-out.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The total and the entries, oldest first.', {
+          type: 'object',
+          required: ['totalMinutes', 'entries'],
+          properties: {
+            totalMinutes: { type: 'integer' },
+            entries: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('Task not found for the active Owner.')
+      }
+    },
+    post: {
+      summary: 'Save time from the task timer',
+      description:
+        "The task timer's Save time, and the replay of the `time-entry` offline queue kind with the client record id header. Owners and helpers; inspectors are read-only. Saved as a time row with `source: \"timer\"` and the task's planting, block and field. `userId` logs someone else's time and is owner only (403 `OWNER_ONLY` with `askOwner: true`; another farm's user or an inspector is 400 `FOREIGN_REF`). `startedAt` no more than 30 days back and `startedAt + minutes` no more than 5 minutes past the server clock, else 400 `TIME_OUT_OF_RANGE`. The task may be open or closed. Not gated by the season close-out.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [clientRecordRef],
+      requestBody: jsonBody(taskTimeEntrySchema),
+      responses: {
+        200: jsonResponse(
+          'A replay of a client record id that was already saved.',
+          DUPLICATE_SCHEMA
+        ),
+        201: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['entry'],
+          properties: { entry: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body, `TIME_OUT_OF_RANGE` or `FOREIGN_REF`.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Inspector role is read-only, or `OWNER_ONLY`.'),
+        404: errorResponse('Task not found for the active Owner.'),
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
+      }
+    }
+  },
+
+  '/api/tasks/time/{id}': {
+    parameters: [idPath('id', 'Time entry id.')],
+    delete: {
+      summary: 'Remove saved task time',
+      description:
+        'Owners remove any entry at any time. Everyone else removes only their own, within 48 hours of saving it (403 `NOT_YOURS` or `TOO_LATE`, with `askOwner: true`); inspectors are read-only. A hard delete: task time is neither a compliance record nor a hold fact. Online only and not gated by the season close-out.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Removed.', {
+          type: 'object',
+          properties: { ok: { type: 'boolean' }, id: { type: 'string' } }
+        }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`READ_ONLY`, `NOT_YOURS` or `TOO_LATE`.'),
+        404: errorResponse('No such time entry for the active Owner.')
       }
     }
   },

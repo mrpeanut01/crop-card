@@ -1,179 +1,274 @@
 /** General care tips by crop family for the Care Guide card. Plain cultural
  *  practice only: no products, rates or spray timing. Shown with `fallback`
- *  provenance because they are not specific to the variety. */
+ *  provenance because they are not specific to the variety.
+ *
+ *  Every tip is quoted from an extension source in
+ *  `apps/web/scripts/care-tips-sources.json` under its id, and the entry's
+ *  `shipped` field holds this exact text (gate: careTips.sources.gate.test.ts).
+ *  Ids are the tip's original research position and are never renumbered. */
+
+export interface CareTip {
+  id: string;
+  text: string;
+}
 
 export interface FamilyCareTips {
   label: string;
-  water: string[];
-  feed: string[];
-  prune: string[];
-  problems: string[];
+  water: CareTip[];
+  feed: CareTip[];
+  prune: CareTip[];
+  problems: CareTip[];
 }
 
-const DEEP_WATER = 'Water deeply once or twice a week so about an inch reaches the roots.';
-const AT_THE_BASE = 'Water at the base in the morning so the leaves dry by evening.';
-const LIGHT_FEED = 'Work compost into the bed before planting. Most gardens need little else.';
+export const CARE_TIP_FIELDS = ['water', 'feed', 'prune', 'problems'] as const;
+
+const COMPOST_SPRING_FALL = 'Add compost to the soil in spring or fall.';
+const TREE_FEED = 'Feed in late winter. On sandy soil, give half in late winter and the rest in May.';
+const THIN_FRUIT = 'Thin fruit when it is about the size of a nickel so the rest hang 6 to 8 inches apart.';
+const THIN_CARROTS = 'Thin carrots to 2 to 3 inches between plants.';
 
 export const FAMILY_CARE_TIPS: Readonly<Record<string, FamilyCareTips>> = {
   solanaceae: {
     label: 'tomatoes, peppers and eggplant',
-    water: [DEEP_WATER, 'Keep watering even. Dry spells followed by a soaking crack the fruit.'],
-    feed: [
-      'Mix compost into the planting hole.',
-      'Side-dress with compost when the first fruit sets.'
+    water: [
+      { id: 'solanaceae.water.0', text: 'Aim for about an inch of water a week, from rain or watering.' }
     ],
-    prune: [
-      'Stake or cage at planting so roots are not damaged later.',
-      'On tall vining tomatoes, pinch the small shoots that grow between the stem and a branch.',
-      'Remove leaves touching the soil.'
-    ],
+    feed: [{ id: 'solanaceae.feed.0', text: COMPOST_SPRING_FALL }],
+    prune: [{ id: 'solanaceae.prune.0', text: 'Put in stakes or cages at planting time.' }],
     problems: [
-      'Yellow lower leaves with dark rings: remove them, mulch, and keep water off the leaves.',
-      'Dark sunken spot on the bottom of the fruit: uneven watering. Water more evenly.',
-      'Leaves chewed overnight: look under the leaves for large green caterpillars and pick them off.'
+      {
+        id: 'solanaceae.problems.0',
+        text: 'Mulch keeps soil from splashing onto the leaves, which helps prevent fungal infection.'
+      },
+      {
+        id: 'solanaceae.problems.1',
+        text: 'Blossom-end rot can develop when soil moisture swings while the fruit grows.'
+      },
+      { id: 'solanaceae.problems.2', text: 'Hornworms are easily removed by hand.' }
     ]
   },
   cucurbit: {
     label: 'squash, cucumbers and melons',
-    water: [DEEP_WATER, AT_THE_BASE],
-    feed: [LIGHT_FEED, 'Side-dress with compost when the vines start to run.'],
-    prune: [
-      'Trellis cucumbers to keep fruit clean and straight.',
-      'Pinch vine tips late in the season so the plant ripens the fruit it has.'
+    water: [
+      { id: 'cucurbit.water.0', text: 'Cucumbers need about an inch of water a week, from rain or watering.' },
+      {
+        id: 'cucurbit.water.1',
+        text: 'Water at the base in the early morning so the leaves have time to dry.'
+      }
     ],
+    feed: [{ id: 'cucurbit.feed.0', text: COMPOST_SPRING_FALL }],
+    prune: [{ id: 'cucurbit.prune.0', text: 'Training cucumbers up a trellis gives straight fruit.' }],
     problems: [
-      'White powder on leaves: improve air flow and remove the worst leaves.',
-      'Whole vine wilts suddenly: check the base of the stem for a hole with sawdust-like frass.',
-      'Small fruit that shrivels: flowers were not pollinated. Leave room for bees.'
+      {
+        id: 'cucurbit.problems.1',
+        text: 'Vine wilts suddenly: look for a hole with sawdust-like frass pushed out of it.'
+      },
+      {
+        id: 'cucurbit.problems.2',
+        text: 'Poor fruit set can come from too little pollination. Cold, rain or cloudy weather can reduce it.'
+      }
     ]
   },
   brassica: {
     label: 'cabbage, broccoli and kale',
-    water: ['Keep the soil evenly moist. Heat and dry soil make them bolt or turn bitter.'],
-    feed: [LIGHT_FEED, 'They are hungry plants. Side-dress with compost a month after planting.'],
-    prune: ['No pruning needed. Pick outer kale leaves and leave the center to keep growing.'],
+    water: [{ id: 'brassica.water.0', text: 'Keep soil moisture even.' }],
+    feed: [
+      { id: 'brassica.feed.1', text: 'Side-dress established plants three to four weeks after transplanting.' }
+    ],
+    prune: [],
     problems: [
-      'Holes in leaves with green droppings: look for small green caterpillars and pick them off.',
-      'Tiny round holes on young plants: flea beetles. Row cover keeps them off.',
-      'Broccoli flowers open yellow: it waited too long. Pick heads while the buds are tight.'
+      {
+        id: 'brassica.problems.0',
+        text: 'Large ragged holes and green-brown droppings mean caterpillars. Pick them off by hand.'
+      },
+      {
+        id: 'brassica.problems.1',
+        text: 'Small round holes in the leaves: flea beetles. Row cover keeps them off.'
+      },
+      { id: 'brassica.problems.2', text: 'Pick broccoli while the flower buds are still tightly closed.' }
     ]
   },
   allium: {
     label: 'onions, garlic and leeks',
-    water: ['Keep evenly moist until the tops start to fall over, then let them dry.'],
-    feed: [LIGHT_FEED],
-    prune: ['Cut garlic flower stalks (scapes) when they curl so the bulb grows bigger.'],
+    water: [
+      {
+        id: 'allium.water.0',
+        text: 'Stop watering when the bulbs reach full size and the tops begin to fall.'
+      }
+    ],
+    feed: [{ id: 'allium.feed.0', text: COMPOST_SPRING_FALL }],
+    prune: [
+      {
+        id: 'allium.prune.0',
+        text: 'Cut garlic flower stalks (scapes) when they curl so the bulb grows bigger.'
+      }
+    ],
     problems: [
-      'Tops yellow and fall over late in the season: that is normal and means harvest is near.',
-      'Weeds crowd them out fast. Keep the bed weeded, since onions cannot shade weeds.'
+      { id: 'allium.problems.0', text: 'Harvest onions when about half the tops are falling over and dry.' },
+      { id: 'allium.problems.1', text: 'Control weeds early. They can easily overtake young garlic.' }
     ]
   },
   'leafy-green': {
     label: 'lettuce, spinach and greens',
-    water: ['Water lightly and often. Shallow roots dry out quickly.'],
-    feed: [LIGHT_FEED],
-    prune: ['Pick outer leaves and leave the center to keep growing.'],
+    water: [
+      { id: 'leafy-green.water.0', text: 'Lettuce has shallow roots. Organic mulch helps hold soil moisture.' }
+    ],
+    feed: [],
+    prune: [{ id: 'leafy-green.prune.0', text: 'Pick the older outer leaves first.' }],
     problems: [
-      'Plant shoots up and turns bitter: heat makes it bolt. Sow again in cooler weather.',
-      'Ragged holes and slime trails: slugs. Check under boards at dawn.'
+      {
+        id: 'leafy-green.problems.0',
+        text: 'High summer heat usually causes bolting (a seed stalk) and bitter flavor.'
+      },
+      { id: 'leafy-green.problems.1', text: 'Slugs and snails may feed on the leaves.' }
     ]
   },
   root: {
     label: 'carrots, beets and radishes',
-    water: ['Keep the top inch moist until seedlings are up, then water deeply.'],
-    feed: ['Skip fresh manure. It makes forked roots.'],
-    prune: ['Thin seedlings to their final spacing early. Crowded roots stay small.'],
+    water: [],
+    feed: [],
+    prune: [{ id: 'root.prune.0', text: THIN_CARROTS }],
     problems: [
-      'Forked or twisted roots: stones or clumps in the soil. Loosen the bed deeper next time.',
-      'Cracked roots: uneven watering.'
+      { id: 'root.problems.0', text: 'Carrots prefer loamy or sandy soil free of stones and clods.' },
+      { id: 'root.problems.1', text: 'Cracked roots: uneven watering.' }
     ]
   },
   apiaceae: {
     label: 'carrots, parsley and dill',
-    water: ['Keep the soil surface moist until seeds sprout. They can take two weeks.'],
-    feed: [LIGHT_FEED],
-    prune: ['Thin seedlings early so each plant has room.'],
+    water: [],
+    feed: [],
+    prune: [{ id: 'apiaceae.prune.0', text: THIN_CARROTS }],
     problems: [
-      'Striped caterpillars on dill or parsley are swallowtail butterflies. Many growers share a plant with them.'
+      {
+        id: 'apiaceae.problems.0',
+        text: 'The parsleyworm, a swallowtail butterfly caterpillar, feeds on carrot leaves.'
+      }
     ]
   },
   legume: {
     label: 'beans and peas',
-    water: ['Water deeply when flowering and podding. Dry soil drops the flowers.'],
-    feed: ['Beans and peas make much of their own nitrogen. Skip extra feeding.'],
-    prune: ['Give peas and pole beans a trellis at planting.'],
-    problems: [
-      'Pods get tough and stringy: pick every few days to keep them tender.',
-      'Leaves skeletonized by yellow spiny larvae: hand-pick and check under the leaves.'
-    ]
+    water: [],
+    feed: [
+      {
+        id: 'legume.feed.0',
+        text: 'Beans team up with Rhizobium bacteria in the soil, which helps growth and yield.'
+      }
+    ],
+    prune: [{ id: 'legume.prune.0', text: 'Put pole bean supports in place at planting time.' }],
+    problems: []
   },
   corn: {
     label: 'corn',
-    water: ['Water deeply when the tassels and silks appear. That is when it matters most.'],
-    feed: ['Side-dress with compost when plants are knee high.'],
-    prune: ['Plant in blocks of short rows, not one long row, so the ears fill out.'],
-    problems: ['Ears with missing kernels: poor pollination. Plant in blocks next time.']
+    water: [
+      {
+        id: 'corn.water.0',
+        text: 'Water matters most during pollination, when tassels and silks appear, and while the ears fill.'
+      }
+    ],
+    feed: [],
+    prune: [
+      { id: 'corn.prune.0', text: 'Plant in blocks of short rows, not one long row, so the ears fill out.' }
+    ],
+    problems: []
   },
   'herb-culinary': {
     label: 'herbs',
-    water: ['Let the top inch dry between waterings. Most herbs dislike wet feet.'],
-    feed: ['Go easy on feeding. Lean soil gives stronger flavor.'],
-    prune: ['Pinch tips often to keep plants bushy, and pinch off flower buds on basil.'],
-    problems: ['Leggy, floppy plants: not enough sun or not enough pinching.']
+    water: [
+      { id: 'herb-culinary.water.0', text: 'Avoid soggy soil. Constant moisture encourages root rot.' }
+    ],
+    feed: [{ id: 'herb-culinary.feed.0', text: 'Go easy on feeding. Lean soil gives stronger flavor.' }],
+    prune: [
+      {
+        id: 'herb-culinary.prune.0',
+        text: 'Pinch basil stems as they lengthen to keep the plant bushy and compact.'
+      }
+    ],
+    problems: [{ id: 'herb-culinary.problems.0', text: 'Thin, spindly growth: not enough light.' }]
   },
   'small-fruit': {
     label: 'strawberries and blueberries',
-    water: [DEEP_WATER, 'Mulch to keep roots cool and moist.'],
-    feed: ['Feed lightly after harvest, not before.'],
-    prune: [
-      'Trim strawberry runners you do not want to root.',
-      'Cut out the oldest blueberry canes in late winter.'
+    water: [
+      {
+        id: 'small-fruit.water.1',
+        text: 'A 2 to 3 inch mulch around blueberries keeps soil moisture more even.'
+      }
     ],
-    problems: ['Birds find ripe berries first. Net the plants as fruit starts to color.']
+    feed: [],
+    prune: [
+      {
+        id: 'small-fruit.prune.1',
+        text: 'On mature rabbiteye blueberries, remove the oldest or largest cane each winter from the fifth year on.'
+      }
+    ],
+    problems: [
+      {
+        id: 'small-fruit.problems.0',
+        text: 'Birds take ripe berries. Netting over the bushes is the only practical control.'
+      }
+    ]
   },
   bramble: {
     label: 'raspberries and blackberries',
-    water: [DEEP_WATER],
-    feed: [LIGHT_FEED],
+    water: [],
+    feed: [],
     prune: [
-      'After harvest, cut canes that fruited down to the ground.',
-      'Keep the row narrow so air moves through.'
+      {
+        id: 'bramble.prune.0',
+        text: 'Canes die after they fruit and will not bear again, so cut them out.'
+      },
+      {
+        id: 'bramble.prune.1',
+        text: 'Keep raspberry rows under 18 inches wide so air moves through and the lower canopy stays dry.'
+      }
     ],
-    problems: ['Fruit that molds on the cane: pick often and remove overripe berries.']
+    problems: [{ id: 'bramble.problems.0', text: 'Pick ripe fruit often to cut down on fruit rot.' }]
   },
   'vine-fruit': {
     label: 'grapes',
-    water: ['Water young vines deeply. Established vines need little extra.'],
-    feed: [LIGHT_FEED],
+    water: [],
+    feed: [],
     prune: [
-      "Prune hard in late winter. Most of last year's growth comes off.",
-      'Pull a few leaves around the clusters in summer so they get light and air.'
+      {
+        id: 'vine-fruit.prune.0',
+        text: 'Prune while dormant in early March. Leave a spur every 8 to 12 inches along each cordon.'
+      }
     ],
-    problems: ['White powder on leaves or fruit: open the canopy so it dries faster.']
+    problems: []
   },
   'stone-fruit': {
     label: 'peaches, plums and cherries',
-    water: ['Water deeply every week or two in dry spells, especially as fruit sizes.'],
-    feed: ['Feed in early spring only.'],
+    water: [],
+    feed: [{ id: 'stone-fruit.feed.0', text: TREE_FEED }],
     prune: [
-      'Prune in late winter to an open center so light reaches the middle.',
-      'Thin young fruit so they are a hand-width apart.'
+      {
+        id: 'stone-fruit.prune.0',
+        text: 'Train to an open center by removing the leader. Prune in late winter.'
+      },
+      { id: 'stone-fruit.prune.1', text: THIN_FRUIT }
     ],
-    problems: ['Fruit with brown, fuzzy rot: pick up and remove fallen and rotten fruit.']
+    problems: [
+      { id: 'stone-fruit.problems.0', text: 'Remove rotten fruit from the tree and the ground right away.' }
+    ]
   },
   orchard: {
     label: 'fruit trees',
-    water: ['Water young trees deeply each week in their first two summers.'],
-    feed: ['Feed in early spring only.'],
+    water: [],
+    feed: [{ id: 'orchard.feed.0', text: TREE_FEED }],
     prune: [
-      'Prune in late winter while dormant. Remove dead, crossing and inward branches.',
-      'Thin young fruit so they are a hand-width apart.'
+      { id: 'orchard.prune.0', text: 'Remove dead, diseased and broken branches.' },
+      { id: 'orchard.prune.1', text: THIN_FRUIT }
     ],
-    problems: ['Fallen fruit spreads trouble. Pick it up through the season.']
+    problems: [{ id: 'orchard.problems.0', text: 'Pick up and remove damaged or fallen fruit.' }]
   }
 };
 
 export function familyCareTips(family: string | null | undefined): FamilyCareTips | null {
   if (!family) return null;
   return FAMILY_CARE_TIPS[family] ?? null;
+}
+
+export function allCareTips(
+  tips: Readonly<Record<string, FamilyCareTips>> = FAMILY_CARE_TIPS
+): CareTip[] {
+  return Object.values(tips).flatMap((f) => CARE_TIP_FIELDS.flatMap((field) => f[field]));
 }

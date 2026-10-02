@@ -114,6 +114,18 @@ export interface CropDrag {
   ghost: { footprint: Footprint; fits: boolean } | null;
 }
 
+export interface BedDrag {
+  presetId: BedPresetId;
+  widthFt: number;
+  lengthFt: number;
+  clientX: number;
+  clientY: number;
+  rect: RectFt | null;
+  fits: boolean;
+}
+
+export type BedDragPresetId = Exclude<BedPresetId, 'custom'>;
+
 export interface RoomConflict {
   text: string;
   retryDateMs: number | null;
@@ -271,10 +283,15 @@ export class DesignerState {
   /** A crop row being dragged from the crop panel: where the pointer is,
    *  the bed under it and the spot it would land on. */
   cropDrag = $state<CropDrag | null>(null);
-  /** Set by the canvas while it is mounted: a client point to feet, and the
-   *  bed drawn under it. */
-  locate: ((clientX: number, clientY: number) => { point: PointFt; bedId: string | null }) | null =
-    null;
+  bedDrag = $state<BedDrag | null>(null);
+  /** Set by the canvas while it is mounted: a client point to feet, the
+   *  bed drawn under it, and whether the point is on the canvas at all. */
+  locate:
+    | ((
+        clientX: number,
+        clientY: number
+      ) => { point: PointFt; bedId: string | null; onCanvas?: boolean })
+    | null = null;
   /** Asks the canvas or list to focus a bed or planting after a keyboard
    *  action moved or created it. */
   focusRequest = $state<{ kind: 'bed' | 'planting'; id: string; n: number } | null>(null);
@@ -791,20 +808,140 @@ export class DesignerState {
   placeBedAt(point: PointFt): Promise<void> {
     if (this.mode.kind !== 'place-bed') return Promise.resolve();
     const { presetId, widthFt, lengthFt } = this.mode;
-    const rect = clampToArea(
-      bedRect(snap(point.x), snap(point.y), widthFt, lengthFt, 0),
-      this.canvas
-    );
-    if (!rect) {
-      this.warn(this.tr('garden.warn.bedTooBig'));
-      return Promise.resolve();
-    }
-    if (overlappingBeds(rect, this.beds).length) {
-      this.warn(this.tr('garden.warn.overlap'));
+    const fit = this.fitNewBed(point.x, point.y, widthFt, lengthFt);
+    if (!fit.ok) {
+      this.warn(fit.refusal);
       return Promise.resolve();
     }
     this.mode = { kind: 'idle' };
-    return this.createBed(presetId, rect, widthFt, lengthFt);
+    return this.createBed(presetId, fit.rect, widthFt, lengthFt);
+  }
+
+  /** Where a new unturned bed with its top-left at x, y lands: snapped,
+   *  clamped into the garden, and refused when it is too big or overlaps.
+   *  Tap to place and drag to place both go through here. */
+  fitNewBed(
+    x: number,
+    y: number,
+    widthFt: number,
+    lengthFt: number
+  ): { ok: true; rect: RectFt } | { ok: false; rect: RectFt | null; refusal: string } {
+    const rect = clampToArea(bedRect(snap(x), snap(y), widthFt, lengthFt, 0), this.canvas);
+    if (!rect) {
+      return {
+        ok: false,
+        rect: null,
+        refusal: this.tr('garden.warn.bedTooBig')
+      };
+    }
+    if (overlappingBeds(rect, this.beds).length) {
+      return { ok: false, rect, refusal: this.tr('garden.warn.overlap') };
+    }
+    return { ok: true, rect };
+  }
+
+  // ── Bed drag ───────────────────────────────────────────────────────────
+
+  /** Starts dragging a preset chip; tapping the chip (`choosePreset`) stays
+   *  the way every device and the keyboard can place. */
+  startBedDrag(presetId: BedPresetId, clientX: number, clientY: number): boolean {
+    if (presetId === 'custom' || !this.canEdit || this.view !== 'canvas') return false;
+    const preset = BED_PRESETS[presetId];
+    this.conflict = null;
+    this.mode = { kind: 'idle' };
+    this.bedDrag = {
+      presetId,
+      widthFt: preset.widthFt,
+      lengthFt: preset.lengthFt,
+      clientX,
+      clientY,
+      rect: null,
+      fits: false
+    };
+    this.say(
+      this.tr('garden.say.draggingBed', {
+        preset: this.tr(`garden.preset.the.${presetId}` as MessageKey)
+      })
+    );
+    this.moveBedDrag(clientX, clientY);
+    return true;
+  }
+
+  moveBedDrag(clientX: number, clientY: number): void {
+    const drag = this.bedDrag;
+    if (!drag) return;
+    const where = this.bedDropAt(drag, clientX, clientY);
+    this.bedDrag = {
+      ...drag,
+      clientX,
+      clientY,
+      rect: where.kind === 'fit' || where.kind === 'refused' ? where.rect : null,
+      fits: where.kind === 'fit'
+    };
+  }
+
+  /** A held press released without moving is a tap (D-32): the drag ends
+   *  quietly, the mode from before the hold comes back, and the chip acts
+   *  as if tapped. */
+  tapAfterHold(presetId: BedPresetId, prior: DesignerMode): void {
+    this.bedDrag = null;
+    this.mode = prior;
+    this.choosePreset(presetId);
+  }
+
+  cancelBedDrag(): void {
+    if (!this.bedDrag) return;
+    this.bedDrag = null;
+    this.say(this.tr('garden.say.putBackShort'));
+  }
+
+  async dropBed(): Promise<void> {
+    const drag = this.bedDrag;
+    this.bedDrag = null;
+    if (!drag) return;
+    const where = this.bedDropAt(drag, drag.clientX, drag.clientY);
+    if (where.kind === 'off') {
+      this.say(this.tr('garden.say.putBackShort'));
+      return;
+    }
+    if (!this.guard()) return;
+    if (where.kind === 'outside') {
+      this.warn(this.tr('garden.err.outside'));
+      return;
+    }
+    if (where.kind === 'refused') {
+      this.warn(where.refusal);
+      return;
+    }
+    await this.createBed(drag.presetId, where.rect, drag.widthFt, drag.lengthFt);
+  }
+
+  private bedDropAt(
+    drag: BedDrag,
+    clientX: number,
+    clientY: number
+  ):
+    | { kind: 'off' }
+    | { kind: 'outside' }
+    | { kind: 'refused'; rect: RectFt | null; refusal: string }
+    | { kind: 'fit'; rect: RectFt } {
+    const hit = this.locate?.(clientX, clientY) ?? null;
+    if (!hit || hit.onCanvas === false) return { kind: 'off' };
+    const { point } = hit;
+    if (
+      !(point.x >= 0 && point.x <= this.canvas.widthFt) ||
+      !(point.y >= 0 && point.y <= this.canvas.lengthFt)
+    ) {
+      return { kind: 'outside' };
+    }
+    const fit = this.fitNewBed(
+      point.x - drag.widthFt / 2,
+      point.y - drag.lengthFt / 2,
+      drag.widthFt,
+      drag.lengthFt
+    );
+    if (!fit.ok) return { kind: 'refused', rect: fit.rect, refusal: fit.refusal };
+    return { kind: 'fit', rect: fit.rect };
   }
 
   async createBed(

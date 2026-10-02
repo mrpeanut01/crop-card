@@ -83,3 +83,17 @@ export const taskPatchSchema = z.discriminatedUnion('action', [
   })
 ]);
 export type TaskPatchInput = z.infer<typeof taskPatchSchema>;
+
+/** Body of `POST /api/tasks/:id/time` (D-25): time from the task timer.
+ *  `userId` names someone else's time, which only an owner may log. */
+export const taskTimeEntrySchema = z.object({
+  startedAt: z.number().int().positive(),
+  minutes: taskMinutesSchema,
+  note: z.string().max(500).optional(),
+  userId: z.string().min(1).max(200).optional()
+});
+export type TaskTimeEntryInput = z.infer<typeof taskTimeEntrySchema>;
+
+/** What the offline queue keeps for a `time-entry` row (D-29). The task id
+ *  goes in the path on replay and is stripped from the body. */
+export type TaskTimeEntryQueuePayload = TaskTimeEntryInput & { taskId: string };

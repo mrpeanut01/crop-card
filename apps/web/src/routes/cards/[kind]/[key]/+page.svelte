@@ -22,6 +22,8 @@
   import FlockQuickActions from '$lib/components/animals/FlockQuickActions.svelte';
   import SeedStartPanel from '$lib/components/cards/SeedStartPanel.svelte';
   import PlantingHours from '$lib/components/cards/PlantingHours.svelte';
+  import TaskTimer from '$lib/components/tasks/TaskTimer.svelte';
+  import { isClosedStatus, type TaskStatus } from '$lib/tasks/status';
 
   const tr = $derived(createT(page.data?.locale));
   const LAYOUT_KEYS = {
@@ -49,6 +51,20 @@
   $effect(() => {
     if (cards.row) void refreshUnsynced();
   });
+
+  let queuedClose = $state(false);
+  async function refreshQueuedClose(taskId: string) {
+    try {
+      const { listQueuedTaskActions } = await import('$lib/client/taskQueue');
+      const rows = await listQueuedTaskActions();
+      queuedClose = rows.some((r) => r.taskId === taskId && !r.rejected);
+    } catch {
+      queuedClose = false;
+    }
+  }
+  $effect(() => {
+    if (kind === 'task' && cards.row) void refreshQueuedClose(key.slice(key.indexOf('_') + 1));
+  });
   let layout = $state<CardPrintLayout>('index-4x6');
   let showNudge = $state(false);
 
@@ -70,6 +86,9 @@
     });
     return built && built.kind === kind ? built : null;
   });
+  const taskOpen = $derived(
+    !queuedClose && !(card?.status && isClosedStatus(card.status.id as TaskStatus))
+  );
 
   let autoPrinted = $state(false);
   let freshWaitOver = $state(false);
@@ -211,6 +230,17 @@
         onChange={refreshUnsynced}
       />
     {/if}
+    {#if card.kind === 'task' && page.data.user?.id}
+      <div class="task-timer">
+        <TaskTimer
+          taskId={key.slice(key.indexOf('_') + 1)}
+          taskTitle={card.title}
+          userId={page.data.user.id}
+          canAct={role !== null && role !== 'inspector'}
+          open={taskOpen}
+        />
+      </div>
+    {/if}
     {#if card.kind === 'planting' && snapshot}
       <SeedStartPanel {snapshot} plantingId={key.slice(key.indexOf('_') + 1)} {role} />
       <PlantingHours plantingId={key.slice(key.indexOf('_') + 1)} {role} />
@@ -240,6 +270,10 @@
 {/if}
 
 <style>
+  .task-timer {
+    max-width: 640px;
+    margin: var(--space-3) 0;
+  }
   .crumbs {
     display: flex;
     align-items: center;

@@ -1,10 +1,8 @@
 /**
- * Phase 25e (#97) — /today Almanac shell visual baselines.
- *
- * Captures the rebuilt /today page at 3 viewports. Auth via the
- * Phase 25b demo-sign-in helper; live data (priority action title,
- * date kicker, weather strip, season-glance counters) is masked so
- * baselines stay deterministic across days.
+ * /today visual baselines at three viewports (Phase 33D, D-36). The default
+ * Day view of the seeded demo farm. Everything that moves with the date, the
+ * weather or the seed time is masked, so the Linux baselines that visual.yml
+ * re-captures stay stable from day to day.
  */
 import { test, expect, settleForScreenshot } from '../lib/test';
 import { signInAsDemoOwner } from '../lib/auth';
@@ -16,34 +14,37 @@ const VIEWPORTS = [
 ];
 
 for (const vp of VIEWPORTS) {
-  test(`today Almanac shell at ${vp.name} (${vp.width}x${vp.height})`, async ({ page }) => {
+  test(`today at ${vp.name} (${vp.width}x${vp.height})`, async ({ page }) => {
     await signInAsDemoOwner(page);
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto('/today');
     await page.waitForLoadState('networkidle');
-    // Wait for at least one shell element so we don't snapshot a partial render.
     await expect(page.getByTestId('today-deck')).toBeVisible();
+    await expect(page.getByTestId('today-deck')).toHaveAttribute('data-view', 'day');
 
     await settleForScreenshot(page);
     await expect(page).toHaveScreenshot(`today-${vp.name}.png`, {
       fullPage: true,
       mask: [
-        // Greeting includes time-of-day ("Good morning/afternoon/evening").
-        page.locator('h1.serif').first(),
-        // Date kicker.
-        page.locator('header.hdr [class^="kicker"]').first(),
-        // Weather strip (varies with NOAA fetch).
+        // Date kicker, time-of-day greeting and the day's subtitle.
+        page.locator('header.hdr [class^="kicker"]'),
+        page.locator('header.hdr h1.greeting'),
+        page.locator('header.hdr .subtitle'),
+        // Current conditions (NWS).
         page.locator('header.hdr .weather'),
-        // Hero card pills + provenance row (priority action depends on seed time).
-        page.locator('.hero-head'),
-        page.locator('.action-title'),
-        page.locator('.action-body'),
-        page.locator('.scope-band'),
-        // Week strip changes every day.
-        page.locator('.day'),
-        // Recommendations card items change daily.
+        // Hero: the next action, or "All caught up", depends on the clock.
+        page.locator('.hero'),
+        // Growing advice reads the weather and the day.
+        page.getByTestId('today-advice'),
+        // Deck: the day's cards, or the empty state, and its summary.
+        page.locator('[data-testid="today-deck"] ul.cards'),
+        page.getByTestId('deck-empty'),
+        page.getByTestId('deck-empty-mine'),
+        page.getByTestId('deck-summary'),
+        // Crop calendar suggestions carry dates.
+        page.locator('.suggestion'),
+        // Recommendations and season-at-a-glance counters.
         page.locator('.item'),
-        // Season-glance counters depend on registered plugins / season data.
         page.locator('.cell')
       ]
     });

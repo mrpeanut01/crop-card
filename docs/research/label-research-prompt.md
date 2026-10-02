@@ -97,9 +97,16 @@ The inputs-plan philosophy filter reads `complianceFlags` (`omriListed`, `certif
 
 `apps/web/src/lib/server/__fixtures__/nws-points-lwx.json` and `nws-gridpoint-lwx.json` were written by hand because the cloud environment couldn't reach `api.weather.gov`. Fetch real `/points/39.1157,-77.5636` and `forecastGridData` responses (send a `User-Agent` header, as `weather.ts` does). Replace the fixtures with them, trimmed to about 5 days. Then run `vitest run src/lib/server/weatherHourly.test.ts src/lib/weather`. If field shapes differ from the fixtures, fix `weatherHourly.ts` and its tests. That would be a real production bug, so call it out.
 
-## Task 7 (macOS only): darwin visual baselines
+## Task 7: retired (darwin visual baselines)
 
-The `*-darwin.png` screenshots in `apps/web/tests/e2e/visual/**` went stale when fonts became self-hosted. On a Mac, run `E2E_VISUAL=1 pnpm --filter @cropcard/web exec playwright test tests/e2e/visual --update-snapshots=all`. Commit only the `-darwin.png` files. Leave the Linux baselines alone; CI owns those through `visual.yml`.
+Retired in Phase 33D (ruling D-08 in `docs/design/PHASE_33_PLAN.md`, D-39 and D-40 in its "33D rulings"). The 18 stale `*-darwin.png` files were deleted, `.gitignore` keeps new ones out, and Linux baselines re-captured by `visual.yml` on CI Chromium are the only committed set (steps in `docs/ci.md`). Do not re-capture darwin baselines.
+
+What is left needs real phones, not a Mac, and lives in Task 7 of [`network-tasks-prompt.md`](network-tasks-prompt.md):
+
+- Open a saved record card from a printed QR code (`/c/rc_<kind>.<id>`) in airplane mode, on iOS Safari and on Android Chrome.
+- Start a task timer, background or force-quit the app, reopen it and stop the timer; the time should still be there.
+- Touch-and-hold drag a bed preset onto the garden designer with a gloved finger, and check that a quick swipe still scrolls.
+- Read the Care Guide on a small screen.
 
 ## Task 8: housekeeping
 

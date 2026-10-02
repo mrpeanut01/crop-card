@@ -311,6 +311,9 @@ export function pendingSummary(kind: string | undefined, payload: unknown): stri
       ? `${verb}, ${p.quantity} ${p.unit}`
       : verb;
   }
+  if (kind === 'time-entry') {
+    return typeof p.minutes === 'number' ? `Task time, ${p.minutes} min` : 'Task time';
+  }
   if (kind === 'seed-start') {
     return typeof p.germinatedCount === 'number'
       ? `${p.germinatedCount} seedlings up`
@@ -335,5 +338,6 @@ export const KIND_LABEL: Record<string, string> = {
   'seed-start': 'Seed tray',
   irrigation: 'Watering',
   'rain-gauge': 'Rain gauge reading',
-  'harvest-disposition': 'Where a harvest went'
+  'harvest-disposition': 'Where a harvest went',
+  'time-entry': 'Task time'
 };

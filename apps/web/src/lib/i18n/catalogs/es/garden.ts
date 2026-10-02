@@ -250,6 +250,7 @@ export const esGarden: Partial<Record<MessageKey, string>> = {
     '{name} ya está en el suelo en {bed}. Registra una siembra nueva en su lugar.',
   'garden.warn.pickDate': 'Elige una fecha cercana a la temporada {year}.',
   'garden.say.putBack': 'Se devolvió {name} a su lugar.',
+  'garden.say.draggingBed': 'Arrastrando {preset} hacia el jardín.',
   'garden.say.putBackShort': 'Devuelto a su lugar.',
   'garden.say.choosePreset':
     'Toca el jardín donde quieres poner {preset}, o vuelve a elegir la opción para usar el primer lugar libre.',

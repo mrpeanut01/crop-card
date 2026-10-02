@@ -1,7 +1,9 @@
 /**
- * Phase 32F (F1-14, F1-18). Time logged when a task is closed. Rows are
- * written only by `recordTaskTime` in `lib/server/taskTime.ts`, inside the
- * close's `writeRecord()` transaction; there is no edit or delete in 32F.
+ * Phase 32F (F1-14, F1-18). Time logged on tasks: on Done through
+ * `recordTaskTime` in `lib/server/taskTime.ts`, and from the 33D task timer
+ * through `POST /api/tasks/:id/time`, each inside its `writeRecord()`
+ * transaction. Time is not a compliance record or a hold fact, so a delete
+ * (D-26) removes the row outright.
  */
 
 import { randomUUID } from 'node:crypto';
@@ -33,7 +35,7 @@ export interface TimeEntryInput {
   fieldId?: string | null;
   startedAt: number;
   minutes: number;
-  source?: 'task-close' | 'manual';
+  source?: 'task-close' | 'manual' | 'timer';
   note?: string | null;
   clientRecordId?: string | null;
 }
@@ -166,4 +168,22 @@ export function placeOfTask(task: { blockId?: string | null; cropId?: string | n
     .where(withTenant(blocks, eq(blocks.id, blockId)))
     .get();
   return block ? { blockId, fieldId: block.fieldId ?? null } : { blockId: null, fieldId: null };
+}
+
+export function getTimeEntry(id: string): TimeEntryRow | null {
+  const row = db
+    .select()
+    .from(taskTimeEntries)
+    .where(withTenant(taskTimeEntries, eq(taskTimeEntries.id, id)))
+    .get();
+  return row ? toRow(row) : null;
+}
+
+/** True when this Owner's row existed and is gone. */
+export function deleteTimeEntry(id: string): boolean {
+  const res = db
+    .delete(taskTimeEntries)
+    .where(withTenant(taskTimeEntries, eq(taskTimeEntries.id, id)))
+    .run();
+  return res.changes > 0;
 }

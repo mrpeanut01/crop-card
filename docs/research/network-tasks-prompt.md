@@ -98,6 +98,11 @@ The cloud agents only tested with desktop Chromium emulating phone sizes. Use re
    - The Add to Home Screen nudge.
    - Printing a Spray Card and a garden Area Card to PDF from the share sheet.
 2. **An Android phone in Chrome.** The same flow, plus the garden designer: tap-to-place a crop, drag-to-place it, and pinch to zoom.
+3. **Phase 33D, on both phones.**
+   - Records: open a spray record card online, then turn on airplane mode, scan its printed QR code (`/c/rc_spray.<id>`) and check the saved copy opens with "Saved copy from <date>. The record may have changed since."
+   - /today: start a task timer, background the app or force-quit it, reopen and stop it; the elapsed time should be kept, and Save time should work with and without signal.
+   - Garden designer: touch and hold a bed preset, drag it onto the canvas with a gloved finger, and check that a quick swipe on the preset bar still scrolls the page.
+   - The Care Guide on a planting card at phone width.
 
 Report what broke, with screenshots. Fix anything small; open an issue for anything larger.
 

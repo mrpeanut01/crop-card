@@ -51,3 +51,4 @@ test-results/
 vite.config.ts.timestamp-*.mjs
 *.vite.config.ts.timestamp-*.mjs
 apps/web/.agent-data/
+apps/web/i18n-crawl-report.json

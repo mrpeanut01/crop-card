@@ -407,7 +407,7 @@
     </IconButton>
     {#if user}
       <details class="owner-chip" bind:open={accountOpen} bind:this={accountEl}>
-        <summary aria-label={tr('nav.account')} title={activeOwner?.name ?? user.name}>
+        <summary aria-label={tr('nav.account')} title={user.name}>
           <Avatar name={avatarName} src={user.avatarUrl} />
         </summary>
         <div class="owner-popover">

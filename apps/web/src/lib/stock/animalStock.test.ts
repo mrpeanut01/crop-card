@@ -222,3 +222,17 @@ describe('sanitizeAnimalDraft', () => {
     expect(sanitizeAnimalDraft('pesticide', d)).toBe(d);
   });
 });
+
+describe('movement words in Spanish', () => {
+  it('keeps English output and translates for es', async () => {
+    const { movementLabel, movementReasonText } = await import('./animalStock');
+    const { stockCategoryLabel } = await import('./categories');
+    expect(movementLabel('animal-feed')).toBe('Fed');
+    expect(movementLabel('animal-feed', 'es')).toBe('Alimentado');
+    expect(movementLabel('mystery', 'es')).toBe('mystery');
+    expect(movementReasonText('spray-event')).toBe('spray-event');
+    expect(movementReasonText('spray-event', 'es')).toBe('aplicación');
+    expect(stockCategoryLabel('animal-health')).toBe('animal-health');
+    expect(stockCategoryLabel('fuel', 'es')).toBe('combustible');
+  });
+});

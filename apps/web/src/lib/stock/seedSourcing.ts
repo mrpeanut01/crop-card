@@ -4,6 +4,8 @@
  * were checked; it never judges whether a search was enough (O-14, B-39).
  */
 
+import { t, type MessageKey } from '$lib/i18n';
+
 export const SEED_ORGANIC_STATUSES = ['organic', 'untreated', 'treated', 'unknown'] as const;
 export type SeedOrganicStatus = (typeof SEED_ORGANIC_STATUSES)[number];
 
@@ -13,6 +15,18 @@ export const SEED_ORGANIC_STATUS_LABEL: Readonly<Record<SeedOrganicStatus, strin
   treated: 'Treated seed',
   unknown: 'Not known'
 };
+
+const SEED_ORGANIC_STATUS_KEYS: Readonly<Record<SeedOrganicStatus, MessageKey>> = {
+  organic: 'stockui.seedsrc.status.organic',
+  untreated: 'stockui.seedsrc.status.untreated',
+  treated: 'stockui.seedsrc.status.treated',
+  unknown: 'stockui.seedsrc.status.unknown'
+};
+
+/** `SEED_ORGANIC_STATUS_LABEL` in the UI locale (exports keep the English map). */
+export function seedOrganicStatusLabel(status: SeedOrganicStatus, locale?: string | null): string {
+  return t(locale, SEED_ORGANIC_STATUS_KEYS[status]);
+}
 
 export const MAX_SOURCES_CHECKED = 30;
 export const SUPPLIER_MAX = 120;
@@ -68,6 +82,16 @@ export const SEED_SEARCH_FLAG_LABEL: Readonly<Record<SeedSearchFlag, string>> = 
   'no-search-on-file': 'No search on file',
   'not-recorded': 'Seed status not recorded'
 };
+
+const SEED_SEARCH_FLAG_KEYS: Readonly<Record<SeedSearchFlag, MessageKey>> = {
+  'no-search-on-file': 'stockui.seedsrc.flag.noSearch',
+  'not-recorded': 'stockui.seedsrc.flag.notRecorded'
+};
+
+/** `SEED_SEARCH_FLAG_LABEL` in the UI locale. */
+export function seedSearchFlagLabel(flag: SeedSearchFlag, locale?: string | null): string {
+  return t(locale, SEED_SEARCH_FLAG_KEYS[flag]);
+}
 
 const YMD = /^\d{4}-\d{2}-\d{2}$/;
 

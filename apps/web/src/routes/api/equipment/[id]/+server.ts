@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { deleteEquipmentCascade } from '$lib/db/admin';
@@ -44,21 +45,26 @@ function nozzleOf(v: unknown): string | null {
 
 export const PATCH: RequestHandler = async (event) => {
   requireOwner(event);
-  if (!event.params.id) return json({ error: 'id required' }, { status: 400 });
+  if (!event.params.id)
+    return json({ error: t(event.locals?.locale, 'stockui.api.idRequired') }, { status: 400 });
   const existing = getEquipment(event.params.id);
-  if (!existing) return json({ error: 'not found' }, { status: 404 });
+  if (!existing)
+    return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   if (parsed.data.spec !== undefined && existing.type !== 'sprayer') {
-    return json({ error: 'tank and nozzle are for sprayers' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'equip.api.specSprayerOnly') }, { status: 400 });
   }
   const patch: Parameters<typeof updateEquipment>[1] = {};
   if (parsed.data.label !== undefined) patch.label = parsed.data.label.trim();
@@ -103,11 +109,16 @@ export const PATCH: RequestHandler = async (event) => {
 export const DELETE: RequestHandler = (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
-  if (!event.params.id) return json({ error: 'id required' }, { status: 400 });
+  if (!event.params.id)
+    return json({ error: t(event.locals?.locale, 'stockui.api.idRequired') }, { status: 400 });
   const equipment = getEquipment(event.params.id);
-  if (!equipment) return json({ error: 'not found' }, { status: 404 });
+  if (!equipment)
+    return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   const result = deleteEquipmentCascade(event.params.id);
   return json(result);
 };

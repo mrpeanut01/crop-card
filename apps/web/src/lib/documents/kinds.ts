@@ -1,5 +1,8 @@
 /** Client-safe copies of the document enums in `lib/db/schema.ts`
  *  (contract C-1). `kinds.test.ts` keeps them identical. */
+
+import { dateToLocaleDateString } from '$lib/intlCache';
+import { intlLocale } from '$lib/prefs';
 export const DOCUMENT_KINDS = [
   'lab-report',
   'certificate',
@@ -89,8 +92,12 @@ export const BACKUP_COPY_NOTE =
 export const VAULT_OFF_COPY = "Document storage isn't set up yet.";
 
 /** A day in the viewer's own time zone, for dates fetched in the browser. */
-export function formatLocalDay(iso: string): string {
+export function formatLocalDay(iso: string, locale?: string | null): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return dateToLocaleDateString(d, intlLocale(locale), {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
 }

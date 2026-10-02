@@ -11,6 +11,7 @@
    * /settings/plugins/[id]/propose-change (deferred to a later sprint).
    */
   import { createT } from '$lib/i18n';
+  import { movementReasonText } from '$lib/stock/animalStock';
   import { page } from '$app/state';
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
@@ -118,7 +119,7 @@
           {#each movements.slice(0, 8) as m (m.id)}
             <li>
               <span class="muted small">{fmt.instant(m.occurredAt, 'date')}</span>
-              <span class="mono">{m.reason}</span>
+              <span class="mono">{movementReasonText(m.reason, page.data?.locale)}</span>
               <span class={m.delta < 0 ? 'rust' : 'forest'}>
                 {m.delta > 0 ? '+' : ''}{m.delta.toFixed(1)}
               </span>

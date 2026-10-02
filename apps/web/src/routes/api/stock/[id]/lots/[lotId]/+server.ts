@@ -4,6 +4,7 @@
  * DELETE /api/stock/:id/lots/:lotId — drop a single lot + its movements.
  */
 
+import { t } from '$lib/i18n';
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { deleteStockLotCascade } from '$lib/db/admin';
@@ -26,17 +27,20 @@ export const PATCH: RequestHandler = async (event) => {
   const { id, lotId } = event.params;
   if (!id || !lotId) throw error(400, 'lotId required');
   if (!listLotsForItem(id).some((l) => l.id === lotId)) {
-    return json({ error: 'lot not found' }, { status: 404 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.lotNotFound') }, { status: 404 });
   }
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   try {
     const lot = setLotQuantityStatus({ lotId, ...parsed.data, performedById: user.id });
@@ -51,7 +55,10 @@ export const DELETE: RequestHandler = (event) => {
   if (!event.params.lotId) throw error(400, 'lotId required');
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
   return json(deleteStockLotCascade(event.params.lotId));
 };

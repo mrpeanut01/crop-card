@@ -3,6 +3,7 @@
  * POST /api/stock        — owner-only; create a new SKU
  */
 
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { createStockItem, listStockItems, type StockCategory } from '$lib/db/stock';
@@ -47,11 +48,14 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const foreign = rejectForeignRefs(['typeId', parsed.data.typeId, getTaxonomyTerm]);
   if (foreign) return foreign;

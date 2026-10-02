@@ -8,6 +8,8 @@ import type { CardFact, CardModel, CardStatus } from '$lib/cards/model';
 import type { InventoryType } from '$lib/inventory/types';
 import { DEFAULT_PREFS, formatCalendarDate, type Prefs } from '$lib/prefs';
 import { formatStockQuantity, isLabelUnitCategory } from '$lib/stock/units';
+import { stockCategoryLabel } from '$lib/stock/categories';
+import { t } from '$lib/i18n';
 import type { InventoryRow, StockRow } from '../../routes/inventory/+page.server';
 
 const NONE = '—';
@@ -32,8 +34,10 @@ export function expectedQuantityText(
       category: row.category
     });
   const parts: string[] = [];
-  if ((row.onOrder ?? 0) > 0) parts.push(`${fmt(row.onOrder ?? 0)} ordered`);
-  if ((row.planned ?? 0) > 0) parts.push(`${fmt(row.planned ?? 0)} planned`);
+  if ((row.onOrder ?? 0) > 0)
+    parts.push(t(prefs.locale, 'inv.form.amountOrdered', { amount: fmt(row.onOrder ?? 0) }));
+  if ((row.planned ?? 0) > 0)
+    parts.push(t(prefs.locale, 'inv.form.amountPlanned', { amount: fmt(row.planned ?? 0) }));
   return parts.length ? parts.join(', ') : null;
 }
 
@@ -44,16 +48,23 @@ export function inventoryRowCard(
   now: number = Date.now()
 ): CardModel {
   const href = inventoryDetailHref(type, row);
+  const tr = (key: Parameters<typeof t>[1]) => t(prefs.locale, key);
   const base = { sections: [], asOf: now, href, key: `inv_${type}_${inventoryRowId(row)}` };
 
   if (row.kind === 'catalog') {
     const crop = type === 'crop';
     const facts: CardFact[] = [
-      { label: 'Id', value: row.pluginId },
-      { label: crop ? 'Archetype' : 'Type', value: row.archetype ?? row.pluginType },
-      { label: crop ? 'Family' : 'Source', value: row.cropFamily ?? NONE },
+      { label: tr('inv.list.col.id'), value: row.pluginId },
       {
-        label: crop ? 'DTM' : 'Version',
+        label: crop ? tr('inv.list.col.archetype') : tr('inv.list.col.type'),
+        value: row.archetype ?? row.pluginType
+      },
+      {
+        label: crop ? tr('inv.list.col.family') : tr('inv.list.col.source'),
+        value: row.cropFamily ?? NONE
+      },
+      {
+        label: crop ? tr('inv.list.col.dtm') : tr('inv.list.col.version'),
         value: row.daysToMaturity
           ? `${row.daysToMaturity.min}–${row.daysToMaturity.max} d`
           : (row.version ?? NONE)
@@ -62,7 +73,7 @@ export function inventoryRowCard(
     return {
       ...base,
       kind: crop ? 'careGuide' : 'stock',
-      kicker: crop ? 'Crop' : 'Catalog',
+      kicker: crop ? tr('inv.list.col.crop') : tr('inv.list.catalog'),
       title: row.displayName,
       facts,
       provenance: [{ source: 'plugin', detail: row.pluginId }]
@@ -72,29 +83,31 @@ export function inventoryRowCard(
   const expected = expectedQuantityText(row, prefs);
   const facts: CardFact[] = [
     type === 'seed'
-      ? { label: 'Crop', value: row.cropName ?? NONE }
-      : { label: 'Kind', value: row.category },
+      ? { label: tr('inv.list.col.crop'), value: row.cropName ?? NONE }
+      : { label: tr('inv.list.col.kind'), value: stockCategoryLabel(row.category, prefs.locale) },
     {
-      label: 'On hand',
+      label: tr('inv.list.col.onHand'),
       value: formatStockQuantity(row.onHand, row.defaultUnit, prefs, {
         labelUnit: isLabelUnitCategory(row.category),
         category: row.category
       })
     },
-    ...(expected ? [{ label: 'Coming', value: expected }] : []),
-    { label: 'Lots', value: String(row.lotCount) },
+    ...(expected ? [{ label: tr('inv.card.coming'), value: expected }] : []),
+    { label: tr('inv.list.col.lots'), value: String(row.lotCount) },
     {
-      label: 'Expires',
-      value: row.earliestExpiry ? formatCalendarDate(row.earliestExpiry) : NONE
+      label: tr('inv.list.col.expires'),
+      value: row.earliestExpiry
+        ? formatCalendarDate(row.earliestExpiry, undefined, undefined, prefs.locale)
+        : NONE
     }
   ];
   return {
     ...base,
     kind: 'stock',
-    kicker: 'Stock',
+    kicker: tr('inv.list.stock'),
     title: row.displayName,
     facts,
-    ...(row.isLow ? { status: { label: 'Low', tone: 'rust' } as CardStatus } : {}),
-    provenance: [{ source: 'data', detail: 'your stock ledger' }]
+    ...(row.isLow ? { status: { label: tr('inv.card.low'), tone: 'rust' } as CardStatus } : {}),
+    provenance: [{ source: 'data', detail: tr('inv.card.ledger') }]
   };
 }

@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   let {
     onCapture,
@@ -8,6 +10,7 @@
     onCapture: (base64jpeg: string) => void;
     onClose: () => void;
   } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let videoEl: HTMLVideoElement | undefined = $state();
   let stream: MediaStream | undefined;
@@ -26,8 +29,8 @@
     } catch (e) {
       error =
         e instanceof Error && e.name === 'NotAllowedError'
-          ? 'Camera permission denied.'
-          : 'Could not access camera.';
+          ? tr('stockui.cam.denied')
+          : tr('stockui.cam.noAccess');
     }
   }
 
@@ -58,29 +61,36 @@
   });
 </script>
 
-<div class="capture-backdrop" role="dialog" aria-modal="true" aria-label="Photograph product label">
+<div
+  class="capture-backdrop"
+  role="dialog"
+  aria-modal="true"
+  aria-label={tr('stockui.cam.photographLabel')}
+>
   <div class="capture-modal">
     <div class="capture-header">
-      <span class="capture-title">Read label</span>
-      <button class="close-btn" onclick={onClose} aria-label="Close">✕</button>
+      <span class="capture-title">{tr('stockui.cam.readLabel')}</span>
+      <button class="close-btn" onclick={onClose} aria-label={tr('stockui.cam.close')}>✕</button>
     </div>
 
     <div class="viewfinder-wrap">
       <!-- svelte-ignore a11y_media_has_caption -->
       <video bind:this={videoEl} class="video-feed" playsinline muted></video>
       {#if !ready && !error}
-        <div class="overlay-msg">Starting camera…</div>
+        <div class="overlay-msg">{tr('stockui.cam.starting')}</div>
       {/if}
       {#if error}
         <div class="overlay-msg error">{error}</div>
       {/if}
     </div>
 
-    <p class="hint">Frame the full label so the text is clearly visible, then tap Capture.</p>
+    <p class="hint">{tr('stockui.cam.labelHint')}</p>
 
     <div class="capture-footer">
-      <button class="secondary" onclick={onClose}>Cancel</button>
-      <button class="primary" onclick={capture} disabled={!ready}> 📸 Capture </button>
+      <button class="secondary" onclick={onClose}>{tr('inv.cancel')}</button>
+      <button class="primary" onclick={capture} disabled={!ready}>
+        📸 {tr('stockui.cam.capture')}
+      </button>
     </div>
   </div>
 </div>

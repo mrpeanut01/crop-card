@@ -5,6 +5,7 @@
  * evidence attaches through the document link API (subject `stock-lot`).
  */
 
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { DEFAULT_PREFS, todayYmd } from '$lib/prefs';
@@ -20,18 +21,21 @@ export const PATCH: RequestHandler = async (event) => {
     return json(
       {
         error: 'NOT_WHILE_IMPERSONATING',
-        message: 'Seed sourcing cannot be entered while impersonating a farm.'
+        message: t(event.locals?.locale, 'stockui.api.seedImpersonating')
       },
       { status: 403 }
     );
   }
   const found = lotOfItem(event.params.id ?? '', event.params.lotId ?? '');
   if (!found) {
-    return json({ error: 'NOT_FOUND', message: 'This lot was not found.' }, { status: 404 });
+    return json(
+      { error: 'NOT_FOUND', message: t(event.locals?.locale, 'stockui.api.seedLotNotFound') },
+      { status: 404 }
+    );
   }
   if (found.category !== 'seed') {
     return json(
-      { error: 'NOT_SEED', message: 'Seed sourcing is only recorded on seed lots.' },
+      { error: 'NOT_SEED', message: t(event.locals?.locale, 'stockui.api.seedNotSeed') },
       { status: 400 }
     );
   }
@@ -39,14 +43,17 @@ export const PATCH: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'INVALID', message: 'The request was not valid JSON.' }, { status: 400 });
+    return json(
+      { error: 'INVALID', message: t(event.locals?.locale, 'stockui.api.seedInvalidJson') },
+      { status: 400 }
+    );
   }
   const parsed = seedSourcingPatchSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
         error: 'invalid request',
-        message: 'Check the seed sourcing fields.',
+        message: t(event.locals?.locale, 'stockui.api.seedCheckFields'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -58,7 +65,7 @@ export const PATCH: RequestHandler = async (event) => {
     return json(
       {
         error: 'invalid request',
-        message: 'A supplier check cannot be dated after today.',
+        message: t(event.locals?.locale, 'stockui.api.seedFuture'),
         issues: [{ path: `sourcesChecked.${future}.checkedAt`, message: 'after today' }]
       },
       { status: 400 }

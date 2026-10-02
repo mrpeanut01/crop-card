@@ -35,7 +35,7 @@
   const owner = $derived(canEdit ?? page.data?.user?.role === 'owner');
   const totals = $derived(lotQuantityTotals(lots));
   const qty = (v: number) => formatStockQuantity(v, unit, currentPrefs(), { digits: 2, category });
-  const unitLabel = $derived(stockUnitLabel(unit as StockUnit, category));
+  const unitLabel = $derived(stockUnitLabel(unit as StockUnit, category, page.data?.locale));
 
   let addOpen = $state(false);
   let addQty = $state<number | null>(null);

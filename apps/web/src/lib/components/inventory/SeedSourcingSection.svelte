@@ -1,5 +1,7 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import DocumentAttach from '$lib/components/documents/DocumentAttach.svelte';
   import { fileHref } from '$lib/documents/client';
   import { fmt } from '$lib/prefsState.svelte';
@@ -7,8 +9,8 @@
     MAX_SOURCES_CHECKED,
     RESULT_MAX,
     SEED_ORGANIC_STATUSES,
-    SEED_ORGANIC_STATUS_LABEL,
-    SEED_SEARCH_FLAG_LABEL,
+    seedOrganicStatusLabel,
+    seedSearchFlagLabel,
     SOURCE_RESULT_SUGGESTIONS,
     SUPPLIER_MAX,
     UNAVAILABILITY_NOTE_MAX,
@@ -34,11 +36,15 @@
 
   const { itemId, lot, sourcing, canEdit }: Props = $props();
   const uid = $props.id();
+  const locale = $derived(page.data?.locale);
+  const tr = $derived(createT(locale));
 
   const flag = $derived(seedSearchFlag(sourcing));
   const checks = $derived(sortChecks(sourcing.sourcesChecked));
   const lotLabel = $derived(
-    lot.lotNumber ? `Lot ${lot.lotNumber}` : `Lot received ${fmt.instant(lot.receivedAt, 'date')}`
+    lot.lotNumber
+      ? tr('stockui.seedsrc.lot', { lot: lot.lotNumber })
+      : tr('stockui.seedsrc.lotReceived', { date: fmt.instant(lot.receivedAt, 'date') })
   );
 
   let editing = $state(false);
@@ -73,7 +79,7 @@
     error = null;
     const filled = draftChecks.filter((c) => c.supplier.trim() || c.result.trim());
     if (filled.some((c) => !c.supplier.trim() || !c.result.trim() || !c.checkedAt)) {
-      error = 'Each supplier check needs a supplier, a date and what you found.';
+      error = tr('stockui.seedsrc.err.incomplete');
       return;
     }
     busy = true;
@@ -96,14 +102,14 @@
       );
       if (!res.ok) {
         const b = (await res.json().catch(() => null)) as { message?: string } | null;
-        error = b?.message ?? `We couldn't save this (HTTP ${res.status}).`;
+        error = b?.message ?? tr('stockui.seedsrc.err.save', { status: res.status });
         return;
       }
       editing = false;
-      saved = 'Seed sourcing saved.';
+      saved = tr('stockui.seedsrc.saved');
       await invalidateAll();
     } catch {
-      error = 'Saving seed sourcing needs a connection.';
+      error = tr('stockui.seedsrc.err.offlineSave');
     } finally {
       busy = false;
     }
@@ -119,14 +125,14 @@
         body: JSON.stringify({ subjectType: 'stock-lot', subjectId: lot.id })
       });
       if (!res.ok) {
-        error = "We couldn't attach this file to the lot. Try again.";
+        error = tr('stockui.seedsrc.err.attach');
         return false;
       }
       attachKey += 1;
       await invalidateAll();
       return true;
     } catch {
-      error = 'Attaching a file needs a connection.';
+      error = tr('stockui.seedsrc.err.offlineAttach');
       return false;
     }
   }
@@ -139,12 +145,12 @@
         { method: 'DELETE' }
       );
       if (!res.ok) {
-        error = "We couldn't remove this file from the lot. Try again.";
+        error = tr('stockui.seedsrc.err.remove');
         return;
       }
       await invalidateAll();
     } catch {
-      error = 'Removing a file needs a connection.';
+      error = tr('stockui.seedsrc.err.offlineRemove');
     }
   }
 </script>
@@ -152,23 +158,27 @@
 <article class="seed-sourcing" data-testid="seed-sourcing" data-lot-id={lot.id}>
   <header>
     <h3>{lotLabel}</h3>
-    {#if lot.supplier}<span class="muted small">from {lot.supplier}</span>{/if}
+    {#if lot.supplier}<span class="muted small"
+        >{tr('stockui.seedsrc.from', { supplier: lot.supplier })}</span
+      >{/if}
   </header>
 
   <dl>
     <div>
-      <dt>Seed status (owner-entered)</dt>
+      <dt>{tr('stockui.seedsrc.statusOwner')}</dt>
       <dd data-testid="seed-status">
-        {sourcing.status ? SEED_ORGANIC_STATUS_LABEL[sourcing.status] : 'Not recorded'}
+        {sourcing.status
+          ? seedOrganicStatusLabel(sourcing.status, locale)
+          : tr('stockui.seedsrc.notRecorded')}
       </dd>
     </div>
   </dl>
   {#if flag}
-    <p class="flag" data-testid="seed-search-flag">{SEED_SEARCH_FLAG_LABEL[flag]}</p>
+    <p class="flag" data-testid="seed-search-flag">{seedSearchFlagLabel(flag, locale)}</p>
   {/if}
 
   {#if checks.length > 0}
-    <h4>Suppliers checked</h4>
+    <h4>{tr('stockui.seedsrc.suppliersChecked')}</h4>
     <ul class="checks" data-testid="seed-checks">
       {#each checks as c, i (i)}
         <li>
@@ -180,12 +190,12 @@
   {/if}
 
   {#if sourcing.unavailabilityNote}
-    <h4>Why organic seed was not used</h4>
+    <h4>{tr('stockui.seedsrc.whyNot')}</h4>
     <p class="note">{sourcing.unavailabilityNote}</p>
   {/if}
 
   {#if sourcing.documents.length > 0 || canEdit}
-    <h4>Search evidence</h4>
+    <h4>{tr('stockui.seedsrc.evidence')}</h4>
     {#if sourcing.documents.length > 0}
       <ul class="docs">
         {#each sourcing.documents as d (d.linkId)}
@@ -193,7 +203,7 @@
             <a class="doc-link" href={fileHref(d.id)} target="_blank" rel="noopener">{d.title}</a>
             {#if canEdit}
               <button type="button" class="btn ghost" onclick={() => detach(d.id, d.linkId)}>
-                Remove from lot
+                {tr('stockui.seedsrc.removeFromLot')}
               </button>
             {/if}
           </li>
@@ -211,36 +221,36 @@
   {#if error}<p class="error" role="alert">{error}</p>{/if}
 
   {#if canEdit && !editing}
-    <button type="button" class="btn" onclick={startEdit}>Edit seed sourcing</button>
+    <button type="button" class="btn" onclick={startEdit}>{tr('stockui.seedsrc.edit')}</button>
   {/if}
 
   {#if editing}
     <form class="edit" onsubmit={save}>
-      <label for="{uid}-status">Seed status</label>
+      <label for="{uid}-status">{tr('stockui.seedsrc.status')}</label>
       <select id="{uid}-status" bind:value={draftStatus}>
-        <option value="">Not recorded</option>
+        <option value="">{tr('stockui.seedsrc.notRecorded')}</option>
         {#each SEED_ORGANIC_STATUSES as s (s)}
-          <option value={s}>{SEED_ORGANIC_STATUS_LABEL[s]}</option>
+          <option value={s}>{seedOrganicStatusLabel(s, locale)}</option>
         {/each}
       </select>
 
       <fieldset>
-        <legend>Suppliers checked</legend>
+        <legend>{tr('stockui.seedsrc.suppliersChecked')}</legend>
         {#if draftChecks.length === 0}
-          <p class="muted small">No supplier checks yet.</p>
+          <p class="muted small">{tr('stockui.seedsrc.noChecks')}</p>
         {/if}
         {#each draftChecks as c, i (i)}
           <div class="check-row">
             <label>
-              <span>Supplier</span>
+              <span>{tr('stockui.seedsrc.supplier')}</span>
               <input type="text" maxlength={SUPPLIER_MAX} bind:value={c.supplier} />
             </label>
             <label>
-              <span>Date checked</span>
+              <span>{tr('stockui.seedsrc.dateChecked')}</span>
               <input type="date" max={fmt.today()} bind:value={c.checkedAt} />
             </label>
             <label class="wide">
-              <span>What you found</span>
+              <span>{tr('stockui.seedsrc.whatFound')}</span>
               <input
                 type="text"
                 maxlength={RESULT_MAX}
@@ -248,25 +258,31 @@
                 bind:value={c.result}
               />
             </label>
-            <button type="button" class="btn ghost" onclick={() => removeCheck(i)}>Remove</button>
+            <button type="button" class="btn ghost" onclick={() => removeCheck(i)}
+              >{tr('stockui.seedsrc.remove')}</button
+            >
           </div>
         {/each}
         <datalist id="{uid}-results">
           {#each SOURCE_RESULT_SUGGESTIONS as r (r)}<option value={r}></option>{/each}
         </datalist>
         {#if draftChecks.length < MAX_SOURCES_CHECKED}
-          <button type="button" class="btn ghost" onclick={addCheck}>Add a supplier check</button>
+          <button type="button" class="btn ghost" onclick={addCheck}
+            >{tr('stockui.seedsrc.addCheck')}</button
+          >
         {/if}
       </fieldset>
 
-      <label for="{uid}-note">Why organic seed was not used (optional)</label>
+      <label for="{uid}-note">{tr('stockui.seedsrc.whyNotOptional')}</label>
       <textarea id="{uid}-note" rows="3" maxlength={UNAVAILABILITY_NOTE_MAX} bind:value={draftNote}
       ></textarea>
 
       <div class="actions">
-        <button type="button" class="btn ghost" onclick={() => (editing = false)}>Cancel</button>
+        <button type="button" class="btn ghost" onclick={() => (editing = false)}
+          >{tr('inv.cancel')}</button
+        >
         <button type="submit" class="btn primary" disabled={busy}>
-          {busy ? 'Saving…' : 'Save seed sourcing'}
+          {busy ? tr('inv.feed.saving') : tr('stockui.seedsrc.save')}
         </button>
       </div>
     </form>

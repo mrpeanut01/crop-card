@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { draftFromScanResult, type StockEntryDraft } from '$lib/stock/normalizeStockEntry';
 
 export type BatchStatus = 'queued' | 'reading' | 'done' | 'failed' | 'saved';
@@ -13,7 +14,8 @@ export interface BatchRow {
 }
 
 export type ScanOutcome =
-  { ok: true; draft: StockEntryDraft } | { ok: false; stop: boolean; message: string };
+  | { ok: true; draft: StockEntryDraft }
+  | { ok: false; stop: boolean; message: string; noKey?: boolean };
 
 export const MAX_BATCH_FILES = 30;
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -30,7 +32,11 @@ export function isNoKeyMessage(message: string | null | undefined): boolean {
 /** Classify a /api/scan-label response. A `stop` outcome means every
  *  later file would fail the same way (no key, spend cap, quota,
  *  offline), so the queue halts instead of burning through the batch. */
-export function classifyScanResponse(status: number, body: unknown): ScanOutcome {
+export function classifyScanResponse(
+  status: number,
+  body: unknown,
+  locale?: string | null
+): ScanOutcome {
   const b = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>;
   const message =
     (typeof b.message === 'string' && b.message) ||
@@ -39,10 +45,15 @@ export function classifyScanResponse(status: number, body: unknown): ScanOutcome
   const reason = typeof b.fallbackReason === 'string' ? b.fallbackReason : null;
 
   if (reason && STOP_REASONS.has(reason)) {
-    return { ok: false, stop: true, message: message ?? stopMessageFor(reason) };
+    return {
+      ok: false,
+      stop: true,
+      message: message ?? stopMessageFor(reason, locale),
+      noKey: reason === 'no-key'
+    };
   }
   if (status < 200 || status >= 300) {
-    const msg = message ?? `HTTP ${status}`;
+    const msg = message ?? t(locale, 'stockui.httpStatus', { status });
     const stop = STOP_STATUSES.has(status) || NO_KEY_RE.test(msg) || CAP_RE.test(msg);
     return { ok: false, stop, message: msg };
   }
@@ -53,9 +64,7 @@ export function classifyScanResponse(status: number, body: unknown): ScanOutcome
     return {
       ok: false,
       stop: false,
-      message:
-        message ??
-        'Claude could not identify the product. Try a clearer photo, the Barcode scanner, or Manual entry.'
+      message: message ?? t(locale, 'stockui.ocr.notIdentified')
     };
   }
   return {
@@ -64,11 +73,11 @@ export function classifyScanResponse(status: number, body: unknown): ScanOutcome
   };
 }
 
-function stopMessageFor(reason: string): string {
-  if (reason === 'no-key') return 'No Anthropic API key configured.';
-  if (reason === 'over-cap') return "This month's AI help is used up.";
-  if (reason === 'rate-limit') return 'Claude is rate-limited right now.';
-  return 'You appear to be offline.';
+function stopMessageFor(reason: string, locale?: string | null): string {
+  if (reason === 'no-key') return t(locale, 'stockui.batch.stop.noKey');
+  if (reason === 'over-cap') return t(locale, 'stockui.batch.stop.overCap');
+  if (reason === 'rate-limit') return t(locale, 'stockui.batch.stop.rateLimit');
+  return t(locale, 'stockui.batch.stop.offline');
 }
 
 export function readAsDataUrl(file: File): Promise<string> {
@@ -85,6 +94,8 @@ export interface LabelBatchDeps {
   readAsDataUrl: (file: File) => Promise<string>;
   createThumb: (file: File) => string | null;
   revokeThumb: (url: string) => void;
+  /** UI locale for the messages this queue writes itself. */
+  locale: () => string | null | undefined;
 }
 
 function defaultDeps(): LabelBatchDeps {
@@ -95,7 +106,8 @@ function defaultDeps(): LabelBatchDeps {
     createThumb: (file) => (hasObjectUrl ? URL.createObjectURL(file) : null),
     revokeThumb: (url) => {
       if (hasObjectUrl) URL.revokeObjectURL(url);
-    }
+    },
+    locale: () => undefined
   };
 }
 
@@ -110,6 +122,7 @@ export class LabelBatch {
   rows = $state<BatchRow[]>([]);
   running = $state(false);
   stopMessage = $state<string | null>(null);
+  stopNoKey = $state(false);
   overflow = $state(0);
 
   readonly #deps: LabelBatchDeps;
@@ -129,7 +142,7 @@ export class LabelBatch {
   }
 
   get stoppedOnNoKey(): boolean {
-    return isNoKeyMessage(this.stopMessage);
+    return this.stopNoKey || isNoKeyMessage(this.stopMessage);
   }
 
   nextReviewable(excludeId?: string): BatchRow | undefined {
@@ -149,7 +162,7 @@ export class LabelBatch {
         thumbUrl: this.#deps.createThumb(file),
         status: tooBig ? 'failed' : 'queued',
         draft: null,
-        error: tooBig ? 'File is larger than 10 MB — resize it or take a new photo.' : null
+        error: tooBig ? t(this.#deps.locale(), 'stockui.batch.tooBig') : null
       });
     }
   }
@@ -157,6 +170,7 @@ export class LabelBatch {
   async run(): Promise<void> {
     if (this.running) return;
     this.stopMessage = null;
+    this.stopNoKey = false;
     this.running = true;
     try {
       for (;;) {
@@ -197,6 +211,7 @@ export class LabelBatch {
     for (const r of this.rows) if (r.thumbUrl) this.#deps.revokeThumb(r.thumbUrl);
     this.rows = [];
     this.stopMessage = null;
+    this.stopNoKey = false;
     this.overflow = 0;
   }
 
@@ -218,14 +233,14 @@ export class LabelBatch {
         body: JSON.stringify({ image })
       });
       const body = await res.json().catch(() => null);
-      outcome = classifyScanResponse(res.status, body);
+      outcome = classifyScanResponse(res.status, body, this.#deps.locale());
     } catch (err) {
       const offline = err instanceof TypeError;
       outcome = {
         ok: false,
         stop: offline,
         message: offline
-          ? 'Network error — you may be offline. Remaining photos were not sent.'
+          ? t(this.#deps.locale(), 'stockui.batch.networkError')
           : err instanceof Error
             ? err.message
             : String(err)
@@ -239,7 +254,10 @@ export class LabelBatch {
     } else {
       current.status = 'failed';
       current.error = outcome.message;
-      if (outcome.stop) this.stopMessage = outcome.message;
+      if (outcome.stop) {
+        this.stopMessage = outcome.message;
+        this.stopNoKey = outcome.noKey === true;
+      }
     }
   }
 }

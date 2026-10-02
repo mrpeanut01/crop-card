@@ -3,6 +3,7 @@
  * or records one that is ordered or planned (#475; not on hand yet).
  */
 
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getStockItem, IncompatibleUnitError, QUANTITY_STATUSES, receiveLot } from '$lib/db/stock';
@@ -23,17 +24,20 @@ const schema = z.object({
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
   if (!event.params.id || !getStockItem(event.params.id)) {
-    return json({ error: 'unknown stock item' }, { status: 404 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.unknownItem') }, { status: 404 });
   }
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   try {
     const lot = receiveLot({

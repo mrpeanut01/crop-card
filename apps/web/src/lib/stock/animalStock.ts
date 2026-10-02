@@ -6,6 +6,7 @@
  * keys, under `feed` and `animalHealth`, so no migration is needed.
  */
 
+import { t, type MessageKey } from '$lib/i18n';
 import type { StockCategory } from '$lib/db/stock';
 import type { InventoryType } from '$lib/inventory/types';
 import type { StockEntryDraft } from './normalizeStockEntry';
@@ -142,7 +143,8 @@ export type FeedUseAmount =
  *  hundredths of a bag through the stock ledger's hundredths storage. */
 export function feedUseAmount(
   item: { defaultUnit: string; metadataJson?: string | null },
-  lb: number
+  lb: number,
+  locale?: string | null
 ): FeedUseAmount {
   const unit = item.defaultUnit;
   if (unit === 'lb' || unit === 'oz' || unit === 'kg' || unit === 'g') {
@@ -153,14 +155,14 @@ export function feedUseAmount(
     return {
       ok: false,
       code: 'NEEDS_LB_PER_BAG',
-      message: 'Set how many pounds are in one bag on the edit page first.'
+      message: t(locale, 'stockui.feed.needsLbPerBag')
     };
   }
   if (perBag === null) {
     return {
       ok: false,
       code: 'UNIT_NOT_WEIGHT',
-      message: `This item is counted in ${unit}, so pounds cannot be taken off it. Change the count on the edit page.`
+      message: t(locale, 'stockui.feed.unitNotWeight', { unit })
     };
   }
   return { ok: true, amount: lb / perBag, unit: unit as StockUnit };
@@ -273,16 +275,42 @@ export function sanitizeAnimalDraft(type: InventoryType, draft: StockEntryDraft)
   return out;
 }
 
-const MOVEMENT_LABELS: Record<string, string> = {
-  receipt: 'Received',
-  adjustment: 'Count changed',
-  spill: 'Spilled',
-  expiry: 'Expired',
-  'animal-feed': 'Fed',
-  'animal-treatment': 'Treatment'
+const MOVEMENT_LABEL_KEYS: Record<string, MessageKey> = {
+  receipt: 'stockui.move.receipt',
+  adjustment: 'stockui.move.adjustment',
+  spill: 'stockui.move.spill',
+  expiry: 'stockui.move.expiry',
+  'animal-feed': 'stockui.move.animalFeed',
+  'animal-treatment': 'stockui.move.animalTreatment'
 };
 
 /** Plain words for a stock history line on the animal detail pages. */
-export function movementLabel(reason: string): string {
-  return MOVEMENT_LABELS[reason] ?? reason;
+export function movementLabel(reason: string, locale?: string | null): string {
+  const key = Object.prototype.hasOwnProperty.call(MOVEMENT_LABEL_KEYS, reason)
+    ? MOVEMENT_LABEL_KEYS[reason]
+    : undefined;
+  return key ? t(locale, key) : reason;
+}
+
+const MOVEMENT_REASON_KEYS: Record<string, MessageKey> = {
+  receipt: 'stockui.reason.receipt',
+  'spray-event': 'stockui.reason.sprayEvent',
+  'insecticide-event': 'stockui.reason.insecticideEvent',
+  'fungicide-event': 'stockui.reason.fungicideEvent',
+  'fertility-application': 'stockui.reason.fertilityApplication',
+  planting: 'stockui.reason.planting',
+  adjustment: 'stockui.reason.adjustment',
+  spill: 'stockui.reason.spill',
+  expiry: 'stockui.reason.expiry',
+  'animal-treatment': 'stockui.reason.animalTreatment',
+  'animal-feed': 'stockui.reason.animalFeed'
+};
+
+/** The movement reason as the crop detail pages show it: the stored code in
+ *  English ("spray-event"), a translated phrase in other locales. */
+export function movementReasonText(reason: string, locale?: string | null): string {
+  const key = Object.prototype.hasOwnProperty.call(MOVEMENT_REASON_KEYS, reason)
+    ? MOVEMENT_REASON_KEYS[reason]
+    : undefined;
+  return key ? t(locale, key) : reason;
 }

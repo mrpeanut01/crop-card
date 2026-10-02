@@ -141,3 +141,17 @@ describe('seed quantities (#473)', () => {
     expect(isSeedCountUnit('oz', 'seed')).toBe(false);
   });
 });
+
+describe('Spanish unit words', () => {
+  it('translates seed and bag words but keeps symbols', () => {
+    const es = { ...DEFAULT_PREFS, locale: 'es' };
+    expect(formatStockQuantity(1, 'seeds', es, { category: 'seed' })).toBe('1 semilla');
+    expect(formatStockQuantity(200, 'count', es, { category: 'seed' })).toBe('200 semillas');
+    expect(formatStockQuantity(3, 'bag', es)).toBe('3 bolsas');
+    expect(formatStockQuantity(2, 'gal', es)).toBe('2.0 gal');
+    expect(formatStockQuantity(2, 'bag', DEFAULT_PREFS, { locale: 'es' })).toBe('2 bolsas');
+    expect(stockUnitLabel('bag-50lb', null, 'es')).toBe('Bolsa de 50 lb');
+    expect(stockUnitLabel('count', 'seed', 'es')).toBe('Semillas');
+    expect(stockUnitLabel('lb', null, 'es')).toBe('lb');
+  });
+});

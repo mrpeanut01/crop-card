@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { deleteStockItemCascade } from '$lib/db/admin';
@@ -41,9 +42,11 @@ const updateSchema = z.object({
 
 export const GET: RequestHandler = (event) => {
   const { params } = event;
-  if (!params.id) return json({ error: 'id required' }, { status: 400 });
+  if (!params.id)
+    return json({ error: t(event.locals?.locale, 'stockui.api.idRequired') }, { status: 400 });
   const item = getStockItem(params.id);
-  if (!item) return json({ error: 'not found' }, { status: 404 });
+  if (!item)
+    return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   return json({
     item,
     lots: lotsForRole(listLotsForItem(params.id), currentUser(event)?.role),
@@ -53,18 +56,26 @@ export const GET: RequestHandler = (event) => {
 
 export const PATCH: RequestHandler = async (event) => {
   requireOwner(event);
-  if (!event.params.id) return json({ error: 'id required' }, { status: 400 });
+  if (!event.params.id)
+    return json({ error: t(event.locals?.locale, 'stockui.api.idRequired') }, { status: 400 });
   const current = getStockItem(event.params.id);
-  if (!current) return json({ error: 'not found' }, { status: 404 });
+  if (!current)
+    return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success)
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   const foreign = rejectForeignRefs(['typeId', parsed.data.typeId, getTaxonomyTerm]);
   if (foreign) return foreign;
   const next = parsed.data;
@@ -87,10 +98,15 @@ export const PATCH: RequestHandler = async (event) => {
 export const DELETE: RequestHandler = (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
-  if (!event.params.id) return json({ error: 'id required' }, { status: 400 });
+  if (!event.params.id)
+    return json({ error: t(event.locals?.locale, 'stockui.api.idRequired') }, { status: 400 });
   const item = getStockItem(event.params.id);
-  if (!item) return json({ error: 'not found' }, { status: 404 });
+  if (!item)
+    return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   return json(deleteStockItemCascade(event.params.id));
 };

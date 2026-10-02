@@ -8,6 +8,7 @@
 
 import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
 import { numberToLocaleString } from '$lib/intlCache';
+import { t, type MessageKey } from '$lib/i18n';
 
 export type LiquidUnit = 'ml' | 'fl-oz' | 'pt' | 'qt' | 'gal';
 export type SolidUnit = 'oz' | 'lb' | 'kg' | 'g';
@@ -118,6 +119,8 @@ export interface StockDisplayOpts {
   labelUnit?: boolean;
   /** Stock category. Seed counts ('count' or 'seeds') read as seeds. */
   category?: string | null;
+  /** UI locale for the "seeds" / "bags" words; overrides `prefs.locale`. */
+  locale?: string | null;
 }
 
 /** Units offered for seed (#473): a seed count first, then weights for bulk
@@ -146,9 +149,23 @@ const UNIT_LABELS: Record<StockUnit, string> = {
   'bag-25kg': '25 kg bag'
 };
 
+const UNIT_LABEL_KEYS: Partial<Record<StockUnit, MessageKey>> = {
+  count: 'units.label.count',
+  seeds: 'units.label.seeds',
+  bag: 'units.label.bag',
+  'bag-50lb': 'units.label.bag50lb',
+  'bag-25kg': 'units.label.bag25kg'
+};
+
 /** Human label for a unit picker. For seed, 'count' reads as Seeds too. */
-export function stockUnitLabel(unit: StockUnit, category?: string | null): string {
-  if (isSeedCountUnit(unit, category)) return 'Seeds';
+export function stockUnitLabel(
+  unit: StockUnit,
+  category?: string | null,
+  locale?: string | null
+): string {
+  if (isSeedCountUnit(unit, category)) return t(locale, 'units.label.seeds');
+  const key = UNIT_LABEL_KEYS[unit];
+  if (key) return t(locale, key);
   return UNIT_LABELS[unit] ?? unit;
 }
 
@@ -159,15 +176,20 @@ export function stockUnitLabel(unit: StockUnit, category?: string | null): strin
 export function formatStockQuantity(
   amount: number | null | undefined,
   unit: StockUnit | string,
-  prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS,
+  prefs: Pick<Prefs, 'units' | 'locale'> = DEFAULT_PREFS,
   opts: StockDisplayOpts = {}
 ): string {
   if (amount === null || amount === undefined || !Number.isFinite(amount)) return '—';
+  const locale = opts.locale ?? prefs.locale;
   if (isSeedCountUnit(unit, opts.category)) {
-    return `${num(amount, 0)} ${Math.abs(amount) === 1 ? 'seed' : 'seeds'}`;
+    return t(locale, Math.abs(amount) === 1 ? 'units.qty.seeds.one' : 'units.qty.seeds.other', {
+      n: num(amount, 0)
+    });
   }
   if (unit === 'bag') {
-    return `${num(amount, opts.digits ?? 2)} ${Math.abs(amount) === 1 ? 'bag' : 'bags'}`;
+    return t(locale, Math.abs(amount) === 1 ? 'units.qty.bags.one' : 'units.qty.bags.other', {
+      n: num(amount, opts.digits ?? 2)
+    });
   }
   const us = `${opts.digits === undefined ? amount.toFixed(1) : num(amount, opts.digits)} ${unit}`;
   if (prefs.units !== 'metric') return us;

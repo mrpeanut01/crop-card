@@ -1,4 +1,6 @@
+import { t, type TranslateKey } from '$lib/i18n';
 import { dateToLocaleDateString } from '$lib/intlCache';
+import { intlLocale } from '$lib/prefs';
 import {
   EARLIEST_OFFSET_DAYS,
   defaultDtmFor,
@@ -38,10 +40,10 @@ const MATURITY_BUFFER_DAYS = 14;
 const ONE_DAY_MS = 86_400_000;
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
-const HARDINESS_NOTE: Record<Hardiness, string> = {
-  hardy: 'Frost-hardy, so it can go in well before the last frost.',
-  'half-hardy': 'Handles a light frost; best right around the last frost.',
-  tender: 'Frost-tender, so wait until the soil warms after the last frost.'
+const HARDINESS_NOTE_KEY: Record<Hardiness, TranslateKey> = {
+  hardy: 'plantui.window.hardy',
+  'half-hardy': 'plantui.window.halfHardy',
+  tender: 'plantui.window.tender'
 };
 
 function parseDay(iso: string): number | null {
@@ -58,10 +60,10 @@ function addDays(iso: string, days: number): string {
   return toDay(parseDay(iso)! + days * ONE_DAY_MS);
 }
 
-export function formatDay(iso: string): string {
+export function formatDay(iso: string, locale?: string | null): string {
   const ms = parseDay(iso);
   if (ms === null) return iso;
-  return dateToLocaleDateString(new Date(ms), 'en-US', {
+  return dateToLocaleDateString(new Date(ms), intlLocale(locale), {
     month: 'short',
     day: 'numeric',
     timeZone: 'UTC'
@@ -72,11 +74,12 @@ export function formatDay(iso: string): string {
  *  path and the baseline the AI refinement is checked against. */
 export function deterministicPlantingWindow(
   crop: PlantingWindowCrop,
-  frost: FrostDatesIso & { frostFree?: boolean }
+  frost: FrostDatesIso & { frostFree?: boolean },
+  locale?: string | null
 ): PlantingWindow {
   const hardiness = hardinessFrom(crop.soilTempMinF, crop.cropFamily);
   const dtm = crop.dtmMaxDays ?? defaultDtmFor(hardiness);
-  if (frost.frostFree) return frostFreeWindow(frost, dtm);
+  if (frost.frostFree) return frostFreeWindow(frost, dtm, locale);
   const earliest = addDays(frost.lastSpring, EARLIEST_OFFSET_DAYS[hardiness]);
   const naturalLatest = addDays(frost.firstFall, -(dtm + MATURITY_BUFFER_DAYS));
 
@@ -85,14 +88,17 @@ export function deterministicPlantingWindow(
       earliest,
       prime: earliest,
       latest: earliest,
-      note: `Tight fit: needs about ${dtm} days before the first fall frost (${formatDay(frost.firstFall)}).`
+      note: t(locale, 'plantui.window.tight', {
+        days: dtm,
+        date: formatDay(frost.firstFall, locale)
+      })
     };
   }
 
   let prime = addDays(frost.lastSpring, PRIME_OFFSET_DAYS[hardiness]);
   if (prime < earliest) prime = earliest;
   if (prime > naturalLatest) prime = naturalLatest;
-  return { earliest, prime, latest: naturalLatest, note: HARDINESS_NOTE[hardiness] };
+  return { earliest, prime, latest: naturalLatest, note: t(locale, HARDINESS_NOTE_KEY[hardiness]) };
 }
 
 export const FROST_FREE_NOTE = 'No frost limit for this bed.';
@@ -100,11 +106,20 @@ export const FROST_FREE_NOTE = 'No frost limit for this bed.';
 /** Frost-free bed (E2-6): Jan 1 to Dec 31 minus DTM and the buffer, no
  *  hardiness offsets. The Jan 1 floor at tomorrow is applied by callers
  *  that know "now" (scheduleCandidacy). */
-function frostFreeWindow(frost: FrostDatesIso, dtm: number): PlantingWindow {
+function frostFreeWindow(
+  frost: FrostDatesIso,
+  dtm: number,
+  locale?: string | null
+): PlantingWindow {
   const earliest = frost.lastSpring;
   const naturalLatest = addDays(frost.firstFall, -(dtm + MATURITY_BUFFER_DAYS));
   const latest = naturalLatest < earliest ? earliest : naturalLatest;
-  return { earliest, prime: earliest, latest, note: FROST_FREE_NOTE };
+  return {
+    earliest,
+    prime: earliest,
+    latest,
+    note: locale ? t(locale, 'plantui.window.frostFree') : FROST_FREE_NOTE
+  };
 }
 
 /** True when the three dates parse, are ordered, and sit in `year`. With

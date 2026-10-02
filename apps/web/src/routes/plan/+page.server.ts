@@ -16,6 +16,7 @@
 
 import { seedStartGuide } from '$lib/schedule/seedStart';
 import type { PageServerLoad } from './$types';
+import { t } from '$lib/i18n';
 import {
   eventsForHarvest,
   eventsForPlanting,
@@ -271,13 +272,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     // follow-up). Plan-revisions proxy is null today (table lands in
     // Phase 25d follow-up) → commit step auto-marks done when the four
     // priors are done.
-    seasonWorkflow: deriveSeasonWorkflow({
-      seasonSetup: seasonSetup ? { modifiedAt: seasonSetup.setAt } : null,
-      lastYearSetup,
-      crops: plantingsInYear(blocks, currentYear),
-      inputsTaskCount: countTasks({ kind: 'primary' }),
-      hasPlanRevision: listPlanRevisions(`season-${currentYear}`, 1).length > 0
-    }),
+    seasonWorkflow: deriveSeasonWorkflow(
+      {
+        seasonSetup: seasonSetup ? { modifiedAt: seasonSetup.setAt } : null,
+        lastYearSetup,
+        crops: plantingsInYear(blocks, currentYear),
+        inputsTaskCount: countTasks({ kind: 'primary' }),
+        hasPlanRevision: listPlanRevisions(`season-${currentYear}`, 1).length > 0
+      },
+      locals.locale
+    ),
     // Phase 25d (#89) — ProvenancePanel data. planId is the season-year
     // identifier; revisions chain wizard-commit + AI-refinement + manual
     // edits so the operator can audit "where this plan came from".
@@ -288,7 +292,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       createdAt: r.createdAt,
       note: typeof r.payload?.note === 'string' ? r.payload.note : undefined
     })),
-    planLabel: `${currentYear} plan`,
+    planLabel: t(locals.locale, 'plan.page.planLabel', { year: currentYear }),
     // Phase 25b (#81) — Plan v2 shell needs open primary tasks for the
     // ScheduledTasksCard. Window: next 30 days + overdue from last 14
     // days so the table never silently drops a forgotten task.
@@ -930,11 +934,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     return {
       ...base,
       calendarGrid: grid,
-      monthLabel: formatCalendarDate(firstOfMonth, 'month-day', {
-        month: 'long',
-        day: undefined,
-        year: 'numeric'
-      }),
+      monthLabel: formatCalendarDate(
+        firstOfMonth,
+        'month-day',
+        {
+          month: 'long',
+          day: undefined,
+          year: 'numeric'
+        },
+        locals.locale
+      ),
       prev: fmtYM(prev),
       next: fmtYM(next),
       eventCountTotal: filteredEvents.length,

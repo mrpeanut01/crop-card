@@ -342,7 +342,12 @@
         meta as Parameters<typeof eventsForPlanting>[1],
         {}
       );
-      const prepActivities = prepTasksForPlanting(d.plantingDateMs, block.tillageMethod, blockId);
+      const prepActivities = prepTasksForPlanting(
+        d.plantingDateMs,
+        block.tillageMethod,
+        blockId,
+        data.locale
+      );
       const phiDays = (meta.preHarvestIntervalDays ?? 0) + (wPhiMode === 'conservative' ? 7 : 0);
       const phiConflict = phiDays > 0 && detectPhiConflict(engineEvents, phiDays);
       const soilTooEarly =
@@ -489,7 +494,7 @@
   }
 
   async function handleWorkflowStep(stepId: string) {
-    const { target } = workflowStepRoute(stepId, data.seasonWorkflow ?? []);
+    const { target } = workflowStepRoute(stepId, data.seasonWorkflow ?? [], data.locale);
     if (!target) return;
     if (target.kind === 'wizard') {
       openWizard(target.wizardStep);
@@ -1925,7 +1930,7 @@
 {#if data.seasonWorkflow && data.seasonWorkflow.length > 0}
   <WorkflowStrip
     seasonYear={data.currentYear ?? new Date().getFullYear()}
-    steps={withStepRoutes(data.seasonWorkflow)}
+    steps={withStepRoutes(data.seasonWorkflow, data.locale)}
     onOpenWizard={() => openWizard()}
     onSelectStep={handleWorkflowStep}
     calendarHref="/plan/calendar?year={data.currentYear ?? new Date().getFullYear()}"

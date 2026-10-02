@@ -1,3 +1,4 @@
+import { t, type TranslateKey } from '$lib/i18n';
 import { convert, type StockUnit } from '$lib/stock/units';
 
 export interface PickerCrop {
@@ -36,8 +37,28 @@ export const PLANTING_UNITS: ReadonlyArray<{ value: StockUnit; label: string }> 
   { value: 'g', label: 'g' }
 ];
 
-export function unitLabel(unit: string): string {
+const UNIT_KEY: Partial<Record<string, TranslateKey>> = {
+  seeds: 'plantui.unit.seeds',
+  count: 'plantui.unit.plants'
+};
+
+export function unitLabel(unit: string, locale?: string | null): string {
+  const key = UNIT_KEY[unit];
+  if (locale && key) return t(locale, key);
   return PLANTING_UNITS.find((u) => u.value === unit)?.label ?? unit;
+}
+
+/** The planting units with labels in `locale`. */
+export function plantingUnits(
+  locale?: string | null
+): ReadonlyArray<{ value: StockUnit; label: string }> {
+  return PLANTING_UNITS.map((u) => ({ value: u.value, label: unitLabel(u.value, locale) }));
+}
+
+/** A stored planting amount's unit for display: English keeps the raw
+ *  unit; another language names seeds and plants in that language. */
+export function quantityUnitLabel(unit: string, locale?: string | null): string {
+  return locale && locale !== 'en' ? unitLabel(unit, locale) : unit;
 }
 
 function score(haystacks: Array<string | null | undefined>, q: string): number {

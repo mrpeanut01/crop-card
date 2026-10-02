@@ -21,6 +21,8 @@
  */
 
 import type { WorkflowStep } from '$lib/components/plan/WorkflowStrip.svelte';
+import { t } from '$lib/i18n';
+import { formatCalendarDate } from '$lib/prefs';
 
 export interface SeasonWorkflowInput {
   /** Result of `loadSeasonSetup(currentYear)` — null when absent. */
@@ -44,7 +46,8 @@ export interface SeasonWorkflowInput {
   frostDatesModifiedAt?: number;
 }
 
-function fmtDate(ms: number): string {
+function fmtDate(ms: number, locale?: string | null): string {
+  if (locale && locale !== 'en') return formatCalendarDate(ms, 'month-day', {}, locale);
   // UTC date methods so the format is timezone-stable for both server
   // rendering and test assertions (Date.UTC(...) → "Apr 2" everywhere).
   const d = new Date(ms);
@@ -65,7 +68,10 @@ function fmtDate(ms: number): string {
   return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
 }
 
-export function deriveSeasonWorkflow(input: SeasonWorkflowInput): WorkflowStep[] {
+export function deriveSeasonWorkflow(
+  input: SeasonWorkflowInput,
+  locale?: string | null
+): WorkflowStep[] {
   const steps: WorkflowStep[] = [];
 
   // 1. Season setup
@@ -76,21 +82,21 @@ export function deriveSeasonWorkflow(input: SeasonWorkflowInput): WorkflowStep[]
       input.frostDatesModifiedAt > input.seasonSetup.modifiedAt;
     steps.push({
       id: 'season-setup',
-      label: 'Season setup',
+      label: t(locale, 'plan.wf.seasonSetup'),
       state: stale ? 'stale' : 'done',
-      when: input.seasonSetup.modifiedAt ? fmtDate(input.seasonSetup.modifiedAt) : undefined,
-      note: stale
-        ? 'Frost dates have changed since season setup was saved. Re-check guardrails.'
-        : 'Philosophy, tillage, and guardrails saved.'
+      when: input.seasonSetup.modifiedAt
+        ? fmtDate(input.seasonSetup.modifiedAt, locale)
+        : undefined,
+      note: stale ? t(locale, 'plan.wf.seasonStale') : t(locale, 'plan.wf.seasonDone')
     });
   } else {
     steps.push({
       id: 'season-setup',
-      label: 'Season setup',
+      label: t(locale, 'plan.wf.seasonSetup'),
       state: 'pending',
       note: input.lastYearSetup
-        ? 'Carry forward from last year or set fresh.'
-        : 'Philosophy + tillage + guardrails.'
+        ? t(locale, 'plan.wf.seasonCarry')
+        : t(locale, 'plan.wf.seasonPending')
     });
   }
 
@@ -99,14 +105,14 @@ export function deriveSeasonWorkflow(input: SeasonWorkflowInput): WorkflowStep[]
   const allocationDone = input.crops.length > 0;
   steps.push({
     id: 'allocation',
-    label: 'Allocation',
+    label: t(locale, 'plan.wf.allocation'),
     state: allocationDone ? 'done' : 'pending',
     when: allocationDone
-      ? `${input.crops.length} planting${input.crops.length === 1 ? '' : 's'}`
+      ? t(locale, 'plan.wf.plantings', { count: input.crops.length })
       : undefined,
     note: allocationDone
-      ? 'Seeds + blocks paired. Refine via the wizard chat.'
-      : 'Pair seed stock to blocks.'
+      ? t(locale, 'plan.wf.allocationDone')
+      : t(locale, 'plan.wf.allocationPending')
   });
 
   // 3. Schedule — done when at least one crop has a plantingDate.
@@ -114,31 +120,34 @@ export function deriveSeasonWorkflow(input: SeasonWorkflowInput): WorkflowStep[]
   const allScheduled = scheduled === input.crops.length && input.crops.length > 0;
   steps.push({
     id: 'schedule',
-    label: 'Schedule',
+    label: t(locale, 'plan.wf.schedule'),
     state: allScheduled ? 'done' : scheduled > 0 ? 'in-progress' : 'pending',
     when:
       scheduled > 0
         ? allScheduled
-          ? `${scheduled}/${input.crops.length} dated`
+          ? t(locale, 'plan.wf.dated', { n: scheduled, total: input.crops.length })
           : `${scheduled}/${input.crops.length}`
         : undefined,
     note: allScheduled
-      ? 'All plantings dated.'
+      ? t(locale, 'plan.wf.scheduleDone')
       : scheduled > 0
-        ? 'Some plantings still missing planting dates.'
-        : 'Pick planting dates per planting.'
+        ? t(locale, 'plan.wf.schedulePartial')
+        : t(locale, 'plan.wf.schedulePending')
   });
 
   // 4. Inputs plan — done when at least one inputs-plan task exists.
   steps.push({
     id: 'inputs',
-    label: 'Inputs plan',
+    label: t(locale, 'plan.wf.inputs'),
     state: input.inputsTaskCount > 0 ? 'done' : 'pending',
-    when: input.inputsTaskCount > 0 ? `${input.inputsTaskCount} tasks` : undefined,
+    when:
+      input.inputsTaskCount > 0
+        ? t(locale, 'plan.wf.tasks', { count: input.inputsTaskCount })
+        : undefined,
     note:
       input.inputsTaskCount > 0
-        ? 'Fertility + cover-crop + irrigation tasks committed.'
-        : 'Sketch the fertility + cover-crop applications.'
+        ? t(locale, 'plan.wf.inputsDone')
+        : t(locale, 'plan.wf.inputsPending')
   });
 
   // 5. Commit — done when plan_revisions row exists OR (fallback) when
@@ -148,9 +157,9 @@ export function deriveSeasonWorkflow(input: SeasonWorkflowInput): WorkflowStep[]
     input.hasPlanRevision === true || (input.hasPlanRevision == null && priorsAllDone);
   steps.push({
     id: 'commit',
-    label: 'Save plan',
+    label: t(locale, 'plan.wf.commit'),
     state: commitDone ? 'done' : 'pending',
-    note: commitDone ? 'Plan saved for the season.' : 'Saving the plan keeps a dated copy.'
+    note: commitDone ? t(locale, 'plan.wf.commitDone') : t(locale, 'plan.wf.commitPending')
   });
 
   return steps;
@@ -173,49 +182,53 @@ export interface WorkflowStepRoute {
   hint: string;
 }
 
-export function workflowStepRoute(stepId: string, steps: WorkflowStep[]): WorkflowStepRoute {
+export function workflowStepRoute(
+  stepId: string,
+  steps: WorkflowStep[],
+  locale?: string | null
+): WorkflowStepRoute {
   const stateOf = (id: string) => steps.find((s) => s.id === id)?.state ?? 'pending';
   const allocated = stateOf('allocation') !== 'pending';
   switch (stepId) {
     case 'season-setup':
       return {
         target: { kind: 'wizard', wizardStep: 'season-setup' },
-        hint: 'Open the wizard at Season setup'
+        hint: t(locale, 'plan.wf.hint.season')
       };
     case 'allocation':
       return {
         target: { kind: 'wizard', wizardStep: 'allocation' },
-        hint: 'Open the wizard at Allocation'
+        hint: t(locale, 'plan.wf.hint.allocation')
       };
     case 'schedule':
       return allocated
         ? {
             target: { kind: 'calendar' },
-            hint: 'Open the season calendar to review planting dates'
+            hint: t(locale, 'plan.wf.hint.calendar')
           }
-        : { target: null, hint: 'Run Allocation first — schedule follows it in the wizard' };
+        : { target: null, hint: t(locale, 'plan.wf.hint.scheduleFirst') };
     case 'inputs':
       if (!allocated) {
-        return { target: null, hint: 'Run Allocation first — the inputs plan follows it' };
+        return { target: null, hint: t(locale, 'plan.wf.hint.inputsFirst') };
       }
       return stateOf('inputs') === 'done'
-        ? { target: { kind: 'tasks' }, hint: 'Show the scheduled input tasks' }
+        ? { target: { kind: 'tasks' }, hint: t(locale, 'plan.wf.hint.tasks') }
         : {
             target: { kind: 'wizard', wizardStep: 'allocation' },
-            hint: 'Open the wizard — the inputs plan follows Allocation + Schedule'
+            hint: t(locale, 'plan.wf.hint.inputsWizard')
           };
     case 'commit':
       return stateOf('commit') === 'done'
-        ? { target: { kind: 'provenance' }, hint: 'Show the plan revision history' }
-        : { target: null, hint: 'Save the plan at the end of the planning wizard' };
+        ? { target: { kind: 'provenance' }, hint: t(locale, 'plan.wf.hint.revisions') }
+        : { target: null, hint: t(locale, 'plan.wf.hint.commit') };
     default:
       return { target: null, hint: '' };
   }
 }
 
-export function withStepRoutes(steps: WorkflowStep[]): WorkflowStep[] {
+export function withStepRoutes(steps: WorkflowStep[], locale?: string | null): WorkflowStep[] {
   return steps.map((s) => {
-    const r = workflowStepRoute(s.id, steps);
+    const r = workflowStepRoute(s.id, steps, locale);
     return { ...s, disabled: r.target === null, actionHint: r.hint };
   });
 }

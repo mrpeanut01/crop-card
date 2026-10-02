@@ -54,7 +54,8 @@
       sourceTag,
       refineCount,
       seededAtLabel,
-      detailHref
+      detailHref,
+      locale: page.data?.locale
     })
   );
 </script>

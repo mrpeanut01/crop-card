@@ -1,5 +1,7 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import type { PlanningYearView } from '$lib/season/planningYear';
 
   interface Props {
@@ -21,6 +23,7 @@
     onChange
   }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   let selected = $derived(view.activeYear);
   let saving = $state(false);
   let error = $state<string | null>(null);
@@ -53,7 +56,7 @@
 </script>
 
 <fieldset class="pyp" disabled={!canEdit || saving} aria-describedby="pyp-reason">
-  <legend class="pyp-legend">Which planting year are you setting up?</legend>
+  <legend class="pyp-legend">{tr('season.year.legend')}</legend>
   <div class="pyp-options">
     {#each view.options as year (year)}
       <label class="pyp-option" class:checked={selected === year}>
@@ -66,7 +69,7 @@
         />
         <span class="pyp-year serif">{year}</span>
         {#if year === view.suggestedYear}
-          <span class="pyp-tag">Suggested</span>
+          <span class="pyp-tag">{tr('season.year.suggested')}</span>
         {/if}
       </label>
     {/each}
@@ -77,7 +80,7 @@
   {/if}
   {#if view.pastYears.length > 0}
     <p class="pyp-past">
-      <span>Past seasons (view only):</span>
+      <span>{tr('season.year.past')}</span>
       {#each view.pastYears as year (year)}
         <a href={pastYearHref(year)}>{year}</a>
       {/each}

@@ -23,6 +23,8 @@
  *      plantings (subsumes #228's real fix).
  */
 
+import { t } from '$lib/i18n';
+
 const ONE_DAY_MS = 86_400_000;
 
 // ─── 1. Rotation advisor ───────────────────────────────────────────────────
@@ -84,7 +86,8 @@ export function buildRotationSuggestion(
   block: BlockRotationInput,
   lookbackByFamily: Record<string, number>,
   fromYear: number,
-  toYear: number
+  toYear: number,
+  locale?: string | null
 ): RotationSuggestion {
   const relevant = block.priorPlantings.filter(
     (p) => p.status === 'harvested' || p.status === 'active' || p.status === 'planned'
@@ -97,7 +100,7 @@ export function buildRotationSuggestion(
       blockName: block.blockName,
       severity: 'ok',
       priorFamilies: [],
-      message: 'No prior-season planting on record — free to plant anything.',
+      message: t(locale, 'season.rot.none'),
       avoidFamilies: []
     };
   }
@@ -124,7 +127,7 @@ export function buildRotationSuggestion(
       blockName: block.blockName,
       severity: 'ok',
       priorFamilies,
-      message: `Prior families (${priorFamilies.join(', ')}) are outside their plant-back window — safe to rotate back.`,
+      message: t(locale, 'season.rot.ok', { families: priorFamilies.join(', ') }),
       avoidFamilies: []
     };
   }
@@ -132,8 +135,11 @@ export function buildRotationSuggestion(
   const famList = [...new Set(avoidFamilies)].sort().join(', ');
   const message =
     worst === 'warn'
-      ? `Rotate away from ${famList} — replanting here risks disease/pest carryover inside the ${maxLookback(avoidFamilies, lookbackByFamily)}-year plant-back window.`
-      : `Consider rotating away from ${famList} — planted here last season.`;
+      ? t(locale, 'season.rot.warn', {
+          families: famList,
+          years: maxLookback(avoidFamilies, lookbackByFamily)
+        })
+      : t(locale, 'season.rot.suggest', { families: famList });
 
   return {
     blockId: block.blockId,
@@ -195,7 +201,8 @@ export function classifyStockCarry(
   lots: readonly StockLotSnapshot[],
   nowMs: number,
   seasonStartMs: number,
-  flagWindowDays = 45
+  flagWindowDays = 45,
+  locale?: string | null
 ): StockCarryDecision[] {
   const flagCutoff = seasonStartMs + flagWindowDays * ONE_DAY_MS;
   const out: StockCarryDecision[] = [];
@@ -205,13 +212,13 @@ export function classifyStockCarry(
     let reason: string;
     if (lot.expiresAtMs !== null && lot.expiresAtMs <= nowMs) {
       disposition = 'expired';
-      reason = 'Already past expiry — do not carry into the new season.';
+      reason = t(locale, 'season.stock.expired');
     } else if (lot.expiresAtMs !== null && lot.expiresAtMs <= flagCutoff) {
       disposition = 'flag-expiring';
-      reason = 'Expires early next season — use first or reorder before planting.';
+      reason = t(locale, 'season.stock.expiring');
     } else {
       disposition = 'roll';
-      reason = 'Non-expired — carries into the new season.';
+      reason = t(locale, 'season.stock.roll');
     }
     out.push({
       lotId: lot.lotId,

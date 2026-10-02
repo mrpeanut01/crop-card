@@ -2,7 +2,7 @@
   import { ChevronRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import { fmt as prefsFmt } from '$lib/prefsState.svelte';
-  import { createT } from '$lib/i18n';
+  import { createT, type TranslateKey } from '$lib/i18n';
 
   const { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -16,6 +16,11 @@
   } as const;
   const statusLabel = (s: string) =>
     s in STATUS_KEY ? tr(STATUS_KEY[s as keyof typeof STATUS_KEY]) : s;
+  const label = (prefix: 'crops.taskKind' | 'crops.hayStatus' | 'crops.eventKind', v: string) => {
+    const key = `${prefix}.${v}` as TranslateKey;
+    const out = tr(key);
+    return out === key ? v : out;
+  };
 
   const blockHref = $derived(`/plan?block=${encodeURIComponent(data.block.id)}`);
   const kicker = $derived(
@@ -94,7 +99,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.crop.varietyDisplayName} · CropCard</title>
+  <title>{tr('crops.pageTitle', { name: data.crop.varietyDisplayName })}</title>
 </svelte:head>
 
 <nav class="breadcrumb" aria-label={tr('crops.breadcrumb')}>
@@ -204,7 +209,7 @@
         <li>
           <span class="when">{fmtDay(t.scheduledFor)}</span>
           <strong>{t.title}</strong>
-          <span class="kind-chip">{t.kind}</span>
+          <span class="kind-chip">{label('crops.taskKind', t.kind)}</span>
           {#if t.completedAt}<span class="status status-harvested">{tr('crops.done')}</span>{/if}
           {#if t.abortedAt}<span class="status status-failed">{tr('crops.aborted')}</span>{/if}
         </li>
@@ -297,7 +302,7 @@
         {#each data.cuttings as c (c.id)}
           <li>
             <strong>{tr('crops.cutting', { n: c.cuttingNumber, year: c.year })}</strong>
-            <span class="status status-{c.status}">{c.status}</span>
+            <span class="status status-{c.status}">{label('crops.hayStatus', c.status)}</span>
             {#if c.balesQuantity}<small>{tr('crops.bales', { n: c.balesQuantity })}</small>{/if}
           </li>
         {/each}
@@ -339,7 +344,9 @@
         <li>
           <span class="when">{fmt(t.sampledAt)}</span>
           {#if t.ph}<small>pH {t.ph.toFixed(1)}</small>{/if}
-          {#if t.organicMatterPct}<small>OM {t.organicMatterPct.toFixed(1)}%</small>{/if}
+          {#if t.organicMatterPct}<small
+              >{tr('crops.om', { pct: t.organicMatterPct.toFixed(1) })}</small
+            >{/if}
         </li>
       {/each}
     </ul>
@@ -355,7 +362,7 @@
         <li>
           <span class="when">{fmtDay(p.startMs)}</span>
           <strong>{p.title}</strong>
-          <span class="kind-chip">{p.kind}</span>
+          <span class="kind-chip">{label('crops.eventKind', p.kind)}</span>
         </li>
       {/each}
     </ul>

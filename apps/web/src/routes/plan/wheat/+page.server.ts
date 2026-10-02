@@ -1,4 +1,5 @@
 import { error } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
@@ -81,9 +82,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   let selected: SmallGrainCandidate | undefined;
   if (requested) {
-    if (!requestedExists) error(404, 'Planting not found');
+    if (!requestedExists) error(404, t(locals.locale, 'plan.wheat.notFound'));
     selected = candidates.find((c) => c.plantingId === requested);
-    if (!selected) error(404, 'Not a small-grain planting');
+    if (!selected) error(404, t(locals.locale, 'plan.wheat.notSmallGrain'));
   } else {
     selected = candidates[0];
   }

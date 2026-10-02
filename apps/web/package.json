@@ -43,7 +43,7 @@
     "@vite-pwa/sveltekit": "^1.1.0",
     "drizzle-kit": "^0.31.11",
     "esbuild": "^0.28.2",
-    "eslint": "^9.39.5",
+    "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-cropcard": "workspace:*",
     "eslint-plugin-svelte": "^3.23.0",

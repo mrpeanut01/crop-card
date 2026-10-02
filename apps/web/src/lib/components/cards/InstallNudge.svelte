@@ -1,12 +1,15 @@
 <script lang="ts">
   import { Share } from 'lucide-svelte';
   import { dismissInstallNudge } from '$lib/client/offlineStorage';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     onDismiss?: () => void;
   }
 
   const { onDismiss }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   function dismiss() {
     dismissInstallNudge();
@@ -16,15 +19,16 @@
 
 <aside class="nudge no-print" aria-labelledby="install-nudge-title">
   <div class="text">
-    <h2 id="install-nudge-title">Keep your cards on this device</h2>
+    <h2 id="install-nudge-title">{tr('cardsui.nudge.title')}</h2>
     <p>
-      Safari clears saved pages after about a week without a visit. Tap
-      <Share size={15} strokeWidth={2} aria-label="Share" /> then
-      <strong>Add to Home Screen</strong>
-      and your cards stay put. Printing them works too.
+      {tr('cardsui.nudge.a')}
+      <Share size={15} strokeWidth={2} aria-label={tr('cardsui.nudge.share')} />
+      {tr('cardsui.nudge.then')}
+      <strong>{tr('cardsui.nudge.add')}</strong>
+      {tr('cardsui.nudge.c')}
     </p>
   </div>
-  <button type="button" class="dismiss" onclick={dismiss}>Got it</button>
+  <button type="button" class="dismiss" onclick={dismiss}>{tr('cardsui.nudge.gotIt')}</button>
 </aside>
 
 <style>

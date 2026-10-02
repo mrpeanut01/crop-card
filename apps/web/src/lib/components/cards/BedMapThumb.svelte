@@ -2,6 +2,8 @@
   import type { CardBedMap } from '$lib/cards/model';
   import { bedMapLabels } from '$lib/cards/bedMapLabels';
   import { ALL_GLYPHS } from '$lib/garden/familyGlyph';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     map: CardBedMap;
@@ -9,6 +11,7 @@
   }
 
   const { map, print = false }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const uid = $props.id();
   const PATTERNS = ['diag', 'dots', 'cross', 'horiz'] as const;
@@ -23,10 +26,12 @@
     [...new Set(map.beds.flatMap((b) => (b.plantings ?? []).map((p) => p.glyph)))].sort()
   );
   const label = $derived(
-    `Bed map, ${map.widthFt} by ${map.lengthFt} feet. ` +
-      map.beds.map((b) => `${b.name}: ${b.crops.length ? b.crops.join(', ') : 'open'}`).join('. ') +
+    `${tr('cardsui.bed.label', { width: map.widthFt, length: map.lengthFt })} ` +
+      map.beds
+        .map((b) => `${b.name}: ${b.crops.length ? b.crops.join(', ') : tr('cardsui.bed.open')}`)
+        .join('. ') +
       (marks.legend.length
-        ? `. Numbers: ${marks.legend.map((r) => `${r.n}, ${r.text}`).join('; ')}.`
+        ? `. ${tr('cardsui.bed.numbers')}: ${marks.legend.map((r) => `${r.n}, ${r.text}`).join('; ')}.`
         : '')
   );
 </script>
@@ -179,7 +184,11 @@
     <figcaption>
       <ul>
         {#each map.beds as b, i (i)}
-          <li><strong>{b.name}</strong>: {b.crops.length ? b.crops.join(', ') : 'open'}</li>
+          <li>
+            <strong>{b.name}</strong>: {b.crops.length
+              ? b.crops.join(', ')
+              : tr('cardsui.bed.open')}
+          </li>
         {/each}
       </ul>
     </figcaption>

@@ -5,6 +5,7 @@
  */
 
 import { buildAreaCard } from '$lib/cards/build/area';
+import { t } from '$lib/i18n';
 import { areaDisplayName, blockDisplayName } from '$lib/cards/build/common';
 import { formatSize } from '$lib/cards/build/size';
 import {
@@ -127,7 +128,9 @@ export function planRailCards(
     const built = buildAreaCard(snapshot, area.id, { prefs });
     if (!built) continue;
     const inArea = blocks.filter((b) => b.fieldId === area.id);
-    out.push(railCard(built, area.id, area.kind, inArea, current, now));
+    out.push(
+      railCard(built, area.id, area.kind, inArea, current, now, t(prefs.locale, 'cards.fact.size'))
+    );
   }
   const loose = blocks.filter((b) => !b.fieldId || !areas.some((a) => a.id === b.fieldId));
   if (loose.length) {
@@ -174,9 +177,10 @@ function railCard(
   kind: AreaKind,
   blocks: readonly BlockWithPlantings[],
   current: URLSearchParams,
-  now: number
+  now: number,
+  sizeLabel = 'Size'
 ): RailAreaCard {
-  const size = built.facts.find((f) => f.label === 'Size');
+  const size = built.facts.find((f) => f.label === 'Size' || f.label === sizeLabel);
   const facts: CardFact[] = [];
   if (size) facts.push(size);
   facts.push(
@@ -215,7 +219,7 @@ export function planAreaCard(
   return {
     ...built,
     title: areaDisplayName({ name: area.name, kind: area.kind }),
-    sections: built.sections.filter((s) => s.title === 'Notes'),
+    sections: built.sections.filter((s) => s.title === t(prefs.locale, 'cards.notes')),
     accent: kindStyle(area.kind).color
   };
 }

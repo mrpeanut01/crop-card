@@ -20,7 +20,7 @@
   const scaleFt = $derived(map.widthFt >= 40 ? 10 : map.widthFt >= 12 ? 5 : 1);
   const glyphD = new Map(ALL_GLYPHS.map((g) => [g.key, g.d]));
   const glyphLabel = new Map(ALL_GLYPHS.map((g) => [g.key, g.label]));
-  const marks = $derived(bedMapLabels(map, font * 0.8));
+  const marks = $derived(bedMapLabels(map, font * 0.8, page.data?.locale));
   const hasPlantings = $derived(map.beds.some((b) => (b.plantings ?? []).length > 0));
   const glyphsUsed = $derived(
     [...new Set(map.beds.flatMap((b) => (b.plantings ?? []).map((p) => p.glyph)))].sort()

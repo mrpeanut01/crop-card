@@ -27,7 +27,8 @@ export const load: PageServerLoad = async (event) => {
   const money = await loadSeasonMoney(year);
   const card = buildProfitCard(year, money.profit, {
     asOf: Date.now(),
-    farmName: farmName(user.activeOwnerId)
+    farmName: farmName(user.activeOwnerId),
+    locale: event.locals.locale
   });
   return {
     year,

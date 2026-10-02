@@ -100,7 +100,11 @@
     {/if}
     {#each busyDays as d (d.ymd)}
       <section class="list-day" data-ymd={d.ymd}>
-        <h5>{calendarDayLabel(d.ymd)}{d.today ? `, ${tr('cardsui.cal.today')}` : ''}</h5>
+        <h5>
+          {calendarDayLabel(d.ymd, page.data?.locale)}{d.today
+            ? `, ${tr('cardsui.cal.today')}`
+            : ''}
+        </h5>
         <ul>
           {#each d.entries as e, i (i)}
             <li class:overdue={e.overdue}>{@render entryLine(e, false)}</li>

@@ -4,11 +4,7 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
   import { createT, type MessageKey } from '$lib/i18n';
-  import {
-    PRINT_RANGE_NOTE,
-    periodCardPrintHref,
-    periodPrintable
-  } from '$lib/cards/build/calendar';
+  import { periodCardPrintHref, printRangeNote, periodPrintable } from '$lib/cards/build/calendar';
   import type { CalendarEvent } from '$lib/calendar/engine';
   import type { Task } from '$lib/db/tasks';
   import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
@@ -781,7 +777,7 @@
           })}>{data.calendar.view === 'week' ? tr('today.print.week') : tr('today.print.month')}</a
         >
       {:else}
-        <p class="print-range" data-testid="print-calendar-range">{PRINT_RANGE_NOTE}</p>
+        <p class="print-range" data-testid="print-calendar-range">{printRangeNote(data.locale)}</p>
       {/if}
     </div>
   {:else if data.season}

@@ -1,5 +1,6 @@
 /** Client-safe Card model shared by the pure builders, the renderer and print. */
 
+import { t } from '$lib/i18n';
 import type { GlyphKey } from '$lib/garden/familyGlyph';
 
 export const CARD_KINDS = [
@@ -187,6 +188,10 @@ export interface CardModel {
 
 export const STALE_NOTICE = 'This card is more than a day old. Refresh it before you rely on it.';
 
+export function staleNotice(locale?: string | null): string {
+  return t(locale, 'cardsui.stale');
+}
+
 export function isCardStale(card: Pick<CardModel, 'asOf' | 'staleAfterMs'>, now: number): boolean {
   return card.staleAfterMs !== undefined && now - card.asOf > card.staleAfterMs;
 }
@@ -288,6 +293,19 @@ export function plantingCardHref(plantingId: string): string {
 
 export const PLANTING_CARE_LINK_LABEL = 'Planting card, care and photo help';
 export const PLANTING_JOURNAL_LINK_LABEL = 'Journal and photo help';
+
+export function plantingCareLinkLabel(locale?: string | null): string {
+  return t(locale, 'cards.link.plantingCare');
+}
+
+export function plantingJournalLinkLabel(locale?: string | null): string {
+  return t(locale, 'cards.link.plantingJournal');
+}
+
+/** A card kind's name in the app language (`CARD_KIND_LABEL` in English). */
+export function cardKindLabel(kind: CardKind, locale?: string | null): string {
+  return t(locale, `cardsui.kind.${kind}`);
+}
 
 /** Link printed beside the QR. Null when there is no stable http(s) origin,
  *  in which case the QR is left off. */

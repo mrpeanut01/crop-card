@@ -36,6 +36,18 @@ export const EQUIPMENT_TYPE_LABEL: Record<SnapshotEquipmentType, string> = {
   other: 'Equipment'
 };
 
+const EQUIPMENT_TYPE_KEY = {
+  sprayer: 'cards.eq.type.sprayer',
+  planter: 'cards.eq.type.planter',
+  drill: 'cards.eq.type.drill',
+  rake: 'cards.eq.type.rake',
+  baler: 'cards.eq.type.baler',
+  tractor: 'cards.eq.type.tractor',
+  mower: 'cards.eq.type.mower',
+  irrigation: 'cards.eq.type.irrigation',
+  other: 'cards.eq.type.other'
+} as const satisfies Record<SnapshotEquipmentType, string>;
+
 /** True when the sprayer carried chemistry after its last decon. */
 export function needsDecon(e: SnapshotEquipment): boolean {
   return stateNeedsDecon(e.state);
@@ -48,20 +60,25 @@ function day(ms: number | null | undefined, opts: ResolvedOptions): string | nul
 }
 
 function sprayerFacts(e: SnapshotEquipment, opts: ResolvedOptions): CardFact[] {
+  const { tr } = opts;
   const s = e.state;
   const facts: CardFact[] = [];
   const gpa = s?.calibratedGpa;
   facts.push({
-    label: 'Calibration',
-    value: isCalibratedGpa(gpa) ? `${trimNumber(gpa, 1)} GPA` : 'Not calibrated',
+    label: tr('cards.eq.calibration'),
+    value: isCalibratedGpa(gpa) ? `${trimNumber(gpa, 1)} GPA` : tr('cards.eq.notCalibrated'),
     provenance: 'data'
   });
   const calibrated = day(s?.calibrationDate, opts);
   if (calibrated && isCalibratedGpa(gpa)) {
-    facts.push({ label: 'Calibrated', value: calibrated, provenance: 'data' });
+    facts.push({ label: tr('cards.eq.calibrated'), value: calibrated, provenance: 'data' });
   }
   if (typeof e.tankGal === 'number' && e.tankGal > 0) {
-    facts.push({ label: 'Tank', value: `${trimNumber(e.tankGal, 1)} gal`, provenance: 'manual' });
+    facts.push({
+      label: tr('cards.eq.tank'),
+      value: `${trimNumber(e.tankGal, 1)} gal`,
+      provenance: 'manual'
+    });
   }
   facts.push({
     label: 'Last decon',
@@ -81,19 +98,20 @@ function sprayerFacts(e: SnapshotEquipment, opts: ResolvedOptions): CardFact[] {
 function commonFacts(e: SnapshotEquipment, opts: ResolvedOptions): CardFact[] {
   const facts: CardFact[] = [];
   const used = day(e.state?.lastUsedAt, opts);
-  if (used) facts.push({ label: 'Last used', value: used, provenance: 'data' });
+  if (used) facts.push({ label: opts.tr('cards.eq.lastUsed'), value: used, provenance: 'data' });
   const winterized = day(e.state?.winterizedAt, opts);
-  if (winterized) facts.push({ label: 'Winterized', value: winterized, provenance: 'data' });
+  if (winterized)
+    facts.push({ label: opts.tr('cards.eq.winterized'), value: winterized, provenance: 'data' });
   return facts;
 }
 
-function priorityAction(e: SnapshotEquipment): CardAction | undefined {
+function priorityAction(e: SnapshotEquipment, opts: ResolvedOptions): CardAction | undefined {
   if (e.type !== 'sprayer') return undefined;
   if (needsDecon(e)) {
     return { label: 'Run decon', href: `/spray/decon?sprayer=${encodeURIComponent(e.id)}` };
   }
   if (!isCalibratedGpa(e.state?.calibratedGpa)) {
-    return { label: 'Calibrate this sprayer', href: '/calibrate' };
+    return { label: opts.tr('cards.eq.calibrate'), href: '/calibrate' };
   }
   return undefined;
 }
@@ -110,27 +128,31 @@ export function buildEquipmentCard(
 
   const tasks = sortTasks(snapshot.tasks.filter((t) => t.equipmentId === e.id));
   const sections: CardSection[] = [];
-  const upcoming = priorityAction(e) ? tasks : tasks.slice(1);
+  const upcoming = priorityAction(e, opts) ? tasks : tasks.slice(1);
   if (upcoming.length) {
     sections.push({
-      title: 'Coming up',
+      title: opts.tr('cards.section.comingUp'),
       items: upcoming
         .slice(0, MAX_UPCOMING)
         .map((t) => `${t.title} (${dueLabel(t.scheduledFor, opts.now, opts.prefs)})`)
     });
   }
 
-  const provenance: CardProvenance[] = [{ source: 'manual', detail: 'your equipment list' }];
+  const provenance: CardProvenance[] = [
+    { source: 'manual', detail: opts.tr('cards.eq.provList') }
+  ];
   if (facts.some((f) => f.provenance === 'data')) provenance.push({ source: 'data' });
 
   const key = cardKey('equipment', e.id);
   return {
     kind: 'equipment',
     key,
-    kicker: `Equipment · ${EQUIPMENT_TYPE_LABEL[e.type] ?? EQUIPMENT_TYPE_LABEL.other}`,
+    kicker: opts.tr('cards.eq.kicker', {
+      type: opts.tr(EQUIPMENT_TYPE_KEY[EQUIPMENT_TYPE_LABEL[e.type] ? e.type : 'other'])
+    }),
     title: e.label,
     facts,
-    next: priorityAction(e) ?? nextAction(tasks, opts, snapshot.plantings),
+    next: priorityAction(e, opts) ?? nextAction(tasks, opts, snapshot.plantings),
     sections,
     asOf: snapshot.generatedAt,
     provenance: mergeProvenance(provenance),

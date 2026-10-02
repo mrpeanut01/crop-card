@@ -31,6 +31,7 @@ import {
 import {
   isPetLayout,
   livesAt,
+  localizeFacts,
   nextCare,
   planLine,
   planProvenance,
@@ -74,6 +75,8 @@ function animalCard(
   options: BuildOptions
 ): CardModel {
   const opts = resolveOptions(snapshot, options);
+  const { tr } = opts;
+  const loc = opts.prefs.locale;
   const species = speciesOf(snapshot, animal.speciesId);
   const group = animal.groupId
     ? (snapshot.animalGroups?.find((g) => g.id === animal.groupId) ?? null)
@@ -94,12 +97,12 @@ function animalCard(
 
   const plans = sortPlans(plansFor(snapshot, 'animal', animal.id));
   const treatments = treatmentsFor(snapshot, 'animal', animal.id);
-  const vet = vetParts(snapshot);
+  const vet = vetParts(snapshot, loc);
 
   const base = animalFacts(
     {
       speciesId: animal.speciesId,
-      speciesName: species?.displayName ?? 'Unknown kind',
+      speciesName: species?.displayName ?? tr('cards.animal.unknownKind'),
       sex: animal.sex as AnimalSex,
       birthDate: animal.birthDate,
       birthDateEstimated: animal.birthDateEstimated,
@@ -123,7 +126,7 @@ function animalCard(
   if (!pet) {
     facts.push({
       label: 'Food animal',
-      value: animal.foodProducing ? 'Yes' : 'No',
+      value: animal.foodProducing ? tr('cards.yes') : tr('cards.no'),
       provenance: 'data'
     });
   }
@@ -134,7 +137,7 @@ function animalCard(
         label: 'Next vaccine',
         value:
           vaccine.nextDueAt === null
-            ? 'Due date not set, ask your vet'
+            ? tr('cards.animal.askVetSentence')
             : `${vaccine.title}, ${dueLabel(vaccine.nextDueAt, opts.now, opts.prefs)}`,
         provenance: vaccine.provenance
       });
@@ -144,35 +147,50 @@ function animalCard(
     if (food > at) facts.splice(at, 0, ...facts.splice(food, 1));
   }
 
+  const shownFacts = localizeFacts(facts, loc);
+
   const sections: CardSection[] = [];
   if (plans.length) {
     sections.push({
-      title: 'Care due',
+      title: tr('cards.animal.careDue'),
       items: plans.map((p) => planLine(p, opts.now, opts.prefs)),
       provenance: sectionProvenance(plans)
     });
   }
   if (group && plansFor(snapshot, 'group', group.id).length) {
     sections.push({
-      title: 'Flock care',
-      items: [`Care for the whole ${species?.groupNoun ?? 'group'} is on the ${group.name} card.`]
+      title: tr('cards.animal.flockCare'),
+      items: [
+        loc && loc !== 'en'
+          ? tr('cards.animal.flockCareOnGroup', { name: group.name })
+          : tr('cards.animal.flockCareOn', {
+              noun: species?.groupNoun ?? 'group',
+              name: group.name
+            })
+      ]
     });
   }
-  const meds = treatmentsSection(treatments, opts.prefs, pet ? 'Medicine' : 'Recent treatments');
+  const meds = treatmentsSection(
+    treatments,
+    opts.prefs,
+    pet ? tr('cards.animal.medicine') : tr('cards.animal.recentTreatments')
+  );
   if (meds) sections.push(meds);
   if (vet.section) sections.push(vet.section);
 
   const links: CardAction[] = [];
   if (vet.link) links.push(vet.link);
-  links.push({ label: 'Open animal page', href: pageHref });
-  links.push({ label: 'Health records', href: `${pageHref}/health` });
+  links.push({ label: tr('cards.animal.openPage'), href: pageHref });
+  links.push({ label: tr('cards.animal.healthRecords'), href: `${pageHref}/health` });
   if (!pet && species?.products.some((p) => p === 'eggs' || p === 'milk')) {
-    links.push({ label: 'Log eggs or milk', href: `${pageHref}/log` });
+    links.push({ label: tr('cards.animal.logEggsMilk'), href: `${pageHref}/log` });
   }
 
-  const provenance: CardProvenance[] = [{ source: 'data', detail: 'your animal records' }];
-  if (species) provenance.push({ source: 'plugin', detail: 'species library' });
-  provenance.push(...planProvenance(plans));
+  const provenance: CardProvenance[] = [
+    { source: 'data', detail: tr('cards.animal.provRecords') }
+  ];
+  if (species) provenance.push({ source: 'plugin', detail: tr('cards.animal.provSpecies') });
+  provenance.push(...planProvenance(plans, loc));
   if (
     treatments.length ||
     vet.section ||
@@ -185,15 +203,15 @@ function animalCard(
 
   const key = cardKey('animal', animal.id);
   const kicker = group
-    ? `${species?.displayName ?? 'Animal'} · ${group.name}`
-    : (species?.displayName ?? 'Animal');
+    ? `${species?.displayName ?? tr('cards.animal.animal')} · ${group.name}`
+    : (species?.displayName ?? tr('cards.animal.animal'));
   const notices = holdNotices(snapshot, reading, opts.prefs, foods);
   return {
     kind: 'animal',
     key,
     kicker,
     title: animalLabel(animal),
-    facts,
+    facts: shownFacts,
     next: nextCare(plans, opts.now, opts.prefs, pageHref),
     sections,
     asOf: snapshot.generatedAt,

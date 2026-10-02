@@ -15,6 +15,7 @@
     type PhotoQuestion
   } from '$lib/journal/model';
   import {
+    CARE_SECTION,
     SPRAY_REDIRECT,
     asksForSprayAdvice,
     careSectionsFor,
@@ -159,13 +160,34 @@
     }
   }
 
+  const CARE_TITLE_KEYS = {
+    water: 'cards.care.water',
+    feed: 'cards.care.feed',
+    prune: 'cards.care.prune',
+    harvest: 'cards.section.harvestCues',
+    problems: 'cards.care.problems',
+    notes: 'cards.notes'
+  } as const satisfies Record<keyof typeof CARE_SECTION, string>;
+
+  /** The Care Guide card's section titles are in the app language; the
+   *  topic match reads the English ones, so map there and back. */
   function careFallback(q: PhotoQuestion, text: string): JournalAnswerSection[] {
+    const toEnglish = new Map<string, string>();
+    const fromEnglish = new Map<string, string>();
+    for (const id of Object.keys(CARE_TITLE_KEYS) as (keyof typeof CARE_TITLE_KEYS)[]) {
+      const local = tr(CARE_TITLE_KEYS[id]);
+      toEnglish.set(local, CARE_SECTION[id]);
+      fromEnglish.set(CARE_SECTION[id], local);
+    }
     const sections = (target?.careGuide?.sections ?? []).map((s) => ({
-      title: s.title,
+      title: toEnglish.get(s.title) ?? s.title,
       items: filterSprayAdviceItems(s.items, sprayTerms),
       provenance: s.provenance === 'plugin' ? ('plugin' as const) : ('fallback' as const)
     }));
-    return careSectionsFor(sections, topicFor(q, text));
+    return careSectionsFor(sections, topicFor(q, text)).map((s) => ({
+      ...s,
+      title: fromEnglish.get(s.title) ?? s.title
+    }));
   }
 
   async function queueEntry(kind: 'note' | 'photo_help', text: string, withPhoto: string | null) {

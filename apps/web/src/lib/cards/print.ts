@@ -1,5 +1,6 @@
 import { cardShortUrl, type CardModel, type CardPrintLayout } from './model';
 import { qrPath, type QrPath } from './qr';
+import { t } from '$lib/i18n';
 
 export const PRINT_LAYOUTS: {
   id: CardPrintLayout;
@@ -29,6 +30,29 @@ export const PRINT_LAYOUTS: {
 
 export const PRINT_HELP =
   'On iPhone, tap Share → Print, then pinch out on the preview to save a PDF. Turn off headers and footers in the print dialog.';
+
+const LAYOUT_KEYS = {
+  'letter-4up': { label: 'cardsui.layout.letter4up.label', hint: 'cardsui.layout.letter4up.hint' },
+  'index-3x5': { label: 'cardsui.layout.index3x5.label', hint: 'cardsui.layout.index3x5.hint' },
+  'index-4x6': { label: 'cardsui.layout.index4x6.label', hint: 'cardsui.layout.index4x6.hint' },
+  'letter-landscape': {
+    label: 'cardsui.layout.landscape.label',
+    hint: 'cardsui.layout.landscape.hint'
+  }
+} as const satisfies Record<CardPrintLayout, { label: string; hint: string }>;
+
+/** A paper choice's name in the app language. */
+export function printLayoutLabel(id: CardPrintLayout, locale?: string | null): string {
+  return t(locale, LAYOUT_KEYS[id].label);
+}
+
+export function printLayoutHint(id: CardPrintLayout, locale?: string | null): string {
+  return t(locale, LAYOUT_KEYS[id].hint);
+}
+
+export function printHelp(locale?: string | null): string {
+  return t(locale, 'cardsui.printHelp');
+}
 
 export function perPage(layout: CardPrintLayout): number {
   return PRINT_LAYOUTS.find((l) => l.id === layout)?.perPage ?? 1;
@@ -67,10 +91,15 @@ export const FULL_PAGE_NOTE = 'This card prints on its own letter page so the wh
 export const LANDSCAPE_PAGE_NOTE =
   'This card prints on Letter paper turned sideways. Choose Letter and Landscape in the print dialog.';
 
-export function fullPageNote(card: Pick<CardModel, 'kind'>): string {
+export function fullPageNote(card: Pick<CardModel, 'kind'>, locale?: string | null): string {
   return isCalendarKind(card.kind)
-    ? LANDSCAPE_PAGE_NOTE
-    : `${FULL_PAGE_NOTE} Choose Letter paper in the print dialog.`;
+    ? t(locale, 'cardsui.one.landscapeNote')
+    : t(locale, 'cardsui.one.fullPageNote');
+}
+
+/** `FULL_PAGE_NOTE` in the app language. */
+export function fullPageMapNote(locale?: string | null): string {
+  return t(locale, 'cards.print.fullPage');
 }
 
 export interface PrintPage<T> {

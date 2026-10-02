@@ -23,7 +23,9 @@
   import type { CardModel } from '$lib/cards/model';
   import type { Prefs } from '$lib/prefs';
   import type { TaskStart } from '$lib/tasks/start';
-  import { TASK_STATUS_LABEL, TASK_STATUS_TONE } from '$lib/tasks/status';
+  import { TASK_STATUS_TONE } from '$lib/tasks/status';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     card: CardModel;
@@ -64,6 +66,7 @@
     onAssigned
   }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   let skipOpen = $state(false);
   let doneFor = $state<{ id: string; title: string } | null>(null);
   let assignOpen = $state(false);
@@ -93,7 +96,7 @@
     {#snippet badges()}
       {#if queued}<QueuedBadge />{/if}
       {#if rejected}
-        <a class="rejected" href="/records/pending">Could not save. Open Pending records</a>
+        <a class="rejected" href="/records/pending">{tr('tasks.deck.rejected')}</a>
       {/if}
     {/snippet}
     {#snippet actions()}
@@ -101,22 +104,27 @@
         <a class="card-link" href={l.href}>{l.label}</a>
       {/each}
       {#if linked.length}
-        <ul class="linked" aria-label="Get ready and follow-up for {card.title}">
+        <ul class="linked" aria-label={tr('tasks.deck.linkedAria', { title: card.title })}>
           {#each linked as l (l.id)}
             <li data-task-id={l.id} data-status={l.status}>
-              <span class="linked-kind">{l.kind === 'pre-task' ? 'Get ready' : 'Follow-up'}</span>
+              <span class="linked-kind"
+                >{l.kind === 'pre-task'
+                  ? tr('tasks.deck.getReady')
+                  : tr('tasks.deck.followUp')}</span
+              >
               <span class="linked-title">{l.title}</span>
               {#if l.due}<span class="linked-due">{l.due}</span>{/if}
-              <Pill tone={TASK_STATUS_TONE[l.status]}>{TASK_STATUS_LABEL[l.status]}</Pill>
+              <Pill tone={TASK_STATUS_TONE[l.status]}>{tr(`tasks.status.${l.status}`)}</Pill>
               {#if l.body?.trim()}<p class="linked-body">{l.body.trim()}</p>{/if}
               {#if l.queued}<QueuedBadge />{/if}
               {#if canAct && l.status !== 'done' && l.status !== 'skipped'}
                 <button
                   type="button"
                   class="btn ghost"
-                  aria-label="Done: {l.title}"
+                  aria-label={tr('tasks.deck.doneAria', { title: l.title })}
                   disabled={busy}
-                  onclick={() => (doneFor = { id: l.id, title: l.title })}>Done</button
+                  onclick={() => (doneFor = { id: l.id, title: l.title })}
+                  >{tr('tasks.deck.done')}</button
                 >
               {/if}
             </li>
@@ -133,25 +141,27 @@
           <button
             type="button"
             class="btn {start ? 'ghost' : 'primary'}"
-            aria-label="Done: {card.title}"
+            aria-label={tr('tasks.deck.doneAria', { title: card.title })}
             disabled={busy}
-            onclick={() => (doneFor = { id: taskId, title: card.title })}>Done</button
+            onclick={() => (doneFor = { id: taskId, title: card.title })}
+            >{tr('tasks.deck.done')}</button
           >
           <button
             type="button"
             class="btn ghost"
-            aria-label="Skip: {card.title}"
+            aria-label={tr('tasks.deck.skipAria', { title: card.title })}
             aria-expanded={skipOpen}
             disabled={busy}
-            onclick={() => (skipOpen = !skipOpen)}>Skip</button
+            onclick={() => (skipOpen = !skipOpen)}>{tr('tasks.deck.skip')}</button
           >
           {#if canAssign}
             <button
               type="button"
               class="btn ghost"
-              aria-label="Assign: {card.title}"
+              aria-label={tr('tasks.deck.assignAria', { title: card.title })}
               disabled={busy}
-              onclick={() => (assignOpen = true)}>{assigneeUserId ? 'Reassign' : 'Assign'}</button
+              onclick={() => (assignOpen = true)}
+              >{assigneeUserId ? tr('tasks.deck.reassign') : tr('tasks.deck.assign')}</button
             >
           {/if}
         </div>

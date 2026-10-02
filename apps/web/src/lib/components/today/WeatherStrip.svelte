@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   /**
    * /today greeting header with the current conditions on the right. The
    * conditions are a button that opens the 7-day forecast sheet, including
@@ -27,6 +29,7 @@
     canSetLocation = false,
     onOpenForecast
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <header class="hdr">
@@ -42,22 +45,27 @@
     aria-haspopup="dialog"
     onclick={() => onOpenForecast?.()}
   >
-    <span class="cc-label">Current conditions <ChevronRight size={14} aria-hidden="true" /></span>
+    <span class="cc-label"
+      >{tr('today.weather.current')} <ChevronRight size={14} aria-hidden="true" /></span
+    >
     {#if weather.status === 'ok'}
       {@const w = weather.summary}
       <span
         class="cells"
-        aria-label={weather.source === 'farm' ? 'Weather at your farm location' : 'Local weather'}
+        aria-label={weather.source === 'farm'
+          ? tr('today.weather.atFarm')
+          : tr('today.weather.local')}
       >
         <span class="w-cell" title={w.shortForecast}>
           <WeatherIcon sky={w.sky} />
           {#if w.shortForecast}<span class="sr-only">{w.shortForecast},</span>{/if}
-          {#if w.tempKind === 'low'}<span class="lbl">Low</span>{/if}
+          {#if w.tempKind === 'low'}<span class="lbl">{tr('today.weather.low')}</span>{/if}
           <span class="mono">{fmt.qty(w.tempF, 'temperature')}</span>
         </span>
         {#if w.windMph !== undefined}
           <span class="w-cell">
-            <Wind size={16} strokeWidth={1.75} aria-hidden="true" /><span class="sr-only">Wind</span
+            <Wind size={16} strokeWidth={1.75} aria-hidden="true" /><span class="sr-only"
+              >{tr('today.weather.wind')}</span
             ><span class="mono">{fmt.qty(w.windMph, 'speed')}</span>
           </span>
         {/if}
@@ -72,12 +80,10 @@
     {:else if weather.status === 'needs-location'}
       <span class="cells set-loc">
         <MapPin size={16} strokeWidth={1.75} aria-hidden="true" />
-        {canSetLocation
-          ? 'Set your farm location to see the forecast'
-          : 'No farm location set for the forecast'}
+        {canSetLocation ? tr('today.weather.setLocation') : tr('today.weather.noLocation')}
       </span>
     {:else}
-      <span class="cells muted">Weather unavailable right now</span>
+      <span class="cells muted">{tr('today.weather.unavailable')}</span>
     {/if}
   </button>
 </header>

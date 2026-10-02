@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import { MapPin } from 'lucide-svelte';
   import Modal from '$lib/components/ui/Modal.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
@@ -13,9 +15,10 @@
     canSetLocation: boolean;
   }
   const { open, onClose, weather, canSetLocation }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
-<Modal {open} {onClose} title="7-day forecast">
+<Modal {open} {onClose} title={tr('today.forecast.title')}>
   <div class="sheet" data-testid="forecast-sheet">
     {#if weather.status === 'ok' && weather.days.length > 0}
       <ul class="days">
@@ -28,7 +31,7 @@
             <WeatherIcon sky={d.sky} size={22} />
             <div class="temps">
               {#if d.overnightOnly}
-                <span class="lbl">Tonight</span>
+                <span class="lbl">{tr('today.forecast.tonight')}</span>
                 <span class="mono">{fmt.qty(d.lowF, 'temperature')}</span>
               {:else}
                 <span class="mono hi">{fmt.qty(d.highF, 'temperature')}</span>
@@ -38,9 +41,11 @@
             <div class="detail">
               {#if d.shortForecast}<span class="short">{d.shortForecast}</span>{/if}
               <span class="meta">
-                <span class:wet={d.popPct >= RAIN_POP_PCT}>Rain {d.popPct}%</span>
+                <span class:wet={d.popPct >= RAIN_POP_PCT}
+                  >{tr('today.forecast.rain', { pct: d.popPct })}</span
+                >
                 {#if d.windMph !== undefined}
-                  · Wind {fmt.qty(d.windMph, 'speed')}{/if}
+                  · {tr('today.forecast.wind', { speed: fmt.qty(d.windMph, 'speed') })}{/if}
               </span>
             </div>
           </li>
@@ -48,23 +53,28 @@
       </ul>
       <p class="source">
         <Provenance source="data" label="NWS" long="National Weather Service forecast" />
-        National Weather Service forecast for {weather.source === 'farm'
-          ? 'your farm location'
-          : 'your first mapped block'}. Updated {fmt.instant(weather.fetchedAt, 'datetime')}.
+        {tr('today.forecast.source', {
+          where:
+            weather.source === 'farm'
+              ? tr('today.forecast.whereFarm')
+              : tr('today.forecast.whereBlock'),
+          updated: fmt.instant(weather.fetchedAt, 'datetime')
+        })}
       </p>
     {:else if weather.status === 'needs-location'}
-      <p class="empty">There is no farm location yet, so there is no forecast to show.</p>
+      <p class="empty">{tr('today.forecast.noLocation')}</p>
       {#if canSetLocation}
         <a class="btn" href="/settings/farm">
-          <MapPin size={16} strokeWidth={1.75} aria-hidden="true" />Set farm location
+          <MapPin size={16} strokeWidth={1.75} aria-hidden="true" />{tr(
+            'today.forecast.setLocation'
+          )}
         </a>
       {:else}
-        <p class="ask">Ask the owner to set the farm location in Settings.</p>
+        <p class="ask">{tr('today.forecast.askOwner')}</p>
       {/if}
     {:else}
       <p class="empty">
-        The National Weather Service forecast could not be reached just now. Try again in a few
-        minutes.
+        {tr('today.forecast.unreachable')}
       </p>
     {/if}
   </div>

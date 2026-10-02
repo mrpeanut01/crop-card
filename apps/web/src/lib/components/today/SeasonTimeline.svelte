@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   /**
    * /today Season view: timelines only. A farm-wide growing-season band,
    * then one row per planting with its grow period and jobs, and a Field
@@ -8,11 +10,7 @@
    */
   import { ChevronLeft, ChevronRight } from 'lucide-svelte';
   import { cardHref, cardKey } from '$lib/cards/model';
-  import {
-    SEASON_SPAN_LABEL,
-    type SeasonSpanKind,
-    type SeasonTimeline
-  } from '$lib/today/seasonTimeline';
+  import type { SeasonSpanKind, SeasonTimeline } from '$lib/today/seasonTimeline';
   import { fmt } from '$lib/prefsState.svelte';
 
   interface Props {
@@ -24,6 +22,15 @@
     onOpenRow: (index: number) => void;
   }
   const { year, years, timeline, now, onSelectYear, onOpenRow }: Props = $props();
+
+  const SPAN_KEY = {
+    grow: 'today.season.span.grow',
+    plant: 'today.season.span.plant',
+    till: 'today.season.span.till',
+    fertilize: 'today.season.span.fertilize',
+    spray: 'today.season.span.spray',
+    harvest: 'today.season.span.harvest'
+  } as const satisfies Record<SeasonSpanKind, string>;
 
   const DAY_MS = 86_400_000;
   const LEGEND: SeasonSpanKind[] = ['grow', 'plant', 'till', 'fertilize', 'spray', 'harvest'];
@@ -66,34 +73,35 @@
     ticks.map((t, i) => ({ ...t, labelled: i % tickStep === 0 && pos(t.ms) <= 92 }))
   );
   const runsOn = (endMs: number) => endMs > timeline.toMs;
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <section class="season" data-testid="season-timeline" aria-labelledby="season-title">
   <div class="head">
-    <h3 id="season-title" class="serif">Season {year}</h3>
+    <h3 id="season-title" class="serif">{tr('today.season.title', { year })}</h3>
     <div class="pick">
       <button
         type="button"
         class="nav-btn"
-        aria-label="Earlier season"
+        aria-label={tr('today.season.earlier')}
         disabled={earlier === null}
         onclick={() => earlier !== null && onSelectYear(earlier)}
       >
         <ChevronLeft size={18} aria-hidden="true" />
       </button>
       <select
-        aria-label="Season"
+        aria-label={tr('today.season.select')}
         value={year}
         onchange={(e) => onSelectYear(Number(e.currentTarget.value))}
       >
         {#each years as y (y)}
-          <option value={y}>Season {y}</option>
+          <option value={y}>{tr('today.season.title', { year: y })}</option>
         {/each}
       </select>
       <button
         type="button"
         class="nav-btn"
-        aria-label="Later season"
+        aria-label={tr('today.season.later')}
         disabled={later === null}
         onclick={() => later !== null && onSelectYear(later)}
       >
@@ -102,25 +110,29 @@
     </div>
   </div>
   <p class="window">
-    Prep for {year} starts around {fmt.instant(timeline.prepStartMs, 'date')}, and prep for {year +
-      1} around {fmt.instant(timeline.nextPrepMs, 'date')}.
+    {tr('today.season.window', {
+      year,
+      start: fmt.instant(timeline.prepStartMs, 'date'),
+      next: year + 1,
+      nextStart: fmt.instant(timeline.nextPrepMs, 'date')
+    })}
   </p>
   <a class="plan-link" href="/plan/calendar?year={year}" data-testid="season-print-calendar"
-    >Print sowing calendar</a
+    >{tr('today.season.printCalendar')}</a
   >
-  <ul class="legend" aria-label="Key">
+  <ul class="legend" aria-label={tr('today.season.key')}>
     {#each LEGEND as k (k)}
-      <li><span class="sw" data-kind={k}></span>{SEASON_SPAN_LABEL[k]}</li>
+      <li><span class="sw" data-kind={k}></span>{tr(SPAN_KEY[k])}</li>
     {/each}
-    <li><span class="sw solid"></span>Done</li>
-    <li><span class="sw dashed"></span>Planned or suggested</li>
+    <li><span class="sw solid"></span>{tr('today.season.done')}</li>
+    <li><span class="sw dashed"></span>{tr('today.season.planned')}</li>
   </ul>
 
   {#if timeline.rows.length === 0}
     <p class="hint" data-testid="season-empty">
-      Nothing is planted or planned for {year} yet. Plan a crop on the Plan page to see its season here.
+      {tr('today.season.empty', { year })}
     </p>
-    <a class="plan-link" href="/plan">Open the Plan page</a>
+    <a class="plan-link" href="/plan">{tr('today.season.openPlan')}</a>
   {:else}
     <div class="gantt">
       <div class="row axis-row" aria-hidden="true">
@@ -135,7 +147,7 @@
       </div>
       {#if timeline.band}
         <div class="row band-row">
-          <span class="label">Growing season</span>
+          <span class="label">{tr('today.season.growingSeason')}</span>
           <div class="track">
             <span
               class="band"
@@ -148,8 +160,14 @@
           </div>
           <span class="sr-only">
             {timeline.band.source === 'frost'
-              ? `From the last spring frost, ${fmt.instant(timeline.band.startMs, 'date')}, to the first fall frost, ${fmt.instant(timeline.band.endMs, 'date')}`
-              : `From your first planting, ${fmt.instant(timeline.band.startMs, 'date')}, to your last harvest, ${fmt.instant(timeline.band.endMs, 'date')}`}
+              ? tr('today.season.bandFrost', {
+                  start: fmt.instant(timeline.band.startMs, 'date'),
+                  end: fmt.instant(timeline.band.endMs, 'date')
+                })
+              : tr('today.season.bandPlanting', {
+                  start: fmt.instant(timeline.band.startMs, 'date'),
+                  end: fmt.instant(timeline.band.endMs, 'date')
+                })}
           </span>
         </div>
       {/if}
@@ -166,9 +184,13 @@
           <button
             type="button"
             class="track tap"
-            aria-label="{row.name} on {row.blockName}: {row.spans.length === 0
-              ? 'no dates yet'
-              : `${row.spans.length} dates`}. Open dates"
+            aria-label={row.spans.length === 0
+              ? tr('today.season.rowAriaNone', { name: row.name, block: row.blockName })
+              : tr('today.season.rowAria', {
+                  name: row.name,
+                  block: row.blockName,
+                  count: row.spans.length
+                })}
             onclick={() => onOpenRow(i)}
           >
             {#each row.spans as s, k (k)}
@@ -186,7 +208,7 @@
             {/each}
             {#if showToday}<span class="now" style="left:{pos(now)}%"></span>{/if}
             {#if row.plantingDate === null && !row.blockWork}<span class="undated"
-                >No planting date yet</span
+                >{tr('today.season.noDate')}</span
               >{/if}
           </button>
         </div>

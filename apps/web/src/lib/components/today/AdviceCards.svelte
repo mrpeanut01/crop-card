@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import WateringSheet from './WateringSheet.svelte';
@@ -30,9 +32,9 @@
     }));
   });
 
-  const SHEET_TITLE: Record<AdviceSheet, string> = {
-    'log-watering': 'Log watering',
-    'rain-gauge': 'Enter rain gauge'
+  const SHEET_TITLE: Record<AdviceSheet, 'today.advice.logWatering' | 'today.advice.rainGauge'> = {
+    'log-watering': 'today.advice.logWatering',
+    'rain-gauge': 'today.advice.rainGauge'
   };
 
   function done(text: string) {
@@ -40,11 +42,12 @@
     message = text;
     onSaved?.(text);
   }
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 {#if cards.length > 0 || message}
   <section class="advice" aria-labelledby="advice-heading" data-testid="today-advice">
-    <h2 id="advice-heading" class="serif">Growing advice</h2>
+    <h2 id="advice-heading" class="serif">{tr('today.advice.heading')}</h2>
     {#if message}<p class="saved" role="status">{message}</p>{/if}
     {#each groups as g (g.kind)}
       {#each g.shown as card (card.id)}
@@ -82,7 +85,7 @@
       {/each}
       {#if g.hidden > 0}
         <button type="button" class="more" onclick={() => (expanded = [...expanded, g.kind])}>
-          Show {g.hidden} more
+          {tr('today.advice.showMore', { count: g.hidden })}
         </button>
       {/if}
     {/each}
@@ -91,8 +94,8 @@
 
 <SetupSheet
   open={sheet !== null}
-  title={sheet ? SHEET_TITLE[sheet.sheet] : ''}
-  kicker="Watering"
+  title={sheet ? tr(SHEET_TITLE[sheet.sheet]) : ''}
+  kicker={tr('today.advice.watering')}
   onClose={() => (sheet = null)}
 >
   {#if sheet}

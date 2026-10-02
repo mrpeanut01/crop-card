@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   /**
    * Phase 25e (#97) — /today "do this first" hero card.
    *
@@ -49,14 +51,18 @@
 
   /** Tone pill on the hero: chemistry-flavored chip. */
   function toneLabel(tag: PriorityAction['toneTag']): string {
-    return {
-      scout: 'Scout',
-      spray: 'Spray',
-      harvest: 'Harvest',
-      fertility: 'Fertility',
-      planting: 'Plant',
-      task: 'Task'
-    }[tag];
+    return tr(
+      (
+        {
+          scout: 'today.hero.toneScout',
+          spray: 'today.hero.toneSpray',
+          harvest: 'today.hero.toneHarvest',
+          fertility: 'today.hero.toneFertility',
+          planting: 'today.hero.tonePlant',
+          task: 'today.hero.toneTask'
+        } as const
+      )[tag]
+    );
   }
   function tonePillTone(
     tag: PriorityAction['toneTag']
@@ -70,22 +76,23 @@
       task: 'neutral'
     }[tag] as 'forest' | 'wheat' | 'rust' | 'sky' | 'neutral';
   }
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <Card padded={false}>
   {#if action}
     <div class="hero">
       <div class="hero-head">
-        <Pill tone="wheat">Today · do this first</Pill>
+        <Pill tone="wheat">{tr('today.hero.doFirst')}</Pill>
         <Pill tone={tonePillTone(action.toneTag)}>{toneLabel(action.toneTag)}</Pill>
         {#if action.overdueDays && action.overdueDays > 0}
-          <Pill tone="rust">Overdue · {action.overdueDays}d</Pill>
+          <Pill tone="rust">{tr('today.hero.overdue', { days: action.overdueDays })}</Pill>
         {/if}
         <div class="prov-row">
           {#if action.kind === 'task'}
-            <Provenance source="data" detail="your tasks" compact />
+            <Provenance source="data" detail={tr('today.hero.yourTasks')} compact />
           {:else}
-            <Provenance source="plugin" detail="crop calendar" compact />
+            <Provenance source="plugin" detail={tr('today.hero.cropCalendar')} compact />
           {/if}
         </div>
       </div>
@@ -107,13 +114,13 @@
         {/if}
         {#if action.taskId && onSkip}
           <button type="button" class="ghost" onclick={() => (skipOpen = !skipOpen)}>
-            Skip, note why
+            {tr('today.hero.skipNoteWhy')}
           </button>
         {/if}
         {#if aiEnabled}
           <span class="ai-hint">
             <Sparkle size={12} strokeWidth={1.75} />
-            <span>Ask Claude · "Why this? What does done look like?"</span>
+            <span>{tr('today.hero.askClaude')}</span>
           </span>
         {/if}
       </div>
@@ -147,10 +154,9 @@
       <div class="empty-icon">
         <Check size={20} strokeWidth={2} />
       </div>
-      <h2 class="serif action-title">All caught up.</h2>
+      <h2 class="serif action-title">{tr('today.hero.caughtUp')}</h2>
       <p class="action-body">
-        Nothing's overdue and nothing needs doing in the next 24 hours. Pick Week or Month below to
-        see what's coming.
+        {tr('today.hero.caughtUpBody')}
       </p>
     </div>
   {/if}

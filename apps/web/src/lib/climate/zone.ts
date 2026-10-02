@@ -9,6 +9,9 @@ import {
   type FrostStation,
   type FrostStationRow
 } from './frostNormals';
+import { t } from '$lib/i18n';
+import { intlLocale } from '$lib/prefs';
+import { numberToLocaleString } from '$lib/intlCache';
 
 /**
  * An approximate hardiness zone worked out from one NOAA station's 1991-2020
@@ -206,43 +209,52 @@ function isWide(zone: Pick<FarmZone, 'provenance' | 'reach'>): boolean {
   return zone.provenance === 'data' && zone.reach === 'wide';
 }
 
-function miles(distanceMi: number): string {
-  return `${Math.round(distanceMi).toLocaleString()} mi`;
+function miles(distanceMi: number, locale?: string | null): string {
+  const n = Math.round(distanceMi);
+  return `${locale ? numberToLocaleString(n, intlLocale(locale)) : n.toLocaleString()} mi`;
 }
 
 /** "Zone 7a (approx.)" for an estimate, "Zone 7a" for the owner's own. */
-export function zoneValueLabel(zone: Pick<FarmZone, 'zone' | 'provenance'>): string {
-  return zone.provenance === 'data' ? `Zone ${zone.zone} (approx.)` : `Zone ${zone.zone}`;
+export function zoneValueLabel(
+  zone: Pick<FarmZone, 'zone' | 'provenance'>,
+  locale?: string | null
+): string {
+  return t(locale, zone.provenance === 'data' ? 'zone.valueApprox' : 'zone.value', {
+    zone: zone.zone
+  });
 }
 
 /** "nearest station 78 mi, similar elevation" for a wide estimate, else null. */
-export function zoneReachNote(zone: FarmZone): string | null {
+export function zoneReachNote(zone: FarmZone, locale?: string | null): string | null {
   if (!isWide(zone) || zone.distanceMi === null) return null;
-  return `nearest station ${miles(zone.distanceMi)}, similar elevation`;
+  return t(locale, 'zone.reach', { distance: miles(zone.distanceMi, locale) });
 }
 
 /** The Farm Map Card's Zone value: "7a (approx.)", "6b (approx., station 78 mi)" or "6b". */
-export function zoneCardValue(zone: FarmZone): string {
+export function zoneCardValue(zone: FarmZone, locale?: string | null): string {
   if (zone.provenance === 'manual') return zone.zone;
   if (isWide(zone) && zone.distanceMi !== null) {
-    return `${zone.zone} (approx., station ${miles(zone.distanceMi)})`;
+    return t(locale, 'zone.cardWide', {
+      zone: zone.zone,
+      distance: miles(zone.distanceMi, locale)
+    });
   }
-  return `${zone.zone} (approx.)`;
+  return t(locale, 'zone.cardApprox', { zone: zone.zone });
 }
 
 /** Provenance detail: "from Washington DC Dulles AP, VA · 6 mi", with
  *  ", similar elevation" added for a wide estimate. */
-export function zoneSourceDetail(zone: FarmZone): string | undefined {
-  if (zone.provenance === 'manual') return 'your zone';
+export function zoneSourceDetail(zone: FarmZone, locale?: string | null): string | undefined {
+  if (zone.provenance === 'manual') return t(locale, 'zone.yours');
   if (!zone.stationName) return undefined;
-  if (zone.distanceMi === null) return `from ${zone.stationName}`;
+  if (zone.distanceMi === null) return t(locale, 'zone.from', { source: zone.stationName });
   const label = frostStationLabel({
     id: '',
     name: zone.stationName,
     distanceMi: zone.distanceMi,
     elevM: null
   });
-  return isWide(zone) ? `from ${label}, similar elevation` : `from ${label}`;
+  return t(locale, isWide(zone) ? 'zone.fromWide' : 'zone.from', { source: label });
 }
 
 export const ZONE_ESTIMATE_LONG =
@@ -251,7 +263,7 @@ export const ZONE_ESTIMATE_LONG =
 export const ZONE_ESTIMATE_WIDE_LONG =
   "No NOAA station with 20 or more recorded winters is within 50 miles, so this uses the nearest one within 100 miles that sits within 1,000 ft of your farm's elevation (USGS). Rougher than a nearby station. Not the USDA map, and CropCard never uses it to limit what you plant";
 
-export function zoneEstimateLong(zone: FarmZone): string | undefined {
+export function zoneEstimateLong(zone: FarmZone, locale?: string | null): string | undefined {
   if (zone.provenance !== 'data') return undefined;
-  return isWide(zone) ? ZONE_ESTIMATE_WIDE_LONG : ZONE_ESTIMATE_LONG;
+  return t(locale, isWide(zone) ? 'zone.estimateWideLong' : 'zone.estimateLong');
 }

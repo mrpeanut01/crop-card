@@ -3,6 +3,7 @@ import { SETTINGS_KEYS } from '$lib/schedule/constants';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 import { elevationFtAt } from './elevation.server';
 import { farmZoneFrom, lookupZone, parseZone, type FarmZone } from './zone';
+import { t } from '$lib/i18n';
 
 /** The owner's typed zone, when they set one. The estimate is never stored:
  *  it is recomputed from the farm location each time. */
@@ -23,7 +24,10 @@ export async function farmZone(): Promise<FarmZone | null> {
 export type ZoneFormResult = { ok: true } | { ok: false; error: string };
 
 /** A blank field clears the owner's zone and goes back to the estimate. */
-export function saveZoneForm(raw: FormDataEntryValue | null): ZoneFormResult {
+export function saveZoneForm(
+  raw: FormDataEntryValue | null,
+  locale?: string | null
+): ZoneFormResult {
   if (raw === null) return { ok: true };
   const text = String(raw).trim();
   if (text === '') {
@@ -32,7 +36,7 @@ export function saveZoneForm(raw: FormDataEntryValue | null): ZoneFormResult {
     return { ok: true };
   }
   const zone = parseZone(text);
-  if (!zone) return { ok: false, error: 'Enter a zone like 7a or 6b, or leave it blank.' };
+  if (!zone) return { ok: false, error: t(locale, 'zone.invalid') };
   setSetting(SETTINGS_KEYS.hardinessZone, zone);
   setSetting(SETTINGS_KEYS.hardinessZoneProvenance, 'manual');
   return { ok: true };

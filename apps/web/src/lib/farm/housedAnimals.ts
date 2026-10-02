@@ -8,6 +8,7 @@
 
 import type { AnimalPurpose } from '$lib/animals/model';
 import { formatCount } from './coopCapacity';
+import { t } from '$lib/i18n';
 import { pluralFrom, withToxicPlants, type ToxicCrop } from '$lib/animals/toxicAdjacency';
 import type { CapacityState } from '$lib/animals/counts';
 import {
@@ -63,13 +64,13 @@ export type HousingByArea = Record<string, AreaHousing>;
 export interface HousingViewOptions {
   /** The "Pets & animals" layout hides tags. Safety wording stays. */
   petsLayout?: boolean;
+  /** The viewer's language for the labels; English when absent. */
+  locale?: string | null;
 }
 
-const FOOD_NOTE = 'food animal';
-
-function groupLine(g: HousedGroupRow): string {
+function groupLine(g: HousedGroupRow, locale?: string | null): string {
   const parts = [g.name, `${g.total} ${g.speciesPlural.toLowerCase()}`];
-  if (g.foodProducing) parts.push(g.total === 1 ? FOOD_NOTE : `${FOOD_NOTE}s`);
+  if (g.foodProducing) parts.push(t(locale, 'area.housing.foodAnimal', { count: g.total }));
   return parts.join(' · ');
 }
 
@@ -78,37 +79,50 @@ function groupLine(g: HousedGroupRow): string {
 export function animalLabel(a: HousedAnimalRow, opts: HousingViewOptions = {}): string {
   const showTag = !opts.petsLayout && a.purpose !== 'pet';
   if (a.name?.trim()) return a.name.trim();
-  if (showTag && a.tag?.trim()) return `Tag ${a.tag.trim()}`;
+  if (showTag && a.tag?.trim()) return t(opts.locale, 'area.housing.tag', { tag: a.tag.trim() });
   return a.speciesName;
 }
 
 function animalLine(a: HousedAnimalRow, opts: HousingViewOptions): string {
   const label = animalLabel(a, opts);
   const parts = label === a.speciesName ? [label] : [label, a.speciesName];
-  if (a.foodProducing) parts.push(FOOD_NOTE);
+  if (a.foodProducing) parts.push(t(opts.locale, 'area.housing.foodAnimal', { count: 1 }));
   return parts.join(' · ');
 }
 
 /** One line per group, then per individual, in the order given. */
 export function housedLines(h: AreaHousing, opts: HousingViewOptions = {}): string[] {
-  return [...h.groups.map(groupLine), ...h.animals.map((a) => animalLine(a, opts))];
+  return [
+    ...h.groups.map((g) => groupLine(g, opts.locale)),
+    ...h.animals.map((a) => animalLine(a, opts))
+  ];
 }
 
-export function capacityLabel(c: CapacityState): string {
-  const of = `${formatCount(c.count)} of ${formatCount(c.capacity)}`;
-  return c.over ? `Over capacity (${of})` : of;
+export function capacityLabel(c: CapacityState, locale?: string | null): string {
+  const of = t(locale, 'area.housing.countOf', {
+    count: formatCount(c.count, locale),
+    capacity: formatCount(c.capacity, locale)
+  });
+  return c.over ? t(locale, 'area.housing.over', { of }) : of;
 }
 
-export function housingFacts(h: AreaHousing | null | undefined): CardFact[] {
+export function housingFacts(
+  h: AreaHousing | null | undefined,
+  locale?: string | null
+): CardFact[] {
   if (!h) return [];
   const facts: CardFact[] = [];
   if (h.total > 0) {
-    facts.push({ label: 'Animals', value: String(h.total), provenance: 'data' });
+    facts.push({
+      label: t(locale, 'area.housing.animals'),
+      value: String(h.total),
+      provenance: 'data'
+    });
   }
   if (h.capacity) {
     facts.push({
-      label: 'Capacity',
-      value: capacityLabel(h.capacity),
+      label: t(locale, 'area.housing.capacity'),
+      value: capacityLabel(h.capacity, locale),
       provenance: h.capacityProvenance ?? 'manual'
     });
   }
@@ -127,8 +141,11 @@ export function housingSection(
   const items =
     lines.length <= MAX_LINES
       ? lines
-      : [...lines.slice(0, MAX_LINES), `+${lines.length - MAX_LINES} more`];
-  return { title: 'Lives here', items, provenance: 'data' };
+      : [
+          ...lines.slice(0, MAX_LINES),
+          t(opts.locale, 'area.housing.more', { count: lines.length - MAX_LINES })
+        ];
+  return { title: t(opts.locale, 'area.housing.livesHere'), items, provenance: 'data' };
 }
 
 /** The Area Card with its housed animals added. A card for an Area with
@@ -138,7 +155,7 @@ export function withHousing(
   h: AreaHousing | null | undefined,
   opts: HousingViewOptions = {}
 ): CardModel {
-  const facts = housingFacts(h);
+  const facts = housingFacts(h, opts.locale);
   const section = housingSection(h, opts);
   if (facts.length === 0 && !section) return card;
   const added: CardProvenance[] = [];
@@ -146,8 +163,8 @@ export function withHousing(
   if (h?.capacity) {
     added.push(
       h.capacityProvenance === 'data'
-        ? { source: 'data', detail: 'capacity suggested from housing guidance' }
-        : { source: 'manual', detail: 'capacity typed by you' }
+        ? { source: 'data', detail: t(opts.locale, 'area.housing.capSuggested') }
+        : { source: 'manual', detail: t(opts.locale, 'area.housing.capTyped') }
     );
   }
   const housed: CardModel = {

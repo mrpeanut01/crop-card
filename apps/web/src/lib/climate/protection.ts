@@ -4,6 +4,8 @@
  * REI, pollinator, grazing or hold logic.
  */
 
+import { t } from '$lib/i18n';
+
 export const PROTECTION_KINDS = [
   'row-cover',
   'low-tunnel',
@@ -129,5 +131,18 @@ export function resolveNewProtection(
 }
 
 export const HARD_FREEZE_NOTE = "Covers buy a few degrees. They don't stop a hard freeze.";
+
+/** A cover kind's label in the viewer's language; English with no locale. */
+export function protectionLabel(kind: ProtectionKind, locale?: string | null): string {
+  return t(locale, `climate.protection.${kind}`);
+}
+
+export function hardFreezeNote(locale?: string | null): string {
+  return t(locale, 'climate.cover.hardFreeze');
+}
+
+export function shiftUnknownNote(locale?: string | null): string {
+  return t(locale, 'climate.cover.shiftUnknownNote');
+}
 export const SHIFT_UNKNOWN_NOTE =
   "Cover shift not known. Enter the days from your cover's instructions.";

@@ -48,13 +48,16 @@
     typeof v === 'number' && Number.isFinite(v) ? v : null;
   const option = $derived(options.find((o) => o.id === speciesId) ?? null);
   const suggestion = $derived(
-    suggestCapacity({
-      option,
-      space,
-      areaSqFt,
-      shelterSqFt: num(draft.shelterSqFt),
-      runSqFt: num(draft.runSqFt)
-    })
+    suggestCapacity(
+      {
+        option,
+        space,
+        areaSqFt,
+        shelterSqFt: num(draft.shelterSqFt),
+        runSqFt: num(draft.runSqFt)
+      },
+      page.data?.locale
+    )
   );
   const manual = $derived(draft.capacityProvenance === 'manual');
   const capacity = $derived(num(draft.capacity));
@@ -184,7 +187,8 @@
     <div class="suggest" data-testid="coop-suggestion" aria-live="polite">
       {#if suggestion.ok}
         <p>
-          {tr('farm.coop.suggestedUpTo')} <strong>{formatCount(suggestion.count)}</strong>
+          {tr('farm.coop.suggestedUpTo')}
+          <strong>{formatCount(suggestion.count, page.data?.locale)}</strong>
           {option?.plural} ({suggestion.basis}).
           {#if suggestion.sourceName}<span class="src"
               >{tr('farm.coop.source', { name: suggestion.sourceName })}</span
@@ -192,7 +196,9 @@
         </p>
         {#if manual && capacity !== suggestion.count}
           <button type="button" class="use" onclick={useSuggestion}
-            >{tr('farm.coop.useInstead', { count: formatCount(suggestion.count) })}</button
+            >{tr('farm.coop.useInstead', {
+              count: formatCount(suggestion.count, page.data?.locale)
+            })}</button
           >
         {/if}
       {:else}

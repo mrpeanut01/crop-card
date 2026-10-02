@@ -76,7 +76,7 @@
   const card = $derived.by(() => {
     const built = buildAreaCard(snapshot, area.id, { prefs });
     if (!built) return null;
-    const housed = withHousing(built, housing, { petsLayout });
+    const housed = withHousing(built, housing, { petsLayout, locale: page.data?.locale });
     return { ...withGrazing(housed, grazing, prefs.timeZone), links: undefined };
   });
   const title = $derived(areaDisplayName(area));
@@ -89,7 +89,9 @@
   const speciesPlurals = $derived(
     Object.fromEntries((coopCtx?.().options ?? []).map((o) => [o.id, o.plural]))
   );
-  const summary = $derived(detailsSummary(area.kind, area.details, speciesNames, speciesPlurals));
+  const summary = $derived(
+    detailsSummary(area.kind, area.details, speciesNames, speciesPlurals, page.data?.locale)
+  );
 
   const blocks = $derived(snapshot.blocks.filter((b) => b.areaId === area.id));
   const blockById = $derived(new Map(blocks.map((b) => [b.id, b])));

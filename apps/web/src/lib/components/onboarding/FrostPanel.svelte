@@ -18,10 +18,10 @@
     type FrostValueProvenance
   } from '$lib/climate/frostSuggest';
   import {
-    FROST_CONFIRM_COPY,
-    FROST_CROSSES_YEAR_COPY,
-    FROST_STORED_FALLBACK_COPY,
     frostConfirmReason,
+    frostConfirmText,
+    frostCrossesYearText,
+    frostStoredFallbackText,
     hardFrostText,
     suggestFromStored
   } from '$lib/climate/frostSettings';
@@ -53,7 +53,8 @@
     blocked = $bindable(false)
   }: Props = $props();
 
-  const tr = $derived(createT(page.data?.locale));
+  const locale = $derived(page.data?.locale as string | undefined);
+  const tr = $derived(createT(locale));
 
   const LABEL: Record<FrostField, string> = $derived({
     lastFrost: tr('onboard.frost.lastFrost'),
@@ -103,9 +104,9 @@
   }
 
   const suggestion = $derived.by(() => {
-    if (basis === 'lookup') return lookup ? suggestFrostValues(lookup, edits) : null;
+    if (basis === 'lookup') return lookup ? suggestFrostValues(lookup, edits, locale) : null;
     if (!stored) return null;
-    return suggestFromStored(stored.values, edits, stored.source);
+    return suggestFromStored(stored.values, edits, stored.source, locale);
   });
 
   const reason = $derived(suggestion ? frostConfirmReason(suggestion) : null);
@@ -221,7 +222,8 @@
           {hardFrostText(
             suggestion.values.lastHardFrost.value,
             suggestion.values.firstHardFrost.value,
-            pretty
+            pretty,
+            locale
           )}
           <Provenance
             source={suggestion.values.lastHardFrost.provenance}
@@ -266,10 +268,10 @@
       {:else if basis === 'lookup' && suggestion.fallbackReason}
         <p class="src">{suggestion.fallbackReason}</p>
       {:else if canEdit && basis === 'stored' && suggestion.values.lastFrost.provenance === 'fallback' && suggestion.values.firstFrost.provenance === 'fallback'}
-        <p class="src">{FROST_STORED_FALLBACK_COPY}</p>
+        <p class="src">{frostStoredFallbackText(locale)}</p>
       {/if}
       {#if suggestion.crossesYear && !editing}
-        <p class="src" data-testid="frost-crosses-year">{FROST_CROSSES_YEAR_COPY}</p>
+        <p class="src" data-testid="frost-crosses-year">{frostCrossesYearText(locale)}</p>
       {/if}
 
       <div class="controls">
@@ -331,7 +333,7 @@
 
       {#if reason}
         <div class="confirm" role="group" aria-label={tr('onboard.frost.confirmAria')}>
-          <p>{FROST_CONFIRM_COPY[reason]}</p>
+          <p>{frostConfirmText(reason, locale)}</p>
           <label class="check">
             <input
               type="checkbox"

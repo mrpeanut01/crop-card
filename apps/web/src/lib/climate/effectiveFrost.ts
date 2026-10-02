@@ -10,6 +10,8 @@
  */
 
 import { dateToLocaleDateString } from '$lib/intlCache';
+import { t } from '$lib/i18n';
+import { intlLocale } from '$lib/prefs';
 import type { FrostDatesIso } from '$lib/plan/plantingWindow';
 import {
   MAX_SHIFT_DAYS,
@@ -218,19 +220,24 @@ export type BlockFrost = SeasonFrostMs & { frostFree?: boolean };
 
 /** "Covered: frost from Apr 2" style summary for a bed, or null when the
  *  bed has no cover that counts. */
-export function effectiveFrostSummary(eff: EffectiveFrost): string | null {
+export function effectiveFrostSummary(eff: EffectiveFrost, locale?: string | null): string | null {
   if (eff.frostFree) {
     return eff.springBy === 'greenhouse-heated' || eff.fallBy === 'greenhouse-heated'
-      ? 'Heated greenhouse: no frost limit.'
-      : 'Covered: no frost limit with these cover shifts.';
+      ? t(locale, 'climate.cover.heatedNoLimit')
+      : t(locale, 'climate.cover.noLimit');
   }
   if (eff.springBy === null && eff.fallBy === null) {
-    return eff.unknownShift.length > 0 ? 'Covered, shift not known' : null;
+    return eff.unknownShift.length > 0 ? t(locale, 'climate.cover.shiftUnknown') : null;
   }
   const fmt = (ms: number) =>
-    dateToLocaleDateString(new Date(ms), 'en-US', { month: 'short', day: 'numeric' });
+    dateToLocaleDateString(new Date(ms), locale ? intlLocale(locale) : 'en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
   const parts: string[] = [];
-  if (eff.springBy) parts.push(`frost ends ${fmt(eff.lastSpringFrostMs)}`);
-  if (eff.fallBy) parts.push(`first frost ${fmt(eff.firstFallFrostMs)}`);
-  return `Covered: ${parts.join(', ')}`;
+  if (eff.springBy)
+    parts.push(t(locale, 'climate.cover.frostEnds', { date: fmt(eff.lastSpringFrostMs) }));
+  if (eff.fallBy)
+    parts.push(t(locale, 'climate.cover.firstFrost', { date: fmt(eff.firstFallFrostMs) }));
+  return t(locale, 'climate.cover.covered', { parts: parts.join(', ') });
 }

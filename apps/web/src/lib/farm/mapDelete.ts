@@ -5,8 +5,9 @@
  * or a line or point is only a shape, so it is deleted.
  */
 
-import { AREA_KIND_LABELS, type AreaKind } from './areaKinds';
-import { MAP_FEATURE_LABELS, type MapFeatureKind } from './mapFeatures';
+import { areaKindLabel, type AreaKind } from './areaKinds';
+import { mapFeatureLabel, type MapFeatureKind } from './mapFeatures';
+import { t } from '$lib/i18n';
 
 export type MapShapeType = 'area' | 'block' | 'shade' | 'feature';
 
@@ -22,20 +23,31 @@ export function shapeKey(s: Pick<MapShape, 'type' | 'id'>): string {
   return `${s.type}:${s.id}`;
 }
 
-export function areaShape(a: { id: string; name: string; kind?: AreaKind | null }): MapShape {
-  return { type: 'area', id: a.id, name: a.name, kindLabel: AREA_KIND_LABELS[a.kind ?? 'field'] };
+export function areaShape(
+  a: { id: string; name: string; kind?: AreaKind | null },
+  locale?: string | null
+): MapShape {
+  return {
+    type: 'area',
+    id: a.id,
+    name: a.name,
+    kindLabel: areaKindLabel(a.kind ?? 'field', locale)
+  };
 }
 
-export function blockShape(b: { id: string; name: string }): MapShape {
-  return { type: 'block', id: b.id, name: b.name, kindLabel: 'Block' };
+export function blockShape(b: { id: string; name: string }, locale?: string | null): MapShape {
+  return { type: 'block', id: b.id, name: b.name, kindLabel: t(locale, 'farm.blockKind.block') };
 }
 
-export function shadeShape(s: { id: string; name: string }): MapShape {
-  return { type: 'shade', id: s.id, name: s.name, kindLabel: 'Shade source' };
+export function shadeShape(s: { id: string; name: string }, locale?: string | null): MapShape {
+  return { type: 'shade', id: s.id, name: s.name, kindLabel: t(locale, 'map.delete.shadeKind') };
 }
 
-export function featureShape(f: { id: string; name: string; kind: MapFeatureKind }): MapShape {
-  return { type: 'feature', id: f.id, name: f.name, kindLabel: MAP_FEATURE_LABELS[f.kind] };
+export function featureShape(
+  f: { id: string; name: string; kind: MapFeatureKind },
+  locale?: string | null
+): MapShape {
+  return { type: 'feature', id: f.id, name: f.name, kindLabel: mapFeatureLabel(f.kind, locale) };
 }
 
 /** Adds the shape, or takes it out when it is already picked. */
@@ -51,13 +63,13 @@ export function isSelected(selection: readonly MapShape[], type: MapShapeType, i
   return selection.some((s) => shapeKey(s) === key);
 }
 
-export function deleteButtonLabel(count: number): string {
-  return count === 1 ? 'Delete 1 shape' : `Delete ${count} shapes`;
+export function deleteButtonLabel(count: number, locale?: string | null): string {
+  return t(locale, 'map.delete.button', { count });
 }
 
 /** The one-line help under the map toolbar, worded for the device. */
-export function deleteHint(touch: boolean): string {
-  return touch ? 'Long-press a shape to delete it.' : 'Right-click a shape to delete it.';
+export function deleteHint(touch: boolean, locale?: string | null): string {
+  return t(locale, touch ? 'map.delete.hintTouch' : 'map.delete.hintMouse');
 }
 
 function displayName(s: MapShape): string {
@@ -65,24 +77,25 @@ function displayName(s: MapShape): string {
 }
 
 /** What happens to one shape, in plain words for the confirm dialog. */
-export function describeDeletion(s: MapShape): string {
+export function describeDeletion(s: MapShape, locale?: string | null): string {
   const name = displayName(s);
+  const kind = s.kindLabel.toLowerCase();
   switch (s.type) {
     case 'area':
-      return `The outline of ${name} (${s.kindLabel.toLowerCase()}) comes off the map. The Area and its records stay.`;
+      return t(locale, 'map.delete.area', { name, kind });
     case 'block':
-      return `The outline of ${name} comes off the map. The block and its records stay.`;
+      return t(locale, 'map.delete.block', { name });
     case 'shade':
-      return `${name} (shade source) is deleted.`;
+      return t(locale, 'map.delete.shade', { name });
     case 'feature':
-      return `${name} (${s.kindLabel.toLowerCase()}) is deleted.`;
+      return t(locale, 'map.delete.feature', { name, kind });
   }
 }
 
-export function confirmTitle(shapes: readonly MapShape[]): string {
+export function confirmTitle(shapes: readonly MapShape[], locale?: string | null): string {
   return shapes.length === 1
-    ? `Delete ${displayName(shapes[0])}?`
-    : `Delete ${shapes.length} shapes?`;
+    ? t(locale, 'map.delete.titleOne', { name: displayName(shapes[0]) })
+    : t(locale, 'map.delete.titleMany', { count: shapes.length });
 }
 
 /** Extra line when a removed outline changes map-based checks. */
@@ -108,13 +121,14 @@ export interface DeleteOutcome {
  *  the owner sees exactly which ones did not go. */
 export async function deleteShapes(
   shapes: readonly MapShape[],
-  handlers: DeleteHandlers
+  handlers: DeleteHandlers,
+  locale?: string | null
 ): Promise<DeleteOutcome> {
   const out: DeleteOutcome = { deleted: [], failed: [] };
   for (const shape of shapes) {
     const run = handlers[shape.type];
     if (!run) {
-      out.failed.push({ shape, message: 'This map cannot delete that here.' });
+      out.failed.push({ shape, message: t(locale, 'map.delete.cannot') });
       continue;
     }
     try {

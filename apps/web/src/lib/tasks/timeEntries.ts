@@ -10,9 +10,6 @@ export const TIME_ENTRY_FUTURE_SLACK_MS = 5 * MINUTE_MS;
 /** How long a person may remove their own entry (D-26). */
 export const OWN_TIME_DELETE_WINDOW_MS = 48 * 60 * MINUTE_MS;
 
-export const OWN_TIME_DELETE_TEXT =
-  'You can remove your own time for 48 hours after saving it. Ask the owner.';
-
 /** True when `startedAt + minutes` is a span this endpoint accepts. */
 export function timeEntryInRange(startedAt: number, minutes: number, now: number): boolean {
   if (!Number.isFinite(startedAt) || !Number.isFinite(minutes)) return false;

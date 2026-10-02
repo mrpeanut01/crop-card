@@ -325,7 +325,7 @@
       {#snippet icon()}<Settings size={16} strokeWidth={1.75} />{/snippet}
     </IconButton>
     <details class="account-menu" bind:open={accountOpen}>
-      <summary aria-label={tr('nav.accountMenu')} title={activeOwner?.name ?? user?.name}>
+      <summary aria-label={tr('nav.accountMenu')} title={user?.name}>
         <Avatar name={avatarName} src={user?.avatarUrl} />
       </summary>
       <div class="owner-popover">

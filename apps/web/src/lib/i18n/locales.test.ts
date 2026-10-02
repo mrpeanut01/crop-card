@@ -24,13 +24,11 @@ describe('CROPCARD_LOCALES', () => {
     expect(enabledLocales()).toEqual(['en']);
   });
 
-  it('is never set by the Azure template or its parameters, so production stays English', () => {
-    for (const file of ['main.bicep', 'parameters.dev.bicepparam']) {
-      const text = readFileSync(
-        new URL(`../../../../../infra/azure/${file}`, import.meta.url),
-        'utf8'
-      );
-      expect(text, file).not.toContain('CROPCARD_LOCALES');
-    }
+  it('is set to English and Spanish by the Azure template', () => {
+    const text = readFileSync(
+      new URL('../../../../../infra/azure/main.bicep', import.meta.url),
+      'utf8'
+    );
+    expect(text).toContain("{ name: 'CROPCARD_LOCALES', value: 'en,es' }");
   });
 });

@@ -8,7 +8,10 @@
   anchor's growth stage in field.
 -->
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
+  import { planFamilyText } from './planFamily';
 
   type GroupMember = {
     cropId: string;
@@ -50,14 +53,17 @@
     onNudgeCompanion: (cropId: string, deltaDays: number) => void;
   } = $props();
 
+  const tr = $derived(createT(page.data?.locale));
+  const famText = (f: string) => planFamilyText(f, page.data?.locale);
+
   let confirmingDisband = $state(false);
   let nudgeOpenForCropId = $state<string | null>(null);
   let nudgeDelta = $state(0);
 
   function systemLabel(kind: 'three-sisters' | 'succession' | 'manual'): string {
-    if (kind === 'three-sisters') return 'Three Sisters';
-    if (kind === 'succession') return 'Succession';
-    return 'Manual group';
+    if (kind === 'three-sisters') return tr('group.kind.threeSisters');
+    if (kind === 'succession') return tr('group.kind.succession');
+    return tr('group.kind.manual');
   }
 
   function tasksForCrop(cropId: string): GroupTask[] {
@@ -90,13 +96,15 @@
   }
 </script>
 
-<aside class="group-inspector" aria-label="Planting group inspector">
+<aside class="group-inspector" aria-label={tr('group.insp.aria')}>
   <header class="head">
     <div>
       <h3>{systemLabel(systemKind)}</h3>
-      <p class="group-id">id: {groupId.slice(0, 8)}…</p>
+      <p class="group-id">{tr('group.insp.id', { id: groupId.slice(0, 8) })}</p>
     </div>
-    <button type="button" class="close" onclick={onClose} aria-label="Close inspector">×</button>
+    <button type="button" class="close" onclick={onClose} aria-label={tr('group.insp.close')}
+      >×</button
+    >
   </header>
 
   <section class="members">
@@ -105,16 +113,18 @@
         <header>
           <span class="role-badge" aria-hidden="true">⚓</span>
           <strong>{anchor.varietyDisplayName}</strong>
-          <span class="family">{anchor.cropFamily}</span>
+          <span class="family">{famText(anchor.cropFamily)}</span>
         </header>
-        <p class="meta">Plant date: {fmtDate(anchor.plantingDateMs)}</p>
+        <p class="meta">{tr('group.insp.plantDate', { date: fmtDate(anchor.plantingDateMs) })}</p>
         <ul class="task-list">
           {#each tasksForCrop(anchor.cropId) as t (t.id)}
             <li class:done={!!t.completedAtMs} class:stale={t.staleAnchor}>
               <span class="task-date">{fmtDate(t.scheduledForMs)}</span>
               <span class="task-title">{t.title}</span>
-              {#if t.completedAtMs}<span class="badge done-badge">done</span>{/if}
-              {#if t.staleAnchor}<span class="badge stale-badge">stale</span>{/if}
+              {#if t.completedAtMs}<span class="badge done-badge">{tr('group.insp.done')}</span
+                >{/if}
+              {#if t.staleAnchor}<span class="badge stale-badge">{tr('group.insp.stale')}</span
+                >{/if}
             </li>
           {/each}
         </ul>
@@ -125,28 +135,33 @@
       <article class="member member-companion">
         <header>
           <strong>{c.varietyDisplayName}</strong>
-          <span class="family">{c.cropFamily}</span>
+          <span class="family">{famText(c.cropFamily)}</span>
           {#if c.offsetDays !== undefined}
             <span class="offset">+{c.offsetDays}d</span>
           {/if}
         </header>
         <p class="meta">
-          Plant date: {fmtDate(c.plantingDateMs)}
+          {tr('group.insp.plantDate', { date: fmtDate(c.plantingDateMs) })}
           <button
             type="button"
             class="nudge-toggle"
             onclick={() => startNudge(c.cropId)}
-            aria-label="Nudge {c.varietyDisplayName} planting date">Nudge ±days</button
+            aria-label={tr('group.insp.nudgeAria', { name: c.varietyDisplayName })}
+            >{tr('group.insp.nudge')}</button
           >
         </p>
         {#if nudgeOpenForCropId === c.cropId}
           <div class="nudge-form">
             <label>
-              Δ days
+              {tr('group.insp.delta')}
               <input type="number" min="-30" max="30" bind:value={nudgeDelta} />
             </label>
-            <button type="button" class="btn-primary" onclick={commitNudge}>Apply</button>
-            <button type="button" class="btn-secondary" onclick={cancelNudge}>Cancel</button>
+            <button type="button" class="btn-primary" onclick={commitNudge}
+              >{tr('group.insp.apply')}</button
+            >
+            <button type="button" class="btn-secondary" onclick={cancelNudge}
+              >{tr('group.insp.cancel')}</button
+            >
           </div>
         {/if}
         <ul class="task-list">
@@ -161,8 +176,10 @@
                 {#if t.isCompanionCheck}<span class="check-glyph" aria-hidden="true">⚑</span>{/if}
                 {t.title}
               </span>
-              {#if t.completedAtMs}<span class="badge done-badge">done</span>{/if}
-              {#if t.staleAnchor}<span class="badge stale-badge">stale</span>{/if}
+              {#if t.completedAtMs}<span class="badge done-badge">{tr('group.insp.done')}</span
+                >{/if}
+              {#if t.staleAnchor}<span class="badge stale-badge">{tr('group.insp.stale')}</span
+                >{/if}
             </li>
           {/each}
         </ul>
@@ -173,13 +190,15 @@
   <footer class="foot">
     {#if !confirmingDisband}
       <button type="button" class="btn-danger" onclick={() => (confirmingDisband = true)}>
-        Disband group
+        {tr('group.insp.disband')}
       </button>
     {:else}
-      <p class="disband-warn">Members keep their plantings; group link clears. Confirm?</p>
-      <button type="button" class="btn-danger" onclick={onDisband}>Yes, disband</button>
+      <p class="disband-warn">{tr('group.insp.disbandWarn')}</p>
+      <button type="button" class="btn-danger" onclick={onDisband}
+        >{tr('group.insp.disbandYes')}</button
+      >
       <button type="button" class="btn-secondary" onclick={() => (confirmingDisband = false)}>
-        Cancel
+        {tr('group.insp.cancel')}
       </button>
     {/if}
   </footer>

@@ -59,13 +59,16 @@ export function listSeasonSetupYears(): number[] {
   return [...years];
 }
 
-export function loadPlanningYearView(now: Date = new Date()): PlanningYearView {
+export function loadPlanningYearView(
+  now: Date = new Date(),
+  locale?: string | null
+): PlanningYearView {
   const stored = storedPlanningYear();
   const frost = planningFrost();
   return {
     activeYear: resolvePlanningYear(stored, now, frost),
     suggestedYear: suggestPlanningYear(now, frost),
-    suggestionReason: suggestionReason(now, frost),
+    suggestionReason: suggestionReason(now, frost, locale),
     options: selectablePlanningYears(now),
     pastYears: pastPlanningYears([...listSeasonSetupYears(), ...listYearsWithCrops()], now),
     chosen: stored !== null && isSelectablePlanningYear(stored, now)

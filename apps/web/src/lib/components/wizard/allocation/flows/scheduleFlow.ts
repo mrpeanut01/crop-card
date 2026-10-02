@@ -99,7 +99,7 @@ export class ScheduleFlow {
       }
       this.#w.queueScrollChat();
     } catch (e) {
-      this.#w.scheduleError = e instanceof Error ? e.message : 'schedule request failed';
+      this.#w.scheduleError = e instanceof Error ? e.message : wt('wizard.err.schedule');
     } finally {
       this.#w.scheduleLoading = false;
       this.#w.scheduleStartMs = null;

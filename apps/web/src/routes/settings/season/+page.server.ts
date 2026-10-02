@@ -9,7 +9,7 @@ export const load: PageServerLoad = (event) => {
   const u = requireOwner(event);
   if (!u.activeOwnerId) throw redirect(303, '/owner-picker');
 
-  const planningYear = loadPlanningYearView();
+  const planningYear = loadPlanningYearView(new Date(), event.locals.locale);
   const yearParam = event.url.searchParams.get('year');
   const requested = yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : null;
   const pastView = requested !== null && planningYear.pastYears.includes(requested);

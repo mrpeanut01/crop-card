@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { CropPlugin } from '$lib/plugins/schemas';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { untrack } from 'svelte';
   import type { SetupArea } from '$lib/setup/types';
   import type { SeasonSetup } from '$lib/season/setup';
@@ -92,6 +94,8 @@
      *  modal naturally. */
     onRefreshParent?: () => void | Promise<void>;
   } = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   const w = setWizardContext(
     new AllocationWizardState(
@@ -253,7 +257,7 @@
 
     {#if w.error && w.step !== 'commit' && w.step !== 'review' && w.step !== 'season-setup'}
       <div class="aw-error-banner" role="alert">
-        <strong>Couldn't generate plan:</strong>
+        <strong>{tr('wizard.aw.genFailed')}</strong>
         {w.error}
       </div>
     {/if}
@@ -296,57 +300,67 @@
 
     <footer class="aw-footer">
       {#if w.step === 'season-setup'}
-        <button class="btn-secondary" onclick={onClose}>Cancel</button>
+        <button class="btn-secondary" onclick={onClose}>{tr('wizard.aw.cancel')}</button>
         {#if w.activeSetup}
           <button
             class="btn-secondary"
             onclick={() => (w.step = w.hasExistingPlan ? 'plan-state' : 'seeds')}
           >
-            Keep current & continue
+            {tr('wizard.aw.keepCurrent')}
           </button>
         {/if}
       {:else if w.step === 'plan-state'}
-        <button class="btn-secondary" onclick={onClose}>Cancel</button>
+        <button class="btn-secondary" onclick={onClose}>{tr('wizard.aw.cancel')}</button>
       {:else if w.step === 'seeds'}
-        <button class="btn-secondary" onclick={onClose}>Cancel</button>
+        <button class="btn-secondary" onclick={onClose}>{tr('wizard.aw.cancel')}</button>
         <button
           class="btn-primary"
           disabled={!w.hasSeedSelection}
           onclick={() => (w.step = 'blocks')}
         >
-          Next: blocks ({w.totalPlantsSelected.toLocaleString()} plants{w.fillToBedSeeds.size > 0
-            ? `, ${w.fillToBedSeeds.size} sized to bed`
-            : ''})
+          {w.fillToBedSeeds.size > 0
+            ? tr('wizard.aw.nextBlocksFill', {
+                plants: w.totalPlantsSelected.toLocaleString(),
+                n: w.fillToBedSeeds.size
+              })
+            : tr('wizard.aw.nextBlocks', { plants: w.totalPlantsSelected.toLocaleString() })}
         </button>
       {:else if w.step === 'blocks'}
-        <button class="btn-secondary" onclick={() => (w.step = 'seeds')}>Back</button>
+        <button class="btn-secondary" onclick={() => (w.step = 'seeds')}
+          >{tr('wizard.aw.back')}</button
+        >
         <button
           class="btn-primary"
           disabled={w.selectedBlockIds.size === 0 || w.loading}
           onclick={() => w.generatePlan()}
         >
-          {w.loading ? 'Generating…' : `Generate plan (${w.selectedBlockIds.size} blocks)`}
+          {w.loading
+            ? tr('wizard.aw.generating')
+            : tr('wizard.aw.generate', { n: w.selectedBlockIds.size })}
         </button>
       {:else if w.step === 'review'}
-        <button class="btn-secondary" onclick={() => (w.step = 'blocks')}>Back</button>
+        <button class="btn-secondary" onclick={() => (w.step = 'blocks')}
+          >{tr('wizard.aw.back')}</button
+        >
         <button class="btn-secondary" onclick={() => w.generatePlan()} disabled={w.loading}
-          >Regenerate</button
+          >{tr('wizard.aw.regenerate')}</button
         >
         <button
           class="btn-primary"
           onclick={() => w.advanceToSchedule()}
           disabled={!w.response || w.response.assignments.length === 0}
-          title="Locks the layout above and moves on to picking planting dates."
+          title={tr('wizard.aw.acceptTitle')}
         >
-          Accept all → schedule
+          {tr('wizard.aw.acceptAll')}
         </button>
       {:else if w.step === 'schedule'}
-        <button class="btn-secondary" onclick={() => (w.step = 'review')}>Back to allocation</button
+        <button class="btn-secondary" onclick={() => (w.step = 'review')}
+          >{tr('wizard.aw.backAlloc')}</button
         >
         <button
           class="btn-secondary"
           onclick={() => w.advanceToSchedule()}
-          disabled={w.scheduleLoading}>Re-schedule</button
+          disabled={w.scheduleLoading}>{tr('wizard.aw.reschedule')}</button
         >
         <button
           class="btn-primary"
@@ -355,7 +369,7 @@
             !w.scheduleResponse ||
             w.scheduleResponse.scheduled.length === 0}
         >
-          Accept dates → inputs plan ({w.scheduleResponse?.scheduled.length ?? 0})
+          {tr('wizard.aw.acceptDates', { n: w.scheduleResponse?.scheduled.length ?? 0 })}
         </button>
       {:else if w.step === 'inputs'}
         <!-- Footer actions live inside InputsPlanStep; no parent buttons here. -->
@@ -365,7 +379,9 @@
           onclick={onClose}
           disabled={w.commitProgress.done < w.commitProgress.total}
         >
-          {w.commitProgress.done < w.commitProgress.total ? 'Committing…' : 'Done'}
+          {w.commitProgress.done < w.commitProgress.total
+            ? tr('wizard.aw.committing')
+            : tr('wizard.aw.done')}
         </button>
       {/if}
     </footer>

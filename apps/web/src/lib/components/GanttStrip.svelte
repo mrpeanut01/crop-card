@@ -6,6 +6,8 @@
   Bars group by equipmentId; overlap renders red.
 -->
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
 
   interface EquipmentBar {
@@ -22,6 +24,7 @@
     viewEndMs: number;
   }
   const props: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
   const DAY_MS = 86_400_000;
 
   const groups = $derived.by(() => {
@@ -55,9 +58,9 @@
   }
 </script>
 
-<div class="gantt-strip" aria-label="Equipment + labor crunch strip">
+<div class="gantt-strip" aria-label={tr('planui.gantt.aria')}>
   {#if groups.length === 0}
-    <p class="empty">No equipment-bound tasks in this window.</p>
+    <p class="empty">{tr('planui.gantt.empty')}</p>
   {:else}
     <ul class="rows">
       {#each groups as g (g.id)}

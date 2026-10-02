@@ -17,6 +17,8 @@
  * year, one click).
  */
 
+import { t, type MessageKey } from '$lib/i18n';
+
 export const SEASON_SETUP_FIELDS = [
   'philosophy',
   'weedStrategy',
@@ -116,22 +118,58 @@ export function allowsSynthetics(s: SeasonSetup): boolean {
 }
 
 /** Strip the explanatory tail from a label so the compact chip fits on a
- *  phone screen. Labels with the shape "Short — long explanation" get the
- *  short part only. Labels without " — " are returned as-is. */
+ *  phone screen. Labels with the shape "Short — long explanation" (or the
+ *  Spanish "Corto: explicación") get the short part only. */
 function chipForm(label: string): string {
   const i = label.indexOf(' — ');
-  return i === -1 ? label : label.slice(0, i);
+  if (i !== -1) return label.slice(0, i);
+  const j = label.indexOf(': ');
+  return j === -1 ? label : label.slice(0, j);
 }
 
 /** Compact human-readable summary used by `SeasonSetupChip.svelte`.
  *  Example: "Certified organic · Scout-then-spray · Compost & amendments
  *  · Cover: Vetch / clover · 2026" */
-export function summarizeSeasonSetup(s: SeasonSetup): string {
-  const phil = chipForm(PHILOSOPHY_LABELS[s.philosophy]);
-  const pest = chipForm(PEST_LABELS[s.pestStrategy]);
-  const fert = chipForm(FERTILITY_LABELS[s.fertilityApproach]);
-  const cover = s.coverCropIntent === 'none' ? null : `Cover: ${COVER_LABELS[s.coverCropIntent]}`;
+export function summarizeSeasonSetup(s: SeasonSetup, locale?: string | null): string {
+  const labels = seasonSetupLabels(locale);
+  const phil = chipForm(labels.philosophy[s.philosophy]);
+  const pest = chipForm(labels.pest[s.pestStrategy]);
+  const fert = chipForm(labels.fert[s.fertilityApproach]);
+  const cover =
+    s.coverCropIntent === 'none'
+      ? null
+      : t(locale, 'wizard.setup.coverChip', { name: labels.cover[s.coverCropIntent] });
   return [phil, pest, fert, cover, s.year].filter(Boolean).join(' · ');
+}
+
+function localized<K extends string>(
+  base: Record<K, string>,
+  prefix: string,
+  locale: string | null | undefined
+): Record<K, string> {
+  const out = {} as Record<K, string>;
+  for (const k of Object.keys(base) as K[]) {
+    out[k] = locale ? t(locale, `${prefix}${k}` as MessageKey) : base[k];
+  }
+  return out;
+}
+
+/** Season Setup option labels in the given locale, same key order as the
+ *  English constants below. No locale returns the English constants. */
+export function seasonSetupLabels(locale?: string | null): {
+  philosophy: Record<Philosophy, string>;
+  weed: Record<WeedStrategy, string>;
+  pest: Record<PestStrategy, string>;
+  fert: Record<FertilityApproach, string>;
+  cover: Record<CoverCropIntent, string>;
+} {
+  return {
+    philosophy: localized(PHILOSOPHY_LABELS, 'plan.page.label.philosophy.', locale),
+    weed: localized(WEED_LABELS, 'plan.page.label.weed.', locale),
+    pest: localized(PEST_LABELS, 'plan.page.label.pest.', locale),
+    fert: localized(FERTILITY_LABELS, 'plan.page.label.fert.', locale),
+    cover: localized(COVER_LABELS, 'plan.page.label.cover.', locale)
+  };
 }
 
 // ─── Human-readable labels (for chip + select options) ──────────────────

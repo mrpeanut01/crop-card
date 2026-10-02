@@ -10,6 +10,8 @@
  */
 
 import { parseMmDd } from '$lib/schedule/constants';
+import { t } from '$lib/i18n';
+import { intlLocale } from '$lib/prefs';
 import { frostSeasonYears } from '$lib/schedule/frostSeason';
 
 export const PLANNING_ROLLOVER_MONTH = 6;
@@ -87,22 +89,26 @@ export function pastPlanningYears(yearsWithData: Iterable<number>, now: Date): n
   return [...new Set(yearsWithData)].filter((yr) => yr < y).sort((a, b) => b - a);
 }
 
-export function suggestionReason(now: Date, frost?: PlanningFrost | null): string {
+export function suggestionReason(
+  now: Date,
+  frost?: PlanningFrost | null,
+  locale?: string | null
+): string {
   const y = now.getFullYear();
+  const next = y + 1;
   const fall = firstFallFrost(now, frost);
   const rolled = rollsOver(now, frost);
   if (fall) {
-    const day = fall.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const day = fall.toLocaleDateString(intlLocale(locale), { month: 'short', day: 'numeric' });
     const passed = now.getTime() >= fall.getTime();
-    if (!rolled)
-      return `Your first fall frost is around ${day}, so there is still time to plant this season.`;
+    if (!rolled) return t(locale, 'wizard.year.frostOpen', { day });
     return passed
-      ? `Your first fall frost, around ${day}, has passed, so most farms are planning ${y + 1} now.`
-      : `Your first fall frost is around ${day}, so the ${y} planting window has mostly closed. Most farms are planning ${y + 1} now.`;
+      ? t(locale, 'wizard.year.frostPassed', { day, next })
+      : t(locale, 'wizard.year.frostClosing', { day, year: y, next });
   }
   return rolled
-    ? `The ${y} planting window has mostly closed, so most farms are planning ${y + 1} now.`
-    : `There is still time to plant this spring and summer.`;
+    ? t(locale, 'wizard.year.closed', { year: y, next })
+    : t(locale, 'wizard.year.open');
 }
 
 export interface PlanningYearView {

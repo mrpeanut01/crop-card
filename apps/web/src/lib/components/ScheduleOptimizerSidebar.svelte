@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
   /**
    * ScheduleOptimizerSidebar (Phase 21b follow-up)
@@ -62,6 +64,8 @@
 
   let { plantings, blocks, extraFacts = [], onApply, onClose }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
+
   type ChatMsg = { role: 'user' | 'assistant'; content: string };
   let messages = $state<ChatMsg[]>([]);
   let draft = $state('');
@@ -79,9 +83,7 @@
 
   const facts = $derived.by(() => {
     if (plantings.length === 0) {
-      return [
-        'No plantings on the swim-lane yet. Schedule some first, then come back here to optimize.'
-      ];
+      return [tr('planui.opt.noPlantings')];
     }
     const blockNames = new Map(blocks.map((b) => [b.id, b.name]));
     const byBlock = new Map<string, number>();
@@ -106,9 +108,13 @@
       .join(', ');
 
     return [
-      `${plantings.length} planting${plantings.length === 1 ? '' : 's'} across ${byBlock.size} block${byBlock.size === 1 ? '' : 's'} — ${blockSummary}.`,
-      `Earliest: ${fmtDate(earliest)}. Latest: ${fmtDate(latest)}.`,
-      `Crops: ${topCrops}${byCrop.size > 6 ? ', …' : ''}.`
+      tr('planui.opt.factSpread', {
+        plantings: tr('planui.opt.plantingsN', { count: plantings.length }),
+        blocks: tr('planui.opt.blocksN', { count: byBlock.size }),
+        summary: blockSummary
+      }),
+      tr('planui.opt.factDates', { earliest: fmtDate(earliest), latest: fmtDate(latest) }),
+      tr('planui.opt.factCrops', { crops: `${topCrops}${byCrop.size > 6 ? ', …' : ''}` })
     ];
   });
 
@@ -119,8 +125,7 @@
     messages = [
       {
         role: 'assistant',
-        content:
-          'Hi — I can re-arrange planting dates to honor cross-pollination staggers, companion offsets, and succession spacing. Tell me what you want to change. Examples:\n\n• "Plant all the corn the first week of May"\n• "Push the brassicas two weeks later so I\'m not behind on the sweet corn"\n• "I want the squash spread out, not all on the same day"\n• "Optimize the schedule for the longest possible harvest window"\n\nI\'ll propose new dates above and you can hit "Apply to grid" if you like what I came up with.'
+        content: tr('planui.opt.greeting')
       }
     ];
     queueScrollChat();
@@ -270,15 +275,16 @@
   });
 </script>
 
-<div class="optimizer-sidebar" role="dialog" aria-modal="false" aria-label="Schedule optimizer">
+<div class="optimizer-sidebar" role="dialog" aria-modal="false" aria-label={tr('planui.opt.aria')}>
   <header class="opt-head">
-    <h3>✨ Optimize schedule</h3>
-    <button type="button" class="opt-close" onclick={onClose} aria-label="Close optimizer">×</button
+    <h3>✨ {tr('planui.opt.title')}</h3>
+    <button type="button" class="opt-close" onclick={onClose} aria-label={tr('planui.opt.close')}
+      >×</button
     >
   </header>
 
   <section class="opt-facts">
-    <h4>What we know</h4>
+    <h4>{tr('planui.opt.know')}</h4>
     <ul>
       {#each facts as f, i (i)}
         <li>{f}</li>
@@ -292,24 +298,22 @@
   {#if proposed && proposed.length > 0}
     <section class="opt-proposal" aria-live="polite">
       <h4>
-        Proposed changes
-        <span class="diff-badge"
-          >{proposedDiffCount} row{proposedDiffCount === 1 ? '' : 's'} differ</span
-        >
+        {tr('planui.opt.proposed')}
+        <span class="diff-badge">{tr('planui.opt.rowsDiffer', { count: proposedDiffCount })}</span>
       </h4>
       {#if proposedRationale}
         <p class="proposal-rationale">{proposedRationale}</p>
       {/if}
       <button type="button" class="apply-btn" onclick={handleApply} disabled={applying}>
-        {applying ? 'Applying…' : 'Apply to grid'}
+        {applying ? tr('planui.opt.applying') : tr('planui.opt.apply')}
       </button>
       {#if applyError}
-        <p class="opt-error" role="alert">Apply failed: {applyError}</p>
+        <p class="opt-error" role="alert">{tr('planui.opt.applyFailed', { error: applyError })}</p>
       {/if}
     </section>
   {/if}
 
-  <section class="opt-chat" aria-label="Refinement chat">
+  <section class="opt-chat" aria-label={tr('planui.opt.chatAria')}>
     <div class="chat-log" bind:this={chatLogEl} role="log" aria-live="polite">
       {#each messages as m, i (i)}
         <div class={`chat-msg chat-${m.role}`}>
@@ -320,7 +324,7 @@
       {#if busy}
         <div class="chat-msg chat-assistant">
           <span class="chat-role" aria-hidden="true">🌱</span>
-          <span class="chat-bubble chat-thinking">Thinking…</span>
+          <span class="chat-bubble chat-thinking">{tr('planui.opt.thinking')}</span>
         </div>
       {/if}
     </div>
@@ -334,13 +338,13 @@
     >
       <textarea
         rows="2"
-        placeholder="Describe what to change, or paste a plan you have in mind…"
+        placeholder={tr('planui.opt.placeholder')}
         bind:value={draft}
         onkeydown={onChatKeydown}
         disabled={busy}
-        aria-label="Chat input"></textarea>
+        aria-label={tr('planui.opt.inputAria')}></textarea>
       <button type="submit" class="send-btn" disabled={busy || !draft.trim()}>
-        {busy ? '…' : 'Send'}
+        {busy ? '…' : tr('planui.opt.send')}
       </button>
     </form>
   </section>

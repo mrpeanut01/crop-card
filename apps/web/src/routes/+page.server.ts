@@ -15,6 +15,7 @@ import {
   sanitizeInviteToken
 } from '$lib/server/magicLink';
 import { ALL_SESSION_ROLES, type SessionRole } from '$lib/server/session';
+import { demoEnabled } from '$lib/server/demo/lifecycle';
 import type { PageServerLoad } from './$types';
 
 /**
@@ -37,7 +38,9 @@ export const load: PageServerLoad = ({ locals, url }) => {
   return {
     inviteToken: url.searchParams.get('invite') ?? null,
     authMode: authMode(),
-    via: (url.searchParams.get('via') === 'phone' ? 'phone' : 'email') as SignInChannel
+    via: (url.searchParams.get('via') === 'phone' ? 'phone' : 'email') as SignInChannel,
+    demoEnabled: demoEnabled(),
+    demoExpired: url.searchParams.get('demo') === 'expired'
   };
 };
 

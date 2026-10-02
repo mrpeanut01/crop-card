@@ -15,6 +15,7 @@
   import TopBar from '$lib/components/ui/TopBar.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
   import UpdateToast from '$lib/components/ui/UpdateToast.svelte';
+  import DemoBanner from '$lib/components/demo/DemoBanner.svelte';
 
   const { data, children } = $props();
   const tr = $derived(createT(data.locale));
@@ -218,6 +219,10 @@
       </form>
     {/snippet}
   </Banner>
+{/if}
+
+{#if data.demo}
+  <DemoBanner expiresAt={data.demo.expiresAt} />
 {/if}
 
 {#if data.billingGrace && !page.url.pathname.startsWith('/settings/billing')}

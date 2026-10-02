@@ -172,7 +172,13 @@ export interface WriteSessionInput {
   impersonating?: boolean;
 }
 
-export function writeSession(cookies: Cookies, user: WriteSessionInput): void {
+/** `ttlMs` shortens the cookie for a demo farm, which is deleted when it
+ *  expires. Defaults to the normal 7 days. */
+export function writeSession(
+  cookies: Cookies,
+  user: WriteSessionInput,
+  ttlMs: number = SESSION_TTL_MS
+): void {
   const payload: SessionPayload = {
     userId: user.id,
     email: user.email,
@@ -181,14 +187,14 @@ export function writeSession(cookies: Cookies, user: WriteSessionInput): void {
     activeOwnerId: user.activeOwnerId,
     activeRole: user.activeRole,
     impersonating: user.impersonating,
-    exp: Date.now() + SESSION_TTL_MS
+    exp: Date.now() + ttlMs
   };
   cookies.set(COOKIE_NAME, sign(payload), {
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
-    maxAge: SESSION_TTL_MS / 1000
+    maxAge: Math.floor(ttlMs / 1000)
   });
 }
 

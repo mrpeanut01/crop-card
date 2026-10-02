@@ -1,6 +1,36 @@
 import type { MessageKey } from '../en';
 
 export const esEntry: Partial<Record<MessageKey, string>> = {
+  'entry.demo.kicker': '¿Primera vez?',
+  'entry.demo.title': 'Explora una granja de demostración',
+  'entry.demo.body':
+    'Recorre una granja y huerta en funcionamiento del condado de Loudoun, ajustada a la fecha de hoy: las tareas de esta semana, registros de aplicación, equipo, animales y lo que viene. Sin registrarte. Todo lo que cambies queda en tu propia copia, que se borra a las 4 horas o cuando la reinicies.',
+  'entry.demo.cta': 'Probar la granja de demostración',
+  'entry.demo.starting': 'Preparando tu granja…',
+  'entry.demo.expired':
+    'Tu granja de demostración venció y se borró. Puedes empezar otra cuando quieras.',
+  'entry.demo.errRate':
+    'Demasiadas granjas de demostración desde esta conexión. Inténtalo de nuevo en unos minutos.',
+  'entry.demo.errBusy':
+    'La demostración está ocupada ahora mismo. Inténtalo de nuevo en unos minutos.',
+  'entry.demo.errOff': 'La demostración no está disponible ahora mismo.',
+  'entry.demo.banner':
+    'Estás explorando una granja de demostración. Cambia lo que quieras; esta copia es solo tuya y se borra a las {time}.',
+  'entry.demo.reset': 'Reiniciar demostración',
+  'entry.demo.resetConfirm':
+    '¿Empezar de nuevo con una granja de demostración nueva? Se borrarán tus cambios.',
+  'entry.demo.leave': 'Salir y registrarse',
+  'entry.demo.try': 'Qué probar',
+  'entry.demo.try.week': 'Las tareas de esta semana',
+  'entry.demo.try.plan': 'Plan de temporada y camas del huerto',
+  'entry.demo.try.map': 'Mapa de la granja',
+  'entry.demo.try.spray': 'Revisar una aplicación antes de mezclar',
+  'entry.demo.try.records': 'Registros de aplicación y cosecha',
+  'entry.demo.try.inventory': 'Inventario de semillas y productos',
+  'entry.demo.try.equipment': 'Aspersoras y calibración',
+  'entry.demo.try.animals': 'Gallinas, cabras y registro de huevos',
+  'entry.demo.try.cards': 'Tarjetas de campo para imprimir',
+  'entry.demo.try.finance': 'Ganancia de la temporada',
   'entry.invite.accept': 'Aceptar invitación →',
   'entry.invite.addEmail': 'Agregar un correo →',
   'entry.invite.back': '← Atrás',

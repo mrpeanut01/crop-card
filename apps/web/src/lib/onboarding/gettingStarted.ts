@@ -7,6 +7,7 @@
  */
 
 import { designerHref } from '$lib/garden/design';
+import { t, type MessageKey } from '$lib/i18n';
 import { profileIncludesFarm, profileIncludesGarden, type FarmProfile } from './profile';
 
 export interface GettingStartedFacts {
@@ -69,109 +70,44 @@ export const GETTING_STARTED_HREFS: Record<GettingStartedItemId, string> = {
   cards: '/cards'
 };
 
-export function gettingStartedItems(f: GettingStartedFacts): GettingStartedItem[] {
+export function gettingStartedItems(
+  f: GettingStartedFacts,
+  locale?: string | null
+): GettingStartedItem[] {
   const garden = profileIncludesGarden(f.profile);
   const farm = profileIncludesFarm(f.profile);
-  const item = (
-    id: GettingStartedItemId,
-    title: string,
-    blurb: string,
-    done: boolean,
-    optional = false
-  ): GettingStartedItem => ({
+  const item = (id: GettingStartedItemId, done: boolean, optional = false): GettingStartedItem => ({
     id,
-    title,
-    blurb,
+    title: t(locale, `gs.${id}.title` as MessageKey),
+    blurb: t(locale, `gs.${id}.blurb` as MessageKey),
     href: id === 'bed' && f.gardenAreaId ? designerHref(f.gardenAreaId) : GETTING_STARTED_HREFS[id],
     done,
     optional
   });
 
   const items: GettingStartedItem[] = [
-    item(
-      'location',
-      'Set your farm location',
-      'Weather, frost dates and spray windows all start from here.',
-      f.hasLocation
-    ),
-    item(
-      'area',
-      'Put your first area on the map',
-      'Draw it on the map or just type its size. Either one works.',
-      f.hasMappedArea
-    ),
-    item(
-      'crop',
-      'Plan your first crop',
-      'Pick a crop and where it grows, and the calendar lays out the work.',
-      f.hasPlanting
-    )
+    item('location', f.hasLocation),
+    item('area', f.hasMappedArea),
+    item('crop', f.hasPlanting)
   ];
   if (garden) {
-    items.push(
-      item(
-        'bed',
-        'Design a garden bed',
-        'Lay out a bed or two so each planting knows where it lives.',
-        f.hasGardenBed
-      )
-    );
+    items.push(item('bed', f.hasGardenBed));
   }
   if (f.animalsAnswered) {
-    items.push(
-      item(
-        'animals',
-        'Add your animals',
-        'Your flock, herd or pets, and where each one lives.',
-        f.hasAnimals === true
-      )
-    );
+    items.push(item('animals', f.hasAnimals === true));
   }
   if (farm) {
-    items.push(
-      item(
-        'equipment',
-        'Add your equipment',
-        'Sprayers, tractors and planters, so their prep and cleanup show up with the work.',
-        f.hasEquipment
-      )
-    );
+    items.push(item('equipment', f.hasEquipment));
   }
   if (f.hasSprayer) {
-    items.push(
-      item(
-        'calibrate',
-        'Calibrate a sprayer',
-        'A five-minute jug-and-stopwatch check so every mix comes out right.',
-        f.hasCalibratedSprayer
-      )
-    );
+    items.push(item('calibrate', f.hasCalibratedSprayer));
   }
   if (farm) {
-    items.push(
-      item(
-        'helper',
-        'Invite a helper',
-        'Give someone who works with you their own sign-in.',
-        f.hasHelper,
-        true
-      )
-    );
+    items.push(item('helper', f.hasHelper, true));
   }
   items.push(
-    item(
-      'assistant',
-      'Turn on the planning assistant',
-      'Adds Claude suggestions to planning. Everything works without it.',
-      f.hasAiKey || f.assistantSkipped === true,
-      true
-    ),
-    item(
-      'cards',
-      'Pin the cards you use most',
-      'Open Cards and tap Pin on a card to keep it on this phone for when there is no signal.',
-      f.hasPinnedCards === true
-    )
+    item('assistant', f.hasAiKey || f.assistantSkipped === true, true),
+    item('cards', f.hasPinnedCards === true)
   );
   return items;
 }

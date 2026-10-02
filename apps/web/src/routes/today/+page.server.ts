@@ -37,7 +37,7 @@ import { deriveWinterizeAlerts, startOfSeason } from '$lib/today/winterizeAlert'
 import { equipmentIdsActiveBefore, listEquipment } from '$lib/db/equipment';
 import { prefsFor, farmTimeZone } from '$lib/db/userProfile';
 import { hasOtherAssignableMember } from '$lib/db/users';
-import { todayYmd, ymdInZone } from '$lib/prefs';
+import { intlLocale, todayYmd, ymdInZone } from '$lib/prefs';
 import { addDaysYmd, calendarGrid, isYmd, resolveTodayParams } from '$lib/today/views';
 import { firstDayOfWeek } from '$lib/intlCache';
 import { loadSeasonView } from '$lib/today/seasonView.server';
@@ -160,7 +160,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   } else if (view === 'week' || view === 'month') {
     const rawAt = url.searchParams.get('at');
     const anchor = isYmd(rawAt) ? rawAt : today;
-    const grid = calendarGrid(view, anchor, firstDayOfWeek('en-US'));
+    const grid = calendarGrid(view, anchor, firstDayOfWeek(intlLocale(locals.locale)));
     const fromMs = Date.parse(grid.fromYmd);
     const toMs = Date.parse(addDaysYmd(grid.toYmd, 1));
     const rangeTasks = listTasks({
@@ -185,7 +185,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     ];
     deckTasks = calendar.tasks;
   } else {
-    season = loadSeasonView(registry, url.searchParams.get('season'), now);
+    season = loadSeasonView(registry, url.searchParams.get('season'), now, locals.locale);
   }
 
   const sprayers = listSprayers();
@@ -216,7 +216,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     openPrimaries: allOpenPrimaries,
     derivedEvents: allEvents,
     blockNameById,
-    now
+    now,
+    locale: locals.locale
   });
 
   const weather = await loadTodayWeather();
@@ -284,6 +285,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       seasonYear: Number(today.slice(0, 4)),
       farmLatLon: hasLocation ? getFarmLatLon() : null,
       timeZone: careTimeZone,
+      locale: locals.locale,
       isOwner,
       // Phase 32F (F4-8): the Monday card, from rows already read here.
       digest: todayDigestInput({
@@ -378,7 +380,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         hasFrostDates:
           !!getSetting(SETTINGS_KEYS.lastFrost) && !!getSetting(SETTINGS_KEYS.firstFrost)
       },
-      locals.user?.role ?? 'helper'
+      locals.user?.role ?? 'helper',
+      locals.locale
     ),
     coveredLogs,
     animalCare,

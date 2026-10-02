@@ -48,21 +48,24 @@ export const load: LayoutServerLoad = ({ locals }) => {
   let navAlerts: NavAlert[] = [];
   if (locals.user?.activeOwnerId) {
     try {
-      navAlerts = buildNavAlerts({
-        dirtySprayers,
-        winterize: deriveWinterizeAlerts(
-          sprayers,
-          Date.now(),
-          equipmentIdsActiveBefore(startOfSeason(Date.now()))
-        ),
-        lowStock: lowStockItems(),
-        expiring: expiringSoon(30).map((e) => ({
-          itemId: e.item.id,
-          itemName: e.item.displayName,
-          category: e.item.category,
-          daysUntilExpiry: e.lot.daysUntilExpiry ?? 0
-        }))
-      });
+      navAlerts = buildNavAlerts(
+        {
+          dirtySprayers,
+          winterize: deriveWinterizeAlerts(
+            sprayers,
+            Date.now(),
+            equipmentIdsActiveBefore(startOfSeason(Date.now()))
+          ),
+          lowStock: lowStockItems(),
+          expiring: expiringSoon(30).map((e) => ({
+            itemId: e.item.id,
+            itemName: e.item.displayName,
+            category: e.item.category,
+            daysUntilExpiry: e.lot.daysUntilExpiry ?? 0
+          }))
+        },
+        locals.locale
+      );
     } catch (err) {
       console.error('[layout] failed to build nav alerts', err);
     }

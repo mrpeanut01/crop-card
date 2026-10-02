@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { dueYmd, ymdInZone } from '$lib/prefs';
 import type { PillTone } from '$lib/styles/tokens';
 
@@ -18,6 +19,11 @@ export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
   done: 'Done',
   skipped: 'Skipped'
 };
+
+/** `TASK_STATUS_LABEL` in the viewer's language. */
+export function taskStatusLabel(status: TaskStatus, locale?: string | null): string {
+  return t(locale, `tasks.status.${status}`);
+}
 
 export const TASK_STATUS_TONE: Record<TaskStatus, PillTone> = {
   late: 'rust',

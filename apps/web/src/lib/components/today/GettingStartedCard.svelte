@@ -74,7 +74,10 @@
   });
 
   const items = $derived(
-    gettingStartedItems({ ...facts, hasPinnedCards: pinned ?? facts.hasPinnedCards })
+    gettingStartedItems(
+      { ...facts, hasPinnedCards: pinned ?? facts.hasPinnedCards },
+      page.data?.locale
+    )
   );
   const summary = $derived(summarizeGettingStarted(items));
   const mode = $derived(hiddenNow ? 'hidden' : gettingStartedMode(summary, dismissed));

@@ -3,7 +3,9 @@
  * client-safe, so the rendered strings are testable. Never mentions spraying.
  */
 
+import { t, type MessageKey } from '$lib/i18n';
 import { dateTimeFormat } from '$lib/intlCache';
+import { intlLocale } from '$lib/prefs';
 import type { TodayAdviceCard } from '$lib/today/advice';
 import {
   verdictRank,
@@ -24,30 +26,34 @@ export const GALLONS_NO_SIZE_LINE =
   "Gallons can't be counted until this Area or bed has a size. Add its size on the farm map.";
 export const COVERED_LINE = 'A cover keeps the rain off. Check the soil by hand.';
 
+type Loc = string | null | undefined;
+
 export function inchesText(n: number): string {
   const v = Math.round(n * 10) / 10;
   return `${v === 0 && n > 0 ? '<0.1' : v.toFixed(1).replace(/\.0$/, '')} in`;
 }
 
-export function joinNames(names: readonly string[]): string {
+export function joinNames(names: readonly string[], locale?: Loc): string {
   if (names.length <= 1) return names[0] ?? '';
-  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  return t(locale, 'advice.water.joinLast', {
+    list: names.slice(0, -1).join(', '),
+    last: names[names.length - 1]
+  });
 }
 
-export function weekdayText(ms: number, timeZone: string): string {
-  return dateTimeFormat('en-US', { weekday: 'short', timeZone }).format(new Date(ms));
+export function weekdayText(ms: number, timeZone: string, locale?: Loc): string {
+  return dateTimeFormat(intlLocale(locale), { weekday: 'short', timeZone }).format(new Date(ms));
 }
 
-export function stationText(s: StationRef): string {
-  return `${s.name}, ${s.distanceMi.toFixed(1).replace(/\.0$/, '')} mi away`;
+export function stationText(s: StationRef, locale?: Loc): string {
+  return t(locale, 'advice.water.station', {
+    name: s.name,
+    miles: s.distanceMi.toFixed(1).replace(/\.0$/, '')
+  });
 }
 
 function latestUnknownLog(beds: readonly BedVerdict[]): BedVerdict {
   return beds.reduce((a, b) => ((b.unknownLogAtMs ?? 0) > (a.unknownLogAtMs ?? 0) ? b : a));
-}
-
-function rainUnknownLine(balance: WaterBalance): string {
-  return balance.gaugeHours > 0 ? GAUGE_PARTIAL_LINE : RAIN_UNKNOWN_LINE;
 }
 
 function bedGroupLine(
@@ -55,68 +61,100 @@ function bedGroupLine(
   reason: UnknownReason | null,
   beds: readonly BedVerdict[],
   timeZone: string,
-  balance: WaterBalance
+  balance: WaterBalance,
+  locale: Loc
 ): string {
-  const names = joinNames(beds.map((b) => b.bedName));
+  const names = joinNames(
+    beds.map((b) => b.bedName),
+    locale
+  );
+  const line = (key: MessageKey, params: Record<string, string> = {}) =>
+    t(locale, key, { names, ...params });
   if (verdict === 'water') {
     const short = Math.max(...beds.map((b) => b.shortIn ?? 0));
-    return `Water ${names}. About ${inchesText(short)} short this week.`;
+    return line('advice.water.bedWater', { inches: inchesText(short) });
   }
-  if (verdict === 'skip') return `Skip watering ${names} today.`;
-  if (verdict === 'ok') return `${names}: watered enough this week.`;
-  if (reason === 'covered') return `Check ${names} by hand. ${COVERED_LINE}`;
+  if (verdict === 'skip') return line('advice.water.bedSkip');
+  if (verdict === 'ok') return line('advice.water.bedOk');
+  if (reason === 'covered') return line('advice.water.bedCovered');
   if (reason === 'amount-not-logged') {
     const latest = latestUnknownLog(beds);
-    const day = weekdayText(latest.unknownLogAtMs ?? 0, timeZone);
-    return latest.unknownLogNeedsSize
-      ? `${names}: you watered ${day}. ${GALLONS_NO_SIZE_LINE}`
-      : `${names}: you watered ${day}, amount not logged.`;
+    const day = weekdayText(latest.unknownLogAtMs ?? 0, timeZone, locale);
+    return line(
+      latest.unknownLogNeedsSize
+        ? 'advice.water.bedWateredNoSize'
+        : 'advice.water.bedWateredNotLogged',
+      { day }
+    );
   }
-  if (reason === 'no-target') return `${names}: ${NO_TARGET_LINE.toLowerCase()}`;
-  const line = rainUnknownLine(balance);
-  return `${names}: ${line.charAt(0).toLowerCase()}${line.slice(1)}`;
+  if (reason === 'no-target') return line('advice.water.bedNoTarget');
+  return line(
+    balance.gaugeHours > 0 ? 'advice.water.bedGaugePartial' : 'advice.water.bedRainUnknown'
+  );
 }
 
-function uniformTitle(area: string, balance: WaterBalance, open: BedVerdict[], tz: string) {
+function uniformTitle(
+  area: string,
+  balance: WaterBalance,
+  open: BedVerdict[],
+  tz: string,
+  locale: Loc
+) {
   const v = balance.verdict;
-  if (v === 'skip') return { title: `Skip watering the ${area} today`, lines: [] };
-  if (v === 'ok') return { title: `${area}: watered enough this week`, lines: [] };
+  const m = (key: MessageKey, params: Record<string, string> = {}) =>
+    t(locale, key, { area, ...params });
+  if (v === 'skip') return { title: m('advice.water.skipTitle'), lines: [] };
+  if (v === 'ok') return { title: m('advice.water.okTitle'), lines: [] };
   if (v === 'water') {
     return {
-      title: `Water the ${area}`,
-      lines: [`About ${inchesText(balance.shortIn ?? 0)} short this week.`]
+      title: m('advice.water.waterTitle'),
+      lines: [m('advice.water.shortLine', { inches: inchesText(balance.shortIn ?? 0) })]
     };
   }
-  if (balance.reason === 'greenhouse') return { title: area, lines: [GREENHOUSE_LINE] };
+  if (balance.reason === 'greenhouse') {
+    return { title: area, lines: [t(locale, 'advice.water.greenhouse')] };
+  }
   if (balance.reason === 'covered') {
-    return { title: `Check the ${area} by hand`, lines: [COVERED_LINE] };
+    return { title: m('advice.water.coveredTitle'), lines: [t(locale, 'advice.water.covered')] };
   }
   if (balance.reason === 'no-target') {
-    return { title: `${area}: no water target`, lines: [NO_TARGET_LINE] };
+    return { title: m('advice.water.noTargetTitle'), lines: [t(locale, 'advice.water.noTarget')] };
   }
   if (balance.reason === 'amount-not-logged') {
     const latest = latestUnknownLog(open);
-    const day = weekdayText(latest.unknownLogAtMs ?? 0, tz);
+    const day = weekdayText(latest.unknownLogAtMs ?? 0, tz, locale);
     return {
-      title: `${area}: rain alone is not enough`,
+      title: m('advice.water.notLoggedTitle'),
       lines: latest.unknownLogNeedsSize
-        ? [`You watered ${day}.`, GALLONS_NO_SIZE_LINE]
-        : [`You watered ${day}, amount not logged.`]
+        ? [m('advice.water.youWatered', { day }), t(locale, 'advice.water.gallonsNoSize')]
+        : [m('advice.water.youWateredNotLogged', { day })]
     };
   }
   if (balance.gaugeHours > 0) {
-    return { title: `${area}: rain only partly known`, lines: [GAUGE_PARTIAL_LINE] };
+    return {
+      title: m('advice.water.partlyTitle'),
+      lines: [t(locale, 'advice.water.gaugePartial')]
+    };
   }
-  return { title: `${area}: rain unknown here`, lines: [RAIN_UNKNOWN_LINE] };
+  return { title: m('advice.water.unknownTitle'), lines: [t(locale, 'advice.water.rainUnknown')] };
 }
 
 /** The week's rain, or an honest lower bound over the part of the week
  *  that has readings (E0-4: a partial total is never the week's total). */
-export function rainTotalLine(rainIn: number, trusted: boolean, coveredHours: number): string {
-  if (trusted) return `Rain in the last 7 days: about ${inchesText(rainIn)}.`;
+export function rainTotalLine(
+  rainIn: number,
+  trusted: boolean,
+  coveredHours: number,
+  locale?: Loc
+): string {
+  const inches = inchesText(rainIn);
+  if (trusted) return t(locale, 'advice.water.rainWeek', { inches });
   const days = Math.floor(coveredHours / 24);
-  const span = days < 1 ? 'less than a day' : days === 1 ? '1 day' : `${days} days`;
-  return `Rain known for only ${span} of the last 7: at least ${inchesText(rainIn)}.`;
+  const span =
+    days < 1
+      ? t(locale, 'advice.water.lessThanDay')
+      : t(locale, 'advice.water.days', { count: days });
+  return t(locale, 'advice.water.rainPartial', { span, inches });
 }
 
 export interface WaterCardInput {
@@ -129,29 +167,38 @@ export interface WaterCardInput {
   timeZone: string;
   /** Neither the Area nor the farm has a location. */
   noLocation?: boolean;
+  /** The viewer's language; English when unset. */
+  locale?: string | null;
 }
 
 export function waterDetail(input: WaterCardInput): string {
   const b = input.balance;
+  const loc = input.locale;
   const parts: string[] = [];
   const counts = b.station !== null && (b.rainSource === 'station' || b.rainSource === 'both');
-  if (b.rainSource === 'gauge') parts.push('Rain from your gauge');
+  if (b.rainSource === 'gauge') parts.push(t(loc, 'advice.water.fromGauge'));
   else if (b.rainSource === 'both' && b.station) {
-    parts.push(`Rain from your gauge and ${stationText(b.station)}`);
-  } else if (counts && b.station) parts.push(`Rain from ${stationText(b.station)}`);
+    parts.push(t(loc, 'advice.water.fromGaugeAnd', { station: stationText(b.station, loc) }));
+  } else if (counts && b.station) {
+    parts.push(t(loc, 'advice.water.fromStation', { station: stationText(b.station, loc) }));
+  }
   if (!counts) {
     const s = input.nearestStation;
-    if (input.noLocation) parts.push('Set the farm location to count station rain');
+    if (input.noLocation) parts.push(t(loc, 'advice.water.setLocation'));
     else if (s && s.distanceMi > 10)
-      parts.push(`Nearest station ${stationText(s)}, too far to count`);
-    else if (s) parts.push(`Nearest station ${stationText(s)}, no rain reports`);
-    else parts.push('No weather station within 30 miles');
+      parts.push(t(loc, 'advice.water.tooFar', { station: stationText(s, loc) }));
+    else if (s) parts.push(t(loc, 'advice.water.noReports', { station: stationText(s, loc) }));
+    else parts.push(t(loc, 'advice.water.noStation'));
   }
   if (b.target) {
     parts.push(
-      `Target ${inchesText(b.target.inches)} a week (${
-        b.target.provenance === 'manual' ? 'your setting' : WATER_TARGET_SOURCE
-      })`
+      t(loc, 'advice.water.target', {
+        inches: inchesText(b.target.inches),
+        source:
+          b.target.provenance === 'manual'
+            ? t(loc, 'advice.water.yourSetting')
+            : WATER_TARGET_SOURCE
+      })
     );
   }
   return `${parts.join('. ')}.`;
@@ -160,6 +207,7 @@ export function waterDetail(input: WaterCardInput): string {
 export function wateringCard(input: WaterCardInput): TodayAdviceCard {
   const b = input.balance;
   const tz = input.timeZone;
+  const loc = input.locale;
   const open = b.perBed.filter((x) => x.reason !== 'covered' && x.reason !== 'greenhouse');
   const covered = b.perBed.filter((x) => x.reason === 'covered');
   const uniform =
@@ -169,14 +217,14 @@ export function wateringCard(input: WaterCardInput): TodayAdviceCard {
   let title: string;
   const lines: string[] = [];
   if (uniform) {
-    const u = uniformTitle(input.areaName, b, open, tz);
+    const u = uniformTitle(input.areaName, b, open, tz, loc);
     title = u.title;
     lines.push(...u.lines);
     if (open.length > 0 && covered.length > 0) {
-      lines.push(bedGroupLine('unknown', 'covered', covered, tz, b));
+      lines.push(bedGroupLine('unknown', 'covered', covered, tz, b, loc));
     }
   } else {
-    title = `Watering the ${input.areaName}`;
+    title = t(loc, 'advice.water.areaTitle', { area: input.areaName });
     const groups = new Map<string, BedVerdict[]>();
     for (const bed of b.perBed) {
       const key = `${bed.verdict}|${bed.reason ?? ''}`;
@@ -185,15 +233,13 @@ export function wateringCard(input: WaterCardInput): TodayAdviceCard {
     const ordered = [...groups.values()].sort(
       (x, y) => verdictRank(x[0].verdict) - verdictRank(y[0].verdict)
     );
-    for (const g of ordered) lines.push(bedGroupLine(g[0].verdict, g[0].reason, g, tz, b));
+    for (const g of ordered) lines.push(bedGroupLine(g[0].verdict, g[0].reason, g, tz, b, loc));
   }
   if (b.rainIn !== null && b.reason !== 'greenhouse') {
-    lines.push(rainTotalLine(b.rainIn, b.rainTrusted, b.coveredHours));
+    lines.push(rainTotalLine(b.rainIn, b.rainTrusted, b.coveredHours, loc));
   }
   if (input.forecastIn !== null && input.forecastIn >= 0.05) {
-    lines.push(
-      `Rain forecast: about ${inchesText(input.forecastIn)} over the next 24 hours (NWS).`
-    );
+    lines.push(t(loc, 'advice.water.forecast', { inches: inchesText(input.forecastIn) }));
   }
   const provenance =
     b.rainSource === 'gauge' || b.rainSource === 'both'
@@ -210,8 +256,18 @@ export function wateringCard(input: WaterCardInput): TodayAdviceCard {
     detail: waterDetail(input),
     tone: b.verdict === 'water' ? 'wheat' : 'info',
     actions: [
-      { kind: 'sheet', label: 'Log watering', sheet: 'log-watering', fieldId: input.fieldId },
-      { kind: 'sheet', label: 'Enter rain gauge', sheet: 'rain-gauge', fieldId: input.fieldId }
+      {
+        kind: 'sheet',
+        label: t(loc, 'today.advice.logWatering'),
+        sheet: 'log-watering',
+        fieldId: input.fieldId
+      },
+      {
+        kind: 'sheet',
+        label: t(loc, 'today.advice.rainGauge'),
+        sheet: 'rain-gauge',
+        fieldId: input.fieldId
+      }
     ],
     sortKey: 100 + verdictRank(b.verdict) * 10
   };

@@ -5,6 +5,7 @@
  */
 
 import type { OrganicInputClass } from '$lib/organic/inputCompliance';
+import { t } from '$lib/i18n';
 
 export interface NoticeProduct {
   name: string;
@@ -16,31 +17,35 @@ export interface OrganicNotice {
   blocks: { id: string; name: string; statusLine: string }[];
 }
 
-function recordPhrase(blockCount: number): string {
+function recordPhrase(blockCount: number, locale?: string | null): string {
   return blockCount === 1
-    ? "It will show on this block's organic record."
-    : "It will show on these blocks' organic records.";
+    ? t(locale, 'organic.notice.recordOne')
+    : t(locale, 'organic.notice.recordMany');
 }
 
 export function organicNoticeMessage(
   inputClass: 'not-allowed' | 'not-marked',
-  blockCount: number
+  blockCount: number,
+  locale?: string | null
 ): string {
   const lead =
     inputClass === 'not-allowed'
-      ? 'The library marks this product as not allowed for organic use.'
-      : "This product isn't marked as allowed for organic use.";
-  return `${lead} ${recordPhrase(blockCount)}`;
+      ? t(locale, 'organic.notice.notAllowed')
+      : t(locale, 'organic.notice.notMarked');
+  return `${lead} ${recordPhrase(blockCount, locale)}`;
 }
 
 /** Null when no selected block has an organic or transitioning status
  *  today, or every selected product is marked allowed. */
-export function organicInputNotice(input: {
-  organicBlocks: Record<string, string> | null | undefined;
-  selectedBlockIds: readonly string[];
-  products: readonly NoticeProduct[];
-  blockNames?: Record<string, string>;
-}): OrganicNotice | null {
+export function organicInputNotice(
+  input: {
+    organicBlocks: Record<string, string> | null | undefined;
+    selectedBlockIds: readonly string[];
+    products: readonly NoticeProduct[];
+    blockNames?: Record<string, string>;
+  },
+  locale?: string | null
+): OrganicNotice | null {
   const statuses = input.organicBlocks ?? {};
   const blockIds = [...new Set(input.selectedBlockIds)].filter((id) =>
     Object.prototype.hasOwnProperty.call(statuses, id)
@@ -56,7 +61,7 @@ export function organicInputNotice(input: {
     products.push({
       name: p.name,
       inputClass: p.inputClass,
-      message: organicNoticeMessage(p.inputClass, blockIds.length)
+      message: organicNoticeMessage(p.inputClass, blockIds.length, locale)
     });
   }
   if (products.length === 0) return null;
@@ -64,7 +69,7 @@ export function organicInputNotice(input: {
     products,
     blocks: blockIds.map((id) => ({
       id,
-      name: input.blockNames?.[id] ?? 'Selected block',
+      name: input.blockNames?.[id] ?? t(locale, 'organic.notice.selectedBlock'),
       statusLine: statuses[id]
     }))
   };

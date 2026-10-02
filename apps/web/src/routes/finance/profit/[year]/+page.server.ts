@@ -2,6 +2,7 @@
  *  `/c/pf_<year>` redirects here. */
 
 import { error } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/db/client';
@@ -23,7 +24,7 @@ function farmName(ownerId: string | null): string | null {
 export const load: PageServerLoad = async (event) => {
   const user = requireMoneyReader(event);
   const year = parseYear(event.params.year, currentSeasonYear());
-  if (year === null) throw error(404, 'No such season');
+  if (year === null) throw error(404, t(event.locals.locale, 'finance.err.noSeason'));
   const money = await loadSeasonMoney(year);
   const card = buildProfitCard(year, money.profit, {
     asOf: Date.now(),

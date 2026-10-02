@@ -41,7 +41,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const year =
     Number(url.searchParams.get('year')) || Number(todayYmd(prefsFor(locals.user?.id)).slice(0, 4));
 
-  const organicBlocks = organicBlocksForNotice(blocks.map((b) => b.id));
+  const organicBlocks = organicBlocksForNotice(
+    blocks.map((b) => b.id),
+    Date.now(),
+    locals.locale
+  );
   const hasOrganicBlock = !!organicBlocks && Object.keys(organicBlocks).length > 0;
 
   return {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { isUpdatingResponse, retryAfterSeconds, UPDATING_QUEUED_NOTICE } from '$lib/updating';
+  import { isUpdatingResponse, retryAfterSeconds, updatingQueuedNotice } from '$lib/updating';
   import { createT } from '$lib/i18n';
   import { onMount, tick, untrack } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
@@ -15,7 +15,7 @@
   import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
   import SetupPlantingBackfill from '$lib/components/setup/SetupPlantingBackfill.svelte';
   import type { SetupPlantingResult } from '$lib/setup/types';
-  import { RECORD_SALE_OFFLINE, recordSaleHref, type SaleLink } from '$lib/finance/harvestSale';
+  import { recordSaleOffline, recordSaleHref, type SaleLink } from '$lib/finance/harvestSale';
   import DispositionPanel from '$lib/components/harvest/DispositionPanel.svelte';
 
   let { data } = $props();
@@ -134,7 +134,7 @@
         const queueId = await enqueueRecord('harvest', body);
         scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
         recordingFor = null;
-        lastNotice = UPDATING_QUEUED_NOTICE;
+        lastNotice = updatingQueuedNotice(data.locale);
         return queueId;
       }
       const out = await res.json();
@@ -295,20 +295,25 @@
 {#if lastSale || saleQueued}
   <div class="sale-strip" data-testid="harvest-saved-strip">
     <span
-      >Harvest saved{lastSale ? ` for ${lastSale.name}` : ''}.{data.canRecordSale
-        ? ' Sold some?'
-        : ''}</span
+      >{data.canRecordSale
+        ? lastSale
+          ? tr('harvestui.savedSoldFor', { name: lastSale.name })
+          : tr('harvestui.savedSold')
+        : lastSale
+          ? tr('harvestui.savedFor', { name: lastSale.name })
+          : tr('harvestui.saved')}</span
     >
     {#if lastSale && data.canWriteRecords}
       <button
         type="button"
         class="sale-link"
         data-testid="where-did-it-go"
-        onclick={() => (dispositionFor = lastSale?.harvestEventId ?? null)}>Where did it go?</button
+        onclick={() => (dispositionFor = lastSale?.harvestEventId ?? null)}
+        >{tr('harvestui.whereDidItGo')}</button
       >
     {:else if saleQueued && data.canWriteRecords}
       <span class="sale-offline" data-testid="where-after-sync"
-        >Add where it went once this harvest syncs.</span
+        >{tr('harvestui.whereAfterSync')}</span
       >
     {/if}
     {#if data.canRecordSale}
@@ -316,7 +321,7 @@
         {#if lastSale && online}
           <a class="sale-link" href={recordSaleHref(lastSale)}>{tr('harvestui.recordSale')}</a>
         {:else}
-          <span class="sale-offline">{RECORD_SALE_OFFLINE}</span>
+          <span class="sale-offline">{recordSaleOffline(data.locale)}</span>
         {/if}
       </span>
     {/if}
@@ -328,7 +333,7 @@
       <strong>⚠ Pre-harvest interval:</strong>
       {phiWarning}
       <button class="phi-dismiss" type="button" onclick={() => (phiWarning = null)}
-        >Acknowledge</button
+        >{tr('harvestui.phiAck')}</button
       >
     </Banner>
   </div>
@@ -595,31 +600,33 @@
             <th>{tr('harvestui.th.quantity')}</th>
             <th>{tr('harvestui.th.lot')}</th>
             <th>{tr('harvestui.th.curing')}</th>
-            <th>Where it went</th>
+            <th>{tr('harvestui.th.where')}</th>
           </tr>
         </thead>
         <tbody>
           {#each data.recordedHarvests as h (h.id)}
             <tr>
-              <td data-label="When">{fmt.instant(h.occurredAt, 'date')}</td>
-              <td data-label="Block">{h.blockName ?? `(deleted block)`}</td>
-              <td data-label="Variety"><code>{h.cropPluginId}</code></td>
-              <td data-label="Quantity">{h.quantity ?? '—'}</td>
-              <td data-label="Lot">{h.lotNumber ?? '—'}</td>
-              <td data-label="Curing">
+              <td data-label={tr('harvestui.th.when')}>{fmt.instant(h.occurredAt, 'date')}</td>
+              <td data-label={tr('harvestui.th.block')}
+                >{h.blockName ?? tr('harvestui.deletedBlock')}</td
+              >
+              <td data-label={tr('harvestui.th.variety')}><code>{h.cropPluginId}</code></td>
+              <td data-label={tr('harvestui.th.quantity')}>{h.quantity ?? '—'}</td>
+              <td data-label={tr('harvestui.th.lot')}>{h.lotNumber ?? '—'}</td>
+              <td data-label={tr('harvestui.th.curing')}>
                 {#if h.curing}
                   <span class="phase-badge phase-{h.curing.phase}">
                     {h.curing.phase === 'in-progress'
-                      ? `${h.curing.daysRemaining}d → ready`
+                      ? tr('harvestui.cur.inProgress', { n: h.curing.daysRemaining })
                       : h.curing.phase === 'ready'
-                        ? `ready (${h.curing.daysRemaining}d left)`
-                        : 'overdue — store now'}
+                        ? tr('harvestui.cur.ready', { n: h.curing.daysRemaining })
+                        : tr('harvestui.cur.overdue')}
                   </span>
                 {:else}
-                  <span class="muted">no curing data</span>
+                  <span class="muted">{tr('harvestui.noCuring')}</span>
                 {/if}
               </td>
-              <td data-label="Where it went">
+              <td data-label={tr('harvestui.th.where')}>
                 <button
                   type="button"
                   class="where-btn"
@@ -627,10 +634,10 @@
                   onclick={() => (dispositionFor = h.id)}
                 >
                   {whereCount(h.id) > 0
-                    ? `${whereCount(h.id)} recorded`
+                    ? tr('harvestui.whereRecorded', { n: whereCount(h.id) })
                     : data.canWriteRecords
-                      ? 'Add'
-                      : 'None'}
+                      ? tr('harvestui.whereAdd')
+                      : tr('harvestui.whereNone')}
                 </button>
               </td>
             </tr>
@@ -643,8 +650,8 @@
 
 <SetupSheet
   open={dispositionHarvest !== null}
-  kicker="Harvest"
-  title="Where did it go?"
+  kicker={tr('harvestui.sheet.kicker')}
+  title={tr('harvestui.whereDidItGo')}
   onClose={() => (dispositionFor = null)}
 >
   {#if dispositionHarvest}

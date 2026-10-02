@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { isUpdatingResponse, retryAfterSeconds, UPDATING_QUEUED_NOTICE } from '$lib/updating';
+  import { isUpdatingResponse, retryAfterSeconds, updatingQueuedNotice } from '$lib/updating';
   import type { ForecastDay, HayViolation } from '$lib/hay';
   import { untrack } from 'svelte';
   import { createT } from '$lib/i18n';
@@ -112,7 +112,7 @@
         const { enqueueRecord, scheduleDrain } = await import('$lib/client/syncQueue');
         await enqueueRecord('hay-cutting', body);
         scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
-        banner = UPDATING_QUEUED_NOTICE;
+        banner = updatingQueuedNotice(data.locale);
         return;
       }
       const out = await res.json();

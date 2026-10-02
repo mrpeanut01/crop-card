@@ -1,6 +1,7 @@
 /** /finance/entries/:id: edit one entry and see its history. Owner only. */
 
 import { error } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import type { PageServerLoad } from './$types';
 import { getLedgerEntry, listLedgerChanges } from '$lib/db/ledger';
 import { requireMoneyReader } from '$lib/finance/access';
@@ -12,7 +13,7 @@ import { farmTimeZone } from '$lib/db/userProfile';
 export const load: PageServerLoad = async (event) => {
   const user = requireMoneyReader(event);
   const entry = getLedgerEntry(event.params.id);
-  if (!entry) throw error(404, 'No such entry');
+  if (!entry) throw error(404, t(event.locals.locale, 'finance.err.noEntry'));
   const options = entryFormOptions(await farmNames());
   const changes = listLedgerChanges(entry.id);
   const people = enteredByNames(changes.map((c) => c.changedById));

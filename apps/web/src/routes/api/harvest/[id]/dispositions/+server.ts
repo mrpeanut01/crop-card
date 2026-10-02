@@ -19,6 +19,7 @@ import { checkSeasonClosed } from '$lib/server/seasonClose';
 import { hasClientRecordId, withClientRecordId } from '$lib/server/clientRecordId';
 import { writeRecord } from '$lib/server/recordWrite';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
+import { t } from '$lib/i18n';
 import { farmHasOrganicStatus } from '$lib/harvest/organicAtHarvest.server';
 import {
   dispositionNotices,
@@ -33,7 +34,8 @@ export const GET: RequestHandler = async (event) => {
   const user = currentUser(event);
   if (!user) return problem(401, 'UNAUTHENTICATED', 'Sign in to see where this harvest went.');
   const harvest = getHarvestEvent(event.params.id ?? '');
-  if (!harvest) return problem(404, 'NOT_FOUND', 'No such harvest record.');
+  if (!harvest)
+    return problem(404, 'NOT_FOUND', t(event.locals.locale, 'harvestui.disp.err.noHarvest'));
   return json({ dispositions: dispositionViewsFor([harvest.id], user.role)[harvest.id] ?? [] });
 };
 
@@ -41,7 +43,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const user = currentUser(event);
   if (!user) return problem(401, 'UNAUTHENTICATED', 'Sign in to record where a harvest went.');
   if (!canMutate(user.role)) {
-    return problem(403, 'READ_ONLY', 'Inspectors can read records but not add to them.');
+    return problem(403, 'READ_ONLY', t(event.locals.locale, 'harvestui.disp.err.readOnlyAdd'));
   }
   let body: unknown;
   try {
@@ -61,11 +63,18 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     );
   }
   const harvest = getHarvestEvent(event.params.id ?? '');
-  if (!harvest) return problem(404, 'NOT_FOUND', 'No such harvest record.');
+  if (!harvest)
+    return problem(404, 'NOT_FOUND', t(event.locals.locale, 'harvestui.disp.err.noHarvest'));
 
   const now = Date.now();
   const occurredAt = parsed.data.occurredAt ?? now;
-  const dated = dispositionDateProblem(occurredAt, harvest.occurredAt, farmTimeZone(), now);
+  const dated = dispositionDateProblem(
+    occurredAt,
+    harvest.occurredAt,
+    farmTimeZone(),
+    now,
+    event.locals.locale
+  );
   if (dated) return problem(400, dated.error, dated.message);
   const closed = checkSeasonClosed(occurredAt);
   if (closed) {
@@ -96,7 +105,10 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
       { createdBy: user.id, clientRecordId, now }
     )
   );
-  const notices = dispositionNotices(harvest, saved, prefsFor(user.id));
+  const notices = dispositionNotices(harvest, saved, {
+    ...prefsFor(user.id),
+    locale: event.locals.locale
+  });
   return json(
     { disposition: presentDisposition(saved, user.role, now), ...notices },
     { status: 201 }

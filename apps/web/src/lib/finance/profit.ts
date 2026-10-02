@@ -14,6 +14,8 @@
  * unknown, never as $0 (F2-8).
  */
 
+import { t } from '$lib/i18n';
+
 export type EnterpriseKind = 'crop' | 'group' | 'animal' | 'tag' | 'area' | 'farm';
 
 export interface MoneyLink {
@@ -122,6 +124,15 @@ export interface SeasonProfit {
 export const NOT_TIED_LABEL = 'Not tied to anything';
 export const STOCK_LOST_LABEL = 'Stock lost or adjusted';
 const STOCK_LOST_KEY = 'farm:stock-lost';
+
+export function notTiedLabel(locale?: string | null): string {
+  return locale ? t(locale, 'finance.notTied') : NOT_TIED_LABEL;
+}
+
+/** An enterprise's name for display: the stock-lost row in `locale`. */
+export function enterpriseName(e: { key: string; label: string }, locale?: string | null): string {
+  return locale && e.key === STOCK_LOST_KEY ? t(locale, 'finance.stockLost') : e.label;
+}
 
 const KIND_ORDER: Record<EnterpriseKind, number> = {
   crop: 0,

@@ -63,11 +63,11 @@ export function dispositionNotices(
   const fmtDate = (ms: number) => formatInstant(ms, prefs, 'date');
   const organicNotice =
     saved.kind === 'sold' && saved.soldAsOrganic === true
-      ? soldAsOrganicNotice(harvest.blockId, harvest.occurredAt, fmtDate)
+      ? soldAsOrganicNotice(harvest.blockId, harvest.occurredAt, fmtDate, prefs.locale)
       : null;
   const all = listDispositionsForHarvests([harvest.id]).get(harvest.id) ?? [];
   return {
     organicNotice,
-    quantityNotice: overQuantityNotice(harvest.quantity, all, saved.unit)
+    quantityNotice: overQuantityNotice(harvest.quantity, all, saved.unit, prefs.locale)
   };
 }

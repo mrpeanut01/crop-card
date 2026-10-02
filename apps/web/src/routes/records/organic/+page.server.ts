@@ -21,22 +21,23 @@ import { animalOrganicProjection } from '$lib/organic/animalStatus.server';
 import { organicHealthPlugins } from '$lib/organic/plugins.server';
 import { loadBlockOrganicFacts } from '$lib/organic/blockFacts.server';
 import { organicUseFactLine, treatmentOutcomeText } from '$lib/organic/animalStatus';
-import { ORGANIC_INPUT_CLASS_LABEL } from '$lib/organic/inputCompliance';
-import { withholdTreatmentLine, ASK_YOUR_CERTIFIER } from '$lib/organic/nopRules';
+import { organicInputClassLabel } from '$lib/organic/inputCompliance';
+import { withholdTreatmentLine } from '$lib/organic/nopRules';
+import { t, type MessageKey } from '$lib/i18n';
 import {
-  ORGANIC_STATUS_LABEL,
+  organicStatusLabel,
   maxEffectiveDay,
   organicStatusLine,
   resolveAreaStatus
 } from '$lib/organic/status';
 import { LOCK_WINDOW_MS } from '$lib/db/recordKinds';
 
-const KIND_LABEL = {
-  spray: 'Herbicide',
-  insecticide: 'Insecticide',
-  fungicide: 'Fungicide',
-  fertility: 'Fertility'
-} as const;
+const KIND_KEY = {
+  spray: 'organic.kind.herbicide',
+  insecticide: 'organic.kind.insecticide',
+  fungicide: 'organic.kind.fungicide',
+  fertility: 'organic.kind.fertility'
+} as const satisfies Record<string, MessageKey>;
 
 function shiftYears(ymd: string, years: number): string {
   const [y, m, d] = ymd.split('-').map(Number);
@@ -52,8 +53,10 @@ function shiftYears(ymd: string, years: number): string {
  */
 export const load: PageServerLoad = async (event) => {
   const user = requireUser(event);
-  const prefs = prefsFor(user.id);
-  const fmt = organicDateFormatter();
+  const locale = event.locals.locale;
+  const tr = (key: MessageKey, params?: Record<string, string | number>) => t(locale, key, params);
+  const prefs = { ...prefsFor(user.id), locale };
+  const fmt = organicDateFormatter(locale);
   const day = (ms: number) => formatInstant(ms, prefs, 'date');
   const now = Date.now();
   const today = todayYmd(prefs);
@@ -75,11 +78,16 @@ export const load: PageServerLoad = async (event) => {
     ...areas.map((a) => [`field:${a.id}`, a.name] as const),
     ...blocks.map((b) => [`block:${b.id}`, b.blockLabel ?? b.name] as const),
     ...animals.map(
-      (a) => [`animal:${a.id}`, a.name ?? (a.tag ? `Tag ${a.tag}` : 'Unnamed animal')] as const
+      (a) =>
+        [
+          `animal:${a.id}`,
+          a.name ?? (a.tag ? tr('organic.name.tag', { tag: a.tag }) : tr('organic.name.unnamed'))
+        ] as const
     ),
     ...groups.map((g) => [`group:${g.id}`, g.name] as const)
   ]);
-  const nameOf = (type: string, id: string) => names.get(`${type}:${id}`) ?? 'A removed record';
+  const nameOf = (type: string, id: string) =>
+    names.get(`${type}:${id}`) ?? tr('organic.name.removed');
 
   const history = listOrganicStatusHistory();
   const people = documentPeople([...history.map((h) => h.createdBy)]);
@@ -88,9 +96,11 @@ export const load: PageServerLoad = async (event) => {
       id: h.id,
       subject: nameOf(h.subjectType, h.subjectId),
       subjectType: h.subjectType,
-      status: ORGANIC_STATUS_LABEL[h.status],
+      status: organicStatusLabel(h.status, locale),
       effective:
-        h.effectiveAt > now ? `starts ${fmt(h.effectiveAt)}` : `effective ${fmt(h.effectiveAt)}`,
+        h.effectiveAt > now
+          ? tr('organic.hist.starts', { date: fmt(h.effectiveAt) })
+          : tr('organic.line.effective', { date: fmt(h.effectiveAt) }),
       certifier: h.certifier,
       note: h.note,
       by: h.createdBy && people.get(h.createdBy) ? identityLabel(people.get(h.createdBy)!) : null,
@@ -111,7 +121,8 @@ export const load: PageServerLoad = async (event) => {
           history.filter((h) => h.subjectType === 'field' && h.subjectId === a.id),
           now
         ),
-        fmt
+        fmt,
+        locale
       )
     }))
     .filter((a) => a.line);
@@ -143,23 +154,23 @@ export const load: PageServerLoad = async (event) => {
       id: b.id,
       name: b.blockLabel ?? b.name,
       areaName: b.fieldId ? (areaNames.get(b.fieldId) ?? null) : null,
-      line: organicStatusLine(status, fmt),
+      line: organicStatusLine(status, fmt, locale),
       areaNotApplied: areaEntry
-        ? `This block has its own entry; the Area's entry of ${fmt(areaEntry.effectiveAt)} does not apply.`
+        ? tr('organic.areaNotApplied', { date: fmt(areaEntry.effectiveAt) })
         : null,
       applications: (f?.applications ?? []).map((a) => ({
         key: `${a.kind}:${a.id}:${a.pluginId ?? a.product}`,
         date: day(a.occurredAt),
-        kind: KIND_LABEL[a.kind],
+        kind: tr(KIND_KEY[a.kind]),
         product: a.product,
-        mark: ORGANIC_INPUT_CLASS_LABEL[a.inputClass],
+        mark: organicInputClassLabel(a.inputClass, locale),
         inputClass: a.inputClass,
         deleted: a.deleted
       })),
       treatedSeed: (f?.treatedSeedPlantings ?? []).map((p) => ({
         key: `${p.cropId}:${p.stockLotId}:${p.at}`,
         date: day(p.at),
-        crop: getCrop(p.cropId)?.varietyDisplayName ?? 'A planting'
+        crop: getCrop(p.cropId)?.varietyDisplayName ?? tr('organic.name.planting')
       })),
       lastNonAllowed: f?.lastNonAllowedAt ? day(f.lastNonAllowedAt) : null,
       transitionLine: f?.transitionLine ?? null
@@ -172,13 +183,13 @@ export const load: PageServerLoad = async (event) => {
       key: `group:${g.id}`,
       name: g.name,
       href: `/animals/groups/${g.id}`,
-      line: organicStatusLine(projection.statusAt({ type: 'group', id: g.id }, now), fmt)
+      line: organicStatusLine(projection.statusAt({ type: 'group', id: g.id }, now), fmt, locale)
     })),
     ...animals.map((a) => ({
       key: `animal:${a.id}`,
       name: nameOf('animal', a.id),
       href: `/animals/${a.id}`,
-      line: organicStatusLine(projection.statusAt({ type: 'animal', id: a.id }, now), fmt)
+      line: organicStatusLine(projection.statusAt({ type: 'animal', id: a.id }, now), fmt, locale)
     }))
   ].filter((a) => a.line);
 
@@ -196,7 +207,7 @@ export const load: PageServerLoad = async (event) => {
         subjects: r.subjects.map((s) => nameOf(s.type, s.id)),
         healthHref: `/animals/${r.subjects[0].id}/health`,
         outcome: r.outcome,
-        outcomeText: treatmentOutcomeText(r),
+        outcomeText: treatmentOutcomeText(r, locale),
         review: r.review
           ? {
               outcome: r.review.outcome,
@@ -240,6 +251,6 @@ export const load: PageServerLoad = async (event) => {
     animalLines,
     treatments,
     welfareLine: animalLines.length || treatments.length ? withholdTreatmentLine() : null,
-    askCertifier: ASK_YOUR_CERTIFIER
+    askCertifier: tr('organic.askCertifier')
   };
 };

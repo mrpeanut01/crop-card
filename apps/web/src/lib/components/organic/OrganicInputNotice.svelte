@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import type { OrganicInputClass } from '$lib/organic/inputCompliance';
   import { organicInputNotice } from './organicInputNotice';
 
@@ -18,14 +20,15 @@
 
   const { organicBlocks, selectedBlockIds, products, blockNames }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const notice = $derived(
-    organicInputNotice({ organicBlocks, selectedBlockIds, products, blockNames })
+    organicInputNotice({ organicBlocks, selectedBlockIds, products, blockNames }, page.data?.locale)
   );
 </script>
 
 {#if notice}
   <aside class="organic-notice" role="note" data-testid="organic-input-notice">
-    <p class="kicker">Organic record</p>
+    <p class="kicker">{tr('organic.notice.kicker')}</p>
     <ul class="products">
       {#each notice.products as p (p.inputClass + p.name)}
         <li data-class={p.inputClass}>
@@ -38,9 +41,7 @@
         <li><span class="block-name">{b.name}</span>: {b.statusLine}</li>
       {/each}
     </ul>
-    <p class="foot">
-      You can still save. The library mark is how the plugin library marks this product today.
-    </p>
+    <p class="foot">{tr('organic.notice.foot')}</p>
   </aside>
 {/if}
 

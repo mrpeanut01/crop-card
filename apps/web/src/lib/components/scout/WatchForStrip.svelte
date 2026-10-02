@@ -15,7 +15,7 @@
   }
 
   const { result, canRecordCatch, todayYmd }: Props = $props();
-  const view = $derived(watchForView(result));
+  const view = $derived(watchForView(result, page.data?.locale));
   const tr = $derived(createT(page.data?.locale));
 
   let catchDates = $state<Record<string, string>>({});

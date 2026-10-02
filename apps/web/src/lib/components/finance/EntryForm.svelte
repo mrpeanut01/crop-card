@@ -181,7 +181,7 @@
     {tr('finance.form.category')}
     <select class="fin-input" name="category" bind:value={category}>
       {#each categories as c (c)}
-        <option value={c}>{categoryLabel(c)}</option>
+        <option value={c}>{categoryLabel(c, page.data?.locale)}</option>
       {/each}
     </select>
   </label>

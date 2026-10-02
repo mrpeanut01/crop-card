@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { t, type MessageKey } from '$lib/i18n';
 
 /** Where a harvest went (Phase 33B, B-27). Client-safe: no server imports, so
  *  the OpenAPI generator and the disposition panel share these. */
@@ -12,6 +13,18 @@ export const DISPOSITION_KIND_LABEL: Record<HarvestDispositionKind, string> = {
   donated: 'Given away',
   discarded: 'Thrown out'
 };
+
+const DISPOSITION_KIND_KEY: Record<HarvestDispositionKind, MessageKey> = {
+  sold: 'harvestui.disp.kind.sold',
+  kept: 'harvestui.disp.kind.kept',
+  donated: 'harvestui.disp.kind.donated',
+  discarded: 'harvestui.disp.kind.discarded'
+};
+
+/** The kind in `locale` for display; the pack and exports keep the map. */
+export function dispositionKindLabel(kind: HarvestDispositionKind, locale?: string | null): string {
+  return locale ? t(locale, DISPOSITION_KIND_KEY[kind]) : DISPOSITION_KIND_LABEL[kind];
+}
 
 export const DISPOSITION_UNIT_SUGGESTIONS = [
   'lb',

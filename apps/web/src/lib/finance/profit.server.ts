@@ -4,6 +4,7 @@
  * only: callers check the role before calling.
  */
 
+import { t } from '$lib/i18n';
 import { and, eq, gte, inArray, isNotNull, isNull, lt, or } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import {
@@ -364,15 +365,31 @@ export function enteredByNames(ids: Array<string | null>): Map<string, string> {
 }
 
 /** The "linked to" text for an entry: "Crop: Tomatoes", "Area: North garden". */
-export function linkedToText(e: LedgerEntry, names: FarmNames): string | null {
-  if (e.cropId) return `Crop: ${names.plantingLabel[e.cropId] ?? 'a planting'}`;
-  if (e.animalGroupId) return `Group: ${names.group[e.animalGroupId] ?? 'an animal group'}`;
-  if (e.animalId) return `Animal: ${names.animal[e.animalId] ?? 'an animal'}`;
+export function linkedToText(
+  e: LedgerEntry,
+  names: FarmNames,
+  locale?: string | null
+): string | null {
+  if (e.cropId) {
+    return t(locale, 'finance.link.crop', {
+      name: names.plantingLabel[e.cropId] ?? t(locale, 'finance.link.aPlanting')
+    });
+  }
+  if (e.animalGroupId) {
+    return t(locale, 'finance.link.group', {
+      name: names.group[e.animalGroupId] ?? t(locale, 'finance.link.aGroup')
+    });
+  }
+  if (e.animalId) {
+    return t(locale, 'finance.link.animal', {
+      name: names.animal[e.animalId] ?? t(locale, 'finance.link.anAnimal')
+    });
+  }
   if (e.fieldId) {
-    const area = names.area[e.fieldId] ?? 'an Area';
+    const area = names.area[e.fieldId] ?? t(locale, 'finance.link.anArea');
     return e.blockId && names.bed[e.blockId]
-      ? `Area: ${area}, ${names.bed[e.blockId]}`
-      : `Area: ${area}`;
+      ? t(locale, 'finance.link.areaBed', { area, bed: names.bed[e.blockId] })
+      : t(locale, 'finance.link.area', { area });
   }
   return null;
 }
@@ -398,14 +415,18 @@ export function enterpriseLabelFor(
   return r?.label ?? NOT_TIED_LABEL;
 }
 
-export function presentEntries(entries: LedgerEntry[], names: FarmNames): PresentedEntry[] {
+export function presentEntries(
+  entries: LedgerEntry[],
+  names: FarmNames,
+  locale?: string | null
+): PresentedEntry[] {
   const people = enteredByNames(entries.map((e) => e.createdById));
   const windows = animalWindows(
     new Set(entries.map((e) => e.animalId).filter((x): x is string => !!x))
   );
   return entries.map((e) => ({
     ...e,
-    linkedTo: linkedToText(e, names),
+    linkedTo: linkedToText(e, names, locale),
     enterpriseLabel: enterpriseLabelFor(e, names, windows),
     enteredBy: e.createdById ? (people.get(e.createdById) ?? null) : null
   }));

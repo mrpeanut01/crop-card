@@ -1,6 +1,8 @@
 /** F2-4: the fixed ledger categories. Client-safe; the CSV and the entry
  *  form read the labels from here. */
 
+import { t, type MessageKey } from '$lib/i18n';
+
 export const LEDGER_KINDS = ['expense', 'income'] as const;
 export type LedgerKind = (typeof LEDGER_KINDS)[number];
 
@@ -52,8 +54,27 @@ export function isCategoryFor(kind: LedgerKind, category: string): category is L
   return (categoriesFor(kind) as readonly string[]).includes(category);
 }
 
-export function categoryLabel(category: string | null | undefined): string {
-  if (!category) return 'Other';
+const CATEGORY_KEY: Record<LedgerCategory, MessageKey> = {
+  'seed-and-plants': 'finance.cat.seedAndPlants',
+  fertility: 'finance.cat.fertility',
+  'pest-control': 'finance.cat.pestControl',
+  feed: 'finance.cat.feed',
+  'animal-health': 'finance.cat.animalHealth',
+  'equipment-and-repairs': 'finance.cat.equipment',
+  fuel: 'finance.cat.fuel',
+  'labour-paid': 'finance.cat.labourPaid',
+  supplies: 'finance.cat.supplies',
+  other: 'finance.cat.other',
+  'produce-sale': 'finance.cat.produceSale',
+  'animal-product-sale': 'finance.cat.animalProductSale',
+  'animal-sale': 'finance.cat.animalSale'
+};
+
+/** The CSV passes no locale and stays English. */
+export function categoryLabel(category: string | null | undefined, locale?: string | null): string {
+  if (!category) return locale ? t(locale, 'finance.cat.other') : 'Other';
+  const key = CATEGORY_KEY[category as LedgerCategory];
+  if (locale && key) return t(locale, key);
   return LEDGER_CATEGORY_LABEL[category as LedgerCategory] ?? category;
 }
 

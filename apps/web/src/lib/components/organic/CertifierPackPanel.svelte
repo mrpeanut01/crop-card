@@ -1,5 +1,8 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   const { from, to }: { from: string; to: string } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let packFrom = $state('');
   let packTo = $state('');
@@ -22,46 +25,42 @@
   function check(e: MouseEvent) {
     errorText = null;
     if (!YMD.test(packFrom) || !YMD.test(packTo)) {
-      errorText = 'Pick both dates.';
+      errorText = tr('organic.pack.errDates');
     } else if (packTo < packFrom) {
-      errorText = 'The end date is before the start date.';
+      errorText = tr('organic.pack.errOrder');
     } else if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      errorText = 'You are offline. The pack downloads only when online.';
+      errorText = tr('organic.pack.errOffline');
     }
     if (errorText) e.preventDefault();
   }
 </script>
 
 <section aria-labelledby="pack-h" class="pack">
-  <h2 id="pack-h" class="serif">Pack for your inspector</h2>
-  <p class="help">
-    One ZIP for your inspector: a summary, every status entry, the activity log, inputs, seed
-    sourcing, the animal treatment log, harvests and an index of linked documents. Every page says
-    "Prepared from records kept in CropCard. This is not a certification."
-  </p>
+  <h2 id="pack-h" class="serif">{tr('organic.pack.title')}</h2>
+  <p class="help">{tr('organic.pack.help')}</p>
   <div class="dates">
     <label>
-      <span>From</span>
+      <span>{tr('organic.pack.from')}</span>
       <input type="date" bind:value={packFrom} data-testid="pack-from" />
     </label>
     <label>
-      <span>To</span>
+      <span>{tr('organic.pack.to')}</span>
       <input type="date" bind:value={packTo} data-testid="pack-to" />
     </label>
   </div>
   <label class="check">
     <input type="checkbox" bind:checked={withDocuments} />
-    <span>Include the linked files themselves</span>
+    <span>{tr('organic.pack.withFiles')}</span>
   </label>
   <div class="actions">
     <a class="primary" href={packHref} download onclick={check} data-testid="pack-download"
-      >Download the pack</a
+      >{tr('organic.pack.download')}</a
     >
     <a class="ghost" href="/api/animals/treatments.csv?{query}" download data-testid="pack-log-csv"
-      >Treatment log CSV</a
+      >{tr('recui.year.logCsv')}</a
     >
     <a class="ghost" href="/api/animals/treatments.pdf?{query}" download data-testid="pack-log-pdf"
-      >Treatment log PDF</a
+      >{tr('recui.year.logPdf')}</a
     >
   </div>
   {#if errorText}<p class="error" role="alert">{errorText}</p>{/if}

@@ -4,10 +4,10 @@
   import { page } from '$app/state';
   import {
     EXTRACTION_METHODS,
-    EXTRACTION_METHOD_LABEL,
+    extractionMethodLabel,
     LAB_RATINGS,
-    LAB_RATING_LABEL,
-    UNITS_BASIS_LABEL,
+    labRatingLabel,
+    unitsBasisLabel,
     UNITS_BASES,
     type ExtractionMethod,
     type LabRating,
@@ -155,7 +155,7 @@
         {#each UNITS_BASES as u (u)}
           <label class="unit" class:on={unitsBasis === u}>
             <input type="radio" name="{uid}-units" value={u} bind:group={unitsBasis} />
-            <span>{UNITS_BASIS_LABEL[u]}</span>
+            <span>{unitsBasisLabel(u, page.data?.locale)}</span>
           </label>
         {/each}
       </div>
@@ -167,7 +167,7 @@
     <select id="{uid}-method" bind:value={extractionMethod}>
       <option value="">{tr('setup.soil.notListed')}</option>
       {#each EXTRACTION_METHODS as m (m)}
-        <option value={m}>{EXTRACTION_METHOD_LABEL[m]}</option>
+        <option value={m}>{extractionMethodLabel(m, page.data?.locale)}</option>
       {/each}
     </select>
 
@@ -210,7 +210,7 @@
             <select bind:value={ratings[n.id]}>
               <option value="">{tr('setup.soil.none')}</option>
               {#each LAB_RATINGS as r (r)}
-                <option value={r}>{LAB_RATING_LABEL[r]}</option>
+                <option value={r}>{labRatingLabel(r, page.data?.locale)}</option>
               {/each}
             </select>
           </label>

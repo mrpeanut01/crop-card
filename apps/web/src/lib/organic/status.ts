@@ -7,6 +7,7 @@
 
 import type { FarmProfile } from '$lib/onboarding/profile';
 import type { Philosophy } from '$lib/season/setup';
+import { t, type MessageKey } from '$lib/i18n';
 
 export const ORGANIC_STATUSES = ['organic', 'transitioning', 'not-organic'] as const;
 export type OrganicStatus = (typeof ORGANIC_STATUSES)[number];
@@ -18,6 +19,17 @@ export const ORGANIC_STATUS_LABEL: Readonly<Record<OrganicStatus, string>> = {
   transitioning: 'Transitioning',
   'not-organic': 'Not organic'
 };
+
+const STATUS_KEY: Readonly<Record<OrganicStatus, MessageKey>> = {
+  organic: 'organic.status.organic',
+  transitioning: 'organic.status.transitioning',
+  'not-organic': 'organic.status.notOrganic'
+};
+
+/** The status name in `locale` (English with none). */
+export function organicStatusLabel(status: OrganicStatus, locale?: string | null): string {
+  return locale ? t(locale, STATUS_KEY[status]) : ORGANIC_STATUS_LABEL[status];
+}
 
 export interface OrganicStatusEntry {
   id: string;
@@ -156,21 +168,28 @@ export function resolveAnimalStatus(
  *  Null when there is no status (the caller renders nothing, O-01). */
 export function organicStatusLine(
   s: EffectiveOrganicStatus | null,
-  fmtDate: (ms: number) => string
+  fmtDate: (ms: number) => string,
+  locale?: string | null
 ): string | null {
   if (!s) return null;
-  const parts = [`owner-entered`, `effective ${fmtDate(s.effectiveAt)}`];
+  const parts = [
+    t(locale, 'organic.line.ownerEntered'),
+    t(locale, 'organic.line.effective', { date: fmtDate(s.effectiveAt) })
+  ];
   const certifier = s.certifier?.trim();
-  if (certifier) parts.push(`certifier ${certifier}`);
+  if (certifier) parts.push(t(locale, 'organic.line.certifier', { name: certifier }));
   const from = s.inheritedFrom
     ? s.inheritedFrom.subjectType === 'group'
-      ? ` from group ${s.inheritedFrom.name}`
-      : ` from ${s.inheritedFrom.name}`
+      ? t(locale, 'organic.line.fromGroup', { name: s.inheritedFrom.name })
+      : t(locale, 'organic.line.from', { name: s.inheritedFrom.name })
     : '';
-  const base = `${ORGANIC_STATUS_LABEL[s.status]} (${parts.join(', ')})${from}`;
+  const base = `${organicStatusLabel(s.status, locale)} (${parts.join(', ')})${from}`;
   if (s.lost && s.status !== 'not-organic') {
-    const why = s.lost.basis === 'owner-review' ? ', as the owner answered' : '';
-    return `Status lost after a treatment on ${fmtDate(s.lost.at)}${why}. Was: ${base}`;
+    return t(
+      locale,
+      s.lost.basis === 'owner-review' ? 'organic.line.lostOwner' : 'organic.line.lost',
+      { date: fmtDate(s.lost.at), base }
+    );
   }
   return base;
 }

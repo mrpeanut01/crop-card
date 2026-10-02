@@ -14,7 +14,7 @@
     labourText,
     netLabel
   } from '$lib/finance/format';
-  import { NOT_TIED_LABEL } from '$lib/finance/profit';
+  import { enterpriseName, notTiedLabel } from '$lib/finance/profit';
   import { ymdInZone } from '$lib/prefs';
 
   const { data } = $props();
@@ -152,7 +152,7 @@
       <ul class="enterprises">
         {#each profit.enterprises as e (e.key)}
           <li class="ent">
-            <h3>{e.label}</h3>
+            <h3>{enterpriseName(e, data.locale)}</h3>
             <dl>
               <div>
                 <dt>{tr('finance.ent.income')}</dt>
@@ -165,17 +165,17 @@
               <div>
                 <dt>{tr('finance.ent.inputs')}</dt>
                 <dd>
-                  {inputCostText(e)}{#if e.includesAreaInputs}<span class="fin-help">
+                  {inputCostText(e, data.locale)}{#if e.includesAreaInputs}<span class="fin-help">
                       {tr('finance.ent.notTied')}</span
                     >{/if}
                 </dd>
               </div>
               <div>
                 <dt>{tr('finance.ent.labour')}</dt>
-                <dd>{labourText(e, rate)}</dd>
+                <dd>{labourText(e, rate, data.locale)}</dd>
               </div>
               <div class="net">
-                <dt>{netLabel(e)}</dt>
+                <dt>{netLabel(e, data.locale)}</dt>
                 <dd class="fin-money">{formatMoney(e.netCents)}</dd>
               </div>
               {#if e.netAfterLabourCents !== null}
@@ -189,7 +189,7 @@
         {/each}
         {#if hasUnallocated(profit)}
           <li class="ent">
-            <h3>{NOT_TIED_LABEL}</h3>
+            <h3>{notTiedLabel(data.locale)}</h3>
             <dl>
               <div>
                 <dt>{tr('finance.ent.income')}</dt>
@@ -258,11 +258,11 @@
             <div class="entry-main">
               <span class="entry-date">{day(e.occurredAt)}</span>
               <span class="entry-what">
-                <strong>{e.description ?? categoryLabel(e.category)}</strong>
+                <strong>{e.description ?? categoryLabel(e.category, data.locale)}</strong>
                 <span class="fin-help"
-                  >{categoryLabel(e.category)}{e.linkedTo ? ` · ${e.linkedTo}` : ''}{e.quantity
-                    ? ` · ${e.quantity} ${e.unit ?? ''}`
-                    : ''}</span
+                  >{categoryLabel(e.category, data.locale)}{e.linkedTo
+                    ? ` · ${e.linkedTo}`
+                    : ''}{e.quantity ? ` · ${e.quantity} ${e.unit ?? ''}` : ''}</span
                 >
               </span>
               <span class="entry-amount fin-money {e.kind}">

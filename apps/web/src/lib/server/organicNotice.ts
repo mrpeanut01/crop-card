@@ -14,15 +14,16 @@ import { isUnderOrganic, organicStatusLine } from '$lib/organic/status';
 
 export function organicBlocksForNotice(
   blockIds: readonly string[],
-  now: number = Date.now()
+  now: number = Date.now(),
+  locale?: string | null
 ): Record<string, string> | null {
   if (farmOrganicChrome() !== 'full') return null;
   const out: Record<string, string> = {};
   if (blockIds.length === 0) return out;
-  const fmt = organicDateFormatter();
+  const fmt = organicDateFormatter(locale);
   for (const [id, s] of blockOrganicStatuses(blockIds, now)) {
     if (!isUnderOrganic(s)) continue;
-    const line = organicStatusLine(s, fmt);
+    const line = organicStatusLine(s, fmt, locale);
     if (line) out[id] = line;
   }
   return out;

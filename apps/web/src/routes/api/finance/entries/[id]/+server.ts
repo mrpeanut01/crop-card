@@ -41,13 +41,13 @@ export const PATCH: RequestHandler = async (event) => {
   if (!parsed.success) return invalidBody(parsed.error);
   const patch = Object.fromEntries(Object.entries(parsed.data).filter(([, v]) => v !== undefined));
   const next = { ...entryToInput(current), ...patch };
-  const refused = checkEntry(next);
+  const refused = checkEntry(next, Date.now(), event.locals.locale);
   if (refused) return refused;
   try {
     const entry = updateLedgerEntry(current.id, next, user.id);
     return entry ? json({ entry }) : notFound();
   } catch (e) {
-    if (e instanceof LotAlreadyExpensedError) return lotConflict(e.entryId);
+    if (e instanceof LotAlreadyExpensedError) return lotConflict(e.entryId, event.locals.locale);
     throw e;
   }
 };

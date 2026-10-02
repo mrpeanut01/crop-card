@@ -11,6 +11,7 @@ import { loadCarryoverData } from '$lib/server/amendmentChain';
 import { countBatches } from '$lib/db/amendments';
 import { stateChip } from '$lib/amendments/carryover';
 import { carryoverHref } from '$lib/farm/areaCarryover';
+import { loadTaskContext } from '$lib/server/recordTaskClose';
 
 export interface FertilizerMark {
   displayName: string;
@@ -39,9 +40,11 @@ import {
 
 export const load: PageServerLoad = async ({ url, locals }) => {
   const blocks = listBlocks();
+  const taskContext = loadTaskContext(url.searchParams.get('task'));
   const cropId = url.searchParams.get('crop');
   const crop = cropId ? getCrop(cropId) : undefined;
-  const blockId = crop?.blockId ?? url.searchParams.get('block') ?? blocks[0]?.id ?? '';
+  const blockId =
+    crop?.blockId ?? url.searchParams.get('block') ?? taskContext?.blockId ?? blocks[0]?.id ?? '';
   const year =
     Number(url.searchParams.get('year')) || Number(todayYmd(prefsFor(locals.user?.id)).slice(0, 4));
 
@@ -65,6 +68,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     carryoverHref: blockId ? carryoverHref(blockId) : null,
     fertilizerMarks: hasOrganicBlock ? await fertilizerMarks() : {},
     selectedCropId: crop?.id ?? null,
+    taskContext,
     blocks: blocks.map((b) => ({
       id: b.id,
       name: b.name,

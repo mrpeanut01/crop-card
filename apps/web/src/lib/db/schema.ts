@@ -1546,7 +1546,8 @@ export const tasks = tenantScoped(
           'fungicide_event',
           'hay_cutting',
           'fertility_application',
-          'animal_health_event'
+          'animal_health_event',
+          'scout_observation'
         ]
       }),
       relatedEventId: text('related_event_id'),

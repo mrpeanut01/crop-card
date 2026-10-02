@@ -1,6 +1,6 @@
 <script lang="ts">
   import { noteHoldWrite } from '$lib/animals/recordClient';
-  import { goto, invalidateAll } from '$app/navigation';
+  import { invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
@@ -25,6 +25,8 @@
   import { sunTimesFor } from '$lib/safety/sunTimes';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { createT } from '$lib/i18n';
+  import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
+  import type { RecordTaskClose } from '$lib/tasks/recordClose';
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -107,6 +109,8 @@
     Array<{ code: string; message: string; detail?: Record<string, unknown> }>
   >([]);
   let busy = $state(false);
+  let taskOutcome = $state<RecordTaskClose | null>(null);
+  let taskQueued = $state(false);
 
   // IPM gate: when the product declares a scout threshold, the operator
   // can only record once the recent observations cross it. The kernel
@@ -255,6 +259,8 @@
     busy = true;
     error = null;
     result = null;
+    taskOutcome = null;
+    taskQueued = false;
     violations = [];
     const body: Record<string, unknown> = {
       blockId: selectedBlockId,
@@ -273,7 +279,9 @@
     body.bloomStatus = bloomStatus;
     if (attestedNoForagers) body.attestedNoForagers = true;
     // Phase 21b follow-up — close the swim-lane pip when deep-linked.
-    if (data.preselectedCropId) body.cropId = data.preselectedCropId;
+    if (data.preselectedCropId && selectedBlockId === data.preselectedBlockId) {
+      body.cropId = data.preselectedCropId;
+    }
     if (data.taskId) body.taskId = data.taskId;
     try {
       // #316 (NFR-02) — offline path. Mirror the herbicide flow: queue the
@@ -283,6 +291,7 @@
         const { enqueueRecord } = await import('$lib/client/syncQueue');
         await enqueueRecord('insecticide', body);
         result = tr('sprayui.queuedResult');
+        taskQueued = !!body.taskId;
         return;
       }
       const res = await fetch('/api/insecticide/record', {
@@ -298,10 +307,7 @@
       }
       await noteHoldWrite('insecticide', body);
       result = `Recorded — re-entry clear ${fmt.instant(respData.event.reEntryClearAt)}.`;
-      if (data.taskId) {
-        goto('/plan?tab=schedule&view=swimlane');
-        return;
-      }
+      taskOutcome = respData.taskClose ?? null;
     } catch (e) {
       // #316 — transient network failure while "online" (e.g. flaky
       // signal). Fall back to the offline queue rather than losing the
@@ -313,6 +319,7 @@
           const { enqueueRecord } = await import('$lib/client/syncQueue');
           await enqueueRecord('insecticide', body);
           result = tr('sprayui.queuedResult');
+          taskQueued = !!body.taskId;
         } catch (queueErr) {
           error = `offline queue failed: ${
             queueErr instanceof Error ? queueErr.message : queueErr
@@ -424,6 +431,18 @@
   submitLabel={tr('sprayui.ins.submit')}
   onSubmit={recordSpray}
 >
+  {#snippet afterSubmit()}
+    <TaskCloseNote
+      task={data.taskContext}
+      record={{
+        blockId: selectedBlockId,
+        cropId: selectedBlockId === data.preselectedBlockId ? data.preselectedCropId : null
+      }}
+      outcome={taskOutcome}
+      queued={taskQueued}
+    />
+  {/snippet}
+
   {#snippet productSection()}
     <label for="insecticide-product">{tr('sprayui.ins.product')}</label>
     <select id="insecticide-product" bind:value={selectedPluginId} required>

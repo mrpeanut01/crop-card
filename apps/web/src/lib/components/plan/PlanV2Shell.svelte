@@ -69,10 +69,6 @@
     onEditBlock?: (blockId: string) => void;
     /** Optional: wire to /plan's existing add-block flow. */
     onAddBlock?: () => void;
-    /** Opens the planning wizard from the empty-farm state (owner only). */
-    onStartPlan?: () => void;
-    /** Season the empty-farm state invites the operator to plan. */
-    seasonYear?: number;
     /** Optional: wire to /plan's existing add-planting flow. */
     onAddPlanting?: (blockId: string) => void;
     /** Opens the add-task form for the selected block (+ active planting). */
@@ -100,8 +96,6 @@
     onOpenWizard,
     onEditBlock,
     onAddBlock,
-    onStartPlan,
-    seasonYear = Number(fmt.today().slice(0, 4)),
     onAddPlanting,
     onAddTask,
     geometryEditHref,
@@ -369,32 +363,7 @@
         {/if}
       </section>
     {/if}
-    {#if !selectedBlock && blocks.length === 0}
-      <div class="pv2-empty" data-empty-state="season-start">
-        {#if onStartPlan}
-          <h2 class="pv2-empty-title">{tr('planui.shell.planSeason', { year: seasonYear })}</h2>
-          <p class="pv2-empty-lede">
-            {tr('planui.shell.planLede')}
-          </p>
-          <button type="button" class="primary start" onclick={onStartPlan}>
-            <Sparkle size={15} strokeWidth={1.75} />
-            {tr('planui.shell.startWizard')}
-          </button>
-          {#if onAddBlock}
-            <p class="pv2-empty-alt">
-              {tr('planui.shell.preferA')}
-              <a href="/plan/farm">{tr('planui.shell.drawFarm')}</a>
-              {tr('planui.shell.preferOr')}
-              <button type="button" class="link" onclick={onAddBlock}
-                >{tr('planui.shell.addByHand')}</button
-              >
-            </p>
-          {/if}
-        {:else}
-          <p>{tr('planui.shell.noBlocksHelper')}</p>
-        {/if}
-      </div>
-    {:else if selectedBlock}
+    {#if selectedBlock}
       <PlanBlockHeader
         block={selectedBlock}
         statusLabel={blockStatusLabel(headerStatus, locale)}
@@ -562,46 +531,6 @@
   }
   .ghost-btn:hover {
     border-color: var(--color-forest-deep);
-  }
-  .pv2-empty {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--color-ink-muted);
-    max-width: 520px;
-    margin: 0 auto;
-  }
-  .pv2-empty-title {
-    margin: 0 0 10px;
-    font-family: var(--font-serif);
-    font-size: 26px;
-    font-weight: 500;
-    color: var(--color-ink);
-  }
-  .pv2-empty-lede {
-    margin: 0;
-    color: var(--color-ink-soft);
-    line-height: 1.5;
-  }
-  .pv2-empty-alt {
-    margin: 18px 0 0;
-    font-size: 14px;
-  }
-  .primary.start {
-    min-height: 48px;
-    padding: 12px 20px;
-    font-size: 15px;
-    margin-top: 20px;
-  }
-  .link {
-    background: transparent;
-    border: none;
-    color: var(--color-forest);
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: underline;
-    font-family: inherit;
-    min-height: 48px;
-    padding: 0 4px;
   }
   .card-empty {
     background: var(--color-paper);

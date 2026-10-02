@@ -13,6 +13,11 @@
  * Phase 32F (F1-2): an owner may give the task to a farm member with
  * `assigneeUserId`; its prep and follow-up tasks go to the same person.
  * Anyone else sending a person gets 403 "Ask the owner.".
+ *
+ * Phase 34A (SO-02, SO-04): replayable from the offline queue through the
+ * client record id header, with the whole create in one transaction. A
+ * scheduled suggestion (`pluginTemplateKey` starting `derived:`) the farm
+ * already has answers 200 with that task and `alreadyScheduled: true`.
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
@@ -22,6 +27,7 @@ import { getEquipment } from '$lib/db/equipment';
 import {
   assignTask,
   createTask,
+  findTaskByTemplateKey,
   getTask,
   listTasks,
   loadEquipmentContext,
@@ -33,6 +39,16 @@ import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { assignRefusal, canAssignTasks, rejectUnassignable } from '$lib/server/taskAssign';
 import { taskCreateSchema } from '$lib/tasks/apiSchemas';
+import { withClientRecordId } from '$lib/server/clientRecordId';
+import { writeRecord } from '$lib/server/recordWrite';
+import type { CropPlugin } from '$lib/plugins/schemas';
+
+/** Template keys /today mints for a scheduled calendar suggestion. */
+const SUGGESTION_KEY_PREFIX = 'derived:';
+const NOTHING_MATERIALIZED: { preTaskIds: string[]; postTaskIds: string[] } = {
+  preTaskIds: [],
+  postTaskIds: []
+};
 
 export const _requestSchema = taskCreateSchema;
 
@@ -59,7 +75,7 @@ export const GET: RequestHandler = ({ url }) => {
   return json({ tasks });
 };
 
-export const POST: RequestHandler = async (event) => {
+export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
@@ -105,39 +121,53 @@ export const POST: RequestHandler = async (event) => {
   }
 
   const performer = auth ?? (await ensureSystemUser());
-  const { assigneeUserId: _assignee, ...fields } = d;
-  const created = createTask({
-    ...fields,
-    createdById: performer.id
-  });
 
-  // For primary tasks, auto-attach plugin pre/post templates.
-  let materialized: { preTaskIds: string[]; postTaskIds: string[] } = {
-    preTaskIds: [],
-    postTaskIds: []
+  // Resolved before the transaction, which must stay synchronous.
+  let cropPlugin: CropPlugin | undefined;
+  let equipmentCtx: ReturnType<typeof loadEquipmentContext> = {
+    template: undefined,
+    lastUsedAt: undefined
   };
-  if (parsed.data.kind === 'primary') {
+  if (d.kind === 'primary') {
     const registry = await getRegistry();
-    const crop = parsed.data.cropId ? getCrop(parsed.data.cropId) : undefined;
-    const cropPlugin = crop
-      ? (() => {
-          const r = registry.get(crop.cropPluginId);
-          return r?.plugin.type === 'crop' ? r.plugin : undefined;
-        })()
-      : undefined;
-    const equipmentCtx = parsed.data.equipmentId
-      ? loadEquipmentContext(parsed.data.equipmentId)
-      : { template: undefined, lastUsedAt: undefined };
-
-    materialized = materializePluginPrePost({
-      primaryTaskId: created.id,
-      scheduledFor: parsed.data.scheduledFor,
-      cropPlugin,
-      equipmentTemplate: equipmentCtx.template,
-      equipmentLastUsedAt: equipmentCtx.lastUsedAt
-    });
+    const crop = d.cropId ? getCrop(d.cropId) : undefined;
+    const r = crop ? registry.get(crop.cropPluginId) : undefined;
+    cropPlugin = r?.plugin.type === 'crop' ? r.plugin : undefined;
+    if (d.equipmentId) equipmentCtx = loadEquipmentContext(d.equipmentId);
   }
 
-  const task = assigneeUserId ? (assignTask(created.id, assigneeUserId) ?? created) : created;
-  return json({ task, materialized }, { status: 201 });
-};
+  const { assigneeUserId: _assignee, ...fields } = d;
+  const dedupeKey = d.pluginTemplateKey?.startsWith(SUGGESTION_KEY_PREFIX)
+    ? d.pluginTemplateKey
+    : null;
+
+  // SO-02/SO-04: the create, its plugin prep and follow-up tasks and the
+  // assignment commit together with the replay receipt. A scheduled
+  // suggestion whose key the farm already has writes nothing.
+  const out = writeRecord(event, () => {
+    const existing = dedupeKey ? findTaskByTemplateKey(dedupeKey) : undefined;
+    if (existing) return { task: existing, materialized: NOTHING_MATERIALIZED, already: true };
+
+    const created = createTask({ ...fields, createdById: performer.id });
+    const materialized =
+      d.kind === 'primary'
+        ? materializePluginPrePost({
+            primaryTaskId: created.id,
+            scheduledFor: d.scheduledFor,
+            cropPlugin,
+            equipmentTemplate: equipmentCtx.template,
+            equipmentLastUsedAt: equipmentCtx.lastUsedAt
+          })
+        : NOTHING_MATERIALIZED;
+    const task = assigneeUserId ? (assignTask(created.id, assigneeUserId) ?? created) : created;
+    return { task, materialized, already: false };
+  });
+
+  if (out.already) {
+    return json(
+      { task: out.task, materialized: out.materialized, alreadyScheduled: true },
+      { status: 200 }
+    );
+  }
+  return json({ task: out.task, materialized: out.materialized }, { status: 201 });
+});

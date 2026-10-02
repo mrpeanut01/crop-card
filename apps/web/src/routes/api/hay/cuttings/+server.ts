@@ -13,7 +13,7 @@
  */
 
 import { withClientRecordId } from '$lib/server/clientRecordId';
-import { bestEffort } from '$lib/server/recordWrite';
+import { closeTaskForRecord } from '$lib/server/recordTaskClose';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { hayCuttingSchema } from '$lib/records/apiSchemas';
@@ -134,7 +134,6 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const occurredAt = parsed.data.mowAt ?? Date.now();
   const year = parsed.data.year ?? new Date(occurredAt).getFullYear();
 
-  const tasks = parsed.data.taskId ? await import('$lib/db/tasks') : null;
   const guarded = await tryGuardedHoldWrite(
     event,
     auth,
@@ -154,30 +153,30 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         notes: parsed.data.notes
       });
 
-      // Phase 12D: close any originating primary task. Non-fatal; the cutting
-      // is recorded even if the task can't be closed.
-      const taskId = parsed.data.taskId;
-      if (tasks && taskId) {
-        bestEffort(() =>
-          tasks.completeTask(taskId, {
-            eventTable: 'hay_cutting',
-            eventId: persisted.id,
-            occurredAt
-          })
-        );
-      }
-      return persisted;
+      const taskClose = closeTaskForRecord({
+        taskId: parsed.data.taskId,
+        record: {
+          blockId: parsed.data.blockId,
+          cropId: parsed.data.cropId,
+          cropPluginId: parsed.data.cropPluginId
+        },
+        eventTable: 'hay_cutting',
+        eventId: persisted.id,
+        occurredAt
+      });
+      return { persisted, taskClose };
     },
     { dated: true }
   );
   if (!guarded.ok) return guarded.response;
-  const persisted = guarded.value;
+  const { persisted, taskClose } = guarded.value;
 
   return json(
     {
       cutting: persisted,
       mowDecision,
-      ruleVersion: RULES_VERSION
+      ruleVersion: RULES_VERSION,
+      taskClose
     },
     { status: 201 }
   );

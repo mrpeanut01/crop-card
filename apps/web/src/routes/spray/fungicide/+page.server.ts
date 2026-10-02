@@ -23,6 +23,7 @@ import { listSprayers } from '$lib/server/sprayers';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { canSetUp, setupAreas } from '$lib/server/setupContext';
 import { organicBlocksForNotice } from '$lib/server/organicNotice';
+import { loadTaskContext } from '$lib/server/recordTaskClose';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
   const cropId = url.searchParams.get('crop');
@@ -73,6 +74,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     };
   }
 
+  const taskContext = loadTaskContext(url.searchParams.get('task'));
   return {
     fungicides: fungicidePlugins,
     pasture: await loadSprayPastureContext(blocks, registry),
@@ -92,13 +94,14 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     recentEvents: listFungicideEvents({ limit: 20 }),
     activeREI: activeFungicideReEntryRestrictions(),
     preselect: {
-      blockId: crop?.blockId ?? url.searchParams.get('block') ?? null,
+      blockId: crop?.blockId ?? url.searchParams.get('block') ?? taskContext?.blockId ?? null,
       cropId: crop?.id ?? null,
-      taskId: url.searchParams.get('task') ?? null,
+      taskId: taskContext?.id ?? null,
       productPluginIds: url.searchParams.getAll('product')
     },
     // Phase 25d (#89) v2-addendum — drives AI-on vs AI-off variant.
     aiEnabled: getUserAiEnabled(locals.user?.id),
-    setup: { canEdit: canSetUp(locals.user?.role), areas: setupAreas() }
+    setup: { canEdit: canSetUp(locals.user?.role), areas: setupAreas() },
+    taskContext
   };
 };

@@ -61,7 +61,8 @@ export type PendingRecordKind =
   | 'irrigation'
   | 'rain-gauge'
   | 'harvest-disposition'
-  | 'time-entry';
+  | 'time-entry'
+  | 'task-schedule';
 
 export interface PendingSprayRecord {
   id: string;

@@ -499,8 +499,8 @@ test.describe('empty season starts in the wizard', () => {
     await provisionWizardTenant(page, { seasonSetup: true, blocks: [] });
     await gotoPlanWithoutWizard(page);
 
-    const card = page.locator('[data-empty-state="season-start"]');
-    await expect(card.getByRole('heading', { name: /Plan your \d{4} season/ })).toBeVisible();
+    const card = page.getByTestId('plan-where');
+    await expect(card.getByRole('heading', { name: 'Where will this grow?' })).toBeVisible();
     await card.getByRole('button', { name: 'Start the planning wizard' }).click();
     await expect(wizard(page)).toBeVisible();
   });

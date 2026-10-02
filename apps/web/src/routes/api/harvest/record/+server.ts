@@ -7,7 +7,9 @@
  */
 
 import { withClientRecordId } from '$lib/server/clientRecordId';
-import { bestEffort, writeRecord } from '$lib/server/recordWrite';
+import { writeRecord } from '$lib/server/recordWrite';
+import { closeTaskForRecord } from '$lib/server/recordTaskClose';
+import type { RecordTaskClose } from '$lib/tasks/recordClose';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { harvestRecordSchema } from '$lib/records/apiSchemas';
@@ -217,7 +219,6 @@ export const POST: RequestHandler = withClientRecordId(async (requestEvent) => {
   }
 
   const base = await getBaseRegistry();
-  const tasks = parsed.data.taskId ? await import('$lib/db/tasks') : null;
   // Every await is above this line: the hay-or-not decision reads the
   // block and its Area as they are now, and a harvest that is not a hay
   // cut is written with no await in between, so a concurrent Area kind
@@ -272,14 +273,19 @@ export const POST: RequestHandler = withClientRecordId(async (requestEvent) => {
     lotNumber: parsed.data.lotNumber,
     moisturePct: parsed.data.moisturePct
   };
+  let taskClose: RecordTaskClose | null = null;
   const closeTask = (event: HarvestEvent) => {
-    const taskId = parsed.data.taskId;
-    // Non-fatal; the harvest is recorded even if the task can't be closed.
-    if (tasks && taskId) {
-      bestEffort(() =>
-        tasks.completeTask(taskId, { eventTable: 'harvest_event', eventId: event.id, occurredAt })
-      );
-    }
+    taskClose = closeTaskForRecord({
+      taskId: parsed.data.taskId,
+      record: {
+        blockId: parsed.data.blockId,
+        cropId: parsed.data.cropId,
+        cropPluginId: parsed.data.cropPluginId
+      },
+      eventTable: 'harvest_event',
+      eventId: event.id,
+      occurredAt
+    });
     return event;
   };
   // C-35: a harvest on a forage block is a hay declaration, checked by the
@@ -299,6 +305,7 @@ export const POST: RequestHandler = withClientRecordId(async (requestEvent) => {
   }
   return json({
     event,
-    phiWarning: phi.decision === 'warn' ? { message: phi.message, conflicts: phi.conflicts } : null
+    phiWarning: phi.decision === 'warn' ? { message: phi.message, conflicts: phi.conflicts } : null,
+    taskClose
   });
 });

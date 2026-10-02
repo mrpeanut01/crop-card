@@ -349,6 +349,9 @@ export function pendingSummary(
   if (kind === 'time-entry') {
     return typeof p.minutes === 'number' ? `Task time, ${p.minutes} min` : 'Task time';
   }
+  if (kind === 'task-schedule') {
+    return typeof p.title === 'string' && p.title ? p.title : null;
+  }
   if (kind === 'seed-start') {
     return typeof p.germinatedCount === 'number'
       ? t(locale, 'recui.sum.seedlingsUp', { n: p.germinatedCount })
@@ -374,7 +377,8 @@ export const KIND_LABEL: Record<string, string> = {
   irrigation: 'Watering',
   'rain-gauge': 'Rain gauge reading',
   'harvest-disposition': 'Where a harvest went',
-  'time-entry': 'Task time'
+  'time-entry': 'Task time',
+  'task-schedule': 'Scheduled task'
 };
 
 const KIND_KEY: Record<string, MessageKey> = {
@@ -393,7 +397,8 @@ const KIND_KEY: Record<string, MessageKey> = {
   'seed-start': 'recui.qkind.seedStart',
   irrigation: 'recui.qkind.irrigation',
   'rain-gauge': 'recui.qkind.rainGauge',
-  'harvest-disposition': 'recui.qkind.harvestDisposition'
+  'harvest-disposition': 'recui.qkind.harvestDisposition',
+  'task-schedule': 'recui.qkind.taskSchedule'
 };
 
 /** A queued row's kind in `locale`; undefined for a kind with no label. */

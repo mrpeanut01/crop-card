@@ -12,6 +12,9 @@
   import { organicInputClass } from '$lib/organic/inputCompliance';
   import CarryoverConfirm from '$lib/components/amendments/CarryoverConfirm.svelte';
   import type { CarryoverConfirmBody } from '$lib/amendments/spreadPrompt';
+  import { page } from '$app/state';
+  import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
+  import { recordCloseMessageKey, type RecordTaskCloseStatus } from '$lib/tasks/recordClose';
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -21,6 +24,12 @@
   let busy = $state(false);
   let message = $state<string | null>(null);
   let error = $state<string | null>(null);
+  // The page reloads after a save; the task's outcome rides on the URL.
+  const savedTaskLine = $derived.by(() => {
+    const status = page.url.searchParams.get('taskClose') as RecordTaskCloseStatus | null;
+    const key = status ? recordCloseMessageKey({ taskId: '', status }) : null;
+    return key ? tr(key) : null;
+  });
 
   // Application form
   let appSource = $state('10-10-10');
@@ -64,10 +73,15 @@
     fmt.qty(v ?? 0, 'weightPerArea', { digits: 0, bare: true });
   const perAc = (v: number) => fmt.qty(v, 'weightPerArea', { digits: 1, bare: true });
 
-  async function reload() {
+  async function reload(taskClose?: RecordTaskCloseStatus | null) {
     const url = new URL(window.location.href);
     url.searchParams.set('block', blockId);
     url.searchParams.set('year', String(year));
+    url.searchParams.delete('taskClose');
+    if (taskClose) {
+      url.searchParams.delete('task');
+      url.searchParams.set('taskClose', taskClose);
+    }
     window.location.href = url.toString();
   }
 
@@ -93,7 +107,8 @@
           pLbPerAcre: appP ?? undefined,
           kLbPerAcre: appK ?? undefined,
           amendmentBatchId: appBatch || undefined,
-          confirmCarryover
+          confirmCarryover,
+          ...(data.taskContext ? { taskId: data.taskContext.id } : {})
         })
       });
       const out = await res.json();
@@ -107,7 +122,7 @@
       }
       confirmFacts = null;
       message = tr('fert.msgApp');
-      reload();
+      reload(out.taskClose?.status ?? null);
     } catch (e2) {
       error = e2 instanceof Error ? e2.message : String(e2);
     } finally {
@@ -248,9 +263,12 @@
 {/if}
 
 {#if message}<p class="success">{message}</p>{/if}
+{#if savedTaskLine}
+  <p class="success" data-testid="task-close-note" role="status">{savedTaskLine}</p>
+{/if}
 {#if error}<p class="error">{error}</p>{/if}
 
-<details class="card">
+<details class="card" open={!!data.taskContext}>
   <summary><h2>{tr('fert.recordApp')}</h2></summary>
   <form onsubmit={recordApplication}>
     <label
@@ -300,6 +318,7 @@
       blockNames={Object.fromEntries(data.blocks.map((b) => [b.id, b.name]))}
     />
     <button type="submit" class="primary" disabled={busy}>{tr('fert.record')}</button>
+    <TaskCloseNote task={data.taskContext} record={{ blockId }} />
   </form>
 </details>
 

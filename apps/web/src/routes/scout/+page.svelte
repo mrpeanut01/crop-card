@@ -36,6 +36,8 @@
   import type { SetupSpotResult } from '$lib/setup/types';
   import QueuedBadge from '$lib/components/ui/QueuedBadge.svelte';
   import WatchForStrip from '$lib/components/scout/WatchForStrip.svelte';
+  import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
+  import type { RecordTaskClose } from '$lib/tasks/recordClose';
 
   interface QueuedObservation {
     id: string;
@@ -51,6 +53,10 @@
   const tr = $derived(createT(data.locale));
 
   let selectedBlockId = $state(untrack(() => data.preselectedBlockId ?? data.blocks[0]?.id ?? ''));
+  // Kept from the first load: the reload after a save no longer finds the
+  // task open, and the saved line still has to show (TC-15).
+  const taskCtx = untrack(() => data.taskContext);
+  let taskOutcome = $state<RecordTaskClose | null>(null);
 
   let spotSheetOpen = $state(false);
   async function onSpotAdded(r: SetupSpotResult) {
@@ -216,6 +222,7 @@
           occurredAt: Date.now()
         };
       }
+      if (taskCtx) payload.taskId = taskCtx.id;
       if (navigator.onLine === false) {
         await queueObservation(payload);
         return;
@@ -236,6 +243,8 @@
         saveError = body.error ?? `HTTP ${res.status}`;
         return;
       }
+      const saved = await res.json().catch(() => ({}));
+      if (saved?.taskClose?.status !== 'already-closed') taskOutcome = saved?.taskClose ?? null;
       saveSuccess = true;
       note = '';
       await invalidateAll();
@@ -439,6 +448,12 @@
       </a>
     {/if}
   </div>
+  <TaskCloseNote
+    task={taskCtx}
+    record={{ blockId: selectedBlockId }}
+    outcome={taskOutcome}
+    queued={saveQueued}
+  />
   {#if saveQueued}
     <p class="queued-note" role="status">
       {tr('scout.queuedNote')}

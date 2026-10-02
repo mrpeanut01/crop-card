@@ -10,6 +10,7 @@
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { bestEffort, errorText } from '$lib/server/recordWrite';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
+import { closeTaskForRecord } from '$lib/server/recordTaskClose';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { insecticideRecordSchema } from '$lib/records/apiSchemas';
 import { computeRatedDilution } from '$lib/dilution/calculator';
@@ -424,8 +425,6 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
 
   const performer = auth ?? (await ensureSystemUser());
 
-  const tasks = parsed.data.taskId ? await import('$lib/db/tasks') : null;
-
   // One transaction: record, sprayer state, stock movements, task close and
   // the replay receipt commit together or not at all.
   const guarded = await tryGuardedHoldWrite(
@@ -509,30 +508,29 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         }
       }
 
-      // Phase 12D: close any originating primary task.
-      const taskId = parsed.data.taskId;
-      if (tasks && taskId) {
-        const closed = bestEffort(() =>
-          tasks.completeTask(taskId, {
-            eventTable: 'insecticide_event',
-            eventId: persisted.id,
-            occurredAt
-          })
-        );
-        if (!closed.ok) stockWarnings.push(`task ${taskId} not closed: ${errorText(closed.error)}`);
+      const taskClose = closeTaskForRecord({
+        taskId: parsed.data.taskId,
+        record: { blockId: parsed.data.blockId, cropId: parsed.data.cropId },
+        eventTable: 'insecticide_event',
+        eventId: persisted.id,
+        occurredAt
+      });
+      if (taskClose?.status === 'failed') {
+        stockWarnings.push(`task ${taskClose.taskId} not closed`);
       }
-      return { persisted, stockResults, stockWarnings };
+      return { persisted, stockResults, stockWarnings, taskClose };
     },
     { dated: true }
   );
   if (!guarded.ok) return guarded.response;
-  const { persisted, stockResults, stockWarnings } = guarded.value;
+  const { persisted, stockResults, stockWarnings, taskClose } = guarded.value;
 
   return json({
     event: persisted,
     ruleVersion: RULES_VERSION,
     stockDecrements: stockResults,
     stockWarnings,
+    taskClose,
     pollinatorWarnings: [
       ...pollinator.checks.filter((c) => c.status === 'warn'),
       ...(nearbyPollinator.status === 'warn' ? [nearbyPollinator] : [])

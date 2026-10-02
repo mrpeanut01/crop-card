@@ -6,6 +6,7 @@ import { getRegistry } from '$lib/server/registry';
 import { listSprayers } from '$lib/server/sprayers';
 import { canSetUp, setupAreas, setupBlocks, setupSprayerTemplates } from '$lib/server/setupContext';
 import { organicBlocksForNotice } from '$lib/server/organicNotice';
+import { loadTaskContext } from '$lib/server/recordTaskClose';
 
 /**
  * Load real blocks from DB. Deep-link query params:
@@ -133,10 +134,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const requestedProducts = url.searchParams.getAll('product');
   const windowStage = url.searchParams.get('windowStage');
   const fromScout = url.searchParams.get('fromScout') === '1';
-  // Phase 21b follow-up — deep-link from the swim-lane pip popover.
-  // On a successful record, the page redirects back to /plan and the
-  // POST sets the task's completedAt + relatedEventId.
-  const taskId = url.searchParams.get('task');
+  const taskContext = loadTaskContext(url.searchParams.get('task'));
+  const taskId = taskContext?.id ?? null;
+  if (!requestedBlockId && taskContext?.blockId) requestedBlockId = taskContext.blockId;
 
   // Filter herbicides by stage when the calendar deep-link tells us which window
   // we're in. V2-V3 corn = POST broadleaf; V4-V6 = POST + sulfonylurea/HPPD;
@@ -192,6 +192,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       windowStage: filteredByStage,
       fromScout,
       taskId
-    }
+    },
+    taskContext
   };
 };

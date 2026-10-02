@@ -2215,6 +2215,9 @@
                   "cropId": {
                     "type": "string"
                   },
+                  "taskId": {
+                    "type": "string"
+                  },
                   "pest": {
                     "type": "string",
                     "minLength": 1,

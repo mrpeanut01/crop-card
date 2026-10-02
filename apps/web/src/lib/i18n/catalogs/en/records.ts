@@ -694,6 +694,11 @@ export const enRecords = {
     'Status lost (the library lists this product as an antibiotic, {citation})',
   'organic.outcome.lostRuleNotAllowed':
     'Status lost (the library marks this product as not allowed for organic use, {citation})',
+  'organic.useFact.allowed': 'allowed for organic use',
+  'organic.useFact.allowedWithConditions': 'allowed for organic use with conditions',
+  'organic.useFact.conditions': ' Conditions: {conditions}',
+  'organic.useFact.line':
+    'Library entry: {what} ({citation}).{conditions} This is a fact to weigh, not the answer.',
   'organic.welfare.cited':
     'Treat a sick animal. The organic rules forbid withholding treatment to keep status ({citation}).',
   'organic.welfare.ask':
@@ -975,6 +980,7 @@ export const enRecords = {
   'recui.qkind.irrigation': 'Watering',
   'recui.qkind.rainGauge': 'Rain gauge reading',
   'recui.qkind.harvestDisposition': 'Where a harvest went',
+  'recui.qkind.taskSchedule': 'Scheduled task',
   'recui.pending.waiting':
     'Waiting for the refused record above for the same animals. It syncs once that one is sorted out.',
   'recui.pending.askOwner': 'Ask the owner. They can add what is missing, then this can sync.',

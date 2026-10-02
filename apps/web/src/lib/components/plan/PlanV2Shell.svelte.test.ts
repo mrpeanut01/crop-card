@@ -272,3 +272,11 @@ describe('PlanV2Shell Area, Block and Planting cards (30G)', () => {
     currentUrl = new URL('http://localhost/plan');
   });
 });
+
+describe('PlanV2Shell with no blocks', () => {
+  it('leaves the empty state to the page (one empty state on /plan)', () => {
+    const { container } = mount({ blocks: [], tasks: [], cropMeta: {}, canEdit: true });
+    expect(container.querySelector('[data-empty-state]')).toBeNull();
+    expect(screen.queryByText('Start the planning wizard')).toBeNull();
+  });
+});

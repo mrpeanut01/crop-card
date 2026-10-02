@@ -108,7 +108,8 @@ export const ENDPOINT_BY_KIND: Record<PendingRecordKind, string> = {
   irrigation: '/api/irrigation',
   'rain-gauge': '/api/rain-gauge',
   'harvest-disposition': '/api/harvest/:id/dispositions',
-  'time-entry': '/api/tasks/:id/time'
+  'time-entry': '/api/tasks/:id/time',
+  'task-schedule': '/api/tasks'
 };
 
 const STOCK_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;

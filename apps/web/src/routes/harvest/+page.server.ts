@@ -16,6 +16,7 @@ import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { canMutate } from '$lib/server/session';
 import { dispositionViewsFor } from '$lib/server/harvestDispositions';
 import { farmHasOrganicStatus } from '$lib/harvest/organicAtHarvest.server';
+import { loadTaskContext } from '$lib/server/recordTaskClose';
 
 /** F2-15: owners see "Record a sale"; a quiet garden household only once
  *  the farm has any ledger entry. Helpers never see it. */
@@ -69,6 +70,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   // ?crop=<id> aliases ?planting=<id> for Phase 12D crop-attribution
   // navigation. Both fall through to the planting-status loop below.
   const focusPlantingId = url.searchParams.get('crop') ?? url.searchParams.get('planting') ?? null;
+  const taskContext = loadTaskContext(url.searchParams.get('task'));
   const blocks = listBlocks();
   const registry = await getRegistry();
   const all = listHarvestEvents();
@@ -238,6 +240,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     canWriteRecords: !!role && canMutate(role),
     isOwner: role === 'owner',
     focusPlantingId,
+    taskContext,
     canRecordSale: canRecordSale(role),
     setup: {
       canEdit: canSetUp(locals.user?.role),

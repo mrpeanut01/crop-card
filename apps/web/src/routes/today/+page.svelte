@@ -52,6 +52,9 @@
   import { TODAY_VIEWS, type TodayView } from '$lib/today/views';
   import { weatherByDate } from '$lib/today/weatherSummary';
   import type { QueuedTaskRow } from '$lib/client/taskQueue';
+  import type { QueuedScheduleRow, ScheduleSuggestionBody } from '$lib/client/taskScheduleQueue';
+  import { pendingForWho, pendingSchedules, serverTemplateKeys } from '$lib/today/pendingSchedules';
+  import QueuedBadge from '$lib/components/ui/QueuedBadge.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatDueDay } from '$lib/prefs';
   import { dateTimeFormat } from '$lib/intlCache';
@@ -149,6 +152,24 @@
   );
   const filtered = $derived(filterByAssignee(entries, who, userId));
   const shownEntries = $derived(filtered.shown);
+
+  let scheduleRows = $state<QueuedScheduleRow[]>([]);
+  const pendingAll = $derived(
+    pendingSchedules(
+      scheduleRows,
+      serverTemplateKeys(data.deckTasks as Task[], data.calendar?.scheduledKeys ?? [])
+    )
+  );
+  const queuedScheduleKeys = $derived(new Set(pendingAll.map((r) => r.pluginTemplateKey)));
+  const pendingShown = $derived(
+    view === 'day' ? pendingForWho(pendingAll, who) : { shown: [], hiddenCount: 0 }
+  );
+  const hiddenCount = $derived(filtered.hiddenCount + pendingShown.hiddenCount);
+  function pendingWhere(r: QueuedScheduleRow): string | null {
+    const planting = r.cropId ? data.plantingNames[r.cropId] : undefined;
+    const blockId = r.blockId ?? planting?.blockId;
+    return (blockId && data.blockNames[blockId]) || null;
+  }
   const canAssign = $derived(data.user?.role === 'owner' && !data.user?.impersonating && hasTeam);
   function setWho(next: AssigneeWho) {
     if (next === who) return;
@@ -238,7 +259,7 @@
   const suggestions = $derived((data.calendar?.suggestions ?? []) as CalendarEvent[]);
   const cells = $derived.by(() => {
     if (!data.calendar) return {};
-    return calendarCells({
+    const out = calendarCells({
       entries: shownEntries,
       suggestions,
       scheduledKeys: new Set(data.calendar.scheduledKeys),
@@ -247,10 +268,26 @@
       todayYmd: data.today,
       timeZone: prefs.timeZone
     });
+    if (queuedScheduleKeys.size === 0) return out;
+    for (const day of Object.keys(out)) {
+      out[day] = out[day].map((c) =>
+        c.type === 'suggestion' &&
+        suggestions[c.index] &&
+        queuedScheduleKeys.has(suggestionTemplateKey(suggestions[c.index]))
+          ? { ...c, queued: true }
+          : c
+      );
+    }
+    return out;
   });
 
+  const upcomingShown = $derived(
+    (data.upcoming as CalendarEvent[]).filter(
+      (e) => !queuedScheduleKeys.has(suggestionTemplateKey(e))
+    )
+  );
   const recommendationItems = $derived.by<RecommendationItem[]>(() =>
-    data.upcoming.slice(0, 8).map((e: CalendarEvent, i: number) => ({
+    upcomingShown.slice(0, 8).map((e: CalendarEvent, i: number) => ({
       id: `${e.kind}:${e.blockId}:${e.startMs}:${i}`,
       title: e.title,
       crop: cropDisplayNameByEnglish(e.varietyDisplayName, data.locale),
@@ -314,9 +351,26 @@
     }
   }
 
+  async function refreshSchedules(): Promise<void> {
+    try {
+      const { listQueuedSchedules } = await import('$lib/client/taskScheduleQueue');
+      const next = await listQueuedSchedules();
+      const waiting = (rows: QueuedScheduleRow[]) => rows.filter((r) => !r.rejected).length;
+      const drained = waiting(next) < waiting(scheduleRows);
+      scheduleRows = next;
+      if (drained && navigator.onLine) await invalidateAll();
+    } catch {
+      scheduleRows = [];
+    }
+  }
+
   onMount(() => {
     void refreshQueued();
-    const timer = setInterval(refreshQueued, 4000);
+    void refreshSchedules();
+    const timer = setInterval(() => {
+      void refreshQueued();
+      void refreshSchedules();
+    }, 4000);
     return () => clearInterval(timer);
   });
 
@@ -432,40 +486,42 @@
     }
   }
 
+  /** SO-05: online first; with no signal, a network error or a server
+   *  error the same body waits on this phone and replays later. */
   async function scheduleFromEvent(e: CalendarEvent, dayYmd: string | null = null) {
     busy = true;
     actionError = null;
+    liveMessage = '';
+    const body: ScheduleSuggestionBody = {
+      title: e.title,
+      body: e.body ?? `Promoted from ${e.kind} suggestion`,
+      kind: 'primary',
+      blockId: e.blockId,
+      cropId: e.cropId,
+      scheduledFor: suggestionScheduleMs(e, data.today, prefs.timeZone, dayYmd),
+      pluginTemplateKey: suggestionTemplateKey(e)
+    };
     try {
-      const res = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          title: e.title,
-          body: e.body ?? `Promoted from ${e.kind} suggestion`,
-          kind: 'primary',
-          blockId: e.blockId,
-          cropId: e.cropId,
-          scheduledFor: suggestionScheduleMs(e, data.today, prefs.timeZone, dayYmd),
-          pluginTemplateKey: suggestionTemplateKey(e)
-        })
-      });
-      if (!res.ok) {
-        const out = await res.json().catch(() => ({}));
-        actionError = tr('today.err.scheduleFailed', {
-          detail: out.error ?? tr('today.err.serverSaid', { status: res.status })
-        });
+      const [{ scheduleSuggestion }, { primeActiveOwnerId }] = await Promise.all([
+        import('$lib/client/taskScheduleQueue'),
+        import('$lib/client/syncQueue')
+      ]);
+      primeActiveOwnerId(data.user?.activeOwnerId ?? null);
+      const out = await scheduleSuggestion(body);
+      if (out.status === 'refused') {
+        actionError = tr('today.err.scheduleFailed', { detail: out.error });
         return;
       }
-      liveMessage = tr('today.msg.added');
       sheet = null;
+      if (out.status === 'queued') {
+        liveMessage = tr('today.msg.addedQueued');
+        await refreshSchedules();
+        return;
+      }
+      liveMessage = out.alreadyScheduled ? tr('today.msg.alreadyScheduled') : tr('today.msg.added');
       await invalidateAll();
     } catch (err) {
-      actionError =
-        navigator.onLine === false
-          ? tr('today.err.needsSignal')
-          : err instanceof Error
-            ? err.message
-            : String(err);
+      actionError = err instanceof Error ? err.message : String(err);
     } finally {
       busy = false;
     }
@@ -552,7 +608,8 @@
 
 {#snippet suggestionCard(e: CalendarEvent, dayYmd: string | null = null)}
   {@const cta = ctaFor(e)}
-  <div class="suggestion">
+  {@const waiting = queuedScheduleKeys.has(suggestionTemplateKey(e))}
+  <div class="suggestion" data-queued-schedule={waiting ? '' : undefined}>
     <div class="s-main">
       <strong>{e.title}</strong>
       <span class="s-meta"
@@ -567,6 +624,7 @@
         ></span
       >
       {#if e.body}<span class="s-body">{e.body}</span>{/if}
+      {#if waiting}<span><QueuedBadge /></span>{/if}
     </div>
     <div class="s-actions">
       {#if cta}<a class="btn ghost" href={cta.href}>{tr(cta.label)}</a>{/if}
@@ -575,7 +633,7 @@
           type="button"
           class="btn ghost"
           aria-label={tr('today.sugg.scheduleAria', { title: e.title })}
-          disabled={busy}
+          disabled={busy || waiting}
           onclick={() => scheduleFromEvent(e, dayYmd)}>{tr('today.sugg.schedule')}</button
         >
       {/if}
@@ -588,8 +646,7 @@
     type="button"
     class="more-all"
     data-testid="more-for-everyone"
-    onclick={() => setWho('all')}
-    >{tr('today.who.moreForEveryone', { count: filtered.hiddenCount })}</button
+    onclick={() => setWho('all')}>{tr('today.who.moreForEveryone', { count: hiddenCount })}</button
   >
 {/snippet}
 
@@ -834,7 +891,7 @@
       onOpenChip={(day, chip) => (sheet = { kind: 'day', day, only: chip.key })}
       onOpenDay={(day) => (sheet = { kind: 'day', day, only: null })}
     />
-    {#if who === 'mine' && filtered.hiddenCount > 0}
+    {#if who === 'mine' && hiddenCount > 0}
       {@render moreForEveryone()}
     {/if}
     <div class="print-row">
@@ -861,11 +918,33 @@
       onOpenRow={(i) => (sheet = { kind: 'season-row', index: i })}
     />
   {:else}
-    {#if deck.length === 0 && who === 'mine' && filtered.hiddenCount > 0}
+    {#if pendingShown.shown.length > 0}
+      <ul class="cards" aria-label={tr('today.pending.aria')} data-testid="pending-schedules">
+        {#each pendingShown.shown as r (r.rowId)}
+          {@const where = pendingWhere(r)}
+          <li>
+            <article class="pending-card" data-testid="pending-schedule">
+              <div class="pending-top">
+                <strong>{r.title}</strong>
+                <QueuedBadge />
+              </div>
+              <p class="s-meta">
+                {tr('today.pending.due', {
+                  day: formatDueDay(r.scheduledFor, prefs, 'month-day', { weekday: 'short' })
+                })}{#if where}
+                  · {where}{/if}
+              </p>
+              <p class="pending-note">{tr('today.pending.note')}</p>
+            </article>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+    {#if deck.length === 0 && who === 'mine' && hiddenCount > 0}
       <div class="empty" data-testid="deck-empty-mine">
         <p class="serif empty-title">{tr('today.empty.mine')}</p>
       </div>
-    {:else if deck.length === 0}
+    {:else if deck.length === 0 && pendingShown.shown.length === 0}
       <div class="empty" data-testid="deck-empty">
         <p class="serif empty-title">{tr('today.empty.none')}</p>
         {#if nothingPlanted}
@@ -882,7 +961,7 @@
           <a class="empty-link" href="/spray">{tr('today.empty.planSpray')}</a>
         {/if}
       </div>
-    {:else}
+    {:else if deck.length > 0}
       <ul class="cards" aria-label={tr('today.deck.tasksAria')}>
         {#each deck as d (d.entry.task.id)}
           <li>{@render taskCard(d.entry.task.id)}</li>
@@ -890,7 +969,7 @@
       </ul>
     {/if}
 
-    {#if who === 'mine' && filtered.hiddenCount > 0}
+    {#if who === 'mine' && hiddenCount > 0}
       {@render moreForEveryone()}
     {/if}
 
@@ -961,7 +1040,7 @@
     onSchedule={canAct
       ? (id) => {
           const idx = recommendationItems.findIndex((r) => r.id === id);
-          const ev = data.upcoming[idx];
+          const ev = upcomingShown[idx];
           if (ev) scheduleFromEvent(ev);
         }
       : undefined}
@@ -1240,6 +1319,35 @@
   .s-meta {
     color: var(--color-ink-soft);
     font-size: 13px;
+  }
+  .pending-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    border: 1px dashed var(--color-divider-soft);
+    border-left: 4px solid var(--color-wheat);
+    border-radius: var(--radius-input);
+    background: var(--color-paper);
+    min-width: 0;
+  }
+  .pending-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 10px;
+    min-width: 0;
+  }
+  .pending-top strong {
+    overflow-wrap: anywhere;
+  }
+  .pending-card p {
+    margin: 0;
+  }
+  .pending-note {
+    color: var(--color-ink-soft);
+    font-size: var(--font-size-meta);
   }
   .s-kind {
     text-transform: lowercase;

@@ -9,6 +9,9 @@
   import HayForageSection from '$lib/components/forage/HayForageSection.svelte';
   import { invalidateAll } from '$app/navigation';
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import { page } from '$app/state';
+  import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
+  import { recordCloseMessageKey, type RecordTaskCloseStatus } from '$lib/tasks/recordClose';
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -28,6 +31,13 @@
   let error = $state<string | null>(null);
   let attestHref = $state<string | null>(null);
   let banner = $state<string | null>(null);
+  let taskQueued = $state(false);
+  // The page reloads after a save; the task's outcome rides on the URL.
+  const savedTaskLine = $derived.by(() => {
+    const status = page.url.searchParams.get('taskClose') as RecordTaskCloseStatus | null;
+    const key = status ? recordCloseMessageKey({ taskId: '', status }) : null;
+    return key ? tr(key) : null;
+  });
 
   // Forecast state
   let forecast = $state<ForecastDay[] | null>(null);
@@ -42,10 +52,15 @@
 
   const selectedCrop = $derived(data.hayCrops.find((c) => c.pluginId === cropPluginId) ?? null);
 
-  function reload() {
+  function reload(taskClose?: RecordTaskCloseStatus | null) {
     const u = new URL(window.location.href);
     u.searchParams.set('block', blockId);
     u.searchParams.set('year', String(year));
+    u.searchParams.delete('taskClose');
+    if (taskClose) {
+      u.searchParams.delete('task');
+      u.searchParams.set('taskClose', taskClose);
+    }
     window.location.href = u.toString();
   }
 
@@ -88,12 +103,14 @@
     busy = true;
     error = null;
     banner = null;
+    taskQueued = false;
     const body = {
       blockId,
       cropPluginId,
       year,
       forecast: forecast ?? undefined,
-      overrideMowGate: opts.override
+      overrideMowGate: opts.override,
+      ...(data.taskContext ? { taskId: data.taskContext.id } : {})
     };
     try {
       // #316 (NFR-02) — offline path. Queue the cutting-start locally; the
@@ -103,6 +120,7 @@
         const { enqueueRecord } = await import('$lib/client/syncQueue');
         await enqueueRecord('hay-cutting', body);
         banner = tr('hayui.queued');
+        taskQueued = !!data.taskContext;
         return;
       }
       const res = await fetch('/api/hay/cuttings', {
@@ -115,6 +133,7 @@
         await enqueueRecord('hay-cutting', body);
         scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
         banner = updatingQueuedNotice(data.locale);
+        taskQueued = !!data.taskContext;
         return;
       }
       const out = await res.json();
@@ -128,7 +147,7 @@
         return;
       }
       banner = tr('hayui.recorded', { n: out.cutting.cuttingNumber });
-      reload();
+      reload(out.taskClose?.status ?? null);
     } catch (e) {
       // #316 — transient network failure while "online": queue instead of
       // losing the cutting.
@@ -139,6 +158,7 @@
           const { enqueueRecord } = await import('$lib/client/syncQueue');
           await enqueueRecord('hay-cutting', body);
           banner = tr('hayui.queued');
+          taskQueued = !!data.taskContext;
         } catch (queueErr) {
           error = tr('hayui.errQueue', {
             msg: queueErr instanceof Error ? queueErr.message : String(queueErr)
@@ -277,6 +297,9 @@
 </form>
 
 {#if banner}<p class="success" role="status" aria-live="polite">{banner}</p>{/if}
+{#if savedTaskLine}
+  <p class="success" data-testid="task-close-note" role="status">{savedTaskLine}</p>
+{/if}
 {#if error}<p class="error" role="alert" aria-live="polite">{error}</p>{/if}
 {#if error && attestHref}
   <a class="attest-link" href={attestHref}>{tr('hayui.attestLink')}</a>
@@ -362,6 +385,7 @@
         </button>
       {/if}
     </div>
+    <TaskCloseNote task={data.taskContext} record={{ blockId, cropPluginId }} queued={taskQueued} />
   {/if}
 </section>
 

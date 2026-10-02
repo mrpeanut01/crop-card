@@ -461,6 +461,9 @@
     await goto(`/plan?block=${encodeURIComponent(r.blockId)}`, { invalidateAll: true });
   }
 
+  const farmHasNoBlocks = $derived(
+    data.setupPrompts ? data.setupPrompts.gate === 'blocks' : data.blocks.length === 0
+  );
   const focusArea = $derived(
     data.focusAreaId
       ? (emptyAreas(data.setupAreas).find((a) => a.id === data.focusAreaId) ?? null)
@@ -1966,22 +1969,20 @@
   />
 {/if}
 
-{#if !data.canEdit && data.setupPrompts?.gate === 'blocks'}
-  <div class="helper-gate" role="status" data-testid="plan-helper-gate">
-    <strong>{tr('plan.page.gate.title')}</strong>
-    {tr('plan.page.gate.body')}
-  </div>
-{/if}
-
-{#if data.canEdit && (data.blocks.length === 0 || focusArea)}
-  <WhereWillThisGrow
-    onName={() => (spotSheetOpen = true)}
-    emptyAreas={emptyAreas(data.setupAreas)}
-    {focusArea}
-    onWhole={plantWholeArea}
-    busy={wholeBusy}
-    error={wholeError}
-  />
+{#if farmHasNoBlocks || (data.canEdit && focusArea)}
+  {#if data.canEdit}
+    <WhereWillThisGrow
+      onName={() => (spotSheetOpen = true)}
+      onStartWizard={() => openWizard()}
+      emptyAreas={emptyAreas(data.setupAreas)}
+      {focusArea}
+      onWhole={plantWholeArea}
+      busy={wholeBusy}
+      error={wholeError}
+    />
+  {:else}
+    <WhereWillThisGrow variant="helper" />
+  {/if}
 {/if}
 
 <SetupSheet
@@ -2026,8 +2027,6 @@
     ])
   )}
   onOpenWizard={() => openWizard()}
-  seasonYear={data.currentYear ?? new Date().getFullYear()}
-  onStartPlan={data.canEdit ? () => openWizard() : undefined}
   onAddTask={(blockId, plantingId) => {
     addTaskTarget = { blockId, plantingId };
   }}
@@ -5907,12 +5906,5 @@
   .bar-edit-foot .btn-secondary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-  .helper-gate {
-    margin: 0 0 12px;
-    padding: 12px 14px;
-    border: 1px solid var(--color-divider, #e5e7e0);
-    border-radius: 8px;
-    background: var(--color-cream, #fbfaf3);
   }
 </style>

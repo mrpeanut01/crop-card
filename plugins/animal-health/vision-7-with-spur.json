@@ -1,7 +1,7 @@
 {
   "pluginId": "vision-7-with-spur",
   "displayName": "Bovilis Vision 7 with Spur (clostridial bacterin-toxoid)",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "animal-health",
   "productKind": "vaccine",
   "activeIngredients": [
@@ -32,5 +32,10 @@
       }
     }
   ],
+  "organicUse": {
+    "status": "allowed",
+    "citation": "7 CFR 205.603(a)(4)",
+    "conditions": "(f) Excipients—only for use in the manufacture of drugs and biologics used to treat organic livestock when the excipient is: (1) Identified by the FDA as Generally Recognized As Safe; (2) Approved by the FDA as a food additive; (3) Included in the FDA review and approval of a New Animal Drug Application or New Drug Application; or (4) Approved by APHIS for use in veterinary biologics."
+  },
   "notes": "Clostridial 7-way vaccine for healthy cattle and sheep. The label states one slaughter restriction and no milk or egg restriction, so none is recorded and milk stays unknown."
 }

@@ -13,6 +13,7 @@
 
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { writeRecord } from '$lib/server/recordWrite';
+import { closeTaskForRecord } from '$lib/server/recordTaskClose';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { scoutRecordSchema } from '$lib/records/apiSchemas';
 import { getBlock } from '$lib/db/blocks';
@@ -57,8 +58,9 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (foreign) return foreign;
 
   const performer = auth ?? (await ensureSystemUser());
-  const persisted = writeRecord(event, () =>
-    insertScoutObservation({
+  const occurredAt = parsed.data.occurredAt ?? Date.now();
+  const { persisted, taskClose } = writeRecord(event, () => {
+    const persisted = insertScoutObservation({
       blockId: parsed.data.blockId,
       cropId: parsed.data.cropId,
       performedById: performer.id,
@@ -66,9 +68,17 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
       metric: parsed.data.metric,
       value: parsed.data.value,
       notes: parsed.data.notes,
-      occurredAt: parsed.data.occurredAt ?? Date.now()
-    })
-  );
+      occurredAt
+    });
+    const taskClose = closeTaskForRecord({
+      taskId: parsed.data.taskId,
+      record: { blockId: parsed.data.blockId, cropId: parsed.data.cropId },
+      eventTable: 'scout_observation',
+      eventId: persisted.id,
+      occurredAt
+    });
+    return { persisted, taskClose };
+  });
 
-  return json({ observation: persisted }, { status: 201 });
+  return json({ observation: persisted, taskClose }, { status: 201 });
 });

@@ -104,6 +104,8 @@
     diseaseGate?: Snippet;
     /** Rendered in place of the block picker when there are no blocks. */
     noBlocks?: Snippet;
+    /** One line under the submit button (the task-close note, TC-14). */
+    afterSubmit?: Snippet;
   }
 
   let {
@@ -135,7 +137,8 @@
     ipmGate,
     pollinatorGate,
     diseaseGate,
-    noBlocks
+    noBlocks,
+    afterSubmit
   }: Props = $props();
 
   // `aiEnabled` is destructured for the page-level snippets that read it
@@ -237,6 +240,7 @@
     <Button type="submit" variant="primary" loading={busy} disabled={!canSubmit}>
       {busy ? tr('sprayui.recording') : submitLabel}
     </Button>
+    {#if afterSubmit}{@render afterSubmit()}{/if}
   </section>
 </form>
 

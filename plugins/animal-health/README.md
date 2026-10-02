@@ -10,3 +10,4 @@ Rules:
 - Every `meatDays`, `milkHours`, `eggsDays` and `doNotUseFor` needs a quote in `apps/web/scripts/animal-health-sources.json` under `withdrawal.<speciesId>.<class>.<field>`.
 - Every food species on the label needs a withdrawal. A missing withdrawal is treated as unknown, and unknown blocks food use.
 - Withdrawal data never comes from a label scan or from AI.
+- `organicUse` is set only from a researched entry in `apps/web/scripts/nop-sources.json` (`entries["livestock.<pluginId>"]`), with that quote copied word for word into `animal-health-sources.json` under `<pluginId>.organicUse`; `organicUse.gate.test.ts` fails on any disagreement, and a `not-listed` entry stays without `organicUse` (needs review) unless its note sources the ingredient as synthetic.

@@ -35,7 +35,8 @@ export type RelatedEventTable =
   | 'fungicide_event'
   | 'hay_cutting'
   | 'fertility_application'
-  | 'animal_health_event';
+  | 'animal_health_event'
+  | 'scout_observation';
 
 export interface Task {
   id: string;
@@ -184,6 +185,19 @@ export function existingTemplateKeys(keys: readonly string[]): Set<string> {
     }
   }
   return out;
+}
+
+/** The farm's oldest task carrying this template key, whatever its date
+ *  or status. A scheduled suggestion's key is unique per farm (SO-04). */
+export function findTaskByTemplateKey(key: string): Task | undefined {
+  const row = db
+    .select()
+    .from(tasks)
+    .where(withTenant(tasks, eq(tasks.pluginTemplateKey, key)))
+    .orderBy(asc(tasks.createdAt))
+    .limit(1)
+    .get();
+  return row ? rowToTask(row) : undefined;
 }
 
 /** `listTasks(filters).length` without reading the rows. */

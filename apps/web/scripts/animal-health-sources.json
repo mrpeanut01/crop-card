@@ -104,6 +104,13 @@
         "publisher": "Merck Animal Health, Safe-Guard (fenbendazole) Suspension 10% label, DailyMed",
         "date": "2026-06-17",
         "quote": "Because a milk discard time has not been established, do not use in lactating goats."
+      },
+      "organicUse": {
+        "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+        "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+        "date": "2026-10-01",
+        "quote": "(23) Parasiticides\u2014prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic. (i) Fenbendazole (CAS #43210-67-9)\u2014milk or milk products from a treated animal cannot be labeled as provided for in subpart D of this part for: 2 days following treatment of cattle; 36 days following treatment of goats, sheep, and other dairy species.",
+        "note": "Copied word for word from apps/web/scripts/nop-sources.json entries[\"livestock.safe-guard-suspension\"] (status allowed-with-annotation)."
       }
     },
     "ivomec-injection": {
@@ -249,6 +256,13 @@
         "date": "2026-07-22",
         "quote": "This drug product is not approved for use in female dairy cattle 20 months of age or older, including dry dairy cows.",
         "note": "Read here as lactating dairy, the stricter of the two."
+      },
+      "organicUse": {
+        "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+        "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+        "date": "2026-10-01",
+        "quote": "(23) Parasiticides\u2014prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic. (ii) Moxidectin (CAS #113507-06-5)\u2014milk or milk products from a treated animal cannot be labeled as provided for in subpart D of this part for: 2 days following treatment of cattle; 36 days following treatment of goats, sheep, and other dairy species.",
+        "note": "Copied word for word from apps/web/scripts/nop-sources.json entries[\"livestock.cydectin-injectable\"] (status allowed-with-annotation)."
       }
     },
     "cydectin-sheep-drench": {
@@ -263,6 +277,13 @@
         "publisher": "Elanco US Inc., Cydectin (moxidectin) Oral Drench for Sheep label, DailyMed",
         "date": "2026-07-22",
         "quote": "Because a withholding time in milk has not been established for this product, do not use in female sheep providing milk for human consumption."
+      },
+      "organicUse": {
+        "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+        "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+        "date": "2026-10-01",
+        "quote": "(23) Parasiticides\u2014prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic. (ii) Moxidectin (CAS #113507-06-5)\u2014milk or milk products from a treated animal cannot be labeled as provided for in subpart D of this part for: 2 days following treatment of cattle; 36 days following treatment of goats, sheep, and other dairy species.",
+        "note": "Copied word for word from apps/web/scripts/nop-sources.json entries[\"livestock.cydectin-sheep-drench\"] (status allowed-with-annotation)."
       }
     },
     "cydectin-pour-on": {
@@ -277,6 +298,13 @@
         "publisher": "Elanco US Inc., Cydectin (moxidectin) Pour-On for Beef and Dairy Cattle label, DailyMed",
         "date": "2025-01-24",
         "quote": "neither a pre-slaughter drug withdrawal period nor a milk discard time are required. Meat and milk from cattle treated with CYDECTIN (moxidectin) Pour-On may be used for human consumption at any time following treatment."
+      },
+      "organicUse": {
+        "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+        "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+        "date": "2026-10-01",
+        "quote": "(23) Parasiticides\u2014prohibited in slaughter stock, allowed in emergency treatment for dairy and breeder stock when organic system plan-approved preventive management does not prevent infestation. In breeder stock, treatment cannot occur during the last third of gestation if the progeny will be sold as organic and must not be used during the lactation period for breeding stock. Allowed for fiber bearing animals when used a minimum of 36 days prior to harvesting of fleece or wool that is to be sold, labeled, or represented as organic. (ii) Moxidectin (CAS #113507-06-5)\u2014milk or milk products from a treated animal cannot be labeled as provided for in subpart D of this part for: 2 days following treatment of cattle; 36 days following treatment of goats, sheep, and other dairy species.",
+        "note": "Copied word for word from apps/web/scripts/nop-sources.json entries[\"livestock.cydectin-pour-on\"] (status allowed-with-annotation)."
       }
     },
     "eprinex-pour-on": {
@@ -322,6 +350,13 @@
         "date": "2026-09-30",
         "quote": "Do not vaccinate within 21 days before slaughter.",
         "note": "Safety section of the manufacturer product page; the linked PDF label was not reachable."
+      },
+      "organicUse": {
+        "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+        "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+        "date": "2026-10-01",
+        "quote": "(4) Biologics\u2014Vaccines. (f) Excipients\u2014only for use in the manufacture of drugs and biologics used to treat organic livestock when the excipient is: (1) Identified by the FDA as Generally Recognized As Safe; (2) Approved by the FDA as a food additive; (3) Included in the FDA review and approval of a New Animal Drug Application or New Drug Application; or (4) Approved by APHIS for use in veterinary biologics.",
+        "note": "Copied word for word from apps/web/scripts/nop-sources.json entries[\"livestock.vision-7-with-spur\"] (status allowed)."
       }
     },
     "covexin-8": {
@@ -338,6 +373,13 @@
         "date": "2026-09-30",
         "quote": "Do not vaccinate within 21 days before slaughter.",
         "note": "Caution section of the manufacturer product page; the linked PDF label was not reachable."
+      },
+      "organicUse": {
+        "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+        "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+        "date": "2026-10-01",
+        "quote": "(4) Biologics\u2014Vaccines. (f) Excipients\u2014only for use in the manufacture of drugs and biologics used to treat organic livestock when the excipient is: (1) Identified by the FDA as Generally Recognized As Safe; (2) Approved by the FDA as a food additive; (3) Included in the FDA review and approval of a New Animal Drug Application or New Drug Application; or (4) Approved by APHIS for use in veterinary biologics.",
+        "note": "Copied word for word from apps/web/scripts/nop-sources.json entries[\"livestock.covexin-8\"] (status allowed)."
       }
     },
     "gordons-livestock-backrubber-pour-on": {

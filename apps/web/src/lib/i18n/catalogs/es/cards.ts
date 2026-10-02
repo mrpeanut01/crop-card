@@ -79,154 +79,21 @@ export const esCards: Partial<Record<MessageKey, string>> = {
   'cards.family.cereal-grain': 'Cereales',
   'cards.family.forage': 'Forraje',
   'cards.family.herb-culinary': 'Hierbas culinarias',
-  'cards.tip.common.deepWater':
-    'Riega a fondo una o dos veces por semana para que llegue alrededor de una pulgada de agua a las raíces.',
-  'cards.tip.common.atTheBase':
-    'Riega en la base por la mañana para que las hojas se sequen antes de la noche.',
-  'cards.tip.common.lightFeed':
-    'Incorpora composta a la cama antes de sembrar. La mayoría de los huertos necesitan poco más.',
   'cards.tipLabel.solanaceae': 'tomates, chiles y berenjenas',
-  'cards.tip.solanaceae.water2':
-    'Riega de forma pareja. Un periodo seco seguido de un riego abundante agrieta la fruta.',
-  'cards.tip.solanaceae.feed1': 'Mezcla composta en el hoyo de plantación.',
-  'cards.tip.solanaceae.feed2':
-    'Aplica composta al lado de las plantas cuando cuaje la primera fruta.',
-  'cards.tip.solanaceae.prune1':
-    'Pon el tutor o la jaula al plantar para no dañar las raíces después.',
-  'cards.tip.solanaceae.prune2':
-    'En los tomates altos de guía, quita los brotes pequeños que crecen entre el tallo y una rama.',
-  'cards.tip.solanaceae.prune3': 'Quita las hojas que tocan el suelo.',
-  'cards.tip.solanaceae.problems1':
-    'Hojas bajas amarillas con anillos oscuros: quítalas, pon acolchado y no mojes las hojas.',
-  'cards.tip.solanaceae.problems2':
-    'Mancha oscura y hundida en la base de la fruta: riego irregular. Riega de forma más pareja.',
-  'cards.tip.solanaceae.problems3':
-    'Hojas comidas durante la noche: busca orugas verdes grandes debajo de las hojas y quítalas a mano.',
   'cards.tipLabel.cucurbit': 'calabazas, pepinos y melones',
-  'cards.tip.cucurbit.feed2':
-    'Aplica composta al lado de las plantas cuando las guías empiecen a extenderse.',
-  'cards.tip.cucurbit.prune1':
-    'Pon los pepinos en espaldera para que la fruta crezca limpia y derecha.',
-  'cards.tip.cucurbit.prune2':
-    'Despunta las guías al final de la temporada para que la planta madure la fruta que ya tiene.',
-  'cards.tip.cucurbit.problems1':
-    'Polvo blanco en las hojas: mejora la circulación del aire y quita las hojas más afectadas.',
-  'cards.tip.cucurbit.problems2':
-    'Toda la guía se marchita de golpe: revisa la base del tallo por si hay un agujero con residuos como aserrín.',
-  'cards.tip.cucurbit.problems3':
-    'Frutas pequeñas que se arrugan: las flores no se polinizaron. Deja espacio para las abejas.',
   'cards.tipLabel.brassica': 'repollo, brócoli y col rizada',
-  'cards.tip.brassica.water1':
-    'Mantén el suelo húmedo de forma pareja. El calor y el suelo seco las hacen espigarse o amargarse.',
-  'cards.tip.brassica.feed2':
-    'Son plantas exigentes. Aplica composta a su lado un mes después de plantar.',
-  'cards.tip.brassica.prune1':
-    'No necesitan poda. Corta las hojas exteriores de la col rizada y deja el centro para que siga creciendo.',
-  'cards.tip.brassica.problems1':
-    'Agujeros en las hojas con excrementos verdes: busca orugas verdes pequeñas y quítalas a mano.',
-  'cards.tip.brassica.problems2':
-    'Agujeritos redondos en plantas jóvenes: escarabajos pulga. Una manta de cultivo los mantiene fuera.',
-  'cards.tip.brassica.problems3':
-    'Las flores del brócoli se abren amarillas: esperó demasiado. Corta las cabezas mientras los botones están cerrados.',
   'cards.tipLabel.allium': 'cebollas, ajos y puerros',
-  'cards.tip.allium.water1':
-    'Mantén la humedad pareja hasta que las hojas empiecen a caerse y luego deja que se sequen.',
-  'cards.tip.allium.prune1':
-    'Corta los tallos florales del ajo cuando se enrosquen para que la cabeza crezca más.',
-  'cards.tip.allium.problems1':
-    'Hojas que se ponen amarillas y se caen al final de la temporada: es normal y significa que la cosecha está cerca.',
-  'cards.tip.allium.problems2':
-    'La maleza las ahoga rápido. Mantén la cama sin maleza, porque las cebollas no le hacen sombra.',
   'cards.tipLabel.leafy-green': 'lechuga, espinaca y verduras de hoja',
-  'cards.tip.leafy-green.water1':
-    'Riega poco y seguido. Las raíces poco profundas se secan rápido.',
-  'cards.tip.leafy-green.prune1':
-    'Corta las hojas exteriores y deja el centro para que siga creciendo.',
-  'cards.tip.leafy-green.problems1':
-    'La planta se alarga y se pone amarga: el calor la hace espigarse. Siembra otra vez cuando refresque.',
-  'cards.tip.leafy-green.problems2':
-    'Agujeros irregulares y rastros de baba: babosas. Revisa debajo de tablas al amanecer.',
   'cards.tipLabel.root': 'zanahorias, betabeles y rábanos',
-  'cards.tip.root.water1':
-    'Mantén húmeda la pulgada de arriba hasta que salgan las plántulas y luego riega a fondo.',
-  'cards.tip.root.feed1': 'No uses estiércol fresco. Hace que las raíces se bifurquen.',
-  'cards.tip.root.prune1':
-    'Ralea las plántulas pronto hasta su distancia final. Las raíces amontonadas se quedan chicas.',
-  'cards.tip.root.problems1':
-    'Raíces bifurcadas o torcidas: piedras o terrones en el suelo. La próxima vez afloja la cama más hondo.',
-  'cards.tip.root.problems2': 'Raíces agrietadas: riego irregular.',
   'cards.tipLabel.apiaceae': 'zanahorias, perejil y eneldo',
-  'cards.tip.apiaceae.water1':
-    'Mantén húmeda la superficie del suelo hasta que germinen las semillas. Pueden tardar dos semanas.',
-  'cards.tip.apiaceae.prune1': 'Ralea las plántulas pronto para que cada planta tenga espacio.',
-  'cards.tip.apiaceae.problems1':
-    'Las orugas rayadas en el eneldo o el perejil son de mariposas cola de golondrina. Muchos productores les dejan una planta.',
   'cards.tipLabel.legume': 'frijoles y chícharos',
-  'cards.tip.legume.water1':
-    'Riega a fondo durante la floración y la formación de vainas. Con el suelo seco se caen las flores.',
-  'cards.tip.legume.feed1':
-    'Los frijoles y chícharos producen gran parte de su propio nitrógeno. No les des abono extra.',
-  'cards.tip.legume.prune1':
-    'Pon una espaldera a los chícharos y a los frijoles de guía al sembrar.',
-  'cards.tip.legume.problems1':
-    'Las vainas se ponen duras y fibrosas: cosecha cada pocos días para que sigan tiernas.',
-  'cards.tip.legume.problems2':
-    'Hojas reducidas a las nervaduras por larvas amarillas con espinas: quítalas a mano y revisa debajo de las hojas.',
   'cards.tipLabel.corn': 'maíz',
-  'cards.tip.corn.water1':
-    'Riega a fondo cuando salgan la espiga y los pelos del elote. Es cuando más importa.',
-  'cards.tip.corn.feed1':
-    'Aplica composta al lado de las plantas cuando lleguen a la altura de la rodilla.',
-  'cards.tip.corn.prune1':
-    'Siembra en bloques de surcos cortos, no en un solo surco largo, para que los elotes se llenen.',
-  'cards.tip.corn.problems1':
-    'Elotes con granos faltantes: mala polinización. La próxima vez siembra en bloques.',
   'cards.tipLabel.herb-culinary': 'hierbas',
-  'cards.tip.herb-culinary.water1':
-    'Deja que la pulgada de arriba se seque entre riegos. A la mayoría de las hierbas no les gusta el exceso de agua.',
-  'cards.tip.herb-culinary.feed1': 'Abona poco. Un suelo pobre da más sabor.',
-  'cards.tip.herb-culinary.prune1':
-    'Despunta seguido para que las plantas crezcan tupidas, y quita los botones florales de la albahaca.',
-  'cards.tip.herb-culinary.problems1':
-    'Plantas largas y caídas: les falta sol o les falta despunte.',
   'cards.tipLabel.small-fruit': 'fresas y arándanos',
-  'cards.tip.small-fruit.water2': 'Pon acolchado para mantener las raíces frescas y húmedas.',
-  'cards.tip.small-fruit.feed1': 'Abona poco después de la cosecha, no antes.',
-  'cards.tip.small-fruit.prune1': 'Corta los estolones de fresa que no quieras que enraícen.',
-  'cards.tip.small-fruit.prune2': 'Quita las cañas más viejas del arándano a finales del invierno.',
-  'cards.tip.small-fruit.problems1':
-    'Los pájaros encuentran primero las bayas maduras. Cubre las plantas con malla cuando la fruta empiece a tomar color.',
   'cards.tipLabel.bramble': 'frambuesas y zarzamoras',
-  'cards.tip.bramble.prune1':
-    'Después de la cosecha, corta a ras del suelo las cañas que ya dieron fruta.',
-  'cards.tip.bramble.prune2': 'Mantén el surco angosto para que circule el aire.',
-  'cards.tip.bramble.problems1':
-    'Fruta que se enmohece en la caña: cosecha seguido y quita las bayas pasadas.',
   'cards.tipLabel.vine-fruit': 'uvas',
-  'cards.tip.vine-fruit.water1':
-    'Riega a fondo las vides jóvenes. Las vides establecidas necesitan poca agua extra.',
-  'cards.tip.vine-fruit.prune1':
-    'Poda fuerte a finales del invierno. Se quita la mayor parte del crecimiento del año pasado.',
-  'cards.tip.vine-fruit.prune2':
-    'En verano quita algunas hojas alrededor de los racimos para que reciban luz y aire.',
-  'cards.tip.vine-fruit.problems1':
-    'Polvo blanco en las hojas o la fruta: abre el follaje para que se seque más rápido.',
   'cards.tipLabel.stone-fruit': 'duraznos, ciruelas y cerezas',
-  'cards.tip.stone-fruit.water1':
-    'En temporadas secas riega a fondo cada una o dos semanas, sobre todo mientras la fruta crece.',
-  'cards.tip.stone-fruit.feed1': 'Abona solo a principios de la primavera.',
-  'cards.tip.stone-fruit.prune1':
-    'Poda a finales del invierno en forma de vaso abierto para que la luz llegue al centro.',
-  'cards.tip.stone-fruit.prune2': 'Ralea la fruta joven para que quede a un palmo de distancia.',
-  'cards.tip.stone-fruit.problems1':
-    'Fruta con pudrición café y vellosa: recoge y saca la fruta caída y podrida.',
   'cards.tipLabel.orchard': 'árboles frutales',
-  'cards.tip.orchard.water1':
-    'Riega a fondo los árboles jóvenes cada semana durante sus dos primeros veranos.',
-  'cards.tip.orchard.prune1':
-    'Poda a finales del invierno, durante la latencia. Quita las ramas muertas, cruzadas y las que crecen hacia adentro.',
-  'cards.tip.orchard.problems1':
-    'La fruta caída propaga problemas. Recógela durante toda la temporada.',
   'cards.area.count.bed.one': '{count} cama de cultivo',
   'cards.area.count.bed.other': '{count} camas de cultivo',
   'cards.area.count.row.one': '{count} hilera',
@@ -520,5 +387,97 @@ export const esCards: Partial<Record<MessageKey, string>> = {
     'Insumos usados, según los registros de existencias y los costos de los lotes',
   'cards.profit.notice':
     'Los insumos usados y la mano de obra son estimaciones a partir de tus registros. Nunca forman parte de los totales en efectivo.',
-  'cards.dateRange': '{from} al {to}'
+  'cards.dateRange': '{from} al {to}',
+  'cards.tip.solanaceae.water.0':
+    'Procura darles alrededor de una pulgada de agua por semana, de lluvia o de riego.',
+  'cards.tip.solanaceae.feed.0': 'Agrega composta al suelo en primavera u otoño.',
+  'cards.tip.solanaceae.prune.0': 'Coloca estacas o jaulas al momento de plantar.',
+  'cards.tip.solanaceae.problems.0':
+    'El acolchado evita que la tierra salpique las hojas, lo que ayuda a prevenir infecciones por hongos.',
+  'cards.tip.solanaceae.problems.1':
+    'La pudrición apical puede aparecer cuando la humedad del suelo cambia mucho mientras crece el fruto.',
+  'cards.tip.solanaceae.problems.2': 'Los gusanos cornudos se quitan fácilmente a mano.',
+  'cards.tip.cucurbit.water.0':
+    'Los pepinos necesitan alrededor de una pulgada de agua por semana, de lluvia o de riego.',
+  'cards.tip.cucurbit.water.1':
+    'Riega en la base temprano en la mañana para que las hojas tengan tiempo de secarse.',
+  'cards.tip.cucurbit.feed.0': 'Agrega composta al suelo en primavera u otoño.',
+  'cards.tip.cucurbit.prune.0': 'Guiar los pepinos por un enrejado da frutos rectos.',
+  'cards.tip.cucurbit.problems.1':
+    'Si la guía se marchita de repente, busca un agujero del que salga un excremento parecido al aserrín.',
+  'cards.tip.cucurbit.problems.2':
+    'El mal cuajado puede deberse a poca polinización. El frío, la lluvia o el tiempo nublado pueden reducirla.',
+  'cards.tip.brassica.water.0': 'Mantén pareja la humedad del suelo.',
+  'cards.tip.brassica.feed.1':
+    'Abona a un lado de las plantas establecidas de tres a cuatro semanas después del trasplante.',
+  'cards.tip.brassica.problems.0':
+    'Agujeros grandes e irregulares y excremento verde o café indican orugas. Quítalas a mano.',
+  'cards.tip.brassica.problems.1':
+    'Agujeros pequeños y redondos en las hojas: pulguillas. La manta flotante las mantiene alejadas.',
+  'cards.tip.brassica.problems.2':
+    'Cosecha el brócoli mientras los botones florales siguen bien cerrados.',
+  'cards.tip.allium.water.0':
+    'Deja de regar cuando los bulbos alcancen su tamaño completo y las hojas empiecen a caer.',
+  'cards.tip.allium.feed.0': 'Agrega composta al suelo en primavera u otoño.',
+  'cards.tip.allium.prune.0':
+    'Corta los tallos florales del ajo (escapos) cuando se enrosquen para que el bulbo crezca más.',
+  'cards.tip.allium.problems.0':
+    'Cosecha las cebollas cuando cerca de la mitad de las hojas estén caídas y secas.',
+  'cards.tip.allium.problems.1':
+    'Controla la maleza desde temprano. Puede invadir fácilmente el ajo joven.',
+  'cards.tip.leafy-green.water.0':
+    'La lechuga tiene raíces poco profundas. Un acolchado orgánico ayuda a conservar la humedad del suelo.',
+  'cards.tip.leafy-green.prune.0': 'Cosecha primero las hojas exteriores más viejas.',
+  'cards.tip.leafy-green.problems.0':
+    'El calor fuerte del verano suele provocar que la planta se espigue (saque un tallo con semilla) y que el sabor se vuelva amargo.',
+  'cards.tip.leafy-green.problems.1': 'Las babosas y los caracoles pueden comerse las hojas.',
+  'cards.tip.root.prune.0': 'Ralea las zanahorias a 2 o 3 pulgadas entre plantas.',
+  'cards.tip.root.problems.0':
+    'Las zanahorias prefieren suelo franco o arenoso, sin piedras ni terrones.',
+  'cards.tip.root.problems.1': 'Raíces agrietadas: riego disparejo.',
+  'cards.tip.apiaceae.prune.0': 'Ralea las zanahorias a 2 o 3 pulgadas entre plantas.',
+  'cards.tip.apiaceae.problems.0':
+    'El gusano del perejil, la oruga de una mariposa cola de golondrina, se come las hojas de la zanahoria.',
+  'cards.tip.legume.feed.0':
+    'Los frijoles trabajan junto con las bacterias Rhizobium del suelo, lo que ayuda al crecimiento y al rendimiento.',
+  'cards.tip.legume.prune.0':
+    'Coloca los soportes para el frijol de enredadera al momento de sembrar.',
+  'cards.tip.corn.water.0':
+    'El agua importa más durante la polinización, cuando aparecen las espigas y los pelos, y mientras se llenan las mazorcas.',
+  'cards.tip.corn.prune.0':
+    'Siembra en bloques de surcos cortos, no en un solo surco largo, para que las mazorcas se llenen bien.',
+  'cards.tip.herb-culinary.water.0':
+    'Evita la tierra empapada. La humedad constante favorece la pudrición de la raíz.',
+  'cards.tip.herb-culinary.feed.0':
+    'Fertiliza con moderación. Un suelo pobre da un sabor más intenso.',
+  'cards.tip.herb-culinary.prune.0':
+    'Despunta los tallos de albahaca conforme se alargan para que la planta quede tupida y compacta.',
+  'cards.tip.herb-culinary.problems.0': 'Crecimiento delgado y alargado: le falta luz.',
+  'cards.tip.small-fruit.water.1':
+    'Un acolchado de 2 a 3 pulgadas alrededor de los arándanos mantiene la humedad del suelo más pareja.',
+  'cards.tip.small-fruit.prune.1':
+    'En arándanos rabbiteye maduros, quita cada invierno la caña más vieja o más grande a partir del quinto año.',
+  'cards.tip.small-fruit.problems.0':
+    'Los pájaros se llevan las bayas maduras. Cubrir las plantas con malla es el único control práctico.',
+  'cards.tip.bramble.prune.0':
+    'Las cañas mueren después de dar fruto y no vuelven a producir, así que córtalas.',
+  'cards.tip.bramble.prune.1':
+    'Mantén los surcos de frambuesa de menos de 18 pulgadas de ancho para que circule el aire y la parte baja se mantenga seca.',
+  'cards.tip.bramble.problems.0':
+    'Cosecha la fruta madura con frecuencia para reducir la pudrición.',
+  'cards.tip.vine-fruit.prune.0':
+    'Poda en reposo a principios de marzo. Deja un pitón cada 8 a 12 pulgadas a lo largo de cada cordón.',
+  'cards.tip.stone-fruit.feed.0':
+    'Fertiliza a finales del invierno. En suelo arenoso, aplica la mitad a finales del invierno y el resto en mayo.',
+  'cards.tip.stone-fruit.prune.0':
+    'Forma el árbol en vaso abierto quitando el líder. Poda a finales del invierno.',
+  'cards.tip.stone-fruit.prune.1':
+    'Ralea la fruta cuando tenga el tamaño de una moneda de cinco centavos para que la que queda cuelgue a 6 u 8 pulgadas de distancia.',
+  'cards.tip.stone-fruit.problems.0': 'Quita de inmediato la fruta podrida del árbol y del suelo.',
+  'cards.tip.orchard.feed.0':
+    'Fertiliza a finales del invierno. En suelo arenoso, aplica la mitad a finales del invierno y el resto en mayo.',
+  'cards.tip.orchard.prune.0': 'Quita las ramas muertas, enfermas y rotas.',
+  'cards.tip.orchard.prune.1':
+    'Ralea la fruta cuando tenga el tamaño de una moneda de cinco centavos para que la que queda cuelgue a 6 u 8 pulgadas de distancia.',
+  'cards.tip.orchard.problems.0': 'Recoge y retira la fruta dañada o caída.'
 };

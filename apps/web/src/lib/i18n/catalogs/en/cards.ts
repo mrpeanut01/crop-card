@@ -77,135 +77,21 @@ export const enCards = {
   'cards.family.cereal-grain': 'Cereal grain',
   'cards.family.forage': 'Forage',
   'cards.family.herb-culinary': 'Herb culinary',
-  'cards.tip.common.deepWater':
-    'Water deeply once or twice a week so about an inch reaches the roots.',
-  'cards.tip.common.atTheBase': 'Water at the base in the morning so the leaves dry by evening.',
-  'cards.tip.common.lightFeed':
-    'Work compost into the bed before planting. Most gardens need little else.',
   'cards.tipLabel.solanaceae': 'tomatoes, peppers and eggplant',
-  'cards.tip.solanaceae.water2':
-    'Keep watering even. Dry spells followed by a soaking crack the fruit.',
-  'cards.tip.solanaceae.feed1': 'Mix compost into the planting hole.',
-  'cards.tip.solanaceae.feed2': 'Side-dress with compost when the first fruit sets.',
-  'cards.tip.solanaceae.prune1': 'Stake or cage at planting so roots are not damaged later.',
-  'cards.tip.solanaceae.prune2':
-    'On tall vining tomatoes, pinch the small shoots that grow between the stem and a branch.',
-  'cards.tip.solanaceae.prune3': 'Remove leaves touching the soil.',
-  'cards.tip.solanaceae.problems1':
-    'Yellow lower leaves with dark rings: remove them, mulch, and keep water off the leaves.',
-  'cards.tip.solanaceae.problems2':
-    'Dark sunken spot on the bottom of the fruit: uneven watering. Water more evenly.',
-  'cards.tip.solanaceae.problems3':
-    'Leaves chewed overnight: look under the leaves for large green caterpillars and pick them off.',
   'cards.tipLabel.cucurbit': 'squash, cucumbers and melons',
-  'cards.tip.cucurbit.feed2': 'Side-dress with compost when the vines start to run.',
-  'cards.tip.cucurbit.prune1': 'Trellis cucumbers to keep fruit clean and straight.',
-  'cards.tip.cucurbit.prune2':
-    'Pinch vine tips late in the season so the plant ripens the fruit it has.',
-  'cards.tip.cucurbit.problems1':
-    'White powder on leaves: improve air flow and remove the worst leaves.',
-  'cards.tip.cucurbit.problems2':
-    'Whole vine wilts suddenly: check the base of the stem for a hole with sawdust-like frass.',
-  'cards.tip.cucurbit.problems3':
-    'Small fruit that shrivels: flowers were not pollinated. Leave room for bees.',
   'cards.tipLabel.brassica': 'cabbage, broccoli and kale',
-  'cards.tip.brassica.water1':
-    'Keep the soil evenly moist. Heat and dry soil make them bolt or turn bitter.',
-  'cards.tip.brassica.feed2':
-    'They are hungry plants. Side-dress with compost a month after planting.',
-  'cards.tip.brassica.prune1':
-    'No pruning needed. Pick outer kale leaves and leave the center to keep growing.',
-  'cards.tip.brassica.problems1':
-    'Holes in leaves with green droppings: look for small green caterpillars and pick them off.',
-  'cards.tip.brassica.problems2':
-    'Tiny round holes on young plants: flea beetles. Row cover keeps them off.',
-  'cards.tip.brassica.problems3':
-    'Broccoli flowers open yellow: it waited too long. Pick heads while the buds are tight.',
   'cards.tipLabel.allium': 'onions, garlic and leeks',
-  'cards.tip.allium.water1':
-    'Keep evenly moist until the tops start to fall over, then let them dry.',
-  'cards.tip.allium.prune1':
-    'Cut garlic flower stalks (scapes) when they curl so the bulb grows bigger.',
-  'cards.tip.allium.problems1':
-    'Tops yellow and fall over late in the season: that is normal and means harvest is near.',
-  'cards.tip.allium.problems2':
-    'Weeds crowd them out fast. Keep the bed weeded, since onions cannot shade weeds.',
   'cards.tipLabel.leafy-green': 'lettuce, spinach and greens',
-  'cards.tip.leafy-green.water1': 'Water lightly and often. Shallow roots dry out quickly.',
-  'cards.tip.leafy-green.prune1': 'Pick outer leaves and leave the center to keep growing.',
-  'cards.tip.leafy-green.problems1':
-    'Plant shoots up and turns bitter: heat makes it bolt. Sow again in cooler weather.',
-  'cards.tip.leafy-green.problems2':
-    'Ragged holes and slime trails: slugs. Check under boards at dawn.',
   'cards.tipLabel.root': 'carrots, beets and radishes',
-  'cards.tip.root.water1': 'Keep the top inch moist until seedlings are up, then water deeply.',
-  'cards.tip.root.feed1': 'Skip fresh manure. It makes forked roots.',
-  'cards.tip.root.prune1': 'Thin seedlings to their final spacing early. Crowded roots stay small.',
-  'cards.tip.root.problems1':
-    'Forked or twisted roots: stones or clumps in the soil. Loosen the bed deeper next time.',
-  'cards.tip.root.problems2': 'Cracked roots: uneven watering.',
   'cards.tipLabel.apiaceae': 'carrots, parsley and dill',
-  'cards.tip.apiaceae.water1':
-    'Keep the soil surface moist until seeds sprout. They can take two weeks.',
-  'cards.tip.apiaceae.prune1': 'Thin seedlings early so each plant has room.',
-  'cards.tip.apiaceae.problems1':
-    'Striped caterpillars on dill or parsley are swallowtail butterflies. Many growers share a plant with them.',
   'cards.tipLabel.legume': 'beans and peas',
-  'cards.tip.legume.water1': 'Water deeply when flowering and podding. Dry soil drops the flowers.',
-  'cards.tip.legume.feed1': 'Beans and peas make much of their own nitrogen. Skip extra feeding.',
-  'cards.tip.legume.prune1': 'Give peas and pole beans a trellis at planting.',
-  'cards.tip.legume.problems1':
-    'Pods get tough and stringy: pick every few days to keep them tender.',
-  'cards.tip.legume.problems2':
-    'Leaves skeletonized by yellow spiny larvae: hand-pick and check under the leaves.',
   'cards.tipLabel.corn': 'corn',
-  'cards.tip.corn.water1':
-    'Water deeply when the tassels and silks appear. That is when it matters most.',
-  'cards.tip.corn.feed1': 'Side-dress with compost when plants are knee high.',
-  'cards.tip.corn.prune1': 'Plant in blocks of short rows, not one long row, so the ears fill out.',
-  'cards.tip.corn.problems1':
-    'Ears with missing kernels: poor pollination. Plant in blocks next time.',
   'cards.tipLabel.herb-culinary': 'herbs',
-  'cards.tip.herb-culinary.water1':
-    'Let the top inch dry between waterings. Most herbs dislike wet feet.',
-  'cards.tip.herb-culinary.feed1': 'Go easy on feeding. Lean soil gives stronger flavor.',
-  'cards.tip.herb-culinary.prune1':
-    'Pinch tips often to keep plants bushy, and pinch off flower buds on basil.',
-  'cards.tip.herb-culinary.problems1':
-    'Leggy, floppy plants: not enough sun or not enough pinching.',
   'cards.tipLabel.small-fruit': 'strawberries and blueberries',
-  'cards.tip.small-fruit.water2': 'Mulch to keep roots cool and moist.',
-  'cards.tip.small-fruit.feed1': 'Feed lightly after harvest, not before.',
-  'cards.tip.small-fruit.prune1': 'Trim strawberry runners you do not want to root.',
-  'cards.tip.small-fruit.prune2': 'Cut out the oldest blueberry canes in late winter.',
-  'cards.tip.small-fruit.problems1':
-    'Birds find ripe berries first. Net the plants as fruit starts to color.',
   'cards.tipLabel.bramble': 'raspberries and blackberries',
-  'cards.tip.bramble.prune1': 'After harvest, cut canes that fruited down to the ground.',
-  'cards.tip.bramble.prune2': 'Keep the row narrow so air moves through.',
-  'cards.tip.bramble.problems1':
-    'Fruit that molds on the cane: pick often and remove overripe berries.',
   'cards.tipLabel.vine-fruit': 'grapes',
-  'cards.tip.vine-fruit.water1': 'Water young vines deeply. Established vines need little extra.',
-  'cards.tip.vine-fruit.prune1': "Prune hard in late winter. Most of last year's growth comes off.",
-  'cards.tip.vine-fruit.prune2':
-    'Pull a few leaves around the clusters in summer so they get light and air.',
-  'cards.tip.vine-fruit.problems1':
-    'White powder on leaves or fruit: open the canopy so it dries faster.',
   'cards.tipLabel.stone-fruit': 'peaches, plums and cherries',
-  'cards.tip.stone-fruit.water1':
-    'Water deeply every week or two in dry spells, especially as fruit sizes.',
-  'cards.tip.stone-fruit.feed1': 'Feed in early spring only.',
-  'cards.tip.stone-fruit.prune1':
-    'Prune in late winter to an open center so light reaches the middle.',
-  'cards.tip.stone-fruit.prune2': 'Thin young fruit so they are a hand-width apart.',
-  'cards.tip.stone-fruit.problems1':
-    'Fruit with brown, fuzzy rot: pick up and remove fallen and rotten fruit.',
   'cards.tipLabel.orchard': 'fruit trees',
-  'cards.tip.orchard.water1': 'Water young trees deeply each week in their first two summers.',
-  'cards.tip.orchard.prune1':
-    'Prune in late winter while dormant. Remove dead, crossing and inward branches.',
-  'cards.tip.orchard.problems1': 'Fallen fruit spreads trouble. Pick it up through the season.',
   'cards.area.count.bed.one': '{count} bed',
   'cards.area.count.bed.other': '{count} beds',
   'cards.area.count.row.one': '{count} row',
@@ -495,5 +381,90 @@ export const enCards = {
   'cards.profit.provInputs': 'Inputs used, from stock records and lot costs',
   'cards.profit.notice':
     'Inputs used and labour are estimates from your records. They are never part of the cash totals.',
-  'cards.dateRange': '{from} – {to}'
+  'cards.dateRange': '{from} – {to}',
+  'cards.tip.solanaceae.water.0': 'Aim for about an inch of water a week, from rain or watering.',
+  'cards.tip.solanaceae.feed.0': 'Add compost to the soil in spring or fall.',
+  'cards.tip.solanaceae.prune.0': 'Put in stakes or cages at planting time.',
+  'cards.tip.solanaceae.problems.0':
+    'Mulch keeps soil from splashing onto the leaves, which helps prevent fungal infection.',
+  'cards.tip.solanaceae.problems.1':
+    'Blossom-end rot can develop when soil moisture swings while the fruit grows.',
+  'cards.tip.solanaceae.problems.2': 'Hornworms are easily removed by hand.',
+  'cards.tip.cucurbit.water.0':
+    'Cucumbers need about an inch of water a week, from rain or watering.',
+  'cards.tip.cucurbit.water.1':
+    'Water at the base in the early morning so the leaves have time to dry.',
+  'cards.tip.cucurbit.feed.0': 'Add compost to the soil in spring or fall.',
+  'cards.tip.cucurbit.prune.0': 'Training cucumbers up a trellis gives straight fruit.',
+  'cards.tip.cucurbit.problems.1':
+    'Vine wilts suddenly: look for a hole with sawdust-like frass pushed out of it.',
+  'cards.tip.cucurbit.problems.2':
+    'Poor fruit set can come from too little pollination. Cold, rain or cloudy weather can reduce it.',
+  'cards.tip.brassica.water.0': 'Keep soil moisture even.',
+  'cards.tip.brassica.feed.1':
+    'Side-dress established plants three to four weeks after transplanting.',
+  'cards.tip.brassica.problems.0':
+    'Large ragged holes and green-brown droppings mean caterpillars. Pick them off by hand.',
+  'cards.tip.brassica.problems.1':
+    'Small round holes in the leaves: flea beetles. Row cover keeps them off.',
+  'cards.tip.brassica.problems.2': 'Pick broccoli while the flower buds are still tightly closed.',
+  'cards.tip.allium.water.0':
+    'Stop watering when the bulbs reach full size and the tops begin to fall.',
+  'cards.tip.allium.feed.0': 'Add compost to the soil in spring or fall.',
+  'cards.tip.allium.prune.0':
+    'Cut garlic flower stalks (scapes) when they curl so the bulb grows bigger.',
+  'cards.tip.allium.problems.0':
+    'Harvest onions when about half the tops are falling over and dry.',
+  'cards.tip.allium.problems.1': 'Control weeds early. They can easily overtake young garlic.',
+  'cards.tip.leafy-green.water.0':
+    'Lettuce has shallow roots. Organic mulch helps hold soil moisture.',
+  'cards.tip.leafy-green.prune.0': 'Pick the older outer leaves first.',
+  'cards.tip.leafy-green.problems.0':
+    'High summer heat usually causes bolting (a seed stalk) and bitter flavor.',
+  'cards.tip.leafy-green.problems.1': 'Slugs and snails may feed on the leaves.',
+  'cards.tip.root.prune.0': 'Thin carrots to 2 to 3 inches between plants.',
+  'cards.tip.root.problems.0': 'Carrots prefer loamy or sandy soil free of stones and clods.',
+  'cards.tip.root.problems.1': 'Cracked roots: uneven watering.',
+  'cards.tip.apiaceae.prune.0': 'Thin carrots to 2 to 3 inches between plants.',
+  'cards.tip.apiaceae.problems.0':
+    'The parsleyworm, a swallowtail butterfly caterpillar, feeds on carrot leaves.',
+  'cards.tip.legume.feed.0':
+    'Beans team up with Rhizobium bacteria in the soil, which helps growth and yield.',
+  'cards.tip.legume.prune.0': 'Put pole bean supports in place at planting time.',
+  'cards.tip.corn.water.0':
+    'Water matters most during pollination, when tassels and silks appear, and while the ears fill.',
+  'cards.tip.corn.prune.0':
+    'Plant in blocks of short rows, not one long row, so the ears fill out.',
+  'cards.tip.herb-culinary.water.0': 'Avoid soggy soil. Constant moisture encourages root rot.',
+  'cards.tip.herb-culinary.feed.0': 'Go easy on feeding. Lean soil gives stronger flavor.',
+  'cards.tip.herb-culinary.prune.0':
+    'Pinch basil stems as they lengthen to keep the plant bushy and compact.',
+  'cards.tip.herb-culinary.problems.0': 'Thin, spindly growth: not enough light.',
+  'cards.tip.small-fruit.water.1':
+    'A 2 to 3 inch mulch around blueberries keeps soil moisture more even.',
+  'cards.tip.small-fruit.prune.1':
+    'On mature rabbiteye blueberries, remove the oldest or largest cane each winter from the fifth year on.',
+  'cards.tip.small-fruit.problems.0':
+    'Birds take ripe berries. Netting over the bushes is the only practical control.',
+  'cards.tip.bramble.prune.0':
+    'Canes die after they fruit and will not bear again, so cut them out.',
+  'cards.tip.bramble.prune.1':
+    'Keep raspberry rows under 18 inches wide so air moves through and the lower canopy stays dry.',
+  'cards.tip.bramble.problems.0': 'Pick ripe fruit often to cut down on fruit rot.',
+  'cards.tip.vine-fruit.prune.0':
+    'Prune while dormant in early March. Leave a spur every 8 to 12 inches along each cordon.',
+  'cards.tip.stone-fruit.feed.0':
+    'Feed in late winter. On sandy soil, give half in late winter and the rest in May.',
+  'cards.tip.stone-fruit.prune.0':
+    'Train to an open center by removing the leader. Prune in late winter.',
+  'cards.tip.stone-fruit.prune.1':
+    'Thin fruit when it is about the size of a nickel so the rest hang 6 to 8 inches apart.',
+  'cards.tip.stone-fruit.problems.0':
+    'Remove rotten fruit from the tree and the ground right away.',
+  'cards.tip.orchard.feed.0':
+    'Feed in late winter. On sandy soil, give half in late winter and the rest in May.',
+  'cards.tip.orchard.prune.0': 'Remove dead, diseased and broken branches.',
+  'cards.tip.orchard.prune.1':
+    'Thin fruit when it is about the size of a nickel so the rest hang 6 to 8 inches apart.',
+  'cards.tip.orchard.problems.0': 'Pick up and remove damaged or fallen fruit.'
 } as const;

@@ -265,22 +265,9 @@ export const FAMILY_CARE_TIPS: Readonly<Record<string, FamilyCareTips>> = {
   }
 };
 
-let tipKeys: Map<string, MessageKey> | null = null;
-
-/** The catalog key whose English text is `text`. */
-function tipKey(text: string): MessageKey | undefined {
-  if (!tipKeys) {
-    tipKeys = new Map();
-    for (const [key, value] of Object.entries(enCards)) {
-      if (key.startsWith('cards.tip.') && !tipKeys.has(value)) tipKeys.set(value, key as MessageKey);
-    }
-  }
-  return tipKeys.get(text);
-}
-
-function localTip(text: string, locale: string): string {
-  const key = tipKey(text);
-  return key ? t(locale, key) : text;
+function localTip(tip: CareTip, locale: string): CareTip {
+  const key = `cards.tip.${tip.id}` as MessageKey;
+  return key in enCards ? { ...tip, text: t(locale, key) } : tip;
 }
 
 /** A family's tips, in the app language when `locale` is given. */
@@ -292,7 +279,7 @@ export function familyCareTips(
   const tips = FAMILY_CARE_TIPS[family];
   if (!tips) return null;
   if (!locale) return tips;
-  const tr = (items: string[]) => items.map((s) => localTip(s, locale));
+  const tr = (items: CareTip[]) => items.map((tip) => localTip(tip, locale));
   const labelKey = `cards.tipLabel.${family}` as MessageKey;
   return {
     label: labelKey in enCards ? t(locale, labelKey) : tips.label,

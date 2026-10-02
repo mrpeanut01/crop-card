@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { enCards } from '$lib/i18n/catalogs/en/cards';
 import { buildCard, buildDeck } from './index';
 import { buildTaskCard } from './task';
-import { FAMILY_CARE_TIPS, familyCareTips } from './careTips';
+import { allCareTips, FAMILY_CARE_TIPS, familyCareTips } from './careTips';
 import { calendarDayLabel, monthName, weekRangeLabel } from './calendar';
 import { dueLabel } from './common';
 import { sampleSnapshot } from './fixtures';
@@ -61,12 +61,17 @@ describe('cards in Spanish', () => {
       const es = familyCareTips(family, 'es')!;
       for (const field of ['water', 'feed', 'prune', 'problems'] as const) {
         expect(es[field]).toHaveLength(tips[field].length);
-        es[field].forEach((line, i) => expect(line).not.toBe(tips[field][i]));
+        es[field].forEach((tip, i) => {
+          expect(tip.id).toBe(tips[field][i].id);
+          expect(tip.text).not.toBe(tips[field][i].text);
+        });
       }
       expect(es.label).not.toBe(tips.label);
     }
     expect(familyCareTips('solanaceae')).toBe(FAMILY_CARE_TIPS.solanaceae);
-    expect(Object.keys(enCards).filter((k) => k.startsWith('cards.tip.')).length).toBeGreaterThan(50);
+    for (const tip of allCareTips()) {
+      expect(enCards[`cards.tip.${tip.id}` as keyof typeof enCards]).toBe(tip.text);
+    }
   });
 
   it('calendar dates follow the locale; English keeps its hand-built form', () => {

@@ -519,5 +519,21 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'advice.dd.noBiofix': 'No hay primera captura registrada',
   'advice.dd.fromTrap': 'Contando desde tu primera captura en trampa el {day}',
   'advice.dd.fromFallback': 'Contando desde el {day}, el inicio habitual del modelo',
-  'advice.dd.from': 'Contando desde el {day}'
+  'advice.dd.from': 'Contando desde el {day}',
+  'tasks.timer.anotherTask': 'otra tarea',
+  'tasks.timer.noConnection': 'Sin conexión. Vuelve a intentarlo cuando tengas señal.',
+  'tasks.timeApi.signIn': 'Primero inicia sesión.',
+  'tasks.timeApi.noTask': 'No existe esa tarea.',
+  'tasks.timeApi.formerMember': 'Exmiembro',
+  'tasks.timeApi.readOnly': 'Los inspectores pueden ver las tareas, pero no registrar tiempo.',
+  'tasks.timeApi.notJson': 'El cuerpo de la solicitud no es JSON.',
+  'tasks.timeApi.checkFields': 'Revisa los campos y vuelve a intentarlo.',
+  'tasks.timeApi.ownerOnly': 'Solo el propietario puede registrar tiempo de otra persona.',
+  'tasks.timeApi.notOnFarm': 'Esa persona no está en esta granja.',
+  'tasks.timeApi.outOfRange':
+    'El tiempo puede empezar hasta 30 días atrás y no puede terminar en el futuro.',
+  'tasks.timeApi.noEntry': 'No existe ese registro de tiempo.',
+  'tasks.timeApi.readOnlyRemove': 'Los inspectores pueden ver el tiempo, pero no quitarlo.',
+  'tasks.timeApi.ownDeleteWindow':
+    'Puedes quitar tu propio tiempo durante 48 horas después de guardarlo. Pídeselo al propietario.'
 };

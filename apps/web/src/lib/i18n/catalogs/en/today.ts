@@ -503,5 +503,20 @@ export const enToday = {
   'advice.dd.noBiofix': 'No first catch recorded',
   'advice.dd.fromTrap': 'Counting from your first trap catch on {day}',
   'advice.dd.fromFallback': "Counting from {day}, the model's usual start",
-  'advice.dd.from': 'Counting from {day}'
+  'advice.dd.from': 'Counting from {day}',
+  'tasks.timer.anotherTask': 'another task',
+  'tasks.timer.noConnection': 'No connection. Try again with signal.',
+  'tasks.timeApi.signIn': 'Sign in first.',
+  'tasks.timeApi.noTask': 'No such task.',
+  'tasks.timeApi.formerMember': 'Former member',
+  'tasks.timeApi.readOnly': 'Inspectors can read tasks but not log time.',
+  'tasks.timeApi.notJson': 'The request body is not JSON.',
+  'tasks.timeApi.checkFields': 'Check the fields and try again.',
+  'tasks.timeApi.ownerOnly': 'Only the owner can log time for someone else.',
+  'tasks.timeApi.notOnFarm': 'That person is not on this farm.',
+  'tasks.timeApi.outOfRange': 'Time can start up to 30 days back and cannot end in the future.',
+  'tasks.timeApi.noEntry': 'No such time entry.',
+  'tasks.timeApi.readOnlyRemove': 'Inspectors can read time but not remove it.',
+  'tasks.timeApi.ownDeleteWindow':
+    'You can remove your own time for 48 hours after saving it. Ask the owner.'
 } as const;

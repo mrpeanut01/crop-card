@@ -516,7 +516,11 @@ const handleRequest: Handle = async ({ event, resolve: resolvePage }) => {
   }
 
   if (user && isDemoUser(user) && demoBlocksWrite(event.request.method, path)) {
-    return demoBlockedResponse(path, event.request.headers.get('x-sveltekit-action') === 'true');
+    return demoBlockedResponse(
+      path,
+      event.request.headers.get('x-sveltekit-action') === 'true',
+      event.locals.locale
+    );
   }
 
   if (

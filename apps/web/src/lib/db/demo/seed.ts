@@ -76,6 +76,7 @@ import {
 } from '$lib/demo/catalog';
 import { buildDemoTimeline, type DemoSpray, type DemoTimeline } from '$lib/demo/timeline';
 import { DAY_MS, DEMO_FROST, DEMO_LAT_LON, addDaysYmd, ymdOf, zonedMs } from '$lib/demo/time';
+import { demoLocalizer, type DemoLocalizer } from '$lib/demo/localize';
 
 export const DEMO_FARM_NAME: string = CATALOG_FARM_NAME;
 
@@ -83,6 +84,8 @@ export interface DemoSeedInput {
   ownerId: string;
   userId: string;
   now: number;
+  /** The visitor's language: names, notes and task titles are written in it. */
+  locale?: string | null;
 }
 
 export interface DemoSeedSummary {
@@ -92,6 +95,9 @@ export interface DemoSeedSummary {
 }
 
 const HOUR_MS = 3_600_000;
+
+/** Set for the length of one synchronous `seedDemoFarm` call. */
+let L: DemoLocalizer = demoLocalizer(null);
 
 // ─── plugin hashes (traceability on spray records) ──────────────────────
 
@@ -155,7 +161,13 @@ export function seedDemoFarm(input: DemoSeedInput): DemoSeedSummary {
     throw new Error('seedDemoFarm: run it inside runWithTenant(ownerId)');
   }
   const timeline = buildDemoTimeline(input.now);
-  const counts = db.transaction(() => writeFarm(input, timeline));
+  L = demoLocalizer(input.locale);
+  let counts: Record<string, number>;
+  try {
+    counts = db.transaction(() => writeFarm(input, timeline));
+  } finally {
+    L = demoLocalizer(null);
+  }
   return { farmName: DEMO_FARM_NAME, counts, seasonYear: timeline.season.current };
 }
 
@@ -173,12 +185,12 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
   const areaId = new Map<DemoAreaKey, string>();
   for (const a of DEMO_AREAS) {
     const f = createField({
-      name: a.name,
+      name: L(a.name),
       kind: a.kind,
       details: a.details,
       widthFt: a.widthFt,
       lengthFt: a.lengthFt,
-      notes: a.notes,
+      notes: L(a.notes),
       geometryGeojson: rectPolygon(a.cxFt, a.cyFt, a.widthFt, a.lengthFt)
     });
     areaId.set(a.key, f.id);
@@ -187,7 +199,7 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
   const bedId = new Map<DemoBedKey, string>();
   for (const b of DEMO_BEDS) {
     const block = createBlock({
-      name: b.name,
+      name: L(b.name),
       fieldId: areaId.get(b.area)!,
       kind: b.kind,
       widthFt: b.widthFt,
@@ -215,7 +227,7 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
       installedOn: null,
       removedOn: null,
       seasonYear: null,
-      notes: '30 × 72 ft gothic tunnel, single poly, roll-up sides.'
+      notes: L('30 × 72 ft gothic tunnel, single poly, roll-up sides.')
     });
     bump('blockProtections');
   }
@@ -232,7 +244,7 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
       type: template.type,
       label: template.label,
       spec: { ...(template.spec ?? {}), templateId: template.templateId },
-      notes: e.notes
+      notes: L(e.notes)
     });
     equipmentId.set(e.key, row.id);
     if (e.hourMeter !== undefined) updateEquipmentState(row.id, { hourMeter: e.hourMeter });
@@ -255,7 +267,7 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
           id,
           blockId,
           cropPluginId: p.cropPluginId,
-          varietyDisplayName: p.variety,
+          varietyDisplayName: L(p.variety),
           plantingDate: new Date(p.plantingDate),
           status: p.status,
           harvestedAt: p.harvestedAt !== undefined ? new Date(p.harvestedAt) : null,
@@ -439,14 +451,14 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
     kind: 'maintenance',
     occurredAt: now - 40 * DAY_MS,
     performedById: userId,
-    notes: 'Engine oil, filters and UDT fluid changed at 1,210 hours.'
+    notes: L('Engine oil, filters and UDT fluid changed at 1,210 hours.')
   });
   appendEquipmentLog({
     equipmentId: equipmentId.get('baler')!,
     kind: 'inspection',
     occurredAt: now - 75 * DAY_MS,
     performedById: userId,
-    notes: 'Knotters timed, new twine knives.'
+    notes: L('Knotters timed, new twine knives.')
   });
 
   // Harvests.
@@ -489,7 +501,7 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
           performedById: userId,
           rulesVersion: RULES_VERSION,
           recordedLate: false,
-          notes: cut.status === 'complete' ? 'Stacked in the bank barn loft.' : null,
+          notes: cut.status === 'complete' ? L('Stacked in the bank barn loft.') : null,
           createdAt: new Date(cut.mowAt)
         })
       )
@@ -506,7 +518,7 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
       pest: s.pest,
       metric: s.metric,
       value: s.value,
-      notes: s.notes,
+      notes: L(s.notes),
       occurredAt: s.at
     });
     bump('records.scout');
@@ -540,7 +552,7 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
       blockId: bedId.get(j.bed)!,
       createdBy: userId,
       kind: 'note',
-      text: j.text,
+      text: L(j.text),
       provenance: 'manual',
       createdAt: j.at
     });
@@ -551,10 +563,10 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
     const tray = createSeedStart({
       cropId: plantingId.get(s.plantingKey)!,
       sownAt: s.sownAt,
-      trayLabel: s.trayLabel,
+      trayLabel: L(s.trayLabel),
       cells: s.cells,
       seedsPerCell: 1,
-      locationText: 'Basement grow shelf',
+      locationText: L('Basement grow shelf'),
       stockLotId: planting.seed ? (stock.seedLotId(planting.seed) ?? null) : null,
       performedById: userId
     });
@@ -589,8 +601,8 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
       provenance: 'manual',
       notes:
         s.bed === 'nfA'
-          ? 'Lab recommends 1 ton/ac ag lime before corn.'
-          : 'Years of compost show. Skip P for a season.'
+          ? L('Lab recommends 1 ton/ac ag lime before corn.')
+          : L('Years of compost show. Skip P for a season.')
     });
     bump('records.soil_test');
   }
@@ -604,7 +616,7 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
       durationMin: w.durationMin,
       inches: w.inches,
       method: w.method,
-      notes: w.notes ?? null,
+      notes: L(w.notes ?? null),
       performedById: userId
     });
     bump('records.irrigation');
@@ -649,7 +661,7 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
               ? animalIds.goats
               : animalIds.dog,
         kind: c.kind,
-        title: c.title,
+        title: L(c.title),
         intervalDays: c.intervalDays,
         nextDueOn: c.nextDue,
         leadDays: c.leadDays,
@@ -684,8 +696,8 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
         occurredAt: e.at,
         amountCents: e.amountCents,
         category: e.category,
-        description: e.description,
-        enterprise: e.enterprise ?? null,
+        description: L(e.description),
+        enterprise: L(e.enterprise ?? null),
         quantity: e.quantity ?? null,
         unit: e.unit ?? null,
         cropId: plantingKey ? (plantingId.get(plantingKey) ?? null) : null,
@@ -789,13 +801,17 @@ function writeSettings(t: DemoTimeline, now: number): void {
   }
   saveEmergencyContacts([
     {
-      name: 'Dr. Ellen Marsh (fictional)',
-      role: 'Large-animal vet',
+      name: L('Dr. Ellen Marsh (fictional)'),
+      role: L('Large-animal vet'),
       phone: '555-0100',
       type: 'vet'
     },
-    { name: 'Loudoun Extension office (fictional)', role: 'Agronomy questions', phone: '555-0142' },
-    { name: 'Ridge Road Co-op (fictional)', role: 'Fuel and fertilizer', phone: '555-0177' }
+    {
+      name: L('Loudoun Extension office (fictional)'),
+      role: L('Agronomy questions'),
+      phone: '555-0142'
+    },
+    { name: L('Ridge Road Co-op (fictional)'), role: L('Fuel and fertilizer'), phone: '555-0177' }
   ]);
 }
 
@@ -806,13 +822,13 @@ function writeMapFeatures(areaId: Map<DemoAreaKey, string>): void {
   const fence = rectCorners(pasture.cxFt, pasture.cyFt, pasture.widthFt, pasture.lengthFt);
   createMapFeature({
     kind: 'fence',
-    name: 'Goat pasture woven-wire fence',
+    name: L('Goat pasture woven-wire fence'),
     geometry: { type: 'LineString', coordinates: fence },
     fieldId: areaId.get('goatPasture')!
   });
   createMapFeature({
     kind: 'gate',
-    name: 'Pasture gate',
+    name: L('Pasture gate'),
     geometry: {
       type: 'Point',
       coordinates: toLonLat(pasture.cxFt - pasture.widthFt / 2, pasture.cyFt + 40)
@@ -821,14 +837,14 @@ function writeMapFeatures(areaId: Map<DemoAreaKey, string>): void {
   });
   createMapFeature({
     kind: 'hydrant',
-    name: 'Barnyard frost-free hydrant',
+    name: L('Barnyard frost-free hydrant'),
     geometry: { type: 'Point', coordinates: toLonLat(100, -70) },
     fieldId: areaId.get('goatPasture')!,
     areaIds: [areaId.get('goatPasture')!, areaId.get('coop')!]
   });
   createMapFeature({
     kind: 'water_source',
-    name: 'Barn well',
+    name: L('Barn well'),
     geometry: { type: 'Point', coordinates: toLonLat(170, 30) },
     fieldId: areaId.get('barn')!,
     details: { source: 'well', flowRateGpm: 8 }
@@ -836,7 +852,7 @@ function writeMapFeatures(areaId: Map<DemoAreaKey, string>): void {
   const garden = DEMO_AREAS.find((a) => a.key === 'garden')!;
   createMapFeature({
     kind: 'irrigation_line',
-    name: 'Garden drip main',
+    name: L('Garden drip main'),
     geometry: {
       type: 'LineString',
       coordinates: [
@@ -848,7 +864,7 @@ function writeMapFeatures(areaId: Map<DemoAreaKey, string>): void {
   });
   createMapFeature({
     kind: 'path',
-    name: 'Farm lane',
+    name: L('Farm lane'),
     geometry: {
       type: 'LineString',
       coordinates: [toLonLat(30, 0), toLonLat(40, 150), toLonLat(20, 400)]
@@ -955,7 +971,7 @@ function writeStock(
             deltaHundredths: hundredths,
             reason: 'receipt' as const,
             performedById: userId,
-            notes: 'lot received'
+            notes: L('lot received')
           })
         )
         .run();
@@ -1089,7 +1105,7 @@ function writeStock(
       movement(lotId, d.quantity!.amount, zonedMs(ymdOf(d.plantingDate, 'UTC'), 8), {
         reason: 'planting',
         cropId: plantingId.get(d.key) ?? null,
-        notes: `Planted ${d.variety}`
+        notes: L(`Planted ${d.variety}`)
       });
     }
     if (s.pending) {
@@ -1102,8 +1118,8 @@ function writeStock(
         status: s.pending.status,
         notes:
           s.pending.status === 'ordered'
-            ? 'Order #48213, shipping this week.'
-            : 'For fall planting.'
+            ? L('Order #48213, shipping this week.')
+            : L('For fall planting.')
       });
     }
   }
@@ -1154,7 +1170,7 @@ function writeStock(
       lotNumber: lotNo('TSC', now - daysAgo * DAY_MS)
     });
     for (const d of useDays) {
-      movement(lotId, 1, now - d * DAY_MS, { reason: 'animal-feed', notes: 'Opened a bag' });
+      movement(lotId, 1, now - d * DAY_MS, { reason: 'animal-feed', notes: L('Opened a bag') });
     }
   }
   insertLot({
@@ -1198,13 +1214,13 @@ function writeAnimals(
   const coop = areaId.get('coop')!;
   const flock = insertAnimalGroup(
     {
-      name: 'Laying flock',
+      name: L('Laying flock'),
       speciesId: 'chicken',
       purpose: 'production',
       headCount: DEMO_FLOCK_SIZE,
       foodProducing: true,
       housingFieldId: coop,
-      notes: 'Buff Orpingtons, Australorps and a few Easter Eggers. Locked in at dusk.'
+      notes: L('Buff Orpingtons, Australorps and a few Easter Eggers. Locked in at dusk.')
     },
     flockSince
   );
@@ -1219,13 +1235,13 @@ function writeAnimals(
   const pasture = areaId.get('goatPasture')!;
   const goats = insertAnimalGroup(
     {
-      name: 'Dairy goats',
+      name: L('Dairy goats'),
       speciesId: 'goat',
       purpose: 'production',
       headCount: 0,
       foodProducing: true,
       housingFieldId: pasture,
-      notes: 'Milked once a day at 7. Rotated between the east and west paddocks.'
+      notes: L('Milked once a day at 7. Rotated between the east and west paddocks.')
     },
     goatsSince
   );
@@ -1263,7 +1279,7 @@ function writeAnimals(
       speciesId: 'dog',
       name: 'Biscuit',
       sex: 'neutered-male',
-      breed: 'Australian Shepherd mix',
+      breed: L('Australian Shepherd mix'),
       birthDate: dogSince - 200 * DAY_MS,
       birthDateEstimated: true,
       acquiredDate: dogSince,
@@ -1272,7 +1288,7 @@ function writeAnimals(
       foodProducing: false,
       housingFieldId: house,
       microchipId: '985 000 000 000 001 (demo)',
-      feedingNote: '2 cups kibble morning and evening. No chicken bones.'
+      feedingNote: L('2 cups kibble morning and evening. No chicken bones.')
     },
     dogSince
   );
@@ -1307,8 +1323,8 @@ function writeTask(task: {
     .values(
       tenantValues({
         id: task.id ?? randomUUID(),
-        title: task.title,
-        body: task.body ?? null,
+        title: L(task.title),
+        body: L(task.body ?? null),
         kind: 'primary' as const,
         cropId: task.cropId ?? null,
         blockId: task.blockId ?? null,

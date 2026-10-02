@@ -14,6 +14,7 @@ import {
   isDemoEmail,
   isDemoOwnerId
 } from '$lib/demo/identity';
+import { demoLocalizer } from '$lib/demo/localize';
 import { createSendLimiter } from '$lib/server/sendLimiter';
 import { clearSession, writeSession } from '$lib/server/session';
 import type { AuthenticatedUser } from '$lib/server/auth';
@@ -47,7 +48,10 @@ export function isDemoUser(user: Pick<AuthenticatedUser, 'email'> | null | undef
 
 /** Creates the user, farm, membership and plan rows for one visitor and
  *  fills the farm. A seed failure removes the half-built farm. */
-export function createDemoFarm(now = Date.now()): {
+export function createDemoFarm(
+  now = Date.now(),
+  locale?: string | null
+): {
   ownerId: string;
   userId: string;
   email: string;
@@ -63,7 +67,8 @@ export function createDemoFarm(now = Date.now()): {
       .values({
         id: userId,
         email,
-        displayName: 'Demo visitor',
+        displayName: demoLocalizer(locale)('Demo visitor'),
+        ...(locale && locale !== 'en' ? { locale } : {}),
         createdAt
       })
       .run();
@@ -95,7 +100,7 @@ export function createDemoFarm(now = Date.now()): {
     }
   });
   try {
-    runWithTenant(ownerId, () => seedDemoFarm({ ownerId, userId, now }));
+    runWithTenant(ownerId, () => seedDemoFarm({ ownerId, userId, now, locale }));
   } catch (err) {
     purgeDemoOwner(ownerId);
     throw err;
@@ -154,7 +159,7 @@ export function startDemo(event: RequestEvent, now = Date.now()): StartDemoResul
   purgeExpiredDemos(now, 10);
   if (current && isDemoUser(current)) endDemoFarm(current);
   if (countDemoOwners() >= maxDemoFarms()) return { ok: false, reason: 'busy' };
-  const { ownerId, userId, email } = createDemoFarm(now);
+  const { ownerId, userId, email } = createDemoFarm(now, event.locals.locale);
   writeSession(
     event.cookies,
     {

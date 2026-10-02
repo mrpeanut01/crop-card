@@ -10,6 +10,7 @@
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { taskTimeEntrySchema } from '$lib/tasks/apiSchemas';
 import { getTask } from '$lib/db/tasks';
 import {
@@ -59,10 +60,11 @@ function present(
 }
 
 export const GET: RequestHandler = (event) => {
+  const loc = event.locals.locale;
   const user = currentUser(event);
-  if (!user?.activeOwnerId) return problem(401, 'UNAUTHENTICATED', 'Sign in first.');
+  if (!user?.activeOwnerId) return problem(401, 'UNAUTHENTICATED', t(loc, 'tasks.timeApi.signIn'));
   const task = getTask(event.params.id ?? '');
-  if (!task) return problem(404, 'NOT_FOUND', 'No such task.');
+  if (!task) return problem(404, 'NOT_FOUND', t(loc, 'tasks.timeApi.noTask'));
   const rows = listTimeEntriesForTask(task.id);
   const now = Date.now();
   const owner = user.role === 'owner';
@@ -74,30 +76,33 @@ export const GET: RequestHandler = (event) => {
         r,
         user,
         now,
-        names ? ((r.userId && names.get(r.userId)) ?? 'Former member') : undefined
+        names
+          ? ((r.userId && names.get(r.userId)) ?? t(loc, 'tasks.timeApi.formerMember'))
+          : undefined
       )
     );
   return json({ totalMinutes: totalMinutes(rows), entries });
 };
 
 export const POST: RequestHandler = withClientRecordId(async (event) => {
+  const loc = event.locals.locale;
   const user = currentUser(event);
-  if (!user?.activeOwnerId) return problem(401, 'UNAUTHENTICATED', 'Sign in first.');
+  if (!user?.activeOwnerId) return problem(401, 'UNAUTHENTICATED', t(loc, 'tasks.timeApi.signIn'));
   if (!canMutate(user.role)) {
-    return problem(403, 'READ_ONLY', 'Inspectors can read tasks but not log time.');
+    return problem(403, 'READ_ONLY', t(loc, 'tasks.timeApi.readOnly'));
   }
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return problem(400, 'INVALID_BODY', 'The request body is not JSON.');
+    return problem(400, 'INVALID_BODY', t(loc, 'tasks.timeApi.notJson'));
   }
   const parsed = taskTimeEntrySchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
         error: 'INVALID_BODY',
-        message: parsed.error.issues[0]?.message ?? 'Check the fields and try again.',
+        message: parsed.error.issues[0]?.message ?? t(loc, 'tasks.timeApi.checkFields'),
         issues: parsed.error.issues
       },
       { status: 400 }
@@ -107,24 +112,20 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const forUser = input.userId ?? user.id;
   if (forUser !== user.id) {
     if (!canAssignTasks(user)) {
-      return problem(403, 'OWNER_ONLY', 'Only the owner can log time for someone else.', {
+      return problem(403, 'OWNER_ONLY', t(loc, 'tasks.timeApi.ownerOnly'), {
         askOwner: true
       });
     }
     const unknown = firstUnknownRef(assertAssignableUser('userId', forUser));
     if (unknown) {
-      return problem(400, 'FOREIGN_REF', 'That person is not on this farm.', { field: unknown });
+      return problem(400, 'FOREIGN_REF', t(loc, 'tasks.timeApi.notOnFarm'), { field: unknown });
     }
   }
   const task = getTask(event.params.id ?? '');
-  if (!task) return problem(404, 'NOT_FOUND', 'No such task.');
+  if (!task) return problem(404, 'NOT_FOUND', t(loc, 'tasks.timeApi.noTask'));
   const now = Date.now();
   if (!timeEntryInRange(input.startedAt, input.minutes, now)) {
-    return problem(
-      400,
-      'TIME_OUT_OF_RANGE',
-      'Time can start up to 30 days back and cannot end in the future.'
-    );
+    return problem(400, 'TIME_OUT_OF_RANGE', t(loc, 'tasks.timeApi.outOfRange'));
   }
   const clientRecordId = hasClientRecordId(event.request)
     ? event.request.headers.get(CLIENT_RECORD_HEADER)

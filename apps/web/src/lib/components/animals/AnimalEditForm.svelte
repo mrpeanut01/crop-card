@@ -1,12 +1,10 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import './animalForms.css';
-  import {
-    OFFLINE_MESSAGE,
-    dateInputToMs,
-    errorFromResponse,
-    msToDateInput
-  } from '$lib/animals/display';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { dateInputToMs, msToDateInput } from '$lib/animals/display';
+  import { errorText } from './labels';
   import { showsFarmFields, type AnimalsLayout } from '$lib/animals/profile';
   import type { AnimalPurpose } from '$lib/animals/model';
   import { sexOptions, type AnimalSex } from '$lib/plugins/species';
@@ -37,6 +35,7 @@
 
   const { animal, layout, notesOnly, onDone }: Props = $props();
   const uid = $props.id();
+  const tr = $derived(createT(page.data?.locale));
   const start = untrack(() => animal);
   const farm = $derived(showsFarmFields(layout, animal.purpose));
 
@@ -89,7 +88,7 @@
       return;
     }
     if (!notesOnly && !clean(name) && !(farm ? clean(tag) : animal.tag)) {
-      error = farm ? 'Keep a name or a tag.' : 'Keep a name.';
+      error = farm ? tr('animals.edit.keepNameOrTag') : tr('animals.edit.keepName');
       return;
     }
     saving = true;
@@ -108,35 +107,35 @@
                 .catch(() => null)
             : null;
         if (code?.code === 'REASON_REQUIRED') needsReason = true;
-        error = await errorFromResponse(res);
+        error = await errorText(res, tr);
         return;
       }
       const out = (await res.json()) as { warnings?: { message: string; animalId: string }[] };
       await onDone(out.warnings ?? []);
     } catch {
-      error = OFFLINE_MESSAGE;
+      error = tr('animals.offline');
     } finally {
       saving = false;
     }
   }
 </script>
 
-<form class="af-form" onsubmit={submit} novalidate aria-label="Edit details">
+<form class="af-form" onsubmit={submit} novalidate aria-label={tr('animals.edit.details')}>
   {#if !notesOnly}
-    <label class="af-label" for="{uid}-name">Name</label>
+    <label class="af-label" for="{uid}-name">{tr('animals.name')}</label>
     <input id="{uid}-name" class="af-input" type="text" maxlength="80" bind:value={name} />
     {#if farm}
-      <label class="af-label" for="{uid}-tag">Tag</label>
+      <label class="af-label" for="{uid}-tag">{tr('animals.tag')}</label>
       <input id="{uid}-tag" class="af-input" type="text" maxlength="40" bind:value={tag} />
     {/if}
-    <label class="af-label" for="{uid}-sex">Sex</label>
+    <label class="af-label" for="{uid}-sex">{tr('animals.sex')}</label>
     <select id="{uid}-sex" class="af-input" bind:value={sex}>
       {#each sexOptions(animal.speciesId) as o (o.value)}
         <option value={o.value}>{o.label}</option>
       {/each}
     </select>
     {#if needsReason && sex !== animal.sex}
-      <label class="af-label" for="{uid}-sex-reason">Why is the sex changing?</label>
+      <label class="af-label" for="{uid}-sex-reason">{tr('animals.edit.whySex')}</label>
       <input
         id="{uid}-sex-reason"
         class="af-input"
@@ -146,44 +145,44 @@
         bind:value={sexReason}
       />
     {/if}
-    <label class="af-label" for="{uid}-born">Birth date</label>
+    <label class="af-label" for="{uid}-born">{tr('animals.birthDate')}</label>
     <input id="{uid}-born" class="af-input" type="date" bind:value={birth} />
     {#if birth}
       <label class="af-check">
         <input type="checkbox" bind:checked={estimated} />
-        <span>This date is a guess</span>
+        <span>{tr('animals.edit.dateGuess')}</span>
       </label>
     {/if}
     {#if farm}
       <div class="af-row">
         <label>
-          <span>Breed</span>
+          <span>{tr('animals.breed')}</span>
           <input class="af-input" type="text" maxlength="80" bind:value={breed} />
         </label>
         <label>
-          <span>Came from</span>
+          <span>{tr('animals.cameFrom')}</span>
           <input class="af-input" type="text" maxlength="200" bind:value={acquiredFrom} />
         </label>
       </div>
     {/if}
     {#if layout === 'farm'}
-      <label class="af-label" for="{uid}-purpose">Kept for</label>
+      <label class="af-label" for="{uid}-purpose">{tr('animals.keptFor')}</label>
       <select id="{uid}-purpose" class="af-input" bind:value={purpose}>
-        <option value="production">Eggs, milk, meat or work</option>
-        <option value="pet">A pet</option>
-        <option value="mixed">Both</option>
+        <option value="production">{tr('animals.purpose.production')}</option>
+        <option value="pet">{tr('animals.purpose.pet')}</option>
+        <option value="mixed">{tr('animals.purpose.mixed')}</option>
       </select>
     {/if}
-    <label class="af-label" for="{uid}-feeding">How much food</label>
+    <label class="af-label" for="{uid}-feeding">{tr('animals.howMuchFood')}</label>
     <input
       id="{uid}-feeding"
       class="af-input"
       type="text"
       maxlength="200"
-      placeholder="1 cup twice a day"
+      placeholder={tr('animals.feedingPlaceholder')}
       bind:value={feeding}
     />
-    <label class="af-label" for="{uid}-chip">Microchip ID</label>
+    <label class="af-label" for="{uid}-chip">{tr('animals.microchip')}</label>
     <input
       id="{uid}-chip"
       class="af-input"
@@ -193,10 +192,10 @@
       bind:value={microchip}
     />
   {/if}
-  <label class="af-label" for="{uid}-notes">Notes</label>
+  <label class="af-label" for="{uid}-notes">{tr('animals.notes')}</label>
   <textarea id="{uid}-notes" class="af-input" maxlength="2000" bind:value={notes}></textarea>
   {#if error}<p class="af-error" role="alert">{error}</p>{/if}
   <button class="af-primary" type="submit" disabled={saving}>
-    {saving ? 'Saving…' : 'Save details'}
+    {saving ? tr('animals.saving') : tr('animals.edit.saveDetails')}
   </button>
 </form>

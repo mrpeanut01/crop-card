@@ -1,7 +1,9 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import './animalForms.css';
-  import { OFFLINE_MESSAGE, errorFromResponse } from '$lib/animals/display';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { errorText, groupNoun } from './labels';
 
   interface Props {
     group: { id: string; name: string; notes: string | null; headCount: number };
@@ -10,9 +12,8 @@
   }
 
   const { group, noun, onDone }: Props = $props();
-  const LOWER_COUNT_MESSAGE =
-    'A lower count is a loss. Record it with "Record a change" so the reason is kept.';
   const uid = $props.id();
+  const tr = $derived(createT(page.data?.locale));
   const start = untrack(() => group);
 
   let name = $state(start.name);
@@ -31,11 +32,11 @@
     if (n !== group.notes) body.notes = n;
     if (headCount !== null && headCount !== group.headCount) {
       if (!Number.isInteger(headCount) || headCount < 0) {
-        error = 'The count must be a whole number.';
+        error = tr('animals.group.countWhole');
         return;
       }
       if (headCount < group.headCount) {
-        error = LOWER_COUNT_MESSAGE;
+        error = tr('animals.group.lowerCount');
         return;
       }
       body.headCount = headCount;
@@ -53,22 +54,27 @@
         body: JSON.stringify(body)
       });
       if (!res.ok) {
-        error = await errorFromResponse(res);
+        error = await errorText(res, tr);
         return;
       }
       await onDone();
     } catch {
-      error = OFFLINE_MESSAGE;
+      error = tr('animals.offline');
     } finally {
       saving = false;
     }
   }
 </script>
 
-<form class="af-form" onsubmit={submit} novalidate aria-label="Edit {noun}">
-  <label class="af-label" for="{uid}-name">Name</label>
+<form
+  class="af-form"
+  onsubmit={submit}
+  novalidate
+  aria-label={tr('animals.group.editAria', { noun: groupNoun(tr, noun) })}
+>
+  <label class="af-label" for="{uid}-name">{tr('animals.name')}</label>
   <input id="{uid}-name" class="af-input" type="text" maxlength="80" bind:value={name} />
-  <label class="af-label" for="{uid}-count">Unnamed count</label>
+  <label class="af-label" for="{uid}-count">{tr('animals.group.unnamedCount')}</label>
   <input
     id="{uid}-count"
     class="af-input"
@@ -79,19 +85,19 @@
     bind:value={headCount}
   />
   <p class="af-help">
-    Raise it for hatches or new arrivals. A loss is recorded with "Record a change", so the reason
-    is kept.
+    {tr('animals.group.countHelp')}
   </p>
   {#if headCount !== group.headCount}
     <label class="af-label" for="{uid}-why"
-      >Why the count changed <span class="af-optional">(optional)</span></label
+      >{tr('animals.group.whyCount')}
+      <span class="af-optional">{tr('animals.optional')}</span></label
     >
     <input id="{uid}-why" class="af-input" type="text" maxlength="500" bind:value={countReason} />
   {/if}
-  <label class="af-label" for="{uid}-notes">Notes</label>
+  <label class="af-label" for="{uid}-notes">{tr('animals.notes')}</label>
   <textarea id="{uid}-notes" class="af-input" maxlength="2000" bind:value={notes}></textarea>
   {#if error}<p class="af-error" role="alert">{error}</p>{/if}
   <button class="af-primary" type="submit" disabled={saving}>
-    {saving ? 'Saving…' : 'Save'}
+    {saving ? tr('animals.saving') : tr('animals.save')}
   </button>
 </form>

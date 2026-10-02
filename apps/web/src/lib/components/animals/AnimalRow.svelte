@@ -1,6 +1,8 @@
 <script lang="ts">
   import Pill from '$lib/components/ui/Pill.svelte';
   import SpeciesIcon from './SpeciesIcon.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     href: string;
@@ -15,6 +17,7 @@
 
   const { href, icon, title, meta = [], foodProducing, status = null }: Props = $props();
   const facts = $derived(meta.filter((m): m is string => !!m));
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <a class="row" {href}>
@@ -27,7 +30,7 @@
   </span>
   <span class="chips">
     {#if status}<Pill tone="neutral">{status}</Pill>{/if}
-    {#if foodProducing}<Pill tone="wheat">Food animal</Pill>{/if}
+    {#if foodProducing}<Pill tone="wheat">{tr('animals.foodAnimal')}</Pill>{/if}
   </span>
 </a>
 

@@ -130,7 +130,7 @@
     {/if}
     <label class="af-label" for="{uid}-sex">{tr('animals.sex')}</label>
     <select id="{uid}-sex" class="af-input" bind:value={sex}>
-      {#each sexOptions(animal.speciesId) as o (o.value)}
+      {#each sexOptions(animal.speciesId, page.data?.locale) as o (o.value)}
         <option value={o.value}>{o.label}</option>
       {/each}
     </select>

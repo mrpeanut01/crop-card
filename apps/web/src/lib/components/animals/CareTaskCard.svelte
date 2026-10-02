@@ -79,7 +79,7 @@
     picked = picked.includes(taskId) ? picked.filter((p) => p !== taskId) : [...picked, taskId];
   }
 
-  const closer = new CareCloser();
+  const closer = new CareCloser({ locale: page.data?.locale });
   let settled = $state<string[]>([]);
 
   async function closeAll(

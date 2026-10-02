@@ -81,6 +81,13 @@ export function pageTitle(tr: Translator, layout: string): string {
   return layout === 'pets' ? tr('nav.petsAndAnimals') : tr('nav.animals');
 }
 
+const USES = ['food', 'sale', 'discard', 'feed-to-animals', 'unknown'] as const;
+
+/** Where eggs or milk went ("For the table"), in the reader's language. */
+export function useLabel(tr: Translator, use: string): string {
+  return (USES as readonly string[]).includes(use) ? tr(`animals.use.${use}` as MessageKey) : use;
+}
+
 export function careKindLabel(tr: Translator, kind: string): string {
   return tr(`animals.careKind.${kind}` as MessageKey);
 }
@@ -97,10 +104,12 @@ const CODE_KEYS: Record<string, MessageKey> = {
   OUT_OF_ORDER: 'animals.err.OUT_OF_ORDER',
   COUNT_TOO_HIGH: 'animals.err.COUNT_TOO_HIGH',
   READ_ONLY: 'animals.err.READ_ONLY',
+  RECORD_LOCKED: 'animallib.err.RECORD_LOCKED',
   NOT_LATEST: 'animals.err.NOT_LATEST',
   GROUP_HAS_MEMBERS: 'animals.err.GROUP_HAS_MEMBERS',
   ANIMAL_HAS_RECORDS: 'animals.err.ANIMAL_HAS_RECORDS',
   AREA_HAS_ANIMALS: 'animals.err.AREA_HAS_ANIMALS',
+  AREA_HAS_GROUP_HISTORY: 'animallib.err.AREA_HAS_GROUP_HISTORY',
   UNKNOWN_SUBJECT: 'animals.err.UNKNOWN_SUBJECT',
   OWNER_ONLY: 'animals.err.OWNER_ONLY',
   IN_THE_FUTURE: 'animals.err.IN_THE_FUTURE'
@@ -129,5 +138,12 @@ export async function errorText(res: Response, tr: Translator): Promise<string> 
   const serverWorded = code === 'OUT_OF_ORDER' && body?.resubmitAs === 'discard';
   if (key && !serverWorded) return tr(key);
   if (res.status === 403 && !(code && ENGLISH_CODES.has(code))) return tr('animals.err.ownerCanDo');
-  return errorFromResponse(res);
+  const out = await errorFromResponse(res);
+  return out === errorFromResponseFallback(res.status)
+    ? tr('animallib.err.http', { status: res.status })
+    : out;
+}
+
+function errorFromResponseFallback(status: number): string {
+  return `Something went wrong (HTTP ${status}).`;
 }

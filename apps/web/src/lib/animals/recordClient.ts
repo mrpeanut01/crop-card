@@ -43,7 +43,8 @@ async function submit(
   body: unknown,
   queued: unknown,
   fetchFn: FetchFn,
-  online: () => boolean
+  online: () => boolean,
+  locale?: string | null
 ): Promise<RecordOutcome> {
   const id = recordId();
   if (!online()) return queue(kind, queued, id);
@@ -71,7 +72,7 @@ async function submit(
       .catch(() => null)) as unknown;
     if (isFoodStop(out)) return { status: 'stopped', stop: out };
   }
-  if (!res.ok) return { status: 'error', message: await errorFromResponse(res) };
+  if (!res.ok) return { status: 'error', message: await errorFromResponse(res, locale) };
   const out = (await res.json().catch(() => ({}))) as { warnings?: { message: string }[] };
   if (kind === 'animal-health') await noteHoldWrite('animal-health', body);
   return { status: 'saved', warnings: (out.warnings ?? []).map((w) => w.message) };
@@ -95,7 +96,8 @@ const isOnline = () => typeof navigator === 'undefined' || navigator.onLine !== 
 export function submitProduction(
   input: ProductionRecordInput,
   fetchFn: FetchFn = fetch,
-  online: () => boolean = isOnline
+  online: () => boolean = isOnline,
+  locale?: string | null
 ): Promise<RecordOutcome> {
   const payload = { ...input, occurredAt: input.occurredAt ?? Date.now() };
   return submit(
@@ -104,23 +106,34 @@ export function submitProduction(
     payload,
     payload,
     fetchFn,
-    online
+    online,
+    locale
   );
 }
 
 export function submitHealth(
   input: HealthRecordInput,
   fetchFn: FetchFn = fetch,
-  online: () => boolean = isOnline
+  online: () => boolean = isOnline,
+  locale?: string | null
 ): Promise<RecordOutcome> {
-  return submit('animal-health', '/api/animals/health/record', input, input, fetchFn, online);
+  return submit(
+    'animal-health',
+    '/api/animals/health/record',
+    input,
+    input,
+    fetchFn,
+    online,
+    locale
+  );
 }
 
 export function submitFeedUse(
   stockItemId: string,
   input: FeedUseInput,
   fetchFn: FetchFn = fetch,
-  online: () => boolean = isOnline
+  online: () => boolean = isOnline,
+  locale?: string | null
 ): Promise<RecordOutcome> {
   const body = { ...input, occurredAt: input.occurredAt ?? Date.now() };
   return submit(
@@ -129,6 +142,7 @@ export function submitFeedUse(
     body,
     { ...body, stockItemId },
     fetchFn,
-    online
+    online,
+    locale
   );
 }

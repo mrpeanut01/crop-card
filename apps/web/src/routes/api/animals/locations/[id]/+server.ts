@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { deleteLatestStay, getLocation } from '$lib/db/animalLocations';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { requireOwner } from '$lib/server/auth';
@@ -22,12 +23,13 @@ export const DELETE: RequestHandler = async (event) => {
   if (!guarded.ok) return guarded.response;
   const result = guarded.value;
   if (result.ok) return json({ ok: true, reopened: result.reopened });
-  if (result.reason === 'not-found') return json({ error: 'move not found' }, { status: 404 });
+  if (result.reason === 'not-found')
+    return json({ error: t(event.locals?.locale, 'animallib.api.moveNotFound') }, { status: 404 });
   return json(
     result.reason === 'not-latest'
       ? { error: 'Only the latest move can be removed.', code: 'NOT_LATEST' }
       : {
-          error: 'This move changed a group. Move the animal again instead.',
+          error: t(event.locals?.locale, 'animallib.api.moveChangedGroup'),
           code: 'GROUP_CHANGE'
         },
     { status: 409 }

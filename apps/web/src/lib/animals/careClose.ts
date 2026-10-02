@@ -24,6 +24,8 @@ export interface CareCloseDeps {
     retryAfterMs?: number
   ) => Promise<void>;
   newId?: () => string;
+  /** The viewer's language for refusal messages. */
+  locale?: string | null;
 }
 
 export interface CareCloseRun {
@@ -111,7 +113,7 @@ export class CareCloser {
         continue;
       }
       if (!res.ok) {
-        out.error = await errorFromResponse(res);
+        out.error = await errorFromResponse(res, this.deps.locale);
         return out;
       }
       const body = (await res.json().catch(() => ({}))) as {

@@ -4,7 +4,7 @@
   import HoldGuardNotice from './HoldGuardNotice.svelte';
   import { holdRefusalOf, type HoldShortenBody } from '$lib/animals/holdGuardCopy';
   import { localInputToMs, msToLocalInput } from '$lib/animals/display';
-  import { errorText, unitLabel } from './labels';
+  import { errorText, unitLabel, useLabel } from './labels';
   import { USE_CHOICES } from '$lib/animals/healthCopy';
   import { isFoodStop, type FoodStop } from '$lib/animals/holdCopy';
   import type { ProductionRecordInput, ProductionKind } from '$lib/animals/recordApiSchemas';
@@ -83,7 +83,7 @@
       pending = null;
       quantity = null;
       onDone(
-        body.use === 'discard' ? 'Saved as thrown out.' : tr('animals.saved'),
+        body.use === 'discard' ? tr('animals.prod.savedThrownOut') : tr('animals.saved'),
         (out.warnings ?? []).map((w) => w.message)
       );
     } catch {
@@ -171,12 +171,12 @@
 
   {#if kind !== 'weight'}
     <fieldset class="af-fieldset">
-      <legend class="af-legend">Where is it going?</legend>
+      <legend class="af-legend">{tr('animals.use.whereGoing')}</legend>
       <div class="af-tiles">
         {#each USE_CHOICES as c (c.value)}
           <label class="af-tile" class:on={use === c.value}>
             <input type="radio" name="{uid}-use" value={c.value} bind:group={use} />
-            <span>{c.label}</span>
+            <span>{useLabel(tr, c.value)}</span>
           </label>
         {/each}
       </div>

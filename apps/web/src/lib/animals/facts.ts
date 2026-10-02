@@ -5,16 +5,17 @@ import { sexLabel, type AnimalSex } from '$lib/plugins/species';
 import { ageText, countText } from './display';
 import { showsFarmFields, type AnimalsLayout } from './profile';
 import type { AnimalPurpose } from './model';
+import { t, type MessageKey } from '$lib/i18n';
 
 export interface Fact {
   label: string;
   value: string;
 }
 
-const PURPOSE_TEXT: Record<AnimalPurpose, string> = {
-  production: 'Eggs, milk, meat or work',
-  pet: 'Pet',
-  mixed: 'Pet and production'
+const PURPOSE_KEY: Record<AnimalPurpose, MessageKey> = {
+  production: 'animals.purpose.production',
+  pet: 'animallib.purpose.pet',
+  mixed: 'animallib.purpose.mixed'
 };
 
 export interface AnimalFactsInput {
@@ -34,22 +35,30 @@ export interface AnimalFactsInput {
   microchipId?: string | null;
 }
 
-export function animalFacts(a: AnimalFactsInput, layout: AnimalsLayout, now = Date.now()): Fact[] {
+export function animalFacts(
+  a: AnimalFactsInput,
+  layout: AnimalsLayout,
+  now = Date.now(),
+  locale?: string | null
+): Fact[] {
+  const tr = (key: MessageKey) => t(locale, key);
   const farm = showsFarmFields(layout, a.purpose);
-  const facts: Fact[] = [{ label: 'Kind', value: a.speciesName }];
-  if (a.sex !== 'unknown') facts.push({ label: 'Sex', value: sexLabel(a.speciesId, a.sex) });
-  const age = ageText(a.birthDate, a.birthDateEstimated, now);
-  if (age) facts.push({ label: 'Age', value: age });
-  if (a.groupName) facts.push({ label: 'Group', value: a.groupName });
-  facts.push({ label: 'Lives at', value: a.livesAt ?? 'Not set' });
-  if (farm) {
-    if (a.tag && a.name) facts.push({ label: 'Tag', value: a.tag });
-    if (a.breed) facts.push({ label: 'Breed', value: a.breed });
-    if (a.acquiredFrom) facts.push({ label: 'Came from', value: a.acquiredFrom });
-    facts.push({ label: 'Kept for', value: PURPOSE_TEXT[a.purpose] });
+  const facts: Fact[] = [{ label: tr('animallib.fact.kind'), value: a.speciesName }];
+  if (a.sex !== 'unknown') {
+    facts.push({ label: tr('animals.sex'), value: sexLabel(a.speciesId, a.sex, locale) });
   }
-  if (a.feedingNote) facts.push({ label: 'Food', value: a.feedingNote });
-  if (a.microchipId) facts.push({ label: 'Microchip', value: a.microchipId });
+  const age = ageText(a.birthDate, a.birthDateEstimated, now, locale);
+  if (age) facts.push({ label: tr('animals.add.age'), value: age });
+  if (a.groupName) facts.push({ label: tr('animallib.fact.group'), value: a.groupName });
+  facts.push({ label: tr('animallib.fact.livesAt'), value: a.livesAt ?? tr('animals.add.notSet') });
+  if (farm) {
+    if (a.tag && a.name) facts.push({ label: tr('animals.tag'), value: a.tag });
+    if (a.breed) facts.push({ label: tr('animals.breed'), value: a.breed });
+    if (a.acquiredFrom) facts.push({ label: tr('animals.cameFrom'), value: a.acquiredFrom });
+    facts.push({ label: tr('animals.keptFor'), value: tr(PURPOSE_KEY[a.purpose]) });
+  }
+  if (a.feedingNote) facts.push({ label: tr('animallib.fact.food'), value: a.feedingNote });
+  if (a.microchipId) facts.push({ label: tr('animallib.fact.microchip'), value: a.microchipId });
   return facts;
 }
 
@@ -62,14 +71,27 @@ export interface GroupFactsInput {
   livesAt: string | null;
 }
 
-export function groupFacts(g: GroupFactsInput, layout: AnimalsLayout): Fact[] {
-  const facts: Fact[] = [{ label: 'How many', value: countText(g.total, g.species) }];
+export function groupFacts(
+  g: GroupFactsInput,
+  layout: AnimalsLayout,
+  locale?: string | null
+): Fact[] {
+  const tr = (key: MessageKey) => t(locale, key);
+  const facts: Fact[] = [
+    { label: tr('animallib.fact.howMany'), value: countText(g.total, g.species, locale) }
+  ];
   if (g.namedCount > 0) {
-    facts.push({ label: 'Named', value: `${g.namedCount} named, ${g.headCount} unnamed` });
+    facts.push({
+      label: tr('animallib.fact.named'),
+      value: t(locale, 'animallib.fact.namedValue', {
+        named: g.namedCount,
+        unnamed: g.headCount
+      })
+    });
   }
-  facts.push({ label: 'Lives at', value: g.livesAt ?? 'Not set' });
+  facts.push({ label: tr('animallib.fact.livesAt'), value: g.livesAt ?? tr('animals.add.notSet') });
   if (layout === 'farm' && g.purpose !== 'pet') {
-    facts.push({ label: 'Kept for', value: PURPOSE_TEXT[g.purpose] });
+    facts.push({ label: tr('animals.keptFor'), value: tr(PURPOSE_KEY[g.purpose]) });
   }
   return facts;
 }

@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { deleteHealthEvent, evaluateHealthLock, getHealthEvent } from '$lib/db/animalHealth';
 import { requireMutator } from '$lib/server/auth';
 import { resolveSubject } from '$lib/server/animalRecords';
@@ -19,7 +20,11 @@ import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 export const DELETE: RequestHandler = async (event) => {
   const user = requireMutator(event);
   const record = getHealthEvent(event.params.id ?? '');
-  if (!record) return json({ error: 'Health record not found.' }, { status: 404 });
+  if (!record)
+    return json(
+      { error: t(event.locals?.locale, 'animallib.api.healthNotFound') },
+      { status: 404 }
+    );
   const subject = resolveSubject(record.subjectType, record.subjectId);
   const holds = carriesHold(record);
   const force = event.url.searchParams.get('force') === 'true';
@@ -55,7 +60,7 @@ export const DELETE: RequestHandler = async (event) => {
   }
   if (lockedAt !== undefined && !reason) {
     return json(
-      { error: 'Say why this locked record is being removed.', code: 'REASON_REQUIRED' },
+      { error: t(event.locals?.locale, 'animals.health.reasonLocked'), code: 'REASON_REQUIRED' },
       { status: 400 }
     );
   }

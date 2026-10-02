@@ -445,8 +445,10 @@
           <div class="off-farm" role="note" data-testid="hay-off-farm">
             <p>{n.text}</p>
             <p class="hint">
-              Sprayed {n.appliedOn}.{n.source ? ` Label: ${n.source}.` : ''}
-              <Provenance source="plugin" detail="label data" compact />
+              {tr('forage.hay.sprayed', { date: n.appliedOn })}{n.source
+                ? ` ${tr('forage.hay.labelSource', { source: n.source })}`
+                : ''}
+              <Provenance source="plugin" detail={tr('forage.hay.labelData')} compact />
             </p>
           </div>
         {/each}

@@ -9,7 +9,8 @@ import { formatCalendarDate, ymdInZone } from '$lib/prefs';
 import type { ForageHazard, ForageHazardKind, ForageTrigger } from '$lib/plugins/schemas';
 import { FORAGE_ADVICE, FROST_LOOKBACK_DAYS, type ForageAdvice } from './advice';
 import { nitrateAsTyped, nitrateConvertedText } from './interpret';
-import { RATING_BASIS_LABELS, type ForageLabRating, type NitrateUnits } from './model';
+import { ratingBasisLabel, type ForageLabRating, type NitrateUnits } from './model';
+import { t } from '$lib/i18n';
 
 const DAY_MS = 86_400_000;
 
@@ -107,6 +108,8 @@ export interface AdvisoryInput {
   hazardsFor: (pluginId: string) => { name: string; hazards: readonly ForageHazard[] } | null;
   timeZone: string;
   now: number;
+  /** Language for lab results; hazard lines stay English. */
+  locale?: string | null;
 }
 
 const TRIGGER_WORDS: Record<ForageTrigger, string> = {
@@ -133,31 +136,49 @@ function list(words: string[]): string {
   return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`;
 }
 
-export function forageDate(ms: number, timeZone: string): string {
-  return formatCalendarDate(ymdInZone(ms, timeZone), 'date');
+export function forageDate(ms: number, timeZone: string, locale?: string | null): string {
+  return formatCalendarDate(ymdInZone(ms, timeZone), 'date', {}, locale);
 }
 
-export function testView(t: AdvisoryTest, timeZone: string): ForageTestView {
+/** A lab result as text. Lab results are data, not hazard wording, so they
+ *  follow `locale`; units and the lab's own words stay as typed. */
+export function testView(
+  test: AdvisoryTest,
+  timeZone: string,
+  locale?: string | null
+): ForageTestView {
   const rating: string[] = [];
-  if (t.labRating?.nitrate) rating.push(`nitrate ${t.labRating.nitrate}`);
-  if (t.labRating?.hcn) rating.push(`prussic acid ${t.labRating.hcn}`);
-  const basis = t.labRating?.basis ? ` (${RATING_BASIS_LABELS[t.labRating.basis]})` : '';
-  const values: string[] = [];
-  if (t.nitrateValue !== null && t.nitrateUnits) {
-    values.push(`Nitrate ${nitrateAsTyped(t.nitrateValue, t.nitrateUnits)}`);
+  if (test.labRating?.nitrate) {
+    rating.push(t(locale, 'forage.test.nitrateRating', { value: test.labRating.nitrate }));
   }
-  if (t.hcnPpm !== null) values.push(`Prussic acid ${t.hcnPpm} ppm HCN`);
-  const date = forageDate(t.sampledAt, timeZone);
+  if (test.labRating?.hcn) {
+    rating.push(t(locale, 'forage.test.hcnRating', { value: test.labRating.hcn }));
+  }
+  const basis = test.labRating?.basis ? ` (${ratingBasisLabel(test.labRating.basis, locale)})` : '';
+  const values: string[] = [];
+  if (test.nitrateValue !== null && test.nitrateUnits) {
+    values.push(
+      t(locale, 'forage.test.nitrateValue', {
+        value: nitrateAsTyped(test.nitrateValue, test.nitrateUnits, locale)
+      })
+    );
+  }
+  if (test.hcnPpm !== null) {
+    values.push(t(locale, 'forage.test.hcnValue', { value: String(test.hcnPpm) }));
+  }
+  const date = forageDate(test.sampledAt, timeZone, locale);
   return {
-    id: t.id,
-    sampledAt: t.sampledAt,
-    ratingText: rating.length ? `Lab rating (owner-entered): ${rating.join('; ')}${basis}` : null,
+    id: test.id,
+    sampledAt: test.sampledAt,
+    ratingText: rating.length
+      ? t(locale, 'forage.test.rating', { rating: rating.join('; '), basis })
+      : null,
     valueText: values.length
-      ? `Sampled ${date}. ${values.join('. ')}, as typed.`
-      : `Sampled ${date}.`,
+      ? t(locale, 'forage.test.sampledValues', { date, values: values.join('. ') })
+      : t(locale, 'forage.test.sampled', { date }),
     convertedText:
-      t.nitrateValue !== null && t.nitrateUnits
-        ? nitrateConvertedText(t.nitrateValue, t.nitrateUnits)
+      test.nitrateValue !== null && test.nitrateUnits
+        ? nitrateConvertedText(test.nitrateValue, test.nitrateUnits, locale)
         : null
   };
 }
@@ -288,7 +309,7 @@ function itemFor(
     triggersOnFile: onFile,
     frostUnknown,
     advice,
-    latestTest: latest ? testView(latest, tz) : null
+    latestTest: latest ? testView(latest, tz, input.locale) : null
   };
 }
 
@@ -357,7 +378,7 @@ export function buildForageAdvisory(input: AdvisoryInput): ForageAdvisory {
       target.kind === 'hay'
         ? `/forage?hayCuttingId=${encodeURIComponent(target.cuttingId)}`
         : `/forage?fieldId=${encodeURIComponent(target.fieldId)}`,
-    targetTest: targetTestRow ? testView(targetTestRow, input.timeZone) : null
+    targetTest: targetTestRow ? testView(targetTestRow, input.timeZone, input.locale) : null
   };
 }
 

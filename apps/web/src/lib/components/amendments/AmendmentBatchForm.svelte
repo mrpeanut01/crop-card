@@ -5,11 +5,13 @@
    */
   import { untrack } from 'svelte';
   import { goto } from '$app/navigation';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import {
     BATCH_KINDS,
-    BATCH_KIND_LABELS,
-    SUPPLIER_STATEMENT_LABELS,
     SUPPLIER_STATEMENT_VALUES,
+    batchKindLabel,
+    supplierStatementLabel,
     type BatchKind,
     type SupplierStatement
   } from '$lib/amendments/model';
@@ -20,6 +22,8 @@
   }
 
   const { today, canSave }: Props = $props();
+  const locale = $derived(page.data?.locale);
+  const tr = $derived(createT(locale));
 
   let kind = $state<BatchKind>('manure');
   let name = $state('');
@@ -55,12 +59,12 @@
         error =
           data?.message ??
           data?.issues?.[0]?.message ??
-          (res.status === 403 ? 'Inspectors cannot add batches.' : 'That did not save.');
+          (res.status === 403 ? tr('amend.new.inspectorErr') : tr('amend.err.notSaved'));
         return;
       }
       await goto(`/inventory/amendment/${encodeURIComponent(data.batch.id)}`);
     } catch {
-      error = 'Could not reach the server. Try again when you are online.';
+      error = tr('amend.err.unreachable');
     } finally {
       busy = false;
     }
@@ -68,67 +72,69 @@
 </script>
 
 {#if !canSave}
-  <p class="note" role="note">Inspectors can read batches but not add them.</p>
+  <p class="note" role="note">{tr('amend.new.inspectorNote')}</p>
 {:else}
   <form onsubmit={submit} data-testid="batch-form">
     <fieldset class="field">
-      <legend>Made here or bought?</legend>
+      <legend>{tr('amend.new.origin')}</legend>
       <label class="choice">
-        <input type="radio" bind:group={origin} value="on-farm" /> Made on this farm
+        <input type="radio" bind:group={origin} value="on-farm" />
+        {tr('amend.new.madeHere')}
       </label>
       <label class="choice">
-        <input type="radio" bind:group={origin} value="bought" /> Bought or brought in
+        <input type="radio" bind:group={origin} value="bought" />
+        {tr('amend.new.bought')}
       </label>
     </fieldset>
     <label class="field">
-      <span>Kind</span>
+      <span>{tr('amend.new.kind')}</span>
       <select bind:value={kind}>
         {#each BATCH_KINDS as k (k)}
-          <option value={k}>{BATCH_KIND_LABELS[k]}</option>
+          <option value={k}>{batchKindLabel(k, locale)}</option>
         {/each}
       </select>
     </label>
     <label class="field">
-      <span>Name</span>
+      <span>{tr('amend.name')}</span>
       <input
         type="text"
         bind:value={name}
         maxlength="80"
         required
         placeholder={origin === 'bought'
-          ? 'Horse manure from the neighbour'
-          : 'Goat pile by the barn'}
+          ? tr('amend.new.placeholderBought')
+          : tr('amend.new.placeholderHome')}
       />
     </label>
     <label class="field">
-      <span>{origin === 'bought' ? 'Arrived on' : 'Started on'}</span>
+      <span>{origin === 'bought' ? tr('amend.new.arrivedOn') : tr('amend.new.startedOn')}</span>
       <input type="date" bind:value={startedOn} max={today} required />
     </label>
     {#if origin === 'bought'}
       <label class="field">
-        <span>Supplier</span>
+        <span>{tr('amend.supplier')}</span>
         <input type="text" bind:value={supplier} maxlength="120" />
       </label>
       <label class="field">
-        <span>What the supplier said about weed killers on the hay or pasture</span>
+        <span>{tr('amend.new.supplierSaid')}</span>
         <select bind:value={statement} data-testid="supplier-statement">
-          <option value="">No answer on file</option>
+          <option value="">{tr('amend.form.noAnswer')}</option>
           {#each SUPPLIER_STATEMENT_VALUES as v (v)}
-            <option value={v}>{SUPPLIER_STATEMENT_LABELS[v]}</option>
+            <option value={v}>{supplierStatementLabel(v, locale)}</option>
           {/each}
         </select>
       </label>
     {:else}
-      <p class="hint">After saving, add the animals, groups or other piles that went in.</p>
+      <p class="hint">{tr('amend.new.hint')}</p>
     {/if}
     <label class="field">
-      <span>Notes</span>
+      <span>{tr('amend.notes')}</span>
       <textarea bind:value={notes} maxlength="1000" rows="3"></textarea>
     </label>
     {#if error}
       <p class="error" role="alert">{error}</p>
     {/if}
-    <button type="submit" class="primary" disabled={busy}>Save batch</button>
+    <button type="submit" class="primary" disabled={busy}>{tr('amend.new.save')}</button>
   </form>
 {/if}
 

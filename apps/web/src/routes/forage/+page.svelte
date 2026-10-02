@@ -2,8 +2,10 @@
   import { invalidateAll } from '$app/navigation';
   import ForageTestForm from '$lib/components/forage/ForageTestForm.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import { createT } from '$lib/i18n';
 
   const { data } = $props();
+  const tr = $derived(createT(data.locale));
   let banner = $state<string | null>(null);
   let error = $state<string | null>(null);
   let deleting = $state<string | null>(null);
@@ -15,10 +17,10 @@
       const res = await fetch(`/api/forage/tests/${encodeURIComponent(id)}`, { method: 'DELETE' });
       const out = await res.json().catch(() => ({}));
       if (!res.ok) {
-        error = out.message ?? `Could not delete (HTTP ${res.status}).`;
+        error = out.message ?? tr('forage.page.errDelete', { status: res.status });
         return;
       }
-      banner = 'Forage test deleted.';
+      banner = tr('forage.page.deleted');
       await invalidateAll();
     } finally {
       deleting = null;
@@ -26,11 +28,11 @@
   }
 </script>
 
-<svelte:head><title>Forage tests · {data.title}</title></svelte:head>
+<svelte:head><title>{tr('forage.page.titleTag', { title: data.title })}</title></svelte:head>
 
 <main class="forage-page">
-  <a class="back" href={data.backHref}>Back</a>
-  <h1>Forage tests</h1>
+  <a class="back" href={data.backHref}>{tr('forage.page.back')}</a>
+  <h1>{tr('forage.page.h1')}</h1>
   <p class="lede">{data.title}</p>
 
   {#if banner}<p class="banner" role="status">{banner}</p>{/if}
@@ -38,16 +40,16 @@
 
   {#if data.access.canRecord}
     {#if !data.target && data.blocks.length === 0}
-      <p class="muted">This Area has no blocks yet, so there is nowhere to file a test.</p>
+      <p class="muted">{tr('forage.page.noBlocks')}</p>
     {:else}
       <section class="card">
-        <h2>Record a forage test</h2>
+        <h2>{tr('forage.record')}</h2>
         <ForageTestForm
           target={data.target}
           blocks={data.blocks}
           canAttach={data.access.canAttach}
           onSaved={async () => {
-            banner = 'Forage test saved.';
+            banner = tr('forage.saved');
             await invalidateAll();
           }}
         />
@@ -56,9 +58,9 @@
   {/if}
 
   <section class="card">
-    <h2>On file</h2>
+    <h2>{tr('forage.page.onFile')}</h2>
     {#if data.tests.length === 0}
-      <p class="muted">No forage tests on file here yet.</p>
+      <p class="muted">{tr('forage.page.none')}</p>
     {:else}
       <ul class="tests">
         {#each data.tests as t (t.id)}
@@ -69,7 +71,7 @@
             {/if}
             {#if t.valueText}<p>{t.valueText}</p>{/if}
             {#if t.convertedText}<p class="muted">{t.convertedText}</p>{/if}
-            {#if t.hasReport}<p class="muted">Lab report attached.</p>{/if}
+            {#if t.hasReport}<p class="muted">{tr('forage.page.reportAttached')}</p>{/if}
             {#if data.access.canDelete}
               <button
                 class="secondary"
@@ -77,7 +79,7 @@
                 disabled={deleting === t.id}
                 onclick={() => remove(t.id)}
               >
-                {deleting === t.id ? 'Deleting…' : 'Delete'}
+                {deleting === t.id ? tr('forage.page.deleting') : tr('forage.page.delete')}
               </button>
             {/if}
           </li>

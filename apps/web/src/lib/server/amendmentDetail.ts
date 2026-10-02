@@ -10,6 +10,7 @@ import { batchReaches } from '$lib/amendments/carryover';
 import { canMutate, type SessionRole } from '$lib/server/session';
 import { loadCarryoverData, lotLabel } from './amendmentChain';
 import { batchView, dayContext, type BatchView } from './amendmentRoutes';
+import { t } from '$lib/i18n';
 
 export interface AmendmentOption {
   id: string;
@@ -43,17 +44,18 @@ export interface AmendmentDetailPayload {
 
 export async function amendmentDetail(
   id: string,
-  role: SessionRole | undefined
+  role: SessionRole | undefined,
+  locale?: string | null
 ): Promise<AmendmentDetailPayload> {
   const batch = getBatch(id);
-  if (!batch) throw error(404, 'batch not found');
+  if (!batch) throw error(404, t(locale, 'amend.err.batch404'));
   const data = await loadCarryoverData();
   const ctx = dayContext();
-  const view = batchView(data, batch, ctx.timeZone);
+  const view = batchView(data, batch, ctx.timeZone, locale);
   const spreads = listBatchSpreads(batch.id).map((s) => ({
     applicationId: s.applicationId,
     blockId: s.blockId,
-    blockName: data.names.blocks.get(s.blockId) ?? 'A block no longer on file',
+    blockName: data.names.blocks.get(s.blockId) ?? t(locale, 'amend.name.unknownBlock'),
     occurredAt: s.occurredAt
   }));
   const spreadBlocks = new Set(spreads.map((s) => s.blockId));
@@ -62,7 +64,7 @@ export async function amendmentDetail(
     ...[...spreadBlocks].flatMap((blockId) =>
       listBioassays({ blockId }).map((b) => ({
         ...b,
-        blockName: data.names.blocks.get(blockId) ?? 'A block'
+        blockName: data.names.blocks.get(blockId) ?? t(locale, 'amend.name.aBlock')
       }))
     )
   ]
@@ -87,7 +89,7 @@ export async function amendmentDetail(
         .map((b) => ({ id: b.id, label: b.name })),
       lots: listAmendmentLots(AMENDMENT_LOT_CATEGORIES).map((l) => ({
         id: l.id,
-        label: lotLabel(l)
+        label: lotLabel(l, locale)
       }))
     },
     canEdit: !!role && canMutate(role),

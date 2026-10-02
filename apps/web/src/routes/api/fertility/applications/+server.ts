@@ -47,7 +47,8 @@ export const POST: RequestHandler = async (event) => {
     const decision = await decideSpread({
       blockId: fields.blockId,
       batchId: fields.amendmentBatchId,
-      confirm: confirmCarryover
+      confirm: confirmCarryover,
+      locale: event.locals?.locale
     });
     if (decision.kind === 'confirm') return json(decision.body, { status: 409 });
     if (decision.kind === 'confirmed') {

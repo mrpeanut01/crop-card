@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import {
     BIOASSAY_NOTES,
     BIOASSAY_RATIOS,
@@ -6,18 +8,20 @@
     BIOASSAY_STEPS,
     BIOASSAY_TIMING
   } from '$lib/amendments/bioassayGuide';
+
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <details class="guide" data-testid="bioassay-guide">
-  <summary>How to do a pea or bean test</summary>
+  <summary>{tr('bioassay.guide.summary')}</summary>
   <ol>
     {#each BIOASSAY_STEPS as s (s.id)}<li>{s.text}</li>{/each}
   </ol>
-  <p class="sub">The sources differ on the mix. Each is shown as it says:</p>
+  <p class="sub">{tr('bioassay.guide.mixLead')}</p>
   <ul>
     {#each BIOASSAY_RATIOS as s (s.id)}<li>{s.text}</li>{/each}
   </ul>
-  <p class="sub">How long to grow them:</p>
+  <p class="sub">{tr('bioassay.guide.howLong')}</p>
   <ul>
     {#each BIOASSAY_TIMING as s (s.id)}<li>{s.text}</li>{/each}
   </ul>
@@ -25,7 +29,7 @@
     {#each BIOASSAY_NOTES as s (s.id)}<li>{s.text}</li>{/each}
   </ul>
   <p class="sub">
-    This is a guide, not a result. What you see in the pots is yours to judge.
+    {tr('bioassay.guide.notResult')}
     {#each BIOASSAY_SOURCE_LINKS as l (l.href)}
       <a href={l.href} target="_blank" rel="noopener noreferrer nofollow">{l.label}</a>
     {/each}

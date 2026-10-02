@@ -61,7 +61,8 @@ export const load: PageServerLoad = async (event) => {
         grazingContextFrom(registry, await getBaseRegistry(), Date.now(), {
           fromAtMs: Number.NEGATIVE_INFINITY
         }).applications.filter((a) => a.blockId === selectedBlockId),
-        farmTimeZone()
+        farmTimeZone(),
+        locals.locale
       )
     : {};
 

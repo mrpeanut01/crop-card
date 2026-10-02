@@ -80,7 +80,11 @@
     if (!built) return null;
     const housed = withHousing(built, housing, { petsLayout, locale: page.data?.locale });
     const held = { ...withGrazing(housed, grazing, prefs.timeZone), links: undefined };
-    return forage.decorate(withSnapshotCarryover(snapshot, area.id, held, { link: true }), area.id);
+    return forage.decorate(
+      withSnapshotCarryover(snapshot, area.id, held, { link: true, locale: page.data?.locale }),
+      area.id,
+      page.data?.locale
+    );
   });
   const forage = new ForageAdvisoryCache();
   $effect(() => {

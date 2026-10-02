@@ -16,7 +16,7 @@
   import { ForageAdvisoryCache } from '$lib/client/forageAdvisory.svelte';
   import { snapshotFromMapData } from '$lib/farm/mapSnapshot';
   import { snapshotCarryoverLines, withSnapshotCarryover } from '$lib/cards/build/area';
-  import { CARRYOVER_SECTION_TITLES, withCarryover } from '$lib/farm/areaCarryover';
+  import { carryoverSectionTitles, withCarryover } from '$lib/farm/areaCarryover';
   import { isSensitiveFamily } from '$lib/amendments/spreadPrompt';
   import { isCropBearing, type AreaKind } from '$lib/farm/areaKinds';
   import {
@@ -170,8 +170,9 @@
       canEdit
     );
     return forage.decorate(
-      withSnapshotCarryover(snapshot, selectedArea.id, held, { link: true }),
-      selectedArea.id
+      withSnapshotCarryover(snapshot, selectedArea.id, held, { link: true, locale }),
+      selectedArea.id,
+      locale
     );
   });
   const forage = new ForageAdvisoryCache();
@@ -189,7 +190,8 @@
       ? areaBlocks.map((b) =>
           withCarryover(
             planBlockCard(b, $page.url.searchParams, selectedAreaId, cropDays, prefs),
-            snapshotCarryoverLines(snapshot, [b.id])
+            snapshotCarryoverLines(snapshot, [b.id]),
+            { locale }
           )
         )
       : []
@@ -347,7 +349,7 @@
                   variant="compact"
                   {prefs}
                   factLimit={3}
-                  compactSections={CARRYOVER_SECTION_TITLES}
+                  compactSections={carryoverSectionTitles(locale)}
                   showAsOf={false}
                   selected={areaBlocks[i]?.id === selectedBlockId}
                 />

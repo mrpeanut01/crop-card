@@ -1,6 +1,8 @@
 <script lang="ts">
   import ForageAdvisoryPanel from '$lib/components/forage/ForageAdvisoryPanel.svelte';
   import { ForageAdvisoryCache } from '$lib/client/forageAdvisory.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   interface Props {
     /** The destination Area. */
@@ -9,6 +11,7 @@
   }
 
   const { fieldId, where = null }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
   const cache = new ForageAdvisoryCache();
 
   $effect(() => {
@@ -22,7 +25,7 @@
   <div class="forage-callout" data-testid="forage-callout">
     <ForageAdvisoryPanel advisory={entry.advisory} failed={entry.failed} {where} />
     {#if entry.advisory?.items.length}
-      <a class="record" href={entry.advisory.recordHref}>Record a forage test</a>
+      <a class="record" href={entry.advisory.recordHref}>{tr('forage.record')}</a>
     {/if}
   </div>
 {/if}

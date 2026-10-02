@@ -1,5 +1,6 @@
 <script lang="ts">
   /** Phase 33C (M-42): a batch's carryover state, never "safe" or "clear". */
+  import { page } from '$app/state';
   import { stateChip, type CarryoverState } from '$lib/amendments/carryover';
 
   interface Props {
@@ -10,7 +11,7 @@
 </script>
 
 <span class="badge {state}" data-testid="carryover-state" data-state={state}
-  >{stateChip(state)}</span
+  >{stateChip(state, page.data?.locale)}</span
 >
 
 <style>

@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { INVENTORY_TYPES, INVENTORY_TYPE_LABELS, type InventoryType } from '$lib/inventory/types';
+  import { INVENTORY_TYPES, type InventoryType } from '$lib/inventory/types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { invTypeLabel } from './typeLabel';
 
   /**
    * Phase 27A primitive (#257). The type-swap row that sits at
@@ -23,9 +26,10 @@
   }
 
   const { activeType, onTypeChange, countByType, types = INVENTORY_TYPES }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
-<div class="inv-type-chip-row" role="tablist" aria-label="Inventory type">
+<div class="inv-type-chip-row" role="tablist" aria-label={tr('inv.typeAria')}>
   {#each types as type (type)}
     <button
       type="button"
@@ -35,7 +39,7 @@
       aria-selected={type === activeType}
       onclick={() => onTypeChange(type)}
     >
-      {INVENTORY_TYPE_LABELS[type]}
+      {invTypeLabel(tr, type)}
       {#if countByType?.[type] !== undefined}
         <span class="count">{countByType[type]}</span>
       {/if}

@@ -3,11 +3,12 @@
   import { page } from '$app/state';
   import InvKVP from './InvKVP.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
+  import { qtyStatusLabel } from './typeLabel';
   import { formatStockQuantity, stockUnitLabel, type StockUnit } from '$lib/stock/units';
   import {
     lotAvailable,
     lotQuantityTotals,
-    QUANTITY_STATUS_LABELS,
     type LotQuantityLike,
     type QuantityStatus
   } from '$lib/stock/quantityStatus';
@@ -30,6 +31,7 @@
 
   const { itemId, unit, category = null, lots, canEdit }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const owner = $derived(canEdit ?? page.data?.user?.role === 'owner');
   const totals = $derived(lotQuantityTotals(lots));
   const qty = (v: number) => formatStockQuantity(v, unit, currentPrefs(), { digits: 2, category });
@@ -52,7 +54,7 @@
       });
       if (!res.ok) {
         const b = await res.json().catch(() => null);
-        error = b?.error ?? `Could not save (HTTP ${res.status}).`;
+        error = b?.error ?? tr('inv.lots.saveFailed', { status: res.status });
         return false;
       }
       await invalidateAll();
@@ -65,7 +67,7 @@
   async function addLot(e: SubmitEvent) {
     e.preventDefault();
     if (!addQty || addQty <= 0) {
-      error = 'Enter a quantity greater than zero.';
+      error = tr('inv.lots.qtyPositive');
       return;
     }
     const ok = await send(`/api/stock/${itemId}/lots`, 'POST', {
@@ -86,26 +88,28 @@
 </script>
 
 <div class="lot-quantities" data-testid="lot-quantities">
-  <InvKVP label="On hand" value={qty(totals.existing)} />
-  <InvKVP label="Ordered" value={qty(totals.ordered)} />
-  <InvKVP label="Planned" value={qty(totals.planned)} />
+  <InvKVP label={tr('inv.qty.existing')} value={qty(totals.existing)} />
+  <InvKVP label={tr('inv.qty.ordered')} value={qty(totals.ordered)} />
+  <InvKVP label={tr('inv.qty.planned')} value={qty(totals.planned)} />
 
   {#if lots.length === 0}
     <p class="empty">
-      No quantity recorded yet. Add what you have, what is on order, or what you plan to buy.
+      {tr('inv.lots.empty')}
     </p>
   {:else}
     <ul class="lot-list">
       {#each lots as lot (lot.id)}
         <li data-status={lot.quantityStatus}>
           <span class="status status-{lot.quantityStatus}">
-            {QUANTITY_STATUS_LABELS[lot.quantityStatus]}
+            {qtyStatusLabel(tr, lot.quantityStatus)}
           </span>
           <span class="amount">
             {qty(lotAvailable(lot))}
           </span>
           {#if lot.lotNumber}<span class="mono muted">{lot.lotNumber}</span>{/if}
-          {#if lot.expiresAt}<span class="muted small">exp {fmt.day(lot.expiresAt)}</span>{/if}
+          {#if lot.expiresAt}<span class="muted small"
+              >{tr('inv.lots.exp', { date: fmt.day(lot.expiresAt) })}</span
+            >{/if}
           {#if owner && lot.quantityStatus !== 'existing'}
             <button
               type="button"
@@ -113,7 +117,7 @@
               disabled={busy}
               onclick={() => markReceived(lot.id)}
             >
-              Mark received
+              {tr('inv.lots.markReceived')}
             </button>
           {/if}
           {#if owner && lot.quantityStatus === 'existing'}
@@ -121,7 +125,7 @@
               class="btn-small ghost expense-link"
               href="/finance/new?kind=expense&stockLotId={encodeURIComponent(lot.id)}"
             >
-              Record purchase as expense
+              {tr('inv.lots.recordExpense')}
             </a>
           {/if}
         </li>
@@ -133,27 +137,29 @@
     {#if addOpen}
       <form class="add-lot" onsubmit={addLot}>
         <label>
-          <span>Quantity ({unitLabel})</span>
+          <span>{tr('inv.lots.quantity', { unit: unitLabel })}</span>
           <input type="number" min="0" step="any" bind:value={addQty} required />
         </label>
         <label>
-          <span>Status</span>
+          <span>{tr('inv.lots.status')}</span>
           <select bind:value={addStatus}>
-            <option value="existing">{QUANTITY_STATUS_LABELS.existing}</option>
-            <option value="ordered">{QUANTITY_STATUS_LABELS.ordered}</option>
-            <option value="planned">{QUANTITY_STATUS_LABELS.planned}</option>
+            <option value="existing">{qtyStatusLabel(tr, 'existing')}</option>
+            <option value="ordered">{qtyStatusLabel(tr, 'ordered')}</option>
+            <option value="planned">{qtyStatusLabel(tr, 'planned')}</option>
           </select>
         </label>
         <div class="actions">
           <button type="button" class="btn-small ghost" onclick={() => (addOpen = false)}>
-            Cancel
+            {tr('inv.cancel')}
           </button>
-          <button type="submit" class="btn-small" disabled={busy}>Save quantity</button>
+          <button type="submit" class="btn-small" disabled={busy}
+            >{tr('inv.lots.saveQuantity')}</button
+          >
         </div>
       </form>
     {:else}
       <button type="button" class="btn-small ghost" onclick={() => (addOpen = true)}>
-        + Add quantity
+        {tr('inv.lots.addQuantity')}
       </button>
     {/if}
   {/if}

@@ -8,6 +8,8 @@
     Loader,
     Clock
   } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { BatchRow, BatchStatus, LabelBatch } from '$lib/stock/labelBatch.svelte';
 
@@ -19,14 +21,15 @@
   }
 
   const { batch, notice = null, onReview, onSwitchToManual }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
-  const STATUS_LABEL: Record<BatchStatus, string> = {
-    queued: 'Queued',
-    reading: 'Reading…',
-    done: 'Ready to review',
-    failed: 'Failed',
-    saved: 'Saved'
-  };
+  const STATUS_LABEL: Record<BatchStatus, string> = $derived({
+    queued: tr('stockui.batch.queued'),
+    reading: tr('stockui.url.reading'),
+    done: tr('stockui.batch.ready'),
+    failed: tr('stockui.batch.failed'),
+    saved: tr('inv.picker.saved')
+  });
 
   const counts = $derived(batch.counts);
   const total = $derived(batch.rows.length);
@@ -34,9 +37,9 @@
   const finished = $derived(counts.done + counts.failed + counts.saved);
 
   const summary = $derived(
-    `${finished} of ${total} read · ${counts.saved} saved` +
-      (counts.failed ? ` · ${counts.failed} failed` : '') +
-      (counts.done ? ` · ${counts.done} to review` : '')
+    tr('stockui.batch.sumBase', { finished, total, saved: counts.saved }) +
+      (counts.failed ? ` · ${tr('stockui.batch.sumFailed', { n: counts.failed })}` : '') +
+      (counts.done ? ` · ${tr('stockui.batch.sumReview', { n: counts.done })}` : '')
   );
 
   function onAddMore(e: Event): void {
@@ -49,10 +52,10 @@
   }
 </script>
 
-<section class="batch" aria-label="Label batch queue" data-testid="label-batch">
+<section class="batch" aria-label={tr('stockui.batch.aria')} data-testid="label-batch">
   <header class="batch-head">
     <div>
-      <h2 class="batch-title">Batch unboxing · {total} photo{total === 1 ? '' : 's'}</h2>
+      <h2 class="batch-title">{tr('stockui.batch.title', { count: total })}</h2>
       <p class="batch-sum" aria-live="polite" data-testid="batch-summary">{summary}</p>
     </div>
     {#if next}
@@ -62,14 +65,13 @@
         onclick={() => onReview(next)}
         data-action="review-next"
       >
-        Review next draft →
+        {tr('stockui.batch.reviewNext')}
       </button>
     {/if}
   </header>
 
   <p class="batch-lede">
-    Photos are read one at a time — each one is a separate Claude call, metered against your AI
-    budget. Review and save each draft; nothing is recorded until you do.
+    {tr('stockui.batch.lede')}
   </p>
 
   {#if notice}
@@ -78,19 +80,19 @@
 
   {#if batch.stopMessage}
     <div class="stop" role="alert" data-testid="batch-stop">
-      <strong>Queue stopped.</strong>
+      <strong>{tr('stockui.batch.stopped')}</strong>
       {batch.stopMessage}
       {#if counts.queued}
-        {counts.queued} photo{counts.queued === 1 ? ' was' : 's were'} not sent.
+        {tr('stockui.batch.notSent', { count: counts.queued })}
       {/if}
       <div class="stop-actions">
         {#if batch.stoppedOnNoKey}
           <a class="btn btn-primary" href="/settings/ai" target="_blank" rel="noopener"
-            >Add Claude key ↗</a
+            >{tr('stockui.batch.addKey')}</a
           >
           {#if onSwitchToManual}
             <button type="button" class="btn" onclick={onSwitchToManual}
-              >Use Manual entry instead →</button
+              >{tr('stockui.batch.useManual')}</button
             >
           {/if}
         {:else if counts.queued}
@@ -99,7 +101,7 @@
             class="btn"
             onclick={() => void batch.run()}
             disabled={batch.running}
-            data-action="resume">Resume queue</button
+            data-action="resume">{tr('stockui.batch.resume')}</button
           >
         {/if}
       </div>
@@ -108,7 +110,7 @@
 
   {#if batch.overflow}
     <p class="notice">
-      Only the first {total} photos were queued — a batch holds at most 30. Add the rest after this batch.
+      {tr('stockui.batch.overflow', { total })}
     </p>
   {/if}
 
@@ -144,9 +146,11 @@
               type="button"
               class="btn btn-primary"
               onclick={() => onReview(row)}
-              aria-label="Review {row.draft?.displayName ?? row.name}"
+              aria-label={tr('stockui.batch.reviewAria', {
+                name: row.draft?.displayName ?? row.name
+              })}
             >
-              Review
+              {tr('stockui.batch.review')}
             </button>
           {/if}
           {#if row.status === 'failed' && !batch.stoppedOnNoKey}
@@ -155,7 +159,7 @@
               class="btn icon-btn"
               onclick={() => void batch.retry(row.id)}
               disabled={batch.running}
-              aria-label="Retry {row.name}"
+              aria-label={tr('stockui.batch.retryAria', { name: row.name })}
             >
               <RotateCcw size={16} aria-hidden="true" />
             </button>
@@ -165,7 +169,7 @@
               type="button"
               class="btn icon-btn"
               onclick={() => batch.discard(row.id)}
-              aria-label="Discard {row.name}"
+              aria-label={tr('stockui.batch.discardAria', { name: row.name })}
             >
               <Trash2 size={16} aria-hidden="true" />
             </button>
@@ -178,7 +182,7 @@
   <footer class="batch-foot">
     <label class="btn add-more" class:disabled={batch.running}>
       <ImagePlus size={16} aria-hidden="true" />
-      Add more photos
+      {tr('stockui.batch.addMore')}
       <input
         type="file"
         accept="image/*"
@@ -195,7 +199,7 @@
       disabled={batch.running}
       data-action="clear-batch"
     >
-      {counts.done ? 'Discard remaining drafts' : 'Done with batch'}
+      {counts.done ? tr('stockui.batch.discardRemaining') : tr('stockui.batch.done')}
     </button>
   </footer>
 </section>

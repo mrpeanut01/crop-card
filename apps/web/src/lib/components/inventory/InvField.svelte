@@ -2,6 +2,8 @@
   import { Lock } from 'lucide-svelte';
   import type { Snippet } from 'svelte';
   import type { FieldChipKind } from '$lib/inventory/types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   /**
    * Phase 27A primitive (#257). Labeled form field with the
@@ -31,19 +33,20 @@
   }
 
   const { label, chip, hint, error, id, children }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <div class="inv-field" class:has-error={!!error}>
   <label class="inv-field-label" for={id}>
     {label}
     {#if chip === 'required'}
-      <span class="chip chip-required">REQUIRED</span>
+      <span class="chip chip-required">{tr('inv.chip.required')}</span>
     {:else if chip === 'from-plugin'}
-      <span class="chip chip-plugin">FROM LIBRARY</span>
+      <span class="chip chip-plugin">{tr('inv.chip.fromLibrary')}</span>
     {:else if chip === 'kernel-locked'}
       <span class="chip chip-locked">
         <Lock size={10} strokeWidth={2} aria-hidden="true" />
-        KERNEL-LOCKED
+        {tr('inv.chip.kernelLocked')}
       </span>
     {/if}
   </label>

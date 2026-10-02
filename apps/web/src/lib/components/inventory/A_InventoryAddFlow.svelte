@@ -1,6 +1,9 @@
 <script lang="ts">
   import { Search, ScanBarcode, Image as ImageIcon, Globe, Pencil } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import A_InventoryEditForm from './A_InventoryEditForm.svelte';
+  import { invTypeWord } from './typeLabel';
   import SearchPanel from '$lib/components/stock/add/SearchPanel.svelte';
   import BarcodePanel from '$lib/components/stock/add/BarcodePanel.svelte';
   import LabelOcrPanel from '$lib/components/stock/add/LabelOcrPanel.svelte';
@@ -62,6 +65,7 @@
   }
 
   const { type, aiEnabled, canSave = true, library = [], onSaved, onCancel }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   type AddMethod = 'search' | 'barcode' | 'label' | 'url' | 'manual';
 
@@ -76,11 +80,11 @@
     aiRequired: boolean;
   }
 
-  const METHODS: MethodMeta[] = [
+  const METHODS: MethodMeta[] = $derived([
     {
       id: 'search',
-      hint: 'Library, then the web',
-      label: 'Search',
+      hint: tr('inv.add.method.search.hint'),
+      label: tr('inv.add.method.search'),
       blurb: 'Type the name for instant matches from the crop and product library.',
       icon: Search,
       aiRequired: false
@@ -88,36 +92,36 @@
     {
       id: 'barcode',
       hint: 'UPC · EAN · DataMatrix',
-      label: 'Scan barcode',
+      label: tr('inv.add.method.barcode'),
       blurb: 'Point the camera at the UPC/EAN. OpenFoodFacts first, then Claude.',
       icon: ScanBarcode,
       aiRequired: false
     },
     {
       id: 'label',
-      hint: 'Claude Vision · batch OK',
-      label: 'Scan label',
+      hint: tr('inv.add.method.label.hint'),
+      label: tr('inv.add.method.label'),
       blurb: 'Photograph the label or any product shot — Claude Vision extracts the fields.',
       icon: ImageIcon,
       aiRequired: true
     },
     {
       id: 'url',
-      hint: 'Product page → draft',
-      label: 'From URL',
+      hint: tr('inv.add.method.url.hint'),
+      label: tr('inv.add.method.url'),
       blurb: 'Paste a product page link — Claude reads it into a draft.',
       icon: Globe,
       aiRequired: true
     },
     {
       id: 'manual',
-      hint: 'Full form · no key needed',
-      label: 'Type it in',
+      hint: tr('inv.add.method.manual.hint'),
+      label: tr('inv.add.method.manual'),
       blurb: 'Fill the fields by hand. Works offline, no key needed.',
       icon: Pencil,
       aiRequired: false
     }
-  ];
+  ]);
 
   // Crop isn't a scan/search target, so it gets the bare form.
   const lotBearing = $derived(type !== 'crop');
@@ -127,7 +131,7 @@
   // no-key recovery empty-state (Invariant 7 — "AI assists, never
   // gates"). Filtering them out hid the recovery UI and left an
   // unexplained 3-of-5 chip row.
-  const visibleMethods = METHODS;
+  const visibleMethods = $derived(METHODS);
 
   type Phase = 'pick' | 'approve';
   let phase = $state<Phase>('pick');
@@ -168,7 +172,11 @@
   // Feed and medicine drafts keep only what an entry method may prefill.
   const animalType = $derived(type === 'feed' || type === 'animal-health');
   const nounLabel = $derived(
-    type === 'feed' ? 'feed or bedding' : type === 'animal-health' ? 'medicine' : type
+    type === 'feed'
+      ? tr('inv.list.addLabel.feed')
+      : type === 'animal-health'
+        ? tr('inv.list.addLabel.medicine')
+        : invTypeWord(tr, type)
   );
 
   function onPanelDraft(d: StockEntryDraft): void {
@@ -201,7 +209,8 @@
     if (id) batch.markSaved(id);
     const name = draft?.displayName;
     const left = batch.counts.done;
-    batchNotice = `Saved${name ? ` ${name}` : ''}.${left ? ` ${left} draft${left === 1 ? '' : 's'} left to review.` : ''}`;
+    const saved = name ? tr('inv.add.savedNamed', { name }) : tr('inv.add.saved');
+    batchNotice = left ? `${saved} ${tr('inv.add.draftsLeft', { count: left })}` : saved;
     method = 'label';
     backToMethods();
   }
@@ -211,7 +220,7 @@
   <A_InventoryEditForm {type} {library} {onSaved} {onCancel} />
 {:else if phase === 'approve'}
   <button type="button" class="back-link" onclick={backToMethods}>
-    {reviewingRowId ? '← Back to batch queue' : '← Choose a different method'}
+    {reviewingRowId ? tr('inv.add.backToBatch') : tr('inv.add.chooseMethod')}
   </button>
   {#if reviewingRowId}
     {#key reviewingRowId}
@@ -234,15 +243,14 @@
   {/if}
 {:else}
   <header class="flow-header">
-    <span class="kicker">Add · {nounLabel}</span>
-    <h1 class="serif">New {nounLabel}</h1>
+    <span class="kicker">{tr('inv.add.kicker', { what: nounLabel })}</span>
+    <h1 class="serif">{tr('inv.add.new', { what: nounLabel })}</h1>
     <p class="lede">
-      Pick how you want to add it — scan, search, or type it in. You'll review every field before
-      saving.
+      {tr('inv.add.lede')}
     </p>
   </header>
 
-  <div class="method-grid" role="tablist" aria-label="Add method">
+  <div class="method-grid" role="tablist" aria-label={tr('inv.add.methodAria')}>
     {#each visibleMethods as m, i (m.id)}
       {@const Icon = m.icon}
       {@const on = method === m.id}
@@ -270,16 +278,16 @@
 
   {#if !canSave}
     <p class="ai-note" role="note" data-testid="helper-note">
-      You're signed in as a helper — you can look products up here, but only the farm owner can save
-      new inventory.
+      {tr('inv.add.helperNote')}
     </p>
   {/if}
 
   {#if !aiEnabled}
     <p class="ai-note">
-      Scan label and From URL need a Claude API key to read the draft —
-      <a href="/settings/ai" target="_blank" rel="noopener">add one in Settings</a>, or use Search,
-      Scan barcode, or Type it in without a key.
+      {tr('inv.add.aiNoteBefore')}
+      <a href="/settings/ai" target="_blank" rel="noopener">{tr('inv.add.aiNoteLink')}</a>{tr(
+        'inv.add.aiNoteAfter'
+      )}
     </p>
   {/if}
 

@@ -1,11 +1,14 @@
 <script lang="ts">
   import A_InventoryList from '$lib/components/inventory/A_InventoryList.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <svelte:head>
-  <title>Inventory — CropCard</title>
+  <title>{tr('inv.pageTitle')}</title>
 </svelte:head>
 
 <A_InventoryList

@@ -12,6 +12,8 @@
    * objects ({min, max, unit}) into readable strings before render.
    * Subsumes the pre-Almanac /plugins/[id] route until Sprint 9 cutover.
    */
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
   import { currentPrefs } from '$lib/prefsState.svelte';
@@ -20,6 +22,7 @@
 
   type Props = Omit<CropDetailPayload, 'type'>;
   const { plugin, resolvedArchetype, hash }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   /** Phase 27C / #237 fix — flatten range-shaped objects so the detail
    *  card stops rendering "[object Object]" for fields like
@@ -31,7 +34,7 @@
     }
     if (Array.isArray(v)) {
       if (v.length === 0) return '—';
-      return v.length + ' item' + (v.length === 1 ? '' : 's');
+      return tr('inv.crop.items', { count: v.length });
     }
     if (typeof v === 'object') {
       const obj = v as Record<string, unknown>;
@@ -66,20 +69,22 @@
 </script>
 
 <header class="detail-header">
-  <span class="kicker">Crop category · {plugin.cropFamily ?? 'unknown family'}</span>
+  <span class="kicker"
+    >{tr('inv.crop.kicker', { family: plugin.cropFamily ?? tr('inv.seed.unknownFamily') })}</span
+  >
   <h1 class="serif">{plugin.displayName}</h1>
   <p class="sub mono">{plugin.pluginId}</p>
 </header>
 
 <div class="detail-grid">
   <div class="col">
-    <InvSection title="About this crop" kicker="Identity">
-      <InvKVP label="Crop id" value={plugin.pluginId} tone="mono" />
-      <InvKVP label="Crop family" value={plugin.cropFamily ?? '—'} />
-      <InvKVP label="Archetype (declared)" value={plugin.archetype ?? '—'} tone="locked" />
-      <InvKVP label="Archetype (resolved)" value={resolvedArchetype} tone="locked" />
+    <InvSection title={tr('inv.crop.about')} kicker={tr('inv.crop.identity')}>
+      <InvKVP label={tr('inv.crop.id')} value={plugin.pluginId} tone="mono" />
+      <InvKVP label={tr('inv.seed.cropFamily')} value={plugin.cropFamily ?? '—'} />
+      <InvKVP label={tr('inv.crop.archDeclared')} value={plugin.archetype ?? '—'} tone="locked" />
+      <InvKVP label={tr('inv.crop.archResolved')} value={resolvedArchetype} tone="locked" />
       {#if plugin.daysToMaturity}
-        <InvKVP label="Days to maturity" value={formatField(plugin.daysToMaturity)} />
+        <InvKVP label={tr('inv.seed.daysToMaturity')} value={formatField(plugin.daysToMaturity)} />
       {/if}
       {#if plugin.preHarvestIntervalDays != null}
         <InvKVP label="PHI" value={`${plugin.preHarvestIntervalDays} d`} tone="locked" />
@@ -87,7 +92,7 @@
     </InvSection>
 
     {#if varieties.length > 0}
-      <InvSection title="Varieties" kicker="From the crop library">
+      <InvSection title={tr('inv.crop.varieties')} kicker={tr('inv.crop.fromLibrary')}>
         <ul class="bullet-list">
           {#each varieties.slice(0, 12) as v, idx (idx)}
             <li>
@@ -101,14 +106,14 @@
             </li>
           {/each}
           {#if varieties.length > 12}
-            <li class="muted small">…and {varieties.length - 12} more</li>
+            <li class="muted small">{tr('inv.crop.andMore', { n: varieties.length - 12 })}</li>
           {/if}
         </ul>
       </InvSection>
     {/if}
 
     {#if growthStages.length > 0}
-      <InvSection title="Growth stages" kicker="V/R / Zadoks">
+      <InvSection title={tr('inv.crop.growthStages')} kicker={tr('inv.crop.stagesKicker')}>
         <ul class="bullet-list">
           {#each growthStages.slice(0, 10) as s, idx (idx)}
             <li>{formatField(s)}</li>
@@ -118,27 +123,33 @@
     {/if}
 
     {#if postHarvestCuring}
-      <InvSection title="Post-harvest curing" kicker="FR-08">
-        <InvKVP label="Method" value={formatField(postHarvestCuring.method)} />
-        <InvKVP label="Duration" value={formatField(postHarvestCuring.durationWeeks)} />
+      <InvSection title={tr('inv.crop.curing')} kicker="FR-08">
+        <InvKVP label={tr('inv.crop.method')} value={formatField(postHarvestCuring.method)} />
         <InvKVP
-          label="Target moisture"
+          label={tr('inv.crop.duration')}
+          value={formatField(postHarvestCuring.durationWeeks)}
+        />
+        <InvKVP
+          label={tr('inv.crop.targetMoisture')}
           value={formatField(postHarvestCuring.targetMoisturePercent)}
         />
-        <InvKVP label="Storage" value={formatField(postHarvestCuring.storageLocation)} />
+        <InvKVP
+          label={tr('inv.crop.storage')}
+          value={formatField(postHarvestCuring.storageLocation)}
+        />
       </InvSection>
     {/if}
   </div>
 
   <div class="col">
-    <InvSection title="Where it's used" kicker="Cross-refs">
+    <InvSection title={tr('inv.crop.whereUsed')} kicker={tr('inv.crop.crossRefs')}>
       <p class="empty small">
-        Block + planting back-references land in Phase 28 with the Unified Inventory edit flow.
+        {tr('inv.crop.whereUsedNote')}
       </p>
     </InvSection>
 
     {#if seasonalTasks.length > 0}
-      <InvSection title="Seasonal tasks" kicker="From the crop library">
+      <InvSection title={tr('inv.crop.seasonalTasks')} kicker={tr('inv.crop.fromLibrary')}>
         <ul class="bullet-list">
           {#each seasonalTasks.slice(0, 8) as t, idx (idx)}
             <li>{formatField(t)}</li>
@@ -147,10 +158,10 @@
       </InvSection>
     {/if}
 
-    <InvSection title="Crop library source" kicker="Signed hash">
-      <InvKVP label="Hash (SHA-256)" value={hash} tone="mono" />
+    <InvSection title={tr('inv.crop.source')} kicker={tr('inv.crop.signedHash')}>
+      <InvKVP label={tr('inv.crop.hash')} value={hash} tone="mono" />
       <details class="json-preview">
-        <summary>View JSON ({Object.keys(plugin).length} fields)</summary>
+        <summary>{tr('inv.crop.viewJson', { n: Object.keys(plugin).length })}</summary>
         <pre class="mono">{JSON.stringify(plugin, null, 2)}</pre>
       </details>
     </InvSection>

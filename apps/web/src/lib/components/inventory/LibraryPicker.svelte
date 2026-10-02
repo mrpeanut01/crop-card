@@ -6,6 +6,8 @@
    * current pick shows with its provenance tag so an auto-match reads as
    * `data` and the operator's own pick as `manual`.
    */
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { searchLibrary, type LibraryOption } from '$lib/plugins/libraryMatch';
 
@@ -31,11 +33,14 @@
     value = $bindable(''),
     source = $bindable('manual'),
     suggestions = [],
-    placeholder = 'Start typing to search',
-    noun = 'category',
+    placeholder: placeholderProp,
+    noun: nounProp,
     clearable = true,
     onChange
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
+  const placeholder = $derived(placeholderProp ?? tr('inv.picker.placeholder'));
+  const noun = $derived(nounProp ?? tr('inv.picker.category'));
 
   const listId = $derived(`${id}-listbox`);
   const selected = $derived(
@@ -116,21 +121,26 @@
       <Provenance
         {source}
         label={source === 'data'
-          ? 'Matched'
+          ? tr('inv.picker.matched')
           : source === 'manual'
-            ? 'You picked'
+            ? tr('inv.picker.youPicked')
             : source === 'plugin'
-              ? 'Saved'
+              ? tr('inv.picker.saved')
               : undefined}
         long={source === 'data'
-          ? 'Matched from the name. Search to change it.'
+          ? tr('inv.picker.matchedLong')
           : source === 'plugin'
-            ? 'The library entry saved with this item. Search to change it.'
+            ? tr('inv.picker.savedLong')
             : undefined}
       />
       {#if clearable}
-        <button type="button" class="clear" onclick={clear} aria-label="Clear the {noun}">
-          Clear
+        <button
+          type="button"
+          class="clear"
+          onclick={clear}
+          aria-label={tr('inv.picker.clearAria', { noun })}
+        >
+          {tr('inv.picker.clear')}
         </button>
       {/if}
     </div>
@@ -145,14 +155,14 @@
     aria-controls={listId}
     aria-activedescendant={open && results[active] ? `${id}-opt-${active}` : undefined}
     value={query}
-    placeholder={selected ? `Change the ${noun}` : placeholder}
+    placeholder={selected ? tr('inv.picker.change', { noun }) : placeholder}
     oninput={onInput}
     onkeydown={onKeydown}
     onfocus={() => (open = true)}
     onblur={() => setTimeout(() => (open = false), 150)}
   />
   {#if open && results.length > 0}
-    <ul class="options" role="listbox" id={listId} aria-label="Matching {noun}s">
+    <ul class="options" role="listbox" id={listId} aria-label={tr('inv.picker.matching', { noun })}>
       {#each results as opt, i (opt.id)}
         <li
           id="{id}-opt-{i}"
@@ -170,7 +180,7 @@
       {/each}
     </ul>
   {:else if open && query.trim()}
-    <p class="none" role="status">No {noun} matches "{query.trim()}".</p>
+    <p class="none" role="status">{tr('inv.picker.none', { noun, query: query.trim() })}</p>
   {/if}
 </div>
 

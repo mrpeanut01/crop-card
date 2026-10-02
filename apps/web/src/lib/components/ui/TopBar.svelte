@@ -17,7 +17,9 @@
     PawPrint,
     Tractor,
     MessageSquare,
-    Inbox
+    Inbox,
+    ChevronDown,
+    Zap
   } from 'lucide-svelte';
   import IconButton from './IconButton.svelte';
   import Avatar from './Avatar.svelte';
@@ -145,6 +147,50 @@
     return path === href || path.startsWith(`${href}/`);
   }
 
+  // Above 768px the three field actions share one Actions dropdown so the
+  // top row fits; the bottom bar keeps them as their own tabs for one-handed
+  // use. desktopSlot[i] is item i's position among the top-row entries.
+  const ACTION_HREFS = new Set(['/spray', '/scout', '/harvest']);
+  const actionItems = $derived(items.filter((i) => ACTION_HREFS.has(i.href)));
+  const firstActionHref = $derived(actionItems[0]?.href);
+  const actionsActive = $derived(actionItems.some((i) => isActive(i.href)));
+  const desktopSlot = $derived.by(() => {
+    const slots: number[] = [];
+    let n = -1;
+    let grouped = false;
+    for (const it of items) {
+      if (!ACTION_HREFS.has(it.href) || !grouped) n += 1;
+      if (ACTION_HREFS.has(it.href)) grouped = true;
+      slots.push(n);
+    }
+    return slots;
+  });
+  const actionsSlot = $derived(desktopSlot[items.findIndex((i) => ACTION_HREFS.has(i.href))]);
+  let actionsOpen = $state(false);
+  let actionsEl = $state<HTMLElement | null>(null);
+  let moreEl = $state<HTMLElement | null>(null);
+  let actionsMenuPos = $state('');
+
+  // The nav can scroll as a last resort, which would clip an absolute
+  // dropdown, so the open menu is placed against the viewport.
+  function placeActionsMenu() {
+    if (!actionsEl?.open) return;
+    const r = actionsEl.getBoundingClientRect();
+    actionsMenuPos = `top: ${Math.round(r.bottom + 6)}px; left: ${Math.round(r.left)}px;`;
+  }
+
+  function closeMenusOnOutsideClick(e: MouseEvent) {
+    const target = e.target as Node | null;
+    if (actionsOpen && actionsEl && target && !actionsEl.contains(target)) actionsOpen = false;
+    if (moreOpen && moreEl && target && !moreEl.contains(target)) moreOpen = false;
+  }
+
+  function closeMenusOnEscape(e: KeyboardEvent) {
+    if (e.key !== 'Escape' || (!actionsOpen && !moreOpen)) return;
+    actionsOpen = false;
+    moreOpen = false;
+  }
+
   // Up to 600px the bottom bar keeps the five field tabs and folds the rest
   // into More, so every tab stays a 48px target. More is shown at every width
   // because it also holds Send feedback (#466).
@@ -159,7 +205,7 @@
   let navEl = $state<HTMLElement | null>(null);
   let headerEl = $state<HTMLElement | null>(null);
   let fit = $state<number>(Number.POSITIVE_INFINITY);
-  const foldedActive = $derived(items.some((it, i) => i >= fit && isActive(it.href)));
+  const foldedActive = $derived(items.some((it, i) => desktopSlot[i] >= fit && isActive(it.href)));
 
   async function measure() {
     const nav = navEl;
@@ -167,7 +213,11 @@
     fit = Number.POSITIVE_INFINITY;
     if (window.innerWidth <= 768) return;
     await tick();
-    const links = [...nav.querySelectorAll<HTMLElement>(':scope > a.nav-link')];
+    const links = [
+      ...nav.querySelectorAll<HTMLElement>(
+        ':scope > a.nav-link:not(.action-item), :scope > .actions-nav'
+      )
+    ];
     const more = nav.querySelector<HTMLElement>(':scope > .more-nav');
     if (!more || nav.scrollWidth <= nav.clientWidth + 1) return;
     const gap = parseFloat(getComputedStyle(nav).columnGap) || 0;
@@ -189,13 +239,18 @@
     let frame = 0;
     const ro = new ResizeObserver(() => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => void measure());
+      frame = requestAnimationFrame(() => {
+        void measure();
+        placeActionsMenu();
+      });
     });
     ro.observe(header);
     void measure();
+    window.addEventListener('scroll', placeActionsMenu, true);
     return () => {
       cancelAnimationFrame(frame);
       ro.disconnect();
+      window.removeEventListener('scroll', placeActionsMenu, true);
     };
   });
 
@@ -206,6 +261,8 @@
 
   const avatarName = $derived(user?.name ?? user?.email ?? (user?.phone ? '#' : '?'));
 </script>
+
+<svelte:window onclick={closeMenusOnOutsideClick} onkeydown={closeMenusOnEscape} />
 
 <header class="topbar" bind:this={headerEl}>
   <div class="brand-cluster">
@@ -223,11 +280,41 @@
     {#each items as item, i (item.href)}
       {@const Icon = item.icon}
       {@const active = isActive(item.href)}
+      {#if item.href === firstActionHref}
+        <details
+          class="actions-nav"
+          class:folded={actionsSlot >= fit}
+          bind:open={actionsOpen}
+          bind:this={actionsEl}
+          ontoggle={placeActionsMenu}
+        >
+          <summary class="nav-link" class:active={actionsActive}>
+            <Zap size={15} strokeWidth={1.75} />
+            <span>{tr('nav.actions')}</span>
+            <ChevronDown size={14} strokeWidth={1.75} class="caret" />
+          </summary>
+          <div class="actions-menu" style={actionsMenuPos}>
+            {#each actionItems as action (action.href)}
+              {@const ActionIcon = action.icon}
+              <a
+                href={action.href}
+                class="more-link action-link"
+                aria-current={isActive(action.href) ? 'page' : undefined}
+                onclick={() => (actionsOpen = false)}
+              >
+                <ActionIcon size={16} strokeWidth={1.75} />
+                <span>{action.label}</span>
+              </a>
+            {/each}
+          </div>
+        </details>
+      {/if}
       <a
         href={item.href}
         class="nav-link"
+        class:action-item={ACTION_HREFS.has(item.href)}
         class:secondary={i >= PRIMARY_COUNT}
-        class:folded={i >= fit}
+        class:folded={desktopSlot[i] >= fit}
         class:active
         aria-current={active ? 'page' : undefined}
       >
@@ -235,7 +322,7 @@
         <span>{item.label}</span>
       </a>
     {/each}
-    <details class="more-nav" bind:open={moreOpen}>
+    <details class="more-nav" bind:open={moreOpen} bind:this={moreEl}>
       <summary
         class="nav-link"
         class:overflow-active={moreActive}
@@ -252,7 +339,7 @@
             href={item.href}
             class="more-link page-link"
             class:overflow={i >= PRIMARY_COUNT}
-            class:folded={i >= fit}
+            class:folded={desktopSlot[i] >= fit}
             aria-current={isActive(item.href) ? 'page' : undefined}
             onclick={() => (moreOpen = false)}
           >
@@ -588,8 +675,7 @@
 
   /* The header row degrades in steps so it never widens the page: the sync
      label collapses to its dot first (text stays in the a11y tree), then the
-     farm name. Between 769px and ~1030px the primary nav scrolls within
-     itself as a fallback. */
+     farm name. Pages that still do not fit fold into More. */
   @media (max-width: 1280px) {
     .right :global(.indicator .label) {
       position: absolute;
@@ -701,11 +787,45 @@
   .more-link.page-link:not(.overflow):not(.folded) {
     display: none;
   }
+  .actions-nav {
+    display: none;
+    position: relative;
+  }
+  .actions-nav summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  .actions-nav summary::-webkit-details-marker {
+    display: none;
+  }
+  .actions-nav :global(.caret) {
+    transition: transform 0.15s ease;
+  }
+  .actions-nav[open] :global(.caret) {
+    transform: rotate(180deg);
+  }
+  .actions-menu {
+    position: fixed;
+    min-width: 200px;
+    background: var(--color-paper);
+    border: 1px solid var(--color-divider);
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(26, 31, 26, 0.18);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+  }
   /* Pages that do not fit the top nav move into More. The nav is a
      scrolling strip as a last resort, which would clip a dropdown, so the
      open menu is placed against the viewport. */
   @media (min-width: 769px) {
-    .nav-link.folded {
+    .actions-nav {
+      display: flex;
+    }
+    .nav-link.action-item,
+    .nav-link.folded,
+    .actions-nav.folded {
       display: none;
     }
     .more-link.folded {

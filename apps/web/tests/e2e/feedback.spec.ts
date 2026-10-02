@@ -188,10 +188,27 @@ test.describe('Send feedback from the app chrome', () => {
       expect(moreBox.x + moreBox.width, `More at ${width}`).toBeLessThanOrEqual(
         navBox.x + navBox.width + 1
       );
+      const actions = nav.locator('details.actions-nav > summary');
+      const actionsInline = await actions.isVisible();
+      if (actionsInline) {
+        await actions.click();
+        for (const name of ['Spray', 'Scout', 'Harvest']) {
+          await expect(
+            nav.locator('.action-link', { hasText: name }),
+            `${name} at ${width}`
+          ).toBeVisible();
+        }
+        await actions.click();
+      }
       await more.click();
       for (const name of pages) {
+        const isAction = ['Spray', 'Scout', 'Harvest'].includes(name);
+        const inMenu = nav.locator('.more-link.page-link', { hasText: name });
+        if (isAction) {
+          expect(await inMenu.isVisible(), `${name} at ${width}`).toBe(!actionsInline);
+          continue;
+        }
         const inline = nav.locator('a.nav-link', { hasText: name });
-        const inMenu = nav.locator('.more-link', { hasText: name });
         const inlineBox = (await inline.isVisible()) ? await inline.boundingBox() : null;
         const shownInline =
           inlineBox !== null && inlineBox.x + inlineBox.width <= navBox.x + navBox.width + 1;

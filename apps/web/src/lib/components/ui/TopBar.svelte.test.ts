@@ -108,3 +108,31 @@ describe('TopBar feedback entry (#466)', () => {
     );
   });
 });
+
+describe('TopBar Actions menu', () => {
+  it('groups Spray, Scout and Harvest under one Actions dropdown for the top row', () => {
+    const { container } = render(TopBar, { online: true, pendingCount: 0 });
+    const actions = container.querySelector('nav.primary-nav > details.actions-nav') as HTMLElement;
+    expect(actions.querySelector('summary')?.textContent).toContain('Actions');
+    const hrefs = [...actions.querySelectorAll('.actions-menu a')].map((a) =>
+      a.getAttribute('href')
+    );
+    expect(hrefs).toEqual(['/spray', '/scout', '/harvest']);
+  });
+
+  it('keeps the three actions as their own bottom-bar tabs, placed after Plan', () => {
+    const { container } = render(TopBar, { online: true, pendingCount: 0 });
+    const nav = container.querySelector('nav.primary-nav') as HTMLElement;
+    const tabs = [...nav.querySelectorAll(':scope > a.nav-link')].map((a) =>
+      a.getAttribute('href')
+    );
+    expect(tabs.slice(0, 5)).toEqual(['/today', '/plan', '/spray', '/scout', '/harvest']);
+    for (const href of ['/spray', '/scout', '/harvest']) {
+      expect(nav.querySelector(`:scope > a[href="${href}"]`)?.classList).toContain('action-item');
+    }
+    const order = [...nav.children].map((el) => el.getAttribute('href') ?? el.className);
+    expect(order.indexOf('/plan')).toBeLessThan(
+      order.findIndex((c) => String(c).includes('actions-nav'))
+    );
+  });
+});

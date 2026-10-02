@@ -17,6 +17,7 @@ export const en = {
   'nav.equipment': 'Equipment',
   'nav.records': 'Records',
   'nav.cards': 'Cards',
+  'nav.actions': 'Actions',
   'nav.more': 'More',
   'nav.morePages': 'More pages',
   'nav.feedbackInbox': 'Feedback inbox',

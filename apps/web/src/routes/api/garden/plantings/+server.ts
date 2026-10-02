@@ -26,7 +26,11 @@ export const POST: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
-  const result = createPlacedPlantings(parsed.data.plantings, cropLookupFrom(await getRegistry()));
+  const result = createPlacedPlantings(
+    parsed.data.plantings,
+    cropLookupFrom(await getRegistry()),
+    event.locals?.locale
+  );
   if (isFailure(result)) return failureResponse(result);
   return json(
     {

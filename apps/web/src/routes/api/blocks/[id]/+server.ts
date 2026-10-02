@@ -71,17 +71,20 @@ export const PATCH: RequestHandler = async (event) => {
     : { ...parsed.data, xFt: null, yFt: null, rotationDeg: null, bedStyle: null };
   const pick = <T>(next: T | null | undefined, prev: T | undefined): T | undefined =>
     next === undefined ? prev : (next ?? undefined);
-  const layoutProblem = bedLayoutProblem({
-    id: block.id,
-    name: parsed.data.name ?? block.name,
-    kind,
-    fieldId: parsed.data.fieldId ?? block.fieldId,
-    widthFt: pick(parsed.data.widthFt, block.widthFt),
-    lengthFt: pick(parsed.data.lengthFt, block.lengthFt),
-    xFt: pick(patch.xFt, block.xFt),
-    yFt: pick(patch.yFt, block.yFt),
-    rotationDeg: pick(patch.rotationDeg, block.rotationDeg)
-  });
+  const layoutProblem = bedLayoutProblem(
+    {
+      id: block.id,
+      name: parsed.data.name ?? block.name,
+      kind,
+      fieldId: parsed.data.fieldId ?? block.fieldId,
+      widthFt: pick(parsed.data.widthFt, block.widthFt),
+      lengthFt: pick(parsed.data.lengthFt, block.lengthFt),
+      xFt: pick(patch.xFt, block.xFt),
+      yFt: pick(patch.yFt, block.yFt),
+      rotationDeg: pick(patch.rotationDeg, block.rotationDeg)
+    },
+    event.locals?.locale
+  );
   if (layoutProblem) return json(layoutProblem, { status: 409 });
   const resized =
     usesDesignerLayout(kind) &&
@@ -91,7 +94,7 @@ export const PATCH: RequestHandler = async (event) => {
     lengthFt: pick(parsed.data.lengthFt, block.lengthFt)
   };
   if (resized) {
-    const shrink = plantingsPastBedEdge(block.id, block.name, nextSize);
+    const shrink = plantingsPastBedEdge(block.id, block.name, nextSize, event.locals?.locale);
     if (shrink) return json(shrink, { status: 409 });
   }
   const guarded = await tryGuardedHoldWrite(event, user, () => {

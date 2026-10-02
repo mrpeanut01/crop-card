@@ -4,7 +4,9 @@
  * number, and the legend under the map says what each number is.
  */
 
+import { t } from '$lib/i18n';
 import { dateToLocaleDateString } from '$lib/intlCache';
+import { intlLocale } from '$lib/prefs';
 import type { CardBedMap, CardBedMapPlanting } from './model';
 
 export interface PlantingLabel {
@@ -26,25 +28,28 @@ export function textWidth(text: string, font: number): number {
   return text.length * font * CHAR_WIDTH;
 }
 
-function shortDate(ymd: string): string {
+function shortDate(ymd: string, locale?: string | null): string {
   const [y, m, d] = ymd.split('-').map(Number);
-  return dateToLocaleDateString(new Date(Date.UTC(y, m - 1, d)), 'en-US', {
+  return dateToLocaleDateString(new Date(Date.UTC(y, m - 1, d)), intlLocale(locale), {
     month: 'short',
     day: 'numeric',
     timeZone: 'UTC'
   });
 }
 
-export function legendText(p: CardBedMapPlanting): string {
+export function legendText(p: CardBedMapPlanting, locale?: string | null): string {
   const bits = [p.name];
-  if (p.later && p.from) bits.push(`from ${shortDate(p.from)}`);
-  if (!p.placed) bits.push('not placed yet');
+  if (p.later && p.from) {
+    bits.push(t(locale, 'gardenlib.map.from', { date: shortDate(p.from, locale) }));
+  }
+  if (!p.placed) bits.push(t(locale, 'gardenlib.map.notPlaced'));
   return bits.join(', ');
 }
 
 export function bedMapLabels(
   map: CardBedMap,
-  font: number
+  font: number,
+  locale?: string | null
 ): { labels: PlantingLabel[][]; legend: BedMapLegendRow[] } {
   const legend: BedMapLegendRow[] = [];
   const pad = font * 0.25;
@@ -56,7 +61,7 @@ export function bedMapLabels(
       const fits = p.l >= font * 1.1 && textWidth(p.name, font) <= room;
       if (fits && p.placed && !p.later) return { text: p.name, n: null, iconFt };
       const n = legend.length + 1;
-      legend.push({ n, text: legendText(p) });
+      legend.push({ n, text: legendText(p, locale) });
       return { text: null, n, iconFt };
     })
   );

@@ -23,6 +23,7 @@ import {
   resolvePlacement
 } from '$lib/server/garden/placement';
 import { db } from '$lib/db/client';
+import { t } from '$lib/i18n';
 import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
 import { applyPlantingEstablishment } from '$lib/server/seedStartTasks';
 
@@ -103,11 +104,14 @@ export const POST: RequestHandler = async (event) => {
     plantCount != null;
   let placement: CropPlacement | undefined;
   if (placing) {
-    const bed = resolveDesignableBed(blockId);
+    const bed = resolveDesignableBed(blockId, event.locals?.locale);
     if (isFailure(bed)) return failureResponse(bed);
     if (footprint && !footprintInsideBed(footprint, bed)) {
       return json(
-        { error: `That spot runs past the edge of ${bed.block.name}.`, code: 'OUTSIDE_AREA' },
+        {
+          error: t(event.locals?.locale, 'gardenlib.place.spotPastEdge', { bed: bed.block.name }),
+          code: 'OUTSIDE_AREA'
+        },
         { status: 400 }
       );
     }

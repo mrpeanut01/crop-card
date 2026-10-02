@@ -2,62 +2,80 @@
   import { FileText, AlertTriangle } from 'lucide-svelte';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
+  import { createT, type MessageKey } from '$lib/i18n';
 
   let { data } = $props();
 
-  const DIAGNOSTICS = $derived<Array<[string, string]>>([
-    ['Build version', data.advanced.buildVersion],
-    ['Rules version', data.advanced.rulesVersion],
-    ['Plugin failures', String(data.advanced.pluginFailures)],
-    ['Crops registered', String(data.appData.crops)],
-    ['Herbicides registered', String(data.appData.herbicides)],
-    ['Plugins loaded', String(data.appData.plugins)],
-    ['Beds and blocks', String(data.appData.blocks)],
-    ['Plantings', String(data.appData.plantings)],
-    ['Tenant ID', data.advanced.tenantId],
-    ['Last Litestream backup', data.advanced.lastBackup],
-    ['Storage tier', 'SQLite · Litestream → Azure Blob']
+  const tr = $derived(createT(data.locale));
+
+  const DIAGNOSTICS = $derived<Array<[MessageKey, string]>>([
+    ['settings.advanced.diag.build', data.advanced.buildVersion],
+    ['settings.advanced.diag.rules', data.advanced.rulesVersion],
+    ['settings.advanced.diag.pluginFailures', String(data.advanced.pluginFailures)],
+    ['settings.advanced.diag.crops', String(data.appData.crops)],
+    ['settings.advanced.diag.herbicides', String(data.appData.herbicides)],
+    ['settings.advanced.diag.plugins', String(data.appData.plugins)],
+    ['settings.advanced.diag.blocks', String(data.appData.blocks)],
+    ['settings.advanced.diag.plantings', String(data.appData.plantings)],
+    ['settings.advanced.diag.tenant', data.advanced.tenantId],
+    ['settings.advanced.diag.backup', data.advanced.lastBackup],
+    ['settings.advanced.diag.storage', 'SQLite · Litestream → Azure Blob']
   ]);
 
-  const EXPORTS = [
-    { name: 'Spray events', fmt: 'CSV', href: '/api/spray/records/export.csv' },
-    { name: 'USDA / NRCS export', fmt: 'CSV', href: '/api/spray/records/export.usda.csv' },
-    { name: 'Spray events PDF', fmt: 'PDF · printable', href: '/api/spray/records/export.pdf' },
-    { name: 'Records (audit)', fmt: 'browser', href: '/records' },
-    { name: 'Plugin overrides', fmt: 'JSON snapshot', href: '/plugins' },
+  const EXPORTS: Array<{ name: MessageKey; fmt: MessageKey | 'CSV'; href: string | null }> = [
+    { name: 'settings.advanced.exp.spray', fmt: 'CSV', href: '/api/spray/records/export.csv' },
+    { name: 'settings.advanced.exp.usda', fmt: 'CSV', href: '/api/spray/records/export.usda.csv' },
     {
-      name: 'Full account · everything',
-      fmt: 'tar.gz · planned',
+      name: 'settings.advanced.exp.sprayPdf',
+      fmt: 'settings.advanced.fmt.pdf',
+      href: '/api/spray/records/export.pdf'
+    },
+    {
+      name: 'settings.advanced.exp.records',
+      fmt: 'settings.advanced.fmt.browser',
+      href: '/records'
+    },
+    { name: 'settings.advanced.exp.plugins', fmt: 'settings.advanced.fmt.json', href: '/plugins' },
+    {
+      name: 'settings.advanced.exp.account',
+      fmt: 'settings.advanced.fmt.tar',
       href: null
     }
   ];
 
-  const DANGER = [
+  const DANGER: Array<{
+    title: MessageKey;
+    desc: MessageKey;
+    btn: MessageKey;
+    action: string;
+    danger: boolean;
+  }> = [
     {
-      title: 'Transfer farm ownership',
-      desc: 'Re-assigns this owner_id to another user. Spray records remain locked under the original signer; helpers stay attached.',
-      btn: 'Transfer…',
+      title: 'settings.advanced.transfer.title',
+      desc: 'settings.advanced.transfer.desc',
+      btn: 'settings.advanced.transfer.btn',
       action: '/settings/advanced',
       danger: false
     },
     {
-      title: 'Reset plugin overrides',
-      desc: 'Removes all your custom plugin overrides. Crop + input plugins fall back to marketplace defaults.',
-      btn: 'Reset…',
+      title: 'settings.advanced.reset.title',
+      desc: 'settings.advanced.reset.desc',
+      btn: 'settings.advanced.reset.btn',
       action: '/settings/advanced',
       danger: false
     },
     {
-      title: 'Delete all data',
-      desc: "Erases everything: spray records, harvest events, blocks, plugins, sessions. VDACS hash chain is also destroyed — you can never prove tampering didn't happen.",
-      btn: 'Delete…',
+      title: 'settings.advanced.delete.title',
+      desc: 'settings.advanced.delete.desc',
+      btn: 'settings.advanced.delete.btn',
       action: '/settings/advanced',
       danger: true
     }
   ];
 
   async function copyDiagnostics() {
-    const text = DIAGNOSTICS.map(([k, v]) => `${k}: ${v}`).join('\n');
+    const en = createT('en');
+    const text = DIAGNOSTICS.map(([k, v]) => `${en(k)}: ${v}`).join('\n');
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -67,35 +85,42 @@
 </script>
 
 <svelte:head
-  ><title>{data.isOwner ? 'Advanced & export-all' : 'App info'} · CropCard</title></svelte:head
+  ><title
+    >{tr('settings.advanced.pageTitle', {
+      title: data.isOwner
+        ? tr('settings.advanced.ownerTitle')
+        : tr('settings.advanced.appInfoTitle')
+    })}</title
+  ></svelte:head
 >
 
 <SettingsShell
-  title={data.isOwner ? 'Advanced & export-all' : 'App info'}
-  kicker={data.isOwner ? 'Danger zone' : 'Diagnostics'}
+  title={data.isOwner ? tr('settings.advanced.ownerTitle') : tr('settings.advanced.appInfoTitle')}
+  kicker={data.isOwner ? tr('settings.advanced.kickerOwner') : tr('settings.advanced.kickerHelper')}
   hideFooter
 >
   <SettingsSection
-    title={data.isOwner ? 'App info' : 'Versions and counts'}
-    sub={data.isOwner
-      ? 'Versions and counts from the server. Paste into a bug report.'
-      : 'From the server. Paste these into a bug report.'}
+    title={data.isOwner
+      ? tr('settings.advanced.versionsOwner')
+      : tr('settings.advanced.versionsHelper')}
+    sub={data.isOwner ? tr('settings.advanced.subOwner') : tr('settings.advanced.subHelper')}
   >
     <div class="diag-grid" data-testid="app-info">
       {#each DIAGNOSTICS as [k, v] (k)}
         <div>
-          <div class="kicker-row">{k}</div>
+          <div class="kicker-row">{tr(k)}</div>
           <div class="diag-v mono">{v}</div>
         </div>
       {/each}
     </div>
     <button type="button" class="ghost-sm with-icon" onclick={copyDiagnostics}>
-      <FileText size={12} /> Copy app info to clipboard
+      <FileText size={12} />
+      {tr('settings.advanced.copy')}
     </button>
     {#if data.pluginFailureList.length > 0}
       <div class="failures" data-testid="plugin-failures">
-        <h3>Plugin files that did not load</h3>
-        <p>Products in these files are missing from pickers until they are fixed.</p>
+        <h3>{tr('settings.advanced.failuresTitle')}</h3>
+        <p>{tr('settings.advanced.failuresBody')}</p>
         <ul>
           {#each data.pluginFailureList as f, i (i)}<li class="mono">{f}</li>{/each}
         </ul>
@@ -105,15 +130,15 @@
 
   {#if data.isOwner}
     <SettingsSection
-      title="Bulk export"
-      sub="Pulls everything for this owner_id. Useful for moving farms or year-end archive."
+      title={tr('settings.advanced.bulkTitle')}
+      sub={tr('settings.advanced.bulkSub')}
     >
       <div class="export-grid">
         {#each EXPORTS as e (e.name)}
           <div class="export-card">
             <div>
-              <div class="export-name">{e.name}</div>
-              <div class="export-fmt mono">{e.fmt}</div>
+              <div class="export-name">{tr(e.name)}</div>
+              <div class="export-fmt mono">{e.fmt === 'CSV' ? e.fmt : tr(e.fmt)}</div>
             </div>
             {#if e.href}
               <a class="ghost-sm" href={e.href}><FileText size={11} /></a>
@@ -129,19 +154,19 @@
       <header class="danger-head">
         <AlertTriangle size={15} strokeWidth={1.75} />
         <div>
-          <h3 class="serif">Danger zone</h3>
-          <p>Irreversible operations · double-confirm required.</p>
+          <h3 class="serif">{tr('settings.advanced.dangerTitle')}</h3>
+          <p>{tr('settings.advanced.dangerSub')}</p>
         </div>
       </header>
       <div class="danger-body">
         {#each DANGER as d (d.title)}
           <div class="danger-row" class:full-danger={d.danger}>
             <div class="danger-text">
-              <div class="danger-title">{d.title}</div>
-              <p class="danger-desc">{d.desc}</p>
+              <div class="danger-title">{tr(d.title)}</div>
+              <p class="danger-desc">{tr(d.desc)}</p>
             </div>
             <button type="button" class="danger-btn" data-danger={d.danger} disabled>
-              {d.btn}
+              {tr(d.btn)}
             </button>
           </div>
         {/each}

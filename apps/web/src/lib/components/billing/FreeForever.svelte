@@ -1,20 +1,24 @@
 <script lang="ts">
   import { ShieldCheck } from 'lucide-svelte';
   import { FREE_FOREVER_FEATURES } from '$lib/billing/plans';
+  import { page } from '$app/state';
+  import { createT, type MessageKey } from '$lib/i18n';
+  import { localizedLine } from './localize';
+
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <section class="free" aria-labelledby="free-forever-title" data-testid="free-forever">
   <h3 id="free-forever-title">
     <ShieldCheck size={18} strokeWidth={1.75} aria-hidden="true" />
-    Free forever: records, safety, exports
+    {tr('billing.free.title')}
   </h3>
   <p class="lede">
-    Spray records are a legal need, so nothing that keeps you safe or compliant is ever behind a
-    plan. If a paid plan ends, every record stays readable, writable and exportable.
+    {tr('billing.free.lede')}
   </p>
   <ul>
-    {#each FREE_FOREVER_FEATURES as line (line)}
-      <li>{line}</li>
+    {#each FREE_FOREVER_FEATURES as line, i (line)}
+      <li>{localizedLine(tr, line, `billing.free.f${i}` as MessageKey)}</li>
     {/each}
   </ul>
 </section>

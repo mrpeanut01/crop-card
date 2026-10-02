@@ -1,5 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { Phone, Plus, X } from 'lucide-svelte';
   import {
     ADD_POISON_CONTROL_INTENT,
@@ -16,6 +18,8 @@
   }
 
   const { initial, error = null }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   let nextId = 0;
   type Row = ContactRowInput & { id: number };
@@ -51,50 +55,50 @@
 
 {#if rows.length === 0}
   <p class="empty">
-    No contacts yet. Anyone reading your Farm Map Card will see these numbers first.
+    {tr('settings.contacts.empty')}
   </p>
 {/if}
 
-<ol class="rows" aria-label="Emergency contacts">
+<ol class="rows" aria-label={tr('settings.contacts.listAria')}>
   {#each rows as row, i (row.id)}
     <li class="row">
       <label class="field">
-        <span>Name</span>
+        <span>{tr('settings.contacts.name')}</span>
         <input
           class="s-input"
           name="contactName"
           autocomplete="off"
           maxlength="60"
           bind:value={row.name}
-          aria-label="Contact {i + 1} name"
+          aria-label={tr('settings.contacts.nameAria', { n: i + 1 })}
         />
       </label>
       <label class="field">
-        <span>Role</span>
+        <span>{tr('settings.contacts.role')}</span>
         <input
           class="s-input"
           name="contactRole"
           autocomplete="off"
           maxlength="60"
-          placeholder="Vet, neighbor, co-op"
+          placeholder={tr('settings.contacts.rolePlaceholder')}
           bind:value={row.role}
-          aria-label="Contact {i + 1} role"
+          aria-label={tr('settings.contacts.roleAria', { n: i + 1 })}
         />
       </label>
       <label class="field">
-        <span>Type</span>
+        <span>{tr('settings.contacts.type')}</span>
         <select
           class="s-input"
           name="contactType"
           bind:value={row.type}
-          aria-label="Contact {i + 1} type"
+          aria-label={tr('settings.contacts.typeAria', { n: i + 1 })}
         >
-          <option value="other">Other</option>
-          <option value="vet">Vet</option>
+          <option value="other">{tr('settings.contacts.typeOther')}</option>
+          <option value="vet">{tr('settings.contacts.typeVet')}</option>
         </select>
       </label>
       <label class="field">
-        <span>Phone</span>
+        <span>{tr('settings.contacts.phone')}</span>
         <input
           class="s-input mono"
           name="contactPhone"
@@ -103,14 +107,14 @@
           autocomplete="off"
           maxlength="30"
           bind:value={row.phone}
-          aria-label="Contact {i + 1} phone"
+          aria-label={tr('settings.contacts.phoneAria', { n: i + 1 })}
         />
       </label>
       <button
         type="button"
         class="remove"
         onclick={() => removeRow(row.id)}
-        aria-label="Remove contact {i + 1}"
+        aria-label={tr('settings.contacts.removeAria', { n: i + 1 })}
       >
         <X size={16} />
       </button>
@@ -121,16 +125,23 @@
 <div class="actions">
   {#if showPoison}
     <button type="submit" class="suggest" name="intent" value={ADD_POISON_CONTROL_INTENT}>
-      <Phone size={15} /> Add {POISON_CONTROL_CONTACT.name} ({POISON_CONTROL_CONTACT.phone})
+      <Phone size={15} />
+      {tr('settings.contacts.addPoison', {
+        name: POISON_CONTROL_CONTACT.name,
+        phone: POISON_CONTROL_CONTACT.phone
+      })}
     </button>
   {/if}
   <button type="button" class="add" onclick={addRow} disabled={full}>
-    <Plus size={15} /> Add a contact
+    <Plus size={15} />
+    {tr('settings.contacts.add')}
   </button>
 </div>
 <p class="hint">
-  Up to {MAX_EMERGENCY_CONTACTS} contacts. The first Vet shows on your animal and pet cards. {POISON_CONTROL_CONTACT.phone}
-  is the national US Poison Help line, open all day, every day. Tap Save changes to keep edits.
+  {tr('settings.contacts.hint', {
+    max: MAX_EMERGENCY_CONTACTS,
+    phone: POISON_CONTROL_CONTACT.phone
+  })}
 </p>
 
 <style>

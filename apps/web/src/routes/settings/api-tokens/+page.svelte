@@ -3,9 +3,12 @@
   import { ChevronRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import { fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
+
+  const tr = $derived(createT(data.locale));
 
   let copied = $state(false);
   function copy(token: string) {
@@ -17,66 +20,73 @@
 </script>
 
 <svelte:head>
-  <title>API tokens · CropCard</title>
+  <title>{tr('settings.tokens.pageTitle')}</title>
 </svelte:head>
 
 <div class="api-tokens">
-  <nav class="breadcrumb" aria-label="Breadcrumb">
-    <a href="/settings">Settings</a>
+  <nav class="breadcrumb" aria-label={tr('settings.tokens.breadcrumbAria')}>
+    <a href="/settings">{tr('settings.tokens.crumbSettings')}</a>
     <ChevronRight size={13} aria-hidden="true" />
-    <a href="/settings/integrations">Integrations</a>
+    <a href="/settings/integrations">{tr('settings.tokens.crumbIntegrations')}</a>
     <ChevronRight size={13} aria-hidden="true" />
-    <span>External agents (API tokens)</span>
+    <span>{tr('settings.tokens.crumbAgents')}</span>
   </nav>
-  <Kicker>Settings · Integrations</Kicker>
-  <h1 class="serif">API tokens.</h1>
+  <Kicker>{tr('settings.tokens.kicker')}</Kicker>
+  <h1 class="serif">{tr('settings.tokens.h1')}</h1>
   <p class="hint">
-    Bearer credentials for external Claude agents that act on this farm's behalf (UC-43). Each token
-    is scoped to this Owner and inherits your role's permissions. Tokens cannot mint other tokens or
-    switch Owners. Revoke immediately if leaked — the plaintext is shown <strong>once</strong> on mint
-    and never recoverable.
+    {tr('settings.tokens.hintA')}
+    <strong>{tr('settings.tokens.once')}</strong>
+    {tr('settings.tokens.hintB')}
   </p>
 
   <section class="section">
-    <h2>Mint a new token</h2>
+    <h2>{tr('settings.tokens.mintTitle')}</h2>
     {#if form?.error}
       <p class="error" role="alert">{form.error}</p>
     {/if}
     {#if form?.minted}
       <div class="copy-once" role="status">
-        <h3>Copy this token now — it will not be shown again</h3>
+        <h3>{tr('settings.tokens.copyTitle')}</h3>
         <pre class="token">{form.minted.token}</pre>
         <button type="button" onclick={() => copy(form.minted.token)}>
-          {copied ? 'Copied ✓' : 'Copy to clipboard'}
+          {copied ? tr('settings.tokens.copied') : tr('settings.tokens.copy')}
         </button>
         <p class="hint">
-          Stored as <code>sha256(plaintext)</code> in the DB. If you lose it, revoke and mint a new one.
+          {tr('settings.tokens.storedA')}
+          <code>sha256(plaintext)</code>
+          {tr('settings.tokens.storedB')}
         </p>
       </div>
     {/if}
     <form method="POST" action="?/mint" use:enhance class="form-row">
-      <input type="text" name="label" placeholder="e.g. scouting-drone-1" maxlength="64" required />
+      <input
+        type="text"
+        name="label"
+        placeholder={tr('settings.tokens.labelPlaceholder')}
+        maxlength="64"
+        required
+      />
       <label class="checkbox">
         <input type="checkbox" name="isServiceAccount" />
-        Service account (independent AI quota)
+        {tr('settings.tokens.serviceAccount')}
       </label>
-      <button type="submit">Mint token</button>
+      <button type="submit">{tr('settings.tokens.mint')}</button>
     </form>
   </section>
 
   <section class="section">
-    <h2>Active tokens</h2>
+    <h2>{tr('settings.tokens.activeTitle')}</h2>
     {#if data.tokens.filter((t) => !t.revokedAt).length === 0}
-      <p class="empty">No active tokens.</p>
+      <p class="empty">{tr('settings.tokens.noActive')}</p>
     {:else}
       <table>
         <thead>
           <tr>
-            <th>Label</th>
-            <th>Kind</th>
-            <th>Created</th>
-            <th>Last used</th>
-            <th>Requests</th>
+            <th>{tr('settings.tokens.colLabel')}</th>
+            <th>{tr('settings.tokens.colKind')}</th>
+            <th>{tr('settings.tokens.colCreated')}</th>
+            <th>{tr('settings.tokens.colLastUsed')}</th>
+            <th>{tr('settings.tokens.colRequests')}</th>
             <th></th>
           </tr>
         </thead>
@@ -84,14 +94,18 @@
           {#each data.tokens.filter((t) => !t.revokedAt) as t (t.id)}
             <tr>
               <td>{t.label}</td>
-              <td>{t.isServiceAccount ? 'Service account' : 'Personal use'}</td>
+              <td
+                >{t.isServiceAccount
+                  ? tr('settings.tokens.kindService')
+                  : tr('settings.tokens.kindPersonal')}</td
+              >
               <td>{fmt.instant(t.createdAt, 'date')}</td>
               <td>{fmt.instant(t.lastUsedAt)}</td>
               <td>{t.requestCount.toLocaleString()}</td>
               <td>
                 <form method="POST" action="?/revoke" use:enhance>
                   <input type="hidden" name="tokenId" value={t.id} />
-                  <button class="revoke" type="submit">Revoke</button>
+                  <button class="revoke" type="submit">{tr('settings.tokens.revoke')}</button>
                 </form>
               </td>
             </tr>
@@ -103,10 +117,14 @@
 
   {#if data.tokens.some((t) => t.revokedAt)}
     <section class="section">
-      <h2>Revoked tokens</h2>
+      <h2>{tr('settings.tokens.revokedTitle')}</h2>
       <table>
         <thead>
-          <tr><th>Label</th><th>Revoked</th><th>Total requests</th></tr>
+          <tr>
+            <th>{tr('settings.tokens.colLabel')}</th>
+            <th>{tr('settings.tokens.colRevoked')}</th>
+            <th>{tr('settings.tokens.colTotal')}</th>
+          </tr>
         </thead>
         <tbody>
           {#each data.tokens.filter((t) => t.revokedAt) as t (t.id)}

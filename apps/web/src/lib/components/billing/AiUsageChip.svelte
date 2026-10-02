@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import AiBudgetMeter from './AiBudgetMeter.svelte';
   import type { AiUsageSnapshot } from '$lib/billing/plans';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   interface Props {
     /** Show the meter only once the month's AI help has run out. */
@@ -12,6 +14,8 @@
   }
 
   const { onlyWhenOut = false, refreshKey, planning = false }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   let usage = $state<AiUsageSnapshot | null>(null);
   let isOwner = $state(false);
@@ -60,13 +64,15 @@
     data-left={usage.planning.monthlyExhausted ? 0 : left}
   >
     {#if usage.planning.monthlyExhausted}
-      This month's AI planning is used up. Plans still work without AI, and it resets on the 1st.
+      {tr('billing.chip.monthlyUsed')}
     {:else if left > 0}
-      AI planning today: {left} of {usage.planning.perDay}
-      {usage.planning.perDay === 1 ? 'run' : 'runs'} left.
+      {tr('billing.chip.left', {
+        count: usage.planning.perDay,
+        left,
+        perDay: usage.planning.perDay
+      })}
     {:else}
-      Today's {usage.planning.perDay} AI planning runs are used up. Plans still work without AI, and it
-      resets at midnight UTC.
+      {tr('billing.chip.dailyUsed', { perDay: usage.planning.perDay })}
     {/if}
   </p>
 {:else if !planning && visible && usage}

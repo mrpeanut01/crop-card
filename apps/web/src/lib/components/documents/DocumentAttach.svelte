@@ -1,9 +1,11 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
+  import { DOCUMENT_SUBJECT_KEYS, localizeDocCopy } from './labels';
   import type { DocumentMeta } from '$lib/documents/apiSchemas';
   import {
     DOCUMENT_ACCEPT,
-    DOCUMENT_SUBJECT_LABEL,
     VAULT_OFF_COPY,
     formatBytes,
     formatLocalDay,
@@ -29,6 +31,7 @@
 
   const { documentId, kind, canEdit, onchange, ondelete }: Props = $props();
   const uid = $props.id();
+  const tr = $derived(createT(page.data?.locale));
 
   let meta = $state<DocumentMeta | null>(null);
   let metaMissing = $state(false);
@@ -43,9 +46,12 @@
 
   const deletedLine = $derived(
     meta?.deletedAt
-      ? `Deleted on ${formatLocalDay(meta.deletedAt)}${
-          meta.deletedBy ? ` by ${meta.deletedBy.label}` : ''
-        }`
+      ? meta.deletedBy
+        ? tr('docs.attach.deletedOnBy', {
+            date: formatLocalDay(meta.deletedAt),
+            who: meta.deletedBy.label
+          })
+        : tr('docs.attach.deletedOn', { date: formatLocalDay(meta.deletedAt) })
       : null
   );
   const otherLinks = $derived((meta?.links ?? []).filter((l) => l.subjectExists));
@@ -117,7 +123,7 @@
     busy = '';
     if (!out.ok) {
       if (out.code === 'VAULT_OFF') vaultEnabled = false;
-      error = out.message;
+      error = localizeDocCopy(tr, out.message);
       return;
     }
     choices = [out.document, ...choices.filter((c) => c.id !== out.document.id)];
@@ -162,7 +168,7 @@
         error?: string;
       };
       if (!res.ok || !body.document) {
-        error = refusalCopy(res.status, body);
+        error = localizeDocCopy(tr, refusalCopy(res.status, body));
         return;
       }
       meta = body.document;
@@ -170,7 +176,7 @@
       confirmingDelete = false;
       ondelete?.(body.document.id);
     } catch {
-      error = 'Deleting a file needs a connection.';
+      error = tr('docs.attach.deleteNeedsConnection');
     } finally {
       busy = '';
     }
@@ -189,18 +195,20 @@
         {/if}
       </div>
       {#if !meta.deletedAt}
-        <a class="btn" href={fileHref(meta.id)} target="_blank" rel="noopener">Open</a>
+        <a class="btn" href={fileHref(meta.id)} target="_blank" rel="noopener"
+          >{tr('docs.attach.open')}</a
+        >
       {/if}
     </div>
   {:else if documentId && metaMissing}
-    <p class="sub">The attached file can't be shown to you.</p>
+    <p class="sub">{tr('docs.attach.missing')}</p>
   {/if}
 
   {#if canEdit}
     {#if !online}
-      <p class="note" role="note">Uploads need a connection.</p>
+      <p class="note" role="note">{localizeDocCopy(tr, 'Uploads need a connection.')}</p>
     {:else if !vaultEnabled}
-      <p class="note" role="note">{VAULT_OFF_COPY}</p>
+      <p class="note" role="note">{localizeDocCopy(tr, VAULT_OFF_COPY)}</p>
     {/if}
     <div class="actions">
       <label class="btn" class:disabled={!online || !vaultEnabled || busy !== ''}>
@@ -212,7 +220,13 @@
           onchange={onFile}
           data-testid="document-attach-input"
         />
-        <span>{busy === 'upload' ? 'Uploading...' : meta ? 'Replace' : 'Attach a file'}</span>
+        <span
+          >{busy === 'upload'
+            ? tr('docs.attach.uploading')
+            : meta
+              ? tr('docs.attach.replace')
+              : tr('docs.attach.attach')}</span
+        >
       </label>
       {#if choices.some((c) => c.id !== meta?.id)}
         <button
@@ -220,26 +234,26 @@
           class="btn"
           disabled={!online || busy !== ''}
           aria-expanded={picking}
-          onclick={() => (picking = !picking)}>Pick from your files</button
+          onclick={() => (picking = !picking)}>{tr('docs.attach.pick')}</button
         >
       {/if}
       {#if meta}
         <button type="button" class="btn" disabled={!online || busy !== ''} onclick={remove}
-          >Remove from this record</button
+          >{tr('docs.attach.removeFromRecord')}</button
         >
         {#if canDelete && !meta.deletedAt}
           <button
             type="button"
             class="btn danger"
             disabled={!online || busy !== ''}
-            onclick={() => (confirmingDelete = true)}>Delete file</button
+            onclick={() => (confirmingDelete = true)}>{tr('docs.attach.deleteFile')}</button
           >
         {/if}
       {/if}
     </div>
 
     {#if picking}
-      <ul class="choices" aria-label="Your files">
+      <ul class="choices" aria-label={tr('docs.attach.filesAria')}>
         {#each choices.filter((c) => c.id !== meta?.id) as c (c.id)}
           <li>
             <button type="button" class="choice" onclick={() => pick(c)}>
@@ -254,16 +268,17 @@
     {#if confirmingDelete && meta}
       <div class="confirm" role="alertdialog" aria-labelledby="{uid}-confirm">
         <p id="{uid}-confirm">
-          Delete "{meta.title}" for good?
+          {tr('docs.attach.confirmLead', { title: meta.title })}
           {#if otherLinks.length > 1}
-            It is also attached to {otherLinks.length - 1} other
-            {otherLinks.length - 1 === 1 ? 'record' : 'records'}:
-            {otherLinks
-              .slice(0, 5)
-              .map((l) => DOCUMENT_SUBJECT_LABEL[l.subjectType])
-              .join(', ')}.
+            {tr('docs.attach.alsoAttached', {
+              count: otherLinks.length - 1,
+              list: otherLinks
+                .slice(0, 5)
+                .map((l) => tr(DOCUMENT_SUBJECT_KEYS[l.subjectType]))
+                .join(', ')
+            })}
           {/if}
-          Records that point at it will say it was deleted.
+          {tr('docs.attach.confirmTail')}
         </p>
         <div class="actions">
           <button
@@ -272,10 +287,10 @@
             disabled={busy !== ''}
             onclick={deleteFile}
             data-testid="document-delete-confirm"
-            >{busy === 'delete' ? 'Deleting...' : 'Delete file'}</button
+            >{busy === 'delete' ? tr('docs.attach.deleting') : tr('docs.attach.deleteFile')}</button
           >
           <button type="button" class="btn" onclick={() => (confirmingDelete = false)}
-            >Keep it</button
+            >{tr('docs.attach.keep')}</button
           >
         </div>
       </div>

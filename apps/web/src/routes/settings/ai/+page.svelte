@@ -7,86 +7,94 @@
   import AiBudgetMeter from '$lib/components/billing/AiBudgetMeter.svelte';
   import { PLANS, formatUsd } from '$lib/billing/plans';
   import type { ActionData, PageData } from './$types';
+  import { createT, type MessageKey } from '$lib/i18n';
 
   const { data, form }: { data: PageData; form: ActionData } = $props();
+
+  const tr = $derived(createT(data.locale));
 
   const enabled = $derived(data.key.source !== 'none');
   const hostedKey = $derived(data.key.source === 'env');
 
   // Static lists from the design — these describe the kernel
   // architecture not per-user state, so they live in the component.
-  const GATED = [
-    'Allocation refinement chat',
-    'Schedule re-derivation (e.g. 3-sisters offsets)',
-    'Input plan substitutions',
-    "Free-text 'ask the assistant' on Plan v2 + Today"
+  const GATED: MessageKey[] = [
+    'settings.ai.gated.0',
+    'settings.ai.gated.1',
+    'settings.ai.gated.2',
+    'settings.ai.gated.3'
   ];
-  const ALWAYS_WORKS = [
-    'All five wizard steps run fully manually — drag Gantt bars, click edit, fill forms',
+  const ALWAYS_WORKS = $derived([
+    tr('settings.ai.works.0'),
     'Safety kernel + decon + retention logic are local and never call AI',
-    'CSV import / export · plugins · all calendar derivations'
-  ];
+    tr('settings.ai.works.2')
+  ]);
 
   const usedToday = $derived((data.usedToday ?? {}) as Record<string, number>);
   // Real quota keys live in DEFAULT_AI_DAILY_QUOTA. Display the
   // ones the design's mockup highlights; fall back to '—' for any
   // that aren't in the snapshot.
   const q = $derived((data.dailyQuotas ?? {}) as Record<string, number>);
-  const ENDPOINTS: Array<{ key: string; label?: string; quota: number }> = $derived([
-    { key: 'allocate', label: 'Plan, schedule and refine', quota: q.allocate ?? 0 },
+  const ENDPOINTS: Array<{ key: string; label?: MessageKey; quota: number }> = $derived([
+    { key: 'allocate', label: 'settings.ai.ep.allocate', quota: q.allocate ?? 0 },
     { key: 'inputs', quota: q.inputs ?? 0 },
     { key: 'suggest', quota: q.suggest ?? 0 },
     { key: 'succession', quota: q.succession ?? 0 },
     { key: 'groups', quota: q.groups ?? 0 },
     { key: 'optimize', quota: q.optimize ?? 0 },
-    { key: 'plugin-search', label: 'Search → web lookup', quota: q['plugin-search'] ?? 0 },
-    { key: 'rationale', label: 'Stock AI refresh (web lookup)', quota: q.rationale ?? 0 },
-    { key: 'plugin-batch-scan', label: 'Receipt scan', quota: q['plugin-batch-scan'] ?? 0 },
-    { key: 'plugin-scan', label: 'Plugin scan (label OCR)', quota: q['plugin-scan'] ?? 0 },
-    { key: 'scan-label', label: 'Inventory label / photo scan', quota: q['scan-label'] ?? 0 },
-    { key: 'scan-url', label: 'Inventory product-page URL', quota: q['scan-url'] ?? 0 },
-    { key: 'scan-barcode', label: 'Inventory barcode lookup', quota: q['scan-barcode'] ?? 0 },
-    { key: 'shortNames', label: 'Short names', quota: q.shortNames ?? 0 },
-    { key: 'planting-window', label: 'Planting date helper', quota: q['planting-window'] ?? 0 },
-    { key: 'garden-fill', label: 'Fill this bed', quota: q['garden-fill'] ?? 0 },
-    { key: 'photo-help', label: 'Ask about a photo', quota: q['photo-help'] ?? 0 }
+    { key: 'plugin-search', label: 'settings.ai.ep.plugin-search', quota: q['plugin-search'] ?? 0 },
+    { key: 'rationale', label: 'settings.ai.ep.rationale', quota: q.rationale ?? 0 },
+    {
+      key: 'plugin-batch-scan',
+      label: 'settings.ai.ep.plugin-batch-scan',
+      quota: q['plugin-batch-scan'] ?? 0
+    },
+    { key: 'plugin-scan', label: 'settings.ai.ep.plugin-scan', quota: q['plugin-scan'] ?? 0 },
+    { key: 'scan-label', label: 'settings.ai.ep.scan-label', quota: q['scan-label'] ?? 0 },
+    { key: 'scan-url', label: 'settings.ai.ep.scan-url', quota: q['scan-url'] ?? 0 },
+    { key: 'scan-barcode', label: 'settings.ai.ep.scan-barcode', quota: q['scan-barcode'] ?? 0 },
+    { key: 'shortNames', label: 'settings.ai.ep.shortNames', quota: q.shortNames ?? 0 },
+    {
+      key: 'planting-window',
+      label: 'settings.ai.ep.planting-window',
+      quota: q['planting-window'] ?? 0
+    },
+    { key: 'garden-fill', label: 'settings.ai.ep.garden-fill', quota: q['garden-fill'] ?? 0 },
+    { key: 'photo-help', label: 'settings.ai.ep.photo-help', quota: q['photo-help'] ?? 0 }
   ]);
   const upgradeName = $derived(data.spend.upgrade ? PLANS[data.spend.upgrade].name : null);
 </script>
 
-<svelte:head><title>AI assistant · CropCard</title></svelte:head>
+<svelte:head><title>{tr('settings.ai.pageTitle')}</title></svelte:head>
 
 <SettingsShell
-  title="AI planning assistant"
-  kicker="Integrations · Claude"
+  title={tr('settings.ai.title')}
+  kicker={tr('settings.ai.kicker')}
   backHref="/settings/integrations"
 >
   {#snippet badge()}
     {#if enabled}
-      <Pill tone="forest"><Check size={10} /> Active</Pill>
+      <Pill tone="forest"><Check size={10} /> {tr('settings.ai.active')}</Pill>
       <!-- #167 / CT-SET-004 — surface a "Cap exceeded" pill next to
            the Active state when this month's spend is over the cap.
            Mirrors the .over class on the cap-fill bar so the badge
            area and the bar are never out-of-sync. -->
       {#if data.spend.aiOff}
-        <Pill tone="neutral">AI off</Pill>
+        <Pill tone="neutral">{tr('settings.ai.aiOff')}</Pill>
       {:else if data.spend.exhausted}
-        <Pill tone="rust">Cap exceeded</Pill>
+        <Pill tone="rust">{tr('settings.ai.capExceeded')}</Pill>
       {/if}
     {:else}
-      <Pill tone="rust">No key</Pill>
+      <Pill tone="rust">{tr('settings.ai.noKey')}</Pill>
     {/if}
   {/snippet}
 
   {#if hostedKey}
-    <p class="included" data-testid="ai-included">AI help is included with your plan.</p>
+    <p class="included" data-testid="ai-included">{tr('settings.ai.included')}</p>
   {:else if data.isOwner}
-    <SettingsSection
-      title="API key"
-      sub="Saved on this farm's CropCard server and used only for this farm's AI help."
-    >
+    <SettingsSection title={tr('settings.ai.keyTitle')} sub={tr('settings.ai.keySub')}>
       <form method="POST" action="?/saveKey" class="form-block key-form">
-        <SettingsField label="Claude API key" hint="sk-ant-…">
+        <SettingsField label={tr('settings.ai.keyLabel')} hint="sk-ant-…">
           <input
             class="s-input mono"
             type="password"
@@ -95,33 +103,35 @@
             placeholder={data.key.masked || 'sk-ant-•••••'}
           />
         </SettingsField>
-        <button type="submit" class="cap-btn primary">Save key</button>
+        <button type="submit" class="cap-btn primary">{tr('settings.ai.saveKey')}</button>
       </form>
     </SettingsSection>
   {/if}
 
-  <SettingsSection
-    title="AI help this month"
-    sub="Your plan's monthly AI budget. When it runs out, every feature keeps working without AI."
-  >
+  <SettingsSection title={tr('settings.ai.monthTitle')} sub={tr('settings.ai.monthSub')}>
     <div class="budget" data-testid="ai-budget">
       <AiBudgetMeter usage={data.spend} isOwner={data.isOwner} />
       <p class="budget-plan">
-        {data.spend.planName} plan includes {formatUsd(PLANS[data.spend.plan].aiMonthlyUsd)} of AI help
-        a month.
-        {#if data.spend.starterBoost}Your first 30 days get {formatUsd(data.spend.planBudget)}.{/if}
+        {tr('settings.ai.planIncludes', {
+          plan: data.spend.planName,
+          amount: formatUsd(PLANS[data.spend.plan].aiMonthlyUsd)
+        })}
+        {#if data.spend.starterBoost}{tr('settings.ai.firstDays', {
+            amount: formatUsd(data.spend.planBudget)
+          })}{/if}
         {#if upgradeName && data.isOwner}
           <a href="/settings/billing"
-            >{upgradeName} includes {formatUsd(
-              PLANS[data.spend.upgrade ?? 'grower'].aiMonthlyUsd
-            )}.</a
+            >{tr('settings.ai.upgradeIncludes', {
+              plan: upgradeName,
+              amount: formatUsd(PLANS[data.spend.upgrade ?? 'grower'].aiMonthlyUsd)
+            })}</a
           >
         {/if}
       </p>
       {#if data.isOwner}
         <form method="POST" action="?/setCap" class="cap-form">
           <label class="cap-field">
-            <span>Lower your monthly AI limit (optional)</span>
+            <span>{tr('settings.ai.lowerLimit')}</span>
             <input
               class="s-input mono"
               type="number"
@@ -133,20 +143,24 @@
             />
           </label>
           <p class="cap-note" data-testid="ai-cap-planning-note">
-            The meter above is everyday AI help. Planning a season with AI is counted apart, with up
-            to {formatUsd(data.spend.planning.monthlyUsd)} a month of its own, so planning never uses
-            up the {formatUsd(data.spend.planBudget)} above. Leave this at {formatUsd(
-              data.spend.planBudget
-            )} to keep both. A lower limit caps everything together, planning included.
+            {tr('settings.ai.capNote', {
+              planning: formatUsd(data.spend.planning.monthlyUsd),
+              budget: formatUsd(data.spend.planBudget)
+            })}
           </p>
           <div class="cap-actions">
-            <button type="submit" class="cap-btn primary" name="mode" value="set">Save limit</button
+            <button type="submit" class="cap-btn primary" name="mode" value="set"
+              >{tr('settings.ai.saveLimit')}</button
             >
             {#if data.ownerCapSetting !== null}
-              <button type="submit" class="cap-btn" name="mode" value="plan">Use full plan</button>
+              <button type="submit" class="cap-btn" name="mode" value="plan"
+                >{tr('settings.ai.useFull')}</button
+              >
             {/if}
             {#if !data.spend.aiOff}
-              <button type="submit" class="cap-btn" name="mode" value="off">Turn AI off</button>
+              <button type="submit" class="cap-btn" name="mode" value="off"
+                >{tr('settings.ai.turnOff')}</button
+              >
             {/if}
           </div>
         </form>
@@ -160,18 +174,15 @@
   </SettingsSection>
 
   <details class="advanced" data-testid="ai-advanced">
-    <summary>Advanced: daily limits per feature</summary>
-    <SettingsSection
-      title="Per-endpoint daily quota"
-      sub="Each AI feature has its own daily limit on your plan. Hitting one falls back to the deterministic result for the rest of the day. A limit of 0 means the feature is part of a bigger plan."
-    >
+    <summary>{tr('settings.ai.advancedSummary')}</summary>
+    <SettingsSection title={tr('settings.ai.quotaTitle')} sub={tr('settings.ai.quotaSub')}>
       <div class="quota-grid">
         {#each ENDPOINTS as e (e.key)}
           {@const used = usedToday[e.key] ?? 0}
           {@const pct = e.quota ? used / e.quota : 0}
           <div class="quota-row">
             <div class="quota-text">
-              <div class="quota-label">{e.label ?? `/api/plan/${e.key}`}</div>
+              <div class="quota-label">{e.label ? tr(e.label) : `/api/plan/${e.key}`}</div>
               {#if e.label}
                 <div class="quota-sub mono">/api/{e.key}</div>
               {/if}
@@ -183,19 +194,16 @@
     </SettingsSection>
   </details>
 
-  <SettingsSection
-    title="What's gated vs always-works"
-    sub="Deterministic fallbacks ensure CropCard remains usable when AI is off, offline, or rate-limited."
-  >
+  <SettingsSection title={tr('settings.ai.gatedTitle')} sub={tr('settings.ai.gatedSub')}>
     <div class="gated-grid">
       <div>
-        <div class="kicker-row">Gated by AI</div>
+        <div class="kicker-row">{tr('settings.ai.gatedBy')}</div>
         <ul class="gated-list" class:dim={!enabled}>
-          {#each GATED as g, i (i)}<li>{g}</li>{/each}
+          {#each GATED as g, i (i)}<li>{tr(g)}</li>{/each}
         </ul>
       </div>
       <div class="always-works-col">
-        <div class="kicker-row">Always works</div>
+        <div class="kicker-row">{tr('settings.ai.alwaysWorks')}</div>
         <ul class="works-list">
           {#each ALWAYS_WORKS as k, i (i)}
             <li>

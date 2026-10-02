@@ -4,6 +4,8 @@
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
+  import { createT, type MessageKey } from '$lib/i18n';
+  import { localizedLine } from '$lib/components/billing/localize';
   import {
     ANIMAL_PUSH_KINDS,
     DEFAULT_PUSH_PREFS,
@@ -22,6 +24,19 @@
   } from '$lib/client/pushClient';
 
   const { data } = $props();
+
+  const tr = $derived(createT(data.locale));
+  const TRANSLATED_KINDS: readonly PushAlertKind[] = [
+    'spring-calibration',
+    'frost-tonight',
+    'animal-care-due',
+    'weekly-digest'
+  ];
+  function kindText(kind: PushAlertKind, part: 'label' | 'sub'): string {
+    const english = PUSH_ALERT_LABELS[kind][part];
+    if (!TRANSLATED_KINDS.includes(kind)) return english;
+    return localizedLine(tr, english, `settings.notif.${kind}.${part}` as MessageKey);
+  }
 
   function shown(kind: PushAlertKind): boolean {
     if (ANIMAL_PUSH_KINDS.includes(kind) && !data.hasAnimals) return false;
@@ -64,7 +79,10 @@
 
   async function readError(res: Response): Promise<string> {
     const body = await res.json().catch(() => null);
-    return (body && (body.message || body.error)) || `Request failed (${res.status})`;
+    return (
+      (body && (body.message || body.error)) ||
+      tr('settings.notif.requestFailed', { status: res.status })
+    );
   }
 
   async function enable() {
@@ -75,7 +93,7 @@
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         if (permission === 'denied') support = 'permission-denied';
-        message = 'Notifications were not allowed for this site.';
+        message = tr('settings.notif.notAllowed');
         return;
       }
       const reg = await registration();
@@ -92,15 +110,12 @@
             applicationServerKey: urlBase64ToUint8Array(data.publicKey).buffer as ArrayBuffer
           }),
           new Promise<never>((_, reject) =>
-            setTimeout(
-              () => reject(new Error("The browser's push service didn't answer. Try again.")),
-              20_000
-            )
+            setTimeout(() => reject(new Error(tr('settings.notif.pushNoAnswer'))), 20_000)
           )
         ]));
       const serialized = serializeSubscription(sub);
       if (!serialized) {
-        message = 'This browser returned an incomplete push subscription.';
+        message = tr('settings.notif.incomplete');
         return;
       }
       const res = await fetch('/api/push/subscribe', {
@@ -114,9 +129,9 @@
       }
       endpoint = serialized.endpoint;
       await invalidateAll();
-      message = 'Push alerts are on for this device.';
+      message = tr('settings.notif.pushOn');
     } catch (err) {
-      message = err instanceof Error ? err.message : 'Could not turn on push alerts.';
+      message = err instanceof Error ? err.message : tr('settings.notif.couldNotTurnOn');
     } finally {
       busy = false;
     }
@@ -137,7 +152,7 @@
         return;
       }
       await invalidateAll();
-      message = 'Push alerts are off for this device.';
+      message = tr('settings.notif.pushOff');
     } finally {
       busy = false;
     }
@@ -186,7 +201,7 @@
         return;
       }
       await invalidateAll();
-      emailMessage = 'Saved.';
+      emailMessage = tr('settings.notif.saved');
     } finally {
       emailBusy = false;
     }
@@ -197,7 +212,9 @@
     emailMessage = '';
     try {
       const res = await fetch('/api/email/test', { method: 'POST' });
-      emailMessage = res.ok ? `Test email sent to ${data.email.address}.` : await readError(res);
+      emailMessage = res.ok
+        ? tr('settings.notif.testEmailSent', { address: data.email.address ?? '' })
+        : await readError(res);
     } finally {
       emailBusy = false;
     }
@@ -219,9 +236,7 @@
       }
       const summary = await res.json();
       message =
-        summary.sent > 0
-          ? 'Test notification sent. It should appear in a few seconds.'
-          : 'The push service did not accept the test. Try turning alerts off and on again.';
+        summary.sent > 0 ? tr('settings.notif.testSent') : tr('settings.notif.testRejected');
       await invalidateAll();
     } finally {
       busy = false;
@@ -229,64 +244,57 @@
   }
 </script>
 
-<svelte:head><title>Notifications · CropCard</title></svelte:head>
+<svelte:head><title>{tr('settings.notif.pageTitle')}</title></svelte:head>
 
-<SettingsShell title="Notifications" kicker="Push and email alerts" hideFooter>
+<SettingsShell title={tr('settings.notif.title')} kicker={tr('settings.notif.kicker')} hideFooter>
   {#snippet badge()}
-    {#if enabled}<Pill tone="forest">On for this device</Pill>{/if}
+    {#if enabled}<Pill tone="forest">{tr('settings.notif.onDevice')}</Pill>{/if}
   {/snippet}
 
-  <SettingsSection
-    title="Push on this device"
-    sub="Push alerts arrive even when CropCard is closed. Nothing is sent until you turn them on, and each device opts in separately, per farm."
-  >
+  <SettingsSection title={tr('settings.notif.pushTitle')} sub={tr('settings.notif.pushSub')}>
     {#if !data.configured}
-      <p class="notice" role="status">Push isn't configured on this server.</p>
+      <p class="notice" role="status">{tr('settings.notif.notConfigured')}</p>
     {:else if !data.canSubscribe}
-      <p class="notice" role="status">Inspector accounts are read-only and can't receive alerts.</p>
+      <p class="notice" role="status">{tr('settings.notif.inspectorReadOnly')}</p>
     {:else if support === 'checking'}
-      <p class="muted">Checking this browser…</p>
+      <p class="muted">{tr('settings.notif.checking')}</p>
     {:else if support === 'unsupported'}
       <p class="notice" role="status">
-        This browser doesn't support web push. On iPhone, add CropCard to the Home Screen first.
+        {tr('settings.notif.unsupported')}
       </p>
     {:else if support === 'no-service-worker'}
       <p class="notice" role="status">
-        The offline service worker isn't running yet. Reload the page once, then try again.
+        {tr('settings.notif.noWorker')}
       </p>
     {:else if support === 'permission-denied'}
       <p class="notice" role="status">
-        Notifications are blocked for this site. Allow them in the browser's site settings, then
-        reload.
+        {tr('settings.notif.blocked')}
       </p>
     {:else}
       <div class="device-row">
         {#if enabled}
           <button type="button" class="btn ghost" disabled={busy} onclick={disable}>
-            Turn off on this device
+            {tr('settings.notif.turnOffDevice')}
           </button>
           <button type="button" class="btn ghost" disabled={busy} onclick={sendTest}>
-            Send a test notification
+            {tr('settings.notif.sendTest')}
           </button>
         {:else}
           <button type="button" class="btn primary" disabled={busy} onclick={enable}>
-            Turn on push alerts
+            {tr('settings.notif.turnOn')}
           </button>
         {/if}
       </div>
       {#if serverSub && serverSub.failureCount > 0}
         <p class="muted">
-          {serverSub.failureCount} recent delivery failure{serverSub.failureCount === 1 ? '' : 's'}.
+          {tr('settings.notif.failures', { count: serverSub.failureCount })}
         </p>
       {/if}
     {/if}
     <p class="status" aria-live="polite">{message}</p>
   </SettingsSection>
 
-  <SettingsSection
-    title="Push alert types"
-    sub="Reminders only. The safety checks and the 48-hour record lock apply either way."
-  >
+  <SettingsSection title={tr('settings.notif.typesTitle')} sub={tr('settings.notif.typesSub')}>
     <ul class="kinds">
       {#each pushKinds as kind (kind)}
         <li>
@@ -298,13 +306,14 @@
               onchange={() => togglePref(kind)}
             />
             <span class="kind-text">
-              <span class="kind-label">{PUSH_ALERT_LABELS[kind].label}</span>
-              <span class="kind-sub">{PUSH_ALERT_LABELS[kind].sub}</span>
+              <span class="kind-label">{kindText(kind, 'label')}</span>
+              <span class="kind-sub">{kindText(kind, 'sub')}</span>
             </span>
           </label>
           {#if kind === 'frost-tonight' && data.frostNeedsLocation}
             <p class="kind-note">
-              Needs your farm's location: <a href="/settings/farm">set it in Farm settings</a>.
+              {tr('settings.notif.needsLocation')}
+              <a href="/settings/farm">{tr('settings.notif.setLocation')}</a>.
             </p>
           {/if}
         </li>
@@ -312,30 +321,29 @@
     </ul>
   </SettingsSection>
 
-  <SettingsSection
-    title="Email alerts"
-    sub="Off unless you turn them on. Pick the alerts you also want by email for this farm."
-  >
+  <SettingsSection title={tr('settings.notif.emailTitle')} sub={tr('settings.notif.emailSub')}>
     {#if !data.canSubscribe}
-      <p class="notice" role="status">Inspector accounts are read-only and can't receive alerts.</p>
+      <p class="notice" role="status">{tr('settings.notif.inspectorReadOnly')}</p>
     {:else if !data.email.address}
       <p class="notice" role="status">
-        Your account has no email address yet. <a href="/settings/account">Add one in Account</a>
-        to get alerts by email.
+        {tr('settings.notif.noEmailA')}
+        <a href="/settings/account">{tr('settings.notif.noEmailLink')}</a>
+        {tr('settings.notif.noEmailB')}
       </p>
     {:else}
-      <p class="muted email-to">Sends to <strong>{data.email.address}</strong>.</p>
+      <p class="muted email-to">
+        {tr('settings.notif.sendsTo')} <strong>{data.email.address}</strong>.
+      </p>
       {#if data.email.impersonating}
-        <p class="notice" role="status">Only the person themselves can change email consent.</p>
+        <p class="notice" role="status">{tr('settings.notif.selfOnly')}</p>
       {/if}
       {#if data.email.suppressed}
         <p class="notice" role="status">
-          Your email provider told us this address unsubscribed or bounced, so alert emails are
-          paused. Ticking a box turns them back on after an unsubscribe.
+          {tr('settings.notif.suppressed')}
         </p>
       {/if}
       {#if data.email.transportOff}
-        <p class="notice" role="status">Email isn't configured on this server.</p>
+        <p class="notice" role="status">{tr('settings.notif.emailOff')}</p>
       {/if}
       <ul class="kinds">
         {#each emailKinds as category (category)}
@@ -348,20 +356,22 @@
                 onchange={() => toggleEmail(category)}
               />
               <span class="kind-text">
-                <span class="kind-label">Email me: {PUSH_ALERT_LABELS[category].label}</span>
-                <span class="kind-sub">{PUSH_ALERT_LABELS[category].sub}</span>
+                <span class="kind-label"
+                  >{tr('settings.notif.emailMe', { label: kindText(category, 'label') })}</span
+                >
+                <span class="kind-sub">{kindText(category, 'sub')}</span>
               </span>
             </label>
           </li>
         {/each}
       </ul>
       <p class="muted">
-        Every alert email has a one-click unsubscribe link. We never send marketing mail. Sign-in
-        codes, farm invites and billing receipts still arrive because you asked for them.
+        {tr('settings.notif.unsubNote')}
       </p>
       {#if data.isOwner}
         <p class="muted">
-          Receipts come from Stripe. <a href="/settings/billing">See your plan and billing</a>.
+          {tr('settings.notif.receipts')}
+          <a href="/settings/billing">{tr('settings.notif.seeBilling')}</a>.
         </p>
       {/if}
       {#if anyEmailOn}
@@ -372,7 +382,7 @@
             disabled={emailBusy || data.email.impersonating}
             onclick={sendTestEmail}
           >
-            Send a test email
+            {tr('settings.notif.sendTestEmail')}
           </button>
         </div>
       {/if}

@@ -1,6 +1,8 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
   import Avatar from '$lib/components/ui/Avatar.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   interface Props {
     name: string;
@@ -8,6 +10,8 @@
   }
 
   const { name, avatarUrl }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   const OUTPUT_PX = 256;
 
@@ -60,7 +64,7 @@
       try {
         body = await downsize(file);
       } catch {
-        status = { tone: 'error', text: "That file couldn't be read as a picture." };
+        status = { tone: 'error', text: tr('settings.avatar.unreadable') };
         return;
       }
       const res = await fetch('/api/account/avatar', {
@@ -70,15 +74,15 @@
       });
       const out = (await res.json().catch(() => ({}))) as { avatarUrl?: string; error?: string };
       if (!res.ok || !out.avatarUrl) {
-        status = { tone: 'error', text: out.error ?? 'Upload failed. Try again.' };
+        status = { tone: 'error', text: out.error ?? tr('settings.avatar.uploadFailed') };
         return;
       }
       touched = true;
       current = out.avatarUrl;
-      status = { tone: 'ok', text: 'Picture updated.' };
+      status = { tone: 'ok', text: tr('settings.avatar.updated') };
       await invalidateAll();
     } catch {
-      status = { tone: 'error', text: 'Upload failed. Check your connection and try again.' };
+      status = { tone: 'error', text: tr('settings.avatar.uploadOffline') };
     } finally {
       busy = false;
       if (input) input.value = '';
@@ -91,15 +95,15 @@
     try {
       const res = await fetch('/api/account/avatar', { method: 'DELETE' });
       if (!res.ok) {
-        status = { tone: 'error', text: "Couldn't remove the picture. Try again." };
+        status = { tone: 'error', text: tr('settings.avatar.removeFailed') };
         return;
       }
       touched = true;
       current = null;
-      status = { tone: 'ok', text: 'Picture removed.' };
+      status = { tone: 'ok', text: tr('settings.avatar.removed') };
       await invalidateAll();
     } catch {
-      status = { tone: 'error', text: "Couldn't remove the picture. Check your connection." };
+      status = { tone: 'error', text: tr('settings.avatar.removeOffline') };
     } finally {
       busy = false;
     }
@@ -119,10 +123,16 @@
       disabled={busy}
     />
     <label for="avatar-file" class="ghost-sm" class:disabled={busy}>
-      {busy ? 'Saving…' : shown ? 'Change photo' : 'Upload photo'}
+      {busy
+        ? tr('settings.avatar.saving')
+        : shown
+          ? tr('settings.avatar.change')
+          : tr('settings.avatar.upload')}
     </label>
     {#if shown}
-      <button type="button" class="ghost-sm" onclick={remove} disabled={busy}>Remove</button>
+      <button type="button" class="ghost-sm" onclick={remove} disabled={busy}
+        >{tr('settings.avatar.remove')}</button
+      >
     {/if}
   </div>
   <p class="status" class:error={status?.tone === 'error'} role="status" aria-live="polite">

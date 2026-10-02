@@ -1,5 +1,7 @@
 <script lang="ts">
   import { PLANS, formatUsd, type AiUsageSnapshot } from '$lib/billing/plans';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   interface Props {
     usage: AiUsageSnapshot;
@@ -9,6 +11,8 @@
   }
 
   const { usage, isOwner, compact = false, showUpsell = true }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   const pct = $derived(Math.round(Math.min(1, usage.pctUsed) * 100));
   const level = $derived(
@@ -20,12 +24,15 @@
 
 <div class="meter" class:compact data-state={level} data-testid="ai-usage-meter">
   <div class="head">
-    <span class="label">AI help this month</span>
+    <span class="label">{tr('billing.meter.label')}</span>
     <span class="amount mono">
       {#if usage.aiOff}
-        Off
+        {tr('billing.meter.off')}
       {:else}
-        {money(usage.monthlyUsdSoFar)} of {money(usage.cap)}
+        {tr('billing.meter.amount', {
+          used: money(usage.monthlyUsdSoFar),
+          cap: money(usage.cap)
+        })}
       {/if}
     </span>
   </div>
@@ -33,7 +40,7 @@
     <div
       class="bar"
       role="meter"
-      aria-label="AI help used this month"
+      aria-label={tr('billing.meter.aria')}
       aria-valuemin="0"
       aria-valuemax="100"
       aria-valuenow={pct}
@@ -44,40 +51,40 @@
 
   {#if level === 'off'}
     <p class="note">
-      AI help is off for this farm. Everything works without it.
-      {#if isOwner}<a href="/settings/ai">Turn it back on</a>{/if}
+      {tr('billing.meter.offNote')}
+      {#if isOwner}<a href="/settings/ai">{tr('billing.meter.turnOn')}</a>{/if}
     </p>
   {:else if level === 'out'}
     <p class="note" data-testid="ai-limit-note">
-      You've used this month's AI help. CropCard keeps working without it and it resets on the 1st.
-      AI planning has its own daily limit.
+      {tr('billing.meter.outNote')}
     </p>
     {#if upgradeName && showUpsell}
       {#if isOwner}
         <a class="upsell" href="/settings/billing" data-testid="ai-upsell">
-          More AI on {upgradeName}
+          {tr('billing.nudge.more', { plan: upgradeName })}
         </a>
       {:else}
-        <p class="note">Ask the farm owner about more AI on {upgradeName}.</p>
+        <p class="note">{tr('billing.nudge.askOwner', { plan: upgradeName })}</p>
       {/if}
     {/if}
   {:else if usage.quickOnly}
     <p class="note" data-testid="ai-low-note">
-      Enough left for quick help, not a web lookup. AI planning has its own daily limit.
+      {tr('billing.meter.lowNote')}
     </p>
     {#if upgradeName && showUpsell && !compact}
       {#if isOwner}
         <a class="upsell" href="/settings/billing" data-testid="ai-upsell">
-          More AI on {upgradeName}
+          {tr('billing.nudge.more', { plan: upgradeName })}
         </a>
       {:else}
-        <p class="note">Ask the farm owner about more AI on {upgradeName}.</p>
+        <p class="note">{tr('billing.nudge.askOwner', { plan: upgradeName })}</p>
       {/if}
     {/if}
   {:else if !compact}
     <p class="note">
-      {usage.planName} plan{#if usage.starterBoost}, with a first-month boost{/if}. When it runs
-      out, CropCard works it out without AI.
+      {usage.starterBoost
+        ? tr('billing.meter.planLineBoost', { plan: usage.planName })
+        : tr('billing.meter.planLine', { plan: usage.planName })}
     </p>
   {/if}
 </div>

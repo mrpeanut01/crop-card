@@ -6,8 +6,10 @@
   import { FULL_PAGE_NOTE, PRINT_HELP } from '$lib/cards/print';
   import { layoutFarmFigure } from '$lib/farm/featureFigure';
   import { currentPrefs } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
 
   const { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   const prefs = $derived(currentPrefs());
   const features = $derived(data.snapshot.mapFeatures ?? []);
@@ -19,23 +21,20 @@
 
   function print() {
     const previous = document.title;
-    document.title = `${card.title} farm map card`;
+    document.title = `${card.title} ${tr('plan.farmMap.docTitleSuffix')}`;
     window.print();
     document.title = previous;
   }
 </script>
 
-<svelte:head><title>Farm map card · CropCard</title></svelte:head>
+<svelte:head><title>{tr('plan.farmMap.pageTitle')}</title></svelte:head>
 
 <div class="wrap">
   <div class="no-print">
     <header>
-      <p class="kicker">Farm map card</p>
+      <p class="kicker">{tr('plan.farmMap.kicker')}</p>
       <h1 class="serif">{card.title}</h1>
-      <p class="lede">
-        The whole farm on one card, ready for the barn wall or the truck. Print it, or save it as a
-        PDF from the print dialog. Printing works without a signal.
-      </p>
+      <p class="lede">{tr('plan.farmMap.lede')}</p>
     </header>
 
     <div class="grid">
@@ -43,18 +42,20 @@
         fields={data.mapFields}
         blocks={data.mapBlocks}
         {features}
-        label="{card.title} map"
+        label="{card.title} {tr('plan.farmMap.mapLabelSuffix')}"
       />
       <CardView {card} {prefs} />
     </div>
 
     <section class="print-box" aria-labelledby="print-title">
-      <h2 id="print-title">Print</h2>
-      <p class="paper">{FULL_PAGE_NOTE} Choose Letter paper in the print dialog.</p>
+      <h2 id="print-title">{tr('plan.farmMap.print')}</h2>
+      <p class="paper">{FULL_PAGE_NOTE} {tr('plan.farmMap.letterPaper')}</p>
       <div class="actions">
-        <button type="button" class="primary" onclick={print}>Print or save as PDF</button>
+        <button type="button" class="primary" onclick={print}
+          >{tr('plan.farmMap.printOrSave')}</button
+        >
         {#if data.canEdit}
-          <a class="secondary" href="/settings/farm/map">Edit the map</a>
+          <a class="secondary" href="/settings/farm/map">{tr('plan.farmMap.editMap')}</a>
         {/if}
       </div>
       <p class="hint">{PRINT_HELP}</p>
@@ -67,7 +68,7 @@
         fields={data.mapFields}
         blocks={data.mapBlocks}
         {features}
-        label="{card.title} map"
+        label="{card.title} {tr('plan.farmMap.mapLabelSuffix')}"
       />
     {/snippet}
   </CardPrintSheet>

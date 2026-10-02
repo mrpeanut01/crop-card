@@ -1,30 +1,28 @@
 <script lang="ts">
   import { browser } from '$app/environment';
   import FarmMapEditor from '$lib/components/farm/FarmMapEditor.svelte';
+  import { createT } from '$lib/i18n';
 
   const { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   const hasFields = $derived(data.fields.length > 0);
   const hasBlocks = $derived(data.blocks.length > 0);
   const steps = $derived([
-    { label: 'Areas', done: hasFields, current: !hasFields },
-    { label: 'Blocks', done: hasBlocks, current: hasFields && !hasBlocks },
-    { label: 'Plan the season', done: false, current: hasBlocks }
+    { label: tr('plan.farm.stepAreas'), done: hasFields, current: !hasFields },
+    { label: tr('plan.farm.stepBlocks'), done: hasBlocks, current: hasFields && !hasBlocks },
+    { label: tr('plan.farm.stepPlan'), done: false, current: hasBlocks }
   ]);
 </script>
 
-<svelte:head><title>Draw your farm · CropCard</title></svelte:head>
+<svelte:head><title>{tr('plan.farm.pageTitle')}</title></svelte:head>
 
 <div class="farm-setup">
   <header>
-    <p class="kicker">Plan · {data.seasonYear} season</p>
-    <h1 class="serif">Draw your farm</h1>
-    <p class="lede">
-      Put your fields, garden, greenhouse and barn on the map, then the blocks inside them. Outline
-      them on the map, or type each one's width and length and CropCard sketches them as boxes.
-      Blocks are what the planner fills with crops.
-    </p>
-    <ol class="steps" aria-label="Setup progress">
+    <p class="kicker">{tr('plan.farm.kicker', { year: data.seasonYear })}</p>
+    <h1 class="serif">{tr('plan.farm.title')}</h1>
+    <p class="lede">{tr('plan.farm.lede')}</p>
+    <ol class="steps" aria-label={tr('plan.farm.progress')}>
       {#each steps as s, i (s.label)}
         <li
           class:done={s.done}
@@ -57,22 +55,19 @@
       initialMode={data.initialMode}
     />
   {:else}
-    <section class="loading"><p>Loading map…</p></section>
+    <section class="loading"><p>{tr('plan.farm.loadingMap')}</p></section>
   {/if}
 
   <footer class="continue-bar">
     {#if hasBlocks}
-      <p>
-        {data.blocks.length} block{data.blocks.length === 1 ? '' : 's'} ready. Next, the planning wizard
-        fills them with crops.
-      </p>
-      <a class="continue" href="/plan">Continue to planning →</a>
+      <p>{tr('plan.farm.blocksReady', { count: data.blocks.length })}</p>
+      <a class="continue" href="/plan">{tr('plan.farm.continue')}</a>
     {:else}
       <p>
-        {hasFields ? 'Add at least one block to continue.' : 'Start by adding an area.'}
-        <a class="skip" href="/plan?setup=skip">Skip the map and plan by block name</a>
+        {hasFields ? tr('plan.farm.addBlock') : tr('plan.farm.addArea')}
+        <a class="skip" href="/plan?setup=skip">{tr('plan.farm.skip')}</a>
       </p>
-      <span class="continue disabled" aria-disabled="true">Continue to planning →</span>
+      <span class="continue disabled" aria-disabled="true">{tr('plan.farm.continue')}</span>
     {/if}
   </footer>
 </div>

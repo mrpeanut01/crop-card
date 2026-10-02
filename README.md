@@ -6,6 +6,8 @@ CropCard is an offline-first web app for small farms, market gardens and homeste
 
 **[Open CropCard →](https://app.cropcard.io)** · **[Try the demo farm →](https://app.cropcard.io)** · **[Pricing →](https://app.cropcard.io/pricing)**
 
+[![The Today view on the Willow Run demo farm: the first task to do, quick actions, and a sprayer cleanout alert](./docs/screenshots/today.png)](https://app.cropcard.io)
+
 > **Try it in one click.** On the sign-in page, choose **Try the demo farm**. You get your own copy of Willow Run Farm in Loudoun County, Virginia, with a full season of plantings, sprays, harvests, animals and open tasks dated around today. No account, no email. It resets when you leave and expires after four hours.
 
 CropCard is in public alpha. It was built for a real small-plot farm in Loudoun County and is used there every day.

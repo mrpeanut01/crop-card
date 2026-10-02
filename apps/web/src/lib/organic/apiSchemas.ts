@@ -1,6 +1,7 @@
 /** Request schemas for /api/organic/** (33B, B-54). Client-safe. */
 
 import { z } from 'zod';
+import { t } from '$lib/i18n';
 import { ORGANIC_STATUSES, ORGANIC_SUBJECT_TYPES } from './status';
 
 const ymd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'use YYYY-MM-DD');
@@ -30,6 +31,11 @@ export const ORGANIC_REVIEW_OUTCOME_LABEL: Readonly<Record<OrganicReviewOutcome,
   'status-lost': 'Ends organic status',
   'not-affected': 'Does not end it'
 };
+
+export function reviewOutcomeLabel(o: OrganicReviewOutcome, locale?: string | null): string {
+  if (!locale) return ORGANIC_REVIEW_OUTCOME_LABEL[o];
+  return t(locale, o === 'status-lost' ? 'organic.review.endsStatus' : 'organic.review.doesNotEnd');
+}
 
 export const treatmentReviewSchema = z.strictObject({
   healthEventId: z.string().min(1).max(64),

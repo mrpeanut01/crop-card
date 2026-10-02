@@ -3,10 +3,12 @@
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import DocumentAttach from '$lib/components/documents/DocumentAttach.svelte';
   import CertifierPackPanel from '$lib/components/organic/CertifierPackPanel.svelte';
-  import { ORGANIC_REVIEW_OUTCOME_LABEL, ORGANIC_REVIEW_OUTCOMES } from '$lib/organic/apiSchemas';
-  import { ORGANIC_STATUSES, ORGANIC_STATUS_LABEL } from '$lib/organic/status';
+  import { reviewOutcomeLabel, ORGANIC_REVIEW_OUTCOMES } from '$lib/organic/apiSchemas';
+  import { ORGANIC_STATUSES, organicStatusLabel } from '$lib/organic/status';
+  import { createT } from '$lib/i18n';
 
   const { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   let subject = $state('');
   let status = $state<(typeof ORGANIC_STATUSES)[number]>('transitioning');
@@ -33,9 +35,9 @@
         error?: string;
         issues?: { message: string }[];
       };
-      return body.message ?? body.issues?.[0]?.message ?? body.error ?? 'Could not save.';
+      return body.message ?? body.issues?.[0]?.message ?? body.error ?? tr('organic.err.notSaved');
     } catch {
-      return 'Could not save.';
+      return tr('organic.err.notSaved');
     }
   }
 
@@ -45,7 +47,7 @@
     message = null;
     const [subjectType, subjectId] = subject.split(':');
     if (!subjectType || !subjectId) {
-      errorText = 'Pick what this status is for.';
+      errorText = tr('organic.err.pickSubject');
       return;
     }
     saving = true;
@@ -67,14 +69,14 @@
         errorText = await errorOf(res);
         return;
       }
-      message = 'Status saved.';
+      message = tr('organic.statusSaved');
       subject = '';
       certifier = '';
       note = '';
       documentId = null;
       await invalidateAll();
     } catch {
-      errorText = 'You are offline. Organic statuses save only when online.';
+      errorText = tr('organic.err.offlineStatus');
     } finally {
       saving = false;
     }
@@ -86,11 +88,11 @@
     const outcome = reviewOutcome[id];
     const reason = (reviewReason[id] ?? '').trim();
     if (!outcome) {
-      errorText = 'Pick an answer.';
+      errorText = tr('organic.err.pickAnswer');
       return;
     }
     if (reason.length < 3) {
-      errorText = 'Say why, in a few words.';
+      errorText = tr('organic.err.sayWhy');
       return;
     }
     reviewBusy = id;
@@ -104,27 +106,26 @@
         errorText = await errorOf(res);
         return;
       }
-      message = 'Answer saved.';
+      message = tr('organic.answerSaved');
       await invalidateAll();
     } catch {
-      errorText = 'You are offline. Answers save only when online.';
+      errorText = tr('organic.err.offlineAnswer');
     } finally {
       reviewBusy = null;
     }
   }
 </script>
 
-<svelte:head><title>Organic records · CropCard</title></svelte:head>
+<svelte:head><title>{tr('organic.pageTitle')}</title></svelte:head>
 
 <div class="organic-page">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/records">Records</a></nav>
+  <nav class="crumbs" aria-label={tr('organic.crumbs')}>
+    <a href="/records">{tr('organic.crumbRecords')}</a>
+  </nav>
   <header>
-    <Kicker>Records · Organic</Kicker>
-    <h1 class="serif">Organic records.</h1>
-    <p class="lede">
-      What your records show for the Areas, blocks and animals you manage as organic. Every status
-      here is one the owner entered. CropCard reports the records and never decides a status.
-    </p>
+    <Kicker>{tr('organic.kicker')}</Kicker>
+    <h1 class="serif">{tr('organic.h1')}</h1>
+    <p class="lede">{tr('organic.lede')}</p>
   </header>
 
   <div class="live" role="status" aria-live="polite">
@@ -133,12 +134,10 @@
   {#if errorText}<p class="error" role="alert">{errorText}</p>{/if}
 
   <section aria-labelledby="now-h" class="panel">
-    <h2 id="now-h" class="serif">Statuses today</h2>
+    <h2 id="now-h" class="serif">{tr('organic.now')}</h2>
     {#if !data.areaLines.length && !data.blockRows.length && !data.animalLines.length}
       <p class="help" data-testid="organic-empty">
-        No organic status on file.{data.canEdit
-          ? ' Add one below for each Area, block, animal or group you manage as organic.'
-          : ''}
+        {data.canEdit ? tr('organic.noneOwner') : tr('organic.none')}
       </p>
     {:else}
       <ul class="lines">
@@ -163,39 +162,36 @@
 
   {#if data.canEdit}
     <section aria-labelledby="add-h" class="panel">
-      <h2 id="add-h" class="serif">Add a status entry</h2>
-      <p class="help">
-        Entries are never edited. To correct one, add a new entry; the latest entry for a date is
-        the one in force, and the history keeps both.
-      </p>
+      <h2 id="add-h" class="serif">{tr('organic.add.title')}</h2>
+      <p class="help">{tr('organic.add.help')}</p>
       <form class="form" onsubmit={saveStatus}>
         <label>
-          <span>For</span>
+          <span>{tr('organic.add.for')}</span>
           <select bind:value={subject} required data-testid="organic-subject">
-            <option value="" disabled>Pick an Area, block, animal or group</option>
+            <option value="" disabled>{tr('organic.add.pick')}</option>
             {#if data.subjects.areas.length}
-              <optgroup label="Areas">
+              <optgroup label={tr('organic.add.areas')}>
                 {#each data.subjects.areas as a (a.id)}
                   <option value="field:{a.id}">{a.name}</option>
                 {/each}
               </optgroup>
             {/if}
             {#if data.subjects.blocks.length}
-              <optgroup label="Blocks and beds">
+              <optgroup label={tr('organic.add.blocks')}>
                 {#each data.subjects.blocks as b (b.id)}
                   <option value="block:{b.id}">{b.name}</option>
                 {/each}
               </optgroup>
             {/if}
             {#if data.subjects.groups.length}
-              <optgroup label="Herds and flocks">
+              <optgroup label={tr('organic.add.groups')}>
                 {#each data.subjects.groups as g (g.id)}
                   <option value="group:{g.id}">{g.name}</option>
                 {/each}
               </optgroup>
             {/if}
             {#if data.subjects.animals.length}
-              <optgroup label="Animals">
+              <optgroup label={tr('organic.add.animals')}>
                 {#each data.subjects.animals as a (a.id)}
                   <option value="animal:{a.id}">{a.name}</option>
                 {/each}
@@ -204,15 +200,15 @@
           </select>
         </label>
         <label>
-          <span>Status</span>
+          <span>{tr('organic.add.status')}</span>
           <select bind:value={status} data-testid="organic-status">
             {#each ORGANIC_STATUSES as s (s)}
-              <option value={s}>{ORGANIC_STATUS_LABEL[s]}</option>
+              <option value={s}>{organicStatusLabel(s, data.locale)}</option>
             {/each}
           </select>
         </label>
         <label>
-          <span>Effective from</span>
+          <span>{tr('organic.add.effective')}</span>
           <input
             type="date"
             min="1970-01-01"
@@ -223,15 +219,23 @@
           />
         </label>
         <label>
-          <span>Certifier <span class="optional">(optional)</span></span>
+          <span
+            >{tr('organic.add.certifier')}
+            <span class="optional">{tr('organic.optional')}</span></span
+          >
           <input type="text" maxlength="120" bind:value={certifier} />
         </label>
         <label class="wide">
-          <span>Note <span class="optional">(optional)</span></span>
+          <span
+            >{tr('organic.add.note')} <span class="optional">{tr('organic.optional')}</span></span
+          >
           <textarea maxlength="1000" rows="2" bind:value={note}></textarea>
         </label>
         <fieldset class="wide">
-          <legend>Certificate <span class="optional">(optional)</span></legend>
+          <legend
+            >{tr('organic.add.certificate')}
+            <span class="optional">{tr('organic.optional')}</span></legend
+          >
           <DocumentAttach
             {documentId}
             kind="certificate"
@@ -245,30 +249,32 @@
           />
         </fieldset>
         <button class="btn-primary" type="submit" disabled={saving} data-testid="organic-save">
-          {saving ? 'Saving…' : 'Save status'}
+          {saving ? tr('organic.saving') : tr('organic.add.save')}
         </button>
       </form>
     </section>
   {:else if data.isHelper}
-    <p class="help">Only the owner enters organic statuses. Ask the owner.</p>
+    <p class="help">{tr('organic.ownerOnly')}</p>
   {/if}
 
   <section aria-labelledby="facts-h" class="panel">
-    <h2 id="facts-h" class="serif">What the records show</h2>
+    <h2 id="facts-h" class="serif">{tr('organic.facts.title')}</h2>
     <form class="window" method="GET">
       <label>
-        <span>From</span>
+        <span>{tr('organic.pack.from')}</span>
         <input type="date" name="from" value={data.window.from} />
       </label>
       <label>
-        <span>To</span>
+        <span>{tr('organic.pack.to')}</span>
         <input type="date" name="to" value={data.window.to} />
       </label>
-      <button class="btn-secondary" type="submit">Show</button>
+      <button class="btn-secondary" type="submit">{tr('organic.facts.show')}</button>
     </form>
-    <p class="help">Showing records from {data.window.from} to {data.window.to}.</p>
+    <p class="help">
+      {tr('organic.facts.showing', { from: data.window.from, to: data.window.to })}
+    </p>
     {#if !data.blockRows.length}
-      <p class="help">No block has an organic status yet, so there is nothing to list here.</p>
+      <p class="help">{tr('organic.facts.noBlocks')}</p>
     {/if}
     {#each data.blockRows as b (b.id)}
       <article class="block" data-testid="organic-block-facts">
@@ -280,23 +286,21 @@
             {#each b.applications as a (a.key)}
               <li data-testid="organic-fact">
                 {a.date} · {a.kind}: {a.product} · {a.mark}{a.deleted
-                  ? ' · Record deleted, still counted as applied'
+                  ? ` · ${tr('organic.facts.deleted')}`
                   : ''}
               </li>
             {/each}
           </ul>
         {:else}
-          <p class="help">
-            No input on file in this window that the library leaves unmarked or marks not allowed.
-          </p>
+          <p class="help">{tr('organic.facts.noInputs')}</p>
         {/if}
         {#each b.treatedSeed as p (p.key)}
-          <p class="fact">{p.date} · {p.crop}: planted from a seed lot recorded as treated</p>
+          <p class="fact">{p.date} · {p.crop}: {tr('organic.facts.treatedSeed')}</p>
         {/each}
         <p class="fact">
           {b.lastNonAllowed
-            ? `Last input on file that the library does not mark as allowed: ${b.lastNonAllowed}.`
-            : 'No input on file that the library does not mark as allowed.'}
+            ? tr('organic.facts.lastNonAllowed', { date: b.lastNonAllowed })
+            : tr('organic.facts.noNonAllowed')}
         </p>
         <p class="fact">{b.transitionLine ?? data.askCertifier}</p>
       </article>
@@ -305,10 +309,10 @@
 
   {#if data.treatments.length || data.animalLines.length}
     <section aria-labelledby="treat-h" class="panel">
-      <h2 id="treat-h" class="serif">Animal treatments</h2>
+      <h2 id="treat-h" class="serif">{tr('organic.treat.title')}</h2>
       {#if data.welfareLine}<p class="welfare">{data.welfareLine}</p>{/if}
       {#if !data.treatments.length}
-        <p class="help">No treatment in this window reached an animal with an organic status.</p>
+        <p class="help">{tr('organic.treat.none')}</p>
       {/if}
       <ul class="treatments">
         {#each data.treatments as t (t.id)}
@@ -322,15 +326,22 @@
             {/if}
             {#if t.review}
               <p class="help">
-                Owner answered "{ORGANIC_REVIEW_OUTCOME_LABEL[t.review.outcome]}" on {t.review.at}{t
-                  .review.by
-                  ? ` (${t.review.by})`
-                  : ''}: {t.review.reason}
+                {t.review.by
+                  ? tr('organic.treat.answeredBy', {
+                      outcome: reviewOutcomeLabel(t.review.outcome, data.locale),
+                      date: t.review.at,
+                      by: t.review.by
+                    })
+                  : tr('organic.treat.answered', {
+                      outcome: reviewOutcomeLabel(t.review.outcome, data.locale),
+                      date: t.review.at
+                    })}
+                {t.review.reason}
               </p>
             {/if}
             {#if t.canAnswer}
               <fieldset class="review">
-                <legend>Does this treatment end organic status?</legend>
+                <legend>{tr('organic.treat.question')}</legend>
                 {#each ORGANIC_REVIEW_OUTCOMES as o (o)}
                   <label class="radio">
                     <input
@@ -340,11 +351,11 @@
                       checked={reviewOutcome[t.id] === o}
                       onchange={() => (reviewOutcome = { ...reviewOutcome, [t.id]: o })}
                     />
-                    {ORGANIC_REVIEW_OUTCOME_LABEL[o]}
+                    {reviewOutcomeLabel(o, data.locale)}
                   </label>
                 {/each}
                 <label>
-                  <span>Why</span>
+                  <span>{tr('organic.treat.why')}</span>
                   <input
                     type="text"
                     maxlength="500"
@@ -362,9 +373,9 @@
                   disabled={reviewBusy === t.id}
                   onclick={() => saveReview(t.id)}
                 >
-                  Save answer
+                  {tr('organic.treat.save')}
                 </button>
-                <p class="help">You can change an answer for 48 hours after you first give it.</p>
+                <p class="help">{tr('organic.treat.change48')}</p>
               </fieldset>
             {/if}
           </li>
@@ -374,17 +385,21 @@
   {/if}
 
   <section aria-labelledby="hist-h" class="panel">
-    <h2 id="hist-h" class="serif">Status history</h2>
+    <h2 id="hist-h" class="serif">{tr('organic.hist.title')}</h2>
     {#if !data.history.length}
-      <p class="help">No entries yet.</p>
+      <p class="help">{tr('organic.hist.none')}</p>
     {:else}
       <ul class="history">
         {#each data.history as h (h.id)}
           <li data-testid="organic-history-row">
-            <strong>{h.subject}</strong>: {h.status} (owner-entered, {h.effective}{h.certifier
-              ? `, certifier ${h.certifier}`
+            <strong>{h.subject}</strong>: {h.status} ({tr('organic.line.ownerEntered')}, {h.effective}{h.certifier
+              ? `, ${tr('organic.line.certifier', { name: h.certifier })}`
               : ''})
-            <span class="help">Saved {h.savedAt}{h.by ? ` by ${h.by}` : ''}.</span>
+            <span class="help"
+              >{h.by
+                ? tr('organic.hist.savedBy', { date: h.savedAt, by: h.by })
+                : tr('organic.hist.saved', { date: h.savedAt })}</span
+            >
             {#if h.note}<p class="help">{h.note}</p>{/if}
             {#each h.documents as d (d.id)}
               <a class="doc" href="/api/documents/{d.id}/file">{d.title}</a>

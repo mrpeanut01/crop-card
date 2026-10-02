@@ -1,8 +1,10 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import {
     DISPOSITION_FORCE_REASON_MIN,
-    DISPOSITION_KIND_LABEL,
+    dispositionKindLabel,
     DISPOSITION_UNIT_SUGGESTIONS,
     HARVEST_DISPOSITION_KINDS,
     type DispositionCreate,
@@ -45,6 +47,7 @@
     onChanged
   }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const zone = $derived(currentPrefs().timeZone);
   const parsedHarvest = untrack(() => parseHarvestQuantity(harvest.quantity));
 
@@ -100,16 +103,16 @@
   function body(): DispositionCreate | null {
     const qty = Number(quantity);
     if (!(qty > 0)) {
-      error = 'Type how much, a number above zero.';
+      error = tr('harvestui.disp.err.qty');
       return null;
     }
     if (!unit.trim()) {
-      error = 'Type the unit, like lb or dozen.';
+      error = tr('harvestui.disp.err.unit');
       return null;
     }
     const occurredAt = dayToMs(date);
     if (occurredAt === null) {
-      error = 'Pick the date.';
+      error = tr('harvestui.disp.err.date');
       return null;
     }
     return {
@@ -145,12 +148,12 @@
           body: JSON.stringify(patch)
         }).catch(() => null);
         if (!res) {
-          error = 'No signal. Changes need a connection.';
+          error = tr('harvestui.disp.err.offlineChange');
           return;
         }
         const out = await res.json().catch(() => ({}));
         if (!res.ok) {
-          error = out.message ?? 'That did not save. Try again.';
+          error = out.message ?? tr('harvestui.disp.err.notSaved');
           return;
         }
         notices = noticesFrom(out);
@@ -161,7 +164,7 @@
           return;
         }
         if (out.status === 'queued') {
-          notices = ['No signal. Saved on this phone; it will send when you are back online.'];
+          notices = [tr('harvestui.disp.queued')];
           resetForm();
           // Nothing new on the server yet, and reloading the page data
           // offline would make SvelteKit fall back to a full navigation.
@@ -193,12 +196,12 @@
       { method: 'DELETE' }
     ).catch(() => null);
     if (!res) {
-      error = 'No signal. Deleting needs a connection.';
+      error = tr('harvestui.disp.err.offlineDelete');
       return;
     }
     if (!res.ok) {
       const out = await res.json().catch(() => ({}));
-      error = out.message ?? 'That did not delete. Try again.';
+      error = out.message ?? tr('harvestui.disp.err.notDeleted');
       return;
     }
     deletingId = null;
@@ -209,21 +212,28 @@
 
 <div class="disp" data-testid="disposition-panel">
   {#if dispositions.length === 0}
-    <p class="empty">Nothing recorded yet for where this harvest went.</p>
+    <p class="empty">{tr('harvestui.disp.empty')}</p>
   {:else}
     <ul class="list">
       {#each dispositions as d (d.id)}
         <li data-testid="disposition-row">
-          <p class="line">{dispositionLine(d, fmt.instant(d.occurredAt, 'date'))}</p>
+          <p class="line">
+            {dispositionLine(d, fmt.instant(d.occurredAt, 'date'), page.data?.locale)}
+          </p>
           <p class="meta">
             {#if d.locked}<span class="pill">Locked</span>{/if}
-            {#if isOwner && d.sale === 'live'}<span class="pill">Sale recorded</span>{/if}
-            {#if isOwner && d.sale === 'deleted'}<span class="pill warn">Linked sale deleted</span
+            {#if isOwner && d.sale === 'live'}<span class="pill"
+                >{tr('harvestui.disp.saleRecorded')}</span
+              >{/if}
+            {#if isOwner && d.sale === 'deleted'}<span class="pill warn"
+                >{tr('harvestui.disp.saleDeleted')}</span
               >{/if}
           </p>
           <div class="row-actions">
             {#if canWrite && !d.locked}
-              <button type="button" class="ghost" onclick={() => startEdit(d)}>Edit</button>
+              <button type="button" class="ghost" onclick={() => startEdit(d)}
+                >{tr('harvestui.disp.edit')}</button
+              >
             {/if}
             {#if canWrite && (!d.locked || isOwner)}
               <button
@@ -232,7 +242,7 @@
                 onclick={() => {
                   deletingId = deletingId === d.id ? null : d.id;
                   deleteReason = '';
-                }}>Delete</button
+                }}>{tr('harvestui.disp.delete')}</button
               >
             {/if}
             {#if isOwner && canRecordSale && d.kind === 'sold' && !d.ledgerEntryId}
@@ -243,10 +253,10 @@
                     harvestEventId: harvest.id,
                     cropId: harvest.cropId ?? '',
                     dispositionId: d.id
-                  })}>Also record the money</a
+                  })}>{tr('harvestui.disp.alsoMoney')}</a
                 >
               {:else}
-                <span class="muted">Record the money on Money when you have signal.</span>
+                <span class="muted">{tr('harvestui.disp.moneyOffline')}</span>
               {/if}
             {/if}
           </div>
@@ -259,7 +269,7 @@
                 </label>
               {/if}
               <button type="button" class="danger" onclick={() => remove(d)}>
-                {d.locked ? 'Delete with this reason' : 'Delete this'}
+                {d.locked ? 'Delete with this reason' : tr('harvestui.disp.deleteThis')}
               </button>
             </div>
           {/if}
@@ -270,25 +280,25 @@
 
   {#if canWrite}
     <form class="form" onsubmit={save} data-testid="disposition-form">
-      <h3>{editingId ? 'Change this entry' : 'Add where it went'}</h3>
-      <div class="kinds" role="group" aria-label="Where it went">
+      <h3>{editingId ? tr('harvestui.disp.changeEntry') : tr('harvestui.disp.addEntry')}</h3>
+      <div class="kinds" role="group" aria-label={tr('harvestui.disp.whereItWent')}>
         {#each HARVEST_DISPOSITION_KINDS as k (k)}
           <button
             type="button"
             class="kind"
             class:on={kind === k}
             aria-pressed={kind === k}
-            onclick={() => (kind = k)}>{DISPOSITION_KIND_LABEL[k]}</button
+            onclick={() => (kind = k)}>{dispositionKindLabel(k, page.data?.locale)}</button
           >
         {/each}
       </div>
       <div class="pair">
         <label>
-          How much
+          {tr('harvestui.disp.howMuch')}
           <input type="number" inputmode="decimal" min="0.01" step="any" bind:value={quantity} />
         </label>
         <label>
-          Unit
+          {tr('harvestui.disp.unit')}
           <input type="text" list="disposition-units" maxlength="20" bind:value={unit} />
         </label>
       </div>
@@ -296,33 +306,37 @@
         {#each DISPOSITION_UNIT_SUGGESTIONS as u (u)}<option value={u}></option>{/each}
       </datalist>
       <label>
-        Date
+        {tr('harvestui.disp.date')}
         <input type="date" min={minDate} max={maxDate} bind:value={date} />
       </label>
       {#if hasRecipient}
         <label>
-          {kind === 'sold' ? 'Sold to (optional)' : 'Given to (optional)'}
+          {kind === 'sold' ? tr('harvestui.disp.soldTo') : tr('harvestui.disp.givenTo')}
           <input type="text" maxlength="120" bind:value={recipient} />
         </label>
       {/if}
       {#if kind === 'sold' && askSoldAsOrganic}
         <fieldset class="organic">
-          <legend>Sold as organic?</legend>
+          <legend>{tr('harvestui.disp.soldAsOrganicQ')}</legend>
           <label class="radio"
-            ><input type="radio" value="yes" bind:group={soldAsOrganic} /> Yes</label
+            ><input type="radio" value="yes" bind:group={soldAsOrganic} />
+            {tr('harvestui.disp.yes')}</label
           >
           <label class="radio"
-            ><input type="radio" value="no" bind:group={soldAsOrganic} /> No</label
+            ><input type="radio" value="no" bind:group={soldAsOrganic} />
+            {tr('harvestui.disp.no')}</label
           >
         </fieldset>
       {/if}
       {#if error}<p class="error" role="alert">{error}</p>{/if}
       <div class="form-actions">
         <button type="submit" class="primary" disabled={saving}>
-          {editingId ? 'Save change' : 'Save'}
+          {editingId ? tr('harvestui.disp.saveChange') : tr('harvestui.disp.save')}
         </button>
         {#if editingId}
-          <button type="button" class="ghost" onclick={resetForm}>Cancel</button>
+          <button type="button" class="ghost" onclick={resetForm}
+            >{tr('harvestui.disp.cancel')}</button
+          >
         {/if}
       </div>
     </form>

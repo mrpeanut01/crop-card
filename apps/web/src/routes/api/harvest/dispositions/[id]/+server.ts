@@ -33,6 +33,7 @@ import { checkSeasonClosed } from '$lib/server/seasonClose';
 import { assertLedgerEntry, rejectForeignRefs } from '$lib/server/foreignRefs';
 import { farmHasOrganicStatus } from '$lib/harvest/organicAtHarvest.server';
 import { dispositionNotices, presentDisposition, problem } from '$lib/server/harvestDispositions';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = dispositionPatchSchema;
 
@@ -43,7 +44,7 @@ export const PATCH: RequestHandler = async (event) => {
   const user = currentUser(event);
   if (!user) return problem(401, 'UNAUTHENTICATED', 'Sign in to change this record.');
   if (!canMutate(user.role)) {
-    return problem(403, 'READ_ONLY', 'Inspectors can read records but not change them.');
+    return problem(403, 'READ_ONLY', t(event.locals.locale, 'harvestui.disp.err.readOnlyChange'));
   }
   let body: unknown;
   try {
@@ -63,15 +64,17 @@ export const PATCH: RequestHandler = async (event) => {
     );
   }
   const existing = getHarvestDisposition(event.params.id ?? '');
-  if (!existing) return problem(404, 'NOT_FOUND', 'No such record of where a harvest went.');
+  if (!existing)
+    return problem(404, 'NOT_FOUND', t(event.locals.locale, 'harvestui.disp.err.noRecord'));
   const harvest = getHarvestEvent(existing.harvestEventId);
-  if (!harvest) return problem(404, 'NOT_FOUND', 'No such harvest record.');
+  if (!harvest)
+    return problem(404, 'NOT_FOUND', t(event.locals.locale, 'harvestui.disp.err.noHarvest'));
 
   const { ledgerEntryId, ...fields } = parsed.data;
   const linking = ledgerEntryId !== undefined;
   if (linking) {
     if (user.role !== 'owner') {
-      return problem(403, 'OWNER_ONLY', 'Only the farm owner can link a sale.');
+      return problem(403, 'OWNER_ONLY', t(event.locals.locale, 'harvestui.disp.err.ownerLink'));
     }
     if (user.impersonating) {
       return problem(
@@ -114,7 +117,8 @@ export const PATCH: RequestHandler = async (event) => {
         fields.occurredAt,
         harvest.occurredAt,
         farmTimeZone(),
-        now
+        now,
+        event.locals.locale
       );
       if (dated) return problem(400, dated.error, dated.message);
     }
@@ -144,7 +148,7 @@ export const PATCH: RequestHandler = async (event) => {
     return out;
   });
   const notices = changing
-    ? dispositionNotices(harvest, saved, prefsFor(user.id))
+    ? dispositionNotices(harvest, saved, { ...prefsFor(user.id), locale: event.locals.locale })
     : { organicNotice: null, quantityNotice: null };
   return json({ disposition: presentDisposition(saved, user.role), ...notices });
 };
@@ -153,10 +157,11 @@ export const DELETE: RequestHandler = async (event) => {
   const user = currentUser(event);
   if (!user) return problem(401, 'UNAUTHENTICATED', 'Sign in to change this record.');
   if (!canMutate(user.role)) {
-    return problem(403, 'READ_ONLY', 'Inspectors can read records but not change them.');
+    return problem(403, 'READ_ONLY', t(event.locals.locale, 'harvestui.disp.err.readOnlyChange'));
   }
   const existing = getHarvestDisposition(event.params.id ?? '');
-  if (!existing) return problem(404, 'NOT_FOUND', 'No such record of where a harvest went.');
+  if (!existing)
+    return problem(404, 'NOT_FOUND', t(event.locals.locale, 'harvestui.disp.err.noRecord'));
   const force = event.url.searchParams.get('force') === 'true';
   const locked = evaluateDispositionLock(existing) !== undefined;
   if (locked && !force) return problem(409, 'RECORD_LOCKED', LOCKED_MESSAGE);

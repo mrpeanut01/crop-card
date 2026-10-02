@@ -11,6 +11,7 @@
  */
 
 import type { NopRules } from './nopRules';
+import { t, type MessageKey } from '$lib/i18n';
 import {
   isUnderOrganic,
   resolveAnimalStatus,
@@ -207,12 +208,20 @@ export const OUTCOME_LABEL: Readonly<Record<TreatmentOrganicRow['outcome'], stri
   'not-affected': 'Owner answered: does not end it'
 };
 
+const OUTCOME_KEY: Readonly<Record<TreatmentOrganicRow['outcome'], MessageKey>> = {
+  'status-lost': 'organic.outcome.statusLost',
+  'needs-review': 'organic.outcome.needsReview',
+  'not-affected': 'organic.outcome.notAffected'
+};
+
 /** The plain words for a row's organic outcome, used on pages and in the
- *  treatment log (B-50). */
-export function treatmentOutcomeText(row: TreatmentOrganicRow): string {
-  if (row.outcome === 'needs-review' && row.deleted) return DELETED_BEFORE_REVIEW;
-  if (row.outcome === 'status-lost' && row.basis === 'owner-review') {
-    return 'Status lost (owner answered: ends organic status)';
+ *  treatment log (B-50). The log passes no locale and stays English. */
+export function treatmentOutcomeText(row: TreatmentOrganicRow, locale?: string | null): string {
+  if (row.outcome === 'needs-review' && row.deleted) {
+    return locale ? t(locale, 'organic.outcome.deletedBeforeReview') : DELETED_BEFORE_REVIEW;
   }
-  return OUTCOME_LABEL[row.outcome];
+  if (row.outcome === 'status-lost' && row.basis === 'owner-review') {
+    return t(locale, 'organic.outcome.lostOwnerAnswered');
+  }
+  return locale ? t(locale, OUTCOME_KEY[row.outcome]) : OUTCOME_LABEL[row.outcome];
 }

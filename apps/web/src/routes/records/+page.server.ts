@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
+import { t } from '$lib/i18n';
 import { listSprayEvents, recordsApproachingRetention } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
@@ -37,7 +38,7 @@ import {
 export const load: PageServerLoad = async (event) => {
   const { url } = event;
   const user = requireUser(event);
-  const prefs = prefsFor(user.id);
+  const prefs = { ...prefsFor(user.id), locale: event.locals.locale };
   const sprayerId = url.searchParams.get('sprayerId') ?? undefined;
   const blockId = url.searchParams.get('blockId') ?? undefined;
   const fromMsRaw = url.searchParams.get('from');
@@ -101,7 +102,7 @@ export const load: PageServerLoad = async (event) => {
       ? wateringRows.map((w) => ({
           id: w.id,
           occurredAt: w.occurredAt,
-          areaName: areaNames.get(w.fieldId) ?? 'Area',
+          areaName: areaNames.get(w.fieldId) ?? t(event.locals.locale, 'recui.area'),
           bedName: w.blockId ? (bedNames.get(w.blockId) ?? null) : null,
           inches: w.inches,
           gallons: w.gallons,

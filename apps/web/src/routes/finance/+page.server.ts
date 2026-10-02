@@ -5,6 +5,7 @@
  */
 
 import { error } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import type { PageServerLoad } from './$types';
 import { listLedgerEntries } from '$lib/db/ledger';
 import { requireMoneyReader } from '$lib/finance/access';
@@ -21,7 +22,7 @@ export const load: PageServerLoad = async (event) => {
   const user = requireMoneyReader(event);
   const thisYear = currentSeasonYear();
   const year = parseYear(event.url.searchParams.get('year'), thisYear);
-  if (year === null) throw error(400, 'year must be a four-digit year');
+  if (year === null) throw error(400, t(event.locals.locale, 'finance.err.badYear'));
   const showDeleted = event.url.searchParams.get('show') === 'deleted';
 
   const money = await loadSeasonMoney(year);
@@ -37,7 +38,7 @@ export const load: PageServerLoad = async (event) => {
     year,
     years,
     showDeleted,
-    entries: presentEntries(rows, money.names),
+    entries: presentEntries(rows, money.names, event.locals.locale),
     profit: money.profit,
     labourRateCents: readLabourRate(),
     canWrite: !user.impersonating,

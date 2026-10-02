@@ -94,8 +94,12 @@ export function farmOrganicChrome(): OrganicChromeLevel {
 }
 
 /** Dates in status lines, in the farm's zone (B-08). */
-export function organicDateFormatter(): (ms: number) => string {
-  const prefs = { ...DEFAULT_PREFS, timeZone: farmTimeZone() };
+export function organicDateFormatter(locale?: string | null): (ms: number) => string {
+  const prefs = {
+    ...DEFAULT_PREFS,
+    timeZone: farmTimeZone(),
+    ...(locale ? { locale } : {})
+  };
   return (ms) => formatInstant(ms, prefs, 'date');
 }
 

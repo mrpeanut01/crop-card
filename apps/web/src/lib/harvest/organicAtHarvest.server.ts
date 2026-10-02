@@ -6,6 +6,7 @@
 import { hasOrganicStatusRows } from '$lib/db/organicStatus';
 import { blockOrganicStatusAt } from '$lib/organic/status.server';
 import { organicStatusLine } from '$lib/organic/status';
+import { t } from '$lib/i18n';
 
 /** B-15 `full`: the farm has any organic status entry at all. Only then is
  *  "sold as organic" asked or stored. */
@@ -18,12 +19,16 @@ export function farmHasOrganicStatus(): boolean {
 export function soldAsOrganicNotice(
   blockId: string,
   harvestMs: number,
-  fmtDate: (ms: number) => string
+  fmtDate: (ms: number) => string,
+  locale?: string | null
 ): string | null {
   const s = blockOrganicStatusAt(blockId, harvestMs);
   if (s?.status === 'organic') return null;
   const day = fmtDate(harvestMs);
-  if (!s) return `This block had no organic status on file on ${day}.`;
-  const line = organicStatusLine(s, fmtDate) ?? '';
-  return `This block was ${line.charAt(0).toLowerCase()}${line.slice(1)} on ${day}.`;
+  if (!s) return t(locale, 'harvestui.disp.noStatusOnDay', { date: day });
+  const line = organicStatusLine(s, fmtDate, locale) ?? '';
+  return t(locale, 'harvestui.disp.blockWas', {
+    line: `${line.charAt(0).toLowerCase()}${line.slice(1)}`,
+    date: day
+  });
 }

@@ -45,7 +45,7 @@ export const POST: RequestHandler = async (event) => {
   if (!read.ok) return json({ error: 'invalid JSON body' }, { status: 400 });
   const parsed = ledgerEntryCreateSchema.safeParse(read.body);
   if (!parsed.success) return invalidBody(parsed.error);
-  const refused = checkEntry(parsed.data);
+  const refused = checkEntry(parsed.data, Date.now(), event.locals.locale);
   if (refused) return refused;
   const { dispositionId, ...input } = parsed.data;
   try {
@@ -59,7 +59,7 @@ export const POST: RequestHandler = async (event) => {
     });
     return json({ entry, dispositionLinked }, { status: 201 });
   } catch (e) {
-    if (e instanceof LotAlreadyExpensedError) return lotConflict(e.entryId);
+    if (e instanceof LotAlreadyExpensedError) return lotConflict(e.entryId, event.locals.locale);
     throw e;
   }
 };

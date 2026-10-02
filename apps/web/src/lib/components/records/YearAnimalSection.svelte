@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
   import { headCountText, type YearAnimalSection } from '$lib/records/yearSummaryAnimals';
+  import type { MessageKey } from '$lib/i18n';
 
   const {
     section,
@@ -8,65 +11,99 @@
     canExportLog
   }: { section: YearAnimalSection; year: number; canExportLog: boolean } = $props();
 
-  const speciesName = (id: string) => section.speciesNames[id] ?? 'Unknown species';
+  const tr = $derived(createT(page.data?.locale));
+  const speciesName = (id: string) => section.speciesNames[id] ?? tr('recui.year.unknownSpecies');
+  const MOVE_KEY: Record<string, MessageKey> = {
+    arrived: 'recui.year.move.arrived',
+    sold: 'recui.year.move.sold',
+    'sold-for-meat': 'recui.year.move.soldForMeat',
+    slaughtered: 'recui.year.move.slaughtered',
+    died: 'recui.year.move.died',
+    culled: 'recui.year.move.culled',
+    rehomed: 'recui.year.move.rehomed'
+  };
+  const USE_KEY: Record<string, MessageKey> = {
+    food: 'recui.year.use.food',
+    sale: 'recui.year.use.sale',
+    discard: 'recui.year.use.discard',
+    'feed-to-animals': 'recui.year.use.feed',
+    unknown: 'recui.year.use.unknown'
+  };
+  const moveLabel = (kind: string, label: string) => (MOVE_KEY[kind] ? tr(MOVE_KEY[kind]) : label);
+  const useLabel = (use: string, label: string) => (USE_KEY[use] ? tr(USE_KEY[use]) : label);
+  const countText = (n: number | null) =>
+    n === null ? tr('recui.year.countUnknown') : headCountText(n);
   const range = $derived(`from=${year}-01-01&to=${year}-12-31`);
 </script>
 
 <section class="animal-review" aria-labelledby="animal-review-heading">
-  <h3 id="animal-review-heading">Animals</h3>
-  <p class="note">From records on file.</p>
+  <h3 id="animal-review-heading">{tr('recui.year.animals')}</h3>
+  <p class="note">{tr('recui.year.fromRecords')}</p>
 
   <div class="grid">
     <article class="card">
-      <h4>Head count</h4>
+      <h4>{tr('recui.year.headCount')}</h4>
       {#if section.headCounts.length}
         <table>
           <thead>
             <tr
-              ><th>Species</th><th class="num">Start of {year}</th><th class="num">End of {year}</th
-              ></tr
+              ><th>{tr('recui.year.species')}</th><th class="num"
+                >{tr('recui.year.startOf', { year })}</th
+              ><th class="num">{tr('recui.year.endOf', { year })}</th></tr
             >
           </thead>
           <tbody>
             {#each section.headCounts as h (h.speciesId)}
               <tr>
                 <td>{speciesName(h.speciesId)}</td>
-                <td class="num">{headCountText(h.atStart)}</td>
-                <td class="num">{headCountText(h.atEnd)}</td>
+                <td class="num">{countText(h.atStart)}</td>
+                <td class="num">{countText(h.atEnd)}</td>
               </tr>
             {/each}
           </tbody>
         </table>
       {:else}
-        <p class="empty">No animals on file this year.</p>
+        <p class="empty">{tr('recui.year.noAnimals')}</p>
       {/if}
     </article>
 
     <article class="card">
-      <h4>Arrivals and departures</h4>
+      <h4>{tr('recui.year.arrivals')}</h4>
       {#if section.movements.length}
         <table>
-          <thead><tr><th>Species</th><th>What happened</th><th class="num">Head</th></tr></thead>
+          <thead
+            ><tr
+              ><th>{tr('recui.year.species')}</th><th>{tr('recui.year.whatHappened')}</th><th
+                class="num">{tr('recui.year.head')}</th
+              ></tr
+            ></thead
+          >
           <tbody>
             {#each section.movements as m (`${m.speciesId}:${m.kind}`)}
               <tr>
                 <td>{speciesName(m.speciesId)}</td>
-                <td>{m.label}</td>
-                <td class="num">{headCountText(m.head)}</td>
+                <td>{moveLabel(m.kind, m.label)}</td>
+                <td class="num">{countText(m.head)}</td>
               </tr>
             {/each}
           </tbody>
         </table>
       {:else}
-        <p class="empty">No arrivals or departures recorded this year.</p>
+        <p class="empty">{tr('recui.year.noArrivals')}</p>
       {/if}
     </article>
 
     <article class="card">
-      <h4>Treatments by product</h4>
+      <h4>{tr('recui.year.treatments')}</h4>
       {#if section.treatments.length}
         <table>
-          <thead><tr><th>Product</th><th class="num">Doses</th><th>Given to</th></tr></thead>
+          <thead
+            ><tr
+              ><th>{tr('recui.year.product')}</th><th class="num">{tr('recui.year.doses')}</th><th
+                >{tr('recui.year.givenTo')}</th
+              ></tr
+            ></thead
+          >
           <tbody>
             {#each section.treatments as t (t.product)}
               <tr>
@@ -78,23 +115,26 @@
           </tbody>
         </table>
       {:else}
-        <p class="empty">No treatments, vaccines or wormers recorded this year.</p>
+        <p class="empty">{tr('recui.year.noTreatments')}</p>
       {/if}
     </article>
 
     <article class="card">
-      <h4>Eggs and milk</h4>
+      <h4>{tr('recui.year.eggsMilk')}</h4>
       {#if section.production.length}
         <table>
           <thead
-            ><tr><th>Food</th><th>Use</th><th class="num">Total</th><th class="num">Logs</th></tr
+            ><tr
+              ><th>{tr('recui.year.food')}</th><th>{tr('recui.year.use')}</th><th class="num"
+                >{tr('recui.year.total')}</th
+              ><th class="num">{tr('recui.year.logs')}</th></tr
             ></thead
           >
           <tbody>
             {#each section.production as p (`${p.food}:${p.use}:${p.unit}`)}
               <tr>
-                <td>{p.food === 'eggs' ? 'Eggs' : 'Milk'}</td>
-                <td>{p.useLabel}</td>
+                <td>{p.food === 'eggs' ? tr('recui.year.eggs') : tr('recui.year.milk')}</td>
+                <td>{useLabel(p.use, p.useLabel)}</td>
                 <td class="num">{p.quantity} {p.unit}</td>
                 <td class="num">{p.logs}</td>
               </tr>
@@ -102,7 +142,7 @@
           </tbody>
         </table>
       {:else}
-        <p class="empty">No eggs or milk logged this year.</p>
+        <p class="empty">{tr('recui.year.noEggsMilk')}</p>
       {/if}
     </article>
 
@@ -134,13 +174,13 @@
         class="btn"
         href="/api/animals/treatments.csv?{range}"
         download
-        data-testid="treatment-log-csv">Treatment log CSV</a
+        data-testid="treatment-log-csv">{tr('recui.year.logCsv')}</a
       >
       <a
         class="btn"
         href="/api/animals/treatments.pdf?{range}"
         download
-        data-testid="treatment-log-pdf">Treatment log PDF</a
+        data-testid="treatment-log-pdf">{tr('recui.year.logPdf')}</a
       >
     </div>
   {/if}

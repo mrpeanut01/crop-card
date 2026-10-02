@@ -1,8 +1,11 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
+  import type { MessageKey } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
   import {
-    SEED_ORGANIC_STATUS_LABEL,
-    SEED_SEARCH_FLAG_LABEL,
+    type SeedOrganicStatus,
+    type SeedSearchFlag,
     seedSearchFlag,
     sortChecks,
     type SeedSourcingRow
@@ -19,10 +22,21 @@
   }
 
   const { rows }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
+  const STATUS_KEY: Record<SeedOrganicStatus, MessageKey> = {
+    organic: 'organic.seed.status.organic',
+    untreated: 'organic.seed.status.untreated',
+    treated: 'organic.seed.status.treated',
+    unknown: 'organic.seed.status.unknown'
+  };
+  const FLAG_KEY: Record<SeedSearchFlag, MessageKey> = {
+    'no-search-on-file': 'organic.seed.flag.noSearch',
+    'not-recorded': 'organic.seed.flag.notRecorded'
+  };
 </script>
 
 {#if rows.length === 0}
-  <p class="empty">No seed lots were received or planted in this date range.</p>
+  <p class="empty">{tr('organic.seed.empty')}</p>
 {:else}
   <ul class="seed-list" data-testid="seed-sourcing-list">
     {#each rows as r (r.stockLotId)}
@@ -30,13 +44,16 @@
       <li>
         <div class="head">
           <a href="/inventory/seed/{encodeURIComponent(r.stockItemId)}">{r.itemName}</a>
-          {#if r.lotNumber}<span class="muted">Lot {r.lotNumber}</span>{/if}
-          <span class="muted">received {fmt.instant(r.receivedAt, 'date')}</span>
+          {#if r.lotNumber}<span class="muted">{tr('organic.seed.lot', { lot: r.lotNumber })}</span
+            >{/if}
+          <span class="muted"
+            >{tr('organic.seed.received', { date: fmt.instant(r.receivedAt, 'date') })}</span
+          >
         </div>
         <div>
-          Seed status (owner-entered):
-          <strong>{r.status ? SEED_ORGANIC_STATUS_LABEL[r.status] : 'Not recorded'}</strong>
-          {#if flag}<span class="flag">{SEED_SEARCH_FLAG_LABEL[flag]}</span>{/if}
+          {tr('organic.seed.statusLabel')}
+          <strong>{r.status ? tr(STATUS_KEY[r.status]) : tr('organic.seed.notRecorded')}</strong>
+          {#if flag}<span class="flag">{tr(FLAG_KEY[flag])}</span>{/if}
         </div>
         {#if r.sourcesChecked.length > 0}
           <ul class="checks">
@@ -48,7 +65,7 @@
         {#if r.unavailabilityNote}<p class="note">{r.unavailabilityNote}</p>{/if}
         {#if r.documentIds.length > 0}
           <p class="muted small">
-            {r.documentIds.length} search evidence file{r.documentIds.length === 1 ? '' : 's'} attached
+            {tr('organic.seed.files', { count: r.documentIds.length })}
           </p>
         {/if}
       </li>

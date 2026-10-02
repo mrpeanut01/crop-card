@@ -8,6 +8,8 @@
  * on file in `SOIL_SOURCES`; every other method reads as unknown.
  */
 
+import { t, type MessageKey } from '$lib/i18n';
+
 export const EXTRACTION_METHODS = [
   'mehlich-1',
   'mehlich-3',
@@ -29,6 +31,13 @@ export const EXTRACTION_METHOD_LABEL: Record<ExtractionMethod, string> = {
   other: 'Other or not sure'
 };
 
+export function extractionMethodLabel(m: ExtractionMethod, locale?: string | null): string {
+  if (!locale) return EXTRACTION_METHOD_LABEL[m];
+  if (m === 'modified-morgan') return t(locale, 'fert.soil.method.modifiedMorgan');
+  if (m === 'other') return t(locale, 'fert.soil.method.other');
+  return EXTRACTION_METHOD_LABEL[m];
+}
+
 export const UNITS_BASES = ['ppm', 'lb-per-acre'] as const;
 export type UnitsBasis = (typeof UNITS_BASES)[number];
 
@@ -36,6 +45,11 @@ export const UNITS_BASIS_LABEL: Record<UnitsBasis, string> = {
   ppm: 'ppm (parts per million)',
   'lb-per-acre': 'lb per acre'
 };
+
+export function unitsBasisLabel(u: UnitsBasis, locale?: string | null): string {
+  if (!locale) return UNITS_BASIS_LABEL[u];
+  return t(locale, u === 'ppm' ? 'fert.soil.units.ppm' : 'fert.soil.units.lbPerAcre');
+}
 
 export const LAB_RATINGS = [
   'very-low',
@@ -57,6 +71,20 @@ export const LAB_RATING_LABEL: Record<LabRating, string> = {
   'very-high': 'Very high',
   excessive: 'Excessive'
 };
+
+const LAB_RATING_KEY: Record<LabRating, MessageKey> = {
+  'very-low': 'fert.soil.rating.veryLow',
+  low: 'fert.soil.rating.low',
+  medium: 'fert.soil.rating.medium',
+  optimum: 'fert.soil.rating.optimum',
+  high: 'fert.soil.rating.high',
+  'very-high': 'fert.soil.rating.veryHigh',
+  excessive: 'fert.soil.rating.excessive'
+};
+
+export function labRatingLabel(r: LabRating, locale?: string | null): string {
+  return locale ? t(locale, LAB_RATING_KEY[r]) : LAB_RATING_LABEL[r];
+}
 
 export const RATED_NUTRIENTS = ['p', 'k', 'ca', 'mg'] as const;
 export type RatedNutrient = (typeof RATED_NUTRIENTS)[number];
@@ -147,6 +175,24 @@ export const PH_CLASS_LABEL: Record<PhClass, string> = {
   'very-strongly-alkaline': 'Very strongly alkaline'
 };
 
+const PH_CLASS_KEY: Record<PhClass, MessageKey> = {
+  'ultra-acid': 'fert.soil.ph.ultraAcid',
+  'extremely-acid': 'fert.soil.ph.extremelyAcid',
+  'very-strongly-acid': 'fert.soil.ph.veryStronglyAcid',
+  'strongly-acid': 'fert.soil.ph.stronglyAcid',
+  'moderately-acid': 'fert.soil.ph.moderatelyAcid',
+  'slightly-acid': 'fert.soil.ph.slightlyAcid',
+  neutral: 'fert.soil.ph.neutral',
+  'slightly-alkaline': 'fert.soil.ph.slightlyAlkaline',
+  'moderately-alkaline': 'fert.soil.ph.moderatelyAlkaline',
+  'strongly-alkaline': 'fert.soil.ph.stronglyAlkaline',
+  'very-strongly-alkaline': 'fert.soil.ph.veryStronglyAlkaline'
+};
+
+export function phClassLabel(cls: PhClass, locale?: string | null): string {
+  return locale ? t(locale, PH_CLASS_KEY[cls]) : PH_CLASS_LABEL[cls];
+}
+
 /** Upper bound (inclusive, at one decimal) of each NRCS reaction class. */
 const PH_CLASS_UPPER: ReadonlyArray<readonly [PhClass, number]> = [
   ['ultra-acid', 3.4],
@@ -174,6 +220,18 @@ export const NUTRIENT_CLASS_LABEL: Record<NutrientClass, string> = {
   low: 'Below optimum',
   optimum: 'Optimum',
   high: 'Above optimum'
+};
+
+const NUTRIENT_CLASS_KEY: Record<NutrientClass, MessageKey> = {
+  low: 'fert.soil.class.low',
+  optimum: 'fert.soil.class.optimum',
+  high: 'fert.soil.class.high'
+};
+
+const MEDIUM_CLASS_KEY: Record<NutrientClass, MessageKey> = {
+  low: 'fert.soil.class.belowMedium',
+  optimum: 'fert.soil.class.medium',
+  high: 'fert.soil.class.aboveMedium'
 };
 
 interface OptimumBand {
@@ -219,9 +277,11 @@ export function computedNutrientClass(
 export function nutrientClassLabel(
   nutrient: 'p' | 'k',
   cls: NutrientClass,
-  method: ExtractionMethod | null | undefined
+  method: ExtractionMethod | null | undefined,
+  locale?: string | null
 ): string {
   const band = method ? OPTIMUM_BANDS[method]?.[nutrient] : undefined;
+  if (locale) return t(locale, band?.labels ? MEDIUM_CLASS_KEY[cls] : NUTRIENT_CLASS_KEY[cls]);
   return band?.labels?.[cls] ?? NUTRIENT_CLASS_LABEL[cls];
 }
 
@@ -242,7 +302,8 @@ function readNutrient(
   raw: number | null | undefined,
   basis: UnitsBasis | null | undefined,
   method: ExtractionMethod | null | undefined,
-  ratings: LabRatings
+  ratings: LabRatings,
+  locale?: string | null
 ): NutrientReading {
   const ppm = toPpm(raw, basis);
   const labRating = ratings[nutrient] ?? null;
@@ -252,7 +313,7 @@ function readNutrient(
     return {
       ppm,
       lbPerAcre: toLbPerAcre(ppm),
-      label: LAB_RATING_LABEL[labRating],
+      label: labRatingLabel(labRating, locale),
       provenance: 'manual',
       labRating,
       computed
@@ -263,7 +324,7 @@ function readNutrient(
     lbPerAcre: toLbPerAcre(ppm),
     label:
       computed && (nutrient === 'p' || nutrient === 'k')
-        ? nutrientClassLabel(nutrient, computed, method)
+        ? nutrientClassLabel(nutrient, computed, method, locale)
         : null,
     provenance: computed ? 'fallback' : null,
     labRating: null,
@@ -283,33 +344,35 @@ export interface LimeEstimate {
  *  the crop, so the amount always comes from the lab. */
 export function limeEstimate(
   ph: number | null | undefined,
-  bufferPh?: number | null
+  bufferPh?: number | null,
+  locale?: string | null
 ): LimeEstimate {
   const cls = phClass(ph);
   const buffer =
     bufferPh != null && Number.isFinite(bufferPh)
-      ? ` Your lab measured a buffer pH of ${bufferPh.toFixed(1)}, which is what it uses to set the amount.`
+      ? ` ${t(locale, 'fert.lime.buffer', { ph: bufferPh.toFixed(1) })}`
       : '';
   if (!cls) {
     return {
       status: 'unknown',
       provenance: 'fallback',
-      text: 'No pH on this test, so there is no lime hint.'
+      text: t(locale, 'fert.lime.noPh')
     };
   }
+  const clsText = phClassLabel(cls, locale).toLowerCase();
   const idx = PH_CLASS_UPPER.findIndex(([c]) => c === cls);
   const moderatelyAcidIdx = PH_CLASS_UPPER.findIndex(([c]) => c === 'moderately-acid');
   if (idx !== -1 && idx <= moderatelyAcidIdx) {
     return {
       status: 'likely',
       provenance: 'fallback',
-      text: `pH ${(ph as number).toFixed(1)} is ${PH_CLASS_LABEL[cls].toLowerCase()}. Most vegetables and field crops grow best in slightly acid soil, so lime is likely needed. Acid-loving crops such as blueberries are the exception.${buffer}`
+      text: `${t(locale, 'fert.lime.likely', { ph: (ph as number).toFixed(1), cls: clsText })}${buffer}`
     };
   }
   return {
     status: 'not-needed',
     provenance: 'fallback',
-    text: `pH ${(ph as number).toFixed(1)} is ${PH_CLASS_LABEL[cls].toLowerCase()}, so lime is not likely needed.${buffer}`
+    text: `${t(locale, 'fert.lime.notNeeded', { ph: (ph as number).toFixed(1), cls: clsText })}${buffer}`
   };
 }
 
@@ -360,17 +423,21 @@ export interface SoilInterpretation {
   ageYears: number;
 }
 
-export function interpretSoilTest(test: SoilTestReadable, now: number): SoilInterpretation {
+export function interpretSoilTest(
+  test: SoilTestReadable,
+  now: number,
+  locale?: string | null
+): SoilInterpretation {
   const ratings = test.labRatings ?? {};
   const method = test.extractionMethod ?? null;
   const basis = test.unitsBasis ?? null;
   return {
     phClass: phClass(test.ph),
-    p: readNutrient('p', test.phosphorusPpm, basis, method, ratings),
-    k: readNutrient('k', test.potassiumPpm, basis, method, ratings),
-    ca: readNutrient('ca', test.caPpm, basis, method, ratings),
-    mg: readNutrient('mg', test.mgPpm, basis, method, ratings),
-    lime: limeEstimate(test.ph, test.bufferPh),
+    p: readNutrient('p', test.phosphorusPpm, basis, method, ratings, locale),
+    k: readNutrient('k', test.potassiumPpm, basis, method, ratings, locale),
+    ca: readNutrient('ca', test.caPpm, basis, method, ratings, locale),
+    mg: readNutrient('mg', test.mgPpm, basis, method, ratings, locale),
+    lime: limeEstimate(test.ph, test.bufferPh, locale),
     stale: isSoilTestStale(test.sampledAt, now),
     ageYears: Math.max(0, (now - test.sampledAt) / YEAR_MS)
   };

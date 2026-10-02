@@ -185,7 +185,8 @@ export const actions: Actions = {
       phone: user.phone,
       isSuperadmin: user.isSuperadmin,
       activeOwnerId: ownerId,
-      activeRole: 'owner'
+      activeRole: 'owner',
+      iat: user.sessionIssuedAt
     });
     throw redirect(303, '/onboarding');
   },

@@ -24,6 +24,7 @@ function asRole(role: SessionRole, ownerId: string, impersonating = false) {
     activeOwnerId: ownerId,
     activeRole: role,
     impersonating,
+    iat: Date.now(),
     exp: Date.now() + 60_000
   };
 }

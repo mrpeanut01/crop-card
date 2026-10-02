@@ -78,7 +78,7 @@ test.describe('/settings/account profile', () => {
     await page.reload();
     await expect(tz).toHaveValue('America/Chicago');
     await expect(units).toHaveValue('metric');
-    await expect(page.getByLabel(/last sign-in/i)).toHaveValue(/C[SD]T$/);
+    await expect(page.getByLabel(/signed in on this browser/i)).toHaveValue(/C[SD]T$/);
 
     await tz.selectOption('America/New_York');
     await units.selectOption('us');

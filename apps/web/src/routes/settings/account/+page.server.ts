@@ -7,7 +7,7 @@
  * on its own through /api/account/avatar.
  */
 
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
@@ -24,6 +24,7 @@ import { identityName } from '$lib/identity';
 import { formatInstant } from '$lib/prefs';
 import { LOCALE_NAMES, enabledLocales, t } from '$lib/i18n';
 import { applyLocaleChoice } from '$lib/server/localeChoice';
+import { signOutEverywhere } from '$lib/server/auth';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => {
@@ -43,9 +44,9 @@ export const load: PageServerLoad = ({ locals }) => {
   const memberSince = userRow?.createdAt
     ? formatInstant(userRow.createdAt, prefs, 'date', { day: undefined })
     : '—';
-  const lastLogin = t(locals.locale, 'account.sessions.lastSignInValue', {
-    time: formatInstant(new Date(), prefs, 'time', { timeZoneName: 'short' })
-  });
+  const lastLogin = user.sessionIssuedAt
+    ? formatInstant(user.sessionIssuedAt, prefs, 'datetime', { timeZoneName: 'short' })
+    : '—';
   const enabled = enabledLocales();
 
   return {
@@ -139,5 +140,10 @@ export const actions: Actions = {
     }
     locals.locale = choice;
     return { localeSaved: true };
+  },
+
+  signOutEverywhere: (event) => {
+    signOutEverywhere(event);
+    throw redirect(303, '/');
   }
 };

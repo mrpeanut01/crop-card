@@ -589,6 +589,13 @@
       "when": 1790870262797,
       "tag": "0083_amendment_chain",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "6",
+      "when": 1790911274913,
+      "tag": "0084_sessions_valid_after",
+      "breakpoints": true
     }
   ]
 }

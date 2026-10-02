@@ -21,6 +21,7 @@ import {
   ALL_SESSION_ROLES,
   canMutate,
   isReadOnly,
+  clearSession,
   readSession,
   writeSession,
   type SessionRole
@@ -37,6 +38,9 @@ export interface AuthenticatedUser {
   activeOwnerId: string | null;
   isSuperadmin: boolean;
   impersonating: boolean;
+  /** Cookie sessions only: when this browser signed in (`SessionPayload.
+   *  iat`). Pass it back as `iat` when re-minting the cookie. */
+  sessionIssuedAt?: number;
   /** `users.locale`, filled when the request boundary re-reads the user
    *  row (32F, F5-3). Never read from the cookie. */
   locale?: string | null;
@@ -66,7 +70,8 @@ export function currentUser(event: RequestEvent): AuthenticatedUser | null {
     role: session.activeRole,
     activeOwnerId: session.activeOwnerId,
     isSuperadmin: session.isSuperadmin,
-    impersonating: session.impersonating ?? false
+    impersonating: session.impersonating ?? false,
+    sessionIssuedAt: session.iat
   };
 }
 
@@ -100,6 +105,15 @@ export function requireInteractiveUser(event: RequestEvent): AuthenticatedUser {
   }
   if (u.impersonating) throw error(403, 'not available while impersonating');
   return u;
+}
+
+/** "Sign out everywhere": every cookie this user holds that was issued
+ *  before now is refused by `revalidateCookieUser`, and this browser's is
+ *  cleared. Bearer tokens are separate credentials and stay valid. */
+export function signOutEverywhere(event: RequestEvent, now: Date = new Date()): void {
+  const u = requireInteractiveUser(event);
+  db.update(users).set({ sessionsValidAfter: now }).where(eq(users.id, u.id)).run();
+  clearSession(event.cookies);
 }
 
 export function isInspectorSession(event: RequestEvent): boolean {
@@ -255,7 +269,8 @@ export function refreshSessionIdentity(event: RequestEvent, user: AuthenticatedU
     isSuperadmin: user.isSuperadmin,
     activeOwnerId: user.activeOwnerId,
     activeRole: user.role,
-    impersonating: user.impersonating
+    impersonating: user.impersonating,
+    iat: user.sessionIssuedAt
   });
 }
 

@@ -107,6 +107,19 @@ describe('shipped species library', () => {
     expect(foodProducingExplanation(species.get('dog'))).toMatch(/^Dogs are not food animals/);
     expect(foodProducingExplanation(species.get('horse'))).toMatch(/even when kept as pets/);
   });
+
+  it('explains the food flag in Spanish with a locale and in English without', () => {
+    for (const s of species.all()) {
+      expect(foodProducingExplanation(s, 'en')).toBe(foodProducingExplanation(s));
+      const es = foodProducingExplanation(s, 'es');
+      expect(es, s.pluginId).not.toBe(foodProducingExplanation(s));
+      expect(es, s.pluginId).toMatch(/animales para alimento/);
+    }
+    expect(foodProducingExplanation(species.get('chicken'), 'es')).toBe(
+      'Gallinas: cuentan como animales para alimento porque la gente come sus huevos.'
+    );
+    expect(foodProducingExplanation(undefined, 'es')).toMatch(/por precaución/);
+  });
 });
 
 describe('species lookups', () => {

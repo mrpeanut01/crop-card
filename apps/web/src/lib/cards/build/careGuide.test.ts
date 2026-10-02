@@ -27,7 +27,12 @@ describe('buildCareGuideCard', () => {
       { label: 'Spacing', value: '18–24 in', provenance: 'plugin' },
       { label: 'Row spacing', value: '48 in', provenance: 'plugin' },
       { label: 'Soil temp', value: '60°F or warmer', provenance: 'plugin' },
-      { label: 'Wait after spraying', value: '14 days before picking', provenance: 'plugin' }
+      {
+        label: 'Wait after spraying',
+        value: '14 days before picking',
+        provenance: 'plugin',
+        englishOnly: true
+      }
     ]);
     expect(card.sections.map((s) => [s.title, s.provenance])).toEqual([
       ['Water', 'fallback'],

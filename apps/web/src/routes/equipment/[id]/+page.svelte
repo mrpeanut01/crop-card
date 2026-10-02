@@ -383,7 +383,7 @@
       {#each data.log as entry (entry.id)}
         <li class="log-entry kind-{entry.kind}">
           <header>
-            <span class="kind">{entry.kind}</span>
+            <span class="kind">{tr(`equip.d.kind.${entry.kind}`)}</span>
             <time>{fmtTs(entry.occurredAt)}</time>
           </header>
           {#if entry.notes}<p>{entry.notes}</p>{/if}

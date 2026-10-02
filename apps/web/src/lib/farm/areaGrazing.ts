@@ -129,7 +129,13 @@ export function grazingSection(
   if (!g) return null;
   const items = grazingLines(g, timeZone);
   if (!items.length) return null;
-  return { title: 'Grazing', items, safety: true, provenance: g.attested ? 'manual' : 'plugin' };
+  return {
+    title: 'Grazing',
+    items,
+    safety: true,
+    englishOnly: 'all',
+    provenance: g.attested ? 'manual' : 'plugin'
+  };
 }
 
 /** The Area Card with its grazing holds added. Unchanged when nothing is held. */

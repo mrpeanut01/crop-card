@@ -351,7 +351,7 @@
           {#if p.targetPests.length}
             <span class="pests">— {p.targetPests.join(', ')}</span>
           {/if}
-          <div class="meta">
+          <div class="meta" lang="en" data-english-only="safety">
             REI {p.reEntryIntervalHours}h
             {#if p.preHarvestIntervalDays !== undefined}
               · PHI {p.preHarvestIntervalDays}d
@@ -549,7 +549,9 @@
           <div class="dial-kicker">{tr('sprayui.ipm.thisWeek')}</div>
           <div class="dial-row">
             <span class="dial-num serif" class:over={ipmTriggered}>{thisWeekCount}</span>
-            <span class="dial-unit">{primaryThreshold.metric.replace(/-/g, ' ')}</span>
+            <span class="dial-unit" lang="en" data-english-only="safety"
+              >{primaryThreshold.metric.replace(/-/g, ' ')}</span
+            >
           </div>
           <div class="dial-sub">
             {tr('sprayui.ipm.actionThreshold')}

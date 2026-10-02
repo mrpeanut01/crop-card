@@ -6,11 +6,14 @@
   import type { PageData } from './$types';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import { listPendingForActiveOwner } from '$lib/client/syncQueue';
-  import { createT } from '$lib/i18n';
+  import { createT, type MessageKey } from '$lib/i18n';
 
   let { data }: { data: PageData } = $props();
 
   const tr = $derived(createT(data.locale));
+  const PLANTING_STATUSES = ['planned', 'active', 'harvested', 'failed', 'archived'];
+  const statusLabel = (status: string) =>
+    PLANTING_STATUSES.includes(status) ? tr(`crops.status.${status}` as MessageKey) : status;
 
   // Client-attested offline pending count (Dexie is client-only). Null until
   // the first read resolves; treated as "unknown/blocking" until then.
@@ -211,7 +214,7 @@
             {#each data.preflight.plantings.filter((p) => !p.resolved) as p (p.cropId)}
               <li>
                 {cropDisplayNameByEnglish(p.varietyDisplayName, data.locale)}
-                <span class="muted">({p.status})</span>
+                <span class="muted">({statusLabel(p.status)})</span>
               </li>
             {/each}
           </ul>

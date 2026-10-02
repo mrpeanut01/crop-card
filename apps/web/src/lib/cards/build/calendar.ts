@@ -227,11 +227,14 @@ export function calendarEntry(
   if (isSprayTask(t)) {
     const key = sprayCardKeyFor(snapshot, t);
     return {
-      text: 'Spray task',
+      text: translate(locale, 'cards.cal.sprayTask'),
       ...(where ? { where } : {}),
       ...(who ? { who } : {}),
       ...(overdue ? { overdue } : {}),
-      see: key.startsWith('sp_') ? 'See the Spray Card' : 'See the task for its Spray Card',
+      see: translate(
+        locale,
+        key.startsWith('sp_') ? 'cards.cal.seeSprayCard' : 'cards.cal.seeTaskSprayCard'
+      ),
       seeUrl: cardShortUrl(snapshot.origin, key)
     };
   }
@@ -387,7 +390,7 @@ function buildPeriodCard(
   if (earlierShown) notices.push(tr('cards.cal.earlierDays'));
   if (farmWideHidden) notices.push(tr('cards.cal.farmWideHidden', { count: farmWideHidden }));
   if (tasks.some((t) => isSprayTask(t)))
-    notices.push('Spray tasks show no rates or mixing steps. Use the Spray Card for those.');
+    notices.push(tr('cards.cal.sprayNotice'));
 
   const key = cardKey(spec.kind, spec.keyId);
   const kicker = [

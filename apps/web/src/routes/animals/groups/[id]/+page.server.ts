@@ -21,7 +21,7 @@ export const load: PageServerLoad = async (event) => {
   const group = getAnimalGroupSummary(event.params.id);
   if (!group) throw error(404, t(event.locals?.locale, 'animallib.api.groupPageNotFound'));
   const user = currentUser(event);
-  const species = await speciesOptions();
+  const species = await speciesOptions(event.locals?.locale);
   const areas = areaOptions();
   const today = ymdInZone(Date.now(), farmTimeZone());
 

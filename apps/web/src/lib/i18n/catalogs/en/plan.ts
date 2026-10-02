@@ -692,5 +692,6 @@ export const enPlan = {
   'plan.grazing.breadcrumb': 'Breadcrumb',
   'plan.grazing.kicker': '{area} · Grazing and haying',
   'plan.grazing.title': 'Grazing and haying times',
-  'plan.grazing.empty': 'Nothing has been sprayed here in the last year.'
+  'plan.grazing.empty': 'Nothing has been sprayed here in the last year.',
+  'plan.cal.body.harvestReadiness': 'Use crop-specific readiness indicators before harvest.'
 } as const;

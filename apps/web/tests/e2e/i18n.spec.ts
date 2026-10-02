@@ -61,7 +61,11 @@ const KNOWN_ENGLISH_KEYS = [
   'billing.free.title',
   'wizard.year.legend',
   'settings.index.records.sub',
-  'billing.plans.foreverNoCard'
+  'billing.plans.foreverNoCard',
+  'cards.spray.why1',
+  'cards.cal.sprayNotice',
+  'animallib.food.unknown',
+  'plan.cal.body.harvestReadiness'
 ] as const satisfies readonly (keyof typeof en)[];
 
 // B34-30: built from the catalog's own top-level prefixes, so a new namespace

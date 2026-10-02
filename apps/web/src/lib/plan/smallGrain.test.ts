@@ -17,6 +17,8 @@ import {
   springYearFor,
   stageForDaysFromPlanting,
   zadoksNumber,
+  zadoksStageName,
+  WINTER_SPRING_ANCHORS,
   type SmallGrainPluginInput
 } from './smallGrain';
 
@@ -480,5 +482,19 @@ describe('vernalization', () => {
       ),
       { numRuns: 60 }
     );
+  });
+});
+
+describe('zadoksStageName', () => {
+  it('keeps every name English without a locale and translates built-in names', () => {
+    for (const s of WINTER_SPRING_ANCHORS) {
+      expect(zadoksStageName(s.code, s.name)).toBe(s.name);
+      expect(zadoksStageName(s.code, s.name, 'en')).toBe(s.name);
+      expect(zadoksStageName(s.code, s.name, 'es')).not.toBe(s.name);
+    }
+    expect(zadoksStageName('Z55', 'Heading (half of head out)', 'es')).toBe(
+      'Espigado (media espiga fuera)'
+    );
+    expect(zadoksStageName('Z55', 'Plugin heading text', 'es')).toBe('Plugin heading text');
   });
 });

@@ -42,6 +42,8 @@ export interface CardFact {
   provenance?: ProvenanceSource;
   /** Printed in place of `value` (a link that only works on screen). */
   printValue?: string;
+  /** Label and value stay English by rule (rates, REI, PHI, decon). */
+  englishOnly?: boolean;
 }
 
 export interface CardAction {
@@ -64,6 +66,11 @@ export interface CardSection {
   /** On screen the title is one line that opens to the items. Print
    *  always shows them. It can be opened and closed, never dismissed. */
   collapsible?: boolean;
+  /** Stays English by rule: `items` keeps only the lines English, `all`
+   *  the title too. */
+  englishOnly?: 'items' | 'all';
+  /** In a mixed section, the items that stay English by rule. */
+  englishOnlyItems?: string[];
 }
 
 export interface CardProvenance {
@@ -171,6 +178,8 @@ export interface CardModel {
   href: string;
   /** Lines shown on every variant, printed included (Spray Card cautions). */
   notices?: string[];
+  /** The notices that stay English by rule (safety and hold lines). */
+  englishOnlyNotices?: string[];
   /** After this long past `asOf` the card shows a stale banner. */
   staleAfterMs?: number;
   /** Extra screen links, e.g. "Open designer" on a garden Area. */

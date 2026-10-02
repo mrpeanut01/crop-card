@@ -479,5 +479,31 @@ export const esCards: Partial<Record<MessageKey, string>> = {
   'cards.tip.orchard.prune.0': 'Quita las ramas muertas, enfermas y rotas.',
   'cards.tip.orchard.prune.1':
     'Ralea la fruta cuando tenga el tamaño de una moneda de cinco centavos para que la que queda cuelgue a 6 u 8 pulgadas de distancia.',
-  'cards.tip.orchard.problems.0': 'Recoge y retira la fruta dañada o caída.'
+  'cards.tip.orchard.problems.0': 'Recoge y retira la fruta dañada o caída.',
+  'cards.spray.kicker': 'Aspersión · {sprayer}',
+  'cards.spray.calibrateFirst': 'Primero calibra',
+  'cards.spray.why': 'Por qué',
+  'cards.spray.why1':
+    'Las cantidades de mezcla dependen de cuántos galones por acre aplica esta aspersora.',
+  'cards.spray.why2':
+    'Calíbrala una vez y sus tarjetas de aplicación mostrarán las cantidades por tanque.',
+  'cards.spray.provSprayer': 'tu aspersora',
+  'cards.spray.provCalibration': 'la calibración de tu aspersora',
+  'cards.spray.epaReg': 'N.º de registro EPA',
+  'cards.spray.epaMissing': 'No consta, revisa la etiqueta',
+  'cards.spray.gpaCalibrated': '{gpa} GPA · calibrada el {date}',
+  'cards.spray.target': 'Objetivo',
+  'cards.spray.before': 'Antes de aplicar',
+  'cards.spray.runDecon': 'Primero haz la descontaminación',
+  'cards.spray.record': 'Registrar esta aplicación',
+  'cards.record.beforeAgain': 'Antes de volver a aplicar',
+  'cards.record.labelFacts': 'Datos de la etiqueta',
+  'cards.record.provDefaultWeather': 'clima predeterminado, no medido',
+  'cards.eq.lastDecon': 'Última descontaminación',
+  'cards.eq.deconDue': '{chemistry}, requiere descontaminación',
+  'cards.cal.sprayTask': 'Tarea de aplicación',
+  'cards.cal.seeSprayCard': 'Ver la tarjeta de aplicación',
+  'cards.cal.seeTaskSprayCard': 'Abre la tarea para ver su tarjeta de aplicación',
+  'cards.cal.sprayNotice':
+    'Las tareas de aplicación no muestran dosis ni pasos de mezcla. Para eso usa la tarjeta de aplicación.'
 };

@@ -211,11 +211,11 @@
   <section class="step">
     <h2>
       {tr('sprayui.dc.stepOf', { n: stepIndex + 1, total: STEPS.length })}
-      {currentStep.title}
+      <span lang="en" data-english-only="safety">{currentStep.title}</span>
     </h2>
-    <p>{currentStep.body}</p>
+    <p lang="en" data-english-only="safety">{currentStep.body}</p>
     {#if currentStep.metricNote && currentPrefs().units === 'metric'}
-      <p class="hint">({currentStep.metricNote()})</p>
+      <p class="hint" lang="en" data-english-only="safety">({currentStep.metricNote()})</p>
     {/if}
 
     {#if currentStep.requiresTimer}
@@ -286,7 +286,12 @@
     <h2>{tr('sprayui.dc.allSteps')}</h2>
     <ol>
       {#each STEPS as s, i (s.key)}
-        <li class:done={i < stepIndex} class:current={i === stepIndex}>
+        <li
+          class:done={i < stepIndex}
+          class:current={i === stepIndex}
+          lang="en"
+          data-english-only="safety"
+        >
           {s.title}
         </li>
       {/each}

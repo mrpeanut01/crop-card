@@ -1004,5 +1004,19 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.beds.leftoverItem.other': '{count} plantas de {name}',
   'wizard.beds.fallbackMsg':
     '{why}, así que estas camas de cultivo se calculan con el espaciado de cada cultivo.',
-  'planui.beds.bedLine': 'Cama {n}: {width} × {length}'
+  'planui.beds.bedLine': 'Cama {n}: {width} × {length}',
+  'planui.zad.stage.Z00': 'Sembrado (semilla seca)',
+  'planui.zad.stage.Z10': 'Primera hoja a través del coleóptilo',
+  'planui.zad.stage.Z13': 'Tres hojas desplegadas',
+  'planui.zad.stage.Z21': 'Tallo principal + 1 macollo',
+  'planui.zad.stage.Z30': 'Inicio del encañado (pseudotallo erecto)',
+  'planui.zad.stage.Z32': 'Segundo nudo detectable',
+  'planui.zad.stage.Z39': 'Lígula de la hoja bandera visible',
+  'planui.zad.stage.Z45': 'Embuchamiento (vaina hinchada)',
+  'planui.zad.stage.Z55': 'Espigado (media espiga fuera)',
+  'planui.zad.stage.Z61': 'Inicio de la antesis',
+  'planui.zad.stage.Z65': 'Antesis media',
+  'planui.zad.stage.Z75': 'Grano lechoso medio',
+  'planui.zad.stage.Z85': 'Grano pastoso blando',
+  'planui.zad.stage.Z92': 'Madurez de cosecha (grano duro)'
 };

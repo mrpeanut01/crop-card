@@ -595,5 +595,14 @@ export const enAnimals = {
   'animals.health.courseTo': 'to {date}',
   'animals.health.moreDoses': 'more doses to come',
   'animals.health.vetName': 'Vet: {name}',
-  'animals.health.lotNumber': 'Lot {lot}'
+  'animals.health.lotNumber': 'Lot {lot}',
+  'animallib.food.unknown':
+    'This species is not in the library, so it counts as a food animal to be safe.',
+  'animallib.food.notFood':
+    '{who} are not food animals, so medicine withdrawal times do not apply.',
+  'animallib.food.eggs': '{who} count as food animals because people eat their eggs.',
+  'animallib.food.milk':
+    '{who} count as food animals because people drink their milk or eat their meat.',
+  'animallib.food.meat': '{who} count as food animals because people eat their meat.',
+  'animallib.food.usRules': '{who} count as food animals under US rules, even when kept as pets.'
 } as const;

@@ -6,11 +6,11 @@ import { getDataKinds } from '$lib/server/registry';
 import { foodProducingExplanation, speciesTiles } from '$lib/plugins/species';
 import { housingOptions, type AreaOption, type SpeciesOption } from './display';
 
-export async function speciesOptions(): Promise<SpeciesOption[]> {
+export async function speciesOptions(locale?: string | null): Promise<SpeciesOption[]> {
   const registry = (await getDataKinds()).species;
   return speciesTiles(registry.all()).map((t) => ({
     ...t,
-    explanation: foodProducingExplanation(registry.get(t.id))
+    explanation: foodProducingExplanation(registry.get(t.id), locale)
   }));
 }
 

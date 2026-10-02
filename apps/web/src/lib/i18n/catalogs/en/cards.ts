@@ -466,5 +466,29 @@ export const enCards = {
   'cards.tip.orchard.prune.0': 'Remove dead, diseased and broken branches.',
   'cards.tip.orchard.prune.1':
     'Thin fruit when it is about the size of a nickel so the rest hang 6 to 8 inches apart.',
-  'cards.tip.orchard.problems.0': 'Pick up and remove damaged or fallen fruit.'
+  'cards.tip.orchard.problems.0': 'Pick up and remove damaged or fallen fruit.',
+  'cards.spray.kicker': 'Spray · {sprayer}',
+  'cards.spray.calibrateFirst': 'Calibrate first',
+  'cards.spray.why': 'Why',
+  'cards.spray.why1': 'Mix amounts depend on how many gallons this sprayer puts down per acre.',
+  'cards.spray.why2': 'Calibrate it once and its spray cards will show amounts per tank.',
+  'cards.spray.provSprayer': 'your sprayer',
+  'cards.spray.provCalibration': 'your sprayer calibration',
+  'cards.spray.epaReg': 'EPA reg. no.',
+  'cards.spray.epaMissing': 'Not on file, check the label',
+  'cards.spray.gpaCalibrated': '{gpa} GPA · calibrated {date}',
+  'cards.spray.target': 'Target',
+  'cards.spray.before': 'Before you spray',
+  'cards.spray.runDecon': 'Run decon first',
+  'cards.spray.record': 'Record this spray',
+  'cards.record.beforeAgain': 'Before you spray again',
+  'cards.record.labelFacts': 'Label facts',
+  'cards.record.provDefaultWeather': 'default weather, not measured',
+  'cards.eq.lastDecon': 'Last decon',
+  'cards.eq.deconDue': '{chemistry}, decon due',
+  'cards.cal.sprayTask': 'Spray task',
+  'cards.cal.seeSprayCard': 'See the Spray Card',
+  'cards.cal.seeTaskSprayCard': 'See the task for its Spray Card',
+  'cards.cal.sprayNotice':
+    'Spray tasks show no rates or mixing steps. Use the Spray Card for those.'
 } as const;

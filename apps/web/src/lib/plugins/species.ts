@@ -7,6 +7,7 @@
 
 import { t, type MessageKey } from '$lib/i18n';
 import type { SpeciesPlugin } from './schemas';
+import { speciesWordsIn } from '$lib/i18n/speciesName';
 
 /** The ruled starter set, in tile order. There is no "Other" species. */
 export const STARTER_SPECIES_IDS = [
@@ -95,8 +96,13 @@ export function speciesLabel(
   return species.get(speciesId)?.displayName ?? t(locale, 'pluginui.species.unknown');
 }
 
-/** One plain line under the food-producing chip on the add form. */
-export function foodProducingExplanation(p: SpeciesPlugin | undefined): string {
+/** One plain line under the food-producing chip on the add form. English
+ *  without `locale`. */
+export function foodProducingExplanation(
+  p: SpeciesPlugin | undefined,
+  locale?: string | null
+): string {
+  if (locale && locale !== 'en') return foodProducingExplanationIn(p, locale);
   if (!p) {
     return 'This species is not in the library, so it counts as a food animal to be safe.';
   }
@@ -114,6 +120,29 @@ export function foodProducingExplanation(p: SpeciesPlugin | undefined): string {
     return `${who} count as food animals because people eat their meat.`;
   }
   return `${who} count as food animals under US rules, even when kept as pets.`;
+}
+
+function foodProducingExplanationIn(p: SpeciesPlugin | undefined, locale: string): string {
+  if (!p) return t(locale, 'animallib.food.unknown');
+  const who = speciesWordsIn(
+    {
+      pluginId: p.pluginId,
+      displayName: p.displayName,
+      label: p.tile.label ?? p.displayName,
+      groupNoun: p.groupNoun
+    },
+    locale
+  ).label;
+  const key = !p.foodProducingDefault
+    ? 'animallib.food.notFood'
+    : p.products.includes('eggs')
+      ? 'animallib.food.eggs'
+      : p.products.includes('milk')
+        ? 'animallib.food.milk'
+        : p.products.includes('meat')
+          ? 'animallib.food.meat'
+          : 'animallib.food.usRules';
+  return t(locale, key, { who });
 }
 
 // Mirrors the `animals.sex` column enum in lib/db/schema.ts.

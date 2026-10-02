@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fmt as prefsFmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
-  import type { DecisionKind, SmallGrainStage } from '$lib/plan/smallGrain';
+  import { zadoksStageName, type DecisionKind, type SmallGrainStage } from '$lib/plan/smallGrain';
 
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
@@ -48,6 +48,9 @@
     return copy;
   }
 
+  const stageName = (s: SmallGrainStage) => zadoksStageName(s.code, s.name, page.data?.locale);
+  const englishDetail = (kind: DecisionKind) => kind !== 'heading' && kind !== 'harvest';
+
   function fmt(ms: number): string {
     return prefsFmt.day(ms, 'month-day');
   }
@@ -71,14 +74,14 @@
       <h2 id="zadoks-title" class="serif">{tr('planui.zad.title')}</h2>
       <p class="sub">
         {#if current}
-          <strong>{current.name}</strong> ({current.code})
+          <strong>{stageName(current)}</strong> ({current.code})
           {tr('planui.zad.since', { date: fmt(current.startMs) })}
         {:else if stages.length > 0}
           {tr('planui.zad.notSown', { date: fmt(stages[0].startMs) })}
         {/if}
         {#if next}{tr('planui.zad.next', {
             code: next.code,
-            name: next.name,
+            name: stageName(next),
             date: fmt(next.startMs)
           })}{/if}
       </p>
@@ -105,13 +108,13 @@
           class:fhb={s.decision === 'fhb-window'}
           class:harvest={s.decision === 'harvest'}
           aria-current={isCurrent ? 'step' : undefined}
-          title="{s.name} ({s.code}) — {fmt(s.startMs)}"
+          title="{stageName(s)} ({s.code}) — {fmt(s.startMs)}"
         >
           <span class="dot" aria-hidden="true">
             {#if done}✓{:else if isCurrent}●{:else if s.decision === 'fhb-window'}!{:else if s.decision === 'harvest'}★{/if}
           </span>
           <span class="code mono">{s.code}</span>
-          <span class="name">{s.name}</span>
+          <span class="name">{stageName(s)}</span>
           <span class="when mono">
             {done ? '' : s.provenance === 'fallback' ? '~' : ''}{fmt(s.startMs)}
           </span>
@@ -127,7 +130,11 @@
         <li class:passed={s.startMs < nowMs && s.decision !== 'fhb-window'}>
           <span class="d-label">{copy.label}</span>
           <span class="d-when mono">{s.code} · ~{fmt(s.startMs)} · {relative(s.startMs)}</span>
-          <span class="d-detail">{copy.detail}</span>
+          {#if englishDetail(s.decision!)}
+            <span class="d-detail" lang="en" data-english-only="safety">{copy.detail}</span>
+          {:else}
+            <span class="d-detail">{copy.detail}</span>
+          {/if}
         </li>
       {/each}
     </ul>

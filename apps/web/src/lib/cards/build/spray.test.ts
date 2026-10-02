@@ -331,3 +331,36 @@ describe('buildSprayCards', () => {
     expect(buildSprayCards(s).map((c) => c.title)).toEqual([CALIBRATE_FIRST_TITLE]);
   });
 });
+
+describe('Spray Card in Spanish', () => {
+  const gear = sampleGearSnapshot();
+  const opts = { locale: 'es' };
+
+  it('translates the chrome and keeps rates, REI, PHI, mix and decon English', () => {
+    const en = buildSprayCard(gear, 'eq_boom~24d')!;
+    const es = buildSprayCard(gear, 'eq_boom~24d', opts)!;
+    expect(en.kicker).toBe('Spray · 50-gal boom');
+    expect(es.kicker).toBe('Aspersión · 50-gal boom');
+    expect(es.next?.label).not.toBe(en.next?.label);
+    const label = (c: typeof es, l: string) => c.facts.find((f) => f.label === l);
+    for (const l of ['Rate', 'REI', 'PHI', 'Tank covers']) {
+      expect(label(es, l), l).toEqual(label(en, l));
+      expect(label(es, l)?.englishOnly, l).toBe(true);
+    }
+    expect(label(es, 'Aspersora')?.value).toMatch(/GPA · calibrada el/);
+    const mix = es.sections.find((s) => s.title === 'Mix order')!;
+    expect(mix.englishOnly).toBe('all');
+    expect(mix.items).toEqual(en.sections.find((s) => s.title === 'Mix order')!.items);
+    const before = es.sections.find((s) => s.title === 'Antes de aplicar')!;
+    expect(before.englishOnly).toBe('items');
+    expect(es.notices).toEqual(en.notices);
+    expect(es.englishOnlyNotices).toEqual(es.notices);
+  });
+
+  it('the calibrate-first card reads in Spanish', () => {
+    const es = buildSprayCard(gear, 'eq_pack', opts)!;
+    expect(es.title).toBe('Primero calibra');
+    expect(es.sections[0].title).toBe('Por qué');
+    expect(buildSprayCard(gear, 'eq_pack')!.title).toBe(CALIBRATE_FIRST_TITLE);
+  });
+});

@@ -19,7 +19,7 @@ export const load: PageServerLoad = async (event) => {
 
   return {
     profile: loadAnimalsProfile(),
-    species: await speciesOptions(),
+    species: await speciesOptions(event.locals?.locale),
     areas,
     housingAreas: housingAreaOptions(areas),
     groups,

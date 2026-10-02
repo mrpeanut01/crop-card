@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
   import { createT, type MessageKey } from '$lib/i18n';
+  import { equipmentTypeLabel } from '$lib/equipment/typeLabel';
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -136,7 +137,7 @@
 <section class="step">
   <h2>{tr('equip.w.sprayer')}</h2>
   <p class="who">
-    <span class="type-badge">{eq.type}</span>
+    <span class="type-badge">{equipmentTypeLabel(eq.type, data.locale)}</span>
     <strong>{eq.label}</strong>
   </p>
   {#if data.sprayer?.lastChemistryClass}
@@ -156,10 +157,14 @@
     <h2>
       {tr('equip.w.step', { n: stepIndex + 1, total: steps.length, title: stepTitle(currentStep) })}
     </h2>
-    <p>{stepBody(currentStep)}</p>
+    {#if currentStep.kind === 'decon'}
+      <p lang="en" data-english-only="safety">{stepBody(currentStep)}</p>
+    {:else}
+      <p>{stepBody(currentStep)}</p>
+    {/if}
 
     {#if currentStep.subSteps}
-      <ol class="sub-steps">
+      <ol class="sub-steps" lang="en" data-english-only="safety">
         {#each currentStep.subSteps as sub, i (i)}
           <li>{sub}</li>
         {/each}

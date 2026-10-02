@@ -713,5 +713,7 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plan.grazing.breadcrumb': 'Ruta de navegación',
   'plan.grazing.kicker': '{area} · Pastoreo y henificación',
   'plan.grazing.title': 'Tiempos de pastoreo y henificación',
-  'plan.grazing.empty': 'No se ha aplicado nada aquí en el último año.'
+  'plan.grazing.empty': 'No se ha aplicado nada aquí en el último año.',
+  'plan.cal.body.harvestReadiness':
+    'Antes de cosechar, revisa las señales de madurez propias de cada cultivo.'
 };

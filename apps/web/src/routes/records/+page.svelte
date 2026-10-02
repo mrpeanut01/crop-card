@@ -15,11 +15,14 @@
   import { lateLabel } from '$lib/records/lateLabel';
   import { KIND_TONE, RECORD_KINDS, type RecordKind } from '$lib/db/recordKinds';
   import { kindLabel } from '$lib/components/records/kindLabel';
+  import { archetypeLabel } from '$lib/plugins/familyLabel';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { localStamp } from '$lib/exports/localTime';
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
+  const archetypeShown = (a: string) =>
+    data.locale && data.locale !== 'en' ? archetypeLabel(a, data.locale) : a;
 
   let pendingCount = $state<number | null>(null);
   let openCards = $state<string[]>([]);
@@ -428,7 +431,7 @@
             <tbody>
               {#each yearSummary.harvestByArchetype as h (h.archetype)}
                 <tr>
-                  <td>{h.archetype}</td>
+                  <td>{archetypeShown(h.archetype)}</td>
                   <td class="num mono">{h.eventCount}</td>
                   <td class="mono muted">{fmtMoisture(h.moisture)}</td>
                 </tr>

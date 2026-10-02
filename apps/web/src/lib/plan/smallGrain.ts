@@ -33,6 +33,7 @@
  * Nothing here is a safety-kernel rule; all output is advisory.
  */
 
+import { t, type MessageKey } from '$lib/i18n';
 import type { GrowthStageTable } from '$lib/plugins/schemas';
 import { normalizeZadoksToGrowthStageTable } from '$lib/plugins/growthStageTemplates';
 import { projectStages } from '$lib/calendar/stageProjection';
@@ -117,6 +118,13 @@ const STAGE_NAMES: Record<string, string> = {
 };
 
 const named = (code: string): TypicalStage => ({ code, name: STAGE_NAMES[code] });
+
+/** A stage's name in `locale`. Names other than the built-in table's
+ *  (a crop plugin's own) and every name without a locale stay as given. */
+export function zadoksStageName(code: string, name: string, locale?: string | null): string {
+  if (!locale || locale === 'en' || STAGE_NAMES[code] !== name) return name;
+  return t(locale, `planui.zad.stage.${code}` as MessageKey);
+}
 
 /** Winter habit, pre-dormancy: days after sowing. */
 export const WINTER_FALL_OFFSETS: ReadonlyArray<TypicalStage & { days: number }> = [

@@ -255,7 +255,9 @@ function flockCard(
     rulesVersion: snapshot.rulesVersion,
     provenance: mergeProvenance(provenance),
     href: cardHref('flock', key),
-    ...(notices.length ? { notices, staleAfterMs: HOLD_CONFIRM_MAX_AGE_MS } : {}),
+    ...(notices.length
+      ? { notices, englishOnlyNotices: [...notices], staleAfterMs: HOLD_CONFIRM_MAX_AGE_MS }
+      : {}),
     links,
     status: holdStatus(reading, foods)
   };

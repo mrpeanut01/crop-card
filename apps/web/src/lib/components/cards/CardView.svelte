@@ -4,7 +4,13 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import BedMapThumb from './BedMapThumb.svelte';
   import CardCalendarView from './CardCalendarView.svelte';
-  import { CARD_KIND_LABEL, isCardStale, type CardModel, type CardVariant } from '$lib/cards/model';
+  import {
+    CARD_KIND_LABEL,
+    isCardStale,
+    type CardModel,
+    type CardSection,
+    type CardVariant
+  } from '$lib/cards/model';
   import type { QrPath } from '$lib/cards/qr';
   import { DEFAULT_PREFS, formatInstant, type Prefs } from '$lib/prefs';
   import { provenanceText } from '$lib/provenanceLabels';
@@ -129,24 +135,40 @@
     {#if card.notices?.length}
       <ul class="notices">
         {#each card.notices as n, i (i)}
-          <li>{n}</li>
+          {#if card.englishOnlyNotices?.includes(n)}
+            <li><span lang="en" data-english-only="safety">{n}</span></li>
+          {:else}
+            <li>{n}</li>
+          {/if}
         {/each}
       </ul>
     {/if}
 
-    {#snippet itemText(item: string, nowrapAfter: string | undefined)}
+    {#snippet itemBody(item: string, nowrapAfter: string | undefined)}
       {@const at = nowrapAfter ? item.lastIndexOf(nowrapAfter) : -1}
       {#if at >= 0 && nowrapAfter}{item.slice(0, at + nowrapAfter.length)}<span class="nowrap"
           >{item.slice(at + nowrapAfter.length)}</span
         >{:else}{item}{/if}
     {/snippet}
 
+    {#snippet itemText(item: string, s: CardSection)}
+      {#if s.englishOnly || s.englishOnlyItems?.includes(item)}<span
+          lang="en"
+          data-english-only="safety">{@render itemBody(item, s.nowrapAfter)}</span
+        >{:else}{@render itemBody(item, s.nowrapAfter)}{/if}
+    {/snippet}
+
+    {#snippet sectionTitle(s: CardSection)}
+      {#if s.englishOnly === 'all'}<span lang="en" data-english-only="safety">{s.title}</span
+        >{:else}{s.title}{/if}
+    {/snippet}
+
     {#each safetyFirst as s (s.title)}
       <section class="section safety" data-safety-section>
-        <h4>{s.title}</h4>
+        <h4>{@render sectionTitle(s)}</h4>
         <ul>
           {#each s.items as item, i (i)}
-            <li>{@render itemText(item, s.nowrapAfter)}</li>
+            <li>{@render itemText(item, s)}</li>
           {/each}
         </ul>
       </section>
@@ -157,11 +179,21 @@
         <dl class="facts">
           {#each facts as f, i (`${i}-${f.label}`)}
             <div class="fact">
-              <dt>{f.label}</dt>
+              {#if f.englishOnly}
+                <dt><span lang="en" data-english-only="safety">{f.label}</span></dt>
+              {:else}
+                <dt>{f.label}</dt>
+              {/if}
               <dd>
-                <span class="value"
-                  >{variant === 'print' && f.printValue ? f.printValue : f.value}</span
-                >
+                {#if f.englishOnly}
+                  <span class="value" lang="en" data-english-only="safety"
+                    >{variant === 'print' && f.printValue ? f.printValue : f.value}</span
+                  >
+                {:else}
+                  <span class="value"
+                    >{variant === 'print' && f.printValue ? f.printValue : f.value}</span
+                  >
+                {/if}
                 {#if f.provenance && variant === 'screen'}
                   <Provenance source={f.provenance} compact />
                 {/if}
@@ -215,28 +247,28 @@
         {#if s.collapsible && variant !== 'print'}
           <details class="section fold" class:safety={s.safety} data-collapsible-section>
             <summary>
-              <span class="fold-title">{s.title}</span>
+              <span class="fold-title">{@render sectionTitle(s)}</span>
               {#if s.provenance && variant === 'screen'}
                 <Provenance source={s.provenance} compact />
               {/if}
             </summary>
             <ul>
               {#each s.items as item, i (i)}
-                <li>{@render itemText(item, s.nowrapAfter)}</li>
+                <li>{@render itemText(item, s)}</li>
               {/each}
             </ul>
           </details>
         {:else}
           <section class="section" class:safety={s.safety}>
             <h4>
-              {s.title}
+              {@render sectionTitle(s)}
               {#if s.provenance && variant === 'screen'}
                 <Provenance source={s.provenance} compact />
               {/if}
             </h4>
             <ul>
               {#each s.items as item, i (i)}
-                <li>{@render itemText(item, s.nowrapAfter)}</li>
+                <li>{@render itemText(item, s)}</li>
               {/each}
             </ul>
           </section>
@@ -245,9 +277,9 @@
     </div>
     {#if variant === 'print' && bodySections.length && !complete}
       <p class="more">
-        {card.kind === 'spray'
-          ? 'Cut short? The label and the live card have the full directions.'
-          : tr('cardsui.cutShort')}
+        {#if card.kind === 'spray'}<span lang="en" data-english-only="safety"
+            >Cut short? The label and the live card have the full directions.</span
+          >{:else}{tr('cardsui.cutShort')}{/if}
       </p>
     {/if}
 

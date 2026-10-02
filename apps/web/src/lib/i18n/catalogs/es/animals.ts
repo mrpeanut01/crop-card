@@ -611,5 +611,17 @@ export const esAnimals: Partial<Record<MessageKey, string>> = {
   'animals.health.courseTo': 'hasta {date}',
   'animals.health.moreDoses': 'faltan más dosis',
   'animals.health.vetName': 'Veterinario: {name}',
-  'animals.health.lotNumber': 'Lote {lot}'
+  'animals.health.lotNumber': 'Lote {lot}',
+  'animallib.food.unknown':
+    'Esta especie no está en la biblioteca, así que por precaución cuenta como animal para alimento.',
+  'animallib.food.notFood':
+    '{who}: no son animales para alimento, así que los tiempos de retiro de medicamentos no aplican.',
+  'animallib.food.eggs':
+    '{who}: cuentan como animales para alimento porque la gente come sus huevos.',
+  'animallib.food.milk':
+    '{who}: cuentan como animales para alimento porque la gente toma su leche o come su carne.',
+  'animallib.food.meat':
+    '{who}: cuentan como animales para alimento porque la gente come su carne.',
+  'animallib.food.usRules':
+    '{who}: cuentan como animales para alimento según las normas de EE. UU., aunque se tengan como mascotas.'
 };

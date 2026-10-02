@@ -231,6 +231,7 @@ export function withCarryover(
     sections.push({
       title: loc ? t(loc, 'carry.section.title') : CARRYOVER_SECTION,
       items: muted.length ? warn : [...warn, ...tail],
+      englishOnlyItems: warn,
       safety: true,
       provenance: 'data'
     });

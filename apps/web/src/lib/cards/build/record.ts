@@ -117,12 +117,12 @@ export function buildSprayRecordCard(
     const rate = p.rate
       ? `${trimNumber(p.rate.amount, 2)} ${p.rate.unit}/A${input.customRateOverride ? ', custom rate' : ''}`
       : 'Rate not recorded';
-    facts.push({ label: p.displayName, value: rate, provenance: 'manual' });
+    facts.push({ label: p.displayName, value: rate, provenance: 'manual', englishOnly: true });
   }
   if (input.products.length === 1 && input.products[0].label) {
     facts.push({
-      label: 'EPA reg. no.',
-      value: input.products[0].label.epaRegistrationNumber ?? 'Not on file, check the label',
+      label: t(loc, 'cards.spray.epaReg'),
+      value: input.products[0].label.epaRegistrationNumber ?? t(loc, 'cards.spray.epaMissing'),
       provenance: 'plugin'
     });
   }
@@ -146,14 +146,16 @@ export function buildSprayRecordCard(
     facts.push({
       label: 'Re-entry clear',
       value: formatInstant(input.reEntryClearAt, prefs, 'datetime'),
-      provenance: 'data'
+      provenance: 'data',
+      englishOnly: true
     });
   }
   if (input.preHarvestClearAt) {
     facts.push({
       label: 'Harvest clear',
       value: formatInstant(input.preHarvestClearAt, prefs, 'month-day'),
-      provenance: 'data'
+      provenance: 'data',
+      englishOnly: true
     });
   }
   if (input.performerLabel) {
@@ -167,19 +169,29 @@ export function buildSprayRecordCard(
   const sections: CardSection[] = [];
   const labels = input.products.map((p) => p.label).filter((l): l is SnapshotSprayProduct => !!l);
   const safety = [...new Set(labels.flatMap((l) => beforeYouSpray(l)))];
-  if (safety.length) sections.push({ title: 'Before you spray again', items: safety, safety: true });
-  sections.push({ title: 'Label facts', items: input.products.map(labelLine) });
+  if (safety.length)
+    sections.push({
+      title: t(loc, 'cards.record.beforeAgain'),
+      items: safety,
+      safety: true,
+      englishOnly: 'items'
+    });
+  sections.push({
+    title: t(loc, 'cards.record.labelFacts'),
+    items: input.products.map(labelLine),
+    englishOnly: 'items'
+  });
   if (input.observation)
     sections.push({ title: t(loc, 'cards.record.scouting'), items: [input.observation] });
   const mix = labels.flatMap((l) => l.mixSteps);
-  if (mix.length) sections.push({ title: 'Mix order', items: mix });
+  if (mix.length) sections.push({ title: 'Mix order', items: mix, englishOnly: 'all' });
 
   const provenance: CardProvenance[] = [
     { source: 'data', detail: t(loc, 'cards.record.provRecord') },
     ...labels.map((l) => ({ source: 'plugin' as const, detail: `${l.pluginId} · v${l.version}` }))
   ];
   if (input.conditions?.provenance === 'default') {
-    provenance.push({ source: 'fallback', detail: 'default weather, not measured' });
+    provenance.push({ source: 'fallback', detail: t(loc, 'cards.record.provDefaultWeather') });
   }
 
   const key = recordCardKey(input.recordKind, input.rowId);
@@ -198,6 +210,7 @@ export function buildSprayRecordCard(
     provenance: mergeProvenance(provenance),
     href: recordHref(input.recordKind, input.rowId),
     notices: [SPRAY_REFERENCE_NOTICE, SPRAY_RECHECK_NOTICE, copyNotice(loc)],
+    englishOnlyNotices: [SPRAY_REFERENCE_NOTICE, SPRAY_RECHECK_NOTICE],
     links: [openRecordLink(input.recordKind, input.rowId, loc)]
   };
 }

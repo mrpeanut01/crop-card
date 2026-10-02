@@ -971,5 +971,19 @@ export const enWizard = {
   'wizard.beds.leftoverItem.one': '{count} {name} plant',
   'wizard.beds.leftoverItem.other': '{count} {name} plants',
   'wizard.beds.fallbackMsg': "{why}, so these beds come from each crop's spacing.",
-  'planui.beds.bedLine': 'Bed {n}: {width} × {length}'
+  'planui.beds.bedLine': 'Bed {n}: {width} × {length}',
+  'planui.zad.stage.Z00': 'Sown (dry seed)',
+  'planui.zad.stage.Z10': 'First leaf through coleoptile',
+  'planui.zad.stage.Z13': 'Three leaves unfolded',
+  'planui.zad.stage.Z21': 'Main shoot + 1 tiller',
+  'planui.zad.stage.Z30': 'Jointing begins (pseudo-stem erect)',
+  'planui.zad.stage.Z32': 'Second node detectable',
+  'planui.zad.stage.Z39': 'Flag leaf ligule visible',
+  'planui.zad.stage.Z45': 'Boot swollen',
+  'planui.zad.stage.Z55': 'Heading (half of head out)',
+  'planui.zad.stage.Z61': 'Anthesis begins',
+  'planui.zad.stage.Z65': 'Mid-anthesis',
+  'planui.zad.stage.Z75': 'Medium milk',
+  'planui.zad.stage.Z85': 'Soft dough',
+  'planui.zad.stage.Z92': 'Harvest-ripe (grain hard)'
 } as const;

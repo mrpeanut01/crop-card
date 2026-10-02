@@ -16,7 +16,7 @@ export const load: PageServerLoad = async (event) => {
   const mode: 'one' | 'group' | null = raw === 'group' || raw === 'one' ? raw : null;
   return {
     profile,
-    species: await speciesOptions(),
+    species: await speciesOptions(event.locals?.locale),
     areas: housingAreaOptions(),
     groups: activeGroupOptions(),
     canEdit: user?.role === 'owner',

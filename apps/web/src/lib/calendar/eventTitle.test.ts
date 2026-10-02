@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { calendarEventTitle, harvestTargetLabel } from './eventTitle';
+import {
+  HARVEST_READINESS_BODY,
+  calendarEventBody,
+  calendarEventTitle,
+  harvestTargetLabel
+} from './eventTitle';
 import { speciesGroupTitle } from '$lib/i18n/speciesName';
 
 const harvest = {
@@ -49,5 +54,19 @@ describe('speciesGroupTitle', () => {
   it('keeps a renamed farm copy as written', () => {
     expect(speciesGroupTitle({ ...chicken, displayName: 'Hen' }, 'es')).toBe('Bandada de gallinas');
     expect(speciesGroupTitle({ ...chicken, groupNoun: 'coop' }, 'es')).toBe('Coop de gallinas');
+  });
+});
+
+describe('calendarEventBody', () => {
+  it('translates only the engine harvest line', () => {
+    const e = { body: HARVEST_READINESS_BODY };
+    expect(calendarEventBody(e)).toBe(HARVEST_READINESS_BODY);
+    expect(calendarEventBody(e, 'en')).toBe(HARVEST_READINESS_BODY);
+    expect(calendarEventBody(e, 'es')).toMatch(/^Antes de cosechar/);
+    const spray = {
+      body: 'Window for Mesotrione + Stadia. Verify decon if sprayer last ran auxin.'
+    };
+    expect(calendarEventBody(spray, 'es')).toBe(spray.body);
+    expect(calendarEventBody({}, 'es')).toBeUndefined();
   });
 });

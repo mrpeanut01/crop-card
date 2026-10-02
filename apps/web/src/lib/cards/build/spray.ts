@@ -88,28 +88,28 @@ function baseCard(
 function calibrateFirstCard(
   snapshot: FarmSnapshot,
   sprayer: SnapshotEquipment,
-  id: string
+  id: string,
+  { tr }: ResolvedOptions
 ): CardModel {
+  const notices = sprayNotices(snapshot);
   return {
     ...baseCard(snapshot, sprayer, id),
-    kicker: `Spray · ${sprayer.label}`,
-    title: CALIBRATE_FIRST_TITLE,
+    kicker: tr('cards.spray.kicker', { sprayer: sprayer.label }),
+    title: tr('cards.spray.calibrateFirst'),
     facts: [
-      { label: 'Sprayer', value: sprayer.label, provenance: 'manual' },
-      { label: 'GPA', value: 'Not calibrated', provenance: 'data' }
+      { label: tr('cards.record.sprayer'), value: sprayer.label, provenance: 'manual' },
+      { label: 'GPA', value: tr('cards.eq.notCalibrated'), provenance: 'data' }
     ],
-    next: { label: 'Calibrate this sprayer', href: '/calibrate' },
+    next: { label: tr('cards.eq.calibrate'), href: '/calibrate' },
     sections: [
       {
-        title: 'Why',
-        items: [
-          'Mix amounts depend on how many gallons this sprayer puts down per acre.',
-          'Calibrate it once and its spray cards will show amounts per tank.'
-        ]
+        title: tr('cards.spray.why'),
+        items: [tr('cards.spray.why1'), tr('cards.spray.why2')]
       }
     ],
-    provenance: [{ source: 'data', detail: 'your sprayer' }],
-    notices: sprayNotices(snapshot)
+    provenance: [{ source: 'data', detail: tr('cards.spray.provSprayer') }],
+    notices,
+    englishOnlyNotices: [...notices]
   };
 }
 
@@ -148,11 +148,17 @@ function dilutionFacts(
     const line = sprayDilution(product, gpa, tank);
     if (!line) return [];
     return [
-      { label: `Per ${trimNumber(tank, 1)}-gal tank`, value: line.display, provenance: 'plugin' },
+      {
+        label: `Per ${trimNumber(tank, 1)}-gal tank`,
+        value: line.display,
+        provenance: 'plugin',
+        englishOnly: true
+      },
       {
         label: 'Tank covers',
         value: `${trimNumber(line.acresCovered, 2)} ac`,
-        provenance: 'data'
+        provenance: 'data',
+        englishOnly: true
       }
     ];
   }
@@ -162,7 +168,8 @@ function dilutionFacts(
     {
       label: 'Per acre',
       value: `${line.display} in ${trimNumber(gpa, 1)} gal water`,
-      provenance: 'plugin'
+      provenance: 'plugin',
+      englishOnly: true
     }
   ];
 }
@@ -185,6 +192,7 @@ function deconSection(
       title: `Decon first: ${protocol.label}`,
       items: [`Last load was ${last}.`, ...protocol.steps],
       safety: true,
+      englishOnly: 'all',
       required: true
     };
   }
@@ -196,6 +204,7 @@ function deconSection(
       `Before a different chemistry: ${after.label.toLowerCase()}.`
     ],
     safety: true,
+    englishOnly: 'all',
     required: false
   };
 }
@@ -230,18 +239,27 @@ function productCard(
   const id = sprayCardId(sprayer.id, product.pluginId);
   const tank = positiveTank(sprayer);
   const calibratedOn = sprayer.state?.calibrationDate;
+  const { tr } = opts;
 
   const facts: CardFact[] = [
     {
-      label: 'EPA reg. no.',
-      value: product.epaRegistrationNumber ?? 'Not on file, check the label',
+      label: tr('cards.spray.epaReg'),
+      value: product.epaRegistrationNumber ?? tr('cards.spray.epaMissing'),
       provenance: 'plugin'
     },
-    { label: 'Rate', value: rateText(product) ?? 'See label', provenance: 'plugin' },
     {
-      label: 'Sprayer',
+      label: 'Rate',
+      value: rateText(product) ?? 'See label',
+      provenance: 'plugin',
+      englishOnly: true
+    },
+    {
+      label: tr('cards.record.sprayer'),
       value: calibratedOn
-        ? `${trimNumber(gpa, 1)} GPA · calibrated ${formatInstant(calibratedOn, opts.prefs, 'month-day')}`
+        ? tr('cards.spray.gpaCalibrated', {
+            gpa: trimNumber(gpa, 1),
+            date: formatInstant(calibratedOn, opts.prefs, 'month-day')
+          })
         : `${trimNumber(gpa, 1)} GPA`,
       provenance: 'data'
     },
@@ -250,7 +268,8 @@ function productCard(
       label: 'REI',
       value:
         product.reEntryIntervalHours !== null ? `${product.reEntryIntervalHours} h` : 'See label',
-      provenance: 'plugin'
+      provenance: 'plugin',
+      englishOnly: true
     },
     {
       label: 'PHI',
@@ -258,11 +277,16 @@ function productCard(
         product.preHarvestIntervalDays !== null
           ? `${product.preHarvestIntervalDays} d`
           : 'See label',
-      provenance: 'plugin'
+      provenance: 'plugin',
+      englishOnly: true
     }
   ];
   if (product.targets.length) {
-    facts.push({ label: 'Target', value: product.targets.join(', '), provenance: 'plugin' });
+    facts.push({
+      label: tr('cards.spray.target'),
+      value: product.targets.join(', '),
+      provenance: 'plugin'
+    });
   }
 
   const { required: deconRequired, ...decon } = deconSection(product, sprayer);
@@ -270,12 +294,14 @@ function productCard(
     title: 'Mix order',
     items: product.mixSteps.length
       ? product.mixSteps
-      : ['Follow the mixing directions on the label.']
+      : ['Follow the mixing directions on the label.'],
+    englishOnly: 'all'
   };
   const before: CardSection = {
-    title: 'Before you spray',
+    title: tr('cards.spray.before'),
     items: beforeYouSpray(product),
-    safety: true
+    safety: true,
+    englishOnly: 'items'
   };
   const sections: CardSection[] = deconRequired ? [decon, before, mix] : [before, mix, decon];
   const notices = sprayNotices(snapshot);
@@ -283,20 +309,24 @@ function productCard(
 
   const provenance: CardProvenance[] = [
     { source: 'plugin', detail: `${product.pluginId} · v${product.version}` },
-    { source: 'data', detail: 'your sprayer calibration' }
+    { source: 'data', detail: tr('cards.spray.provCalibration') }
   ];
 
   return {
     ...baseCard(snapshot, sprayer, id),
-    kicker: `Spray · ${sprayer.label}`,
+    kicker: tr('cards.spray.kicker', { sprayer: sprayer.label }),
     title: product.displayName,
     facts,
     next: deconRequired
-      ? { label: 'Run decon first', href: `/spray/decon?sprayer=${encodeURIComponent(sprayer.id)}` }
-      : { label: 'Record this spray', href: RECORD_HREF[product.type] },
+      ? {
+          label: tr('cards.spray.runDecon'),
+          href: `/spray/decon?sprayer=${encodeURIComponent(sprayer.id)}`
+        }
+      : { label: tr('cards.spray.record'), href: RECORD_HREF[product.type] },
     sections,
     provenance: mergeProvenance(provenance),
-    notices
+    notices,
+    englishOnlyNotices: [...notices]
   };
 }
 
@@ -309,11 +339,12 @@ export function buildSprayCard(
   const sprayer = sprayers(snapshot).find((s) => s.id === sprayerId);
   if (!sprayer) return null;
   const gpa = sprayer.state?.calibratedGpa;
-  if (!isCalibratedGpa(gpa)) return calibrateFirstCard(snapshot, sprayer, id);
+  const opts = resolveOptions(snapshot, options);
+  if (!isCalibratedGpa(gpa)) return calibrateFirstCard(snapshot, sprayer, id, opts);
   if (!pluginId) return null;
   const product = snapshot.sprayProducts?.[pluginId];
   if (!product) return null;
-  return productCard(snapshot, sprayer, product, gpa, resolveOptions(snapshot, options));
+  return productCard(snapshot, sprayer, product, gpa, opts);
 }
 
 export function buildSprayCards(snapshot: FarmSnapshot, options: BuildOptions = {}): CardModel[] {
@@ -325,7 +356,7 @@ export function buildSprayCards(snapshot: FarmSnapshot, options: BuildOptions = 
   for (const sprayer of sprayers(snapshot)) {
     const gpa = sprayer.state?.calibratedGpa;
     if (!isCalibratedGpa(gpa)) {
-      out.push(calibrateFirstCard(snapshot, sprayer, sprayer.id));
+      out.push(calibrateFirstCard(snapshot, sprayer, sprayer.id, opts));
       continue;
     }
     for (const p of products) out.push(productCard(snapshot, sprayer, p, gpa, opts));

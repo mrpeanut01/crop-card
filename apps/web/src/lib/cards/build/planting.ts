@@ -185,7 +185,8 @@ export function buildPlantingCard(
     facts.push({
       label: 'Wait after spraying',
       value: `${phi} ${phi === 1 ? 'day' : 'days'} before picking`,
-      provenance: 'plugin'
+      provenance: 'plugin',
+      englishOnly: true
     });
   }
 

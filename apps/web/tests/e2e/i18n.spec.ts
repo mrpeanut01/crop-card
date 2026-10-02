@@ -61,7 +61,11 @@ const KNOWN_ENGLISH_KEYS = [
   'billing.free.title',
   'wizard.year.legend',
   'settings.index.records.sub',
-  'billing.plans.foreverNoCard'
+  'billing.plans.foreverNoCard',
+  'cards.spray.why1',
+  'cards.cal.sprayNotice',
+  'animallib.food.unknown',
+  'plan.cal.body.harvestReadiness'
 ] as const satisfies readonly (keyof typeof en)[];
 
 // B34-30: built from the catalog's own top-level prefixes, so a new namespace
@@ -228,11 +232,11 @@ test.describe('language picker, flag on', () => {
     await signInByLink(page, email);
     await createOnboardedFarm(page, { growing: ['garden'] });
     await page.goto('/settings/account');
+    await page.waitForLoadState('networkidle');
     await page.getByLabel('App language').selectOption('es');
-    await Promise.all([
-      page.waitForURL(/\/settings\/account/),
-      page.getByRole('button', { name: 'Use this language' }).click()
-    ]);
+    await page.getByRole('button', { name: 'Use this language' }).click();
+    // The form posts back to the same URL, so waiting on the URL returned before the save landed.
+    await expect(page.locator('html')).toHaveAttribute('lang', 'es');
     const english = KNOWN_ENGLISH_KEYS.map((key) => ({ key, text: en[key] }));
     for (const route of routes) {
       await test.step(route, async () => {

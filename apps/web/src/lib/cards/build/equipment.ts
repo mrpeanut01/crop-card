@@ -81,14 +81,16 @@ function sprayerFacts(e: SnapshotEquipment, opts: ResolvedOptions): CardFact[] {
     });
   }
   facts.push({
-    label: 'Last decon',
+    label: tr('cards.eq.lastDecon'),
     value: day(s?.lastDeconAt, opts) ?? tr('cards.eq.noneOnRecord'),
     provenance: 'data'
   });
   if (s?.lastChemistryClass) {
     facts.push({
       label: tr('cards.eq.lastLoad'),
-      value: needsDecon(e) ? `${s.lastChemistryClass}, decon due` : s.lastChemistryClass,
+      value: needsDecon(e)
+        ? tr('cards.eq.deconDue', { chemistry: s.lastChemistryClass })
+        : s.lastChemistryClass,
       provenance: 'data'
     });
   }

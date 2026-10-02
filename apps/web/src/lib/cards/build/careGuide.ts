@@ -148,7 +148,8 @@ export function buildCareGuideCard(
     facts.push({
       label: 'Wait after spraying',
       value: `${plugin.preHarvestIntervalDays} ${plugin.preHarvestIntervalDays === 1 ? 'day' : 'days'} before picking`,
-      provenance: 'plugin'
+      provenance: 'plugin',
+      englishOnly: true
     });
   }
 

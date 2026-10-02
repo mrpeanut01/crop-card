@@ -230,7 +230,9 @@ function animalCard(
     rulesVersion: snapshot.rulesVersion,
     provenance: mergeProvenance(provenance),
     href: cardHref('animal', key),
-    ...(notices.length ? { notices, staleAfterMs: HOLD_CONFIRM_MAX_AGE_MS } : {}),
+    ...(notices.length
+      ? { notices, englishOnlyNotices: [...notices], staleAfterMs: HOLD_CONFIRM_MAX_AGE_MS }
+      : {}),
     links,
     status: holdStatus(reading, foods),
     ...(group ? { parentKey: cardKey('flock', group.id) } : {})

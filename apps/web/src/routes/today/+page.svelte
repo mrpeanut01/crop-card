@@ -5,6 +5,7 @@
   import { page } from '$app/state';
   import { createT, type MessageKey } from '$lib/i18n';
   import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
+  import { calendarEventBody, calendarEventTitle } from '$lib/calendar/eventTitle';
   import { periodCardPrintHref, printRangeNote, periodPrintable } from '$lib/cards/build/calendar';
   import type { CalendarEvent } from '$lib/calendar/engine';
   import type { Task } from '$lib/db/tasks';
@@ -268,15 +269,14 @@
       todayYmd: data.today,
       timeZone: prefs.timeZone
     });
-    if (queuedScheduleKeys.size === 0) return out;
     for (const day of Object.keys(out)) {
-      out[day] = out[day].map((c) =>
-        c.type === 'suggestion' &&
-        suggestions[c.index] &&
-        queuedScheduleKeys.has(suggestionTemplateKey(suggestions[c.index]))
-          ? { ...c, queued: true }
-          : c
-      );
+      out[day] = out[day].map((c) => {
+        if (c.type !== 'suggestion' || !suggestions[c.index]) return c;
+        const shown = { ...c, title: calendarEventTitle(suggestions[c.index], data.locale) };
+        return queuedScheduleKeys.has(suggestionTemplateKey(suggestions[c.index]))
+          ? { ...shown, queued: true }
+          : shown;
+      });
     }
     return out;
   });
@@ -289,7 +289,7 @@
   const recommendationItems = $derived.by<RecommendationItem[]>(() =>
     upcomingShown.slice(0, 8).map((e: CalendarEvent, i: number) => ({
       id: `${e.kind}:${e.blockId}:${e.startMs}:${i}`,
-      title: e.title,
+      title: calendarEventTitle(e, data.locale),
       crop: cropDisplayNameByEnglish(e.varietyDisplayName, data.locale),
       window: fmt.day(e.startMs, 'month-day')
     }))
@@ -611,7 +611,7 @@
   {@const waiting = queuedScheduleKeys.has(suggestionTemplateKey(e))}
   <div class="suggestion" data-queued-schedule={waiting ? '' : undefined}>
     <div class="s-main">
-      <strong>{e.title}</strong>
+      <strong>{calendarEventTitle(e, data.locale)}</strong>
       <span class="s-meta"
         >{fmtRange(e.startMs, e.endMs)} · {cropDisplayNameByEnglish(
           e.varietyDisplayName,
@@ -623,7 +623,7 @@
             : e.kind.replace(/-/g, ' ')}</span
         ></span
       >
-      {#if e.body}<span class="s-body">{e.body}</span>{/if}
+      {#if e.body}<span class="s-body">{calendarEventBody(e, data.locale)}</span>{/if}
       {#if waiting}<span><QueuedBadge /></span>{/if}
     </div>
     <div class="s-actions">
@@ -632,7 +632,7 @@
         <button
           type="button"
           class="btn ghost"
-          aria-label={tr('today.sugg.scheduleAria', { title: e.title })}
+          aria-label={tr('today.sugg.scheduleAria', { title: calendarEventTitle(e, data.locale) })}
           disabled={busy || waiting}
           onclick={() => scheduleFromEvent(e, dayYmd)}>{tr('today.sugg.schedule')}</button
         >

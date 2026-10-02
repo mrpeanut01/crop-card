@@ -42,6 +42,19 @@ export function forageLines(advisory: ForageAdvisory, locale?: string | null): s
   return out;
 }
 
+/** The lines of `forageLines` that stay English as hazard wording. */
+export function forageHazardLines(advisory: ForageAdvisory): string[] {
+  const out: string[] = [];
+  for (const item of advisory.items) {
+    out.push(item.headline);
+    for (const t of item.triggersOnFile) out.push(t.text);
+    if (item.frostUnknown) out.push(FORAGE_FROST_UNKNOWN_TEXT);
+    out.push(item.raisesRisk);
+    for (const a of item.advice) out.push(a.text);
+  }
+  return out;
+}
+
 export function forageSection(
   advisory: ForageAdvisory | null | undefined,
   failed = false,
@@ -56,6 +69,7 @@ export function forageSection(
   return {
     title,
     items: forageLines(advisory, locale),
+    englishOnlyItems: forageHazardLines(advisory),
     provenance: hasTest ? 'manual' : advisory.provenance,
     collapsible: true
   };

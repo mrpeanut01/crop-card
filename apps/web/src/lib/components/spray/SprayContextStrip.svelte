@@ -188,7 +188,7 @@
         <AlertTriangle size={15} strokeWidth={1.75} />
       {/if}
       <span>
-        <strong>{compatibility.label}.</strong>
+        <strong lang="en" data-english-only="safety">{compatibility.label}.</strong>
         {#if compatibility.reason}
           <span class="why" title={compatibility.reason}>{tr('sprayui.ctx.why')}</span>
         {/if}

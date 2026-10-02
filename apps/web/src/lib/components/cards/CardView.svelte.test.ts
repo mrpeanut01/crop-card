@@ -452,3 +452,18 @@ describe('CardView on live pages (30G)', () => {
     expect(container.querySelector('article')?.classList.contains('kind-scout')).toBe(true);
   });
 });
+
+describe('CardView English-only markers', () => {
+  it('wraps safety facts, sections and notices in lang="en" on a Spanish Spray Card', () => {
+    const card = buildSprayCard(sampleGearSnapshot(), 'eq_boom~24d', { locale: 'es' })!;
+    const { container } = render(CardView, { card, variant: 'screen', prefs });
+    const marked = [...container.querySelectorAll('[lang="en"][data-english-only="safety"]')].map(
+      (el) => el.textContent?.trim()
+    );
+    expect(marked).toContain('Rate');
+    expect(marked).toContain('Mix order');
+    expect(marked).toContain(SPRAY_RECHECK_NOTICE);
+    const kicker = container.querySelector('.kicker')!;
+    expect(kicker.closest('[lang="en"]')).toBeNull();
+  });
+});

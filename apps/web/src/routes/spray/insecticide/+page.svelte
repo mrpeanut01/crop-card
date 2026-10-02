@@ -366,7 +366,10 @@
               <summary>{tr('sprayui.ins.thresholds')}</summary>
               <ul>
                 {#each p.scoutingThresholds as t (t.pest + t.metric)}
-                  <li>{t.pest}: spray at {t.threshold} {t.metric}</li>
+                  <li lang="en" data-english-only="safety">
+                    {t.pest}: spray at {t.threshold}
+                    {t.metric}
+                  </li>
                 {/each}
               </ul>
             </details>
@@ -404,7 +407,7 @@
 </div>
 
 {#if ipmBlocked}
-  <div class="ipm-block-banner" role="status">
+  <div class="ipm-block-banner" role="status" lang="en" data-english-only="safety">
     <strong>Below action threshold.</strong>
     Recent scout observations don't cross {primaryThreshold?.pest}
     ≥{primaryThreshold?.threshold}
@@ -524,9 +527,9 @@
     <header class="gate-header">
       <h2>{tr('sprayui.ipm.title')}</h2>
       {#if ipmTriggered}
-        <span class="pill-triggered">Triggered</span>
+        <span class="pill-triggered" lang="en" data-english-only="safety">Triggered</span>
       {:else if primaryThreshold}
-        <span class="pill-pending">Below threshold</span>
+        <span class="pill-pending" lang="en" data-english-only="safety">Below threshold</span>
       {/if}
       <Provenance source="data" detail={tr('sprayui.ipm.scoutLog')} compact />
       {#if primaryThreshold}

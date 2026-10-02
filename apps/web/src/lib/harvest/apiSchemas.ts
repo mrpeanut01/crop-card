@@ -95,6 +95,23 @@ export function dispositionProblem(v: {
   return null;
 }
 
+const DISPOSITION_PROBLEM_KEY: Readonly<Record<string, MessageKey>> = {
+  'Only a sale or a gift has a recipient.': 'harvestui.disp.err.recipientKind',
+  'Only a sale can be marked sold as organic.': 'harvestui.disp.err.organicKind'
+};
+
+/** The first refusal of a disposition body in `locale`: the schema's own
+ *  problem, else "Check the fields". English with no locale. */
+export function dispositionIssueText(
+  issues: readonly { message: string }[],
+  locale?: string | null
+): string {
+  const first = issues[0]?.message;
+  if (!locale) return first ?? 'Check the fields and try again.';
+  const key = first ? DISPOSITION_PROBLEM_KEY[first] : 'harvestui.disp.err.checkFields';
+  return key ? t(locale, key) : t(locale, 'harvestui.disp.err.checkFields');
+}
+
 export const dispositionCreateSchema = z
   .object({
     kind: z.enum(HARVEST_DISPOSITION_KINDS),

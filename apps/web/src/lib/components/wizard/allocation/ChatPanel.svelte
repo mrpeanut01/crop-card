@@ -5,6 +5,8 @@
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
 
+  const CHAT_MODEL = 'claude-haiku-4-5';
+
   const w = getWizardContext();
   const tr = $derived(createT(page.data?.locale));
   const aiEnabled = $derived(w.props.aiEnabled);
@@ -28,7 +30,7 @@
   {#if aiEnabled}
     <header class="aw-chat-header">
       <h3>{tr('wizard.chat.title')}</h3>
-      <span class="muted aw-chat-model"> claude-haiku-4-5 · {tr('wizard.chat.grounded')} </span>
+      <span class="muted aw-chat-model"> {CHAT_MODEL} · {tr('wizard.chat.grounded')} </span>
       <span class="muted">
         {#if w.step === 'schedule'}{tr('wizard.chat.hintSchedule')}
         {:else}{tr('wizard.chat.hintPlan')}

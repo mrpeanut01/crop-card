@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { getHealthEvent } from '$lib/db/animalHealth';
 import { evaluateReviewLock, getReviewForHealthEvent, upsertReview } from '$lib/db/organicReviews';
 import { requireUser } from '$lib/server/auth';
@@ -15,7 +16,7 @@ export const _requestSchema = treatmentReviewSchema;
  */
 export const POST: RequestHandler = async (event) => {
   const user = requireUser(event);
-  const refused = organicWriteRefusal(user);
+  const refused = organicWriteRefusal(user, event.locals?.locale);
   if (refused) return refused;
   let body: unknown;
   try {
@@ -37,9 +38,10 @@ export const POST: RequestHandler = async (event) => {
     return json(
       {
         error: 'REVIEW_NOT_NEEDED',
-        message: row
-          ? 'The library already decides this treatment.'
-          : 'This treatment did not reach an animal under organic management, so there is nothing to answer.'
+        message: t(
+          event.locals?.locale,
+          row ? 'organic.api.libraryDecides' : 'organic.api.notReached'
+        )
       },
       { status: 409 }
     );
@@ -49,7 +51,7 @@ export const POST: RequestHandler = async (event) => {
     return json(
       {
         error: 'REVIEW_LOCKED',
-        message: 'This answer was given more than 48 hours ago and can no longer change.'
+        message: t(event.locals?.locale, 'organic.api.reviewLocked')
       },
       { status: 409 }
     );

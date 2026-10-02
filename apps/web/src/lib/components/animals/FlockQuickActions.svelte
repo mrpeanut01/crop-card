@@ -255,6 +255,8 @@
         class:unsure={foodHeld.verdict === 'unconfirmed'}
         data-testid="offline-hold-chip"
         role="status"
+        lang="en"
+        data-english-only="safety"
       >
         {#if foodHeld.verdict === 'hold' && foodHeld.reading}
           {#each foodHeld.reading.holds as h (h.food)}{holdLine(h, tz)}.
@@ -362,7 +364,13 @@
           </div>
         </fieldset>
         {#if held}
-          <p class="af-note" role="alert" data-testid="hold-stop">
+          <p
+            class="af-note"
+            role="alert"
+            data-testid="hold-stop"
+            lang="en"
+            data-english-only="safety"
+          >
             {stopText ??
               `These ${unitLabel} are on hold, so they can't be kept for the table or sold.`}
             The only way to save them is as thrown out.
@@ -371,11 +379,15 @@
             type="button"
             class="af-primary wide"
             disabled={saving}
+            lang="en"
+            data-english-only="safety"
             onclick={() => logProduction('discard')}>Save as discard</button
           >
         {:else}
           {#if check.verdict === 'unconfirmed'}
-            <p class="af-help">The server checks holds again when this syncs.</p>
+            <p class="af-help" lang="en" data-english-only="safety">
+              The server checks holds again when this syncs.
+            </p>
           {/if}
           <button
             type="button"
@@ -404,7 +416,7 @@
           <option value="">{tr('animals.quick.notSure')}</option>
           {#each ROUTE_CHOICES as r (r.value)}<option value={r.value}>{r.label}</option>{/each}
         </select>
-        <p class="af-help">
+        <p class="af-help" lang="en" data-english-only="safety">
           Its eggs, milk and meat go on hold until the owner adds the withdrawal time from the label
           or the vet. The owner can add this when online.
         </p>

@@ -330,10 +330,11 @@
           <li>
             <div class="aw-bed-head">
               <strong
-                >Bed {blocks.length + i + 1}: {fmt.qty(bed.widthFt, 'distance')} × {fmt.qty(
-                  bed.lengthFt,
-                  'distance'
-                )}</strong
+                >{tr('planui.beds.bedLine', {
+                  n: blocks.length + i + 1,
+                  width: fmt.qty(bed.widthFt, 'distance'),
+                  length: fmt.qty(bed.lengthFt, 'distance')
+                })}</strong
               >
               <Provenance source={suggestion.provenance} compact />
             </div>

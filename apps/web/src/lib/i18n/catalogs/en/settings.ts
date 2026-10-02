@@ -1011,5 +1011,44 @@ export const enSettings = {
   'settings.tz.America/Edmonton': 'Mountain (Edmonton)',
   'settings.tz.America/Vancouver': 'Pacific (Vancouver)',
   'settings.units.us': 'US (acre · lb · °F)',
-  'settings.units.metric': 'Metric (ha · kg · °C)'
+  'settings.units.metric': 'Metric (ha · kg · °C)',
+  'settings.err.signIn': 'Sign in to see this page.',
+  'settings.err.ownerOnly': 'Only the farm owner can open this page.',
+  'settings.err.noActiveOwner': 'Pick a farm first.',
+  'settings.err.impersonating': "This isn't available while you are viewing as someone else.",
+  'settings.err.session': "This isn't available for this session.",
+  'settings.err.ownerAction': 'Only the farm owner can do this.',
+  'settings.err.missing': 'Something was missing from the form. Try again.',
+  'settings.avatar.err.tooLarge': 'That picture is too large. Pick one under 512 KB.',
+  'settings.avatar.err.none': 'No picture was sent.',
+  'settings.avatar.err.type': 'Use a JPEG, PNG or WebP picture.',
+  'docs.copy.attachDeleted': 'This file was deleted, so it cannot be attached.',
+  'docs.copy.photoStays': 'Photos stay with their journal entry or animal.',
+  'docs.copy.photoRemove': 'Remove this photo from its journal entry or animal.',
+  'docs.copy.interactiveOwnerDelete':
+    'Only the owner, signed in on their own account, can delete a file.',
+  'docs.copy.unsupportedList': "This file type can't be stored. Use a {list} file.",
+  'docs.copy.or': 'or',
+  'settings.index.diag.storageValue': 'SQLite · Litestream → Azure Blob',
+  'settings.about.sigName': 'Shawn',
+  'settings.equip.deconNeeded': 'Decon needed',
+  'settings.equip.sprayersSub':
+    'Calibrated GPA drives every tank-mix calculation. Sprayers that need decon block the next spray until cleaned.',
+  'settings.equip.decon': 'Decon',
+  'settings.records.retentionSub':
+    'VDACS requires a 2-year minimum for pesticide records. CropCard never deletes them on its own. Rows near expiry raise an alert and only the owner can remove them (NFR-05).',
+  'settings.records.yearsShort': '{n} yr',
+  'settings.records.retentionKinds': 'Spray, insecticide, fungicide (FR-09 / NFR-05)',
+  'settings.records.withinYears': 'Within the last {n} years',
+  'settings.records.preExpiry': 'Aged into the 30-day pre-expiry window',
+  'settings.records.lockSub':
+    "FR-09 · spray records can no longer change after this window closes. The server enforces it whatever the screen shows, and it can't be changed.",
+  'settings.records.measuredFrom': 'Measured from the time of application',
+  'settings.records.howItWorks': 'How it works:',
+  'settings.records.howItWorksBody':
+    "a record can be edited for {hours} hours after it's entered. After that the server refuses any edit or delete, so the audit trail shows any tampering.",
+  'settings.records.integritySub':
+    "Each record carries per-plugin content hashes; every export prints a SHA-256 of its canonical row set so an inspector can confirm the records haven't changed since export.",
+  'settings.records.quietLede':
+    'Anything you spray, whether copper, sulfur, Bt or spinosad, comes with label rules and record-keeping duties. When you record a spray, CropCard keeps the record, locks it after {hours} hours and holds it for at least {years} years. Here is how that works.'
 } as const;

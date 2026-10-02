@@ -105,7 +105,7 @@
       </div>
 
       <div class="signature">
-        <div class="sig-name serif">Shawn</div>
+        <div class="sig-name serif">{tr('settings.about.sigName')}</div>
         <div class="sig-place">{tr('settings.about.sigPlace')}</div>
       </div>
     </section>

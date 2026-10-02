@@ -362,8 +362,10 @@
 {#if phiWarning}
   <div class="phi-banner">
     <Banner tone="wheat">
-      <strong>⚠ Pre-harvest interval:</strong>
-      {phiWarning}
+      <span lang="en" data-english-only="safety">
+        <strong>⚠ Pre-harvest interval:</strong>
+        {phiWarning}
+      </span>
       <button class="phi-dismiss" type="button" onclick={() => (phiWarning = null)}
         >{tr('harvestui.phiAck')}</button
       >

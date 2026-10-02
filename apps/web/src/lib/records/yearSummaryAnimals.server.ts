@@ -171,6 +171,7 @@ async function coveredInYear(
       subject: subjectName(l.subjectType, l.subjectId),
       what: l.kind,
       use: USE_LABEL[use],
+      useCode: use,
       basis: 'known'
     });
   }
@@ -181,6 +182,7 @@ async function coveredInYear(
       subject: subjectName(e.subjectType, e.subjectId),
       what: 'meat',
       use: ANIMAL_MOVEMENT_LABEL[e.status] ?? e.status,
+      useCode: e.status,
       basis: 'known'
     });
   }

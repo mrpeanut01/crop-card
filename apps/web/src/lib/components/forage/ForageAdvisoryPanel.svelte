@@ -66,27 +66,29 @@
 {:else if summary}
   <details class="forage" class:elevated data-testid="forage-advisory" {open}>
     <summary>
-      <span class="line">{summary}</span>
+      <span class="line" lang="en" data-english-only="safety">{summary}</span>
       <Provenance source={advisory?.provenance ?? 'plugin'} compact />
     </summary>
     {#each items as item, i (i)}
       <section class="item">
-        <h4>{item.headline}</h4>
+        <h4 lang="en" data-english-only="safety">{item.headline}</h4>
         {#if item.triggersOnFile.length || item.frostUnknown}
           <ul>
             {#each item.triggersOnFile as t, j (j)}
-              <li>{t.text}</li>
+              <li><span lang="en" data-english-only="safety">{t.text}</span></li>
             {/each}
-            {#if item.frostUnknown}<li>{FORAGE_FROST_UNKNOWN_TEXT}</li>{/if}
+            {#if item.frostUnknown}<li>
+                <span lang="en" data-english-only="safety">{FORAGE_FROST_UNKNOWN_TEXT}</span>
+              </li>{/if}
           </ul>
         {/if}
-        <p class="muted">{item.raisesRisk}</p>
+        <p class="muted" lang="en" data-english-only="safety">{item.raisesRisk}</p>
         {#if item.advice.length}
           <p class="lead">{tr('forage.panel.lead')}</p>
           <ul class="advice">
             {#each item.advice as a (a.id)}
               <li>
-                {a.text}
+                <span lang="en" data-english-only="safety">{a.text}</span>
                 <a href={a.url} target="_blank" rel="noopener noreferrer nofollow"
                   >{tr('forage.panel.source')}</a
                 >

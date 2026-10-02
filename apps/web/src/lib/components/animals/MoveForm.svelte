@@ -300,13 +300,17 @@
 
   {#if error}<p class="af-error" role="alert">{error}</p>{/if}
   {#if attestHref}
-    <a class="af-ghost attest-link" href={attestHref}>Add the grazing time from the label</a>
+    <a class="af-ghost attest-link" href={attestHref} lang="en" data-english-only="safety"
+      >Add the grazing time from the label</a
+    >
   {/if}
   {#if saveToday}
     <button
       class="af-ghost"
       type="button"
       disabled={saving}
+      lang="en"
+      data-english-only="safety"
       onclick={() => {
         when = 'now';
         form?.requestSubmit();

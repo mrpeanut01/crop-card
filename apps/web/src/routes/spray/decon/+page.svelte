@@ -152,7 +152,7 @@
 </script>
 
 <h1>{tr('sprayui.dc.title')}</h1>
-<p class="lede">
+<p class="lede" lang="en" data-english-only="safety">
   Clean the sprayer before it carries a different chemistry. Confirm each step to unlock the next.
   The app times the 30-minute ammonia soak.
 </p>
@@ -180,7 +180,7 @@
   {#if !completed && data.canRecord}
     <details class="quick-mark">
       <summary>{tr('sprayui.dc.alreadyClean')}</summary>
-      <p class="hint">
+      <p class="hint" lang="en" data-english-only="safety">
         Use this if the decon was done outside the app (or you've completed it before and just need
         to update state). Records a decon timestamp without walking through the per-step wizard. The
         kernel will treat the sprayer as decontaminated immediately.
@@ -227,6 +227,8 @@
           <button
             type="button"
             class="skip"
+            lang="en"
+            data-english-only="safety"
             onclick={() => {
               timerSkipped = true;
             }}
@@ -235,13 +237,15 @@
           </button>
         </div>
       {:else if timerSkipped}
-        <p class="timer-skipped">
+        <p class="timer-skipped" lang="en" data-english-only="safety">
           ⏭ Timer skipped — you've confirmed the 30-minute dwell already happened. Tap Next to
           continue.
         </p>
       {:else if !timerDone}
-        <p class="timer">Soaking… <strong>{clock(remaining)}</strong> remaining</p>
-        <p class="hint">
+        <p class="timer" lang="en" data-english-only="safety">
+          Soaking… <strong>{clock(remaining)}</strong> remaining
+        </p>
+        <p class="hint" lang="en" data-english-only="safety">
           You may close this tab — the timer is cosmetic; what matters is the actual 30-minute dwell
           on the chemicals. The next step unlocks at zero. Or
           <button
@@ -253,7 +257,9 @@
           > if the soak already finished.
         </p>
       {:else}
-        <p class="timer-done">✓ 30 minutes elapsed. Step unlocked.</p>
+        <p class="timer-done" lang="en" data-english-only="safety">
+          ✓ 30 minutes elapsed. Step unlocked.
+        </p>
       {/if}
     {/if}
 
@@ -289,7 +295,7 @@
 {:else}
   <section class="step success">
     <h2>{tr('sprayui.dc.recorded')}</h2>
-    <p>
+    <p lang="en" data-english-only="safety">
       Sprayer <strong>{sprayer?.label ?? selectedSprayerId}</strong> is cleared. The kernel will now allow
       it on different chemistry until its next load.
     </p>

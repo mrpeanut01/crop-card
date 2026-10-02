@@ -35,7 +35,7 @@ export const PATCH: RequestHandler = async (event) => {
   }
   const { documentId } = parsed.data;
   if (documentId) {
-    const refused = checkLabReport(documentId);
+    const refused = checkLabReport(documentId, event.locals?.locale);
     if (refused) return refused;
   }
   if (!setSoilTestDocument(id, documentId, user.id)) {

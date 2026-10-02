@@ -75,7 +75,7 @@
   {/if}
 
   {#if moistureGates.length > 0}
-    <div class="moisture-gates">
+    <div class="moisture-gates" lang="en" data-english-only="safety">
       <span class="block-title">Moisture gates</span>
       <ul>
         {#each moistureGates as g, i (i)}
@@ -103,7 +103,9 @@
       <span>{tr('harvestui.r.grain.stored')}</span>
       <input type="text" inputmode="decimal" placeholder="13.0" bind:value={moisturePct} />
     </label>
-    <p class="hint">Binning above the family threshold is blocked — dry down first.</p>
+    <p class="hint" lang="en" data-english-only="safety">
+      Binning above the family threshold is blocked — dry down first.
+    </p>
   </div>
 
   <FallbackHarvestRenderer

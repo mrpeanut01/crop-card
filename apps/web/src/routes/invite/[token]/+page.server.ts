@@ -20,7 +20,7 @@ import type { PageServerLoad } from './$types';
  */
 export const load: PageServerLoad = async (event) => {
   const token = event.params.token;
-  if (!token) throw error(400, 'missing token');
+  if (!token) throw error(400, t(event.locals?.locale, 'entry.invite.err.missingToken'));
   const user = currentUser(event);
   if (!user) {
     throw redirect(303, `/?invite=${encodeURIComponent(token)}`);
@@ -51,7 +51,7 @@ export const load: PageServerLoad = async (event) => {
 export const actions: Actions = {
   accept: async (event) => {
     const token = event.params.token;
-    if (!token) throw error(400, 'missing token');
+    if (!token) throw error(400, t(event.locals?.locale, 'entry.invite.err.missingToken'));
     const user = currentUser(event);
     if (!user) throw redirect(303, `/?invite=${encodeURIComponent(token)}`);
 

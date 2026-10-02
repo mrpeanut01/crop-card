@@ -24,8 +24,8 @@ export const load: PageServerLoad = async (event) => {
   const locale = event.locals.locale;
   const q = event.url.searchParams;
   const kind: LedgerKind = q.get('kind') === 'income' ? 'income' : 'expense';
-  const names = await farmNames();
-  const options = entryFormOptions(names, event.locals?.locale);
+  const names = await farmNames(locale);
+  const options = entryFormOptions(names, locale);
   const known = (id: string | null, list: Array<{ id: string }>) =>
     id && list.some((o) => o.id === id) ? id : null;
 

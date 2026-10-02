@@ -719,5 +719,16 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'equip.typeDesc.rake': 'rastrillo de heno (rotativo o de barras paralelas)',
   'equip.typeDesc.baler': 'pacas cuadradas chicas, redondas grandes o cuadradas grandes',
   'equip.typeDesc.mower': 'segadora o segadora acondicionadora',
-  'equip.typeDesc.irrigation': 'sistema por goteo, aspersión o pivote'
+  'equip.typeDesc.irrigation': 'sistema por goteo, aspersión o pivote',
+  'inv.fert.npkLabel': 'N–P₂O₅–K₂O',
+  'inv.fert.p2o5': 'P₂O₅',
+  'inv.fert.k2o': 'K₂O',
+  'equip.add.nozzlePlaceholder': 'TeeJet XR110015',
+  'equip.deconLink': 'Descontaminar →',
+  'equip.lastDecon': 'Última descontaminación',
+  'equip.d.deconWizard': 'Asistente de descontaminación',
+  'equip.w.ledeStrict':
+    'Preparación para guardar al final de la temporada. Confirma cada paso antes de que se abra el siguiente. La descontaminación final usa el protocolo específico de la clase para la última carga de esta aspersora.',
+  'equip.w.ledeStandard':
+    'Preparación para guardar al final de la temporada. Confirma cada paso antes de que se abra el siguiente. La descontaminación final usa el protocolo estándar para la última carga de esta aspersora.'
 };

@@ -67,32 +67,34 @@
 
 <div class="detail-grid">
   <div class="col">
-    <InvSection title="Withdrawal" kicker="From the label">
-      {#if !plugin}
-        <p class="note" role="note" data-testid="withdrawal-unknown">
-          Not linked to a library product, so its withdrawal is not known here. When you record a
-          treatment with it, eggs, milk and meat stay on hold until the owner enters the withdrawal
-          from the label or the vet.
-        </p>
-      {:else}
-        <div class="prov-row">
-          <Provenance source="plugin" detail={plugin.pluginId} />
-          {#if meta.pluginLink === 'manual'}<Provenance
-              source="manual"
-              label={tr('inv.ah.ownerLinked')}
-            />{/if}
-        </div>
-        <ul class="uses">
-          {#each plugin.labelUses as u (u.speciesId + u.class)}
-            <li>
-              <strong>{speciesNames[u.speciesId] ?? u.speciesId}</strong>
-              <span class="muted">{CLASS_LABEL[u.class] ?? u.class}</span>
-              <span>{withdrawalText(u.withdrawal)}</span>
-            </li>
-          {/each}
-        </ul>
-      {/if}
-    </InvSection>
+    <div lang="en" data-english-only="safety">
+      <InvSection title="Withdrawal" kicker="From the label">
+        {#if !plugin}
+          <p class="note" role="note" data-testid="withdrawal-unknown">
+            Not linked to a library product, so its withdrawal is not known here. When you record a
+            treatment with it, eggs, milk and meat stay on hold until the owner enters the
+            withdrawal from the label or the vet.
+          </p>
+        {:else}
+          <div class="prov-row">
+            <Provenance source="plugin" detail={plugin.pluginId} />
+            {#if meta.pluginLink === 'manual'}<Provenance
+                source="manual"
+                label={tr('inv.ah.ownerLinked')}
+              />{/if}
+          </div>
+          <ul class="uses">
+            {#each plugin.labelUses as u (u.speciesId + u.class)}
+              <li>
+                <strong>{speciesNames[u.speciesId] ?? u.speciesId}</strong>
+                <span class="muted">{CLASS_LABEL[u.class] ?? u.class}</span>
+                <span>{withdrawalText(u.withdrawal)}</span>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </InvSection>
+    </div>
 
     {#if item}
       <InvSection title={tr('inv.feed.history')} kicker={tr('inv.feed.last12')}>

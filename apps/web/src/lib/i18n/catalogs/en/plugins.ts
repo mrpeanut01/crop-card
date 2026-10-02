@@ -769,5 +769,6 @@ export const enPlugins = {
   'pluginui.sex.rabbit.female': 'Doe',
   'pluginui.sex.rabbit.male': 'Buck',
   'pluginui.sex.rabbit.neutered-male': 'Neutered buck',
-  'pluginui.sex.rabbit.spayed-female': 'Spayed doe'
+  'pluginui.sex.rabbit.spayed-female': 'Spayed doe',
+  'cardsui.rulesVersion': 'Rules {version}'
 } as const;

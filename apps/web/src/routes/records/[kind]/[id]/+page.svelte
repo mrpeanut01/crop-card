@@ -110,18 +110,21 @@
   <section class="lock-banner" role="status">
     <Lock size={14} />
     <span>
-      <strong>Locked.</strong>
-      This record passed the 48-hour FR-09 edit window
-      {#if data.lockedAt}on <span class="mono">{fmtTimestamp(data.lockedAt)}</span>{/if}
-      and is immutable. Edits would break the audit chain.
+      <strong>{tr('records.detail.lockedTitle')}</strong>
+      {data.lockedAt
+        ? tr('records.detail.lockedOn', { date: fmtTimestamp(data.lockedAt) })
+        : tr('records.detail.lockedBody')}
     </span>
   </section>
 {:else}
   <section class="edit-banner" role="status">
     <span>
-      <strong>Editable until {fmtTimestamp(data.occurredAt + 48 * 60 * 60 * 1000)}.</strong>
-      Make corrections before the 48-hour FR-09 window closes — after that this row will be locked for
-      audit integrity.
+      <strong
+        >{tr('records.detail.editableUntil', {
+          date: fmtTimestamp(data.occurredAt + 48 * 60 * 60 * 1000)
+        })}</strong
+      >
+      {tr('records.detail.editableBody')}
     </span>
     {#if data.canEdit && editHref(data.kind)}
       <a class="edit-cta" href={editHref(data.kind)!}>
@@ -155,7 +158,13 @@
 
 {#if data.pollinator}
   {@const p = data.pollinator}
-  <section class="card" aria-labelledby="pollinator-heading" data-testid="pollinator-attestation">
+  <section
+    class="card"
+    aria-labelledby="pollinator-heading"
+    data-testid="pollinator-attestation"
+    lang="en"
+    data-english-only="safety"
+  >
     <h2 class="card-title" id="pollinator-heading">Pollinator protection</h2>
     <div class="card-row">
       <div class="card-label">Bloom status</div>

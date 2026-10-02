@@ -1050,5 +1050,44 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
   'settings.tz.America/Edmonton': 'Montaña (Edmonton)',
   'settings.tz.America/Vancouver': 'Pacífico (Vancouver)',
   'settings.units.us': 'EE. UU. (acre · lb · °F)',
-  'settings.units.metric': 'Métrico (ha · kg · °C)'
+  'settings.units.metric': 'Métrico (ha · kg · °C)',
+  'settings.err.signIn': 'Inicia sesión para ver esta página.',
+  'settings.err.ownerOnly': 'Solo el propietario de la granja puede abrir esta página.',
+  'settings.err.noActiveOwner': 'Primero elige una granja.',
+  'settings.err.impersonating': 'Esto no está disponible mientras ves la app como otra persona.',
+  'settings.err.session': 'Esto no está disponible en esta sesión.',
+  'settings.err.ownerAction': 'Solo el propietario de la granja puede hacer esto.',
+  'settings.err.missing': 'Faltó algo en el formulario. Inténtalo de nuevo.',
+  'settings.avatar.err.tooLarge': 'Esa foto es demasiado grande. Elige una de menos de 512 KB.',
+  'settings.avatar.err.none': 'No se envió ninguna foto.',
+  'settings.avatar.err.type': 'Usa una foto JPEG, PNG o WebP.',
+  'docs.copy.attachDeleted': 'Este archivo se eliminó, así que no se puede adjuntar.',
+  'docs.copy.photoStays': 'Las fotos se quedan con su entrada del diario o con su animal.',
+  'docs.copy.photoRemove': 'Quita esta foto desde su entrada del diario o desde su animal.',
+  'docs.copy.interactiveOwnerDelete':
+    'Solo el dueño, con la sesión iniciada en su propia cuenta, puede eliminar un archivo.',
+  'docs.copy.unsupportedList': 'Este tipo de archivo no se puede guardar. Usa un archivo {list}.',
+  'docs.copy.or': 'o',
+  'settings.index.diag.storageValue': 'SQLite · Litestream → Azure Blob',
+  'settings.about.sigName': 'Shawn',
+  'settings.equip.deconNeeded': 'Falta descontaminar',
+  'settings.equip.sprayersSub':
+    'Los GPA calibrados determinan cada cálculo de mezcla en el tanque. Una aspersora que necesita descontaminación bloquea la siguiente aplicación hasta que se limpie.',
+  'settings.equip.decon': 'Descontaminar',
+  'settings.records.retentionSub':
+    'VDACS exige guardar los registros de pesticidas al menos 2 años. CropCard nunca los borra por su cuenta. Las filas cerca de vencer muestran una alerta y solo el propietario puede quitarlas (NFR-05).',
+  'settings.records.yearsShort': '{n} años',
+  'settings.records.retentionKinds': 'Herbicida, insecticida, fungicida (FR-09 / NFR-05)',
+  'settings.records.withinYears': 'En los últimos {n} años',
+  'settings.records.preExpiry': 'Dentro de los 30 días antes de vencer',
+  'settings.records.lockSub':
+    'FR-09 · los registros de aplicación ya no pueden cambiar después de que cierra esta ventana. El servidor lo hace cumplir sin importar lo que muestre la pantalla, y no se puede cambiar.',
+  'settings.records.measuredFrom': 'Contado desde la hora de la aplicación',
+  'settings.records.howItWorks': 'Cómo funciona:',
+  'settings.records.howItWorksBody':
+    'un registro se puede editar durante {hours} horas después de ingresarlo. Después, el servidor rechaza cualquier edición o eliminación, así que el historial de auditoría deja ver cualquier alteración.',
+  'settings.records.integritySub':
+    'Cada registro lleva hashes del contenido de cada complemento; cada exportación imprime un SHA-256 de su conjunto canónico de filas para que un inspector confirme que los registros no han cambiado desde la exportación.',
+  'settings.records.quietLede':
+    'Todo lo que aplicas, ya sea cobre, azufre, Bt o spinosad, viene con reglas de etiqueta y obligaciones de registro. Cuando registras una aplicación, CropCard guarda el registro, lo bloquea después de {hours} horas y lo conserva al menos {years} años. Así funciona.'
 };

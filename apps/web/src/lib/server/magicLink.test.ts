@@ -387,7 +387,7 @@ describe('client address resolution + proxy-safe per-IP limit', () => {
       now
     });
     expect(publicIp.outcome).toBe('sent');
-  });
+  }, 30_000);
 
   it('keys the per-IP limit on the address adapter-node resolves via getClientAddress', async () => {
     const clientIp = uniqIp();

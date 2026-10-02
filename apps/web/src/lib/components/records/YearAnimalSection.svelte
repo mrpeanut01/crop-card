@@ -2,8 +2,12 @@
   import { page } from '$app/state';
   import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
-  import { headCountText, type YearAnimalSection } from '$lib/records/yearSummaryAnimals';
-  import type { MessageKey } from '$lib/i18n';
+  import {
+    headCountText,
+    type CoveredDeclarationLine,
+    type YearAnimalSection
+  } from '$lib/records/yearSummaryAnimals';
+  import { coveredUseKey, YEAR_MOVE_KEY, YEAR_USE_KEY } from '$lib/records/yearAnimalLabels';
 
   const {
     section,
@@ -13,24 +17,20 @@
 
   const tr = $derived(createT(page.data?.locale));
   const speciesName = (id: string) => section.speciesNames[id] ?? tr('recui.year.unknownSpecies');
-  const MOVE_KEY: Record<string, MessageKey> = {
-    arrived: 'recui.year.move.arrived',
-    sold: 'recui.year.move.sold',
-    'sold-for-meat': 'recui.year.move.soldForMeat',
-    slaughtered: 'recui.year.move.slaughtered',
-    died: 'recui.year.move.died',
-    culled: 'recui.year.move.culled',
-    rehomed: 'recui.year.move.rehomed'
+  const moveLabel = (kind: string, label: string) =>
+    YEAR_MOVE_KEY[kind] ? tr(YEAR_MOVE_KEY[kind]) : label;
+  const useLabel = (use: string, label: string) =>
+    YEAR_USE_KEY[use] ? tr(YEAR_USE_KEY[use]) : label;
+  const coveredUse = (c: CoveredDeclarationLine) => {
+    const key = coveredUseKey(c);
+    return key ? tr(key) : c.use;
   };
-  const USE_KEY: Record<string, MessageKey> = {
-    food: 'recui.year.use.food',
-    sale: 'recui.year.use.sale',
-    discard: 'recui.year.use.discard',
-    'feed-to-animals': 'recui.year.use.feed',
-    unknown: 'recui.year.use.unknown'
-  };
-  const moveLabel = (kind: string, label: string) => (MOVE_KEY[kind] ? tr(MOVE_KEY[kind]) : label);
-  const useLabel = (use: string, label: string) => (USE_KEY[use] ? tr(USE_KEY[use]) : label);
+  const foodLabel = (what: 'eggs' | 'milk' | 'meat') =>
+    what === 'eggs'
+      ? tr('recui.year.eggs')
+      : what === 'milk'
+        ? tr('recui.year.milk')
+        : tr('recui.year.covered.meat');
   const countText = (n: number | null) =>
     n === null ? tr('recui.year.countUnknown') : headCountText(n);
   const range = $derived(`from=${year}-01-01&to=${year}-12-31`);
@@ -147,23 +147,33 @@
     </article>
 
     <article class="card wide">
-      <h4>Food or sales inside a hold</h4>
+      <h4>{tr('recui.year.covered.title')}</h4>
       {#if section.covered.length}
         <table>
-          <thead><tr><th>Date</th><th>Animal or group</th><th>What</th><th>Hold</th></tr></thead>
+          <thead
+            ><tr
+              ><th>{tr('recui.year.covered.date')}</th><th>{tr('recui.year.covered.subject')}</th
+              ><th>{tr('recui.year.covered.what')}</th><th>{tr('recui.year.covered.hold')}</th></tr
+            ></thead
+          >
           <tbody>
             {#each section.covered as c (`${c.atMs}:${c.subject}:${c.what}:${c.use}`)}
               <tr>
                 <td>{fmt.instant(c.atMs, 'date')}</td>
                 <td>{c.subject}</td>
-                <td>{c.what}, {c.use.toLowerCase()}</td>
-                <td>{c.basisText}</td>
+                <td
+                  >{tr('recui.year.covered.line', {
+                    what: foodLabel(c.what),
+                    use: coveredUse(c).toLowerCase()
+                  })}</td
+                >
+                <td><span lang="en" data-english-only="safety">{c.basisText}</span></td>
               </tr>
             {/each}
           </tbody>
         </table>
       {:else}
-        <p class="empty">No food or sale on file fell inside a hold this year.</p>
+        <p class="empty">{tr('recui.year.covered.none')}</p>
       {/if}
     </article>
   </div>

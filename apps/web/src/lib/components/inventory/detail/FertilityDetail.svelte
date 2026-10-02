@@ -38,7 +38,7 @@
     <h1 class="serif">{item.displayName}</h1>
     {#if plugin}
       <p class="sub">
-        N–P₂O₅–K₂O <span class="mono">{npk.n}-{npk.p}-{npk.k}</span>
+        {tr('inv.fert.npkLabel')} <span class="mono">{npk.n}-{npk.p}-{npk.k}</span>
         {#if plugin.organic}· <span class="omri">OMRI</span>{/if}
       </p>
     {/if}
@@ -63,14 +63,14 @@
           <span class="npk-val mono">{npk.n}%</span>
         </div>
         <div class="npk-row">
-          <span class="npk-label">P₂O₅</span>
+          <span class="npk-label">{tr('inv.fert.p2o5')}</span>
           <div class="npk-bar">
             <div class="fill p" style="width: {(npk.p / npkMax) * 100}%"></div>
           </div>
           <span class="npk-val mono">{npk.p}%</span>
         </div>
         <div class="npk-row">
-          <span class="npk-label">K₂O</span>
+          <span class="npk-label">{tr('inv.fert.k2o')}</span>
           <div class="npk-bar">
             <div class="fill k" style="width: {(npk.k / npkMax) * 100}%"></div>
           </div>

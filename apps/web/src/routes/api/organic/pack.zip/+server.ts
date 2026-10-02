@@ -9,6 +9,7 @@
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { prefsFor } from '$lib/db/userProfile';
 import { organicPackQuerySchema } from '$lib/records/apiSchemas';
 import { recordExportReader } from '$lib/records/exportAccess.server';
@@ -31,7 +32,7 @@ export const GET: RequestHandler = async (event) => {
     return json(
       {
         error: 'PACK_BUSY',
-        message: 'A pack for this farm is already being built. Try again in a few seconds.'
+        message: t(event.locals?.locale, 'organic.api.packBusy')
       },
       { status: 429, headers: { 'Retry-After': '10' } }
     );

@@ -142,7 +142,14 @@
   }
 </script>
 
-<form class="af-form" onsubmit={submit} novalidate aria-label="Record health">
+<form
+  class="af-form"
+  onsubmit={submit}
+  novalidate
+  aria-label="Record health"
+  lang="en"
+  data-english-only="safety"
+>
   <fieldset class="af-fieldset" hidden={!!lockedKind}>
     <legend class="af-legend">What was it?</legend>
     <div class="af-tiles">

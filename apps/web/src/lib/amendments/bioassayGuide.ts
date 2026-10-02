@@ -6,6 +6,9 @@
  * and the day count, so those are shown per source and never merged.
  */
 
+import { t, type MessageKey } from '$lib/i18n';
+import { enAmend } from '$lib/i18n/catalogs/en/amend';
+
 export interface GuideSentence {
   id: string;
   text: string;
@@ -121,3 +124,11 @@ export const ALL_GUIDE_SENTENCES: readonly GuideSentence[] = [
   ...BIOASSAY_NOTES,
   BIOASSAY_DAMAGE
 ];
+
+/** A guide sentence in `locale` (the shipped English with none). The
+ *  catalog English must match `text`; `bioassayGuide.test.ts` checks it. */
+export function guideSentenceText(s: GuideSentence, locale?: string | null): string {
+  if (!locale) return s.text;
+  const key = `amend.bioassay.${s.id}`;
+  return key in enAmend ? t(locale, key as MessageKey) : s.text;
+}

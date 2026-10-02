@@ -28,7 +28,7 @@ import { signOutEverywhere } from '$lib/server/auth';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => {
-  if (!locals.user) throw error(401, 'sign-in required');
+  if (!locals.user) throw error(401, t(locals.locale, 'settings.err.signIn'));
   const user = locals.user;
 
   const userRow = db.select().from(users).where(eq(users.id, user.id)).get();
@@ -81,8 +81,8 @@ export const load: PageServerLoad = ({ locals }) => {
 
 export const actions: Actions = {
   save: async ({ request, locals }) => {
-    if (!locals.user) throw error(401, 'sign-in required');
-    if (locals.user.impersonating) throw error(403, 'not available while impersonating');
+    if (!locals.user) throw error(401, t(locals.locale, 'settings.err.signIn'));
+    if (locals.user.impersonating) throw error(403, t(locals.locale, 'settings.err.impersonating'));
     // Sign-in email/phone change only through the verified-code flow in
     // the "Sign-in methods" section (/api/account/identity).
     const fd = await request.formData();
@@ -124,9 +124,9 @@ export const actions: Actions = {
 
   /** F5-9. Cookie sessions only, like the other identity settings. */
   locale: async ({ request, locals, cookies }) => {
-    if (!locals.user) throw error(401, 'sign-in required');
+    if (!locals.user) throw error(401, t(locals.locale, 'settings.err.signIn'));
     if (locals.authVia !== 'cookie' || locals.user.impersonating) {
-      throw error(403, 'not available for this session');
+      throw error(403, t(locals.locale, 'settings.err.session'));
     }
     const fd = await request.formData();
     const choice = applyLocaleChoice({

@@ -84,7 +84,9 @@
           removedOn: rem,
           seasonYear: thisSeasonOnly ? seasonYear : null
         },
-        seasonYear
+        seasonYear,
+        fetch,
+        page.data?.locale
       );
       onDone(result);
     } catch (err) {

@@ -264,15 +264,16 @@
     {#if response?.meta?.fallback}
       <div class="fallback-banner">
         {#if response.meta.fallback === 'no-api-key'}
-          ℹ {tr('group.wiz.fbNoKey')}
+          <span aria-hidden="true">ⓘ</span> {tr('group.wiz.fbNoKey')}
         {:else if response.meta.fallback === 'ai-unavailable'}
-          ℹ {tr('group.wiz.fbUnavailable', {
+          <span aria-hidden="true">ⓘ</span>
+          {tr('group.wiz.fbUnavailable', {
             message: response.meta.fallbackMessage ?? tr('group.wiz.claudeUnavailable')
           })}
         {:else if response.meta.fallback === 'engine-only'}
           ⚠ {tr('group.wiz.fbEngine')}
         {:else if response.meta.fallback === 'no-drafts'}
-          ℹ {tr('group.wiz.fbNoDrafts')}
+          <span aria-hidden="true">ⓘ</span> {tr('group.wiz.fbNoDrafts')}
         {/if}
       </div>
     {/if}

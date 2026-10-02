@@ -706,5 +706,12 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plan.design.notInCopy': 'Este huerto no está en la copia guardada en este dispositivo.',
   'plan.design.didNotLoad': 'El diseñador del huerto no cargó. Inténtalo de nuevo.',
   'plan.design.notDesignable':
-    'Esta área no tiene diseñador de huerto. Solo los huertos y los invernaderos lo tienen.'
+    'Esta área no tiene diseñador de huerto. Solo los huertos y los invernaderos lo tienen.',
+  'crops.err.missingBlock': 'Falta la cama de cultivo o el bloque de esta siembra.',
+  'plan.swimlane.eastIndex': 'E{n}',
+  'plan.grazing.docTitle': 'Tiempos de pastoreo · {area} · CropCard',
+  'plan.grazing.breadcrumb': 'Ruta de navegación',
+  'plan.grazing.kicker': '{area} · Pastoreo y henificación',
+  'plan.grazing.title': 'Tiempos de pastoreo y henificación',
+  'plan.grazing.empty': 'No se ha aplicado nada aquí en el último año.'
 };

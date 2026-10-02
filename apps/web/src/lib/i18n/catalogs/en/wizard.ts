@@ -970,5 +970,6 @@ export const enWizard = {
     'These {max} beds leave out {list}. Use longer or wider beds, or plant less.',
   'wizard.beds.leftoverItem.one': '{count} {name} plant',
   'wizard.beds.leftoverItem.other': '{count} {name} plants',
-  'wizard.beds.fallbackMsg': "{why}, so these beds come from each crop's spacing."
+  'wizard.beds.fallbackMsg': "{why}, so these beds come from each crop's spacing.",
+  'planui.beds.bedLine': 'Bed {n}: {width} × {length}'
 } as const;

@@ -591,5 +591,9 @@ export const enAnimals = {
   'animals.use.whereGoingMany': 'Where are they going?',
   'animals.prod.savedThrownOut': 'Saved as thrown out.',
   'animals.quick.thrownOut': '{count} {unit} thrown out:',
-  'animals.history.anotherGroup': 'another group'
+  'animals.history.anotherGroup': 'another group',
+  'animals.health.courseTo': 'to {date}',
+  'animals.health.moreDoses': 'more doses to come',
+  'animals.health.vetName': 'Vet: {name}',
+  'animals.health.lotNumber': 'Lot {lot}'
 } as const;

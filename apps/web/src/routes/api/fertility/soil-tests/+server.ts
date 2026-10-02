@@ -32,7 +32,7 @@ export const POST: RequestHandler = async (event) => {
   if (foreign) return foreign;
   const { documentId, ...fields } = parsed.data;
   if (documentId) {
-    const refused = checkLabReport(documentId);
+    const refused = checkLabReport(documentId, event.locals?.locale);
     if (refused) return refused;
   }
   const persisted = db.transaction(() => {

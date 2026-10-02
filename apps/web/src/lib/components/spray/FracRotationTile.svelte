@@ -49,11 +49,15 @@
   <div class="head">
     <span class="title">{tr('sprayui.frac.title')}</span>
     {#if status === 'block'}
-      <Pill tone="rust">Same group as last spray</Pill>
+      <span lang="en" data-english-only="safety"
+        ><Pill tone="rust">Same group as last spray</Pill></span
+      >
     {:else if status === 'warn'}
-      <Pill tone="wheat">Group repeated in tank</Pill>
+      <span lang="en" data-english-only="safety"
+        ><Pill tone="wheat">Group repeated in tank</Pill></span
+      >
     {:else if status === 'pass'}
-      <Pill tone="forest">Group cleared</Pill>
+      <span lang="en" data-english-only="safety"><Pill tone="forest">Group cleared</Pill></span>
     {:else}
       <Pill tone="neutral">{tr('sprayui.frac.pick')}</Pill>
     {/if}
@@ -75,19 +79,27 @@
 
   <p class="msg" role={status === 'block' ? 'alert' : undefined}>
     {#if status === 'block'}
-      FRAC {sharedCodes.join(', ')} was used in the most recent fungicide on this block ({prior?.displayName ??
-        'prior application'}, {prior ? fmt.instant(prior.occurredAt, 'date') : ''}). Rotate to a
-      different mode of action — the server will refuse this record.
+      <span lang="en" data-english-only="safety">
+        FRAC {sharedCodes.join(', ')} was used in the most recent fungicide on this block ({prior?.displayName ??
+          'prior application'}, {prior ? fmt.instant(prior.occurredAt, 'date') : ''}). Rotate to a
+        different mode of action — the server will refuse this record.
+      </span>
     {:else if status === 'warn'}
-      FRAC {tankOverlapCode} is on two products in this tank. Consider a different mode of action for
-      resistance management.
+      <span lang="en" data-english-only="safety">
+        FRAC {tankOverlapCode} is on two products in this tank. Consider a different mode of action for
+        resistance management.
+      </span>
     {:else if status === 'pass' && prior}
-      No FRAC group overlaps the last fungicide on this block ({prior.displayName}, {fmt.instant(
-        prior.occurredAt,
-        'date'
-      )}).
+      <span lang="en" data-english-only="safety">
+        No FRAC group overlaps the last fungicide on this block ({prior.displayName}, {fmt.instant(
+          prior.occurredAt,
+          'date'
+        )}).
+      </span>
     {:else if status === 'pass'}
-      No prior fungicide recorded on this block — nothing to rotate against.
+      <span lang="en" data-english-only="safety">
+        No prior fungicide recorded on this block — nothing to rotate against.
+      </span>
     {:else}
       {tr('sprayui.frac.idle')}
     {/if}

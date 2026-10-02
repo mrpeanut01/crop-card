@@ -6,7 +6,8 @@
     BIOASSAY_RATIOS,
     BIOASSAY_SOURCE_LINKS,
     BIOASSAY_STEPS,
-    BIOASSAY_TIMING
+    BIOASSAY_TIMING,
+    guideSentenceText
   } from '$lib/amendments/bioassayGuide';
 
   const tr = $derived(createT(page.data?.locale));
@@ -15,18 +16,18 @@
 <details class="guide" data-testid="bioassay-guide">
   <summary>{tr('bioassay.guide.summary')}</summary>
   <ol>
-    {#each BIOASSAY_STEPS as s (s.id)}<li>{s.text}</li>{/each}
+    {#each BIOASSAY_STEPS as s (s.id)}<li>{guideSentenceText(s, page.data?.locale)}</li>{/each}
   </ol>
   <p class="sub">{tr('bioassay.guide.mixLead')}</p>
   <ul>
-    {#each BIOASSAY_RATIOS as s (s.id)}<li>{s.text}</li>{/each}
+    {#each BIOASSAY_RATIOS as s (s.id)}<li>{guideSentenceText(s, page.data?.locale)}</li>{/each}
   </ul>
   <p class="sub">{tr('bioassay.guide.howLong')}</p>
   <ul>
-    {#each BIOASSAY_TIMING as s (s.id)}<li>{s.text}</li>{/each}
+    {#each BIOASSAY_TIMING as s (s.id)}<li>{guideSentenceText(s, page.data?.locale)}</li>{/each}
   </ul>
   <ul>
-    {#each BIOASSAY_NOTES as s (s.id)}<li>{s.text}</li>{/each}
+    {#each BIOASSAY_NOTES as s (s.id)}<li>{guideSentenceText(s, page.data?.locale)}</li>{/each}
   </ul>
   <p class="sub">
     {tr('bioassay.guide.notResult')}

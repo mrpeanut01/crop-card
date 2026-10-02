@@ -8,6 +8,11 @@ export const UPDATING_MESSAGE = 'CropCard is updating. Nothing was saved. Try ag
 export const UPDATING_QUEUED_NOTICE =
   'CropCard is updating, so this was saved on this device. It will send in a moment.';
 
+/** The fence's refusal in the caller's language (English with none). */
+export function updatingMessage(locale?: string | null): string {
+  return locale ? t(locale, 'recui.updatingMessage') : UPDATING_MESSAGE;
+}
+
 /** The queued notice in the viewer's language (English with none). */
 export function updatingQueuedNotice(locale?: string | null): string {
   return locale ? t(locale, 'recui.updatingQueued') : UPDATING_QUEUED_NOTICE;

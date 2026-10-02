@@ -40,7 +40,7 @@
   );
 </script>
 
-<header class="gate-header">
+<header class="gate-header" lang="en" data-english-only="safety">
   <h2>Pollinator-protection gate</h2>
   <span class="pill pill-{result.overall}" data-testid="pollinator-overall">{pillLabel}</span>
   <Provenance
@@ -53,7 +53,7 @@
   {/if}
 </header>
 
-<fieldset class="bloom">
+<fieldset class="bloom" lang="en" data-english-only="safety">
   <legend>Is the crop or any flowering weed in bloom in this block?</legend>
   {#if bloomingCrops.length > 0}
     <p class="hint">
@@ -86,7 +86,7 @@
   {/if}
 </fieldset>
 
-<ul class="tiles">
+<ul class="tiles" lang="en" data-english-only="safety">
   {#each result.checks as c (c.id)}
     <li
       class="tile tile-{c.status}"

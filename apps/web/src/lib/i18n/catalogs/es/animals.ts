@@ -607,5 +607,9 @@ export const esAnimals: Partial<Record<MessageKey, string>> = {
   'animals.use.whereGoingMany': '¿A dónde van?',
   'animals.prod.savedThrownOut': 'Guardado como desechado.',
   'animals.quick.thrownOut': '{count} {unit} desechados:',
-  'animals.history.anotherGroup': 'otro grupo'
+  'animals.history.anotherGroup': 'otro grupo',
+  'animals.health.courseTo': 'hasta {date}',
+  'animals.health.moreDoses': 'faltan más dosis',
+  'animals.health.vetName': 'Veterinario: {name}',
+  'animals.health.lotNumber': 'Lote {lot}'
 };

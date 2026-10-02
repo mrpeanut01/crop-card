@@ -279,5 +279,20 @@ export const enAmend = {
 
   'forage.hay.sprayed': 'Sprayed {date}.',
   'forage.hay.labelSource': 'Label: {source}.',
-  'forage.hay.labelData': 'label data'
+  'forage.hay.labelData': 'label data',
+  'amend.bioassay.controls': 'Fill a few pots with plain potting mix as controls.',
+  'amend.bioassay.mix': 'Fill a few more pots with the material mixed with potting mix.',
+  'amend.bioassay.plant': 'Plant pea seeds in every pot. Some sources use beans too.',
+  'amend.bioassay.grow': 'Grow them until about three sets of leaves appear.',
+  'amend.bioassay.look':
+    'Look for distorted or cupped leaves in the new growth, and compare them with the control pots.',
+  'amend.bioassay.ratio-osu': 'Oregon State: 2 parts material to 1 part potting mix.',
+  'amend.bioassay.ratio-ncsu': 'NC State: 1 part material to 1 part potting mix.',
+  'amend.bioassay.days-osu': 'Oregon State: 14 to 21 days after the seeds come up.',
+  'amend.bioassay.lab':
+    'Oregon State notes that a chemical lab test might not show this kind of weed killer.',
+  'amend.bioassay.retest':
+    'Oregon State suggests testing once or twice a year until there are no signs of damage.',
+  'carry.page.lede':
+    'Some weed killers pass through animals and compost and can damage tomatoes, beans, peas and other broadleaf crops. These lines come from your records. A pea or bean test in pots is the usual way to check before planting.'
 } as const;

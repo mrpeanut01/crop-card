@@ -1003,5 +1003,6 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.beds.leftoverItem.one': '{count} planta de {name}',
   'wizard.beds.leftoverItem.other': '{count} plantas de {name}',
   'wizard.beds.fallbackMsg':
-    '{why}, así que estas camas de cultivo se calculan con el espaciado de cada cultivo.'
+    '{why}, así que estas camas de cultivo se calculan con el espaciado de cada cultivo.',
+  'planui.beds.bedLine': 'Cama {n}: {width} × {length}'
 };

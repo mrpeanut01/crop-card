@@ -13,6 +13,7 @@ import {
   DISPOSITION_FORCE_REASON_MAX,
   DISPOSITION_FORCE_REASON_MIN,
   dispositionPatchSchema,
+  dispositionIssueText,
   dispositionProblem,
   type HarvestDispositionKind
 } from '$lib/harvest/apiSchemas';
@@ -37,9 +38,6 @@ import { t } from '$lib/i18n';
 
 export const _requestSchema = dispositionPatchSchema;
 
-const LOCKED_MESSAGE =
-  'This record is locked 48 hours after its date. The owner can delete it with a reason.';
-
 export const PATCH: RequestHandler = async (event) => {
   const user = currentUser(event);
   if (!user) return problem(401, 'UNAUTHENTICATED', 'Sign in to change this record.');
@@ -57,7 +55,7 @@ export const PATCH: RequestHandler = async (event) => {
     return json(
       {
         error: 'INVALID_BODY',
-        message: parsed.error.issues[0]?.message ?? 'Check the fields and try again.',
+        message: dispositionIssueText(parsed.error.issues, event.locals?.locale),
         issues: parsed.error.issues
       },
       { status: 400 }
@@ -80,7 +78,7 @@ export const PATCH: RequestHandler = async (event) => {
       return problem(
         403,
         'NOT_WHILE_IMPERSONATING',
-        'Money cannot be changed while impersonating.'
+        t(event.locals.locale, 'harvestui.disp.err.moneyImpersonating')
       );
     }
     const foreign = rejectForeignRefs(assertLedgerEntry('ledgerEntryId', ledgerEntryId));
@@ -91,7 +89,7 @@ export const PATCH: RequestHandler = async (event) => {
   const changes: DispositionFieldChanges = {};
   if (changing) {
     if (evaluateDispositionLock(existing) !== undefined) {
-      return problem(409, 'RECORD_LOCKED', LOCKED_MESSAGE);
+      return problem(409, 'RECORD_LOCKED', t(event.locals.locale, 'harvestui.disp.err.locked'));
     }
     const kind: HarvestDispositionKind = fields.kind ?? existing.kind;
     const recipient =
@@ -108,7 +106,12 @@ export const PATCH: RequestHandler = async (event) => {
           : null;
     const merged = { kind, recipient, soldAsOrganic };
     const bad = dispositionProblem(merged);
-    if (bad) return problem(400, 'INVALID_BODY', bad);
+    if (bad)
+      return problem(
+        400,
+        'INVALID_BODY',
+        dispositionIssueText([{ message: bad }], event.locals.locale)
+      );
     if (!farmHasOrganicStatus()) soldAsOrganic = null;
 
     if (fields.occurredAt !== undefined) {
@@ -164,18 +167,27 @@ export const DELETE: RequestHandler = async (event) => {
     return problem(404, 'NOT_FOUND', t(event.locals.locale, 'harvestui.disp.err.noRecord'));
   const force = event.url.searchParams.get('force') === 'true';
   const locked = evaluateDispositionLock(existing) !== undefined;
-  if (locked && !force) return problem(409, 'RECORD_LOCKED', LOCKED_MESSAGE);
+  if (locked && !force)
+    return problem(409, 'RECORD_LOCKED', t(event.locals.locale, 'harvestui.disp.err.locked'));
   let reason: string | undefined;
   if (locked) {
     if (user.role !== 'owner') {
-      return problem(403, 'OWNER_ONLY', 'Only the farm owner can delete a locked record.');
+      return problem(
+        403,
+        'OWNER_ONLY',
+        t(event.locals.locale, 'harvestui.disp.err.ownerDeleteLocked')
+      );
     }
     reason = event.url.searchParams.get('reason')?.trim() ?? '';
     if (
       reason.length < DISPOSITION_FORCE_REASON_MIN ||
       reason.length > DISPOSITION_FORCE_REASON_MAX
     ) {
-      return problem(400, 'REASON_REQUIRED', 'Say why this locked record is being deleted.');
+      return problem(
+        400,
+        'REASON_REQUIRED',
+        t(event.locals.locale, 'harvestui.disp.err.reasonNeeded')
+      );
     }
   }
   const summary = db.transaction(() =>

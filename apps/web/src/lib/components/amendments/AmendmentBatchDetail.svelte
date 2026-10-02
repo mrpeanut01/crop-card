@@ -189,7 +189,9 @@
   {#if batch.paths.length}
     <ul class="paths" data-testid="carryover-paths">
       {#each batch.paths as path, i (i)}
-        <li class={path.state}>{path.sentence}</li>
+        <li class={path.state}>
+          <span lang="en" data-english-only="safety">{path.sentence}</span>
+        </li>
       {/each}
     </ul>
     {#if batch.morePaths > 0}
@@ -197,7 +199,9 @@
     {/if}
   {/if}
   {#if batch.advice}
-    <p class="advice" data-testid="carryover-advice">{batch.advice}</p>
+    <p class="advice" data-testid="carryover-advice">
+      <span lang="en" data-english-only="safety">{batch.advice}</span>
+    </p>
   {/if}
   {#each batch.standingNotes as note (note)}
     <p class="muted note">{note}</p>

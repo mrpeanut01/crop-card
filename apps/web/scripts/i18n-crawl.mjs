@@ -127,16 +127,28 @@ while (queue.length && seen.size < MAX) {
   const finalPath = new URL(page.url()).pathname + new URL(page.url()).search;
   const data = await page.evaluate(() => {
     const out = [];
-    const skip = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'CODE', 'PRE', 'svg', 'SVG']);
+    const skip = new Set([
+      'SCRIPT',
+      'STYLE',
+      'NOSCRIPT',
+      'CODE',
+      'PRE',
+      'KBD',
+      'SAMP',
+      'svg',
+      'SVG'
+    ]);
+    const skipped = 'code,pre,kbd,samp,svg,[data-i18n-skip],[lang="en"][data-english-only]';
     const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     let n;
     while ((n = tw.nextNode())) {
       const el = n.parentElement;
-      if (!el || skip.has(el.tagName) || el.closest('code,pre,svg,[data-i18n-skip]')) continue;
+      if (!el || skip.has(el.tagName) || el.closest(skipped)) continue;
       const v = n.nodeValue.replace(/\s+/g, ' ').trim();
       if (v) out.push(v);
     }
     for (const el of document.querySelectorAll('[aria-label],[title],[placeholder],[alt]')) {
+      if (el.closest('[lang="en"][data-english-only]')) continue;
       for (const a of ['aria-label', 'title', 'placeholder', 'alt']) {
         const v = el.getAttribute(a);
         if (v) out.push('@' + a + ': ' + v);

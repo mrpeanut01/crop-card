@@ -25,7 +25,7 @@ export const load: PageServerLoad = async (event) => {
   if (year === null) throw error(400, t(event.locals.locale, 'finance.err.badYear'));
   const showDeleted = event.url.searchParams.get('show') === 'deleted';
 
-  const money = await loadSeasonMoney(year);
+  const money = await loadSeasonMoney(year, event.locals.locale);
   const rows = showDeleted
     ? listLedgerEntries({ fromMs: money.fromMs, toMs: money.toMs, state: 'deleted' })
     : money.entries;

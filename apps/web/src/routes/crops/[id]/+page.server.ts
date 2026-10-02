@@ -12,13 +12,15 @@ import { listTasks } from '$lib/db/tasks';
 import { eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
+import { calendarEventTitle } from '$lib/calendar/eventTitle';
+import { taskDisplayTitle } from '$lib/tasks/title';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const crop = getCrop(params.id);
   if (!crop) throw error(404, t(locals.locale, 'crops.notFound'));
 
   const block = getBlock(crop.blockId);
-  if (!block) throw error(500, 'crop references missing block');
+  if (!block) throw error(500, t(locals.locale, 'crops.err.missingBlock'));
   const registry = await getRegistry();
   const cropRecord = registry.get(crop.cropPluginId);
   const cropPlugin =
@@ -59,7 +61,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       },
       cropPlugin,
       { blockPlantings: block.plantings }
-    );
+    ).map((e) => ({ ...e, title: calendarEventTitle(e, locals.locale) }));
   }
 
   return {
@@ -85,7 +87,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     cuttings,
     fertilityApps,
     soilTests,
-    tasks,
+    tasks: tasks.map((task) => ({ ...task, title: taskDisplayTitle(task, locals.locale) })),
     projected
   };
 };

@@ -55,10 +55,24 @@ const KNOWN_COPY: Record<string, MessageKey> = {
   "This file type can't be stored. Use a PDF, JPEG, PNG, WebP or CSV file.":
     'docs.copy.unsupported',
   "This file couldn't be read. Save it again as a PDF, JPEG, PNG, WebP or CSV file and retry.":
-    'docs.copy.unreadable'
+    'docs.copy.unreadable',
+  'This file was deleted, so it cannot be attached.': 'docs.copy.attachDeleted',
+  'Photos stay with their journal entry or animal.': 'docs.copy.photoStays',
+  'Remove this photo from its journal entry or animal.': 'docs.copy.photoRemove',
+  'Only the owner, signed in on their own account, can delete a file.':
+    'docs.copy.interactiveOwnerDelete'
 };
 
+const UNSUPPORTED_LIST = /^This file type can't be stored\. Use an? (.+) file\.$/;
+
 export function localizeDocCopy(tr: Translator, message: string): string {
+  const list = UNSUPPORTED_LIST.exec(message)?.[1];
+  if (list && !KNOWN_COPY[message]) {
+    if (tr('docs.copy.or') === createT('en')('docs.copy.or')) return message;
+    return tr('docs.copy.unsupportedList', {
+      list: list.replace(/ or /g, ` ${tr('docs.copy.or')} `)
+    });
+  }
   const key = KNOWN_COPY[message];
   return key && createT('en')(key) === message ? tr(key) : message;
 }

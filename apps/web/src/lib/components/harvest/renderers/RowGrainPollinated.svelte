@@ -69,7 +69,7 @@
         />
       </label>
     </div>
-    <p class="hint">
+    <p class="hint" lang="en" data-english-only="safety">
       Storage moisture targets: dent/feed corn &lt;15%, food-grade dent &lt;14%, sweet flash-frozen
       &lt;76% kernel moisture.
     </p>

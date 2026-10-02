@@ -25,10 +25,12 @@
         {facts.batch.name}: {facts.stateLabel}
         <Provenance source="data" detail={tr('amend.prov.yourRecords')} compact />
       </p>
-      <p>{facts.message}</p>
+      <p><span lang="en" data-english-only="safety">{facts.message}</span></p>
       {#if facts.pathSentences.length}
         <ul>
-          {#each facts.pathSentences as p, i (i)}<li>{p}</li>{/each}
+          {#each facts.pathSentences as p, i (i)}<li>
+              <span lang="en" data-english-only="safety">{p}</span>
+            </li>{/each}
         </ul>
         {#if facts.morePaths}<p class="meta">
             {tr('amend.morePaths', { count: facts.morePaths })}

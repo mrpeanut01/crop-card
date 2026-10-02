@@ -14,9 +14,12 @@ export const load: PageServerLoad = async (event) => {
   const user = requireMoneyReader(event);
   const entry = getLedgerEntry(event.params.id);
   if (!entry) throw error(404, t(event.locals.locale, 'finance.err.noEntry'));
-  const options = entryFormOptions(await farmNames(), event.locals?.locale);
+  const options = entryFormOptions(await farmNames(event.locals?.locale), event.locals?.locale);
   const changes = listLedgerChanges(entry.id);
-  const people = enteredByNames(changes.map((c) => c.changedById));
+  const people = enteredByNames(
+    changes.map((c) => c.changedById),
+    event.locals?.locale
+  );
   const value: EntryFormValue = {
     id: entry.id,
     kind: entry.kind,

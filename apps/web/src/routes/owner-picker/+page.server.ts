@@ -7,6 +7,7 @@ import { activeAssignmentsForUser } from '$lib/db/users';
 import { currentUser } from '$lib/server/auth';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import type { PageServerLoad } from './$types';
+import { t } from '$lib/i18n';
 
 /**
  * Owner picker — shown to Helpers who belong to multiple Owners. The
@@ -47,14 +48,14 @@ export const load: PageServerLoad = ({ locals }) => {
 export const actions: Actions = {
   pick: async (event) => {
     const user = currentUser(event);
-    if (!user) throw error(401, 'authentication required');
+    if (!user) throw error(401, t(event.locals.locale, 'settings.err.signIn'));
     const fd = await event.request.formData();
     const ownerId = String(fd.get('ownerId') ?? '');
-    if (!ownerId) return fail(400, { error: 'ownerId required' });
+    if (!ownerId) return fail(400, { error: t(event.locals.locale, 'entry.picker.err.pickFarm') });
 
     const assignments = activeAssignmentsForUser(user.id);
     const match = assignments.find((a) => a.ownerId === ownerId);
-    if (!match) throw error(403, 'no assignment to that Owner');
+    if (!match) throw error(403, t(event.locals.locale, 'entry.picker.err.notMember'));
 
     writeSession(event.cookies, {
       id: user.id,

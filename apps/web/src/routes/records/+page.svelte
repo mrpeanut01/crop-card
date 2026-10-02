@@ -233,12 +233,14 @@
           class="btn-primary"
           href="/api/records/export.vdacs.pdf{exportQuery}"
           download
-          title="VDACS-formatted audit pack: spray + insecticide + fungicide records, owner identity, integrity hash"
+          title={tr('records.export.vdacsTitle')}
         >
-          <Lock size={13} /> VDACS audit PDF
+          <Lock size={13} />
+          {tr('records.export.vdacsPdf')}
         </a>
         <a class="btn-ghost" href="/api/spray/records/export.usda.csv{exportQuery}" download>
-          <FileText size={13} /> USDA / NRCS CSV
+          <FileText size={13} />
+          {tr('records.export.usdaCsv')}
         </a>
       {/if}
       <a
@@ -458,7 +460,7 @@
 
       {#if data.chrome === 'full'}
         <article class="review-card">
-          <h3>Decon + calibration</h3>
+          <h3>{tr('records.review.deconCalib')}</h3>
           <ul class="stat-list">
             <li>
               <strong class="mono"
@@ -472,7 +474,8 @@
               {tr('recui.calib.thisYear')}
             </li>
             <li>
-              <strong class="mono">{yearSummary.compliance.deconEventsThisYear}</strong> decon events
+              <strong class="mono">{yearSummary.compliance.deconEventsThisYear}</strong>
+              {tr('records.review.deconEvents')}
             </li>
           </ul>
         </article>
@@ -630,8 +633,11 @@
     <div class="retention-strip">
       <Lock size={13} />
       <span>
-        <strong>{summary.locked}/{summary.total}</strong> records locked under the 48-hour FR-09
-        rule. Oldest record: <span class="mono">{fmtDate(summary.oldestMs)}</span>.
+        {tr('records.retention.locked', {
+          locked: summary.locked,
+          total: summary.total,
+          oldest: fmtDate(summary.oldestMs)
+        })}
       </span>
     </div>
 
@@ -657,7 +663,7 @@
               <th scope="col">{tr('records.ledger.blockPlanting')}</th>
               <th scope="col">{tr('records.ledger.detail')}</th>
               <th scope="col">{tr('records.ledger.by')}</th>
-              <th scope="col">Hash</th>
+              <th scope="col">{tr('records.ledger.hash')}</th>
               <th scope="col" aria-label={tr('records.ledger.open')}></th>
             </tr>
           </thead>
@@ -770,14 +776,13 @@
   {#snippet complianceCards()}
     <section class="footer-cards">
       <article class="reassurance">
-        <div class="reassurance-kicker">Integrity hash</div>
+        <div class="reassurance-kicker">{tr('records.integrity.kicker')}</div>
         <p>
-          Each record carries per-plugin content hashes, and every export prints a SHA-256 of its
-          canonical row set. Re-exporting the same records reproduces the same hash; a change after
-          the FR-09 lock alters it.
+          {tr('records.integrity.body')}
         </p>
         <a class="reassurance-link" href="/api/records/export.vdacs.pdf{exportQuery}" download>
-          Download VDACS audit pack <ArrowRight size={12} />
+          {tr('records.integrity.download')}
+          <ArrowRight size={12} />
         </a>
       </article>
       <article class="reassurance">
@@ -803,10 +808,12 @@
       </p>
       <div class="fold-actions">
         <a class="btn-ghost" href="/api/records/export.vdacs.pdf{exportQuery}" download>
-          <Lock size={13} /> VDACS audit PDF
+          <Lock size={13} />
+          {tr('records.export.vdacsPdf')}
         </a>
         <a class="btn-ghost" href="/api/spray/records/export.usda.csv{exportQuery}" download>
-          <FileText size={13} /> USDA / NRCS CSV
+          <FileText size={13} />
+          {tr('records.export.usdaCsv')}
         </a>
       </div>
       {@render complianceCards()}

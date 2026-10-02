@@ -14,13 +14,14 @@ import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { getFarmProfile } from '$lib/onboarding/state.server';
 import { complianceChromeLevel } from '$lib/records/complianceChrome';
+import { t } from '$lib/i18n';
 
 const SPRAY_RETENTION_YEARS = 2;
 const DAY_MS = 86_400_000;
 
 export const load: ServerLoad = ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
-  if (locals.user.role !== 'owner') throw error(403, 'owner-only');
+  if (locals.user.role !== 'owner') throw error(403, t(locals.locale, 'settings.err.ownerOnly'));
 
   const sprays = listSprayEvents();
   const insects = listInsecticideEvents();

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   /**
    * B-21 (issue #30) — HRAC / IRAC / FRAC group-code chip.
    *
@@ -23,13 +25,11 @@
     /** Optional pre-formatted label (overrides `${kind} ${group}`). */
     label?: string;
   } = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 {#if group !== undefined && group !== null && String(group).length > 0}
-  <span
-    class="badge {kind.toLowerCase()}"
-    title="Mode-of-action group — rotate across groups to slow resistance"
-  >
+  <span class="badge {kind.toLowerCase()}" title={tr('sprayui.groupBadge.title')}>
     {label ?? `${kind} ${group}`}
   </span>
 {/if}

@@ -1,6 +1,7 @@
 import type { CellRecommendation, MatchInput, MatchResult, Plate, PlateSeedType } from './types';
 import { MM_TO_64THS } from './types';
 import { DEFAULT_PREFS, formatQuantity, toDisplay, unitLabel, type Prefs } from '$lib/prefs';
+import { t } from '$lib/i18n';
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
@@ -62,20 +63,25 @@ export function matchPlates(plates: Plate[], input: MatchInput): MatchResult[] {
 export function cellCountRecommendation(
   inRowInches: number | undefined,
   rowInches: number | undefined,
-  prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS
+  prefs: Pick<Prefs, 'units'> & { locale?: string | null } = DEFAULT_PREFS
 ): CellRecommendation | null {
   if (!inRowInches || inRowInches <= 0) return null;
   const row = rowInches ?? 30;
   if (!row || row <= 0) return null;
   const ppa = Math.round((43560 * 144) / (inRowInches * row));
-  const ppaStr = `${formatQuantity(ppa, 'perArea', prefs, { bare: true })} plants${unitLabel('perArea', prefs)}`;
+  const locale = prefs.locale;
+  const n = formatQuantity(ppa, 'perArea', prefs, { bare: true });
+  const per = unitLabel('perArea', prefs);
+  const ppaStr = locale ? t(locale, 'tools.plate.rec.stand', { n, per }) : `${n} plants${per}`;
   const k = (v: number) => `${Math.round(toDisplay(v, 'perArea', prefs) / 1000)}k`;
   if (ppa <= 22_000) {
     return {
       cells: 16,
       band: 'low',
       plantsPerAcre: ppa,
-      note: `${ppaStr} is a sparse stand — a 16-cell plate matches at standard sprockets.`
+      note: locale
+        ? t(locale, 'tools.plate.rec.low', { stand: ppaStr })
+        : `${ppaStr} is a sparse stand — a 16-cell plate matches at standard sprockets.`
     };
   }
   if (ppa >= 26_000) {
@@ -83,14 +89,18 @@ export function cellCountRecommendation(
       cells: 24,
       band: 'high',
       plantsPerAcre: ppa,
-      note: `${ppaStr} is a typical/high stand — a 24-cell plate matches at standard sprockets.`
+      note: locale
+        ? t(locale, 'tools.plate.rec.high', { stand: ppaStr })
+        : `${ppaStr} is a typical/high stand — a 24-cell plate matches at standard sprockets.`
     };
   }
   return {
     cells: 24,
     band: 'mid',
     plantsPerAcre: ppa,
-    note: `${ppaStr} is between ${k(22_000)}–${k(26_000)} — either works, but 24-cell gives more downward sprocket headroom.`
+    note: locale
+      ? t(locale, 'tools.plate.rec.mid', { stand: ppaStr, from: k(22_000), to: k(26_000) })
+      : `${ppaStr} is between ${k(22_000)}–${k(26_000)} — either works, but 24-cell gives more downward sprocket headroom.`
   };
 }
 

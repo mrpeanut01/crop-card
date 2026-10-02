@@ -26,7 +26,7 @@
 
 <Modal open={stop !== null} {onClose} title={stop ? (TITLE[stop.code] ?? 'Stop') : 'Stop'}>
   {#if stop}
-    <div class="stop" role="alert" data-testid="food-stop">
+    <div class="stop" role="alert" data-testid="food-stop" lang="en" data-english-only="safety">
       <p class="lead">{stop.error}</p>
       {#if stop.clearsOn}
         <p class="date">Clear from <strong>{stop.clearsOn}</strong>.</p>
@@ -66,7 +66,7 @@
     </div>
   {/if}
   {#snippet footer()}
-    <div class="actions">
+    <div class="actions" lang="en" data-english-only="safety">
       <button type="button" class="af-primary" disabled={saving} onclick={onDiscard}>
         {saving ? 'Saving…' : 'Save as discarded'}
       </button>

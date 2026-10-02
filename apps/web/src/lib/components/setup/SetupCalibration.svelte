@@ -1,6 +1,8 @@
 <script lang="ts">
   import CalibrationWizard from '$lib/components/calibration/CalibrationWizard.svelte';
   import type { SetupCalibrationResult } from '$lib/setup/types';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   interface Props {
     sprayer: {
@@ -16,12 +18,12 @@
   }
 
   const { sprayer, canSave, onDone }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <div class="setup-calibration">
   <p class="lede">
-    Spray a short, measured course with <strong>{sprayer.label}</strong> and catch what comes out in a
-    jug. The ounces you catch are your gallons per acre, and CropCard scales every rate from that number.
+    {tr('setup.calibration.lede', { sprayer: sprayer.label })}
   </p>
   <CalibrationWizard sprayers={[sprayer]} {canSave} lockSprayer onSaved={onDone} />
 </div>

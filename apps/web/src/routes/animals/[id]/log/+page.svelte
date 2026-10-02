@@ -120,7 +120,9 @@
                 <Pill tone="wheat">{lateLabel(true, l.daysLate, page.data?.locale)}</Pill>
               {/if}
               {#if l.inHold}
-                <Pill tone="rust">Inside a hold</Pill>
+                <span lang="en" data-english-only="safety"
+                  ><Pill tone="rust">Inside a hold</Pill></span
+                >
               {/if}
             </div>
             <p class="meta">{formatInstant(l.occurredAt, prefs)}</p>

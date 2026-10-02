@@ -3,10 +3,11 @@ import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { listEquipment } from '$lib/db/equipment';
 import { EQUIPMENT_DOMAIN, listTaxonomyTerms } from '$lib/db/taxonomy';
+import { t } from '$lib/i18n';
 
 export const load: PageServerLoad = ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
-  if (locals.user.role !== 'owner') throw error(403, 'owner-only');
+  if (locals.user.role !== 'owner') throw error(403, t(locals.locale, 'settings.err.ownerOnly'));
 
   const typeById = new Map(listTaxonomyTerms({ domain: EQUIPMENT_DOMAIN }).map((t) => [t.id, t]));
   const active = listEquipment().filter((e) => e.retiredAt == null);

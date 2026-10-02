@@ -48,35 +48,45 @@
         <InvKVP label={tr('inv.pest.product')} value={plugin.displayName} />
         <InvKVP label={tr('inv.pest.productId')} value={plugin.pluginId} tone="mono" />
       {:else}
-        <p class="warn-empty" role="note" data-testid="no-product-link">
+        <p
+          class="warn-empty"
+          role="note"
+          data-testid="no-product-link"
+          lang="en"
+          data-english-only="safety"
+        >
           No product label linked. This item has no EPA registration number, REI, PHI or label rate,
           so the safety checks cannot use its label data. Link the product with Edit.
         </p>
       {/if}
     </InvSection>
 
-    <InvSection title="Safety kernel" kicker="From the product label">
-      <InvKVP label="EPA reg" value={plugin?.epaRegistrationNumber ?? '—'} tone="locked" />
-      <InvKVP
-        label="Re-entry interval"
-        value={plugin?.reEntryIntervalHours != null ? `${plugin.reEntryIntervalHours} h` : '—'}
-        tone="locked"
-      />
-      <InvKVP
-        label="Pre-harvest interval"
-        value={plugin?.preHarvestIntervalDays != null ? `${plugin.preHarvestIntervalDays} d` : '—'}
-        tone="locked"
-      />
-      {#if plugin?.activeIngredients?.length}
-        <div class="ai-list">
-          {#each plugin.activeIngredients as ai, idx (idx)}
-            <span class="ai-chip"
-              >{ai.name}{ai.chemistryClass ? ` (${ai.chemistryClass})` : ''}</span
-            >
-          {/each}
-        </div>
-      {/if}
-    </InvSection>
+    <div lang="en" data-english-only="safety">
+      <InvSection title="Safety kernel" kicker="From the product label">
+        <InvKVP label="EPA reg" value={plugin?.epaRegistrationNumber ?? '—'} tone="locked" />
+        <InvKVP
+          label="Re-entry interval"
+          value={plugin?.reEntryIntervalHours != null ? `${plugin.reEntryIntervalHours} h` : '—'}
+          tone="locked"
+        />
+        <InvKVP
+          label="Pre-harvest interval"
+          value={plugin?.preHarvestIntervalDays != null
+            ? `${plugin.preHarvestIntervalDays} d`
+            : '—'}
+          tone="locked"
+        />
+        {#if plugin?.activeIngredients?.length}
+          <div class="ai-list">
+            {#each plugin.activeIngredients as ai, idx (idx)}
+              <span class="ai-chip"
+                >{ai.name}{ai.chemistryClass ? ` (${ai.chemistryClass})` : ''}</span
+              >
+            {/each}
+          </div>
+        {/if}
+      </InvSection>
+    </div>
 
     <InvSection title={tr('inv.pest.rate')} kicker={tr('inv.pest.labelDerived')}>
       {#if plugin?.ratePerAcre}

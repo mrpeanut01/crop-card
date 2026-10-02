@@ -201,8 +201,9 @@
 
 {#if data.user?.impersonating}
   <Banner tone="rust" urgent>
-    Impersonating <strong>{data.activeOwner?.name ?? 'this Owner'}</strong> as superadmin — every
-    mutation is audited.
+    {tr('entry.layout.impersonating', {
+      owner: data.activeOwner?.name ?? tr('entry.layout.impersonatingThisOwner')
+    })}
     {#snippet action()}
       <!-- #221 / CT-ADM-002 — must be a form POST so the server-side
            exitImpersonation action runs (clears the session impersonation
@@ -215,7 +216,8 @@
         use:enhance
         style="display:contents"
       >
-        <button type="submit" class="banner-link-btn">Exit impersonation</button>
+        <button type="submit" class="banner-link-btn">{tr('entry.layout.exitImpersonation')}</button
+        >
       </form>
     {/snippet}
   </Banner>
@@ -259,30 +261,32 @@
 {/if}
 
 {#if showLayoutDeconBanner(page.url.pathname, data.dirtySprayers.length)}
-  <Banner tone="rust" urgent>
-    {data.dirtySprayers.length} sprayer{data.dirtySprayers.length === 1 ? '' : 's'} need{data
-      .dirtySprayers.length === 1
-      ? 's'
-      : ''} decontamination:
-    {#each data.dirtySprayers as s, i (s.id)}
-      {i > 0 ? ', ' : ''}<strong>{s.label}</strong> ({s.lastChemistryClass}){/each}
-    {#if data.user?.role === 'owner'}
-      <a
-        class="decon-cta"
-        href="/spray/decon?sprayer={encodeURIComponent(data.dirtySprayers[0].id)}"
-      >
-        Run decon wizard →
-      </a>
-    {:else}
-      <span class="decon-ask">Ask the owner to run and record it.</span>
-      <a
-        class="decon-cta"
-        href="/spray/decon?sprayer={encodeURIComponent(data.dirtySprayers[0].id)}"
-      >
-        See the steps →
-      </a>
-    {/if}
-  </Banner>
+  <div lang="en" data-english-only="safety">
+    <Banner tone="rust" urgent>
+      {data.dirtySprayers.length} sprayer{data.dirtySprayers.length === 1 ? '' : 's'} need{data
+        .dirtySprayers.length === 1
+        ? 's'
+        : ''} decontamination:
+      {#each data.dirtySprayers as s, i (s.id)}
+        {i > 0 ? ', ' : ''}<strong>{s.label}</strong> ({s.lastChemistryClass}){/each}
+      {#if data.user?.role === 'owner'}
+        <a
+          class="decon-cta"
+          href="/spray/decon?sprayer={encodeURIComponent(data.dirtySprayers[0].id)}"
+        >
+          Run decon wizard →
+        </a>
+      {:else}
+        <span class="decon-ask">Ask the owner to run and record it.</span>
+        <a
+          class="decon-cta"
+          href="/spray/decon?sprayer={encodeURIComponent(data.dirtySprayers[0].id)}"
+        >
+          See the steps →
+        </a>
+      {/if}
+    </Banner>
+  </div>
 {/if}
 
 <a class="skip-link" href="#main-content">{tr('entry.layout.skip')}</a>

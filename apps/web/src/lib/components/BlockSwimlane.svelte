@@ -787,7 +787,9 @@
         <div class="block-meta">
           {#if b.acres != null}<span>{fmt.area(b.acres)}</span>{/if}
           <span class="sun sun-{b.sunExposure ?? 'full'}">{sunText(b.sunExposure ?? 'full')}</span>
-          {#if b.eastWestIndex != null}<span class="axis">E{b.eastWestIndex}</span>{/if}
+          {#if b.eastWestIndex != null}<span class="axis"
+              >{tr('plan.swimlane.eastIndex', { n: b.eastWestIndex })}</span
+            >{/if}
         </div>
       </div>
     {/each}

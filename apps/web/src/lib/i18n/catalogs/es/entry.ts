@@ -877,5 +877,17 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'entry.demoFarm.p.eggs': '{count} docenas de huevos, puesto de la granja',
   'entry.demoFarm.p.grain': '{amount} bu de {crop} al elevador de Purcellville',
   'entry.demoFarm.p.hayBales': '{count} pacas pequeñas, {nth} corte',
-  'entry.demoFarm.p.diesel': 'Diésel agrícola, {amount} gal'
+  'entry.demoFarm.p.diesel': 'Diésel agrícola, {amount} gal',
+  'entry.invite.err.missingToken':
+    'A este enlace de invitación le falta una parte. Pide una invitación nueva.',
+  'entry.picker.err.pickFarm': 'Elige una granja.',
+  'entry.picker.err.notMember': 'No eres miembro de esa granja.',
+  'setup.calibration.lede':
+    'Aplica en un tramo corto y medido con {sprayer} y recoge lo que sale en una jarra. Las onzas que recoges son tus galones por acre, y CropCard ajusta cada dosis a partir de ese número.',
+  'entry.layout.impersonating':
+    'Estás suplantando a {owner} como superadministrador. Cada cambio queda registrado.',
+  'entry.layout.impersonatingThisOwner': 'este propietario',
+  'entry.layout.exitImpersonation': 'Salir de la suplantación',
+  'entry.land.smsConsentTranslation':
+    'CropCard te enviará un código de inicio de sesión por mensaje de texto. Pueden aplicarse tarifas de mensajes y datos. Responde STOP para darte de baja o HELP para obtener ayuda.'
 };

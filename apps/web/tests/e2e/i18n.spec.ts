@@ -1,6 +1,8 @@
 import type { APIRequestContext, Page } from '@playwright/test';
 import { expect, test } from './lib/test';
 import { createOnboardedFarm, signInNewUser } from './lib/newOwner';
+import { en } from '../../src/lib/i18n/catalogs/en';
+import { es } from '../../src/lib/i18n/catalogs/es';
 
 // 32F, F5. The main preview runs with production's default (English only);
 // the magic-link preview (E2E_PORT + 1) runs with CROPCARD_LOCALES=en,es.
@@ -36,6 +38,37 @@ async function signInByLink(page: Page, email: string): Promise<void> {
 }
 
 const nav = (page: Page) => page.getByRole('navigation').first();
+
+// 34B (B34-29): English sentences that render on the swept routes for a new
+// garden farm. A Spanish page that still shows one of them fails.
+const KNOWN_ENGLISH_KEYS = [
+  'today.gs.heading',
+  'gs.bed.title',
+  'planui.where.title',
+  'planui.where.sketchHint',
+  'plan.farm.skip',
+  'plan.cal.printMonth',
+  'inv.empty.lede',
+  'equip.lede',
+  'docs.page.uploadSub',
+  'docs.copy.backupNote',
+  'organic.pack.title',
+  'organic.add.help',
+  'forage.page.nameOne',
+  'settings.helpers.noPending',
+  'settings.notif.typesSub',
+  'settings.farm.nothingDrawn',
+  'billing.free.title',
+  'wizard.year.legend',
+  'settings.index.records.sub',
+  'billing.plans.foreverNoCard'
+] as const satisfies readonly (keyof typeof en)[];
+
+// B34-30: built from the catalog's own top-level prefixes, so a new namespace
+// is covered without editing this test.
+const RAW_KEY = new RegExp(
+  `\\b(?:${[...new Set(Object.keys(en).map((k) => k.split('.')[0]))].join('|')})\\.[a-z][A-Za-z0-9]*(?:\\.[A-Za-z0-9-]+)+`
+);
 
 test.describe('language infrastructure, flag off (production default)', () => {
   test.use({ locale: 'es-MX', extraHTTPHeaders: { 'Accept-Language': 'es-MX,es;q=0.9' } });
@@ -149,7 +182,48 @@ test.describe('language picker, flag on', () => {
     await expect(page.getByText('¿En qué idioma quieres usar CropCard?')).toBeVisible();
   });
 
-  test('main pages render in Spanish with no raw message keys', async ({ page }) => {
+  test('the known English sentences have Spanish values', () => {
+    expect(KNOWN_ENGLISH_KEYS.length).toBeGreaterThanOrEqual(12);
+    for (const key of KNOWN_ENGLISH_KEYS) {
+      expect(en[key].split(/\s+/).length, key).toBeGreaterThan(1);
+      expect(es[key], key).toBeTruthy();
+      expect(es[key], key).not.toBe(en[key]);
+    }
+  });
+
+  test('main pages render in Spanish with no raw message keys or known English', async ({
+    page
+  }) => {
+    const routes = [
+      '/today',
+      '/plan',
+      '/plan/farm',
+      '/plan/calendar',
+      '/inventory',
+      '/equipment',
+      '/records',
+      '/records/organic',
+      '/harvest',
+      '/scout',
+      '/animals',
+      '/cards',
+      '/fertility',
+      '/forage',
+      '/finance',
+      '/plugins',
+      '/tools',
+      '/settings',
+      '/settings/farm',
+      '/settings/billing',
+      '/settings/helpers',
+      '/settings/notifications',
+      '/settings/season',
+      '/settings/documents',
+      '/settings/records',
+      '/settings/equipment'
+    ];
+    // B34-31: one sign-in, one farm, and time for every route under load.
+    test.setTimeout(60_000 + routes.length * 10_000);
     const email = `i18n-all-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@e2e.cropcard.local`;
     await signInByLink(page, email);
     await createOnboardedFarm(page, { growing: ['garden'] });
@@ -159,38 +233,19 @@ test.describe('language picker, flag on', () => {
       page.waitForURL(/\/settings\/account/),
       page.getByRole('button', { name: 'Use this language' }).click()
     ]);
-    const rawKey =
-      /\b(?:today|tasks|plan|planui|crops|wizard|farm|tools|garden|inv|equip|stockui|settings|billing|docs|feedback|animals|records|harvestui|scout|hayui|fert|finance|calib|plugins|cardsui|entry|onboard|setup|ui|pricing|signin|nav|account)\.[a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+/;
-    const routes = [
-      '/today',
-      '/plan',
-      '/plan/farm',
-      '/plan/calendar',
-      '/inventory',
-      '/equipment',
-      '/records',
-      '/harvest',
-      '/scout',
-      '/animals',
-      '/cards',
-      '/fertility',
-      '/finance',
-      '/plugins',
-      '/tools',
-      '/settings',
-      '/settings/farm',
-      '/settings/billing',
-      '/settings/helpers',
-      '/settings/notifications',
-      '/settings/season'
-    ];
+    const english = KNOWN_ENGLISH_KEYS.map((key) => ({ key, text: en[key] }));
     for (const route of routes) {
-      const res = await page.goto(route);
-      expect(res?.status(), route).toBeLessThan(500);
-      await page.waitForLoadState('networkidle');
-      await expect(page.locator('html'), route).toHaveAttribute('lang', 'es');
-      const text = await page.locator('body').innerText();
-      expect(text.match(rawKey)?.[0] ?? null, `${route} shows a raw message key`).toBeNull();
+      await test.step(route, async () => {
+        const res = await page.goto(route);
+        // /forage with no subject answers 400 by design; anything under 500 renders a page.
+        expect(res?.status(), route).toBeLessThan(500);
+        await page.waitForLoadState('networkidle');
+        await expect(page.locator('html'), route).toHaveAttribute('lang', 'es');
+        const text = await page.locator('body').innerText();
+        expect(text.match(RAW_KEY)?.[0] ?? null, `${route} shows a raw message key`).toBeNull();
+        const found = english.filter((e) => text.includes(e.text)).map((e) => e.key);
+        expect(found, `${route} shows English`).toEqual([]);
+      });
     }
   });
 
@@ -220,6 +275,80 @@ test.describe('language picker, flag on', () => {
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth
     );
     expect(overflow).toBeLessThanOrEqual(0);
+    await context.close();
+  });
+
+  test('the SMS consent line stays the registered English with a Spanish line below it', async ({
+    browser
+  }) => {
+    const context = await browser.newContext({
+      baseURL: MAGIC_BASE,
+      locale: 'es-MX',
+      extraHTTPHeaders: { 'Accept-Language': 'es-MX,es;q=0.9' },
+      viewport: { width: 375, height: 800 }
+    });
+    const page = await context.newPage();
+    await page.goto('/?via=phone');
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+    const registered = page.locator('p.consent[data-english-only="regulatory"]');
+    await expect(registered).toHaveAttribute('lang', 'en');
+    await expect(registered).toHaveText(
+      'CropCard will text you a sign-in code. Msg & data rates may apply. Reply STOP to opt out, HELP for help.'
+    );
+    const spanish = page.getByTestId('sms-consent-translation');
+    await expect(spanish).toHaveText(es['entry.land.smsConsentTranslation'] as string);
+    await expect(spanish).toContainText('STOP');
+    await expect(spanish).toContainText('HELP');
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+    await context.close();
+
+    const englishContext = await browser.newContext({ baseURL: MAGIC_BASE, locale: 'en-US' });
+    const englishPage = await englishContext.newPage();
+    await englishPage.goto('/?via=phone');
+    await englishPage.waitForLoadState('networkidle');
+    await expect(englishPage.locator('p.consent[data-english-only="regulatory"]')).toBeVisible();
+    await expect(englishPage.getByTestId('sms-consent-translation')).toHaveCount(0);
+    await englishContext.close();
+  });
+
+  test('screens translated in 34B fit 375 px in Spanish', async ({ browser }) => {
+    const routes = ['/records', '/settings/records', '/settings', '/equipment', '/plan', '/today'];
+    test.setTimeout(60_000 + routes.length * 10_000);
+    const context = await browser.newContext({
+      baseURL: MAGIC_BASE,
+      locale: 'es-MX',
+      extraHTTPHeaders: { 'Accept-Language': 'es-MX,es;q=0.9' },
+      viewport: { width: 375, height: 800 }
+    });
+    const page = await context.newPage();
+    await page.route(
+      (url) => url.origin !== MAGIC_BASE,
+      (route) => route.fulfill({ status: 204, body: '' })
+    );
+    const email = `i18n-375-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@e2e.cropcard.local`;
+    await signInByLink(page, email);
+    await createOnboardedFarm(page, { growing: ['garden'] });
+    for (const route of routes) {
+      await test.step(route, async () => {
+        const res = await page.goto(route);
+        expect(res?.status(), route).toBeLessThan(500);
+        await page.waitForLoadState('networkidle');
+        await expect(page.locator('html'), route).toHaveAttribute('lang', 'es');
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+        );
+        expect(overflow, `${route} scrolls sideways`).toBeLessThanOrEqual(0);
+      });
+    }
+    await page.goto('/settings/records');
+    await page.waitForLoadState('networkidle');
+    await page.getByTestId('quiet-compliance').locator('summary').click();
+    await expect(page.getByText(es['settings.records.measuredFrom'] as string)).toBeVisible();
+    await expect(page.getByText(en['settings.records.measuredFrom'])).toHaveCount(0);
     await context.close();
   });
 });

@@ -126,7 +126,7 @@
   />
 
   {#if data.corrections.length}
-    <section class="panel" aria-label="Owner-corrected holds">
+    <section class="panel" aria-label="Owner-corrected holds" lang="en" data-english-only="safety">
       <p><Pill tone="wheat">Owner-corrected</Pill></p>
       <ul>
         {#each data.corrections as c (c.id)}
@@ -185,12 +185,14 @@
             </div>
             <p class="meta">
               {formatInstant(e.administeredAt, prefs)}
-              {#if e.courseEndAt}to {formatInstant(e.courseEndAt, prefs)}{/if}
-              {#if e.courseOpen}· more doses to come{/if}
+              {#if e.courseEndAt}{tr('animals.health.courseTo', {
+                  date: formatInstant(e.courseEndAt, prefs)
+                })}{/if}
+              {#if e.courseOpen}· {tr('animals.health.moreDoses')}{/if}
               {#if e.dose}· {e.dose} {e.doseUnit ?? ''}{/if}
               {#if e.route}· {routeLabel.get(e.route) ?? e.route}{/if}
-              {#if e.vetName}· Vet: {e.vetName}{/if}
-              {#if e.lotNumber}· Lot {e.lotNumber}{/if}
+              {#if e.vetName}· {tr('animals.health.vetName', { name: e.vetName })}{/if}
+              {#if e.lotNumber}· {tr('animals.health.lotNumber', { lot: e.lotNumber })}{/if}
             </p>
             {#if e.carriesHold && showHolds}
               <ul class="hold-lines">
@@ -223,6 +225,8 @@
                   class="af-ghost"
                   aria-expanded={entryFor === e.id}
                   onclick={() => (entryFor = entryFor === e.id ? null : e.id)}
+                  lang="en"
+                  data-english-only="safety"
                 >
                   Add withdrawal
                 </button>
@@ -273,7 +277,7 @@
                   bind:value={removeReason}
                 />
                 {#if e.carriesHold && showHolds}
-                  <div class="action-row">
+                  <div class="action-row" lang="en" data-english-only="safety">
                     <button
                       type="button"
                       class="af-danger"
@@ -291,13 +295,13 @@
                       Void this entry…
                     </button>
                   </div>
-                  <p class="af-help">
+                  <p class="af-help" lang="en" data-english-only="safety">
                     A dose that was given keeps its hold. The owner can void an entry that was a
                     mistake within 48 hours of entering it; holds from an unknown label or a
                     prohibited drug can't be voided.
                   </p>
                   {#if voidOffer?.id === e.id}
-                    <div class="remove" role="alert">
+                    <div class="remove" role="alert" lang="en" data-english-only="safety">
                       <p><strong>Voiding this entry would shorten holds:</strong></p>
                       <ul>
                         {#each voidOffer.refusal.holds.slice(0, 3) as h, i (i)}

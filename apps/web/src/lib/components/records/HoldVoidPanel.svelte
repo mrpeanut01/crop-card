@@ -87,7 +87,7 @@
 </script>
 
 {#if visible}
-  <div class="hold-void" data-testid="hold-void">
+  <div class="hold-void" data-testid="hold-void" lang="en" data-english-only="safety">
     {#if !open}
       <button type="button" class="danger" onclick={() => (open = true)}>Void this entry…</button>
     {:else}

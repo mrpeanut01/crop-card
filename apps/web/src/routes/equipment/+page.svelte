@@ -239,7 +239,12 @@
         </label>
         <label class="field">
           <span>{tr('equip.add.nozzle')}</span>
-          <input type="text" placeholder="TeeJet XR110015" maxlength="60" bind:value={newNozzle} />
+          <input
+            type="text"
+            placeholder={tr('equip.add.nozzlePlaceholder')}
+            maxlength="60"
+            bind:value={newNozzle}
+          />
         </label>
       {/if}
       <label class="field">
@@ -307,12 +312,14 @@
             <dd>
               {#if e.state.lastChemistryClass}
                 <span class="warn">{e.state.lastChemistryClass}</span>
-                <a class="link" href="/spray/decon?sprayer={encodeURIComponent(e.id)}">Decon →</a>
+                <a class="link" href="/spray/decon?sprayer={encodeURIComponent(e.id)}"
+                  >{tr('equip.deconLink')}</a
+                >
               {:else}
                 <span class="ok">{tr('equip.clean')}</span>
               {/if}
             </dd>
-            <dt>Last decon</dt>
+            <dt>{tr('equip.lastDecon')}</dt>
             <dd>{fmtTs(e.state.lastDeconAt)}</dd>
           {:else}
             <dt>{tr('equip.hourMeter')}</dt>

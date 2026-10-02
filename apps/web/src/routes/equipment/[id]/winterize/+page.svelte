@@ -130,8 +130,7 @@
 </header>
 
 <p class="lede">
-  End-of-season storage prep (UC-45). Each step must be confirmed before the next unlocks. The final
-  decon uses the {protocol.strict ? 'class-specific' : 'standard'} protocol for this sprayer's last load.
+  {protocol.strict ? tr('equip.w.ledeStrict') : tr('equip.w.ledeStandard')}
 </p>
 
 <section class="step">
@@ -141,12 +140,14 @@
     <strong>{eq.label}</strong>
   </p>
   {#if data.sprayer?.lastChemistryClass}
-    <p class="warn">
+    <p class="warn" lang="en" data-english-only="safety">
       Last carried: <strong>{data.sprayer.lastChemistryClass}</strong>
       {#if protocol.strict}<span class="strict-pill">strict SOP</span>{/if}
     </p>
   {:else}
-    <p class="ok">Tank already clean — no strict-SOP chemistry on file.</p>
+    <p class="ok" lang="en" data-english-only="safety">
+      Tank already clean — no strict-SOP chemistry on file.
+    </p>
   {/if}
 </section>
 

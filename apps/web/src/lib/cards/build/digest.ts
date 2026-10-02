@@ -6,6 +6,7 @@
  */
 
 import { numberFormat } from '$lib/intlCache';
+import { t } from '$lib/i18n';
 import {
   DIGEST_LIST_LIMIT,
   digestHours,
@@ -25,6 +26,8 @@ export interface DigestCardOptions {
   viewerName?: string | null;
   /** Lines per list before "And N more". The printed page lists them all. */
   listLimit?: number;
+  /** The reader's language; unset is English. */
+  locale?: string | null;
 }
 
 const USD: Intl.NumberFormatOptions = { style: 'currency', currency: 'USD' };
@@ -33,103 +36,127 @@ function money(cents: number): string {
   return numberFormat('en-US', USD).format(cents / 100);
 }
 
-function count(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
-}
-
 export function digestCardKey(weekStartYmd: string): string {
   return cardKey('digest', weekStartYmd);
 }
 
 export function buildDigestCard(d: WeeklyDigest, opts: DigestCardOptions): CardModel {
-  const cap = (items: string[]) => limited(items, opts.listLimit ?? DIGEST_LIST_LIMIT);
+  const loc = opts.locale;
+  const cap = (items: string[]) => limited(items, opts.listLimit ?? DIGEST_LIST_LIMIT, loc);
+  const line = (l: Parameters<typeof digestLineText>[0]) =>
+    digestLineText(l, { withAssignee: d.isOwner }, loc);
   const facts: CardFact[] = [
     {
-      label: d.isOwner ? 'Tasks this week' : 'Your tasks this week',
+      label: t(loc, d.isOwner ? 'digest.card.tasksThisWeek' : 'digest.card.yourTasksThisWeek'),
       value: String(d.dueThisWeekCount),
       provenance: 'data'
     },
-    { label: 'Overdue', value: String(d.overdueCount), provenance: 'data' }
+    { label: t(loc, 'digest.card.overdue'), value: String(d.overdueCount), provenance: 'data' }
   ];
   if (!d.isOwner && d.unassignedCount > 0) {
     facts.push({
-      label: 'Not assigned to anyone',
+      label: t(loc, 'digest.card.notAssigned'),
       value: String(d.unassignedCount),
       provenance: 'data'
     });
   }
   if (d.careDueCount > 0) {
-    facts.push({ label: 'Animal care', value: String(d.careDueCount), provenance: 'data' });
+    facts.push({
+      label: t(loc, 'digest.card.animalCare'),
+      value: String(d.careDueCount),
+      provenance: 'data'
+    });
   }
   if (d.lowStockCount > 0) {
-    facts.push({ label: 'Running low', value: String(d.lowStockCount), provenance: 'data' });
+    facts.push({
+      label: t(loc, 'digest.card.runningLow'),
+      value: String(d.lowStockCount),
+      provenance: 'data'
+    });
   }
 
   const sections: CardSection[] = [];
   if (d.overdue.length > 0) {
     sections.push({
-      title: 'Overdue',
-      items: cap(d.overdue.map((l) => digestLineText(l, { withAssignee: d.isOwner }))),
+      title: t(loc, 'digest.card.overdue'),
+      items: cap(d.overdue.map(line)),
       provenance: 'data'
     });
   }
   sections.push({
-    title: d.isOwner ? 'This week' : 'Your week',
+    title: t(loc, d.isOwner ? 'digest.card.thisWeek' : 'digest.card.yourWeek'),
     items:
       d.dueThisWeek.length > 0
-        ? cap(d.dueThisWeek.map((l) => digestLineText(l, { withAssignee: d.isOwner })))
-        : ['Nothing on the task list for the rest of this week.'],
+        ? cap(d.dueThisWeek.map(line))
+        : [t(loc, 'digest.card.nothingThisWeek')],
     provenance: 'data'
   });
   if (d.isOwner && d.byPerson.length > 0) {
     sections.push({
-      title: 'Who has what',
-      items: d.byPerson.map((p) => `${p.name}: ${count(p.count, 'task', 'tasks')}`),
+      title: t(loc, 'digest.card.whoHasWhat'),
+      items: d.byPerson.map((p) =>
+        t(loc, 'digest.card.personTasks', { name: p.name, count: p.count })
+      ),
       provenance: 'data'
     });
   }
   if (d.careDue.length > 0) {
     sections.push({
-      title: 'Animal care',
-      items: cap(d.careDue.map((l) => `${shortDay(l.dueYmd)}: ${l.text}`)),
+      title: t(loc, 'digest.card.animalCare'),
+      items: cap(
+        d.careDue.map((l) =>
+          t(loc, 'digest.card.dayLine', { day: shortDay(l.dueYmd, loc), text: l.text })
+        )
+      ),
       provenance: 'data'
     });
   }
   const lw = d.lastWeek;
   if (lw) {
     const items = [
-      `${d.isOwner ? 'Tasks finished' : 'Your tasks finished'}: ${lw.done}`,
-      ...(lw.skipped > 0 ? [`Skipped: ${lw.skipped}`] : [])
+      t(loc, d.isOwner ? 'digest.card.tasksFinished' : 'digest.card.yourTasksFinished', {
+        count: lw.done
+      }),
+      ...(lw.skipped > 0 ? [t(loc, 'digest.card.skipped', { count: lw.skipped })] : [])
     ];
     if (lw.minutes !== null && lw.minutes > 0) {
-      items.push(`${d.isOwner ? 'Time logged' : 'Your time logged'}: ${digestHours(lw.minutes)}`);
+      items.push(
+        t(loc, d.isOwner ? 'digest.card.timeLogged' : 'digest.card.yourTimeLogged', {
+          time: digestHours(lw.minutes, loc)
+        })
+      );
       if (d.isOwner && lw.minutesByPerson.length > 1) {
-        for (const p of lw.minutesByPerson) items.push(`${p.name}: ${digestHours(p.count)}`);
+        for (const p of lw.minutesByPerson) {
+          items.push(t(loc, 'digest.card.personTime', { name: p.name, time: digestHours(p.count, loc) }));
+        }
       }
     }
     if (lw.harvests !== null && lw.harvests > 0) {
-      items.push(`Harvests recorded: ${lw.harvests}`);
+      items.push(t(loc, 'digest.card.harvests', { count: lw.harvests }));
     }
     sections.push({
-      title: `Last week (${shortDay(lw.fromYmd)} to ${shortDay(lw.toYmd)})`,
+      title: t(loc, 'digest.card.lastWeek', {
+        from: shortDay(lw.fromYmd, loc),
+        to: shortDay(lw.toYmd, loc)
+      }),
       items,
       provenance: 'data'
     });
   }
   if (d.isOwner && d.cash) {
     sections.push({
-      title: 'Money last week',
+      title: t(loc, 'digest.card.money'),
       items: [
-        `Income: ${money(d.cash.incomeCents)}`,
-        `Expenses: ${money(d.cash.expenseCents)}`,
-        `Net: ${money(d.cash.netCents)}`
+        t(loc, 'digest.card.income', { amount: money(d.cash.incomeCents) }),
+        t(loc, 'digest.card.expenses', { amount: money(d.cash.expenseCents) }),
+        t(loc, 'digest.card.net', { amount: money(d.cash.netCents) })
       ],
       provenance: 'manual'
     });
   }
 
   const kicker = [
-    `Week of ${shortDay(d.weekStartYmd)}`,
+    t(loc, 'digest.card.weekOf', { day: shortDay(d.weekStartYmd, loc) }),
     ...(opts.farmName ? [opts.farmName] : []),
     ...(!d.isOwner && opts.viewerName ? [opts.viewerName] : [])
   ].join(' · ');
@@ -138,16 +165,16 @@ export function buildDigestCard(d: WeeklyDigest, opts: DigestCardOptions): CardM
     kind: 'digest',
     key: digestCardKey(d.weekStartYmd),
     kicker,
-    title: 'Your week',
+    title: t(loc, 'digest.card.title'),
     facts,
     sections,
     asOf: opts.asOf,
     provenance: [
-      { source: 'data', detail: 'From your tasks, time and harvest records' },
-      ...(d.cash ? [{ source: 'manual' as const, detail: 'Money you entered on the farm ledger' }] : [])
+      { source: 'data', detail: t(loc, 'digest.card.fromRecords') },
+      ...(d.cash ? [{ source: 'manual' as const, detail: t(loc, 'digest.card.fromLedger') }] : [])
     ],
     href: DIGEST_HREF,
-    notices: ['Safety alerts are not in this summary. They still come on their own.']
+    notices: [t(loc, 'digest.card.safetyNotice')]
   };
 }
 

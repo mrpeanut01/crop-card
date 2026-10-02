@@ -2,9 +2,11 @@
   import '$lib/cards/print.css';
   import CardView from '$lib/components/cards/CardView.svelte';
   import { currentPrefs } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
 
   const { data } = $props();
   const prefs = $derived(currentPrefs());
+  const tr = $derived(createT(data.locale));
 
   function print() {
     const previous = document.title;
@@ -14,22 +16,22 @@
   }
 </script>
 
-<svelte:head><title>Your week · CropCard</title></svelte:head>
+<svelte:head><title>{tr('digest.page.title')}</title></svelte:head>
 
 <div class="no-print">
-  <nav class="crumbs" aria-label="Breadcrumb">
-    <a href="/today">Today</a>
+  <nav class="crumbs" aria-label={tr('digest.page.breadcrumb')}>
+    <a href="/today">{tr('digest.page.today')}</a>
     <span aria-hidden="true">›</span>
-    <span>Monday summary</span>
+    <span>{tr('digest.page.crumb')}</span>
   </nav>
   <div class="one">
     <CardView card={data.card} {prefs} />
   </div>
   <div class="actions">
     <button type="button" class="btn primary" onclick={print} data-testid="digest-print">
-      Print this summary
+      {tr('digest.page.print')}
     </button>
-    <a class="btn ghost" href="/settings/notifications">Get it every Monday</a>
+    <a class="btn ghost" href="/settings/notifications">{tr('digest.page.everyMonday')}</a>
   </div>
 </div>
 

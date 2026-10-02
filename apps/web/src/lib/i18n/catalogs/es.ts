@@ -13,12 +13,14 @@ import { esAnimals } from './es/animals';
 import { esRecords } from './es/records';
 import { esPlugins } from './es/plugins';
 import { esEntry } from './es/entry';
+import { esNotify } from './es/notify';
 
 /**
  * Spanish (F5-8). Machine-drafted and proofread, but not yet signed off by a
  * native-speaker agricultural reviewer, so `reviewed` stays false. Safety,
- * hold, withdrawal, grazing, spray, email and push text stays English (see
- * `englishOnly.ts`).
+ * hold, withdrawal, grazing and spray text in the app stays English (see
+ * `englishOnly.ts`); push, email, SMS and the Monday summary follow the
+ * recipient's language.
  */
 export const reviewed = false;
 
@@ -36,7 +38,8 @@ export const ES_PARTS: ReadonlyArray<Partial<Record<MessageKey, string>>> = [
   esAnimals,
   esRecords,
   esPlugins,
-  esEntry
+  esEntry,
+  esNotify
 ];
 
 export const es: Partial<Record<MessageKey, string>> = Object.assign({}, ...ES_PARTS);

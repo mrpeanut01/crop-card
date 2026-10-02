@@ -8,35 +8,44 @@
 import { ymdInZone } from '$lib/prefs';
 import { weekdayOfYmd } from '$lib/today/views';
 import type { TodayAdviceCard, TodayAdviceContext } from '$lib/today/advice';
+import { t } from '$lib/i18n';
 import { buildWeeklyDigest, type WeeklyDigest } from './weekly';
 
 export const DIGEST_PRINT_HREF = '/today/digest';
 
-function count(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
-}
-
-export function digestCardLines(d: WeeklyDigest): string[] {
+export function digestCardLines(d: WeeklyDigest, locale?: string | null): string[] {
   const lines: string[] = [];
-  const due = d.isOwner
-    ? `${count(d.dueThisWeekCount, 'task', 'tasks')} due this week`
-    : `${count(d.dueThisWeekCount, 'task', 'tasks')} for you this week`;
-  lines.push(d.overdueCount > 0 ? `${due}, ${d.overdueCount} overdue.` : `${due}.`);
+  const due = t(locale, d.isOwner ? 'digest.today.dueOwner' : 'digest.today.dueHelper', {
+    count: d.dueThisWeekCount
+  });
+  lines.push(
+    d.overdueCount > 0
+      ? t(locale, 'digest.today.dueOverdue', { due, count: d.overdueCount })
+      : t(locale, 'digest.today.dueOnly', { due })
+  );
   if (d.isOwner && d.byPerson.length > 0) {
-    lines.push(d.byPerson.map((p) => `${p.name}: ${p.count}`).join(', ') + '.');
-  }
-  if (!d.isOwner && d.unassignedCount > 0) {
     lines.push(
-      `${count(d.unassignedCount, 'more task is', 'more tasks are')} not assigned to anyone.`
+      d.byPerson
+        .map((p) => t(locale, 'digest.today.personCount', { name: p.name, count: p.count }))
+        .join(', ') + '.'
     );
   }
+  if (!d.isOwner && d.unassignedCount > 0) {
+    lines.push(t(locale, 'digest.today.unassigned', { count: d.unassignedCount }));
+  }
   if (d.careDue.length > 0) {
-    const titles = d.careDue.slice(0, 3).map((l) => l.text);
-    const more = d.careDue.length > 3 ? ` and ${d.careDue.length - 3} more` : '';
-    lines.push(`Animal care: ${titles.join(', ')}${more}.`);
+    const titles = d.careDue
+      .slice(0, 3)
+      .map((l) => l.text)
+      .join(', ');
+    lines.push(
+      d.careDue.length > 3
+        ? t(locale, 'digest.today.careMore', { titles, count: d.careDue.length - 3 })
+        : t(locale, 'digest.today.care', { titles })
+    );
   }
   if (d.lowStockCount > 0) {
-    lines.push(`${count(d.lowStockCount, 'item is', 'items are')} running low.`);
+    lines.push(t(locale, 'digest.today.lowStock', { count: d.lowStockCount }));
   }
   return lines;
 }
@@ -55,22 +64,23 @@ export async function digestAdvice(ctx: TodayAdviceContext): Promise<TodayAdvice
     nowMs: ctx.nowMs,
     openTasks: input.openTasks,
     careDue: input.careDue,
-    lowStockCount: input.lowStockCount
+    lowStockCount: input.lowStockCount,
+    locale: ctx.locale
   });
   const actions: TodayAdviceCard['actions'] = [
-    { kind: 'link', label: 'Print this summary', href: DIGEST_PRINT_HREF }
+    { kind: 'link', label: t(ctx.locale, 'digest.today.print'), href: DIGEST_PRINT_HREF }
   ];
   if (input.isOwner) {
-    actions.push({ kind: 'link', label: "See last week's money", href: '/finance' });
+    actions.push({ kind: 'link', label: t(ctx.locale, 'digest.today.money'), href: '/finance' });
   }
   return [
     {
       id: `digest:${today}`,
       kind: 'digest',
-      title: 'Your week',
-      lines: digestCardLines(digest),
+      title: t(ctx.locale, 'digest.today.title'),
+      lines: digestCardLines(digest, ctx.locale),
       provenance: 'data',
-      detail: 'From your task list',
+      detail: t(ctx.locale, 'digest.today.detail'),
       tone: 'info',
       actions,
       sortKey: -1000

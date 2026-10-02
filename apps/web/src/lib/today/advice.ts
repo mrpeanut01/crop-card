@@ -64,8 +64,7 @@ export interface TodayAdviceContext {
   isOwner?: boolean;
   /** The Monday summary card (F4-8). */
   digest?: TodayDigestInput;
-  /** The viewer's language for watering and degree-day copy. The Monday
-   *  card stays English (digest text is English by rule). */
+  /** The viewer's language for card text; unset is English. */
   locale?: string | null;
 }
 

@@ -10,6 +10,7 @@
 
 import type { PushAlertKind } from '$lib/push/prefs';
 import { digestPushBody, type WeeklyDigest } from '$lib/digest/weekly';
+import { t } from '$lib/i18n';
 
 export const HOUR_MS = 60 * 60 * 1000;
 export const LOCK_WINDOW_MS = 48 * HOUR_MS;
@@ -87,13 +88,11 @@ export interface PushAlert {
   batchSubject?: string;
 }
 
-const RECORD_LABEL: Record<LockableRecordKind, string> = {
-  spray: 'Herbicide spray',
-  insecticide: 'Insecticide',
-  fungicide: 'Fungicide'
-};
-
-export function deconDueAlerts(sprayers: SprayerSnapshot[], now: number): PushAlert[] {
+export function deconDueAlerts(
+  sprayers: SprayerSnapshot[],
+  now: number,
+  locale?: string | null
+): PushAlert[] {
   const out: PushAlert[] = [];
   for (const s of sprayers) {
     if (!s.lastChemistryClass || !s.lastSprayedAt) continue;
@@ -103,8 +102,11 @@ export function deconDueAlerts(sprayers: SprayerSnapshot[], now: number): PushAl
     out.push({
       kind: 'decon-due',
       subjectId: `${s.id}:${s.lastSprayedAt}`,
-      title: `Decon due · ${s.label}`,
-      body: `${s.label} still carries ${s.lastChemistryClass}. Run the decon wizard before the next load.`,
+      title: t(locale, 'push.decon.title', { sprayer: s.label }),
+      body: t(locale, 'push.decon.body', {
+        sprayer: s.label,
+        chemistry: s.lastChemistryClass
+      }),
       url: `/spray/decon?sprayer=${encodeURIComponent(s.id)}`,
       audience: { kind: 'all' }
     });
@@ -114,7 +116,8 @@ export function deconDueAlerts(sprayers: SprayerSnapshot[], now: number): PushAl
 
 export function lockWindowClosingAlerts(
   records: LockableRecordSnapshot[],
-  now: number
+  now: number,
+  locale?: string | null
 ): PushAlert[] {
   const out: PushAlert[] = [];
   for (const r of records) {
@@ -123,13 +126,21 @@ export function lockWindowClosingAlerts(
     const remaining = locksAt - now;
     if (remaining <= 0 || remaining > LOCK_WARNING_LEAD_MS) continue;
     const minutes = Math.max(1, Math.round(remaining / 60_000));
-    const when = minutes >= 60 ? `${Math.round(minutes / 60)}h` : `${minutes} min`;
-    const where = r.blockName ? ` on ${r.blockName}` : '';
+    const when =
+      minutes >= 60
+        ? t(locale, 'push.lock.hours', { hours: Math.round(minutes / 60) })
+        : t(locale, 'push.lock.minutes', { minutes });
+    const lower = t(locale, `push.lock.recordLower.${r.kind}`);
     out.push({
       kind: 'lock-window-closing',
       subjectId: `${r.kind}:${r.id}`,
-      title: `${RECORD_LABEL[r.kind]} record locks in ${when}`,
-      body: `The ${RECORD_LABEL[r.kind].toLowerCase()} record${where} becomes read-only then. Check it now if anything needs correcting.`,
+      title: t(locale, 'push.lock.title', {
+        record: t(locale, `push.lock.record.${r.kind}`),
+        when
+      }),
+      body: r.blockName
+        ? t(locale, 'push.lock.bodyOn', { record: lower, block: r.blockName })
+        : t(locale, 'push.lock.body', { record: lower }),
       url: `/records/${r.kind}/${encodeURIComponent(r.id)}`,
       audience: { kind: 'owners-and', userIds: [r.performedById] }
     });
@@ -137,7 +148,11 @@ export function lockWindowClosingAlerts(
   return out;
 }
 
-export function springCalibrationAlerts(sprayers: SprayerSnapshot[], now: number): PushAlert[] {
+export function springCalibrationAlerts(
+  sprayers: SprayerSnapshot[],
+  now: number,
+  locale?: string | null
+): PushAlert[] {
   const nowDate = new Date(now);
   if (nowDate.getMonth() < SPRING_START_MONTH) return [];
   const year = nowDate.getFullYear();
@@ -149,8 +164,8 @@ export function springCalibrationAlerts(sprayers: SprayerSnapshot[], now: number
     out.push({
       kind: 'spring-calibration',
       subjectId: `${s.id}:${year}`,
-      title: `Recalibrate ${s.label}`,
-      body: `${s.label} was winterized and has no calibration on file. Run the 1/128-acre calibration before the first spring spray.`,
+      title: t(locale, 'push.spring.title', { sprayer: s.label }),
+      body: t(locale, 'push.spring.body', { sprayer: s.label }),
       url: '/calibrate',
       audience: { kind: 'all' }
     });
@@ -162,11 +177,13 @@ export function selectDueAlerts(input: {
   sprayers: SprayerSnapshot[];
   records: LockableRecordSnapshot[];
   now: number;
+  /** Recipient language; unset is English. */
+  locale?: string | null;
 }): PushAlert[] {
   return [
-    ...deconDueAlerts(input.sprayers, input.now),
-    ...lockWindowClosingAlerts(input.records, input.now),
-    ...springCalibrationAlerts(input.sprayers, input.now)
+    ...deconDueAlerts(input.sprayers, input.now, input.locale),
+    ...lockWindowClosingAlerts(input.records, input.now, input.locale),
+    ...springCalibrationAlerts(input.sprayers, input.now, input.locale)
   ];
 }
 
@@ -200,13 +217,14 @@ export function digestSubjectId(userId: string, mondayYmd: string): string {
 /** One alert per person (F4-4): content differs per person, so none are
  *  batched. The body never carries money (F4-7). */
 export function weeklyDigestAlerts(
-  digests: ReadonlyArray<{ userId: string; digest: WeeklyDigest }>
+  digests: ReadonlyArray<{ userId: string; digest: WeeklyDigest }>,
+  locale?: string | null
 ): PushAlert[] {
   return digests.map(({ userId, digest }) => ({
     kind: 'weekly-digest' as const,
     subjectId: digestSubjectId(userId, digest.weekStartYmd),
-    title: 'Monday summary',
-    body: digestPushBody(digest),
+    title: t(locale, 'push.digest.title'),
+    body: digestPushBody(digest, locale),
     url: '/today',
     audience: { kind: 'only' as const, userIds: [userId] }
   }));

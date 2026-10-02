@@ -24,6 +24,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { formatPhone, normalizeEmail, parseIdentifier } from '$lib/identity';
 import { t, type MessageKey } from '$lib/i18n';
 import { dispatchEmail } from './email';
+import { localeField } from './messageLocale';
 import {
   burnCodesForLoginToken,
   issueCode,
@@ -146,6 +147,8 @@ export interface MagicLinkRequest {
   ip: string | null;
   origin: string;
   inviteToken?: string | null;
+  /** Language of the email; the request's locale at send time. */
+  locale?: string | null;
   now?: number;
 }
 
@@ -223,7 +226,8 @@ export async function requestMagicLink(
     to: req.email,
     loginUrl: buildVerifyUrl(req.origin, token, req.inviteToken),
     code,
-    expiresAt
+    expiresAt,
+    ...localeField(req.locale)
   });
   return { outcome: 'sent', expiresAt };
 }
@@ -356,7 +360,8 @@ export async function handleLoginRequest(
         email: id.value,
         ip,
         origin,
-        inviteToken: sanitizeInviteToken(rawInvite)
+        inviteToken: sanitizeInviteToken(rawInvite),
+        locale: locale ?? event.locals?.locale
       });
     } catch (e) {
       console.error('[magic-link] dispatch failed', e instanceof Error ? e.message : e);
@@ -380,7 +385,8 @@ export async function handleLoginRequest(
         hash: sha256(bucket.key),
         max: bucket.attributed ? MAX_SMS_PER_IP : MAX_SMS_UNATTRIBUTED
       },
-      origin
+      origin,
+      locale: locale ?? event.locals?.locale
     });
   } catch (e) {
     console.error('[sms-login] dispatch failed', e instanceof Error ? e.message : e);

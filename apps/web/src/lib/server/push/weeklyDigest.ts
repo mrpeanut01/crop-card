@@ -33,6 +33,9 @@ import {
   type PushAlert
 } from './triggers';
 import type { VapidConfig } from './webPush';
+import { DEFAULT_LOCALE, type Locale } from '$lib/i18n';
+import { recipientLocales } from '$lib/server/recipientLocale';
+import { localeField } from '$lib/server/messageLocale';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Open tasks older than this are not "overdue" in a summary any more. */
@@ -104,13 +107,15 @@ export async function weeklyDigestForOwner(
     memberIds: [...eligible.keys()],
     withCash: anyOwnerEmail
   });
-  const digestFor = (userId: string, withCash: boolean): WeeklyDigest =>
-    source.digestFor(userId, eligible.get(userId) === 'owner', withCash);
+  const localeOf = recipientLocales(recipients);
+  const digestFor = (userId: string, withCash: boolean, locale: Locale): WeeklyDigest =>
+    source.digestFor(userId, eligible.get(userId) === 'owner', withCash, locale);
 
   const emails = deps.emailOrigin ? emailsForUsers(recipients) : new Map<string, string | null>();
   for (const userId of recipients) {
-    const digest = digestFor(userId, false);
-    const [alert] = weeklyDigestAlerts([{ userId, digest }]);
+    const locale = localeOf.get(userId) ?? DEFAULT_LOCALE;
+    const digest = digestFor(userId, false, locale);
+    const [alert] = weeklyDigestAlerts([{ userId, digest }], locale);
     if (!claimDelivery(alert.kind, alert.subjectId, now)) continue;
     summary.alerts++;
     let delivered = 0;
@@ -145,9 +150,10 @@ export async function weeklyDigestForOwner(
         emails,
         consents,
         origin: deps.emailOrigin,
-        digest: eligible.get(userId) === 'owner' ? digestFor(userId, true) : digest,
+        digest: eligible.get(userId) === 'owner' ? digestFor(userId, true, locale) : digest,
         viewerName: source.people[userId] ?? null,
-        now
+        now,
+        locale
       });
       delivered += mail.sent;
       summary.emailed += mail.sent;
@@ -161,7 +167,12 @@ export async function weeklyDigestForOwner(
 export interface DigestSource {
   timeZone: string;
   people: Record<string, string>;
-  digestFor(userId: string, isOwner: boolean, withCash: boolean): WeeklyDigest;
+  digestFor(
+    userId: string,
+    isOwner: boolean,
+    withCash: boolean,
+    locale?: string | null
+  ): WeeklyDigest;
 }
 
 /**
@@ -208,7 +219,7 @@ export function loadDigestSource(input: {
   return {
     timeZone,
     people,
-    digestFor: (userId, isOwner, withCash) =>
+    digestFor: (userId, isOwner, withCash, locale) =>
       buildWeeklyDigest({
         viewerId: userId,
         isOwner,
@@ -222,7 +233,8 @@ export function loadDigestSource(input: {
         harvestsAt,
         lowStockCount,
         people,
-        cash: isOwner && withCash ? cash : null
+        cash: isOwner && withCash ? cash : null,
+        locale
       })
   };
 }
@@ -239,6 +251,7 @@ async function sendDigestEmail(input: {
   digest: WeeklyDigest;
   viewerName: string | null;
   now: number;
+  locale?: Locale;
 }): Promise<{ sent: number; failed: number }> {
   const [r] = selectEmailRecipients({
     members: [...input.members],
@@ -253,14 +266,15 @@ async function sendDigestEmail(input: {
   const card = buildDigestCard(input.digest, {
     asOf: input.now,
     farmName: input.farmName,
-    viewerName: input.viewerName
+    viewerName: input.viewerName,
+    locale: input.locale
   });
   try {
     await dispatchEmail({
       kind: 'weekly-digest',
       to: r.email,
       farmName: input.farmName,
-      weekOf: shortDay(input.digest.weekStartYmd),
+      weekOf: shortDay(input.digest.weekStartYmd, input.locale),
       body: digestCardText(card),
       actionUrl: new URL('/today', input.origin).toString(),
       settingsUrl: new URL('/settings/notifications', input.origin).toString(),
@@ -268,7 +282,8 @@ async function sendDigestEmail(input: {
         userId: r.userId,
         ownerId: input.ownerId,
         scope: 'weekly-digest'
-      })
+      }),
+      ...localeField(input.locale)
     });
     return { sent: 1, failed: 0 };
   } catch (err) {

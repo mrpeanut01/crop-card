@@ -27,7 +27,12 @@ export const POST: RequestHandler = async (event) => {
     } catch {
       // No ORIGIN in production: send the code without the autofill line.
     }
-    const r = await requestLinkCode({ userId: user.id, identifier: id, origin });
+    const r = await requestLinkCode({
+      userId: user.id,
+      identifier: id,
+      origin,
+      locale: event.locals.locale
+    });
     if (!r.ok) {
       return json(
         { error: t(locale, LINK_ERROR_KEY[r.error]) },

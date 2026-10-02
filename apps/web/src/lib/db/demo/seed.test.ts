@@ -346,6 +346,29 @@ describe('two demo farms side by side', () => {
     }
   }, 30_000);
 
+  it('writes the same farm in the visitor’s language', () => {
+    const now = zonedMs('2026-08-01', 9);
+    const en = createDemoOwner(now);
+    const es = createDemoOwner(now);
+    runWithTenant(en.ownerId, () => seedDemoFarm({ ...en, now }));
+    runWithTenant(es.ownerId, () => seedDemoFarm({ ...es, now, locale: 'es' }));
+    expect(countByOwner(es.ownerId)).toEqual(countByOwner(en.ownerId));
+    const view = (ownerId: string) =>
+      runWithTenant(ownerId, () => ({
+        areas: listFields().map((f) => f.name),
+        groups: listAnimalGroups().map((g) => g.name),
+        tasks: listTasks({}).map((x) => x.title)
+      }));
+    const english = view(en.ownerId);
+    const spanish = view(es.ownerId);
+    expect(english.areas).toContain('Kitchen Garden');
+    expect(spanish.areas).toContain('Huerto familiar');
+    expect(spanish.areas).not.toContain('Kitchen Garden');
+    expect(spanish.groups).toContain('Bandada de postura');
+    expect(spanish.tasks).toContain('Recoger los huevos y anotar la cantidad');
+    expect(english.tasks).toContain('Collect eggs and log the count');
+  }, 30_000);
+
   it('refuses to run outside the owner’s tenant', () => {
     const now = zonedMs('2026-08-01', 9);
     const a = createDemoOwner(now);

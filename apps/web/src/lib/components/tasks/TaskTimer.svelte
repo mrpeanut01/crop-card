@@ -132,7 +132,7 @@
     busy = true;
     say('');
     try {
-      const out = await startTimer({ taskId, taskTitle, userId });
+      const out = await startTimer({ taskId, taskTitle, userId, locale: page.data?.locale });
       if (out.ok) {
         say(tr('tasks.timer.started', { title: taskTitle }));
       } else if (out.reason === 'other-task') {
@@ -171,7 +171,13 @@
     const minutes = sheetMinutes;
     const startedAt = long ? sheet.stopAt - minutes * 60_000 : sheet.startedAt;
     try {
-      const out = await saveTaskTime(taskId, { startedAt, minutes, userId });
+      const out = await saveTaskTime(
+        taskId,
+        { startedAt, minutes, userId },
+        undefined,
+        undefined,
+        page.data?.locale
+      );
       if (out.status === 'error') {
         sheetError = out.message;
         return;
@@ -222,7 +228,7 @@
 
   async function remove(id: string) {
     timeError = '';
-    const out = await removeTaskTime(id);
+    const out = await removeTaskTime(id, undefined, page.data?.locale);
     if (!out.ok) {
       timeError = out.message;
       return;

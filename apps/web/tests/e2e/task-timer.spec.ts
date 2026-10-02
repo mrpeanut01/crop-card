@@ -122,10 +122,11 @@ test.describe('task timer (33D, D2)', () => {
 
   test('stopping from the strip shows the outcome on screen', async ({ page }) => {
     const id = await farmWithTask(page, 'timerstripsave', 'Prune the berries');
-    await deckCard(page, id)
-      .getByRole('button', { name: 'Start timer: Prune the berries' })
-      .click();
+    const card = deckCard(page, id);
+    await card.getByRole('button', { name: 'Start timer: Prune the berries' }).click();
+    await expect(card.getByRole('button', { name: 'Stop timer: Prune the berries' })).toBeVisible();
     await page.clock.fastForward('15:00');
+    await expect(card.getByTestId('timer-clock')).toHaveText('0:15');
     await page.getByRole('button', { name: 'Week', exact: true }).click();
     await page.waitForLoadState('networkidle');
     const strip = page.getByTestId('timer-strip');

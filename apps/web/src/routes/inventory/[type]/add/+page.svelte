@@ -1,16 +1,21 @@
 <script lang="ts">
   import A_InventoryAddFlow from '$lib/components/inventory/A_InventoryAddFlow.svelte';
   import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { invTypeWord } from '$lib/components/inventory/typeLabel';
 
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <svelte:head>
-  <title>New {data.type} — CropCard</title>
+  <title>{tr('inv.add.pageTitle', { type: invTypeWord(tr, data.type) })}</title>
 </svelte:head>
 
-<nav class="breadcrumb" aria-label="Breadcrumb">
-  <a href="/inventory?type={data.type}">← All {data.type}</a>
+<nav class="breadcrumb" aria-label={tr('inv.breadcrumb')}>
+  <a href="/inventory?type={data.type}">{tr('inv.allType', { type: invTypeWord(tr, data.type) })}</a
+  >
 </nav>
 
 {#if data.aiEnabled}<AiUsageChip />{/if}

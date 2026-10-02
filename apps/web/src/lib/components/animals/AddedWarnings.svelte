@@ -1,22 +1,27 @@
 <script lang="ts">
   import './animalForms.css';
   import { addedHref, type AddedAnimals } from '$lib/animals/display';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     created: AddedAnimals;
   }
 
   const { created }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <section class="af-note added-warnings" role="status">
-  <p>Saved {created.label}.</p>
+  <p>{tr('animals.added.saved', { label: created.label })}</p>
   <ul>
     {#each created.warnings as w (w.animalId + w.message)}
       <li><a href="/animals/{w.animalId}">{w.message}</a></li>
     {/each}
   </ul>
-  <a class="af-primary go" href={addedHref(created)}>Go to {created.label}</a>
+  <a class="af-primary go" href={addedHref(created)}
+    >{tr('animals.added.goTo', { label: created.label })}</a
+  >
 </section>
 
 <style>

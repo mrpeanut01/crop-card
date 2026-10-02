@@ -15,26 +15,25 @@
   import History from '$lib/components/animals/History.svelte';
   import AnimalEditForm from '$lib/components/animals/AnimalEditForm.svelte';
   import CarePlansPanel from '$lib/components/animals/CarePlansPanel.svelte';
-  import {
-    OFFLINE_MESSAGE,
-    STATUS_LABEL,
-    animalLabel,
-    errorFromResponse
-  } from '$lib/animals/display';
+  import { animalName, errorText, pageTitle, statusLabel } from '$lib/components/animals/labels';
   import { animalFacts } from '$lib/animals/facts';
   import { buildHistory } from '$lib/animals/history';
   import { isOutcomeStatus } from '$lib/animals/model';
   import { DEFAULT_PREFS } from '$lib/prefs';
   import type { MoveOutcome } from '$lib/animals/moveClient';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   type Init = NonNullable<Parameters<typeof fetch>[1]>;
 
   const prefs = $derived(data.prefs ?? DEFAULT_PREFS);
   const animal = $derived(data.animal);
   const layout = $derived(data.profile.layout);
-  const label = $derived(animalLabel(animal));
+  const label = $derived(animalName(tr, animal));
+  const title = $derived(pageTitle(tr, layout));
   const gone = $derived(isOutcomeStatus(animal.status));
   const archived = $derived(animal.status === 'archived');
   const areaNames = $derived(new Map(data.areas.map((a) => [a.id, a.name])));
@@ -44,7 +43,7 @@
     animalFacts(
       {
         ...animal,
-        speciesName: data.species?.displayName ?? 'Unknown kind',
+        speciesName: data.species?.displayName ?? tr('animals.detail.unknownKind'),
         livesAt: livesAtId ? (areaNames.get(livesAtId) ?? null) : null,
         groupName: data.group?.name ?? null
       },
@@ -90,13 +89,13 @@
     try {
       const res = await fetch(url, init);
       if (!res.ok) {
-        actionError = await errorFromResponse(res);
+        actionError = await errorText(res, tr);
         return;
       }
       if (typeof done === 'string') await refresh(done);
       else done();
     } catch {
-      actionError = OFFLINE_MESSAGE;
+      actionError = tr('animals.offline');
     } finally {
       busy = false;
     }
@@ -116,12 +115,12 @@
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ subjectType: 'animal', subjectId: animal.id, status: 'active' })
       },
-      'Marked as still here.'
+      tr('animals.detail.markedHere')
     );
   }
 
   function remove() {
-    if (!confirm(`Delete ${label}? Use this only for a mistaken entry.`)) return;
+    if (!confirm(tr('animals.detail.confirmDelete', { name: label }))) return;
     void send(`/api/animals/${animal.id}?ifEmpty=1`, { method: 'DELETE' }, () => {
       void goto('/animals');
     });
@@ -129,12 +128,12 @@
 </script>
 
 <svelte:head>
-  <title>{label} · {data.profile.title} · CropCard</title>
+  <title>{label} · {title} · CropCard</title>
 </svelte:head>
 
 <div class="detail-page">
-  <nav class="crumbs" aria-label="Breadcrumb">
-    <a href="/animals">{data.profile.title}</a>
+  <nav class="crumbs" aria-label={tr('animals.breadcrumb')}>
+    <a href="/animals">{title}</a>
     {#if data.group}
       <span aria-hidden="true">›</span>
       <a href="/animals/groups/{data.group.id}">{data.group.name}</a>
@@ -146,8 +145,8 @@
       <span class="badge"><SpeciesIcon icon={data.species?.icon} size={26} /></span>
       <div class="titles">
         <Kicker>
-          {data.species?.displayName ?? 'Animal'}{animal.status !== 'active'
-            ? ` · ${STATUS_LABEL[animal.status]}`
+          {data.species?.displayName ?? tr('animals.detail.animal')}{animal.status !== 'active'
+            ? ` · ${statusLabel(tr, animal.status)}`
             : ''}
         </Kicker>
         <h1 id="animal-title" class="serif">{label}</h1>
@@ -159,11 +158,12 @@
         foodProducing={animal.foodProducing}
         explanation={flagIsDefault
           ? (data.species?.explanation ?? null)
-          : 'The owner changed this. The history shows why.'}
+          : tr('animals.detail.ownerChanged')}
       />
-      {#if animal.notForSlaughter}<Pill tone="sky">Not for slaughter</Pill>{/if}
-      {#if gone}<Pill tone="neutral">No longer here</Pill>{/if}
-      {#if archived}<Pill tone="neutral">Archived</Pill>{/if}
+      {#if animal.notForSlaughter}<Pill tone="sky">{tr('animals.detail.notForSlaughter')}</Pill
+        >{/if}
+      {#if gone}<Pill tone="neutral">{tr('animals.noLongerHere')}</Pill>{/if}
+      {#if archived}<Pill tone="neutral">{tr('animals.archived')}</Pill>{/if}
     </div>
 
     <HoldChips
@@ -180,9 +180,9 @@
         speciesPlural={data.speciesPlural}
       />
     {/if}
-    <nav class="record-links" aria-label="Records">
-      <a class="af-ghost" href="/animals/{animal.id}/health">Health</a>
-      <a class="af-ghost" href="/animals/{animal.id}/log">Eggs, milk and weights</a>
+    <nav class="record-links" aria-label={tr('animals.records')}>
+      <a class="af-ghost" href="/animals/{animal.id}/health">{tr('animals.health')}</a>
+      <a class="af-ghost" href="/animals/{animal.id}/log">{tr('animals.eggsMilkWeights')}</a>
     </nav>
 
     <FactList {facts} />
@@ -193,12 +193,12 @@
       hasPhoto={animal.hasPhoto}
       version={animal.updatedAt}
       canEdit={data.canLog}
-      onDone={() => refresh('Photo saved.')}
+      onDone={() => refresh(tr('animals.detail.photoSaved'))}
     />
 
     {#if animal.notes}
       <section>
-        <h2 class="section-title">Notes</h2>
+        <h2 class="section-title">{tr('animals.notes')}</h2>
         <p class="notes">{animal.notes}</p>
       </section>
     {/if}
@@ -231,7 +231,7 @@
   {#if actionError}<p class="af-error" role="alert">{actionError}</p>{/if}
 
   {#if data.canLog && animal.status === 'active'}
-    <section class="actions" aria-label="Actions">
+    <section class="actions" aria-label={tr('animals.actions')}>
       <div class="action-row">
         <button
           type="button"
@@ -239,7 +239,7 @@
           aria-expanded={panel === 'move'}
           onclick={() => (panel = panel === 'move' ? 'none' : 'move')}
         >
-          Move
+          {tr('animals.moveAction')}
         </button>
         <button
           type="button"
@@ -247,7 +247,7 @@
           aria-expanded={panel === 'status'}
           onclick={() => (panel = panel === 'status' ? 'none' : 'status')}
         >
-          Record a change
+          {tr('animals.recordChange')}
         </button>
         {#if data.canEdit}
           <button
@@ -256,7 +256,7 @@
             aria-expanded={panel === 'edit'}
             onclick={() => (panel = panel === 'edit' ? 'none' : 'edit')}
           >
-            Edit details
+            {tr('animals.detail.editDetails')}
           </button>
         {/if}
       </div>
@@ -285,11 +285,11 @@
       {/if}
     </section>
   {:else if data.canLog && gone}
-    <section class="actions" aria-label="Actions">
-      <p class="af-help">Recorded by mistake? Mark it as still here. The history keeps both.</p>
+    <section class="actions" aria-label={tr('animals.actions')}>
+      <p class="af-help">{tr('animals.detail.mistakeHelp')}</p>
       <div class="action-row">
         <button type="button" class="af-ghost" disabled={busy} onclick={stillHere}>
-          It is still here
+          {tr('animals.detail.stillHere')}
         </button>
         {#if data.canEdit}
           <button
@@ -297,7 +297,7 @@
             class={panel === 'edit' ? 'af-primary' : 'af-ghost'}
             onclick={() => (panel = panel === 'edit' ? 'none' : 'edit')}
           >
-            Edit notes
+            {tr('animals.detail.editNotes')}
           </button>
         {/if}
       </div>
@@ -311,14 +311,14 @@
       notesOnly={gone}
       onDone={async (w) => {
         warnings = w;
-        await refresh('Details saved.');
+        await refresh(tr('animals.detail.detailsSaved'));
       }}
     />
   {/if}
 
   {#if data.canEdit && !gone}
     <section class="owner" aria-labelledby="owner-h">
-      <h2 id="owner-h" class="section-title">Owner settings</h2>
+      <h2 id="owner-h" class="section-title">{tr('animals.ownerSettings')}</h2>
       <div class="action-col">
         {#if !archived}
           <FlagForm
@@ -345,9 +345,13 @@
               class="af-ghost"
               disabled={busy}
               onclick={() =>
-                send(`/api/animals/${animal.id}`, json({ status: 'active' }), 'Restored.')}
+                send(
+                  `/api/animals/${animal.id}`,
+                  json({ status: 'active' }),
+                  tr('animals.restored')
+                )}
             >
-              Restore
+              {tr('animals.restore')}
             </button>
           {:else}
             <button
@@ -355,27 +359,32 @@
               class="af-ghost"
               disabled={busy}
               onclick={() =>
-                send(`/api/animals/${animal.id}`, json({ status: 'archived' }), 'Archived.')}
+                send(
+                  `/api/animals/${animal.id}`,
+                  json({ status: 'archived' }),
+                  tr('animals.archivedDone')
+                )}
             >
-              Archive
+              {tr('animals.archive')}
             </button>
           {/if}
-          <button type="button" class="af-danger" disabled={busy} onclick={remove}>Delete</button>
+          <button type="button" class="af-danger" disabled={busy} onclick={remove}
+            >{tr('animals.delete')}</button
+          >
         </div>
         <p class="af-help">
-          Archive hides it from lists and keeps its history. Delete is only for a mistaken entry
-          with no records.
+          {tr('animals.detail.archiveHelp')}
         </p>
       </div>
     </section>
   {/if}
 
   <section aria-labelledby="history-h">
-    <h2 id="history-h" class="section-title">History</h2>
+    <h2 id="history-h" class="section-title">{tr('animals.history')}</h2>
     <History
       entries={history}
       {prefs}
-      onChanged={() => refresh('Removed.')}
+      onChanged={() => refresh(tr('animals.removed'))}
       onVoided={() => refresh('Voided.')}
     />
   </section>

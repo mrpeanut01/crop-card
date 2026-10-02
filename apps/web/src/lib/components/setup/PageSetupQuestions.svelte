@@ -1,5 +1,7 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import type { SetupAsk, SetupNudge } from '$lib/onboarding/pageSetup';
   import type { SeasonSetup } from '$lib/season/setup';
   import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
@@ -19,6 +21,8 @@
 
   const { nudges, scope, kicker, latLon = null, year, lastYearSetup = null }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
+
   let asking = $state<SetupAsk | null>(null);
 
   async function answered() {
@@ -32,7 +36,7 @@
 <SetupSheet
   open={asking === 'climate'}
   {kicker}
-  title="Where is your farm?"
+  title={tr('setup.climate.title')}
   onClose={() => (asking = null)}
   onDone={answered}
 >
@@ -45,7 +49,7 @@
   <SetupSheet
     open={asking === 'season'}
     {kicker}
-    title={`Set up the ${year} season`}
+    title={tr('setup.season.title', { year })}
     onClose={() => (asking = null)}
     onDone={answered}
   >

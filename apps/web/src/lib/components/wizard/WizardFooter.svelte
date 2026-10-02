@@ -9,6 +9,8 @@
    * `canContinue` so each step's contract drives the gate.
    */
   import { ChevronRight, ArrowRight } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     backLabel?: string;
@@ -19,26 +21,20 @@
     onBack?: () => void;
     onContinue?: () => void;
   }
-  const {
-    backLabel = 'Back',
-    nextLabel = 'Continue',
-    canContinue = true,
-    summary,
-    onBack,
-    onContinue
-  }: Props = $props();
+  const { backLabel, nextLabel, canContinue = true, summary, onBack, onContinue }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <footer class="wf">
   <button type="button" class="ghost" onclick={onBack} disabled={!onBack}>
     <ChevronRight size={14} strokeWidth={1.75} class="wf-back-icon" />
-    {backLabel}
+    {backLabel ?? tr('wizard.footer.back')}
   </button>
   {#if summary}
     <div class="summary">{summary}</div>
   {/if}
   <button type="button" class="primary" onclick={onContinue} disabled={!canContinue || !onContinue}>
-    {nextLabel}
+    {nextLabel ?? tr('wizard.footer.continue')}
     <ArrowRight size={14} strokeWidth={1.75} />
   </button>
 </footer>

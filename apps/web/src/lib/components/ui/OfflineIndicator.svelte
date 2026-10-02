@@ -1,18 +1,22 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+
   interface Props {
     online: boolean;
     pendingCount: number | null;
   }
 
   const { online, pendingCount }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const label = $derived.by(() => {
     if (!online) {
       const n = pendingCount ?? 0;
-      return n > 0 ? `Offline · ${n} queued` : 'Offline';
+      return n > 0 ? tr('ui.offline.queued', { count: n }) : tr('ui.offline.offline');
     }
-    if (pendingCount && pendingCount > 0) return `Syncing · ${pendingCount}`;
-    return 'Online · synced';
+    if (pendingCount && pendingCount > 0) return tr('ui.offline.syncing', { count: pendingCount });
+    return tr('ui.offline.synced');
   });
 </script>
 

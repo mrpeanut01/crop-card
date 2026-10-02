@@ -1,14 +1,16 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
   import CardView from '$lib/components/cards/CardView.svelte';
   import { currentPrefs } from '$lib/prefsState.svelte';
 
   const { data } = $props();
+  const tr = $derived(createT(data.locale));
 </script>
 
-<svelte:head><title>Watering log · CropCard</title></svelte:head>
+<svelte:head><title>{tr('records.irrigation.pageTitle')}</title></svelte:head>
 
 <div class="irrigation-record">
-  <p class="back"><a href="/records?watering=1">Back to the watering log</a></p>
+  <p class="back"><a href="/records?watering=1">{tr('records.irrigation.back')}</a></p>
   <CardView card={data.card} prefs={currentPrefs()} />
 </div>
 

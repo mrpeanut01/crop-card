@@ -2,10 +2,13 @@
   import { aiProgressLabel, fmtElapsed } from './format';
   import type { ProgressStage } from './types';
   import { getWizardContext } from './wizardState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const { stage, startMs }: { stage: ProgressStage; startMs: number | null } = $props();
 
   const w = getWizardContext();
+  const tr = $derived(createT(page.data?.locale));
 
   const elapsed = $derived(startMs == null ? 0 : Math.max(0, w.nowMs - startMs));
 </script>
@@ -14,7 +17,9 @@
   <span class="ai-spinner" aria-hidden="true"></span>
   <div class="ai-progress-text">
     <span class="ai-progress-label">{aiProgressLabel(stage, elapsed)}</span>
-    <span class="ai-progress-elapsed" aria-label="elapsed time">{fmtElapsed(elapsed)}</span>
+    <span class="ai-progress-elapsed" aria-label={tr('wizard.ai.elapsedAria')}
+      >{fmtElapsed(elapsed)}</span
+    >
   </div>
 </div>
 

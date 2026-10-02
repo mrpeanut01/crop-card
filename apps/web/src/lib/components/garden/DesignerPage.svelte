@@ -11,11 +11,11 @@
   import PlantingEstablishment from '$lib/components/garden/PlantingEstablishment.svelte';
   import TimeScrubber from '$lib/components/garden/TimeScrubber.svelte';
   import { DesignerState, setDesigner } from '$lib/components/garden/designerState.svelte';
-  import { ft, longDate, parseYmd, plural, ymd } from '$lib/components/garden/format';
+  import { countOf, ft, longDate, parseYmd, shortDate, ymd } from '$lib/components/garden/format';
   import { loadSnapshot } from '$lib/client/cardStore';
   import { designFromSnapshot } from '$lib/garden/design';
-  import { shortDate } from '$lib/garden/occupancy';
   import { AREA_KIND_LABELS } from '$lib/farm/areaKinds';
+  import type { MessageKey } from '$lib/i18n';
   import { cardHref, cardKey } from '$lib/cards/model';
   import { DEFAULT_PREFS, formatInstant } from '$lib/prefs';
   import { syncCardSnapshot } from '$lib/client/cardSync';
@@ -44,6 +44,11 @@
     )
   );
   if (untrack(() => data.offline)) d.offline = true;
+  untrack(() => (d.locale = page.data?.locale ?? null));
+  $effect.pre(() => {
+    d.locale = page.data?.locale ?? null;
+  });
+  const tr = $derived(d.tr);
 
   let canvasRef = $state<{ zoomIn(): void; zoomOut(): void; fitAll(): void } | null>(null);
   let customOpen = $state(false);
@@ -53,7 +58,12 @@
   const areaName = $derived(d.canvas.name);
   const areaCardHref = $derived(cardHref('area', cardKey('area', d.canvas.areaId)));
   const sizeText = $derived(`${ft(d.canvas.widthFt)}×${ft(d.canvas.lengthFt)} ft`);
-  const printDate = $derived(`${longDate(d.dateMs)}, ${new Date(d.dateMs).getUTCFullYear()}`);
+  const areaKindText = $derived(
+    data.areaKind === 'garden' || data.areaKind === 'greenhouse'
+      ? tr(`garden.kind.${data.areaKind}` as MessageKey)
+      : AREA_KIND_LABELS[data.areaKind]
+  );
+  const printDate = $derived(`${longDate(d.dateMs, tr)}, ${new Date(d.dateMs).getUTCFullYear()}`);
   const legend = $derived(
     [...d.beds]
       .sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }))
@@ -61,8 +71,12 @@
         const occ = d.occupancy.get(bed.blockId);
         const rows = (occ?.occupants ?? []).map((o) => {
           const p = d.design.plantings.find((q) => q.cropId === o.cropId);
-          const count = p?.plantCount ? `, ${plural(p.plantCount, 'plant')}` : '';
-          return `${p?.varietyDisplayName ?? 'Planting'}${count}, ${shortDate(o.startMs)} to ${shortDate(o.harvestEndMs)}`;
+          const count = p?.plantCount ? `, ${countOf('plant', p.plantCount, tr)}` : '';
+          return tr('garden.page.legendRow', {
+            name: `${p?.varietyDisplayName ?? tr('garden.page.planting')}${count}`,
+            from: shortDate(o.startMs, tr),
+            to: shortDate(o.harvestEndMs, tr)
+          });
         });
         return { id: bed.blockId, name: bed.name, rows };
       })
@@ -191,7 +205,7 @@
   });
 </script>
 
-<svelte:head><title>{areaName} designer · CropCard</title></svelte:head>
+<svelte:head><title>{tr('garden.page.title', { name: areaName })}</title></svelte:head>
 <svelte:window onkeydown={onGlobalKey} />
 
 <div
@@ -204,22 +218,22 @@
   <header class="top">
     <div class="title">
       <p class="kicker">
-        {AREA_KIND_LABELS[data.areaKind]} · {sizeText} · {d.design.seasonYear} season
+        {areaKindText} · {sizeText} · {tr('garden.page.seasonYear', { year: d.design.seasonYear })}
       </p>
       <h1 class="serif">{areaName}</h1>
-      <p class="print-only print-head">On {printDate}</p>
+      <p class="print-only print-head">{tr('garden.page.on', { date: printDate })}</p>
     </div>
     <div class="head-actions">
-      <div class="seg" role="group" aria-label="View">
+      <div class="seg" role="group" aria-label={tr('garden.page.view')}>
         <button type="button" aria-pressed={d.view === 'canvas'} onclick={() => setView('canvas')}
-          >Canvas</button
+          >{tr('garden.page.canvas')}</button
         >
         <button type="button" aria-pressed={d.view === 'list'} onclick={() => setView('list')}
-          >List</button
+          >{tr('garden.page.list')}</button
         >
       </div>
       {#if data.seasons.length > 1}
-        <nav class="seg" aria-label="Season">
+        <nav class="seg" aria-label={tr('garden.page.season')}>
           {#each data.seasons as y (y)}
             <a
               class="seg-link"
@@ -230,33 +244,31 @@
           {/each}
         </nav>
       {/if}
-      <a class="hbtn" href={areaCardHref}>Area Card</a>
+      <a class="hbtn" href={areaCardHref}>{tr('garden.page.areaCard')}</a>
       <button
         type="button"
         class="hbtn"
         data-testid="designer-print"
-        aria-label="Print the Area Card for {printDate}"
+        aria-label={tr('garden.page.printAria', { date: printDate })}
         disabled={printing}
-        onclick={print}>{printing ? 'Opening…' : 'Print'}</button
+        onclick={print}>{printing ? tr('garden.page.opening') : tr('garden.page.print')}</button
       >
     </div>
   </header>
 
   {#if d.offline}
     <div class="banner warn" data-testid="offline-banner">
-      You're offline. This layout is from {asOfText}. Editing needs a connection.
+      {tr('garden.page.offline', { when: asOfText })}
     </div>
   {:else if !data.canEdit}
     <div class="banner" data-testid="readonly-banner">
-      View only. The farm owner changes the layout.
+      {tr('garden.page.viewOnly')}
     </div>
   {/if}
   {#if d.canvas.source === 'default'}
     <div class="banner">
-      This garden doesn't have a size yet, so beds are drawn on a {ft(d.canvas.widthFt)} by {ft(
-        d.canvas.lengthFt
-      )} foot grid.
-      <a class="hbtn" href="/plan/farm">Set its size on the farm map</a>
+      {tr('garden.page.noSize', { w: ft(d.canvas.widthFt), l: ft(d.canvas.lengthFt) })}
+      <a class="hbtn" href="/plan/farm">{tr('garden.page.setSize')}</a>
     </div>
   {/if}
 
@@ -280,9 +292,11 @@
     <div class="banner" data-testid="jump-to">
       <span>{j.text}</span>
       <button type="button" class="hbtn" onclick={() => onScrub(j.dateMs)}
-        >Go to {shortDate(j.dateMs)}</button
+        >{tr('garden.page.goTo', { date: shortDate(j.dateMs, tr) })}</button
       >
-      <button type="button" class="hbtn" onclick={() => (d.jumpTo = null)}>Dismiss</button>
+      <button type="button" class="hbtn" onclick={() => (d.jumpTo = null)}
+        >{tr('garden.page.dismiss')}</button
+      >
     </div>
   {/if}
 
@@ -297,15 +311,12 @@
           onclick={() => {
             d.setDate(c.retryDateMs!);
             void d.placeCrop(c.crop, c.blockId, c.at, c.retryDateMs!);
-          }}
-          >Place on {new Date(c.retryDateMs).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            timeZone: 'UTC'
-          })}</button
+          }}>{tr('garden.page.placeOn', { date: shortDate(c.retryDateMs, tr) })}</button
         >
       {/if}
-      <button type="button" class="hbtn" onclick={() => (d.conflict = null)}>Cancel</button>
+      <button type="button" class="hbtn" onclick={() => (d.conflict = null)}
+        >{tr('garden.common.cancel')}</button
+      >
     </div>
   {/if}
 
@@ -313,7 +324,7 @@
     <Hint
       key="garden_designer"
       anchor="[data-hint-anchor=garden_designer]"
-      text="Pick a bed size, then tap the garden to put it there. Tap a bed to move, turn or size it."
+      text={tr('garden.page.hintDesigner')}
       suppressed={d.view !== 'canvas' ||
         d.cropPanelOpen ||
         !!d.selectedBed ||
@@ -323,7 +334,7 @@
   <Hint
     key="designer_scrubber"
     anchor="[data-hint-anchor=designer_scrubber]"
-    text="Slide through the season to see what's growing in each bed and when it opens up."
+    text={tr('garden.page.hintScrubber')}
     suppressed={!d.hasScheduledPlanting ||
       d.cropPanelOpen ||
       !!d.selectedBed ||
@@ -333,7 +344,7 @@
   {#if customOpen && d.canEdit}
     <form
       class="custom"
-      aria-label="Custom bed size"
+      aria-label={tr('garden.page.customSize')}
       onsubmit={(e) => {
         e.preventDefault();
         customOpen = false;
@@ -342,9 +353,17 @@
         else d.choosePreset('custom', { widthFt: customW, lengthFt: customL });
       }}
     >
-      <label>Width (ft) <input type="number" min="1" step="0.5" bind:value={customW} /></label>
-      <label>Length (ft) <input type="number" min="1" step="0.5" bind:value={customL} /></label>
-      <button type="submit" class="hbtn">{d.view === 'list' ? 'Add bed' : 'Place it'}</button>
+      <label
+        >{tr('garden.page.widthFt')}
+        <input type="number" min="1" step="0.5" bind:value={customW} /></label
+      >
+      <label
+        >{tr('garden.page.lengthFt')}
+        <input type="number" min="1" step="0.5" bind:value={customL} /></label
+      >
+      <button type="submit" class="hbtn"
+        >{d.view === 'list' ? tr('garden.list.addBed') : tr('garden.page.placeIt')}</button
+      >
       {#if d.view === 'canvas'}
         <button
           type="button"
@@ -352,10 +371,12 @@
           onclick={() => {
             customOpen = false;
             void d.addBedAtFreeSpot('custom', { widthFt: customW, lengthFt: customL });
-          }}>First open spot</button
+          }}>{tr('garden.toolbar.firstSpot')}</button
         >
       {/if}
-      <button type="button" class="hbtn" onclick={() => (customOpen = false)}>Cancel</button>
+      <button type="button" class="hbtn" onclick={() => (customOpen = false)}
+        >{tr('garden.common.cancel')}</button
+      >
     </form>
   {/if}
 
@@ -366,15 +387,27 @@
           <DesignerToolbar oncustom={() => (customOpen = true)} />
         </div>
         <DesignerCanvas bind:this={canvasRef} />
-        <ul class="print-only legend" aria-label="What is in each bed on {printDate}">
+        <ul
+          class="print-only legend"
+          aria-label={tr('garden.page.legendAria', { date: printDate })}
+        >
           {#each legend as l (l.id)}
-            <li><strong>{l.name}:</strong> {l.rows.length ? l.rows.join('; ') : 'Open'}</li>
+            <li>
+              <strong>{l.name}:</strong>
+              {l.rows.length ? l.rows.join('; ') : tr('garden.list.open')}
+            </li>
           {/each}
         </ul>
-        <div class="zoom" role="group" aria-label="Zoom">
-          <button type="button" class="hbtn" onclick={() => canvasRef?.zoomIn()}>Zoom in</button>
-          <button type="button" class="hbtn" onclick={() => canvasRef?.zoomOut()}>Zoom out</button>
-          <button type="button" class="hbtn" onclick={() => canvasRef?.fitAll()}>Fit</button>
+        <div class="zoom" role="group" aria-label={tr('garden.page.zoom')}>
+          <button type="button" class="hbtn" onclick={() => canvasRef?.zoomIn()}
+            >{tr('garden.page.zoomIn')}</button
+          >
+          <button type="button" class="hbtn" onclick={() => canvasRef?.zoomOut()}
+            >{tr('garden.page.zoomOut')}</button
+          >
+          <button type="button" class="hbtn" onclick={() => canvasRef?.fitAll()}
+            >{tr('garden.page.fit')}</button
+          >
         </div>
       </div>
       <aside class="side">
@@ -383,7 +416,7 @@
           <BedInspector bed={d.selectedBed} />
           <PlantingEstablishment />
         {:else}
-          <p class="side-empty">Tap a bed to see what's in it, its size and its history.</p>
+          <p class="side-empty">{tr('garden.page.tapBed')}</p>
         {/if}
       </aside>
     </div>

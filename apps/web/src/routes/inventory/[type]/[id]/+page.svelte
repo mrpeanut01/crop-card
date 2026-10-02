@@ -5,9 +5,12 @@
   import CropPluginDetail from '$lib/components/inventory/detail/CropPluginDetail.svelte';
   import FeedDetail from '$lib/components/inventory/detail/FeedDetail.svelte';
   import AnimalHealthDetail from '$lib/components/inventory/detail/AnimalHealthDetail.svelte';
-  import { INVENTORY_TYPE_LABELS } from '$lib/inventory/types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { invTypeLower } from '$lib/components/inventory/typeLabel';
 
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   function titleOf(d: typeof data): string {
     if (d.type === 'crop') return d.plugin.displayName;
@@ -22,11 +25,11 @@
   </title>
 </svelte:head>
 
-<nav class="breadcrumb" aria-label="Breadcrumb">
+<nav class="breadcrumb" aria-label={tr('inv.breadcrumb')}>
   <a
     href="/inventory?type={data.type}{data.type === 'animal-health' && !data.item
       ? '&mode=catalog'
-      : ''}">← All {INVENTORY_TYPE_LABELS[data.type].toLowerCase()}</a
+      : ''}">{tr('inv.allType', { type: invTypeLower(tr, data.type) })}</a
   >
 </nav>
 

@@ -1,5 +1,7 @@
 <script lang="ts">
   import { Lock, Unlock } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     locked: boolean;
@@ -7,15 +9,16 @@
   }
 
   const { locked, hash }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <span class="lock-pill" class:locked class:unlocked={!locked}>
   {#if locked}
     <Lock size={11} strokeWidth={2} />
-    <span class="label">locked</span>
+    <span class="label">{tr('ui.lock.locked')}</span>
   {:else}
     <Unlock size={11} strokeWidth={2} />
-    <span class="label">editable</span>
+    <span class="label">{tr('ui.lock.editable')}</span>
   {/if}
   {#if hash}
     <span class="hash">· {hash}</span>

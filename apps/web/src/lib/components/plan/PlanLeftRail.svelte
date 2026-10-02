@@ -4,6 +4,8 @@
   import CardView from '$lib/components/cards/CardView.svelte';
   import { NO_AREA, type RailAreaCard } from '$lib/plan/planCards';
   import { currentPrefs } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     cards: RailAreaCard[];
@@ -11,6 +13,7 @@
     onAddBlock?: () => void;
   }
   const { cards, selectedAreaId, onAddBlock }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let filterText = $state('');
   const query = $derived(filterText.trim().toLowerCase());
@@ -18,12 +21,22 @@
   const areaCount = $derived(cards.filter((c) => c.areaId !== NO_AREA).length);
 </script>
 
-<aside class="rail" aria-label="Areas" data-sveltekit-noscroll data-sveltekit-keepfocus>
+<aside
+  class="rail"
+  aria-label={tr('planui.rail.aria')}
+  data-sveltekit-noscroll
+  data-sveltekit-keepfocus
+>
   <div class="rail-head">
     <div class="head-row">
-      <Kicker>Areas · {areaCount}</Kicker>
+      <Kicker>{tr('planui.rail.kicker', { n: areaCount })}</Kicker>
       {#if onAddBlock}
-        <button class="add" onclick={onAddBlock} title="New block" aria-label="New block">
+        <button
+          class="add"
+          onclick={onAddBlock}
+          title={tr('planui.rail.newBlock')}
+          aria-label={tr('planui.rail.newBlock')}
+        >
           <Plus size={16} strokeWidth={1.75} />
         </button>
       {/if}
@@ -33,16 +46,18 @@
       <input
         class="filter"
         type="search"
-        placeholder="Filter Areas, beds or crops…"
+        placeholder={tr('planui.rail.filterPlaceholder')}
         bind:value={filterText}
-        aria-label="Filter Areas by name, bed or crop"
+        aria-label={tr('planui.rail.filterAria')}
       />
     </div>
   </div>
 
   {#if filtered.length === 0}
     <div class="empty">
-      {query ? `Nothing matches “${filterText.trim()}”.` : 'No Areas yet.'}
+      {query
+        ? tr('planui.rail.nothingMatches', { query: filterText.trim() })
+        : tr('planui.rail.noAreas')}
     </div>
   {:else}
     <ul class="cards" data-testid="plan-area-cards">
@@ -58,7 +73,7 @@
           >
             {#snippet actions()}
               {#if c.designer}
-                <a class="designer" href={c.designer}>Open designer</a>
+                <a class="designer" href={c.designer}>{tr('planui.rail.openDesigner')}</a>
               {/if}
             {/snippet}
           </CardView>

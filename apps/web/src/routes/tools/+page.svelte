@@ -1,30 +1,30 @@
 <script lang="ts">
   import type { PageData } from './$types';
+  import { createT } from '$lib/i18n';
   let { data }: { data: PageData } = $props();
+  const tr = $derived(createT(data.locale));
 </script>
 
-<svelte:head><title>Tools — CropCard</title></svelte:head>
+<svelte:head><title>{tr('tools.title')} — CropCard</title></svelte:head>
 
 <header class="head">
-  <h1>Tools</h1>
-  <p class="subtitle">Calculators and reference utilities for field operations.</p>
+  <h1>{tr('tools.title')}</h1>
+  <p class="subtitle">{tr('tools.subtitle')}</p>
 </header>
 
 <section class="tools-grid">
   {#if data.showPlanterPlate}
     <a class="tool-card" href="/tools/planter-plate-selector">
-      <h2>Planter plate selector</h2>
+      <h2>{tr('tools.plate.card.title')}</h2>
       <p>
-        Look up Lincoln Ag plate numbers (John Deere "B" / IHC "C") by seed type, dimensions, and
-        target planting density. Optionally save the chosen plate to a seed inventory record.
+        {tr('tools.plate.card.body')}
       </p>
     </a>
   {/if}
   <a class="tool-card" href="/calibrate">
-    <h2>Sprayer calibration (1/128 acre)</h2>
+    <h2>{tr('tools.calib.title')}</h2>
     <p>
-      Calibrate boom sprayer GPA from a 1/128-acre stride collection. Records to the sprayer's
-      calibration history.
+      {tr('tools.calib.body')}
     </p>
   </a>
 </section>

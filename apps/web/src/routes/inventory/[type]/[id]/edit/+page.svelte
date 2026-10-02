@@ -1,18 +1,24 @@
 <script lang="ts">
   import A_InventoryEditForm from '$lib/components/inventory/A_InventoryEditForm.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { invTypeWord } from '$lib/components/inventory/typeLabel';
 
   const { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <svelte:head>
-  <title>Edit {data.type} — CropCard</title>
+  <title>{tr('inv.edit.pageTitle', { type: invTypeWord(tr, data.type) })}</title>
 </svelte:head>
 
-<nav class="breadcrumb" aria-label="Breadcrumb">
+<nav class="breadcrumb" aria-label={tr('inv.breadcrumb')}>
   {#if data.existing && 'id' in data.existing}
-    <a href="/inventory/{data.type}/{data.existing.id}">← Back to detail</a>
+    <a href="/inventory/{data.type}/{data.existing.id}">{tr('inv.backToDetail')}</a>
   {:else}
-    <a href="/inventory?type={data.type}">← All {data.type}</a>
+    <a href="/inventory?type={data.type}"
+      >{tr('inv.allType', { type: invTypeWord(tr, data.type) })}</a
+    >
   {/if}
 </nav>
 

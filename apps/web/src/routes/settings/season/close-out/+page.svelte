@@ -5,8 +5,11 @@
   import type { PageData } from './$types';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import { listPendingForActiveOwner } from '$lib/client/syncQueue';
+  import { createT } from '$lib/i18n';
 
   let { data }: { data: PageData } = $props();
+
+  const tr = $derived(createT(data.locale));
 
   // Client-attested offline pending count (Dexie is client-only). Null until
   // the first read resolves; treated as "unknown/blocking" until then.
@@ -49,13 +52,15 @@
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        submitError = body.error ? `Close refused: ${body.error}` : `Close failed (${res.status}).`;
+        submitError = body.error
+          ? tr('settings.close.refused', { error: body.error })
+          : tr('settings.close.failed', { status: res.status });
         return;
       }
       justClosed = true;
       await invalidateAll();
     } catch {
-      submitError = 'Network error while closing the season.';
+      submitError = tr('settings.close.networkClose');
     } finally {
       submitting = false;
     }
@@ -73,13 +78,13 @@
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        submitError = body.message ?? `Reopen failed (${res.status}).`;
+        submitError = body.message ?? tr('settings.close.reopenFailed', { status: res.status });
         return;
       }
       justClosed = false;
       await invalidateAll();
     } catch {
-      submitError = 'Network error while reopening the season.';
+      submitError = tr('settings.close.networkReopen');
     } finally {
       submitting = false;
     }
@@ -87,31 +92,30 @@
 </script>
 
 <svelte:head>
-  <title>Close season · CropCard</title>
+  <title>{tr('settings.close.pageTitle')}</title>
 </svelte:head>
 
 <div class="closeout-page">
-  <nav class="breadcrumb" aria-label="Breadcrumb">
-    <a href="/settings">Settings</a>
+  <nav class="breadcrumb" aria-label={tr('settings.tokens.breadcrumbAria')}>
+    <a href="/settings">{tr('settings.tokens.crumbSettings')}</a>
     <ChevronRight size={13} aria-hidden="true" />
-    <a href="/settings/season">Season</a>
+    <a href="/settings/season">{tr('settings.carry.crumbSeason')}</a>
     <ChevronRight size={13} aria-hidden="true" />
-    <span>Close-out</span>
+    <span>{tr('settings.close.crumb')}</span>
   </nav>
 
   <header class="page-header">
-    <Kicker>Settings · Season {data.year}</Kicker>
-    <h1 class="serif">Close the {data.year} season.</h1>
+    <Kicker>{tr('settings.close.kicker', { year: data.year })}</Kicker>
+    <h1 class="serif">{tr('settings.close.h1', { year: data.year })}</h1>
     <p class="hint">
-      Closing the season locks every {data.year} record. No spray, insecticide, fungicide, harvest, or
-      hay-cutting entry dated in {data.year} can be added or changed afterward — the same way a spray
-      record locks 48 hours after it's written. You have 7 days to reopen if you close by mistake.
+      {tr('settings.close.hint', { year: data.year })}
     </p>
   </header>
 
   {#if !data.isOwner}
     <p class="readonly-banner" role="status">
-      <Lock size={14} aria-hidden="true" /> Helper view — only the farm owner can close or reopen a season.
+      <Lock size={14} aria-hidden="true" />
+      {tr('settings.close.helperBanner')}
     </p>
   {/if}
 
@@ -123,45 +127,43 @@
     <section class="handoff" aria-labelledby="handoff-h">
       <div class="closed-badge">
         <Lock size={16} aria-hidden="true" />
-        {data.year} season closed
+        {tr('settings.close.closedBadge', { year: data.year })}
       </div>
-      <h2 id="handoff-h">Season closed. What's next?</h2>
+      <h2 id="handoff-h">{tr('settings.close.nextTitle')}</h2>
       <p class="hint">
-        The {data.year} books are sealed. Records are read-only. Pick up the off-season checklist:
+        {tr('settings.close.nextHint', { year: data.year })}
       </p>
       <div class="cta-grid">
         <a class="cta-card" href="/equipment">
-          <span class="cta-title">Winterize equipment →</span>
-          <span class="cta-sub">Log storage state for sprayers + tools.</span>
+          <span class="cta-title">{tr('settings.close.winterize')}</span>
+          <span class="cta-sub">{tr('settings.close.winterizeSub')}</span>
         </a>
         <a class="cta-card" href="/records">
-          <span class="cta-title">Year-end report →</span>
-          <span class="cta-sub">Review + export the {data.year} record book.</span>
+          <span class="cta-title">{tr('settings.close.yearEnd')}</span>
+          <span class="cta-sub">{tr('settings.close.yearEndSub', { year: data.year })}</span>
         </a>
         <a class="cta-card" href="/settings/season/carry-forward">
-          <span class="cta-title">Prep next season →</span>
-          <span class="cta-sub"
-            >Rotation checks, stock roll-forward + plan draft for {data.year + 1}.</span
-          >
+          <span class="cta-title">{tr('settings.close.prep')}</span>
+          <span class="cta-sub">{tr('settings.close.prepSub', { year: data.year + 1 })}</span>
         </a>
       </div>
 
       {#if data.isOwner && data.reopenAvailable}
         <div class="reopen-row">
           <p class="hint">
-            Closed in error? You can still reopen the {data.year} season (within 7 days of closing).
+            {tr('settings.close.reopenHint', { year: data.year })}
           </p>
           <button type="button" class="secondary-btn" disabled={submitting} onclick={reopenSeason}>
-            {submitting ? 'Reopening…' : 'Reopen season'}
+            {submitting ? tr('settings.close.reopening') : tr('settings.close.reopen')}
           </button>
         </div>
       {:else if data.isOwner && data.closed}
-        <p class="hint muted">The 7-day reopen window has passed. This close is permanent.</p>
+        <p class="hint muted">{tr('settings.close.permanent')}</p>
       {/if}
     </section>
   {:else}
     <section class="checklist" aria-labelledby="checklist-h">
-      <h2 id="checklist-h">Preflight checklist</h2>
+      <h2 id="checklist-h">{tr('settings.close.checklist')}</h2>
 
       <div class="check-row" class:ok={pendingOk} class:pending={pendingCount === null}>
         <span class="check-icon">
@@ -171,15 +173,15 @@
             />{/if}
         </span>
         <div class="check-body">
-          <span class="check-title">Offline queue drained</span>
+          <span class="check-title">{tr('settings.close.queueTitle')}</span>
           <span class="check-sub">
             {#if pendingCount === null}
-              Checking your device's pending records…
+              {tr('settings.close.checking')}
             {:else if pendingOk}
-              No records waiting to sync.
+              {tr('settings.close.noneWaiting')}
             {:else}
-              {pendingCount} record{pendingCount === 1 ? '' : 's'} still pending. Go online + let them
-              sync first — <a href="/records/pending">review pending →</a>
+              {tr('settings.close.pending', { count: pendingCount })}
+              <a href="/records/pending">{tr('settings.close.reviewPending')}</a>
             {/if}
           </span>
         </div>
@@ -193,15 +195,13 @@
             />{/if}
         </span>
         <div class="check-body">
-          <span class="check-title">Active plantings resolved</span>
+          <span class="check-title">{tr('settings.close.plantingsTitle')}</span>
           <span class="check-sub">
             {#if plantingsOk}
-              Every {data.year} planting is harvested, failed, or archived.
+              {tr('settings.close.plantingsOk', { year: data.year })}
             {:else}
-              {data.preflight.unresolvedCount} planting{data.preflight.unresolvedCount === 1
-                ? ''
-                : 's'} still active or planned. Mark each harvested / failed / archived in
-              <a href="/plan">Plan →</a>
+              {tr('settings.close.unresolved', { count: data.preflight.unresolvedCount })}
+              <a href="/plan">{tr('settings.close.planLink')}</a>
             {/if}
           </span>
         </div>
@@ -222,16 +222,16 @@
             />{/if}
         </span>
         <div class="check-body">
-          <span class="check-title">Harvest roll-up reviewed</span>
+          <span class="check-title">{tr('settings.close.harvestTitle')}</span>
           <span class="check-sub">
-            {data.preflight.harvest.eventCount} harvest event{data.preflight.harvest.eventCount ===
-            1
-              ? ''
-              : 's'} recorded in {data.year}.
+            {tr('settings.close.harvestEvents', {
+              count: data.preflight.harvest.eventCount,
+              year: data.year
+            })}
           </span>
           <label class="attest-check">
             <input type="checkbox" bind:checked={harvestAttested} disabled={!data.isOwner} />
-            I've reviewed the {data.year} harvest totals and confirm they're complete.
+            {tr('settings.close.attest', { year: data.year })}
           </label>
         </div>
       </div>
@@ -245,10 +245,12 @@
         onclick={closeSeason}
       >
         <Lock size={16} aria-hidden="true" />
-        {submitting ? 'Closing…' : `Close ${data.year} season`}
+        {submitting
+          ? tr('settings.close.closing')
+          : tr('settings.close.closeBtn', { year: data.year })}
       </button>
       {#if data.isOwner && !allGreen}
-        <p class="hint muted">Clear all three checks above to enable close.</p>
+        <p class="hint muted">{tr('settings.close.clearAll')}</p>
       {/if}
     </div>
   {/if}

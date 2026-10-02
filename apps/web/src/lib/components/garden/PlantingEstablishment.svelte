@@ -8,6 +8,7 @@
   import { getDesigner } from './designerState.svelte';
 
   const d = getDesigner();
+  const tr = $derived(d.tr);
   const p = $derived(d.selectedPlanting);
   const crop = $derived(p ? d.crop(p.cropPluginId) : undefined);
   const suggested = $derived(preselectedEstablishment(crop));
@@ -23,55 +24,57 @@
   }
 
   function current(): string {
-    if (p?.establishment === 'direct-seed') return 'Seeded in the ground';
-    if (p?.establishment === 'transplant') return 'Seedlings';
-    return 'Not answered yet';
+    if (p?.establishment === 'direct-seed') return tr('garden.est.current.direct');
+    if (p?.establishment === 'transplant') return tr('garden.est.current.transplant');
+    return tr('garden.est.current.none');
   }
 </script>
 
 {#if p}
   <section class="est" aria-labelledby="est-title" data-testid="designer-seed-or-seedling">
-    <h3 id="est-title">Seed or seedling?</h3>
+    <h3 id="est-title">{tr('garden.est.title')}</h3>
     <p class="now">
       {p.varietyDisplayName}: {current()}
       {#if p.establishment}<Provenance source="manual" compact />{/if}
     </p>
     {#if !p.establishment && suggested}
       <p class="hint">
-        Usually {suggested === 'transplant' ? 'set out as seedlings' : 'seeded in the ground'}.
+        {suggested === 'transplant'
+          ? tr('garden.est.usually.transplant')
+          : tr('garden.est.usually.direct')}
         <Provenance source="plugin" compact />
       </p>
     {/if}
     {#if d.canEdit}
-      <div class="row" role="group" aria-label="Seed or seedling">
+      <div class="row" role="group" aria-label={tr('garden.est.group')}>
         <button
           type="button"
           class="chip"
           disabled={busy}
           aria-pressed={p.establishment === 'direct-seed'}
-          onclick={() => choose('direct-seed', false)}>Seed</button
+          onclick={() => choose('direct-seed', false)}>{tr('garden.est.seed')}</button
         >
         <button
           type="button"
           class="chip"
           disabled={busy}
-          onclick={() => choose('transplant', true)}>Seedling, I start it indoors</button
+          onclick={() => choose('transplant', true)}>{tr('garden.est.seedlingIndoors')}</button
         >
         <button
           type="button"
           class="chip"
           disabled={busy}
-          onclick={() => choose('transplant', false)}>Seedling, bought</button
+          onclick={() => choose('transplant', false)}>{tr('garden.est.seedlingBought')}</button
         >
       </div>
       {#if timing && !timing.startIndoorsWeeks}
         <p class="hint">
-          Indoor start timing is not known for this crop. Set the sow date yourself on the plan.
+          {tr('garden.est.noTiming')}
         </p>
       {/if}
       {#each notes as n (n)}<p class="hint">{n}</p>{/each}
     {:else}
-      <p class="hint">Ask the owner to change this.</p>
+      <p class="hint">{tr('garden.est.askOwner')}</p>
     {/if}
   </section>
 {/if}

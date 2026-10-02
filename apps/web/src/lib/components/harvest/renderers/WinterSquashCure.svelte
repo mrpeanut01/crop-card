@@ -1,5 +1,7 @@
 <script lang="ts">
   import { Package } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
@@ -7,6 +9,7 @@
   import { fmtQtyRange, usText } from './format';
 
   const props: RendererProps = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let fruitCount = $state('');
   let totalLb = $state<number | null>(null);
@@ -37,24 +40,25 @@
   <header class="archetype-head">
     <Package size={18} strokeWidth={1.75} />
     <div>
-      <span class="archetype-name">Cure-then-store harvest</span>
+      <span class="archetype-name">{tr('harvestui.r.squash.name')}</span>
       <span class="archetype-sub">
-        Field-cure 10-14 days at {fmtQtyRange(80, 85, 'temperature', currentPrefs())} before storing at
-        {fmtQtyRange(50, 55, 'temperature', currentPrefs())}. Record field-pick weight here; log
-        cull + cured weight separately.
+        {tr('harvestui.r.squash.sub', {
+          warm: fmtQtyRange(80, 85, 'temperature', currentPrefs()),
+          cool: fmtQtyRange(50, 55, 'temperature', currentPrefs())
+        })}
       </span>
     </div>
   </header>
 
   <div class="cure-block">
-    <span class="block-title">Field-pick + cure schedule</span>
+    <span class="block-title">{tr('harvestui.r.squash.block')}</span>
     <div class="cure-grid">
       <label class="qfield">
-        <span>Fruit count</span>
+        <span>{tr('harvestui.r.squash.fruitCount')}</span>
         <input type="text" inputmode="numeric" placeholder="120" bind:value={fruitCount} />
       </label>
       <label class="qfield">
-        <span>Total weight ({fmt.unit('weight')})</span>
+        <span>{tr('harvestui.r.squash.totalWeight', { unit: fmt.unit('weight') })}</span>
         <UnitInput
           quantity="weight"
           suffix={false}
@@ -63,17 +67,23 @@
         />
       </label>
       <label class="qfield">
-        <span>Cure start (date)</span>
+        <span>{tr('harvestui.r.squash.cureStart')}</span>
         <input type="date" bind:value={cureStart} />
       </label>
       <label class="qfield">
-        <span>Flesh moisture (%)</span>
-        <input type="text" inputmode="decimal" placeholder="optional" bind:value={moisturePct} />
+        <span>{tr('harvestui.r.squash.flesh')}</span>
+        <input
+          type="text"
+          inputmode="decimal"
+          placeholder={tr('harvestui.r.optional')}
+          bind:value={moisturePct}
+        />
       </label>
     </div>
     <p class="hint">
-      Cure 10–14 days at {fmtQtyRange(80, 85, 'temperature', currentPrefs())} before binning. Stop curing
-      once stems pull dry with a clean abscission.
+      {tr('harvestui.r.squash.hint', {
+        warm: fmtQtyRange(80, 85, 'temperature', currentPrefs())
+      })}
     </p>
   </div>
 

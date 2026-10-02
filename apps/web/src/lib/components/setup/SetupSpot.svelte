@@ -1,5 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import { AREA_KIND_LABELS, CROP_AREA_KINDS, type CropAreaKind } from '$lib/farm/areaKinds';
   import { AREA_KIND_HINT, AREA_NAME_PLACEHOLDER } from '$lib/farm/kindStyle';
   import {
@@ -26,9 +28,10 @@
     canEdit,
     defaultKind = 'field',
     initialAreaId,
-    submitLabel = 'Save this spot',
+    submitLabel,
     onDone
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
   const uid = $props.id();
 
   const startArea = untrack(
@@ -40,7 +43,7 @@
   const pickedArea = $derived(areas.find((a) => a.id === areaId) ?? null);
   const placeholder = $derived(
     pickedArea
-      ? (SPOT_NAME_PLACEHOLDER[pickedArea.kind as CropAreaKind] ?? 'e.g. Back bed')
+      ? (SPOT_NAME_PLACEHOLDER[pickedArea.kind as CropAreaKind] ?? tr('setup.spot.phFallback'))
       : AREA_NAME_PLACEHOLDER[kind]
   );
   let widthFt = $state<number | null>(null);
@@ -65,7 +68,7 @@
       }
       onDone(out.result);
     } catch {
-      error = "We couldn't reach CropCard. Check your signal and try again.";
+      error = tr('setup.spot.errNetwork');
     } finally {
       saving = false;
     }
@@ -74,13 +77,13 @@
 
 {#if !canEdit}
   <p class="ask-owner" role="note">
-    Ask the owner to add a spot. Once it's on the farm it shows up here.
+    {tr('setup.spot.askOwner')}
   </p>
 {:else}
   <form class="setup-spot" onsubmit={submit}>
-    <p class="lede">A name is all it needs. You can draw it on the map later.</p>
+    <p class="lede">{tr('setup.spot.lede')}</p>
 
-    <label for="{uid}-name">What do you call it?</label>
+    <label for="{uid}-name">{tr('setup.spot.callIt')}</label>
     <input
       id="{uid}-name"
       type="text"
@@ -94,24 +97,25 @@
 
     {#if pickedArea && pickedArea.blockCount === 0}
       <p class="help">
-        Nothing is inside {pickedArea.name} yet, so this can be the whole {pickedArea.name}. Or give
-        it a smaller name, like a bed.
+        {tr('setup.spot.wholeArea', { name: pickedArea.name })}
       </p>
     {/if}
 
     {#if areas.length > 0}
-      <label for="{uid}-area">Where is it?</label>
+      <label for="{uid}-area">{tr('setup.spot.where')}</label>
       <select id="{uid}-area" bind:value={areaId}>
-        <option value={NEW_AREA}>Somewhere new</option>
+        <option value={NEW_AREA}>{tr('setup.spot.somewhereNew')}</option>
         {#each areas as a (a.id)}
-          <option value={a.id}>Inside {a.name} ({AREA_KIND_LABELS[a.kind]})</option>
+          <option value={a.id}
+            >{tr('setup.spot.inside', { name: a.name, kind: AREA_KIND_LABELS[a.kind] })}</option
+          >
         {/each}
       </select>
     {/if}
 
     {#if areaId === NEW_AREA}
       <fieldset>
-        <legend>What kind of place is it?</legend>
+        <legend>{tr('setup.spot.whatKind')}</legend>
         <div class="kinds">
           {#each CROP_AREA_KINDS as k (k)}
             <label class="kind" class:on={kind === k}>
@@ -125,16 +129,17 @@
     {/if}
 
     <fieldset class="size">
-      <legend>About how big? <span class="optional">(optional)</span></legend>
-      <p class="help">Spray and seed totals use it. Pace it off or guess, in feet.</p>
+      <legend>{tr('setup.spot.howBig')} <span class="optional">{tr('setup.optional')}</span></legend
+      >
+      <p class="help">{tr('setup.spot.sizeHelp')}</p>
       <div class="size-row">
         <label>
-          <span>Width (ft)</span>
+          <span>{tr('setup.spot.width')}</span>
           <input type="number" min="1" step="1" inputmode="numeric" bind:value={widthFt} />
         </label>
         <span aria-hidden="true">×</span>
         <label>
-          <span>Length (ft)</span>
+          <span>{tr('setup.spot.length')}</span>
           <input type="number" min="1" step="1" inputmode="numeric" bind:value={lengthFt} />
         </label>
       </div>
@@ -143,7 +148,7 @@
     {#if error}<p class="error" role="alert">{error}</p>{/if}
 
     <button class="primary" type="submit" disabled={saving}>
-      {saving ? 'Saving…' : submitLabel}
+      {saving ? tr('setup.saving') : (submitLabel ?? tr('setup.spot.submit'))}
     </button>
   </form>
 {/if}

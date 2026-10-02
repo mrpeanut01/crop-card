@@ -10,6 +10,8 @@
    * — operator can't edit them here; the proposal flow lives at
    * /settings/plugins/[id]/propose-change (deferred to a later sprint).
    */
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
   import LotQuantities from '../LotQuantities.svelte';
@@ -19,6 +21,7 @@
 
   type Props = Omit<PesticideDetailPayload, 'type'>;
   const { item, lots, movements, plugin }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const stockQty = (v: number, digits?: number) =>
     formatStockQuantity(v, item.defaultUnit, currentPrefs(), { digits, labelUnit: true });
@@ -26,7 +29,7 @@
 
 <header class="detail-header">
   <div>
-    <span class="kicker">Pesticide</span>
+    <span class="kicker">{tr('inv.pest.kicker')}</span>
     <h1 class="serif">{item.displayName}</h1>
     {#if plugin?.activeIngredients?.length}
       <p class="sub">
@@ -34,15 +37,15 @@
       </p>
     {/if}
   </div>
-  <a class="edit-cta" href="/inventory/pesticide/{item.id}/edit">Edit</a>
+  <a class="edit-cta" href="/inventory/pesticide/{item.id}/edit">{tr('inv.edit')}</a>
 </header>
 
 <div class="detail-grid">
   <div class="col">
-    <InvSection title="Product label" kicker="Library">
+    <InvSection title={tr('inv.pest.productLabel')} kicker={tr('inv.pest.library')}>
       {#if plugin}
-        <InvKVP label="Product" value={plugin.displayName} />
-        <InvKVP label="Product id" value={plugin.pluginId} tone="mono" />
+        <InvKVP label={tr('inv.pest.product')} value={plugin.displayName} />
+        <InvKVP label={tr('inv.pest.productId')} value={plugin.pluginId} tone="mono" />
       {:else}
         <p class="warn-empty" role="note" data-testid="no-product-link">
           No product label linked. This item has no EPA registration number, REI, PHI or label rate,
@@ -74,10 +77,10 @@
       {/if}
     </InvSection>
 
-    <InvSection title="Application rate" kicker="Label-derived">
+    <InvSection title={tr('inv.pest.rate')} kicker={tr('inv.pest.labelDerived')}>
       {#if plugin?.ratePerAcre}
         <InvKVP
-          label="Default rate"
+          label={tr('inv.pest.defaultRate')}
           value={formatRateText(
             plugin.ratePerAcre.amount,
             plugin.ratePerAcre.unit,
@@ -89,27 +92,27 @@
           tone="mono"
         />
       {:else}
-        <p class="empty">No default rate on the product label.</p>
+        <p class="empty">{tr('inv.pest.noRate')}</p>
       {/if}
     </InvSection>
   </div>
 
   <div class="col">
-    <InvSection title="Quantity" kicker="On hand, ordered, planned">
+    <InvSection title={tr('inv.seed.quantity')} kicker={tr('inv.seed.quantityKicker')}>
       <LotQuantities itemId={item.id} unit={item.defaultUnit} {lots} />
     </InvSection>
 
-    <InvSection title="Storage & reorder">
+    <InvSection title={tr('inv.storageReorder')}>
       <InvKVP
-        label="Reorder at"
+        label={tr('inv.reorderAt')}
         value={item.reorderThreshold != null ? stockQty(item.reorderThreshold, 2) : '—'}
       />
-      <InvKVP label="Notes" value={item.notes ?? '—'} />
+      <InvKVP label={tr('inv.seed.notes')} value={item.notes ?? '—'} />
     </InvSection>
 
-    <InvSection title="Recent usage" kicker="Last 25">
+    <InvSection title={tr('inv.recentUsage')} kicker={tr('inv.last25')}>
       {#if movements.length === 0}
-        <p class="empty">No recorded movements.</p>
+        <p class="empty">{tr('inv.noMovements')}</p>
       {:else}
         <ul class="movement-list">
           {#each movements.slice(0, 8) as m (m.id)}

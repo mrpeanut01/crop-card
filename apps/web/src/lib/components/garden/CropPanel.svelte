@@ -1,10 +1,11 @@
 <script lang="ts">
   import { resolveSpacing } from '$lib/garden/plantCount';
-  import { familyLabel } from '$lib/garden/rotation';
   import type { GardenCrop } from '$lib/garden/types';
   import { getDesigner, type CropChoice } from './designerState.svelte';
+  import { familyName } from './format';
 
   const d = getDesigner();
+  const tr = $derived(d.tr);
   const MAX_RESULTS = 40;
   const DRAG_START_PX = 6;
   const EDGE_PX = 56;
@@ -145,7 +146,7 @@
     if (name.includes(q)) return 2;
     if (
       c.cropFamily.toLowerCase().includes(q) ||
-      familyLabel(c.cropFamily).toLowerCase().includes(q)
+      familyName(c.cropFamily, tr).toLowerCase().includes(q)
     )
       return 3;
     return -1;
@@ -172,8 +173,8 @@
     const out = new Map<string, GardenCrop[]>();
     for (const c of results) {
       const key = d.recentPluginIds.includes(c.pluginId)
-        ? 'Recently used'
-        : familyLabel(c.cropFamily);
+        ? tr('garden.crop.recent')
+        : familyName(c.cropFamily, tr);
       const list = out.get(key) ?? [];
       list.push(c);
       out.set(key, list);
@@ -183,7 +184,7 @@
 
   function spacingText(c: GardenCrop): string {
     const s = resolveSpacing(c, 'square');
-    return `${Math.round(s.inRowIn)} in apart`;
+    return tr('garden.crop.apart', { n: Math.round(s.inRowIn) });
   }
 
   $effect(() => {
@@ -204,7 +205,7 @@
     style:top="{d.cropDrag.clientY}px"
   >
     {d.cropDrag.choice.label}{#if d.cropDrag.bedId}
-      · {d.cropDrag.ghost?.fits ? d.bed(d.cropDrag.bedId)?.name : 'No room here'}{/if}
+      · {d.cropDrag.ghost?.fits ? d.bed(d.cropDrag.bedId)?.name : tr('garden.crop.noRoomHere')}{/if}
   </div>
 {/if}
 
@@ -217,13 +218,15 @@
   >
     <header class="head">
       <h2 id="crop-panel-title">
-        {target ? `Add a crop to ${target.name}` : 'Add a crop'}
+        {target ? tr('garden.crop.addTo', { name: target.name }) : tr('garden.crop.add')}
       </h2>
-      <button type="button" class="close" onclick={() => (d.cropPanelOpen = false)}>Close</button>
+      <button type="button" class="close" onclick={() => (d.cropPanelOpen = false)}
+        >{tr('garden.common.close')}</button
+      >
     </header>
 
     {#if d.unplacedPlantings.length}
-      <h3>This season</h3>
+      <h3>{tr('garden.crop.thisSeason')}</h3>
       <ul class="list">
         {#each d.unplacedPlantings as p (p.cropId)}
           {@const choice = {
@@ -244,13 +247,15 @@
                   class="grip"
                   data-drag-grip
                   aria-hidden="true"
-                  title="Drag onto a bed"
+                  title={tr('garden.crop.dragTitle')}
                 ></span>{/if}
               <span class="name">{p.varietyDisplayName}</span>
               <span class="meta">
                 {d.bed(p.blockId)?.name ?? ''}{p.plantingDateMs != null
                   ? ` · ${d.dateText(p.plantingDateMs)}`
-                  : ' · no date'}{p.plantCount ? ` · ${p.plantCount} plants` : ''}
+                  : ` · ${tr('garden.crop.noDate')}`}{p.plantCount
+                  ? ` · ${tr('garden.crop.plantsMeta', { count: p.plantCount })}`
+                  : ''}
               </span>
             </button>
           </li>
@@ -259,23 +264,23 @@
     {/if}
 
     {#if draggable}
-      <p class="how">Tap a crop, then tap a bed. Or drag it by its handle onto a bed.</p>
+      <p class="how">{tr('garden.crop.how')}</p>
     {/if}
-    <label class="search-label" for="crop-search">Search crops</label>
+    <label class="search-label" for="crop-search">{tr('garden.crop.search')}</label>
     <input
       id="crop-search"
       class="search"
       type="search"
       bind:this={input}
       bind:value={query}
-      placeholder="Tomato, lettuce, beans"
+      placeholder={tr('garden.crop.placeholder')}
       autocomplete="off"
     />
     {#if query.trim() && results.length === 0}
-      <p class="empty">No crop matches "{query.trim()}".</p>
+      <p class="empty">{tr('garden.crop.noMatch', { query: query.trim() })}</p>
     {:else if query.trim() && matches.length > results.length}
       <p class="empty" data-testid="crop-results-cut">
-        Showing {results.length} of {matches.length}. Keep typing to narrow it.
+        {tr('garden.crop.showing', { shown: results.length, total: matches.length })}
       </p>
     {/if}
     {#each groups as [family, crops] (family)}
@@ -300,13 +305,16 @@
                   class="grip"
                   data-drag-grip
                   aria-hidden="true"
-                  title="Drag onto a bed"
+                  title={tr('garden.crop.dragTitle')}
                 ></span>{/if}
               <span class="name">{c.displayName}</span>
               <span class="meta">
                 {c.daysToMaturity
-                  ? `${c.daysToMaturity.min}–${c.daysToMaturity.max} days`
-                  : 'days unknown'} · {spacingText(c)}
+                  ? tr('garden.crop.days', {
+                      min: c.daysToMaturity.min,
+                      max: c.daysToMaturity.max
+                    })
+                  : tr('garden.crop.daysUnknown')} · {spacingText(c)}
               </span>
             </button>
           </li>

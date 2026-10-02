@@ -1,7 +1,9 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
+  import { createT, type MessageKey } from '$lib/i18n';
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
   const eq = $derived(data.equipment);
   const protocol = $derived(data.protocol);
 
@@ -59,6 +61,24 @@
     }
   ]);
 
+  // The stored step label stays English; only the page text is translated.
+  // The final-decon step is decon text and stays English.
+  const STEP_TEXT = {
+    'drain-down': ['equip.w.drain.title', 'equip.w.drain.body'],
+    'antifreeze-flush': ['equip.w.antifreeze.title', 'equip.w.antifreeze.body'],
+    'nozzles-screens': ['equip.w.nozzles.title', 'equip.w.nozzles.body'],
+    'tank-inspection': ['equip.w.tank.title', 'equip.w.tank.body'],
+    confirm: ['equip.w.confirm.title', 'equip.w.confirm.body']
+  } as const satisfies Record<string, readonly [MessageKey, MessageKey]>;
+  function stepTitle(s: WStep): string {
+    const k = STEP_TEXT[s.key as keyof typeof STEP_TEXT];
+    return k ? tr(k[0]) : s.title;
+  }
+  function stepBody(s: WStep): string {
+    const k = STEP_TEXT[s.key as keyof typeof STEP_TEXT];
+    return k ? tr(k[1]) : s.body;
+  }
+
   let stepIndex = $state(0);
   const currentStep = $derived(steps[stepIndex]);
 
@@ -79,7 +99,7 @@
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        submitError = err.error ?? `HTTP ${res.status}`;
+        submitError = err.error ?? tr('stockui.httpStatus', { status: res.status });
         return;
       }
       completed = true;
@@ -106,7 +126,7 @@
 
 <header class="head">
   <a href="/equipment/{encodeURIComponent(eq.id)}" class="back">← {eq.label}</a>
-  <h1>Winterize sprayer</h1>
+  <h1>{tr('equip.w.title')}</h1>
 </header>
 
 <p class="lede">
@@ -115,7 +135,7 @@
 </p>
 
 <section class="step">
-  <h2>Sprayer</h2>
+  <h2>{tr('equip.w.sprayer')}</h2>
   <p class="who">
     <span class="type-badge">{eq.type}</span>
     <strong>{eq.label}</strong>
@@ -132,8 +152,10 @@
 
 {#if !completed}
   <section class="step">
-    <h2>Step {stepIndex + 1} of {steps.length}: {currentStep.title}</h2>
-    <p>{currentStep.body}</p>
+    <h2>
+      {tr('equip.w.step', { n: stepIndex + 1, total: steps.length, title: stepTitle(currentStep) })}
+    </h2>
+    <p>{stepBody(currentStep)}</p>
 
     {#if currentStep.subSteps}
       <ol class="sub-steps">
@@ -144,32 +166,32 @@
     {/if}
 
     <div class="actions">
-      <button type="button" onclick={back} disabled={stepIndex === 0}>← Back</button>
+      <button type="button" onclick={back} disabled={stepIndex === 0}>{tr('equip.w.back')}</button>
       <button type="button" class="primary" onclick={next} disabled={submitting}>
         {stepIndex === steps.length - 1
           ? submitting
-            ? 'Recording…'
-            : 'Confirm winterized'
-          : 'Next →'}
+            ? tr('equip.w.recording')
+            : tr('equip.w.confirmBtn')
+          : tr('equip.w.next')}
       </button>
     </div>
     {#if submitError}<p class="error">{submitError}</p>{/if}
   </section>
 
   <section class="checklist">
-    <h2>All steps</h2>
+    <h2>{tr('equip.w.allSteps')}</h2>
     <ol>
       {#each steps as s, i (s.key)}
-        <li class:done={i < stepIndex} class:current={i === stepIndex}>{s.title}</li>
+        <li class:done={i < stepIndex} class:current={i === stepIndex}>{stepTitle(s)}</li>
       {/each}
     </ol>
   </section>
 {:else}
   <section class="step success">
-    <h2>✓ Sprayer winterized</h2>
+    <h2>{tr('equip.w.done')}</h2>
     <p>
-      <strong>{eq.label}</strong> is stamped winterized. Chemistry load cleared, and calibration is now
-      "Uncalibrated" — re-run calibration (UC-10) before your first spring spray.
+      <strong>{eq.label}</strong>
+      {tr('equip.w.doneNote')}
     </p>
     <div class="actions">
       <button
@@ -177,7 +199,7 @@
         class="primary"
         onclick={() => goto(`/equipment/${encodeURIComponent(eq.id)}`)}
       >
-        Back to equipment
+        {tr('equip.w.backToEquipment')}
       </button>
     </div>
   </section>

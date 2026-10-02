@@ -2,12 +2,12 @@
   import './animalForms.css';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import CareTaskCard from './CareTaskCard.svelte';
-  import { OFFLINE_MESSAGE, errorFromResponse } from '$lib/animals/display';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { careKindLabel, errorText } from './labels';
   import {
     CARE_KIND_CHOICES,
-    CARE_KIND_LABEL,
     defaultLeadDays,
-    undatedPrompt,
     type CareCardView,
     type CarePlanKind,
     type CarePlanView as PlanView
@@ -43,6 +43,7 @@
     onChanged
   }: Props = $props();
   const uid = $props.id();
+  const tr = $derived(createT(page.data?.locale));
 
   let adding = $state(false);
   let editing = $state<string | null>(null);
@@ -83,14 +84,14 @@
         body: body === undefined ? undefined : JSON.stringify(body)
       });
       if (!res.ok) {
-        error = await errorFromResponse(res);
+        error = await errorText(res, tr);
         return;
       }
       adding = false;
       editing = null;
       onChanged(done);
     } catch {
-      error = OFFLINE_MESSAGE;
+      error = tr('animals.offline');
     } finally {
       busy = false;
     }
@@ -115,43 +116,49 @@
   function save(e: SubmitEvent, plan?: PlanView) {
     e.preventDefault();
     if (!title.trim()) {
-      error = 'Give it a name, like "Rabies vaccine".';
+      error = tr('animals.care.giveName');
       return;
     }
     if (!repeats && !dueOn) {
-      error = 'Pick the day.';
+      error = tr('animals.care.pickDay');
       return;
     }
     if (lastOn && !(everyDays && everyDays > 0)) {
-      error = 'Say how often it repeats, or give the next due date instead.';
+      error = tr('animals.care.sayOften');
       return;
     }
     void (plan
-      ? send(`${base}/${plan.id}`, 'PATCH', formBody(true), 'Care plan saved.')
-      : send(base, 'POST', formBody(false), 'Care plan added.'));
+      ? send(`${base}/${plan.id}`, 'PATCH', formBody(true), tr('animals.care.planSaved'))
+      : send(base, 'POST', formBody(false), tr('animals.care.planAdded')));
   }
 
   function whenText(p: PlanView): string {
-    if (!p.active) return 'Turned off';
-    if (!p.nextDueOn) return 'Due date not set, ask your vet';
-    return `Next due ${formatCalendarDate(p.nextDueOn, 'date')}`;
+    if (!p.active) return tr('animals.care.turnedOff');
+    if (!p.nextDueOn) return tr('animals.care.noDueDate');
+    return tr('animals.care.nextDue', { date: formatCalendarDate(p.nextDueOn, 'date') });
   }
 
   function everyText(p: PlanView): string | null {
-    if (p.onceOn) return 'Once';
+    if (p.onceOn) return tr('animals.care.once');
     if (!p.intervalDays) return null;
     const d = p.intervalDays;
-    if (d % 365 === 0) return d === 365 ? 'Every year' : `Every ${d / 365} years`;
-    if (d % 7 === 0) return d === 7 ? 'Every week' : `Every ${d / 7} weeks`;
-    return d === 1 ? 'Every day' : `Every ${d} days`;
+    if (d % 365 === 0) {
+      return d === 365
+        ? tr('animals.care.everyYear')
+        : tr('animals.care.everyYears', { n: d / 365 });
+    }
+    if (d % 7 === 0) {
+      return d === 7 ? tr('animals.care.everyWeek') : tr('animals.care.everyWeeks', { n: d / 7 });
+    }
+    return d === 1 ? tr('animals.care.everyDay') : tr('animals.care.everyDays', { n: d });
   }
 </script>
 
 <section class="care" aria-labelledby="{uid}-h" data-testid="care-plans">
-  <h2 id="{uid}-h" class="section-title">Care</h2>
+  <h2 id="{uid}-h" class="section-title">{tr('animals.care.title')}</h2>
 
   {#if plans.length === 0}
-    <p class="af-help">No care plans yet.</p>
+    <p class="af-help">{tr('animals.care.none')}</p>
   {/if}
 
   <ul class="plans">
@@ -163,14 +170,17 @@
           <Provenance
             source={p.provenance}
             compact
-            label={p.provenance === 'plugin' ? 'Suggested' : undefined}
+            label={p.provenance === 'plugin' ? tr('animals.care.suggested') : undefined}
           />
         </div>
         <p class="plan-meta">
-          {CARE_KIND_LABEL[p.kind]}{everyText(p) ? ` · ${everyText(p)}` : ''} · {whenText(p)}
+          {careKindLabel(tr, p.kind)}{everyText(p) ? ` · ${everyText(p)}` : ''} · {whenText(p)}
         </p>
         {#if !p.nextDueOn && p.active}
-          <p class="af-note">{undatedPrompt(p.title, subjectName)} {p.note ?? ''}</p>
+          <p class="af-note">
+            {tr('animals.care.undated', { subject: subjectName, title: p.title.toLowerCase() })}
+            {p.note ?? ''}
+          </p>
         {/if}
         {#if card && card.items.length === 1}
           <CareTaskCard {card} {todayYmd} {isOwner} {canAct} {products} {stock} {onChanged} />
@@ -189,7 +199,7 @@
                   editing = p.id;
                 }}
               >
-                {p.nextDueOn ? 'Edit' : 'Set the date'}
+                {p.nextDueOn ? tr('animals.edit') : tr('animals.care.setDate')}
               </button>
               <button
                 type="button"
@@ -200,22 +210,27 @@
                     `${base}/${p.id}`,
                     'PATCH',
                     { active: !p.active },
-                    p.active ? 'Turned off.' : 'Turned on.'
+                    p.active ? tr('animals.care.turnedOffDone') : tr('animals.care.turnedOnDone')
                   )}
               >
-                {p.active ? 'Turn off' : 'Turn on'}
+                {p.active ? tr('animals.care.turnOff') : tr('animals.care.turnOn')}
               </button>
               <button
                 type="button"
                 class="af-danger"
                 disabled={busy}
                 onclick={() => {
-                  if (confirm(`Delete "${p.title}"? Records already saved stay.`)) {
-                    void send(`${base}/${p.id}`, 'DELETE', undefined, 'Care plan deleted.');
+                  if (confirm(tr('animals.care.confirmDelete', { title: p.title }))) {
+                    void send(
+                      `${base}/${p.id}`,
+                      'DELETE',
+                      undefined,
+                      tr('animals.care.planDeleted')
+                    );
                   }
                 }}
               >
-                Delete
+                {tr('animals.delete')}
               </button>
             </div>
           {/if}
@@ -242,28 +257,34 @@
             adding = true;
           }}
         >
-          Add a care plan
+          {tr('animals.care.add')}
         </button>
         <button
           type="button"
           class="af-ghost"
           disabled={busy}
-          onclick={() => send(`${base}/defaults`, 'POST', undefined, 'Suggestions checked.')}
+          onclick={() =>
+            send(`${base}/defaults`, 'POST', undefined, tr('animals.care.suggestionsChecked'))}
         >
-          Add suggested care
+          {tr('animals.care.addSuggested')}
         </button>
       </div>
     {/if}
   {:else if !isOwner && plans.length > 0}
-    <p class="af-help">The owner sets up care plans.</p>
+    <p class="af-help">{tr('animals.care.ownerSets')}</p>
   {/if}
 
   {#if error}<p class="af-error" role="alert">{error}</p>{/if}
 </section>
 
 {#snippet planForm(plan?: PlanView)}
-  <form class="af-form" onsubmit={(e) => save(e, plan)} novalidate aria-label="Care plan">
-    <label class="af-label" for="{uid}-kind">What kind of care</label>
+  <form
+    class="af-form"
+    onsubmit={(e) => save(e, plan)}
+    novalidate
+    aria-label={tr('animals.care.planAria')}
+  >
+    <label class="af-label" for="{uid}-kind">{tr('animals.care.whatKind')}</label>
     <select
       id="{uid}-kind"
       class="af-input"
@@ -272,33 +293,36 @@
         if (!plan) leadDays = defaultLeadDays(kind);
       }}
     >
-      {#each CARE_KIND_CHOICES as c (c.value)}<option value={c.value}>{c.label}</option>{/each}
+      {#each CARE_KIND_CHOICES as c (c.value)}<option value={c.value}
+          >{careKindLabel(tr, c.value)}</option
+        >{/each}
     </select>
-    <label class="af-label" for="{uid}-title">Name</label>
+    <label class="af-label" for="{uid}-title">{tr('animals.name')}</label>
     <input
       id="{uid}-title"
       class="af-input"
       type="text"
       maxlength="120"
-      placeholder="Rabies vaccine"
+      placeholder={tr('animals.care.phTitle')}
       bind:value={title}
     />
     <fieldset class="af-fieldset">
-      <legend class="af-legend">How often</legend>
+      <legend class="af-legend">{tr('animals.care.howOften')}</legend>
       <div class="af-tiles">
         <label class="af-tile" class:on={repeats}>
           <input type="radio" name="{uid}-rep" value={true} bind:group={repeats} />
-          <span>Repeats</span>
+          <span>{tr('animals.care.repeats')}</span>
         </label>
         <label class="af-tile" class:on={!repeats}>
           <input type="radio" name="{uid}-rep" value={false} bind:group={repeats} />
-          <span>Once</span>
+          <span>{tr('animals.care.once')}</span>
         </label>
       </div>
     </fieldset>
     {#if repeats}
       <label class="af-label" for="{uid}-every">
-        Every how many days <span class="af-optional">(ask your vet)</span>
+        {tr('animals.care.everyHowMany')}
+        <span class="af-optional">{tr('animals.care.askVet')}</span>
       </label>
       <input
         id="{uid}-every"
@@ -310,18 +334,19 @@
         bind:value={everyDays}
       />
       <label class="af-label" for="{uid}-last">
-        Last done <span class="af-optional">(if you know it)</span>
+        {tr('animals.care.lastDone')}
+        <span class="af-optional">{tr('animals.care.ifKnown')}</span>
       </label>
       <input id="{uid}-last" class="af-input" type="date" bind:value={lastOn} />
       <label class="af-label" for="{uid}-due">
-        Or the next due date <span class="af-optional">(optional)</span>
+        {tr('animals.care.orNextDue')} <span class="af-optional">{tr('animals.optional')}</span>
       </label>
       <input id="{uid}-due" class="af-input" type="date" bind:value={dueOn} />
     {:else}
-      <label class="af-label" for="{uid}-due">On</label>
+      <label class="af-label" for="{uid}-due">{tr('animals.care.on')}</label>
       <input id="{uid}-due" class="af-input" type="date" bind:value={dueOn} />
     {/if}
-    <label class="af-label" for="{uid}-lead">Show it this many days ahead</label>
+    <label class="af-label" for="{uid}-lead">{tr('animals.care.leadDays')}</label>
     <input
       id="{uid}-lead"
       class="af-input"
@@ -331,10 +356,10 @@
       inputmode="numeric"
       bind:value={leadDays}
     />
-    <p class="af-help">With no date, the plan waits here and never shows on Today.</p>
+    <p class="af-help">{tr('animals.care.noDateHelp')}</p>
     <div class="row">
       <button class="af-primary" type="submit" disabled={busy}>
-        {busy ? 'Saving…' : 'Save'}
+        {busy ? tr('animals.saving') : tr('animals.save')}
       </button>
       <button
         type="button"
@@ -344,7 +369,7 @@
           editing = null;
         }}
       >
-        Cancel
+        {tr('animals.cancel')}
       </button>
     </div>
   </form>

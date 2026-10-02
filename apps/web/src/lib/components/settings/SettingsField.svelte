@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   /**
    * Phase 25c (#88) — labeled field wrapper for /settings/* subpages.
@@ -17,12 +19,14 @@
   }
 
   const { label, hint, required = false, children }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <label class="field">
   <div class="label-row">
     <span class="label-text">{label}</span>
-    {#if required}<span class="req">· required</span>{/if}
+    {#if required}<span class="req">{tr('settings.field.required')}</span>{/if}
     {#if hint}<span class="hint mono">{hint}</span>{/if}
   </div>
   {@render children()}

@@ -1,8 +1,10 @@
 <script lang="ts">
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { invalidateAll } from '$app/navigation';
+  import { createT } from '$lib/i18n';
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
   const eq = $derived(data.equipment);
 
   let logKind = $state<'maintenance' | 'inspection' | 'note'>('maintenance');
@@ -34,7 +36,7 @@
       });
       const out = await res.json().catch(() => ({}));
       if (!res.ok) {
-        notesError = out.error ?? `HTTP ${res.status}`;
+        notesError = out.error ?? tr('stockui.httpStatus', { status: res.status });
         return;
       }
       editingNotes = false;
@@ -65,7 +67,7 @@
 
   async function saveSpec() {
     if (tankDraft != null && !(tankDraft > 0)) {
-      specError = 'Tank size must be more than 0, or leave it blank.';
+      specError = tr('equip.d.err.tank');
       return;
     }
     savingSpec = true;
@@ -83,7 +85,7 @@
       });
       const out = await res.json().catch(() => ({}));
       if (!res.ok) {
-        specError = out.error ?? `HTTP ${res.status}`;
+        specError = out.error ?? tr('stockui.httpStatus', { status: res.status });
         return;
       }
       editingSpec = false;
@@ -115,7 +117,7 @@
   async function saveLabel() {
     const next = labelDraft.trim();
     if (!next) {
-      labelError = 'Name cannot be empty';
+      labelError = tr('equip.d.err.name');
       return;
     }
     if (next === eq.label) {
@@ -132,7 +134,7 @@
       });
       const out = await res.json();
       if (!res.ok) {
-        labelError = out.error ?? `HTTP ${res.status}`;
+        labelError = out.error ?? tr('stockui.httpStatus', { status: res.status });
         return;
       }
       editingLabel = false;
@@ -166,7 +168,7 @@
       });
       const out = await res.json();
       if (!res.ok) {
-        logError = out.error ?? `HTTP ${res.status}`;
+        logError = out.error ?? tr('stockui.httpStatus', { status: res.status });
         return;
       }
       logNotes = '';
@@ -188,7 +190,7 @@
 </script>
 
 <header class="head">
-  <a href="/equipment" class="back">← All equipment</a>
+  <a href="/equipment" class="back">{tr('equip.d.allEquipment')}</a>
   {#if editingLabel}
     <div class="label-edit">
       <input
@@ -197,20 +199,22 @@
         onkeydown={onLabelKey}
         disabled={savingLabel}
         maxlength="120"
-        aria-label="Equipment name"
+        aria-label={tr('equip.d.nameAria')}
       />
       <button class="primary" onclick={saveLabel} disabled={savingLabel || !labelDraft.trim()}>
-        {savingLabel ? '…' : 'Save'}
+        {savingLabel ? '…' : tr('equip.d.save')}
       </button>
-      <button class="btn" onclick={cancelEditLabel} disabled={savingLabel}>Cancel</button>
+      <button class="btn" onclick={cancelEditLabel} disabled={savingLabel}
+        >{tr('inv.cancel')}</button
+      >
     </div>
     {#if labelError}<p class="error">{labelError}</p>{/if}
   {:else}
     <div class="label-row">
       <h1>{eq.label}</h1>
       {#if data.canRename}
-        <button class="rename-btn" onclick={startEditLabel} aria-label="Rename equipment">
-          Rename
+        <button class="rename-btn" onclick={startEditLabel} aria-label={tr('equip.d.renameAria')}>
+          {tr('equip.d.rename')}
         </button>
       {/if}
     </div>
@@ -222,13 +226,13 @@
 </header>
 
 <section class="card">
-  <h2>State</h2>
+  <h2>{tr('equip.d.state')}</h2>
   <dl>
     {#if eq.type === 'sprayer'}
-      <dt>Calibrated GPA</dt>
+      <dt>{tr('equip.d.calGpa')}</dt>
       <dd>
         {#if eq.state.calibratedGpa == null}
-          <span class="warn">Uncalibrated</span>
+          <span class="warn">{tr('equip.d.uncalibrated')}</span>
         {:else}
           {eq.state.calibratedGpa}{metricGpa(eq.state.calibratedGpa)}
           {#if eq.state.calibrationDate}
@@ -236,39 +240,39 @@
           {/if}
         {/if}
       </dd>
-      <dt>Last chemistry</dt>
+      <dt>{tr('equip.d.lastChemistry')}</dt>
       <dd>
         {#if eq.state.lastChemistryClass}
           <span class="warn">{eq.state.lastChemistryClass}</span>
-          <small>at {fmtTs(eq.state.lastUsedAt)}</small>
+          <small>{tr('equip.d.at', { time: fmtTs(eq.state.lastUsedAt) })}</small>
         {:else}
-          <span class="ok">clean</span>
+          <span class="ok">{tr('equip.clean')}</span>
         {/if}
       </dd>
       <dt>Last decon</dt>
       <dd>{fmtTs(eq.state.lastDeconAt)}</dd>
-      <dt>Tank</dt>
+      <dt>{tr('equip.d.tank')}</dt>
       <dd>{spec.tankGal != null ? fmt.label(spec.tankGal, 'volume') : '—'}</dd>
-      <dt>Nozzle</dt>
+      <dt>{tr('equip.d.nozzle')}</dt>
       <dd>{spec.nozzle ?? '—'}</dd>
       {#if eq.state.winterizedAt}
-        <dt>Winterized</dt>
+        <dt>{tr('equip.d.winterized')}</dt>
         <dd>
           <span class="ok">{fmtTs(eq.state.winterizedAt)}</span>
-          <small>· Recalibrate in spring</small>
+          <small>· {tr('equip.d.recalSpring')}</small>
         </dd>
       {/if}
     {:else}
-      <dt>Hour meter</dt>
+      <dt>{tr('equip.hourMeter')}</dt>
       <dd>{eq.state.hourMeter ?? '—'}</dd>
-      <dt>Last used</dt>
+      <dt>{tr('equip.lastUsed')}</dt>
       <dd>{fmtTs(eq.state.lastUsedAt)}</dd>
     {/if}
   </dl>
   {#if editingSpec}
     <div class="spec-edit" data-testid="sprayer-spec-edit">
       <label>
-        <span>Tank size (gallons)</span>
+        <span>{tr('equip.d.tankGal')}</span>
         <input
           type="number"
           min="0"
@@ -279,11 +283,11 @@
         />
       </label>
       <label>
-        <span>Nozzle</span>
+        <span>{tr('equip.d.nozzle')}</span>
         <input
           type="text"
           maxlength="80"
-          placeholder="e.g. TeeJet 8002 flat fan"
+          placeholder={tr('equip.d.nozzlePh')}
           bind:value={nozzleDraft}
           disabled={savingSpec}
         />
@@ -291,37 +295,36 @@
     </div>
     <div class="actions">
       <button class="primary" onclick={saveSpec} disabled={savingSpec}>
-        {savingSpec ? 'Saving…' : 'Save tank and nozzle'}
+        {savingSpec ? tr('inv.feed.saving') : tr('equip.d.saveSpec')}
       </button>
       <button class="btn" onclick={() => (editingSpec = false)} disabled={savingSpec}>
-        Cancel
+        {tr('inv.cancel')}
       </button>
     </div>
     {#if nozzleWillChange && eq.state.calibratedGpa != null}
       <p class="warn-note" data-testid="nozzle-recalibrate-warning">
-        A new nozzle changes how much the sprayer puts out. Saving clears the {eq.state
-          .calibratedGpa} GPA calibration, so calibrate again before the next spray.
+        {tr('equip.d.nozzleWarn', { gpa: eq.state.calibratedGpa })}
       </p>
     {/if}
     {#if specError}<p class="error" role="alert">{specError}</p>{/if}
   {/if}
   {#if recalibrateNotice}
     <p class="warn-note" role="status" data-testid="nozzle-recalibrate-notice">
-      The nozzle changed, so the old calibration was cleared.
-      <a href="/calibrate?sprayer={encodeURIComponent(eq.id)}">Calibrate now</a>
+      {tr('equip.d.nozzleChanged')}
+      <a href="/calibrate?sprayer={encodeURIComponent(eq.id)}">{tr('equip.d.calibrateNow')}</a>
     </p>
   {/if}
   {#if editingNotes}
     <label class="notes-edit">
-      <span>Notes</span>
+      <span>{tr('equip.d.notes')}</span>
       <textarea rows="3" maxlength="500" bind:value={notesDraft} disabled={savingNotes}></textarea>
     </label>
     <div class="actions">
       <button class="primary" onclick={saveNotes} disabled={savingNotes}>
-        {savingNotes ? 'Saving…' : 'Save notes'}
+        {savingNotes ? tr('inv.feed.saving') : tr('equip.d.saveNotes')}
       </button>
       <button class="btn" onclick={() => (editingNotes = false)} disabled={savingNotes}>
-        Cancel
+        {tr('inv.cancel')}
       </button>
     </div>
     {#if notesError}<p class="error">{notesError}</p>{/if}
@@ -331,35 +334,37 @@
 
   <div class="actions">
     {#if data.canRename && !editingNotes}
-      <button class="btn" onclick={startEditNotes}>{eq.notes ? 'Edit notes' : 'Add notes'}</button>
+      <button class="btn" onclick={startEditNotes}
+        >{eq.notes ? tr('equip.d.editNotes') : tr('equip.d.addNotes')}</button
+      >
     {/if}
     {#if eq.type === 'sprayer' && data.canRename && !editingSpec}
-      <button class="btn" onclick={startEditSpec}>Edit tank and nozzle</button>
+      <button class="btn" onclick={startEditSpec}>{tr('equip.d.editSpec')}</button>
     {/if}
     {#if eq.type === 'sprayer'}
-      <a class="btn" href="/calibrate?sprayer={encodeURIComponent(eq.id)}">Calibrate</a>
+      <a class="btn" href="/calibrate?sprayer={encodeURIComponent(eq.id)}"
+        >{tr('equip.d.calibrate')}</a
+      >
       <a class="btn" href="/spray/decon?sprayer={encodeURIComponent(eq.id)}">Decon wizard</a>
-      <a class="btn" href="/equipment/{encodeURIComponent(eq.id)}/winterize">Winterize</a>
+      <a class="btn" href="/equipment/{encodeURIComponent(eq.id)}/winterize"
+        >{tr('equip.d.winterize')}</a
+      >
     {/if}
   </div>
 </section>
 
 {#if data.canEdit}
   <section class="card">
-    <h2>Append log entry</h2>
+    <h2>{tr('equip.d.appendLog')}</h2>
     <div class="row">
       <select bind:value={logKind}>
-        <option value="maintenance">Maintenance</option>
-        <option value="inspection">Inspection</option>
-        <option value="note">Note</option>
+        <option value="maintenance">{tr('equip.d.kind.maintenance')}</option>
+        <option value="inspection">{tr('equip.d.kind.inspection')}</option>
+        <option value="note">{tr('equip.d.kind.note')}</option>
       </select>
-      <input
-        type="text"
-        placeholder="What happened? e.g. 'Replaced air filter'"
-        bind:value={logNotes}
-      />
+      <input type="text" placeholder={tr('equip.d.logPh')} bind:value={logNotes} />
       <button class="primary" onclick={appendLog} disabled={logging || !logNotes.trim()}>
-        {logging ? '…' : 'Append'}
+        {logging ? '…' : tr('equip.d.append')}
       </button>
     </div>
     {#if logError}<p class="error">{logError}</p>{/if}
@@ -367,9 +372,9 @@
 {/if}
 
 <section class="card">
-  <h2>Log ({data.log.length})</h2>
+  <h2>{tr('equip.d.log', { count: data.log.length })}</h2>
   {#if data.log.length === 0}
-    <p class="empty">No log entries yet.</p>
+    <p class="empty">{tr('equip.d.noLog')}</p>
   {:else}
     <ul class="log">
       {#each data.log as entry (entry.id)}
@@ -381,7 +386,7 @@
           {#if entry.notes}<p>{entry.notes}</p>{/if}
           {#if entry.payload}
             <details>
-              <summary>payload</summary>
+              <summary>{tr('equip.d.payload')}</summary>
               <pre>{JSON.stringify(entry.payload, null, 2)}</pre>
             </details>
           {/if}

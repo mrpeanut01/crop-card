@@ -1,16 +1,19 @@
 <script lang="ts">
   import { CloudOff } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     label?: string;
   }
 
-  const { label = 'Will save when online' }: Props = $props();
+  const { label }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
-<span class="queued" data-queued title="Saved on this device. It uploads when you have signal.">
+<span class="queued" data-queued title={tr('ui.queued.title')}>
   <CloudOff size={13} strokeWidth={2} aria-hidden="true" />
-  <span>{label}</span>
+  <span>{label ?? tr('ui.queued.label')}</span>
 </span>
 
 <style>

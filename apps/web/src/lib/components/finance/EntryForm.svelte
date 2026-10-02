@@ -1,6 +1,8 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { goto } from '$app/navigation';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import '$lib/components/finance/finance.css';
   import {
     categoriesFor,
@@ -22,6 +24,7 @@
   }
 
   const { initial, options, linkNote = null, backHref }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   type LinkKind = 'none' | 'crop' | 'area' | 'group' | 'animal';
 
@@ -79,17 +82,17 @@
     error = null;
     const amountCents = parseMoneyInput(amount);
     if (amountCents === null) {
-      error = 'Type the amount in dollars, like 12.50.';
+      error = tr('finance.form.errAmount');
       return;
     }
     const occurredAt = dayMs(date);
     if (occurredAt === null) {
-      error = 'Pick the date.';
+      error = tr('finance.form.errDate');
       return;
     }
     const qty = quantity.trim() === '' ? null : Number(quantity);
     if (qty !== null && !(qty > 0)) {
-      error = 'Quantity must be a number above zero, or empty.';
+      error = tr('finance.form.errQty');
       return;
     }
     const body = {
@@ -123,12 +126,12 @@
     ).catch(() => null);
     saving = false;
     if (!res) {
-      error = 'No signal. Save this when you are back online.';
+      error = tr('finance.form.errOffline');
       return;
     }
     if (!res.ok) {
       const out = await res.json().catch(() => ({}));
-      error = out.error ?? 'That did not save. Try again.';
+      error = out.error ?? tr('finance.form.errSave');
       return;
     }
     await goto(backHref, { invalidateAll: true });
@@ -136,20 +139,20 @@
 </script>
 
 <form class="entry-form" onsubmit={submit}>
-  <div class="fin-segment" role="group" aria-label="Money in or out">
+  <div class="fin-segment" role="group" aria-label={tr('finance.form.moneyInOut')}>
     <button
       type="button"
       class="fin-ghost"
       class:on={kind === 'expense'}
       aria-pressed={kind === 'expense'}
-      onclick={() => setKind('expense')}>Expense</button
+      onclick={() => setKind('expense')}>{tr('finance.form.expense')}</button
     >
     <button
       type="button"
       class="fin-ghost"
       class:on={kind === 'income'}
       aria-pressed={kind === 'income'}
-      onclick={() => setKind('income')}>Income</button
+      onclick={() => setKind('income')}>{tr('finance.form.income')}</button
     >
   </div>
 
@@ -157,7 +160,7 @@
 
   <div class="fin-row">
     <label class="fin-label">
-      Amount in dollars
+      {tr('finance.form.amount')}
       <input
         class="fin-input"
         name="amount"
@@ -169,13 +172,13 @@
       {#if preview !== null}<span class="fin-help">{formatMoney(preview)}</span>{/if}
     </label>
     <label class="fin-label">
-      Date
+      {tr('finance.form.date')}
       <input class="fin-input" name="date" type="date" required bind:value={date} />
     </label>
   </div>
 
   <label class="fin-label">
-    Category
+    {tr('finance.form.category')}
     <select class="fin-input" name="category" bind:value={category}>
       {#each categories as c (c)}
         <option value={c}>{categoryLabel(c)}</option>
@@ -184,31 +187,31 @@
   </label>
 
   <label class="fin-label">
-    What was it? <span class="optional">(optional)</span>
+    {tr('finance.form.what')} <span class="optional">{tr('finance.form.optional')}</span>
     <input class="fin-input" name="description" maxlength="200" bind:value={description} />
   </label>
 
   <label class="fin-label">
-    Linked to <span class="optional">(optional)</span>
+    {tr('finance.form.linked')} <span class="optional">{tr('finance.form.optional')}</span>
     <select class="fin-input" name="link" bind:value={link}>
-      <option value="">Nothing in particular</option>
+      <option value="">{tr('finance.form.nothing')}</option>
       {#if options.plantings.length}
-        <optgroup label="Crops">
+        <optgroup label={tr('finance.form.crops')}>
           {#each options.plantings as p (p.id)}<option value="crop:{p.id}">{p.label}</option>{/each}
         </optgroup>
       {/if}
       {#if options.groups.length}
-        <optgroup label="Animal groups">
+        <optgroup label={tr('finance.form.groups')}>
           {#each options.groups as g (g.id)}<option value="group:{g.id}">{g.label}</option>{/each}
         </optgroup>
       {/if}
       {#if options.animals.length}
-        <optgroup label="Animals">
+        <optgroup label={tr('finance.form.animals')}>
           {#each options.animals as a (a.id)}<option value="animal:{a.id}">{a.label}</option>{/each}
         </optgroup>
       {/if}
       {#if options.areas.length}
-        <optgroup label="Areas">
+        <optgroup label={tr('finance.form.areas')}>
           {#each options.areas as a (a.id)}<option value="area:{a.id}">{a.label}</option>{/each}
         </optgroup>
       {/if}
@@ -217,9 +220,9 @@
 
   {#if bedsHere.length}
     <label class="fin-label">
-      Bed <span class="optional">(optional)</span>
+      {tr('finance.form.bed')} <span class="optional">{tr('finance.form.optional')}</span>
       <select class="fin-input" name="blockId" bind:value={blockId}>
-        <option value="">The whole Area</option>
+        <option value="">{tr('finance.form.wholeArea')}</option>
         {#each bedsHere as b (b.id)}<option value={b.id}>{b.label}</option>{/each}
       </select>
     </label>
@@ -227,36 +230,36 @@
 
   {#if animalLinked}
     <p class="fin-note">
-      This records money only. Log where eggs, milk or meat went on the animal's page.
+      {tr('finance.form.animalNote')}
     </p>
   {/if}
 
   {#if tagUsed}
     <label class="fin-label">
-      Enterprise tag <span class="optional">(optional)</span>
+      {tr('finance.form.enterprise')} <span class="optional">{tr('finance.form.optional')}</span>
       <input
         class="fin-input"
         name="enterprise"
         maxlength="60"
-        placeholder="Farm stand, CSA, markets"
+        placeholder={tr('finance.form.enterprisePh')}
         bind:value={enterprise}
       />
-      <span class="fin-help">Groups entries that are not tied to one crop or animal.</span>
+      <span class="fin-help">{tr('finance.form.enterpriseHelp')}</span>
     </label>
   {/if}
 
   <div class="fin-row">
     <label class="fin-label">
-      Quantity <span class="optional">(optional)</span>
+      {tr('finance.form.quantity')} <span class="optional">{tr('finance.form.optional')}</span>
       <input class="fin-input" name="quantity" inputmode="decimal" bind:value={quantity} />
     </label>
     <label class="fin-label">
-      Unit <span class="optional">(optional)</span>
+      {tr('finance.form.unit')} <span class="optional">{tr('finance.form.optional')}</span>
       <input
         class="fin-input"
         name="unit"
         maxlength="30"
-        placeholder="lb, dozen, bale"
+        placeholder={tr('finance.form.unitPh')}
         bind:value={unit}
       />
     </label>
@@ -264,12 +267,11 @@
 
   {#if hasLot}
     <p class="fin-help">
-      Linked to a stock lot. This counts as cash spent, and each crop or animal is charged only for
-      what it used.
+      {tr('finance.form.lotNote')}
     </p>
   {/if}
   {#if hasHarvest}
-    <p class="fin-help">Linked to a harvest record. The harvest record itself is not changed.</p>
+    <p class="fin-help">{tr('finance.form.harvestNote')}</p>
   {/if}
 
   {#if error}<p class="fin-error" role="alert">{error}</p>{/if}
@@ -277,14 +279,14 @@
   <div class="fin-actions">
     <button class="fin-primary" type="submit" disabled={saving}>
       {saving
-        ? 'Saving'
+        ? tr('finance.form.saving')
         : start.id
-          ? 'Save changes'
+          ? tr('finance.form.saveChanges')
           : kind === 'income'
-            ? 'Save income'
-            : 'Save expense'}
+            ? tr('finance.form.saveIncome')
+            : tr('finance.form.saveExpense')}
     </button>
-    <a class="fin-ghost" href={backHref}>Cancel</a>
+    <a class="fin-ghost" href={backHref}>{tr('finance.form.cancel')}</a>
   </div>
 </form>
 

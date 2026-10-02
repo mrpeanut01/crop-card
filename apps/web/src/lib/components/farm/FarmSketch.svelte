@@ -7,7 +7,9 @@
     type SketchInput
   } from '$lib/farm/sketch';
   import type { AreaKind } from '$lib/farm/areaKinds';
-  import { AREA_KIND_LABELS } from '$lib/farm/areaKinds';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { kindLabel } from './farmLabels';
   import { kindStyle } from '$lib/farm/kindStyle';
 
   let {
@@ -23,6 +25,7 @@
     onSizeArea?: (id: string) => void;
   } = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const unsizedFields = $derived(fields.filter((f) => layout.unsized.includes(f.name)));
 
   const kindById = $derived(new Map(fields.map((f) => [f.id, f.kind ?? 'field'] as const)));
@@ -47,16 +50,10 @@
 <figure class="sketch" data-testid="farm-sketch">
   {#if layout.fields.length === 0}
     <div class="sketch-empty">
-      <p>Nothing to sketch yet. Add a field with its width and length below.</p>
+      <p>{tr('farm.sketch.empty')}</p>
     </div>
   {:else}
-    <svg
-      {viewBox}
-      role="img"
-      aria-label="Farm sketch: {layout.fields.length} field{layout.fields.length === 1
-        ? ''
-        : 's'} drawn to scale from their dimensions"
-    >
+    <svg {viewBox} role="img" aria-label={tr('farm.sketch.aria', { count: layout.fields.length })}>
       <defs>
         <pattern
           id="sketch-grass"
@@ -96,7 +93,7 @@
               vector-effect="non-scaling-stroke"
               role="button"
               tabindex="0"
-              aria-label="Open the card for {f.name}, {AREA_KIND_LABELS[kind]}"
+              aria-label={tr('farm.sketch.openCard', { name: f.name, kind: kindLabel(tr, kind) })}
               onclick={() => onSelectArea(f.id)}
               onkeydown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -131,7 +128,7 @@
                   >{b.name}: {formatFt(b.w, currentPrefs())} × {formatFt(
                     b.h,
                     currentPrefs()
-                  )}{b.fits ? '' : ' (runs past the field edge)'}</title
+                  )}{b.fits ? '' : ' ' + tr('farm.sketch.pastEdge')}</title
                 >
               </rect>
               {#if b.w > font * 3 && b.h > font * 1.4}
@@ -149,7 +146,7 @@
             <tspan class="dims"
               >{f.measured
                 ? `${formatFt(f.w, currentPrefs())} × ${formatFt(f.h, currentPrefs())}`
-                : '(size from area)'}</tspan
+                : tr('farm.sketch.sizeFromArea')}</tspan
             ></text
           >
         </g>
@@ -172,13 +169,11 @@
     </svg>
   {/if}
   <figcaption>
-    Sketch only: boxes are drawn to scale from the dimensions you entered, but their placement is
-    arranged automatically. Draw on the map when you want real boundaries for pollination distances
-    and shade.
+    {tr('farm.sketch.caption')}
     {#if layout.unsized.length > 0}
       {#if onSizeArea && unsizedFields.length > 0}
         <span class="unsized">
-          Not shown until they have a size:
+          {tr('farm.sketch.unsized')}
           {#each unsizedFields as f (f.id)}
             <button
               type="button"
@@ -186,12 +181,13 @@
               data-testid="size-area"
               onclick={() => onSizeArea(f.id)}
             >
-              Add size for {f.name}
+              {tr('farm.sketch.addSize', { name: f.name })}
             </button>
           {/each}
         </span>
       {:else}
-        <span class="unsized">Not shown (no size yet): {layout.unsized.join(', ')}.</span>
+        <span class="unsized">{tr('farm.sketch.noSize', { names: layout.unsized.join(', ') })}</span
+        >
       {/if}
     {/if}
   </figcaption>

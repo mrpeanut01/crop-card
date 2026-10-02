@@ -1,54 +1,52 @@
 <script lang="ts">
   import Kicker from '$lib/components/ui/Kicker.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
-<svelte:head><title>Community plugins · CropCard</title></svelte:head>
+<svelte:head><title>{tr('plugins.community.title')}</title></svelte:head>
 
 <header class="head">
-  <Kicker>Plugins · Community</Kicker>
-  <h1>Community plugins</h1>
+  <Kicker>{tr('plugins.community.kicker')}</Kicker>
+  <h1>{tr('plugins.community.h1')}</h1>
   <p class="lede">
-    Shared browsing and one-click install aren't available in CropCard yet. You can still add any
-    crop or input plugin today — here's how.
+    {tr('plugins.community.lede')}
   </p>
 </header>
 
 <section class="card" aria-labelledby="add-now">
-  <h2 id="add-now">Add a plugin now</h2>
+  <h2 id="add-now">{tr('plugins.community.addNow')}</h2>
   <ul class="actions">
     <li>
       <a class="action primary" href="/plugins" data-testid="community-upload">
-        Upload plugin JSON →
+        {tr('plugins.community.upload')}
       </a>
       <span class="hint">
-        Owners can paste or upload a plugin file a neighbor or extension agent shared with you.
+        {tr('plugins.community.uploadHint')}
       </span>
     </li>
     <li>
-      <a class="action" href="/plugins/new">Author a plugin →</a>
-      <span class="hint">Step-by-step wizard for a crop or product that isn't in the library.</span>
+      <a class="action" href="/plugins/new">{tr('plugins.community.author')}</a>
+      <span class="hint">{tr('plugins.community.authorHint')}</span>
     </li>
     <li>
       <a class="action" href="/inventory?type=crop&mode=catalog" data-testid="community-catalog">
-        Browse installed catalog →
+        {tr('plugins.community.browse')}
       </a>
-      <span class="hint">Every crop and input plugin already on this farm.</span>
+      <span class="hint">{tr('plugins.community.browseHint')}</span>
     </li>
   </ul>
 </section>
 
 <section class="card" aria-labelledby="status">
-  <h2 id="status">What the marketplace will be</h2>
+  <h2 id="status">{tr('plugins.community.statusH2')}</h2>
   <p>
-    A curated catalog of reviewed plugin definitions — crops, herbicides, insecticides, fungicides,
-    fertilizers and companions — that CropCard can pull in with one click. The catalog service
-    exists and is admin-reviewed today, but this app does not connect to it yet, so there is nothing
-    to browse from here.
+    {tr('plugins.community.status1')}
   </p>
   <p>
-    The contract won't change when it opens: plugins are data only, every file is re-validated
-    against its schema, and the bypass check guarantees a plugin can never loosen a safety rule.
-    Uploads you make today go through that same check.
+    {tr('plugins.community.status2')}
   </p>
 </section>
 

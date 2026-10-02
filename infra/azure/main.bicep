@@ -455,6 +455,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
               { name: 'DATABASE_URL', value: 'file:/data/cropcard.db' }
               { name: 'AUTH_SECRET', secretRef: 'auth-secret' }
               { name: 'AUTH_MODE', value: authMode }
+              { name: 'CROPCARD_LOCALES', value: 'en,es' }
               { name: 'ORIGIN', value: appOrigin }
               { name: 'REDIRECT_HOSTS', value: domainTls ? join(skip(customFqdns, 1), ',') : '' }
               { name: 'ADDRESS_HEADER', value: 'X-Forwarded-For' }

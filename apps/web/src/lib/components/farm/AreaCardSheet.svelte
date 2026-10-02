@@ -12,12 +12,7 @@
     taskPlanHref
   } from '$lib/cards/build/common';
   import type { FarmSnapshot } from '$lib/cards/snapshot';
-  import {
-    AREA_KINDS,
-    AREA_KIND_LABELS,
-    type AreaDetails,
-    type AreaKind
-  } from '$lib/farm/areaKinds';
+  import { AREA_KINDS, type AreaDetails, type AreaKind } from '$lib/farm/areaKinds';
   import {
     detailsFromDraft,
     detailsSummary,
@@ -32,6 +27,9 @@
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { getCoopContext } from '$lib/farm/coopContext';
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { kindLabel } from './farmLabels';
 
   type Tab = 'details' | 'plantings' | 'tasks' | 'history';
 
@@ -64,6 +62,7 @@
     onEditShape?: () => void;
   } = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   let tab = $state<Tab>('details');
   let editing = $state(false);
   let saving = $state(false);
@@ -128,12 +127,12 @@
     return taskPlanHref(blockId);
   }
 
-  const TABS: Array<{ id: Tab; label: string }> = [
-    { id: 'details', label: 'Details' },
-    { id: 'plantings', label: 'Plantings' },
-    { id: 'tasks', label: 'Tasks' },
-    { id: 'history', label: 'History' }
-  ];
+  const TABS: Array<{ id: Tab; label: string }> = $derived([
+    { id: 'details', label: tr('farm.tab.details') },
+    { id: 'plantings', label: tr('farm.tab.plantings') },
+    { id: 'tasks', label: tr('farm.tab.tasks') },
+    { id: 'history', label: tr('farm.tab.history') }
+  ]);
 
   $effect(() => {
     if (open) {
@@ -165,11 +164,11 @@
   async function save() {
     const checked = detailsFromDraft(draftKind, draftDetails);
     if (!checked.ok) {
-      error = 'Some details don’t look right. Check them and try again.';
+      error = tr('farm.sheet.badDetails');
       return;
     }
     if (!draftName.trim()) {
-      error = 'Give it a name.';
+      error = tr('farm.sheet.needName');
       return;
     }
     saving = true;
@@ -182,7 +181,7 @@
       });
       if (!res.ok) {
         const out = await res.json().catch(() => ({}));
-        error = out.error ?? `Couldn’t save (HTTP ${res.status}).`;
+        error = out.error ?? tr('farm.sheet.saveFailed', { status: res.status });
         return;
       }
       editing = false;
@@ -212,11 +211,11 @@
   >
     <div class="kind-row">
       <span class="swatch" aria-hidden="true"></span>
-      <span class="kind">{AREA_KIND_LABELS[area.kind]}</span>
+      <span class="kind">{kindLabel(tr, area.kind)}</span>
     </div>
 
     {#if designer === 'available'}
-      <a class="designer primary" href={designerHref(area.id)}>Open designer</a>
+      <a class="designer primary" href={designerHref(area.id)}>{tr('farm.sheet.openDesigner')}</a>
     {/if}
     {#if canEdit && needsLabelTime(grazing)}
       <a class="designer grazing-time" href="/plan/areas/{encodeURIComponent(area.id)}/grazing">
@@ -224,7 +223,7 @@
       </a>
     {/if}
 
-    <div class="tabs" role="tablist" aria-label="Area card sections">
+    <div class="tabs" role="tablist" aria-label={tr('farm.sheet.sections')}>
       {#each TABS as t, i (t.id)}
         <button
           type="button"
@@ -256,17 +255,17 @@
             }}
           >
             <label class="field">
-              <span>Name</span>
+              <span>{tr('farm.sheet.name')}</span>
               <input type="text" bind:value={draftName} maxlength="120" />
             </label>
             <label class="field">
-              <span>Kind</span>
+              <span>{tr('farm.sheet.kind')}</span>
               <select
                 value={draftKind}
                 onchange={(e) => changeKind(e.currentTarget.value as AreaKind)}
               >
                 {#each AREA_KINDS as k (k)}
-                  <option value={k}>{AREA_KIND_LABELS[k]}</option>
+                  <option value={k}>{kindLabel(tr, k)}</option>
                 {/each}
               </select>
             </label>
@@ -280,10 +279,10 @@
             {#if error}<p class="error" role="alert">{error}</p>{/if}
             <div class="actions">
               <button type="submit" class="primary" disabled={saving}>
-                {saving ? 'Saving…' : 'Save details'}
+                {saving ? tr('farm.sheet.saving') : tr('farm.sheet.saveDetails')}
               </button>
               <button type="button" class="secondary" onclick={() => (editing = false)}
-                >Cancel</button
+                >{tr('farm.cancel')}</button
               >
             </div>
           </form>
@@ -291,7 +290,7 @@
           {#if card}<CardView {card} {prefs} />{/if}
           {#if housing && housing.total > 0}
             <a class="empty-action" href="/animals" data-testid="area-animals-link">
-              {petsLayout ? 'Open Pets & animals' : 'Open Animals'}
+              {petsLayout ? tr('farm.sheet.openPets') : tr('farm.sheet.openAnimals')}
             </a>
           {/if}
           {#if summary.length}
@@ -303,11 +302,11 @@
                     {row.value}
                     {#if row.provenance === 'data'}<Provenance
                         source="data"
-                        label="Suggested"
+                        label={tr('farm.prov.suggested')}
                         compact
                       />{:else if row.provenance === 'manual'}<Provenance
                         source="manual"
-                        label="Typed by you"
+                        label={tr('farm.prov.typed')}
                         compact
                       />{/if}
                   </dd>
@@ -315,13 +314,17 @@
               {/each}
             </dl>
           {:else if hasDetailFields(area.kind) && canEdit}
-            <p class="muted">No details yet. Add watering, structure or organic status any time.</p>
+            <p class="muted">{tr('farm.sheet.noDetails')}</p>
           {/if}
           {#if canEdit}
             <div class="actions">
-              <button type="button" class="secondary" onclick={startEdit}>Edit details</button>
+              <button type="button" class="secondary" onclick={startEdit}
+                >{tr('farm.sheet.editDetails')}</button
+              >
               {#if onEditShape}
-                <button type="button" class="secondary" onclick={onEditShape}>Edit outline</button>
+                <button type="button" class="secondary" onclick={onEditShape}
+                  >{tr('farm.sheet.editOutline')}</button
+                >
               {/if}
             </div>
           {/if}
@@ -333,7 +336,9 @@
               <li>
                 <span class="row-title">{p.varietyDisplayName}</span>
                 <span class="row-meta">
-                  {p.status === 'planned' ? 'Planned' : 'Growing'}{where(p.blockId)}{p.plantingDate
+                  {p.status === 'planned'
+                    ? tr('farm.sheet.planned')
+                    : tr('farm.sheet.growing')}{where(p.blockId)}{p.plantingDate
                     ? ` · ${monthDay(p.plantingDate)}`
                     : ''}
                 </span>
@@ -341,8 +346,8 @@
             {/each}
           </ul>
         {:else}
-          <p class="muted">Nothing planted here yet.</p>
-          <a class="empty-action" href={planHref}>Plan a crop here</a>
+          <p class="muted">{tr('farm.sheet.nothingPlanted')}</p>
+          <a class="empty-action" href={planHref}>{tr('farm.sheet.planCrop')}</a>
         {/if}
       {:else if tab === 'tasks'}
         {#if tasks.length}
@@ -359,8 +364,8 @@
             {/each}
           </ul>
         {:else}
-          <p class="muted">No open tasks here for the next month.</p>
-          <a class="empty-action" href={planHref}>Open this area in Plan</a>
+          <p class="muted">{tr('farm.sheet.noTasks')}</p>
+          <a class="empty-action" href={planHref}>{tr('farm.sheet.openInPlan')}</a>
         {/if}
       {:else if history.length}
         <ul class="rows">
@@ -368,22 +373,24 @@
             <li>
               <span class="row-title">{p.varietyDisplayName}</span>
               <span class="row-meta">
-                {p.plantingDate ? monthDay(p.plantingDate) : 'Undated'}{where(
+                {p.plantingDate ? monthDay(p.plantingDate) : tr('farm.sheet.undated')}{where(
                   p.blockId
-                )}{p.harvestedAt ? ` · harvested ${monthDay(p.harvestedAt)}` : ''}
+                )}{p.harvestedAt
+                  ? ` · ${tr('farm.sheet.harvestedOn', { date: monthDay(p.harvestedAt) })}`
+                  : ''}
               </span>
             </li>
           {/each}
         </ul>
       {:else}
-        <p class="muted">No past plantings recorded here yet.</p>
+        <p class="muted">{tr('farm.sheet.noPast')}</p>
       {/if}
       {#if tab === 'history' && blocks.length > 0}
         <div class="records-links" data-testid="area-records-links">
-          <p class="muted">Sprays, scouting and harvests are in Records.</p>
+          <p class="muted">{tr('farm.sheet.recordsNote')}</p>
           {#each blocks as b (b.id)}
             <a class="empty-action" href="/records?blockId={encodeURIComponent(b.id)}">
-              Records for {blockDisplayName(b)}
+              {tr('farm.sheet.recordsFor', { name: blockDisplayName(b) })}
             </a>
           {/each}
         </div>

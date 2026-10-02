@@ -2,6 +2,8 @@
   import CardView from './CardView.svelte';
   import type { CardModel } from '$lib/cards/model';
   import type { Prefs } from '$lib/prefs';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     cards: CardModel[];
@@ -10,11 +12,12 @@
   }
 
   const { cards, prefs, now }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 {#if cards.length}
   <section class="care" aria-labelledby="care-guide-heading" data-testid="care-guides">
-    <h2 id="care-guide-heading" class="serif">How to care for it</h2>
+    <h2 id="care-guide-heading" class="serif">{tr('cardsui.care.title')}</h2>
     {#if cards.length === 1}
       <CardView card={cards[0]} {prefs} {now} />
     {:else}

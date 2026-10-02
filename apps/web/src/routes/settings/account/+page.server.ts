@@ -12,13 +12,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
 import { activeAssignmentsForUser } from '$lib/db/users';
-import {
-  avatarUrl,
-  avatarVersion,
-  prefsFor,
-  setUserLocale,
-  updateProfile
-} from '$lib/db/userProfile';
+import { avatarUrl, avatarVersion, prefsFor, updateProfile } from '$lib/db/userProfile';
 import { changeOwnerZone } from '$lib/server/holdGuard';
 import {
   DEFAULT_TIME_ZONE,
@@ -28,8 +22,8 @@ import {
 } from '$lib/profile';
 import { identityName } from '$lib/identity';
 import { formatInstant } from '$lib/prefs';
-import { LOCALE_NAMES, enabledLocales, isKnownLocale, t } from '$lib/i18n';
-import { LOCALE_COOKIE } from '$lib/i18n/resolve';
+import { LOCALE_NAMES, enabledLocales, t } from '$lib/i18n';
+import { applyLocaleChoice } from '$lib/server/localeChoice';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => {
@@ -134,21 +128,15 @@ export const actions: Actions = {
       throw error(403, 'not available for this session');
     }
     const fd = await request.formData();
-    const choice = String(fd.get('locale') ?? '')
-      .trim()
-      .toLowerCase();
-    const enabled = enabledLocales();
-    if (enabled.length <= 1 || !isKnownLocale(choice) || !enabled.includes(choice)) {
+    const choice = applyLocaleChoice({
+      raw: fd.get('locale'),
+      cookies,
+      userId: locals.user.id,
+      saveToUser: true
+    });
+    if (!choice) {
       return fail(400, { localeError: t(locals.locale, 'account.language.unavailable') });
     }
-    setUserLocale(locals.user.id, choice);
-    cookies.set(LOCALE_COOKIE, choice, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 365
-    });
     locals.locale = choice;
     return { localeSaved: true };
   }

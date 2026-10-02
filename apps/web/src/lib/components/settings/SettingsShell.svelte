@@ -1,6 +1,8 @@
 <script lang="ts">
   import { ChevronLeft } from 'lucide-svelte';
   import type { Snippet } from 'svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   /**
    * Phase 25c (#88) — shared shell for /settings/* subpages.
@@ -44,22 +46,24 @@
     backHref = '/settings',
     children
   }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 <div class="shell">
   <header class="head">
-    <a class="back" href={backHref} aria-label="Back to Settings">
+    <a class="back" href={backHref} aria-label={tr('settings.shell.backAria')}>
       <ChevronLeft size={16} strokeWidth={1.75} />
     </a>
     <div class="head-text">
-      <div class="kicker">Settings · {kicker}</div>
+      <div class="kicker">{tr('settings.shell.kicker', { kicker })}</div>
       <div class="title-row">
         <h1 class="serif">{title}</h1>
         {#if badge}{@render badge()}{/if}
       </div>
     </div>
     {#if dirty}
-      <span class="dirty">● Unsaved</span>
+      <span class="dirty">{tr('settings.shell.unsaved')}</span>
     {/if}
   </header>
 
@@ -77,8 +81,8 @@
         </div>
       </div>
       <footer class="footer">
-        <a class="ghost" href={backHref}>Cancel</a>
-        <button type="submit" class="primary">Save changes</button>
+        <a class="ghost" href={backHref}>{tr('settings.shell.cancel')}</a>
+        <button type="submit" class="primary">{tr('settings.shell.save')}</button>
       </footer>
     </form>
   {:else}

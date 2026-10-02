@@ -1,7 +1,9 @@
 <script lang="ts">
   import './animalForms.css';
   import { Camera } from 'lucide-svelte';
-  import { OFFLINE_MESSAGE, errorFromResponse } from '$lib/animals/display';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { errorText } from './labels';
 
   interface Props {
     animalId: string;
@@ -15,6 +17,7 @@
 
   const { animalId, name, hasPhoto, version, canEdit, onDone }: Props = $props();
   const uid = $props.id();
+  const tr = $derived(createT(page.data?.locale));
 
   let busy = $state(false);
   let error = $state<string | null>(null);
@@ -26,7 +29,7 @@
     if (!file) return;
     error = null;
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      error = 'Photos need a signal. Try again when you are online.';
+      error = tr('animals.photo.needSignal');
       return;
     }
     busy = true;
@@ -39,14 +42,14 @@
         body: JSON.stringify({ photo })
       });
       if (!res.ok) {
-        error = await errorFromResponse(res);
+        error = await errorText(res, tr);
         return;
       }
       await onDone();
     } catch (err) {
       error =
         err instanceof TypeError
-          ? OFFLINE_MESSAGE
+          ? tr('animals.offline')
           : err instanceof Error
             ? err.message
             : String(err);
@@ -58,13 +61,17 @@
 
 <div class="photo">
   {#if hasPhoto}
-    <img src="/api/animals/{animalId}/photo?v={version}" alt="Photo of {name}" />
+    <img src="/api/animals/{animalId}/photo?v={version}" alt={tr('animals.photo.alt', { name })} />
   {:else}
     <div class="empty" aria-hidden="true"><Camera size={28} strokeWidth={1.5} /></div>
   {/if}
   {#if canEdit}
     <label class="af-ghost pick" for="{uid}-file">
-      {busy ? 'Saving…' : hasPhoto ? 'Change photo' : 'Add a photo'}
+      {busy
+        ? tr('animals.saving')
+        : hasPhoto
+          ? tr('animals.photo.change')
+          : tr('animals.photo.add')}
     </label>
     <input
       id="{uid}-file"

@@ -7,8 +7,22 @@
   import { rangeText } from '$lib/plugins/rangeText';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatRateText } from '$lib/stock/units';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   let { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
+  const TYPE_KEYS = {
+    crop: 'plugins.type.crop',
+    herbicide: 'plugins.type.herbicide',
+    insecticide: 'plugins.type.insecticide',
+    fungicide: 'plugins.type.fungicide',
+    fertilizer: 'plugins.type.fertilizer',
+    companion: 'plugins.type.companion'
+  } as const;
+  function typeLabel(type: string): string {
+    return type in TYPE_KEYS ? tr(TYPE_KEYS[type as keyof typeof TYPE_KEYS]) : type;
+  }
 
   let rollingBack = $state<string | null>(null);
   let rollbackError = $state<string | null>(null);
@@ -52,9 +66,9 @@
       lifecycleSuccess =
         action === 'retire'
           ? global
-            ? 'Retired for every farm.'
-            : 'Retired on this farm.'
-          : 'Restored.';
+            ? tr('plugins.detail.retiredAll')
+            : tr('plugins.detail.retiredFarm')
+          : tr('plugins.detail.restored');
       await invalidateAll();
     } catch (e) {
       lifecycleError = e instanceof Error ? e.message : String(e);
@@ -83,7 +97,7 @@
         lifecycleError = out.error ?? `HTTP ${res.status}`;
         return;
       }
-      lifecycleSuccess = 'Uninstalled. Redirecting…';
+      lifecycleSuccess = tr('plugins.detail.uninstalled');
       setTimeout(() => goto('/plugins'), 700);
     } catch (e) {
       lifecycleError = e instanceof Error ? e.message : String(e);
@@ -139,10 +153,7 @@
   });
 
   async function rollback(version: string) {
-    if (
-      !confirm(`Roll ${data.pluginId} back to v${version}? A new forward version will be created.`)
-    )
-      return;
+    if (!confirm(tr('plugins.detail.rollbackConfirm', { id: data.pluginId, version }))) return;
     rollingBack = version;
     rollbackError = null;
     rollbackSuccess = null;
@@ -157,7 +168,7 @@
         rollbackError = out.error ?? `HTTP ${res.status}`;
         return;
       }
-      rollbackSuccess = `Rolled back. Now at v${out.version}.`;
+      rollbackSuccess = tr('plugins.detail.rolledBack', { version: out.version });
       await invalidateAll();
     } catch (e) {
       rollbackError = e instanceof Error ? e.message : String(e);
@@ -215,36 +226,40 @@
 </script>
 
 <svelte:head>
-  <title>{data.pluginId} — Plugin</title>
+  <title>{tr('plugins.detail.title', { id: data.pluginId })}</title>
 </svelte:head>
 
 <nav class="breadcrumbs">
-  <a href="/plugins">← All plugins</a>
+  <a href="/plugins">{tr('plugins.detail.back')}</a>
 </nav>
 
 {#if data.live && plugin}
   <section class="card header-card">
     <div class="title-row">
       <h1>{data.live.displayName}</h1>
-      <span class="type-badge type-{data.live.type}">{data.live.type}</span>
+      <span class="type-badge type-{data.live.type}">{typeLabel(data.live.type)}</span>
       {#each groupBadges as gb (gb.kind + gb.group)}
         <GroupCodeBadge kind={gb.kind} group={gb.group} />
       {/each}
       <span class="version">v{data.live.version}</span>
       {#if data.history.length > 1}
-        <span class="history-chip">{data.history.length} versions</span>
+        <span class="history-chip"
+          >{tr('plugins.list.versions', { count: data.history.length })}</span
+        >
       {/if}
     </div>
     <div class="header-actions">
       {#if data.canEdit}
-        <button class="action primary" onclick={startEdit} disabled={retireBusy}> ✎ Edit </button>
+        <button class="action primary" onclick={startEdit} disabled={retireBusy}>
+          {tr('plugins.detail.edit')}
+        </button>
       {/if}
       <a
         class="action subtle"
         href="/api/plugins/{encodeURIComponent(data.pluginId)}/export"
         download
       >
-        ↓ Download
+        {tr('plugins.detail.download')}
       </a>
       {#if data.canEdit}
         <span class="action-divider" aria-hidden="true"></span>
@@ -254,7 +269,7 @@
             onclick={() => lifecycleAction('unretire')}
             disabled={retireBusy}
           >
-            ⤴ Unretire on this farm
+            {tr('plugins.detail.unretireFarm')}
           </button>
         {:else}
           <button
@@ -262,7 +277,7 @@
             onclick={() => lifecycleAction('retire')}
             disabled={retireBusy}
           >
-            ⤵ Retire on this farm
+            {tr('plugins.detail.retireFarm')}
           </button>
         {/if}
       {/if}
@@ -274,7 +289,7 @@
             onclick={() => lifecycleAction('unretire', true)}
             disabled={retireBusy}
           >
-            ⤴ Unretire for all farms
+            {tr('plugins.detail.unretireAll')}
           </button>
         {:else}
           <button
@@ -282,29 +297,31 @@
             onclick={() => lifecycleAction('retire', true)}
             disabled={retireBusy}
           >
-            ⤵ Retire for all farms
+            {tr('plugins.detail.retireAll')}
           </button>
         {/if}
         <button class="action danger" onclick={openUninstallConfirm} disabled={retireBusy}>
-          ✕ Uninstall…
+          {tr('plugins.detail.uninstall')}
         </button>
       {/if}
     </div>
     {#if data.hiddenForOwner}
       <p class="retired-banner">
-        ⚠ This plugin is <strong>retired on this farm</strong>. It's hidden from this farm's pickers
-        but still resolves for historical event records. Other farms are unaffected.
+        ⚠ {tr('plugins.detail.retiredFarmA')}<strong>{tr('plugins.detail.retiredFarmB')}</strong
+        >{tr('plugins.detail.retiredFarmC')}
       </p>
     {:else if isRetired}
       <p class="retired-banner">
-        ⚠ This plugin is <strong>retired</strong> in the shared library. It's hidden from spray pickers
-        but still resolves for historical event records.
+        ⚠ {tr('plugins.detail.retiredLibA')}<strong>{tr('plugins.detail.retiredLibB')}</strong>{tr(
+          'plugins.detail.retiredLibC'
+        )}
       </p>
     {/if}
     {#if data.farmOverride}
       <p class="retired-banner">
-        This is <strong>this farm's copy</strong> of the plugin. Edits apply to this farm only; other
-        farms see the shared version.
+        {tr('plugins.detail.copyA')}<strong>{tr('plugins.detail.copyB')}</strong>{tr(
+          'plugins.detail.copyC'
+        )}
       </p>
     {/if}
   </section>
@@ -312,8 +329,7 @@
   <section class="card">
     <h1>{data.pluginId}</h1>
     <p class="retired-notice">
-      No live registry entry. This plugin is either retired or has been removed from disk; version
-      history below.
+      {tr('plugins.detail.noLive')}
     </p>
     {#if data.isSuperadmin && isRetired}
       <button
@@ -321,7 +337,7 @@
         onclick={() => lifecycleAction('unretire', true)}
         disabled={retireBusy}
       >
-        ⤴ Unretire for all farms
+        {tr('plugins.detail.unretireAll')}
       </button>
     {/if}
   </section>
@@ -333,27 +349,22 @@
   <p class="error">⛔ {lifecycleError}</p>
   {#if uninstallRefs}
     <div class="ref-summary">
-      <strong>Referenced by:</strong>
+      <strong>{tr('plugins.detail.referencedBy')}</strong>
       <ul>
         {#if uninstallRefs.sprayEvents}<li>
-            {uninstallRefs.sprayEvents} spray event{uninstallRefs.sprayEvents === 1 ? '' : 's'}
+            {tr('plugins.detail.refSpray', { count: uninstallRefs.sprayEvents })}
           </li>{/if}
         {#if uninstallRefs.insecticideEvents}<li>
-            {uninstallRefs.insecticideEvents} insecticide event{uninstallRefs.insecticideEvents ===
-            1
-              ? ''
-              : 's'}
+            {tr('plugins.detail.refInsecticide', { count: uninstallRefs.insecticideEvents })}
           </li>{/if}
         {#if uninstallRefs.fungicideEvents}<li>
-            {uninstallRefs.fungicideEvents} fungicide event{uninstallRefs.fungicideEvents === 1
-              ? ''
-              : 's'}
+            {tr('plugins.detail.refFungicide', { count: uninstallRefs.fungicideEvents })}
           </li>{/if}
         {#if uninstallRefs.cropRows}<li>
-            {uninstallRefs.cropRows} crop row{uninstallRefs.cropRows === 1 ? '' : 's'}
+            {tr('plugins.detail.refCrop', { count: uninstallRefs.cropRows })}
           </li>{/if}
       </ul>
-      <p class="muted">Retire instead — that keeps the audit trail intact.</p>
+      <p class="muted">{tr('plugins.detail.retireInstead')}</p>
     </div>
   {/if}
 {/if}
@@ -374,13 +385,12 @@
     tabindex="-1"
   >
     <div class="modal">
-      <h2 id="uninstall-title">Uninstall {data.pluginId}?</h2>
+      <h2 id="uninstall-title">{tr('plugins.detail.uninstallTitle', { id: data.pluginId })}</h2>
       <p>
-        This is irreversible. The plugin's payload rows are deleted; an audit tombstone is kept.
-        Refused automatically if any spray / insecticide / fungicide event still references it.
+        {tr('plugins.detail.uninstallBody')}
       </p>
       <label class="confirm-label">
-        Type <code>{data.pluginId}</code> to confirm:
+        {tr('plugins.detail.typeA')}<code>{data.pluginId}</code>{tr('plugins.detail.typeB')}
         <!-- svelte-ignore a11y_autofocus -->
         <input
           type="text"
@@ -392,14 +402,14 @@
       </label>
       <div class="modal-actions">
         <button class="secondary" onclick={closeUninstallConfirm} disabled={retireBusy}
-          >Cancel</button
+          >{tr('plugins.detail.cancel')}</button
         >
         <button
           class="danger"
           onclick={uninstall}
           disabled={retireBusy || uninstallConfirmInput !== data.pluginId}
         >
-          {retireBusy ? 'Uninstalling…' : 'Uninstall permanently'}
+          {retireBusy ? tr('plugins.detail.uninstalling') : tr('plugins.detail.uninstallPerm')}
         </button>
       </div>
     </div>
@@ -416,21 +426,21 @@
     {@const indicators = asArray<string>(plugin.harvestIndicators)}
     {@const traits = asArray<string>(plugin.traits)}
     <section class="card">
-      <h2>Key facts</h2>
+      <h2>{tr('plugins.detail.keyFacts')}</h2>
       <dl class="grid-dl">
         <div class="stat">
-          <dt>Family</dt>
+          <dt>{tr('plugins.detail.family')}</dt>
           <dd>{plugin.cropFamily}</dd>
         </div>
         {#if dtm}
           <div class="stat">
-            <dt>Days to maturity</dt>
+            <dt>{tr('plugins.detail.dtm')}</dt>
             <dd>{dtm.min}-{dtm.max} d</dd>
           </div>
         {/if}
         {#if asNum(plugin.defaultRowSpacingInches) !== undefined}
           <div class="stat">
-            <dt>Row spacing</dt>
+            <dt>{tr('plugins.detail.rowSpacing')}</dt>
             <dd>{fmt.qty(asNum(plugin.defaultRowSpacingInches), 'length')}</dd>
           </div>
         {/if}
@@ -442,38 +452,40 @@
         {/if}
         {#if asStr(plugin.cornType)}
           <div class="stat">
-            <dt>Corn type</dt>
+            <dt>{tr('plugins.detail.cornType')}</dt>
             <dd>{plugin.cornType}</dd>
           </div>
         {/if}
         {#if agronomy?.lifecycle}
           <div class="stat">
-            <dt>Lifecycle</dt>
+            <dt>{tr('plugins.detail.lifecycle')}</dt>
             <dd>{agronomy.lifecycle}</dd>
           </div>
         {/if}
         {#if asNum(agronomy?.rotationLookbackYears) !== undefined}
           <div class="stat">
-            <dt>Rotation lookback</dt>
-            <dd>{agronomy?.rotationLookbackYears} years</dd>
+            <dt>{tr('plugins.detail.rotation')}</dt>
+            <dd>
+              {tr('plugins.detail.years', { count: agronomy?.rotationLookbackYears as number })}
+            </dd>
           </div>
         {/if}
         {#if asNum(planting?.soilTempMinF) !== undefined}
           <div class="stat">
-            <dt>Soil temp min</dt>
+            <dt>{tr('plugins.detail.soilTemp')}</dt>
             <dd>{fmt.qty(asNum(planting?.soilTempMinF), 'temperature')}</dd>
           </div>
         {/if}
       </dl>
       {#if traits.length > 0}
         <div class="chip-row">
-          <span class="row-label">Traits</span>
+          <span class="row-label">{tr('plugins.detail.traits')}</span>
           {#each traits as t, idx (idx)}<span class="chip neutral">{t}</span>{/each}
         </div>
       {/if}
       {#if indicators.length > 0}
         <div class="bullet-list">
-          <strong class="row-label">Harvest indicators</strong>
+          <strong class="row-label">{tr('plugins.detail.harvestIndicators')}</strong>
           <ul>
             {#each indicators as ind, idx (idx)}<li>{ind}</li>{/each}
           </ul>
@@ -483,12 +495,16 @@
         {@const curingWeeks = rangeText(curing.durationWeeks)}
         {@const curingMoisture = rangeText(curing.targetMoisturePercent)}
         <div class="bullet-list">
-          <strong class="row-label">Post-harvest curing</strong>
+          <strong class="row-label">{tr('plugins.detail.curing')}</strong>
           <p class="muted">
             {(curing.method as string) ?? ''}
-            {#if curingWeeks}· {curingWeeks} weeks{/if}
-            {#if curingMoisture}· target {curingMoisture}% moisture{/if}
-            {#if curing.storageLocation}· store at {curing.storageLocation}{/if}
+            {#if curingWeeks}· {tr('plugins.detail.curingWeeks', { value: curingWeeks })}{/if}
+            {#if curingMoisture}· {tr('plugins.detail.curingMoisture', {
+                value: curingMoisture
+              })}{/if}
+            {#if curing.storageLocation}· {tr('plugins.detail.curingStore', {
+                value: String(curing.storageLocation)
+              })}{/if}
           </p>
         </div>
       {/if}
@@ -506,29 +522,29 @@
     {@const traitGated = asArray<Record<string, unknown>>(plugin.traitGatedSafeFor)}
     {@const flags = asObj(plugin.complianceFlags)}
     <section class="card">
-      <h2>Key facts</h2>
+      <h2>{tr('plugins.detail.keyFacts')}</h2>
       <dl class="grid-dl">
         {#each ais as ai, i (i)}
           <div class="stat">
-            <dt>Active ingredient {ais.length > 1 ? i + 1 : ''}</dt>
+            <dt>{tr('plugins.detail.activeIngredient')} {ais.length > 1 ? i + 1 : ''}</dt>
             <dd>{ai.name} <span class="muted">({ai.chemistryClass})</span></dd>
           </div>
         {/each}
         {#if rate}
           <div class="stat">
-            <dt>Rate / acre</dt>
+            <dt>{tr('plugins.detail.rate')}</dt>
             <dd>{labelRate(rate)}</dd>
           </div>
         {/if}
         {#if asNum(plugin.gpaCalibration) !== undefined}
           <div class="stat">
-            <dt>GPA calibration</dt>
+            <dt>{tr('plugins.detail.gpa')}</dt>
             <dd>{plugin.gpaCalibration}{metricGpa(asNum(plugin.gpaCalibration))}</dd>
           </div>
         {/if}
         {#if asStr(plugin.applicationTiming)}
           <div class="stat">
-            <dt>Application timing</dt>
+            <dt>{tr('plugins.detail.timing')}</dt>
             <dd>{plugin.applicationTiming}</dd>
           </div>
         {/if}
@@ -574,11 +590,14 @@
       {/if}
       {#if flags}
         <div class="chip-row">
-          <span class="row-label">Compliance</span>
+          <span class="row-label">{tr('plugins.detail.compliance')}</span>
           {#if flags.omriListed}<span class="chip ok">OMRI-listed</span>{/if}
-          {#if flags.nonGmoCompliant}<span class="chip ok">non-GMO</span>{/if}
-          {#if flags.transitioningAllowed}<span class="chip ok">transition OK</span>{/if}
-          {#if flags.certifiedOrganicAllowed === false}<span class="chip neg">not organic</span
+          {#if flags.nonGmoCompliant}<span class="chip ok">{tr('plugins.detail.nonGmo')}</span>{/if}
+          {#if flags.transitioningAllowed}<span class="chip ok"
+              >{tr('plugins.detail.transition')}</span
+            >{/if}
+          {#if flags.certifiedOrganicAllowed === false}<span class="chip neg"
+              >{tr('plugins.detail.notOrganic')}</span
             >{/if}
         </div>
       {/if}
@@ -595,11 +614,11 @@
     {@const safeFor = asArray<string>(labelClaims?.safeForCropPluginIds)}
     {@const flags = asObj(plugin.complianceFlags)}
     <section class="card">
-      <h2>Key facts</h2>
+      <h2>{tr('plugins.detail.keyFacts')}</h2>
       <dl class="grid-dl">
         {#each ais as ai, i (i)}
           <div class="stat">
-            <dt>Active ingredient {ais.length > 1 ? i + 1 : ''}</dt>
+            <dt>{tr('plugins.detail.activeIngredient')} {ais.length > 1 ? i + 1 : ''}</dt>
             <dd>
               {ai.name}{#if ai.iracGroup}<span class="muted"> (IRAC {ai.iracGroup})</span>{/if}
             </dd>
@@ -607,7 +626,7 @@
         {/each}
         {#if rate}
           <div class="stat">
-            <dt>Rate / acre</dt>
+            <dt>{tr('plugins.detail.rate')}</dt>
             <dd>{labelRate(rate)}</dd>
           </div>
         {/if}
@@ -638,7 +657,7 @@
       </dl>
       {#if pests.length > 0}
         <div class="chip-row">
-          <span class="row-label">Target pests</span>
+          <span class="row-label">{tr('plugins.detail.targetPests')}</span>
           {#each pests as p, idx (idx)}<span class="chip neutral">{p}</span>{/each}
         </div>
       {/if}
@@ -667,11 +686,14 @@
       {/if}
       {#if flags}
         <div class="chip-row">
-          <span class="row-label">Compliance</span>
+          <span class="row-label">{tr('plugins.detail.compliance')}</span>
           {#if flags.omriListed}<span class="chip ok">OMRI-listed</span>{/if}
-          {#if flags.nonGmoCompliant}<span class="chip ok">non-GMO</span>{/if}
-          {#if flags.transitioningAllowed}<span class="chip ok">transition OK</span>{/if}
-          {#if flags.certifiedOrganicAllowed === false}<span class="chip neg">not organic</span
+          {#if flags.nonGmoCompliant}<span class="chip ok">{tr('plugins.detail.nonGmo')}</span>{/if}
+          {#if flags.transitioningAllowed}<span class="chip ok"
+              >{tr('plugins.detail.transition')}</span
+            >{/if}
+          {#if flags.certifiedOrganicAllowed === false}<span class="chip neg"
+              >{tr('plugins.detail.notOrganic')}</span
             >{/if}
         </div>
       {/if}
@@ -687,11 +709,11 @@
     {@const safeFor = asArray<string>(labelClaims?.safeForCropPluginIds)}
     {@const flags = asObj(plugin.complianceFlags)}
     <section class="card">
-      <h2>Key facts</h2>
+      <h2>{tr('plugins.detail.keyFacts')}</h2>
       <dl class="grid-dl">
         {#each ais as ai, i (i)}
           <div class="stat">
-            <dt>Active ingredient {ais.length > 1 ? i + 1 : ''}</dt>
+            <dt>{tr('plugins.detail.activeIngredient')} {ais.length > 1 ? i + 1 : ''}</dt>
             <dd>
               {ai.name}{#if ai.fracCode}<span class="muted"> (FRAC {ai.fracCode})</span>{/if}
             </dd>
@@ -699,13 +721,13 @@
         {/each}
         {#if rate}
           <div class="stat">
-            <dt>Rate / acre</dt>
+            <dt>{tr('plugins.detail.rate')}</dt>
             <dd>{labelRate(rate)}</dd>
           </div>
         {/if}
         {#if asNum(plugin.gpaCalibration) !== undefined}
           <div class="stat">
-            <dt>GPA calibration</dt>
+            <dt>{tr('plugins.detail.gpa')}</dt>
             <dd>{plugin.gpaCalibration}{metricGpa(asNum(plugin.gpaCalibration))}</dd>
           </div>
         {/if}
@@ -723,7 +745,7 @@
         {/if}
         {#if asStr(plugin.applicationTiming)}
           <div class="stat">
-            <dt>Application timing</dt>
+            <dt>{tr('plugins.detail.timing')}</dt>
             <dd>{plugin.applicationTiming}</dd>
           </div>
         {/if}
@@ -740,7 +762,7 @@
       </dl>
       {#if diseases.length > 0}
         <div class="chip-row">
-          <span class="row-label">Target diseases</span>
+          <span class="row-label">{tr('plugins.detail.targetDiseases')}</span>
           {#each diseases as d, idx (idx)}<span class="chip neutral">{d}</span>{/each}
         </div>
       {/if}
@@ -755,9 +777,11 @@
       {/if}
       {#if flags}
         <div class="chip-row">
-          <span class="row-label">Compliance</span>
+          <span class="row-label">{tr('plugins.detail.compliance')}</span>
           {#if flags.omriListed}<span class="chip ok">OMRI-listed</span>{/if}
-          {#if flags.transitioningAllowed}<span class="chip ok">transition OK</span>{/if}
+          {#if flags.transitioningAllowed}<span class="chip ok"
+              >{tr('plugins.detail.transition')}</span
+            >{/if}
         </div>
       {/if}
       {#if asStr(plugin.notes)}<p class="notes">{plugin.notes}</p>{/if}
@@ -770,34 +794,34 @@
     {@const secondary = asObj(plugin.secondaryNutrients)}
     {@const flags = asObj(plugin.complianceFlags)}
     <section class="card">
-      <h2>Key facts</h2>
+      <h2>{tr('plugins.detail.keyFacts')}</h2>
       <dl class="grid-dl">
         {#if analysis}
           <div class="stat">
-            <dt>N-P-K</dt>
+            <dt>{tr('plugins.detail.npk')}</dt>
             <dd>{analysis.n}-{analysis.p}-{analysis.k}</dd>
           </div>
         {/if}
         {#if asStr(plugin.form)}
           <div class="stat">
-            <dt>Form</dt>
+            <dt>{tr('plugins.detail.form')}</dt>
             <dd>{plugin.form}</dd>
           </div>
         {/if}
         <div class="stat">
-          <dt>Organic</dt>
-          <dd>{asBool(plugin.organic) ? 'Yes' : 'No'}</dd>
+          <dt>{tr('plugins.detail.organic')}</dt>
+          <dd>{asBool(plugin.organic) ? tr('plugins.detail.yes') : tr('plugins.detail.no')}</dd>
         </div>
         {#if range}
           <div class="stat">
-            <dt>Application range</dt>
+            <dt>{tr('plugins.detail.appRange')}</dt>
             <dd>{rangeRate(range)}</dd>
           </div>
         {/if}
       </dl>
       {#if secondary}
         <div class="chip-row">
-          <span class="row-label">Secondary nutrients</span>
+          <span class="row-label">{tr('plugins.detail.secondary')}</span>
           {#each Object.entries(secondary) as [k, v] (k)}
             <span class="chip neutral">{k.toUpperCase()} {v}%</span>
           {/each}
@@ -805,10 +829,13 @@
       {/if}
       {#if flags}
         <div class="chip-row">
-          <span class="row-label">Compliance</span>
+          <span class="row-label">{tr('plugins.detail.compliance')}</span>
           {#if flags.omriListed}<span class="chip ok">OMRI-listed</span>{/if}
-          {#if flags.transitioningAllowed}<span class="chip ok">transition OK</span>{/if}
-          {#if flags.certifiedOrganicAllowed === false}<span class="chip neg">not organic</span
+          {#if flags.transitioningAllowed}<span class="chip ok"
+              >{tr('plugins.detail.transition')}</span
+            >{/if}
+          {#if flags.certifiedOrganicAllowed === false}<span class="chip neg"
+              >{tr('plugins.detail.notOrganic')}</span
             >{/if}
         </div>
       {/if}
@@ -822,27 +849,30 @@
     {@const keepApart = asArray<Record<string, unknown>>(plugin.keepApart)}
     {@const members = asArray<Record<string, unknown>>(plugin.members)}
     <section class="card">
-      <h2>Key facts</h2>
+      <h2>{tr('plugins.detail.keyFacts')}</h2>
       <dl class="grid-dl">
         {#if asStr(plugin.primaryFamily)}
           <div class="stat">
-            <dt>Anchor family</dt>
+            <dt>{tr('plugins.detail.anchorFamily')}</dt>
             <dd>{plugin.primaryFamily}</dd>
           </div>
         {/if}
         {#if members.length > 0}
           <div class="stat">
-            <dt>Companion members</dt>
+            <dt>{tr('plugins.detail.members')}</dt>
             <dd>{members.length}</dd>
           </div>
         {/if}
       </dl>
       {#if asStr(plugin.benefit)}
-        <p class="notes"><strong class="row-label">Benefit</strong> {plugin.benefit}</p>
+        <p class="notes">
+          <strong class="row-label">{tr('plugins.detail.benefit')}</strong>
+          {plugin.benefit}
+        </p>
       {/if}
       {#if members.length > 0}
         <div class="bullet-list">
-          <strong class="row-label">Companion members</strong>
+          <strong class="row-label">{tr('plugins.detail.members')}</strong>
           <ul>
             {#each members as m, idx (idx)}
               <li>
@@ -850,11 +880,13 @@
                 <span class="muted">({m.family})</span>
                 {#if m.plantingOffsetDays != null}
                   {#if (m.plantingOffsetDays as number) < 0}
-                    · plant {Math.abs(m.plantingOffsetDays as number)}d BEFORE anchor
+                    · {tr('plugins.detail.plantBefore', {
+                      days: Math.abs(m.plantingOffsetDays as number)
+                    })}
                   {:else if (m.plantingOffsetDays as number) === 0}
-                    · plant same day as anchor
+                    · {tr('plugins.detail.plantSame')}
                   {:else}
-                    · plant +{m.plantingOffsetDays as number}d after anchor
+                    · {tr('plugins.detail.plantAfter', { days: m.plantingOffsetDays as number })}
                   {/if}
                 {/if}
                 {#if asStr(m.title)}— {m.title}{/if}
@@ -865,7 +897,7 @@
       {/if}
       {#if goodWith.length > 0}
         <div class="chip-row">
-          <span class="row-label">Good with</span>
+          <span class="row-label">{tr('plugins.detail.goodWith')}</span>
           {#each goodWith as id, idx (idx)}<PluginRef
               pluginId={id}
               lookup={data.pluginLookup}
@@ -874,7 +906,7 @@
       {/if}
       {#if badWith.length > 0}
         <div class="chip-row">
-          <span class="row-label">Bad with</span>
+          <span class="row-label">{tr('plugins.detail.badWith')}</span>
           {#each badWith as id, idx (idx)}<PluginRef
               pluginId={id}
               lookup={data.pluginLookup}
@@ -883,7 +915,7 @@
       {/if}
       {#each keepApart as k, kIdx (kIdx)}
         <div class="bullet-list">
-          <strong class="row-label">Keep apart</strong>
+          <strong class="row-label">{tr('plugins.detail.keepApart')}</strong>
           {#if asStr(k.reason)}<p class="notes">{k.reason}</p>{/if}
           <div class="chip-row">
             {#each asArray<string>(k.a) as id, idx (idx)}<PluginRef
@@ -892,13 +924,15 @@
               />{/each}
           </div>
           <div class="chip-row">
-            <span class="row-label">away from</span>
+            <span class="row-label">{tr('plugins.detail.awayFrom')}</span>
             {#each asArray<string>(k.b) as id, idx (idx)}<PluginRef
                 pluginId={id}
                 lookup={data.pluginLookup}
               />{/each}
           </div>
-          {#if asStr(k.source)}<p class="muted">Source: {k.source}</p>{/if}
+          {#if asStr(k.source)}<p class="muted">
+              {tr('plugins.list.source', { source: String(k.source) })}
+            </p>{/if}
         </div>
       {/each}
     </section>
@@ -911,20 +945,24 @@
     {@const seasonalTasks = asArray<Record<string, unknown>>(plugin.seasonalTasks)}
     {#if preTasks.length || postTasks.length || seasonalTasks.length}
       <section class="card">
-        <h2>Tasks</h2>
+        <h2>{tr('plugins.detail.tasks')}</h2>
         {#if preTasks.length > 0}
           <div class="task-group">
-            <h3>Pre-tasks ({preTasks.length})</h3>
+            <h3>{tr('plugins.detail.preTasks', { count: preTasks.length })}</h3>
             <ul class="task-list">
               {#each preTasks as t, idx (idx)}
                 <li>
                   {#if t.category}<span class="task-cat">{t.category}</span>{/if}
                   <strong>{t.title}</strong>
                   {#if t.daysBeforePlant != null}<span class="muted"
-                      >· {t.daysBeforePlant}d before plant</span
+                      >· {tr('plugins.detail.beforePlant', {
+                        days: t.daysBeforePlant as number
+                      })}</span
                     >{/if}
                   {#if t.daysBeforeFirstHarvest != null}<span class="muted"
-                      >· {t.daysBeforeFirstHarvest}d before first harvest</span
+                      >· {tr('plugins.detail.beforeFirstHarvest', {
+                        days: t.daysBeforeFirstHarvest as number
+                      })}</span
                     >{/if}
                   {#if asStr(t.body)}<p class="body">{t.body}</p>{/if}
                 </li>
@@ -934,17 +972,21 @@
         {/if}
         {#if postTasks.length > 0}
           <div class="task-group">
-            <h3>Post-tasks ({postTasks.length})</h3>
+            <h3>{tr('plugins.detail.postTasks', { count: postTasks.length })}</h3>
             <ul class="task-list">
               {#each postTasks as t, idx (idx)}
                 <li>
                   {#if t.category}<span class="task-cat">{t.category}</span>{/if}
                   <strong>{t.title}</strong>
                   {#if t.daysAfterPlant != null}<span class="muted"
-                      >· {t.daysAfterPlant}d after plant</span
+                      >· {tr('plugins.detail.afterPlant', {
+                        days: t.daysAfterPlant as number
+                      })}</span
                     >{/if}
                   {#if t.daysAfterHarvest != null}<span class="muted"
-                      >· {t.daysAfterHarvest}d after harvest</span
+                      >· {tr('plugins.detail.afterHarvest', {
+                        days: t.daysAfterHarvest as number
+                      })}</span
                     >{/if}
                   {#if asStr(t.body)}<p class="body">{t.body}</p>{/if}
                 </li>
@@ -954,19 +996,23 @@
         {/if}
         {#if seasonalTasks.length > 0}
           <div class="task-group">
-            <h3>Seasonal tasks ({seasonalTasks.length})</h3>
+            <h3>{tr('plugins.detail.seasonalTasks', { count: seasonalTasks.length })}</h3>
             <ul class="task-list">
               {#each seasonalTasks as t, idx (idx)}
                 <li>
                   {#if t.category}<span class="task-cat">{t.category}</span>{/if}
                   <strong>{t.title}</strong>
                   {#if t.kind}<span class="muted">· {t.kind}</span>{/if}
-                  {#if t.dayOfYear != null}<span class="muted">· day-of-year {t.dayOfYear}</span
+                  {#if t.dayOfYear != null}<span class="muted"
+                      >· {tr('plugins.detail.dayOfYear', { day: t.dayOfYear as number })}</span
                     >{/if}
                   {#if t.daysAfterPlanting != null}<span class="muted"
-                      >· +{t.daysAfterPlanting}d after planting</span
+                      >· {tr('plugins.detail.afterPlanting', {
+                        days: t.daysAfterPlanting as number
+                      })}</span
                     >{/if}
-                  {#if t.windowDays != null}<span class="muted">· ±{t.windowDays}d window</span
+                  {#if t.windowDays != null}<span class="muted"
+                      >· {tr('plugins.detail.window', { days: t.windowDays as number })}</span
                     >{/if}
                   {#if asStr(t.body)}<p class="body">{t.body}</p>{/if}
                 </li>
@@ -1003,17 +1049,16 @@
   {/if}
 
   <details class="card">
-    <summary>Raw JSON</summary>
+    <summary>{tr('plugins.detail.rawJson')}</summary>
     <pre>{JSON.stringify(plugin, null, 2)}</pre>
   </details>
 {/if}
 
 <section class="card">
-  <h2>Version history</h2>
+  <h2>{tr('plugins.detail.history')}</h2>
   {#if data.history.length === 0}
     <p class="empty">
-      No version rows on record. This plugin pre-dates Phase 22 versioning and hasn't been edited
-      since the backfill. Editing it will create the first row.
+      {tr('plugins.detail.noHistory')}
     </p>
   {:else}
     <PluginVersionTimeline

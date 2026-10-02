@@ -5,8 +5,11 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import type { PageData } from './$types';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
 
   let { data }: { data: PageData } = $props();
+
+  const tr = $derived(createT(data.locale));
 
   const dirtyCount = $derived(data.sprayers.filter((s) => s.needsDecon).length);
   const otherCount = $derived(data.otherTypes.reduce((n, t) => n + t.count, 0));
@@ -16,9 +19,9 @@
     currentPrefs().units === 'metric' ? ` (${fmt.qty(gpa, 'volumePerArea')})` : '';
 </script>
 
-<svelte:head><title>Equipment · CropCard</title></svelte:head>
+<svelte:head><title>{tr('settings.equip.pageTitle')}</title></svelte:head>
 
-<SettingsShell title="Equipment" kicker="Machinery">
+<SettingsShell title={tr('settings.equip.title')} kicker={tr('settings.equip.kicker')}>
   {#snippet badge()}
     {#if dirtyCount > 0}
       <Pill tone="rust">Decon needed</Pill>
@@ -26,15 +29,18 @@
   {/snippet}
 
   <SettingsSection
-    title={`Sprayers & calibration · ${data.sprayers.length}`}
+    title={tr('settings.equip.sprayersTitle', { count: data.sprayers.length })}
     sub="Calibrated GPA drives every tank-mix calculation. Sprayers that need decon block the next spray until cleaned."
   >
     {#snippet right()}
-      <a class="primary-sm" href="/equipment?add=sprayer"><Plus size={11} /> Add sprayer</a>
+      <a class="primary-sm" href="/equipment?add=sprayer"
+        ><Plus size={11} />
+        {tr('settings.equip.addSprayer')}</a
+      >
     {/snippet}
 
     {#if data.sprayers.length === 0}
-      <p class="empty">No sprayers yet. Add one, then run the 1/128-acre calibration.</p>
+      <p class="empty">{tr('settings.equip.noSprayers')}</p>
     {/if}
     {#each data.sprayers as s (s.id)}
       <div class="row">
@@ -44,12 +50,14 @@
           <div class="row-sub mono">
             {#if s.calibratedGpa != null}
               {s.calibratedGpa.toFixed(1)} GPA{metricGpa(s.calibratedGpa)}{s.calibrationDate
-                ? ` · calibrated ${fmtDate(s.calibrationDate)}`
+                ? tr('settings.equip.calibratedOn', { date: fmtDate(s.calibrationDate) })
                 : ''}
             {:else}
-              Uncalibrated
+              {tr('settings.equip.uncalibrated')}
             {/if}
-            {#if s.winterizedAt}· winterized {fmtDate(s.winterizedAt)}{/if}
+            {#if s.winterizedAt}{tr('settings.equip.winterizedOn', {
+                date: fmtDate(s.winterizedAt)
+              })}{/if}
           </div>
         </div>
         <div class="row-actions">
@@ -57,22 +65,24 @@
             <a class="ghost-sm rust" href="/spray/decon?sprayer={encodeURIComponent(s.id)}">Decon</a
             >
           {/if}
-          <a class="ghost-sm" href="/calibrate?sprayer={encodeURIComponent(s.id)}">Calibrate</a>
+          <a class="ghost-sm" href="/calibrate?sprayer={encodeURIComponent(s.id)}"
+            >{tr('settings.equip.calibrate')}</a
+          >
         </div>
       </div>
     {/each}
   </SettingsSection>
 
   <SettingsSection
-    title={`Other equipment · ${otherCount}`}
-    sub="Tractors, planters, mowers and the rest. Hour meters, maintenance logs and winterization live on each item."
+    title={tr('settings.equip.otherTitle', { count: otherCount })}
+    sub={tr('settings.equip.otherSub')}
   >
     {#snippet right()}
-      <a class="ghost-sm" href="/equipment">Manage all</a>
+      <a class="ghost-sm" href="/equipment">{tr('settings.equip.manageAll')}</a>
     {/snippet}
 
     {#if data.otherTypes.length === 0}
-      <p class="empty">Nothing besides sprayers yet.</p>
+      <p class="empty">{tr('settings.equip.none')}</p>
     {:else}
       <div class="type-grid">
         {#each data.otherTypes as t (t.type)}

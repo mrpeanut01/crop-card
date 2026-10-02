@@ -1,15 +1,13 @@
 <script lang="ts">
   import './animalForms.css';
-  import {
-    areaKindLabel,
-    localInputToMs,
-    msToLocalInput,
-    type AreaOption
-  } from '$lib/animals/display';
+  import { localInputToMs, msToLocalInput, type AreaOption } from '$lib/animals/display';
   import { submitMove, type MoveOutcome } from '$lib/animals/moveClient';
   import type { AnimalMoveInput } from '$lib/animals/apiSchemas';
   import type { ToxicPlantsByArea } from '$lib/animals/toxicAdjacency';
   import ToxicPlantsCallout from './ToxicPlantsCallout.svelte';
+  import { areaKindName, groupNoun } from './labels';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Member {
     id: string;
@@ -49,6 +47,7 @@
     onDone
   }: Props = $props();
   const uid = $props.id();
+  const tr = $derived(createT(page.data?.locale));
 
   const destinations = $derived(areas.filter((a) => a.id !== currentFieldId));
   let target = $state<'area' | 'group'>('area');
@@ -66,10 +65,13 @@
   let saveToday = $state(false);
   let form = $state<HTMLFormElement | null>(null);
 
-  const areaName = (id: string | null) => areas.find((a) => a.id === id)?.name ?? 'the new place';
+  const areaName = (id: string | null) =>
+    areas.find((a) => a.id === id)?.name ?? tr('animals.move.newPlace');
 
   function capacityText(c: { capacity: number; count: number; over: boolean } | null): string {
-    return c?.over ? ` Over capacity (${c.count} of ${c.capacity}).` : '';
+    return c?.over
+      ? ` ${tr('animals.move.overCapacity', { count: c.count, capacity: c.capacity })}`
+      : '';
   }
 
   async function submit(e: SubmitEvent) {
@@ -79,34 +81,37 @@
     saveToday = false;
     const movedAt = when === 'now' ? Date.now() : localInputToMs(earlier);
     if (movedAt === null) {
-      error = 'Pick when they moved.';
+      error = tr('animals.move.pickWhen');
       return;
     }
     let input: AnimalMoveInput;
     if (target === 'group') {
       if (!toGroupId) {
-        error = 'Pick a group.';
+        error = tr('animals.move.pickGroup');
         return;
       }
       input = { subjectType: 'animal', subjectId, toGroupId, movedAt };
     } else {
       if (!fieldId) {
-        error = 'Pick where they went.';
+        error = tr('animals.move.pickWhere');
         return;
       }
       input = { subjectType, subjectId, fieldId, movedAt };
       if (group && how === 'some') {
         const n = count ?? 0;
         if (!Number.isInteger(n) || n < 0) {
-          error = 'Enter a whole number.';
+          error = tr('animals.move.wholeNumber');
           return;
         }
         if (n + picked.length === 0) {
-          error = 'Say how many are moving.';
+          error = tr('animals.move.sayHowMany');
           return;
         }
         if (n > group.headCount) {
-          error = `Only ${group.headCount} unnamed are in this ${group.noun}.`;
+          error = tr('animals.move.onlyUnnamed', {
+            headCount: group.headCount,
+            noun: groupNoun(tr, group.noun)
+          });
           return;
         }
         if (n > 0) input.count = n;
@@ -124,44 +129,58 @@
         return;
       }
       if (out.status === 'queued') {
-        onDone(out, 'Saved on this phone. The move uploads when you have signal.');
+        onDone(out, tr('animals.move.queued'));
         return;
       }
-      const where =
+      const joined = joinGroups.find((g) => g.id === toGroupId)?.name;
+      const destination = areas.find((a) => a.id === fieldId)?.name;
+      const head =
         target === 'group'
-          ? `into ${joinGroups.find((g) => g.id === toGroupId)?.name ?? 'the group'}`
-          : `to ${areaName(fieldId)}`;
-      const split = out.move.newGroup ? ` They are now the group "${out.move.newGroup.name}".` : '';
+          ? joined
+            ? tr('animals.move.movedInto', { name: joined })
+            : tr('animals.move.movedIntoGroup')
+          : destination
+            ? tr('animals.move.movedTo', { name: destination })
+            : tr('animals.move.movedToNew');
+      const split = out.move.newGroup
+        ? ` ${tr('animals.move.nowGroup', { name: out.move.newGroup.name })}`
+        : '';
       const notes = out.warnings?.length ? ` ${out.warnings.join(' ')}` : '';
-      onDone(out, `Moved ${where}.${split}${capacityText(out.move.capacity)}${notes}`);
+      onDone(out, `${head}${split}${capacityText(out.move.capacity)}${notes}`);
     } catch {
-      error = "We couldn't save the move. Try again.";
+      error = tr('animals.move.saveFailed');
     } finally {
       saving = false;
     }
   }
 </script>
 
-<form class="af-form" bind:this={form} onsubmit={submit} novalidate aria-label="Move">
+<form
+  class="af-form"
+  bind:this={form}
+  onsubmit={submit}
+  novalidate
+  aria-label={tr('animals.moveAction')}
+>
   {#if subjectType === 'animal' && joinGroups.length > 0}
     <div class="af-segment">
       <label class="af-tile" class:on={target === 'area'}>
         <input type="radio" name="{uid}-target" value="area" bind:group={target} />
-        <span>To a place</span>
+        <span>{tr('animals.move.toPlace')}</span>
       </label>
       <label class="af-tile" class:on={target === 'group'}>
         <input type="radio" name="{uid}-target" value="group" bind:group={target} />
-        <span>Into a group</span>
+        <span>{tr('animals.move.intoGroup')}</span>
       </label>
     </div>
   {/if}
 
   {#if target === 'area'}
-    <label class="af-label" for="{uid}-to">Move to</label>
+    <label class="af-label" for="{uid}-to">{tr('animals.move.moveTo')}</label>
     <select id="{uid}-to" class="af-input" bind:value={fieldId}>
-      <option value="" disabled>Pick a place</option>
+      <option value="" disabled>{tr('animals.move.pickPlace')}</option>
       {#each destinations as a (a.id)}
-        <option value={a.id}>{a.name} ({areaKindLabel(a.kind)})</option>
+        <option value={a.id}>{a.name} ({areaKindName(tr, a.kind)})</option>
       {/each}
     </select>
     {#if toxic && fieldId}
@@ -173,30 +192,33 @@
       />
     {/if}
     {#if destinations.length === 0}
-      <p class="af-help">There is nowhere else to move them yet. The owner can add a place.</p>
+      <p class="af-help">{tr('animals.move.nowhere')}</p>
     {/if}
     {#if inGroup}
-      <p class="af-help">Moving this one on its own takes it out of {inGroup.name}.</p>
+      <p class="af-help">{tr('animals.move.takesOut', { name: inGroup.name })}</p>
     {/if}
 
     {#if group && group.total > 1}
       <fieldset class="af-fieldset">
-        <legend class="af-legend">How many?</legend>
+        <legend class="af-legend">{tr('animals.howMany')}</legend>
         <div class="af-segment">
           <label class="af-tile" class:on={how === 'all'}>
             <input type="radio" name="{uid}-how" value="all" bind:group={how} />
-            <span>All {group.total}</span>
+            <span>{tr('animals.move.all', { total: group.total })}</span>
           </label>
           <label class="af-tile" class:on={how === 'some'}>
             <input type="radio" name="{uid}-how" value="some" bind:group={how} />
-            <span>Some of them</span>
+            <span>{tr('animals.move.some')}</span>
           </label>
         </div>
       </fieldset>
       {#if how === 'some'}
         {#if group.headCount > 0}
           <label class="af-label" for="{uid}-count">
-            How many unnamed? <span class="af-optional">(of {group.headCount})</span>
+            {tr('animals.move.howManyUnnamed')}
+            <span class="af-optional"
+              >{tr('animals.move.ofCount', { headCount: group.headCount })}</span
+            >
           </label>
           <input
             id="{uid}-count"
@@ -211,7 +233,7 @@
         {/if}
         {#if group.members.length > 0}
           <fieldset class="af-fieldset">
-            <legend class="af-legend">Named ones moving</legend>
+            <legend class="af-legend">{tr('animals.move.namedMoving')}</legend>
             {#each group.members as m (m.id)}
               <label class="af-check">
                 <input type="checkbox" value={m.id} bind:group={picked} />
@@ -221,44 +243,47 @@
           </fieldset>
         {/if}
         <label class="af-label" for="{uid}-gname">
-          Name for the ones moving <span class="af-optional">(optional)</span>
+          {tr('animals.move.nameMoving')}
+          <span class="af-optional">{tr('animals.optional')}</span>
         </label>
         <input
           id="{uid}-gname"
           class="af-input"
           type="text"
           maxlength="80"
-          placeholder="e.g. Broody hens"
+          placeholder={tr('animals.move.phBroody')}
           bind:value={newGroupName}
         />
-        <p class="af-help">They become their own {group.noun} at the new place.</p>
+        <p class="af-help">
+          {tr('animals.move.ownGroup', { noun: groupNoun(tr, group.noun) })}
+        </p>
       {/if}
     {/if}
   {:else}
-    <label class="af-label" for="{uid}-join">Which group?</label>
+    <label class="af-label" for="{uid}-join">{tr('animals.move.whichGroup')}</label>
     <select id="{uid}-join" class="af-input" bind:value={toGroupId}>
-      <option value="" disabled>Pick a group</option>
+      <option value="" disabled>{tr('animals.move.pickGroup')}</option>
       {#each joinGroups as g (g.id)}
         <option value={g.id}>{g.name}</option>
       {/each}
     </select>
-    <p class="af-help">It then lives wherever that group lives.</p>
+    <p class="af-help">{tr('animals.move.livesWith')}</p>
   {/if}
 
   <fieldset class="af-fieldset">
-    <legend class="af-legend">When?</legend>
+    <legend class="af-legend">{tr('animals.when')}</legend>
     <div class="af-segment">
       <label class="af-tile" class:on={when === 'now'}>
         <input type="radio" name="{uid}-when" value="now" bind:group={when} />
-        <span>Just now</span>
+        <span>{tr('animals.move.justNow')}</span>
       </label>
       <label class="af-tile" class:on={when === 'earlier'}>
         <input type="radio" name="{uid}-when" value="earlier" bind:group={when} />
-        <span>Earlier</span>
+        <span>{tr('animals.move.earlier')}</span>
       </label>
     </div>
     {#if when === 'earlier'}
-      <label class="af-label" for="{uid}-at">Moved at</label>
+      <label class="af-label" for="{uid}-at">{tr('animals.move.movedAt')}</label>
       <input id="{uid}-at" class="af-input" type="datetime-local" bind:value={earlier} />
     {/if}
   </fieldset>
@@ -279,7 +304,7 @@
     >
   {/if}
   <button class="af-primary" type="submit" disabled={saving}>
-    {saving ? 'Saving…' : 'Save the move'}
+    {saving ? tr('animals.saving') : tr('animals.move.saveMove')}
   </button>
 </form>
 

@@ -3,6 +3,8 @@
   import { Crosshair } from 'lucide-svelte';
   import Modal from '$lib/components/ui/Modal.svelte';
   import Button from '$lib/components/ui/Button.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const {
     open,
@@ -20,6 +22,7 @@
     onApply: (lat: number, lon: number) => void;
   } = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   let draftLat = $state<number | null>(null);
   let draftLon = $state<number | null>(null);
   let source = $state<string | null>(null);
@@ -31,7 +34,7 @@
     untrack(() => {
       draftLat = lat;
       draftLon = lon;
-      source = lat != null && lon != null ? 'Saved location' : null;
+      source = lat != null && lon != null ? tr('farm.loc.saved') : null;
       geoError = null;
     });
   });
@@ -44,22 +47,20 @@
 
   function useGps() {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      geoError = "This browser can't share its location. Tap the map instead.";
+      geoError = tr('farm.loc.noGeo');
       return;
     }
     geoBusy = true;
     geoError = null;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setDraft(pos.coords.latitude, pos.coords.longitude, 'GPS fix');
+        setDraft(pos.coords.latitude, pos.coords.longitude, tr('farm.loc.gps'));
         geoBusy = false;
       },
       (err) => {
         geoBusy = false;
         geoError =
-          err.code === err.PERMISSION_DENIED
-            ? 'Location permission was declined. Tap the map instead.'
-            : "Couldn't get a GPS fix. Tap the map instead.";
+          err.code === err.PERMISSION_DENIED ? tr('farm.loc.denied') : tr('farm.loc.failed');
       },
       { enableHighAccuracy: true, timeout: 15000 }
     );
@@ -72,42 +73,42 @@
   }
 </script>
 
-<Modal {open} {onClose} title="Find your farm on the map">
+<Modal {open} {onClose} title={tr('farm.loc.title')}>
   <div class="body">
-    <p class="lede">Use your phone's GPS, or tap the map where the farm sits.</p>
+    <p class="lede">{tr('farm.loc.lede')}</p>
     <Button variant="ghost" size="sm" loading={geoBusy} onclick={useGps} data-testid="gps-locate">
       {#snippet iconLeft()}<Crosshair size={14} />{/snippet}
-      {geoBusy ? 'Finding you…' : 'Use my GPS location'}
+      {geoBusy ? tr('farm.loc.finding') : tr('farm.loc.useGps')}
     </Button>
     {#if geoError}
       <p class="error" role="alert">{geoError}</p>
     {/if}
     {#if open}
       {#await import('$lib/components/onboarding/LocationPicker.svelte')}
-        <div class="map-loading">Loading map…</div>
+        <div class="map-loading">{tr('farm.loc.loadingMap')}</div>
       {:then { default: LocationPicker }}
         <LocationPicker
           lat={draftLat}
           lon={draftLon}
           {fallback}
-          onPick={(la, lo) => setDraft(la, lo, 'Pin on the map')}
+          onPick={(la, lo) => setDraft(la, lo, tr('farm.loc.pin'))}
         />
       {:catch}
-        <div class="map-loading">The map couldn't load. Use GPS or type the coordinates.</div>
+        <div class="map-loading">{tr('farm.loc.mapFailed')}</div>
       {/await}
     {/if}
     <p class="picked mono" role="status" data-testid="gps-picked">
       {#if draftLat != null && draftLon != null}
         {source ? `${source} · ` : ''}{draftLat.toFixed(4)}, {draftLon.toFixed(4)}
       {:else}
-        No location picked yet.
+        {tr('farm.loc.none')}
       {/if}
     </p>
   </div>
   {#snippet footer()}
-    <Button variant="ghost" onclick={onClose}>Cancel</Button>
+    <Button variant="ghost" onclick={onClose}>{tr('farm.cancel')}</Button>
     <Button onclick={apply} disabled={draftLat == null || draftLon == null} data-testid="gps-apply"
-      >Use this location</Button
+      >{tr('farm.loc.use')}</Button
     >
   {/snippet}
 </Modal>

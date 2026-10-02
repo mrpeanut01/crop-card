@@ -2,7 +2,6 @@
   import { onMount, tick } from 'svelte';
   import { footprintBounds, pointFt, pointInBedIn, rectFt, snap } from '$lib/garden/geometry';
   import { familyGlyph } from '$lib/garden/familyGlyph';
-  import { shortDate } from '$lib/garden/occupancy';
   import type { BedLayout, Footprint, PlacedPlanting, PointFt, RectFt } from '$lib/garden/types';
   import { getDesigner } from './designerState.svelte';
   import {
@@ -19,9 +18,11 @@
     zoomView,
     type View
   } from './canvasMath';
-  import { familyTone, ft, sizeLabel } from './format';
+  import { familyTone, ft, shortDate, sizeLabel } from './format';
+  import type { MessageKey } from '$lib/i18n';
 
   const d = getDesigner();
+  const tr = $derived(d.tr);
 
   const DRAG_THRESHOLD_PX = 6;
   const HIT_PX = 48;
@@ -502,23 +503,28 @@
     return d.wholeSeason ? 'later' : null;
   }
 
-  function openChip(bed: BedLayout): string {
+  function openChip(bed: BedLayout, form: 'long' | 'short' = 'long'): string {
     const occ = d.occupancy.get(bed.blockId);
     if (!occ) return '';
+    const key = form === 'long' ? 'garden.canvas.openFrom' : 'garden.canvas.openShort';
     if (occ.occupants.length === 0) {
-      return occ.openSinceMs != null ? `Open from ${shortDate(occ.openSinceMs)}` : 'Open';
+      return occ.openSinceMs != null
+        ? tr(key, { date: shortDate(occ.openSinceMs, tr) })
+        : tr('garden.list.open');
     }
-    return occ.nextOpenMs != null ? `Open from ${shortDate(occ.nextOpenMs)}` : 'Full';
+    return occ.nextOpenMs != null
+      ? tr(key, { date: shortDate(occ.nextOpenMs, tr) })
+      : tr('garden.list.full');
   }
 
   /** Bed name bottom-left and its open chip bottom-right, or the chip on its
    *  own line above when both don't fit; each cut to the bed's width. */
   function bedLabels(bed: BedLayout, r: RectFt, unplaced: boolean) {
-    const full = `${bed.name}${unplaced ? ' · Not placed yet' : ''}`;
+    const full = `${bed.name}${unplaced ? ` · ${tr('garden.list.notPlaced')}` : ''}`;
     const tall = r.l > r.w * 1.5 && textWidthFt(bed.name, fontFt) > r.w - 0.3;
     if (tall) {
       const along = r.l - 0.4;
-      const chip = openChip(bed).replace('Open from ', 'Open ');
+      const chip = openChip(bed, 'short');
       const both = `${full} · ${chip}`;
       return {
         name: '',
@@ -530,7 +536,7 @@
     }
     const room = r.w - 0.3;
     const long = openChip(bed);
-    const short = long.replace('Open from ', 'Open ');
+    const short = openChip(bed, 'short');
     const fits = (t: string) => textWidthFt(t, fontFt * 0.8) <= room;
     const sameLine = textWidthFt(full, fontFt) + textWidthFt(long, fontFt * 0.8) + 0.3 <= room;
     const ownLine = !sameLine && r.l > fontFt * 2.6;
@@ -618,7 +624,11 @@
     preserveAspectRatio="xMidYMid meet"
     style:aspect-ratio="{fit.w} / {fit.h}"
     role="group"
-    aria-label="{d.canvas.name} layout, {ft(d.canvas.widthFt)} by {ft(d.canvas.lengthFt)} feet"
+    aria-label={tr('garden.canvas.layout', {
+      name: d.canvas.name,
+      w: ft(d.canvas.widthFt),
+      l: ft(d.canvas.lengthFt)
+    })}
     onpointerdown={onPointerDown}
     onpointermove={onPointerMove}
     onpointerup={onPointerUp}
@@ -678,7 +688,7 @@
 
     {#each d.design.landmarks ?? [] as m (m.id)}
       {#if m.rect}
-        <g class="landmark" aria-label="{m.name}, landmark">
+        <g class="landmark" aria-label={tr('garden.canvas.landmark', { name: m.name })}>
           <rect
             x={m.rect.x}
             y={m.rect.y}
@@ -764,7 +774,7 @@
                 plantingPreview?.cropId === p.cropId
                   ? plantingPreview.rect
                   : footprintBounds(vfp, bed)}
-              {@const stage = d.stageOf(p.cropId)}
+              {@const stage = d.stageText(p.cropId)}
               {@const psel = d.selectedCropId === p.cropId}
               {@const notPlaced = !p.footprint}
               {@const glyph = familyGlyph(p.cropFamily)}
@@ -782,10 +792,10 @@
                 role="button"
                 tabindex={selected || psel ? 0 : -1}
                 aria-label="{p.varietyDisplayName}{p.plantCount
-                  ? `, ${p.plantCount} plants`
+                  ? `, ${tr('garden.crop.plantsMeta', { count: p.plantCount })}`
                   : ''}{stage ? `, ${stage.toLowerCase()}` : ''}{notPlaced
-                  ? ', not placed yet'
-                  : ''}, {glyph.label.toLowerCase()}"
+                  ? `, ${tr('garden.canvas.notPlacedLower')}`
+                  : ''}, {tr(`garden.glyph.${glyph.key}` as MessageKey).toLowerCase()}"
                 onkeydown={(e) => onPlantingKey(e, p)}
               >
                 <rect
@@ -829,7 +839,7 @@
                       x={pr.x + 0.15}
                       y={pr.y + fontFt * 2}
                       font-size={fontFt * 0.8}
-                      >{fitText('Not placed yet', pr.w - 0.3, fontFt * 0.8)}</text
+                      >{fitText(tr('garden.list.notPlaced'), pr.w - 0.3, fontFt * 0.8)}</text
                     >
                   {:else if stage && pr.l * pxPerFt > 34}
                     <text
@@ -912,7 +922,7 @@
     {#if d.canvas.hasNorth}
       <g
         class="north"
-        aria-label="North is up"
+        aria-label={tr('garden.canvas.north')}
         transform="translate({d.canvas.widthFt - fontFt}, {fontFt * 0.2})"
       >
         <path
@@ -925,10 +935,10 @@
   </svg>
   {#if d.preview}
     <p class="drag-readout" aria-hidden="true">
-      {ft(d.preview.rect.x)} ft from west · {ft(d.preview.rect.y)} ft from north · {sizeLabel(
-        d.preview.rect.w,
-        d.preview.rect.l
-      )}
+      {tr('garden.canvas.previewPos', {
+        x: ft(d.preview.rect.x),
+        y: ft(d.preview.rect.y)
+      })} · {sizeLabel(d.preview.rect.w, d.preview.rect.l)}
     </p>
   {/if}
 </div>

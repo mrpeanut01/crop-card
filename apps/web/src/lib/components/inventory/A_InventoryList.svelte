@@ -12,6 +12,8 @@
    */
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
+  import { createT } from '$lib/i18n';
+  import { invTypeWord } from './typeLabel';
   import InvTypeChip from './InvTypeChip.svelte';
   import InventoryEmptyGrid from './InventoryEmptyGrid.svelte';
   import CardView from '$lib/components/cards/CardView.svelte';
@@ -35,6 +37,8 @@
   }
 
   const { type, mode, counts, rows, canAdd = true, visibleTypes: visibleProp }: Props = $props();
+
+  const tr = $derived(createT($page.data?.locale));
 
   const visibleTypes = $derived(
     visibleProp ?? visibleInventoryTypes({ stockCounts: counts, hasAnimals: false, active: type })
@@ -78,10 +82,10 @@
       const withArchetype = catalog.filter((c) => c.archetype).length;
       const archetypes = new Set(catalog.map((c) => c.archetype).filter(Boolean));
       return [
-        { label: 'In the catalog', value: catalog.length },
-        { label: 'With archetype', value: withArchetype },
-        { label: 'Distinct archetypes', value: archetypes.size },
-        { label: 'Source', value: 'core' }
+        { label: tr('inv.list.kpi.inCatalog'), value: catalog.length },
+        { label: tr('inv.list.kpi.withArchetype'), value: withArchetype },
+        { label: tr('inv.list.kpi.distinctArchetypes'), value: archetypes.size },
+        { label: tr('inv.list.kpi.source'), value: 'core' }
       ];
     }
     // Stock modes: pesticide / fertility / seed
@@ -93,17 +97,21 @@
       (s) => s.earliestExpiry !== undefined && s.earliestExpiry <= sixtyDays
     ).length;
     return [
-      { label: 'Active SKUs', value: stock.length },
-      { label: 'On hand (Σ)', value: onHand.toFixed(1) },
-      { label: 'Reorder soon', value: reorderSoon },
-      { label: 'Expiring 60d', value: expiring60 }
+      { label: tr('inv.list.kpi.activeSkus'), value: stock.length },
+      { label: tr('inv.list.kpi.onHandSum'), value: onHand.toFixed(1) },
+      { label: tr('inv.list.kpi.reorderSoon'), value: reorderSoon },
+      { label: tr('inv.list.kpi.expiring60'), value: expiring60 }
     ];
   });
 
   // Crop is catalog only; feed is stock only, like equipment (D0-17).
   const showCatalogToggle = $derived(type !== 'crop' && type !== 'feed');
   const addLabel = $derived(
-    type === 'feed' ? 'feed or bedding' : type === 'animal-health' ? 'medicine' : type
+    type === 'feed'
+      ? tr('inv.list.addLabel.feed')
+      : type === 'animal-health'
+        ? tr('inv.list.addLabel.medicine')
+        : invTypeWord(tr, type)
   );
 
   const rowCards = $derived(filteredRows.map((r) => inventoryRowCard(r, type, currentPrefs())));
@@ -111,17 +119,16 @@
 
 <header class="inv-header">
   <div class="inv-header-title">
-    <span class="kicker">Inventory</span>
-    <h1 class="serif">All inventory</h1>
+    <span class="kicker">{tr('inv.list.kicker')}</span>
+    <h1 class="serif">{tr('inv.list.title')}</h1>
     <p class="lede">
-      {visibleTypes.includes('feed')
-        ? 'Pesticides, fertility, seeds, crops, feed and animal health in one place.'
-        : 'Pesticides, fertility, seeds and crops in one place.'} Sprayers and other gear live in
-      <a href="/equipment">Equipment</a>.
+      {visibleTypes.includes('feed') ? tr('inv.list.ledeWithAnimals') : tr('inv.list.ledeBase')}
+      {tr('inv.list.ledeGear')}
+      <a href="/equipment">{tr('inv.list.equipmentLink')}</a>.
     </p>
   </div>
   {#if type !== 'crop'}
-    <a class="add-cta" href="/inventory/{type}/add">+ Add {addLabel}</a>
+    <a class="add-cta" href="/inventory/{type}/add">{tr('inv.list.add', { what: addLabel })}</a>
   {/if}
 </header>
 
@@ -133,14 +140,14 @@
 />
 
 {#if showCatalogToggle}
-  <div class="mode-toggle" role="group" aria-label="Stock vs catalog">
+  <div class="mode-toggle" role="group" aria-label={tr('inv.list.stockVsCatalog')}>
     <button
       type="button"
       class:active={mode === 'stock'}
       aria-pressed={mode === 'stock'}
       onclick={() => switchMode('stock')}
     >
-      Stock
+      {tr('inv.list.stock')}
     </button>
     <button
       type="button"
@@ -148,12 +155,12 @@
       aria-pressed={mode === 'catalog'}
       onclick={() => switchMode('catalog')}
     >
-      Catalog
+      {tr('inv.list.catalog')}
     </button>
   </div>
 {/if}
 
-<div class="kpi-strip" role="list" aria-label="At-a-glance metrics">
+<div class="kpi-strip" role="list" aria-label={tr('inv.list.metrics')}>
   {#each kpis as kpi (kpi.label)}
     <div class="kpi-card" role="listitem">
       <div class="kpi-value serif">{kpi.value}</div>
@@ -164,9 +171,7 @@
 
 {#if rows.length === 0 && type === 'animal-health' && mode === 'catalog'}
   <p class="catalog-pending" role="note" data-testid="animal-health-catalog-empty">
-    No animal-health products are in the library yet. Their withdrawal times have to be checked
-    against the printed label before they are added. Until then, add your bottles under Stock, and
-    enter the withdrawal from the label or your vet when you record a treatment.
+    {tr('inv.list.catalogPending')}
   </p>
 {:else if rows.length === 0}
   <InventoryEmptyGrid activeType={type} {canAdd} types={visibleTypes} />
@@ -175,10 +180,12 @@
     <input
       type="search"
       bind:value={search}
-      placeholder="Search by name…"
-      aria-label="Search inventory"
+      placeholder={tr('inv.list.searchPlaceholder')}
+      aria-label={tr('inv.list.searchAria')}
     />
-    <span class="count mono">{filteredRows.length} of {rows.length}</span>
+    <span class="count mono"
+      >{tr('inv.list.countOf', { shown: filteredRows.length, total: rows.length })}</span
+    >
   </div>
 
   <div class="table-wrap">
@@ -186,23 +193,23 @@
       <thead>
         <tr>
           {#if type === 'crop' || mode === 'catalog'}
-            <th>Id</th>
-            <th>{type === 'crop' ? 'Archetype' : 'Type'}</th>
-            <th>{type === 'crop' ? 'Family' : 'Source'}</th>
-            <th>{type === 'crop' ? 'DTM' : 'Version'}</th>
+            <th>{tr('inv.list.col.id')}</th>
+            <th>{type === 'crop' ? tr('inv.list.col.archetype') : tr('inv.list.col.type')}</th>
+            <th>{type === 'crop' ? tr('inv.list.col.family') : tr('inv.list.col.source')}</th>
+            <th>{type === 'crop' ? tr('inv.list.col.dtm') : tr('inv.list.col.version')}</th>
           {:else}
-            <th>Item</th>
-            <th>{type === 'seed' ? 'Crop' : 'Kind'}</th>
-            <th class="num">On hand</th>
-            <th class="num">Lots</th>
-            <th>Expires</th>
+            <th>{tr('inv.list.col.item')}</th>
+            <th>{type === 'seed' ? tr('inv.list.col.crop') : tr('inv.list.col.kind')}</th>
+            <th class="num">{tr('inv.list.col.onHand')}</th>
+            <th class="num">{tr('inv.list.col.lots')}</th>
+            <th>{tr('inv.list.col.expires')}</th>
           {/if}
         </tr>
       </thead>
       <tbody>
         {#if filteredRows.length === 0}
           <tr>
-            <td colspan="6" class="empty">Nothing matches that search.</td>
+            <td colspan="6" class="empty">{tr('inv.list.noMatch')}</td>
           </tr>
         {:else}
           {#each filteredRows as row (row.kind === 'catalog' ? row.pluginId : row.id)}
@@ -242,9 +249,9 @@
     </table>
   </div>
 
-  <ul class="inv-cards" data-testid="inventory-cards" aria-label="Inventory">
+  <ul class="inv-cards" data-testid="inventory-cards" aria-label={tr('inv.list.cardsAria')}>
     {#if rowCards.length === 0}
-      <li class="cards-empty">Nothing matches that search.</li>
+      <li class="cards-empty">{tr('inv.list.noMatch')}</li>
     {:else}
       {#each rowCards as card, i (inventoryRowId(filteredRows[i]))}
         <li>

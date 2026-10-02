@@ -22,8 +22,11 @@
    *   - #473 — quantity on add and edit; seeds count in Seeds by default
    */
   import { goto } from '$app/navigation';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import { untrack } from 'svelte';
   import InvSection from './InvSection.svelte';
+  import { invTypeWord, qtyStatusLabel } from './typeLabel';
   import InvField from './InvField.svelte';
   import LibraryPicker from './LibraryPicker.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
@@ -41,7 +44,7 @@
     stockUnitLabel,
     type StockUnit
   } from '$lib/stock/units';
-  import { QUANTITY_STATUS_LABELS, type QuantityStatus } from '$lib/stock/quantityStatus';
+  import type { QuantityStatus } from '$lib/stock/quantityStatus';
   import {
     ANIMAL_HEALTH_UNITS,
     FEED_UNITS,
@@ -97,6 +100,7 @@
   }
 
   const { type, existing, prefill, library = [], onSaved, onCancel }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const isEdit = $derived(!!existing);
   const isSeed = $derived(type === 'seed');
@@ -266,25 +270,40 @@
   }
   function placeholdersFor(t: InventoryType): { displayName: string; shortName: string } {
     if (t === 'seed')
-      return { displayName: 'e.g. Cherokee Purple Tomato', shortName: 'e.g. Cherokee Purple' };
+      return {
+        displayName: tr('inv.form.ph.seed.name'),
+        shortName: tr('inv.form.ph.seed.short')
+      };
     if (t === 'fertility')
-      return { displayName: 'e.g. Calcium Nitrate 15.5-0-0', shortName: 'e.g. CalNit' };
-    if (t === 'feed') return { displayName: 'e.g. Layer pellets 16%', shortName: 'e.g. Layer' };
+      return {
+        displayName: tr('inv.form.ph.fert.name'),
+        shortName: tr('inv.form.ph.fert.short')
+      };
+    if (t === 'feed')
+      return { displayName: tr('inv.form.ph.feed.name'), shortName: tr('inv.form.ph.feed.short') };
     if (t === 'animal-health')
-      return { displayName: 'e.g. the name on the bottle', shortName: 'e.g. Dewormer' };
-    return { displayName: 'e.g. Roundup PowerMAX', shortName: 'e.g. Roundup PM' };
+      return { displayName: tr('inv.form.ph.med.name'), shortName: tr('inv.form.ph.med.short') };
+    return { displayName: tr('inv.form.ph.pest.name'), shortName: tr('inv.form.ph.pest.short') };
   }
   const placeholders = $derived(placeholdersFor(type));
   const categoryOptions = $derived(categoryOptionsFor(type));
-  const CATEGORY_LABELS: Partial<Record<StockCategory, string>> = {
-    feed: 'Feed',
-    bedding: 'Bedding',
-    'animal-health': 'Animal health'
-  };
+  function categoryLabel(c: StockCategory): string {
+    const labels: Partial<Record<StockCategory, string>> = {
+      feed: tr('inv.feed.feed'),
+      bedding: tr('inv.feed.bedding'),
+      'animal-health': tr('inv.ah.kicker'),
+      herbicide: tr('inv.form.cat.herbicide'),
+      insecticide: tr('inv.form.cat.insecticide'),
+      fungicide: tr('inv.form.cat.fungicide'),
+      fertilizer: tr('inv.form.cat.fertilizer'),
+      seed: tr('inv.form.cat.seed')
+    };
+    return labels[c] ?? c;
+  }
   function nounFor(t: InventoryType): string {
-    if (t === 'feed') return 'feed or bedding';
-    if (t === 'animal-health') return 'medicine';
-    return t;
+    if (t === 'feed') return tr('inv.list.addLabel.feed');
+    if (t === 'animal-health') return tr('inv.list.addLabel.medicine');
+    return invTypeWord(tr, t);
   }
 
   const unitOptions = $derived.by((): StockUnit[] => {
@@ -314,9 +333,11 @@
     const parts: string[] = [];
     const fmt = (n: number) =>
       formatStockQuantity(n, existing.defaultUnit, undefined, { category, digits: 2 });
-    if ((existing.onOrder ?? 0) > 0) parts.push(`${fmt(existing.onOrder ?? 0)} ordered`);
-    if ((existing.planned ?? 0) > 0) parts.push(`${fmt(existing.planned ?? 0)} planned`);
-    return parts.length ? parts.join(' and ') : null;
+    if ((existing.onOrder ?? 0) > 0)
+      parts.push(tr('inv.form.amountOrdered', { amount: fmt(existing.onOrder ?? 0) }));
+    if ((existing.planned ?? 0) > 0)
+      parts.push(tr('inv.form.amountPlanned', { amount: fmt(existing.planned ?? 0) }));
+    return parts.length ? parts.join(` ${tr('inv.form.and')} `) : null;
   });
 
   // #253 — seed requires a linked crop category.
@@ -326,31 +347,31 @@
   function validate(): boolean {
     fieldErrors = {};
     if (!displayName.trim()) {
-      fieldErrors.displayName = 'Display name is required';
+      fieldErrors.displayName = tr('inv.form.err.displayName');
     }
     if (lotBearing) {
       if (!defaultUnit) {
-        fieldErrors.defaultUnit = 'Pick a unit';
+        fieldErrors.defaultUnit = tr('inv.form.err.unit');
       }
       if (requiresLink && !pluginId.trim()) {
-        fieldErrors.pluginId = 'Pick a crop category for this seed so the planner can use it';
+        fieldErrors.pluginId = tr('inv.form.err.category');
       }
       if (quantity != null && (!Number.isFinite(quantity) || quantity < 0)) {
-        fieldErrors.quantity = 'On hand cannot be negative';
+        fieldErrors.quantity = tr('inv.form.err.negative');
       }
     }
     if (isFeed) {
       if (medicated) fieldErrors.medicated = MEDICATED_FEED_MESSAGE;
       if (defaultUnit === 'bag' && !(lbPerBag != null && lbPerBag > 0)) {
-        fieldErrors.lbPerBag = 'Say how many pounds are in one bag';
+        fieldErrors.lbPerBag = tr('inv.form.err.lbPerBag');
       }
-      if (scoopLb != null && !(scoopLb > 0)) fieldErrors.scoopLb = 'A scoop must be more than 0 lb';
+      if (scoopLb != null && !(scoopLb > 0)) fieldErrors.scoopLb = tr('inv.form.err.scoop');
     }
     if (isMed && nadaText.trim() && !normalizeNada(nadaText)) {
-      fieldErrors.nada = 'Type it the way the label prints it, e.g. NADA 141-061';
+      fieldErrors.nada = tr('inv.form.err.nada');
     }
     if (reorderThreshold != null && reorderThreshold < 0) {
-      fieldErrors.reorderThreshold = 'Reorder threshold cannot be negative';
+      fieldErrors.reorderThreshold = tr('inv.form.err.reorder');
     }
     return Object.keys(fieldErrors).length === 0;
   }
@@ -364,7 +385,7 @@
     let savedId: string | null = null;
     try {
       if (type === 'crop') {
-        error = 'Crop categories are versioned. Upload a new version in the crop library.';
+        error = tr('inv.form.err.cropVersioned');
         return;
       }
       savedId = await submitLotBearing();
@@ -427,9 +448,7 @@
           notes: 'Changed on the edit form'
         });
         if (!q.ok) {
-          throw new Error(
-            `Saved the details, but the quantity did not change: ${await apiError(q)}`
-          );
+          throw new Error(tr('inv.form.err.qtyNotChanged', { error: await apiError(q) }));
         }
       }
       return existing.id;
@@ -452,7 +471,7 @@
       });
       if (!lot.ok) {
         throw new Error(
-          `Saved ${displayName.trim()}, but the quantity did not save: ${await apiError(lot)}. Save again to retry the quantity.`
+          tr('inv.form.err.qtyNotSaved', { name: displayName.trim(), error: await apiError(lot) })
         );
       }
     }
@@ -462,7 +481,9 @@
   async function apiError(res: Response): Promise<string> {
     const body = await res.json().catch(() => null);
     if (res.status === 403) {
-      return `Only the farm owner can save inventory changes${body?.message ? ` (${body.message})` : ''}.`;
+      return body?.message
+        ? tr('inv.form.err.ownerOnlyDetail', { detail: body.message })
+        : tr('inv.form.err.ownerOnly');
     }
     const issue = body?.issues?.[0];
     const detail = issue?.message
@@ -472,7 +493,7 @@
   }
 
   function handleCancel(): void {
-    if (dirty && !confirm('Discard unsaved changes?')) return;
+    if (dirty && !confirm(tr('inv.form.discard'))) return;
     if (onCancel) {
       onCancel();
       return;
@@ -491,24 +512,31 @@
 <svelte:window on:beforeunload={onBeforeUnload} />
 
 <header class="form-header">
-  <span class="kicker">{isEdit ? 'Edit' : 'Add'} · {nounFor(type)}</span>
+  <span class="kicker"
+    >{isEdit
+      ? tr('inv.form.kickerEdit', { what: nounFor(type) })
+      : tr('inv.add.kicker', { what: nounFor(type) })}</span
+  >
   <h1 class="serif">
-    {isEdit ? displayName || '(unnamed)' : `New ${nounFor(type)}`}
+    {isEdit ? displayName || tr('inv.form.unnamed') : tr('inv.add.new', { what: nounFor(type) })}
   </h1>
 </header>
 
 {#if showPrefillBanner && prefill}
   <div class="prefill-banner" role="status">
     <Provenance source={prefill.source} />
-    <span
-      >Pre-filled for your review. Check each field, then save. Nothing is recorded until you do.</span
-    >
+    <span>{tr('inv.form.prefill')}</span>
   </div>
 {/if}
 
 <form onsubmit={handleSubmit} class="form-body">
-  <InvSection title="Identity" kicker="Required">
-    <InvField id="displayName" label="Display name" chip="required" error={fieldErrors.displayName}>
+  <InvSection title={tr('inv.form.identity')} kicker={tr('inv.form.required')}>
+    <InvField
+      id="displayName"
+      label={tr('inv.form.displayName')}
+      chip="required"
+      error={fieldErrors.displayName}
+    >
       <input
         id="displayName"
         type="text"
@@ -520,7 +548,7 @@
     </InvField>
 
     {#if lotBearing}
-      <InvField id="shortName" label="Short label" hint="Compact UI label (optional)">
+      <InvField id="shortName" label={tr('inv.form.shortLabel')} hint={tr('inv.form.shortHint')}>
         <input
           id="shortName"
           type="text"
@@ -531,10 +559,10 @@
       </InvField>
 
       {#if categoryOptions.length > 1}
-        <InvField id="category" label="Kind" chip="required">
+        <InvField id="category" label={tr('inv.list.col.kind')} chip="required">
           <select id="category" bind:value={category}>
             {#each categoryOptions as opt (opt)}
-              <option value={opt}>{CATEGORY_LABELS[opt] ?? opt}</option>
+              <option value={opt}>{categoryLabel(opt)}</option>
             {/each}
           </select>
         </InvField>
@@ -543,16 +571,16 @@
   </InvSection>
 
   {#if isFeed}
-    <InvSection title="Bag and scoop" kicker="Feed">
+    <InvSection title={tr('inv.feed.bagAndScoop')} kicker={tr('inv.feed.feed')}>
       <InvField
         id="medicated"
-        label="Medicated feed"
+        label={tr('inv.form.medicated')}
         error={fieldErrors.medicated}
-        hint="Feed with a drug in it, such as a coccidiostat or antibiotic."
+        hint={tr('inv.form.medicatedHint')}
       >
         <label class="check">
           <input id="medicated" type="checkbox" bind:checked={medicated} />
-          <span>This feed is medicated</span>
+          <span>{tr('inv.form.medicatedCheck')}</span>
         </label>
       </InvField>
       {#if medicated}
@@ -564,10 +592,10 @@
       {/if}
       <InvField
         id="lbPerBag"
-        label="Pounds in one bag"
+        label={tr('inv.form.lbPerBag')}
         chip={defaultUnit === 'bag' ? 'required' : undefined}
         error={fieldErrors.lbPerBag}
-        hint="Printed on the bag. Needed when you count this in bags, so a use in pounds comes off the right amount."
+        hint={tr('inv.form.lbPerBagHint')}
       >
         <input
           id="lbPerBag"
@@ -580,9 +608,9 @@
       </InvField>
       <InvField
         id="scoopLb"
-        label="One scoop (lb)"
+        label={tr('inv.form.scoopLb')}
         error={fieldErrors.scoopLb}
-        hint="Optional. Weigh your scoop once; the 1, 2 and 3 scoop buttons use it."
+        hint={tr('inv.form.scoopHint')}
       >
         <div class="with-prov">
           <input
@@ -600,10 +628,10 @@
   {/if}
 
   {#if isMed}
-    <InvSection title="Approval number" kicker="Optional">
+    <InvSection title={tr('inv.form.approval')} kicker={tr('inv.form.optional')}>
       <InvField
         id="nada"
-        label="NADA or ANADA number"
+        label={tr('inv.form.nadaLabel')}
         error={fieldErrors.nada}
         hint="On the label, e.g. NADA 141-061. Withdrawal times are never read from a scan; you enter them from the label or your vet when you record a treatment."
       >
@@ -618,8 +646,12 @@
   {#if lotBearing}
     {#if !isFeed}
       <InvSection
-        title={isSeed ? 'Crop category' : isMed ? 'Library product' : 'Product label'}
-        kicker={requiresLink ? 'Required' : 'Optional'}
+        title={isSeed
+          ? tr('inv.seed.cropCategory')
+          : isMed
+            ? tr('inv.form.libraryProduct')
+            : tr('inv.pest.productLabel')}
+        kicker={requiresLink ? tr('inv.form.required') : tr('inv.form.optional')}
       >
         {#if suggestedLink}
           <div class="suggest" data-testid="suggested-link">
@@ -628,7 +660,7 @@
               Link it so treatments use its label withdrawal?
             </p>
             <button type="button" class="btn-secondary" onclick={confirmSuggestedLink}>
-              Link it
+              {tr('inv.form.linkIt')}
             </button>
           </div>
         {/if}
@@ -640,13 +672,13 @@
         {:else}
           <InvField
             id="pluginId"
-            label={isSeed ? 'Category' : 'Product'}
+            label={isSeed ? tr('inv.seed.category') : tr('inv.pest.product')}
             chip={requiresLink ? 'required' : 'from-plugin'}
             hint={isSeed
-              ? 'The crop this seed grows. We match it from the name; search to change it.'
+              ? tr('inv.form.hint.seed')
               : isMed
                 ? 'Only link the exact product on the label. Its withdrawal times apply to every treatment from this bottle.'
-                : 'Link the product in the library so its label and safety data stay in sync.'}
+                : tr('inv.form.hint.product')}
             error={fieldErrors.pluginId}
           >
             <LibraryPicker
@@ -655,25 +687,24 @@
               bind:value={pluginId}
               bind:source={pluginSource}
               {suggestions}
-              noun={isSeed ? 'category' : 'product'}
-              placeholder={isSeed ? 'Search crops, e.g. tomato' : 'Search products'}
+              noun={isSeed ? tr('inv.picker.category') : tr('inv.picker.product')}
+              placeholder={isSeed ? tr('inv.form.searchCrops') : tr('inv.form.searchProducts')}
             />
           </InvField>
         {/if}
       </InvSection>
     {/if}
 
-    <InvSection title="On hand" kicker={isEdit ? 'Stock' : 'Optional'}>
+    <InvSection
+      title={tr('inv.qty.existing')}
+      kicker={isEdit ? tr('inv.list.stock') : tr('inv.form.optional')}
+    >
       <InvField
         id="defaultUnit"
-        label="Unit"
+        label={tr('inv.form.unit')}
         chip="required"
         error={fieldErrors.defaultUnit}
-        hint={unitLocked
-          ? 'The unit is fixed once stock is on hand.'
-          : isSeed
-            ? 'Count seeds, or use a weight for bulk seed bought by the ounce or pound.'
-            : undefined}
+        hint={unitLocked ? tr('inv.form.unitLocked') : isSeed ? tr('inv.form.unitSeed') : undefined}
       >
         <select id="defaultUnit" bind:value={defaultUnit} disabled={unitLocked}>
           {#each unitOptions as u (u)}
@@ -683,13 +714,15 @@
       </InvField>
       <InvField
         id="quantity"
-        label={isEdit ? `On hand (${unitLabel})` : `How much do you have? (${unitLabel})`}
+        label={isEdit
+          ? tr('inv.form.onHandLabel', { unit: unitLabel })
+          : tr('inv.form.howMuch', { unit: unitLabel })}
         error={fieldErrors.quantity}
         hint={isEdit
           ? expectedNote
-            ? 'Only what is in the shed now. Changing this records an adjustment in the stock history.'
-            : 'Changing this records an adjustment in the stock history.'
-          : 'Saved as the first lot. Leave blank if you have not counted it yet; the planner sizes it to the bed.'}
+            ? tr('inv.form.hint.onHandShed')
+            : tr('inv.form.hint.onHandAdjust')
+          : tr('inv.form.hint.firstLot')}
       >
         <input
           id="quantity"
@@ -702,38 +735,30 @@
       </InvField>
       {#if expectedNote && existing}
         <p class="expected-note" data-testid="expected-note">
-          You also have {expectedNote}. When it arrives, tap Mark received on
-          <a href={`/inventory/${type}/${existing.id}`}>the item page</a> instead of changing On hand
-          here, so it is not counted twice.
+          {tr('inv.form.alsoHave', { what: expectedNote })}
+          <a href={`/inventory/${type}/${existing.id}`}>{tr('inv.form.itemPage')}</a>
+          {tr('inv.form.alsoHaveAfter')}
         </p>
       {/if}
       {#if !isEdit}
-        <InvField
-          id="lotNumber"
-          label="Lot number"
-          hint="Optional. Printed on the label or packet."
-        >
+        <InvField id="lotNumber" label={tr('inv.form.lotNumber')} hint={tr('inv.form.lotHint')}>
           <input id="lotNumber" type="text" bind:value={lotNumber} maxlength="80" />
         </InvField>
-        <InvField
-          id="initialStatus"
-          label="Status"
-          hint="Ordered and planned amounts help the planner lay out beds, but only on-hand stock counts as in the shed."
-        >
+        <InvField id="initialStatus" label={tr('inv.lots.status')} hint={tr('inv.form.statusHint')}>
           <select id="initialStatus" bind:value={initialStatus}>
-            <option value="existing">{QUANTITY_STATUS_LABELS.existing}</option>
-            <option value="ordered">{QUANTITY_STATUS_LABELS.ordered}</option>
-            <option value="planned">{QUANTITY_STATUS_LABELS.planned}</option>
+            <option value="existing">{qtyStatusLabel(tr, 'existing')}</option>
+            <option value="ordered">{qtyStatusLabel(tr, 'ordered')}</option>
+            <option value="planned">{qtyStatusLabel(tr, 'planned')}</option>
           </select>
         </InvField>
       {/if}
     </InvSection>
 
-    <InvSection title="Storage & reorder" kicker="Optional">
+    <InvSection title={tr('inv.storageReorder')} kicker={tr('inv.form.optional')}>
       <InvField
         id="reorderThreshold"
-        label="Reorder at"
-        hint="Flag it as Reorder Soon when on hand drops below this number"
+        label={tr('inv.reorderAt')}
+        hint={tr('inv.form.reorderHint')}
         error={fieldErrors.reorderThreshold}
       >
         <input
@@ -744,22 +769,23 @@
           bind:value={reorderThreshold}
         />
       </InvField>
-      <InvField id="barcode" label="Barcode" hint="EAN / UPC / GTIN, used by the Barcode method">
+      <InvField id="barcode" label={tr('inv.form.barcode')} hint={tr('inv.form.barcodeHint')}>
         <input id="barcode" type="text" bind:value={barcode} maxlength="100" />
       </InvField>
     </InvSection>
   {/if}
 
-  <InvSection title="Notes">
-    <InvField id="notes" label="Free-form notes">
+  <InvSection title={tr('inv.seed.notes')}>
+    <InvField id="notes" label={tr('inv.form.freeNotes')}>
       <textarea id="notes" rows="3" bind:value={notes} maxlength="500"></textarea>
     </InvField>
   </InvSection>
 
   {#if type === 'crop'}
     <div class="banner">
-      <strong>Crop categories are versioned.</strong>
-      Upload a new version in the <a href="/plugins">crop library</a>.
+      <strong>{tr('inv.form.cropVersioned')}</strong>
+      {tr('inv.form.cropUpload')}
+      <a href="/plugins">{tr('inv.form.cropLibrary')}</a>{tr('inv.form.cropAfter')}
     </div>
   {/if}
 
@@ -769,10 +795,14 @@
 
   <footer class="save-footer">
     <button type="button" class="btn-secondary" onclick={handleCancel} disabled={submitting}>
-      Cancel
+      {tr('inv.cancel')}
     </button>
     <button type="submit" class="btn-primary" disabled={submitting || (isFeed && medicated)}>
-      {submitting ? 'Saving…' : isEdit ? 'Save changes' : `Create ${nounFor(type)}`}
+      {submitting
+        ? tr('inv.feed.saving')
+        : isEdit
+          ? tr('inv.form.saveChanges')
+          : tr('inv.form.create', { what: nounFor(type) })}
     </button>
   </footer>
 </form>

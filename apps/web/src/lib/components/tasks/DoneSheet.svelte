@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import Modal from '$lib/components/ui/Modal.svelte';
   import {
     DONE_TIME_CHIPS,
@@ -41,18 +43,19 @@
     if (busy) return;
     onDone(m);
   }
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
-<Modal {open} {onClose} title="How long did it take?">
+<Modal {open} {onClose} title={tr('tasks.done.title')}>
   <div class="done-sheet" data-testid="done-sheet">
     <p class="job">{title}</p>
-    <div class="chips" role="group" aria-label="Time spent">
+    <div class="chips" role="group" aria-label={tr('tasks.done.timeSpent')}>
       {#each DONE_TIME_CHIPS as c (c.minutes)}
         <button
           type="button"
           class="chip"
           disabled={busy}
-          aria-label="Done, {formatHours(c.minutes)}"
+          aria-label={tr('tasks.done.doneHours', { time: formatHours(c.minutes) })}
           onclick={() => finish(c.minutes)}>{c.label}</button
         >
       {/each}
@@ -61,12 +64,12 @@
         class="chip"
         aria-expanded={other}
         disabled={busy}
-        onclick={() => (other = !other)}>Other</button
+        onclick={() => (other = !other)}>{tr('tasks.done.other')}</button
       >
     </div>
     {#if other}
       <div class="other">
-        <label for="done-minutes-{uid}">Minutes</label>
+        <label for="done-minutes-{uid}">{tr('tasks.done.minutes')}</label>
         <div class="other-row">
           <input
             id="done-minutes-{uid}"
@@ -78,19 +81,21 @@
             bind:value={raw}
           />
           <span class="as-hours" aria-live="polite"
-            >{valid ? formatHours(minutes) : `1 to ${MAX_TASK_MINUTES} minutes`}</span
+            >{valid
+              ? formatHours(minutes)
+              : tr('tasks.done.range', { max: MAX_TASK_MINUTES })}</span
           >
           <button
             type="button"
             class="save"
             disabled={!valid || busy}
-            onclick={() => finish(minutes)}>Save</button
+            onclick={() => finish(minutes)}>{tr('tasks.done.save')}</button
           >
         </div>
       </div>
     {/if}
     <button type="button" class="skip" disabled={busy} onclick={() => finish(undefined)}
-      >Done, skip time</button
+      >{tr('tasks.done.skipTime')}</button
     >
   </div>
 </Modal>

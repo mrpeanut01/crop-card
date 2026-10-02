@@ -3,6 +3,8 @@
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import { areaFromDimensions, blockSizePatch } from '$lib/plan/editBlockSize';
   import CoverChips from '$lib/components/setup/CoverChips.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface BlockSeed {
     id: string;
@@ -40,6 +42,7 @@
     seasonYear,
     onCoversChanged
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let name = $state('');
   let blockLabel = $state('');
@@ -100,7 +103,7 @@
     e.preventDefault();
     if (!block) return;
     if (!name.trim()) {
-      saveError = 'Block name is required';
+      saveError = tr('planui.edit.nameRequired');
       return;
     }
     submitting = true;
@@ -168,72 +171,84 @@
       tabindex="-1"
     >
       <header class="modal-header">
-        <h2 id="edit-block-title" class="serif">Edit block</h2>
-        <button type="button" class="close" onclick={onClose} aria-label="Close">
+        <h2 id="edit-block-title" class="serif">{tr('planui.edit.title')}</h2>
+        <button type="button" class="close" onclick={onClose} aria-label={tr('planui.edit.close')}>
           <X size={16} strokeWidth={1.75} />
         </button>
       </header>
       <form onsubmit={handleSubmit} class="modal-form">
         <label class="field">
-          <span class="label">Name <span class="req" aria-hidden="true">*</span></span>
+          <span class="label"
+            >{tr('planui.edit.name')} <span class="req" aria-hidden="true">*</span></span
+          >
           <input
             id="edit-block-name"
             type="text"
             bind:value={name}
-            placeholder="e.g. East Field"
+            placeholder={tr('planui.edit.namePlaceholder')}
             required
             maxlength="120"
           />
         </label>
         <label class="field">
-          <span class="label">Short label</span>
+          <span class="label">{tr('planui.edit.shortLabel')}</span>
           <input
             type="text"
             bind:value={blockLabel}
-            placeholder="e.g. EF (used in compact UI)"
+            placeholder={tr('planui.edit.shortPlaceholder')}
             maxlength="60"
           />
         </label>
         {#if showDimensions}
           <div class="dims">
             <label class="field">
-              <span class="label">Width</span>
-              <UnitInput quantity="distance" min={0} bind:value={widthFt} placeholder="Optional" />
+              <span class="label">{tr('planui.edit.width')}</span>
+              <UnitInput
+                quantity="distance"
+                min={0}
+                bind:value={widthFt}
+                placeholder={tr('planui.edit.optional')}
+              />
             </label>
             <label class="field">
-              <span class="label">Length</span>
-              <UnitInput quantity="distance" min={0} bind:value={lengthFt} placeholder="Optional" />
+              <span class="label">{tr('planui.edit.length')}</span>
+              <UnitInput
+                quantity="distance"
+                min={0}
+                bind:value={lengthFt}
+                placeholder={tr('planui.edit.optional')}
+              />
             </label>
           </div>
-          <p class="hint">Width and length set the area. The planner sizes beds from them.</p>
+          <p class="hint">{tr('planui.edit.dimsHint')}</p>
         {/if}
         <label class="field">
-          <span class="label">Area</span>
+          <span class="label">{tr('planui.edit.area')}</span>
           {#if dimsArea !== null}
             <UnitInput quantity="area" value={dimsArea} disabled data-testid="edit-block-area" />
             <span class="hint">
-              Worked out from the width and length. Clear them to type an area instead.
+              {tr('planui.edit.areaHint')}
             </span>
           {:else}
             <UnitInput
               quantity="area"
               min={0}
               bind:value={acres}
-              placeholder="Optional"
+              placeholder={tr('planui.edit.optional')}
               data-testid="edit-block-area"
             />
           {/if}
           <span class="hint">
-            <a href={legacyEditorHref}>Edit geometry on map →</a>
+            <a href={legacyEditorHref}>{tr('planui.edit.editGeometry')}</a>
           </span>
         </label>
         {#if saveError}<p class="error" role="alert">{saveError}</p>{/if}
         <footer class="modal-footer">
           <button type="button" class="btn-secondary" onclick={onClose} disabled={submitting}>
-            Cancel
+            {tr('planui.edit.cancel')}
           </button>
           <button type="submit" class="btn-primary" disabled={submitting}>
-            {submitting ? 'Saving…' : 'Save changes'}
+            {submitting ? tr('planui.edit.saving') : tr('planui.edit.save')}
           </button>
         </footer>
       </form>

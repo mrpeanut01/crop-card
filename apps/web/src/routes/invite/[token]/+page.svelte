@@ -2,41 +2,51 @@
   import { enhance } from '$app/forms';
   import { fmt } from '$lib/prefsState.svelte';
   import type { PageData } from './$types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   let { data }: { data: PageData } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   // #333 — surface the specific redemption failure so the helper knows
   // whether to ask for a fresh link, sign in under a different email, or
   // just log in. `reason` is only present on the invalid branch.
-  const INVALID_COPY = {
+  const INVALID_COPY = $derived({
     expired: {
-      title: 'This invite has expired',
-      hint: 'Invite links are valid for 7 days. Ask the farm owner to send a fresh one.'
+      title: tr('entry.invite.reason.expired.title'),
+      hint: tr('entry.invite.reason.expired.hint')
     },
     revoked: {
-      title: 'This invite was revoked',
-      hint: 'The farm owner cancelled this invite. Ask them to send a new one if you still need access.'
+      title: tr('entry.invite.reason.revoked.title'),
+      hint: tr('entry.invite.reason.revoked.hint')
     },
     accepted: {
-      title: 'This invite was already used',
-      hint: 'You (or someone on this email) already accepted it. Just sign in to reach the farm.'
+      title: tr('entry.invite.reason.accepted.title'),
+      hint: tr('entry.invite.reason.accepted.hint')
     },
     'needs-email': {
-      title: 'Add your email to accept',
-      hint: 'Invites are sent to an email address and you signed in with a phone number. Add and verify that email under Settings → Account, then open this link again.'
+      title: tr('entry.invite.reason.needsEmail.title'),
+      hint: tr('entry.invite.reason.needsEmail.hint')
     },
     'not-found': {
-      title: 'Invite no longer valid',
-      hint: "This link doesn't match your signed-in email, or it never existed. Check you're signed in under the address the invite was sent to, or ask for a fresh invite."
+      title: tr('entry.invite.reason.notFound.title'),
+      hint: tr('entry.invite.reason.notFound.hint')
     }
-  } as const;
+  });
   const invalid = $derived(
     data.status === 'invalid' ? INVALID_COPY[data.reason ?? 'not-found'] : null
   );
+
+  function roleLabel(role: string): string {
+    if (role === 'owner') return tr('entry.role.owner');
+    if (role === 'helper') return tr('entry.role.helper');
+    if (role === 'inspector') return tr('entry.role.inspector');
+    return role;
+  }
 </script>
 
 <svelte:head>
-  <title>Accept invite — CropCard</title>
+  <title>{tr('entry.invite.title')}</title>
 </svelte:head>
 
 <div class="invite">
@@ -44,21 +54,23 @@
     <h1>{invalid?.title}</h1>
     <p class="hint">{invalid?.hint}</p>
     {#if data.reason === 'needs-email'}
-      <a href="/settings/account" class="back">Add an email →</a>
+      <a href="/settings/account" class="back">{tr('entry.invite.addEmail')}</a>
     {/if}
-    <a href="/today" class="back">← Back</a>
+    <a href="/today" class="back">{tr('entry.invite.back')}</a>
   {:else}
-    <h1>Join {data.ownerName}</h1>
+    <h1>{tr('entry.invite.join', { name: data.ownerName })}</h1>
     <p class="hint">
-      You've been invited to act as a <strong>{data.roleWithinOwner}</strong> on
-      <strong>{data.ownerName}</strong>.
+      {tr('entry.invite.invitedPre')}<strong>{roleLabel(data.roleWithinOwner)}</strong>{tr(
+        'entry.invite.invitedMid'
+      )}<strong>{data.ownerName}</strong>.
     </p>
     <form method="POST" action="?/accept" use:enhance>
-      <button class="accept" type="submit">Accept invite →</button>
+      <button class="accept" type="submit">{tr('entry.invite.accept')}</button>
     </form>
     <p class="expires">
-      Expires {fmt.instant(data.expiresAt)}
-      {fmt.zone(data.expiresAt)}.
+      {tr('entry.invite.expires', {
+        when: `${fmt.instant(data.expiresAt)} ${fmt.zone(data.expiresAt)}`
+      })}
     </p>
   {/if}
 </div>

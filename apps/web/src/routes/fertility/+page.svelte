@@ -1,5 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { createT } from '$lib/i18n';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatRateText } from '$lib/stock/units';
@@ -11,6 +12,7 @@
   import { organicInputClass } from '$lib/organic/inputCompliance';
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   let blockId = $state(untrack(() => data.selectedBlockId));
   let year = $state(untrack(() => data.year));
@@ -86,10 +88,10 @@
       });
       const out = await res.json();
       if (!res.ok) {
-        error = out.error ?? 'failed';
+        error = out.error ?? tr('fert.errFailed');
         return;
       }
-      message = 'Application recorded.';
+      message = tr('fert.msgApp');
       reload();
     } catch (e2) {
       error = e2 instanceof Error ? e2.message : String(e2);
@@ -117,10 +119,10 @@
       });
       const out = await res.json();
       if (!res.ok) {
-        error = out.error ?? 'failed';
+        error = out.error ?? tr('fert.errFailed');
         return;
       }
-      message = 'Credit recorded.';
+      message = tr('fert.msgCredit');
       reload();
     } catch (e2) {
       error = e2 instanceof Error ? e2.message : String(e2);
@@ -145,14 +147,14 @@
         body: JSON.stringify({ documentId })
       });
       if (!res.ok) {
-        error = "We couldn't save the lab report on this soil test. Try again.";
+        error = tr('fert.errLabSave');
         return false;
       }
       labReports[soilTestId] = documentId;
-      message = documentId ? 'Lab report attached.' : 'Lab report removed from this soil test.';
+      message = documentId ? tr('fert.msgLabAttached') : tr('fert.msgLabRemoved');
       return true;
     } catch {
-      error = 'Attaching a lab report needs a connection.';
+      error = tr('fert.errLabOffline');
       return false;
     }
   }
@@ -160,15 +162,14 @@
   function onSoilTestSaved(r: SetupSoilTestResult) {
     soilSheetOpen = false;
     blockId = r.blockId;
-    message = 'Soil test saved.';
+    message = tr('fert.msgSoilSaved');
     reload();
   }
 </script>
 
-<h1>Fertility</h1>
+<h1>{tr('fert.title')}</h1>
 <p class="lede">
-  Per-block N / P / K budget. Applications + cover-crop credits + soil tests roll into a yearly
-  delivered total. Crop demand comes from the planting plugin or operator override.
+  {tr('fert.lede')}
 </p>
 
 <form
@@ -179,7 +180,7 @@
   }}
 >
   <label>
-    Block
+    {tr('fert.block')}
     <select bind:value={blockId}>
       {#each data.blocks as b (b.id)}
         <option value={b.id}
@@ -189,15 +190,15 @@
     </select>
   </label>
   <label>
-    Year
+    {tr('fert.year')}
     <input type="number" min="1900" max="3000" bind:value={year} />
   </label>
-  <button type="submit" class="primary">Load</button>
+  <button type="submit" class="primary">{tr('fert.load')}</button>
 </form>
 
 {#if data.budget}
   <section class="card budget">
-    <h2>Year {data.budget.year} budget</h2>
+    <h2>{tr('fert.budgetTitle', { year: data.budget.year })}</h2>
     <table>
       <thead>
         <tr>
@@ -209,19 +210,19 @@
       </thead>
       <tbody>
         <tr>
-          <th scope="row">Applications</th>
+          <th scope="row">{tr('fert.applications')}</th>
           <td>{perAc(data.budget.nDeliveredLbPerAcre)}</td>
           <td>{perAc(data.budget.pDeliveredLbPerAcre)}</td>
           <td>{perAc(data.budget.kDeliveredLbPerAcre)}</td>
         </tr>
         <tr>
-          <th scope="row">Cover-crop / residual credits</th>
+          <th scope="row">{tr('fert.credits')}</th>
           <td>{perAc(data.budget.nCreditedLbPerAcre)}</td>
           <td>{perAc(data.budget.pCreditedLbPerAcre)}</td>
           <td>{perAc(data.budget.kCreditedLbPerAcre)}</td>
         </tr>
         <tr class="total">
-          <th scope="row">Total available</th>
+          <th scope="row">{tr('fert.total')}</th>
           <td>{perAc(data.budget.totalNLbPerAcre)}</td>
           <td>{perAc(data.budget.totalPLbPerAcre)}</td>
           <td>{perAc(data.budget.totalKLbPerAcre)}</td>
@@ -235,10 +236,11 @@
 {#if error}<p class="error">{error}</p>{/if}
 
 <details class="card">
-  <summary><h2>Record fertilizer application</h2></summary>
+  <summary><h2>{tr('fert.recordApp')}</h2></summary>
   <form onsubmit={recordApplication}>
     <label
-      >Source <input
+      >{tr('fert.source')}
+      <input
         type="text"
         bind:value={appSource}
         list={fertilizerChoices.length ? 'fertilizer-plugins' : undefined}
@@ -251,18 +253,18 @@
         {/each}
       </datalist>
     {/if}
-    <label>Rate <input type="number" min="0" step="any" bind:value={appRate} /></label>
-    <label>Unit <input type="text" bind:value={appUnit} /></label>
+    <label>{tr('fert.rate')} <input type="number" min="0" step="any" bind:value={appRate} /></label>
+    <label>{tr('fert.unit')} <input type="text" bind:value={appUnit} /></label>
     <label
-      >N delivered ({rateUnit})
+      >{tr('fert.nDelivered', { unit: rateUnit })}
       <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={appN} /></label
     >
     <label
-      >P₂O₅ delivered ({rateUnit})
+      >{tr('fert.pDelivered', { unit: rateUnit })}
       <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={appP} /></label
     >
     <label
-      >K₂O delivered ({rateUnit})
+      >{tr('fert.kDelivered', { unit: rateUnit })}
       <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={appK} /></label
     >
     <OrganicInputNotice
@@ -271,39 +273,39 @@
       products={organicProducts}
       blockNames={Object.fromEntries(data.blocks.map((b) => [b.id, b.name]))}
     />
-    <button type="submit" class="primary" disabled={busy}>Record</button>
+    <button type="submit" class="primary" disabled={busy}>{tr('fert.record')}</button>
   </form>
 </details>
 
 <details class="card">
-  <summary><h2>Record cover-crop / residual credit</h2></summary>
+  <summary><h2>{tr('fert.recordCredit')}</h2></summary>
   <form onsubmit={recordCredit}>
-    <label>Source <input type="text" bind:value={creditSource} /></label>
-    <label>Cover-crop plugin id <input type="text" bind:value={creditPlugin} /></label>
+    <label>{tr('fert.source')} <input type="text" bind:value={creditSource} /></label>
+    <label>{tr('fert.coverPluginId')} <input type="text" bind:value={creditPlugin} /></label>
     <label class="checkbox">
       <input type="checkbox" bind:checked={creditUseDefaults} />
-      Use default credit table for this plugin
+      {tr('fert.useDefaults')}
     </label>
     <label
-      >Override N credit ({rateUnit}, optional)
+      >{tr('fert.overrideN', { unit: rateUnit })}
       <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={creditN} /></label
     >
-    <button type="submit" class="primary" disabled={busy}>Record credit</button>
+    <button type="submit" class="primary" disabled={busy}>{tr('fert.recordCreditBtn')}</button>
   </form>
 </details>
 
 <section class="card">
-  <h2>Soil test</h2>
-  <p>Copy the numbers from your lab report, in ppm or lb per acre.</p>
+  <h2>{tr('fert.soil.title')}</h2>
+  <p>{tr('fert.soil.copy')}</p>
   <button type="button" class="primary" onclick={() => (soilSheetOpen = true)}>
-    Add a soil test
+    {tr('fert.soil.add')}
   </button>
 </section>
 
 <SetupSheet
   open={soilSheetOpen}
-  kicker="Fertility"
-  title="Add a soil test"
+  kicker={tr('fert.sheetKicker')}
+  title={tr('fert.soil.add')}
   onClose={() => (soilSheetOpen = false)}
   onDone={onSoilTestSaved}
 >
@@ -318,9 +320,9 @@
 </SetupSheet>
 
 <section class="card">
-  <h2>History — applications</h2>
+  <h2>{tr('fert.hist.apps')}</h2>
   {#if data.applications.length === 0}
-    <p>No applications recorded for this block.</p>
+    <p>{tr('fert.hist.noApps')}</p>
   {:else}
     <ul>
       {#each data.applications as a (a.id)}
@@ -336,9 +338,9 @@
 </section>
 
 <section class="card">
-  <h2>History — cover-crop credits</h2>
+  <h2>{tr('fert.hist.credits')}</h2>
   {#if data.credits.length === 0}
-    <p>No credits recorded.</p>
+    <p>{tr('fert.hist.noCredits')}</p>
   {:else}
     <ul>
       {#each data.credits as c (c.id)}
@@ -354,21 +356,24 @@
 </section>
 
 <section class="card">
-  <h2>History — soil tests</h2>
+  <h2>{tr('fert.hist.soil')}</h2>
   {#if data.soilTests.length === 0}
-    <p>No soil tests yet.</p>
+    <p>{tr('fert.hist.noSoil')}</p>
   {:else}
     <ul>
       {#each data.soilTests as t (t.id)}
         <li>
-          {fmt.instant(t.sampledAt, 'date')} — pH {t.ph?.toFixed(1) ?? '?'}, OM {t.organicMatterPct?.toFixed(
-            1
-          ) ?? '?'}%, NO₃ {t.nitratePpm ?? '?'}, P {t.phosphorusPpm ?? '?'}, K {t.potassiumPpm ??
-            '?'}
+          {fmt.instant(t.sampledAt, 'date')} — {tr('fert.soilLine', {
+            ph: t.ph?.toFixed(1) ?? '?',
+            om: t.organicMatterPct?.toFixed(1) ?? '?',
+            no3: t.nitratePpm ?? '?',
+            p: t.phosphorusPpm ?? '?',
+            k: t.potassiumPpm ?? '?'
+          })}
           {t.unitsBasis === 'lb-per-acre' ? 'lb/A' : 'ppm'}
           {#if labReportOf(t) || data.canAddSoilTest}
             <div class="lab-report" data-testid="soil-test-lab-report">
-              <span class="lab-report-label">Lab report</span>
+              <span class="lab-report-label">{tr('fert.labReport')}</span>
               <DocumentAttach
                 documentId={labReportOf(t)}
                 kind="lab-report"

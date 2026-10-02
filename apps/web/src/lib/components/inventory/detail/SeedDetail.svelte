@@ -11,6 +11,8 @@
    * `stock_item_id` on the planting row. For Sprint 7 we surface the
    * placeholder + an arrow to the planning wizard.
    */
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
   import LotQuantities from '../LotQuantities.svelte';
@@ -33,6 +35,7 @@
     showSeedSourcing = false,
     canEditSeedSourcing = false
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const stockQty = (v: number, digits?: number) =>
     formatStockQuantity(v, item.defaultUnit, currentPrefs(), { digits, category: item.category });
@@ -40,42 +43,47 @@
 
 <header class="detail-header">
   <div>
-    <span class="kicker">Seed · {plugin?.cropFamily ?? 'unknown family'}</span>
+    <span class="kicker"
+      >{tr('inv.seed.kicker', { family: plugin?.cropFamily ?? tr('inv.seed.unknownFamily') })}</span
+    >
     <h1 class="serif">{item.displayName}</h1>
     {#if plugin?.daysToMaturity}
       <p class="sub">
-        <span class="mono">{plugin.daysToMaturity.min}–{plugin.daysToMaturity.max} d</span> to maturity
+        <span class="mono">{plugin.daysToMaturity.min}–{plugin.daysToMaturity.max} d</span>
+        {tr('inv.seed.toMaturity')}
       </p>
     {/if}
   </div>
-  <a class="edit-cta" href="/inventory/seed/{item.id}/edit">Edit</a>
+  <a class="edit-cta" href="/inventory/seed/{item.id}/edit">{tr('inv.edit')}</a>
 </header>
 
 <div class="detail-grid">
   <div class="col">
-    <InvSection title="Crop category" kicker="Linked">
+    <InvSection title={tr('inv.seed.cropCategory')} kicker={tr('inv.seed.linked')}>
       {#if plugin}
-        <InvKVP label="Category" value={plugin.displayName} />
-        <InvKVP label="Crop family" value={plugin.cropFamily ?? '—'} />
-        <InvKVP label="Archetype" value={plugin.archetype ?? '—'} tone="locked" />
+        <InvKVP label={tr('inv.seed.category')} value={plugin.displayName} />
+        <InvKVP label={tr('inv.seed.cropFamily')} value={plugin.cropFamily ?? '—'} />
+        <InvKVP label={tr('inv.seed.archetype')} value={plugin.archetype ?? '—'} tone="locked" />
         <p class="cta-row">
-          <a href="/inventory/crop/{encodeURIComponent(plugin.pluginId)}">Open the crop →</a>
+          <a href="/inventory/crop/{encodeURIComponent(plugin.pluginId)}"
+            >{tr('inv.seed.openCrop')}</a
+          >
         </p>
       {:else}
         <p class="empty">
-          No crop category linked yet. Pick one with Edit so the planner can use this seed.
+          {tr('inv.seed.noCategory')}
         </p>
       {/if}
     </InvSection>
 
-    <InvSection title="Germination & treatment" kicker="At sourcing">
-      <InvKVP label="Notes" value={item.notes ?? '—'} />
+    <InvSection title={tr('inv.seed.germination')} kicker={tr('inv.seed.atSourcing')}>
+      <InvKVP label={tr('inv.seed.notes')} value={item.notes ?? '—'} />
     </InvSection>
 
-    <InvSection title="Planting parameters" kicker="From the crop category">
+    <InvSection title={tr('inv.seed.plantingParams')} kicker={tr('inv.seed.fromCategory')}>
       {#if plugin?.daysToMaturity}
         <InvKVP
-          label="Days to maturity"
+          label={tr('inv.seed.daysToMaturity')}
           value={`${plugin.daysToMaturity.min}–${plugin.daysToMaturity.max} d`}
         />
       {/if}
@@ -83,7 +91,7 @@
   </div>
 
   <div class="col">
-    <InvSection title="Quantity" kicker="On hand, ordered, planned">
+    <InvSection title={tr('inv.seed.quantity')} kicker={tr('inv.seed.quantityKicker')}>
       <LotQuantities itemId={item.id} unit={item.defaultUnit} category={item.category} {lots} />
     </InvSection>
 
@@ -107,9 +115,9 @@
       </InvSection>
     {/if}
 
-    <InvSection title="Saving / sowing history" kicker="Last 8">
+    <InvSection title={tr('inv.seed.history')} kicker={tr('inv.seed.last8')}>
       {#if movements.length === 0}
-        <p class="empty">No sowing recorded yet.</p>
+        <p class="empty">{tr('inv.seed.noSowing')}</p>
       {:else}
         <ul class="movement-list">
           {#each movements.slice(0, 8) as m (m.id)}
@@ -125,9 +133,9 @@
       {/if}
     </InvSection>
 
-    <InvSection title="Linked plantings" kicker="Deferred">
+    <InvSection title={tr('inv.seed.linkedPlantings')} kicker={tr('inv.seed.deferred')}>
       <p class="empty small">
-        Per-planting back-reference lands in Phase 28 (seed → planting linkage).
+        {tr('inv.seed.linkageNote')}
       </p>
     </InvSection>
   </div>

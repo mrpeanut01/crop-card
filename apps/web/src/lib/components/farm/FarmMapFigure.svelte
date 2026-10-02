@@ -1,11 +1,13 @@
 <script lang="ts">
-  import { AREA_KINDS, AREA_KIND_LABELS, type AreaKind } from '$lib/farm/areaKinds';
+  import { AREA_KINDS, type AreaKind } from '$lib/farm/areaKinds';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { featureLabel, kindLabel } from './farmLabels';
   import { kindStyle } from '$lib/farm/kindStyle';
   import type { OverlayBlockInput, OverlayFieldInput } from '$lib/plan/mapOverlayLayout';
   import { layoutFarmFigure } from '$lib/farm/featureFigure';
   import {
     MAP_FEATURE_KINDS,
-    MAP_FEATURE_LABELS,
     MAP_FEATURE_STYLE,
     geometryTypeFor,
     type MapFeatureView
@@ -15,7 +17,7 @@
     fields,
     blocks,
     features = [],
-    label = 'Farm map'
+    label
   }: {
     fields: OverlayFieldInput[];
     blocks: OverlayBlockInput[];
@@ -23,6 +25,8 @@
     label?: string;
   } = $props();
 
+  const tr = $derived(createT(page.data?.locale));
+  const shownLabel = $derived(label ?? tr('farm.fig.farmMap'));
   const figure = $derived(layoutFarmFigure(fields, blocks, features));
   const layout = $derived(figure.layout);
   const featureLegend = $derived(
@@ -55,13 +59,13 @@
 
 <figure class="farm-figure" data-testid="farm-map-figure">
   {#if layout.mode === 'none'}
-    <p class="empty">Nothing is drawn or sized yet, so there is no picture to show.</p>
+    <p class="empty">{tr('farm.fig.empty')}</p>
   {:else}
     <svg
       {viewBox}
       preserveAspectRatio="xMidYMid meet"
       role="img"
-      aria-label="{label}{layout.mode === 'sketch' ? ', sketched from entered sizes' : ''}"
+      aria-label="{shownLabel}{layout.mode === 'sketch' ? tr('farm.fig.sketched') : ''}"
     >
       {#each layout.fields as f (f.id)}
         {@const ks = kindStyle(kindById.get(f.id))}
@@ -88,13 +92,13 @@
           style:stroke={st.color}
           style:stroke-dasharray={st.dashArray ?? 'none'}
         >
-          <title>{MAP_FEATURE_LABELS[l.kind]}: {l.name}</title>
+          <title>{featureLabel(tr, l.kind)}: {l.name}</title>
         </polyline>
       {/each}
       {#each figure.points as p (p.id)}
         {@const st = MAP_FEATURE_STYLE[p.kind]}
         <g class="feature-point" data-feature-kind={p.kind}>
-          <title>{MAP_FEATURE_LABELS[p.kind]}: {p.name}</title>
+          <title>{featureLabel(tr, p.kind)}: {p.name}</title>
           <circle cx={p.x} cy={p.y} r={span * 0.018} style:fill={st.color} />
           <text
             class="symbol"
@@ -118,11 +122,11 @@
     </svg>
     {#if legend.length || featureLegend.length}
       <figcaption>
-        <ul class="legend" aria-label="Legend">
+        <ul class="legend" aria-label={tr('farm.fig.legend')}>
           {#each legend as k (k)}
             <li>
               <span class="swatch" style:--kind={kindStyle(k).color} aria-hidden="true"></span>
-              {AREA_KIND_LABELS[k]}
+              {kindLabel(tr, k)}
             </li>
           {/each}
           {#each featureLegend as k (k)}
@@ -133,18 +137,16 @@
                 style:--kind={MAP_FEATURE_STYLE[k].color}
                 aria-hidden="true">{MAP_FEATURE_STYLE[k].symbol ?? ''}</span
               >
-              {MAP_FEATURE_LABELS[k]}
+              {featureLabel(tr, k)}
             </li>
           {/each}
         </ul>
         {#if layout.mode === 'sketch'}
-          <p class="note">Placed from the sizes you entered, not surveyed.</p>
+          <p class="note">{tr('farm.fig.placed')}</p>
         {/if}
         {#if figure.unplaced > 0}
           <p class="note">
-            Your fences, gates and water points are saved, but this picture is built from the sizes
-            you typed, so it can't place them. Draw your fields on the map as well and they will
-            show here.
+            {tr('farm.fig.unplaced')}
           </p>
         {/if}
       </figcaption>

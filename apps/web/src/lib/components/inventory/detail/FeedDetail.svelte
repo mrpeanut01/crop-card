@@ -6,6 +6,8 @@
    * edit page.
    */
   import { invalidateAll } from '$app/navigation';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
   import LotQuantities from '../LotQuantities.svelte';
@@ -24,6 +26,7 @@
   type Props = Omit<FeedDetailPayload, 'type'>;
   const { item, lots, movements, feed, onHand, onHandLb, subjects, canUse, canEdit }: Props =
     $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const qty = (v: number) =>
     formatStockQuantity(v, item.defaultUnit, currentPrefs(), {
@@ -31,7 +34,9 @@
       category: item.category
     });
   const lbText = (v: number) => `${Math.round(v * 10) / 10} lb`;
-  const kicker = $derived(item.category === 'bedding' ? 'Bedding' : 'Feed');
+  const kicker = $derived(
+    item.category === 'bedding' ? tr('inv.feed.bedding') : tr('inv.feed.feed')
+  );
   const scoops = $derived(scoopChoices(feed.scoopLb));
   const subjectLabel = (note?: string) => {
     const s = parseFeedUseNote(note);
@@ -54,11 +59,11 @@
     error = null;
     notice = null;
     if (amountLb == null || !Number.isFinite(amountLb) || amountLb <= 0) {
-      error = 'Type how many pounds were used.';
+      error = tr('inv.feed.typePounds');
       return;
     }
     if (amountLb > MAX_FEED_USE_LB) {
-      error = `That is more than ${MAX_FEED_USE_LB} lb. Check the number.`;
+      error = tr('inv.feed.tooMany', { max: MAX_FEED_USE_LB });
       return;
     }
     const [subjectType, subjectId] = subject ? subject.split(':') : [];
@@ -74,14 +79,14 @@
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) {
-        error = body?.error ?? `Could not save (HTTP ${res.status}).`;
+        error = body?.error ?? tr('inv.lots.saveFailed', { status: res.status });
         return;
       }
-      notice = body?.warnings?.[0]?.message ?? `Used ${lbText(amountLb)}.`;
+      notice = body?.warnings?.[0]?.message ?? tr('inv.feed.used', { amount: lbText(amountLb) });
       lb = null;
       await invalidateAll();
     } catch {
-      error = 'Could not reach the server. Try again when you have signal.';
+      error = tr('inv.feed.noServer');
     } finally {
       busy = false;
     }
@@ -94,30 +99,29 @@
     <h1 class="serif">{item.displayName}</h1>
     <p class="sub" data-testid="feed-on-hand">
       {qty(onHand)}{#if onHandLb !== null && item.defaultUnit !== 'lb'}
-        ({lbText(onHandLb)}){/if} on hand
+        ({lbText(onHandLb)}){/if}
+      {tr('inv.feed.onHandSuffix')}
     </p>
   </div>
   {#if canEdit}
-    <a class="edit-cta" href="/inventory/feed/{item.id}/edit">Edit</a>
+    <a class="edit-cta" href="/inventory/feed/{item.id}/edit">{tr('inv.edit')}</a>
   {/if}
 </header>
 
 <div class="detail-grid">
   <div class="col">
     {#if canUse}
-      <InvSection title="Use" kicker="Take off stock">
+      <InvSection title={tr('inv.feed.use')} kicker={tr('inv.feed.takeOff')}>
         {#if item.defaultUnit === 'bag' && !feed.lbPerBag}
           <p class="empty" role="note">
-            {canEdit
-              ? 'Set how many pounds are in one bag on the edit page first.'
-              : 'Ask the owner to set how many pounds are in one bag first.'}
+            {canEdit ? tr('inv.feed.setBagOwner') : tr('inv.feed.setBagHelper')}
           </p>
         {:else}
           {#if subjects.length > 0}
             <label class="field">
-              <span>Who ate it (optional)</span>
+              <span>{tr('inv.feed.whoAte')}</span>
               <select bind:value={subject} data-testid="feed-subject">
-                <option value="">Not saying</option>
+                <option value="">{tr('inv.feed.notSaying')}</option>
                 {#each subjects as s (s.type + s.id)}
                   <option value="{s.type}:{s.id}">{s.label}</option>
                 {/each}
@@ -125,11 +129,10 @@
             </label>
           {/if}
           {#if scoops.length > 0}
-            <div class="scoops" role="group" aria-label="Scoops">
+            <div class="scoops" role="group" aria-label={tr('inv.feed.scoopsAria')}>
               {#each scoops as c (c.scoops)}
                 <button type="button" class="scoop" disabled={busy} onclick={() => recordUse(c.lb)}>
-                  {c.scoops}
-                  {c.scoops === 1 ? 'scoop' : 'scoops'}
+                  {tr('inv.feed.scoops', { count: c.scoops })}
                   <span class="muted">{lbText(c.lb)}</span>
                 </button>
               {/each}
@@ -143,7 +146,7 @@
             }}
           >
             <label class="field">
-              <span>Pounds used</span>
+              <span>{tr('inv.feed.poundsUsed')}</span>
               <input
                 type="number"
                 inputmode="decimal"
@@ -154,7 +157,7 @@
               />
             </label>
             <button type="submit" class="primary" disabled={busy}>
-              {busy ? 'Saving…' : 'Record use'}
+              {busy ? tr('inv.feed.saving') : tr('inv.feed.recordUse')}
             </button>
           </form>
         {/if}
@@ -163,9 +166,9 @@
       </InvSection>
     {/if}
 
-    <InvSection title="History" kicker="Last 12">
+    <InvSection title={tr('inv.feed.history')} kicker={tr('inv.feed.last12')}>
       {#if movements.length === 0}
-        <p class="empty">Nothing recorded yet.</p>
+        <p class="empty">{tr('inv.feed.nothingYet')}</p>
       {:else}
         <ul class="movement-list">
           {#each movements.slice(0, 12) as m (m.id)}
@@ -184,20 +187,27 @@
   </div>
 
   <div class="col">
-    <InvSection title="Quantity" kicker="On hand, ordered, planned">
+    <InvSection title={tr('inv.seed.quantity')} kicker={tr('inv.seed.quantityKicker')}>
       <LotQuantities itemId={item.id} unit={item.defaultUnit} category={item.category} {lots} />
     </InvSection>
 
-    <InvSection title="Bag and scoop">
+    <InvSection title={tr('inv.feed.bagAndScoop')}>
       <InvKVP
-        label="One bag"
-        value={feed.lbPerBag ? lbText(feed.lbPerBag) : item.defaultUnit === 'bag' ? 'Not set' : '—'}
+        label={tr('inv.feed.oneBag')}
+        value={feed.lbPerBag
+          ? lbText(feed.lbPerBag)
+          : item.defaultUnit === 'bag'
+            ? tr('inv.feed.notSet')
+            : '—'}
       />
       <div class="kvp-prov">
-        <InvKVP label="One scoop" value={feed.scoopLb ? lbText(feed.scoopLb) : 'Not set'} />
+        <InvKVP
+          label={tr('inv.feed.oneScoop')}
+          value={feed.scoopLb ? lbText(feed.scoopLb) : tr('inv.feed.notSet')}
+        />
         {#if feed.scoopLb}<Provenance source="manual" compact />{/if}
       </div>
-      <InvKVP label="Notes" value={item.notes ?? '—'} />
+      <InvKVP label={tr('inv.seed.notes')} value={item.notes ?? '—'} />
     </InvSection>
   </div>
 </div>

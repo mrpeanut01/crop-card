@@ -18,6 +18,8 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import { fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     block: BlockWithPlantings;
@@ -49,27 +51,30 @@
     askOwner = false,
     onAddPlanting
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const isPoly = $derived(block.plantings.length > 1);
   const geometryMissing = $derived(!block.geometryGeojson);
-  const geometryNote =
-    'This block has no map outline, so pollination distances, the map overlay, and area-from-map are unavailable.';
+  const geometryNote = $derived(tr('planui.bh.geoNote'));
   const cropSummary = $derived.by(() => {
-    if (block.plantings.length === 0) return 'No plantings yet';
+    if (block.plantings.length === 0) return tr('planui.bh.noPlantings');
     if (block.plantings.length === 1) return block.plantings[0].varietyDisplayName;
-    return `${block.plantings.length} plantings · ${block.plantings
-      .slice(0, 2)
-      .map((p) => p.varietyDisplayName)
-      .join(', ')}…`;
+    return tr('planui.bh.plantingsSummary', {
+      count: block.plantings.length,
+      names: block.plantings
+        .slice(0, 2)
+        .map((p) => p.varietyDisplayName)
+        .join(', ')
+    });
   });
   const kickerText = $derived.by(() => {
-    const ac = block.acres !== undefined ? fmt.area(block.acres) : 'no acres recorded';
+    const ac = block.acres !== undefined ? fmt.area(block.acres) : tr('planui.bh.noAcres');
     const polyLabel = isPoly
-      ? `${block.plantings.length} plantings`
+      ? tr('planui.bh.plantingsCount', { count: block.plantings.length })
       : block.plantings.length === 1
-        ? 'single planting'
-        : 'empty block';
-    return `Block · ${ac} · ${polyLabel}`;
+        ? tr('planui.bh.single')
+        : tr('planui.bh.empty');
+    return tr('planui.bh.kicker', { area: ac, label: polyLabel });
   });
 </script>
 
@@ -84,7 +89,7 @@
       {#if isPoly}
         <Pill tone="forest">
           <Layers size={10} strokeWidth={1.75} />
-          Polyculture
+          {tr('planui.bh.polyculture')}
         </Pill>
       {/if}
       {#if block.acres !== undefined}
@@ -95,29 +100,29 @@
           <a
             class="geo-link"
             href={geometryEditHref}
-            title="{geometryNote} Draw it in the farm map editor."
+            title="{geometryNote} {tr('planui.bh.geoDraw')}"
             data-testid="geometry-missing"
           >
             <Pill tone="wheat">
               <MapPin size={10} strokeWidth={1.75} aria-hidden="true" />
-              No map geometry
+              {tr('planui.bh.noGeometry')}
             </Pill>
           </a>
         {:else}
           <span
             class="geo-static"
-            title="{geometryNote} The farm owner can draw it."
+            title="{geometryNote} {tr('planui.bh.geoOwner')}"
             data-testid="geometry-missing"
           >
             <Pill tone="wheat">
               <MapPin size={10} strokeWidth={1.75} aria-hidden="true" />
-              No map geometry
+              {tr('planui.bh.noGeometry')}
             </Pill>
           </span>
         {/if}
       {/if}
       {#if harvestWindowLabel}
-        <Pill tone="wheat">Harvest {harvestWindowLabel}</Pill>
+        <Pill tone="wheat">{tr('planui.bh.harvest', { label: harvestWindowLabel })}</Pill>
       {/if}
       {#if statusLabel}
         <Pill tone={statusTone}>{statusLabel}</Pill>
@@ -126,29 +131,29 @@
   </div>
   <div class="bh-actions">
     {#if onOpenMap}
-      <button class="ghost" onclick={onOpenMap} title="View this block on the field map">
-        <Map size={14} strokeWidth={1.75} /> View on map
+      <button class="ghost" onclick={onOpenMap} title={tr('planui.bh.viewMapTitle')}>
+        <Map size={14} strokeWidth={1.75} />
+        {tr('planui.bh.viewMap')}
       </button>
     {/if}
     {#if onRefineWithAi}
-      <button
-        class="ghost"
-        onclick={onRefineWithAi}
-        title="Open the season-plan chat with this block in context"
-      >
-        <Sprout size={14} strokeWidth={1.75} /> Refine with AI
+      <button class="ghost" onclick={onRefineWithAi} title={tr('planui.bh.refineTitle')}>
+        <Sprout size={14} strokeWidth={1.75} />
+        {tr('planui.bh.refine')}
       </button>
     {/if}
     {#if onEditBlock}
       <button class="ghost" onclick={onEditBlock}>
-        <Wrench size={14} strokeWidth={1.75} /> Edit block
+        <Wrench size={14} strokeWidth={1.75} />
+        {tr('planui.bh.editBlock')}
       </button>
     {:else if askOwner}
-      <p class="ask-owner" data-testid="plan-ask-owner">Ask the owner to change blocks.</p>
+      <p class="ask-owner" data-testid="plan-ask-owner">{tr('planui.bh.askOwner')}</p>
     {/if}
     {#if onAddPlanting}
       <button class="primary" onclick={onAddPlanting} data-hint-anchor="plan_first_crop">
-        <Plus size={14} strokeWidth={1.75} /> Add planting
+        <Plus size={14} strokeWidth={1.75} />
+        {tr('planui.bh.addPlanting')}
       </button>
     {/if}
   </div>

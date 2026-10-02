@@ -14,6 +14,8 @@
   import { Plus, ChevronRight } from 'lucide-svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   export type ScheduledRow = {
     id: string;
@@ -32,7 +34,14 @@
     titleSuffix?: string;
     onAddTask?: () => void;
   }
-  const { rows, titleSuffix = '· next 30 days', onAddTask }: Props = $props();
+  const { rows, titleSuffix, onAddTask }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
+  const STATUS_KEY = {
+    scheduled: 'planui.sched.statusScheduled',
+    today: 'planui.sched.statusToday',
+    'window-open': 'planui.sched.statusWindowOpen',
+    overdue: 'planui.sched.statusOverdue'
+  } as const;
 
   function statusTone(s: ScheduledRow['status']): 'wheat' | 'rust' | 'neutral' | 'forest' {
     return s === 'window-open'
@@ -47,27 +56,36 @@
 
 <Card>
   <div class="head">
-    <h3 class="serif">Scheduled tasks <span class="suffix">{titleSuffix}</span></h3>
+    <h3 class="serif">
+      {tr('planui.sched.title')}
+      <span class="suffix">{titleSuffix ?? tr('planui.sched.suffix')}</span>
+    </h3>
     {#if onAddTask}
-      <button class="ghost" onclick={onAddTask} type="button" aria-label="Add task">
-        <Plus size={13} strokeWidth={1.75} aria-hidden="true" /> Task
+      <button
+        class="ghost"
+        onclick={onAddTask}
+        type="button"
+        aria-label={tr('planui.sched.addAria')}
+      >
+        <Plus size={13} strokeWidth={1.75} aria-hidden="true" />
+        {tr('planui.sched.addTask')}
       </button>
     {/if}
   </div>
 
   {#if rows.length === 0}
-    <div class="empty">Nothing scheduled in this window.</div>
+    <div class="empty">{tr('planui.sched.empty')}</div>
   {:else}
     <div class="table-scroll">
       <table>
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Task</th>
-            <th>Planting</th>
-            <th>Source</th>
-            <th>Status</th>
-            <th aria-label="open"></th>
+            <th>{tr('planui.sched.thDate')}</th>
+            <th>{tr('planui.sched.thTask')}</th>
+            <th>{tr('planui.sched.thPlanting')}</th>
+            <th>{tr('planui.sched.thSource')}</th>
+            <th>{tr('planui.sched.thStatus')}</th>
+            <th aria-label={tr('planui.sched.openAria')}></th>
           </tr>
         </thead>
         <tbody>
@@ -87,10 +105,10 @@
                 {/if}
               </td>
               <td class="source">{row.source}</td>
-              <td><Pill tone={statusTone(row.status)}>{row.status}</Pill></td>
+              <td><Pill tone={statusTone(row.status)}>{tr(STATUS_KEY[row.status])}</Pill></td>
               <td class="chev">
                 {#if row.href}
-                  <a href={row.href} aria-label="Open task">
+                  <a href={row.href} aria-label={tr('planui.sched.openTask')}>
                     <ChevronRight size={14} strokeWidth={1.75} />
                   </a>
                 {/if}

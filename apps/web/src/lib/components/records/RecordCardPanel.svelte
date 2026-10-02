@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import CardView from '$lib/components/cards/CardView.svelte';
   import HoldVoidPanel from './HoldVoidPanel.svelte';
   import type { CardModel, CardPrintLayout } from '$lib/cards/model';
@@ -16,6 +18,7 @@
     onVoided?: () => void | Promise<void>;
   }
   const { recordKind, rowId, prefs, onPrint, fetcher, onVoided }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   type Load =
     | { state: 'loading' }
@@ -48,10 +51,7 @@
         if (!res.ok) {
           load = {
             state: 'error',
-            message:
-              res.status === 404
-                ? 'This record is no longer here.'
-                : 'The card could not load. Try again in a moment.'
+            message: res.status === 404 ? tr('records.card.gone') : tr('records.card.loadFail')
           };
           return;
         }
@@ -72,7 +72,7 @@
       .catch(() => {
         load = {
           state: 'error',
-          message: 'No connection, so this card cannot load. Your saved cards are in the deck.'
+          message: tr('records.card.offline')
         };
       });
   });
@@ -80,13 +80,13 @@
 
 <div class="record-card" data-testid="record-card-panel" aria-live="polite">
   {#if load.state === 'loading'}
-    <p class="note">Loading the card…</p>
+    <p class="note">{tr('records.card.loading')}</p>
   {:else if load.state === 'voided'}
     <p class="note" role="status">Voided. This entry is no longer in your records.</p>
   {:else if load.state === 'error'}
-    <p class="note">{load.message} <a href="/cards">Open your card deck</a></p>
+    <p class="note">{load.message} <a href="/cards">{tr('records.card.openDeck')}</a></p>
   {:else if load.cards.length === 0}
-    <p class="note">This record has no card of its own. Open the record for every detail.</p>
+    <p class="note">{tr('records.card.none')}</p>
   {:else}
     <div class="cards">
       {#each load.cards as card (card.key)}
@@ -94,7 +94,7 @@
       {/each}
     </div>
     <div class="print-row">
-      <label for={selectId}>Paper</label>
+      <label for={selectId}>{tr('records.card.paper')}</label>
       <select id={selectId} bind:value={layout}>
         {#each PRINT_LAYOUTS as l (l.id)}
           <option value={l.id}>{l.label}</option>
@@ -107,7 +107,7 @@
           if (load.state === 'ready') onPrint({ cards: load.cards, layout, origin: load.origin });
         }}
       >
-        Print card
+        {tr('records.card.print')}
       </button>
     </div>
   {/if}

@@ -48,6 +48,7 @@ test.describe('language infrastructure, flag off (production default)', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.getByRole('heading', { name: 'Account & sign-in' })).toBeVisible();
     await expect(page.getByText('App language')).toHaveCount(0);
+    await expect(page.getByRole('group', { name: 'Language' })).toHaveCount(0);
     await expect(nav(page).getByRole('link', { name: 'Today' }).first()).toBeVisible();
   });
 });
@@ -95,6 +96,102 @@ test.describe('language picker, flag on', () => {
     await expect(page.getByText('Language saved.')).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(nav(page).getByRole('link', { name: 'Today' }).first()).toBeVisible();
+  });
+
+  test('the header EN / ES button switches the language and sticks', async ({ page }) => {
+    const email = `i18n-hdr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@e2e.cropcard.local`;
+    await signInByLink(page, email);
+    await createOnboardedFarm(page, { growing: ['garden'] });
+    await page.goto('/today');
+    await page.waitForLoadState('networkidle');
+
+    const toggle = page.getByRole('group', { name: 'Language' });
+    await expect(toggle.getByRole('button', { name: 'English' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    const es = toggle.getByRole('button', { name: 'Español' });
+    const box = await es.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(48);
+
+    await Promise.all([page.waitForNavigation(), es.click()]);
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+    await expect(nav(page).getByRole('link', { name: 'Hoy' }).first()).toBeVisible();
+
+    await page.goto('/settings/account');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByLabel('Idioma de la aplicación')).toHaveValue('es');
+
+    await Promise.all([
+      page.waitForNavigation(),
+      page.getByRole('group', { name: 'Idioma' }).getByRole('button', { name: 'English' }).click()
+    ]);
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  });
+
+  test('onboarding asks which language to use', async ({ page }) => {
+    const email = `i18n-ob-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@e2e.cropcard.local`;
+    await signInByLink(page, email);
+    await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText('Which language should CropCard use?')).toBeVisible();
+    await Promise.all([
+      page.waitForNavigation(),
+      page
+        .locator('#main-content')
+        .getByRole('group', { name: 'Language' })
+        .getByRole('button', { name: 'Español' })
+        .click()
+    ]);
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText('¿En qué idioma quieres usar CropCard?')).toBeVisible();
+  });
+
+  test('main pages render in Spanish with no raw message keys', async ({ page }) => {
+    const email = `i18n-all-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@e2e.cropcard.local`;
+    await signInByLink(page, email);
+    await createOnboardedFarm(page, { growing: ['garden'] });
+    await page.goto('/settings/account');
+    await page.getByLabel('App language').selectOption('es');
+    await Promise.all([
+      page.waitForURL(/\/settings\/account/),
+      page.getByRole('button', { name: 'Use this language' }).click()
+    ]);
+    const rawKey =
+      /\b(?:today|tasks|plan|planui|crops|wizard|farm|tools|garden|inv|equip|stockui|settings|billing|docs|feedback|animals|records|harvestui|scout|hayui|fert|finance|calib|plugins|cardsui|entry|onboard|setup|ui|pricing|signin|nav|account)\.[a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+/;
+    const routes = [
+      '/today',
+      '/plan',
+      '/plan/farm',
+      '/plan/calendar',
+      '/inventory',
+      '/equipment',
+      '/records',
+      '/harvest',
+      '/scout',
+      '/animals',
+      '/cards',
+      '/fertility',
+      '/finance',
+      '/plugins',
+      '/tools',
+      '/settings',
+      '/settings/farm',
+      '/settings/billing',
+      '/settings/helpers',
+      '/settings/notifications',
+      '/settings/season'
+    ];
+    for (const route of routes) {
+      const res = await page.goto(route);
+      expect(res?.status(), route).toBeLessThan(500);
+      await page.waitForLoadState('networkidle');
+      await expect(page.locator('html'), route).toHaveAttribute('lang', 'es');
+      const text = await page.locator('body').innerText();
+      expect(text.match(rawKey)?.[0] ?? null, `${route} shows a raw message key`).toBeNull();
+    }
   });
 
   test('a Spanish browser with no saved choice gets Spanish menus, and no sideways scroll at 375 px', async ({

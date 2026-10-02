@@ -14,6 +14,7 @@ export const esCore: Partial<Record<MessageKey, string>> = {
   'nav.equipment': 'Equipo',
   'nav.records': 'Registros',
   'nav.cards': 'Tarjetas',
+  'nav.actions': 'Acciones',
   'nav.more': 'Más',
   'nav.morePages': 'Más páginas',
   'nav.feedbackInbox': 'Buzón de comentarios',

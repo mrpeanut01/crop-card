@@ -136,7 +136,7 @@ interface SwPushScopeLike {
 
 export function installSwPush(scope: SwPushScopeLike): void {
   scope.addEventListener('push', (event) => {
-    let raw: string | null = null;
+    let raw: string | null;
     try {
       raw = event.data ? event.data.text() : null;
     } catch {

@@ -431,7 +431,7 @@ const handleRequest: Handle = async ({ event, resolve: resolvePage }) => {
 
   // Phase 24 — Bearer-first auth resolution.
   const authHeader = event.request.headers.get('authorization');
-  let user: ReturnType<typeof currentUser> = null;
+  let user: ReturnType<typeof currentUser>;
   if (authHeader && /^bearer\s+/i.test(authHeader)) {
     const plaintext = authHeader.replace(/^bearer\s+/i, '').trim();
     const resolved = lookupByPlaintext(plaintext);

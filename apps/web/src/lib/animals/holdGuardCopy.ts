@@ -160,7 +160,7 @@ export type HoldQueueMarker = 'Owner must enter' | 'Change the date';
 /** C-35 §1: an offline-queue item the guard refused stays pending, marked
  *  with what unblocks it. `body` is the raw response text. */
 export function holdQueueMarker(status: number, body: string): HoldQueueMarker | null {
-  let parsed: { code?: unknown; askOwner?: unknown; windowDays?: unknown } | null = null;
+  let parsed: { code?: unknown; askOwner?: unknown; windowDays?: unknown } | null;
   try {
     parsed = JSON.parse(body);
   } catch {

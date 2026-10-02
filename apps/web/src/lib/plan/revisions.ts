@@ -39,7 +39,7 @@ export interface PlanRevision {
 }
 
 function rowToRevision(row: typeof planRevisions.$inferSelect): PlanRevision {
-  let payload: Record<string, unknown> = {};
+  let payload: Record<string, unknown>;
   try {
     payload = JSON.parse(row.payloadJson) as Record<string, unknown>;
   } catch {

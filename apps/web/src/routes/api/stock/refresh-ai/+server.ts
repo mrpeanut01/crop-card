@@ -239,7 +239,7 @@ export const GET: RequestHandler = (event) => {
   for (const row of rows) {
     const item = getStockItem(row.id);
     if (!item?.pendingRefreshJson) continue;
-    let parsed: Record<string, unknown> | null = null;
+    let parsed: Record<string, unknown> | null;
     try {
       parsed = JSON.parse(item.pendingRefreshJson) as Record<string, unknown>;
     } catch {

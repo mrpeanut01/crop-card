@@ -50,6 +50,7 @@
     mode,
     stored = null,
     canEdit = true,
+    // eslint-disable-next-line no-useless-assignment -- $bindable() in $props() destructuring is a rune declaration, not a plain default
     blocked = $bindable(false)
   }: Props = $props();
 

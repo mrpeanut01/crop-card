@@ -604,10 +604,7 @@ function merge2(a: readonly Span[], b: readonly Span[]): Span[] {
       const y = b[j];
       if (y.fromMs <= at) {
         const r = BASIS_RANK[y.basis];
-        if (r > rank) {
-          cover = y;
-          rank = r;
-        }
+        if (r > rank) cover = y;
         if (y.toMs < next) next = y.toMs;
       } else if (y.fromMs < next) next = y.fromMs;
     }

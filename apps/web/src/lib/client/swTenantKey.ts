@@ -209,7 +209,7 @@ export function createOwnerStore(
     async getLocale() {
       if (localeLoaded) return locale;
       const startedAt = localeGeneration;
-      let persisted = DEFAULT_SW_LOCALE;
+      let persisted: string;
       try {
         const cache = await cacheStorage?.open(SW_META_CACHE);
         const hit = await cache?.match(SW_META_LOCALE_URL);
@@ -226,7 +226,7 @@ export function createOwnerStore(
     async get() {
       if (loaded) return owner;
       const startedAt = generation;
-      let persisted: string | null = null;
+      let persisted: string | null;
       try {
         const cache = await cacheStorage?.open(SW_META_CACHE);
         const hit = await cache?.match(SW_META_OWNER_URL);

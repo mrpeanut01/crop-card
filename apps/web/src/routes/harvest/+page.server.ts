@@ -198,7 +198,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     const minMs = h.occurredAt + curing.durationWeeks.min * 7 * DAY_MS;
     const maxMs = h.occurredAt + curing.durationWeeks.max * 7 * DAY_MS;
     let phase: 'in-progress' | 'ready' | 'overdue';
-    let daysRemaining = 0;
+    let daysRemaining: number;
     if (now < minMs) {
       phase = 'in-progress';
       daysRemaining = Math.ceil((minMs - now) / DAY_MS);

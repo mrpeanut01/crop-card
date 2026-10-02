@@ -13,6 +13,8 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { requireSuperadmin } from '$lib/server/auth';
 import { PluginLifecycleError, uninstallPlugin } from '$lib/server/pluginLifecycle';
+import { lifecycleErrorMessage } from '$lib/plugins/lifecycleMessage';
+import { t } from '$lib/i18n';
 
 export const POST: RequestHandler = async (event) => {
   const session = requireSuperadmin(event);
@@ -32,7 +34,7 @@ export const POST: RequestHandler = async (event) => {
   if (confirm !== pluginId) {
     return json(
       {
-        error: 'Type the pluginId in the `confirm` field to authorize an irreversible uninstall.'
+        error: t(event.locals.locale, 'pluginui.api.confirmUninstall')
       },
       { status: 400 }
     );
@@ -44,7 +46,14 @@ export const POST: RequestHandler = async (event) => {
   } catch (e) {
     if (e instanceof PluginLifecycleError) {
       const status = e.code === 'still-referenced' ? 409 : e.code === 'not-found' ? 404 : 500;
-      return json({ error: e.message, code: e.code, references: e.references }, { status });
+      return json(
+        {
+          error: lifecycleErrorMessage(e, pluginId, event.locals.locale),
+          code: e.code,
+          references: e.references
+        },
+        { status }
+      );
     }
     return json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }

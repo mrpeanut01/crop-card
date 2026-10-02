@@ -16,6 +16,7 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { t } from '$lib/i18n';
 import { requireOwner } from '$lib/server/auth';
 import { recordCall } from '$lib/server/aiGuard';
 import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
@@ -72,9 +73,10 @@ export const POST: RequestHandler = async (event) => {
       found: false,
       provenance: 'fallback',
       fallbackReason: tried.fallbackReason,
-      message: `${tried.fallbackMessage} ${
-        retryable ? 'Try again, or use' : 'Use'
-      } the authoring form to add the plugin by hand.`,
+      message: `${tried.fallbackMessage} ${t(
+        event.locals.locale,
+        retryable ? 'pluginui.api.scanRetry' : 'pluginui.api.scanManual'
+      )}`,
       ...(retryable ? { retryable: true } : {})
     });
   }

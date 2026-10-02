@@ -4,6 +4,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { createT } from '$lib/i18n';
+  import { cropFamilyLabel } from '$lib/plugins/familyLabel';
   import { CHEMISTRY_CLASSES, type ChemistryClass } from '$lib/safety/types';
   import { CROP_FAMILIES, type CropFamily } from '$lib/safety/cropFamilyLethality';
   import HelpIcon from '$lib/components/HelpIcon.svelte';
@@ -817,7 +818,9 @@
             />
           </span>
           <select bind:value={cropFamily}>
-            {#each CROP_FAMILIES as f (f)}<option value={f}>{f}</option>{/each}
+            {#each CROP_FAMILIES as f (f)}<option value={f}
+                >{cropFamilyLabel(f, page.data?.locale)}</option
+              >{/each}
           </select>
         </label>
         <label>
@@ -1261,7 +1264,9 @@
             />
           </span>
           <select bind:value={cmpPrimaryFamily}>
-            {#each CROP_FAMILIES as f (f)}<option value={f}>{f}</option>{/each}
+            {#each CROP_FAMILIES as f (f)}<option value={f}
+                >{cropFamilyLabel(f, page.data?.locale)}</option
+              >{/each}
           </select>
         </label>
       </div>

@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { PluginDiff } from '$lib/plugins/diff';
   import { fmt } from '$lib/prefsState.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   type TimelineRow = {
     id: string;
@@ -23,6 +25,8 @@
     canRollback?: boolean;
     onRollback?: (version: string) => void;
   } = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   function formatDate(ms: number): string {
     return fmt.instant(ms, 'date');
@@ -48,9 +52,12 @@
   function diffTitle(d: PluginDiff | undefined): string {
     if (!d) return '';
     const lines: string[] = [];
-    if (d.addedKeys.length) lines.push(`Added:\n  ${d.addedKeys.join('\n  ')}`);
-    if (d.removedKeys.length) lines.push(`Removed:\n  ${d.removedKeys.join('\n  ')}`);
-    if (d.changedKeys.length) lines.push(`Changed:\n  ${d.changedKeys.join('\n  ')}`);
+    if (d.addedKeys.length)
+      lines.push(`${tr('pluginui.timeline.added')}\n  ${d.addedKeys.join('\n  ')}`);
+    if (d.removedKeys.length)
+      lines.push(`${tr('pluginui.timeline.removed')}\n  ${d.removedKeys.join('\n  ')}`);
+    if (d.changedKeys.length)
+      lines.push(`${tr('pluginui.timeline.changed')}\n  ${d.changedKeys.join('\n  ')}`);
     return lines.join('\n\n');
   }
 </script>
@@ -59,8 +66,10 @@
   {#each rows as row (row.id)}
     <li class:current={isCurrent(row)} class:retired={!!row.retiredAt}>
       <span class="version">v{row.version}</span>
-      {#if isCurrent(row)}<span class="chip current-chip">current</span>{/if}
-      {#if row.retiredAt}<span class="chip retired-chip">retired</span>{/if}
+      {#if isCurrent(row)}<span class="chip current-chip">{tr('pluginui.timeline.current')}</span
+        >{/if}
+      {#if row.retiredAt}<span class="chip retired-chip">{tr('pluginui.timeline.retired')}</span
+        >{/if}
       <span class="when">{formatDate(row.createdAt)}</span>
       {#if row.changedByEmail}<span class="who">{row.changedByEmail}</span>{/if}
       {#if diffSummary(row.diffSummary)}
@@ -69,11 +78,13 @@
       {#if row.changeReason}
         <span class="reason" title={row.changeReason}>{row.changeReason}</span>
       {:else if !diffSummary(row.diffSummary)}
-        <span class="reason muted">initial import</span>
+        <span class="reason muted">{tr('pluginui.timeline.initial')}</span>
       {/if}
       <code class="hash" title={`SHA-256: ${row.hash}`}>{row.hash.slice(0, 8)}</code>
       {#if canRollback && !isCurrent(row) && onRollback}
-        <button class="link" onclick={() => onRollback?.(row.version)}>Rollback</button>
+        <button class="link" onclick={() => onRollback?.(row.version)}
+          >{tr('pluginui.timeline.rollback')}</button
+        >
       {/if}
     </li>
   {/each}

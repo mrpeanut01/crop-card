@@ -5,6 +5,17 @@ import { currentOwnerId } from '$lib/db/tenant';
 import { currentVersionOf, historyOf } from '$lib/db/pluginVersions';
 import { hracGroupOf } from '$lib/safety/cropFamilyLethality';
 import type { Plugin } from '$lib/plugins/schemas';
+import { t, type MessageKey } from '$lib/i18n';
+import { cropFamilyLabel } from '$lib/plugins/familyLabel';
+
+const FORM_KEYS: Record<string, MessageKey> = {
+  granular: 'plugins.new.formGranular',
+  liquid: 'plugins.new.formLiquid',
+  soluble: 'plugins.new.formSoluble',
+  compost: 'plugins.new.formCompost',
+  'slow-release': 'plugins.new.formSlow',
+  meal: 'plugins.new.formMeal'
+};
 
 type GroupChip = { kind: 'HRAC' | 'IRAC' | 'FRAC'; group: string };
 
@@ -41,12 +52,17 @@ function dedupe(chips: GroupChip[]): GroupChip[] {
 
 /** One-line summary surfaced under each row. Per-kind so the operator can
  *  recognize the product without opening the detail page. */
-function summaryFor(plugin: Plugin): string {
+function summaryFor(plugin: Plugin, locale?: string | null): string {
   switch (plugin.type) {
     case 'crop': {
-      const parts: string[] = [`${plugin.cropFamily}`];
+      const parts: string[] = [cropFamilyLabel(plugin.cropFamily, locale)];
       if (plugin.daysToMaturity) {
-        parts.push(`${plugin.daysToMaturity.min}-${plugin.daysToMaturity.max}d to maturity`);
+        parts.push(
+          t(locale, 'pluginui.summary.maturity', {
+            min: plugin.daysToMaturity.min,
+            max: plugin.daysToMaturity.max
+          })
+        );
       }
       if (plugin.preHarvestIntervalDays != null)
         parts.push(`PHI ${plugin.preHarvestIntervalDays}d`);
@@ -70,7 +86,9 @@ function summaryFor(plugin: Plugin): string {
         parts.push(`PHI ${plugin.preHarvestIntervalDays}d`);
       if (plugin.targetPests?.length) {
         parts.push(
-          `vs ${plugin.targetPests.slice(0, 2).join(', ')}${plugin.targetPests.length > 2 ? '…' : ''}`
+          t(locale, 'pluginui.summary.vs', {
+            list: `${plugin.targetPests.slice(0, 2).join(', ')}${plugin.targetPests.length > 2 ? '…' : ''}`
+          })
         );
       }
       return parts.join(' · ');
@@ -82,23 +100,32 @@ function summaryFor(plugin: Plugin): string {
       if (plugin.applicationTiming) parts.push(plugin.applicationTiming);
       if (plugin.targetDiseases?.length) {
         parts.push(
-          `vs ${plugin.targetDiseases.slice(0, 2).join(', ')}${plugin.targetDiseases.length > 2 ? '…' : ''}`
+          t(locale, 'pluginui.summary.vs', {
+            list: `${plugin.targetDiseases.slice(0, 2).join(', ')}${plugin.targetDiseases.length > 2 ? '…' : ''}`
+          })
         );
       }
       return parts.join(' · ');
     }
     case 'fertilizer': {
       const { n, p, k } = plugin.analysis;
-      const parts: string[] = [`${n}-${p}-${k}`, plugin.form];
-      if (plugin.organic) parts.push('organic');
+      const formKey = FORM_KEYS[plugin.form];
+      const parts: string[] = [`${n}-${p}-${k}`, formKey ? t(locale, formKey) : plugin.form];
+      if (plugin.organic) parts.push(t(locale, 'pluginui.summary.organic'));
       return parts.join(' · ');
     }
     case 'companion': {
       const parts: string[] = [];
-      if (plugin.primaryFamily) parts.push(`anchor: ${plugin.primaryFamily}`);
+      if (plugin.primaryFamily)
+        parts.push(
+          t(locale, 'pluginui.summary.anchor', {
+            family: cropFamilyLabel(plugin.primaryFamily, locale)
+          })
+        );
       if (plugin.members?.length)
-        parts.push(`${plugin.members.length} member${plugin.members.length === 1 ? '' : 's'}`);
-      if (plugin.goodWith?.length) parts.push(`${plugin.goodWith.length} good-with`);
+        parts.push(t(locale, 'pluginui.summary.members', { count: plugin.members.length }));
+      if (plugin.goodWith?.length)
+        parts.push(t(locale, 'pluginui.summary.goodWith', { count: plugin.goodWith.length }));
       return parts.join(' · ');
     }
   }
@@ -129,7 +156,7 @@ export const load: PageServerLoad = async ({ locals }) => {
       lastChangedAt: current?.createdAt ?? null,
       retiredAt: current?.retiredAt ?? null,
       groupCodes: groupCodesFor(r.plugin),
-      summary: summaryFor(r.plugin)
+      summary: summaryFor(r.plugin, locals.locale)
     };
   });
   return {

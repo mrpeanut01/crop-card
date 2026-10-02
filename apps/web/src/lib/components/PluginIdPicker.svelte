@@ -13,13 +13,16 @@
    * animate in on add so the operator sees the selection register.
    */
   import { fly } from 'svelte/transition';
+  import { page } from '$app/state';
+  import { createT, t } from '$lib/i18n';
+  import { pluginKindLabel } from '$lib/plugins/familyLabel';
   type PluginRef = { pluginId: string; displayName: string; type: string };
 
   let {
     available,
     selected,
     kind,
-    placeholder = 'Search by name…',
+    placeholder = t(page.data?.locale, 'pluginui.picker.search'),
     onChange
   }: {
     available: ReadonlyArray<PluginRef>;
@@ -28,6 +31,9 @@
     placeholder?: string;
     onChange: (ids: string[]) => void;
   } = $props();
+
+  const tr = $derived(createT(page.data?.locale));
+  const kindWord = $derived(pluginKindLabel(kind, page.data?.locale));
 
   let query = $state('');
   let showList = $state(false);
@@ -93,7 +99,10 @@
       <ul class="options">
         {#if filtered.length === 0}
           <li class="empty">
-            {#if query}No {kind}s match "{query}"{:else}No {kind}s available{/if}
+            {#if query}{tr('pluginui.picker.noMatch', { kind: kindWord, query })}{:else}{tr(
+                'pluginui.picker.none',
+                { kind: kindWord }
+              )}{/if}
           </li>
         {:else}
           {#each filtered as p (p.pluginId)}
@@ -123,7 +132,7 @@
           <button
             type="button"
             class="remove"
-            aria-label={`Remove ${p.displayName}`}
+            aria-label={tr('pluginui.picker.remove', { name: p.displayName })}
             onclick={() => remove(p.pluginId)}>×</button
           >
         </span>

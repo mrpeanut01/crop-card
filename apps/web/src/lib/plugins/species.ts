@@ -5,6 +5,7 @@
  * animal whose species is missing counts as food-producing.
  */
 
+import { t, type MessageKey } from '$lib/i18n';
 import type { SpeciesPlugin } from './schemas';
 
 /** The ruled starter set, in tile order. There is no "Other" species. */
@@ -78,12 +79,20 @@ export function offersNotForSlaughter(species: SpeciesSource, speciesId: string)
   return species.get(speciesId)?.notForSlaughterToggle === true;
 }
 
-export function groupNounFor(species: SpeciesSource, speciesId: string): string {
-  return species.get(speciesId)?.groupNoun ?? 'group';
+export function groupNounFor(
+  species: SpeciesSource,
+  speciesId: string,
+  locale?: string | null
+): string {
+  return species.get(speciesId)?.groupNoun ?? t(locale, 'pluginui.species.group');
 }
 
-export function speciesLabel(species: SpeciesSource, speciesId: string): string {
-  return species.get(speciesId)?.displayName ?? 'Unknown species';
+export function speciesLabel(
+  species: SpeciesSource,
+  speciesId: string,
+  locale?: string | null
+): string {
+  return species.get(speciesId)?.displayName ?? t(locale, 'pluginui.species.unknown');
 }
 
 /** One plain line under the food-producing chip on the add form. */
@@ -152,17 +161,38 @@ function wordsFor(speciesId: string): SexWords {
   return (SEX_WORDS as Record<string, SexWords>)[speciesId] ?? GENERIC_SEX_WORDS;
 }
 
-export function sexLabel(speciesId: string, sex: AnimalSex): string {
+function sexWordKey(speciesId: string, sex: AnimalSex): MessageKey {
+  if (sex === 'unknown') return 'pluginui.sex.unknown';
+  const own = (SEX_WORDS as Record<string, SexWords>)[speciesId];
+  if (own && own !== GENERIC_SEX_WORDS && own[sex] !== undefined) {
+    return `pluginui.sex.${speciesId}.${sex}` as MessageKey;
+  }
+  return `pluginui.sex.generic.${sex}`;
+}
+
+/** Display word for an animal's sex. With a locale it is translated; the
+ *  English words are the ones in the tables above. */
+export function sexLabel(speciesId: string, sex: AnimalSex, locale?: string | null): string {
+  if (locale) return t(locale, sexWordKey(speciesId, sex));
   if (sex === 'unknown') return UNKNOWN_SEX_LABEL;
   return wordsFor(speciesId)[sex] ?? GENERIC_SEX_WORDS[sex];
 }
 
 /** Choices for the sex picker, species words first, "Not sure" last. */
-export function sexOptions(speciesId: string): { value: AnimalSex; label: string }[] {
+export function sexOptions(
+  speciesId: string,
+  locale?: string | null
+): { value: AnimalSex; label: string }[] {
   const words = wordsFor(speciesId);
   const values = ANIMAL_SEXES.filter(
     (s): s is Exclude<AnimalSex, 'unknown'> => s !== 'unknown' && words[s] !== undefined
   );
+  if (locale) {
+    return [
+      ...values.map((value) => ({ value, label: sexLabel(speciesId, value, locale) })),
+      { value: 'unknown', label: sexLabel(speciesId, 'unknown', locale) }
+    ];
+  }
   return [
     ...values.map((value) => ({ value, label: words[value]! })),
     { value: 'unknown', label: UNKNOWN_SEX_LABEL }

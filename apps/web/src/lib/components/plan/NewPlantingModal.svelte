@@ -163,7 +163,8 @@
   function seedAmountText(seed: PickerSeed): string {
     return availableQuantityText(
       { existing: seed.onHand, ordered: seed.onOrder ?? 0, planned: seed.planned ?? 0 },
-      seed.defaultUnit
+      seed.defaultUnit,
+      locale
     );
   }
 

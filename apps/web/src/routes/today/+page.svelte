@@ -62,7 +62,12 @@
     type TaskStatus
   } from '$lib/tasks/status';
   import { taskDisplayTitle } from '$lib/tasks/title';
-  import { defaultAssigneeWho, resolveAssigneeWho, type AssigneeWho } from '$lib/tasks/assignee';
+  import {
+    defaultAssigneeWho,
+    memberNameIn,
+    resolveAssigneeWho,
+    type AssigneeWho
+  } from '$lib/tasks/assignee';
 
   const { data } = $props();
   const tr = $derived(createT(page.data?.locale));
@@ -189,7 +194,7 @@
         after: linked.filter((l) => l.kind === 'post-task').map((l) => l.title),
         queued: queued.get(t.id) ?? null,
         asOf: data.nowMs,
-        assignee: t.assignee?.name ?? null,
+        assignee: t.assignee ? memberNameIn(t.assignee.name, data.locale) : null,
         href: taskPlanHref(t.blockId ?? planting?.blockId ?? null)
       },
       { now: data.nowMs, prefs }

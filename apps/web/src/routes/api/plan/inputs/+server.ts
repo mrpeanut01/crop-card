@@ -149,6 +149,7 @@ export const POST: RequestHandler = async (event) => {
 
   const tried = await tryAiWithGuard({
     endpoint: 'inputs',
+    locale: event.locals?.locale,
     userId: auth.id,
     prompt: (signal) => planInputsWithAI({ ...baseInput, signal })
   });

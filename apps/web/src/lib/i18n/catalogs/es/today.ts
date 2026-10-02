@@ -1,6 +1,8 @@
 import type { MessageKey } from '../en';
 
 export const esToday: Partial<Record<MessageKey, string>> = {
+  'tasks.member.fallback': 'Miembro de la granja',
+  'tasks.member.phoneEnding': 'teléfono que termina en {digits}',
   'tasks.assign.loadFailed': 'No se pudieron cargar los miembros de la granja.',
   'tasks.assign.loading': 'Cargando los miembros de la granja…',
   'tasks.assign.members': 'Miembros de la granja',
@@ -461,6 +463,23 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'advice.water.yourSetting': 'tu configuración',
   'advice.water.areaTitle': 'Riego de {area}',
   'advice.water.forecast': 'Lluvia pronosticada: unas {inches} en las próximas 24 horas (NWS).',
+  'advice.dd.line.degreeDays.one': '{count} grado día',
+  'advice.dd.line.degreeDays.other': '{count} grados día',
+  'advice.dd.line.days.one': '{count} día',
+  'advice.dd.line.days.other': '{count} días',
+  'advice.dd.line.total': '{total} desde el {since}, hasta el {through}.',
+  'advice.dd.line.totalMissing':
+    'Al menos {total} desde el {since}, faltan {missing}, hasta el {through}.',
+  'advice.dd.line.setTraps': 'Pon trampas. Registra tu primera captura para empezar la cuenta.',
+  'advice.dd.line.startsOn': 'La cuenta empieza el {day}.',
+  'advice.dd.line.noReadings': 'Todavía no hay lecturas de la estación desde el {day}.',
+  'advice.dd.line.cantTell': '{label}: todavía no se sabe, faltan {missing}.',
+  'advice.dd.line.inAbout': '{label} en unos {remaining}.',
+  'advice.dd.line.passed': 'La ventana de {label} ya pasó este año.',
+  'advice.dd.msg.noLocation': 'Indica la ubicación de tu granja.',
+  'advice.dd.msg.noStation':
+    'Los grados día necesitan una estación meteorológica a menos de {miles} millas. No se encontró ninguna.',
+  'advice.dd.msg.noReadings': 'Las lecturas de la estación no están disponibles en este momento.',
   'advice.dd.watchFor': 'Vigila {pest}',
   'advice.dd.openScouting': 'Abrir monitoreo',
   'advice.dd.detail': '{station}. {biofix}. Base {base}°F.',

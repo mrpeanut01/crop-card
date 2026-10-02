@@ -559,7 +559,6 @@ export const enPlan = {
   'plantui.card.harvest': 'Harvest',
   'plantui.card.amount': 'Amount',
   'plantui.card.smallGrainLink': 'Stages, scab risk & vernalization',
-  'plantui.card.journalLink': 'Journal and photo help',
   'plantui.status.planned': 'planned',
   'plantui.status.active': 'active',
   'plantui.status.mature': 'mature',
@@ -586,6 +585,8 @@ export const enPlan = {
   'plantui.blockStatus.planned': 'planned',
   'plantui.blockStatus.active': 'active',
   'plantui.blockStatus.mature': 'mature',
+  'sched.hardenUnknownNote': 'Hardening-off timing is not known for this crop.',
+  'sched.notDatedNote': 'Seed-start tasks are made once the planting has a date.',
   'sched.sowTimingUnknown':
     'Indoor start timing is not known for this crop. Set the sow date yourself.',
   'sched.sowAfterTransplant':

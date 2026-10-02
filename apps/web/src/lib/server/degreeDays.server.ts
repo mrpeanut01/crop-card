@@ -33,7 +33,7 @@ import {
 import type { PestModelPlugin } from '$lib/plugins/schemas';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 import { farmTimeZone } from '$lib/db/userProfile';
-import { DEFAULT_PREFS, formatCalendarDate, ymdInZone } from '$lib/prefs';
+import { DEFAULT_PREFS, ymdInZone } from '$lib/prefs';
 import { t } from '$lib/i18n';
 import { getDataKinds, getRegistry } from '$lib/server/registry';
 import {
@@ -260,7 +260,8 @@ export function evaluateModel(
   todayYmd: string,
   stored: StoredBiofix | null,
   days: readonly DailyTemps[] | null,
-  applicable: boolean
+  applicable: boolean,
+  locale?: string | null
 ): DegreeDayModelResult {
   const biofix = resolveBiofix(model, year, stored);
   const toYmd = lastCountableYmd(year, todayYmd);
@@ -307,7 +308,7 @@ export function evaluateModel(
           }
         : null
     },
-    lines: watchForLines(status, biofix),
+    lines: watchForLines(status, biofix, locale),
     applicable,
     showOnScout: applicable && showOnScout(status),
     showOnToday: applicable && showOnToday(status)
@@ -353,6 +354,8 @@ interface LoadInput {
   /** The farm's time zone; read from settings when omitted. */
   timeZone?: string;
   deps?: DegreeDayDeps;
+  /** The viewer's language for `message` and the model lines. */
+  locale?: string | null;
 }
 
 /** Crop families with an active or planned planting in `year`. */
@@ -408,7 +411,8 @@ export async function loadDegreeDays(input: LoadInput): Promise<DegreeDaysResult
         todayYmd,
         biofixes.get(m.pluginId) ?? null,
         days,
-        modelApplies(m, families)
+        modelApplies(m, families),
+        input.locale
       )
     );
 
@@ -416,7 +420,7 @@ export async function loadDegreeDays(input: LoadInput): Promise<DegreeDaysResult
     return {
       ...base,
       location: 'no-location',
-      message: 'Set your farm location.',
+      message: t(input.locale, 'advice.dd.msg.noLocation'),
       models: evaluate(null).map(hideCounts)
     };
   }
@@ -431,7 +435,7 @@ export async function loadDegreeDays(input: LoadInput): Promise<DegreeDaysResult
     return {
       ...base,
       location: 'no-station',
-      message: `Degree days need a weather station within ${OBSERVED_MAX_STATION_MILES} miles. None found.`,
+      message: t(input.locale, 'advice.dd.msg.noStation', { miles: OBSERVED_MAX_STATION_MILES }),
       models: evaluate(null).map(hideCounts)
     };
   }
@@ -439,7 +443,7 @@ export async function loadDegreeDays(input: LoadInput): Promise<DegreeDaysResult
     ...base,
     station: toStation(station),
     dataError: error,
-    message: days === null ? 'Station readings are not available right now.' : null,
+    message: days === null ? t(input.locale, 'advice.dd.msg.noReadings') : null,
     models: evaluate(days)
   };
 }
@@ -459,16 +463,13 @@ function hideCounts(r: DegreeDayModelResult): DegreeDayModelResult {
 
 export function biofixDetail(r: DegreeDayModelResult, locale?: string | null): string {
   if (!r.biofix.date) return t(locale, 'advice.dd.noBiofix');
-  const day =
-    locale && locale !== 'en'
-      ? formatCalendarDate(r.biofix.date, 'month-day', {}, locale)
-      : shortDay(r.biofix.date);
+  const day = shortDay(r.biofix.date, locale);
   if (r.biofix.provenance === 'manual') return t(locale, 'advice.dd.fromTrap', { day });
   if (r.biofix.provenance === 'fallback') return t(locale, 'advice.dd.fromFallback', { day });
   return t(locale, 'advice.dd.from', { day });
 }
 
-/** The /today cards. `lines` come from the pest model and stay English. */
+/** The /today cards. `lines` are built in the viewer's language by `loadDegreeDays`. */
 export function degreeDayCards(
   result: DegreeDaysResult,
   locale?: string | null
@@ -515,7 +516,8 @@ export const degreeDayAdvice: TodayAdviceProvider = async (ctx) => {
     farmLatLon: ctx.farmLatLon,
     plantedFamilies: families,
     timeZone: ctx.timeZone ?? DEFAULT_PREFS.timeZone,
-    deps: { timeoutMs: TODAY_FETCH_TIMEOUT_MS }
+    deps: { timeoutMs: TODAY_FETCH_TIMEOUT_MS },
+    locale: ctx.locale
   });
   return degreeDayCards(result, ctx.locale);
 };

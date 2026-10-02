@@ -1,8 +1,8 @@
 import {
-  EXTRACTION_METHOD_LABEL,
-  PH_CLASS_LABEL,
   SOIL_TEST_STALE_YEARS,
+  extractionMethodLabel,
   interpretSoilTest,
+  phClassLabel,
   type NutrientReading
 } from '$lib/fertility/soilInterpret';
 import { formatCalendarDate, ymdInZone } from '$lib/prefs';
@@ -103,7 +103,7 @@ export function buildSoilTestCard(
   const opts = resolveOptions(snapshot, options);
   const { tr } = opts;
   const loc = opts.prefs.locale;
-  const read = interpretSoilTest(test, opts.now);
+  const read = interpretSoilTest(test, opts.now, loc);
   const unit = test.unitsBasis === 'lb-per-acre' ? 'lb/A' : 'ppm';
 
   const sampled = formatCalendarDate(
@@ -125,7 +125,7 @@ export function buildSoilTestCard(
   if (test.extractionMethod) {
     facts.push({
       label: tr('cards.soil.method'),
-      value: EXTRACTION_METHOD_LABEL[test.extractionMethod],
+      value: extractionMethodLabel(test.extractionMethod, loc),
       provenance: 'manual'
     });
   }
@@ -133,7 +133,7 @@ export function buildSoilTestCard(
     facts.push({
       label: 'pH',
       value: read.phClass
-        ? `${test.ph.toFixed(1)} · ${PH_CLASS_LABEL[read.phClass]}`
+        ? `${test.ph.toFixed(1)} · ${phClassLabel(read.phClass, loc)}`
         : test.ph.toFixed(1),
       provenance: 'manual'
     });

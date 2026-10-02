@@ -8,7 +8,7 @@ import { buildAreaCard } from '$lib/cards/build/area';
 import { areaDisplayName, blockDisplayName } from '$lib/cards/build/common';
 import { formatSize } from '$lib/cards/build/size';
 import {
-  PLANTING_JOURNAL_LINK_LABEL,
+  plantingJournalLinkLabel,
   cardKey,
   plantingCardHref,
   type CardFact,
@@ -208,7 +208,7 @@ function railCard(
   now: number,
   locale?: string | null
 ): RailAreaCard {
-  const sizeLabel = t(locale, 'plantui.card.size');
+  const sizeLabel = t(locale, 'cards.fact.size');
   const size = built.facts.find((f) => f.label === 'Size' || f.label === sizeLabel);
   const facts: CardFact[] = [];
   if (size) facts.push(size);
@@ -246,7 +246,7 @@ export function planAreaCard(
 ): CardModel | null {
   const built = buildAreaCard(snapshot, area.id, { prefs });
   if (!built) return null;
-  const notesTitle = t(prefs.locale, 'plantui.card.notes');
+  const notesTitle = t(prefs.locale, 'cards.notes');
   return {
     ...built,
     title: areaDisplayName({ name: area.name, kind: area.kind }),
@@ -421,7 +421,7 @@ export function planPlantingCard(input: PlanPlantingCardInput): CardModel {
         ? [{ label: t(locale, 'plantui.card.smallGrainLink'), href: input.detailHref }]
         : []),
       {
-        label: locale ? t(locale, 'plantui.card.journalLink') : PLANTING_JOURNAL_LINK_LABEL,
+        label: plantingJournalLinkLabel(locale),
         href: plantingCardHref(planting.id)
       }
     ]

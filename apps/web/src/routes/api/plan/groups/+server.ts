@@ -162,6 +162,7 @@ export const POST: RequestHandler = async (event) => {
 
   const tried = await tryAiWithGuard({
     endpoint: 'groups',
+    locale: event.locals?.locale,
     userId: user.id,
     prompt: () =>
       proposeGroupPlans(planningInput, built.context, {

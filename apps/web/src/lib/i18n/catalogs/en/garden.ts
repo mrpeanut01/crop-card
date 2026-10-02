@@ -430,13 +430,6 @@ export const enGarden = {
   'gardenlib.fill.why.offline': "Claude can't be reached right now",
   'gardenlib.fill.why.timeout': 'Claude took too long',
   'gardenlib.fill.why.invalid': "Claude's ideas didn't fit this bed",
-  'gardenlib.fill.limit.monthly-budget': "This month's AI help for your farm is used up",
-  'gardenlib.fill.limit.owner-disabled': 'AI help is turned off for this farm',
-  'gardenlib.fill.limit.plan-excluded': "This AI help isn't on the {plan} plan",
-  'gardenlib.fill.limit.plan-excluded-any': "This AI help isn't on your plan",
-  'gardenlib.fill.limit.free-pool': 'Free AI help is resting until the 1st',
-  'gardenlib.fill.limit.global': 'AI help is paused for this month',
-  'gardenlib.fill.limit.daily-quota': "Today's AI help for this is used up",
   'gardenlib.fill.nothingFits':
     '{prefix}, and no recipe or planned crop fits this bed on {date}. Try a later date or free up some space.',
   'gardenlib.fill.fromRecipe': 'a plain plan from the {recipe} recipe',

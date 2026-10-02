@@ -18,7 +18,7 @@ export const GET: RequestHandler = (event) => {
   if (!getCrop(id)) return json({ error: 'planting not found' }, { status: 404 });
   const rows = listTimeEntriesForCrop(id);
   const perUser = sumMinutes(rows, 'user');
-  const names = memberNamesByIds([...perUser.keys()]);
+  const names = memberNamesByIds([...perUser.keys()], event.locals?.locale);
   const byPerson = [...perUser]
     .map(([userId, minutes]) => ({
       id: userId,

@@ -4,12 +4,12 @@
   import { page } from '$app/state';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import {
-    HARD_FREEZE_NOTE,
     MAX_SHIFT_DAYS,
     PROTECTION_KINDS,
-    PROTECTION_LABEL,
-    SHIFT_UNKNOWN_NOTE,
+    hardFreezeNote,
     protectionDefaults,
+    protectionLabel,
+    shiftUnknownNote,
     type ProtectionKind
   } from '$lib/climate/protection';
   import { addBlockCover, type BlockCoversResponse } from '$lib/climate/protectionView';
@@ -101,13 +101,13 @@
   <form class="setup-protection" onsubmit={submit}>
     <p class="lede">
       {tr('setup.cover.lede')}
-      {HARD_FREEZE_NOTE}
+      {hardFreezeNote(page.data?.locale)}
     </p>
 
     <label for="sp-kind-{uid}">{tr('setup.cover.kind')}</label>
     <select id="sp-kind-{uid}" bind:value={kind} data-autofocus>
       {#each PROTECTION_KINDS as k (k)}
-        <option value={k}>{PROTECTION_LABEL[k]}</option>
+        <option value={k}>{protectionLabel(k, page.data?.locale)}</option>
       {/each}
     </select>
 
@@ -115,7 +115,7 @@
       <p class="help">{tr('setup.cover.heatedHelp')}</p>
     {:else}
       {#if defaults.springShiftDays === null || defaults.fallShiftDays === null}
-        <p class="help" role="note">{SHIFT_UNKNOWN_NOTE}</p>
+        <p class="help" role="note">{shiftUnknownNote(page.data?.locale)}</p>
       {/if}
       <div class="shift-row">
         <label>

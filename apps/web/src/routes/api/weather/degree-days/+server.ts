@@ -33,7 +33,12 @@ export const GET: RequestHandler = async (event) => {
   const thisYear = new Date(now).getFullYear();
   const year = parsed.data.year ?? thisYear;
   if (year > thisYear) return json({ error: 'year is in the future' }, { status: 400 });
-  const result = await loadDegreeDays({ year, modelId: parsed.data.model, nowMs: now });
+  const result = await loadDegreeDays({
+    year,
+    modelId: parsed.data.model,
+    nowMs: now,
+    locale: event.locals?.locale
+  });
   if (parsed.data.model && result.models.length === 0) {
     return json({ error: 'pest model not found' }, { status: 404 });
   }

@@ -15,6 +15,7 @@ import { stampTraysTransplanted } from '$lib/db/seedStarts';
 import { deleteSetting, getSetting, setSetting } from '$lib/db/settings';
 import type { PlantingEstablishment } from '$lib/seedStart/apiSchemas';
 import { tenantValues, withTenant } from '$lib/db/tenant';
+import { t, type MessageKey } from '$lib/i18n';
 import {
   SOW_AFTER_TRANSPLANT_NOTE,
   resolveSeedStartTiming,
@@ -112,14 +113,33 @@ export function materializeSeedStartTasks(input: SeedStartTaskInput): SeedStartT
   return { plan, taskIds, notes: seedStartNotes(plan) };
 }
 
+const NOT_DATED_NOTE = 'Seed-start tasks are made once the planting has a date.';
+const HARDEN_UNKNOWN_NOTE = 'Hardening-off timing is not known for this crop.';
+const SOW_UNKNOWN_NOTE =
+  'Indoor start timing is not known for this crop. Set the sow date yourself.';
+
+const NOTE_KEYS: Record<string, MessageKey> = {
+  [SOW_AFTER_TRANSPLANT_NOTE]: 'sched.sowAfterTransplant',
+  [SOW_UNKNOWN_NOTE]: 'sched.sowTimingUnknown',
+  [HARDEN_UNKNOWN_NOTE]: 'sched.hardenUnknownNote',
+  [NOT_DATED_NOTE]: 'sched.notDatedNote'
+};
+
+/** The English seed-start notes in the viewer's language, for API
+ *  responses the planting forms show. */
+export function localizeSeedStartNotes(notes: readonly string[], locale?: string | null): string[] {
+  if (!locale) return [...notes];
+  return notes.map((n) => (NOTE_KEYS[n] ? t(locale, NOTE_KEYS[n]) : n));
+}
+
 export function seedStartNotes(plan: SeedStartPlan): string[] {
   const notes: string[] = [];
   if (plan.sowAfterTransplant) notes.push(SOW_AFTER_TRANSPLANT_NOTE);
   if (plan.unknown.includes('sow')) {
-    notes.push('Indoor start timing is not known for this crop. Set the sow date yourself.');
+    notes.push(SOW_UNKNOWN_NOTE);
   }
   if (plan.unknown.includes('harden')) {
-    notes.push('Hardening-off timing is not known for this crop.');
+    notes.push(HARDEN_UNKNOWN_NOTE);
   }
   return notes;
 }
@@ -246,7 +266,7 @@ export function applyPlantingEstablishment(
   if (crop.plantingDate == null) {
     return {
       ...none,
-      notes: ['Seed-start tasks are made once the planting has a date.']
+      notes: [NOT_DATED_NOTE]
     };
   }
   const result = materializeSeedStartTasks({

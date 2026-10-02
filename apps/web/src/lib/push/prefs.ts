@@ -50,14 +50,6 @@ export const PUSH_ALERT_LABELS: Record<PushAlertKind, { label: string; sub: stri
   }
 };
 
-/** Decon, record-lock, withdrawal and hold alert names stay English (safety wording). */
-const TRANSLATED_ALERT_KINDS: readonly PushAlertKind[] = [
-  'spring-calibration',
-  'frost-tonight',
-  'animal-care-due',
-  'weekly-digest'
-];
-
 /** An alert's label or explanation for the settings and unsubscribe pages. */
 export function pushAlertText(
   kind: PushAlertKind,
@@ -65,7 +57,7 @@ export function pushAlertText(
   locale?: string | null
 ): string {
   const english = PUSH_ALERT_LABELS[kind][part];
-  if (!locale || !TRANSLATED_ALERT_KINDS.includes(kind)) return english;
+  if (!locale) return english;
   const key = `settings.notif.${kind}.${part}` as MessageKey;
   return t('en', key) === english ? t(locale, key) : english;
 }

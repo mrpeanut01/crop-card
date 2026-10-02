@@ -50,7 +50,7 @@
   <p class="label">
     <strong>{tray.trayLabel ?? tr('cardsui.germ.tray')}</strong>
     <span aria-live="polite" data-testid="germination-text"
-      >{germinationText(count, tray.cells, tray.seedsPerCell)}</span
+      >{germinationText(count, tray.cells, tray.seedsPerCell, page.data?.locale)}</span
     >
     {#if queued}<QueuedBadge />{/if}
   </p>

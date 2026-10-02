@@ -46,8 +46,12 @@ import { hayDaysLate } from '$lib/records/hayExport.server';
 const LOOKUP_LIMIT = 10_000;
 
 /** G2-06: the hay record card's "Saved N days after its date" line. */
-export function hayLateNotice(cuttingNumber: number, label: string): string {
-  return `Hay cutting ${cuttingNumber}: ${label}.`;
+export function hayLateNotice(
+  cuttingNumber: number,
+  label: string,
+  locale?: string | null
+): string {
+  return t(locale, 'cards.record.hayLate', { n: cuttingNumber, label });
 }
 
 function withNotice(card: CardModel, notice: string): CardModel {
@@ -265,11 +269,13 @@ export async function buildRecordCards(
     if (!c) return null;
     const at = c.mowAt ?? c.baleAt ?? c.storedAt ?? c.createdAt;
     const plantingId = c.cropId ?? plantingIdForRecord(c.blockId, c.cropPluginId, at);
-    const late = lateLabel(c.recordedLate, hayDaysLate(c));
+    const late = lateLabel(c.recordedLate, hayDaysLate(c), ctx.prefs.locale);
     const cards = await plantingCard(plantingId, kind, rowId, ctx);
     return {
       cards: late
-        ? cards.map((card) => withNotice(card, hayLateNotice(c.cuttingNumber, late)))
+        ? cards.map((card) =>
+            withNotice(card, hayLateNotice(c.cuttingNumber, late, ctx.prefs.locale))
+          )
         : cards,
       origin
     };

@@ -12,8 +12,7 @@ import {
 import { requireOwner } from '$lib/server/auth';
 import { aiLimitOf, recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import { recordCall } from '$lib/server/aiGuard';
-import { aiLimitReason, type AiLimit } from '$lib/billing/aiLimit';
-import { PLANS } from '$lib/billing/plans';
+import { aiLimitReason } from '$lib/billing/aiLimit';
 import { t, type MessageKey } from '$lib/i18n';
 import { suggestBedLayout } from '$lib/server/aiBedLayout';
 import { getRegistry } from '$lib/server/registry';
@@ -32,24 +31,6 @@ const WHY: Record<string, MessageKey> = {
   invalid: 'wizard.beds.why.invalid',
   'too-many-beds': 'wizard.beds.why.tooMany'
 };
-
-function limitReason(limit: AiLimit, locale: string | null | undefined): string {
-  if (!locale || locale === 'en') return aiLimitReason(limit);
-  if (limit.detail === 'plan-excluded') {
-    return limit.plan
-      ? t(locale, 'wizard.beds.limit.planExcludedNamed', { plan: PLANS[limit.plan].name })
-      : t(locale, 'wizard.beds.limit.planExcluded');
-  }
-  const keys: Record<Exclude<AiLimit['detail'], 'plan-excluded'>, MessageKey> = {
-    'monthly-budget': 'wizard.beds.why.overCap',
-    'owner-disabled': 'wizard.beds.limit.ownerDisabled',
-    'free-pool': 'wizard.beds.limit.freePool',
-    global: 'wizard.beds.limit.global',
-    'daily-quota': 'wizard.beds.why.quota',
-    'token-quota': 'wizard.beds.why.quota'
-  };
-  return t(locale, keys[limit.detail]);
-}
 
 /** POST /api/plan/beds/suggest (#475). Beds sized for the seed being
  *  planted: Claude's grouping when it is available and checks out, else a
@@ -107,7 +88,7 @@ export const POST: RequestHandler = async (event) => {
     provenance: 'fallback' as const,
     note: null,
     message: `${t(locale, 'wizard.beds.fallbackMsg', {
-      why: limit ? limitReason(limit, locale) : t(locale, WHY[why], { max: MAX_SUGGESTED_BEDS })
+      why: limit ? aiLimitReason(limit, locale) : t(locale, WHY[why], { max: MAX_SUGGESTED_BEDS })
     })}${leftover}`,
     unplaced,
     aiLimit: limit

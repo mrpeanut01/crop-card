@@ -125,6 +125,31 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'cardsui.one.titleBare': 'Tarjeta · CropCard',
   'cardsui.one.titleNamed': '{title} · Tarjetas · CropCard',
   'cardsui.paper': 'Papel',
+  'cardsui.photo.why.noKey': 'Claude está apagado, así que esto es lo que dice la Guía de cuidado.',
+  'cardsui.photo.why.overCap':
+    'La ayuda de IA de este mes para tu granja ya se agotó, así que esto es lo que dice la Guía de cuidado.',
+  'cardsui.photo.why.quota':
+    'La ayuda de IA de hoy para fotos ya se agotó, así que esto es lo que dice la Guía de cuidado.',
+  'cardsui.photo.why.rateLimit':
+    'Claude no está respondiendo ahora, así que esto es lo que dice la Guía de cuidado.',
+  'cardsui.photo.why.offline':
+    'No se puede contactar a Claude ahora, así que esto es lo que dice la Guía de cuidado.',
+  'cardsui.photo.why.timeout':
+    'Claude tardó demasiado, así que esto es lo que dice la Guía de cuidado.',
+  'cardsui.photo.why.invalid':
+    'No se pudo usar la respuesta de Claude, así que esto es lo que dice la Guía de cuidado.',
+  'cardsui.photo.why.spray': 'Esto es lo que dice la Guía de cuidado.',
+  'cardsui.photo.why.limit': '{reason}, así que esto es lo que dice la Guía de cuidado.',
+  'cardsui.photo.savedJournalPhoto': 'Tu foto y tu pregunta quedaron guardadas en el diario.',
+  'cardsui.photo.savedJournal': 'Tu pregunta quedó guardada en el diario.',
+  'cardsui.photo.noSection.harvest':
+    'Este cultivo todavía no tiene señales de cosecha. Cuenta los días desde la siembra y revisa el sobre de semillas.',
+  'cardsui.photo.noSection.prune':
+    'Este cultivo todavía no tiene pasos de poda. La mayoría de las plantas solo necesitan quitar las partes muertas o dañadas.',
+  'cardsui.photo.noSection.problems':
+    'Este cultivo todavía no tiene problemas comunes en la lista. Toma una foto de cerca de ambos lados de una hoja y compárala la próxima semana.',
+  'cardsui.photo.noSection.general':
+    'Este cultivo todavía no tiene guía de cultivo. Revisa el sobre de semillas para lo básico.',
   'cardsui.photo.about': 'Sobre {label}',
   'cardsui.photo.add': '¿Algo que agregar?',
   'cardsui.photo.addNote': 'Agregar una nota',
@@ -681,17 +706,6 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'pluginui.tasks.window': 'Ventana (días)',
   'pluginui.tasks.body': 'Texto (nota opcional)',
   'pluginui.tasks.add': '+ Agregar tarea',
-  'pluginui.taskCategory.plant': 'Sembrar',
-  'pluginui.taskCategory.till': 'Labrar',
-  'pluginui.taskCategory.fertilize': 'Fertilizar',
-  'pluginui.taskCategory.spray': 'Aplicar',
-  'pluginui.taskCategory.scout': 'Monitorear',
-  'pluginui.taskCategory.companion-check': 'Revisar compañeros',
-  'pluginui.taskCategory.prune': 'Podar',
-  'pluginui.taskCategory.harvest': 'Cosecha',
-  'pluginui.taskCategory.hay-cutting': 'Heno',
-  'pluginui.taskCategory.animal-care': 'Cuidado de animales',
-  'pluginui.taskCategory.other': 'Otra',
   'pluginui.seasonalKind.spray': 'aplicación',
   'pluginui.seasonalKind.cultural': 'labor cultural',
   'pluginui.seasonalKind.pruning': 'poda',

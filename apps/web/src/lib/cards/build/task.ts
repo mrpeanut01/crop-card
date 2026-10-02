@@ -1,5 +1,5 @@
 import { formatDueDay, formatInstant } from '$lib/prefs';
-import type { TaskCategory } from '$lib/plan/taskCategory';
+import { labelForTaskCategory, type TaskCategory } from '$lib/plan/taskCategory';
 import {
   TASK_STATUS_TONE,
   deriveTaskStatus,
@@ -113,7 +113,9 @@ export function buildTaskCardFrom(
   const status = taskStatusFor(task, ctx.queued, opts);
   const kicker = [
     tr(KIND_KICKER[task.kind ?? 'primary']),
-    task.category && task.category !== 'other' ? tr(`cards.taskCat.${task.category}`) : null
+    task.category && task.category !== 'other'
+      ? labelForTaskCategory(task.category, opts.prefs.locale)
+      : null
   ]
     .filter(Boolean)
     .join(' · ');

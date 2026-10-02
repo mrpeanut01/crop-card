@@ -2,6 +2,7 @@
  *  Care Guide section answers which question, and the guard that keeps
  *  pesticide product, rate and spray-timing advice out of every answer. */
 
+import { t, type MessageKey } from '$lib/i18n';
 import type { JournalAnswerSection, PhotoQuestion } from './model';
 
 export type CareTopic = 'harvest' | 'prune' | 'problems' | 'general';
@@ -62,6 +63,41 @@ export function careSectionsFor(
     }));
   if (found.length) return found;
   return [{ title: 'Care guide', items: [NO_SECTION_TEXT[topic]], provenance: 'fallback' }];
+}
+
+const CARE_TITLE_KEYS: Record<string, MessageKey> = {
+  [CARE_SECTION.water]: 'cards.care.water',
+  [CARE_SECTION.feed]: 'cards.care.feed',
+  [CARE_SECTION.prune]: 'cards.care.prune',
+  [CARE_SECTION.harvest]: 'cards.section.harvestCues',
+  [CARE_SECTION.problems]: 'cards.care.problems',
+  [CARE_SECTION.notes]: 'cards.notes',
+  'Care guide': 'cardsui.photo.careGuide'
+};
+
+const NO_SECTION_KEYS: Record<CareTopic, MessageKey> = {
+  harvest: 'cardsui.photo.noSection.harvest',
+  prune: 'cardsui.photo.noSection.prune',
+  problems: 'cardsui.photo.noSection.problems',
+  general: 'cardsui.photo.noSection.general'
+};
+
+/** A saved or offline Care Guide answer section in the viewer's language.
+ *  Answers are stored in English, so this maps the fixed titles and the
+ *  "no section" lines at display time; plugin text stays as it is. */
+export function careSectionForDisplay<S extends JournalAnswerSection>(
+  section: S,
+  locale?: string | null
+): S {
+  if (!locale || locale === 'en') return section;
+  const titleKey = CARE_TITLE_KEYS[section.title];
+  const items = section.items.map((item) => {
+    const topic = (Object.keys(NO_SECTION_TEXT) as CareTopic[]).find(
+      (k) => NO_SECTION_TEXT[k] === item
+    );
+    return topic ? t(locale, NO_SECTION_KEYS[topic]) : item;
+  });
+  return { ...section, title: titleKey ? t(locale, titleKey) : section.title, items };
 }
 
 export const SPRAY_REDIRECT =

@@ -3,6 +3,7 @@ import { blockDisplayName, type BuildOptions } from '$lib/cards/build/common';
 import { parseCardKey, type CardModel } from '$lib/cards/model';
 import type { FarmSnapshot } from '$lib/cards/snapshot';
 import { isDesignable } from '$lib/farm/areaKinds';
+import { t } from '$lib/i18n';
 
 export interface PhotoHelpTarget {
   cropId: string;
@@ -32,12 +33,15 @@ export function photoHelpTargets(
   } else {
     return [];
   }
+  const locale = options.locale ?? options.prefs?.locale ?? null;
   return plantings.map((p) => {
     const block = blocks.get(p.blockId);
     const name = p.varietyDisplayName.trim() || snapshot.cropPlugins[p.cropPluginId]?.displayName;
     return {
       cropId: p.id,
-      label: [name || 'Planting', block && blockDisplayName(block)].filter(Boolean).join(' · '),
+      label: [name || t(locale, 'cards.planting.kicker'), block && blockDisplayName(block, locale)]
+        .filter(Boolean)
+        .join(' · '),
       careGuide: buildCareGuideCard(snapshot, p.cropPluginId, options)
     };
   });

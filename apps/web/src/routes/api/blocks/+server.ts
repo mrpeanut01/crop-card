@@ -33,7 +33,12 @@ export const POST: RequestHandler = async (event) => {
   if (foreign) return foreign;
   const area = parsed.data.fieldId ? getField(parsed.data.fieldId) : undefined;
   const kind = parsed.data.kind ?? (area ? defaultBlockKindFor(area.kind) : DEFAULT_BLOCK_KIND);
-  const placement = blockPlacementError(area?.kind ?? null, kind, parsed.data);
+  const placement = blockPlacementError(
+    area?.kind ?? null,
+    kind,
+    parsed.data,
+    event.locals?.locale
+  );
   if (placement) return json({ error: placement }, { status: 400 });
   const layoutProblem = bedLayoutProblem(
     {

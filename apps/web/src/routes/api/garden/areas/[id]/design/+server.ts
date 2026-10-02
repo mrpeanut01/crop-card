@@ -10,7 +10,8 @@ export const GET: RequestHandler = async (event) => {
   const user = requireUser(event);
   const body = await loadDesignerResponse(event.params.id ?? '', {
     role: user.role,
-    season: event.url.searchParams.get('season')
+    season: event.url.searchParams.get('season'),
+    locale: event.locals?.locale
   });
   if (!body) {
     return json(

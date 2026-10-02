@@ -741,6 +741,18 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
     'Las alternativas deterministas garantizan que CropCard siga siendo útil cuando la IA está desactivada, sin conexión o limitada.',
   'settings.ai.gatedBy': 'Depende de la IA',
   'settings.ai.alwaysWorks': 'Siempre funciona',
+  'settings.notif.decon-due.label': 'Descontaminación pendiente',
+  'settings.notif.decon-due.sub':
+    'Una aspersora todavía tiene químicos una hora después de su última aplicación.',
+  'settings.notif.lock-window-closing.label': 'Registro a punto de bloquearse',
+  'settings.notif.lock-window-closing.sub':
+    'Un registro de aplicación, insecticida o fungicida se bloquea para siempre en menos de 2 horas.',
+  'settings.notif.withdrawal-clears.label': 'Retención terminada',
+  'settings.notif.withdrawal-clears.sub':
+    'Terminó una retención de huevos, leche o carne en un animal o grupo. Solo el propietario.',
+  'settings.notif.hold-covers-sale.label': 'Una retención ahora cubre una venta',
+  'settings.notif.hold-covers-sale.sub':
+    'Un registro posterior dejó dentro de una retención registros de huevos, leche o carne que ya guardaste. Solo el propietario.',
   'settings.notif.spring-calibration.label': 'Calibración de primavera',
   'settings.notif.spring-calibration.sub':
     'Una aspersora invernada necesita recalibrarse antes de la primera aspersión de primavera.',
@@ -1000,6 +1012,12 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
   'settings.diag.backupLive': 'Litestream · activo',
   'billing.seatLimit':
     'Llegaste al límite de lugares. Los ayudantes que ya están en la granja conservan su acceso; un plan más grande agrega más lugares.',
+  'billing.degrade.noKey':
+    'No hay una clave de API de Anthropic configurada. Agrega una en Configuración → IA para activar Claude.',
+  'billing.degrade.limited': '{reason}. CropCard lo resolvió sin IA.',
+  'billing.degrade.timeout': 'Claude tardó demasiado en responder.',
+  'billing.degrade.offline': 'No se puede contactar a Claude (sin conexión).',
+  'billing.degrade.unavailable': 'Claude no está disponible en este momento{detail}.',
   'billing.limit.monthly': 'La ayuda de IA de este mes para tu granja ya se agotó',
   'billing.limit.ownerOff': 'La ayuda de IA está apagada en esta granja',
   'billing.limit.planExcludedNamed': 'Esta ayuda de IA no está en el plan {plan}',

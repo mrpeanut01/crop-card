@@ -154,7 +154,10 @@
     if (!selectedArea) return null;
     const card = planAreaCard(snapshot, selectedArea, prefs);
     if (!card) return null;
-    const housed = withHousing(card, areaHousing[selectedArea.id], { petsLayout });
+    const housed = withHousing(card, areaHousing[selectedArea.id], {
+      petsLayout,
+      locale
+    });
     const g = areaGrazing[selectedArea.id];
     return withGrazingTimeLink(withGrazing(housed, g, prefs.timeZone), g, selectedArea.id, canEdit);
   });

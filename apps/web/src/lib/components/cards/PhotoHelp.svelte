@@ -18,6 +18,7 @@
     CARE_SECTION,
     SPRAY_REDIRECT,
     asksForSprayAdvice,
+    careSectionForDisplay,
     careSectionsFor,
     filterSprayAdviceItems,
     topicFor
@@ -404,7 +405,8 @@
             <p class="ai-text">{shown.answer.text}</p>
             <Provenance source="ai" />
           {/if}
-          {#each shown.answer.sections as s (s.title)}
+          {#each shown.answer.sections as raw (raw.title)}
+            {@const s = careSectionForDisplay(raw, page.data?.locale)}
             <section class="care-section">
               <h3>
                 {s.title}
@@ -491,7 +493,9 @@
                 <p class="ai-text">{e.answer.text}</p>
               {:else if e.answer?.sections.length}
                 <p class="hint">
-                  {tr('cardsui.photo.answeredFrom', { title: e.answer.sections[0].title })}
+                  {tr('cardsui.photo.answeredFrom', {
+                    title: careSectionForDisplay(e.answer.sections[0], page.data?.locale).title
+                  })}
                 </p>
               {/if}
               {#if isOwner}

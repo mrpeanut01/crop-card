@@ -82,10 +82,14 @@ export function speciesOf(snapshot: FarmSnapshot, id: string): SnapshotSpecies |
   return snapshot.species?.[id] ?? null;
 }
 
-export function livesAt(snapshot: FarmSnapshot, fieldId: string | null): string | null {
+export function livesAt(
+  snapshot: FarmSnapshot,
+  fieldId: string | null,
+  locale?: string | null
+): string | null {
   if (!fieldId) return null;
   const area = snapshot.areas.find((a) => a.id === fieldId);
-  return area ? areaDisplayName(area) : null;
+  return area ? areaDisplayName(area, locale) : null;
 }
 
 export function plansFor(

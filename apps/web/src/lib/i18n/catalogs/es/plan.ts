@@ -573,7 +573,6 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plantui.card.harvest': 'Cosecha',
   'plantui.card.amount': 'Cantidad',
   'plantui.card.smallGrainLink': 'Etapas, riesgo de fusariosis y vernalización',
-  'plantui.card.journalLink': 'Diario y ayuda con fotos',
   'plantui.status.planned': 'planificada',
   'plantui.status.active': 'activa',
   'plantui.status.mature': 'madura',
@@ -603,6 +602,8 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plantui.blockStatus.planned': 'planificado',
   'plantui.blockStatus.active': 'activo',
   'plantui.blockStatus.mature': 'maduro',
+  'sched.hardenUnknownNote': 'No se conoce el tiempo de aclimatación para este cultivo.',
+  'sched.notDatedNote': 'Las tareas de semillero se crean cuando la siembra tiene fecha.',
   'sched.sowTimingUnknown':
     'No se conoce cuándo empezar este cultivo bajo techo. Pon tú la fecha de siembra.',
   'sched.sowAfterTransplant':

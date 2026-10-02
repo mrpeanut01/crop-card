@@ -133,7 +133,7 @@ export const actions: Actions = {
       });
     }
     if (latLon) fd.set('frostBasis', 'lookup');
-    const frost = latLon ? await resolveFrostForm(fd, latLon) : null;
+    const frost = latLon ? await resolveFrostForm(fd, latLon, event.locals?.locale) : null;
     if (frost && !frost.ok) {
       return fail(400, {
         error: frost.reason

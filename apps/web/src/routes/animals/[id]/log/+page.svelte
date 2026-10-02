@@ -117,7 +117,7 @@
               <strong>{l.quantity} {l.unit}</strong>
               <span>{l.kind === 'weight' ? tr('animals.prod.weight') : useLabel(tr, l.use)}</span>
               {#if l.recordedLate}
-                <Pill tone="wheat">{lateLabel(true, l.daysLate)}</Pill>
+                <Pill tone="wheat">{lateLabel(true, l.daysLate, page.data?.locale)}</Pill>
               {/if}
               {#if l.inHold}
                 <Pill tone="rust">Inside a hold</Pill>

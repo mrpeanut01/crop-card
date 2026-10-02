@@ -1007,11 +1007,6 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.beds.why.timeout': 'Claude tardó demasiado',
   'wizard.beds.why.invalid': 'Las camas de cultivo de Claude no cuadraban con tu semilla',
   'wizard.beds.why.tooMany': 'Esta semilla necesita más de {max} camas de cultivo',
-  'wizard.beds.limit.planExcludedNamed': 'Esta ayuda de IA no está incluida en el plan {plan}',
-  'wizard.beds.limit.planExcluded': 'Esta ayuda de IA no está incluida en tu plan',
-  'wizard.beds.limit.ownerDisabled': 'La ayuda de IA está apagada para esta granja',
-  'wizard.beds.limit.freePool': 'La ayuda de IA gratuita se reanuda el día 1',
-  'wizard.beds.limit.global': 'La ayuda de IA está en pausa este mes',
   'wizard.beds.leftover':
     'Estas {max} camas de cultivo dejan fuera {list}. Usa camas más largas o más anchas, o siembra menos.',
   'wizard.beds.leftoverItem.one': '{count} planta de {name}',

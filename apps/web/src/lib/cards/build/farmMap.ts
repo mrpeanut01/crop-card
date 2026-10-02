@@ -169,15 +169,15 @@ export function buildFarmMapCard(
   if (snapshot.zone) {
     facts.push({
       label: tr('cards.map.zone'),
-      value: zoneCardValue(snapshot.zone),
+      value: zoneCardValue(snapshot.zone, loc),
       provenance: snapshot.zone.provenance
     });
     provenance.push({
       source: snapshot.zone.provenance,
       detail:
         snapshot.zone.provenance === 'data'
-          ? tr('cards.map.zoneApprox', { detail: String(zoneSourceDetail(snapshot.zone)) })
-          : zoneSourceDetail(snapshot.zone)
+          ? tr('cards.map.zoneApprox', { detail: String(zoneSourceDetail(snapshot.zone, loc)) })
+          : zoneSourceDetail(snapshot.zone, loc)
     });
   }
 
@@ -204,7 +204,7 @@ export function buildFarmMapCard(
       .sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }));
     const items = ofKind.slice(0, MAX_PER_KIND).map((f) => {
       const named = loc && !f.name.trim() ? { ...f, name: featureLabel(f.kind, loc) } : f;
-      const line = describeFeature(named, lengthText);
+      const line = describeFeature(named, lengthText, loc);
       if (!servesManyAreas(f.kind)) return line;
       const served = servedAreaIds(f)
         .map((id) => areaById.get(id))

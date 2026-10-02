@@ -25,7 +25,6 @@ import { deterministicPlantingWindow, type PlantingWindow } from '$lib/plan/plan
 import type { BedRecipePlugin, CropPlugin } from '$lib/plugins/schemas';
 import { bedFrostIso, bedFrostMs } from '$lib/server/blockFrost.server';
 import { aiLimitReason, type AiLimit } from '$lib/billing/aiLimit';
-import { PLANS } from '$lib/billing/plans';
 import { aiLimitOf, recordFallback, tryAiWithGuard } from '../aiDegrade';
 import type { FallbackReason } from '../aiTry';
 import { recordCall } from '../aiGuard';
@@ -212,18 +211,6 @@ function windowLookup(inputs: FillInputs): (id: string) => PlantingWindow | null
 
 type Why = FallbackReason | 'invalid' | 'quota';
 
-/** `aiLimitReason` in the viewer's language; English reads it as is. */
-function limitPrefix(limit: AiLimit, locale: string | null | undefined): string {
-  if (!locale || locale === 'en') return aiLimitReason(limit);
-  const detail = limit.detail === 'token-quota' ? 'daily-quota' : limit.detail;
-  if (detail === 'plan-excluded') {
-    return limit.plan
-      ? t(locale, 'gardenlib.fill.limit.plan-excluded', { plan: PLANS[limit.plan].name })
-      : t(locale, 'gardenlib.fill.limit.plan-excluded-any');
-  }
-  return t(locale, `gardenlib.fill.limit.${detail}`);
-}
-
 export function fallbackMessage(
   why: Why,
   plan: DeterministicFillPlan,
@@ -232,7 +219,7 @@ export function fallbackMessage(
   locale?: string | null
 ): string {
   const prefix = limit
-    ? limitPrefix(limit, locale)
+    ? aiLimitReason(limit, locale)
     : t(locale, `gardenlib.fill.why.${why}` as MessageKey);
   if (plan.proposals.length === 0) {
     return t(locale, 'gardenlib.fill.nothingFits', {

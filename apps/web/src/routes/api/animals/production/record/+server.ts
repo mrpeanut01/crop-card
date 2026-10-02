@@ -76,7 +76,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (late !== null) {
     warnings.push({
       code: 'LOGGED_LATE',
-      message: `${lateLabel(true, late)}.`
+      message: `${lateLabel(true, late, event.locals?.locale)}.`
     });
   }
   return json({ log, warnings }, { status: 201 });

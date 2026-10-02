@@ -20,13 +20,14 @@
   import {
     TASK_CATEGORY_VALUES,
     glyphForTaskCategory,
+    labelForTaskCategory,
     type TaskCategory
   } from '$lib/plan/taskCategory';
 
   const tr = $derived(createT(page.data?.locale));
 
   function categoryLabel(c: TaskCategory): string {
-    return tr(`pluginui.taskCategory.${c}`);
+    return labelForTaskCategory(c, page.data?.locale);
   }
 
   function slugify(s: string): string {

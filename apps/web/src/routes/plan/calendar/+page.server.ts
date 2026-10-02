@@ -21,7 +21,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   return {
     nowMs: now,
     ...loadSowingCalendar(registry, url.searchParams.get('year'), now, {
-      frostByBlock: loadEffectiveFrostByBlock
+      frostByBlock: loadEffectiveFrostByBlock,
+      locale: locals?.locale
     })
   };
 };

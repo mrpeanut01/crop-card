@@ -7,7 +7,6 @@ import {
   type CardProvenance,
   type CardSection
 } from '../model';
-import { GREENHOUSE_LINE } from '$lib/weather/waterCopy';
 import type {
   FarmSnapshot,
   SnapshotArea,
@@ -240,7 +239,7 @@ function baseAreaCard(
     });
   }
   if (area.kind === 'greenhouse' && active.length) {
-    sections.push({ title: tr('cards.area.watering'), items: [GREENHOUSE_LINE] });
+    sections.push({ title: tr('cards.area.watering'), items: [tr('advice.water.greenhouse')] });
   }
   if (area.notes?.trim()) sections.push({ title: tr('cards.notes'), items: [area.notes.trim()] });
 

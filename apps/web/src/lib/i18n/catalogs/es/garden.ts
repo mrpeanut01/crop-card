@@ -447,13 +447,6 @@ export const esGarden: Partial<Record<MessageKey, string>> = {
   'gardenlib.fill.why.offline': 'No se puede conectar con Claude en este momento',
   'gardenlib.fill.why.timeout': 'Claude tardó demasiado',
   'gardenlib.fill.why.invalid': 'Las ideas de Claude no cabían en esta cama',
-  'gardenlib.fill.limit.monthly-budget': 'Ya se usó la ayuda de IA de este mes para tu granja',
-  'gardenlib.fill.limit.owner-disabled': 'La ayuda de IA está desactivada para esta granja',
-  'gardenlib.fill.limit.plan-excluded': 'Esta ayuda de IA no está en el plan {plan}',
-  'gardenlib.fill.limit.plan-excluded-any': 'Esta ayuda de IA no está en tu plan',
-  'gardenlib.fill.limit.free-pool': 'La ayuda de IA gratuita vuelve el día 1',
-  'gardenlib.fill.limit.global': 'La ayuda de IA está en pausa este mes',
-  'gardenlib.fill.limit.daily-quota': 'Ya se usó la ayuda de IA de hoy para esto',
   'gardenlib.fill.nothingFits':
     '{prefix}, y ninguna receta ni cultivo planificado cabe en esta cama el {date}. Prueba una fecha más tarde o libera espacio.',
   'gardenlib.fill.fromRecipe': 'un plan sencillo a partir de la receta {recipe}',

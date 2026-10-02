@@ -91,7 +91,7 @@
     {prefs}
     {now}
     factLimit={card.facts.length}
-    compactSections={['Notes']}
+    compactSections={[tr('cards.notes')]}
   >
     {#snippet badges()}
       {#if queued}<QueuedBadge />{/if}

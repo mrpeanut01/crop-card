@@ -72,6 +72,7 @@ export const POST: RequestHandler = async (event) => {
       try {
         const tried = await tryAiWithGuard({
           endpoint: 'plugin-batch-scan',
+          locale: event.locals?.locale,
           userId: session.id,
           timeoutMs: 120_000,
           prompt: (_signal, hold) =>

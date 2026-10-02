@@ -5,8 +5,8 @@
  * show in every layout (B-17).
  */
 
-import { animalLabel } from '$lib/animals/display';
-import { animalFacts } from '$lib/animals/facts';
+import { animalLabelIn } from '$lib/animals/display';
+import { animalFacts, type AnimalFactsInput } from '$lib/animals/facts';
 import { displayFoods } from '$lib/animals/holdCopy';
 import type { AnimalSex } from '$lib/plugins/species';
 import {
@@ -99,8 +99,7 @@ function animalCard(
   const treatments = treatmentsFor(snapshot, 'animal', animal.id);
   const vet = vetParts(snapshot, loc);
 
-  const base = animalFacts(
-    {
+  const factsInput: AnimalFactsInput = {
       speciesId: animal.speciesId,
       speciesName: species?.displayName ?? tr('cards.animal.unknownKind'),
       sex: animal.sex as AnimalSex,
@@ -111,15 +110,18 @@ function animalCard(
       breed: animal.breed,
       acquiredFrom: null,
       purpose: animal.purpose,
-      livesAt: livesAt(snapshot, group?.housingFieldId ?? animal.housingFieldId),
+      livesAt: livesAt(snapshot, group?.housingFieldId ?? animal.housingFieldId, loc),
       groupName: group?.name ?? null,
       feedingNote: animal.feedingNote,
       microchipId: animal.microchipId
-    },
-    layout,
-    opts.now
-  );
-  const facts: CardFact[] = base.map((f) => ({ ...f, provenance: FACT_PROVENANCE[f.label] ?? 'data' }));
+  };
+  const base = animalFacts(factsInput, layout, opts.now);
+  const localValues = loc ? animalFacts(factsInput, layout, opts.now, loc).map((f) => f.value) : null;
+  const facts: CardFact[] = base.map((f, i) => ({
+    ...f,
+    ...(localValues ? { value: localValues[i] } : {}),
+    provenance: FACT_PROVENANCE[f.label] ?? 'data'
+  }));
   if (animal.organicStatus) {
     facts.push({ label: 'Organic status', value: animal.organicStatus, provenance: 'manual' });
   }
@@ -210,7 +212,7 @@ function animalCard(
     kind: 'animal',
     key,
     kicker,
-    title: animalLabel(animal),
+    title: animalLabelIn(animal, loc),
     facts: shownFacts,
     next: nextCare(plans, opts.now, opts.prefs, pageHref),
     sections,

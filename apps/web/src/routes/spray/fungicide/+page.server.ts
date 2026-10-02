@@ -76,7 +76,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   return {
     fungicides: fungicidePlugins,
     pasture: await loadSprayPastureContext(blocks, registry),
-    organicBlocks: organicBlocksForNotice(blocks.map((b) => b.id)),
+    organicBlocks: organicBlocksForNotice(
+      blocks.map((b) => b.id),
+      Date.now(),
+      locals?.locale
+    ),
     priorFungicideByBlock,
     blocks: blocks.map((b) => ({
       id: b.id,

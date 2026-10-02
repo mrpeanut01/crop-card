@@ -9,6 +9,8 @@
 
 import type { PestModelPlugin } from '$lib/plugins/schemas';
 import { isYmd, type Accumulation } from '$lib/climate/degreeDays';
+import { t } from '$lib/i18n';
+import { formatCalendarDate } from '$lib/prefs';
 
 export type PestModelStage = PestModelPlugin['stages'][number];
 
@@ -156,40 +158,52 @@ export function showOnToday(status: ModelStatus): boolean {
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-/** "2026-09-27" → "Sep 27". */
-export function shortDay(ymd: string): string {
+/** "2026-09-27" → "Sep 27"; in `locale` when one is given. */
+export function shortDay(ymd: string, locale?: string | null): string {
+  if (locale && locale !== 'en') return formatCalendarDate(ymd, 'month-day', {}, locale);
   const [, m, d] = ymd.split('-').map(Number);
   return `${MONTHS[m - 1]} ${d}`;
 }
 
-function plural(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
-}
-
-export function totalLine(status: ModelStatus, biofix: ResolvedBiofix): string | null {
+export function totalLine(
+  status: ModelStatus,
+  biofix: ResolvedBiofix,
+  locale?: string | null
+): string | null {
   if (status.state !== 'counting' || !status.throughYmd || !biofix.ymd) return null;
   const n = Math.floor(status.total);
-  const since = `since ${shortDay(biofix.ymd)}`;
-  const through = `through ${shortDay(status.throughYmd)}`;
+  const params = {
+    total: t(locale, 'advice.dd.line.degreeDays', { count: n }),
+    since: shortDay(biofix.ymd, locale),
+    through: shortDay(status.throughYmd, locale)
+  };
   if (status.missingDays > 0) {
-    return `At least ${plural(n, 'degree day', 'degree days')} ${since}, ${plural(status.missingDays, 'day', 'days')} missing, ${through}.`;
+    return t(locale, 'advice.dd.line.totalMissing', {
+      ...params,
+      missing: t(locale, 'advice.dd.line.days', { count: status.missingDays })
+    });
   }
-  return `${plural(n, 'degree day', 'degree days')} ${since}, ${through}.`;
+  return t(locale, 'advice.dd.line.total', params);
 }
 
-/** Plain lines for the strip and the card. Stage messages come from the plugin. */
-export function watchForLines(status: ModelStatus, biofix: ResolvedBiofix): string[] {
+/** Plain lines for the strip and the card. Stage labels and messages come
+ *  from the plugin and stay as written. */
+export function watchForLines(
+  status: ModelStatus,
+  biofix: ResolvedBiofix,
+  locale?: string | null
+): string[] {
   if (status.state === 'no-biofix') {
-    return ['Set traps. Record your first catch to start the count.'];
+    return [t(locale, 'advice.dd.line.setTraps')];
   }
   if (status.state === 'before-biofix' && biofix.ymd) {
-    return [`Counting starts ${shortDay(biofix.ymd)}.`];
+    return [t(locale, 'advice.dd.line.startsOn', { day: shortDay(biofix.ymd, locale) })];
   }
   if (status.state === 'no-data' && biofix.ymd) {
-    return [`No station readings yet since ${shortDay(biofix.ymd)}.`];
+    return [t(locale, 'advice.dd.line.noReadings', { day: shortDay(biofix.ymd, locale) })];
   }
   const lines: string[] = [];
-  const total = totalLine(status, biofix);
+  const total = totalLine(status, biofix, locale);
   if (total) lines.push(total);
   if (status.stage && status.inWindow) {
     lines.push(`${status.stage.label}: ${status.stage.message}`);
@@ -198,11 +212,17 @@ export function watchForLines(status: ModelStatus, biofix: ResolvedBiofix): stri
     const label = status.next.stage.label;
     lines.push(
       status.next.uncertain
-        ? `${label}: can't tell yet, ${plural(status.missingDays, 'day', 'days')} missing.`
-        : `${label} in about ${plural(status.next.remaining, 'degree day', 'degree days')}.`
+        ? t(locale, 'advice.dd.line.cantTell', {
+            label,
+            missing: t(locale, 'advice.dd.line.days', { count: status.missingDays })
+          })
+        : t(locale, 'advice.dd.line.inAbout', {
+            label,
+            remaining: t(locale, 'advice.dd.line.degreeDays', { count: status.next.remaining })
+          })
     );
   } else if (status.stage && !status.inWindow) {
-    lines.push(`${status.stage.label} window has passed for this year.`);
+    lines.push(t(locale, 'advice.dd.line.passed', { label: status.stage.label }));
   }
   return lines;
 }

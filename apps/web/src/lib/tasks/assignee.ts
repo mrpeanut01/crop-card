@@ -3,6 +3,8 @@
  * named on screen and on paper, and the Mine/Everyone filter state.
  */
 
+import { t } from '$lib/i18n';
+
 export const ASSIGNABLE_ROLES = ['owner', 'helper', 'custom-operator'] as const;
 export type AssignableRole = (typeof ASSIGNABLE_ROLES)[number];
 
@@ -18,14 +20,26 @@ export interface MemberLike {
 /** The name a card, a print or a digest shows: the chosen name, else the
  *  email local-part, else the last four digits of the phone. Never a full
  *  email address or phone number (F0-12). */
-export function memberName(u: MemberLike): string {
+export function memberName(u: MemberLike, locale?: string | null): string {
   const chosen = u.displayName?.trim();
   if (chosen) return chosen;
   const local = u.email?.split('@')[0]?.trim();
   if (local) return local;
   const digits = (u.phone ?? '').replace(/\D/g, '');
-  if (digits.length >= 4) return `phone ending ${digits.slice(-4)}`;
-  return 'Farm member';
+  if (digits.length >= 4)
+    return t(locale, 'tasks.member.phoneEnding', { digits: digits.slice(-4) });
+  return t(locale, 'tasks.member.fallback');
+}
+
+const PHONE_ENDING = /^phone ending (\d{4})$/;
+
+/** A name `memberName` already built in English, in the viewer's
+ *  language: only its two fallbacks change, a chosen name never does. */
+export function memberNameIn(name: string, locale?: string | null): string {
+  if (!locale) return name;
+  if (name === 'Farm member') return t(locale, 'tasks.member.fallback');
+  const phone = PHONE_ENDING.exec(name);
+  return phone ? t(locale, 'tasks.member.phoneEnding', { digits: phone[1] }) : name;
 }
 
 export function isAssigneeWho(v: unknown): v is AssigneeWho {

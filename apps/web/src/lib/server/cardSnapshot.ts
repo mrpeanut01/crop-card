@@ -410,7 +410,10 @@ type AnimalSnapshotPart = Pick<
 
 /** 32D: animals, flocks, care plans, recent treatments and the kernel's
  *  open holds. A farm that never had an animal pays one existence check. */
-export async function animalSnapshotPart(windowNow: number): Promise<AnimalSnapshotPart> {
+export async function animalSnapshotPart(
+  windowNow: number,
+  locale?: string | null
+): Promise<AnimalSnapshotPart> {
   if (!hasAnyAnimalRecord()) return {};
   const groupRows = listAnimalGroups();
   const groups = new Map(groupRows.map((g) => [g.id, g]));
@@ -437,7 +440,7 @@ export async function animalSnapshotPart(windowNow: number): Promise<AnimalSnaps
   const projectedTo = windowNow + SNAPSHOT_HOLD_HORIZON_MS;
   const { projection } = await projectActiveFarm(timeZone, projectedTo);
   const holds = snapshotHolds(projection, windowNow, subjects);
-  const organic = await organicSnapshotLines(windowNow);
+  const organic = await organicSnapshotLines(windowNow, locale);
   return {
     animals: animalRows
       .map((a) => toSnapshotAnimal(a, groups, organic))
@@ -543,7 +546,7 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     if (m) p.minutesLogged = m;
   }
 
-  const organic = await organicSnapshotLines(windowNow);
+  const organic = await organicSnapshotLines(windowNow, opts.locale);
   const stockItems = listStockItems();
   const sprayProducts: Record<string, SnapshotSprayProduct> = {};
   for (const item of stockItems) {
@@ -570,7 +573,7 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
       windowNow - SNAPSHOT_TASK_PAST_DAYS * DAY_MS,
       windowNow + SNAPSHOT_TASK_FUTURE_DAYS * DAY_MS
     ),
-    people: listAssignableMembers(ownerId).map((m) => ({ id: m.id, name: m.name })),
+    people: listAssignableMembers(ownerId, opts.locale).map((m) => ({ id: m.id, name: m.name })),
     taskWindow: {
       fromMs: windowNow - SNAPSHOT_TASK_PAST_DAYS * DAY_MS,
       toMs: windowNow + SNAPSHOT_TASK_FUTURE_DAYS * DAY_MS
@@ -588,7 +591,7 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     mapFeatures: listMapFeatureViews(),
     emergencyContacts: loadEmergencyContacts(),
     soilTests: latestSoilTestsPerBlock(listSoilTests(), labReportForSoilTests()),
-    ...(await animalSnapshotPart(windowNow))
+    ...(await animalSnapshotPart(windowNow, opts.locale))
   };
 }
 

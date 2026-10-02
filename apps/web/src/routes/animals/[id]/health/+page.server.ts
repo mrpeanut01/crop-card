@@ -20,7 +20,10 @@ import { withholdTreatmentLine } from '$lib/organic/nopRules';
 /** 33B (B-06, B-14, B-24): the owner-entered status line, the welfare line
  *  and each treatment's organic outcome. Nothing when the farm has no
  *  organic status at all (B-15). */
-async function organicPart(subject: { type: 'animal' | 'group'; id: string }) {
+async function organicPart(
+  subject: { type: 'animal' | 'group'; id: string },
+  locale?: string | null
+) {
   if (farmOrganicChrome() !== 'full') return null;
   const projection = animalOrganicProjection(await organicHealthPlugins());
   const status = projection.statusAt(subject, Date.now());
@@ -28,12 +31,12 @@ async function organicPart(subject: { type: 'animal' | 'group'; id: string }) {
   for (const r of projection.rows) {
     if (!r.subjects.some((s) => s.type === subject.type && s.id === subject.id)) continue;
     outcomes[r.healthEventId] = {
-      text: treatmentOutcomeText(r),
+      text: treatmentOutcomeText(r, locale),
       needsAnswer: r.outcome === 'needs-review' && !r.deleted
     };
   }
   return {
-    statusLine: organicStatusLine(status, organicDateFormatter()),
+    statusLine: organicStatusLine(status, organicDateFormatter(locale), locale),
     welfareLine: status && status.status !== 'not-organic' ? withholdTreatmentLine() : null,
     membersLost: subject.type === 'group' ? groupMembersLost(projection, subject.id) : 0,
     outcomes
@@ -103,7 +106,7 @@ export const load: PageServerLoad = async (event) => {
     .map((c) => ({ id: c.id, recordKind: c.recordKind, reason: c.reason, createdAt: c.createdAt }));
   return {
     ...base,
-    organic: await organicPart({ type: subject.type, id: subject.id }),
+    organic: await organicPart({ type: subject.type, id: subject.id }, event.locals?.locale),
     events,
     corrections,
     products: library

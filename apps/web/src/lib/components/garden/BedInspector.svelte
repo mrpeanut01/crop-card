@@ -17,7 +17,7 @@
     SpacingPattern,
     SuccessionProposal
   } from '$lib/garden/types';
-  import { PLANTING_CARE_LINK_LABEL, cardHref, cardKey, plantingCardHref } from '$lib/cards/model';
+  import { cardHref, cardKey, plantingCardHref, plantingCareLinkLabel } from '$lib/cards/model';
   import { getDesigner } from './designerState.svelte';
   import CoverChips from '$lib/components/setup/CoverChips.svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
@@ -882,8 +882,8 @@
             <a
               class="link"
               href={plantingCardHref(p.cropId)}
-              aria-label="{PLANTING_CARE_LINK_LABEL}: {p.varietyDisplayName}"
-              data-testid="planting-card-link">{PLANTING_CARE_LINK_LABEL}</a
+              aria-label="{plantingCareLinkLabel(d.locale)}: {p.varietyDisplayName}"
+              data-testid="planting-card-link">{plantingCareLinkLabel(d.locale)}</a
             >
           </li>
         {/each}

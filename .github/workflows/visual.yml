@@ -4,7 +4,8 @@ name: visual
 # layout guarantee (no horizontal overflow at 375px) is already an e2e
 # assertion, so it no longer runs on PRs. Run it by hand before a visual
 # redesign lands, or set `update: true` to re-capture the -linux.png
-# baselines on this runner's Chromium and commit them to `branch`.
+# baselines on this runner's Chromium and commit them to `branch`. `main`
+# only takes pull requests, so `update` refuses to run with branch `main`.
 on:
   workflow_dispatch:
     inputs:
@@ -27,6 +28,11 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Refuse to re-capture on main
+        if: ${{ inputs.update && (inputs.branch == 'main' || inputs.branch == 'refs/heads/main') }}
+        run: |
+          echo "::error title=update needs a branch::main only takes changes through a pull request, so the commit this run makes would be refused. Cut a branch from main, dispatch again with that branch, then open a PR with the new -linux.png files (docs/ci.md)."
+          exit 1
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.branch }}

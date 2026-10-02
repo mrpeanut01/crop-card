@@ -53,7 +53,7 @@ The release workflow then runs:
   4. Open a PR from the branch; it auto-merges once CI is green like any other.
   5. Optional check: dispatch again on `main` with `update` off; it should pass.
 
-  Dispatching straight on `main` with `update` on also works, but only if the Actions bot is allowed to push to `main`. Locally, `E2E_VISUAL=1 pnpm --filter @cropcard/web exec playwright test tests/e2e/visual --update-snapshots=none` is only useful to check that a spec reaches its screenshot; a pixel mismatch there is expected, and no PNG from it is committed.
+  Dispatching with `update` on and the branch set to `main` fails at its first step on purpose: `main` is protected and only takes pull requests, so the commit would be refused after a full run. Use a branch and a PR. Locally, `E2E_VISUAL=1 pnpm --filter @cropcard/web exec playwright test tests/e2e/visual --update-snapshots=none` is only useful to check that a spec reaches its screenshot; a pixel mismatch there is expected, and no PNG from it is committed.
 
 ## Dependency updates
 

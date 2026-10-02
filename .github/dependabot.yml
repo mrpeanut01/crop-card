@@ -24,6 +24,10 @@ updates:
       # supports jsdom 30.
       - dependency-name: jsdom
         versions: ['>=30.0.0']
+      # Production runs Node 22 (infra/Dockerfile, CI). Types for a newer Node
+      # would let code use APIs the runtime lacks. Lift this when the runtime moves.
+      - dependency-name: '@types/node'
+        versions: ['>=23.0.0']
   - package-ecosystem: github-actions
     directory: /
     schedule:

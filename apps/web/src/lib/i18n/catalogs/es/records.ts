@@ -261,7 +261,7 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'harvestui.noWindowBanner':
     'No hay ventana de cosecha registrada para este cultivo. Registra de todos modos.',
   'harvestui.opens': 'abre el {date} ({n} d)',
-  'harvestui.pageTitle': 'Cosecha — CropCard',
+  'harvestui.pageTitle': 'Cosecha · CropCard',
   'harvestui.pastBanner': 'La ventana cerró hace {n} d. ¿Registras tarde?',
   'harvestui.planted': 'Sembrada el {date} ·',
   'harvestui.plantings': 'Siembras',

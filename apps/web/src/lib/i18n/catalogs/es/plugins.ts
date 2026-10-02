@@ -331,7 +331,7 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'plugins.detail.targetPests': 'Plagas objetivo',
   'plugins.detail.tasks': 'Tareas',
   'plugins.detail.timing': 'Momento de aplicación',
-  'plugins.detail.title': '{id} — Complemento',
+  'plugins.detail.title': '{id} · Complemento',
   'plugins.detail.traits': 'Rasgos',
   'plugins.detail.transition': 'transición OK',
   'plugins.detail.typeA': 'Escribe ',

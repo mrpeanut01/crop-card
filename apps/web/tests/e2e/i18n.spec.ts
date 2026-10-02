@@ -149,6 +149,51 @@ test.describe('language picker, flag on', () => {
     await expect(page.getByText('¿En qué idioma quieres usar CropCard?')).toBeVisible();
   });
 
+  test('main pages render in Spanish with no raw message keys', async ({ page }) => {
+    const email = `i18n-all-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@e2e.cropcard.local`;
+    await signInByLink(page, email);
+    await createOnboardedFarm(page, { growing: ['garden'] });
+    await page.goto('/settings/account');
+    await page.getByLabel('App language').selectOption('es');
+    await Promise.all([
+      page.waitForURL(/\/settings\/account/),
+      page.getByRole('button', { name: 'Use this language' }).click()
+    ]);
+    const rawKey =
+      /\b(?:today|tasks|plan|planui|crops|wizard|farm|tools|garden|inv|equip|stockui|settings|billing|docs|feedback|animals|records|harvestui|scout|hayui|fert|finance|calib|plugins|cardsui|entry|onboard|setup|ui|pricing|signin|nav|account)\.[a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+/;
+    const routes = [
+      '/today',
+      '/plan',
+      '/plan/farm',
+      '/plan/calendar',
+      '/inventory',
+      '/equipment',
+      '/records',
+      '/harvest',
+      '/scout',
+      '/animals',
+      '/cards',
+      '/fertility',
+      '/finance',
+      '/plugins',
+      '/tools',
+      '/settings',
+      '/settings/farm',
+      '/settings/billing',
+      '/settings/helpers',
+      '/settings/notifications',
+      '/settings/season'
+    ];
+    for (const route of routes) {
+      const res = await page.goto(route);
+      expect(res?.status(), route).toBeLessThan(500);
+      await page.waitForLoadState('networkidle');
+      await expect(page.locator('html'), route).toHaveAttribute('lang', 'es');
+      const text = await page.locator('body').innerText();
+      expect(text.match(rawKey)?.[0] ?? null, `${route} shows a raw message key`).toBeNull();
+    }
+  });
+
   test('a Spanish browser with no saved choice gets Spanish menus, and no sideways scroll at 375 px', async ({
     browser
   }) => {

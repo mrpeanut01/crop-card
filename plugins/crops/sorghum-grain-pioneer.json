@@ -27,5 +27,23 @@
     ],
     "beeAttractive": false
   },
-  "archetype": "small-grain.zadoks"
+  "archetype": "small-grain.zadoks",
+  "forageHazards": [
+    {
+      "kind": "prussic-acid",
+      "triggers": [
+        "frost",
+        "drought",
+        "young-regrowth",
+        "heavy-nitrogen"
+      ]
+    },
+    {
+      "kind": "nitrate",
+      "triggers": [
+        "drought",
+        "heavy-nitrogen"
+      ]
+    }
+  ]
 }

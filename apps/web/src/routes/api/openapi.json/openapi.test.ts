@@ -52,6 +52,13 @@ import { _requestSchema as rainGauge } from '../rain-gauge/+server';
 import { _requestSchema as ledgerCreate } from '../finance/entries/+server';
 import { _requestSchema as ledgerPatch } from '../finance/entries/[id]/+server';
 import { _requestSchema as seedSourcingPatch } from '../stock/[id]/lots/[lotId]/seed-sourcing/+server';
+import { _requestSchema as stockLotCreate } from '../stock/[id]/lots/+server';
+import { _requestSchema as batchCreate } from '../amendments/batches/+server';
+import { _requestSchema as batchPatch } from '../amendments/batches/[id]/+server';
+import { _requestSchema as batchInput } from '../amendments/batches/[id]/inputs/+server';
+import { _requestSchema as bioassayCreate } from '../amendments/bioassays/+server';
+import { _requestSchema as dismissalCreate } from '../amendments/dismissals/+server';
+import { _requestSchema as fertilityApplication } from '../fertility/applications/+server';
 import { _requestSchema as labourRate } from '../finance/labour-rate/+server';
 import { _requestSchema as organicStatus } from '../organic/status/+server';
 import { _requestSchema as organicReview } from '../organic/treatment-reviews/+server';
@@ -90,6 +97,13 @@ describe('openapi.json', () => {
   it.each([
     ['/api/fields', 'post', fieldCreate],
     ['/api/stock/{id}/lots/{lotId}/seed-sourcing', 'patch', seedSourcingPatch],
+    ['/api/stock/{id}/lots', 'post', stockLotCreate],
+    ['/api/amendments/batches', 'post', batchCreate],
+    ['/api/amendments/batches/{id}', 'patch', batchPatch],
+    ['/api/amendments/batches/{id}/inputs', 'post', batchInput],
+    ['/api/amendments/bioassays', 'post', bioassayCreate],
+    ['/api/amendments/dismissals', 'post', dismissalCreate],
+    ['/api/fertility/applications', 'post', fertilityApplication],
     ['/api/fields/{id}', 'patch', fieldPatch],
     ['/api/blocks', 'post', blockCreate],
     ['/api/blocks/{id}', 'patch', blockPatch],

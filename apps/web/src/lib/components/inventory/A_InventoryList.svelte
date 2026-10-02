@@ -23,6 +23,8 @@
   import type { InventoryType } from '$lib/inventory/types';
   import { visibleInventoryTypes } from '$lib/inventory/chips';
   import type { CatalogRow, InventoryRow, StockRow } from '../../../routes/inventory/+page.server';
+  import AmendmentBatchList from '$lib/components/amendments/AmendmentBatchList.svelte';
+  import type { AmendmentRow } from '$lib/amendments/view';
 
   interface Props {
     type: InventoryType;
@@ -34,9 +36,22 @@
     /** Chips shown; feed and animal-health hide until the farm has animals
      *  or stock of that type (Phase 32D). */
     visibleTypes?: readonly InventoryType[];
+    /** Manure and compost batches when `type` is `amendment` (33C). */
+    amendments?: AmendmentRow[];
+    /** Anyone who records work can start a pile (33C, M-36). */
+    canAddAmendment?: boolean;
   }
 
-  const { type, mode, counts, rows, canAdd = true, visibleTypes: visibleProp }: Props = $props();
+  const {
+    type,
+    mode,
+    counts,
+    rows,
+    canAdd = true,
+    visibleTypes: visibleProp,
+    amendments = [],
+    canAddAmendment = false
+  }: Props = $props();
 
   const tr = $derived(createT($page.data?.locale));
 
@@ -77,6 +92,23 @@
 
   // Per-type KPI shape. Returns 4 cards; types swap based on `mode`.
   const kpis: Array<{ label: string; value: string | number }> = $derived.by(() => {
+    if (type === 'amendment') {
+      return [
+        { label: tr('inv.list.kpi.batches'), value: amendments.length },
+        {
+          label: tr('inv.list.kpi.mayCarry'),
+          value: amendments.filter((a) => a.state === 'may-carry').length
+        },
+        {
+          label: tr('inv.list.kpi.notKnown'),
+          value: amendments.filter((a) => a.state === 'not-known').length
+        },
+        {
+          label: tr('inv.list.kpi.stillOpen'),
+          value: amendments.filter((a) => a.closedAt === null).length
+        }
+      ];
+    }
     if (type === 'crop' || mode === 'catalog') {
       const catalog = rows as Array<CatalogRow & { kind: 'catalog' }>;
       const withArchetype = catalog.filter((c) => c.archetype).length;
@@ -105,13 +137,15 @@
   });
 
   // Crop is catalog only; feed is stock only, like equipment (D0-17).
-  const showCatalogToggle = $derived(type !== 'crop' && type !== 'feed');
+  const showCatalogToggle = $derived(type !== 'crop' && type !== 'feed' && type !== 'amendment');
   const addLabel = $derived(
     type === 'feed'
       ? tr('inv.list.addLabel.feed')
       : type === 'animal-health'
         ? tr('inv.list.addLabel.medicine')
-        : invTypeWord(tr, type)
+        : type === 'amendment'
+          ? tr('inv.list.addLabel.amendment')
+          : invTypeWord(tr, type)
   );
 
   const rowCards = $derived(filteredRows.map((r) => inventoryRowCard(r, type, currentPrefs())));
@@ -127,7 +161,7 @@
       <a href="/equipment">{tr('inv.list.equipmentLink')}</a>.
     </p>
   </div>
-  {#if type !== 'crop'}
+  {#if type !== 'crop' && (type !== 'amendment' || canAddAmendment)}
     <a class="add-cta" href="/inventory/{type}/add">{tr('inv.list.add', { what: addLabel })}</a>
   {/if}
 </header>
@@ -169,12 +203,18 @@
   {/each}
 </div>
 
-{#if rows.length === 0 && type === 'animal-health' && mode === 'catalog'}
+{#if type === 'amendment'}
+  {#if amendments.length === 0}
+    <InventoryEmptyGrid activeType={type} {canAdd} types={visibleTypes} {canAddAmendment} />
+  {:else}
+    <AmendmentBatchList rows={amendments} />
+  {/if}
+{:else if rows.length === 0 && type === 'animal-health' && mode === 'catalog'}
   <p class="catalog-pending" role="note" data-testid="animal-health-catalog-empty">
     {tr('inv.list.catalogPending')}
   </p>
 {:else if rows.length === 0}
-  <InventoryEmptyGrid activeType={type} {canAdd} types={visibleTypes} />
+  <InventoryEmptyGrid activeType={type} {canAdd} types={visibleTypes} {canAddAmendment} />
 {:else}
   <div class="search-row">
     <input

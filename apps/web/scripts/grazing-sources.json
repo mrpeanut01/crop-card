@@ -55,6 +55,20 @@
         "date": "2024-09-24",
         "quote": "Do not use treated plant residues , including hay or straw from areas treated within the preceding 18 months, in compost, mulch, or mushroom spawn.",
         "note": "Also: 'Do not use hay or straw from areas treated with Chaparral within the preceding 18 months or manure from animals feeding on hay treated with Chaparral in compost.' The label points to EPA's aminopyralid compost-contamination page. The space before the comma in the quote is as extracted from the PDF."
+      },
+      "manureCarryoverDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2024-09-24",
+        "quote": "Do not use manure from animals that have grazed forage or eaten hay harvested from treated areas within the previous 3 days, in compost, mulch, or mushroom spawn.",
+        "note": "Copied verbatim from the carryoverManureWindow entry for chaparral-aminopyralid-metsulfuron (Phase 33C ruling M-17)."
+      },
+      "hayOffFarmRestricted": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2024-09-24",
+        "quote": "Hay can only be used on the farm or ranch where product is applied.",
+        "note": "Copied verbatim from the carryoverHayOffFarm entry for chaparral-aminopyralid-metsulfuron (Phase 33C ruling M-17)."
       }
     },
     "crossbow": {
@@ -90,6 +104,13 @@
         "date": "2025-02-03",
         "quote": "Animals that have been fed triclopyr treated forage must be fed forage free of triclopyr for at least 3 days before movement to an area where manure may be collected, or sensitive crops are grown.",
         "note": "The label also bars selling or moving treated plant material, or manure from animals that grazed it, off-site for compost or bedding/feed for 30 days after application."
+      },
+      "manureCarryoverDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00260-20250204.pdf",
+        "publisher": "Corteva Agriscience (EPA PPLS stamped label)",
+        "date": "2025-02-03",
+        "quote": "Animals that have been fed triclopyr treated forage must be fed forage free of triclopyr for at least 3 days before movement to an area where manure may be collected, or sensitive crops are grown.",
+        "note": "Copied verbatim from the manureCarryover entry for crossbow (Phase 33C ruling M-17)."
       }
     },
     "pursuit": {
@@ -266,6 +287,20 @@
         "publisher": "Dow AgroSciences (EPA PPLS stamped label, GF-3850 alternate brand DuraCor)",
         "date": "2019-11-26",
         "quote": "Do not use hay, silage, and manure from areas treated with GF-3850 within the preceding 18 months or manure from animals feeding on hay treated with GF-3850 in compost."
+      },
+      "manureCarryoverDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00739-20191126.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label, GF-3850 alternate brand DuraCor)",
+        "date": "2019-11-26",
+        "quote": "Do not use manure from animals that have grazed forage or eaten hay harvested from treated areas within the previous 3 days, in compost, mulch, or mushroom spawn.",
+        "note": "Copied verbatim from the carryoverManureWindow entry for duracor-aminopyralid-florpyrauxifen (Phase 33C ruling M-17)."
+      },
+      "hayOffFarmRestricted": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00739-20191126.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label, GF-3850 alternate brand DuraCor)",
+        "date": "2019-11-26",
+        "quote": "Hay from areas treated with GF-3850 in the preceding 18 months can NOT be distributed or made available for sale off the farm or ranch where harvested unless allowed by supplemental labeling.",
+        "note": "Copied verbatim from the carryoverHayOffFarm entry for duracor-aminopyralid-florpyrauxifen (Phase 33C ruling M-17)."
       }
     },
     "grazonnext-hl": {
@@ -322,6 +357,20 @@
         "publisher": "Dow AgroSciences (EPA PPLS stamped label)",
         "date": "2017-03-13",
         "quote": "Do not use hay or straw from areas treated with GrazonNext HL within the preceding 18-months or manure from animals feeding on hay treated with GrazonNext HL in compost."
+      },
+      "manureCarryoverDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00628-20170313.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label)",
+        "date": "2017-03-13",
+        "quote": "Do not use manure from animals that have grazed forage or eaten hay harvested from treated areas within the previous 3 days, in compost, mulch or mushroom spawn.",
+        "note": "Copied verbatim from the carryoverManureWindow entry for grazonnext-hl (Phase 33C ruling M-17)."
+      },
+      "hayOffFarmRestricted": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00628-20170313.pdf",
+        "publisher": "Dow AgroSciences (EPA PPLS stamped label)",
+        "date": "2017-03-13",
+        "quote": "Hay from areas treated with GrazonNext HL in the preceding 18-months CANNOT be distributed or made available for sale off the farm or ranch where harvested unless allowed by supplemental labeling.",
+        "note": "Copied verbatim from the carryoverHayOffFarm entry for grazonnext-hl (Phase 33C ruling M-17)."
       }
     },
     "harmony-sg-thifensulfuron": {
@@ -472,6 +521,13 @@
         "date": "2019-03-11",
         "quote": "Do not use plant residues, including hay or straw from treated areas, or manure or bedding straw from animals that have grazed or consumed forage from treated areas, for composting or mulching where susceptible plants may be grown the following season.",
         "note": "Also: 'Do not spread manure from animals that have grazed or consumed forage or hay from treated areas on land used for growing susceptible broadleaf plants or apply such materials to land used for growing broadleaf crops, ornamentals, orchards, or other susceptible desirable plants.'"
+      },
+      "manureCarryoverDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20190311.pdf",
+        "publisher": "Dow AgroSciences LLC (EPA PPLS stamped label)",
+        "date": "2019-03-11",
+        "quote": "Do not transfer livestock from treated grazing areas (or feeding of treated hay) to sensitive broadleaf crop areas without first allowing 7 days of grazing on an untreated pasture (or feeding of treated hay). If livestock are transferred within less than 7 days of grazing untreated pasture or eating untreated hay, urine and manure may contain enough clopyralid to cause injury to sensitive broadleaf plants.",
+        "note": "Copied verbatim from the carryoverManureWindow entry for stinger (Phase 33C ruling M-17)."
       }
     },
     "resicore-rev": {

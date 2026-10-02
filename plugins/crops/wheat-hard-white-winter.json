@@ -35,5 +35,14 @@
     ],
     "beeAttractive": false
   },
-  "archetype": "small-grain.zadoks"
+  "archetype": "small-grain.zadoks",
+  "forageHazards": [
+    {
+      "kind": "nitrate",
+      "triggers": [
+        "drought",
+        "heavy-nitrogen"
+      ]
+    }
+  ]
 }

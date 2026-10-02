@@ -156,6 +156,10 @@ export interface FertilityApplicationInput {
   kLbPerAcre?: number;
   performedById?: string;
   notes?: string;
+  /** The manure or compost batch spread (33C). */
+  amendmentBatchId?: string;
+  /** The stored carryover confirmation, `CarryoverAck` as JSON (M-46). */
+  carryoverAckJson?: string;
 }
 
 export interface FertilityApplication extends FertilityApplicationInput {
@@ -176,7 +180,9 @@ function rowToApplication(row: typeof fertilityApplications.$inferSelect): Ferti
     pLbPerAcre: row.pDeliveredHundredths / 100,
     kLbPerAcre: row.kDeliveredHundredths / 100,
     performedById: row.performedById ?? undefined,
-    notes: row.notes ?? undefined
+    notes: row.notes ?? undefined,
+    amendmentBatchId: row.amendmentBatchId ?? undefined,
+    carryoverAckJson: row.carryoverAckJson ?? undefined
   };
 }
 
@@ -198,12 +204,23 @@ export function insertFertilityApplication(input: FertilityApplicationInput): Fe
         pDeliveredHundredths: Math.round((input.pLbPerAcre ?? 0) * 100),
         kDeliveredHundredths: Math.round((input.kLbPerAcre ?? 0) * 100),
         performedById: input.performedById ?? null,
-        notes: input.notes ?? null
+        notes: input.notes ?? null,
+        amendmentBatchId: input.amendmentBatchId ?? null,
+        carryoverAckJson: input.carryoverAckJson ?? null
       })
     )
     .returning()
     .get();
   return rowToApplication(row);
+}
+
+export function getFertilityApplication(id: string): FertilityApplication | undefined {
+  const row = db
+    .select()
+    .from(fertilityApplications)
+    .where(withTenant(fertilityApplications, eq(fertilityApplications.id, id)))
+    .get();
+  return row ? rowToApplication(row) : undefined;
 }
 
 export function listFertilityApplicationsForBlock(blockId: string): FertilityApplication[] {

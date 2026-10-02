@@ -38,6 +38,7 @@ import { displayFootprints } from '$lib/garden/displayPack';
 import { familyGlyph } from '$lib/garden/familyGlyph';
 import { footprintBounds } from '$lib/garden/geometry';
 import { withSnapshotAnimals } from './areaAnimals';
+import { AREA_LINE_LIMIT, withCarryover, type CarryoverLine } from '$lib/farm/areaCarryover';
 
 const MAX_LIST = 8;
 const BLOCK_KIND_ORDER: SnapshotBlockKind[] = ['bed', 'row', 'container', 'block'];
@@ -95,7 +96,50 @@ export function buildAreaCard(
   options: BuildOptions = {}
 ): CardModel | null {
   const card = baseAreaCard(snapshot, areaId, options);
-  return card ? withSnapshotAnimals(snapshot, areaId, card, resolveOptions(snapshot, options)) : null;
+  if (!card) return null;
+  return withSnapshotCarryover(
+    snapshot,
+    areaId,
+    withSnapshotAnimals(snapshot, areaId, card, resolveOptions(snapshot, options))
+  );
+}
+
+/** The 33C after-spread lines a snapshot carries for the blocks on an
+ *  Area (M-52), with the blocks' names. */
+export function snapshotCarryoverLines(
+  snapshot: FarmSnapshot,
+  blockIds: readonly string[]
+): CarryoverLine[] {
+  if (!snapshot.carryover?.length) return [];
+  const ids = new Set(blockIds);
+  return snapshot.carryover
+    .filter((l) => ids.has(l.blockId))
+    .map((l) => ({
+      blockId: l.blockId,
+      applicationId: '',
+      batchId: '',
+      tone: l.tone,
+      text: l.text,
+      provenance: 'data' as const
+    }));
+}
+
+/** The Area Card with its blocks' carryover lines, at most three, each
+ *  named by its block. Live pages pass `link` for the test and dismiss
+ *  page; the offline card has no such page. */
+export function withSnapshotCarryover(
+  snapshot: FarmSnapshot,
+  areaId: string,
+  card: CardModel,
+  opts: { link?: boolean } = {}
+): CardModel {
+  const blocks = snapshot.blocks.filter((b) => b.areaId === areaId);
+  const lines = snapshotCarryoverLines(
+    snapshot,
+    blocks.map((b) => b.id)
+  );
+  const names = new Map(blocks.map((b) => [b.id, blockDisplayName(b)]));
+  return withCarryover(card, lines, { blockNames: names, max: AREA_LINE_LIMIT, link: opts.link });
 }
 
 function baseAreaCard(

@@ -358,6 +358,14 @@
         "manureCarryover": {
           "type": "boolean"
         },
+        "manureCarryoverDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3650
+        },
+        "hayOffFarmRestricted": {
+          "type": "boolean"
+        },
         "source": {
           "type": "string",
           "minLength": 1,

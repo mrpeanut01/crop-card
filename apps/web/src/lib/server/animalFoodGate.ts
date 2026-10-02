@@ -114,6 +114,101 @@ function exposureStays(subject: FoodSubject, food: Food, atMs: number): Exposure
   return out;
 }
 
+export interface ManureStay extends ExposureStay {
+  subjectType: SubjectType;
+  subjectId: string;
+}
+
+/** A feed use naming this subject inside the window reaches the input. */
+export interface ManureFeedReach {
+  subjectType: SubjectType;
+  subjectId: string;
+  fromMs: number | null;
+  toMs: number | null;
+}
+
+function tag(stays: ExposureStay[], subjectType: SubjectType, subjectId: string): ManureStay[] {
+  return stays.map((s) => ({ ...s, subjectType, subjectId }));
+}
+
+function overlaps(
+  m: { fromMs: number | null; toMs: number | null },
+  w: { fromMs: number; toMs: number }
+) {
+  return (m.fromMs ?? Number.NEGATIVE_INFINITY) <= w.toMs && (m.toMs === null || m.toMs > w.fromMs);
+}
+
+/**
+ * 33C (M-30): where the manure collected from an amendment input could
+ * have grazed, read the way the food gate reads stays (undone moves kept).
+ * An animal input: its own stays plus its groups' stays while it was a
+ * member. A group input: the group's stays, its split lineage, and every
+ * animal that was a member at any moment inside the window, with their own
+ * stays and their other groups' stays while members. Each stay names the
+ * subject that was there. `feedReach` says whose feed uses reach the input:
+ * a member's own feed counts for all time, as its own stays do. `missing`
+ * is true when the animal or group is no longer on file.
+ */
+export function manureSources(
+  input: { type: SubjectType; id: string },
+  window: { fromMs: number; toMs: number }
+): { stays: ManureStay[]; feedReach: ManureFeedReach[]; missing: boolean } {
+  const all = { fromMs: null, toMs: null };
+  const ctx = foodSubjectFor(input.type, input.id);
+  const stays: ManureStay[] = [];
+  const feedReach: ManureFeedReach[] = [
+    { subjectType: input.type, subjectId: input.id, fromMs: null, toMs: null }
+  ];
+  if (!ctx) return { stays, feedReach, missing: true };
+  const subject = ctx.subject;
+  if (subject.type === 'animal') {
+    stays.push(...tag(clip(animalStays(subject.id), all), 'animal', subject.id));
+    for (const m of subject.memberships.map(physicalWindow)) {
+      stays.push(...tag(clip(groupStays(m.groupId), m), 'group', m.groupId));
+      feedReach.push({
+        subjectType: 'group',
+        subjectId: m.groupId,
+        fromMs: m.fromMs,
+        toMs: m.toMs
+      });
+    }
+    return { stays, feedReach, missing: false };
+  }
+  stays.push(...tag(clip(groupStays(subject.id), all), 'group', subject.id));
+  for (const l of subject.lineage ?? []) {
+    const w = physicalWindow(l);
+    stays.push(...tag(clip(groupStays(l.groupId), w), 'group', l.groupId));
+    feedReach.push({ subjectType: 'group', subjectId: l.groupId, fromMs: w.fromMs, toMs: w.toMs });
+  }
+  for (const member of subject.members) {
+    const windows = member.memberships.map(physicalWindow);
+    const inGroup = windows.filter((m) => m.groupId === subject.id);
+    if (!inGroup.some((m) => overlaps(m, window))) continue;
+    stays.push(...tag(clip(animalStays(member.animalId), all), 'animal', member.animalId));
+    feedReach.push({ subjectType: 'animal', subjectId: member.animalId, fromMs: null, toMs: null });
+    for (const m of windows) {
+      if (m.groupId !== subject.id) {
+        stays.push(...tag(clip(groupStays(m.groupId), m), 'group', m.groupId));
+        feedReach.push({
+          subjectType: 'group',
+          subjectId: m.groupId,
+          fromMs: m.fromMs,
+          toMs: m.toMs
+        });
+      }
+    }
+  }
+  return { stays, feedReach, missing: false };
+}
+
+/** C-C2 contract: the stays alone. */
+export function manureSourceStays(
+  input: { type: SubjectType; id: string },
+  window: { fromMs: number; toMs: number }
+): ExposureStay[] {
+  return manureSources(input, window).stays;
+}
+
 /** The latest recorded dose that reached this subject's meat, live or
  *  force-deleted as given (C-26). A meat declaration dated earlier is
  *  refused: the dose shows the animal was still alive. */

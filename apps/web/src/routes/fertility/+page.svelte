@@ -10,6 +10,8 @@
   import DocumentAttach from '$lib/components/documents/DocumentAttach.svelte';
   import OrganicInputNotice from '$lib/components/organic/OrganicInputNotice.svelte';
   import { organicInputClass } from '$lib/organic/inputCompliance';
+  import CarryoverConfirm from '$lib/components/amendments/CarryoverConfirm.svelte';
+  import type { CarryoverConfirmBody } from '$lib/amendments/spreadPrompt';
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -27,6 +29,8 @@
   let appN = $state<number | null>(20);
   let appP = $state<number | null>(20);
   let appK = $state<number | null>(20);
+  let appBatch = $state('');
+  let confirmFacts = $state<CarryoverConfirmBody | null>(null);
 
   // Credit form
   let creditSource = $state('cover-crop:crimson-clover-cover');
@@ -69,6 +73,10 @@
 
   async function recordApplication(e: Event) {
     e.preventDefault();
+    await postApplication(undefined);
+  }
+
+  async function postApplication(confirmCarryover: string | undefined) {
     busy = true;
     error = null;
     message = null;
@@ -83,14 +91,21 @@
           rateUnit: appUnit,
           nLbPerAcre: appN ?? undefined,
           pLbPerAcre: appP ?? undefined,
-          kLbPerAcre: appK ?? undefined
+          kLbPerAcre: appK ?? undefined,
+          amendmentBatchId: appBatch || undefined,
+          confirmCarryover
         })
       });
       const out = await res.json();
-      if (!res.ok) {
-        error = out.error ?? tr('fert.errFailed');
+      if (res.status === 409 && out.error === 'CARRYOVER_CONFIRM') {
+        confirmFacts = out as CarryoverConfirmBody;
         return;
       }
+      if (!res.ok) {
+        error = out.message ?? out.error ?? tr('fert.errFailed');
+        return;
+      }
+      confirmFacts = null;
       message = tr('fert.msgApp');
       reload();
     } catch (e2) {
@@ -267,6 +282,17 @@
       >{tr('fert.kDelivered', { unit: rateUnit })}
       <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={appK} /></label
     >
+    {#if data.amendmentBatches.length}
+      <label
+        >{tr('fert.batch')}
+        <select bind:value={appBatch} data-testid="fertility-batch">
+          <option value="">{tr('fert.batchNone')}</option>
+          {#each data.amendmentBatches as b (b.id)}
+            <option value={b.id}>{b.name} ({b.stateText})</option>
+          {/each}
+        </select>
+      </label>
+    {/if}
     <OrganicInputNotice
       organicBlocks={data.organicBlocks}
       selectedBlockIds={blockId ? [blockId] : []}
@@ -319,8 +345,19 @@
   {/snippet}
 </SetupSheet>
 
+<CarryoverConfirm
+  open={confirmFacts !== null}
+  facts={confirmFacts}
+  {busy}
+  onConfirm={(hash) => postApplication(hash)}
+  onClose={() => (confirmFacts = null)}
+/>
+
 <section class="card">
   <h2>{tr('fert.hist.apps')}</h2>
+  {#if data.carryoverHref && data.applications.some((a) => a.batchName)}
+    <p><a class="carry-link" href={data.carryoverHref}>{tr('fert.carryoverLink')}</a></p>
+  {/if}
   {#if data.applications.length === 0}
     <p>{tr('fert.hist.noApps')}</p>
   {:else}
@@ -331,6 +368,13 @@
           {a.source} · {formatRateText(a.ratePerAcre, a.rateUnit, currentPrefs())}
           ({npk(a.nLbPerAcre)} N · {npk(a.pLbPerAcre)} P ·
           {npk(a.kLbPerAcre)} K {rateUnit})
+          {#if a.batchName}
+            <br /><em class="hint"
+              >{a.confirmed
+                ? tr('fert.spreadConfirmed', { batch: a.batchName })
+                : tr('fert.spread', { batch: a.batchName })}</em
+            >
+          {/if}
         </li>
       {/each}
     </ul>
@@ -389,6 +433,11 @@
 </section>
 
 <style>
+  .carry-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+  }
   .lab-report {
     margin: var(--space-2) 0 var(--space-3);
     display: flex;

@@ -10,6 +10,8 @@
     "lactatingDairyGrazeDays": 0,
     "meatAnimalRemovalBeforeSlaughterDays": 0,
     "manureCarryover": true,
+    "manureCarryoverDays": 3,
+    "hayOffFarmRestricted": true,
     "source": "Chaparral herbicide, EPA Reg. No. 62719-597, label stamped 09-24-2024 (accepted 2024-09-27)"
   },
   "displayName": "Chaparral (aminopyralid + metsulfuron-methyl)",

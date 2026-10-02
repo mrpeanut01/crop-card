@@ -142,3 +142,44 @@ describe('SEASON_CLOSED exemptions (Phase 33B, B3)', () => {
     });
   }
 });
+
+/** Phase 33C (M-64): amendment batches and their inputs never read the
+ *  season-closed gate. The behavior is pinned in
+ *  `amendments/amendments.endpoints.test.ts`. */
+const EXEMPT_33C_CHAIN = [
+  'amendments/batches/+server.ts',
+  'amendments/batches/[id]/+server.ts',
+  'amendments/batches/[id]/inputs/+server.ts',
+  'amendments/batches/[id]/inputs/[inputId]/+server.ts'
+];
+
+describe('SEASON_CLOSED exemptions (Phase 33C, amendment batches)', () => {
+  for (const rel of EXEMPT_33C_CHAIN) {
+    it(`${rel} never reads the season-closed gate`, () => {
+      const src = readFileSync(path.join(here, rel), 'utf8');
+      expect(src).not.toContain('checkSeasonClosed(');
+      expect(src).not.toContain('getActiveCloseout(');
+      expect(src).not.toContain("from '$lib/server/seasonClose'");
+    });
+  }
+});
+
+/** Phase 33C (M-64): pea or bean tests and dismissals never read the
+ *  season-closed gate; fertility applications keep the gate they had. */
+const EXEMPT_33C_SPREAD = [
+  'amendments/bioassays/+server.ts',
+  'amendments/bioassays/[id]/+server.ts',
+  'amendments/dismissals/+server.ts',
+  'amendments/dismissals/[id]/+server.ts'
+];
+
+describe('SEASON_CLOSED exemptions (Phase 33C, spread warnings)', () => {
+  for (const rel of EXEMPT_33C_SPREAD) {
+    it(`${rel} never reads the season-closed gate`, () => {
+      const src = readFileSync(path.join(here, rel), 'utf8');
+      expect(src).not.toContain('checkSeasonClosed(');
+      expect(src).not.toContain('getActiveCloseout(');
+      expect(src).not.toContain("from '$lib/server/seasonClose'");
+    });
+  }
+});

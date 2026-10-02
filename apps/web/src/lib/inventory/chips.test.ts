@@ -39,4 +39,15 @@ describe('visibleInventoryTypes', () => {
     });
     expect(out).toEqual(CROP_ONLY);
   });
+
+  it('hides manure and compost until the farm has a batch, whatever the animals (M-41)', () => {
+    expect(visibleInventoryTypes({ stockCounts: {}, hasAnimals: true })).not.toContain('amendment');
+    expect(visibleInventoryTypes({ stockCounts: { amendment: 1 }, hasAnimals: false })).toEqual([
+      ...CROP_ONLY,
+      'amendment'
+    ]);
+    expect(
+      visibleInventoryTypes({ stockCounts: {}, hasAnimals: false, active: 'amendment' })
+    ).toContain('amendment');
+  });
 });

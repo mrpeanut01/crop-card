@@ -67,6 +67,7 @@ import { listFields, type FieldWithBlocks } from '$lib/db/fields';
 import { loadAreaHousing } from '$lib/server/areaHousing';
 import { loadAreaGrazing } from '$lib/server/areaGrazing';
 import { buildMapSnapshot } from '$lib/server/mapSnapshot';
+import { withLiveCarryover } from '$lib/server/areaCarryover';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listStockItems, type StockItemWithBalance } from '$lib/db/stock';
 import { countTasks, listTasks, type Task } from '$lib/db/tasks';
@@ -233,7 +234,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     canEdit,
     setupAreas: canEdit ? setupAreas() : [],
     focusAreaId: url.searchParams.get('area'),
-    areaSnapshot: buildMapSnapshot({ fields, blocks }),
+    areaSnapshot: await withLiveCarryover(buildMapSnapshot({ fields, blocks })),
     areaHousing,
     areaGrazing,
     petsLayout,

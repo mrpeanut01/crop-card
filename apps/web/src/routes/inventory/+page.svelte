@@ -18,4 +18,6 @@
   rows={data.rows}
   canAdd={data.canAdd}
   visibleTypes={data.visibleTypes}
+  amendments={data.amendments}
+  canAddAmendment={data.canAddAmendment}
 />

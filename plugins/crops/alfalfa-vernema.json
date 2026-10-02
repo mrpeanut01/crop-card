@@ -62,5 +62,14 @@
     "continuous": true,
     "beeAttractive": true
   },
-  "archetype": "forage-cutting-cycle"
+  "archetype": "forage-cutting-cycle",
+  "forageHazards": [
+    {
+      "kind": "nitrate",
+      "triggers": [
+        "drought",
+        "heavy-nitrogen"
+      ]
+    }
+  ]
 }

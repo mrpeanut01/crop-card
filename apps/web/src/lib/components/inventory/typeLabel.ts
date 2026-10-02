@@ -7,7 +7,8 @@ const TYPE_LABEL_KEYS = {
   seed: 'inv.type.seed',
   crop: 'inv.type.crop',
   feed: 'inv.type.feed',
-  'animal-health': 'inv.type.animalHealth'
+  'animal-health': 'inv.type.animalHealth',
+  amendment: 'inv.type.amendment'
 } as const satisfies Record<InventoryType, MessageKey>;
 
 const TYPE_WORD_KEYS = {
@@ -16,7 +17,8 @@ const TYPE_WORD_KEYS = {
   seed: 'inv.typeWord.seed',
   crop: 'inv.typeWord.crop',
   feed: 'inv.typeWord.feed',
-  'animal-health': 'inv.typeWord.animalHealth'
+  'animal-health': 'inv.typeWord.animalHealth',
+  amendment: 'inv.typeWord.amendment'
 } as const satisfies Record<InventoryType, MessageKey>;
 
 /** The chip label for a type ("Pesticides", "Feed & bedding"). */

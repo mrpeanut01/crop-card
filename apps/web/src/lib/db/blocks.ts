@@ -257,7 +257,8 @@ export function getBlock(id: string): BlockWithPlantings | undefined {
       sourceProvenance: p.sourceProvenance ?? null,
       groupRole: p.groupRole ?? undefined,
       establishment: p.establishment ?? null,
-      sownIndoorsAt: p.sownIndoorsAt?.getTime() ?? null
+      sownIndoorsAt: p.sownIndoorsAt?.getTime() ?? null,
+      status: p.status
     }));
   return { ...rowToBlock(row), plantings };
 }

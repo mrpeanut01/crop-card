@@ -49,5 +49,23 @@
       "severity": "caution",
       "note": "Young regrowth and plants stressed by drought or frost can release prussic acid. Ask your extension agent or vet before grazing it."
     }
+  ],
+  "forageHazards": [
+    {
+      "kind": "prussic-acid",
+      "triggers": [
+        "frost",
+        "drought",
+        "young-regrowth",
+        "heavy-nitrogen"
+      ]
+    },
+    {
+      "kind": "nitrate",
+      "triggers": [
+        "drought",
+        "heavy-nitrogen"
+      ]
+    }
   ]
 }

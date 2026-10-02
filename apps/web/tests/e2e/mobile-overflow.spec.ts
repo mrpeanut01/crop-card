@@ -9,6 +9,8 @@ const ROUTES = [
   '/spray/fungicide',
   '/inventory',
   '/inventory/seed/add',
+  '/inventory?type=amendment',
+  '/inventory/amendment/add',
   '/equipment',
   '/animals',
   '/records?watering=1',

@@ -21,22 +21,13 @@
   import MapFilterPanel from '$lib/components/farm/MapFilterPanel.svelte';
   import MapFeatureList from '$lib/components/farm/MapFeatureList.svelte';
   import Hint from '$lib/components/ui/Hint.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { kindLabel, kindPlaceholder, shadeLabel } from '$lib/components/farm/farmLabels';
   import { markHintSeen } from '$lib/client/hints';
   import { SQFT_PER_ACRE, acresForApi, formatFt, sketchAcres } from '$lib/farm/sketch';
-  import {
-    AREA_KINDS,
-    AREA_KIND_LABELS,
-    isCropBearing,
-    type AreaDetails,
-    type AreaKind
-  } from '$lib/farm/areaKinds';
-  import {
-    AREA_KIND_NOUN,
-    AREA_NAME_PLACEHOLDER,
-    kindCounts,
-    kindStyle,
-    type AddPick
-  } from '$lib/farm/kindStyle';
+  import { AREA_KINDS, isCropBearing, type AreaDetails, type AreaKind } from '$lib/farm/areaKinds';
+  import { kindCounts, kindStyle, type AddPick } from '$lib/farm/kindStyle';
   import {
     DEFAULT_MAP_FILTER,
     isFilterActive,
@@ -65,6 +56,7 @@
   import type { ShadeSource, ShadeSourceKind } from '$lib/db/shadeSources';
   import type { TillageMethod } from '$lib/schedule/constants';
 
+  const tr = $derived(createT(page.data?.locale));
   type Geom = { type: 'Polygon' | 'MultiPolygon'; coordinates: unknown };
   type ShadeKind = ShadeSourceKind;
   type AreaExtra = { kind: AreaKind; details: AreaDetails | null };
@@ -282,7 +274,7 @@
     suggestedAcres: number | null,
     extra?: AreaExtra
   ) {
-    if (!name.trim()) throw new Error('Give it a name first.');
+    if (!name.trim()) throw new Error(tr('farm.editor.nameFirst'));
     const res = await fetch('/api/fields', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -347,7 +339,7 @@
   }
 
   async function deleteShadeFromList(id: string, name: string) {
-    if (!confirm(`Delete shade source "${name}"?`)) return;
+    if (!confirm(tr('farm.editor.confirmShade', { name }))) return;
     try {
       await deleteShadeSource(id);
     } catch (e) {
@@ -428,7 +420,7 @@
     if (!newFieldName.trim()) return;
     const checked = detailsFromDraft(newFieldKind, newFieldDetails);
     if (!checked.ok) {
-      fieldError = 'Some details don’t look right. Check them and try again.';
+      fieldError = tr('farm.sheet.badDetails');
       return;
     }
     creatingField = true;
@@ -518,7 +510,7 @@
     });
     if (!res.ok) {
       const out = await res.json().catch(() => ({}));
-      alert(`Save failed: ${out.error ?? res.status}`);
+      alert(tr('farm.editor.saveFailed', { error: out.error ?? res.status }));
       return;
     }
     editingFieldId = null;
@@ -528,14 +520,14 @@
   async function deleteField(id: string, name: string, blockCount: number) {
     const ok = confirm(
       blockCount > 0
-        ? `Delete "${name}"? This removes all ${blockCount} block(s) and every crop and record kept against them. It can't be undone.`
-        : `Delete "${name}"?`
+        ? tr('farm.editor.confirmDeleteArea', { name, count: blockCount })
+        : tr('farm.editor.confirmDeleteAreaPlain', { name })
     );
     if (!ok) return;
     const res = await fetch(`/api/fields/${encodeURIComponent(id)}`, { method: 'DELETE' });
     if (!res.ok) {
       const out = await res.json().catch(() => ({}));
-      alert(`Delete failed: ${out.error ?? res.status}`);
+      alert(tr('farm.editor.deleteFailed', { error: out.error ?? res.status }));
       return;
     }
     await invalidateAll();
@@ -666,7 +658,7 @@
     });
     if (!res.ok) {
       const out = await res.json().catch(() => ({}));
-      alert(`Save failed: ${out.error ?? res.status}`);
+      alert(tr('farm.editor.saveFailed', { error: out.error ?? res.status }));
       return;
     }
     editingBlockId = null;
@@ -676,14 +668,14 @@
   async function deleteBlock(id: string, name: string, plantingsCount: number) {
     const ok = confirm(
       plantingsCount > 0
-        ? `Delete block "${name}"? This removes all ${plantingsCount} crop(s) plus every event recorded against them. Cannot be undone.`
-        : `Delete block "${name}"?`
+        ? tr('farm.editor.confirmDeleteBlock', { name, count: plantingsCount })
+        : tr('farm.editor.confirmDeleteBlockPlain', { name })
     );
     if (!ok) return;
     const res = await fetch(`/api/blocks/${encodeURIComponent(id)}`, { method: 'DELETE' });
     if (!res.ok) {
       const out = await res.json().catch(() => ({}));
-      alert(`Delete failed: ${out.error ?? res.status}`);
+      alert(tr('farm.editor.deleteFailed', { error: out.error ?? res.status }));
       return;
     }
     await invalidateAll();
@@ -741,7 +733,7 @@
     });
     if (!res.ok) {
       const out = await res.json().catch(() => ({}));
-      alert(`Save failed: ${out.error ?? res.status}`);
+      alert(tr('farm.editor.saveFailed', { error: out.error ?? res.status }));
       return;
     }
     editingShadeId = null;
@@ -789,7 +781,7 @@
   async function addShadeWithoutGeometry() {
     if (!isShadeKind(addKind)) return;
     if (!addShadeName.trim()) {
-      addShadeError = 'Name is required.';
+      addShadeError = tr('farm.editor.nameRequired');
       return;
     }
     addingShade = true;
@@ -852,13 +844,13 @@
           geomError = out.error ?? 'failed';
           return;
         }
-        geomMessage = 'Geometry saved.';
+        geomMessage = tr('farm.editor.geomSaved');
         pasteText = '';
         await invalidateAll();
         return;
       }
       if (parsed.type !== 'FeatureCollection' || !Array.isArray(parsed.features)) {
-        geomError = 'Expected a FeatureCollection with a features array.';
+        geomError = tr('farm.editor.expectedCollection');
         return;
       }
       const results: typeof pasteResults = [];
@@ -871,14 +863,18 @@
         const kind = props['type'];
         const name = props['name'];
         if (!name) {
-          results.push({ name: '(unnamed)', kind: kind ?? '?', status: 'skipped — no name' });
+          results.push({
+            name: tr('farm.editor.unnamed'),
+            kind: kind ?? '?',
+            status: tr('farm.editor.skipNoName')
+          });
           continue;
         }
         const geom = feat.geometry ?? feat;
         if (kind === 'field') {
           const field = fields.find((f) => f.name === name);
           if (!field) {
-            results.push({ name, kind: 'field', status: 'not found' });
+            results.push({ name, kind: 'field', status: tr('farm.editor.notFound') });
             continue;
           }
           const res = await fetch(`/api/fields/${encodeURIComponent(field.id)}/geometry`, {
@@ -886,7 +882,13 @@
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(geom)
           });
-          results.push({ name, kind: 'field', status: res.ok ? 'saved ✓' : `error ${res.status}` });
+          results.push({
+            name,
+            kind: 'field',
+            status: res.ok
+              ? tr('farm.editor.saved')
+              : tr('farm.editor.errorStatus', { status: res.status })
+          });
         } else if (kind === 'block') {
           const fieldName = props['field'];
           const block =
@@ -896,7 +898,7 @@
                 (!fieldName || fields.find((f) => f.id === b.fieldId)?.name === fieldName)
             ) ?? blocks.find((b) => b.name === name);
           if (!block) {
-            results.push({ name, kind: 'block', status: 'not found' });
+            results.push({ name, kind: 'block', status: tr('farm.editor.notFound') });
             continue;
           }
           const res = await fetch(`/api/blocks/${encodeURIComponent(block.id)}/geometry`, {
@@ -904,9 +906,15 @@
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(geom)
           });
-          results.push({ name, kind: 'block', status: res.ok ? 'saved ✓' : `error ${res.status}` });
+          results.push({
+            name,
+            kind: 'block',
+            status: res.ok
+              ? tr('farm.editor.saved')
+              : tr('farm.editor.errorStatus', { status: res.status })
+          });
         } else {
-          results.push({ name, kind: kind ?? '?', status: 'skipped — unknown type' });
+          results.push({ name, kind: kind ?? '?', status: tr('farm.editor.skipUnknown') });
         }
       }
       pasteResults = results;
@@ -922,44 +930,45 @@
 
 {#if isFirstRun && canEdit}
   <section class="card welcome">
-    <h2>Put your farm on the map</h2>
+    <h2>{tr('farm.editor.welcomeTitle')}</h2>
     <p>
-      Tap <strong>Add</strong> and pick what you're adding: a field, a garden, a greenhouse, the
-      barn. Then outline it on the <strong>Map</strong>. If the aerial view doesn't help, switch to
-      <strong>Dimensions</strong> and type its width and length instead; CropCard draws it as a box.
+      {tr('farm.editor.w1')} <strong>{tr('farm.editor.bAdd')}</strong>
+      {tr('farm.editor.w2')} <strong>{tr('farm.editor.bMap')}</strong>{tr('farm.editor.w3')}
+      <strong>{tr('farm.editor.bDims')}</strong>
+      {tr('farm.editor.w4')}
     </p>
   </section>
 {/if}
 
 <div class="mode-bar">
-  <div class="seg" role="group" aria-label="How to lay out your farm">
+  <div class="seg" role="group" aria-label={tr('farm.editor.layoutLabel')}>
     <button
       type="button"
       class:active={mode === 'map'}
       aria-pressed={mode === 'map'}
-      onclick={() => (mode = 'map')}>🗺️ Map</button
+      onclick={() => (mode = 'map')}>🗺️ {tr('farm.editor.bMap')}</button
     >
     <button
       type="button"
       class:active={mode === 'sketch'}
       aria-pressed={mode === 'sketch'}
-      onclick={() => (mode = 'sketch')}>📐 Dimensions</button
+      onclick={() => (mode = 'sketch')}>📐 {tr('farm.editor.bDims')}</button
     >
   </div>
   {#if mode === 'map'}
     <button type="button" class="locate" onclick={centerOnMe} disabled={locating || !blockMap}>
-      📍 {locating ? 'Locating…' : 'Center on my location'}
+      📍 {locating ? tr('farm.editor.locating') : tr('farm.editor.center')}
     </button>
   {/if}
 </div>
-<div class="verbs" role="toolbar" aria-label="Farm map">
+<div class="verbs" role="toolbar" aria-label={tr('farm.fig.farmMap')}>
   {#if canEdit}
     <button
       type="button"
       class="verb primary"
       data-hint-anchor="map_add"
       onclick={() => (addOpen = true)}
-      disabled={mode === 'map' && !blockMap}>+ Add</button
+      disabled={mode === 'map' && !blockMap}>{tr('farm.addPlus')}</button
     >
   {/if}
   <button
@@ -972,10 +981,10 @@
       void markHintSeen('map_filter');
     }}
   >
-    Filter{filterActive ? ' (on)' : ''}
+    {tr('farm.editor.filter')}{filterActive ? ' ' + tr('farm.editor.filterOn') : ''}
   </button>
   {#if exportHref}
-    <a class="verb" href={exportHref}>Export card</a>
+    <a class="verb" href={exportHref}>{tr('farm.editor.exportCard')}</a>
   {/if}
 </div>
 {#if mode === 'map' && locateMessage}
@@ -986,20 +995,20 @@
   <Hint
     key="map_add"
     anchor="[data-hint-anchor=map_add]"
-    text="Tap Add to put a field, garden, greenhouse or barn on your farm. You pick what it is, then outline it."
+    text={tr('farm.editor.hintAdd')}
     suppressed={addOpen || filterOpen || !!selectedArea || mapBusy}
   />
   <Hint
     key="map_draw_area"
     anchor="[data-hint-anchor=map_draw_area]"
-    text="Tap each corner, then the first corner again to close the shape. Size and perimeter fill in for you."
+    text={tr('farm.editor.hintDraw')}
     suppressed={addOpen || filterOpen || !!selectedArea || mapBusy}
   />
 {/if}
 <Hint
   key="map_filter"
   anchor="[data-hint-anchor=map_filter]"
-  text="Filter hides kinds you don't need right now, like woods or the pond. It remembers your choice on this device."
+  text={tr('farm.editor.hintFilter')}
   suppressed={addOpen || filterOpen || !!selectedArea || mapBusy}
 />
 
@@ -1068,7 +1077,7 @@
       onBusyChange={(b) => (mapBusy = b)}
     />
   {:else}
-    <section class="card empty"><p>Loading map…</p></section>
+    <section class="card empty"><p>{tr('farm.loc.loadingMap')}</p></section>
   {/if}
 {:else}
   <FarmSketch
@@ -1094,29 +1103,31 @@
         }}
       >
         <h3>
-          {fields.length === 0 ? '1. ' : ''}Add {AREA_KIND_NOUN[newFieldKind]}
+          {fields.length === 0 ? '1. ' : ''}{tr('farm.editor.addNoun', {
+            noun: tr(`farm.kindNoun.${newFieldKind}`)
+          })}
         </h3>
         <label class="kind-pick"
-          >Kind
+          >{tr('farm.sheet.kind')}
           <select
             value={newFieldKind}
             onchange={(e) => setNewFieldKind(e.currentTarget.value as AreaKind)}
           >
             {#each AREA_KINDS as k (k)}
-              <option value={k}>{AREA_KIND_LABELS[k]}</option>
+              <option value={k}>{kindLabel(tr, k)}</option>
             {/each}
           </select>
         </label>
         <div class="grid3">
           <label
-            >Name<input
+            >{tr('farm.sheet.name')}<input
               type="text"
-              placeholder={AREA_NAME_PLACEHOLDER[newFieldKind]}
+              placeholder={kindPlaceholder(tr, newFieldKind)}
               bind:value={newFieldName}
             /></label
           >
           <label
-            >Width ({fmt.unit('distance')})<UnitInput
+            >{tr('farm.editor.width', { unit: fmt.unit('distance') })}<UnitInput
               quantity="distance"
               suffix={false}
               min={1}
@@ -1124,7 +1135,7 @@
             /></label
           >
           <label
-            >Length ({fmt.unit('distance')})<UnitInput
+            >{tr('farm.editor.length', { unit: fmt.unit('distance') })}<UnitInput
               quantity="distance"
               suffix={false}
               min={1}
@@ -1144,7 +1155,9 @@
             class="primary"
             disabled={creatingField || !newFieldName.trim() || !fieldAcresPreview}
           >
-            {creatingField ? '…' : `Add ${AREA_KIND_LABELS[newFieldKind].toLowerCase()}`}
+            {creatingField
+              ? '…'
+              : tr('farm.editor.addKind', { kind: kindLabel(tr, newFieldKind).toLowerCase() })}
           </button>
           {#if fieldAcresPreview}<span class="hint"
               >≈ {fmt.qty(
@@ -1165,29 +1178,32 @@
             createBlock();
           }}
         >
-          <h3>{blocks.length === 0 ? '2. Add the blocks inside it' : 'Add a block'}</h3>
+          <h3>
+            {blocks.length === 0
+              ? tr('farm.editor.addBlocksInside')
+              : tr('farm.editor.addBlockTitle')}
+          </h3>
           <p class="hint">
-            A block is a patch you plant as one unit: a bed, a row set, a corner of a field. Blocks
-            are packed inside their area's box.
+            {tr('farm.editor.blockHint')}
           </p>
           <div class="grid3">
             {#if blockParents.length > 1}
               <label class="full"
-                >Inside
+                >{tr('farm.editor.inside')}
                 <select bind:value={newBlockFieldId}>
                   {#each blockParents as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
                 </select>
               </label>
             {/if}
             <label
-              >Block name<input
+              >{tr('farm.editor.blockName')}<input
                 type="text"
-                placeholder="e.g. Sweet corn A"
+                placeholder={tr('farm.editor.blockPh')}
                 bind:value={newBlockName}
               /></label
             >
             <label
-              >Width ({fmt.unit('distance')})<UnitInput
+              >{tr('farm.editor.width', { unit: fmt.unit('distance') })}<UnitInput
                 quantity="distance"
                 suffix={false}
                 min={1}
@@ -1195,7 +1211,7 @@
               /></label
             >
             <label
-              >Length ({fmt.unit('distance')})<UnitInput
+              >{tr('farm.editor.length', { unit: fmt.unit('distance') })}<UnitInput
                 quantity="distance"
                 suffix={false}
                 min={1}
@@ -1209,7 +1225,7 @@
               class="primary"
               disabled={creatingBlock || !newBlockName.trim() || !blockAcresPreview}
             >
-              {creatingBlock ? '…' : 'Add block'}
+              {creatingBlock ? '…' : tr('farm.editor.addBlock')}
             </button>
             {#if blockAcresPreview}<span class="hint"
                 >≈ {fmt.qty(
@@ -1225,11 +1241,10 @@
   {/if}
 {/if}
 
-<section class="card" aria-label="Areas">
+<section class="card" aria-label={tr('farm.filter.areas')}>
   {#if fields.length === 0}
     <p class="empty-row">
-      Nothing on the map yet. Tap Add to outline a field, garden or barn, or switch to Dimensions
-      and type its size.
+      {tr('farm.editor.emptyAreas')}
     </p>
   {:else}
     {#each fields as f (f.id)}
@@ -1244,11 +1259,11 @@
             type="button"
             class="field-name"
             onclick={() => openArea(f.id)}
-            aria-label="Open the card for {f.name}">{f.name}</button
+            aria-label={tr('farm.editor.openCard', { name: f.name })}>{f.name}</button
           >
           <span class="field-stats">
-            {AREA_KIND_LABELS[fKind]} ·
-            {fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}
+            {kindLabel(tr, fKind)} ·
+            {tr('farm.editor.blockCount', { count: fieldBlocks.length })}
             {#if fieldAcresDisplay !== null && fieldAcresDisplay > 0}· {formatAreaAcres(
                 fieldAcresDisplay,
                 currentPrefs()
@@ -1264,20 +1279,22 @@
                 newBlockAcres = undefined;
                 blockError = null;
               }}
-              title="Add block"
-              aria-label="Add block to {f.name}">+ Block</button
+              title={tr('farm.editor.addBlock')}
+              aria-label={tr('farm.editor.addBlockTo', { name: f.name })}
+              >{tr('farm.editor.plusBlock')}</button
             >
             <button
               class="row-action"
               onclick={() => startEditField(f)}
-              title="Edit name and size"
-              aria-label="Edit name and size of {f.name}">Edit size</button
+              title={tr('farm.editor.editNameSize')}
+              aria-label={tr('farm.editor.editNameSizeOf', { name: f.name })}
+              >{tr('farm.editor.editSize')}</button
             >
             <button
               class="row-action danger"
               onclick={() => deleteField(f.id, f.name, fieldBlocks.length)}
-              aria-label="Delete {f.name}"
-              title="Delete">Delete</button
+              aria-label={tr('farm.editor.deleteName', { name: f.name })}
+              title={tr('farm.delete')}>{tr('farm.delete')}</button
             >
           {/if}
         </div>
@@ -1285,9 +1302,9 @@
         {#if editingFieldId === f.id}
           <div class="inline-edit">
             <div class="grid2">
-              <label>Name<input type="text" bind:value={editFieldName} /></label>
+              <label>{tr('farm.sheet.name')}<input type="text" bind:value={editFieldName} /></label>
               <label
-                >Size<UnitInput
+                >{tr('farm.editor.size')}<UnitInput
                   quantity="area"
                   min={0}
                   bind:value={
@@ -1296,7 +1313,7 @@
                 /></label
               >
               <label
-                >Width ({fmt.unit('distance')})<UnitInput
+                >{tr('farm.editor.width', { unit: fmt.unit('distance') })}<UnitInput
                   quantity="distance"
                   suffix={false}
                   min={1}
@@ -1304,18 +1321,20 @@
                 /></label
               >
               <label
-                >Length ({fmt.unit('distance')})<UnitInput
+                >{tr('farm.editor.length', { unit: fmt.unit('distance') })}<UnitInput
                   quantity="distance"
                   suffix={false}
                   min={1}
                   bind:value={editFieldLength}
                 /></label
               >
-              <label class="full">Notes<input type="text" bind:value={editFieldNotes} /></label>
+              <label class="full"
+                >{tr('farm.editor.notes')}<input type="text" bind:value={editFieldNotes} /></label
+              >
             </div>
             <div class="row">
-              <button class="primary" onclick={saveEditField}>Save</button>
-              <button onclick={() => (editingFieldId = null)}>Cancel</button>
+              <button class="primary" onclick={saveEditField}>{tr('farm.save')}</button>
+              <button onclick={() => (editingFieldId = null)}>{tr('farm.cancel')}</button>
             </div>
           </div>
         {/if}
@@ -1324,7 +1343,7 @@
 
         {#if fieldBlocks.length === 0}
           <p class="empty-row-indent">
-            No blocks yet. Draw one on the map, or add it by size under Dimensions.
+            {tr('farm.editor.noBlocks')}
           </p>
         {:else}
           <ul class="block-list-flat">
@@ -1339,28 +1358,29 @@
                 <span class="block-stats">
                   {#if acresDisplay}{acresDisplay}{/if}
                   {#if b.plantings.length > 0}
-                    {acresDisplay ? ' · ' : ''}{b.plantings.length} planting{b.plantings.length ===
-                    1
-                      ? ''
-                      : 's'}
+                    {acresDisplay ? ' · ' : ''}{tr('farm.editor.plantingCount', {
+                      count: b.plantings.length
+                    })}
                   {/if}
                   {#if dimsText(b)}{acresDisplay || b.plantings.length > 0 ? ' · ' : ''}{dimsText(
                       b
                     )}{/if}
-                  {#if !b.geometryGeojson}<span class="not-drawn">not on map</span>{/if}
+                  {#if !b.geometryGeojson}<span class="not-drawn">{tr('farm.editor.notOnMap')}</span
+                    >{/if}
                 </span>
                 {#if canEdit}
                   <button
                     class="row-action"
                     onclick={() => startEditBlock(b)}
-                    title="Edit block"
-                    aria-label="Edit {b.name}">Edit</button
+                    title={tr('farm.editor.editBlock')}
+                    aria-label={tr('farm.list.editName', { name: b.name })}
+                    >{tr('farm.edit')}</button
                   >
                   <button
                     class="row-action danger"
                     onclick={() => deleteBlock(b.id, b.name, b.plantings.length)}
-                    aria-label="Delete {b.name}"
-                    title="Delete block">Delete</button
+                    aria-label={tr('farm.editor.deleteName', { name: b.name })}
+                    title={tr('farm.editor.deleteBlock')}>{tr('farm.delete')}</button
                   >
                 {/if}
               </li>
@@ -1368,9 +1388,14 @@
                 <li class="inline-edit-row">
                   <div class="inline-edit">
                     <div class="grid2">
-                      <label>Name<input type="text" bind:value={editBlockName} /></label>
                       <label
-                        >Size<UnitInput
+                        >{tr('farm.sheet.name')}<input
+                          type="text"
+                          bind:value={editBlockName}
+                        /></label
+                      >
+                      <label
+                        >{tr('farm.editor.size')}<UnitInput
                           quantity="area"
                           min={0}
                           bind:value={
@@ -1379,14 +1404,14 @@
                         /></label
                       >
                       <label
-                        >Code<input
+                        >{tr('farm.editor.code')}<input
                           type="text"
                           placeholder="A"
                           bind:value={editBlockLabel}
                         /></label
                       >
                       <label
-                        >Width ({fmt.unit('distance')})<UnitInput
+                        >{tr('farm.editor.width', { unit: fmt.unit('distance') })}<UnitInput
                           quantity="distance"
                           suffix={false}
                           min={1}
@@ -1394,7 +1419,7 @@
                         /></label
                       >
                       <label
-                        >Length ({fmt.unit('distance')})<UnitInput
+                        >{tr('farm.editor.length', { unit: fmt.unit('distance') })}<UnitInput
                           quantity="distance"
                           suffix={false}
                           min={1}
@@ -1403,7 +1428,7 @@
                       >
                       {#if fields.length > 1}
                         <label class="full"
-                          >Move to
+                          >{tr('farm.editor.moveTo')}
                           <select bind:value={editBlockFieldId}>
                             {#each blockParents as ff (ff.id)}<option value={ff.id}
                                 >{ff.name}</option
@@ -1412,15 +1437,15 @@
                         </label>
                       {/if}
                       <label class="full"
-                        >Tillage method
+                        >{tr('farm.editor.tillage')}
                         <select bind:value={editBlockTillage}>
-                          <option value="conventional">Conventional (plow/disk)</option>
-                          <option value="reduced-till">Reduced-till (single pass)</option>
-                          <option value="no-till">No-till (burndown only)</option>
+                          <option value="conventional">{tr('farm.editor.tillConv')}</option>
+                          <option value="reduced-till">{tr('farm.editor.tillReduced')}</option>
+                          <option value="no-till">{tr('farm.editor.tillNo')}</option>
                         </select>
                       </label>
                       <label
-                        >Slope (%)
+                        >{tr('farm.editor.slope')}
                         <input
                           type="number"
                           min="0"
@@ -1431,24 +1456,23 @@
                         />
                       </label>
                       <label
-                        >Slope aspect (° downhill)
+                        >{tr('farm.editor.aspect')}
                         <input
                           type="number"
                           min="0"
                           max="360"
                           step="1"
-                          placeholder="0=N, 90=E, 180=S, 270=W"
+                          placeholder={tr('farm.editor.aspectPh')}
                           bind:value={editBlockSlopeAspectDeg}
                         />
                       </label>
                     </div>
                     <p class="block-slope-hint">
-                      Slope inputs are optional. Leave both blank for flat terrain. The shade model
-                      uses these to lengthen / shorten projected shadows along the downhill axis.
+                      {tr('farm.editor.slopeHint')}
                     </p>
                     <div class="row">
-                      <button class="primary" onclick={saveEditBlock}>Save</button>
-                      <button onclick={() => (editingBlockId = null)}>Cancel</button>
+                      <button class="primary" onclick={saveEditBlock}>{tr('farm.save')}</button>
+                      <button onclick={() => (editingBlockId = null)}>{tr('farm.cancel')}</button>
                     </div>
                   </div>
                 </li>
@@ -1461,8 +1485,10 @@
           <div class="add-block-inline">
             <input
               type="text"
-              placeholder={fKind === 'garden' || fKind === 'greenhouse' ? 'Bed name' : 'Block name'}
-              aria-label="Name"
+              placeholder={fKind === 'garden' || fKind === 'greenhouse'
+                ? tr('farm.editor.bedName')
+                : tr('farm.editor.blockName')}
+              aria-label={tr('farm.sheet.name')}
               bind:value={newBlockName}
             />
             {#if fKind === 'garden' || fKind === 'greenhouse'}
@@ -1471,8 +1497,8 @@
                   quantity="distance"
                   min={1}
                   suffix={false}
-                  placeholder="Width ({fmt.unit('distance')})"
-                  aria-label="Width ({fmt.unit('distance')})"
+                  placeholder={tr('farm.editor.width', { unit: fmt.unit('distance') })}
+                  aria-label={tr('farm.editor.width', { unit: fmt.unit('distance') })}
                   bind:value={newBlockWidth}
                 /></span
               >
@@ -1482,8 +1508,8 @@
                   quantity="distance"
                   min={1}
                   suffix={false}
-                  placeholder="Length ({fmt.unit('distance')})"
-                  aria-label="Length ({fmt.unit('distance')})"
+                  placeholder={tr('farm.editor.length', { unit: fmt.unit('distance') })}
+                  aria-label={tr('farm.editor.length', { unit: fmt.unit('distance') })}
                   bind:value={newBlockLength}
                 /></span
               >
@@ -1503,7 +1529,7 @@
               onclick={() => createBlock(f.id)}
               disabled={creatingBlock || !newBlockName.trim()}
             >
-              {creatingBlock ? '…' : 'Add'}
+              {creatingBlock ? '…' : tr('farm.editor.bAdd')}
             </button>
             <button
               class="small"
@@ -1525,20 +1551,21 @@
                 <span class="block-name">{s.name}</span>
                 <span class="block-stats">
                   {s.kind} · {fmt.qty(s.heightFt, 'distance')}{#if s.isDeciduous}
-                    · deciduous{/if}
-                  {#if !s.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
+                    · {tr('farm.editor.deciduous')}{/if}
+                  {#if !s.geometryGeojson}<span class="not-drawn">{tr('farm.editor.notDrawn')}</span
+                    >{/if}
                 </span>
                 {#if canEdit}
                   <button
                     class="row-action"
                     onclick={() => startEditShade(s)}
-                    title="Edit shade source">✏</button
+                    title={tr('farm.editor.editShade')}>✏</button
                   >
                   <button
                     class="row-action danger"
                     onclick={() => deleteShadeFromList(s.id, s.name)}
-                    aria-label="Delete {s.name}"
-                    title="Delete shade source">🗑</button
+                    aria-label={tr('farm.editor.deleteName', { name: s.name })}
+                    title={tr('farm.editor.deleteShade')}>🗑</button
                   >
                 {/if}
               </li>
@@ -1557,7 +1584,7 @@
       <div class="field-group">
         <div class="field-row">
           <span class="field-icon">🌐</span>
-          <strong class="field-title">Farm-wide shade sources</strong>
+          <strong class="field-title">{tr('farm.editor.farmWideShade')}</strong>
         </div>
         <ul class="block-list-flat">
           {#each shadeSources.filter((s) => !s.fieldId || !fields.some((f) => f.id === s.fieldId)) as s (s.id)}
@@ -1566,14 +1593,15 @@
               <span class="block-name">{s.name}</span>
               <span class="block-stats">
                 {s.kind} · {fmt.qty(s.heightFt, 'distance')}{#if s.isDeciduous}
-                  · deciduous{/if}
-                {#if !s.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
+                  · {tr('farm.editor.deciduous')}{/if}
+                {#if !s.geometryGeojson}<span class="not-drawn">{tr('farm.editor.notDrawn')}</span
+                  >{/if}
               </span>
               {#if canEdit}
                 <button
                   class="row-action"
                   onclick={() => startEditShade(s)}
-                  title="Edit shade source">✏</button
+                  title={tr('farm.editor.editShade')}>✏</button
                 >
                 <button
                   class="row-action danger"
@@ -1607,26 +1635,25 @@
 
 {#if canEdit && mode === 'map'}
   <details class="card advanced">
-    <summary>Add without drawing</summary>
+    <summary>{tr('farm.editor.addNoDraw')}</summary>
     <p class="lede">
-      Add an area, a block, a tree row, a grove, a building or other shade source by name only. You
-      can outline it on the map later.
+      {tr('farm.editor.addNoDrawLede')}
     </p>
 
     <label class="full">
-      What are you adding?
+      {tr('farm.editor.whatAdding')}
       <select bind:value={addKind}>
-        <option value="field">An area (field, garden, barn…)</option>
-        <option value="block">A block inside an area</option>
+        <option value="field">{tr('farm.editor.optArea')}</option>
+        <option value="block">{tr('farm.editor.optBlock')}</option>
         <option disabled>──────────────</option>
-        <option value="tree-row">🌳 Tree row</option>
-        <option value="tree-grove">🌲 Tree grove</option>
-        <option value="tree-single">🌳 Single tree</option>
-        <option value="hedge">🌿 Hedge</option>
-        <option value="building">🏠 Building</option>
-        <option value="fence">🧱 Fence (shade)</option>
-        <option value="structure">🏗️ Structure</option>
-        <option value="other">🌑 Other</option>
+        <option value="tree-row">🌳 {shadeLabel(tr, 'tree-row')}</option>
+        <option value="tree-grove">🌲 {tr('farm.editor.shadeGrove')}</option>
+        <option value="tree-single">🌳 {shadeLabel(tr, 'tree-single')}</option>
+        <option value="hedge">🌿 {shadeLabel(tr, 'hedge')}</option>
+        <option value="building">🏠 {shadeLabel(tr, 'building')}</option>
+        <option value="fence">🧱 {tr('farm.add.fenceShade')}</option>
+        <option value="structure">🏗️ {shadeLabel(tr, 'structure')}</option>
+        <option value="other">🌑 {tr('farm.editor.shadeOther')}</option>
       </select>
     </label>
 
@@ -1634,34 +1661,34 @@
       <div class="add-form-section">
         <div class="grid2">
           <label
-            >Kind
+            >{tr('farm.sheet.kind')}
             <select
               value={newFieldKind}
               onchange={(e) => setNewFieldKind(e.currentTarget.value as AreaKind)}
             >
               {#each AREA_KINDS as k (k)}
-                <option value={k}>{AREA_KIND_LABELS[k]}</option>
+                <option value={k}>{kindLabel(tr, k)}</option>
               {/each}
             </select>
           </label>
           <label
-            >Name<input
+            >{tr('farm.sheet.name')}<input
               type="text"
-              placeholder={AREA_NAME_PLACEHOLDER[newFieldKind]}
+              placeholder={kindPlaceholder(tr, newFieldKind)}
               bind:value={newFieldName}
             /></label
           >
           <label
-            >Size (optional)<UnitInput
+            >{tr('farm.editor.sizeOpt')}<UnitInput
               quantity="area"
               min={0}
               bind:value={() => newFieldAcres ?? null, (v) => (newFieldAcres = v ?? undefined)}
             /></label
           >
           <label class="full"
-            >Notes (optional)<input
+            >{tr('farm.editor.notesOpt')}<input
               type="text"
-              placeholder="Lease info, address, etc."
+              placeholder={tr('farm.editor.notesPh')}
               bind:value={newFieldNotes}
             /></label
           >
@@ -1677,32 +1704,34 @@
           onclick={createField}
           disabled={creatingField || !newFieldName.trim()}
         >
-          {creatingField ? '…' : `Add ${AREA_KIND_LABELS[newFieldKind].toLowerCase()}`}
+          {creatingField
+            ? '…'
+            : tr('farm.editor.addKind', { kind: kindLabel(tr, newFieldKind).toLowerCase() })}
         </button>
         {#if fieldError}<p class="error">{fieldError}</p>{/if}
       </div>
     {:else if addKind === 'block'}
       {#if blockParents.length === 0}
-        <p class="error">Add a crop area first. Every block sits inside one.</p>
+        <p class="error">{tr('farm.editor.needCropArea')}</p>
       {:else}
         <div class="add-form-section">
           <div class="grid2">
             <label
-              >Name<input
+              >{tr('farm.sheet.name')}<input
                 type="text"
-                placeholder="e.g. Corn Block A"
+                placeholder={tr('farm.editor.blockPh2')}
                 bind:value={newBlockName}
               /></label
             >
             <label
-              >Size (optional)<UnitInput
+              >{tr('farm.editor.sizeOpt')}<UnitInput
                 quantity="area"
                 min={0}
                 bind:value={() => newBlockAcres ?? null, (v) => (newBlockAcres = v ?? undefined)}
               /></label
             >
             <label class="full"
-              >Inside
+              >{tr('farm.editor.inside')}
               <select bind:value={newBlockFieldId}>
                 {#each blockParents as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
               </select>
@@ -1713,7 +1742,7 @@
             onclick={() => createBlock()}
             disabled={creatingBlock || !newBlockName.trim()}
           >
-            {creatingBlock ? '…' : 'Add block'}
+            {creatingBlock ? '…' : tr('farm.editor.addBlock')}
           </button>
           {#if blockError}<p class="error">{blockError}</p>{/if}
         </div>
@@ -1722,14 +1751,14 @@
       <div class="add-form-section">
         <div class="grid2">
           <label
-            >Name<input
+            >{tr('farm.sheet.name')}<input
               type="text"
-              placeholder="e.g. North maple windbreak"
+              placeholder={tr('farm.editor.shadePh')}
               bind:value={addShadeName}
             /></label
           >
           <label
-            >Height<UnitInput
+            >{tr('farm.editor.height')}<UnitInput
               quantity="distance"
               min={1}
               max={200}
@@ -1737,7 +1766,7 @@
             /></label
           >
           <label
-            >Opacity (0–1)<input
+            >{tr('farm.editor.opacity')}<input
               type="number"
               min="0"
               max="1"
@@ -1746,21 +1775,21 @@
             /></label
           >
           <label class="full"
-            >Area (optional; leave blank for the whole farm)
+            >{tr('farm.editor.areaOpt')}
             <select bind:value={addShadeFieldId}>
-              <option value="">Whole farm</option>
+              <option value="">{tr('farm.editor.wholeFarm')}</option>
               {#each fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
             </select>
           </label>
         </div>
         <label class="checkbox-line">
           <input type="checkbox" bind:checked={addShadeIsDeciduous} />
-          Deciduous (leaves drop in winter)
+          {tr('farm.editor.deciduousLong')}
         </label>
         {#if addShadeIsDeciduous}
           <div class="grid2">
             <label
-              >Leaf-on (day of year)<input
+              >{tr('farm.editor.leafOn')}<input
                 type="number"
                 min="1"
                 max="366"
@@ -1768,7 +1797,7 @@
               /></label
             >
             <label
-              >Leaf-off (day of year)<input
+              >{tr('farm.editor.leafOff')}<input
                 type="number"
                 min="1"
                 max="366"
@@ -1782,21 +1811,19 @@
           onclick={addShadeWithoutGeometry}
           disabled={addingShade || !addShadeName.trim()}
         >
-          {addingShade ? '…' : `Add ${addKind}`}
+          {addingShade ? '…' : tr('farm.editor.addKind', { kind: addKind })}
         </button>
         {#if addShadeError}<p class="error">{addShadeError}</p>{/if}
         <p class="muted" style="margin-top:0.4rem">
-          Without geometry the shade source won't project shadows — draw it on the map after to wire
-          up shading.
+          {tr('farm.editor.noGeomNote')}
         </p>
       </div>
     {/if}
 
     <details class="nested-advanced">
-      <summary>Advanced — paste GeoJSON</summary>
+      <summary>{tr('farm.editor.advanced')}</summary>
       <p class="lede">
-        Power-user import path: paste GeoJSON exported from QGIS, ArcGIS, or a county GIS portal.
-        Currently supports field + block features only.
+        {tr('farm.editor.advancedLede')}
       </p>
 
       <div class="paste-mode-tabs">
@@ -1808,7 +1835,7 @@
             geomError = null;
             geomMessage = null;
           }}
-          type="button">Single block</button
+          type="button">{tr('farm.editor.singleBlock')}</button
         >
         <button
           class:active={pasteMode === 'collection'}
@@ -1817,22 +1844,24 @@
             geomError = null;
             geomMessage = null;
           }}
-          type="button">Fields + Blocks (FeatureCollection)</button
+          type="button">{tr('farm.editor.fieldsBlocks')}</button
         >
       </div>
 
       <form onsubmit={savePaste}>
         {#if pasteMode === 'block'}
           <label>
-            Block
+            {tr('farm.editor.blockWord')}
             <select bind:value={pasteBlockId}>
               {#each blocks as b (b.id)}
-                <option value={b.id}>{b.name}{b.geometryGeojson ? ' (has geometry)' : ''}</option>
+                <option value={b.id}
+                  >{b.name}{b.geometryGeojson ? ' ' + tr('farm.editor.hasGeom') : ''}</option
+                >
               {/each}
             </select>
           </label>
           <label>
-            GeoJSON (Polygon, MultiPolygon, Feature, or FeatureCollection)
+            {tr('farm.editor.geojsonLabel')}
             <textarea
               bind:value={pasteText}
               rows="6"
@@ -1841,12 +1870,16 @@
           </label>
         {:else}
           <p class="lede">
-            Paste a GeoJSON <code>FeatureCollection</code> where each Feature has
-            <code>properties.type</code> of <code>"field"</code> or <code>"block"</code>, and
-            <code>properties.name</code> matching an existing field or block name.
+            {tr('farm.editor.pasteA')} <code>FeatureCollection</code>
+            {tr('farm.editor.pasteB')}
+            <code>properties.type</code>
+            {tr('farm.editor.pasteC')} <code>"field"</code>
+            {tr('farm.editor.pasteD')} <code>"block"</code>{tr('farm.editor.pasteE')}
+            <code>properties.name</code>
+            {tr('farm.editor.pasteF')}
           </p>
           <label>
-            FeatureCollection JSON
+            {tr('farm.editor.fcJson')}
             <textarea
               bind:value={pasteText}
               rows="10"
@@ -1855,7 +1888,11 @@
         {/if}
 
         <button type="submit" class="primary" disabled={geomBusy || !pasteText.trim()}>
-          {geomBusy ? 'Saving…' : pasteMode === 'collection' ? 'Import all' : 'Save geometry'}
+          {geomBusy
+            ? tr('farm.sheet.saving')
+            : pasteMode === 'collection'
+              ? tr('farm.editor.importAll')
+              : tr('farm.editor.saveGeom')}
         </button>
       </form>
 
@@ -1863,10 +1900,16 @@
       {#if geomError}<p class="error">{geomError}</p>{/if}
       {#if pasteResults.length > 0}
         <table class="paste-results">
-          <thead><tr><th>Name</th><th>Type</th><th>Result</th></tr></thead>
+          <thead
+            ><tr
+              ><th>{tr('farm.sheet.name')}</th><th>{tr('farm.editor.type')}</th><th
+                >{tr('farm.editor.result')}</th
+              ></tr
+            ></thead
+          >
           <tbody>
             {#each pasteResults as r, idx (idx)}
-              <tr class={r.status.startsWith('saved') ? 'result-ok' : 'result-warn'}>
+              <tr class={r.status === tr('farm.editor.saved') ? 'result-ok' : 'result-warn'}>
                 <td>{r.name}</td>
                 <td>{r.kind}</td>
                 <td>{r.status}</td>
@@ -1882,22 +1925,22 @@
 {#snippet shadeEditForm()}
   <div class="inline-edit">
     <div class="grid2">
-      <label>Name<input type="text" bind:value={editShadeName} /></label>
+      <label>{tr('farm.sheet.name')}<input type="text" bind:value={editShadeName} /></label>
       <label
-        >Kind
+        >{tr('farm.sheet.kind')}
         <select bind:value={editShadeKind}>
-          <option value="tree-row">Tree row</option>
-          <option value="tree-grove">Tree grove</option>
-          <option value="tree-single">Single tree</option>
-          <option value="hedge">Hedge</option>
-          <option value="building">Building</option>
-          <option value="fence">Fence (shade)</option>
-          <option value="structure">Structure</option>
-          <option value="other">Other</option>
+          <option value="tree-row">{shadeLabel(tr, 'tree-row')}</option>
+          <option value="tree-grove">{tr('farm.editor.shadeGrove')}</option>
+          <option value="tree-single">{shadeLabel(tr, 'tree-single')}</option>
+          <option value="hedge">{shadeLabel(tr, 'hedge')}</option>
+          <option value="building">{shadeLabel(tr, 'building')}</option>
+          <option value="fence">{tr('farm.add.fenceShade')}</option>
+          <option value="structure">{shadeLabel(tr, 'structure')}</option>
+          <option value="other">{tr('farm.editor.shadeOther')}</option>
         </select>
       </label>
       <label
-        >Height<UnitInput
+        >{tr('farm.editor.height')}<UnitInput
           quantity="distance"
           min={1}
           max={200}
@@ -1905,7 +1948,7 @@
         /></label
       >
       <label
-        >Opacity (0–1)<input
+        >{tr('farm.editor.opacity')}<input
           type="number"
           min="0"
           max="1"
@@ -1915,9 +1958,9 @@
       >
       {#if fields.length > 0}
         <label class="full"
-          >Field
+          >{tr('farm.editor.fieldWord')}
           <select bind:value={editShadeFieldId}>
-            <option value="">Whole farm</option>
+            <option value="">{tr('farm.editor.wholeFarm')}</option>
             {#each fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
           </select>
         </label>
@@ -1925,12 +1968,12 @@
     </div>
     <label class="checkbox-line">
       <input type="checkbox" bind:checked={editShadeIsDeciduous} />
-      Deciduous (leaves drop in winter)
+      {tr('farm.editor.deciduousLong')}
     </label>
     {#if editShadeIsDeciduous}
       <div class="grid2">
         <label
-          >Leaf-on (day of year)<input
+          >{tr('farm.editor.leafOn')}<input
             type="number"
             min="1"
             max="366"
@@ -1938,7 +1981,7 @@
           /></label
         >
         <label
-          >Leaf-off (day of year)<input
+          >{tr('farm.editor.leafOff')}<input
             type="number"
             min="1"
             max="366"
@@ -1948,8 +1991,8 @@
       </div>
     {/if}
     <div class="row">
-      <button class="primary" onclick={saveEditShade}>Save</button>
-      <button onclick={() => (editingShadeId = null)}>Cancel</button>
+      <button class="primary" onclick={saveEditShade}>{tr('farm.save')}</button>
+      <button onclick={() => (editingShadeId = null)}>{tr('farm.cancel')}</button>
     </div>
   </div>
 {/snippet}

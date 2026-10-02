@@ -11,8 +11,19 @@
   import { MM_TO_64THS } from '$lib/planterPlate/types';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
+  const SEED_TYPE_KEYS = {
+    Corn: 'tools.plate.type.Corn',
+    Sorghum: 'tools.plate.type.Sorghum',
+    Soybean: 'tools.plate.type.Soybean',
+    Sunflower: 'tools.plate.type.Sunflower',
+    'Sugar Beet': 'tools.plate.type.SugarBeet'
+  } as const;
+  const seedTypeLabel = (s: string): string =>
+    s in SEED_TYPE_KEYS ? tr(SEED_TYPE_KEYS[s as keyof typeof SEED_TYPE_KEYS]) : s;
 
   const plates = $derived(data.plates as Plate[]);
 
@@ -255,102 +266,137 @@
   }
 </script>
 
-<svelte:head><title>Planter Plate Selector — CropCard</title></svelte:head>
+<svelte:head><title>{tr('tools.plate.title')} — CropCard</title></svelte:head>
 
 <header class="head">
   {#if ctx}
-    <a href="/inventory?type=seed" class="back">← Back to inventory</a>
+    <a href="/inventory?type=seed" class="back">{tr('tools.plate.backInventory')}</a>
   {:else}
-    <a href="/tools" class="back">← Tools</a>
+    <a href="/tools" class="back">{tr('tools.plate.backTools')}</a>
   {/if}
-  <h1>Planter Plate Selector</h1>
+  <h1>{tr('tools.plate.title')}</h1>
   {#if ctx}
     <p class="subtitle">
-      Pre-filled for <strong>{ctx.displayName}</strong>. Save will write back to this seed record.
+      {tr('tools.plate.prefilled')} <strong>{ctx.displayName}</strong>{tr(
+        'tools.plate.prefilledEnd'
+      )}
     </p>
   {:else}
     <p class="subtitle">
-      Match a Lincoln Ag plate (John Deere "B" / IHC "C") to your seed by type, shape, cell count,
-      and (optionally) dimensions. Save the result to any seed lot when you're done.
+      {tr('tools.plate.lede')}
     </p>
   {/if}
 </header>
 
 <section class="card form-panel" aria-labelledby="filters-h">
-  <h2 id="filters-h">Filters</h2>
+  <h2 id="filters-h">{tr('tools.plate.filters')}</h2>
 
   <fieldset>
-    <legend>Planter brand / plate series</legend>
+    <legend>{tr('tools.plate.series')}</legend>
     <div class="radios">
-      <label><input type="radio" bind:group={series} value="B" /> John Deere (B)</label>
-      <label><input type="radio" bind:group={series} value="C" /> International Harvester (C)</label
+      <label><input type="radio" bind:group={series} value="B" /> {tr('tools.plate.jd')}</label>
+      <label><input type="radio" bind:group={series} value="C" /> {tr('tools.plate.ih')}</label>
+      <label><input type="radio" bind:group={series} value="Both" /> {tr('tools.plate.both')}</label
       >
-      <label><input type="radio" bind:group={series} value="Both" /> Both</label>
     </div>
   </fieldset>
 
   <label class="block">
-    <span>Seed type</span>
+    <span>{tr('tools.plate.seedType')}</span>
     <select bind:value={seedType}>
-      <option value="">— pick one —</option>
-      <option value="Corn">Corn</option>
-      <option value="Sorghum">Sorghum</option>
-      <option value="Soybean">Soybean</option>
-      <option value="Sunflower">Sunflower</option>
-      <option value="Sugar Beet">Sugar Beet</option>
+      <option value="">{tr('tools.plate.pickOne')}</option>
+      <option value="Corn">{seedTypeLabel('Corn')}</option>
+      <option value="Sorghum">{seedTypeLabel('Sorghum')}</option>
+      <option value="Soybean">{seedTypeLabel('Soybean')}</option>
+      <option value="Sunflower">{seedTypeLabel('Sunflower')}</option>
+      <option value="Sugar Beet">{seedTypeLabel('Sugar Beet')}</option>
     </select>
   </label>
 
   {#if showShape}
     <fieldset>
-      <legend>Cell type / seed shape</legend>
+      <legend>{tr('tools.plate.shapeLegend')}</legend>
       <div class="radios">
-        <label><input type="radio" bind:group={shape} value="Round" /> Round seed</label>
-        <label><input type="radio" bind:group={shape} value="Flat" /> Flat seed</label>
-        <label><input type="radio" bind:group={shape} value="Either" /> Either / Unknown</label>
+        <label
+          ><input type="radio" bind:group={shape} value="Round" />
+          {tr('tools.plate.roundSeed')}</label
+        >
+        <label
+          ><input type="radio" bind:group={shape} value="Flat" />
+          {tr('tools.plate.flatSeed')}</label
+        >
+        <label
+          ><input type="radio" bind:group={shape} value="Either" />
+          {tr('tools.plate.eitherUnknown')}</label
+        >
       </div>
     </fieldset>
   {/if}
 
   <fieldset>
     <legend>
-      Number of cells
+      {tr('tools.plate.cellsLegend')}
       {#if showCellRec && cellRec && cellFilter === String(cellRec.cells) && plantsPerAcre !== null}
         <span class="rec-inline" title={cellRec.note}
-          >· suggested ({fmt.qty(plantsPerAcre, 'perArea', { bare: true })} plants{fmt.unit(
-            'perArea'
-          )})</span
+          >· {tr('tools.plate.suggested')} ({fmt.qty(plantsPerAcre, 'perArea', { bare: true })}
+          {tr('tools.plate.plants')}{fmt.unit('perArea')})</span
         >
       {/if}
     </legend>
     <div class="radios">
-      <label><input type="radio" bind:group={cellFilter} value="16" /> 16 cell</label>
-      <label><input type="radio" bind:group={cellFilter} value="24" /> 24 cell</label>
+      <label
+        ><input type="radio" bind:group={cellFilter} value="16" />
+        {tr('tools.plate.cell', { n: 16 })}</label
+      >
+      <label
+        ><input type="radio" bind:group={cellFilter} value="24" />
+        {tr('tools.plate.cell', { n: 24 })}</label
+      >
       {#if showSorghumCells}
-        <label><input type="radio" bind:group={cellFilter} value="30" /> 30 cell</label>
-        <label><input type="radio" bind:group={cellFilter} value="60" /> 60 cell</label>
+        <label
+          ><input type="radio" bind:group={cellFilter} value="30" />
+          {tr('tools.plate.cell', { n: 30 })}</label
+        >
+        <label
+          ><input type="radio" bind:group={cellFilter} value="60" />
+          {tr('tools.plate.cell', { n: 60 })}</label
+        >
       {/if}
       {#if showSoybeanCells}
-        <label><input type="radio" bind:group={cellFilter} value="20" /> 20 cell</label>
-        <label><input type="radio" bind:group={cellFilter} value="22" /> 22 cell</label>
-        <label><input type="radio" bind:group={cellFilter} value="32" /> 32 cell</label>
-        <label><input type="radio" bind:group={cellFilter} value="38" /> 38 cell</label>
+        <label
+          ><input type="radio" bind:group={cellFilter} value="20" />
+          {tr('tools.plate.cell', { n: 20 })}</label
+        >
+        <label
+          ><input type="radio" bind:group={cellFilter} value="22" />
+          {tr('tools.plate.cell', { n: 22 })}</label
+        >
+        <label
+          ><input type="radio" bind:group={cellFilter} value="32" />
+          {tr('tools.plate.cell', { n: 32 })}</label
+        >
+        <label
+          ><input type="radio" bind:group={cellFilter} value="38" />
+          {tr('tools.plate.cell', { n: 38 })}</label
+        >
       {/if}
-      <label><input type="radio" bind:group={cellFilter} value="Either" /> Either</label>
+      <label
+        ><input type="radio" bind:group={cellFilter} value="Either" />
+        {tr('tools.plate.either')}</label
+      >
     </div>
     {#if showCellRec}
       <details class="density-disclosure">
-        <summary>Why this suggestion? (target density)</summary>
+        <summary>{tr('tools.plate.why')}</summary>
         <p class="hint">
-          For corn, a 24-cell plate plants 1.5× as many seeds per area as a 16-cell at the same
-          sprocket. Plants{fmt.unit('perArea')} is computed from the spacings below; the threshold (≤{Math.round(
-            fmt.toDisplay(22_000, 'perArea') / 1000
-          )}k → 16-cell, ≥{Math.round(fmt.toDisplay(22_000, 'perArea') / 1000)}k → 24-cell) is a
-          heuristic — it picks the cell-count family, not the sprocket itself.
+          {tr('tools.plate.density', {
+            unit: fmt.unit('perArea'),
+            k: Math.round(fmt.toDisplay(22_000, 'perArea') / 1000)
+          })}
         </p>
         <div class="row2">
           <label
-            ><span>In-row spacing ({fmt.unit('length')})</span><UnitInput
+            ><span>{tr('tools.plate.inRow', { unit: fmt.unit('length') })}</span><UnitInput
               quantity="length"
               min={0.5}
               suffix={false}
@@ -359,7 +405,7 @@
             /></label
           >
           <label
-            ><span>Row spacing ({fmt.unit('length')})</span><UnitInput
+            ><span>{tr('tools.plate.rowSpacing', { unit: fmt.unit('length') })}</span><UnitInput
               quantity="length"
               min={6}
               suffix={false}
@@ -371,12 +417,16 @@
         {#if cellRec && plantsPerAcre !== null}
           <p class="rec-line rec-{cellRec.band}">
             <strong
-              >{fmt.qty(plantsPerAcre, 'perArea', { bare: true })} plants{fmt.unit('perArea')} → suggests
-              {cellRec.cells}-cell.</strong
+              >{fmt.qty(plantsPerAcre, 'perArea', { bare: true })}
+              {tr('tools.plate.plants')}{fmt.unit('perArea')} → {tr('tools.plate.suggests', {
+                cells: cellRec.cells
+              })}</strong
             >
             <span>{cellRec.note}</span>
             {#if cellFilter !== String(cellRec.cells)}
-              <button type="button" class="link-btn" onclick={applyRecommendation}>Apply</button>
+              <button type="button" class="link-btn" onclick={applyRecommendation}
+                >{tr('tools.plate.apply')}</button
+              >
             {/if}
           </p>
         {/if}
@@ -386,16 +436,15 @@
 
   <fieldset class="dims">
     <legend>
-      Seed dimensions <span class="opt">(optional)</span>
+      {tr('tools.plate.dims')} <span class="opt">{tr('tools.plate.optional')}</span>
       <button
         type="button"
         class="help"
-        aria-label="Dimensions help"
-        title="L = Length, D = Depth, T = Thickness. Toggle between mm and 64ths of an inch."
-        >?</button
+        aria-label={tr('tools.plate.dimsHelp')}
+        title={tr('tools.plate.dimsHelpTitle')}>?</button
       >
     </legend>
-    <div class="unit-toggle" role="group" aria-label="Dimension unit">
+    <div class="unit-toggle" role="group" aria-label={tr('tools.plate.dimUnit')}>
       <button
         type="button"
         class="unit-btn"
@@ -406,16 +455,17 @@
         type="button"
         class="unit-btn"
         class:active={dimUnit === '64ths'}
-        onclick={() => toggleUnit('64ths')}>64ths in.</button
+        onclick={() => toggleUnit('64ths')}>{tr('tools.plate.64ths')}</button
       >
     </div>
     <p class="hint">
-      Format: L-D-T (e.g., {dimUnit === 'mm' ? '12-9-5 mm' : '30-23-13 (64ths)'}). Leave blank to
-      see all plates for selected type.
+      {tr('tools.plate.format', {
+        example: dimUnit === 'mm' ? '12-9-5 mm' : '30-23-13 (64ths)'
+      })}
     </p>
     <div class="row3">
       <label
-        ><span>L (Length, {dimUnit})</span><input
+        ><span>{tr('tools.plate.lenL', { unit: dimUnit })}</span><input
           type="number"
           min="0"
           step={dimUnit === 'mm' ? '0.1' : '0.5'}
@@ -423,7 +473,7 @@
         /></label
       >
       <label
-        ><span>D (Depth, {dimUnit})</span><input
+        ><span>{tr('tools.plate.depD', { unit: dimUnit })}</span><input
           type="number"
           min="0"
           step={dimUnit === 'mm' ? '0.1' : '0.5'}
@@ -431,7 +481,7 @@
         /></label
       >
       <label
-        ><span>T (Thickness, {dimUnit})</span><input
+        ><span>{tr('tools.plate.thkT', { unit: dimUnit })}</span><input
           type="number"
           min="0"
           step={dimUnit === 'mm' ? '0.1' : '0.5'}
@@ -440,7 +490,7 @@
       >
     </div>
     <label class="block">
-      <span>Tolerance: ±{tolerance} {dimUnit} per dimension</span>
+      <span>{tr('tools.plate.tolerance', { tol: tolerance, unit: dimUnit })}</span>
       <input
         type="range"
         min="0"
@@ -451,35 +501,37 @@
     </label>
   </fieldset>
 
-  <button type="button" class="primary" onclick={find} disabled={!seedType}>Find plates</button>
+  <button type="button" class="primary" onclick={find} disabled={!seedType}
+    >{tr('tools.plate.find')}</button
+  >
 </section>
 
 <section class="card results-panel" aria-labelledby="results-h">
   <div class="results-head">
-    <h2 id="results-h">Results</h2>
+    <h2 id="results-h">{tr('tools.plate.results')}</h2>
     <button
       type="button"
       class="secondary print-btn"
       onclick={printResults}
-      disabled={!searched || results.length === 0}>Print results</button
+      disabled={!searched || results.length === 0}>{tr('tools.plate.print')}</button
     >
   </div>
 
   {#if !searched}
-    <p class="empty" aria-live="polite">Select a seed type above to get started.</p>
+    <p class="empty" aria-live="polite">{tr('tools.plate.start')}</p>
   {:else}
     {#if seedType === 'Sugar Beet'}
       <p class="warn-banner" role="alert">
-        ⚠️ Sugar Beet plates require a Sugar Beet bottom — incompatible with standard corn planters.
+        ⚠️ {tr('tools.plate.sugarBeet')}
       </p>
     {/if}
     <p class="count" aria-live="polite">
       {results.length}
-      {results.length === 1 ? 'plate' : 'plates'} found
-      {results.length === 20 ? ' (showing first 20)' : ''}
+      {tr('tools.plate.found', { count: results.length })}
+      {results.length === 20 ? ' ' + tr('tools.plate.first20') : ''}
     </p>
     {#if results.length === 0}
-      <p class="empty">No plates found — try widening your tolerance or clearing filters.</p>
+      <p class="empty">{tr('tools.plate.none')}</p>
     {:else}
       <ul class="cards">
         {#each results as p (p.plateNumber)}
@@ -492,39 +544,47 @@
             </header>
             <dl>
               <div>
-                <dt>Dimensions</dt>
-                <dd>{p.dimensions} <small>(L-D-T, 64ths in)</small></dd>
+                <dt>{tr('tools.plate.dimsLabel')}</dt>
+                <dd>{p.dimensions} <small>{tr('tools.plate.dimsNote')}</small></dd>
               </div>
               {#if p.shape}<div>
-                  <dt>Shape</dt>
-                  <dd><span class="badge shape-{p.shape.toLowerCase()}">{p.shape}</span></dd>
+                  <dt>{tr('tools.plate.shape')}</dt>
+                  <dd>
+                    <span class="badge shape-{p.shape.toLowerCase()}"
+                      >{p.shape === 'Round'
+                        ? tr('tools.plate.round')
+                        : p.shape === 'Flat'
+                          ? tr('tools.plate.flat')
+                          : p.shape}</span
+                    >
+                  </dd>
                 </div>{/if}
               <div>
-                <dt>Cells</dt>
+                <dt>{tr('tools.plate.cells')}</dt>
                 <dd>{p.cells}</dd>
               </div>
               <div>
-                <dt>Series</dt>
-                <dd>{p.series === 'B' ? 'John Deere (B)' : 'IHC (C)'}</dd>
+                <dt>{tr('tools.plate.seriesLabel')}</dt>
+                <dd>{p.series === 'B' ? tr('tools.plate.jd') : tr('tools.plate.ihc')}</dd>
               </div>
               <div>
-                <dt>Seed type</dt>
-                <dd>{p.seedType}</dd>
+                <dt>{tr('tools.plate.seedType')}</dt>
+                <dd>{seedTypeLabel(p.seedType)}</dd>
               </div>
               {#if p.seedType === 'Corn' && p.gradeSize}<div>
-                  <dt>Grade</dt>
+                  <dt>{tr('tools.plate.grade')}</dt>
                   <dd><span class="badge grade">{p.gradeSize}</span></dd>
                 </div>{/if}
               {#if p.seedType === 'Sorghum' && p.notes}<div>
-                  <dt>Seeds/lb</dt>
+                  <dt>{tr('tools.plate.seedsLb')}</dt>
                   <dd>{p.notes}</dd>
                 </div>{/if}
               {#if p.seedType === 'Soybean' && p.notes}<div>
-                  <dt>Notes</dt>
+                  <dt>{tr('tools.plate.notes')}</dt>
                   <dd>{p.notes}</dd>
                 </div>{/if}
               {#if 'delta' in p && p.delta !== undefined}<div>
-                  <dt>Match score</dt>
+                  <dt>{tr('tools.plate.score')}</dt>
                   <dd><strong>Δ = {p.delta}</strong></dd>
                 </div>{/if}
             </dl>
@@ -532,9 +592,9 @@
             {#if data.canEdit && p.seedType !== 'Sugar Beet' && data.seedItems.length > 0}
               <form method="POST" action="?/saveToStock" class="save-form">
                 <label class="save-target">
-                  <span>Save to seed:</span>
+                  <span>{tr('tools.plate.saveTo')}</span>
                   <select name="stockId" bind:value={saveTargetId} required>
-                    <option value="">— choose a seed lot —</option>
+                    <option value="">{tr('tools.plate.chooseLot')}</option>
                     {#each data.seedItems as si (si.id)}
                       <option value={si.id}>{si.displayName}</option>
                     {/each}
@@ -585,13 +645,13 @@
                     value={plantsPerAcre}
                   />{/if}
                 <button type="submit" class="primary save" disabled={!saveTargetId}
-                  >Save to seed record</button
+                  >{tr('tools.plate.saveBtn')}</button
                 >
               </form>
             {:else if data.canEdit && data.seedItems.length === 0}
               <p class="empty save-empty">
-                No seed inventory yet — add a seed to <a href="/inventory/seed/add">/inventory</a> to
-                save.
+                {tr('tools.plate.noSeed1')} <a href="/inventory/seed/add">/inventory</a>
+                {tr('tools.plate.noSeed2')}
               </p>
             {/if}
           </li>
@@ -601,7 +661,7 @@
   {/if}
 </section>
 
-<footer class="foot">Data sourced from Lincoln Ag Products.</footer>
+<footer class="foot">{tr('tools.plate.source')}</footer>
 
 <style>
   .head .back {

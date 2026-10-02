@@ -2,6 +2,9 @@
   import type { AreaKind } from '$lib/farm/areaKinds';
   import { AREA_DETAIL_FIELDS, fieldShown, type DetailsDraft } from '$lib/farm/areaDetailsForm';
   import CoopPenFields from './CoopPenFields.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { detailLabel, detailOption } from './farmLabels';
 
   let {
     kind,
@@ -19,6 +22,7 @@
     areaSqFt?: number | null;
   } = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const specs = $derived(AREA_DETAIL_FIELDS[kind]);
 </script>
 
@@ -35,20 +39,20 @@
               checked={draft[f.key] === true}
               onchange={(e) => (draft = { ...draft, [f.key]: e.currentTarget.checked })}
             />
-            <span>{f.label}</span>
+            <span>{detailLabel(tr, f.key, f.label)}</span>
           </label>
         {:else}
           <label class="field" for="{idPrefix}-{f.key}">
-            <span>{f.label}</span>
+            <span>{detailLabel(tr, f.key, f.label)}</span>
             {#if f.type === 'select'}
               <select
                 id="{idPrefix}-{f.key}"
                 value={(draft[f.key] as string) ?? ''}
                 onchange={(e) => (draft = { ...draft, [f.key]: e.currentTarget.value })}
               >
-                <option value="">Not set</option>
+                <option value="">{tr('farm.notSet')}</option>
                 {#each f.options as o (o.value)}
-                  <option value={o.value}>{o.label}</option>
+                  <option value={o.value}>{detailOption(tr, f.key, o.value, o.label)}</option>
                 {/each}
               </select>
             {:else if f.type === 'date'}
@@ -74,7 +78,7 @@
                       [f.key]: e.currentTarget.value === '' ? null : Number(e.currentTarget.value)
                     })}
                 />
-                <span class="unit">{f.unit}</span>
+                <span class="unit">{f.unit === 'animals' ? tr('farm.unit.animals') : f.unit}</span>
               </span>
             {:else}
               <span class="feet">
@@ -92,7 +96,7 @@
                       [f.key]: e.currentTarget.value === '' ? null : Number(e.currentTarget.value)
                     })}
                 />
-                <span class="unit">ft</span>
+                <span class="unit">{tr('farm.unit.ft')}</span>
               </span>
             {/if}
           </label>

@@ -1,6 +1,9 @@
 <script lang="ts">
   import Modal from '$lib/components/ui/Modal.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import { ADD_GROUPS, type AddGroup, type AddPick } from '$lib/farm/kindStyle';
+  import { featureHint, featureLabel, kindHint, kindLabel, shadeLabel } from './farmLabels';
 
   const {
     open,
@@ -16,29 +19,45 @@
     canAddBlock?: boolean;
   } = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const groups = $derived(
     mode === 'map' ? ADD_GROUPS : ADD_GROUPS.filter((g) => g.id !== 'shade' && g.id !== 'features')
   );
 
   // Both groups have a fence: one casts shade, the other is a drawn line.
   function labelFor(item: AddGroup['items'][number]): string {
-    if (item.kind !== 'fence') return item.label;
-    return item.type === 'shade' ? 'Fence (shade)' : 'Fence line';
+    if (item.type === 'area') return kindLabel(tr, item.kind);
+    if (item.type === 'shade' && item.kind !== 'fence') return shadeLabel(tr, item.kind);
+    if (item.type === 'feature' && item.kind !== 'fence') return featureLabel(tr, item.kind);
+    return item.type === 'shade' ? tr('farm.add.fenceShade') : tr('farm.add.fenceLine');
   }
+
+  function hintFor(item: AddGroup['items'][number]): string {
+    return item.type === 'area'
+      ? kindHint(tr, item.kind)
+      : item.type === 'feature'
+        ? featureHint(tr, item.kind)
+        : '';
+  }
+
+  const GROUP_TITLE = {
+    crop: 'farm.group.crop',
+    other: 'farm.group.other',
+    features: 'farm.group.features',
+    shade: 'farm.group.shade'
+  } as const;
 </script>
 
-<Modal {open} {onClose} title="Add to map">
+<Modal {open} {onClose} title={tr('farm.add.title')}>
   <p class="lede">
-    {mode === 'map'
-      ? 'Pick what you are adding, then outline or mark it on the map.'
-      : 'Pick what you are adding, then type its width and length.'}
+    {mode === 'map' ? tr('farm.add.ledeMap') : tr('farm.add.ledeSketch')}
   </p>
   {#if mode === 'sketch'}
-    <p class="lede note">Fences, gates, water and other lines and points go on the Map view.</p>
+    <p class="lede note">{tr('farm.add.sketchNote')}</p>
   {/if}
   {#each groups as g (g.id)}
     <section class="group" aria-labelledby="add-group-{g.id}">
-      <h3 id="add-group-{g.id}">{g.title}</h3>
+      <h3 id="add-group-{g.id}">{tr(GROUP_TITLE[g.id])}</h3>
       <ul>
         {#each g.items as item (item.kind)}
           <li>
@@ -59,7 +78,7 @@
               <span class="text">
                 <span class="label">{labelFor(item)}</span>
                 {#if item.type === 'area' || item.type === 'feature'}<span class="hint"
-                    >{item.hint}</span
+                    >{hintFor(item)}</span
                   >{/if}
               </span>
             </button>
@@ -75,8 +94,8 @@
             >
               <span class="swatch block" aria-hidden="true"></span>
               <span class="text">
-                <span class="label">Block or bed</span>
-                <span class="hint">A patch inside one of your crop areas</span>
+                <span class="label">{tr('farm.add.blockOrBed')}</span>
+                <span class="hint">{tr('farm.add.blockHint')}</span>
               </span>
             </button>
           </li>

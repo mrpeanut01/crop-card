@@ -1,11 +1,13 @@
 <script lang="ts">
   import Modal from '$lib/components/ui/Modal.svelte';
-  import { AREA_KINDS, AREA_KIND_LABELS, type AreaKind } from '$lib/farm/areaKinds';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { featurePlural, kindLabel } from './farmLabels';
+  import { AREA_KINDS, type AreaKind } from '$lib/farm/areaKinds';
   import { AREA_KIND_STYLE } from '$lib/farm/kindStyle';
   import { toggleFeatureKind, toggleKind, type MapFilter } from '$lib/farm/mapFilter';
   import {
     MAP_FEATURE_KINDS,
-    MAP_FEATURE_PLURAL,
     MAP_FEATURE_STYLE,
     geometryTypeFor,
     type MapFeatureKind
@@ -33,20 +35,22 @@
     canAdd?: boolean;
   } = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const present = $derived(AREA_KINDS.filter((k) => (counts.get(k) ?? 0) > 0));
   const presentFeatures = $derived(
     MAP_FEATURE_KINDS.filter((k) => (featureCounts.get(k) ?? 0) > 0)
   );
 </script>
 
-<Modal {open} {onClose} title="Filter map">
+<Modal {open} {onClose} title={tr('farm.filter.title')}>
   <div class="filter" data-testid="map-filter">
     <fieldset>
-      <legend>Areas</legend>
+      <legend>{tr('farm.filter.areas')}</legend>
       {#if present.length === 0}
         <p class="muted">
-          Nothing on the map yet.{#if canAdd}
-            Close this and tap <strong>+ Add</strong> to draw your first area.{/if}
+          {tr('farm.filter.empty')}{#if canAdd}
+            {tr('farm.filter.emptyAdd1')} <strong>{tr('farm.addPlus')}</strong>
+            {tr('farm.filter.emptyAdd2')}{/if}
         </p>
       {/if}
       {#each present as k (k)}
@@ -57,14 +61,14 @@
             onchange={() => onChange(toggleKind(filter, k))}
           />
           <span class="swatch" style:--swatch={AREA_KIND_STYLE[k].color} aria-hidden="true"></span>
-          <span class="name">{AREA_KIND_LABELS[k]}</span>
+          <span class="name">{kindLabel(tr, k)}</span>
           <span class="n">{counts.get(k)}</span>
         </label>
       {/each}
     </fieldset>
     {#if presentFeatures.length}
       <fieldset>
-        <legend>Lines & points</legend>
+        <legend>{tr('farm.group.features')}</legend>
         {#each presentFeatures as k (k)}
           <label class="toggle">
             <input
@@ -79,14 +83,14 @@
               style:--swatch={MAP_FEATURE_STYLE[k].color}
               aria-hidden="true"
             ></span>
-            <span class="name">{MAP_FEATURE_PLURAL[k]}</span>
+            <span class="name">{featurePlural(tr, k)}</span>
             <span class="n">{featureCounts.get(k)}</span>
           </label>
         {/each}
       </fieldset>
     {/if}
     <fieldset>
-      <legend>Show</legend>
+      <legend>{tr('farm.filter.show')}</legend>
       {#if hasShade}
         <label class="toggle">
           <input
@@ -94,7 +98,7 @@
             checked={filter.shade}
             onchange={(e) => onChange({ ...filter, shade: e.currentTarget.checked })}
           />
-          <span class="name">Shade & structures</span>
+          <span class="name">{tr('farm.group.shade')}</span>
         </label>
       {/if}
       <label class="toggle">
@@ -103,7 +107,7 @@
           checked={filter.labels}
           onchange={(e) => onChange({ ...filter, labels: e.currentTarget.checked })}
         />
-        <span class="name">Labels</span>
+        <span class="name">{tr('farm.filter.labels')}</span>
       </label>
       {#if showBaseLayer}
         <label class="toggle">
@@ -112,11 +116,11 @@
             checked={filter.satellite}
             onchange={(e) => onChange({ ...filter, satellite: e.currentTarget.checked })}
           />
-          <span class="name">Satellite</span>
+          <span class="name">{tr('farm.filter.satellite')}</span>
         </label>
       {/if}
     </fieldset>
-    <p class="muted">Saved on this device for this farm.</p>
+    <p class="muted">{tr('farm.filter.saved')}</p>
   </div>
 </Modal>
 

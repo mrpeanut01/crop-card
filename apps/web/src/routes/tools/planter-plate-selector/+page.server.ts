@@ -7,6 +7,7 @@ import { getPlatesCatalog } from '$lib/planterPlate/catalog';
 import { inferSeedTypeFromName } from '$lib/planterPlate/match';
 import type { PlateSeedType } from '$lib/planterPlate/types';
 import { getSetting } from '$lib/db/settings';
+import { t } from '$lib/i18n';
 import { SETTINGS_KEYS } from '$lib/schedule/constants';
 
 export const load: PageServerLoad = (event) => {
@@ -58,13 +59,17 @@ export const actions: Actions = {
     requireOwner(event);
     const fd = await event.request.formData();
     const stockId = String(fd.get('stockId') ?? '').trim();
-    if (!stockId) return fail(400, { error: 'stockId required' });
+    if (!stockId)
+      return fail(400, { error: t(event.locals.locale, 'tools.plate.err.stockRequired') });
     const item = getStockItem(stockId);
-    if (!item) throw error(404, `unknown stock item: ${stockId}`);
-    if (item.category !== 'seed') return fail(400, { error: 'target item is not a seed' });
+    if (!item)
+      throw error(404, t(event.locals.locale, 'tools.plate.err.unknownStock', { id: stockId }));
+    if (item.category !== 'seed')
+      return fail(400, { error: t(event.locals.locale, 'tools.plate.err.notSeed') });
 
     const plateNumber = String(fd.get('plateNumber') ?? '').trim();
-    if (!plateNumber) return fail(400, { error: 'plateNumber required' });
+    if (!plateNumber)
+      return fail(400, { error: t(event.locals.locale, 'tools.plate.err.plateRequired') });
 
     const num = (k: string): number | undefined => {
       const v = fd.get(k);

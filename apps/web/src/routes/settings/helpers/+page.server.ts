@@ -2,7 +2,6 @@ import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import { t } from '$lib/i18n';
 import { requireOwner } from '$lib/server/auth';
 import { dispatchEmail } from '$lib/server/email';
-import { t } from '$lib/i18n';
 import { localeField } from '$lib/server/messageLocale';
 import { issueInvite, listInvitesForOwner, revokeInvite } from '$lib/server/invites';
 import { seatUsage, SEAT_LIMIT_MESSAGE } from '$lib/server/billing/plans';

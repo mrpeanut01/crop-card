@@ -1,6 +1,6 @@
 import { minutesInWords, withOriginBoundLine } from './otpMessage';
 import type { UnsubscribeLinks } from './emailUnsubscribe';
-import type { EmailAlertCategory } from '$lib/email/alertCategories';
+import { emailAlertLabel, type EmailAlertCategory } from '$lib/email/alertCategories';
 import { t } from '$lib/i18n';
 import { effectiveLocale } from './messageLocale';
 
@@ -383,10 +383,6 @@ export function textToHtml(text: string): string {
   return `<div style="font-family:sans-serif;white-space:pre-wrap">${escaped}</div>`;
 }
 
-function categoryLabel(category: EmailAlertCategory, locale: string): string {
-  return t(locale, `email.category.${category}`);
-}
-
 function subjectFor(email: OutboundEmail): string {
   const loc = effectiveLocale(email.locale);
   switch (email.kind) {
@@ -407,10 +403,10 @@ function alertBody(email: AlertEmail): string {
   const loc = effectiveLocale(email.locale);
   const farm = email.farmName;
   const why = email.category
-    ? t(loc, 'email.alert.why', { label: categoryLabel(email.category, loc), farm })
+    ? t(loc, 'email.alert.why', { label: emailAlertLabel(email.category, loc), farm })
     : t(loc, 'email.alert.whyTest', { farm });
   const stop = email.category
-    ? t(loc, 'email.alert.stop', { label: categoryLabel(email.category, loc) })
+    ? t(loc, 'email.alert.stop', { label: emailAlertLabel(email.category, loc) })
     : t(loc, 'email.alert.stopAll');
   return [
     email.body,
@@ -430,7 +426,7 @@ function alertBody(email: AlertEmail): string {
 
 function digestBody(email: DigestEmail): string {
   const loc = effectiveLocale(email.locale);
-  const label = categoryLabel('weekly-digest', loc);
+  const label = emailAlertLabel('weekly-digest', loc);
   return [
     email.body,
     ``,

@@ -361,7 +361,7 @@ export async function handleLoginRequest(
         ip,
         origin,
         inviteToken: sanitizeInviteToken(rawInvite),
-        locale: event.locals?.locale
+        locale: locale ?? event.locals?.locale
       });
     } catch (e) {
       console.error('[magic-link] dispatch failed', e instanceof Error ? e.message : e);
@@ -386,7 +386,7 @@ export async function handleLoginRequest(
         max: bucket.attributed ? MAX_SMS_PER_IP : MAX_SMS_UNATTRIBUTED
       },
       origin,
-      locale: event.locals?.locale
+      locale: locale ?? event.locals?.locale
     });
   } catch (e) {
     console.error('[sms-login] dispatch failed', e instanceof Error ? e.message : e);

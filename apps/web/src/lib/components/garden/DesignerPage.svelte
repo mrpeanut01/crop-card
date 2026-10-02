@@ -17,7 +17,8 @@
   import { AREA_KIND_LABELS } from '$lib/farm/areaKinds';
   import type { MessageKey } from '$lib/i18n';
   import { cardHref, cardKey } from '$lib/cards/model';
-  import { DEFAULT_PREFS, formatInstant } from '$lib/prefs';
+  import { formatInstant } from '$lib/prefs';
+  import { currentPrefs } from '$lib/prefsState.svelte';
   import { syncCardSnapshot } from '$lib/client/cardSync';
   import type { DesignerPageData } from '$lib/garden/api';
 
@@ -88,7 +89,7 @@
     url.searchParams.delete('on');
     return `${url.pathname}${url.search}`;
   }
-  const asOfText = $derived(formatInstant(d.design.asOf, DEFAULT_PREFS, 'datetime'));
+  const asOfText = $derived(formatInstant(d.design.asOf, currentPrefs(), 'datetime'));
 
   let ready = $state(false);
 

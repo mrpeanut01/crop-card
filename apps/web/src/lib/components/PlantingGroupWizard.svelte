@@ -11,7 +11,7 @@
   validation twice; the wizard surfaces this via a fallback banner.
 -->
 <script lang="ts">
-  import { formatCalendarDate } from '$lib/prefs';
+  import { fmt } from '$lib/prefsState.svelte';
 
   type PlanMember = {
     cropId: string;
@@ -123,7 +123,7 @@
   }
 
   function fmtDate(ms: number): string {
-    return formatCalendarDate(ms, 'month-day');
+    return fmt.day(ms, 'month-day');
   }
 
   function fmtDateInput(ms: number): string {

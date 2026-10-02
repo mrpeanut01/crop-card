@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { fmt as prefsFmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { DecisionKind, SmallGrainStage } from '$lib/plan/smallGrain';
-  import { formatCalendarDate } from '$lib/prefs';
+
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
 
@@ -44,7 +45,7 @@
   }
 
   function fmt(ms: number): string {
-    return formatCalendarDate(ms, 'month-day');
+    return prefsFmt.day(ms, 'month-day');
   }
 
   function relative(ms: number): string {

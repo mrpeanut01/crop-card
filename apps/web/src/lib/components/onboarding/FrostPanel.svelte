@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fmt } from '$lib/prefsState.svelte';
   import { untrack } from 'svelte';
   import { Snowflake } from 'lucide-svelte';
   import { createT } from '$lib/i18n';
@@ -24,7 +25,7 @@
     hardFrostText,
     suggestFromStored
   } from '$lib/climate/frostSettings';
-  import { formatCalendarDate } from '$lib/prefs';
+
   import { colderFrostDates } from '$lib/climate/frostShift';
 
   interface Props {
@@ -118,7 +119,7 @@
   });
 
   function pretty(mmdd: string | null): string {
-    return mmdd ? formatCalendarDate(`2000-${mmdd}`, 'month-day') : tr('onboard.frost.none');
+    return mmdd ? fmt.day(`2000-${mmdd}`, 'month-day') : tr('onboard.frost.none');
   }
 
   const REFERENCE_LONG = $derived(tr('onboard.frost.refLong'));

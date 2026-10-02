@@ -8,7 +8,8 @@
   anchor's growth stage in field.
 -->
 <script lang="ts">
-  import { formatCalendarDate } from '$lib/prefs';
+  import { fmt } from '$lib/prefsState.svelte';
+
   type GroupMember = {
     cropId: string;
     cropPluginId: string;
@@ -66,7 +67,7 @@
   }
 
   function fmtDate(ms: number | null | undefined): string {
-    return ms ? formatCalendarDate(ms) : '—';
+    return ms ? fmt.day(ms) : '—';
   }
 
   const anchor = $derived(members.find((m) => m.role === 'anchor') ?? null);

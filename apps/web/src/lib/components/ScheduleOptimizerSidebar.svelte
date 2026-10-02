@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fmt } from '$lib/prefsState.svelte';
   /**
    * ScheduleOptimizerSidebar (Phase 21b follow-up)
    *
@@ -15,7 +16,6 @@
    * surrounding UI.
    */
   import { onMount } from 'svelte';
-  import { formatCalendarDate } from '$lib/prefs';
 
   type SwimPlantingLite = {
     cropId: string;
@@ -94,7 +94,7 @@
     }
     const earliest = new Date(Math.min(...dates));
     const latest = new Date(Math.max(...dates));
-    const fmtDate = (d: Date) => formatCalendarDate(d);
+    const fmtDate = (d: Date) => fmt.day(d);
 
     const blockSummary = [...byBlock.entries()]
       .map(([id, n]) => `“${blockNames.get(id) ?? id}” (${n})`)

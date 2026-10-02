@@ -162,7 +162,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
           impersonating: locals.user.impersonating
         }
       : null,
-    prefs: profile?.prefs ?? DEFAULT_PREFS,
+    prefs: { ...(profile?.prefs ?? DEFAULT_PREFS), locale: locals.locale ?? 'en' },
     dirtySprayers,
     navAlerts,
     animalsNavLabel: animalsLabel,

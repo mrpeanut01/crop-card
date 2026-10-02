@@ -32,7 +32,11 @@ export const fmt = {
     style?: DateStyle,
     extra?: Intl.DateTimeFormatOptions
   ) => formatInstant(v, currentPrefs(), style, extra),
-  day: formatCalendarDate,
+  day: (
+    v: string | Date | number | null | undefined,
+    style?: Exclude<DateStyle, 'time' | 'datetime'>,
+    extra?: Intl.DateTimeFormatOptions
+  ) => formatCalendarDate(v, style, extra, currentPrefs().locale),
   qty: (v: number | null | undefined, q: Quantity, opts?: FormatOpts) =>
     formatQuantity(v, q, currentPrefs(), opts),
   label: (v: number | null | undefined, q: Quantity, opts?: FormatOpts) =>

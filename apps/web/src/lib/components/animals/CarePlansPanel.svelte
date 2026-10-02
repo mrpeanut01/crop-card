@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fmt } from '$lib/prefsState.svelte';
   import './animalForms.css';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import CareTaskCard from './CareTaskCard.svelte';
@@ -12,7 +13,6 @@
     type CarePlanKind,
     type CarePlanView as PlanView
   } from '$lib/animals/carePlans';
-  import { formatCalendarDate } from '$lib/prefs';
 
   interface Props {
     /** The animal or group id in `/api/animals/:id/care-plans`. */
@@ -135,7 +135,7 @@
   function whenText(p: PlanView): string {
     if (!p.active) return tr('animals.care.turnedOff');
     if (!p.nextDueOn) return tr('animals.care.noDueDate');
-    return tr('animals.care.nextDue', { date: formatCalendarDate(p.nextDueOn, 'date') });
+    return tr('animals.care.nextDue', { date: fmt.day(p.nextDueOn, 'date') });
   }
 
   function everyText(p: PlanView): string | null {

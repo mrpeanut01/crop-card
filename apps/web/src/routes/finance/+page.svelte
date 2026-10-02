@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fmt } from '$lib/prefsState.svelte';
   import { invalidateAll } from '$app/navigation';
   import { createT } from '$lib/i18n';
   import '$lib/components/finance/finance.css';
@@ -14,7 +15,7 @@
     netLabel
   } from '$lib/finance/format';
   import { NOT_TIED_LABEL } from '$lib/finance/profit';
-  import { formatCalendarDate, ymdInZone } from '$lib/prefs';
+  import { ymdInZone } from '$lib/prefs';
 
   const { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -25,7 +26,7 @@
     '?' + new URLSearchParams({ year: String(data.year), ...extra }).toString();
 
   function day(ms: number): string {
-    return formatCalendarDate(ymdInZone(ms, data.timeZone), 'date');
+    return fmt.day(ymdInZone(ms, data.timeZone), 'date');
   }
 
   let busy = $state<string | null>(null);

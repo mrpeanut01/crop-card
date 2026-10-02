@@ -72,7 +72,8 @@ describe('#316 — kind → endpoint routing', () => {
       'seed-start': '/api/seed-starts/:id/progress',
       irrigation: '/api/irrigation',
       'rain-gauge': '/api/rain-gauge',
-      'harvest-disposition': '/api/harvest/:id/dispositions'
+      'harvest-disposition': '/api/harvest/:id/dispositions',
+      'time-entry': '/api/tasks/:id/time'
     });
     const endpoints = Object.values(ENDPOINT_BY_KIND);
     expect(new Set(endpoints).size).toBe(endpoints.length);

@@ -9,12 +9,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fc from 'fast-check';
-import {
-  PHASE_33_RECORD_KINDS,
-  db,
-  type PendingRecordKind,
-  type PendingSprayRecord
-} from './dexie';
+import { db, type PendingRecordKind, type PendingSprayRecord } from './dexie';
 import { ACTIVE_OWNER_ENDPOINT, EXPECTED_OWNER_HEADER } from './ownerSync';
 import {
   endpointForRecord,
@@ -44,8 +39,12 @@ const KINDS: PendingRecordKind[] = [
   'animal-production',
   'seed-start',
   'irrigation',
-  'rain-gauge'
+  'rain-gauge',
+  'time-entry'
 ];
+
+/** Kinds this build does not route (a newer app's row, a damaged row). */
+const UNROUTED_KINDS = ['not-a-real-kind', 'toString'] as const;
 
 /** 0 = accepted; 503 = transient (retried); 400/422 = definitive (parked). */
 type FailStatus = 0 | 503 | 400 | 422;
@@ -453,14 +452,14 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
   });
 });
 
-describe('A-10: Phase 33 kinds are declared, not routed', () => {
+describe('A-10: an unrouted kind is never posted', () => {
   it('a row of an unrouted kind is never posted and stays pending; routed rows still drain', async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.array(
           fc.record({
             ownerId: fc.constantFrom<string>(...OWNERS),
-            kind: fc.constantFrom<string>(...PHASE_33_RECORD_KINDS, 'scout', 'harvest'),
+            kind: fc.constantFrom<string>(...UNROUTED_KINDS, 'scout', 'harvest', 'time-entry'),
             createdAt: fc.integer({ min: 0, max: 1_000_000 })
           }),
           { minLength: 1, maxLength: 12 }
@@ -483,7 +482,7 @@ describe('A-10: Phase 33 kinds are declared, not routed', () => {
           const calls = installFetch();
           await drainQueue();
           const after = await snapshot();
-          const unrouted = (k: string) => (PHASE_33_RECORD_KINDS as readonly string[]).includes(k);
+          const unrouted = (k: string) => (UNROUTED_KINDS as readonly string[]).includes(k);
           for (const [i, r] of rows.entries()) {
             const id = `row_${i}`;
             const posted = calls.some((c) => c.payload.marker === id);
@@ -508,7 +507,7 @@ describe('A-10: Phase 33 kinds are declared, not routed', () => {
   });
 
   it('endpointForRecord answers null for an unrouted kind', () => {
-    for (const kind of PHASE_33_RECORD_KINDS) {
+    for (const kind of UNROUTED_KINDS) {
       expect(endpointForRecord({ kind: kind as PendingRecordKind })).toBeNull();
     }
   });

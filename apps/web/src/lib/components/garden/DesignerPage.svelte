@@ -153,7 +153,7 @@
   $effect(() => () => d.cancelDateSummary());
 
   function onGlobalKey(e: KeyboardEvent): void {
-    if (e.key !== 'Escape' || e.defaultPrevented || d.cropDrag) return;
+    if (e.key !== 'Escape' || e.defaultPrevented || d.cropDrag || d.bedDrag) return;
     if (d.mode.kind !== 'idle') d.cancelMode();
     else if (d.cropPanelOpen) d.cropPanelOpen = false;
   }

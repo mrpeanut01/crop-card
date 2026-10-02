@@ -100,12 +100,25 @@ async function clearOfflineCards(): Promise<void> {
   }
 }
 
+/** Logout and the no-Owner case drop every running task timer, so a shared
+ *  device never keeps the last person's clock. An Owner switch keeps it: it
+ *  is keyed by Owner and shows only for the active one (D-22). */
+async function clearTimers(): Promise<void> {
+  if (typeof indexedDB === 'undefined') return;
+  try {
+    const { clearTaskTimers } = await import('./taskTimer');
+    await clearTaskTimers();
+  } catch {
+    /* IndexedDB unavailable → nothing stored */
+  }
+}
+
 /** Signed in with no active Owner (a revoked helper downgraded to a partial
  *  session, or a user between farms): forget this tab's Owner key and drop
  *  every stored Card so nothing from the old farm stays readable. */
 export async function forgetActiveOwner(): Promise<void> {
   rememberActiveOwner(null);
-  await clearOfflineCards();
+  await Promise.all([clearOfflineCards(), clearTimers()]);
 }
 
 /** Call after a successful switch. Keeps every Owner's namespaced SW cache
@@ -120,7 +133,11 @@ export async function resetTenantCaches(newOwnerId: string): Promise<void> {
  *  persisted owner pointer. */
 export async function wipeTenantCaches(): Promise<void> {
   rememberActiveOwner(null);
-  await Promise.all([announceActiveOwner(null, { wipe: true }), clearOfflineCards()]);
+  await Promise.all([
+    announceActiveOwner(null, { wipe: true }),
+    clearOfflineCards(),
+    clearTimers()
+  ]);
   if (typeof caches === 'undefined') return;
   try {
     const doomed = new Set<string>([

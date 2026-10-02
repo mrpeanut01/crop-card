@@ -161,7 +161,10 @@
 
   /** A client point in feet, and the bed drawn there when the point is on
    *  the visible canvas; how a crop dragged from the panel finds its bed. */
-  function locate(clientX: number, clientY: number): { point: PointFt; bedId: string | null } {
+  function locate(
+    clientX: number,
+    clientY: number
+  ): { point: PointFt; bedId: string | null; onCanvas: boolean } {
     const point = toFt(clientX, clientY);
     const box = svg?.getBoundingClientRect();
     const onCanvas =
@@ -170,7 +173,7 @@
       clientX <= box.right &&
       clientY >= box.top &&
       clientY <= box.bottom;
-    if (!onCanvas) return { point, bedId: null };
+    if (!onCanvas) return { point, bedId: null, onCanvas };
     const bed = [...orderedBeds]
       .reverse()
       .find(
@@ -180,7 +183,7 @@
           point.y >= b.rect.y &&
           point.y <= b.rect.y + b.rect.l
       );
-    return { point, bedId: bed?.blockId ?? null };
+    return { point, bedId: bed?.blockId ?? null, onCanvas };
   }
 
   function toFt(clientX: number, clientY: number): PointFt {
@@ -918,6 +921,19 @@
         {/if}
       </g>
     {/each}
+
+    {#if d.bedDrag?.rect}
+      {@const br = d.bedDrag.rect}
+      <g
+        class="ghost drag"
+        class:nofit={!d.bedDrag.fits}
+        data-testid="bed-drag-ghost"
+        data-fits={d.bedDrag.fits}
+        aria-hidden="true"
+      >
+        <rect x={br.x} y={br.y} width={br.w} height={br.l} vector-effect="non-scaling-stroke" />
+      </g>
+    {/if}
 
     {#if d.canvas.hasNorth}
       <g

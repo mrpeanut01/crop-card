@@ -107,7 +107,8 @@ export const ENDPOINT_BY_KIND: Record<PendingRecordKind, string> = {
   'seed-start': '/api/seed-starts/:id/progress',
   irrigation: '/api/irrigation',
   'rain-gauge': '/api/rain-gauge',
-  'harvest-disposition': '/api/harvest/:id/dispositions'
+  'harvest-disposition': '/api/harvest/:id/dispositions',
+  'time-entry': '/api/tasks/:id/time'
 };
 
 const STOCK_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
@@ -149,14 +150,24 @@ export function endpointForRecord(
     const safe = typeof id === 'string' && STOCK_ID_PATTERN.test(id) ? id : '_';
     return `/api/harvest/${safe}/dispositions`;
   }
+  if (kind === 'time-entry') {
+    const id = (rec.payload as { taskId?: unknown } | null | undefined)?.taskId;
+    const safe = typeof id === 'string' && STOCK_ID_PATTERN.test(id) ? id : '_';
+    return `/api/tasks/${safe}/time`;
+  }
   return ENDPOINT_BY_KIND[kind];
 }
 
 /** The body a row replays with. `feed-use` carries its stock item,
- *  `seed-start` its tray and `harvest-disposition` its harvest in the path,
- *  not the body. */
+ *  `seed-start` its tray, `harvest-disposition` its harvest and
+ *  `time-entry` its task in the path, not the body. */
 export function bodyForRecord(rec: Pick<PendingSprayRecord, 'kind' | 'payload'>): unknown {
   const kind = kindOf(rec);
+  if (kind === 'time-entry') {
+    if (!rec.payload || typeof rec.payload !== 'object') return rec.payload;
+    const { taskId: _task, ...body } = rec.payload as Record<string, unknown>;
+    return body;
+  }
   if (kind !== 'feed-use' && kind !== 'seed-start' && kind !== 'harvest-disposition') {
     return rec.payload;
   }
@@ -267,8 +278,9 @@ function recordedAt(payload: unknown): number | null {
     movedAt?: unknown;
     administeredAt?: unknown;
     readAt?: unknown;
+    startedAt?: unknown;
   };
-  const v = [p.occurredAt, p.mowAt, p.movedAt, p.administeredAt, p.readAt].find(
+  const v = [p.occurredAt, p.mowAt, p.movedAt, p.administeredAt, p.readAt, p.startedAt].find(
     (x) => typeof x === 'number'
   );
   return typeof v === 'number' && Number.isFinite(v) ? v : null;

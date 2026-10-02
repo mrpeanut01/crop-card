@@ -17,8 +17,10 @@
     /** Completes the task. `minutes` is undefined for "Done, skip time". */
     onDone: (minutes: number | undefined) => void;
     onClose: () => void;
+    /** Minutes from the task timer: opens "Other" with them filled in. */
+    initialMinutes?: number;
   }
-  const { open, title, busy = false, onDone, onClose }: Props = $props();
+  const { open, title, busy = false, onDone, onClose, initialMinutes }: Props = $props();
   const uid = $props.id();
 
   let other = $state(false);
@@ -36,6 +38,9 @@
     if (!open) {
       other = false;
       raw = '';
+    } else if (initialMinutes !== undefined) {
+      other = true;
+      raw = initialMinutes;
     }
   });
 

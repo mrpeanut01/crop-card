@@ -3,6 +3,7 @@
   import { fmt } from '$lib/prefsState.svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { CHEMISTRY_CLASSES, type ChemistryClass } from '$lib/safety/types';
   import { CROP_FAMILIES, type CropFamily } from '$lib/safety/cropFamilyLethality';
   import HelpIcon from '$lib/components/HelpIcon.svelte';
@@ -12,6 +13,7 @@
   } from '$lib/components/PluginTaskListEditor.svelte';
 
   let { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   // ─── Slug + unique-id helpers ─────────────────────────────────────────
 
@@ -54,14 +56,14 @@
     'fertilizer',
     'companion'
   ];
-  const MODE_LABELS: Record<Mode, string> = {
-    crop: 'Crop variety',
-    herbicide: 'Herbicide',
-    insecticide: 'Insecticide',
-    fungicide: 'Fungicide',
-    fertilizer: 'Fertilizer',
-    companion: 'Companion system'
-  };
+  const MODE_LABEL_KEYS = {
+    crop: 'plugins.new.mode.crop',
+    herbicide: 'plugins.new.mode.herbicide',
+    insecticide: 'plugins.new.mode.insecticide',
+    fungicide: 'plugins.new.mode.fungicide',
+    fertilizer: 'plugins.new.mode.fertilizer',
+    companion: 'plugins.new.mode.companion'
+  } as const;
 
   // ─── Prefill parsing ──────────────────────────────────────────────────
   //
@@ -730,8 +732,8 @@
             out.code === 'bypass'
               ? 'Rejected — would override a hard-locked safety rule'
               : out.code === 'schema'
-                ? 'Rejected — schema validation failed'
-                : `Rejected (HTTP ${res.status})`,
+                ? tr('plugins.new.rejectSchema')
+                : tr('plugins.new.rejectHttp', { status: res.status }),
           issues:
             Array.isArray(out.issues) && out.issues.length > 0
               ? out.issues
@@ -748,27 +750,24 @@
   }
 </script>
 
-<h1>Author a new plugin</h1>
+<h1>{tr('plugins.new.h1')}</h1>
 
 {#if !data.canEdit}
   <section class="card role-locked">
-    <h2>Owner role required</h2>
+    <h2>{tr('plugins.new.ownerRequired')}</h2>
     <p>
-      Authoring plugins changes this farm's safety knowledge base. Sign in as Owner to use this
-      wizard. Helpers can browse the existing catalog at <a href="/plugins">/plugins</a>.
+      {tr('plugins.new.lockedA')}<a href="/plugins">/plugins</a>{tr('plugins.new.lockedB')}
     </p>
-    <a class="primary" href="/signin">Sign in</a>
+    <a class="primary" href="/signin">{tr('plugins.new.signIn')}</a>
   </section>
 {:else}
   {#if prefillParse.kind === 'error'}
     <section class="card">
-      <h2>Prefill payload could not be read</h2>
+      <h2>{tr('plugins.new.prefillError')}</h2>
       <div class="reject">
         <strong>⛔ {prefillParse.message}</strong>
         <p>
-          Pick a type below and fill in the form manually, or go back to <a href="/plugins"
-            >/plugins</a
-          > and rerun the scan or search.
+          {tr('plugins.new.prefillA')}<a href="/plugins">/plugins</a>{tr('plugins.new.prefillB')}
         </p>
       </div>
     </section>
@@ -776,25 +775,25 @@
 
   <p class="lede">
     {#if prefillParse.kind === 'ok'}
-      Pre-filled from a {prefillParse.obj.type ?? 'plugin'} candidate. Review the fields below, edit anything
-      that's wrong, then save. The kernel validates schema + bypass attempts at registration.
+      {tr('plugins.new.prefilled', {
+        type: String(prefillParse.obj.type ?? tr('plugins.new.pluginWord'))
+      })}
     {:else}
-      Pick the plugin type, fill in the fields, then save. The kernel validates schema + bypass
-      attempts at registration.
+      {tr('plugins.new.pick')}
     {/if}
   </p>
 
   <section class="card">
     <div class="type-row">
-      <label for="plugin-type-select" class="type-label">Plugin type</label>
+      <label for="plugin-type-select" class="type-label">{tr('plugins.new.pluginType')}</label>
       <select id="plugin-type-select" class="type-select" bind:value={mode}>
-        <option value="" disabled>— Select a type —</option>
+        <option value="" disabled>{tr('plugins.new.selectType')}</option>
         {#each MODES as m (m)}
-          <option value={m}>{MODE_LABELS[m]}</option>
+          <option value={m}>{tr(MODE_LABEL_KEYS[m])}</option>
         {/each}
       </select>
       {#if mode === ''}
-        <span class="type-prompt">← Select the type of inventory you are adding</span>
+        <span class="type-prompt">{tr('plugins.new.selectPrompt')}</span>
       {/if}
     </div>
   </section>
@@ -803,18 +802,18 @@
     <!-- Nothing else rendered until the operator picks a type. -->
   {:else if mode === 'crop'}
     <section class="card">
-      <h2>Crop fields</h2>
+      <h2>{tr('plugins.new.cropFields')}</h2>
       <div class="grid">
         <label>
-          Display name
-          <input type="text" bind:value={cropDisplayName} placeholder="e.g. Bantam Sweet Corn" />
+          {tr('plugins.new.displayName')}
+          <input type="text" bind:value={cropDisplayName} placeholder={tr('plugins.new.phCrop')} />
         </label>
         <label>
           <span class="label-row">
-            Crop family
+            {tr('plugins.new.cropFamily')}
             <HelpIcon
-              label="What is crop family?"
-              text="Botanical family the kernel reasons over (cucurbit, solanaceae, brassica, allium, …). Determines which chemistries are lethal vs safe and which companion systems apply."
+              label={tr('plugins.new.helpCropFamilyLabel')}
+              text={tr('plugins.new.helpCropFamily')}
             />
           </span>
           <select bind:value={cropFamily}>
@@ -823,78 +822,76 @@
         </label>
         <label>
           <span class="label-row">
-            Days to maturity (min)
-            <HelpIcon
-              label="What is DTM min?"
-              text="Earliest expected seed-to-harvest window. Drives calendar scheduling + the Plan-wizard's free-window check. Use the lower bound from the seed catalog."
-            />
+            {tr('plugins.new.dtmMin')}
+            <HelpIcon label={tr('plugins.new.helpDtmLabel')} text={tr('plugins.new.helpDtm')} />
           </span>
           <input type="number" min="1" bind:value={cropDtmMin} />
         </label>
         <label>
-          Days to maturity (max)
+          {tr('plugins.new.dtmMax')}
           <input type="number" min="1" bind:value={cropDtmMax} />
         </label>
         <label>
-          Default row spacing ({fmt.unit('length')})
+          {tr('plugins.new.rowSpacing', { unit: fmt.unit('length') })}
           <UnitInput quantity="length" min={1} suffix={false} bind:value={cropRowSpacing} />
         </label>
         <label>
           <span class="label-row">
-            Pre-harvest interval (days)
+            {tr('plugins.new.phiDays')}
             <HelpIcon
-              label="What is PHI?"
-              text="Days between the last spray and a legal harvest. Defaults applied across all chemistries; individual sprays can override per-product."
+              label={tr('plugins.new.helpPhiLabel')}
+              text={tr('plugins.new.helpPhiDefault')}
             />
           </span>
           <input type="number" min="0" bind:value={cropPHI} />
         </label>
       </div>
       <label class="full">
-        Harvest indicators (one per line)
-        <textarea
-          rows="4"
-          bind:value={cropIndicators}
-          placeholder="e.g.&#10;Husks fully dry and papery&#10;Black layer at kernel tip"
+        {tr('plugins.new.indicators')}
+        <textarea rows="4" bind:value={cropIndicators} placeholder={tr('plugins.new.phIndicators')}
         ></textarea>
       </label>
       <label class="full">
-        Notes
+        {tr('plugins.new.notes')}
         <textarea rows="3" bind:value={cropNotes}></textarea>
       </label>
 
       <PluginTaskListEditor
-        label="Pre-tasks"
-        helpText="Auto-attach when the operator schedules a primary task tied to this crop (e.g. 'Test germination 14d before plant')."
+        label={tr('plugins.new.preTasks')}
+        helpText={tr('plugins.new.helpPre')}
         variant="preTasks"
         rows={preTasks}
       />
       <PluginTaskListEditor
-        label="Post-tasks"
-        helpText="Fire after a referenced phase (e.g. 'Disc residue 7d after harvest')."
+        label={tr('plugins.new.postTasks')}
+        helpText={tr('plugins.new.helpPost')}
         variant="postTasks"
         rows={postTasks}
       />
       <PluginTaskListEditor
-        label="Seasonal tasks"
-        helpText="Calendar-anchored or planting-relative recurring tasks (e.g. 'Scout SWD weekly during fruit set')."
+        label={tr('plugins.new.seasonalTasks')}
+        helpText={tr('plugins.new.helpSeasonal')}
         variant="seasonalTasks"
         rows={seasonalTasks}
       />
     </section>
   {:else if mode === 'herbicide'}
     <section class="card">
-      <h2>Herbicide fields</h2>
+      <h2>{tr('plugins.new.herbFields')}</h2>
       <div class="grid">
         <label>
-          <span class="label-row">Display name</span>
-          <input type="text" bind:value={hDisplayName} placeholder="e.g. Atrazine 4L" />
+          <span class="label-row">{tr('plugins.new.displayName')}</span>
+          <input
+            type="text"
+            bind:value={hDisplayName}
+            placeholder={tr('plugins.new.phAtrazine4')}
+          />
         </label>
         <label>
           <span class="label-row">
-            Chemistry class
+            {tr('plugins.new.chemClass')}
             <HelpIcon
-              label="What is chemistry class?"
+              label={tr('plugins.new.helpChemLabel')}
               text="HRAC mode-of-action group identifier. Drives the safety kernel's kill matrix (which crop families this product harms) + resistance-rotation hints on /spray. Match the value to the active ingredient's HRAC group."
             />
           </span>
@@ -904,26 +901,23 @@
         </label>
         <label>
           <span class="label-row">
-            Active ingredient name
+            {tr('plugins.new.aiName')}
             <HelpIcon
-              label="What is active ingredient name?"
-              text="Common chemical name as printed on the guaranteed-analysis section of the label (e.g. atrazine, glyphosate, pendimethalin). Not the brand name."
+              label={tr('plugins.new.helpAiNameLabel')}
+              text={tr('plugins.new.helpAiNameH')}
             />
           </span>
-          <input type="text" bind:value={hActiveName} placeholder="e.g. atrazine" />
+          <input type="text" bind:value={hActiveName} placeholder={tr('plugins.new.phAtrazine')} />
         </label>
         <label>
           <span class="label-row">
-            Rate / acre (amount)
-            <HelpIcon
-              label="What is rate per acre?"
-              text="Maximum label rate per acre. The sprayer evaluates this against your block's acreage to compute total product needed and tank loads."
-            />
+            {tr('plugins.new.rateAmount')}
+            <HelpIcon label={tr('plugins.new.helpRateLabel')} text={tr('plugins.new.helpRateH')} />
           </span>
           <input type="number" step="0.01" min="0" bind:value={hRateAmount} />
         </label>
         <label>
-          Unit
+          {tr('plugins.new.unit')}
           <select bind:value={hRateUnit}>
             <option value="fl-oz">fl-oz</option>
             <option value="oz">oz</option>
@@ -934,24 +928,21 @@
         </label>
         <label>
           <span class="label-row">
-            GPA calibration
-            <HelpIcon
-              label="What is GPA calibration?"
-              text="Gallons of total spray solution per acre your sprayer is calibrated to deliver. CropCard's dilution math assumes this rate when computing product per tank."
-            />
+            {tr('plugins.new.gpa')}
+            <HelpIcon label={tr('plugins.new.helpGpaLabel')} text={tr('plugins.new.helpGpa')} />
           </span>
           <input type="number" min="1" bind:value={hGpa} />
         </label>
         <label>
           <span class="label-row">
-            Application timing
+            {tr('plugins.new.timing')}
             <HelpIcon
-              label="What is application timing?"
-              text="BURNDOWN = pre-plant non-selective kill of existing vegetation. PRE = pre-emergence residual. POST = post-emergence over the established crop. POST-DIRECTED = directed spray in row middles, shielded from the crop."
+              label={tr('plugins.new.helpTimingLabel')}
+              text={tr('plugins.new.helpTimingH')}
             />
           </span>
           <select bind:value={hApplicationTiming}>
-            <option value="">(unspecified)</option>
+            <option value="">{tr('plugins.new.unspecified')}</option>
             <option value="BURNDOWN">BURNDOWN</option>
             <option value="PRE">PRE</option>
             <option value="POST">POST</option>
@@ -960,9 +951,9 @@
         </label>
         <label class="checkbox-field">
           <span class="label-row">
-            Requires AMS
+            {tr('plugins.new.requiresAms')}
             <HelpIcon
-              label="What is AMS?"
+              label={tr('plugins.new.helpAmsLabel')}
               text="Ammonium-sulfate adjuvant. Some products (notably glyphosate in hard water) require AMS in the tank to perform. CropCard's spray flow surfaces a STOP if checked and AMS isn't in the tank-mix."
             />
           </span>
@@ -970,9 +961,9 @@
         </label>
         <label class="checkbox-field">
           <span class="label-row">
-            Decon required after use
+            {tr('plugins.new.deconAfter')}
             <HelpIcon
-              label="What is decon required?"
+              label={tr('plugins.new.helpDeconLabel')}
               text="The sprayer must be decontaminated after this product before spraying anything else. The cross-contamination kernel blocks the next spray until a decon event is recorded."
             />
           </span>
@@ -980,9 +971,10 @@
         </label>
         <label class="picker-field">
           <span class="label-row">
-            Label-safe crops <span class="muted">(default: empty)</span>
+            {tr('plugins.new.labelSafe')}
+            <span class="muted">{tr('plugins.new.defaultEmpty')}</span>
             <HelpIcon
-              label="What is label-safe crops?"
+              label={tr('plugins.new.helpLabelSafeLabel')}
               text="Only fill in when the manufacturer's label explicitly names crops the kernel would otherwise refuse to spray over (e.g. atrazine on corn, clethodim on cucurbits). The bypass check rejects entries that contradict the kill matrix. Most herbicides ship safely without this — leave it empty."
             />
           </span>
@@ -991,55 +983,49 @@
             selected={hSafeForCropIds}
             onChange={(ids) => (hSafeForCropIds = ids)}
             kind="crop"
-            placeholder="Search crops by name…"
+            placeholder={tr('plugins.new.searchCrops')}
           />
         </label>
       </div>
       <label class="full">
-        Notes
+        {tr('plugins.new.notes')}
         <textarea rows="3" bind:value={hNotes}></textarea>
       </label>
     </section>
   {:else if mode === 'insecticide'}
     <section class="card">
-      <h2>Insecticide fields</h2>
+      <h2>{tr('plugins.new.insectFields')}</h2>
       <div class="grid">
         <label>
-          Display name
+          {tr('plugins.new.displayName')}
           <input type="text" bind:value={iDisplayName} />
         </label>
         <label>
           <span class="label-row">
-            Active ingredient name
+            {tr('plugins.new.aiName')}
             <HelpIcon
-              label="What is active ingredient name?"
-              text="Common chemical name as printed on the guaranteed-analysis section of the label (e.g. imidacloprid, spinosad). Not the brand name."
+              label={tr('plugins.new.helpAiNameLabel')}
+              text={tr('plugins.new.helpAiNameI')}
             />
           </span>
-          <input type="text" bind:value={iActiveName} placeholder="e.g. imidacloprid" />
+          <input type="text" bind:value={iActiveName} placeholder={tr('plugins.new.phImida')} />
         </label>
         <label>
           <span class="label-row">
-            IRAC group
-            <HelpIcon
-              label="What is IRAC group?"
-              text="IRAC mode-of-action group code (e.g. 4A neonicotinoid, 1A organophosphate, 11A Bt). Drives resistance-rotation warnings — don't apply two products from the same group back-to-back."
-            />
+            {tr('plugins.new.irac')}
+            <HelpIcon label={tr('plugins.new.helpIracLabel')} text={tr('plugins.new.helpIrac')} />
           </span>
-          <input type="text" bind:value={iIracGroup} placeholder="e.g. 4A" />
+          <input type="text" bind:value={iIracGroup} placeholder={tr('plugins.new.ph4a')} />
         </label>
         <label>
           <span class="label-row">
-            Rate / acre (amount)
-            <HelpIcon
-              label="What is rate per acre?"
-              text="Maximum label rate per acre. Spray flow scales this against block acreage to compute total product needed."
-            />
+            {tr('plugins.new.rateAmount')}
+            <HelpIcon label={tr('plugins.new.helpRateLabel')} text={tr('plugins.new.helpRateI')} />
           </span>
           <input type="number" step="0.01" min="0" bind:value={iRateAmount} />
         </label>
         <label>
-          Unit
+          {tr('plugins.new.unit')}
           <select bind:value={iRateUnit}>
             <option value="fl-oz">fl-oz</option>
             <option value="oz">oz</option>
@@ -1050,9 +1036,9 @@
         </label>
         <label>
           <span class="label-row">
-            Re-entry interval (hours)
+            {tr('plugins.new.reiHours')}
             <HelpIcon
-              label="What is REI?"
+              label={tr('plugins.new.helpReiLabel')}
               text="Field workers must wait this many hours after spraying before re-entering the treated area. Kernel surfaces a STOP for entries inside this window."
             />
           </span>
@@ -1060,9 +1046,9 @@
         </label>
         <label>
           <span class="label-row">
-            Pre-harvest interval (days)
+            {tr('plugins.new.phiDays')}
             <HelpIcon
-              label="What is PHI?"
+              label={tr('plugins.new.helpPhiLabel')}
               text="Days between the last spray and a legal harvest. Kernel blocks harvest records inside this window."
             />
           </span>
@@ -1070,9 +1056,9 @@
         </label>
         <label>
           <span class="label-row">
-            Pollinator risk
+            {tr('plugins.new.pollRisk')}
             <HelpIcon
-              label="What is pollinator risk?"
+              label={tr('plugins.new.helpPollLabel')}
               text="Risk this product poses to bees + pollinators. Drives advisory warnings on sprays scheduled during bloom windows."
             />
           </span>
@@ -1085,64 +1071,51 @@
         </label>
         <label>
           <span class="label-row">
-            Target pests (comma-separated)
-            <HelpIcon
-              label="What are target pests?"
-              text="Pests the label claims efficacy against. Used to nudge the operator from /scout into /spray/insecticide when a scouting threshold is crossed."
-            />
+            {tr('plugins.new.targetPests')}
+            <HelpIcon label={tr('plugins.new.helpPestsLabel')} text={tr('plugins.new.helpPests')} />
           </span>
-          <input
-            type="text"
-            bind:value={iTargetPests}
-            placeholder="e.g. aphid, thrips, corn-earworm"
-          />
+          <input type="text" bind:value={iTargetPests} placeholder={tr('plugins.new.phPests')} />
         </label>
       </div>
       <label class="full">
-        Notes
+        {tr('plugins.new.notes')}
         <textarea rows="3" bind:value={iNotes}></textarea>
       </label>
     </section>
   {:else if mode === 'fungicide'}
     <section class="card">
-      <h2>Fungicide fields</h2>
+      <h2>{tr('plugins.new.fungFields')}</h2>
       <div class="grid">
         <label>
-          Display name
+          {tr('plugins.new.displayName')}
           <input type="text" bind:value={fDisplayName} />
         </label>
         <label>
           <span class="label-row">
-            Active ingredient name
+            {tr('plugins.new.aiName')}
             <HelpIcon
-              label="What is active ingredient name?"
-              text="Common chemical name as printed on the label (e.g. azoxystrobin, copper hydroxide, chlorothalonil). Not the brand name."
+              label={tr('plugins.new.helpAiNameLabel')}
+              text={tr('plugins.new.helpAiNameF')}
             />
           </span>
-          <input type="text" bind:value={fActiveName} placeholder="e.g. azoxystrobin" />
+          <input type="text" bind:value={fActiveName} placeholder={tr('plugins.new.phAzoxy')} />
         </label>
         <label>
           <span class="label-row">
-            FRAC code
-            <HelpIcon
-              label="What is FRAC code?"
-              text="FRAC mode-of-action group (M01 copper, P01 host-defense inducer, 1-99 single-site mechanisms, BM01 biological). Drives resistance-rotation warnings — alternate FRAC codes across the season to slow resistance."
-            />
+            {tr('plugins.new.frac')}
+            <HelpIcon label={tr('plugins.new.helpFracLabel')} text={tr('plugins.new.helpFrac')} />
           </span>
-          <input type="text" bind:value={fFracCode} placeholder="e.g. 11, M01, P01" />
+          <input type="text" bind:value={fFracCode} placeholder={tr('plugins.new.phFrac')} />
         </label>
         <label>
           <span class="label-row">
-            Rate / acre (amount)
-            <HelpIcon
-              label="What is rate per acre?"
-              text="Maximum label rate per acre. Spray flow scales this against block acreage to compute total product needed."
-            />
+            {tr('plugins.new.rateAmount')}
+            <HelpIcon label={tr('plugins.new.helpRateLabel')} text={tr('plugins.new.helpRateI')} />
           </span>
           <input type="number" step="0.01" min="0" bind:value={fRateAmount} />
         </label>
         <label>
-          Unit
+          {tr('plugins.new.unit')}
           <select bind:value={fRateUnit}>
             <option value="fl-oz">fl-oz</option>
             <option value="oz">oz</option>
@@ -1153,29 +1126,23 @@
         </label>
         <label>
           <span class="label-row">
-            Re-entry interval (hours)
-            <HelpIcon
-              label="What is REI?"
-              text="Field workers must wait this many hours after spraying before re-entering the treated area."
-            />
+            {tr('plugins.new.reiHours')}
+            <HelpIcon label={tr('plugins.new.helpReiLabel')} text={tr('plugins.new.helpReiF')} />
           </span>
           <input type="number" min="0" bind:value={fReEntryHours} />
         </label>
         <label>
           <span class="label-row">
-            Pre-harvest interval (days)
-            <HelpIcon
-              label="What is PHI?"
-              text="Days between the last spray and a legal harvest."
-            />
+            {tr('plugins.new.phiDays')}
+            <HelpIcon label={tr('plugins.new.helpPhiLabel')} text={tr('plugins.new.helpPhiF')} />
           </span>
           <input type="number" min="0" bind:value={fPhiDays} />
         </label>
         <label>
           <span class="label-row">
-            Pollinator risk
+            {tr('plugins.new.pollRisk')}
             <HelpIcon
-              label="What is pollinator risk?"
+              label={tr('plugins.new.helpPollLabel')}
               text="Risk this product poses to bees + pollinators. Drives advisory warnings on sprays scheduled during bloom windows."
             />
           </span>
@@ -1188,14 +1155,14 @@
         </label>
         <label>
           <span class="label-row">
-            Application timing
+            {tr('plugins.new.timing')}
             <HelpIcon
-              label="What is application timing?"
-              text="DORMANT = winter copper / lime-sulfur. PRE-BLOOM / BLOOM / POST-BLOOM = orchard fire-blight + scab windows. COVER = vegetative protectant. PRE-HARVEST = late-season disease protection within the PHI."
+              label={tr('plugins.new.helpTimingLabel')}
+              text={tr('plugins.new.helpTimingF')}
             />
           </span>
           <select bind:value={fApplicationTiming}>
-            <option value="">(unspecified)</option>
+            <option value="">{tr('plugins.new.unspecified')}</option>
             <option value="DORMANT">DORMANT</option>
             <option value="PRE-BLOOM">PRE-BLOOM</option>
             <option value="BLOOM">BLOOM</option>
@@ -1206,103 +1173,91 @@
         </label>
         <label>
           <span class="label-row">
-            Target diseases (comma-separated)
+            {tr('plugins.new.targetDiseases')}
             <HelpIcon
-              label="What are target diseases?"
-              text="Diseases the label claims efficacy against. Used to suggest products on /scout when a disease pressure is observed."
+              label={tr('plugins.new.helpDiseasesLabel')}
+              text={tr('plugins.new.helpDiseases')}
             />
           </span>
           <input
             type="text"
             bind:value={fTargetDiseases}
-            placeholder="e.g. early-blight, anthracnose"
+            placeholder={tr('plugins.new.phDiseases')}
           />
         </label>
       </div>
       <label class="full">
-        Notes
+        {tr('plugins.new.notes')}
         <textarea rows="3" bind:value={fNotes}></textarea>
       </label>
     </section>
   {:else if mode === 'fertilizer'}
     <section class="card">
-      <h2>Fertilizer fields</h2>
+      <h2>{tr('plugins.new.fertFields')}</h2>
       <div class="grid">
         <label>
-          Display name
+          {tr('plugins.new.displayName')}
           <input type="text" bind:value={ftDisplayName} />
         </label>
         <label>
           <span class="label-row">
             N %
-            <HelpIcon
-              label="What is N %?"
-              text="Guaranteed-analysis nitrogen percentage by weight, as printed on the label (the first number in N-P-K, e.g. 12-0-0 → 12)."
-            />
+            <HelpIcon label={tr('plugins.new.helpNLabel')} text={tr('plugins.new.helpN')} />
           </span>
           <input type="number" step="0.1" min="0" max="100" bind:value={ftN} />
         </label>
         <label>
           <span class="label-row">
             P %
-            <HelpIcon
-              label="What is P %?"
-              text="Guaranteed-analysis phosphate percentage (reported as P₂O₅), the second number in N-P-K labeling (e.g. 11-52-0 → 52)."
-            />
+            <HelpIcon label={tr('plugins.new.helpPLabel')} text={tr('plugins.new.helpP')} />
           </span>
           <input type="number" step="0.1" min="0" max="100" bind:value={ftP} />
         </label>
         <label>
           <span class="label-row">
             K %
-            <HelpIcon
-              label="What is K %?"
-              text="Guaranteed-analysis potash percentage (reported as K₂O), the third number in N-P-K labeling (e.g. 0-0-60 → 60)."
-            />
+            <HelpIcon label={tr('plugins.new.helpKLabel')} text={tr('plugins.new.helpK')} />
           </span>
           <input type="number" step="0.1" min="0" max="100" bind:value={ftK} />
         </label>
         <label>
           <span class="label-row">
-            Form
-            <HelpIcon
-              label="What is form?"
-              text="Physical form of the product. Drives the application UI (broadcast vs side-dress vs foliar) and the dilution math for liquids."
-            />
+            {tr('plugins.new.form')}
+            <HelpIcon label={tr('plugins.new.helpFormLabel')} text={tr('plugins.new.helpForm')} />
           </span>
           <select bind:value={ftForm}>
-            <option value="granular">granular</option>
-            <option value="liquid">liquid</option>
-            <option value="soluble">soluble</option>
-            <option value="compost">compost</option>
-            <option value="slow-release">slow-release</option>
-            <option value="meal">meal</option>
+            <option value="granular">{tr('plugins.new.formGranular')}</option>
+            <option value="liquid">{tr('plugins.new.formLiquid')}</option>
+            <option value="soluble">{tr('plugins.new.formSoluble')}</option>
+            <option value="compost">{tr('plugins.new.formCompost')}</option>
+            <option value="slow-release">{tr('plugins.new.formSlow')}</option>
+            <option value="meal">{tr('plugins.new.formMeal')}</option>
           </select>
         </label>
         <label class="checkbox-field">
-          <span class="label-row">Organic</span>
+          <span class="label-row">{tr('plugins.new.organic')}</span>
           <input type="checkbox" bind:checked={ftOrganic} />
         </label>
       </div>
       <label class="full">
-        Notes
+        {tr('plugins.new.notes')}
         <textarea rows="3" bind:value={ftNotes}></textarea>
       </label>
     </section>
   {:else if mode === 'companion'}
     <section class="card">
-      <h2>Companion fields</h2>
+      <h2>{tr('plugins.new.compFields')}</h2>
       <div class="grid">
         <label>
-          Display name
+          {tr('plugins.new.displayName')}
           <input type="text" bind:value={cmpDisplayName} />
         </label>
         <label>
           <span class="label-row">
-            Primary family
+            {tr('plugins.new.primaryFamily')}
             <HelpIcon
-              label="What is primary family?"
-              text="Anchor crop family for this companion system. When the operator plants a member of this family, the engine emits companion-trigger events for the secondary members."
+              label={tr('plugins.new.helpPrimaryLabel')}
+              text={tr('plugins.new.helpPrimary')}
             />
           </span>
           <select bind:value={cmpPrimaryFamily}>
@@ -1312,44 +1267,37 @@
       </div>
       <label class="picker-field full">
         <span class="label-row">
-          Good with
-          <HelpIcon
-            label="What is good with?"
-            text="Other crops this companion likes when planted nearby. Surfaced as ✓ chips in the companion advisor on /plan."
-          />
+          {tr('plugins.new.goodWith')}
+          <HelpIcon label={tr('plugins.new.helpGoodLabel')} text={tr('plugins.new.helpGood')} />
         </span>
         <PluginIdPicker
           available={data.availablePlugins}
           selected={cmpGoodWith}
           onChange={(ids) => (cmpGoodWith = ids)}
           kind="crop"
-          placeholder="Search crops by name…"
+          placeholder={tr('plugins.new.searchCrops')}
         />
       </label>
       <label class="picker-field full">
         <span class="label-row">
-          Bad with
-          <HelpIcon
-            label="What is bad with?"
-            text="Other crops this companion clashes with. Surfaced as ✗ warnings when both appear in the same block."
-          />
+          {tr('plugins.new.badWith')}
+          <HelpIcon label={tr('plugins.new.helpBadLabel')} text={tr('plugins.new.helpBad')} />
         </span>
         <PluginIdPicker
           available={data.availablePlugins}
           selected={cmpBadWith}
           onChange={(ids) => (cmpBadWith = ids)}
           kind="crop"
-          placeholder="Search crops by name…"
+          placeholder={tr('plugins.new.searchCrops')}
         />
       </label>
       <label class="full">
-        Benefit
+        {tr('plugins.new.benefit')}
         <textarea rows="3" bind:value={cmpBenefit}></textarea>
       </label>
       {#if extras.members}
         <p class="muted">
-          Member companions (from the prefill) will be preserved on save; edit via the JSON
-          expansion below if needed.
+          {tr('plugins.new.membersNote')}
         </p>
       {/if}
     </section>
@@ -1357,24 +1305,24 @@
 
   {#if mode !== ''}
     <details class="card">
-      <summary>JSON preview (what will be saved)</summary>
+      <summary>{tr('plugins.new.jsonPreview')}</summary>
       <pre>{JSON.stringify(preview, null, 2)}</pre>
     </details>
 
     {#if data.isSuperadmin}
       <label class="publish-global">
         <input type="checkbox" bind:checked={publishGlobal} />
-        Publish to the shared library (every farm)
+        {tr('plugins.new.publishGlobal')}
       </label>
     {:else}
-      <p class="muted">Saved to this farm only; other farms keep the shared library version.</p>
+      <p class="muted">{tr('plugins.new.savedFarmOnly')}</p>
     {/if}
 
     <div class="footer-actions">
       <button class="primary" onclick={submit} disabled={submitting}>
-        {submitting ? 'Saving…' : 'Save plugin'}
+        {submitting ? tr('plugins.new.saving') : tr('plugins.new.save')}
       </button>
-      <a class="link" href="/plugins">Cancel</a>
+      <a class="link" href="/plugins">{tr('plugins.new.cancel')}</a>
     </div>
   {/if}
 

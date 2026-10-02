@@ -6,8 +6,23 @@
   import ReceiptScan from '$lib/components/ReceiptScan.svelte';
   import { filterRegisteredPlugins } from '$lib/plugins/filterRegistered';
   import { fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   let { data } = $props();
+  const tr = $derived(createT(page.data?.locale));
+  const TYPE_KEYS = {
+    all: 'plugins.type.all',
+    crop: 'plugins.type.crop',
+    herbicide: 'plugins.type.herbicide',
+    insecticide: 'plugins.type.insecticide',
+    fungicide: 'plugins.type.fungicide',
+    fertilizer: 'plugins.type.fertilizer',
+    companion: 'plugins.type.companion'
+  } as const;
+  function typeLabel(type: string): string {
+    return type in TYPE_KEYS ? tr(TYPE_KEYS[type as keyof typeof TYPE_KEYS]) : type;
+  }
 
   type Candidate = {
     source: 'claude-vision' | 'web-search' | 'local';
@@ -64,7 +79,7 @@
         scanError =
           typeof out.message === 'string' && out.message
             ? out.message
-            : 'Claude could not identify a product on this label. Try a clearer photo or the authoring form directly.';
+            : tr('plugins.list.scanNotFound');
         return;
       }
       scanCandidate = out.candidate;
@@ -90,7 +105,7 @@
     searchBusy = true;
     searchError = null;
     searchSource = null;
-    searchStatus = opts.useAi ? 'Connecting to Claude…' : 'Searching local registry…';
+    searchStatus = opts.useAi ? tr('plugins.list.connecting') : tr('plugins.list.searchingLocal');
 
     if (opts.useAi) {
       await runAiLookupStreaming();
@@ -172,7 +187,7 @@
       searchCandidates = (event.candidates as Candidate[]) ?? [];
       searchSource = 'web-search';
     } else if (phase === 'error') {
-      searchError = (event.message as string) ?? 'unknown error';
+      searchError = (event.message as string) ?? tr('plugins.list.unknownError');
     } else if (typeof event.message === 'string') {
       searchStatus = event.message;
     }
@@ -264,7 +279,7 @@
       parsed = JSON.parse(uploadJson);
     } catch (e) {
       reject = {
-        title: 'JSON parse error',
+        title: tr('plugins.list.jsonParseError'),
         code: 'other',
         issues: [{ path: '(input)', message: e instanceof Error ? e.message : String(e) }]
       };
@@ -284,8 +299,8 @@
             out.code === 'bypass'
               ? 'Plugin rejected — would override a hard-locked safety rule'
               : out.code === 'schema'
-                ? 'Plugin rejected — schema validation failed'
-                : `Plugin rejected (HTTP ${res.status})`,
+                ? tr('plugins.list.rejectSchema')
+                : tr('plugins.list.rejectHttp', { status: res.status }),
           code: out.code ?? 'other',
           issues:
             Array.isArray(out.issues) && out.issues.length > 0
@@ -294,12 +309,12 @@
         };
         return;
       }
-      uploadSuccess = `Saved as ${out.pluginId} (${out.path})`;
+      uploadSuccess = tr('plugins.list.savedAs', { id: out.pluginId, path: out.path });
       uploadJson = '';
       await invalidateAll();
     } catch (e) {
       reject = {
-        title: 'Network error',
+        title: tr('plugins.list.networkError'),
         code: 'other',
         issues: [{ path: '', message: e instanceof Error ? e.message : String(e) }]
       };
@@ -324,29 +339,27 @@
   }
 </script>
 
-<h1>Plugin Manager</h1>
+<h1>{tr('plugins.list.h1')}</h1>
 <p class="lede">
-  All crop, herbicide, insecticide, and companion knowledge lives in data-only JSON files under <code
-    >plugins/</code
-  >. The kernel reads them through a registry that validates schema + checks for bypass attempts at
-  registration. Loaded {data.records.length} plugin{data.records.length === 1 ? '' : 's'}.
+  {tr('plugins.list.ledeA')}<code>plugins/</code>{tr('plugins.list.ledeB')}
+  {tr('plugins.list.loaded', { count: data.records.length })}
 </p>
 
 {#if data.canEdit}
   <section class="card add-paths">
-    <h2>Add a product</h2>
+    <h2>{tr('plugins.list.addProduct')}</h2>
     <div class="add-row">
       <button class="primary-cta wide" onclick={openCapture} disabled={scanBusy}>
-        {scanBusy ? 'Reading label…' : '📷 Scan label'}
+        {scanBusy ? tr('plugins.list.readingLabel') : tr('plugins.list.scanLabel')}
       </button>
       <button class="primary-cta wide" onclick={() => (showReceiptScan = true)}>
-        🧾 Scan receipt
+        {tr('plugins.list.scanReceipt')}
       </button>
-      <a class="primary-cta wide" href="/plugins/new">✎ Manual entry</a>
+      <a class="primary-cta wide" href="/plugins/new">{tr('plugins.list.manualEntry')}</a>
     </div>
     <div class="search-row">
       <label for="plugin-search-input" class="search-label">
-        Or type a product name — we'll search the registry first, then the web:
+        {tr('plugins.list.searchLabel')}
       </label>
       <div class="search-input-row">
         <input
@@ -354,27 +367,29 @@
           type="text"
           bind:value={searchQuery}
           oninput={onSearchInput}
-          placeholder="e.g. Roundup PowerMax, Concord grape, Bordeaux mix"
+          placeholder={tr('plugins.list.searchPlaceholder')}
           autocomplete="off"
         />
         <button
           class="ai-lookup"
           onclick={() => runSearch({ useAi: true })}
           disabled={searchBusy || searchQuery.trim().length < 3}
-          title="Use AI to look up product details from the web"
+          title={tr('plugins.list.aiTitle')}
         >
           <span class="ai-icon" aria-hidden="true">✦</span>
-          AI Lookup
+          {tr('plugins.list.aiLookup')}
         </button>
       </div>
       {#if searchError}<p class="warn-inline">{searchError}</p>{/if}
       {#if searchBusy}
         <p class="muted live-status">
           <span class="spinner" aria-hidden="true"></span>
-          {searchStatus ?? 'Searching…'}
+          {searchStatus ?? tr('plugins.list.searching')}
         </p>
       {/if}
-      {#if !searchBusy && searchSource}<p class="muted source-line">Source: {searchSource}</p>{/if}
+      {#if !searchBusy && searchSource}<p class="muted source-line">
+          {tr('plugins.list.source', { source: searchSource })}
+        </p>{/if}
       {#each searchCandidates as c, i (c.candidate?.pluginId ?? `cand-${i}`)}
         <PluginCandidateCard candidate={c} onUse={useCandidate} />
       {/each}
@@ -392,8 +407,7 @@
   </section>
 {:else}
   <p class="role-notice">
-    📚 <strong>View only</strong> — helper role can browse + audit plugins. Sign in as Owner to author
-    or upload new ones.
+    📚 <strong>{tr('plugins.list.viewOnly')}</strong>{tr('plugins.list.viewOnlyRest')}
   </p>
 {/if}
 
@@ -406,13 +420,13 @@
 {/if}
 
 <p class="community-link">
-  Looking to share or discover plugins? See the <a href="/plugins/community">community plugins</a>
-  page.
+  {tr('plugins.list.communityA')}<a href="/plugins/community">{tr('plugins.list.communityLink')}</a
+  >{tr('plugins.list.communityB')}
 </p>
 
 {#if data.failures.length > 0}
   <section class="alert">
-    <strong>⚠ {data.failures.length} plugin file(s) failed to load:</strong>
+    <strong>⚠ {tr('plugins.list.failures', { count: data.failures.length })}</strong>
     <ul>
       {#each data.failures as f, idx (idx)}<li>{f}</li>{/each}
     </ul>
@@ -421,7 +435,7 @@
 
 <section class="card list-card">
   <header class="list-header">
-    <h2>Registered plugins</h2>
+    <h2>{tr('plugins.list.registered')}</h2>
     <div class="filter-tabs">
       {#each ['all', 'crop', 'herbicide', 'insecticide', 'fungicide', 'fertilizer', 'companion'] as t (t)}
         <button
@@ -429,7 +443,7 @@
           class:active={typeFilter === t}
           onclick={() => (typeFilter = t as typeof typeFilter)}
         >
-          {t}
+          {typeLabel(t)}
           {#if t === 'all'}<span class="tab-count">{data.records.length}</span>{:else}<span
               class="tab-count">{data.records.filter((r) => r.type === t).length}</span
             >{/if}
@@ -439,10 +453,10 @@
   </header>
 
   {#if selectedIds.size > 0}
-    <div class="bulk-bar" role="region" aria-label="Bulk actions">
-      <span class="bulk-count">{selectedIds.size} selected</span>
-      <button class="bulk-action" onclick={bulkDownload}>↓ Download JSON</button>
-      <button class="bulk-clear" onclick={clearSelection}>Clear</button>
+    <div class="bulk-bar" role="region" aria-label={tr('plugins.list.bulkActions')}>
+      <span class="bulk-count">{tr('plugins.list.selected', { count: selectedIds.size })}</span>
+      <button class="bulk-action" onclick={bulkDownload}>{tr('plugins.list.downloadJson')}</button>
+      <button class="bulk-clear" onclick={clearSelection}>{tr('plugins.list.clear')}</button>
     </div>
   {/if}
 
@@ -451,8 +465,8 @@
       class="list-search"
       type="search"
       bind:value={listQuery}
-      placeholder="Filter by name or plugin id"
-      aria-label="Filter registered plugins"
+      placeholder={tr('plugins.list.filterPlaceholder')}
+      aria-label={tr('plugins.list.filterAria')}
       data-testid="plugin-list-filter"
     />
     <label class="select-all">
@@ -462,7 +476,12 @@
         indeterminate={someFilteredSelected && !allFilteredSelected}
         onchange={selectAllFiltered}
       />
-      <span>{filtered.length} {typeFilter === 'all' ? 'plugins' : typeFilter + ' plugins'}</span>
+      <span
+        >{filtered.length}
+        {typeFilter === 'all'
+          ? tr('plugins.list.countAll')
+          : tr('plugins.list.countType', { type: typeLabel(typeFilter) })}</span
+      >
     </label>
   </div>
 
@@ -474,29 +493,27 @@
           class="row-check"
           checked={selectedIds.has(r.pluginId)}
           onchange={() => toggleSelect(r.pluginId)}
-          aria-label={`Select ${r.displayName}`}
+          aria-label={tr('plugins.list.select', { name: r.displayName })}
         />
         <a class="row-main" href="/plugins/{encodeURIComponent(r.pluginId)}">
           <div class="row-line1">
             <strong class="name">{r.displayName}</strong>
-            <span class="type-badge type-{r.type}">{r.type}</span>
+            <span class="type-badge type-{r.type}">{typeLabel(r.type)}</span>
             {#each r.groupCodes as gc, idx (idx)}
               <GroupCodeBadge kind={gc.kind} group={gc.group} />
             {/each}
             <span class="version">v{r.version}</span>
             {#if r.farmOverride}
-              <span
-                class="history-chip"
-                title="Edited on this farm; other farms see the shared version"
-                >this farm's copy</span
+              <span class="history-chip" title={tr('plugins.list.farmCopyTitle')}
+                >{tr('plugins.list.farmCopy')}</span
               >
             {/if}
             {#if r.farmRetired}
-              <span class="history-chip">retired on this farm</span>
+              <span class="history-chip">{tr('plugins.list.retired')}</span>
             {/if}
             {#if r.historyCount > 1}
-              <span class="history-chip" title="Number of versions on record"
-                >{r.historyCount} versions</span
+              <span class="history-chip" title={tr('plugins.list.versionsTitle')}
+                >{tr('plugins.list.versions', { count: r.historyCount })}</span
               >
             {/if}
           </div>
@@ -513,8 +530,8 @@
           class="row-download"
           href="/api/plugins/{encodeURIComponent(r.pluginId)}/export"
           download
-          title="Download JSON"
-          aria-label={`Download ${r.displayName}`}
+          title={tr('plugins.list.downloadTitle')}
+          aria-label={tr('plugins.list.download', { name: r.displayName })}
           onclick={(e) => e.stopPropagation()}
         >
           ↓
@@ -522,7 +539,7 @@
       </li>
     {/each}
     {#if filtered.length === 0}
-      <li class="empty-row">No plugins match this filter.</li>
+      <li class="empty-row">{tr('plugins.list.empty')}</li>
     {/if}
   </ul>
 </section>
@@ -530,11 +547,10 @@
 {#if data.canEdit}
   <section class="card">
     <details>
-      <summary>Advanced: upload raw plugin JSON</summary>
+      <summary>{tr('plugins.list.advanced')}</summary>
       <p class="lede">
-        Paste a JSON document or upload a <code>.json</code> file. The registry will validate
-        against the schema + bypass matrix. Most authors should use the
-        <a href="/plugins/new">guided wizard</a> instead.
+        {tr('plugins.list.advA')}<code>.json</code>{tr('plugins.list.advB')}
+        <a href="/plugins/new">{tr('plugins.list.advWizard')}</a>{tr('plugins.list.advC')}
       </p>
       <input type="file" accept="application/json" onchange={handleFile} />
       <textarea
@@ -543,7 +559,7 @@
         placeholder={'{ "pluginId": "…", "type": "crop", "displayName": "…", "version": "1.0.0", "cropFamily": "corn" }'}
       ></textarea>
       <button class="primary" onclick={uploadPlugin} disabled={uploading || !uploadJson.trim()}>
-        {uploading ? 'Uploading…' : 'Upload'}
+        {uploading ? tr('plugins.list.uploading') : tr('plugins.list.upload')}
       </button>
       {#if uploadSuccess}<p class="success">{uploadSuccess}</p>{/if}
       {#if reject}
@@ -580,7 +596,7 @@
         </p>
       {:else if reject.code === 'schema'}
         <p class="why">
-          The plugin doesn't conform to the schema. See the field-level messages below.
+          {tr('plugins.list.schemaWhy')}
         </p>
       {/if}
       <ul class="issues">
@@ -591,7 +607,7 @@
           </li>
         {/each}
       </ul>
-      <button class="ack" onclick={ackReject}>Got it</button>
+      <button class="ack" onclick={ackReject}>{tr('plugins.list.gotIt')}</button>
     </div>
   </div>
 {/if}

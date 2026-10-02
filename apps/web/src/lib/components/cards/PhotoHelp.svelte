@@ -25,6 +25,8 @@
   import { resizePhoto } from '$lib/client/photoResize';
   import type { QueuedJournalRow } from '$lib/client/journalQueue';
   import { DEFAULT_PREFS, formatInstant, type Prefs } from '$lib/prefs';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     targets: PhotoHelpTarget[];
@@ -35,9 +37,15 @@
 
   const { targets, role = null, prefs = DEFAULT_PREFS, sprayTerms = [] }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const CHIPS = Object.entries(PHOTO_QUESTION_LABEL) as Array<
     [Exclude<PhotoQuestion, 'other'>, string]
   >;
+  const CHIP_KEYS = {
+    ready: 'cardsui.photo.q.ready',
+    prune: 'cardsui.photo.q.prune',
+    leaves: 'cardsui.photo.q.leaves'
+  } as const;
 
   let chosenId = $state<string | null>(null);
   const cropId = $derived(chosenId ?? targets[0]?.cropId ?? null);
@@ -145,7 +153,7 @@
       photo = await resizePhoto(file);
     } catch (err) {
       photo = null;
-      photoError = err instanceof Error ? err.message : 'That photo could not be read.';
+      photoError = err instanceof Error ? err.message : tr('cardsui.photo.unreadable');
     } finally {
       photoBusy = false;
     }
@@ -175,9 +183,7 @@
     chip = null;
     typed = '';
     const spray = asksForSprayAdvice(asked, sprayTerms);
-    const saved = hadPhoto
-      ? 'Your photo and question will save when you are back online.'
-      : 'Your question will save when you are back online.';
+    const saved = hadPhoto ? tr('cardsui.photo.savedWithPhoto') : tr('cardsui.photo.savedQuestion');
     shown = {
       answer: {
         question: q,
@@ -187,7 +193,7 @@
         sprayRedirect: spray
       },
       provenance: 'fallback',
-      message: `${spray ? `${SPRAY_REDIRECT} ` : ''}No signal right now, so here is what the Care Guide says. ${saved}`,
+      message: `${spray ? `${SPRAY_REDIRECT} ` : ''}${tr('cardsui.photo.noSignal')} ${saved}`,
       queued: true
     };
   }
@@ -224,7 +230,7 @@
         aiLimit?: AiLimit | null;
       };
       if (!res.ok || !body.answer || !body.provenance) {
-        askError = body.error ?? 'That did not go through. Try again.';
+        askError = body.error ?? tr('cardsui.photo.failed');
         return;
       }
       shown = {
@@ -263,10 +269,10 @@
           if (res.ok && body.entry) {
             entries = [body.entry, ...entries];
             note = '';
-            noteMessage = 'Note saved.';
+            noteMessage = tr('cardsui.photo.noteSaved');
             return;
           }
-          noteMessage = body.error ?? 'That note did not save. Try again.';
+          noteMessage = body.error ?? tr('cardsui.photo.noteFailed');
           return;
         } catch {
           /* no signal after all: queue it below */
@@ -274,7 +280,7 @@
       }
       await queueEntry('note', text, null);
       note = '';
-      noteMessage = 'Saved on this phone. It will upload when you are back online.';
+      noteMessage = tr('cardsui.photo.noteQueued');
     } finally {
       noteBusy = false;
     }
@@ -291,9 +297,7 @@
       entries = entries.filter((e) => e.id !== entry.id);
     } else {
       noteMessage =
-        res?.status === 403
-          ? 'Only the owner can delete journal entries.'
-          : 'That did not delete. Try again with signal.';
+        res?.status === 403 ? tr('cardsui.photo.ownerDelete') : tr('cardsui.photo.deleteFailed');
     }
   }
 
@@ -306,11 +310,11 @@
 
 {#if targets.length}
   <section class="photo-help" aria-labelledby="photo-help-heading" data-testid="photo-help">
-    <h2 id="photo-help-heading" class="serif">Ask about a photo</h2>
+    <h2 id="photo-help-heading" class="serif">{tr('cardsui.photo.title')}</h2>
 
     {#if targets.length > 1}
       <label class="field">
-        <span>Which planting?</span>
+        <span>{tr('cardsui.photo.which')}</span>
         <select value={cropId} onchange={(e) => pickTarget(e.currentTarget.value)}>
           {#each targets as t (t.cropId)}
             <option value={t.cropId}>{t.label}</option>
@@ -318,7 +322,7 @@
         </select>
       </label>
     {:else if target}
-      <p class="about">About {target.label}</p>
+      <p class="about">{tr('cardsui.photo.about', { label: target.label })}</p>
     {/if}
 
     {#if canWrite}
@@ -333,38 +337,37 @@
             onchange={onPhoto}
             data-testid="photo-input"
           />
-          {photo ? 'Retake photo' : 'Take or choose a photo'}
+          {photo ? tr('cardsui.photo.retake') : tr('cardsui.photo.take')}
         </label>
         {#if photo}
-          <img class="preview" src={photo} alt="What you are asking about" />
+          <img class="preview" src={photo} alt={tr('cardsui.photo.alt')} />
           <button type="button" class="btn ghost" onclick={() => (photo = null)}>
-            Remove photo
+            {tr('cardsui.photo.remove')}
           </button>
         {/if}
       </div>
-      {#if photoBusy}<p class="hint" role="status">Making the photo smaller…</p>{/if}
+      {#if photoBusy}<p class="hint" role="status">{tr('cardsui.photo.shrinking')}</p>{/if}
       {#if photoError}<p class="error" role="alert">{photoError}</p>{/if}
 
-      <div class="chips" role="group" aria-label="Pick a question">
-        {#each CHIPS as [id, label] (id)}
+      <div class="chips" role="group" aria-label={tr('cardsui.photo.pick')}>
+        {#each CHIPS as [id] (id)}
           <button
             type="button"
             class="chip"
             aria-pressed={chip === id}
-            onclick={() => (chip = chip === id ? null : id)}>{label}</button
+            onclick={() => (chip = chip === id ? null : id)}>{tr(CHIP_KEYS[id])}</button
           >
         {/each}
       </div>
       <label class="field">
-        <span>{chip ? 'Anything to add?' : 'Or ask in your own words'}</span>
+        <span>{chip ? tr('cardsui.photo.add') : tr('cardsui.photo.own')}</span>
         <textarea rows="2" maxlength="500" bind:value={typed}></textarea>
       </label>
       <button type="button" class="btn primary" disabled={!canAsk} onclick={ask}>
-        {asking ? 'Asking…' : 'Ask'}
+        {asking ? tr('cardsui.photo.asking') : tr('cardsui.photo.ask')}
       </button>
       <p class="hint">
-        Answers are about growing only. For anything you would spray, use the Spray flow and the
-        product label.
+        {tr('cardsui.photo.growingOnly')}
       </p>
       {#if askError}<p class="error" role="alert">{askError}</p>{/if}
     {/if}
@@ -385,7 +388,7 @@
                 {s.title}
                 <Provenance
                   source={s.provenance ?? 'fallback'}
-                  label={s.provenance === 'plugin' ? undefined : 'Care guide'}
+                  label={s.provenance === 'plugin' ? undefined : tr('cardsui.photo.careGuide')}
                   compact
                 />
               </h3>
@@ -395,24 +398,24 @@
             </section>
           {/each}
           {#if shown.answer.sprayRedirect}
-            <a class="btn ghost" href="/spray">Open the Spray flow</a>
+            <a class="btn ghost" href="/spray">{tr('cardsui.photo.openSpray')}</a>
           {/if}
         </div>
       {/if}
     </div>
 
     <section class="journal" aria-labelledby="journal-heading">
-      <h3 id="journal-heading">Journal</h3>
+      <h3 id="journal-heading">{tr('cardsui.photo.journal')}</h3>
       {#if canWrite}
         <label class="field">
-          <span>Add a note</span>
+          <span>{tr('cardsui.photo.addNote')}</span>
           <textarea rows="2" maxlength="2000" bind:value={note}></textarea>
         </label>
         <button
           type="button"
           class="btn ghost"
           disabled={!note.trim() || noteBusy}
-          onclick={saveNote}>Save note</button
+          onclick={saveNote}>{tr('cardsui.photo.saveNote')}</button
         >
       {/if}
       {#if noteMessage}<p class="hint" role="status">{noteMessage}</p>{/if}
@@ -422,22 +425,26 @@
           {#each queuedNotes as q (q.rowId)}
             <li class="entry" data-testid="journal-queued">
               {#if q.rejected}
-                <p class="error">This did not save. Open Records to try it again.</p>
+                <p class="error">{tr('cardsui.photo.rejected')}</p>
               {:else}
                 <QueuedBadge />
               {/if}
-              <p>{q.text || 'Photo'}{q.hasPhoto && q.text ? ' (with photo)' : ''}</p>
+              <p>
+                {q.text || tr('cardsui.photo.photoWord')}{q.hasPhoto && q.text
+                  ? ` ${tr('cardsui.photo.withPhoto')}`
+                  : ''}
+              </p>
             </li>
           {/each}
         </ul>
       {/if}
 
       {#if journalState === 'offline'}
-        <p class="hint">The journal loads when you have signal. New notes save on this phone.</p>
+        <p class="hint">{tr('cardsui.photo.jOffline')}</p>
       {:else if journalState === 'error'}
-        <p class="hint">The journal did not load. Try again in a moment.</p>
+        <p class="hint">{tr('cardsui.photo.jError')}</p>
       {:else if journalState === 'ready' && entries.length === 0 && !queuedNotes.length}
-        <p class="hint">Nothing here yet. Notes and photo questions show up here.</p>
+        <p class="hint">{tr('cardsui.photo.jEmpty')}</p>
       {/if}
       {#if entries.length}
         <ul class="entries" data-testid="journal-entries">
@@ -451,7 +458,9 @@
                 <img
                   class="thumb"
                   src={journalPhotoUrl(cropId, e.id)}
-                  alt="Taken {formatInstant(e.createdAt, prefs, 'month-day')}"
+                  alt={tr('cardsui.photo.taken', {
+                    date: formatInstant(e.createdAt, prefs, 'month-day')
+                  })}
                   loading="lazy"
                 />
               {/if}
@@ -459,26 +468,29 @@
               {#if e.answer?.text}
                 <p class="ai-text">{e.answer.text}</p>
               {:else if e.answer?.sections.length}
-                <p class="hint">Answered from the Care Guide: {e.answer.sections[0].title}.</p>
+                <p class="hint">
+                  {tr('cardsui.photo.answeredFrom', { title: e.answer.sections[0].title })}
+                </p>
               {/if}
               {#if isOwner}
                 {#if confirmDelete === e.id}
-                  <div class="confirm" role="group" aria-label="Delete this entry?">
-                    <span class="confirm-q">Delete this entry?</span>
+                  <div class="confirm" role="group" aria-label={tr('cardsui.photo.deleteQ')}>
+                    <span class="confirm-q">{tr('cardsui.photo.deleteQ')}</span>
                     <button
                       type="button"
                       class="btn ghost small"
-                      onclick={() => (confirmDelete = null)}>Cancel</button
+                      onclick={() => (confirmDelete = null)}>{tr('cardsui.photo.cancel')}</button
                     >
                     <button type="button" class="btn danger small" onclick={() => remove(e)}
-                      >Delete</button
+                      >{tr('cardsui.photo.delete')}</button
                     >
                   </div>
                 {:else}
                   <button
                     type="button"
                     class="btn ghost small"
-                    onclick={() => (confirmDelete = e.id)}>Delete…</button
+                    onclick={() => (confirmDelete = e.id)}
+                    >{tr('cardsui.photo.deleteEllipsis')}</button
                   >
                 {/if}
               {/if}

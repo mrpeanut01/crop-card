@@ -4,16 +4,13 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import BedMapThumb from './BedMapThumb.svelte';
   import CardCalendarView from './CardCalendarView.svelte';
-  import {
-    CARD_KIND_LABEL,
-    STALE_NOTICE,
-    isCardStale,
-    type CardModel,
-    type CardVariant
-  } from '$lib/cards/model';
+  import { CARD_KIND_LABEL, isCardStale, type CardModel, type CardVariant } from '$lib/cards/model';
   import type { QrPath } from '$lib/cards/qr';
   import { DEFAULT_PREFS, formatInstant, type Prefs } from '$lib/prefs';
   import { provenanceText } from '$lib/provenanceLabels';
+  import { CARD_KIND_LABEL_KEYS } from './kindLabels';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     card: CardModel;
@@ -41,6 +38,7 @@
     complete?: boolean;
   }
 
+  const tr = $derived(createT(page.data?.locale));
   const COMPACT_FACTS = 2;
 
   const {
@@ -94,7 +92,7 @@
   <div class="strip" aria-hidden="true"></div>
   <div class="body">
     {#if variant === 'print' && !kickerNamesKind}
-      <div class="kind-label">{CARD_KIND_LABEL[card.kind]}</div>
+      <div class="kind-label">{tr(CARD_KIND_LABEL_KEYS[card.kind])}</div>
     {/if}
     {#if badges && variant !== 'print'}
       <div class="kicker-row">
@@ -124,7 +122,7 @@
     </div>
 
     {#if stale}
-      <p class="stale" role="status">{STALE_NOTICE}</p>
+      <p class="stale" role="status">{tr('cardsui.stale')}</p>
     {/if}
     {#if card.notices?.length}
       <ul class="notices">
@@ -173,10 +171,10 @@
 
       {#if card.next}
         {#if variant === 'print'}
-          <p class="next"><span class="next-label">Next:</span> {nextText}</p>
+          <p class="next"><span class="next-label">{tr('cardsui.next')}</span> {nextText}</p>
         {:else}
           <a class="next" href={card.next.href}>
-            <span class="next-label">Next:</span>
+            <span class="next-label">{tr('cardsui.next')}</span>
             {nextText}
           </a>
         {/if}
@@ -184,7 +182,7 @@
 
       {#if card.bedMap && variant !== 'compact'}
         <section class="section" data-testid="card-bed-map">
-          <h4>Garden bed map</h4>
+          <h4>{tr('cardsui.bedMap')}</h4>
           <BedMapThumb map={card.bedMap} print={variant === 'print'} />
         </section>
       {/if}
@@ -247,14 +245,14 @@
       <p class="more">
         {card.kind === 'spray'
           ? 'Cut short? The label and the live card have the full directions.'
-          : 'Cut short? The live card has the full list.'}
+          : tr('cardsui.cutShort')}
       </p>
     {/if}
 
     {#if showAsOf || card.rulesVersion || variant !== 'compact'}
       <footer class="foot">
         {#if showAsOf || variant === 'print'}
-          <span class="asof">As of {asOf}</span>
+          <span class="asof">{tr('cardsui.asOf', { date: asOf })}</span>
         {/if}
         {#if card.rulesVersion}
           <span class="rules mono">Rules {card.rulesVersion}</span>
@@ -278,7 +276,7 @@
           viewBox="0 0 {link.qr.size} {link.qr.size}"
           shape-rendering="crispEdges"
           role="img"
-          aria-label="QR code linking to {link.url}"
+          aria-label={tr('cardsui.qr', { url: link.url })}
         >
           <rect width={link.qr.size} height={link.qr.size} fill="#fff" />
           <path d={link.qr.d} fill="#000" />

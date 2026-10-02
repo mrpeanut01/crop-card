@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { CardCalendar, CardCalendarEntry } from '$lib/cards/model';
   import { calendarDayLabel } from '$lib/cards/build/calendar';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     calendar: CardCalendar;
@@ -10,6 +12,7 @@
   }
 
   const { calendar, mode = 'agenda' }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const days = $derived(calendar.weeks.flat().filter((d) => d.inPeriod));
   const busyDays = $derived(days.filter((d) => d.entries.length > 0));
@@ -22,14 +25,13 @@
   function linkNo(e: CardCalendarEntry): number {
     return e.seeUrl ? links.indexOf(e.seeUrl) + 1 : 0;
   }
-  const OVERDUE_TEXT = ' overdue';
   const URL_SEP = ': ';
 </script>
 
 {#snippet entryLine(e: CardCalendarEntry, footnote: boolean)}
   <span class="t">{e.text}</span>{#if e.where}<span class="w">{`, ${e.where}`}</span
     >{/if}{#if e.who}<span class="who">{` · ${e.who}`}</span>{/if}{#if e.overdue}<span class="od"
-      >{OVERDUE_TEXT}</span
+      >{` ${tr('cardsui.cal.overdue')}`}</span
     >{/if}{#if e.see}<span class="see"
       >{`. ${e.see}`}{#if footnote && e.seeUrl}{` [${linkNo(e)}]`}{:else if e.seeUrl}{URL_SEP}<span
           class="url">{e.seeUrl}</span
@@ -60,7 +62,7 @@
                 {#if d.inPeriod}
                   <div class="day">{d.label}</div>
                   {#if d.earlier}
-                    <div class="note">Not on this card</div>
+                    <div class="note">{tr('cardsui.cal.notOnCard')}</div>
                   {:else}
                     <ul>
                       {#each d.entries.slice(0, calendar.perDay) as e, i (i)}
@@ -69,7 +71,7 @@
                     </ul>
                     {#if d.entries.length > calendar.perDay}
                       <div class="more" data-testid="calendar-more">
-                        +{d.entries.length - calendar.perDay} more
+                        {tr('cardsui.cal.more', { count: d.entries.length - calendar.perDay })}
                       </div>
                     {/if}
                   {/if}
@@ -81,7 +83,7 @@
       </tbody>
     </table>
     {#if links.length}
-      <ol class="links" aria-label="Spray Card links">
+      <ol class="links" aria-label={tr('cardsui.cal.sprayLinks')}>
         {#each links as url, i (url)}
           <li><span class="n">[{i + 1}]</span> <span class="url">{url}</span></li>
         {/each}
@@ -94,11 +96,11 @@
     data-testid={mode === 'list' ? 'card-calendar-list' : 'card-calendar-agenda'}
   >
     {#if busyDays.length === 0}
-      <p class="empty">Nothing scheduled.</p>
+      <p class="empty">{tr('cardsui.cal.nothing')}</p>
     {/if}
     {#each busyDays as d (d.ymd)}
       <section class="list-day" data-ymd={d.ymd}>
-        <h5>{calendarDayLabel(d.ymd)}{d.today ? ', today' : ''}</h5>
+        <h5>{calendarDayLabel(d.ymd)}{d.today ? `, ${tr('cardsui.cal.today')}` : ''}</h5>
         <ul>
           {#each d.entries as e, i (i)}
             <li class:overdue={e.overdue}>{@render entryLine(e, false)}</li>

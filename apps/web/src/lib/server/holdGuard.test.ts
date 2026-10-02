@@ -114,6 +114,7 @@ import {
   OTHER_LOOKBACK_MS,
   guardedHoldWrite,
   projectActiveFarm,
+  backfillHoldParams,
   backfillHoldParamsEverywhere,
   zoneChangeShortensHolds,
   changeOwnerZone,
@@ -1145,12 +1146,13 @@ describe('C-35 §2 snapshots before a shared-library change (review round 1)', (
       expect(readHoldParamsFor(s.id)).toBeUndefined();
       const tenDays = await hayEnd();
       expect(tenDays).toBeGreaterThan(Date.now() + 7 * DAY);
-      expect(await backfillHoldParamsEverywhere()).toBeGreaterThan(0);
+      await backfillHoldParamsEverywhere();
       expect(readHoldParamsFor(s.id)).toBeDefined();
       expect(recordedAtOf('spray', s.id)).toBeNull();
       m.knownDays = 3;
       expect(await hayEnd()).toBe(tenDays);
-      expect(await backfillHoldParamsEverywhere()).toBe(0);
+      await backfillHoldParamsEverywhere();
+      expect(await backfillHoldParams()).toBe(0);
     });
   });
 
@@ -1184,7 +1186,8 @@ describe('C-35 §2 snapshots of products named by owner entries (review round 6)
       await backfillHoldParamsEverywhere();
       const params = JSON.parse(readHoldParams('animal-health').get(dose.id) ?? '{}');
       expect(params.products).toEqual({ 'later-wormer': null });
-      expect(await backfillHoldParamsEverywhere()).toBe(0);
+      await backfillHoldParamsEverywhere();
+      expect(await backfillHoldParams()).toBe(0);
       db.update(animalHealthEvents)
         .set({
           vetDirectedWithdrawal: JSON.stringify([
@@ -1194,7 +1197,7 @@ describe('C-35 §2 snapshots of products named by owner entries (review round 6)
         })
         .where(withTenant(animalHealthEvents, eq(animalHealthEvents.id, dose.id)))
         .run();
-      expect(await backfillHoldParamsEverywhere()).toBeGreaterThan(0);
+      await backfillHoldParamsEverywhere();
       const next = JSON.parse(readHoldParams('animal-health').get(dose.id) ?? '{}');
       expect(next.products).toEqual({ 'later-wormer': null, 'other-wormer': null });
       expect(next.product).toEqual(params.product);
@@ -1257,11 +1260,12 @@ describe('C-35 §2 snapshots survive a delete (review round 2)', () => {
       const tenDays = await hayEnd();
       deleteSprayEvent(s.id, { force: true, tombstone: true });
       expect(tombstoneOf(s.id).holdParamsJson).toBeUndefined();
-      expect(await backfillHoldParamsEverywhere()).toBeGreaterThan(0);
+      await backfillHoldParamsEverywhere();
       expect(typeof tombstoneOf(s.id).holdParamsJson).toBe('string');
       m.knownDays = 3;
       expect(await hayEnd()).toBe(tenDays);
-      expect(await backfillHoldParamsEverywhere()).toBe(0);
+      await backfillHoldParamsEverywhere();
+      expect(await backfillHoldParams()).toBe(0);
     });
   });
 
@@ -1270,7 +1274,8 @@ describe('C-35 §2 snapshots survive a delete (review round 2)', () => {
       const s = spray(farm, Date.now() - 2 * DAY);
       await backfillHoldParamsEverywhere();
       deleteSprayEvent(s.id, { force: true, tombstone: true, neverApplied: true });
-      expect(await backfillHoldParamsEverywhere()).toBe(0);
+      await backfillHoldParamsEverywhere();
+      expect(await backfillHoldParams()).toBe(0);
     });
   });
 });

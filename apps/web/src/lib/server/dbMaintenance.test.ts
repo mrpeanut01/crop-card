@@ -1,11 +1,17 @@
 /**
  * Retention pruning: each rule deletes only its own table's rows past their
  * own clock, and compliance ledgers are never touched. Runs with `now` set
- * in 2001 so rows other test files write (dated today) are out of reach.
+ * in 2001. Maintenance is a deployment-wide job, so this file runs on its
+ * own SQLite file: another file's maintenance pass on the shared test
+ * database would otherwise prune these rows or claim the once-a-day slot.
  */
 
+import { execSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { afterEach, describe, expect, it } from 'vitest';
+import { existsSync, unlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { sqliteHandle } from '$lib/db/client';
 import {
   claimClientRecord,
@@ -22,6 +28,28 @@ import {
   RETENTION_RULES,
   runDbMaintenance
 } from './dbMaintenance';
+
+const DB_FILE = path.join(tmpdir(), `cropcard-maint-${process.pid}-${Date.now()}.db`);
+const previousUrl = process.env.DATABASE_URL;
+
+beforeAll(() => {
+  process.env.DATABASE_URL = `file:${DB_FILE}`;
+  execSync('node ./scripts/migrate.mjs', {
+    cwd: path.resolve(import.meta.dirname, '../../..'),
+    env: { ...process.env, DATABASE_URL: `file:${DB_FILE}` },
+    stdio: 'pipe'
+  });
+});
+
+afterAll(() => {
+  try {
+    sqliteHandle().close();
+  } catch {
+    /* never opened */
+  }
+  process.env.DATABASE_URL = previousUrl;
+  for (const s of ['', '-wal', '-shm']) if (existsSync(DB_FILE + s)) unlinkSync(DB_FILE + s);
+});
 
 const DAY = 86_400_000;
 const NOW = Date.UTC(2001, 5, 1);

@@ -137,10 +137,23 @@ describe('recordCardStore', () => {
   it('refuses the 101st pin and needs a stored row to pin', async () => {
     expect(await pinRecordCard(key('nope'))).toBe('missing');
     expect(await pinRecordCard('pl_1')).toBe('missing');
-    for (let i = 0; i < RECORD_CARD_PIN_LIMIT; i++) {
-      await saveRecordCard(model(`p${i}`), i + 1);
-      expect(await pinRecordCard(key(`p${i}`), i + 1)).toBe('pinned');
-    }
+    const seeded = RECORD_CARD_PIN_LIMIT - 1;
+    const ids = Array.from({ length: seeded }, (_, i) => `p${i}`);
+    await db().recordCards.bulkPut(
+      ids.map((id, i) => ({
+        ownerId: 'owner_a',
+        key: key(id),
+        model: model(id),
+        savedAt: i + 1,
+        lastOpenedAt: i + 1
+      }))
+    );
+    await db().pinnedCards.bulkPut(
+      ids.map((id, i) => ({ ownerId: 'owner_a', key: key(id), pinnedAt: i + 1 }))
+    );
+    expect(await pinRecordCard(key('p0'), 1)).toBe('pinned');
+    await saveRecordCard(model(`p${seeded}`), seeded + 1);
+    expect(await pinRecordCard(key(`p${seeded}`), seeded + 1)).toBe('pinned');
     await pinCard('pl_1');
     await saveRecordCard(model('p100'), 500);
     expect(await pinRecordCard(key('p100'))).toBe('limit');

@@ -18,6 +18,8 @@
   import Card from '$lib/components/ui/Card.svelte';
   import type { CalendarEvent } from '$lib/calendar/engine';
   import type { PlantingRecord } from '$lib/db/blocks';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     plantings: PlantingRecord[];
@@ -31,8 +33,17 @@
     yearLabel?: string;
   }
   const { plantings, events, daysToMaturityById = {}, yearLabel }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
-  const MONTHS = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+  const MONTHS = $derived([
+    tr('planui.season.monApr'),
+    tr('planui.season.monMay'),
+    tr('planui.season.monJun'),
+    tr('planui.season.monJul'),
+    tr('planui.season.monAug'),
+    tr('planui.season.monSep'),
+    tr('planui.season.monOct')
+  ]);
   const DAY_MS = 24 * 60 * 60 * 1000;
 
   function plantingColor(plantingId: string): string {
@@ -65,7 +76,9 @@
       Math.max(0, ((Date.now() - bounds.startMs) / (bounds.endMs - bounds.startMs)) * 100)
     )
   );
-  const computedYearLabel = $derived(yearLabel ?? `${bounds.year} · Apr → Oct`);
+  const computedYearLabel = $derived(
+    yearLabel ?? tr('planui.season.yearLabel', { year: bounds.year })
+  );
 
   type Window = { start: number; end: number; color: string; label: string };
   function windowsFor(p: PlantingRecord): Window[] {
@@ -86,17 +99,27 @@
     const harvestEnd = harvestEv?.endMs ?? (harvestStart ? harvestStart + 14 * DAY_MS : null);
 
     if (plantStart && harvestStart && harvestStart > plantStart) {
-      out.push({ start: plantStart, end: harvestStart, color, label: 'planting → fruit set' });
+      out.push({
+        start: plantStart,
+        end: harvestStart,
+        color,
+        label: tr('planui.season.winPlanting')
+      });
     }
     if (harvestStart && harvestEnd) {
-      out.push({ start: harvestStart, end: harvestEnd, color: '#c9961f', label: 'harvest' });
+      out.push({
+        start: harvestStart,
+        end: harvestEnd,
+        color: '#c9961f',
+        label: tr('planui.season.winHarvest')
+      });
     }
     if (terminationEv) {
       out.push({
         start: terminationEv.startMs,
         end: terminationEv.endMs,
         color: 'var(--color-rust, #a64a2a)',
-        label: 'terminate'
+        label: tr('planui.season.winTerminate')
       });
     }
     if (out.length === 0) {
@@ -106,7 +129,7 @@
         start: fallbackStart,
         end: fallbackStart + 90 * DAY_MS,
         color,
-        label: 'season'
+        label: tr('planui.season.winSeason')
       });
     }
     return out;
@@ -126,7 +149,7 @@
 <Card>
   <div class="head">
     <h3 class="serif">
-      Season · {plantings.length > 1 ? 'all plantings overlaid' : 'timeline'}
+      {plantings.length > 1 ? tr('planui.season.titleAll') : tr('planui.season.titleOne')}
     </h3>
     <div class="cap">{computedYearLabel}</div>
   </div>
@@ -134,10 +157,10 @@
   <div class="axis-row">
     <div class="axis-spacer" aria-hidden="true"></div>
     <div class="axis" role="presentation">
-      {#each MONTHS as mo, i (mo)}
+      {#each MONTHS as mo, i (i)}
         <span class="month" style:left="{(i / (MONTHS.length - 1)) * 100}%">{mo}</span>
       {/each}
-      <span class="today-pin" style:left="{todayPct}%">TODAY</span>
+      <span class="today-pin" style:left="{todayPct}%">{tr('planui.season.today')}</span>
     </div>
   </div>
 

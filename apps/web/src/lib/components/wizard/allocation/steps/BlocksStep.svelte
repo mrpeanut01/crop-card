@@ -1,5 +1,7 @@
 <script lang="ts">
   import { getWizardContext } from '../wizardState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import EditBlockModal from '$lib/components/plan/EditBlockModal.svelte';
   import { fmt } from '$lib/prefsState.svelte';
@@ -13,6 +15,12 @@
   } from '$lib/plan/bedLayout';
 
   const w = getWizardContext();
+  const tr = $derived(createT(page.data?.locale));
+  const SUN_KEY = {
+    full: 'wizard.blocks.sunFull',
+    partial: 'wizard.blocks.sunPartial',
+    shade: 'wizard.blocks.sunShade'
+  } as const;
   const blocks = $derived(w.props.blocks);
   let editing = $state<BlockEntry | null>(null);
 
@@ -83,7 +91,7 @@
 
   async function suggestBeds() {
     if (!bedWidthFt || !maxBedLengthFt) {
-      suggestError = 'Give a bed width and a longest bed first.';
+      suggestError = tr('wizard.blocks.errWidth');
       return;
     }
     suggesting = true;
@@ -152,7 +160,7 @@
   async function addBlock(e: SubmitEvent) {
     e.preventDefault();
     if (!newName.trim()) {
-      addError = 'Give the block a name.';
+      addError = tr('wizard.blocks.errName');
       return;
     }
     adding = true;
@@ -185,21 +193,24 @@
 
 {#if blocks.length === 0}
   <div class="aw-blocks-empty" data-empty-state="blocks">
-    <h3>Add your first block</h3>
+    <h3>{tr('wizard.blocks.emptyTitle')}</h3>
     <p class="aw-intro">
-      A block is any patch you plant as one unit: a bed, a row set, a field corner. Name it and the
-      wizard will plan into it. You can draw it on the farm map later.
+      {tr('wizard.blocks.emptyIntro')}
     </p>
   </div>
 {:else}
   <div class="aw-blocks-header">
-    <p class="aw-intro">Pick the blocks the wizard may use.</p>
+    <p class="aw-intro">{tr('wizard.blocks.pick')}</p>
     <div class="aw-blocks-actions">
-      <span class="muted">{w.selectedBlockIds.size} of {blocks.length} selected</span>
-      <button type="button" class="aw-link" onclick={() => w.selectAllBlocks()}>Select all</button>
+      <span class="muted"
+        >{tr('wizard.blocks.selected', { n: w.selectedBlockIds.size, total: blocks.length })}</span
+      >
+      <button type="button" class="aw-link" onclick={() => w.selectAllBlocks()}
+        >{tr('wizard.blocks.selectAll')}</button
+      >
       {#if w.selectedBlockIds.size > 0}
         <button type="button" class="aw-link" onclick={() => (w.selectedBlockIds = new Set())}>
-          Clear
+          {tr('wizard.blocks.clear')}
         </button>
       {/if}
     </div>
@@ -213,10 +224,10 @@
           : b.acres !== undefined
             ? fmt.area(b.acres, { digits: 2 })
             : null}
-      {@const sunText = b.sunExposure ? `${b.sunExposure} sun` : null}
+      {@const sunText = b.sunExposure ? tr(SUN_KEY[b.sunExposure]) : null}
       {@const plantingsText =
         b.plantings.length > 0
-          ? `${b.plantings.length} active planting${b.plantings.length === 1 ? '' : 's'}`
+          ? tr('wizard.blocks.activePlantings', { count: b.plantings.length })
           : null}
       <li class:checked>
         <label>
@@ -226,7 +237,7 @@
             <span class="aw-chips">
               {#if acresText}<span class="aw-chip">{acresText}</span>{:else}<span
                   class="aw-chip aw-chip-warn"
-                  data-testid="block-no-size">No size yet</span
+                  data-testid="block-no-size">{tr('wizard.blocks.noSize')}</span
                 >{/if}
               {#if sunText}<span class="aw-chip">☀ {sunText}</span>{/if}
               {#if plantingsText}<span class="aw-chip aw-chip-warn">🌱 {plantingsText}</span>{/if}
@@ -246,25 +257,27 @@
           aria-describedby={`aw-block-name-${b.id}`}
           data-action="edit-block"
         >
-          Edit
+          {tr('wizard.blocks.edit')}
         </button>
       </li>
     {/each}
   </ul>
   {#if unsizedSelected.length > 0}
     <p class="aw-space aw-space-short" role="status" data-testid="unsized-blocks">
-      {unsizedSelected.length === 1
-        ? `${unsizedSelected[0].blockLabel ?? unsizedSelected[0].name} has no size yet`
-        : `${unsizedSelected.length} of the blocks you picked have no size yet`}, so the plan cannot
-      put seed there. Tap Edit and give it a width and length.
+      {tr('wizard.blocks.unsized', {
+        count: unsizedSelected.length,
+        name: unsizedSelected[0].blockLabel ?? unsizedSelected[0].name
+      })}
     </p>
   {/if}
   {#if neededSqft > 0 && selectedSqft > 0}
     <p class="aw-space" class:aw-space-short={neededSqft > selectedSqft} data-testid="space-check">
-      Your counted seed needs about {fmt.area(neededSqft / SQFT_PER_ACRE, { digits: 2 })}. The
-      blocks you picked hold about {fmt.area(selectedSqft / SQFT_PER_ACRE, { digits: 2 })}.
+      {tr('wizard.blocks.space', {
+        needed: fmt.area(neededSqft / SQFT_PER_ACRE, { digits: 2 }),
+        have: fmt.area(selectedSqft / SQFT_PER_ACRE, { digits: 2 })
+      })}
       {#if neededSqft > selectedSqft}
-        Pick more blocks, make one bigger, or expect some seed left over.
+        {tr('wizard.blocks.spaceMore')}
       {/if}
     </p>
   {/if}
@@ -272,18 +285,17 @@
 
 {#if countedSeeds.length > 0 && w.props.onRefreshParent}
   <section class="aw-beds" data-testid="bed-suggest" aria-labelledby="aw-beds-title">
-    <h3 id="aw-beds-title">Beds for this seed</h3>
+    <h3 id="aw-beds-title">{tr('wizard.blocks.bedsTitle')}</h3>
     <p class="aw-intro">
-      Get beds sized for the seed you picked, from each crop's spacing. Nothing is added until you
-      say so.
+      {tr('wizard.blocks.bedsIntro')}
     </p>
     <div class="aw-beds-fields">
       <label class="aw-add-field aw-add-acres">
-        <span>Bed width</span>
+        <span>{tr('wizard.blocks.bedWidth')}</span>
         <UnitInput quantity="distance" min={1} bind:value={bedWidthFt} disabled={suggesting} />
       </label>
       <label class="aw-add-field aw-add-acres">
-        <span>Longest bed</span>
+        <span>{tr('wizard.blocks.longestBed')}</span>
         <UnitInput quantity="distance" min={1} bind:value={maxBedLengthFt} disabled={suggesting} />
       </label>
       <button
@@ -293,12 +305,14 @@
         disabled={suggesting || addingBeds}
         data-action="suggest-beds"
       >
-        {suggesting ? 'Working it out…' : 'Suggest beds'}
+        {suggesting ? tr('wizard.blocks.working') : tr('wizard.blocks.suggest')}
       </button>
     </div>
     <p class="muted aw-beds-default">
-      Start with {DEFAULT_BED_WIDTH_FT} ft wide and up to {DEFAULT_MAX_BED_LENGTH_FT} ft long, or type
-      your own sizes.
+      {tr('wizard.blocks.bedDefault', {
+        w: DEFAULT_BED_WIDTH_FT,
+        l: DEFAULT_MAX_BED_LENGTH_FT
+      })}
     </p>
     {#if suggestion}
       {#if suggestion.message}
@@ -324,9 +338,8 @@
             </div>
             <span class="muted">
               {bed.crops
-                .map(
-                  (c) =>
-                    `${c.name}: ${c.plants} plants in ${c.rows} ${c.rows === 1 ? 'row' : 'rows'}`
+                .map((c) =>
+                  tr('wizard.blocks.cropRows', { name: c.name, plants: c.plants, count: c.rows })
                 )
                 .join('; ')}
             </span>
@@ -343,21 +356,20 @@
           data-action="add-suggested-beds"
         >
           {addingBeds
-            ? 'Adding…'
-            : `Add ${suggestion.beds.length === 1 ? 'this bed' : `these ${suggestion.beds.length} beds`}${newArea ? ` to ${newArea.name}` : ''}`}
+            ? tr('wizard.blocks.adding')
+            : `${tr('wizard.blocks.addBeds', { count: suggestion.beds.length })}${newArea ? tr('wizard.blocks.toArea', { area: newArea.name }) : ''}`}
         </button>
         <button type="button" class="btn-secondary" onclick={() => (suggestion = null)}>
-          Not now
+          {tr('wizard.blocks.notNow')}
         </button>
       </div>
     {/if}
     {#if bedsAdded}
       <p class="aw-notice" role="status">
-        Added {bedsAdded}
-        {bedsAdded === 1 ? 'bed' : 'beds'} and picked {bedsAdded === 1 ? 'it' : 'them'} for this plan.
+        {tr('wizard.blocks.added', { count: bedsAdded })}
         {#if designerArea}
           <a href={`/plan/areas/${designerArea.id}/design`} class="aw-designer-link"
-            >Lay out the plants in the garden designer</a
+            >{tr('wizard.blocks.designerLink')}</a
           >
         {/if}
       </p>
@@ -377,12 +389,19 @@
 
 <form class="aw-add-block" onsubmit={addBlock} data-testid="wizard-add-block">
   <label class="aw-add-field">
-    <span>{blocks.length === 0 ? 'Block name' : 'Add another block'}</span>
-    <input type="text" bind:value={newName} placeholder="e.g. North beds" disabled={adding} />
+    <span
+      >{blocks.length === 0 ? tr('wizard.blocks.blockName') : tr('wizard.blocks.addAnother')}</span
+    >
+    <input
+      type="text"
+      bind:value={newName}
+      placeholder={tr('wizard.blocks.namePlaceholder')}
+      disabled={adding}
+    />
   </label>
   {#if areas.length > 1}
     <label class="aw-add-field">
-      <span>In</span>
+      <span>{tr('wizard.blocks.in')}</span>
       <select
         value={newArea?.id ?? ''}
         onchange={(e) => (pickedAreaId = (e.target as HTMLSelectElement).value)}
@@ -395,22 +414,22 @@
       </select>
     </label>
   {:else if newArea}
-    <p class="aw-add-in muted">Goes in {newArea.name}.</p>
+    <p class="aw-add-in muted">{tr('wizard.blocks.goesIn', { name: newArea.name })}</p>
   {/if}
   <label class="aw-add-field aw-add-acres">
-    <span>Width (optional)</span>
+    <span>{tr('wizard.blocks.widthOpt')}</span>
     <UnitInput quantity="distance" min={0} bind:value={newWidthFt} disabled={adding} />
   </label>
   <label class="aw-add-field aw-add-acres">
-    <span>Length (optional)</span>
+    <span>{tr('wizard.blocks.lengthOpt')}</span>
     <UnitInput quantity="distance" min={0} bind:value={newLengthFt} disabled={adding} />
   </label>
   <label class="aw-add-field aw-add-acres">
-    <span>Or area</span>
+    <span>{tr('wizard.blocks.orArea')}</span>
     <UnitInput quantity="area" min={0} bind:value={newAcres} disabled={adding} />
   </label>
   <button type="submit" class="btn-secondary" disabled={adding || !w.props.onRefreshParent}>
-    {adding ? 'Adding…' : '+ Add block'}
+    {adding ? tr('wizard.blocks.adding') : tr('wizard.blocks.addBlock')}
   </button>
   {#if addError}
     <p class="aw-add-error" role="alert">{addError}</p>

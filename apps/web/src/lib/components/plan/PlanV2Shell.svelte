@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
+  import { createT } from '$lib/i18n';
   import { Sparkle } from 'lucide-svelte';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import type { CalendarEvent } from '$lib/calendar/engine';
@@ -105,6 +106,7 @@
     canEdit = true
   }: Props = $props();
 
+  const tr = $derived(createT($page.data?.locale));
   const prefs = $derived(currentPrefs());
   const areas = $derived<PlanAreaEntry[]>(
     fields.map((f) => ({ id: f.id, name: f.name, kind: (f.kind ?? 'field') as AreaKind }))
@@ -223,7 +225,7 @@
           title: t.title,
           plantingLabel: planting?.varietyDisplayName?.split(' ').slice(0, 2).join(' '),
           plantingColor: planting ? plantingColor(planting.id) : undefined,
-          source: t.pluginTemplateKey ?? 'Manual',
+          source: t.pluginTemplateKey ?? tr('planui.shell.manual'),
           status:
             t.scheduledFor < now - 24 * 60 * 60 * 1000
               ? 'overdue'
@@ -276,18 +278,24 @@
 
   <div class="pv2-main">
     {#if blocks.length > 0 && selectedAreaId}
-      <section class="area-view" aria-label="Area" data-testid="plan-area-view">
+      <section
+        class="area-view"
+        aria-label={tr('planui.shell.areaAria')}
+        data-testid="plan-area-view"
+      >
         {#if areaCard}
           <CardView card={areaCard} {prefs} showAsOf={false} />
         {/if}
         <div class="block-cards-head">
           <h2 class="section-title">
             {selectedArea
-              ? `Beds and blocks in ${areaCard?.title ?? selectedArea.name}`
-              : 'Blocks not in an Area'}
+              ? tr('planui.shell.bedsIn', { name: areaCard?.title ?? selectedArea.name })
+              : tr('planui.shell.blocksNoArea')}
           </h2>
           {#if onAddBlock}
-            <button type="button" class="ghost-btn" onclick={onAddBlock}>Add block</button>
+            <button type="button" class="ghost-btn" onclick={onAddBlock}
+              >{tr('planui.shell.addBlock')}</button
+            >
           {/if}
         </div>
         {#if blockCards.length}
@@ -312,11 +320,11 @@
           </ul>
         {:else}
           <div class="card-empty" data-testid="plan-area-empty">
-            <p>Nothing is planted here yet.</p>
+            <p>{tr('planui.shell.nothingPlanted')}</p>
             {#if canEdit && selectedArea && isCropBearing(selectedArea.kind)}
               <a class="primary plan-here" href="/plan?area={encodeURIComponent(selectedArea.id)}">
                 <Sparkle size={13} strokeWidth={1.75} />
-                Plan a crop here
+                {tr('planui.shell.planHere')}
               </a>
             {/if}
           </div>
@@ -326,23 +334,26 @@
     {#if !selectedBlock && blocks.length === 0}
       <div class="pv2-empty" data-empty-state="season-start">
         {#if onStartPlan}
-          <h2 class="pv2-empty-title">Plan your {seasonYear} season</h2>
+          <h2 class="pv2-empty-title">{tr('planui.shell.planSeason', { year: seasonYear })}</h2>
           <p class="pv2-empty-lede">
-            The planning wizard walks you through it one step at a time: your season goals, the seed
-            you have on hand, and the blocks you'll plant.
+            {tr('planui.shell.planLede')}
           </p>
           <button type="button" class="primary start" onclick={onStartPlan}>
             <Sparkle size={15} strokeWidth={1.75} />
-            Start the planning wizard
+            {tr('planui.shell.startWizard')}
           </button>
           {#if onAddBlock}
             <p class="pv2-empty-alt">
-              Prefer to lay it out yourself? <a href="/plan/farm">Draw your farm</a> or
-              <button type="button" class="link" onclick={onAddBlock}>add a block by hand</button>
+              {tr('planui.shell.preferA')}
+              <a href="/plan/farm">{tr('planui.shell.drawFarm')}</a>
+              {tr('planui.shell.preferOr')}
+              <button type="button" class="link" onclick={onAddBlock}
+                >{tr('planui.shell.addByHand')}</button
+              >
             </p>
           {/if}
         {:else}
-          <p>No blocks yet. The farm owner sets up blocks and the season plan.</p>
+          <p>{tr('planui.shell.noBlocksHelper')}</p>
         {/if}
       </div>
     {:else if selectedBlock}
@@ -365,11 +376,11 @@
 
       {#if plantings.length === 0}
         <div class="card-empty">
-          <p>This block has no plantings yet.</p>
+          <p>{tr('planui.shell.noPlantings')}</p>
           {#if onAddPlanting}
             <button type="button" class="primary" onclick={() => onAddPlanting(selectedBlock.id)}>
               <Sparkle size={13} strokeWidth={1.75} />
-              Add first planting
+              {tr('planui.shell.addFirst')}
             </button>
           {/if}
         </div>
@@ -426,7 +437,7 @@
           rows={scheduledRows}
           titleSuffix={activePlanting
             ? `· ${activePlanting.varietyDisplayName.split(' ').slice(0, 2).join(' ')}`
-            : '· next 30 days'}
+            : undefined}
           onAddTask={onAddTask
             ? () => onAddTask(selectedBlock.id, activePlanting?.id ?? null)
             : undefined}

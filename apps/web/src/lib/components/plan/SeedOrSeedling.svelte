@@ -7,6 +7,8 @@
    * as it behaves today.
    */
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import {
     DTM_FROM_TRANSPLANT_NOTE,
     SOW_AFTER_TRANSPLANT_NOTE,
@@ -41,6 +43,7 @@
     idPrefix = 'sos',
     compact = false
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const preselect = $derived(preselectedEstablishment(plugin ?? undefined));
   let touched = $state(false);
@@ -71,24 +74,26 @@
   }
 
   function weeks(w: { min: number; max: number }) {
-    return w.min === w.max ? `${w.min} weeks` : `${w.min} to ${w.max} weeks`;
+    return w.min === w.max
+      ? tr('planui.sos.weeksSame', { min: w.min })
+      : tr('planui.sos.weeksRange', { min: w.min, max: w.max });
   }
 </script>
 
 <fieldset class="sos" class:compact data-testid="seed-or-seedling">
-  <legend class="label">Seed or seedling?</legend>
-  <div class="choices" role="group" aria-label="Seed or seedling">
+  <legend class="label">{tr('planui.sos.title')}</legend>
+  <div class="choices" role="group" aria-label={tr('planui.sos.title')}>
     <button
       type="button"
       class="chip"
       aria-pressed={establishment === 'direct-seed'}
-      onclick={() => pick('direct-seed')}>Seed</button
+      onclick={() => pick('direct-seed')}>{tr('planui.sos.seed')}</button
     >
     <button
       type="button"
       class="chip"
       aria-pressed={establishment === 'transplant'}
-      onclick={() => pick('transplant')}>Seedling</button
+      onclick={() => pick('transplant')}>{tr('planui.sos.seedling')}</button
     >
     {#if establishment}
       <Provenance source={touched || establishment !== preselect ? 'manual' : 'plugin'} compact />
@@ -98,18 +103,18 @@
   {#if establishment === 'transplant'}
     <label class="check">
       <input type="checkbox" bind:checked={startIndoors} />
-      <span>I'll start these from seed indoors</span>
+      <span>{tr('planui.sos.startIndoors')}</span>
     </label>
     {#if startIndoors}
       {#if timing?.startIndoorsWeeks}
         <p class="hint">
-          Sow {weeks(timing.startIndoorsWeeks)} before transplant.
+          {tr('planui.sos.sowBefore', { weeks: weeks(timing.startIndoorsWeeks) })}
           <Provenance source={timing.startIndoorsWeeks.source} compact />
         </p>
       {:else}
         <p class="hint" data-testid="sow-timing-unknown">{SOW_TIMING_UNKNOWN}</p>
         <label class="field">
-          <span class="label">Sow indoors on</span>
+          <span class="label">{tr('planui.sos.sowOn')}</span>
           <input
             id="{idPrefix}-sow-on"
             type="date"
@@ -125,12 +130,12 @@
         {/if}
       {/if}
       {#if !dated}
-        <p class="hint">Seed-start tasks are made once the planting has a date.</p>
+        <p class="hint">{tr('planui.sos.needDate')}</p>
       {:else if sowKnown || sowIndoorsOn}
-        <p class="hint">Sow, harden-off and transplant tasks go on your list.</p>
+        <p class="hint">{tr('planui.sos.tasksGo')}</p>
       {/if}
     {:else}
-      <p class="hint">No indoor tasks for bought seedlings.</p>
+      <p class="hint">{tr('planui.sos.noIndoor')}</p>
     {/if}
   {:else if establishment === 'direct-seed' && plugin?.plantingGuide?.dtmFrom === 'transplant'}
     <p class="hint">{DTM_FROM_TRANSPLANT_NOTE}</p>

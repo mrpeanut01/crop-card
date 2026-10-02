@@ -6,8 +6,11 @@
   import { fmtDateMs } from '../format';
   import { getWizardContext } from '../wizardState.svelte';
   import SeedOrSeedling from '$lib/components/plan/SeedOrSeedling.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const w = getWizardContext();
+  const tr = $derived(createT(page.data?.locale));
   const aiEnabled = $derived(w.props.aiEnabled);
 
   const scheduledCrops = $derived.by(() => {
@@ -37,39 +40,39 @@
     shown={aiEnabled
       ? ['plugin', 'data', 'ai', 'manual']
       : ['plugin', 'data', 'fallback', 'manual']}
-    note={aiEnabled
-      ? 'Dates AI-proposed within plugin-derived windows · all editable'
-      : 'AI off · deterministic scheduler · plugin windows + your records'}
+    note={aiEnabled ? tr('wizard.schedule.noteAi') : tr('wizard.schedule.noteOff')}
   />
   {#if w.scheduleLoading}
     <AiProgress stage="schedule" startMs={w.scheduleStartMs} />
   {:else if w.scheduleError}
-    <p class="aw-error">Error: {w.scheduleError}</p>
-    <button class="btn-secondary" onclick={() => w.advanceToSchedule()}>Retry</button>
+    <p class="aw-error">{tr('wizard.schedule.error', { error: w.scheduleError })}</p>
+    <button class="btn-secondary" onclick={() => w.advanceToSchedule()}
+      >{tr('wizard.schedule.retry')}</button
+    >
   {:else if w.scheduleResponse}
     {#if w.scheduleResponse.meta.fallback}
       <div class="aw-banner info" role="alert" aria-live="assertive">
         {w.scheduleResponse.meta.fallback === 'no-api-key'
-          ? '🛟 Dates picked by the deterministic scheduler (no Anthropic API key). Staggers + companion offsets honored.'
-          : '🛟 AI needed help — deterministic scheduler took over. See chat below for what tripped it up and refine from there.'}
+          ? tr('wizard.schedule.noKey')
+          : tr('wizard.schedule.aiHelp')}
       </div>
     {/if}
     <p class="aw-rationale">
       {w.scheduleResponse.rationale}
       <Provenance
         source={w.scheduleResponse.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
-        detail={w.scheduleResponse.meta.fallback ? 'deterministic scheduler' : undefined}
+        detail={w.scheduleResponse.meta.fallback ? tr('wizard.schedule.fallbackDetail') : undefined}
         compact
       />
     </p>
     <table class="aw-table">
       <thead>
         <tr>
-          <th>Seed</th>
-          <th>Block</th>
-          <th>Planting date</th>
-          <th>Plants</th>
-          <th>Why</th>
+          <th>{tr('wizard.schedule.thSeed')}</th>
+          <th>{tr('wizard.schedule.thBlock')}</th>
+          <th>{tr('wizard.schedule.thDate')}</th>
+          <th>{tr('wizard.schedule.thPlants')}</th>
+          <th>{tr('wizard.schedule.thWhy')}</th>
         </tr>
       </thead>
       <tbody>
@@ -78,7 +81,7 @@
             <td>
               {p.varietyDisplayName}
               {#if p.successionIndex}
-                <span class="chip chip-succession" title="Succession sowing">
+                <span class="chip chip-succession" title={tr('wizard.schedule.succession')}>
                   {p.successionIndex.i}/{p.successionIndex.n}
                 </span>
               {/if}
@@ -93,7 +96,7 @@
     </table>
     {#if w.scheduleResponse.advisories.length > 0}
       <section class="aw-banner info">
-        <strong>Schedule notes:</strong>
+        <strong>{tr('wizard.schedule.notes')}</strong>
         <ul>
           {#each w.scheduleResponse.advisories as a, idx (idx)}<li>{a}</li>{/each}
         </ul>
@@ -101,10 +104,9 @@
     {/if}
     {#if scheduledCrops.length}
       <section class="aw-sos" aria-labelledby="aw-sos-title" data-testid="wizard-seed-or-seedling">
-        <h3 id="aw-sos-title">Seed or seedling?</h3>
+        <h3 id="aw-sos-title">{tr('wizard.schedule.sosTitle')}</h3>
         <p class="aw-sos-lede">
-          Seedlings you start indoors get Sow, Harden off and Transplant tasks, counted back from
-          each planting date.
+          {tr('wizard.schedule.sosLede')}
         </p>
         {#each scheduledCrops as c (c.id)}
           {#if w.establishmentByCrop[c.id]}

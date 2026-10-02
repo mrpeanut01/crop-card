@@ -46,6 +46,8 @@
     type Establishment,
     type SeedStartPluginSlice
   } from '$lib/schedule/seedStart';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   type CropCatalogEntry = PickerCrop & {
     soilTempMinF?: number | null;
@@ -81,6 +83,7 @@
     onClose,
     onCreated
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   type WindowState = {
     window: PlantingWindow;
@@ -330,13 +333,13 @@
   async function handleSubmit(e: SubmitEvent): Promise<void> {
     e.preventDefault();
     if (!picked) {
-      error = 'Pick a crop from the list first';
+      error = tr('planui.np.pickCrop');
       listOpen = true;
       cropInput?.focus();
       return;
     }
     if (!blockId) {
-      error = 'No block selected';
+      error = tr('planui.np.noBlock');
       return;
     }
     submitting = true;
@@ -398,17 +401,17 @@
   >
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="new-planting-title">
       <header class="modal-header">
-        <h2 id="new-planting-title" class="serif">Add planting</h2>
-        <button type="button" class="close" onclick={onClose} aria-label="Close">
+        <h2 id="new-planting-title" class="serif">{tr('planui.np.title')}</h2>
+        <button type="button" class="close" onclick={onClose} aria-label={tr('planui.np.close')}>
           <X size={16} strokeWidth={1.75} />
         </button>
       </header>
       <form onsubmit={handleSubmit} class="modal-form">
-        <p class="muted">Adding to <strong>{blockName}</strong></p>
+        <p class="muted">{tr('planui.np.addingTo')} <strong>{blockName}</strong></p>
 
         <div class="field combo">
           <label class="label" for="np-crop">
-            Crop <span class="req" aria-hidden="true">*</span>
+            {tr('planui.np.crop')} <span class="req" aria-hidden="true">*</span>
           </label>
           <input
             id="np-crop"
@@ -423,8 +426,8 @@
               ? optionId(activeIndex)
               : undefined}
             placeholder={seedStock.some((s) => s.cropPluginId)
-              ? 'Your seed, or type any crop'
-              : 'Type a crop, e.g. tomato'}
+              ? tr('planui.np.placeholderSeed')
+              : tr('planui.np.placeholderCrop')}
             bind:value={query}
             oninput={onQueryInput}
             onfocus={() => (listOpen = true)}
@@ -432,9 +435,14 @@
             onkeydown={onComboKey}
           />
           {#if listOpen}
-            <ul id="np-crop-list" class="options" role="listbox" aria-label="Crops">
+            <ul
+              id="np-crop-list"
+              class="options"
+              role="listbox"
+              aria-label={tr('planui.np.cropsAria')}
+            >
               {#if results.seeds.length}
-                <li class="group" role="presentation">Your seed</li>
+                <li class="group" role="presentation">{tr('planui.np.yourSeed')}</li>
                 {#each results.seeds as opt, i (opt.seed.stockItemId)}
                   <li
                     id={optionId(i)}
@@ -455,7 +463,7 @@
               {/if}
               {#if results.crops.length}
                 <li class="group" role="presentation">
-                  {results.seeds.length ? 'Other crops' : 'Crops'}
+                  {results.seeds.length ? tr('planui.np.otherCrops') : tr('planui.np.crops')}
                 </li>
                 {#each results.crops as opt, j (opt.crop.pluginId)}
                   {@const i = results.seeds.length + j}
@@ -480,39 +488,47 @@
               {#if results.moreCrops > 0}
                 <li class="more" role="presentation">
                   {results.crops.length === 0
-                    ? `Type to search all ${results.moreCrops} crops`
-                    : `${results.moreCrops} more, keep typing`}
+                    ? tr('planui.np.typeToSearch', { n: results.moreCrops })
+                    : tr('planui.np.moreKeepTyping', { n: results.moreCrops })}
                 </li>
               {:else if flat.length === 0}
-                <li class="more" role="presentation">No crop matches "{query}"</li>
+                <li class="more" role="presentation">{tr('planui.np.noMatch', { query })}</li>
               {/if}
             </ul>
           {/if}
           {#if pickedSeed}
-            <span class="hint seed-tag">Using your seed: {seedAmountText(pickedSeed)}</span>
+            <span class="hint seed-tag"
+              >{tr('planui.np.usingSeed', { amount: seedAmountText(pickedSeed) })}</span
+            >
           {:else if pickedCrop}
-            <span class="hint">None of your seed is linked to this crop.</span>
+            <span class="hint">{tr('planui.np.noSeedLinked')}</span>
           {/if}
         </div>
 
         <label class="field">
-          <span class="label">Variety name</span>
+          <span class="label">{tr('planui.np.variety')}</span>
           <input
             type="text"
             bind:value={varietyDisplayName}
             oninput={() => (varietyEdited = true)}
-            placeholder="Defaults to the crop name"
+            placeholder={tr('planui.np.varietyPlaceholder')}
             maxlength="160"
           />
         </label>
 
         <div class="field">
-          <label class="label" for="np-date">Planting date</label>
+          <label class="label" for="np-date">{tr('planui.np.date')}</label>
           <input id="np-date" type="date" data-season-year={seasonYear} bind:value={plantingDate} />
           {#if windowState}
             <div class="window" aria-live="polite">
-              <div class="chips" role="group" aria-label="Suggested planting dates">
+              <div class="chips" role="group" aria-label={tr('planui.np.suggestedAria')}>
                 {#each [['Earliest', windowState.window.earliest], ['Prime', windowState.window.prime], ['Latest', windowState.window.latest]] as [label, day] (label)}
+                  {@const labelText =
+                    label === 'Earliest'
+                      ? tr('planui.np.earliest')
+                      : label === 'Prime'
+                        ? tr('planui.np.prime')
+                        : tr('planui.np.latest')}
                   <button
                     type="button"
                     class="chip"
@@ -520,18 +536,20 @@
                     class:on={plantingDate === day}
                     onclick={() => (plantingDate = day)}
                   >
-                    <span class="chip-k">{label}</span>
+                    <span class="chip-k">{labelText}</span>
                     <span class="chip-v">{formatDay(day)}</span>
                   </button>
                 {/each}
               </div>
               <div class="window-foot">
                 {#if windowState.loading}
-                  <span class="hint">Checking your location with Claude…</span>
+                  <span class="hint">{tr('planui.np.checkingClaude')}</span>
                 {:else}
                   <Provenance
                     source={windowState.source}
-                    detail={windowState.source === 'ai' ? 'your location' : 'frost dates'}
+                    detail={windowState.source === 'ai'
+                      ? tr('planui.np.detailLocation')
+                      : tr('planui.np.detailFrost')}
                   />
                 {/if}
                 {#if windowState.window.note}
@@ -543,7 +561,7 @@
               {/if}
               {#if fit === 'early'}
                 <p class="warn">
-                  That's before the earliest date, so expect frost or cold-soil risk.
+                  {tr('planui.np.tooEarlyWarn')}
                 </p>
                 {#if blockId}
                   {#if canEditCovers}
@@ -552,18 +570,18 @@
                       class="btn-secondary add-cover"
                       onclick={() => (coverSheetOpen = true)}
                     >
-                      Too early for this bed. Add a cover?
+                      {tr('planui.np.addCover')}
                     </button>
                   {:else}
-                    <p class="hint">Too early for this bed. Ask the owner about a cover.</p>
+                    <p class="hint">{tr('planui.np.askOwnerCover')}</p>
                   {/if}
                 {/if}
               {:else if fit === 'late'}
-                <p class="warn">That's after the latest date; it may not mature before frost.</p>
+                <p class="warn">{tr('planui.np.tooLateWarn')}</p>
               {/if}
             </div>
           {:else}
-            <span class="hint">Leave empty to plan as undated.</span>
+            <span class="hint">{tr('planui.np.leaveEmpty')}</span>
           {/if}
         </div>
 
@@ -580,10 +598,12 @@
         {/if}
 
         <fieldset class="amounts">
-          <legend class="label">How much</legend>
+          <legend class="label">{tr('planui.np.howMuch')}</legend>
           <div class="amount-row">
             <label class="field grow">
-              <span class="sub">Planting <span class="sub-note">what goes in the ground</span></span
+              <span class="sub"
+                >{tr('planui.np.planting')}
+                <span class="sub-note">{tr('planui.np.plantingNote')}</span></span
               >
               <input
                 type="number"
@@ -591,12 +611,12 @@
                 min="0"
                 inputmode="decimal"
                 bind:value={plantQty}
-                placeholder="Optional"
+                placeholder={tr('planui.np.optional')}
               />
             </label>
             <label class="field unit">
-              <span class="sub">Unit</span>
-              <select bind:value={plantUnit} aria-label="Planting unit">
+              <span class="sub">{tr('planui.np.unit')}</span>
+              <select bind:value={plantUnit} aria-label={tr('planui.np.plantingUnitAria')}>
                 {#each plantUnitOptions as u (u.value)}
                   <option value={u.value}>{u.label}</option>
                 {/each}
@@ -608,32 +628,35 @@
             <span class="hint">
               {#if seedUse === 'short'}
                 <span class="warn-inline"
-                  >More than the {seedAmountText(pickedSeed)}; the shortfall is noted.</span
+                  >{tr('planui.np.moreThan', { amount: seedAmountText(pickedSeed) })}</span
                 >
               {:else if seedUse === 'mismatch'}
-                Seed is stocked in {unitLabel(pickedSeed.defaultUnit)}, so inventory won't change.
+                {tr('planui.np.stockedIn', { unit: unitLabel(pickedSeed.defaultUnit) })}
               {:else if pickedSeed.onHand > 0}
-                Comes out of your seed on hand first, then what is ordered or planned.
+                {tr('planui.np.fromOnHand')}
               {:else}
-                Set aside from the seed you have ordered or planned.
+                {tr('planui.np.setAside')}
               {/if}
             </span>
           {:else if pickedCrop}
             <div class="amount-row">
               <label class="field grow">
-                <span class="sub">Bought <span class="sub-note">what you purchased</span></span>
+                <span class="sub"
+                  >{tr('planui.np.bought')}
+                  <span class="sub-note">{tr('planui.np.boughtNote')}</span></span
+                >
                 <input
                   type="number"
                   step="any"
                   min="0"
                   inputmode="decimal"
                   bind:value={boughtQty}
-                  placeholder="Optional"
+                  placeholder={tr('planui.np.optional')}
                 />
               </label>
               <label class="field unit">
-                <span class="sub">Unit</span>
-                <select bind:value={boughtUnit} aria-label="Bought unit">
+                <span class="sub">{tr('planui.np.unit')}</span>
+                <select bind:value={boughtUnit} aria-label={tr('planui.np.boughtUnitAria')}>
                   {#each PLANTING_UNITS as u (u.value)}
                     <option value={u.value}>{u.label}</option>
                   {/each}
@@ -642,15 +665,13 @@
             </div>
             <span class="hint">
               {#if boughtUse === 'mismatch'}
-                Different kinds of unit, so the planting won't be subtracted from what you bought.
+                {tr('planui.np.mismatch')}
               {:else if boughtUse === 'short'}
-                <span class="warn-inline"
-                  >Planting more than you bought; the shortfall is noted.</span
-                >
+                <span class="warn-inline">{tr('planui.np.boughtShort')}</span>
               {:else if boughtQty && boughtQty > 0}
-                Adds this seed to inventory; the planting comes out of it.
+                {tr('planui.np.addsToInventory')}
               {:else}
-                Fill in Bought to track this seed in inventory. Leave it blank if you don't.
+                {tr('planui.np.fillBought')}
               {/if}
             </span>
           {/if}
@@ -659,10 +680,10 @@
         {#if error}<p class="error" role="alert">{error}</p>{/if}
         <footer class="modal-footer">
           <button type="button" class="btn-secondary" onclick={onClose} disabled={submitting}>
-            Cancel
+            {tr('planui.np.cancel')}
           </button>
           <button type="submit" class="btn-primary" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Add planting'}
+            {submitting ? tr('planui.np.creating') : tr('planui.np.title')}
           </button>
         </footer>
       </form>
@@ -673,7 +694,7 @@
 {#if blockId}
   <SetupSheet
     open={coverSheetOpen}
-    title="Add a cover"
+    title={tr('planui.np.coverTitle')}
     kicker={blockName}
     onClose={() => (coverSheetOpen = false)}
   >

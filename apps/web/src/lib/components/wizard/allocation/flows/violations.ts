@@ -1,4 +1,5 @@
 import type { BlockEntry, SeedStockEntry } from '../types';
+import { wt } from '../wt';
 
 /** Translate a raw validator violation string into operator-friendly
  *  text. Replaces UUIDs with block/variety names from props and
@@ -39,12 +40,14 @@ export function humanizeAllocationViolation(
     const cap = Number(capStr);
     const overBy = total - cap;
     const detail = replaceIds(v).replace(/^.*\(/, '(');
-    return (
-      `Too many ${family} varieties packed onto “${blockName}”: ${total} plants total, ` +
-      `but the block's largest single-variety capacity is ${cap}. That's ${overBy} plants ` +
-      `over the recommended density. Spread some varieties to another block, or reduce ` +
-      `plant counts. ${detail}`
-    );
+    return wt('wizard.viol.family', {
+      family,
+      block: blockName,
+      total,
+      cap,
+      over: overBy,
+      detail
+    });
   }
 
   // Per-assignment density pattern: "assignment X→Y packs N/M plants
@@ -56,11 +59,12 @@ export function humanizeAllocationViolation(
     const [, sid, bid, plantsStr, capStr] = perAssign;
     const seedName = seedNames.get(sid) ?? sid;
     const blockName = blockNames.get(bid) ?? bid;
-    return (
-      `“${seedName}” is over-packed on “${blockName}” (${plantsStr} plants vs. ` +
-      `${capStr} recommended). This variety has other viable blocks — splitting or ` +
-      `reducing would clear the density check.`
-    );
+    return wt('wizard.viol.overpacked', {
+      seed: seedName,
+      block: blockName,
+      plants: plantsStr,
+      cap: capStr
+    });
   }
 
   // plantsFit cap pattern: "assignment[N] plants=X exceeds plantsFit=Y for (sid, bid)"
@@ -71,7 +75,12 @@ export function humanizeAllocationViolation(
     const [, plantsStr, capStr, sid, bid] = plantsFit;
     const seedName = seedNames.get(sid) ?? sid;
     const blockName = blockNames.get(bid) ?? bid;
-    return `“${seedName}” on “${blockName}” has ${plantsStr} plants but the block only fits ${capStr}.`;
+    return wt('wizard.viol.plantsFit', {
+      seed: seedName,
+      block: blockName,
+      plants: plantsStr,
+      cap: capStr
+    });
   }
 
   // Matrix-not-candidate pattern.
@@ -82,7 +91,7 @@ export function humanizeAllocationViolation(
     const [, sid, bid] = notCand;
     const seedName = seedNames.get(sid) ?? sid;
     const blockName = blockNames.get(bid) ?? bid;
-    return `The AI proposed planting “${seedName}” on “${blockName}”, but this combination wasn't on the candidacy list (likely a sun, rotation, or capacity mismatch from the original blocks step).`;
+    return wt('wizard.viol.notCandidate', { seed: seedName, block: blockName });
   }
 
   // Default: UUID-replacement only.

@@ -5,8 +5,11 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { availableQuantityText } from '$lib/stock/quantityStatus';
   import type { SeedStockEntry } from '../types';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   const w = getWizardContext();
+  const tr = $derived(createT(page.data?.locale));
   const onRefreshParent = $derived(w.props.onRefreshParent);
   const onClose = () => w.props.onClose();
 
@@ -22,8 +25,8 @@
       w.selectNewSeed(saved.id);
       const entry = w.props.seedStock.find((s) => s.stockItemId === saved.id);
       addNotice = entry
-        ? `Added ${entry.shortName ?? entry.displayName} and picked it for this plan.`
-        : 'Seed added.';
+        ? tr('wizard.seeds.added', { name: entry.shortName ?? entry.displayName })
+        : tr('wizard.seeds.addedGeneric');
     }
   }
 
@@ -72,8 +75,7 @@
 
 <div class="aw-seeds-head">
   <p class="aw-intro">
-    Pick the seed lots you want to plant. The quantity starts at what you have on hand plus what is
-    ordered or planned, and you can change it on each row.
+    {tr('wizard.seeds.intro')}
   </p>
   <button
     type="button"
@@ -85,15 +87,15 @@
     disabled={!onRefreshParent}
     data-action="add-seed-inline"
   >
-    + Add seed
+    {tr('wizard.seeds.addSeed')}
   </button>
 </div>
 {#if addNotice}<p class="aw-notice" role="status">{addNotice}</p>{/if}
 
 <SetupSheet
   open={addOpen}
-  title="Add seed to inventory"
-  kicker="Planning"
+  title={tr('wizard.seeds.sheetTitle')}
+  kicker={tr('wizard.seeds.sheetKicker')}
   onClose={() => (addOpen = false)}
 >
   <A_InventoryAddFlow
@@ -114,13 +116,10 @@
 {#if w.noPluginStock.length > 0}
   <div class="needs-plugin-section" data-empty-state="needs-plugin">
     <h3 class="needs-plugin-title">
-      {w.noPluginStock.length}
-      {w.noPluginStock.length === 1 ? 'seed needs' : 'seeds need'} a crop category
+      {tr('wizard.seeds.needsCategory', { count: w.noPluginStock.length })}
     </h3>
     <p class="needs-plugin-lede">
-      These seed lots are in your inventory but don't have a crop category yet. Pick the crop each
-      one is, so the planner can match planting guides, days to maturity and companion rules. This
-      search stays on your farm and needs no AI.
+      {tr('wizard.seeds.needsLede')}
     </p>
     <ul class="needs-plugin-list">
       {#each w.noPluginStock as s (s.stockItemId)}
@@ -136,30 +135,33 @@
             disabled={!!w.seedLink.linkAssigningId}
             data-action="open-link-picker"
           >
-            {w.seedLink.linkPickerOpenFor === s.stockItemId ? 'Picking…' : 'Pick a crop category →'}
+            {w.seedLink.linkPickerOpenFor === s.stockItemId
+              ? tr('wizard.seeds.picking')
+              : tr('wizard.seeds.pickCategory')}
           </button>
           {#if w.seedLink.linkPickerOpenFor === s.stockItemId}
-            <div class="link-picker" role="dialog" aria-label="Pick a crop category">
+            <div class="link-picker" role="dialog" aria-label={tr('wizard.seeds.pickCategoryAria')}>
               <input
                 type="search"
                 class="aw-search"
-                placeholder="Search by crop name (e.g. corn, lettuce, basil)…"
+                placeholder={tr('wizard.seeds.searchCropPlaceholder')}
                 bind:value={w.seedLink.linkQuery}
                 oninput={() => w.seedLink.onLinkQueryChange()}
-                aria-label="Search crop categories"
+                aria-label={tr('wizard.seeds.searchCropAria')}
               />
               {#if w.seedLink.linkSearching}
-                <p class="muted">Searching crops…</p>
+                <p class="muted">{tr('wizard.seeds.searchingCrops')}</p>
               {:else if w.seedLink.linkError}
                 <p class="error" role="alert">{w.seedLink.linkError}</p>
               {:else if w.seedLink.linkQuery.trim().length < 2}
-                <p class="muted">Type at least 2 letters to search your crops.</p>
+                <p class="muted">{tr('wizard.seeds.typeMore')}</p>
               {:else if w.seedLink.linkResults.length === 0}
                 <p class="muted">
-                  No crops match. Try a different search, or
+                  {tr('wizard.seeds.noMatch')}
                   <a href="/inventory?type=crop&mode=catalog" target="_blank" rel="noopener"
-                    >add the crop in Inventory</a
-                  > first.
+                    >{tr('wizard.seeds.addCropLink')}</a
+                  >
+                  {tr('wizard.seeds.noMatchAfter')}
                 </p>
               {:else}
                 <ul class="link-results">
@@ -173,7 +175,7 @@
                       >
                         <span class="link-result-name">{r.displayName}</span>
                         <span class="muted link-result-score"
-                          >{Math.round(r.score * 100)}% match</span
+                          >{tr('wizard.seeds.match', { pct: Math.round(r.score * 100) })}</span
                         >
                       </button>
                     </li>
@@ -187,7 +189,7 @@
                   onclick={() => w.seedLink.closeLinkPicker()}
                   disabled={w.seedLink.linkAssigningId === s.stockItemId}
                 >
-                  Cancel
+                  {tr('wizard.seeds.cancel')}
                 </button>
               </div>
             </div>
@@ -207,11 +209,9 @@
        an inline embedded form (toggle pattern) without changing
        the CTAs below. Touch this block, not its callers. -->
   <div class="aw-seed-empty" data-empty-state="seed-stock">
-    <h3 class="aw-seed-empty-title">No seed stock yet</h3>
+    <h3 class="aw-seed-empty-title">{tr('wizard.seeds.emptyTitle')}</h3>
     <p class="aw-seed-empty-lede">
-      Seed is tracked in Inventory: packets, bulk orders and saved seed all belong there. Add what
-      you have, what you have ordered, or what you plan to buy. You can add it here without leaving
-      the plan.
+      {tr('wizard.seeds.emptyLede')}
     </p>
     <div class="aw-seed-empty-actions">
       <button
@@ -221,7 +221,7 @@
         disabled={!onRefreshParent}
         data-action="add-seed-stock"
       >
-        Add seed
+        {tr('wizard.seeds.addSeedBtn')}
       </button>
       <a
         class="btn-secondary"
@@ -230,7 +230,7 @@
         rel="noopener"
         data-action="open-stock"
       >
-        Open Inventory ↗
+        {tr('wizard.seeds.openInventory')}
       </a>
       <button
         type="button"
@@ -239,52 +239,56 @@
         disabled={w.seedLink.seedStockRefreshing || !onRefreshParent}
         data-action="refresh-seed-stock"
       >
-        {w.seedLink.seedStockRefreshing ? 'Refreshing…' : 'I’ve added stock — refresh'}
+        {w.seedLink.seedStockRefreshing
+          ? tr('wizard.seeds.refreshing')
+          : tr('wizard.seeds.refresh')}
       </button>
       <!-- #175 — explicit skip path so the seeds step is never a
            dead-end. Closes the wizard with a clear "come back later"
            gesture; pairs with #173 Save & resume later once that
            lands. -->
       <button type="button" class="btn-link" onclick={onClose} data-action="skip-seeds-for-now">
-        Skip — I’ll add seed stock later
+        {tr('wizard.seeds.skip')}
       </button>
     </div>
   </div>
 {:else if w.eligibleStock.length === 0 && w.noPluginStock.length > 0}
-  <p class="empty">Pick a crop category for a seed above to make it available for planning.</p>
+  <p class="empty">{tr('wizard.seeds.pickAbove')}</p>
 {:else}
   <div class="aw-search-row">
     <input
       type="search"
       class="aw-search"
-      placeholder="Search by variety or family…"
-      aria-label="Search seed lots"
+      placeholder={tr('wizard.seeds.searchPlaceholder')}
+      aria-label={tr('wizard.seeds.searchAria')}
       bind:value={w.seedSearch}
     />
     {#if w.seedSearch.trim().length > 0}
       <span class="muted">
-        {filteredEligibleStock.length} of {w.eligibleStock.length}
+        {tr('wizard.seeds.countOf', {
+          shown: filteredEligibleStock.length,
+          total: w.eligibleStock.length
+        })}
       </span>
     {/if}
   </div>
   {#if filteredEligibleStock.length === 0}
-    <p class="empty">No seeds match “{w.seedSearch}”.</p>
+    <p class="empty">{tr('wizard.seeds.noSeedsMatch', { query: w.seedSearch })}</p>
   {:else}
     <table class="aw-table">
       <thead>
         <tr>
           <th></th>
-          <th>Variety</th>
-          <th>Available</th>
-          <th>Quantity</th>
+          <th>{tr('wizard.seeds.thVariety')}</th>
+          <th>{tr('wizard.seeds.thAvailable')}</th>
+          <th>{tr('wizard.seeds.thQuantity')}</th>
           <th>
-            ≈ plants
+            {tr('wizard.seeds.thPlants')}
             <button
               type="button"
               class="aw-info"
-              aria-label="Why is this less than the seed count?"
-              title="Estimated plants the seed will yield, applying an 85% germination assumption.&#10;&#10;• Seeds: count × 0.85 (e.g. 25 seeds → about 21 plants)&#10;• lb / oz / g: converted to seeds using the crop's seeds per pound (from the crop if known, else a family default), then × 0.85&#10;&#10;Real germination varies by lot and conditions; treat this as a sizing estimate, not a guarantee."
-              >ⓘ</button
+              aria-label={tr('wizard.seeds.plantsInfoAria')}
+              title={tr('wizard.seeds.plantsTip')}>ⓘ</button
             >
           </th>
         </tr>
@@ -294,22 +298,28 @@
           {@const famCount = w.familySelectedCount(g.items)}
           <tr class="family-row">
             <td colspan="5">
-              <span class="family-name">{g.family ?? 'Unclassified'}</span>
-              <span class="muted">({famCount} of {g.items.length} selected)</span>
+              <span class="family-name">{g.family ?? tr('wizard.seeds.unclassified')}</span>
+              <span class="muted"
+                >{tr('wizard.seeds.famSelected', { n: famCount, total: g.items.length })}</span
+              >
               <span class="family-actions">
                 <button
                   type="button"
                   class="family-action-btn"
                   onclick={() => w.selectAllInFamily(g.items)}
                   disabled={famCount === g.items.length}
-                  aria-label={`Select all ${g.family ?? 'unclassified'} seeds`}>Select all</button
+                  aria-label={tr('wizard.seeds.selectAllAria', {
+                    family: g.family ?? tr('wizard.seeds.unclassifiedLower')
+                  })}>{tr('wizard.seeds.selectAll')}</button
                 >
                 {#if famCount > 0}
                   <button
                     type="button"
                     class="family-action-btn family-action-clear"
                     onclick={() => w.clearFamily(g.items)}
-                    aria-label={`Clear ${g.family ?? 'unclassified'} selection`}>Clear</button
+                    aria-label={tr('wizard.seeds.clearAria', {
+                      family: g.family ?? tr('wizard.seeds.unclassifiedLower')
+                    })}>{tr('wizard.seeds.clear')}</button
                   >
                 {/if}
               </span>
@@ -327,7 +337,9 @@
                   <input
                     id={`aw-seed-${s.stockItemId}`}
                     type="checkbox"
-                    aria-label={`Select ${s.shortName ?? s.displayName}`}
+                    aria-label={tr('wizard.seeds.selectOne', {
+                      name: s.shortName ?? s.displayName
+                    })}
                     {checked}
                     onchange={() => w.toggleSeed(s)}
                   />
@@ -341,19 +353,23 @@
                   {/if}
                 </label>
               </td>
-              <td class="aw-avail" data-testid="seed-available" data-label="Available">
+              <td
+                class="aw-avail"
+                data-testid="seed-available"
+                data-label={tr('wizard.seeds.thAvailable')}
+              >
                 {availableText(s)}
               </td>
-              <td class="aw-qty" data-label="Quantity">
+              <td class="aw-qty" data-label={tr('wizard.seeds.thQuantity')}>
                 <input
                   type="number"
                   min="0"
                   max={total > 0 ? total : undefined}
                   step="0.25"
                   value={fill ? '' : qty}
-                  placeholder={fill ? 'Not set' : undefined}
+                  placeholder={fill ? tr('wizard.seeds.notSet') : undefined}
                   disabled={!checked}
-                  aria-label={`Quantity of ${s.shortName ?? s.displayName}`}
+                  aria-label={tr('wizard.seeds.qtyOf', { name: s.shortName ?? s.displayName })}
                   oninput={(e) =>
                     w.setSeedQuantity(s.stockItemId, Number((e.target as HTMLInputElement).value))}
                 />
@@ -361,11 +377,11 @@
                 {#if fill}
                   <span class="aw-fill" data-testid="fill-to-bed">
                     <Provenance source="fallback" compact />
-                    Quantity not set, will size to bed
+                    {tr('wizard.seeds.fillNote')}
                   </span>
                 {/if}
               </td>
-              <td data-label="≈ plants">
+              <td data-label={tr('wizard.seeds.thPlants')}>
                 {fill ? '—' : plants !== null ? plants.toLocaleString() : '—'}
               </td>
             </tr>

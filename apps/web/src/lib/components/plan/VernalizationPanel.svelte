@@ -9,6 +9,8 @@
     type VernalizationAssessment
   } from '$lib/plan/smallGrain';
   import { fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
 
   interface Props {
     assessment: VernalizationAssessment;
@@ -17,8 +19,13 @@
   }
 
   const { assessment: v, observedLabel = null }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
-  const dataDetail = $derived(observedLabel ? `NOAA observed · ${observedLabel}` : 'NWS hourly');
+  const dataDetail = $derived(
+    observedLabel
+      ? tr('planui.vern.obsDetail', { label: observedLabel })
+      : tr('planui.vern.nwsHourly')
+  );
 
   const W = 240;
   const pct = $derived(Math.round(v.progress * 100));
@@ -27,29 +34,31 @@
   const pill = $derived.by(() => {
     switch (v.status) {
       case 'complete':
-        return { tone: 'forest' as const, text: 'Complete' };
+        return { tone: 'forest' as const, text: tr('planui.vern.complete') };
       case 'in-progress':
-        return { tone: 'sky' as const, text: 'Accumulating' };
+        return { tone: 'sky' as const, text: tr('planui.vern.accumulating') };
       case 'at-risk':
-        return { tone: 'rust' as const, text: 'At risk' };
+        return { tone: 'rust' as const, text: tr('planui.vern.atRisk') };
       case 'not-planted':
-        return { tone: 'neutral' as const, text: 'Not sown' };
+        return { tone: 'neutral' as const, text: tr('planui.vern.notSown') };
       default:
-        return { tone: 'neutral' as const, text: 'Not required' };
+        return { tone: 'neutral' as const, text: tr('planui.vern.notRequired') };
     }
   });
 
   const note = $derived.by(() => {
-    if (!v.required) return 'Spring-habit grain flowers without a cold period.';
-    if (v.status === 'not-planted') return 'Counting starts at sowing.';
-    if (v.springPlanted)
-      return 'Winter-habit variety sown in spring may not get enough cold to head. Expect a thin or headless stand.';
-    if (v.status === 'complete') return 'Cold requirement met — heads will form.';
+    if (!v.required) return tr('planui.vern.noteSpring');
+    if (v.status === 'not-planted') return tr('planui.vern.noteCounting');
+    if (v.springPlanted) return tr('planui.vern.noteSpringPlanted');
+    if (v.status === 'complete') return tr('planui.vern.noteMet');
     if (v.accumulatedDays < 1)
-      return `Cold days start counting once temperatures settle below ${fmt.qty(50, 'temperature')} — typically November in Loudoun County.`;
-    if (v.status === 'at-risk')
-      return 'Short of the typical requirement this late in spring — scout for heading.';
-    return `Winter wheat needs about ${v.requiredDays} days at ${fmt.qty(VERNALIZATION_MIN_F, 'temperature', { bare: true })}–${fmt.qty(VERNALIZATION_MAX_F, 'temperature')} to flower.`;
+      return tr('planui.vern.noteStart', { temp: fmt.qty(50, 'temperature') });
+    if (v.status === 'at-risk') return tr('planui.vern.noteShort');
+    return tr('planui.vern.noteNeeds', {
+      days: v.requiredDays,
+      min: fmt.qty(VERNALIZATION_MIN_F, 'temperature', { bare: true }),
+      max: fmt.qty(VERNALIZATION_MAX_F, 'temperature')
+    });
   });
 </script>
 
@@ -57,7 +66,7 @@
   <header class="head">
     <div class="title-row">
       <Thermometer size={16} strokeWidth={1.75} aria-hidden="true" />
-      <h2 id="vern-title" class="serif">Vernalization</h2>
+      <h2 id="vern-title" class="serif">{tr('planui.vern.title')}</h2>
       <Pill tone={pill.tone}>{pill.text}</Pill>
     </div>
     {#if v.required && v.status !== 'not-planted'}
@@ -67,8 +76,8 @@
           detail={v.provenance === 'data'
             ? dataDetail
             : observedLabel
-              ? 'observed + climatology'
-              : 'climatology + forecast'}
+              ? tr('planui.vern.obsClim')
+              : tr('planui.vern.climForecast')}
         />
       </div>
     {/if}
@@ -78,14 +87,13 @@
     {#if v.required && v.status !== 'not-planted'}
       <div class="count">
         <span class="serif big" data-testid="vern-days">{Math.floor(v.accumulatedDays)}</span>
-        <span class="of">/ {v.requiredDays} cold days</span>
+        <span class="of">{tr('planui.vern.cold', { n: v.requiredDays })}</span>
       </div>
       <svg
         viewBox="0 0 {W} 14"
         role="img"
-        aria-label="Vernalization {pct}% complete{projPct > pct
-          ? `, ${projPct}% by end of forecast`
-          : ''}"
+        aria-label={tr('planui.vern.aria', { pct }) +
+          (projPct > pct ? tr('planui.vern.ariaProj', { proj: projPct }) : '')}
       >
         <rect x="0" y="2" width={W} height="10" rx="5" class="bg" />
         {#if projPct > pct}
@@ -96,7 +104,7 @@
       <div class="split">
         {#if v.climatologyDays > 0}
           <span
-            ><Provenance source="fallback" detail="climatology estimate" compact />
+            ><Provenance source="fallback" detail={tr('planui.vern.climEstimate')} compact />
             {v.climatologyDays} d</span
           >
         {/if}
@@ -108,7 +116,9 @@
         {/if}
         {#if v.status !== 'complete' && v.projectedDays > v.accumulatedDays}
           <span class="muted"
-            >+{Math.round((v.projectedDays - v.accumulatedDays) * 10) / 10} d in forecast</span
+            >{tr('planui.vern.inForecast', {
+              n: Math.round((v.projectedDays - v.accumulatedDays) * 10) / 10
+            })}</span
           >
         {/if}
       </div>
@@ -116,10 +126,10 @@
     <p class="note">{note}</p>
     {#if v.required && v.climatologyDays > 0}
       <p class="foot">
-        {observedLabel
-          ? 'Hours missing from the station record are'
-          : 'No nearby NOAA station record was available, so past days are'} estimated from {LOUDOUN_AIR_TEMP_NORMALS.label}
-        with a ±{fmt.qty(9, 'temperatureDelta')} daily swing. Farms far from Loudoun County will differ.
+        {tr(observedLabel ? 'planui.vern.footObserved' : 'planui.vern.footNoStation', {
+          label: LOUDOUN_AIR_TEMP_NORMALS.label,
+          swing: fmt.qty(9, 'temperatureDelta')
+        })}
       </p>
     {/if}
   </div>

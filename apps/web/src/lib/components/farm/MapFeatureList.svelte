@@ -1,10 +1,11 @@
 <script lang="ts">
   import MapFeatureFields from '$lib/components/farm/MapFeatureFields.svelte';
   import { fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { featureLabel, featurePlural } from './farmLabels';
   import {
     MAP_FEATURE_KINDS,
-    MAP_FEATURE_LABELS,
-    MAP_FEATURE_PLURAL,
     MAP_FEATURE_STYLE,
     describeFeature,
     geometryTypeFor,
@@ -18,6 +19,7 @@
     type FeatureFormDraft
   } from '$lib/farm/mapFeatureForm';
 
+  const tr = $derived(createT(page.data?.locale));
   type Body = FeatureBody;
 
   const {
@@ -76,7 +78,7 @@
   }
 
   async function remove(f: MapFeatureView) {
-    if (!confirm(`Remove ${f.name} from the map?`)) return;
+    if (!confirm(tr('farm.list.confirmRemove', { name: f.name }))) return;
     try {
       await onDelete(f.id);
     } catch (e) {
@@ -88,11 +90,12 @@
 </script>
 
 <section class="card features" aria-labelledby="map-features-title" data-testid="map-feature-list">
-  <h2 id="map-features-title">Lines & points</h2>
+  <h2 id="map-features-title">{tr('farm.group.features')}</h2>
   {#if groups.length === 0}
     <p class="muted">
-      No fences, gates, water or paths yet.{#if canEdit}
-        Tap <strong>+ Add</strong> and pick one under Lines & points.{/if}
+      {tr('farm.list.empty')}{#if canEdit}
+        {tr('farm.list.emptyTap')} <strong>{tr('farm.addPlus')}</strong>
+        {tr('farm.list.emptyPick')}{/if}
     </p>
   {/if}
   {#each groups as g (g.kind)}
@@ -103,7 +106,7 @@
         style:--swatch={MAP_FEATURE_STYLE[g.kind].color}
         aria-hidden="true">{MAP_FEATURE_STYLE[g.kind].symbol ?? ''}</span
       >
-      {MAP_FEATURE_PLURAL[g.kind]}
+      {featurePlural(tr, g.kind)}
     </h3>
     <ul>
       {#each g.items as f (f.id)}
@@ -113,23 +116,26 @@
               <span class="name">{describeFeature(f, lengthText)}</span>
               {#if servedNames(f).length}
                 <span class="where"
-                  >{f.kind === 'hydrant' ? 'Serves ' : ''}{servedNames(f).join(', ')}</span
+                  >{f.kind === 'hydrant' ? tr('farm.list.serves') + ' ' : ''}{servedNames(f).join(
+                    ', '
+                  )}</span
                 >
               {/if}
-              {#if !f.geometry}<span class="where">Not on the map</span>{/if}
+              {#if !f.geometry}<span class="where">{tr('farm.list.notOnMap')}</span>{/if}
             </span>
             {#if canEdit && editingId !== f.id}
               <button
                 type="button"
                 class="act"
                 onclick={() => startEdit(f)}
-                aria-label="Edit {f.name}">Edit</button
+                aria-label={tr('farm.list.editName', { name: f.name })}>{tr('farm.edit')}</button
               >
               <button
                 type="button"
                 class="act danger"
                 onclick={() => remove(f)}
-                aria-label="Remove {f.name}">Remove</button
+                aria-label={tr('farm.list.removeName', { name: f.name })}
+                >{tr('farm.list.remove')}</button
               >
             {/if}
           </div>
@@ -137,7 +143,9 @@
             <form
               class="edit"
               novalidate
-              aria-label="Edit {MAP_FEATURE_LABELS[f.kind].toLowerCase()}"
+              aria-label={tr('farm.list.editName', {
+                name: featureLabel(tr, f.kind).toLowerCase()
+              })}
               onsubmit={(e) => {
                 e.preventDefault();
                 void save(f);
@@ -147,9 +155,10 @@
               {#if error}<p class="error" role="alert">{error}</p>{/if}
               <div class="actions">
                 <button type="submit" class="primary" disabled={busy || !draft.name.trim()}
-                  >{busy ? 'Saving…' : 'Save'}</button
+                  >{busy ? tr('farm.sheet.saving') : tr('farm.save')}</button
                 >
-                <button type="button" onclick={() => (editingId = null)}>Cancel</button>
+                <button type="button" onclick={() => (editingId = null)}>{tr('farm.cancel')}</button
+                >
               </div>
             </form>
           {/if}

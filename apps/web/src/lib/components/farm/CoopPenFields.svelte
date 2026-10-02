@@ -5,6 +5,9 @@
   import { COOP_SPACE_LABELS, type DetailsDraft } from '$lib/farm/areaDetailsForm';
   import { defaultCoopSpecies, formatCount, suggestCapacity } from '$lib/farm/coopCapacity';
   import { getCoopContext } from '$lib/farm/coopContext';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
+  import { detailOption } from './farmLabels';
 
   let {
     draft = $bindable(),
@@ -19,6 +22,7 @@
     areaSqFt?: number | null;
   } = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const ctxGet = getCoopContext();
   const ctx = $derived(ctxGet?.() ?? null);
   const options = $derived(ctx?.options ?? []);
@@ -90,34 +94,34 @@
 <div class="coop" data-testid="coop-pen-fields">
   {#if options.length}
     <div class="field">
-      <label for="{idPrefix}-speciesId">Animal type</label>
+      <label for="{idPrefix}-speciesId">{tr('farm.df.speciesId')}</label>
       <select
         id="{idPrefix}-speciesId"
         value={speciesId}
         onchange={(e) => set('speciesId', e.currentTarget.value || undefined)}
       >
-        <option value="">Not set</option>
+        <option value="">{tr('farm.notSet')}</option>
         {#each options as o (o.id)}
           <option value={o.id}>{o.name}</option>
         {/each}
       </select>
     </div>
     <div class="field">
-      <label for="{idPrefix}-space">Is it indoors, a run, or both?</label>
+      <label for="{idPrefix}-space">{tr('farm.df.space')}</label>
       <select
         id="{idPrefix}-space"
         value={space ?? ''}
         onchange={(e) => set('space', e.currentTarget.value || undefined)}
       >
-        <option value="">Not set</option>
+        <option value="">{tr('farm.notSet')}</option>
         {#each COOP_SPACE_KINDS as k (k)}
-          <option value={k}>{COOP_SPACE_LABELS[k]}</option>
+          <option value={k}>{detailOption(tr, 'space', k, COOP_SPACE_LABELS[k])}</option>
         {/each}
       </select>
     </div>
     {#if space === 'both'}
       <div class="field">
-        <label for="{idPrefix}-shelterSqFt">Shelter floor</label>
+        <label for="{idPrefix}-shelterSqFt">{tr('farm.df.shelterSqFt')}</label>
         <span class="unit-row">
           <input
             id="{idPrefix}-shelterSqFt"
@@ -128,11 +132,11 @@
             value={draft.shelterSqFt ?? ''}
             oninput={sqftInput('shelterSqFt')}
           />
-          <span class="unit">sq ft</span>
+          <span class="unit">{tr('farm.unit.sqft')}</span>
         </span>
       </div>
       <div class="field">
-        <label for="{idPrefix}-runSqFt">Run</label>
+        <label for="{idPrefix}-runSqFt">{tr('farm.df.runSqFt')}</label>
         <span class="unit-row">
           <input
             id="{idPrefix}-runSqFt"
@@ -143,14 +147,14 @@
             value={draft.runSqFt ?? ''}
             oninput={sqftInput('runSqFt')}
           />
-          <span class="unit">sq ft</span>
+          <span class="unit">{tr('farm.unit.sqft')}</span>
         </span>
       </div>
     {/if}
   {/if}
 
   <div class="field">
-    <label for="{idPrefix}-capacity">Holds up to</label>
+    <label for="{idPrefix}-capacity">{tr('farm.df.capacity')}</label>
     <span class="unit-row">
       <input
         id="{idPrefix}-capacity"
@@ -162,16 +166,16 @@
         value={capacity ?? ''}
         oninput={(e) => typeCapacity(e.currentTarget.value)}
       />
-      <span class="unit">{option ? option.plural : 'animals'}</span>
+      <span class="unit">{option ? option.plural : tr('farm.unit.animals')}</span>
       {#if capacity !== null && draft.capacityProvenance === 'data'}
         <Provenance
           source="data"
-          label="Suggested"
+          label={tr('farm.prov.suggested')}
           detail={suggestion.ok ? suggestion.sourceName : undefined}
           compact
         />
       {:else if capacity !== null && manual}
-        <Provenance source="manual" label="Typed by you" compact />
+        <Provenance source="manual" label={tr('farm.prov.typed')} compact />
       {/if}
     </span>
   </div>
@@ -180,21 +184,22 @@
     <div class="suggest" data-testid="coop-suggestion" aria-live="polite">
       {#if suggestion.ok}
         <p>
-          Suggested: up to <strong>{formatCount(suggestion.count)}</strong>
+          {tr('farm.coop.suggestedUpTo')} <strong>{formatCount(suggestion.count)}</strong>
           {option?.plural} ({suggestion.basis}).
-          {#if suggestion.sourceName}<span class="src">Source: {suggestion.sourceName}.</span>{/if}
+          {#if suggestion.sourceName}<span class="src"
+              >{tr('farm.coop.source', { name: suggestion.sourceName })}</span
+            >{/if}
         </p>
         {#if manual && capacity !== suggestion.count}
           <button type="button" class="use" onclick={useSuggestion}
-            >Use {formatCount(suggestion.count)} instead</button
+            >{tr('farm.coop.useInstead', { count: formatCount(suggestion.count) })}</button
           >
         {/if}
       {:else}
         <p class="muted">{suggestion.reason}</p>
       {/if}
       <p class="muted">
-        This number is only a guide. CropCard shows it on the Area Card and never stops you from
-        moving animals in.
+        {tr('farm.coop.guide')}
       </p>
     </div>
   {/if}

@@ -34,6 +34,7 @@ function seedFarm(plan: 'grower' | null): { ownerId: string; userId: string } {
     activeOwnerId: ownerId,
     activeRole: 'owner',
     impersonating: false,
+    iat: Date.now(),
     exp: Date.now() + 60_000
   };
   return { ownerId, userId };

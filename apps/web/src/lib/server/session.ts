@@ -76,6 +76,11 @@ export interface SessionPayload {
   /** True when a superadmin is acting as `activeOwnerId`. UI surfaces a
    *  red banner and the impersonation auto-expires. */
   impersonating?: boolean;
+  /** When this browser signed in, ms epoch. Kept across re-mints (Owner
+   *  switch, impersonation) so "Sign out everywhere" (`users.
+   *  sessions_valid_after`) catches them. Cookies minted before it existed
+   *  read as 0. */
+  iat: number;
   /** Expiry ms epoch. */
   exp: number;
 }
@@ -153,6 +158,7 @@ function verify(cookie: string): SessionPayload | null {
     activeOwnerId: p.activeOwnerId ?? null,
     activeRole,
     impersonating: p.impersonating,
+    iat: typeof p.iat === 'number' && Number.isFinite(p.iat) ? p.iat : 0,
     exp: p.exp
   };
 }
@@ -170,6 +176,9 @@ export interface WriteSessionInput {
   activeOwnerId: string | null;
   activeRole: SessionRole;
   impersonating?: boolean;
+  /** Pass the current session's `iat` when re-minting a cookie for an
+   *  already signed-in browser; a fresh sign-in leaves it unset (now). */
+  iat?: number;
 }
 
 /** `ttlMs` shortens the cookie for a demo farm, which is deleted when it
@@ -187,6 +196,7 @@ export function writeSession(
     activeOwnerId: user.activeOwnerId,
     activeRole: user.activeRole,
     impersonating: user.impersonating,
+    iat: user.iat ?? Date.now(),
     exp: Date.now() + ttlMs
   };
   cookies.set(COOKIE_NAME, sign(payload), {

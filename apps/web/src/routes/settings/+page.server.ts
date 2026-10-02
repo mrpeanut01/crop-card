@@ -64,10 +64,9 @@ export const load: ServerLoad = async ({ locals }) => {
   const memberSince = userRow?.createdAt
     ? formatInstant(userRow.createdAt, prefs, 'date', { day: undefined })
     : '—';
-  // Last sign-in is the HMAC cookie's issuance time; we don't persist
-  // sign-in events as DB rows yet, so use "today" as a placeholder
-  // when the user is currently authenticated.
-  const lastLogin = `today · ${formatInstant(new Date(), prefs, 'time', { timeZoneName: 'short' })}`;
+  const lastLogin = locals.user.sessionIssuedAt
+    ? formatInstant(locals.user.sessionIssuedAt, prefs, 'datetime', { timeZoneName: 'short' })
+    : '—';
 
   const profile = profileFor(locals.user.id);
 
@@ -81,10 +80,7 @@ export const load: ServerLoad = async ({ locals }) => {
       name: identityName({ ...locals.user, displayName: profile.displayName }),
       avatarUrl: profile.avatarUrl,
       since: memberSince,
-      lastLogin,
-      // Active sessions — we don't track concurrent sessions yet; the
-      // current cookie counts as 1.
-      sessions: 1
+      lastLogin
     },
     owner: ownerRow
       ? {

@@ -58,16 +58,15 @@ export const esCore: Partial<Record<MessageKey, string>> = {
   'account.signIn.sub':
     'Sin contraseñas. El correo es la forma principal: un mensaje trae un enlace de inicio de sesión y un código de respaldo de 6 dígitos. Un número de celular verificado también sirve.',
   'account.sessions.title': 'Sesiones',
-  'account.sessions.sub': 'Dispositivos con sesión iniciada.',
-  'account.sessions.lastSignIn': 'Último inicio de sesión',
+  'account.sessions.sub':
+    'Cada teléfono o navegador mantiene la sesión iniciada 7 días, salvo que la cierres.',
+  'account.sessions.lastSignIn': 'Sesión iniciada en este navegador',
   'account.sessions.lastSignInHint': 'Sesión con cookie',
   'account.sessions.lastSignInValue': 'hoy · {time}',
-  'account.sessions.active': 'Sesiones activas · {count}',
-  'account.sessions.thisBrowser': 'Esta sesión del navegador',
-  'account.sessions.current': 'actual',
-  'account.sessions.thisDevice': 'Este dispositivo',
-  'account.sessions.signOut': 'Cerrar sesión',
   'account.sessions.signOutEverywhere': 'Cerrar sesión en todos los dispositivos',
+  'account.sessions.everywhereHint':
+    'Cierra la sesión en todos los teléfonos y navegadores de esta cuenta, incluido este. Los registros pendientes de sincronizar en otro dispositivo se quedan allí hasta que alguien vuelva a iniciar sesión en él.',
+  'account.sessions.impersonating': 'No disponible mientras actúas como otro propietario.',
   'account.export.title': 'Exportar datos',
   'account.export.sub': 'Descarga todo lo que guardamos sobre ti y los registros de tu granja.',
   'account.export.json': 'Descargar datos de la cuenta (JSON)',

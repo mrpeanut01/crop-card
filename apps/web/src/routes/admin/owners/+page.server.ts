@@ -67,7 +67,8 @@ export const actions: Actions = {
       isSuperadmin: true,
       activeOwnerId: ownerId,
       activeRole: 'owner',
-      impersonating: true
+      impersonating: true,
+      iat: u.sessionIssuedAt
     });
     throw redirect(303, '/today');
   },
@@ -84,7 +85,8 @@ export const actions: Actions = {
       isSuperadmin: true,
       activeOwnerId: next?.ownerId ?? null,
       activeRole: next?.roleWithinOwner ?? 'owner',
-      impersonating: false
+      impersonating: false,
+      iat: u.sessionIssuedAt
     });
     if (u.impersonating) {
       writeAuditRow({

@@ -629,8 +629,8 @@ export function withOwnerHeader(response: Response, ownerId: string, locale?: st
  * revoked helper, a changed role or a withdrawn superadmin flag takes effect
  * immediately instead of when the 7-day cookie expires.
  *
- * Returns null when the user no longer exists (the session is cleared).
- * A lost membership downgrades to a partial session, which routes the user
+ * Returns null when the user no longer exists or signed out everywhere after
+ * this cookie was issued (the session is cleared). A lost membership downgrades to a partial session, which routes the user
  * to the Owner-picker or onboarding rather than into the old farm.
  */
 export function revalidateCookieUser(
@@ -641,12 +641,16 @@ export function revalidateCookieUser(
       email: users.email,
       phone: users.phone,
       isSuperadmin: users.isSuperadmin,
-      locale: users.locale
+      locale: users.locale,
+      sessionsValidAfter: users.sessionsValidAfter
     })
     .from(users)
     .where(eq(users.id, user.id))
     .get();
   if (!row) return null;
+  if (row.sessionsValidAfter && (user.sessionIssuedAt ?? 0) < row.sessionsValidAfter.getTime()) {
+    return null;
+  }
   const fresh = {
     ...user,
     email: row.email,

@@ -217,9 +217,6 @@
   <div class="identity-meta">
     <div class="meta-label">{tr('settings.index.lastSignIn')}</div>
     <div class="meta-value mono">{data.user.lastLogin}</div>
-    <div class="meta-sub">
-      {tr('settings.index.sessions', { count: data.user.sessions })}
-    </div>
   </div>
 </section>
 
@@ -364,11 +361,6 @@
     font-size: 12.5px;
     color: var(--color-ink);
     margin-top: 2px;
-  }
-  .meta-sub {
-    font-size: 11px;
-    color: var(--color-ink-muted);
-    margin-top: 4px;
   }
   .mono {
     font-family: var(--font-mono, ui-monospace, monospace);

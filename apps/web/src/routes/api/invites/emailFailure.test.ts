@@ -14,6 +14,7 @@ vi.mock('$lib/server/session', async (importOriginal) => {
       activeOwnerId: 'owner-inv',
       activeRole: 'owner',
       impersonating: false,
+      iat: Date.now(),
       exp: Date.now() + 60_000
     })
   };

@@ -15,7 +15,7 @@
   import { countOf, ft, longDate, parseYmd, shortDate, ymd } from '$lib/components/garden/format';
   import { loadSnapshot } from '$lib/client/cardStore';
   import { designFromSnapshot } from '$lib/garden/design';
-  import { AREA_KIND_LABELS } from '$lib/farm/areaKinds';
+  import { areaKindLabel } from '$lib/farm/areaKinds';
   import type { MessageKey } from '$lib/i18n';
   import { cardHref, cardKey } from '$lib/cards/model';
   import { formatInstant } from '$lib/prefs';
@@ -63,7 +63,7 @@
   const areaKindText = $derived(
     data.areaKind === 'garden' || data.areaKind === 'greenhouse'
       ? tr(`garden.kind.${data.areaKind}` as MessageKey)
-      : AREA_KIND_LABELS[data.areaKind]
+      : areaKindLabel(data.areaKind, d.locale)
   );
   const printDate = $derived(`${longDate(d.dateMs, tr)}, ${new Date(d.dateMs).getUTCFullYear()}`);
   const legend = $derived(

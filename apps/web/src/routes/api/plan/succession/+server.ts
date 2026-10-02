@@ -51,6 +51,7 @@ export const POST: RequestHandler = async (event) => {
 
   const tried = await tryAiWithGuard({
     endpoint: 'succession',
+    locale: event.locals?.locale,
     userId: user.id,
     prompt: async (signal) => {
       const ctx = await buildFarmContext(year);

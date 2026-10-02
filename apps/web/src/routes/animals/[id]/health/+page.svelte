@@ -179,7 +179,9 @@
             <div class="row-head">
               <strong>{HEALTH_KIND_LABEL[e.kind]}{e.product ? `: ${e.product}` : ''}</strong>
               {#if e.carriesHold && e.locked}<Pill tone="neutral">{tr('animals.locked')}</Pill>{/if}
-              {#if e.recordedLate}<Pill tone="wheat">{lateLabel(true, e.daysLate)}</Pill>{/if}
+              {#if e.recordedLate}<Pill tone="wheat"
+                  >{lateLabel(true, e.daysLate, page.data?.locale)}</Pill
+                >{/if}
             </div>
             <p class="meta">
               {formatInstant(e.administeredAt, prefs)}

@@ -1,5 +1,5 @@
 import { formatDueDay, formatInstant } from '$lib/prefs';
-import type { TaskCategory } from '$lib/plan/taskCategory';
+import { labelForTaskCategory, type TaskCategory } from '$lib/plan/taskCategory';
 import {
   TASK_STATUS_TONE,
   deriveTaskStatus,
@@ -23,7 +23,8 @@ import {
   resolveOptions,
   resolvedFrom,
   type BuildOptions,
-  type ResolvedOptions
+  type ResolvedOptions,
+  plantingName
 } from './common';
 
 export interface TaskCardInput {
@@ -113,7 +114,9 @@ export function buildTaskCardFrom(
   const status = taskStatusFor(task, ctx.queued, opts);
   const kicker = [
     tr(KIND_KICKER[task.kind ?? 'primary']),
-    task.category && task.category !== 'other' ? tr(`cards.taskCat.${task.category}`) : null
+    task.category && task.category !== 'other'
+      ? labelForTaskCategory(task.category, opts.prefs.locale)
+      : null
   ]
     .filter(Boolean)
     .join(' · ');
@@ -180,7 +183,10 @@ export function buildTaskCardFromSnapshot(
   const planting = task.cropId ? snapshot.plantings.find((p) => p.id === task.cropId) : undefined;
   const blockId = task.blockId ?? planting?.blockId ?? null;
   const block = blockId ? snapshot.blocks.find((b) => b.id === blockId) : undefined;
-  const where = [planting?.varietyDisplayName, block && blockDisplayName(block, opts.prefs.locale)]
+  const where = [
+    planting && plantingName(planting, opts.prefs.locale),
+    block && blockDisplayName(block, opts.prefs.locale)
+  ]
     .filter(Boolean)
     .join(' · ');
   const equipment = task.equipmentId

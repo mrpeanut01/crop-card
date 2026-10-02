@@ -119,6 +119,30 @@ export const enPlugins = {
   'cardsui.one.titleBare': 'Card · CropCard',
   'cardsui.one.titleNamed': '{title} · Cards · CropCard',
   'cardsui.paper': 'Paper',
+  'cardsui.photo.why.noKey': 'Claude is off, so here is what the Care Guide says.',
+  'cardsui.photo.why.overCap':
+    "This month's AI help for your farm is used up, so here is what the Care Guide says.",
+  'cardsui.photo.why.quota':
+    "Today's AI help for photos is used up, so here is what the Care Guide says.",
+  'cardsui.photo.why.rateLimit':
+    "Claude isn't answering right now, so here is what the Care Guide says.",
+  'cardsui.photo.why.offline':
+    "Claude can't be reached right now, so here is what the Care Guide says.",
+  'cardsui.photo.why.timeout': 'Claude took too long, so here is what the Care Guide says.',
+  'cardsui.photo.why.invalid':
+    "Claude's answer could not be used, so here is what the Care Guide says.",
+  'cardsui.photo.why.spray': 'Here is what the Care Guide says.',
+  'cardsui.photo.why.limit': '{reason}, so here is what the Care Guide says.',
+  'cardsui.photo.savedJournalPhoto': 'Your photo and question are saved in the journal.',
+  'cardsui.photo.savedJournal': 'Your question is saved in the journal.',
+  'cardsui.photo.noSection.harvest':
+    'This crop has no harvest cues yet. Count days from planting and check the seed packet.',
+  'cardsui.photo.noSection.prune':
+    'This crop has no pruning steps yet. Most plants only need dead or damaged parts removed.',
+  'cardsui.photo.noSection.problems':
+    'This crop has no common problems listed yet. Take a close photo of both sides of a leaf and compare it next week.',
+  'cardsui.photo.noSection.general':
+    'This crop has no growing guide yet. Check the seed packet for the basics.',
   'cardsui.photo.about': 'About {label}',
   'cardsui.photo.add': 'Anything to add?',
   'cardsui.photo.addNote': 'Add a note',
@@ -665,17 +689,6 @@ export const enPlugins = {
   'pluginui.tasks.window': 'Window (days)',
   'pluginui.tasks.body': 'Body (optional operator note)',
   'pluginui.tasks.add': '+ Add task',
-  'pluginui.taskCategory.plant': 'Plant',
-  'pluginui.taskCategory.till': 'Till',
-  'pluginui.taskCategory.fertilize': 'Fertilize',
-  'pluginui.taskCategory.spray': 'Spray',
-  'pluginui.taskCategory.scout': 'Scout',
-  'pluginui.taskCategory.companion-check': 'Companion check',
-  'pluginui.taskCategory.prune': 'Prune',
-  'pluginui.taskCategory.harvest': 'Harvest',
-  'pluginui.taskCategory.hay-cutting': 'Hay',
-  'pluginui.taskCategory.animal-care': 'Animal care',
-  'pluginui.taskCategory.other': 'Other',
   'pluginui.seasonalKind.spray': 'spray',
   'pluginui.seasonalKind.cultural': 'cultural',
   'pluginui.seasonalKind.pruning': 'pruning',

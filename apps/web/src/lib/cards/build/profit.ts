@@ -7,7 +7,7 @@
 
 import { formatMoney } from '$lib/finance/money';
 import { hasUnallocated, inputCostText, labourText, netLabel } from '$lib/finance/format';
-import { NOT_TIED_LABEL, type SeasonProfit } from '$lib/finance/profit';
+import { enterpriseName, notTiedLabel, type SeasonProfit } from '$lib/finance/profit';
 import { cardKey, type CardFact, type CardModel, type CardSection } from '../model';
 import { createT } from '$lib/i18n';
 
@@ -58,15 +58,15 @@ export function buildProfitCard(
       line(tr('cards.profit.directCosts'), formatMoney(e.directExpenseCents)),
       line(
         tr('cards.profit.inputsUsed'),
-        `${inputCostText(e)}${e.includesAreaInputs ? tr('cards.profit.someNotTied') : ''}`
+        `${inputCostText(e, opts.locale)}${e.includesAreaInputs ? tr('cards.profit.someNotTied') : ''}`
       ),
-      line(tr('cards.profit.labour'), labourText(e, rate)),
-      `${netLabel(e)}: ${formatMoney(e.netCents)}`
+      line(tr('cards.profit.labour'), labourText(e, rate, opts.locale)),
+      `${netLabel(e, opts.locale)}: ${formatMoney(e.netCents)}`
     ];
     if (e.netAfterLabourCents !== null) {
       items.push(line(tr('cards.profit.netAfterLabour'), formatMoney(e.netAfterLabourCents)));
     }
-    return { title: e.label, items, provenance: 'data' as const };
+    return { title: enterpriseName(e, opts.locale), items, provenance: 'data' as const };
   });
 
   if (hasUnallocated(profit)) {
@@ -82,7 +82,7 @@ export function buildProfitCard(
           inputCostText({
             inputCostCents: u.inputCostCents,
             inputCostUnknownCount: u.inputCostUnknownCount
-          })
+          }, opts.locale)
         )
       );
     }
@@ -92,12 +92,13 @@ export function buildProfitCard(
           tr('cards.profit.labour'),
           labourText(
             { labourMinutes: u.labourMinutes, labourCents: u.labourCents, labourNotCounted: false },
-            rate
+            rate,
+            opts.locale
           )
         )
       );
     }
-    sections.push({ title: NOT_TIED_LABEL, items });
+    sections.push({ title: notTiedLabel(opts.locale), items });
   }
 
   if (sections.length === 0) {

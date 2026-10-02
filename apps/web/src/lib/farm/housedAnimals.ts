@@ -177,6 +177,7 @@ export function withHousing(
     housed,
     h?.toxicPlants,
     h?.speciesIds ?? [],
-    pluralFrom(h?.speciesPlural ?? {})
+    pluralFrom(h?.speciesPlural ?? {}),
+    opts.locale
   );
 }

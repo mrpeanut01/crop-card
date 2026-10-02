@@ -16,7 +16,8 @@ import {
   sortTasks,
   ymdToUtcMs,
   type BuildOptions,
-  type ResolvedOptions
+  type ResolvedOptions,
+  plantingName
 } from './common';
 
 const MAX_ITEMS = 10;
@@ -25,7 +26,7 @@ function where(snapshot: FarmSnapshot, t: SnapshotTask, locale?: string | null):
   const planting = t.cropId ? snapshot.plantings.find((p) => p.id === t.cropId) : undefined;
   const blockId = t.blockId ?? planting?.blockId ?? null;
   const block = blockId ? snapshot.blocks.find((b) => b.id === blockId) : undefined;
-  const parts = [planting?.varietyDisplayName, block && blockDisplayName(block, locale)].filter(
+  const parts = [planting && plantingName(planting, locale), block && blockDisplayName(block, locale)].filter(
     Boolean
   );
   return parts.length ? ` · ${parts.join(' · ')}` : '';

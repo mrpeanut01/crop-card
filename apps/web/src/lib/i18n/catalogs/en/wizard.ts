@@ -975,11 +975,6 @@ export const enWizard = {
   'wizard.beds.why.timeout': 'Claude took too long',
   'wizard.beds.why.invalid': "Claude's beds didn't fit your seed",
   'wizard.beds.why.tooMany': 'This seed needs more than {max} beds',
-  'wizard.beds.limit.planExcludedNamed': "This AI help isn't on the {plan} plan",
-  'wizard.beds.limit.planExcluded': "This AI help isn't on your plan",
-  'wizard.beds.limit.ownerDisabled': 'AI help is turned off for this farm',
-  'wizard.beds.limit.freePool': 'Free AI help is resting until the 1st',
-  'wizard.beds.limit.global': 'AI help is paused for this month',
   'wizard.beds.leftover':
     'These {max} beds leave out {list}. Use longer or wider beds, or plant less.',
   'wizard.beds.leftoverItem.one': '{count} {name} plant',

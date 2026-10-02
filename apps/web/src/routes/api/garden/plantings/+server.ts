@@ -8,6 +8,7 @@ import {
   isFailure
 } from '$lib/server/garden/placement';
 import { getRegistry } from '$lib/server/registry';
+import { localizeSeedStartNotes } from '$lib/server/seedStartTasks';
 
 export const _requestSchema = plantingCreateSchema;
 
@@ -35,7 +36,9 @@ export const POST: RequestHandler = async (event) => {
   return json(
     {
       plantings: result.plantings,
-      ...(result.seedStartNotes.length ? { seedStartNotes: result.seedStartNotes } : {})
+      ...(result.seedStartNotes.length
+        ? { seedStartNotes: localizeSeedStartNotes(result.seedStartNotes, event.locals?.locale) }
+        : {})
     } satisfies PlantingCreateResponse,
     { status: 201 }
   );

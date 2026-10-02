@@ -1,12 +1,11 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { createT } from '$lib/i18n';
-  import type { MessageKey } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
   import {
-    type SeedOrganicStatus,
-    type SeedSearchFlag,
+    seedOrganicStatusLabel,
     seedSearchFlag,
+    seedSearchFlagLabel,
     sortChecks,
     type SeedSourcingRow
   } from '$lib/stock/seedSourcing';
@@ -23,16 +22,6 @@
 
   const { rows }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
-  const STATUS_KEY: Record<SeedOrganicStatus, MessageKey> = {
-    organic: 'organic.seed.status.organic',
-    untreated: 'organic.seed.status.untreated',
-    treated: 'organic.seed.status.treated',
-    unknown: 'organic.seed.status.unknown'
-  };
-  const FLAG_KEY: Record<SeedSearchFlag, MessageKey> = {
-    'no-search-on-file': 'organic.seed.flag.noSearch',
-    'not-recorded': 'organic.seed.flag.notRecorded'
-  };
 </script>
 
 {#if rows.length === 0}
@@ -52,8 +41,12 @@
         </div>
         <div>
           {tr('organic.seed.statusLabel')}
-          <strong>{r.status ? tr(STATUS_KEY[r.status]) : tr('organic.seed.notRecorded')}</strong>
-          {#if flag}<span class="flag">{tr(FLAG_KEY[flag])}</span>{/if}
+          <strong
+            >{r.status
+              ? seedOrganicStatusLabel(r.status, page.data?.locale)
+              : tr('organic.seed.notRecorded')}</strong
+          >
+          {#if flag}<span class="flag">{seedSearchFlagLabel(flag, page.data?.locale)}</span>{/if}
         </div>
         {#if r.sourcesChecked.length > 0}
           <ul class="checks">

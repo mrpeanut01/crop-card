@@ -7,11 +7,7 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import GerminationStepper from './GerminationStepper.svelte';
   import type { FarmSnapshot, SnapshotSeedTray } from '$lib/cards/snapshot';
-  import {
-    HARDEN_TIMING_UNKNOWN,
-    SOW_TIMING_UNKNOWN,
-    resolveSeedStartTiming
-  } from '$lib/schedule/seedStart';
+  import { resolveSeedStartTiming } from '$lib/schedule/seedStart';
   import { localDayInput, traySownAt } from '$lib/seedStart/trayDate';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
@@ -113,7 +109,7 @@
           })}
           <Provenance source={timing.startIndoorsWeeks.source} compact />
         {:else}
-          {SOW_TIMING_UNKNOWN}
+          {tr('sched.sowTimingUnknown')}
         {/if}
       </li>
       <li>
@@ -123,7 +119,7 @@
           })}
           <Provenance source={timing.hardenOffDays.source} compact />
         {:else}
-          {HARDEN_TIMING_UNKNOWN}
+          {tr('sched.hardenTimingUnknown')}
         {/if}
       </li>
     </ul>

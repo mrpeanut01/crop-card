@@ -171,7 +171,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   return {
     blocks,
     pasture: await loadSprayPastureContext(dbBlocks, registry),
-    organicBlocks: organicBlocksForNotice(blocks.map((b) => b.id)),
+    organicBlocks: organicBlocksForNotice(
+      blocks.map((b) => b.id),
+      Date.now(),
+      locals?.locale
+    ),
     herbicides,
     allHerbicides,
     sprayers: listSprayers(),

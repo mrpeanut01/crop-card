@@ -51,6 +51,7 @@ export const POST: RequestHandler = async (event) => {
 
   const tried = await tryAiWithGuard({
     endpoint: 'plugin-scan',
+    locale: event.locals?.locale,
     userId: session.id,
     timeoutMs: 60_000,
     prompt: (signal) =>

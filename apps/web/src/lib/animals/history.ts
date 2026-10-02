@@ -89,12 +89,12 @@ function statusText(e: HistoryStatus, locale?: string | null): string {
 
 const DAY_MS = 86_400_000;
 
-function statusLate(e: HistoryStatus): string | null {
+function statusLate(e: HistoryStatus, locale?: string | null): string | null {
   const days =
     e.createdAt !== undefined && e.createdAt > e.occurredAt
       ? Math.floor((e.createdAt - e.occurredAt) / DAY_MS)
       : null;
-  return lateLabel(e.recordedLate === true, days);
+  return lateLabel(e.recordedLate === true, days, locale);
 }
 
 function flagText(f: HistoryFlag, locale?: string | null): string {
@@ -147,7 +147,7 @@ export function buildHistory(input: HistoryInput): HistoryEntry[] {
   }
   const lastStatus = input.statusEvents.at(-1);
   for (const e of input.statusEvents) {
-    const late = statusLate(e);
+    const late = statusLate(e, input.locale);
     entries.push({
       id: `st:${e.id}`,
       at: e.occurredAt,

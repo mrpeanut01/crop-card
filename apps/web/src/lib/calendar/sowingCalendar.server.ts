@@ -88,9 +88,9 @@ export function loadSowingCalendar(
   registry: PluginRegistry,
   rawYear: string | null,
   now: number,
-  opts: { frostByBlock?: FrostByBlockLoader } = {}
+  opts: { frostByBlock?: FrostByBlockLoader; locale?: string | null } = {}
 ): SowingCalendarData {
-  const season = loadSeasonView(registry, rawYear, now);
+  const season = loadSeasonView(registry, rawYear, now, opts.locale);
   const year = season.year;
   const rows = season.timeline.rows.filter((r) => !r.blockWork);
   const ids = new Set(rows.map((r) => r.plantingId));

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { createT, type TranslateKey } from '$lib/i18n';
+  import { calendarEventCrop, calendarEventTitle } from '$lib/calendar/eventTitle';
   import { goto, invalidateAll } from '$app/navigation';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
@@ -3286,9 +3287,15 @@
               {#if cell.events.length > 0}
                 <ul class="events">
                   {#each cell.events.slice(0, 3) as e (e.kind + e.cropPluginId + e.startMs)}
-                    <li class="event {e.kind}" title="{e.title} — {e.varietyDisplayName}">
+                    <li
+                      class="event {e.kind}"
+                      title="{calendarEventTitle(e, data.locale)} — {calendarEventCrop(
+                        e,
+                        data.locale
+                      )}"
+                    >
                       <span class="dot" aria-hidden="true"></span>
-                      <span class="label">{e.title}</span>
+                      <span class="label">{calendarEventTitle(e, data.locale)}</span>
                     </li>
                   {/each}
                   {#if cell.events.length > 3}

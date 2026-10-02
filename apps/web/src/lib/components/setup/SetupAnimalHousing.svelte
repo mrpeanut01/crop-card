@@ -4,11 +4,11 @@
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
   import {
-    OFFLINE_MESSAGE,
     areaKindLabel,
     errorFromResponse,
     housingOptions,
     newHousingKinds,
+    offlineMessage,
     type AreaOption,
     type HousingPick
   } from '$lib/animals/display';
@@ -45,7 +45,7 @@
   const NEW = '__new__';
 
   const options = $derived(housingOptions(areas));
-  const kinds = newHousingKinds();
+  const kinds = $derived(newHousingKinds(page.data?.locale));
   let picked = $state(untrack(() => housingOptions(areas)[0]?.id ?? NEW));
   let kind = $state(
     untrack(() =>
@@ -103,13 +103,13 @@
         )
       });
       if (!res.ok) {
-        error = await errorFromResponse(res);
+        error = await errorFromResponse(res, page.data?.locale);
         return;
       }
       const { field } = (await res.json()) as { field: { id: string; name: string } };
       onDone({ areaId: field.id, areaName: field.name, kind, created: true });
     } catch {
-      error = OFFLINE_MESSAGE;
+      error = offlineMessage(page.data?.locale);
     } finally {
       saving = false;
     }
@@ -137,7 +137,7 @@
             <label class="af-tile" class:on={picked === a.id}>
               <input type="radio" name="{uid}-place" value={a.id} bind:group={picked} />
               <span>{a.name}</span>
-              <span class="af-tile-hint">{areaKindLabel(a.kind)}</span>
+              <span class="af-tile-hint">{areaKindLabel(a.kind, page.data?.locale)}</span>
             </label>
           {/each}
           <label class="af-tile" class:on={picked === NEW}>

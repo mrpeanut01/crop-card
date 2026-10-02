@@ -10,7 +10,7 @@
   import { formatRateText } from '$lib/stock/units';
   import { createT } from '$lib/i18n';
   import { cropFamilyLabel } from '$lib/plugins/familyLabel';
-  import { TASK_CATEGORY_VALUES } from '$lib/plan/taskCategory';
+  import { TASK_CATEGORY_VALUES, labelForTaskCategory } from '$lib/plan/taskCategory';
   import { page } from '$app/state';
 
   let { data } = $props();
@@ -57,7 +57,7 @@
   }
   function taskCategoryLabel(c: unknown): string {
     const hit = TASK_CATEGORY_VALUES.find((x) => x === c);
-    return hit ? tr(`pluginui.taskCategory.${hit}`) : String(c);
+    return hit ? labelForTaskCategory(hit, page.data?.locale) : String(c);
   }
 
   let rollingBack = $state<string | null>(null);

@@ -4,8 +4,10 @@
  * same-kind, same-day care of its members rolls into one line (D2-11).
  */
 
-import { animalLabel, countText } from '$lib/animals/display';
-import { groupFacts } from '$lib/animals/facts';
+import { animalLabel, animalLabelIn, countText } from '$lib/animals/display';
+import { groupFacts, type GroupFactsInput } from '$lib/animals/facts';
+import { speciesGroupTitle, speciesWordsIn } from '$lib/i18n/speciesName';
+import { carePlanTitleIn } from '$lib/animals/carePlans';
 import { displayFoods } from '$lib/animals/holdCopy';
 import { ymdInZone } from '$lib/prefs';
 import {
@@ -74,12 +76,16 @@ export function memberCareLines(
         a.plan.title.localeCompare(b.plan.title)
     )
     .map(({ plan, names }) => {
-      const who = names.length === 1 ? names[0] : countText(names.length, species);
+      const who = names.length === 1 ? names[0] : countText(
+              names.length,
+              species,
+              opts.prefs.locale
+            );
       const when =
         plan.nextDueAt === null
           ? askYourVet(opts.prefs.locale)
           : dueLabel(plan.nextDueAt, opts.now, opts.prefs);
-      return `${plan.title}: ${who}, ${when}`;
+      return `${carePlanTitleIn(plan, opts.prefs.locale)}: ${who}, ${when}`;
     });
 }
 
@@ -118,7 +124,10 @@ function flockCard(
       ).length > 0
   );
   if (heldMembers.length) {
-    const names = heldMembers.slice(0, 3).map(animalLabel).join(', ');
+    const names = heldMembers
+      .slice(0, 3)
+      .map((m) => animalLabelIn(m, loc))
+      .join(', ');
     const more = heldMembers.length > 3 ? ` and ${heldMembers.length - 3} more` : '';
     notices.push(`Also on hold on their own cards: ${names}${more}.`);
   }
@@ -126,26 +135,29 @@ function flockCard(
   const speciesWords = species
     ? { label: species.label, displayName: species.displayName }
     : undefined;
-  const facts: CardFact[] = groupFacts(
-    {
-      total: group.total,
-      headCount: group.headCount,
-      namedCount: group.namedCount,
-      species: speciesWords,
-      purpose: group.purpose,
-      livesAt: livesAt(snapshot, group.housingFieldId)
-    },
-    pet ? 'pets' : 'farm'
-  ).map((f) => ({
+  const factsInput: GroupFactsInput = {
+    total: group.total,
+    headCount: group.headCount,
+    namedCount: group.namedCount,
+    species: speciesWords,
+    purpose: group.purpose,
+    livesAt: livesAt(snapshot, group.housingFieldId, loc)
+  };
+  const layout = pet ? 'pets' : 'farm';
+  const shownWords = species ? speciesWordsIn(species, loc) : undefined;
+  const localValues = loc
+    ? groupFacts(
+        {
+          ...factsInput,
+          species: shownWords && { label: shownWords.label, displayName: shownWords.displayName }
+        },
+        layout,
+        loc
+      ).map((f) => f.value)
+    : null;
+  const facts: CardFact[] = groupFacts(factsInput, layout).map((f, i) => ({
     ...f,
-    ...(f.label === 'Named' && loc
-      ? {
-          value: tr('cards.animal.namedValue', {
-            named: group.namedCount,
-            unnamed: group.headCount
-          })
-        }
-      : {}),
+    ...(localValues ? { value: localValues[i] } : {}),
     provenance: 'data' as const
   }));
   if (!pet) {
@@ -166,12 +178,16 @@ function flockCard(
 
   const groupPlans = sortPlans(plansFor(snapshot, 'group', group.id));
   const memberPlans = members.flatMap((m) =>
-    plansFor(snapshot, 'animal', m.id).map((plan) => ({ plan, memberName: animalLabel(m) }))
+    plansFor(snapshot, 'animal', m.id).map((plan) => ({ plan, memberName: animalLabelIn(m, loc) }))
   );
   const sections: CardSection[] = [];
   const careItems = [
     ...groupPlans.map((p) => planLine(p, opts.now, opts.prefs)),
-    ...memberCareLines(memberPlans, speciesWords, opts)
+    ...memberCareLines(
+      memberPlans,
+      shownWords && { label: shownWords.label, displayName: shownWords.displayName },
+      opts
+    )
   ];
   const allPlans = [...groupPlans, ...memberPlans.map((m) => m.plan)];
   if (careItems.length) {
@@ -182,7 +198,7 @@ function flockCard(
     });
   }
   if (members.length) {
-    const names = members.slice(0, MAX_MEMBER_LINES).map(animalLabel);
+    const names = members.slice(0, MAX_MEMBER_LINES).map((m) => animalLabelIn(m, loc));
     if (members.length > MAX_MEMBER_LINES)
       names.push(tr('cards.more', { count: members.length - MAX_MEMBER_LINES }));
     sections.push({
@@ -230,7 +246,7 @@ function flockCard(
   return {
     kind: 'flock',
     key,
-    kicker: species ? `${species.displayName} ${noun}` : tr('cards.animal.group'),
+    kicker: species ? speciesGroupTitle({ ...species, groupNoun: noun }, loc) : tr('cards.animal.group'),
     title: group.name,
     facts: localizeFacts(facts, loc),
     next: nextCare(allPlans, opts.now, opts.prefs, pageHref),

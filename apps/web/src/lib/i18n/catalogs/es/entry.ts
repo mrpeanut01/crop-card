@@ -453,6 +453,11 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'setup.spot.inside': 'Dentro de {name} ({kind})',
   'setup.spot.lede': 'Solo necesita un nombre. Puedes dibujarlo en el mapa después.',
   'setup.spot.length': 'Largo (pies)',
+  'setup.spot.ph.field': 'p. ej., Mitad norte',
+  'setup.spot.ph.garden': 'p. ej., Cama de tomates',
+  'setup.spot.ph.greenhouse': 'p. ej., Mesa 1',
+  'setup.spot.ph.orchard': 'p. ej., Hilera 1',
+  'setup.spot.ph.pasture': 'p. ej., Potrero de arriba',
   'setup.spot.phFallback': 'p. ej., Cama del fondo',
   'setup.spot.sizeHelp':
     'Los totales de aspersión y semilla lo usan. Mídelo a pasos o calcúlalo, en pies.',

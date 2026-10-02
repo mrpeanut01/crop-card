@@ -165,14 +165,19 @@ export function localDay(ms: number): string {
 }
 
 /** A bed's effective frost as local days, for `plantingWindow` callers. */
-export function bedFrostView(e: EffectiveFrost, farm: SeasonFrostMs, year: number): BedFrostView {
+export function bedFrostView(
+  e: EffectiveFrost,
+  farm: SeasonFrostMs,
+  year: number,
+  locale?: string | null
+): BedFrostView {
   return {
     lastSpring: e.frostFree ? `${year}-01-01` : localDay(e.lastSpringFrostMs),
     firstFall: e.frostFree ? `${year}-12-31` : localDay(e.firstFallFrostMs),
     frostFree: e.frostFree,
     farmLastSpring: localDay(farm.lastSpringFrostMs),
     farmFirstFall: localDay(farm.firstFallFrostMs),
-    summary: effectiveFrostSummary(e)
+    summary: effectiveFrostSummary(e, locale)
   };
 }
 

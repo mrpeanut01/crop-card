@@ -714,6 +714,17 @@ export const enSettings = {
     'Deterministic fallbacks ensure CropCard remains usable when AI is off, offline, or rate-limited.',
   'settings.ai.gatedBy': 'Gated by AI',
   'settings.ai.alwaysWorks': 'Always works',
+  'settings.notif.decon-due.label': 'Decon due',
+  'settings.notif.decon-due.sub': 'A sprayer still carries chemistry an hour after its last spray.',
+  'settings.notif.lock-window-closing.label': 'Record lock closing',
+  'settings.notif.lock-window-closing.sub':
+    'A spray, insecticide, or fungicide record locks for good in under 2 hours.',
+  'settings.notif.withdrawal-clears.label': 'Hold cleared',
+  'settings.notif.withdrawal-clears.sub':
+    'An egg, milk or meat hold on an animal or group has ended. Owner only.',
+  'settings.notif.hold-covers-sale.label': 'Hold now covers a sale',
+  'settings.notif.hold-covers-sale.sub':
+    'A later record put egg, milk or meat records you already saved inside a hold. Owner only.',
   'settings.notif.spring-calibration.label': 'Spring calibration',
   'settings.notif.spring-calibration.sub':
     'A winterized sprayer needs recalibrating before the first spring spray.',
@@ -963,6 +974,12 @@ export const enSettings = {
   'settings.diag.backupLive': 'Litestream · live',
   'billing.seatLimit':
     'Seat limit reached. Helpers already on the farm keep their access; a bigger plan adds more seats.',
+  'billing.degrade.noKey':
+    'No Anthropic API key configured — add one on Settings → AI to turn Claude on.',
+  'billing.degrade.limited': '{reason}. CropCard worked this out without AI instead.',
+  'billing.degrade.timeout': 'Claude took too long to respond.',
+  'billing.degrade.offline': 'Claude is unreachable (offline).',
+  'billing.degrade.unavailable': 'Claude is unavailable right now{detail}.',
   'billing.limit.monthly': "This month's AI help for your farm is used up",
   'billing.limit.ownerOff': 'AI help is turned off for this farm',
   'billing.limit.planExcludedNamed': "This AI help isn't on the {plan} plan",

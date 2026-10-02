@@ -158,7 +158,7 @@
         }
         notices = noticesFrom(out);
       } else {
-        const out = await submitDisposition(harvest.id, b);
+        const out = await submitDisposition(harvest.id, b, undefined, undefined, page.data?.locale);
         if (out.status === 'error') {
           error = out.message;
           return;

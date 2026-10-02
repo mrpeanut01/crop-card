@@ -63,7 +63,8 @@ export const PATCH: RequestHandler = async (event) => {
   const placement = blockPlacementError(
     placementChanged ? (area?.kind ?? null) : null,
     kind,
-    parsed.data
+    parsed.data,
+    event.locals?.locale
   );
   if (placement) return json({ error: placement }, { status: 400 });
   const patch = usesDesignerLayout(kind)

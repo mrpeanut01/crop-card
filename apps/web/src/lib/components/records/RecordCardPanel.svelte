@@ -5,7 +5,7 @@
   import CardView from '$lib/components/cards/CardView.svelte';
   import HoldVoidPanel from './HoldVoidPanel.svelte';
   import type { CardModel, CardPrintLayout } from '$lib/cards/model';
-  import { PRINT_LAYOUTS } from '$lib/cards/print';
+  import { PRINT_LAYOUTS, printLayoutLabel } from '$lib/cards/print';
   import type { Prefs } from '$lib/prefs';
 
   interface Props {
@@ -97,7 +97,7 @@
       <label for={selectId}>{tr('records.card.paper')}</label>
       <select id={selectId} bind:value={layout}>
         {#each PRINT_LAYOUTS as l (l.id)}
-          <option value={l.id}>{l.label}</option>
+          <option value={l.id}>{printLayoutLabel(l.id, page.data?.locale)}</option>
         {/each}
       </select>
       <button

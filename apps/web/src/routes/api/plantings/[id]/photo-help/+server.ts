@@ -39,7 +39,8 @@ export const POST: RequestHandler = async (event) => {
       crop,
       plugin,
       req: { question: parsed.data.question, text: parsed.data.text, photo: photo.photo },
-      sprayTerms: sprayTermsFor(registry)
+      sprayTerms: sprayTermsFor(registry),
+      locale: event.locals?.locale
     })
   );
 };

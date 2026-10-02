@@ -89,13 +89,14 @@ export function designFrostForYear(seasonYear: number): {
  *  `frost`. Beds that match the farm are left out. */
 export function designFrostByBed(
   blockIds: readonly string[],
-  seasonYear: number
+  seasonYear: number,
+  locale?: string | null
 ): Record<string, BedFrost> {
   const ctx = effectiveFrostContext(seasonYear);
   const eff = loadEffectiveFrostByBlock(blockIds, seasonYear, ctx);
   const out: Record<string, BedFrost> = {};
   for (const [id, e] of Object.entries(eff)) {
-    const summary = effectiveFrostSummary(e);
+    const summary = effectiveFrostSummary(e, locale);
     const moved =
       e.frostFree ||
       e.lastSpringFrostMs !== ctx.farm.lastSpringFrostMs ||
@@ -124,7 +125,12 @@ export function designFrostForBed(
  *  greenhouse. */
 export async function loadGardenDesign(
   areaId: string,
-  opts: { seasonYear: number; readOnlyReason: GardenDesign['readOnlyReason']; now?: number }
+  opts: {
+    seasonYear: number;
+    readOnlyReason: GardenDesign['readOnlyReason'];
+    now?: number;
+    locale?: string | null;
+  }
 ): Promise<DesignerLoad | null> {
   const area = getField(areaId);
   if (!area || !isDesignable(area.kind)) return null;
@@ -196,7 +202,7 @@ export async function loadGardenDesign(
       ...frost,
       provenance: snapshotFrostFromSettings().provenance
     },
-    frostByBed: designFrostByBed(blockIds, opts.seasonYear),
+    frostByBed: designFrostByBed(blockIds, opts.seasonYear, opts.locale),
     seasonYear: opts.seasonYear,
     asOf: opts.now ?? Date.now(),
     readOnlyReason: opts.readOnlyReason
@@ -259,7 +265,7 @@ export async function loadGardenDesign(
  *  those; otherwise the active planning year is shown. */
 export async function loadDesignerResponse(
   areaId: string,
-  opts: { role: string; season: string | null; now?: Date }
+  opts: { role: string; season: string | null; now?: Date; locale?: string | null }
 ): Promise<GardenDesignResponse | null> {
   const canEdit = opts.role === 'owner';
   const now = opts.now ?? new Date();
@@ -271,7 +277,8 @@ export async function loadDesignerResponse(
   const seasonYear = seasons.includes(asked) ? asked : activeYear;
   const loaded = await loadGardenDesign(areaId, {
     seasonYear,
-    readOnlyReason: canEdit ? null : 'role'
+    readOnlyReason: canEdit ? null : 'role',
+    locale: opts.locale
   });
   if (!loaded) return null;
   return { ...loaded, canEdit, role: opts.role, seasons, activeYear };

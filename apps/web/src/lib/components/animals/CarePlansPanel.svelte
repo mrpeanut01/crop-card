@@ -11,7 +11,9 @@
     defaultLeadDays,
     type CareCardView,
     type CarePlanKind,
-    type CarePlanView as PlanView
+    type CarePlanView as PlanView,
+    carePlanTitleIn,
+    careNoteIn
   } from '$lib/animals/carePlans';
 
   interface Props {
@@ -166,7 +168,7 @@
       {@const card = cardByPlan.get(p.id)}
       <li class="plan" class:off={!p.active} data-testid="care-plan">
         <div class="plan-head">
-          <span class="plan-title">{p.title}</span>
+          <span class="plan-title">{carePlanTitleIn(p, page.data?.locale)}</span>
           <Provenance
             source={p.provenance}
             compact
@@ -178,8 +180,11 @@
         </p>
         {#if !p.nextDueOn && p.active}
           <p class="af-note">
-            {tr('animals.care.undated', { subject: subjectName, title: p.title.toLowerCase() })}
-            {p.note ?? ''}
+            {tr('animals.care.undated', {
+              subject: subjectName,
+              title: carePlanTitleIn(p, page.data?.locale).toLowerCase()
+            })}
+            {careNoteIn(p.note, page.data?.locale)}
           </p>
         {/if}
         {#if card && card.items.length === 1}
@@ -220,7 +225,13 @@
                 class="af-danger"
                 disabled={busy}
                 onclick={() => {
-                  if (confirm(tr('animals.care.confirmDelete', { title: p.title }))) {
+                  if (
+                    confirm(
+                      tr('animals.care.confirmDelete', {
+                        title: carePlanTitleIn(p, page.data?.locale)
+                      })
+                    )
+                  ) {
                     void send(
                       `${base}/${p.id}`,
                       'DELETE',

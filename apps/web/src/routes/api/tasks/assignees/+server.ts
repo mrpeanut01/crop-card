@@ -12,5 +12,5 @@ export const GET: RequestHandler = (event) => {
   const auth = currentUser(event);
   if (!auth?.activeOwnerId) return json({ error: 'sign in first' }, { status: 401 });
   if (!canAssignTasks(auth)) return assignRefusal();
-  return json({ assignees: listAssignableMembers(auth.activeOwnerId) });
+  return json({ assignees: listAssignableMembers(auth.activeOwnerId, event.locals?.locale) });
 };

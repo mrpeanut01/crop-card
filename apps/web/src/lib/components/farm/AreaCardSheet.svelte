@@ -341,7 +341,7 @@
                   {p.status === 'planned'
                     ? tr('farm.sheet.planned')
                     : tr('farm.sheet.growing')}{where(p.blockId)}{p.plantingDate
-                    ? ` · ${monthDay(p.plantingDate)}`
+                    ? ` · ${monthDay(p.plantingDate, page.data?.locale)}`
                     : ''}
                 </span>
               </li>
@@ -375,10 +375,10 @@
             <li>
               <span class="row-title">{p.varietyDisplayName}</span>
               <span class="row-meta">
-                {p.plantingDate ? monthDay(p.plantingDate) : tr('farm.sheet.undated')}{where(
-                  p.blockId
-                )}{p.harvestedAt
-                  ? ` · ${tr('farm.sheet.harvestedOn', { date: monthDay(p.harvestedAt) })}`
+                {p.plantingDate
+                  ? monthDay(p.plantingDate, page.data?.locale)
+                  : tr('farm.sheet.undated')}{where(p.blockId)}{p.harvestedAt
+                  ? ` · ${tr('farm.sheet.harvestedOn', { date: monthDay(p.harvestedAt, page.data?.locale) })}`
                   : ''}
               </span>
             </li>

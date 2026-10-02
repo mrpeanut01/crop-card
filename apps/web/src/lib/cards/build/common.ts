@@ -13,6 +13,7 @@ import {
   CROP_AREA_KINDS as CROP_AREA_KIND_LIST
 } from '$lib/farm/areaKinds';
 import { createT, t, type Translator } from '$lib/i18n';
+import { cropDisplayName } from '$lib/i18n/cropName';
 import type { CardAction } from '../model';
 import type {
   FarmSnapshot,
@@ -191,4 +192,13 @@ export function nextAction(
     href: taskPlanHref(blockId),
     due: dueLabel(first.scheduledFor, opts.now, opts.prefs)
   };
+}
+
+/** A planting's crop name for display: the Spanish plugin name when the
+ *  stored name is still the plugin's English one; owner-typed names as is. */
+export function plantingName(
+  p: { cropPluginId: string; varietyDisplayName: string },
+  locale?: string | null
+): string {
+  return cropDisplayName(p.cropPluginId, p.varietyDisplayName, locale);
 }

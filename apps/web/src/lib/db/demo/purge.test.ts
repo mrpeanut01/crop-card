@@ -7,7 +7,7 @@ import { blobDeletions, helperAssignments, owners, userHints, users } from '../s
 import { seedPhase33 } from '../phase33.fixtures';
 import { ownerStoragePrefix } from '../documents';
 import { DEMO_EMAIL_DOMAIN, DEMO_OWNER_PREFIX, DEMO_TTL_MS } from '$lib/demo/identity';
-import { countDemoOwners, purgeDemoOwner, purgeExpiredDemoOwners } from './purge';
+import { purgeDemoOwner, purgeExpiredDemoOwners } from './purge';
 
 function ownerTables(): string[] {
   return (
@@ -120,13 +120,11 @@ describe('purgeExpiredDemoOwners', () => {
     makeOwner(old, `v-${randomUUID()}@${DEMO_EMAIL_DOMAIN}`, now - DEMO_TTL_MS - 60_000);
     makeOwner(fresh, `v-${randomUUID()}@${DEMO_EMAIL_DOMAIN}`, now - 60_000);
     makeOwner(oldReal, `old-${randomUUID()}@example.com`, now - 10 * DEMO_TTL_MS);
-    const before = countDemoOwners();
 
     purgeExpiredDemoOwners(now, 1000);
 
     expect(db.select().from(owners).where(eq(owners.id, old)).get()).toBeUndefined();
     expect(db.select().from(owners).where(eq(owners.id, fresh)).get()).toBeDefined();
     expect(db.select().from(owners).where(eq(owners.id, oldReal)).get()).toBeDefined();
-    expect(countDemoOwners()).toBeLessThan(before);
   });
 });

@@ -96,7 +96,9 @@ function createDemoOwner(now: number): { ownerId: string; userId: string } {
         name: DEMO_FARM_NAME,
         slug: ownerId,
         billingStatus: 'active',
-        createdAt: at
+        // Real clock: the expiry sweep keys on this, and a parallel test
+        // starting a demo would purge a farm dated months back mid-seed.
+        createdAt: new Date()
       })
       .run();
     db.insert(helperAssignments)
@@ -128,11 +130,18 @@ function countByOwner(ownerId: string): Record<string, number> {
   return out;
 }
 
-function totalRows(): Record<string, number> {
-  unscopedQueryNote('test counts every tenant table');
+/** Rows a mis-scoped write would land in: no owner, or the legacy
+ *  default farm. Other test files write to their own owners in parallel
+ *  on the same database, so whole-table totals are not stable. */
+function strayRows(): Record<string, number> {
+  unscopedQueryNote('test counts tenant rows that belong to no demo owner');
   const out: Record<string, number> = {};
   for (const table of TENANT_TABLES) {
-    const row = db.$client.prepare(`SELECT count(*) AS n FROM "${table}"`).get() as { n: number };
+    const row = db.$client
+      .prepare(
+        `SELECT count(*) AS n FROM "${table}" WHERE owner_id IS NULL OR owner_id IN ('', 'owner_home_farm')`
+      )
+      .get() as { n: number };
     out[table] = row.n;
   }
   return out;
@@ -167,7 +176,7 @@ describe.each(NOWS)('seedDemoFarm on %s', (ymd) => {
 
   it('seeds a believable farm that every main page can read', async () => {
     const { ownerId, userId } = createDemoOwner(now);
-    const before = totalRows();
+    const before = strayRows();
     const started = performance.now();
     const summary = runWithTenant(ownerId, () => seedDemoFarm({ ownerId, userId, now }));
     const elapsed = performance.now() - started;
@@ -177,14 +186,8 @@ describe.each(NOWS)('seedDemoFarm on %s', (ymd) => {
     expect(elapsed).toBeLessThan(3000);
 
     // Every row the seed wrote is this owner's.
-    const after = totalRows();
+    expect(strayRows()).toEqual(before);
     const mine = countByOwner(ownerId);
-    for (const table of TENANT_TABLES) {
-      expect({ table, added: after[table] - before[table] }).toEqual({
-        table,
-        added: mine[table]
-      });
-    }
     const total = Object.values(mine).reduce((a, b) => a + b, 0);
     expect(total).toBeGreaterThan(250);
     expect(total).toBeLessThan(1500);

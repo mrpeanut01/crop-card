@@ -1,5 +1,7 @@
 <script lang="ts">
   import { Leaf } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
@@ -7,6 +9,7 @@
   import { fmtQtyRange, usText } from './format';
 
   const props: RendererProps = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const priorPicks = $derived(props.rendererData?.priorPickCount ?? 0);
   const cutNumber = $derived(priorPicks + 1);
@@ -32,19 +35,21 @@
   <header class="archetype-head">
     <Leaf size={18} strokeWidth={1.75} />
     <div>
-      <span class="archetype-name">Cut-and-come-again harvest</span>
+      <span class="archetype-name">{tr('harvestui.r.leafy.name')}</span>
       <span class="archetype-sub">
-        Cut {cutNumber}. Cut {fmtQtyRange(1, 2, 'length', currentPrefs())} above the growing point so
-        the plant can regrow. Re-harvest in 2-3 weeks until bolt.
+        {tr('harvestui.r.leafy.sub', {
+          n: cutNumber,
+          range: fmtQtyRange(1, 2, 'length', currentPrefs())
+        })}
       </span>
     </div>
   </header>
 
   <div class="cut-block">
-    <span class="block-title">This cut</span>
+    <span class="block-title">{tr('harvestui.r.leafy.block')}</span>
     <div class="cut-grid">
       <label class="qfield">
-        <span>Cut weight ({fmt.unit('weight')})</span>
+        <span>{tr('harvestui.r.leafy.weight', { unit: fmt.unit('weight') })}</span>
         <UnitInput
           quantity="weight"
           suffix={false}
@@ -53,7 +58,7 @@
         />
       </label>
       <label class="qfield">
-        <span>Cut height above crown ({fmt.unit('length')})</span>
+        <span>{tr('harvestui.r.leafy.height', { unit: fmt.unit('length') })}</span>
         <UnitInput
           quantity="length"
           suffix={false}
@@ -64,7 +69,7 @@
     </div>
     <label class="bolt-check">
       <input type="checkbox" bind:checked={boltObserved} />
-      Bolt observed — plant likely past its regrowth window
+      {tr('harvestui.r.leafy.bolt')}
     </label>
   </div>
 

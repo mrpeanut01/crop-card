@@ -1,10 +1,13 @@
 <script lang="ts">
   import { Grape } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
 
   // Quality (Brix/pH/TA) is packed into the lotNumber tag pending #180 schema lift.
   const props: RendererProps = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let brix = $state('');
   let phReading = $state('');
@@ -27,16 +30,15 @@
   <header class="archetype-head">
     <Grape size={18} strokeWidth={1.75} />
     <div>
-      <span class="archetype-name">Perennial-vine quality harvest</span>
+      <span class="archetype-name">{tr('harvestui.r.vine.name')}</span>
       <span class="archetype-sub">
-        Quality-anchored single window. Record Brix / pH / TA — vintage tracking + buyer payments
-        rely on it.
+        {tr('harvestui.r.vine.sub')}
       </span>
     </div>
   </header>
 
   <div class="quality-block">
-    <span class="block-title">Quality at pick (logged into harvest record)</span>
+    <span class="block-title">{tr('harvestui.r.vine.block')}</span>
     <div class="quality-grid">
       <label class="qfield">
         <span>Brix</span>
@@ -45,7 +47,7 @@
           inputmode="decimal"
           placeholder="22.5°"
           bind:value={brix}
-          aria-label="Brix reading at harvest"
+          aria-label={tr('harvestui.r.vine.ariaBrix')}
         />
       </label>
       <label class="qfield">
@@ -55,23 +57,22 @@
           inputmode="decimal"
           placeholder="3.45"
           bind:value={phReading}
-          aria-label="pH reading at harvest"
+          aria-label={tr('harvestui.r.vine.ariaPh')}
         />
       </label>
       <label class="qfield">
-        <span>TA (g/L)</span>
+        <span>{tr('harvestui.r.vine.ta')}</span>
         <input
           type="text"
           inputmode="decimal"
           placeholder="6.5"
           bind:value={ta}
-          aria-label="Titratable acidity reading at harvest"
+          aria-label={tr('harvestui.r.vine.ariaTa')}
         />
       </label>
     </div>
     <p class="hint">
-      Wine grapes target: Brix 22–25, pH 3.2–3.6, TA 6–9 g/L. Tune to varietal + style. Hops: log
-      dry-matter %.
+      {tr('harvestui.r.vine.hint')}
     </p>
   </div>
 

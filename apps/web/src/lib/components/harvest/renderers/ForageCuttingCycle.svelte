@@ -1,10 +1,13 @@
 <script lang="ts">
   import { Scissors } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
   import { fmtRange } from './format';
 
   const props: RendererProps = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const hayOps = $derived(props.rendererData?.hayOperations);
   const priorPicks = $derived(props.rendererData?.priorPickCount ?? 0);
@@ -19,10 +22,9 @@
   <header class="archetype-head">
     <Scissors size={18} strokeWidth={1.75} />
     <div>
-      <span class="archetype-name">Forage cutting cycle</span>
+      <span class="archetype-name">{tr('harvestui.r.forage.name')}</span>
       <span class="archetype-sub">
-        Multi-cut perennial. Check the 3-day weather window before mowing — wet hay molds in the
-        bale.
+        {tr('harvestui.r.forage.sub')}
       </span>
     </div>
   </header>
@@ -33,7 +35,7 @@
        below stays for the quick-log path. -->
   <p class="hay-cta">
     <a href="/hay?block={props.blockId}&planting={props.plantingId}">
-      Open multi-step hay workflow →
+      {tr('harvestui.r.forage.cta')}
     </a>
   </p>
 
@@ -41,17 +43,20 @@
     <div class="hay-detail">
       {#if cuttingsPerSeason}
         <div class="detail-row">
-          <span class="detail-label">Cutting</span>
+          <span class="detail-label">{tr('harvestui.r.forage.cutting')}</span>
           <span class="detail-value mono">
-            {priorPicks + 1} of {fmtRange(cuttingsPerSeason)} per season
+            {tr('harvestui.r.forage.cuttingOf', {
+              n: priorPicks + 1,
+              range: fmtRange(cuttingsPerSeason)
+            })}
           </span>
         </div>
       {/if}
       {#if cutInterval}
         <div class="detail-row">
-          <span class="detail-label">Cut interval</span>
+          <span class="detail-label">{tr('harvestui.r.forage.interval')}</span>
           <span class="detail-value mono">
-            {fmtRange(cutInterval, 'd')} regrowth window
+            {tr('harvestui.r.forage.regrowth', { range: fmtRange(cutInterval, 'd') })}
           </span>
         </div>
       {/if}

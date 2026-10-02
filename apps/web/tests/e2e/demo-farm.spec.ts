@@ -45,8 +45,11 @@ test.describe('demo farm from the sign-in page', () => {
     expect(farmCookie).toBeTruthy();
 
     page.once('dialog', (d) => d.accept());
-    await page.getByTestId('demo-reset').click();
-    await page.waitForURL('**/today');
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes('/demo?/reset')),
+      page.getByTestId('demo-reset').click()
+    ]);
+    await page.waitForLoadState('load');
     const resetCookie = (await page.context().cookies()).find((c) => c.name === 'cropcard.session');
     expect(resetCookie?.value).not.toBe(farmCookie?.value);
     await expect(page.getByTestId('demo-banner')).toBeVisible();

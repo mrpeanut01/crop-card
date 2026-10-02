@@ -1067,10 +1067,32 @@ export function buildDemoTimeline(now: number): DemoTimeline {
     }
     addTask({
       key: 'routine:overdue',
-      title: 'Replace the leaking hose bib at the barn',
-      body: 'Washer kit is on the shelf by the feed bins.',
-      category: 'other',
+      title: fieldSeason
+        ? 'Scout the kitchen garden for pests and disease'
+        : 'Check stored squash and garlic for soft spots',
+      body: fieldSeason
+        ? 'Turn leaves on the tomatoes and squash; log anything at threshold on /scout.'
+        : 'Pull anything soft before it spreads to the rest of the crate.',
+      category: fieldSeason ? 'scout' : 'other',
       due: utcDayMs(addDaysYmd(today, -2))
+    });
+    addTask({
+      key: 'routine:eggs',
+      title: 'Collect eggs and log the count',
+      body: 'Log the count on the Laying flock page so the egg record stays complete.',
+      category: 'other',
+      due: utcDayMs(today)
+    });
+    addTask({
+      key: 'routine:today2',
+      title: fieldSeason
+        ? 'Check soil moisture in the garden beds before watering'
+        : 'Vent the high tunnel if it climbs past 80°F',
+      body: fieldSeason
+        ? 'Push a finger 2 in down; water only beds that are dry there.'
+        : 'Roll the sides up a foot at midday and close them by 3 pm.',
+      category: 'other',
+      due: utcDayMs(today)
     });
     addTask({
       key: 'routine:today',

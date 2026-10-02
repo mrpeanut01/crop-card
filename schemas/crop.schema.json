@@ -1239,6 +1239,42 @@
         "additionalProperties": false
       }
     },
+    "forageHazards": {
+      "minItems": 1,
+      "maxItems": 2,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "prussic-acid",
+              "nitrate"
+            ]
+          },
+          "triggers": {
+            "minItems": 1,
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "frost",
+                "drought",
+                "young-regrowth",
+                "heavy-nitrogen"
+              ]
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "triggers"
+        ],
+        "additionalProperties": false
+      }
+    },
     "planting": {
       "type": "object",
       "propertyNames": {

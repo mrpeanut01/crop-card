@@ -7,14 +7,17 @@ import { loadPhase32DataKinds, type Phase32DataKinds } from './registryDataKinds
 import type { CropPlugin } from './schemas';
 import {
   animalHealthFactPaths,
+  carryoverDaysQuoteGaps,
   checkPastureCoverage,
   checkSources,
   cropFactPaths,
+  forageHazardGaps,
   grazingFactPaths,
   missingWithdrawals,
   pestModelFactPaths,
   sourceEntrySchema,
   speciesFactPaths,
+  type ForageSourceEntry,
   type PastureAllowlistEntry,
   type PesticidePlugin,
   type SourceMap
@@ -44,6 +47,11 @@ const speciesSources = readJson<{ entries: SourceMap }>('species-sources.json', 
   entries: {}
 }).entries;
 const cropSources = readJson<SourceMap>('crop-data-sources.json', {});
+// Phase 33C (M-13): the plan's forage-hazard-sources.json is this file.
+const forageSources = readJson<{ entries: Record<string, ForageSourceEntry> }>(
+  'forage-toxicity-sources.json',
+  { entries: {} }
+).entries;
 
 let library: PluginRegistry;
 let kinds: Phase32DataKinds;
@@ -174,6 +182,41 @@ describe('Phase 32A source coverage gate', () => {
       }
     }
     expect(bad).toEqual([]);
+  });
+});
+
+describe('Phase 33C plugin data gate', () => {
+  it('every manureCarryoverDays quote states the number of days (M-17)', () => {
+    expect(carryoverDaysQuoteGaps(pesticidesOf(library), grazing.entries)).toEqual([]);
+  });
+
+  it('ships exactly the ruled carryover days and hay flags (M-15, M-16)', () => {
+    const days = Object.fromEntries(
+      pesticidesOf(library)
+        .filter((p) => p.grazingRestrictions?.manureCarryoverDays !== undefined)
+        .map((p) => [p.pluginId, p.grazingRestrictions!.manureCarryoverDays])
+    );
+    expect(days).toEqual({
+      'grazonnext-hl': 3,
+      'duracor-aminopyralid-florpyrauxifen': 3,
+      'chaparral-aminopyralid-metsulfuron': 3,
+      crossbow: 3,
+      stinger: 7
+    });
+    const hay = pesticidesOf(library)
+      .filter((p) => p.grazingRestrictions?.hayOffFarmRestricted === true)
+      .map((p) => p.pluginId)
+      .sort();
+    expect(hay).toEqual([
+      'chaparral-aminopyralid-metsulfuron',
+      'duracor-aminopyralid-florpyrauxifen',
+      'grazonnext-hl'
+    ]);
+  });
+
+  it('every forage hazard and trigger is sourced, and research and data agree (M-21 to M-23)', () => {
+    expect(forageSources, 'forage-toxicity-sources.json must load').not.toEqual({});
+    expect(forageHazardGaps(library.crops(), forageSources)).toEqual([]);
   });
 });
 

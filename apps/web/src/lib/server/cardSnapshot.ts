@@ -4,6 +4,7 @@
  * pesticide plugins come from the Owner's registry view.
  */
 
+import { loadCarryoverLines, snapshotCarryover } from '$lib/server/areaCarryover';
 import { DEFAULT_LOCALE } from '$lib/i18n/locales';
 import { listOpenSeedStarts } from '$lib/db/seedStarts';
 import { createHash } from 'node:crypto';
@@ -588,7 +589,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     mapFeatures: listMapFeatureViews(),
     emergencyContacts: loadEmergencyContacts(),
     soilTests: latestSoilTestsPerBlock(listSoilTests(), labReportForSoilTests()),
-    ...(await animalSnapshotPart(windowNow))
+    ...(await animalSnapshotPart(windowNow)),
+    carryover: snapshotCarryover(await loadCarryoverLines(windowNow))
   };
 }
 

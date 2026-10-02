@@ -5,6 +5,7 @@
   import CropPluginDetail from '$lib/components/inventory/detail/CropPluginDetail.svelte';
   import FeedDetail from '$lib/components/inventory/detail/FeedDetail.svelte';
   import AnimalHealthDetail from '$lib/components/inventory/detail/AnimalHealthDetail.svelte';
+  import AmendmentBatchDetail from '$lib/components/amendments/AmendmentBatchDetail.svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
   import { invTypeLower } from '$lib/components/inventory/typeLabel';
@@ -15,6 +16,7 @@
   function titleOf(d: typeof data): string {
     if (d.type === 'crop') return d.plugin.displayName;
     if (d.type === 'animal-health') return d.item?.displayName ?? d.plugin?.displayName ?? '';
+    if (d.type === 'amendment') return d.batch.name;
     return d.item.displayName;
   }
 </script>
@@ -61,6 +63,8 @@
   <FeedDetail {...data} />
 {:else if data.type === 'animal-health'}
   <AnimalHealthDetail {...data} />
+{:else if data.type === 'amendment'}
+  <AmendmentBatchDetail {...data} />
 {:else if data.type === 'crop'}
   <CropPluginDetail
     plugin={data.plugin}

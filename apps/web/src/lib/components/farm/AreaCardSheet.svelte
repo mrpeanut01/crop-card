@@ -4,6 +4,7 @@
   import CardView from '$lib/components/cards/CardView.svelte';
   import AreaDetailsFields from './AreaDetailsFields.svelte';
   import { buildAreaCard } from '$lib/cards/build';
+  import { withSnapshotCarryover } from '$lib/cards/build/area';
   import {
     areaDisplayName,
     blockDisplayName,
@@ -12,7 +13,7 @@
     taskPlanHref
   } from '$lib/cards/build/common';
   import type { FarmSnapshot } from '$lib/cards/snapshot';
-  import { AREA_KINDS, type AreaDetails, type AreaKind } from '$lib/farm/areaKinds';
+  import { AREA_KINDS, isCropBearing, type AreaDetails, type AreaKind } from '$lib/farm/areaKinds';
   import {
     detailsFromDraft,
     detailsSummary,
@@ -24,6 +25,7 @@
   import { kindStyle } from '$lib/farm/kindStyle';
   import { withHousing, type AreaHousing } from '$lib/farm/housedAnimals';
   import { needsLabelTime, withGrazing, type AreaGrazing } from '$lib/farm/areaGrazing';
+  import { ForageAdvisoryCache } from '$lib/client/forageAdvisory.svelte';
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { getCoopContext } from '$lib/farm/coopContext';
   import Provenance from '$lib/components/ui/Provenance.svelte';
@@ -77,7 +79,12 @@
     const built = buildAreaCard(snapshot, area.id, { prefs });
     if (!built) return null;
     const housed = withHousing(built, housing, { petsLayout });
-    return { ...withGrazing(housed, grazing, prefs.timeZone), links: undefined };
+    const held = { ...withGrazing(housed, grazing, prefs.timeZone), links: undefined };
+    return forage.decorate(withSnapshotCarryover(snapshot, area.id, held, { link: true }), area.id);
+  });
+  const forage = new ForageAdvisoryCache();
+  $effect(() => {
+    if (open && isCropBearing(area.kind)) void forage.load({ fieldId: area.id });
   });
   const title = $derived(areaDisplayName(area));
   const style = $derived(kindStyle(area.kind));

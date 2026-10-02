@@ -4,6 +4,7 @@
   import type { PlantingRecord } from '$lib/db/blocks';
   import { planPlantingCard, plantingColor, type PlantingSourceTag } from '$lib/plan/planCards';
   import { currentPrefs } from '$lib/prefsState.svelte';
+  import { withCarryover, type CarryoverLine } from '$lib/farm/areaCarryover';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
 
@@ -25,6 +26,8 @@
     onRefine?: () => void;
     /** Archetype-specific plan view (e.g. /plan/wheat for small grains). */
     detailHref?: string;
+    /** 33C after-spread lines on this planting's block (M-47 planting hint). */
+    carryover?: readonly CarryoverLine[];
   }
   const {
     planting,
@@ -39,7 +42,8 @@
     seededAtLabel,
     onCompanionClick,
     onRefine,
-    detailHref
+    detailHref,
+    carryover = []
   }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
 
@@ -57,10 +61,11 @@
       detailHref
     })
   );
+  const shown = $derived(withCarryover(card, carryover, { link: true }));
 </script>
 
 <div class="planting-card" data-testid="planting-card">
-  <CardView {card} prefs={currentPrefs()} showAsOf={false}>
+  <CardView card={shown} prefs={currentPrefs()} showAsOf={false}>
     {#snippet actions()}
       {#if companions.length > 0}
         <div class="companions">

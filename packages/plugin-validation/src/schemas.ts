@@ -713,6 +713,46 @@ export const animalToxicitySchema = z
   );
 export type AnimalToxicity = z.infer<typeof animalToxicitySchema>;
 
+// ─── Phase 33C — forage hazards (advisory only, never a kernel input) ───
+// Which crops can carry prussic acid or nitrate, and what raises the risk.
+// No numbers live here: every hazard and trigger rests on an entry in
+// apps/web/scripts/forage-toxicity-sources.json (checked by the source
+// coverage gate), and advice numbers live in code tied to their quotes.
+
+export const FORAGE_HAZARD_KINDS = ["prussic-acid", "nitrate"] as const;
+export type ForageHazardKind = (typeof FORAGE_HAZARD_KINDS)[number];
+
+export const FORAGE_TRIGGERS = [
+  "frost",
+  "drought",
+  "young-regrowth",
+  "heavy-nitrogen",
+] as const;
+export type ForageTrigger = (typeof FORAGE_TRIGGERS)[number];
+
+export interface ForageHazard {
+  kind: ForageHazardKind;
+  triggers: ForageTrigger[];
+}
+
+export const forageHazardSchema: z.ZodType<ForageHazard> = z
+  .strictObject({
+    kind: z.enum(FORAGE_HAZARD_KINDS),
+    triggers: z.array(z.enum(FORAGE_TRIGGERS)).min(1).max(4),
+  })
+  .refine((h) => new Set(h.triggers).size === h.triggers.length, {
+    message: "list each forage hazard trigger once",
+    path: ["triggers"],
+  });
+
+export const forageHazardsSchema = z
+  .array(forageHazardSchema)
+  .min(1)
+  .max(2)
+  .refine((hs) => new Set(hs.map((h) => h.kind)).size === hs.length, {
+    message: "one forageHazards entry per kind",
+  });
+
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal("crop"),
   cropFamily: z.preprocess(
@@ -888,6 +928,8 @@ export const cropPluginSchema = pluginBase.extend({
   bloomWindow: bloomWindowSchema,
   /** Phase 32A — which animals this crop harms. Advisory callouts only. */
   animalToxicity: animalToxicitySchema.optional(),
+  /** Phase 33C — prussic acid and nitrate risk. Advisory callouts only. */
+  forageHazards: forageHazardsSchema.optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),
@@ -1041,6 +1083,14 @@ export const grazingRestrictionsSchema = z
     notForPasture: z.boolean().optional(),
     /** Residue survives in manure from animals that grazed treated forage. */
     manureCarryover: z.boolean().optional(),
+    /** Phase 33C (M-14): days after an animal last grazed treated forage or
+     *  ate treated hay during which its manure must be kept out of compost,
+     *  mulch or ground for sensitive crops. Not how long manure stays
+     *  harmful; no label states that. Needs `manureCarryover: true`. */
+    manureCarryoverDays: labelDays.optional(),
+    /** Phase 33C (M-16): the label limits moving or selling hay from treated
+     *  ground off the farm. Only `true` means anything. */
+    hayOffFarmRestricted: z.boolean().optional(),
     /** Short citation: product label, EPA reg number and label date. */
     source: z.string().min(1).max(300),
   })
@@ -1064,6 +1114,13 @@ export const grazingRestrictionsSchema = z
     {
       message: "a species exception needs grazeDays or hayDays",
       path: ["speciesExceptions"],
+    },
+  )
+  .refine(
+    (g) => g.manureCarryoverDays === undefined || g.manureCarryover === true,
+    {
+      message: "manureCarryoverDays needs manureCarryover: true",
+      path: ["manureCarryoverDays"],
     },
   );
 export type GrazingRestrictions = z.infer<typeof grazingRestrictionsSchema>;

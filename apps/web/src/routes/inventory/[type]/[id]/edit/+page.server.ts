@@ -24,6 +24,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   if (type === 'crop') {
     return { type, existing: undefined, library: [], canSave: false };
   }
+  if (type === 'amendment') {
+    throw redirect(307, `/inventory/amendment/${encodeURIComponent(params.id)}`);
+  }
 
   const item = getStockItemWithBalance(params.id);
   if (!item) throw error(404, `stock item not found: ${params.id}`);

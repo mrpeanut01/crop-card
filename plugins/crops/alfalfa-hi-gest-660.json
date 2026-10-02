@@ -69,5 +69,14 @@
         }
       }
     }
-  }
+  },
+  "forageHazards": [
+    {
+      "kind": "nitrate",
+      "triggers": [
+        "drought",
+        "heavy-nitrogen"
+      ]
+    }
+  ]
 }

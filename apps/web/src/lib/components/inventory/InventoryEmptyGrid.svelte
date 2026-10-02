@@ -12,9 +12,12 @@
     /** Kinds offered as tiles; defaults to the always-shown types plus the
      *  active one. */
     types?: readonly InventoryType[];
+    /** Helpers and custom operators can start a manure or compost pile
+     *  (33C, M-36) even where they cannot add stock. */
+    canAddAmendment?: boolean;
   }
 
-  const { activeType, canAdd, types: typesProp }: Props = $props();
+  const { activeType, canAdd, types: typesProp, canAddAmendment = false }: Props = $props();
   const types = $derived(
     typesProp ?? visibleInventoryTypes({ stockCounts: {}, hasAnimals: false, active: activeType })
   );
@@ -27,8 +30,12 @@
     seed: 'inv.empty.hint.seed',
     crop: 'inv.empty.hint.crop',
     feed: 'inv.empty.hint.feed',
-    'animal-health': 'inv.empty.hint.animalHealth'
+    'animal-health': 'inv.empty.hint.animalHealth',
+    amendment: 'inv.empty.hint.amendment'
   } as const satisfies Record<InventoryType, MessageKey>;
+  const tileTitle = (t: InventoryType): string =>
+    t === 'amendment' ? tr('inv.empty.tile.amendment') : invTypeLabel(tr, t);
+  const tiles = $derived(types.includes('amendment') ? types : [...types, 'amendment' as const]);
 </script>
 
 <section class="inv-empty" aria-labelledby="inv-empty-title" data-testid="inventory-empty">
@@ -38,7 +45,7 @@
   {#if canAdd}
     <p class="lede">{tr('inv.empty.lede')}</p>
     <ul class="grid">
-      {#each types as t (t)}
+      {#each tiles as t (t)}
         <li>
           <a
             class="tile"
@@ -46,16 +53,30 @@
             href="/inventory/{t}/add"
             aria-current={t === activeType ? 'true' : undefined}
           >
-            <span class="tile-title">{invTypeLabel(tr, t)}</span>
+            <span class="tile-title">{tileTitle(t)}</span>
             <span class="tile-hint">{tr(HINT_KEYS[t])}</span>
           </a>
         </li>
       {/each}
     </ul>
   {:else}
-    <p class="ask-owner" role="note">
-      {tr('inv.empty.askOwner')}
-    </p>
+    {#if canAddAmendment && activeType === 'amendment'}
+      <p class="lede">{tr('inv.empty.amendmentLede')}</p>
+    {:else}
+      <p class="ask-owner" role="note">
+        {tr('inv.empty.askOwner')}
+      </p>
+    {/if}
+    {#if canAddAmendment}
+      <ul class="grid helper-tiles">
+        <li>
+          <a class="tile" href="/inventory/amendment/add">
+            <span class="tile-title">{tileTitle('amendment')}</span>
+            <span class="tile-hint">{tr(HINT_KEYS.amendment)}</span>
+          </a>
+        </li>
+      </ul>
+    {/if}
   {/if}
 </section>
 
@@ -110,6 +131,9 @@
   .tile-hint {
     font-size: var(--font-size-caption, 12px);
     color: var(--color-ink-soft, #4a4f46);
+  }
+  .helper-tiles {
+    margin-top: var(--space-3, 12px);
   }
   .ask-owner {
     margin: 0;

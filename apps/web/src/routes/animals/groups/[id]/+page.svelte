@@ -259,6 +259,7 @@
             noun,
             members: here.map((m) => ({ id: m.id, label: animalName(tr, m) }))
           }}
+          forage
           toxic={{
             byArea: data.toxicPlants,
             speciesIds: [group.speciesId],

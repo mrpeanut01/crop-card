@@ -105,6 +105,48 @@ describe('fact paths', () => {
     ]);
   });
 
+  it('lists the Phase 33C carryover days and a true hay flag (M-17)', () => {
+    const g = grazingRestrictionsSchema.parse({
+      grazeDays: 0,
+      manureCarryover: true,
+      manureCarryoverDays: 3,
+      hayOffFarmRestricted: true,
+      source: 'Test label'
+    });
+    expect(grazingFactPaths(g)).toEqual([
+      'grazeDays',
+      'manureCarryoverDays',
+      'manureCarryover',
+      'hayOffFarmRestricted'
+    ]);
+    const off = grazingRestrictionsSchema.parse({
+      manureCarryover: true,
+      hayOffFarmRestricted: false,
+      source: 'Test label'
+    });
+    expect(grazingFactPaths(off)).toEqual(['manureCarryover']);
+  });
+
+  it('refuses carryover days on a product not flagged as carrying over (M-18)', () => {
+    expect(
+      grazingRestrictionsSchema.safeParse({ manureCarryoverDays: 3, source: 'Test label' }).success
+    ).toBe(false);
+    expect(
+      grazingRestrictionsSchema.safeParse({
+        manureCarryover: false,
+        manureCarryoverDays: 3,
+        source: 'Test label'
+      }).success
+    ).toBe(false);
+    expect(
+      grazingRestrictionsSchema.safeParse({
+        manureCarryover: true,
+        manureCarryoverDays: -1,
+        source: 'Test label'
+      }).success
+    ).toBe(false);
+  });
+
   it('lists the new crop numbers and each toxic species, and nothing for empty fields', () => {
     const base = {
       pluginId: 'crop-test',

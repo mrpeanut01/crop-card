@@ -26,6 +26,7 @@ import {
   applicationFieldId,
   canReassignBlock,
   farmCopyRestrictions,
+  hayOffFarmRestrictedFor,
   registryMaxIntervalDays,
   type GrazingApplication,
   type GrazingApplicationSource,
@@ -87,6 +88,19 @@ export function toApplications(
       const pluginId = prod.pluginId ?? null;
       const p = pesticide(registry, pluginId);
       const shared = pesticide(base, pluginId);
+      const sharedR = shared?.grazingRestrictions as GrazingRestrictions | undefined;
+      const farmR =
+        p && p !== shared ? (p.grazingRestrictions as GrazingRestrictions | undefined) : undefined;
+      const hayOffFarm = hayOffFarmRestrictedFor(sharedR, farmR)
+        ? {
+            hayOffFarm: {
+              source:
+                (sharedR?.hayOffFarmRestricted ? sharedR.source : undefined) ??
+                (farmR?.hayOffFarmRestricted ? farmR.source : undefined) ??
+                null
+            }
+          }
+        : {};
       out.push({
         ref: `${source}:${e.id}`,
         source,
@@ -99,12 +113,10 @@ export function toApplications(
           prod.displayName ??
           pluginId ??
           'an unnamed product',
-        restrictions: farmCopyRestrictions(
-          shared?.grazingRestrictions as GrazingRestrictions | undefined,
-          p && p !== shared ? (p.grazingRestrictions as GrazingRestrictions | undefined) : undefined
-        ),
+        restrictions: farmCopyRestrictions(sharedR, farmR),
         activeIngredients: (p ?? shared)?.activeIngredients.map((a) => a.name) ?? [],
-        ...(e.formerFieldId ? { formerFieldId: e.formerFieldId } : {})
+        ...(e.formerFieldId ? { formerFieldId: e.formerFieldId } : {}),
+        ...hayOffFarm
       });
     }
   }

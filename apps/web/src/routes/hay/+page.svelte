@@ -6,7 +6,9 @@
   import { fmt } from '$lib/prefsState.svelte';
   import { grazingTimeHref } from '$lib/animals/holdCopy';
   import HoldVoidPanel from '$lib/components/records/HoldVoidPanel.svelte';
+  import HayForageSection from '$lib/components/forage/HayForageSection.svelte';
   import { invalidateAll } from '$app/navigation';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -439,6 +441,27 @@
           </div>
         {/if}
         {#if c.notes}<p class="hint">{c.notes}</p>{/if}
+        {#each c.offFarm as n (n.productName)}
+          <div class="off-farm" role="note" data-testid="hay-off-farm">
+            <p>{n.text}</p>
+            <p class="hint">
+              Sprayed {n.appliedOn}.{n.source ? ` Label: ${n.source}.` : ''}
+              <Provenance source="plugin" detail="label data" compact />
+            </p>
+          </div>
+        {/each}
+        {#if data.canStockBales && (c.status === 'storing' || c.status === 'complete')}
+          <a
+            class="bales-link"
+            href="/inventory/feed/add?hayCuttingId={encodeURIComponent(c.id)}"
+            data-testid="bales-to-feed">{tr('hayui.balesToFeed')}</a
+          >
+        {/if}
+        <HayForageSection
+          cuttingId={c.id}
+          canRecord={data.forage.canRecord}
+          canAttach={data.forage.canAttach}
+        />
         <HoldVoidPanel
           url="/api/hay/cuttings/{c.id}/void"
           canVoidHolds={data.canVoidHolds}
@@ -454,6 +477,24 @@
 </section>
 
 <style>
+  .off-farm {
+    margin: 0.5rem 0;
+    padding: 0.6rem 0.75rem;
+    border-radius: 6px;
+    background: var(--pill-wheat-bg, #fbf3dc);
+    border: 1px solid var(--pill-wheat-bd, #e7d39a);
+    overflow-wrap: anywhere;
+  }
+  .off-farm p {
+    margin: 0;
+  }
+  .bales-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--color-forest, #1f5e3a);
+    font-weight: 600;
+  }
   .attest-link {
     display: inline-flex;
     align-items: center;

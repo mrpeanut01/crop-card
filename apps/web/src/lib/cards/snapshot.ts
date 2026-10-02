@@ -425,6 +425,13 @@ export interface SnapshotAreaHold {
   status: SnapshotHoldStatus;
 }
 
+/** A Phase 33C after-spread line on a block (M-52), precomputed text. */
+export interface SnapshotCarryoverLine {
+  blockId: string;
+  text: string;
+  tone: 'warn' | 'muted';
+}
+
 export interface FarmSnapshot {
   version: typeof FARM_SNAPSHOT_VERSION | 3 | 2 | 1;
   ownerId: string;
@@ -479,6 +486,8 @@ export interface FarmSnapshot {
   /** The span `tasks` covers, so Week and Month Cards know which days are
    *  complete. Absent on bundles saved before 32F. */
   taskWindow?: { fromMs: number; toMs: number };
+  /** 33C carryover lines per block. Absent on bundles saved before it. */
+  carryover?: SnapshotCarryoverLine[];
 }
 
 /** One map line or point, as the map and the Farm Map Card read it. */

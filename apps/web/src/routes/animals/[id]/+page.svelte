@@ -268,6 +268,7 @@
           currentFieldId={animal.groupId ? null : animal.housingFieldId}
           joinGroups={data.joinGroups}
           inGroup={data.group ? { id: data.group.id, name: data.group.name } : null}
+          forage
           toxic={{
             byArea: data.toxicPlants,
             speciesIds: [animal.speciesId],

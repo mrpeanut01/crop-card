@@ -20,7 +20,8 @@
 
 import type { Archetype } from '$lib/plugins/schemas';
 
-export type InventoryType = 'pesticide' | 'fertility' | 'seed' | 'crop' | 'feed' | 'animal-health';
+export type InventoryType =
+  'pesticide' | 'fertility' | 'seed' | 'crop' | 'feed' | 'animal-health' | 'amendment';
 
 export type LotUnit = 'fl oz' | 'gal' | 'lb' | 'oz' | 'g' | 'yd³' | 'plants' | 'bag';
 
@@ -155,8 +156,13 @@ export const INVENTORY_TYPES: readonly InventoryType[] = [
   'seed',
   'crop',
   'feed',
-  'animal-health'
+  'animal-health',
+  'amendment'
 ] as const;
+
+/** Phase 33C (M-41): manure and compost batches. The chip is hidden while
+ *  the farm has no batch; the add picker always offers it. Stock only. */
+export const AMENDMENT_INVENTORY_TYPE: InventoryType = 'amendment';
 
 /** Types whose chip is hidden until the farm has animals or stock of that
  *  type, so a crop-only farm keeps its short chip row. */
@@ -168,7 +174,8 @@ export const INVENTORY_TYPE_LABELS: Record<InventoryType, string> = {
   seed: 'Seeds',
   crop: 'Crops',
   feed: 'Feed & bedding',
-  'animal-health': 'Animal health'
+  'animal-health': 'Animal health',
+  amendment: 'Manure & compost'
 };
 
 export const STOCK_CATEGORY_TO_INVENTORY_TYPE: Record<string, InventoryType> = {

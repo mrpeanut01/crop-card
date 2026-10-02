@@ -11,6 +11,7 @@ import { listFields } from '$lib/db/fields';
 import { listShadeSources } from '$lib/db/shadeSources';
 import { listMapFeatures } from '$lib/db/mapFeatures';
 import { buildMapSnapshot } from '$lib/server/mapSnapshot';
+import { withLiveCarryover } from '$lib/server/areaCarryover';
 import { loadAreaHousing } from '$lib/server/areaHousing';
 import { loadCoopSpecies } from '$lib/server/coopSpecies';
 import { loadAreaGrazing } from '$lib/server/areaGrazing';
@@ -31,7 +32,7 @@ export const load: ServerLoad = async ({ locals }) => {
     blocks,
     fields,
     ownerId: locals.user.activeOwnerId,
-    snapshot: buildMapSnapshot({ fields, blocks }),
+    snapshot: await withLiveCarryover(buildMapSnapshot({ fields, blocks })),
     shadeSources: listShadeSources(),
     mapFeatures: listMapFeatures(),
     housing,

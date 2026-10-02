@@ -217,14 +217,17 @@ test.describe('just-in-time setup', () => {
     await expect(page.getByRole('heading', { name: 'Salad bed' }).first()).toBeVisible();
   });
 
-  test('inventory: an empty list offers the four kinds in the same chrome', async ({ page }) => {
+  test('inventory: an empty list offers the four kinds and a manure pile in the same chrome', async ({
+    page
+  }) => {
     await provisionEmptyFarm(page);
     await page.goto('/inventory?type=pesticide');
     await page.waitForLoadState('networkidle');
     const empty = page.getByTestId('inventory-empty');
     await expect(empty.getByRole('heading', { name: 'No pesticides yet' })).toBeVisible();
     await expect(page.getByRole('tablist', { name: 'Inventory type' })).toBeVisible();
-    await expect(empty.getByRole('link')).toHaveCount(4);
+    await expect(empty.getByRole('link')).toHaveCount(5);
+    await expect(empty.getByRole('link', { name: /Manure or compost pile/ })).toBeVisible();
     await empty.getByRole('link', { name: /Seeds/ }).click();
     await expect(page).toHaveURL(/\/inventory\/seed\/add$/);
   });
@@ -260,7 +263,11 @@ test.describe('just-in-time setup', () => {
     await helper.goto('/inventory?type=fertility');
     const empty = helper.getByTestId('inventory-empty');
     await expect(empty.getByRole('note')).toContainText('Ask the owner');
-    await expect(empty.getByRole('link')).toHaveCount(0);
+    await expect(empty.getByRole('link')).toHaveCount(1);
+    await expect(empty.getByRole('link', { name: /Manure or compost pile/ })).toHaveAttribute(
+      'href',
+      '/inventory/amendment/add'
+    );
 
     const forged = await helper.request.post('/api/blocks', {
       data: { name: 'Sneaky' },

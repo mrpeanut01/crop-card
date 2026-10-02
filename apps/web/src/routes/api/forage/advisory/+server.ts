@@ -24,7 +24,10 @@ export const GET: RequestHandler = async (event) => {
   }
   try {
     const advisory = await loadForageAdvisory(
-      fieldId ? { fieldId } : { hayCuttingId: hayCuttingId as string }
+      fieldId ? { fieldId } : { hayCuttingId: hayCuttingId as string },
+      Date.now(),
+      {},
+      event.locals?.locale
     );
     return json({ advisory }, { headers: { 'cache-control': 'private, no-store' } });
   } catch (e) {

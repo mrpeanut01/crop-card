@@ -13,12 +13,14 @@ import { buildCarryoverLines } from '$lib/farm/areaCarryover';
 import { stateChip, type CarryoverState } from '$lib/amendments/carryover';
 import { parseCarryoverAck } from '$lib/amendments/spreadPrompt';
 import { DEFAULT_PREFS, todayYmd, ymdInZone } from '$lib/prefs';
+import { t } from '$lib/i18n';
 
 /** Phase 33C (M-47 to M-50): one block's after-spread lines, the pea or
  *  bean tests on it, and the owner's dismissals. Every role reads it. */
 export const load: PageServerLoad = async (event) => {
+  const locale = event.locals?.locale;
   const block = getBlock(event.params.id);
-  if (!block) error(404, 'Block not found');
+  if (!block) error(404, t(locale, 'carry.page.blockNotFound'));
   const area = block.fieldId ? getField(block.fieldId) : undefined;
   const user = currentUser(event);
   const timeZone = farmTimeZone();
@@ -69,19 +71,25 @@ export const load: PageServerLoad = async (event) => {
       return {
         applicationId: s.applicationId,
         batchId: s.batchId,
-        batchName: batchNames.get(s.batchId) ?? 'A manure or compost batch',
+        batchName: batchNames.get(s.batchId) ?? t(locale, 'carry.page.unknownBatch'),
         spreadOn: day(s.occurredAt),
         state,
-        stateText: stateChip(state),
+        stateText: stateChip(state, locale),
         ack: ack
-          ? { by: ack.confirmedByName, on: day(ack.confirmedAt), stateText: stateChip(ack.state) }
+          ? {
+              by: ack.confirmedByName,
+              on: day(ack.confirmedAt),
+              stateText: stateChip(ack.state, locale)
+            }
           : null,
         dismissal: dismissal
           ? {
               id: dismissal.id,
               reason: dismissal.reason,
               on: day(dismissal.createdAt),
-              by: (dismissal.createdBy && names.get(dismissal.createdBy)) || 'The owner'
+              by:
+                (dismissal.createdBy && names.get(dismissal.createdBy)) ||
+                t(locale, 'carry.page.theOwner')
             }
           : null
       };

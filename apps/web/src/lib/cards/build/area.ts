@@ -110,10 +110,12 @@ export function buildAreaCard(
 ): CardModel | null {
   const card = baseAreaCard(snapshot, areaId, options);
   if (!card) return null;
+  const resolved = resolveOptions(snapshot, options);
   return withSnapshotCarryover(
     snapshot,
     areaId,
-    withSnapshotAnimals(snapshot, areaId, card, resolveOptions(snapshot, options))
+    withSnapshotAnimals(snapshot, areaId, card, resolved),
+    { locale: resolved.prefs.locale }
   );
 }
 
@@ -144,7 +146,7 @@ export function withSnapshotCarryover(
   snapshot: FarmSnapshot,
   areaId: string,
   card: CardModel,
-  opts: { link?: boolean } = {}
+  opts: { link?: boolean; locale?: string | null } = {}
 ): CardModel {
   const blocks = snapshot.blocks.filter((b) => b.areaId === areaId);
   const lines = snapshotCarryoverLines(
@@ -152,7 +154,12 @@ export function withSnapshotCarryover(
     blocks.map((b) => b.id)
   );
   const names = new Map(blocks.map((b) => [b.id, blockDisplayName(b)]));
-  return withCarryover(card, lines, { blockNames: names, max: AREA_LINE_LIMIT, link: opts.link });
+  return withCarryover(card, lines, {
+    blockNames: names,
+    max: AREA_LINE_LIMIT,
+    link: opts.link,
+    locale: opts.locale
+  });
 }
 
 function baseAreaCard(

@@ -1,6 +1,7 @@
 /** The forage test form's draft and its request body (Phase 33C, M-58).
  *  Pure and client-safe. */
 
+import { t } from '$lib/i18n';
 import type { ForageTestCreate } from './apiSchemas';
 import type { NitrateUnits, RatingBasis } from './model';
 
@@ -39,20 +40,21 @@ const num = (v: number | null | undefined): number | undefined =>
 /** The body to POST, or the plain-English reason it cannot be sent. */
 export function buildForageTestBody(
   target: ForageTestTarget,
-  d: ForageTestDraft
+  d: ForageTestDraft,
+  locale?: string | null
 ): { ok: true; body: ForageTestCreate } | { ok: false; error: string } {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d.sampledOn)) {
-    return { ok: false, error: 'Pick the day the sample was taken.' };
+    return { ok: false, error: t(locale, 'forage.form.err.day') };
   }
   const nitrateValue = num(d.nitrateValue);
   if (nitrateValue !== undefined && !d.nitrateUnits) {
-    return { ok: false, error: 'Pick the units the lab used for nitrate.' };
+    return { ok: false, error: t(locale, 'forage.form.err.units') };
   }
   const hcnPpm = num(d.hcnPpm);
   const ratingNitrate = d.ratingNitrate.trim();
   const ratingHcn = d.ratingHcn.trim();
   if (nitrateValue === undefined && hcnPpm === undefined && !ratingNitrate && !ratingHcn) {
-    return { ok: false, error: 'Enter at least one value or the lab rating.' };
+    return { ok: false, error: t(locale, 'forage.form.err.atLeastOne') };
   }
   const labRating =
     ratingNitrate || ratingHcn || d.basis

@@ -55,7 +55,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const carry = countBatches() > 0 ? await loadCarryoverData() : null;
   const amendmentBatches = (carry?.batches ?? []).map((b) => {
     const state = carry?.chains.get(b.id)?.state ?? 'none-on-file';
-    return { id: b.id, name: b.name, state, stateText: stateChip(state) };
+    return { id: b.id, name: b.name, state, stateText: stateChip(state, locals.locale) };
   });
   const batchNames = new Map((carry?.batches ?? []).map((b) => [b.id, b.name]));
 

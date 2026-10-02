@@ -1,6 +1,8 @@
 /** Phase 33C amendment batch vocabulary. Client-safe; mirrors the enums in
  *  `lib/db/schema.ts` (a test keeps them equal). */
 
+import { t } from '$lib/i18n';
+
 export const BATCH_KINDS = ['manure', 'compost', 'bedding-pack'] as const;
 export type BatchKind = (typeof BATCH_KINDS)[number];
 
@@ -24,6 +26,14 @@ export const SUPPLIER_STATEMENT_LABELS: Readonly<Record<SupplierStatement, strin
   unknown: 'The supplier does not know',
   'none-asked': 'Not asked yet'
 };
+
+export function batchKindLabel(kind: BatchKind, locale?: string | null): string {
+  return locale ? t(locale, `amend.kind.${kind}`) : BATCH_KIND_LABELS[kind];
+}
+
+export function supplierStatementLabel(v: SupplierStatement, locale?: string | null): string {
+  return locale ? t(locale, `amend.statement.${v}`) : SUPPLIER_STATEMENT_LABELS[v];
+}
 
 /** M-38: stock categories that can go into a pile. */
 export const AMENDMENT_LOT_CATEGORIES = ['feed', 'bedding', 'fertilizer'] as const;

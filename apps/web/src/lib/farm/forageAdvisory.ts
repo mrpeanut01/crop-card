@@ -7,6 +7,7 @@
 
 import { mergeProvenance, type CardModel, type CardSection } from '$lib/cards/model';
 import type { ForageAdvisory } from '$lib/forage/advisory';
+import { t } from '$lib/i18n';
 
 export type {
   ForageAdvisory,
@@ -20,15 +21,17 @@ export const FORAGE_FROST_UNKNOWN_TEXT = 'Frost data could not be read. Check wh
 export const FORAGE_SECTION_TITLE = 'Forage check';
 export const FORAGE_ADVICE_LEAD = 'Sources advise:';
 
-/** The plain lines of an advisory, in reading order. */
-export function forageLines(advisory: ForageAdvisory): string[] {
+/** The plain lines of an advisory, in reading order. The hazard lines stay
+ *  English; only the lead-in follows `locale`. */
+export function forageLines(advisory: ForageAdvisory, locale?: string | null): string[] {
+  const lead = locale ? t(locale, 'forage.panel.lead') : FORAGE_ADVICE_LEAD;
   const out: string[] = [];
   for (const item of advisory.items) {
     out.push(item.headline);
     for (const t of item.triggersOnFile) out.push(t.text);
     if (item.frostUnknown) out.push(FORAGE_FROST_UNKNOWN_TEXT);
     out.push(item.raisesRisk);
-    if (item.advice.length) out.push(FORAGE_ADVICE_LEAD);
+    if (item.advice.length) out.push(lead);
     for (const a of item.advice) out.push(a.text);
     if (item.latestTest) {
       if (item.latestTest.ratingText) out.push(item.latestTest.ratingText);
@@ -41,14 +44,18 @@ export function forageLines(advisory: ForageAdvisory): string[] {
 
 export function forageSection(
   advisory: ForageAdvisory | null | undefined,
-  failed = false
+  failed = false,
+  locale?: string | null
 ): CardSection | null {
-  if (failed) return { title: FORAGE_SECTION_TITLE, items: [FORAGE_FAILED_TEXT] };
+  const title = locale ? t(locale, 'forage.section.title') : FORAGE_SECTION_TITLE;
+  if (failed) {
+    return { title, items: [locale ? t(locale, 'forage.panel.failed') : FORAGE_FAILED_TEXT] };
+  }
   if (!advisory || advisory.items.length === 0) return null;
   const hasTest = advisory.items.some((i) => i.latestTest);
   return {
-    title: FORAGE_SECTION_TITLE,
-    items: forageLines(advisory),
+    title,
+    items: forageLines(advisory, locale),
     provenance: hasTest ? 'manual' : advisory.provenance,
     collapsible: true
   };
@@ -59,24 +66,36 @@ export function forageSection(
 export function withForageAdvisory(
   card: CardModel,
   advisory: ForageAdvisory | null | undefined,
-  failed = false
+  failed = false,
+  locale?: string | null
 ): CardModel {
-  const section = forageSection(advisory, failed);
+  const section = forageSection(advisory, failed, locale);
   if (!section) return card;
   const at = card.sections[0]?.title === 'Grazing' ? 1 : 0;
   const sections = [...card.sections.slice(0, at), section, ...card.sections.slice(at)];
   if (failed || !advisory) return { ...card, sections };
   const provenance = mergeProvenance([
     ...card.provenance,
-    { source: 'plugin', detail: 'forage hazards' },
+    { source: 'plugin', detail: locale ? t(locale, 'forage.prov.hazards') : 'forage hazards' },
     ...(advisory.items.some((i) => i.latestTest)
-      ? [{ source: 'manual' as const, detail: 'lab rating entered by you' }]
+      ? [
+          {
+            source: 'manual' as const,
+            detail: locale ? t(locale, 'forage.prov.labRating') : 'lab rating entered by you'
+          }
+        ]
       : [])
   ]);
   return {
     ...card,
     sections,
     provenance,
-    links: [...(card.links ?? []), { label: 'Record a forage test', href: advisory.recordHref }]
+    links: [
+      ...(card.links ?? []),
+      {
+        label: locale ? t(locale, 'forage.record') : 'Record a forage test',
+        href: advisory.recordHref
+      }
+    ]
   };
 }

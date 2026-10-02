@@ -244,7 +244,7 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
   }
 
   if (type === 'animal-health') return animalHealthPayload(id, locals.user?.role);
-  if (type === 'amendment') return amendmentDetail(id, locals.user?.role);
+  if (type === 'amendment') return amendmentDetail(id, locals.user?.role, locals.locale);
 
   // Lot-bearing types: pesticide / fertility / seed / feed
   const item = getStockItem(id);

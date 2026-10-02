@@ -36,7 +36,8 @@ export function hayOffFarmText(productName: string): string {
 export function hayOffFarmNotices(
   cuttings: ReadonlyArray<{ id: string; blockId: string; cutAtMs: number }>,
   applications: readonly HayOffFarmApplication[],
-  timeZone: string
+  timeZone: string,
+  locale?: string | null
 ): Record<string, HayOffFarmNotice[]> {
   const out: Record<string, HayOffFarmNotice[]> = {};
   const flagged = applications.filter(restricted);
@@ -55,7 +56,7 @@ export function hayOffFarmNotices(
       .map((a) => ({
         productName: a.productName,
         text: hayOffFarmText(a.productName),
-        appliedOn: formatCalendarDate(ymdInZone(a.appliedAtMs, timeZone), 'date'),
+        appliedOn: formatCalendarDate(ymdInZone(a.appliedAtMs, timeZone), 'date', {}, locale),
         source: a.hayOffFarm?.source ?? a.restrictions?.source ?? null
       }));
   }

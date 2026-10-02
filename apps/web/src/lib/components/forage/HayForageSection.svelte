@@ -2,6 +2,8 @@
   import ForageAdvisoryPanel from './ForageAdvisoryPanel.svelte';
   import ForageTestForm from './ForageTestForm.svelte';
   import { ForageAdvisoryCache } from '$lib/client/forageAdvisory.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   interface Props {
     cuttingId: string;
@@ -12,6 +14,7 @@
   }
 
   const { cuttingId, canRecord, canAttach }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
   const cache = new ForageAdvisoryCache();
   let formOpen = $state(false);
   let saved = $state<string | null>(null);
@@ -42,7 +45,7 @@
         {canAttach}
         onSaved={async () => {
           formOpen = false;
-          saved = 'Forage test saved.';
+          saved = tr('forage.saved');
           await cache.load({ hayCuttingId: cuttingId }, true);
         }}
         onCancel={() => (formOpen = false)}
@@ -56,7 +59,7 @@
           formOpen = true;
         }}
       >
-        Record a forage test
+        {tr('forage.record')}
       </button>
     {/if}
   {/if}

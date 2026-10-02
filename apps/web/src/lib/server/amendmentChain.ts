@@ -41,6 +41,7 @@ import { fieldOfBlocks, grazingContextFrom } from '$lib/server/areaGrazing';
 import { getBaseRegistry, getRegistry } from '$lib/server/registry';
 import type { PluginRegistry } from '$lib/plugins/registry';
 import { manureSources } from './animalFoodGate';
+import { t } from '$lib/i18n';
 
 function carryoverDays(a: GrazingApplication): number | null {
   const d = (a.restrictions as { manureCarryoverDays?: unknown } | null)?.manureCarryoverDays;
@@ -102,16 +103,23 @@ export interface ChainNames {
   lots: Map<string, AmendmentLot>;
 }
 
-export function subjectName(names: ChainNames, type: 'animal' | 'group', id: string): string {
+export function subjectName(
+  names: ChainNames,
+  type: 'animal' | 'group',
+  id: string,
+  locale?: string | null
+): string {
   return (
     (type === 'animal' ? names.animals.get(id) : names.groups.get(id)) ??
-    (type === 'animal' ? 'An animal' : 'A group')
+    t(locale, type === 'animal' ? 'amend.name.anAnimal' : 'amend.name.aGroup')
   );
 }
 
-export function lotLabel(lot: AmendmentLot | undefined): string {
-  if (!lot) return 'A lot no longer on file';
-  return lot.lotNumber ? `${lot.itemName} (lot ${lot.lotNumber})` : lot.itemName;
+export function lotLabel(lot: AmendmentLot | undefined, locale?: string | null): string {
+  if (!lot) return t(locale, 'amend.name.lotGone');
+  return lot.lotNumber
+    ? t(locale, 'amend.name.withLot', { item: lot.itemName, lot: lot.lotNumber })
+    : lot.itemName;
 }
 
 export interface LoadedChains {

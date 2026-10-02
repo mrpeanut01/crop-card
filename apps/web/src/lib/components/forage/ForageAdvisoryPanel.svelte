@@ -1,11 +1,9 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { ForageAdvisory, ForageTestView } from '$lib/forage/advisory';
-  import {
-    FORAGE_ADVICE_LEAD,
-    FORAGE_FAILED_TEXT,
-    FORAGE_FROST_UNKNOWN_TEXT
-  } from '$lib/farm/forageAdvisory';
+  import { FORAGE_FROST_UNKNOWN_TEXT } from '$lib/farm/forageAdvisory';
 
   interface Props {
     advisory: ForageAdvisory | null;
@@ -27,6 +25,7 @@
     showTargetTest = false,
     open = false
   }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   const items = $derived(advisory?.items ?? []);
   const elevated = $derived(items.some((i) => i.elevated));
@@ -59,9 +58,11 @@
 {/snippet}
 
 {#if loading}
-  <p class="muted" aria-live="polite">Checking forage…</p>
+  <p class="muted" aria-live="polite">{tr('forage.panel.checking')}</p>
 {:else if failed}
-  <p class="failed" role="status" data-testid="forage-advisory-failed">{FORAGE_FAILED_TEXT}</p>
+  <p class="failed" role="status" data-testid="forage-advisory-failed">
+    {tr('forage.panel.failed')}
+  </p>
 {:else if summary}
   <details class="forage" class:elevated data-testid="forage-advisory" {open}>
     <summary>
@@ -81,12 +82,14 @@
         {/if}
         <p class="muted">{item.raisesRisk}</p>
         {#if item.advice.length}
-          <p class="lead">{FORAGE_ADVICE_LEAD}</p>
+          <p class="lead">{tr('forage.panel.lead')}</p>
           <ul class="advice">
             {#each item.advice as a (a.id)}
               <li>
                 {a.text}
-                <a href={a.url} target="_blank" rel="noopener noreferrer nofollow">Source</a>
+                <a href={a.url} target="_blank" rel="noopener noreferrer nofollow"
+                  >{tr('forage.panel.source')}</a
+                >
               </li>
             {/each}
           </ul>
@@ -97,7 +100,7 @@
       </section>
     {/each}
     {#if targetTest}{@render test(targetTest)}{/if}
-    <p class="muted">This is advice from extension sources. It never stops a move or a cutting.</p>
+    <p class="muted">{tr('forage.panel.foot')}</p>
   </details>
 {:else if targetTest}
   {@render test(targetTest)}

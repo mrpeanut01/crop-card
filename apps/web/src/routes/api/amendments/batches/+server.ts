@@ -10,7 +10,13 @@ import { requireMutator, requireUser } from '$lib/server/auth';
 import { invalidBody } from '$lib/organic/access.server';
 import { batchCreateSchema } from '$lib/amendments/apiSchemas';
 import { loadCarryoverData } from '$lib/server/amendmentChain';
-import { batchView, checkDay, dayContext, readJson } from '$lib/server/amendmentRoutes';
+import {
+  batchView,
+  checkDay,
+  dayContext,
+  readJson,
+  localIssues
+} from '$lib/server/amendmentRoutes';
 
 export const _requestSchema = batchCreateSchema;
 
@@ -26,10 +32,10 @@ export const POST: RequestHandler = async (event) => {
   const body = await readJson(event.request);
   if (body instanceof Response) return body;
   const parsed = batchCreateSchema.safeParse(body);
-  if (!parsed.success) return invalidBody(parsed.error.issues);
+  if (!parsed.success) return invalidBody(localIssues(parsed.error.issues, event.locals?.locale));
   const input = parsed.data;
   const ctx = dayContext();
-  const started = checkDay(ctx, input.startedOn, 'startedOn');
+  const started = checkDay(ctx, input.startedOn, 'startedOn', event.locals?.locale);
   if ('response' in started) return started.response;
   const batch = insertBatch({
     kind: input.kind,

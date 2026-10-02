@@ -5,6 +5,8 @@
  */
 
 import { numberToLocaleString } from '$lib/intlCache';
+import { t } from '$lib/i18n';
+import { intlLocale } from '$lib/prefs';
 import { NITRATE_UNIT_LABELS, type NitrateUnits } from './model';
 
 /** `forage-toxicity-sources.json` entry the two factors come from. */
@@ -37,22 +39,28 @@ export function convertNitrate(value: number, from: NitrateUnits): ConvertedNitr
   }
 }
 
-function num(n: number): string {
+function num(n: number, locale?: string | null): string {
   const digits = Math.abs(n) >= 100 ? 0 : 2;
-  return numberToLocaleString(n, 'en-US', { maximumFractionDigits: digits });
+  return numberToLocaleString(n, intlLocale(locale), { maximumFractionDigits: digits });
 }
 
-/** The value exactly as the lab printed it, with its unit. */
-export function nitrateAsTyped(value: number, units: NitrateUnits): string {
-  return `${num(value)} ${NITRATE_UNIT_LABELS[units]}`;
+/** The value exactly as the lab printed it, with its unit (units stay English). */
+export function nitrateAsTyped(value: number, units: NitrateUnits, locale?: string | null): string {
+  return `${num(value, locale)} ${NITRATE_UNIT_LABELS[units]}`;
 }
 
 /** The other forms, labelled as converted, or why there are none. */
-export function nitrateConvertedText(value: number, units: NitrateUnits): string {
+export function nitrateConvertedText(
+  value: number,
+  units: NitrateUnits,
+  locale?: string | null
+): string {
   const c = convertNitrate(value, units);
-  if (!c) return 'Not converted: no conversion factor for potassium nitrate is on file.';
+  if (!c) return t(locale, 'forage.notConverted');
   const parts: string[] = [];
-  if (units !== 'ppm-nitrate') parts.push(`${num(c.ppmNitrate)} ppm nitrate`);
-  if (units !== 'ppm-nitrate-n') parts.push(`${num(c.ppmNitrateN)} ppm nitrate-nitrogen`);
-  return `About ${parts.join(' or ')} (converted)`;
+  if (units !== 'ppm-nitrate') parts.push(`${num(c.ppmNitrate, locale)} ppm nitrate`);
+  if (units !== 'ppm-nitrate-n') parts.push(`${num(c.ppmNitrateN, locale)} ppm nitrate-nitrogen`);
+  const values =
+    parts.length === 2 ? t(locale, 'forage.orPair', { a: parts[0], b: parts[1] }) : parts[0];
+  return t(locale, 'forage.converted', { values });
 }

@@ -60,8 +60,8 @@ export class ForageAdvisoryCache {
   }
 
   /** The Area Card with whatever is loaded so far. */
-  decorate(card: CardModel, fieldId: string): CardModel {
+  decorate(card: CardModel, fieldId: string, locale?: string | null): CardModel {
     const e = this.get({ fieldId });
-    return e ? withForageAdvisory(card, e.advisory, e.failed) : card;
+    return e ? withForageAdvisory(card, e.advisory, e.failed, locale) : card;
   }
 }

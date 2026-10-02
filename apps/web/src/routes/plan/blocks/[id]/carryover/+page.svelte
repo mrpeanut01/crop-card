@@ -5,17 +5,19 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import BioassayGuide from '$lib/components/amendments/BioassayGuide.svelte';
   import BioassayForm from '$lib/components/amendments/BioassayForm.svelte';
-  import { OFFLINE_TEXT, responseMessage } from '$lib/amendments/responseMessage';
+  import { offlineText, responseMessage } from '$lib/amendments/responseMessage';
   import { formatCalendarDate } from '$lib/prefs';
+  import { createT } from '$lib/i18n';
 
   const { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   const reasons = $state<Record<string, string>>({});
   let busy = $state(false);
   let status = $state<string | null>(null);
   let error = $state<string | null>(null);
 
-  const day = (ymd: string) => formatCalendarDate(ymd, 'date');
+  const day = (ymd: string) => formatCalendarDate(ymd, 'date', {}, data.locale);
 
   async function send(
     url: string,
@@ -28,14 +30,14 @@
     try {
       const res = await fetch(url, init);
       if (!res.ok) {
-        error = await responseMessage(res);
+        error = await responseMessage(res, data.locale);
         return false;
       }
       status = done;
       await invalidateAll();
       return true;
     } catch {
-      error = OFFLINE_TEXT;
+      error = offlineText(data.locale);
       return false;
     } finally {
       busy = false;
@@ -45,7 +47,7 @@
   async function dismiss(applicationId: string) {
     const reason = (reasons[applicationId] ?? '').trim();
     if (reason.length < 3) {
-      error = 'Say why you are dismissing this line, in a few words.';
+      error = tr('carry.page.errReason');
       return;
     }
     const ok = await send(
@@ -59,7 +61,7 @@
           reason
         })
       },
-      'Line dismissed. The facts stay on file.'
+      tr('carry.page.dismissedOk')
     );
     if (ok) reasons[applicationId] = '';
   }
@@ -68,7 +70,7 @@
     return send(
       `/api/amendments/dismissals/${encodeURIComponent(id)}`,
       { method: 'DELETE' },
-      'The line is back.'
+      tr('carry.page.restored')
     );
   }
 
@@ -76,23 +78,25 @@
     return send(
       `/api/amendments/bioassays/${encodeURIComponent(id)}`,
       { method: 'DELETE' },
-      'Test removed.'
+      tr('carry.page.testRemoved')
     );
   }
 </script>
 
 <svelte:head>
-  <title>Carryover · {data.block.name} · CropCard</title>
+  <title>{tr('carry.page.title', { block: data.block.name })}</title>
 </svelte:head>
 
 <div class="carry-page">
-  <nav class="crumbs" aria-label="Breadcrumb">
-    <a href="/plan?block={encodeURIComponent(data.block.id)}">{data.area?.name ?? 'Plan'}</a>
+  <nav class="crumbs" aria-label={tr('carry.page.crumbAria')}>
+    <a href="/plan?block={encodeURIComponent(data.block.id)}"
+      >{data.area?.name ?? tr('carry.page.plan')}</a
+    >
   </nav>
 
   <header>
-    <Kicker>{data.block.name} · Manure and compost</Kicker>
-    <h1 class="serif">Weed killer carryover</h1>
+    <Kicker>{tr('carry.page.kicker', { block: data.block.name })}</Kicker>
+    <h1 class="serif">{tr('carry.section.title')}</h1>
   </header>
 
   <p class="lede">
@@ -107,10 +111,10 @@
   {#if error}<p class="af-error" role="alert">{error}</p>{/if}
 
   <section aria-labelledby="lines-h">
-    <h2 id="lines-h">On this block now <Provenance source="data" compact /></h2>
+    <h2 id="lines-h">{tr('carry.page.nowTitle')} <Provenance source="data" compact /></h2>
     {#if data.lines.length === 0}
       <p class="af-help" data-testid="carryover-none">
-        No carryover weed killer on file for what was spread here.
+        {tr('carry.page.none')}
       </p>
     {:else}
       <ul class="lines">
@@ -123,21 +127,30 @@
 
   {#if data.spreads.length}
     <section aria-labelledby="spreads-h">
-      <h2 id="spreads-h">Manure and compost spread here</h2>
+      <h2 id="spreads-h">{tr('carry.page.spreadTitle')}</h2>
       <ul class="rows">
         {#each data.spreads as s (s.applicationId)}
           <li class="row" data-testid="carryover-spread">
             <strong>{s.batchName}</strong>
-            <p class="meta">Spread {day(s.spreadOn)}. Now: {s.stateText}.</p>
+            <p class="meta">
+              {tr('carry.page.spreadNow', { date: day(s.spreadOn), state: s.stateText })}
+            </p>
             {#if s.ack}
               <p class="meta">
-                {s.ack.by} confirmed before spreading on {day(s.ack.on)}, when it read: {s.ack
-                  .stateText}.
+                {tr('carry.page.ack', {
+                  by: s.ack.by,
+                  date: day(s.ack.on),
+                  state: s.ack.stateText
+                })}
               </p>
             {/if}
             {#if s.dismissal}
               <p class="meta">
-                Dismissed by {s.dismissal.by} on {day(s.dismissal.on)}: {s.dismissal.reason}
+                {tr('carry.page.dismissed', {
+                  by: s.dismissal.by,
+                  date: day(s.dismissal.on),
+                  reason: s.dismissal.reason
+                })}
               </p>
               {#if data.isOwner}
                 <button
@@ -146,18 +159,20 @@
                   disabled={busy}
                   onclick={() => s.dismissal && restore(s.dismissal.id)}
                 >
-                  Bring the line back
+                  {tr('carry.page.restore')}
                 </button>
               {/if}
             {:else if s.state !== 'none-on-file'}
               {#if data.isOwner}
-                <label class="af-label" for="reason-{s.applicationId}">Why dismiss this line</label>
+                <label class="af-label" for="reason-{s.applicationId}"
+                  >{tr('carry.page.reasonLabel')}</label
+                >
                 <input
                   id="reason-{s.applicationId}"
                   class="af-input"
                   type="text"
                   maxlength="500"
-                  placeholder="The supplier showed me the hay records"
+                  placeholder={tr('carry.page.reasonPh')}
                   bind:value={reasons[s.applicationId]}
                 />
                 <button
@@ -166,10 +181,10 @@
                   disabled={busy}
                   onclick={() => dismiss(s.applicationId)}
                 >
-                  Dismiss this line
+                  {tr('carry.page.dismiss')}
                 </button>
               {:else}
-                <p class="af-help">Only the owner can dismiss a line. Ask the owner.</p>
+                <p class="af-help">{tr('carry.page.ownerOnly')}</p>
               {/if}
             {/if}
           </li>
@@ -179,18 +194,18 @@
   {/if}
 
   <section aria-labelledby="tests-h">
-    <h2 id="tests-h">Pea or bean tests on this block</h2>
+    <h2 id="tests-h">{tr('carry.page.testsTitle')}</h2>
     {#if data.bioassays.length === 0}
-      <p class="af-help">No tests recorded on this block.</p>
+      <p class="af-help">{tr('carry.page.testsNone')}</p>
     {:else}
       <ul class="rows">
         {#each data.bioassays as b (b.id)}
           <li class="row" data-testid="carryover-test">
             <span>
-              <Provenance source="manual" detail="you reported it" compact />
-              {day(b.testedOn)}: {b.result === 'no-damage' ? 'no damage seen' : 'damage seen'}{b.by
-                ? `, recorded by ${b.by}`
-                : ''}
+              <Provenance source="manual" detail={tr('carry.page.youReported')} compact />
+              {day(b.testedOn)}: {b.result === 'no-damage'
+                ? tr('carry.test.noDamageSeen')
+                : tr('carry.test.damageSeen')}{b.by ? tr('carry.page.testBy', { by: b.by }) : ''}
             </span>
             {#if b.note}<p class="meta">{b.note}</p>{/if}
             {#if data.isOwner}
@@ -200,7 +215,7 @@
                 disabled={busy}
                 onclick={() => deleteTest(b.id)}
               >
-                Remove this test
+                {tr('amend.tests.remove')}
               </button>
             {/if}
           </li>
@@ -212,7 +227,7 @@
         target={{ blockId: data.block.id }}
         today={data.today}
         onsaved={async () => {
-          status = 'Test saved.';
+          status = tr('carry.page.testSaved');
           await invalidateAll();
         }}
       />

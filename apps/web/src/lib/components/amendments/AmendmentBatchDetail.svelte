@@ -8,6 +8,8 @@
    */
   import { untrack } from 'svelte';
   import { invalidateAll } from '$app/navigation';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import CarryoverStateBadge from './CarryoverStateBadge.svelte';
   import BioassayForm from './BioassayForm.svelte';
   import BioassayGuide from './BioassayGuide.svelte';
@@ -16,9 +18,9 @@
   import InvSection from '$lib/components/inventory/InvSection.svelte';
   import { fmt } from '$lib/prefsState.svelte';
   import {
-    BATCH_KIND_LABELS,
-    SUPPLIER_STATEMENT_LABELS,
     SUPPLIER_STATEMENT_VALUES,
+    batchKindLabel,
+    supplierStatementLabel,
     type SupplierStatement
   } from '$lib/amendments/model';
   import type { AmendmentDetailPayload } from '$lib/server/amendmentDetail';
@@ -26,13 +28,11 @@
   type Props = Omit<AmendmentDetailPayload, 'type'>;
   const { batch, bioassays, spreads, options, canEdit, canDeleteInputs, today }: Props = $props();
 
+  const locale = $derived(page.data?.locale);
+  const tr = $derived(createT(locale));
+
   type AddKind = 'group' | 'animal' | 'batch' | 'stock-lot';
-  const ADD_LABELS: Record<AddKind, string> = {
-    group: 'A group of animals',
-    animal: 'One animal',
-    batch: 'Another pile or load',
-    'stock-lot': 'Hay, bedding or bagged manure from stock'
-  };
+  const ADD_KINDS: readonly AddKind[] = ['group', 'animal', 'batch', 'stock-lot'];
 
   let addKind = $state<AddKind>('group');
   let addId = $state('');
@@ -92,13 +92,13 @@
         error =
           data?.message ??
           data?.issues?.[0]?.message ??
-          (res.status === 403 ? 'You do not have permission to do that.' : 'That did not save.');
+          (res.status === 403 ? tr('amend.err.noPermission') : tr('amend.err.notSaved'));
         return false;
       }
       await invalidateAll();
       return true;
     } catch {
-      error = 'Could not reach the server. Try again when you are online.';
+      error = tr('amend.err.unreachable');
       return false;
     } finally {
       busy = false;
@@ -108,7 +108,7 @@
   async function addInput(e: SubmitEvent) {
     e.preventDefault();
     if (!addId) {
-      error = 'Pick what went in.';
+      error = tr('amend.err.pickInput');
       return;
     }
     const ok = await send(`/api/amendments/batches/${batch.id}/inputs`, 'POST', {
@@ -149,26 +149,30 @@
 
   function inputDates(i: Props['batch']['inputs'][number]): string {
     if (i.inputType === 'animal' || i.inputType === 'group') {
-      const end = i.toAt === null ? 'still collecting' : fmt.day(i.toAt - 1);
-      return `${fmt.day(i.fromAt)} to ${end}`;
+      const end = i.toAt === null ? tr('amend.dates.stillCollecting') : fmt.day(i.toAt - 1);
+      return tr('amend.dates.range', { from: fmt.day(i.fromAt), to: end });
     }
-    return `Added ${fmt.day(i.fromAt)}`;
+    return tr('amend.dates.added', { date: fmt.day(i.fromAt) });
   }
 
-  const INPUT_KIND: Record<string, string> = {
-    animal: 'Animal',
-    group: 'Group',
-    batch: 'Pile or load',
-    'stock-lot': 'From stock'
-  };
+  function inputKindLabel(kind: Props['batch']['inputs'][number]['inputType']): string {
+    return tr(`amend.inputKind.${kind}`);
+  }
 </script>
 
 <header class="detail-header">
-  <span class="kicker">{BATCH_KIND_LABELS[batch.kind]}</span>
+  <span class="kicker">{batchKindLabel(batch.kind, locale)}</span>
   <h1 class="serif">{batch.name}</h1>
   <p class="sub">
-    {isHome ? 'Made on the farm' : `Bought${batch.supplier ? ` from ${batch.supplier}` : ''}`} · Started
-    {fmt.day(batch.startedAt)}{batch.closedAt ? ` · Closed ${fmt.day(batch.closedAt - 1)}` : ''}
+    {isHome
+      ? tr('amend.header.madeHere')
+      : batch.supplier
+        ? tr('amend.header.boughtFrom', { supplier: batch.supplier })
+        : tr('amend.header.bought')} · {tr('amend.header.started', {
+      date: fmt.day(batch.startedAt)
+    })}{batch.closedAt
+      ? ` · ${tr('amend.header.closed', { date: fmt.day(batch.closedAt - 1) })}`
+      : ''}
   </p>
 </header>
 
@@ -176,10 +180,10 @@
   <p class="error" role="alert">{error}</p>
 {/if}
 
-<InvSection title="Carryover weed killer" kicker="What the records show">
+<InvSection title={tr('amend.sec.carryover.title')} kicker={tr('amend.sec.carryover.kicker')}>
   <div class="state-row">
     <CarryoverStateBadge state={batch.state} />
-    <Provenance source="data" detail="your records" />
+    <Provenance source="data" detail={tr('amend.prov.yourRecords')} />
   </div>
   <p class="state-label" data-testid="carryover-label">{batch.stateLabel}</p>
   {#if batch.paths.length}
@@ -189,7 +193,7 @@
       {/each}
     </ul>
     {#if batch.morePaths > 0}
-      <p class="muted">And {batch.morePaths} more.</p>
+      <p class="muted">{tr('amend.morePaths', { count: batch.morePaths })}</p>
     {/if}
   {/if}
   {#if batch.advice}
@@ -201,9 +205,9 @@
 </InvSection>
 
 {#if isHome}
-  <InvSection title="What went in" kicker="Sources">
+  <InvSection title={tr('amend.sec.inputs.title')} kicker={tr('amend.sec.inputs.kicker')}>
     {#if batch.inputs.length === 0}
-      <p class="muted">Nothing added yet.</p>
+      <p class="muted">{tr('amend.inputs.none')}</p>
     {:else}
       <ul class="inputs" data-testid="batch-inputs">
         {#each batch.inputs as input (input.id)}
@@ -211,8 +215,8 @@
             <span class="input-main">
               <span class="input-label">{input.label}</span>
               <span class="muted">
-                {INPUT_KIND[input.inputType]} · {inputDates(input)}{input.supplierStatement
-                  ? ` · ${SUPPLIER_STATEMENT_LABELS[input.supplierStatement]}`
+                {inputKindLabel(input.inputType)} · {inputDates(input)}{input.supplierStatement
+                  ? ` · ${supplierStatementLabel(input.supplierStatement, locale)}`
                   : ''}
               </span>
             </span>
@@ -222,7 +226,8 @@
                 class="ghost"
                 disabled={busy}
                 onclick={() => removeInput(input.id)}
-                aria-label="Remove {input.label}">Remove</button
+                aria-label={tr('amend.removeAria', { label: input.label })}
+                >{tr('amend.remove')}</button
               >
             {/if}
           </li>
@@ -233,103 +238,105 @@
     {#if canEdit && isOpen}
       <form class="add-input" onsubmit={addInput} data-testid="add-input-form">
         <label class="field">
-          <span>What went in</span>
+          <span>{tr('amend.form.whatWentIn')}</span>
           <select bind:value={addKind} onchange={() => (addId = '')} data-testid="add-input-kind">
-            {#each Object.entries(ADD_LABELS) as [value, label] (value)}
-              <option {value}>{label}</option>
+            {#each ADD_KINDS as value (value)}
+              <option {value}>{tr(`amend.add.${value}`)}</option>
             {/each}
           </select>
         </label>
         <label class="field">
-          <span>Which one</span>
+          <span>{tr('amend.form.whichOne')}</span>
           <select bind:value={addId} data-testid="add-input-choice">
-            <option value="">Choose…</option>
+            <option value="">{tr('amend.form.choose')}</option>
             {#each choices as c (c.id)}
               <option value={c.id}>{c.label}</option>
             {/each}
           </select>
         </label>
         {#if choices.length === 0}
-          <p class="muted">Nothing of that kind is on file yet.</p>
+          <p class="muted">{tr('amend.form.noneOfKind')}</p>
         {/if}
         <label class="field">
           <span>
-            {addKind === 'group' || addKind === 'animal' ? 'Collecting from' : 'Added on'}
+            {addKind === 'group' || addKind === 'animal'
+              ? tr('amend.form.collectingFrom')
+              : tr('amend.form.addedOn')}
           </span>
           <input type="date" bind:value={addFrom} max={today} required />
         </label>
         {#if addKind === 'group' || addKind === 'animal'}
           <label class="field">
-            <span>Last day collected (leave empty while still collecting)</span>
+            <span>{tr('amend.form.lastDay')}</span>
             <input type="date" bind:value={addTo} max={today} min={addFrom} />
           </label>
         {/if}
         {#if addKind === 'stock-lot'}
           <label class="field">
-            <span>What the supplier said about weed killers</span>
+            <span>{tr('amend.form.supplierSaid')}</span>
             <select bind:value={addStatement}>
-              <option value="">No answer on file</option>
+              <option value="">{tr('amend.form.noAnswer')}</option>
               {#each SUPPLIER_STATEMENT_VALUES as v (v)}
-                <option value={v}>{SUPPLIER_STATEMENT_LABELS[v]}</option>
+                <option value={v}>{supplierStatementLabel(v, locale)}</option>
               {/each}
             </select>
           </label>
         {/if}
-        <button type="submit" class="primary" disabled={busy}>Add to this batch</button>
+        <button type="submit" class="primary" disabled={busy}>{tr('amend.form.addToBatch')}</button>
       </form>
     {:else if canEdit && !isOpen}
-      <p class="muted">This batch is closed. Reopen it to add more.</p>
+      <p class="muted">{tr('amend.closedReopen')}</p>
     {/if}
   </InvSection>
 {/if}
 
 {#if canEdit}
-  <InvSection title="Details" kicker="Edit">
+  <InvSection title={tr('amend.sec.details.title')} kicker={tr('amend.sec.details.kicker')}>
     <form class="details" onsubmit={saveDetails}>
       <label class="field">
-        <span>Name</span>
+        <span>{tr('amend.name')}</span>
         <input type="text" bind:value={name} maxlength="80" required />
       </label>
       {#if !isHome}
         <label class="field">
-          <span>Supplier</span>
+          <span>{tr('amend.supplier')}</span>
           <input type="text" bind:value={supplier} maxlength="120" />
         </label>
         <label class="field">
-          <span>What the supplier said about weed killers</span>
+          <span>{tr('amend.form.supplierSaid')}</span>
           <select bind:value={statement} data-testid="supplier-statement">
-            <option value="">No answer on file</option>
+            <option value="">{tr('amend.form.noAnswer')}</option>
             {#each SUPPLIER_STATEMENT_VALUES as v (v)}
-              <option value={v}>{SUPPLIER_STATEMENT_LABELS[v]}</option>
+              <option value={v}>{supplierStatementLabel(v, locale)}</option>
             {/each}
           </select>
         </label>
       {/if}
       <label class="field">
-        <span>Notes</span>
+        <span>{tr('amend.notes')}</span>
         <textarea bind:value={notes} maxlength="1000" rows="3"></textarea>
       </label>
-      <button type="submit" class="primary" disabled={busy}>Save details</button>
+      <button type="submit" class="primary" disabled={busy}>{tr('amend.saveDetails')}</button>
     </form>
     {#if isHome}
       <div class="close-row">
         {#if isOpen}
           <label class="field">
-            <span>Closed on</span>
+            <span>{tr('amend.closedOn')}</span>
             <input type="date" bind:value={closeOn} max={today} />
           </label>
           <button
             type="button"
             class="ghost"
             disabled={busy}
-            onclick={() => patch({ closedOn: closeOn })}>Close this batch</button
+            onclick={() => patch({ closedOn: closeOn })}>{tr('amend.closeBatch')}</button
           >
         {:else}
           <button
             type="button"
             class="ghost"
             disabled={busy}
-            onclick={() => patch({ closedOn: null })}>Reopen this batch</button
+            onclick={() => patch({ closedOn: null })}>{tr('amend.reopenBatch')}</button
           >
         {/if}
       </div>
@@ -337,18 +344,22 @@
   </InvSection>
 {/if}
 
-<InvSection title="Pea or bean tests" kicker="Bioassays">
+<InvSection title={tr('amend.sec.tests.title')} kicker={tr('amend.sec.tests.kicker')}>
   {#if bioassays.length === 0}
-    <p class="muted">No pea or bean test on file.</p>
+    <p class="muted">{tr('amend.tests.none')}</p>
   {:else}
     <ul class="plain">
       {#each bioassays as b (b.id)}
         <li>
-          {fmt.day(b.testedAt)}: {b.result === 'damage' ? 'showed damage' : 'showed no damage'}
-          {b.blockName ? ` (on ${b.blockName})` : ' (this batch)'}{b.note ? `. ${b.note}` : ''}
+          {tr(b.result === 'damage' ? 'amend.tests.damage' : 'amend.tests.noDamage', {
+            date: fmt.day(b.testedAt)
+          })}
+          {b.blockName
+            ? tr('amend.tests.onBlock', { block: b.blockName })
+            : tr('amend.tests.thisBatch')}{b.note ? `. ${b.note}` : ''}
           {#if canDeleteInputs}
             <button class="ghost" type="button" disabled={busy} onclick={() => removeTest(b.id)}>
-              Remove this test
+              {tr('amend.tests.remove')}
             </button>
           {/if}
         </li>
@@ -361,9 +372,9 @@
   <BioassayGuide />
 </InvSection>
 
-<InvSection title="Where it was spread" kicker="Fertility records">
+<InvSection title={tr('amend.sec.spread.title')} kicker={tr('amend.sec.spread.kicker')}>
   {#if spreads.length === 0}
-    <p class="muted">Not spread on any block yet.</p>
+    <p class="muted">{tr('amend.spread.none')}</p>
   {:else}
     <ul class="plain">
       {#each spreads as s (s.applicationId)}

@@ -63,7 +63,7 @@
       locale: page.data?.locale
     })
   );
-  const shown = $derived(withCarryover(card, carryover, { link: true }));
+  const shown = $derived(withCarryover(card, carryover, { link: true, locale: page.data?.locale }));
 </script>
 
 <div class="planting-card" data-testid="planting-card">

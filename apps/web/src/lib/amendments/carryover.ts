@@ -15,6 +15,7 @@
  */
 
 import { dateTimeFormat } from '$lib/intlCache';
+import { t } from '$lib/i18n';
 import type { SupplierStatement } from './model';
 
 export type { SupplierStatement } from './model';
@@ -529,13 +530,22 @@ const STATE_LABELS: Record<CarryoverState, string> = {
 };
 
 /** M-42 wording. Never "safe" or "clear". */
-export function stateLabel(state: CarryoverState): string {
-  return STATE_LABELS[state];
+export function stateLabel(state: CarryoverState, locale?: string | null): string {
+  return locale ? t(locale, `carry.state.${state}`) : STATE_LABELS[state];
 }
 
 /** Short chip text for lists. */
-export function stateChip(state: CarryoverState): string {
-  return state === 'none-on-file' ? 'No carryover weed killer on file' : STATE_LABELS[state];
+export function stateChip(state: CarryoverState, locale?: string | null): string {
+  if (state !== 'none-on-file') return stateLabel(state, locale);
+  return locale ? t(locale, 'carry.chip.none-on-file') : 'No carryover weed killer on file';
+}
+
+/** A standing note for display. Notes about the hazard itself stay English. */
+export function standingNoteText(note: string, locale?: string | null): string {
+  if (!locale) return note;
+  if (note === NO_SOURCES_NOTE) return t(locale, 'carry.note.noSources');
+  if (note === SUPPLIER_SAID_NONE_NOTE) return t(locale, 'carry.note.supplierSaidNone');
+  return note;
 }
 
 /** True when any not-known path rests on a bought load or lot, so the

@@ -8,6 +8,7 @@
  */
 
 import { formatCalendarDate, ymdInZone } from '$lib/prefs';
+import { t } from '$lib/i18n';
 import type { CarryoverState } from '$lib/amendments/carryover';
 import { HARMS_TEXT } from '$lib/amendments/spreadPrompt';
 import { BIOASSAY_DAMAGE_TEXT } from '$lib/amendments/bioassayGuide';
@@ -33,6 +34,19 @@ export const CARRYOVER_SECTION = 'Weed killer carryover';
 export const CARRYOVER_TESTS_SECTION = 'Pea or bean tests';
 export const CARRYOVER_SECTION_TITLES = [CARRYOVER_SECTION, CARRYOVER_TESTS_SECTION] as const;
 export const AREA_LINE_LIMIT = 3;
+
+/** The carryover section titles in English and in `locale`, so a card
+ *  built in either language is matched (compact view, re-apply). */
+export function carryoverSectionTitles(locale?: string | null): readonly string[] {
+  if (!locale) return CARRYOVER_SECTION_TITLES;
+  return [
+    ...new Set([
+      ...CARRYOVER_SECTION_TITLES,
+      t(locale, 'carry.section.title'),
+      t(locale, 'carry.section.tests')
+    ])
+  ];
+}
 
 export interface SpreadFact {
   applicationId: string;
@@ -185,6 +199,8 @@ export interface WithCarryoverOptions {
   max?: number;
   /** Add a screen link per block to the pea test and dismiss page. */
   link?: boolean;
+  /** Language for the section titles and links; the lines stay English. */
+  locale?: string | null;
 }
 
 function nameOf(names: WithCarryoverOptions['blockNames'], id: string): string | undefined {
@@ -208,11 +224,12 @@ export function withCarryover(
   };
   const warn = shown.filter((l) => l.tone === 'warn').map(text);
   const muted = shown.filter((l) => l.tone === 'muted').map(text);
-  const tail = more > 0 ? [`and ${more} more`] : [];
+  const loc = opts.locale;
+  const tail = more > 0 ? [loc ? t(loc, 'carry.more', { count: more }) : `and ${more} more`] : [];
   const sections: CardSection[] = [];
   if (warn.length) {
     sections.push({
-      title: CARRYOVER_SECTION,
+      title: loc ? t(loc, 'carry.section.title') : CARRYOVER_SECTION,
       items: muted.length ? warn : [...warn, ...tail],
       safety: true,
       provenance: 'data'
@@ -220,14 +237,13 @@ export function withCarryover(
   }
   if (muted.length) {
     sections.push({
-      title: CARRYOVER_TESTS_SECTION,
+      title: loc ? t(loc, 'carry.section.tests') : CARRYOVER_TESTS_SECTION,
       items: [...muted, ...tail],
       provenance: 'data'
     });
   }
-  const kept = card.sections.filter(
-    (s) => !(CARRYOVER_SECTION_TITLES as readonly string[]).includes(s.title)
-  );
+  const titles = carryoverSectionTitles(loc);
+  const kept = card.sections.filter((s) => !titles.includes(s.title));
   const links: CardAction[] = [...(card.links ?? [])];
   if (opts.link) {
     const blocks = [...new Set(shown.map((l) => l.blockId))];
@@ -235,13 +251,23 @@ export function withCarryover(
       const href = carryoverHref(id);
       if (links.some((l) => l.href === href)) continue;
       const name = nameOf(opts.blockNames, id);
-      links.push({ label: name ? `Pea test or dismiss: ${name}` : 'Pea test or dismiss', href });
+      const label = loc
+        ? name
+          ? t(loc, 'carry.link.named', { name })
+          : t(loc, 'carry.link')
+        : name
+          ? `Pea test or dismiss: ${name}`
+          : 'Pea test or dismiss';
+      links.push({ label, href });
     }
   }
   return {
     ...card,
     sections: [...sections, ...kept],
-    provenance: mergeProvenance([...card.provenance, { source: 'data', detail: 'your records' }]),
+    provenance: mergeProvenance([
+      ...card.provenance,
+      { source: 'data', detail: loc ? t(loc, 'amend.prov.yourRecords') : 'your records' }
+    ]),
     ...(links.length ? { links } : {})
   };
 }

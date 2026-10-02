@@ -7,6 +7,7 @@
  */
 
 import { CHEMISTRY_KILL_MATRIX } from '$lib/safety/cropFamilyLethality';
+import { t } from '$lib/i18n';
 import type { CarryoverChain, CarryoverPath, CarryoverState } from './carryover';
 
 export type CarryoverReason =
@@ -55,8 +56,11 @@ const REASON_TEXT: Record<CarryoverReason, string> = {
   'unknown-family': 'A crop planned or growing here has no known crop family.'
 };
 
-export function reasonText(reason: CarryoverReason): string {
-  return REASON_TEXT[reason];
+/** The damaged-crop reason stays English (hazard wording); the others
+ *  are facts about the block and follow the locale. */
+export function reasonText(reason: CarryoverReason, locale?: string | null): string {
+  if (!locale || reason === 'sensitive-crop') return REASON_TEXT[reason];
+  return t(locale, `carry.reason.${reason}`);
 }
 
 /** What a carryover weed killer harms, for the prompt and the block line. */

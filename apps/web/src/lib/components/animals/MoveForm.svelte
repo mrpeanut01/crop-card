@@ -126,7 +126,7 @@
     }
     saving = true;
     try {
-      const out = await submitMove(input);
+      const out = await submitMove(input, undefined, undefined, page.data?.locale);
       if (out.status === 'error') {
         error = out.message;
         attestHref = out.attestHref ?? null;

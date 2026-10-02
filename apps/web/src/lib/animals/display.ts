@@ -3,6 +3,7 @@
 import { AREA_KIND_LABELS, isAreaKind } from '$lib/farm/areaKinds';
 import type { SpeciesTile } from '$lib/plugins/species';
 import { isHousingAreaKind, type AnimalStatus, type StatusEventStatus } from './model';
+import { t, type MessageKey } from '$lib/i18n';
 
 export const STATUS_LABEL: Record<AnimalStatus | 'sold-for-meat', string> = {
   active: 'Here',
@@ -30,9 +31,17 @@ export const OUTCOME_CHOICES: { value: Exclude<StatusEventStatus, 'active'>; lab
 export const MEAT_CHOICE_VALUES: readonly string[] = ['slaughtered', 'sold-for-meat'];
 
 export function animalLabel(a: { name: string | null; tag: string | null }): string {
+  return animalLabelIn(a);
+}
+
+/** `animalLabel` in the viewer's language ("Tag 14", "Unnamed"). */
+export function animalLabelIn(
+  a: { name: string | null; tag: string | null },
+  locale?: string | null
+): string {
   if (a.name?.trim()) return a.name.trim();
-  if (a.tag?.trim()) return `Tag ${a.tag.trim()}`;
-  return 'Unnamed';
+  if (a.tag?.trim()) return t(locale, 'animals.tagLabel', { tag: a.tag.trim() });
+  return t(locale, 'animals.unnamed');
 }
 
 const DAY = 86_400_000;
@@ -42,11 +51,21 @@ const DAY = 86_400_000;
 export function ageText(
   birthMs: number | null,
   estimated: boolean,
-  now: number = Date.now()
+  now: number = Date.now(),
+  locale?: string | null
 ): string | null {
   if (birthMs === null || !Number.isFinite(birthMs)) return null;
   const days = Math.floor((now - birthMs) / DAY);
   if (days < 0) return null;
+  if (locale) {
+    let local: string;
+    if (days < 14) local = t(locale, 'animals.age.days', { count: days });
+    else if (days < 60) local = t(locale, 'animals.age.weeks', { count: Math.floor(days / 7) });
+    else if (days < 730) {
+      local = t(locale, 'animals.age.months', { count: Math.floor(days / 30.44) });
+    } else local = t(locale, 'animals.age.years', { count: Math.floor(days / 365.25) });
+    return estimated ? t(locale, 'animals.age.about', { text: local }) : local;
+  }
   let text: string;
   if (days < 14) text = days === 1 ? '1 day' : `${days} days`;
   else if (days < 60) text = `${Math.floor(days / 7)} weeks`;
@@ -133,7 +152,8 @@ export interface HousingPick {
   created: boolean;
 }
 
-export function areaKindLabel(kind: string): string {
+export function areaKindLabel(kind: string, locale?: string | null): string {
+  if (locale && isAreaKind(kind)) return t(locale, `animals.areaKind.${kind}` as MessageKey);
   if (kind === 'coop_pen') return 'Coop or pen';
   return isAreaKind(kind) ? AREA_KIND_LABELS[kind] : kind;
 }
@@ -148,13 +168,14 @@ export function housingOptions<T extends AreaOption>(areas: readonly T[]): T[] {
 
 /** Kinds offered when making a new place for animals. The coop kind shows
  *  once it is a known Area kind. */
-export function newHousingKinds(): { kind: string; label: string; hint: string }[] {
-  const all = [
-    { kind: 'coop_pen', label: 'Coop or pen', hint: 'Chickens, ducks, rabbits' },
-    { kind: 'barn', label: 'Barn', hint: 'A barn, stable or shed' },
-    { kind: 'pasture', label: 'Pasture', hint: 'Grass they graze' },
-    { kind: 'residence', label: 'House', hint: 'Dogs and cats' }
-  ];
+export function newHousingKinds(
+  locale?: string | null
+): { kind: string; label: string; hint: string }[] {
+  const all = (['coop_pen', 'barn', 'pasture', 'residence'] as const).map((kind) => ({
+    kind,
+    label: t(locale, `animals.areaKind.${kind}`),
+    hint: t(locale, `animallib.housing.${kind}.hint`)
+  }));
   return all.filter((k) => isAreaKind(k.kind));
 }
 
@@ -183,6 +204,32 @@ const CODE_MESSAGES: Record<string, string> = {
   HOLD_NOT_VOIDABLE: "Holds from a prohibited drug or unknown label can't be shortened."
 };
 
+/** Catalog keys for the plain-word refusals above that are not about a
+ *  hold, so they read in the viewer's language. */
+const CODE_KEYS: Record<string, MessageKey> = {
+  SPECIES_MISMATCH: 'animals.err.SPECIES_MISMATCH',
+  NOT_A_HOUSING_AREA: 'animals.err.NOT_A_HOUSING_AREA',
+  ALREADY_THERE: 'animals.err.ALREADY_THERE',
+  SAME_TIME: 'animals.err.SAME_TIME',
+  OUT_OF_ORDER: 'animals.err.OUT_OF_ORDER',
+  COUNT_TOO_HIGH: 'animals.err.COUNT_TOO_HIGH',
+  READ_ONLY: 'animals.err.READ_ONLY',
+  RECORD_LOCKED: 'animallib.err.RECORD_LOCKED',
+  NOT_LATEST: 'animals.err.NOT_LATEST',
+  GROUP_HAS_MEMBERS: 'animals.err.GROUP_HAS_MEMBERS',
+  ANIMAL_HAS_RECORDS: 'animals.err.ANIMAL_HAS_RECORDS',
+  AREA_HAS_ANIMALS: 'animals.err.AREA_HAS_ANIMALS',
+  AREA_HAS_GROUP_HISTORY: 'animallib.err.AREA_HAS_GROUP_HISTORY',
+  UNKNOWN_SUBJECT: 'animals.err.UNKNOWN_SUBJECT',
+  OWNER_ONLY: 'animals.err.OWNER_ONLY',
+  IN_THE_FUTURE: 'animals.err.IN_THE_FUTURE'
+};
+
+function codeMessage(code: string, locale: string | null | undefined): string | undefined {
+  const key = CODE_KEYS[code];
+  return locale && key ? t(locale, key) : CODE_MESSAGES[code];
+}
+
 /** C-35: refusals whose server copy names the holds and dates involved, so
  *  the form shows it as written. */
 const SERVER_WORDED = new Set([
@@ -193,7 +240,10 @@ const SERVER_WORDED = new Set([
   'HOLD_ACTIVE'
 ]);
 
-export async function errorFromResponse(res: Response): Promise<string> {
+/** The message to show for a refused request. With a locale, the plain-word
+ *  refusals read in that language; hold refusals and anything the server
+ *  words itself stay as written. */
+export async function errorFromResponse(res: Response, locale?: string | null): Promise<string> {
   const body = (await res.json().catch(() => null)) as {
     error?: string;
     code?: string;
@@ -205,21 +255,28 @@ export async function errorFromResponse(res: Response): Promise<string> {
   }
   if (res.status === 403) {
     return body?.code && CODE_MESSAGES[body.code]
-      ? CODE_MESSAGES[body.code]
-      : 'Only the owner can do that.';
+      ? (codeMessage(body.code, locale) ?? CODE_MESSAGES[body.code])
+      : t(locale, 'animals.err.ownerCanDo');
   }
-  if (body?.code && CODE_MESSAGES[body.code]) return CODE_MESSAGES[body.code];
-  return body?.error ?? `Something went wrong (HTTP ${res.status}).`;
+  if (body?.code && CODE_MESSAGES[body.code]) {
+    return codeMessage(body.code, locale) ?? CODE_MESSAGES[body.code];
+  }
+  return body?.error ?? t(locale, 'animallib.err.http', { status: res.status });
 }
 
 export const OFFLINE_MESSAGE = "We couldn't reach CropCard. Check your signal and try again.";
 
+export function offlineMessage(locale?: string | null): string {
+  return t(locale, 'animals.offline');
+}
+
 /** "24 chickens", "1 chicken". */
 export function countText(
   total: number,
-  species: { label: string; displayName: string } | undefined
+  species: { label: string; displayName: string } | undefined,
+  locale?: string | null
 ): string {
-  if (!species) return `${total} ${total === 1 ? 'animal' : 'animals'}`;
+  if (!species) return t(locale, 'animals.count.animal', { count: total });
   const word = total === 1 ? species.displayName : species.label;
   return `${total} ${word.toLowerCase()}`;
 }

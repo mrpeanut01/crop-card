@@ -1,5 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import DocumentAttach from '$lib/components/documents/DocumentAttach.svelte';
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { todayYmd } from '$lib/prefs';
@@ -9,7 +11,7 @@
     FORAGE_RATING_MAX,
     NITRATE_UNIT_LABELS,
     RATING_BASES,
-    RATING_BASIS_LABELS
+    ratingBasisLabel
   } from '$lib/forage/model';
   import {
     buildForageTestBody,
@@ -30,6 +32,8 @@
 
   const { target = null, blocks = [], canAttach, onSaved, onCancel }: Props = $props();
   const uid = $props.id();
+  const locale = $derived(page.data?.locale);
+  const tr = $derived(createT(locale));
 
   let draft = $state<ForageTestDraft>(emptyForageDraft(todayYmd(currentPrefs())));
   let blockId = $state(untrack(() => blocks[0]?.id ?? ''));
@@ -42,10 +46,10 @@
     error = null;
     const t: ForageTestTarget | null = target ?? (blockId ? { blockId } : null);
     if (!t) {
-      error = 'Pick where the sample came from.';
+      error = tr('forage.form.err.where');
       return;
     }
-    const built = buildForageTestBody(t, draft);
+    const built = buildForageTestBody(t, draft, locale);
     if (!built.ok) {
       error = built.error;
       return;
@@ -63,13 +67,13 @@
           out.message ??
           out.issues?.[0]?.message ??
           out.error ??
-          `Could not save (HTTP ${res.status}).`;
+          tr('forage.form.err.http', { status: res.status });
         return;
       }
       draft = emptyForageDraft(today);
       onSaved(out.test);
     } catch {
-      error = 'Could not save. Check the connection and try again.';
+      error = tr('forage.form.err.offline');
     } finally {
       saving = false;
     }
@@ -77,13 +81,10 @@
 </script>
 
 <form class="forage-form" onsubmit={save} data-testid="forage-test-form">
-  <p class="help">
-    Type the numbers and the rating exactly as the lab printed them. The lab's own rating is what
-    the app shows.
-  </p>
+  <p class="help">{tr('forage.form.help')}</p>
 
   {#if !target}
-    <label for="{uid}-block">Sample came from</label>
+    <label for="{uid}-block">{tr('forage.form.from')}</label>
     <select id="{uid}-block" bind:value={blockId}>
       {#each blocks as b (b.id)}
         <option value={b.id}>{b.name}</option>
@@ -93,20 +94,20 @@
 
   <div class="pair">
     <label>
-      Day sampled
+      {tr('forage.form.day')}
       <input type="date" max={today} bind:value={draft.sampledOn} required />
     </label>
     <label>
-      Lab <span class="optional">(optional)</span>
+      {tr('forage.form.lab')} <span class="optional">{tr('forage.form.optional')}</span>
       <input type="text" maxlength={FORAGE_LAB_MAX} bind:value={draft.lab} />
     </label>
   </div>
 
   <fieldset>
-    <legend>Nitrate</legend>
+    <legend>{tr('forage.form.nitrate')}</legend>
     <div class="pair">
       <label>
-        Value
+        {tr('forage.form.value')}
         <input
           type="number"
           min="0"
@@ -116,9 +117,9 @@
         />
       </label>
       <label>
-        Units
+        {tr('forage.form.units')}
         <select bind:value={draft.nitrateUnits}>
-          <option value="">Pick units</option>
+          <option value="">{tr('forage.form.pickUnits')}</option>
           {#each FORAGE_NITRATE_UNITS as u (u)}
             <option value={u}>{NITRATE_UNIT_LABELS[u]}</option>
           {/each}
@@ -126,38 +127,43 @@
       </label>
     </div>
     <label>
-      Lab rating for nitrate <span class="optional">(as printed)</span>
+      {tr('forage.form.nitrateRating')} <span class="optional">{tr('forage.form.asPrinted')}</span>
       <input type="text" maxlength={FORAGE_RATING_MAX} bind:value={draft.ratingNitrate} />
     </label>
   </fieldset>
 
   <fieldset>
-    <legend>Prussic acid (HCN) <span class="optional">(optional)</span></legend>
+    <legend
+      >{tr('forage.form.hcn')} <span class="optional">{tr('forage.form.optional')}</span></legend
+    >
     <div class="pair">
       <label>
-        Value in ppm
+        {tr('forage.form.valuePpm')}
         <input type="number" min="0" step="any" inputmode="decimal" bind:value={draft.hcnPpm} />
       </label>
       <label>
-        Lab rating <span class="optional">(as printed)</span>
+        {tr('forage.form.labRating')} <span class="optional">{tr('forage.form.asPrinted')}</span>
         <input type="text" maxlength={FORAGE_RATING_MAX} bind:value={draft.ratingHcn} />
       </label>
     </div>
   </fieldset>
 
   <label>
-    Basis the lab used
+    {tr('forage.form.basis')}
     <select bind:value={draft.basis}>
-      <option value="">Not entered</option>
+      <option value="">{tr('forage.form.notEntered')}</option>
       {#each RATING_BASES as b (b)}
-        <option value={b}>{RATING_BASIS_LABELS[b]}</option>
+        <option value={b}>{ratingBasisLabel(b, locale)}</option>
       {/each}
     </select>
   </label>
 
   {#if canAttach}
     <fieldset>
-      <legend>Lab report <span class="optional">(optional)</span></legend>
+      <legend
+        >{tr('forage.form.report')}
+        <span class="optional">{tr('forage.form.optional')}</span></legend
+      >
       <DocumentAttach
         documentId={draft.documentId}
         kind="forage-test"
@@ -176,10 +182,10 @@
 
   <div class="actions">
     <button class="primary" type="submit" disabled={saving}>
-      {saving ? 'Saving…' : 'Save forage test'}
+      {saving ? tr('forage.form.saving') : tr('forage.form.save')}
     </button>
     {#if onCancel}
-      <button class="secondary" type="button" onclick={onCancel}>Cancel</button>
+      <button class="secondary" type="button" onclick={onCancel}>{tr('forage.form.cancel')}</button>
     {/if}
   </div>
 </form>

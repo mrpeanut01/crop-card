@@ -7,6 +7,7 @@
   import { withCarryover, type CarryoverLine } from '$lib/farm/areaCarryover';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { cropDisplayName } from '$lib/i18n/cropName';
 
   interface Props {
     planting: PlantingRecord;
@@ -58,10 +59,11 @@
       sourceTag,
       refineCount,
       seededAtLabel,
-      detailHref
+      detailHref,
+      locale: page.data?.locale
     })
   );
-  const shown = $derived(withCarryover(card, carryover, { link: true }));
+  const shown = $derived(withCarryover(card, carryover, { link: true, locale: page.data?.locale }));
 </script>
 
 <div class="planting-card" data-testid="planting-card">
@@ -79,10 +81,15 @@
                 type="button"
                 class="comp-chip"
                 onclick={() => onCompanionClick?.(c.id)}
-                title={tr('planui.pcard.jumpTo', { name: c.varietyDisplayName })}
+                title={tr('planui.pcard.jumpTo', {
+                  name: cropDisplayName(c.cropPluginId, c.varietyDisplayName, page.data?.locale)
+                })}
               >
                 <span class="dot" style:background={plantingColor(c.id)}></span>
-                {c.varietyDisplayName.split(' ').slice(0, 2).join(' ')}
+                {cropDisplayName(c.cropPluginId, c.varietyDisplayName, page.data?.locale)
+                  .split(' ')
+                  .slice(0, 2)
+                  .join(' ')}
               </button>
             {/each}
           </div>

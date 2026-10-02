@@ -59,7 +59,8 @@ export const load: PageServerLoad = ({ url, locals }) => {
     canRecordCatch: !!locals.user && canMutate(locals.user.role),
     // Phase 32E (E5): streamed so a cold weather fetch never holds the page.
     degreeDays: loadDegreeDays({
-      deps: { timeoutMs: SCOUT_FETCH_TIMEOUT_MS }
+      deps: { timeoutMs: SCOUT_FETCH_TIMEOUT_MS },
+      locale: locals?.locale
     }).catch((e) => {
       console.warn('[scout] degree days failed', e);
       return null;

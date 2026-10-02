@@ -22,7 +22,7 @@ export const GET: RequestHandler = async (event) => {
   const { kind, id } = event.params;
   if (!kind || !id) throw error(404, 'No such record');
   const opts = {
-    prefs: prefsFor(user.id),
+    prefs: { ...prefsFor(user.id), locale: event.locals.locale ?? 'en' },
     origin: process.env.ORIGIN?.trim().replace(/\/+$/, '') || null
   };
   let result;

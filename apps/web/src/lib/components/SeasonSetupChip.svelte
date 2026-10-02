@@ -9,6 +9,8 @@
 
   import type { SeasonSetup } from '$lib/season/setup';
   import { summarizeSeasonSetup } from '$lib/season/setup';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   let {
     setup,
@@ -20,14 +22,15 @@
     onEdit?: () => void;
   } = $props();
 
-  const summary = $derived(summarizeSeasonSetup(setup));
+  const tr = $derived(createT(page.data?.locale));
+  const summary = $derived(summarizeSeasonSetup(setup, page.data?.locale));
 </script>
 
 <div class="sc-chip">
   <span class="sc-prefix" aria-hidden="true">🌱</span>
   <span class="sc-summary">{summary}</span>
   {#if canEdit && onEdit}
-    <button type="button" class="sc-edit" onclick={onEdit}>Edit</button>
+    <button type="button" class="sc-edit" onclick={onEdit}>{tr('season.chip.edit')}</button>
   {/if}
 </div>
 

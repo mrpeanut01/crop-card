@@ -7,6 +7,7 @@
 
 import { z } from 'zod';
 import { haversineMeters } from '$lib/geo/area';
+import { t } from '$lib/i18n';
 
 export const MAP_FEATURE_KINDS = [
   'fence',
@@ -111,6 +112,14 @@ export const WATER_SOURCE_LABELS: Readonly<Record<WaterSourceType, string>> = {
   pond: 'Pond or stream',
   rain: 'Rain catchment'
 };
+
+export function mapFeatureLabel(kind: MapFeatureKind, locale?: string | null): string {
+  return t(locale, `farm.feat.${kind}`);
+}
+
+export function waterSourceLabel(source: WaterSourceType, locale?: string | null): string {
+  return t(locale, `farm.water.${source}`);
+}
 
 export const MAX_FLOW_GPM = 5000;
 
@@ -278,16 +287,17 @@ export function featureCounts(
 /** One plain line for lists and the printed card, e.g. "Barn well · Well, 12 gal/min". */
 export function describeFeature(
   feature: Pick<MapFeatureView, 'kind' | 'name' | 'details' | 'lengthFt'>,
-  formatLength: (ft: number) => string = (ft) => `${ft.toLocaleString('en-US')} ft`
+  formatLength: (ft: number) => string = (ft) => `${ft.toLocaleString('en-US')} ft`,
+  locale?: string | null
 ): string {
-  const name = feature.name.trim() || MAP_FEATURE_LABELS[feature.kind];
+  const name = feature.name.trim() || mapFeatureLabel(feature.kind, locale);
   const extras: string[] = [];
   if (feature.lengthFt !== null && feature.lengthFt > 0)
     extras.push(formatLength(feature.lengthFt));
   if (feature.kind === 'water_source' && feature.details) {
     const d = feature.details;
     const bits: string[] = [];
-    if (d.source) bits.push(WATER_SOURCE_LABELS[d.source]);
+    if (d.source) bits.push(waterSourceLabel(d.source, locale));
     if (d.flowRateGpm !== undefined) bits.push(`${trimFlow(d.flowRateGpm)} gal/min`);
     if (bits.length) extras.push(bits.join(', '));
   }

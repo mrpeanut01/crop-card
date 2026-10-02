@@ -23,7 +23,8 @@ export const POST: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
-  const bed = resolveDesignableBed(event.params.blockId ?? '');
+  const locale = event.locals?.locale;
+  const bed = resolveDesignableBed(event.params.blockId ?? '', locale);
   if (isFailure(bed)) return failureResponse(bed);
 
   const registry = await getRegistry();
@@ -32,5 +33,5 @@ export const POST: RequestHandler = async (event) => {
   const recipes = (await getBedRecipes()).all();
 
   const inputs = loadFillInputs(bed, parsed.data, crops, recipes);
-  return json(await fillBed({ userId: user.id, bed, req: parsed.data, inputs }));
+  return json(await fillBed({ userId: user.id, bed, req: parsed.data, inputs, locale }));
 };

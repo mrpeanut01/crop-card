@@ -1,7 +1,6 @@
-import { DEFAULT_PREFS, formatDueDay, formatInstant } from '$lib/prefs';
+import { formatDueDay, formatInstant } from '$lib/prefs';
 import { labelForTaskCategory, type TaskCategory } from '$lib/plan/taskCategory';
 import {
-  TASK_STATUS_LABEL,
   TASK_STATUS_TONE,
   deriveTaskStatus,
   statusWithQueued,
@@ -9,10 +8,10 @@ import {
   type TaskStatus
 } from '$lib/tasks/status';
 import {
-  PLANTING_CARE_LINK_LABEL,
   cardHref,
   cardKey,
   plantingCardHref,
+  plantingCareLinkLabel,
   type CardFact,
   type CardModel,
   type CardProvenance,
@@ -22,8 +21,10 @@ import type { FarmSnapshot } from '../snapshot';
 import {
   blockDisplayName,
   resolveOptions,
+  resolvedFrom,
   type BuildOptions,
-  type ResolvedOptions
+  type ResolvedOptions,
+  plantingName
 } from './common';
 
 export interface TaskCardInput {
@@ -58,36 +59,42 @@ export interface TaskCardContext {
   assignee?: string | null;
 }
 
-const KIND_KICKER: Record<NonNullable<TaskCardInput['kind']>, string> = {
-  primary: 'Task',
-  'pre-task': 'Get ready',
-  'post-task': 'Follow-up'
-};
+const KIND_KICKER = {
+  primary: 'cards.task.kind.primary',
+  'pre-task': 'cards.task.kind.pre',
+  'post-task': 'cards.task.kind.post'
+} as const satisfies Record<NonNullable<TaskCardInput['kind']>, string>;
 
 function whenText(task: TaskCardInput, status: TaskStatus, opts: ResolvedOptions): string {
+  const { tr } = opts;
   const day = formatDueDay(task.scheduledFor, opts.prefs, 'month-day', { weekday: 'short' });
   switch (status) {
     case 'late':
-      return `Was due ${day}`;
+      return tr('cards.task.wasDue', { day });
     case 'due-today':
-      return 'Today';
+      return tr('cards.task.today');
     case 'done':
       return task.completedAt
-        ? `Done ${formatInstant(task.completedAt, opts.prefs, 'month-day')}`
-        : 'Done';
+        ? tr('cards.task.doneOn', {
+            date: formatInstant(task.completedAt, opts.prefs, 'month-day')
+          })
+        : tr('cards.task.done');
     case 'skipped':
       return task.abortedAt
-        ? `Skipped ${formatInstant(task.abortedAt, opts.prefs, 'month-day')}`
-        : 'Skipped';
+        ? tr('cards.task.skippedOn', {
+            date: formatInstant(task.abortedAt, opts.prefs, 'month-day')
+          })
+        : tr('cards.task.skipped');
     default:
       return day;
   }
 }
 
-function provenanceFor(task: TaskCardInput): CardProvenance {
+function provenanceFor(task: TaskCardInput, opts: ResolvedOptions): CardProvenance {
   const key = task.pluginTemplateKey ?? '';
-  if (/^(crop|equipment|derived):/.test(key)) return { source: 'plugin', detail: 'crop calendar' };
-  return { source: 'data', detail: 'your task list' };
+  if (/^(crop|equipment|derived):/.test(key))
+    return { source: 'plugin', detail: opts.tr('cards.prov.cropCalendar') };
+  return { source: 'data', detail: opts.tr('cards.prov.taskList') };
 }
 
 export function taskStatusFor(
@@ -103,25 +110,33 @@ export function buildTaskCardFrom(
   ctx: TaskCardContext,
   opts: ResolvedOptions
 ): CardModel {
+  const { tr } = opts;
   const status = taskStatusFor(task, ctx.queued, opts);
   const kicker = [
-    KIND_KICKER[task.kind ?? 'primary'],
-    task.category && task.category !== 'other' ? labelForTaskCategory(task.category) : null
+    tr(KIND_KICKER[task.kind ?? 'primary']),
+    task.category && task.category !== 'other'
+      ? labelForTaskCategory(task.category, opts.prefs.locale)
+      : null
   ]
     .filter(Boolean)
     .join(' · ');
 
-  const facts: CardFact[] = [{ label: 'When', value: whenText(task, status, opts) }];
-  if (ctx.where) facts.push({ label: 'Where', value: ctx.where, provenance: 'data' });
-  if (ctx.equipmentLabel) facts.push({ label: 'Equipment', value: ctx.equipmentLabel });
-  if (ctx.assignee?.trim()) facts.push({ label: 'Assigned to', value: ctx.assignee.trim() });
+  const facts: CardFact[] = [{ label: tr('cards.task.when'), value: whenText(task, status, opts) }];
+  if (ctx.where) facts.push({ label: tr('cards.task.where'), value: ctx.where, provenance: 'data' });
+  if (ctx.equipmentLabel) facts.push({ label: tr('cards.task.equipment'), value: ctx.equipmentLabel });
+  if (ctx.assignee?.trim())
+    facts.push({ label: tr('cards.task.assignedTo'), value: ctx.assignee.trim() });
   if (status === 'skipped' && task.abortReason?.trim())
-    facts.push({ label: 'Why skipped', value: task.abortReason.trim(), provenance: 'manual' });
+    facts.push({
+      label: tr('cards.task.whySkipped'),
+      value: task.abortReason.trim(),
+      provenance: 'manual'
+    });
 
   const sections: CardSection[] = [];
-  if (task.body?.trim()) sections.push({ title: 'Notes', items: [task.body.trim()] });
-  if (ctx.before?.length) sections.push({ title: 'Get ready', items: ctx.before });
-  if (ctx.after?.length) sections.push({ title: 'Follow-up', items: ctx.after });
+  if (task.body?.trim()) sections.push({ title: tr('cards.notes'), items: [task.body.trim()] });
+  if (ctx.before?.length) sections.push({ title: tr('cards.task.kind.pre'), items: ctx.before });
+  if (ctx.after?.length) sections.push({ title: tr('cards.task.kind.post'), items: ctx.after });
 
   const key = cardKey('task', task.id);
   return {
@@ -132,11 +147,18 @@ export function buildTaskCardFrom(
     facts,
     sections,
     asOf: ctx.asOf,
-    provenance: [provenanceFor(task)],
+    provenance: [provenanceFor(task, opts)],
     href: ctx.href ?? cardHref('task', key),
-    status: { id: status, label: TASK_STATUS_LABEL[status], tone: TASK_STATUS_TONE[status] },
+    status: { id: status, label: tr(`tasks.status.${status}`), tone: TASK_STATUS_TONE[status] },
     ...(task.cropId
-      ? { links: [{ label: PLANTING_CARE_LINK_LABEL, href: plantingCardHref(task.cropId) }] }
+      ? {
+          links: [
+            {
+              label: plantingCareLinkLabel(opts.prefs.locale),
+              href: plantingCardHref(task.cropId)
+            }
+          ]
+        }
       : {})
   };
 }
@@ -146,10 +168,7 @@ export function buildTaskCard(
   ctx: TaskCardContext,
   options: BuildOptions & { now: number }
 ): CardModel {
-  return buildTaskCardFrom(task, ctx, {
-    prefs: options.prefs ?? DEFAULT_PREFS,
-    now: options.now
-  });
+  return buildTaskCardFrom(task, ctx, resolvedFrom(options.prefs, options.now, options.locale));
 }
 
 /** An open task from the offline snapshot, for `/cards/task/tk_<id>`. */
@@ -164,7 +183,10 @@ export function buildTaskCardFromSnapshot(
   const planting = task.cropId ? snapshot.plantings.find((p) => p.id === task.cropId) : undefined;
   const blockId = task.blockId ?? planting?.blockId ?? null;
   const block = blockId ? snapshot.blocks.find((b) => b.id === blockId) : undefined;
-  const where = [planting?.varietyDisplayName, block && blockDisplayName(block)]
+  const where = [
+    planting && plantingName(planting, opts.prefs.locale),
+    block && blockDisplayName(block, opts.prefs.locale)
+  ]
     .filter(Boolean)
     .join(' · ');
   const equipment = task.equipmentId

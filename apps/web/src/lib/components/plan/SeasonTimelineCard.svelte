@@ -20,6 +20,7 @@
   import type { PlantingRecord } from '$lib/db/blocks';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { cropDisplayName } from '$lib/i18n/cropName';
 
   interface Props {
     plantings: PlantingRecord[];
@@ -166,10 +167,11 @@
 
   {#each plantings as p, i (p.id)}
     {@const ws = windowsFor(p)}
+    {@const shownName = cropDisplayName(p.cropPluginId, p.varietyDisplayName, page.data?.locale)}
     <div class="gantt-row" class:first={i === 0}>
-      <div class="gantt-label" title={p.varietyDisplayName}>
+      <div class="gantt-label" title={shownName}>
         <span class="swatch" style:background={plantingColor(p.id)}></span>
-        <span class="label-text">{p.varietyDisplayName.split(' ').slice(0, 3).join(' ')}</span>
+        <span class="label-text">{shownName.split(' ').slice(0, 3).join(' ')}</span>
       </div>
       <div class="gantt-track">
         <div class="today-line" style:left="{todayPct}%"></div>

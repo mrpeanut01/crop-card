@@ -12,6 +12,9 @@ export interface CareTip {
   text: string;
 }
 
+import { t, type MessageKey } from '$lib/i18n';
+import { enCards } from '$lib/i18n/catalogs/en/cards';
+
 export interface FamilyCareTips {
   label: string;
   water: CareTip[];
@@ -262,9 +265,29 @@ export const FAMILY_CARE_TIPS: Readonly<Record<string, FamilyCareTips>> = {
   }
 };
 
-export function familyCareTips(family: string | null | undefined): FamilyCareTips | null {
+function localTip(tip: CareTip, locale: string): CareTip {
+  const key = `cards.tip.${tip.id}` as MessageKey;
+  return key in enCards ? { ...tip, text: t(locale, key) } : tip;
+}
+
+/** A family's tips, in the app language when `locale` is given. */
+export function familyCareTips(
+  family: string | null | undefined,
+  locale?: string | null
+): FamilyCareTips | null {
   if (!family) return null;
-  return FAMILY_CARE_TIPS[family] ?? null;
+  const tips = FAMILY_CARE_TIPS[family];
+  if (!tips) return null;
+  if (!locale) return tips;
+  const tr = (items: CareTip[]) => items.map((tip) => localTip(tip, locale));
+  const labelKey = `cards.tipLabel.${family}` as MessageKey;
+  return {
+    label: labelKey in enCards ? t(locale, labelKey) : tips.label,
+    water: tr(tips.water),
+    feed: tr(tips.feed),
+    prune: tr(tips.prune),
+    problems: tr(tips.problems)
+  };
 }
 
 export function allCareTips(

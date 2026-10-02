@@ -78,9 +78,13 @@
   const card = $derived.by(() => {
     const built = buildAreaCard(snapshot, area.id, { prefs });
     if (!built) return null;
-    const housed = withHousing(built, housing, { petsLayout });
+    const housed = withHousing(built, housing, { petsLayout, locale: page.data?.locale });
     const held = { ...withGrazing(housed, grazing, prefs.timeZone), links: undefined };
-    return forage.decorate(withSnapshotCarryover(snapshot, area.id, held, { link: true }), area.id);
+    return forage.decorate(
+      withSnapshotCarryover(snapshot, area.id, held, { link: true, locale: page.data?.locale }),
+      area.id,
+      page.data?.locale
+    );
   });
   const forage = new ForageAdvisoryCache();
   $effect(() => {
@@ -96,7 +100,9 @@
   const speciesPlurals = $derived(
     Object.fromEntries((coopCtx?.().options ?? []).map((o) => [o.id, o.plural]))
   );
-  const summary = $derived(detailsSummary(area.kind, area.details, speciesNames, speciesPlurals));
+  const summary = $derived(
+    detailsSummary(area.kind, area.details, speciesNames, speciesPlurals, page.data?.locale)
+  );
 
   const blocks = $derived(snapshot.blocks.filter((b) => b.areaId === area.id));
   const blockById = $derived(new Map(blocks.map((b) => [b.id, b])));
@@ -346,7 +352,7 @@
                   {p.status === 'planned'
                     ? tr('farm.sheet.planned')
                     : tr('farm.sheet.growing')}{where(p.blockId)}{p.plantingDate
-                    ? ` · ${monthDay(p.plantingDate)}`
+                    ? ` · ${monthDay(p.plantingDate, page.data?.locale)}`
                     : ''}
                 </span>
               </li>
@@ -380,10 +386,10 @@
             <li>
               <span class="row-title">{p.varietyDisplayName}</span>
               <span class="row-meta">
-                {p.plantingDate ? monthDay(p.plantingDate) : tr('farm.sheet.undated')}{where(
-                  p.blockId
-                )}{p.harvestedAt
-                  ? ` · ${tr('farm.sheet.harvestedOn', { date: monthDay(p.harvestedAt) })}`
+                {p.plantingDate
+                  ? monthDay(p.plantingDate, page.data?.locale)
+                  : tr('farm.sheet.undated')}{where(p.blockId)}{p.harvestedAt
+                  ? ` · ${tr('farm.sheet.harvestedOn', { date: monthDay(p.harvestedAt, page.data?.locale) })}`
                   : ''}
               </span>
             </li>

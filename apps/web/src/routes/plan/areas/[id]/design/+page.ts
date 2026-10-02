@@ -2,9 +2,8 @@ import { browser } from '$app/environment';
 import { error, redirect } from '@sveltejs/kit';
 import type { DesignerPageData, GardenDesignResponse } from '$lib/garden/api';
 import { resolvePlanningYear, type PlanningFrost } from '$lib/season/planningYear';
+import { t } from '$lib/i18n';
 import type { PageLoad } from './$types';
-
-const NOT_DESIGNABLE = 'This Area has no garden designer. Only gardens and greenhouses do.';
 
 function seasonFrom(season: string | null, now: Date, frost: PlanningFrost | null): number {
   const asked = Number(season);
@@ -16,7 +15,8 @@ function seasonFrom(season: string | null, now: Date, frost: PlanningFrost | nul
 async function fromSnapshot(
   areaId: string,
   season: string | null,
-  role: string
+  role: string,
+  locale: string | null | undefined
 ): Promise<DesignerPageData> {
   const [{ loadSnapshot }, { designerDataFromSnapshot }] = await Promise.all([
     import('$lib/client/cardStore'),
@@ -24,10 +24,7 @@ async function fromSnapshot(
   ]);
   const row = await loadSnapshot().catch(() => null);
   if (!row) {
-    error(
-      503,
-      "You're offline, and this garden isn't saved on this device yet. Open it once with signal, or open your saved Cards."
-    );
+    error(503, t(locale, 'plan.design.offlineNotSaved'));
   }
   const frost = row.bundle.frost;
   const saved =
@@ -38,7 +35,7 @@ async function fromSnapshot(
     seasonYear: seasonFrom(season, new Date(), saved),
     role
   });
-  if (!data) error(404, "This garden isn't in the copy saved on this device.");
+  if (!data) error(404, t(locale, 'plan.design.notInCopy'));
   return data;
 }
 
@@ -58,14 +55,15 @@ export const load: PageLoad = async ({ fetch, params, url, parent }) => {
       res = null;
     }
   }
+  const locale = async () => (await parent()).locale;
   if (!res) {
-    if (!browser) error(503, "The garden designer didn't load. Try again.");
-    const { user } = await parent();
-    return fromSnapshot(params.id, season, user?.role ?? 'owner');
+    if (!browser) error(503, t(await locale(), 'plan.design.didNotLoad'));
+    const parentData = await parent();
+    return fromSnapshot(params.id, season, parentData.user?.role ?? 'owner', parentData.locale);
   }
   if (res.status === 401) redirect(303, '/');
-  if (res.status === 404) error(404, NOT_DESIGNABLE);
-  if (!res.ok) error(res.status, "The garden designer didn't load. Try again.");
+  if (res.status === 404) error(404, t(await locale(), 'plan.design.notDesignable'));
+  if (!res.ok) error(res.status, t(await locale(), 'plan.design.didNotLoad'));
   const body = (await res.json()) as GardenDesignResponse;
   return { ...body, offline: false } satisfies DesignerPageData;
 };

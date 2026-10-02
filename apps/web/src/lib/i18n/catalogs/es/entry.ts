@@ -483,6 +483,11 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'setup.spot.inside': 'Dentro de {name} ({kind})',
   'setup.spot.lede': 'Solo necesita un nombre. Puedes dibujarlo en el mapa después.',
   'setup.spot.length': 'Largo (pies)',
+  'setup.spot.ph.field': 'p. ej., Mitad norte',
+  'setup.spot.ph.garden': 'p. ej., Cama de tomates',
+  'setup.spot.ph.greenhouse': 'p. ej., Mesa 1',
+  'setup.spot.ph.orchard': 'p. ej., Hilera 1',
+  'setup.spot.ph.pasture': 'p. ej., Potrero de arriba',
   'setup.spot.phFallback': 'p. ej., Cama del fondo',
   'setup.spot.sizeHelp':
     'Los totales de aspersión y semilla lo usan. Mídelo a pasos o calcúlalo, en pies.',
@@ -547,10 +552,330 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
     'La IA estaba apagada o no disponible, así que se usó el valor predeterminado',
   'ui.prov.manual': 'Lo escribiste',
   'ui.prov.plugin': 'Plugin',
+  'ui.prov.pluginLong': 'De un complemento de cultivo, insumo o del núcleo de seguridad',
+  'ui.prov.manualLong': 'Lo ingresaste o editaste tú · el núcleo de seguridad lo sigue revisando',
   'ui.provLegend.title': 'De dónde viene este dato',
   'ui.queued.label': 'Se guardará cuando haya conexión',
   'ui.queued.title': 'Guardado en este dispositivo. Se sube cuando tengas señal.',
   'ui.update.later': 'Después',
   'ui.update.msg': 'Hay una versión nueva',
-  'ui.update.reload': 'Recargar'
+  'ui.update.reload': 'Recargar',
+  'signin.placeholderEmail': 'tu@ejemplo.com',
+  'signin.err.emailOrPhone': 'Escribe un correo electrónico o un número de teléfono.',
+  'signin.err.emailOrPhoneUs':
+    'Escribe un correo electrónico o un número de teléfono (en EE. UU. puedes omitir el +1).',
+  'signin.err.looksPhone':
+    'Eso parece un número de teléfono. Toca "Usar un número de teléfono" abajo.',
+  'signin.err.enterEmail': 'Escribe tu correo electrónico, por ejemplo tu@ejemplo.com.',
+  'signin.err.looksEmail':
+    'Eso parece un correo electrónico. Toca "Usar correo electrónico" abajo.',
+  'signin.err.enterMobile':
+    'Escribe un número de celular. En EE. UU. puedes omitir el +1, por ejemplo (571) 555-0123.',
+  'signin.err.validEmail': 'Escribe un correo electrónico válido.',
+  'signin.err.notConfigured': 'El inicio de sesión no está configurado en este servidor.',
+  'signin.err.emailSendFailed':
+    'No pudimos enviar el correo en este momento. Inténtalo de nuevo en un minuto.',
+  'signin.err.smsSendFailed':
+    'No pudimos enviar el mensaje de texto en este momento. Inténtalo de nuevo en un minuto o usa tu correo.',
+  'signin.err.startAgain': 'Empieza de nuevo con tu correo o tu número de teléfono.',
+  'signin.msg.linkSent':
+    'Si esa dirección puede iniciar sesión, ya va en camino un enlace para entrar. Vence en 15 minutos.',
+  'signin.msg.codeSent':
+    'Si ese número puede recibir mensajes de texto, ya va en camino un código de 6 dígitos. Vence en 10 minutos.',
+  'signin.code.invalid': 'Ese código no coincide. Revísalo e inténtalo de nuevo.',
+  'signin.code.expired': 'Ese código ya venció. Pide uno nuevo.',
+  'signin.code.tooManyAttempts': 'Demasiados intentos fallidos con ese código. Pide uno nuevo.',
+  'signin.link.inUse': 'Eso ya es el inicio de sesión de otra cuenta de CropCard.',
+  'signin.link.alreadyYours': 'Eso ya está en tu cuenta.',
+  'signin.link.rateLimited':
+    'Pediste demasiados códigos. Espera unos minutos e inténtalo de nuevo.',
+  'signin.link.emailFailed': 'No pudimos enviar el correo en este momento.',
+  'signin.link.textFailed': 'No pudimos enviar el mensaje de texto en este momento.',
+  'signin.link.lastIdentity':
+    'No puedes quitar tu única forma de iniciar sesión. Agrega la otra primero.',
+  'entry.unsub.err.invalid': 'Este enlace para cancelar la suscripción no es válido.',
+  'entry.unsub.err.notMember':
+    'Ya no estás en esta granja en CropCard, así que no se pueden activar sus alertas.',
+  'entry.unsub.err.pickOne': 'Elige al menos un correo para volver a activarlo.',
+  'entry.unsub.err.expired':
+    'Este enlace solo puede deshacer la cancelación durante unos minutos. Inicia sesión en CropCard y vuelve a activar las alertas en Configuración, Notificaciones.',
+  'onboard.frostConfirm.fallback':
+    'No encontramos una estación meteorológica a menos de 50 millas, así que estos son los promedios del condado de Loudoun. Compáralos con la oficina de extensión de tu condado, o consérvalos por ahora.',
+  'onboard.frostConfirm.frost-free':
+    'La estación más cercana casi nunca registra heladas. El calendario de siembra igual necesita una fecha de primavera y una de otoño, así que escribe las tuyas, o conserva por ahora los promedios del condado de Loudoun.',
+  'onboard.frostConfirm.missing':
+    'El calendario de siembra necesita una fecha de helada de primavera y una de otoño. Escríbelas, o conserva por ahora los promedios del condado de Loudoun.',
+  'entry.invite.someFarm': 'una granja de CropCard',
+  'entry.invite.noLongerValid': 'la invitación ya no es válida',
+  'entry.demo.blocked':
+    'No está disponible en la demo. Regístrate con tu correo para usarlo en tu propia granja.',
+  'entry.demoFarm.s.farmhouse': 'Casa de la granja',
+  'entry.demoFarm.s.bankBarn': 'Granero de ladera',
+  'entry.demoFarm.s.lockedPesticideCabinetOnTheLower':
+    'Gabinete de pesticidas con llave en el nivel inferior, pared este.',
+  'entry.demoFarm.s.chickenCoop': 'Gallinero',
+  'entry.demoFarm.s.kitchenGarden': 'Huerto familiar',
+  'entry.demoFarm.s.highTunnel': 'Túnel alto',
+  'entry.demoFarm.s.homeOrchard': 'Huerto frutal',
+  'entry.demoFarm.s.goatPasture': 'Potrero de cabras',
+  'entry.demoFarm.s.lowerHayMeadow': 'Prado de heno bajo',
+  'entry.demoFarm.s.northField': 'Campo norte',
+  'entry.demoFarm.s.cornSoybeanAndWheatRotationTile':
+    'Rotación de maíz, soya y trigo. Salida del drenaje en la esquina NE.',
+  'entry.demoFarm.s.hayMeadow': 'Prado de heno',
+  'entry.demoFarm.s.tunnelEastBed': 'Cama este del túnel',
+  'entry.demoFarm.s.tunnelWestBed': 'Cama oeste del túnel',
+  'entry.demoFarm.s.appleRow': 'Hilera de manzanos',
+  'entry.demoFarm.s.peachRow': 'Hilera de durazneros',
+  'entry.demoFarm.s.theHayMeadow': 'el prado de heno',
+  'entry.demoFarm.s.theTunnelEastBed': 'la cama este del túnel',
+  'entry.demoFarm.s.theTunnelWestBed': 'la cama oeste del túnel',
+  'entry.demoFarm.s.theAppleRow': 'la hilera de manzanos',
+  'entry.demoFarm.s.thePeachRow': 'la hilera de durazneros',
+  'entry.demoFarm.s.3072FtGothicTunnelSingle':
+    'Túnel gótico de 30 × 72 ft, plástico sencillo, laterales enrollables.',
+  'entry.demoFarm.s.kubotaL3901BoughtUsedIn2019':
+    'Kubota L3901, comprado usado en 2019. Fluido UDT 10W-30.',
+  'entry.demoFarm.s.teejetXr11003TipsRinseTankAfter':
+    'Boquillas TeeJet XR11003. Enjuagar el tanque después de cada carga.',
+  'entry.demoFarm.s.gardenAndTunnelOnlyFlatFan':
+    'Solo para el huerto y el túnel. Boquilla de abanico plano para fungicidas.',
+  'entry.demoFarm.s.orchardHandgunCopperAndCaptanOnly':
+    'Pistola manual para el huerto frutal. Solo cobre y captan.',
+  'entry.demoFarm.s.cornAndBeanPlatesInThe': 'Platos para maíz y frijol en el granero.',
+  'entry.demoFarm.s.wheatAndCoverCrops': 'Trigo y cultivos de cobertura.',
+  'entry.demoFarm.s.spareShearBoltsInTheToolbox':
+    'Pernos de seguridad de repuesto en la caja de herramientas.',
+  'entry.demoFarm.s.engineOilFiltersAndUdtFluid':
+    'Cambio de aceite de motor, filtros y fluido UDT a las 1,210 horas.',
+  'entry.demoFarm.s.knottersTimedNewTwineKnives':
+    'Anudadores sincronizados, cuchillas de hilo nuevas.',
+  'entry.demoFarm.s.stackedInTheBankBarnLoft': 'Apilado en el altillo del granero de ladera.',
+  'entry.demoFarm.s.lambsquartersAndAFewGiantRagweed':
+    'Quelite cenizo y algunas plantas de ambrosía gigante que escaparon en el extremo sur.',
+  'entry.demoFarm.s.shotHoleFeedingOnAHandful':
+    'Daño de perforaciones en unas pocas plantas. Por debajo del umbral.',
+  'entry.demoFarm.s.waterhempFlushingAlongTheFenceRow':
+    'Emergencia de amaranto acuático a lo largo de la cerca.',
+  'entry.demoFarm.s.lowerCanopyOnlyFlagLeafClean':
+    'Solo en el follaje inferior. Hoja bandera limpia.',
+  'entry.demoFarm.s.twoHornwormsHandPickedFrassOn':
+    'Dos gusanos cornudos retirados a mano. Excremento en las hojas inferiores.',
+  'entry.demoFarm.s.eggClustersScrapedOffTheLeaf':
+    'Masas de huevos raspadas del envés de las hojas.',
+  'entry.demoFarm.s.weeklyWalkNothingAtThresholdYet':
+    'Recorrido semanal. Nada llega al umbral todavía.',
+  'entry.demoFarm.s.ranBothDripZonesTomatoesWere':
+    'Se regaron ambas zonas de goteo. Los tomates estaban marchitos al mediodía.',
+  'entry.demoFarm.s.doubleRowCoverInsideTheTunnel':
+    'Doble cubierta flotante dentro del túnel esta noche, pronóstico de mínima de 14°F.',
+  'entry.demoFarm.s.firstRipeCherokeePurplesSomeCracking':
+    'Primeros Cherokee Purple maduros. Algunas grietas en los hombros después de la lluvia fuerte.',
+  'entry.demoFarm.s.goodGerminationUnderTheBoardThinned':
+    'Buena germinación bajo la tabla. Raleado a 2 in.',
+  'entry.demoFarm.s.plantedTheBiggestCloves6In':
+    'Se plantaron los dientes más grandes a 6 in de distancia, con acolchado de paja.',
+  'entry.demoFarm.s.rowCoverOnForTheCold':
+    'Cubierta flotante puesta por la ola de frío. Antes se aclimataron una semana en el porche.',
+  'entry.demoFarm.s.setOut8CherokeePurpleOn':
+    'Se trasplantaron 8 Cherokee Purple en la línea de goteo, con tutores y regados. Tallos enterrados hasta las primeras hojas verdaderas.',
+  'entry.demoFarm.s.sunGoldsAreSplittingAfterRain':
+    'Los Sun Gold se están rajando después de la lluvia. Cosechando cada pocos días en la etapa naranja.',
+  'entry.demoFarm.s.basementGrowShelf': 'Estante de cultivo del sótano',
+  'entry.demoFarm.s.labRecommends1TonAcAg':
+    'El laboratorio recomienda 1 ton/ac de cal agrícola antes del maíz.',
+  'entry.demoFarm.s.yearsOfCompostShowSkipP':
+    'Se notan los años de composta. Omite el P por una temporada.',
+  'entry.demoFarm.s.lotReceived': 'lote recibido',
+  'entry.demoFarm.s.openedABag': 'Se abrió una bolsa',
+  'entry.demoFarm.s.order48213ShippingThisWeek': 'Pedido #48213, se envía esta semana.',
+  'entry.demoFarm.s.forFallPlanting': 'Para la siembra de otoño.',
+  'entry.demoFarm.s.drEllenMarshFictional': 'Dra. Ellen Marsh (ficticia)',
+  'entry.demoFarm.s.largeAnimalVet': 'Veterinaria de animales grandes',
+  'entry.demoFarm.s.loudounExtensionOfficeFictional': 'Oficina de Extensión de Loudoun (ficticia)',
+  'entry.demoFarm.s.agronomyQuestions': 'Preguntas de agronomía',
+  'entry.demoFarm.s.ridgeRoadCoOpFictional': 'Cooperativa Ridge Road (ficticia)',
+  'entry.demoFarm.s.fuelAndFertilizer': 'Combustible y fertilizante',
+  'entry.demoFarm.s.goatPastureWovenWireFence': 'Cerca de malla del potrero de cabras',
+  'entry.demoFarm.s.pastureGate': 'Puerta del potrero',
+  'entry.demoFarm.s.barnyardFrostFreeHydrant': 'Hidrante antiheladas del corral',
+  'entry.demoFarm.s.barnWell': 'Pozo del granero',
+  'entry.demoFarm.s.gardenDripMain': 'Línea principal de goteo del huerto',
+  'entry.demoFarm.s.farmLane': 'Camino de la granja',
+  'entry.demoFarm.s.layingFlock': 'Bandada de postura',
+  'entry.demoFarm.s.buffOrpingtonsAustralorpsAndAFew':
+    'Buff Orpington, Australorp y algunas Easter Egger. Se encierran al anochecer.',
+  'entry.demoFarm.s.dairyGoats': 'Cabras lecheras',
+  'entry.demoFarm.s.milkedOnceADayAt7':
+    'Se ordeñan una vez al día a las 7. Rotan entre los potreros este y oeste.',
+  'entry.demoFarm.s.australianShepherdMix': 'Mestizo de pastor australiano',
+  'entry.demoFarm.s.2CupsKibbleMorningAndEvening':
+    '2 tazas de croquetas en la mañana y en la tarde. Nada de huesos de pollo.',
+  'entry.demoFarm.s.demoVisitor': 'Visitante de la demo',
+  'entry.demoFarm.s.flockHealthCheckMitesCropsAnd':
+    'Revisión de salud de la bandada: ácaros, buches y cloacas',
+  'entry.demoFarm.s.trimGoatHooves': 'Recortar pezuñas de las cabras',
+  'entry.demoFarm.s.famachaCheckDewormOnlyTheAnemic':
+    'Revisión FAMACHA, desparasitar solo a las cabras anémicas',
+  'entry.demoFarm.s.cdTBooster': 'Refuerzo de CD&T',
+  'entry.demoFarm.s.bathAndNailTrimForBiscuit': 'Baño y corte de uñas para Biscuit',
+  'entry.demoFarm.s.rabiesBooster3Year': 'Refuerzo de rabia (3 años)',
+  'entry.demoFarm.s.blowOutTheDripLinesBefore':
+    'Purgar las líneas de goteo antes de la primera helada',
+  'entry.demoFarm.s.calibrateTheBoomSprayer1128':
+    'Calibrar la aspersora de botalón (método de 1/128 de acre)',
+  'entry.demoFarm.s.checkSoilMoistureInTheGarden':
+    'Revisar la humedad del suelo en las camas del huerto antes de regar',
+  'entry.demoFarm.s.checkStoredSquashAndGarlicFor':
+    'Revisar si la calabaza y el ajo almacenados tienen partes blandas',
+  'entry.demoFarm.s.checkTheBalerKnottersAndTwine':
+    'Revisar los anudadores y el hilo de la empacadora',
+  'entry.demoFarm.s.checkTheDripLinesForLeaks': 'Revisar si las líneas de goteo tienen fugas',
+  'entry.demoFarm.s.checkTheFenceChargerAndGoat':
+    'Revisar el energizador de la cerca y el bebedero de las cabras',
+  'entry.demoFarm.s.cleanAndSanitizeTheSeedStarting':
+    'Limpiar y desinfectar las bandejas de germinación',
+  'entry.demoFarm.s.cleanOutTheCoopAndAdd': 'Limpiar el gallinero y poner cama nueva',
+  'entry.demoFarm.s.closeOutTheSeason': 'Cerrar la temporada',
+  'entry.demoFarm.s.collectEggsAndLogTheCount': 'Recoger los huevos y anotar la cantidad',
+  'entry.demoFarm.s.drainAndCoilTheGardenHoses': 'Vaciar y enrollar las mangueras del huerto',
+  'entry.demoFarm.s.flushTheBoomSprayerAndCheck':
+    'Enjuagar la aspersora de botalón y revisar cada boquilla',
+  'entry.demoFarm.s.greaseThePlanterChains': 'Engrasar las cadenas de la sembradora',
+  'entry.demoFarm.s.greaseTheTractorAndCheckFluids': 'Engrasar el tractor y revisar los fluidos',
+  'entry.demoFarm.s.inventorySprayProductsAndNoteLot':
+    'Hacer inventario de los productos de aplicación y anotar los números de lote',
+  'entry.demoFarm.s.layDripTapeInTheKitchen': 'Tender cinta de goteo en el huerto familiar',
+  'entry.demoFarm.s.moveTheGoatsToTheEast': 'Mover las cabras al potrero este',
+  'entry.demoFarm.s.mowTheFieldEdgesAndFence': 'Segar las orillas del campo y las cercas',
+  'entry.demoFarm.s.mowTheOrchardAisles': 'Segar los pasillos del huerto frutal',
+  'entry.demoFarm.s.patchThePastureFenceWhereThe':
+    'Reparar la cerca del potrero por donde pasaron los venados',
+  'entry.demoFarm.s.pickUpDroppedApplesUnderThe': 'Recoger las manzanas caídas bajo los árboles',
+  'entry.demoFarm.s.placeTheSeedOrderForNext':
+    'Hacer el pedido de semillas para la próxima temporada',
+  'entry.demoFarm.s.pruneTheHoneycrispTrees': 'Podar los manzanos Honeycrisp',
+  'entry.demoFarm.s.pullSoilSamplesFromTheGarden':
+    'Tomar muestras de suelo del huerto y del Campo norte',
+  'entry.demoFarm.s.pullSpentTomatoVinesAndBag':
+    'Arrancar las matas de tomate agotadas y embolsar las hojas',
+  'entry.demoFarm.s.pullSuckersOnTheTunnelTomatoes': 'Quitar los chupones de los tomates del túnel',
+  'entry.demoFarm.s.replaceTheBackpackSprayerSeals':
+    'Cambiar los sellos de la aspersora de mochila',
+  'entry.demoFarm.s.restockTheFirstAidKitIn': 'Reabastecer el botiquín del granero',
+  'entry.demoFarm.s.rollUpTheTunnelSidesOn': 'Subir los laterales del túnel en las tardes cálidas',
+  'entry.demoFarm.s.rollCrimpTheCerealRyeAhead': 'Rolar y aplastar el centeno antes de la soya',
+  'entry.demoFarm.s.scoutTheKitchenGardenForPests':
+    'Monitorear plagas y enfermedades en el huerto familiar',
+  'entry.demoFarm.s.setUpTheTomatoTrellisIn': 'Armar el enrejado de tomates en la Cama 1',
+  'entry.demoFarm.s.sharpenTheDiscMowerKnives': 'Afilar las cuchillas de la segadora de discos',
+  'entry.demoFarm.s.snapGarlicScapesInBed6': 'Quitar los escapos del ajo en la Cama 6',
+  'entry.demoFarm.s.topUpStrawMulchInThe':
+    'Reponer el acolchado de paja en los pasillos del huerto',
+  'entry.demoFarm.s.turnTheCompostPile': 'Voltear la pila de composta',
+  'entry.demoFarm.s.ventTheHighTunnelIfIt': 'Ventilar el túnel alto si pasa de 80°F',
+  'entry.demoFarm.s.walkTheNorthFieldAndGarden': 'Recorrer el Campo norte y el huerto',
+  'entry.demoFarm.s.walkTheTunnelAndOrchard': 'Recorrer el túnel y el huerto frutal',
+  'entry.demoFarm.s.winterizeTheBoomSprayer': 'Preparar para el invierno la aspersora de botalón',
+  'entry.demoFarm.s.checkGrainMoistureBeforeRunningThe':
+    'Revisa la humedad del grano antes de usar la cosechadora.',
+  'entry.demoFarm.s.checkWhatIsLeftOnInventory': 'Primero revisa lo que queda en /inventory.',
+  'entry.demoFarm.s.logTheCountOnTheLaying':
+    'Anota la cantidad en la página de la Bandada de postura para que el registro de huevos esté completo.',
+  'entry.demoFarm.s.needsThreeDryDaysCheckThe':
+    'Necesita tres días secos. Revisa el pronóstico para heno antes de segar.',
+  'entry.demoFarm.s.noteWeedsPestsAndAnythingAt':
+    'Anota malezas, plagas y todo lo que llegue al umbral en /scout.',
+  'entry.demoFarm.s.pullAnythingSoftBeforeItSpreads':
+    'Retira lo que esté blando antes de que se pase al resto de la caja.',
+  'entry.demoFarm.s.pullScapesOnceTheyCurlSo':
+    'Quita los escapos cuando se enrosquen para que los bulbos engorden.',
+  'entry.demoFarm.s.pushAFinger2InDown':
+    'Mete un dedo 2 in; riega solo las camas que estén secas a esa profundidad.',
+  'entry.demoFarm.s.rollTheSidesUpAFoot':
+    'Sube los laterales un pie al mediodía y ciérralos antes de las 3 pm.',
+  'entry.demoFarm.s.rotateBeforeTheWestSideIs':
+    'Rota antes de que el lado oeste quede pastoreado por debajo de 4 in.',
+  'entry.demoFarm.s.runTheSeasonCloseOutFrom':
+    'Haz el cierre de temporada desde /records cuando entre la última cosecha.',
+  'entry.demoFarm.s.turnLeavesOnTheTomatoesAnd':
+    'Voltea las hojas de los tomates y las calabazas; anota todo lo que llegue al umbral en /scout.',
+  'entry.demoFarm.s.waitForAnthesisPollenSheddingSo':
+    'Espera a la antesis (liberación de polen) para que no se vuelva a levantar.',
+  'entry.demoFarm.s.europeanCornBorer': 'barrenador europeo del maíz',
+  'entry.demoFarm.s.mexicanBeanBeetle': 'conchuela del frijol',
+  'entry.demoFarm.s.aphids': 'pulgones',
+  'entry.demoFarm.s.broadleafWeeds': 'malezas de hoja ancha',
+  'entry.demoFarm.s.brownMarmoratedStinkBug': 'chinche apestosa marrón marmolada',
+  'entry.demoFarm.s.cerealLeafBeetle': 'escarabajo de la hoja de los cereales',
+  'entry.demoFarm.s.greenPeachAphid': 'pulgón verde del durazno',
+  'entry.demoFarm.s.importedCabbageworm': 'gusano importado de la col',
+  'entry.demoFarm.s.onionThrips': 'trips de la cebolla',
+  'entry.demoFarm.s.powderyMildew': 'oídio',
+  'entry.demoFarm.s.squashBug': 'chinche de la calabaza',
+  'entry.demoFarm.s.tomatoHornworm': 'gusano cornudo del tomate',
+  'entry.demoFarm.s.waterhemp': 'amaranto acuático',
+  'entry.demoFarm.s.appleScab': 'sarna del manzano',
+  'entry.demoFarm.s.bacterialSpot': 'mancha bacteriana',
+  'entry.demoFarm.s.earlyBlight': 'tizón temprano',
+  'entry.demoFarm.s.fireBlight': 'tizón de fuego',
+  'entry.demoFarm.s.peachLeafCurl': 'torque del durazno',
+  'entry.demoFarm.s.pioneerP1257amFieldCorn': 'Maíz de grano Pioneer P1257AM',
+  'entry.demoFarm.s.asgrowAg38x8Soybeans': 'Soya Asgrow AG38X8',
+  'entry.demoFarm.s.hilliardSoftRedWinterWheat': 'Trigo rojo suave de invierno Hilliard',
+  'entry.demoFarm.s.aroostookCerealRyeCover': 'Cobertura de centeno Aroostook',
+  'entry.demoFarm.s.sunGoldCherryTomato': 'Tomate cherry Sun Gold',
+  'entry.demoFarm.s.californiaWonderBellPepper': 'Pimiento morrón California Wonder',
+  'entry.demoFarm.s.earlyJalapeO': 'Jalapeño Early',
+  'entry.demoFarm.s.buttercrunchLettuce': 'Lechuga Buttercrunch',
+  'entry.demoFarm.s.redSailsLettuceFallSuccession': 'Lechuga Red Sails (sucesión de otoño)',
+  'entry.demoFarm.s.providerBushBean': 'Frijol de mata Provider',
+  'entry.demoFarm.s.blackBeautyZucchini': 'Calabacita Black Beauty',
+  'entry.demoFarm.s.walthamButternut': 'Calabaza butternut Waltham',
+  'entry.demoFarm.s.musicHardneckGarlic': 'Ajo de cuello duro Music',
+  'entry.demoFarm.s.genoveseBasil': 'Albahaca Genovese',
+  'entry.demoFarm.s.scarletNantesCarrot': 'Zanahoria Scarlet Nantes',
+  'entry.demoFarm.s.lacinatoDinosaurKale': 'Col rizada Lacinato (dinosaurio)',
+  'entry.demoFarm.s.julietGrapeTomato': 'Tomate uva Juliet',
+  'entry.demoFarm.s.marketmore76Cucumber': 'Pepino Marketmore 76',
+  'entry.demoFarm.s.bloomsdaleLongStandingSpinach': 'Espinaca Bloomsdale Long Standing',
+  'entry.demoFarm.s.honeycrispAppleOnG41': 'Manzana Honeycrisp sobre G.41',
+  'entry.demoFarm.s.redhavenPeach': 'Durazno Redhaven',
+  'entry.demoFarm.s.potomacOrchardgrassHay': 'Heno de pasto ovillo Potomac',
+  'entry.demoFarm.s.leesburgFarmersMarketTomatoesPeppersGreens':
+    'Mercado de agricultores de Leesburg: tomates, chiles, verduras de hoja',
+  'entry.demoFarm.s.dripTapeFittingsAndRowCover': 'Cinta de goteo, conexiones y cubierta flotante',
+  'entry.demoFarm.s.balerKnotterRebuild': 'Reconstrucción del anudador de la empacadora',
+  'entry.demoFarm.s.marketGarden': 'Huerto comercial',
+  'entry.demoFarm.s.grain': 'Granos',
+  'entry.demoFarm.s.hay': 'Heno',
+  'entry.demoFarm.s.corn': 'maíz',
+  'entry.demoFarm.s.soybean': 'soya',
+  'entry.demoFarm.s.wheat': 'trigo',
+  'entry.demoFarm.s.1st': '1.er',
+  'entry.demoFarm.s.2nd': '2.º',
+  'entry.demoFarm.s.3rd': '3.er',
+  'entry.demoFarm.s.4th': '4.º',
+  'entry.demoFarm.s.5th': '5.º',
+  'entry.demoFarm.p.bed': 'Cama {n}',
+  'entry.demoFarm.p.northField': 'Campo norte {letter}',
+  'entry.demoFarm.p.spray': 'Aplicar {product} en {target}',
+  'entry.demoFarm.p.sprayDone': 'Aplicar {product}',
+  'entry.demoFarm.p.sprayTarget': 'Objetivo: {pest}.',
+  'entry.demoFarm.p.apply': 'Aplicar {product} en {place}',
+  'entry.demoFarm.p.scout': 'Monitorear {pest} en {crop}',
+  'entry.demoFarm.p.pick': 'Cosechar {crop}',
+  'entry.demoFarm.p.harvest': 'Cosechar {crop}',
+  'entry.demoFarm.p.terminate': 'Terminar {crop} en {place}',
+  'entry.demoFarm.p.sow': 'Sembrar {crop} bajo techo',
+  'entry.demoFarm.p.harden': 'Empezar a aclimatar {crop}',
+  'entry.demoFarm.p.transplant': 'Trasplantar {crop} a {place}',
+  'entry.demoFarm.p.plant': 'Sembrar {crop} en {place}',
+  'entry.demoFarm.p.planted': 'Se sembró {crop}',
+  'entry.demoFarm.p.cutHay': 'Cortar heno: {nth} corte',
+  'entry.demoFarm.p.tray': '{name}, {cells} celdas',
+  'entry.demoFarm.p.eggs': '{count} docenas de huevos, puesto de la granja',
+  'entry.demoFarm.p.grain': '{amount} bu de {crop} al elevador de Purcellville',
+  'entry.demoFarm.p.hayBales': '{count} pacas pequeñas, {nth} corte',
+  'entry.demoFarm.p.diesel': 'Diésel agrícola, {amount} gal'
 };

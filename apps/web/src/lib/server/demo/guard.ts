@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 
 /** Writes a demo visitor may not make: anything that reaches past the
  *  throwaway farm (email, texts, push, payments, API tokens, invites,
@@ -40,15 +41,20 @@ export function demoBlocksWrite(method: string, pathname: string): boolean {
 /** The refusal, shaped for whoever asked: a form action submitted with
  *  `use:enhance` gets an action failure the page shows as `form.error`;
  *  everything else gets JSON. */
-export function demoBlockedResponse(pathname: string, isActionRequest: boolean): Response {
+export function demoBlockedResponse(
+  pathname: string,
+  isActionRequest: boolean,
+  locale?: string | null
+): Response {
+  const message = locale ? t(locale, 'entry.demo.blocked') : DEMO_BLOCKED_MESSAGE;
   if (isActionRequest && !pathname.startsWith('/api/')) {
     return json(
-      { type: 'failure', status: 403, data: JSON.stringify([{ error: 1 }, DEMO_BLOCKED_MESSAGE]) },
+      { type: 'failure', status: 403, data: JSON.stringify([{ error: 1 }, message]) },
       { headers: { 'cache-control': 'no-store' } }
     );
   }
   return json(
-    { error: DEMO_BLOCKED_MESSAGE, message: DEMO_BLOCKED_MESSAGE, code: 'DEMO_DISABLED' },
+    { error: message, message, code: 'DEMO_DISABLED' },
     { status: 403, headers: { 'cache-control': 'no-store' } }
   );
 }

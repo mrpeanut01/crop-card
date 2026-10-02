@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import type { CropPlugin } from '$lib/plugins/schemas';
   import { seedStockUnit, seedsToPlants } from '$lib/seed/quantity';
 
@@ -50,6 +52,7 @@
   // from the prop, then user edits independently. Modal is not reused across
   // different stock items (parent re-mounts via {#if activeSeedModal}).
   let quantity = $state(stock.onHand);
+  const tr = $derived(createT(page.data?.locale));
 
   const stepOptions = $derived(stepFor(stock.defaultUnit));
 
@@ -115,19 +118,23 @@
         >
         {stock.displayName}
       </h2>
-      <button class="qm-close" type="button" aria-label="Close" onclick={onClose}>✕</button>
+      <button class="qm-close" type="button" aria-label={tr('planui.qty.close')} onclick={onClose}
+        >✕</button
+      >
     </div>
 
     <div class="qm-body">
-      <p class="qm-onhand">On hand: <strong>{stock.onHand} {stock.defaultUnit}</strong></p>
+      <p class="qm-onhand">
+        {tr('planui.qty.onHand')} <strong>{stock.onHand} {stock.defaultUnit}</strong>
+      </p>
 
-      <label class="qm-label" for="qm-input">How much to plant?</label>
+      <label class="qm-label" for="qm-input">{tr('planui.qty.howMuch')}</label>
       <div class="qm-input-row">
         <button
           type="button"
           class="qm-step"
           onclick={() => bump(-stepOptions.coarse)}
-          aria-label="Decrease by {stepOptions.coarse}"
+          aria-label={tr('planui.qty.decrease', { n: stepOptions.coarse })}
         >
           −−
         </button>
@@ -135,7 +142,7 @@
           type="button"
           class="qm-step"
           onclick={() => bump(-stepOptions.fine)}
-          aria-label="Decrease by {stepOptions.fine}"
+          aria-label={tr('planui.qty.decrease', { n: stepOptions.fine })}
         >
           −
         </button>
@@ -154,7 +161,7 @@
           type="button"
           class="qm-step"
           onclick={() => bump(stepOptions.fine)}
-          aria-label="Increase by {stepOptions.fine}"
+          aria-label={tr('planui.qty.increase', { n: stepOptions.fine })}
         >
           +
         </button>
@@ -162,21 +169,24 @@
           type="button"
           class="qm-step"
           onclick={() => bump(stepOptions.coarse)}
-          aria-label="Increase by {stepOptions.coarse}"
+          aria-label={tr('planui.qty.increase', { n: stepOptions.coarse })}
         >
           ++
         </button>
       </div>
 
       {#if plantEquivalent !== null}
-        <p class="qm-plants">≈ <strong>{plantEquivalent.toLocaleString()}</strong> plants</p>
+        <p class="qm-plants">
+          ≈ <strong>{plantEquivalent.toLocaleString()}</strong>
+          {tr('planui.qty.plants')}
+        </p>
       {/if}
     </div>
 
     <div class="qm-footer">
-      <button type="button" class="qm-cancel" onclick={onClose}>Cancel</button>
+      <button type="button" class="qm-cancel" onclick={onClose}>{tr('planui.qty.cancel')}</button>
       <button type="button" class="qm-confirm" onclick={commit} disabled={quantity <= 0}>
-        Add to plan
+        {tr('planui.qty.add')}
       </button>
     </div>
   </div>

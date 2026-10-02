@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { BrowserMultiFormatReader, type Result } from '@zxing/library';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   let {
     onDetected,
@@ -9,6 +11,7 @@
     onDetected: (rawValue: string, format: string) => void;
     onClose: () => void;
   } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let videoEl: HTMLVideoElement | undefined = $state();
   let stream: MediaStream | undefined;
@@ -60,8 +63,8 @@
     } catch (e) {
       error =
         e instanceof Error && e.name === 'NotAllowedError'
-          ? 'Camera permission denied. Please allow camera access and try again.'
-          : 'Could not access camera.';
+          ? tr('stockui.cam.deniedRetry')
+          : tr('stockui.cam.noAccess');
     }
   }
 
@@ -121,11 +124,18 @@
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
-<div class="scanner-backdrop" role="dialog" aria-modal="true" aria-label="Scan barcode">
+<div
+  class="scanner-backdrop"
+  role="dialog"
+  aria-modal="true"
+  aria-label={tr('inv.add.method.barcode')}
+>
   <div class="scanner-modal">
     <div class="scanner-header">
-      <span class="scanner-title">Scan barcode</span>
-      <button class="close-btn" onclick={onClose} aria-label="Close scanner">✕</button>
+      <span class="scanner-title">{tr('inv.add.method.barcode')}</span>
+      <button class="close-btn" onclick={onClose} aria-label={tr('stockui.cam.closeScanner')}
+        >✕</button
+      >
     </div>
 
     <div class="viewfinder-wrap">
@@ -137,7 +147,7 @@
         </div>
       {/if}
       {#if status === 'starting'}
-        <div class="status-msg">Starting camera…</div>
+        <div class="status-msg">{tr('stockui.cam.starting')}</div>
       {/if}
       {#if error}
         <div class="status-msg error-msg">{error}</div>
@@ -145,11 +155,11 @@
     </div>
 
     {#if status === 'scanning'}
-      <p class="hint">Point camera at a UPC, EAN, or QR barcode on the product packaging.</p>
+      <p class="hint">{tr('stockui.cam.barcodeHint')}</p>
     {/if}
 
     <div class="scanner-footer">
-      <button class="secondary" onclick={onClose}>Cancel</button>
+      <button class="secondary" onclick={onClose}>{tr('inv.cancel')}</button>
     </div>
   </div>
 </div>

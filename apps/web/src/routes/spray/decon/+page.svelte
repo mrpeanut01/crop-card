@@ -2,8 +2,10 @@
   import { onDestroy, untrack } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   let selectedSprayerId = $state(untrack(() => data.sprayer?.id ?? data.sprayers[0]?.id ?? ''));
   const sprayer = $derived(data.sprayers.find((s) => s.id === selectedSprayerId));
@@ -149,20 +151,19 @@
   }
 </script>
 
-<h1>Sprayer decontamination</h1>
+<h1>{tr('sprayui.dc.title')}</h1>
 <p class="lede">
   Clean the sprayer before it carries a different chemistry. Confirm each step to unlock the next.
   The app times the 30-minute ammonia soak.
 </p>
 {#if !data.canRecord}
   <p class="ask-owner" role="note" data-testid="decon-ask-owner">
-    Decon due. Only the owner can record it. You can follow the steps here, then ask the owner to
-    record the decon so the sprayer is cleared.
+    {tr('sprayui.dc.askOwner')}
   </p>
 {/if}
 
 <section class="step">
-  <h2>Sprayer</h2>
+  <h2>{tr('sprayui.dc.sprayer')}</h2>
   <select bind:value={selectedSprayerId}>
     {#each data.sprayers as s (s.id)}
       <option value={s.id}>{s.label}</option>
@@ -170,14 +171,15 @@
   </select>
   {#if sprayer?.lastChemistryClass}
     <p class="warn">
-      Last carried: <strong>{sprayer.lastChemistryClass}</strong> at
-      {sprayer.lastSprayedAt ? fmt.instant(sprayer.lastSprayedAt) : 'unknown'}
+      {tr('sprayui.dc.lastCarried')} <strong>{sprayer.lastChemistryClass}</strong>
+      {tr('sprayui.dc.at')}
+      {sprayer.lastSprayedAt ? fmt.instant(sprayer.lastSprayedAt) : tr('sprayui.dc.unknown')}
     </p>
   {/if}
 
   {#if !completed && data.canRecord}
     <details class="quick-mark">
-      <summary>Already cleaned the sprayer? Mark it clean now.</summary>
+      <summary>{tr('sprayui.dc.alreadyClean')}</summary>
       <p class="hint">
         Use this if the decon was done outside the app (or you've completed it before and just need
         to update state). Records a decon timestamp without walking through the per-step wizard. The
@@ -189,7 +191,7 @@
         onclick={complete}
         disabled={submitting || !sprayer}
       >
-        {submitting ? 'Marking…' : 'Mark sprayer clean now'}
+        {submitting ? tr('sprayui.dc.marking') : tr('sprayui.dc.markClean')}
       </button>
     </details>
   {/if}
@@ -197,16 +199,20 @@
 
 {#if helperFinished}
   <section class="step success" data-testid="decon-helper-done">
-    <h2>Steps done</h2>
+    <h2>{tr('sprayui.dc.stepsDone')}</h2>
     <p>
-      Tell the owner the decon on <strong>{sprayer?.label ?? 'this sprayer'}</strong> is finished so they
-      can record it. The sprayer stays flagged until they do.
+      {tr('sprayui.dc.tellOwner', { sprayer: sprayer?.label ?? tr('sprayui.dc.thisSprayer') })}
     </p>
-    <button type="button" class="primary" onclick={() => goto('/today')}>Back to Today</button>
+    <button type="button" class="primary" onclick={() => goto('/today')}
+      >{tr('sprayui.dc.backToday')}</button
+    >
   </section>
 {:else if !completed}
   <section class="step">
-    <h2>Step {stepIndex + 1} of {STEPS.length}: {currentStep.title}</h2>
+    <h2>
+      {tr('sprayui.dc.stepOf', { n: stepIndex + 1, total: STEPS.length })}
+      {currentStep.title}
+    </h2>
     <p>{currentStep.body}</p>
     {#if currentStep.metricNote && currentPrefs().units === 'metric'}
       <p class="hint">({currentStep.metricNote()})</p>
@@ -216,7 +222,7 @@
       {#if !timerStartedAt && !timerSkipped}
         <div class="timer-actions">
           <button type="button" class="primary" onclick={startTimer}>
-            Start 30-minute timer
+            {tr('sprayui.dc.startTimer')}
           </button>
           <button
             type="button"
@@ -252,15 +258,17 @@
     {/if}
 
     <div class="actions">
-      <button type="button" onclick={back} disabled={stepIndex === 0}>← Back</button>
+      <button type="button" onclick={back} disabled={stepIndex === 0}
+        >{tr('sprayui.dc.back')}</button
+      >
       <button type="button" class="primary" onclick={next} disabled={!stepCanAdvance || submitting}>
         {stepIndex === STEPS.length - 1
           ? !data.canRecord
-            ? 'Finish the steps'
+            ? tr('sprayui.dc.finish')
             : submitting
-              ? 'Recording…'
-              : 'Confirm complete'
-          : 'Next →'}
+              ? tr('sprayui.recording')
+              : tr('sprayui.dc.confirm')
+          : tr('sprayui.dc.next')}
       </button>
     </div>
     {#if submitError}
@@ -269,7 +277,7 @@
   </section>
 
   <section class="checklist">
-    <h2>All steps</h2>
+    <h2>{tr('sprayui.dc.allSteps')}</h2>
     <ol>
       {#each STEPS as s, i (s.key)}
         <li class:done={i < stepIndex} class:current={i === stepIndex}>
@@ -280,13 +288,13 @@
   </section>
 {:else}
   <section class="step success">
-    <h2>✓ Decon recorded</h2>
+    <h2>{tr('sprayui.dc.recorded')}</h2>
     <p>
       Sprayer <strong>{sprayer?.label ?? selectedSprayerId}</strong> is cleared. The kernel will now allow
       it on different chemistry until its next load.
     </p>
     <button type="button" class="primary" onclick={() => goto('/spray')}>
-      Back to spray plan
+      {tr('sprayui.dc.backSpray')}
     </button>
   </section>
 {/if}

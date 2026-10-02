@@ -365,7 +365,7 @@
           >{tr('animals.sex')} <span class="af-optional">{tr('animals.optional')}</span></label
         >
         <select id="{uid}-sex" class="af-input" bind:value={sex}>
-          {#each sexOptions(chosen.id) as o (o.value)}
+          {#each sexOptions(chosen.id, page.data?.locale) as o (o.value)}
             <option value={o.value}>{o.label}</option>
           {/each}
         </select>

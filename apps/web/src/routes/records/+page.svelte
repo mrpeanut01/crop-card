@@ -38,7 +38,7 @@
     printJob = job;
     await tick();
     const previous = document.title;
-    document.title = 'CropCard record card';
+    document.title = tr('recui.printTitle');
     try {
       window.print();
     } finally {
@@ -215,8 +215,11 @@
     <Kicker>{tr('records.kicker')}</Kicker>
     <h1 class="serif">{tr('records.h1')}</h1>
     <p class="lede">
-      <strong>{summary.total} records</strong> · {summary.locked} locked · {summary.ytd} this year. Retained
-      through <span class="mono">{fmtDate(summary.retentionUntilMs)}</span>.
+      <strong>{tr('recui.lede.records', { count: summary.total })}</strong> · {tr(
+        'recui.lede.locked',
+        { n: summary.locked }
+      )} · {tr('recui.lede.ytd', { n: summary.ytd })}. {tr('recui.lede.retained')}
+      <span class="mono">{fmtDate(summary.retentionUntilMs)}</span>.
     </p>
     <div class="actions">
       <a class="btn-ghost" href="/api/spray/records/export.csv{exportQuery}" download>
@@ -254,7 +257,7 @@
           href="/records/organic"
           data-testid="organic-records-link"
         >
-          Organic records
+          {tr('recui.organicLink')}
         </a>
       {/if}
     </div>
@@ -461,11 +464,12 @@
               <strong class="mono"
                 >{yearSummary.compliance.calibratedSprayerCount}/{yearSummary.compliance
                   .sprayerCount}</strong
-              > sprayers calibrated
+              >
+              {tr('recui.calib.sprayers')}
             </li>
             <li>
-              <strong class="mono">{yearSummary.compliance.calibratedThisYear}</strong> calibrated this
-              year
+              <strong class="mono">{yearSummary.compliance.calibratedThisYear}</strong>
+              {tr('recui.calib.thisYear')}
             </li>
             <li>
               <strong class="mono">{yearSummary.compliance.deconEventsThisYear}</strong> decon events
@@ -660,7 +664,7 @@
           <tbody>
             {#each data.records as r (r.id)}
               {@const cardOpen = openCards.includes(r.id)}
-              {@const late = lateLabel(r.recordedLate === true, r.daysLate ?? null)}
+              {@const late = lateLabel(r.recordedLate === true, r.daysLate ?? null, data.locale)}
               <tr>
                 <td class="mono ts">{fmtRowTime(r)}</td>
                 <td>

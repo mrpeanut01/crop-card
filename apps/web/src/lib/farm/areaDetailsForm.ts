@@ -1,4 +1,5 @@
 import { formatCount } from './coopCapacity';
+import { t, type TranslateKey } from '$lib/i18n';
 import {
   CAPACITY_PROVENANCES,
   COOP_SPACE_KINDS,
@@ -194,13 +195,22 @@ function humanizeId(id: string): string {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
+/** A catalog lookup that keeps the English `fallback` when there is no
+ *  locale or no catalog entry for `key`. */
+function localized(locale: string | null | undefined, key: string, fallback: string): string {
+  if (!locale) return fallback;
+  const out = t(locale, key as TranslateKey);
+  return out === key ? fallback : out;
+}
+
 export function detailsSummary(
   kind: AreaKind,
   details: AreaDetails | null | undefined,
   speciesNames?: Readonly<Record<string, string>>,
   /** Lower-case plurals by species id, so a coop's capacity reads
    *  "12 chickens" rather than "12 animals". */
-  speciesPlurals?: Readonly<Record<string, string>>
+  speciesPlurals?: Readonly<Record<string, string>>,
+  locale?: string | null
 ): DetailSummaryRow[] {
   if (!details) return [];
   const src = details as Record<string, unknown>;
@@ -209,26 +219,31 @@ export function detailsSummary(
     const v = src[f.key];
     if (v === undefined || v === null) continue;
     if (f.type === 'provenance') continue;
-    if (f.type === 'boolean') rows.push({ label: f.label, value: v ? 'Yes' : 'No' });
-    else if (f.type === 'feet' && typeof v === 'number')
-      rows.push({ label: f.label, value: `${v} ft` });
+    const label = localized(locale, `farm.df.${f.key}`, f.label);
+    if (f.type === 'boolean')
+      rows.push({ label, value: localized(locale, v ? 'area.yes' : 'area.no', v ? 'Yes' : 'No') });
+    else if (f.type === 'feet' && typeof v === 'number') rows.push({ label, value: `${v} ft` });
     else if (f.type === 'count' && typeof v === 'number') {
       const prov = src[`${f.key}Provenance`];
       const species = typeof src.speciesId === 'string' ? src.speciesId : null;
-      const unit = (species && speciesPlurals?.[species]) || f.unit;
+      const unit =
+        (species && speciesPlurals?.[species]) || localized(locale, `farm.unit.${f.unit}`, f.unit);
       rows.push({
-        label: f.label,
-        value: `${formatCount(v)} ${unit}`,
+        label,
+        value: `${formatCount(v, locale)} ${unit}`,
         ...(prov === 'data' || prov === 'manual' ? { provenance: prov } : {})
       });
     } else if (f.type === 'sqft' && typeof v === 'number')
-      rows.push({ label: f.label, value: `${v} sq ft` });
+      rows.push({ label, value: `${v} sq ft` });
     else if (f.type === 'species' && typeof v === 'string')
-      rows.push({ label: f.label, value: speciesNames?.[v] ?? humanizeId(v) });
+      rows.push({ label, value: speciesNames?.[v] ?? humanizeId(v) });
     else if (f.type === 'select') {
       const opt = f.options.find((o) => o.value === v);
-      rows.push({ label: f.label, value: opt?.label ?? String(v) });
-    } else rows.push({ label: f.label, value: String(v) });
+      rows.push({
+        label,
+        value: opt ? localized(locale, `farm.dfo.${f.key}.${opt.value}`, opt.label) : String(v)
+      });
+    } else rows.push({ label, value: String(v) });
   }
   return rows;
 }

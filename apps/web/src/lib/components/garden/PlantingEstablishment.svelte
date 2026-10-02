@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { pageCropName } from '$lib/i18n/pageCropName';
   /**
    * Phase 32E (E1-1). "Seed or seedling?" for the planting selected in the
    * garden designer. The owner answers; a helper sees the answer.
@@ -34,7 +35,7 @@
   <section class="est" aria-labelledby="est-title" data-testid="designer-seed-or-seedling">
     <h3 id="est-title">{tr('garden.est.title')}</h3>
     <p class="now">
-      {p.varietyDisplayName}: {current()}
+      {pageCropName(p.cropPluginId, p.varietyDisplayName)}: {current()}
       {#if p.establishment}<Provenance source="manual" compact />{/if}
     </p>
     {#if !p.establishment && suggested}

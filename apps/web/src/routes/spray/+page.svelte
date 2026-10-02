@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { cropFamilyLabel } from '$lib/plugins/familyLabel';
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import { noteHoldWrite } from '$lib/animals/recordClient';
   import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
   import { goto, invalidateAll } from '$app/navigation';
@@ -27,6 +29,7 @@
   import { pastureNotice } from '$lib/farm/pastureNotice';
   import OrganicInputNotice from '$lib/components/organic/OrganicInputNotice.svelte';
   import { organicInputClass } from '$lib/organic/inputCompliance';
+  import { createT } from '$lib/i18n';
 
   // Stepper + context-strip $derived inputs computed below the rest of
   // the herbicide flow's state (selectedBlocks / sprayer / herbicides /
@@ -38,17 +41,17 @@
     const verdicts = [...perBlockResults.values()];
     const safetyDone = verdicts.length > 0 && verdicts.every((r) => r.ok);
     return [
-      { label: 'Block & crop', state: hasBlocks ? 'done' : 'active' },
+      { label: tr('sprayui.step.blockCrop'), state: hasBlocks ? 'done' : 'active' },
       {
-        label: 'Sprayer & tank',
+        label: tr('sprayui.step.sprayerTank'),
         state: !hasSprayer ? (hasBlocks ? 'active' : 'pending') : 'done'
       },
       {
-        label: 'Mix',
+        label: tr('sprayui.step.mix'),
         state: !hasMix ? (hasBlocks && hasSprayer ? 'active' : 'pending') : 'done'
       },
       {
-        label: 'Safety check',
+        label: tr('sprayui.step.safety'),
         state:
           verdicts.length === 0
             ? hasMix && hasBlocks && hasSprayer
@@ -59,7 +62,7 @@
               : 'active'
       },
       {
-        label: 'Confirm & record',
+        label: tr('sprayui.step.confirm'),
         state: safetyDone ? 'active' : 'pending'
       }
     ];
@@ -72,6 +75,7 @@
   } from '$lib/dilution/unitConvert';
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   // Preselect from query params so deep-links from /today and /scout land on
   // a partially-filled form instead of a blank one.
@@ -296,7 +300,7 @@
   async function saveBlockAcres(blockId: string) {
     const acres = Number(sizeDrafts[blockId]);
     if (!Number.isFinite(acres) || acres <= 0) {
-      sizeError = 'Enter the size in acres, like 0.25.';
+      sizeError = tr('sprayui.size.invalid');
       return;
     }
     sizeSaving = blockId;
@@ -309,12 +313,12 @@
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        sizeError = body.error ?? `Could not save the size (HTTP ${res.status}).`;
+        sizeError = body.error ?? tr('sprayui.size.saveFailed', { status: res.status });
         return;
       }
       await invalidateAll();
     } catch {
-      sizeError = "We couldn't reach CropCard. Check your signal and try again.";
+      sizeError = tr('sprayui.offlineError');
     } finally {
       sizeSaving = null;
     }
@@ -752,7 +756,7 @@
       ? '—'
       : cropFamilies.length === 1
         ? cropFamilies[0]
-        : `${cropFamilies.length} crop families`
+        : tr('sprayui.ctx.cropFamilies', { count: cropFamilies.length })
   );
   const ctxCropSubtitle = $derived(
     selectedBlocks.length === 0
@@ -760,7 +764,7 @@
       : selectedBlocks
           .flatMap((b) => b.crops)
           .slice(0, 3)
-          .map((c) => c.displayName)
+          .map((c) => cropDisplayNameByEnglish(c.displayName, data.locale))
           .join(' · ')
   );
   const ctxCompatibility = $derived<CompatibilityState | undefined>(
@@ -783,7 +787,7 @@
   );
 
   let setupSheet = $state<null | 'planting' | 'sprayer' | 'calibration'>(null);
-  let sprayerSheetTitle = $state('Which sprayer?');
+  let sprayerSheetTitle = $state<string | null>(null);
 
   async function onPlantingAdded(r: SetupPlantingResult) {
     setupSheet = null;
@@ -794,7 +798,7 @@
 
   async function onSprayerAdded(r: SetupSprayerResult) {
     setupSheet = null;
-    sprayerSheetTitle = 'Which sprayer?';
+    sprayerSheetTitle = null;
     await invalidateAll();
     selectedSprayerId = r.sprayerId;
     await focusAfterSetup(`[data-sprayer-id="${CSS.escape(r.sprayerId)}"]`);
@@ -835,35 +839,34 @@
 {#if data.preselect.fromScout || data.preselect.blockId}
   <Banner tone="forest">
     {#if data.preselect.fromScout}
-      Continuing from scout — block pre-selected.
+      {tr('sprayui.pre.fromScout')}
     {:else}
-      Pre-filled from <a href="/today">today's calendar</a>.
+      {tr('sprayui.pre.fromToday')} <a href="/today">{tr('sprayui.pre.todayLink')}</a>.
     {/if}
   </Banner>
 {/if}
 
 {#if data.blocks.length === 0}
   <SetupCallout
-    kicker="Before you mix"
-    title="What are you spraying?"
+    kicker={tr('sprayui.where.kicker')}
+    title={tr('sprayui.where.title')}
     canEdit={data.setup.canEdit}
-    askOwner="Ask the owner to add what's growing here. The safety checks need to know the crop before a spray can be recorded."
+    askOwner={tr('sprayui.where.askOwner')}
     testId="spray-where"
   >
     <p>
-      The safety checks need to know what's growing where. Tell CropCard what's in the ground and
-      you'll carry on right here.
+      {tr('sprayui.where.body')}
     </p>
     {#snippet actions()}
       <button type="button" class="primary" onclick={() => (setupSheet = 'planting')}>
-        Add what's growing
+        {tr('sprayui.where.add')}
       </button>
-      <a href="/plan">Plan a crop first</a>
+      <a href="/plan">{tr('sprayui.where.plan')}</a>
     {/snippet}
   </SetupCallout>
 {:else}
   <section class="step">
-    <h2>1. Block</h2>
+    <h2>{tr('sprayui.h.block')}</h2>
     <div class="cards">
       {#each data.blocks as b (b.id)}
         {@const isSelected = selectedBlockIds.has(b.id)}
@@ -884,16 +887,19 @@
           {#if b.preplant}
             <!-- Phase 21b follow-up — block has nothing in the ground;
                  spray is a pre-plant burndown. Crop-tox check skipped. -->
-            <p class="preplant-tag">🌱 Pre-plant — no crop in ground</p>
+            <p class="preplant-tag">{tr('sprayui.block.preplant')}</p>
             {#if b.plannedCropNames.length > 0}
               <small class="planned">
-                Planned: {b.plannedCropNames.join(', ')}
+                {tr('sprayui.block.planned', { crops: b.plannedCropNames.join(', ') })}
               </small>
             {/if}
           {:else}
             <ul>
               {#each b.crops as c, idx (idx)}
-                <li>{c.displayName} <em>({c.cropFamily})</em></li>
+                <li>
+                  {cropDisplayNameByEnglish(c.displayName, data.locale)}
+                  <em>({c.cropFamily ? cropFamilyLabel(c.cropFamily, data.locale) : ''})</em>
+                </li>
               {/each}
             </ul>
           {/if}
@@ -902,7 +908,7 @@
                  event from earlier today. Recording will PATCH it
                  instead of creating a duplicate. -->
             <p class="existing-event-tag">
-              ✏ Will update event from
+              {tr('sprayui.block.willUpdate')}
               {fmt.instant(b.existingEvent.occurredAt, 'time')}
             </p>
           {/if}
@@ -912,34 +918,36 @@
   </section>
 
   <section class="step">
-    <h2>2. Herbicide(s)</h2>
+    <h2>{tr('sprayui.h.herbicides')}</h2>
     {#if data.preselect.windowStage && !showAllHerbicides}
       <p class="filter-hint">
-        Filtered to <strong>{data.preselect.windowStage}</strong> window from today's calendar.
+        {tr('sprayui.herb.filteredTo')} <strong>{data.preselect.windowStage}</strong>
+        {tr('sprayui.herb.filteredWindow')}
         <button class="link-button" onclick={() => (showAllHerbicides = true)}>
-          Show all herbicides
+          {tr('sprayui.herb.showAll')}
         </button>
       </p>
     {/if}
     {#if sprayer && sprayer.calibratedGpa == null}
       <p class="filter-hint" data-testid="uncalibrated-hint">
-        <strong>{sprayer.label}</strong> is uncalibrated — rates below are per acre only.
+        <strong>{sprayer.label}</strong>
+        {tr('sprayui.herb.uncalibrated')}
         <button type="button" class="link-button" onclick={() => (setupSheet = 'calibration')}>
-          Calibrate {sprayer.label}
+          {tr('sprayui.sheet.calibrate', { name: sprayer.label })}
         </button>
       </p>
     {/if}
     <label class="herbicide-search">
-      <span>Find a product</span>
+      <span>{tr('sprayui.herb.find')}</span>
       <input
         type="search"
-        placeholder="Name or active ingredient"
+        placeholder={tr('sprayui.herb.findPlaceholder')}
         autocomplete="off"
         bind:value={herbicideQuery}
       />
     </label>
     {#if herbicideList.length === 0}
-      <p class="filter-hint">No herbicide matches “{herbicideQuery}”.</p>
+      <p class="filter-hint">{tr('sprayui.herb.noMatch', { query: herbicideQuery })}</p>
     {/if}
     <div class="cards">
       {#each herbicideList as h (h.pluginId)}
@@ -966,8 +974,8 @@
             </div>
           {/if}
           <small
-            >{h.applicationTiming ?? 'unspecified timing'} • {h.contactOrganic
-              ? 'contact, no HRAC group'
+            >{h.applicationTiming ?? tr('sprayui.herb.unspecifiedTiming')} • {h.contactOrganic
+              ? tr('sprayui.herb.contact')
               : h.chemistryClasses.join(', ')}</small
           >
           <small data-testid="herbicide-rate-preview">
@@ -981,22 +989,22 @@
   </section>
 
   <section class="step">
-    <h2>3. Sprayer</h2>
+    <h2>{tr('sprayui.h.sprayer')}</h2>
     {#if data.sprayers.length === 0}
       <div class="sprayer-empty" data-testid="sprayer-empty">
         <p>
-          <strong>Which sprayer?</strong> There isn't one on the farm yet. Once it's added and calibrated,
-          CropCard works out every product rate from its gallons per acre.
+          <strong>{tr('sprayui.sprayer.emptyLead')}</strong>
+          {tr('sprayui.sprayer.emptyBody')}
         </p>
         {#if data.setup.canEdit}
           <div class="sprayer-empty-cta">
             <button type="button" class="primary" onclick={() => (setupSheet = 'sprayer')}>
-              + Add a sprayer
+              {tr('sprayui.sprayer.add')}
             </button>
           </div>
         {:else}
           <p class="ask-owner" role="note">
-            Ask the owner to add a sprayer. Once it's on the farm it shows up here.
+            {tr('sprayui.sprayer.askOwner')}
           </p>
         {/if}
       </div>
@@ -1012,17 +1020,20 @@
           >
             <strong>{s.label}</strong>
             <small
-              >{s.tankGal ? `${s.tankGal} gal tank • ` : ''}{s.calibratedGpa != null
+              >{s.tankGal ? tr('sprayui.sprayer.tank', { gal: s.tankGal }) : ''}{s.calibratedGpa !=
+              null
                 ? fmt.label(s.calibratedGpa, 'volumePerArea')
-                : 'Uncalibrated'}</small
+                : tr('sprayui.sprayer.uncalibrated')}</small
             >
             {#if s.lastChemistryClass}
-              <small class="warn">last load: {s.lastChemistryClass}</small>
+              <small class="warn"
+                >{tr('sprayui.sprayer.lastLoad', { class: s.lastChemistryClass })}</small
+              >
             {:else}
-              <small class="ok">clean</small>
+              <small class="ok">{tr('sprayui.sprayer.clean')}</small>
             {/if}
             {#if s.lastDeconAt}
-              <small>last decon: {fmt.instant(s.lastDeconAt)}</small>
+              <small>{tr('sprayui.sprayer.lastDecon', { date: fmt.instant(s.lastDeconAt) })}</small>
             {/if}
           </button>
         {/each}
@@ -1031,12 +1042,15 @@
   </section>
 
   <section class="step">
-    <h2>4. Tank size</h2>
+    <h2>{tr('sprayui.h.tank')}</h2>
     <p class="hint">
-      How much are you mixing in this load?{#if selectedSprayerTank}
-        {selectedSprayer?.label} holds {selectedSprayerTank} gal.{/if}
+      {tr('sprayui.tank.question')}{#if selectedSprayerTank}
+        {tr('sprayui.tank.holds', {
+          name: selectedSprayer?.label ?? '',
+          gal: selectedSprayerTank
+        })}{/if}
     </p>
-    <div class="quick-picks" role="radiogroup" aria-label="Tank size in gallons">
+    <div class="quick-picks" role="radiogroup" aria-label={tr('sprayui.tank.aria')}>
       {#each tankChoices as size (size)}
         <button
           type="button"
@@ -1061,12 +1075,12 @@
         class:selected={customTankOpen}
         onclick={() => (customTankOpen = true)}
       >
-        Other
+        {tr('sprayui.tank.other')}
       </button>
     </div>
     {#if customTankOpen}
       <label class="custom-tank">
-        Gallons in this load
+        {tr('sprayui.tank.custom')}
         <input
           type="number"
           min="0.5"
@@ -1090,21 +1104,21 @@
        flips the record to `'measured'`. The kernel still re-runs via the
        debounced `$effect` on any change. -->
   <section class="step">
-    <h2>5. Conditions</h2>
+    <h2>{tr('sprayui.h.conditions')}</h2>
     <p class="hint">
       {#if conditionsMeasured}
-        Recorded as <strong>measured</strong> — these values save to the spray record.
+        {tr('sprayui.cond.recordedAs')} <strong>{tr('sprayui.cond.measured')}</strong>
+        {tr('sprayui.cond.measuredTail')}
       {:else}
-        Using conservative defaults. Enter real readings before you spray so the record and drift
-        documentation are accurate.
+        {tr('sprayui.cond.defaults')}
       {/if}
     </p>
     <div class="conditions conditions-grid">
       <div class="stepper">
-        <span class="stepper-label">Wind</span>
+        <span class="stepper-label">{tr('sprayui.cond.wind')}</span>
         <button
           type="button"
-          aria-label="Decrease wind speed"
+          aria-label={tr('sprayui.cond.windDown')}
           onclick={() => {
             windMph = Math.max(0, windMph - 1);
             markConditionsMeasured();
@@ -1117,7 +1131,7 @@
         >
         <button
           type="button"
-          aria-label="Increase wind speed"
+          aria-label={tr('sprayui.cond.windUp')}
           onclick={() => {
             windMph = windMph + 1;
             markConditionsMeasured();
@@ -1125,10 +1139,10 @@
         >
       </div>
       <div class="stepper">
-        <span class="stepper-label">Temp</span>
+        <span class="stepper-label">{tr('sprayui.cond.temp')}</span>
         <button
           type="button"
-          aria-label="Decrease temperature"
+          aria-label={tr('sprayui.cond.tempDown')}
           onclick={() => {
             tempF = tempF - 1;
             markConditionsMeasured();
@@ -1141,7 +1155,7 @@
         >
         <button
           type="button"
-          aria-label="Increase temperature"
+          aria-label={tr('sprayui.cond.tempUp')}
           onclick={() => {
             tempF = tempF + 1;
             markConditionsMeasured();
@@ -1149,10 +1163,10 @@
         >
       </div>
       <div class="stepper">
-        <span class="stepper-label">Rain 24h</span>
+        <span class="stepper-label">{tr('sprayui.cond.rain')}</span>
         <button
           type="button"
-          aria-label="Decrease rain forecast"
+          aria-label={tr('sprayui.cond.rainDown')}
           onclick={() => {
             rainMm = Math.max(0, rainMm - 1);
             markConditionsMeasured();
@@ -1165,7 +1179,7 @@
         >
         <button
           type="button"
-          aria-label="Increase rain forecast"
+          aria-label={tr('sprayui.cond.rainUp')}
           onclick={() => {
             rainMm = rainMm + 1;
             markConditionsMeasured();
@@ -1175,20 +1189,20 @@
     </div>
     {#if !conditionsMeasured}
       <p class="conditions-provenance-note">
-        Not yet measured — this pass will be recorded with default conditions.
+        {tr('sprayui.cond.notMeasured')}
       </p>
     {/if}
   </section>
 
   {#if isCornBlock}
     <section class="step">
-      <h2>Corn height</h2>
+      <h2>{tr('sprayui.h.corn')}</h2>
       <div class="conditions">
         <div class="stepper">
-          <span class="stepper-label">Corn ht</span>
+          <span class="stepper-label">{tr('sprayui.corn.label')}</span>
           <button
             type="button"
-            aria-label="Decrease corn height"
+            aria-label={tr('sprayui.corn.down')}
             onclick={() => (cornHeightIn = Math.max(0, (cornHeightIn ?? 0) - 1))}>−</button
           >
           <output
@@ -1198,7 +1212,7 @@
           >
           <button
             type="button"
-            aria-label="Increase corn height"
+            aria-label={tr('sprayui.corn.up')}
             onclick={() => (cornHeightIn = (cornHeightIn ?? 0) + 1)}>+</button
           >
         </div>
@@ -1208,7 +1222,7 @@
 {/if}
 
 {#if lastError}
-  <Banner tone="rust" urgent>Error: {lastError}</Banner>
+  <Banner tone="rust" urgent>{tr('sprayui.errorLabel')} {lastError}</Banner>
 {/if}
 
 {#if result}
@@ -1221,12 +1235,12 @@
   >
     {#if result.ok}
       <header class="spray-card-head">
-        <h2>✓ Spray Card</h2>
+        <h2>{tr('sprayui.card.title')}</h2>
         <button
           type="button"
           class="print-btn no-print"
           onclick={() => window.print()}
-          aria-label="Print spray card">🖨 Print Spray Card</button
+          aria-label={tr('sprayui.card.printAria')}>{tr('sprayui.card.print')}</button
         >
       </header>
 
@@ -1240,13 +1254,15 @@
         {@const totalSprayGallons = totalAcres * gpa}
         <div class="spray-card-summary">
           <div class="sc-metric">
-            <span class="sc-label">Total area</span>
+            <span class="sc-label">{tr('sprayui.card.totalArea')}</span>
             <span class="sc-value"
-              >{totalAcres > 0 ? fmt.label(totalAcres, 'area', { digits: 2 }) : 'Not set'}</span
+              >{totalAcres > 0
+                ? fmt.label(totalAcres, 'area', { digits: 2 })
+                : tr('sprayui.card.notSet')}</span
             >
           </div>
           <div class="sc-metric">
-            <span class="sc-label">Spray volume</span>
+            <span class="sc-label">{tr('sprayui.card.volume')}</span>
             {#if totalAcres > 0}
               <span class="sc-value">{fmt.label(totalSprayGallons, 'volume', { digits: 1 })}</span>
               <span class="sc-sublabel"
@@ -1257,14 +1273,14 @@
               >
             {:else}
               <span class="sc-value">—</span>
-              <span class="sc-sublabel">Needs the size of the area</span>
+              <span class="sc-sublabel">{tr('sprayui.card.needsSize')}</span>
             {/if}
           </div>
           <div class="sc-metric">
-            <span class="sc-label">Tank fills</span>
+            <span class="sc-label">{tr('sprayui.card.tankFills')}</span>
             <span class="sc-value">{tanksNeeded}</span>
             <span class="sc-sublabel"
-              >{tankSizeGallons}-gal tank{metric
+              >{tr('sprayui.card.galTank', { gal: tankSizeGallons })}{metric
                 ? ` (${fmt.qty(tankSizeGallons, 'volume', { digits: 0 })})`
                 : ''}</span
             >
@@ -1272,16 +1288,16 @@
         </div>
         {#if unsizedBlocks.length > 0 && data.setup.canEdit}
           <div class="size-prompt" data-testid="spray-size-prompt">
-            <p>How big is it? Totals need the size.</p>
+            <p>{tr('sprayui.size.prompt')}</p>
             {#each unsizedBlocks as b (b.id)}
               <label class="size-row">
-                <span>{b.label} (acres)</span>
+                <span>{tr('sprayui.size.acres', { name: b.label })}</span>
                 <input
                   type="number"
                   min="0.001"
                   step="0.01"
                   inputmode="decimal"
-                  placeholder="e.g. 0.25"
+                  placeholder={tr('sprayui.size.placeholder')}
                   value={sizeDrafts[b.id] ?? ''}
                   oninput={(e) => (sizeDrafts = { ...sizeDrafts, [b.id]: e.currentTarget.value })}
                 />
@@ -1291,7 +1307,7 @@
                   disabled={sizeSaving !== null}
                   onclick={() => saveBlockAcres(b.id)}
                 >
-                  {sizeSaving === b.id ? 'Saving…' : 'Save size'}
+                  {sizeSaving === b.id ? tr('sprayui.saving') : tr('sprayui.size.save')}
                 </button>
               </label>
             {/each}
@@ -1314,13 +1330,13 @@
 
         <!-- Per-product table — totals + native + secondary units. The
              operator sees what to buy / measure overall before mixing. -->
-        <h3>Chemicals needed</h3>
+        <h3>{tr('sprayui.card.chemicals')}</h3>
         <table class="dilution">
           <thead>
             <tr>
-              <th>Product</th>
-              <th>Total needed</th>
-              <th>Per full {tankSizeGallons}-gal tank</th>
+              <th>{tr('sprayui.card.product')}</th>
+              <th>{tr('sprayui.card.totalNeeded')}</th>
+              <th>{tr('sprayui.card.perTank', { gal: tankSizeGallons })}</th>
             </tr>
           </thead>
           <tbody>
@@ -1339,7 +1355,7 @@
                       <small class="alt-units">≈ {totalSecondary.join(' · ')}</small>
                     {/if}
                   {:else}
-                    <strong aria-label="Unknown until the area size is set">—</strong>
+                    <strong aria-label={tr('sprayui.card.unknownAria')}>—</strong>
                   {/if}
                 </td>
                 <td>
@@ -1358,7 +1374,7 @@
              options so the operator can fill to a sight-glass mark. -->
         {@const remainingAcresLastTank = totalAcres - (tanksNeeded - 1) * (tankSizeGallons / gpa)}
         {#if remainingAcresLastTank > 0 && remainingAcresLastTank < tankSizeGallons / gpa}
-          <h3>{tanksNeeded > 1 ? `Last (partial) tank` : `Tank fill`}</h3>
+          <h3>{tanksNeeded > 1 ? tr('sprayui.card.lastPartial') : tr('sprayui.card.tankFill')}</h3>
           <p class="fill-note">
             The {tanksNeeded > 1 ? 'last tank covers' : 'pass covers'}
             <strong>{fmt.label(remainingAcresLastTank, 'area', { digits: 2 })}</strong>
@@ -1371,9 +1387,9 @@
               <caption>{d.displayName}</caption>
               <thead>
                 <tr>
-                  <th>Water (gal)</th>
-                  <th>Covers</th>
-                  <th>Chemical</th>
+                  <th>{tr('sprayui.card.water')}</th>
+                  <th>{tr('sprayui.card.covers')}</th>
+                  <th>{tr('sprayui.card.chemical')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1387,7 +1403,7 @@
                         })}</strong
                       >
                       {#if f.recommended}
-                        <small class="rec-tag">recommended</small>
+                        <small class="rec-tag">{tr('sprayui.card.recommended')}</small>
                       {/if}
                     </td>
                     <td>{fmt.label(f.acresCovered, 'area', { digits: 2 })}</td>
@@ -1406,7 +1422,7 @@
       {/if}
 
       {#if result.tankMixOrder}
-        <h3>Tank-mix order</h3>
+        <h3>{tr('sprayui.card.mixOrder')}</h3>
         <ol class="mix-order">
           {#each result.tankMixOrder as step (step.order)}
             <li>{step.instruction}</li>
@@ -1419,7 +1435,7 @@
              multi-block passes. The shared dilution / tank-mix output
              above applies to every OK block; STOP blocks are listed
              here so the operator can deselect them before recording. -->
-        <h3>Per-block outcome</h3>
+        <h3>{tr('sprayui.card.perBlock')}</h3>
         <ul class="per-block-status">
           {#each selectedBlocks as b (b.id)}
             {@const pr = perBlockResults.get(b.id)}
@@ -1427,17 +1443,20 @@
             <li class:ok={pr?.ok} class:stop={pr && !pr.ok}>
               <span class="pb-name">{b.label}</span>
               {#if oc?.kind === 'created'}
-                <span class="pb-tag pb-ok">✓ created</span>
+                <span class="pb-tag pb-ok">{tr('sprayui.card.created')}</span>
               {:else if oc?.kind === 'updated'}
-                <span class="pb-tag pb-ok">✏ updated</span>
+                <span class="pb-tag pb-ok">{tr('sprayui.card.updated')}</span>
               {:else if oc?.kind === 'skipped-stop'}
                 <span class="pb-tag pb-stop">⛔ skipped (STOP)</span>
               {:else if oc?.kind === 'skipped-locked'}
                 <span class="pb-tag pb-stop">🔒 skipped (locked &gt; 48h)</span>
               {:else if oc?.kind === 'failed'}
-                <span class="pb-tag pb-stop">⚠ failed: {oc.error}</span>
+                <span class="pb-tag pb-stop">{tr('sprayui.card.failed', { error: oc.error })}</span>
               {:else if pr?.ok}
-                <span class="pb-tag pb-ok">✓ {b.existingEvent ? 'will update' : 'will record'}</span
+                <span class="pb-tag pb-ok"
+                  >{b.existingEvent
+                    ? tr('sprayui.card.willUpdate')
+                    : tr('sprayui.card.willRecord')}</span
                 >
               {:else if pr && !pr.ok}
                 <span class="pb-tag pb-stop"
@@ -1450,7 +1469,8 @@
       {/if}
 
       <p class="audit">
-        Rule version: {result.ruleVersion} • Plugin hashes:
+        {tr('sprayui.card.ruleVersion')}
+        {result.ruleVersion} • {tr('sprayui.card.pluginHashes')}
         {#each Object.entries(result.pluginHashes) as [id, h] (id)}
           <code>{id}@{h.slice(0, 8)}</code>
         {/each}
@@ -1465,31 +1485,31 @@
           disabled={recording || okCount === 0}
         >
           {recording
-            ? 'Recording…'
+            ? tr('sprayui.recording')
             : okCount > 1
-              ? `Confirm — record this spray on ${okCount} blocks`
-              : 'Confirm — record this spray'}
+              ? tr('sprayui.card.confirmMany', { count: okCount })
+              : tr('sprayui.card.confirm')}
         </button>
       {:else if queuedOffline}
         <p class="recorded queued">
-          ☁ Offline — queued. Will sync to the server when connection returns.
+          {tr('sprayui.card.queued')}
         </p>
-        <div class="next-actions" aria-label="What's next">
-          <a href="/records/pending" class="secondary">View queue</a>
-          <a href="/today" class="secondary">Back to today</a>
+        <div class="next-actions" aria-label={tr('sprayui.next.aria')}>
+          <a href="/records/pending" class="secondary">{tr('sprayui.next.queue')}</a>
+          <a href="/today" class="secondary">{tr('sprayui.next.today')}</a>
         </div>
       {:else}
         <p class="recorded">
           {#if recordedId.startsWith('multi:')}
-            ✓ Recorded on {recordedId.slice('multi:'.length)} blocks
+            {tr('sprayui.card.recordedMany', { count: recordedId.slice('multi:'.length) })}
           {:else}
-            ✓ Spray event recorded as <code>{recordedId.slice(0, 8)}…</code>
+            {tr('sprayui.card.recordedAs')} <code>{recordedId.slice(0, 8)}…</code>
           {/if}
         </p>
-        <div class="next-actions" aria-label="What's next">
-          <a href="/today" class="secondary">Back to today</a>
-          <a href="/records" class="secondary">View records</a>
-          <a href="/spray" class="secondary">Plan another spray</a>
+        <div class="next-actions" aria-label={tr('sprayui.next.aria')}>
+          <a href="/today" class="secondary">{tr('sprayui.next.today')}</a>
+          <a href="/records" class="secondary">{tr('sprayui.next.records')}</a>
+          <a href="/spray" class="secondary">{tr('sprayui.next.another')}</a>
         </div>
       {/if}
     {:else}
@@ -1499,7 +1519,9 @@
           The selected sprayer last carried a different chemistry. Run the decontamination wizard
           before this spray will be allowed.
         </p>
-        <button type="button" class="primary" onclick={goToDecon}> Open decon wizard → </button>
+        <button type="button" class="primary" onclick={goToDecon}>
+          {tr('sprayui.card.openDecon')}
+        </button>
       {/if}
       <ul class="violations">
         {#each result.violations as v (v.code + JSON.stringify(v.detail))}
@@ -1508,7 +1530,7 @@
             <p>{v.message}</p>
             {#if v.detail}
               <details>
-                <summary>Show kernel evaluation detail</summary>
+                <summary>{tr('sprayui.card.kernelDetail')}</summary>
                 <pre>{JSON.stringify(v.detail, null, 2)}</pre>
               </details>
             {/if}
@@ -1521,8 +1543,8 @@
 
 <SetupSheet
   open={setupSheet === 'planting'}
-  kicker="Spray"
-  title="What's growing there?"
+  kicker={tr('sprayui.sheet.kicker')}
+  title={tr('sprayui.sheet.whatsGrowing')}
   onDone={onPlantingAdded}
   onClose={() => (setupSheet = null)}
 >
@@ -1531,7 +1553,7 @@
       blocks={data.setup.blocks}
       areas={data.setup.areas}
       canEdit={data.setup.canEdit}
-      submitLabel="Save and pick products"
+      submitLabel={tr('sprayui.sheet.savePick')}
       onDone={done}
     />
   {/snippet}
@@ -1539,19 +1561,19 @@
 
 <SetupSheet
   open={setupSheet === 'sprayer'}
-  kicker="Spray"
-  title={sprayerSheetTitle}
+  kicker={tr('sprayui.sheet.kicker')}
+  title={sprayerSheetTitle ?? tr('sprayui.sheet.whichSprayer')}
   onDone={onSprayerAdded}
   onClose={() => {
     setupSheet = null;
-    sprayerSheetTitle = 'Which sprayer?';
+    sprayerSheetTitle = null;
   }}
 >
   {#snippet children(done)}
     <SetupSprayer
       templates={data.setup.sprayerTemplates}
       canEdit={data.setup.canEdit}
-      onCreated={(r) => (sprayerSheetTitle = `Calibrate ${r.label}`)}
+      onCreated={(r) => (sprayerSheetTitle = tr('sprayui.sheet.calibrate', { name: r.label }))}
       onDone={done}
     />
   {/snippet}
@@ -1560,8 +1582,8 @@
 {#if sprayer}
   <SetupSheet
     open={setupSheet === 'calibration'}
-    kicker="Spray"
-    title="Calibrate {sprayer.label}"
+    kicker={tr('sprayui.sheet.kicker')}
+    title={tr('sprayui.sheet.calibrate', { name: sprayer.label })}
     onDone={onCalibrated}
     onClose={() => (setupSheet = null)}
   >

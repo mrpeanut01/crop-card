@@ -1,4 +1,4 @@
-import { PUSH_ALERT_KINDS, PUSH_ALERT_LABELS, type PushAlertKind } from '$lib/push/prefs';
+import { PUSH_ALERT_KINDS, pushAlertText, type PushAlertKind } from '$lib/push/prefs';
 
 /** Email alert categories mirror the push alert kinds one to one. */
 export const EMAIL_ALERT_CATEGORIES = PUSH_ALERT_KINDS;
@@ -23,6 +23,6 @@ export function isEmailAlertCategory(value: unknown): value is EmailAlertCategor
   return typeof value === 'string' && (EMAIL_ALERT_CATEGORIES as readonly string[]).includes(value);
 }
 
-export function emailAlertLabel(category: EmailAlertCategory): string {
-  return PUSH_ALERT_LABELS[category].label;
+export function emailAlertLabel(category: EmailAlertCategory, locale?: string | null): string {
+  return pushAlertText(category, 'label', locale);
 }

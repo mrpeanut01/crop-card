@@ -3,6 +3,7 @@
 
 import { STATUS_LABEL } from './display';
 import { lateLabel } from '$lib/records/lateLabel';
+import { t, type TranslateKey } from '$lib/i18n';
 
 export interface HistoryLocation {
   id: string;
@@ -64,38 +65,52 @@ export interface HistoryInput {
   canUndo: boolean;
   /** The viewer is the interactive owner (32G G4-13). */
   canVoid?: boolean;
+  /** The viewer's language for the entry text; English when absent. */
+  locale?: string | null;
 }
 
 function isMarker(l: HistoryLocation): boolean {
   return l.toMs !== null && l.toMs === l.fromMs;
 }
 
-function statusText(e: HistoryStatus): string {
+function statusText(e: HistoryStatus, locale?: string | null): string {
+  const known = Object.prototype.hasOwnProperty.call(STATUS_LABEL, e.status);
   const label = STATUS_LABEL[e.status as keyof typeof STATUS_LABEL] ?? e.status;
   const delta = e.headCountDelta ?? 0;
-  if (delta > 0) return `${delta} added`;
-  if (delta < 0) return `${-delta} ${label.toLowerCase()}`;
-  return e.status === 'active' ? 'Marked as still here' : label;
+  if (delta > 0) return t(locale, 'animallib.history.added', { count: delta });
+  if (delta < 0) {
+    return known
+      ? t(locale, `animallib.history.gone.${e.status}` as TranslateKey, { count: -delta })
+      : `${-delta} ${label.toLowerCase()}`;
+  }
+  if (e.status === 'active') return t(locale, 'animallib.history.stillHere');
+  return known ? t(locale, `animals.status.${e.status}` as TranslateKey) : label;
 }
 
 const DAY_MS = 86_400_000;
 
-function statusLate(e: HistoryStatus): string | null {
+function statusLate(e: HistoryStatus, locale?: string | null): string | null {
   const days =
     e.createdAt !== undefined && e.createdAt > e.occurredAt
       ? Math.floor((e.createdAt - e.occurredAt) / DAY_MS)
       : null;
-  return lateLabel(e.recordedLate === true, days);
+  return lateLabel(e.recordedLate === true, days, locale);
 }
 
-function flagText(f: HistoryFlag): string {
+function flagText(f: HistoryFlag, locale?: string | null): string {
   if (f.flag === 'food_producing') {
-    return f.newValue ? 'Marked as a food animal' : 'Marked as not a food animal';
+    return t(
+      locale,
+      f.newValue ? 'animallib.history.markedFood' : 'animallib.history.markedNotFood'
+    );
   }
   if (f.flag === 'presumed_lactating') {
-    return f.newValue ? 'Counted as possibly in milk again' : 'No longer counted as in milk';
+    return t(locale, f.newValue ? 'animallib.history.inMilkAgain' : 'animallib.history.notInMilk');
   }
-  return f.newValue ? 'Marked not for slaughter' : 'Not-for-slaughter mark removed';
+  return t(
+    locale,
+    f.newValue ? 'animallib.history.markedNoSlaughter' : 'animallib.history.noSlaughterRemoved'
+  );
 }
 
 export function buildHistory(input: HistoryInput): HistoryEntry[] {
@@ -106,12 +121,17 @@ export function buildHistory(input: HistoryInput): HistoryEntry[] {
     let text: string;
     if (isMarker(l) || l.toGroupId) {
       text = l.toGroupId
-        ? `Joined ${input.groupName(l.toGroupId)}`
-        : `Left ${input.groupName(l.fromGroupId ?? '')}`;
+        ? t(input.locale, 'animallib.history.joined', { group: input.groupName(l.toGroupId) })
+        : t(input.locale, 'animallib.history.left', {
+            group: input.groupName(l.fromGroupId ?? '')
+          });
     } else if (l.fromGroupId) {
-      text = `Moved to ${input.areaName(l.fieldId)}, out of ${input.groupName(l.fromGroupId)}`;
+      text = t(input.locale, 'animallib.history.movedOutOf', {
+        area: input.areaName(l.fieldId),
+        group: input.groupName(l.fromGroupId)
+      });
     } else {
-      text = `Moved to ${input.areaName(l.fieldId)}`;
+      text = t(input.locale, 'animallib.history.movedTo', { area: input.areaName(l.fieldId) });
     }
     entries.push({
       id: `loc:${l.id}`,
@@ -127,11 +147,11 @@ export function buildHistory(input: HistoryInput): HistoryEntry[] {
   }
   const lastStatus = input.statusEvents.at(-1);
   for (const e of input.statusEvents) {
-    const late = statusLate(e);
+    const late = statusLate(e, input.locale);
     entries.push({
       id: `st:${e.id}`,
       at: e.occurredAt,
-      text: statusText(e),
+      text: statusText(e, input.locale),
       detail: e.reason,
       undo:
         input.canUndo && e.id === lastStatus?.id && !e.locked
@@ -152,7 +172,7 @@ export function buildHistory(input: HistoryInput): HistoryEntry[] {
     entries.push({
       id: `fl:${f.id}`,
       at: f.changedAt,
-      text: flagText(f),
+      text: flagText(f, input.locale),
       detail: f.reason,
       undo: null,
       locked: false

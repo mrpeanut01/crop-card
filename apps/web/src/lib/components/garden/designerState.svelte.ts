@@ -2028,7 +2028,8 @@ export class DesignerState {
         (m, q) =>
           q.plantingDateMs != null && (m == null || q.plantingDateMs > m) ? q.plantingDateMs : m,
         null
-      )
+      ),
+      locale: this.locale
     });
     this.ghosts = proposal.sowings
       .filter((s) => s.footprint && !s.conflict)
@@ -2036,7 +2037,7 @@ export class DesignerState {
         key: `succ-${s.index}`,
         blockId: bed.blockId,
         footprint: s.footprint!,
-        label: shortDate(s.plantingDateMs)
+        label: shortDate(s.plantingDateMs, this.tr)
       }));
     return proposal;
   }
@@ -2094,7 +2095,7 @@ export class DesignerState {
       this.design.frost.firstFallFrostMs
     );
     return this.recipes
-      .map((recipe) => ({ recipe, fit: recipeFits(recipe, days) }))
+      .map((recipe) => ({ recipe, fit: recipeFits(recipe, days, this.locale) }))
       .sort(
         (a, b) =>
           Number(b.fit.fits) - Number(a.fit.fits) ||
@@ -2114,7 +2115,8 @@ export class DesignerState {
       lastSpringFrostMs: this.frostFor(blockId).lastSpringFrostMs,
       firstFallFrostMs: this.frostFor(blockId).firstFallFrostMs,
       intervals: this.intervals.filter((i) => i.blockId === blockId),
-      seasonYear: this.design.seasonYear
+      seasonYear: this.design.seasonYear,
+      locale: this.locale
     });
     this.ghosts = application.plantings.map((p) => ({
       key: p.key,

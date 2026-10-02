@@ -32,6 +32,7 @@ import { plantCount, resolveSpacing } from '$lib/garden/plantCount';
 import type { GardenCrop, PlacedPlanting, PlantingStatus } from '$lib/garden/types';
 import { bedFrostMs } from '$lib/server/blockFrost.server';
 import { db } from '$lib/db/client';
+import { t } from '$lib/i18n';
 import { plantingInGround } from '$lib/garden/inGround';
 import type { PluginRegistry } from '$lib/plugins';
 import { applyPlantingEstablishment, seedStartTasksOnFirstDate } from '$lib/server/seedStartTasks';
@@ -76,22 +77,22 @@ export interface DesignableBed {
 
 /** The bed or container behind `blockId`, inside a garden or greenhouse
  *  Area, with a Size. Another Owner's id reads as unknown. */
-export function resolveDesignableBed(blockId: string): DesignableBed | GardenFailure {
+export function resolveDesignableBed(
+  blockId: string,
+  locale?: string | null
+): DesignableBed | GardenFailure {
   const block = getBlock(blockId);
   if (!block) return gardenFailure(400, 'unknown blockId', 'FOREIGN_REF');
+  const name = block.name;
   if (!block.kind || !usesDesignerLayout(block.kind)) {
-    return gardenFailure(409, `${block.name} isn't a bed or container.`, 'NOT_DESIGNABLE');
+    return gardenFailure(409, t(locale, 'gardenlib.place.notBed', { name }), 'NOT_DESIGNABLE');
   }
   const area = block.fieldId ? getArea(block.fieldId) : undefined;
   if (!area || !isDesignable(area.kind)) {
-    return gardenFailure(409, `${block.name} isn't in a garden or greenhouse.`, 'NOT_DESIGNABLE');
+    return gardenFailure(409, t(locale, 'gardenlib.place.notGarden', { name }), 'NOT_DESIGNABLE');
   }
   if (!block.widthFt || !block.lengthFt) {
-    return gardenFailure(
-      409,
-      `Set ${block.name}'s size before placing crops in it.`,
-      'NOT_DESIGNABLE'
-    );
+    return gardenFailure(409, t(locale, 'gardenlib.place.setSize', { name }), 'NOT_DESIGNABLE');
   }
   return { block, area, widthFt: block.widthFt, lengthFt: block.lengthFt };
 }
@@ -178,7 +179,11 @@ export function placedPlantingFromCrop(crop: Crop, plugin: GardenCrop | undefine
 /** "Shares space with Lettuce until Jul 1." for each planting in the bed that
  *  overlaps this one in both space and time. Interplanting is allowed, so
  *  these never block. */
-export function sharedSpaceWarnings(crop: Crop, lookup: CropLookup): string[] {
+export function sharedSpaceWarnings(
+  crop: Crop,
+  lookup: CropLookup,
+  locale?: string | null
+): string[] {
   if (!crop.footprint || crop.plantingDate == null) return [];
   const year = new Date(crop.plantingDate).getFullYear();
   const { firstFallFrostMs, lastSpringFrostMs } = bedFrostMs(crop.blockId, year);
@@ -199,7 +204,10 @@ export function sharedSpaceWarnings(crop: Crop, lookup: CropLookup): string[] {
     if (!theirs || !(theirs.startMs < mine.endMs && mine.startMs < theirs.endMs)) continue;
     if (other.footprint && !footprintsOverlap(other.footprint, crop.footprint)) continue;
     out.push(
-      `Shares space with ${other.varietyDisplayName} until ${shortDate(Math.min(theirs.endMs, mine.endMs))}.`
+      t(locale, 'garden.say.sharesSpace', {
+        name: other.varietyDisplayName,
+        date: shortDate(Math.min(theirs.endMs, mine.endMs), locale)
+      })
     );
   }
   return out;
@@ -217,7 +225,8 @@ export function linkedSowingClash(
   target: { blockId: string; footprint: Footprint | null; plantingDateMs: number | null },
   bedName: string,
   lookup: CropLookup,
-  ignore: ReadonlySet<string> = new Set()
+  ignore: ReadonlySet<string> = new Set(),
+  locale?: string | null
 ): string | null {
   if (target.plantingDateMs == null) return null;
   const plugin = lookup(current.cropPluginId);
@@ -249,7 +258,13 @@ export function linkedSowingClash(
     ) {
       continue;
     }
-    return `No room for ${current.varietyDisplayName} there in ${bedName} on ${shortDate(mine.startMs)}. ${other.varietyDisplayName} holds that spot until ${shortDate(theirs.endMs)}.`;
+    return t(locale, 'gardenlib.place.clash', {
+      name: current.varietyDisplayName,
+      bed: bedName,
+      date: shortDate(mine.startMs, locale),
+      other: other.varietyDisplayName,
+      until: shortDate(theirs.endMs, locale)
+    });
   }
   return null;
 }
@@ -307,21 +322,30 @@ export function writeFootprint(
   cropId: string,
   req: FootprintWriteRequest,
   lookup: CropLookup,
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
+  locale?: string | null
 ): FootprintWriteResult {
   const current = getCrop(cropId);
-  if (!current) return gardenFailure(404, 'planting not found');
-  const bed = resolveDesignableBed(req.blockId);
+  if (!current) return gardenFailure(404, t(locale, 'gardenlib.place.notFound'));
+  const bed = resolveDesignableBed(req.blockId, locale);
   if (isFailure(bed)) return bed;
+  const bedNameOf = (blockId: string) => getBlock(blockId)?.name ?? t(locale, 'garden.say.itsBed');
   if (req.blockId !== current.blockId && cropInGround(current, nowMs)) {
     return gardenFailure(
       409,
-      `${current.varietyDisplayName} is already in the ground in ${getBlock(current.blockId)?.name ?? 'its bed'}. Record a new planting instead.`,
+      t(locale, 'gardenlib.place.inGround', {
+        name: current.varietyDisplayName,
+        bed: bedNameOf(current.blockId)
+      }),
       'IN_GROUND'
     );
   }
   if (req.footprint && !footprintInsideBed(req.footprint, bed)) {
-    return gardenFailure(400, `That spot runs past the edge of ${bed.block.name}.`, 'OUTSIDE_AREA');
+    return gardenFailure(
+      400,
+      t(locale, 'gardenlib.place.spotPastEdge', { bed: bed.block.name }),
+      'OUTSIDE_AREA'
+    );
   }
   const nextDateMs = req.plantingDateMs === undefined ? current.plantingDate : req.plantingDateMs;
   const newDateMs =
@@ -331,7 +355,7 @@ export function writeFootprint(
   if (newDateMs != null && newDateMs > nowMs && cropInGround(current, nowMs)) {
     return gardenFailure(
       409,
-      `${current.varietyDisplayName} is already in the ground, so its date can't move past today. Record a new planting instead.`,
+      t(locale, 'gardenlib.place.inGroundDate', { name: current.varietyDisplayName }),
       'IN_GROUND'
     );
   }
@@ -348,7 +372,8 @@ export function writeFootprint(
       { blockId: req.blockId, footprint: req.footprint, plantingDateMs: nextDateMs },
       bed.block.name,
       lookup,
-      movingTogether
+      movingTogether,
+      locale
     );
     if (clash) return gardenFailure(409, clash, 'OVERLAP');
   }
@@ -358,9 +383,10 @@ export function writeFootprint(
       const clash = linkedSowingClash(
         f.crop,
         { blockId: f.crop.blockId, footprint: f.crop.footprint ?? null, plantingDateMs: f.toMs },
-        getBlock(f.crop.blockId)?.name ?? 'its bed',
+        bedNameOf(f.crop.blockId),
         lookup,
-        ignore
+        ignore,
+        locale
       );
       if (clash) return gardenFailure(409, clash, 'OVERLAP');
     }
@@ -391,7 +417,7 @@ export function writeFootprint(
         planting: placedPlantingFromCrop(saved, plugin),
         reanchored,
         followers,
-        warnings: sharedSpaceWarnings(saved, lookup)
+        warnings: sharedSpaceWarnings(saved, lookup, locale)
       }
     };
   });
@@ -404,18 +430,22 @@ export type PlantingCreateResult =
  *  before anything is written, so a bad item writes nothing. */
 export function createPlacedPlantings(
   items: PlantingCreateRequest['plantings'],
-  lookup: CropLookup
+  lookup: CropLookup,
+  locale?: string | null
 ): PlantingCreateResult {
   const checked: Array<{ item: (typeof items)[number]; plugin: GardenCrop }> = [];
   for (const item of items) {
-    const bed = resolveDesignableBed(item.blockId);
+    const bed = resolveDesignableBed(item.blockId, locale);
     if (isFailure(bed)) return bed;
     const plugin = lookup(item.cropPluginId);
     if (!plugin) return gardenFailure(400, `unknown crop plugin ${item.cropPluginId}`);
     if (!footprintInsideBed(item.footprint, bed)) {
       return gardenFailure(
         400,
-        `${item.varietyDisplayName} runs past the edge of ${bed.block.name}.`,
+        t(locale, 'gardenlib.place.runsPast', {
+          name: item.varietyDisplayName,
+          bed: bed.block.name
+        }),
         'OUTSIDE_AREA'
       );
     }

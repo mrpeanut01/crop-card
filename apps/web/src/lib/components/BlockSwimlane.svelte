@@ -12,8 +12,10 @@
   render continuously with the off-year half rendered at lower opacity.
 -->
 <script lang="ts">
+  import { harvestTargetLabel } from '$lib/calendar/eventTitle';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
   import type { ShadeImpactEvent } from '$lib/calendar/engine';
   import type { RotationConflict, SameTimeOverlap } from '$lib/calendar/rotation';
@@ -298,6 +300,14 @@
     }
   }
 
+  const tr = $derived(createT(page.data?.locale));
+
+  function sunText(sun: 'full' | 'partial' | 'shade'): string {
+    if (sun === 'partial') return tr('planui.swim.sun.partial');
+    if (sun === 'shade') return tr('planui.swim.sun.shade');
+    return tr('planui.swim.sun.full');
+  }
+
   function fmtDateRange(startMs: number, endMs: number): string {
     return `${fmt.day(startMs, 'month-day')} – ${fmt.day(endMs, 'month-day')}`;
   }
@@ -306,23 +316,42 @@
   function barTooltip(p: SwimPlanting, lanesCount: number, laneIdx: number): string {
     const head = `${p.varietyDisplayName} • ${fmt.day(p.plantingDateMs)} → ${fmt.day(p.endMs)}`;
     const grp = p.groupId ? ` • ${systemLabel(p.groupSystemKind ?? 'manual')}` : '';
-    const lane = lanesCount > 1 ? ` • lane ${laneIdx + 1}/${lanesCount}` : '';
+    const lane =
+      lanesCount > 1 ? ` • ${tr('planui.swim.lane', { n: laneIdx + 1, total: lanesCount })}` : '';
     const lines: string[] = [head + grp + lane];
-    if (p.cornType) lines.push(`Type: ${p.cornType}`);
+    if (p.cornType) lines.push(tr('planui.swim.type', { type: p.cornType }));
     if (p.currentStage) {
       const days = p.currentStage.daysIntoStage;
-      lines.push(`Stage: ${p.currentStage.code} — ${p.currentStage.name} (day ${days})`);
-      if (p.currentStage.inspect) lines.push(`Inspect: ${p.currentStage.inspect}`);
+      lines.push(
+        tr('planui.swim.stage', {
+          code: p.currentStage.code,
+          name: p.currentStage.name,
+          days
+        })
+      );
+      if (p.currentStage.inspect)
+        lines.push(tr('planui.swim.inspect', { text: p.currentStage.inspect }));
     }
     if (p.nextStage) {
-      lines.push(`Next: ${p.nextStage.code} ${p.nextStage.name} in ${p.nextStage.daysToStart}d`);
+      lines.push(
+        tr('planui.swim.next', {
+          code: p.nextStage.code,
+          name: p.nextStage.name,
+          days: p.nextStage.daysToStart
+        })
+      );
     }
     if (p.harvestTargets?.length) {
       for (const t of p.harvestTargets) {
-        lines.push(`Harvest target — ${t.label}: ${fmtDateRange(t.startMs, t.endMs)}`);
+        lines.push(
+          tr('planui.swim.harvestTarget', {
+            label: harvestTargetLabel(t.label, page.data?.locale),
+            range: fmtDateRange(t.startMs, t.endMs)
+          })
+        );
       }
     }
-    lines.push('drag to move, click to select');
+    lines.push(tr('planui.swim.dragHint'));
     return lines.join('\n');
   }
 
@@ -407,7 +436,11 @@
           intensity: e.detail.intensity,
           sourceLabel,
           slotsLabel: '',
-          tooltip: `Shaded by ${e.detail.shadingVariety} from ${fmt.day(e.startMs)} – ${fmt.day(e.endMs)}`
+          tooltip: tr('planui.swim.shadedBy', {
+            source: e.detail.shadingVariety,
+            start: fmt.day(e.startMs),
+            end: fmt.day(e.endMs)
+          })
         });
       }
     }
@@ -416,7 +449,7 @@
       const slots = Array.from(slotAcc.get(k) ?? []);
       band.slotsLabel = formatSlots(slots);
       if (band.slotsLabel) {
-        band.tooltip = `${band.tooltip} · sun ${band.slotsLabel}`;
+        band.tooltip = `${band.tooltip} · ${tr('planui.swim.sun', { slots: band.slotsLabel })}`;
       }
     }
     return Array.from(byKey.values()).sort((a, b) => a.startMs - b.startMs);
@@ -620,9 +653,9 @@
   });
 
   function systemLabel(kind: 'three-sisters' | 'succession' | 'manual'): string {
-    if (kind === 'three-sisters') return 'Three Sisters';
-    if (kind === 'succession') return 'Succession';
-    return 'Group';
+    if (kind === 'three-sisters') return tr('group.kind.threeSisters');
+    if (kind === 'succession') return tr('group.kind.succession');
+    return tr('group.wiz.group');
   }
 
   /** Picture-emoji glyphs make the task type identifiable at a
@@ -652,19 +685,19 @@
   function pipLabel(category: SwimTaskPip['category']): string {
     switch (category) {
       case 'plant':
-        return 'Plant';
+        return tr('planui.swim.pip.plant');
       case 'till':
-        return 'Till';
+        return tr('planui.swim.pip.till');
       case 'fertilize':
-        return 'Fertilize';
+        return tr('planui.swim.pip.fertilize');
       case 'spray':
-        return 'Spray';
+        return tr('planui.swim.pip.spray');
       case 'scout':
-        return 'Scout';
+        return tr('planui.swim.pip.scout');
       case 'companion-check':
-        return 'Companion check';
+        return tr('planui.swim.pip.companion');
       default:
-        return 'Task';
+        return tr('planui.swim.pip.task');
     }
   }
   // pipColor() removed when pips switched to emoji rendering — the
@@ -730,7 +763,7 @@
 
 <svelte:window onkeydown={onSwimlaneKey} />
 
-<div class="swimlane" aria-label="Block schedule swim lane" bind:this={swimRoot}>
+<div class="swimlane" aria-label={tr('planui.swim.aria')} bind:this={swimRoot}>
   <div class="header-row">
     <div class="time-axis-cell"><span aria-hidden="true">🗓️</span></div>
     {#each orderedBlocks as b (b.id)}
@@ -748,12 +781,12 @@
         ondragleave={() => onHeaderDragLeave(b.id)}
         ondrop={(e) => onHeaderDrop(e, b.id)}
         ondragend={onHeaderDragEnd}
-        title="Drag to reorder columns"
+        title={tr('planui.swim.reorder')}
       >
         <div class="block-name">{b.blockLabel ?? b.name}</div>
         <div class="block-meta">
           {#if b.acres != null}<span>{fmt.area(b.acres)}</span>{/if}
-          <span class="sun sun-{b.sunExposure ?? 'full'}">{b.sunExposure ?? 'full'}</span>
+          <span class="sun sun-{b.sunExposure ?? 'full'}">{sunText(b.sunExposure ?? 'full')}</span>
           {#if b.eastWestIndex != null}<span class="axis">E{b.eastWestIndex}</span>{/if}
         </div>
       </div>
@@ -767,7 +800,9 @@
   >
     <div class="time-axis">
       {#each weekTicks.filter((w) => w.monDayIdx >= 0) as wt (wt.monDayIdx)}
-        <div class="week-tick mon" style="top: {wt.monDayIdx * ROW_H}px">M {wt.monLabel}</div>
+        <div class="week-tick mon" style="top: {wt.monDayIdx * ROW_H}px">
+          {tr('planui.swim.monday', { day: wt.monLabel })}
+        </div>
       {/each}
       {#each monthTicks as t (t.dayIdx)}
         <div class="month-tick" style="top: {t.dayIdx * ROW_H}px">{t.label}</div>
@@ -780,7 +815,7 @@
         <div
           class="column"
           role="region"
-          aria-label="Block {b.name} drop zone"
+          aria-label={tr('planui.swim.dropZone', { name: b.name })}
           style="flex: {colFlexFor(b.id)};"
           ondragover={(e) => onColumnDragOver(e, b.id)}
           ondragleave={onColumnDragLeave}
@@ -815,7 +850,10 @@
               class="group-bracket group-bracket-{g.systemKind}"
               style="top: {top}px; height: {height}px"
               onclick={() => props.onGroupOpen?.(g.groupId)}
-              aria-label="{systemLabel(g.systemKind)} group, {g.memberCount} plantings"
+              aria-label={tr('planui.swim.groupAria', {
+                kind: systemLabel(g.systemKind),
+                count: g.memberCount
+              })}
             >
               <span class="group-bracket-label">{systemLabel(g.systemKind)}</span>
             </button>
@@ -880,21 +918,27 @@
                   <span
                     class="stage-badge"
                     style="background: {stageColor.bg}; color: {stageColor.fg};"
-                    aria-label="Current stage: {p.currentStage.code} {p.currentStage.name}"
-                    >{p.currentStage.code}</span
+                    aria-label={tr('planui.swim.stageAria', {
+                      code: p.currentStage.code,
+                      name: p.currentStage.name
+                    })}>{p.currentStage.code}</span
                   >
                 {/if}
                 {#if p.cornType}
-                  <span class="corn-type-chip" aria-label="Corn type: {p.cornType}"
-                    >{p.cornType}</span
+                  <span
+                    class="corn-type-chip"
+                    aria-label={tr('planui.swim.cornAria', { type: p.cornType })}>{p.cornType}</span
                   >
                 {/if}
                 {p.shortName ?? p.varietyDisplayName}
               </span>
               {#if height >= 24}
                 {@const plantDate = fmt.day(p.plantingDateMs, 'month-day')}
-                <span class="plant-line" aria-label="Planted {plantDate}">
-                  <span class="ht-leader">Plant</span>
+                <span
+                  class="plant-line"
+                  aria-label={tr('planui.swim.plantedAria', { date: plantDate })}
+                >
+                  <span class="ht-leader">{tr('planui.swim.plant')}</span>
                   <span class="ht-date">{plantDate}</span>
                 </span>
               {/if}
@@ -910,11 +954,22 @@
                   class="harvest-target-box"
                   style="top: {htTop}px; height: {htHeight}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX *
                     2}px);"
-                  title="Harvest — {t.label} ({t.stageCode}): {htStart} – {htEnd}"
-                  aria-label="Harvest window {t.label} from {htStart} to {htEnd}"
+                  title={tr('planui.swim.harvestTitle', {
+                    label: harvestTargetLabel(t.label, page.data?.locale),
+                    code: t.stageCode,
+                    start: htStart,
+                    end: htEnd
+                  })}
+                  aria-label={tr('planui.swim.harvestAria', {
+                    label: harvestTargetLabel(t.label, page.data?.locale),
+                    start: htStart,
+                    end: htEnd
+                  })}
                 >
-                  <span class="ht-line ht-leader">Harvest</span>
-                  <span class="ht-line ht-tag">{t.label}</span>
+                  <span class="ht-line ht-leader">{tr('planui.swim.harvest')}</span>
+                  <span class="ht-line ht-tag"
+                    >{harvestTargetLabel(t.label, page.data?.locale)}</span
+                  >
                   <span class="ht-line ht-date">{htStart}</span>
                   <span class="ht-line ht-date">{htEnd}</span>
                 </div>
@@ -947,7 +1002,7 @@
             ></div>
             {#if dropPreview.tooEarly}
               <div class="drop-preview-label too-early-label" style="top: {top}px">
-                ⚠ Too early — snapped to soil-temp / frost floor
+                ⚠ {tr('planui.swim.tooEarly')}
               </div>
             {/if}
           {/if}

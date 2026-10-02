@@ -13,6 +13,7 @@ import { requireOwner } from '$lib/server/auth';
 import { aiLimitOf, recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import { recordCall } from '$lib/server/aiGuard';
 import { aiLimitReason } from '$lib/billing/aiLimit';
+import { t, type MessageKey } from '$lib/i18n';
 import { suggestBedLayout } from '$lib/server/aiBedLayout';
 import { getRegistry } from '$lib/server/registry';
 
@@ -20,15 +21,15 @@ export const _requestSchema = bedLayoutRequestSchema;
 
 const BED_LAYOUT_TIMEOUT_MS = 8000;
 
-const WHY: Record<string, string> = {
-  'no-key': 'Claude is off',
-  'over-cap': "This month's AI help for your farm is used up",
-  quota: "Today's AI help for this is used up",
-  'rate-limit': "Claude isn't answering right now",
-  offline: "Claude can't be reached right now",
-  timeout: 'Claude took too long',
-  invalid: "Claude's beds didn't fit your seed",
-  'too-many-beds': `This seed needs more than ${MAX_SUGGESTED_BEDS} beds`
+const WHY: Record<string, MessageKey> = {
+  'no-key': 'wizard.beds.why.noKey',
+  'over-cap': 'wizard.beds.why.overCap',
+  quota: 'wizard.beds.why.quota',
+  'rate-limit': 'wizard.beds.why.rateLimit',
+  offline: 'wizard.beds.why.offline',
+  timeout: 'wizard.beds.why.timeout',
+  invalid: 'wizard.beds.why.invalid',
+  'too-many-beds': 'wizard.beds.why.tooMany'
 };
 
 /** POST /api/plan/beds/suggest (#475). Beds sized for the seed being
@@ -38,6 +39,7 @@ const WHY: Record<string, string> = {
  *  Fill this bed allowance. */
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
+  const locale = event.locals?.locale;
   let raw: unknown;
   try {
     raw = await event.request.json();
@@ -73,16 +75,21 @@ export const POST: RequestHandler = async (event) => {
   const opts = { bedWidthFt: parsed.data.bedWidthFt, maxBedLengthFt: parsed.data.maxBedLengthFt };
   const { beds: plain, unplaced } = planBeds(crops, opts);
   const leftover = unplaced.length
-    ? ` These ${MAX_SUGGESTED_BEDS} beds leave out ${unplaced
-        .map((u) => `${u.plants} ${u.name} ${u.plants === 1 ? 'plant' : 'plants'}`)
-        .join(', ')}. Use longer or wider beds, or plant less.`
+    ? ` ${t(locale, 'wizard.beds.leftover', {
+        max: MAX_SUGGESTED_BEDS,
+        list: unplaced
+          .map((u) => t(locale, 'wizard.beds.leftoverItem', { count: u.plants, name: u.name }))
+          .join(', ')
+      })}`
     : '';
 
   const fallback = (why: string, limit: ReturnType<typeof aiLimitOf> = null) => ({
     beds: plain,
     provenance: 'fallback' as const,
     note: null,
-    message: `${limit ? aiLimitReason(limit) : WHY[why]}, so these beds come from each crop's spacing.${leftover}`,
+    message: `${t(locale, 'wizard.beds.fallbackMsg', {
+      why: limit ? aiLimitReason(limit, locale) : t(locale, WHY[why], { max: MAX_SUGGESTED_BEDS })
+    })}${leftover}`,
     unplaced,
     aiLimit: limit
   });

@@ -15,10 +15,11 @@ import { areaOptions, housingAreaOptions, speciesOptions } from '$lib/animals/pa
 import { loadCareSection } from '$lib/server/careView';
 import { ymdInZone } from '$lib/prefs';
 import { loadToxicPlants } from '$lib/server/toxicPlants';
+import { t } from '$lib/i18n';
 
 export const load: PageServerLoad = async (event) => {
   const animal = getAnimal(event.params.id);
-  if (!animal) throw error(404, 'Animal not found');
+  if (!animal) throw error(404, t(event.locals?.locale, 'animallib.api.animalPageNotFound'));
   const user = currentUser(event);
   const species = await speciesOptions();
   const areas = areaOptions();
@@ -45,7 +46,7 @@ export const load: PageServerLoad = async (event) => {
       )
       .map((g) => ({ id: g.id, name: g.name })),
     ...(await holdsFor('animal', animal.id, farmTimeZone())),
-    care: await loadCareSection('animal', animal.id, animal.speciesId, today),
+    care: await loadCareSection('animal', animal.id, animal.speciesId, today, event.locals?.locale),
     todayYmd: today,
     ...(await loadToxicPlants()),
     canEdit: user?.role === 'owner',

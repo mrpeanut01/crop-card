@@ -50,4 +50,12 @@ describe('demoBlockedResponse', () => {
     expect(body).toMatchObject({ type: 'failure', status: 403 });
     expect(JSON.parse(body.data)).toEqual([{ error: 1 }, DEMO_BLOCKED_MESSAGE]);
   });
+
+  it('says it in the visitor’s language', async () => {
+    expect(await demoBlockedResponse('/api/invites', false, 'en').json()).toMatchObject({
+      error: DEMO_BLOCKED_MESSAGE
+    });
+    const body = await demoBlockedResponse('/api/invites', false, 'es').json();
+    expect(body.error).toMatch(/^No está disponible en la demo/);
+  });
 });

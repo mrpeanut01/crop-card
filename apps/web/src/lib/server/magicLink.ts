@@ -22,7 +22,9 @@ import { loginTokens } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import type { RequestEvent } from '@sveltejs/kit';
 import { formatPhone, normalizeEmail, parseIdentifier } from '$lib/identity';
+import { t, type MessageKey } from '$lib/i18n';
 import { dispatchEmail } from './email';
+import { localeField } from './messageLocale';
 import {
   burnCodesForLoginToken,
   issueCode,
@@ -145,6 +147,8 @@ export interface MagicLinkRequest {
   ip: string | null;
   origin: string;
   inviteToken?: string | null;
+  /** Language of the email; the request's locale at send time. */
+  locale?: string | null;
   now?: number;
 }
 
@@ -222,7 +226,8 @@ export async function requestMagicLink(
     to: req.email,
     loginUrl: buildVerifyUrl(req.origin, token, req.inviteToken),
     code,
-    expiresAt
+    expiresAt,
+    ...localeField(req.locale)
   });
   return { outcome: 'sent', expiresAt };
 }
@@ -303,11 +308,12 @@ export type MagicLinkHttpResult =
 export async function handleMagicLinkRequest(
   event: RequestEvent,
   rawEmail: unknown,
-  rawInvite: unknown
+  rawInvite: unknown,
+  locale?: string | null
 ): Promise<MagicLinkHttpResult> {
   const email = normalizeLoginEmail(rawEmail);
-  if (!email) return { ok: false, status: 400, error: 'Enter a valid email address.' };
-  const result = await handleLoginRequest(event, email, rawInvite);
+  if (!email) return { ok: false, status: 400, error: t(locale, 'signin.err.validEmail') };
+  const result = await handleLoginRequest(event, email, rawInvite, locale);
   return result.ok ? { ok: true, message: result.message } : result;
 }
 
@@ -332,22 +338,19 @@ export type LoginRequestResult =
 export async function handleLoginRequest(
   event: RequestEvent,
   rawIdentifier: unknown,
-  rawInvite: unknown
+  rawInvite: unknown,
+  locale?: string | null
 ): Promise<LoginRequestResult> {
   const id = parseIdentifier(rawIdentifier);
   if (!id) {
-    return {
-      ok: false,
-      status: 400,
-      error: 'Enter an email address or a phone number (US numbers can skip the +1).'
-    };
+    return { ok: false, status: 400, error: t(locale, 'signin.err.emailOrPhoneUs') };
   }
   let origin: string;
   try {
     origin = magicLinkOrigin(event.url.origin);
   } catch (e) {
     console.error('[login]', e instanceof Error ? e.message : e);
-    return { ok: false, status: 503, error: 'Sign-in is not configured on this server.' };
+    return { ok: false, status: 503, error: t(locale, 'signin.err.notConfigured') };
   }
   const ip = clientAddress(event);
 
@@ -357,22 +360,19 @@ export async function handleLoginRequest(
         email: id.value,
         ip,
         origin,
-        inviteToken: sanitizeInviteToken(rawInvite)
+        inviteToken: sanitizeInviteToken(rawInvite),
+        locale: locale ?? event.locals?.locale
       });
     } catch (e) {
       console.error('[magic-link] dispatch failed', e instanceof Error ? e.message : e);
-      return {
-        ok: false,
-        status: 503,
-        error: "We couldn't send the email just now. Try again in a minute."
-      };
+      return { ok: false, status: 503, error: t(locale, 'signin.err.emailSendFailed') };
     }
     return {
       ok: true,
       channel: 'email',
       identifier: id.value,
       sentTo: id.value,
-      message: MAGIC_LINK_GENERIC_MESSAGE
+      message: locale ? t(locale, 'signin.msg.linkSent') : MAGIC_LINK_GENERIC_MESSAGE
     };
   }
 
@@ -385,43 +385,44 @@ export async function handleLoginRequest(
         hash: sha256(bucket.key),
         max: bucket.attributed ? MAX_SMS_PER_IP : MAX_SMS_UNATTRIBUTED
       },
-      origin
+      origin,
+      locale: locale ?? event.locals?.locale
     });
   } catch (e) {
     console.error('[sms-login] dispatch failed', e instanceof Error ? e.message : e);
-    return {
-      ok: false,
-      status: 503,
-      error: "We couldn't send the text just now. Try again in a minute, or use your email."
-    };
+    return { ok: false, status: 503, error: t(locale, 'signin.err.smsSendFailed') };
   }
   return {
     ok: true,
     channel: 'sms',
     identifier: id.value,
     sentTo: formatPhone(id.value),
-    message: SMS_CODE_GENERIC_MESSAGE
+    message: locale ? t(locale, 'signin.msg.codeSent') : SMS_CODE_GENERIC_MESSAGE
   };
 }
 
 export const SMS_CODE_GENERIC_MESSAGE =
   'If that number can receive texts, a 6-digit code is on its way. It expires in 10 minutes.';
 
-const CODE_ERROR_COPY: Record<CodeInvalidReason, string> = {
-  invalid: "That code didn't match. Check it and try again.",
-  expired: 'That code has expired. Send a new one.',
-  'too-many-attempts': 'Too many wrong tries for that code. Send a new one.'
-};
+const CODE_ERROR_KEY = {
+  invalid: 'signin.code.invalid',
+  expired: 'signin.code.expired',
+  'too-many-attempts': 'signin.code.tooManyAttempts'
+} as const satisfies Record<CodeInvalidReason, MessageKey>;
 
 export type CodeLoginResult =
   { ok: true; identity: { email: string } | { phone: string } } | { ok: false; error: string };
 
 /** Redeem a login code typed into the sign-in form. */
-export function redeemLoginCode(rawIdentifier: unknown, rawCode: unknown): CodeLoginResult {
+export function redeemLoginCode(
+  rawIdentifier: unknown,
+  rawCode: unknown,
+  locale?: string | null
+): CodeLoginResult {
   const id = parseIdentifier(rawIdentifier);
-  if (!id) return { ok: false, error: 'Start again with your email or phone number.' };
+  if (!id) return { ok: false, error: t(locale, 'signin.err.startAgain') };
   const r = redeemCode({ destination: id.value, purpose: 'login', code: rawCode });
-  if (!r.ok) return { ok: false, error: CODE_ERROR_COPY[r.reason] };
+  if (!r.ok) return { ok: false, error: t(locale, CODE_ERROR_KEY[r.reason]) };
   return {
     ok: true,
     identity: id.kind === 'email' ? { email: id.value } : { phone: id.value }

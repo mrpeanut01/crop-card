@@ -6,8 +6,8 @@
   import type { DrainHalt } from '$lib/client/syncQueue';
   import { fmt } from '$lib/prefsState.svelte';
   import {
-    KIND_LABEL,
-    RECOVERY_LABEL,
+    queueKindLabel,
+    recoveryLabel,
     deleteConfirmText,
     lineageKeys,
     payloadSubjectKeys,
@@ -104,7 +104,7 @@
   }
 
   async function discard(p: PendingSprayRecord) {
-    if (!confirm(deleteConfirmText(p.kind, p.payload))) return;
+    if (!confirm(deleteConfirmText(p.kind, p.payload, page.data?.locale))) return;
     const { discardPendingForActiveOwner } = await import('$lib/client/syncQueue');
     await discardPendingForActiveOwner(p.id);
     await refresh();
@@ -226,15 +226,14 @@
             </span>
           </header>
           <p class="what">
-            <strong>{KIND_LABEL[p.kind ?? 'herbicide'] ?? tr('records.pending.record')}</strong
-            >{#if pendingSummary(p.kind, p.payload)}
-              · {pendingSummary(p.kind, p.payload)}{/if}
+            <strong
+              >{queueKindLabel(p.kind ?? 'herbicide', page.data?.locale) ??
+                tr('records.pending.record')}</strong
+            >{#if pendingSummary(p.kind, p.payload, page.data?.locale)}
+              · {pendingSummary(p.kind, p.payload, page.data?.locale)}{/if}
           </p>
           {#if waiting.has(p.id)}
-            <p class="waiting">
-              Waiting for the refused record above for the same animals. It syncs once that one is
-              sorted out.
-            </p>
+            <p class="waiting">{tr('recui.pending.waiting')}</p>
           {/if}
           {#if p.status === 'rejected' && p.rejectInfo?.error}
             <p class="err">{p.rejectInfo.error}</p>
@@ -244,14 +243,14 @@
           {#if p.status === 'rejected'}
             {@const rec = recoveryFor(p)}
             {#if rec.askOwner}
-              <p class="ask">Ask the owner. They can add what is missing, then this can sync.</p>
+              <p class="ask">{tr('recui.pending.askOwner')}</p>
             {/if}
             {#if rec.actions.some((a) => a !== 'retry')}
               <div class="recover" data-testid="recovery-actions">
                 {#each rec.actions.filter((a) => a !== 'retry') as a (a)}
                   <button
                     class={a === rec.primary ? 'primary wide' : 'secondary wide'}
-                    onclick={() => recover(p, a)}>{RECOVERY_LABEL[a]}</button
+                    onclick={() => recover(p, a)}>{recoveryLabel(a, page.data?.locale)}</button
                   >
                 {/each}
                 {#if redating === p.id}

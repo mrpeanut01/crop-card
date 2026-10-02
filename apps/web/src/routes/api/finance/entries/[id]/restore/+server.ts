@@ -12,7 +12,7 @@ export const POST: RequestHandler = (event) => {
     const entry = restoreLedgerEntry(event.params.id!, user.id);
     return entry ? json({ entry }) : json({ error: 'No such entry.' }, { status: 404 });
   } catch (e) {
-    if (e instanceof LotAlreadyExpensedError) return lotConflict(e.entryId);
+    if (e instanceof LotAlreadyExpensedError) return lotConflict(e.entryId, event.locals.locale);
     throw e;
   }
 };

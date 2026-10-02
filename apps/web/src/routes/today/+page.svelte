@@ -4,11 +4,8 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
   import { createT, type MessageKey } from '$lib/i18n';
-  import {
-    PRINT_RANGE_NOTE,
-    periodCardPrintHref,
-    periodPrintable
-  } from '$lib/cards/build/calendar';
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
+  import { periodCardPrintHref, printRangeNote, periodPrintable } from '$lib/cards/build/calendar';
   import type { CalendarEvent } from '$lib/calendar/engine';
   import type { Task } from '$lib/db/tasks';
   import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
@@ -60,8 +57,19 @@
   import { dateTimeFormat } from '$lib/intlCache';
   import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
   import { formatHours } from '$lib/labour/hours';
-  import { isClosedStatus } from '$lib/tasks/status';
-  import { defaultAssigneeWho, resolveAssigneeWho, type AssigneeWho } from '$lib/tasks/assignee';
+  import {
+    isClosedStatus,
+    taskStatusLabel,
+    TASK_STATUSES,
+    type TaskStatus
+  } from '$lib/tasks/status';
+  import { taskDisplayTitle } from '$lib/tasks/title';
+  import {
+    defaultAssigneeWho,
+    memberNameIn,
+    resolveAssigneeWho,
+    type AssigneeWho
+  } from '$lib/tasks/assignee';
 
   const { data } = $props();
   const tr = $derived(createT(page.data?.locale));
@@ -100,7 +108,11 @@
   });
   const rejected = $derived(new Set(queuedRows.filter((r) => r.rejected).map((r) => r.taskId)));
 
-  const tasks = $derived(data.deckTasks as Task[]);
+  const tasks = $derived(
+    (data.deckTasks as Task[]).map((t) => ({ ...t, title: taskDisplayTitle(t, page.data?.locale) }))
+  );
+  const isTaskStatus = (s: string | undefined): s is TaskStatus =>
+    (TASK_STATUSES as readonly (string | undefined)[]).includes(s);
   const entries = $derived<DeckEntry<Task>[]>(
     data.calendar
       ? buildCalendarDeck(tasks, {
@@ -167,13 +179,15 @@
     const planting = t.cropId ? data.plantingNames[t.cropId] : undefined;
     const blockId = t.blockId ?? planting?.blockId;
     const block = blockId ? data.blockNames[blockId] : undefined;
-    const parts = [planting?.name, block].filter(Boolean);
+    const parts = [planting && cropDisplayNameByEnglish(planting.name, data.locale), block].filter(
+      Boolean
+    );
     return parts.length ? parts.join(' · ') : null;
   }
 
   function cardFor(t: Task, linked: Task[]) {
     const planting = t.cropId ? data.plantingNames[t.cropId] : undefined;
-    return buildTaskCard(
+    const card = buildTaskCard(
       t,
       {
         where: whereFor(t),
@@ -182,11 +196,15 @@
         after: linked.filter((l) => l.kind === 'post-task').map((l) => l.title),
         queued: queued.get(t.id) ?? null,
         asOf: data.nowMs,
-        assignee: t.assignee?.name ?? null,
+        assignee: t.assignee ? memberNameIn(t.assignee.name, data.locale) : null,
         href: taskPlanHref(t.blockId ?? planting?.blockId ?? null)
       },
       { now: data.nowMs, prefs }
     );
+    const status = card.status;
+    return status && isTaskStatus(status.id)
+      ? { ...card, status: { ...status, label: taskStatusLabel(status.id, page.data?.locale) } }
+      : card;
   }
 
   const deck = $derived(
@@ -196,7 +214,7 @@
         e.task,
         e.linked.map((l) => l.task)
       ),
-      start: taskStart(e.task),
+      start: taskStart(e.task, page.data?.locale),
       linked: e.linked.map((l): LinkedTaskItem => ({
         id: l.task.id,
         title: l.task.title,
@@ -235,7 +253,7 @@
     data.upcoming.slice(0, 8).map((e: CalendarEvent, i: number) => ({
       id: `${e.kind}:${e.blockId}:${e.startMs}:${i}`,
       title: e.title,
-      crop: e.varietyDisplayName,
+      crop: cropDisplayNameByEnglish(e.varietyDisplayName, data.locale),
       window: fmt.day(e.startMs, 'month-day')
     }))
   );
@@ -538,7 +556,10 @@
     <div class="s-main">
       <strong>{e.title}</strong>
       <span class="s-meta"
-        >{fmtRange(e.startMs, e.endMs)} · {e.varietyDisplayName} ·
+        >{fmtRange(e.startMs, e.endMs)} · {cropDisplayNameByEnglish(
+          e.varietyDisplayName,
+          data.locale
+        )} ·
         <span class="s-kind"
           >{EVENT_KIND_LABEL[e.kind]
             ? tr(EVENT_KIND_LABEL[e.kind])
@@ -687,19 +708,17 @@
 {/if}
 
 {#if data.winterizeAlerts.length > 0}
-  <section class="card winterize-alert" aria-label="Winterization reminder">
-    <h2>❄ Winterization check</h2>
+  <section class="card winterize-alert" aria-label={tr('today.winter.aria')}>
+    <h2>❄ {tr('today.winter.heading')}</h2>
     <p>
-      {data.winterizeAlerts.length === 1 ? 'A sprayer was' : 'Sprayers were'} used this season but
-      {data.winterizeAlerts.length === 1 ? 'was' : 'were'} not winterized after the prior one. Recalibrate
-      (UC-10) and winterize before storage.
+      {tr('today.winter.body', { count: data.winterizeAlerts.length })}
     </p>
     <ul>
       {#each data.winterizeAlerts as a (a.sprayerId)}
         <li>
           <a href="/equipment/{encodeURIComponent(a.sprayerId)}/winterize">{a.label}</a>
-          {#if a.uncalibrated}<span class="pill">Uncalibrated</span>{/if}
-          {#if a.neverWinterized}<span class="pill">Never winterized</span>{/if}
+          {#if a.uncalibrated}<span class="pill">{tr('today.winter.uncalibrated')}</span>{/if}
+          {#if a.neverWinterized}<span class="pill">{tr('today.winter.never')}</span>{/if}
         </li>
       {/each}
     </ul>
@@ -829,7 +848,7 @@
           })}>{data.calendar.view === 'week' ? tr('today.print.week') : tr('today.print.month')}</a
         >
       {:else}
-        <p class="print-range" data-testid="print-calendar-range">{PRINT_RANGE_NOTE}</p>
+        <p class="print-range" data-testid="print-calendar-range">{printRangeNote(data.locale)}</p>
       {/if}
     </div>
   {:else if data.season}
@@ -860,7 +879,7 @@
           <p>{tr('today.empty.nothingDue')}</p>
         {/if}
         {#if !gardenOnly}
-          <a class="empty-link" href="/spray">Plan a spray</a>
+          <a class="empty-link" href="/spray">{tr('today.empty.planSpray')}</a>
         {/if}
       </div>
     {:else}

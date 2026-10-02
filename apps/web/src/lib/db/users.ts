@@ -164,7 +164,7 @@ export interface AssignableMember {
 }
 
 /** Everyone who can be given a task on this Owner (F0-11), by name. */
-export function listAssignableMembers(ownerId: string): AssignableMember[] {
+export function listAssignableMembers(ownerId: string, locale?: string | null): AssignableMember[] {
   unscopedQueryNote('farm members come from helper_assignments joined to global users');
   return db
     .select({
@@ -188,7 +188,7 @@ export function listAssignableMembers(ownerId: string): AssignableMember[] {
     .map((r) => ({
       id: r.id,
       role: r.role as AssignableRole,
-      name: memberName({ email: r.email, phone: r.phone, displayName: r.displayName })
+      name: memberName({ email: r.email, phone: r.phone, displayName: r.displayName }, locale)
     }));
 }
 
@@ -212,7 +212,10 @@ export function hasOtherAssignableMember(ownerId: string, userId: string): boole
 }
 
 /** Display names for user ids, through `memberName` (F0-12). */
-export function memberNamesByIds(ids: readonly string[]): Map<string, string> {
+export function memberNamesByIds(
+  ids: readonly string[],
+  locale?: string | null
+): Map<string, string> {
   unscopedQueryNote('users is the global identity table; callers pass ids from tenant rows');
   const out = new Map<string, string>();
   const unique = [...new Set(ids)];
@@ -227,7 +230,7 @@ export function memberNamesByIds(ids: readonly string[]): Map<string, string> {
       .from(users)
       .where(inArray(users.id, unique.slice(i, i + 500)))
       .all()) {
-      out.set(r.id, memberName(r));
+      out.set(r.id, memberName(r, locale));
     }
   }
   return out;

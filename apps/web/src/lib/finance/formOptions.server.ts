@@ -9,16 +9,26 @@ import { farmTimeZone } from '$lib/db/userProfile';
 import { lotsForRole } from './redact';
 import type { FarmNames } from './profit.server';
 import type { EntryFormOptions, LinkOption } from './formTypes';
+import { cropDisplayName } from '$lib/i18n/cropName';
+import { t } from '$lib/i18n';
 
 export type { EntryFormOptions, LinkOption };
 
 const byLabel = (a: LinkOption, b: LinkOption) => a.label.localeCompare(b.label);
 
-export function entryFormOptions(names: FarmNames): EntryFormOptions {
+export function entryFormOptions(names: FarmNames, locale?: string | null): EntryFormOptions {
   const plantings = Object.keys(names.plantingPlugin).map((id) => {
-    const crop = names.crop[names.plantingPlugin[id]];
+    const pluginId = names.plantingPlugin[id];
+    const crop = names.crop[pluginId];
     const variety = names.plantingLabel[id];
-    return { id, label: variety && variety !== crop ? `${crop}, ${variety}` : crop };
+    const shown = cropDisplayName(pluginId, crop, locale);
+    return {
+      id,
+      label:
+        variety && variety !== crop
+          ? `${shown}, ${cropDisplayName(pluginId, variety, locale)}`
+          : shown
+    };
   });
   return {
     plantings: plantings.sort(byLabel),
@@ -26,7 +36,11 @@ export function entryFormOptions(names: FarmNames): EntryFormOptions {
       .map(([id, label]) => ({ id, label }))
       .sort(byLabel),
     beds: [...names.blockField.entries()]
-      .map(([id, fieldId]) => ({ id, fieldId, label: names.bed[id] ?? 'Bed' }))
+      .map(([id, fieldId]) => ({
+        id,
+        fieldId,
+        label: names.bed[id] ?? t(locale, 'finance.form.bedFallback')
+      }))
       .sort(byLabel),
     groups: Object.entries(names.group)
       .map(([id, label]) => ({ id, label }))

@@ -2,6 +2,7 @@
   import { getWizardContext } from '../wizardState.svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import EditBlockModal from '$lib/components/plan/EditBlockModal.svelte';
   import { fmt } from '$lib/prefsState.svelte';
@@ -339,7 +340,11 @@
             <span class="muted">
               {bed.crops
                 .map((c) =>
-                  tr('wizard.blocks.cropRows', { name: c.name, plants: c.plants, count: c.rows })
+                  tr('wizard.blocks.cropRows', {
+                    name: cropDisplayNameByEnglish(c.name, page.data?.locale),
+                    plants: c.plants,
+                    count: c.rows
+                  })
                 )
                 .join('; ')}
             </span>

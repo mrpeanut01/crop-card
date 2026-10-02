@@ -16,31 +16,41 @@ import {
   sortTasks,
   ymdToUtcMs,
   type BuildOptions,
-  type ResolvedOptions
+  type ResolvedOptions,
+  plantingName
 } from './common';
 
 const MAX_ITEMS = 10;
 
-function where(snapshot: FarmSnapshot, t: SnapshotTask): string {
+function where(snapshot: FarmSnapshot, t: SnapshotTask, locale?: string | null): string {
   const planting = t.cropId ? snapshot.plantings.find((p) => p.id === t.cropId) : undefined;
   const blockId = t.blockId ?? planting?.blockId ?? null;
   const block = blockId ? snapshot.blocks.find((b) => b.id === blockId) : undefined;
-  const parts = [planting?.varietyDisplayName, block && blockDisplayName(block)].filter(Boolean);
+  const parts = [planting && plantingName(planting, locale), block && blockDisplayName(block, locale)].filter(
+    Boolean
+  );
   return parts.length ? ` · ${parts.join(' · ')}` : '';
 }
 
-function capped(items: string[]): string[] {
+function capped(items: string[], opts: ResolvedOptions): string[] {
   return items.length > MAX_ITEMS
-    ? [...items.slice(0, MAX_ITEMS), `+${items.length - MAX_ITEMS} more`]
+    ? [...items.slice(0, MAX_ITEMS), opts.tr('cards.more', { count: items.length - MAX_ITEMS })]
     : items;
 }
 
-function dayTitle(ymd: string, today: string): string {
+function dayTitle(ymd: string, today: string, opts: ResolvedOptions): string {
   const diff = daysBetweenYmd(today, ymd);
-  if (diff === 0) return 'Today';
-  if (diff === 1) return 'Tomorrow';
-  if (diff === -1) return 'Yesterday';
-  return formatCalendarDate(ymd, 'date-long', { year: undefined });
+  if (diff === 0) return opts.tr('cards.day.today');
+  if (diff === 1) return opts.tr('cards.day.tomorrow');
+  if (diff === -1) return opts.tr('cards.day.yesterday');
+  return capitalize(
+    formatCalendarDate(ymd, 'date-long', { year: undefined }, opts.prefs.locale)
+  );
+}
+
+/** Spanish dates start lowercase ("lunes, 5 de octubre"); a title doesn't. */
+function capitalize(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
 function tasksOn(snapshot: FarmSnapshot, ymd: string, opts: ResolvedOptions): SnapshotTask[] {
@@ -56,6 +66,8 @@ export function buildDayCard(
 ): CardModel | null {
   if (ymdToUtcMs(ymd) === null) return null;
   const opts = resolveOptions(snapshot, options);
+  const { tr } = opts;
+  const loc = opts.prefs.locale;
   const today = ymdInZone(opts.now, opts.prefs.timeZone);
   const due = tasksOn(snapshot, ymd, opts);
   const overdue =
@@ -66,33 +78,43 @@ export function buildDayCard(
       : [];
 
   const facts: CardFact[] = [
-    { label: 'Due', value: due.length ? `${due.length}` : 'Nothing scheduled', provenance: 'data' }
+    {
+      label: tr('cards.day.due'),
+      value: due.length ? `${due.length}` : tr('cards.nothingScheduled'),
+      provenance: 'data'
+    }
   ];
   if (overdue.length)
-    facts.push({ label: 'Overdue', value: `${overdue.length}`, provenance: 'data' });
+    facts.push({ label: tr('cards.overdue'), value: `${overdue.length}`, provenance: 'data' });
 
   const sections: CardSection[] = [];
   if (overdue.length) {
     sections.push({
-      title: 'Overdue',
-      items: capped(overdue.map((t) => `${t.title}${where(snapshot, t)}`))
+      title: tr('cards.overdue'),
+      items: capped(
+        overdue.map((t) => `${t.title}${where(snapshot, t, loc)}`),
+        opts
+      )
     });
   }
   if (due.length) {
     sections.push({
-      title: ymd === today ? 'Due today' : 'Due',
-      items: capped(due.map((t) => `${t.title}${where(snapshot, t)}`))
+      title: ymd === today ? tr('cards.day.dueToday') : tr('cards.day.due'),
+      items: capped(
+        due.map((t) => `${t.title}${where(snapshot, t, loc)}`),
+        opts
+      )
     });
   }
 
-  const provenance: CardProvenance[] = [{ source: 'data', detail: 'your task list' }];
+  const provenance: CardProvenance[] = [{ source: 'data', detail: tr('cards.prov.taskList') }];
   const key = cardKey('day', ymd);
-  const date = formatCalendarDate(ymd, 'date-long', { year: undefined });
+  const date = formatCalendarDate(ymd, 'date-long', { year: undefined }, loc);
   return {
     kind: 'day',
     key,
-    kicker: `Day · ${date}`,
-    title: dayTitle(ymd, today),
+    kicker: tr('cards.day.kicker', { date }),
+    title: dayTitle(ymd, today, opts),
     facts,
     next: nextAction([...overdue, ...due], opts, snapshot.plantings),
     sections,

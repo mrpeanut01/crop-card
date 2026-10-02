@@ -18,6 +18,7 @@ import {
   rejectForeignRefs
 } from '$lib/server/foreignRefs';
 import { MAX_FUTURE_MS, ledgerEntryProblem } from './apiSchemas';
+import { t } from '$lib/i18n';
 
 export function invalidBody(err: ZodError): Response {
   return json(
@@ -39,14 +40,15 @@ export async function readBody(
   }
 }
 
-export function checkEntry(input: LedgerEntryInput, now = Date.now()): Response | null {
+export function checkEntry(
+  input: LedgerEntryInput,
+  now = Date.now(),
+  locale?: string | null
+): Response | null {
   const problem = ledgerEntryProblem(input);
   if (problem) return json({ error: problem }, { status: 400 });
   if (input.occurredAt > now + MAX_FUTURE_MS) {
-    return json(
-      { error: 'The date is more than a day ahead.', code: 'IN_THE_FUTURE' },
-      { status: 400 }
-    );
+    return json({ error: t(locale, 'finance.err.future'), code: 'IN_THE_FUTURE' }, { status: 400 });
   }
   const foreign = rejectForeignRefs(
     assertCrop('cropId', input.cropId),
@@ -65,16 +67,16 @@ export function checkEntry(input: LedgerEntryInput, now = Date.now()): Response 
       .where(withTenant(blocks, eq(blocks.id, input.blockId)))
       .get();
     if (block?.fieldId !== input.fieldId) {
-      return json({ error: 'That bed is not in that Area.' }, { status: 400 });
+      return json({ error: t(locale, 'finance.err.bedArea') }, { status: 400 });
     }
   }
   return null;
 }
 
-export function lotConflict(entryId: string): Response {
+export function lotConflict(entryId: string, locale?: string | null): Response {
   return json(
     {
-      error: 'This stock lot already has a purchase expense.',
+      error: t(locale, 'finance.err.lotExpensed'),
       code: 'LOT_ALREADY_EXPENSED',
       entryId
     },

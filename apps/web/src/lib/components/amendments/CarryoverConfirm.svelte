@@ -2,6 +2,8 @@
   import Modal from '$lib/components/ui/Modal.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { formatCalendarDate } from '$lib/prefs';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import type { CarryoverConfirmBody } from '$lib/amendments/spreadPrompt';
 
   interface Props {
@@ -12,55 +14,60 @@
     onClose: () => void;
   }
   const { open, facts, busy = false, onConfirm, onClose }: Props = $props();
+  const locale = $derived(page.data?.locale);
+  const tr = $derived(createT(locale));
 </script>
 
-<Modal {open} {onClose} title="Before you spread this" closeOnBackdrop={false}>
+<Modal {open} {onClose} title={tr('carry.confirm.title')} closeOnBackdrop={false}>
   {#if facts}
     <div class="carry-confirm" data-testid="carryover-confirm">
       <p class="state">
         {facts.batch.name}: {facts.stateLabel}
-        <Provenance source="data" detail="your records" compact />
+        <Provenance source="data" detail={tr('amend.prov.yourRecords')} compact />
       </p>
       <p>{facts.message}</p>
       {#if facts.pathSentences.length}
         <ul>
           {#each facts.pathSentences as p, i (i)}<li>{p}</li>{/each}
         </ul>
-        {#if facts.morePaths}<p class="meta">And {facts.morePaths} more.</p>{/if}
+        {#if facts.morePaths}<p class="meta">
+            {tr('amend.morePaths', { count: facts.morePaths })}
+          </p>{/if}
       {/if}
       {#each facts.standingNotes as n, i (i)}<p class="meta">{n}</p>{/each}
-      <p class="sub">Why this block:</p>
+      <p class="sub">{tr('carry.confirm.why')}</p>
       <ul>
         {#each facts.reasonTexts as r, i (i)}<li>{r}</li>{/each}
       </ul>
       {#if facts.bioassays.length}
-        <p class="sub">Pea or bean tests of this batch on file:</p>
+        <p class="sub">{tr('carry.confirm.tests')}</p>
         <ul>
           {#each facts.bioassays as b (b.id)}
             <li>
-              {formatCalendarDate(b.testedOn, 'date')}: {b.result === 'no-damage'
-                ? 'no damage seen'
-                : 'damage seen'}
+              {formatCalendarDate(b.testedOn, 'date', {}, locale)}: {b.result === 'no-damage'
+                ? tr('carry.test.noDamageSeen')
+                : tr('carry.test.damageSeen')}
             </li>
           {/each}
         </ul>
       {/if}
       <p class="meta">
-        You can still save it. Your confirmation and these facts are kept with the record. A pea or
-        bean test before planting is the usual check.
+        {tr('carry.confirm.foot')}
       </p>
     </div>
   {/if}
   {#snippet footer()}
     <div class="actions">
-      <button type="button" class="ghost" onclick={onClose} disabled={busy}>Cancel</button>
+      <button type="button" class="ghost" onclick={onClose} disabled={busy}
+        >{tr('carry.confirm.cancel')}</button
+      >
       <button
         type="button"
         class="primary"
         disabled={busy || !facts}
         onclick={() => facts && onConfirm(facts.factsHash)}
       >
-        {busy ? 'Saving…' : 'I understand, save it'}
+        {busy ? tr('carry.confirm.saving') : tr('carry.confirm.ok')}
       </button>
     </div>
   {/snippet}

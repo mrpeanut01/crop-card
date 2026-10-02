@@ -33,19 +33,27 @@ export const POST: RequestHandler = async (event) => {
   if (foreign) return foreign;
   const area = parsed.data.fieldId ? getField(parsed.data.fieldId) : undefined;
   const kind = parsed.data.kind ?? (area ? defaultBlockKindFor(area.kind) : DEFAULT_BLOCK_KIND);
-  const placement = blockPlacementError(area?.kind ?? null, kind, parsed.data);
+  const placement = blockPlacementError(
+    area?.kind ?? null,
+    kind,
+    parsed.data,
+    event.locals?.locale
+  );
   if (placement) return json({ error: placement }, { status: 400 });
-  const layoutProblem = bedLayoutProblem({
-    id: '',
-    name: parsed.data.name,
-    kind: parsed.data.kind ?? DEFAULT_BLOCK_KIND,
-    fieldId: parsed.data.fieldId,
-    widthFt: parsed.data.widthFt,
-    lengthFt: parsed.data.lengthFt,
-    xFt: parsed.data.xFt,
-    yFt: parsed.data.yFt,
-    rotationDeg: parsed.data.rotationDeg
-  });
+  const layoutProblem = bedLayoutProblem(
+    {
+      id: '',
+      name: parsed.data.name,
+      kind: parsed.data.kind ?? DEFAULT_BLOCK_KIND,
+      fieldId: parsed.data.fieldId,
+      widthFt: parsed.data.widthFt,
+      lengthFt: parsed.data.lengthFt,
+      xFt: parsed.data.xFt,
+      yFt: parsed.data.yFt,
+      rotationDeg: parsed.data.rotationDeg
+    },
+    event.locals?.locale
+  );
   if (layoutProblem) return json(layoutProblem, { status: 409 });
   const { geometryGeojson, ...rest } = parsed.data;
   const block = createBlock({

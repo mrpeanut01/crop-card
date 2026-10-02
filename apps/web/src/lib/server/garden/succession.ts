@@ -19,6 +19,7 @@ import { proposeSuccession } from '$lib/garden/succession';
 import type { GardenCrop } from '$lib/garden/types';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { db } from '$lib/db/client';
+import { t } from '$lib/i18n';
 import { applyPlantingEstablishment, hasSeedStartTasks } from '$lib/server/seedStartTasks';
 import { bedFrostMs } from '$lib/server/blockFrost.server';
 import {
@@ -35,19 +36,18 @@ export type SuccessionResult = { ok: true; response: SuccessionResponse } | Gard
 export function addSuccession(
   blockId: string,
   req: SuccessionRequest,
-  crops: Readonly<Record<string, CropPlugin>>
+  crops: Readonly<Record<string, CropPlugin>>,
+  locale?: string | null
 ): SuccessionResult {
-  const bed = resolveDesignableBed(blockId);
+  const bed = resolveDesignableBed(blockId, locale);
   if (isFailure(bed)) return bed;
   const anchorCrop = getCrop(req.cropId);
   if (!anchorCrop || anchorCrop.blockId !== bed.block.id) {
-    return gardenFailure(404, 'planting not found in this bed');
+    return gardenFailure(404, t(locale, 'gardenlib.succ.notFound'));
   }
+  const name = anchorCrop.varietyDisplayName;
   if (anchorCrop.status !== 'planned' && anchorCrop.status !== 'active') {
-    return gardenFailure(
-      409,
-      `${anchorCrop.varietyDisplayName} is finished for the season. Pick a current planting.`
-    );
+    return gardenFailure(409, t(locale, 'gardenlib.succ.finished', { name }));
   }
   const extending =
     !!anchorCrop.groupId &&
@@ -60,9 +60,13 @@ export function addSuccession(
         : undefined;
     return gardenFailure(
       409,
-      first
-        ? `This is one sowing in a series. Add sowings from the first one${first.plantingDate != null ? `, ${shortDate(first.plantingDate)}` : ''}.`
-        : `${anchorCrop.varietyDisplayName} is already linked to other plantings.`
+      !first
+        ? t(locale, 'gardenlib.succ.linked', { name })
+        : first.plantingDate != null
+          ? t(locale, 'gardenlib.succ.oneOfSeriesOn', {
+              date: shortDate(first.plantingDate, locale)
+            })
+          : t(locale, 'gardenlib.succ.oneOfSeries')
     );
   }
   const series = extending ? listGroupMembers(anchorCrop.groupId!) : [];
@@ -90,13 +94,14 @@ export function addSuccession(
     intervals,
     firstFallFrostMs,
     lastSpringFrostMs,
-    afterMs
+    afterMs,
+    locale
   });
   if (!req.commit) return { ok: true, response: { proposal, groupId: null, created: [] } };
 
   const sowings = proposal.sowings.filter((s) => s.footprint && !s.conflict);
   if (!plugin || anchor.plantingDateMs == null || sowings.length === 0) {
-    return gardenFailure(409, proposal.reason || 'No sowing fits this bed.');
+    return gardenFailure(409, proposal.reason || t(locale, 'gardenlib.succ.noneFits'));
   }
   const anchorDateMs = anchor.plantingDateMs;
   const companions: GroupMemberInput[] = sowings.map((s) => ({

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { equipmentTypeDescription, equipmentTypeLabel } from '$lib/equipment/typeLabel';
   import { untrack } from 'svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { invalidateAll } from '$app/navigation';
@@ -184,7 +185,7 @@
     </button>
     {#each [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0])) as [name, c] (name)}
       <button class="chip" class:active={typeFilter === name} onclick={() => (typeFilter = name)}>
-        {name} ({c})
+        {equipmentTypeLabel(name, data.locale)} ({c})
       </button>
     {/each}
   </div>
@@ -201,7 +202,9 @@
   <section class="card" id="add">
     <h2>{tr('equip.add.title')}</h2>
     <datalist id="equipment-type-suggestions">
-      {#each data.types as t (t.id)}<option value={t.name}>{t.description ?? ''}</option>{/each}
+      {#each data.types as t (t.id)}<option value={t.name}
+          >{equipmentTypeDescription(t.name, t.description, data.locale)}</option
+        >{/each}
     </datalist>
     <div class="add-grid">
       <label class="field">
@@ -277,7 +280,7 @@
       <li class="card item type-{e.type}">
         <header>
           <a href="/equipment/{e.id}"><strong>{e.label}</strong></a>
-          <span class="type-badge">{e.typeName}</span>
+          <span class="type-badge">{equipmentTypeLabel(e.typeName, data.locale)}</span>
           {#if e.retiredAt}<span class="retired"
               >{tr('equip.retired', { date: fmtTs(e.retiredAt) })}</span
             >{/if}

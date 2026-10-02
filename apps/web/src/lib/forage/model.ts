@@ -1,5 +1,7 @@
 /** Client-safe forage test vocabulary (Phase 33C, C4). */
 
+import { t } from '$lib/i18n';
+
 /** The four ways labs report nitrate. Mirrors `NITRATE_UNITS` in the DB
  *  schema (kept separate so this module stays out of the server bundle). */
 export const FORAGE_NITRATE_UNITS = [
@@ -25,6 +27,10 @@ export const RATING_BASIS_LABELS: Readonly<Record<RatingBasis, string>> = {
   'as-fed': 'as-fed basis',
   'not-stated': 'basis not stated'
 };
+
+export function ratingBasisLabel(b: RatingBasis, locale?: string | null): string {
+  return locale ? t(locale, `forage.basis.${b}`) : RATING_BASIS_LABELS[b];
+}
 
 /** The lab's own words, stored as typed (M-58). */
 export interface ForageLabRating {

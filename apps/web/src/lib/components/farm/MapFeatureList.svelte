@@ -60,7 +60,7 @@
   }
 
   async function save(f: MapFeatureView) {
-    const checked = bodyFromDraft(f.kind, draft);
+    const checked = bodyFromDraft(f.kind, draft, page.data?.locale);
     if (!checked.ok) {
       error = checked.message;
       return;
@@ -113,7 +113,7 @@
         <li data-feature-row={f.id} data-feature-kind={f.kind}>
           <div class="row">
             <span class="text">
-              <span class="name">{describeFeature(f, lengthText)}</span>
+              <span class="name">{describeFeature(f, lengthText, page.data?.locale)}</span>
               {#if servedNames(f).length}
                 <span class="where"
                   >{f.kind === 'hydrant' ? tr('farm.list.serves') + ' ' : ''}{servedNames(f).join(

@@ -23,8 +23,9 @@ import {
   resolvePlacement
 } from '$lib/server/garden/placement';
 import { db } from '$lib/db/client';
+import { t } from '$lib/i18n';
 import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
-import { applyPlantingEstablishment } from '$lib/server/seedStartTasks';
+import { applyPlantingEstablishment, localizeSeedStartNotes } from '$lib/server/seedStartTasks';
 
 const stockUnit = z.enum(ALL_STOCK_UNITS as unknown as [StockUnit, ...StockUnit[]]);
 
@@ -103,11 +104,14 @@ export const POST: RequestHandler = async (event) => {
     plantCount != null;
   let placement: CropPlacement | undefined;
   if (placing) {
-    const bed = resolveDesignableBed(blockId);
+    const bed = resolveDesignableBed(blockId, event.locals?.locale);
     if (isFailure(bed)) return failureResponse(bed);
     if (footprint && !footprintInsideBed(footprint, bed)) {
       return json(
-        { error: `That spot runs past the edge of ${bed.block.name}.`, code: 'OUTSIDE_AREA' },
+        {
+          error: t(event.locals?.locale, 'gardenlib.place.spotPastEdge', { bed: bed.block.name }),
+          code: 'OUTSIDE_AREA'
+        },
         { status: 400 }
       );
     }
@@ -207,5 +211,17 @@ export const POST: RequestHandler = async (event) => {
   const placed = saved
     ? placedPlantingFromCrop(saved, cropLookupFrom(registry)(saved.cropPluginId))
     : undefined;
-  return json({ planting, decrement, purchased, placed, seedStart }, { status: 201 });
+  return json(
+    {
+      planting,
+      decrement,
+      purchased,
+      placed,
+      seedStart: seedStart && {
+        ...seedStart,
+        notes: localizeSeedStartNotes(seedStart.notes, event.locals?.locale)
+      }
+    },
+    { status: 201 }
+  );
 };

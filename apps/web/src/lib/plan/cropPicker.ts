@@ -1,4 +1,6 @@
+import { t, type TranslateKey } from '$lib/i18n';
 import { convert, type StockUnit } from '$lib/stock/units';
+import { cropDisplayName } from '$lib/i18n/cropName';
 
 export interface PickerCrop {
   pluginId: string;
@@ -36,8 +38,28 @@ export const PLANTING_UNITS: ReadonlyArray<{ value: StockUnit; label: string }> 
   { value: 'g', label: 'g' }
 ];
 
-export function unitLabel(unit: string): string {
+const UNIT_KEY: Partial<Record<string, TranslateKey>> = {
+  seeds: 'plantui.unit.seeds',
+  count: 'plantui.unit.plants'
+};
+
+export function unitLabel(unit: string, locale?: string | null): string {
+  const key = UNIT_KEY[unit];
+  if (locale && key) return t(locale, key);
   return PLANTING_UNITS.find((u) => u.value === unit)?.label ?? unit;
+}
+
+/** The planting units with labels in `locale`. */
+export function plantingUnits(
+  locale?: string | null
+): ReadonlyArray<{ value: StockUnit; label: string }> {
+  return PLANTING_UNITS.map((u) => ({ value: u.value, label: unitLabel(u.value, locale) }));
+}
+
+/** A stored planting amount's unit for display: English keeps the raw
+ *  unit; another language names seeds and plants in that language. */
+export function quantityUnitLabel(unit: string, locale?: string | null): string {
+  return locale && locale !== 'en' ? unitLabel(unit, locale) : unit;
 }
 
 function score(haystacks: Array<string | null | undefined>, q: string): number {
@@ -65,7 +87,8 @@ export function searchCrops(
   query: string,
   seeds: ReadonlyArray<PickerSeed>,
   catalog: ReadonlyArray<PickerCrop>,
-  limit = 8
+  limit = 8,
+  locale?: string | null
 ): PickerResults {
   const q = query.trim().toLowerCase();
   const byId = new Map(catalog.map((c) => [c.pluginId, c]));
@@ -78,7 +101,16 @@ export function searchCrops(
     if (!crop) continue;
     seededIds.add(crop.pluginId);
     const s = q
-      ? score([seed.shortName, seed.displayName, crop.displayName, crop.cropFamily], q)
+      ? score(
+          [
+            seed.shortName,
+            seed.displayName,
+            crop.displayName,
+            crop.cropFamily,
+            localName(crop, locale)
+          ],
+          q
+        )
       : 0;
     if (s >= 0) seedRows.push({ opt: { kind: 'seed', seed, crop }, s });
   }
@@ -94,7 +126,7 @@ export function searchCrops(
   const cropRows: Array<{ opt: Extract<PickerOption, { kind: 'crop' }>; s: number }> = [];
   for (const crop of catalog) {
     if (seededIds.has(crop.pluginId)) continue;
-    const s = q ? score([crop.displayName, crop.cropFamily], q) : 0;
+    const s = q ? score([crop.displayName, crop.cropFamily, localName(crop, locale)], q) : 0;
     if (s >= 0) cropRows.push({ opt: { kind: 'crop', crop }, s });
   }
   cropRows.sort(
@@ -108,6 +140,11 @@ export function searchCrops(
     crops: cropRows.slice(0, cropLimit).map((r) => r.opt),
     moreCrops: Math.max(0, cropRows.length - cropLimit)
   };
+}
+
+function localName(crop: PickerCrop, locale?: string | null): string | null {
+  const name = cropDisplayName(crop.pluginId, crop.displayName, locale);
+  return name === crop.displayName ? null : name;
 }
 
 export function optionLabel(opt: PickerOption): string {

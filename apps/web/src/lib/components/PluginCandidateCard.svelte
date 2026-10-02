@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
+
   type Issue = { path: string; message: string };
   type Validation = { ok: boolean; schemaIssues: Issue[]; bypassIssues: Issue[] };
   type Candidate = {
@@ -22,13 +25,14 @@
     onSkip?: () => void;
   } = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const plugin = $derived(candidate.candidate ?? null);
   const sourceLabel = $derived(
     candidate.source === 'claude-vision'
-      ? '📷 Label scan'
+      ? `📷 ${tr('pluginui.cand.labelScan')}`
       : candidate.source === 'web-search'
-        ? '🌐 Web search'
-        : '📚 Local match'
+        ? `🌐 ${tr('pluginui.cand.webSearch')}`
+        : `📚 ${tr('pluginui.cand.localMatch')}`
   );
   const hasIssues = $derived(
     !candidate.validation.ok &&
@@ -45,11 +49,13 @@
     <span class="source">{sourceLabel}</span>
     {#if candidate.confidence}
       <span class="confidence confidence-{candidate.confidence}"
-        >{candidate.confidence} confidence</span
+        >{tr(`pluginui.cand.confidence.${candidate.confidence}`)}</span
       >
     {/if}
     {#if typeof candidate.score === 'number'}
-      <span class="score" title="Fuzzy match score">{Math.round(candidate.score * 100)}%</span>
+      <span class="score" title={tr('pluginui.cand.score')}
+        >{Math.round(candidate.score * 100)}%</span
+      >
     {/if}
   </header>
 
@@ -63,21 +69,17 @@
 
     {#if candidate.guessed && candidate.guessed.length > 0}
       <p class="guessed">
-        <strong>Guessed:</strong>
+        <strong>{tr('pluginui.cand.guessed')}</strong>
         {#each candidate.guessed as f, i (i)}
           <code>{f}</code>{i < candidate.guessed.length - 1 ? ',' : ''}
         {/each}
-        — verify before commit.
+        {tr('pluginui.cand.verify')}
       </p>
     {/if}
 
     {#if candidate.citations && candidate.citations.length > 0}
       <details>
-        <summary
-          >{candidate.citations.length} citation{candidate.citations.length === 1
-            ? ''
-            : 's'}</summary
-        >
+        <summary>{tr('pluginui.cand.citations', { count: candidate.citations.length })}</summary>
         <ul class="citations">
           {#each candidate.citations as c, idx (idx)}
             <li><a href={c.url} target="_blank" rel="noopener">{c.title ?? c.url}</a></li>
@@ -88,7 +90,7 @@
 
     {#if hasIssues}
       <div class="issues">
-        <strong>⛔ Cannot commit as-is:</strong>
+        <strong>⛔ {tr('pluginui.cand.cannotCommit')}</strong>
         <ul>
           {#each issues as i, idx (idx)}
             <li>
@@ -106,7 +108,7 @@
       <pre>{JSON.stringify(plugin, null, 2)}</pre>
     </details>
   {:else}
-    <p class="empty">No payload returned for this candidate.</p>
+    <p class="empty">{tr('pluginui.cand.noPayload')}</p>
     {#if hasIssues}
       <ul class="issues">
         {#each issues as i, idx (idx)}
@@ -121,18 +123,16 @@
 
   <footer>
     {#if onSkip}
-      <button class="secondary" onclick={onSkip}>Skip</button>
+      <button class="secondary" onclick={onSkip}>{tr('pluginui.cand.skip')}</button>
     {/if}
     {#if plugin}
       <button
         class="primary"
         disabled={hasIssues}
         onclick={() => onUse(plugin)}
-        title={hasIssues
-          ? 'Fix the issues above before commit'
-          : 'Open the authoring form pre-filled with this candidate'}
+        title={hasIssues ? tr('pluginui.cand.fixFirst') : tr('pluginui.cand.openForm')}
       >
-        {candidate.source === 'local' ? 'Open' : 'Review & save'} →
+        {candidate.source === 'local' ? tr('pluginui.cand.open') : tr('pluginui.cand.review')} →
       </button>
     {/if}
   </footer>

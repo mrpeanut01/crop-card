@@ -25,6 +25,7 @@ import {
 } from '$lib/climate/frostSettings.server';
 import { storedFrostView } from '$lib/climate/frostSettings';
 import { parseZone } from '$lib/climate/zone';
+import { t } from '$lib/i18n';
 import { loadManualZone, saveZoneForm } from '$lib/climate/zoneSettings.server';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { unscopedQueryNote } from '$lib/db/tenant';
@@ -97,18 +98,18 @@ export const actions: Actions = {
     const hasContacts = form.get('contactsPresent') === '1';
     let rows = contactRowsFromForm(form);
     if (form.get('intent') === ADD_POISON_CONTROL_INTENT) rows = withPoisonControl(rows);
-    const contacts = hasContacts ? parseContactRows(rows) : null;
+    const contacts = hasContacts ? parseContactRows(rows, locals.locale) : null;
     if (contacts && !contacts.ok) {
       return fail(400, { contactsError: contacts.error, contactRows: rows });
     }
 
     const latLon = parseLatLon(form.get('lat'), form.get('lon'));
-    const frost = await resolveFrostForm(form, latLon);
+    const frost = await resolveFrostForm(form, latLon, locals.locale);
     if (!frost.ok) return fail(400, { error: frost.error, contactRows: rows });
     const zoneRaw = form.get('hardinessZone');
     if (zoneRaw !== null && String(zoneRaw).trim() !== '' && !parseZone(zoneRaw)) {
       return fail(400, {
-        error: 'Enter a zone like 7a or 6b, or leave it blank.',
+        error: t(locals.locale, 'zone.invalid'),
         contactRows: rows
       });
     }
@@ -124,7 +125,7 @@ export const actions: Actions = {
 
     if (latLon) setSetting(SETTINGS_KEYS.farmLatLon, JSON.stringify(latLon));
     if (frost.plan) applyFrostPlan(frost.plan);
-    saveZoneForm(zoneRaw);
+    saveZoneForm(zoneRaw, locals.locale);
     if (contacts?.ok) saveEmergencyContacts(contacts.contacts);
 
     return { ok: true };

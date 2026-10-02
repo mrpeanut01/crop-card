@@ -174,7 +174,7 @@
           {#each movements.slice(0, 12) as m (m.id)}
             <li>
               <span class="muted small">{fmt.instant(m.occurredAt, 'date')}</span>
-              <span>{movementLabel(m.reason)}</span>
+              <span>{movementLabel(m.reason, page.data?.locale)}</span>
               {#if subjectLabel(m.notes)}<span class="muted">{subjectLabel(m.notes)}</span>{/if}
               <span class={m.delta < 0 ? 'rust' : 'forest'}>
                 {m.delta > 0 ? '+' : ''}{qty(m.delta)}

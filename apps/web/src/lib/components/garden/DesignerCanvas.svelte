@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { pageCropName } from '$lib/i18n/pageCropName';
   import { onMount, tick } from 'svelte';
   import { footprintBounds, pointFt, pointInBedIn, rectFt, snap } from '$lib/garden/geometry';
   import { familyGlyph } from '$lib/garden/familyGlyph';
@@ -587,7 +588,7 @@
     p: PlacedPlanting,
     widthFt: number
   ): { text: string; abbreviated: boolean } {
-    const name = p.varietyDisplayName.split(/[—(,]/)[0].trim();
+    const name = pageCropName(p.cropPluginId, p.varietyDisplayName).split(/[—(,]/)[0].trim();
     const count = p.plantCount ? ` · ${p.plantCount}` : '';
     const font = fontFt * 0.9;
     const room = widthFt - 0.3;
@@ -794,7 +795,7 @@
                 data-family-glyph={glyph.key}
                 role="button"
                 tabindex={selected || psel ? 0 : -1}
-                aria-label="{p.varietyDisplayName}{p.plantCount
+                aria-label="{pageCropName(p.cropPluginId, p.varietyDisplayName)}{p.plantCount
                   ? `, ${tr('garden.crop.plantsMeta', { count: p.plantCount })}`
                   : ''}{stage ? `, ${stage.toLowerCase()}` : ''}{notPlaced
                   ? `, ${tr('garden.canvas.notPlacedLower')}`

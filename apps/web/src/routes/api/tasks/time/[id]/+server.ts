@@ -6,26 +6,35 @@
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { deleteTimeEntry, getTimeEntry } from '$lib/db/taskTime';
 import { currentUser } from '$lib/server/auth';
-import { OWN_TIME_DELETE_TEXT, timeDeleteVerdict } from '$lib/tasks/timeEntries';
+import { timeDeleteVerdict } from '$lib/tasks/timeEntries';
 
 export const DELETE: RequestHandler = (event) => {
+  const loc = event.locals.locale;
   const user = currentUser(event);
   if (!user?.activeOwnerId) {
-    return json({ error: 'UNAUTHENTICATED', message: 'Sign in first.' }, { status: 401 });
+    return json(
+      { error: 'UNAUTHENTICATED', message: t(loc, 'tasks.timeApi.signIn') },
+      { status: 401 }
+    );
   }
   const entry = getTimeEntry(event.params.id ?? '');
-  if (!entry) return json({ error: 'NOT_FOUND', message: 'No such time entry.' }, { status: 404 });
+  if (!entry)
+    return json({ error: 'NOT_FOUND', message: t(loc, 'tasks.timeApi.noEntry') }, { status: 404 });
   const verdict = timeDeleteVerdict(entry, user, Date.now());
   if (verdict === 'READ_ONLY') {
     return json(
-      { error: 'READ_ONLY', message: 'Inspectors can read time but not remove it.' },
+      { error: 'READ_ONLY', message: t(loc, 'tasks.timeApi.readOnlyRemove') },
       { status: 403 }
     );
   }
   if (verdict !== 'ok') {
-    return json({ error: verdict, message: OWN_TIME_DELETE_TEXT, askOwner: true }, { status: 403 });
+    return json(
+      { error: verdict, message: t(loc, 'tasks.timeApi.ownDeleteWindow'), askOwner: true },
+      { status: 403 }
+    );
   }
   deleteTimeEntry(entry.id);
   return json({ ok: true, id: entry.id });

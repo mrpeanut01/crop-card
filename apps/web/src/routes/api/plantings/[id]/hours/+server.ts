@@ -4,6 +4,7 @@ import { listTimeEntriesForCrop } from '$lib/db/taskTime';
 import { memberNamesByIds } from '$lib/db/users';
 import { sumMinutes, totalMinutes } from '$lib/labour/hours';
 import { currentUser } from '$lib/server/auth';
+import { t } from '$lib/i18n';
 
 /**
  * GET /api/plantings/:id/hours: time logged on this planting's tasks, in
@@ -18,11 +19,11 @@ export const GET: RequestHandler = (event) => {
   if (!getCrop(id)) return json({ error: 'planting not found' }, { status: 404 });
   const rows = listTimeEntriesForCrop(id);
   const perUser = sumMinutes(rows, 'user');
-  const names = memberNamesByIds([...perUser.keys()]);
+  const names = memberNamesByIds([...perUser.keys()], event.locals?.locale);
   const byPerson = [...perUser]
     .map(([userId, minutes]) => ({
       id: userId,
-      name: names.get(userId) ?? 'Former member',
+      name: names.get(userId) ?? t(event.locals?.locale, 'tasks.timeApi.formerMember'),
       minutes
     }))
     .sort((a, b) => b.minutes - a.minutes || a.name.localeCompare(b.name));

@@ -5,7 +5,7 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import SetupSheet from './SetupSheet.svelte';
   import SetupProtection from './SetupProtection.svelte';
-  import { HARD_FREEZE_NOTE, PROTECTION_LABEL } from '$lib/climate/protection';
+  import { hardFreezeNote, protectionLabel } from '$lib/climate/protection';
   import {
     fetchBlockCovers,
     removeBlockCover,
@@ -51,7 +51,7 @@
     if (ms === null) return null;
     const d = new Date(ms);
     const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    return formatDay(iso);
+    return formatDay(iso, page.data?.locale);
   }
 
   function datesText(p: BlockProtectionView): string {
@@ -103,12 +103,16 @@
         {#each data.protections as p (p.id)}
           <li class="chip" data-testid="cover-chip">
             <div class="chip-main">
-              <strong>{PROTECTION_LABEL[p.kind]}</strong>
+              <strong>{protectionLabel(p.kind, page.data?.locale)}</strong>
               {#if p.kind === 'greenhouse-heated'}
                 <span>{tr('setup.chips.noLimit')}</span>
               {:else}
                 <span>
-                  {shiftText('spring', p.springShiftDays)} · {shiftText('fall', p.fallShiftDays)}
+                  {shiftText('spring', p.springShiftDays, page.data?.locale)} · {shiftText(
+                    'fall',
+                    p.fallShiftDays,
+                    page.data?.locale
+                  )}
                   {#if p.springShiftDays !== null || p.fallShiftDays !== null}
                     <Provenance source={p.provenance} compact />
                   {/if}
@@ -120,7 +124,9 @@
               <button
                 type="button"
                 class="remove"
-                aria-label={tr('setup.chips.removeAria', { name: PROTECTION_LABEL[p.kind] })}
+                aria-label={tr('setup.chips.removeAria', {
+                  name: protectionLabel(p.kind, page.data?.locale)
+                })}
                 disabled={removing === p.id}
                 onclick={() => remove(p)}>{tr('setup.chips.remove')}</button
               >
@@ -133,7 +139,7 @@
       <p class="summary" data-testid="bed-frost-summary">{data.frost.summary}</p>
     {/if}
     {#if data.protections.length > 0}
-      <p class="muted small">{HARD_FREEZE_NOTE}</p>
+      <p class="muted small">{hardFreezeNote(page.data?.locale)}</p>
     {/if}
     {#if actionError}<p class="error" role="alert">{actionError}</p>{/if}
     {#if canEdit}

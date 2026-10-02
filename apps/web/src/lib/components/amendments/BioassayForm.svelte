@@ -1,6 +1,8 @@
 <script lang="ts">
   import '$lib/components/animals/animalForms.css';
-  import { OFFLINE_TEXT, responseMessage } from '$lib/amendments/responseMessage';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
+  import { offlineText, responseMessage } from '$lib/amendments/responseMessage';
 
   interface Props {
     /** The batch or the block the test was of (M-49). */
@@ -10,6 +12,8 @@
     onsaved?: () => void | Promise<void>;
   }
   const { target, today, onsaved }: Props = $props();
+  const locale = $derived(page.data?.locale);
+  const tr = $derived(createT(locale));
 
   let testedOn = $state('');
   let result = $state<'no-damage' | 'damage' | ''>('');
@@ -23,7 +27,7 @@
     error = null;
     const on = testedOn || today;
     if (!result) {
-      error = 'Pick what you saw: no damage, or damage.';
+      error = tr('bioassay.err.pick');
       return;
     }
     saving = true;
@@ -34,7 +38,7 @@
         body: JSON.stringify({ ...target, testedOn: on, result, note: note.trim() || undefined })
       });
       if (!res.ok) {
-        error = await responseMessage(res);
+        error = await responseMessage(res, locale);
         return;
       }
       testedOn = '';
@@ -42,7 +46,7 @@
       note = '';
       await onsaved?.();
     } catch {
-      error = OFFLINE_TEXT;
+      error = offlineText(locale);
     } finally {
       saving = false;
     }
@@ -53,29 +57,30 @@
   class="af-form bioassay-form"
   onsubmit={save}
   novalidate
-  aria-label="Record a pea or bean test"
+  aria-label={tr('bioassay.form.title')}
 >
-  <h3>Record a pea or bean test</h3>
-  <label class="af-label" for="{idBase}-on">Day you checked the plants</label>
+  <h3>{tr('bioassay.form.title')}</h3>
+  <label class="af-label" for="{idBase}-on">{tr('bioassay.form.day')}</label>
   <input id="{idBase}-on" class="af-input" type="date" max={today} bind:value={testedOn} />
   <fieldset class="af-fieldset">
-    <legend class="af-legend">What you saw</legend>
+    <legend class="af-legend">{tr('bioassay.form.saw')}</legend>
     <label class="af-check">
       <input type="radio" name="{idBase}-result" value="no-damage" bind:group={result} />
-      No damage compared with the control pots
+      {tr('bioassay.form.noDamage')}
     </label>
     <label class="af-check">
       <input type="radio" name="{idBase}-result" value="damage" bind:group={result} />
-      Cupped, twisted or distorted new leaves
+      {tr('bioassay.form.damage')}
     </label>
   </fieldset>
   <label class="af-label" for="{idBase}-note"
-    >Note <span class="af-optional">(optional)</span></label
+    >{tr('bioassay.form.note')}
+    <span class="af-optional">{tr('bioassay.form.optional')}</span></label
   >
   <textarea id="{idBase}-note" class="af-input" maxlength="500" bind:value={note}></textarea>
   {#if error}<p class="af-error" role="alert">{error}</p>{/if}
   <button class="af-primary" type="submit" disabled={saving}>
-    {saving ? 'Saving…' : 'Save the test'}
+    {saving ? tr('bioassay.form.saving') : tr('bioassay.form.save')}
   </button>
 </form>
 

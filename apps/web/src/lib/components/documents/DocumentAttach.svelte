@@ -48,10 +48,10 @@
     meta?.deletedAt
       ? meta.deletedBy
         ? tr('docs.attach.deletedOnBy', {
-            date: formatLocalDay(meta.deletedAt),
+            date: formatLocalDay(meta.deletedAt, page.data?.locale),
             who: meta.deletedBy.label
           })
-        : tr('docs.attach.deletedOn', { date: formatLocalDay(meta.deletedAt) })
+        : tr('docs.attach.deletedOn', { date: formatLocalDay(meta.deletedAt, page.data?.locale) })
       : null
   );
   const otherLinks = $derived((meta?.links ?? []).filter((l) => l.subjectExists));
@@ -258,7 +258,7 @@
           <li>
             <button type="button" class="choice" onclick={() => pick(c)}>
               <span class="title">{c.title}</span>
-              <span class="sub">{formatLocalDay(c.createdAt)}</span>
+              <span class="sub">{formatLocalDay(c.createdAt, page.data?.locale)}</span>
             </button>
           </li>
         {/each}

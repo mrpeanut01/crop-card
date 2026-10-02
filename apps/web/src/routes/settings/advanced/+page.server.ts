@@ -13,6 +13,7 @@ import { countPlantings, listBlocks } from '$lib/db/blocks';
 import { listTokensForOwner } from '$lib/server/apiTokens';
 import { getRegistry, getRegistryStats } from '$lib/server/registry';
 import { RULES_VERSION } from '$lib/safety/version';
+import { t } from '$lib/i18n';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -34,7 +35,7 @@ export const load: PageServerLoad = async ({ locals }) => {
       rulesVersion: RULES_VERSION,
       pluginFailures: stats.failures.length,
       tenantId: ownerRow?.slug ?? ownerRow?.id ?? '—',
-      lastBackup: 'Litestream · live'
+      lastBackup: t(locals.locale, 'settings.diag.backupLive')
     },
     appData: {
       crops: registry.crops().length,

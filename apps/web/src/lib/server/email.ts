@@ -2,6 +2,8 @@ import { isDemoEmail } from '$lib/demo/identity';
 import { minutesInWords, withOriginBoundLine } from './otpMessage';
 import type { UnsubscribeLinks } from './emailUnsubscribe';
 import { emailAlertLabel, type EmailAlertCategory } from '$lib/email/alertCategories';
+import { t } from '$lib/i18n';
+import { effectiveLocale } from './messageLocale';
 
 /**
  * Email transport (Phase 18e foundation + Sprint 21 production adapter).
@@ -40,6 +42,8 @@ interface InviteEmail {
   message?: string;
   /** ms-epoch expiry. */
   expiresAt: number;
+  /** Message language; unset is English. */
+  locale?: string | null;
 }
 
 interface MagicLinkEmail {
@@ -51,6 +55,7 @@ interface MagicLinkEmail {
   code: string;
   /** ms-epoch expiry. */
   expiresAt: number;
+  locale?: string | null;
 }
 
 interface ContactCodeEmail {
@@ -62,6 +67,7 @@ interface ContactCodeEmail {
   expiresAt: number;
   /** Site origin for the autofill line; null skips it. */
   origin: string | null;
+  locale?: string | null;
 }
 
 /** A field alert (or the test message from Settings). Opt-in only: the
@@ -80,10 +86,11 @@ export interface AlertEmail {
   /** Absolute link to /settings/notifications. */
   settingsUrl: string;
   unsubscribe: UnsubscribeLinks;
+  locale?: string | null;
 }
 
 /** The Monday summary (F4-11). Opt-in per farm under its own category, so
- *  unsubscribing from it leaves field alerts alone. English only. */
+ *  unsubscribing from it leaves field alerts alone. */
 export interface DigestEmail {
   kind: 'weekly-digest';
   to: string;
@@ -97,6 +104,7 @@ export interface DigestEmail {
   /** Absolute link to /settings/notifications. */
   settingsUrl: string;
   unsubscribe: UnsubscribeLinks;
+  locale?: string | null;
 }
 
 export type OutboundEmail =
@@ -378,62 +386,67 @@ export function textToHtml(text: string): string {
 }
 
 function subjectFor(email: OutboundEmail): string {
+  const loc = effectiveLocale(email.locale);
   switch (email.kind) {
     case 'helper-invite':
-      return `You've been invited to ${email.ownerName} on CropCard`;
+      return t(loc, 'email.subject.invite', { owner: email.ownerName });
     case 'magic-link':
-      return `Your CropCard sign-in code is ${email.code}`;
+      return t(loc, 'email.subject.magicLink', { code: email.code });
     case 'contact-code':
-      return `Your CropCard verification code is ${email.code}`;
+      return t(loc, 'email.subject.contactCode', { code: email.code });
     case 'field-alert':
-      return `${email.title} · ${email.farmName}`;
+      return t(loc, 'email.subject.alert', { title: email.title, farm: email.farmName });
     case 'weekly-digest':
-      return `Your week of ${email.weekOf} · ${email.farmName}`;
+      return t(loc, 'email.subject.digest', { weekOf: email.weekOf, farm: email.farmName });
   }
 }
 
 function alertBody(email: AlertEmail): string {
+  const loc = effectiveLocale(email.locale);
+  const farm = email.farmName;
   const why = email.category
-    ? `You're getting this because you turned on "${emailAlertLabel(email.category)}" emails for ${email.farmName} in CropCard.`
-    : `You asked CropCard for a test email for ${email.farmName}.`;
+    ? t(loc, 'email.alert.why', { label: emailAlertLabel(email.category, loc), farm })
+    : t(loc, 'email.alert.whyTest', { farm });
   const stop = email.category
-    ? `Stop "${emailAlertLabel(email.category)}" emails:`
-    : 'Stop all alert emails from this farm:';
+    ? t(loc, 'email.alert.stop', { label: emailAlertLabel(email.category, loc) })
+    : t(loc, 'email.alert.stopAll');
   return [
     email.body,
     ``,
-    `Open in CropCard:`,
+    t(loc, 'email.openIn'),
     email.actionUrl,
     ``,
     why,
     stop,
     email.unsubscribe.pageUrl,
-    `Change which alerts you get:`,
+    t(loc, 'email.alert.change'),
     email.settingsUrl,
     ``,
-    `CropCard`
+    t(loc, 'email.signatureBare')
   ].join('\n');
 }
 
 function digestBody(email: DigestEmail): string {
-  const label = emailAlertLabel('weekly-digest');
+  const loc = effectiveLocale(email.locale);
+  const label = emailAlertLabel('weekly-digest', loc);
   return [
     email.body,
     ``,
-    `Open in CropCard:`,
+    t(loc, 'email.openIn'),
     email.actionUrl,
     ``,
-    `You're getting this because you turned on "${label}" emails for ${email.farmName} in CropCard.`,
-    `Stop "${label}" emails:`,
+    t(loc, 'email.alert.why', { label, farm: email.farmName }),
+    t(loc, 'email.alert.stop', { label }),
     email.unsubscribe.pageUrl,
-    `Change which emails you get:`,
+    t(loc, 'email.digest.change'),
     email.settingsUrl,
     ``,
-    `CropCard`
+    t(loc, 'email.signatureBare')
   ].join('\n');
 }
 
 function bodyFor(email: OutboundEmail): string {
+  const loc = effectiveLocale(email.locale);
   switch (email.kind) {
     case 'helper-invite': {
       const expiresIn = Math.max(
@@ -441,48 +454,48 @@ function bodyFor(email: OutboundEmail): string {
         Math.round((email.expiresAt - Date.now()) / (24 * 3600 * 1000))
       );
       return [
-        `Hi,`,
+        t(loc, 'email.invite.hi'),
         ``,
-        `${email.ownerName} has invited you to their CropCard farm.`,
-        email.message ? `\nMessage: ${email.message}\n` : '',
-        `Click to accept (expires in ${expiresIn} days):`,
+        t(loc, 'email.invite.invited', { owner: email.ownerName }),
+        email.message ? `\n${t(loc, 'email.invite.message', { message: email.message })}\n` : '',
+        t(loc, 'email.invite.accept', { days: expiresIn }),
         email.acceptUrl,
         ``,
-        `— CropCard`
+        t(loc, 'email.signature')
       ]
         .filter(Boolean)
         .join('\n');
     }
     case 'magic-link': {
-      const expires = minutesInWords(email.expiresAt - Date.now());
+      const expires = minutesInWords(email.expiresAt - Date.now(), loc);
       return withOriginBoundLine(
         [
-          `Your CropCard sign-in code is ${email.code}.`,
+          t(loc, 'email.magicLink.code', { code: email.code }),
           ``,
-          `Tap this link on this device to sign in. It expires in ${expires} and works once:`,
+          t(loc, 'email.magicLink.tap', { expires }),
           email.loginUrl,
           ``,
-          `Opened this email somewhere else? Type the backup code above on the sign-in screen instead.`,
+          t(loc, 'email.magicLink.elsewhere'),
           ``,
-          `If you didn't ask to sign in, you can ignore this email.`,
+          t(loc, 'email.magicLink.ignore'),
           ``,
-          `— CropCard`
+          t(loc, 'email.signature')
         ],
         new URL(email.loginUrl).origin,
         email.code
       );
     }
     case 'contact-code': {
-      const expires = minutesInWords(email.expiresAt - Date.now());
+      const expires = minutesInWords(email.expiresAt - Date.now(), loc);
       return withOriginBoundLine(
         [
-          `Your CropCard verification code is ${email.code}.`,
+          t(loc, 'email.contactCode.code', { code: email.code }),
           ``,
-          `Enter it in CropCard to add this email to your account. It expires in ${expires}.`,
+          t(loc, 'email.contactCode.enter', { expires }),
           ``,
-          `If you didn't ask for this, you can ignore this email.`,
+          t(loc, 'email.contactCode.ignore'),
           ``,
-          `— CropCard`
+          t(loc, 'email.signature')
         ],
         email.origin,
         email.code

@@ -88,7 +88,8 @@ async function readFrost(
 export async function loadForageAdvisory(
   target: ForageTarget,
   now: number = Date.now(),
-  deps: ForageAdvisoryDeps = {}
+  deps: ForageAdvisoryDeps = {},
+  locale?: string | null
 ): Promise<ForageAdvisory> {
   const [base, registry] = await Promise.all([getBaseRegistry(), getRegistry()]);
   const hazardsFor = (pluginId: string) => {
@@ -148,6 +149,7 @@ export async function loadForageAdvisory(
     frost,
     hazardsFor,
     timeZone: farmTimeZone(),
-    now
+    now,
+    locale
   });
 }

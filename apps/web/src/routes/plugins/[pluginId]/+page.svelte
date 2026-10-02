@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cropDisplayName } from '$lib/i18n/cropName';
   import { goto, invalidateAll } from '$app/navigation';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import PluginRef from '$lib/components/PluginRef.svelte';
@@ -8,6 +9,8 @@
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatRateText } from '$lib/stock/units';
   import { createT } from '$lib/i18n';
+  import { cropFamilyLabel } from '$lib/plugins/familyLabel';
+  import { TASK_CATEGORY_VALUES, labelForTaskCategory } from '$lib/plan/taskCategory';
   import { page } from '$app/state';
 
   let { data } = $props();
@@ -22,6 +25,39 @@
   } as const;
   function typeLabel(type: string): string {
     return type in TYPE_KEYS ? tr(TYPE_KEYS[type as keyof typeof TYPE_KEYS]) : type;
+  }
+  function familyLabel(family: unknown): string {
+    return typeof family === 'string' ? cropFamilyLabel(family, page.data?.locale) : '';
+  }
+  const SEASONAL_KINDS = [
+    'spray',
+    'cultural',
+    'pruning',
+    'thinning',
+    'fertilize',
+    'irrigate',
+    'scout',
+    'harvest'
+  ] as const;
+  function seasonalKindLabel(k: unknown): string {
+    const hit = SEASONAL_KINDS.find((x) => x === k);
+    return hit ? tr(`pluginui.seasonalKind.${hit}`) : String(k);
+  }
+  const FORM_KEYS = {
+    granular: 'plugins.new.formGranular',
+    liquid: 'plugins.new.formLiquid',
+    soluble: 'plugins.new.formSoluble',
+    compost: 'plugins.new.formCompost',
+    'slow-release': 'plugins.new.formSlow',
+    meal: 'plugins.new.formMeal'
+  } as const;
+  function formLabel(form: unknown): string {
+    const f = String(form);
+    return f in FORM_KEYS ? tr(FORM_KEYS[f as keyof typeof FORM_KEYS]) : f;
+  }
+  function taskCategoryLabel(c: unknown): string {
+    const hit = TASK_CATEGORY_VALUES.find((x) => x === c);
+    return hit ? labelForTaskCategory(hit, page.data?.locale) : String(c);
   }
 
   let rollingBack = $state<string | null>(null);
@@ -236,7 +272,7 @@
 {#if data.live && plugin}
   <section class="card header-card">
     <div class="title-row">
-      <h1>{data.live.displayName}</h1>
+      <h1>{cropDisplayName(data.pluginId, data.live.displayName, data.locale)}</h1>
       <span class="type-badge type-{data.live.type}">{typeLabel(data.live.type)}</span>
       {#each groupBadges as gb (gb.kind + gb.group)}
         <GroupCodeBadge kind={gb.kind} group={gb.group} />
@@ -430,7 +466,7 @@
       <dl class="grid-dl">
         <div class="stat">
           <dt>{tr('plugins.detail.family')}</dt>
-          <dd>{plugin.cropFamily}</dd>
+          <dd>{familyLabel(plugin.cropFamily)}</dd>
         </div>
         {#if dtm}
           <div class="stat">
@@ -550,13 +586,13 @@
         {/if}
         {#if asStr(plugin.epaRegistrationNumber)}
           <div class="stat">
-            <dt>EPA reg #</dt>
+            <dt>{tr('pluginui.detail.epaReg')}</dt>
             <dd>{plugin.epaRegistrationNumber}</dd>
           </div>
         {/if}
         <div class="stat">
-          <dt>Requires AMS</dt>
-          <dd>{asBool(plugin.requiresAMS) ? 'Yes' : 'No'}</dd>
+          <dt>{tr('pluginui.detail.requiresAms')}</dt>
+          <dd>{asBool(plugin.requiresAMS) ? tr('plugins.detail.yes') : tr('plugins.detail.no')}</dd>
         </div>
         <div class="stat">
           <dt>Decon required</dt>
@@ -591,7 +627,7 @@
       {#if flags}
         <div class="chip-row">
           <span class="row-label">{tr('plugins.detail.compliance')}</span>
-          {#if flags.omriListed}<span class="chip ok">OMRI-listed</span>{/if}
+          {#if flags.omriListed}<span class="chip ok">{tr('pluginui.detail.omri')}</span>{/if}
           {#if flags.nonGmoCompliant}<span class="chip ok">{tr('plugins.detail.nonGmo')}</span>{/if}
           {#if flags.transitioningAllowed}<span class="chip ok"
               >{tr('plugins.detail.transition')}</span
@@ -650,7 +686,7 @@
         {/if}
         {#if asStr(plugin.epaRegistrationNumber)}
           <div class="stat">
-            <dt>EPA reg #</dt>
+            <dt>{tr('pluginui.detail.epaReg')}</dt>
             <dd>{plugin.epaRegistrationNumber}</dd>
           </div>
         {/if}
@@ -672,7 +708,7 @@
       {/if}
       {#if thresholds.length > 0}
         <div class="bullet-list">
-          <strong class="row-label">Scouting thresholds</strong>
+          <strong class="row-label">{tr('pluginui.detail.scoutThresholds')}</strong>
           <ul>
             {#each thresholds as t, idx (idx)}
               <li>
@@ -687,7 +723,7 @@
       {#if flags}
         <div class="chip-row">
           <span class="row-label">{tr('plugins.detail.compliance')}</span>
-          {#if flags.omriListed}<span class="chip ok">OMRI-listed</span>{/if}
+          {#if flags.omriListed}<span class="chip ok">{tr('pluginui.detail.omri')}</span>{/if}
           {#if flags.nonGmoCompliant}<span class="chip ok">{tr('plugins.detail.nonGmo')}</span>{/if}
           {#if flags.transitioningAllowed}<span class="chip ok"
               >{tr('plugins.detail.transition')}</span
@@ -778,7 +814,7 @@
       {#if flags}
         <div class="chip-row">
           <span class="row-label">{tr('plugins.detail.compliance')}</span>
-          {#if flags.omriListed}<span class="chip ok">OMRI-listed</span>{/if}
+          {#if flags.omriListed}<span class="chip ok">{tr('pluginui.detail.omri')}</span>{/if}
           {#if flags.transitioningAllowed}<span class="chip ok"
               >{tr('plugins.detail.transition')}</span
             >{/if}
@@ -805,7 +841,7 @@
         {#if asStr(plugin.form)}
           <div class="stat">
             <dt>{tr('plugins.detail.form')}</dt>
-            <dd>{plugin.form}</dd>
+            <dd>{formLabel(plugin.form)}</dd>
           </div>
         {/if}
         <div class="stat">
@@ -830,7 +866,7 @@
       {#if flags}
         <div class="chip-row">
           <span class="row-label">{tr('plugins.detail.compliance')}</span>
-          {#if flags.omriListed}<span class="chip ok">OMRI-listed</span>{/if}
+          {#if flags.omriListed}<span class="chip ok">{tr('pluginui.detail.omri')}</span>{/if}
           {#if flags.transitioningAllowed}<span class="chip ok"
               >{tr('plugins.detail.transition')}</span
             >{/if}
@@ -854,7 +890,7 @@
         {#if asStr(plugin.primaryFamily)}
           <div class="stat">
             <dt>{tr('plugins.detail.anchorFamily')}</dt>
-            <dd>{plugin.primaryFamily}</dd>
+            <dd>{familyLabel(plugin.primaryFamily)}</dd>
           </div>
         {/if}
         {#if members.length > 0}
@@ -877,7 +913,7 @@
             {#each members as m, idx (idx)}
               <li>
                 <strong>{m.role}</strong>
-                <span class="muted">({m.family})</span>
+                <span class="muted">({familyLabel(m.family)})</span>
                 {#if m.plantingOffsetDays != null}
                   {#if (m.plantingOffsetDays as number) < 0}
                     · {tr('plugins.detail.plantBefore', {
@@ -952,7 +988,7 @@
             <ul class="task-list">
               {#each preTasks as t, idx (idx)}
                 <li>
-                  {#if t.category}<span class="task-cat">{t.category}</span>{/if}
+                  {#if t.category}<span class="task-cat">{taskCategoryLabel(t.category)}</span>{/if}
                   <strong>{t.title}</strong>
                   {#if t.daysBeforePlant != null}<span class="muted"
                       >· {tr('plugins.detail.beforePlant', {
@@ -976,7 +1012,7 @@
             <ul class="task-list">
               {#each postTasks as t, idx (idx)}
                 <li>
-                  {#if t.category}<span class="task-cat">{t.category}</span>{/if}
+                  {#if t.category}<span class="task-cat">{taskCategoryLabel(t.category)}</span>{/if}
                   <strong>{t.title}</strong>
                   {#if t.daysAfterPlant != null}<span class="muted"
                       >· {tr('plugins.detail.afterPlant', {
@@ -1000,9 +1036,9 @@
             <ul class="task-list">
               {#each seasonalTasks as t, idx (idx)}
                 <li>
-                  {#if t.category}<span class="task-cat">{t.category}</span>{/if}
+                  {#if t.category}<span class="task-cat">{taskCategoryLabel(t.category)}</span>{/if}
                   <strong>{t.title}</strong>
-                  {#if t.kind}<span class="muted">· {t.kind}</span>{/if}
+                  {#if t.kind}<span class="muted">· {seasonalKindLabel(t.kind)}</span>{/if}
                   {#if t.dayOfYear != null}<span class="muted"
                       >· {tr('plugins.detail.dayOfYear', { day: t.dayOfYear as number })}</span
                     >{/if}
@@ -1029,7 +1065,7 @@
     {@const sprayWindows = asArray<Record<string, unknown>>(plugin.sprayWindows)}
     {#if sprayWindows.length > 0}
       <details class="card">
-        <summary>Spray windows ({sprayWindows.length})</summary>
+        <summary>{tr('pluginui.detail.sprayWindows', { count: sprayWindows.length })}</summary>
         <ul class="task-list">
           {#each sprayWindows as sw, idx (idx)}
             <li>
@@ -1037,8 +1073,12 @@
               <span class="muted">· {sw.chemistryClass}</span>
               {#if sw.purpose}<span class="chip neutral small">{sw.purpose}</span>{/if}
               <div class="muted">
-                {sw.offsetDaysMin}-{sw.offsetDaysMax} days from {sw.anchor}{#if sw.stageCode}
-                  (stage {sw.stageCode}){/if}
+                {tr('pluginui.detail.windowDays', {
+                  min: String(sw.offsetDaysMin),
+                  max: String(sw.offsetDaysMax),
+                  anchor: String(sw.anchor)
+                })}{#if sw.stageCode}
+                  {tr('pluginui.detail.windowStage', { stage: String(sw.stageCode) })}{/if}
               </div>
               {#if asStr(sw.body)}<p class="body">{sw.body}</p>{/if}
             </li>

@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { createT } from '$lib/i18n';
+  import { cropDisplayName } from '$lib/i18n/cropName';
   import { Sparkle } from 'lucide-svelte';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import type { CalendarEvent } from '$lib/calendar/engine';
@@ -15,7 +16,7 @@
   import { ForageAdvisoryCache } from '$lib/client/forageAdvisory.svelte';
   import { snapshotFromMapData } from '$lib/farm/mapSnapshot';
   import { snapshotCarryoverLines, withSnapshotCarryover } from '$lib/cards/build/area';
-  import { CARRYOVER_SECTION_TITLES, withCarryover } from '$lib/farm/areaCarryover';
+  import { carryoverSectionTitles, withCarryover } from '$lib/farm/areaCarryover';
   import { isSensitiveFamily } from '$lib/amendments/spreadPrompt';
   import { isCropBearing, type AreaKind } from '$lib/farm/areaKinds';
   import {
@@ -38,6 +39,7 @@
   import {
     blockHarvestWindowLabel,
     blockStatus,
+    blockStatusLabel,
     blockStatusTone,
     currentStageLabel,
     plantingRoleLabel,
@@ -111,6 +113,9 @@
   }: Props = $props();
 
   const tr = $derived(createT($page.data?.locale));
+  const locale = $derived($page.data?.locale);
+  const cropName = (p: { cropPluginId: string; varietyDisplayName: string }) =>
+    cropDisplayName(p.cropPluginId, p.varietyDisplayName, locale);
   const prefs = $derived(currentPrefs());
   const areas = $derived<PlanAreaEntry[]>(
     fields.map((f) => ({ id: f.id, name: f.name, kind: (f.kind ?? 'field') as AreaKind }))
@@ -153,7 +158,10 @@
     if (!selectedArea) return null;
     const card = planAreaCard(snapshot, selectedArea, prefs);
     if (!card) return null;
-    const housed = withHousing(card, areaHousing[selectedArea.id], { petsLayout });
+    const housed = withHousing(card, areaHousing[selectedArea.id], {
+      petsLayout,
+      locale
+    });
     const g = areaGrazing[selectedArea.id];
     const held = withGrazingTimeLink(
       withGrazing(housed, g, prefs.timeZone),
@@ -162,8 +170,9 @@
       canEdit
     );
     return forage.decorate(
-      withSnapshotCarryover(snapshot, selectedArea.id, held, { link: true }),
-      selectedArea.id
+      withSnapshotCarryover(snapshot, selectedArea.id, held, { link: true, locale }),
+      selectedArea.id,
+      locale
     );
   });
   const forage = new ForageAdvisoryCache();
@@ -181,7 +190,8 @@
       ? areaBlocks.map((b) =>
           withCarryover(
             planBlockCard(b, $page.url.searchParams, selectedAreaId, cropDays, prefs),
-            snapshotCarryoverLines(snapshot, [b.id])
+            snapshotCarryoverLines(snapshot, [b.id]),
+            { locale }
           )
         )
       : []
@@ -222,7 +232,7 @@
       plantings.map((p) => plantingStatus(p.plantingDate, cropMeta[p.cropPluginId]?.daysToMaturity))
     )
   );
-  const harvestWindowLabel = $derived(blockHarvestWindowLabel(blockEvents));
+  const harvestWindowLabel = $derived(blockHarvestWindowLabel(blockEvents, Date.now(), locale));
 
   const daysToMaturityById = $derived.by<Record<string, number>>(() => {
     const out: Record<string, number> = {};
@@ -250,7 +260,7 @@
           id: t.id,
           dateLabel: fmt.day(t.scheduledFor, 'month-day'),
           title: t.title,
-          plantingLabel: planting?.varietyDisplayName?.split(' ').slice(0, 2).join(' '),
+          plantingLabel: planting ? cropName(planting).split(' ').slice(0, 2).join(' ') : undefined,
           plantingColor: planting ? plantingColor(planting.id) : undefined,
           source: t.pluginTemplateKey ?? tr('planui.shell.manual'),
           status:
@@ -339,7 +349,7 @@
                   variant="compact"
                   {prefs}
                   factLimit={3}
-                  compactSections={CARRYOVER_SECTION_TITLES}
+                  compactSections={carryoverSectionTitles(locale)}
                   showAsOf={false}
                   selected={areaBlocks[i]?.id === selectedBlockId}
                 />
@@ -387,7 +397,7 @@
     {:else if selectedBlock}
       <PlanBlockHeader
         block={selectedBlock}
-        statusLabel={headerStatus}
+        statusLabel={blockStatusLabel(headerStatus, locale)}
         statusTone={blockStatusTone(headerStatus)}
         {harvestWindowLabel}
         {geometryEditHref}
@@ -420,9 +430,9 @@
               planting={p}
               daysToMaturity={meta?.daysToMaturity}
               cropName={meta?.displayName}
-              role={plantingRoleLabel(p)}
-              stage={currentStageLabel(blockEvents, p)}
-              harvestStart={plantingHarvestLabel(blockEvents, p.id)}
+              role={plantingRoleLabel(p, locale)}
+              stage={currentStageLabel(blockEvents, p, Date.now(), locale)}
+              harvestStart={plantingHarvestLabel(blockEvents, p.id, locale)}
               detailHref={smallGrainHref(p.id, meta?.archetype)}
               carryover={plantingCarryover(p.cropPluginId)}
               companions={companionsFor(p.id)}
@@ -442,9 +452,9 @@
             planting={activePlanting}
             daysToMaturity={meta?.daysToMaturity}
             cropName={meta?.displayName}
-            role={plantingRoleLabel(activePlanting)}
-            stage={currentStageLabel(blockEvents, activePlanting)}
-            harvestStart={plantingHarvestLabel(blockEvents, activePlanting.id)}
+            role={plantingRoleLabel(activePlanting, locale)}
+            stage={currentStageLabel(blockEvents, activePlanting, Date.now(), locale)}
+            harvestStart={plantingHarvestLabel(blockEvents, activePlanting.id, locale)}
             detailHref={smallGrainHref(activePlanting.id, meta?.archetype)}
             carryover={plantingCarryover(activePlanting.cropPluginId)}
             companions={companionsFor(activePlanting.id)}
@@ -466,7 +476,7 @@
         <ScheduledTasksCard
           rows={scheduledRows}
           titleSuffix={activePlanting
-            ? `· ${activePlanting.varietyDisplayName.split(' ').slice(0, 2).join(' ')}`
+            ? `· ${cropName(activePlanting).split(' ').slice(0, 2).join(' ')}`
             : undefined}
           onAddTask={onAddTask
             ? () => onAddTask(selectedBlock.id, activePlanting?.id ?? null)

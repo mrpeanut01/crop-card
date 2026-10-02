@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { carePlanPatchSchema } from '$lib/animals/carePlanApiSchemas';
 import { getCarePlan } from '$lib/db/animalCarePlans';
 import { farmTimeZone } from '$lib/db/userProfile';
@@ -17,24 +18,25 @@ function planFor(id: string | undefined, planId: string | undefined) {
   return plan;
 }
 
-const notFound = () => json({ error: 'care plan not found' }, { status: 404 });
+const notFound = (locale?: string | null) =>
+  json({ error: t(locale, 'animallib.api.carePlanNotFound') }, { status: 404 });
 
 /** Owner only. Open tasks of the plan are rewritten from the edit. */
 export const PATCH: RequestHandler = async (event) => {
   requireOwner(event);
   const plan = planFor(event.params.id, event.params.planId);
-  if (!plan) return notFound();
+  if (!plan) return notFound(event.locals?.locale);
   const body = await parseBody(event.request, carePlanPatchSchema);
   if (!body.ok) return body.response;
   const input = body.data;
   if (input.lastDoneOn && !(input.intervalDays ?? plan.intervalDays)) {
     return json(
-      { error: 'Say how often it repeats before giving the last date.', code: 'NO_INTERVAL' },
+      { error: t(event.locals?.locale, 'animallib.api.noInterval'), code: 'NO_INTERVAL' },
       { status: 400 }
     );
   }
   const updated = editCarePlan(plan, input, farmTimeZone());
-  if (!updated) return notFound();
+  if (!updated) return notFound(event.locals?.locale);
   return json({ plan: updated });
 };
 
@@ -43,7 +45,7 @@ export const PATCH: RequestHandler = async (event) => {
 export const DELETE: RequestHandler = (event) => {
   requireOwner(event);
   const plan = planFor(event.params.id, event.params.planId);
-  if (!plan) return notFound();
+  if (!plan) return notFound(event.locals?.locale);
   removeCarePlan(plan);
   return json({ deleted: true });
 };

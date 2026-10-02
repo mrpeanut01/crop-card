@@ -16,20 +16,28 @@
   import MapFeatureFields from '$lib/components/farm/MapFeatureFields.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { fmt } from '$lib/prefsState.svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import {
     AREA_KINDS,
-    AREA_KIND_LABELS,
+    areaKindLabel,
     isCropBearing,
     perimeterFtFromGeojson,
     type AreaDetails,
     type AreaKind
   } from '$lib/farm/areaKinds';
-  import { AREA_NAME_PLACEHOLDER, kindStyle, shadeStyle, type AddPick } from '$lib/farm/kindStyle';
+  import {
+    areaNamePlaceholder,
+    kindStyle,
+    shadeKindLabel,
+    shadeStyle,
+    type AddPick
+  } from '$lib/farm/kindStyle';
   import { isFeatureVisible, isKindVisible, type MapFilter } from '$lib/farm/mapFilter';
   import {
-    MAP_FEATURE_LABELS,
     MAP_FEATURE_STYLE,
     describeFeature,
+    mapFeatureLabel,
     geometryTypeFor,
     lineLengthFt,
     parseFeatureGeometry,
@@ -237,6 +245,9 @@
     onBusyChange?: (busy: boolean) => void;
   } = $props();
 
+  const locale = $derived(page.data?.locale as string | undefined);
+  const tr = $derived(createT(locale));
+
   // ── Colors by Area kind ──────────────────────────────────────────────────
   const fieldKindMap = new Map<string, AreaKind>();
 
@@ -411,12 +422,16 @@
     if (!shapes || deleteBusy) return;
     deleteBusy = true;
     deleteError = null;
-    const outcome = await deleteShapes(shapes, {
-      area: (id) => onSaveFieldGeometry(id, null),
-      block: (id) => onSaveGeometry(id, null),
-      shade: onDeleteShadeSource ? (id) => onDeleteShadeSource!(id, '') : undefined,
-      feature: onDeleteMapFeature
-    });
+    const outcome = await deleteShapes(
+      shapes,
+      {
+        area: (id) => onSaveFieldGeometry(id, null),
+        block: (id) => onSaveGeometry(id, null),
+        shade: onDeleteShadeSource ? (id) => onDeleteShadeSource!(id, '') : undefined,
+        feature: onDeleteMapFeature
+      },
+      locale
+    );
     deleteBusy = false;
     const gone = new Set(outcome.deleted.map(shapeKey));
     selection = selection.filter((s) => !gone.has(shapeKey(s)));
@@ -531,7 +546,7 @@
       maxZoom: MAP_MAX_ZOOM,
       // Long-press fires contextmenu on every touch browser, not just Safari.
       tapHold: canEdit && !thumbnail,
-      zoomControl: !thumbnail,
+      zoomControl: false,
       dragging: !thumbnail,
       scrollWheelZoom: !thumbnail,
       doubleClickZoom: !thumbnail,
@@ -542,6 +557,9 @@
       initialCenter ? [initialCenter.lat, initialCenter.lon] : [39.1, -77.55],
       initialCenter ? 16 : 13
     );
+    if (!thumbnail) {
+      L.control.zoom({ zoomInTitle: tr('map.zoomIn'), zoomOutTitle: tr('map.zoomOut') }).addTo(map);
+    }
     markMapReady();
 
     const satellite = L.tileLayer(
@@ -564,7 +582,11 @@
     else satellite.addTo(map);
     if (!thumbnail && !filter) {
       L.control
-        .layers({ Satellite: satellite, Streets: streets }, undefined, { position: 'topright' })
+        .layers(
+          { [tr('map.layer.satellite')]: satellite, [tr('map.layer.streets')]: streets },
+          undefined,
+          { position: 'topright' }
+        )
         .addTo(map);
     }
 
@@ -597,8 +619,8 @@
         const wrap = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
         const btn = L.DomUtil.create('button', '', wrap) as HTMLButtonElement;
         btn.type = 'button';
-        btn.title = 'My location';
-        btn.setAttribute('aria-label', 'Center on my GPS location');
+        btn.title = tr('map.locate.title');
+        btn.setAttribute('aria-label', tr('map.locate.aria'));
         btn.innerHTML = '📍';
         btn.style.cssText =
           'display:flex;align-items:center;justify-content:center;width:44px;height:44px;background:white;border:none;cursor:pointer;font-size:1.3rem;';
@@ -615,7 +637,7 @@
     new (LocateControl as any)({ position: 'bottomright' }).addTo(map);
 
     if (canEdit) {
-      map.pm.setLang('en');
+      map.pm.setLang(locale === 'es' ? 'es' : 'en');
       map.pm.setGlobalOptions({
         snappable: true,
         snapDistance: 20,
@@ -650,8 +672,8 @@
           if (!parsed.ok) {
             drawError =
               geometryTypeFor(kind) === 'LineString'
-                ? 'That line needs at least two points. Try again.'
-                : 'That spot could not be read. Try again.';
+                ? tr('map.err.lineTwoPoints')
+                : tr('map.err.spotUnread');
             return;
           }
           featureDraft = {
@@ -676,7 +698,7 @@
         if (drawMode === 'shade-line' || drawMode === 'shade-polygon') {
           const expectedKind = drawMode === 'shade-line' ? 'LineString' : 'Polygon';
           if (geojson.type !== expectedKind) {
-            drawError = `Expected ${expectedKind} but got ${geojson.type}`;
+            drawError = tr('map.err.expectedGeom', { expected: expectedKind, got: geojson.type });
             drawMode = 'auto';
             pendingShadeKind = null;
             return;
@@ -826,10 +848,11 @@
       (layer as LGeoJSON).eachLayer((l) => {
         const poly = l as LPolygon & { pm: { enable: (o: object) => void } };
         if (canEdit) l.on('pm:edit', () => debouncedFieldSave(f.id, poly));
-        registerShape(areaShape(f), l);
+        const shape = areaShape(f, locale);
+        registerShape(shape, l);
         l.on('click', () => {
           if (drawing) return;
-          if (pickInSelectMode(areaShape(f))) return;
+          if (pickInSelectMode(shape)) return;
           _suppressNextMapClick = true;
           if (onSelectArea && !editingActive) {
             onSelectArea(f.id);
@@ -929,10 +952,11 @@
         (layer as LGeoJSON).eachLayer((l) => {
           const poly = l as LPolygon & { pm: { enable: (o: object) => void } };
           l.on('pm:edit', () => debouncedSave(b.id, poly));
-          registerShape(blockShape(b), l);
+          const shape = blockShape(b, locale);
+          registerShape(shape, l);
           l.on('click', () => {
             if (drawing) return;
-            if (pickInSelectMode(blockShape(b))) return;
+            if (pickInSelectMode(shape)) return;
             _suppressNextMapClick = true;
             editingActive = true;
             poly.pm.enable({ snappable: true, allowSelfIntersection: false });
@@ -970,7 +994,8 @@
           fillOpacity: isLine ? 0 : 0.18
         })
       });
-      const tooltipText = `${s.name} · ${s.kind} · ${fmt.qty(s.heightFt, 'distance')}${s.isDeciduous ? ' · deciduous' : ''}`;
+      const kindText = locale && locale !== 'en' ? shadeKindLabel(s.kind, locale) : s.kind;
+      const tooltipText = `${s.name} · ${kindText} · ${fmt.qty(s.heightFt, 'distance')}${s.isDeciduous ? ` · ${tr('farm.editor.deciduous')}` : ''}`;
       layer.bindTooltip(escapeHtml(tooltipText), { direction: 'top' });
       const id = (layer as unknown as { _leaflet_id: number })._leaflet_id;
       polygonToShadeId.set(id, s.id);
@@ -980,10 +1005,11 @@
           if (onUpdateShadeGeometry) {
             l.on('pm:edit', () => debouncedShadeSave(s.id, poly));
           }
-          if (onDeleteShadeSource) registerShape(shadeShape(s), l);
+          const shape = shadeShape(s, locale);
+          if (onDeleteShadeSource) registerShape(shape, l);
           l.on('click', () => {
             if (drawing) return;
-            if (onDeleteShadeSource && pickInSelectMode(shadeShape(s))) return;
+            if (onDeleteShadeSource && pickInSelectMode(shape)) return;
             _suppressNextMapClick = true;
             editingActive = true;
             poly.pm.enable({ snappable: true, allowSelfIntersection: false });
@@ -1027,7 +1053,7 @@
       if (!f.geometry) continue;
       if (filter && !isFeatureVisible(filter, f.kind)) continue;
       const st = MAP_FEATURE_STYLE[f.kind];
-      const tip = describeFeature(f, (ft) => fmt.qty(ft, 'distance', { digits: 0 }));
+      const tip = describeFeature(f, (ft) => fmt.qty(ft, 'distance', { digits: 0 }), locale);
       let layer: import('leaflet').Layer;
       if (f.geometry.type === 'LineString') {
         const latlngs = f.geometry.coordinates.map(([lon, lat]) => [lat, lon] as [number, number]);
@@ -1046,7 +1072,9 @@
           title: f.name
         });
       }
-      layer.bindTooltip(escapeHtml(`${MAP_FEATURE_LABELS[f.kind]}: ${tip}`), { direction: 'top' });
+      layer.bindTooltip(escapeHtml(`${mapFeatureLabel(f.kind, locale)}: ${tip}`), {
+        direction: 'top'
+      });
       if (canEdit && onUpdateMapFeatureGeometry) {
         const id = f.id;
         const kind = f.kind;
@@ -1055,10 +1083,11 @@
           toGeoJSON: () => { geometry: unknown };
         };
         layer.on('pm:edit', () => debouncedFeatureSave(id, kind, editable));
-        if (onDeleteMapFeature) registerShape(featureShape(f), layer);
+        const shape = featureShape(f, locale);
+        if (onDeleteMapFeature) registerShape(shape, layer);
         layer.on('click', () => {
           if (drawing) return;
-          if (onDeleteMapFeature && pickInSelectMode(featureShape(f))) return;
+          if (onDeleteMapFeature && pickInSelectMode(shape)) return;
           _suppressNextMapClick = true;
           editingActive = true;
           editable.pm.enable({ snappable: true, allowSelfIntersection: true });
@@ -1092,6 +1121,7 @@
     void fields;
     void shadeSources;
     void mapFeatures;
+    void locale;
     const f = filter;
     if (!browser || !map) return;
     if (f && satelliteLayer && streetsLayer) {
@@ -1273,7 +1303,7 @@
       setTimeout(async () => {
         const parsed = parseFeatureGeometry(kind, layer.toGeoJSON().geometry);
         if (!parsed.ok) {
-          drawError = 'That edit could not be saved. Try again.';
+          drawError = tr('map.err.editNotSaved');
           return;
         }
         try {
@@ -1358,9 +1388,9 @@
   export async function centerOnMe(): Promise<string | null> {
     await mapReady;
     if (!browser || !('geolocation' in navigator)) {
-      return 'This browser does not share its location.';
+      return tr('map.loc.noShare');
     }
-    const denied = 'Location permission is off. Allow it in your browser to center the map on you.';
+    const denied = tr('map.loc.permOff');
     try {
       const status = await navigator.permissions?.query({ name: 'geolocation' });
       if (status?.state === 'denied') return denied;
@@ -1370,10 +1400,7 @@
     return new Promise((resolve) => {
       // The geolocation timeout only starts once permission is granted, so an
       // unanswered prompt needs its own limit.
-      const giveUp = setTimeout(
-        () => resolve('No location yet. Allow location access in your browser, then try again.'),
-        LOCATE_GIVE_UP_MS
-      );
+      const giveUp = setTimeout(() => resolve(tr('map.loc.notYet')), LOCATE_GIVE_UP_MS);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           clearTimeout(giveUp);
@@ -1385,7 +1412,7 @@
           resolve(
             err.code === err.PERMISSION_DENIED
               ? denied
-              : `Could not get your location: ${err.message}`
+              : tr('map.loc.error', { message: err.message })
           );
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
@@ -1610,7 +1637,7 @@
     }
     drawMode = 'feature-point';
     const markerStyle = leaflet
-      ? { icon: featureMarkerIcon(leaflet, kind, MAP_FEATURE_LABELS[kind]) }
+      ? { icon: featureMarkerIcon(leaflet, kind, mapFeatureLabel(kind, locale)) }
       : undefined;
     map.pm.enableDraw('Marker', { markerStyle, continueDrawing: false });
   }
@@ -1659,7 +1686,7 @@
       } else {
         const checked = detailsFromDraft(pendingDraft.kind, pendingDraft.details);
         if (!checked.ok) {
-          pendingDraft.error = 'Some details don’t look right. Check them and try again.';
+          pendingDraft.error = tr('farm.sheet.badDetails');
           return;
         }
         const extra = { kind: pendingDraft.kind, details: checked.details };
@@ -1705,14 +1732,15 @@
 
 <div class="map-shell" class:map-thumbnail={thumbnail}>
   {#if deleteControls}
-    <div class="select-bar" role="toolbar" aria-label="Select and delete shapes">
+    <div class="select-bar" role="toolbar" aria-label={tr('map.select.aria')}>
       <button
         type="button"
         class="sel-btn"
         class:on={selectMode}
         aria-pressed={selectMode}
         disabled={drawing}
-        onclick={toggleSelectMode}>{selectMode ? 'Done selecting' : 'Select'}</button
+        onclick={toggleSelectMode}
+        >{selectMode ? tr('map.select.done') : tr('map.select.select')}</button
       >
       {#if selectMode}
         <button
@@ -1721,17 +1749,19 @@
           data-testid="map-delete-selected"
           disabled={selection.length === 0}
           onclick={() => requestDelete([...selection])}
-          >{selection.length ? deleteButtonLabel(selection.length) : 'Delete'}</button
+          >{selection.length
+            ? deleteButtonLabel(selection.length, locale)
+            : tr('farm.delete')}</button
         >
       {/if}
     </div>
     <p class="delete-hint" data-testid="map-delete-hint">
       {#if selectMode}
         {selection.length
-          ? `${selection.length} picked. Tap more shapes, or tap one again to drop it.`
-          : 'Tap the shapes you want to delete.'}
+          ? tr('map.select.picked', { count: selection.length })
+          : tr('map.select.tapShapes')}
       {:else}
-        {deleteHint(touchDevice)} To delete several, tap Select.
+        {deleteHint(touchDevice, locale)} {tr('map.select.several')}
       {/if}
     </p>
   {/if}
@@ -1739,7 +1769,7 @@
     class="map"
     class:selecting={selectMode}
     bind:this={mapEl}
-    aria-label="Field and block map"
+    aria-label={tr('map.aria')}
     role="application"
   ></div>
 
@@ -1748,30 +1778,37 @@
       class="thumbnail-overlay"
       role="button"
       tabindex="0"
-      aria-label="Open full map in Layout"
+      aria-label={tr('map.thumb.aria')}
       onclick={onThumbnailClick}
       onkeydown={(e) => e.key === 'Enter' && onThumbnailClick?.()}
     >
-      <span class="thumbnail-hint">View in Layout →</span>
+      <span class="thumbnail-hint">{tr('map.thumb.view')}</span>
     </div>
   {/if}
 
   {#if canEdit && !thumbnail}
-    <div class="toolbar" role="toolbar" aria-label="Map tools">
+    <div class="toolbar" role="toolbar" aria-label={tr('map.tools.aria')}>
       {#if drawing}
-        <button type="button" class="tool danger" onclick={cancelDraw}>✕ Cancel</button>
+        <button type="button" class="tool danger" onclick={cancelDraw}
+          >{tr('map.tools.cancel')}</button
+        >
       {:else if editingActive}
-        <button type="button" class="tool done" onclick={stopEditing} title="Finish editing">
-          ✓ Done editing
+        <button
+          type="button"
+          class="tool done"
+          onclick={stopEditing}
+          title={tr('map.tools.finishTitle')}
+        >
+          {tr('map.tools.doneEditing')}
         </button>
       {:else if !filter}
         <button
           type="button"
           class="tool primary"
           onclick={startDraw}
-          title="Draw a field or block polygon"
+          title={tr('map.tools.drawTitle')}
         >
-          🌾 Field / Block
+          {tr('map.tools.fieldBlock')}
         </button>
         {#if onCreateShadeSource}
           <button
@@ -1779,51 +1816,53 @@
             class="tool"
             class:active={shadePickerOpen}
             onclick={toggleShadePicker}
-            title="Add a shade source — pick a kind, then draw">🌑 Shade ▾</button
+            title={tr('map.tools.shadeTitle')}>{tr('map.tools.shade')}</button
           >
           {#if shadePickerOpen && !drawing}
-            <div class="shade-picker" role="menu" aria-label="Pick shade source kind">
-              <p class="shade-picker-hint">Pick a kind to draw:</p>
-              <div class="shade-picker-row"><strong>Lines</strong></div>
+            <div class="shade-picker" role="menu" aria-label={tr('map.shadePick.aria')}>
+              <p class="shade-picker-hint">{tr('map.shadePick.hint')}</p>
+              <div class="shade-picker-row"><strong>{tr('map.shadePick.lines')}</strong></div>
               <button
                 type="button"
                 class="shade-picker-btn"
-                onclick={() => startDrawShade('tree-row')}>🌳 Tree row</button
+                onclick={() => startDrawShade('tree-row')}>🌳 {tr('farm.shade.tree-row')}</button
               >
               <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('hedge')}
-                >🌿 Hedge</button
+                >🌿 {tr('farm.shade.hedge')}</button
               >
               <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('fence')}
-                >🧱 Fence</button
+                >🧱 {tr('farm.shade.fence')}</button
               >
-              <div class="shade-picker-row"><strong>Areas</strong></div>
+              <div class="shade-picker-row"><strong>{tr('farm.filter.areas')}</strong></div>
               <button
                 type="button"
                 class="shade-picker-btn"
-                onclick={() => startDrawShade('tree-grove')}>🌲 Tree grove</button
-              >
-              <button
-                type="button"
-                class="shade-picker-btn"
-                onclick={() => startDrawShade('tree-single')}>🌳 Single tree</button
+                onclick={() => startDrawShade('tree-grove')}
+                >🌲 {tr('farm.editor.shadeGrove')}</button
               >
               <button
                 type="button"
                 class="shade-picker-btn"
-                onclick={() => startDrawShade('building')}>🏠 Building</button
+                onclick={() => startDrawShade('tree-single')}
+                >🌳 {tr('farm.shade.tree-single')}</button
               >
               <button
                 type="button"
                 class="shade-picker-btn"
-                onclick={() => startDrawShade('structure')}>🏗️ Structure</button
+                onclick={() => startDrawShade('building')}>🏠 {tr('farm.shade.building')}</button
+              >
+              <button
+                type="button"
+                class="shade-picker-btn"
+                onclick={() => startDrawShade('structure')}>🏗️ {tr('farm.shade.structure')}</button
               >
               <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('other')}
-                >🌑 Other</button
+                >🌑 {tr('farm.editor.shadeOther')}</button
               >
               <button
                 type="button"
                 class="shade-picker-cancel"
-                onclick={() => (shadePickerOpen = false)}>Cancel</button
+                onclick={() => (shadePickerOpen = false)}>{tr('farm.cancel')}</button
               >
             </div>
           {/if}
@@ -1844,24 +1883,25 @@
       data-hint-anchor={drawMode === 'area' ? 'map_draw_area' : undefined}
     >
       {#if drawMode === 'feature-line'}
-        Tap along the {MAP_FEATURE_LABELS[pendingFeatureKind].toLowerCase()}, then tap the last
-        point again (or double-click) to finish.
+        {tr('map.hint.featureLine', {
+          thing: mapFeatureLabel(pendingFeatureKind, locale).toLowerCase()
+        })}
       {:else if drawMode === 'feature-point'}
-        Tap the map where the {MAP_FEATURE_LABELS[pendingFeatureKind].toLowerCase()} is.
+        {tr('map.hint.featurePoint', {
+          thing: mapFeatureLabel(pendingFeatureKind, locale).toLowerCase()
+        })}
       {:else if drawMode === 'shade-line'}
-        Click points to draw the tree row / fence line. Double-click to finish.
+        {tr('map.hint.shadeLine')}
       {:else if drawMode === 'shade-polygon'}
-        Click points to outline the grove / building footprint. Double-click to finish.
+        {tr('map.hint.shadePolygon')}
       {:else if drawMode === 'area'}
-        Tap each corner of the {AREA_KIND_LABELS[pendingAreaKind].toLowerCase()}, then tap the first
-        corner again (or double-click) to finish.
+        {tr('map.hint.area', { thing: areaKindLabel(pendingAreaKind, locale).toLowerCase() })}
       {:else if drawMode === 'block'}
-        Tap each corner of the block inside one of your crop areas, then tap the first corner again
-        (or double-click) to finish.
+        {tr('map.hint.block')}
       {:else}
-        Click points to outline an area. Double-click to finish. Draw <strong>inside a field</strong
-        >
-        to create a block; draw <strong>outside</strong> to create a field.
+        {tr('map.hint.auto1')} <strong>{tr('map.hint.autoInside')}</strong>
+        {tr('map.hint.auto2')} <strong>{tr('map.hint.autoOutside')}</strong>
+        {tr('map.hint.auto3')}
       {/if}
     </p>
   {/if}
@@ -1873,12 +1913,12 @@
     onClose={() => {
       if (!deleteBusy) deleteRequest = null;
     }}
-    title={confirmTitle(deleteRequest)}
+    title={confirmTitle(deleteRequest, locale)}
   >
     <div class="delete-confirm" data-testid="map-delete-confirm">
       <ul>
         {#each deleteRequest as shape (shapeKey(shape))}
-          <li>{describeDeletion(shape)}</li>
+          <li>{describeDeletion(shape, locale)}</li>
         {/each}
       </ul>
       {#if outlineWarning(deleteRequest)}
@@ -1888,16 +1928,16 @@
       <div class="actions">
         <button type="button" class="danger-btn" disabled={deleteBusy} onclick={confirmDelete}
           >{deleteBusy
-            ? 'Deleting…'
+            ? tr('map.delete.deleting')
             : deleteRequest.length === 1
-              ? 'Delete'
-              : `Delete ${deleteRequest.length}`}</button
+              ? tr('farm.delete')
+              : tr('map.delete.deleteN', { count: deleteRequest.length })}</button
         >
         <button
           type="button"
           class="cancel-btn"
           disabled={deleteBusy}
-          onclick={() => (deleteRequest = null)}>Cancel</button
+          onclick={() => (deleteRequest = null)}>{tr('farm.cancel')}</button
         >
       </div>
     </div>
@@ -1916,11 +1956,15 @@
     tabindex="-1"
   >
     <div class="draft-modal" style:--kind={MAP_FEATURE_STYLE[featureDraft.kind].color}>
-      <h2 id="feature-draft-title">New {MAP_FEATURE_LABELS[featureDraft.kind].toLowerCase()}</h2>
+      <h2 id="feature-draft-title">
+        {tr('map.draft.newThing', {
+          thing: mapFeatureLabel(featureDraft.kind, locale).toLowerCase()
+        })}
+      </h2>
       {#if featureDraft.lengthFt !== null}
         <dl class="measures" data-testid="feature-draft-length">
           <div>
-            <dt>Length</dt>
+            <dt>{tr('map.draft.length')}</dt>
             <dd>
               ≈ {fmt.qty(featureDraft.lengthFt, 'distance', { digits: 0 })}
               <Provenance source="data" compact />
@@ -1942,10 +1986,10 @@
           onclick={(e) => !finishingClick(e) && submitFeatureDraft()}
           disabled={featureDraft.busy || !featureDraft.form.name.trim()}
         >
-          {featureDraft.busy ? '…' : 'Save'}
+          {featureDraft.busy ? '…' : tr('farm.save')}
         </button>
         <button type="button" onclick={(e) => !finishingClick(e) && dismissFeatureDraft()}
-          >Discard</button
+          >{tr('map.draft.discard')}</button
         >
       </div>
     </div>
@@ -1962,23 +2006,23 @@
     tabindex="-1"
   >
     <div class="draft-modal">
-      <h2 id="shade-draft-title">Add shade source</h2>
+      <h2 id="shade-draft-title">{tr('map.shadeDraft.title')}</h2>
       <p class="acres-hint">
         {shadeDraft.geomKind === 'LineString'
-          ? 'Tree row / fence line'
-          : 'Grove / building footprint'}
+          ? tr('map.shadeDraft.line')
+          : tr('map.shadeDraft.poly')}
       </p>
       <label>
-        Name
+        {tr('farm.sheet.name')}
         <input
           type="text"
           bind:value={shadeDraft.name}
-          placeholder="North maple windbreak"
+          placeholder={tr('map.shadeDraft.ph')}
           maxlength="120"
         />
       </label>
       <label>
-        Kind
+        {tr('farm.sheet.kind')}
         <select
           value={shadeDraft.kind}
           onchange={(e) => {
@@ -1994,23 +2038,23 @@
           }}
         >
           {#if shadeDraft.geomKind === 'LineString'}
-            <option value="tree-row">🌳 Tree row (line of trees, e.g. windbreak)</option>
-            <option value="hedge">🌿 Hedge</option>
-            <option value="fence">🧱 Fence</option>
-            <option value="other">🌑 Other</option>
+            <option value="tree-row">🌳 {tr('map.shadeOpt.treeRow')}</option>
+            <option value="hedge">🌿 {tr('farm.shade.hedge')}</option>
+            <option value="fence">🧱 {tr('farm.shade.fence')}</option>
+            <option value="other">🌑 {tr('farm.editor.shadeOther')}</option>
           {:else}
-            <option value="tree-grove">🌲 Tree grove (clump or stand)</option>
-            <option value="tree-single">🌳 Single tree (canopy footprint)</option>
-            <option value="building">🏠 Building</option>
-            <option value="structure">🏗️ Structure</option>
-            <option value="other">🌑 Other</option>
+            <option value="tree-grove">🌲 {tr('map.shadeOpt.grove')}</option>
+            <option value="tree-single">🌳 {tr('map.shadeOpt.single')}</option>
+            <option value="building">🏠 {tr('farm.shade.building')}</option>
+            <option value="structure">🏗️ {tr('farm.shade.structure')}</option>
+            <option value="other">🌑 {tr('farm.editor.shadeOther')}</option>
           {/if}
         </select>
       </label>
-      <p class="shade-defaults-hint">Defaults adjust to match the kind — tweak any value below.</p>
+      <p class="shade-defaults-hint">{tr('map.shadeDraft.defaults')}</p>
       <div class="shade-grid-2">
         <label>
-          Height ({fmt.unit('distance')})
+          {tr('map.shadeDraft.height', { unit: fmt.unit('distance') })}
           <UnitInput
             quantity="distance"
             min={1}
@@ -2025,22 +2069,22 @@
           />
         </label>
         <label>
-          Opacity (0–1)
+          {tr('farm.editor.opacity')}
           <input type="number" min="0" max="1" step="0.05" bind:value={shadeDraft.opacity} />
         </label>
       </div>
       <label class="shade-checkbox">
         <input type="checkbox" bind:checked={shadeDraft.isDeciduous} />
-        Deciduous (leaves drop in winter)
+        {tr('farm.editor.deciduousLong')}
       </label>
       {#if shadeDraft.isDeciduous}
         <div class="shade-grid-2">
           <label>
-            Leaf-on (day of year)
+            {tr('farm.editor.leafOn')}
             <input type="number" min="1" max="366" bind:value={shadeDraft.leafOnDayOfYear} />
           </label>
           <label>
-            Leaf-off (day of year)
+            {tr('farm.editor.leafOff')}
             <input type="number" min="1" max="366" bind:value={shadeDraft.leafOffDayOfYear} />
           </label>
         </div>
@@ -2053,10 +2097,10 @@
           onclick={(e) => !finishingClick(e) && submitShadeDraft()}
           disabled={!shadeDraftReady}
         >
-          {shadeDraft.busy ? '…' : 'Save shade source'}
+          {shadeDraft.busy ? '…' : tr('map.shadeDraft.save')}
         </button>
         <button type="button" onclick={(e) => !finishingClick(e) && dismissShadeDraft()}
-          >Discard</button
+          >{tr('map.draft.discard')}</button
         >
       </div>
     </div>
@@ -2075,7 +2119,7 @@
     <div class="draft-modal" style:--kind={kindStyle(pendingDraft.kind).color}>
       {#if pendingDraft.mode === 'block'}
         <h2 id="draft-title">
-          {pendingDraft.typed ? 'New block' : 'Assign block geometry'}
+          {pendingDraft.typed ? tr('map.draft.newBlock') : tr('map.draft.assignBlock')}
         </h2>
         {@render measures(pendingDraft.acres, null)}
 
@@ -2083,18 +2127,18 @@
           <div class="mode-radio">
             <label>
               <input type="radio" bind:group={pendingDraft.assignMode} value="existing" />
-              Use a block you already named
+              {tr('map.draft.useBlock')}
             </label>
             <label>
               <input type="radio" bind:group={pendingDraft.assignMode} value="new" />
-              Create a new block
+              {tr('map.draft.createBlock')}
             </label>
           </div>
         {/if}
 
         {#if pendingDraft.assignMode === 'existing'}
           <label>
-            Block
+            {tr('farm.editor.blockWord')}
             <select bind:value={pendingDraft.existingBlockId}>
               {#each pendingDraft.blockChoices as c (c.id)}
                 <option value={c.id}>{c.name}{c.fieldName ? ` (${c.fieldName})` : ''}</option>
@@ -2103,18 +2147,20 @@
           </label>
         {:else}
           <label>
-            Block name
+            {tr('farm.editor.blockName')}
             <input
               type="text"
               bind:value={pendingDraft.newBlockName}
-              placeholder="e.g. Corn Block A"
+              placeholder={tr('farm.editor.blockPh2')}
             />
           </label>
           {#if blockParents.length > 1 || !pendingDraft.newBlockFieldId}
             <label>
-              Inside
+              {tr('farm.editor.inside')}
               <select bind:value={pendingDraft.newBlockFieldId}>
-                {#if !pendingDraft.newBlockFieldId}<option value="">Pick one</option>{/if}
+                {#if !pendingDraft.newBlockFieldId}<option value=""
+                    >{tr('map.draft.pickOne')}</option
+                  >{/if}
                 {#each blockParents as f (f.id)}
                   <option value={f.id}>{f.name}</option>
                 {/each}
@@ -2122,14 +2168,16 @@
             </label>
           {/if}
           {#if blockParents.length === 0}
-            <p class="map-error">Add a field, garden or other crop area first.</p>
+            <p class="map-error">{tr('map.draft.needCropArea')}</p>
           {/if}
         {/if}
       {:else}
         <h2 id="draft-title">
           {pendingDraft.typed
-            ? `New ${AREA_KIND_LABELS[pendingDraft.kind].toLowerCase()}`
-            : 'New area'}
+            ? tr('map.draft.newThing', {
+                thing: areaKindLabel(pendingDraft.kind, locale).toLowerCase()
+              })
+            : tr('map.draft.newArea')}
         </h2>
         {@render measures(pendingDraft.acres, pendingDraft.perimeterFt)}
 
@@ -2137,18 +2185,18 @@
           <div class="mode-radio">
             <label>
               <input type="radio" bind:group={pendingDraft.assignFieldMode} value="existing" />
-              Use one you already named
+              {tr('map.draft.useOne')}
             </label>
             <label>
               <input type="radio" bind:group={pendingDraft.assignFieldMode} value="new" />
-              Create a new one
+              {tr('map.draft.createOne')}
             </label>
           </div>
         {/if}
 
         {#if pendingDraft.assignFieldMode === 'existing'}
           <label>
-            Name
+            {tr('farm.sheet.name')}
             <select bind:value={pendingDraft.existingFieldId}>
               {#each pendingDraft.fieldChoices as c (c.id)}
                 <option value={c.id}>{c.name}</option>
@@ -2157,16 +2205,16 @@
           </label>
         {:else}
           <label>
-            Name
+            {tr('farm.sheet.name')}
             <input
               type="text"
               bind:value={pendingDraft.newFieldName}
-              placeholder={AREA_NAME_PLACEHOLDER[pendingDraft.kind]}
+              placeholder={areaNamePlaceholder(pendingDraft.kind, locale)}
             />
           </label>
         {/if}
         <label>
-          Kind
+          {tr('farm.sheet.kind')}
           <select
             value={pendingDraft.kind}
             onchange={(e) => {
@@ -2177,7 +2225,7 @@
             }}
           >
             {#each AREA_KINDS as k (k)}
-              <option value={k}>{AREA_KIND_LABELS[k]}</option>
+              <option value={k}>{areaKindLabel(k, locale)}</option>
             {/each}
           </select>
         </label>
@@ -2203,12 +2251,16 @@
         >
           {#if pendingDraft.busy}…
           {:else if pendingDraft.mode === 'block'}
-            {pendingDraft.assignMode === 'existing' ? 'Save outline' : 'Save block'}
+            {pendingDraft.assignMode === 'existing'
+              ? tr('map.draft.saveOutline')
+              : tr('map.draft.saveBlock')}
           {:else}
-            Save
+            {tr('farm.save')}
           {/if}
         </button>
-        <button type="button" onclick={(e) => !finishingClick(e) && dismissDraft()}>Discard</button>
+        <button type="button" onclick={(e) => !finishingClick(e) && dismissDraft()}
+          >{tr('map.draft.discard')}</button
+        >
       </div>
     </div>
   </div>
@@ -2219,13 +2271,13 @@
     <dl class="measures" data-testid="draft-measures">
       {#if acres !== null}
         <div>
-          <dt>Size</dt>
+          <dt>{tr('farm.editor.size')}</dt>
           <dd>≈ {fmt.area(acres)} <Provenance source="data" compact /></dd>
         </div>
       {/if}
       {#if perimeterFt !== null}
         <div>
-          <dt>Perimeter</dt>
+          <dt>{tr('map.draft.perimeter')}</dt>
           <dd>
             ≈ {fmt.qty(perimeterFt, 'distance', { digits: 0 })}
             <Provenance source="data" compact />

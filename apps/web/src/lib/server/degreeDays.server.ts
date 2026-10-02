@@ -34,6 +34,7 @@ import type { PestModelPlugin } from '$lib/plugins/schemas';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { DEFAULT_PREFS, ymdInZone } from '$lib/prefs';
+import { t } from '$lib/i18n';
 import { getDataKinds, getRegistry } from '$lib/server/registry';
 import {
   CLOSED_MONTH_TTL_MS,
@@ -259,7 +260,8 @@ export function evaluateModel(
   todayYmd: string,
   stored: StoredBiofix | null,
   days: readonly DailyTemps[] | null,
-  applicable: boolean
+  applicable: boolean,
+  locale?: string | null
 ): DegreeDayModelResult {
   const biofix = resolveBiofix(model, year, stored);
   const toYmd = lastCountableYmd(year, todayYmd);
@@ -306,7 +308,7 @@ export function evaluateModel(
           }
         : null
     },
-    lines: watchForLines(status, biofix),
+    lines: watchForLines(status, biofix, locale),
     applicable,
     showOnScout: applicable && showOnScout(status),
     showOnToday: applicable && showOnToday(status)
@@ -352,6 +354,8 @@ interface LoadInput {
   /** The farm's time zone; read from settings when omitted. */
   timeZone?: string;
   deps?: DegreeDayDeps;
+  /** The viewer's language for `message` and the model lines. */
+  locale?: string | null;
 }
 
 /** Crop families with an active or planned planting in `year`. */
@@ -407,7 +411,8 @@ export async function loadDegreeDays(input: LoadInput): Promise<DegreeDaysResult
         todayYmd,
         biofixes.get(m.pluginId) ?? null,
         days,
-        modelApplies(m, families)
+        modelApplies(m, families),
+        input.locale
       )
     );
 
@@ -415,7 +420,7 @@ export async function loadDegreeDays(input: LoadInput): Promise<DegreeDaysResult
     return {
       ...base,
       location: 'no-location',
-      message: 'Set your farm location.',
+      message: t(input.locale, 'advice.dd.msg.noLocation'),
       models: evaluate(null).map(hideCounts)
     };
   }
@@ -430,7 +435,7 @@ export async function loadDegreeDays(input: LoadInput): Promise<DegreeDaysResult
     return {
       ...base,
       location: 'no-station',
-      message: `Degree days need a weather station within ${OBSERVED_MAX_STATION_MILES} miles. None found.`,
+      message: t(input.locale, 'advice.dd.msg.noStation', { miles: OBSERVED_MAX_STATION_MILES }),
       models: evaluate(null).map(hideCounts)
     };
   }
@@ -438,7 +443,7 @@ export async function loadDegreeDays(input: LoadInput): Promise<DegreeDaysResult
     ...base,
     station: toStation(station),
     dataError: error,
-    message: days === null ? 'Station readings are not available right now.' : null,
+    message: days === null ? t(input.locale, 'advice.dd.msg.noReadings') : null,
     models: evaluate(days)
   };
 }
@@ -456,22 +461,26 @@ function hideCounts(r: DegreeDayModelResult): DegreeDayModelResult {
 
 // ─── /today card ───────────────────────────────────────────────────────
 
-export function biofixDetail(r: DegreeDayModelResult): string {
-  if (!r.biofix.date) return 'No first catch recorded';
-  const day = shortDay(r.biofix.date);
-  if (r.biofix.provenance === 'manual') return `Counting from your first trap catch on ${day}`;
-  if (r.biofix.provenance === 'fallback') return `Counting from ${day}, the model's usual start`;
-  return `Counting from ${day}`;
+export function biofixDetail(r: DegreeDayModelResult, locale?: string | null): string {
+  if (!r.biofix.date) return t(locale, 'advice.dd.noBiofix');
+  const day = shortDay(r.biofix.date, locale);
+  if (r.biofix.provenance === 'manual') return t(locale, 'advice.dd.fromTrap', { day });
+  if (r.biofix.provenance === 'fallback') return t(locale, 'advice.dd.fromFallback', { day });
+  return t(locale, 'advice.dd.from', { day });
 }
 
-export function degreeDayCards(result: DegreeDaysResult): TodayAdviceCard[] {
+/** The /today cards. `lines` are built in the viewer's language by `loadDegreeDays`. */
+export function degreeDayCards(
+  result: DegreeDaysResult,
+  locale?: string | null
+): TodayAdviceCard[] {
   if (!result.station) return [];
   return result.models
     .filter((m) => m.showOnToday)
     .map((m, i) => ({
       id: `pest:${m.modelId}`,
       kind: 'degree-days' as const,
-      title: `Watch for ${m.pest.commonName.toLowerCase()}`,
+      title: t(locale, 'advice.dd.watchFor', { pest: m.pest.commonName.toLowerCase() }),
       lines: m.lines,
       provenance:
         m.biofix.provenance === 'manual'
@@ -479,9 +488,15 @@ export function degreeDayCards(result: DegreeDaysResult): TodayAdviceCard[] {
           : m.biofix.provenance === 'fallback'
             ? ('fallback' as const)
             : ('data' as const),
-      detail: `${stationLine(result.station as DegreeDayStation)}. ${biofixDetail(m)}. Base ${m.baseTempF}°F.`,
+      detail: t(locale, 'advice.dd.detail', {
+        station: stationLine(result.station as DegreeDayStation),
+        biofix: biofixDetail(m, locale),
+        base: m.baseTempF
+      }),
       tone: 'wheat' as const,
-      actions: [{ kind: 'link' as const, label: 'Open scouting', href: '/scout' }],
+      actions: [
+        { kind: 'link' as const, label: t(locale, 'advice.dd.openScouting'), href: '/scout' }
+      ],
       sortKey: 200 + i
     }));
 }
@@ -501,7 +516,8 @@ export const degreeDayAdvice: TodayAdviceProvider = async (ctx) => {
     farmLatLon: ctx.farmLatLon,
     plantedFamilies: families,
     timeZone: ctx.timeZone ?? DEFAULT_PREFS.timeZone,
-    deps: { timeoutMs: TODAY_FETCH_TIMEOUT_MS }
+    deps: { timeoutMs: TODAY_FETCH_TIMEOUT_MS },
+    locale: ctx.locale
   });
-  return degreeDayCards(result);
+  return degreeDayCards(result, ctx.locale);
 };

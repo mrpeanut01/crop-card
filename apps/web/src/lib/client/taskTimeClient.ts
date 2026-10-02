@@ -6,6 +6,7 @@
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
 import { enqueueRecord, scheduleDrain } from './syncQueue';
+import { t } from '$lib/i18n';
 import type { TaskTimeEntryInput, TaskTimeEntryQueuePayload } from '$lib/tasks/apiSchemas';
 import type { TaskTimeEntryView, TaskTimeSummary } from '$lib/tasks/timeEntries';
 
@@ -34,16 +35,17 @@ async function queue(payload: TaskTimeEntryQueuePayload, id: string): Promise<Ta
 
 const isOnline = () => typeof navigator === 'undefined' || navigator.onLine !== false;
 
-async function errorMessage(res: Response): Promise<string> {
+async function errorMessage(res: Response, locale?: string | null): Promise<string> {
   const out = (await res.json().catch(() => null)) as { message?: string; error?: string } | null;
-  return out?.message ?? out?.error ?? 'That did not save. Try again.';
+  return out?.message ?? out?.error ?? t(locale, 'tasks.timer.saveFailed');
 }
 
 export async function saveTaskTime(
   taskId: string,
   input: TaskTimeEntryInput,
   fetchFn: FetchFn = fetch,
-  online: () => boolean = isOnline
+  online: () => boolean = isOnline,
+  locale?: string | null
 ): Promise<TaskTimeOutcome> {
   const id = recordId();
   const payload: TaskTimeEntryQueuePayload = { ...input, taskId };
@@ -64,7 +66,7 @@ export async function saveTaskTime(
     scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
     return out;
   }
-  if (!res.ok) return { status: 'error', message: await errorMessage(res) };
+  if (!res.ok) return { status: 'error', message: await errorMessage(res, locale) };
   const body = (await res.json().catch(() => null)) as { entry?: TaskTimeEntryView } | null;
   return { status: 'saved', entry: body?.entry ?? null };
 }
@@ -84,15 +86,16 @@ export async function loadTaskTime(
 
 export async function removeTaskTime(
   entryId: string,
-  fetchFn: FetchFn = fetch
+  fetchFn: FetchFn = fetch,
+  locale?: string | null
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   try {
     const res = await fetchFn(`/api/tasks/time/${encodeURIComponent(entryId)}`, {
       method: 'DELETE'
     });
     if (res.ok) return { ok: true };
-    return { ok: false, message: await errorMessage(res) };
+    return { ok: false, message: await errorMessage(res, locale) };
   } catch {
-    return { ok: false, message: 'No connection. Try again with signal.' };
+    return { ok: false, message: t(locale, 'tasks.timer.noConnection') };
   }
 }

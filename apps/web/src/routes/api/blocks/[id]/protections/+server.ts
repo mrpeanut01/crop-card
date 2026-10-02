@@ -23,14 +23,14 @@ import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
 export const _requestSchema = blockProtectionCreateSchema;
 
-function view(blockId: string, year: number): BlockCoversResponse {
+function view(blockId: string, year: number, locale?: string | null): BlockCoversResponse {
   const ctx = effectiveFrostContext(year);
   const eff = loadEffectiveFrostByBlock([blockId], year, ctx)[blockId];
   return {
     protections: listBlockProtections([blockId]),
     seasonYear: year,
     effectiveFrost: eff,
-    frost: bedFrostView(eff, ctx.farm, year)
+    frost: bedFrostView(eff, ctx.farm, year, locale)
   };
 }
 
@@ -43,7 +43,7 @@ export const GET: RequestHandler = (event) => {
   requireUser(event);
   const block = getBlock(event.params.id!);
   if (!block) throw error(404, 'block not found');
-  return json(view(block.id, yearParam(event.url)));
+  return json(view(block.id, yearParam(event.url), event.locals?.locale));
 };
 
 export const POST: RequestHandler = async (event) => {
@@ -78,5 +78,8 @@ export const POST: RequestHandler = async (event) => {
     seasonYear: d.seasonYear ?? null,
     notes: d.notes?.trim() || null
   });
-  return json({ protection, ...view(block.id, yearParam(event.url)) }, { status: 201 });
+  return json(
+    { protection, ...view(block.id, yearParam(event.url), event.locals?.locale) },
+    { status: 201 }
+  );
 };

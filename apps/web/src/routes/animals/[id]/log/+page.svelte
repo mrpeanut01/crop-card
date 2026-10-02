@@ -6,8 +6,7 @@
   import HoldChips from '$lib/components/animals/HoldChips.svelte';
   import ProductionForm from '$lib/components/animals/ProductionForm.svelte';
   import HoldVoidPanel from '$lib/components/records/HoldVoidPanel.svelte';
-  import { errorText } from '$lib/components/animals/labels';
-  import { USE_LABEL } from '$lib/animals/healthCopy';
+  import { errorText, useLabel } from '$lib/components/animals/labels';
   import type { FoodStop } from '$lib/animals/holdCopy';
   import { formatInstant } from '$lib/prefs';
   import { lateLabel } from '$lib/records/lateLabel';
@@ -56,7 +55,7 @@
         actionError = await errorText(res, tr);
         return;
       }
-      status = 'Changed to thrown out.';
+      status = tr('animals.log.changedThrownOut');
       await invalidateAll();
     } catch {
       actionError = tr('animals.offline');
@@ -116,9 +115,9 @@
           <li class="row">
             <div class="row-main">
               <strong>{l.quantity} {l.unit}</strong>
-              <span>{l.kind === 'weight' ? tr('animals.prod.weight') : USE_LABEL[l.use]}</span>
+              <span>{l.kind === 'weight' ? tr('animals.prod.weight') : useLabel(tr, l.use)}</span>
               {#if l.recordedLate}
-                <Pill tone="wheat">{lateLabel(true, l.daysLate)}</Pill>
+                <Pill tone="wheat">{lateLabel(true, l.daysLate, page.data?.locale)}</Pill>
               {/if}
               {#if l.inHold}
                 <Pill tone="rust">Inside a hold</Pill>
@@ -127,7 +126,7 @@
             <p class="meta">{formatInstant(l.occurredAt, prefs)}</p>
             {#if data.canLog && (l.use === 'food' || l.use === 'sale')}
               <button type="button" class="af-ghost" onclick={() => markThrownOut(l.id)}>
-                Mark as thrown out
+                {tr('animals.log.markThrownOut')}
               </button>
             {/if}
             <HoldVoidPanel

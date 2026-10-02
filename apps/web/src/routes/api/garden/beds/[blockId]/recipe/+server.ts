@@ -27,8 +27,12 @@ export const POST: RequestHandler = async (event) => {
   const crops: Record<string, CropPlugin> = {};
   for (const crop of registry.crops()) crops[crop.pluginId] = crop;
   const recipes = await getBedRecipes();
-  const result = applyBedRecipe(event.params.blockId ?? '', parsed.data, crops, (id) =>
-    recipes.get(id)
+  const result = applyBedRecipe(
+    event.params.blockId ?? '',
+    parsed.data,
+    crops,
+    (id) => recipes.get(id),
+    event.locals?.locale
   );
   if (isFailure(result)) return failureResponse(result);
   return json(result.response, { status: result.status });

@@ -2,10 +2,14 @@
   import { ChevronRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import { fmt as prefsFmt } from '$lib/prefsState.svelte';
-  import { createT } from '$lib/i18n';
+  import { createT, type TranslateKey } from '$lib/i18n';
+  import { cropDisplayName } from '$lib/i18n/cropName';
 
   const { data } = $props();
   const tr = $derived(createT(data.locale));
+  const plantingName = $derived(
+    cropDisplayName(data.crop.cropPluginId, data.crop.varietyDisplayName, data.locale)
+  );
 
   const STATUS_KEY = {
     planned: 'crops.status.planned',
@@ -16,12 +20,19 @@
   } as const;
   const statusLabel = (s: string) =>
     s in STATUS_KEY ? tr(STATUS_KEY[s as keyof typeof STATUS_KEY]) : s;
+  const label = (prefix: 'crops.taskKind' | 'crops.hayStatus' | 'crops.eventKind', v: string) => {
+    const key = `${prefix}.${v}` as TranslateKey;
+    const out = tr(key);
+    return out === key ? v : out;
+  };
 
   const blockHref = $derived(`/plan?block=${encodeURIComponent(data.block.id)}`);
   const kicker = $derived(
     [
       tr('crops.kickerPlanting'),
-      data.cropPlugin?.displayName ?? data.crop.cropPluginId,
+      data.cropPlugin
+        ? cropDisplayName(data.crop.cropPluginId, data.cropPlugin.displayName, data.locale)
+        : data.crop.cropPluginId,
       data.crop.plantingDate
         ? new Date(data.crop.plantingDate).toISOString().slice(0, 4)
         : tr('crops.kickerPlanned')
@@ -72,7 +83,7 @@
   }
 
   async function deleteCrop() {
-    if (!confirm(tr('crops.confirmDelete', { name: data.crop.varietyDisplayName }))) {
+    if (!confirm(tr('crops.confirmDelete', { name: plantingName }))) {
       return;
     }
     busy = true;
@@ -94,7 +105,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.crop.varietyDisplayName} · CropCard</title>
+  <title>{tr('crops.pageTitle', { name: plantingName })}</title>
 </svelte:head>
 
 <nav class="breadcrumb" aria-label={tr('crops.breadcrumb')}>
@@ -102,13 +113,13 @@
   <ChevronRight size={13} aria-hidden="true" />
   <a href={blockHref}>{data.block.name}</a>
   <ChevronRight size={13} aria-hidden="true" />
-  <span aria-current="page">{data.crop.varietyDisplayName}</span>
+  <span aria-current="page">{plantingName}</span>
 </nav>
 
 <header class="crop-header">
   <div>
     <Kicker>{kicker}</Kicker>
-    <h1 class="serif">{data.crop.varietyDisplayName}</h1>
+    <h1 class="serif">{plantingName}</h1>
     <p class="meta">
       {tr('crops.block')} <strong>{data.block.name}</strong>
       {#if data.block.acres}— {prefsFmt.qty(data.block.acres, 'area')}{/if}
@@ -182,7 +193,7 @@
     <h2>{tr('crops.plan')}</h2>
     <dl>
       <dt>{tr('crops.variety')}</dt>
-      <dd>{data.cropPlugin.displayName}</dd>
+      <dd>{cropDisplayName(data.crop.cropPluginId, data.cropPlugin.displayName, data.locale)}</dd>
       <dt>{tr('crops.family')}</dt>
       <dd>{data.cropPlugin.cropFamily}</dd>
       <dt>{tr('crops.dtm')}</dt>
@@ -204,7 +215,7 @@
         <li>
           <span class="when">{fmtDay(t.scheduledFor)}</span>
           <strong>{t.title}</strong>
-          <span class="kind-chip">{t.kind}</span>
+          <span class="kind-chip">{label('crops.taskKind', t.kind)}</span>
           {#if t.completedAt}<span class="status status-harvested">{tr('crops.done')}</span>{/if}
           {#if t.abortedAt}<span class="status status-failed">{tr('crops.aborted')}</span>{/if}
         </li>
@@ -297,7 +308,7 @@
         {#each data.cuttings as c (c.id)}
           <li>
             <strong>{tr('crops.cutting', { n: c.cuttingNumber, year: c.year })}</strong>
-            <span class="status status-{c.status}">{c.status}</span>
+            <span class="status status-{c.status}">{label('crops.hayStatus', c.status)}</span>
             {#if c.balesQuantity}<small>{tr('crops.bales', { n: c.balesQuantity })}</small>{/if}
           </li>
         {/each}
@@ -339,7 +350,9 @@
         <li>
           <span class="when">{fmt(t.sampledAt)}</span>
           {#if t.ph}<small>pH {t.ph.toFixed(1)}</small>{/if}
-          {#if t.organicMatterPct}<small>OM {t.organicMatterPct.toFixed(1)}%</small>{/if}
+          {#if t.organicMatterPct}<small
+              >{tr('crops.om', { pct: t.organicMatterPct.toFixed(1) })}</small
+            >{/if}
         </li>
       {/each}
     </ul>
@@ -355,7 +368,7 @@
         <li>
           <span class="when">{fmtDay(p.startMs)}</span>
           <strong>{p.title}</strong>
-          <span class="kind-chip">{p.kind}</span>
+          <span class="kind-chip">{label('crops.eventKind', p.kind)}</span>
         </li>
       {/each}
     </ul>

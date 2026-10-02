@@ -1,4 +1,6 @@
 import { enCore } from './en/core';
+import { enCards } from './en/cards';
+import { enSprayui } from './en/sprayui';
 import { enGarden } from './en/garden';
 import { enWizard } from './en/wizard';
 import { enToday } from './en/today';
@@ -10,6 +12,8 @@ import { enAnimals } from './en/animals';
 import { enRecords } from './en/records';
 import { enPlugins } from './en/plugins';
 import { enEntry } from './en/entry';
+import { enNotify } from './en/notify';
+import { enAmend } from './en/amend';
 
 /**
  * The English catalog is the source of every message key (F5-2). Keys are
@@ -19,6 +23,8 @@ import { enEntry } from './en/entry';
  */
 export const EN_PARTS = [
   enCore,
+  enCards,
+  enSprayui,
   enGarden,
   enWizard,
   enToday,
@@ -29,11 +35,15 @@ export const EN_PARTS = [
   enAnimals,
   enRecords,
   enPlugins,
-  enEntry
+  enEntry,
+  enNotify,
+  enAmend
 ] as const;
 
 export const en = {
   ...enCore,
+  ...enCards,
+  ...enSprayui,
   ...enGarden,
   ...enWizard,
   ...enToday,
@@ -44,7 +54,9 @@ export const en = {
   ...enAnimals,
   ...enRecords,
   ...enPlugins,
-  ...enEntry
+  ...enEntry,
+  ...enNotify,
+  ...enAmend
 } as const;
 
 export type MessageKey = keyof typeof en;

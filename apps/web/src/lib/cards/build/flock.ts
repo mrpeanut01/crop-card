@@ -4,8 +4,10 @@
  * same-kind, same-day care of its members rolls into one line (D2-11).
  */
 
-import { animalLabel, countText } from '$lib/animals/display';
-import { groupFacts } from '$lib/animals/facts';
+import { animalLabel, animalLabelIn, countText } from '$lib/animals/display';
+import { groupFacts, type GroupFactsInput } from '$lib/animals/facts';
+import { speciesGroupTitle, speciesWordsIn } from '$lib/i18n/speciesName';
+import { carePlanTitleIn } from '$lib/animals/carePlans';
 import { displayFoods } from '$lib/animals/holdCopy';
 import { ymdInZone } from '$lib/prefs';
 import {
@@ -29,9 +31,10 @@ import {
   HOLD_CONFIRM_MAX_AGE_MS
 } from './animalHolds';
 import {
-  ASK_YOUR_VET,
+  askYourVet,
   isPetLayout,
   livesAt,
+  localizeFacts,
   nextCare,
   planLine,
   planProvenance,
@@ -73,10 +76,16 @@ export function memberCareLines(
         a.plan.title.localeCompare(b.plan.title)
     )
     .map(({ plan, names }) => {
-      const who = names.length === 1 ? names[0] : countText(names.length, species);
+      const who = names.length === 1 ? names[0] : countText(
+              names.length,
+              species,
+              opts.prefs.locale
+            );
       const when =
-        plan.nextDueAt === null ? ASK_YOUR_VET : dueLabel(plan.nextDueAt, opts.now, opts.prefs);
-      return `${plan.title}: ${who}, ${when}`;
+        plan.nextDueAt === null
+          ? askYourVet(opts.prefs.locale)
+          : dueLabel(plan.nextDueAt, opts.now, opts.prefs);
+      return `${carePlanTitleIn(plan, opts.prefs.locale)}: ${who}, ${when}`;
     });
 }
 
@@ -86,6 +95,8 @@ function flockCard(
   options: BuildOptions
 ): CardModel {
   const opts = resolveOptions(snapshot, options);
+  const { tr } = opts;
+  const loc = opts.prefs.locale;
   const species = speciesOf(snapshot, group.speciesId);
   const pet = isPetLayout(snapshot, group.purpose);
   const pageHref = groupPageHref(group.id);
@@ -113,7 +124,10 @@ function flockCard(
       ).length > 0
   );
   if (heldMembers.length) {
-    const names = heldMembers.slice(0, 3).map(animalLabel).join(', ');
+    const names = heldMembers
+      .slice(0, 3)
+      .map((m) => animalLabelIn(m, loc))
+      .join(', ');
     const more = heldMembers.length > 3 ? ` and ${heldMembers.length - 3} more` : '';
     notices.push(`Also on hold on their own cards: ${names}${more}.`);
   }
@@ -121,68 +135,110 @@ function flockCard(
   const speciesWords = species
     ? { label: species.label, displayName: species.displayName }
     : undefined;
-  const facts: CardFact[] = groupFacts(
-    {
-      total: group.total,
-      headCount: group.headCount,
-      namedCount: group.namedCount,
-      species: speciesWords,
-      purpose: group.purpose,
-      livesAt: livesAt(snapshot, group.housingFieldId)
-    },
-    pet ? 'pets' : 'farm'
-  ).map((f) => ({ ...f, provenance: 'data' as const }));
+  const factsInput: GroupFactsInput = {
+    total: group.total,
+    headCount: group.headCount,
+    namedCount: group.namedCount,
+    species: speciesWords,
+    purpose: group.purpose,
+    livesAt: livesAt(snapshot, group.housingFieldId, loc)
+  };
+  const layout = pet ? 'pets' : 'farm';
+  const shownWords = species ? speciesWordsIn(species, loc) : undefined;
+  const localValues = loc
+    ? groupFacts(
+        {
+          ...factsInput,
+          species: shownWords && { label: shownWords.label, displayName: shownWords.displayName }
+        },
+        layout,
+        loc
+      ).map((f) => f.value)
+    : null;
+  const facts: CardFact[] = groupFacts(factsInput, layout).map((f, i) => ({
+    ...f,
+    ...(localValues ? { value: localValues[i] } : {}),
+    provenance: 'data' as const
+  }));
   if (!pet) {
     facts.push({
-      label: 'Food animals',
-      value: group.foodProducing ? 'Yes' : 'No',
+      label: tr('cards.animal.foodAnimals'),
+      value: group.foodProducing ? tr('cards.yes') : tr('cards.no'),
       provenance: 'data'
     });
   }
 
   if (group.organicStatus) {
-    facts.push({ label: 'Organic status', value: group.organicStatus, provenance: 'manual' });
+    facts.push({
+      label: tr('cards.fact.organicStatus'),
+      value: group.organicStatus,
+      provenance: 'manual'
+    });
   }
 
   const groupPlans = sortPlans(plansFor(snapshot, 'group', group.id));
   const memberPlans = members.flatMap((m) =>
-    plansFor(snapshot, 'animal', m.id).map((plan) => ({ plan, memberName: animalLabel(m) }))
+    plansFor(snapshot, 'animal', m.id).map((plan) => ({ plan, memberName: animalLabelIn(m, loc) }))
   );
   const sections: CardSection[] = [];
   const careItems = [
     ...groupPlans.map((p) => planLine(p, opts.now, opts.prefs)),
-    ...memberCareLines(memberPlans, speciesWords, opts)
+    ...memberCareLines(
+      memberPlans,
+      shownWords && { label: shownWords.label, displayName: shownWords.displayName },
+      opts
+    )
   ];
   const allPlans = [...groupPlans, ...memberPlans.map((m) => m.plan)];
   if (careItems.length) {
-    sections.push({ title: 'Care due', items: careItems, provenance: sectionProvenance(allPlans) });
+    sections.push({
+      title: tr('cards.animal.careDue'),
+      items: careItems,
+      provenance: sectionProvenance(allPlans)
+    });
   }
   if (members.length) {
-    const names = members.slice(0, MAX_MEMBER_LINES).map(animalLabel);
-    if (members.length > MAX_MEMBER_LINES) names.push(`+${members.length - MAX_MEMBER_LINES} more`);
-    sections.push({ title: `Members (${members.length})`, items: names, provenance: 'data' });
+    const names = members.slice(0, MAX_MEMBER_LINES).map((m) => animalLabelIn(m, loc));
+    if (members.length > MAX_MEMBER_LINES)
+      names.push(tr('cards.more', { count: members.length - MAX_MEMBER_LINES }));
+    sections.push({
+      title: tr('cards.animal.members', { count: members.length }),
+      items: names,
+      provenance: 'data'
+    });
   }
   const treated = treatmentsSection(
     treatmentsFor(snapshot, 'group', group.id),
     opts.prefs,
-    pet ? 'Medicine' : 'Recent treatments'
+    pet ? tr('cards.animal.medicine') : tr('cards.animal.recentTreatments')
   );
   if (treated) sections.push(treated);
-  const vet = vetParts(snapshot);
+  const vet = vetParts(snapshot, loc);
   if (vet.section) sections.push(vet.section);
 
   const links: CardAction[] = [];
   if (vet.link) links.push(vet.link);
-  links.push({ label: `Open ${species?.groupNoun ?? 'group'} page`, href: pageHref });
+  links.push({
+    label:
+      loc && loc !== 'en'
+        ? tr('cards.animal.openGroupPage')
+        : tr('cards.animal.openNounPage', { noun: species?.groupNoun ?? 'group' }),
+    href: pageHref
+  });
   const healthHref = `/animals/${encodeURIComponent(group.id)}/health`;
-  links.push({ label: 'Health records', href: healthHref });
+  links.push({ label: tr('cards.animal.healthRecords'), href: healthHref });
   if (species?.products.some((p) => p === 'eggs' || p === 'milk')) {
-    links.push({ label: 'Log eggs or milk', href: `/animals/${encodeURIComponent(group.id)}/log` });
+    links.push({
+      label: tr('cards.animal.logEggsMilk'),
+      href: `/animals/${encodeURIComponent(group.id)}/log`
+    });
   }
 
-  const provenance: CardProvenance[] = [{ source: 'data', detail: 'your animal records' }];
-  if (species) provenance.push({ source: 'plugin', detail: 'species library' });
-  provenance.push(...planProvenance(allPlans));
+  const provenance: CardProvenance[] = [
+    { source: 'data', detail: tr('cards.animal.provRecords') }
+  ];
+  if (species) provenance.push({ source: 'plugin', detail: tr('cards.animal.provSpecies') });
+  provenance.push(...planProvenance(allPlans, loc));
   if (treated || vet.section || group.organicStatus) provenance.push({ source: 'manual' });
 
   const noun = species?.groupNoun ?? 'group';
@@ -190,9 +246,9 @@ function flockCard(
   return {
     kind: 'flock',
     key,
-    kicker: species ? `${species.displayName} ${noun}` : 'Animal group',
+    kicker: species ? speciesGroupTitle({ ...species, groupNoun: noun }, loc) : tr('cards.animal.group'),
     title: group.name,
-    facts,
+    facts: localizeFacts(facts, loc),
     next: nextCare(allPlans, opts.now, opts.prefs, pageHref),
     sections,
     asOf: snapshot.generatedAt,

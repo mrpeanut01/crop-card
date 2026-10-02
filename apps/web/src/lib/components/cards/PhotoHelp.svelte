@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
   import AiLimitNudge from '$lib/components/billing/AiLimitNudge.svelte';
   import type { AiLimit } from '$lib/billing/aiLimit';
@@ -15,8 +16,10 @@
     type PhotoQuestion
   } from '$lib/journal/model';
   import {
+    CARE_SECTION,
     SPRAY_REDIRECT,
     asksForSprayAdvice,
+    careSectionForDisplay,
     careSectionsFor,
     filterSprayAdviceItems,
     topicFor
@@ -159,13 +162,34 @@
     }
   }
 
+  const CARE_TITLE_KEYS = {
+    water: 'cards.care.water',
+    feed: 'cards.care.feed',
+    prune: 'cards.care.prune',
+    harvest: 'cards.section.harvestCues',
+    problems: 'cards.care.problems',
+    notes: 'cards.notes'
+  } as const satisfies Record<keyof typeof CARE_SECTION, string>;
+
+  /** The Care Guide card's section titles are in the app language; the
+   *  topic match reads the English ones, so map there and back. */
   function careFallback(q: PhotoQuestion, text: string): JournalAnswerSection[] {
+    const toEnglish = new Map<string, string>();
+    const fromEnglish = new Map<string, string>();
+    for (const id of Object.keys(CARE_TITLE_KEYS) as (keyof typeof CARE_TITLE_KEYS)[]) {
+      const local = tr(CARE_TITLE_KEYS[id]);
+      toEnglish.set(local, CARE_SECTION[id]);
+      fromEnglish.set(CARE_SECTION[id], local);
+    }
     const sections = (target?.careGuide?.sections ?? []).map((s) => ({
-      title: s.title,
+      title: toEnglish.get(s.title) ?? s.title,
       items: filterSprayAdviceItems(s.items, sprayTerms),
       provenance: s.provenance === 'plugin' ? ('plugin' as const) : ('fallback' as const)
     }));
-    return careSectionsFor(sections, topicFor(q, text));
+    return careSectionsFor(sections, topicFor(q, text)).map((s) => ({
+      ...s,
+      title: fromEnglish.get(s.title) ?? s.title
+    }));
   }
 
   async function queueEntry(kind: 'note' | 'photo_help', text: string, withPhoto: string | null) {
@@ -322,7 +346,11 @@
         </select>
       </label>
     {:else if target}
-      <p class="about">{tr('cardsui.photo.about', { label: target.label })}</p>
+      <p class="about">
+        {tr('cardsui.photo.about', {
+          label: cropDisplayNameByEnglish(target.label, page.data?.locale)
+        })}
+      </p>
     {/if}
 
     {#if canWrite}
@@ -382,7 +410,8 @@
             <p class="ai-text">{shown.answer.text}</p>
             <Provenance source="ai" />
           {/if}
-          {#each shown.answer.sections as s (s.title)}
+          {#each shown.answer.sections as raw (raw.title)}
+            {@const s = careSectionForDisplay(raw, page.data?.locale)}
             <section class="care-section">
               <h3>
                 {s.title}
@@ -469,7 +498,9 @@
                 <p class="ai-text">{e.answer.text}</p>
               {:else if e.answer?.sections.length}
                 <p class="hint">
-                  {tr('cardsui.photo.answeredFrom', { title: e.answer.sections[0].title })}
+                  {tr('cardsui.photo.answeredFrom', {
+                    title: careSectionForDisplay(e.answer.sections[0], page.data?.locale).title
+                  })}
                 </p>
               {/if}
               {#if isOwner}

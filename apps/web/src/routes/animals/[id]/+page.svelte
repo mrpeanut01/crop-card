@@ -47,7 +47,9 @@
         livesAt: livesAtId ? (areaNames.get(livesAtId) ?? null) : null,
         groupName: data.group?.name ?? null
       },
-      layout
+      layout,
+      Date.now(),
+      page.data?.locale
     )
   );
   const flagIsDefault = $derived(
@@ -58,10 +60,11 @@
       locations: data.locations,
       statusEvents: data.statusEvents,
       flagChanges: data.flagChanges,
-      areaName: (id) => areaNames.get(id) ?? 'a place that was removed',
-      groupName: (id) => groupNames.get(id) ?? 'a group',
+      areaName: (id) => areaNames.get(id) ?? tr('animals.history.removedPlace'),
+      groupName: (id) => groupNames.get(id) ?? tr('animals.history.aGroup'),
       canUndo: data.canEdit,
-      canVoid: data.canVoidHolds
+      canVoid: data.canVoidHolds,
+      locale: page.data?.locale
     })
   );
 

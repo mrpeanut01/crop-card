@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fmt } from '$lib/prefsState.svelte';
   import './animalForms.css';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import CareTaskCard from './CareTaskCard.svelte';
@@ -10,9 +11,10 @@
     defaultLeadDays,
     type CareCardView,
     type CarePlanKind,
-    type CarePlanView as PlanView
+    type CarePlanView as PlanView,
+    carePlanTitleIn,
+    careNoteIn
   } from '$lib/animals/carePlans';
-  import { formatCalendarDate } from '$lib/prefs';
 
   interface Props {
     /** The animal or group id in `/api/animals/:id/care-plans`. */
@@ -135,7 +137,7 @@
   function whenText(p: PlanView): string {
     if (!p.active) return tr('animals.care.turnedOff');
     if (!p.nextDueOn) return tr('animals.care.noDueDate');
-    return tr('animals.care.nextDue', { date: formatCalendarDate(p.nextDueOn, 'date') });
+    return tr('animals.care.nextDue', { date: fmt.day(p.nextDueOn, 'date') });
   }
 
   function everyText(p: PlanView): string | null {
@@ -166,7 +168,7 @@
       {@const card = cardByPlan.get(p.id)}
       <li class="plan" class:off={!p.active} data-testid="care-plan">
         <div class="plan-head">
-          <span class="plan-title">{p.title}</span>
+          <span class="plan-title">{carePlanTitleIn(p, page.data?.locale)}</span>
           <Provenance
             source={p.provenance}
             compact
@@ -178,8 +180,11 @@
         </p>
         {#if !p.nextDueOn && p.active}
           <p class="af-note">
-            {tr('animals.care.undated', { subject: subjectName, title: p.title.toLowerCase() })}
-            {p.note ?? ''}
+            {tr('animals.care.undated', {
+              subject: subjectName,
+              title: carePlanTitleIn(p, page.data?.locale).toLowerCase()
+            })}
+            {careNoteIn(p.note, page.data?.locale)}
           </p>
         {/if}
         {#if card && card.items.length === 1}
@@ -220,7 +225,13 @@
                 class="af-danger"
                 disabled={busy}
                 onclick={() => {
-                  if (confirm(tr('animals.care.confirmDelete', { title: p.title }))) {
+                  if (
+                    confirm(
+                      tr('animals.care.confirmDelete', {
+                        title: carePlanTitleIn(p, page.data?.locale)
+                      })
+                    )
+                  ) {
                     void send(
                       `${base}/${p.id}`,
                       'DELETE',

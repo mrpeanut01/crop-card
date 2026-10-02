@@ -11,9 +11,12 @@
  * overlap.
  */
 
+import { calendarEventTitle } from '$lib/calendar/eventTitle';
 import { frostDatesFromMmDd } from '$lib/schedule/frostSeason';
 import { rolloverDateForSeason, type PlanningFrost } from '$lib/season/planningYear';
 import type { TaskCategory } from '$lib/plan/taskCategory';
+import { t as msg } from '$lib/i18n';
+import { taskDisplayTitle } from '$lib/tasks/title';
 
 export type SeasonSpanKind = 'grow' | 'plant' | 'till' | 'fertilize' | 'spray' | 'harvest';
 
@@ -105,6 +108,7 @@ export interface SeasonTaskIn {
   abortedAt?: number;
   category?: TaskCategory;
   relatedEventTable?: string;
+  pluginTemplateKey?: string | null;
 }
 
 export interface SeasonTimelineInput {
@@ -121,6 +125,8 @@ export interface SeasonTimelineInput {
   records: readonly SeasonRecordIn[];
   tasks: readonly SeasonTaskIn[];
   now: number;
+  /** The viewer's language for row and span labels; English when unset. */
+  locale?: string | null;
 }
 
 /** The years the Season dropdown offers, newest first. */
@@ -240,8 +246,6 @@ function heldByOther(
   return at < nextOnBlock;
 }
 
-export const BLOCK_WORK_NAME = 'Field work';
-
 function nextPlantingOnBlock(p: SeasonPlantingIn, all: readonly SeasonPlantingIn[]): number {
   if (p.plantingDate === null) return Infinity;
   let next = Infinity;
@@ -275,7 +279,7 @@ export function buildSeasonTimeline(input: SeasonTimelineInput): SeasonTimeline 
         startMs: p.plantingDate,
         endMs: p.plantingDate,
         recorded: planted,
-        label: planted ? 'Planted' : 'Planned planting'
+        label: msg(input.locale, planted ? 'today.tl.planted' : 'today.tl.plannedPlanting')
       });
     }
     input.events.forEach((e, index) => {
@@ -287,7 +291,7 @@ export function buildSeasonTimeline(input: SeasonTimelineInput): SeasonTimeline 
         startMs: e.startMs,
         endMs: Math.max(e.startMs, e.endMs),
         recorded: false,
-        label: e.title,
+        label: calendarEventTitle({ ...e, varietyDisplayName: p.name }, input.locale),
         suggestion: index
       });
     });
@@ -313,7 +317,7 @@ export function buildSeasonTimeline(input: SeasonTimelineInput): SeasonTimeline 
         startMs: at,
         endMs: at,
         recorded: t.completedAt !== undefined,
-        label: t.title
+        label: taskDisplayTitle(t, input.locale)
       });
     }
     if (p.plantingDate !== null) {
@@ -327,7 +331,7 @@ export function buildSeasonTimeline(input: SeasonTimelineInput): SeasonTimeline 
           startMs: p.plantingDate,
           endMs: growEnd,
           recorded: planted,
-          label: planted ? 'Growing' : 'Planned growing period'
+          label: msg(input.locale, planted ? 'today.tl.growing' : 'today.tl.plannedGrowing')
         });
       }
     }
@@ -410,7 +414,11 @@ function blockWorkRows(
       names instanceof Map
         ? names.get(blockId)
         : (names as Readonly<Record<string, string>> | undefined)?.[blockId];
-    return fromMap ?? plantings.find((p) => p.blockId === blockId)?.blockName ?? 'Unnamed block';
+    return (
+      fromMap ??
+      plantings.find((p) => p.blockId === blockId)?.blockName ??
+      msg(input.locale, 'today.tl.unnamedBlock')
+    );
   };
 
   const byBlock = new Map<string, SeasonSpan[]>();
@@ -441,13 +449,13 @@ function blockWorkRows(
       startMs: at,
       endMs: at,
       recorded: t.completedAt !== undefined,
-      label: t.title
+      label: taskDisplayTitle(t, input.locale)
     });
   }
   return [...byBlock].map(([blockId, spans]) => ({
     plantingId: `block:${blockId}`,
     blockWork: true,
-    name: BLOCK_WORK_NAME,
+    name: msg(input.locale, 'today.tl.fieldWork'),
     blockId,
     blockName: nameOf(blockId),
     plantingDate: null,

@@ -7,11 +7,17 @@
   import SignInMethods from '$lib/components/settings/SignInMethods.svelte';
   import AvatarUpload from '$lib/components/settings/AvatarUpload.svelte';
   import { DISPLAY_NAME_MAX, DISPLAY_UNITS, TIME_ZONES } from '$lib/profile';
-  import { createT } from '$lib/i18n';
+  import Pill from '$lib/components/ui/Pill.svelte';
+  import { createT, type MessageKey } from '$lib/i18n';
+  import { localizedLine } from '$lib/components/billing/localize';
 
   const { data, form } = $props();
 
   const tr = $derived(createT(data.locale));
+  const optionLabel = (
+    prefix: 'settings.tz' | 'settings.units',
+    o: { id: string; label: string }
+  ) => localizedLine(tr, o.label, `${prefix}.${o.id}` as MessageKey);
 
   const timeZoneOptions = $derived(
     TIME_ZONES.some((tz) => tz.id === data.account.timeZone)
@@ -50,7 +56,7 @@
             disabled={data.account.impersonating}
           >
             {#each timeZoneOptions as tz (tz.id)}
-              <option value={tz.id}>{tz.label}</option>
+              <option value={tz.id}>{optionLabel('settings.tz', tz)}</option>
             {/each}
           </select>
         </SettingsField>
@@ -62,7 +68,7 @@
             disabled={data.account.impersonating}
           >
             {#each DISPLAY_UNITS as u (u.id)}
-              <option value={u.id}>{u.label}</option>
+              <option value={u.id}>{optionLabel('settings.units', u)}</option>
             {/each}
           </select>
         </SettingsField>

@@ -14,6 +14,7 @@ import { farmTimeZone } from '$lib/db/userProfile';
 import {
   factsHash,
   pathSentence,
+  standingNoteText,
   stateLabel,
   type CarryoverState
 } from '$lib/amendments/carryover';
@@ -58,7 +59,10 @@ export async function decideSpread(input: {
   batchId: string;
   confirm: string | undefined;
   now?: number;
+  /** The viewer's language for the prompt's labels; hazard text stays English. */
+  locale?: string | null;
 }): Promise<SpreadDecision> {
+  const locale = input.locale;
   const now = input.now ?? Date.now();
   const data = await loadCarryoverData(now);
   const chain = data.chains.get(input.batchId);
@@ -102,13 +106,13 @@ export async function decideSpread(input: {
       message,
       batch: { id: batch.id, name: batch.name },
       state,
-      stateLabel: stateLabel(state),
+      stateLabel: stateLabel(state, locale),
       paths: chain.paths,
       pathSentences: chain.paths.map((p) => pathSentence(p, timeZone)),
       morePaths: chain.morePaths,
-      standingNotes: chain.standingNotes,
+      standingNotes: chain.standingNotes.map((n) => standingNoteText(n, locale)),
       reasons: target.reasons,
-      reasonTexts: target.reasons.map(reasonText),
+      reasonTexts: target.reasons.map((r) => reasonText(r, locale)),
       families: target.families,
       bioassays,
       factsHash: hash

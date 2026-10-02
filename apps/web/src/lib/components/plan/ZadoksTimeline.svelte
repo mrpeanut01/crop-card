@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { fmt as prefsFmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { DecisionKind, SmallGrainStage } from '$lib/plan/smallGrain';
-  import { formatCalendarDate } from '$lib/prefs';
+
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
 
@@ -40,11 +41,15 @@
       return { label: tr('planui.zad.headingLabel'), detail: tr('planui.zad.headingDetail') };
     if (kind === 'harvest')
       return { label: tr('planui.zad.harvestLabel'), detail: tr('planui.zad.harvestDetail') };
-    return DECISION_COPY[kind];
+    const copy = DECISION_COPY[kind];
+    if (kind === 'herbicide-cutoff') return { ...copy, label: tr('plan.zad.herbicideCutoff') };
+    if (kind === 'flag-leaf') return { ...copy, label: tr('plan.zad.flagLeaf') };
+    if (kind === 'fhb-window') return { ...copy, label: tr('plan.zad.fhbWindow') };
+    return copy;
   }
 
   function fmt(ms: number): string {
-    return formatCalendarDate(ms, 'month-day');
+    return prefsFmt.day(ms, 'month-day');
   }
 
   function relative(ms: number): string {

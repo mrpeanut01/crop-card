@@ -4,6 +4,8 @@
   import Banner from '$lib/components/ui/Banner.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   /** Shell shared by `/spray/insecticide` + `/spray/fungicide`. Owns the
    *  header, block selector, conditions, submit, banner stack, and the
@@ -140,13 +142,16 @@
   // via props passthrough; the shell itself doesn't branch on it until
   // #89 lands the variant-specific chrome.
 
+  const tr = $derived(createT(page.data?.locale));
   const blockFieldId = $derived(`${chemistry}-block`);
   const windFieldId = $derived(`${chemistry}-wind`);
   const tempFieldId = $derived(`${chemistry}-temp`);
   const rainFieldId = $derived(`${chemistry}-rain`);
   const tankFieldId = $derived(`${chemistry}-tank`);
   const metric = $derived(currentPrefs().units === 'metric');
-  const conditionsHeading = $derived(observation ? '3 · Conditions' : '2 · Conditions');
+  const conditionsHeading = $derived(
+    observation ? tr('sprayui.dp.conditions3') : tr('sprayui.dp.conditions2')
+  );
 </script>
 
 <SprayPageHeader {chemistry} {title} {lede} {activeREI} {gates} />
@@ -157,14 +162,14 @@
 
 <form onsubmit={onSubmit}>
   <section class="card">
-    <h2>1 · Block + product</h2>
+    <h2>{tr('sprayui.dp.blockProduct')}</h2>
 
     {#if blocks.length === 0 && noBlocks}
       {@render noBlocks()}
     {:else}
-      <label for={blockFieldId}>Block</label>
+      <label for={blockFieldId}>{tr('sprayui.dp.block')}</label>
       <select id={blockFieldId} bind:value={blockId} required>
-        <option value="">— pick a block —</option>
+        <option value="">{tr('sprayui.dp.pickBlock')}</option>
         {#each blocks as b (b.id)}
           <option value={b.id}
             >{b.name}{b.acres ? ` · ${fmt.label(b.acres, 'area', { digits: 2 })}` : ''}</option
@@ -194,7 +199,7 @@
 
   {#if observation}
     <section class="card">
-      <h2>2 · Observation (optional)</h2>
+      <h2>{tr('sprayui.dp.observation')}</h2>
       {@render observation()}
     </section>
   {/if}
@@ -202,17 +207,17 @@
   <section class="card">
     <h2>{conditionsHeading}</h2>
 
-    <label for={windFieldId}>Wind (mph)</label>
+    <label for={windFieldId}>{tr('sprayui.dp.wind')}</label>
     <input id={windFieldId} type="number" min="0" step="0.5" bind:value={windMph} required />
     {#if metric && Number.isFinite(windMph)}<span class="hint">≈ {fmt.qty(windMph, 'speed')}</span
       >{/if}
 
-    <label for={tempFieldId}>Temperature (°F)</label>
+    <label for={tempFieldId}>{tr('sprayui.dp.temp')}</label>
     <input id={tempFieldId} type="number" step="0.5" bind:value={tempF} required />
     {#if metric && Number.isFinite(tempF)}<span class="hint">≈ {fmt.qty(tempF, 'temperature')}</span
       >{/if}
 
-    <label for={rainFieldId}>Rain forecast next 24h (%)</label>
+    <label for={rainFieldId}>{tr('sprayui.dp.rain')}</label>
     <input
       id={rainFieldId}
       type="number"
@@ -223,14 +228,14 @@
       required
     />
 
-    <label for={tankFieldId}>Tank size (gal, optional — enables stock decrement)</label>
+    <label for={tankFieldId}>{tr('sprayui.dp.tank')}</label>
     <input id={tankFieldId} type="number" min="0" step="0.5" bind:value={tankSize} />
     {#if metric && tankSize}<span class="hint">≈ {fmt.qty(tankSize, 'volume')}</span>{/if}
   </section>
 
   <section class="card actions">
     <Button type="submit" variant="primary" loading={busy} disabled={!canSubmit}>
-      {busy ? 'Recording…' : submitLabel}
+      {busy ? tr('sprayui.recording') : submitLabel}
     </Button>
   </section>
 </form>
@@ -240,7 +245,7 @@
 {/if}
 {#if error}
   <Banner tone="rust" urgent>
-    <strong>Error:</strong>
+    <strong>{tr('sprayui.errorLabel')}</strong>
     {error}
     {#if violations.length > 0}
       <ul class="violations">
@@ -248,7 +253,7 @@
           <li>
             <code>{v.code}</code> — {v.message}
             {#if v.detail?.source === 'user-added'}
-              <span class="badge">stock label</span>
+              <span class="badge">{tr('sprayui.dp.stockLabel')}</span>
             {/if}
           </li>
         {/each}
@@ -258,7 +263,7 @@
 {/if}
 {#if warnings.length > 0}
   <Banner tone="wheat">
-    <strong>Warnings:</strong>
+    <strong>{tr('sprayui.warningsLabel')}</strong>
     <ul class="violations">
       {#each warnings as w, i (i)}<li>{w}</li>{/each}
     </ul>

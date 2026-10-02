@@ -61,7 +61,7 @@ describe('t()', () => {
 });
 
 describe('English-only messages', () => {
-  it('covers the safety, spray, decon, hold and outbound-message families', () => {
+  it('covers the safety, spray, decon and hold families', () => {
     for (const key of [
       'safety.stop',
       'kernel.PROHIBITED_DRUG',
@@ -73,12 +73,17 @@ describe('English-only messages', () => {
       'withdrawal.hold',
       'grazing.clear',
       'hold.shorten',
-      'label.verbatim',
-      'email.digest',
-      'push.frost',
-      'digest.title'
+      'label.verbatim'
     ]) {
       expect(isEnglishOnly(key), key).toBe(true);
+    }
+    for (const key of [
+      'email.subject.alert',
+      'push.frost.title',
+      'digest.card.title',
+      'sms.login'
+    ]) {
+      expect(isEnglishOnly(key), key).toBe(false);
     }
     expect(isEnglishOnly('nav.spray')).toBe(false);
     expect(isEnglishOnly('account.title')).toBe(false);

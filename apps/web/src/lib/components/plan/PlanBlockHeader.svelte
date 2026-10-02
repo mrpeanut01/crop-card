@@ -20,6 +20,7 @@
   import { fmt } from '$lib/prefsState.svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { cropDisplayName } from '$lib/i18n/cropName';
 
   interface Props {
     block: BlockWithPlantings;
@@ -52,19 +53,18 @@
     onAddPlanting
   }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
+  const cropName = (p: { cropPluginId: string; varietyDisplayName: string }) =>
+    cropDisplayName(p.cropPluginId, p.varietyDisplayName, page.data?.locale);
 
   const isPoly = $derived(block.plantings.length > 1);
   const geometryMissing = $derived(!block.geometryGeojson);
   const geometryNote = $derived(tr('planui.bh.geoNote'));
   const cropSummary = $derived.by(() => {
     if (block.plantings.length === 0) return tr('planui.bh.noPlantings');
-    if (block.plantings.length === 1) return block.plantings[0].varietyDisplayName;
+    if (block.plantings.length === 1) return cropName(block.plantings[0]);
     return tr('planui.bh.plantingsSummary', {
       count: block.plantings.length,
-      names: block.plantings
-        .slice(0, 2)
-        .map((p) => p.varietyDisplayName)
-        .join(', ')
+      names: block.plantings.slice(0, 2).map(cropName).join(', ')
     });
   });
   const kickerText = $derived.by(() => {

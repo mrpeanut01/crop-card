@@ -1,6 +1,8 @@
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { requireOwner } from '$lib/server/auth';
 import { dispatchEmail } from '$lib/server/email';
+import { t } from '$lib/i18n';
+import { localeField } from '$lib/server/messageLocale';
 import { issueInvite, listInvitesForOwner, revokeInvite } from '$lib/server/invites';
 import { roleTakesSeat, seatUsage, SEAT_LIMIT_MESSAGE } from '$lib/server/billing/plans';
 import { db } from '$lib/db/client';
@@ -65,10 +67,11 @@ export const POST: RequestHandler = async (event) => {
   const emailSent = await dispatchEmail({
     kind: 'helper-invite',
     to: inviteeEmail,
-    ownerName: ownerRow?.name ?? 'a CropCard farm',
+    ownerName: ownerRow?.name ?? t(event.locals.locale, 'email.invite.ownerFallback'),
     acceptUrl,
     message,
-    expiresAt: issued.expiresAt
+    expiresAt: issued.expiresAt,
+    ...localeField(event.locals.locale)
   }).then(
     () => true,
     (err) => {

@@ -1,5 +1,6 @@
 import { firstDayOfWeek } from '$lib/intlCache';
-import { ymdInZone } from '$lib/prefs';
+import { formatCalendarDate, ymdInZone } from '$lib/prefs';
+import { t, t as translate } from '$lib/i18n';
 import {
   cardHref,
   cardKey,
@@ -19,7 +20,8 @@ import {
   resolveOptions,
   sortTasks,
   ymdToUtcMs,
-  type BuildOptions
+  type BuildOptions,
+  type ResolvedOptions
 } from './common';
 import { isCalibratedGpa, sprayCardId } from './spray';
 import {
@@ -59,6 +61,19 @@ export const OUTSIDE_WINDOW_NOTE =
   'This period is outside the saved Cards. Open it while online.';
 export const EARLIER_DAYS_NOTE = 'Earlier days are not on this card.';
 
+export function outsideWindowNote(locale?: string | null): string {
+  return t(locale, 'cards.cal.outsideWindow');
+}
+
+/** English keeps the hand-built names; other languages use `Intl`. */
+function intlDates(locale: string | null | undefined): locale is string {
+  return !!locale && locale !== 'en';
+}
+
+function capitalize(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
 export { PRINTED_MIX_PATTERN, PRINTED_RATE_PATTERN };
 
 export interface CalendarFilters {
@@ -83,26 +98,47 @@ export function startOfWeekYmd(ymd: string, firstDay: number): string {
   return addDaysYmd(ymd, -back)!;
 }
 
-export function monthName(ym: string): string {
+export function monthName(ym: string, locale?: string | null): string {
+  if (intlDates(locale))
+    return capitalize(
+      formatCalendarDate(`${ym}-01`, 'date', { month: 'long', day: undefined }, locale)
+    );
   return `${MONTHS[Number(ym.slice(5, 7)) - 1]} ${ym.slice(0, 4)}`;
 }
 
-function shortMonthDay(ymd: string): string {
+function shortMonthDay(ymd: string, locale?: string | null): string {
+  if (intlDates(locale)) return formatCalendarDate(ymd, 'month-day', {}, locale);
   return `${MONTHS[Number(ymd.slice(5, 7)) - 1].slice(0, 3)} ${Number(ymd.slice(8, 10))}`;
 }
 
-export function weekRangeLabel(fromYmd: string, toYmd: string): string {
-  if (fromYmd.slice(0, 7) === toYmd.slice(0, 7))
-    return `${shortMonthDay(fromYmd)} to ${Number(toYmd.slice(8, 10))}`;
-  return `${shortMonthDay(fromYmd)} to ${shortMonthDay(toYmd)}`;
+export function weekRangeLabel(fromYmd: string, toYmd: string, locale?: string | null): string {
+  const sameMonth = fromYmd.slice(0, 7) === toYmd.slice(0, 7);
+  if (intlDates(locale)) {
+    const from = sameMonth ? `${Number(fromYmd.slice(8, 10))}` : shortMonthDay(fromYmd, locale);
+    return t(locale, 'cards.cal.range', { from, to: shortMonthDay(toYmd, locale) });
+  }
+  if (sameMonth)
+    return t(locale, 'cards.cal.range', {
+      from: shortMonthDay(fromYmd),
+      to: `${Number(toYmd.slice(8, 10))}`
+    });
+  return t(locale, 'cards.cal.range', { from: shortMonthDay(fromYmd), to: shortMonthDay(toYmd) });
 }
 
 function weekdayOf(ymd: string): number {
   return new Date(ymdToUtcMs(ymd)!).getUTCDay();
 }
 
-/** "Mon Oct 5". */
-export function calendarDayLabel(ymd: string): string {
+function weekdayName(ymd: string, locale?: string | null): string {
+  return intlDates(locale)
+    ? formatCalendarDate(ymd, 'weekday', {}, locale)
+    : WEEKDAYS[weekdayOf(ymd)];
+}
+
+/** "Mon Oct 5" ("lun, 5 oct" in Spanish). */
+export function calendarDayLabel(ymd: string, locale?: string | null): string {
+  if (intlDates(locale))
+    return formatCalendarDate(ymd, 'month-day', { weekday: 'short' }, locale);
   return `${WEEKDAYS[weekdayOf(ymd)]} ${shortMonthDay(ymd)}`;
 }
 
@@ -131,12 +167,16 @@ function taskBlockId(snapshot: FarmSnapshot, t: SnapshotTask): string | null {
   return planting?.blockId ?? null;
 }
 
-function whereText(snapshot: FarmSnapshot, t: SnapshotTask): string | undefined {
+function whereText(
+  snapshot: FarmSnapshot,
+  t: SnapshotTask,
+  locale?: string | null
+): string | undefined {
   const blockId = taskBlockId(snapshot, t);
   const block = blockId ? snapshot.blocks.find((b) => b.id === blockId) : undefined;
   if (!block) return undefined;
   const area = block.areaId ? snapshot.areas.find((a) => a.id === block.areaId) : undefined;
-  const parts = [area && areaDisplayName(area), blockDisplayName(block)].filter(
+  const parts = [area && areaDisplayName(area, locale), blockDisplayName(block, locale)].filter(
     (p): p is string => !!p
   );
   const unique = parts.filter((p, i) => parts.indexOf(p) === i);
@@ -170,7 +210,8 @@ export function calendarEntry(
   snapshot: FarmSnapshot,
   t: SnapshotTask,
   todayYmd: string,
-  timeZone: string
+  timeZone: string,
+  locale?: string | null
 ): CardCalendarEntry {
   const overdue = ymdInZone(t.scheduledFor, timeZone) < todayYmd || undefined;
   const person = t.assigneeUserId
@@ -178,10 +219,10 @@ export function calendarEntry(
     : undefined;
   const who = person ? shortName(person.name) : undefined;
   if (isCareTask(t)) {
-    const text = unsafeOnPaper(t.title) ? 'Animal care task' : t.title;
+    const text = unsafeOnPaper(t.title) ? translate(locale, 'cards.cal.careTask') : t.title;
     return { text, ...(who ? { who } : {}), ...(overdue ? { overdue } : {}) };
   }
-  let where = whereText(snapshot, t);
+  let where = whereText(snapshot, t, locale);
   if (where && unsafeOnPaper(where)) where = undefined;
   if (isSprayTask(t)) {
     const key = sprayCardKeyFor(snapshot, t);
@@ -196,11 +237,11 @@ export function calendarEntry(
   }
   if (unsafeOnPaper(t.title)) {
     return {
-      text: TASK_DETAILS_TEXT,
+      text: locale ? translate(locale, 'cards.cal.taskDetails') : TASK_DETAILS_TEXT,
       ...(where ? { where } : {}),
       ...(who ? { who } : {}),
       ...(overdue ? { overdue } : {}),
-      see: TASK_DETAILS_HINT,
+      see: locale ? translate(locale, 'cards.cal.taskDetailsHint') : TASK_DETAILS_HINT,
       seeUrl: cardShortUrl(snapshot.origin, cardKey('task', t.id))
     };
   }
@@ -243,16 +284,23 @@ export function filterCalendarTasks(
   return { tasks: out, farmWideHidden };
 }
 
-function filterLabels(snapshot: FarmSnapshot, filters: CalendarFilters): string[] {
+function filterLabels(
+  snapshot: FarmSnapshot,
+  filters: CalendarFilters,
+  opts: ResolvedOptions
+): string[] {
+  const { tr } = opts;
   const out: string[] = [];
   if (filters.area) {
     const area = snapshot.areas.find((a) => a.id === filters.area);
-    out.push(area ? areaDisplayName(area) : 'One Area');
+    out.push(area ? areaDisplayName(area, opts.prefs.locale) : tr('cards.cal.oneArea'));
   }
-  if (filters.who === 'unassigned') out.push('Unassigned');
+  if (filters.who === 'unassigned') out.push(tr('cards.cal.unassigned'));
   else if (filters.who) {
     const person = snapshot.people?.find((p) => p.id === filters.who);
-    out.push(person ? `For ${shortName(person.name)}` : 'For one person');
+    out.push(
+      person ? tr('cards.cal.forPerson', { name: shortName(person.name) }) : tr('cards.cal.forOne')
+    );
   }
   return out;
 }
@@ -268,7 +316,7 @@ interface PeriodSpec {
   title: string;
   kickerDates: string;
   perDay: number;
-  dayLabel: (ymd: string) => string;
+  dayLabel: (ymd: string, locale?: string | null) => string;
 }
 
 function buildPeriodCard(
@@ -277,6 +325,8 @@ function buildPeriodCard(
   options: CalendarBuildOptions
 ): CardModel | null {
   const opts = resolveOptions(snapshot, options);
+  const { tr } = opts;
+  const loc = opts.prefs.locale;
   const tz = opts.prefs.timeZone;
   const today = ymdInZone(opts.now, tz);
   const window = completeDays(snapshot, tz);
@@ -293,7 +343,7 @@ function buildPeriodCard(
   for (const t of tasks) {
     const ymd = ymdInZone(t.scheduledFor, tz);
     const list = byDay.get(ymd) ?? [];
-    list.push(calendarEntry(snapshot, t, today, tz));
+    list.push(calendarEntry(snapshot, t, today, tz, loc));
     byDay.set(ymd, list);
   }
 
@@ -305,7 +355,7 @@ function buildPeriodCard(
       if (earlier) earlierShown = true;
       return {
         ymd,
-        label: spec.dayLabel(ymd),
+        label: spec.dayLabel(ymd, loc),
         inPeriod: within,
         earlier,
         today: ymd === today,
@@ -316,7 +366,7 @@ function buildPeriodCard(
   const overflow = weeks.some((row) => row.some((d) => d.entries.length > spec.perDay));
   const calendar: CardCalendar = {
     period: spec.kind,
-    weekdays: spec.weeks[0].map((ymd) => WEEKDAYS[weekdayOf(ymd)]),
+    weekdays: spec.weeks[0].map((ymd) => weekdayName(ymd, loc)),
     weeks,
     perDay: spec.perDay,
     overflow
@@ -325,24 +375,26 @@ function buildPeriodCard(
   const overdueCount = tasks.filter((t) => ymdInZone(t.scheduledFor, tz) < today).length;
   const facts: CardFact[] = [
     {
-      label: 'Open tasks',
-      value: tasks.length ? `${tasks.length}` : 'Nothing scheduled',
+      label: tr('cards.cal.openTasks'),
+      value: tasks.length ? `${tasks.length}` : tr('cards.nothingScheduled'),
       provenance: 'data'
     }
   ];
-  if (overdueCount) facts.push({ label: 'Overdue', value: `${overdueCount}`, provenance: 'data' });
+  if (overdueCount)
+    facts.push({ label: tr('cards.overdue'), value: `${overdueCount}`, provenance: 'data' });
 
   const notices: string[] = [];
-  if (earlierShown) notices.push(EARLIER_DAYS_NOTE);
-  if (farmWideHidden)
-    notices.push(
-      farmWideHidden === 1 ? '1 farm-wide task not shown.' : `${farmWideHidden} farm-wide tasks not shown.`
-    );
+  if (earlierShown) notices.push(tr('cards.cal.earlierDays'));
+  if (farmWideHidden) notices.push(tr('cards.cal.farmWideHidden', { count: farmWideHidden }));
   if (tasks.some((t) => isSprayTask(t)))
     notices.push('Spray tasks show no rates or mixing steps. Use the Spray Card for those.');
 
   const key = cardKey(spec.kind, spec.keyId);
-  const kicker = [spec.kind === 'week' ? 'Week' : 'Month', spec.kickerDates, ...filterLabels(snapshot, filters)]
+  const kicker = [
+    spec.kind === 'week' ? tr('cards.cal.week') : tr('cards.cal.month'),
+    spec.kickerDates,
+    ...filterLabels(snapshot, filters, opts)
+  ]
     .filter(Boolean)
     .join(' · ');
   return {
@@ -353,7 +405,7 @@ function buildPeriodCard(
     facts,
     sections: [],
     asOf: snapshot.generatedAt,
-    provenance: [{ source: 'data', detail: 'your task list' }],
+    provenance: [{ source: 'data', detail: tr('cards.prov.taskList') }],
     href: cardHref(spec.kind, key),
     ...(notices.length ? { notices } : {}),
     calendar
@@ -370,6 +422,7 @@ export function buildWeekPeriodCard(
   const from = startOfWeekYmd(anyDayYmd, firstDay);
   const row = Array.from({ length: 7 }, (_, i) => addDaysYmd(from, i)!);
   const to = row[6];
+  const loc = resolveOptions(snapshot, options).prefs.locale;
   return buildPeriodCard(
     snapshot,
     {
@@ -378,8 +431,8 @@ export function buildWeekPeriodCard(
       weeks: [row],
       firstYmd: from,
       lastYmd: to,
-      title: `Week of ${shortMonthDay(from)}`,
-      kickerDates: weekRangeLabel(from, to),
+      title: t(loc, 'cards.cal.weekOf', { date: shortMonthDay(from, loc) }),
+      kickerDates: weekRangeLabel(from, to, loc),
       perDay: WEEK_PER_DAY,
       dayLabel: calendarDayLabel
     },
@@ -401,6 +454,7 @@ export function buildMonthPeriodCard(
   const m = Number(ym.slice(5, 7));
   const last = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
   const gridFrom = startOfWeekYmd(first, firstDay);
+  const loc = resolveOptions(snapshot, options).prefs.locale;
   const weeks: string[][] = [];
   for (let start = gridFrom; start <= last; start = addDaysYmd(start, 7)!) {
     weeks.push(Array.from({ length: 7 }, (_, i) => addDaysYmd(start, i)!));
@@ -413,7 +467,7 @@ export function buildMonthPeriodCard(
       weeks,
       firstYmd: first,
       lastYmd: last,
-      title: monthName(ym),
+      title: monthName(ym, loc),
       kickerDates: '',
       perDay: MONTH_PER_DAY,
       dayLabel: (ymd) => `${Number(ymd.slice(8, 10))}`
@@ -441,6 +495,10 @@ export function printedCalendarText(card: CardModel): string[] {
 export const PRINTABLE_PAST_DAYS = 13;
 export const PRINTABLE_FUTURE_DAYS = 61;
 export const PRINT_RANGE_NOTE = 'Printing covers the last two weeks and the next two months.';
+
+export function printRangeNote(locale?: string | null): string {
+  return t(locale, 'cards.cal.printRange');
+}
 
 /** Whether a /today Week or Month view can be printed from the saved Cards,
  *  using the same test the Card builder uses (its last day inside the window). */

@@ -11,15 +11,10 @@
    */
 
   import { untrack } from 'svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import type { SeasonSetup } from '$lib/season/setup';
-  import {
-    SEASON_SETUP_DEFAULTS,
-    PHILOSOPHY_LABELS,
-    WEED_LABELS,
-    PEST_LABELS,
-    FERTILITY_LABELS,
-    COVER_LABELS
-  } from '$lib/season/setup';
+  import { SEASON_SETUP_DEFAULTS, seasonSetupOptions } from '$lib/season/setup';
 
   let {
     existing,
@@ -32,6 +27,9 @@
     currentYear: number;
     onSave: (setup: SeasonSetup) => void;
   } = $props();
+
+  const tr = $derived(createT(page.data?.locale));
+  const locale = $derived(page.data?.locale);
 
   // Seed local form state from props ONCE on mount. The form is owned by
   // this step; subsequent prop changes from the parent are intentionally
@@ -86,12 +84,12 @@
       });
       if (!res.ok) {
         const body = await res.text().catch(() => '');
-        throw new Error(body || `save failed (${res.status})`);
+        throw new Error(body || tr('season.step.saveFailed', { status: res.status }));
       }
       const data = (await res.json()) as { setup: SeasonSetup };
       onSave(data.setup);
     } catch (e) {
-      error = e instanceof Error ? e.message : 'unknown error';
+      error = e instanceof Error ? e.message : tr('season.step.unknownError');
     } finally {
       saving = false;
     }
@@ -112,16 +110,16 @@
       });
       if (!res.ok) {
         const body = await res.text().catch(() => '');
-        throw new Error(body || `carry-forward failed (${res.status})`);
+        throw new Error(body || tr('season.step.carryFailed', { status: res.status }));
       }
       const data = (await res.json()) as { setup: SeasonSetup | null };
       if (data.setup) {
         onSave(data.setup);
       } else {
-        error = `No saved setup found for ${lastYearSetup.year}.`;
+        error = tr('season.step.noSaved', { year: lastYearSetup.year });
       }
     } catch (e) {
-      error = e instanceof Error ? e.message : 'unknown error';
+      error = e instanceof Error ? e.message : tr('season.step.unknownError');
     } finally {
       saving = false;
     }
@@ -130,16 +128,14 @@
 
 <div class="ss-step">
   <header class="ss-header">
-    <h3>Set up your {currentYear} planting season</h3>
+    <h3>{tr('season.step.title', { year: currentYear })}</h3>
     <p class="ss-intro">
-      Five quick questions tell the planner what kinds of products + practices fit your operation.
-      Your answers carry forward year over year — you can change them any time from <a
-        href="/settings/season">Settings → Season</a
-      >.
+      {tr('season.step.introLead')}
+      <a href="/settings/season">{tr('season.step.introLink')}</a>{tr('season.step.introTail')}
     </p>
     {#if lastYearSetup && !existing}
       <button type="button" class="ss-carry" disabled={saving} onclick={useLastYear}>
-        ↻ Use my {lastYearSetup.year} answers
+        {tr('season.step.useLast', { year: lastYearSetup.year })}
       </button>
     {/if}
   </header>
@@ -152,20 +148,18 @@
     }}
   >
     <label class="ss-field">
-      <span class="ss-label">Input philosophy</span>
+      <span class="ss-label">{tr('plan.page.season.philosophy')}</span>
       <select bind:value={philosophy} disabled={saving} required>
-        {#each Object.entries(PHILOSOPHY_LABELS) as [val, label] (val)}
+        {#each seasonSetupOptions('philosophy', locale) as [val, label] (val)}
           <option value={val}>{label}</option>
         {/each}
       </select>
-      <span class="ss-hint">
-        Gates which products the planner will suggest. Organic = OMRI-listed only.
-      </span>
+      <span class="ss-hint">{tr('season.step.philosophyHint')}</span>
     </label>
 
     {#if philosophy === 'organic-transitioning'}
       <label class="ss-field">
-        <span class="ss-label">Transition started in</span>
+        <span class="ss-label">{tr('season.step.transition')}</span>
         <input
           type="number"
           min="1900"
@@ -175,58 +169,48 @@
           disabled={saving}
           required
         />
-        <span class="ss-hint">
-          Used to surface "year N of 3" badges and to time the certification eligibility milestone.
-        </span>
+        <span class="ss-hint">{tr('season.step.transitionHint')}</span>
       </label>
     {/if}
 
     <label class="ss-field">
-      <span class="ss-label">Weed strategy</span>
+      <span class="ss-label">{tr('plan.page.season.weed')}</span>
       <select bind:value={weedStrategy} disabled={saving} required>
-        {#each Object.entries(WEED_LABELS) as [val, label] (val)}
+        {#each seasonSetupOptions('weed', locale) as [val, label] (val)}
           <option value={val}>{label}</option>
         {/each}
       </select>
-      <span class="ss-hint">Each tier includes the ones above it.</span>
+      <span class="ss-hint">{tr('season.step.weedHint')}</span>
     </label>
 
     <label class="ss-field">
-      <span class="ss-label">Pest strategy</span>
+      <span class="ss-label">{tr('plan.page.season.pest')}</span>
       <select bind:value={pestStrategy} disabled={saving} required>
-        {#each Object.entries(PEST_LABELS) as [val, label] (val)}
+        {#each seasonSetupOptions('pest', locale) as [val, label] (val)}
           <option value={val}>{label}</option>
         {/each}
       </select>
-      <span class="ss-hint">
-        Scout-then-spray (IPM) schedules field-check reminders instead of calendar sprays.
-      </span>
+      <span class="ss-hint">{tr('season.step.pestHint')}</span>
     </label>
 
     <label class="ss-field">
-      <span class="ss-label">Last year's cover crop</span>
+      <span class="ss-label">{tr('plan.page.season.cover')}</span>
       <select bind:value={coverCropIntent} disabled={saving} required>
-        {#each Object.entries(COVER_LABELS) as [val, label] (val)}
+        {#each seasonSetupOptions('cover', locale) as [val, label] (val)}
           <option value={val}>{label}</option>
         {/each}
       </select>
-      <span class="ss-hint">
-        What overwintered on your fields. Schedules spring termination and feeds the legume N credit
-        below.
-      </span>
+      <span class="ss-hint">{tr('season.step.coverHint')}</span>
     </label>
 
     <label class="ss-field">
-      <span class="ss-label">Fertility approach</span>
+      <span class="ss-label">{tr('plan.page.season.fertility')}</span>
       <select bind:value={fertilityApproach} disabled={saving} required>
-        {#each Object.entries(FERTILITY_LABELS) as [val, label] (val)}
+        {#each seasonSetupOptions('fert', locale) as [val, label] (val)}
           <option value={val}>{label}</option>
         {/each}
       </select>
-      <span class="ss-hint">
-        Picks the fertility product pool. Cover-crop credits subtract legume N from required N
-        before sizing.
-      </span>
+      <span class="ss-hint">{tr('season.step.fertHint')}</span>
     </label>
 
     {#if error}
@@ -235,7 +219,7 @@
 
     <div class="ss-actions">
       <button type="submit" class="ss-submit" disabled={saving}>
-        {existing ? 'Save changes & continue' : 'Save & continue'}
+        {existing ? tr('season.step.saveChanges') : tr('season.step.save')}
       </button>
     </div>
   </form>

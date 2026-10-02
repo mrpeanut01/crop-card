@@ -2,6 +2,7 @@
 
 import { formatMoney } from './money';
 import type { EnterpriseProfit, SeasonProfit } from './profit';
+import { t } from '$lib/i18n';
 
 /** "45 min", "1.5 h": to the nearest quarter hour above an hour. Mirrors
  *  `formatHours` in `lib/labour/hours.ts` (F1-18). */
@@ -15,32 +16,47 @@ export function plural(n: number, one: string, many: string): string {
   return `${n} ${n === 1 ? one : many}`;
 }
 
+function uses(n: number, locale?: string | null): string {
+  return t(locale, 'finance.fmt.uses', { count: n });
+}
+
 export function inputCostText(
-  e: Pick<EnterpriseProfit, 'inputCostCents' | 'inputCostUnknownCount'>
+  e: Pick<EnterpriseProfit, 'inputCostCents' | 'inputCostUnknownCount'>,
+  locale?: string | null
 ): string {
   const known = formatMoney(e.inputCostCents);
   if (e.inputCostUnknownCount === 0) return known;
-  const unknown = plural(e.inputCostUnknownCount, 'use', 'uses');
+  const unknown = uses(e.inputCostUnknownCount, locale);
   return e.inputCostCents === 0
-    ? `Cost unknown (${unknown})`
-    : `${known}, plus ${unknown} with unknown cost`;
+    ? t(locale, 'finance.fmt.costUnknown', { unknown })
+    : t(locale, 'finance.fmt.plusUnknown', { known, unknown });
 }
 
-export function netLabel(e: Pick<EnterpriseProfit, 'inputCostUnknownCount'>): string {
+export function netLabel(
+  e: Pick<EnterpriseProfit, 'inputCostUnknownCount'>,
+  locale?: string | null
+): string {
   return e.inputCostUnknownCount > 0
-    ? `Net, not counting ${plural(e.inputCostUnknownCount, 'use', 'uses')} with unknown cost`
-    : 'Net';
+    ? t(locale, 'finance.fmt.netNotCounting', { unknown: uses(e.inputCostUnknownCount, locale) })
+    : t(locale, 'finance.fmt.net');
 }
 
 export function labourText(
   e: Pick<EnterpriseProfit, 'labourMinutes' | 'labourCents' | 'labourNotCounted'>,
-  rate: number | null
+  rate: number | null,
+  locale?: string | null
 ): string {
-  if (e.labourNotCounted) return 'Labour not counted for animals';
-  if (e.labourMinutes === 0) return 'No time logged';
+  if (e.labourNotCounted) return t(locale, 'finance.fmt.labourAnimals');
+  if (e.labourMinutes === 0) return t(locale, 'finance.fmt.noTime');
   const hours = formatMinutes(e.labourMinutes);
-  if (rate === null || e.labourCents === null) return `${hours}. Labour rate not set`;
-  return `${hours}, ${formatMoney(e.labourCents)}. Labour, an estimate at ${formatMoney(rate)} an hour`;
+  if (rate === null || e.labourCents === null) {
+    return t(locale, 'finance.fmt.rateNotSet', { hours });
+  }
+  return t(locale, 'finance.fmt.labourEstimate', {
+    hours,
+    cost: formatMoney(e.labourCents),
+    rate: formatMoney(rate)
+  });
 }
 
 export function hasUnallocated(p: SeasonProfit): boolean {

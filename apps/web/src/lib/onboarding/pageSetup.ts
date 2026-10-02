@@ -10,6 +10,8 @@
  * inspectors get no nudges: a list of things they cannot act on is clutter.
  */
 
+import { t } from '$lib/i18n';
+
 export interface PlanSetupFacts {
   /** The owner saved a farm location (not the built-in default). */
   hasLocation: boolean;
@@ -62,15 +64,19 @@ function nudge(
   return { id, title, body, href, action, ask };
 }
 
-function climateNudges(f: ClimateSetupFacts, why: string): SetupNudge[] {
+function climateNudges(
+  f: ClimateSetupFacts,
+  page: 'today' | 'plan',
+  locale: string | null | undefined
+): SetupNudge[] {
   if (!f.hasLocation) {
     return [
       nudge(
         'location',
-        'Your farm location is not set',
-        `Set your farm location so ${why} fit your farm.`,
+        t(locale, 'nudge.location.title'),
+        t(locale, page === 'today' ? 'nudge.location.bodyToday' : 'nudge.location.bodyPlan'),
         '/settings/farm',
-        'Set farm location',
+        t(locale, 'nudge.location.action'),
         'climate'
       )
     ];
@@ -79,10 +85,10 @@ function climateNudges(f: ClimateSetupFacts, why: string): SetupNudge[] {
     return [
       nudge(
         'frost',
-        'Frost dates are not saved yet',
-        'Save your last spring and first fall frost dates so the schedule lines up with your season.',
+        t(locale, 'nudge.frost.title'),
+        t(locale, 'nudge.frost.body'),
         '/settings/farm',
-        'Save frost dates',
+        t(locale, 'nudge.frost.action'),
         'climate'
       )
     ];
@@ -92,25 +98,33 @@ function climateNudges(f: ClimateSetupFacts, why: string): SetupNudge[] {
 
 /** /today: the weather, frost alerts and the calendar all read the farm
  *  location and frost dates. Nothing here gates the page. */
-export function todaySetupPrompts(f: ClimateSetupFacts, role: Role): PageSetupPrompts<never> {
+export function todaySetupPrompts(
+  f: ClimateSetupFacts,
+  role: Role,
+  locale?: string | null
+): PageSetupPrompts<never> {
   return {
     gate: null,
-    nudges: role === 'owner' ? climateNudges(f, 'the weather, frost alerts and planting dates') : []
+    nudges: role === 'owner' ? climateNudges(f, 'today', locale) : []
   };
 }
 
-export function planSetupPrompts(f: PlanSetupFacts, role: Role): PageSetupPrompts<PlanSetupGate> {
+export function planSetupPrompts(
+  f: PlanSetupFacts,
+  role: Role,
+  locale?: string | null
+): PageSetupPrompts<PlanSetupGate> {
   const gate: PlanSetupGate | null = f.hasBlocks ? null : 'blocks';
   if (role !== 'owner') return { gate, nudges: [] };
-  const nudges: SetupNudge[] = climateNudges(f, 'frost dates, weather and planting windows');
+  const nudges: SetupNudge[] = climateNudges(f, 'plan', locale);
   if (!f.hasSeasonSetup) {
     nudges.push(
       nudge(
         'season',
-        `The ${f.year} season is not set up`,
-        'Answer five quick questions (growing style, weeds, pests, fertility, cover crops) so the inputs plan fits how you farm.',
+        t(locale, 'nudge.season.title', { year: f.year }),
+        t(locale, 'nudge.season.body'),
         '/settings/season',
-        'Set up the season',
+        t(locale, 'nudge.season.action'),
         'season'
       )
     );
@@ -119,10 +133,10 @@ export function planSetupPrompts(f: PlanSetupFacts, role: Role): PageSetupPrompt
     nudges.push(
       nudge(
         'seed',
-        'No seed in inventory yet',
-        'Add the seed you have, have ordered or plan to buy. The planner lays out beds from it.',
+        t(locale, 'nudge.seed.title'),
+        t(locale, 'nudge.seed.body'),
         '/inventory/seed/add',
-        'Add seed'
+        t(locale, 'nudge.seed.action')
       )
     );
   }

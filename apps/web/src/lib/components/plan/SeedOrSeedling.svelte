@@ -10,9 +10,6 @@
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
   import {
-    DTM_FROM_TRANSPLANT_NOTE,
-    SOW_AFTER_TRANSPLANT_NOTE,
-    SOW_TIMING_UNKNOWN,
     preselectedEstablishment,
     resolveSeedStartTiming,
     type Establishment,
@@ -112,7 +109,7 @@
           <Provenance source={timing.startIndoorsWeeks.source} compact />
         </p>
       {:else}
-        <p class="hint" data-testid="sow-timing-unknown">{SOW_TIMING_UNKNOWN}</p>
+        <p class="hint" data-testid="sow-timing-unknown">{tr('sched.sowTimingUnknown')}</p>
         <label class="field">
           <span class="label">{tr('planui.sos.sowOn')}</span>
           <input
@@ -125,7 +122,7 @@
         </label>
         {#if sowTooLate}
           <p class="hint warn" role="alert" data-testid="sow-after-transplant">
-            {SOW_AFTER_TRANSPLANT_NOTE}
+            {tr('sched.sowAfterTransplant')}
           </p>
         {/if}
       {/if}
@@ -138,7 +135,7 @@
       <p class="hint">{tr('planui.sos.noIndoor')}</p>
     {/if}
   {:else if establishment === 'direct-seed' && plugin?.plantingGuide?.dtmFrom === 'transplant'}
-    <p class="hint">{DTM_FROM_TRANSPLANT_NOTE}</p>
+    <p class="hint">{tr('sched.dtmFromTransplant')}</p>
   {/if}
 </fieldset>
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { pageCropName } from '$lib/i18n/pageCropName';
   import { tick } from 'svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import AiLimitNudge from '$lib/components/billing/AiLimitNudge.svelte';
@@ -16,7 +17,7 @@
     SpacingPattern,
     SuccessionProposal
   } from '$lib/garden/types';
-  import { PLANTING_CARE_LINK_LABEL, cardHref, cardKey, plantingCardHref } from '$lib/cards/model';
+  import { cardHref, cardKey, plantingCardHref, plantingCareLinkLabel } from '$lib/cards/model';
   import { getDesigner } from './designerState.svelte';
   import CoverChips from '$lib/components/setup/CoverChips.svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
@@ -138,14 +139,14 @@
   }
 
   function cropName(pluginId: string, fallback: string): string {
-    return d.crop(pluginId)?.displayName ?? fallback;
+    return pageCropName(pluginId, d.crop(pluginId)?.displayName ?? fallback);
   }
 
   function hintText(h: (typeof bedHints)[number]): string {
     const a = d.design.plantings.find((p) => p.cropId === h.a.cropId);
     const b = d.design.plantings.find((p) => p.cropId === h.b.cropId);
-    const an = `${a?.varietyDisplayName ?? h.a.cropPluginId} (${d.bed(h.a.blockId)?.name ?? ''})`;
-    const bn = `${b?.varietyDisplayName ?? h.b.cropPluginId} (${d.bed(h.b.blockId)?.name ?? ''})`;
+    const an = `${a ? pageCropName(a.cropPluginId, a.varietyDisplayName) : h.a.cropPluginId} (${d.bed(h.a.blockId)?.name ?? ''})`;
+    const bn = `${b ? pageCropName(b.cropPluginId, b.varietyDisplayName) : h.b.cropPluginId} (${d.bed(h.b.blockId)?.name ?? ''})`;
     if (h.relation === 'keep-apart') {
       const why = h.benefit ? ` ${/[.!?]$/.test(h.benefit) ? h.benefit : `${h.benefit}.`}` : '';
       return `${tr('garden.insp.keepApart', { a: an, b: bn })}${why}`;
@@ -539,7 +540,7 @@
           {@const first = series[0]}
           {@const when =
             p.plantingDateMs != null ? d.dateText(p.plantingDateMs) : tr('garden.insp.noDate')}
-          {@const who = `${p.varietyDisplayName}, ${when}`}
+          {@const who = `${pageCropName(p.cropPluginId, p.varietyDisplayName)}, ${when}`}
           {@const thisYear = d.inSeasonYear(p)}
           <li
             class="prow"
@@ -554,7 +555,7 @@
                 aria-expanded={open}
                 data-planting-row-id={p.cropId}
                 onclick={() => (open ? (d.selectedCropId = null) : d.selectPlanting(p.cropId))}
-                >{p.varietyDisplayName}</button
+                >{pageCropName(p.cropPluginId, p.varietyDisplayName)}</button
               >
               {#if p.sourceProvenance}<span class="prov-inline"
                   ><Provenance
@@ -881,8 +882,8 @@
             <a
               class="link"
               href={plantingCardHref(p.cropId)}
-              aria-label="{PLANTING_CARE_LINK_LABEL}: {p.varietyDisplayName}"
-              data-testid="planting-card-link">{PLANTING_CARE_LINK_LABEL}</a
+              aria-label="{plantingCareLinkLabel(d.locale)}: {p.varietyDisplayName}"
+              data-testid="planting-card-link">{plantingCareLinkLabel(d.locale)}</a
             >
           </li>
         {/each}
@@ -945,10 +946,14 @@
               {#each recipePreview.plantings as prop (prop.key)}
                 <li class="prow">
                   <span>
-                    {prop.varietyDisplayName} · {shortDate(prop.plantingDateMs, tr)} · {sizeLabel(
-                      prop.footprint.w_in / 12,
-                      prop.footprint.l_in / 12
-                    )} · {countOf('plant', prop.plantCount, tr)}
+                    {pageCropName(prop.cropPluginId, prop.varietyDisplayName)} · {shortDate(
+                      prop.plantingDateMs,
+                      tr
+                    )} · {sizeLabel(prop.footprint.w_in / 12, prop.footprint.l_in / 12)} · {countOf(
+                      'plant',
+                      prop.plantCount,
+                      tr
+                    )}
                   </span>
                   <span class="prov-inline"><Provenance source={prop.provenance} compact /></span>
                   <label class="accept">
@@ -1003,10 +1008,14 @@
             {#each fill.proposals as prop (prop.key)}
               <li class="prow">
                 <span
-                  >{prop.varietyDisplayName} · {shortDate(prop.plantingDateMs, tr)} · {sizeLabel(
-                    prop.footprint.w_in / 12,
-                    prop.footprint.l_in / 12
-                  )} · {countOf('plant', prop.plantCount, tr)}</span
+                  >{pageCropName(prop.cropPluginId, prop.varietyDisplayName)} · {shortDate(
+                    prop.plantingDateMs,
+                    tr
+                  )} · {sizeLabel(prop.footprint.w_in / 12, prop.footprint.l_in / 12)} · {countOf(
+                    'plant',
+                    prop.plantCount,
+                    tr
+                  )}</span
                 >
                 <span class="pmeta">{prop.note ?? spotText(prop.footprint)}</span>
                 <span class="prov-inline"><Provenance source={prop.provenance} compact /></span>
@@ -1053,7 +1062,7 @@
         <ul class="hist">
           {#each history.filter((h) => h.seasonYear === year) as h (h.cropId)}
             <li>
-              {h.varietyDisplayName}
+              {pageCropName(h.cropPluginId, h.varietyDisplayName)}
               <span class="pmeta"
                 >· {familyName(h.cropFamily, tr)}{h.plantingDateMs != null
                   ? ` · ${d.dateText(h.plantingDateMs)}`

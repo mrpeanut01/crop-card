@@ -1,5 +1,7 @@
 /** "Record a sale" after a harvest (F2-15). Client-safe. */
 
+import { t } from '$lib/i18n';
+
 /** "40 lb" → { quantity: 40, unit: 'lb' }. Null when the harvest quantity
  *  does not start with a number. */
 export function parseHarvestQuantity(
@@ -31,3 +33,7 @@ export function recordSaleHref(link: SaleLink): string {
 }
 
 export const RECORD_SALE_OFFLINE = 'Record the sale on Money when you have signal';
+
+export function recordSaleOffline(locale?: string | null): string {
+  return locale ? t(locale, 'finance.recordSaleOffline') : RECORD_SALE_OFFLINE;
+}

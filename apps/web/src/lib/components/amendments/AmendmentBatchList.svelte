@@ -2,7 +2,9 @@
   /** Phase 33C (M-41): the manure and compost rows on the unified
    *  inventory list. One card per batch with its carryover state. */
   import CarryoverStateBadge from './CarryoverStateBadge.svelte';
-  import { BATCH_KIND_LABELS } from '$lib/amendments/model';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
+  import { batchKindLabel } from '$lib/amendments/model';
   import { fmt } from '$lib/prefsState.svelte';
   import type { AmendmentRow } from '$lib/amendments/view';
 
@@ -11,6 +13,8 @@
   }
 
   const { rows }: Props = $props();
+  const locale = $derived(page.data?.locale);
+  const tr = $derived(createT(locale));
 
   let search = $state('');
   const filtered = $derived(
@@ -24,10 +28,12 @@
   <input
     type="search"
     bind:value={search}
-    placeholder="Search by name…"
-    aria-label="Search manure and compost"
+    placeholder={tr('amend.list.searchPh')}
+    aria-label={tr('amend.list.searchAria')}
   />
-  <span class="count mono">{filtered.length} of {rows.length}</span>
+  <span class="count mono"
+    >{tr('amend.list.count', { shown: filtered.length, total: rows.length })}</span
+  >
 </div>
 
 <ul class="batches" data-testid="amendment-list">
@@ -39,16 +45,18 @@
           <CarryoverStateBadge state={row.state} />
         </span>
         <span class="meta">
-          {BATCH_KIND_LABELS[row.kind]} · {row.origin === 'bought'
-            ? `Bought${row.supplier ? ` from ${row.supplier}` : ''}`
-            : `${row.inputCount} ${row.inputCount === 1 ? 'source' : 'sources'}`} · Started {fmt.day(
-            row.startedAt
-          )}{row.closedAt ? ' · Closed' : ''}
+          {batchKindLabel(row.kind, locale)} · {row.origin === 'bought'
+            ? row.supplier
+              ? tr('amend.header.boughtFrom', { supplier: row.supplier })
+              : tr('amend.header.bought')
+            : tr('amend.list.sources', { count: row.inputCount })} · {tr('amend.header.started', {
+            date: fmt.day(row.startedAt)
+          })}{row.closedAt ? ` · ${tr('amend.list.closed')}` : ''}
         </span>
       </a>
     </li>
   {:else}
-    <li class="empty">Nothing matches that search.</li>
+    <li class="empty">{tr('amend.list.noMatch')}</li>
   {/each}
 </ul>
 

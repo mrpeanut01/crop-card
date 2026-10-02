@@ -9,6 +9,7 @@
 import type { AnimalToxicity } from '$lib/plugins/schemas';
 import type { CardModel, CardProvenance, CardSection } from '$lib/cards/model';
 import { mergeProvenance } from '$lib/cards/model';
+import { t } from '$lib/i18n';
 
 export type ToxicityEntry = AnimalToxicity[number];
 export type PlantPart = ToxicityEntry['parts'][number];
@@ -199,11 +200,13 @@ export function withToxicPlants(
   card: CardModel,
   crops: readonly ToxicCrop[] | null | undefined,
   speciesIds: readonly string[],
-  plural: SpeciesPlural
+  plural: SpeciesPlural,
+  locale?: string | null
 ): CardModel {
   const section = toxicSection(toxicFindings(crops, speciesIds), plural);
   if (!section) return card;
-  const at = card.sections.findIndex((s) => s.title === 'Lives here');
+  const livesHere = t(locale, 'area.housing.livesHere');
+  const at = card.sections.findIndex((s) => s.title === 'Lives here' || s.title === livesHere);
   const sections = [...card.sections];
   sections.splice(at + 1, 0, section);
   return {

@@ -12,6 +12,7 @@
    */
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import { createT } from '$lib/i18n';
   import { invTypeWord } from './typeLabel';
   import InvTypeChip from './InvTypeChip.svelte';
@@ -20,6 +21,7 @@
   import { expectedQuantityText, inventoryRowCard, inventoryRowId } from '$lib/inventory/rowCards';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatStockQuantity, isLabelUnitCategory } from '$lib/stock/units';
+  import { stockCategoryLabel } from '$lib/stock/categories';
   import type { InventoryType } from '$lib/inventory/types';
   import { visibleInventoryTypes } from '$lib/inventory/chips';
   import type { CatalogRow, InventoryRow, StockRow } from '../../../routes/inventory/+page.server';
@@ -267,7 +269,13 @@
                 </td>
               {:else}
                 <td>{row.displayName}</td>
-                <td class="muted">{type === 'seed' ? (row.cropName ?? '—') : row.category}</td>
+                <td class="muted">
+                  {type === 'seed'
+                    ? row.cropName
+                      ? cropDisplayNameByEnglish(row.cropName, $page.data?.locale)
+                      : '—'
+                    : stockCategoryLabel(row.category, $page.data?.locale)}
+                </td>
                 <td class="num" class:low={row.isLow}>
                   {formatStockQuantity(row.onHand, row.defaultUnit, currentPrefs(), {
                     labelUnit: isLabelUnitCategory(row.category),

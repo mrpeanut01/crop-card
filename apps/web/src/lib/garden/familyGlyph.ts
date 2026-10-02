@@ -4,6 +4,8 @@
  * path in a 10 by 10 box; callers scale it to the footprint.
  */
 
+import { t } from '$lib/i18n';
+
 export type GlyphKey =
   | 'brassica'
   | 'allium'
@@ -112,3 +114,8 @@ export function familyGlyph(family: string | null | undefined): FamilyGlyph {
 }
 
 export const ALL_GLYPHS: readonly FamilyGlyph[] = Object.values(GLYPHS);
+
+/** The glyph's `label` in the viewer's language. */
+export function glyphLabel(key: GlyphKey, locale?: string | null): string {
+  return t(locale, `garden.glyph.${key}`);
+}

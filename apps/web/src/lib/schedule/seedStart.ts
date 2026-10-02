@@ -9,6 +9,7 @@
  * step is left out (E1-5).
  */
 
+import { t } from '$lib/i18n';
 import { familySeedStartDefaults } from '$lib/plugins/familyDefaults';
 
 export type SeedStartStep = 'sow' | 'harden' | 'transplant';
@@ -263,14 +264,15 @@ export function germinationMax(cells: number | null, seedsPerCell: number | null
 export function germinationText(
   count: number | null,
   cells: number | null,
-  seedsPerCell: number | null
+  seedsPerCell: number | null,
+  locale?: string | null
 ): string {
   const up = count ?? 0;
   if (cells != null && cells > 0) {
     const planted = seedsPerCell != null && seedsPerCell > 0 ? cells * seedsPerCell : cells;
-    return `${up} of ${planted} up`;
+    return t(locale, 'sched.germOf', { up, planted });
   }
-  return `${up} up`;
+  return t(locale, 'sched.germUp', { up });
 }
 
 /** The planting request fields for a "Seed or seedling?" answer. Nothing

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fmt } from '$lib/prefsState.svelte';
   import './animalForms.css';
   import HealthForm from './HealthForm.svelte';
   import TimeChipRow from '$lib/components/tasks/TimeChipRow.svelte';
@@ -13,7 +14,7 @@
     type CareItemView
   } from '$lib/animals/carePlans';
   import type { HealthRecordInput } from '$lib/animals/recordApiSchemas';
-  import { formatCalendarDate } from '$lib/prefs';
+
   import type { CareCloseExtra } from '$lib/client/taskQueue';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
@@ -61,7 +62,7 @@
   );
 
   function dueText(item: CareItemView): string {
-    const day = formatCalendarDate(item.scheduledOn, 'month-day');
+    const day = fmt.day(item.scheduledOn, 'month-day');
     if (item.status === 'late') return tr('animals.care.wasDue', { day });
     if (item.status === 'due') return tr('animals.care.dueToday');
     return tr('animals.care.due', { day });
@@ -78,7 +79,7 @@
     picked = picked.includes(taskId) ? picked.filter((p) => p !== taskId) : [...picked, taskId];
   }
 
-  const closer = new CareCloser();
+  const closer = new CareCloser({ locale: page.data?.locale });
   let settled = $state<string[]>([]);
 
   async function closeAll(
@@ -283,7 +284,7 @@
           <p class="af-help">{tr('animals.care.nextHelp')}</p>
         {:else}
           <p id="{uid}-next" class="af-help">
-            {suggestedNext ? formatCalendarDate(suggestedNext, 'date') : tr('animals.care.notSet')}.
+            {suggestedNext ? fmt.day(suggestedNext, 'date') : tr('animals.care.notSet')}.
             {tr('animals.care.ownerCanChange')}
           </p>
         {/if}

@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { listFlagChanges, listGroupMembers, type FlagChange } from '$lib/db/animals';
 import {
   activeMemberCount,
@@ -19,11 +20,12 @@ import { endCareForSubject } from '$lib/server/carePlans';
 import { groupAdditionGate } from '$lib/server/grazingGate';
 import { farmTimeZone } from '$lib/db/userProfile';
 
-const notFound = () => json({ error: 'group not found' }, { status: 404 });
+const notFound = (locale?: string | null) =>
+  json({ error: t(locale, 'animallib.api.groupNotFound') }, { status: 404 });
 
-export const GET: RequestHandler = ({ params }) => {
+export const GET: RequestHandler = ({ params, locals }) => {
   const group = params.id ? getAnimalGroupSummary(params.id) : undefined;
-  if (!group) return notFound();
+  if (!group) return notFound(locals?.locale);
   return json({
     group,
     members: listGroupMembers(group.id),
@@ -41,14 +43,14 @@ export const _requestSchema = animalGroupPatchSchema;
 export const PATCH: RequestHandler = async (event) => {
   const user = requireOwner(event);
   const group = event.params.id ? getAnimalGroup(event.params.id) : undefined;
-  if (!group) return notFound();
+  if (!group) return notFound(event.locals?.locale);
   const body = await parseBody(event.request, animalGroupPatchSchema);
   if (!body.ok) return body.response;
   const input = body.data;
   if (input.status === 'archived' && group.status === 'active' && activeMemberCount(group.id) > 0) {
     return json(
       {
-        error: 'Move or record the named animals in this group before archiving it.',
+        error: t(event.locals?.locale, 'animallib.api.namedBeforeArchive'),
         code: 'GROUP_HAS_MEMBERS'
       },
       { status: 409 }
@@ -57,7 +59,9 @@ export const PATCH: RequestHandler = async (event) => {
   if (input.status === 'archived' && group.status === 'active' && group.headCount > 0) {
     return json(
       {
-        error: `${group.headCount} unnamed animals are still in this group. Record them as gone or move them before archiving it.`,
+        error: t(event.locals?.locale, 'animallib.api.unnamedBeforeArchive', {
+          count: group.headCount
+        }),
         code: 'GROUP_HAS_ANIMALS'
       },
       { status: 409 }
@@ -66,14 +70,17 @@ export const PATCH: RequestHandler = async (event) => {
   if (input.headCount !== undefined && input.headCount < group.headCount) {
     return json(
       {
-        error: 'A lower count is a loss. Record it with "Record a change" so the reason is kept.',
+        error: t(event.locals?.locale, 'animals.group.lowerCount'),
         code: 'USE_STATUS_FOR_LOSSES'
       },
       { status: 409 }
     );
   }
   if (input.headCount !== undefined && group.status !== 'active' && input.status !== 'active') {
-    return json({ error: 'Restore this group before changing its count.' }, { status: 409 });
+    return json(
+      { error: t(event.locals?.locale, 'animallib.api.restoreBeforeCount') },
+      { status: 409 }
+    );
   }
 
   let grazingWarnings: string[] = [];
@@ -113,11 +120,11 @@ export const PATCH: RequestHandler = async (event) => {
 export const DELETE: RequestHandler = async (event) => {
   const user = requireOwner(event);
   const id = event.params.id;
-  if (!id) return notFound();
+  if (!id) return notFound(event.locals?.locale);
   const guarded = await tryGuardedHoldWrite(event, user, () => deleteGroupIfEmpty(id));
   if (!guarded.ok) return guarded.response;
   const outcome = guarded.value;
-  if (outcome === 'not-found') return notFound();
+  if (outcome === 'not-found') return notFound(event.locals?.locale);
   if (outcome === 'has-members') {
     return json(
       { error: 'This group still has named animals.', code: 'GROUP_HAS_MEMBERS' },

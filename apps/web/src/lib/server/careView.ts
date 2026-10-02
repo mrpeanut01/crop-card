@@ -33,7 +33,7 @@ export function careCards(
   plans: ReadonlyMap<string, CarePlan>,
   subjects: ReadonlyMap<string, CareSubject>,
   todayYmd: string,
-  opts: { surfacedOnly?: boolean } = {}
+  opts: { surfacedOnly?: boolean; locale?: string | null } = {}
 ): CareCardView[] {
   const rows: {
     taskId: string;
@@ -90,7 +90,7 @@ export function careCards(
       dueOn: r.dueOn,
       groupId: items.length > 1 ? r.groupId : null,
       groupName,
-      title: careCardTitle(r.careKind, items, groupName),
+      title: careCardTitle(r.careKind, items, groupName, opts.locale),
       items
     };
   });
@@ -117,7 +117,8 @@ export async function loadCareSection(
   subjectType: 'animal' | 'group',
   subjectId: string,
   speciesId: string,
-  todayYmd: string
+  todayYmd: string,
+  locale?: string | null
 ): Promise<{
   plans: CarePlanView[];
   cards: CareCardView[];
@@ -133,7 +134,9 @@ export async function loadCareSection(
     return !!meta && planIds.has(meta.planId);
   });
   const subjects = careSubjects([{ subjectType, subjectId }]);
-  const cards = careCards(open, new Map(plans.map((p) => [p.id, p])), subjects, todayYmd);
+  const cards = careCards(open, new Map(plans.map((p) => [p.id, p])), subjects, todayYmd, {
+    locale
+  });
   return {
     plans: plans.map((p) => ({
       id: p.id,

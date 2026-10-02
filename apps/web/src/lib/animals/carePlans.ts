@@ -11,6 +11,7 @@
 
 import type { HealthEventKind } from '$lib/safety/animalWithdrawal';
 import type { AnimalSubjectType } from './model';
+import { t, type MessageKey } from '$lib/i18n';
 
 /** Every care kind (D0-4): the 32A table kinds plus the species plugin's
  *  `shearing` and `health-check`. */
@@ -332,10 +333,17 @@ export function careItemStatus(scheduledOn: string, todayYmd: string): CareItemV
 export function careCardTitle(
   kind: CarePlanKind,
   items: readonly Pick<CareItemView, 'planTitle' | 'subjectName'>[],
-  groupName: string | null
+  groupName: string | null,
+  locale?: string | null
 ): string {
   if (items.length === 1) return careTaskTitle(items[0].planTitle, items[0].subjectName);
-  return `${CARE_KIND_LABEL[kind]} for ${items.length} animals${groupName ? ` in ${groupName}` : ''}`;
+  if (!locale) {
+    return `${CARE_KIND_LABEL[kind]} for ${items.length} animals${groupName ? ` in ${groupName}` : ''}`;
+  }
+  const label = t(locale, `animals.careKind.${kind}` as MessageKey);
+  return groupName
+    ? t(locale, 'care.cardTitleIn', { kind: label, count: items.length, group: groupName })
+    : t(locale, 'care.cardTitle', { kind: label, count: items.length });
 }
 
 /** A plan as the animal pages show it. */
@@ -351,4 +359,34 @@ export interface CarePlanView {
   provenance: 'plugin' | 'manual' | 'fallback';
   /** The species suggestion's note ("Ask your vet."), if any. */
   note: string | null;
+}
+
+const DEFAULT_TITLE_KEYS: Record<string, MessageKey> = {
+  'Rabies vaccine': 'animallib.careDefault.rabies',
+  'Core vaccines': 'animallib.careDefault.coreVaccines'
+};
+
+const DEFAULT_NOTE_KEYS: Record<string, MessageKey> = {
+  'How often depends on the vaccine and local law. Ask your vet.':
+    'animallib.careDefault.rabiesNote',
+  'Which ones and how often depend on age and risk. Ask your vet.':
+    'animallib.careDefault.coreVaccinesNote'
+};
+
+/** A care plan title for display. The built-in dog and cat defaults (seeded
+ *  with plugin provenance) read in `locale`; owner-typed titles as stored. */
+export function carePlanTitleIn(
+  plan: { title: string; provenance?: string | null },
+  locale?: string | null
+): string {
+  if (!locale || plan.provenance !== 'plugin') return plan.title;
+  const key = DEFAULT_TITLE_KEYS[plan.title];
+  return key ? t(locale, key) : plan.title;
+}
+
+/** A built-in species care note in `locale`; anything else as is. */
+export function careNoteIn(note: string | null | undefined, locale?: string | null): string {
+  if (!note) return '';
+  const key = locale ? DEFAULT_NOTE_KEYS[note] : undefined;
+  return key ? t(locale, key) : note;
 }

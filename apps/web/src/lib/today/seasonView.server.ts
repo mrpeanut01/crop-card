@@ -1,3 +1,4 @@
+import { cropDisplayName } from '$lib/i18n/cropName';
 import { listBlocks } from '$lib/db/blocks';
 import { listCrops, listYearsWithCrops } from '$lib/db/crops';
 import { listFertilityApplicationsForBlock } from '$lib/db/fertility';
@@ -6,6 +7,7 @@ import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listTasks } from '$lib/db/tasks';
+import { t } from '$lib/i18n';
 import { eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
 import type { PluginRegistry } from '$lib/plugins';
 import type { CropPlugin } from '$lib/plugins/schemas';
@@ -45,7 +47,8 @@ function parseYear(raw: string | null): number | null {
 export function loadSeasonView(
   registry: PluginRegistry,
   rawYear: string | null,
-  now: number
+  now: number,
+  locale?: string | null
 ): SeasonViewData {
   const activePlanningYear = getActivePlanningYear(new Date(now));
   const frost = planningFrost();
@@ -79,9 +82,9 @@ export function loadSeasonView(
   function toPlantingIn(c: (typeof crops)[number]) {
     return {
       id: c.id,
-      name: c.varietyDisplayName,
+      name: cropDisplayName(c.cropPluginId, c.varietyDisplayName, locale),
       blockId: c.blockId,
-      blockName: blockName.get(c.blockId) ?? 'Unnamed block',
+      blockName: blockName.get(c.blockId) ?? t(locale, 'today.tl.unnamedBlock'),
       plantingDate: c.plantingDate,
       status: c.status,
       harvestedAt: c.harvestedAt
@@ -130,7 +133,7 @@ export function loadSeasonView(
         blockId: e.blockId,
         cropId: e.cropId,
         occurredAt: e.occurredAt,
-        label: 'Herbicide spray'
+        label: t(locale, 'today.tl.herbicideSpray')
       });
     for (const e of listInsecticideEvents(range))
       records.push({
@@ -138,7 +141,7 @@ export function loadSeasonView(
         blockId: e.blockId,
         cropId: e.cropId,
         occurredAt: e.occurredAt,
-        label: 'Insecticide spray'
+        label: t(locale, 'today.tl.insecticideSpray')
       });
     for (const e of listFungicideEvents(range))
       records.push({
@@ -146,7 +149,7 @@ export function loadSeasonView(
         blockId: e.blockId,
         cropId: e.cropId,
         occurredAt: e.occurredAt,
-        label: 'Fungicide spray'
+        label: t(locale, 'today.tl.fungicideSpray')
       });
     for (const e of listHarvestEvents(range))
       records.push({
@@ -154,7 +157,7 @@ export function loadSeasonView(
         blockId: e.blockId,
         cropId: e.cropId,
         occurredAt: e.occurredAt,
-        label: 'Harvested'
+        label: t(locale, 'today.tl.harvested')
       });
     for (const { id: blockId } of blocks) {
       for (const a of listFertilityApplicationsForBlock(blockId)) {
@@ -164,7 +167,7 @@ export function loadSeasonView(
           blockId: a.blockId,
           cropId: a.cropId,
           occurredAt: a.occurredAt,
-          label: 'Fertilizer applied'
+          label: t(locale, 'today.tl.fertilizerApplied')
         });
       }
     }
@@ -180,7 +183,8 @@ export function loadSeasonView(
       events,
       records,
       tasks,
-      now
+      now,
+      locale
     });
     return {
       year: y,

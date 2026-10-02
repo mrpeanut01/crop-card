@@ -14,10 +14,7 @@ export const ENGLISH_ONLY_PREFIXES = [
   'withdrawal.',
   'grazing.',
   'hold.',
-  'label.',
-  'email.',
-  'push.',
-  'digest.'
+  'label.'
 ] as const;
 
 export const ENGLISH_ONLY_KEYS: readonly string[] = [];

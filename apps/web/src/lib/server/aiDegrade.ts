@@ -1,5 +1,6 @@
 import type { AiEndpointName } from '$lib/schedule/constants';
-import type { AiLimit } from '$lib/billing/aiLimit';
+import { aiLimitReason, type AiLimit } from '$lib/billing/aiLimit';
+import { t } from '$lib/i18n';
 import { currentOwnerId, runWithTenant } from '$lib/db/tenant';
 import { checkGuard, recordCall, reserveGuard, type GuardHold, type GuardOutcome } from './aiGuard';
 import { aiTry, type FallbackReason } from './aiTry';
@@ -59,6 +60,9 @@ export interface TryAiWithGuardArgs<T> {
   /** Token usage carried by a resolved value, for metering a call that
    *  settles after the timeout. Defaults to reading `value.meta`. */
   usageOf?: (value: T) => CallUsage | null;
+  /** The viewer's language for `fallbackMessage`. Leave unset when the
+   *  message is stored or sent to Claude. */
+  locale?: string | null;
 }
 
 function isFiniteNumber(v: unknown): v is number {
@@ -145,14 +149,22 @@ export function aiLimitOf(guard: GuardOutcome): AiLimit | null {
 export function fallbackMessageFor(
   reason: FallbackReason,
   guard: GuardOutcome,
-  error: unknown
+  error: unknown,
+  locale?: string | null
 ): string {
-  if (reason === 'no-key') return NO_KEY_FALLBACK_MESSAGE;
-  if (!guard.ok && (reason === 'over-cap' || reason === 'rate-limit')) return guard.message;
-  if (reason === 'timeout') return 'Claude took too long to respond.';
-  if (reason === 'offline') return 'Claude is unreachable (offline).';
+  const english = !locale || locale === 'en';
+  if (reason === 'no-key')
+    return english ? NO_KEY_FALLBACK_MESSAGE : t(locale, 'billing.degrade.noKey');
+  if (!guard.ok && (reason === 'over-cap' || reason === 'rate-limit')) {
+    const limit = english ? null : aiLimitOf(guard);
+    return limit
+      ? t(locale, 'billing.degrade.limited', { reason: aiLimitReason(limit, locale) })
+      : guard.message;
+  }
+  if (reason === 'timeout') return t(locale, 'billing.degrade.timeout');
+  if (reason === 'offline') return t(locale, 'billing.degrade.offline');
   const detail = error instanceof Error && error.message ? ` (${error.message})` : '';
-  return `Claude is unavailable right now${detail}.`;
+  return t(locale, 'billing.degrade.unavailable', { detail });
 }
 
 /** Guard + aiTry in one step for endpoints whose deterministic path lives in
@@ -204,7 +216,7 @@ export async function tryAiWithGuard<T>(args: TryAiWithGuardArgs<T>): Promise<De
       provenance: 'fallback',
       value: null,
       fallbackReason: reason,
-      fallbackMessage: fallbackMessageFor(reason, guard, state.error),
+      fallbackMessage: fallbackMessageFor(reason, guard, state.error, args.locale),
       error: state.error,
       guard
     };

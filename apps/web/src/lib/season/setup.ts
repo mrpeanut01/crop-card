@@ -17,6 +17,8 @@
  * year, one click).
  */
 
+import { t, type TranslateKey } from '$lib/i18n';
+
 export const SEASON_SETUP_FIELDS = [
   'philosophy',
   'weedStrategy',
@@ -120,17 +122,24 @@ export function allowsSynthetics(s: SeasonSetup): boolean {
  *  short part only. Labels without " — " are returned as-is. */
 function chipForm(label: string): string {
   const i = label.indexOf(' — ');
-  return i === -1 ? label : label.slice(0, i);
+  if (i !== -1) return label.slice(0, i);
+  const j = label.indexOf(': ');
+  return j === -1 ? label : label.slice(0, j);
 }
 
 /** Compact human-readable summary used by `SeasonSetupChip.svelte`.
  *  Example: "Certified organic · Scout-then-spray · Compost & amendments
  *  · Cover: Vetch / clover · 2026" */
-export function summarizeSeasonSetup(s: SeasonSetup): string {
-  const phil = chipForm(PHILOSOPHY_LABELS[s.philosophy]);
-  const pest = chipForm(PEST_LABELS[s.pestStrategy]);
-  const fert = chipForm(FERTILITY_LABELS[s.fertilityApproach]);
-  const cover = s.coverCropIntent === 'none' ? null : `Cover: ${COVER_LABELS[s.coverCropIntent]}`;
+export function summarizeSeasonSetup(s: SeasonSetup, locale?: string | null): string {
+  const phil = chipForm(seasonSetupLabel('philosophy', s.philosophy, locale));
+  const pest = chipForm(seasonSetupLabel('pest', s.pestStrategy, locale));
+  const fert = chipForm(seasonSetupLabel('fert', s.fertilityApproach, locale));
+  const cover =
+    s.coverCropIntent === 'none'
+      ? null
+      : t(locale, 'season.chip.cover', {
+          name: seasonSetupLabel('cover', s.coverCropIntent, locale)
+        });
   return [phil, pest, fert, cover, s.year].filter(Boolean).join(' · ');
 }
 
@@ -195,3 +204,33 @@ export const COVER_LABELS: Record<CoverCropIntent, string> = {
   other: 'Other',
   none: 'None'
 };
+
+export type SeasonSetupLabelGroup = 'philosophy' | 'weed' | 'pest' | 'fert' | 'cover';
+
+const LABELS_BY_GROUP: Record<SeasonSetupLabelGroup, Record<string, string>> = {
+  philosophy: PHILOSOPHY_LABELS,
+  weed: WEED_LABELS,
+  pest: PEST_LABELS,
+  fert: FERTILITY_LABELS,
+  cover: COVER_LABELS
+};
+
+/** A Season Setup option's label in `locale`; the English labels above
+ *  without one. Unknown values come back as-is. */
+export function seasonSetupLabel(
+  group: SeasonSetupLabelGroup,
+  value: string,
+  locale?: string | null
+): string {
+  const english = LABELS_BY_GROUP[group][value];
+  if (english === undefined) return value;
+  return t(locale, `plan.page.label.${group}.${value}` as TranslateKey);
+}
+
+/** The option list for one Season Setup select, in `locale`. */
+export function seasonSetupOptions(
+  group: SeasonSetupLabelGroup,
+  locale?: string | null
+): Array<[string, string]> {
+  return Object.keys(LABELS_BY_GROUP[group]).map((v) => [v, seasonSetupLabel(group, v, locale)]);
+}

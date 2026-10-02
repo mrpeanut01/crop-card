@@ -14,6 +14,8 @@ import { DEFAULT_PREFS, todayYmd } from '$lib/prefs';
 import { requireMutator, requireUser } from '$lib/server/auth';
 import { assertHayCutting, assertStockLot, rejectForeignRefs } from '$lib/server/foreignRefs';
 import { checkLabReport } from '$lib/server/soilTestDocument';
+import { localIssues } from '$lib/server/amendmentRoutes';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = forageTestCreateSchema;
 
@@ -43,14 +45,17 @@ export const POST: RequestHandler = async (event) => {
     return json(
       {
         error: 'invalid request',
-        issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
+        issues: localIssues(parsed.error.issues, event.locals?.locale).map((i) => ({
+          path: i.path.join('.'),
+          message: i.message
+        }))
       },
       { status: 400 }
     );
   }
   const input = parsed.data;
   if (input.documentId && user.role !== 'owner') {
-    return refusal(403, 'OWNER_ONLY', 'Only the owner can attach a lab report. Ask the owner.');
+    return refusal(403, 'OWNER_ONLY', t(event.locals?.locale, 'forage.api.ownerAttach'));
   }
   const foreign = rejectForeignRefs(
     ['blockId', input.blockId, getBlock],
@@ -59,18 +64,21 @@ export const POST: RequestHandler = async (event) => {
   );
   if (foreign) return foreign;
   if (input.stockLotId && stockLotCategory(input.stockLotId) !== 'feed') {
-    return refusal(400, 'NOT_FEED_LOT', 'A forage test goes on a feed lot.');
+    return refusal(400, 'NOT_FEED_LOT', t(event.locals?.locale, 'forage.api.notFeedLot'));
   }
   const day = realDay(input.sampledOn);
   if (!day) {
     return json(
-      { error: 'invalid request', issues: [{ path: 'sampledOn', message: 'Use a real date.' }] },
+      {
+        error: 'invalid request',
+        issues: [{ path: 'sampledOn', message: t(event.locals?.locale, 'amend.api.useRealDate') }]
+      },
       { status: 400 }
     );
   }
   const timeZone = farmTimeZone();
   if (input.sampledOn > todayYmd({ ...DEFAULT_PREFS, timeZone })) {
-    return refusal(400, 'IN_THE_FUTURE', 'That date is in the future.');
+    return refusal(400, 'IN_THE_FUTURE', t(event.locals?.locale, 'amend.api.future'));
   }
   if (input.documentId) {
     const refused = checkLabReport(input.documentId);

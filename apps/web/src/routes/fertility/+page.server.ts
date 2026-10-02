@@ -45,13 +45,17 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const year =
     Number(url.searchParams.get('year')) || Number(todayYmd(prefsFor(locals.user?.id)).slice(0, 4));
 
-  const organicBlocks = organicBlocksForNotice(blocks.map((b) => b.id));
+  const organicBlocks = organicBlocksForNotice(
+    blocks.map((b) => b.id),
+    Date.now(),
+    locals.locale
+  );
   const hasOrganicBlock = !!organicBlocks && Object.keys(organicBlocks).length > 0;
 
   const carry = countBatches() > 0 ? await loadCarryoverData() : null;
   const amendmentBatches = (carry?.batches ?? []).map((b) => {
     const state = carry?.chains.get(b.id)?.state ?? 'none-on-file';
-    return { id: b.id, name: b.name, state, stateText: stateChip(state) };
+    return { id: b.id, name: b.name, state, stateText: stateChip(state, locals.locale) };
   });
   const batchNames = new Map((carry?.batches ?? []).map((b) => [b.id, b.name]));
 

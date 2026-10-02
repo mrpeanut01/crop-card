@@ -13,6 +13,8 @@
  * flag (organic source, not NOP-allowed) are never read here.
  */
 
+import { t, type MessageKey } from '$lib/i18n';
+
 export interface OrganicComplianceFlags {
   omriListed?: boolean;
   certifiedOrganicAllowed?: boolean;
@@ -39,6 +41,17 @@ export const ORGANIC_INPUT_CLASS_LABEL: Readonly<Record<OrganicInputClass, strin
   'not-allowed': 'Library mark: not allowed for organic use',
   'not-marked': 'Library mark: not marked either way'
 };
+
+const INPUT_CLASS_KEY: Readonly<Record<OrganicInputClass, MessageKey>> = {
+  allowed: 'organic.inputClass.allowed',
+  'not-allowed': 'organic.inputClass.notAllowed',
+  'not-marked': 'organic.inputClass.notMarked'
+};
+
+/** The library mark in `locale` for display; exports keep the English map. */
+export function organicInputClassLabel(c: OrganicInputClass, locale?: string | null): string {
+  return locale ? t(locale, INPUT_CLASS_KEY[c]) : ORGANIC_INPUT_CLASS_LABEL[c];
+}
 
 /** The raw flags as stored, for exports (B-46). */
 export function complianceFlagsText(flags: OrganicComplianceFlags | undefined): string {

@@ -260,7 +260,8 @@
                 <span class="title">{d.title}</span>
                 <span class="sub"
                   >{tr(DOCUMENT_KIND_KEYS[d.kind])} · {formatBytes(d.byteSize)} · {formatLocalDay(
-                    d.createdAt
+                    d.createdAt,
+                    data.locale
                   )}</span
                 >
                 <span class="sub">{attachedTo(d)}</span>

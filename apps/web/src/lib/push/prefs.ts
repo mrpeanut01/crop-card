@@ -1,3 +1,5 @@
+import { t, type MessageKey } from '$lib/i18n';
+
 export const PUSH_ALERT_KINDS = [
   'decon-due',
   'lock-window-closing',
@@ -47,6 +49,18 @@ export const PUSH_ALERT_LABELS: Record<PushAlertKind, { label: string; sub: stri
     sub: "One summary of the week's tasks every Monday morning. Safety alerts still come on their own."
   }
 };
+
+/** An alert's label or explanation for the settings and unsubscribe pages. */
+export function pushAlertText(
+  kind: PushAlertKind,
+  part: 'label' | 'sub',
+  locale?: string | null
+): string {
+  const english = PUSH_ALERT_LABELS[kind][part];
+  if (!locale) return english;
+  const key = `settings.notif.${kind}.${part}` as MessageKey;
+  return t('en', key) === english ? t(locale, key) : english;
+}
 
 /** Kinds added after devices had already saved their choices. A device
  *  that saved before a kind existed keeps it off until the user turns it

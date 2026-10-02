@@ -7,6 +7,8 @@
    * to /api/plugins/upload.
    */
   import { invalidateAll } from '$app/navigation';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   type Issue = { path: string; message: string };
   type Validation = { ok: boolean; schemaIssues: Issue[]; bypassIssues: Issue[] };
@@ -35,6 +37,7 @@
   };
 
   let { onClose }: { onClose: () => void } = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let file = $state<File | null>(null);
   let fileName = $state('');
@@ -57,7 +60,7 @@
     const f = input.files?.[0];
     if (!f) return;
     if (f.type !== 'image/jpeg' && f.type !== 'image/png' && f.type !== 'application/pdf') {
-      scanError = `Unsupported file type "${f.type}". Use JPEG, PNG, or PDF.`;
+      scanError = tr('stockui.receipt.badType', { type: f.type });
       return;
     }
     file = f;
@@ -96,7 +99,7 @@
         body: JSON.stringify({ document: base64, mediaType: fileMediaType })
       });
       if (!res.ok || !res.body) {
-        scanError = `HTTP ${res.status}`;
+        scanError = tr('stockui.httpStatus', { status: res.status });
         return;
       }
       const reader = res.body.getReader();
@@ -151,7 +154,7 @@
     } else if (phase === 'complete') {
       scanStatus = (event.message as string) ?? null;
     } else if (phase === 'error') {
-      scanError = (event.message as string) ?? 'unknown error';
+      scanError = (event.message as string) ?? tr('stockui.receipt.unknownError');
     } else if (typeof event.message === 'string') {
       scanStatus = event.message;
     }
@@ -179,7 +182,10 @@
         if (!res.ok) {
           commitErrors = [
             ...commitErrors,
-            { lineIndex: p.lineIndex, message: out.error ?? `HTTP ${res.status}` }
+            {
+              lineIndex: p.lineIndex,
+              message: out.error ?? tr('stockui.httpStatus', { status: res.status })
+            }
           ];
         } else {
           savedCount++;
@@ -192,7 +198,7 @@
       }
     }
     commitBusy = false;
-    commitSummary = `Saved ${savedCount} of ${toCommit.length} accepted candidate${toCommit.length === 1 ? '' : 's'}.`;
+    commitSummary = tr('stockui.receipt.saved', { saved: savedCount, count: toCommit.length });
     if (savedCount > 0) {
       await invalidateAll();
     }
@@ -225,32 +231,35 @@
 >
   <div class="receipt-modal">
     <header>
-      <h2 id="receipt-scan-title">Receipt / manifest scan</h2>
-      <button class="close" onclick={onClose} aria-label="Close" disabled={scanBusy || commitBusy}
-        >✕</button
+      <h2 id="receipt-scan-title">{tr('stockui.receipt.title')}</h2>
+      <button
+        class="close"
+        onclick={onClose}
+        aria-label={tr('stockui.cam.close')}
+        disabled={scanBusy || commitBusy}>✕</button
       >
     </header>
 
     {#if proposals.length === 0 && !scanBusy}
       <div class="upload-area">
         <p class="lede">
-          Upload a vendor receipt, invoice, packing list, or order confirmation. Claude extracts the
-          line items and looks each one up online; you review and accept the ones you want to
-          install as plugins.
+          {tr('stockui.receipt.lede')}
         </p>
         <input
           type="file"
           accept="image/jpeg,image/png,application/pdf"
           onchange={handleFile}
-          aria-label="Receipt file"
+          aria-label={tr('stockui.receipt.fileAria')}
         />
         {#if fileName}
-          <p class="file-info">Selected: <strong>{fileName}</strong></p>
+          <p class="file-info">{tr('stockui.receipt.selected')} <strong>{fileName}</strong></p>
         {/if}
         {#if scanError}<p class="error">{scanError}</p>{/if}
         <div class="actions">
-          <button class="primary" disabled={!file} onclick={startScan}> ✦ Scan with AI </button>
-          <button class="link" onclick={onClose}>Cancel</button>
+          <button class="primary" disabled={!file} onclick={startScan}>
+            ✦ {tr('stockui.receipt.scan')}
+          </button>
+          <button class="link" onclick={onClose}>{tr('inv.cancel')}</button>
         </div>
       </div>
     {/if}
@@ -258,7 +267,7 @@
     {#if scanBusy}
       <div class="progress">
         <span class="spinner" aria-hidden="true"></span>
-        <span>{scanStatus ?? 'Working…'}</span>
+        <span>{scanStatus ?? tr('stockui.receipt.working')}</span>
       </div>
       {#if proposals.length > 0}
         <ul class="proposals">
@@ -271,7 +280,7 @@
                 {:else if p.candidate === null}
                   <span class="spinner small" aria-hidden="true"></span>
                 {:else}
-                  — no match
+                  {tr('stockui.receipt.noMatchShort')}
                 {/if}
               </div>
             </li>
@@ -282,10 +291,12 @@
 
     {#if !scanBusy && proposals.length > 0}
       <div class="review">
-        {#if vendor}<p class="vendor">Vendor: <strong>{vendor}</strong></p>{/if}
+        {#if vendor}<p class="vendor">
+            {tr('stockui.receipt.vendor')} <strong>{vendor}</strong>
+          </p>{/if}
         {#if scanError}<p class="error">{scanError}</p>{/if}
         <p class="muted">
-          {acceptedCount} of {proposals.length} selected · uncheck rows you don't want to install.
+          {tr('stockui.receipt.selectedCount', { n: acceptedCount, total: proposals.length })}
         </p>
         <ul class="proposals review-list">
           {#each proposals as p (p.lineIndex)}
@@ -309,7 +320,9 @@
                       {#if c?.confidence}<span class="conf conf-{c.confidence}">{c.confidence}</span
                         >{/if}
                     {:else}
-                      <em class="muted">No match for: {p.line.rawText}</em>
+                      <em class="muted"
+                        >{tr('stockui.receipt.noMatchFor', { text: p.line.rawText })}</em
+                      >
                     {/if}
                   </div>
                   <div class="row-raw">
@@ -339,10 +352,10 @@
         {/if}
         {#if commitErrors.length > 0}
           <details class="error-details">
-            <summary>{commitErrors.length} failed</summary>
+            <summary>{tr('stockui.batch.sumFailed', { n: commitErrors.length })}</summary>
             <ul>
               {#each commitErrors as e, idx (idx)}
-                <li>Line {e.lineIndex + 1}: {e.message}</li>
+                <li>{tr('stockui.receipt.line', { n: e.lineIndex + 1 })}: {e.message}</li>
               {/each}
             </ul>
           </details>
@@ -355,11 +368,15 @@
             onclick={commitAccepted}
           >
             {commitBusy
-              ? 'Saving…'
-              : `Save ${acceptedCount} plugin${acceptedCount === 1 ? '' : 's'}`}
+              ? tr('inv.feed.saving')
+              : tr('stockui.receipt.savePlugins', { count: acceptedCount })}
           </button>
-          <button class="secondary" disabled={commitBusy} onclick={reset}>Start over</button>
-          <button class="link" disabled={commitBusy} onclick={onClose}>Done</button>
+          <button class="secondary" disabled={commitBusy} onclick={reset}
+            >{tr('stockui.search.startOver')}</button
+          >
+          <button class="link" disabled={commitBusy} onclick={onClose}
+            >{tr('stockui.receipt.done')}</button
+          >
         </div>
       </div>
     {/if}

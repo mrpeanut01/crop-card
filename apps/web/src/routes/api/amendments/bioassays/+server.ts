@@ -10,7 +10,7 @@ import { requireMutator, requireUser } from '$lib/server/auth';
 import { invalidBody } from '$lib/organic/access.server';
 import { bioassayCreateSchema } from '$lib/amendments/apiSchemas';
 import { assertAmendmentBatch, assertBlock, rejectForeignRefs } from '$lib/server/foreignRefs';
-import { checkDay, dayContext, readJson } from '$lib/server/amendmentRoutes';
+import { checkDay, dayContext, readJson, localIssues } from '$lib/server/amendmentRoutes';
 
 export const _requestSchema = bioassayCreateSchema;
 
@@ -26,7 +26,7 @@ export const POST: RequestHandler = async (event) => {
   const body = await readJson(event.request);
   if (body instanceof Response) return body;
   const parsed = bioassayCreateSchema.safeParse(body);
-  if (!parsed.success) return invalidBody(parsed.error.issues);
+  if (!parsed.success) return invalidBody(localIssues(parsed.error.issues, event.locals?.locale));
   const input = parsed.data;
   const foreign = rejectForeignRefs(
     assertAmendmentBatch('batchId', input.batchId),
@@ -34,7 +34,7 @@ export const POST: RequestHandler = async (event) => {
   );
   if (foreign) return foreign;
   const ctx = dayContext();
-  const tested = checkDay(ctx, input.testedOn, 'testedOn');
+  const tested = checkDay(ctx, input.testedOn, 'testedOn', event.locals?.locale);
   if ('response' in tested) return tested.response;
   const bioassay = insertBioassay({
     batchId: input.batchId ?? null,

@@ -7,6 +7,7 @@ import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
 import type { DispositionCreate, DispositionQueuePayload } from './apiSchemas';
 import type { DispositionView } from './dispositions';
+import { t } from '$lib/i18n';
 
 export interface DispositionSaved {
   disposition: DispositionView;
@@ -44,7 +45,8 @@ export async function submitDisposition(
   harvestEventId: string,
   input: DispositionCreate,
   fetchFn: FetchFn = fetch,
-  online: () => boolean = isOnline
+  online: () => boolean = isOnline,
+  locale?: string | null
 ): Promise<DispositionOutcome> {
   const id = recordId();
   const body: DispositionCreate = { ...input, occurredAt: input.occurredAt ?? Date.now() };
@@ -71,7 +73,7 @@ export async function submitDisposition(
     const out = (await res.json().catch(() => null)) as { message?: string; error?: string } | null;
     return {
       status: 'error',
-      message: out?.message ?? out?.error ?? 'That did not save. Try again.'
+      message: out?.message ?? out?.error ?? t(locale, 'harvestui.disp.err.notSaved')
     };
   }
   return { status: 'saved', body: (await res.json()) as DispositionSaved };

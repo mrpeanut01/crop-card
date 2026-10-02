@@ -25,6 +25,7 @@ import {
   topicFor
 } from '$lib/journal/photoHelp';
 import { aiLimitReason, type AiLimit } from '$lib/billing/aiLimit';
+import { t, type MessageKey } from '$lib/i18n';
 import { aiLimitOf, recordFallback, tryAiWithGuard } from './aiDegrade';
 import { recordCall } from './aiGuard';
 import { askPhotoHelp, type PhotoHelpPromptInput } from './aiPhotoHelp';
@@ -52,24 +53,33 @@ export interface PhotoHelpResponse {
 
 type Why = FallbackReason | 'quota' | 'invalid' | 'spray';
 
-const WHY_MESSAGE: Record<Why, string> = {
-  'no-key': 'Claude is off, so here is what the Care Guide says.',
-  'over-cap': "This month's AI help for your farm is used up, so here is what the Care Guide says.",
-  quota: "Today's AI help for photos is used up, so here is what the Care Guide says.",
-  'rate-limit': "Claude isn't answering right now, so here is what the Care Guide says.",
-  offline: "Claude can't be reached right now, so here is what the Care Guide says.",
-  timeout: 'Claude took too long, so here is what the Care Guide says.',
-  invalid: "Claude's answer could not be used, so here is what the Care Guide says.",
-  spray: `${SPRAY_REDIRECT} Here is what the Care Guide says.`
+const WHY_KEY: Record<Exclude<Why, 'spray'>, MessageKey> = {
+  'no-key': 'cardsui.photo.why.noKey',
+  'over-cap': 'cardsui.photo.why.overCap',
+  quota: 'cardsui.photo.why.quota',
+  'rate-limit': 'cardsui.photo.why.rateLimit',
+  offline: 'cardsui.photo.why.offline',
+  timeout: 'cardsui.photo.why.timeout',
+  invalid: 'cardsui.photo.why.invalid'
 };
 
-export function photoHelpMessage(why: Why, hasPhoto = true, limit: AiLimit | null = null): string {
-  const saved = hasPhoto
-    ? 'Your photo and question are saved in the journal.'
-    : 'Your question is saved in the journal.';
+/** The banner above a Care Guide answer. The spray redirect stays English
+ *  (safety wording); the rest follows the viewer's language. */
+export function photoHelpMessage(
+  why: Why,
+  hasPhoto = true,
+  limit: AiLimit | null = null,
+  locale?: string | null
+): string {
+  const saved = t(
+    locale,
+    hasPhoto ? 'cardsui.photo.savedJournalPhoto' : 'cardsui.photo.savedJournal'
+  );
   const lead = limit
-    ? `${aiLimitReason(limit)}, so here is what the Care Guide says.`
-    : WHY_MESSAGE[why];
+    ? t(locale, 'cardsui.photo.why.limit', { reason: aiLimitReason(limit, locale) })
+    : why === 'spray'
+      ? `${SPRAY_REDIRECT} ${t(locale, 'cardsui.photo.why.spray')}`
+      : t(locale, WHY_KEY[why]);
   return `${lead} ${saved}`;
 }
 
@@ -139,6 +149,9 @@ export async function answerPhotoHelp(args: {
   req: PhotoHelpRequest;
   sprayTerms?: readonly string[];
   now?: number;
+  /** The viewer's language for the banner message only; the saved
+   *  journal entry and the prompt stay English. */
+  locale?: string | null;
 }): Promise<PhotoHelpResponse> {
   const { userId, crop, plugin, req, sprayTerms } = args;
   const now = args.now ?? Date.now();
@@ -177,7 +190,7 @@ export async function answerPhotoHelp(args: {
     return {
       provenance: 'fallback',
       fallbackReason: reason,
-      message: photoHelpMessage(why, !!req.photo, limit),
+      message: photoHelpMessage(why, !!req.photo, limit, args.locale),
       answer,
       entry: save(answer, 'fallback'),
       aiLimit: limit

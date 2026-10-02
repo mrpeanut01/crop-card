@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { stockUnitLabel } from '$lib/stock/units';
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import { onMount } from 'svelte';
   import { createT, type TranslateKey } from '$lib/i18n';
+  import { calendarEventCrop, calendarEventTitle } from '$lib/calendar/eventTitle';
   import { goto, invalidateAll } from '$app/navigation';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
@@ -342,7 +345,12 @@
         meta as Parameters<typeof eventsForPlanting>[1],
         {}
       );
-      const prepActivities = prepTasksForPlanting(d.plantingDateMs, block.tillageMethod, blockId);
+      const prepActivities = prepTasksForPlanting(
+        d.plantingDateMs,
+        block.tillageMethod,
+        blockId,
+        data.locale
+      );
       const phiDays = (meta.preHarvestIntervalDays ?? 0) + (wPhiMode === 'conservative' ? 7 : 0);
       const phiConflict = phiDays > 0 && detectPhiConflict(engineEvents, phiDays);
       const soilTooEarly =
@@ -489,7 +497,7 @@
   }
 
   async function handleWorkflowStep(stepId: string) {
-    const { target } = workflowStepRoute(stepId, data.seasonWorkflow ?? []);
+    const { target } = workflowStepRoute(stepId, data.seasonWorkflow ?? [], data.locale);
     if (!target) return;
     if (target.kind === 'wizard') {
       openWizard(target.wizardStep);
@@ -1925,7 +1933,7 @@
 {#if data.seasonWorkflow && data.seasonWorkflow.length > 0}
   <WorkflowStrip
     seasonYear={data.currentYear ?? new Date().getFullYear()}
-    steps={withStepRoutes(data.seasonWorkflow)}
+    steps={withStepRoutes(data.seasonWorkflow, data.locale)}
     onOpenWizard={() => openWizard()}
     onSelectStep={handleWorkflowStep}
     calendarHref="/plan/calendar?year={data.currentYear ?? new Date().getFullYear()}"
@@ -2469,9 +2477,12 @@
                                   class="crop-name"
                                   draggable="false"
                                   ondragstart={(e) => e.preventDefault()}
-                                  title={p.varietyDisplayName}
+                                  title={cropDisplayNameByEnglish(
+                                    p.varietyDisplayName,
+                                    data.locale
+                                  )}
                                   >{data.seedShortNameByDisplay?.[p.varietyDisplayName] ??
-                                    p.varietyDisplayName}</a
+                                    cropDisplayNameByEnglish(p.varietyDisplayName, data.locale)}</a
                                 >
                                 {#if p.quantityPlanted !== undefined && p.quantityUnit}
                                   <span class="crop-qty">{p.quantityPlanted} {p.quantityUnit}</span>
@@ -2617,7 +2628,7 @@
                       <span class="seed-name">{s.shortName ?? s.displayName}</span>
                       <span class="seed-meta">
                         {s.onHand}
-                        {s.defaultUnit}
+                        {stockUnitLabel(s.defaultUnit as StockUnit, 'seed', data.locale)}
                         {#if empty}
                           · {tr('plan.page.seed.emptyTag')}{/if}
                       </span>
@@ -3181,7 +3192,11 @@
               <ul class="delete-list">
                 {#each deleteCropIds as id (id)}
                   {@const planting = data.swimPlantings?.find((p) => p.cropId === id)}
-                  <li>{planting?.varietyDisplayName ?? id}</li>
+                  <li>
+                    {planting
+                      ? cropDisplayNameByEnglish(planting.varietyDisplayName, data.locale)
+                      : id}
+                  </li>
                 {/each}
               </ul>
               <p class="hint">{tr('plan.page.del.hint')}</p>
@@ -3281,9 +3296,15 @@
               {#if cell.events.length > 0}
                 <ul class="events">
                   {#each cell.events.slice(0, 3) as e (e.kind + e.cropPluginId + e.startMs)}
-                    <li class="event {e.kind}" title="{e.title} — {e.varietyDisplayName}">
+                    <li
+                      class="event {e.kind}"
+                      title="{calendarEventTitle(e, data.locale)} — {calendarEventCrop(
+                        e,
+                        data.locale
+                      )}"
+                    >
                       <span class="dot" aria-hidden="true"></span>
-                      <span class="label">{e.title}</span>
+                      <span class="label">{calendarEventTitle(e, data.locale)}</span>
                     </li>
                   {/each}
                   {#if cell.events.length > 3}

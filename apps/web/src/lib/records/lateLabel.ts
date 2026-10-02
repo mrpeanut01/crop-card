@@ -5,11 +5,19 @@
  * was late. A label only; no gate reads it.
  */
 
-export function lateLabel(recordedLate: boolean, daysLate: number | null): string | null {
+import { t } from '$lib/i18n';
+
+/** Exports, the pack and PDFs pass no locale and stay English. */
+export function lateLabel(
+  recordedLate: boolean,
+  daysLate: number | null,
+  locale?: string | null
+): string | null {
   if (!recordedLate) return null;
-  if (daysLate === null || !Number.isFinite(daysLate) || daysLate < 1) return 'Saved late';
-  const days = Math.floor(daysLate);
-  return `Saved ${days} ${days === 1 ? 'day' : 'days'} after its date`;
+  if (daysLate === null || !Number.isFinite(daysLate) || daysLate < 1) {
+    return t(locale, 'recui.late.unknown');
+  }
+  return t(locale, 'recui.late.days', { count: Math.floor(daysLate) });
 }
 
 export interface LateCells {

@@ -2,8 +2,8 @@
   import { untrack } from 'svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
-  import { AREA_KIND_LABELS, CROP_AREA_KINDS, type CropAreaKind } from '$lib/farm/areaKinds';
-  import { AREA_KIND_HINT, AREA_NAME_PLACEHOLDER } from '$lib/farm/kindStyle';
+  import { CROP_AREA_KINDS, areaKindLabel, type CropAreaKind } from '$lib/farm/areaKinds';
+  import { areaKindHint, areaNamePlaceholder } from '$lib/farm/kindStyle';
   import {
     NEW_AREA,
     SPOT_NAME_PLACEHOLDER,
@@ -43,8 +43,10 @@
   const pickedArea = $derived(areas.find((a) => a.id === areaId) ?? null);
   const placeholder = $derived(
     pickedArea
-      ? (SPOT_NAME_PLACEHOLDER[pickedArea.kind as CropAreaKind] ?? tr('setup.spot.phFallback'))
-      : AREA_NAME_PLACEHOLDER[kind]
+      ? SPOT_NAME_PLACEHOLDER[pickedArea.kind as CropAreaKind]
+        ? tr(`setup.spot.ph.${pickedArea.kind as CropAreaKind}`)
+        : tr('setup.spot.phFallback')
+      : areaNamePlaceholder(kind, page.data?.locale)
   );
   let widthFt = $state<number | null>(null);
   let lengthFt = $state<number | null>(null);
@@ -107,7 +109,10 @@
         <option value={NEW_AREA}>{tr('setup.spot.somewhereNew')}</option>
         {#each areas as a (a.id)}
           <option value={a.id}
-            >{tr('setup.spot.inside', { name: a.name, kind: AREA_KIND_LABELS[a.kind] })}</option
+            >{tr('setup.spot.inside', {
+              name: a.name,
+              kind: areaKindLabel(a.kind, page.data?.locale)
+            })}</option
           >
         {/each}
       </select>
@@ -120,8 +125,8 @@
           {#each CROP_AREA_KINDS as k (k)}
             <label class="kind" class:on={kind === k}>
               <input type="radio" name="{uid}-kind" value={k} bind:group={kind} />
-              <span class="kind-name">{AREA_KIND_LABELS[k]}</span>
-              <span class="kind-hint">{AREA_KIND_HINT[k]}</span>
+              <span class="kind-name">{areaKindLabel(k, page.data?.locale)}</span>
+              <span class="kind-hint">{areaKindHint(k, page.data?.locale)}</span>
             </label>
           {/each}
         </div>

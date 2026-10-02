@@ -328,7 +328,9 @@
   // Stored quantities are in the item's unit; changing the unit once stock
   // is on hand would silently reinterpret every lot.
   const unitLocked = $derived(isEdit && (existing?.lotCount ?? 0) > 0);
-  const unitLabel = $derived(stockUnitLabel(defaultUnit, category).toLowerCase());
+  const unitLabel = $derived(
+    stockUnitLabel(defaultUnit, category, page.data?.locale).toLowerCase()
+  );
 
   // #475 review: an arrived order is received on the item page, never typed
   // into On hand here, or the planner counts the seed twice.
@@ -336,7 +338,11 @@
     if (!existing) return null;
     const parts: string[] = [];
     const fmt = (n: number) =>
-      formatStockQuantity(n, existing.defaultUnit, undefined, { category, digits: 2 });
+      formatStockQuantity(n, existing.defaultUnit, undefined, {
+        category,
+        digits: 2,
+        locale: page.data?.locale
+      });
     if ((existing.onOrder ?? 0) > 0)
       parts.push(tr('inv.form.amountOrdered', { amount: fmt(existing.onOrder ?? 0) }));
     if ((existing.planned ?? 0) > 0)
@@ -497,7 +503,7 @@
     const detail = issue?.message
       ? `: ${issue.path?.length ? `${issue.path.join('.')}: ` : ''}${issue.message}`
       : '';
-    return `${body?.error ?? body?.message ?? `HTTP ${res.status}`}${detail}`;
+    return `${body?.error ?? body?.message ?? tr('stockui.httpStatus', { status: res.status })}${detail}`;
   }
 
   function handleCancel(): void {
@@ -721,7 +727,7 @@
       >
         <select id="defaultUnit" bind:value={defaultUnit} disabled={unitLocked}>
           {#each unitOptions as u (u)}
-            <option value={u}>{stockUnitLabel(u, category)}</option>
+            <option value={u}>{stockUnitLabel(u, category, page.data?.locale)}</option>
           {/each}
         </select>
       </InvField>

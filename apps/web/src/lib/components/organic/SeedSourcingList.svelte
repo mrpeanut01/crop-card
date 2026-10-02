@@ -1,9 +1,11 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
   import {
-    SEED_ORGANIC_STATUS_LABEL,
-    SEED_SEARCH_FLAG_LABEL,
+    seedOrganicStatusLabel,
     seedSearchFlag,
+    seedSearchFlagLabel,
     sortChecks,
     type SeedSourcingRow
   } from '$lib/stock/seedSourcing';
@@ -19,10 +21,11 @@
   }
 
   const { rows }: Props = $props();
+  const tr = $derived(createT(page.data?.locale));
 </script>
 
 {#if rows.length === 0}
-  <p class="empty">No seed lots were received or planted in this date range.</p>
+  <p class="empty">{tr('organic.seed.empty')}</p>
 {:else}
   <ul class="seed-list" data-testid="seed-sourcing-list">
     {#each rows as r (r.stockLotId)}
@@ -30,13 +33,20 @@
       <li>
         <div class="head">
           <a href="/inventory/seed/{encodeURIComponent(r.stockItemId)}">{r.itemName}</a>
-          {#if r.lotNumber}<span class="muted">Lot {r.lotNumber}</span>{/if}
-          <span class="muted">received {fmt.instant(r.receivedAt, 'date')}</span>
+          {#if r.lotNumber}<span class="muted">{tr('organic.seed.lot', { lot: r.lotNumber })}</span
+            >{/if}
+          <span class="muted"
+            >{tr('organic.seed.received', { date: fmt.instant(r.receivedAt, 'date') })}</span
+          >
         </div>
         <div>
-          Seed status (owner-entered):
-          <strong>{r.status ? SEED_ORGANIC_STATUS_LABEL[r.status] : 'Not recorded'}</strong>
-          {#if flag}<span class="flag">{SEED_SEARCH_FLAG_LABEL[flag]}</span>{/if}
+          {tr('organic.seed.statusLabel')}
+          <strong
+            >{r.status
+              ? seedOrganicStatusLabel(r.status, page.data?.locale)
+              : tr('organic.seed.notRecorded')}</strong
+          >
+          {#if flag}<span class="flag">{seedSearchFlagLabel(flag, page.data?.locale)}</span>{/if}
         </div>
         {#if r.sourcesChecked.length > 0}
           <ul class="checks">
@@ -48,7 +58,7 @@
         {#if r.unavailabilityNote}<p class="note">{r.unavailabilityNote}</p>{/if}
         {#if r.documentIds.length > 0}
           <p class="muted small">
-            {r.documentIds.length} search evidence file{r.documentIds.length === 1 ? '' : 's'} attached
+            {tr('organic.seed.files', { count: r.documentIds.length })}
           </p>
         {/if}
       </li>

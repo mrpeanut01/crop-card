@@ -1,3 +1,4 @@
+import { formatStockQuantity, isSeedCountUnit } from '$lib/stock/units';
 import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
 import {
   cardHref,
@@ -15,7 +16,8 @@ import {
   monthDay,
   resolveOptions,
   trimNumber,
-  type BuildOptions
+  type BuildOptions,
+  plantingName
 } from './common';
 import { ymdInZone } from '$lib/prefs';
 
@@ -40,6 +42,20 @@ export function isLowStock(item: Pick<SnapshotStockItem, 'onHand' | 'reorderThre
   return item.reorderThreshold !== null && item.onHand <= item.reorderThreshold;
 }
 
+const STOCK_CATEGORY_KEY = {
+  herbicide: 'cards.stock.cat.herbicide',
+  insecticide: 'cards.stock.cat.insecticide',
+  fungicide: 'cards.stock.cat.fungicide',
+  fertilizer: 'cards.stock.cat.fertilizer',
+  seed: 'cards.stock.cat.seed',
+  adjuvant: 'cards.stock.cat.adjuvant',
+  fuel: 'cards.stock.cat.fuel',
+  part: 'cards.stock.cat.part',
+  feed: 'cards.stock.cat.feed',
+  bedding: 'cards.stock.cat.bedding',
+  'animal-health': 'cards.stock.cat.animal-health'
+} as const satisfies Record<SnapshotStockCategory, string>;
+
 function inventoryHref(item: SnapshotStockItem): string {
   const type = STOCK_CATEGORY_TO_INVENTORY_TYPE[item.category];
   return type ? `/inventory/${type}/${encodeURIComponent(item.id)}` : '/inventory';
@@ -53,33 +69,50 @@ export function buildStockCard(
   const item = snapshot.stock.find((s) => s.id === itemId);
   if (!item) return null;
   const opts = resolveOptions(snapshot, options);
+  const { tr } = opts;
+  const loc = opts.prefs.locale;
   const today = ymdInZone(opts.now, opts.prefs.timeZone);
+  const qty = (n: number) =>
+    loc && loc !== 'en' && (isSeedCountUnit(item.unit, item.category) || item.unit === 'bag')
+      ? formatStockQuantity(n, item.unit, opts.prefs, { category: item.category, digits: 2 })
+      : `${trimNumber(n, 2)} ${item.unit}`;
 
   const facts: CardFact[] = [
     {
-      label: 'On hand',
-      value: `${trimNumber(item.onHand, 2)} ${item.unit}`,
+      label: tr('cards.stock.onHand'),
+      value: qty(item.onHand),
       provenance: 'data'
     }
   ];
   if (item.reorderThreshold !== null) {
     facts.push({
-      label: 'Reorder at',
-      value: `${trimNumber(item.reorderThreshold, 2)} ${item.unit}`,
+      label: tr('cards.stock.reorderAt'),
+      value: qty(item.reorderThreshold),
       provenance: 'manual'
     });
   }
   if (item.earliestExpiry) {
     const days = daysBetweenYmd(today, item.earliestExpiry);
-    const suffix =
-      days === null ? '' : days < 0 ? ', expired' : days <= EXPIRING_DAYS ? ', soon' : '';
+    const date = monthDay(item.earliestExpiry, loc);
     facts.push({
-      label: 'Expires',
-      value: `${monthDay(item.earliestExpiry)}${suffix}`,
+      label: tr('cards.stock.expires'),
+      value:
+        days === null
+          ? date
+          : days < 0
+            ? tr('cards.stock.expired', { date })
+            : days <= EXPIRING_DAYS
+              ? tr('cards.stock.soon', { date })
+              : date,
       provenance: 'manual'
     });
   }
-  if (isLowStock(item)) facts.push({ label: 'Status', value: 'Low, reorder', provenance: 'data' });
+  if (isLowStock(item))
+    facts.push({
+      label: tr('cards.stock.status'),
+      value: tr('cards.stock.low'),
+      provenance: 'data'
+    });
 
   const sections: CardSection[] = [];
   if (item.pluginId) {
@@ -88,31 +121,38 @@ export function buildStockCard(
       .filter((p) => p.cropPluginId === item.pluginId && p.status !== 'harvested')
       .map((p) => {
         const b = blocks.get(p.blockId);
-        const when = p.plantingDate ? ` · ${monthDay(p.plantingDate)}` : '';
-        return `${p.varietyDisplayName}${b ? ` · ${blockDisplayName(b)}` : ''}${when}`;
+        const when = p.plantingDate ? ` · ${monthDay(p.plantingDate, loc)}` : '';
+        return `${plantingName(p, loc)}${b ? ` · ${blockDisplayName(b, loc)}` : ''}${when}`;
       });
     if (planned.length) {
       sections.push({
-        title: 'Planned for',
+        title: tr('cards.stock.plannedFor'),
         items:
           planned.length > MAX_PLANNED
-            ? [...planned.slice(0, MAX_PLANNED), `+${planned.length - MAX_PLANNED} more`]
+            ? [
+                ...planned.slice(0, MAX_PLANNED),
+                tr('cards.more', { count: planned.length - MAX_PLANNED })
+              ]
             : planned
       });
     }
   }
 
-  const provenance: CardProvenance[] = [{ source: 'data', detail: 'your stock ledger' }];
+  const provenance: CardProvenance[] = [{ source: 'data', detail: tr('cards.stock.provLedger') }];
   if (facts.some((f) => f.provenance === 'manual')) provenance.push({ source: 'manual' });
 
   const key = cardKey('stock', item.id);
   return {
     kind: 'stock',
     key,
-    kicker: `Stock · ${STOCK_CATEGORY_LABEL[item.category] ?? 'Stock'}`,
+    kicker: tr('cards.stock.kicker', {
+      category: STOCK_CATEGORY_KEY[item.category]
+        ? tr(STOCK_CATEGORY_KEY[item.category])
+        : tr('cards.stock.stock')
+    }),
     title: item.displayName,
     facts,
-    next: { label: 'Open in inventory', href: inventoryHref(item) },
+    next: { label: tr('cards.stock.openInventory'), href: inventoryHref(item) },
     sections,
     asOf: snapshot.generatedAt,
     provenance: mergeProvenance(provenance),

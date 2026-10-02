@@ -15,6 +15,7 @@ import {
   sanitizeInviteToken
 } from '$lib/server/magicLink';
 import { ALL_SESSION_ROLES, type SessionRole } from '$lib/server/session';
+import { t } from '$lib/i18n';
 import { demoEnabled } from '$lib/server/demo/lifecycle';
 import type { PageServerLoad } from './$types';
 
@@ -84,11 +85,13 @@ export const actions: Actions = {
     const channel = parseSignInChannel(fd.get('channel'));
     let id = parseIdentifier(raw);
     if (channel) {
-      const parsed = parseForChannel(raw, channel);
+      const parsed = parseForChannel(raw, channel, event.locals?.locale);
       if (!parsed.ok) return fail(400, { error: parsed.error, inviteToken, via: channel });
       id = parsed.id;
     }
-    if (!id) return fail(400, { error: 'Enter an email address or a phone number.', inviteToken });
+    if (!id) {
+      return fail(400, { error: t(event.locals?.locale, 'signin.err.emailOrPhone'), inviteToken });
+    }
     let result;
     try {
       result = loginByIdentity(
@@ -121,11 +124,11 @@ export const actions: Actions = {
     const entered = String(raw ?? '');
     let identifier: unknown = raw;
     if (channel) {
-      const parsed = parseForChannel(raw, channel);
+      const parsed = parseForChannel(raw, channel, event.locals?.locale);
       if (!parsed.ok) return fail(400, { error: parsed.error, inviteToken, entered, via: channel });
       identifier = parsed.id.value;
     }
-    const result = await handleLoginRequest(event, identifier, inviteToken);
+    const result = await handleLoginRequest(event, identifier, inviteToken, event.locals?.locale);
     if (!result.ok) {
       return fail(result.status, {
         error: result.error,
@@ -150,7 +153,7 @@ export const actions: Actions = {
     const fd = await event.request.formData();
     const identifier = String(fd.get('identifier') ?? '');
     const inviteToken = sanitizeInviteToken(fd.get('invite'));
-    const redeemed = redeemLoginCode(identifier, fd.get('code'));
+    const redeemed = redeemLoginCode(identifier, fd.get('code'), event.locals?.locale);
     const id = parseIdentifier(identifier);
     if (!redeemed.ok) {
       return fail(400, {

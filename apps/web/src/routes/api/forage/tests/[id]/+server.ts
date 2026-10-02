@@ -4,18 +4,19 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { deleteForageTest } from '$lib/db/forageTests';
 import { requireUser } from '$lib/server/auth';
+import { t } from '$lib/i18n';
 
 export const DELETE: RequestHandler = (event) => {
   const user = requireUser(event);
   if (user.role !== 'owner') {
     return json(
-      { error: 'OWNER_ONLY', message: 'Only the owner can delete a forage test. Ask the owner.' },
+      { error: 'OWNER_ONLY', message: t(event.locals?.locale, 'forage.api.ownerDelete') },
       { status: 403 }
     );
   }
   if (!deleteForageTest(event.params.id ?? '')) {
     return json(
-      { error: 'NOT_FOUND', message: 'That forage test is not on this farm.' },
+      { error: 'NOT_FOUND', message: t(event.locals?.locale, 'forage.api.notFound') },
       { status: 404 }
     );
   }

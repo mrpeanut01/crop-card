@@ -26,7 +26,12 @@ export const POST: RequestHandler = async (event) => {
   const registry = await getRegistry();
   const crops: Record<string, CropPlugin> = {};
   for (const crop of registry.crops()) crops[crop.pluginId] = crop;
-  const result = addSuccession(event.params.blockId ?? '', parsed.data, crops);
+  const result = addSuccession(
+    event.params.blockId ?? '',
+    parsed.data,
+    crops,
+    event.locals?.locale
+  );
   if (isFailure(result)) return failureResponse(result);
   return json(result.response, { status: parsed.data.commit ? 201 : 200 });
 };

@@ -139,7 +139,7 @@
   let draft = $state<StockEntryDraft | null>(null);
   let busy = $state(false);
 
-  const batch = new LabelBatch();
+  const batch = new LabelBatch({ locale: () => page.data?.locale });
   let reviewingRowId = $state<string | null>(null);
   let batchNotice = $state<string | null>(null);
   const batchActive = $derived(batch.rows.length > 0);

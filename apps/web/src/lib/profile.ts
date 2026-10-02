@@ -1,5 +1,7 @@
 /** Client-safe profile rules shared by the settings form and the server. */
 
+import { t } from '$lib/i18n';
+
 export const DISPLAY_NAME_MAX = 60;
 export const AVATAR_MAX_BYTES = 512 * 1024;
 
@@ -10,17 +12,21 @@ export type DisplayNameResult = { ok: true; value: string | null } | { ok: false
 /** Trims and collapses whitespace; empty clears the name back to the
  *  identity fallback. Control characters are refused rather than stripped
  *  so a pasted value never silently changes. */
-export function normalizeDisplayName(raw: unknown): DisplayNameResult {
+export function normalizeDisplayName(raw: unknown, locale?: string | null): DisplayNameResult {
   if (raw === null || raw === undefined) return { ok: true, value: null };
-  if (typeof raw !== 'string') return { ok: false, error: 'Name must be text.' };
+  if (typeof raw !== 'string')
+    return { ok: false, error: t(locale, 'settings.account.err.nameText') };
   // eslint-disable-next-line no-control-regex
   if (/[\u0000-\u001f\u007f]/.test(raw)) {
-    return { ok: false, error: 'Name contains characters that cannot be displayed.' };
+    return { ok: false, error: t(locale, 'settings.account.err.nameChars') };
   }
   const value = raw.trim().replace(/\s+/g, ' ');
   if (!value) return { ok: true, value: null };
   if ([...value].length > DISPLAY_NAME_MAX) {
-    return { ok: false, error: `Keep the name to ${DISPLAY_NAME_MAX} characters or fewer.` };
+    return {
+      ok: false,
+      error: t(locale, 'settings.account.err.nameLong', { max: DISPLAY_NAME_MAX })
+    };
   }
   return { ok: true, value };
 }
@@ -73,7 +79,8 @@ export const DISPLAY_UNITS: ReadonlyArray<{ id: DisplayUnits; label: string }> =
 /** Any IANA zone the runtime knows is accepted, not just the listed ones,
  *  so a value set elsewhere never fails a later save. */
 export function normalizeTimeZone(
-  raw: unknown
+  raw: unknown,
+  locale?: string | null
 ): { ok: true; value: string } | { ok: false; error: string } {
   if (typeof raw !== 'string' || !raw.trim()) return { ok: true, value: DEFAULT_TIME_ZONE };
   const tz = raw.trim();
@@ -81,14 +88,15 @@ export function normalizeTimeZone(
     const canonical = new Intl.DateTimeFormat('en-US', { timeZone: tz }).resolvedOptions().timeZone;
     return { ok: true, value: canonical };
   } catch {
-    return { ok: false, error: 'Pick a time zone from the list.' };
+    return { ok: false, error: t(locale, 'settings.account.err.timeZone') };
   }
 }
 
 export function normalizeDisplayUnits(
-  raw: unknown
+  raw: unknown,
+  locale?: string | null
 ): { ok: true; value: DisplayUnits } | { ok: false; error: string } {
   if (raw === null || raw === undefined || raw === '') return { ok: true, value: 'us' };
   if (raw === 'us' || raw === 'metric') return { ok: true, value: raw };
-  return { ok: false, error: 'Pick US or Metric units.' };
+  return { ok: false, error: t(locale, 'settings.account.err.units') };
 }

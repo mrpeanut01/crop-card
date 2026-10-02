@@ -7,6 +7,7 @@
 import { maturityStartMs } from '$lib/schedule/seedStart';
 import { ARCHETYPES, resolveArchetype, type Archetype } from '$lib/plugins/schemas';
 import { frostSeasonShape, monthDayOfYear } from '$lib/schedule/frostSeason';
+import { t, type MessageKey } from '$lib/i18n';
 import type {
   BedLayout,
   Footprint,
@@ -57,12 +58,22 @@ export type OccupancyPlanting = Pick<
 
 export const ONE_DAY_MS = 86_400_000;
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
 /** "Jul 1" for a UTC day. */
-export function shortDate(ms: number): string {
+export function shortDate(ms: number, locale?: string | null): string {
   const d = new Date(ms);
-  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
+  return t(locale, 'garden.date.short', {
+    month: t(locale, `garden.monthShort.${d.getUTCMonth()}` as MessageKey),
+    day: d.getUTCDate()
+  });
+}
+
+/** "July 15" for a UTC day. */
+export function longDate(ms: number, locale?: string | null): string {
+  const d = new Date(ms);
+  return t(locale, 'garden.date.long', {
+    month: t(locale, `garden.month.${d.getUTCMonth()}` as MessageKey),
+    day: d.getUTCDate()
+  });
 }
 
 export function utcDayStart(ms: number): number {

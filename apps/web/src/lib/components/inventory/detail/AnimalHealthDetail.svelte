@@ -77,7 +77,10 @@
       {:else}
         <div class="prov-row">
           <Provenance source="plugin" detail={plugin.pluginId} />
-          {#if meta.pluginLink === 'manual'}<Provenance source="manual" label="Owner linked" />{/if}
+          {#if meta.pluginLink === 'manual'}<Provenance
+              source="manual"
+              label={tr('inv.ah.ownerLinked')}
+            />{/if}
         </div>
         <ul class="uses">
           {#each plugin.labelUses as u (u.speciesId + u.class)}
@@ -100,7 +103,7 @@
             {#each movements.slice(0, 12) as m (m.id)}
               <li>
                 <span class="muted small">{fmt.instant(m.occurredAt, 'date')}</span>
-                <span>{movementLabel(m.reason)}</span>
+                <span>{movementLabel(m.reason, page.data?.locale)}</span>
                 <span class={m.delta < 0 ? 'rust' : 'forest'}>
                   {m.delta > 0 ? '+' : ''}{qty(m.delta)}
                 </span>

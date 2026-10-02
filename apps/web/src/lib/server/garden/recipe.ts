@@ -10,6 +10,7 @@ import type { Footprint } from '$lib/farm/footprint';
 import type { RecipeRequest, RecipeResponse } from '$lib/garden/api';
 import { occupancyIntervals } from '$lib/garden/occupancy';
 import { applyRecipe } from '$lib/garden/recipes';
+import { t } from '$lib/i18n';
 import type { BedRecipePlugin, CropPlugin } from '$lib/plugins/schemas';
 import { designFrostForBed } from '$lib/server/gardenDesignLoad';
 import {
@@ -39,12 +40,15 @@ export function applyBedRecipe(
   blockId: string,
   req: RecipeRequest,
   crops: Readonly<Record<string, CropPlugin>>,
-  findRecipe: (pluginId: string) => BedRecipePlugin | undefined
+  findRecipe: (pluginId: string) => BedRecipePlugin | undefined,
+  locale?: string | null
 ): RecipeResult {
-  const bed = resolveDesignableBed(blockId);
+  const bed = resolveDesignableBed(blockId, locale);
   if (isFailure(bed)) return bed;
   const recipe = findRecipe(req.recipePluginId);
-  if (!recipe) return gardenFailure(404, `There's no bed recipe called ${req.recipePluginId}.`);
+  if (!recipe) {
+    return gardenFailure(404, t(locale, 'gardenlib.recipe.noSuch', { id: req.recipePluginId }));
+  }
 
   const frost = designFrostForBed(bed.block.id, req.seasonYear);
   const intervals = occupancyIntervals(
@@ -59,7 +63,8 @@ export function applyBedRecipe(
     crops,
     ...frost,
     intervals,
-    seasonYear: req.seasonYear
+    seasonYear: req.seasonYear,
+    locale
   });
   if (!req.commit) return { ok: true, status: 200, response: { application, created: [] } };
 
@@ -69,7 +74,7 @@ export function applyBedRecipe(
       req.acceptKeys ?? req.expected?.map((e) => e.key) ?? application.plantings.map((p) => p.key)
     )
   ];
-  if (keys.length === 0) return gardenFailure(400, 'Keep at least one planting to add.');
+  if (keys.length === 0) return gardenFailure(400, t(locale, 'gardenlib.recipe.keepOne'));
   const changed = (req.expected ?? []).some((e) => {
     const now = byKey.get(e.key);
     return !now || now.plantingDateMs !== e.plantingDateMs || !sameSpot(now.footprint, e.footprint);
@@ -77,7 +82,7 @@ export function applyBedRecipe(
   if (changed || keys.some((k) => !byKey.has(k))) {
     return gardenFailure(
       409,
-      `${bed.block.name} changed since this preview, so nothing was added. Open the recipe again to see what fits now.`,
+      t(locale, 'gardenlib.recipe.stale', { bed: bed.block.name }),
       'STALE'
     );
   }
@@ -94,7 +99,8 @@ export function applyBedRecipe(
         source: 'plugin' as const
       };
     }),
-    (id) => crops[id]
+    (id) => crops[id],
+    locale
   );
   if (isFailure(created)) return created;
   return { ok: true, status: 201, response: { application, created: created.plantings } };

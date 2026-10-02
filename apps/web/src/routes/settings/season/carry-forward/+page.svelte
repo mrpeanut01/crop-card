@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import { goto } from '$app/navigation';
   import { ChevronRight } from 'lucide-svelte';
   import type { PageData } from './$types';
@@ -144,7 +145,9 @@
       <ul class="rows">
         {#each data.preview.clonedPlantings as c (`${c.blockId}-${c.cropPluginId}`)}
           <li class="row">
-            <span class="row-title">{c.varietyDisplayName}</span>
+            <span class="row-title"
+              >{cropDisplayNameByEnglish(c.varietyDisplayName, data.locale)}</span
+            >
             <span class="row-body">
               {fmtDate(c.plantingDateMs)}
               {#if c.clamped}<span class="chip">{tr('settings.carry.dateRechecked')}</span>{/if}

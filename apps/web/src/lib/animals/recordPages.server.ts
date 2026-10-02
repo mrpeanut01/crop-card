@@ -11,7 +11,8 @@ import { resolveSubject } from '$lib/server/animalRecords';
 import { pageHoldsFor } from '$lib/server/animalFoodGate';
 import { getDataKinds } from '$lib/server/registry';
 import type { AnimalSubjectType } from './model';
-import { animalLabel } from './display';
+import { animalLabelIn } from './display';
+import { t } from '$lib/i18n';
 import type { HoldSummaries } from './holdCopy';
 import type { Food } from '$lib/safety/animalWithdrawal';
 
@@ -42,9 +43,9 @@ export async function loadRecordPageBase(event: RequestEvent): Promise<RecordPag
     : getAnimalGroup(id)
       ? 'group'
       : null;
-  if (!type) throw error(404, 'Animal not found');
+  if (!type) throw error(404, t(event.locals?.locale, 'animallib.api.animalPageNotFound'));
   const resolved = resolveSubject(type, id);
-  if (!resolved) throw error(404, 'Animal not found');
+  if (!resolved) throw error(404, t(event.locals?.locale, 'animallib.api.animalPageNotFound'));
   const user = currentUser(event);
   const timeZone = farmTimeZone();
   const species = (await getDataKinds()).species.get(resolved.speciesId);
@@ -53,9 +54,9 @@ export async function loadRecordPageBase(event: RequestEvent): Promise<RecordPag
     subject: {
       type,
       id,
-      name: resolved.animal ? animalLabel(resolved.animal) : resolved.name,
+      name: resolved.animal ? animalLabelIn(resolved.animal, event.locals?.locale) : resolved.name,
       speciesId: resolved.speciesId,
-      speciesName: species?.displayName ?? 'Animal',
+      speciesName: species?.displayName ?? t(event.locals?.locale, 'animallib.api.animalFallback'),
       foodProducing: resolved.foodProducing,
       detailHref: type === 'animal' ? `/animals/${id}` : `/animals/groups/${id}`
     },

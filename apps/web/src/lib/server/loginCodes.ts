@@ -25,6 +25,7 @@ import { loginCodes, loginTokens, users } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import { type Identifier } from '$lib/identity';
 import { dispatchEmail } from './email';
+import { localeField } from './messageLocale';
 import { authSecret } from './session';
 import { smsLinkBody, smsLoginBody } from './otpMessage';
 import { dispatchSms } from './sms';
@@ -126,6 +127,8 @@ export interface SmsLoginRequest {
   phone: string;
   ip: { hash: string; max: number };
   origin: string | null;
+  /** Language of the text; the request's locale at send time. */
+  locale?: string | null;
   now?: number;
 }
 
@@ -155,7 +158,7 @@ export async function requestSmsLogin(
   await dispatchSms({
     to: req.phone,
     kind: 'login-code',
-    body: smsLoginBody(code, SMS_CODE_TTL_MS, req.origin)
+    body: smsLoginBody(code, SMS_CODE_TTL_MS, req.origin, req.locale)
   });
   return { outcome: 'sent' };
 }
@@ -255,6 +258,8 @@ export async function requestLinkCode(opts: {
   identifier: Identifier;
   /** Site origin for the autofill line; null skips it. */
   origin: string | null;
+  /** Language of the message; the request's locale at send time. */
+  locale?: string | null;
   now?: number;
 }): Promise<LinkRequestResult> {
   unscopedQueryNote('linking a sign-in identity touches the global users table');
@@ -286,12 +291,19 @@ export async function requestLinkCode(opts: {
     now
   });
   if (channel === 'email') {
-    await dispatchEmail({ kind: 'contact-code', to: value, code, expiresAt, origin: opts.origin });
+    await dispatchEmail({
+      kind: 'contact-code',
+      to: value,
+      code,
+      expiresAt,
+      origin: opts.origin,
+      ...localeField(opts.locale)
+    });
   } else {
     await dispatchSms({
       to: value,
       kind: 'verify-phone',
-      body: smsLinkBody(code, LINK_CODE_TTL_MS, opts.origin)
+      body: smsLinkBody(code, LINK_CODE_TTL_MS, opts.origin, opts.locale)
     });
   }
   return { ok: true, expiresAt };

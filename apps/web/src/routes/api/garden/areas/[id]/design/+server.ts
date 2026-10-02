@@ -1,6 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth';
 import { loadDesignerResponse } from '$lib/server/gardenDesignLoad';
+import { t } from '$lib/i18n';
 
 /** GET /api/garden/areas/[id]/design?season=YYYY. The garden designer's
  *  data for any signed-in role; only the owner gets `canEdit`. Another
@@ -9,11 +10,12 @@ export const GET: RequestHandler = async (event) => {
   const user = requireUser(event);
   const body = await loadDesignerResponse(event.params.id ?? '', {
     role: user.role,
-    season: event.url.searchParams.get('season')
+    season: event.url.searchParams.get('season'),
+    locale: event.locals?.locale
   });
   if (!body) {
     return json(
-      { error: 'This Area has no garden designer. Only gardens and greenhouses do.' },
+      { error: t(event.locals?.locale, 'gardenlib.page.notDesignable') },
       { status: 404 }
     );
   }

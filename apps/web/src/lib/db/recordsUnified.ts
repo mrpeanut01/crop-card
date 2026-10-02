@@ -26,6 +26,8 @@ import { withTenant } from './tenant';
 import { listSprayEvents, evaluateLock as evaluateSprayLock } from './sprayEvents';
 import { listInsecticideEvents } from './insecticideEvents';
 import { pollinatorAttestationSummary } from '$lib/records/pollinatorAttestation';
+import { t, type MessageKey } from '$lib/i18n';
+import { cropDisplayName } from '$lib/i18n/cropName';
 import { listFungicideEvents } from './fungicideEvents';
 import { listScoutObservations } from './scoutObservations';
 import { listHarvestEvents } from './harvestEvents';
@@ -222,9 +224,18 @@ function listFertilityApplicationsAll(filters: {
   }));
 }
 
+const HAY_STATUS_KEY: Record<string, MessageKey> = {
+  aborted: 'hayui.status.aborted',
+  baling: 'hayui.status.baling',
+  complete: 'hayui.status.complete',
+  mowing: 'hayui.status.mowing',
+  raking: 'hayui.status.raking',
+  tedding: 'hayui.status.tedding'
+};
+
 export function listUnifiedRecords(
   filters: UnifiedFilters = {},
-  prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS
+  prefs: Pick<Prefs, 'units' | 'locale'> = DEFAULT_PREFS
 ): UnifiedRecord[] {
   const now = Date.now();
   const kinds = new Set<RecordKind>(filters.kinds ?? RECORD_KINDS);
@@ -254,7 +265,7 @@ export function listUnifiedRecords(
         performedById: e.performedById,
         detail: products
           ? `${products} · ${formatQuantity(e.conditions.windMph, 'speed', prefs)} / ${formatQuantity(e.conditions.tempF, 'temperature', prefs)}`
-          : 'spray event',
+          : t(prefs.locale, 'recui.detail.sprayEvent'),
         hash: shortHash({
           k: 'spray',
           id: e.id,
@@ -291,7 +302,7 @@ export function listUnifiedRecords(
         detail: [
           e.scoutObservation
             ? `${products} · ${e.scoutObservation.pest} ${e.scoutObservation.metric}=${e.scoutObservation.value}`
-            : products || 'insecticide event',
+            : products || t(prefs.locale, 'recui.detail.insecticideEvent'),
           pollinatorAttestationSummary(e)
         ]
           .filter(Boolean)
@@ -323,7 +334,7 @@ export function listUnifiedRecords(
         performedById: e.performedById,
         detail: e.diseaseObservation
           ? `${products} · ${e.diseaseObservation.disease} ${e.diseaseObservation.metric}=${e.diseaseObservation.value}`
-          : products || 'fungicide event',
+          : products || t(prefs.locale, 'recui.detail.fungicideEvent'),
         hash: shortHash({ k: 'fungicide', id: e.id, o: e.occurredAt, p: e.products }),
         locked: isLocked(e.occurredAt, e.lockedAt, now),
         lockedAt: e.lockedAt
@@ -362,7 +373,10 @@ export function listUnifiedRecords(
       toMs: filters.toMs
     });
     for (const e of events.slice(0, perKindLimit)) {
-      const moisture = e.moisturePct !== undefined ? ` · ${e.moisturePct}% moisture` : '';
+      const moisture =
+        e.moisturePct !== undefined
+          ? ` · ${t(prefs.locale, 'recui.detail.moisture', { pct: e.moisturePct })}`
+          : '';
       out.push({
         id: `harvest:${e.id}`,
         kind: 'harvest',
@@ -372,7 +386,7 @@ export function listUnifiedRecords(
         blockLabel: blockLabelById.get(e.blockId),
         cropPluginId: e.cropPluginId,
         detail: e.quantity
-          ? `${e.cropPluginId} · ${e.quantity}${e.lotNumber ? ` · lot ${e.lotNumber}` : ''}${moisture}`
+          ? `${e.cropPluginId} · ${e.quantity}${e.lotNumber ? ` · ${t(prefs.locale, 'recui.detail.lot', { lot: e.lotNumber })}` : ''}${moisture}`
           : `${e.cropPluginId}${moisture}`,
         hash: shortHash({
           k: 'harvest',
@@ -406,7 +420,12 @@ export function listUnifiedRecords(
           : c.baleType
             ? ` · ${c.baleType}`
             : '';
-      const moisture = c.baleMoisturePct !== undefined ? ` · ${c.baleMoisturePct}% moisture` : '';
+      const moisture =
+        c.baleMoisturePct !== undefined
+          ? ` · ${t(prefs.locale, 'recui.detail.moisture', { pct: c.baleMoisturePct })}`
+          : '';
+      const statusKey = HAY_STATUS_KEY[c.status];
+      const status = statusKey && prefs.locale ? t(prefs.locale, statusKey) : c.status;
       out.push({
         id: `hay:${c.id}`,
         kind: 'hay',
@@ -416,7 +435,7 @@ export function listUnifiedRecords(
         blockLabel: blockLabelById.get(c.blockId),
         cropPluginId: c.cropPluginId,
         performedById: c.performedById,
-        detail: `${c.cropPluginId} · cutting ${c.cuttingNumber} · ${c.status}${bale}${moisture}`,
+        detail: `${c.cropPluginId} · ${t(prefs.locale, 'recui.detail.cutting', { n: c.cuttingNumber })} · ${status}${bale}${moisture}`,
         hash: shortHash({ k: 'hay', id: c.id, o: occurredAt, n: c.cuttingNumber, s: c.status }),
         locked: isLocked(occurredAt, undefined, now),
         recordedLate: c.recordedLate,
@@ -485,7 +504,7 @@ export function listUnifiedRecords(
         blockId: p.blockId,
         blockLabel: blockLabelById.get(p.blockId),
         cropPluginId: p.cropPluginId,
-        detail: `${p.varietyDisplayName} (${p.cropPluginId})`,
+        detail: `${cropDisplayName(p.cropPluginId, p.varietyDisplayName, prefs.locale)} (${p.cropPluginId})`,
         hash: shortHash({ k: 'planting', id: p.id, o: p.plantingDate, c: p.cropPluginId }),
         locked: isLocked(p.plantingDate, undefined, now)
       });

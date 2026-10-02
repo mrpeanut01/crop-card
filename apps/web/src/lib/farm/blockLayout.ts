@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import {
-  AREA_KIND_LABELS,
   BED_STYLES,
+  areaKindLabel,
+  blockKindLabel,
   BLOCK_KINDS,
   blockKindsFor,
   normalizeRotationDeg,
@@ -10,6 +11,7 @@ import {
   type BlockKind
 } from './areaKinds';
 import { MAX_SKETCH_FT } from './sketch';
+import { t } from '$lib/i18n';
 
 const positionFt = z.number().min(0).max(MAX_SKETCH_FT);
 
@@ -55,19 +57,25 @@ export function hasLayoutValues(input: LayoutValues): boolean {
 export function blockPlacementError(
   areaKind: AreaKind | null,
   kind: BlockKind,
-  layout: LayoutValues
+  layout: LayoutValues,
+  locale?: string | null
 ): string | null {
   if (areaKind !== null) {
     const allowed = blockKindsFor(areaKind);
     if (!allowed.includes(kind)) {
-      const label = AREA_KIND_LABELS[areaKind];
+      const label = areaKindLabel(areaKind, locale);
+      const name = (k: BlockKind) => (locale ? blockKindLabel(k, locale).toLowerCase() : k);
       return allowed.length
-        ? `${label} Areas hold ${allowed.join(', ')}, not ${kind}`
-        : `${label} Areas don't hold blocks`;
+        ? t(locale, 'area.placement.holds', {
+            label,
+            allowed: allowed.map(name).join(', '),
+            kind: name(kind)
+          })
+        : t(locale, 'area.placement.noBlocks', { label });
     }
   }
   if (!usesDesignerLayout(kind) && hasLayoutValues(layout)) {
-    return `layout fields (xFt, yFt, rotationDeg, bedStyle) apply only to beds and containers`;
+    return t(locale, 'area.placement.layoutOnly');
   }
   return null;
 }

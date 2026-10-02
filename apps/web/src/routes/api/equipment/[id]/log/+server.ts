@@ -4,6 +4,7 @@
  * sprayer/calibrate flows; this endpoint is for the general log.
  */
 
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { appendEquipmentLog, getEquipment } from '$lib/db/equipment';
@@ -19,17 +20,21 @@ const schema = z.object({
 export const POST: RequestHandler = async (event) => {
   const user = requireUser(event);
   const id = event.params.id;
-  if (!id || !getEquipment(id)) return json({ error: 'not found' }, { status: 404 });
+  if (!id || !getEquipment(id))
+    return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
 
   const entry = appendEquipmentLog({

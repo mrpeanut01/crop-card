@@ -19,12 +19,12 @@
  */
 
 import {
-  CARE_KIND_LABEL,
-  careAlertText,
   daysBetween,
   isSurfaced,
+  type CarePlanKind,
   type CareTaskMeta
 } from '$lib/animals/carePlans';
+import { t } from '$lib/i18n';
 import {
   splitHoldMapKey,
   type HoldFact,
@@ -37,42 +37,79 @@ export interface OpenCareTask {
   meta: CareTaskMeta;
   /** The task's day (`YYYY-MM-DD`): the due day, or later after a snooze. */
   scheduledOn: string;
-  subjectName: string;
+  /** Null when the animal or group is gone; the alert says "An animal". */
+  subjectName: string | null;
+}
+
+function careLabel(kind: CarePlanKind, locale?: string | null): string {
+  return t(locale, `animals.careKind.${kind}`);
+}
+
+/** The lock-screen text for one care reminder: the animal or group and
+ *  the care kind only. */
+export function careAlertTextFor(
+  kind: CarePlanKind,
+  subjectName: string,
+  when: 'soon' | 'due',
+  daysAway: number,
+  locale?: string | null
+): { title: string; body: string } {
+  const p = { label: careLabel(kind, locale), name: subjectName };
+  if (when === 'due') {
+    return { title: t(locale, 'push.care.dueTitle', p), body: t(locale, 'push.care.dueBody', p) };
+  }
+  return {
+    title: t(locale, 'push.care.soonTitle', p),
+    body:
+      daysAway === 1
+        ? t(locale, 'push.care.soonBodyTomorrow', p)
+        : t(locale, 'push.care.soonBodyDays', { ...p, days: daysAway })
+  };
 }
 
 /** How late a due-day reminder may still go out (a tick missed). */
 export const CARE_DUE_GRACE_DAYS = 1;
 
-export function careDueAlerts(tasks: readonly OpenCareTask[], todayYmd: string): PushAlert[] {
+export function careDueAlerts(
+  tasks: readonly OpenCareTask[],
+  todayYmd: string,
+  locale?: string | null
+): PushAlert[] {
   const out: PushAlert[] = [];
-  for (const t of tasks) {
-    const { meta } = t;
+  for (const task of tasks) {
+    const { meta } = task;
+    const name = task.subjectName ?? t(locale, 'push.animal.fallback');
+    const batchLabel = t(locale, 'push.care.batchLabel', {
+      label: careLabel(meta.careKind, locale),
+      name
+    });
     const url =
       meta.subjectType === 'group'
         ? `/animals/groups/${encodeURIComponent(meta.subjectId)}`
         : `/animals/${encodeURIComponent(meta.subjectId)}`;
-    const lateBy = daysBetween(t.scheduledOn, todayYmd);
+    const lateBy = daysBetween(task.scheduledOn, todayYmd);
     if (lateBy >= 0) {
       if (lateBy > CARE_DUE_GRACE_DAYS) continue;
-      const text = careAlertText(meta.careKind, t.subjectName, 'due', 0);
+      const text = careAlertTextFor(meta.careKind, name, 'due', 0, locale);
       out.push({
         kind: 'animal-care-due',
-        subjectId: `${meta.planId}:${meta.dueOn}:due:${t.scheduledOn}`,
+        subjectId: `${meta.planId}:${meta.dueOn}:due:${task.scheduledOn}`,
         title: text.title,
         body: text.body,
         url: '/today',
         audience: { kind: 'all' },
         batchKey: 'animal-care-due',
-        batchLabel: `${CARE_KIND_LABEL[meta.careKind]}: ${t.subjectName}`
+        batchLabel
       });
       continue;
     }
     if (!isSurfaced(meta, todayYmd) || todayYmd >= meta.dueOn) continue;
-    const text = careAlertText(
+    const text = careAlertTextFor(
       meta.careKind,
-      t.subjectName,
+      name,
       'soon',
-      daysBetween(todayYmd, meta.dueOn)
+      daysBetween(todayYmd, meta.dueOn),
+      locale
     );
     out.push({
       kind: 'animal-care-due',
@@ -82,7 +119,7 @@ export function careDueAlerts(tasks: readonly OpenCareTask[], todayYmd: string):
       url,
       audience: { kind: 'all' },
       batchKey: 'animal-care-due',
-      batchLabel: `${CARE_KIND_LABEL[meta.careKind]}: ${t.subjectName}`
+      batchLabel
     });
   }
   return out;
@@ -139,16 +176,17 @@ export function clearedHolds(
 
 export function withdrawalClearsAlerts(
   cleared: readonly ClearedHold[],
-  labels: ReadonlyMap<string, string>
+  labels: ReadonlyMap<string, string>,
+  locale?: string | null
 ): PushAlert[] {
   return cleared.map((c) => {
-    const name = labels.get(c.subjectKey) ?? 'An animal';
+    const name = labels.get(c.subjectKey) ?? t(locale, 'push.animal.fallback');
     const [type, id] = c.subjectKey.split(':');
     return {
       kind: 'withdrawal-clears' as const,
       subjectId: `${c.subjectKey}:${c.food}:${c.clearedAt}`,
-      title: `Hold cleared: ${name}`,
-      body: `A hold on ${name} has ended. Open CropCard to check before use.`,
+      title: t(locale, 'push.cleared.title', { name }),
+      body: t(locale, 'push.cleared.body', { name }),
       url:
         type === 'group'
           ? `/animals/groups/${encodeURIComponent(id)}`
@@ -176,7 +214,8 @@ export function holdCoversSaleAlerts(
     subjectType: Subject['subjectType'],
     subjectId: string,
     has: { logs: boolean }
-  ) => string
+  ) => string,
+  locale?: string | null
 ): PushAlert[] {
   const records = new Map<string, Subject>();
   for (const f of loaded.facts) {
@@ -195,7 +234,7 @@ export function holdCoversSaleAlerts(
     hits.push({ coveredId, key, subject });
     if (coveredId.startsWith('log:')) withLogs.add(key);
   }
-  const nameOf = (key: string) => loaded.labels.get(key) ?? 'An animal';
+  const nameOf = (key: string) => loaded.labels.get(key) ?? t(locale, 'push.animal.fallback');
   hits.sort(
     (a, b) =>
       nameOf(a.key).localeCompare(nameOf(b.key)) ||
@@ -207,7 +246,7 @@ export function holdCoversSaleAlerts(
     return {
       kind: 'hold-covers-sale' as const,
       subjectId: coveredId,
-      ...holdCoversSaleText(name, 1, 0),
+      ...holdCoversSaleText(name, 1, 0, locale),
       url: hrefFor(subject.subjectType, subject.subjectId, { logs: withLogs.has(key) }),
       audience: { kind: 'owners-and' as const, userIds: [] },
       batchKey: 'hold-covers-sale',
@@ -221,22 +260,23 @@ export function holdCoversSaleAlerts(
 export function holdCoversSaleText(
   firstName: string,
   records: number,
-  otherSubjects: number
+  otherSubjects: number,
+  locale?: string | null
 ): { title: string; body: string } {
   return {
     title:
       otherSubjects > 0
-        ? `Check sales from ${firstName} and ${otherSubjects} more`
-        : `Check sales from ${firstName}`,
-    body:
-      records === 1
-        ? '1 saved egg, milk or meat record is now inside a hold. If it was sold, tell the buyer.'
-        : `${records} saved egg, milk or meat records are now inside a hold. If any were sold, tell the buyer.`
+        ? t(locale, 'push.holdSale.titleMore', { name: firstName, count: otherSubjects })
+        : t(locale, 'push.holdSale.title', { name: firstName }),
+    body: t(locale, 'push.holdSale.body', { count: records })
   };
 }
 
 /** One push for several alerts of a kind (D0-16: "3 holds cleared"). */
-export function batchMessage(alerts: readonly PushAlert[]): {
+export function batchMessage(
+  alerts: readonly PushAlert[],
+  locale?: string | null
+): {
   title: string;
   body: string;
   url: string;
@@ -248,26 +288,28 @@ export function batchMessage(alerts: readonly PushAlert[]): {
     const subjects = [...new Set(alerts.map((a) => a.batchSubject ?? a.url))];
     return {
       ...holdCoversSaleText(
-        alerts[0].batchLabel ?? 'An animal',
+        alerts[0].batchLabel ?? t(locale, 'push.animal.fallback'),
         alerts.length,
-        subjects.length - 1
+        subjects.length - 1,
+        locale
       ),
       url: subjects.length === 1 ? alerts[0].url : '/today'
     };
   }
   const labels = [...new Set(alerts.map((a) => a.batchLabel ?? a.title))];
   const shown = labels.slice(0, 3).join('; ');
-  const more = labels.length > 3 ? `; and ${labels.length - 3} more` : '';
+  const more = labels.length > 3 ? t(locale, 'push.batch.more', { count: labels.length - 3 }) : '';
+  const list = `${shown}${more}`;
   if (alerts[0].kind === 'withdrawal-clears') {
     return {
-      title: `${alerts.length} holds cleared`,
-      body: `Holds have ended for ${shown}${more}. Open CropCard to check before use.`,
+      title: t(locale, 'push.cleared.batchTitle', { count: alerts.length }),
+      body: t(locale, 'push.cleared.batchBody', { list }),
       url: '/animals'
     };
   }
   return {
-    title: `${alerts.length} animal care jobs`,
-    body: `Coming up or due: ${shown}${more}.`,
+    title: t(locale, 'push.care.batchTitle', { count: alerts.length }),
+    body: t(locale, 'push.care.batchBody', { list }),
     url: '/today'
   };
 }

@@ -62,7 +62,9 @@
   const facts = $derived(variant === 'compact' ? card.facts.slice(0, factLimit) : card.facts);
   const asOf = $derived(formatInstant(card.asOf, prefs, 'datetime'));
   const kickerNamesKind = $derived(
-    card.kicker.toLowerCase().startsWith(CARD_KIND_LABEL[card.kind].toLowerCase())
+    [CARD_KIND_LABEL[card.kind], tr(CARD_KIND_LABEL_KEYS[card.kind])].some((label) =>
+      card.kicker.toLowerCase().startsWith(label.toLowerCase())
+    )
   );
   const link = $derived(variant === 'print' ? printLink : null);
   const safetyFirst = $derived(variant === 'print' ? card.sections.filter((s) => s.safety) : []);
@@ -74,7 +76,7 @@
       ? bodySections.filter((s) => compactSections.includes(s.title))
       : bodySections
   );
-  const provText = $derived(provenanceText(card.provenance));
+  const provText = $derived(provenanceText(card.provenance, page.data?.locale));
   const nextText = $derived(
     card.next ? `${card.next.label}${card.next.due ? ` (${card.next.due})` : ''}` : ''
   );

@@ -94,8 +94,12 @@ export function farmOrganicChrome(): OrganicChromeLevel {
 }
 
 /** Dates in status lines, in the farm's zone (B-08). */
-export function organicDateFormatter(): (ms: number) => string {
-  const prefs = { ...DEFAULT_PREFS, timeZone: farmTimeZone() };
+export function organicDateFormatter(locale?: string | null): (ms: number) => string {
+  const prefs = {
+    ...DEFAULT_PREFS,
+    timeZone: farmTimeZone(),
+    ...(locale ? { locale } : {})
+  };
   return (ms) => formatInstant(ms, prefs, 'date');
 }
 
@@ -105,20 +109,27 @@ export interface OrganicSnapshotLines {
 
 /** B-16: status lines for the offline snapshot, at the snapshot's window
  *  time. A farm with no entry pays one read and gets nulls. */
-export async function organicSnapshotLines(atMs: number): Promise<OrganicSnapshotLines> {
+export async function organicSnapshotLines(
+  atMs: number,
+  locale?: string | null
+): Promise<OrganicSnapshotLines> {
   const entries = listOrganicStatusEntries();
   if (entries.length === 0) return { line: () => null };
-  const fmt = organicDateFormatter();
+  const fmt = organicDateFormatter(locale);
   const byKey = entriesByKey(entries);
   const hasAnimal = entries.some((e) => e.subjectType === 'animal' || e.subjectType === 'group');
   const projection = hasAnimal ? animalOrganicProjection(await organicHealthPlugins()) : null;
   return {
     line(subjectType, id) {
       if (subjectType === 'field') {
-        return organicStatusLine(resolveAreaStatus(byKey.get(`field:${id}`) ?? [], atMs), fmt);
+        return organicStatusLine(
+          resolveAreaStatus(byKey.get(`field:${id}`) ?? [], atMs),
+          fmt,
+          locale
+        );
       }
       if (!projection) return null;
-      return organicStatusLine(projection.statusAt({ type: subjectType, id }, atMs), fmt);
+      return organicStatusLine(projection.statusAt({ type: subjectType, id }, atMs), fmt, locale);
     }
   };
 }

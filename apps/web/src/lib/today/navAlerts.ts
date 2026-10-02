@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
 import type { WinterizeAlert } from './winterizeAlert';
 
@@ -20,8 +21,9 @@ function inventoryHref(category: string, id: string): string {
   return `/inventory/${type}/${encodeURIComponent(id)}`;
 }
 
-/** The same alerts /today renders, flattened for the top-bar bell. Decon first (it blocks the next spray). */
-export function buildNavAlerts(input: NavAlertInput): NavAlert[] {
+/** The same alerts /today renders, flattened for the top-bar bell. Decon first (it blocks the next spray).
+ *  The decon line stays English (safety wording); the rest follow `locale`. */
+export function buildNavAlerts(input: NavAlertInput, locale?: string | null): NavAlert[] {
   const out: NavAlert[] = [];
   for (const s of input.dirtySprayers) {
     out.push({
@@ -35,7 +37,9 @@ export function buildNavAlerts(input: NavAlertInput): NavAlert[] {
     out.push({
       id: `winterize:${w.sprayerId}`,
       tone: 'wheat',
-      label: `${w.label}: ${w.uncalibrated ? 'recalibrate and ' : ''}check winterization`,
+      label: t(locale, w.uncalibrated ? 'today.nav.winterizeRecal' : 'today.nav.winterize', {
+        label: w.label
+      }),
       href: `/equipment/${encodeURIComponent(w.sprayerId)}/winterize`
     });
   }
@@ -43,7 +47,7 @@ export function buildNavAlerts(input: NavAlertInput): NavAlert[] {
     out.push({
       id: `low:${i.id}`,
       tone: 'wheat',
-      label: `${i.displayName} is low on stock`,
+      label: t(locale, 'today.nav.lowStock', { name: i.displayName }),
       href: inventoryHref(i.category, i.id)
     });
   }
@@ -54,7 +58,7 @@ export function buildNavAlerts(input: NavAlertInput): NavAlert[] {
     out.push({
       id: `expiring:${e.itemId}`,
       tone: 'wheat',
-      label: `${e.itemName} lot expires in ${e.daysUntilExpiry} day${e.daysUntilExpiry === 1 ? '' : 's'}`,
+      label: t(locale, 'today.nav.expiring', { name: e.itemName, count: e.daysUntilExpiry }),
       href: inventoryHref(e.category, e.itemId)
     });
   }

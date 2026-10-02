@@ -133,8 +133,15 @@ export const actions: Actions = {
       });
     }
     if (latLon) fd.set('frostBasis', 'lookup');
-    const frost = latLon ? await resolveFrostForm(fd, latLon) : null;
-    if (frost && !frost.ok) return fail(400, { error: frost.error, frostReason: frost.reason });
+    const frost = latLon ? await resolveFrostForm(fd, latLon, event.locals?.locale) : null;
+    if (frost && !frost.ok) {
+      return fail(400, {
+        error: frost.reason
+          ? t(event.locals.locale, `onboard.frostConfirm.${frost.reason}`)
+          : frost.error,
+        frostReason: frost.reason
+      });
+    }
 
     const now = new Date(Date.now());
     const planningYear = Number(fd.get('planningYear'));

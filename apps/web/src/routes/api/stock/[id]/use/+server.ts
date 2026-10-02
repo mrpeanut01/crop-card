@@ -8,6 +8,7 @@ import { requireMutator } from '$lib/server/auth';
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { assertAnimalSubject, firstUnknownRef } from '$lib/server/foreignRefs';
 import { writeRecord } from '$lib/server/recordWrite';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = feedUseSchema;
 
@@ -22,10 +23,11 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const user = requireMutator(event);
   const id = event.params.id ?? '';
   const item = getStockItem(id);
-  if (!item) return json({ error: 'not found' }, { status: 404 });
+  if (!item)
+    return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   if (!isFeedCategory(item.category)) {
     return json(
-      { error: 'Only feed and bedding can be used here.', code: 'NOT_FEED' },
+      { error: t(event.locals?.locale, 'stockui.api.notFeed'), code: 'NOT_FEED' },
       { status: 400 }
     );
   }
@@ -39,11 +41,11 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const occurredAt = input.occurredAt ?? now;
   if (occurredAt > now + MAX_FUTURE_SKEW_MS) {
     return json(
-      { error: 'A feed use cannot be dated in the future.', code: 'IN_THE_FUTURE' },
+      { error: t(event.locals?.locale, 'stockui.api.feedFuture'), code: 'IN_THE_FUTURE' },
       { status: 400 }
     );
   }
-  const amount = feedUseAmount(item, input.lb);
+  const amount = feedUseAmount(item, input.lb, event.locals?.locale);
   if (!amount.ok) return json({ error: amount.message, code: amount.code }, { status: 409 });
 
   const subject =
@@ -64,7 +66,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
       ? [
           {
             code: 'STOCK_SHORT',
-            message: `Only part of that was on hand. Count what is left and fix it on the item page.`
+            message: t(event.locals?.locale, 'stockui.api.stockShort')
           }
         ]
       : [];

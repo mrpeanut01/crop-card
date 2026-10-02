@@ -9,6 +9,7 @@
 import { MAX_TASK_MINUTES, MIN_TASK_MINUTES } from '$lib/labour/hours';
 import { activeCardOwnerId } from './cardStore';
 import { db, type TaskTimerRow } from './dexie';
+import { t } from '$lib/i18n';
 
 /** Fired on `window` after any start or stop, so other timers on the page
  *  re-read Dexie (D-30). */
@@ -40,6 +41,7 @@ export async function startTimer(input: {
   taskTitle: string;
   userId: string;
   now?: number;
+  locale?: string | null;
 }): Promise<StartResult> {
   if (!timerStorageAvailable()) return { ok: false, reason: 'no-storage' };
   const ownerId = activeCardOwnerId();
@@ -54,7 +56,7 @@ export async function startTimer(input: {
         return {
           ok: false,
           reason: 'other-task',
-          taskTitle: running.taskTitle?.trim() || 'another task'
+          taskTitle: running.taskTitle?.trim() || t(input.locale, 'tasks.timer.anotherTask')
         } as const;
       }
       await d.taskTimers.put({

@@ -12,6 +12,8 @@
  * in /plan/+page.server.ts only kicks in for legacy rows + v1 plugins
  * that predate the tag.
  */
+import { t } from '$lib/i18n';
+
 export const TASK_CATEGORY_VALUES = [
   'plant',
   'till',
@@ -48,7 +50,8 @@ export const PALETTE_TASK_CATEGORY_VALUES = [
 ] as const satisfies ReadonlyArray<TaskCategory>;
 
 /** Human-readable label used in dropdown options + popover headings. */
-export function labelForTaskCategory(c: TaskCategory): string {
+export function labelForTaskCategory(c: TaskCategory, locale?: string | null): string {
+  if (locale) return t(locale, `plan.taskCat.${c}`);
   switch (c) {
     case 'plant':
       return 'Plant';

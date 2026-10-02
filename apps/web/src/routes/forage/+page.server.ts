@@ -13,6 +13,7 @@ import { currentUser } from '$lib/server/auth';
 import { forageAccess } from '$lib/forage/access';
 import { testView } from '$lib/forage/advisory';
 import type { ForageTestTarget } from '$lib/forage/form';
+import { t } from '$lib/i18n';
 
 /** Forage lab results for an Area, block, hay cutting or feed lot (Phase
  *  33C, M-61). Every role reads; owner, helper and custom operator record. */
@@ -22,6 +23,7 @@ export const load: PageServerLoad = async (event) => {
   const blockId = q.get('blockId');
   const hayCuttingId = q.get('hayCuttingId');
   const stockLotId = q.get('stockLotId');
+  const locale = event.locals?.locale;
 
   let title: string;
   let target: ForageTestTarget | null = null;
@@ -30,43 +32,49 @@ export const load: PageServerLoad = async (event) => {
   let backHref = '/plan';
   if (fieldId) {
     const facts = forageFactsForArea(fieldId);
-    if (!facts.area) error(404, 'Area not found');
+    if (!facts.area) error(404, t(locale, 'forage.page.areaNotFound'));
     title = facts.area.name;
     blocks = facts.blocks.map((b) => ({ id: b.id, name: b.name }));
     filter = { blockIds: blocks.map((b) => b.id), hayCuttingIds: facts.cuts.map((c) => c.id) };
     backHref = `/plan?area=${encodeURIComponent(fieldId)}`;
   } else if (blockId) {
     const block = getBlock(blockId);
-    if (!block) error(404, 'Block not found');
+    if (!block) error(404, t(locale, 'forage.page.blockNotFound'));
     title = block.name;
     target = { blockId };
     filter = { blockId };
     backHref = `/plan?block=${encodeURIComponent(blockId)}`;
   } else if (hayCuttingId) {
     const cutting = getCutting(hayCuttingId);
-    if (!cutting) error(404, 'Hay cutting not found');
+    if (!cutting) error(404, t(locale, 'forage.page.cuttingNotFound'));
     const block = getBlock(cutting.blockId);
-    title = `Hay cutting ${cutting.cuttingNumber}${block ? ` from ${block.name}` : ''}`;
+    title = block
+      ? t(locale, 'forage.page.hayCuttingFrom', { n: cutting.cuttingNumber, block: block.name })
+      : t(locale, 'forage.page.hayCutting', { n: cutting.cuttingNumber });
     target = { hayCuttingId };
     filter = { hayCuttingId };
     backHref = `/hay?block=${encodeURIComponent(cutting.blockId)}&year=${cutting.year}`;
   } else if (stockLotId) {
-    if (stockLotCategory(stockLotId) !== 'feed') error(404, 'Feed lot not found');
-    title = 'Feed lot';
+    if (stockLotCategory(stockLotId) !== 'feed') error(404, t(locale, 'forage.page.lotNotFound'));
+    title = t(locale, 'forage.page.feedLot');
     target = { stockLotId };
     filter = { stockLotId };
     backHref = '/inventory';
   } else {
-    error(400, 'Name an Area, block, hay cutting or feed lot.');
+    error(400, t(locale, 'forage.page.nameOne'));
   }
 
   const timeZone = farmTimeZone();
   const blockNames = new Map(blocks.map((b) => [b.id, b.name]));
-  const tests = listForageTests(filter).map((t) => ({
-    ...testView(t, timeZone),
-    lab: t.lab,
-    where: t.blockId ? (blockNames.get(t.blockId) ?? null) : t.hayCuttingId ? 'Hay cutting' : null,
-    hasReport: !!t.documentId
+  const tests = listForageTests(filter).map((row) => ({
+    ...testView(row, timeZone, locale),
+    lab: row.lab,
+    where: row.blockId
+      ? (blockNames.get(row.blockId) ?? null)
+      : row.hayCuttingId
+        ? t(locale, 'forage.page.whereHay')
+        : null,
+    hasReport: !!row.documentId
   }));
   return {
     title,

@@ -371,5 +371,77 @@ export const enGarden = {
   'garden.insp.nothingFits': 'Nothing fits the open space on this date.',
   'garden.insp.bedHistory': 'Bed history',
   'garden.insp.nothingGrown': 'Nothing has grown in {name} yet.',
-  'garden.insp.addCover': 'Add a cover'
+  'garden.insp.addCover': 'Add a cover',
+  'gardenlib.succ.needDate': 'Give {name} a planting date first.',
+  'gardenlib.succ.plantOnce': "{name} doesn't usually succession-sow here. Plant once.",
+  'gardenlib.succ.frost':
+    'Sown {date}, it would not mature before the first fall frost on {frost}.',
+  'gardenlib.succ.noRoom': 'No room in this bed on {date}.',
+  'gardenlib.succ.every': 'Sow again every {days} days.',
+  'gardenlib.succ.nextFits': 'The next sowing fits.',
+  'gardenlib.succ.allFit': 'All {count} sowings fit.',
+  'gardenlib.succ.someFit': '{fitting} of {count} sowings fit. The others say why.',
+  'gardenlib.succ.seasonHolds': 'The season holds about {count} sowings in all.',
+  'gardenlib.succ.notFound': 'planting not found in this bed',
+  'gardenlib.succ.finished': '{name} is finished for the season. Pick a current planting.',
+  'gardenlib.succ.oneOfSeries': 'This is one sowing in a series. Add sowings from the first one.',
+  'gardenlib.succ.oneOfSeriesOn':
+    'This is one sowing in a series. Add sowings from the first one, {date}.',
+  'gardenlib.succ.linked': '{name} is already linked to other plantings.',
+  'gardenlib.succ.noneFits': 'No sowing fits this bed.',
+  'gardenlib.recipe.needsDays': 'Needs about {min} frost-free days. Your season has {days}.',
+  'gardenlib.recipe.upToDays': 'Made for seasons up to {max} frost-free days. Yours has {days}.',
+  'gardenlib.recipe.scaled': 'Written for a {from} ft bed and scaled to this {to} ft bed.',
+  'gardenlib.recipe.notInLibrary':
+    "{crop} isn't in your crop library, and neither are its alternates.",
+  'gardenlib.recipe.usedInstead': 'Used {crop} in place of {original}.',
+  'gardenlib.recipe.followsStep': 'Follows step {n}, which could not be placed.',
+  'gardenlib.recipe.plantOnce': "{crop} doesn't usually succession-sow, so it is planted once.",
+  'gardenlib.recipe.cropSowing': '{crop} (sowing {n})',
+  'gardenlib.recipe.notReady':
+    '{crop} sown {date} would not be ready before the first fall frost on {frost}.',
+  'gardenlib.recipe.noRoom': 'No room for {crop} on {date}. That part of the bed opens {opens}.',
+  'gardenlib.recipe.shares': '{crop} shares space with {other} until {date}.',
+  'gardenlib.recipe.noSuch': "There's no bed recipe called {id}.",
+  'gardenlib.recipe.keepOne': 'Keep at least one planting to add.',
+  'gardenlib.recipe.stale':
+    '{bed} changed since this preview, so nothing was added. Open the recipe again to see what fits now.',
+  'gardenlib.place.notBed': "{name} isn't a bed or container.",
+  'gardenlib.place.notGarden': "{name} isn't in a garden or greenhouse.",
+  'gardenlib.place.setSize': "Set {name}'s size before placing crops in it.",
+  'gardenlib.place.notFound': 'planting not found',
+  'gardenlib.place.clash':
+    'No room for {name} there in {bed} on {date}. {other} holds that spot until {until}.',
+  'gardenlib.place.inGround':
+    '{name} is already in the ground in {bed}. Record a new planting instead.',
+  'gardenlib.place.inGroundDate':
+    "{name} is already in the ground, so its date can't move past today. Record a new planting instead.",
+  'gardenlib.place.spotPastEdge': 'That spot runs past the edge of {bed}.',
+  'gardenlib.place.runsPast': '{name} runs past the edge of {bed}.',
+  'gardenlib.layout.areaTooSmall':
+    "{name} can't get that small. {names} would sit past the new edge. Move {them} first.",
+  'gardenlib.layout.it': 'it',
+  'gardenlib.layout.them': 'them',
+  'gardenlib.layout.pastArea': '{name} would run past the edge of {area}.',
+  'gardenlib.layout.overlap': "Beds can't overlap: {name} and {other}.",
+  'gardenlib.fill.why.no-key': 'Claude is off',
+  'gardenlib.fill.why.over-cap': "This month's AI help for your farm is used up",
+  'gardenlib.fill.why.quota': "Today's AI help for this is used up",
+  'gardenlib.fill.why.rate-limit': "Claude isn't answering right now",
+  'gardenlib.fill.why.offline': "Claude can't be reached right now",
+  'gardenlib.fill.why.timeout': 'Claude took too long',
+  'gardenlib.fill.why.invalid': "Claude's ideas didn't fit this bed",
+  'gardenlib.fill.nothingFits':
+    '{prefix}, and no recipe or planned crop fits this bed on {date}. Try a later date or free up some space.',
+  'gardenlib.fill.fromRecipe': 'a plain plan from the {recipe} recipe',
+  'gardenlib.fill.bySpacing': 'a plain plan that fits your planned crops by spacing',
+  'gardenlib.fill.planned': '{prefix}, so this is {source}. Everything here works the same.',
+  'gardenlib.map.from': 'from {date}',
+  'gardenlib.map.notPlaced': 'not placed yet',
+  'gardenlib.page.notDesignable':
+    'This Area has no garden designer. Only gardens and greenhouses do.',
+  'gardenlib.page.offlineNotSaved':
+    "You're offline, and this garden isn't saved on this device yet. Open it once with signal, or open your saved Cards.",
+  'gardenlib.page.notInCopy': "This garden isn't in the copy saved on this device.",
+  'gardenlib.page.didntLoad': "The garden designer didn't load. Try again."
 } as const;

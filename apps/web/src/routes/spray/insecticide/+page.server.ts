@@ -83,7 +83,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   return {
     insecticides: insecticidePlugins,
     pasture: await loadSprayPastureContext(allBlocks, registry),
-    organicBlocks: organicBlocksForNotice(allBlocks.map((b) => b.id)),
+    organicBlocks: organicBlocksForNotice(
+      allBlocks.map((b) => b.id),
+      Date.now(),
+      locals?.locale
+    ),
     blocks: allBlocks.map((b) => {
       const location = (b.geometryGeojson && geometryCentroid(b.geometryGeojson)) || farm;
       const blooming = b.plantings.filter((p) => {

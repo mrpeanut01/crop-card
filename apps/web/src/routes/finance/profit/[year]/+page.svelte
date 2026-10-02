@@ -5,7 +5,7 @@
   import CardView from '$lib/components/cards/CardView.svelte';
   import CardPrintSheet from '$lib/components/cards/CardPrintSheet.svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
-  import { PRINT_HELP } from '$lib/cards/print';
+  import { printHelp } from '$lib/cards/print';
   import { currentPrefs } from '$lib/prefsState.svelte';
 
   const { data } = $props();
@@ -41,7 +41,7 @@
       >
       <a class="fin-ghost" href="/finance?year={data.year}">{tr('finance.profit.back')}</a>
     </div>
-    <p class="fin-help">{PRINT_HELP}</p>
+    <p class="fin-help">{printHelp(data.locale)}</p>
   </div>
   <CardPrintSheet cards={[data.card]} {prefs} origin={data.origin} />
 </div>

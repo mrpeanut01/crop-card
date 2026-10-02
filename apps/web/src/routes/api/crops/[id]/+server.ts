@@ -29,7 +29,11 @@ import { cropPatchSchema } from '$lib/crops/apiSchemas';
 import { cropLookupFrom, failureResponse, writeFootprint } from '$lib/server/garden/placement';
 import { getRegistry } from '$lib/server/registry';
 import { db } from '$lib/db/client';
-import { applyPlantingEstablishment, seedStartTasksOnFirstDate } from '$lib/server/seedStartTasks';
+import {
+  applyPlantingEstablishment,
+  localizeSeedStartNotes,
+  seedStartTasksOnFirstDate
+} from '$lib/server/seedStartTasks';
 
 export const _requestSchema = cropPatchSchema;
 const patchSchema = cropPatchSchema;
@@ -79,7 +83,13 @@ export const PATCH: RequestHandler = async (event) => {
       );
     }
     const { action: _action, ...request } = parsed.data;
-    const result = writeFootprint(event.params.id, request, cropLookupFrom(await getRegistry()));
+    const result = writeFootprint(
+      event.params.id,
+      request,
+      cropLookupFrom(await getRegistry()),
+      undefined,
+      event.locals?.locale
+    );
     if (!result.ok) return failureResponse(result);
     return json(result.response);
   }
@@ -104,7 +114,10 @@ export const PATCH: RequestHandler = async (event) => {
         plugin
       )
     );
-    return json({ crop: getCrop(id), seedStart: outcome });
+    return json({
+      crop: getCrop(id),
+      seedStart: { ...outcome, notes: localizeSeedStartNotes(outcome.notes, event.locals?.locale) }
+    });
   }
 
   if (parsed.data.action === 'unschedule') {

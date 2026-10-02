@@ -83,7 +83,8 @@ export function withSnapshotAnimals(
 ): CardModel {
   if (!snapshot.animals) return card;
   const housed = withHousing(card, housingFromSnapshot(snapshot, areaId), {
-    petsLayout: snapshot.animalsLayout === 'pets'
+    petsLayout: snapshot.animalsLayout === 'pets',
+    locale: opts.prefs.locale
   });
   const tz = snapshot.holdTimeZone || opts.prefs.timeZone;
   return withGrazing(housed, grazingFromSnapshot(snapshot, areaId, opts.now), tz);

@@ -1,5 +1,9 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { pageCropName } from '$lib/i18n/pageCropName';
+  import { page } from '$app/state';
+  import { createT, type MessageKey } from '$lib/i18n';
+  import { seasonSetupLabel } from '$lib/season/setup';
   import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
   /**
    * Inputs Plan wizard step (Phase 21 / B-28 / UC-37d).
@@ -77,6 +81,38 @@
     onChoicesChange
   }: Props = $props();
 
+  const locale = $derived(page.data?.locale);
+  const tr = $derived(createT(locale));
+  const english = $derived(!locale || locale === 'en');
+
+  /** A code shown as-is in English (with dashes as spaces where the step
+   *  did that before) and through the catalog in other locales. */
+  function codeText(prefix: string, code: string, englishText: string): string {
+    if (english) return englishText;
+    const key = `${prefix}${code}` as MessageKey;
+    const hit = tr(key);
+    return hit === key ? englishText : hit;
+  }
+
+  function noCompliantReason(w: Extract<PlannerWarning, { kind: 'no-compliant-product' }>): string {
+    if (english || !plan) return w.reason;
+    const s = w.slot;
+    const family =
+      s === 'burndown' || s === 'pre-emergent' || s === 'post-emergent' || s === 'cover-terminate'
+        ? 'herbicide'
+        : s === 'insecticide-prophylactic' || s === 'insecticide-scouted'
+          ? 'insecticide'
+          : s === 'fungicide'
+            ? 'fungicide'
+            : 'fertilizer';
+    const phil = seasonSetupLabel('philosophy', plan.meta.philosophy, locale);
+    return tr('inputs.warn.poolReason', {
+      family: codeText('inputs.cat.', family, family),
+      philosophy: phil.split(': ')[0],
+      slot: fmtSlot(s)
+    });
+  }
+
   // Seeded once from the wizard; the step owns the edits and reports them up.
   let choices = $state<Record<string, string>>({ ...untrack(() => initialChoices) });
 
@@ -86,9 +122,9 @@
   }
 
   function optionLabel(o: InputsPlanProductOption): string {
-    if (o.stock === 'enough') return `${o.displayName} (on hand)`;
-    if (o.stock === 'some') return `${o.displayName} (some on hand)`;
-    return `${o.displayName} (to buy)`;
+    if (o.stock === 'enough') return tr('inputs.opt.onHand', { name: o.displayName });
+    if (o.stock === 'some') return tr('inputs.opt.some', { name: o.displayName });
+    return tr('inputs.opt.toBuy', { name: o.displayName });
   }
 
   function sourceFor(app: InputsPlanApplication): 'plugin' | 'data' | 'ai' | 'manual' | 'fallback' {
@@ -103,32 +139,33 @@
    *  identifiers like `no-growth-stage-table`. */
   function warningCopy(w: PlannerWarning): { title: string; body: string } {
     const plantingName =
-      plantings.find((p) => p.id === w.plantingId)?.varietyDisplayName ?? 'this planting';
+      plantings.find((p) => p.id === w.plantingId)?.varietyDisplayName ??
+      tr('inputs.warn.thisPlanting');
     switch (w.kind) {
       case 'no-compliant-product':
         return {
-          title: `No compliant product for ${plantingName}`,
-          body: `${w.reason} — review on /settings/season and /inventory, or relax the philosophy filter.`
+          title: tr('inputs.warn.noCompliant.title', { name: plantingName }),
+          body: tr('inputs.warn.noCompliant.body', { reason: noCompliantReason(w) })
         };
       case 'missing-yield-goal':
         return {
-          title: `Yield goal missing for ${plantingName}`,
-          body: `Family "${w.cropFamily}" has no yield-goal default. N/P/K rates use a conservative fallback; edit the planting to set a target yield for sharper rates.`
+          title: tr('inputs.warn.yield.title', { name: plantingName }),
+          body: tr('inputs.warn.yield.body', { family: w.cropFamily })
         };
       case 'missing-spray-window-purpose':
         return {
-          title: `Spray-window purpose missing on ${plantingName}`,
-          body: `Crop plugin "${w.cropPluginId}" has a "${w.windowTitle}" window without a tagged purpose — that window was skipped. File a plugin issue or add the purpose field.`
+          title: tr('inputs.warn.purpose.title', { name: plantingName }),
+          body: tr('inputs.warn.purpose.body', { plugin: w.cropPluginId, window: w.windowTitle })
         };
       case 'missing-anchor-date':
         return {
-          title: `No planting date set on ${plantingName}`,
-          body: `Schedule a planting date in the Schedule step so applications can anchor to it.`
+          title: tr('inputs.warn.anchor.title', { name: plantingName }),
+          body: tr('inputs.warn.anchor.body')
         };
       case 'no-growth-stage-table':
         return {
-          title: `No IPM scout cadence library for ${plantingName}`,
-          body: `Crop plugin "${w.cropPluginId}" isn't in the growth-stage table — a general 7-day scouting reminder was added in place of the targeted cadence.`
+          title: tr('inputs.warn.stage.title', { name: plantingName }),
+          body: tr('inputs.warn.stage.body', { plugin: w.cropPluginId })
         };
     }
   }
@@ -170,7 +207,7 @@
       });
       const payload = await res.json();
       if (!res.ok) {
-        error = payload.error ?? 'failed to load plan';
+        error = payload.error ?? tr('inputs.loadFailed');
         plan = null;
         return;
       }
@@ -283,50 +320,42 @@
   }
 
   function fmtSlot(slot: string): string {
-    return slot.replace(/-/g, ' ');
+    return codeText('inputs.slot.', slot, slot.replace(/-/g, ' '));
   }
 </script>
 
 <div class="inputs-step">
   <header class="step-header">
-    <h2>Inputs plan</h2>
-    <p class="lede">
-      Deterministic plan derived from your season setup, the crop family defaults and the
-      compliance-filtered product catalog. Toggle rows off to skip them; the right rail aggregates
-      everything you keep.
-    </p>
+    <h2>{tr('inputs.title')}</h2>
+    <p class="lede">{tr('inputs.lede')}</p>
   </header>
 
   {#if loading}
-    <p class="muted">Computing inputs plan…</p>
+    <p class="muted">{tr('inputs.computing')}</p>
   {:else if error}
     <div class="card err" role="alert">
-      <strong>Couldn't generate plan:</strong>
+      <strong>{tr('inputs.genFailed')}</strong>
       {error}
-      <button type="button" class="link-btn" onclick={loadPlan}>retry</button>
+      <button type="button" class="link-btn" onclick={loadPlan}>{tr('inputs.retry')}</button>
     </div>
   {:else if plan}
     {#if planMeta?.fallback === 'deterministic'}
       <div class="card warn" role="status">
-        <strong>AI substitution rejected.</strong> The proposed product changes failed validation;
-        falling back to the deterministic plan. Edit a row above to substitute by hand.
+        <strong>{tr('inputs.fb.rejected')}</strong>
+        {tr('inputs.fb.rejectedBody')}
         {#if planMeta.violations && planMeta.violations.length > 0}
           <details class="violation-details">
-            <summary
-              >Why? ({planMeta.violations.length} violation{planMeta.violations.length === 1
-                ? ''
-                : 's'})</summary
-            >
+            <summary>{tr('inputs.fb.why', { count: planMeta.violations.length })}</summary>
             <ul class="violation-list">
               {#each planMeta.violations as v, i (i)}
                 <li><code>{v}</code></li>
               {/each}
             </ul>
             <p class="violation-hint">
-              Most common cause: plugins lack <code>complianceFlags</code> (omriListed,
-              nonGmoCompliant, etc.) so they can't satisfy a non-conventional philosophy. Tag the
-              plugins via Plugin Manager, or switch philosophy to
-              <code>conventional</code> to unblock substitutions.
+              {tr('inputs.fb.hintA')} <code>complianceFlags</code>
+              {tr('inputs.fb.hintB')}
+              <code>conventional</code>
+              {tr('inputs.fb.hintC')}
             </p>
           </details>
         {/if}
@@ -334,22 +363,26 @@
     {:else if planMeta?.fallback === 'quota-exceeded'}
       <div class="card warn" role="status">
         {#if planMeta.fallbackMessage}
-          <strong>AI limit reached.</strong>
-          {planMeta.fallbackMessage} Showing the deterministic plan.
+          <strong>{tr('inputs.fb.limit')}</strong>
+          {planMeta.fallbackMessage}
+          {tr('inputs.fb.showing')}
         {:else}
-          <strong>AI limit reached.</strong> Showing the deterministic plan, which works the same way.
+          <strong>{tr('inputs.fb.limit')}</strong>
+          {tr('inputs.fb.showingSame')}
         {/if}
       </div>
       <AiUsageChip />
     {:else if planMeta?.fallback === 'ai-unavailable'}
       <div class="card info" role="status">
-        Showing the deterministic plan — {planMeta.fallbackMessage ??
-          'Claude is unavailable right now.'}
+        {tr('inputs.fb.unavailable', {
+          message: planMeta.fallbackMessage ?? tr('inputs.fb.claudeUnavailable')
+        })}
       </div>
     {:else if planMeta?.fallback === 'no-api-key'}
       <div class="card info" role="status">
-        Showing the deterministic plan (no AI key configured). Add
-        <code>ANTHROPIC_API_KEY</code> to enable product substitutions.
+        {tr('inputs.fb.noKeyA')}
+        <code>ANTHROPIC_API_KEY</code>
+        {tr('inputs.fb.noKeyB')}
       </div>
     {/if}
 
@@ -359,9 +392,7 @@
           shown={aiEnabled && !planMeta?.fallback
             ? ['plugin', 'data', 'ai', 'manual']
             : ['plugin', 'data', 'fallback', 'manual']}
-          note={aiEnabled && !planMeta?.fallback
-            ? 'Rates from plugin defaults · AI substitutes products · all editable'
-            : 'AI off · deterministic plan · plugin + your records'}
+          note={aiEnabled && !planMeta?.fallback ? tr('inputs.legend.ai') : tr('inputs.legend.off')}
         />
         {#each plantings as planting (planting.id)}
           {@const apps = appsByPlanting.get(planting.id) ?? []}
@@ -376,10 +407,12 @@
               onclick={() => toggleExpanded(planting.id)}
               aria-expanded={expanded.has(planting.id)}
             >
-              <span class="planting-name">{planting.varietyDisplayName}</span>
+              <span class="planting-name"
+                >{pageCropName(planting.cropPluginId, planting.varietyDisplayName)}</span
+              >
               <span class="planting-meta">
-                {planting.plantingDate ? fmtDate(planting.plantingDate) : 'no date'} ·
-                {acceptedHere} task{acceptedHere === 1 ? '' : 's'}
+                {planting.plantingDate ? fmtDate(planting.plantingDate) : tr('inputs.noDate')} ·
+                {tr('inputs.tasks', { count: acceptedHere })}
               </span>
               <span class="caret" aria-hidden="true">
                 {expanded.has(planting.id) ? '▾' : '▸'}
@@ -389,7 +422,7 @@
             {#if expanded.has(planting.id)}
               <div class="planting-body">
                 {#if apps.length === 0 && scouts.length === 0}
-                  <p class="muted">No applications or scout tasks needed for this crop.</p>
+                  <p class="muted">{tr('inputs.noneNeeded')}</p>
                 {/if}
 
                 {#each apps as app (app.id)}
@@ -399,7 +432,10 @@
                       type="checkbox"
                       checked={!rejectedAppIds.has(app.id)}
                       onchange={() => toggleAppReject(app.id)}
-                      aria-label={`Keep ${fmtSlot(app.slot)} for ${planting.varietyDisplayName}`}
+                      aria-label={tr('inputs.keepAria', {
+                        slot: fmtSlot(app.slot),
+                        name: planting.varietyDisplayName
+                      })}
                     />
                     <div class="row-body">
                       <div class="row-title">
@@ -410,13 +446,16 @@
                           <select
                             class="product-select"
                             value={app.productPluginId ?? ''}
-                            aria-label={`Product for ${fmtSlot(app.slot)} on ${planting.varietyDisplayName}`}
+                            aria-label={tr('inputs.productAria', {
+                              slot: fmtSlot(app.slot),
+                              name: planting.varietyDisplayName
+                            })}
                             data-testid="product-select"
                             onchange={(e) =>
                               chooseProduct(app.id, (e.target as HTMLSelectElement).value)}
                           >
                             {#if !app.productPluginId}
-                              <option value="" disabled>Pick a product</option>
+                              <option value="" disabled>{tr('inputs.pickProduct')}</option>
                             {:else if !opts.some((o) => o.pluginId === app.productPluginId)}
                               <option value={app.productPluginId}>{app.productDisplayName}</option>
                             {/if}
@@ -426,7 +465,7 @@
                           </select>
                         {:else}
                           <span class="product-name">
-                            {app.productDisplayName ?? '⚠ pick product'}
+                            {app.productDisplayName ?? `⚠ ${tr('inputs.pickProductShort')}`}
                           </span>
                         {/if}
                         <span class="row-date">{fmtDate(app.applicationDateMs)}</span>
@@ -437,7 +476,7 @@
                         <p class="rate-line">{formatApplicationRateLine(app, currentPrefs())}</p>
                       {:else if app.productPluginId}
                         <p class="rate-line" data-testid="rate-missing">
-                          No rate for this product here. Check its label for the amount.
+                          {tr('inputs.rateMissing')}
                         </p>
                       {/if}
                     </div>
@@ -453,9 +492,11 @@
                     />
                     <div class="row-body">
                       <div class="row-title">
-                        <span class="slot-pill" data-category="scout">scout</span>
+                        <span class="slot-pill" data-category="scout">{tr('inputs.scout')}</span>
                         <span class="product-name">{scout.title}</span>
-                        <span class="row-date">every {scout.recurrenceDays}d</span>
+                        <span class="row-date"
+                          >{tr('inputs.every', { n: scout.recurrenceDays })}</span
+                        >
                         <Provenance source="plugin" compact />
                       </div>
                       <p class="rationale">{scout.body}</p>
@@ -469,7 +510,7 @@
 
         {#if plan.warnings.length > 0}
           <section class="card warn" aria-labelledby="ips-warn-heading">
-            <h3 id="ips-warn-heading">Warnings ({plan.warnings.length})</h3>
+            <h3 id="ips-warn-heading">{tr('inputs.warnings', { n: plan.warnings.length })}</h3>
             <ul class="warn-list">
               {#each plan.warnings as w, i (i)}
                 {@const c = warningCopy(w)}
@@ -484,31 +525,31 @@
       </div>
 
       <aside class="shopping">
-        <h3>Shopping list</h3>
+        <h3>{tr('inputs.shopping')}</h3>
         {#if shoppingList.length === 0}
           {#if unsizedCount > 0}
             <p class="muted" data-testid="shopping-unsized">
-              No amounts to work out yet. {unsizedCount === 1
-                ? '1 chosen product has'
-                : `${unsizedCount} chosen products have`} no rate here, so check the label before you
-              buy.
+              {tr('inputs.unsizedOnly', { count: unsizedCount })}
             </p>
           {:else if productCount > 0}
-            <p class="muted">Nothing to buy. The stock you have covers the chosen applications.</p>
+            <p class="muted">{tr('inputs.covered')}</p>
           {:else}
-            <p class="muted">Nothing to buy for the chosen applications.</p>
+            <p class="muted">{tr('inputs.nothing')}</p>
           {/if}
         {:else}
           <ul>
             {#each shoppingList as item (item.pluginId)}
               <li>
                 <div class="shop-title">
-                  <span class="shop-cat">{item.category}</span>
+                  <span class="shop-cat"
+                    >{codeText('inputs.cat.', item.category, item.category)}</span
+                  >
                   <span class="shop-name">{item.displayName}</span>
                 </div>
                 <div class="shop-totals">
                   <span
-                    >Need: <strong
+                    >{tr('inputs.need')}
+                    <strong
                       >{formatInputAmount(
                         item.totalNeeded,
                         item.unit,
@@ -518,22 +559,18 @@
                     ></span
                   >
                   <span
-                    >On hand: {formatInputAmount(
-                      item.onHand,
-                      item.unit,
-                      item.category,
-                      currentPrefs()
-                    )}</span
+                    >{tr('inputs.onHand')}
+                    {formatInputAmount(item.onHand, item.unit, item.category, currentPrefs())}</span
                   >
                   {#if item.stockUnitMismatch}
                     <span class="unit-mismatch"
-                      >You have some, kept in {item.stockUnitMismatch}. Check the label to see if it
-                      covers this.</span
+                      >{tr('inputs.unitMismatch', { unit: item.stockUnitMismatch })}</span
                     >
                   {/if}
                   {#if item.shortfall > 0}
                     <span class="shortfall"
-                      >Buy: {formatInputAmount(
+                      >{tr('inputs.buy')}
+                      {formatInputAmount(
                         item.shortfall,
                         item.unit,
                         item.category,
@@ -541,7 +578,7 @@
                       )}</span
                     >
                   {:else}
-                    <span class="covered">✓ Covered</span>
+                    <span class="covered">✓ {tr('inputs.coveredShort')}</span>
                   {/if}
                 </div>
               </li>
@@ -549,10 +586,7 @@
           </ul>
           {#if unsizedCount > 0}
             <p class="muted" data-testid="shopping-unsized">
-              {unsizedCount === 1
-                ? '1 chosen product has no rate here and is not on this list'
-                : `${unsizedCount} chosen products have no rate here and are not on this list`}, so
-              check the label before you buy.
+              {tr('inputs.unsizedList', { count: unsizedCount })}
             </p>
           {/if}
         {/if}
@@ -561,19 +595,21 @@
 
     {#if commitError}
       <div class="card err" role="alert">
-        <strong>Commit failed:</strong>
+        <strong>{tr('inputs.commitFailed')}</strong>
         {commitError}
       </div>
     {/if}
 
     <footer class="step-actions">
-      <button type="button" class="secondary" onclick={onBack}>← Back to schedule</button>
+      <button type="button" class="secondary" onclick={onBack}>← {tr('inputs.back')}</button>
       <span class="summary">
-        Accepting {acceptedSummary.apps} application{acceptedSummary.apps === 1 ? '' : 's'}
-        + {acceptedSummary.scouts} scout task{acceptedSummary.scouts === 1 ? '' : 's'}.
+        {tr('inputs.summary', {
+          apps: tr('inputs.appsN', { count: acceptedSummary.apps }),
+          scouts: tr('inputs.scoutsN', { count: acceptedSummary.scouts })
+        })}
       </span>
       <button type="button" class="primary" disabled={committing} onclick={handleCommit}>
-        {committing ? 'Committing…' : 'Accept and commit →'}
+        {committing ? tr('inputs.committing') : tr('inputs.commit')}
       </button>
     </footer>
   {/if}

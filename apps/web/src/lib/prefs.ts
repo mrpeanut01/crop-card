@@ -19,6 +19,15 @@ import {
 export interface Prefs {
   timeZone: string;
   units: DisplayUnits;
+  /** The app language (`en`, `es`). Dates follow it; exports and other
+   *  server-side records leave it unset and stay English. */
+  locale?: string;
+}
+
+/** The `Intl` locale dates are written in. Spanish uses US Spanish, so
+ *  numbers keep the decimal point the forms take. */
+export function intlLocale(locale: string | null | undefined): string {
+  return locale === 'es' ? 'es-US' : 'en-US';
 }
 
 export const DEFAULT_PREFS: Prefs = { timeZone: DEFAULT_TIME_ZONE, units: 'us' };
@@ -56,7 +65,11 @@ export function formatInstant(
   if (value === null || value === undefined) return '—';
   const d = toDate(value);
   if (!d) return '—';
-  return dateToLocaleString(d, 'en-US', { ...STYLES[style], ...extra, timeZone: prefs.timeZone });
+  return dateToLocaleString(d, intlLocale(prefs.locale), {
+    ...STYLES[style],
+    ...extra,
+    timeZone: prefs.timeZone
+  });
 }
 
 const YMD = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -68,7 +81,8 @@ const YMD = /^(\d{4})-(\d{2})-(\d{2})$/;
 export function formatCalendarDate(
   value: string | Date | number | null | undefined,
   style: Exclude<DateStyle, 'time' | 'datetime'> = 'date',
-  extra: Intl.DateTimeFormatOptions = {}
+  extra: Intl.DateTimeFormatOptions = {},
+  locale?: string | null
 ): string {
   if (value === null || value === undefined || value === '') return '—';
   let d: Date | null;
@@ -79,7 +93,11 @@ export function formatCalendarDate(
     d = toDate(value);
   }
   if (!d) return '—';
-  return dateToLocaleDateString(d, 'en-US', { ...STYLES[style], ...extra, timeZone: 'UTC' });
+  return dateToLocaleDateString(d, intlLocale(locale), {
+    ...STYLES[style],
+    ...extra,
+    timeZone: 'UTC'
+  });
 }
 
 /** The `YYYY-MM-DD` day an instant falls on in `timeZone`. */
@@ -115,7 +133,7 @@ export function formatDueDay(
   extra: Intl.DateTimeFormatOptions = {}
 ): string {
   return isUtcMidnight(ms)
-    ? formatCalendarDate(ms, style, extra)
+    ? formatCalendarDate(ms, style, extra, prefs.locale)
     : formatInstant(ms, prefs, style, extra);
 }
 

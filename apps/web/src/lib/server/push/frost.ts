@@ -8,7 +8,7 @@
 import type { Hardiness } from '$lib/schedule/scheduleCandidacy';
 import type { FrostAlert, FrostEvent } from '../nwsAlerts';
 import { HOUR_MS, type PushAlert } from './triggers';
-import { HARD_FREEZE_NOTE } from '$lib/climate/protection';
+import { t } from '$lib/i18n';
 
 /** Only products whose cold period starts within this lead are "tonight". */
 export const FROST_ALERT_LEAD_MS = 36 * HOUR_MS;
@@ -50,20 +50,20 @@ export function isInGroundOrImminent(p: FrostPlantingSnapshot, now: number): boo
   );
 }
 
-function listNames(names: string[]): string {
+export function listNames(names: string[], locale?: string | null): string {
   const shown = names.slice(0, 3);
   const more = names.length - shown.length;
-  const joined =
-    shown.length <= 2
-      ? shown.join(' and ')
-      : `${shown.slice(0, -1).join(', ')} and ${shown.at(-1)}`;
-  return more > 0 ? `${shown.join(', ')} and ${more} more` : joined;
+  if (more > 0) return t(locale, 'push.list.more', { list: shown.join(', '), count: more });
+  if (shown.length === 1) return shown[0];
+  if (shown.length === 0) return '';
+  return t(locale, 'push.list.pair', { a: shown.slice(0, -1).join(', '), b: shown.at(-1)! });
 }
 
 export function frostTonightAlerts(
   products: FrostAlert[],
   plantings: FrostPlantingSnapshot[],
-  now: number
+  now: number,
+  locale?: string | null
 ): PushAlert[] {
   const candidates = plantings.filter((p) => p.cover !== 'heated' && isInGroundOrImminent(p, now));
   if (candidates.length === 0) return [];
@@ -78,24 +78,32 @@ export function frostTonightAlerts(
     const when = product.nwsHeadline ? ` ${sentenceCase(product.nwsHeadline)}.` : '';
     const coveredBeds = [
       ...new Set(
-        hit.filter((p) => p.cover === 'covered').map((p) => p.blockName ?? 'the covered beds')
+        hit
+          .filter((p) => p.cover === 'covered')
+          .map((p) => p.blockName ?? t(locale, 'push.frost.coveredBeds'))
       )
     ];
     const anyUncovered = hit.some((p) => p.cover !== 'covered');
     const hardFreeze = HARD_FREEZE_EVENTS.has(product.event);
     const action = [
-      anyUncovered ? ' Cover or harvest before the cold sets in.' : '',
-      coveredBeds.length ? ` Check covers on ${listNames(coveredBeds)}.` : '',
-      hardFreeze && coveredBeds.length ? ` ${HARD_FREEZE_NOTE}` : '',
+      anyUncovered ? ` ${t(locale, 'push.frost.coverOrHarvest')}` : '',
+      coveredBeds.length
+        ? ` ${t(locale, 'push.frost.checkCovers', { beds: listNames(coveredBeds, locale) })}`
+        : '',
+      hardFreeze && coveredBeds.length ? ` ${t(locale, 'push.frost.hardFreeze')}` : '',
       hardFreeze && coveredBeds.length && !anyUncovered
-        ? ' Harvest or add more cover before the cold sets in.'
+        ? ` ${t(locale, 'push.frost.harvestOrMoreCover')}`
         : ''
     ].join('');
+    const riskLine = t(locale, 'push.frost.atRisk', {
+      names: listNames(names, locale),
+      count: names.length
+    });
     out.push({
       kind: 'frost-tonight',
       subjectId: product.productKey,
-      title: `${product.event} · protect tender crops`,
-      body: `${listNames(names)} ${names.length === 1 ? 'is' : 'are'} at risk.${when}${action} (NWS${product.senderName ? `, ${product.senderName.replace(/^NWS\s+/, '')}` : ''})`,
+      title: t(locale, 'push.frost.title', { event: product.event }),
+      body: `${riskLine}${when}${action} (NWS${product.senderName ? `, ${product.senderName.replace(/^NWS\s+/, '')}` : ''})`,
       url: '/today',
       audience: { kind: 'all' }
     });

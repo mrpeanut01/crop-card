@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { DEFAULT_PREFS, formatQuantity, type Prefs } from '$lib/prefs';
 import type { PollinationConstraint } from './types';
 
@@ -9,16 +10,17 @@ export function pollinationNote(
     PollinationConstraint,
     'kind' | 'pairDisplayNames' | 'blockNames' | 'distanceFt' | 'staggerDays'
   >,
-  prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS
+  prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS,
+  locale?: string | null
 ): string {
   const [seedA, seedB] = c.pairDisplayNames;
   const [blockA, blockB] = c.blockNames;
   if (c.kind === 'geometry-missing' || c.distanceFt === null) {
-    return `Couldn't check isolation between ${blockA} and ${blockB} — add geometry to one or both to enable the check.`;
+    return t(locale, 'plan.poll.geometryMissing', { blockA, blockB });
   }
   const d = formatQuantity(c.distanceFt, 'distance', prefs);
   if (c.kind === 'isolated-spatially') {
-    return `${seedA} on ${blockA} is ${d} from ${seedB} on ${blockB} — far enough apart that cross-pollination isn't an issue.`;
+    return t(locale, 'plan.poll.isolated', { seedA, blockA, d, seedB, blockB });
   }
-  return `${seedA} (${blockA}) and ${seedB} (${blockB}) are only ${d} apart — schedule plantings ≥${c.staggerDays} d apart so their flowering windows don't overlap.`;
+  return t(locale, 'plan.poll.stagger', { seedA, blockA, seedB, blockB, d, days: c.staggerDays });
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { pageCropName } from '$lib/i18n/pageCropName';
   import { onMount, tick, untrack } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
@@ -14,10 +15,11 @@
   import { countOf, ft, longDate, parseYmd, shortDate, ymd } from '$lib/components/garden/format';
   import { loadSnapshot } from '$lib/client/cardStore';
   import { designFromSnapshot } from '$lib/garden/design';
-  import { AREA_KIND_LABELS } from '$lib/farm/areaKinds';
+  import { areaKindLabel } from '$lib/farm/areaKinds';
   import type { MessageKey } from '$lib/i18n';
   import { cardHref, cardKey } from '$lib/cards/model';
-  import { DEFAULT_PREFS, formatInstant } from '$lib/prefs';
+  import { formatInstant } from '$lib/prefs';
+  import { currentPrefs } from '$lib/prefsState.svelte';
   import { syncCardSnapshot } from '$lib/client/cardSync';
   import type { DesignerPageData } from '$lib/garden/api';
 
@@ -61,7 +63,7 @@
   const areaKindText = $derived(
     data.areaKind === 'garden' || data.areaKind === 'greenhouse'
       ? tr(`garden.kind.${data.areaKind}` as MessageKey)
-      : AREA_KIND_LABELS[data.areaKind]
+      : areaKindLabel(data.areaKind, d.locale)
   );
   const printDate = $derived(`${longDate(d.dateMs, tr)}, ${new Date(d.dateMs).getUTCFullYear()}`);
   const legend = $derived(
@@ -73,7 +75,7 @@
           const p = d.design.plantings.find((q) => q.cropId === o.cropId);
           const count = p?.plantCount ? `, ${countOf('plant', p.plantCount, tr)}` : '';
           return tr('garden.page.legendRow', {
-            name: `${p?.varietyDisplayName ?? tr('garden.page.planting')}${count}`,
+            name: `${p ? pageCropName(p.cropPluginId, p.varietyDisplayName) : tr('garden.page.planting')}${count}`,
             from: shortDate(o.startMs, tr),
             to: shortDate(o.harvestEndMs, tr)
           });
@@ -88,7 +90,7 @@
     url.searchParams.delete('on');
     return `${url.pathname}${url.search}`;
   }
-  const asOfText = $derived(formatInstant(d.design.asOf, DEFAULT_PREFS, 'datetime'));
+  const asOfText = $derived(formatInstant(d.design.asOf, currentPrefs(), 'datetime'));
 
   let ready = $state(false);
 

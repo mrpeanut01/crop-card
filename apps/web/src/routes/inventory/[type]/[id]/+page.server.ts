@@ -19,6 +19,7 @@
  * Returns a discriminated payload the page component dispatches on.
  */
 
+import { t } from '$lib/i18n';
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import {
@@ -164,7 +165,7 @@ function parseType(raw: string): InventoryType {
   return raw as InventoryType;
 }
 
-function feedSubjects(): FeedSubject[] {
+function feedSubjects(locale?: string | null): FeedSubject[] {
   const groups = listAnimalGroups().map((g) => ({
     type: 'group' as const,
     id: g.id,
@@ -175,7 +176,7 @@ function feedSubjects(): FeedSubject[] {
     .map((a) => ({
       type: 'animal' as const,
       id: a.id,
-      label: a.name ?? a.tag ?? 'Unnamed animal'
+      label: a.name ?? a.tag ?? t(locale, 'inv.feed.unnamedAnimal')
     }));
   return [...groups, ...animals].sort((a, b) => a.label.localeCompare(b.label));
 }
@@ -243,7 +244,7 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
   }
 
   if (type === 'animal-health') return animalHealthPayload(id, locals.user?.role);
-  if (type === 'amendment') return amendmentDetail(id, locals.user?.role);
+  if (type === 'amendment') return amendmentDetail(id, locals.user?.role, locals.locale);
 
   // Lot-bearing types: pesticide / fertility / seed / feed
   const item = getStockItem(id);
@@ -279,7 +280,7 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
       feed: feedMeta(item.metadataJson),
       onHand,
       onHandLb: onHandLb(item, onHand),
-      subjects: feedSubjects(),
+      subjects: feedSubjects(locals.locale),
       canUse: !!role && canMutate(role),
       canEdit: role === 'owner'
     };

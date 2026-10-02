@@ -76,11 +76,16 @@ export const POST: RequestHandler = async (event) => {
 
   const cacheKey = plantingWindowCacheKey(currentOwnerId() ?? user.id, input);
   const cached = getCachedWindow(cacheKey);
-  const frostView = { ...frost, farm: farmFrost, cover: bed ? bedCover(bed) : null };
+  const frostView = {
+    ...frost,
+    farm: farmFrost,
+    cover: bed ? bedCover(bed, event.locals?.locale) : null
+  };
   if (cached) return json({ window: cached, frost: frostView, provenance: 'ai', cached: true });
 
   const tried = await tryAiWithGuard({
     endpoint: 'planting-window',
+    locale: event.locals?.locale,
     userId: user.id,
     timeoutMs: 15_000,
     prompt: (signal) => suggestPlantingWindow(input, signal)
@@ -89,7 +94,7 @@ export const POST: RequestHandler = async (event) => {
   if (tried.provenance === 'fallback') {
     recordFallback(user.id, 'planting-window', tried.fallbackReason);
     return json({
-      window: baseline,
+      window: deterministicPlantingWindow(cropFacts, frost, event.locals.locale),
       frost: frostView,
       provenance: 'fallback',
       fallbackReason: tried.fallbackReason,
@@ -113,9 +118,9 @@ export const POST: RequestHandler = async (event) => {
   return json({ window, frost: frostView, provenance: 'ai' });
 };
 
-function bedCover(e: EffectiveFrost) {
+function bedCover(e: EffectiveFrost, locale?: string | null) {
   return {
-    summary: effectiveFrostSummary(e),
+    summary: effectiveFrostSummary(e, locale),
     springShiftDays: e.springShiftDays,
     fallShiftDays: e.fallShiftDays,
     springBy: e.springBy,

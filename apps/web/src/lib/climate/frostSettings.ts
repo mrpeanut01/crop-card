@@ -20,6 +20,7 @@ import {
   type FrostSuggestion,
   type FrostValueProvenance
 } from './frostSuggest';
+import { t, type TranslateKey } from '$lib/i18n';
 
 export type StoredFrostDates = Record<FrostField, string | null>;
 
@@ -96,7 +97,8 @@ export function storedFrostView(
 export function suggestFromStored(
   view: Record<FrostField, FrostSuggestedValue>,
   override: FrostOverride,
-  source: string | null
+  source: string | null,
+  locale?: string | null
 ): FrostSuggestion {
   const values = {} as Record<FrostField, FrostSuggestedValue>;
   const issues: FrostOverrideIssue[] = [];
@@ -115,7 +117,7 @@ export function suggestFromStored(
     const typed = normalizeFrost(input);
     if (!typed) {
       values[f] = { ...current, invalid: true };
-      issues.push({ field: f, input, message: `"${input}" isn't a date. Use MM-DD or M/D.` });
+      issues.push({ field: f, input, message: t(locale, 'climate.frost.notDate', { input }) });
     } else {
       values[f] = typed === current.value ? current : { value: typed, provenance: 'manual' };
     }
@@ -162,6 +164,24 @@ export const FROST_CONFIRM_COPY: Record<FrostConfirmReason, string> = {
     'The planting calendar needs a spring and a fall frost date. Type them in, or keep the Loudoun County averages for now.'
 };
 
+const FROST_CONFIRM_KEY: Record<FrostConfirmReason, TranslateKey> = {
+  fallback: 'climate.frost.confirm.fallback',
+  'frost-free': 'climate.frost.confirm.frostFree',
+  missing: 'climate.frost.confirm.missing'
+};
+
+export function frostConfirmText(reason: FrostConfirmReason, locale?: string | null): string {
+  return t(locale, FROST_CONFIRM_KEY[reason]);
+}
+
+export function frostStoredFallbackText(locale?: string | null): string {
+  return t(locale, 'climate.frost.storedFallback');
+}
+
+export function frostCrossesYearText(locale?: string | null): string {
+  return t(locale, 'climate.frost.crossesYear');
+}
+
 /** Shown, never blocking, when the station's frost season spans the new year. */
 export const FROST_CROSSES_YEAR_COPY =
   'Here frost only comes for a few weeks around the new year, so your growing season runs from one year into the next. The planting calendar handles that for you.';
@@ -178,12 +198,16 @@ export type FrostSaveResult =
 
 export function planFrostSave(
   s: FrostSuggestion,
-  opts: { confirmed: boolean; probability: FrostProbability | null }
+  opts: { confirmed: boolean; probability: FrostProbability | null; locale?: string | null }
 ): FrostSaveResult {
   if (s.issues.length > 0) return { ok: false, error: s.issues.map((i) => i.message).join(' ') };
   const reason = frostConfirmReason(s);
   if (reason && !opts.confirmed) {
-    return { ok: false, error: FROST_CONFIRM_COPY[reason], reason };
+    return {
+      ok: false,
+      error: opts.locale ? frostConfirmText(reason, opts.locale) : FROST_CONFIRM_COPY[reason],
+      reason
+    };
   }
   const values = { ...s.values };
   if (values.lastFrost.value === null) {
@@ -232,14 +256,17 @@ export function readFrostOverride(get: (name: string) => unknown): FrostOverride
 export function hardFrostText(
   lastHard: string | null,
   firstHard: string | null,
-  pretty: (mmdd: string) => string
+  pretty: (mmdd: string) => string,
+  locale?: string | null
 ): string {
-  const lead = 'Hard frost (24 °F or colder):';
-  if (!lastHard && !firstHard) return `${lead} none on record.`;
+  const lead = t(locale, 'climate.frost.hardLead');
+  const line = (key: TranslateKey, params: Record<string, string> = {}) =>
+    `${lead} ${t(locale, key, params)}`;
+  if (!lastHard && !firstHard) return line('climate.frost.hardNone');
   if (lastHard && firstHard && firstHard.replace('-', '') < lastHard.replace('-', '')) {
-    return `${lead} usually only between about ${pretty(firstHard)} and ${pretty(lastHard)}.`;
+    return line('climate.frost.hardBetween', { first: pretty(firstHard), last: pretty(lastHard) });
   }
-  if (!firstHard) return `${lead} last around ${pretty(lastHard!)}. No first date on record.`;
-  if (!lastHard) return `${lead} first around ${pretty(firstHard)}. No last date on record.`;
-  return `${lead} last around ${pretty(lastHard)}, first around ${pretty(firstHard)}.`;
+  if (!firstHard) return line('climate.frost.hardLastOnly', { last: pretty(lastHard!) });
+  if (!lastHard) return line('climate.frost.hardFirstOnly', { first: pretty(firstHard) });
+  return line('climate.frost.hardBoth', { last: pretty(lastHard), first: pretty(firstHard) });
 }

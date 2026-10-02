@@ -6,6 +6,7 @@
 import type { BedRecipePlugin, BedRecipeStep } from '$lib/plugins/schemas';
 import { successionIntervalDays } from '$lib/schedule/succession';
 import { fitFootprint, footprintsOverlap } from './geometry';
+import { t } from '$lib/i18n';
 import { plantingOccupancy, shortDate } from './occupancy';
 import { footprintForCount, plantCount, resolveSpacing } from './plantCount';
 import type {
@@ -27,6 +28,8 @@ export interface RecipeContext {
   /** Existing intervals on this bed; recipe steps never overlap them. */
   intervals: readonly OccupancyInterval[];
   seasonYear: number;
+  /** Language for skipped reasons and warnings; English when unset. */
+  locale?: string | null;
 }
 
 export type RecipeFit = { fits: true } | { fits: false; reason: string };
@@ -41,19 +44,23 @@ export function frostFreeDays(lastSpringFrostMs: number, firstFallFrostMs: numbe
 
 /** Frost-free days (first fall minus last spring frost) inside the recipe's
  *  `frostFreeDays` range. Zone labels are never checked. */
-export function recipeFits(recipe: BedRecipePlugin, frostFreeDays: number): RecipeFit {
+export function recipeFits(
+  recipe: BedRecipePlugin,
+  frostFreeDays: number,
+  locale?: string | null
+): RecipeFit {
   const range = recipe.frostFreeDays;
   if (!range) return { fits: true };
   if (frostFreeDays < range.min) {
     return {
       fits: false,
-      reason: `Needs about ${range.min} frost-free days. Your season has ${frostFreeDays}.`
+      reason: t(locale, 'gardenlib.recipe.needsDays', { min: range.min, days: frostFreeDays })
     };
   }
   if (range.max !== undefined && frostFreeDays > range.max) {
     return {
       fits: false,
-      reason: `Made for seasons up to ${range.max} frost-free days. Yours has ${frostFreeDays}.`
+      reason: t(locale, 'gardenlib.recipe.upToDays', { max: range.max, days: frostFreeDays })
     };
   }
   return { fits: true };
@@ -134,7 +141,8 @@ interface Placed {
  *  slices along the bed's length, one per sowing. Proposals carry `plugin`
  *  provenance; steps that cannot be placed land in `skipped`. */
 export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): RecipeApplication {
-  const { bed } = ctx;
+  const { bed, locale } = ctx;
+  const date = (ms: number) => shortDate(ms, locale);
   const skipped: RecipeApplication['skipped'] = [];
   const warnings: string[] = [];
   const placed: Placed[] = [];
@@ -142,7 +150,10 @@ export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): Recipe
 
   if (recipe.bedSize.widthFt !== bed.widthFt || recipe.bedSize.lengthFt !== bed.lengthFt) {
     warnings.push(
-      `Written for a ${formatFt(recipe.bedSize.widthFt)}×${formatFt(recipe.bedSize.lengthFt)} ft bed and scaled to this ${formatFt(bed.widthFt)}×${formatFt(bed.lengthFt)} ft bed.`
+      t(locale, 'gardenlib.recipe.scaled', {
+        from: `${formatFt(recipe.bedSize.widthFt)}×${formatFt(recipe.bedSize.lengthFt)}`,
+        to: `${formatFt(bed.widthFt)}×${formatFt(bed.lengthFt)}`
+      })
     );
   }
 
@@ -151,12 +162,17 @@ export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): Recipe
     if (!crop) {
       skipped.push({
         stepIndex,
-        reason: `${step.cropPluginId} isn't in your crop library, and neither are its alternates.`
+        reason: t(locale, 'gardenlib.recipe.notInLibrary', { crop: step.cropPluginId })
       });
       return;
     }
     if (crop.pluginId !== step.cropPluginId) {
-      warnings.push(`Used ${crop.displayName} in place of ${step.cropPluginId}.`);
+      warnings.push(
+        t(locale, 'gardenlib.recipe.usedInstead', {
+          crop: crop.displayName,
+          original: step.cropPluginId
+        })
+      );
     }
 
     let baseMs: number;
@@ -166,7 +182,9 @@ export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): Recipe
       if (!prior) {
         skipped.push({
           stepIndex,
-          reason: `Follows step ${(step.start.afterStep ?? 0) + 1}, which could not be placed.`
+          reason: t(locale, 'gardenlib.recipe.followsStep', {
+            n: (step.start.afterStep ?? 0) + 1
+          })
         });
         return;
       }
@@ -184,7 +202,7 @@ export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): Recipe
     if (step.successions) {
       intervalDays = step.successions.intervalDays ?? successionIntervalDays(crop.cropFamily);
       if (intervalDays <= 0) {
-        warnings.push(`${crop.displayName} doesn't usually succession-sow, so it is planted once.`);
+        warnings.push(t(locale, 'gardenlib.recipe.plantOnce', { crop: crop.displayName }));
       }
     }
     const count = intervalDays > 0 ? sowings : 1;
@@ -211,11 +229,18 @@ export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): Recipe
         { firstFallFrostMs: ctx.firstFallFrostMs, lastSpringFrostMs: ctx.lastSpringFrostMs }
       );
       if (!interval) continue;
-      const label = k === 0 ? '' : ` (sowing ${k + 1})`;
+      const cropName =
+        k === 0
+          ? crop.displayName
+          : t(locale, 'gardenlib.recipe.cropSowing', { crop: crop.displayName, n: k + 1 });
       if (interval.harvestStartMs > ctx.firstFallFrostMs) {
         skipped.push({
           stepIndex,
-          reason: `${crop.displayName}${label} sown ${shortDate(plantingDateMs)} would not be ready before the first fall frost on ${shortDate(ctx.firstFallFrostMs)}.`
+          reason: t(locale, 'gardenlib.recipe.notReady', {
+            crop: cropName,
+            date: date(plantingDateMs),
+            frost: date(ctx.firstFallFrostMs)
+          })
         });
         continue;
       }
@@ -228,7 +253,11 @@ export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): Recipe
       if (clash) {
         skipped.push({
           stepIndex,
-          reason: `No room for ${crop.displayName}${label} on ${shortDate(plantingDateMs)}. That part of the bed opens ${shortDate(clash.endMs)}.`
+          reason: t(locale, 'gardenlib.recipe.noRoom', {
+            crop: cropName,
+            date: date(plantingDateMs),
+            opens: date(clash.endMs)
+          })
         });
         continue;
       }
@@ -238,7 +267,11 @@ export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): Recipe
           spacesOverlap(other.proposal.footprint, footprint)
         ) {
           warnings.push(
-            `${crop.displayName} shares space with ${other.name} until ${shortDate(Math.min(other.interval.endMs, interval.endMs))}.`
+            t(locale, 'gardenlib.recipe.shares', {
+              crop: crop.displayName,
+              other: other.name,
+              date: date(Math.min(other.interval.endMs, interval.endMs))
+            })
           );
         }
       }

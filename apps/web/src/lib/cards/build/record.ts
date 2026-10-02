@@ -17,17 +17,18 @@ import {
 import type { SnapshotSprayProduct } from '../snapshot';
 import { SPRAY_RECHECK_NOTICE, SPRAY_REFERENCE_NOTICE, beforeYouSpray } from './spray';
 import { trimNumber } from './common';
+import { t } from '$lib/i18n';
 
 export const RECORD_COPY_NOTICE = 'Read-only copy of a saved record. The record is the legal copy.';
 export const OPEN_RECORD_LABEL = 'Open full record';
 
 export type SprayRecordKind = 'spray' | 'insecticide' | 'fungicide';
 
-const SPRAY_KIND_LABEL: Record<SprayRecordKind, string> = {
-  spray: 'Spray record',
-  insecticide: 'Insecticide record',
-  fungicide: 'Fungicide record'
-};
+const SPRAY_KIND_LABEL = {
+  spray: 'cards.record.kind.spray',
+  insecticide: 'cards.record.kind.insecticide',
+  fungicide: 'cards.record.kind.fungicide'
+} as const satisfies Record<SprayRecordKind, string>;
 
 export interface SprayRecordProduct {
   pluginId: string;
@@ -65,12 +66,18 @@ export interface RecordCardOptions {
   now: number;
 }
 
-function openRecordLink(recordKind: string, rowId: string) {
-  return { label: OPEN_RECORD_LABEL, href: recordHref(recordKind, rowId) };
+function openRecordLink(recordKind: string, rowId: string, locale?: string | null) {
+  return { label: t(locale, 'cards.record.open'), href: recordHref(recordKind, rowId) };
 }
 
-function lockStatus(locked: boolean): CardModel['status'] {
-  return locked ? { label: 'Locked', tone: 'neutral' } : { label: 'Editable', tone: 'wheat' };
+function lockStatus(locked: boolean, locale?: string | null): CardModel['status'] {
+  return locked
+    ? { label: t(locale, 'cards.record.locked'), tone: 'neutral' }
+    : { label: t(locale, 'cards.record.editable'), tone: 'wheat' };
+}
+
+function copyNotice(locale?: string | null): string {
+  return t(locale, 'cards.record.copyNotice');
 }
 
 function labelLine(p: SprayRecordProduct): string {
@@ -89,16 +96,22 @@ export function buildSprayRecordCard(
   opts: RecordCardOptions
 ): CardModel {
   const { prefs } = opts;
+  const loc = prefs.locale;
   const facts: CardFact[] = [
     {
-      label: 'Sprayed',
+      label: t(loc, 'cards.record.sprayed'),
       value: formatInstant(input.occurredAt, prefs, 'datetime'),
       provenance: 'data'
     }
   ];
-  if (input.blockLabel) facts.push({ label: 'Block', value: input.blockLabel, provenance: 'data' });
+  if (input.blockLabel)
+    facts.push({ label: t(loc, 'cards.record.block'), value: input.blockLabel, provenance: 'data' });
   if (input.sprayerLabel) {
-    facts.push({ label: 'Sprayer', value: input.sprayerLabel, provenance: 'data' });
+    facts.push({
+      label: t(loc, 'cards.record.sprayer'),
+      value: input.sprayerLabel,
+      provenance: 'data'
+    });
   }
   for (const p of input.products) {
     const rate = p.rate
@@ -115,7 +128,7 @@ export function buildSprayRecordCard(
   }
   if (input.conditions) {
     facts.push({
-      label: 'Wind · temp',
+      label: t(loc, 'cards.record.windTemp'),
       value: `${formatQuantity(input.conditions.windMph, 'speed', prefs)} · ${formatQuantity(
         input.conditions.tempF,
         'temperature',
@@ -144,7 +157,11 @@ export function buildSprayRecordCard(
     });
   }
   if (input.performerLabel) {
-    facts.push({ label: 'Recorded by', value: input.performerLabel, provenance: 'data' });
+    facts.push({
+      label: t(loc, 'cards.record.recordedBy'),
+      value: input.performerLabel,
+      provenance: 'data'
+    });
   }
 
   const sections: CardSection[] = [];
@@ -152,12 +169,13 @@ export function buildSprayRecordCard(
   const safety = [...new Set(labels.flatMap((l) => beforeYouSpray(l)))];
   if (safety.length) sections.push({ title: 'Before you spray again', items: safety, safety: true });
   sections.push({ title: 'Label facts', items: input.products.map(labelLine) });
-  if (input.observation) sections.push({ title: 'Scouting', items: [input.observation] });
+  if (input.observation)
+    sections.push({ title: t(loc, 'cards.record.scouting'), items: [input.observation] });
   const mix = labels.flatMap((l) => l.mixSteps);
   if (mix.length) sections.push({ title: 'Mix order', items: mix });
 
   const provenance: CardProvenance[] = [
-    { source: 'data', detail: 'your record' },
+    { source: 'data', detail: t(loc, 'cards.record.provRecord') },
     ...labels.map((l) => ({ source: 'plugin' as const, detail: `${l.pluginId} · v${l.version}` }))
   ];
   if (input.conditions?.provenance === 'default') {
@@ -168,17 +186,19 @@ export function buildSprayRecordCard(
   return {
     kind: 'spray',
     key,
-    kicker: [SPRAY_KIND_LABEL[input.recordKind], input.blockLabel].filter(Boolean).join(' · '),
+    kicker: [t(loc, SPRAY_KIND_LABEL[input.recordKind]), input.blockLabel]
+      .filter(Boolean)
+      .join(' · '),
     title: input.products.map((p) => p.displayName).join(', ') || 'Spray',
-    status: lockStatus(input.locked),
+    status: lockStatus(input.locked, loc),
     facts,
     sections,
     asOf: opts.now,
     rulesVersion: input.rulesVersion,
     provenance: mergeProvenance(provenance),
     href: recordHref(input.recordKind, input.rowId),
-    notices: [SPRAY_REFERENCE_NOTICE, SPRAY_RECHECK_NOTICE, RECORD_COPY_NOTICE],
-    links: [openRecordLink(input.recordKind, input.rowId)]
+    notices: [SPRAY_REFERENCE_NOTICE, SPRAY_RECHECK_NOTICE, copyNotice(loc)],
+    links: [openRecordLink(input.recordKind, input.rowId, loc)]
   };
 }
 
@@ -204,48 +224,59 @@ export function buildScoutRecordCard(
   input: ScoutRecordCardInput,
   opts: RecordCardOptions
 ): CardModel {
+  const loc = opts.prefs.locale;
   const facts: CardFact[] = [
     {
-      label: 'Seen',
+      label: t(loc, 'cards.record.seen'),
       value: formatInstant(input.occurredAt, opts.prefs, 'datetime'),
       provenance: 'data'
     },
     { label: metricLabel(input.metric), value: trimNumber(input.value, 2), provenance: 'manual' }
   ];
-  if (input.blockLabel) facts.push({ label: 'Block', value: input.blockLabel, provenance: 'data' });
+  if (input.blockLabel)
+    facts.push({ label: t(loc, 'cards.record.block'), value: input.blockLabel, provenance: 'data' });
   if (input.plantingLabel) {
-    facts.push({ label: 'Crop', value: input.plantingLabel, provenance: 'data' });
+    facts.push({ label: t(loc, 'cards.record.crop'), value: input.plantingLabel, provenance: 'data' });
   }
   if (input.performerLabel) {
-    facts.push({ label: 'Scouted by', value: input.performerLabel, provenance: 'data' });
+    facts.push({
+      label: t(loc, 'cards.record.scoutedBy'),
+      value: input.performerLabel,
+      provenance: 'data'
+    });
   }
   const sections: CardSection[] = input.notes?.trim()
-    ? [{ title: 'Notes', items: [input.notes.trim()] }]
+    ? [{ title: t(loc, 'cards.notes'), items: [input.notes.trim()] }]
     : [];
   const key = recordCardKey('scout', input.rowId);
   return {
     kind: 'scout',
     key,
-    kicker: ['Scout', input.blockLabel].filter(Boolean).join(' · '),
-    title: input.pest.trim() || 'Scout note',
-    status: lockStatus(input.locked),
+    kicker: [t(loc, 'cards.record.scout'), input.blockLabel].filter(Boolean).join(' · '),
+    title: input.pest.trim() || t(loc, 'cards.record.scoutNote'),
+    status: lockStatus(input.locked, loc),
     facts,
     sections,
     asOf: opts.now,
     provenance: [
-      { source: 'manual', detail: 'your observation' },
-      { source: 'data', detail: 'your record' }
+      { source: 'manual', detail: t(loc, 'cards.record.provObservation') },
+      { source: 'data', detail: t(loc, 'cards.record.provRecord') }
     ],
     href: recordHref('scout', input.rowId),
-    notices: [RECORD_COPY_NOTICE],
-    links: [openRecordLink('scout', input.rowId)]
+    notices: [copyNotice(loc)],
+    links: [openRecordLink('scout', input.rowId, loc)]
   };
 }
 
 /** A live Planting or Equipment card shown under a record row: read-only,
  *  with a way back to the record it came from. */
-export function frameLiveCard(card: CardModel, recordKind: string, rowId: string): CardModel {
-  const link = openRecordLink(recordKind, rowId);
+export function frameLiveCard(
+  card: CardModel,
+  recordKind: string,
+  rowId: string,
+  locale?: string | null
+): CardModel {
+  const link = openRecordLink(recordKind, rowId, locale);
   return {
     ...card,
     links: [...(card.links ?? []).filter((l) => l.href !== link.href), link]
@@ -273,9 +304,10 @@ export function buildIrrigationRecordCard(
   input: IrrigationRecordCardInput,
   opts: RecordCardOptions
 ): CardModel {
+  const loc = opts.prefs.locale;
   const facts: CardFact[] = [
     {
-      label: 'Watered',
+      label: t(loc, 'cards.water.watered'),
       value: formatInstant(input.occurredAt, opts.prefs, 'datetime'),
       provenance: 'manual'
     }
@@ -286,29 +318,41 @@ export function buildIrrigationRecordCard(
       : input.gallons !== null
         ? `${trimNumber(input.gallons, 1)} gal`
         : input.durationMin !== null
-          ? `${input.durationMin} min, amount not logged`
-          : 'Not logged';
-  facts.push({ label: 'Amount', value: amount, provenance: 'manual' });
-  if (input.areaLabel) facts.push({ label: 'Area', value: input.areaLabel, provenance: 'data' });
-  facts.push({ label: 'Where', value: input.bedLabel ?? 'Whole Area', provenance: 'data' });
-  if (input.method) facts.push({ label: 'How', value: input.method, provenance: 'manual' });
+          ? t(loc, 'cards.water.minutesOnly', { min: input.durationMin })
+          : t(loc, 'cards.water.notLogged');
+  facts.push({ label: t(loc, 'cards.water.amount'), value: amount, provenance: 'manual' });
+  if (input.areaLabel)
+    facts.push({ label: t(loc, 'cards.water.area'), value: input.areaLabel, provenance: 'data' });
+  facts.push({
+    label: t(loc, 'cards.task.where'),
+    value: input.bedLabel ?? t(loc, 'cards.water.wholeArea'),
+    provenance: 'data'
+  });
+  if (input.method)
+    facts.push({ label: t(loc, 'cards.water.how'), value: input.method, provenance: 'manual' });
   if (input.performerLabel) {
-    facts.push({ label: 'Logged by', value: input.performerLabel, provenance: 'data' });
+    facts.push({
+      label: t(loc, 'cards.water.loggedBy'),
+      value: input.performerLabel,
+      provenance: 'data'
+    });
   }
   const sections: CardSection[] = input.notes?.trim()
-    ? [{ title: 'Notes', items: [input.notes.trim()] }]
+    ? [{ title: t(loc, 'cards.notes'), items: [input.notes.trim()] }]
     : [];
   return {
     kind: 'irrigation',
     key: recordCardKey('irrigation', input.rowId),
-    kicker: ['Watering', input.areaLabel].filter(Boolean).join(' · '),
-    title: input.bedLabel ? `Watered ${input.bedLabel}` : 'Watered',
+    kicker: [t(loc, 'cards.area.watering'), input.areaLabel].filter(Boolean).join(' · '),
+    title: input.bedLabel
+      ? t(loc, 'cards.water.wateredBed', { bed: input.bedLabel })
+      : t(loc, 'cards.water.watered'),
     facts,
     sections,
     asOf: opts.now,
-    provenance: [{ source: 'manual', detail: 'your watering log' }],
+    provenance: [{ source: 'manual', detail: t(loc, 'cards.water.provLog') }],
     href: recordHref('irrigation', input.rowId),
-    notices: [IRRIGATION_RECORD_NOTICE],
-    links: [openRecordLink('irrigation', input.rowId)]
+    notices: [t(loc, 'cards.water.notice')],
+    links: [openRecordLink('irrigation', input.rowId, loc)]
   };
 }

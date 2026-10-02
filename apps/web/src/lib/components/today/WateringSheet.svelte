@@ -7,6 +7,7 @@
   import { gaugeCountsFrom } from '$lib/weather/waterBalance';
   import { inchesText } from '$lib/weather/waterCopy';
   import { dateTimeFormat } from '$lib/intlCache';
+  import { intlLocale } from '$lib/prefs';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { AdviceSheet } from '$lib/today/advice';
 
@@ -59,9 +60,11 @@
   }
 
   function whenText(ms: number): string {
-    return dateTimeFormat('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(
-      new Date(ms)
-    );
+    return dateTimeFormat(intlLocale(page.data?.locale), {
+      weekday: 'short',
+      hour: 'numeric',
+      minute: '2-digit'
+    }).format(new Date(ms));
   }
 
   let summary = $state<Summary | null>(null);

@@ -7,6 +7,7 @@
   import type { SeedStockEntry } from '../types';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { pageCropName } from '$lib/i18n/pageCropName';
 
   const w = getWizardContext();
   const tr = $derived(createT(page.data?.locale));
@@ -37,7 +38,8 @@
   function availableText(s: SeedStockEntry): string {
     return availableQuantityText(
       { existing: s.onHand, ordered: s.onOrder ?? 0, planned: s.planned ?? 0 },
-      s.defaultUnit
+      s.defaultUnit,
+      page.data?.locale
     );
   }
 
@@ -47,6 +49,7 @@
       ? w.eligibleStock.filter(
           (s) =>
             s.displayName.toLowerCase().includes(q) ||
+            pageCropName(s.cropPluginId, s.displayName).toLowerCase().includes(q) ||
             (s.cropFamily ?? '').toLowerCase().includes(q)
         )
       : w.eligibleStock;
@@ -173,7 +176,9 @@
                         onclick={() => w.seedLink.assignPluginToStock(s.stockItemId, r.pluginId)}
                         disabled={!!w.seedLink.linkAssigningId}
                       >
-                        <span class="link-result-name">{r.displayName}</span>
+                        <span class="link-result-name"
+                          >{pageCropName(r.pluginId, r.displayName)}</span
+                        >
                         <span class="muted link-result-score"
                           >{tr('wizard.seeds.match', { pct: Math.round(r.score * 100) })}</span
                         >
@@ -347,7 +352,9 @@
               </td>
               <td title={s.displayName}>
                 <label class="seed-name-cell" for={`aw-seed-${s.stockItemId}`}>
-                  <span class="seed-name-primary">{s.shortName ?? s.displayName}</span>
+                  <span class="seed-name-primary"
+                    >{pageCropName(s.cropPluginId, s.shortName ?? s.displayName)}</span
+                  >
                   {#if s.shortName && s.shortName !== s.displayName}
                     <span class="seed-name-sub">{s.displayName}</span>
                   {/if}

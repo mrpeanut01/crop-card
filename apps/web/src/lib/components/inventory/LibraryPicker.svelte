@@ -8,6 +8,7 @@
    */
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { cropDisplayName } from '$lib/i18n/cropName';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { searchLibrary, type LibraryOption } from '$lib/plugins/libraryMatch';
 
@@ -39,6 +40,7 @@
     onChange
   }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
+  const shown = (o: LibraryOption) => cropDisplayName(o.id, o.name, page.data?.locale);
   const placeholder = $derived(placeholderProp ?? tr('inv.picker.placeholder'));
   const noun = $derived(nounProp ?? tr('inv.picker.category'));
 
@@ -52,7 +54,16 @@
   let active = $state(0);
 
   const results = $derived.by(() => {
-    if (query.trim()) return searchLibrary(query, options, 8);
+    if (query.trim()) {
+      const hits = searchLibrary(query, options, 8);
+      if (page.data?.locale !== 'es') return hits;
+      const plain = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const local = options.map((o) => ({ ...o, name: plain(shown(o)) }));
+      const extra = searchLibrary(plain(query), local, 8)
+        .filter((l) => !hits.some((h) => h.id === l.id))
+        .map((l) => options.find((o) => o.id === l.id) ?? l);
+      return [...hits, ...extra].slice(0, 8);
+    }
     const seen = new Set<string>();
     const out: LibraryOption[] = [];
     for (const s of suggestions) {
@@ -117,7 +128,7 @@
 <div class="picker">
   {#if selected}
     <div class="current" data-testid="{id}-current">
-      <span class="current-name">{selected.name}</span>
+      <span class="current-name">{shown(selected)}</span>
       <Provenance
         {source}
         label={source === 'data'
@@ -175,7 +186,7 @@
             pick(opt);
           }}
         >
-          {opt.name}
+          {shown(opt)}
         </li>
       {/each}
     </ul>

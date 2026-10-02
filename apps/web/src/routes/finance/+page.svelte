@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
+  import { createT } from '$lib/i18n';
   import '$lib/components/finance/finance.css';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
@@ -16,6 +17,7 @@
   import { formatCalendarDate, ymdInZone } from '$lib/prefs';
 
   const { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   const profit = $derived(data.profit);
   const rate = $derived(profit.labourRateCentsPerHour);
@@ -41,7 +43,7 @@
     busy = null;
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      rowError = body.error ?? 'That did not save. Try again.';
+      rowError = body.error ?? tr('finance.errSave');
       return;
     }
     await invalidateAll();
@@ -58,7 +60,7 @@
     const text = rateText.trim();
     const cents = text === '' ? null : parseMoneyInput(text);
     if (text !== '' && cents === null) {
-      rateError = 'Type an amount like 15.00, or leave it empty.';
+      rateError = tr('finance.rate.errType');
       return;
     }
     const res = await fetch('/api/finance/labour-rate', {
@@ -67,7 +69,7 @@
       body: JSON.stringify({ centsPerHour: cents })
     });
     if (!res.ok) {
-      rateError = 'That rate did not save. Try again.';
+      rateError = tr('finance.rate.errSave');
       return;
     }
     rateSaved = true;
@@ -75,27 +77,29 @@
   }
 </script>
 
-<svelte:head><title>Money · CropCard</title></svelte:head>
+<svelte:head><title>{tr('finance.pageTitle')}</title></svelte:head>
 
 <div class="fin-page">
   <header class="fin-header">
     <div>
-      <Kicker>Money · owner only</Kicker>
-      <h1 class="serif">Money for {data.year}.</h1>
+      <Kicker>{tr('finance.kicker')}</Kicker>
+      <h1 class="serif">{tr('finance.h1', { year: data.year })}</h1>
       <p class="fin-lede">
-        What came in and went out, and what each crop and animal group cost you. Only you see this
-        page. Helpers never see money.
+        {tr('finance.lede')}
       </p>
     </div>
     {#if data.canWrite}
       <div class="fin-actions">
-        <a class="fin-primary" href="/finance/new{q({ kind: 'expense' })}">Add expense</a>
-        <a class="fin-ghost" href="/finance/new{q({ kind: 'income' })}">Add income</a>
+        <a class="fin-primary" href="/finance/new{q({ kind: 'expense' })}"
+          >{tr('finance.addExpense')}</a
+        >
+        <a class="fin-ghost" href="/finance/new{q({ kind: 'income' })}">{tr('finance.addIncome')}</a
+        >
       </div>
     {/if}
   </header>
 
-  <nav class="years" aria-label="Season">
+  <nav class="years" aria-label={tr('finance.seasonNav')}>
     {#each data.years as y (y)}
       <a
         class="fin-ghost"
@@ -107,41 +111,42 @@
   </nav>
 
   <section class="fin-panel" aria-labelledby="cash-title">
-    <h2 id="cash-title">Cash this season</h2>
+    <h2 id="cash-title">{tr('finance.cash.title')}</h2>
     <dl class="cash">
       <div>
-        <dt>Income</dt>
+        <dt>{tr('finance.cash.income')}</dt>
         <dd class="fin-money">{formatMoney(profit.cash.incomeCents)}</dd>
       </div>
       <div>
-        <dt>Expenses</dt>
+        <dt>{tr('finance.cash.expenses')}</dt>
         <dd class="fin-money">{formatMoney(profit.cash.expenseCents)}</dd>
       </div>
       <div>
-        <dt>Net cash</dt>
+        <dt>{tr('finance.cash.net')}</dt>
         <dd class="fin-money" data-testid="net-cash">{formatMoney(profit.cash.netCents)}</dd>
       </div>
     </dl>
     {#if profit.lotPurchaseCents > 0}
       <p class="fin-help">
-        {formatMoney(profit.lotPurchaseCents)} of the expenses bought stock. Those lots count toward each
-        crop or animal only as they are used, so nothing is counted twice.
+        {tr('finance.lotPurchase', { amount: formatMoney(profit.lotPurchaseCents) })}
       </p>
     {/if}
     <div class="fin-actions links">
-      <a class="fin-ghost" href="/finance/profit/{data.year}">Season profit card</a>
-      <a class="fin-ghost" href="/api/finance/export.csv{q()}" download>Download CSV</a>
+      <a class="fin-ghost" href="/finance/profit/{data.year}">{tr('finance.profitCard')}</a>
+      <a class="fin-ghost" href="/api/finance/export.csv{q()}" download
+        >{tr('finance.downloadCsv')}</a
+      >
     </div>
   </section>
 
   <section class="fin-panel" aria-labelledby="ent-title">
-    <h2 id="ent-title">By crop, animal and Area</h2>
+    <h2 id="ent-title">{tr('finance.ent.title')}</h2>
     <p class="fin-help">
-      Inputs used come from your stock records times what each lot cost
-      <Provenance source="data" compact />. Labour is an estimate from time logged on tasks.
+      {tr('finance.ent.help1')}
+      <Provenance source="data" compact />{tr('finance.ent.help2')}
     </p>
     {#if profit.enterprises.length === 0 && !hasUnallocated(profit)}
-      <p class="empty">Nothing recorded for {data.year} yet.</p>
+      <p class="empty">{tr('finance.ent.empty', { year: data.year })}</p>
     {:else}
       <ul class="enterprises">
         {#each profit.enterprises as e (e.key)}
@@ -149,23 +154,23 @@
             <h3>{e.label}</h3>
             <dl>
               <div>
-                <dt>Income</dt>
+                <dt>{tr('finance.ent.income')}</dt>
                 <dd class="fin-money">{formatMoney(e.incomeCents)}</dd>
               </div>
               <div>
-                <dt>Direct costs</dt>
+                <dt>{tr('finance.ent.direct')}</dt>
                 <dd class="fin-money">{formatMoney(e.directExpenseCents)}</dd>
               </div>
               <div>
-                <dt>Inputs used</dt>
+                <dt>{tr('finance.ent.inputs')}</dt>
                 <dd>
                   {inputCostText(e)}{#if e.includesAreaInputs}<span class="fin-help">
-                      Some sprays or feed were not tied to one planting.</span
+                      {tr('finance.ent.notTied')}</span
                     >{/if}
                 </dd>
               </div>
               <div>
-                <dt>Labour</dt>
+                <dt>{tr('finance.ent.labour')}</dt>
                 <dd>{labourText(e, rate)}</dd>
               </div>
               <div class="net">
@@ -174,7 +179,7 @@
               </div>
               {#if e.netAfterLabourCents !== null}
                 <div>
-                  <dt>Net after labour estimate</dt>
+                  <dt>{tr('finance.ent.netAfter')}</dt>
                   <dd class="fin-money">{formatMoney(e.netAfterLabourCents)}</dd>
                 </div>
               {/if}
@@ -186,16 +191,16 @@
             <h3>{NOT_TIED_LABEL}</h3>
             <dl>
               <div>
-                <dt>Income</dt>
+                <dt>{tr('finance.ent.income')}</dt>
                 <dd class="fin-money">{formatMoney(profit.unallocated.incomeCents)}</dd>
               </div>
               <div>
-                <dt>Direct costs</dt>
+                <dt>{tr('finance.ent.direct')}</dt>
                 <dd class="fin-money">{formatMoney(profit.unallocated.directExpenseCents)}</dd>
               </div>
               {#if profit.unallocated.labourMinutes > 0}
                 <div>
-                  <dt>Time logged</dt>
+                  <dt>{tr('finance.ent.timeLogged')}</dt>
                   <dd>{formatMinutes(profit.unallocated.labourMinutes)}</dd>
                 </div>
               {/if}
@@ -208,40 +213,42 @@
 
   {#if data.canWrite}
     <section class="fin-panel" aria-labelledby="rate-title">
-      <h2 id="rate-title">Labour rate</h2>
+      <h2 id="rate-title">{tr('finance.rate.title')}</h2>
       <form class="rate" onsubmit={saveRate}>
         <label class="fin-label">
-          Dollars an hour, one rate for everyone
+          {tr('finance.rate.label')}
           <input
             class="fin-input"
             inputmode="decimal"
             autocomplete="off"
-            placeholder="Not set"
+            placeholder={tr('finance.rate.notSet')}
             bind:value={rateText}
           />
         </label>
-        <button class="fin-ghost" type="submit">Save rate</button>
+        <button class="fin-ghost" type="submit">{tr('finance.rate.save')}</button>
       </form>
       <p class="fin-help">
-        {data.labourRateCents === null
-          ? 'Labour rate not set. Hours still show; cost does not.'
-          : 'Labour cost is an estimate: time logged times this rate.'}
+        {data.labourRateCents === null ? tr('finance.rate.helpUnset') : tr('finance.rate.helpSet')}
       </p>
       {#if rateError}<p class="fin-error" role="alert">{rateError}</p>{/if}
-      {#if rateSaved}<p class="fin-help" role="status">Rate saved.</p>{/if}
+      {#if rateSaved}<p class="fin-help" role="status">{tr('finance.rate.saved')}</p>{/if}
     </section>
   {/if}
 
   <section class="fin-panel" aria-labelledby="entries-title">
-    <h2 id="entries-title">{data.showDeleted ? 'Deleted entries' : 'Entries'}</h2>
-    <div class="fin-segment" role="group" aria-label="Which entries">
-      <a class="fin-ghost" class:on={!data.showDeleted} href={q()}>Entries</a>
-      <a class="fin-ghost" class:on={data.showDeleted} href={q({ show: 'deleted' })}>Deleted</a>
+    <h2 id="entries-title">
+      {data.showDeleted ? tr('finance.deletedEntries') : tr('finance.entries')}
+    </h2>
+    <div class="fin-segment" role="group" aria-label={tr('finance.which')}>
+      <a class="fin-ghost" class:on={!data.showDeleted} href={q()}>{tr('finance.entries')}</a>
+      <a class="fin-ghost" class:on={data.showDeleted} href={q({ show: 'deleted' })}
+        >{tr('finance.deleted')}</a
+      >
     </div>
     {#if rowError}<p class="fin-error" role="alert">{rowError}</p>{/if}
     {#if data.entries.length === 0}
       <p class="empty">
-        {data.showDeleted ? 'No deleted entries.' : `No entries for ${data.year} yet.`}
+        {data.showDeleted ? tr('finance.noDeleted') : tr('finance.noEntries', { year: data.year })}
       </p>
     {:else}
       <ul class="entries">
@@ -268,15 +275,15 @@
                     class="fin-ghost"
                     type="button"
                     disabled={busy === e.id}
-                    onclick={() => act(e.id, 'restore')}>Restore</button
+                    onclick={() => act(e.id, 'restore')}>{tr('finance.restore')}</button
                   >
                 {:else}
-                  <a class="fin-ghost" href="/finance/entries/{e.id}">Edit</a>
+                  <a class="fin-ghost" href="/finance/entries/{e.id}">{tr('finance.edit')}</a>
                   <button
                     class="fin-danger"
                     type="button"
                     disabled={busy === e.id}
-                    onclick={() => act(e.id, 'delete')}>Delete</button
+                    onclick={() => act(e.id, 'delete')}>{tr('finance.delete')}</button
                   >
                 {/if}
               </div>

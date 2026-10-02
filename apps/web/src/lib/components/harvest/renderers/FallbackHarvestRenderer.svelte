@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import Provenance from '$lib/components/ui/Provenance.svelte';
 
   /**
@@ -15,6 +17,7 @@
   import type { RendererProps } from './types';
 
   const props: RendererProps = $props();
+  const tr = $derived(createT(page.data?.locale));
   // Don't destructure `props` — Svelte 5 needs a $derived to keep
   // reactive references current across loader re-runs.
   const harvestIndicators = $derived(props.harvestIndicators);
@@ -41,7 +44,7 @@
 <form class="harvest-form" onsubmit={submit}>
   {#if harvestIndicators.length > 0}
     <section class="indicators">
-      <h4>Look for…</h4>
+      <h4>{tr('harvestui.r.lookFor')}</h4>
       <ul>
         {#each harvestIndicators as ind, i (i)}
           <li>{ind}</li>
@@ -52,7 +55,7 @@
 
   <div class="row">
     <label for="fb-qty">
-      Quantity (optional)
+      {tr('harvestui.r.qtyOpt')}
       <Provenance source="manual" compact />
     </label>
     <input
@@ -60,13 +63,13 @@
       type="text"
       bind:value={quantity}
       disabled={busy}
-      placeholder="e.g., 12 lb"
+      placeholder={tr('harvestui.r.qtyPh')}
     />
   </div>
 
   <div class="row">
     <label for="fb-lot">
-      Lot # (optional)
+      {tr('harvestui.r.lotOpt')}
       <Provenance source="manual" compact />
     </label>
     <input id="fb-lot" type="text" bind:value={lotNumber} disabled={busy} maxlength="80" />
@@ -77,9 +80,11 @@
   {/if}
 
   <div class="actions">
-    <button type="button" class="ghost" onclick={props.onCancel} disabled={busy}>Cancel</button>
+    <button type="button" class="ghost" onclick={props.onCancel} disabled={busy}
+      >{tr('harvestui.r.cancel')}</button
+    >
     <button type="submit" class="primary" disabled={busy}>
-      {busy ? 'Recording…' : 'Record harvest'}
+      {busy ? tr('harvestui.r.recording') : tr('harvestui.r.record')}
     </button>
   </div>
 </form>

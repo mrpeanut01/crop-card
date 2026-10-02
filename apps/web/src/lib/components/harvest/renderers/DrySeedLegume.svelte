@@ -1,5 +1,7 @@
 <script lang="ts">
   import { Sprout } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
@@ -7,6 +9,7 @@
   import { fmtQtyRange, usText } from './format';
 
   const props: RendererProps = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let dryPodLb = $state<number | null>(null);
   let cleanSeedLb = $state<number | null>(null);
@@ -40,19 +43,18 @@
   <header class="archetype-head">
     <Sprout size={18} strokeWidth={1.75} />
     <div>
-      <span class="archetype-name">Dry-seed legume harvest</span>
+      <span class="archetype-name">{tr('harvestui.r.legume.name')}</span>
       <span class="archetype-sub">
-        Threshing pass at full senescence. Test seed moisture (target 13-15%) before storage — wet
-        beans heat + rot.
+        {tr('harvestui.r.legume.sub')}
       </span>
     </div>
   </header>
 
   <div class="bean-block">
-    <span class="block-title">Threshing + storage</span>
+    <span class="block-title">{tr('harvestui.r.legume.block')}</span>
     <div class="bean-grid">
       <label class="qfield">
-        <span>Dry pod weight ({fmt.unit('weight')})</span>
+        <span>{tr('harvestui.r.legume.pod', { unit: fmt.unit('weight') })}</span>
         <UnitInput
           quantity="weight"
           suffix={false}
@@ -61,7 +63,7 @@
         />
       </label>
       <label class="qfield">
-        <span>Clean seed weight ({fmt.unit('weight')})</span>
+        <span>{tr('harvestui.r.legume.seed', { unit: fmt.unit('weight') })}</span>
         <UnitInput
           quantity="weight"
           suffix={false}
@@ -70,7 +72,7 @@
         />
       </label>
       <label class="qfield wide">
-        <span>Storage moisture (%)</span>
+        <span>{tr('harvestui.r.legume.moisture')}</span>
         <input
           type="text"
           inputmode="decimal"

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createT } from '$lib/i18n';
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
   import { onMount, tick } from 'svelte';
@@ -11,11 +12,13 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import LockPill from '$lib/components/ui/LockPill.svelte';
   import { lateLabel } from '$lib/records/lateLabel';
-  import { KIND_LABEL, KIND_TONE, RECORD_KINDS, type RecordKind } from '$lib/db/recordKinds';
+  import { KIND_TONE, RECORD_KINDS, type RecordKind } from '$lib/db/recordKinds';
+  import { kindLabel } from '$lib/components/records/kindLabel';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { localStamp } from '$lib/exports/localTime';
 
   let { data } = $props();
+  const tr = $derived(createT(data.locale));
 
   let pendingCount = $state<number | null>(null);
   let openCards = $state<string[]>([]);
@@ -88,8 +91,8 @@
   }): string {
     if (w.inches !== null) return `${w.inches} in`;
     if (w.gallons !== null) return `${w.gallons} gal`;
-    if (w.durationMin !== null) return `${w.durationMin} min, amount not logged`;
-    return 'Amount not logged';
+    if (w.durationMin !== null) return tr('records.watering.minNoAmount', { n: w.durationMin });
+    return tr('records.watering.noAmount');
   }
 
   const loadMoreHref = $derived.by(() => {
@@ -177,13 +180,13 @@
 
   // UC-46 — Year in review.
   const yearSummary = $derived(data.yearSummary);
-  const PHILOSOPHY_LABELS: Record<string, string> = {
-    conventional: 'Conventional',
-    'no-till': 'No-till',
-    'non-gmo': 'Non-GMO',
-    'organic-transitioning': 'Organic (transitioning)',
-    'certified-organic': 'Certified organic'
-  };
+  const PHILOSOPHY_LABELS = $derived<Record<string, string>>({
+    conventional: tr('records.philosophy.conventional'),
+    'no-till': tr('records.philosophy.noTill'),
+    'non-gmo': tr('records.philosophy.nonGmo'),
+    'organic-transitioning': tr('records.philosophy.organicTransitioning'),
+    'certified-organic': tr('records.philosophy.certifiedOrganic')
+  });
 
   function changeYear(value: string) {
     const params = new URLSearchParams(exportQuery.replace(/^\?/, ''));
@@ -204,12 +207,12 @@
   }
 </script>
 
-<svelte:head><title>Records · CropCard</title></svelte:head>
+<svelte:head><title>{tr('records.pageTitle')}</title></svelte:head>
 
 <div class="records-page" class:no-print={printJob !== null}>
   <header class="page-header">
-    <Kicker>Records & audit trail</Kicker>
-    <h1 class="serif">Records.</h1>
+    <Kicker>{tr('records.kicker')}</Kicker>
+    <h1 class="serif">{tr('records.h1')}</h1>
     <p class="lede">
       <strong>{summary.total} records</strong> · {summary.locked} locked · {summary.ytd} this year. Retained
       through <span class="mono">{fmtDate(summary.retentionUntilMs)}</span>.
@@ -239,7 +242,7 @@
         class:has-pending={pendingCount && pendingCount > 0}
         href="/records/pending"
       >
-        Pending sync queue
+        {tr('records.pendingQueue')}
         {#if pendingCount && pendingCount > 0}
           <span class="pending-badge">{pendingCount}</span>
         {/if}
@@ -254,16 +257,17 @@
   <section class="year-review" aria-labelledby="year-review-heading">
     <div class="year-review-head">
       <div>
-        <Kicker>Year in review</Kicker>
-        <h2 id="year-review-heading" class="serif">{yearSummary.year} season summary.</h2>
+        <Kicker>{tr('records.year.kicker')}</Kicker>
+        <h2 id="year-review-heading" class="serif">
+          {tr('records.year.heading', { year: yearSummary.year })}
+        </h2>
         <p class="year-lede">
-          Deterministic roll-up of every recorded application, harvest, and input for the season.
-          Read-only.
+          {tr('records.year.lede')}
         </p>
       </div>
       <div class="year-actions">
         <label class="year-select">
-          <span class="visually-hidden">Season year</span>
+          <span class="visually-hidden">{tr('records.year.select')}</span>
           <Calendar size={13} />
           <select
             value={String(data.selectedYear)}
@@ -279,11 +283,12 @@
           href="/api/records/year-summary.pdf?year={yearSummary.year}"
           download
         >
-          <FileText size={13} /> Year summary PDF
+          <FileText size={13} />
+          {tr('records.year.pdf')}
         </a>
         {#if data.showMoneyLink}
           <a class="btn-ghost money-link" href="/finance?year={yearSummary.year}"
-            >Money for {yearSummary.year}</a
+            >{tr('records.year.money', { year: yearSummary.year })}</a
           >
         {/if}
       </div>
@@ -292,38 +297,38 @@
     <div class="kpi-grid">
       <div class="kpi">
         <span class="kpi-num mono">{yearSummary.totals.totalApplications}</span>
-        <span class="kpi-label">Applications</span>
+        <span class="kpi-label">{tr('records.kpi.applications')}</span>
       </div>
       <div class="kpi">
         <span class="kpi-num mono">{yearSummary.totals.harvestEvents}</span>
-        <span class="kpi-label">Harvest events</span>
+        <span class="kpi-label">{tr('records.kpi.harvestEvents')}</span>
       </div>
       <div class="kpi">
         <span class="kpi-num mono">{yearSummary.totals.blocksTreated}</span>
-        <span class="kpi-label">Blocks treated</span>
+        <span class="kpi-label">{tr('records.kpi.blocksTreated')}</span>
       </div>
       {#if yearSummary.inputCosts}
         <div class="kpi">
           <span class="kpi-num mono">{fmtCents(yearSummary.inputCosts.totalCents)}</span>
-          <span class="kpi-label">Input costs</span>
+          <span class="kpi-label">{tr('records.kpi.inputCosts')}</span>
         </div>
       {/if}
       <div class="kpi">
         <span class="kpi-num mono">{yearSummary.scoutFunnel.spraysAvoided}</span>
-        <span class="kpi-label">Sprays avoided</span>
+        <span class="kpi-label">{tr('records.kpi.spraysAvoided')}</span>
       </div>
     </div>
 
     <div class="review-cards">
       <article class="review-card">
-        <h3>Applications by product</h3>
+        <h3>{tr('records.card.byProduct')}</h3>
         {#if yearSummary.productAcreage.length}
           <table class="mini-table">
             <thead>
               <tr
-                ><th>Product</th><th>Class</th><th class="num">Apps</th><th class="num"
-                  >Area ({fmt.unit('area')})</th
-                ></tr
+                ><th>{tr('records.th.product')}</th><th>{tr('records.th.class')}</th><th class="num"
+                  >{tr('records.th.apps')}</th
+                ><th class="num">{tr('records.th.area', { unit: fmt.unit('area') })}</th></tr
               >
             </thead>
             <tbody>
@@ -338,18 +343,18 @@
             </tbody>
           </table>
         {:else}
-          <p class="empty">No applications recorded this year.</p>
+          <p class="empty">{tr('records.card.noApps')}</p>
         {/if}
       </article>
 
       <article class="review-card">
-        <h3>By chemistry class</h3>
+        <h3>{tr('records.card.byChem')}</h3>
         {#if yearSummary.chemistryClassAcreage.length}
           <table class="mini-table">
             <thead>
               <tr
-                ><th>Class</th><th class="num">Apps</th><th class="num"
-                  >Area ({fmt.unit('area')})</th
+                ><th>{tr('records.th.class')}</th><th class="num">{tr('records.th.apps')}</th><th
+                  class="num">{tr('records.th.area', { unit: fmt.unit('area') })}</th
                 ></tr
               >
             </thead>
@@ -364,39 +369,46 @@
             </tbody>
           </table>
         {:else}
-          <p class="empty">No chemistry classes recorded.</p>
+          <p class="empty">{tr('records.card.noChem')}</p>
         {/if}
       </article>
 
       {#if data.chrome === 'full'}
         <article class="review-card">
-          <h3>Philosophy compliance</h3>
+          <h3>{tr('records.card.philosophy')}</h3>
           <p class="philosophy-line">
-            Evaluated against <strong
+            {tr('records.philosophy.evaluated')}
+            <strong
               >{PHILOSOPHY_LABELS[yearSummary.philosophy.philosophy] ??
                 yearSummary.philosophy.philosophy}</strong
             >.
           </p>
           <ul class="stat-list">
             <li>
-              <Pill tone="forest">{yearSummary.philosophy.compliantApplications}</Pill> compliant
+              <Pill tone="forest">{yearSummary.philosophy.compliantApplications}</Pill>
+              {tr('records.philosophy.compliant')}
             </li>
             <li>
-              <Pill tone="rust">{yearSummary.philosophy.nonCompliantApplications}</Pill> non-compliant
+              <Pill tone="rust">{yearSummary.philosophy.nonCompliantApplications}</Pill>
+              {tr('records.philosophy.nonCompliant')}
             </li>
             <li>
-              <Pill tone="neutral">{yearSummary.philosophy.unknownApplications}</Pill> unclassified
+              <Pill tone="neutral">{yearSummary.philosophy.unknownApplications}</Pill>
+              {tr('records.philosophy.unclassified')}
             </li>
           </ul>
         </article>
       {/if}
 
       <article class="review-card">
-        <h3>Harvest by archetype</h3>
+        <h3>{tr('records.card.harvestByArchetype')}</h3>
         {#if yearSummary.harvestByArchetype.length}
           <table class="mini-table">
             <thead>
-              <tr><th>Archetype</th><th class="num">Events</th><th>Moisture min/mean/max</th></tr>
+              <tr
+                ><th>{tr('records.th.archetype')}</th><th class="num">{tr('records.th.events')}</th
+                ><th>{tr('records.th.moisture')}</th></tr
+              >
             </thead>
             <tbody>
               {#each yearSummary.harvestByArchetype as h (h.archetype)}
@@ -409,22 +421,24 @@
             </tbody>
           </table>
         {:else}
-          <p class="empty">No harvest events recorded this year.</p>
+          <p class="empty">{tr('records.card.noHarvest')}</p>
         {/if}
       </article>
 
       <article class="review-card">
-        <h3>Scout → spray funnel</h3>
+        <h3>{tr('records.card.funnel')}</h3>
         <ul class="stat-list">
           <li>
-            <strong class="mono">{yearSummary.scoutFunnel.scoutObservations}</strong> observations
+            <strong class="mono">{yearSummary.scoutFunnel.scoutObservations}</strong>
+            {tr('records.funnel.observations')}
           </li>
           <li>
             <strong class="mono">{yearSummary.scoutFunnel.thresholdTriggeredApplications}</strong>
-            threshold-triggered
+            {tr('records.funnel.threshold')}
           </li>
           <li>
-            <strong class="mono">{yearSummary.scoutFunnel.spraysAvoided}</strong> sprays avoided
+            <strong class="mono">{yearSummary.scoutFunnel.spraysAvoided}</strong>
+            {tr('records.funnel.avoided')}
           </li>
         </ul>
       </article>
@@ -453,8 +467,8 @@
   </section>
 
   <section class="filter-card">
-    <div class="filter-row chip-row" role="group" aria-label="Record kind filters">
-      <span class="filter-label">Filter</span>
+    <div class="filter-row chip-row" role="group" aria-label={tr('records.filter.group')}>
+      <span class="filter-label">{tr('records.filter.label')}</span>
       {#each RECORD_KINDS as kind (kind)}
         {@const active = data.activeKinds.includes(kind)}
         {@const count = summary.countsByKind[kind] ?? 0}
@@ -465,7 +479,7 @@
           onclick={() => toggleKind(kind)}
           aria-pressed={active}
         >
-          <Pill tone={KIND_TONE[kind]}>{KIND_LABEL[kind]}</Pill>
+          <Pill tone={KIND_TONE[kind]}>{kindLabel(tr, kind)}</Pill>
           <span class="kind-count mono">{count}</span>
         </button>
       {/each}
@@ -477,57 +491,61 @@
         onclick={() => goto(wateringHref, { noScroll: true, keepFocus: true })}
         data-testid="watering-chip"
       >
-        <Pill tone="sky">Watering</Pill>
+        <Pill tone="sky">{tr('records.filter.watering')}</Pill>
         <span class="kind-count mono">{data.watering.count}</span>
       </button>
       <span class="sep" aria-hidden="true"></span>
       <label class="inline-input">
         <Calendar size={12} />
-        <span class="visually-hidden">From date</span>
+        <span class="visually-hidden">{tr('records.filter.from')}</span>
         <input
           type="date"
           value={data.activeFromIso ?? ''}
           onchange={(e) => applyDateRange('from', (e.target as HTMLInputElement).value)}
-          aria-label="From date"
+          aria-label={tr('records.filter.from')}
         />
       </label>
       <span class="arrow" aria-hidden="true">→</span>
       <label class="inline-input">
-        <span class="visually-hidden">To date</span>
+        <span class="visually-hidden">{tr('records.filter.to')}</span>
         <input
           type="date"
           value={data.activeToIso ?? ''}
           onchange={(e) => applyDateRange('to', (e.target as HTMLInputElement).value)}
-          aria-label="To date"
+          aria-label={tr('records.filter.to')}
         />
       </label>
       {#if data.activeFromIso || data.activeToIso}
-        <button type="button" class="clear-range" onclick={clearDateRange}>clear dates</button>
+        <button type="button" class="clear-range" onclick={clearDateRange}
+          >{tr('records.filter.clearDates')}</button
+        >
       {/if}
       <span class="filter-spacer"></span>
-      <span class="count-mono mono">{data.filteredTotal} of {summary.total}</span>
+      <span class="count-mono mono"
+        >{tr('records.filter.countOf', { n: data.filteredTotal, total: summary.total })}</span
+      >
     </div>
 
     <div class="filter-row select-row">
       <label class="inline-select">
-        Block
+        {tr('records.filter.block')}
         <select
           value={data.activeBlockId ?? ''}
           onchange={(e) => applyFilter('blockId', (e.target as HTMLSelectElement).value)}
         >
-          <option value="">All blocks</option>
+          <option value="">{tr('records.filter.allBlocks')}</option>
           {#each data.blocks as b (b.id)}
             <option value={b.id}>{b.blockLabel ?? b.name}</option>
           {/each}
         </select>
       </label>
       <label class="inline-select">
-        Sprayer
+        {tr('records.filter.sprayer')}
         <select
           value={data.activeSprayerId ?? ''}
           onchange={(e) => applyFilter('sprayerId', (e.target as HTMLSelectElement).value)}
         >
-          <option value="">All sprayers</option>
+          <option value="">{tr('records.filter.allSprayers')}</option>
           {#each data.sprayers as s (s.id)}
             <option value={s.id}>{s.label}</option>
           {/each}
@@ -541,13 +559,12 @@
         aria-labelledby="watering-log-heading"
         data-testid="watering-log"
       >
-        <h2 id="watering-log-heading">Watering log</h2>
+        <h2 id="watering-log-heading">{tr('records.watering.title')}</h2>
         <p class="watering-note">
-          Watering logs help the watering advice. They are not compliance records and are not in the
-          exports.
+          {tr('records.watering.note')}
         </p>
         {#if data.watering.rows.length === 0}
-          <p class="watering-note">No watering logged in this range.</p>
+          <p class="watering-note">{tr('records.watering.empty')}</p>
         {:else}
           <ul class="watering-rows">
             {#each data.watering.rows as w (w.id)}
@@ -564,12 +581,12 @@
                     aria-expanded={open}
                     onclick={() => toggleCard(key)}
                   >
-                    Card
+                    {tr('records.cardBtn')}
                   </button>
                   <a
                     class="drill"
                     href={`/records/irrigation/${w.id}`}
-                    aria-label="Open watering log"
+                    aria-label={tr('records.watering.openLog')}
                   >
                     <ChevronRight size={14} />
                   </a>
@@ -601,26 +618,26 @@
 
     {#if data.records.length === 0}
       <div class="empty">
-        <h2>No records match these filters</h2>
+        <h2>{tr('records.empty.title')}</h2>
         <p>
-          Toggle a kind chip above to widen the view, or
-          <a href="/spray">plan a spray</a>,
-          <a href="/scout">log a scout observation</a>, or
-          <a href="/harvest">record a harvest</a>.
+          {tr('records.empty.p1')}
+          <a href="/spray">{tr('records.empty.planSpray')}</a>,
+          <a href="/scout">{tr('records.empty.logScout')}</a>, {tr('records.empty.or')}
+          <a href="/harvest">{tr('records.empty.recordHarvest')}</a>.
         </p>
       </div>
     {:else}
       <div class="ledger-scroll">
-        <table class="ledger" aria-label="Records ledger">
+        <table class="ledger" aria-label={tr('records.ledger.aria')}>
           <thead>
             <tr>
-              <th scope="col">Timestamp ({fmt.zone()})</th>
-              <th scope="col">Kind</th>
-              <th scope="col">Block · planting</th>
-              <th scope="col">Detail</th>
-              <th scope="col">By</th>
+              <th scope="col">{tr('records.ledger.timestamp', { zone: fmt.zone() })}</th>
+              <th scope="col">{tr('records.ledger.kind')}</th>
+              <th scope="col">{tr('records.ledger.blockPlanting')}</th>
+              <th scope="col">{tr('records.ledger.detail')}</th>
+              <th scope="col">{tr('records.ledger.by')}</th>
               <th scope="col">Hash</th>
-              <th scope="col" aria-label="Open"></th>
+              <th scope="col" aria-label={tr('records.ledger.open')}></th>
             </tr>
           </thead>
           <tbody>
@@ -630,7 +647,7 @@
               <tr>
                 <td class="mono ts">{fmtRowTime(r)}</td>
                 <td>
-                  <Pill tone={KIND_TONE[r.kind]}>{KIND_LABEL[r.kind]}</Pill>
+                  <Pill tone={KIND_TONE[r.kind]}>{kindLabel(tr, r.kind)}</Pill>
                 </td>
                 <td>
                   <div class="block-name">{r.blockLabel ?? '—'}</div>
@@ -641,7 +658,7 @@
                 <td class="detail-cell">
                   {r.detail}
                   {#if r.customRateOverride}
-                    <span class="override-pill">custom rate</span>
+                    <span class="override-pill">{tr('records.ledger.customRate')}</span>
                   {/if}
                   {#if late}
                     <span class="late-pill"><Pill tone="wheat">{late}</Pill></span>
@@ -657,15 +674,21 @@
                     class="card-toggle"
                     aria-expanded={cardOpen}
                     aria-controls={`record-card-${r.id}`}
-                    aria-label={`Card: ${KIND_LABEL[r.kind]} record from ${fmtRowTime(r)}`}
+                    aria-label={tr('records.ledger.cardAria', {
+                      kind: kindLabel(tr, r.kind),
+                      time: fmtRowTime(r)
+                    })}
                     onclick={() => toggleCard(r.id)}
                   >
-                    Card
+                    {tr('records.cardBtn')}
                   </button>
                   <a
                     class="drill"
                     href={`/records/${r.kind}/${r.rowId}`}
-                    aria-label={`Open ${KIND_LABEL[r.kind]} record from ${fmtRowTime(r)}`}
+                    aria-label={tr('records.ledger.openAria', {
+                      kind: kindLabel(tr, r.kind),
+                      time: fmtRowTime(r)
+                    })}
                   >
                     <ChevronRight size={14} />
                   </a>
@@ -693,10 +716,13 @@
       </div>
       <div class="load-more">
         <p class="load-more-status" role="status" aria-live="polite">
-          Showing {data.records.length} of {data.filteredTotal}
-          {data.filteredTotal === 1 ? 'record' : 'records'}, newest first.
+          {tr('records.load.showing', {
+            shown: data.records.length,
+            total: data.filteredTotal,
+            noun: data.filteredTotal === 1 ? tr('records.load.record') : tr('records.load.records')
+          })}
           {#if hiddenCount > 0 && loadMoreHref === null}
-            Export for the rest.
+            {tr('records.load.exportRest')}
           {/if}
         </p>
         {#if loadMoreHref}
@@ -707,7 +733,7 @@
             data-sveltekit-keepfocus
             data-sveltekit-replacestate
           >
-            Load {loadMoreCount} more
+            {tr('records.load.more', { n: loadMoreCount })}
           </a>
         {/if}
       </div>
@@ -716,8 +742,7 @@
 
   {#if data.approachingRetention.length > 0}
     <section class="alert" role="status">
-      ⚠ {data.approachingRetention.length} record(s) approaching the 2-year retention horizon. Confirm
-      with owner before any deletion.
+      {tr('records.retention.alert', { n: data.approachingRetention.length })}
     </section>
   {/if}
 
@@ -735,13 +760,13 @@
         </a>
       </article>
       <article class="reassurance">
-        <div class="reassurance-kicker">Inspector access</div>
+        <div class="reassurance-kicker">{tr('records.inspector.kicker')}</div>
         <p>
-          Invite a VDACS inspector or CSA member as a read-only inspector. They sign in with their
-          own account and see this view without edit access.
+          {tr('records.inspector.body')}
         </p>
         <a class="reassurance-link ghost" href="/settings/helpers">
-          <Plus size={12} /> Invite an inspector
+          <Plus size={12} />
+          {tr('records.inspector.invite')}
         </a>
       </article>
     </section>
@@ -751,10 +776,9 @@
     {@render complianceCards()}
   {:else}
     <details class="pesticide-fold" data-testid="records-pesticide-fold">
-      <summary>Pesticide record-keeping (applies if you spray)</summary>
+      <summary>{tr('records.fold.summary')}</summary>
       <p class="fold-lede">
-        Virginia asks anyone who sprays a pesticide to keep these records. Nothing here needs your
-        attention until you record a spray.
+        {tr('records.fold.lede')}
       </p>
       <div class="fold-actions">
         <a class="btn-ghost" href="/api/records/export.vdacs.pdf{exportQuery}" download>

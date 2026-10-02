@@ -1,9 +1,12 @@
 <script lang="ts">
   import { Wheat } from 'lucide-svelte';
+  import { createT } from '$lib/i18n';
+  import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
 
   const props: RendererProps = $props();
+  const tr = $derived(createT(page.data?.locale));
 
   let bushels = $state('');
   let moisturePct = $state('');
@@ -34,31 +37,36 @@
   <header class="archetype-head">
     <Wheat size={18} strokeWidth={1.75} />
     <div>
-      <span class="archetype-name">Row-grain harvest</span>
+      <span class="archetype-name">{tr('harvestui.r.corn.name')}</span>
       <span class="archetype-sub">
-        Wind-pollinated. Sweet corn at R3 (milk); dent / popcorn at R6 (black layer + dry-down).
+        {tr('harvestui.r.corn.sub')}
       </span>
     </div>
   </header>
 
   <div class="grain-block">
-    <span class="block-title">Yield + grain quality</span>
+    <span class="block-title">{tr('harvestui.r.corn.block')}</span>
     <div class="grain-grid">
       <label class="qfield">
-        <span>Bushels</span>
+        <span>{tr('harvestui.r.corn.bushels')}</span>
         <input type="text" inputmode="decimal" placeholder="120" bind:value={bushels} />
       </label>
       <label class="qfield">
-        <span>Moisture (%)</span>
+        <span>{tr('harvestui.r.corn.moisture')}</span>
         <input type="text" inputmode="decimal" placeholder="15.5" bind:value={moisturePct} />
       </label>
       <label class="qfield">
-        <span>Test weight (lb/bu)</span>
+        <span>{tr('harvestui.r.corn.testWeight')}</span>
         <input type="text" inputmode="decimal" placeholder="56" bind:value={testWeight} />
       </label>
       <label class="qfield">
-        <span>Ear count</span>
-        <input type="text" inputmode="numeric" placeholder="optional" bind:value={earCount} />
+        <span>{tr('harvestui.r.corn.earCount')}</span>
+        <input
+          type="text"
+          inputmode="numeric"
+          placeholder={tr('harvestui.r.optional')}
+          bind:value={earCount}
+        />
       </label>
     </div>
     <p class="hint">

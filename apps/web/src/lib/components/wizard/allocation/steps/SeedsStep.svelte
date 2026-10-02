@@ -38,7 +38,8 @@
   function availableText(s: SeedStockEntry): string {
     return availableQuantityText(
       { existing: s.onHand, ordered: s.onOrder ?? 0, planned: s.planned ?? 0 },
-      s.defaultUnit
+      s.defaultUnit,
+      page.data?.locale
     );
   }
 

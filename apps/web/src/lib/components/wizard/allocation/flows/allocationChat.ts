@@ -1,4 +1,5 @@
 import type { AllocationWizardState } from '../wizardState.svelte';
+import { wt } from '../wt';
 import type { ChatMsg } from '../types';
 import type { AllocateFlow } from './allocateFlow';
 
@@ -43,7 +44,7 @@ export class AllocationChatFlow {
       }
       this.#w.queueScrollChat();
     } catch (err) {
-      this.#w.chatError = err instanceof Error ? err.message : 'chat request failed';
+      this.#w.chatError = err instanceof Error ? err.message : wt('wizard.err.chat');
       // Roll back the optimistic user message on hard error.
       if (this.#w.step === 'schedule') {
         this.#w.scheduleChatMessages = this.#w.scheduleChatMessages.slice(0, -1);

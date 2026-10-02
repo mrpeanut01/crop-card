@@ -11,7 +11,10 @@
   validation twice; the wizard surfaces this via a fallback banner.
 -->
 <script lang="ts">
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
+  import { planFamilyText } from './planFamily';
 
   type PlanMember = {
     cropId: string;
@@ -69,6 +72,7 @@
     onCommitted: (committedGroupIds: string[]) => void;
   } = $props();
 
+  const tr = $derived(createT(page.data?.locale));
   const DAY_MS = 24 * 60 * 60 * 1000;
 
   let response = $state<SuggestResponse | null>(null);
@@ -101,14 +105,14 @@
       });
       const j = await r.json();
       if (!r.ok) {
-        error = j.error ?? `request failed (${r.status})`;
+        error = j.error ?? tr('group.wiz.requestFailedStatus', { status: r.status });
         return;
       }
       response = j as SuggestResponse;
       // Default-accept everything the AI/engine proposed.
       acceptedIdx = new Set(response.proposed.map((_, i) => i));
     } catch (e) {
-      error = e instanceof Error ? e.message : 'request failed';
+      error = e instanceof Error ? e.message : tr('group.wiz.requestFailed');
     } finally {
       loading = false;
     }
@@ -131,7 +135,7 @@
   }
 
   function familyLabel(f: string): string {
-    return f.replace(/-/g, ' ');
+    return planFamilyText(f, page.data?.locale, f.replace(/-/g, ' '));
   }
 
   function effectiveAnchorMs(idx: number, plan: ProposedPlan): number {
@@ -221,7 +225,7 @@
         }
       } catch (e) {
         commitProgress.failed.push(
-          `${plan.anchor.varietyDisplayName}: ${e instanceof Error ? e.message : 'commit failed'}`
+          `${plan.anchor.varietyDisplayName}: ${e instanceof Error ? e.message : tr('group.wiz.commitFailed')}`
         );
       }
       commitProgress = { ...commitProgress, done: commitProgress.done + 1 };
@@ -233,38 +237,42 @@
   const acceptedCount = $derived(acceptedIdx.size);
 </script>
 
-<div class="wizard-backdrop" role="dialog" aria-modal="true" aria-label="AI planting plan">
+<div class="wizard-backdrop" role="dialog" aria-modal="true" aria-label={tr('group.wiz.aria')}>
   <div class="wizard">
     <header class="wizard-head">
       <div class="head-text">
-        <h2>✨ Plan a season</h2>
-        <p class="head-sub">
-          AI proposes groups + singleton plantings from your unscheduled drafts.
-        </p>
+        <h2>✨ {tr('group.wiz.title')}</h2>
+        <p class="head-sub">{tr('group.wiz.sub')}</p>
       </div>
-      <button type="button" class="close" onclick={onClose} aria-label="Close wizard">×</button>
+      <button type="button" class="close" onclick={onClose} aria-label={tr('group.wiz.close')}
+        >×</button
+      >
     </header>
 
     {#if response?.spend}
       <div class="spend-banner" class:warn={response.spend.warnAt80}>
-        AI spend this month: ${response.spend.monthlyUsdSoFar.toFixed(2)} of ${response.spend.cap.toFixed(
-          2
-        )}
-        {#if response.meta?.usdEstimate}· this call ${response.meta.usdEstimate.toFixed(3)}{/if}
+        {tr('group.wiz.spend', {
+          spent: response.spend.monthlyUsdSoFar.toFixed(2),
+          cap: response.spend.cap.toFixed(2)
+        })}
+        {#if response.meta?.usdEstimate}{tr('group.wiz.thisCall', {
+            cost: response.meta.usdEstimate.toFixed(3)
+          })}{/if}
       </div>
     {/if}
 
     {#if response?.meta?.fallback}
       <div class="fallback-banner">
         {#if response.meta.fallback === 'no-api-key'}
-          ℹ Engine-only plan (no AI key configured). Proposals are deterministic.
+          ℹ {tr('group.wiz.fbNoKey')}
         {:else if response.meta.fallback === 'ai-unavailable'}
-          ℹ Engine-only plan — {response.meta.fallbackMessage ?? 'Claude is unavailable right now.'} Proposals
-          are deterministic.
+          ℹ {tr('group.wiz.fbUnavailable', {
+            message: response.meta.fallbackMessage ?? tr('group.wiz.claudeUnavailable')
+          })}
         {:else if response.meta.fallback === 'engine-only'}
-          ⚠ AI validation failed twice — using engine fallback. Plans are still safe.
+          ⚠ {tr('group.wiz.fbEngine')}
         {:else if response.meta.fallback === 'no-drafts'}
-          ℹ No unscheduled drafts to plan.
+          ℹ {tr('group.wiz.fbNoDrafts')}
         {/if}
       </div>
     {/if}
@@ -273,21 +281,23 @@
       {#if loading}
         <div class="loading">
           <div class="spinner" aria-hidden="true"></div>
-          <p>Analyzing your drafts…</p>
+          <p>{tr('group.wiz.analyzing')}</p>
         </div>
       {:else if error}
         <div class="error">
           <p>{error}</p>
-          <button type="button" class="btn-secondary" onclick={() => generate()}>Retry</button>
+          <button type="button" class="btn-secondary" onclick={() => generate()}
+            >{tr('group.wiz.retry')}</button
+          >
         </div>
       {:else if response && response.proposed.length === 0}
         <div class="empty-card">
           <p>
-            <strong>No plans to propose.</strong>
+            <strong>{tr('group.wiz.emptyTitle')}</strong>
           </p>
           <p>
-            Either there are no unscheduled drafts (visit the <strong>Crops tab</strong> to add seed to
-            a block) or the AI couldn't find a viable date window for any draft this season.
+            {tr('group.wiz.emptyBefore')} <strong>{tr('group.wiz.emptyTab')}</strong>
+            {tr('group.wiz.emptyAfter')}
           </p>
         </div>
       {:else if response}
@@ -300,16 +310,20 @@
                 <div class="plan-title">
                   {#if plan.kind === 'group'}
                     <span class="badge badge-group"
-                      >{plan.systemKind === 'three-sisters' ? '🌽 Three Sisters' : 'Group'}</span
+                      >{plan.systemKind === 'three-sisters'
+                        ? `🌽 ${tr('group.kind.threeSisters')}`
+                        : tr('group.wiz.group')}</span
                     >
                   {:else}
-                    <span class="badge badge-single">Single planting</span>
+                    <span class="badge badge-single">{tr('group.wiz.single')}</span>
                   {/if}
-                  <span class="plan-block">on {blockLabelOf(plan.blockId)}</span>
+                  <span class="plan-block"
+                    >{tr('group.wiz.on', { block: blockLabelOf(plan.blockId) })}</span
+                  >
                 </div>
                 <label class="accept-toggle">
                   <input type="checkbox" checked={accepted} onchange={() => toggleAccept(idx)} />
-                  {accepted ? 'Accepted' : 'Skipped'}
+                  {accepted ? tr('group.wiz.accepted') : tr('group.wiz.skipped')}
                 </label>
               </header>
 
@@ -333,7 +347,7 @@
               </ul>
 
               {#if plan.rationale}
-                <p class="rationale"><em>Why:</em> {plan.rationale}</p>
+                <p class="rationale"><em>{tr('group.wiz.why')}</em> {plan.rationale}</p>
               {/if}
 
               {#if plan.advisories.length > 0}
@@ -345,16 +359,16 @@
               {/if}
 
               <details class="edit-dates">
-                <summary>Edit anchor date</summary>
+                <summary>{tr('group.wiz.editAnchor')}</summary>
                 <label>
-                  Anchor planting
+                  {tr('group.wiz.anchorPlanting')}
                   <input
                     type="date"
                     value={fmtDateInput(anchorMs)}
                     oninput={(e) => setAnchorDate(idx, (e.currentTarget as HTMLInputElement).value)}
                   />
                 </label>
-                <p class="edit-hint">Companion dates auto-shift by their fixed offsets.</p>
+                <p class="edit-hint">{tr('group.wiz.editHint')}</p>
               </details>
             </article>
           {/each}
@@ -362,9 +376,7 @@
 
         {#if response.unscheduled.length > 0}
           <details class="unscheduled-block">
-            <summary
-              >{response.unscheduled.length} draft{response.unscheduled.length === 1 ? '' : 's'} not placed</summary
-            >
+            <summary>{tr('group.wiz.notPlaced', { count: response.unscheduled.length })}</summary>
             <ul>
               {#each response.unscheduled as u (u.cropId)}
                 <li>{u.reason}</li>
@@ -376,7 +388,12 @@
 
       {#if committing}
         <div class="commit-progress">
-          <p>Committing {commitProgress.done} of {commitProgress.total}…</p>
+          <p>
+            {tr('group.wiz.committingN', {
+              done: commitProgress.done,
+              total: commitProgress.total
+            })}
+          </p>
           <progress value={commitProgress.done} max={commitProgress.total}></progress>
           {#if commitProgress.failed.length > 0}
             <ul class="commit-fail">
@@ -396,9 +413,14 @@
         onclick={() => generate()}
         disabled={loading || committing}
       >
-        Regenerate
+        {tr('group.wiz.regenerate')}
       </button>
-      <span class="counter">{acceptedCount} of {response?.proposed?.length ?? 0} accepted</span>
+      <span class="counter"
+        >{tr('group.wiz.acceptedOf', {
+          n: acceptedCount,
+          total: response?.proposed?.length ?? 0
+        })}</span
+      >
       <button
         type="button"
         class="btn-primary"
@@ -406,8 +428,8 @@
         disabled={committing || loading || acceptedCount === 0}
       >
         {committing
-          ? 'Committing…'
-          : `Commit ${acceptedCount} plan${acceptedCount === 1 ? '' : 's'}`}
+          ? tr('group.wiz.committing')
+          : tr('group.wiz.commitN', { count: acceptedCount })}
       </button>
     </footer>
   </div>

@@ -9,6 +9,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { cropDisplayName } from '$lib/i18n/cropName';
+  import { createT, type MessageKey } from '$lib/i18n';
 
   export interface PaletteCard {
     pluginId: string;
@@ -51,32 +52,13 @@
     'vine-fruit': '🍇'
   };
 
-  const FAMILY_LABEL: Record<string, string> = {
-    allium: 'Alliums',
-    apiaceae: 'Apiaceae — Carrots / Celery',
-    bramble: 'Brambles',
-    brassica: 'Brassicas',
-    'broadleaf-companion': 'Broadleaf Companions',
-    'cereal-grain': 'Cereal Grains',
-    corn: 'Corn',
-    'cover-grass': 'Cover Grasses',
-    'cover-legume': 'Cover Legumes',
-    cucurbit: 'Cucurbits',
-    forage: 'Forage & Hay',
-    'herb-culinary': 'Culinary Herbs',
-    'leafy-green': 'Leafy Greens',
-    legume: 'Legumes',
-    orchard: 'Orchard Fruits',
-    root: 'Root Vegetables',
-    'small-fruit': 'Small Fruits',
-    solanaceae: 'Solanaceae — Tomato / Pepper',
-    'stone-fruit': 'Stone Fruits',
-    'vine-fruit': 'Vine Fruits'
-  };
+  const tr = $derived(createT(page.data?.locale));
 
   function familyLabel(family: string | null | undefined): string {
-    if (!family) return 'Unclassified';
-    return FAMILY_LABEL[family] ?? family;
+    if (!family) return tr('planui.fam.unclassified');
+    const key = `planui.fam.${family}` as MessageKey;
+    const hit = tr(key);
+    return hit === key ? family : hit;
   }
   function familyIcon(family: string | null | undefined): string {
     if (!family) return '🌱';
@@ -100,7 +82,7 @@
   const cropLocale = $derived(page.data?.locale as string | undefined);
 </script>
 
-<div class="palette" aria-label="Crop palette">
+<div class="palette" aria-label={tr('planui.palette.aria')}>
   {#if props.seedStockCards && props.seedStockCards.length > 0}
     {@const groups = (() => {
       const byFamily = new Map<string, typeof props.seedStockCards>();
@@ -118,7 +100,9 @@
         .sort((a, b) => familySortKey(a.family).localeCompare(familySortKey(b.family)));
     })()}
     <section>
-      <h3>Seed Stock <span class="count">({props.seedStockCards.length})</span></h3>
+      <h3>
+        {tr('planui.palette.seedStock')} <span class="count">({props.seedStockCards.length})</span>
+      </h3>
       {#each groups as g (g.family ?? '__unc__')}
         <div class="family-group">
           <div class="family-head">
@@ -135,7 +119,11 @@
                   class:disabled={props.canEdit === false || !s.cropPluginId}
                   disabled={props.canEdit === false || !s.cropPluginId}
                   onclick={() => props.onSeedStockClick?.(s.stockItemId)}
-                  aria-label="Seed: {s.displayName}, on hand {s.onHand} {s.defaultUnit}, click to assign to a block"
+                  aria-label={tr('planui.palette.seedAria', {
+                    name: s.displayName,
+                    qty: s.onHand,
+                    unit: s.defaultUnit
+                  })}
                 >
                   <span class="card-title"
                     >{cropDisplayName(s.cropPluginId, s.displayName, cropLocale)}</span
@@ -143,7 +131,7 @@
                   <span class="card-meta">
                     {s.onHand}
                     {s.defaultUnit}
-                    {#if !s.cropPluginId}· no plugin link{/if}
+                    {#if !s.cropPluginId}{tr('planui.palette.noLink')}{/if}
                   </span>
                 </button>
               </li>

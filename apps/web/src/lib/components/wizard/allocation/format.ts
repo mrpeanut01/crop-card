@@ -1,9 +1,9 @@
 import { formatCalendarDate } from '$lib/prefs';
 import type { ProgressStage, SufficiencyResult } from './types';
-import { wt } from './wt';
+import { wlocale, wt } from './wt';
 
 export function fmtDateMs(ms: number): string {
-  return formatCalendarDate(ms, 'date');
+  return formatCalendarDate(ms, 'date', {}, wlocale());
 }
 
 // ─── AI progress heartbeat ──────────────────────────────────────────────

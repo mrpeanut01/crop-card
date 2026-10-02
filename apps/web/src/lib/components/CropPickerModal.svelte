@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { cropDisplayName } from '$lib/i18n/cropName';
+  import { createT, type MessageKey } from '$lib/i18n';
 
   type CatalogItem = {
     pluginId: string;
@@ -44,28 +45,15 @@
     'vine-fruit': '🍇'
   };
 
-  const FAMILY_LABEL: Record<string, string> = {
-    allium: 'Alliums',
-    apiaceae: 'Apiaceae — Carrots / Celery',
-    bramble: 'Brambles',
-    brassica: 'Brassicas',
-    'broadleaf-companion': 'Broadleaf Companions',
-    'cereal-grain': 'Cereal Grains',
-    corn: 'Corn',
-    'cover-grass': 'Cover Grasses',
-    'cover-legume': 'Cover Legumes',
-    cucurbit: 'Cucurbits — Squash / Pumpkins',
-    forage: 'Forage & Hay',
-    'herb-culinary': 'Culinary Herbs',
-    'leafy-green': 'Leafy Greens',
-    legume: 'Legumes',
-    orchard: 'Orchard Fruits',
-    root: 'Root Vegetables',
-    'small-fruit': 'Small Fruits',
-    solanaceae: 'Solanaceous — Tomatoes / Peppers',
-    'stone-fruit': 'Stone Fruits',
-    'vine-fruit': 'Vine Fruits'
-  };
+  const tr = $derived(createT(page.data?.locale));
+
+  function familyLabel(fam: string): string {
+    const key = (
+      fam === 'cucurbit' || fam === 'solanaceae' ? `planui.picker.fam.${fam}` : `planui.fam.${fam}`
+    ) as MessageKey;
+    const hit = tr(key);
+    return hit === key ? fam : hit;
+  }
 
   let search = $state('');
   let familyFilter = $state('');
@@ -118,15 +106,20 @@
   class="picker-backdrop"
   role="dialog"
   aria-modal="true"
-  aria-label="Select a crop variety"
+  aria-label={tr('planui.picker.title')}
   onclick={(e) => e.target === e.currentTarget && onClose()}
   onkeydown={(e) => e.key === 'Escape' && onClose()}
   tabindex="-1"
 >
   <div class="picker-modal">
     <div class="picker-header">
-      <h2>Select a crop variety</h2>
-      <button type="button" class="close-btn" onclick={onClose} aria-label="Close">✕</button>
+      <h2>{tr('planui.picker.title')}</h2>
+      <button
+        type="button"
+        class="close-btn"
+        onclick={onClose}
+        aria-label={tr('planui.picker.close')}>✕</button
+      >
     </div>
 
     <div class="picker-controls">
@@ -135,28 +128,32 @@
         <input
           type="search"
           class="search-input"
-          placeholder="Search varieties…"
+          placeholder={tr('planui.picker.search')}
           bind:value={search}
           autocomplete="off"
         />
       </div>
-      <select class="family-filter" bind:value={familyFilter} aria-label="Filter by crop type">
-        <option value="">All crop types</option>
+      <select
+        class="family-filter"
+        bind:value={familyFilter}
+        aria-label={tr('planui.picker.filterAria')}
+      >
+        <option value="">{tr('planui.picker.allTypes')}</option>
         {#each families as fam (fam)}
-          <option value={fam}>{FAMILY_LABEL[fam] ?? fam}</option>
+          <option value={fam}>{familyLabel(fam)}</option>
         {/each}
       </select>
     </div>
 
     <div class="picker-list">
       {#if grouped.length === 0}
-        <p class="no-results">No varieties match your search.</p>
+        <p class="no-results">{tr('planui.picker.noResults')}</p>
       {/if}
       {#each grouped as [fam, items] (fam)}
         <div class="family-group">
           <div class="family-heading">
             <span aria-hidden="true">{FAMILY_ICON[fam] ?? '🌱'}</span>
-            {FAMILY_LABEL[fam] ?? fam}
+            {familyLabel(fam)}
             <span class="family-count">({items.length})</span>
           </div>
           {#each items as item (item.pluginId)}
@@ -186,11 +183,11 @@
         </div>
         <div class="footer-actions">
           <label class="date-label">
-            Planting date <span class="optional">(optional)</span>
+            {tr('planui.picker.date')} <span class="optional">{tr('planui.picker.optional')}</span>
             <input type="date" bind:value={plantingDate} />
           </label>
           <button type="button" class="add-btn" onclick={confirm}>
-            + Add to {blockName}
+            {tr('planui.picker.addTo', { name: blockName })}
           </button>
         </div>
       </div>

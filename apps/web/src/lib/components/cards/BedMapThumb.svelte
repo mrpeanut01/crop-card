@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { CardBedMap } from '$lib/cards/model';
   import { bedMapLabels } from '$lib/cards/bedMapLabels';
-  import { ALL_GLYPHS } from '$lib/garden/familyGlyph';
+  import { ALL_GLYPHS, glyphLabel } from '$lib/garden/familyGlyph';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
 
@@ -19,7 +19,6 @@
   const font = $derived(Math.max(map.widthFt, map.lengthFt) / 22);
   const scaleFt = $derived(map.widthFt >= 40 ? 10 : map.widthFt >= 12 ? 5 : 1);
   const glyphD = new Map(ALL_GLYPHS.map((g) => [g.key, g.d]));
-  const glyphLabel = new Map(ALL_GLYPHS.map((g) => [g.key, g.label]));
   const marks = $derived(bedMapLabels(map, font * 0.8, page.data?.locale));
   const hasPlantings = $derived(map.beds.some((b) => (b.plantings ?? []).length > 0));
   const glyphsUsed = $derived(
@@ -173,7 +172,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 /></svg
-              >{glyphLabel.get(g)}
+              >{glyphLabel(g, page.data?.locale)}
             </li>
           {/each}
         </ul>

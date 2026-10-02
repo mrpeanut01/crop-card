@@ -79,7 +79,13 @@ export const PATCH: RequestHandler = async (event) => {
       );
     }
     const { action: _action, ...request } = parsed.data;
-    const result = writeFootprint(event.params.id, request, cropLookupFrom(await getRegistry()));
+    const result = writeFootprint(
+      event.params.id,
+      request,
+      cropLookupFrom(await getRegistry()),
+      undefined,
+      event.locals?.locale
+    );
     if (!result.ok) return failureResponse(result);
     return json(result.response);
   }

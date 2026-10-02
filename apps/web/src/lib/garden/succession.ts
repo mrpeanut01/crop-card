@@ -14,6 +14,7 @@ import {
   plantingOccupancy,
   shortDate
 } from './occupancy';
+import { t } from '$lib/i18n';
 import { plantCount } from './plantCount';
 import type {
   BedLayout,
@@ -44,6 +45,8 @@ export interface SuccessionInput {
   /** Date of the series' latest sowing when the anchor already has some;
    *  new sowings follow it instead of the anchor. */
   afterMs?: number | null;
+  /** Language for `reason` and `conflict`; English when unset. */
+  locale?: string | null;
 }
 
 function centerOf(fp: Footprint): { xIn: number; yIn: number } {
@@ -55,7 +58,7 @@ function centerOf(fp: Footprint): { xIn: number; yIn: number } {
  *  mature before first fall frost, or has no room, carries a `conflict`. A
  *  family with a 0-day interval returns no sowings and says why. */
 export function proposeSuccession(input: SuccessionInput): SuccessionProposal {
-  const { anchor, crop, bed } = input;
+  const { anchor, crop, bed, locale } = input;
   const name = crop?.displayName ?? anchor.varietyDisplayName;
   const family = crop?.cropFamily ?? anchor.cropFamily;
   const manual =
@@ -73,13 +76,13 @@ export function proposeSuccession(input: SuccessionInput): SuccessionProposal {
   };
 
   if (anchor.plantingDateMs == null) {
-    return { ...base, sowings: [], reason: `Give ${name} a planting date first.` };
+    return { ...base, sowings: [], reason: t(locale, 'gardenlib.succ.needDate', { name }) };
   }
   if (intervalDays <= 0) {
     return {
       ...base,
       sowings: [],
-      reason: `${name} doesn't usually succession-sow here. Plant once.`
+      reason: t(locale, 'gardenlib.succ.plantOnce', { name })
     };
   }
 
@@ -100,7 +103,10 @@ export function proposeSuccession(input: SuccessionInput): SuccessionProposal {
         plantingDateMs,
         footprint: null,
         plantCount: null,
-        conflict: `Sown ${shortDate(plantingDateMs)}, it would not mature before the first fall frost on ${shortDate(frostMs)}.`
+        conflict: t(locale, 'gardenlib.succ.frost', {
+          date: shortDate(plantingDateMs, locale),
+          frost: shortDate(frostMs, locale)
+        })
       });
       continue;
     }
@@ -140,7 +146,7 @@ export function proposeSuccession(input: SuccessionInput): SuccessionProposal {
         plantingDateMs,
         footprint: null,
         plantCount: null,
-        conflict: `No room in this bed on ${shortDate(plantingDateMs)}.`
+        conflict: t(locale, 'gardenlib.succ.noRoom', { date: shortDate(plantingDateMs, locale) })
       });
       continue;
     }
@@ -167,15 +173,16 @@ export function proposeSuccession(input: SuccessionInput): SuccessionProposal {
     bed.blockId,
     anchor.cropId
   );
-  let reason = `Sow again every ${intervalDays} days.`;
-  reason +=
+  const parts = [
+    t(locale, 'gardenlib.succ.every', { days: intervalDays }),
     fitting === count
       ? count === 1
-        ? ' The next sowing fits.'
-        : ` All ${count} sowings fit.`
-      : ` ${fitting} of ${count} sowings fit. The others say why.`;
+        ? t(locale, 'gardenlib.succ.nextFits')
+        : t(locale, 'gardenlib.succ.allFit', { count })
+      : t(locale, 'gardenlib.succ.someFit', { fitting, count })
+  ];
   if (fit.eligible && fit.maxPlantings < count + 1) {
-    reason += ` The season holds about ${fit.maxPlantings} sowings in all.`;
+    parts.push(t(locale, 'gardenlib.succ.seasonHolds', { count: fit.maxPlantings }));
   }
-  return { ...base, sowings, reason };
+  return { ...base, sowings, reason: parts.join(' ') };
 }

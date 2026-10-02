@@ -381,5 +381,91 @@ export const esGarden: Partial<Record<MessageKey, string>> = {
   'garden.insp.nothingFits': 'Nada cabe en el espacio libre en esta fecha.',
   'garden.insp.bedHistory': 'Historial de la cama',
   'garden.insp.nothingGrown': 'Aún no ha crecido nada en {name}.',
-  'garden.insp.addCover': 'Agregar una cubierta'
+  'garden.insp.addCover': 'Agregar una cubierta',
+  'gardenlib.succ.needDate': 'Primero ponle una fecha de siembra a {name}.',
+  'gardenlib.succ.plantOnce':
+    '{name} no suele sembrarse de forma escalonada aquí. Siémbralo una sola vez.',
+  'gardenlib.succ.frost':
+    'Sembrado el {date}, no maduraría antes de la primera helada de otoño del {frost}.',
+  'gardenlib.succ.noRoom': 'No hay espacio en esta cama el {date}.',
+  'gardenlib.succ.every': 'Vuelve a sembrar cada {days} días.',
+  'gardenlib.succ.nextFits': 'La siguiente siembra cabe.',
+  'gardenlib.succ.allFit': 'Caben las {count} siembras.',
+  'gardenlib.succ.someFit': 'Caben {fitting} de {count} siembras. Las demás dicen por qué.',
+  'gardenlib.succ.seasonHolds': 'En total, la temporada da para unas {count} siembras.',
+  'gardenlib.succ.notFound': 'no se encontró la siembra en esta cama',
+  'gardenlib.succ.finished': '{name} ya terminó esta temporada. Elige una siembra actual.',
+  'gardenlib.succ.oneOfSeries':
+    'Esta es una siembra de una serie. Agrega siembras desde la primera.',
+  'gardenlib.succ.oneOfSeriesOn':
+    'Esta es una siembra de una serie. Agrega siembras desde la primera, del {date}.',
+  'gardenlib.succ.linked': '{name} ya está vinculado a otras siembras.',
+  'gardenlib.succ.noneFits': 'Ninguna siembra cabe en esta cama.',
+  'gardenlib.recipe.needsDays': 'Necesita unos {min} días sin helada. Tu temporada tiene {days}.',
+  'gardenlib.recipe.upToDays':
+    'Hecha para temporadas de hasta {max} días sin helada. La tuya tiene {days}.',
+  'gardenlib.recipe.scaled':
+    'Escrita para una cama de {from} pies y ajustada a esta cama de {to} pies.',
+  'gardenlib.recipe.notInLibrary':
+    '{crop} no está en tu biblioteca de cultivos, y sus alternativas tampoco.',
+  'gardenlib.recipe.usedInstead': 'Se usó {crop} en lugar de {original}.',
+  'gardenlib.recipe.followsStep': 'Sigue al paso {n}, que no se pudo colocar.',
+  'gardenlib.recipe.plantOnce':
+    '{crop} no suele sembrarse de forma escalonada, así que se siembra una sola vez.',
+  'gardenlib.recipe.cropSowing': '{crop} (siembra {n})',
+  'gardenlib.recipe.notReady':
+    '{crop} sembrado el {date} no estaría listo antes de la primera helada de otoño del {frost}.',
+  'gardenlib.recipe.noRoom':
+    'No hay espacio para {crop} el {date}. Esa parte de la cama se libera el {opens}.',
+  'gardenlib.recipe.shares': '{crop} comparte espacio con {other} hasta el {date}.',
+  'gardenlib.recipe.noSuch': 'No hay ninguna receta de cama llamada {id}.',
+  'gardenlib.recipe.keepOne': 'Conserva al menos una siembra para agregar.',
+  'gardenlib.recipe.stale':
+    '{bed} cambió desde esta vista previa, así que no se agregó nada. Abre la receta otra vez para ver qué cabe ahora.',
+  'gardenlib.place.notBed': '{name} no es una cama de cultivo ni un contenedor.',
+  'gardenlib.place.notGarden': '{name} no está en un jardín ni en un invernadero.',
+  'gardenlib.place.setSize': 'Define el tamaño de {name} antes de colocar cultivos en ella.',
+  'gardenlib.place.notFound': 'no se encontró la siembra',
+  'gardenlib.place.clash':
+    'No hay espacio para {name} ahí en {bed} el {date}. {other} ocupa ese lugar hasta el {until}.',
+  'gardenlib.place.inGround':
+    '{name} ya está en la tierra en {bed}. Mejor registra una siembra nueva.',
+  'gardenlib.place.inGroundDate':
+    '{name} ya está en la tierra, así que su fecha no puede pasar de hoy. Mejor registra una siembra nueva.',
+  'gardenlib.place.spotPastEdge': 'Ese lugar se sale del borde de {bed}.',
+  'gardenlib.place.runsPast': '{name} se sale del borde de {bed}.',
+  'gardenlib.layout.areaTooSmall':
+    '{name} no puede hacerse tan pequeño. Esto quedaría fuera del nuevo borde: {names}. Primero mueve {them}.',
+  'gardenlib.layout.it': 'esa cama',
+  'gardenlib.layout.them': 'esas camas',
+  'gardenlib.layout.pastArea': '{name} se saldría del borde de {area}.',
+  'gardenlib.layout.overlap': 'Las camas no pueden superponerse: {name} y {other}.',
+  'gardenlib.fill.why.no-key': 'Claude está desactivado',
+  'gardenlib.fill.why.over-cap': 'Ya se usó la ayuda de IA de este mes para tu granja',
+  'gardenlib.fill.why.quota': 'Ya se usó la ayuda de IA de hoy para esto',
+  'gardenlib.fill.why.rate-limit': 'Claude no responde en este momento',
+  'gardenlib.fill.why.offline': 'No se puede conectar con Claude en este momento',
+  'gardenlib.fill.why.timeout': 'Claude tardó demasiado',
+  'gardenlib.fill.why.invalid': 'Las ideas de Claude no cabían en esta cama',
+  'gardenlib.fill.limit.monthly-budget': 'Ya se usó la ayuda de IA de este mes para tu granja',
+  'gardenlib.fill.limit.owner-disabled': 'La ayuda de IA está desactivada para esta granja',
+  'gardenlib.fill.limit.plan-excluded': 'Esta ayuda de IA no está en el plan {plan}',
+  'gardenlib.fill.limit.plan-excluded-any': 'Esta ayuda de IA no está en tu plan',
+  'gardenlib.fill.limit.free-pool': 'La ayuda de IA gratuita vuelve el día 1',
+  'gardenlib.fill.limit.global': 'La ayuda de IA está en pausa este mes',
+  'gardenlib.fill.limit.daily-quota': 'Ya se usó la ayuda de IA de hoy para esto',
+  'gardenlib.fill.nothingFits':
+    '{prefix}, y ninguna receta ni cultivo planificado cabe en esta cama el {date}. Prueba una fecha más tarde o libera espacio.',
+  'gardenlib.fill.fromRecipe': 'un plan sencillo a partir de la receta {recipe}',
+  'gardenlib.fill.bySpacing':
+    'un plan sencillo que acomoda tus cultivos planificados según su espaciado',
+  'gardenlib.fill.planned': '{prefix}, así que esto es {source}. Todo aquí funciona igual.',
+  'gardenlib.map.from': 'desde el {date}',
+  'gardenlib.map.notPlaced': 'aún sin colocar',
+  'gardenlib.page.notDesignable':
+    'Esta Área no tiene diseñador de jardín. Solo los jardines y los invernaderos lo tienen.',
+  'gardenlib.page.offlineNotSaved':
+    'Estás sin conexión y este jardín todavía no está guardado en este dispositivo. Ábrelo una vez con señal, o abre tus Tarjetas guardadas.',
+  'gardenlib.page.notInCopy': 'Este jardín no está en la copia guardada en este dispositivo.',
+  'gardenlib.page.didntLoad': 'El diseñador de jardín no cargó. Inténtalo de nuevo.'
 };

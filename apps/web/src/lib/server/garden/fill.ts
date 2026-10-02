@@ -8,7 +8,8 @@
 import { listBlocks } from '$lib/db/blocks';
 import { listCrops, type Crop } from '$lib/db/crops';
 import type { FillRequest, FillResponse } from '$lib/garden/api';
-import { occupancyIntervals } from '$lib/garden/occupancy';
+import { longDate, occupancyIntervals } from '$lib/garden/occupancy';
+import { t, type MessageKey } from '$lib/i18n';
 import { resolveSpacing } from '$lib/garden/plantCount';
 import {
   dayOf,
@@ -24,6 +25,7 @@ import { deterministicPlantingWindow, type PlantingWindow } from '$lib/plan/plan
 import type { BedRecipePlugin, CropPlugin } from '$lib/plugins/schemas';
 import { bedFrostIso, bedFrostMs } from '$lib/server/blockFrost.server';
 import { aiLimitReason, type AiLimit } from '$lib/billing/aiLimit';
+import { PLANS } from '$lib/billing/plans';
 import { aiLimitOf, recordFallback, tryAiWithGuard } from '../aiDegrade';
 import type { FallbackReason } from '../aiTry';
 import { recordCall } from '../aiGuard';
@@ -40,14 +42,6 @@ const DAY_MS = 86_400_000;
 
 function isoDay(ms: number): string {
   return new Date(dayOf(ms)).toISOString().slice(0, 10);
-}
-
-function longDate(ms: number): string {
-  return new Date(ms).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC'
-  });
 }
 
 export interface FillInputs {
@@ -218,30 +212,38 @@ function windowLookup(inputs: FillInputs): (id: string) => PlantingWindow | null
 
 type Why = FallbackReason | 'invalid' | 'quota';
 
-const WHY_PREFIX: Record<Why, string> = {
-  'no-key': 'Claude is off',
-  'over-cap': "This month's AI help for your farm is used up",
-  quota: "Today's AI help for this is used up",
-  'rate-limit': "Claude isn't answering right now",
-  offline: "Claude can't be reached right now",
-  timeout: 'Claude took too long',
-  invalid: "Claude's ideas didn't fit this bed"
-};
+/** `aiLimitReason` in the viewer's language; English reads it as is. */
+function limitPrefix(limit: AiLimit, locale: string | null | undefined): string {
+  if (!locale || locale === 'en') return aiLimitReason(limit);
+  const detail = limit.detail === 'token-quota' ? 'daily-quota' : limit.detail;
+  if (detail === 'plan-excluded') {
+    return limit.plan
+      ? t(locale, 'gardenlib.fill.limit.plan-excluded', { plan: PLANS[limit.plan].name })
+      : t(locale, 'gardenlib.fill.limit.plan-excluded-any');
+  }
+  return t(locale, `gardenlib.fill.limit.${detail}`);
+}
 
 export function fallbackMessage(
   why: Why,
   plan: DeterministicFillPlan,
   dateMs: number,
-  limit: AiLimit | null = null
+  limit: AiLimit | null = null,
+  locale?: string | null
 ): string {
-  const prefix = limit ? aiLimitReason(limit) : WHY_PREFIX[why];
+  const prefix = limit
+    ? limitPrefix(limit, locale)
+    : t(locale, `gardenlib.fill.why.${why}` as MessageKey);
   if (plan.proposals.length === 0) {
-    return `${prefix}, and no recipe or planned crop fits this bed on ${longDate(dateMs)}. Try a later date or free up some space.`;
+    return t(locale, 'gardenlib.fill.nothingFits', {
+      prefix,
+      date: longDate(dateMs, locale)
+    });
   }
   const source = plan.recipe
-    ? `a plain plan from the ${plan.recipe.displayName} recipe`
-    : 'a plain plan that fits your planned crops by spacing';
-  return `${prefix}, so this is ${source}. Everything here works the same.`;
+    ? t(locale, 'gardenlib.fill.fromRecipe', { recipe: plan.recipe.displayName })
+    : t(locale, 'gardenlib.fill.bySpacing');
+  return t(locale, 'gardenlib.fill.planned', { prefix, source });
 }
 
 export async function fillBed(args: {
@@ -249,8 +251,10 @@ export async function fillBed(args: {
   bed: DesignableBed;
   req: FillRequest;
   inputs: FillInputs;
+  /** Language for the fallback banner; English when unset. */
+  locale?: string | null;
 }): Promise<FillResponse> {
-  const { userId, bed, req, inputs } = args;
+  const { userId, bed, req, inputs, locale } = args;
   const plan = deterministicFillPlan(inputs.recipes, inputs.unplaced, inputs.ctx, req.dateMs);
   const tried = await tryAiWithGuard({
     endpoint: 'garden-fill',
@@ -268,7 +272,7 @@ export async function fillBed(args: {
       proposals: plan.proposals,
       provenance: 'fallback',
       fallbackReason: tried.fallbackReason,
-      message: fallbackMessage(why, plan, req.dateMs, limit),
+      message: fallbackMessage(why, plan, req.dateMs, limit, locale),
       aiLimit: limit
     };
   }
@@ -300,7 +304,7 @@ export async function fillBed(args: {
       proposals: plan.proposals,
       provenance: 'fallback',
       fallbackReason: null,
-      message: fallbackMessage('invalid', plan, req.dateMs)
+      message: fallbackMessage('invalid', plan, req.dateMs, null, locale)
     };
   }
   return { proposals, provenance: 'ai', fallbackReason: null, message: null };

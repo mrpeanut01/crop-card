@@ -70,14 +70,17 @@ export const PATCH: RequestHandler = async (event) => {
   if (reshapes && (isDesignable(existing.kind) || isDesignable(nextKind))) {
     const pick = <T>(next: T | null | undefined, prev: T | null | undefined): T | null =>
       next === undefined ? (prev ?? null) : next;
-    const problem = bedsPastAreaEdge({
-      id: existing.id,
-      name: parsed.data.name ?? existing.name,
-      kind: nextKind,
-      widthFt: pick(parsed.data.widthFt, existing.widthFt),
-      lengthFt: pick(parsed.data.lengthFt, existing.lengthFt),
-      geometryGeojson: pick(parsed.data.geometryGeojson, existing.geometryGeojson)
-    });
+    const problem = bedsPastAreaEdge(
+      {
+        id: existing.id,
+        name: parsed.data.name ?? existing.name,
+        kind: nextKind,
+        widthFt: pick(parsed.data.widthFt, existing.widthFt),
+        lengthFt: pick(parsed.data.lengthFt, existing.lengthFt),
+        geometryGeojson: pick(parsed.data.geometryGeojson, existing.geometryGeojson)
+      },
+      event.locals?.locale
+    );
     if (problem) return json(problem, { status: 409 });
   }
   const { details: rawDetails, ...rest } = parsed.data;

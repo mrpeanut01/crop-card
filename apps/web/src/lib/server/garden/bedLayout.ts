@@ -10,6 +10,7 @@ import { getField } from '$lib/db/fields';
 import { isDesignable, normalizeRotationDeg, usesDesignerLayout } from '$lib/farm/areaKinds';
 import { bedRect, canvasFromArea, clampFootprint, rectsOverlap } from '$lib/garden/geometry';
 import type { Rotation } from '$lib/garden/types';
+import { t } from '$lib/i18n';
 
 const EPS = 1e-6;
 
@@ -40,7 +41,8 @@ function outside(c: Crop, size: { widthFt: number; lengthFt: number }): boolean 
 export function plantingsPastBedEdge(
   blockId: string,
   bedName: string,
-  size: Size
+  size: Size,
+  locale?: string | null
 ): BedLayoutProblem | null {
   if (!size.widthFt || !size.lengthFt) return null;
   const sized = { widthFt: size.widthFt, lengthFt: size.lengthFt };
@@ -48,7 +50,11 @@ export function plantingsPastBedEdge(
   if (inTheWay.length === 0) return null;
   const names = [...new Set(inTheWay.map((c) => c.varietyDisplayName))].join(', ');
   return {
-    error: `${bedName} can't get that small. ${names} would sit past the new edge. Move or shrink ${inTheWay.length === 1 ? 'it' : 'them'} first.`,
+    error: t(locale, 'garden.warn.tooSmall', {
+      name: bedName,
+      names,
+      them: t(locale, inTheWay.length === 1 ? 'garden.warn.it' : 'garden.warn.them')
+    }),
     code: 'OUTSIDE_AREA'
   };
 }
@@ -85,14 +91,17 @@ function rectOf(b: Placed) {
 
 /** Refuses a garden or greenhouse Size (or outline) that would leave a
  *  placed bed past its edge, naming the beds that no longer fit. */
-export function bedsPastAreaEdge(next: {
-  id: string;
-  name: string;
-  kind: Parameters<typeof isDesignable>[0];
-  widthFt: number | null;
-  lengthFt: number | null;
-  geometryGeojson: string | null;
-}): BedLayoutProblem | null {
+export function bedsPastAreaEdge(
+  next: {
+    id: string;
+    name: string;
+    kind: Parameters<typeof isDesignable>[0];
+    widthFt: number | null;
+    lengthFt: number | null;
+    geometryGeojson: string | null;
+  },
+  locale?: string | null
+): BedLayoutProblem | null {
   if (!isDesignable(next.kind)) return null;
   const canvas = canvasFromArea({
     id: next.id,
@@ -110,14 +119,18 @@ export function bedsPastAreaEdge(next: {
   if (outsideBeds.length === 0) return null;
   const names = outsideBeds.map((b) => b.name).join(', ');
   return {
-    error: `${next.name} can't get that small. ${names} would sit past the new edge. Move ${outsideBeds.length === 1 ? 'it' : 'them'} first.`,
+    error: t(locale, 'gardenlib.layout.areaTooSmall', {
+      name: next.name,
+      names,
+      them: t(locale, outsideBeds.length === 1 ? 'gardenlib.layout.it' : 'gardenlib.layout.them')
+    }),
     code: 'OUTSIDE_AREA'
   };
 }
 
 /** Null when the block (as it would be saved) is fine where it is. Blocks
  *  that aren't placed beds in a garden or greenhouse are never checked. */
-export function bedLayoutProblem(next: Placed): BedLayoutProblem | null {
+export function bedLayoutProblem(next: Placed, locale?: string | null): BedLayoutProblem | null {
   if (!next.kind || !usesDesignerLayout(next.kind) || !next.fieldId) return null;
   const rect = rectOf(next);
   if (!rect) return null;
@@ -136,14 +149,20 @@ export function bedLayoutProblem(next: Placed): BedLayoutProblem | null {
     rect.x + rect.w > canvas.widthFt + EPS ||
     rect.y + rect.l > canvas.lengthFt + EPS
   ) {
-    return { error: `${next.name} would run past the edge of ${area.name}.`, code: 'OUTSIDE_AREA' };
+    return {
+      error: t(locale, 'gardenlib.layout.pastArea', { name: next.name, area: area.name }),
+      code: 'OUTSIDE_AREA'
+    };
   }
   for (const other of listBlocks()) {
     if (other.id === next.id || other.fieldId !== next.fieldId) continue;
     if (!other.kind || !usesDesignerLayout(other.kind)) continue;
     const r = rectOf(other);
     if (r && rectsOverlap(rect, r)) {
-      return { error: `Beds can't overlap: ${next.name} and ${other.name}.`, code: 'OVERLAP' };
+      return {
+        error: t(locale, 'gardenlib.layout.overlap', { name: next.name, other: other.name }),
+        code: 'OVERLAP'
+      };
     }
   }
   return null;

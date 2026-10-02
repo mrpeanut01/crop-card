@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { stockUnitLabel } from '$lib/stock/units';
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import { onMount } from 'svelte';
   import { createT, type TranslateKey } from '$lib/i18n';
   import { calendarEventCrop, calendarEventTitle } from '$lib/calendar/eventTitle';
@@ -2475,9 +2477,12 @@
                                   class="crop-name"
                                   draggable="false"
                                   ondragstart={(e) => e.preventDefault()}
-                                  title={p.varietyDisplayName}
+                                  title={cropDisplayNameByEnglish(
+                                    p.varietyDisplayName,
+                                    data.locale
+                                  )}
                                   >{data.seedShortNameByDisplay?.[p.varietyDisplayName] ??
-                                    p.varietyDisplayName}</a
+                                    cropDisplayNameByEnglish(p.varietyDisplayName, data.locale)}</a
                                 >
                                 {#if p.quantityPlanted !== undefined && p.quantityUnit}
                                   <span class="crop-qty">{p.quantityPlanted} {p.quantityUnit}</span>
@@ -2623,7 +2628,7 @@
                       <span class="seed-name">{s.shortName ?? s.displayName}</span>
                       <span class="seed-meta">
                         {s.onHand}
-                        {s.defaultUnit}
+                        {stockUnitLabel(s.defaultUnit as StockUnit, 'seed', data.locale)}
                         {#if empty}
                           · {tr('plan.page.seed.emptyTag')}{/if}
                       </span>
@@ -3187,7 +3192,11 @@
               <ul class="delete-list">
                 {#each deleteCropIds as id (id)}
                   {@const planting = data.swimPlantings?.find((p) => p.cropId === id)}
-                  <li>{planting?.varietyDisplayName ?? id}</li>
+                  <li>
+                    {planting
+                      ? cropDisplayNameByEnglish(planting.varietyDisplayName, data.locale)
+                      : id}
+                  </li>
                 {/each}
               </ul>
               <p class="hint">{tr('plan.page.del.hint')}</p>

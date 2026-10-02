@@ -12,6 +12,7 @@
   render continuously with the off-year half rendered at lower opacity.
 -->
 <script lang="ts">
+  import { harvestTargetLabel } from '$lib/calendar/eventTitle';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { createT } from '$lib/i18n';
@@ -344,7 +345,7 @@
       for (const t of p.harvestTargets) {
         lines.push(
           tr('planui.swim.harvestTarget', {
-            label: t.label,
+            label: harvestTargetLabel(t.label, page.data?.locale),
             range: fmtDateRange(t.startMs, t.endMs)
           })
         );
@@ -954,19 +955,21 @@
                   style="top: {htTop}px; height: {htHeight}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX *
                     2}px);"
                   title={tr('planui.swim.harvestTitle', {
-                    label: t.label,
+                    label: harvestTargetLabel(t.label, page.data?.locale),
                     code: t.stageCode,
                     start: htStart,
                     end: htEnd
                   })}
                   aria-label={tr('planui.swim.harvestAria', {
-                    label: t.label,
+                    label: harvestTargetLabel(t.label, page.data?.locale),
                     start: htStart,
                     end: htEnd
                   })}
                 >
                   <span class="ht-line ht-leader">{tr('planui.swim.harvest')}</span>
-                  <span class="ht-line ht-tag">{t.label}</span>
+                  <span class="ht-line ht-tag"
+                    >{harvestTargetLabel(t.label, page.data?.locale)}</span
+                  >
                   <span class="ht-line ht-date">{htStart}</span>
                   <span class="ht-line ht-date">{htEnd}</span>
                 </div>

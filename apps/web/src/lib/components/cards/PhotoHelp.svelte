@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
   import AiLimitNudge from '$lib/components/billing/AiLimitNudge.svelte';
   import type { AiLimit } from '$lib/billing/aiLimit';
@@ -345,7 +346,11 @@
         </select>
       </label>
     {:else if target}
-      <p class="about">{tr('cardsui.photo.about', { label: target.label })}</p>
+      <p class="about">
+        {tr('cardsui.photo.about', {
+          label: cropDisplayNameByEnglish(target.label, page.data?.locale)
+        })}
+      </p>
     {/if}
 
     {#if canWrite}

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { cropFamilyLabel } from '$lib/plugins/familyLabel';
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import { noteHoldWrite } from '$lib/animals/recordClient';
   import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
   import { goto, invalidateAll } from '$app/navigation';
@@ -762,7 +764,7 @@
       : selectedBlocks
           .flatMap((b) => b.crops)
           .slice(0, 3)
-          .map((c) => c.displayName)
+          .map((c) => cropDisplayNameByEnglish(c.displayName, data.locale))
           .join(' · ')
   );
   const ctxCompatibility = $derived<CompatibilityState | undefined>(
@@ -894,7 +896,10 @@
           {:else}
             <ul>
               {#each b.crops as c, idx (idx)}
-                <li>{c.displayName} <em>({c.cropFamily})</em></li>
+                <li>
+                  {cropDisplayNameByEnglish(c.displayName, data.locale)}
+                  <em>({c.cropFamily ? cropFamilyLabel(c.cropFamily, data.locale) : ''})</em>
+                </li>
               {/each}
             </ul>
           {/if}

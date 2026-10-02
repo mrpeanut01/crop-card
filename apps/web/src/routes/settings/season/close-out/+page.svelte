@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import { browser } from '$app/environment';
   import { invalidateAll } from '$app/navigation';
   import { ChevronRight, Check, X, Lock } from 'lucide-svelte';
@@ -208,7 +209,10 @@
         {#if !plantingsOk}
           <ul class="unresolved-list">
             {#each data.preflight.plantings.filter((p) => !p.resolved) as p (p.cropId)}
-              <li>{p.varietyDisplayName} <span class="muted">({p.status})</span></li>
+              <li>
+                {cropDisplayNameByEnglish(p.varietyDisplayName, data.locale)}
+                <span class="muted">({p.status})</span>
+              </li>
             {/each}
           </ul>
         {/if}

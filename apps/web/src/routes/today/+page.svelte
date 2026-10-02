@@ -251,7 +251,7 @@
     data.upcoming.slice(0, 8).map((e: CalendarEvent, i: number) => ({
       id: `${e.kind}:${e.blockId}:${e.startMs}:${i}`,
       title: e.title,
-      crop: e.varietyDisplayName,
+      crop: cropDisplayNameByEnglish(e.varietyDisplayName, data.locale),
       window: fmt.day(e.startMs, 'month-day')
     }))
   );
@@ -525,7 +525,10 @@
     <div class="s-main">
       <strong>{e.title}</strong>
       <span class="s-meta"
-        >{fmtRange(e.startMs, e.endMs)} · {e.varietyDisplayName} ·
+        >{fmtRange(e.startMs, e.endMs)} · {cropDisplayNameByEnglish(
+          e.varietyDisplayName,
+          data.locale
+        )} ·
         <span class="s-kind"
           >{EVENT_KIND_LABEL[e.kind]
             ? tr(EVENT_KIND_LABEL[e.kind])

@@ -1,3 +1,4 @@
+import { cropDisplayName } from '$lib/i18n/cropName';
 import { listBlocks } from '$lib/db/blocks';
 import { listCrops, listYearsWithCrops } from '$lib/db/crops';
 import { listFertilityApplicationsForBlock } from '$lib/db/fertility';
@@ -81,7 +82,7 @@ export function loadSeasonView(
   function toPlantingIn(c: (typeof crops)[number]) {
     return {
       id: c.id,
-      name: c.varietyDisplayName,
+      name: cropDisplayName(c.cropPluginId, c.varietyDisplayName, locale),
       blockId: c.blockId,
       blockName: blockName.get(c.blockId) ?? t(locale, 'today.tl.unnamedBlock'),
       plantingDate: c.plantingDate,

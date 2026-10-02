@@ -53,14 +53,14 @@ test.describe('/settings/account profile', () => {
     await name.fill('  Dale   Ridge ');
     await save(page);
     await expect(name).toHaveValue('Dale Ridge');
-    await expect(page.locator('header.topbar .owner-chip > summary')).toHaveAttribute(
+    await expect(page.locator('header.topbar .account-menu > summary')).toHaveAttribute(
       'title',
       'Dale Ridge'
     );
 
     await name.fill('');
     await save(page);
-    await expect(page.locator('header.topbar .owner-chip > summary')).not.toHaveAttribute(
+    await expect(page.locator('header.topbar .account-menu > summary')).not.toHaveAttribute(
       'title',
       'Dale Ridge'
     );

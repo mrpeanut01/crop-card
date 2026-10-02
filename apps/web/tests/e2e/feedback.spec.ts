@@ -88,9 +88,8 @@ test.describe('Send feedback from the app chrome', () => {
     await page.waitForLoadState('networkidle');
     await noHorizontalOverflow(page);
 
-    const nav = page.getByRole('navigation', { name: 'Primary' });
-    await nav.getByLabel('More pages').click();
-    const item = nav.getByRole('button', { name: 'Send feedback' });
+    await page.getByLabel('Account', { exact: true }).click();
+    const item = page.getByRole('button', { name: 'Send feedback' });
     const box = await item.boundingBox();
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(48);
     await item.click();
@@ -146,77 +145,57 @@ test.describe('Send feedback from the app chrome', () => {
     await admin.context().close();
   });
 
-  test('the More menu holds Send feedback on a desktop screen too', async ({ page }) => {
+  test('the account menu holds Send feedback on a desktop screen too', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await signInNewUser(page, 'fbdesk');
     await createOnboardedFarm(page, { growing: ['garden'] });
     await page.goto('/today');
     await page.waitForLoadState('networkidle');
-    const nav = page.getByRole('navigation', { name: 'Primary' });
-    await expect(nav.getByRole('link', { name: 'Inventory' })).toBeVisible();
-    await nav.getByLabel('More pages').click();
-    await expect(nav.locator('.more-link', { hasText: 'Inventory' })).toBeHidden();
-    await nav.getByRole('button', { name: 'Send feedback' }).click();
+    await page.getByLabel('Account', { exact: true }).click();
+    await page.getByRole('button', { name: 'Send feedback' }).click();
     await expect(page.getByRole('dialog', { name: 'Send feedback' })).toBeVisible();
     await noHorizontalOverflow(page);
   });
 
-  test('every page and More stay in sight at laptop and tablet widths', async ({ page }) => {
+  test('every page is one menu away at laptop and tablet widths, with no More', async ({
+    page
+  }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await signInNewUser(page, 'fbwidths');
     await createOnboardedFarm(page, { growing: ['garden'] });
     await page.goto('/today');
     await page.waitForLoadState('networkidle');
     const nav = page.getByRole('navigation', { name: 'Primary' });
-    const pages = [
-      'Today',
-      'Plan',
-      'Spray',
-      'Scout',
-      'Harvest',
-      'Inventory',
-      'Equipment',
-      'Records',
-      'Cards'
-    ];
-    for (const width of [1440, 1366, 1280, 1024, 900, 800]) {
+    const groups: Record<string, string[]> = {
+      actions: ['Spray', 'Scout', 'Harvest'],
+      farm: ['Inventory', 'Equipment'],
+      records: ['Records', 'Cards']
+    };
+    for (const width of [1440, 1366, 1280, 1024, 960, 900, 800, 769]) {
       await page.setViewportSize({ width, height: 900 });
       await page.waitForTimeout(150);
-      const navBox = (await nav.boundingBox())!;
-      const more = nav.getByLabel('More pages');
-      const moreBox = (await more.boundingBox())!;
-      expect(moreBox.x + moreBox.width, `More at ${width}`).toBeLessThanOrEqual(
-        navBox.x + navBox.width + 1
-      );
-      const actions = nav.locator('details.actions-nav > summary');
-      const actionsInline = await actions.isVisible();
-      if (actionsInline) {
-        await actions.click();
-        for (const name of ['Spray', 'Scout', 'Harvest']) {
-          await expect(
-            nav.locator('.action-link', { hasText: name }),
-            `${name} at ${width}`
-          ).toBeVisible();
-        }
-        await actions.click();
+      await expect(nav.getByText('More', { exact: true })).toHaveCount(0);
+      const fits = await nav.evaluate((n) => n.scrollWidth <= n.clientWidth + 1);
+      expect(fits, `nav fits at ${width}`).toBe(true);
+      for (const name of ['Today', 'Plan']) {
+        await expect(
+          nav.locator('a.nav-link', { hasText: name }),
+          `${name} at ${width}`
+        ).toBeVisible();
       }
-      await more.click();
-      for (const name of pages) {
-        const isAction = ['Spray', 'Scout', 'Harvest'].includes(name);
-        const inMenu = nav.locator('.more-link.page-link', { hasText: name });
-        if (isAction) {
-          expect(await inMenu.isVisible(), `${name} at ${width}`).toBe(!actionsInline);
-          continue;
+      for (const [id, names] of Object.entries(groups)) {
+        const summary = nav.locator(`details[data-group="${id}"] > summary`);
+        await expect(summary, `${id} at ${width}`).toBeVisible();
+        await summary.click();
+        for (const name of names) {
+          const link = nav.locator(`details[data-group="${id}"] .menu-link`, { hasText: name });
+          await expect(link, `${name} at ${width}`).toBeVisible();
+          const box = (await link.boundingBox())!;
+          expect(box.x + box.width, `${name} on screen at ${width}`).toBeLessThanOrEqual(width);
+          expect(box.height).toBeGreaterThanOrEqual(48);
         }
-        const inline = nav.locator('a.nav-link', { hasText: name });
-        const inlineBox = (await inline.isVisible()) ? await inline.boundingBox() : null;
-        const shownInline =
-          inlineBox !== null && inlineBox.x + inlineBox.width <= navBox.x + navBox.width + 1;
-        const shownInMenu = await inMenu.isVisible();
-        expect(shownInline !== shownInMenu, `${name} at ${width}`).toBe(true);
+        await page.keyboard.press('Escape');
       }
-      await expect(nav.getByRole('button', { name: 'Send feedback' })).toBeVisible();
-      await more.click();
       await noHorizontalOverflow(page);
     }
   });

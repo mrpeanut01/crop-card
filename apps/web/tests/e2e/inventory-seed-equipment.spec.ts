@@ -123,8 +123,7 @@ test.describe('equipment (#474)', () => {
     await expect(page.getByRole('tab', { name: /Sprayers/ })).toHaveCount(0);
 
     const nav = page.getByRole('navigation', { name: 'Primary' });
-    const inline = nav.locator('a.nav-link', { hasText: 'Equipment' });
-    if (!(await inline.isVisible())) await nav.getByLabel('More pages').click();
+    await nav.locator('details[data-group="farm"] > summary').click();
     await nav.getByRole('link', { name: 'Equipment' }).click();
     await expect(page).toHaveURL(/\/equipment$/);
     await expect(page.getByRole('heading', { name: 'Equipment', level: 1 })).toBeVisible();
@@ -197,11 +196,8 @@ test.describe('equipment (#474)', () => {
     );
     expect(overflow).toBeLessThanOrEqual(0);
     const nav = page.getByRole('navigation', { name: 'Primary' });
-    const direct = nav.getByRole('link', { name: 'Equipment' });
-    if (!(await direct.isVisible())) {
-      await nav.getByLabel('More pages').click();
-    }
-    await nav.getByRole('link', { name: 'Equipment' }).first().click();
+    await nav.locator('details[data-group="farm"] > summary').click();
+    await nav.getByRole('link', { name: 'Equipment' }).click();
     await expect(page).toHaveURL(/\/equipment$/);
   });
 

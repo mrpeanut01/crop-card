@@ -98,7 +98,7 @@ test.describe('persona usability fixes', () => {
     );
   });
 
-  test('at phone width the bottom bar keeps five 48px tabs and folds the rest into More', async ({
+  test('at phone width the bottom bar has five 48px tabs and the groups open above it', async ({
     page
   }) => {
     await page.setViewportSize({ width: 375, height: 740 });
@@ -107,16 +107,22 @@ test.describe('persona usability fixes', () => {
     await page.waitForLoadState('networkidle');
     const nav = page.getByRole('navigation', { name: 'Primary' });
     const visible = nav.locator('a.nav-link:visible, summary.nav-link:visible');
-    await expect(visible).toHaveCount(6);
+    await expect(visible).toHaveCount(5);
     for (const box of await visible.evaluateAll((els) =>
       els.map((e) => e.getBoundingClientRect())
     )) {
       expect(box.width).toBeGreaterThanOrEqual(48);
       expect(box.height).toBeGreaterThanOrEqual(48);
     }
-    await expect(nav.getByRole('link', { name: 'Inventory' }).first()).toBeHidden();
-    await nav.getByLabel('More pages').click();
-    await expect(nav.locator('.more-link', { hasText: 'Inventory' })).toBeVisible();
+    await nav.locator('details[data-group="farm"] > summary').click();
+    const inventory = nav.locator('.menu-link', { hasText: 'Inventory' });
+    await expect(inventory).toBeVisible();
+    const navBox = (await nav.boundingBox())!;
+    const invBox = (await inventory.boundingBox())!;
+    expect(invBox.y + invBox.height).toBeLessThanOrEqual(navBox.y);
+    expect(invBox.x).toBeGreaterThanOrEqual(0);
+    expect(invBox.x + invBox.width).toBeLessThanOrEqual(375);
+    await page.keyboard.press('Escape');
 
     const seg = page.getByTestId('today-deck').getByRole('button', { name: 'Week' });
     const segBox = await seg.boundingBox();

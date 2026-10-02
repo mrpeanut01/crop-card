@@ -40,8 +40,8 @@ describe('t()', () => {
 
   it('createT binds the locale', () => {
     const tes = createT('es');
-    expect(tes('nav.more')).toBe('Más');
-    expect(createT('en')('nav.more')).toBe('More');
+    expect(tes('nav.actions')).toBe('Acciones');
+    expect(createT('en')('nav.actions')).toBe('Actions');
   });
 
   it('never returns an empty string for any key in any locale', () => {

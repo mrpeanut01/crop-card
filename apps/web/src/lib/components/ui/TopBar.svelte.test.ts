@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
 
 vi.mock('$app/state', () => ({
   page: { url: new URL('http://localhost/today') }
@@ -75,24 +75,68 @@ describe('TopBar animals entry (Phase 32B)', () => {
   });
 });
 
-describe('TopBar equipment entry (#474)', () => {
-  it('links Equipment right after Inventory', () => {
+function groupLinks(container: HTMLElement, id: string) {
+  const group = container.querySelector(`nav.primary-nav > details[data-group="${id}"]`);
+  return [...(group?.querySelectorAll('.group-menu a') ?? [])].map((a) => a.getAttribute('href'));
+}
+
+describe('TopBar primary nav', () => {
+  it('has five entries and no More menu: Today, Plan, Actions, Farm, Records', () => {
     const { container } = render(TopBar, { online: true, pendingCount: 0 });
     const nav = container.querySelector('nav.primary-nav') as HTMLElement;
-    const hrefs = [...nav.querySelectorAll(':scope > a')].map((a) => a.getAttribute('href'));
-    const more = [...nav.querySelectorAll('.more-menu a')].map((a) => a.getAttribute('href'));
-    const all = [...hrefs, ...more.filter((h) => !hrefs.includes(h))];
-    const i = all.indexOf('/inventory');
-    expect(i).toBeGreaterThan(-1);
-    expect(all[i + 1]).toBe('/equipment');
-    expect(within(nav).getAllByText('Equipment').length).toBeGreaterThan(0);
+    const entries = [...nav.children].map(
+      (el) => el.getAttribute('href') ?? el.getAttribute('data-group')
+    );
+    expect(entries).toEqual(['/today', '/plan', 'actions', 'farm', 'records']);
+    expect(nav.textContent).not.toContain('More');
+  });
+
+  it('puts Spray, Scout and Harvest under Actions', () => {
+    const { container } = render(TopBar, { online: true, pendingCount: 0 });
+    expect(groupLinks(container, 'actions')).toEqual(['/spray', '/scout', '/harvest']);
+  });
+
+  it('puts Inventory then Equipment under Farm (#474), with Animals first when kept', () => {
+    const plain = render(TopBar, { online: true, pendingCount: 0 });
+    expect(groupLinks(plain.container, 'farm')).toEqual(['/inventory', '/equipment']);
+    plain.unmount();
+    const withAnimals = render(TopBar, { online: true, pendingCount: 0, animalsLabel: 'Animals' });
+    expect(groupLinks(withAnimals.container, 'farm')).toEqual([
+      '/animals',
+      '/inventory',
+      '/equipment'
+    ]);
+  });
+
+  it('puts Records and Cards under Records', () => {
+    const { container } = render(TopBar, { online: true, pendingCount: 0 });
+    expect(groupLinks(container, 'records')).toEqual(['/records', '/cards']);
+  });
+
+  it('opens one group at a time and closes it on Escape', async () => {
+    const { container } = render(TopBar, { online: true, pendingCount: 0 });
+    const summary = (id: string) =>
+      container.querySelector(`details[data-group="${id}"] > summary`) as HTMLElement;
+    const open = () =>
+      [...container.querySelectorAll('details.nav-group[open]')].map((d) =>
+        d.getAttribute('data-group')
+      );
+    await fireEvent.click(summary('actions'));
+    expect(open()).toEqual(['actions']);
+    await fireEvent.click(summary('farm'));
+    expect(open()).toEqual(['farm']);
+    await fireEvent.keyDown(window, { key: 'Escape' });
+    expect(open()).toEqual([]);
   });
 });
 
-describe('TopBar feedback entry (#466)', () => {
-  it('offers Send feedback in the More menu at every width', () => {
-    const { container } = render(TopBar, { online: true, pendingCount: 0 });
-    const menu = container.querySelector('.more-menu') as HTMLElement;
+describe('TopBar feedback in the account menu (#466)', () => {
+  const user = { email: 'ann@example.com', name: 'Ann', role: 'owner' };
+
+  it('holds Send feedback behind the avatar', () => {
+    const { container } = render(TopBar, { online: true, pendingCount: 0, user });
+    const menu = container.querySelector('.account-menu') as HTMLElement;
+    expect(within(menu).getByLabelText('Account').tagName).toBe('SUMMARY');
     expect(within(menu).getByRole('button', { name: 'Send feedback' })).toBeInTheDocument();
     expect(container.querySelector('a[href="/admin/feedback"]')).toBeNull();
   });
@@ -101,38 +145,10 @@ describe('TopBar feedback entry (#466)', () => {
     const { container } = render(TopBar, {
       online: true,
       pendingCount: 0,
-      user: { email: 'a@b.c', role: 'owner', isSuperadmin: true }
+      user: { ...user, isSuperadmin: true }
     });
     expect(container.querySelector('a[href="/admin/feedback"]')?.textContent).toContain(
       'Feedback inbox'
-    );
-  });
-});
-
-describe('TopBar Actions menu', () => {
-  it('groups Spray, Scout and Harvest under one Actions dropdown for the top row', () => {
-    const { container } = render(TopBar, { online: true, pendingCount: 0 });
-    const actions = container.querySelector('nav.primary-nav > details.actions-nav') as HTMLElement;
-    expect(actions.querySelector('summary')?.textContent).toContain('Actions');
-    const hrefs = [...actions.querySelectorAll('.actions-menu a')].map((a) =>
-      a.getAttribute('href')
-    );
-    expect(hrefs).toEqual(['/spray', '/scout', '/harvest']);
-  });
-
-  it('keeps the three actions as their own bottom-bar tabs, placed after Plan', () => {
-    const { container } = render(TopBar, { online: true, pendingCount: 0 });
-    const nav = container.querySelector('nav.primary-nav') as HTMLElement;
-    const tabs = [...nav.querySelectorAll(':scope > a.nav-link')].map((a) =>
-      a.getAttribute('href')
-    );
-    expect(tabs.slice(0, 5)).toEqual(['/today', '/plan', '/spray', '/scout', '/harvest']);
-    for (const href of ['/spray', '/scout', '/harvest']) {
-      expect(nav.querySelector(`:scope > a[href="${href}"]`)?.classList).toContain('action-item');
-    }
-    const order = [...nav.children].map((el) => el.getAttribute('href') ?? el.className);
-    expect(order.indexOf('/plan')).toBeLessThan(
-      order.findIndex((c) => String(c).includes('actions-nav'))
     );
   });
 });

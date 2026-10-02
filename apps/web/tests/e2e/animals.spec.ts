@@ -47,11 +47,10 @@ test('an owner adds 24 layers, a helper moves them offline and the move replays 
   await page.waitForLoadState('networkidle');
   await expect(page.getByRole('heading', { level: 1, name: 'Animals' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Layers/ })).toBeVisible();
-  await expect(
-    page
-      .getByRole('navigation', { name: 'Primary' })
-      .getByRole('link', { name: 'Animals', exact: true })
-  ).toHaveCount(1);
+  const primary = page.getByRole('navigation', { name: 'Primary' });
+  await primary.locator('details[data-group="farm"] > summary').click();
+  await expect(primary.getByRole('link', { name: 'Animals', exact: true })).toHaveCount(1);
+  await page.keyboard.press('Escape');
 
   const helper = await provisionHelper(page, browser);
   await helper.goto(`/animals/groups/${groupId}`);
@@ -184,9 +183,10 @@ test('a garden household sees Pets & animals, no tag field and never the word li
 
   await page.goto('/animals');
   await page.waitForLoadState('networkidle');
-  await expect(
-    page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Pets & animals' })
-  ).toHaveCount(1);
+  const primary = page.getByRole('navigation', { name: 'Primary' });
+  await primary.locator('details[data-group="farm"] > summary').click();
+  await expect(primary.getByRole('link', { name: 'Pets & animals' })).toHaveCount(1);
+  await page.keyboard.press('Escape');
   const individuals = page.getByRole('heading', { name: 'Your animals' });
   const flocks = page.getByRole('heading', { name: 'Flocks and groups' });
   const [a, b] = await Promise.all([individuals.boundingBox(), flocks.boundingBox()]);

@@ -6,8 +6,6 @@
   import {
     BACKUP_COPY_NOTE,
     DOCUMENT_ACCEPT,
-    DOCUMENT_KIND_LABEL,
-    DOCUMENT_SUBJECT_LABEL,
     VAULT_OFF_COPY,
     formatBytes,
     formatLocalDay,
@@ -15,8 +13,16 @@
     type DocumentKind
   } from '$lib/documents/kinds';
   import { fileHref, refusalCopy, uploadDocument } from '$lib/documents/client';
+  import { createT } from '$lib/i18n';
+  import {
+    DOCUMENT_KIND_KEYS,
+    DOCUMENT_SUBJECT_KEYS,
+    localizeDocCopy
+  } from '$lib/components/documents/labels';
 
   const { data } = $props();
+
+  const tr = $derived(createT(data.locale));
 
   type Filter = DocumentKind | 'all';
   let filter = $state<Filter>('all');
@@ -60,11 +66,13 @@
 
   function attachedTo(d: DocumentMeta): string {
     const live = d.links.filter((l) => l.subjectExists);
-    if (live.length === 0) return 'Not attached to anything';
-    const names = [...new Set(live.map((l) => DOCUMENT_SUBJECT_LABEL[l.subjectType]))];
-    return `Attached to ${live.length === 1 ? 'a' : live.length} ${names.join(', ')}${
-      live.length > 1 ? ' records' : ''
-    }`;
+    if (live.length === 0) return tr('docs.page.notAttached');
+    const names = [...new Set(live.map((l) => tr(DOCUMENT_SUBJECT_KEYS[l.subjectType])))].join(
+      ', '
+    );
+    return live.length === 1
+      ? tr('docs.page.attachedOne', { names })
+      : tr('docs.page.attachedMany', { count: live.length, names });
   }
 
   async function onFile(e: Event) {
@@ -78,11 +86,11 @@
     const out = await uploadDocument(file, { kind: uploadKind, title: uploadTitle });
     busy = false;
     if (!out.ok) {
-      error = out.message;
+      error = localizeDocCopy(tr, out.message);
       return;
     }
     uploadTitle = '';
-    message = `Saved "${out.document.title}".`;
+    message = tr('docs.page.saved', { title: out.document.title });
     more = null;
     await invalidateAll();
   }
@@ -95,15 +103,15 @@
       const res = await fetch(`/api/documents/${encodeURIComponent(d.id)}`, { method: 'DELETE' });
       const body = (await res.json().catch(() => ({}))) as { code?: string; error?: string };
       if (!res.ok) {
-        error = refusalCopy(res.status, body);
+        error = localizeDocCopy(tr, refusalCopy(res.status, body));
         return;
       }
       confirming = null;
-      message = `Deleted "${d.title}".`;
+      message = tr('docs.page.deleted', { title: d.title });
       if (more) more = { ...more, docs: more.docs.filter((m) => m.id !== d.id) };
       await invalidateAll();
     } catch {
-      error = 'Deleting a file needs a connection.';
+      error = tr('docs.attach.deleteNeedsConnection');
     } finally {
       busy = false;
     }
@@ -131,72 +139,80 @@
   }
 </script>
 
-<svelte:head><title>Documents · CropCard</title></svelte:head>
+<svelte:head><title>{tr('docs.page.pageTitle')}</title></svelte:head>
 
-<SettingsShell title="Documents" kicker="Files and storage" hideFooter>
+<SettingsShell title={tr('docs.page.title')} kicker={tr('docs.page.kicker')} hideFooter>
   {#if !data.isOwner}
-    <p class="note" role="note">Only the farm owner can manage documents.</p>
+    <p class="note" role="note">{tr('docs.page.ownerOnly')}</p>
   {:else}
-    <SettingsSection
-      title="Storage"
-      sub="Lab reports, certificates, labels and receipts you keep with your records."
-    >
+    <SettingsSection title={tr('docs.page.storageTitle')} sub={tr('docs.page.storageSub')}>
       <div class="meter" data-testid="documents-usage">
         <div
           class="bar"
           role="meter"
-          aria-label="Storage used"
+          aria-label={tr('docs.page.storageAria')}
           aria-valuemin={0}
           aria-valuemax={data.capBytes}
           aria-valuenow={Math.min(data.usedBytes, data.capBytes)}
-          aria-valuetext="{formatBytes(data.usedBytes)} of {formatBytes(data.capBytes)} used"
+          aria-valuetext={tr('docs.page.usedOf', {
+            used: formatBytes(data.usedBytes),
+            cap: formatBytes(data.capBytes)
+          })}
         >
           <span class="fill" class:full={overCap} style="width: {pct}%"></span>
         </div>
         <p class="meter-text">
-          {formatBytes(data.usedBytes)} of {formatBytes(data.capBytes)} used
+          {tr('docs.page.usedOf', {
+            used: formatBytes(data.usedBytes),
+            cap: formatBytes(data.capBytes)
+          })}
         </p>
       </div>
       {#if overCap}
         <p class="warn" role="status" data-testid="documents-over-cap">
-          Your files stay readable. New uploads need room: delete files or move to a bigger plan.
-          <a href="/settings/billing">See plans</a>
+          {tr('docs.page.overCap')}
+          <a href="/settings/billing">{tr('docs.page.seePlans')}</a>
         </p>
       {/if}
       {#if photoTotals.length}
         <ul class="photos" data-testid="documents-photos">
           {#each photoTotals as t (t.kind)}
             <li>
-              <span>{DOCUMENT_KIND_LABEL[t.kind]}</span>
-              <span>{t.count} {t.count === 1 ? 'photo' : 'photos'} · {formatBytes(t.bytes)}</span>
+              <span>{tr(DOCUMENT_KIND_KEYS[t.kind])}</span>
+              <span>{tr('docs.page.photos', { count: t.count, size: formatBytes(t.bytes) })}</span>
             </li>
           {/each}
         </ul>
-        <p class="note">Photos stay with their journal entry or animal. Remove them there.</p>
+        <p class="note">{tr('docs.page.photosNote')}</p>
       {/if}
-      <p class="note">{BACKUP_COPY_NOTE}</p>
+      <p class="note">{localizeDocCopy(tr, BACKUP_COPY_NOTE)}</p>
       {#if data.canDelete}
         <a class="btn zip" href="/api/account/export.zip" download data-testid="documents-zip"
-          >Download all records and files (ZIP)</a
+          >{tr('docs.page.zip')}</a
         >
       {/if}
     </SettingsSection>
 
-    <SettingsSection title="Upload a file" sub="PDF, JPEG, PNG, WebP or CSV, up to 20 MB each.">
+    <SettingsSection title={tr('docs.page.uploadTitle')} sub={tr('docs.page.uploadSub')}>
       {#if !data.vaultEnabled}
-        <p class="note" role="note" data-testid="documents-vault-off">{VAULT_OFF_COPY}</p>
+        <p class="note" role="note" data-testid="documents-vault-off">
+          {localizeDocCopy(tr, VAULT_OFF_COPY)}
+        </p>
       {:else}
         <div class="upload">
           <label>
-            <span>What is it?</span>
+            <span>{tr('docs.page.whatIsIt')}</span>
             <select bind:value={uploadKind}>
               {#each uploadKinds as k (k)}
-                <option value={k}>{DOCUMENT_KIND_LABEL[k]}</option>
+                <option value={k}>{tr(DOCUMENT_KIND_KEYS[k])}</option>
               {/each}
             </select>
           </label>
           <label>
-            <span>Title <span class="optional">(optional)</span></span>
+            <span
+              >{tr('docs.page.titleLabel')}
+              <span class="optional">{tr('docs.page.optional')}</span></span
+            >
             <input type="text" maxlength="120" autocomplete="off" bind:value={uploadTitle} />
           </label>
           <label class="btn primary" class:disabled={busy}>
@@ -207,7 +223,7 @@
               onchange={onFile}
               data-testid="documents-upload-input"
             />
-            <span>{busy ? 'Uploading...' : 'Choose a file'}</span>
+            <span>{busy ? tr('docs.page.uploading') : tr('docs.page.chooseFile')}</span>
           </label>
         </div>
       {/if}
@@ -215,27 +231,27 @@
       {#if error}<p class="error" role="alert">{error}</p>{/if}
     </SettingsSection>
 
-    <SettingsSection title="Your files">
+    <SettingsSection title={tr('docs.page.filesTitle')}>
       {#if fileTotals.length > 1}
-        <div class="chips" role="group" aria-label="Show files of one kind">
+        <div class="chips" role="group" aria-label={tr('docs.page.showKindAria')}>
           <button
             type="button"
             class="chip"
             aria-pressed={filter === 'all'}
-            onclick={() => (filter = 'all')}>All</button
+            onclick={() => (filter = 'all')}>{tr('docs.page.all')}</button
           >
           {#each fileTotals as t (t.kind)}
             <button
               type="button"
               class="chip"
               aria-pressed={filter === t.kind}
-              onclick={() => (filter = t.kind)}>{DOCUMENT_KIND_LABEL[t.kind]} ({t.count})</button
+              onclick={() => (filter = t.kind)}>{tr(DOCUMENT_KIND_KEYS[t.kind])} ({t.count})</button
             >
           {/each}
         </div>
       {/if}
       {#if shown.length === 0}
-        <p class="note">No files yet.</p>
+        <p class="note">{tr('docs.page.none')}</p>
       {:else}
         <ul class="files" data-testid="documents-list">
           {#each shown as d (d.id)}
@@ -243,29 +259,35 @@
               <div class="file-text">
                 <span class="title">{d.title}</span>
                 <span class="sub"
-                  >{DOCUMENT_KIND_LABEL[d.kind]} · {formatBytes(d.byteSize)} · {formatLocalDay(
+                  >{tr(DOCUMENT_KIND_KEYS[d.kind])} · {formatBytes(d.byteSize)} · {formatLocalDay(
                     d.createdAt
                   )}</span
                 >
                 <span class="sub">{attachedTo(d)}</span>
               </div>
               <div class="row-actions">
-                <a class="btn" href={fileHref(d.id)} target="_blank" rel="noopener">Open</a>
+                <a class="btn" href={fileHref(d.id)} target="_blank" rel="noopener"
+                  >{tr('docs.page.open')}</a
+                >
                 {#if data.canDelete}
                   <button
                     type="button"
                     class="btn danger"
                     disabled={busy}
-                    onclick={() => (confirming = d.id)}>Delete</button
+                    onclick={() => (confirming = d.id)}>{tr('docs.page.delete')}</button
                   >
                 {/if}
               </div>
               {#if confirming === d.id}
-                <div class="confirm" role="alertdialog" aria-label="Delete {d.title}">
+                <div
+                  class="confirm"
+                  role="alertdialog"
+                  aria-label={tr('docs.page.deleteAria', { title: d.title })}
+                >
                   <p>
-                    Delete "{d.title}" for good?
+                    {tr('docs.page.confirmLead', { title: d.title })}
                     {#if d.links.some((l) => l.subjectExists)}
-                      {attachedTo(d)}; those records will say it was deleted.
+                      {tr('docs.page.thoseRecords', { attached: attachedTo(d) })}
                     {/if}
                   </p>
                   <div class="row-actions">
@@ -273,10 +295,10 @@
                       type="button"
                       class="btn danger"
                       disabled={busy}
-                      onclick={() => remove(d)}>Delete file</button
+                      onclick={() => remove(d)}>{tr('docs.page.deleteFile')}</button
                     >
                     <button type="button" class="btn" onclick={() => (confirming = null)}
-                      >Keep it</button
+                      >{tr('docs.page.keep')}</button
                     >
                   </div>
                 </div>
@@ -285,7 +307,7 @@
           {/each}
         </ul>
         {#if cursor !== null}
-          <button type="button" class="btn" onclick={loadMore}>Load more</button>
+          <button type="button" class="btn" onclick={loadMore}>{tr('docs.page.loadMore')}</button>
         {/if}
       {/if}
     </SettingsSection>

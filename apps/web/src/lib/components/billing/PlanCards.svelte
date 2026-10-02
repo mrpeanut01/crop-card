@@ -11,6 +11,9 @@
 
 <script lang="ts">
   import { Check } from 'lucide-svelte';
+  import { page } from '$app/state';
+  import { createT, type MessageKey } from '$lib/i18n';
+  import { localizedLine } from './localize';
   import {
     AI_BUDGET_EXAMPLES,
     PLANS,
@@ -30,16 +33,18 @@
 
   let { interval = $bindable('year'), current = null, cta }: Props = $props();
 
+  const tr = $derived(createT(page.data?.locale));
+
   function priceLine(plan: PlanId): { big: string; small: string } {
     const def = PLANS[plan];
-    if (def.monthlyPriceUsd === 0) return { big: '$0', small: 'forever, no card needed' };
+    if (def.monthlyPriceUsd === 0) return { big: '$0', small: tr('billing.plans.foreverNoCard') };
     if (interval === 'year') {
       return {
         big: formatUsd(annualMonthlyEquivalent(plan)),
-        small: `a month, billed ${formatUsd(def.annualPriceUsd)} a year`
+        small: tr('billing.plans.billedYearly', { price: formatUsd(def.annualPriceUsd) })
       };
     }
-    return { big: formatUsd(def.monthlyPriceUsd), small: 'a month, billed monthly' };
+    return { big: formatUsd(def.monthlyPriceUsd), small: tr('billing.plans.billedMonthly') };
   }
 
   const savings = $derived(
@@ -48,7 +53,7 @@
 </script>
 
 <div class="plans">
-  <div class="toggle" role="radiogroup" aria-label="Billing period">
+  <div class="toggle" role="radiogroup" aria-label={tr('billing.plans.periodAria')}>
     <button
       type="button"
       role="radio"
@@ -57,7 +62,8 @@
       onclick={() => (interval = 'year')}
       data-testid="interval-year"
     >
-      Yearly <span class="save">save {savings}%</span>
+      {tr('billing.plans.yearly')}
+      <span class="save">{tr('billing.plans.save', { pct: savings })}</span>
     </button>
     <button
       type="button"
@@ -67,7 +73,7 @@
       onclick={() => (interval = 'month')}
       data-testid="interval-month"
     >
-      Monthly
+      {tr('billing.plans.monthly')}
     </button>
   </div>
 
@@ -84,18 +90,28 @@
       >
         <header>
           <h3 id="plan-name-{plan}" class="name">{PLANS[plan].name}</h3>
-          {#if current === plan}<span class="badge">Your plan</span>{/if}
+          {#if current === plan}<span class="badge">{tr('billing.plans.yourPlan')}</span>{/if}
         </header>
         <div class="price">
           <span class="big">{price.big}</span>
           <span class="small">{price.small}</span>
         </div>
         <ul>
-          {#each PLAN_HIGHLIGHTS[plan] as line (line)}
-            <li><Check size={14} strokeWidth={2.25} aria-hidden="true" /> <span>{line}</span></li>
+          {#each PLAN_HIGHLIGHTS[plan] as line, i (line)}
+            <li>
+              <Check size={14} strokeWidth={2.25} aria-hidden="true" />
+              <span>{localizedLine(tr, line, `billing.plans.${plan}.h${i}` as MessageKey)}</span>
+            </li>
           {/each}
         </ul>
-        <p class="budget">{AI_BUDGET_EXAMPLES[plan]}</p>
+        <p class="budget">
+          {localizedLine(
+            tr,
+            AI_BUDGET_EXAMPLES[plan],
+            `billing.plans.budget.${plan}` as MessageKey,
+            { n: PLANS[plan].dailyQuota.allocate }
+          )}
+        </p>
         {#if action}
           {#if action.href && !action.disabled}
             <a

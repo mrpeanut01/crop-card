@@ -4,6 +4,7 @@
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import FeedbackSheet from './FeedbackSheet.svelte';
   import { claimHint, hintState, initHints, markHintSeen, releaseHint } from '$lib/client/hints';
+  import { createT } from '$lib/i18n';
 
   interface Props {
     /** Parent-side reasons to hold off (e.g. a sprayer needs decon). */
@@ -11,6 +12,8 @@
   }
 
   const { suppressed = false }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   const KEY = 'alpha_welcome';
   /** Device copy of "seen", so a second account on the same phone is not
@@ -69,19 +72,29 @@
   }
 </script>
 
-<SetupSheet {open} title="Welcome to CropCard" kicker="Alpha review" onClose={close}>
+<SetupSheet
+  {open}
+  title={tr('feedback.welcome.title')}
+  kicker={tr('feedback.welcome.kicker')}
+  onClose={close}
+>
   <div class="welcome" data-testid="alpha-welcome">
     <p>
-      CropCard is in alpha review. We are changing things quickly, so you will see new pieces most
-      weeks, and now and then something that does not work yet.
+      {tr('feedback.welcome.p1')}
     </p>
     <p>
-      If something looks wrong or you have an idea, please tell us.
-      <strong>Send feedback</strong> is always in the <strong>More</strong> menu.
+      {tr('feedback.welcome.p2a')}
+      <strong>{tr('feedback.alpha.send')}</strong>
+      {tr('feedback.welcome.p2b')}
+      <strong>{tr('feedback.alpha.more')}</strong>{tr('feedback.alpha.menuEnd')}
     </p>
     <div class="actions">
-      <button type="button" class="primary" onclick={close} data-autofocus>Got it</button>
-      <button type="button" class="secondary" onclick={sendFeedback}>Send feedback now</button>
+      <button type="button" class="primary" onclick={close} data-autofocus
+        >{tr('feedback.welcome.gotIt')}</button
+      >
+      <button type="button" class="secondary" onclick={sendFeedback}
+        >{tr('feedback.welcome.sendNow')}</button
+      >
     </div>
   </div>
 </SetupSheet>

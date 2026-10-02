@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { page } from '$app/state';
+  import { createT } from '$lib/i18n';
 
   interface Props {
     /** Where "Sign in" points; the landing page's own form. */
@@ -7,6 +9,8 @@
   }
 
   const { signInHref = '#signin-title' }: Props = $props();
+
+  const tr = $derived(createT(page.data?.locale));
 
   const KEY = 'cropcard.alpha-banner.dismissed';
   let show = $state(false);
@@ -30,17 +34,22 @@
 </script>
 
 {#if show}
-  <aside class="alpha" aria-label="Alpha review" data-testid="alpha-banner">
+  <aside class="alpha" aria-label={tr('feedback.banner.aria')} data-testid="alpha-banner">
     <div class="text">
-      <p class="title">Welcome. CropCard is in alpha review.</p>
+      <p class="title">{tr('feedback.banner.title')}</p>
       <p>
-        We are changing things quickly, so expect new pieces most weeks and the odd rough edge. Once
-        you <a href={signInHref}>sign in</a>, you can send us bug reports and ideas from
-        <strong>Send feedback</strong> in the <strong>More</strong> menu.
+        {tr('feedback.banner.p1')}
+        <a href={signInHref}>{tr('feedback.banner.signIn')}</a>{tr('feedback.banner.p2')}
+        <strong>{tr('feedback.alpha.send')}</strong>
+        {tr('feedback.alpha.in')}
+        <strong>{tr('feedback.alpha.more')}</strong>{tr('feedback.alpha.menuEnd')}
       </p>
     </div>
-    <button type="button" class="dismiss" onclick={dismiss} aria-label="Dismiss alpha notice"
-      >×</button
+    <button
+      type="button"
+      class="dismiss"
+      onclick={dismiss}
+      aria-label={tr('feedback.banner.dismissAria')}>×</button
     >
   </aside>
 {/if}

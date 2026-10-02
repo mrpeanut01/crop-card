@@ -3,8 +3,13 @@
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
+  import { createT, type MessageKey } from '$lib/i18n';
 
   let { data, form } = $props();
+
+  const tr = $derived(createT(data.locale));
+  const itemText = (id: string, part: 'name' | 'note' | 'since') =>
+    tr(`settings.integrations.${id}.${part}` as MessageKey);
 
   // Static integration list — these describe app-wide capability not
   // per-tenant state. Real connection status (e.g., NEWA API key set)
@@ -73,18 +78,21 @@
   const planned = integrations.filter((i) => i.status === 'planned');
 </script>
 
-<svelte:head><title>Integrations · CropCard</title></svelte:head>
+<svelte:head><title>{tr('settings.integrations.pageTitle')}</title></svelte:head>
 
-<SettingsShell title="Integrations" kicker="Connected services">
+<SettingsShell
+  title={tr('settings.integrations.title')}
+  kicker={tr('settings.integrations.kicker')}
+>
   <SettingsSection
-    title="Claude AI assistant"
-    sub="Optional. Without a key every feature runs on its deterministic fallback."
+    title={tr('settings.integrations.aiTitle')}
+    sub={tr('settings.integrations.aiSub')}
   >
     {#snippet right()}
       {#if data.ai.enabled}
-        <Pill tone="forest"><Check size={10} /> Active</Pill>
+        <Pill tone="forest"><Check size={10} /> {tr('settings.integrations.active')}</Pill>
       {:else}
-        <Pill tone="rust">Off · no key</Pill>
+        <Pill tone="rust">{tr('settings.integrations.offNoKey')}</Pill>
       {/if}
     {/snippet}
 
@@ -92,10 +100,12 @@
       <div class="icon" class:on={data.ai.enabled}><Leaf size={16} strokeWidth={1.75} /></div>
       <div class="row-text">
         {#if data.ai.fromEnv}
-          <div class="row-title" data-testid="ai-included">AI help is included with your plan.</div>
+          <div class="row-title" data-testid="ai-included">
+            {tr('settings.integrations.included')}
+          </div>
         {:else}
           <form method="POST" action="?/saveKey" class="key-row">
-            <label class="sr-only" for="ai-key">Claude API key</label>
+            <label class="sr-only" for="ai-key">{tr('settings.integrations.keyLabel')}</label>
             <input
               id="ai-key"
               type="password"
@@ -105,11 +115,13 @@
               class="key-input mono"
             />
             <button type="submit" class="primary-sm">
-              {data.ai.enabled ? 'Update key' : 'Save & enable'}
+              {data.ai.enabled
+                ? tr('settings.integrations.updateKey')
+                : tr('settings.integrations.saveEnable')}
             </button>
           </form>
           <div class="row-sub">
-            Get a key at
+            {tr('settings.integrations.getKey')}
             <a href="https://console.anthropic.com" target="_blank" rel="noreferrer noopener"
               >console.anthropic.com</a
             >.
@@ -121,40 +133,45 @@
           <p class="ok" role="status">{form.message}</p>
         {/if}
         <div class="row-meta mono">
-          ${data.ai.spendThisMonth.toFixed(2)} of ${data.ai.monthlyCapUSD.toFixed(2)} this month ·
-          {data.ai.callsThisMonth} call{data.ai.callsThisMonth === 1 ? '' : 's'} this month
+          {tr('settings.integrations.spend', {
+            spend: data.ai.spendThisMonth.toFixed(2),
+            cap: data.ai.monthlyCapUSD.toFixed(2),
+            count: data.ai.callsThisMonth
+          })}
         </div>
       </div>
-      <a class="ghost-sm" href="/settings/ai">Usage & quotas</a>
+      <a class="ghost-sm" href="/settings/ai">{tr('settings.integrations.usage')}</a>
     </div>
   </SettingsSection>
 
-  <SettingsSection title="Active integrations">
+  <SettingsSection title={tr('settings.integrations.activeTitle')}>
     {#each active as it, i (it.id)}
       <div class="row">
         <div class="icon"><Cloud size={16} strokeWidth={1.75} /></div>
         <div class="row-text">
-          <div class="row-title">{it.name}</div>
-          <div class="row-sub">{it.note}</div>
-          <div class="row-meta mono">connected since {it.since}</div>
+          <div class="row-title">{itemText(it.id, 'name')}</div>
+          <div class="row-sub">{itemText(it.id, 'note')}</div>
+          <div class="row-meta mono">
+            {tr('settings.integrations.connectedSince', { since: itemText(it.id, 'since') })}
+          </div>
         </div>
-        <Pill tone="forest"><Check size={10} /> connected</Pill>
-        <button type="button" class="ghost-sm">Manage</button>
+        <Pill tone="forest"><Check size={10} /> {tr('settings.integrations.connected')}</Pill>
+        <button type="button" class="ghost-sm">{tr('settings.integrations.manage')}</button>
       </div>
     {/each}
   </SettingsSection>
 
   <SettingsSection
-    title="Planned integrations"
-    sub="On the roadmap. Open issues in the repo to track or sponsor a particular one."
+    title={tr('settings.integrations.plannedTitle')}
+    sub={tr('settings.integrations.plannedSub')}
   >
     <div class="planned-grid">
       {#each planned as it (it.id)}
         <div class="planned-card">
           <div class="icon dim"><Cloud size={13} /></div>
           <div>
-            <div class="planned-title">{it.name}</div>
-            <div class="planned-sub">{it.note}</div>
+            <div class="planned-title">{itemText(it.id, 'name')}</div>
+            <div class="planned-sub">{itemText(it.id, 'note')}</div>
           </div>
         </div>
       {/each}
@@ -162,12 +179,13 @@
   </SettingsSection>
 
   <SettingsSection
-    title="External agents"
-    sub="Bearer tokens that let external Claude agents drive /api/** non-interactively."
+    title={tr('settings.integrations.agentsTitle')}
+    sub={tr('settings.integrations.agentsSub')}
   >
     <p class="external-blurb">
-      Manage API tokens at <a href="/settings/api-tokens">/settings/api-tokens</a>.
-      {data.tokenCount} token{data.tokenCount === 1 ? '' : 's'} active for your owner.
+      {tr('settings.integrations.manageTokens')}
+      <a href="/settings/api-tokens">/settings/api-tokens</a>.
+      {tr('settings.integrations.tokens', { count: data.tokenCount })}
     </p>
   </SettingsSection>
 </SettingsShell>

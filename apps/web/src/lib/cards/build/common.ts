@@ -12,6 +12,7 @@ import {
   BLOCK_KIND_LABELS,
   CROP_AREA_KINDS as CROP_AREA_KIND_LIST
 } from '$lib/farm/areaKinds';
+import { createT, t, type Translator } from '$lib/i18n';
 import type { CardAction } from '../model';
 import type {
   FarmSnapshot,
@@ -32,15 +33,33 @@ export interface BuildOptions {
   /** `animal:<id>` / `group:<id>` subjects with a treatment or move still
    *  queued on this phone; their cards can't confirm "no holds". */
   unsyncedAnimalSubjects?: ReadonlySet<string>;
+  /** The app language for the card's words. Defaults to `prefs.locale`;
+   *  with neither the card is English. */
+  locale?: string | null;
 }
 
 export interface ResolvedOptions {
   prefs: Prefs;
   now: number;
+  /** Translator for the card's words (English when no locale is set). */
+  tr: Translator;
+}
+
+/** Card options for `prefs` and `now`, with `locale` overriding the one
+ *  `prefs` carries. */
+export function resolvedFrom(
+  prefs: Prefs | undefined,
+  now: number,
+  locale?: string | null
+): ResolvedOptions {
+  const base = prefs ?? DEFAULT_PREFS;
+  const loc = locale ?? base.locale ?? null;
+  const p = loc && base.locale !== loc ? { ...base, locale: loc } : base;
+  return { prefs: p, now, tr: createT(loc) };
 }
 
 export function resolveOptions(snapshot: FarmSnapshot, opts: BuildOptions = {}): ResolvedOptions {
-  return { prefs: opts.prefs ?? DEFAULT_PREFS, now: opts.now ?? snapshot.generatedAt };
+  return resolvedFrom(opts.prefs, opts.now ?? snapshot.generatedAt, opts.locale);
 }
 
 const YMD = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -70,14 +89,21 @@ export function daysBetweenYmd(fromYmd: string, toYmd: string): number | null {
   return Math.round((b - a) / DAY_MS);
 }
 
-export function monthDay(ymd: string): string {
-  return formatCalendarDate(ymd, 'month-day');
+export function monthDay(ymd: string, locale?: string | null): string {
+  return formatCalendarDate(ymd, 'month-day', {}, locale);
 }
 
-export function dateRange(startYmd: string, endYmd: string): string {
-  const a = monthDay(startYmd);
-  const b = monthDay(endYmd);
-  return a === b ? a : `${a} – ${b}`;
+export function dateRange(startYmd: string, endYmd: string, locale?: string | null): string {
+  const a = monthDay(startYmd, locale);
+  const b = monthDay(endYmd, locale);
+  return a === b ? a : t(locale, 'cards.dateRange', { from: a, to: b });
+}
+
+/** "60 days" or "55–70 days" for a days-to-maturity range. */
+export function daysText(min: number, max: number, opts: Pick<ResolvedOptions, 'tr'>): string {
+  return min === max
+    ? opts.tr('cards.days.count', { count: min })
+    : opts.tr('cards.days.range', { min, max });
 }
 
 export function trimNumber(n: number, digits = 1): string {
@@ -90,36 +116,55 @@ export const CROP_AREA_KINDS: ReadonlySet<SnapshotAreaKind> = new Set(CROP_AREA_
 
 export const BLOCK_KIND_LABEL: Readonly<Record<SnapshotBlockKind, string>> = BLOCK_KIND_LABELS;
 
-export function areaKindLabel(kind: SnapshotAreaKind | null | undefined): string {
-  return (kind && AREA_KIND_LABEL[kind]) || AREA_KIND_LABEL.field;
+export function areaKindLabel(
+  kind: SnapshotAreaKind | null | undefined,
+  locale?: string | null
+): string {
+  const k = kind && AREA_KIND_LABEL[kind] ? kind : 'field';
+  return locale ? t(locale, `farm.kind.${k}`) : AREA_KIND_LABEL[k];
 }
 
 /** "Hayfield" when the owner named it, otherwise the kind label. Never
  *  "{kind} area". */
-export function areaDisplayName(area: Pick<SnapshotArea, 'name' | 'kind'>): string {
+export function areaDisplayName(
+  area: Pick<SnapshotArea, 'name' | 'kind'>,
+  locale?: string | null
+): string {
   const name = area.name.trim();
-  return name || areaKindLabel(area.kind);
+  return name || areaKindLabel(area.kind, locale);
+}
+
+export function blockKindLabel(kind: SnapshotBlockKind, locale?: string | null): string {
+  const k = BLOCK_KIND_LABEL[kind] ? kind : 'block';
+  return locale ? t(locale, `farm.blockKind.${k}`) : BLOCK_KIND_LABEL[k];
 }
 
 export function blockDisplayName(
-  block: Pick<SnapshotBlock, 'name' | 'kind' | 'blockLabel'>
+  block: Pick<SnapshotBlock, 'name' | 'kind' | 'blockLabel'>,
+  locale?: string | null
 ): string {
   const name = block.name.trim();
   if (name) return name;
-  const label = BLOCK_KIND_LABEL[block.kind] ?? BLOCK_KIND_LABEL.block;
+  const label = blockKindLabel(block.kind, locale);
   return block.blockLabel ? `${label} ${block.blockLabel}` : label;
 }
 
+/** "due today", "overdue since Oct 3"; in the language `prefs.locale` names. */
 export function dueLabel(scheduledFor: number, now: number, prefs: Prefs): string {
   const due = dueYmd(scheduledFor, prefs.timeZone);
   const today = ymdInZone(now, prefs.timeZone);
   const diff = daysBetweenYmd(today, due);
+  const loc = prefs.locale;
   if (diff === null) return formatDueDay(scheduledFor, prefs, 'month-day');
-  if (diff < 0) return `overdue since ${formatDueDay(scheduledFor, prefs, 'month-day')}`;
-  if (diff === 0) return 'due today';
-  if (diff === 1) return 'due tomorrow';
-  if (diff < 7) return `due ${formatDueDay(scheduledFor, prefs, 'weekday')}`;
-  return `due ${formatDueDay(scheduledFor, prefs, 'month-day')}`;
+  if (diff < 0)
+    return t(loc, 'cards.due.overdueSince', {
+      date: formatDueDay(scheduledFor, prefs, 'month-day')
+    });
+  if (diff === 0) return t(loc, 'cards.due.today');
+  if (diff === 1) return t(loc, 'cards.due.tomorrow');
+  if (diff < 7)
+    return t(loc, 'cards.due.weekday', { day: formatDueDay(scheduledFor, prefs, 'weekday') });
+  return t(loc, 'cards.due.on', { date: formatDueDay(scheduledFor, prefs, 'month-day') });
 }
 
 export function sortTasks(tasks: readonly SnapshotTask[]): SnapshotTask[] {

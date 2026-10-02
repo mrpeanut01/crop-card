@@ -7,6 +7,7 @@ import {
   telHref
 } from '$lib/farm/emergencyContacts';
 import { formatInstant, type Prefs } from '$lib/prefs';
+import { t, type MessageKey } from '$lib/i18n';
 import type { HealthEventKind } from '$lib/safety/animalWithdrawal';
 import type { CardAction, CardProvenance, CardSection } from '../model';
 import type {
@@ -20,6 +21,63 @@ import { areaDisplayName, dueLabel } from './common';
 
 export const ASK_YOUR_VET = 'due date not set, ask your vet';
 
+export function askYourVet(locale?: string | null): string {
+  return t(locale, 'cards.animal.askVet');
+}
+
+const HEALTH_KIND_KEY: Record<HealthEventKind, MessageKey> = {
+  treatment: 'cards.health.treatment',
+  vaccination: 'cards.health.vaccination',
+  deworm: 'cards.health.deworm',
+  'vet-visit': 'cards.health.vet-visit',
+  injury: 'cards.health.injury',
+  note: 'cards.health.note'
+};
+
+const FACT_LABEL_KEY: Record<string, MessageKey> = {
+  Kind: 'cards.animal.fact.kind',
+  Sex: 'cards.animal.fact.sex',
+  Age: 'cards.animal.fact.age',
+  Group: 'cards.animal.fact.group',
+  'Lives at': 'cards.animal.fact.livesAt',
+  Tag: 'cards.animal.fact.tag',
+  Breed: 'cards.animal.fact.breed',
+  'Came from': 'cards.animal.fact.cameFrom',
+  'Kept for': 'cards.animal.fact.keptFor',
+  Food: 'cards.animal.fact.food',
+  Microchip: 'cards.animal.fact.microchip',
+  'How many': 'cards.animal.fact.howMany',
+  Named: 'cards.animal.fact.named',
+  'Organic status': 'cards.fact.organicStatus',
+  'Food animal': 'cards.animal.foodAnimal',
+  'Next vaccine': 'cards.animal.nextVaccine'
+};
+
+const FACT_VALUE_KEY: Record<string, MessageKey> = {
+  'Not set': 'cards.animal.notSet',
+  'Eggs, milk, meat or work': 'cards.animal.purpose.production',
+  Pet: 'cards.animal.purpose.pet',
+  'Pet and production': 'cards.animal.purpose.mixed'
+};
+
+/** The English fact list from `animalFacts`/`groupFacts` in the app
+ *  language: known labels and fixed values are swapped, the owner's own
+ *  words and plugin names stay as they are. */
+export function localizeFacts<F extends { label: string; value: string }>(
+  facts: F[],
+  locale: string | null | undefined
+): F[] {
+  if (!locale) return facts;
+  return facts.map((f) => {
+    const label = FACT_LABEL_KEY[f.label];
+    const value = FACT_VALUE_KEY[f.value];
+    return {
+      ...f,
+      label: label ? t(locale, label) : f.label,
+      value: value && (f.label === 'Lives at' || f.label === 'Kept for') ? t(locale, value) : f.value
+    };
+  });
+}
 export function speciesOf(snapshot: FarmSnapshot, id: string): SnapshotSpecies | null {
   return snapshot.species?.[id] ?? null;
 }
@@ -41,7 +99,7 @@ export function plansFor(
 }
 
 export function planLine(p: SnapshotCarePlan, now: number, prefs: Prefs): string {
-  if (p.nextDueAt === null) return `${p.title}: ${ASK_YOUR_VET}`;
+  if (p.nextDueAt === null) return `${p.title}: ${askYourVet(prefs.locale)}`;
   return `${p.title}: ${dueLabel(p.nextDueAt, now, prefs)}`;
 }
 
@@ -55,16 +113,19 @@ export function sortPlans(plans: readonly SnapshotCarePlan[]): SnapshotCarePlan[
   );
 }
 
-export function planProvenance(plans: readonly SnapshotCarePlan[]): CardProvenance[] {
+export function planProvenance(
+  plans: readonly SnapshotCarePlan[],
+  locale?: string | null
+): CardProvenance[] {
   const out: CardProvenance[] = [];
   if (plans.some((p) => p.provenance === 'plugin')) {
-    out.push({ source: 'plugin', detail: 'species care defaults' });
+    out.push({ source: 'plugin', detail: t(locale, 'cards.animal.provSpeciesCare') });
   }
   if (plans.some((p) => p.provenance === 'manual')) {
-    out.push({ source: 'manual', detail: 'care dates you set' });
+    out.push({ source: 'manual', detail: t(locale, 'cards.animal.provCareDates') });
   }
   if (plans.some((p) => p.provenance === 'fallback')) {
-    out.push({ source: 'fallback', detail: 'general care reminders' });
+    out.push({ source: 'fallback', detail: t(locale, 'cards.animal.provReminders') });
   }
   return out;
 }
@@ -97,12 +158,20 @@ export function treatmentsFor(
   );
 }
 
-export function treatmentLine(t: SnapshotTreatment, prefs: Prefs): string {
-  const kind = HEALTH_KIND_LABEL[t.kind as HealthEventKind] ?? 'Health record';
-  const what = t.productName ? `${kind}: ${t.productName}` : kind;
-  const on = formatInstant(t.administeredAt, prefs, 'date');
-  if (t.courseEndAt !== null && t.courseEndAt > t.administeredAt) {
-    return `${what}, ${on} to ${formatInstant(t.courseEndAt, prefs, 'date')}`;
+export function treatmentLine(tr: SnapshotTreatment, prefs: Prefs): string {
+  const loc = prefs.locale;
+  const kindKey = HEALTH_KIND_KEY[tr.kind as HealthEventKind];
+  const kind = loc
+    ? t(loc, kindKey ?? 'cards.health.record')
+    : (HEALTH_KIND_LABEL[tr.kind as HealthEventKind] ?? 'Health record');
+  const what = tr.productName ? `${kind}: ${tr.productName}` : kind;
+  const on = formatInstant(tr.administeredAt, prefs, 'date');
+  if (tr.courseEndAt !== null && tr.courseEndAt > tr.administeredAt) {
+    return t(loc, 'cards.animal.treatmentCourse', {
+      what,
+      from: on,
+      to: formatInstant(tr.courseEndAt, prefs, 'date')
+    });
   }
   return `${what}, ${on}`;
 }
@@ -117,26 +186,34 @@ export function treatmentsSection(
   if (!treatments.length) return null;
   const lines = treatments.slice(0, MAX_TREATMENT_LINES).map((t) => treatmentLine(t, prefs));
   if (treatments.length > MAX_TREATMENT_LINES) {
-    lines.push(`+${treatments.length - MAX_TREATMENT_LINES} more on the health page`);
+    lines.push(
+      t(prefs.locale, 'cards.animal.moreOnHealth', {
+        count: treatments.length - MAX_TREATMENT_LINES
+      })
+    );
   }
   return { title, items: lines, provenance: 'manual' };
 }
 
 /** The farm's vet as a section (printed) and one 48dp call link (screen). */
-export function vetParts(snapshot: FarmSnapshot): {
+export function vetParts(
+  snapshot: FarmSnapshot,
+  locale?: string | null
+): {
   section: CardSection | null;
   link: CardAction | null;
 } {
   const vet = firstVetContact(snapshot.emergencyContacts);
   if (!vet) return { section: null, link: null };
+  const vetWord = t(locale, 'cards.animal.vet');
   return {
     section: {
-      title: 'Vet',
-      items: [formatEmergencyContact({ ...vet, role: vet.role || 'Vet' })],
+      title: vetWord,
+      items: [formatEmergencyContact({ ...vet, role: vet.role || vetWord })],
       provenance: 'manual',
       nowrapAfter: ': '
     },
-    link: { label: `Call ${vet.name}`, href: telHref(vet.phone) }
+    link: { label: t(locale, 'cards.animal.call', { name: vet.name }), href: telHref(vet.phone) }
   };
 }
 

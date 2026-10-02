@@ -3,7 +3,7 @@
   import CardPrintSheet from '$lib/components/cards/CardPrintSheet.svelte';
   import FarmMapFigure from '$lib/components/farm/FarmMapFigure.svelte';
   import { buildFarmMapCard } from '$lib/cards/build';
-  import { FULL_PAGE_NOTE, PRINT_HELP } from '$lib/cards/print';
+  import { fullPageMapNote, printHelp } from '$lib/cards/print';
   import { layoutFarmFigure } from '$lib/farm/featureFigure';
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { createT } from '$lib/i18n';
@@ -49,7 +49,7 @@
 
     <section class="print-box" aria-labelledby="print-title">
       <h2 id="print-title">{tr('plan.farmMap.print')}</h2>
-      <p class="paper">{FULL_PAGE_NOTE} {tr('plan.farmMap.letterPaper')}</p>
+      <p class="paper">{fullPageMapNote(data.locale)} {tr('plan.farmMap.letterPaper')}</p>
       <div class="actions">
         <button type="button" class="primary" onclick={print}
           >{tr('plan.farmMap.printOrSave')}</button
@@ -58,7 +58,7 @@
           <a class="secondary" href="/settings/farm/map">{tr('plan.farmMap.editMap')}</a>
         {/if}
       </div>
-      <p class="hint">{PRINT_HELP}</p>
+      <p class="hint">{printHelp(data.locale)}</p>
     </section>
   </div>
 

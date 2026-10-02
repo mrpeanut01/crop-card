@@ -16,7 +16,6 @@ import type {
   SnapshotPlanting
 } from '../snapshot';
 import {
-  BLOCK_KIND_LABEL,
   CROP_AREA_KINDS,
   areaDisplayName,
   areaKindLabel,
@@ -25,7 +24,8 @@ import {
   nextAction,
   resolveOptions,
   sortTasks,
-  type BuildOptions
+  type BuildOptions,
+  type ResolvedOptions
 } from './common';
 import { SQFT_PER_ACRE, formatAreaAcres, formatFeet, formatSize, sizeBasis } from './size';
 import { areaCareLinks } from './careGuide';
@@ -42,35 +42,48 @@ import { withSnapshotAnimals } from './areaAnimals';
 const MAX_LIST = 8;
 const BLOCK_KIND_ORDER: SnapshotBlockKind[] = ['bed', 'row', 'container', 'block'];
 
-function plural(n: number, word: string): string {
-  return `${n} ${word.toLowerCase()}${n === 1 ? '' : 's'}`;
-}
+const KIND_COUNT = {
+  bed: 'cards.area.count.bed',
+  row: 'cards.area.count.row',
+  container: 'cards.area.count.container',
+  block: 'cards.area.count.block'
+} as const satisfies Record<SnapshotBlockKind, string>;
 
-function capped(items: string[]): string[] {
+const KIND_SECTION = {
+  bed: 'cards.area.section.bed',
+  row: 'cards.area.section.row',
+  container: 'cards.area.section.container',
+  block: 'cards.area.section.block'
+} as const satisfies Record<SnapshotBlockKind, string>;
+
+function capped(items: string[], opts: ResolvedOptions): string[] {
   if (items.length <= MAX_LIST) return items;
-  return [...items.slice(0, MAX_LIST), `+${items.length - MAX_LIST} more`];
+  return [...items.slice(0, MAX_LIST), opts.tr('cards.more', { count: items.length - MAX_LIST })];
 }
 
 /** Sketch dimensions and typed acres are the owner's; only acres measured
  *  from drawn map geometry are `data`. */
-function sizeProvenance(area: SnapshotArea): CardProvenance | null {
+function sizeProvenance(area: SnapshotArea, opts: ResolvedOptions): CardProvenance | null {
+  const { tr } = opts;
   const basis = sizeBasis(area);
-  if (basis === 'dimensions') return { source: 'manual', detail: 'your dimensions' };
+  if (basis === 'dimensions') return { source: 'manual', detail: tr('cards.prov.yourDimensions') };
   if (basis !== 'acres' || area.acresSource === null) return null;
-  if (area.acresSource === 'geometry') return { source: 'data', detail: 'your map' };
+  if (area.acresSource === 'geometry') return { source: 'data', detail: tr('cards.prov.yourMap') };
   return {
     source: 'manual',
-    detail: area.acresSource === 'typed' ? 'typed acres' : 'your dimensions'
+    detail:
+      area.acresSource === 'typed' ? tr('cards.prov.typedAcres') : tr('cards.prov.yourDimensions')
   };
 }
 
 function plantingLine(
   p: SnapshotPlanting,
   block: SnapshotBlock | undefined,
-  showDate: boolean
+  showDate: boolean,
+  locale?: string | null
 ): string {
-  const where = block ? ` · ${blockDisplayName(block)}` : '';
-  const when = showDate && p.plantingDate ? ` · ${monthDay(p.plantingDate)}` : '';
+  const where = block ? ` · ${blockDisplayName(block, locale)}` : '';
+  const when = showDate && p.plantingDate ? ` · ${monthDay(p.plantingDate, locale)}` : '';
   return `${p.varietyDisplayName}${where}${when}`;
 }
 
@@ -106,7 +119,9 @@ function baseAreaCard(
   const area = snapshot.areas.find((a) => a.id === areaId);
   if (!area) return null;
   const opts = resolveOptions(snapshot, options);
-  const kindLabel = areaKindLabel(area.kind);
+  const { tr } = opts;
+  const loc = opts.prefs.locale;
+  const kindLabel = areaKindLabel(area.kind, loc);
   const size = formatSize(area, opts.prefs);
   const cropBearing = CROP_AREA_KINDS.has(area.kind);
 
@@ -125,25 +140,30 @@ function baseAreaCard(
   // Migration 0050 and a create without a kind both default to `field`, so
   // only a non-default kind is known to be the owner's pick.
   const provenance: CardProvenance[] =
-    area.kind !== DEFAULT_AREA_KIND ? [{ source: 'manual', detail: 'kind picked by you' }] : [];
+    area.kind !== DEFAULT_AREA_KIND
+      ? [{ source: 'manual', detail: tr('cards.prov.kindPicked') }]
+      : [];
   if (size) {
-    const sp = sizeProvenance(area);
-    facts.push({ label: 'Size', value: size, provenance: sp?.source });
+    const sp = sizeProvenance(area, opts);
+    facts.push({ label: tr('cards.fact.size'), value: size, provenance: sp?.source });
     if (sp) provenance.push(sp);
   }
   if (!size) {
     const blockAcres = blocks.reduce((sum, b) => sum + blockSizeAcres(b), 0);
     if (blockAcres > 0) {
       facts.push({
-        label: 'Size',
-        value: `${formatAreaAcres(blockAcres, opts.prefs)} across its ${blocks.length === 1 ? 'bed' : 'beds'}`,
+        label: tr('cards.fact.size'),
+        value: tr('cards.area.sizeAcross', {
+          count: blocks.length,
+          size: formatAreaAcres(blockAcres, opts.prefs)
+        }),
         provenance: 'data'
       });
     }
   }
   if (area.perimeterFt !== null && area.perimeterFt > 0) {
     facts.push({
-      label: 'Perimeter',
+      label: tr('cards.fact.perimeter'),
       value: formatFeet(area.perimeterFt, opts.prefs),
       provenance: 'data'
     });
@@ -153,45 +173,55 @@ function baseAreaCard(
     const counts = new Map<SnapshotBlockKind, number>();
     for (const b of blocks) counts.set(b.kind, (counts.get(b.kind) ?? 0) + 1);
     const value = BLOCK_KIND_ORDER.filter((k) => counts.has(k))
-      .map((k) => plural(counts.get(k)!, BLOCK_KIND_LABEL[k]))
+      .map((k) => tr(KIND_COUNT[k], { count: counts.get(k)! }))
       .join(' · ');
-    facts.push({ label: 'Holds', value, provenance: 'data' });
+    facts.push({ label: tr('cards.fact.holds'), value, provenance: 'data' });
   }
 
   if (cropBearing) {
     facts.push({
-      label: 'Growing',
+      label: tr('cards.fact.growing'),
       value: active.length
-        ? `${active.length} planting${active.length === 1 ? '' : 's'}`
-        : 'Nothing yet',
+        ? tr('cards.area.plantings', { count: active.length })
+        : tr('cards.area.nothingYet'),
       provenance: 'data'
     });
     if (planned.length) {
-      facts.push({ label: 'Planned', value: `${planned.length}`, provenance: 'data' });
+      facts.push({ label: tr('cards.fact.planned'), value: `${planned.length}`, provenance: 'data' });
     }
   }
   if (area.organicStatus) {
-    facts.push({ label: 'Organic status', value: area.organicStatus, provenance: 'manual' });
-    provenance.push({ source: 'manual', detail: 'organic status you entered' });
+    facts.push({
+      label: tr('cards.fact.organicStatus'),
+      value: area.organicStatus,
+      provenance: 'manual'
+    });
+    provenance.push({ source: 'manual', detail: tr('cards.prov.organicEntered') });
   }
   const water = watererNamesFor(area.id, snapshot.mapFeatures ?? []);
   if (water.length) {
-    facts.push({ label: 'Water', value: water.join(', '), provenance: 'manual' });
-    provenance.push({ source: 'manual', detail: 'hydrants you placed' });
+    facts.push({ label: tr('cards.fact.water'), value: water.join(', '), provenance: 'manual' });
+    provenance.push({ source: 'manual', detail: tr('cards.prov.hydrants') });
   }
   if (facts.some((f) => f.provenance === 'data')) provenance.push({ source: 'data' });
 
   const sections: CardSection[] = [];
   if (active.length) {
     sections.push({
-      title: 'Growing now',
-      items: capped(active.map((p) => plantingLine(p, blockById.get(p.blockId), false)))
+      title: tr('cards.area.growingNow'),
+      items: capped(
+        active.map((p) => plantingLine(p, blockById.get(p.blockId), false, loc)),
+        opts
+      )
     });
   }
   if (planned.length) {
     sections.push({
-      title: 'Planned',
-      items: capped(planned.map((p) => plantingLine(p, blockById.get(p.blockId), true)))
+      title: tr('cards.fact.planned'),
+      items: capped(
+        planned.map((p) => plantingLine(p, blockById.get(p.blockId), true, loc)),
+        opts
+      )
     });
   }
   for (const kind of BLOCK_KIND_ORDER) {
@@ -199,19 +229,20 @@ function baseAreaCard(
     const ofKind = blocks.filter((b) => b.kind === kind);
     if (!ofKind.length) continue;
     sections.push({
-      title: `${BLOCK_KIND_LABEL[kind]}s`,
+      title: tr(KIND_SECTION[kind]),
       items: capped(
         ofKind.map((b) => {
           const s = formatSize(b, opts.prefs);
-          return s ? `${blockDisplayName(b)} · ${s}` : blockDisplayName(b);
-        })
+          return s ? `${blockDisplayName(b, loc)} · ${s}` : blockDisplayName(b, loc);
+        }),
+        opts
       )
     });
   }
   if (area.kind === 'greenhouse' && active.length) {
-    sections.push({ title: 'Watering', items: [GREENHOUSE_LINE] });
+    sections.push({ title: tr('cards.area.watering'), items: [GREENHOUSE_LINE] });
   }
-  if (area.notes?.trim()) sections.push({ title: 'Notes', items: [area.notes.trim()] });
+  if (area.notes?.trim()) sections.push({ title: tr('cards.notes'), items: [area.notes.trim()] });
 
   const tasks = sortTasks(
     snapshot.tasks.filter(
@@ -221,7 +252,7 @@ function baseAreaCard(
     )
   );
 
-  const name = areaDisplayName(area);
+  const name = areaDisplayName(area, loc);
   const kicker = size ? `${kindLabel} · ${size}` : kindLabel;
   const key = cardKey('area', area.id);
   const bedMap = isDesignable(area.kind)
@@ -232,8 +263,8 @@ function baseAreaCard(
     ...(isDesignable(area.kind)
       ? {
           links: [
-            { label: 'Open designer', href: designerHref(area.id) },
-            ...areaCareLinks(snapshot, area.id)
+            { label: tr('cards.area.openDesigner'), href: designerHref(area.id) },
+            ...areaCareLinks(snapshot, area.id, loc)
           ]
         }
       : {}),

@@ -9,6 +9,7 @@ import { formatMoney } from '$lib/finance/money';
 import { hasUnallocated, inputCostText, labourText, netLabel } from '$lib/finance/format';
 import { NOT_TIED_LABEL, type SeasonProfit } from '$lib/finance/profit';
 import { cardKey, type CardFact, type CardModel, type CardSection } from '../model';
+import { createT } from '$lib/i18n';
 
 export function profitCardHref(year: number | string): string {
   return `/finance/profit/${encodeURIComponent(String(year))}`;
@@ -17,37 +18,53 @@ export function profitCardHref(year: number | string): string {
 export function buildProfitCard(
   year: number,
   profit: SeasonProfit,
-  opts: { asOf: number; farmName?: string | null }
+  opts: { asOf: number; farmName?: string | null; locale?: string | null }
 ): CardModel {
+  const tr = createT(opts.locale);
   const rate = profit.labourRateCentsPerHour;
   const facts: CardFact[] = [
-    { label: 'Income', value: formatMoney(profit.cash.incomeCents), provenance: 'manual' },
-    { label: 'Expenses', value: formatMoney(profit.cash.expenseCents), provenance: 'manual' },
-    { label: 'Net cash', value: formatMoney(profit.cash.netCents), provenance: 'manual' }
+    {
+      label: tr('cards.profit.income'),
+      value: formatMoney(profit.cash.incomeCents),
+      provenance: 'manual'
+    },
+    {
+      label: tr('cards.profit.expenses'),
+      value: formatMoney(profit.cash.expenseCents),
+      provenance: 'manual'
+    },
+    { label: tr('cards.profit.netCash'), value: formatMoney(profit.cash.netCents), provenance: 'manual' }
   ];
   if (profit.lotPurchaseCents > 0) {
     facts.push({
-      label: 'Stock bought',
-      value: `${formatMoney(profit.lotPurchaseCents)}, counted below as it is used`,
+      label: tr('cards.profit.stockBought'),
+      value: tr('cards.profit.stockBoughtValue', { money: formatMoney(profit.lotPurchaseCents) }),
       provenance: 'manual'
     });
   }
   facts.push({
-    label: 'Labour rate',
-    value: rate === null ? 'Labour rate not set' : `${formatMoney(rate)} an hour, an estimate`,
+    label: tr('cards.profit.labourRate'),
+    value:
+      rate === null
+        ? tr('cards.profit.labourRateNotSet')
+        : tr('cards.profit.perHour', { money: formatMoney(rate) }),
     provenance: 'manual'
   });
 
+  const line = (label: string, value: string) => `${label}: ${value}`;
   const sections: CardSection[] = profit.enterprises.map((e) => {
     const items = [
-      `Income: ${formatMoney(e.incomeCents)}`,
-      `Direct costs: ${formatMoney(e.directExpenseCents)}`,
-      `Inputs used: ${inputCostText(e)}${e.includesAreaInputs ? ' (some not tied to one planting)' : ''}`,
-      `Labour: ${labourText(e, rate)}`,
+      line(tr('cards.profit.income'), formatMoney(e.incomeCents)),
+      line(tr('cards.profit.directCosts'), formatMoney(e.directExpenseCents)),
+      line(
+        tr('cards.profit.inputsUsed'),
+        `${inputCostText(e)}${e.includesAreaInputs ? tr('cards.profit.someNotTied') : ''}`
+      ),
+      line(tr('cards.profit.labour'), labourText(e, rate)),
       `${netLabel(e)}: ${formatMoney(e.netCents)}`
     ];
     if (e.netAfterLabourCents !== null) {
-      items.push(`Net after labour estimate: ${formatMoney(e.netAfterLabourCents)}`);
+      items.push(line(tr('cards.profit.netAfterLabour'), formatMoney(e.netAfterLabourCents)));
     }
     return { title: e.label, items, provenance: 'data' as const };
   });
@@ -55,41 +72,56 @@ export function buildProfitCard(
   if (hasUnallocated(profit)) {
     const u = profit.unallocated;
     const items = [
-      `Income: ${formatMoney(u.incomeCents)}`,
-      `Direct costs: ${formatMoney(u.directExpenseCents)}`
+      line(tr('cards.profit.income'), formatMoney(u.incomeCents)),
+      line(tr('cards.profit.directCosts'), formatMoney(u.directExpenseCents))
     ];
     if (u.inputCostCents || u.inputCostUnknownCount) {
       items.push(
-        `Inputs used: ${inputCostText({ inputCostCents: u.inputCostCents, inputCostUnknownCount: u.inputCostUnknownCount })}`
+        line(
+          tr('cards.profit.inputsUsed'),
+          inputCostText({
+            inputCostCents: u.inputCostCents,
+            inputCostUnknownCount: u.inputCostUnknownCount
+          })
+        )
       );
     }
     if (u.labourMinutes) {
       items.push(
-        `Labour: ${labourText({ labourMinutes: u.labourMinutes, labourCents: u.labourCents, labourNotCounted: false }, rate)}`
+        line(
+          tr('cards.profit.labour'),
+          labourText(
+            { labourMinutes: u.labourMinutes, labourCents: u.labourCents, labourNotCounted: false },
+            rate
+          )
+        )
       );
     }
     sections.push({ title: NOT_TIED_LABEL, items });
   }
 
   if (sections.length === 0) {
-    sections.push({ title: 'Nothing yet', items: ['No money or stock use recorded this year.'] });
+    sections.push({
+      title: tr('cards.profit.nothingYet'),
+      items: [tr('cards.profit.nothingRecorded')]
+    });
   }
 
   return {
     kind: 'profit',
     key: cardKey('profit', String(year)),
-    kicker: `Season profit · ${year}`,
-    title: opts.farmName ? `${opts.farmName} season profit` : 'Season profit',
+    kicker: tr('cards.profit.kicker', { year }),
+    title: opts.farmName
+      ? tr('cards.profit.titleNamed', { farm: opts.farmName })
+      : tr('cards.profit.title'),
     facts,
     sections,
     asOf: opts.asOf,
     provenance: [
-      { source: 'manual', detail: 'Income and expenses you entered' },
-      { source: 'data', detail: 'Inputs used, from stock records and lot costs' }
+      { source: 'manual', detail: tr('cards.profit.provEntered') },
+      { source: 'data', detail: tr('cards.profit.provInputs') }
     ],
     href: profitCardHref(year),
-    notices: [
-      'Inputs used and labour are estimates from your records. They are never part of the cash totals.'
-    ]
+    notices: [tr('cards.profit.notice')]
   };
 }

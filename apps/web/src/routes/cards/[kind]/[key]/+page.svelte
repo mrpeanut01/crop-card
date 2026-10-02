@@ -18,7 +18,7 @@
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { cardViewParams, snapshotOlderThan, withoutPrintParam } from '$lib/cards/viewParams';
   import { formatInstant } from '$lib/prefs';
-  import { OUTSIDE_WINDOW_NOTE } from '$lib/cards/build/calendar';
+  import { outsideWindowNote } from '$lib/cards/build/calendar';
   import FlockQuickActions from '$lib/components/animals/FlockQuickActions.svelte';
   import SeedStartPanel from '$lib/components/cards/SeedStartPanel.svelte';
   import PlantingHours from '$lib/components/cards/PlantingHours.svelte';
@@ -221,7 +221,7 @@
     {/key}
   {:else if snapshot && (kind === 'week' || kind === 'month')}
     <p class="status" role="status" data-testid="calendar-outside-window">
-      {OUTSIDE_WINDOW_NOTE} <a href="/today">{tr('cardsui.one.backToday')}</a> ·
+      {outsideWindowNote(page.data?.locale)} <a href="/today">{tr('cardsui.one.backToday')}</a> ·
       <a href="/cards">{tr('cardsui.one.backCards')}</a>
     </p>
   {:else if snapshot}

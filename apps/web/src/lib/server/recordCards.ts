@@ -37,6 +37,7 @@ import { listSprayers } from '$lib/db/sprayers';
 import { withTenant } from '$lib/db/tenant';
 import { identityLabel } from '$lib/identity';
 import type { Prefs } from '$lib/prefs';
+import { t, type MessageKey } from '$lib/i18n';
 import { buildFarmSnapshot, toCropPlugin, toSprayProduct } from './cardSnapshot';
 import { getRegistry } from './registry';
 import { lateLabel } from '$lib/records/lateLabel';
@@ -61,7 +62,7 @@ function withWhereItWent(card: CardModel, went: HarvestDisposition[], prefs: Pre
     sections: [
       ...card.sections,
       {
-        title: 'Where it went',
+        title: t(prefs.locale, 'cards.record.whereItWent'),
         items: went.map((d) => dispositionLine(d, formatInstant(d.occurredAt, prefs, 'date'))),
         provenance: 'manual'
       }
@@ -142,7 +143,7 @@ async function plantingCard(
     plantingId
   );
   const card = buildPlantingCard(snapshot, plantingId, { prefs: opts.prefs, now: opts.now });
-  return card ? [frameLiveCard(card, recordKind, rowId)] : [];
+  return card ? [frameLiveCard(card, recordKind, rowId, opts.prefs.locale)] : [];
 }
 
 /** Null when no such record is visible to the active Owner. */
@@ -300,19 +301,19 @@ export async function buildRecordCards(
     if (!row) return null;
     const snapshot = await buildFarmSnapshot({ now, origin });
     const card = buildEquipmentCard(snapshot, row.equipmentId, cardOpts);
-    return { cards: card ? [frameLiveCard(card, kind, rowId)] : [], origin };
+    return { cards: card ? [frameLiveCard(card, kind, rowId, opts.prefs.locale)] : [], origin };
   }
 
   return null;
 }
 
-const METHOD_LABEL: Record<string, string> = {
-  drip: 'Drip line',
-  soaker: 'Soaker hose',
-  sprinkler: 'Sprinkler',
-  hand: 'By hand',
-  flood: 'Flood or furrow',
-  other: 'Other'
+const METHOD_LABEL: Record<string, MessageKey> = {
+  drip: 'cards.water.method.drip',
+  soaker: 'cards.water.method.soaker',
+  sprinkler: 'cards.water.method.sprinkler',
+  hand: 'cards.water.method.hand',
+  flood: 'cards.water.method.flood',
+  other: 'cards.water.method.other'
 };
 
 /** Phase 32E (E4-14): a watering log's card. Null when the active Owner has no such log. */
@@ -332,7 +333,11 @@ export function buildIrrigationRecordCards(
       inches: ev.inches,
       gallons: ev.gallons,
       durationMin: ev.durationMin,
-      method: ev.method ? (METHOD_LABEL[ev.method] ?? ev.method) : null,
+      method: ev.method
+        ? METHOD_LABEL[ev.method]
+          ? t(opts.prefs.locale, METHOD_LABEL[ev.method])
+          : ev.method
+        : null,
       notes: ev.notes,
       performerLabel: performer(ev.performedById)
     },

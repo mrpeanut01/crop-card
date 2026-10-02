@@ -29,9 +29,10 @@ import {
   HOLD_CONFIRM_MAX_AGE_MS
 } from './animalHolds';
 import {
-  ASK_YOUR_VET,
+  askYourVet,
   isPetLayout,
   livesAt,
+  localizeFacts,
   nextCare,
   planLine,
   planProvenance,
@@ -75,7 +76,9 @@ export function memberCareLines(
     .map(({ plan, names }) => {
       const who = names.length === 1 ? names[0] : countText(names.length, species);
       const when =
-        plan.nextDueAt === null ? ASK_YOUR_VET : dueLabel(plan.nextDueAt, opts.now, opts.prefs);
+        plan.nextDueAt === null
+          ? askYourVet(opts.prefs.locale)
+          : dueLabel(plan.nextDueAt, opts.now, opts.prefs);
       return `${plan.title}: ${who}, ${when}`;
     });
 }
@@ -86,6 +89,8 @@ function flockCard(
   options: BuildOptions
 ): CardModel {
   const opts = resolveOptions(snapshot, options);
+  const { tr } = opts;
+  const loc = opts.prefs.locale;
   const species = speciesOf(snapshot, group.speciesId);
   const pet = isPetLayout(snapshot, group.purpose);
   const pageHref = groupPageHref(group.id);
@@ -131,17 +136,32 @@ function flockCard(
       livesAt: livesAt(snapshot, group.housingFieldId)
     },
     pet ? 'pets' : 'farm'
-  ).map((f) => ({ ...f, provenance: 'data' as const }));
+  ).map((f) => ({
+    ...f,
+    ...(f.label === 'Named' && loc
+      ? {
+          value: tr('cards.animal.namedValue', {
+            named: group.namedCount,
+            unnamed: group.headCount
+          })
+        }
+      : {}),
+    provenance: 'data' as const
+  }));
   if (!pet) {
     facts.push({
-      label: 'Food animals',
-      value: group.foodProducing ? 'Yes' : 'No',
+      label: tr('cards.animal.foodAnimals'),
+      value: group.foodProducing ? tr('cards.yes') : tr('cards.no'),
       provenance: 'data'
     });
   }
 
   if (group.organicStatus) {
-    facts.push({ label: 'Organic status', value: group.organicStatus, provenance: 'manual' });
+    facts.push({
+      label: tr('cards.fact.organicStatus'),
+      value: group.organicStatus,
+      provenance: 'manual'
+    });
   }
 
   const groupPlans = sortPlans(plansFor(snapshot, 'group', group.id));
@@ -155,34 +175,54 @@ function flockCard(
   ];
   const allPlans = [...groupPlans, ...memberPlans.map((m) => m.plan)];
   if (careItems.length) {
-    sections.push({ title: 'Care due', items: careItems, provenance: sectionProvenance(allPlans) });
+    sections.push({
+      title: tr('cards.animal.careDue'),
+      items: careItems,
+      provenance: sectionProvenance(allPlans)
+    });
   }
   if (members.length) {
     const names = members.slice(0, MAX_MEMBER_LINES).map(animalLabel);
-    if (members.length > MAX_MEMBER_LINES) names.push(`+${members.length - MAX_MEMBER_LINES} more`);
-    sections.push({ title: `Members (${members.length})`, items: names, provenance: 'data' });
+    if (members.length > MAX_MEMBER_LINES)
+      names.push(tr('cards.more', { count: members.length - MAX_MEMBER_LINES }));
+    sections.push({
+      title: tr('cards.animal.members', { count: members.length }),
+      items: names,
+      provenance: 'data'
+    });
   }
   const treated = treatmentsSection(
     treatmentsFor(snapshot, 'group', group.id),
     opts.prefs,
-    pet ? 'Medicine' : 'Recent treatments'
+    pet ? tr('cards.animal.medicine') : tr('cards.animal.recentTreatments')
   );
   if (treated) sections.push(treated);
-  const vet = vetParts(snapshot);
+  const vet = vetParts(snapshot, loc);
   if (vet.section) sections.push(vet.section);
 
   const links: CardAction[] = [];
   if (vet.link) links.push(vet.link);
-  links.push({ label: `Open ${species?.groupNoun ?? 'group'} page`, href: pageHref });
+  links.push({
+    label:
+      loc && loc !== 'en'
+        ? tr('cards.animal.openGroupPage')
+        : tr('cards.animal.openNounPage', { noun: species?.groupNoun ?? 'group' }),
+    href: pageHref
+  });
   const healthHref = `/animals/${encodeURIComponent(group.id)}/health`;
-  links.push({ label: 'Health records', href: healthHref });
+  links.push({ label: tr('cards.animal.healthRecords'), href: healthHref });
   if (species?.products.some((p) => p === 'eggs' || p === 'milk')) {
-    links.push({ label: 'Log eggs or milk', href: `/animals/${encodeURIComponent(group.id)}/log` });
+    links.push({
+      label: tr('cards.animal.logEggsMilk'),
+      href: `/animals/${encodeURIComponent(group.id)}/log`
+    });
   }
 
-  const provenance: CardProvenance[] = [{ source: 'data', detail: 'your animal records' }];
-  if (species) provenance.push({ source: 'plugin', detail: 'species library' });
-  provenance.push(...planProvenance(allPlans));
+  const provenance: CardProvenance[] = [
+    { source: 'data', detail: tr('cards.animal.provRecords') }
+  ];
+  if (species) provenance.push({ source: 'plugin', detail: tr('cards.animal.provSpecies') });
+  provenance.push(...planProvenance(allPlans, loc));
   if (treated || vet.section || group.organicStatus) provenance.push({ source: 'manual' });
 
   const noun = species?.groupNoun ?? 'group';
@@ -190,9 +230,9 @@ function flockCard(
   return {
     kind: 'flock',
     key,
-    kicker: species ? `${species.displayName} ${noun}` : 'Animal group',
+    kicker: species ? `${species.displayName} ${noun}` : tr('cards.animal.group'),
     title: group.name,
-    facts,
+    facts: localizeFacts(facts, loc),
     next: nextCare(allPlans, opts.now, opts.prefs, pageHref),
     sections,
     asOf: snapshot.generatedAt,

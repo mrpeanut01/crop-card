@@ -17,7 +17,14 @@ import {
   type CardSection
 } from '../model';
 import type { FarmSnapshot, SnapshotSoilTest } from '../snapshot';
-import { areaDisplayName, blockDisplayName, resolveOptions, trimNumber, type BuildOptions } from './common';
+import { t } from '$lib/i18n';
+import {
+  areaDisplayName,
+  blockDisplayName,
+  resolveOptions,
+  trimNumber,
+  type BuildOptions
+} from './common';
 
 export const FOLLOW_LAB_NOTICE =
   "Follow your lab's recommendation for lime and fertilizer. The classes here are a quick read, not a replacement for it.";
@@ -52,28 +59,34 @@ export function safeReportUrl(raw: string | null | undefined): string | null {
  *  the offline snapshot, so the link says it needs a connection. */
 export function labReportParts(
   test: SnapshotSoilTest,
-  timeZone: string
+  timeZone: string,
+  locale?: string | null
 ): { fact: CardFact | null; links: CardAction[] } {
   const links: CardAction[] = [];
   let fact: CardFact | null = null;
   const r = test.labReport;
   if (r && r.deletedAt !== null) {
-    const day = formatCalendarDate(ymdInZone(r.deletedAt, timeZone), 'date');
-    fact = { label: 'Lab report', value: `Deleted on ${day}`, provenance: 'manual' };
+    const day = formatCalendarDate(ymdInZone(r.deletedAt, timeZone), 'date', {}, locale);
+    fact = {
+      label: t(locale, 'cards.soil.labReport'),
+      value: t(locale, 'cards.soil.deletedOn', { day }),
+      provenance: 'manual'
+    };
   } else if (r) {
     fact = {
-      label: 'Lab report',
-      value: 'Attached',
-      printValue: 'On file',
+      label: t(locale, 'cards.soil.labReport'),
+      value: t(locale, 'cards.soil.attached'),
+      printValue: t(locale, 'cards.soil.onFile'),
       provenance: 'manual'
     };
     links.push({
-      label: 'Open lab report when online',
+      label: t(locale, 'cards.soil.openReport'),
       href: `/api/documents/${encodeURIComponent(r.documentId)}/file`
     });
   }
   const typed = safeReportUrl(test.reportPdfUrl);
-  if (typed) links.push({ label: 'Lab report link (typed by hand)', href: typed, external: true });
+  if (typed)
+    links.push({ label: t(locale, 'cards.soil.typedLink'), href: typed, external: true });
   return { fact, links };
 }
 
@@ -88,21 +101,30 @@ export function buildSoilTestCard(
   if (!block) return null;
   const area = block.areaId ? snapshot.areas.find((a) => a.id === block.areaId) : undefined;
   const opts = resolveOptions(snapshot, options);
+  const { tr } = opts;
+  const loc = opts.prefs.locale;
   const read = interpretSoilTest(test, opts.now);
   const unit = test.unitsBasis === 'lb-per-acre' ? 'lb/A' : 'ppm';
 
-  const sampled = formatCalendarDate(ymdInZone(test.sampledAt, opts.prefs.timeZone), 'date');
+  const sampled = formatCalendarDate(
+    ymdInZone(test.sampledAt, opts.prefs.timeZone),
+    'date',
+    {},
+    loc
+  );
   const facts: CardFact[] = [
     {
-      label: 'Sampled',
-      value: read.stale ? `${sampled}, over ${SOIL_TEST_STALE_YEARS} years ago` : sampled,
+      label: tr('cards.soil.sampled'),
+      value: read.stale
+        ? tr('cards.soil.overYears', { date: sampled, years: SOIL_TEST_STALE_YEARS })
+        : sampled,
       provenance: 'manual'
     }
   ];
-  if (test.lab) facts.push({ label: 'Lab', value: test.lab, provenance: 'manual' });
+  if (test.lab) facts.push({ label: tr('cards.soil.lab'), value: test.lab, provenance: 'manual' });
   if (test.extractionMethod) {
     facts.push({
-      label: 'Method',
+      label: tr('cards.soil.method'),
       value: EXTRACTION_METHOD_LABEL[test.extractionMethod],
       provenance: 'manual'
     });
@@ -117,70 +139,79 @@ export function buildSoilTestCard(
     });
   }
   if (test.bufferPh !== null) {
-    facts.push({ label: 'Buffer pH', value: test.bufferPh.toFixed(1), provenance: 'manual' });
+    facts.push({
+      label: tr('cards.soil.bufferPh'),
+      value: test.bufferPh.toFixed(1),
+      provenance: 'manual'
+    });
   }
   for (const f of [
-    nutrientFact('Phosphorus (P)', test.phosphorusPpm, unit, read.p),
-    nutrientFact('Potassium (K)', test.potassiumPpm, unit, read.k),
-    nutrientFact('Calcium (Ca)', test.caPpm, unit, read.ca),
-    nutrientFact('Magnesium (Mg)', test.mgPpm, unit, read.mg)
+    nutrientFact(tr('cards.soil.phosphorus'), test.phosphorusPpm, unit, read.p),
+    nutrientFact(tr('cards.soil.potassium'), test.potassiumPpm, unit, read.k),
+    nutrientFact(tr('cards.soil.calcium'), test.caPpm, unit, read.ca),
+    nutrientFact(tr('cards.soil.magnesium'), test.mgPpm, unit, read.mg)
   ]) {
     if (f) facts.push(f);
   }
   if (test.organicMatterPct !== null) {
     facts.push({
-      label: 'Organic matter',
+      label: tr('cards.soil.organicMatter'),
       value: `${trimNumber(test.organicMatterPct, 1)}%`,
       provenance: 'manual'
     });
   }
   if (test.nitratePpm !== null) {
     facts.push({
-      label: 'Nitrate',
+      label: tr('cards.soil.nitrate'),
       value: `${trimNumber(test.nitratePpm, 1)} ${unit}`,
       provenance: 'manual'
     });
   }
 
-  const report = labReportParts(test, opts.prefs.timeZone);
+  const report = labReportParts(test, opts.prefs.timeZone, loc);
   if (report.fact) facts.push(report.fact);
 
   const sections: CardSection[] = [];
   if (read.lime.status !== 'unknown') {
-    sections.push({ title: 'Lime', items: [read.lime.text], provenance: 'fallback' });
+    sections.push({ title: tr('cards.soil.lime'), items: [read.lime.text], provenance: 'fallback' });
   }
   if (read.stale) {
     sections.push({
-      title: 'Test again',
-      items: [
-        `This test is more than ${SOIL_TEST_STALE_YEARS} years old. Soil changes over time, so a new test will give better numbers.`
-      ]
+      title: tr('cards.soil.testAgain'),
+      items: [tr('cards.soil.testAgainText', { years: SOIL_TEST_STALE_YEARS })]
     });
   }
 
-  const provenance: CardProvenance[] = [{ source: 'manual', detail: 'your lab report' }];
+  const provenance: CardProvenance[] = [
+    { source: 'manual', detail: tr('cards.soil.provReport') }
+  ];
   if (facts.some((f) => f.provenance === 'fallback') || sections.length) {
-    provenance.push({ source: 'fallback', detail: 'general soil test classes' });
+    provenance.push({ source: 'fallback', detail: tr('cards.soil.provClasses') });
   }
 
   const key = cardKey('soilTest', test.id);
-  const place = blockDisplayName(block);
+  const place = blockDisplayName(block, loc);
   return {
     kind: 'soilTest',
     key,
-    kicker: area ? `Soil test · ${areaDisplayName(area)}` : 'Soil test',
+    kicker: area
+      ? tr('cards.soil.kickerArea', { area: areaDisplayName(area, loc) })
+      : tr('cards.soil.kicker'),
     title: place,
     facts,
-    next: { label: 'Open fertility', href: `/fertility?block=${encodeURIComponent(block.id)}` },
+    next: {
+      label: tr('cards.soil.openFertility'),
+      href: `/fertility?block=${encodeURIComponent(block.id)}`
+    },
     sections,
     asOf: snapshot.generatedAt,
     provenance: mergeProvenance(provenance),
     href: cardHref('soilTest', key),
-    notices: [FOLLOW_LAB_NOTICE],
+    notices: [tr('cards.soil.followLab')],
     ...(report.links.length ? { links: report.links } : {}),
     status: read.stale
-      ? { id: 'stale', label: 'Due for a new test', tone: 'rust' }
-      : { id: 'current', label: 'Current', tone: 'forest' }
+      ? { id: 'stale', label: tr('cards.soil.statusStale'), tone: 'rust' }
+      : { id: 'current', label: tr('cards.soil.statusCurrent'), tone: 'forest' }
   };
 }
 

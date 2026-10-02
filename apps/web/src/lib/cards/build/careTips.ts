@@ -2,6 +2,9 @@
  *  practice only: no products, rates or spray timing. Shown with `fallback`
  *  provenance because they are not specific to the variety. */
 
+import { t, type MessageKey } from '$lib/i18n';
+import { enCards } from '$lib/i18n/catalogs/en/cards';
+
 export interface FamilyCareTips {
   label: string;
   water: string[];
@@ -173,7 +176,40 @@ export const FAMILY_CARE_TIPS: Readonly<Record<string, FamilyCareTips>> = {
   }
 };
 
-export function familyCareTips(family: string | null | undefined): FamilyCareTips | null {
+let tipKeys: Map<string, MessageKey> | null = null;
+
+/** The catalog key whose English text is `text`. */
+function tipKey(text: string): MessageKey | undefined {
+  if (!tipKeys) {
+    tipKeys = new Map();
+    for (const [key, value] of Object.entries(enCards)) {
+      if (key.startsWith('cards.tip.') && !tipKeys.has(value)) tipKeys.set(value, key as MessageKey);
+    }
+  }
+  return tipKeys.get(text);
+}
+
+function localTip(text: string, locale: string): string {
+  const key = tipKey(text);
+  return key ? t(locale, key) : text;
+}
+
+/** A family's tips, in the app language when `locale` is given. */
+export function familyCareTips(
+  family: string | null | undefined,
+  locale?: string | null
+): FamilyCareTips | null {
   if (!family) return null;
-  return FAMILY_CARE_TIPS[family] ?? null;
+  const tips = FAMILY_CARE_TIPS[family];
+  if (!tips) return null;
+  if (!locale) return tips;
+  const tr = (items: string[]) => items.map((s) => localTip(s, locale));
+  const labelKey = `cards.tipLabel.${family}` as MessageKey;
+  return {
+    label: labelKey in enCards ? t(locale, labelKey) : tips.label,
+    water: tr(tips.water),
+    feed: tr(tips.feed),
+    prune: tr(tips.prune),
+    problems: tr(tips.problems)
+  };
 }

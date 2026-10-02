@@ -58,7 +58,13 @@
   import { dateTimeFormat } from '$lib/intlCache';
   import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
   import { formatHours } from '$lib/labour/hours';
-  import { isClosedStatus } from '$lib/tasks/status';
+  import {
+    isClosedStatus,
+    taskStatusLabel,
+    TASK_STATUSES,
+    type TaskStatus
+  } from '$lib/tasks/status';
+  import { taskDisplayTitle } from '$lib/tasks/title';
   import { defaultAssigneeWho, resolveAssigneeWho, type AssigneeWho } from '$lib/tasks/assignee';
 
   const { data } = $props();
@@ -98,7 +104,11 @@
   });
   const rejected = $derived(new Set(queuedRows.filter((r) => r.rejected).map((r) => r.taskId)));
 
-  const tasks = $derived(data.deckTasks as Task[]);
+  const tasks = $derived(
+    (data.deckTasks as Task[]).map((t) => ({ ...t, title: taskDisplayTitle(t, page.data?.locale) }))
+  );
+  const isTaskStatus = (s: string | undefined): s is TaskStatus =>
+    (TASK_STATUSES as readonly (string | undefined)[]).includes(s);
   const entries = $derived<DeckEntry<Task>[]>(
     data.calendar
       ? buildCalendarDeck(tasks, {
@@ -171,7 +181,7 @@
 
   function cardFor(t: Task, linked: Task[]) {
     const planting = t.cropId ? data.plantingNames[t.cropId] : undefined;
-    return buildTaskCard(
+    const card = buildTaskCard(
       t,
       {
         where: whereFor(t),
@@ -185,6 +195,10 @@
       },
       { now: data.nowMs, prefs }
     );
+    const status = card.status;
+    return status && isTaskStatus(status.id)
+      ? { ...card, status: { ...status, label: taskStatusLabel(status.id, page.data?.locale) } }
+      : card;
   }
 
   const deck = $derived(
@@ -194,7 +208,7 @@
         e.task,
         e.linked.map((l) => l.task)
       ),
-      start: taskStart(e.task),
+      start: taskStart(e.task, page.data?.locale),
       linked: e.linked.map((l): LinkedTaskItem => ({
         id: l.task.id,
         title: l.task.title,
@@ -655,19 +669,17 @@
 {/if}
 
 {#if data.winterizeAlerts.length > 0}
-  <section class="card winterize-alert" aria-label="Winterization reminder">
-    <h2>❄ Winterization check</h2>
+  <section class="card winterize-alert" aria-label={tr('today.winter.aria')}>
+    <h2>❄ {tr('today.winter.heading')}</h2>
     <p>
-      {data.winterizeAlerts.length === 1 ? 'A sprayer was' : 'Sprayers were'} used this season but
-      {data.winterizeAlerts.length === 1 ? 'was' : 'were'} not winterized after the prior one. Recalibrate
-      (UC-10) and winterize before storage.
+      {tr('today.winter.body', { count: data.winterizeAlerts.length })}
     </p>
     <ul>
       {#each data.winterizeAlerts as a (a.sprayerId)}
         <li>
           <a href="/equipment/{encodeURIComponent(a.sprayerId)}/winterize">{a.label}</a>
-          {#if a.uncalibrated}<span class="pill">Uncalibrated</span>{/if}
-          {#if a.neverWinterized}<span class="pill">Never winterized</span>{/if}
+          {#if a.uncalibrated}<span class="pill">{tr('today.winter.uncalibrated')}</span>{/if}
+          {#if a.neverWinterized}<span class="pill">{tr('today.winter.never')}</span>{/if}
         </li>
       {/each}
     </ul>
@@ -812,7 +824,7 @@
           <p>{tr('today.empty.nothingDue')}</p>
         {/if}
         {#if !gardenOnly}
-          <a class="empty-link" href="/spray">Plan a spray</a>
+          <a class="empty-link" href="/spray">{tr('today.empty.planSpray')}</a>
         {/if}
       </div>
     {:else}

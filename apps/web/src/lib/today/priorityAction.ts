@@ -17,6 +17,8 @@
 import type { CalendarEvent } from '$lib/calendar/engine';
 import type { Task } from '$lib/db/tasks';
 import { formatCalendarDate } from '$lib/prefs';
+import { t } from '$lib/i18n';
+import { taskDisplayTitle } from '$lib/tasks/title';
 
 export type PriorityActionKind = 'task' | 'derived';
 
@@ -64,20 +66,24 @@ function startOfToday(now = Date.now()): number {
   return d.getTime();
 }
 
-function ctaForTask(task: Task): { href: string; label: string; markDone?: boolean } {
+function ctaForTask(
+  task: Task,
+  locale: string | null | undefined
+): { href: string; label: string; markDone?: boolean } {
+  const openSpray = t(locale, 'today.pa.cta.openSpray');
   switch (task.relatedEventTable) {
     case 'spray_event':
-      return { href: '/spray', label: 'Open spray flow' };
+      return { href: '/spray', label: openSpray };
     case 'insecticide_event':
-      return { href: '/spray/insecticide', label: 'Open spray flow' };
+      return { href: '/spray/insecticide', label: openSpray };
     case 'fungicide_event':
-      return { href: '/spray/fungicide', label: 'Open spray flow' };
+      return { href: '/spray/fungicide', label: openSpray };
     case 'harvest_event':
-      return { href: '/harvest', label: 'Record harvest' };
+      return { href: '/harvest', label: t(locale, 'today.pa.cta.recordHarvest') };
     case 'hay_cutting':
-      return { href: '/hay', label: 'Open hay flow' };
+      return { href: '/hay', label: t(locale, 'today.pa.cta.openHay') };
     default:
-      return { href: '/today', label: 'Mark done', markDone: true };
+      return { href: '/today', label: t(locale, 'today.pa.cta.markDone'), markDone: true };
   }
 }
 
@@ -97,16 +103,19 @@ function toneForTask(task: Task): PriorityAction['toneTag'] {
   }
 }
 
-function ctaForDerived(kind: string): { href: string; label: string } {
+function ctaForDerived(
+  kind: string,
+  locale: string | null | undefined
+): { href: string; label: string } {
   switch (kind) {
     case 'spray-window':
-      return { href: '/spray', label: 'Open spray flow' };
+      return { href: '/spray', label: t(locale, 'today.pa.cta.openSpray') };
     case 'scout-cadence':
-      return { href: '/scout', label: 'Start scouting' };
+      return { href: '/scout', label: t(locale, 'today.pa.cta.startScouting') };
     case 'harvest-window':
-      return { href: '/harvest', label: 'Record harvest' };
+      return { href: '/harvest', label: t(locale, 'today.pa.cta.recordHarvest') };
     default:
-      return { href: '/plan', label: 'Schedule task' };
+      return { href: '/plan', label: t(locale, 'today.pa.cta.scheduleTask') };
   }
 }
 
@@ -116,10 +125,13 @@ export interface DerivePriorityInputs {
   /** Block lookup so we can stamp a friendly scope label. */
   blockNameById: Map<string, string>;
   now?: number;
+  /** The viewer's language for the CTA and scope labels; English when unset. */
+  locale?: string | null;
 }
 
 export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityAction | null {
   const now = inputs.now ?? Date.now();
+  const locale = inputs.locale;
   const dayStart = startOfToday(now);
   const tomorrowEnd = dayStart + 2 * DAY_MS;
 
@@ -129,20 +141,20 @@ export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityActi
 
   const top = candidates[0];
   if (top) {
-    const cta = ctaForTask(top);
+    const cta = ctaForTask(top, locale);
     const overdueDays =
       top.scheduledFor < dayStart ? Math.floor((dayStart - top.scheduledFor) / DAY_MS) : undefined;
     const blockName = top.blockId ? inputs.blockNameById.get(top.blockId) : undefined;
     const scope: Array<[string, string]> = [];
-    if (blockName) scope.push(['Block', blockName]);
-    if (top.equipmentId) scope.push(['Equipment', top.equipmentId]);
+    if (blockName) scope.push([t(locale, 'today.pa.scope.block'), blockName]);
+    if (top.equipmentId) scope.push([t(locale, 'today.pa.scope.equipment'), top.equipmentId]);
     scope.push([
-      'Scheduled',
-      formatCalendarDate(top.scheduledFor, 'month-day', { weekday: 'short' })
+      t(locale, 'today.pa.scope.scheduled'),
+      formatCalendarDate(top.scheduledFor, 'month-day', { weekday: 'short' }, locale)
     ]);
     return {
       kind: 'task',
-      title: top.title,
+      title: taskDisplayTitle(top, locale),
       body: top.body,
       toneTag: toneForTask(top),
       scope,
@@ -162,12 +174,15 @@ export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityActi
     .sort((a, b) => a.startMs - b.startMs);
   const ev = dayEvents[0];
   if (ev) {
-    const cta = ctaForDerived(ev.kind);
+    const cta = ctaForDerived(ev.kind, locale);
     const tone = DERIVED_TONE_MAP[ev.kind] ?? 'task';
     const blockName = ev.blockId ? inputs.blockNameById.get(ev.blockId) : undefined;
     const scope: Array<[string, string]> = [];
-    if (blockName) scope.push(['Block', blockName]);
-    scope.push(['Window closes', formatCalendarDate(ev.endMs, 'month-day', { weekday: 'short' })]);
+    if (blockName) scope.push([t(locale, 'today.pa.scope.block'), blockName]);
+    scope.push([
+      t(locale, 'today.pa.scope.windowCloses'),
+      formatCalendarDate(ev.endMs, 'month-day', { weekday: 'short' }, locale)
+    ]);
     return {
       kind: 'derived',
       title: ev.title,

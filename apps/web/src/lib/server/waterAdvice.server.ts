@@ -411,7 +411,8 @@ export async function wateringCards(
       nearestStation: r.nearestStation,
       forecastIn: r.forecastIn,
       timeZone: ctx.timeZone ?? 'America/New_York',
-      noLocation: r.area.point === null
+      noLocation: r.area.point === null,
+      locale: ctx.locale
     })
   );
 }

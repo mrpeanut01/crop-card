@@ -52,7 +52,7 @@
         {/each}
       </ul>
       <p class="source">
-        <Provenance source="data" label="NWS" long="National Weather Service forecast" />
+        <Provenance source="data" label="NWS" long={tr('today.forecast.nwsLong')} />
         {tr('today.forecast.source', {
           where:
             weather.source === 'farm'

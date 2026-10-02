@@ -33,7 +33,8 @@ import {
 import type { PestModelPlugin } from '$lib/plugins/schemas';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 import { farmTimeZone } from '$lib/db/userProfile';
-import { DEFAULT_PREFS, ymdInZone } from '$lib/prefs';
+import { DEFAULT_PREFS, formatCalendarDate, ymdInZone } from '$lib/prefs';
+import { t } from '$lib/i18n';
 import { getDataKinds, getRegistry } from '$lib/server/registry';
 import {
   CLOSED_MONTH_TTL_MS,
@@ -456,22 +457,29 @@ function hideCounts(r: DegreeDayModelResult): DegreeDayModelResult {
 
 // ─── /today card ───────────────────────────────────────────────────────
 
-export function biofixDetail(r: DegreeDayModelResult): string {
-  if (!r.biofix.date) return 'No first catch recorded';
-  const day = shortDay(r.biofix.date);
-  if (r.biofix.provenance === 'manual') return `Counting from your first trap catch on ${day}`;
-  if (r.biofix.provenance === 'fallback') return `Counting from ${day}, the model's usual start`;
-  return `Counting from ${day}`;
+export function biofixDetail(r: DegreeDayModelResult, locale?: string | null): string {
+  if (!r.biofix.date) return t(locale, 'advice.dd.noBiofix');
+  const day =
+    locale && locale !== 'en'
+      ? formatCalendarDate(r.biofix.date, 'month-day', {}, locale)
+      : shortDay(r.biofix.date);
+  if (r.biofix.provenance === 'manual') return t(locale, 'advice.dd.fromTrap', { day });
+  if (r.biofix.provenance === 'fallback') return t(locale, 'advice.dd.fromFallback', { day });
+  return t(locale, 'advice.dd.from', { day });
 }
 
-export function degreeDayCards(result: DegreeDaysResult): TodayAdviceCard[] {
+/** The /today cards. `lines` come from the pest model and stay English. */
+export function degreeDayCards(
+  result: DegreeDaysResult,
+  locale?: string | null
+): TodayAdviceCard[] {
   if (!result.station) return [];
   return result.models
     .filter((m) => m.showOnToday)
     .map((m, i) => ({
       id: `pest:${m.modelId}`,
       kind: 'degree-days' as const,
-      title: `Watch for ${m.pest.commonName.toLowerCase()}`,
+      title: t(locale, 'advice.dd.watchFor', { pest: m.pest.commonName.toLowerCase() }),
       lines: m.lines,
       provenance:
         m.biofix.provenance === 'manual'
@@ -479,9 +487,15 @@ export function degreeDayCards(result: DegreeDaysResult): TodayAdviceCard[] {
           : m.biofix.provenance === 'fallback'
             ? ('fallback' as const)
             : ('data' as const),
-      detail: `${stationLine(result.station as DegreeDayStation)}. ${biofixDetail(m)}. Base ${m.baseTempF}°F.`,
+      detail: t(locale, 'advice.dd.detail', {
+        station: stationLine(result.station as DegreeDayStation),
+        biofix: biofixDetail(m, locale),
+        base: m.baseTempF
+      }),
       tone: 'wheat' as const,
-      actions: [{ kind: 'link' as const, label: 'Open scouting', href: '/scout' }],
+      actions: [
+        { kind: 'link' as const, label: t(locale, 'advice.dd.openScouting'), href: '/scout' }
+      ],
       sortKey: 200 + i
     }));
 }
@@ -503,5 +517,5 @@ export const degreeDayAdvice: TodayAdviceProvider = async (ctx) => {
     timeZone: ctx.timeZone ?? DEFAULT_PREFS.timeZone,
     deps: { timeoutMs: TODAY_FETCH_TIMEOUT_MS }
   });
-  return degreeDayCards(result);
+  return degreeDayCards(result, ctx.locale);
 };

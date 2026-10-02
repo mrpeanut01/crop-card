@@ -258,7 +258,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         hasSeed: allSeedStock.length > 0,
         year: currentYear
       },
-      locals.user?.role ?? 'helper'
+      locals.user?.role ?? 'helper',
+      locals.locale
     ),
     priorSeason: priorSeasonSummary(blocks, currentYear),
     // Phase 25d v2-addendum (#89) — drives AI-on/off variant on the

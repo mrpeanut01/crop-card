@@ -490,7 +490,9 @@ export async function fetchPageContent(
     });
   } catch (e) {
     if (e instanceof SafeFetchError && POLICY_ERROR_CODES.has(e.code)) throw e;
-    throw new Error(`Could not load page: ${e instanceof Error ? e.message : String(e)}`);
+    throw new Error(`Could not load page: ${e instanceof Error ? e.message : String(e)}`, {
+      cause: e
+    });
   }
   if (res.status < 200 || res.status >= 300) {
     res.cancel();
@@ -506,7 +508,9 @@ export async function fetchPageContent(
   try {
     ({ text: html } = await res.readText());
   } catch (e) {
-    throw new Error(`Could not load page: ${e instanceof Error ? e.message : String(e)}`);
+    throw new Error(`Could not load page: ${e instanceof Error ? e.message : String(e)}`, {
+      cause: e
+    });
   }
 
   // <title>

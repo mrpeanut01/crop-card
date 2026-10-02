@@ -23,7 +23,7 @@ const bodySchema = z.object({
 
 export const POST: RequestHandler = async (event) => {
   requireOwner(event);
-  let raw: unknown = {};
+  let raw: unknown;
   try {
     raw = await event.request.json();
   } catch {

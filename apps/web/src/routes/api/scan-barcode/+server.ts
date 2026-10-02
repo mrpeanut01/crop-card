@@ -64,7 +64,7 @@ export async function POST(event) {
   }
 
   const off = await tryOpenFoodFacts(barcode);
-  let result: Partial<ScanResult> = {};
+  let result: Partial<ScanResult>;
 
   if (off.name && off.category) {
     result = {

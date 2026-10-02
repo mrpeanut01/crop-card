@@ -54,7 +54,7 @@ export function buildTankMixSteps(products: HerbicidePlugin[]): TankMixStep[] {
   }
 
   steps.push({ order: n++, instruction: 'Top off water to final tank volume.' });
-  steps.push({ order: n++, instruction: 'Spray within 2 hours of mixing.' });
+  steps.push({ order: n, instruction: 'Spray within 2 hours of mixing.' });
 
   return steps;
 }

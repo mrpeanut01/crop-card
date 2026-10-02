@@ -97,7 +97,7 @@
   onMount(() => {
     ready = true;
     const fromUrl = page.url.searchParams.get('view');
-    let stored: string | null = null;
+    let stored: string | null;
     try {
       stored = localStorage.getItem(VIEW_KEY);
     } catch {

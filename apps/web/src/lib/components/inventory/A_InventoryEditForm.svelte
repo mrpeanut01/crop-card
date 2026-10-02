@@ -395,13 +395,12 @@
     error = null;
     if (!validate()) return;
     submitting = true;
-    let savedId: string | null = null;
     try {
       if (type === 'crop') {
         error = tr('inv.form.err.cropVersioned');
         return;
       }
-      savedId = await submitLotBearing();
+      const savedId = await submitLotBearing();
       dirty = false;
       if (onSaved) onSaved({ id: savedId });
       else goto(`/inventory?type=${type}`);

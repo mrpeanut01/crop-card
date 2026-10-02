@@ -81,7 +81,7 @@ export const POST: RequestHandler = async (event) => {
     );
   }
 
-  let body: { rowId?: string; all?: boolean } = {};
+  let body: { rowId?: string; all?: boolean };
   try {
     body = await event.request.json();
   } catch {

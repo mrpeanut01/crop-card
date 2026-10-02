@@ -457,7 +457,7 @@ export async function refineAllocation(
     derivedSignalHit
   };
 
-  let parsed: unknown = null;
+  let parsed: unknown;
   let totalMeta: AiResultMeta = {
     model: choice.model,
     inputTokens: 0,
@@ -465,7 +465,7 @@ export async function refineAllocation(
     outputTokens: 0,
     usdEstimate: 0
   };
-  let rawText = '';
+  let rawText: string;
   try {
     const startMs = Date.now();
     const msg = await client.messages.create({
@@ -1666,7 +1666,7 @@ async function retryWithSemanticContext(
   const durationMs = Date.now() - startMs;
   const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
   const stripped = text.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
-  let parsed: unknown = null;
+  let parsed: unknown;
   try {
     parsed = JSON.parse(stripped);
   } catch {
@@ -1700,7 +1700,7 @@ async function callClaude(
   const durationMs = Date.now() - startMs;
   const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
   const stripped = text.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
-  let parsed: unknown = null;
+  let parsed: unknown;
   try {
     parsed = JSON.parse(stripped);
   } catch {

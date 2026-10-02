@@ -95,7 +95,6 @@ function walkJpeg(
     const segStart = j - 1;
     if (marker === 0xd9) {
       parts.push(bytes.subarray(segStart, j + 1));
-      i = j + 1;
       break;
     }
     if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {

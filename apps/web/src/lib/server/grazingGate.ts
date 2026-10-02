@@ -250,12 +250,10 @@ export async function moveTruncationRefusal(
   timeZone: string,
   now = Date.now()
 ): Promise<{ code: 'STAY_HAS_GRAZING_HOLD'; error: string } | null> {
-  let covering: Covering | null = null;
-  if (plan.kind === 'group' || plan.kind === 'group-split') {
-    covering = coveringStayFor('group', plan.group.id, plan.movedAt);
-  } else {
-    covering = coveringStayFor('animal', plan.animal.id, plan.movedAt);
-  }
+  const covering: Covering | null =
+    plan.kind === 'group' || plan.kind === 'group-split'
+      ? coveringStayFor('group', plan.group.id, plan.movedAt)
+      : coveringStayFor('animal', plan.animal.id, plan.movedAt);
   if (!covering) return null;
   if (!(await stayCutErasesExposure(covering, plan.movedAt, timeZone, now))) return null;
   return CUT_REFUSAL;

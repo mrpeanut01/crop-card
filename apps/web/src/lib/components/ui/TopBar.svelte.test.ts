@@ -130,11 +130,13 @@ describe('TopBar primary nav', () => {
   });
 });
 
-describe('TopBar account menu (#466)', () => {
+describe('TopBar feedback in the account menu (#466)', () => {
+  const user = { email: 'ann@example.com', name: 'Ann', role: 'owner' };
+
   it('holds Send feedback behind the avatar', () => {
-    const { container } = render(TopBar, { online: true, pendingCount: 0 });
+    const { container } = render(TopBar, { online: true, pendingCount: 0, user });
     const menu = container.querySelector('.account-menu') as HTMLElement;
-    expect(within(menu).getByLabelText('Account menu').tagName).toBe('SUMMARY');
+    expect(within(menu).getByLabelText('Account').tagName).toBe('SUMMARY');
     expect(within(menu).getByRole('button', { name: 'Send feedback' })).toBeInTheDocument();
     expect(container.querySelector('a[href="/admin/feedback"]')).toBeNull();
   });
@@ -143,25 +145,54 @@ describe('TopBar account menu (#466)', () => {
     const { container } = render(TopBar, {
       online: true,
       pendingCount: 0,
-      user: { email: 'a@b.c', role: 'owner', isSuperadmin: true }
+      user: { ...user, isSuperadmin: true }
     });
     expect(container.querySelector('a[href="/admin/feedback"]')?.textContent).toContain(
       'Feedback inbox'
     );
   });
+});
 
-  it('lists the farms to switch between when there are several', () => {
+describe('TopBar account menu', () => {
+  const user = { email: 'ann@example.com', name: 'Ann', role: 'owner' };
+
+  it('opens from the avatar with the account identity, settings link and sign out', () => {
+    const { container } = render(TopBar, { online: true, pendingCount: 0, user });
+    const trigger = screen.getByLabelText('Account');
+    expect(trigger.tagName).toBe('SUMMARY');
+    const popover = container.querySelector('.owner-popover') as HTMLElement;
+    expect(within(popover).getByText('ann@example.com')).toBeInTheDocument();
+    expect(within(popover).getByRole('link', { name: 'Account' }).getAttribute('href')).toBe(
+      '/settings/account'
+    );
+    const signOut = within(popover).getByRole('button', { name: 'Sign out' });
+    const form = signOut.closest('form') as HTMLFormElement;
+    expect(form.getAttribute('method')).toBe('POST');
+    expect(form.getAttribute('action')).toBe('/signout');
+  });
+
+  it('keeps the farm switcher in the same menu when there are several farms', () => {
     const { container } = render(TopBar, {
       online: true,
       pendingCount: 0,
+      user,
       activeOwner: { id: 'o1', name: 'Home' },
       availableOwners: [
         { id: 'o1', name: 'Home', role: 'owner' },
         { id: 'o2', name: 'Neighbor', role: 'helper' }
       ]
     });
-    const menu = container.querySelector('.account-menu') as HTMLElement;
-    const choices = within(menu).getAllByRole('menuitemradio');
-    expect(choices.map((c) => c.getAttribute('aria-checked'))).toEqual(['true', 'false']);
+    const popover = container.querySelector('.owner-popover') as HTMLElement;
+    expect(within(popover).getAllByRole('menuitemradio')).toHaveLength(2);
+    expect(within(popover).getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+  });
+
+  it('shows a phone-only user their formatted number', () => {
+    render(TopBar, {
+      online: true,
+      pendingCount: 0,
+      user: { email: null, phone: '+15405550123', role: 'owner' }
+    });
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
   });
 });

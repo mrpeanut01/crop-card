@@ -18,8 +18,11 @@
     Inbox,
     ChevronDown,
     Zap,
-    Warehouse
+    Warehouse,
+    User,
+    LogOut
   } from 'lucide-svelte';
+  import { identityLabel } from '$lib/identity';
   import IconButton from './IconButton.svelte';
   import Avatar from './Avatar.svelte';
   import OfflineIndicator from './OfflineIndicator.svelte';
@@ -42,7 +45,7 @@
     name: string;
     role: string;
   }
-  interface User {
+  interface SessionUser {
     email: string | null;
     phone?: string | null;
     name?: string;
@@ -52,7 +55,7 @@
   }
 
   interface Props {
-    user?: User | null;
+    user?: SessionUser | null;
     activeOwner?: ActiveOwner | null;
     availableOwners?: AvailableOwner[];
     online: boolean;
@@ -324,42 +327,68 @@
     >
       {#snippet icon()}<Settings size={16} strokeWidth={1.75} />{/snippet}
     </IconButton>
-    <details class="account-menu" bind:open={accountOpen}>
-      <summary aria-label={tr('nav.accountMenu')} title={user?.name}>
-        <Avatar name={avatarName} src={user?.avatarUrl} />
-      </summary>
-      <div class="owner-popover">
-        {#if availableOwners.length > 1 && activeOwner}
-          <div class="owner-popover-label" id="switch-farm-label">{tr('nav.switchFarm')}</div>
-          <div role="menu" aria-labelledby="switch-farm-label">
-            {#each availableOwners as o (o.id)}
-              <button
-                type="button"
-                class="owner-choice"
-                class:active={o.id === activeOwner.id}
-                role="menuitemradio"
-                aria-checked={o.id === activeOwner.id}
-                onclick={() => onSwitchOwner?.(o.id)}
-              >
-                <span>{o.name}</span>
-                <span class="owner-role mono">{o.role}</span>
-              </button>
-            {/each}
+    {#if user}
+      <details class="account-menu" bind:open={accountOpen}>
+        <summary aria-label={tr('nav.account')} title={user.name}>
+          <Avatar name={avatarName} src={user.avatarUrl} />
+        </summary>
+        <div class="owner-popover">
+          <div class="account-id">
+            {#if user.name}<span class="account-name">{user.name}</span>{/if}
+            <span class="account-handle mono"
+              >{identityLabel({ email: user.email, phone: user.phone ?? null })}</span
+            >
           </div>
-          <div class="menu-divider" aria-hidden="true"></div>
-        {/if}
-        {#if user?.isSuperadmin}
-          <a href="/admin/feedback" class="menu-link" onclick={() => (accountOpen = false)}>
-            <Inbox size={16} strokeWidth={1.75} />
-            <span>{tr('nav.feedbackInbox')}</span>
-          </a>
-        {/if}
-        <button type="button" class="menu-link" onclick={openFeedback}>
-          <MessageSquare size={16} strokeWidth={1.75} />
-          <span>{tr('nav.sendFeedback')}</span>
-        </button>
-      </div>
-    </details>
+          {#if availableOwners.length > 1 && activeOwner}
+            <div class="owner-popover-label">{tr('nav.switchFarm')}</div>
+            <div role="menu" aria-label={tr('nav.switchFarm')}>
+              {#each availableOwners as o (o.id)}
+                <button
+                  type="button"
+                  class="owner-choice"
+                  class:active={o.id === activeOwner.id}
+                  role="menuitemradio"
+                  aria-checked={o.id === activeOwner.id}
+                  onclick={() => onSwitchOwner?.(o.id)}
+                >
+                  <span>{o.name}</span>
+                  <span class="owner-role mono">{o.role}</span>
+                </button>
+              {/each}
+            </div>
+          {/if}
+          <div class="account-actions">
+            <a href="/settings/account" class="owner-choice" onclick={() => (accountOpen = false)}>
+              <span class="with-icon"><User size={15} strokeWidth={1.75} />{tr('nav.account')}</span
+              >
+            </a>
+            {#if user.isSuperadmin}
+              <a href="/admin/feedback" class="owner-choice" onclick={() => (accountOpen = false)}>
+                <span class="with-icon"
+                  ><Inbox size={15} strokeWidth={1.75} />{tr('nav.feedbackInbox')}</span
+                >
+              </a>
+            {/if}
+            <button type="button" class="owner-choice" onclick={openFeedback}>
+              <span class="with-icon"
+                ><MessageSquare size={15} strokeWidth={1.75} />{tr('nav.sendFeedback')}</span
+              >
+            </button>
+            <form method="POST" action="/signout">
+              <button type="submit" class="owner-choice">
+                <span class="with-icon"
+                  ><LogOut size={15} strokeWidth={1.75} />{tr('nav.signOut')}</span
+                >
+              </button>
+            </form>
+          </div>
+        </div>
+      </details>
+    {:else}
+      <span class="standalone">
+        <Avatar name={avatarName} />
+      </span>
+    {/if}
     <OfflineIndicator {online} {pendingCount} />
   </div>
 </header>
@@ -568,10 +597,8 @@
   .account-menu > summary::-webkit-details-marker {
     display: none;
   }
-  .menu-divider {
-    height: 1px;
-    margin: 6px 4px;
-    background: var(--color-divider);
+  .standalone {
+    display: inline-flex;
   }
   .owner-popover {
     position: absolute;
@@ -612,6 +639,50 @@
   .owner-choice.active {
     color: var(--color-forest-deep);
     font-weight: 600;
+  }
+  .owner-choice:focus-visible {
+    outline: 2px solid var(--color-forest);
+    outline-offset: -2px;
+  }
+  a.owner-choice,
+  .account-actions .owner-choice {
+    min-height: 48px;
+    text-decoration: none;
+    font: inherit;
+  }
+  .with-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .account-id {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--color-divider);
+    margin-bottom: 4px;
+  }
+  .account-name {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  .account-handle {
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-muted);
+    overflow-wrap: anywhere;
+  }
+  .account-actions {
+    border-top: 1px solid var(--color-divider);
+    margin-top: 4px;
+    padding-top: 4px;
+  }
+  .account-id + .account-actions {
+    border-top: none;
+    margin-top: 0;
+  }
+  .account-actions form {
+    margin: 0;
   }
   .owner-role {
     font-size: var(--font-size-meta);

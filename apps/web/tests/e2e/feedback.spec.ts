@@ -88,7 +88,7 @@ test.describe('Send feedback from the app chrome', () => {
     await page.waitForLoadState('networkidle');
     await noHorizontalOverflow(page);
 
-    await page.getByLabel('Account menu').click();
+    await page.getByLabel('Account', { exact: true }).click();
     const item = page.getByRole('button', { name: 'Send feedback' });
     const box = await item.boundingBox();
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(48);
@@ -151,7 +151,7 @@ test.describe('Send feedback from the app chrome', () => {
     await createOnboardedFarm(page, { growing: ['garden'] });
     await page.goto('/today');
     await page.waitForLoadState('networkidle');
-    await page.getByLabel('Account menu').click();
+    await page.getByLabel('Account', { exact: true }).click();
     await page.getByRole('button', { name: 'Send feedback' }).click();
     await expect(page.getByRole('dialog', { name: 'Send feedback' })).toBeVisible();
     await noHorizontalOverflow(page);

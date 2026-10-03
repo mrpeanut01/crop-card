@@ -9,6 +9,9 @@
     "max": 90
   },
   "defaultRowSpacingInches": 7,
+  "harvestIndicators": [
+    "Incorporate at early bloom, after 2 to 3 months of growth"
+  ],
   "plantingGuide": {
     "soilTempMinF": 65,
     "recommendedLbsPerAcre": 30

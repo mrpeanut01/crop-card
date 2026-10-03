@@ -8,7 +8,16 @@
     "min": 95,
     "max": 95
   },
+  "harvestIndicators": [
+    "Three to four layers of petals open and the centers just becoming visible",
+    "Wiggle test: the stem just below the bloom stays firm",
+    "Leave at least three nodes on the main stem for regrowth"
+  ],
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 9,
+      "max": 12
+    },
     "soilTempMinF": 70,
     "rowSpacingIn": 14,
     "seedDepthIn": {

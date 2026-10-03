@@ -164,6 +164,14 @@
       "note": "NC State planting calendar gives Arugula 6-9 in (overlapping)."
     }
   },
+  "austrian-winter-pea-cover": {
+    "harvestIndicators": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/field-peas/",
+      "publisher": "Sustainable Agriculture Research and Education (SARE, USDA NIFA), Managing Cover Crops Profitably, 3rd Edition",
+      "date": "2007",
+      "quote": "SARE, Managing Cover Crops Profitably, Field Peas (also called Austrian winter peas), Killing Field Pea Cover Crops: \"Peas are easily killed any time with herbicides, or by disking or mowing after full bloom, the stage of maturity that provides the optimum N contribution. Disk lightly to preserve the tender residue for some short-term erosion control.\""
+    }
+  },
   "basil-genovese": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
@@ -681,6 +689,22 @@
       "quote": "VCE 426-406, Cucumbers, Melons and Squash (Cucumbers): \"Harvest: From when cucumbers are about 2 inches long up to any size before they begin to turn yellow, about 15 days. Remove by turning cucumbers parallel to the vine and giving a quick snap.\""
     }
   },
+  "currant-red-lake": {
+    "inRowSpacingIn": {
+      "url": "https://extension.psu.edu/home-fruit-plantings-gooseberries-and-currants",
+      "publisher": "Penn State Extension",
+      "date": "2026-04-01 (updated)",
+      "quote": "Penn State Extension, Home Fruit Plantings: Gooseberries and Currants: \"Space plants 3 to 4 feet apart in rows 6 to 8 feet apart.\"",
+      "note": "VCE 426-840 excludes currants (\"Currants and gooseberries are not included in this publication\"). The Cornell Guide to Growing Fruit at Home overlaps: text \"plants should be spaced 3 to 5 feet apart in the row, with 8 to 10 feet between rows\"; Table 2 gives 4 ft between plants."
+    },
+    "daysToMaturity": {
+      "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/7e177801-b193-4487-b604-a0b1b9f2e18a/content",
+      "publisher": "Cornell Cooperative Extension, Cornell Guide to Growing Fruit at Home (Department of Horticulture, Cornell University)",
+      "date": "2003 (© Cornell University; Table 2 as revised in the PDF modified 2020-11-30)",
+      "quote": "Cornell Guide to Growing Fruit at Home, Table 2, Planting and harvesting guidelines for various fruit crops, columns \"Spacing Between Plants (ft.) | Spacing Between Rows (ft.) | Bearing age (years) | Potential Yield at Maturity (lb./plant) | Harvest Period | Cultural demands\"; row \"Currant 4 8 2-4 6-8 July Low\"",
+      "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-bluecrop 1095). Penn State Extension (Gooseberries and Currants) is consistent: \"Each plant will produce between 5 to 7 pounds when mature (usually during the third or fourth year).\""
+    }
+  },
   "daikon-radish-cover": {
     "harvestIndicators": {
       "url": "https://extension.umd.edu/resource/cover-crops-gardens",
@@ -713,6 +737,22 @@
       "date": "2026-03-10",
       "quote": "VCE 426-413, Potatoes, Peppers and Eggplant (Eggplant): \"Spacing: 18 to 24 inches by 30 to 36 inches.\"",
       "note": "VCE 426-331 Table 5 agrees (Eggplant 18-24 in)."
+    }
+  },
+  "elderberry-adams": {
+    "inRowSpacingIn": {
+      "url": "https://extension.psu.edu/elderberry-in-the-garden-and-the-kitchen",
+      "publisher": "Penn State Extension (Westmoreland County Master Gardeners)",
+      "date": "2025-02-24 (updated)",
+      "quote": "Penn State Extension, Elderberry in the Garden and the Kitchen: \"Ensure spacing is 5 to 7 feet between plants, as elderberries have extensive, though relatively shallow, root systems.\"",
+      "note": "VCE 426-840 does not cover elderberry. The Cornell Guide to Growing Fruit at Home Table 2 gives 6 ft between plants and 10 ft between rows (inside the Penn State range); its text says \"Space plants 6 to 10 feet apart.\""
+    },
+    "daysToMaturity": {
+      "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/7e177801-b193-4487-b604-a0b1b9f2e18a/content",
+      "publisher": "Cornell Cooperative Extension, Cornell Guide to Growing Fruit at Home (Department of Horticulture, Cornell University)",
+      "date": "2003 (© Cornell University; Table 2 as revised in the PDF modified 2020-11-30)",
+      "quote": "Cornell Guide to Growing Fruit at Home, Table 2, Planting and harvesting guidelines for various fruit crops, columns \"Spacing Between Plants (ft.) | Spacing Between Rows (ft.) | Bearing age (years) | Potential Yield at Maturity (lb./plant) | Harvest Period | Cultural demands\"; row \"Elderberry 6 10 2-4 4-8 Aug. to Sept. Low\"",
+      "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-bluecrop 1095). Penn State says only that \"It takes an elderberry a few years to become really productive.\""
     }
   },
   "elephant-garlic": {
@@ -860,6 +900,20 @@
       "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
       "quote": "Merck Veterinary Manual: \"Multiple varieties of Vitis vinifera fruit have been reported as toxic in dogs, including fresh grapes, dried grapes (raisins and currants), and processed grape products.\"",
       "note": "The article title covers Vitis spp. (American and hybrid grapes as well as V. vinifera). 'Currants' in the quote are dried grapes, not Ribes currants, so the currant plugins carry no entry. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "inRowSpacingIn": {
+      "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/7e177801-b193-4487-b604-a0b1b9f2e18a/content",
+      "publisher": "Cornell Cooperative Extension, Cornell Guide to Growing Fruit at Home (Department of Horticulture, Cornell University)",
+      "date": "2003 (© Cornell University; Table 2 as revised in the PDF modified 2020-11-30)",
+      "quote": "Cornell Guide to Growing Fruit at Home, Table 2, Planting and harvesting guidelines for various fruit crops, columns \"Spacing Between Plants (ft.) | Spacing Between Rows (ft.) | Bearing age (years) | Potential Yield at Maturity (lb./plant) | Harvest Period | Cultural demands\"; row \"Vinifera type 8 9 3 10 early Sept. to Oct. High\"",
+      "note": "Cornell is the only source found with a figure for Vitis vinifera specifically; VCE 426-840 Table 1 covers American, hybrid and muscadine grapes only. UMD HGIC, Growing Grapes in the Home Garden (updated 2024-04-12, covers V. vinifera) agrees: \"Space plants about 8 feet apart.\""
+    },
+    "daysToMaturity": {
+      "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/7e177801-b193-4487-b604-a0b1b9f2e18a/content",
+      "publisher": "Cornell Cooperative Extension, Cornell Guide to Growing Fruit at Home (Department of Horticulture, Cornell University)",
+      "date": "2003 (© Cornell University; Table 2 as revised in the PDF modified 2020-11-30)",
+      "quote": "Cornell Guide to Growing Fruit at Home, Table 2, Planting and harvesting guidelines for various fruit crops, columns \"Spacing Between Plants (ft.) | Spacing Between Rows (ft.) | Bearing age (years) | Potential Yield at Maturity (lb./plant) | Harvest Period | Cultural demands\"; row \"Vinifera type 8 9 3 10 early Sept. to Oct. High\"",
+      "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-bluecrop 1095). UMD HGIC, Growing Grapes in the Home Garden agrees: \"The first crop is usually harvested 3 years after planting.\""
     }
   },
   "grape-chardonnay": {
@@ -1058,6 +1112,21 @@
       "date": "2026-02-17",
       "quote": "VCE 426-408, Leafy Green Vegetables (Cooking Greens): \"Mustard: 4 to 6 inches x 18 to 30 inches\"",
       "note": "Cross-check VCE 426-331 Table 5 gives 1-2 in thinned to 6 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "nasturtium-companion": {
+    "inRowSpacingIn": {
+      "url": "https://hort.extension.wisc.edu/articles/nasturtium-tropaeolum-majus/",
+      "publisher": "University of Wisconsin-Madison Extension, Horticulture",
+      "date": "2026 (page \"Last Update\")",
+      "quote": "UW-Madison Extension, Nasturtium, Tropaeolum majus: \"Sow seeds ½ inch deep (they need darkness to germinate) and 10 to 12 inches apart.\"",
+      "note": "No VCE, Penn State or Cornell figure was found; the UMD HGIC Nasturtium page says to plant \"according to label directions\" and gives no distance."
+    },
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/nasturtium",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2023-02-20",
+      "quote": "UMD HGIC, Nasturtium: \"It is best to use fresh young leaves and flowers and can be harvested throughout the season. When plants become stressed harvested leaves and flowers have a stronger flavor that can be off-putting.\""
     }
   },
   "oats-cover-spring": {
@@ -1694,6 +1763,12 @@
       "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
       "quote": "MSU Extension, Sorghum-sudangrass pasture poses prussic acid and nitrate poisoning risk: \"Care is needed when utilizing these forages for cattle, sheep, and goats because of risks related to prussic acid and nitrate poisoning.\"",
       "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "harvestIndicators": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/sorghum-sudangrass/",
+      "publisher": "Sustainable Agriculture Research and Education (SARE, USDA NIFA), Managing Cover Crops Profitably, 3rd Edition",
+      "date": "2007",
+      "quote": "SARE, Managing Cover Crops Profitably, Sorghum-Sudangrass Hybrids: \"Mowing or grazing when stalks are 3 to 4 feet tall encourages tillering and deeper root growth, and keeps regrowth vegetative and less fibrous until frost. For mid-summer cuttings, leave at least 6 inches of stubble to ensure good regrowth and continued weed suppression.\" ... \"Disking while plants are still vegetative will speed decomposition.\" ... \"Flail chopping after frost or killing the cover crop with herbicide will create a suitable mulch for no-till planting\""
     }
   },
   "southern-pea-pinkeye-purple-hull": {
@@ -1782,6 +1857,30 @@
       "note": "Agreeing source: UNH Cooperative Extension, Alan T. Eaton and Rachel Maccini, \"Tarnished Plant Bug\" pest fact sheet (updated June 2016, https://extension.unh.edu/resources/files/Resource000555_Rep577.pdf): \"Crop Placement - Avoid planting susceptible crops, such as strawberries, close to clover or alfalfa crops.\" The NC State page also describes alfalfa strips as a managed trap crop paired with vacuuming in California organic systems; that is a deliberate trap-crop system, not unmanaged neighbouring plantings, and the same page's cultural advice is to keep strawberries away from alfalfa. Clover and small grains are left out because the sources name them only generically."
     }
   },
+  "strawberry-jewel": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: \"Under the matted-row system used by many home gardeners, runner plants are allowed to set freely in all directions. The original plants should be set 18 to 24 inches apart in the row.\"",
+      "note": "The spacing depends on the planting system (the same publication gives 12 to 16 inches for the hill or plasticulture system). The plugin names its system in its own notes (\"Standard June-bearing matted-row variety\"), so the matted-row figure applies. The Cornell Guide to Growing Fruit at Home Table 2 gives June-bearing strawberry 2 ft between plants, inside this range."
+    }
+  },
+  "strawflower-king-silvery-white": {
+    "inRowSpacingIn": {
+      "url": "https://extension.usu.edu/productionhort/research/strawflower-cut-flower-production-in-utah",
+      "publisher": "Utah State University Extension, Production Horticulture",
+      "date": "2026-10-03 (accessed; page shows no publication date, cites 2024 references)",
+      "quote": "USU Extension, Strawflower Cut Flower Production in Utah: \"Space plants 9 to 12 inches apart to avoid overcrowding at maturity; USU trials used 12-inch spacing.\"",
+      "note": "The plugin is a Harris Seeds catalog item, but the Harris product page (harrisseeds.com/products/strawflower-king-silvery-white-seed) gives only \"Plant spread: 12-16\"\", not an in-row spacing, so the extension figure for the species is used. No VCE, Penn State, UMD or Cornell figure was found."
+    },
+    "harvestIndicators": {
+      "url": "https://extension.usu.edu/productionhort/research/strawflower-cut-flower-production-in-utah",
+      "publisher": "Utah State University Extension, Production Horticulture",
+      "date": "2026-10-03 (accessed; page shows no publication date, cites 2024 references)",
+      "quote": "USU Extension, Strawflower Cut Flower Production in Utah: \"Flowers are ready for harvest when three to four layers of petals are open, and the centers are just becoming visible\" ... \"When harvesting, leave at least three nodes (sets of leaves) of growth on the main stem to promote regrowth for subsequent harvests.\" ... \"If the stem right below the bloom moves, the flower is not ready. If the stem stays firm while moving, the flower is ready.\""
+    }
+  },
   "sudangrass-piper": {
     "animalToxicity.cattle": {
       "url": "https://forage.msu.edu/extension/sorghum-sudangrass-pasture-poses-prussic-acid-and-nitrate-poisoning-risk/",
@@ -1821,6 +1920,14 @@
       "date": "2016-07-08",
       "quote": "NC State Extension, Central North Carolina Planting Calendar for Annual Vegetables, Fruits, and Herbs, Table 1 (Days to Harvest | Distance Between Plants (inches)): \"Sunflower | 55–110 | 9–24\"",
       "note": "Crop-level figure; Mammoth Russian is an open-pollinated heirloom not tied to one vendor."
+    }
+  },
+  "sunn-hemp-cover": {
+    "harvestIndicators": {
+      "url": "https://edis.ifas.ufl.edu/publication/NG043",
+      "publisher": "UF/IFAS Extension (EDIS ENY-717, Management of Nematodes and Soil Fertility with Sunn Hemp Cover Crop)",
+      "date": "2022-01 (revised; originally 2004-09)",
+      "quote": "UF/IFAS ENY-717: \"Sunn hemp is most commonly used as a green manure, where it is grown for 2 to 3 months before cash crop planting and then incorporated into the soil at early blooming stage.\" Also: \"When plowed under at early bloom stage, nitrogen recovery of this leguminous plant is the highest.\""
     }
   },
   "sweet-corn-american-dream-f1-seed": {
@@ -2561,6 +2668,14 @@
       "date": "2026-09-26 (accessed; product page has no publication date)",
       "quote": "Harris Seeds product page Growing Information: Maturation Days: 85 Days; Spacing in Row: 24-36\"; Spacing Between Rows: 6-8'",
       "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule. VCE 426-331 gives Watermelon 3-4 ft in row; VCE 426-406 gives hills 6-8 ft apart."
+    }
+  },
+  "white-clover-cover": {
+    "harvestIndicators": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/white-clover/",
+      "publisher": "Sustainable Agriculture Research and Education (SARE, USDA NIFA), Managing Cover Crops Profitably, 3rd Edition",
+      "date": "2007",
+      "quote": "SARE, Managing Cover Crops Profitably, White Clover, Killing White Clover Cover Crops: \"Thorough uprooting and incorporation by chisel or moldboard plowing, field cultivating, undercutting or rotary tilling, or—in spring—use of a suitable herbicide will result in good to excellent kill of white clover. Extremely close mowing and partial tillage that leaves any roots undisturbed will suppress, but not kill, white clover.\""
     }
   }
 }

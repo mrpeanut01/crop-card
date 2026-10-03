@@ -23,6 +23,7 @@
   "preHarvestIntervalDays": 3,
   "rainfastHours": 2,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "352-592",
   "targetDiseases": [
     "late blight",

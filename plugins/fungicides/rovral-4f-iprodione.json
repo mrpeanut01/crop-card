@@ -21,7 +21,8 @@
   "gpaCalibration": 30,
   "reEntryIntervalHours": 24,
   "preHarvestIntervalDays": 7,
-  "pollinatorRisk": "low",
+  "pollinatorRisk": "moderate",
+  "pollinator": {"beeToxicity":"toxic","bloomRestriction":"none"},
   "epaRegistrationNumber": "279-9564",
   "targetDiseases": [
     "Botrytis",

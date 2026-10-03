@@ -21,6 +21,7 @@
   "reEntryIntervalHours": 48,
   "preHarvestIntervalDays": 1,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "deconRequired": true,
   "targetDiseases": [
     "bacterial spot",

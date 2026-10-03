@@ -13,7 +13,8 @@
   "gpaCalibration": 50,
   "reEntryIntervalHours": 24,
   "preHarvestIntervalDays": 1,
-  "pollinatorRisk": "low",
+  "pollinatorRisk": "moderate",
+  "pollinator": {"beeToxicity":"toxic","bloomRestriction":"none"},
   "targetDiseases": ["apple scab", "brown rot (stone fruit)", "Botrytis", "powdery mildew"],
   "labelClaims": { "safeForCropFamilies": ["orchard", "stone-fruit", "small-fruit"] },
   "notes": "Single-site MBC FRAC 1 — high resistance risk. Rotate aggressively. NOT tank-mix-compatible with copper."

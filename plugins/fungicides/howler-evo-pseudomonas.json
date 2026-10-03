@@ -21,6 +21,7 @@
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "none",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "70051-141",
   "targetDiseases": [
     "Pythium",

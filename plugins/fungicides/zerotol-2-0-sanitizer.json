@@ -24,7 +24,8 @@
   "gpaCalibration": 50,
   "reEntryIntervalHours": 1,
   "preHarvestIntervalDays": 0,
-  "pollinatorRisk": "low",
+  "pollinatorRisk": "high",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
   "epaRegistrationNumber": "70299-12",
   "targetDiseases": [
     "bacterial leaf spot",

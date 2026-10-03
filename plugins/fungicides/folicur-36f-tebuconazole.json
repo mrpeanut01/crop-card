@@ -23,6 +23,7 @@
   "preHarvestIntervalDays": 30,
   "rainfastHours": 4,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "264-752",
   "targetDiseases": [
     "soybean rust",

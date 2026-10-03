@@ -14,6 +14,7 @@
   "reEntryIntervalHours": 24,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "targetDiseases": ["apple scab", "powdery mildew", "cedar-apple rust", "mummy berry (blueberry)"],
   "labelClaims": { "safeForCropFamilies": ["orchard", "small-fruit", "stone-fruit", "vine-fruit"] },
   "notes": "DMI FRAC 3. Mummy berry standard for blueberries (apply at green-tip)."

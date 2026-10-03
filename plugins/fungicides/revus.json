@@ -15,6 +15,7 @@
   "preHarvestIntervalDays": 1,
   "rainfastHours": 1,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "targetDiseases": ["downy mildew", "late blight"],
   "labelClaims": { "safeForCropFamilies": ["solanaceae", "cucurbit", "leafy-green", "vine-fruit"] },
   "notes": "FRAC 40 CAA. Downy mildew + late blight specialist. Tomato / cucurbit / lettuce / grape."

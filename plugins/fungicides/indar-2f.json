@@ -14,6 +14,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 14,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "targetDiseases": ["brown rot", "apple scab", "cherry leaf spot", "powdery mildew"],
   "labelClaims": { "safeForCropFamilies": ["stone-fruit", "orchard"] },
   "notes": "DMI FRAC 3 triazole. Brown rot specialist. Rotate with FRAC 11 / 7. 14-day PHI."

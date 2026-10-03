@@ -18,6 +18,7 @@
   "preHarvestIntervalDays": 0,
   "rainfastHours": 1,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "targetDiseases": ["apple scab", "summer rots", "powdery mildew"],
   "labelClaims": { "safeForCropFamilies": ["orchard", "small-fruit", "stone-fruit"] },
   "notes": "FRAC 7 + 11 premix. Two MOAs in one product."

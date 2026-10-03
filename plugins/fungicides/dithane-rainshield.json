@@ -14,6 +14,7 @@
   "reEntryIntervalHours": 24,
   "preHarvestIntervalDays": 77,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "targetDiseases": ["apple scab", "downy mildew", "rust", "early blight"],
   "labelClaims": { "safeForCropFamilies": ["orchard", "solanaceae", "cucurbit"] },
   "notes": "Brand-name mancozeb with rainfast formulation. Same active as Manzate / Penncozeb."

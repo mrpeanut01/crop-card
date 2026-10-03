@@ -21,6 +21,7 @@
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "42519-22-5905",
   "targetDiseases": [
     "Phytophthora",

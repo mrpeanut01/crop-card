@@ -15,6 +15,7 @@
   "preHarvestIntervalDays": 0,
   "rainfastHours": 2,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "targetDiseases": ["Botrytis", "Sclerotinia"],
   "labelClaims": { "safeForCropFamilies": ["small-fruit", "vine-fruit", "stone-fruit"] },
   "notes": "FRAC 17 — Botrytis specialist. Strawberry / grape / blueberry pre-harvest."

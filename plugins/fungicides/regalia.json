@@ -14,6 +14,7 @@
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "none",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "targetDiseases": ["powdery mildew", "bacterial spot", "downy mildew"],
   "labelClaims": { "safeForCropFamilies": ["solanaceae", "cucurbit", "leafy-green", "small-fruit", "vine-fruit"] },
   "notes": "OMRI plant-extract host-defense inducer. Pair with conventional protectants for full coverage."

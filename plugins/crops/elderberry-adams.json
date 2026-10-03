@@ -4,7 +4,17 @@
   "displayName": "Elderberry — Adams",
   "version": "1.0.0",
   "cropFamily": "small-fruit",
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1460
+  },
   "defaultRowSpacingInches": 96,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 60,
+      "max": 84
+    }
+  },
   "harvestIndicators": [
     "Whole cluster turns deep purple-black",
     "Berries soft + fragrant"

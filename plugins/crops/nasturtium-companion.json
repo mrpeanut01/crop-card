@@ -9,6 +9,16 @@
     "max": 60
   },
   "defaultRowSpacingInches": 12,
+  "harvestIndicators": [
+    "Pick fresh young leaves and flowers throughout the season",
+    "Leaves and flowers from stressed plants taste stronger"
+  ],
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 10,
+      "max": 12
+    }
+  },
   "notes": "Trap crop for aphids and squash bugs. Sacrificial host — interplant at pumpkin block edges.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {

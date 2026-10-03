@@ -4,7 +4,17 @@
   "displayName": "Currant — Red Lake",
   "version": "1.0.0",
   "cropFamily": "small-fruit",
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1460
+  },
   "defaultRowSpacingInches": 60,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    }
+  },
   "harvestIndicators": [
     "Whole cluster turns deep red",
     "Pick whole strigs"

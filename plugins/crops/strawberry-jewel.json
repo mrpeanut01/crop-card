@@ -10,6 +10,12 @@
     "max": 730
   },
   "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
   "seasonalTasks": [
     {
       "key": "row-renovation",

@@ -1,0 +1,29 @@
+{
+  "pluginId": "onion-thrips-alfalfa-wheat",
+  "type": "companion",
+  "displayName": "Onions and Alfalfa or Wheat (keep apart: onion thrips)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "goodWith": [],
+  "badWith": [],
+  "keepApart": [
+    {
+      "a": [
+        "onion-candy-sweet-f1",
+        "onion-long-day-patterson-f1",
+        "onion-red-burgundy",
+        "onion-storage-yellow-stuttgarter",
+        "onion-walla-walla"
+      ],
+      "b": [
+        "alfalfa-hi-gest-660",
+        "alfalfa-vernema",
+        "wheat-hard-red-spring",
+        "wheat-hard-white-winter",
+        "wheat-soft-red-winter"
+      ],
+      "reason": "Onion thrips build up in alfalfa and wheat and move to onions when those crops are cut or harvested",
+      "source": "UMass Extension Vegetable Program, \"Onion Thrips\" fact sheet, https://www.umass.edu/agriculture-food-environment/vegetable/fact-sheets/onion-thrips"
+    }
+  ]
+}

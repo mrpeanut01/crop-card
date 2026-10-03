@@ -8,6 +8,15 @@
       "note": "VCE is internally inconsistent (426-331 Table 5: Squash, winter 2-4 ft; 426-406: bush 3-4 ft, semi-vining 4-6 ft, vining 5-7 ft), so the UMD figure, which overlaps both, is used."
     }
   },
+  "alfalfa-potato-bean-leafhopper": {
+    "keepApart": {
+      "url": "https://hort.extension.wisc.edu/files/2014/11/Potato-Leafhoppers.pdf",
+      "publisher": "University of Wisconsin-Madison Division of Extension, Garden Facts XHT1132 (David M. Lowenstein and Russell L. Groves, \"Potato Leafhopper\")",
+      "date": "Revised 2020-05-06",
+      "quote": "Avoid planting sensitive crops near alfalfa fields , because PLHs will migrate from alfalfa to these crops when the alfalfa field is harvested.",
+      "note": "The same fact sheet names the sensitive crops: \"Snap beans and potatoes should be monitored regularly for PLH activity , especially in early summer after alfalfa is cut.\" Only snap bean (Phaseolus vulgaris pod bean) and potato plugins are listed; other PLH hosts the sheet mentions (eggplant, strawberry, apple) are not tied to the alfalfa advice there. Michigan State Extension E-2269 (1992) agrees for dry beans: \"Be sure to check dry bean fields after nearby alfalfa fields are cut because cutting causes the adult leafhoppers to leave alfalfa fields.\" The spacing before \"PLH\" and \",\" is as extracted from the PDF text."
+    }
+  },
   "apple-cortland": {
     "animalToxicity.dog": {
       "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
@@ -1151,6 +1160,15 @@
       "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
+  "onion-thrips-alfalfa-wheat": {
+    "keepApart": {
+      "url": "https://www.umass.edu/agriculture-food-environment/vegetable/fact-sheets/onion-thrips",
+      "publisher": "UMass Amherst Extension Vegetable Program, \"Onion Thrips\" fact sheet",
+      "date": "Page shows no publication date; accessed 2026-10-03",
+      "quote": "Avoid planting onions near alfalfa, wheat or clover, as these crops can harbor large populations of thrips.",
+      "note": "Agreeing sources: Utah State University Extension Vegetable Guide, Onion Thrips (https://extension.usu.edu/vegetableguide/onion/onion-thrips.php): \"Avoid planting onion adjacent to alfalfa fields.\"; UC IPM Onion and Garlic Pest Management Guidelines, Thrips (https://ipm.ucanr.edu/agriculture/onion-and-garlic/thrips/): \"Avoid planting onions near grain or alfalfa fields if possible, because thrips often increase in those fields in the spring and migrate to onion fields when the grain senesces, or when the alfalfa is cut.\"; University of Kentucky Entomology EF328 (https://Entomology.Ca.Uky.Edu/files/ef328.pdf): \"Avoid planting near alfalfa and small grains if possible.\" Only bulb onion plugins are listed. Clover is left out because the sources name it only as \"clover\", not a species."
+    }
+  },
   "onion-walla-walla": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-331/426-331.html",
@@ -1753,6 +1771,15 @@
       "date": "2026-09-26 (accessed; product page has no publication date)",
       "quote": "Harris Seeds product page Growing Information: Maturation Days: 98 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
       "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    }
+  },
+  "strawberry-alfalfa-tarnished-plant-bug": {
+    "keepApart": {
+      "url": "https://content.ces.ncsu.edu/tarnished-plant-bug-in-strawberries",
+      "publisher": "NC State Extension (Lorena Lopez, \"Tarnished Plant Bug in Strawberries\")",
+      "date": "Published 2014-05-19; reviewed/revised 2026-04-17",
+      "quote": "Avoid locating strawberry fields immediately adjacent to alfalfa fields, large weedy areas, small-grain fields, or disturbed vegetation or other major TPB source habitats.",
+      "note": "Agreeing source: UNH Cooperative Extension, Alan T. Eaton and Rachel Maccini, \"Tarnished Plant Bug\" pest fact sheet (updated June 2016, https://extension.unh.edu/resources/files/Resource000555_Rep577.pdf): \"Crop Placement - Avoid planting susceptible crops, such as strawberries, close to clover or alfalfa crops.\" The NC State page also describes alfalfa strips as a managed trap crop paired with vacuuming in California organic systems; that is a deliberate trap-crop system, not unmanaged neighbouring plantings, and the same page's cultural advice is to keep strawberries away from alfalfa. Clover and small grains are left out because the sources name them only generically."
     }
   },
   "sudangrass-piper": {

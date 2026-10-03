@@ -983,6 +983,10 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.qty.part': '{amount} {unit} {status}',
   'wizard.err.request': 'la solicitud falló',
   'wizard.err.chat': 'falló el mensaje del chat',
+  'wizard.override.hint':
+    'Si ya lo revisó y aun así quiere el plan de la IA, use “Aplicar de todos modos” abajo.',
+  'wizard.override.applied':
+    'Se aplicó el plan de la IA por encima del validador. La tabla de arriba muestra la nueva distribución. Se pasaron por alto las revisiones de tamaño y espacio, así que revise la cantidad de plantas antes de guardar.',
   'wizard.err.schedule': 'falló la solicitud del calendario',
   'wizard.poll.noGeometry':
     'No se pudo revisar el aislamiento entre {blockA} y {blockB}. Dibuja uno o ambos en el mapa para activar la revisión.',
@@ -1005,6 +1009,33 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.beds.fallbackMsg':
     '{why}, así que estas camas de cultivo se calculan con el espaciado de cada cultivo.',
   'planui.beds.bedLine': 'Cama {n}: {width} × {length}',
+  'wizard.split.chipBeds': 'Repartido en {n} camas',
+  'wizard.split.chipBlocks': 'Repartido en {n} bloques',
+  'wizard.split.keep': 'Mantener en una cama',
+  'wizard.split.keepHint': 'Sembrar este cultivo en una sola cama y planificar de nuevo',
+  'wizard.split.keepFailed': 'No se pudo guardar esa opción: {error}',
+  'wizard.leftover.lead.one': 'Sobra {count} planta de {name}:',
+  'wizard.leftover.lead.other': 'Sobran {count} plantas de {name}:',
+  'wizard.leftover.full': 'No queda espacio en {bed}',
+  'wizard.leftover.tooSmall': 'En {bed} no cabe este cultivo',
+  'wizard.leftover.keepApart': '{bed} tiene {crop}, que debe mantenerse separado de este',
+  'wizard.leftover.rotation': '{bed} tuvo la misma familia de cultivos hace muy poco',
+  'wizard.leftover.crossPollination': '{bed} tiene {crop}, que se cruzaría con este',
+  'wizard.leftover.sun': '{bed} no recibe el sol que este cultivo necesita',
+  'wizard.leftover.narrow': 'Las hileras de este cultivo no caben a lo ancho de {bed}',
+  'wizard.leftover.keptInOneBed': '{bed} no se usó: se mantiene en una cama',
+  'wizard.leftover.otherCrop': 'otro cultivo',
+  'wizard.commit.retryHead': 'Estos no se guardaron:',
+  'wizard.commit.retry': 'Intentar de nuevo los que fallaron',
+  'wizard.commit.retrying': 'Intentando de nuevo…',
+  'wizard.viol.unplacedWithRoom': '{seed} dejó plantas fuera aunque {block} todavía tenía espacio.',
+  'wizard.viol.keptInOneBed': '{seed} se mantiene en una cama, pero se puso en más de una.',
+  'wizard.viol.keepApart':
+    '{seed} se puso en {block} junto a un cultivo del que debe mantenerse separado.',
+  'wizard.viol.splitRuledOut':
+    'Más de una parte de {seed} quedó donde la rotación o un cultivo con el que se cruzaría no lo permite.',
+  'wizard.split.keepNote':
+    'Mantener en una cama se guarda para esta finca y vuelve a planificar con este cultivo en una sola cama.',
   'planui.zad.stage.Z00': 'Sembrado (semilla seca)',
   'planui.zad.stage.Z10': 'Primera hoja a través del coleóptilo',
   'planui.zad.stage.Z13': 'Tres hojas desplegadas',

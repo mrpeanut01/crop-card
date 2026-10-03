@@ -70,7 +70,8 @@ export function buildAllocationInput(
         ? fillCap(pluginIndex[s.cropPluginId], selectedBlocks, bedIds)
         : (s.quantityPlants as number),
       sunRequirement: s.sunRequirement,
-      ...(fill ? { fillToCapacity: true } : {})
+      ...(fill ? { fillToCapacity: true } : {}),
+      ...(s.keepInOneBed === true ? { keepInOneBed: true } : {})
     };
   });
 

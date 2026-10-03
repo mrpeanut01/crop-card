@@ -28,6 +28,33 @@ export function humanizeAllocationViolation(
       return id;
     });
 
+  // Phase 35 (C-1): stable prefixes from the shared validator. The rest of
+  // the string is diagnostic; pull the seed and block ids out of it.
+  if (v.startsWith('unplaced-with-room:') || v.startsWith('kept-in-one-bed:')) {
+    const tokens = v.match(/[A-Za-z0-9_-]{6,}/g) ?? [];
+    const sid = tokens.find((tok) => seedNames.has(tok));
+    const bid = tokens.find((tok) => blockNames.has(tok));
+    const seed = sid ? seedNames.get(sid)! : '';
+    if (v.startsWith('kept-in-one-bed:')) {
+      return wt('wizard.viol.keptInOneBed', { seed: seed || replaceIds(v) });
+    }
+    if (seed && bid) {
+      return wt('wizard.viol.unplacedWithRoom', { seed, block: blockNames.get(bid)! });
+    }
+    return replaceIds(v);
+  }
+
+  if (v.startsWith('keep-apart:') || v.startsWith('split-ruled-out:')) {
+    const tokens = v.match(/[A-Za-z0-9_-]{3,}/g) ?? [];
+    const sid = tokens.find((tok) => seedNames.has(tok));
+    const bid = tokens.find((tok) => blockNames.has(tok));
+    const seed = sid ? seedNames.get(sid)! : '';
+    if (!seed) return replaceIds(v);
+    if (v.startsWith('split-ruled-out:')) return wt('wizard.viol.splitRuledOut', { seed });
+    if (bid) return wt('wizard.viol.keepApart', { seed, block: blockNames.get(bid)! });
+    return replaceIds(v);
+  }
+
   // Family-density pattern: "block <id> packs multiple <family>
   // varieties: total N plants exceeds 1.25× the largest plantsFit (M)"
   const familyMatch = v.match(

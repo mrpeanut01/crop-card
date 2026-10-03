@@ -1,7 +1,7 @@
 /**
  * Shared types and Claude prompt logic for barcode + label scan endpoints.
  */
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicClient } from './anthropicClient';
 import { toVisionSource } from './visionImage';
 import type { StockCategory } from '$lib/db/stock';
 import { getRegistry } from '$lib/server/registry';
@@ -418,7 +418,7 @@ export async function claudeTextLookup(
   const apiKey = getApiKey();
   if (!apiKey) return { found: false };
   try {
-    const client = new Anthropic({ apiKey });
+    const client = anthropicClient(apiKey);
     const nameHint = partialName ? ` Partial name from database: "${partialName}".` : '';
     const msg = await withRetry(() =>
       client.messages.create({
@@ -758,7 +758,7 @@ export async function claudeUrlLookup(
 ): Promise<Partial<ScanResult>> {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error(NO_KEY_MESSAGE);
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const rendered = renderPageContentForPrompt(content);
   const userMessage =
     `Identify this farm-supply product from a vendor product page. The page has been ` +
@@ -792,7 +792,7 @@ export async function claudeVisionLookup(
 ): Promise<Partial<ScanResult>> {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error(NO_KEY_MESSAGE);
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const barcodeHint = barcode ? ` The product barcode is ${barcode}.` : '';
   const msg = await withRetry(() =>
     client.messages.create({
@@ -834,7 +834,7 @@ export async function claudeMedLabelLookup(
 ): Promise<MedLabelScan> {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error(NO_KEY_MESSAGE);
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const msg = await withRetry(() =>
     client.messages.create({
       model: 'claude-sonnet-4-6',

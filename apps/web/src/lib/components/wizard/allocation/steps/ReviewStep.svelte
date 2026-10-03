@@ -8,6 +8,8 @@
   import { sufficiencyChip } from '../format';
   import { getWizardContext } from '../wizardState.svelte';
   import { blockHasSize } from '../types';
+  import { groupSplitRows, leftoverHasRuledOut, leftoverReasons } from '../split';
+  import { cropDisplayName } from '$lib/i18n/cropName';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
 
@@ -18,6 +20,46 @@
   const pickedBlocksUnsized = $derived(
     w.props.blocks.filter((b) => w.selectedBlockIds.has(b.id)).every((b) => !blockHasSize(b))
   );
+
+  const rows = $derived(groupSplitRows(w.response?.assignments ?? [], w.splitLotCounts));
+  const leftoverByLot = $derived(
+    new Map((w.response?.leftover ?? []).map((r) => [r.stockItemId, r]))
+  );
+
+  /** The first Review row of each lot carries its keep-in-one-bed toggle. */
+  function isFirstRowOfLot(i: number): boolean {
+    const id = rows[i]?.assignment.stockItemId;
+    return !!id && rows.findIndex((r) => r.assignment.stockItemId === id) === i;
+  }
+
+  function rowHasToggle(i: number): boolean {
+    const a = rows[i]?.assignment;
+    if (!a || !isFirstRowOfLot(i) || w.isFillToBed(a.stockItemId)) return false;
+    return (
+      !!w.splitLotCounts.get(a.stockItemId) ||
+      w.isKeptInOneBed(a.cropPluginId) ||
+      leftoverHasRuledOut(leftoverByLot.get(a.stockItemId))
+    );
+  }
+
+  function unplacedHasToggle(u: { stockItemId: string; cropPluginId: string }): boolean {
+    if (pickedBlocksUnsized || w.isFillToBed(u.stockItemId)) return false;
+    const report = leftoverByLot.get(u.stockItemId);
+    if (!report || report.blocks.length === 0) return false;
+    return (
+      (leftoverHasRuledOut(report) || w.isKeptInOneBed(u.cropPluginId)) &&
+      !rows.some((r) => r.assignment.stockItemId === u.stockItemId)
+    );
+  }
+
+  const anyKeepToggle = $derived(
+    rows.some((_, i) => rowHasToggle(i)) || (w.response?.unplaced ?? []).some(unplacedHasToggle)
+  );
+
+  function cropNameFor(pluginId: string): string | undefined {
+    const c = (w.props.cropCatalog ?? []).find((x) => x.pluginId === pluginId);
+    return c ? cropDisplayName(pluginId, c.displayName, page.data?.locale) : undefined;
+  }
 
   /** Pollination chips for a single assignment row. Surfaces only the
    *  unresolved (must-stagger) constraints so the table doesn't bloat. */
@@ -58,6 +100,24 @@
   }
 </script>
 
+{#snippet keepToggle(cropPluginId: string)}
+  <button
+    type="button"
+    class="keep-toggle"
+    data-testid="keep-in-one-bed"
+    aria-pressed={w.isKeptInOneBed(cropPluginId)}
+    title={tr('wizard.split.keepHint')}
+    aria-describedby="aw-keep-note"
+    disabled={w.keepInOneBedBusy}
+    onclick={() => void w.toggleKeepInOneBed(cropPluginId)}
+  >
+    {tr('wizard.split.keep')}
+  </button>
+{/snippet}
+
+{#if w.keepInOneBedError}
+  <p class="aw-error" role="alert">{w.keepInOneBedError}</p>
+{/if}
 {#if w.loading}
   <AiProgress stage="allocate" startMs={w.allocateStartMs} />
 {:else if w.error}
@@ -117,6 +177,11 @@
       compact
     />
   </p>
+  {#if anyKeepToggle}
+    <p id="aw-keep-note" class="keep-note" data-testid="keep-note">
+      {tr('wizard.split.keepNote')}
+    </p>
+  {/if}
   <table class="aw-table">
     <thead>
       <tr>
@@ -129,21 +194,33 @@
       </tr>
     </thead>
     <tbody>
-      {#each w.response.assignments as a, idx (idx)}
+      {#each rows as row, idx (row.index)}
+        {@const a = row.assignment}
         {@const key = `${a.stockItemId}:${a.blockId}`}
         {@const suff = w.response.sufficiency[key]}
         {@const chip = suff ? sufficiencyChip(suff) : null}
         {@const poll = pollinationSummary(a.stockItemId, a.blockId)}
-        <tr>
-          <td>{w.varietyDisplayFor(a.stockItemId)}</td>
-          <td>{w.blockNameFor(a.blockId)}</td>
-          <td>{a.plants.toLocaleString()}</td>
+        {@const splitN = w.splitLotCounts.get(a.stockItemId)}
+        <tr data-split={splitN ? a.stockItemId : undefined}>
+          <td class="cell-seed">{w.varietyDisplayFor(a.stockItemId)}</td>
+          <td data-label={tr('wizard.review.thBlock')}>{w.blockNameFor(a.blockId)}</td>
+          <td data-label={tr('wizard.review.thPlants')}>{a.plants.toLocaleString()}</td>
           <td class="cell-fit">
             {#if chip}
               <span class={`chip chip-sm ${chip.cls}`} title={chip.tooltip}>{chip.label}</span>
             {/if}
             {#if poll}
               <span class="chip chip-sm chip-pollination" title={poll.tooltip}>{poll.label}</span>
+            {/if}
+            {#if splitN}
+              <span class="chip chip-sm chip-split" data-testid="split-chip">
+                {w.splitNounFor(a.stockItemId) === 'beds'
+                  ? tr('wizard.split.chipBeds', { n: splitN })
+                  : tr('wizard.split.chipBlocks', { n: splitN })}
+              </span>
+            {/if}
+            {#if rowHasToggle(idx)}
+              {@render keepToggle(a.cropPluginId)}
             {/if}
           </td>
           <td class="why">{w.response.perRowRationale[key] ?? ''}</td>
@@ -174,6 +251,17 @@
               name: w.varietyDisplayFor(u.stockItemId),
               count: u.quantityPlants
             })}
+            {@const report = leftoverByLot.get(u.stockItemId)}
+            {#if report && report.blocks.length > 0}
+              <ul class="leftover-reasons" data-testid="leftover-reasons">
+                {#each leftoverReasons(report, { block: (id) => w.blockNameFor(id), crop: cropNameFor }, page.data?.locale) as reason, ri (ri)}
+                  <li>{reason}</li>
+                {/each}
+              </ul>
+              {#if unplacedHasToggle(u)}
+                {@render keepToggle(u.cropPluginId)}
+              {/if}
+            {/if}
           {/if}
         </li>
       {/each}
@@ -232,6 +320,40 @@
     color: #1f4a85;
     font-size: 0.92rem;
   }
+  .chip-split {
+    background: #e3eefb;
+    color: #1f4a85;
+  }
+  .keep-toggle {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0 0.9rem;
+    margin: 0.25rem 0;
+    border: 1px solid var(--color-forest);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--color-forest);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .keep-toggle[aria-pressed='true'] {
+    background: var(--color-forest);
+    color: #fff;
+  }
+  .keep-toggle:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+  .leftover-reasons {
+    margin: 0.35rem 0 0.25rem;
+    padding-left: 1.2rem;
+    color: #4a5d4a;
+    font-size: 0.92rem;
+  }
   .chip-pollination {
     background: #fbe7d8;
     color: #8a3a00;
@@ -281,6 +403,49 @@
     color: #4a5d4a;
     font-size: 0.9rem;
     max-width: 22rem;
+  }
+  .keep-note {
+    margin: 0 0 0.5rem;
+    color: #4a5d4a;
+    font-size: 0.9rem;
+  }
+  @media (max-width: 560px) {
+    .aw-table,
+    .aw-table tbody,
+    .aw-table tr,
+    .aw-table td {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+    .aw-table thead {
+      display: none;
+    }
+    .aw-table tr {
+      border-bottom: 1px solid #e4e9e4;
+      padding: 0.35rem 0;
+    }
+    .aw-table td {
+      border-bottom: none;
+      padding: 0.2rem 0.5rem;
+    }
+    .aw-table td.cell-seed {
+      font-weight: 700;
+    }
+    .aw-table td[data-label]::before {
+      content: attr(data-label) ': ';
+      font-weight: 600;
+      color: var(--color-forest);
+    }
+    td.cell-fit,
+    .why {
+      max-width: 100%;
+    }
+    .chip-sm {
+      max-width: 100%;
+    }
   }
   .aw-cost {
     color: #6a7d6a;

@@ -76,6 +76,8 @@ export interface Crop {
   establishment?: 'direct-seed' | 'transplant';
   /** Earliest recorded tray sowing (Phase 32E, E1-16). */
   sownIndoorsAt?: number;
+  /** Phase 35: the split group shared by every part of one seed lot. */
+  splitGroupId?: string | null;
 }
 
 export type PlantingSource = 'ai' | 'fallback' | 'plugin';
@@ -131,6 +133,7 @@ function rowToCrop(row: typeof crops.$inferSelect): Crop {
   if (row.archetypeOverride) out.archetypeOverride = row.archetypeOverride;
   if (row.establishment) out.establishment = row.establishment;
   if (row.sownIndoorsAt) out.sownIndoorsAt = row.sownIndoorsAt.getTime();
+  if (row.splitGroupId) out.splitGroupId = row.splitGroupId;
   if (row.harvestUseCases) {
     try {
       const parsed = JSON.parse(row.harvestUseCases);
@@ -172,6 +175,17 @@ export function listCrops(filters: ListFilters = {}): Crop[] {
   q = q.orderBy(desc(crops.plantingDate));
   if (filters.limit) q = q.limit(filters.limit);
   return q.all().map(rowToCrop);
+}
+
+/** Phase 35: every planting of one split group on the active farm. Another
+ *  Owner's rows never join, even with the same group id. */
+export function listSplitGroup(splitGroupId: string): Crop[] {
+  return db
+    .select()
+    .from(crops)
+    .where(withTenant(crops, eq(crops.splitGroupId, splitGroupId)))
+    .all()
+    .map(rowToCrop);
 }
 
 /** Phase 32E: writes the "Seed or seedling?" answer; null clears it. */

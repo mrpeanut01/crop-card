@@ -351,7 +351,7 @@ describe('GET /api/account/export.json', () => {
     });
 
     const { json } = await exportFor(farm.ownerId);
-    expect(json.schemaVersion).toBe('1.4.0');
+    expect(json.schemaVersion).toBe('1.5.0');
     const hay = json.hayCuttings as Array<{ id: string; recordedLate: boolean }>;
     expect(hay.find((c) => c.id === late)?.recordedLate).toBe(true);
     expect(hay.find((c) => c.id === onTime)?.recordedLate).toBe(false);

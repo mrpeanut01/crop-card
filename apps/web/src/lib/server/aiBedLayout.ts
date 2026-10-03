@@ -5,7 +5,7 @@
  * it. Anything that does not fit answers with the plain plan instead.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicClient } from './anthropicClient';
 import { z } from 'zod';
 import { MAX_SUGGESTED_BEDS, type BedLayoutCrop, type BedLayoutOptions } from '$lib/plan/bedLayout';
 import { extractJsonObject } from './aiJsonExtract';
@@ -82,7 +82,7 @@ export async function suggestBedLayout(
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('no api key');
   const choice = selectModel('gardenFill');
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const msg = await client.messages.create(
     {
       model: choice.model,

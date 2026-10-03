@@ -12,6 +12,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { anthropicClient } from './anthropicClient';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 import type { Crop } from '$lib/db/crops';
@@ -216,7 +217,7 @@ export async function proposeGroupPlans(
   }
 
   const choice = selectModel('groups');
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   // Phase 17 (Track 3.2) — dual cache breakpoints (header + bulky catalog).
   const systemBlocks = buildFarmSystemBlocks(ctx);
 

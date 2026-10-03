@@ -18,12 +18,14 @@
   import { snapshotCarryoverLines, withSnapshotCarryover } from '$lib/cards/build/area';
   import { carryoverSectionTitles, withCarryover } from '$lib/farm/areaCarryover';
   import { isSensitiveFamily } from '$lib/amendments/spreadPrompt';
-  import { isCropBearing, type AreaKind } from '$lib/farm/areaKinds';
+  import { DESIGNABLE_AREA_KINDS, isCropBearing, type AreaKind } from '$lib/farm/areaKinds';
+  import { splitGroupBlocks, splitNoun } from '$lib/plan/splitGroup';
   import {
     NO_AREA,
     planAreaCard,
     planBlockCard,
     planRailCards,
+    planSelectHref,
     plantingColor,
     type PlanAreaEntry
   } from '$lib/plan/planCards';
@@ -85,6 +87,8 @@
     petsLayout?: boolean;
     /** False for helpers: block and map edits are the owner's. */
     canEdit?: boolean;
+    /** Phase 35: crops the farm keeps in one bed (owner only). */
+    keepInOneBedCrops?: string[];
   }
   const {
     blocks,
@@ -103,7 +107,8 @@
     areaHousing = {},
     areaGrazing = {},
     petsLayout = false,
-    canEdit = true
+    canEdit = true,
+    keepInOneBedCrops = []
   }: Props = $props();
 
   const tr = $derived(createT($page.data?.locale));
@@ -119,6 +124,69 @@
   );
   function areaIdOf(b: BlockWithPlantings): string {
     return b.fieldId && areas.some((a) => a.id === b.fieldId) ? b.fieldId : NO_AREA;
+  }
+
+  // Phase 35 (R-16, R-22): parts of one seed lot in several blocks, read
+  // from the plantings this page already loaded.
+  const splitGroups = $derived(splitGroupBlocks(blocks));
+  const bedAreaIds = $derived(
+    new Set(
+      areas
+        .filter((a) => (DESIGNABLE_AREA_KINDS as readonly string[]).includes(a.kind))
+        .map((a) => a.id)
+    )
+  );
+  let keepOverride = $state<string[] | null>(null);
+  const keepSet = $derived(new Set(keepOverride ?? keepInOneBedCrops));
+  /** The crop whose keep-in-one-bed choice is saving, and the one planting
+   *  card whose tap failed, so the error shows once, on the card tapped. */
+  let keepBusyCrop = $state<string | null>(null);
+  let keepError = $state<{ plantingId: string; message: string } | null>(null);
+
+  function splitFor(p: { splitGroupId?: string | null; blockId: string }) {
+    const parts = p.splitGroupId ? splitGroups.get(p.splitGroupId) : undefined;
+    if (!parts) return undefined;
+    const bedIds = parts.filter((x) => x.areaId && bedAreaIds.has(x.areaId)).map((x) => x.blockId);
+    return {
+      n: parts.length,
+      noun: splitNoun(
+        parts.map((x) => x.blockId),
+        bedIds
+      ),
+      others: parts
+        .filter((x) => x.blockId !== p.blockId)
+        .map((x) => ({
+          blockId: x.blockId,
+          name: x.blockName,
+          href: planSelectHref(
+            $page.url.searchParams,
+            x.areaId && areas.some((a) => a.id === x.areaId) ? x.areaId : NO_AREA,
+            x.blockId
+          )
+        }))
+    };
+  }
+
+  async function toggleKeep(cropPluginId: string, plantingId: string) {
+    keepBusyCrop = cropPluginId;
+    keepError = null;
+    try {
+      const res = await fetch('/api/plan/keep-in-one-bed', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ cropPluginId, keep: !keepSet.has(cropPluginId) })
+      });
+      const body = (await res.json().catch(() => ({}))) as { cropPluginIds?: string[] };
+      if (!res.ok || !body.cropPluginIds) {
+        keepError = { plantingId, message: tr('plan.split.saveFailed') };
+        return;
+      }
+      keepOverride = body.cropPluginIds;
+    } catch {
+      keepError = { plantingId, message: tr('plan.split.saveFailed') };
+    } finally {
+      keepBusyCrop = null;
+    }
   }
 
   const fieldParam = $derived($page.url.searchParams.get('field'));
@@ -405,6 +473,11 @@
               detailHref={smallGrainHref(p.id, meta?.archetype)}
               carryover={plantingCarryover(p.cropPluginId)}
               companions={companionsFor(p.id)}
+              split={splitFor(p)}
+              keepInOneBed={keepSet.has(p.cropPluginId)}
+              onToggleKeep={canEdit ? () => toggleKeep(p.cropPluginId, p.id) : undefined}
+              keepBusy={keepBusyCrop === p.cropPluginId}
+              keepError={keepError?.plantingId === p.id ? keepError.message : null}
               sourceTag={p.sourceProvenance === 'ai'
                 ? 'AI plan'
                 : p.sourceProvenance === 'fallback'
@@ -427,6 +500,13 @@
             detailHref={smallGrainHref(activePlanting.id, meta?.archetype)}
             carryover={plantingCarryover(activePlanting.cropPluginId)}
             companions={companionsFor(activePlanting.id)}
+            split={splitFor(activePlanting)}
+            keepInOneBed={keepSet.has(activePlanting.cropPluginId)}
+            onToggleKeep={canEdit
+              ? () => toggleKeep(activePlanting.cropPluginId, activePlanting.id)
+              : undefined}
+            keepBusy={keepBusyCrop === activePlanting.cropPluginId}
+            keepError={keepError?.plantingId === activePlanting.id ? keepError.message : null}
             sourceTag={activePlanting.sourceProvenance === 'ai'
               ? 'AI plan'
               : activePlanting.sourceProvenance === 'fallback'

@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicClient } from './anthropicClient';
 import { selectModel, estimateUsd, type AiResultMeta } from './aiPlanning';
 import { extractJsonObject } from './aiJsonExtract';
 import { getApiKey } from './scanResult';
@@ -94,7 +94,7 @@ export async function suggestPlantingWindow(
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('no api key');
   const choice = selectModel('plantingWindow');
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const msg = await client.messages.create(
     {
       model: choice.model,

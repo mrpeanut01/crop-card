@@ -20,6 +20,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { anthropicClient } from './anthropicClient';
 import { toVisionSource } from './visionImage';
 import { z } from 'zod';
 import { PluginRegistrationError, PluginRegistry, pluginSchema, type Plugin } from '$lib/plugins';
@@ -462,7 +463,7 @@ export async function claudeVisionPluginLookup(
       }
     };
   }
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const choice = selectModel('rationale');
   const userPrompt = buildVisionUserPrompt(hintType);
 
@@ -548,7 +549,7 @@ export async function claudePluginSearchByName(
       }
     };
   }
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const choice = selectModel('rationale');
   const userPrompt = buildSearchUserPrompt(query, hintType);
 
@@ -759,7 +760,7 @@ export async function claudePluginSearchByNameStreaming(
     };
   }
 
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const choice = selectModel('rationale');
   const userPrompt = buildSearchUserPrompt(query, hintType);
 
@@ -1006,7 +1007,7 @@ export async function claudeReceiptExtract(
       }
     };
   }
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const choice = selectModel('rationale');
 
   // The Anthropic SDK accepts `document` content blocks for PDFs and

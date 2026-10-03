@@ -280,3 +280,46 @@ describe('PlanV2Shell with no blocks', () => {
     expect(screen.queryByText('Start the planning wizard')).toBeNull();
   });
 });
+
+describe('PlanV2Shell keep-in-one-bed errors', () => {
+  const part = (id: string, blockId: string, crop: string, group: string) => ({
+    id,
+    blockId,
+    cropPluginId: crop,
+    varietyDisplayName: crop,
+    plantingDate: NOW - 5 * DAY,
+    splitGroupId: group
+  });
+  const SPLIT = ['b1', 'b2'].map((id, i) => ({
+    id,
+    name: `Bed ${i + 1}`,
+    acres: 0.01,
+    tillageMethod: 'conventional',
+    axesLocked: false,
+    plantings: [
+      part(`bean-${id}`, id, 'bean', 'sg-bean'),
+      part(`beet-${id}`, id, 'beet', 'sg-beet')
+    ]
+  })) as unknown as BlockWithPlantings[];
+
+  it('shows a failed save once, on the card that was tapped', async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error('offline'));
+    vi.stubGlobal('fetch', fetchMock);
+    try {
+      mount({ blocks: SPLIT, tasks: [], events: [], cropMeta: CROP_META });
+      const toggles = await screen.findAllByTestId('plan-keep-in-one-bed');
+      expect(toggles.length).toBeGreaterThanOrEqual(2);
+      await fireEvent.click(toggles[0]);
+      await vi.waitFor(() => expect(screen.getAllByRole('alert')).toHaveLength(1));
+      const cards = screen.getAllByTestId('planting-card');
+      const withAlert = cards.filter((c) => within(c).queryByRole('alert'));
+      expect(withAlert).toHaveLength(1);
+      expect(withAlert[0]).toContainElement(toggles[0]);
+      for (const t of screen.getAllByTestId('plan-keep-in-one-bed')) {
+        expect((t as HTMLButtonElement).disabled).toBe(false);
+      }
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});

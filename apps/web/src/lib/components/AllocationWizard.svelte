@@ -47,6 +47,7 @@
     emptySeason = false,
     currentYear = new Date().getFullYear(),
     aiEnabled = false,
+    keepInOneBedCrops = [],
     wizardPlanId,
     initialChatMessages = [],
     initialStep,
@@ -71,6 +72,8 @@
      *  step's AI-on/off variant. Step 2 (Schedule) shows the deterministic
      *  planner chat instead of the Gantt chat when off. */
     aiEnabled?: boolean;
+    /** Phase 35: crops the farm keeps in one bed (owner setting). */
+    keepInOneBedCrops?: string[];
     /** Phase 25d (#89) — identifies the plan whose chat history this
      *  wizard run-through belongs to. Convention: `season-${year}`. When
      *  omitted, chat persistence is disabled (silent fallback to the
@@ -120,6 +123,9 @@
         },
         get aiEnabled() {
           return aiEnabled;
+        },
+        get keepInOneBedCrops() {
+          return keepInOneBedCrops;
         },
         get wizardPlanId() {
           return wizardPlanId;

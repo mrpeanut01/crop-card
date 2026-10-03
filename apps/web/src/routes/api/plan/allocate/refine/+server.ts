@@ -123,6 +123,8 @@ export const POST: RequestHandler = async (event) => {
     reply: result.reply,
     assignments: result.assignments,
     unplaced: result.unplaced,
+    leftover: result.leftover,
+    sharedBedBlockIds: [...(planInput.bedBlockIds ?? [])],
     sufficiency: result.sufficiency,
     rationale: result.rationale,
     perRowRationale: result.perRowRationale,

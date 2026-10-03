@@ -716,6 +716,16 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plan.grazing.kicker': '{area} · Pastoreo y henificación',
   'plan.grazing.title': 'Tiempos de pastoreo y henificación',
   'plan.grazing.empty': 'No se ha aplicado nada aquí en el último año.',
+  'plan.split.lineBeds': 'Un lote de semilla en {n} camas',
+  'plan.split.lineBlocks': 'Un lote de semilla en {n} bloques',
+  'plan.split.alsoIn': 'También en',
+  'plan.split.keep': 'Mantener este cultivo en una cama la próxima vez',
+  'plan.split.keepNote':
+    'Esto solo cambia los planes nuevos. Las siembras ya guardadas se quedan donde están.',
+  'plan.split.saveFailed': 'No se pudo guardar esa opción. Inténtalo de nuevo.',
+  'plan.split.err.ownerOnly': 'Solo el propietario puede cambiar esto. Pregúntale al propietario.',
+  'plan.split.err.invalid': 'Envía un cultivo y si se mantiene en una cama.',
+  'plan.split.err.unknownCrop': 'Ese cultivo no está en la biblioteca de cultivos.',
   'plan.cal.body.harvestReadiness':
     'Antes de cosechar, revisa las señales de madurez propias de cada cultivo.'
 };

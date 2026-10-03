@@ -795,11 +795,15 @@ export const crops = tenantScoped(
       /** Phase 32E. `planting_date` stays the in-ground date; a transplant
        *  records its indoor sowing here. */
       establishment: text('establishment', { enum: ['direct-seed', 'transplant'] }),
-      sownIndoorsAt: integer('sown_indoors_at', { mode: 'timestamp_ms' })
+      sownIndoorsAt: integer('sown_indoors_at', { mode: 'timestamp_ms' }),
+      /** Phase 35: one seed lot planted across several blocks. Every part
+       *  carries the same `sg_<uuid>` the wizard minted at commit. */
+      splitGroupId: text('split_group_id')
     },
     (table) => ({
       ownerBlockIdx: index('crops_owner_block_idx').on(table.ownerId, table.blockId),
-      ownerStatusIdx: index('crops_owner_status_idx').on(table.ownerId, table.status)
+      ownerStatusIdx: index('crops_owner_status_idx').on(table.ownerId, table.status),
+      ownerSplitGroupIdx: index('crops_owner_split_group_idx').on(table.ownerId, table.splitGroupId)
     })
   )
 );

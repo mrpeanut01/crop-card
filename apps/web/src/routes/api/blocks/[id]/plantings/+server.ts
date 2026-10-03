@@ -22,7 +22,9 @@ import {
   resolveDesignableBed,
   resolvePlacement
 } from '$lib/server/garden/placement';
-import { db } from '$lib/db/client';
+import { withClientRecordId } from '$lib/server/clientRecordId';
+import { writeRecord } from '$lib/server/recordWrite';
+import { SPLIT_GROUP_ID_PATTERN } from '$lib/plan/splitGroup';
 import { t } from '$lib/i18n';
 import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
 import { applyPlantingEstablishment, localizeSeedStartNotes } from '$lib/server/seedStartTasks';
@@ -58,13 +60,15 @@ const plantingSchema = z.object({
    *  placing it in a bed. Keeps a fill-to-bed planting's size on record so
    *  later plans see how much of a shared bed it takes. */
   plannedPlants: z.number().int().positive().max(100_000).optional(),
+  /** Phase 35: the wizard's id for one seed lot planted in several blocks. */
+  splitGroupId: z.string().regex(SPLIT_GROUP_ID_PATTERN).optional(),
   /** Phase 32E "Seed or seedling?" (E1-10). */
   ...plantingEstablishmentFields
 });
 
 export const _requestSchema = plantingSchema;
 
-export const POST: RequestHandler = async (event) => {
+export const POST: RequestHandler = withClientRecordId(async (event) => {
   const user = requireOwner(event);
 
   const blockId = event.params.id;
@@ -127,7 +131,9 @@ export const POST: RequestHandler = async (event) => {
     );
   }
 
-  const { planting, seedStart } = db.transaction(() => {
+  // Phase 35 (R-19): the planting, any purchase and the seed draw commit
+  // with the replay receipt, so a retried wizard row never saves twice.
+  const { planting, seedStart, purchased, decrement } = writeRecord(event, () => {
     const planting = addPlanting({
       blockId,
       cropPluginId: parsed.data.cropPluginId,
@@ -138,7 +144,8 @@ export const POST: RequestHandler = async (event) => {
       sourceProvenance: parsed.data.sourceProvenance,
       placement,
       plannedPlants: placement ? undefined : parsed.data.plannedPlants,
-      status: placement ? 'planned' : undefined
+      status: placement ? 'planned' : undefined,
+      splitGroupId: parsed.data.splitGroupId
     });
     const seedStart = applyPlantingEstablishment(
       planting.id,
@@ -149,63 +156,62 @@ export const POST: RequestHandler = async (event) => {
       },
       plugin.plugin.type === 'crop' ? plugin.plugin : undefined
     );
-    return { planting, seedStart };
-  });
 
-  let stockItemId = parsed.data.stockItemId;
-  let purchased: { stockItemId: string } | undefined;
-  if (parsed.data.purchase) {
-    const item = createStockItem({
-      category: 'seed',
-      displayName: planting.varietyDisplayName,
-      defaultUnit: parsed.data.purchase.unit,
-      pluginId: parsed.data.cropPluginId
-    });
-    receiveLot({
-      stockItemId: item.id,
-      receivedQuantity: parsed.data.purchase.quantity,
-      unit: parsed.data.purchase.unit,
-      performedById: user.id
-    });
-    stockItemId = item.id;
-    purchased = { stockItemId: item.id };
-  }
+    let stockItemId = parsed.data.stockItemId;
+    let purchased: { stockItemId: string } | undefined;
+    if (parsed.data.purchase) {
+      const item = createStockItem({
+        category: 'seed',
+        displayName: planting.varietyDisplayName,
+        defaultUnit: parsed.data.purchase.unit,
+        pluginId: parsed.data.cropPluginId
+      });
+      receiveLot({
+        stockItemId: item.id,
+        receivedQuantity: parsed.data.purchase.quantity,
+        unit: parsed.data.purchase.unit,
+        performedById: user.id
+      });
+      stockItemId = item.id;
+      purchased = { stockItemId: item.id };
+    }
 
-  // Decrement seed stock if a stock item + quantity were supplied. FIFO
-  // across lots; shortfall does not fail the request — the planting is
-  // already persisted.
-  let decrement: { fulfilled: number; shortfall: number } | undefined;
-  if (
-    stockItemId &&
-    parsed.data.quantityPlanted !== undefined &&
-    parsed.data.quantityPlanted > 0 &&
-    parsed.data.quantityUnit
-  ) {
-    const item = getStockItem(stockItemId);
-    const unitOk = (ALL_STOCK_UNITS as ReadonlyArray<string>).includes(parsed.data.quantityUnit);
-    if (item && !unitOk) {
-      decrement = { fulfilled: 0, shortfall: parsed.data.quantityPlanted };
-    } else if (item) {
-      try {
-        const result = decrementForUse({
-          stockItemId,
-          amount: parsed.data.quantityPlanted,
-          unit: parsed.data.quantityUnit as StockUnit,
-          cropId: planting.id,
-          reason: 'planting',
-          performedById: user.id,
-          drawExpected: true
-        });
-        decrement = { fulfilled: result.fulfilled, shortfall: result.shortfall };
-      } catch (err) {
-        if (err instanceof IncompatibleUnitError) {
-          decrement = { fulfilled: 0, shortfall: parsed.data.quantityPlanted };
-        } else {
-          throw err;
+    // Decrement seed stock if a stock item + quantity were supplied. FIFO
+    // across lots; shortfall does not fail the request.
+    let decrement: { fulfilled: number; shortfall: number } | undefined;
+    if (
+      stockItemId &&
+      parsed.data.quantityPlanted !== undefined &&
+      parsed.data.quantityPlanted > 0 &&
+      parsed.data.quantityUnit
+    ) {
+      const item = getStockItem(stockItemId);
+      const unitOk = (ALL_STOCK_UNITS as ReadonlyArray<string>).includes(parsed.data.quantityUnit);
+      if (item && !unitOk) {
+        decrement = { fulfilled: 0, shortfall: parsed.data.quantityPlanted };
+      } else if (item) {
+        try {
+          const result = decrementForUse({
+            stockItemId,
+            amount: parsed.data.quantityPlanted,
+            unit: parsed.data.quantityUnit as StockUnit,
+            cropId: planting.id,
+            reason: 'planting',
+            performedById: user.id,
+            drawExpected: true
+          });
+          decrement = { fulfilled: result.fulfilled, shortfall: result.shortfall };
+        } catch (err) {
+          if (err instanceof IncompatibleUnitError) {
+            decrement = { fulfilled: 0, shortfall: parsed.data.quantityPlanted };
+          } else {
+            throw err;
+          }
         }
       }
     }
-  }
+    return { planting, seedStart, purchased, decrement };
+  });
 
   const saved = placement ? getCrop(planting.id) : undefined;
   const placed = saved
@@ -224,4 +230,4 @@ export const POST: RequestHandler = async (event) => {
     },
     { status: 201 }
   );
-};
+});

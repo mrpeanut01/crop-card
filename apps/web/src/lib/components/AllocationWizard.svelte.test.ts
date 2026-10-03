@@ -505,3 +505,117 @@ describe('seed quantities from inventory (#471, #475)', () => {
     expect(within(row).queryByTestId('fill-to-bed')).toBeNull();
   });
 });
+
+describe('one seed lot across several beds (Phase 35)', () => {
+  const GARDEN = '99999999-9999-4999-8999-999999999999';
+  const splitResponse = {
+    ...allocateResponse,
+    assignments: [
+      assignment(BEAN, NORTH, 120),
+      assignment(BEET, SOUTH, 255),
+      assignment(BEAN, SOUTH, 50)
+    ]
+  };
+
+  it('keeps a plan with no split exactly as before', async () => {
+    renderWizard();
+    await driveToReview();
+    expect(screen.queryByTestId('split-chip')).toBeNull();
+    expect(screen.queryByTestId('keep-in-one-bed')).toBeNull();
+    expect(screen.queryByTestId('keep-note')).toBeNull();
+  });
+
+  it('shows the parts of a split lot together with a chip and a keep toggle', async () => {
+    routes['POST /api/plan/allocate'] = () => ({
+      json: { ...splitResponse, sharedBedBlockIds: [NORTH, SOUTH] }
+    });
+    renderWizard();
+    await driveToReview();
+    expect(reviewRows()).toEqual([
+      'Bush Bean — Provider|North Bed|120',
+      'Bush Bean — Provider|South Bed|50',
+      'Beet — Detroit Dark Red|South Bed|255'
+    ]);
+    const chips = screen.getAllByTestId('split-chip');
+    expect(chips).toHaveLength(2);
+    expect(chips[0]).toHaveTextContent('Split across 2 beds');
+    const toggle = screen.getByTestId('keep-in-one-bed');
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(toggle).toHaveTextContent('Keep in one bed');
+    const note = screen.getByTestId('keep-note');
+    expect(note).toHaveTextContent('saved for this farm and plans again');
+    expect(toggle).toHaveAttribute('aria-describedby', note.id);
+  });
+
+  it('says blocks when the parts are not all garden beds, and works it out without the server list', async () => {
+    routes['POST /api/plan/allocate'] = () => ({ json: splitResponse });
+    renderWizard({
+      areas: [{ id: GARDEN, name: 'Kitchen garden', kind: 'garden' }],
+      blocks: [
+        { ...blocks[0], fieldId: GARDEN },
+        { ...blocks[1], fieldId: null }
+      ]
+    });
+    await driveToReview();
+    expect(screen.getAllByTestId('split-chip')[0]).toHaveTextContent('Split across 2 blocks');
+  });
+
+  it('saves the keep choice and plans again with the seed kept in one bed', async () => {
+    let allocations = 0;
+    routes['POST /api/plan/allocate'] = () => {
+      allocations++;
+      return allocations === 1
+        ? { json: splitResponse }
+        : {
+            json: {
+              ...allocateResponse,
+              assignments: [assignment(BEAN, NORTH, 120), assignment(BEET, SOUTH, 255)],
+              unplaced: [
+                { stockItemId: BEAN, cropPluginId: 'bush-bean-provider', quantityPlants: 50 }
+              ],
+              leftover: [
+                {
+                  stockItemId: BEAN,
+                  cropPluginId: 'bush-bean-provider',
+                  plantsLeft: 50,
+                  blocks: [
+                    { blockId: NORTH, status: 'full' },
+                    { blockId: SOUTH, status: 'kept-in-one-bed' }
+                  ]
+                }
+              ]
+            }
+          };
+    };
+    routes['PUT /api/plan/keep-in-one-bed'] = () => ({
+      json: { cropPluginIds: ['bush-bean-provider'] }
+    });
+    renderWizard();
+    await driveToReview();
+    await fireEvent.click(screen.getByTestId('keep-in-one-bed'));
+    await waitFor(() => expect(allocations).toBe(2));
+    expect(calls.find((c) => c.key === 'PUT /api/plan/keep-in-one-bed')?.body).toEqual({
+      cropPluginId: 'bush-bean-provider',
+      keep: true
+    });
+    const second = calls.filter((c) => c.key === 'POST /api/plan/allocate')[1].body as {
+      seedSelections: Array<{ stockItemId: string; keepInOneBed?: boolean }>;
+    };
+    expect(second.seedSelections.find((s) => s.stockItemId === BEAN)?.keepInOneBed).toBe(true);
+    expect(second.seedSelections.find((s) => s.stockItemId === BEET)?.keepInOneBed).toBeUndefined();
+    const reasons = await screen.findByTestId('leftover-reasons');
+    expect(reasons).toHaveTextContent('North Bed is full');
+    expect(reasons).toHaveTextContent('South Bed was not used: kept in one bed');
+    expect(screen.getByTestId('keep-in-one-bed')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByTestId('split-chip')).toBeNull();
+  });
+
+  it('prefills the keep choice from the farm setting', async () => {
+    renderWizard({ keepInOneBedCrops: ['bush-bean-provider'] });
+    await driveToReview();
+    const body = calls.find((c) => c.key === 'POST /api/plan/allocate')!.body as {
+      seedSelections: Array<{ stockItemId: string; keepInOneBed?: boolean }>;
+    };
+    expect(body.seedSelections.find((s) => s.stockItemId === BEAN)?.keepInOneBed).toBe(true);
+  });
+});

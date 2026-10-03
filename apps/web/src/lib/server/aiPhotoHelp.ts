@@ -3,7 +3,7 @@
  *  plugin's own guide; its reply is filtered for spray advice before anyone
  *  reads it. */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicClient } from './anthropicClient';
 import { JPEG_DATA_URL_PREFIX } from '$lib/journal/photo';
 import { estimateUsd, selectModel, type AiResultMeta } from './aiPlanning';
 import { getApiKey } from './scanResult';
@@ -77,7 +77,7 @@ export async function askPhotoHelp(
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('no api key');
   const choice = selectModel('photoHelp');
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const prompt = buildPhotoHelpPrompt(input);
   const msg = await client.messages.create(
     {

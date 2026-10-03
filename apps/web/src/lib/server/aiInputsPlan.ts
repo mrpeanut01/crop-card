@@ -32,7 +32,7 @@
  * with the other AI surfaces.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicClient } from './anthropicClient';
 
 import { planInputs, type InputsPlan, type InputsPlanInput } from '$lib/plan/inputsPlan';
 import { isProductAllowed } from '$lib/season/philosophyFilter';
@@ -224,7 +224,7 @@ async function callInputsClaude(
   } = {}
 ): Promise<AiCallResult> {
   const { refinementMessage, history = [], signal } = opts;
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const choice = selectModel('inputs');
 
   const systemPrompt = buildSystemPrompt();

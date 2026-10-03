@@ -17,7 +17,7 @@
  * is bounded at `max_uses: 4` searches).
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicClient } from './anthropicClient';
 import { selectModel, estimateUsd, type AiResultMeta } from './aiPlanning';
 import { getApiKey } from './scanResult';
 import { getPlatesCatalog } from '$lib/planterPlate/catalog';
@@ -164,7 +164,7 @@ export async function refreshStockItem(input: StockRefreshInput): Promise<StockR
   }
 
   const choice = selectModel('rationale'); // Sonnet — accurate extraction
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const prompt = buildPrompt(input);
 
   try {

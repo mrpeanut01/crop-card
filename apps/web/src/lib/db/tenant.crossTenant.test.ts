@@ -913,6 +913,53 @@ describe('cross-tenant isolation', () => {
     });
   });
 
+  // Phase 35 (R-13): a split group id carries no authority. Two Owners using
+  // the same string never see each other's parts.
+  it('split group reads stay inside the tenant even with the same group id', () => {
+    fc.assert(
+      fc.property(fc.uuid(), fc.integer({ min: 1, max: 3 }), (uuid, parts) => {
+        const groupId = `sg_${uuid}`;
+        const seed = (ownerId: string) =>
+          runWithTenant(ownerId, () => {
+            const ids: string[] = [];
+            for (let i = 0; i < parts + 1; i++) {
+              const block = blocksRepo.createBlock({ name: `${ownerId}-split-${uuid}-${i}` });
+              ids.push(
+                blocksRepo.addPlanting({
+                  blockId: block.id,
+                  cropPluginId: 'crop:bean',
+                  varietyDisplayName: 'Bean',
+                  plantingDate: null,
+                  quantityPlanted: 10,
+                  quantityUnit: 'seeds',
+                  splitGroupId: groupId
+                }).id
+              );
+            }
+            return ids;
+          });
+        const mine = seed(OWNER_A);
+        const theirs = seed(OWNER_B);
+        runWithTenant(OWNER_A, () => {
+          const got = cropsRepo.listSplitGroup(groupId).map((c) => c.id);
+          expect(got.sort()).toEqual([...mine].sort());
+          for (const id of theirs) expect(got).not.toContain(id);
+          const listed = blocksRepo
+            .listBlocks()
+            .flatMap((b) => b.plantings)
+            .filter((p) => p.splitGroupId === groupId)
+            .map((p) => p.id);
+          expect(listed.sort()).toEqual([...mine].sort());
+        });
+        runWithTenant(OWNER_B, () => {
+          const got = cropsRepo.listSplitGroup(groupId).map((c) => c.id);
+          expect(got.sort()).toEqual([...theirs].sort());
+        });
+      }),
+      { numRuns: 15 }
+    );
+  });
+
   it('planting_journal entries are owner-scoped: list, read, photo and delete (Phase 30G)', () => {
     const seed = (ownerId: string) =>
       runWithTenant(ownerId, () => {

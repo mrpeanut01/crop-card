@@ -10,7 +10,9 @@ export const seedSelectionSchema = z
     varietyDisplayName: z.string().min(1).max(160),
     quantityPlants: z.number().int().positive().max(1_000_000).optional(),
     fillToBed: z.boolean().optional(),
-    sunRequirement: z.enum(['full', 'partial', 'shade']).optional()
+    sunRequirement: z.enum(['full', 'partial', 'shade']).optional(),
+    /** Phase 35 (R-15): keep this counted seed on one block for this run. */
+    keepInOneBed: z.boolean().optional()
   })
   .refine((s) => s.fillToBed === true || s.quantityPlants !== undefined, {
     message: 'quantityPlants is required unless fillToBed is set',

@@ -2110,6 +2110,7 @@
     addTaskTarget = { blockId, plantingId };
   }}
   canEdit={data.canEdit}
+  keepInOneBedCrops={data.keepInOneBedCrops ?? []}
   onAddBlock={data.canEdit
     ? () => {
         showNewBlockModal = true;
@@ -3820,8 +3821,10 @@
       sunExposure: b.sunExposure,
       widthFt: b.widthFt,
       lengthFt: b.lengthFt,
+      fieldId: b.fieldId ?? null,
       plantings: b.plantings.map((p) => ({ varietyDisplayName: p.varietyDisplayName }))
     }))}
+    keepInOneBedCrops={data.keepInOneBedCrops ?? []}
     areas={data.setupAreas ?? []}
     plantingGuides={data.plantingGuides}
     cropCatalog={data.cropCatalog}

@@ -19,6 +19,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { anthropicClient } from './anthropicClient';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { Crop } from '$lib/db/crops';
 import {
@@ -198,7 +199,7 @@ export async function refineSchedule(
   }
 
   const choice = selectModel('allocate');
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const systemBlocks = buildFarmSystemBlocks(ctx);
   const initialPrompt = buildSchedulePrompt(input, windows, successionFits);
   const previousAssistantJson = JSON.stringify(
@@ -489,7 +490,7 @@ export async function schedulePlantings(
   }
 
   const choice = selectModel('allocate');
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const systemBlocks = buildFarmSystemBlocks(ctx);
 
   // Pre-compute the deterministic plan and pass it as a baseline anchor in

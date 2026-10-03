@@ -170,7 +170,17 @@ describe('engine packing on shared beds (#440)', () => {
       )
     );
     expect(new Set(result.assignments.map((a) => a.stockItemId))).toEqual(new Set(['L', 'T', 'P']));
-    expect(result.unplaced).toEqual([]);
+    // Phase 35 (R-11): seed left once the bed is full is reported, with the
+    // bed named as full, instead of being dropped.
+    for (const u of result.unplaced) {
+      const got = result.assignments
+        .filter((a) => a.stockItemId === u.stockItemId)
+        .reduce((s, a) => s + a.plants, 0);
+      expect(got + u.quantityPlants).toBe(1000);
+    }
+    for (const r of result.leftover) {
+      expect(r.blocks).toEqual([{ blockId: 'bed', status: 'full' }]);
+    }
     const share = sharesByBed(result, [b]).get('bed')!;
     expect(share).toBeLessThanOrEqual(1 + SHARE_EPSILON);
     expect(share).toBeGreaterThan(0.8);

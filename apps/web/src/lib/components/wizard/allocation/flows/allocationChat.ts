@@ -118,7 +118,7 @@ export class AllocationChatFlow {
       const violationLine = violations.length > 0 ? `\n\nWhy:\n• ${violations.join('\n• ')}` : '';
       const overrideHint =
         Array.isArray(body?.meta?.rejectedAssignments) && body.meta.rejectedAssignments.length > 0
-          ? "\n\nIf you've reviewed and want to accept the AI's plan anyway, use “Apply anyway” below."
+          ? `\n\n${wt('wizard.override.hint')}`
           : '';
       reply = `${header}${violationLine}${overrideHint}\n\n${aiReply}`;
 
@@ -182,15 +182,20 @@ export class AllocationChatFlow {
       // Unplaced + sufficiency are recomputed by the next refine; until
       // then, clear them so the operator doesn't read stale numbers.
       unplaced: [],
-      sufficiency: {}
+      sufficiency: {},
+      // R-31: the farmer accepted Claude's plan, so its rows are `ai`, not
+      // the `fallback` the validator rejection set.
+      meta: {
+        ...this.#w.response.meta,
+        fallback: undefined,
+        violationsOnFirstAttempt: undefined
+      }
     };
     this.#w.allocationChatMessages = [
       ...this.#w.allocationChatMessages,
       {
         role: 'assistant',
-        content:
-          '✅ Applied the AI plan over the validator. The grid above shows the new layout. ' +
-          'Density / capacity checks were overridden — review the plant counts before committing.'
+        content: wt('wizard.override.applied')
       }
     ];
     this.#w.lastRejectedAssignments = null;

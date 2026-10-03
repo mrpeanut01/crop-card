@@ -88,6 +88,8 @@ export interface PlantingRecord {
   sownIndoorsAt?: number | null;
   /** Set by `listBlocks`; watering advice counts only active plantings. */
   status?: 'planned' | 'active' | 'harvested' | 'failed' | 'archived';
+  /** Phase 35: shared by every part of one seed lot planted in several blocks. */
+  splitGroupId?: string | null;
 }
 
 export interface BlockWithPlantings extends Block {
@@ -223,7 +225,8 @@ export function listBlocks(opts: ListBlocksOptions = {}): BlockWithPlantings[] {
       groupRole: p.groupRole ?? undefined,
       establishment: p.establishment ?? null,
       sownIndoorsAt: p.sownIndoorsAt?.getTime() ?? null,
-      status: p.status
+      status: p.status,
+      splitGroupId: p.splitGroupId ?? null
     });
     grouped.set(p.blockId, list);
   }
@@ -258,7 +261,8 @@ export function getBlock(id: string): BlockWithPlantings | undefined {
       groupRole: p.groupRole ?? undefined,
       establishment: p.establishment ?? null,
       sownIndoorsAt: p.sownIndoorsAt?.getTime() ?? null,
-      status: p.status
+      status: p.status,
+      splitGroupId: p.splitGroupId ?? null
     }));
   return { ...rowToBlock(row), plantings };
 }
@@ -438,13 +442,18 @@ export function addPlanting(input: {
   /** A placed planting is a plan until its date comes, so the designer
    *  paths pass `'planned'`; otherwise a dated row starts `'active'`. */
   status?: 'planned' | 'active';
+  /** Phase 35: the seed lot's split group (`sg_<uuid>`), when split. */
+  splitGroupId?: string;
 }): PlantingRecord {
   if (input.plantingDate === null && input.quantityPlanted !== undefined && !input.placement) {
     const conds = [
       eq(plantingRecords.blockId, input.blockId),
       eq(plantingRecords.cropPluginId, input.cropPluginId),
       eq(plantingRecords.status, 'planned'),
-      isNull(plantingRecords.plantingDate)
+      isNull(plantingRecords.plantingDate),
+      input.splitGroupId
+        ? eq(plantingRecords.splitGroupId, input.splitGroupId)
+        : isNull(plantingRecords.splitGroupId)
     ];
     if (input.quantityUnit) {
       conds.push(eq(plantingRecords.quantityUnit, input.quantityUnit));
@@ -479,7 +488,8 @@ export function addPlanting(input: {
         cropPluginId: updated.cropPluginId,
         varietyDisplayName: updated.varietyDisplayName,
         plantingDate: updated.plantingDate?.getTime() ?? null,
-        sourceProvenance: updated.sourceProvenance ?? null
+        sourceProvenance: updated.sourceProvenance ?? null,
+        splitGroupId: updated.splitGroupId ?? null
       };
     }
   }
@@ -499,6 +509,7 @@ export function addPlanting(input: {
           input.quantityPlanted !== undefined ? Math.round(input.quantityPlanted * 100) : null,
         quantityUnit: input.quantityUnit ?? null,
         sourceProvenance: input.sourceProvenance ?? null,
+        splitGroupId: input.splitGroupId ?? null,
         ...(input.placement
           ? placementColumns(input.placement)
           : input.plannedPlants !== undefined
@@ -514,7 +525,8 @@ export function addPlanting(input: {
     cropPluginId: row.cropPluginId,
     varietyDisplayName: row.varietyDisplayName,
     plantingDate: row.plantingDate?.getTime() ?? null,
-    sourceProvenance: row.sourceProvenance ?? null
+    sourceProvenance: row.sourceProvenance ?? null,
+    splitGroupId: row.splitGroupId ?? null
   };
 }
 

@@ -6,7 +6,7 @@
  * (B-44). Owner and inspector (B-48).
  */
 
-import type { RequestHandler } from '@sveltejs/kit';
+import type { RequestEvent, RequestHandler } from '@sveltejs/kit';
 import { prefsFor } from '$lib/db/userProfile';
 import { buildTreatmentLog } from '$lib/records/animalTreatmentLog.server';
 import { exportWindowQuerySchema } from '$lib/records/apiSchemas';
@@ -14,10 +14,13 @@ import { recordExportReader } from '$lib/records/exportAccess.server';
 import { parseExportWindow, windowRefusal } from '$lib/records/exportWindow';
 import { treatmentLogPdf } from '$lib/records/treatmentLogPdf.server';
 import { farmNameOf } from '$lib/records/farmName.server';
+import { withRenderRefusal } from '$lib/server/render/refusal';
 
 export const _requestSchema = exportWindowQuerySchema;
 
-export const GET: RequestHandler = async (event) => {
+export const GET: RequestHandler = (event) => withRenderRefusal(event, () => exportPdf(event));
+
+async function exportPdf(event: RequestEvent): Promise<Response> {
   const access = recordExportReader(event);
   if (!access.ok) return access.response;
   const prefs = prefsFor(access.user.id);
@@ -30,7 +33,9 @@ export const GET: RequestHandler = async (event) => {
     to: window.to,
     footer: 'log',
     viewer: access.user,
-    prefs
+    prefs,
+    ownerId: access.user.activeOwnerId ?? '',
+    signal: event.request?.signal
   });
   return new Response(new Uint8Array(pdf), {
     headers: {
@@ -39,4 +44,4 @@ export const GET: RequestHandler = async (event) => {
       'Cache-Control': 'private, no-store'
     }
   });
-};
+}

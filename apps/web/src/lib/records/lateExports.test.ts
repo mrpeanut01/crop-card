@@ -239,9 +239,9 @@ describe('VDACS PDF (G2-07..G2-09)', () => {
     expect(doc).toContain('Only hay cuttings and animal records track this');
     expect(doc).not.toContain('b hay block');
     const rows = (
-      (m.docs[0] as { content: Array<{ table?: { body: unknown[][] } }> }).content.find(
-        (c) => c.table
-      )?.table?.body ?? []
+      (
+        m.docs[0] as { doc: { content: Array<{ table?: { body: unknown[][] } }> } }
+      ).doc.content.find((c) => c.table)?.table?.body ?? []
     ).slice(1);
     const hay = rows.filter((r) => (r[1] as { text: string }).text === 'hay');
     expect(hay).toHaveLength(2);

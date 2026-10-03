@@ -157,11 +157,11 @@
 
   <SettingsSection title={tr('account.export.title')} sub={tr('account.export.sub')}>
     <div class="export-row">
-      <a class="ghost" href="/api/account/export.json" download>
+      <a class="ghost" href="/api/account/export.json" data-sveltekit-reload>
         <FileText size={13} />
         {tr('account.export.json')}
       </a>
-      <a class="ghost" href="/api/records/export.vdacs.pdf" download>
+      <a class="ghost" href="/api/records/export.vdacs.pdf" data-sveltekit-reload>
         <FileText size={13} />
         {tr('account.export.vdacs')}
       </a>

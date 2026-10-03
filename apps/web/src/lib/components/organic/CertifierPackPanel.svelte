@@ -53,14 +53,21 @@
     <span>{tr('organic.pack.withFiles')}</span>
   </label>
   <div class="actions">
-    <a class="primary" href={packHref} download onclick={check} data-testid="pack-download"
-      >{tr('organic.pack.download')}</a
+    <a
+      class="primary"
+      href={packHref}
+      data-sveltekit-reload
+      onclick={check}
+      data-testid="pack-download">{tr('organic.pack.download')}</a
     >
     <a class="ghost" href="/api/animals/treatments.csv?{query}" download data-testid="pack-log-csv"
       >{tr('recui.year.logCsv')}</a
     >
-    <a class="ghost" href="/api/animals/treatments.pdf?{query}" download data-testid="pack-log-pdf"
-      >{tr('recui.year.logPdf')}</a
+    <a
+      class="ghost"
+      href="/api/animals/treatments.pdf?{query}"
+      data-sveltekit-reload
+      data-testid="pack-log-pdf">{tr('recui.year.logPdf')}</a
     >
   </div>
   {#if errorText}<p class="error" role="alert">{errorText}</p>{/if}

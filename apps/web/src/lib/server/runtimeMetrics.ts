@@ -10,6 +10,13 @@ import { monitorEventLoopDelay, performance, type IntervalHistogram } from 'node
 import type { Handle } from '@sveltejs/kit';
 import { databasePath } from '$lib/db/client';
 import { dbCounters, runWithDbTiming } from '$lib/db/instrument';
+import {
+  renderCounters,
+  renderModeInUse,
+  runWithRenderTiming,
+  type RenderMode,
+  type RequestRenderTiming
+} from '$lib/server/render/metrics';
 
 const DEFAULT_INTERVAL_MS = 10 * 60_000;
 const SLOW_LOOP_MS = 100;
@@ -39,6 +46,10 @@ export interface MetricsLine {
   db_ms: number;
   busy: number;
   wal_kb: number | null;
+  render_jobs: number;
+  render_ms: number;
+  render_busy: number;
+  render_mode: RenderMode | null;
 }
 
 /** Snapshot and reset the current window. Returns null when idle. */
@@ -50,13 +61,28 @@ export function takeMetricsLine(h: IntervalHistogram): MetricsLine | null {
     req: win.requests,
     db_ms: Math.round(win.dbMs),
     busy: dbCounters.busy,
-    wal_kb: null
+    wal_kb: null,
+    render_jobs: renderCounters.jobs,
+    render_ms: Math.round(renderCounters.ms),
+    render_busy: renderCounters.busy,
+    render_mode: renderModeInUse()
   };
   h.reset();
   win.requests = 0;
   win.dbMs = 0;
   dbCounters.busy = 0;
-  if (line.req === 0 && line.busy === 0 && line.eld_max_ms < SLOW_LOOP_MS) return null;
+  renderCounters.jobs = 0;
+  renderCounters.ms = 0;
+  renderCounters.busy = 0;
+  if (
+    line.req === 0 &&
+    line.busy === 0 &&
+    line.render_jobs === 0 &&
+    line.render_busy === 0 &&
+    line.eld_max_ms < SLOW_LOOP_MS
+  ) {
+    return null;
+  }
   const wal = walSizeBytes();
   line.wal_kb = wal === null ? null : Math.round(wal / 1024);
   return line;
@@ -82,8 +108,15 @@ export function startRuntimeMetrics(
   return true;
 }
 
-export function serverTimingValue(totalMs: number, dbMs: number, queries: number): string {
-  return `db;dur=${dbMs.toFixed(1)};desc="${queries}q", total;dur=${totalMs.toFixed(1)}`;
+export function serverTimingValue(
+  totalMs: number,
+  dbMs: number,
+  queries: number,
+  render?: RequestRenderTiming
+): string {
+  const db = `db;dur=${dbMs.toFixed(1)};desc="${queries}q"`;
+  const rendered = render?.mode ? `, render;dur=${render.ms.toFixed(1)};desc="${render.mode}"` : '';
+  return `${db}${rendered}, total;dur=${totalMs.toFixed(1)}`;
 }
 
 /** Wraps the app's handle: times the request and the DB statements it ran. */
@@ -91,13 +124,16 @@ export const withServerTiming =
   (inner: Handle): Handle =>
   async (input) => {
     const start = performance.now();
-    const { timing, result } = runWithDbTiming(() => inner(input));
+    const { timing: render, result: run } = runWithRenderTiming(() =>
+      runWithDbTiming(() => inner(input))
+    );
+    const { timing, result } = run;
     const response = await result;
     noteRequest(timing.ms);
     try {
       response.headers.append(
         'Server-Timing',
-        serverTimingValue(performance.now() - start, timing.ms, timing.queries)
+        serverTimingValue(performance.now() - start, timing.ms, timing.queries, render)
       );
     } catch {
       // Immutable headers (a proxied fetch response); skip the header.

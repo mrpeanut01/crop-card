@@ -255,6 +255,8 @@ export const enPlan = {
   'plan.page.edit.dateInvalid': 'Planting date is invalid',
   'plan.page.edit.detailsFailed': 'details update failed ({status})',
   'plan.page.edit.qtyInvalid': 'Quantity must be a non-negative number',
+  'plan.page.edit.queued': 'Saved on this phone. It will upload when you are back online.',
+  'plan.page.edit.shortOffline': 'The short name needs a connection and was not changed.',
   'plan.page.edit.shortFailed': 'short-name update failed ({status})',
   'plan.page.errNetwork': "We couldn't reach CropCard. Check your signal and try again.",
   'plan.page.filter.all': 'All',

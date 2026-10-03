@@ -189,7 +189,7 @@
       <a
         class="btn"
         href="/api/animals/treatments.pdf?{range}"
-        download
+        data-sveltekit-reload
         data-testid="treatment-log-pdf">{tr('recui.year.logPdf')}</a
       >
     </div>

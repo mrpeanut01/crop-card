@@ -228,14 +228,14 @@
       <a class="btn-ghost" href="/api/spray/records/export.csv{exportQuery}" download>
         <FileText size={13} /> CSV
       </a>
-      <a class="btn-ghost" href="/api/spray/records/export.pdf{exportQuery}" download>
+      <a class="btn-ghost" href="/api/spray/records/export.pdf{exportQuery}" data-sveltekit-reload>
         <FileText size={13} /> PDF
       </a>
       {#if data.chrome === 'full'}
         <a
           class="btn-primary"
           href="/api/records/export.vdacs.pdf{exportQuery}"
-          download
+          data-sveltekit-reload
           title={tr('records.export.vdacsTitle')}
         >
           <Lock size={13} />
@@ -299,7 +299,7 @@
         <a
           class="btn-primary"
           href="/api/records/year-summary.pdf?year={yearSummary.year}"
-          download
+          data-sveltekit-reload
         >
           <FileText size={13} />
           {tr('records.year.pdf')}
@@ -783,7 +783,11 @@
         <p>
           {tr('records.integrity.body')}
         </p>
-        <a class="reassurance-link" href="/api/records/export.vdacs.pdf{exportQuery}" download>
+        <a
+          class="reassurance-link"
+          href="/api/records/export.vdacs.pdf{exportQuery}"
+          data-sveltekit-reload
+        >
           {tr('records.integrity.download')}
           <ArrowRight size={12} />
         </a>
@@ -810,7 +814,11 @@
         {tr('records.fold.lede')}
       </p>
       <div class="fold-actions">
-        <a class="btn-ghost" href="/api/records/export.vdacs.pdf{exportQuery}" download>
+        <a
+          class="btn-ghost"
+          href="/api/records/export.vdacs.pdf{exportQuery}"
+          data-sveltekit-reload
+        >
           <Lock size={13} />
           {tr('records.export.vdacsPdf')}
         </a>

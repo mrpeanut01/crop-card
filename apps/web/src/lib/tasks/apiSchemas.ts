@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EDIT_CONFLICT_API_NOTE as EDIT_CONFLICT_NOTE } from '$lib/edits/conflict';
 import { healthRecordSchema } from '$lib/animals/recordApiSchemas';
 import { SNOOZE_DAYS, isYmd } from '$lib/animals/carePlans';
 import { MAX_TASK_MINUTES, MIN_TASK_MINUTES } from '$lib/labour/hours';
@@ -56,6 +57,20 @@ export const taskCreateSchema = z
   });
 export type TaskCreateInput = z.infer<typeof taskCreateSchema>;
 
+/** The values the device last saw, per edit action (Phase 36, E-03). */
+export const taskEditBaseSchema = z
+  .object({
+    title: z.string().max(120).nullable().optional(),
+    body: z.string().max(500).nullable().optional()
+  })
+  .strict();
+export const taskRescheduleBaseSchema = z
+  .object({ scheduledFor: z.number().int().nullable().optional() })
+  .strict();
+export const taskAssignBaseSchema = z
+  .object({ assigneeUserId: z.string().max(200).nullable().optional() })
+  .strict();
+
 /** Body of `PATCH /api/tasks/:id`. */
 export const taskPatchSchema = z.discriminatedUnion('action', [
   z.object({
@@ -68,19 +83,28 @@ export const taskPatchSchema = z.discriminatedUnion('action', [
     reason: z.string().max(500).optional(),
     minutes: z.never({ message: 'time is logged only on Done' }).optional()
   }),
-  z.object({
-    action: z.literal('reschedule'),
-    scheduledFor: z.number().int()
-  }),
-  z.object({
-    action: z.literal('edit'),
-    title: z.string().min(1).max(120).optional(),
-    body: z.string().max(500).optional()
-  }),
-  z.object({
-    action: z.literal('assign'),
-    assigneeUserId: z.string().min(1).max(200).nullable()
-  })
+  z
+    .object({
+      action: z.literal('reschedule'),
+      scheduledFor: z.number().int(),
+      base: taskRescheduleBaseSchema.optional()
+    })
+    .describe('Move the task to another day.' + EDIT_CONFLICT_NOTE),
+  z
+    .object({
+      action: z.literal('edit'),
+      title: z.string().min(1).max(120).optional(),
+      body: z.string().max(500).optional(),
+      base: taskEditBaseSchema.optional()
+    })
+    .describe('Change the title or notes.' + EDIT_CONFLICT_NOTE),
+  z
+    .object({
+      action: z.literal('assign'),
+      assigneeUserId: z.string().min(1).max(200).nullable(),
+      base: taskAssignBaseSchema.optional()
+    })
+    .describe('Owners only. Assign the task, or pass null for nobody.' + EDIT_CONFLICT_NOTE)
 ]);
 export type TaskPatchInput = z.infer<typeof taskPatchSchema>;
 

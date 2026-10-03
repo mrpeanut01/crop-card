@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EDIT_CONFLICT_API_NOTE as EDIT_CONFLICT_NOTE } from '$lib/edits/conflict';
 import { setPlacementPatchSchema } from '$lib/garden/api';
 import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
 
@@ -19,15 +20,35 @@ export const cropStatusPatchSchema = z
   })
   .describe('Change the planting status. Harvested and archived dates are stamped for you.');
 
+/** The values the device last saw for `set-schedule`'s fields (Phase 36, E-03). */
+export const cropScheduleBaseSchema = z
+  .object({
+    plantingDate: z.number().int().nullable().optional(),
+    blockId: z.string().max(200).nullable().optional()
+  })
+  .strict();
+
+/** The values the device last saw for `edit-details`' fields (Phase 36, E-03). */
+export const cropEditDetailsBaseSchema = z
+  .object({
+    varietyDisplayName: z.string().max(160).nullable().optional(),
+    quantityPlanted: z.number().nullable().optional(),
+    quantityUnit: z.string().max(16).nullable().optional(),
+    harvestUseCases: z.array(z.string().max(40)).max(8).nullable().optional()
+  })
+  .strict();
+
 export const cropSchedulePatchSchema = z
   .object({
     action: z.literal('set-schedule'),
     /** Epoch ms; null sends the planting back to the "to schedule" tray. */
     plantingDate: z.number().int().nullable(),
-    blockId: z.string().min(1).optional()
+    blockId: z.string().min(1).optional(),
+    base: cropScheduleBaseSchema.optional()
   })
   .describe(
-    'Set or clear the planting date, and optionally move it to another block. Open tasks tied to the planting move by the same number of days.'
+    'Set or clear the planting date, and optionally move it to another block. Open tasks tied to the planting move by the same number of days.' +
+      EDIT_CONFLICT_NOTE
   );
 
 export const cropChangePluginPatchSchema = z
@@ -47,9 +68,12 @@ export const cropEditDetailsPatchSchema = z
     quantityPlanted: z.number().nonnegative().nullable().optional(),
     quantityUnit: z.string().min(1).max(16).nullable().optional(),
     /** Which of the plugin's harvest windows to show; null shows them all. */
-    harvestUseCases: z.array(z.string().min(1).max(40)).max(8).nullable().optional()
+    harvestUseCases: z.array(z.string().min(1).max(40)).max(8).nullable().optional(),
+    base: cropEditDetailsBaseSchema.optional()
   })
-  .describe('Edit the variety name, quantity and which harvest windows to show.');
+  .describe(
+    'Edit the variety name, quantity and which harvest windows to show.' + EDIT_CONFLICT_NOTE
+  );
 
 export const cropUnschedulePatchSchema = z
   .object({ action: z.literal('unschedule') })

@@ -2,7 +2,7 @@ declare module 'pdfmake' {
   type Style = Record<string, unknown>;
 
   export interface DocumentDefinition {
-    info?: Record<string, string>;
+    info?: Record<string, string | Date>;
     pageSize?: string;
     pageOrientation?: 'portrait' | 'landscape';
     pageMargins?: number[];

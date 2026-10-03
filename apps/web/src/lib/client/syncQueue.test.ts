@@ -74,7 +74,8 @@ describe('#316 — kind → endpoint routing', () => {
       'rain-gauge': '/api/rain-gauge',
       'harvest-disposition': '/api/harvest/:id/dispositions',
       'time-entry': '/api/tasks/:id/time',
-      'task-schedule': '/api/tasks'
+      'task-schedule': '/api/tasks',
+      'record-edit': '/api/:target/:id'
     });
     const endpoints = Object.values(ENDPOINT_BY_KIND);
     expect(new Set(endpoints).size).toBe(endpoints.length);

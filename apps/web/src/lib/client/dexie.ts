@@ -36,11 +36,15 @@
  * Phase 33 (v6): `recordCards` keeps opened record cards per Owner (33D
  * fills and prunes it) and `taskTimers` holds one running timer per Owner
  * and user on this device. 33D routes `time-entry`, the timer's saved time.
+ *
+ * Phase 36 adds the `record-edit` kind (a PATCH to a planting or task) and
+ * the non-indexed `editConflict` field, with no version bump.
  */
 
 import Dexie, { type Table } from 'dexie';
 import type { FarmSnapshot } from '$lib/cards/snapshot';
 import type { RejectInfo } from '$lib/animals/queueRecovery';
+import type { EditConflictBody } from '$lib/edits/conflict';
 
 /** #316 — offline-capable record kinds. Each maps to a POST endpoint in
  *  syncQueue.ts (ENDPOINT_BY_KIND). Extend both together. */
@@ -62,7 +66,8 @@ export type PendingRecordKind =
   | 'rain-gauge'
   | 'harvest-disposition'
   | 'time-entry'
-  | 'task-schedule';
+  | 'task-schedule'
+  | 'record-edit';
 
 export interface PendingSprayRecord {
   id: string;
@@ -87,6 +92,9 @@ export interface PendingSprayRecord {
   /** 32D: the parts of a definitive refusal the recovery UX reads (code,
    *  message, askOwner, resubmitAs, fieldId). Not indexed; no bump. */
   rejectInfo?: RejectInfo;
+  /** Phase 36 (U-02): the server's 409 EDIT_CONFLICT for a parked
+   *  `record-edit` row. Not indexed; no bump. */
+  editConflict?: EditConflictBody;
   createdAt: number;
 }
 

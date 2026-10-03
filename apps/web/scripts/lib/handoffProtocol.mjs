@@ -21,6 +21,10 @@ export const STALE_MS = 60_000;
 export const ACQUIRE_TIMEOUT_MS = 75_000;
 export const POLL_MS = 2_000;
 export const DRAIN_TIMEOUT_MS = 10_000;
+/** Phase 36 (R-12): how long a release waits for export renders that were
+ *  accepted before the fence. 30 s plus the 15 s catch-up stays under the
+ *  75 s acquire cap. */
+export const RENDER_DRAIN_TIMEOUT_MS = 30_000;
 export const CATCHUP_TIMEOUT_MS = 15_000;
 export const RETRY_AFTER_S = 10;
 

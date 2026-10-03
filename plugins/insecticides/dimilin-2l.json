@@ -23,7 +23,7 @@
     "alfalfa weevil",
     "gypsy moth"
   ],
-  "pollinatorRisk": "low",
+  "pollinatorRisk": "moderate",
   "pollinator": {"beeToxicity":"toxic","bloomRestriction":"none"},
   "notes": "Insect growth regulator IRAC 15 — chitin synthesis inhibitor. Slow but selective; bee-friendlier.",
   "complianceFlags": {

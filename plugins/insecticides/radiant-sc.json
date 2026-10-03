@@ -26,7 +26,7 @@
     "cabbage looper",
     "spotted-wing drosophila"
   ],
-  "pollinatorRisk": "moderate",
+  "pollinatorRisk": "high",
   "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only","residualToxicityHours":3},
   "notes": "Spinosyn IRAC 5 — semi-systemic. SWD-active in berry crops. Avoid bloom or apply at sunset.",
   "complianceFlags": {

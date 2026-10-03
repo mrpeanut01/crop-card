@@ -19,7 +19,7 @@
   "gpaCalibration": 30,
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 0,
-  "pollinatorRisk": "low",
+  "pollinatorRisk": "moderate",
   "pollinator": {"beeToxicity":"toxic","bloomRestriction":"dusk-to-dawn-only"},
   "epaRegistrationNumber": "82074-2",
   "targetPests": [

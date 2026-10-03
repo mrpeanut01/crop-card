@@ -1159,6 +1159,13 @@
       "docDate": "2026-09-17",
       "quote": "Product Name: PYGANIC CROP PROTECTION EC 5.0 II Admin Number: 1021-1772",
       "note": "Corrected 2026-09-25 from 1021-1772. PPLS transfer history: 1021-1772 (MGK) -> 73049-552 (Sumitomo Biorational) on 2026-09-03."
+    },
+    "banvel": {
+      "epaRegistrationNumber": "70506-461",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+      "matchedTitle": "DICAMBA DMA 4# AG (alternate brand BANVEL HERBICIDE)",
+      "docDate": "2009-09-11",
+      "note": "Number set in #501 per the 2026-09-30 owner ruling; provenance added 2026-10-03 (#530). PPLS cswu/ppls/70506-461: Active, UPL NA, altbrandnames 'DICAMBA 4#' and 'BANVEL HERBICIDE', transferred from 66330-276 (Arysta) on 2021-05-26 and earlier from 51036-289 (BASF). No label filed under 70506-461 yet; the quoted file is the last 66330-276 label."
     }
   },
   "rainfast": {
@@ -2702,6 +2709,14 @@
       "docDate": "2026-05-28",
       "quote": "LALGUARD® M52 OD",
       "page": 3
+    },
+    "banvel": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+      "docDate": "2009-09-11",
+      "page": 5,
+      "quote": "DICAMBA DMA 4# AG is a water soluble formulation that can be applied using water or sprayable fluid fertilizer as the carrier.",
+      "note": "Verified 2026-10-03 (#530). PPLS 70506-461 (UPL NA, Active) is product 'DICAMBA DMA 4# AG' with alternate brand 'BANVEL HERBICIDE'; the label body uses BANVEL as the brand (p25: 'BANVEL may be tank mixed with one or more of the following herbicides'). Transfer history 51036-289 (BASF) -> 66330-276 (Arysta, 2006-07-07) -> 70506-461 (UPL, 2021-05-26); the 2009 Arysta file is the newest label posted for the registration. 'Water soluble formulation' of a liquid DMA salt maps to SL (same mapping as axxe/glyphosate-4-plus). PPLS formulations field: 'Soluble Concentrate'."
     }
   },
   "dataCorrections": {

@@ -3,6 +3,27 @@ import { fmtDateMs } from '../format';
 import { establishmentPayload } from '$lib/schedule/seedStart';
 import type { AllocationWizardState } from '../wizardState.svelte';
 import type { AllocationResponse, ScheduledPlanting } from '../types';
+import { apportionLotQuantity, splitGroupIds } from '$lib/plan/splitGroup';
+import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
+
+/** One planting the commit step posts, kept in wizard state so a retry
+ *  sends the same body, client record id and split group id. */
+export interface CommitRow {
+  key: string;
+  stockItemId: string;
+  blockId: string;
+  cropPluginId: string;
+  varietyDisplayName: string;
+  plants: number;
+  plantingDateMs?: number;
+  /** Seed drawn; undefined for a fill-to-bed seed. */
+  quantity?: number;
+  unit: string;
+  splitGroupId?: string;
+  sourceProvenance: 'ai' | 'fallback';
+  clientRecordId: string;
+  label: string;
+}
 
 export interface AcceptedInputs {
   applications: InputsPlanApplication[];
@@ -38,132 +59,159 @@ export class CommitFlow {
     this.#w.error = null;
 
     // Phase B5 — if the scheduler ran, commit one dated row per scheduled
-    // planting (successions are already split). Otherwise (no scheduler) fall
-    // back to the pre-B5 path that commits one undated row per assignment.
+    // planting (successions are already split). Otherwise commit one undated
+    // row per assignment.
     if (this.#w.scheduleResponse && this.#w.scheduleResponse.scheduled.length > 0) {
       await this.commitScheduled(this.#w.scheduleResponse.scheduled);
       return;
     }
-
-    this.#w.commitProgress = {
-      done: 0,
-      total: response.assignments.length,
-      failed: []
-    };
-    const quantities = this.buildCommitQuantities(response.assignments);
     // #212 — every wizard-committed planting carries a provenance flag so
-    // PlantingCard's footer reads "AI plan" / "Fallback" instead of the
-    // catch-all "Manual entry". Driven by the allocate response's
-    // meta.fallback (set by aiTry on no-key / over-cap / quota-exceeded /
-    // engine-only AI validation failures).
+    // PlantingCard's footer reads "AI plan" / "Fallback" instead of
+    // "Manual entry".
     const planProvenance: 'ai' | 'fallback' = response.meta.fallback ? 'fallback' : 'ai';
-    for (const a of response.assignments) {
-      const seedEntry = this.#w.props.seedStock.find((s) => s.stockItemId === a.stockItemId);
-      const unit = seedEntry?.defaultUnit ?? 'seeds';
-      const quantityForCommit = quantities.get(`${a.stockItemId}:${a.blockId}`) ?? 0;
-      try {
-        const res = await fetch(`/api/blocks/${a.blockId}/plantings`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            cropPluginId: a.cropPluginId,
-            varietyDisplayName: a.varietyDisplayName,
-            // #471 — a fill-to-bed seed has no counted quantity to record.
-            quantityPlanted: this.#w.isFillToBed(a.stockItemId) ? undefined : quantityForCommit,
-            quantityUnit: unit,
-            plannedPlants: a.plants > 0 ? Math.round(a.plants) : undefined,
-            stockItemId: a.stockItemId,
-            sourceProvenance: planProvenance,
-            ...this.answerFor(a.cropPluginId)
-          })
-        });
-        if (!res.ok) {
-          this.#w.commitProgress.failed.push(
-            `${a.varietyDisplayName} → ${this.#w.blockNameFor(a.blockId)}`
-          );
-        }
-      } catch {
-        this.#w.commitProgress.failed.push(
-          `${a.varietyDisplayName} → ${this.#w.blockNameFor(a.blockId)}`
-        );
-      }
-      this.#w.commitProgress = { ...this.#w.commitProgress, done: this.#w.commitProgress.done + 1 };
-    }
-    if (this.#w.commitProgress.failed.length === 0) {
-      await this.commitAcceptedInputs();
-      await this.#w.discardDraft();
-      this.#w.props.onCommitted();
+    this.#w.commitRows = this.buildRows(
+      response.assignments.map((a) => ({ ...a, plantingDateMs: undefined })),
+      planProvenance
+    );
+    await this.postRows(this.#w.commitRows);
+  }
+
+  /** Phase B5 — dated commit: one planting per scheduled row, successions
+   *  included. */
+  async commitScheduled(plantings: ScheduledPlanting[]) {
+    // #212 — 'fallback' when either the allocator or the scheduler fell back.
+    const planProvenance: 'ai' | 'fallback' =
+      this.#w.response?.meta.fallback || this.#w.scheduleResponse?.meta.fallback
+        ? 'fallback'
+        : 'ai';
+    this.#w.commitRows = this.buildRows(plantings, planProvenance);
+    await this.postRows(this.#w.commitRows);
+  }
+
+  /** Phase 35 (R-19): posts only the rows that did not save, with the same
+   *  client record ids and split group ids, so a row that saved on the
+   *  server but looked failed in the browser is never saved twice. */
+  async retryFailed() {
+    const failed = new Set(this.#w.commitFailedKeys);
+    const rows = this.#w.commitRows.filter((r) => failed.has(r.key));
+    if (rows.length === 0) return;
+    this.#w.commitRetrying = true;
+    try {
+      await this.postRows(rows);
+    } finally {
+      this.#w.commitRetrying = false;
     }
   }
 
-  /** Phase B5 — dated commit. Walks the scheduler's `scheduled[]` and posts
-   *  one planting per dated row, including succession entries. Seed quantity
-   *  per row = (plants_i / total_plants_per_stock) × operator's original
-   *  selectedSeeds quantity so stock decrement matches what was actually
-   *  consumed. */
-  async commitScheduled(plantings: ScheduledPlanting[]) {
+  /** One commit row per planting: the seed drawn is apportioned over the
+   *  lot's rows so it adds up to the selected quantity (R-18), and every
+   *  row of a lot on two or more blocks carries one split group id (R-12). */
+  buildRows(
+    plantings: ReadonlyArray<{
+      stockItemId: string;
+      blockId: string;
+      cropPluginId: string;
+      varietyDisplayName: string;
+      plants: number;
+      plantingDateMs?: number;
+    }>,
+    sourceProvenance: 'ai' | 'fallback'
+  ): CommitRow[] {
+    const keyed = plantings.map((p, i) => ({ ...p, key: `r${i}` }));
+    const groupIds = splitGroupIds(keyed);
+    const quantities = new Map<string, number>();
+    const byLot = new Map<string, typeof keyed>();
+    for (const p of keyed) {
+      const list = byLot.get(p.stockItemId) ?? [];
+      list.push(p);
+      byLot.set(p.stockItemId, list);
+    }
+    for (const [stockItemId, rows] of byLot) {
+      if (this.#w.isFillToBed(stockItemId)) continue;
+      const unit = this.unitFor(stockItemId);
+      const selected = this.#w.selectedSeeds.get(stockItemId) ?? 0;
+      for (const [k, v] of apportionLotQuantity(selected, unit, rows)) quantities.set(k, v);
+    }
+    return keyed.map((p) => {
+      const dated = p.plantingDateMs !== undefined;
+      return {
+        key: p.key,
+        stockItemId: p.stockItemId,
+        blockId: p.blockId,
+        cropPluginId: p.cropPluginId,
+        varietyDisplayName: p.varietyDisplayName,
+        plants: p.plants,
+        plantingDateMs: p.plantingDateMs,
+        quantity: quantities.get(p.key),
+        unit: this.unitFor(p.stockItemId),
+        splitGroupId: groupIds.get(p.stockItemId),
+        sourceProvenance,
+        clientRecordId: newClientRecordId(),
+        label: dated
+          ? `${p.varietyDisplayName} → ${this.#w.blockNameFor(p.blockId)} (${fmtDateMs(p.plantingDateMs!)})`
+          : `${p.varietyDisplayName} → ${this.#w.blockNameFor(p.blockId)}`
+      };
+    });
+  }
+
+  unitFor(stockItemId: string): string {
+    return (
+      this.#w.props.seedStock.find((s) => s.stockItemId === stockItemId)?.defaultUnit ?? 'seeds'
+    );
+  }
+
+  async postRows(rows: ReadonlyArray<CommitRow>) {
+    const stillFailed = new Set(this.#w.commitFailedKeys);
+    for (const r of rows) stillFailed.delete(r.key);
+    const failedNow: string[] = [];
     this.#w.commitProgress = {
-      done: 0,
-      total: plantings.length,
+      done: this.#w.commitRows.length - rows.length,
+      total: this.#w.commitRows.length,
       failed: []
     };
-    // Pre-compute total plants per (stockItemId) and the operator's seed
-    // quantity so we can apportion per-row seed accurately.
-    const totalPlantsByStock = new Map<string, number>();
-    for (const p of plantings) {
-      totalPlantsByStock.set(
-        p.stockItemId,
-        (totalPlantsByStock.get(p.stockItemId) ?? 0) + p.plants
-      );
-    }
-
-    for (const p of plantings) {
-      const seedEntry = this.#w.props.seedStock.find((s) => s.stockItemId === p.stockItemId);
-      const unit = seedEntry?.defaultUnit ?? 'seeds';
-      const selectedQty = this.#w.selectedSeeds.get(p.stockItemId) ?? 0;
-      const totalPlants = totalPlantsByStock.get(p.stockItemId) ?? 0;
-      const seedQty = totalPlants > 0 ? (p.plants / totalPlants) * selectedQty : 0;
-      const isInteger = unit === 'seeds' || unit === 'count' || unit === 'packets';
-      const quantityForCommit = isInteger
-        ? Math.max(0, Math.round(seedQty))
-        : Number(seedQty.toFixed(3));
-      // #212 — provenance flag derived from BOTH the allocator AND the
-      // scheduler: if either fell back to deterministic, the planting
-      // carries 'fallback'; otherwise 'ai'. Mirrors the per-row chip on
-      // the review + schedule steps.
-      const planProvenance: 'ai' | 'fallback' =
-        this.#w.response?.meta.fallback || this.#w.scheduleResponse?.meta.fallback
-          ? 'fallback'
-          : 'ai';
+    for (const r of rows) {
+      let ok: boolean;
       try {
-        const res = await fetch(`/api/blocks/${p.blockId}/plantings`, {
+        const res = await fetch(`/api/blocks/${r.blockId}/plantings`, {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: {
+            'content-type': 'application/json',
+            [CLIENT_RECORD_HEADER]: r.clientRecordId
+          },
           body: JSON.stringify({
-            cropPluginId: p.cropPluginId,
-            varietyDisplayName: p.varietyDisplayName,
-            quantityPlanted: this.#w.isFillToBed(p.stockItemId) ? undefined : quantityForCommit,
-            quantityUnit: unit,
-            plannedPlants: p.plants > 0 ? Math.round(p.plants) : undefined,
-            stockItemId: p.stockItemId,
-            plantingDate: p.plantingDateMs,
-            sourceProvenance: planProvenance,
-            ...this.answerFor(p.cropPluginId)
+            cropPluginId: r.cropPluginId,
+            varietyDisplayName: r.varietyDisplayName,
+            // #471 — a fill-to-bed seed has no counted quantity to record.
+            quantityPlanted: r.quantity,
+            quantityUnit: r.unit,
+            plannedPlants: r.plants > 0 ? Math.round(r.plants) : undefined,
+            stockItemId: r.stockItemId,
+            ...(r.plantingDateMs !== undefined ? { plantingDate: r.plantingDateMs } : {}),
+            sourceProvenance: r.sourceProvenance,
+            ...(r.splitGroupId ? { splitGroupId: r.splitGroupId } : {}),
+            ...this.answerFor(r.cropPluginId)
           })
         });
-        if (!res.ok) {
-          this.#w.commitProgress.failed.push(
-            `${p.varietyDisplayName} → ${this.#w.blockNameFor(p.blockId)} (${fmtDateMs(p.plantingDateMs)})`
-          );
-        }
+        ok = res.ok;
       } catch {
-        this.#w.commitProgress.failed.push(
-          `${p.varietyDisplayName} → ${this.#w.blockNameFor(p.blockId)} (${fmtDateMs(p.plantingDateMs)})`
-        );
+        ok = false;
       }
-      this.#w.commitProgress = { ...this.#w.commitProgress, done: this.#w.commitProgress.done + 1 };
+      if (!ok) failedNow.push(r.key);
+      this.#w.commitProgress = {
+        ...this.#w.commitProgress,
+        done: this.#w.commitProgress.done + 1
+      };
     }
-    if (this.#w.commitProgress.failed.length === 0) {
+    for (const k of failedNow) stillFailed.add(k);
+    const order = this.#w.commitRows.map((r) => r.key).filter((k) => stillFailed.has(k));
+    this.#w.commitFailedKeys = order;
+    const labels = new Map(this.#w.commitRows.map((r) => [r.key, r.label]));
+    this.#w.commitProgress = {
+      ...this.#w.commitProgress,
+      done: this.#w.commitRows.length - order.length,
+      failed: order.map((k) => labels.get(k) ?? k)
+    };
+    if (order.length === 0) {
       await this.commitAcceptedInputs();
       await this.#w.discardDraft();
       this.#w.props.onCommitted();
@@ -200,12 +248,8 @@ export class CommitFlow {
     }
   }
 
-  /** Apportion the user's original seed quantity (selectedSeeds) across the
-   *  AI's per-block plant assignments. Stock decrement runs against this
-   *  number, so the seed quantity actually planted is what gets debited —
-   *  not the post-germination plant count. Integer-required units (`seeds`,
-   *  `count`, `packets`) use largest-remainder rounding so the per-assignment
-   *  values sum back to the user's original quantity. */
+  /** The seed drawn per assignment (keys `stockItemId:blockId`), adding up
+   *  to the selected quantity per lot (R-18). */
   buildCommitQuantities(assignments: AllocationResponse['assignments']): Map<string, number> {
     const out = new Map<string, number>();
     const byStock = new Map<string, AllocationResponse['assignments']>();
@@ -219,38 +263,19 @@ export class CommitFlow {
       if (!entry) continue;
       const selectedQty = this.#w.selectedSeeds.get(stockItemId) ?? 0;
       if (selectedQty <= 0) continue;
-      const totalPlants = items.reduce((s, x) => s + x.plants, 0);
-      if (totalPlants <= 0) continue;
-      const unit = entry.defaultUnit;
-      const isInteger = unit === 'seeds' || unit === 'count' || unit === 'packets';
-      const raw = items.map((a) => ({
-        a,
-        raw: (a.plants / totalPlants) * selectedQty
-      }));
-      if (!isInteger) {
-        for (const { a, raw: r } of raw) {
-          out.set(`${stockItemId}:${a.blockId}`, Number(r.toFixed(3)));
-        }
-        continue;
-      }
-      const target = Math.round(selectedQty);
-      const rounded = raw.map((x) => ({
-        a: x.a,
-        floor: Math.floor(x.raw),
-        frac: x.raw - Math.floor(x.raw)
-      }));
-      const used = rounded.reduce((s, x) => s + x.floor, 0);
-      let remainder = target - used;
-      const order = [...rounded].sort((x, y) => y.frac - x.frac);
-      for (const x of order) {
-        if (remainder <= 0) break;
-        x.floor += 1;
-        remainder -= 1;
-      }
-      for (const x of rounded) {
-        out.set(`${stockItemId}:${x.a.blockId}`, x.floor);
-      }
+      if (items.reduce((s, x) => s + x.plants, 0) <= 0) continue;
+      const parts = apportionLotQuantity(
+        selectedQty,
+        entry.defaultUnit,
+        items.map((a) => ({ key: `${stockItemId}:${a.blockId}`, plants: a.plants }))
+      );
+      for (const [k, v] of parts) out.set(k, v);
     }
     return out;
   }
+}
+
+/** A client record id for one commit row (R-19). */
+function newClientRecordId(): string {
+  return crypto.randomUUID();
 }

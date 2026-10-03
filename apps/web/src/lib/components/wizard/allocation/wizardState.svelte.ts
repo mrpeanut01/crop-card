@@ -9,7 +9,9 @@ import type { InputsPlanProvisionalPlanting } from '$lib/plan/inputsPlan';
 import { AllocateFlow } from './flows/allocateFlow';
 import { AllocationChatFlow } from './flows/allocationChat';
 import { ScheduleFlow } from './flows/scheduleFlow';
-import { CommitFlow, type AcceptedInputs } from './flows/commitFlow';
+import { CommitFlow, type AcceptedInputs, type CommitRow } from './flows/commitFlow';
+import { splitLots } from '$lib/plan/splitGroup';
+import { DESIGNABLE_AREA_KINDS } from '$lib/farm/areaKinds';
 import { DraftFlow } from './flows/draftFlow';
 import { humanizeAllocationViolation as humanizeViolation } from './flows/violations';
 import { PlanResetState } from './steps/planResetState.svelte';
@@ -50,6 +52,8 @@ export interface WizardInputs {
   /** Crop categories a seed added from the Seeds step can link to (#472). */
   readonly cropCatalog?: ReadonlyArray<CropCatalogItem>;
   readonly aiEnabled: boolean;
+  /** Crops the farm keeps in one bed (owner setting, Phase 35 R-15). */
+  readonly keepInOneBedCrops?: ReadonlyArray<string>;
   readonly wizardPlanId: string | undefined;
   readonly onClose: () => void;
   readonly onCommitted: () => void;
@@ -190,6 +194,17 @@ export class AllocationWizardState {
     total: 0,
     failed: []
   });
+  /** Phase 35 (R-19): every row the commit posts, with its client record id,
+   *  and the keys of the rows that did not save. */
+  commitRows = $state<CommitRow[]>([]);
+  commitFailedKeys = $state<string[]>([]);
+  commitRetrying = $state(false);
+
+  /** Phase 35 (R-15): crop plugin ids kept in one bed for this run, prefilled
+   *  from the farm's setting and saved back when the farmer toggles one. */
+  keepInOneBed = $state<Set<string>>(new Set());
+  keepInOneBedError = $state<string | null>(null);
+  keepInOneBedBusy = $state(false);
 
   scheduleResponse = $state<ScheduleResponse | null>(null);
   /** Phase 32E "Seed or seedling?" per crop, forwarded by the commit. */
@@ -226,6 +241,7 @@ export class AllocationWizardState {
     this.planReset = new PlanResetState(this);
     this.seedLink = new SeedLinkState(this);
     this.activeSetup = initial.seasonSetup;
+    this.keepInOneBed = new Set(untrack(() => props.keepInOneBedCrops ?? []));
     this.hasExistingPlan = untrack(
       () => !initial.emptySeason && props.blocks.some((b) => b.plantings && b.plantings.length > 0)
     );
@@ -244,6 +260,67 @@ export class AllocationWizardState {
     this.scheduleChatMessages = initial.initialChatMessages
       .filter((m) => m.step === 'schedule' && (m.role === 'user' || m.role === 'assistant'))
       .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+  }
+
+  /** stockItemId -> number of blocks, for lots the plan splits (R-21). */
+  readonly splitLotCounts = $derived(splitLots(this.response?.assignments ?? []));
+
+  /** Picked blocks that are garden or greenhouse beds (R-20). */
+  readonly sharedBedIds = $derived.by(() => {
+    if (this.response?.sharedBedBlockIds) return new Set(this.response.sharedBedBlockIds);
+    const bedAreas = new Set(
+      (this.props.areas ?? [])
+        .filter((a) => (DESIGNABLE_AREA_KINDS as readonly string[]).includes(a.kind))
+        .map((a) => a.id)
+    );
+    return new Set(
+      this.props.blocks.filter((b) => b.fieldId && bedAreas.has(b.fieldId)).map((b) => b.id)
+    );
+  });
+
+  /** "beds" or "blocks" for a lot's rows in the current plan. */
+  splitNounFor(stockItemId: string): 'beds' | 'blocks' {
+    const ids = (this.response?.assignments ?? [])
+      .filter((a) => a.stockItemId === stockItemId)
+      .map((a) => a.blockId);
+    return ids.length > 0 && ids.every((id) => this.sharedBedIds.has(id)) ? 'beds' : 'blocks';
+  }
+
+  isKeptInOneBed(cropPluginId: string): boolean {
+    return this.keepInOneBed.has(cropPluginId);
+  }
+
+  /** Saves the farm's keep-in-one-bed choice for a crop and plans again. */
+  async toggleKeepInOneBed(cropPluginId: string): Promise<void> {
+    const keep = !this.keepInOneBed.has(cropPluginId);
+    this.keepInOneBedBusy = true;
+    this.keepInOneBedError = null;
+    try {
+      const res = await fetch('/api/plan/keep-in-one-bed', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ cropPluginId, keep })
+      });
+      const body = (await res.json().catch(() => ({}))) as {
+        cropPluginIds?: string[];
+        error?: string;
+      };
+      if (!res.ok || !body.cropPluginIds) {
+        this.keepInOneBedError = wt('wizard.split.keepFailed', {
+          error: body.error ?? `HTTP ${res.status}`
+        });
+        return;
+      }
+      this.keepInOneBed = new Set(body.cropPluginIds);
+    } catch (e) {
+      this.keepInOneBedError = wt('wizard.split.keepFailed', {
+        error: e instanceof Error ? e.message : String(e)
+      });
+      return;
+    } finally {
+      this.keepInOneBedBusy = false;
+    }
+    await this.generatePlan();
   }
 
   readonly chatMessages = $derived(
@@ -485,6 +562,10 @@ export class AllocationWizardState {
 
   commitScheduled(plantings: ScheduledPlanting[]) {
     return this.#commit.commitScheduled(plantings);
+  }
+
+  retryFailedCommits(): Promise<void> {
+    return this.#commit.retryFailed();
   }
 
   commitAcceptedInputs(): Promise<void> {

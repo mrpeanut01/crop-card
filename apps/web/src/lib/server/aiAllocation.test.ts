@@ -123,7 +123,7 @@ describe('validateAiPlan — accept valid plans', () => {
       {
         rationale: 'placed lettuce on block A',
         assignments: [
-          { stockItemId: 'stock-1', blockId: 'A', plants: Math.min(500, fitA), rationale: 'fits' }
+          { stockItemId: 'stock-1', blockId: 'A', plants: Math.min(1000, fitA), rationale: 'fits' }
         ]
       },
       input,
@@ -140,7 +140,7 @@ describe('validateAiPlan — accept valid plans', () => {
       {
         rationale: 'ok',
         assignments: [
-          { stockItemId: 'stock-1', blockId: 'A', plants: Math.min(100, fitA), rationale: 'fits' }
+          { stockItemId: 'stock-1', blockId: 'A', plants: Math.min(1000, fitA), rationale: 'fits' }
         ],
         advisories: [
           'Block A is twice the size you need — consider companion planting.',
@@ -174,7 +174,7 @@ describe('validateAiPlan — accept valid plans', () => {
       {
         rationale: 'ok',
         assignments: [
-          { stockItemId: 'stock-1', blockId: 'A', plants: Math.min(100, fitA), rationale: 'fits' }
+          { stockItemId: 'stock-1', blockId: 'A', plants: Math.min(1000, fitA), rationale: 'fits' }
         ]
       },
       input,
@@ -498,7 +498,21 @@ describe('validateAiPlan — block space shared across crops', () => {
   });
 
   it('accepts five crops that split the bed between them', () => {
-    expect(planAt(mixedBedInput(), 0.2).valid).toBe(true);
+    // Each lot is exactly its fifth of the bed, so no seed is left while
+    // the bed has room (Phase 35 R-17).
+    const base = mixedBedInput();
+    const fits = buildCandidacyMatrix(base);
+    const input: PlanInput = {
+      ...base,
+      seeds: base.seeds.map((s) => ({
+        ...s,
+        quantityPlants: Math.max(
+          1,
+          Math.floor(fits.find((r) => r.stockItemId === s.stockItemId)!.plantsFit * 0.2)
+        )
+      }))
+    };
+    expect(planAt(input, 0.2).valid).toBe(true);
   });
 
   it('treats a 0-plant row as left out, and still rejects a negative one', () => {
@@ -516,10 +530,14 @@ describe('validateAiPlan — block space shared across crops', () => {
         input,
         matrix
       );
+    // A 0-plant row is left out, not an error: the only complaint is that
+    // seed is left while the bed has room (Phase 35 R-17).
     const zero = row(0);
-    expect(zero.valid).toBe(true);
-    if (zero.valid)
-      expect(zero.plan.assignments.map((a) => a.stockItemId)).toEqual(['basil-stock']);
+    expect(zero.valid).toBe(false);
+    if (!zero.valid) {
+      expect(zero.violations.length).toBeGreaterThan(0);
+      expect(zero.violations.every((v) => v.startsWith('unplaced-with-room:'))).toBe(true);
+    }
     expect(row(-2).valid).toBe(false);
   });
 

@@ -51,6 +51,7 @@ import {
 } from '../src/lib/garden/api.ts';
 import { hintsPostSchema } from '../src/lib/hints.ts';
 import { bedLayoutRequestSchema } from '../src/lib/plan/bedLayoutApi.ts';
+import { keepInOneBedRequestSchema } from '../src/lib/plan/keepInOneBed.ts';
 import {
   journalEntrySchema,
   photoHelpSchema,
@@ -2383,6 +2384,25 @@ const paths = {
         400: { description: 'Invalid body.' },
         403: { description: 'Not the owner.' },
         404: { description: 'A seed id is not a seed on this farm.' }
+      }
+    }
+  },
+
+  '/api/plan/keep-in-one-bed': {
+    put: {
+      summary: "Keep a crop in one bed in the farm's future plans",
+      description:
+        'Owner only. Stores the crop plugin id in the owner setting `layout_keep_in_one_bed` (or removes it with `keep: false`) and answers the whole sorted list. The planning wizard prefills each seed from it. It never moves or merges plantings already saved.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(keepInOneBedRequestSchema),
+      responses: {
+        200: jsonResponse('The crops now kept in one bed.', {
+          type: 'object',
+          required: ['cropPluginIds'],
+          properties: { cropPluginIds: { type: 'array', items: { type: 'string' } } }
+        }),
+        400: { description: 'Invalid body, or the crop is not in the crop library.' },
+        403: { description: 'Not the owner.' }
       }
     }
   },

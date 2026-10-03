@@ -25,6 +25,8 @@ export type BlockEntry = {
   widthFt?: number;
   lengthFt?: number;
   plantings: Array<{ varietyDisplayName: string }>;
+  /** The Area the block sits in, so the wizard can call garden beds "beds". */
+  fieldId?: string | null;
 };
 
 /** A block the plan can size seed to: typed width and length, or an area
@@ -53,6 +55,25 @@ export type SufficiencyResult = {
   leftoverPlants: number;
 };
 
+/** Why a picked block took no more of a left-over seed (contract C-1,
+ *  mirrored from `lib/layout/split.ts`). */
+export type LeftoverBlockStatus =
+  | 'full'
+  | 'too-small'
+  | 'keep-apart'
+  | 'rotation'
+  | 'cross-pollination'
+  | 'sun'
+  | 'narrow'
+  | 'kept-in-one-bed';
+
+export type LeftoverReport = {
+  stockItemId: string;
+  cropPluginId: string;
+  plantsLeft: number;
+  blocks: Array<{ blockId: string; status: LeftoverBlockStatus; withPluginId?: string }>;
+};
+
 export type AllocationResponse = {
   assignments: Array<{
     stockItemId: string;
@@ -69,6 +90,10 @@ export type AllocationResponse = {
   pollinationConstraints?: PollinationConstraint[];
   geometryMissingBlockIds?: string[];
   companionGroups?: CompanionGroupMarker[];
+  /** Phase 35: one report per counted seed with plants left over. */
+  leftover?: LeftoverReport[];
+  /** Phase 35: picked blocks that are garden or greenhouse beds. */
+  sharedBedBlockIds?: string[];
   meta: {
     model: string;
     usdEstimate: number;

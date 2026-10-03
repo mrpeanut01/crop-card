@@ -93,6 +93,8 @@ export const POST: RequestHandler = async (event) => {
   return json({
     assignments: result.assignments,
     unplaced: result.unplaced,
+    leftover: result.leftover,
+    sharedBedBlockIds: [...(planInput.bedBlockIds ?? [])],
     sufficiency: result.sufficiency,
     rationale: result.rationale,
     perRowRationale: result.perRowRationale,

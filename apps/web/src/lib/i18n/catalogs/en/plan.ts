@@ -695,5 +695,15 @@ export const enPlan = {
   'plan.grazing.kicker': '{area} · Grazing and haying',
   'plan.grazing.title': 'Grazing and haying times',
   'plan.grazing.empty': 'Nothing has been sprayed here in the last year.',
+  'plan.split.lineBeds': 'One seed lot in {n} beds',
+  'plan.split.lineBlocks': 'One seed lot in {n} blocks',
+  'plan.split.alsoIn': 'Also in',
+  'plan.split.keep': 'Keep this crop in one bed next time',
+  'plan.split.keepNote':
+    'This only changes new plans. Plantings already saved stay where they are.',
+  'plan.split.saveFailed': 'Could not save that choice. Try again.',
+  'plan.split.err.ownerOnly': 'Only the farm owner can change this. Ask the owner.',
+  'plan.split.err.invalid': 'Send a crop and whether to keep it in one bed.',
+  'plan.split.err.unknownCrop': 'That crop is not in the crop library.',
   'plan.cal.body.harvestReadiness': 'Use crop-specific readiness indicators before harvest.'
 } as const;

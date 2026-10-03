@@ -5,7 +5,7 @@
  * When nothing survives, the caller answers with the deterministic plan.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicClient } from './anthropicClient';
 import { z } from 'zod';
 import { footprintSchema, SPACING_PATTERNS, type Footprint } from '$lib/farm/footprint';
 import { footprintsOverlap } from '$lib/garden/geometry';
@@ -133,7 +133,7 @@ export async function suggestGardenFill(
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('no api key');
   const choice = selectModel('gardenFill');
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const msg = await client.messages.create(
     {
       model: choice.model,

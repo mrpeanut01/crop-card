@@ -49,6 +49,14 @@ import { POST } from './+server';
 const ENGINE = {
   assignments: [{ stockItemId: 's1', blockId: 'blk-1' }],
   unplaced: [],
+  leftover: [
+    {
+      stockItemId: 's1',
+      cropPluginId: 'tomato',
+      plantsLeft: 2,
+      blocks: [{ blockId: 'blk-1', status: 'full' }]
+    }
+  ],
   sufficiency: [],
   rationale: 'engine',
   perRowRationale: {},
@@ -59,7 +67,7 @@ const ENGINE = {
   meta: { model: 'engine-fallback', usdEstimate: 0, fallback: 'ai-unavailable' }
 };
 
-function post() {
+function post(extra: Record<string, unknown> = {}) {
   return POST({
     request: new Request('http://localhost/api/plan/allocate', {
       method: 'POST',
@@ -70,7 +78,8 @@ function post() {
             stockItemId: 's1',
             cropPluginId: 'tomato',
             varietyDisplayName: 'Brandywine',
-            quantityPlants: 10
+            quantityPlants: 10,
+            ...extra
           }
         ],
         blockIds: ['blk-1']
@@ -167,5 +176,15 @@ describe('/api/plan/allocate degradation', () => {
     expect(m.recordCall).toHaveBeenCalledWith(
       expect.objectContaining({ provenance: 'ai', inputTokens: 10 })
     );
+  });
+
+  it('answers with the leftover report and the shared bed ids, and passes keep-in-one-bed through (Phase 35)', async () => {
+    m.getApiKey.mockReturnValue('');
+    const res = await post({ keepInOneBed: true });
+    const body = await res.json();
+    expect(body.leftover).toEqual(ENGINE.leftover);
+    expect(body.sharedBedBlockIds).toEqual([]);
+    const planInput = m.allocateDeterministic.mock.calls[0][0];
+    expect(planInput.seeds[0].keepInOneBed).toBe(true);
   });
 });

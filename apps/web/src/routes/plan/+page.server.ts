@@ -44,6 +44,7 @@ import {
   type RotationConflict,
   type SameTimeOverlap
 } from '$lib/calendar/rotation';
+import { keepInOneBedCrops as keepInOneBedCrops_ } from '$lib/plan/keepInOneBed.server';
 import { listBlocks, type BlockWithPlantings, type PlantingRecord } from '$lib/db/blocks';
 import { listCrops, type Crop } from '$lib/db/crops';
 import { harvestTargetKey } from '$lib/plan/harvestTargetKey';
@@ -157,6 +158,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const fields = listFields();
   const isFirstRun = blocks.length === 0 && fields.length === 0;
   const canEdit = locals.user?.role === 'owner';
+  const keepInOneBedCrops = canEdit ? keepInOneBedCrops_() : [];
   const { housing: areaHousing, petsLayout } = await loadAreaHousing(fields);
   const areaGrazing = await loadAreaGrazing(blocks, farmTimeZone());
 
@@ -233,6 +235,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     fields,
     isFirstRun,
     canEdit,
+    keepInOneBedCrops,
     setupAreas: canEdit ? setupAreas() : [],
     focusAreaId: url.searchParams.get('area'),
     areaSnapshot: await withLiveCarryover(buildMapSnapshot({ fields, blocks })),

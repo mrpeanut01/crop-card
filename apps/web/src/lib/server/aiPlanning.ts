@@ -14,7 +14,7 @@
  *   Sonnet 4.6 — input $3.00 / MTok, cached $0.30 / MTok, output $15.00 / MTok
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicClient } from './anthropicClient';
 import { getApiKey } from './scanResult';
 import { appendTurn, buildThreadedMessages } from './aiPlanningSession';
 import { recordAiCall } from './aiCallStats';
@@ -230,7 +230,7 @@ export async function planWithAI(
   const choice = selectModel(task);
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('No Anthropic API key configured. Add it on the Settings page.');
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
 
   // Phase 17 (Track 3.2) — dual cache breakpoints (header + bulky catalog).
   const systemBlocks = buildFarmSystemBlocks(ctx);

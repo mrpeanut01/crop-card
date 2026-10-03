@@ -15,11 +15,22 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { anthropicClient } from './anthropicClient';
 import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
 import type { BlockWithPlantings } from '$lib/db/blocks';
 import type { Crop } from '$lib/db/crops';
-import { rotationLookbackForFamily } from '$lib/calendar/rotation';
 import { planLayout, type PlanInput, type SeedRequest, type Assignment } from '$lib/layout/engine';
+import {
+  blocksWithRoomForLeftover,
+  cropsOnBlock,
+  crossingCrop,
+  isNarrow,
+  keepApartCrops,
+  leftoverReports,
+  rotationConflict,
+  sunMatchOf,
+  type LeftoverReport
+} from '$lib/layout/split';
 import {
   plantsFitUsable,
   sufficiencyOf,
@@ -96,6 +107,9 @@ export interface AiAssignment {
 export interface AllocationResult {
   assignments: Assignment[];
   unplaced: SeedRequest[];
+  /** Phase 35 (C-1): why each counted lot with plants left could not go on
+   *  any picked block. */
+  leftover: LeftoverReport[];
   /** Per-assignment sufficiency for the UI. Indexed by `${stockItemId}:${blockId}`. */
   sufficiency: Record<string, SufficiencyResult>;
   /** Plain-language explanation for the whole plan + per-row rationale
@@ -207,7 +221,7 @@ export async function allocate(
   }
 
   const choice = selectModel('allocate');
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   // Phase 17 (Track 3.2) — dual cache breakpoints (header + bulky catalog).
   const systemBlocks = buildFarmSystemBlocks(ctx);
 
@@ -307,6 +321,7 @@ export async function allocate(
   return {
     assignments,
     unplaced,
+    leftover: leftoverReports(input, assignments),
     sufficiency,
     rationale: aiPlan.rationale,
     perRowRationale,
@@ -413,7 +428,7 @@ export async function refineAllocation(
   }
 
   const choice = selectModel('allocate');
-  const client = new Anthropic({ apiKey });
+  const client = anthropicClient(apiKey);
   const systemBlocks = buildFarmSystemBlocks(ctx);
   const pollinationLayer = buildPollinationLayer(input);
   const matrixPrompt = buildAllocationPrompt(matrix, input, pollinationLayer);
@@ -504,6 +519,10 @@ export async function refineAllocation(
     };
   }
 
+  const previousTotals = new Map<string, number>();
+  for (const a of refine.previousAssignments) {
+    previousTotals.set(a.stockItemId, (previousTotals.get(a.stockItemId) ?? 0) + a.plants);
+  }
   let validation = validateAiPlan(
     {
       assignments: refinement.assignments,
@@ -511,7 +530,8 @@ export async function refineAllocation(
       advisories: refinement.advisories
     },
     input,
-    matrix
+    matrix,
+    { previousTotals }
   );
   let lastRefinement = refinement;
 
@@ -530,6 +550,7 @@ export async function refineAllocation(
       '\n- Every (stockItemId, blockId) pair MUST appear in the candidacy matrix from the first message.' +
       '\n- Respect plantsFit caps; do not over-fill a block.' +
       '\n- Honor sun, rotation, narrow, companion-bad, and pollination flags from the matrix.' +
+      '\n- Spread a seed over the picked blocks before leaving any of it unplaced, and keep a seed marked keep_in_one_bed=Y on one block.' +
       '\n\nSame JSON shape as before — no prose, no code fences.';
     try {
       const retryMsgs = [
@@ -564,7 +585,8 @@ export async function refineAllocation(
             advisories: retryRefinement.advisories
           },
           input,
-          matrix
+          matrix,
+          { previousTotals }
         );
         if (retryValidation.valid) {
           validation = retryValidation;
@@ -686,6 +708,7 @@ export async function refineAllocation(
   return {
     assignments,
     unplaced,
+    leftover: leftoverReports(input, assignments),
     sufficiency,
     rationale: validation.plan.rationale || refine.previousRationale,
     perRowRationale,
@@ -801,6 +824,7 @@ function echoPreviousPlan(
   return {
     assignments,
     unplaced,
+    leftover: leftoverReports(input, assignments),
     sufficiency,
     rationale: refine.previousRationale,
     perRowRationale,
@@ -822,7 +846,6 @@ function echoPreviousPlan(
 
 export function buildCandidacyMatrix(input: PlanInput): MatrixRow[] {
   const out: MatrixRow[] = [];
-  const now = Date.now();
 
   const bedIds = new Set(input.bedBlockIds ?? []);
   const freeShareByBed = new Map<string, number>();
@@ -836,8 +859,6 @@ export function buildCandidacyMatrix(input: PlanInput): MatrixRow[] {
     const plugin = input.pluginIndex[seed.cropPluginId];
     if (!plugin) continue;
     const compEntry = input.companions[seed.cropPluginId] ?? { goodWith: [], badWith: [] };
-    const lookback = rotationLookbackForFamily(plugin.cropFamily);
-    const lookbackCutoff = lookback > 0 ? now - lookback * 365 * 86_400_000 : 0;
 
     for (const block of input.blocks) {
       const sharedBed = bedIds.has(block.id);
@@ -852,32 +873,14 @@ export function buildCandidacyMatrix(input: PlanInput): MatrixRow[] {
         plantsFit
       });
 
+      // Phase 35 (R-17): the same helpers the engine's rule-outs use, so
+      // the prompt and the validator agree.
       const sunMatch = sunMatchOf(seed, plugin, block.sunExposure ?? null);
-
-      let rotationOk = true;
-      if (lookback > 0) {
-        for (const c of input.existingCrops) {
-          if (c.blockId !== block.id) continue;
-          if (c.plantingDate == null || c.plantingDate < lookbackCutoff) continue;
-          const prior = input.pluginIndex[c.cropPluginId];
-          if (prior && prior.cropFamily === plugin.cropFamily) {
-            rotationOk = false;
-            break;
-          }
-        }
-      }
-
-      const placedHere = new Set<string>();
-      for (const c of input.existingCrops) {
-        if (c.blockId === block.id) placedHere.add(c.cropPluginId);
-      }
+      const rotationOk = rotationConflict(input, plugin, block.id) === null;
+      const placedHere = new Set(cropsOnBlock(input, block.id, []));
       const goodHere = compEntry.goodWith.filter((p) => placedHere.has(p));
-      const badHere = compEntry.badWith.filter((p) => placedHere.has(p));
-
-      const rowIn = plugin.plantingGuide?.rowSpacingIn ?? plugin.defaultRowSpacingInches ?? 12;
-      const minDimFt = sharedBed ? bedMinDimFt(block) : sqrtAcresFt(block);
-      // A bed is planted from its edges: one row across is enough.
-      const narrow = minDimFt != null && minDimFt < ((sharedBed ? 1 : 2) * rowIn) / 12;
+      const badHere = keepApartCrops(input, seed.cropPluginId, block.id, []);
+      const narrow = isNarrow(block, plugin, sharedBed);
 
       const fam = plugin.cropFamily;
       const threeSistersCandidate = fam === 'corn' || fam === 'legume' || fam === 'cucurbit';
@@ -923,38 +926,6 @@ function plantsFitUsableForBlock(
   return Math.max(0, total - Math.floor(consumed));
 }
 
-function sunMatchOf(
-  seed: SeedRequest,
-  plugin: CropPlugin,
-  blockSun: 'full' | 'partial' | 'shade' | null
-): 'full' | 'partial' | 'none' {
-  if (blockSun === null) return 'partial';
-  const want = seed.sunRequirement ?? defaultSunForFamily(plugin.cropFamily);
-  if (want === blockSun) return 'full';
-  if (
-    (want === 'full' && blockSun === 'partial') ||
-    (want === 'partial' && (blockSun === 'full' || blockSun === 'shade'))
-  ) {
-    return 'partial';
-  }
-  return 'none';
-}
-
-function defaultSunForFamily(family: string): 'full' | 'partial' | 'shade' {
-  if (family === 'brassica') return 'partial';
-  return 'full';
-}
-
-function bedMinDimFt(block: BlockWithPlantings): number | null {
-  if (block.widthFt && block.lengthFt) return Math.min(block.widthFt, block.lengthFt);
-  return sqrtAcresFt(block);
-}
-
-function sqrtAcresFt(block: BlockWithPlantings): number | null {
-  if (!block.acres || block.acres <= 0) return null;
-  return Math.sqrt(block.acres * 43_560);
-}
-
 // ─── Prompt building ─────────────────────────────────────────────────────
 
 export function buildAllocationPrompt(
@@ -967,8 +938,10 @@ export function buildAllocationPrompt(
       `- ${s.stockItemId} | ${s.varietyDisplayName} | plugin=${s.cropPluginId} | ` +
       (s.fillToCapacity
         ? `available_plants=not set (size it to the space you give it, at most ${s.quantityPlants})`
-        : `available_plants=${s.quantityPlants}`)
+        : `available_plants=${s.quantityPlants}`) +
+      (s.keepInOneBed && !s.fillToCapacity ? ' | keep_in_one_bed=Y' : '')
   );
+  const keepSeeds = input.seeds.filter((s) => s.keepInOneBed && !s.fillToCapacity);
   const bedIds = new Set(input.bedBlockIds ?? []);
   const freeShareOf = (blockId: string) =>
     matrix.find((r) => r.blockId === blockId)?.freeShare ?? 1;
@@ -987,7 +960,7 @@ export function buildAllocationPrompt(
         '- Crops on one shared bed split its AREA. For each assignment on a shared bed, return "areaShare": the fraction of the whole bed that crop gets (for example 0.25 for a quarter of the bed).',
         "- The areaShare values of every crop on one shared bed must add up to no more than that bed's free_share. Never give two crops the whole bed.",
         '- Plants are worked out for you as areaShare × that crop\'s whole-bed plantsFit, so you may leave "plants" out on a shared bed.',
-        '- Having seed left over once the beds are full is normal in a garden. Do not squeeze extra plants in to use it up.',
+        "- Seed left over is fine only once every bed that suits the crop is full. Never squeeze extra plants past a bed's free_share to use it up.",
         '- Split a bed between the crops that suit it, roughly in proportion to how much of each the farmer has. A crop with available_plants "not set" should get a fair share, not the whole bed.'
       ]
     : [];
@@ -1060,6 +1033,13 @@ export function buildAllocationPrompt(
       '- Total plants assigned for each stockItemId must equal its plantsAvailable (or as close as possible).',
       '- For each (seed, block) pick: plants must be ≤ plantsFit and > 0. Leave a seed out of assignments when it has no room; do not list it with 0 plants.',
       '- A seed may be split across multiple blocks; sum across blocks ≤ plantsAvailable.',
+      '- SPREAD BEFORE LEAVING SEED: when a seed does not fit on one block, put the rest on the other picked blocks before leaving any of it unplaced. Leave seed unplaced only when every other block is full or has a reason against it: a crop to keep apart from it, the same crop family planted there too recently, a different crop there that it would cross with, the wrong sun, or rows too wide for the block. The validator rejects a plan that leaves seed unplaced while such a block still has room.',
+      "- RULES APPLY TO YOUR OWN PLAN TOO: compBad only lists crops already on a block. Never put two of this plan's crops that must be kept apart on the same block. When a seed goes on more than one block, only its first part may go where rotationOk=N or beside a different crop it would cross with; the validator rejects the rest.",
+      ...(keepSeeds.length > 0
+        ? [
+            `- KEEP IN ONE BED: the farmer wants ${keepSeeds.map((k) => k.stockItemId).join(', ')} (keep_in_one_bed=Y) on one block each. Never put one of these on two blocks; leave what does not fit unplaced.`
+          ]
+        : []),
       '- Never select a row where compBad is non-empty unless no other option exists.',
       '',
       'HARD CAPS (a violation here will be rejected by the validator):',
@@ -1114,7 +1094,19 @@ export type ValidatedPlan =
  *  of space (sum of plants / plantsFit). */
 export const BLOCK_SHARE_CAP = 1.25;
 
-export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow[]): ValidatedPlan {
+export interface ValidateOptions {
+  /** Refine only: each lot's plant total in the plan the farmer was shown.
+   *  A lot the farmer's request brought below that total is a reduction the
+   *  farmer asked for, so it is not checked for room left on other blocks. */
+  previousTotals?: ReadonlyMap<string, number>;
+}
+
+export function validateAiPlan(
+  raw: unknown,
+  input: PlanInput,
+  matrix: MatrixRow[],
+  options: ValidateOptions = {}
+): ValidatedPlan {
   const violations: string[] = [];
   if (!raw || typeof raw !== 'object') {
     return { valid: false, violations: ['response was not an object'] };
@@ -1372,6 +1364,78 @@ export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow
     }
   }
 
+  // (d) Phase 35 (R-17): a counted lot must spread over the picked blocks
+  // before any of it is left, and a keep-in-one-bed lot stays on one block.
+  const asPlaced: Assignment[] = validAssignments.map((a) => {
+    const seed = seedById.get(a.stockItemId)!;
+    return {
+      stockItemId: a.stockItemId,
+      cropPluginId: seed.cropPluginId,
+      varietyDisplayName: seed.varietyDisplayName,
+      blockId: a.blockId,
+      plants: a.plants,
+      score: 0
+    };
+  });
+  // (e) Claude's parts meet the same rule-outs the engine applies with the
+  // crops it has already placed (R-05): no part lands beside a crop it must
+  // be kept apart from, wherever that crop sits in this plan, and at most one
+  // part of a lot (its first) sits on a block its rotation or a crossing crop
+  // on that block rules out.
+  const apartSeen = new Set<string>();
+  for (const a of asPlaced) {
+    const already = new Set(keepApartCrops(input, a.cropPluginId, a.blockId, []));
+    const apart = keepApartCrops(input, a.cropPluginId, a.blockId, asPlaced).filter(
+      (p) => !already.has(p)
+    );
+    if (apart.length === 0) continue;
+    const key = [a.blockId, ...[a.cropPluginId, apart[0]].sort()].join('|');
+    if (apartSeen.has(key)) continue;
+    apartSeen.add(key);
+    violations.push(
+      `keep-apart: ${a.stockItemId} (${a.cropPluginId}) is on ${a.blockId} with ${apart.join(', ')}, which must be kept apart. Move one of them to a different block.`
+    );
+  }
+  for (const seed of input.seeds) {
+    const plugin = input.pluginIndex[seed.cropPluginId];
+    if (!plugin) continue;
+    const mine = asPlaced.filter((a) => a.stockItemId === seed.stockItemId);
+    if (mine.length < 2) continue;
+    const ruled = mine.filter(
+      (a) =>
+        rotationConflict(input, plugin, a.blockId) !== null ||
+        crossingCrop(input, plugin, a.blockId, asPlaced) !== null
+    );
+    if (ruled.length > 1) {
+      violations.push(
+        `split-ruled-out: ${seed.stockItemId} has parts on ${ruled.map((a) => a.blockId).join(', ')}, where its rotation or a crop it crosses with rules it out. Only one part of a lot may go on such a block.`
+      );
+    }
+  }
+
+  for (const seed of input.seeds) {
+    if (seed.fillToCapacity) continue;
+    const mine = asPlaced.filter((a) => a.stockItemId === seed.stockItemId);
+    if (seed.keepInOneBed) {
+      const blocks = new Set(mine.map((a) => a.blockId));
+      if (blocks.size > 1) {
+        violations.push(
+          `kept-in-one-bed: ${seed.stockItemId} must stay on one block but is on ${[...blocks].join(', ')}. Keep it on one block and leave the rest unplaced.`
+        );
+      }
+      continue;
+    }
+    const total = mine.reduce((sum, a) => sum + a.plants, 0);
+    const before = options.previousTotals?.get(seed.stockItemId);
+    if (before !== undefined && total < before) continue;
+    const roomy = blocksWithRoomForLeftover(input, seed, asPlaced);
+    if (roomy.length > 0) {
+      violations.push(
+        `unplaced-with-room: ${seed.stockItemId} has ${seed.quantityPlants - total} plants left but ${roomy.join(', ')} still ${roomy.length === 1 ? 'has' : 'have'} room for it. Put the rest there before leaving seed unplaced.`
+      );
+    }
+  }
+
   if (violations.length > 0) return { valid: false, violations };
   const rationale = typeof obj.rationale === 'string' ? obj.rationale : '';
   const advisories = Array.isArray(obj.advisories)
@@ -1422,6 +1486,7 @@ function engineFallback(
   return {
     assignments: result.assignments,
     unplaced: result.unplaced,
+    leftover: result.leftover,
     sufficiency,
     rationale:
       reason === 'no-api-key'

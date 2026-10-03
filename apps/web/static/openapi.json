@@ -12956,6 +12956,73 @@
         }
       }
     },
+    "/api/plan/keep-in-one-bed": {
+      "put": {
+        "summary": "Keep a crop in one bed in the farm's future plans",
+        "description": "Owner only. Stores the crop plugin id in the owner setting `layout_keep_in_one_bed` (or removes it with `keep: false`) and answers the whole sorted list. The planning wizard prefills each seed from it. It never moves or merges plantings already saved.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cropPluginId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "keep": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "cropPluginId",
+                  "keep"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The crops now kept in one bed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "cropPluginIds"
+                  ],
+                  "properties": {
+                    "cropPluginIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or the crop is not in the crop library."
+          },
+          "403": {
+            "description": "Not the owner."
+          }
+        }
+      }
+    },
     "/api/garden/beds/{blockId}/recipe": {
       "parameters": [
         {

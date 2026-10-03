@@ -22,13 +22,20 @@ export class AllocateFlow {
         // Ornamental Corn — Raw Untreated Non-GMO (1/2 lb)". Falls back
         // to displayName when no shortName is set.
         const varietyDisplayName = entry.shortName ?? entry.displayName;
+        // Phase 35 (R-15): the farmer's keep-in-one-bed choice rides on the
+        // seed and is authoritative for this run.
+        const keep =
+          entry.cropPluginId && this.#w.isKeptInOneBed(entry.cropPluginId)
+            ? { keepInOneBed: true as const }
+            : {};
         if (this.#w.isFillToBed(stockItemId)) {
           // #471 — no quantity anywhere: the server sizes it to the bed.
           return {
             stockItemId,
             cropPluginId: entry.cropPluginId!,
             varietyDisplayName,
-            fillToBed: true as const
+            fillToBed: true as const,
+            ...keep
           };
         }
         const plants = this.#w.plantsFor(stockItemId, quantity);
@@ -36,7 +43,8 @@ export class AllocateFlow {
           stockItemId,
           cropPluginId: entry.cropPluginId!,
           varietyDisplayName,
-          quantityPlants: Math.max(1, plants ?? Math.round(quantity))
+          quantityPlants: Math.max(1, plants ?? Math.round(quantity)),
+          ...keep
         };
       });
   }

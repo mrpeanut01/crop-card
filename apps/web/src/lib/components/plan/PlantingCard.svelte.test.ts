@@ -139,3 +139,43 @@ describe('PlantingCard title link (#179)', () => {
     expect(link.getAttribute('href')).toBe('/crops/p1');
   });
 });
+
+describe('PlantingCard split line (Phase 35, R-16)', () => {
+  const split = {
+    n: 2,
+    noun: 'beds' as const,
+    others: [{ blockId: 'b2', name: 'Bed B', href: '/plan?field=g&block=b2' }]
+  };
+
+  it('says how many beds the seed lot is in and links the others', () => {
+    render(PlantingCard, { planting: PLANTING, split });
+    expect(screen.getByTestId('planting-split')).toHaveTextContent('One seed lot in 2 beds');
+    expect(screen.getByRole('link', { name: 'Bed B' }).getAttribute('href')).toBe(
+      '/plan?field=g&block=b2'
+    );
+    expect(screen.queryByTestId('plan-keep-in-one-bed')).toBeNull();
+  });
+
+  it('says blocks when the parts are not all beds', () => {
+    render(PlantingCard, { planting: PLANTING, split: { ...split, noun: 'blocks' } });
+    expect(screen.getByTestId('planting-split')).toHaveTextContent('One seed lot in 2 blocks');
+  });
+
+  it('gives the owner a keep toggle that only changes new plans', async () => {
+    const onToggleKeep = vi.fn();
+    render(PlantingCard, { planting: PLANTING, split, keepInOneBed: true, onToggleKeep });
+    const toggle = screen.getByTestId('plan-keep-in-one-bed');
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    expect(toggle).toHaveTextContent('Keep this crop in one bed next time');
+    expect(screen.getByTestId('planting-split')).toHaveTextContent(
+      'This only changes new plans. Plantings already saved stay where they are.'
+    );
+    await fireEvent.click(toggle);
+    expect(onToggleKeep).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows nothing for a planting that is not split', () => {
+    render(PlantingCard, { planting: PLANTING });
+    expect(screen.queryByTestId('planting-split')).toBeNull();
+  });
+});

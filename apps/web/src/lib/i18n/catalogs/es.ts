@@ -17,13 +17,13 @@ import { esNotify } from './es/notify';
 import { esAmend } from './es/amend';
 
 /**
- * Spanish (F5-8). Machine-drafted and proofread, but not yet signed off by a
- * native-speaker agricultural reviewer, so `reviewed` stays false. Safety,
+ * Spanish (F5-8). Machine-drafted, then corrected and signed off by the
+ * owner's native-speaker proofreader (#511, 2026-10-03). Safety,
  * hold, withdrawal, grazing and spray text in the app stays English (see
  * `englishOnly.ts`); push, email, SMS and the Monday summary follow the
  * recipient's language.
  */
-export const reviewed = false;
+export const reviewed = true;
 
 export const ES_PARTS: ReadonlyArray<Partial<Record<MessageKey, string>>> = [
   esCore,

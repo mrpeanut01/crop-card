@@ -55,8 +55,8 @@ describe('t()', () => {
     );
   });
 
-  it('marks the Spanish catalog unreviewed', () => {
-    expect(reviewed).toBe(false);
+  it('marks the Spanish catalog reviewed', () => {
+    expect(reviewed).toBe(true);
   });
 });
 

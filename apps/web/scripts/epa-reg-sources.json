@@ -1335,11 +1335,11 @@
         "beeToxicity": "unknown",
         "bloomRestriction": "none"
       },
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070127-00010-20171109.pdf",
-      "docDate": "2017-11-09",
-      "page": 3,
-      "quote": "TICK-EX EC BIOINSECTICIDE [ABN: MET52® EC ]",
-      "note": "Last PPLS label bearing the Met52 EC brand (reg then 70127-10, now 64137-33). No bee/pollinator/bloom language on it, nor on the current Lalguard M52 OD label (064137-00033-20260528.pdf)."
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/064137-00033-20260528.pdf",
+      "docDate": "2026-05-28",
+      "page": 6,
+      "quote": "ENVIRONMENTAL HAZARDS For Terrestrial Uses: This product is toxic to aquatic invertebrates. Do not apply directly to water, or to areas where surface water is present",
+      "note": "Re-checked 2026-10-03 against the current Lalguard M52 OD master label (EPA 64137-33, v7 12Aug25, accepted 2026-05-28; PDF p6 = label p4 of 17, sublabel B repeats it on PDF p16). No bee, pollinator, bloom, hive or foraging language anywhere on the label -> unknown/none. The last label bearing the Met52 EC brand (070127-00010-20171109.pdf, 'TICK-EX EC BIOINSECTICIDE [ABN: MET52® EC ]', reg then 70127-10) is also silent on bees."
     },
     "movento": {
       "pollinator": {

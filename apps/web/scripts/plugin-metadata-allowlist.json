@@ -12,11 +12,6 @@
       "reason": "Generic plugin with no single label: dozens of 2,4-D amine registrations differ in strength and label wording, so the formulation code must come from the jug on hand rather than one chosen label."
     },
     {
-      "pluginId": "banvel",
-      "field": "formulation",
-      "reason": "No single Banvel product: the Banvel name is on three UPL registrations (70506-461 Banvel, 70506-505 Banvel 4 SL, 70506-503 Banvel 480) and the plugin names BASF, whose dicamba label never says Banvel. Pick the product first; formulation follows (label-research 2026-09-25)."
-    },
-    {
       "pluginId": "chaparral-aminopyralid-metsulfuron",
       "field": "formulation",
       "reason": "Chaparral label (EPA 62719-597, 2024 and 2011 versions, plus Greenbook specimen) names no formulation type; only PPLS record says 'Water Dispersible Granule'. Product is dry, measured by volumetric cylinder or scale in ounces."
@@ -264,7 +259,7 @@
     {
       "pluginId": "treflan-trust-ec",
       "field": "epaRegistrationNumber",
-      "reason": "Plugin spans two brands: Treflan HFP is one registration (62719-250 transferred to Gowan as 10163-363 in 2016), but Trust is WinField 1381-146 or 1381-261 and no PPLS product is named Trust HFP. Use the number on the jug."
+      "reason": "Plugin spans two brands with two registrants and stays one plugin (#530: not split). Checked PPLS 2026-10-03: Treflan HFP is 10163-363 (Gowan, Active; transferred from Corteva 62719-250 on 2016-08-15; newest label 2026-06-23), while Trust is WinField 1381-146 ('TRUST HERBICIDE', label 2015-05-26) or 1381-261 ('TRUST', label 2024-07-17), and neither Trust label says HFP. No single number fits 'Treflan / Trust HFP'; use the number on the jug on hand."
     },
     {
       "pluginId": "bt-kurstaki",
@@ -304,7 +299,7 @@
     {
       "pluginId": "dimethoate-4ec",
       "field": "epaRegistrationNumber",
-      "reason": "Generic plugin: several active dimethoate 4EC registrations (Loveland 34704-207, Drexel 19713-231, UPL 70506-453, FMC 279-3541); the number depends on the jug on hand. The previous 5905-368 was Omni Supreme Spray (a mineral oil)."
+      "reason": "Generic plugin: several active dimethoate 4EC registrations (Loveland 34704-207, Drexel 19713-231, UPL 70506-453, FMC 279-3541); the number depends on the jug on hand. The previous 5905-368 was Omni Supreme Spray (a mineral oil). Rechecked 2026-10-03 (#530): the plugin notes say Loveland Products, but Loveland's 34704-207 is titled 'DIMETHOATE 400' on PPLS and on every label file (2007-2014), never 'Dimethoate 4EC', so it is not taken as the plugin's product."
     }
   ]
 }

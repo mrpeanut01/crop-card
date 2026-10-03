@@ -5,6 +5,7 @@
   "epaRegistrationNumber": "70506-461",
   "version": "1.0.0",
   "defaultUnit": "fl-oz",
+  "formulation": "SL",
   "applicationTiming": "POST",
   "activeIngredients": [
     {

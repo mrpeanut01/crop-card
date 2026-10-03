@@ -25,7 +25,7 @@
     "psyllid",
     "phylloxera"
   ],
-  "pollinatorRisk": "low",
+  "pollinatorRisk": "moderate",
   "pollinator": {"beeToxicity":"toxic","bloomRestriction":"prohibited-during-bloom"},
   "notes": "Tetronic IRAC 23 — fully systemic, bidirectional. Slow-acting but suppresses scale + below-ground pests.",
   "complianceFlags": {

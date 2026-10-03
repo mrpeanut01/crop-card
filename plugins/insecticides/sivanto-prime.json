@@ -24,7 +24,7 @@
     "leafhopper",
     "psyllid"
   ],
-  "pollinatorRisk": "low",
+  "pollinatorRisk": "high",
   "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
   "notes": "Butenolide IRAC 4D — bee-friendlier neonic alternative. Sucking-pest specialist.",
   "complianceFlags": {

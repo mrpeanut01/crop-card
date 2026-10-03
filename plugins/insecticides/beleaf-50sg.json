@@ -23,7 +23,7 @@
     "tarnished plant bug",
     "whitefly (suppression)"
   ],
-  "pollinatorRisk": "low",
+  "pollinatorRisk": "moderate",
   "pollinator": {"beeToxicity":"toxic","bloomRestriction":"none"},
   "notes": "IRAC 29 selective feeding inhibitor. Aphid + plant bug specialist; very low non-target impact.",
   "complianceFlags": {

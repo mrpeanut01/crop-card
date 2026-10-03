@@ -22,6 +22,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 21,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "100-617",
   "targetDiseases": [
     "wheat leaf rust",

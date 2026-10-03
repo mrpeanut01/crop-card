@@ -21,6 +21,7 @@
   "reEntryIntervalHours": 24,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "none",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "targetDiseases": [
     "powdery mildew",
     "rust",

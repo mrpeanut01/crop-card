@@ -14,6 +14,7 @@
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "targetDiseases": ["downy mildew", "powdery mildew", "Alternaria", "Septoria", "anthracnose", "rust"],
   "labelClaims": { "safeForCropFamilies": ["solanaceae", "cucurbit", "leafy-green", "brassica", "small-fruit", "vine-fruit", "orchard"] },
   "notes": "QoI strobilurin FRAC 11. NEVER apply to apples — phytotoxic to McIntosh-class cultivars. Resistance risk high; rotate."

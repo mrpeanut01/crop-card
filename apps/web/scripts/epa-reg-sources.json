@@ -1977,6 +1977,677 @@
       "page": 5,
       "quote": "ENVIRONMENTAL HAZARDS This product is toxic to aquatic invertebrates. This product is toxic to the green lacewing and the predatory mite (Galendromus (= Metaseiulus) occidentalis)",
       "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Label names non-target beneficial-insect toxicity (lacewing, predatory mite) but says nothing about bees/pollinators or bloom. relatively-nontoxic needs an explicit label statement -> unknown (more protective)."
+    },
+    "actigard-50wg": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00922-20211102.pdf",
+      "docDate": "2021-11-02",
+      "page": 7,
+      "quote": "Environmental Hazards This pesticide is toxic to fish and aquatic invertebrates. Do not apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when cleaning equipment or disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "actinovate-streptomyces": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073314-00020-20221215.pdf",
+      "docDate": "2022-12-15",
+      "page": 7,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses: Do not apply directly to water, to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate. Cover or collect [seeds] [or] [powder] [product] spilled during [loading][use].",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. Actinovate Soluble master label (Actinovate AG alternate brand)."
+    },
+    "aliette-wdg-fosetyl-al": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00516-20190719.pdf",
+      "docDate": "2019-07-19",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS DIRECTIONS THROUGH SPRINKLER IRRIGATION SYSTEMS This product is toxic to aquatic and estuarine invertebrates. Drift and runoff may be hazardous to aquatic and estuarine organisms in neighboring areas. Do not apply directly to water, to areas where surface water is present or to intertidal areas below the mean high water mark.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. (The two-column layout puts the sprinkler heading between 'ENVIRONMENTAL HAZARDS' and its text.)"
+    },
+    "aprovia": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01471-20241030.pdf",
+      "docDate": "2024-10-30",
+      "page": 7,
+      "quote": "Environmental Hazards Benzovindiflupyr is toxic to fish, aquatic invertebrates and mammals. Drift and runoff may be hazardous to aquatic organisms in water adjacent to treated area. For terrestrial uses: DO NOT apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark. DO NOT contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "bravo-weather-stik": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/050534-00188-20140822.pdf",
+      "docDate": "2014-08-22",
+      "page": 4,
+      "quote": "Environmental Hazards This product is toxic to aquatic invertebrates and wildlife. Do not apply directly to water, to areas where surface water is present, or to intertidal areas below the mean high water mark. Drift and runoff may be hazardous to aquatic organisms in neighboring areas. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. Label filed under 50534-188 (Bravo 720); PPLS lists Bravo WeatherStik as the alternate brand of the 66222-276 record. 'Wildlife' is read as birds and mammals, not bees; the label has no bee language."
+    },
+    "captan-80wdg": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00029-20180226.pdf",
+      "docDate": "2018-02-26",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This product is toxic to aquatic organisms. Do not apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark. Drift and runoff from treated areas may be hazardous to aquatic organisms in neighboring areas. Do not contaminate water when cleaning equipment or disposing of equipment washwaters or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. Label filed under 66330-29 (Arysta Captan 80 WDG), now 70506-445 (UPL) per PPLS transfer history."
+    },
+    "cease-omri": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01155-20140407.pdf",
+      "docDate": "2014-04-07",
+      "page": 6,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate. Do not apply when weather conditions favor drift or runoff from treated areas.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. Cease is BioWorks (68539) distributor product of 264-1155 (Rhapsody ASO master label); plant lists naming \"Bee-Balm\" are not bee statements."
+    },
+    "cevya-mefentrifluconazole": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00407-20230112.pdf",
+      "docDate": "2023-01-12",
+      "page": 4,
+      "quote": "Environmental Hazards This pesticide is toxic to fish and aquatic invertebrates. Drift and runoff may be hazardous to aquatic organisms in water adjacent to treated areas. DO NOT apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark. DO NOT contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "cuprofix-ultra-disperss": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00201-20251204.pdf",
+      "docDate": "2025-12-04",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to fish and aquatic invertebrates and may contaminate water through runoff. This product has a potential for runoff for several months or more after application. Poorly draining soils and soils with shallow water tables are more prone to produce runoff that contains this product. Drift and runoff may be hazardous to aquatic organisms in water adjacent to treated areas.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "curzate-60df-cymoxanil": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00592-20181019.pdf",
+      "docDate": "2018-10-19",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This product is toxic to fish and aquatic invertebrates. Drift and runoff from treated areas may be hazardous to aquatic organisms in neighboring areas. Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. Do not contaminate water when cleaning equipment or disposing of equipment washwaters.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. The newer 2021-05-05 registration-review label (000352-00592-20210505.pdf) extracts only as font-shifted text; decoded, its Environmental Hazards text is the same and it has no bee language either, so the 2018 label's readable text is quoted."
+    },
+    "dithane-rainshield": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00396-20240229.pdf",
+      "docDate": "2024-02-29",
+      "page": 4,
+      "quote": "Environmental Hazards This pesticide is toxic to aquatic organisms. Drift and runoff from treated areas may be hazardous to aquatic organisms in neighboring areas. Do not apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when cleaning equipment or disposing of equipment washwaters or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. Label filed under 62719-396 (Dithane F-45); PPLS lists Dithane F-45 Rainshield as the alternate brand of 70506-654."
+    },
+    "double-nickel-55": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00108-20250108.pdf",
+      "docDate": "2025-01-08",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS Do not apply directly to water or to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwaters or rinsate. Do not apply when weather conditions favor drift or runoff from treated areas.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. CX-9030 master label (Double Nickel 55 WG alternate brand)."
+    },
+    "elevate-50wdg": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00446-20260303.pdf",
+      "docDate": "2026-03-03",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to fish and aquatic invertebrates. Drift and runoff may be hazardous to aquatic organisms in neighboring areas. Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high-water mark. Do not contaminate water when cleaning equipment or disposing of equipment washwaters or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "endura-boscalid": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00197-20221108.pdf",
+      "docDate": "2022-11-08",
+      "page": 4,
+      "quote": "Environmental Hazards DO NOT apply directly to water, areas where surface water is present, or intertidal areas below the mean high water mark . DO NOT contaminate water when disposing of equipment washwaters or rinsate .",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "flint-extra": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00826-20250116.pdf",
+      "docDate": "2025-01-16",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to fish and aquatic invertebrates. Applying this product when rain is not predicted for the next 24 hours will help reduce potential risk to aquatic invertebrates by reducing pesticide runoff from the treatment area into water bodies. DO NOT apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. GEM 500 SC master label (Flint Extra alternate brand)."
+    },
+    "folicur-36f-tebuconazole": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00752-20131119.pdf",
+      "docDate": "2013-11-19",
+      "page": 3,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to mammals, fish and aquatic invertebrates. Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. Runoff may be hazardous to aquatic organisms in neighboring areas. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "forum": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00427-20190930.pdf",
+      "docDate": "2019-09-30",
+      "page": 4,
+      "quote": "Environmental Hazards DO NOT apply directly to water, to areas where surface water is present, or to intertidal areas below the mean high water mark. DO NOT contaminate water when cleaning equipment or disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "headline-sc": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+      "docDate": "2026-02-23",
+      "page": 4,
+      "quote": "Environmental Hazards This product may contaminate water through drift of spray in wind. This pesticide is toxic to ﬁsh and aquatic invertebrates. Drift and runoff may be hazardous to aquatic organisms in water adjacent to treated areas. DO NOT apply directly to water, areas where surface water is present, or intertidal areas below the mean high water mark. DO NOT contaminate water when disposing of equipment washwaters or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "howler-evo-pseudomonas": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00141-20260505.pdf",
+      "docDate": "2026-05-05",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean hight water mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "indar-2f": {
+      "pollinator": {
+        "beeToxicity": "relatively-nontoxic",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00416-20130711.pdf",
+      "docDate": "2013-07-11",
+      "page": 11,
+      "quote": "Enable 2F is considered not hazardous to bees, including those which are actively foraging in the area during application, when used as directed.",
+      "note": "Enable 2F master label; Indar 2F is an alternate brand of 62719-416. Environmental Hazards (p4) mention only fish and aquatic organisms. The explicit not-hazardous-to-bees statement maps to relatively-nontoxic with no bloom restriction."
+    },
+    "inspire-super": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01317-20210505.pdf",
+      "docDate": "2021-05-05",
+      "page": 5,
+      "quote": "Environmental Hazards Difenoconazole and cyprodinil are toxic to fish, mammals and aquatic invertebrates. Drift and runoff may be hazardous to aquatic estuarine/marine organisms in water adjacent to treated area. For terrestrial uses: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "k-phite-phosphonate": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073806-00001-20250130.pdf",
+      "docDate": "2025-01-30",
+      "page": 7,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses: Do not apply directly to water, to areas where surface water is present or to intertidal areas below the mean high-water mark. Do not contaminate water when disposing of equipment washwaters or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. PFS 56 master label (KPHITE alternate brands)."
+    },
+    "kasumin-2l-kasugamycin": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00404-20191021.pdf",
+      "docDate": "2019-10-21",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high-water mark. Do not contaminate water when cleaning equipment or disposing of equipment wash waters.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. The newest 70506-430 file (2025-02-27) is a time-limited-use extension letter with no label; quoted label filed under 66330-404 before transfer to 70506-430 (UPL)."
+    },
+    "kocide-3000-o": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/091411-00011-20180312.pdf",
+      "docDate": "2018-03-12",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to fish and aquatic invertebrates and may contaminate water through runoff. This product has a potential for runoff for several months or more after application. Poorly draining soils and soils with shallow water tables are more prone to produce runoff that contains this product. Dr ift and runoff may be hazardous t o aquatic organisms in waters adjacent to treated areas.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. KX-002 master label (Kocide 3000-O alternate brand); Certis distributor number 91411-11-70051."
+    },
+    "kumulus-df": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/051036-00352-20140624.pdf",
+      "docDate": "2014-06-24",
+      "page": 4,
+      "quote": "Environmental Hazards DO NOT apply directly to water, to areas where surface water is present, or to intertidal areas below the mean high water mark. DO NOT contaminate water when disposing of rinsate or equipment washwaters. DO NOT apply when weather conditions favor drift from treated areas.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "lifegard-bacillus-mycoides": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00119-20250624.pdf",
+      "docDate": "2025-06-24",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS For Terrestrial Uses: Do not apply directly to water or to areas where surface water is present or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. BmJ WG master label (LifeGard WG alternate brand)."
+    },
+    "luna-tranquility": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01085-20250618.pdf",
+      "docDate": "2025-06-18",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses: DO NOT apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. DO NOT contaminate water when disposing of equipment wash water or rinsate. This product may impact surface water quality due to runoff of rain water. This is especially true for poorly draining soils and soils with shallow ground water.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "manzate-pro-stick": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00234-20260416.pdf",
+      "docDate": "2026-04-16",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS This product is toxic to aquatic organisms. Drift and runoff from treated areas may be hazardous toaquatic organisms in neighboring areas. Do not apply directly to water, to areas where surface water ispresent or to intertidal areas below the mean high water mark. Cover or incorporate spilled treated seed. Do not contaminate water by disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "merivon": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00310-20240118.pdf",
+      "docDate": "2024-01-18",
+      "page": 4,
+      "quote": "Environmental Hazards This pesticide is toxic to fish and aquatic invertebrates . Drift and runoff may be hazardous to aquatic organisms in water adjacent to treated areas . DO NOT apply directly to water, to areas where surface water is present, or to intertidal areas below the mean high water mark . DO NOT contaminate water when disposing of equipment washwater or rinsate .",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "microthiol-disperss": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00187-20241013.pdf",
+      "docDate": "2024-10-13",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS DO NOT apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. DO NOT apply where runoff is likely to occur. DO NOT contaminate water when disposing of equipment washwaters.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. The newer 2026-09-03 file is a PRN 98-10 notification (adds DO NOT on page 10) whose stamped label is image-only; the 2024-10-13 label is the newest readable one."
+    },
+    "milstop-potassium-bicarbonate": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/068539-00013-20211020.pdf",
+      "docDate": "2021-10-20",
+      "page": 5,
+      "quote": "Environmental Hazards: For terrestrial uses, do not apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean highwater mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. PB133 master label (MilStop alternate brand); plant lists naming \"Bee balm\" are not bee statements."
+    },
+    "miravis-pydiflumetofen": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
+      "docDate": "2025-07-24",
+      "page": 7,
+      "quote": "Environmental Hazards Pydiflumetofen is toxic to fish, aquatic invertebrates, and oysters and shrimp. Drift and runoff may be hazardous to aquatic organisms in water adjacent to treated areas. For terrestrial uses: Do not apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. A19649 Crop master label (Miravis alternate brand)."
+    },
+    "mycoshield-oxytetracycline": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/055146-00097-20191107.pdf",
+      "docDate": "2019-11-07",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS Do not apply directly to water, to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwaters.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. The two 2020 files are supplemental-label letters; the 2019-11-07 label is the newest with the precautionary statements."
+    },
+    "mycostop-streptomyces": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/064137-00005-20260804.pdf",
+      "docDate": "2026-08-04",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS: For terrestrial uses: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "omega-500f-fluazinam": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00001-20240226.pdf",
+      "docDate": "2024-02-26",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This product is toxic to fish and aquatic invertebrates. Do not apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when cleaning equipment or disposing of equipment wash waters or rinsate. Do not apply when weather conditions favor drift from treated areas.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "orondis-opti": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01591-20240515.pdf",
+      "docDate": "2024-05-15",
+      "page": 9,
+      "quote": "Environmental Hazards This product is toxic to aquatic invertebrates and wildlife. For terrestrial uses: Do not apply directly to water, to areas where surface water is present, or to intertidal areas below the mean high-water mark. Drift and runoff may be hazardous to aquatic organisms in neighboring areas. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. 'Wildlife' (from the chlorothalonil component) is read as birds and mammals, not bees; the label has no bee language."
+    },
+    "oxidate-2-0": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00012-20210903.pdf",
+      "docDate": "2021-09-03",
+      "page": 26,
+      "quote": "This product is highly toxic to bees and other beneficial insects exposed to direct contact on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds while bees are actively visiting the treatment area.",
+      "note": "OxiDate 2.0 is an alternate brand of ZeroTol 2.0 (70299-12); same label as zerotol-2-0-sanitizer. The \"while bees are actively visiting\" statement maps to dusk-to-dawn-only."
+    },
+    "phostrol-phosphonate": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/055146-00083-20211208.pdf",
+      "docDate": "2021-12-08",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial use: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment wash wat ers or rinsate. This pesticide is toxic to fish and aquatic organisms. Do not apply to water. Drift and runoff from treated areas may be hazardous to fish and aquatic organisms in adjacent aquatic sites.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "presidio-fluopicolide": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00140-20220523.pdf",
+      "docDate": "2022-05-23",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to fish and aquatic invertebrates. Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. Drift and runoff from treated areas may be hazardous to aquatic organisms in water adjacent to treated areas. Do not contaminate water by disposing of equipment washwaters or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. V-10161 4 SC master label (Presidio alternate brand)."
+    },
+    "previcur-flex-propamocarb": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00678-20240816.pdf",
+      "docDate": "2024-08-16",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS DO NOT apply directly to water, to areas where surface water is present, or to intertidal areas below the high water mark. DO NOT contaminate water when disposing of equipment washwaters or rinsate. DO NOT apply when weather conditions favor drift from the treated areas.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. Previcur master label (Previcur Flex alternate brand)."
+    },
+    "pristine": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00199-20221130.pdf",
+      "docDate": "2022-11-30",
+      "page": 4,
+      "quote": "Environmental Hazards This pesticide is toxic to ﬁsh and aquatic invertebrates. Drift and runoff may be hazardous to aquatic organisms in water adjacent to treated areas. DO NOT apply directly to water, areas where surface water is present, or intertidal areas below the mean high water mark. DO NOT contami- nate water when disposing of equipment washwaters or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "prophyt-phosphonate": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/042519-00022-20251024.pdf",
+      "docDate": "2025-10-24",
+      "page": 4,
+      "quote": "Environmental Hazards: For terrestrial uses: Do not apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean highwater mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. Helena distributor number 42519-22-5905 of Prophyt (42519-22)."
+    },
+    "quadris-flowable": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+      "docDate": "2018-12-19",
+      "page": 9,
+      "quote": "POLLINATOR ADVISORY STATEMENT This product may adversely impact the forage and habitat of local pollinators, including the monarch butterfly (and its larvae), birds, or bats if it reaches non-target areas. Protect pollinators by following label directions to minimize spray drift.",
+      "note": "Abound Flowable master label; Quadris Flowable is an alternate brand of 100-1098. The advisory is about forage and habitat loss from drift, not a bee toxicity class, and sets no bloom restriction; Environmental Hazards (p5) mention only fish and aquatic invertebrates. So 'unknown' with no bloom restriction."
+    },
+    "quintec-quinoxyfen": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/033906-00026-20230413.pdf",
+      "docDate": "2023-04-13",
+      "page": 4,
+      "quote": "Environmental Hazards This product is toxic to fish and aquatic invertebrates. DO NOT apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. DO NOT apply when weather conditions favor runoff or drift from the target area. DO NOT contaminate water when cleaning equipment or disposing of equipment wash waters or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. Label filed under 33906-26 (Quintec) per PPLS transfer history of 81880-30."
+    },
+    "rally-40wsp": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00410-20180227.pdf",
+      "docDate": "2018-02-27",
+      "page": 4,
+      "quote": "Environmental Hazards For terrestrial uses, do not apply directly to water or to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwaters or rinsate. Do not apply when weather conditions favor drift or runoff from areas treated.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "ranman": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00003-20260625.pdf",
+      "docDate": "2026-06-25",
+      "page": 3,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to aquatic inve rtebrates. DO NOT apply directly to water, to areas where surface water is present or to intertidal areas below the mean high water mark. DO NOT contaminate waters when disposing of equipment wash waters or rinsate. Drift and runoff may be hazardous to aquatic organisms in water adjacent to treated areas.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "regalia": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00003-20260820.pdf",
+      "docDate": "2026-08-20",
+      "page": 6,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses: do not apply directly to water, to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "regalia-maxx-omri": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00006-20130226.pdf",
+      "docDate": "2013-02-26",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS For Terrestrial Uses: Do not apply directly to water, to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "revus": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01254-20251016.pdf",
+      "docDate": "2025-10-16",
+      "page": 7,
+      "quote": "Environmental Hazards For terrestrial use: Do not apply directly to water, to areas where surface water is present, or to intertidal areas below the mean high water mark. DO NOT contaminate water when disposing of equipment washwater or rinsate. This product may contaminate water through drift of spray in wind. This product has a potential for runoff for several months or more after application.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "ridomil-gold-sl": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01202-20230621.pdf",
+      "docDate": "2023-06-21",
+      "page": 8,
+      "quote": "Environmental Hazards DO NOT apply directly to water, to areas where surface water is present, or to intertidal areas below the mean high-water mark. DO NOT contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "rootshield-wp-trichoderma": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/068539-00007-20210421.pdf",
+      "docDate": "2021-04-21",
+      "page": 7,
+      "quote": "ENVIRONMENTAL HAZARDS: For terrestrial uses: Do not apply dir ectly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "rovral-4f-iprodione": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09564-20150828.pdf",
+      "docDate": "2015-08-28",
+      "page": 4,
+      "quote": "This pesticide is toxic to invertebrates. For terrestrial uses, do not apply directly to water or to areas where surface water is present or to intertidal areas below the mean high-water mark.",
+      "note": "No bee, pollinator or foraging language. The Environmental Hazards box says 'toxic to invertebrates' without limiting it to aquatic invertebrates; bees are invertebrates, so the stricter reading is 'toxic'. No bloom restriction on the label."
+    },
+    "scala-sc": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00788-20170222.pdf",
+      "docDate": "2017-02-22",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS Do not apply directly to water, to areas where surface water is present or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater. Drift or run-off from treated areas is hazardous to fish and aquatic invertebrates in neighboring areas.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "serenade-aso": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01152-20250212.pdf",
+      "docDate": "2025-02-12",
+      "page": 6,
+      "quote": "ENVIRONMENTAL HAZARDS For Terrestrial Use: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate. Do not apply when weather conditions favor drift or run-off from treated areas.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. Plant lists naming \"Bee-Balm\" are not bee statements."
+    },
+    "stargus-bacillus-amyloliquefaciens": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00028-20260410.pdf",
+      "docDate": "2026-04-10",
+      "page": 6,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. MBI-110 EP master label (Stargus alternate brand)."
+    },
+    "switch-625wg": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00953-20250421.pdf",
+      "docDate": "2025-04-21",
+      "page": 7,
+      "quote": "Environmental Hazards This pesticide is toxic to fish, aquatic invertebrates, oysters, and shrimp. For terrestrial uses: DO NOT apply directly to water, to areas where surface water is present, or to intertidal areas below the mean high-water mark. DO NOT contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "tilt-36ec-propiconazole": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+      "docDate": "2021-11-10",
+      "page": 6,
+      "quote": "Environmental Hazards Propiconazole is toxic to fish and shrimp. For terrestrial uses, do not apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "topsin-m-wsb": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00125-20260625.pdf",
+      "docDate": "2026-06-25",
+      "page": 5,
+      "quote": "Pollinator Hazard Statement This product is moderately toxic to bees and other pollinating non-target insects exposed to direct treatment on blooming crops or weeds.",
+      "note": "Label says 'moderately toxic' (not in the mapping) -> mapped to the more protective 'toxic', as for acramite-bifenazate. The only bee restrictions are under 'Advisory Best Management Practices for Pollinator Protection' (p16: 'Avoid applications when bees are actively foraging'), which are advisory, so no bloom restriction."
+    },
+    "trilogy-neem": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00002-20230602.pdf",
+      "docDate": "2023-06-02",
+      "page": 4,
+      "quote": "BEE HAZARD This product is toxic to bees exposed to direct treatment. Do not apply this product while bees are actively visiting the treatment area.",
+      "note": "Same BEE HAZARD box repeated on pp19 and 29 (Neem Oil 70% master label; Trilogy is an alternate brand name). The foraging statement maps to dusk-to-dawn-only."
+    },
+    "zampro-ametoctradin": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00302-20190930.pdf",
+      "docDate": "2019-09-30",
+      "page": 4,
+      "quote": "Environmental Hazards DO NOT apply directly to water, areas where surface water is present, or intertidal areas below the mean high water mark. DO NOT contaminate water when disposing of equipment washwater or rinsate. Groundwater Ametoctradin and its degradates have properties and characteristics associated with chemicals detected in groundwater.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction."
+    },
+    "zerotol-2-0-sanitizer": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00012-20210903.pdf",
+      "docDate": "2021-09-03",
+      "page": 26,
+      "quote": "This product is highly toxic to bees and other beneficial insects exposed to direct contact on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds while bees are actively visiting the treatment area.",
+      "note": "Same Environmental Hazards text on p5. The \"while bees are actively visiting\" statement maps to dusk-to-dawn-only. The label also says: \"Do not apply this product or allow it to drift to crops where beneficials are part of an Integrated Pest Management strategy.\""
     }
   },
   "formulation": {

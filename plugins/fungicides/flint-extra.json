@@ -14,6 +14,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 14,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "targetDiseases": ["apple scab", "powdery mildew", "summer rots"],
   "labelClaims": { "safeForCropFamilies": ["orchard"] },
   "notes": "QoI FRAC 11. Apple program standard. Rotate with non-11 every other cover spray."

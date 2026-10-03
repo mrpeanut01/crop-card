@@ -17,6 +17,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 14,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "targetDiseases": ["apple scab", "powdery mildew", "rust"],
   "labelClaims": { "safeForCropFamilies": ["orchard"] },
   "notes": "Premix FRAC 9 + 3. Pome-fruit only. Phytotox risk with non-ionic surfactants — DO NOT tank-mix with NIS."

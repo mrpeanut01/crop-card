@@ -14,6 +14,7 @@
   "reEntryIntervalHours": 24,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "deconRequired": false,
   "targetDiseases": ["apple scab", "bitter rot", "summer fruit rots", "brown rot (stone fruit)", "anthracnose", "leaf spot"],
   "labelClaims": { "safeForCropFamilies": ["orchard", "stone-fruit", "small-fruit", "bramble", "vine-fruit"] },

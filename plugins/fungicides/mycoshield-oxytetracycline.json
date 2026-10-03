@@ -21,6 +21,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 21,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "55146-97",
   "targetDiseases": [
     "fire blight",

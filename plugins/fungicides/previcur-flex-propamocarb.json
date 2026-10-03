@@ -22,6 +22,7 @@
   "preHarvestIntervalDays": 5,
   "rainfastHours": 0.5,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "264-678",
   "targetDiseases": [
     "downy mildew",

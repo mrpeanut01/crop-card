@@ -21,6 +21,7 @@
   "reEntryIntervalHours": 1,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "68539-13",
   "targetDiseases": [
     "powdery mildew",

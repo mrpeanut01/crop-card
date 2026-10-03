@@ -1,0 +1,21 @@
+{
+  "pluginId": "strawberry-alfalfa-tarnished-plant-bug",
+  "type": "companion",
+  "displayName": "Strawberries and Alfalfa (keep apart: tarnished plant bug)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "goodWith": [],
+  "badWith": [],
+  "keepApart": [
+    {
+      "a": [
+        "strawberry-albion-day-neutral",
+        "strawberry-earliglow-june-bearing",
+        "strawberry-jewel"
+      ],
+      "b": ["alfalfa-hi-gest-660", "alfalfa-vernema"],
+      "reason": "Tarnished plant bugs build up in alfalfa and move into strawberries, especially when the alfalfa is cut",
+      "source": "NC State Extension, Lorena Lopez, \"Tarnished Plant Bug in Strawberries\" (2014, revised 2026-04-17), https://content.ces.ncsu.edu/tarnished-plant-bug-in-strawberries"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "pluginId": "alfalfa-potato-bean-leafhopper",
+  "type": "companion",
+  "displayName": "Alfalfa and Potatoes or Snap Beans (keep apart: potato leafhopper)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "goodWith": [],
+  "badWith": [],
+  "keepApart": [
+    {
+      "a": ["alfalfa-hi-gest-660", "alfalfa-vernema"],
+      "b": [
+        "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed",
+        "bush-bean-blue-lake-274",
+        "bush-bean-provider",
+        "bush-bean-roma-ii",
+        "bush-bean-royal-burgundy",
+        "pole-bean-kentucky-wonder",
+        "pole-beans-rattlesnake",
+        "potato-french-fingerling",
+        "potato-german-butterball",
+        "potato-kennebec",
+        "potato-purple-majesty",
+        "potato-russet-burbank",
+        "potato-yukon-gold"
+      ],
+      "reason": "Potato leafhoppers leave alfalfa when it is cut and move to nearby snap beans and potatoes",
+      "source": "University of Wisconsin Garden Facts XHT1132, David M. Lowenstein and Russell L. Groves, \"Potato Leafhopper\" (revised 2020-05-06), https://hort.extension.wisc.edu/files/2014/11/Potato-Leafhoppers.pdf"
+    }
+  ]
+}

@@ -15,6 +15,8 @@ import { organicPackQuerySchema } from '$lib/records/apiSchemas';
 import { recordExportReader } from '$lib/records/exportAccess.server';
 import { parseExportWindow, windowRefusal } from '$lib/records/exportWindow';
 import { releaseWhenDone, streamOrganicPack, tryStartPack } from '$lib/server/organicPack';
+import { RenderRefused } from '$lib/server/render/queue';
+import { renderRefusalResponse } from '$lib/server/render/refusal';
 
 export const _requestSchema = organicPackQuerySchema;
 
@@ -46,10 +48,14 @@ export const GET: RequestHandler = async (event) => {
       to: window.to,
       documents,
       viewer: user,
-      prefs
+      prefs,
+      signal: event.request?.signal
     });
   } catch (e) {
     release();
+    if (e instanceof RenderRefused) {
+      return renderRefusalResponse(event.request, event.locals?.locale, e);
+    }
     throw e;
   }
   return new Response(releaseWhenDone(stream, release), {

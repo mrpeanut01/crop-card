@@ -14,7 +14,8 @@ describe('CertifierPackPanel', () => {
     render(CertifierPackPanel, { from: '2026-01-01', to: '2026-12-31' });
     const link = screen.getByTestId('pack-download');
     expect(link.tagName).toBe('A');
-    expect(link.hasAttribute('download')).toBe(true);
+    expect(link.hasAttribute('download')).toBe(false);
+    expect(link.hasAttribute('data-sveltekit-reload')).toBe(true);
     expect(link.getAttribute('href')).toBe('/api/organic/pack.zip?from=2026-01-01&to=2026-12-31');
     await fireEvent.click(screen.getByLabelText('Include the linked files themselves'));
     expect(link.getAttribute('href')).toBe(

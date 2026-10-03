@@ -2,6 +2,9 @@
  * GET    /api/tasks/:id          — fetch primary + linked pre/post-tasks
  * PATCH  /api/tasks/:id          — { action: 'complete' | 'abort' | 'reschedule' | 'edit' | 'assign' }
  *
+ * `edit`, `reschedule` and `assign` take an optional `base` and answer 409
+ * `EDIT_CONFLICT` on a stale edit (Phase 36). Closing a task never reads it.
+ *
  * Aborting a primary cascades to its open pre/post-tasks (with the same
  * abort reason). Completing a primary leaves pre/post-tasks alone — the
  * operator marks each independently (e.g. "I did the calibration check
@@ -23,6 +26,13 @@ import { canMutate } from '$lib/server/session';
 import { careMetaOf, closeCareTask } from '$lib/server/carePlans';
 import { afterSeedStartTaskDone } from '$lib/server/seedStartTasks';
 import { writeRecord } from '$lib/server/recordWrite';
+import { withClientRecordId } from '$lib/server/clientRecordId';
+import {
+  changedValues,
+  editConflictResponse,
+  runCheckedEdit,
+  taskEditValues
+} from '$lib/server/editConflict';
 import { recordTaskTime, timeOnClosedTask } from '$lib/server/taskTime';
 import {
   assignRefusal,
@@ -34,6 +44,8 @@ import { taskPatchSchema } from '$lib/tasks/apiSchemas';
 
 export const _requestSchema = taskPatchSchema;
 
+class TaskClosedDuringEdit extends Error {}
+
 export const GET: RequestHandler = ({ params }) => {
   if (!params.id) throw error(400, 'id required');
   const result = getTaskWithLinked(params.id);
@@ -41,7 +53,7 @@ export const GET: RequestHandler = ({ params }) => {
   return json(result);
 };
 
-export const PATCH: RequestHandler = async (event) => {
+export const PATCH: RequestHandler = withClientRecordId(async (event) => {
   if (!event.params.id) throw error(400, 'id required');
   const auth = currentUser(event);
   let body: unknown;
@@ -78,9 +90,33 @@ export const PATCH: RequestHandler = async (event) => {
     }
     const refused = rejectUnassignable(parsed.data.assigneeUserId);
     if (refused) return refused;
-    const task = assignTask(id, parsed.data.assigneeUserId);
-    if (!task) return taskClosedRefusal();
-    return json({ task });
+    const assigneeUserId = parsed.data.assigneeUserId;
+    let out;
+    try {
+      out = runCheckedEdit(event, {
+        target: 'task',
+        id,
+        action: 'assign',
+        base: parsed.data.base,
+        mine: { assigneeUserId },
+        locale: event.locals?.locale,
+        read: () => getTask(id),
+        values: taskEditValues,
+        write: () => {
+          const task = assignTask(id, assigneeUserId);
+          if (!task) throw new TaskClosedDuringEdit();
+          return task;
+        }
+      });
+    } catch (e) {
+      if (e instanceof TaskClosedDuringEdit) return taskClosedRefusal();
+      throw e;
+    }
+    if (!out.ok) {
+      if (out.status === 409) return editConflictResponse(out.body);
+      return json({ error: 'task not found' }, { status: 404 });
+    }
+    return json({ task: out.value });
   }
   if (parsed.data.action === 'complete') {
     const existing = getTask(id);
@@ -131,26 +167,38 @@ export const PATCH: RequestHandler = async (event) => {
       });
     }
   }
-  try {
-    if (parsed.data.action === 'abort') {
+  if (parsed.data.action === 'abort') {
+    try {
       return json({ task: abortTask(id, parsed.data.reason) });
+    } catch (e) {
+      if (e instanceof Error && /unknown task id/i.test(e.message)) {
+        return json({ error: 'task not found' }, { status: 404 });
+      }
+      throw e;
     }
-    if (parsed.data.action === 'reschedule') {
-      return json({ task: updateTask(id, { scheduledFor: parsed.data.scheduledFor }) });
-    }
-    // edit
-    return json({
-      task: updateTask(id, { title: parsed.data.title, body: parsed.data.body })
-    });
-  } catch (e) {
-    // The repo throws `unknown task id: …` when the row doesn't exist (or is
-    // out of tenant scope). Surface that as a clean 404 instead of a raw 500.
-    if (e instanceof Error && /unknown task id/i.test(e.message)) {
-      return json({ error: 'task not found' }, { status: 404 });
-    }
-    throw e;
   }
-};
+  if (!getTask(id)) return json({ error: 'task not found' }, { status: 404 });
+  const patch =
+    parsed.data.action === 'reschedule'
+      ? { scheduledFor: parsed.data.scheduledFor }
+      : { title: parsed.data.title, body: parsed.data.body };
+  const out = runCheckedEdit(event, {
+    target: 'task',
+    id,
+    action: parsed.data.action,
+    base: parsed.data.base,
+    mine: changedValues(patch),
+    locale: event.locals?.locale,
+    read: () => getTask(id),
+    values: taskEditValues,
+    write: () => updateTask(id, patch)
+  });
+  if (!out.ok) {
+    if (out.status === 409) return editConflictResponse(out.body);
+    return json({ error: 'task not found' }, { status: 404 });
+  }
+  return json({ task: out.value });
+});
 
 /**
  * DELETE /api/tasks/:id

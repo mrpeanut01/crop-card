@@ -13427,13 +13427,42 @@
                       "blockId": {
                         "type": "string",
                         "minLength": 1
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "plantingDate": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "blockId": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "additionalProperties": false
                       }
                     },
                     "required": [
                       "action",
                       "plantingDate"
                     ],
-                    "description": "Set or clear the planting date, and optionally move it to another block. Open tasks tied to the planting move by the same number of days."
+                    "description": "Set or clear the planting date, and optionally move it to another block. Open tasks tied to the planting move by the same number of days. Send `base` with the value of each field you change as you last saw it. If someone else has changed one of those fields since, nothing is saved and the answer is 409 with `code: \"EDIT_CONFLICT\"`, `fields` (each conflicting field with `base`, `mine` and `theirs`) and `current` (every editable field as stored now). A field changed without a `base` entry is not checked."
                   },
                   {
                     "type": "object",
@@ -13508,12 +13537,61 @@
                             "type": "null"
                           }
                         ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "varietyDisplayName": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 160
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "quantityPlanted": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "quantityUnit": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 16
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "harvestUseCases": {
+                            "anyOf": [
+                              {
+                                "maxItems": 8,
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "maxLength": 40
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "additionalProperties": false
                       }
                     },
                     "required": [
                       "action"
                     ],
-                    "description": "Edit the variety name, quantity and which harvest windows to show."
+                    "description": "Edit the variety name, quantity and which harvest windows to show. Send `base` with the value of each field you change as you last saw it. If someone else has changed one of those fields since, nothing is saved and the answer is 409 with `code: \"EDIT_CONFLICT\"`, `fields` (each conflicting field with `base`, `mine` and `theirs`) and `current` (every editable field as stored now). A field changed without a `base` entry is not checked."
                   },
                   {
                     "type": "object",
@@ -17305,12 +17383,31 @@
                         "type": "integer",
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "scheduledFor": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "additionalProperties": false
                       }
                     },
                     "required": [
                       "action",
                       "scheduledFor"
-                    ]
+                    ],
+                    "description": "Move the task to another day. Send `base` with the value of each field you change as you last saw it. If someone else has changed one of those fields since, nothing is saved and the answer is 409 with `code: \"EDIT_CONFLICT\"`, `fields` (each conflicting field with `base`, `mine` and `theirs`) and `current` (every editable field as stored now). A field changed without a `base` entry is not checked."
                   },
                   {
                     "type": "object",
@@ -17327,11 +17424,40 @@
                       "body": {
                         "type": "string",
                         "maxLength": 500
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 120
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "body": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 500
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "additionalProperties": false
                       }
                     },
                     "required": [
                       "action"
-                    ]
+                    ],
+                    "description": "Change the title or notes. Send `base` with the value of each field you change as you last saw it. If someone else has changed one of those fields since, nothing is saved and the answer is 409 with `code: \"EDIT_CONFLICT\"`, `fields` (each conflicting field with `base`, `mine` and `theirs`) and `current` (every editable field as stored now). A field changed without a `base` entry is not checked."
                   },
                   {
                     "type": "object",
@@ -17351,12 +17477,30 @@
                             "type": "null"
                           }
                         ]
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "assigneeUserId": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "additionalProperties": false
                       }
                     },
                     "required": [
                       "action",
                       "assigneeUserId"
-                    ]
+                    ],
+                    "description": "Owners only. Assign the task, or pass null for nobody. Send `base` with the value of each field you change as you last saw it. If someone else has changed one of those fields since, nothing is saved and the answer is 409 with `code: \"EDIT_CONFLICT\"`, `fields` (each conflicting field with `base`, `mine` and `theirs`) and `current` (every editable field as stored now). A field changed without a `base` entry is not checked."
                   }
                 ]
               }

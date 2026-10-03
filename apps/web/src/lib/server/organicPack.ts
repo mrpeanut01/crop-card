@@ -59,7 +59,7 @@ import {
 } from '$lib/stock/seedSourcing';
 import { daysLate } from '$lib/server/animalProductionGate';
 import { getRegistry } from '$lib/server/registry';
-import { renderPdf, type PdfDocDefinition } from '$lib/server/pdf';
+import { runRenderJob } from '$lib/server/render/queue';
 import { extensionFor, slugify, toDocumentMeta } from '$lib/server/documentAccess';
 import { openDocument } from '$lib/server/vault/documents';
 import { crc32, zipStream, type ZipEntry } from '$lib/server/zip';
@@ -67,11 +67,8 @@ import type { AuthenticatedUser } from '$lib/server/auth';
 import { APP_VERSION } from '$lib/version';
 import { buildTreatmentLog } from '$lib/records/animalTreatmentLog.server';
 import { lateLabel } from '$lib/records/lateLabel';
-import { exportFooter, PDF_STYLES, tableLayout } from '$lib/records/treatmentLogPdf.server';
 import { farmNameOf } from '$lib/records/farmName.server';
 import {
-  packCsvFiles,
-  packReadme,
   PACK_FILES,
   type PackActivityRow,
   type PackData,
@@ -100,6 +97,9 @@ export interface OrganicPackOptions {
   from: string;
   to: string;
   now?: Date;
+  /** The request's signal: a pack still waiting to render is dropped when
+   *  the download is abandoned (R-04). */
+  signal?: AbortSignal;
 }
 
 export function libraryBuild(): string {
@@ -520,121 +520,20 @@ export async function buildOrganicPackData(opts: OrganicPackOptions): Promise<Pa
   };
 }
 
-export async function organicPackSummaryPdf(
-  data: PackData,
-  opts: { viewer: AuthenticatedUser; prefs: Prefs; now: Date; withDocuments: boolean }
-): Promise<Buffer> {
-  const th = (text: string) => ({ text, style: 'th' });
-  const cell = (text: string | null) => ({ text: text ?? '', style: 'cell' });
-  const withStatus = data.statuses.filter((s) => s.inForceToday);
-  const needsReview = data.treatments.filter((t) => t.organicOutcome === 'Needs review').length;
-  const flagged = data.seed.filter((s) => s.flag).length;
-  const docDef: PdfDocDefinition = {
-    info: {
-      title: `Certifier pack ${data.from} to ${data.to}, ${data.farmName}`,
-      author: 'CropCard',
-      creator: `CropCard v${APP_VERSION}`,
-      producer: `CropCard v${APP_VERSION}`
-    },
-    pageSize: 'LETTER',
-    pageOrientation: 'portrait',
-    pageMargins: [30, 40, 30, 56],
-    header: (currentPage: number) => ({
-      text: `${data.farmName} · records from ${data.from} to ${data.to}${currentPage > 1 ? ` · page ${currentPage}` : ''}`,
-      style: 'farmSub',
-      margin: [30, 16, 30, 0]
-    }),
-    footer: exportFooter({ kind: 'pack', viewer: opts.viewer, prefs: opts.prefs, now: opts.now }),
-    content: [
-      { text: 'Organic records pack', style: 'h1' },
-      {
-        text: `${data.farmName}. Records from ${data.from} to ${data.to}, prepared ${data.generatedAt}. Every organic status here was entered by the farm owner. CropCard does not decide whether land, animals or crops qualify. Ask your certifier.`,
-        style: 'body',
-        margin: [0, 0, 0, 6]
-      },
-      {
-        text: `Library marks are read from the plugin library in ${data.libraryBuild} on the day this pack was prepared, not as they read when each record was saved.`,
-        style: 'sub',
-        margin: [0, 0, 0, 8]
-      },
-      { text: 'Owner-entered status in force today', style: 'h2' },
-      withStatus.length
-        ? {
-            table: {
-              headerRows: 1,
-              widths: [50, '*', '*'],
-              body: [
-                [th('Subject'), th('Name'), th('Status')],
-                ...withStatus.map((s) => [
-                  cell(s.subjectType),
-                  cell(s.area ? `${s.name} (${s.area})` : s.name),
-                  cell(s.inForceToday)
-                ])
-              ]
-            },
-            layout: tableLayout()
-          }
-        : { text: 'No organic status is on file for any subject.', style: 'empty' },
-      { text: 'What is in this pack', style: 'h2' },
-      {
-        table: {
-          headerRows: 1,
-          widths: [130, '*'],
-          body: [
-            [th('File'), th('Contents')],
-            [
-              cell(PACK_FILES.statuses),
-              cell(
-                `${data.statuses.length} row(s): every growing Area, block, animal and group with its status history. A blank status means none is on file.`
-              )
-            ],
-            [cell(PACK_FILES.activity), cell(`${data.activity.length} record(s) in the window.`)],
-            [cell(PACK_FILES.inputs), cell(`${data.inputs.length} input(s) used in the window.`)],
-            [
-              cell(PACK_FILES.seed),
-              cell(
-                `${data.seed.length} seed lot(s); ${flagged} flagged "No search on file" or "Seed status not recorded".`
-              )
-            ],
-            [
-              cell(PACK_FILES.treatments),
-              cell(
-                `${data.treatments.length} dose record(s)${needsReview ? `; ${needsReview} still need the owner's organic review` : ''}.`
-              )
-            ],
-            [
-              cell(PACK_FILES.harvests),
-              cell(`${data.harvests.length} row(s) of harvests and where they went.`)
-            ],
-            [
-              cell(PACK_FILES.documents),
-              cell(
-                `${data.documents.length} linked document(s)${opts.withDocuments ? ', with the files under documents/' : ''}.`
-              )
-            ]
-          ]
-        },
-        layout: tableLayout()
-      },
-      {
-        text: 'In every CSV file the first row reads "Prepared from records kept in CropCard. This is not a certification." and the column names are on row 2.',
-        style: 'sub',
-        margin: [0, 8, 0, 0]
-      }
-    ],
-    styles: PDF_STYLES,
-    defaultStyle: { fontSize: 9, font: 'Roboto' }
-  };
-  return renderPdf(docDef);
+function bytesEntry(name: string, bytes: Uint8Array, mtime: Date, crc = crc32(bytes)): ZipEntry {
+  return { name, mtime, size: bytes.byteLength, crc32: crc, open: async () => bytes };
 }
 
-function bytesEntry(name: string, bytes: Uint8Array, mtime: Date): ZipEntry {
-  return { name, mtime, size: bytes.byteLength, crc32: crc32(bytes), open: async () => bytes };
+export interface OrganicPackFiles {
+  readme: Uint8Array;
+  summary: Uint8Array;
+  /** The seven CSV files in pack order, encoded with their CRC (R-09). */
+  csv: readonly { name: string; bytes: Uint8Array; crc32: number }[];
 }
 
 /** The ZIP entries: README, summary, the seven CSVs, then any documents. */
 export function organicPackEntries(
-  files: { readme: string; summary: Uint8Array; csv: Record<string, string> },
+  files: OrganicPackFiles,
   docs: readonly DocumentRow[],
   now: Date,
   open: (doc: DocumentRow) => Promise<ReadableStream<Uint8Array> | null> = openDocument
@@ -643,11 +542,9 @@ export function organicPackEntries(
   const missing: string[] = [];
   const byName = new Map<string, DocumentRow>();
   function* entries(): Generator<ZipEntry> {
-    yield bytesEntry(PACK_FILES.readme, enc.encode(files.readme), now);
+    yield bytesEntry(PACK_FILES.readme, files.readme, now);
     yield bytesEntry(PACK_FILES.summary, files.summary, now);
-    for (const [name, text] of Object.entries(files.csv)) {
-      yield bytesEntry(name, enc.encode(text), now);
-    }
+    for (const file of files.csv) yield bytesEntry(file.name, file.bytes, now, file.crc32);
     for (const doc of docs) {
       const name = packDocumentEntryName(doc);
       byName.set(name, doc);
@@ -687,30 +584,35 @@ export function organicPackEntries(
 }
 
 /** Contract C-B4: the whole pack as one stream. The caller holds the
- *  per-Owner single flight (B-49) until the stream ends. */
+ *  per-Owner single flight (B-49) until the stream ends. The README, the
+ *  summary PDF and the CSV files are built by the render queue from data
+ *  read here (R-09); the ZIP and the vault files stream on this thread. */
 export async function streamOrganicPack(
   opts: OrganicPackOptions
 ): Promise<ReadableStream<Uint8Array>> {
   const now = opts.now ?? new Date();
   const data = await buildOrganicPackData({ ...opts, now });
-  const summary = await organicPackSummaryPdf(data, {
-    viewer: opts.viewer,
-    prefs: opts.prefs,
-    now,
-    withDocuments: opts.documents
-  });
   const docs = opts.documents
     ? packDocuments(opts.viewer.role, listDocuments()).map((d) => d.row)
     : [];
-  const { entries, onSkipped } = organicPackEntries(
+  const rendered = await runRenderJob(
     {
-      readme: packReadme(data, { withDocuments: opts.documents }),
-      summary: new Uint8Array(summary),
-      csv: packCsvFiles(data)
+      kind: 'organic-pack-files',
+      input: {
+        data,
+        exporter: identityLabel(opts.viewer),
+        role: opts.viewer.role,
+        prefs: opts.prefs,
+        nowMs: now.getTime(),
+        withDocuments: opts.documents
+      }
     },
-    docs,
-    now
+    { ownerId: opts.viewer.activeOwnerId ?? '', signal: opts.signal }
   );
+  if (rendered.kind !== 'organic-pack-files') {
+    throw new Error(`render returned ${rendered.kind}, expected organic-pack-files`);
+  }
+  const { entries, onSkipped } = organicPackEntries(rendered, docs, now);
   return zipStream(entries, { onSkipped });
 }
 

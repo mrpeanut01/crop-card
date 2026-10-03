@@ -12,6 +12,7 @@ import {
   HEARTBEAT_MS,
   HOLDER_BLOB,
   POLL_MS,
+  RENDER_DRAIN_TIMEOUT_MS,
   REQUEST_BLOB,
   frameAlign,
   parseLitestreamMetrics,
@@ -31,8 +32,9 @@ const state: {
   phase: Phase;
   reason: string | null;
   inflight: number;
+  renders: number;
   started: boolean;
-} = { phase: 'serving', reason: null, inflight: 0, started: false };
+} = { phase: 'serving', reason: null, inflight: 0, renders: 0, started: false };
 
 const log = (msg: string) => console.log(`[handoff] ${msg}`);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -41,8 +43,18 @@ export function isFenced(): boolean {
   return state.phase !== 'serving';
 }
 
-export function handoffStatus(): { phase: Phase; reason: string | null; inflight: number } {
-  return { phase: state.phase, reason: state.reason, inflight: state.inflight };
+export function handoffStatus(): {
+  phase: Phase;
+  reason: string | null;
+  inflight: number;
+  renders: number;
+} {
+  return {
+    phase: state.phase,
+    reason: state.reason,
+    inflight: state.inflight,
+    renders: state.renders
+  };
 }
 
 /** Run a mutating request while counting it, so a release can wait for
@@ -56,11 +68,23 @@ export async function trackMutation<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
+/** Count an export render from when it is accepted until its result is
+ *  delivered (R-12), so a release waits for it before handing over. */
+export async function trackRender<T>(fn: () => Promise<T>): Promise<T> {
+  state.renders++;
+  try {
+    return await fn();
+  } finally {
+    state.renders--;
+  }
+}
+
 /** Test-only reset. */
 export function _resetHandoffForTests(): void {
   state.phase = 'serving';
   state.reason = null;
   state.inflight = 0;
+  state.renders = 0;
   state.started = false;
   releasing = null;
   deps = null;
@@ -190,9 +214,16 @@ export function release(reason: string, releasedTo: string | null): Promise<void
   if (heartbeatTimer) clearInterval(heartbeatTimer);
   if (pollTimer) clearInterval(pollTimer);
   releasing = (async () => {
-    const drainDeadline = Date.now() + DRAIN_TIMEOUT_MS;
-    while (state.inflight > 0 && Date.now() < drainDeadline) await sleep(100);
+    const started = Date.now();
+    const drainDeadline = started + DRAIN_TIMEOUT_MS;
+    const renderDeadline = started + RENDER_DRAIN_TIMEOUT_MS;
+    const waiting = () =>
+      (state.inflight > 0 && Date.now() < drainDeadline) ||
+      (state.renders > 0 && Date.now() < renderDeadline);
+    while (waiting()) await sleep(100);
     if (state.inflight > 0) log(`${state.inflight} request(s) still running after drain timeout`);
+    if (state.renders > 0)
+      log(`${state.renders} export render(s) still running after drain timeout`);
     let pageSize = 4096;
     try {
       pageSize = setDbReadOnly();

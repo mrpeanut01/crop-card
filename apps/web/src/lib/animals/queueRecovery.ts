@@ -121,6 +121,11 @@ export function recoveryFor(row: {
       askOwner
     };
   }
+  if (row.kind === 'record-edit' && (status === 409 || status === 404)) {
+    // Phase 36 (U-03): the conflict choice or "deleted on another device"
+    // replaces Retry, which would only be refused again.
+    return { primary: null, actions: [], askOwner };
+  }
   if (isAnimalQueueKind(row.kind) && info.code === 'OUT_OF_ORDER') {
     return { primary: 'record-now', actions: ['record-now'], askOwner };
   }
@@ -349,6 +354,9 @@ export function pendingSummary(
   if (kind === 'time-entry') {
     return typeof p.minutes === 'number' ? `Task time, ${p.minutes} min` : 'Task time';
   }
+  if (kind === 'record-edit') {
+    return typeof p.label === 'string' && p.label ? p.label : null;
+  }
   if (kind === 'task-schedule') {
     return typeof p.title === 'string' && p.title ? p.title : null;
   }
@@ -378,7 +386,8 @@ export const KIND_LABEL: Record<string, string> = {
   'rain-gauge': 'Rain gauge reading',
   'harvest-disposition': 'Where a harvest went',
   'time-entry': 'Task time',
-  'task-schedule': 'Scheduled task'
+  'task-schedule': 'Scheduled task',
+  'record-edit': 'Edit'
 };
 
 const KIND_KEY: Record<string, MessageKey> = {
@@ -398,7 +407,8 @@ const KIND_KEY: Record<string, MessageKey> = {
   irrigation: 'recui.qkind.irrigation',
   'rain-gauge': 'recui.qkind.rainGauge',
   'harvest-disposition': 'recui.qkind.harvestDisposition',
-  'task-schedule': 'recui.qkind.taskSchedule'
+  'task-schedule': 'recui.qkind.taskSchedule',
+  'record-edit': 'recui.conflict.kind'
 };
 
 /** A queued row's kind in `locale`; undefined for a kind with no label. */

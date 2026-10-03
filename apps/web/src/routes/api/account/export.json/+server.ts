@@ -7,17 +7,26 @@
  * plugin snapshot zip) are linked, not inlined.
  */
 
-import { type RequestHandler } from '@sveltejs/kit';
+import { type RequestEvent, type RequestHandler } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth';
 import { buildAccountExport } from '$lib/server/accountExport';
 import { APP_VERSION } from '$lib/version';
 import { identityLabel } from '$lib/identity';
+import { runRenderJob } from '$lib/server/render/queue';
+import { withRenderRefusal } from '$lib/server/render/refusal';
 
-export const GET: RequestHandler = async (event) => {
+export const GET: RequestHandler = (event) => withRenderRefusal(event, () => exportJson(event));
+
+async function exportJson(event: RequestEvent): Promise<Response> {
   const user = requireUser(event);
   const payload = await buildAccountExport(event);
+  const rendered = await runRenderJob(
+    { kind: 'json-bytes', value: payload, space: 2 },
+    { ownerId: user.activeOwnerId ?? '', signal: event.request?.signal }
+  );
+  if (rendered.kind !== 'json-bytes') throw new Error(`render returned ${rendered.kind}`);
   const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
-  return new Response(JSON.stringify(payload, null, 2), {
+  return new Response(rendered.bytes as Uint8Array<ArrayBuffer>, {
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Content-Disposition': `attachment; filename="cropcard-account-export-${stamp}.json"`,
@@ -25,4 +34,4 @@ export const GET: RequestHandler = async (event) => {
       'X-CropCard-Exported-By': identityLabel(user)
     }
   });
-};
+}

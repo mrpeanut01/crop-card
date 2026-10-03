@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev --host 0.0.0.0 --port 5173",
-    "build": "vite build",
+    "build": "vite build && node scripts/build-render-worker.mjs",
     "preview": "vite preview --host 0.0.0.0 --port 5173",
     "start": "node build/index.js",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",

@@ -5,6 +5,8 @@
  *   bed (owner only); see lib/server/garden/placement.ts.
  *
  * Status transitions stamp `harvested_at` / `archived_at` automatically.
+ * `edit-details` and `set-schedule` take an optional `base` and answer 409
+ * `EDIT_CONFLICT` on a stale edit (Phase 36, lib/server/editConflict.ts).
  * Inspector role is read-only at the hooks layer.
  */
 
@@ -29,6 +31,13 @@ import { cropPatchSchema } from '$lib/crops/apiSchemas';
 import { cropLookupFrom, failureResponse, writeFootprint } from '$lib/server/garden/placement';
 import { getRegistry } from '$lib/server/registry';
 import { db } from '$lib/db/client';
+import { withClientRecordId } from '$lib/server/clientRecordId';
+import {
+  changedValues,
+  editConflictResponse,
+  plantingEditValues,
+  runCheckedEdit
+} from '$lib/server/editConflict';
 import {
   applyPlantingEstablishment,
   localizeSeedStartNotes,
@@ -52,7 +61,7 @@ export const GET: RequestHandler = ({ params }) => {
   return json({ crop: c });
 };
 
-export const PATCH: RequestHandler = async (event) => {
+export const PATCH: RequestHandler = withClientRecordId(async (event) => {
   if (!event.params.id) throw error(400, 'id required');
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
@@ -137,14 +146,30 @@ export const PATCH: RequestHandler = async (event) => {
   }
 
   if (parsed.data.action === 'edit-details') {
-    if (!getCrop(event.params.id)) throw error(404, 'crop not found');
-    const updated = updateDetails(event.params.id, {
+    const id = event.params.id;
+    if (!getCrop(id)) throw error(404, 'crop not found');
+    const patch = {
       varietyDisplayName: parsed.data.varietyDisplayName,
       quantityPlanted: parsed.data.quantityPlanted ?? undefined,
       quantityUnit: parsed.data.quantityUnit ?? undefined,
       harvestUseCases: parsed.data.harvestUseCases
+    };
+    const out = runCheckedEdit(event, {
+      target: 'planting',
+      id,
+      action: 'edit-details',
+      base: parsed.data.base,
+      mine: changedValues(patch),
+      locale: event.locals?.locale,
+      read: () => getCrop(id),
+      values: plantingEditValues,
+      write: () => updateDetails(id, patch)
     });
-    return json({ crop: updated });
+    if (!out.ok) {
+      if (out.status === 409) return editConflictResponse(out.body);
+      throw error(404, 'crop not found');
+    }
+    return json({ crop: out.value });
   }
 
   if (parsed.data.action === 'change-plugin') {
@@ -161,38 +186,47 @@ export const PATCH: RequestHandler = async (event) => {
   }
 
   if (parsed.data.action === 'set-schedule') {
-    const before = getCrop(event.params.id);
+    const id = event.params.id;
+    const before = getCrop(id);
     if (!before) throw error(404, 'crop not found');
     const foreign = rejectForeignRefs(['blockId', parsed.data.blockId, getBlock]);
     if (foreign) return foreign;
-    const result = setSchedule(event.params.id, {
-      plantingDate: parsed.data.plantingDate,
-      blockId: parsed.data.blockId
-    });
-    // Hybrid drift policy: when an active crop's planting date moves,
-    // re-anchor every open task tied to this crop by the same delta —
-    // primary tasks (fertilize, spray, scout, till, etc.) AND their
-    // linked pre/post. User-overridden tasks don't move; they get
-    // `staleAnchor` so the UI can paint them faded. This is what
-    // keeps the swim-lane's task pips ("+" fertilizer markers, ✦ sprays,
-    // etc.) in sync with the new planting date as the operator drags
-    // bars around or accepts an AI optimization.
-    const oldMs = before.plantingDate;
+    const plugin = cropLookupFrom(await getRegistry())(before.cropPluginId);
     const newMs = parsed.data.plantingDate;
-    if (oldMs != null && newMs != null && oldMs !== newMs) {
-      reanchorCropTasks(event.params.id, oldMs, newMs);
+    const blockId = parsed.data.blockId;
+    const out = runCheckedEdit(event, {
+      target: 'planting',
+      id,
+      action: 'set-schedule',
+      base: parsed.data.base,
+      mine: changedValues({ plantingDate: newMs, blockId: blockId || undefined }),
+      locale: event.locals?.locale,
+      read: () => getCrop(id),
+      values: plantingEditValues,
+      write: (cur) => {
+        const result = setSchedule(id, { plantingDate: newMs, blockId });
+        // Hybrid drift policy: when an active crop's planting date moves,
+        // re-anchor every open task tied to this crop by the same delta.
+        // User-overridden tasks don't move; they get `staleAnchor`.
+        const oldMs = cur.plantingDate;
+        if (oldMs != null && newMs != null && oldMs !== newMs) {
+          reanchorCropTasks(id, oldMs, newMs);
+        }
+        if (oldMs == null && newMs != null) seedStartTasksOnFirstDate(id, plugin);
+        return result;
+      }
+    });
+    if (!out.ok) {
+      if (out.status === 409) return editConflictResponse(out.body);
+      throw error(404, 'crop not found');
     }
-    if (oldMs == null && newMs != null) {
-      const plugin = cropLookupFrom(await getRegistry())(before.cropPluginId);
-      seedStartTasksOnFirstDate(event.params.id, plugin);
-    }
-    return json({ crop: result });
+    return json({ crop: out.value });
   }
 
   const status = ACTION_TO_STATUS[parsed.data.action];
   const updated = updateStatus(event.params.id, status, parsed.data.occurredAt);
   return json({ crop: updated });
-};
+});
 
 /**
  * DELETE /api/crops/:id

@@ -17,6 +17,9 @@
   } from '$lib/animals/queueRecovery';
   import { localInputToMs, msToLocalInput } from '$lib/animals/display';
   import type { FarmSnapshot } from '$lib/cards/snapshot';
+  import EditConflictChoice from '$lib/components/records/EditConflictChoice.svelte';
+  import { isRecordEditPayload } from '$lib/edits/queue';
+  import type { ConflictChoice } from '$lib/edits/resolve';
 
   const tr = $derived(createT(page.data?.locale));
   let pending = $state<PendingSprayRecord[]>([]);
@@ -46,6 +49,50 @@
     return out;
   });
   const retryableCount = $derived(pending.length - rejectedCount);
+  const blockNames = $derived<Record<string, string>>(
+    Object.fromEntries((snapshot?.blocks ?? []).map((b) => [b.id, b.name]))
+  );
+  let resolving = $state<string | null>(null);
+
+  function editOf(p: PendingSprayRecord) {
+    return p.kind === 'record-edit' && isRecordEditPayload(p.payload) ? p.payload : null;
+  }
+
+  function editDeleted(p: PendingSprayRecord): boolean {
+    return p.kind === 'record-edit' && p.status === 'rejected' && p.lastStatus === 404;
+  }
+
+  async function resolveConflict(p: PendingSprayRecord, choice: ConflictChoice) {
+    resolving = p.id;
+    try {
+      const { resolveEditConflictForActiveOwner } = await import('$lib/client/syncQueue');
+      const out = await resolveEditConflictForActiveOwner(p.id, choice);
+      if (out === null) {
+        lastDrainResult = tr('records.pending.errChanged');
+        await refresh();
+        return;
+      }
+      if (out === 'dropped') {
+        lastDrainResult = tr('recui.conflict.dropped');
+        await refresh();
+        return;
+      }
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        lastDrainResult = tr('records.pending.savedPhone');
+        await refresh();
+        return;
+      }
+      await drainNow();
+    } finally {
+      resolving = null;
+    }
+  }
+
+  async function deleteFromPhone(p: PendingSprayRecord) {
+    const { discardPendingForActiveOwner } = await import('$lib/client/syncQueue');
+    await discardPendingForActiveOwner(p.id);
+    await refresh();
+  }
 
   const HALT_MESSAGES = $derived<Record<DrainHalt, string>>({
     offline: tr('records.pending.halt.offline'),
@@ -235,7 +282,24 @@
           {#if waiting.has(p.id)}
             <p class="waiting">{tr('recui.pending.waiting')}</p>
           {/if}
-          {#if p.status === 'rejected' && p.rejectInfo?.error}
+          {#if editOf(p) && p.status === 'rejected' && p.editConflict}
+            <EditConflictChoice
+              conflict={p.editConflict}
+              label={editOf(p)?.label ?? ''}
+              names={{ blockNames }}
+              busy={resolving === p.id}
+              onResolve={(choice) => resolveConflict(p, choice)}
+            />
+          {:else if editDeleted(p)}
+            <p class="err">
+              {editOf(p)?.target === 'task'
+                ? tr('recui.conflict.deleted.task')
+                : tr('recui.conflict.deleted.planting')}
+            </p>
+            <button class="secondary wide" onclick={() => deleteFromPhone(p)}
+              >{tr('records.pending.delete')}</button
+            >
+          {:else if p.status === 'rejected' && p.rejectInfo?.error}
             <p class="err">{p.rejectInfo.error}</p>
           {:else if p.lastError}
             <p class="err">{p.lastError}</p>

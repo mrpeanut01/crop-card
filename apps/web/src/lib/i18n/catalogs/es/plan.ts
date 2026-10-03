@@ -260,6 +260,8 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plan.page.edit.dateInvalid': 'La fecha de siembra no es válida',
   'plan.page.edit.detailsFailed': 'no se pudieron actualizar los detalles ({status})',
   'plan.page.edit.qtyInvalid': 'La cantidad debe ser un número no negativo',
+  'plan.page.edit.queued': 'Guardado en este teléfono. Se subirá cuando vuelvas a tener conexión.',
+  'plan.page.edit.shortOffline': 'El nombre corto necesita conexión y no se cambió.',
   'plan.page.edit.shortFailed': 'no se pudo actualizar el nombre corto ({status})',
   'plan.page.errNetwork': 'No pudimos conectar con CropCard. Revisa tu señal e inténtalo de nuevo.',
   'plan.page.filter.all': 'Todos',

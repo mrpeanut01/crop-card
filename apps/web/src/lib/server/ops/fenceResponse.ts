@@ -21,18 +21,30 @@ export function fenceResponse(
 ): Response | null {
   if (!fenced || SAFE_METHODS.has(request.method)) return null;
   const message = updatingMessage(locale);
-  const headers = {
-    'retry-after': String(RETRY_AFTER_S),
-    'cache-control': 'no-store',
-    'x-cropcard-updating': '1'
-  };
   if (request.headers.get('x-sveltekit-action') === 'true') {
     const data = JSON.stringify([{ error: 1, message: 1, code: 2 }, message, UPDATING_CODE]);
     return new Response(JSON.stringify({ type: 'failure', status: 503, data }), {
       status: 200,
-      headers: { ...headers, 'content-type': 'application/json' }
+      headers: { ...updatingHeaders(), 'content-type': 'application/json' }
     });
   }
+  return updatingResponse(request, locale);
+}
+
+function updatingHeaders() {
+  return {
+    'retry-after': String(RETRY_AFTER_S),
+    'cache-control': 'no-store',
+    'x-cropcard-updating': '1'
+  };
+}
+
+/** The 503 "CropCard is updating" answer as a short page for a browser
+ *  navigation or as JSON for everything else. Also used for an export
+ *  asked for while this container hands over (R-12). */
+export function updatingResponse(request: Request, locale?: string | null): Response {
+  const message = updatingMessage(locale);
+  const headers = updatingHeaders();
   const accept = request.headers.get('accept') ?? '';
   if (accept.includes('text/html') && !accept.includes('application/json')) {
     return new Response(

@@ -55,6 +55,9 @@ import {
   type RejectInfo
 } from '$lib/animals/queueRecovery';
 import type { FarmSnapshot } from '$lib/cards/snapshot';
+import { isEditConflictBody, type EditConflictBody } from '$lib/edits/conflict';
+import { rebaseEdit, type ConflictChoice } from '$lib/edits/resolve';
+import { isRecordEditPayload, recordEditPath } from '$lib/edits/queue';
 
 export type DrainHalt = 'offline' | 'no-active-owner' | 'owner-unverified' | 'owner-mismatch';
 
@@ -109,7 +112,8 @@ export const ENDPOINT_BY_KIND: Record<PendingRecordKind, string> = {
   'rain-gauge': '/api/rain-gauge',
   'harvest-disposition': '/api/harvest/:id/dispositions',
   'time-entry': '/api/tasks/:id/time',
-  'task-schedule': '/api/tasks'
+  'task-schedule': '/api/tasks',
+  'record-edit': '/api/:target/:id'
 };
 
 const STOCK_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
@@ -156,7 +160,16 @@ export function endpointForRecord(
     const safe = typeof id === 'string' && STOCK_ID_PATTERN.test(id) ? id : '_';
     return `/api/tasks/${safe}/time`;
   }
+  if (kind === 'record-edit') {
+    if (!isRecordEditPayload(rec.payload)) return null;
+    return recordEditPath(rec.payload.target, rec.payload.id);
+  }
   return ENDPOINT_BY_KIND[kind];
+}
+
+/** `record-edit` rows PATCH an existing row; every other kind POSTs (U-02). */
+export function methodForRecord(rec: Pick<PendingSprayRecord, 'kind'>): 'POST' | 'PATCH' {
+  return kindOf(rec) === 'record-edit' ? 'PATCH' : 'POST';
 }
 
 /** The body a row replays with. `feed-use` carries its stock item,
@@ -164,6 +177,9 @@ export function endpointForRecord(
  *  `time-entry` its task in the path, not the body. */
 export function bodyForRecord(rec: Pick<PendingSprayRecord, 'kind' | 'payload'>): unknown {
   const kind = kindOf(rec);
+  if (kind === 'record-edit') {
+    return isRecordEditPayload(rec.payload) ? rec.payload.body : rec.payload;
+  }
   if (kind === 'time-entry') {
     if (!rec.payload || typeof rec.payload !== 'object') return rec.payload;
     const { taskId: _task, ...body } = rec.payload as Record<string, unknown>;
@@ -380,8 +396,45 @@ export async function retryRejectedForActiveOwner(id: string): Promise<boolean> 
       delete r.status;
       delete r.lastStatus;
       delete r.rejectInfo;
+      delete r.editConflict;
     });
   return true;
+}
+
+/**
+ * Phase 36 (U-04): resolve a parked `record-edit` row the server refused
+ * with 409 EDIT_CONFLICT. Keep mine and Choose for each rewrite the body in
+ * place (base taken from what is stored now) and clear the refusal, so the
+ * next drain sends it again under the same client record id. Keep theirs,
+ * or a merge that leaves nothing to change, deletes the row. Scoped to the
+ * active Owner like the other recovery calls. Returns what happened, or
+ * null when the row is not this Owner's conflicted edit.
+ */
+export async function resolveEditConflictForActiveOwner(
+  id: string,
+  choice: ConflictChoice
+): Promise<'resend' | 'dropped' | null> {
+  const target = await ownRejectedRow(id);
+  if (!target || kindOf(target) !== 'record-edit') return null;
+  const conflict = target.editConflict;
+  if (!conflict || !isRecordEditPayload(target.payload)) return null;
+  const body = rebaseEdit(target.payload.body, conflict, choice);
+  if (!body) {
+    await db().pendingSprayRecords.delete(id);
+    return 'dropped';
+  }
+  const payload = { ...target.payload, body };
+  await db()
+    .pendingSprayRecords.where('id')
+    .equals(id)
+    .modify((r) => {
+      r.payload = payload;
+      delete r.status;
+      delete r.lastStatus;
+      delete r.rejectInfo;
+      delete r.editConflict;
+    });
+  return 'resend';
 }
 
 async function loadActiveSnapshot(): Promise<FarmSnapshot | null> {
@@ -463,13 +516,23 @@ type SubmitOutcome =
       error: string;
       holdMarker?: HoldQueueMarker | null;
       rejectInfo?: RejectInfo;
+      editConflict?: EditConflictBody;
     };
+
+function editConflictOf(body: string): EditConflictBody | undefined {
+  try {
+    const parsed = JSON.parse(body) as unknown;
+    return isEditConflictBody(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 async function submitOne(rec: PendingSprayRecord, endpoint: string): Promise<SubmitOutcome> {
   let res: Response;
   try {
     res = await fetch(endpoint, {
-      method: 'POST',
+      method: methodForRecord(rec),
       headers: {
         'Content-Type': 'application/json',
         [EXPECTED_OWNER_HEADER]: rec.ownerId,
@@ -494,7 +557,8 @@ async function submitOne(rec: PendingSprayRecord, endpoint: string): Promise<Sub
     status: res.status,
     error: `HTTP ${res.status}: ${body.slice(0, 240)}`,
     holdMarker: holdQueueMarker(res.status, body),
-    rejectInfo: rejectInfoOf(body)
+    rejectInfo: rejectInfoOf(body),
+    editConflict: res.status === 409 ? editConflictOf(body) : undefined
   };
 }
 
@@ -596,7 +660,8 @@ async function drainOnce(): Promise<DrainResult> {
       lastError: outcome.error,
       lastStatus: outcome.status,
       holdMarker: outcome.holdMarker ?? undefined,
-      rejectInfo: outcome.rejectInfo
+      rejectInfo: outcome.rejectInfo,
+      editConflict: outcome.editConflict
     };
     if (outcome.kind === 'rejected') {
       patch.status = 'rejected';

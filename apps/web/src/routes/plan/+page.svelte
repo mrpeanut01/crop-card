@@ -1,6 +1,10 @@
 <script lang="ts">
   import { stockUnitLabel } from '$lib/stock/units';
-  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
+  import { cropDisplayName, cropDisplayNameByEnglish } from '$lib/i18n/cropName';
+  import EditConflictChoice from '$lib/components/records/EditConflictChoice.svelte';
+  import { runRecordEdits, type RecordEditPayload, type RecordEditRun } from '$lib/edits/queue';
+  import { rebaseEdit, type ConflictChoice } from '$lib/edits/resolve';
+  import type { EditConflictBody, EditValue } from '$lib/edits/conflict';
   import { onMount } from 'svelte';
   import { createT, type TranslateKey } from '$lib/i18n';
   import { calendarEventCrop, calendarEventTitle } from '$lib/calendar/eventTitle';
@@ -838,7 +842,7 @@
     stockItemId: string | null;
     plantingDate: string;
     plantingDateOriginal: string;
-    quantityPlanted: string;
+    quantityPlanted: string | number | null;
     quantityUnit: string;
     /** Phase 21b follow-up — operator's chosen harvest target keys.
      *  Set inside openEditCrop from the planting's current filter
@@ -863,6 +867,38 @@
   });
   let editBusy = $state(false);
   let editError = $state<string | null>(null);
+  /** Phase 36 (C-E1): the planting's fields as this device saw them when the
+   *  modal opened. Sent as `base`, so a stale edit is refused, not saved. */
+  let editSeen = $state<{
+    varietyDisplayName: string;
+    quantityPlanted: number | null;
+    quantityUnit: string | null;
+    harvestUseCases: string[] | null;
+    plantingDate: number | null;
+    cropPluginId: string | null;
+  } | null>(null);
+  let editConflict = $state<{
+    conflict: EditConflictBody;
+    remaining: RecordEditPayload[];
+  } | null>(null);
+  let editQueued = $state(false);
+  let editShortSkipped = $state(false);
+  const editUseLabels = $derived<Record<string, string>>(
+    Object.fromEntries(editForm.availableHarvestUseCases.map((o) => [o.key, o.label]))
+  );
+  const editBlockNames = $derived<Record<string, string>>(
+    Object.fromEntries(
+      (data.swimBlocks ?? []).map((b: { id: string; name: string }) => [b.id, b.name])
+    )
+  );
+
+  function closeEditCrop() {
+    editCropId = null;
+    editConflict = null;
+    editQueued = false;
+    editShortSkipped = false;
+    editSeen = null;
+  }
   // Phase 21b follow-up — split-into-N popup state. Now a separate
   // modal triggered from the selection action bar (Split… button next
   // to Edit), so the operator can split without traversing the full
@@ -917,7 +953,145 @@
       harvestUseCasesOriginal: currentSelection.slice(),
       availableHarvestUseCases: available
     };
+    editSeen = {
+      varietyDisplayName: planting.varietyDisplayName,
+      quantityPlanted: planting.quantityPlanted ?? null,
+      quantityUnit: planting.quantityUnit ?? null,
+      harvestUseCases: saved ? saved.slice() : null,
+      plantingDate: planting.plantingDateMs ?? null,
+      cropPluginId: planting.cropPluginId ?? null
+    };
     editError = null;
+    editConflict = null;
+    editQueued = false;
+    editShortSkipped = false;
+  }
+
+  function editLabel(): string {
+    const name = editSeen?.varietyDisplayName ?? editForm.varietyDisplayName;
+    return cropDisplayName(editSeen?.cropPluginId ?? null, name, data.locale);
+  }
+
+  /** Builds the modal's PATCH bodies with `base`, or an error message. */
+  function buildEditPayloads(cropId: string): RecordEditPayload[] | string {
+    const seen = editSeen;
+    const out: RecordEditPayload[] = [];
+    const label = editLabel();
+    if (editForm.plantingDate && editForm.plantingDate !== editForm.plantingDateOriginal) {
+      const newMs = new Date(editForm.plantingDate).getTime();
+      if (!Number.isFinite(newMs)) return tr('plan.page.edit.dateInvalid');
+      const pluginId = seen?.cropPluginId;
+      const snapped = pluginId ? snapPlantingDate(pluginId, newMs) : newMs;
+      out.push({
+        target: 'planting',
+        id: cropId,
+        label,
+        body: {
+          action: 'set-schedule',
+          plantingDate: snapped,
+          base: { plantingDate: seen?.plantingDate ?? null }
+        }
+      });
+    }
+    const details: Record<string, unknown> = {};
+    const base: Record<string, EditValue> = {};
+    const newName = editForm.varietyDisplayName.trim();
+    if (newName && newName !== seen?.varietyDisplayName) {
+      details.varietyDisplayName = newName;
+      base.varietyDisplayName = seen?.varietyDisplayName ?? null;
+    }
+    // bind:value on a number input hands back a number (or null), not a string.
+    const qtyText = String(editForm.quantityPlanted ?? '').trim();
+    if (qtyText) {
+      const n = Number(qtyText);
+      if (!Number.isFinite(n) || n < 0) return tr('plan.page.edit.qtyInvalid');
+      const original = seen?.quantityPlanted;
+      if (original == null || Math.abs(original - n) > 1e-6) {
+        details.quantityPlanted = n;
+        base.quantityPlanted = original ?? null;
+      }
+    }
+    // Unit is read-only in the modal and never sent. An empty selection is
+    // never useful, so "every option" is sent as null (show all).
+    const origUses = [...editForm.harvestUseCasesOriginal].sort();
+    const newUses = [...editForm.harvestUseCases].sort();
+    const usesChanged =
+      origUses.length !== newUses.length || origUses.some((u, i) => u !== newUses[i]);
+    if (usesChanged) {
+      const allSelected =
+        newUses.length > 0 && newUses.length === editForm.availableHarvestUseCases.length;
+      details.harvestUseCases = allSelected ? null : newUses;
+      base.harvestUseCases = seen?.harvestUseCases ?? null;
+    }
+    if (Object.keys(details).length > 0) {
+      out.push({
+        target: 'planting',
+        id: cropId,
+        label,
+        body: { action: 'edit-details', ...details, base }
+      });
+    }
+    return out;
+  }
+
+  /** Short name lives on the matching stock item and needs a connection. */
+  async function saveShortName(): Promise<boolean> {
+    const newShort = editForm.shortName.trim();
+    if (newShort === editForm.shortNameOriginal || !editForm.stockItemId) return true;
+    const r = await fetch(`/api/stock/${encodeURIComponent(editForm.stockItemId)}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ shortName: newShort || null })
+    }).catch(() => null);
+    if (!r || !r.ok) {
+      const e = r ? await r.json().catch(() => ({})) : {};
+      editError =
+        (e as { error?: string }).error ??
+        tr('plan.page.edit.shortFailed', { status: r?.status ?? 0 });
+      return false;
+    }
+    return true;
+  }
+
+  async function finishEditRun(run: RecordEditRun) {
+    if (run.status === 'conflict') {
+      editConflict = { conflict: run.conflict, remaining: run.remaining };
+      return;
+    }
+    if (run.status === 'refused') {
+      editError = run.error;
+      return;
+    }
+    if (run.queued > 0) {
+      editQueued = true;
+      editShortSkipped =
+        editForm.shortName.trim() !== editForm.shortNameOriginal && !!editForm.stockItemId;
+      return;
+    }
+    if (!(await saveShortName())) return;
+    closeEditCrop();
+    await invalidateAll();
+  }
+
+  async function resolveEditConflict(choice: ConflictChoice) {
+    const pending = editConflict;
+    if (!pending) return;
+    editBusy = true;
+    editError = null;
+    try {
+      const [first, ...rest] = pending.remaining;
+      const body = first ? rebaseEdit(first.body, pending.conflict, choice) : null;
+      const next = body && first ? [{ ...first, body }, ...rest] : rest;
+      editConflict = null;
+      if (choice === 'theirs' && next.length === 0) {
+        closeEditCrop();
+        await invalidateAll();
+        return;
+      }
+      await finishEditRun(await runRecordEdits(next));
+    } finally {
+      editBusy = false;
+    }
   }
 
   async function commitEdit() {
@@ -925,107 +1099,12 @@
     editBusy = true;
     editError = null;
     try {
-      // Step 1 — set-schedule if the operator changed the start date. Goes
-      // through the same path as drag-to-move so reanchorPluginPrePost runs
-      // and dependent tasks shift.
-      if (editForm.plantingDate && editForm.plantingDate !== editForm.plantingDateOriginal) {
-        const newMs = new Date(editForm.plantingDate).getTime();
-        if (!Number.isFinite(newMs)) {
-          editError = tr('plan.page.edit.dateInvalid');
-          editBusy = false;
-          return;
-        }
-        const planting = data.swimPlantings?.find((p) => p.cropId === editCropId);
-        const snapped = planting?.cropPluginId
-          ? snapPlantingDate(planting.cropPluginId, newMs)
-          : newMs;
-        const r = await fetch(`/api/crops/${encodeURIComponent(editCropId)}`, {
-          method: 'PATCH',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ action: 'set-schedule', plantingDate: snapped })
-        });
-        if (!r.ok) {
-          const e = await r.json().catch(() => ({}));
-          editError = e.error ?? tr('plan.page.edit.dateFailed', { status: r.status });
-          return;
-        }
+      const payloads = buildEditPayloads(editCropId);
+      if (typeof payloads === 'string') {
+        editError = payloads;
+        return;
       }
-
-      // Step 2 — edit-details for variety + quantity, only if any of those
-      // fields was actually filled in.
-      const detailsBody: Record<string, unknown> = { action: 'edit-details' };
-      let hasDetails = false;
-      const newName = editForm.varietyDisplayName.trim();
-      const planting = data.swimPlantings?.find((p) => p.cropId === editCropId);
-      if (newName && newName !== planting?.varietyDisplayName) {
-        detailsBody.varietyDisplayName = newName;
-        hasDetails = true;
-      }
-      if (editForm.quantityPlanted.trim()) {
-        const n = Number(editForm.quantityPlanted);
-        if (!Number.isFinite(n) || n < 0) {
-          editError = tr('plan.page.edit.qtyInvalid');
-          editBusy = false;
-          return;
-        }
-        // Only send when the value actually changed from the
-        // pre-populated original (avoids no-op PATCHes).
-        const original = planting?.quantityPlanted;
-        if (original == null || Math.abs(original - n) > 1e-6) {
-          detailsBody.quantityPlanted = n;
-          hasDetails = true;
-        }
-      }
-      // Unit is rendered read-only in the modal now (the value is set at
-      // planting time and locked here); never sent in the PATCH.
-      // Phase 21b follow-up — harvest use case filter. Only PATCH when
-      // the selection changed from what was saved. Sending an empty
-      // array would persist as "show nothing" (semantically valid but
-      // never useful); we send null to clear when the operator's
-      // selection covers every available option.
-      const origUses = [...editForm.harvestUseCasesOriginal].sort();
-      const newUses = [...editForm.harvestUseCases].sort();
-      const usesChanged =
-        origUses.length !== newUses.length || origUses.some((u, i) => u !== newUses[i]);
-      if (usesChanged) {
-        // "Every option selected" → null (means: show all, no filter).
-        const allSelected =
-          newUses.length > 0 && newUses.length === editForm.availableHarvestUseCases.length;
-        detailsBody.harvestUseCases = allSelected ? null : newUses;
-        hasDetails = true;
-      }
-      if (hasDetails) {
-        const r = await fetch(`/api/crops/${encodeURIComponent(editCropId)}`, {
-          method: 'PATCH',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(detailsBody)
-        });
-        if (!r.ok) {
-          const e = await r.json().catch(() => ({}));
-          editError = e.error ?? tr('plan.page.edit.detailsFailed', { status: r.status });
-          return;
-        }
-      }
-
-      // Step 3 — short name (lives on the matching stock item, not the crop).
-      // Only fires when the operator actually changed it AND we have a
-      // stockItemId to PATCH against. Empty string clears the override.
-      const newShort = editForm.shortName.trim();
-      if (newShort !== editForm.shortNameOriginal && editForm.stockItemId) {
-        const r = await fetch(`/api/stock/${encodeURIComponent(editForm.stockItemId)}`, {
-          method: 'PATCH',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ shortName: newShort || null })
-        });
-        if (!r.ok) {
-          const e = await r.json().catch(() => ({}));
-          editError = e.error ?? tr('plan.page.edit.shortFailed', { status: r.status });
-          return;
-        }
-      }
-
-      editCropId = null;
-      await invalidateAll();
+      await finishEditRun(await runRecordEdits(payloads));
     } finally {
       editBusy = false;
     }
@@ -3009,112 +3088,143 @@
               <button
                 type="button"
                 class="close"
-                onclick={() => (editCropId = null)}
+                onclick={closeEditCrop}
                 aria-label={tr('plan.page.bar.close')}>×</button
               >
             </header>
-            <div class="bar-edit-body">
-              <label>
-                {tr('plan.page.bar.shortName')}
-                <small class="field-hint">{tr('plan.page.bar.shortHint')}</small>
-                <input
-                  type="text"
-                  bind:value={editForm.shortName}
-                  disabled={editBusy || !editForm.stockItemId}
-                  maxlength="40"
-                  placeholder={editForm.stockItemId
-                    ? tr('plan.page.bar.shortPh')
-                    : tr('plan.page.bar.shortPhNone')}
+            {#if editConflict}
+              <div class="bar-edit-body">
+                <EditConflictChoice
+                  conflict={editConflict.conflict}
+                  label={editLabel()}
+                  names={{
+                    blockNames: editBlockNames,
+                    useLabels: editUseLabels,
+                    cropPluginId: editSeen?.cropPluginId ?? null
+                  }}
+                  busy={editBusy}
+                  onResolve={resolveEditConflict}
                 />
-              </label>
-              <label>
-                {tr('plan.page.bar.variety')}
-                <small class="field-hint">{tr('plan.page.bar.varietyHint')}</small>
-                <input
-                  type="text"
-                  bind:value={editForm.varietyDisplayName}
-                  disabled={editBusy}
-                  maxlength="160"
-                />
-              </label>
-              <label>
-                {tr('plan.page.bar.start')}
-                <input type="date" bind:value={editForm.plantingDate} disabled={editBusy} />
-              </label>
-              <div class="qty-row">
-                <label class="qty-amount">
-                  {tr('plan.page.bar.qty')}
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    bind:value={editForm.quantityPlanted}
-                    disabled={editBusy}
-                    placeholder={tr('plan.page.bar.qtyPh')}
-                  />
-                </label>
-                <label class="qty-unit">
-                  {tr('plan.page.bar.unit')}
+                {#if editError}<p class="bar-edit-error">{editError}</p>{/if}
+              </div>
+            {:else if editQueued}
+              <div class="bar-edit-body">
+                <p class="bar-edit-queued" role="status" data-testid="edit-queued">
+                  {tr('plan.page.edit.queued')}
+                </p>
+                {#if editShortSkipped}
+                  <p class="hint">{tr('plan.page.edit.shortOffline')}</p>
+                {/if}
+              </div>
+              <footer class="bar-edit-foot">
+                <button type="button" class="btn-primary" onclick={closeEditCrop}>
+                  {tr('plan.page.bar.close')}
+                </button>
+              </footer>
+            {:else}
+              <div class="bar-edit-body">
+                <label>
+                  {tr('plan.page.bar.shortName')}
+                  <small class="field-hint">{tr('plan.page.bar.shortHint')}</small>
                   <input
                     type="text"
-                    value={editForm.quantityUnit || '—'}
-                    readonly
-                    tabindex="-1"
-                    aria-readonly="true"
-                    title={tr('plan.page.bar.unitTitle')}
-                    class="qty-unit-readonly"
+                    bind:value={editForm.shortName}
+                    disabled={editBusy || !editForm.stockItemId}
+                    maxlength="40"
+                    placeholder={editForm.stockItemId
+                      ? tr('plan.page.bar.shortPh')
+                      : tr('plan.page.bar.shortPhNone')}
                   />
                 </label>
-              </div>
-              <p class="hint">{tr('plan.page.bar.dateHint')}</p>
+                <label>
+                  {tr('plan.page.bar.variety')}
+                  <small class="field-hint">{tr('plan.page.bar.varietyHint')}</small>
+                  <input
+                    type="text"
+                    bind:value={editForm.varietyDisplayName}
+                    disabled={editBusy}
+                    maxlength="160"
+                  />
+                </label>
+                <label>
+                  {tr('plan.page.bar.start')}
+                  <input type="date" bind:value={editForm.plantingDate} disabled={editBusy} />
+                </label>
+                <div class="qty-row">
+                  <label class="qty-amount">
+                    {tr('plan.page.bar.qty')}
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      bind:value={editForm.quantityPlanted}
+                      disabled={editBusy}
+                      placeholder={tr('plan.page.bar.qtyPh')}
+                    />
+                  </label>
+                  <label class="qty-unit">
+                    {tr('plan.page.bar.unit')}
+                    <input
+                      type="text"
+                      value={editForm.quantityUnit || '—'}
+                      readonly
+                      tabindex="-1"
+                      aria-readonly="true"
+                      title={tr('plan.page.bar.unitTitle')}
+                      class="qty-unit-readonly"
+                    />
+                  </label>
+                </div>
+                <p class="hint">{tr('plan.page.bar.dateHint')}</p>
 
-              <fieldset class="harvest-uses">
-                <legend>{tr('plan.page.bar.harvestWindow')}</legend>
-                {#if editForm.availableHarvestUseCases.length === 0}
-                  <p class="hint hint-tight">{tr('plan.page.bar.noWindows')}</p>
-                {:else}
-                  <div class="harvest-use-list">
-                    {#each editForm.availableHarvestUseCases as opt (opt.key)}
-                      <label class="harvest-use-pill">
-                        <input
-                          type="checkbox"
-                          checked={editForm.harvestUseCases.includes(opt.key)}
-                          onchange={(ev) => {
-                            const target = ev.currentTarget as HTMLInputElement;
-                            if (target.checked) {
-                              if (!editForm.harvestUseCases.includes(opt.key)) {
-                                editForm.harvestUseCases = [...editForm.harvestUseCases, opt.key];
+                <fieldset class="harvest-uses">
+                  <legend>{tr('plan.page.bar.harvestWindow')}</legend>
+                  {#if editForm.availableHarvestUseCases.length === 0}
+                    <p class="hint hint-tight">{tr('plan.page.bar.noWindows')}</p>
+                  {:else}
+                    <div class="harvest-use-list">
+                      {#each editForm.availableHarvestUseCases as opt (opt.key)}
+                        <label class="harvest-use-pill">
+                          <input
+                            type="checkbox"
+                            checked={editForm.harvestUseCases.includes(opt.key)}
+                            onchange={(ev) => {
+                              const target = ev.currentTarget as HTMLInputElement;
+                              if (target.checked) {
+                                if (!editForm.harvestUseCases.includes(opt.key)) {
+                                  editForm.harvestUseCases = [...editForm.harvestUseCases, opt.key];
+                                }
+                              } else {
+                                editForm.harvestUseCases = editForm.harvestUseCases.filter(
+                                  (x) => x !== opt.key
+                                );
                               }
-                            } else {
-                              editForm.harvestUseCases = editForm.harvestUseCases.filter(
-                                (x) => x !== opt.key
-                              );
-                            }
-                          }}
-                          disabled={editBusy}
-                        />
-                        <span>{opt.label}</span>
-                      </label>
-                    {/each}
-                  </div>
-                {/if}
-              </fieldset>
+                            }}
+                            disabled={editBusy}
+                          />
+                          <span>{opt.label}</span>
+                        </label>
+                      {/each}
+                    </div>
+                  {/if}
+                </fieldset>
 
-              {#if editError}<p class="bar-edit-error">{editError}</p>{/if}
-            </div>
-            <footer class="bar-edit-foot">
-              <button
-                type="button"
-                class="btn-secondary"
-                onclick={() => (editCropId = null)}
-                disabled={editBusy}
-              >
-                {tr('plan.page.bar.cancel')}
-              </button>
-              <button type="button" class="btn-primary" onclick={commitEdit} disabled={editBusy}>
-                {editBusy ? tr('plan.page.bar.saving') : tr('plan.page.bar.save')}
-              </button>
-            </footer>
+                {#if editError}<p class="bar-edit-error">{editError}</p>{/if}
+              </div>
+              <footer class="bar-edit-foot">
+                <button
+                  type="button"
+                  class="btn-secondary"
+                  onclick={closeEditCrop}
+                  disabled={editBusy}
+                >
+                  {tr('plan.page.bar.cancel')}
+                </button>
+                <button type="button" class="btn-primary" onclick={commitEdit} disabled={editBusy}>
+                  {editBusy ? tr('plan.page.bar.saving') : tr('plan.page.bar.save')}
+                </button>
+              </footer>
+            {/if}
           </div>
         </div>
       {/if}
@@ -5728,6 +5838,8 @@
     background: #fff;
     border-radius: 0.5rem;
     width: min(480px, 92vw);
+    max-height: 92vh;
+    overflow-y: auto;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: column;
@@ -5864,6 +5976,15 @@
     font-size: 0.78rem;
     color: #6b7280;
   }
+  .bar-edit-queued {
+    margin: 0;
+    padding: 0.6rem 0.75rem;
+    background: #e6f2ea;
+    color: #1f5e3a;
+    border: 1px solid #b7d7c2;
+    border-radius: 0.3rem;
+    font-weight: 600;
+  }
   .bar-edit-error {
     margin: 0;
     padding: 0.5rem 0.7rem;
@@ -5895,7 +6016,7 @@
     padding: 0.5rem 1rem;
     border-radius: 0.3rem;
     cursor: pointer;
-    min-height: 40px;
+    min-height: 48px;
     font-weight: 600;
     font-size: 0.88rem;
   }

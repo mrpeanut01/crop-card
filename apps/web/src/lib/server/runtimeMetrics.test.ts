@@ -108,7 +108,11 @@ describe('metrics line', () => {
       'req',
       'db_ms',
       'busy',
-      'wal_kb'
+      'wal_kb',
+      'render_jobs',
+      'render_ms',
+      'render_busy',
+      'render_mode'
     ]);
   });
 
@@ -120,6 +124,15 @@ describe('metrics line', () => {
 describe('Server-Timing', () => {
   it('formats db + total durations', () => {
     expect(serverTimingValue(12.345, 1.2, 3)).toBe('db;dur=1.2;desc="3q", total;dur=12.3');
+  });
+
+  it('adds the render time and mode when the request rendered an export', () => {
+    expect(serverTimingValue(50, 1, 2, { ms: 40.04, mode: 'thread' })).toBe(
+      'db;dur=1.0;desc="2q", render;dur=40.0;desc="thread", total;dur=50.0'
+    );
+    expect(serverTimingValue(5, 1, 2, { ms: 0, mode: null })).toBe(
+      'db;dur=1.0;desc="2q", total;dur=5.0'
+    );
   });
 
   it('adds the header with the DB time spent resolving the request', async () => {

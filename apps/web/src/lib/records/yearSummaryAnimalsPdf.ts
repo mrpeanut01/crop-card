@@ -1,25 +1,18 @@
 /** 33B (plan item 8): the animal section of the year summary PDF, as
  *  pdfmake content. Pure; shown only when the farm has animals (B-53). */
 
+import { CC_TABLE } from '$lib/server/render/pdfSpec';
 import { headCountText, type YearAnimalSection } from './yearSummaryAnimals';
 
 function th(text: string) {
   return { text, style: 'th' };
 }
 
-function layout() {
-  return {
-    fillColor: (rowIndex: number) => (rowIndex === 0 ? '#1f5e3a' : null),
-    hLineColor: () => '#cccccc',
-    vLineColor: () => '#cccccc'
-  };
-}
-
 function table(widths: (string | number)[], header: string[], rows: string[][], empty: string) {
   if (rows.length === 0) return { text: empty, style: 'empty' };
   return {
     table: { headerRows: 1, widths, body: [header.map(th), ...rows] },
-    layout: layout()
+    layout: CC_TABLE
   };
 }
 

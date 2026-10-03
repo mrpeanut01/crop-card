@@ -1,30 +1,20 @@
-import pdfmake, { type DocumentDefinition } from 'pdfmake';
+/**
+ * Every compliance PDF goes through here (R-01). The document arrives as a
+ * plain `PdfJobDoc` and is rendered by the render queue: in the worker in
+ * production, on this thread in dev and tests (R-10). Throws
+ * `RenderRefused` when the queue says no; see `render/refusal.ts`.
+ */
 
-const STANDARD_FONTS = new Set([
-  'Helvetica',
-  'Helvetica-Bold',
-  'Helvetica-Oblique',
-  'Helvetica-BoldOblique'
-]);
+import type { PdfJobDoc } from '$lib/server/render/pdfSpec';
+import { runRenderJob } from '$lib/server/render/queue';
 
-pdfmake.setFonts({
-  Roboto: {
-    normal: 'Helvetica',
-    bold: 'Helvetica-Bold',
-    italics: 'Helvetica-Oblique',
-    bolditalics: 'Helvetica-BoldOblique'
-  }
-});
-// Exports never embed remote or on-disk resources; pdfmake 0.3 treats the
-// PDF standard font names as local paths, so only those are allowed.
-pdfmake.setUrlAccessPolicy(() => false);
-pdfmake.setLocalAccessPolicy((path) => STANDARD_FONTS.has(path));
+export type { PdfJobDoc };
 
-export type PdfDocDefinition = DocumentDefinition & {
-  header?: (currentPage: number, pageCount: number) => unknown;
-  footer?: (currentPage: number, pageCount: number) => unknown;
-};
-
-export function renderPdf(docDef: PdfDocDefinition): Promise<Buffer> {
-  return pdfmake.createPdf(docDef).getBuffer();
+export async function renderPdf(
+  spec: PdfJobDoc,
+  ctx: { ownerId: string; signal?: AbortSignal }
+): Promise<Buffer> {
+  const result = await runRenderJob({ kind: 'pdf', spec }, ctx);
+  if (result.kind !== 'pdf') throw new Error(`render returned ${result.kind}, expected pdf`);
+  return Buffer.from(result.bytes.buffer, result.bytes.byteOffset, result.bytes.byteLength);
 }

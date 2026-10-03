@@ -187,8 +187,11 @@
       {/if}
       <p class="note">{localizeDocCopy(tr, BACKUP_COPY_NOTE)}</p>
       {#if data.canDelete}
-        <a class="btn zip" href="/api/account/export.zip" download data-testid="documents-zip"
-          >{tr('docs.page.zip')}</a
+        <a
+          class="btn zip"
+          href="/api/account/export.zip"
+          data-sveltekit-reload
+          data-testid="documents-zip">{tr('docs.page.zip')}</a
         >
       {/if}
     </SettingsSection>

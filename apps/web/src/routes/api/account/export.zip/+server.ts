@@ -6,7 +6,7 @@
  * named in `documents/MISSING.txt`.
  */
 
-import type { RequestHandler } from '@sveltejs/kit';
+import type { RequestEvent, RequestHandler } from '@sveltejs/kit';
 import { listDocuments, type DocumentRow } from '$lib/db/documents';
 import { requireUser } from '$lib/server/auth';
 import { buildAccountExport } from '$lib/server/accountExport';
@@ -14,25 +14,28 @@ import { isInteractiveOwner } from '$lib/server/interactiveOwner';
 import { documentRefusal, extensionFor, slugify } from '$lib/server/documentAccess';
 import { openDocument } from '$lib/server/vault/documents';
 import { crc32, zipStream, type ZipEntry } from '$lib/server/zip';
+import { runRenderJob } from '$lib/server/render/queue';
+import { withRenderRefusal } from '$lib/server/render/refusal';
 
 export function _documentEntryName(doc: Pick<DocumentRow, 'id' | 'title' | 'mime'>): string {
   return `documents/${doc.id}-${slugify(doc.title)}.${extensionFor(doc.mime)}`;
 }
 
-function bytesEntry(name: string, bytes: Uint8Array, mtime: Date): ZipEntry {
-  return { name, mtime, size: bytes.byteLength, crc32: crc32(bytes), open: async () => bytes };
+function bytesEntry(name: string, bytes: Uint8Array, mtime: Date, crc = crc32(bytes)): ZipEntry {
+  return { name, mtime, size: bytes.byteLength, crc32: crc, open: async () => bytes };
 }
 
 export function _exportEntries(
   json: Uint8Array,
   docs: readonly DocumentRow[],
   now: Date,
-  open: (doc: DocumentRow) => Promise<ReadableStream<Uint8Array> | null> = openDocument
+  open: (doc: DocumentRow) => Promise<ReadableStream<Uint8Array> | null> = openDocument,
+  jsonCrc?: number
 ): { entries: Generator<ZipEntry>; onSkipped: (e: ZipEntry) => void } {
   const missing: string[] = [];
   const byName = new Map<string, DocumentRow>();
   function* entries(): Generator<ZipEntry> {
-    yield bytesEntry('export.json', json, now);
+    yield bytesEntry('export.json', json, now, jsonCrc ?? crc32(json));
     for (const doc of docs) {
       const name = _documentEntryName(doc);
       byName.set(name, doc);
@@ -67,7 +70,9 @@ export function _exportEntries(
   };
 }
 
-export const GET: RequestHandler = async (event) => {
+export const GET: RequestHandler = (event) => withRenderRefusal(event, () => exportZip(event));
+
+async function exportZip(event: RequestEvent): Promise<Response> {
   const user = requireUser(event);
   if (!isInteractiveOwner(event, user)) {
     return documentRefusal(
@@ -77,10 +82,20 @@ export const GET: RequestHandler = async (event) => {
     );
   }
   const payload = await buildAccountExport(event);
-  const json = new TextEncoder().encode(JSON.stringify(payload, null, 2));
+  const rendered = await runRenderJob(
+    { kind: 'json-bytes', value: payload, space: 2 },
+    { ownerId: user.activeOwnerId ?? '', signal: event.request?.signal }
+  );
+  if (rendered.kind !== 'json-bytes') throw new Error(`render returned ${rendered.kind}`);
   const docs = listDocuments();
   const now = new Date();
-  const { entries, onSkipped } = _exportEntries(json, docs, now);
+  const { entries, onSkipped } = _exportEntries(
+    rendered.bytes,
+    docs,
+    now,
+    openDocument,
+    rendered.crc32
+  );
   return new Response(zipStream(entries, { onSkipped }), {
     headers: {
       'Content-Type': 'application/zip',
@@ -89,4 +104,4 @@ export const GET: RequestHandler = async (event) => {
       'X-Content-Type-Options': 'nosniff'
     }
   });
-};
+}

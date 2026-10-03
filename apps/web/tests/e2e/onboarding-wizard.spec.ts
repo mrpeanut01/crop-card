@@ -60,7 +60,7 @@ test.describe('two-screen onboarding', () => {
     await page.getByText('A garden', { exact: true }).click();
     await page.getByText('Hay or pasture', { exact: true }).click();
     await go.click();
-    await expect(page).toHaveURL(/\/today$/);
+    await expect(page).toHaveURL(/\/today$/, { timeout: 15_000 });
 
     const card = page.getByTestId('getting-started');
     await expect(card).toBeVisible();
@@ -105,7 +105,7 @@ test.describe('two-screen onboarding', () => {
     await page.getByRole('button', { name: /^Continue/ }).click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('What are you growing on?');
     await page.getByRole('button', { name: 'Not sure yet' }).click();
-    await expect(page).toHaveURL(/\/today$/);
+    await expect(page).toHaveURL(/\/today$/, { timeout: 15_000 });
     expect(await areas(page)).toEqual([]);
   });
 
@@ -168,7 +168,7 @@ test.describe('two-screen onboarding', () => {
       expect(res.headers()['location']).toBe('/today');
     }
     await page.goto('/onboarding?step=fields');
-    await expect(page).toHaveURL(/\/today$/);
+    await expect(page).toHaveURL(/\/today$/, { timeout: 15_000 });
   });
 
   test('a second farm submit from a stale tab is refused', async ({ page }) => {

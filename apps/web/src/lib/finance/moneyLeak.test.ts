@@ -217,18 +217,14 @@ const SURFACES: Surface[] = [
 
 function moneyIn(text: string, farm: Farm): string[] {
   const hits: string[] = [];
-  const needles = [
-    farm.entryId,
-    SECRET,
-    'receivedCostCents',
-    String(LOT_COST),
-    String(ENTRY_CENTS),
-    '987.65',
-    '432.10',
-    '39.17',
-    LABOUR_RATE_SETTING
-  ];
+  const needles = [farm.entryId, SECRET, 'receivedCostCents', LABOUR_RATE_SETTING];
   for (const n of needles) if (text.includes(n)) hits.push(n);
+  // Whole numbers only: a timestamp or id can hold these digits by chance.
+  const amounts = [String(LOT_COST), String(ENTRY_CENTS), '987.65', '432.10', '39.17'];
+  for (const n of amounts) {
+    const re = new RegExp(`(?<![0-9A-Za-z.])${n.replace('.', '\\.')}(?![0-9A-Za-z])`);
+    if (re.test(text)) hits.push(n);
+  }
   const dollars = /\$\s?\d/.exec(text);
   if (dollars) hits.push(text.slice(Math.max(0, dollars.index - 40), dollars.index + 20));
   return hits;

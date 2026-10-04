@@ -147,6 +147,68 @@ export function cropFactPaths(c: CropPlugin): string[] {
   return paths;
 }
 
+/** OC-1 (docs/design/ORCHARD_CALENDAR.md): crop seasonal task rows never
+ *  carry spray timing or pesticide wording. Case-insensitive words, plus
+ *  acronyms matched only in capitals so ordinary words never trip them. */
+export const SEASONAL_PESTICIDE_WORDS =
+  /\b(fungicides?|insecticides?|bactericides?|herbicides?|pesticides?|miticides?|nematicides?|pyrethroids?|captan|sulfur|lime-sulfur|copper|streptomycin|apogee|mancozeb|chlorothalonil|myclobutanil|strobilurins?|tank[- ]?mix(es|ed)?|spray(s|ing|ed)?|oils?)\b/i;
+export const SEASONAL_PESTICIDE_ACRONYMS = /\b(FRAC|IRAC|PHI|REI|DMI|SDHI)\b/;
+
+export function seasonalTaskWordingProblems(
+  crops: readonly Pick<CropPlugin, 'pluginId' | 'seasonalTasks' | 'orchardSeasonalTasks'>[]
+): string[] {
+  const out: string[] = [];
+  for (const c of crops) {
+    const lists = [
+      ['seasonalTasks', c.seasonalTasks ?? []],
+      ['orchardSeasonalTasks', c.orchardSeasonalTasks ?? []]
+    ] as const;
+    for (const [field, rows] of lists) {
+      for (const row of rows as readonly {
+        key: string;
+        kind?: string;
+        category?: string;
+        title: string;
+        body?: string;
+      }[]) {
+        const at = `${c.pluginId} ${field}.${row.key}`;
+        if (row.kind === 'spray') out.push(`${at}: kind spray`);
+        if (row.category === 'spray') out.push(`${at}: category spray`);
+        for (const [part, text] of [
+          ['title', row.title],
+          ['body', row.body ?? '']
+        ] as const) {
+          const hit =
+            text.match(SEASONAL_PESTICIDE_WORDS) ?? text.match(SEASONAL_PESTICIDE_ACRONYMS);
+          if (hit) out.push(`${at}: ${part} says "${hit[0]}"`);
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/** The one stage caution OC-1 keeps: a warning against spraying, not advice to spray. */
+const STAGE_BLOOM_CAUTION = /\bavoid insecticides\b/gi;
+
+/** OC-1: growth-stage hints (`inspect`) carry no spray timing or product
+ *  wording either, since the Plan swimlane and calendar show them. */
+export function stageTemplateWordingProblems(
+  tables: Readonly<
+    Record<string, { stages: readonly { code: string; inspect?: string }[] } | null | undefined>
+  >
+): string[] {
+  const out: string[] = [];
+  for (const [family, table] of Object.entries(tables)) {
+    for (const st of table?.stages ?? []) {
+      const text = (st.inspect ?? '').replace(STAGE_BLOOM_CAUTION, '');
+      const hit = text.match(SEASONAL_PESTICIDE_WORDS) ?? text.match(SEASONAL_PESTICIDE_ACRONYMS);
+      if (hit) out.push(`${family} ${st.code}: inspect says "${hit[0]}"`);
+    }
+  }
+  return out;
+}
+
 export type PesticidePlugin = HerbicidePlugin | InsecticidePlugin | FungicidePlugin;
 
 const PASTURE_WORDS =

@@ -218,16 +218,16 @@ describe('FR-10 orchard seasonal tasks', () => {
     bloomWindow: { monthsOfYear: [4, 5], beeAttractive: true },
     orchardSeasonalTasks: [
       {
-        key: 'dormant-oil',
-        dayOfYear: 75,
+        key: 'post-bloom-thinning',
+        dayOfYear: 140,
         windowDays: 14,
-        title: 'Dormant oil spray window'
+        title: 'Hand fruit thinning'
       },
       {
-        key: 'bloom-fungicide',
-        dayOfYear: 120,
-        windowDays: 14,
-        title: 'Bloom fungicide'
+        key: 'harvest',
+        dayOfYear: 270,
+        windowDays: 30,
+        title: 'Apple harvest window'
       }
     ]
   };

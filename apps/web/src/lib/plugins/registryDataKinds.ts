@@ -1,9 +1,12 @@
 /**
- * Registry passes for the Phase 32 data-only kinds: species, animal-health
- * products and pest models. Like bed recipes, each lives in its own folder
+ * Registry passes for the Phase 32 data-only kinds (species, animal-health
+ * products and pest models) and orchard calendars (ruling OC-8). Like bed
+ * recipes, each lives in its own folder
  * under plugins/, is parsed with its own strict schema and never joins the
  * library `pluginSchema`. Animal-health label uses must name a registered
- * species plugin.
+ * species plugin; orchard calendar host crops must name registered crop
+ * plugins in a host family, and the edition must be this year's or last
+ * year's.
  *
  * Server-only (node:fs).
  */
@@ -15,9 +18,11 @@ import { collectJsonFiles } from './loader';
 import { PluginRegistrationError } from './registry';
 import {
   animalHealthPluginSchema,
+  orchardCalendarPluginSchema,
   pestModelPluginSchema,
   speciesPluginSchema,
   type AnimalHealthPlugin,
+  type OrchardCalendarPlugin,
   type PestModelPlugin,
   type SpeciesPlugin
 } from './schemas';
@@ -25,6 +30,7 @@ import {
 export const SPECIES_DIR = 'species';
 export const ANIMAL_HEALTH_DIR = 'animal-health';
 export const PEST_MODELS_DIR = 'pest-models';
+export const ORCHARD_CALENDARS_DIR = 'orchard-calendars';
 
 type Issue = { path: string; message: string };
 
@@ -64,6 +70,50 @@ export function validateAnimalHealth(raw: unknown, species: SpeciesLookup): Anim
 
 export function validatePestModel(raw: unknown): PestModelPlugin {
   return parseOrThrow(pestModelPluginSchema, raw, 'pest model');
+}
+
+export interface CropLookup {
+  /** The crop family of a registered crop plugin, or undefined when the id
+   *  is not a crop plugin. */
+  cropFamilyOf(pluginId: string): string | undefined;
+}
+
+export interface OrchardCalendarContext extends CropLookup {
+  currentYear: number;
+}
+
+export function validateOrchardCalendar(
+  raw: unknown,
+  ctx: OrchardCalendarContext
+): OrchardCalendarPlugin {
+  const plugin = parseOrThrow(orchardCalendarPluginSchema, raw, 'orchard calendar');
+  const issues: Issue[] = [];
+  const edition = Number(plugin.edition);
+  if (edition !== ctx.currentYear && edition !== ctx.currentYear - 1) {
+    issues.push({
+      path: 'edition',
+      message: `edition ${plugin.edition} is not ${ctx.currentYear} or ${ctx.currentYear - 1}`
+    });
+  }
+  const families: readonly string[] = plugin.hostCropFamilies;
+  plugin.hostCropPluginIds.forEach((id, i) => {
+    const family = ctx.cropFamilyOf(id);
+    if (family === undefined) {
+      issues.push({
+        path: `hostCropPluginIds.${i}`,
+        message: `${id} is not a registered crop plugin`
+      });
+    } else if (!families.includes(family)) {
+      issues.push({
+        path: `hostCropPluginIds.${i}`,
+        message: `${id} is in family ${family}, which is not in hostCropFamilies`
+      });
+    }
+  });
+  if (issues.length > 0) {
+    throw new PluginRegistrationError('orchard calendar failed registry checks', issues);
+  }
+  return plugin;
 }
 
 export class DataKindRegistry<T extends { pluginId: string }> {
@@ -121,12 +171,22 @@ export interface Phase32DataKinds {
   species: DataKindRegistry<SpeciesPlugin>;
   animalHealth: DataKindRegistry<AnimalHealthPlugin>;
   pestModels: DataKindRegistry<PestModelPlugin>;
+  orchardCalendars: DataKindRegistry<OrchardCalendarPlugin>;
   failed: DataKindFailure[];
+}
+
+export interface DataKindLoadOptions {
+  /** Without it, no orchard calendar host crop resolves. */
+  crops?: CropLookup;
+  now?: Date;
 }
 
 /** Loads species first, so animal-health label uses can be checked against
  *  them. Missing folders yield empty registries. */
-export async function loadPhase32DataKinds(pluginsRoot: string): Promise<Phase32DataKinds> {
+export async function loadPhase32DataKinds(
+  pluginsRoot: string,
+  opts: DataKindLoadOptions = {}
+): Promise<Phase32DataKinds> {
   const failed: DataKindFailure[] = [];
   const species = new DataKindRegistry('species plugin', validateSpecies);
   await loadInto(species, path.join(pluginsRoot, SPECIES_DIR), failed);
@@ -136,5 +196,13 @@ export async function loadPhase32DataKinds(pluginsRoot: string): Promise<Phase32
   await loadInto(animalHealth, path.join(pluginsRoot, ANIMAL_HEALTH_DIR), failed);
   const pestModels = new DataKindRegistry('pest model', validatePestModel);
   await loadInto(pestModels, path.join(pluginsRoot, PEST_MODELS_DIR), failed);
-  return { species, animalHealth, pestModels, failed };
+  const calendarContext: OrchardCalendarContext = {
+    cropFamilyOf: (id) => opts.crops?.cropFamilyOf(id),
+    currentYear: (opts.now ?? new Date()).getUTCFullYear()
+  };
+  const orchardCalendars = new DataKindRegistry('orchard calendar', (raw) =>
+    validateOrchardCalendar(raw, calendarContext)
+  );
+  await loadInto(orchardCalendars, path.join(pluginsRoot, ORCHARD_CALENDARS_DIR), failed);
+  return { species, animalHealth, pestModels, orchardCalendars, failed };
 }

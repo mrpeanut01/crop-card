@@ -5,6 +5,7 @@ import { loadPluginsFromDirectory } from './loader';
 import { PluginRegistry } from './registry';
 import { loadPhase32DataKinds, type Phase32DataKinds } from './registryDataKinds';
 import type { CropPlugin } from './schemas';
+import { PERENNIAL_DAYOFYEAR_TEMPLATES } from './growthStageTemplates';
 import {
   animalHealthFactPaths,
   carryoverDaysQuoteGaps,
@@ -15,6 +16,8 @@ import {
   grazingFactPaths,
   missingWithdrawals,
   pestModelFactPaths,
+  seasonalTaskWordingProblems,
+  stageTemplateWordingProblems,
   sourceEntrySchema,
   speciesFactPaths,
   type ForageSourceEntry,
@@ -217,6 +220,30 @@ describe('Phase 33C plugin data gate', () => {
   it('every forage hazard and trigger is sourced, and research and data agree (M-21 to M-23)', () => {
     expect(forageSources, 'forage-toxicity-sources.json must load').not.toEqual({});
     expect(forageHazardGaps(library.crops(), forageSources)).toEqual([]);
+  });
+});
+
+describe('OC-1 crop seasonal tasks carry no spray advice', () => {
+  it('no crop plugin has a spray seasonal row or pesticide wording in one', () => {
+    expect(
+      seasonalTaskWordingProblems(library.crops()),
+      'seasonal and orchard tasks may not name sprays or pesticides (docs/design/ORCHARD_CALENDAR.md OC-1)'
+    ).toEqual([]);
+  });
+
+  it('no perennial fruit growth-stage hint names a spray or pesticide', () => {
+    expect(Object.keys(PERENNIAL_DAYOFYEAR_TEMPLATES)).toContain('vine-fruit');
+    expect(
+      stageTemplateWordingProblems(PERENNIAL_DAYOFYEAR_TEMPLATES),
+      'stage hints may not name sprays or pesticides (docs/design/ORCHARD_CALENDAR.md OC-1)'
+    ).toEqual([]);
+  });
+
+  it('still checks the rows the orchard and berry plugins keep', () => {
+    const rows = library
+      .crops()
+      .flatMap((c) => [...(c.seasonalTasks ?? []), ...(c.orchardSeasonalTasks ?? [])]);
+    expect(rows.length).toBeGreaterThan(10);
   });
 });
 

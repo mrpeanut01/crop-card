@@ -1946,3 +1946,224 @@ export const pestModelPluginSchema = z
     });
   });
 export type PestModelPlugin = z.infer<typeof pestModelPluginSchema>;
+
+// ─── Orchard calendar plugins (ruling OC-8) ─────────────────────────────
+// Data only, loaded from plugins/orchard-calendars/ by its own registry
+// pass. A calendar names tree fruit stages, how to recognise each one and
+// the disease, pest and weather targets a guide lists for it. Ruling OC-2:
+// no product, product class, rate, brand, PHI or REI, ever. Every stage
+// description, degree-day estimate and window needs a quote in
+// apps/web/scripts/orchard-calendar-sources.json.
+
+/** Crop families a calendar may host (OC-6). Each host crop is still
+ *  named one by one in `hostCropPluginIds`. */
+export const ORCHARD_CALENDAR_HOST_FAMILIES = [
+  "orchard",
+  "stone-fruit",
+] as const;
+
+/** Targets and timing only (OC-2). There is no spray purpose. */
+export const ORCHARD_WINDOW_PURPOSES = [
+  "scout",
+  "cultural",
+  "sanitation",
+  "disease-risk",
+  "pest-risk",
+  "bloom",
+  "harvest-prep",
+] as const;
+
+export const ORCHARD_TARGET_KINDS = ["disease", "pest", "weather"] as const;
+
+export const ORCHARD_GDD_BIOFIX_KINDS = ["january-1", "calendar-date"] as const;
+
+/** Stages and windows near bloom, which must be pollinator sensitive. */
+export const ORCHARD_BLOOM_WORDS = /pink|bloom|petal[\s-]*fall/i;
+
+const ORCHARD_UNIT =
+  "(?:fl\\.?\\s*oz|oz|ounces?|onzas?|lbs?|libras?|pounds?|pints?|pt|qt|quarts?|gal(?:lons?|[oó]n|ones)?|%|percent|por\\s*ciento|ml|litros?|liters?|litres?|l|per\\s+acre|por\\s+acre|/\\s*a(?:cre)?|/\\s*100\\s*gal)(?![a-zñ])";
+
+/** Each rule the orchard calendar copy guard checks, with the reason it
+ *  gives. English and Spanish, since calendar text may be shown in both. */
+export const ORCHARD_COPY_RULES: readonly { re: RegExp; reason: string }[] = [
+  {
+    re: new RegExp(`\\d[\\d.,/\\s-]*\\s*${ORCHARD_UNIT}`, "i"),
+    reason: "a number next to a rate or volume unit",
+  },
+  { re: /\bper\s+acre\b|\bpor\s+acre\b/i, reason: "a per-acre rate" },
+  {
+    re: /\bPHI\b|\bREI\b|\bpre-?harvest\s+interval|\brestricted[\s-]+entry|\bplazo\s+de\s+seguridad|\bintervalo\s+de\s+(?:reingreso|reentrada|precosecha)/i,
+    reason: "PHI or REI",
+  },
+  { re: /\bsafe(?:ly)?\b|\bsegur[oa]s?\b/i, reason: "the word safe" },
+  { re: /recommend|recomend/i, reason: "a recommendation" },
+  {
+    re: /spray|insecticid|pesticid|fungicid|herbicid|bactericid|miticid|\bapply|\bapplication|pulveriz|rociar|roc[ií]e|fumig|aplicar|aplicaci[oó]n|plaguicid/i,
+    reason: "spraying or a pesticide",
+  },
+  {
+    re: /\b(?:captan|mancozeb|metiram|ziram|thiram|dodine|myclobutanil|fenbuconazole|difenoconazole|flutriafol|tebuconazole|propiconazole|azoxystrobin|pyraclostrobin|trifloxystrobin|kresoxim|boscalid|fluopyram|fluxapyroxad|cyprodinil|pyrimethanil|thiophanate|streptomycin|kasugamycin|oxytetracycline|prohexadione|copper|cobre|sulfur|sulphur|azufre|lime[\s-]*sulfur|bordeaux|burdeos|(?:dormant|horticultural|superior|mineral)\s+oil|aceite|abamectin|acetamiprid|bifenthrin|carbaryl|chlorantraniliprole|chlorpyrifos|cyantraniliprole|esfenvalerate|imidacloprid|indoxacarb|kaolin|lambda-?cyhalothrin|malathion|novaluron|phosmet|spinetoram|spinosad|thiamethoxam|permethrin|pyrethrins?|azadirachtin|neem|glyphosate|paraquat|glufosinate|manzate|dithane|penncozeb|rally|indar|inspire|luna|merivon|pristine|flint|sovran|syllit|agri-?mycin|firewall|kasumin|mycoshield|apogee|kudos|assail|altacor|delegate|exirel|imidan|avaunt|actara|belt|sevin|lorsban|esteem|intrepid|rimon|surround|danitol|warrior|asana|provado|admire|calypso|agri-?mek|nexter|acramite|envidor|zeal|apollo|savey|roundup|gramoxone)\b/i,
+    reason: "a product, brand or active ingredient",
+  },
+];
+
+/** The copy guard: the reasons a piece of calendar text is refused, or an
+ *  empty list. */
+export function orchardCopyProblems(text: string): string[] {
+  return ORCHARD_COPY_RULES.filter((r) => r.re.test(text)).map((r) => r.reason);
+}
+
+const orchardCopy = (max: number) =>
+  z
+    .string()
+    .trim()
+    .min(1)
+    .max(max)
+    .superRefine((text, ctx) => {
+      for (const reason of orchardCopyProblems(text)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `orchard calendar text may not carry ${reason}`,
+        });
+      }
+    });
+
+const orchardId = z.string().regex(pluginIdRegex);
+const orchardSourceKey = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,159}$/);
+
+export const orchardGddEstimateSchema = z
+  .strictObject({
+    baseTempF: z.number().min(0).max(100),
+    biofix: z.strictObject({
+      kind: z.enum(ORCHARD_GDD_BIOFIX_KINDS),
+      date: monthDay.optional(),
+    }),
+    gddFrom: z.number().min(0).max(10000),
+    gddTo: z.number().min(0).max(10000),
+    /** Needs an entry with `gateEligible: true` (two agreeing sources,
+     *  ruling OC-5). */
+    sourceKey: orchardSourceKey,
+  })
+  .superRefine((g, ctx) => {
+    if (g.gddTo < g.gddFrom) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["gddTo"],
+        message: "gddTo must be at or above gddFrom",
+      });
+    }
+    if (g.biofix.kind === "calendar-date" && g.biofix.date === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["biofix", "date"],
+        message: "a calendar-date biofix needs a date",
+      });
+    }
+    if (g.biofix.kind === "january-1" && g.biofix.date !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["biofix", "date"],
+        message: "a january-1 biofix takes no date",
+      });
+    }
+  });
+
+export const orchardWindowSchema = z.strictObject({
+  id: orchardId,
+  purpose: z.enum(ORCHARD_WINDOW_PURPOSES),
+  targets: z
+    .array(
+      z.strictObject({ id: orchardId, kind: z.enum(ORCHARD_TARGET_KINDS) }),
+    )
+    .max(20),
+  pollinatorSensitive: z.boolean(),
+  note: orchardCopy(300).optional(),
+  sourceKeys: z.array(orchardSourceKey).min(1).max(10),
+});
+export type OrchardWindow = z.infer<typeof orchardWindowSchema>;
+
+export const orchardStageSchema = z.strictObject({
+  id: orchardId,
+  name: orchardCopy(80),
+  order: z.number().int().min(0).max(100),
+  recognise: z.strictObject({
+    description: orchardCopy(400),
+    sourceKey: orchardSourceKey,
+    gddEstimate: orchardGddEstimateSchema.optional(),
+  }),
+  windows: z.array(orchardWindowSchema).max(20),
+});
+export type OrchardStage = z.infer<typeof orchardStageSchema>;
+
+export const orchardCalendarPluginSchema = z
+  .strictObject({
+    pluginId: z
+      .string()
+      .regex(pluginIdRegex, "pluginId must be kebab-case ≤64 chars"),
+    type: z.literal("orchard-calendar"),
+    version: z.string().min(1),
+    /** The guide's edition year. The loader refuses a calendar that is not
+     *  the current or previous year's edition. */
+    edition: z.string().regex(/^\d{4}$/, "edition is a 4-digit year"),
+    hostCropFamilies: z.array(z.enum(ORCHARD_CALENDAR_HOST_FAMILIES)).min(1),
+    /** Crop plugins that opt in, one by one. Each must be a registered crop
+     *  in one of `hostCropFamilies`. */
+    hostCropPluginIds: z.array(orchardId).min(1).max(100),
+    stages: z.array(orchardStageSchema).min(1).max(30),
+  })
+  .superRefine((c, ctx) => {
+    const unique = (
+      values: string[],
+      path: (i: number) => (string | number)[],
+      what: string,
+    ) => {
+      const seen = new Set<string>();
+      values.forEach((v, i) => {
+        if (seen.has(v))
+          ctx.addIssue({
+            code: "custom",
+            path: path(i),
+            message: `${what} must be unique`,
+          });
+        seen.add(v);
+      });
+    };
+    unique(
+      c.hostCropPluginIds,
+      (i) => ["hostCropPluginIds", i],
+      "host crop ids",
+    );
+    unique(
+      c.stages.map((s) => s.id),
+      (i) => ["stages", i, "id"],
+      "stage ids",
+    );
+    unique(
+      c.stages.map((s) => String(s.order)),
+      (i) => ["stages", i, "order"],
+      "stage orders",
+    );
+    const windowPaths: (string | number)[][] = [];
+    const windowIds: string[] = [];
+    c.stages.forEach((s, si) =>
+      s.windows.forEach((w, wi) => {
+        windowIds.push(w.id);
+        windowPaths.push(["stages", si, "windows", wi, "id"]);
+        const nearBloom =
+          w.purpose === "bloom" ||
+          [s.id, s.name, w.id, w.note ?? ""].some((t) =>
+            ORCHARD_BLOOM_WORDS.test(t),
+          );
+        if (nearBloom && !w.pollinatorSensitive) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["stages", si, "windows", wi, "pollinatorSensitive"],
+            message:
+              "a window at pink, bloom or petal fall must be pollinator sensitive",
+          });
+        }
+      }),
+    );
+    unique(windowIds, (i) => windowPaths[i], "window ids");
+  });
+export type OrchardCalendarPlugin = z.infer<typeof orchardCalendarPluginSchema>;

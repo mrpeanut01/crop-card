@@ -2,7 +2,7 @@
   "pluginId": "grape-concord",
   "type": "crop",
   "displayName": "Grape — Concord (American)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "vine-fruit",
   "preHarvestIntervalDays": 14,
   "daysToMaturity": {
@@ -36,30 +36,12 @@
       "category": "prune"
     },
     {
-      "key": "downy-mildew-cover",
-      "kind": "spray",
-      "dayOfYear": 140,
-      "windowDays": 14,
-      "title": "Pre-bloom mancozeb / copper",
-      "body": "Black rot + downy mildew + powdery mildew window. M03 mancozeb 3 lb/A.",
-      "category": "spray"
-    },
-    {
-      "key": "post-bloom-cover",
-      "kind": "spray",
-      "dayOfYear": 165,
-      "windowDays": 14,
-      "title": "Post-bloom cover",
-      "body": "FRAC 11 strobilurin or FRAC 7 SDHI — alternate from M03.",
-      "category": "spray"
-    },
-    {
       "key": "leaf-pull",
       "kind": "cultural",
       "dayOfYear": 200,
       "windowDays": 21,
       "title": "Pull basal leaves around clusters",
-      "body": "Improves spray penetration + reduces botrytis.",
+      "body": "Reduces botrytis.",
       "category": "other"
     },
     {

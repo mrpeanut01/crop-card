@@ -621,7 +621,7 @@ const perennialDeciduousFruit: PerennialStageTemplate = {
       dayOfYearStart: 1,
       dayOfYearEnd: 50,
       bodyKind: 'dormant',
-      inspect: 'Dormant pruning + dormant oil window.'
+      inspect: 'Dormant pruning window.'
     },
     {
       code: 'swollen-bud',
@@ -629,7 +629,7 @@ const perennialDeciduousFruit: PerennialStageTemplate = {
       dayOfYearStart: 51,
       dayOfYearEnd: 75,
       bodyKind: 'transition',
-      inspect: 'Buds swelling; copper window for some diseases.'
+      inspect: 'Buds swelling.'
     },
     {
       code: 'bud-break',
@@ -637,7 +637,7 @@ const perennialDeciduousFruit: PerennialStageTemplate = {
       dayOfYearStart: 76,
       dayOfYearEnd: 95,
       bodyKind: 'vegetative',
-      inspect: 'Green tip / pink bud; first fungicide for apple scab / peach leaf curl.'
+      inspect: 'Green tip / pink bud.'
     },
     {
       code: 'bloom',
@@ -653,7 +653,7 @@ const perennialDeciduousFruit: PerennialStageTemplate = {
       dayOfYearStart: 121,
       dayOfYearEnd: 135,
       bodyKind: 'reproductive',
-      inspect: 'First post-bloom cover spray window.'
+      inspect: 'Petals dropping.'
     },
     {
       code: 'fruit-set',
@@ -669,7 +669,7 @@ const perennialDeciduousFruit: PerennialStageTemplate = {
       dayOfYearStart: 166,
       dayOfYearEnd: 220,
       bodyKind: 'ripening',
-      inspect: 'Cover spray rotation; summer pruning.'
+      inspect: 'Fruit sizing; summer pruning.'
     },
     {
       code: 'color-change',
@@ -677,7 +677,7 @@ const perennialDeciduousFruit: PerennialStageTemplate = {
       dayOfYearStart: 221,
       dayOfYearEnd: 260,
       bodyKind: 'ripening',
-      inspect: 'Brix climbs; pre-harvest fungicide PHI window opens.'
+      inspect: 'Brix climbs.'
     },
     {
       code: 'harvest',
@@ -715,7 +715,7 @@ const perennialVineFruit: PerennialStageTemplate = {
       dayOfYearStart: 140,
       dayOfYearEnd: 165,
       bodyKind: 'reproductive',
-      inspect: 'Pre-bloom mancozeb / copper for black rot + downy mildew.'
+      inspect: 'Flowers open on the clusters.'
     },
     {
       code: 'fruit-set',

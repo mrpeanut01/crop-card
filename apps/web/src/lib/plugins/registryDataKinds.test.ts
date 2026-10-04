@@ -9,12 +9,18 @@ import {
   FIXTURE_PET_SPECIES,
   FIXTURE_SPECIES
 } from './dataKinds.fixtures';
+import {
+  FIXTURE_ORCHARD_CALENDAR,
+  FIXTURE_ORCHARD_CROPS,
+  FIXTURE_ORCHARD_EDITION_YEAR
+} from './orchardCalendar.fixtures';
 import { loadPluginsFromDirectory } from './loader';
 import { PluginRegistrationError, PluginRegistry } from './registry';
 import {
   DataKindRegistry,
   loadPhase32DataKinds,
   validateAnimalHealth,
+  validateOrchardCalendar,
   validatePestModel,
   validateSpecies
 } from './registryDataKinds';
@@ -169,6 +175,42 @@ describe('pest-model plugins', () => {
   });
 });
 
+describe('orchard calendar plugins', () => {
+  const ctx = { ...FIXTURE_ORCHARD_CROPS, currentYear: FIXTURE_ORCHARD_EDITION_YEAR };
+
+  it('accepts the fixture', () => {
+    expect(validateOrchardCalendar(FIXTURE_ORCHARD_CALENDAR, ctx).stages).toHaveLength(3);
+  });
+
+  it("accepts last year's edition and refuses older or future ones", () => {
+    expect(() =>
+      validateOrchardCalendar(FIXTURE_ORCHARD_CALENDAR, { ...ctx, currentYear: 2027 })
+    ).not.toThrow();
+    for (const currentYear of [2028, 2025]) {
+      const issues = issuesOf(() =>
+        validateOrchardCalendar(FIXTURE_ORCHARD_CALENDAR, { ...ctx, currentYear })
+      );
+      expect(issues.map((i) => i.path)).toEqual(['edition']);
+    }
+  });
+
+  it('refuses a host crop that is not a registered crop or not in a host family', () => {
+    const raw = {
+      ...FIXTURE_ORCHARD_CALENDAR,
+      hostCropPluginIds: ['test-fixture-apple', 'test-fixture-missing', 'test-fixture-blueberry']
+    };
+    const issues = issuesOf(() => validateOrchardCalendar(raw, ctx));
+    expect(issues.map((i) => i.path)).toEqual(['hostCropPluginIds.1', 'hostCropPluginIds.2']);
+    expect(issues[1].message).toMatch(/small-fruit/);
+  });
+
+  it('refuses a product class or other unknown key', () => {
+    expect(() =>
+      validateOrchardCalendar({ ...FIXTURE_ORCHARD_CALENDAR, productClasses: [] }, ctx)
+    ).toThrow(PluginRegistrationError);
+  });
+});
+
 describe('DataKindRegistry', () => {
   it('refuses a duplicate id', () => {
     const reg = new DataKindRegistry('species plugin', validateSpecies);
@@ -205,15 +247,35 @@ describe('loadPhase32DataKinds', () => {
       );
       await writeFile(path.join(tmp, 'pest-models', 'm.json'), JSON.stringify(FIXTURE_PEST_MODEL));
       await writeFile(path.join(tmp, 'pest-models', 'bad.json'), '{ not json');
-      const kinds = await loadPhase32DataKinds(tmp);
+      await mkdir(path.join(tmp, 'orchard-calendars'));
+      await writeFile(
+        path.join(tmp, 'orchard-calendars', 'c.json'),
+        JSON.stringify(FIXTURE_ORCHARD_CALENDAR)
+      );
+      await writeFile(
+        path.join(tmp, 'orchard-calendars', 'stale.json'),
+        JSON.stringify({
+          ...FIXTURE_ORCHARD_CALENDAR,
+          pluginId: 'test-fixture-stale-calendar',
+          edition: '2020'
+        })
+      );
+      const kinds = await loadPhase32DataKinds(tmp, {
+        crops: FIXTURE_ORCHARD_CROPS,
+        now: new Date(Date.UTC(FIXTURE_ORCHARD_EDITION_YEAR, 5, 1))
+      });
       expect(kinds.species.all().map((s) => s.pluginId)).toEqual([FIXTURE_SPECIES.pluginId]);
       expect(kinds.animalHealth.all().map((p) => p.pluginId)).toEqual([
         FIXTURE_ANIMAL_HEALTH.pluginId
       ]);
       expect(kinds.pestModels.all().map((p) => p.pluginId)).toEqual([FIXTURE_PEST_MODEL.pluginId]);
+      expect(kinds.orchardCalendars.all().map((c) => c.pluginId)).toEqual([
+        FIXTURE_ORCHARD_CALENDAR.pluginId
+      ]);
       expect(kinds.failed.map((f) => path.basename(f.file)).sort()).toEqual([
         'bad.json',
-        'orphan.json'
+        'orphan.json',
+        'stale.json'
       ]);
     });
   });
@@ -223,18 +285,39 @@ describe('loadPhase32DataKinds', () => {
     expect(kinds.species.all()).toEqual([]);
     expect(kinds.animalHealth.all()).toEqual([]);
     expect(kinds.pestModels.all()).toEqual([]);
+    expect(kinds.orchardCalendars.all()).toEqual([]);
     expect(kinds.failed).toEqual([]);
+  });
+
+  it('resolves no orchard calendar host crop without a crop lookup', async () => {
+    await withTmp(async (tmp) => {
+      await mkdir(path.join(tmp, 'orchard-calendars'));
+      await writeFile(
+        path.join(tmp, 'orchard-calendars', 'c.json'),
+        JSON.stringify(FIXTURE_ORCHARD_CALENDAR)
+      );
+      const kinds = await loadPhase32DataKinds(tmp, {
+        now: new Date(Date.UTC(FIXTURE_ORCHARD_EDITION_YEAR, 5, 1))
+      });
+      expect(kinds.orchardCalendars.all()).toEqual([]);
+      expect(kinds.failed).toHaveLength(1);
+    });
   });
 
   it('keeps the library loader away from the Phase 32 folders', async () => {
     await withTmp(async (tmp) => {
-      for (const d of ['species', 'animal-health', 'pest-models']) await mkdir(path.join(tmp, d));
+      for (const d of ['species', 'animal-health', 'pest-models', 'orchard-calendars'])
+        await mkdir(path.join(tmp, d));
       await writeFile(path.join(tmp, 'species', 'hen.json'), JSON.stringify(FIXTURE_SPECIES));
       await writeFile(
         path.join(tmp, 'animal-health', 'a.json'),
         JSON.stringify(FIXTURE_ANIMAL_HEALTH)
       );
       await writeFile(path.join(tmp, 'pest-models', 'm.json'), JSON.stringify(FIXTURE_PEST_MODEL));
+      await writeFile(
+        path.join(tmp, 'orchard-calendars', 'c.json'),
+        JSON.stringify(FIXTURE_ORCHARD_CALENDAR)
+      );
       const result = await loadPluginsFromDirectory(new PluginRegistry(), tmp);
       expect(result.registered).toEqual([]);
       expect(result.failed).toEqual([]);

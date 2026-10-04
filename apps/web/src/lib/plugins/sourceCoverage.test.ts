@@ -22,6 +22,8 @@ import {
   isPastureLabelled,
   missingWithdrawals,
   pestModelFactPaths,
+  seasonalTaskWordingProblems,
+  stageTemplateWordingProblems,
   speciesFactPaths,
   type SourceMap
 } from './sourceCoverage';
@@ -271,5 +273,150 @@ describe('pasture coverage', () => {
     expect(
       checkPastureCoverage(plugins, familyOf, [{ pluginId: 'test-herb', reason: 'Test reason.' }])
     ).toEqual({ unallowlisted: [], stale: ['test-herb'] });
+  });
+});
+
+describe('seasonalTaskWordingProblems (OC-1)', () => {
+  const crop = (rows: Record<string, unknown>[], field = 'seasonalTasks') =>
+    ({ pluginId: 'test-crop', [field]: rows }) as unknown as Parameters<
+      typeof seasonalTaskWordingProblems
+    >[0][number];
+
+  it('passes the kept orchard and berry rows', () => {
+    expect(
+      seasonalTaskWordingProblems([
+        crop([
+          {
+            key: 'winter-prune',
+            kind: 'pruning',
+            title: 'Winter pruning (dormant)',
+            body: 'Remove 1/6 oldest canes.',
+            category: 'prune'
+          },
+          {
+            key: 'swd-monitoring',
+            kind: 'scout',
+            title: 'SWD trap monitoring',
+            body: 'Spotted-wing drosophila is the dominant ripe-fruit pest.',
+            category: 'scout'
+          },
+          {
+            key: 'leaf-pull',
+            kind: 'cultural',
+            title: 'Pull basal leaves around clusters',
+            body: 'Reduces botrytis.',
+            category: 'other'
+          },
+          {
+            key: 'mow',
+            kind: 'pruning',
+            title: 'Mow canes',
+            body: 'Cut canes after dormancy; check soil moisture.',
+            category: 'till'
+          }
+        ]),
+        crop(
+          [
+            {
+              key: 'post-bloom-thinning',
+              title: 'Hand fruit thinning',
+              body: 'Thin to one fruit per cluster.',
+              category: 'prune'
+            }
+          ],
+          'orchardSeasonalTasks'
+        )
+      ])
+    ).toEqual([]);
+  });
+
+  it('fails a row of kind or category spray', () => {
+    expect(
+      seasonalTaskWordingProblems([
+        crop([{ key: 'a', kind: 'spray', title: 'Look at leaves' }]),
+        crop([{ key: 'b', title: 'Look at leaves', category: 'spray' }], 'orchardSeasonalTasks')
+      ])
+    ).toEqual([
+      'test-crop seasonalTasks.a: kind spray',
+      'test-crop orchardSeasonalTasks.b: category spray'
+    ]);
+  });
+
+  it.each([
+    ['Pre-bloom fungicide', 'fungicide'],
+    ['Dormant oil window', 'oil'],
+    ['Captan per label', 'Captan'],
+    ['Streptomycin/Apogee gate', 'Streptomycin'],
+    ['Apogee growth regulator', 'Apogee'],
+    ['M03 mancozeb 3 lb/A', 'mancozeb'],
+    ['Chlorothalonil cover', 'Chlorothalonil'],
+    ['FRAC 3 (myclobutanil)', 'myclobutanil'],
+    ['Alternate FRAC groups', 'FRAC'],
+    ['Rotate IRAC groups', 'IRAC'],
+    ['Respect 3-day PHI', 'PHI'],
+    ['Wait out the REI', 'REI'],
+    ['Captan + insecticide tank-mix', 'Captan'],
+    ['Tank mix before bloom', 'Tank mix'],
+    ['Pyrethroids on 5-7 d intervals', 'Pyrethroids'],
+    ['Copper for fire blight', 'Copper'],
+    ['Sulfur for mildew', 'Sulfur'],
+    ['Bactericide at bloom', 'Bactericide'],
+    ['Summer cover sprays', 'sprays'],
+    ['Improves spray penetration', 'spray']
+  ])('fails pesticide wording: %s', (body, word) => {
+    expect(
+      seasonalTaskWordingProblems([crop([{ key: 'x', kind: 'scout', title: 'Check', body }])])
+    ).toEqual([`test-crop seasonalTasks.x: body says "${word}"`]);
+  });
+
+  it('does not read acronyms out of ordinary words', () => {
+    expect(
+      seasonalTaskWordingProblems([
+        crop([
+          {
+            key: 'x',
+            kind: 'scout',
+            title: 'Graphite rein check',
+            body: 'Phi and rei in lower case; soil and boil.'
+          }
+        ])
+      ])
+    ).toEqual([]);
+  });
+});
+
+describe('stageTemplateWordingProblems (OC-1)', () => {
+  it('flags product and spray wording in a stage hint', () => {
+    expect(
+      stageTemplateWordingProblems({
+        'vine-fruit': {
+          stages: [
+            { code: 'bloom', inspect: 'Pre-bloom mancozeb / copper for black rot.' },
+            { code: 'harvest', inspect: 'Respect the PHI.' },
+            { code: 'veraison', inspect: 'Color change begins.' },
+            { code: 'dormant' }
+          ]
+        },
+        corn: null
+      })
+    ).toEqual([
+      'vine-fruit bloom: inspect says "mancozeb"',
+      'vine-fruit harvest: inspect says "PHI"'
+    ]);
+  });
+
+  it('keeps the bloom caution against insecticides but nothing else beside it', () => {
+    expect(
+      stageTemplateWordingProblems({
+        orchard: {
+          stages: [{ code: 'bloom', inspect: 'Pollinator activity critical; AVOID insecticides.' }]
+        }
+      })
+    ).toEqual([]);
+    expect(
+      stageTemplateWordingProblems({
+        orchard: { stages: [{ code: 'bloom', inspect: 'Avoid insecticides; use a fungicide.' }] }
+      })
+    ).toEqual(['orchard bloom: inspect says "fungicide"']);
   });
 });

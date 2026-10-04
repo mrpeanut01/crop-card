@@ -1,0 +1,4 @@
+{
+  "$comment": "Ruling OC-8. Quotes behind every orchard calendar on plugins/orchard-calendars/*.json, keyed by the sourceKey a stage description, degree-day estimate or window names. Each entry is { sources: [{ url, publisher, date, quote, edition, page, note? }], gateEligible?, note? } from an https .edu or .gov page, quoted word for word. A degree-day estimate ships only from an entry with gateEligible true, which needs two agreeing sources from different hosts (ruling OC-5); where the guides disagree or only one gives a value, record both or the one with gateEligible false and say why in note. Sources from a page reader's extraction never count. No product, product class, rate, brand, PHI or REI is ever recorded here (OC-2). Empty until a local agent works docs/design/ORCHARD_CALENDAR.md 'Needs a local agent'; checked by apps/web/src/lib/plugins/orchardCalendar.sources.gate.test.ts.",
+  "entries": {}
+}

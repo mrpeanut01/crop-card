@@ -23,6 +23,7 @@
  *   schemas/species.schema.json         (Phase 32A, plugins/species/)
  *   schemas/animal-health.schema.json   (Phase 32A, plugins/animal-health/)
  *   schemas/pest-model.schema.json      (Phase 32A, plugins/pest-models/)
+ *   schemas/orchard-calendar.schema.json (ruling OC-8, plugins/orchard-calendars/)
  *
  * Each file is written with a stable `$id` URL and a top-level description
  * pointing back to the Zod source. The schemas are emitted as JSON Schema
@@ -47,7 +48,8 @@ import {
   bedRecipePluginSchema,
   speciesPluginSchema,
   animalHealthPluginSchema,
-  pestModelPluginSchema
+  pestModelPluginSchema,
+  orchardCalendarPluginSchema
 } from '../src/lib/plugins/schemas.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -126,6 +128,13 @@ const TARGETS = [
     title: 'CropCard Pest-Model Plugin',
     description:
       'Data-only degree-day pest model. method names one of the degree-day methods the app implements and never carries a formula; stage advice is about scouting or covering, never spraying. Every number needs a quoted source in apps/web/scripts/pest-model-sources.json. Loaded from plugins/pest-models/. Mirrors packages/plugin-validation/src/schemas.ts (pestModelPluginSchema).'
+  },
+  {
+    file: 'orchard-calendar.schema.json',
+    schema: orchardCalendarPluginSchema,
+    title: 'CropCard Orchard Calendar Plugin',
+    description:
+      'Data-only tree fruit calendar for one guide edition: stages, how to recognise each one and windows with disease, pest or weather targets. No product, product class, brand, rate, PHI or REI (ruling OC-2); the runtime copy guard also refuses spray, safe and recommended wording. Windows at pink, bloom or petal fall must be pollinator sensitive. Every hostCropPluginIds entry must name a registered crop plugin in hostCropFamilies, the edition must be the current or previous year, and every sourceKey needs a quoted source in apps/web/scripts/orchard-calendar-sources.json (a gddEstimate needs two agreeing sources). Loaded from plugins/orchard-calendars/. Mirrors packages/plugin-validation/src/schemas.ts (orchardCalendarPluginSchema).'
   }
 ];
 

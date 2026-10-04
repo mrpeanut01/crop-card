@@ -16,12 +16,13 @@ import { unresolvedKeepApartIds } from './companionRelations';
 import type { CompanionPlugin } from './schemas';
 
 /** Folders under plugins/ that hold other data kinds with their own
- *  registry pass (bed recipes and the Phase 32 kinds), not library plugins. */
+ *  registry pass (bed recipes, the Phase 32 kinds and orchard calendars), not library plugins. */
 export const NON_LIBRARY_PLUGIN_DIRS: ReadonlySet<string> = new Set([
   'bed-recipes',
   'species',
   'animal-health',
-  'pest-models'
+  'pest-models',
+  'orchard-calendars'
 ]);
 
 export interface LoadResult {

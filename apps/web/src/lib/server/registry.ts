@@ -190,10 +190,14 @@ export async function getBedRecipes(): Promise<BedRecipeRegistry> {
   return registry;
 }
 
-/** Species, animal-health and pest-model plugins (Phase 32). */
+/** Species, animal-health and pest-model plugins (Phase 32), and orchard
+ *  calendars checked against the shared crop library. */
 export async function getDataKinds(): Promise<Phase32DataKinds> {
   if (cachedDataKinds) return cachedDataKinds;
-  const kinds = await loadPhase32DataKinds(pluginsDir());
+  const base = await getBaseRegistry();
+  const kinds = await loadPhase32DataKinds(pluginsDir(), {
+    crops: { cropFamilyOf: (id) => cropFamilyOf(base.get(id)?.plugin) }
+  });
   if (kinds.failed.length > 0) {
     console.warn(
       '[registry] some Phase 32 data plugins failed to load:',
@@ -206,6 +210,12 @@ export async function getDataKinds(): Promise<Phase32DataKinds> {
   }
   cachedDataKinds = kinds;
   return kinds;
+}
+
+function cropFamilyOf(plugin: { type: string; cropFamily?: unknown } | undefined) {
+  return plugin?.type === 'crop' && typeof plugin.cropFamily === 'string'
+    ? plugin.cropFamily
+    : undefined;
 }
 
 /** Test hook: registers a pest model into the loaded data kinds. Tests and

@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cropcard.dev/schemas/orchard-calendar.schema.json",
+  "title": "CropCard Orchard Calendar Plugin",
+  "description": "Data-only tree fruit calendar for one guide edition: stages, how to recognise each one and windows with disease, pest or weather targets. No product, product class, brand, rate, PHI or REI (ruling OC-2); the runtime copy guard also refuses spray, safe and recommended wording. Windows at pink, bloom or petal fall must be pollinator sensitive. Every hostCropPluginIds entry must name a registered crop plugin in hostCropFamilies, the edition must be the current or previous year, and every sourceKey needs a quoted source in apps/web/scripts/orchard-calendar-sources.json (a gddEstimate needs two agreeing sources). Loaded from plugins/orchard-calendars/. Mirrors packages/plugin-validation/src/schemas.ts (orchardCalendarPluginSchema).",
+  "type": "object",
+  "properties": {
+    "pluginId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+    },
+    "type": {
+      "type": "string",
+      "const": "orchard-calendar"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "edition": {
+      "type": "string",
+      "pattern": "^\\d{4}$"
+    },
+    "hostCropFamilies": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "orchard",
+          "stone-fruit"
+        ]
+      }
+    },
+    "hostCropPluginIds": {
+      "minItems": 1,
+      "maxItems": 100,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+      }
+    },
+    "stages": {
+      "minItems": 1,
+      "maxItems": 30,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "recognise": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 400
+              },
+              "sourceKey": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,159}$"
+              },
+              "gddEstimate": {
+                "type": "object",
+                "properties": {
+                  "baseTempF": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "biofix": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "january-1",
+                          "calendar-date"
+                        ]
+                      },
+                      "date": {
+                        "type": "string",
+                        "pattern": "^(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "gddFrom": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "gddTo": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "sourceKey": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,159}$"
+                  }
+                },
+                "required": [
+                  "baseTempF",
+                  "biofix",
+                  "gddFrom",
+                  "gddTo",
+                  "sourceKey"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "description",
+              "sourceKey"
+            ],
+            "additionalProperties": false
+          },
+          "windows": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+                },
+                "purpose": {
+                  "type": "string",
+                  "enum": [
+                    "scout",
+                    "cultural",
+                    "sanitation",
+                    "disease-risk",
+                    "pest-risk",
+                    "bloom",
+                    "harvest-prep"
+                  ]
+                },
+                "targets": {
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "disease",
+                          "pest",
+                          "weather"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "kind"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "pollinatorSensitive": {
+                  "type": "boolean"
+                },
+                "note": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 300
+                },
+                "sourceKeys": {
+                  "minItems": 1,
+                  "maxItems": 10,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,159}$"
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "purpose",
+                "targets",
+                "pollinatorSensitive",
+                "sourceKeys"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "order",
+          "recognise",
+          "windows"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "pluginId",
+    "type",
+    "version",
+    "edition",
+    "hostCropFamilies",
+    "hostCropPluginIds",
+    "stages"
+  ],
+  "additionalProperties": false
+}

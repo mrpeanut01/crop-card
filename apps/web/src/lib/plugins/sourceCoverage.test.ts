@@ -23,6 +23,7 @@ import {
   missingWithdrawals,
   pestModelFactPaths,
   seasonalTaskWordingProblems,
+  stageTemplateWordingProblems,
   speciesFactPaths,
   type SourceMap
 } from './sourceCoverage';
@@ -381,5 +382,41 @@ describe('seasonalTaskWordingProblems (OC-1)', () => {
         ])
       ])
     ).toEqual([]);
+  });
+});
+
+describe('stageTemplateWordingProblems (OC-1)', () => {
+  it('flags product and spray wording in a stage hint', () => {
+    expect(
+      stageTemplateWordingProblems({
+        'vine-fruit': {
+          stages: [
+            { code: 'bloom', inspect: 'Pre-bloom mancozeb / copper for black rot.' },
+            { code: 'harvest', inspect: 'Respect the PHI.' },
+            { code: 'veraison', inspect: 'Color change begins.' },
+            { code: 'dormant' }
+          ]
+        },
+        corn: null
+      })
+    ).toEqual([
+      'vine-fruit bloom: inspect says "mancozeb"',
+      'vine-fruit harvest: inspect says "PHI"'
+    ]);
+  });
+
+  it('keeps the bloom caution against insecticides but nothing else beside it', () => {
+    expect(
+      stageTemplateWordingProblems({
+        orchard: {
+          stages: [{ code: 'bloom', inspect: 'Pollinator activity critical; AVOID insecticides.' }]
+        }
+      })
+    ).toEqual([]);
+    expect(
+      stageTemplateWordingProblems({
+        orchard: { stages: [{ code: 'bloom', inspect: 'Avoid insecticides; use a fungicide.' }] }
+      })
+    ).toEqual(['orchard bloom: inspect says "fungicide"']);
   });
 });

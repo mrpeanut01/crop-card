@@ -188,6 +188,27 @@ export function seasonalTaskWordingProblems(
   return out;
 }
 
+/** The one stage caution OC-1 keeps: a warning against spraying, not advice to spray. */
+const STAGE_BLOOM_CAUTION = /\bavoid insecticides\b/gi;
+
+/** OC-1: growth-stage hints (`inspect`) carry no spray timing or product
+ *  wording either, since the Plan swimlane and calendar show them. */
+export function stageTemplateWordingProblems(
+  tables: Readonly<
+    Record<string, { stages: readonly { code: string; inspect?: string }[] } | null | undefined>
+  >
+): string[] {
+  const out: string[] = [];
+  for (const [family, table] of Object.entries(tables)) {
+    for (const st of table?.stages ?? []) {
+      const text = (st.inspect ?? '').replace(STAGE_BLOOM_CAUTION, '');
+      const hit = text.match(SEASONAL_PESTICIDE_WORDS) ?? text.match(SEASONAL_PESTICIDE_ACRONYMS);
+      if (hit) out.push(`${family} ${st.code}: inspect says "${hit[0]}"`);
+    }
+  }
+  return out;
+}
+
 export type PesticidePlugin = HerbicidePlugin | InsecticidePlugin | FungicidePlugin;
 
 const PASTURE_WORDS =

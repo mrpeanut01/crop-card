@@ -5,6 +5,7 @@ import { loadPluginsFromDirectory } from './loader';
 import { PluginRegistry } from './registry';
 import { loadPhase32DataKinds, type Phase32DataKinds } from './registryDataKinds';
 import type { CropPlugin } from './schemas';
+import { PERENNIAL_DAYOFYEAR_TEMPLATES } from './growthStageTemplates';
 import {
   animalHealthFactPaths,
   carryoverDaysQuoteGaps,
@@ -16,6 +17,7 @@ import {
   missingWithdrawals,
   pestModelFactPaths,
   seasonalTaskWordingProblems,
+  stageTemplateWordingProblems,
   sourceEntrySchema,
   speciesFactPaths,
   type ForageSourceEntry,
@@ -226,6 +228,14 @@ describe('OC-1 crop seasonal tasks carry no spray advice', () => {
     expect(
       seasonalTaskWordingProblems(library.crops()),
       'seasonal and orchard tasks may not name sprays or pesticides (docs/design/ORCHARD_CALENDAR.md OC-1)'
+    ).toEqual([]);
+  });
+
+  it('no perennial fruit growth-stage hint names a spray or pesticide', () => {
+    expect(Object.keys(PERENNIAL_DAYOFYEAR_TEMPLATES)).toContain('vine-fruit');
+    expect(
+      stageTemplateWordingProblems(PERENNIAL_DAYOFYEAR_TEMPLATES),
+      'stage hints may not name sprays or pesticides (docs/design/ORCHARD_CALENDAR.md OC-1)'
     ).toEqual([]);
   });
 

@@ -715,7 +715,7 @@ const perennialVineFruit: PerennialStageTemplate = {
       dayOfYearStart: 140,
       dayOfYearEnd: 165,
       bodyKind: 'reproductive',
-      inspect: 'Pre-bloom mancozeb / copper for black rot + downy mildew.'
+      inspect: 'Flowers open on the clusters.'
     },
     {
       code: 'fruit-set',

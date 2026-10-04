@@ -2,7 +2,7 @@
   "pluginId": "raspberry-heritage",
   "type": "crop",
   "displayName": "Raspberry — Heritage (red, primocane-fruiting)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "bramble",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
@@ -31,8 +31,8 @@
       "kind": "scout",
       "dayOfYear": 195,
       "windowDays": 90,
-      "title": "SWD trap + spray decision",
-      "body": "Spotted-wing drosophila is the dominant ripe-fruit pest. Pyrethroids on 5–7 d intervals during ripening.",
+      "title": "SWD trap monitoring",
+      "body": "Spotted-wing drosophila is the dominant ripe-fruit pest.",
       "category": "scout"
     },
     {

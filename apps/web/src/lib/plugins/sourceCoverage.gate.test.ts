@@ -15,6 +15,7 @@ import {
   grazingFactPaths,
   missingWithdrawals,
   pestModelFactPaths,
+  seasonalTaskWordingProblems,
   sourceEntrySchema,
   speciesFactPaths,
   type ForageSourceEntry,
@@ -217,6 +218,22 @@ describe('Phase 33C plugin data gate', () => {
   it('every forage hazard and trigger is sourced, and research and data agree (M-21 to M-23)', () => {
     expect(forageSources, 'forage-toxicity-sources.json must load').not.toEqual({});
     expect(forageHazardGaps(library.crops(), forageSources)).toEqual([]);
+  });
+});
+
+describe('OC-1 crop seasonal tasks carry no spray advice', () => {
+  it('no crop plugin has a spray seasonal row or pesticide wording in one', () => {
+    expect(
+      seasonalTaskWordingProblems(library.crops()),
+      'seasonal and orchard tasks may not name sprays or pesticides (docs/design/ORCHARD_CALENDAR.md OC-1)'
+    ).toEqual([]);
+  });
+
+  it('still checks the rows the orchard and berry plugins keep', () => {
+    const rows = library
+      .crops()
+      .flatMap((c) => [...(c.seasonalTasks ?? []), ...(c.orchardSeasonalTasks ?? [])]);
+    expect(rows.length).toBeGreaterThan(10);
   });
 });
 

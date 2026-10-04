@@ -2,7 +2,7 @@
   "pluginId": "blueberry-bluecrop",
   "type": "crop",
   "displayName": "Blueberry — Bluecrop (highbush)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "small-fruit",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
@@ -27,30 +27,12 @@
       "category": "prune"
     },
     {
-      "key": "mummy-berry-cover",
-      "kind": "spray",
-      "dayOfYear": 95,
-      "windowDays": 14,
-      "title": "Mummy berry primary infection cover",
-      "body": "FRAC 3 (myclobutanil) or FRAC 11 — alternate per stewardship. Begin at green-tip stage.",
-      "category": "spray"
-    },
-    {
-      "key": "anthracnose-pre-bloom",
-      "kind": "spray",
-      "dayOfYear": 115,
-      "windowDays": 14,
-      "title": "Anthracnose pre-bloom",
-      "body": "Captan or chlorothalonil. Critical for fruit-rot prevention.",
-      "category": "spray"
-    },
-    {
       "key": "swd-monitoring",
       "kind": "scout",
       "dayOfYear": 165,
       "windowDays": 60,
       "title": "Spotted-wing drosophila trap monitoring",
-      "body": "Apple cider vinegar + yeast traps; 7-d insecticide intervals once SWD detected.",
+      "body": "Apple cider vinegar + yeast traps.",
       "category": "scout"
     },
     {

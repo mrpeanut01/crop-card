@@ -109,7 +109,8 @@ test.describe('watering advice', () => {
     await page.setViewportSize({ width: 375, height: 800 });
     await kitchenGarden(page, FAR_FROM_STATION);
     await openToday(page);
-    await expect(page.locator('[data-testid="advice-card"]')).toHaveCount(1);
+    // Only the watering card: on a Monday the Monday summary card shows too.
+    await expect(page.locator('[data-testid="advice-card"][data-kind="watering"]')).toHaveCount(1);
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(scrollWidth).toBeLessThanOrEqual(375);
     for (const name of ['Log watering', 'Enter rain gauge']) {

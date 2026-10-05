@@ -94,8 +94,11 @@ export interface ScheduleWindow {
    *  planting window, this lists the sub-windows that ARE available.
    *  Format: `[startMs, endMs]` pairs; planting must start within one of
    *  these. Empty array means the natural [earliest, latest] is fully
-   *  available. */
+   *  available, unless `blockFull` is set. */
   freeSubWindows?: Array<[number, number]>;
+  /** True when existing plantings occupy the block for the whole
+   *  [earliest, latest] window, so there is no free sub-window at all. */
+  blockFull?: boolean;
 }
 
 export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] {
@@ -135,7 +138,11 @@ export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] 
     const naturalLatest = blockFrost.firstFallFrostMs - dtmMax * ONE_DAY_MS - 14 * ONE_DAY_MS;
     const latestMs = Math.max(earliestMs + ONE_DAY_MS, naturalLatest);
 
-    const free = freeSubWindowsForBlock(occupiedByBlock[a.blockId] ?? [], earliestMs, latestMs);
+    const { free, full } = freeSubWindowsForBlock(
+      occupiedByBlock[a.blockId] ?? [],
+      earliestMs,
+      latestMs
+    );
 
     out.push({
       stockItemId: a.stockItemId,
@@ -144,7 +151,8 @@ export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] 
       latestMs,
       hardiness,
       dtmDaysMax: dtmMax,
-      freeSubWindows: free
+      freeSubWindows: free,
+      ...(full ? { blockFull: true } : {})
     });
   }
   return out;
@@ -229,13 +237,14 @@ function computeBlockOccupancy(
 }
 
 /** Given occupied windows on a block and a [earliest, latest] interval,
- *  return the free sub-intervals within. Empty array signals "all open." */
-function freeSubWindowsForBlock(
+ *  return the free sub-intervals within. An empty `free` means "all open"
+ *  unless `full` says the occupied windows cover the whole interval. */
+export function freeSubWindowsForBlock(
   occupied: ReadonlyArray<OccupiedWindow>,
   earliestMs: number,
   latestMs: number
-): Array<[number, number]> {
-  if (occupied.length === 0) return [];
+): { free: Array<[number, number]>; full: boolean } {
+  if (occupied.length === 0) return { free: [], full: false };
   const free: Array<[number, number]> = [];
   let cursor = earliestMs;
   for (const w of occupied) {
@@ -245,7 +254,9 @@ function freeSubWindowsForBlock(
     cursor = Math.max(cursor, w.endMs);
   }
   if (cursor < latestMs) free.push([cursor, latestMs]);
-  return free.filter(([s, e]) => e > s);
+  const open = free.filter(([s, e]) => e > s);
+  const overlaps = occupied.some((w) => w.endMs > earliestMs && w.startMs < latestMs);
+  return { free: open, full: overlaps && open.length === 0 };
 }
 
 export function formatDateMs(ms: number): string {

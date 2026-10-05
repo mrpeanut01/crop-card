@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { Crop } from '$lib/db/crops';
-import { hardinessOf, scheduleCandidacy, formatDateMs } from './scheduleCandidacy';
+import {
+  freeSubWindowsForBlock,
+  hardinessOf,
+  scheduleCandidacy,
+  formatDateMs
+} from './scheduleCandidacy';
 import { frostDatesFromMmDd } from './frostSeason';
 
 function fakePlugin(opts: {
@@ -475,5 +480,31 @@ describe('scheduleCandidacy frostByBlock (Phase 32E)', () => {
     });
     expect(w.earliestMs).toBe(jan1);
     expect(w.latestMs).toBe(dec31 - (80 + 14) * DAY);
+  });
+});
+
+describe('freeSubWindowsForBlock', () => {
+  const D = 24 * 60 * 60 * 1000;
+  const start = Date.UTC(2027, 4, 1);
+  const end = start + 60 * D;
+
+  it('an empty block is all open, not full', () => {
+    expect(freeSubWindowsForBlock([], start, end)).toEqual({ free: [], full: false });
+  });
+
+  it('a block occupied for the whole window is full, not "all open"', () => {
+    const r = freeSubWindowsForBlock([{ startMs: start - 10 * D, endMs: end + D }], start, end);
+    expect(r).toEqual({ free: [], full: true });
+  });
+
+  it('a partly occupied block lists the open part', () => {
+    const r = freeSubWindowsForBlock([{ startMs: start - D, endMs: start + 20 * D }], start, end);
+    expect(r.full).toBe(false);
+    expect(r.free).toEqual([[start + 20 * D, end]]);
+  });
+
+  it('occupancy outside the window leaves it fully open', () => {
+    const r = freeSubWindowsForBlock([{ startMs: end + D, endMs: end + 9 * D }], start, end);
+    expect(r).toEqual({ free: [[start, end]], full: false });
   });
 });

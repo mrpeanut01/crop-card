@@ -13,7 +13,8 @@ export function pollinatorNeighbors(
   treatedBlockId: string,
   blocks: BlockWithPlantings[],
   cropPlugin: (pluginId: string) => CropPlugin | null,
-  at: number
+  at: number,
+  timeZone?: string
 ): NeighborBlock[] {
   const treated = blocks.find((b) => b.id === treatedBlockId);
   if (!treated) return [];
@@ -31,7 +32,8 @@ export function pollinatorNeighbors(
           displayName: plugin?.displayName ?? p.varietyDisplayName,
           inBloomNow: isInBloom(
             { cropPluginId: p.cropPluginId, plantedAt: p.plantingDate, bloomWindow },
-            at
+            at,
+            timeZone
           ),
           beeAttractive: bloomWindow?.beeAttractive === true
         };

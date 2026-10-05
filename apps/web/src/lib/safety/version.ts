@@ -45,5 +45,8 @@
  * Issue #469 — 0.7.1: the prohibited-drug table was checked against 21 CFR
  * 530.41 (eCFR, 2026-09-28). The influenza A paragraphs are (d)(1) and
  * (d)(2), not (b)(1) and (b)(2); no drug was added or removed.
+ * 0.7.2: the bloom gate (`pollinatorBloom.ts`) reads a crop's calendar
+ * bloom months on the farm's clock instead of UTC, so a May-blooming crop
+ * still reads in bloom on a Virginia evening of May 31.
  */
-export const RULES_VERSION = '0.7.1' as const;
+export const RULES_VERSION = '0.7.2' as const;

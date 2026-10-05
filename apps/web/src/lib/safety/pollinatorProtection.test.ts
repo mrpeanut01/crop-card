@@ -411,3 +411,17 @@ describe('checkPollinatorProtection — properties', () => {
     );
   });
 });
+
+describe('checkPollinatorProtection — sunset time in the farm zone', () => {
+  it('names the sunset on the farm clock, not the server clock', () => {
+    const r = run(PYRETHROID, 'in-bloom', NOON, { timeZone: 'America/New_York' });
+    expect(check(r, 'time-of-day').reason).toContain('(8:40 PM)');
+    const warn = run(HT_NONE, 'in-bloom', NOON, { timeZone: 'America/New_York' });
+    expect(check(warn, 'time-of-day').reason).toContain('(8:40 PM)');
+  });
+
+  it('still blocks with an invalid zone', () => {
+    const r = run(PYRETHROID, 'in-bloom', NOON, { timeZone: 'Not/AZone' });
+    expect(check(r, 'time-of-day').status).toBe('block');
+  });
+});

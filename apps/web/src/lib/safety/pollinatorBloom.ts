@@ -18,6 +18,8 @@
  * `bloomWindow` are NOT in bloom (no data = no gate).
  */
 
+import { dateTimeFormat } from '$lib/intlCache';
+import { DEFAULT_FARM_TIME_ZONE } from './animalWithdrawal';
 import type { SafetyViolation } from './types';
 
 export type PollinatorRisk = 'none' | 'low' | 'moderate' | 'high' | 'unknown';
@@ -47,7 +49,23 @@ export interface CropInBlock {
 
 const DAY_MS = 86_400_000;
 
-export function isInBloom(crop: CropInBlock, now: number): boolean {
+/** Calendar month (1..12) at `now` on the farm's clock. An invalid zone
+ *  falls back to the default farm zone. */
+function farmMonth(now: number, timeZone: string): number {
+  let f: Intl.DateTimeFormat;
+  try {
+    f = dateTimeFormat('en-US', { timeZone, month: 'numeric' });
+  } catch {
+    f = dateTimeFormat('en-US', { timeZone: DEFAULT_FARM_TIME_ZONE, month: 'numeric' });
+  }
+  return Number(f.formatToParts(new Date(now)).find((p) => p.type === 'month')?.value);
+}
+
+export function isInBloom(
+  crop: CropInBlock,
+  now: number,
+  timeZone: string = DEFAULT_FARM_TIME_ZONE
+): boolean {
   const bw = crop.bloomWindow;
   if (!bw) return false;
   if (bw.beeAttractive === false) return false;
@@ -62,8 +80,7 @@ export function isInBloom(crop: CropInBlock, now: number): boolean {
   }
 
   if (bw.monthsOfYear && bw.monthsOfYear.length > 0) {
-    const monthNow = new Date(now).getUTCMonth() + 1; // 1..12
-    return bw.monthsOfYear.includes(monthNow);
+    return bw.monthsOfYear.includes(farmMonth(now, timeZone));
   }
 
   if (bw.daysFromPlantingMin !== undefined) {
@@ -79,7 +96,8 @@ export function isInBloom(crop: CropInBlock, now: number): boolean {
 export function checkPollinatorBloom(
   proposed: SprayedProduct[],
   cropsInBlock: CropInBlock[],
-  now: number
+  now: number,
+  timeZone: string = DEFAULT_FARM_TIME_ZONE
 ): SafetyViolation[] {
   // Conservative — treat 'unknown' as risky (matches Phase 21's
   // philosophy-filter default-deny behavior for unknown compliance).
@@ -87,7 +105,7 @@ export function checkPollinatorBloom(
   const risky = proposed.filter((p) => RISKY.includes(p.pollinatorRisk ?? 'unknown'));
   if (risky.length === 0) return [];
 
-  const inBloom = cropsInBlock.filter((c) => isInBloom(c, now));
+  const inBloom = cropsInBlock.filter((c) => isInBloom(c, now, timeZone));
   if (inBloom.length === 0) return [];
 
   return [

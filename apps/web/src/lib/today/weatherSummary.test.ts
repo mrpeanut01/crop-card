@@ -67,6 +67,11 @@ describe('summarizeForecast', () => {
 });
 
 describe('summarizeForecastSafely', () => {
+  it('words the rain hint in the viewer language', () => {
+    const one = summarizeForecast([day({ date: '2026-05-25', popPct: 45 })], 'es');
+    expect(one?.rainHint).toBe('45% de lluvia el lun');
+  });
+
   it('returns null on null input', () => {
     expect(summarizeForecastSafely(null)).toBeNull();
     expect(summarizeForecastSafely(undefined)).toBeNull();

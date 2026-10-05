@@ -222,7 +222,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     timeZone: prefs.timeZone
   });
 
-  const weather = await loadTodayWeather();
+  const weather = await loadTodayWeather(locals?.locale);
 
   // YTD spray count = spray + insecticide + fungicide events since Jan 1.
   const yearStart = startOfYear(now);

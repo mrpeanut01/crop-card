@@ -73,7 +73,7 @@
         c.displayName.toLowerCase().includes(q) ||
         nameOf(c).toLowerCase().includes(q) ||
         (c.cropFamily ?? '').toLowerCase().includes(q);
-      const matchFamily = !familyFilter || c.cropFamily === familyFilter;
+      const matchFamily = !familyFilter || (c.cropFamily ?? 'other') === familyFilter;
       return matchSearch && matchFamily;
     })
   );

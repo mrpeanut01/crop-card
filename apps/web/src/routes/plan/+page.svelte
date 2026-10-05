@@ -3427,7 +3427,7 @@
               <div class="num">{dayNum(cell.iso)}</div>
               {#if cell.events.length > 0}
                 <ul class="events">
-                  {#each cell.events.slice(0, 3) as e (e.kind + e.cropPluginId + e.startMs)}
+                  {#each cell.events.slice(0, 3) as e, ei (ei)}
                     <li
                       class="event {e.kind}"
                       title="{calendarEventTitle(e, data.locale)} — {calendarEventCrop(

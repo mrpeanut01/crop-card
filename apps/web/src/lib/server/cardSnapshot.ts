@@ -38,6 +38,7 @@ import {
   listCarePlansForCards,
   listOpenTasksForCards,
   listPlantingsForCards,
+  listSplitGroupParts,
   listTreatmentsForCards
 } from '$lib/db/cardSnapshot';
 import { hasAnyAnimalRecord, listAnimals, type Animal } from '$lib/db/animals';
@@ -62,6 +63,7 @@ import { eventsForPlanting } from '$lib/calendar/engine';
 import { getDataKinds, getRegistry } from './registry';
 import { sprayTermsFor } from './sprayTerms';
 import { listMapFeatureViews } from '$lib/db/mapFeatures';
+import { splitGroupBlockIds } from '$lib/plan/splitGroup';
 
 const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
@@ -570,6 +572,9 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
       .map(toBlock)
       .sort((a, b) => a.id.localeCompare(b.id)),
     plantings,
+    splitGroups: splitGroupBlockIds(
+      listSplitGroupParts([...new Set(plantings.flatMap((p) => p.splitGroupId ?? []))])
+    ),
     tasks: listOpenTasksForCards(
       windowNow - SNAPSHOT_TASK_PAST_DAYS * DAY_MS,
       windowNow + SNAPSHOT_TASK_FUTURE_DAYS * DAY_MS

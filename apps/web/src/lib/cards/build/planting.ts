@@ -31,6 +31,7 @@ import { careGuideHref, careLinkLabel } from './careGuide';
 import { ymdInZone } from '$lib/prefs';
 import { cropDisplayName } from '$lib/i18n/cropName';
 import { filterSprayAdviceItems } from '$lib/journal/photoHelp';
+import { snapshotSplitFor, splitLine } from './split';
 
 const MAX_UPCOMING = 3;
 
@@ -192,6 +193,15 @@ export function buildPlantingCard(
 
   const tasks = sortTasks(snapshot.tasks.filter((t) => t.cropId === p.id));
   const sections: CardSection[] = [];
+  const split = snapshotSplitFor(snapshot, p);
+  if (split) {
+    sections.push({
+      title: splitLine(split, tr),
+      items: split.others.length
+        ? [`${tr('plan.split.alsoIn')}: ${split.others.map((b) => blockDisplayName(b, loc)).join(', ')}`]
+        : []
+    });
+  }
   if (tasks.length > 1) {
     sections.push({
       title: tr('cards.section.comingUp'),

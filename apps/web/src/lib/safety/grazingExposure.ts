@@ -433,21 +433,24 @@ export function exposureSpansFast(
       const push = (toMs: number, basis: ExposureSpan['basis'], fromMs = exposed) => {
         if (toMs > fromMs) out.push({ fieldId: stay.fieldId, ref: app.ref, fromMs, toMs, basis });
       };
-      if (app.appliedAtMs >= exposed - p.lookMs) {
-        const g = p.graze;
-        const active =
-          g.days === null || g.prohibited || (g.days > 0 && exposed < (g.clearsAtMs ?? 0));
-        if (active) {
-          let clears: number | null = g.clearsAtMs;
-          if (input.food === 'meat' && clears !== null) {
-            clears =
-              p.removalDays === undefined
-                ? null
-                : roundedCached(cache, clears, p.removalDays, input.timeZone);
-          }
-          if (clears !== null) push(clears, 'known');
-          else push(p.windowEndsAtMs, g.prohibited ? 'prohibited' : 'unknown');
+      const g = p.graze;
+      // As `evaluateGrazing`: an undated or forbidden finding counts only
+      // inside the lookback, a dated one until it clears, even when its
+      // farm-local midnight falls just past the lookback.
+      const active =
+        g.days === null || g.prohibited
+          ? app.appliedAtMs >= exposed - p.lookMs
+          : g.days > 0 && exposed < (g.clearsAtMs ?? 0);
+      if (active) {
+        let clears: number | null = g.clearsAtMs;
+        if (input.food === 'meat' && clears !== null) {
+          clears =
+            p.removalDays === undefined
+              ? null
+              : roundedCached(cache, clears, p.removalDays, input.timeZone);
         }
+        if (clears !== null) push(clears, 'known');
+        else push(p.windowEndsAtMs, g.prohibited ? 'prohibited' : 'unknown');
       }
       if (input.food === 'meat' && p.removalApplies) {
         const left = Math.min(to, p.windowEndsAtMs);

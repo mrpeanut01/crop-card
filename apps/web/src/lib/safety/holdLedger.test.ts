@@ -627,3 +627,24 @@ describe('FACT_EFFECT', () => {
     }
   });
 });
+
+describe('grazing exposure past the exact lookback (0.7.3)', () => {
+  it('holds eggs of a hen that went onto a pasture whose year-long interval has not cleared', () => {
+    const sprayedAt = NOW - 400 * DAY;
+    const arrive = sprayedAt + 365 * DAY + 3_600_000;
+    const facts: HoldFact[] = [
+      hen('h1'),
+      { kind: 'block-assignment', blockId: 'b1', fieldId: 'pasture' },
+      spray('spray:s1', 'b1', sprayedAt, {
+        source: 'label',
+        grazeDays: 365,
+        lactatingDairyGrazeDays: 365
+      }),
+      stay({ id: 'st1', subjectId: 'h1', fieldId: 'pasture', fromMs: arrive, toMs: arrive + DAY })
+    ];
+    const spans = projectHolds(facts, NOW, { ...ctx, registryMaxIntervalDays: 365 }).holds.get(
+      eggsOf('animal:h1')
+    );
+    expect(spans?.some((s) => s.fromMs <= arrive && arrive < s.toMs)).toBe(true);
+  });
+});

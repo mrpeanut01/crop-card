@@ -155,7 +155,6 @@ function derivationWasFamilyFallback(
 ): boolean {
   if (override !== undefined) return false;
   if (!plugin) return false;
-  const guide = plugin.plantingGuide;
-  if (guide?.seedsPerAcre && guide?.recommendedLbsPerAcre) return false;
-  return true;
+  const { seedsPerLbSource } = resolveSeedsPerLb(plugin);
+  return seedsPerLbSource !== 'plugin-direct' && seedsPerLbSource !== 'plugin-derived';
 }

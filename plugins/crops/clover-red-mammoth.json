@@ -11,7 +11,13 @@
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "soilTempMinF": 40,
-    "recommendedLbsPerAcre": 12
+    "recommendedLbsPerAcre": 12,
+    "seedingRate": {
+      "drillRowSpacingIn": {
+        "min": 6,
+        "max": 8
+      }
+    }
   },
   "harvestIndicators": [
     "10% bloom for hay",

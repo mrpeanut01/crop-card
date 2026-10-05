@@ -52,5 +52,13 @@
       "kind": "nitrate",
       "triggers": ["drought", "heavy-nitrogen"]
     }
-  ]
+  ],
+  "plantingGuide": {
+    "seedingRate": {
+      "seedsPerAcre": {
+        "min": 25000,
+        "max": 33000
+      }
+    }
+  }
 }

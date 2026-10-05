@@ -171,6 +171,39 @@ describe('fact paths', () => {
       'animalToxicity.cat'
     ]);
   });
+
+  it('asks for a source for every seeding rate value', () => {
+    const base = {
+      pluginId: 'crop-test',
+      type: 'crop',
+      displayName: 'Test Crop',
+      version: '1',
+      cropFamily: 'solanaceae',
+      harvestStyle: 'continuous-fruit',
+      bloomWindow: { daysFromPlantingMin: 1, daysFromPlantingMax: 2, beeAttractive: false }
+    };
+    const crop = cropPluginSchema.parse({
+      ...base,
+      plantingGuide: {
+        seedingRate: {
+          drilledLbsPerAcre: { min: 60, max: 120 },
+          broadcastLbsPerAcre: { min: 90, max: 160 },
+          drillRowSpacingIn: { min: 6, max: 8 }
+        }
+      }
+    });
+    expect(cropFactPaths(crop)).toEqual([
+      'seedingRate.drilledLbsPerAcre',
+      'seedingRate.broadcastLbsPerAcre',
+      'seedingRate.drillRowSpacingIn'
+    ]);
+    expect(() =>
+      cropPluginSchema.parse({
+        ...base,
+        plantingGuide: { seedingRate: { drilledLbsPerAcre: { min: 1, max: 2 }, rateGuess: 3 } }
+      })
+    ).toThrow();
+  });
 });
 
 describe('checkSources', () => {

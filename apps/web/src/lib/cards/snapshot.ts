@@ -198,6 +198,14 @@ export interface SnapshotMinMax {
   max: number;
 }
 
+export interface SnapshotSeedingRate {
+  drilledLbsPerAcre?: SnapshotMinMax;
+  broadcastLbsPerAcre?: SnapshotMinMax;
+  drilledSeedsPerSqFt?: SnapshotMinMax;
+  seedsPerAcre?: SnapshotMinMax;
+  drillRowSpacingIn?: SnapshotMinMax;
+}
+
 /** The subset of a crop plugin the Planting, Area and Care Guide cards read. */
 export interface SnapshotCropPlugin {
   pluginId: string;
@@ -219,6 +227,8 @@ export interface SnapshotCropPlugin {
     hardenOffDays?: SnapshotMinMax;
     germinationTempF?: SnapshotMinMax;
     dtmFrom?: 'direct-seed' | 'transplant';
+    /** Sourced seeding rates for drilled, broadcast or row-planted crops. */
+    seedingRate?: SnapshotSeedingRate;
   };
   harvestIndicators?: string[];
   notes?: string;

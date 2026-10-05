@@ -54,6 +54,32 @@ export const PLANTING_ESTABLISHMENTS = [
 ] as const;
 export const DTM_ANCHORS = ["direct-seed", "transplant"] as const;
 
+/** Drilled, broadcast or row-planted field crops (cover crops, forage
+ *  stands, small grains, corn, sorghum), which extension sources describe by
+ *  seeding rate and row width instead of an in-row distance. Every value is
+ *  a range the source prints and needs a crop-data-sources.json entry at
+ *  `seedingRate.<key>`; nothing here is derived. */
+export const seedingRateSchema = z
+  .object({
+    drilledLbsPerAcre: minMaxNumber.optional(),
+    broadcastLbsPerAcre: minMaxNumber.optional(),
+    /** Small grains: drilled seeds per square foot. */
+    drilledSeedsPerSqFt: minMaxNumber.optional(),
+    /** Row crops: seeds or plants per acre at planting. */
+    seedsPerAcre: minMaxNumber.optional(),
+    /** Drill or planter row width, in inches. */
+    drillRowSpacingIn: minMaxNumber.optional(),
+  })
+  .strict();
+
+export const SEEDING_RATE_KEYS = [
+  "drilledLbsPerAcre",
+  "broadcastLbsPerAcre",
+  "drilledSeedsPerSqFt",
+  "seedsPerAcre",
+  "drillRowSpacingIn",
+] as const;
+
 export const plantingGuideSchema = z
   .object({
     soilTempMinF: z.number().optional(),
@@ -95,6 +121,7 @@ export const plantingGuideSchema = z
     germinationTempF: minMaxNumber.optional(),
     /** The event `daysToMaturity` counts from. */
     dtmFrom: z.enum(DTM_ANCHORS).optional(),
+    seedingRate: seedingRateSchema.optional(),
   })
   .partial();
 

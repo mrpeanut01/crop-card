@@ -14,6 +14,7 @@ import {
   FORAGE_TRIGGER_SOURCE_KEYS,
   isPageReaderSource
 } from '$lib/forage/hazardSources';
+import { SEEDING_RATE_KEYS } from './schemas';
 import type {
   ForageHazard,
   ForageHazardKind,
@@ -141,6 +142,8 @@ export const CROP_SOURCED_GUIDE_FIELDS = [
 export function cropFactPaths(c: CropPlugin): string[] {
   const guide = c.plantingGuide ?? {};
   const paths = present('', guide, [...CROP_SOURCED_GUIDE_FIELDS]);
+  if (guide.seedingRate)
+    paths.push(...present('seedingRate.', guide.seedingRate, [...SEEDING_RATE_KEYS]));
   for (const entry of c.animalToxicity ?? []) {
     for (const id of entry.speciesIds) paths.push(`animalToxicity.${id}`);
   }

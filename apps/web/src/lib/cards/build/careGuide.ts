@@ -21,6 +21,7 @@ import {
   plantingName
 } from './common';
 import { formatInches } from './size';
+import { seedingFacts } from './seeding';
 import { familyCareTips, type CareTip, type FamilyCareTips } from './careTips';
 import { CARE_SECTION, filterSprayAdviceItems, growerFacingText } from '$lib/journal/photoHelp';
 import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
@@ -127,8 +128,9 @@ export function buildCareGuideCard(
       provenance: 'plugin'
     });
   }
+  facts.push(...seedingFacts(guide?.seedingRate, opts));
   const rows = guide?.rowSpacingIn ?? plugin.defaultRowSpacingInches;
-  if (rows) {
+  if (rows && !guide?.seedingRate?.drillRowSpacingIn) {
     facts.push({
       label: tr('cards.fact.rowSpacing'),
       value: formatInches(rows, opts.prefs),

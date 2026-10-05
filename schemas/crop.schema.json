@@ -262,6 +262,102 @@
             "direct-seed",
             "transplant"
           ]
+        },
+        "seedingRate": {
+          "type": "object",
+          "properties": {
+            "drilledLbsPerAcre": {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "max": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "min",
+                "max"
+              ],
+              "additionalProperties": false
+            },
+            "broadcastLbsPerAcre": {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "max": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "min",
+                "max"
+              ],
+              "additionalProperties": false
+            },
+            "drilledSeedsPerSqFt": {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "max": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "min",
+                "max"
+              ],
+              "additionalProperties": false
+            },
+            "seedsPerAcre": {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "max": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "min",
+                "max"
+              ],
+              "additionalProperties": false
+            },
+            "drillRowSpacingIn": {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "max": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "min",
+                "max"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

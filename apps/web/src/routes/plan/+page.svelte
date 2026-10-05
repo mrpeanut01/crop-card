@@ -1665,6 +1665,7 @@
 
     const isCrossField = sourceBlock.fieldId !== targetBlock.fieldId;
 
+    if (isCrossField && !data.canEdit) return;
     if (isCrossField && targetBlock.fieldId) {
       // Cross-field move: PATCH the block's fieldId, then invalidate so the
       // page reflects the new parent. Update the saved order first so the
@@ -1710,7 +1711,7 @@
   }
 
   function onFieldRowDragOver(ev: DragEvent, fieldId: string) {
-    if (!cropsReorderDragId) return;
+    if (!cropsReorderDragId || !data.canEdit) return;
     ev.preventDefault();
     if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
     fieldDropOverId = fieldId;
@@ -1719,7 +1720,7 @@
     if (fieldDropOverId === fieldId) fieldDropOverId = null;
   }
   async function onFieldRowDrop(ev: DragEvent, fieldId: string) {
-    if (!cropsReorderDragId) return;
+    if (!cropsReorderDragId || !data.canEdit) return;
     ev.preventDefault();
     const sourceId = cropsReorderDragId;
     cropsReorderDragId = null;

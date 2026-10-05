@@ -1,6 +1,7 @@
 <script lang="ts">
   import { isUpdatingResponse, retryAfterSeconds, updatingQueuedNotice } from '$lib/updating';
-  import type { ForecastDay, HayViolation } from '$lib/hay';
+  import type { ForecastDay, HayStatus, HayStep, HayViolation } from '$lib/hay';
+  import { nextStep as engineNextStep } from '$lib/hay';
   import { untrack } from 'svelte';
   import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
@@ -212,28 +213,40 @@
   async function abortCutting(cuttingId: string) {
     if (!confirm(tr('hayui.abortConfirm'))) return;
     busy = true;
+    error = null;
     try {
-      await fetch(`/api/hay/cuttings/${cuttingId}`, {
+      const res = await fetch(`/api/hay/cuttings/${cuttingId}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ action: 'abort' })
       });
+      if (!res.ok) {
+        const out = await res.json().catch(() => ({}));
+        error = out.error ?? tr('hayui.errAdvance');
+        return;
+      }
       reload();
+    } catch (e) {
+      error = e instanceof Error ? e.message : String(e);
     } finally {
       busy = false;
     }
   }
 
-  function nextStep(c: { status: string }): 'ted' | 'rake' | 'bale' | 'store' | null {
-    const map: Record<string, 'ted' | 'rake' | 'bale' | 'store' | null> = {
-      mowing: 'ted',
-      tedding: 'rake',
-      raking: 'bale',
-      baling: 'store',
-      complete: null,
-      aborted: null
-    };
-    return map[c.status] ?? null;
+  const DEFAULT_HAY_STEPS: readonly HayStep[] = ['mow', 'ted', 'rake', 'bale', 'store'];
+  function stepsFor(c: { cropPluginId: string }): readonly HayStep[] {
+    return (
+      data.hayCrops.find((h) => h.pluginId === c.cropPluginId)?.hayOperations?.steps ??
+      DEFAULT_HAY_STEPS
+    );
+  }
+
+  function nextStep(c: {
+    status: string;
+    cropPluginId: string;
+  }): 'ted' | 'rake' | 'bale' | 'store' | null {
+    const step = engineNextStep(stepsFor(c), c.status as HayStatus);
+    return step === null || step === 'mow' ? null : step;
   }
 
   const STATUS_KEY = {
@@ -417,7 +430,7 @@
         </header>
         <ul class="timeline">
           <li>{tr('hayui.tl.mow', { ts: fmtTs(c.mowAt) })}</li>
-          {#if selectedCrop?.hayOperations?.steps.includes('ted')}
+          {#if stepsFor(c).includes('ted')}
             <li>{tr('hayui.tl.ted', { ts: fmtTs(c.tedAt) })}</li>
           {/if}
           <li>{tr('hayui.tl.rake', { ts: fmtTs(c.rakeAt) })}</li>

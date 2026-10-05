@@ -863,19 +863,19 @@
         label={tr('plugins.new.preTasks')}
         helpText={tr('plugins.new.helpPre')}
         variant="preTasks"
-        rows={preTasks}
+        bind:rows={preTasks}
       />
       <PluginTaskListEditor
         label={tr('plugins.new.postTasks')}
         helpText={tr('plugins.new.helpPost')}
         variant="postTasks"
-        rows={postTasks}
+        bind:rows={postTasks}
       />
       <PluginTaskListEditor
         label={tr('plugins.new.seasonalTasks')}
         helpText={tr('plugins.new.helpSeasonal')}
         variant="seasonalTasks"
-        rows={seasonalTasks}
+        bind:rows={seasonalTasks}
       />
     </section>
   {:else if mode === 'herbicide'}

@@ -16,7 +16,7 @@ export const _requestSchema = journalEntrySchema;
 /** GET /api/plantings/[id]/journal. Newest first; photos load separately. */
 export const GET: RequestHandler = (event) => {
   requireUser(event);
-  const crop = cropOr404(event.params.id);
+  const crop = cropOr404(event.params.id, event.locals?.locale);
   if (crop instanceof Response) return crop;
   return json({ entries: listJournalForCrop(crop.id) });
 };
@@ -27,6 +27,6 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const who = await journalWriter(event);
   if (!who.ok) return who.response;
   const parsed = journalEntrySchema.safeParse(await readJson(event));
-  if (!parsed.success) return badRequest(parsed.error);
+  if (!parsed.success) return badRequest(parsed.error, event.locals?.locale);
   return addJournalEntry(event, event.params.id ?? '', who.userId, parsed.data);
 });

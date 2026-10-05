@@ -330,3 +330,31 @@ describe('dragging a crop onto a bed', () => {
     list.cleanup();
   });
 });
+
+describe('placing a scheduled planting the server refuses', () => {
+  it('rolls back and offers no jump to its date', async () => {
+    const design = kitchenGarden({
+      plantings: [
+        plantingRow({
+          id: 'later',
+          cropPluginId: LETTUCE.pluginId,
+          varietyDisplayName: 'Lettuce',
+          plantingDateMs: APR_15
+        })
+      ]
+    });
+    const { d, calls, cleanup } = make({ design }, () => ({
+      status: 409,
+      body: { error: 'No room for Lettuce there in Bed 1.', code: 'OVERLAP' }
+    }));
+    expect(d.dateMs).not.toBe(APR_15);
+    await d.placeCrop({ source: 'planting', cropId: 'later', label: 'Lettuce' }, 'bed1');
+    await flush();
+    expect(calls).toHaveLength(1);
+    expect(d.design.plantings.find((p) => p.cropId === 'later')?.footprint).toBeNull();
+    expect(d.alert).toBe('No room for Lettuce there in Bed 1.');
+    expect(d.jumpTo).toBeNull();
+    expect(d.selectedCropId).toBeNull();
+    cleanup();
+  });
+});

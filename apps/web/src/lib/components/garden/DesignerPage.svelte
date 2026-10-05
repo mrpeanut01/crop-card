@@ -114,6 +114,7 @@
     const goOnline = () => {
       d.offline = false;
       if (data.offline) void invalidateAll();
+      else if (d.design.readOnlyReason === 'offline') void restoreOnlineDesign();
     };
     window.addEventListener('offline', goOffline);
     window.addEventListener('online', goOnline);
@@ -136,6 +137,15 @@
     } catch {
       /* no snapshot store in this browser: keep the page's own copy */
     }
+  }
+
+  /** Back online after the page swapped to the read-only offline copy:
+   *  fetch the design again so the owner can edit without a reload. */
+  async function restoreOnlineDesign(): Promise<void> {
+    await invalidateAll();
+    if (d.offline || data.offline) return;
+    d.design = data.design;
+    d.history = data.history;
   }
 
   function setView(v: 'canvas' | 'list'): void {

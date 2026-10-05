@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PUSH_ALERT_KINDS } from '$lib/push/prefs';
+import { assertUrlAllowed } from '$lib/server/safeFetch';
 
 const MAX_ENDPOINT_LENGTH = 2048;
 
@@ -13,7 +14,17 @@ export const endpointSchema = z
   .string()
   .max(MAX_ENDPOINT_LENGTH)
   .url()
-  .refine((v) => v.startsWith('https://'), 'push endpoint must be https');
+  .refine((v) => v.startsWith('https://'), 'push endpoint must be https')
+  .refine(isPublicUrl, 'push endpoint must be a public address');
+
+function isPublicUrl(v: string): boolean {
+  try {
+    assertUrlAllowed(v);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export const prefsPatchSchema = z
   .object(

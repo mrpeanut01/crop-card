@@ -259,6 +259,19 @@ async function resolveValidated(
   return { address: first.address, family: isIP(first.address) === 6 ? 6 : 4 };
 }
 
+/** For callers that must use their own HTTP client (Web Push POSTs): the
+ *  same URL and DNS checks `safeFetch` runs before connecting. Throws
+ *  `SafeFetchError`. The connection itself is not pinned, so a redirect
+ *  must not be followed and DNS can still change after the check. */
+export async function assertResolvesPublic(
+  raw: string | URL,
+  resolver: Resolver = defaultResolver
+): Promise<URL> {
+  const u = assertUrlAllowed(raw);
+  await resolveValidated(u, resolver);
+  return u;
+}
+
 // ─── Default transport ─────────────────────────────────────────────────
 
 function pinnedLookup(address: string, family: 4 | 6): LookupFunction {

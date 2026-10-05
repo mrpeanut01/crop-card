@@ -21,6 +21,7 @@ import type { PollinatorAttestation } from '$lib/records/pollinatorAttestation';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { listScoutObservations } from '$lib/db/scoutObservations';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
+import { getCutting } from '$lib/db/hayCuttings';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/server/sprayers';
 import { db } from '$lib/db/client';
@@ -142,6 +143,23 @@ export const load: PageServerLoad = async (event) => {
       quantity: ev.quantity,
       lotNumber: ev.lotNumber
     };
+  } else if (kind === 'hay') {
+    const c = getCutting(rowId);
+    if (!c) throw error(404, 'hay record not found');
+    occurredAt = c.mowAt ?? c.baleAt ?? c.storedAt ?? c.createdAt;
+    locked = isLocked(occurredAt, undefined, now);
+    performerLabel = performerEmail(c.performedById);
+    detail = {
+      blockLabel: blockLabelById.get(c.blockId) ?? c.blockId,
+      cropPluginId: c.cropPluginId,
+      cuttingNumber: c.cuttingNumber,
+      status: c.status,
+      baleType: c.baleType,
+      balesQuantity: c.balesQuantity,
+      baleMoisturePct: c.baleMoisturePct,
+      rulesVersion: c.rulesVersion,
+      notes: c.notes
+    };
   } else if (kind === 'fertility') {
     const row = db
       .select()
@@ -201,6 +219,7 @@ export const load: PageServerLoad = async (event) => {
       payloadJson: row.payloadJson
     };
   }
+  if (!detail) throw error(404, 'record not found');
 
   return {
     kind,

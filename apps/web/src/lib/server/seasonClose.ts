@@ -17,6 +17,8 @@
 import { eq } from 'drizzle-orm';
 import { RULES_VERSION } from '$lib/safety/version';
 import { t } from '$lib/i18n';
+import { ymdInZone } from '$lib/prefs';
+import { farmTimeZone } from '$lib/db/userProfile';
 import { db } from '$lib/db/client';
 import { seasonCloseouts } from '$lib/db/schema';
 import { withTenant } from '$lib/db/tenant';
@@ -41,10 +43,11 @@ export interface SeasonClosedBlock {
   message: string;
 }
 
-/** The calendar year (local time) a record timestamp falls in. Season
- *  close-outs are keyed on this year. */
-export function seasonYearOf(occurredAtMs: number): number {
-  return new Date(occurredAtMs).getFullYear();
+/** The farm-local calendar year a record timestamp falls in. Season
+ *  close-outs are keyed on this year; the server runs in UTC, so reading
+ *  the process's local year would put a US Dec 31 evening in next year. */
+export function seasonYearOf(occurredAtMs: number, timeZone: string = farmTimeZone()): number {
+  return Number(ymdInZone(occurredAtMs, timeZone).slice(0, 4));
 }
 
 /**

@@ -63,10 +63,16 @@ function msInYear(year: number, monthIdx = 5, day = 15): number {
 }
 
 describe('seasonYearOf', () => {
-  it('maps a timestamp to its local calendar year', () => {
+  it('maps a timestamp to its farm-local calendar year', () => {
     expect(seasonYearOf(msInYear(2026))).toBe(2026);
-    expect(seasonYearOf(new Date(2026, 0, 1, 0, 0, 0).getTime())).toBe(2026);
-    expect(seasonYearOf(new Date(2026, 11, 31, 23, 0, 0).getTime())).toBe(2026);
+    // Jan 1 00:30 and Dec 31 23:30 in New York.
+    expect(seasonYearOf(Date.UTC(2026, 0, 1, 5, 30), 'America/New_York')).toBe(2026);
+    expect(seasonYearOf(Date.UTC(2027, 0, 1, 4, 30), 'America/New_York')).toBe(2026);
+  });
+
+  it('keeps a US Dec 31 evening in that year, not the next UTC year', () => {
+    // 8pm EST on Dec 31 is already Jan 1 in UTC.
+    expect(seasonYearOf(Date.UTC(2027, 0, 1, 1, 0))).toBe(2026);
   });
 });
 
@@ -106,12 +112,14 @@ describe('checkSeasonClosed gate', () => {
     const owner = freshOwner();
     runWithTenant(owner, () => {
       closeSeason({ year: 2030, ...baseSnapshot });
-      const jan1 = new Date(2030, 0, 1, 0, 0, 0).getTime();
-      const dec31 = new Date(2030, 11, 31, 23, 59, 59).getTime();
+      // Farm-local (default America/New_York) boundaries of 2030.
+      const jan1 = Date.UTC(2030, 0, 1, 5, 0, 0);
+      const dec31 = Date.UTC(2031, 0, 1, 4, 59, 59);
       expect(checkSeasonClosed(jan1)?.code).toBe(SEASON_CLOSED);
       expect(checkSeasonClosed(dec31)?.code).toBe(SEASON_CLOSED);
       // One second before Jan 1 (prior year) is open.
       expect(checkSeasonClosed(jan1 - 1000)).toBeNull();
+      expect(checkSeasonClosed(dec31 + 1000)).toBeNull();
     });
   });
 

@@ -33,6 +33,7 @@ import {
 import { getDataKinds, getRegistry } from '$lib/server/registry';
 import { INVENTORY_TYPES, type InventoryType } from '$lib/inventory/types';
 import { resolveArchetype, type AnimalHealthPlugin } from '$lib/plugins/schemas';
+import type { PollinatorLabelFields } from '$lib/pollinator/labelText';
 import { listAnimals } from '$lib/db/animals';
 import { listAnimalGroups } from '$lib/db/animalGroups';
 import { canMutate } from '$lib/server/session';
@@ -63,6 +64,8 @@ export interface PesticideDetailPayload {
     preHarvestIntervalDays?: number;
     activeIngredients?: Array<{ name: string; chemistryClass?: string }>;
     ratePerAcre?: { amount: number; unit: string };
+    pollinatorRisk?: string;
+    pollinator?: PollinatorLabelFields['pollinator'];
   };
 }
 

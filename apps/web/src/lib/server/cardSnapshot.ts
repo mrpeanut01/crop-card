@@ -287,7 +287,12 @@ export function toSprayProduct(p: Plugin): SnapshotSprayProduct | null {
       loadClasses: ['fungicide-load'],
       mixSteps: [],
       rainfastHours: p.rainfastHours ?? null,
-      pollinator: null
+      pollinator: p.pollinator
+        ? {
+            beeToxicity: p.pollinator.beeToxicity,
+            bloomRestriction: p.pollinator.bloomRestriction
+          }
+        : null
     };
   }
   return null;

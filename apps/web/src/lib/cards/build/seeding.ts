@@ -32,12 +32,16 @@ export function seedingFacts(
   const { tr, prefs } = opts;
   const facts: CardFact[] = [];
   const push = (label: string, value: string) => facts.push({ label, value, provenance: 'plugin' });
-  if (rate.drilledLbsPerAcre)
-    push(tr('cards.fact.seedDrilled'), range(rate.drilledLbsPerAcre, 'weightPerArea', prefs));
+  const weight = (r: SnapshotMinMax) => {
+    const value = range(r, 'weightPerArea', prefs);
+    if (!rate.seedBasis) return value;
+    return tr('cards.fact.withBasis', { value, basis: tr(`cards.fact.seedBasis.${rate.seedBasis}`) });
+  };
+  if (rate.drilledLbsPerAcre) push(tr('cards.fact.seedDrilled'), weight(rate.drilledLbsPerAcre));
   if (rate.drilledSeedsPerSqFt)
     push(tr('cards.fact.seedPerSqFt'), perSqFt(rate.drilledSeedsPerSqFt, opts));
   if (rate.broadcastLbsPerAcre)
-    push(tr('cards.fact.seedBroadcast'), range(rate.broadcastLbsPerAcre, 'weightPerArea', prefs));
+    push(tr('cards.fact.seedBroadcast'), weight(rate.broadcastLbsPerAcre));
   if (rate.seedsPerAcre)
     push(tr('cards.fact.seedPopulation'), range(rate.seedsPerAcre, 'perArea', prefs));
   if (rate.drillRowSpacingIn)

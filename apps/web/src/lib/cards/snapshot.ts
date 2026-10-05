@@ -204,6 +204,7 @@ export interface SnapshotSeedingRate {
   drilledSeedsPerSqFt?: SnapshotMinMax;
   seedsPerAcre?: SnapshotMinMax;
   drillRowSpacingIn?: SnapshotMinMax;
+  seedBasis?: 'bulk' | 'pls';
 }
 
 /** The subset of a crop plugin the Planting, Area and Care Guide cards read. */

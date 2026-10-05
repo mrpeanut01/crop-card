@@ -13,10 +13,15 @@
     "soilTempMinF": 60,
     "recommendedLbsPerAcre": 60,
     "seedingRate": {
+      "drilledLbsPerAcre": {
+        "min": 50,
+        "max": 60
+      },
       "drillRowSpacingIn": {
         "min": 6,
         "max": 8
-      }
+      },
+      "seedBasis": "bulk"
     }
   },
   "notes": "Quick-cycling 30–45 day summer smother crop. Fits between spring + fall cash crops. NOT a true grass family — but kernel-grouped under cover-grass for termination semantics.",

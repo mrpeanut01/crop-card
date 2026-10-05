@@ -22,7 +22,12 @@
       "drilledLbsPerAcre": {
         "min": 15,
         "max": 20
-      }
+      },
+      "broadcastLbsPerAcre": {
+        "min": 25,
+        "max": 30
+      },
+      "seedBasis": "bulk"
     }
   },
   "harvestIndicators": [

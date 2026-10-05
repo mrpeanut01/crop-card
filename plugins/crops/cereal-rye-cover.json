@@ -41,7 +41,8 @@
       "broadcastLbsPerAcre": {
         "min": 90,
         "max": 160
-      }
+      },
+      "seedBasis": "bulk"
     }
   }
 }

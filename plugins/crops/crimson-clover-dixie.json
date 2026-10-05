@@ -19,10 +19,15 @@
       "max": 0.5
     },
     "seedingRate": {
+      "drilledLbsPerAcre": {
+        "min": 15,
+        "max": 18
+      },
       "broadcastLbsPerAcre": {
         "min": 22,
         "max": 30
-      }
+      },
+      "seedBasis": "bulk"
     }
   },
   "harvestIndicators": [

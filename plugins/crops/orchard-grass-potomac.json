@@ -10,7 +10,13 @@
   },
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
-    "recommendedLbsPerAcre": 14
+    "recommendedLbsPerAcre": 14,
+    "seedingRate": {
+      "drilledLbsPerAcre": {
+        "min": 10,
+        "max": 12
+      }
+    }
   },
   "harvestIndicators": [
     "Boot to early-head"

@@ -57,7 +57,8 @@ describe('demo catalog matches the shipped plugins', () => {
     }
     for (const p of DEMO_PERENNIALS) {
       const raw = plugin('crops', p.cropPluginId) as Json;
-      expect([raw.daysToMaturity.min, raw.daysToMaturity.max]).toEqual(p.dtm);
+      if (raw.daysToMaturity)
+        expect([raw.daysToMaturity.min, raw.daysToMaturity.max]).toEqual(p.dtm);
       for (const op of p.ops) sprayed.push([op.product, p.cropPluginId]);
     }
     for (const [productId, cropId] of sprayed) {

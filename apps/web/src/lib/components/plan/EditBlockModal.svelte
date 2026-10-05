@@ -53,25 +53,28 @@
   let saveError = $state<string | null>(null);
   let modalEl = $state<HTMLDivElement | null>(null);
 
+  // Seed the form once per open block: the parent hands a fresh `block`
+  // object after every invalidation (adding a cover here triggers one), and
+  // re-seeding then would wipe what the farmer has typed.
+  let seededFor: string | null = null;
   $effect(() => {
-    if (open && block) {
-      name = block.name;
-      blockLabel = block.blockLabel ?? '';
-      acres = block.acres ?? null;
-      widthFt = block.widthFt ?? null;
-      lengthFt = block.lengthFt ?? null;
-      saveError = null;
+    if (!open || !block) {
+      seededFor = null;
+      return;
     }
-  });
-
-  // #355 — on open, move focus into the dialog (first input) so the trigger
-  // doesn't keep focus off-screen; Tab wraps within the modal (focus trap).
-  $effect(() => {
-    if (open && block) {
-      queueMicrotask(() => {
-        document.getElementById('edit-block-name')?.focus();
-      });
-    }
+    if (seededFor === block.id) return;
+    seededFor = block.id;
+    name = block.name;
+    blockLabel = block.blockLabel ?? '';
+    acres = block.acres ?? null;
+    widthFt = block.widthFt ?? null;
+    lengthFt = block.lengthFt ?? null;
+    saveError = null;
+    // #355 — on open, move focus into the dialog (first input) so the
+    // trigger doesn't keep focus off-screen; Tab wraps within the modal.
+    queueMicrotask(() => {
+      document.getElementById('edit-block-name')?.focus();
+    });
   });
 
   function getFocusable(): HTMLElement[] {

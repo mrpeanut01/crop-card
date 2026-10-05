@@ -6,6 +6,7 @@
   import { page } from '$app/state';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import {
+    fallbackFrost,
     lookupFrostDates,
     type FrostLookupResult,
     type FrostProbability
@@ -76,13 +77,19 @@
   let seq = 0;
 
   async function runLookup() {
+    const mine = ++seq;
     if (lat == null || lon == null) {
       lookup = null;
+      loading = false;
       return;
     }
-    const mine = ++seq;
     loading = true;
-    const result = await lookupFrostDates(lat, lon, { probability });
+    let result: FrostLookupResult;
+    try {
+      result = await lookupFrostDates(lat, lon, { probability });
+    } catch {
+      result = fallbackFrost('no-dataset', probability);
+    }
     if (mine !== seq) return;
     lookup = result;
     loading = false;

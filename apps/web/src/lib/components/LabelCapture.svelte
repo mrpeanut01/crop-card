@@ -17,12 +17,20 @@
   let error: string | undefined = $state();
   let ready = $state(false);
 
+  let destroyed = false;
+
   async function startCamera() {
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
+      const s = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 } }
       });
-      if (!videoEl) return;
+      // Closed while the permission prompt or camera start was pending:
+      // release the camera instead of leaving it running unseen.
+      if (destroyed || !videoEl) {
+        s.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      stream = s;
       videoEl.srcObject = stream;
       await videoEl.play();
       ready = true;
@@ -57,6 +65,7 @@
     startCamera();
   });
   onDestroy(() => {
+    destroyed = true;
     stopCamera();
   });
 </script>

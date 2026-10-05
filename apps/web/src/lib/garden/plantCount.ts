@@ -12,7 +12,23 @@ import type {
   SpacingPattern
 } from './types';
 
+/** Placeholder for a crop with no spacing on file. It has no source, so
+ *  every use is tagged `fallback` (#555). */
 export const FALLBACK_SPACING_IN = 12;
+export const FALLBACK_SPACING_PROVENANCE = 'fallback' as const;
+
+export interface SpacingValue {
+  inches: number;
+  provenance: 'plugin' | typeof FALLBACK_SPACING_PROVENANCE;
+}
+
+interface SpacingFields {
+  defaultRowSpacingInches?: number | null;
+  plantingGuide?: {
+    rowSpacingIn?: number | null;
+    inRowSpacingIn?: { min: number; max: number } | null;
+  } | null;
+}
 
 const EPS = 1e-9;
 const SFG_CELL_IN = 12;
@@ -25,31 +41,44 @@ function fl(value: number): number {
   return Math.max(0, Math.floor(value + EPS));
 }
 
-/** Plugin spacing (in-row midpoint, row spacing), else
- *  `defaultRowSpacingInches` both ways, else `FALLBACK_SPACING_IN`. A manual
- *  override wins for whichever values it carries. */
+/** Row spacing: the plugin's row spacing, then `defaultRowSpacingInches`,
+ *  else the tagged placeholder. */
+export function rowSpacingOf(crop: SpacingFields | undefined): SpacingValue {
+  const row = crop?.plantingGuide?.rowSpacingIn;
+  if (positive(row)) return { inches: row, provenance: 'plugin' };
+  const def = crop?.defaultRowSpacingInches;
+  if (positive(def)) return { inches: def, provenance: 'plugin' };
+  return { inches: FALLBACK_SPACING_IN, provenance: FALLBACK_SPACING_PROVENANCE };
+}
+
+/** In-row spacing: the midpoint of the plugin's in-row range, else the tagged
+ *  placeholder. Row spacing is never used as in-row spacing. */
+export function inRowSpacingOf(crop: SpacingFields | undefined): SpacingValue {
+  const range = crop?.plantingGuide?.inRowSpacingIn;
+  const mid = range ? (range.min + range.max) / 2 : NaN;
+  if (positive(mid)) return { inches: mid, provenance: 'plugin' };
+  return { inches: FALLBACK_SPACING_IN, provenance: FALLBACK_SPACING_PROVENANCE };
+}
+
+/** Plugin spacing (in-row midpoint, row spacing), else the tagged placeholder
+ *  in-row with the plugin's row spacing when it has one. A manual override
+ *  wins for whichever values it carries. */
 export function resolveSpacing(
   crop: GardenCrop | undefined,
   pattern: SpacingPattern,
   override?: { inRowIn?: number | null; rowIn?: number | null }
 ): PlantSpacing {
-  const guide = crop?.plantingGuide;
-  const range = guide?.inRowSpacingIn;
-  let inRowIn: number;
+  const inRow = inRowSpacingOf(crop);
+  const guideRow = crop?.plantingGuide?.rowSpacingIn;
+  let inRowIn = inRow.inches;
   let rowIn: number;
   let source: PlantSpacing['source'];
-  const mid = range ? (range.min + range.max) / 2 : NaN;
-  if (positive(mid)) {
-    inRowIn = mid;
-    rowIn = positive(guide?.rowSpacingIn) ? guide.rowSpacingIn : mid;
+  if (inRow.provenance === 'plugin') {
+    rowIn = positive(guideRow) ? guideRow : inRow.inches;
     source = 'plugin';
   } else {
-    const fallback = positive(crop?.defaultRowSpacingInches)
-      ? crop.defaultRowSpacingInches
-      : FALLBACK_SPACING_IN;
-    inRowIn = fallback;
-    rowIn = fallback;
-    source = 'fallback';
+    rowIn = rowSpacingOf(crop).inches;
+    source = FALLBACK_SPACING_PROVENANCE;
   }
   if (positive(override?.inRowIn)) {
     inRowIn = override.inRowIn;

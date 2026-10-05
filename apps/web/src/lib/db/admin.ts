@@ -13,7 +13,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { type SQL, and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
+import { type SQL, and, eq, inArray, isNotNull, isNull, lte, or } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
 import { plantingInGround } from '$lib/garden/inGround';
@@ -82,6 +82,7 @@ import {
 import { ownerStoragePrefix } from './documents';
 import { unlinkMapFeaturesFromField } from './mapFeatures';
 import { liveHoldParams } from './holdParams';
+import { LOCK_WINDOW_MS } from './recordKinds';
 import { evaluateLock as evaluateSprayLock, getSprayEvent } from './sprayEvents';
 import { evaluateLock as evaluateInsecticideLock, getInsecticideEvent } from './insecticideEvents';
 import { evaluateLock as evaluateFungicideLock, getFungicideEvent } from './fungicideEvents';
@@ -501,6 +502,39 @@ export function deleteCropCascade(
   removed.crops = del(crops, eq(crops.id, id));
 
   return { removed };
+}
+
+/** FR-09 / Invariant 5: whether deleting this planting would destroy a
+ *  record already past its 48-hour lock (a spray, insecticide, fungicide,
+ *  harvest or hay cutting dated 48 hours or more ago). */
+export function cropHasLockedRecords(id: string, nowMs: number = Date.now()): boolean {
+  const cutoff = new Date(nowMs - LOCK_WINDOW_MS);
+  const any = <T extends TenantScopedTable>(table: T, where: SQL | undefined): boolean =>
+    db
+      .select()
+      .from(table as SQLiteTable)
+      .where(withTenant(table, where))
+      .limit(1)
+      .all().length > 0;
+  return (
+    any(sprayEvents, and(eq(sprayEvents.cropId, id), lte(sprayEvents.occurredAt, cutoff))) ||
+    any(
+      insecticideEvents,
+      and(eq(insecticideEvents.cropId, id), lte(insecticideEvents.occurredAt, cutoff))
+    ) ||
+    any(
+      fungicideEvents,
+      and(eq(fungicideEvents.cropId, id), lte(fungicideEvents.occurredAt, cutoff))
+    ) ||
+    any(harvestEvents, and(eq(harvestEvents.cropId, id), lte(harvestEvents.occurredAt, cutoff))) ||
+    any(
+      hayCuttings,
+      and(
+        eq(hayCuttings.cropId, id),
+        or(lte(hayCuttings.mowAt, cutoff), lte(hayCuttings.createdAt, cutoff))
+      )
+    )
+  );
 }
 
 // ─── Per-block (the heaviest cascade) ───────────────────────────────────

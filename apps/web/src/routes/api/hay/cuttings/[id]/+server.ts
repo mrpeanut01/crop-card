@@ -29,6 +29,8 @@ import { farmTimeZone } from '$lib/db/userProfile';
 import { MAX_FUTURE_SKEW_MS } from '$lib/animals/model';
 import { hayCutGate } from '$lib/server/grazingGate';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
+import { LOCK_WINDOW_MS } from '$lib/db/recordKinds';
+import { t } from '$lib/i18n';
 
 const patchSchema = z.discriminatedUnion('action', [
   z.object({
@@ -210,7 +212,8 @@ export const PATCH: RequestHandler = async (event) => {
 };
 
 /**
- * DELETE /api/hay/cuttings/:id — hard delete a recorded cutting.
+ * DELETE /api/hay/cuttings/:id — hard delete a recorded cutting. Past the
+ * FR-09 48-hour lock only the owner can, with `?force=true`.
  */
 export const DELETE: RequestHandler = async (eventCtx) => {
   if (!eventCtx.params.id) throw error(400, 'id required');
@@ -218,8 +221,25 @@ export const DELETE: RequestHandler = async (eventCtx) => {
   if (auth && !canMutate(auth.role)) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
   }
+  const existing = getCutting(eventCtx.params.id);
+  if (!existing) throw error(404, 'cutting not found');
+  const locale = eventCtx.locals?.locale;
+  if (Date.now() - (existing.mowAt ?? existing.createdAt) >= LOCK_WINDOW_MS) {
+    if (auth?.role !== 'owner') {
+      return json(
+        { error: t(locale, 'hayui.api.deleteLockedOwnerOnly'), code: 'RECORD_LOCKED' },
+        { status: 403 }
+      );
+    }
+    if (eventCtx.url.searchParams.get('force') !== 'true') {
+      return json(
+        { error: t(locale, 'hayui.api.deleteLockedForce'), code: 'RECORD_LOCKED' },
+        { status: 422 }
+      );
+    }
+  }
   const { deleteHayCutting } = await import('$lib/db/admin');
-  const id = eventCtx.params.id;
+  const id = existing.id;
   const guarded = await tryGuardedHoldWrite(eventCtx, auth, () => deleteHayCutting(id));
   if (!guarded.ok) return guarded.response;
   return json(guarded.value);

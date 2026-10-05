@@ -10,7 +10,7 @@ import { createBlock } from './blocks';
 import { createPlanned } from './crops';
 import { insertFungicideEvent, getFungicideEvent } from './fungicideEvents';
 import { insertScoutObservation } from './scoutObservations';
-import { deleteBlockCascade, deleteCropCascade } from './admin';
+import { cropHasLockedRecords, deleteBlockCascade, deleteCropCascade } from './admin';
 
 function seed() {
   const ownerId = `cropfk-${randomUUID()}`;
@@ -78,6 +78,14 @@ describe('planting and block deletes with fungicide and scout records', () => {
     runWithTenant(s.ownerId, () => {
       expect(() => deleteBlockCascade(s.blockId)).not.toThrow();
       expect(getFungicideEvent(s.fungId)).toBeUndefined();
+    });
+  });
+
+  it('reports a planting with a record past the 48-hour lock', () => {
+    const s = seed();
+    runWithTenant(s.ownerId, () => {
+      expect(cropHasLockedRecords(s.cropId)).toBe(true);
+      expect(cropHasLockedRecords(s.cropId, Date.now() - 2 * 86_400_000)).toBe(false);
     });
   });
 });

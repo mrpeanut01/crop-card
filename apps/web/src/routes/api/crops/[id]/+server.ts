@@ -11,7 +11,7 @@
  */
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
-import { deleteCropCascade } from '$lib/db/admin';
+import { cropHasLockedRecords, deleteCropCascade } from '$lib/db/admin';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { getBlock } from '$lib/db/blocks';
 import {
@@ -27,6 +27,7 @@ import { reanchorCropTasks } from '$lib/db/tasks';
 import { currentUser } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
+import { t } from '$lib/i18n';
 import { cropPatchSchema } from '$lib/crops/apiSchemas';
 import { cropLookupFrom, failureResponse, writeFootprint } from '$lib/server/garden/placement';
 import { getRegistry } from '$lib/server/registry';
@@ -244,6 +245,12 @@ export const DELETE: RequestHandler = async (event) => {
   }
   const c = getCrop(event.params.id);
   if (!c) throw error(404, 'crop not found');
+  if (auth?.role !== 'owner' && cropHasLockedRecords(c.id)) {
+    return json(
+      { error: t(event.locals?.locale, 'crops.api.deleteLockedOwnerOnly'), code: 'RECORD_LOCKED' },
+      { status: 403 }
+    );
+  }
   const id = event.params.id;
   const guarded = await tryGuardedHoldWrite(event, auth, () => deleteCropCascade(id));
   if (!guarded.ok) return guarded.response;

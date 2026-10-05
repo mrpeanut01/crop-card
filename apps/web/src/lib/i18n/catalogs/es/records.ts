@@ -394,6 +394,10 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'harvestui.upcoming': 'Ventanas próximas',
   'harvestui.upcomingWindows': 'ventanas próximas ·',
   'harvestui.windowRange': 'Ventana {range}',
+  'hayui.api.deleteLockedOwnerOnly':
+    'Este corte tiene más de 48 horas, así que solo el dueño puede eliminarlo. Pídeselo al dueño.',
+  'hayui.api.deleteLockedForce':
+    'Este corte tiene más de 48 horas y está bloqueado. Confirma que quieres eliminarlo de todos modos.',
   'hayui.abort': 'Cancelar corte',
   'hayui.abortConfirm':
     '¿Cancelar este corte? Úsalo solo si se descartó el proceso de segar a empacar.',

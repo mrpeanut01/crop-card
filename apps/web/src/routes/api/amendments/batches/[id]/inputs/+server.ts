@@ -17,7 +17,7 @@ import { invalidBody } from '$lib/organic/access.server';
 import { batchInputCreateSchema } from '$lib/amendments/apiSchemas';
 import { batchReaches } from '$lib/amendments/carryover';
 import { AMENDMENT_LOT_CATEGORIES } from '$lib/amendments/model';
-import { assertAnimalSubject, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertAnimalSubject, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { loadCarryoverData } from '$lib/server/amendmentChain';
 import {
   batchView,
@@ -53,7 +53,10 @@ export const POST: RequestHandler = async (event) => {
   }
 
   if (input.inputType === 'animal' || input.inputType === 'group') {
-    const bad = rejectForeignRefs(assertAnimalSubject('inputId', input.inputType, input.inputId));
+    const bad = rejectForeignRefsIn(
+      event.locals?.locale,
+      assertAnimalSubject('inputId', input.inputType, input.inputId)
+    );
     if (bad) return bad;
   } else if (input.inputType === 'batch') {
     if (!getBatch(input.inputId))

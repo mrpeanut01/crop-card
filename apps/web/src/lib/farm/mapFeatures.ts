@@ -117,6 +117,10 @@ export function mapFeatureLabel(kind: MapFeatureKind, locale?: string | null): s
   return t(locale, `farm.feat.${kind}`);
 }
 
+function kindWord(kind: MapFeatureKind, locale?: string | null): string {
+  return mapFeatureLabel(kind, locale).toLowerCase();
+}
+
 export function waterSourceLabel(source: WaterSourceType, locale?: string | null): string {
   return t(locale, `farm.water.${source}`);
 }
@@ -148,12 +152,16 @@ export type FeatureDetailsResult =
 /** Validates `details` against `kind`; an empty object normalizes to null. */
 export function validateFeatureDetails(
   kind: MapFeatureKind,
-  details: unknown
+  details: unknown,
+  locale?: string | null
 ): FeatureDetailsResult {
   if (details === null || details === undefined) return { ok: true, details: null };
   const parsed = MAP_FEATURE_DETAILS_SCHEMAS[kind].safeParse(details);
   if (!parsed.success) {
-    return { ok: false, message: `details don't fit a ${MAP_FEATURE_LABELS[kind].toLowerCase()}` };
+    return {
+      ok: false,
+      message: t(locale, 'map.featErr.details', { kind: kindWord(kind, locale) })
+    };
   }
   const clean = Object.fromEntries(
     Object.entries(parsed.data).filter(([, v]) => v !== undefined)
@@ -202,46 +210,48 @@ export type GeometryResult =
  * used. Lines need at least two distinct points; the geometry type must
  * match the kind.
  */
-export function parseFeatureGeometry(kind: MapFeatureKind, input: unknown): GeometryResult {
+export function parseFeatureGeometry(
+  kind: MapFeatureKind,
+  input: unknown,
+  locale?: string | null
+): GeometryResult {
+  const no = (message: string): GeometryResult => ({ ok: false, message });
   let raw = input;
   if (typeof raw === 'string') {
     try {
       raw = JSON.parse(raw);
     } catch {
-      return { ok: false, message: 'geometry is not valid JSON' };
+      return no(t(locale, 'map.featErr.notJson'));
     }
   }
   if (raw && typeof raw === 'object' && (raw as { type?: unknown }).type === 'Feature') {
     raw = (raw as { geometry?: unknown }).geometry;
   }
-  if (!raw || typeof raw !== 'object') return { ok: false, message: 'geometry is missing' };
+  if (!raw || typeof raw !== 'object') return no(t(locale, 'map.featErr.missing'));
   const g = raw as { type?: unknown; coordinates?: unknown };
   const expected = geometryTypeFor(kind);
   if (g.type !== expected) {
-    return {
-      ok: false,
-      message: `a ${MAP_FEATURE_LABELS[kind].toLowerCase()} needs a ${expected} geometry`
-    };
+    return no(t(locale, 'map.featErr.wrongType', { kind: kindWord(kind, locale), expected }));
   }
   if (expected === 'Point') {
     const p = toPosition(g.coordinates);
     return p
       ? { ok: true, geometry: { type: 'Point', coordinates: p } }
-      : { ok: false, message: 'point coordinates are out of range' };
+      : no(t(locale, 'map.featErr.pointRange'));
   }
-  if (!Array.isArray(g.coordinates)) return { ok: false, message: 'line has no coordinates' };
+  if (!Array.isArray(g.coordinates)) return no(t(locale, 'map.featErr.noCoords'));
   if (g.coordinates.length > MAX_LINE_VERTICES) {
-    return { ok: false, message: 'line has too many points' };
+    return no(t(locale, 'map.featErr.tooMany'));
   }
   const coords: Position[] = [];
   for (const c of g.coordinates) {
     const p = toPosition(c);
-    if (!p) return { ok: false, message: 'line coordinates are out of range' };
+    if (!p) return no(t(locale, 'map.featErr.lineRange'));
     coords.push(p);
   }
   const distinct = new Set(coords.map(([x, y]) => `${x},${y}`));
   if (coords.length < 2 || distinct.size < 2) {
-    return { ok: false, message: 'a line needs at least two different points' };
+    return no(t(locale, 'map.featErr.twoPoints'));
   }
   return { ok: true, geometry: { type: 'LineString', coordinates: coords } };
 }

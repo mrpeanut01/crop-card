@@ -3,7 +3,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { grazingAttestationSchema } from '$lib/animals/recordApiSchemas';
 import { insertGrazingAttestation } from '$lib/db/grazingAttestations';
 import { requireOwner } from '$lib/server/auth';
-import { assertField, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertField, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { parseBody } from '$lib/server/animals';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { interactiveOwnerRefusal, isInteractiveOwner } from '$lib/server/interactiveOwner';
@@ -31,7 +31,7 @@ export const POST: RequestHandler = async (event) => {
   const body = await parseBody(event.request, grazingAttestationSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const input = body.data;
-  const foreign = rejectForeignRefs(assertField('fieldId', input.fieldId));
+  const foreign = rejectForeignRefsIn(event.locals?.locale, assertField('fieldId', input.fieldId));
   if (foreign) return foreign;
 
   const context = await loadGrazingContext();

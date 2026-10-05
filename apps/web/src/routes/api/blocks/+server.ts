@@ -7,7 +7,7 @@ import { blockPlacementError } from '$lib/farm/blockLayout';
 import { parseKindFilter } from '$lib/farm/kindFilter';
 import { getField } from '$lib/db/fields';
 import { requireOwner } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { bedLayoutProblem } from '$lib/server/garden/bedLayout';
 
 export const GET: RequestHandler = ({ url, locals }) => {
@@ -34,7 +34,11 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
-  const foreign = rejectForeignRefs(['fieldId', parsed.data.fieldId, getField]);
+  const foreign = rejectForeignRefsIn(event.locals?.locale, [
+    'fieldId',
+    parsed.data.fieldId,
+    getField
+  ]);
   if (foreign) return foreign;
   const area = parsed.data.fieldId ? getField(parsed.data.fieldId) : undefined;
   const kind = parsed.data.kind ?? (area ? defaultBlockKindFor(area.kind) : DEFAULT_BLOCK_KIND);

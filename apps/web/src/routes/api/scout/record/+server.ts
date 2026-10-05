@@ -21,7 +21,7 @@ import { getCrop } from '$lib/db/crops';
 import { insertScoutObservation } from '$lib/db/scoutObservations';
 import { ensureSystemUser } from '$lib/db/users';
 import { currentUser } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
 import { t } from '$lib/i18n';
 
@@ -55,7 +55,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     );
   }
 
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['blockId', parsed.data.blockId, getBlock],
     ['cropId', parsed.data.cropId, getCrop]
   );

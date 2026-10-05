@@ -29,7 +29,7 @@ import type { PluginRegistry } from '$lib/plugins';
 import { evaluateHarvestMoisture, HARVEST_MOISTURE_BLOCK } from '$lib/safety/harvestMoisture';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
 import { t } from '$lib/i18n';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { evaluateHarvestPhi, type AppliedSpray } from '$lib/schedule/harvestPhi';
 import { resolveArchetype } from '$lib/plugins/schemas';
 import { hayCutGate } from '$lib/server/grazingGate';
@@ -173,7 +173,11 @@ export const POST: RequestHandler = withClientRecordId(async (requestEvent) => {
   if (!block) {
     return json({ error: t(requestEvent.locals?.locale, 'api.err.unknownBlock') }, { status: 404 });
   }
-  const foreign = rejectForeignRefs(['cropId', parsed.data.cropId, getCrop]);
+  const foreign = rejectForeignRefsIn(requestEvent.locals?.locale, [
+    'cropId',
+    parsed.data.cropId,
+    getCrop
+  ]);
   if (foreign) return foreign;
   const registry = await getRegistry();
   const plugin = registry.get(parsed.data.cropPluginId);

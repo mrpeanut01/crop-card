@@ -31,7 +31,7 @@ import { farmTimeZone, prefsFor } from '$lib/db/userProfile';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
-import { assertLedgerEntry, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertLedgerEntry, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { farmHasOrganicStatus } from '$lib/harvest/organicAtHarvest.server';
 import { dispositionNotices, presentDisposition, problem } from '$lib/server/harvestDispositions';
 import { t } from '$lib/i18n';
@@ -82,7 +82,10 @@ export const PATCH: RequestHandler = async (event) => {
         t(event.locals.locale, 'harvestui.disp.err.moneyImpersonating')
       );
     }
-    const foreign = rejectForeignRefs(assertLedgerEntry('ledgerEntryId', ledgerEntryId));
+    const foreign = rejectForeignRefsIn(
+      event.locals?.locale,
+      assertLedgerEntry('ledgerEntryId', ledgerEntryId)
+    );
     if (foreign) return foreign;
   }
 

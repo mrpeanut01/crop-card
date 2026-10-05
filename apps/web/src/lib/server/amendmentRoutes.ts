@@ -68,7 +68,7 @@ export function checkDay(
     return {
       response: json(
         {
-          error: 'invalid request',
+          error: t(locale, 'stockui.api.invalidRequest'),
           issues: [{ path: field, message: t(locale, 'amend.api.useRealDate') }]
         },
         { status: 400 }

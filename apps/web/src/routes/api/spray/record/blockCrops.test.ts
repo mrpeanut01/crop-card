@@ -56,7 +56,10 @@ vi.mock('$lib/server/sprayers', () => ({
   recordSpray: vi.fn()
 }));
 vi.mock('$lib/server/seasonClose', () => ({ checkSeasonClosed: () => null }));
-vi.mock('$lib/server/foreignRefs', () => ({ rejectForeignRefs: () => null }));
+vi.mock('$lib/server/foreignRefs', () => ({
+  rejectForeignRefs: () => null,
+  rejectForeignRefsIn: () => null
+}));
 vi.mock('$lib/db/blocks', () => ({
   getBlock: (id: string) => (id === 'blk-1' ? { id, plantings: m.plantings } : undefined)
 }));

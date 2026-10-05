@@ -438,7 +438,12 @@ export function createPlacedPlantings(
     const bed = resolveDesignableBed(item.blockId, locale);
     if (isFailure(bed)) return bed;
     const plugin = lookup(item.cropPluginId);
-    if (!plugin) return gardenFailure(400, `unknown crop plugin ${item.cropPluginId}`);
+    if (!plugin) {
+      return gardenFailure(
+        400,
+        t(locale, 'gardenlib.place.unknownPlugin', { id: item.cropPluginId })
+      );
+    }
     if (!footprintInsideBed(item.footprint, bed)) {
       return gardenFailure(
         400,

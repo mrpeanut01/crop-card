@@ -30,6 +30,7 @@ export const esApierrA: Partial<Record<MessageKey, string>> = {
   'api.err.unknownFieldId': 'fieldId desconocido',
   'api.err.unknownInputId': 'inputId desconocido',
   'api.err.unknownFertilityApplication': 'fertilityApplicationId desconocido',
+  'api.err.unknownRef': '{field} desconocido',
   'api.err.unknownPendingCalibration': 'calibración pendiente desconocida',
   'api.err.blockIdRequired': 'falta blockId',
   'api.err.blockIdParamRequired': 'falta el id del bloque',

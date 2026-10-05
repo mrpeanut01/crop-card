@@ -15,7 +15,7 @@ import {
 import { getCrop } from '$lib/db/crops';
 import { getEquipment } from '$lib/db/equipment';
 import { currentUser } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
 
 export const GET: RequestHandler = ({ params, locals }) => {
@@ -54,7 +54,11 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
-  const foreign = rejectForeignRefs(['equipmentId', parsed.data.equipmentId, getEquipment]);
+  const foreign = rejectForeignRefsIn(event.locals?.locale, [
+    'equipmentId',
+    parsed.data.equipmentId,
+    getEquipment
+  ]);
   if (foreign) return foreign;
   try {
     const binding = bindEquipment({

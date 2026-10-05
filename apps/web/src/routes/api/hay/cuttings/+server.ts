@@ -27,7 +27,7 @@ import { RULES_VERSION } from '$lib/safety/version';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { hayCutGate } from '$lib/server/grazingGate';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { MAX_FUTURE_SKEW_MS } from '$lib/animals/model';
@@ -76,7 +76,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     );
   }
 
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['blockId', parsed.data.blockId, getBlock],
     ['cropId', parsed.data.cropId, getCrop]
   );

@@ -53,7 +53,7 @@ import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 
 /** Coarse sprayer-load token for the cross-contamination state machine
  *  (#321). Fungicides carry FRAC codes, not an HRAC ChemistryClass, so the
@@ -93,7 +93,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     );
   }
 
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['blockId', parsed.data.blockId, getBlock],
     ['cropId', parsed.data.cropId, getCrop]
   );

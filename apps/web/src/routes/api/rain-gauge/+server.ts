@@ -11,7 +11,7 @@ import { insertRainGaugeReading, previousGaugeReading } from '$lib/db/irrigation
 import { rainGaugeCreateSchema } from '$lib/irrigation/apiSchemas';
 import { requireMutator } from '$lib/server/auth';
 import { withClientRecordId } from '$lib/server/clientRecordId';
-import { assertField, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertField, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { checkWhen, invalid, readJson } from '$lib/server/irrigationApi';
 import { writeRecord } from '$lib/server/recordWrite';
 import { gaugeCountsFrom } from '$lib/weather/waterBalance';
@@ -28,7 +28,10 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (!parsed.success) return invalid(parsed.error);
   const b = parsed.data;
   const fieldIds = [...new Set(b.fieldIds)];
-  const foreign = rejectForeignRefs(...fieldIds.map((id) => assertField('fieldIds', id)));
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
+    ...fieldIds.map((id) => assertField('fieldIds', id))
+  );
   if (foreign) return foreign;
 
   const now = Date.now();

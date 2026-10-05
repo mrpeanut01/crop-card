@@ -7,7 +7,7 @@ import { hasClientRecordId, withClientRecordId } from '$lib/server/clientRecordI
 import {
   assertAnimalSubject,
   firstUnknownRef,
-  rejectForeignRefs,
+  rejectForeignRefsIn,
   type ForeignRef
 } from '$lib/server/foreignRefs';
 import { guardedHoldWrite } from '$lib/server/holdGuard';
@@ -39,7 +39,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (firstUnknownRef(assertAnimalSubject('subjectId', input.subjectType, input.subjectId))) {
     return json({ error: unknownSubjectMessage, code: 'UNKNOWN_SUBJECT' }, { status: 400 });
   }
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['fieldId', input.fieldId, getField],
     assertAnimalSubject('toGroupId', 'group', input.toGroupId),
     ...(input.animalIds ?? []).map((id): ForeignRef =>

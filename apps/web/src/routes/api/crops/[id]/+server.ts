@@ -25,7 +25,7 @@ import {
 } from '$lib/db/crops';
 import { reanchorCropTasks } from '$lib/db/tasks';
 import { currentUser } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
 import { t } from '$lib/i18n';
 import { cropPatchSchema } from '$lib/crops/apiSchemas';
@@ -200,7 +200,11 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
     const id = event.params.id;
     const before = getCrop(id);
     if (!before) throw error(404, t(event.locals?.locale, 'api.err.cropNotFound'));
-    const foreign = rejectForeignRefs(['blockId', parsed.data.blockId, getBlock]);
+    const foreign = rejectForeignRefsIn(event.locals?.locale, [
+      'blockId',
+      parsed.data.blockId,
+      getBlock
+    ]);
     if (foreign) return foreign;
     const plugin = cropLookupFrom(await getRegistry())(before.cropPluginId);
     const newMs = parsed.data.plantingDate;

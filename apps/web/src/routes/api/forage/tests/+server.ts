@@ -12,7 +12,7 @@ import { zonedDayStartMs } from '$lib/exports/dateRange';
 import { forageTestCreateSchema } from '$lib/forage/apiSchemas';
 import { DEFAULT_PREFS, todayYmd } from '$lib/prefs';
 import { requireMutator, requireUser } from '$lib/server/auth';
-import { assertHayCutting, assertStockLot, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertHayCutting, assertStockLot, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { checkLabReport } from '$lib/server/soilTestDocument';
 import { localIssues } from '$lib/server/amendmentRoutes';
 import { t } from '$lib/i18n';
@@ -57,7 +57,8 @@ export const POST: RequestHandler = async (event) => {
   if (input.documentId && user.role !== 'owner') {
     return refusal(403, 'OWNER_ONLY', t(event.locals?.locale, 'forage.api.ownerAttach'));
   }
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['blockId', input.blockId, getBlock],
     assertHayCutting('hayCuttingId', input.hayCuttingId),
     assertStockLot('stockLotId', input.stockLotId)

@@ -5,7 +5,7 @@ import { getBlock } from '$lib/db/blocks';
 import { insertFertilityCredit, listFertilityCreditsForBlock } from '$lib/db/fertility';
 import { defaultCoverCredit } from '$lib/fertility/coverCropCredits';
 import { requireOwner } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 
 const inputSchema = z.object({
   blockId: z.string().min(1),
@@ -42,7 +42,11 @@ export const POST: RequestHandler = async (event) => {
     );
   }
 
-  const foreign = rejectForeignRefs(['blockId', parsed.data.blockId, getBlock]);
+  const foreign = rejectForeignRefsIn(event.locals?.locale, [
+    'blockId',
+    parsed.data.blockId,
+    getBlock
+  ]);
   if (foreign) return foreign;
 
   let { nLbPerAcre, pLbPerAcre, kLbPerAcre, notes } = parsed.data;

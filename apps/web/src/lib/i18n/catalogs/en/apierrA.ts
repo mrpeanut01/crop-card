@@ -28,6 +28,7 @@ export const enApierrA = {
   'api.err.unknownFieldId': 'unknown fieldId',
   'api.err.unknownInputId': 'unknown inputId',
   'api.err.unknownFertilityApplication': 'unknown fertilityApplicationId',
+  'api.err.unknownRef': 'unknown {field}',
   'api.err.unknownPendingCalibration': 'unknown pending calibration',
   'api.err.blockIdRequired': 'blockId required',
   'api.err.blockIdParamRequired': 'block id required',

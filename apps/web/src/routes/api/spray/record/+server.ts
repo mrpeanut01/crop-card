@@ -46,7 +46,7 @@ import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { bestEffort, errorText } from '$lib/server/recordWrite';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { t } from '$lib/i18n';
@@ -74,7 +74,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     );
   }
 
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['blockId', parsed.data.blockId, getBlock],
     ['cropId', parsed.data.cropId, getCrop]
   );

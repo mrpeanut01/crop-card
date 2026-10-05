@@ -7,7 +7,7 @@ import {
   type UpdateMapFeatureInput
 } from '$lib/db/mapFeatures';
 import { requireOwner } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { mapFeaturePatchSchema } from '$lib/farm/apiSchemas';
 import { parseFeatureGeometry, validateFeatureDetails } from '$lib/farm/mapFeatures';
 import { checkAreaIds } from '$lib/server/mapFeatureAreaIds';
@@ -44,22 +44,30 @@ export const PATCH: RequestHandler = async (event) => {
   const patch: UpdateMapFeatureInput = {};
   if (parsed.data.name !== undefined) patch.name = parsed.data.name;
   if (parsed.data.geometry !== undefined) {
-    const geom = parseFeatureGeometry(existing.kind, parsed.data.geometry);
+    const geom = parseFeatureGeometry(existing.kind, parsed.data.geometry, event.locals?.locale);
     if (!geom.ok) return json({ error: geom.message }, { status: 400 });
     patch.geometry = geom.geometry;
   }
   if ('details' in parsed.data) {
-    const details = validateFeatureDetails(existing.kind, parsed.data.details);
+    const details = validateFeatureDetails(
+      existing.kind,
+      parsed.data.details,
+      event.locals?.locale
+    );
     if (!details.ok) return json({ error: details.message }, { status: 400 });
     patch.details = details.details;
   }
   if (parsed.data.fieldId !== undefined) {
-    const foreign = rejectForeignRefs(['fieldId', parsed.data.fieldId, getField]);
+    const foreign = rejectForeignRefsIn(event.locals?.locale, [
+      'fieldId',
+      parsed.data.fieldId,
+      getField
+    ]);
     if (foreign) return foreign;
     patch.fieldId = parsed.data.fieldId;
   }
   if (parsed.data.areaIds !== undefined) {
-    const bad = checkAreaIds(existing.kind, parsed.data.areaIds);
+    const bad = checkAreaIds(existing.kind, parsed.data.areaIds, event.locals?.locale);
     if (bad) return bad;
     patch.areaIds = parsed.data.areaIds;
     delete patch.fieldId;

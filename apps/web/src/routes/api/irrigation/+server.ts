@@ -13,7 +13,7 @@ import { insertIrrigationEvent, listIrrigationEvents } from '$lib/db/irrigation'
 import { irrigationCreateSchema } from '$lib/irrigation/apiSchemas';
 import { requireMutator, requireUser } from '$lib/server/auth';
 import { withClientRecordId } from '$lib/server/clientRecordId';
-import { assertField, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertField, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { checkWhen, invalid, readJson } from '$lib/server/irrigationApi';
 import { writeRecord } from '$lib/server/recordWrite';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
@@ -30,7 +30,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (!parsed.success) return invalid(parsed.error);
   const b = parsed.data;
 
-  const foreign = rejectForeignRefs(assertField('fieldId', b.fieldId), [
+  const foreign = rejectForeignRefsIn(event.locals?.locale, assertField('fieldId', b.fieldId), [
     'blockId',
     b.blockId,
     getBlock

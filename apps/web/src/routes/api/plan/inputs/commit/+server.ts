@@ -46,7 +46,7 @@ import { withTenant } from '$lib/db/tenant';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { t } from '$lib/i18n';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { insertPlanRevision } from '$lib/plan/revisions';
 import { getActiveSession, markSessionCompleted } from '$lib/db/wizardChat';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
@@ -179,7 +179,8 @@ export const POST: RequestHandler = async (event) => {
   const blockIds = new Set<string>();
   for (const a of parsed.data.applications) blockIds.add(a.blockId);
   for (const s of parsed.data.scoutTasks) blockIds.add(s.blockId);
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ...Array.from(blockIds, (id) => ['blockId', id, getBlock] as const)
   );
   if (foreign) return foreign;

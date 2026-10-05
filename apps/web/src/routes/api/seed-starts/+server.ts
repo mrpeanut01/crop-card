@@ -9,7 +9,7 @@ import {
   assertCrop,
   assertField,
   assertStockLot,
-  rejectForeignRefs
+  rejectForeignRefsIn
 } from '$lib/server/foreignRefs';
 import { writeRecord } from '$lib/server/recordWrite';
 import { t } from '$lib/i18n';
@@ -32,7 +32,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const body = await parseBody(event.request, seedStartCreateSchema);
   if (!body.ok) return body.response;
   const input = body.data;
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     assertCrop('cropId', input.cropId),
     assertField('locationAreaId', input.locationAreaId),
     assertStockLot('stockLotId', input.stockLotId)

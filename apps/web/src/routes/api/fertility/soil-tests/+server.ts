@@ -3,7 +3,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { getBlock } from '$lib/db/blocks';
 import { insertSoilTest, listSoilTestsForBlock } from '$lib/db/fertility';
 import { requireOwner } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { db } from '$lib/db/client';
 import { setSoilTestDocument } from '$lib/db/documents';
 import { checkLabReport } from '$lib/server/soilTestDocument';
@@ -32,7 +32,11 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
-  const foreign = rejectForeignRefs(['blockId', parsed.data.blockId, getBlock]);
+  const foreign = rejectForeignRefsIn(event.locals?.locale, [
+    'blockId',
+    parsed.data.blockId,
+    getBlock
+  ]);
   if (foreign) return foreign;
   const { documentId, ...fields } = parsed.data;
   if (documentId) {

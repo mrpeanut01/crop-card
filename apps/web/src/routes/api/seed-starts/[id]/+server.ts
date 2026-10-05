@@ -4,7 +4,7 @@ import { getSeedStart, updateSeedStart } from '$lib/db/seedStarts';
 import { seedStartPatchSchema } from '$lib/seedStart/apiSchemas';
 import { parseBody } from '$lib/server/animals';
 import { requireOwner, requireUser } from '$lib/server/auth';
-import { assertField, assertStockLot, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertField, assertStockLot, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { t } from '$lib/i18n';
 
 export const _requestSchema = seedStartPatchSchema;
@@ -26,7 +26,8 @@ export const PATCH: RequestHandler = async (event) => {
   const body = await parseBody(event.request, seedStartPatchSchema);
   if (!body.ok) return body.response;
   const input = body.data;
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     assertField('locationAreaId', input.locationAreaId),
     assertStockLot('stockLotId', input.stockLotId)
   );

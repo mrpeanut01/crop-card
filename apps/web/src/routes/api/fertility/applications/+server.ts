@@ -6,7 +6,7 @@ import { insertFertilityApplication, listFertilityApplicationsForBlock } from '$
 import { getStockItem } from '$lib/db/stock';
 import { ensureSystemUser, memberNamesByIds } from '$lib/db/users';
 import { currentUser, requireOwner } from '$lib/server/auth';
-import { assertAmendmentBatch, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertAmendmentBatch, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { fertilityApplicationCreateSchema } from '$lib/fertility/apiSchemas';
 import { writeRecord } from '$lib/server/recordWrite';
 import { closeTaskForRecord } from '$lib/server/recordTaskClose';
@@ -38,7 +38,8 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['blockId', parsed.data.blockId, getBlock],
     ['cropId', parsed.data.cropId, getCrop],
     ['stockItemId', parsed.data.stockItemId, getStockItem],

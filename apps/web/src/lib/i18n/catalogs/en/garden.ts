@@ -418,6 +418,7 @@ export const enGarden = {
     "{name} is already in the ground, so its date can't move past today. Record a new planting instead.",
   'gardenlib.place.spotPastEdge': 'That spot runs past the edge of {bed}.',
   'gardenlib.place.runsPast': '{name} runs past the edge of {bed}.',
+  'gardenlib.place.unknownPlugin': 'unknown crop plugin {id}',
   'gardenlib.layout.areaTooSmall':
     "{name} can't get that small. {names} would sit past the new edge. Move {them} first.",
   'gardenlib.layout.it': 'it',

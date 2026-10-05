@@ -55,7 +55,10 @@ vi.mock('$lib/server/sprayers', () => ({
   recordSpray: m.recordSpray
 }));
 vi.mock('$lib/server/seasonClose', () => ({ checkSeasonClosed: () => null }));
-vi.mock('$lib/server/foreignRefs', () => ({ rejectForeignRefs: () => null }));
+vi.mock('$lib/server/foreignRefs', () => ({
+  rejectForeignRefs: () => null,
+  rejectForeignRefsIn: () => null
+}));
 vi.mock('$lib/db/blocks', () => ({ getBlock: () => ({}) }));
 vi.mock('$lib/db/crops', () => ({ getCrop: () => ({}) }));
 vi.mock('$lib/db/sprayEvents', () => ({ insertSprayEvent: m.insertSprayEvent }));

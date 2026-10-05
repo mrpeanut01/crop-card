@@ -4,7 +4,7 @@ import { listAnimals, type AnimalListStatus } from '$lib/db/animals';
 import { getField } from '$lib/db/fields';
 import { animalCreateSchema } from '$lib/animals/apiSchemas';
 import { requireOwner } from '$lib/server/auth';
-import { assertAnimalSubject, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertAnimalSubject, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { createAnimalWithHousing, getSpecies, parseBody, ruleResponse } from '$lib/server/animals';
 import { getAnimalGroupSummary } from '$lib/db/animalGroups';
 import { farmTimeZone } from '$lib/db/userProfile';
@@ -37,7 +37,8 @@ export const POST: RequestHandler = async (event) => {
   const body = await parseBody(event.request, animalCreateSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const input = body.data;
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['housingFieldId', input.housingFieldId, getField],
     assertAnimalSubject('groupId', 'group', input.groupId)
   );

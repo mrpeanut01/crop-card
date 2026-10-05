@@ -24,6 +24,7 @@ import {
 import { documentExists } from '$lib/db/documents';
 import { type TenantScopedTable, requireOwnerId, withTenant } from '$lib/db/tenant';
 import { ASSIGNABLE_ROLES } from '$lib/tasks/assignee';
+import { t } from '$lib/i18n';
 
 /**
  * Invariant 6 — a row stamped with the caller's owner_id must not reference
@@ -46,8 +47,19 @@ export function firstUnknownRef(...refs: ForeignRef[]): string | null {
 
 /** 400 `{ error: 'unknown <field>' }` for the first unresolvable reference. */
 export function rejectForeignRefs(...refs: ForeignRef[]): Response | null {
+  return rejectForeignRefsIn(null, ...refs);
+}
+
+/** `rejectForeignRefs` with the error in the caller's language; the field
+ *  name stays as the API spells it. */
+export function rejectForeignRefsIn(
+  locale: string | null | undefined,
+  ...refs: ForeignRef[]
+): Response | null {
   const field = firstUnknownRef(...refs);
-  return field ? json({ error: `unknown ${field}` }, { status: 400 }) : null;
+  return field
+    ? json({ error: t(locale, 'api.err.unknownRef', { field }) }, { status: 400 })
+    : null;
 }
 
 export type AnimalSubjectType = (typeof ANIMAL_SUBJECT_TYPES)[number];

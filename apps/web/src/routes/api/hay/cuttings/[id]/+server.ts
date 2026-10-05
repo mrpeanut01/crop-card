@@ -104,7 +104,7 @@ export const PATCH: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
-  const seasonClosed = checkSeasonClosed(advanceAt);
+  const seasonClosed = checkSeasonClosed(advanceAt, event.locals?.locale);
   if (seasonClosed) {
     return json(
       { error: seasonClosed.code, message: seasonClosed.message, year: seasonClosed.year },

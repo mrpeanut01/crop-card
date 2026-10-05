@@ -131,7 +131,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const occurredAt = parsed.data.occurredAt ?? now;
 
   // UC-44 — SEASON_CLOSED gate. Refuse writes dated inside a closed season.
-  const seasonClosed = checkSeasonClosed(occurredAt);
+  const seasonClosed = checkSeasonClosed(occurredAt, event.locals?.locale);
   if (seasonClosed) {
     return json(
       { error: seasonClosed.code, message: seasonClosed.message, year: seasonClosed.year },

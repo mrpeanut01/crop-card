@@ -11,6 +11,6 @@ import { assignRefusal, canAssignTasks } from '$lib/server/taskAssign';
 export const GET: RequestHandler = (event) => {
   const auth = currentUser(event);
   if (!auth?.activeOwnerId) return json({ error: 'sign in first' }, { status: 401 });
-  if (!canAssignTasks(auth)) return assignRefusal();
+  if (!canAssignTasks(auth)) return assignRefusal(event.locals?.locale);
   return json({ assignees: listAssignableMembers(auth.activeOwnerId, event.locals?.locale) });
 };

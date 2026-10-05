@@ -16,6 +16,7 @@
 
 import { eq } from 'drizzle-orm';
 import { RULES_VERSION } from '$lib/safety/version';
+import { t } from '$lib/i18n';
 import { db } from '$lib/db/client';
 import { seasonCloseouts } from '$lib/db/schema';
 import { withTenant } from '$lib/db/tenant';
@@ -55,7 +56,10 @@ export function seasonYearOf(occurredAtMs: number): number {
  * One check-site: endpoints translate a non-null result into a 422 with the
  * `SEASON_CLOSED` code. Do not re-implement the year→closed lookup elsewhere.
  */
-export function checkSeasonClosed(occurredAtMs: number): SeasonClosedBlock | null {
+export function checkSeasonClosed(
+  occurredAtMs: number,
+  locale?: string | null
+): SeasonClosedBlock | null {
   const year = seasonYearOf(occurredAtMs);
   const active = getActiveCloseout(year);
   if (!active) return null;
@@ -63,7 +67,7 @@ export function checkSeasonClosed(occurredAtMs: number): SeasonClosedBlock | nul
     code: SEASON_CLOSED,
     year,
     closedAt: active.closedAt,
-    message: `The ${year} season is closed. Records dated in ${year} can no longer be added or changed. Reopen the season first if a correction is needed.`
+    message: t(locale, 'settings.close.recordRefused', { year })
   };
 }
 

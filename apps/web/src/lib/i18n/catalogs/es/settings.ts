@@ -550,6 +550,8 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
     'Cerrar la temporada bloquea todos los registros de {year}. Después no se puede agregar ni cambiar ninguna entrada de aspersión, insecticida, fungicida, cosecha o corte de heno con fecha de {year}, igual que un registro de aspersión se bloquea 48 horas después de escribirse. Tienes 7 días para reabrirla si la cierras por error.',
   'settings.close.helperBanner':
     'Vista de ayudante: solo el propietario de la granja puede cerrar o reabrir una temporada.',
+  'settings.close.recordRefused':
+    'La temporada {year} está cerrada. Ya no se pueden añadir ni cambiar registros con fecha de {year}. Reabre la temporada primero si hace falta una corrección.',
   'settings.close.closedBadge': 'Temporada {year} cerrada',
   'settings.close.nextTitle': 'Temporada cerrada. ¿Qué sigue?',
   'settings.close.nextHint':

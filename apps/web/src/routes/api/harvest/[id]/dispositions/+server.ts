@@ -76,7 +76,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     event.locals.locale
   );
   if (dated) return problem(400, dated.error, dated.message);
-  const closed = checkSeasonClosed(occurredAt);
+  const closed = checkSeasonClosed(occurredAt, event.locals?.locale);
   if (closed) {
     return json(
       { error: closed.code, message: closed.message, year: closed.year },

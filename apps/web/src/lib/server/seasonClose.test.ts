@@ -89,6 +89,13 @@ describe('checkSeasonClosed gate', () => {
       expect(blocked?.code).toBe(SEASON_CLOSED);
       expect(blocked?.year).toBe(2026);
 
+      expect(blocked?.message).toBe(
+        'The 2026 season is closed. Records dated in 2026 can no longer be added or changed. Reopen the season first if a correction is needed.'
+      );
+      expect(checkSeasonClosed(msInYear(2026), 'es')?.message).toMatch(
+        /^La temporada 2026 está cerrada/
+      );
+
       // Neighboring years remain open.
       expect(checkSeasonClosed(msInYear(2025))).toBeNull();
       expect(checkSeasonClosed(msInYear(2027))).toBeNull();

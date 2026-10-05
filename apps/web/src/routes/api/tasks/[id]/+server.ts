@@ -82,13 +82,13 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
   }
   if (parsed.data.action === 'assign') {
-    if (!canAssignTasks(auth)) return assignRefusal();
+    if (!canAssignTasks(auth)) return assignRefusal(event.locals?.locale);
     const existing = getTask(id);
     if (!existing) return json({ error: 'task not found' }, { status: 404 });
     if (existing.completedAt !== undefined || existing.abortedAt !== undefined) {
-      return taskClosedRefusal();
+      return taskClosedRefusal(event.locals?.locale);
     }
-    const refused = rejectUnassignable(parsed.data.assigneeUserId);
+    const refused = rejectUnassignable(parsed.data.assigneeUserId, event.locals?.locale);
     if (refused) return refused;
     const assigneeUserId = parsed.data.assigneeUserId;
     let out;
@@ -109,7 +109,7 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
         }
       });
     } catch (e) {
-      if (e instanceof TaskClosedDuringEdit) return taskClosedRefusal();
+      if (e instanceof TaskClosedDuringEdit) return taskClosedRefusal(event.locals?.locale);
       throw e;
     }
     if (!out.ok) {

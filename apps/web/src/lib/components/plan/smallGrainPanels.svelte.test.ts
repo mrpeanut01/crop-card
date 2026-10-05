@@ -67,6 +67,22 @@ describe('FhbRiskPanel', () => {
     expect(screen.getByText(/Prosaro/)).toBeTruthy();
   });
 
+  it('lists two fungicide records saved at the same moment', () => {
+    const a = assessFhbRisk({ anthesisMs: anthesis, hours, provenance: 'data', nowMs: start });
+    const at = anthesis + DAY_MS;
+    render(FhbRiskPanel, {
+      assessment: a,
+      daily: dailyScabFavorableHours(hours),
+      nowMs: start,
+      fungicides: [
+        { occurredAt: at, products: ['Prosaro'] },
+        { occurredAt: at, products: ['Caramba'] }
+      ]
+    });
+    expect(screen.getByText(/Prosaro/)).toBeTruthy();
+    expect(screen.getByText(/Caramba/)).toBeTruthy();
+  });
+
   it('says weather unavailable on the fallback path', () => {
     const a = assessFhbRisk({
       anthesisMs: anthesis,

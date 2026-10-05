@@ -200,7 +200,7 @@
 
   {#if fungicides.length > 0}
     <ul class="fungicides" aria-label={tr('planui.fhb.fungAria')}>
-      {#each fungicides as f (f.occurredAt)}
+      {#each fungicides as f, i (i)}
         <li>
           <Provenance source="data" detail={tr('planui.fhb.fungDetail')} compact />
           {tr('planui.fhb.fungRecord', {

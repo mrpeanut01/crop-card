@@ -3,6 +3,7 @@ import { requireSuperadmin } from '$lib/server/auth';
 import {
   listAllOwners,
   listAudit,
+  ownerExists,
   setBillingStatus,
   setPlanOverride,
   writeAuditRow
@@ -49,6 +50,7 @@ export const actions: Actions = {
     const fd = await event.request.formData();
     const ownerId = String(fd.get('ownerId') ?? '');
     if (!ownerId) return fail(400, { error: 'ownerId required' });
+    if (!ownerExists(ownerId)) return fail(404, { error: 'owner not found' });
 
     // The superadmin "borrows" the chosen Owner's tenant for this session.
     // The session cookie's `impersonating=true` flag surfaces the red

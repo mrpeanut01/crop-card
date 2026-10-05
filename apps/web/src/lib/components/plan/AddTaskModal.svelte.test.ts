@@ -96,4 +96,27 @@ describe('AddTaskModal (#122)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('nope');
     expect(onCreated).not.toHaveBeenCalled();
   });
+  it('keeps a typed title when the assignee list arrives after the form opens', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        await gate;
+        return { ok: true, json: async () => ({ assignees: [{ id: 'u1', name: 'Ana' }] }) };
+      })
+    );
+    render(AddTaskModal, {
+      open: true,
+      blockId: 'b1',
+      blockName: 'Block A',
+      canAssign: true,
+      onClose: vi.fn(),
+      onCreated: vi.fn()
+    });
+    await fireEvent.input(screen.getByLabelText(/Task/), { target: { value: 'Mow' } });
+    release();
+    await screen.findByRole('option', { name: 'Ana' });
+    expect(screen.getByLabelText(/Task/)).toHaveValue('Mow');
+  });
 });

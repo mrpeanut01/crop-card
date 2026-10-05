@@ -53,6 +53,35 @@ describe('buildCareGuideCard', () => {
     ]);
   });
 
+  it('lists spacing and first fruit per tree size class, leading the sections', () => {
+    const tree = {
+      pluginId: 'apple-test',
+      displayName: 'Apple — Test',
+      version: '1.0.0',
+      cropFamily: 'orchard',
+      treeSizeClasses: [
+        { sizeClass: 'standard' as const, minSpacingFt: 30, yearsToBearing: { min: 6, max: 10 } },
+        { sizeClass: 'dwarf' as const, minSpacingFt: 8, yearsToBearing: { min: 3, max: 3 } }
+      ]
+    };
+    const withTree = { ...snap, cropPlugins: { ...snap.cropPlugins, 'apple-test': tree } };
+    const card = buildCareGuideCard(withTree, 'apple-test')!;
+    expect(card.facts.find((f) => f.label === 'Spacing')).toBeUndefined();
+    expect(card.sections[0]).toEqual({
+      title: 'Spacing by tree size',
+      items: [
+        'Spacing and first fruit depend on the rootstock. The nursery tag says whether a tree is dwarf, semi-dwarf or standard.',
+        'Dwarf: at least 8 ft apart, first fruit in 3 years',
+        'Standard: at least 30 ft apart, first fruit in 6–10 years'
+      ],
+      provenance: 'plugin'
+    });
+    const es = buildCareGuideCard(withTree, 'apple-test', { locale: 'es' })!;
+    expect(es.sections[0].items[2]).toBe(
+      'Estándar: al menos 30 ft entre árboles, primera fruta en 6 a 10 años'
+    );
+  });
+
   it("uses the plugin's own pruning steps over family tips", () => {
     const { sections } = careGuideSections({
       ...snap.cropPlugins['tomato-cherokee-purple'],

@@ -1275,6 +1275,55 @@
         "additionalProperties": false
       }
     },
+    "treeSizeClasses": {
+      "minItems": 1,
+      "maxItems": 3,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sizeClass": {
+            "type": "string",
+            "enum": [
+              "dwarf",
+              "semi-dwarf",
+              "standard"
+            ]
+          },
+          "minSpacingFt": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 60
+          },
+          "yearsToBearing": {
+            "type": "object",
+            "properties": {
+              "min": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 15
+              },
+              "max": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 15
+              }
+            },
+            "required": [
+              "min",
+              "max"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "sizeClass",
+          "minSpacingFt",
+          "yearsToBearing"
+        ],
+        "additionalProperties": false
+      }
+    },
     "planting": {
       "type": "object",
       "propertyNames": {

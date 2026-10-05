@@ -38,6 +38,27 @@
       "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
       "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
       "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "treeSizeClasses.dwarf": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - dwarf | 8 | 2 | 2-3 | 30-35 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
+    },
+    "treeSizeClasses.semi-dwarf": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - semidwarf | 18 | 4 | 4-6 | 30-35 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
+    },
+    "treeSizeClasses.standard": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - standard | 30 | 8 | 6-10 | 35-45 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
     }
   },
   "apple-fuji": {
@@ -61,6 +82,27 @@
       "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
       "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
       "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "treeSizeClasses.dwarf": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - dwarf | 8 | 2 | 2-3 | 30-35 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
+    },
+    "treeSizeClasses.semi-dwarf": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - semidwarf | 18 | 4 | 4-6 | 30-35 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
+    },
+    "treeSizeClasses.standard": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - standard | 30 | 8 | 6-10 | 35-45 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
     }
   },
   "apple-gala": {
@@ -84,6 +126,27 @@
       "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
       "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
       "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "treeSizeClasses.dwarf": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - dwarf | 8 | 2 | 2-3 | 30-35 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
+    },
+    "treeSizeClasses.semi-dwarf": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - semidwarf | 18 | 4 | 4-6 | 30-35 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
+    },
+    "treeSizeClasses.standard": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - standard | 30 | 8 | 6-10 | 35-45 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
     }
   },
   "apple-honeycrisp": {
@@ -107,6 +170,27 @@
       "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
       "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
       "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "treeSizeClasses.dwarf": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - dwarf | 8 | 2 | 2-3 | 30-35 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
+    },
+    "treeSizeClasses.semi-dwarf": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - semidwarf | 18 | 4 | 4-6 | 30-35 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
+    },
+    "treeSizeClasses.standard": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - standard | 30 | 8 | 6-10 | 35-45 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
     }
   },
   "apple-orchard": {
@@ -130,6 +214,27 @@
       "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
       "quote": "ASPCA, Apple (Malus sylvestrus): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock.\"",
       "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "treeSizeClasses.dwarf": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - dwarf | 8 | 2 | 2-3 | 30-35 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
+    },
+    "treeSizeClasses.semi-dwarf": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - semidwarf | 18 | 4 | 4-6 | 30-35 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
+    },
+    "treeSizeClasses.standard": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - standard | 30 | 8 | 6-10 | 35-45 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2 (spacing by rootstock) agrees on the direction but not the numbers: \"Apple, M.9 7 13 3-5\", \"Apple, M.26 10 15 3-5\", \"Apple, M.7, M.9/MM.106 12 18 4-5\", \"Apple, MM.106, MM.111 18 24 5\" (between plants ft, between rows ft, bearing age years). VCE is used because it is the Virginia source and names size classes, which is what nursery tags show; its figures are minimum distances."
     }
   },
   "apricot-moorpark": {
@@ -2676,6 +2781,24 @@
       "publisher": "Sustainable Agriculture Research and Education (SARE, USDA NIFA), Managing Cover Crops Profitably, 3rd Edition",
       "date": "2007",
       "quote": "SARE, Managing Cover Crops Profitably, White Clover, Killing White Clover Cover Crops: \"Thorough uprooting and incorporation by chisel or moldboard plowing, field cultivating, undercutting or rotary tilling, or—in spring—use of a suitable herbicide will result in good to excellent kill of white clover. Extremely close mowing and partial tillage that leaves any roots undisturbed will suppress, but not kill, white clover.\""
+    }
+  },
+  "pear-bartlett": {
+    "treeSizeClasses.standard": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Pear - standard | 25 | 3 | 5-8 | 35-45 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2: \"Pear, standard 20 20 5\" and \"Pear, Old Home/quince 15 15 4\". VCE 426-841 Table 1 also lists \"Pear - dwarf | 12 | 1/2 | 3-4 | 15-20 |\" but the same page says dwarf pear trees \"are not recommended because trees may not survive more than five years due to disease and incompatibility problems\", so no dwarf row ships."
+    }
+  },
+  "pear-bosc": {
+    "treeSizeClasses.standard": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Pear - standard | 25 | 3 | 5-8 | 35-45 |\"",
+      "note": "Cornell Guide to Growing Fruit at Home, Table 2: \"Pear, standard 20 20 5\" and \"Pear, Old Home/quince 15 15 4\". VCE 426-841 Table 1 also lists \"Pear - dwarf | 12 | 1/2 | 3-4 | 15-20 |\" but the same page says dwarf pear trees \"are not recommended because trees may not survive more than five years due to disease and incompatibility problems\", so no dwarf row ships."
     }
   }
 }

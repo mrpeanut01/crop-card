@@ -19,6 +19,7 @@ import {
   seasonalTaskWordingProblems,
   stageTemplateWordingProblems,
   sourceEntrySchema,
+  treeSizeClassQuoteGaps,
   speciesFactPaths,
   type ForageSourceEntry,
   type PastureAllowlistEntry,
@@ -168,6 +169,12 @@ describe('Phase 32A source coverage gate', () => {
         .map((id) => `${c.pluginId}: ${id}`)
     );
     expect(unknown).toEqual([]);
+  });
+
+  it('every tree size class quote states its spacing and bearing age', () => {
+    const crops = library.crops();
+    expect(treeSizeClassQuoteGaps(crops, cropSources)).toEqual([]);
+    expect(crops.filter((c) => c.treeSizeClasses).length).toBeGreaterThan(0);
   });
 
   it('every entry in the Phase 32 source files is a complete quote', () => {

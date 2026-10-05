@@ -1550,7 +1550,7 @@
                 <span class="block-icon">{shadeKindEmoji(s.kind)}</span>
                 <span class="block-name">{s.name}</span>
                 <span class="block-stats">
-                  {s.kind} · {fmt.qty(s.heightFt, 'distance')}{#if s.isDeciduous}
+                  {shadeLabel(tr, s.kind)} · {fmt.qty(s.heightFt, 'distance')}{#if s.isDeciduous}
                     · {tr('farm.editor.deciduous')}{/if}
                   {#if !s.geometryGeojson}<span class="not-drawn">{tr('farm.editor.notDrawn')}</span
                     >{/if}
@@ -1592,7 +1592,7 @@
               <span class="block-icon">{shadeKindEmoji(s.kind)}</span>
               <span class="block-name">{s.name}</span>
               <span class="block-stats">
-                {s.kind} · {fmt.qty(s.heightFt, 'distance')}{#if s.isDeciduous}
+                {shadeLabel(tr, s.kind)} · {fmt.qty(s.heightFt, 'distance')}{#if s.isDeciduous}
                   · {tr('farm.editor.deciduous')}{/if}
                 {#if !s.geometryGeojson}<span class="not-drawn">{tr('farm.editor.notDrawn')}</span
                   >{/if}
@@ -1811,7 +1811,11 @@
           onclick={addShadeWithoutGeometry}
           disabled={addingShade || !addShadeName.trim()}
         >
-          {addingShade ? '…' : tr('farm.editor.addKind', { kind: addKind })}
+          {addingShade
+            ? '…'
+            : tr('farm.editor.addKind', {
+                kind: isShadeKind(addKind) ? shadeLabel(tr, addKind).toLowerCase() : addKind
+              })}
         </button>
         {#if addShadeError}<p class="error">{addShadeError}</p>{/if}
         <p class="muted" style="margin-top:0.4rem">

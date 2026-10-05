@@ -100,6 +100,19 @@ describe('Week Card', () => {
     expect(card.facts.find((f) => f.label === 'Overdue')?.value).toBe('1');
   });
 
+  it('keeps a date-only task (UTC midnight) on its own day, as /today does', () => {
+    const s = snap([task({ id: 'dated', scheduledFor: at('2026-06-01T00:00:00Z') })]);
+    const card = buildWeekCard(s, '2026-06-01', {
+      firstDay: 0,
+      now: NOW,
+      prefs: { timeZone: 'America/New_York', units: 'us' }
+    })!;
+    expect(day(card, '2026-06-01').entries).toHaveLength(1);
+    expect(day(card, '2026-05-31').entries).toHaveLength(0);
+    expect(day(card, '2026-06-01').entries[0].overdue).toBeUndefined();
+    expect(card.facts.find((f) => f.label === 'Overdue')).toBeUndefined();
+  });
+
   it('caps a day at 12 and flags the overflow page', () => {
     const many = Array.from({ length: WEEK_PER_DAY + 3 }, (_, i) => task({ id: `t${i}` }));
     const card = buildWeekCard(snap(many), '2026-06-01')!;

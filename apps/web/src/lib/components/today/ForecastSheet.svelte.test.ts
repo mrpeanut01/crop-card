@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import WeatherStrip from './WeatherStrip.svelte';
 import ForecastSheet from './ForecastSheet.svelte';
@@ -9,6 +9,10 @@ import type { TodayWeather } from '$lib/today/weatherSummary';
 
 const page = vi.hoisted(() => ({ data: {} as Record<string, unknown> }));
 vi.mock('$app/state', () => ({ page }));
+
+afterEach(() => {
+  page.data = {};
+});
 
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
@@ -80,9 +84,8 @@ describe('Current conditions rain hint', () => {
     page.data = { locale: 'es' };
     strip(ok);
     const btn = screen.getByTestId('current-conditions');
-    expect(btn).toHaveTextContent('80% lluvia');
+    expect(btn).toHaveTextContent('80% de lluvia');
     expect(btn).not.toHaveTextContent('80% rain');
-    page.data = {};
   });
 });
 

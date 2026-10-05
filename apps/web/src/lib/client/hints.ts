@@ -55,16 +55,16 @@ function writeList(key: string, list: Iterable<string>): void {
 }
 
 async function flushPending(userId: string, fetcher: Fetch): Promise<void> {
-  const pending = readList(lsKey(userId, 'pending'));
-  if (pending.length === 0) return;
+  const sent = readList(lsKey(userId, 'pending')).slice(0, 50);
+  if (sent.length === 0) return;
   try {
     const res = await fetcher('/api/me/hints', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ keys: pending.slice(0, 50) })
+      body: JSON.stringify({ keys: sent })
     });
     if (res.ok || res.status === 400 || res.status === 409) {
-      const left = readList(lsKey(userId, 'pending')).filter((k) => !pending.includes(k));
+      const left = readList(lsKey(userId, 'pending')).filter((k) => !sent.includes(k));
       writeList(lsKey(userId, 'pending'), left);
     }
   } catch {

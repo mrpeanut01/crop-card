@@ -289,6 +289,18 @@ export const enToday = {
     'Counts as rain since {when}, the 24 hours before you read it. Empty the gauge after you read it.',
   'today.watering.enterAmount': 'Enter how much you watered.',
   'today.watering.enterGauge': 'Enter the inches in the gauge. Enter 0 if it is dry.',
+  'today.watering.err.bedNotInArea': 'That bed is not in this Area.',
+  'today.watering.err.gaugeFuture': 'The gauge reading time is in the future.',
+  'today.watering.err.gaugeOld': 'The gauge reading time is more than a year ago.',
+  'today.watering.err.noGauge': 'No such gauge reading',
+  'today.watering.err.noLog': 'No such watering log',
+  'today.watering.err.removeGauge':
+    'Only the owner or the person who entered it can remove it. Ask the owner.',
+  'today.watering.err.removeLog':
+    'Only the owner or the person who logged it can remove it. Ask the owner.',
+  'today.watering.err.targetOwnerOnly': 'Only the owner sets the water target. Ask the owner.',
+  'today.watering.err.wateringFuture': 'The watering time is in the future.',
+  'today.watering.err.wateringOld': 'The watering time is more than a year ago.',
   'today.watering.gallons': 'Gallons',
   'today.watering.gaugeSaved': 'Gauge reading saved.',
   'today.watering.gaugeSavedQueued':

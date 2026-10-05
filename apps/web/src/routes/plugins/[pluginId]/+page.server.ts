@@ -37,8 +37,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   }
 
   unscopedQueryNote('joining changed-by user for plugin history is a global lookup');
+  // The shared history spans every farm, so only a superadmin sees who made
+  // each change; anyone else sees only their own name (Invariant 6).
+  const viewerId = locals.user?.id ?? null;
+  const seesEveryone = !!locals.user?.isSuperadmin && locals.authVia !== 'bearer';
   const userIds = Array.from(
-    new Set(history.map((r) => r.changedByUserId).filter((id): id is string => !!id))
+    new Set(
+      history
+        .map((r) => r.changedByUserId)
+        .filter((id): id is string => !!id && (seesEveryone || id === viewerId))
+    )
   );
   const emailMap = new Map<string, string>();
   if (userIds.length > 0) {

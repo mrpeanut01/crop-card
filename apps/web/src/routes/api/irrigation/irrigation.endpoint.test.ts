@@ -63,7 +63,12 @@ async function call(
   handler: unknown,
   path: string,
   method: string,
-  opts: { params?: Record<string, string>; body?: unknown; headers?: Record<string, string> } = {}
+  opts: {
+    params?: Record<string, string>;
+    body?: unknown;
+    headers?: Record<string, string>;
+    locale?: string;
+  } = {}
 ): Promise<{ status: number; body: Json }> {
   const url = new URL(`${BASE}${path}`);
   try {
@@ -75,7 +80,7 @@ async function call(
         headers: { 'content-type': 'application/json', ...(opts.headers ?? {}) },
         body: opts.body === undefined ? undefined : JSON.stringify(opts.body)
       }),
-      locals: {}
+      locals: opts.locale ? { locale: opts.locale } : {}
     } as never);
     const text = await res.text();
     return { status: res.status, body: text ? JSON.parse(text) : {} };
@@ -137,6 +142,35 @@ describe('POST /api/irrigation', () => {
       m.role = 'inspector';
       expect((await log({ fieldId: g.fieldId, inches: 1 })).status).toBe(403);
       expect(listIrrigationEvents()).toHaveLength(0);
+    });
+  });
+
+  it('answers its refusals in the request language', async () => {
+    await runWithTenantAsync(seedOwner(), async () => {
+      const g = garden();
+      const other = createField({ name: 'Back field', kind: 'field' });
+      const es = (body: unknown) => call(LOG, '/irrigation', 'POST', { body, locale: 'es' });
+      expect((await es({ fieldId: other.id, blockId: g.bedId, inches: 1 })).body.error).toBe(
+        'Esa cama de cultivo no está en esta Área.'
+      );
+      const future = await es({ fieldId: g.fieldId, inches: 1, occurredAt: Date.now() + 2 * H });
+      expect(future.body.error).toBe('La hora del riego está en el futuro.');
+      const english = await log({ fieldId: g.fieldId, inches: 1, occurredAt: Date.now() + 2 * H });
+      expect(english.body.error).toBe('The watering time is in the future.');
+      const gaugeEs = await call(GAUGE, '/rain-gauge', 'POST', {
+        body: { fieldIds: [g.fieldId], inches: 0.5, readAt: Date.now() + 2 * H },
+        locale: 'es'
+      });
+      expect(gaugeEs.body.error).toBe('La hora de la lectura del pluviómetro está en el futuro.');
+      m.role = 'helper';
+      const target = await call(TARGET, '/irrigation/target', 'POST', {
+        body: { fieldId: g.fieldId, inches: 1 },
+        locale: 'es'
+      });
+      expect(target.status).toBe(403);
+      expect(target.body.error).toBe(
+        'Solo el propietario fija la meta de agua. Pregunta al propietario.'
+      );
     });
   });
 

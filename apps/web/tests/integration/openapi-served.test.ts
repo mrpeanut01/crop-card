@@ -92,4 +92,17 @@ describe('GET /api/openapi.json', () => {
     expect(body.openapi).toBe('3.1.0');
     expect(body.paths['/api/health']).toBeDefined();
   });
+
+  it('serves exactly the static artifact', async () => {
+    const res = await GET({} as Parameters<typeof GET>[0]);
+    expect(await res.text()).toBe(readFileSync(ARTIFACT_PATH, 'utf-8'));
+  });
+
+  it('does not read the artifact from a path relative to the bundled module', () => {
+    const src = readFileSync(
+      resolve(__dirname, '../../src/routes/api/openapi.json/+server.ts'),
+      'utf-8'
+    );
+    expect(src).not.toMatch(/readFile|import\.meta\.url/);
+  });
 });

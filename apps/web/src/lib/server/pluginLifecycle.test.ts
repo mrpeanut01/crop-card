@@ -9,10 +9,26 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { mkdir, writeFile, unlink, stat } from 'node:fs/promises';
+import { mkdir, rm, writeFile, unlink, stat } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+
+// Work on a private copy of the plugin library: writing fixture plugins into
+// the real plugins/ folder raced with tests that load every committed plugin.
+const isolatedPlugins = vi.hoisted(() => {
+  const fs = process.getBuiltinModule('node:fs') as typeof import('node:fs');
+  const os = process.getBuiltinModule('node:os') as typeof import('node:os');
+  const p = process.getBuiltinModule('node:path') as typeof import('node:path');
+  const url = process.getBuiltinModule('node:url') as typeof import('node:url');
+  const source =
+    process.env.PLUGINS_DIR ??
+    p.resolve(p.dirname(url.fileURLToPath(import.meta.url)), '../../../../../plugins');
+  const dir = fs.mkdtempSync(p.join(os.tmpdir(), 'cropcard-lifecycle-plugins-'));
+  fs.cpSync(source, dir, { recursive: true });
+  const previous = process.env.PLUGINS_DIR;
+  process.env.PLUGINS_DIR = dir;
+  return { dir, previous };
+});
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { blocks, equipment, fields, pluginVersions, sprayEvents, users } from '$lib/db/schema';
@@ -32,8 +48,7 @@ const TEST_BLOCK_ID = 'lifecycle-test-block';
 const TEST_SPRAYER_ID = 'lifecycle-test-sprayer';
 const TEST_FIELD_ID = 'lifecycle-test-field';
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const pluginsRoot = process.env.PLUGINS_DIR ?? path.resolve(here, '../../../../../plugins');
+const pluginsRoot = isolatedPlugins.dir;
 
 function uniqId(): string {
   return `lifecycle-test-${randomUUID().slice(0, 8)}`;
@@ -122,6 +137,9 @@ beforeAll(() => {
 });
 
 afterAll(async () => {
+  await rm(isolatedPlugins.dir, { recursive: true, force: true });
+  if (isolatedPlugins.previous === undefined) delete process.env.PLUGINS_DIR;
+  else process.env.PLUGINS_DIR = isolatedPlugins.previous;
   // Best-effort cleanup of test artifacts.
   for (const id of created) {
     db.delete(pluginVersions).where(eq(pluginVersions.pluginId, id)).run();

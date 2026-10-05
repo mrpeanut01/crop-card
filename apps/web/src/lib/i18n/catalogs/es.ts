@@ -15,6 +15,7 @@ import { esPlugins } from './es/plugins';
 import { esEntry } from './es/entry';
 import { esNotify } from './es/notify';
 import { esAmend } from './es/amend';
+import { esApierrB } from './es/apierrB';
 
 /**
  * Spanish (F5-8). Machine-drafted, then corrected and signed off by the
@@ -41,7 +42,8 @@ export const ES_PARTS: ReadonlyArray<Partial<Record<MessageKey, string>>> = [
   esPlugins,
   esEntry,
   esNotify,
-  esAmend
+  esAmend,
+  esApierrB
 ];
 
 export const es: Partial<Record<MessageKey, string>> = Object.assign({}, ...ES_PARTS);

@@ -297,6 +297,19 @@ export const esToday: Partial<Record<MessageKey, string>> = {
     'Cuenta como lluvia desde {when}, las 24 horas antes de leerlo. Vacía el pluviómetro después de leerlo.',
   'today.watering.enterAmount': 'Escribe cuánto regaste.',
   'today.watering.enterGauge': 'Escribe las pulgadas del pluviómetro. Escribe 0 si está seco.',
+  'today.watering.err.bedNotInArea': 'Esa cama de cultivo no está en esta Área.',
+  'today.watering.err.gaugeFuture': 'La hora de la lectura del pluviómetro está en el futuro.',
+  'today.watering.err.gaugeOld': 'La lectura del pluviómetro es de hace más de un año.',
+  'today.watering.err.noGauge': 'No existe esa lectura del pluviómetro',
+  'today.watering.err.noLog': 'No existe ese registro de riego',
+  'today.watering.err.removeGauge':
+    'Solo el propietario o quien la anotó puede quitarla. Pregunta al propietario.',
+  'today.watering.err.removeLog':
+    'Solo el propietario o quien lo registró puede quitarlo. Pregunta al propietario.',
+  'today.watering.err.targetOwnerOnly':
+    'Solo el propietario fija la meta de agua. Pregunta al propietario.',
+  'today.watering.err.wateringFuture': 'La hora del riego está en el futuro.',
+  'today.watering.err.wateringOld': 'El riego es de hace más de un año.',
   'today.watering.gallons': 'Galones',
   'today.watering.gaugeSaved': 'Lectura del pluviómetro guardada.',
   'today.watering.gaugeSavedQueued':

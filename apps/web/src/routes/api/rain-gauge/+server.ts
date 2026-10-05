@@ -30,7 +30,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (foreign) return foreign;
 
   const now = Date.now();
-  const when = checkWhen(b.readAt ?? now, now, 'gauge reading');
+  const when = checkWhen(b.readAt ?? now, now, 'gauge', event.locals?.locale);
   if (when) return when;
   const readAt = Math.min(b.readAt ?? now, now);
 

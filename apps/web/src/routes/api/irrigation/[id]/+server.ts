@@ -8,15 +8,17 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { deleteIrrigationEvent, getIrrigationEvent } from '$lib/db/irrigation';
 import { requireUser } from '$lib/server/auth';
 import { canRemoveLog } from '$lib/server/irrigationApi';
+import { t } from '$lib/i18n';
 
 export const DELETE: RequestHandler = (event) => {
   const user = requireUser(event);
   const row = getIrrigationEvent(event.params.id ?? '');
-  if (!row) return json({ error: 'No such watering log' }, { status: 404 });
+  if (!row)
+    return json({ error: t(event.locals?.locale, 'today.watering.err.noLog') }, { status: 404 });
   if (!canRemoveLog(user, row.performedById)) {
     return json(
       {
-        error: 'Only the owner or the person who logged it can remove it. Ask the owner.',
+        error: t(event.locals?.locale, 'today.watering.err.removeLog'),
         askOwner: true
       },
       { status: 403 }

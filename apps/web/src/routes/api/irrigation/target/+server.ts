@@ -12,6 +12,7 @@ import { assertField, rejectForeignRefs } from '$lib/server/foreignRefs';
 import { invalid, readJson } from '$lib/server/irrigationApi';
 import { resolveTarget } from '$lib/server/waterAdvice.server';
 import { waterTargetKey } from '$lib/weather/waterSources';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = waterTargetSchema;
 
@@ -19,7 +20,7 @@ export const POST: RequestHandler = async (event) => {
   const user = requireUser(event);
   if (user.role !== 'owner') {
     return json(
-      { error: 'Only the owner sets the water target. Ask the owner.', askOwner: true },
+      { error: t(event.locals?.locale, 'today.watering.err.targetOwnerOnly'), askOwner: true },
       { status: 403 }
     );
   }

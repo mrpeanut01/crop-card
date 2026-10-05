@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { ZodError } from 'zod';
 import type { AuthenticatedUser } from '$lib/server/auth';
+import { t } from '$lib/i18n';
 
 /** Five minutes of clock skew between a phone and the server. */
 export const FUTURE_SKEW_MS = 5 * 60 * 1000;
@@ -28,18 +29,21 @@ export async function readJson(
 }
 
 /** Null when `ms` is a sensible past moment, else the refusal. */
-export function checkWhen(ms: number, now: number, what: string): Response | null {
+export function checkWhen(
+  ms: number,
+  now: number,
+  what: 'watering' | 'gauge',
+  locale?: string | null
+): Response | null {
   if (ms > now + FUTURE_SKEW_MS) {
-    return json(
-      { error: `The ${what} time is in the future.`, code: 'IN_THE_FUTURE' },
-      { status: 400 }
-    );
+    const key =
+      what === 'watering' ? 'today.watering.err.wateringFuture' : 'today.watering.err.gaugeFuture';
+    return json({ error: t(locale, key), code: 'IN_THE_FUTURE' }, { status: 400 });
   }
   if (ms < now - MAX_BACKDATE_MS) {
-    return json(
-      { error: `The ${what} time is more than a year ago.`, code: 'TOO_OLD' },
-      { status: 400 }
-    );
+    const key =
+      what === 'watering' ? 'today.watering.err.wateringOld' : 'today.watering.err.gaugeOld';
+    return json({ error: t(locale, key), code: 'TOO_OLD' }, { status: 400 });
   }
   return null;
 }

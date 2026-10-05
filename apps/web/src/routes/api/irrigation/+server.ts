@@ -17,6 +17,7 @@ import { assertField, rejectForeignRefs } from '$lib/server/foreignRefs';
 import { checkWhen, invalid, readJson } from '$lib/server/irrigationApi';
 import { writeRecord } from '$lib/server/recordWrite';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = irrigationCreateSchema;
 
@@ -35,12 +36,15 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   ]);
   if (foreign) return foreign;
   if (b.blockId && getBlock(b.blockId)?.fieldId !== b.fieldId) {
-    return json({ error: 'That bed is not in this Area.' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'today.watering.err.bedNotInArea') },
+      { status: 400 }
+    );
   }
 
   const now = Date.now();
   const occurredAt = Math.min(b.occurredAt ?? now, now);
-  const when = checkWhen(b.occurredAt ?? now, now, 'watering');
+  const when = checkWhen(b.occurredAt ?? now, now, 'watering', event.locals?.locale);
   if (when) return when;
 
   const clientRecordId = event.request.headers.get(CLIENT_RECORD_HEADER);

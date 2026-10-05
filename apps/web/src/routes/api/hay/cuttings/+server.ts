@@ -30,6 +30,7 @@ import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { hayCutGate } from '$lib/server/grazingGate';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { MAX_FUTURE_SKEW_MS } from '$lib/animals/model';
+import { checkSeasonClosed } from '$lib/server/seasonClose';
 
 export const _requestSchema = hayCuttingSchema;
 const inputSchema = hayCuttingSchema;
@@ -79,6 +80,14 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     return json(
       { error: 'A mow cannot be dated in the future.', code: 'IN_THE_FUTURE' },
       { status: 400 }
+    );
+  }
+  // UC-44 — SEASON_CLOSED gate. A mow is a dated field record.
+  const seasonClosed = checkSeasonClosed(parsed.data.mowAt ?? now);
+  if (seasonClosed) {
+    return json(
+      { error: seasonClosed.code, message: seasonClosed.message, year: seasonClosed.year },
+      { status: 422 }
     );
   }
   const hayGate = await hayCutGate(

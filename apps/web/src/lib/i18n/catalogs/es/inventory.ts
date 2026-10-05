@@ -5,6 +5,8 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'inv.add.pageTitle': 'Nuevo: {type} · CropCard',
   'inv.add.amendmentTitle': 'Nueva pila de estiércol o composta',
   'inv.add.hayName': 'Heno, {cutting}',
+  'inv.add.hayCuttingLabel': '{block}, corte {n} ({year})',
+  'inv.add.hayBlockFallback': 'un bloque de heno',
   'inv.edit.pageTitle': 'Editar: {type} · CropCard',
   'inv.breadcrumb': 'Ruta de navegación',
   'inv.allType': '← Todo en {type}',

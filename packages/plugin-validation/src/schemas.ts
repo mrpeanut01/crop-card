@@ -54,6 +54,8 @@ export const PLANTING_ESTABLISHMENTS = [
 ] as const;
 export const DTM_ANCHORS = ["direct-seed", "transplant"] as const;
 
+export const SEED_BASES = ["bulk", "pls"] as const;
+
 /** Drilled, broadcast or row-planted field crops (cover crops, forage
  *  stands, small grains, corn, sorghum), which extension sources describe by
  *  seeding rate and row width instead of an in-row distance. Every value is
@@ -65,13 +67,20 @@ export const seedingRateSchema = z
     broadcastLbsPerAcre: minMaxNumber.optional(),
     /** Small grains: drilled seeds per square foot. */
     drilledSeedsPerSqFt: minMaxNumber.optional(),
-    /** Row crops: seeds or plants per acre at planting. */
+    /** Row crops: seeds (kernels) planted per acre, never a final stand.
+     *  Not the same field as `plantingGuide.seedsPerAcre`, which the
+     *  seed-quantity math reads. */
     seedsPerAcre: minMaxNumber.optional(),
     /** Drill or planter row width, in inches. */
     drillRowSpacingIn: minMaxNumber.optional(),
+    /** What the lb/acre rates weigh: seed as bought (`bulk`) or pure live
+     *  seed (`pls`). Set only when a source states it, with its own
+     *  `seedingRate.seedBasis` entry. */
+    seedBasis: z.enum(SEED_BASES).optional(),
   })
   .strict();
 
+/** The range keys of `seedingRateSchema` (everything but `seedBasis`). */
 export const SEEDING_RATE_KEYS = [
   "drilledLbsPerAcre",
   "broadcastLbsPerAcre",

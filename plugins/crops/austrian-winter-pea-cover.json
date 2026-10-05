@@ -27,7 +27,8 @@
       "drillRowSpacingIn": {
         "min": 6,
         "max": 12
-      }
+      },
+      "seedBasis": "bulk"
     }
   },
   "notes": "Cool-season N-fixer; pairs well with cereal rye or oats. Highest N contribution of common winter legumes (~150 lb N / acre at full biomass).",

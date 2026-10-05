@@ -355,6 +355,13 @@
                 "max"
               ],
               "additionalProperties": false
+            },
+            "seedBasis": {
+              "type": "string",
+              "enum": [
+                "bulk",
+                "pls"
+              ]
             }
           },
           "additionalProperties": false

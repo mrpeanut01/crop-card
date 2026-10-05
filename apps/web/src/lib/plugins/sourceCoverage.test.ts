@@ -11,6 +11,8 @@ import {
   grazingRestrictionsSchema,
   herbicidePluginSchema,
   pestModelPluginSchema,
+  seedingRateSchema,
+  SEEDING_RATE_KEYS,
   speciesPluginSchema
 } from './schemas';
 import {
@@ -25,6 +27,7 @@ import {
   seasonalTaskWordingProblems,
   stageTemplateWordingProblems,
   speciesFactPaths,
+  seedingRateQuoteGaps,
   treeSizeClassQuoteGaps,
   type SourceMap
 } from './sourceCoverage';
@@ -32,6 +35,16 @@ import {
 const animalHealth = animalHealthPluginSchema.parse(FIXTURE_ANIMAL_HEALTH);
 const pestModel = pestModelPluginSchema.parse(FIXTURE_PEST_MODEL);
 const species = speciesPluginSchema.parse(FIXTURE_SPECIES);
+
+const SEEDING_BASE = {
+  pluginId: 'test-crop',
+  type: 'crop',
+  displayName: 'Test Crop',
+  version: '1',
+  cropFamily: 'solanaceae',
+  harvestStyle: 'continuous-fruit',
+  bloomWindow: { daysFromPlantingMin: 1, daysFromPlantingMax: 2, beeAttractive: false }
+};
 
 function sourced(pluginId: string, paths: string[]): SourceMap {
   return { [pluginId]: Object.fromEntries(paths.map((p) => [p, FIXTURE_SOURCE])) };
@@ -204,6 +217,63 @@ describe('fact paths', () => {
         plantingGuide: { seedingRate: { drilledLbsPerAcre: { min: 1, max: 2 }, rateGuess: 3 } }
       })
     ).toThrow();
+  });
+
+  it('gates the seed basis as its own sourced fact and refuses other bases', () => {
+    const crop = cropPluginSchema.parse({
+      ...SEEDING_BASE,
+      plantingGuide: { seedingRate: { drilledLbsPerAcre: { min: 3, max: 5 }, seedBasis: 'pls' } }
+    });
+    expect(cropFactPaths(crop)).toEqual(['seedingRate.drilledLbsPerAcre', 'seedingRate.seedBasis']);
+    expect(seedingRateSchema.safeParse({ seedBasis: 'certified' }).success).toBe(false);
+  });
+
+  it('keeps SEEDING_RATE_KEYS in step with the schema', () => {
+    expect([...SEEDING_RATE_KEYS, 'seedBasis'].sort()).toEqual(
+      Object.keys(seedingRateSchema.shape).sort()
+    );
+  });
+
+  it('needs each seeding rate quote to state its range and basis', () => {
+    const crop = cropPluginSchema.parse({
+      ...SEEDING_BASE,
+      plantingGuide: {
+        seedingRate: {
+          drilledLbsPerAcre: { min: 60, max: 120 },
+          broadcastLbsPerAcre: { min: 90, max: 160 },
+          seedsPerAcre: { min: 25000, max: 33000 },
+          drillRowSpacingIn: { min: 6, max: 7 },
+          seedBasis: 'bulk'
+        }
+      }
+    });
+    const quoted = (quote: string) => ({ ...FIXTURE_SOURCE, quote });
+    const ok: SourceMap = {
+      'test-crop': {
+        'seedingRate.drilledLbsPerAcre': quoted('Drill 60 to 120 lb./A into a prepared seedbed'),
+        'seedingRate.broadcastLbsPerAcre': quoted('row "Rye | 3/4–2 | 60–120 | 90–160 |"'),
+        'seedingRate.seedsPerAcre': quoted('plant 25,000 to 33,000 kernels per acre'),
+        'seedingRate.drillRowSpacingIn': quoted('While 6- to 7-inch row spacings are best'),
+        'seedingRate.seedBasis': quoted('assuming legal standards for germination percentage')
+      }
+    };
+    expect(seedingRateQuoteGaps([crop], ok)).toEqual([]);
+    const bad: SourceMap = {
+      'test-crop': {
+        'seedingRate.drilledLbsPerAcre': quoted('Drill 160 to 1200 lb./A'),
+        'seedingRate.broadcastLbsPerAcre': quoted('broadcast 90 to 150 lb./A'),
+        'seedingRate.seedsPerAcre': quoted('plant 25,000 kernels per acre'),
+        'seedingRate.drillRowSpacingIn': quoted('in 6 to 8 inch rows'),
+        'seedingRate.seedBasis': quoted('Drill at 45 lbs./acre PLS')
+      }
+    };
+    expect(seedingRateQuoteGaps([crop], bad)).toEqual([
+      'test-crop: seedingRate.drilledLbsPerAcre quote does not state 60-120',
+      'test-crop: seedingRate.broadcastLbsPerAcre quote does not state 90-160',
+      'test-crop: seedingRate.seedsPerAcre quote does not state 25000-33000',
+      'test-crop: seedingRate.drillRowSpacingIn quote does not state 6-7',
+      'test-crop: seedingRate.seedBasis quote does not say bulk'
+    ]);
   });
 });
 

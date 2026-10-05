@@ -289,15 +289,15 @@
       "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
       "date": "2007",
-      "quote": "F ield peas 11/2–3 50–80 90–100 4 .61 –1.20 50 75 pea, vetch S",
-      "note": "Chart 3B row as extracted by pypdf. Columns: species, depth (in), drilled lb/A, broadcast lb/A, oz/100 sq ft, cost, inoculant. Species-level field pea row. The NRCS pea Plant Guide (Pavek 2012) prints the same 50 to 80 drilled and 90 to 100 broadcast, citing Clark 2007."
+      "quote": "SARE MCCP Chart 3B Planting, columns \"Species | Depth | Drilled lb./A | Drilled bu/A | Broadcast lb./A | Broadcast bu/A | oz./100 ft2 | Cost ($/lb.) | Cost/A drilled | Cost/A broadcast | Inoc. Type | Reseeds\"; row \"Field peas | 1 1/2–3 | 50–80 |  | 90–100 |  | 4 | .61–1.20 | 50 | 75 | pea, vetch | S\"",
+      "note": "Row read from the chart PDF and written with its column names; legume rows leave the bu/A cells blank. Species-level field pea row; SARE's pea page is titled Field Peas (also called Austrian winter peas). The NRCS pea Plant Guide (Pavek 2012) prints the same 50 to 80 drilled and 90 to 100 broadcast but cites Clark 2007, the SARE book, so it is not a second source. The NRCS Iowa Winter Pea fact sheet (2025) prints 45 lb/acre PLS for both methods, an Iowa baseline rate (see cereal-rye-cover's note)."
     },
     "seedingRate.broadcastLbsPerAcre": {
       "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
       "date": "2007",
-      "quote": "F ield peas 11/2–3 50–80 90–100 4 .61 –1.20 50 75 pea, vetch S",
-      "note": "Chart 3B row as extracted by pypdf. Columns: species, depth (in), drilled lb/A, broadcast lb/A, oz/100 sq ft, cost, inoculant. Species-level field pea row. The NRCS pea Plant Guide (Pavek 2012) prints the same 50 to 80 drilled and 90 to 100 broadcast, citing Clark 2007."
+      "quote": "SARE MCCP Chart 3B Planting, columns \"Species | Depth | Drilled lb./A | Drilled bu/A | Broadcast lb./A | Broadcast bu/A | oz./100 ft2 | Cost ($/lb.) | Cost/A drilled | Cost/A broadcast | Inoc. Type | Reseeds\"; row \"Field peas | 1 1/2–3 | 50–80 |  | 90–100 |  | 4 | .61–1.20 | 50 | 75 | pea, vetch | S\"",
+      "note": "Row read from the chart PDF and written with its column names; legume rows leave the bu/A cells blank. Species-level field pea row; SARE's pea page is titled Field Peas (also called Austrian winter peas). The NRCS pea Plant Guide (Pavek 2012) prints the same 50 to 80 drilled and 90 to 100 broadcast but cites Clark 2007, the SARE book, so it is not a second source. The NRCS Iowa Winter Pea fact sheet (2025) prints 45 lb/acre PLS for both methods, an Iowa baseline rate (see cereal-rye-cover's note)."
     },
     "seedingRate.drillRowSpacingIn": {
       "url": "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_pisa6.pdf",
@@ -305,6 +305,13 @@
       "date": "Published June 2012",
       "quote": "Seed is planted at a depth of 1.5 to 3 inches in rows spaced 6 to 12 inches apart (Elzebroek and Wind, 2008).",
       "note": "General pea establishment text for Pisum sativum."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "barley-grain-thoroughbred": {
@@ -487,7 +494,21 @@
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Buckwheat",
       "date": "2007",
       "quote": "In untilled, minimally tilled or clean-tilled soils, drill 50 to 60 lb./A at 1/2 to 11/2 inches deep in 6 to 8 inch rows.",
-      "note": "Rates are left empty: this page says drill 50 to 60 and broadcast up to 96 lb./A, Chart 3B says drilled 48-70 and broadcast 50-90."
+      "note": "Single source; no other source found prints a buckwheat drill row width."
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/buckwheat/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Buckwheat",
+      "date": "2007",
+      "quote": "In untilled, minimally tilled or clean-tilled soils, drill 50 to 60 lb./A at 1/2 to 11/2 inches deep in 6 to 8 inch rows.",
+      "note": "Chart 3B prints drilled 48-70, which overlaps; the crop page's range is used (overlap rule, panel ruling 2026-10-04). Broadcast is left empty: the page gives only a ceiling ('broadcast up to 96 lb./A') and Chart 3B says 50-90."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "cabbage-early-jersey-wakefield": {
@@ -661,14 +682,21 @@
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Cereal Rye",
       "date": "2007",
       "quote": "Drill 60 to 120 lb./A (1 to 2 bushels) into a prepared seedbed or broadcast 90 to 160 lb./A (1.5 to 3 bushels) and disk lightly or cultipack (361, 422).",
-      "note": "Chart 3B agrees (drilled 60-120, broadcast 90-160). NRCS Iowa / Iowa State cover crop fact sheets (May 2025) print lower single pure-live-seed rates from the Iowa practice standard; that is a different seed basis and region, so they are noted, not counted as a disagreement."
+      "note": "Chart 3B agrees (drilled 60-120, broadcast 90-160). The NRCS Iowa / Iowa State cover crop fact sheets (May 2025) print lower single pure-live-seed rates (rye 45 drilled and 50 broadcast, mustard 3 and 4). Seed basis alone cannot close a two- to three-fold gap; they are Midwest Cover Crops Council baseline rates for Iowa corn and soybean systems, and the rye sheet says 'If grazing or weed suppression is desired, increase seeding rate.' A different purpose and region, so not counted (panel ruling 2026-10-04). Maryland NRCS 340 (2025) prints winter rye 90 and mustard 8, inside these ranges."
     },
     "seedingRate.broadcastLbsPerAcre": {
       "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/cereal-rye/",
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Cereal Rye",
       "date": "2007",
       "quote": "Drill 60 to 120 lb./A (1 to 2 bushels) into a prepared seedbed or broadcast 90 to 160 lb./A (1.5 to 3 bushels) and disk lightly or cultipack (361, 422).",
-      "note": "Chart 3B agrees. The page adds that a late-fall broadcast can go as high as 300 or 350 lb./A."
+      "note": "Chart 3B agrees (drilled 60-120, broadcast 90-160). The page adds that a late-fall broadcast can go as high as 300 or 350 lb./A. The NRCS Iowa / Iowa State cover crop fact sheets (May 2025) print lower single pure-live-seed rates (rye 45 drilled and 50 broadcast, mustard 3 and 4). Seed basis alone cannot close a two- to three-fold gap; they are Midwest Cover Crops Council baseline rates for Iowa corn and soybean systems, and the rye sheet says 'If grazing or weed suppression is desired, increase seeding rate.' A different purpose and region, so not counted (panel ruling 2026-10-04). Maryland NRCS 340 (2025) prints winter rye 90 and mustard 8, inside these ranges."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "cherry-bing-sweet": {
@@ -835,7 +863,7 @@
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn",
       "date": "December 15, 2023",
       "quote": "Rate of planting On soils with high production potential where good production practices are followed, plant 25,000 to 33,000 kernels per acre. If planted on droughty soils, the rate of planting should be decreased by 10%-15%.",
-      "note": "Kernels planted per acre on high-potential soils. Penn State Extension (Assessing Corn and Soybean Populations, May 2024) puts full yield at a final stand of 30,000 plants per acre, inside this range. No row width is sourced."
+      "note": "Single source (VCE). Kernels planted per acre on soils with high production potential; the same sentence lowers the rate 10-15% on droughty soils. Penn State Extension's 30,000 plants per acre is a final stand, a different measure, so it is not a second source. No row width is sourced."
     }
   },
   "corn-sweet-bodacious": {
@@ -853,21 +881,21 @@
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Cowpeas",
       "date": "2007",
       "quote": "In a moist seedbed, drill cowpeas 1 to 2 inches deep at about 30 to 90 lb./A, using the higher rate in drier or cooler areas or for larger-seeded cultivars (361, 422).",
-      "note": "Chart 3B agrees (drilled 30-90). Species-level; Iron Clay is a cultivar."
-    },
-    "seedingRate.broadcastLbsPerAcre": {
-      "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
-      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
-      "date": "2007",
-      "quote": "C owp eas 1–1 1/2 30–90 70–120 5 .85 – 71 113 cowpeas, S",
-      "note": "Columns: depth, drilled lb/A, broadcast lb/A, oz/100 sq ft. The cowpea page's 'about 100 lb./A' broadcast and the NRCS Cowpea Plant Guide's 85 lb/acre broadcast both fall inside this range."
+      "note": "Chart 3B prints the same 30-90; the NRCS Cowpea Plant Guide's 30 lb/acre drilled overlaps. Species-level; no Iron Clay figure found. Broadcast is left empty (panel ruling 2026-10-04): the page says 'about 100 lb./A' with 70 possible in good moisture, NRCS says 85, and Chart 3B says 70-120."
     },
     "seedingRate.drillRowSpacingIn": {
       "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/cowpeas/",
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Cowpeas",
       "date": "2007",
       "quote": "While 6- to 7-inch row spacings are best for rapid groundcover or a short growing season, viny types can be planted in 15- to 30-inch rows.",
-      "note": "The same sentence allows 15- to 30-inch rows for viny types."
+      "note": "The cover-crop branch of the sentence (rapid groundcover or a short season); the same sentence allows 15- to 30-inch rows for viny types."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "crimson-clover-cover": {
@@ -882,7 +910,21 @@
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Crimson Clover",
       "date": "2007",
       "quote": "Seed six to eight weeks before the average date of first frost at 15 to 18 lb./A drilled, 22 to 30 lb./A broadcast.",
-      "note": "Broadcast 22 to 30 agrees with Chart 3B and the NRCS Crimson Clover Plant Guide (2013). Drilled is left empty: this page says 15 to 18, Chart 3B says 15-20. Species-level rate."
+      "note": "Chart 3B prints the same 22-30. The NRCS Crimson Clover Plant Guide (2013) repeats it citing Clark 2007, the SARE book, so it is not a second source. Species-level rate."
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/crimson-clover/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Crimson Clover",
+      "date": "2007",
+      "quote": "Seed six to eight weeks before the average date of first frost at 15 to 18 lb./A drilled, 22 to 30 lb./A broadcast.",
+      "note": "Chart 3B prints 15-20 drilled, which overlaps; the crop page's range is used (overlap rule, panel ruling 2026-10-04). The NRCS Crimson Clover Plant Guide prints the same 15 to 18 but cites Clark 2007, the SARE book. Species-level; no Dixie figure found."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "crimson-clover-dixie": {
@@ -891,7 +933,21 @@
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Crimson Clover",
       "date": "2007",
       "quote": "Seed six to eight weeks before the average date of first frost at 15 to 18 lb./A drilled, 22 to 30 lb./A broadcast.",
-      "note": "Broadcast 22 to 30 agrees with Chart 3B and the NRCS Crimson Clover Plant Guide (2013). Drilled is left empty: this page says 15 to 18, Chart 3B says 15-20. Species-level rate."
+      "note": "Chart 3B prints the same 22-30. The NRCS Crimson Clover Plant Guide (2013) repeats it citing Clark 2007, the SARE book, so it is not a second source. Species-level rate."
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/crimson-clover/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Crimson Clover",
+      "date": "2007",
+      "quote": "Seed six to eight weeks before the average date of first frost at 15 to 18 lb./A drilled, 22 to 30 lb./A broadcast.",
+      "note": "Chart 3B prints 15-20 drilled, which overlaps; the crop page's range is used (overlap rule, panel ruling 2026-10-04). The NRCS Crimson Clover Plant Guide prints the same 15 to 18 but cites Clark 2007, the SARE book. Species-level; no Dixie figure found."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "cucumber-regal-f1-seed": {
@@ -1207,7 +1263,21 @@
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Hairy Vetch",
       "date": "2007",
       "quote": "Drill seed at 15 to 20 lb./A, broadcast 25 to 30 lb./A.",
-      "note": "Drilled 15 to 20 agrees with Chart 3B and the NRCS Hairy Vetch Plant Guide (2023). Broadcast is left empty: this page says 25 to 30, Chart 3B 25-40, NRCS 2023 20-30. Species-level rate."
+      "note": "Chart 3B and the NRCS Hairy Vetch Plant Guide (2023) print the same 15 to 20. Species-level rate."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/hairy-vetch/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Hairy Vetch",
+      "date": "2007",
+      "quote": "Drill seed at 15 to 20 lb./A, broadcast 25 to 30 lb./A.",
+      "note": "Chart 3B prints 25-40 and the NRCS Hairy Vetch Plant Guide (2023) 20-30; both overlap, so the crop page's range is used (overlap rule, panel ruling 2026-10-04). Species-level; no Purple Bounty figure found."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "hairy-vetch-purple-bounty": {
@@ -1216,7 +1286,21 @@
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Hairy Vetch",
       "date": "2007",
       "quote": "Drill seed at 15 to 20 lb./A, broadcast 25 to 30 lb./A.",
-      "note": "Drilled 15 to 20 agrees with Chart 3B and the NRCS Hairy Vetch Plant Guide (2023). Broadcast is left empty: this page says 25 to 30, Chart 3B 25-40, NRCS 2023 20-30. Species-level rate."
+      "note": "Chart 3B and the NRCS Hairy Vetch Plant Guide (2023) print the same 15 to 20. Species-level rate."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/hairy-vetch/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Hairy Vetch",
+      "date": "2007",
+      "quote": "Drill seed at 15 to 20 lb./A, broadcast 25 to 30 lb./A.",
+      "note": "Chart 3B prints 25-40 and the NRCS Hairy Vetch Plant Guide (2023) 20-30; both overlap, so the crop page's range is used (overlap rule, panel ruling 2026-10-04). Species-level; no Purple Bounty figure found."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "hops-cascade": {
@@ -1340,6 +1424,13 @@
       "date": "2007",
       "quote": "Seeding rate is 8 to 10 lb./A for black medic, 12 to 20 lb./A for larger-seeded (snail, gamma and burr) annual medics.",
       "note": "The rate sits in the page's drilling paragraph ('Drill 1/4 to 1/2 inch deep ...'). Chart 3B's medic row (drilled 8-22) covers all medics, larger-seeded ones included. Broadcast is left empty: the only figure (Chart 3B, 12-26) is for all medics."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "mint-spearmint": {
@@ -1365,14 +1456,21 @@
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Brassicas and Mustards",
       "date": "2007",
       "quote": "Mustard. Drill 5-12 lb./A ¼–¾ in. deep or broadcast 10-15 lb./A.",
-      "note": "Chart 3B agrees (drilled 5-12, broadcast 10-15). Generic mustard, not specific to the biofumigant line. NRCS Iowa / Iowa State cover crop fact sheets (May 2025) print lower single pure-live-seed rates from the Iowa practice standard; that is a different seed basis and region, so they are noted, not counted as a disagreement."
+      "note": "Chart 3B agrees (drilled 5-12, broadcast 10-15). Generic mustard, not specific to the biofumigant line. The NRCS Iowa / Iowa State cover crop fact sheets (May 2025) print lower single pure-live-seed rates (rye 45 drilled and 50 broadcast, mustard 3 and 4). Seed basis alone cannot close a two- to three-fold gap; they are Midwest Cover Crops Council baseline rates for Iowa corn and soybean systems, and the rye sheet says 'If grazing or weed suppression is desired, increase seeding rate.' A different purpose and region, so not counted (panel ruling 2026-10-04). Maryland NRCS 340 (2025) prints winter rye 90 and mustard 8, inside these ranges."
     },
     "seedingRate.broadcastLbsPerAcre": {
       "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/brassicas-and-mustards/",
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Brassicas and Mustards",
       "date": "2007",
       "quote": "Mustard. Drill 5-12 lb./A ¼–¾ in. deep or broadcast 10-15 lb./A.",
-      "note": "Chart 3B agrees."
+      "note": "Chart 3B agrees (drilled 5-12, broadcast 10-15). Generic mustard, not specific to the biofumigant line. The NRCS Iowa / Iowa State cover crop fact sheets (May 2025) print lower single pure-live-seed rates (rye 45 drilled and 50 broadcast, mustard 3 and 4). Seed basis alone cannot close a two- to three-fold gap; they are Midwest Cover Crops Council baseline rates for Iowa corn and soybean systems, and the rye sheet says 'If grazing or weed suppression is desired, increase seeding rate.' A different purpose and region, so not counted (panel ruling 2026-10-04). Maryland NRCS 340 (2025) prints winter rye 90 and mustard 8, inside these ranges."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "nasturtium-companion": {
@@ -1538,6 +1636,15 @@
       "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
+  "orchard-grass-potomac": {
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.uaex.uada.edu/publications/pdf/FSA3154.pdf",
+      "publisher": "University of Arkansas System Division of Agriculture, Orchardgrass for Forage (FSA3154)",
+      "date": "FSA3154-PD-10-20N (October 2020)",
+      "quote": "Seeding rate: 10-12 lbs/acre drilled; 12-15 lbs broadcast",
+      "note": "Pure stand; the sheet lists Potomac among varieties that did well in Kentucky and Tennessee trials. Overlapping method-split sources: UGA Circular 814 'D: 10-15 lbs/A B: 15-20 lbs/A' and Missouri G4652 drilled 8-15 (pounds of live seed). VCE 424-100 and Penn State print 8-12 pure stand and Kentucky AGR-64 15-20, none naming a method, so they are not counted. Basis not stated, so no seedBasis. Broadcast is left empty: 12-15 here vs 15-20 in UGA C814 (panel ruling 2026-10-04)."
+    }
+  },
   "oregano-greek": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
@@ -1698,6 +1805,13 @@
       "date": "June 2025",
       "quote": "Broadcast (4-6 lbs./acre PLS)",
       "note": "Pure live seed. The NRCS Plant Guide (2018) says only that broadcast seed should go on at a higher rate than drilled, which this matches; the fact sheet says drilling establishes best."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://nrcs-prod.azureedge.us/sites/default/files/2025-07/Phacelia%20Cover%20Crop%20Fact%20Sheet.pdf",
+      "publisher": "USDA NRCS Iowa / Iowa State University Extension and Outreach, Phacelia Cover Crop Fact Sheet for Iowa",
+      "date": "June 2025",
+      "quote": "Drill/Plant at 1/4-inch (3-5 lbs./acre PLS**)",
+      "note": "The sheet's footnote reads '**Pure Live Seed'."
     }
   },
   "plum-methley": {
@@ -2061,7 +2175,21 @@
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Sorghum-Sudangrass",
       "date": "2007",
       "quote": "With sufficient surface moisture, broadcast 40 to 50 lb./A, or drill 35 to 40 lb./A as deep as 2 inches to reach moist soil.",
-      "note": "Chart 3B agrees on broadcast 40-50. Drilled is left empty: this page says 35 to 40, Chart 3B prints a single 35. Smother-crop cover rates; forage rates are lower. NRCS Iowa / Iowa State cover crop fact sheets (May 2025) print lower single pure-live-seed rates from the Iowa practice standard; that is a different seed basis and region, so they are noted, not counted as a disagreement."
+      "note": "Chart 3B agrees on broadcast 40-50. Smother-crop cover rates: the page says these rates give a quicker canopy than the lower rates used for forage. The NRCS Iowa / Iowa State fact sheet (May 2025) prints 15 drilled and 17 broadcast lb/acre PLS; seed basis alone cannot close a gap that size. It is an Iowa baseline for a different purpose, so it is not counted (panel ruling 2026-10-04)."
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/sorghum-sudangrass/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Sorghum-Sudangrass",
+      "date": "2007",
+      "quote": "With sufficient surface moisture, broadcast 40 to 50 lb./A, or drill 35 to 40 lb./A as deep as 2 inches to reach moist soil.",
+      "note": "Chart 3B prints a single 35, inside this range; the crop page's range is used (overlap rule, panel ruling 2026-10-04). Smother-crop cover rates: the page says these rates give a quicker canopy than the lower rates used for forage. The NRCS Iowa / Iowa State fact sheet (May 2025) prints 15 drilled and 17 broadcast lb/acre PLS; seed basis alone cannot close a gap that size. It is an Iowa baseline for a different purpose, so it is not counted (panel ruling 2026-10-04)."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "southern-pea-pinkeye-purple-hull": {
@@ -2992,15 +3120,22 @@
       "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
       "date": "2007",
-      "quote": "W hiteclover 1/4–1/2 3–9 5–14 1.5 1.10 – 19 30 redcl, R",
-      "note": "Columns: depth, drilled lb/A, broadcast lb/A, oz/100 sq ft. The white clover page's higher rates for adverse overseeding (5 to 9 drilled, 7 to 14 broadcast) are the top of these ranges, and the NRCS White Clover Plant Guide's 4 lb PLS full rate falls inside."
+      "quote": "SARE MCCP Chart 3B Planting, columns \"Species | Depth | Drilled lb./A | Drilled bu/A | Broadcast lb./A | Broadcast bu/A | oz./100 ft2 | Cost ($/lb.) | Cost/A drilled | Cost/A broadcast | Inoc. Type | Reseeds\"; row \"White clover | 1/4–1/2 | 3–9 |  | 5–14 |  | 1.5 | 1.10–4.00 | 19 | 30 | redcl, wht cl | R\"",
+      "note": "Row read from the chart PDF and written with its column names; legume rows leave the bu/A cells blank. Chart 3B is the only general pure-stand rate: the white clover page gives only situational rates (5 to 9 drilled and 7 to 14 broadcast when overseeding in adverse situations, 4 to 6 drilled in mixtures), which sit inside these ranges. The NRCS White Clover Plant Guide's 4 lb PLS full rate names no method and is a different seed basis, so it is neither support nor disagreement."
     },
     "seedingRate.broadcastLbsPerAcre": {
       "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
       "date": "2007",
-      "quote": "W hiteclover 1/4–1/2 3–9 5–14 1.5 1.10 – 19 30 redcl, R",
-      "note": "Columns as above."
+      "quote": "SARE MCCP Chart 3B Planting, columns \"Species | Depth | Drilled lb./A | Drilled bu/A | Broadcast lb./A | Broadcast bu/A | oz./100 ft2 | Cost ($/lb.) | Cost/A drilled | Cost/A broadcast | Inoc. Type | Reseeds\"; row \"White clover | 1/4–1/2 | 3–9 |  | 5–14 |  | 1.5 | 1.10–4.00 | 19 | 30 | redcl, wht cl | R\"",
+      "note": "Row read from the chart PDF and written with its column names; legume rows leave the bu/A cells blank. Chart 3B is the only general pure-stand rate: the white clover page gives only situational rates (5 to 9 drilled and 7 to 14 broadcast when overseeding in adverse situations, 4 to 6 drilled in mixtures), which sit inside these ranges. The NRCS White Clover Plant Guide's 4 lb PLS full rate names no method and is a different seed basis, so it is neither support nor disagreement."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "winter-pea-vns-cover": {
@@ -3008,15 +3143,15 @@
       "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
       "date": "2007",
-      "quote": "F ield peas 11/2–3 50–80 90–100 4 .61 –1.20 50 75 pea, vetch S",
-      "note": "Chart 3B row as extracted by pypdf. Columns: species, depth (in), drilled lb/A, broadcast lb/A, oz/100 sq ft, cost, inoculant. Species-level field pea row. The NRCS pea Plant Guide (Pavek 2012) prints the same 50 to 80 drilled and 90 to 100 broadcast, citing Clark 2007."
+      "quote": "SARE MCCP Chart 3B Planting, columns \"Species | Depth | Drilled lb./A | Drilled bu/A | Broadcast lb./A | Broadcast bu/A | oz./100 ft2 | Cost ($/lb.) | Cost/A drilled | Cost/A broadcast | Inoc. Type | Reseeds\"; row \"Field peas | 1 1/2–3 | 50–80 |  | 90–100 |  | 4 | .61–1.20 | 50 | 75 | pea, vetch | S\"",
+      "note": "Row read from the chart PDF and written with its column names; legume rows leave the bu/A cells blank. Species-level field pea row; SARE's pea page is titled Field Peas (also called Austrian winter peas). The NRCS pea Plant Guide (Pavek 2012) prints the same 50 to 80 drilled and 90 to 100 broadcast but cites Clark 2007, the SARE book, so it is not a second source. The NRCS Iowa Winter Pea fact sheet (2025) prints 45 lb/acre PLS for both methods, an Iowa baseline rate (see cereal-rye-cover's note)."
     },
     "seedingRate.broadcastLbsPerAcre": {
       "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
       "date": "2007",
-      "quote": "F ield peas 11/2–3 50–80 90–100 4 .61 –1.20 50 75 pea, vetch S",
-      "note": "Chart 3B row as extracted by pypdf. Columns: species, depth (in), drilled lb/A, broadcast lb/A, oz/100 sq ft, cost, inoculant. Species-level field pea row. The NRCS pea Plant Guide (Pavek 2012) prints the same 50 to 80 drilled and 90 to 100 broadcast, citing Clark 2007."
+      "quote": "SARE MCCP Chart 3B Planting, columns \"Species | Depth | Drilled lb./A | Drilled bu/A | Broadcast lb./A | Broadcast bu/A | oz./100 ft2 | Cost ($/lb.) | Cost/A drilled | Cost/A broadcast | Inoc. Type | Reseeds\"; row \"Field peas | 1 1/2–3 | 50–80 |  | 90–100 |  | 4 | .61–1.20 | 50 | 75 | pea, vetch | S\"",
+      "note": "Row read from the chart PDF and written with its column names; legume rows leave the bu/A cells blank. Species-level field pea row; SARE's pea page is titled Field Peas (also called Austrian winter peas). The NRCS pea Plant Guide (Pavek 2012) prints the same 50 to 80 drilled and 90 to 100 broadcast but cites Clark 2007, the SARE book, so it is not a second source. The NRCS Iowa Winter Pea fact sheet (2025) prints 45 lb/acre PLS for both methods, an Iowa baseline rate (see cereal-rye-cover's note)."
     },
     "seedingRate.drillRowSpacingIn": {
       "url": "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_pisa6.pdf",
@@ -3024,6 +3159,13 @@
       "date": "Published June 2012",
       "quote": "Seed is planted at a depth of 1.5 to 3 inches in rows spaced 6 to 12 inches apart (Elzebroek and Wind, 2008).",
       "note": "General pea establishment text for Pisum sativum."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "pear-bartlett": {

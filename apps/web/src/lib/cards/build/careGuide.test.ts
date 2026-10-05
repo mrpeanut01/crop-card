@@ -180,8 +180,33 @@ describe('buildCareGuideCard', () => {
     expect(es.facts.map((f) => f.label)).toEqual([
       'Dosis con sembradora',
       'Dosis al voleo',
-      'Distancia entre hileras'
+      'Entre hileras de sembradora'
     ]);
+  });
+
+  it('says what the seed rates weigh when the source states it', () => {
+    const phacelia = {
+      pluginId: 'phacelia',
+      displayName: 'Phacelia',
+      version: '1',
+      cropFamily: 'cover-broadleaf',
+      plantingGuide: {
+        seedingRate: {
+          drilledLbsPerAcre: { min: 3, max: 5 },
+          broadcastLbsPerAcre: { min: 4, max: 6 },
+          seedBasis: 'pls' as const
+        }
+      }
+    };
+    const s = sampleSnapshot({ plantings: [], cropPlugins: { phacelia } });
+    expect(buildCareGuideCard(s, 'phacelia')!.facts.map((f) => f.value)).toEqual([
+      '3–5 lb/ac, pure live seed',
+      '4–6 lb/ac, pure live seed'
+    ]);
+    const es = buildCareGuideCard(s, 'phacelia', {
+      prefs: { timeZone: 'UTC', units: 'us', locale: 'es' }
+    })!;
+    expect(es.facts[0].value).toMatch(/semilla pura viva$/);
   });
 
   it('shows a small-grain seed count and a row-crop population', () => {

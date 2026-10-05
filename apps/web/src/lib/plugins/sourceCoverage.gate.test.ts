@@ -20,6 +20,7 @@ import {
   seasonalTaskWordingProblems,
   stageTemplateWordingProblems,
   sourceEntrySchema,
+  seedingRateQuoteGaps,
   treeSizeClassQuoteGaps,
   speciesFactPaths,
   type ForageSourceEntry,
@@ -176,6 +177,12 @@ describe('Phase 32A source coverage gate', () => {
     const crops = library.crops();
     expect(treeSizeClassQuoteGaps(crops, cropSources)).toEqual([]);
     expect(crops.filter((c) => c.treeSizeClasses).length).toBeGreaterThan(0);
+  });
+
+  it('every seeding rate quote states its range and seed basis', () => {
+    const crops = library.crops();
+    expect(seedingRateQuoteGaps(crops, cropSources)).toEqual([]);
+    expect(crops.filter((c) => c.plantingGuide?.seedingRate).length).toBeGreaterThan(0);
   });
 
   it('every entry in the Phase 32 source files is a complete quote', () => {

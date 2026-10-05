@@ -26,7 +26,8 @@
       "broadcastLbsPerAcre": {
         "min": 10,
         "max": 15
-      }
+      },
+      "seedBasis": "bulk"
     }
   },
   "harvestIndicators": [

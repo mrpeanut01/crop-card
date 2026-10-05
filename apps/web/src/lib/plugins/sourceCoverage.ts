@@ -143,7 +143,7 @@ export function cropFactPaths(c: CropPlugin): string[] {
   const guide = c.plantingGuide ?? {};
   const paths = present('', guide, [...CROP_SOURCED_GUIDE_FIELDS]);
   if (guide.seedingRate)
-    paths.push(...present('seedingRate.', guide.seedingRate, [...SEEDING_RATE_KEYS]));
+    paths.push(...present('seedingRate.', guide.seedingRate, [...SEEDING_RATE_KEYS, 'seedBasis']));
   for (const entry of c.animalToxicity ?? []) {
     for (const id of entry.speciesIds) paths.push(`animalToxicity.${id}`);
   }
@@ -170,6 +170,48 @@ export function treeSizeClassQuoteGaps(
       }
       if (!new RegExp(`(^|[^\\d])${years}([^\\d]|$)`).test(entry.data.quote)) {
         gaps.push(`${c.pluginId}: ${key} quote does not state ${min}-${max} years`);
+      }
+    }
+  }
+  return gaps;
+}
+
+function numberPattern(n: number): string {
+  const [int, frac] = String(n).split('.');
+  const grouped = int.replace(/\B(?=(\d{3})+$)/g, ',?');
+  return frac ? `${grouped}\\.${frac}` : grouped;
+}
+
+/** A seeding rate range must appear in its quote ("60-120", "60–120",
+ *  "60 to 120", "6- to 7-inch", "25,000 to 33,000"; one figure when
+ *  min = max), and a seed basis must match the quote: `pls` names pure live
+ *  seed and `bulk` never does. Returns "pluginId: problem" lines. */
+export function seedingRateQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'plantingGuide'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  const pls = /\bPLS\b|pure live seed/i;
+  for (const c of crops) {
+    const rate = c.plantingGuide?.seedingRate;
+    if (!rate) continue;
+    for (const key of SEEDING_RATE_KEYS) {
+      const r = rate[key];
+      if (!r) continue;
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[`seedingRate.${key}`]);
+      if (!entry.success) continue;
+      const body =
+        r.min === r.max
+          ? numberPattern(r.min)
+          : `${numberPattern(r.min)}-?\\s*(?:-|–|—|to)\\s*${numberPattern(r.max)}`;
+      if (!new RegExp(`(^|[^\\d.,])${body}([^\\d]|$)`).test(entry.data.quote)) {
+        gaps.push(`${c.pluginId}: seedingRate.${key} quote does not state ${r.min}-${r.max}`);
+      }
+    }
+    if (rate.seedBasis) {
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.['seedingRate.seedBasis']);
+      if (entry.success && pls.test(entry.data.quote) !== (rate.seedBasis === 'pls')) {
+        gaps.push(`${c.pluginId}: seedingRate.seedBasis quote does not say ${rate.seedBasis}`);
       }
     }
   }

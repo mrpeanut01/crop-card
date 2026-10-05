@@ -23,7 +23,8 @@
       "broadcastLbsPerAcre": {
         "min": 5,
         "max": 14
-      }
+      },
+      "seedBasis": "bulk"
     }
   },
   "notes": "Low-growing perennial — works as a living mulch in orchard alleyways or vegetable interplant. N-fixer + pollinator-friendly.",

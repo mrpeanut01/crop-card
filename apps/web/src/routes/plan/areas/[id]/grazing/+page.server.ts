@@ -4,6 +4,7 @@ import { getField } from '$lib/db/fields';
 import { listBlocks } from '$lib/db/blocks';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { currentUser } from '$lib/server/auth';
+import { t } from '$lib/i18n';
 import { applicationsOnField, loadGrazingContext } from '$lib/server/areaGrazing';
 import { formatClearDate } from '$lib/safety/animalWithdrawal';
 import {
@@ -26,7 +27,7 @@ function holdText(v: GrazingVerdict, timeZone: string): string {
  *  times read from each label; nothing is filled in for them. */
 export const load: PageServerLoad = async (event) => {
   const field = getField(event.params.id);
-  if (!field) error(404, 'Area not found');
+  if (!field) error(404, t(event.locals?.locale, 'forage.page.areaNotFound'));
   const user = currentUser(event);
   const timeZone = farmTimeZone();
   const blocks = new Map(

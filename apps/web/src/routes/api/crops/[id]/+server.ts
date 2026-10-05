@@ -37,7 +37,6 @@ import {
   writeFootprint,
   type GardenFailure
 } from '$lib/server/garden/placement';
-import { t } from '$lib/i18n';
 import { getRegistry } from '$lib/server/registry';
 import { db } from '$lib/db/client';
 import { withClientRecordId } from '$lib/server/clientRecordId';

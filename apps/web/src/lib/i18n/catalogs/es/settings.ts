@@ -259,6 +259,8 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
   'settings.index.pieces.other': '{count} piezas',
   'settings.index.sprayers.one': '{count} aspersora y calibración',
   'settings.index.sprayers.other': '{count} aspersoras y calibración',
+  'settings.index.needsDecon.one': '{count} sin descontaminar',
+  'settings.index.needsDecon.other': '{count} sin descontaminar',
   'settings.index.plugins.label': 'Complementos y biblioteca de cultivos',
   'settings.index.plugins.sub': '{loaded} cargados · {failed} con error',
   'settings.index.documents.label': 'Documentos',
@@ -691,6 +693,8 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
   'settings.ai.gated.3': 'Pregunta libre al asistente en Plan v2 + Hoy',
   'settings.ai.works.0':
     'Los cinco pasos del asistente funcionan totalmente a mano: arrastra las barras de Gantt, haz clic en editar, llena formularios',
+  'settings.ai.works.1':
+    'El núcleo de seguridad, la descontaminación y la retención de registros funcionan en local y nunca llaman a la IA',
   'settings.ai.works.2':
     'Importación / exportación CSV · complementos · todos los cálculos del calendario',
   'settings.ai.ep.allocate': 'Planificar, programar y ajustar',

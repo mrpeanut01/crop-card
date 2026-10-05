@@ -252,6 +252,8 @@ export const enSettings = {
   'settings.index.pieces.other': '{count} pieces',
   'settings.index.sprayers.one': '{count} sprayer & calibration',
   'settings.index.sprayers.other': '{count} sprayers & calibration',
+  'settings.index.needsDecon.one': '{count} needs decon',
+  'settings.index.needsDecon.other': '{count} need decon',
   'settings.index.plugins.label': 'Plugins & crop library',
   'settings.index.plugins.sub': '{loaded} loaded · {failed} failed',
   'settings.index.documents.label': 'Documents',
@@ -665,6 +667,7 @@ export const enSettings = {
   'settings.ai.gated.3': "Free-text 'ask the assistant' on Plan v2 + Today",
   'settings.ai.works.0':
     'All five wizard steps run fully manually — drag Gantt bars, click edit, fill forms',
+  'settings.ai.works.1': 'Safety kernel + decon + retention logic are local and never call AI',
   'settings.ai.works.2': 'CSV import / export · plugins · all calendar derivations',
   'settings.ai.ep.allocate': 'Plan, schedule and refine',
   'settings.ai.ep.plugin-search': 'Search → web lookup',

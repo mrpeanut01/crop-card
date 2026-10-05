@@ -198,3 +198,29 @@ describe('checkPollinatorBloom', () => {
     expect(v[0].detail?.riskyProducts).toEqual(['a', 'b']);
   });
 });
+
+describe('isInBloom — calendar months on the farm clock', () => {
+  // 2026-05-31 21:00 in Virginia is already June 1 in UTC.
+  const MAY_31_EVENING_ET = Date.UTC(2026, 5, 1, 1, 0);
+  const apple = {
+    cropPluginId: 'apple',
+    plantedAt: MAY_31_EVENING_ET - 365 * 86_400_000,
+    bloomWindow: { monthsOfYear: [5], beeAttractive: true }
+  };
+
+  it('reads the month in the farm zone', () => {
+    expect(isInBloom(apple, MAY_31_EVENING_ET, 'America/New_York')).toBe(true);
+    expect(isInBloom(apple, MAY_31_EVENING_ET, 'UTC')).toBe(false);
+  });
+
+  it('defaults to the farm default zone and blocks the spray', () => {
+    expect(isInBloom(apple, MAY_31_EVENING_ET)).toBe(true);
+    expect(
+      checkPollinatorBloom([{ pluginId: 'x', pollinatorRisk: 'high' }], [apple], MAY_31_EVENING_ET)
+    ).toHaveLength(1);
+  });
+
+  it('falls back to the default zone for an invalid zone', () => {
+    expect(isInBloom(apple, MAY_31_EVENING_ET, 'Not/AZone')).toBe(true);
+  });
+});

@@ -13,6 +13,7 @@
  * sunrise/sunset (`sunTimes.ts`). Pure — no DB, env, or clock reads.
  */
 
+import { dateTimeFormat } from '$lib/intlCache';
 import type { SafetyViolation } from './types';
 import type { SunTimes } from './sunTimes';
 
@@ -45,6 +46,9 @@ export interface PollinatorProtectionInput {
   /** Operator confirms no bees are foraging — only consulted when the
    *  sun times are unavailable for a dusk-to-dawn product. */
   attestedNoForagers?: boolean;
+  /** Farm-local IANA zone for the sunset time in the reasons. Without it
+   *  the runtime's zone is used (the browser's on the spray page). */
+  timeZone?: string;
 }
 
 export interface PollinatorCheck {
@@ -124,8 +128,15 @@ export function isDaylight(at: Date, sun: SunTimes): boolean {
   return t >= sun.sunrise.getTime() && t < sun.sunset.getTime();
 }
 
-function fmtTime(d: Date): string {
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+function fmtTime(d: Date, timeZone?: string): string {
+  if (timeZone) {
+    try {
+      return dateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone }).format(d);
+    } catch {
+      // An invalid zone falls back to the runtime's.
+    }
+  }
+  return dateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(d);
 }
 
 function hoursUntilSunrise(at: Date, sun: SunTimes): number {
@@ -248,7 +259,7 @@ export function checkPollinatorProtection(
         id: 'time-of-day',
         status: 'block',
         label: 'Dusk-to-dawn only',
-        reason: `Label prohibits application while bees are foraging. Apply after sunset (${fmtTime(input.sunTimes.sunset)}) and before sunrise.`
+        reason: `Label prohibits application while bees are foraging. Apply after sunset (${fmtTime(input.sunTimes.sunset, input.timeZone)}) and before sunrise.`
       });
     } else {
       checks.push({
@@ -264,7 +275,7 @@ export function checkPollinatorProtection(
       status: 'warn',
       label: 'Time of day',
       reason: input.sunTimes
-        ? `Daylight application of a bee-toxic product — best practice is after sunset (${fmtTime(input.sunTimes.sunset)}).`
+        ? `Daylight application of a bee-toxic product — best practice is after sunset (${fmtTime(input.sunTimes.sunset, input.timeZone)}).`
         : 'Sunrise/sunset unavailable — best practice is to spray after sunset.'
     });
   } else {

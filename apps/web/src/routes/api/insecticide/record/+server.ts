@@ -30,6 +30,7 @@ import {
   type StockItem
 } from '$lib/db/stock';
 import { ensureSystemUser } from '$lib/db/users';
+import { farmTimeZone } from '$lib/db/userProfile';
 import type { InsecticidePlugin, CropPlugin } from '$lib/plugins/schemas';
 import { checkEnvironment } from '$lib/safety/environment';
 import type { HerbicideProduct, SafetyResult, SprayContext } from '$lib/safety';
@@ -253,7 +254,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     });
   // #130 — label pollinator gate (RULES_VERSION 0.5.6). Label language is
   // law, so this is not routed through the KERNEL_DRY_RUN wrapper.
-  const pluginSaysInBloom = cropsInBlock.some((c) => isInBloom(c, occurredAt));
+  const timeZone = farmTimeZone();
+  const pluginSaysInBloom = cropsInBlock.some((c) => isInBloom(c, occurredAt, timeZone));
   const bloomStatus: BloomStatus =
     parsed.data.bloomStatus ?? (pluginSaysInBloom ? 'in-bloom' : 'unknown');
   const bloomStatusSource: AttestedBloomSource = parsed.data.bloomStatus
@@ -273,7 +275,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     bloomStatus,
     applicationTime: new Date(occurredAt),
     sunTimes: sunTimesFor(lat, lon, new Date(occurredAt)),
-    attestedNoForagers: parsed.data.attestedNoForagers
+    attestedNoForagers: parsed.data.attestedNoForagers,
+    timeZone
   });
   const pollinatorBlock = pollinatorViolations(pollinator);
   if (pollinatorBlock.length > 0) {
@@ -302,7 +305,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         const rec = registry.get(id);
         return rec && rec.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : null;
       },
-      occurredAt
+      occurredAt,
+      timeZone
     )
   });
 

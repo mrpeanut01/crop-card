@@ -31,6 +31,7 @@ import {
   type StockItem
 } from '$lib/db/stock';
 import { ensureSystemUser } from '$lib/db/users';
+import { farmTimeZone } from '$lib/db/userProfile';
 import type { FungicidePlugin, CropPlugin } from '$lib/plugins/schemas';
 import { checkEnvironment } from '$lib/safety/environment';
 import type { HerbicideProduct, SafetyResult, SprayContext } from '$lib/safety';
@@ -210,7 +211,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
           pollinatorRisk: p.pollinatorRisk ?? 'unknown'
         })),
         cropsInBlock,
-        occurredAt
+        occurredAt,
+        farmTimeZone()
       ),
     {
       plannedSpray: { productPluginIds: parsed.data.productPluginIds },

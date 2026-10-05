@@ -126,7 +126,7 @@ export const PATCH: RequestHandler = async (event) => {
       if (dated) return problem(400, dated.error, dated.message);
     }
     for (const at of new Set([existing.occurredAt, fields.occurredAt ?? existing.occurredAt])) {
-      const closed = checkSeasonClosed(at);
+      const closed = checkSeasonClosed(at, event.locals?.locale);
       if (closed) {
         return json(
           { error: closed.code, message: closed.message, year: closed.year },

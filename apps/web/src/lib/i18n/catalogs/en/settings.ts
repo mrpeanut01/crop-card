@@ -536,6 +536,8 @@ export const enSettings = {
   'settings.close.hint':
     "Closing the season locks every {year} record. No spray, insecticide, fungicide, harvest, or hay-cutting entry dated in {year} can be added or changed afterward — the same way a spray record locks 48 hours after it's written. You have 7 days to reopen if you close by mistake.",
   'settings.close.helperBanner': 'Helper view — only the farm owner can close or reopen a season.',
+  'settings.close.recordRefused':
+    'The {year} season is closed. Records dated in {year} can no longer be added or changed. Reopen the season first if a correction is needed.',
   'settings.close.closedBadge': '{year} season closed',
   'settings.close.nextTitle': "Season closed. What's next?",
   'settings.close.nextHint':

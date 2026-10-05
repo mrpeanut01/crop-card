@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import { getEquipment } from '$lib/db/equipment';
 import { getSprayer } from '$lib/server/sprayers';
 import { selectDeconProtocol } from '$lib/safety/deconProtocol';
+import { canMutate } from '$lib/server/session';
 
 export const load: PageServerLoad = ({ params, locals }) => {
   if (!params.id) throw error(400, 'id required');
@@ -18,8 +19,8 @@ export const load: PageServerLoad = ({ params, locals }) => {
     equipment,
     sprayer,
     protocol,
-    // Helper+ may run winterization (same crew as UC-04 decon). Read-only
-    // inspector sessions have no mutating user; the API also enforces.
-    canWinterize: locals.user != null
+    // Helper+ may run winterization (same crew as UC-04 decon); inspectors
+    // are read-only and the API refuses them too.
+    canWinterize: !!locals.user && canMutate(locals.user.role)
   };
 };

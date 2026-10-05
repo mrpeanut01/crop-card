@@ -80,7 +80,7 @@
       createError = tr('equip.err.addType', { error: out.error ?? res.status });
       return { ok: false, typeId: null, legacyType: 'other' };
     }
-    return { ok: true, typeId: out.type.id as string, legacyType: 'other' };
+    return { ok: true, typeId: out.type.id as string, legacyType: nameToLegacyEnum(name) };
   }
 
   /** Map a Type name to the closest legacy enum value so the existing

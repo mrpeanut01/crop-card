@@ -8,6 +8,7 @@
  */
 
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { rowSpacingOf } from '$lib/garden/plantCount';
 import type { BlockWithPlantings, SunExposure } from '$lib/db/blocks';
 import type { Crop } from '$lib/db/crops';
 import { rotationLookbackForFamily } from '$lib/calendar/rotation';
@@ -184,7 +185,7 @@ export function isNarrow(
   plugin: CropPlugin,
   sharedBed: boolean
 ): boolean {
-  const rowIn = plugin.plantingGuide?.rowSpacingIn ?? plugin.defaultRowSpacingInches ?? 12;
+  const rowIn = rowSpacingOf(plugin).inches;
   const minDimFt = sharedBed ? bedMinDimFt(block) : sqrtAcresFt(block);
   return minDimFt != null && minDimFt < ((sharedBed ? 1 : 2) * rowIn) / 12;
 }

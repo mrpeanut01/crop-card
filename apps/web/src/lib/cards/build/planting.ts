@@ -27,6 +27,7 @@ import {
   type ResolvedOptions
 } from './common';
 import { formatInches } from './size';
+import { seedingFacts } from './seeding';
 import { careGuideHref, careLinkLabel } from './careGuide';
 import { ymdInZone } from '$lib/prefs';
 import { cropDisplayName } from '$lib/i18n/cropName';
@@ -71,7 +72,12 @@ function spacingFacts(
       provenance: p.spacingIn !== null ? 'manual' : 'plugin'
     });
   }
-  const rows = p.rowSpacingIn ?? guide?.rowSpacingIn ?? plugin?.defaultRowSpacingInches ?? null;
+  const byArea = inRow === null ? guide?.seedingRate : undefined;
+  facts.push(...seedingFacts(byArea, opts));
+  const rows =
+    p.rowSpacingIn ??
+    (byArea?.drillRowSpacingIn ? null : (guide?.rowSpacingIn ?? plugin?.defaultRowSpacingInches)) ??
+    null;
   if (rows !== null) {
     facts.push({
       label: tr('cards.fact.rowSpacing'),

@@ -11,7 +11,13 @@
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "soilTempMinF": 50,
-    "recommendedLbsPerAcre": 22
+    "recommendedLbsPerAcre": 22,
+    "seedingRate": {
+      "broadcastLbsPerAcre": {
+        "min": 22,
+        "max": 30
+      }
+    }
   },
   "notes": "Winter-annual N-fixing cover. Drill Aug–Sep; terminate at full bloom for max biomass + N. Excellent rye / vetch alternative for vegetable systems.",
   "harvestIndicators": [

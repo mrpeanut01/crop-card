@@ -16,7 +16,13 @@
   ],
   "plantingGuide": {
     "soilTempMinF": 65,
-    "recommendedLbsPerAcre": 35
+    "recommendedLbsPerAcre": 35,
+    "seedingRate": {
+      "broadcastLbsPerAcre": {
+        "min": 40,
+        "max": 50
+      }
+    }
   },
   "notes": "Massive summer biomass for soil-building. Mow at 4 ft to encourage rooting + regrowth. Allelopathic — wait 2 wk before planting small-seeded crops.",
   "harvestStyle": "cover-crop-termination",

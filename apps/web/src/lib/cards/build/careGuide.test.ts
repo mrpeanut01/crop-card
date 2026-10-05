@@ -149,6 +149,67 @@ describe('buildCareGuideCard', () => {
     expect(card.provenance).toHaveLength(1);
   });
 
+  it('shows sourced seeding rates for a drilled crop instead of the legacy row spacing', () => {
+    const rye = {
+      pluginId: 'rye',
+      displayName: 'Rye',
+      version: '1',
+      cropFamily: 'cover-grass',
+      defaultRowSpacingInches: 6,
+      plantingGuide: {
+        seedingRate: {
+          drilledLbsPerAcre: { min: 60, max: 120 },
+          broadcastLbsPerAcre: { min: 90, max: 160 },
+          drillRowSpacingIn: { min: 6, max: 8 }
+        }
+      }
+    };
+    const s = sampleSnapshot({ plantings: [], cropPlugins: { rye } });
+    expect(buildCareGuideCard(s, 'rye')!.facts).toEqual([
+      { label: 'Seed rate, drilled', value: '60–120 lb/ac', provenance: 'plugin' },
+      { label: 'Seed rate, broadcast', value: '90–160 lb/ac', provenance: 'plugin' },
+      { label: 'Drill rows', value: '6–8 in', provenance: 'plugin' }
+    ]);
+    const metric = buildCareGuideCard(s, 'rye', {
+      prefs: { timeZone: 'UTC', units: 'metric' }
+    })!;
+    expect(metric.facts[0].value).toBe('67–135 kg/ha');
+    const es = buildCareGuideCard(s, 'rye', {
+      prefs: { timeZone: 'UTC', units: 'us', locale: 'es' }
+    })!;
+    expect(es.facts.map((f) => f.label)).toEqual([
+      'Dosis con sembradora',
+      'Dosis al voleo',
+      'Distancia entre hileras'
+    ]);
+  });
+
+  it('shows a small-grain seed count and a row-crop population', () => {
+    const plugins = {
+      wheat: {
+        pluginId: 'wheat',
+        displayName: 'Wheat',
+        version: '1',
+        cropFamily: 'cereal-grain',
+        plantingGuide: { seedingRate: { drilledSeedsPerSqFt: { min: 22, max: 30 } } }
+      },
+      corn: {
+        pluginId: 'corn',
+        displayName: 'Corn',
+        version: '1',
+        cropFamily: 'corn',
+        plantingGuide: { seedingRate: { seedsPerAcre: { min: 28000, max: 32000 } } }
+      }
+    };
+    const s = sampleSnapshot({ plantings: [], cropPlugins: plugins });
+    expect(buildCareGuideCard(s, 'wheat')!.facts).toEqual([
+      { label: 'Seeds, drilled', value: '22–30 per sq ft', provenance: 'plugin' }
+    ]);
+    expect(buildCareGuideCard(s, 'corn')!.facts).toEqual([
+      { label: 'Seeding population', value: '28,000–32,000/ac', provenance: 'plugin' }
+    ]);
+  });
+
   it('builds one card per referenced plugin and null for unknown ids', () => {
     expect(buildCareGuideCards(snap).map((c) => c.key)).toEqual([
       'cg_bean-provider',

@@ -17,6 +17,15 @@
       "note": "The same fact sheet names the sensitive crops: \"Snap beans and potatoes should be monitored regularly for PLH activity , especially in early summer after alfalfa is cut.\" Only snap bean (Phaseolus vulgaris pod bean) and potato plugins are listed; other PLH hosts the sheet mentions (eggplant, strawberry, apple) are not tied to the alfalfa advice there. Michigan State Extension E-2269 (1992) agrees for dry beans: \"Be sure to check dry bean fields after nearby alfalfa fields are cut because cutting causes the adult leafhoppers to leave alfalfa fields.\" The spacing before \"PLH\" and \",\" is as extracted from the PDF text."
     }
   },
+  "alfalfa-vernema": {
+    "seedingRate.drillRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Alfalfa",
+      "date": "December 15, 2023",
+      "quote": "Method of planting 6-8 inch rows or solid-seeded.",
+      "note": "Rates are left empty: VCE 15-25 lbs alone (method not stated), Penn State 15-18 pure stand, Missouri G4652 drilled 12-15 PLS."
+    }
+  },
   "apple-cortland": {
     "animalToxicity.dog": {
       "url": "https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/apple",
@@ -275,6 +284,36 @@
       "publisher": "Sustainable Agriculture Research and Education (SARE, USDA NIFA), Managing Cover Crops Profitably, 3rd Edition",
       "date": "2007",
       "quote": "SARE, Managing Cover Crops Profitably, Field Peas (also called Austrian winter peas), Killing Field Pea Cover Crops: \"Peas are easily killed any time with herbicides, or by disking or mowing after full bloom, the stage of maturity that provides the optimum N contribution. Disk lightly to preserve the tender residue for some short-term erosion control.\""
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
+      "date": "2007",
+      "quote": "F ield peas 11/2–3 50–80 90–100 4 .61 –1.20 50 75 pea, vetch S",
+      "note": "Chart 3B row as extracted by pypdf. Columns: species, depth (in), drilled lb/A, broadcast lb/A, oz/100 sq ft, cost, inoculant. Species-level field pea row. The NRCS pea Plant Guide (Pavek 2012) prints the same 50 to 80 drilled and 90 to 100 broadcast, citing Clark 2007."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
+      "date": "2007",
+      "quote": "F ield peas 11/2–3 50–80 90–100 4 .61 –1.20 50 75 pea, vetch S",
+      "note": "Chart 3B row as extracted by pypdf. Columns: species, depth (in), drilled lb/A, broadcast lb/A, oz/100 sq ft, cost, inoculant. Species-level field pea row. The NRCS pea Plant Guide (Pavek 2012) prints the same 50 to 80 drilled and 90 to 100 broadcast, citing Clark 2007."
+    },
+    "seedingRate.drillRowSpacingIn": {
+      "url": "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_pisa6.pdf",
+      "publisher": "USDA NRCS Plant Guide for pea (Pisum sativum), Pullman Plant Materials Center",
+      "date": "Published June 2012",
+      "quote": "Seed is planted at a depth of 1.5 to 3 inches in rows spaced 6 to 12 inches apart (Elzebroek and Wind, 2008).",
+      "note": "General pea establishment text for Pisum sativum."
+    }
+  },
+  "barley-grain-thoroughbred": {
+    "seedingRate.drilledSeedsPerSqFt": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Barley",
+      "date": "December 15, 2023",
+      "quote": "Rate of seeding 120 lbs/A (hulled) or approximately 30 seeds/sq ft (18 seeds/drill foot in 7-inch rows)",
+      "note": "Hulled barley; Thoroughbred is hulled. The next row says planting with a grain drill is best. The 120 lb figure is left empty: Missouri G4652 prints drilled 80-110 PLS (forage context)."
     }
   },
   "basil-genovese": {
@@ -442,6 +481,13 @@
       "publisher": "University of Maryland Extension, Home and Garden Information Center",
       "date": "2026-08-07",
       "quote": "UMD HGIC, Cover Crops For Gardens: Selection chart: \"Buckwheat (Fagopyrum esculentum) | buckwheat | 3 to 4 | spring or summer | any time | not winter-hardy; grows quickly; willreseed\" \"Cover crops are mown, flattened, and/or turned into the soil before going to seed, usually in late April or early May.\""
+    },
+    "seedingRate.drillRowSpacingIn": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/buckwheat/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Buckwheat",
+      "date": "2007",
+      "quote": "In untilled, minimally tilled or clean-tilled soils, drill 50 to 60 lb./A at 1/2 to 11/2 inches deep in 6 to 8 inch rows.",
+      "note": "Rates are left empty: this page says drill 50 to 60 and broadcast up to 96 lb./A, Chart 3B says drilled 48-70 and broadcast 50-90."
     }
   },
   "cabbage-early-jersey-wakefield": {
@@ -609,6 +655,20 @@
       "publisher": "Penn State Extension",
       "date": "2024-06-05",
       "quote": "Penn State Extension, Cereal Rye as a Cover Crop: \"Roll-crimping alone will not kill the cover crop until after anthesis (pollen shed), and if rolled-crimped before anthesis, it should be followed by a burndown spray.\" ... \"It is not recommended to incorporate mature rye because soil microbes require a lot of N to break down high C:N rye, causing N deficiency in the next crop.\""
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/cereal-rye/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Cereal Rye",
+      "date": "2007",
+      "quote": "Drill 60 to 120 lb./A (1 to 2 bushels) into a prepared seedbed or broadcast 90 to 160 lb./A (1.5 to 3 bushels) and disk lightly or cultipack (361, 422).",
+      "note": "Chart 3B agrees (drilled 60-120, broadcast 90-160). NRCS Iowa / Iowa State cover crop fact sheets (May 2025) print lower single pure-live-seed rates from the Iowa practice standard; that is a different seed basis and region, so they are noted, not counted as a disagreement."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/cereal-rye/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Cereal Rye",
+      "date": "2007",
+      "quote": "Drill 60 to 120 lb./A (1 to 2 bushels) into a prepared seedbed or broadcast 90 to 160 lb./A (1.5 to 3 bushels) and disk lightly or cultipack (361, 422).",
+      "note": "Chart 3B agrees. The page adds that a late-fall broadcast can go as high as 300 or 350 lb./A."
     }
   },
   "cherry-bing-sweet": {
@@ -745,6 +805,15 @@
       "quote": "VCE 426-420, Herb Culture and Use (Annuals table, Plant spacing): \"Cilantro, coriander Coriandrum sativum | 24” | 18”\""
     }
   },
+  "clover-red-mammoth": {
+    "seedingRate.drillRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Red Clover",
+      "date": "December 15, 2023",
+      "quote": "Plant in 6-8 inch rows or solid-seeded usually with a grass.",
+      "note": "Red clover generally. Rates are left empty: VCE 8-10 lbs alone, Penn State 10-12, Missouri and Kentucky 8-12, none tied to a method."
+    }
+  },
   "collards-georgia-southern": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-408/426-408.html",
@@ -760,6 +829,13 @@
       "publisher": "Cornell University, Cornell Home Gardening Vegetable Growing Guides (Corn)",
       "date": "2006 (page copyright)",
       "quote": "Cornell Vegetable Growing Guide, Corn: \"choose another type of corn that you won’t harvest until the ears are fully mature and dry. These include popcorn, ornamental corn or field corn (dent, flint and flour corns grown for meal or animal feed).\""
+    },
+    "seedingRate.seedsPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn",
+      "date": "December 15, 2023",
+      "quote": "Rate of planting On soils with high production potential where good production practices are followed, plant 25,000 to 33,000 kernels per acre. If planted on droughty soils, the rate of planting should be decreased by 10%-15%.",
+      "note": "Kernels planted per acre on high-potential soils. Penn State Extension (Assessing Corn and Soybean Populations, May 2024) puts full yield at a final stand of 30,000 plants per acre, inside this range. No row width is sourced."
     }
   },
   "corn-sweet-bodacious": {
@@ -771,12 +847,51 @@
       "note": "Cross-check VCE 426-331 Table 5 gives Corn, sweet 6-12 in; overlapping range, crop-specific publication used."
     }
   },
+  "cowpea-iron-clay-cover": {
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/cowpeas/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Cowpeas",
+      "date": "2007",
+      "quote": "In a moist seedbed, drill cowpeas 1 to 2 inches deep at about 30 to 90 lb./A, using the higher rate in drier or cooler areas or for larger-seeded cultivars (361, 422).",
+      "note": "Chart 3B agrees (drilled 30-90). Species-level; Iron Clay is a cultivar."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
+      "date": "2007",
+      "quote": "C owp eas 1–1 1/2 30–90 70–120 5 .85 – 71 113 cowpeas, S",
+      "note": "Columns: depth, drilled lb/A, broadcast lb/A, oz/100 sq ft. The cowpea page's 'about 100 lb./A' broadcast and the NRCS Cowpea Plant Guide's 85 lb/acre broadcast both fall inside this range."
+    },
+    "seedingRate.drillRowSpacingIn": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/cowpeas/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Cowpeas",
+      "date": "2007",
+      "quote": "While 6- to 7-inch row spacings are best for rapid groundcover or a short growing season, viny types can be planted in 15- to 30-inch rows.",
+      "note": "The same sentence allows 15- to 30-inch rows for viny types."
+    }
+  },
   "crimson-clover-cover": {
     "harvestIndicators": {
       "url": "https://extension.umd.edu/resource/cover-crops-gardens",
       "publisher": "University of Maryland Extension, Home and Garden Information Center",
       "date": "2026-08-07",
       "quote": "UMD HGIC, Cover Crops For Gardens: \"Cover crops are mown, flattened, and/or turned into the soil before going to seed, usually in late April or early May.\" \"Spring vegetable planting may be delayed somewhat by a cover crop (except for oats and usually daikon radish) since you must allow about 2 weeks for the terminated cover crop plants to break down.\" Selection chart: \"Crimson clover (Trifolium incarnatum) | legume | 1 to 2 | spring or late summer/fall | fall or spring | showy spring blooms\""
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/crimson-clover/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Crimson Clover",
+      "date": "2007",
+      "quote": "Seed six to eight weeks before the average date of first frost at 15 to 18 lb./A drilled, 22 to 30 lb./A broadcast.",
+      "note": "Broadcast 22 to 30 agrees with Chart 3B and the NRCS Crimson Clover Plant Guide (2013). Drilled is left empty: this page says 15 to 18, Chart 3B says 15-20. Species-level rate."
+    }
+  },
+  "crimson-clover-dixie": {
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/crimson-clover/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Crimson Clover",
+      "date": "2007",
+      "quote": "Seed six to eight weeks before the average date of first frost at 15 to 18 lb./A drilled, 22 to 30 lb./A broadcast.",
+      "note": "Broadcast 22 to 30 agrees with Chart 3B and the NRCS Crimson Clover Plant Guide (2013). Drilled is left empty: this page says 15 to 18, Chart 3B says 15-20. Species-level rate."
     }
   },
   "cucumber-regal-f1-seed": {
@@ -1086,6 +1201,22 @@
       "publisher": "University of Maryland Extension, Home and Garden Information Center",
       "date": "2026-08-07",
       "quote": "UMD HGIC, Cover Crops For Gardens: Selection chart: \"Hairy vetch (Vicia villosa) | legume | 3 to 4 | late summer/fall | spring | very hardy; slow to establish; can become weedy, so till under at bloom before it ripens seed\" \"Spring vegetable planting may be delayed somewhat by a cover crop (except for oats and usually daikon radish) since you must allow about 2 weeks for the terminated cover crop plants to break down.\""
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/hairy-vetch/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Hairy Vetch",
+      "date": "2007",
+      "quote": "Drill seed at 15 to 20 lb./A, broadcast 25 to 30 lb./A.",
+      "note": "Drilled 15 to 20 agrees with Chart 3B and the NRCS Hairy Vetch Plant Guide (2023). Broadcast is left empty: this page says 25 to 30, Chart 3B 25-40, NRCS 2023 20-30. Species-level rate."
+    }
+  },
+  "hairy-vetch-purple-bounty": {
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/hairy-vetch/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Hairy Vetch",
+      "date": "2007",
+      "quote": "Drill seed at 15 to 20 lb./A, broadcast 25 to 30 lb./A.",
+      "note": "Drilled 15 to 20 agrees with Chart 3B and the NRCS Hairy Vetch Plant Guide (2023). Broadcast is left empty: this page says 25 to 30, Chart 3B 25-40, NRCS 2023 20-30. Species-level rate."
     }
   },
   "hops-cascade": {
@@ -1202,6 +1333,15 @@
       "note": "Cross-check VCE 426-331 Table 5 gives Beans, lima 3-6 in; overlapping range, crop-specific publication used. Fordhook 242 is a bush lima."
     }
   },
+  "medic-black-cover": {
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/medics/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Medics",
+      "date": "2007",
+      "quote": "Seeding rate is 8 to 10 lb./A for black medic, 12 to 20 lb./A for larger-seeded (snail, gamma and burr) annual medics.",
+      "note": "The rate sits in the page's drilling paragraph ('Drill 1/4 to 1/2 inch deep ...'). Chart 3B's medic row (drilled 8-22) covers all medics, larger-seeded ones included. Broadcast is left empty: the only figure (Chart 3B, 12-26) is for all medics."
+    }
+  },
   "mint-spearmint": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
@@ -1217,6 +1357,22 @@
       "date": "2026-02-17",
       "quote": "VCE 426-408, Leafy Green Vegetables (Cooking Greens): \"Mustard: 4 to 6 inches x 18 to 30 inches\"",
       "note": "Cross-check VCE 426-331 Table 5 gives 1-2 in thinned to 6 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "mustard-tillage-cover": {
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/brassicas-and-mustards/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Brassicas and Mustards",
+      "date": "2007",
+      "quote": "Mustard. Drill 5-12 lb./A ¼–¾ in. deep or broadcast 10-15 lb./A.",
+      "note": "Chart 3B agrees (drilled 5-12, broadcast 10-15). Generic mustard, not specific to the biofumigant line. NRCS Iowa / Iowa State cover crop fact sheets (May 2025) print lower single pure-live-seed rates from the Iowa practice standard; that is a different seed basis and region, so they are noted, not counted as a disagreement."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/brassicas-and-mustards/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Brassicas and Mustards",
+      "date": "2007",
+      "quote": "Mustard. Drill 5-12 lb./A ¼–¾ in. deep or broadcast 10-15 lb./A.",
+      "note": "Chart 3B agrees."
     }
   },
   "nasturtium-companion": {
@@ -1240,6 +1396,15 @@
       "publisher": "University of Maryland Extension, Home and Garden Information Center",
       "date": "2026-08-07",
       "quote": "UMD HGIC, Cover Crops For Gardens: \"Oats are killed by the first hard freeze, leaving a brown decomposing mat in spring.\" ... \"In spring, any remaining debris can be forked into the soil or raked aside to mulch around new plants.\""
+    }
+  },
+  "oats-grain-jerry": {
+    "seedingRate.drillRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Oats",
+      "date": "December 15, 2023",
+      "quote": "Plant at 65-80 lbs or 12-15 seeds per row foot in 6-8 inch rows or solid-seeded.",
+      "note": "Spring oats sentence; the plugin is spring grain oats. The lb rate is left empty: Missouri G4652 prints drilled 90-120 PLS (forage context)."
     }
   },
   "onion-candy-sweet-f1": {
@@ -1517,6 +1682,22 @@
       "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
       "quote": "ASPCA, Onion (Allium cepa): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
       "note": "Scallions, shallots and Egyptian walking onions are Allium cepa (or its aggregatum and proliferum groups), the species on the ASPCA onion page. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    }
+  },
+  "phacelia-cover": {
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://nrcs-prod.azureedge.us/sites/default/files/2025-07/Phacelia%20Cover%20Crop%20Fact%20Sheet.pdf",
+      "publisher": "USDA NRCS Iowa / Iowa State University Extension and Outreach, Phacelia Cover Crop Fact Sheet for Iowa",
+      "date": "June 2025",
+      "quote": "Drill/Plant at 1/4-inch (3-5 lbs./acre PLS**)",
+      "note": "Pure live seed. The NRCS Lacy Phacelia Plant Guide (Smither-Kopperl, September 2018) agrees: 4.6 lb. per acre drilled."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://nrcs-prod.azureedge.us/sites/default/files/2025-07/Phacelia%20Cover%20Crop%20Fact%20Sheet.pdf",
+      "publisher": "USDA NRCS Iowa / Iowa State University Extension and Outreach, Phacelia Cover Crop Fact Sheet for Iowa",
+      "date": "June 2025",
+      "quote": "Broadcast (4-6 lbs./acre PLS)",
+      "note": "Pure live seed. The NRCS Plant Guide (2018) says only that broadcast seed should go on at a higher rate than drilled, which this matches; the fact sheet says drilling establishes best."
     }
   },
   "plum-methley": {
@@ -1874,6 +2055,13 @@
       "publisher": "Sustainable Agriculture Research and Education (SARE, USDA NIFA), Managing Cover Crops Profitably, 3rd Edition",
       "date": "2007",
       "quote": "SARE, Managing Cover Crops Profitably, Sorghum-Sudangrass Hybrids: \"Mowing or grazing when stalks are 3 to 4 feet tall encourages tillering and deeper root growth, and keeps regrowth vegetative and less fibrous until frost. For mid-summer cuttings, leave at least 6 inches of stubble to ensure good regrowth and continued weed suppression.\" ... \"Disking while plants are still vegetative will speed decomposition.\" ... \"Flail chopping after frost or killing the cover crop with herbicide will create a suitable mulch for no-till planting\""
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/sorghum-sudangrass/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Sorghum-Sudangrass",
+      "date": "2007",
+      "quote": "With sufficient surface moisture, broadcast 40 to 50 lb./A, or drill 35 to 40 lb./A as deep as 2 inches to reach moist soil.",
+      "note": "Chart 3B agrees on broadcast 40-50. Drilled is left empty: this page says 35 to 40, Chart 3B prints a single 35. Smother-crop cover rates; forage rates are lower. NRCS Iowa / Iowa State cover crop fact sheets (May 2025) print lower single pure-live-seed rates from the Iowa practice standard; that is a different seed basis and region, so they are noted, not counted as a disagreement."
     }
   },
   "southern-pea-pinkeye-purple-hull": {
@@ -2033,6 +2221,15 @@
       "publisher": "UF/IFAS Extension (EDIS ENY-717, Management of Nematodes and Soil Fertility with Sunn Hemp Cover Crop)",
       "date": "2022-01 (revised; originally 2004-09)",
       "quote": "UF/IFAS ENY-717: \"Sunn hemp is most commonly used as a green manure, where it is grown for 2 to 3 months before cash crop planting and then incorporated into the soil at early blooming stage.\" Also: \"When plowed under at early bloom stage, nitrogen recovery of this leguminous plant is the highest.\""
+    }
+  },
+  "sunn-hemp-tropic-sun": {
+    "seedingRate.drillRowSpacingIn": {
+      "url": "https://cms.ctahr.hawaii.edu/soap/Resources/Sustainable-and-Organic-Topics/Tropic-Sun-sunn-hemp",
+      "publisher": "University of Hawaii CTAHR, Sustainable and Organic Agriculture Program, 'Tropic Sun' Sunn Hemp",
+      "date": "Text last updated on 9/25/2009",
+      "quote": "Drilled: 30-50 lbs. pure live seed per acre (34-56 kg/ha) in 6-inch rows.",
+      "note": "The CTAHR green manure sheet SA-GM-11 (Aug. 2002) also says rows 6 inches apart; both credit Rotar & Joy. The 36 to 42 inch rows on the same page are for seed production. Rates are left empty: CTAHR prints 30-50 drilled and 40-60 broadcast pure live seed, NRCS Iowa (May 2025) prints 10 and 15 pure live seed."
     }
   },
   "sweet-corn-american-dream-f1-seed": {
@@ -2775,12 +2972,58 @@
       "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule. VCE 426-331 gives Watermelon 3-4 ft in row; VCE 426-406 gives hills 6-8 ft apart."
     }
   },
+  "wheat-soft-red-winter": {
+    "seedingRate.drillRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Wheat",
+      "date": "December 15, 2023",
+      "quote": "Plant 120-150 lbs per acre (36 seeds per sq ft or 20 seeds per drill foot in 7-inch rows). Plant in 6-8 inch rows or solid-seeded.",
+      "note": "The October 2004 VCE Crop and Soil Environmental News wheat seeding article also tables 6, 7 and 8 inch rows. Rates are left empty: 36 seeds per sq ft here vs 30-35 in the 2004 article, and 120-150 lb here vs Missouri G4652 drilled 90-100 PLS (forage)."
+    }
+  },
   "white-clover-cover": {
     "harvestIndicators": {
       "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/white-clover/",
       "publisher": "Sustainable Agriculture Research and Education (SARE, USDA NIFA), Managing Cover Crops Profitably, 3rd Edition",
       "date": "2007",
       "quote": "SARE, Managing Cover Crops Profitably, White Clover, Killing White Clover Cover Crops: \"Thorough uprooting and incorporation by chisel or moldboard plowing, field cultivating, undercutting or rotary tilling, or—in spring—use of a suitable herbicide will result in good to excellent kill of white clover. Extremely close mowing and partial tillage that leaves any roots undisturbed will suppress, but not kill, white clover.\""
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
+      "date": "2007",
+      "quote": "W hiteclover 1/4–1/2 3–9 5–14 1.5 1.10 – 19 30 redcl, R",
+      "note": "Columns: depth, drilled lb/A, broadcast lb/A, oz/100 sq ft. The white clover page's higher rates for adverse overseeding (5 to 9 drilled, 7 to 14 broadcast) are the top of these ranges, and the NRCS White Clover Plant Guide's 4 lb PLS full rate falls inside."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
+      "date": "2007",
+      "quote": "W hiteclover 1/4–1/2 3–9 5–14 1.5 1.10 – 19 30 redcl, R",
+      "note": "Columns as above."
+    }
+  },
+  "winter-pea-vns-cover": {
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
+      "date": "2007",
+      "quote": "F ield peas 11/2–3 50–80 90–100 4 .61 –1.20 50 75 pea, vetch S",
+      "note": "Chart 3B row as extracted by pypdf. Columns: species, depth (in), drilled lb/A, broadcast lb/A, oz/100 sq ft, cost, inoculant. Species-level field pea row. The NRCS pea Plant Guide (Pavek 2012) prints the same 50 to 80 drilled and 90 to 100 broadcast, citing Clark 2007."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
+      "date": "2007",
+      "quote": "F ield peas 11/2–3 50–80 90–100 4 .61 –1.20 50 75 pea, vetch S",
+      "note": "Chart 3B row as extracted by pypdf. Columns: species, depth (in), drilled lb/A, broadcast lb/A, oz/100 sq ft, cost, inoculant. Species-level field pea row. The NRCS pea Plant Guide (Pavek 2012) prints the same 50 to 80 drilled and 90 to 100 broadcast, citing Clark 2007."
+    },
+    "seedingRate.drillRowSpacingIn": {
+      "url": "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_pisa6.pdf",
+      "publisher": "USDA NRCS Plant Guide for pea (Pisum sativum), Pullman Plant Materials Center",
+      "date": "Published June 2012",
+      "quote": "Seed is planted at a depth of 1.5 to 3 inches in rows spaced 6 to 12 inches apart (Elzebroek and Wind, 2008).",
+      "note": "General pea establishment text for Pisum sativum."
     }
   },
   "pear-bartlett": {

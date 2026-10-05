@@ -2,7 +2,14 @@ import { eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
 import type { BlockWithPlantings, PlantingRecord } from '$lib/db/blocks';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { t } from '$lib/i18n';
-import { DEFAULT_PREFS, formatCalendarDate, formatQuantity, type Prefs } from '$lib/prefs';
+import {
+  DEFAULT_PREFS,
+  formatCalendarDate,
+  formatDueDay,
+  formatQuantity,
+  type Prefs
+} from '$lib/prefs';
+import { deriveTaskStatus } from '$lib/tasks/status';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -143,4 +150,20 @@ export function planV2EventsFor(
     }
   }
   return out;
+}
+
+export type ScheduledTaskStatus = 'overdue' | 'today' | 'scheduled';
+
+/** Date label and status for an open task on the Scheduled tasks card,
+ *  both by the same due-day rule (`dueYmd`) as /today. */
+export function scheduledTaskTiming(
+  scheduledFor: number,
+  now: number,
+  prefs: Prefs
+): { dateLabel: string; status: ScheduledTaskStatus } {
+  const s = deriveTaskStatus({ scheduledFor }, now, prefs.timeZone);
+  return {
+    dateLabel: formatDueDay(scheduledFor, prefs, 'month-day'),
+    status: s === 'late' ? 'overdue' : s === 'due-today' ? 'today' : 'scheduled'
+  };
 }

@@ -37,7 +37,6 @@
   import ScheduledTasksCard, { type ScheduledRow } from './ScheduledTasksCard.svelte';
   import MapOverlay from './MapOverlay.svelte';
   import type { OverlayFieldInput } from '$lib/plan/mapOverlayLayout';
-  import { fmt } from '$lib/prefsState.svelte';
   import {
     blockHarvestWindowLabel,
     blockStatus,
@@ -46,7 +45,8 @@
     currentStageLabel,
     plantingRoleLabel,
     plantingHarvestLabel,
-    plantingStatus
+    plantingStatus,
+    scheduledTaskTiming
   } from '$lib/plan/planV2Derive';
 
   interface Props {
@@ -89,6 +89,8 @@
     canEdit?: boolean;
     /** Phase 35: crops the farm keeps in one bed (owner only). */
     keepInOneBedCrops?: string[];
+    /** The plan's season year, for the season timeline axis. */
+    seasonYear?: number;
   }
   const {
     blocks,
@@ -108,7 +110,8 @@
     areaGrazing = {},
     petsLayout = false,
     canEdit = true,
-    keepInOneBedCrops = []
+    keepInOneBedCrops = [],
+    seasonYear
   }: Props = $props();
 
   const tr = $derived(createT($page.data?.locale));
@@ -318,19 +321,15 @@
       .sort((a, b) => a.scheduledFor - b.scheduledFor)
       .map((t) => {
         const planting = selectedBlock.plantings.find((p) => p.id === t.cropId);
+        const timing = scheduledTaskTiming(t.scheduledFor, now, prefs);
         return {
           id: t.id,
-          dateLabel: fmt.day(t.scheduledFor, 'month-day'),
+          dateLabel: timing.dateLabel,
           title: t.title,
           plantingLabel: planting ? cropName(planting).split(' ').slice(0, 2).join(' ') : undefined,
           plantingColor: planting ? plantingColor(planting.id) : undefined,
           source: t.pluginTemplateKey ?? tr('planui.shell.manual'),
-          status:
-            t.scheduledFor < now - 24 * 60 * 60 * 1000
-              ? 'overdue'
-              : t.scheduledFor < now + 24 * 60 * 60 * 1000
-                ? 'today'
-                : 'scheduled'
+          status: timing.status
         };
       });
   });
@@ -518,7 +517,7 @@
       {/if}
 
       {#if plantings.length > 0}
-        <SeasonTimelineCard {plantings} events={blockEvents} {daysToMaturityById} />
+        <SeasonTimelineCard {plantings} events={blockEvents} {daysToMaturityById} {seasonYear} />
       {/if}
 
       <div id="plan-scheduled-tasks">

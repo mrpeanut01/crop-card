@@ -99,11 +99,11 @@ export async function buildYearSummary(
   const timeZone = prefs?.timeZone ?? farmTimeZone();
   const { fromMs, toMs } = yearBounds(year, timeZone);
 
-  const sprayEvents = listSprayEvents({ fromMs, toMs, limit: 100_000 });
-  const insecticideEvents = listInsecticideEvents({ fromMs, toMs, limit: 100_000 });
-  const fungicideEvents = listFungicideEvents({ fromMs, toMs, limit: 100_000 });
+  const sprayEvents = listSprayEvents({ fromMs, toMs });
+  const insecticideEvents = listInsecticideEvents({ fromMs, toMs });
+  const fungicideEvents = listFungicideEvents({ fromMs, toMs });
   const harvestEvents = listHarvestEvents({ fromMs, toMs });
-  const scoutObs = listScoutObservations({ fromMs, limit: 100_000 }).filter(
+  const scoutObs = listScoutObservations({ fromMs }).filter(
     (o) => o.occurredAt >= fromMs && o.occurredAt <= toMs
   );
   const blocks = listBlocks();

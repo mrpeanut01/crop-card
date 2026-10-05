@@ -8,8 +8,6 @@ export interface HayExportRow {
   daysLate: number | null;
 }
 
-const LIMIT = 10_000;
-
 /** Hay cuttings for the CSV, USDA and VDACS exports, tenant-scoped through `listCuttings`. */
 export function listHayForExport(filters: {
   blockId?: string;
@@ -17,7 +15,7 @@ export function listHayForExport(filters: {
   toMs?: number;
 }): HayExportRow[] {
   const out: HayExportRow[] = [];
-  for (const cutting of listCuttings({ blockId: filters.blockId, limit: LIMIT })) {
+  for (const cutting of listCuttings({ blockId: filters.blockId })) {
     const occurredAt = cutting.mowAt ?? cutting.createdAt;
     if (filters.fromMs !== undefined && occurredAt < filters.fromMs) continue;
     if (filters.toMs !== undefined && occurredAt > filters.toMs) continue;

@@ -220,16 +220,16 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
       calibratedGpa: s.calibratedGpa ?? null
     })),
     events: {
-      spray: listSprayEvents({ limit: 10_000 }),
-      insecticide: listInsecticideEvents({ limit: 10_000 }).map((e) => ({
+      spray: listSprayEvents(),
+      insecticide: listInsecticideEvents().map((e) => ({
         ...e,
         bloomStatus: e.bloomStatus ?? null,
         bloomStatusSource: e.bloomStatusSource ?? null,
         attestedNoForagers: e.attestedNoForagers ?? null,
         pollinatorVerdict: e.pollinatorVerdict ?? null
       })),
-      fungicide: listFungicideEvents({ limit: 10_000 }),
-      scout: listScoutObservations({ limit: 10_000 }),
+      fungicide: listFungicideEvents(),
+      scout: listScoutObservations(),
       harvest: listHarvestEvents(),
       fertility,
       planting,

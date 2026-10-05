@@ -209,8 +209,7 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
     sprayerId,
     blockId,
     fromMs,
-    toMs,
-    limit: 10_000
+    toMs
   });
   // A sprayer filter keeps only that sprayer's applications and decons;
   // harvest, hay and fertility rows have no sprayer, so they are left out.
@@ -218,14 +217,12 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
   const insecticides = listInsecticideEvents({
     blockId,
     fromMs,
-    toMs,
-    limit: 10_000
+    toMs
   }).filter(onSprayer);
   const fungicides = listFungicideEvents({
     blockId,
     fromMs,
-    toMs,
-    limit: 10_000
+    toMs
   }).filter(onSprayer);
   const harvests = sprayerId ? [] : listHarvestEvents({ blockId, fromMs, toMs });
   const hays = sprayerId ? [] : listHayForExport({ blockId, fromMs, toMs });

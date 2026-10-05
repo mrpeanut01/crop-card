@@ -26,7 +26,7 @@ export interface SprayCropRegistry {
 export interface BlockPlantingFacts {
   cropPluginId: string;
   plantingDate: number | null;
-  status: string;
+  status?: string;
 }
 
 const GONE_STATUSES = new Set(['harvested', 'archived', 'failed']);
@@ -39,7 +39,9 @@ export function standingCropPluginIds(
   atMs: number
 ): string[] {
   return plantings
-    .filter((p) => !GONE_STATUSES.has(p.status) && p.plantingDate != null && p.plantingDate <= atMs)
+    .filter(
+      (p) => !GONE_STATUSES.has(p.status ?? '') && p.plantingDate != null && p.plantingDate <= atMs
+    )
     .map((p) => p.cropPluginId);
 }
 

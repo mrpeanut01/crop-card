@@ -14,23 +14,25 @@ import {
   OBSERVED_MAX_SPAN_DAYS,
   stationLabel
 } from '$lib/server/weatherObserved';
+import { t } from '$lib/i18n';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const GET: RequestHandler = async (event) => {
   if (!currentUser(event)) {
-    return json({ error: 'authentication required' }, { status: 401 });
+    return json({ error: t(event.locals?.locale, 'api.errB.authRequired') }, { status: 401 });
   }
   const now = Date.now();
   const from = Number(event.url.searchParams.get('from'));
   if (!Number.isFinite(from) || from > now || from < now - OBSERVED_MAX_SPAN_DAYS * DAY_MS) {
     return json(
-      { error: `from must be a ms timestamp within the last ${OBSERVED_MAX_SPAN_DAYS} days` },
+      { error: t(event.locals?.locale, 'api.errB.observedFrom', { days: OBSERVED_MAX_SPAN_DAYS }) },
       { status: 400 }
     );
   }
   const location = resolveWeatherLocation(event.url.searchParams.get('blockId'));
-  if (!location) return json({ error: 'block not found' }, { status: 404 });
+  if (!location)
+    return json({ error: t(event.locals?.locale, 'api.errB.blockNotFound') }, { status: 404 });
 
   const observed = await getObservedHours(location.lat, location.lon, from, now);
   return json(

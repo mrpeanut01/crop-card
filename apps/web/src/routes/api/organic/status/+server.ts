@@ -47,7 +47,10 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = organicStatusCreateSchema.safeParse(body);
   if (!parsed.success) return invalidBody(parsed.error.issues);
@@ -55,7 +58,8 @@ export const POST: RequestHandler = async (event) => {
 
   if (input.subjectType === 'field') {
     const field = getField(input.subjectId);
-    if (!field) return json({ error: 'unknown subjectId' }, { status: 400 });
+    if (!field)
+      return json({ error: t(event.locals?.locale, 'api.errB.unknownSubjectId') }, { status: 400 });
     if (!isCropBearing(field.kind)) {
       return json(
         {
@@ -66,7 +70,7 @@ export const POST: RequestHandler = async (event) => {
       );
     }
   } else if (!subjectExists(input.subjectType, input.subjectId)) {
-    return json({ error: 'unknown subjectId' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.errB.unknownSubjectId') }, { status: 400 });
   }
 
   const timeZone = farmTimeZone();
@@ -82,7 +86,7 @@ export const POST: RequestHandler = async (event) => {
   ) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: [
           {
             path: 'effectiveOn',

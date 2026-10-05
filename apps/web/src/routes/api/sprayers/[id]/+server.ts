@@ -11,9 +11,10 @@
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { countSprayEventsForSprayer, deleteSprayerCascade } from '$lib/db/admin';
 import { requireOwner } from '$lib/server/auth';
+import { t } from '$lib/i18n';
 
 export const DELETE: RequestHandler = (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   requireOwner(event);
   if (countSprayEventsForSprayer(event.params.id) > 0) {
     return json(

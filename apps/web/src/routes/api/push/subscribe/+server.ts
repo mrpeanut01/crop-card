@@ -22,6 +22,7 @@ import {
 import { DEFAULT_PUSH_PREFS, mergePushPrefs } from '$lib/push/prefs';
 import { prefsSchema, subscribeSchema, unsubscribeSchema } from '$lib/server/push/validate';
 import { readVapidConfig } from '$lib/server/push/webPush';
+import { t } from '$lib/i18n';
 
 function view(sub: PushSubscriptionRecord) {
   return {
@@ -40,8 +41,8 @@ async function body(event: Parameters<RequestHandler>[0]): Promise<unknown> {
 
 export const POST: RequestHandler = async (event) => {
   const u = requireMutator(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
-  if (!readVapidConfig()) throw error(503, "Push isn't configured on this server");
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.errB.noActiveOwner'));
+  if (!readVapidConfig()) throw error(503, t(event.locals?.locale, 'api.errB.pushNotConfigured'));
   const parsed = subscribeSchema.safeParse(await body(event));
   if (!parsed.success) throw error(400, parsed.error.issues[0]?.message ?? 'invalid body');
   const { subscription, prefs } = parsed.data;
@@ -58,23 +59,23 @@ export const POST: RequestHandler = async (event) => {
 
 export const PATCH: RequestHandler = async (event) => {
   const u = requireMutator(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.errB.noActiveOwner'));
   const parsed = prefsSchema.safeParse(await body(event));
   if (!parsed.success) throw error(400, parsed.error.issues[0]?.message ?? 'invalid body');
   const existing = getSubscriptionForUser(u.id, parsed.data.endpoint);
-  if (!existing) throw error(404, 'subscription not found');
+  if (!existing) throw error(404, t(event.locals?.locale, 'api.errB.subscriptionNotFound'));
   const updated = updatePrefsForUser(
     u.id,
     parsed.data.endpoint,
     mergePushPrefs(existing.prefs, parsed.data.prefs)
   );
-  if (!updated) throw error(404, 'subscription not found');
+  if (!updated) throw error(404, t(event.locals?.locale, 'api.errB.subscriptionNotFound'));
   return json({ subscription: view(updated) });
 };
 
 export const DELETE: RequestHandler = async (event) => {
   const u = requireMutator(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.errB.noActiveOwner'));
   const parsed = unsubscribeSchema.safeParse(await body(event));
   if (!parsed.success) throw error(400, parsed.error.issues[0]?.message ?? 'invalid body');
   const removed = deleteSubscriptionForUser(u.id, parsed.data.endpoint);

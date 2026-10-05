@@ -15,16 +15,18 @@ import { farmTimeZone } from '$lib/db/userProfile';
 import { biofixPutSchema } from '$lib/ipm/apiSchemas';
 import { acceptsManualBiofix } from '$lib/ipm/pestModels';
 import { farmYmd } from '$lib/server/degreeDays.server';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = biofixPutSchema;
 
 export const PUT: RequestHandler = async (event) => {
   const user = requireMutator(event);
   const model = (await getDataKinds()).pestModels.get(event.params.id ?? '');
-  if (!model) return json({ error: 'pest model not found' }, { status: 404 });
+  if (!model)
+    return json({ error: t(event.locals?.locale, 'api.errB.pestModelNotFound') }, { status: 404 });
   if (!acceptsManualBiofix(model)) {
     return json(
-      { error: 'This model counts from a fixed date, not a trap catch.', code: 'BIOFIX_NOT_TRAP' },
+      { error: t(event.locals?.locale, 'api.errB.biofixNotTrap'), code: 'BIOFIX_NOT_TRAP' },
       { status: 400 }
     );
   }
@@ -32,13 +34,16 @@ export const PUT: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = biofixPutSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -52,7 +57,7 @@ export const PUT: RequestHandler = async (event) => {
   const today = farmYmd(Date.now(), farmTimeZone());
   if (date > today) {
     return json(
-      { error: 'The catch date cannot be in the future.', code: 'IN_THE_FUTURE' },
+      { error: t(event.locals?.locale, 'api.errB.catchFuture'), code: 'IN_THE_FUTURE' },
       { status: 400 }
     );
   }

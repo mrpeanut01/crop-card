@@ -41,32 +41,36 @@ import {
   taskClosedRefusal
 } from '$lib/server/taskAssign';
 import { taskPatchSchema } from '$lib/tasks/apiSchemas';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = taskPatchSchema;
 
 class TaskClosedDuringEdit extends Error {}
 
-export const GET: RequestHandler = ({ params }) => {
-  if (!params.id) throw error(400, 'id required');
+export const GET: RequestHandler = ({ params, locals }) => {
+  if (!params.id) throw error(400, t(locals?.locale, 'stockui.api.idRequired'));
   const result = getTaskWithLinked(params.id);
-  if (!result) throw error(404, 'task not found');
+  if (!result) throw error(404, t(locals?.locale, 'api.errB.taskNotFound'));
   return json(result);
 };
 
 export const PATCH: RequestHandler = withClientRecordId(async (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const auth = currentUser(event);
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = taskPatchSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({
           path: i.path.join('.'),
           message: i.message
@@ -79,12 +83,16 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
   const id = event.params.id;
   const action = parsed.data.action;
   if (parsed.data.action !== 'assign' && auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
   if (parsed.data.action === 'assign') {
     if (!canAssignTasks(auth)) return assignRefusal(event.locals?.locale);
     const existing = getTask(id);
-    if (!existing) return json({ error: 'task not found' }, { status: 404 });
+    if (!existing)
+      return json({ error: t(event.locals?.locale, 'api.errB.taskNotFound') }, { status: 404 });
     if (existing.completedAt !== undefined || existing.abortedAt !== undefined) {
       return taskClosedRefusal(event.locals?.locale);
     }
@@ -114,13 +122,14 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
     }
     if (!out.ok) {
       if (out.status === 409) return editConflictResponse(out.body);
-      return json({ error: 'task not found' }, { status: 404 });
+      return json({ error: t(event.locals?.locale, 'api.errB.taskNotFound') }, { status: 404 });
     }
     return json({ task: out.value });
   }
   if (parsed.data.action === 'complete') {
     const existing = getTask(id);
-    if (!existing) return json({ error: 'task not found' }, { status: 404 });
+    if (!existing)
+      return json({ error: t(event.locals?.locale, 'api.errB.taskNotFound') }, { status: 404 });
     const at = parsed.data.occurredAt ?? Date.now();
     const minutes = parsed.data.minutes;
     if (existing.completedAt !== undefined || existing.abortedAt !== undefined) {
@@ -172,12 +181,13 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
       return json({ task: abortTask(id, parsed.data.reason) });
     } catch (e) {
       if (e instanceof Error && /unknown task id/i.test(e.message)) {
-        return json({ error: 'task not found' }, { status: 404 });
+        return json({ error: t(event.locals?.locale, 'api.errB.taskNotFound') }, { status: 404 });
       }
       throw e;
     }
   }
-  if (!getTask(id)) return json({ error: 'task not found' }, { status: 404 });
+  if (!getTask(id))
+    return json({ error: t(event.locals?.locale, 'api.errB.taskNotFound') }, { status: 404 });
   const patch =
     parsed.data.action === 'reschedule'
       ? { scheduledFor: parsed.data.scheduledFor }
@@ -195,7 +205,7 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
   });
   if (!out.ok) {
     if (out.status === 409) return editConflictResponse(out.body);
-    return json({ error: 'task not found' }, { status: 404 });
+    return json({ error: t(event.locals?.locale, 'api.errB.taskNotFound') }, { status: 404 });
   }
   return json({ task: out.value });
 });
@@ -208,10 +218,13 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
  * leave orphaned wraparounds.
  */
 export const DELETE: RequestHandler = async (eventCtx) => {
-  if (!eventCtx.params.id) throw error(400, 'id required');
+  if (!eventCtx.params.id) throw error(400, t(eventCtx.locals?.locale, 'stockui.api.idRequired'));
   const auth = currentUser(eventCtx);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(eventCtx.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
   const { deleteTask } = await import('$lib/db/admin');
   return json(deleteTask(eventCtx.params.id));

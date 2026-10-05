@@ -29,7 +29,7 @@ export const POST: RequestHandler = async (event) => {
   }
   const id = event.params.id;
   if (!id || !getSprayer(id)) {
-    return json({ error: 'unknown sprayer id' }, { status: 404 });
+    return json({ error: t(event.locals?.locale, 'api.errB.unknownSprayerId') }, { status: 404 });
   }
 
   const body = (await event.request.json().catch(() => ({}))) as {
@@ -57,7 +57,7 @@ export const POST: RequestHandler = async (event) => {
   }
 
   if (steps.length === 0) {
-    return json({ error: 'no winterization steps supplied' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.errB.noWinterizeSteps') }, { status: 400 });
   }
 
   const updated = recordWinterization(id, steps, { performedById: user.id });

@@ -6,6 +6,7 @@ import { planWithAI } from '$lib/server/aiPlanning';
 import { recordCall } from '$lib/server/aiGuard';
 import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
+import { t } from '$lib/i18n';
 
 const bodySchema = z.object({
   blockId: z.string().min(1),
@@ -22,11 +23,14 @@ export const POST: RequestHandler = async (event) => {
   try {
     raw = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = bodySchema.safeParse(raw);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
 
   const year = parsed.data.year ?? getActivePlanningYear();

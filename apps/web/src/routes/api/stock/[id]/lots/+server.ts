@@ -37,7 +37,7 @@ export const POST: RequestHandler = async (event) => {
       return json(
         {
           error: 'NOT_FEED_LOT',
-          message: 'Only feed and bedding lots can come from a hay cutting.'
+          message: t(event.locals?.locale, 'api.errB.notFeedLot')
         },
         { status: 400 }
       );

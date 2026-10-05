@@ -29,6 +29,7 @@ import { recordCall } from '$lib/server/aiGuard';
 import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import type { FallbackReason } from '$lib/server/aiTry';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { t } from '$lib/i18n';
 
 const MAX_ITEMS_PER_BULK = 25;
 
@@ -48,7 +49,10 @@ export const POST: RequestHandler = async (event) => {
   }
   const parsed = bodySchema.safeParse(raw);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
 
   const onlyMissing = parsed.data.onlyMissing !== false;
@@ -199,7 +203,7 @@ export const POST: RequestHandler = async (event) => {
       ? {
           provenance: 'fallback',
           fallbackReason: degraded.reason,
-          message: `${degraded.message} ${results.length} of ${pool.length} item(s) refreshed; the rest are unchanged.`
+          message: `${degraded.message} ${t(event.locals?.locale, 'api.errB.refreshPartial', { done: results.length, total: pool.length })}`
         }
       : { provenance: 'ai' }),
     meta: {

@@ -42,6 +42,7 @@ import { taskCreateSchema } from '$lib/tasks/apiSchemas';
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { writeRecord } from '$lib/server/recordWrite';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { t } from '$lib/i18n';
 
 /** Template keys /today mints for a scheduled calendar suggestion. */
 const SUGGESTION_KEY_PREFIX = 'derived:';
@@ -78,20 +79,26 @@ export const GET: RequestHandler = ({ url }) => {
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = taskCreateSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({
           path: i.path.join('.'),
           message: i.message
@@ -110,7 +117,10 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     (d.equipmentId && !getEquipment(d.equipmentId) && 'equipmentId') ||
     (d.linkedToTaskId && !getTask(d.linkedToTaskId) && 'linkedToTaskId');
   if (foreign) {
-    return json({ error: `unknown ${foreign}` }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'api.errB.unknownField', { name: foreign }) },
+      { status: 400 }
+    );
   }
 
   const assigneeUserId = d.assigneeUserId ?? null;

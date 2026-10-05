@@ -11,10 +11,12 @@ import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { mapFeaturePatchSchema } from '$lib/farm/apiSchemas';
 import { parseFeatureGeometry, validateFeatureDetails } from '$lib/farm/mapFeatures';
 import { checkAreaIds } from '$lib/server/mapFeatureAreaIds';
+import { t } from '$lib/i18n';
 
-export const GET: RequestHandler = ({ params }) => {
+export const GET: RequestHandler = ({ params, locals }) => {
   const mapFeature = params.id ? getMapFeature(params.id) : undefined;
-  if (!mapFeature) return json({ error: 'not found' }, { status: 404 });
+  if (!mapFeature)
+    return json({ error: t(locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   return json({ mapFeature });
 };
 
@@ -24,16 +26,20 @@ export const PATCH: RequestHandler = async (event) => {
   requireOwner(event);
   const id = event.params.id;
   const existing = id ? getMapFeature(id) : undefined;
-  if (!id || !existing) return json({ error: 'not found' }, { status: 404 });
+  if (!id || !existing)
+    return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = _requestSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const patch: UpdateMapFeatureInput = {};
   if (parsed.data.name !== undefined) patch.name = parsed.data.name;
@@ -64,6 +70,7 @@ export const PATCH: RequestHandler = async (event) => {
 export const DELETE: RequestHandler = (event) => {
   requireOwner(event);
   const id = event.params.id;
-  if (!id || !deleteMapFeature(id)) return json({ error: 'not found' }, { status: 404 });
+  if (!id || !deleteMapFeature(id))
+    return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   return json({ ok: true });
 };

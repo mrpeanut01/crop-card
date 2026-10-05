@@ -22,20 +22,21 @@ import { t } from '$lib/i18n';
 export const POST: RequestHandler = async (event) => {
   const session = requireSuperadmin(event);
   const pluginId = event.params.pluginId;
-  if (!pluginId) return json({ error: 'pluginId is required' }, { status: 400 });
+  if (!pluginId)
+    return json({ error: t(event.locals?.locale, 'api.errB.pluginIdIsRequired') }, { status: 400 });
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const toVersion =
     body && typeof body === 'object' && 'toVersion' in body
       ? String((body as { toVersion: unknown }).toVersion ?? '')
       : '';
   if (!toVersion) {
-    return json({ error: 'toVersion is required' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.errB.toVersionRequired') }, { status: 400 });
   }
 
   const history = historyOf(pluginId);

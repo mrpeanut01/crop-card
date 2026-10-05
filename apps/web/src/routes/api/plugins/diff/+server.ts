@@ -17,6 +17,7 @@ import { requireOwner } from '$lib/server/auth';
 import { diffPlugins } from '$lib/plugins/diff';
 import { bumpPatch, currentVersionOf } from '$lib/db/pluginVersions';
 import { effectiveOverride, HIDDEN_PAYLOAD } from '$lib/db/pluginOverrides';
+import { t } from '$lib/i18n';
 
 export const POST: RequestHandler = async (event) => {
   requireOwner(event);
@@ -24,18 +25,21 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const candidate =
     body && typeof body === 'object' && 'plugin' in body
       ? (body as { plugin: unknown }).plugin
       : body;
   if (!candidate || typeof candidate !== 'object') {
-    return json({ error: 'candidate is required' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.errB.candidateRequired') }, { status: 400 });
   }
   const pluginId = (candidate as { pluginId?: unknown }).pluginId;
   if (typeof pluginId !== 'string' || pluginId.length === 0) {
-    return json({ error: 'candidate.pluginId is required' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'api.errB.candidatePluginIdRequired') },
+      { status: 400 }
+    );
   }
 
   const own =

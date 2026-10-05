@@ -4,6 +4,7 @@ import { getStockItemByBarcode, getStockItemByPluginId } from '$lib/db/stock';
 import { claudeTextLookup, matchCropPlugins, type ScanResult } from '$lib/server/scanResult';
 import { runScanAi } from '$lib/server/scanAi';
 import { findTaxonomyTermByName, inventoryDomain } from '$lib/db/taxonomy';
+import { t } from '$lib/i18n';
 
 const requestSchema = z.object({ barcode: z.string().min(1).max(100) });
 
@@ -49,7 +50,7 @@ async function tryOpenFoodFacts(barcode: string) {
 export async function POST(event) {
   const body = await event.request.json().catch(() => null);
   const parsed = requestSchema.safeParse(body);
-  if (!parsed.success) error(400, 'invalid request');
+  if (!parsed.success) error(400, t(event.locals?.locale, 'stockui.api.invalidRequest'));
   const { barcode } = parsed.data;
 
   const existing = getStockItemByBarcode(barcode);

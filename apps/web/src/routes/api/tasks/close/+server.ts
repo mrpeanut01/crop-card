@@ -9,6 +9,7 @@ import { afterSeedStartTaskDone } from '$lib/server/seedStartTasks';
 import { writeRecord } from '$lib/server/recordWrite';
 import { careMetaOf, closeCareTask } from '$lib/server/carePlans';
 import { recordTaskTime, timeOnClosedTask } from '$lib/server/taskTime';
+import { t } from '$lib/i18n';
 
 const DAY_MS = 86_400_000;
 
@@ -36,23 +37,31 @@ export const _requestSchema = taskCloseSchema;
  */
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
-  if (!auth) return json({ error: 'sign in first' }, { status: 401 });
+  if (!auth)
+    return json({ error: t(event.locals?.locale, 'api.errB.signInFirst') }, { status: 401 });
   if (!canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = taskCloseSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidRequest') }, { status: 400 });
   }
   const { taskId, action, reason, minutes } = parsed.data;
   const existing = getTask(taskId);
-  if (!existing) return json({ error: 'task not found' }, { status: 404 });
+  if (!existing)
+    return json({ error: t(event.locals?.locale, 'api.errB.taskNotFound') }, { status: 404 });
   const meta = careMetaOf(existing);
   const carriesDose = !!meta && action === 'complete' && !!parsed.data.healthEvent;
   const now = Date.now();

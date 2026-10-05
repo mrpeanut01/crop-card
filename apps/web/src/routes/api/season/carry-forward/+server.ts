@@ -19,6 +19,7 @@ import { z } from 'zod';
 
 import { requireOwner } from '$lib/server/auth';
 import { carryForwardSeasonAsync } from '$lib/season/carryForward.server';
+import { t } from '$lib/i18n';
 
 const bodySchema = z.object({
   fromYear: z.number().int().min(2000).max(3000),
@@ -34,7 +35,7 @@ export async function POST(event) {
     error(400, parsed.error.issues[0]?.message ?? 'invalid body');
   }
   if (parsed.data.toYear < parsed.data.fromYear) {
-    error(400, 'toYear must be >= fromYear');
+    error(400, t(event.locals?.locale, 'api.errB.toYearGteFrom'));
   }
 
   const result = await carryForwardSeasonAsync({

@@ -12,6 +12,7 @@ import { getStockItemByPluginId } from '$lib/db/stock';
 import { requireUser } from '$lib/server/auth';
 import { runScanAi, ScanInputError } from '$lib/server/scanAi';
 import { assertUrlAllowed, POLICY_ERROR_CODES, SafeFetchError } from '$lib/server/safeFetch';
+import { t } from '$lib/i18n';
 
 const requestSchema = z.object({
   url: z.string().trim().min(1).max(2048).url()
@@ -43,7 +44,7 @@ export async function POST(event) {
   requireUser(event);
   const body = await event.request.json().catch(() => null);
   const parsed = requestSchema.safeParse(body);
-  if (!parsed.success) error(400, 'invalid request');
+  if (!parsed.success) error(400, t(event.locals?.locale, 'stockui.api.invalidRequest'));
   const { url } = parsed.data;
   try {
     assertUrlAllowed(url);

@@ -15,17 +15,21 @@ import { getTask, loadEquipmentContext, materializePluginPrePost } from '$lib/db
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
+import { t } from '$lib/i18n';
 
 export const POST: RequestHandler = async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const primary = getTask(event.params.id);
-  if (!primary) throw error(404, 'task not found');
+  if (!primary) throw error(404, t(event.locals?.locale, 'api.errB.taskNotFound'));
   if (primary.kind !== 'primary') {
-    return json({ error: 'pre-tasks can only attach to primary tasks' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.errB.preTasksPrimary') }, { status: 400 });
   }
 
   const registry = await getRegistry();

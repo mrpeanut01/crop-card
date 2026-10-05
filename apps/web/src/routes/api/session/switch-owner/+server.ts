@@ -2,6 +2,7 @@ import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { activeAssignmentsForUser } from '$lib/db/users';
 import { currentUser } from '$lib/server/auth';
 import { writeSession } from '$lib/server/session';
+import { t } from '$lib/i18n';
 
 /**
  * Switch the active Owner without a full re-login. Body: `{ ownerId }`.
@@ -12,23 +13,23 @@ import { writeSession } from '$lib/server/session';
  */
 export const POST: RequestHandler = async (event) => {
   const user = currentUser(event);
-  if (!user) throw error(401, 'authentication required');
+  if (!user) throw error(401, t(event.locals?.locale, 'api.errB.authRequired'));
 
   // Phase 24 — Bearer tokens are owner-scoped at issuance. Allowing an
   // agent to switch owners would let a leaked token roam every tenant
   // its underlying user has access to. Reject; agents must use a token
   // minted under the target Owner.
   if (event.locals.authVia === 'bearer') {
-    throw error(403, 'Bearer-authed sessions cannot switch owners');
+    throw error(403, t(event.locals?.locale, 'api.errB.bearerSwitch'));
   }
 
   const body = await event.request.json().catch(() => null);
   const ownerId = body && typeof body.ownerId === 'string' ? body.ownerId : null;
-  if (!ownerId) throw error(400, 'ownerId required');
+  if (!ownerId) throw error(400, t(event.locals?.locale, 'api.errB.ownerIdRequired'));
 
   const assignments = activeAssignmentsForUser(user.id);
   const match = assignments.find((a) => a.ownerId === ownerId);
-  if (!match) throw error(403, 'no active assignment to that Owner');
+  if (!match) throw error(403, t(event.locals?.locale, 'api.errB.noAssignment'));
 
   writeSession(event.cookies, {
     id: user.id,

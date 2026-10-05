@@ -23,6 +23,7 @@ import {
   writePluginFile
 } from '$lib/server/pluginFiles';
 import { AnimalRuleError } from '$lib/server/animals';
+import { t } from '$lib/i18n';
 
 export const POST: RequestHandler = async (event) => {
   const global = event.url.searchParams.get('scope') === 'global';
@@ -32,7 +33,7 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const candidate =
     body && typeof body === 'object' && 'plugin' in body

@@ -12,10 +12,12 @@ import {
   validateFeatureDetails
 } from '$lib/farm/mapFeatures';
 import { checkAreaIds } from '$lib/server/mapFeatureAreaIds';
+import { t } from '$lib/i18n';
 
-export const GET: RequestHandler = ({ url }) => {
+export const GET: RequestHandler = ({ url, locals }) => {
   const kinds = parseKindFilter(url.searchParams.get('kind'), MAP_FEATURE_KINDS);
-  if (kinds === 'invalid') return json({ error: 'unknown kind' }, { status: 400 });
+  if (kinds === 'invalid')
+    return json({ error: t(locals?.locale, 'api.errB.unknownKind') }, { status: 400 });
   const fieldId = url.searchParams.get('fieldId') ?? undefined;
   const all = listMapFeatures({ fieldId });
   return json({ mapFeatures: kinds ? all.filter((f) => kinds.includes(f.kind)) : all });
@@ -29,11 +31,14 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = _requestSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const { kind, name, fieldId } = parsed.data;
   const geom = parseFeatureGeometry(kind, parsed.data.geometry);

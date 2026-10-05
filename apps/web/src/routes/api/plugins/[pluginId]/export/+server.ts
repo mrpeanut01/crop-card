@@ -9,12 +9,14 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { getRegistry } from '$lib/server/registry';
+import { t } from '$lib/i18n';
 
-export const GET: RequestHandler = async ({ params }) => {
-  if (!params.pluginId) return json({ error: 'pluginId required' }, { status: 400 });
+export const GET: RequestHandler = async ({ params, locals }) => {
+  if (!params.pluginId)
+    return json({ error: t(locals?.locale, 'api.errB.pluginIdRequired') }, { status: 400 });
   const registry = await getRegistry();
   const record = registry.get(params.pluginId);
-  if (!record) return json({ error: 'not found' }, { status: 404 });
+  if (!record) return json({ error: t(locals?.locale, 'stockui.api.notFound') }, { status: 404 });
 
   const body = JSON.stringify(record.plugin, null, 2);
   return new Response(body, {

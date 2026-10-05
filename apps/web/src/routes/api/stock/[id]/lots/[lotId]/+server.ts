@@ -24,7 +24,7 @@ const patchSchema = z.object({
 export const PATCH: RequestHandler = async (event) => {
   const user = requireOwner(event);
   const { id, lotId } = event.params;
-  if (!id || !lotId) throw error(400, 'lotId required');
+  if (!id || !lotId) throw error(400, t(event.locals?.locale, 'api.errB.lotIdRequired'));
   if (!listLotsForItem(id).some((l) => l.id === lotId)) {
     return json({ error: t(event.locals?.locale, 'stockui.api.lotNotFound') }, { status: 404 });
   }
@@ -53,7 +53,7 @@ export const PATCH: RequestHandler = async (event) => {
 export const DELETE: RequestHandler = (event) => {
   requireOwner(event);
   const { id, lotId } = event.params;
-  if (!id || !lotId) throw error(400, 'lotId required');
+  if (!id || !lotId) throw error(400, t(event.locals?.locale, 'api.errB.lotIdRequired'));
   if (!listLotsForItem(id).some((l) => l.id === lotId)) {
     return json({ error: t(event.locals?.locale, 'stockui.api.lotNotFound') }, { status: 404 });
   }

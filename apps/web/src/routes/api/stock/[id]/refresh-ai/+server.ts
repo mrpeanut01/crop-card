@@ -23,13 +23,15 @@ import { refreshStockItem } from '$lib/server/aiRefreshStock';
 import { recordCall } from '$lib/server/aiGuard';
 import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { t } from '$lib/i18n';
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
   const id = event.params.id;
-  if (!id) return json({ error: 'missing id' }, { status: 400 });
+  if (!id) return json({ error: t(event.locals?.locale, 'api.errB.missingId') }, { status: 400 });
   const item = getStockItem(id);
-  if (!item) return json({ error: 'item not found' }, { status: 404 });
+  if (!item)
+    return json({ error: t(event.locals?.locale, 'api.errB.itemNotFound') }, { status: 404 });
 
   const registry = await getRegistry();
   let cropFamily: string | undefined;
@@ -72,7 +74,7 @@ export const POST: RequestHandler = async (event) => {
       result: null,
       provenance: 'fallback',
       fallbackReason: tried.fallbackReason,
-      message: `${tried.fallbackMessage} The item is unchanged; edit its fields by hand.`,
+      message: `${tried.fallbackMessage} ${t(event.locals?.locale, 'api.errB.refreshUnchanged')}`,
       meta: {
         model: 'n/a',
         usdEstimate: 0,
@@ -128,9 +130,10 @@ export const POST: RequestHandler = async (event) => {
 export const DELETE: RequestHandler = (event) => {
   requireOwner(event);
   const id = event.params.id;
-  if (!id) return json({ error: 'missing id' }, { status: 400 });
+  if (!id) return json({ error: t(event.locals?.locale, 'api.errB.missingId') }, { status: 400 });
   const item = getStockItem(id);
-  if (!item) return json({ error: 'item not found' }, { status: 404 });
+  if (!item)
+    return json({ error: t(event.locals?.locale, 'api.errB.itemNotFound') }, { status: 404 });
   setPendingRefresh(id, null);
   return json({ ok: true });
 };
@@ -145,9 +148,10 @@ export const DELETE: RequestHandler = (event) => {
 export const GET: RequestHandler = (event) => {
   requireOwner(event);
   const id = event.params.id;
-  if (!id) return json({ error: 'missing id' }, { status: 400 });
+  if (!id) return json({ error: t(event.locals?.locale, 'api.errB.missingId') }, { status: 400 });
   const item = getStockItem(id);
-  if (!item) return json({ error: 'item not found' }, { status: 404 });
+  if (!item)
+    return json({ error: t(event.locals?.locale, 'api.errB.itemNotFound') }, { status: 404 });
   if (!item.pendingRefreshJson) {
     return json({ result: null, pendingRefreshAt: null });
   }

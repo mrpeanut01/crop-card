@@ -12,6 +12,7 @@ import { frostDatesForYear } from '$lib/schedule/settings';
 import { plannerFrostByBlock } from '$lib/server/blockFrost.server';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
+import { t } from '$lib/i18n';
 
 const bodySchema = z.object({
   assignments: z
@@ -71,11 +72,14 @@ export const POST: RequestHandler = async (event) => {
   try {
     raw = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = bodySchema.safeParse(raw);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
 
   const registry = await getRegistry();
@@ -86,7 +90,10 @@ export const POST: RequestHandler = async (event) => {
   const unknown = parsed.data.assignments.filter((a) => !pluginIndex[a.cropPluginId]);
   if (unknown.length > 0) {
     return json(
-      { error: 'unknown crop plugin(s)', plugins: unknown.map((a) => a.cropPluginId) },
+      {
+        error: t(event.locals?.locale, 'api.errB.unknownCropPlugins'),
+        plugins: unknown.map((a) => a.cropPluginId)
+      },
       { status: 400 }
     );
   }

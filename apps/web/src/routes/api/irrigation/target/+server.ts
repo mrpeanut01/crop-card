@@ -25,7 +25,8 @@ export const POST: RequestHandler = async (event) => {
     );
   }
   const read = await readJson(event.request);
-  if (!read.ok) return json({ error: 'invalid JSON body' }, { status: 400 });
+  if (!read.ok)
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   const parsed = waterTargetSchema.safeParse(read.body);
   if (!parsed.success) return invalid(parsed.error);
   const foreign = rejectForeignRefs(assertField('fieldId', parsed.data.fieldId));

@@ -133,9 +133,13 @@ function applicationBody(app: z.infer<typeof applicationSchema>, prefs: Prefs): 
 
 export const POST: RequestHandler = async (event) => {
   const auth = currentUser(event);
-  if (!auth) return json({ error: 'authentication required' }, { status: 401 });
+  if (!auth)
+    return json({ error: t(event.locals?.locale, 'api.errB.authRequired') }, { status: 401 });
   if (!canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
   if (auth.role !== 'owner') {
     return json({ error: t(event.locals?.locale, 'amend.err.ownerOnly') }, { status: 403 });
@@ -148,14 +152,14 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
 
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -195,7 +199,12 @@ export const POST: RequestHandler = async (event) => {
     });
     if (problems.length > 0) {
       return json(
-        { error: `Some picked products cannot be used: ${problems.join(' ')}`, problems },
+        {
+          error: t(event.locals?.locale, 'api.errB.productsUnusable', {
+            problems: problems.join(' ')
+          }),
+          problems
+        },
         { status: 422 }
       );
     }

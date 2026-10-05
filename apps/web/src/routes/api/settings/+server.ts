@@ -20,6 +20,7 @@ import { markFrostField } from '$lib/climate/frostSettings.server';
 import type { FrostField } from '$lib/climate/frostSuggest';
 import { isDemoUser } from '$lib/server/demo/lifecycle';
 import { demoBlockedResponse } from '$lib/server/demo/guard';
+import { t } from '$lib/i18n';
 
 const FROST_FIELD_BY_KEY: Partial<Record<string, FrostField>> = {
   [SETTINGS_KEYS.lastFrost]: 'lastFrost',
@@ -146,7 +147,7 @@ export async function POST(event) {
     value?: unknown;
   } | null;
   if (!body || typeof body.key !== 'string' || !ALLOWED_KEYS.includes(body.key as SettingKey)) {
-    error(400, 'invalid key');
+    error(400, t(event.locals?.locale, 'api.errB.invalidKey'));
   }
   const key = body.key as SettingKey;
   const demo = demoAiRefusal(user, key, event.locals?.locale);
@@ -170,7 +171,8 @@ export async function POST(event) {
 export async function DELETE(event) {
   const user = requireOwner(event);
   const key = event.url.searchParams.get('key') as SettingKey | null;
-  if (!key || !ALLOWED_KEYS.includes(key)) error(400, 'invalid key');
+  if (!key || !ALLOWED_KEYS.includes(key))
+    error(400, t(event.locals?.locale, 'api.errB.invalidKey'));
   const demo = demoAiRefusal(user, key, event.locals?.locale);
   if (demo) return demo;
   deleteSetting(key);

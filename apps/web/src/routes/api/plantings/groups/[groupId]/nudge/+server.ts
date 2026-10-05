@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { listGroupMembers, nudgeCompanionPlanting } from '$lib/db/crops';
 import { completeTask, getTask } from '$lib/db/tasks';
 import { requireOwner } from '$lib/server/auth';
+import { t } from '$lib/i18n';
 
 const nudgeSchema = z.object({
   companionCropId: z.string().min(1),
@@ -21,23 +22,28 @@ const nudgeSchema = z.object({
 export const POST: RequestHandler = async (event) => {
   requireOwner(event);
   const groupId = event.params.groupId;
-  if (!groupId) return json({ error: 'missing groupId' }, { status: 400 });
+  if (!groupId)
+    return json({ error: t(event.locals?.locale, 'api.errB.missingGroupId') }, { status: 400 });
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = nudgeSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
 
   const members = listGroupMembers(groupId);
-  if (members.length === 0) return json({ error: 'unknown group' }, { status: 404 });
+  if (members.length === 0)
+    return json({ error: t(event.locals?.locale, 'api.errB.unknownGroup') }, { status: 404 });
   if (!members.some((m) => m.id === parsed.data.companionCropId && m.groupRole === 'companion')) {
-    return json({ error: 'crop is not a companion of this group' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.errB.notCompanion') }, { status: 400 });
   }
 
   try {

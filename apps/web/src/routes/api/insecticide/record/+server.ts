@@ -61,6 +61,7 @@ import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { t } from '$lib/i18n';
 
 /** Coarse sprayer-load token for the cross-contamination state machine
  *  (#321). Insecticides carry IRAC groups, not an HRAC ChemistryClass, so
@@ -91,21 +92,24 @@ function occurredAtError(occurredAt: number, now: number): string | null {
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
 
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -124,7 +128,10 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     const err = occurredAtError(parsed.data.occurredAt, now);
     if (err) {
       return json(
-        { error: 'invalid request', issues: [{ path: 'occurredAt', message: err }] },
+        {
+          error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
+          issues: [{ path: 'occurredAt', message: err }]
+        },
         { status: 400 }
       );
     }
@@ -155,7 +162,10 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   }
 
   if (missing.length > 0) {
-    return json({ error: 'unknown insecticide pluginIds', missing }, { status: 404 });
+    return json(
+      { error: t(event.locals?.locale, 'api.errB.unknownInsecticidePlugins'), missing },
+      { status: 404 }
+    );
   }
 
   // Environmental gate (wind / temp / rain) — same kernel module as herbicides.
@@ -329,7 +339,14 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   // GPA simply no-op when no sprayer is selected.
   const sprayer = parsed.data.sprayerId ? getSprayer(parsed.data.sprayerId) : undefined;
   if (parsed.data.sprayerId && !sprayer) {
-    return json({ error: `unknown sprayer: ${parsed.data.sprayerId}` }, { status: 404 });
+    return json(
+      {
+        error: t(event.locals?.locale, 'api.errB.unknownSprayer', {
+          id: parsed.data.sprayerId ?? ''
+        })
+      },
+      { status: 404 }
+    );
   }
 
   // Cross-contamination gate (UC-04 / UC-32). If the tank last carried a

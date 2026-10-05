@@ -49,6 +49,7 @@ import { checkSeasonClosed } from '$lib/server/seasonClose';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { bestEffort, errorText } from '$lib/server/recordWrite';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = sprayRecordSchema;
 const requestSchema = sprayRecordSchema;
@@ -59,14 +60,14 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   try {
     body = await request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
 
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -114,21 +115,30 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   }
 
   if (missing.length > 0) {
-    return json({ error: 'unknown herbicide pluginIds', missing }, { status: 404 });
+    return json(
+      { error: t(event.locals?.locale, 'api.errB.unknownHerbicidePlugins'), missing },
+      { status: 404 }
+    );
   }
 
   const stored = getSprayer(parsed.data.sprayer.id);
   if (!stored) {
-    return json({ error: `unknown sprayer: ${parsed.data.sprayer.id}` }, { status: 404 });
+    return json(
+      { error: t(event.locals?.locale, 'api.errB.unknownSprayer', { id: parsed.data.sprayer.id }) },
+      { status: 404 }
+    );
   }
 
   // Role gates (FR-09 / NFR-09).
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
   if (parsed.data.customRateOverride && auth?.role !== 'owner') {
-    return json({ error: 'custom rate override requires owner role' }, { status: 403 });
+    return json({ error: t(event.locals?.locale, 'api.errB.rateOverrideOwner') }, { status: 403 });
   }
 
   // FR-03: judge the spray against the block's plantings on file as well

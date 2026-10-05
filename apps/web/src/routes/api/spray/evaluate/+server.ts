@@ -42,6 +42,7 @@ import { getRegistry } from '$lib/server/registry';
 import { getSprayer } from '$lib/server/sprayers';
 import { getBlock, type BlockWithPlantings } from '$lib/db/blocks';
 import { resolveSprayCrops, standingCropPluginIds } from '$lib/server/sprayCrops';
+import { t } from '$lib/i18n';
 
 const cropStageInput = z.object({
   cropPluginId: z.string().min(1),
@@ -90,19 +91,19 @@ const requestSchema = z.object({
     .optional()
 });
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
 
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -134,7 +135,10 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   if (missing.length > 0) {
-    return json({ error: 'unknown herbicide pluginIds', missing }, { status: 404 });
+    return json(
+      { error: t(locals?.locale, 'api.errB.unknownHerbicidePlugins'), missing },
+      { status: 404 }
+    );
   }
 
   // Hydrate sprayer state from server when the caller passes just an id;
@@ -160,7 +164,7 @@ export const POST: RequestHandler = async ({ request }) => {
   let plantings: BlockWithPlantings['plantings'] = [];
   if (parsed.data.blockId) {
     const block = getBlock(parsed.data.blockId);
-    if (!block) return json({ error: 'unknown block' }, { status: 404 });
+    if (!block) return json({ error: t(locals?.locale, 'api.errB.unknownBlock') }, { status: 404 });
     plantings = block.plantings;
   }
   const crops = resolveSprayCrops(

@@ -9,6 +9,7 @@ import { getField } from '$lib/db/fields';
 import { deleteShadeSource, getShadeSource, updateShadeSource } from '$lib/db/shadeSources';
 import { requireOwner } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { t } from '$lib/i18n';
 
 const KINDS = [
   'tree-row',
@@ -37,17 +38,21 @@ const updateSchema = z.object({
 export const PATCH: RequestHandler = async (event) => {
   requireOwner(event);
   const id = event.params.id;
-  if (!id) return json({ error: 'missing id' }, { status: 400 });
-  if (!getShadeSource(id)) return json({ error: 'not found' }, { status: 404 });
+  if (!id) return json({ error: t(event.locals?.locale, 'api.errB.missingId') }, { status: 400 });
+  if (!getShadeSource(id))
+    return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const foreign = rejectForeignRefs(['fieldId', parsed.data.fieldId, getField]);
   if (foreign) return foreign;
@@ -58,8 +63,8 @@ export const PATCH: RequestHandler = async (event) => {
 export const DELETE: RequestHandler = (event) => {
   requireOwner(event);
   const id = event.params.id;
-  if (!id) return json({ error: 'missing id' }, { status: 400 });
+  if (!id) return json({ error: t(event.locals?.locale, 'api.errB.missingId') }, { status: 400 });
   const ok = deleteShadeSource(id);
-  if (!ok) return json({ error: 'not found' }, { status: 404 });
+  if (!ok) return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   return json({ ok: true });
 };

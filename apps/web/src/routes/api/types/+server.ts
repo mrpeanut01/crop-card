@@ -13,6 +13,7 @@ import {
   listTaxonomyTerms
 } from '$lib/db/taxonomy';
 import { requireOwner } from '$lib/server/auth';
+import { t } from '$lib/i18n';
 
 export const GET: RequestHandler = ({ url }) => {
   const domain = url.searchParams.get('domain') ?? undefined;
@@ -35,11 +36,14 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   try {
     const term = createTaxonomyTerm(parsed.data);

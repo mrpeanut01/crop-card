@@ -52,7 +52,7 @@ export const PATCH: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         message: t(event.locals?.locale, 'stockui.api.seedCheckFields'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
@@ -64,7 +64,7 @@ export const PATCH: RequestHandler = async (event) => {
   if (future >= 0) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         message: t(event.locals?.locale, 'stockui.api.seedFuture'),
         issues: [{ path: `sourcesChecked.${future}.checkedAt`, message: 'after today' }]
       },

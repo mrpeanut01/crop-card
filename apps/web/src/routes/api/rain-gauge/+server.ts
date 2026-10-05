@@ -15,13 +15,15 @@ import { assertField, rejectForeignRefs } from '$lib/server/foreignRefs';
 import { checkWhen, invalid, readJson } from '$lib/server/irrigationApi';
 import { writeRecord } from '$lib/server/recordWrite';
 import { gaugeCountsFrom } from '$lib/weather/waterBalance';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = rainGaugeCreateSchema;
 
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const user = requireMutator(event);
   const read = await readJson(event.request);
-  if (!read.ok) return json({ error: 'invalid JSON body' }, { status: 400 });
+  if (!read.ok)
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   const parsed = rainGaugeCreateSchema.safeParse(read.body);
   if (!parsed.success) return invalid(parsed.error);
   const b = parsed.data;

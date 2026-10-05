@@ -31,6 +31,7 @@ import { currentUser } from '$lib/server/auth';
 import { recordCall } from '$lib/server/aiGuard';
 import { degradeTag, recordFallback, tryAiWithGuard, ZERO_USAGE } from '$lib/server/aiDegrade';
 import { planInputsWithAI } from '$lib/server/aiInputsPlan';
+import { t } from '$lib/i18n';
 
 const provisionalPlantingSchema = z.object({
   id: z.string().min(1),
@@ -51,20 +52,21 @@ export const POST: RequestHandler = async (event) => {
   // Auth required so tenant scoping kicks in; read-only inspectors are
   // fine — the endpoint only computes, never mutates.
   const auth = currentUser(event);
-  if (!auth) return json({ error: 'authentication required' }, { status: 401 });
+  if (!auth)
+    return json({ error: t(event.locals?.locale, 'api.errB.authRequired') }, { status: 401 });
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
 
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -77,7 +79,7 @@ export const POST: RequestHandler = async (event) => {
   if (!seasonSetup) {
     return json(
       {
-        error: 'no season setup for year — complete the season setup step first',
+        error: t(event.locals?.locale, 'api.errB.noSeasonSetupStep'),
         needsSeasonSetup: true,
         year
       },

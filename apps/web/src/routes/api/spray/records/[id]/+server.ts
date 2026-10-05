@@ -18,26 +18,30 @@ import { applicationHoldsGrazing } from '$lib/server/areaGrazing';
 import { interactiveOwnerRefusal, isInteractiveOwner } from '$lib/server/interactiveOwner';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { recordedAtOf } from '$lib/db/holdParams';
+import { t } from '$lib/i18n';
 
-export const GET: RequestHandler = ({ params }) => {
-  if (!params.id) throw error(400, 'id required');
+export const GET: RequestHandler = ({ params, locals }) => {
+  if (!params.id) throw error(400, t(locals?.locale, 'stockui.api.idRequired'));
   const e = getSprayEvent(params.id);
-  if (!e) throw error(404, 'spray record not found');
+  if (!e) throw error(404, t(locals?.locale, 'api.errB.sprayRecordNotFound'));
   return json({ event: e });
 };
 
 export const DELETE: RequestHandler = async (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
   const force = event.url.searchParams.get('force') === 'true';
   if (force && auth?.role !== 'owner') {
-    return json({ error: 'force-delete of locked records requires owner role' }, { status: 403 });
+    return json({ error: t(event.locals?.locale, 'api.errB.forceDeleteOwner') }, { status: 403 });
   }
   const existing = getSprayEvent(event.params.id);
-  if (!existing) throw error(404, 'spray record not found');
+  if (!existing) throw error(404, t(event.locals?.locale, 'api.errB.sprayRecordNotFound'));
   const reason = event.url.searchParams.get('reason') ?? undefined;
   const neverApplied = event.url.searchParams.get('neverApplied') === 'true';
   const holds = await applicationHoldsGrazing(`spray:${event.params.id}`, farmTimeZone());

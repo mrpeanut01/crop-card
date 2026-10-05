@@ -7,6 +7,7 @@ import { parseBody } from '$lib/server/animals';
 import { requireMutator } from '$lib/server/auth';
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { writeRecord } from '$lib/server/recordWrite';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = seedStartProgressSchema;
 
@@ -20,7 +21,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   requireMutator(event);
   const id = event.params.id ?? '';
   const tray = getSeedStart(id);
-  if (!tray) return json({ error: 'not found' }, { status: 404 });
+  if (!tray)
+    return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   const body = await parseBody(event.request, seedStartProgressSchema);
   if (!body.ok) return body.response;
   const input = body.data;
@@ -29,7 +31,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   for (const at of [observedAt, input.hardenStartedAt, input.transplantedAt]) {
     if (at !== undefined && at > now + MAX_FUTURE_SKEW_MS) {
       return json(
-        { error: 'Tray progress cannot be dated in the future.', code: 'IN_THE_FUTURE' },
+        { error: t(event.locals?.locale, 'api.errB.trayProgressFuture'), code: 'IN_THE_FUTURE' },
         { status: 400 }
       );
     }
@@ -38,13 +40,14 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (input.germinatedCount !== undefined && input.germinatedCount > max) {
     return json(
       {
-        error: `That is more than the ${max} seeds in this tray.`,
+        error: t(event.locals?.locale, 'api.errB.trayOverMax', { max }),
         code: 'OVER_TRAY'
       },
       { status: 400 }
     );
   }
   const result = writeRecord(event, () => recordSeedStartProgress(id, { ...input, observedAt }));
-  if (!result) return json({ error: 'not found' }, { status: 404 });
+  if (!result)
+    return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   return json(result, { status: 201 });
 });

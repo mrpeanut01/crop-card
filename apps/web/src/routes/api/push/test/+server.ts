@@ -11,14 +11,14 @@ import { t } from '$lib/i18n';
  *  the active Owner (optionally just one endpoint). */
 export const POST: RequestHandler = async (event) => {
   const u = requireMutator(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.errB.noActiveOwner'));
   const config = readVapidConfig();
-  if (!config) throw error(503, "Push isn't configured on this server");
+  if (!config) throw error(503, t(event.locals?.locale, 'api.errB.pushNotConfigured'));
   const parsed = testSchema.safeParse(await event.request.json().catch(() => ({})));
   if (!parsed.success) throw error(400, parsed.error.issues[0]?.message ?? 'invalid body');
   const endpoint = parsed.data.endpoint;
   const subs = listSubscriptionsForUser(u.id).filter((s) => !endpoint || s.endpoint === endpoint);
-  if (subs.length === 0) throw error(404, 'no push subscription for this user');
+  if (subs.length === 0) throw error(404, t(event.locals?.locale, 'api.errB.noPushSub'));
   const locale = recipientLocale(u.id);
   const summary = await sendToSubscriptions(
     subs,

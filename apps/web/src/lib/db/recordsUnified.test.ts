@@ -18,7 +18,7 @@ import { createBlock, addPlanting } from './blocks';
 import { insertSprayEvent } from './sprayEvents';
 import { insertInsecticideEvent } from './insecticideEvents';
 import { insertFungicideEvent } from './fungicideEvents';
-import { insertScoutObservation } from './scoutObservations';
+import { getScoutObservation, insertScoutObservation } from './scoutObservations';
 import { insertHarvestEvent } from './harvestEvents';
 import { createCutting, advanceCutting } from './hayCuttings';
 import { insertFertilityApplication } from './fertility';
@@ -226,6 +226,20 @@ describe('recordsUnified — listUnifiedRecords', () => {
       expect(records.find((r) => r.rowId === seeded.ids.scout)).toBeUndefined();
       expect(records.every((r) => r.occurredAt <= toMs)).toBe(true);
     });
+  });
+
+  it("reads one scout observation by id, never another farm's", () => {
+    const ownerId = `rec-get-${randomUUID().slice(0, 6)}`;
+    const otherId = `rec-get-other-${randomUUID().slice(0, 6)}`;
+    const userId = `rec-get-user-${randomUUID().slice(0, 6)}`;
+    ensureOwner(ownerId);
+    ensureOwner(otherId);
+    ensureUser(userId);
+    const seeded = seedAllKinds(ownerId, userId);
+    expect(runWithTenant(ownerId, () => getScoutObservation(seeded.ids.scout))?.id).toBe(
+      seeded.ids.scout
+    );
+    expect(runWithTenant(otherId, () => getScoutObservation(seeded.ids.scout))).toBeUndefined();
   });
 
   it('surfaces the hay cutting branch with cutting #, status, bale + moisture (#326)', () => {

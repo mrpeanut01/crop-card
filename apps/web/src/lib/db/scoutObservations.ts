@@ -70,6 +70,15 @@ export function insertScoutObservation(input: ScoutObservationInput): ScoutObser
   return rowToObservation(row);
 }
 
+export function getScoutObservation(id: string): ScoutObservation | undefined {
+  const row = db
+    .select()
+    .from(scoutObservations)
+    .where(withTenant(scoutObservations, eq(scoutObservations.id, id)))
+    .get();
+  return row ? rowToObservation(row) : undefined;
+}
+
 export interface ListFilters {
   blockId?: string;
   pest?: string;

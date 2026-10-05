@@ -20,19 +20,19 @@ import type { FarmSnapshot } from '$lib/cards/snapshot';
 import { listBlocks } from '$lib/db/blocks';
 import { listPlantingsForCardsByIds, plantingIdForRecord } from '$lib/db/cardSnapshot';
 import { db } from '$lib/db/client';
-import { listFungicideEvents } from '$lib/db/fungicideEvents';
-import { listCuttings } from '$lib/db/hayCuttings';
+import { getFungicideEvent } from '$lib/db/fungicideEvents';
+import { getCutting } from '$lib/db/hayCuttings';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listDispositionsForHarvests, type HarvestDisposition } from '$lib/db/harvestDispositions';
 import { dispositionLine } from '$lib/harvest/dispositions';
 import { formatInstant } from '$lib/prefs';
-import { listInsecticideEvents } from '$lib/db/insecticideEvents';
+import { getInsecticideEvent } from '$lib/db/insecticideEvents';
 import { LOCK_WINDOW_MS, RECORD_KINDS, type RecordKind } from '$lib/db/recordKinds';
 import { equipmentLog, fertilityApplications, users } from '$lib/db/schema';
 import { getIrrigationEvent } from '$lib/db/irrigation';
 import { getField } from '$lib/db/fields';
-import { listScoutObservations } from '$lib/db/scoutObservations';
-import { listSprayEvents } from '$lib/db/sprayEvents';
+import { getScoutObservation } from '$lib/db/scoutObservations';
+import { getSprayEvent } from '$lib/db/sprayEvents';
 import { listSprayers } from '$lib/db/sprayers';
 import { withTenant } from '$lib/db/tenant';
 import { identityLabel } from '$lib/identity';
@@ -42,8 +42,6 @@ import { buildFarmSnapshot, toCropPlugin, toSprayProduct } from './cardSnapshot'
 import { getRegistry } from './registry';
 import { lateLabel } from '$lib/records/lateLabel';
 import { hayDaysLate } from '$lib/records/hayExport.server';
-
-const LOOKUP_LIMIT = 10_000;
 
 /** G2-06: the hay record card's "Saved N days after its date" line. */
 export function hayLateNotice(
@@ -162,7 +160,7 @@ export async function buildRecordCards(
   const cardOpts = { prefs: opts.prefs, now };
 
   if (kind === 'spray') {
-    const ev = listSprayEvents({ limit: LOOKUP_LIMIT }).find((e) => e.id === rowId);
+    const ev = getSprayEvent(rowId);
     if (!ev) return null;
     const sprayer = listSprayers().find((s) => s.id === ev.sprayerId);
     const card = buildSprayRecordCard(
@@ -192,10 +190,7 @@ export async function buildRecordCards(
   }
 
   if (kind === 'insecticide' || kind === 'fungicide') {
-    const ev =
-      kind === 'insecticide'
-        ? listInsecticideEvents({ limit: LOOKUP_LIMIT }).find((e) => e.id === rowId)
-        : listFungicideEvents({ limit: LOOKUP_LIMIT }).find((e) => e.id === rowId);
+    const ev = kind === 'insecticide' ? getInsecticideEvent(rowId) : getFungicideEvent(rowId);
     if (!ev) return null;
     const sprayer = ev.sprayerId ? listSprayers().find((s) => s.id === ev.sprayerId) : undefined;
     const seen =
@@ -231,7 +226,7 @@ export async function buildRecordCards(
   }
 
   if (kind === 'scout') {
-    const ev = listScoutObservations({ limit: LOOKUP_LIMIT }).find((e) => e.id === rowId);
+    const ev = getScoutObservation(rowId);
     if (!ev) return null;
     const planting = ev.cropId ? listPlantingsForCardsByIds([ev.cropId])[0] : undefined;
     const card = buildScoutRecordCard(
@@ -265,7 +260,7 @@ export async function buildRecordCards(
   }
 
   if (kind === 'hay') {
-    const c = listCuttings({ limit: LOOKUP_LIMIT }).find((x) => x.id === rowId);
+    const c = getCutting(rowId);
     if (!c) return null;
     const at = c.mowAt ?? c.baleAt ?? c.storedAt ?? c.createdAt;
     const plantingId = c.cropId ?? plantingIdForRecord(c.blockId, c.cropPluginId, at);

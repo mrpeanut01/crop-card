@@ -14,6 +14,7 @@ vi.mock('./aiGuard', () => ({
 
 import { currentOwnerId, runWithTenantAsync } from '$lib/db/tenant';
 import { tryAiWithGuard, usageFromMeta } from './aiDegrade';
+import { AiSpentError } from './aiCost';
 
 const META = {
   model: 'claude-test',
@@ -156,6 +157,47 @@ describe('tryAiWithGuard — late metering after timeout', () => {
     await flush();
     expect(out.provenance).toBe('ai');
     expect(seenSignal!.aborted).toBe(false);
+    expect(recordCall).not.toHaveBeenCalled();
+  });
+});
+
+describe('tryAiWithGuard — billed but unusable answers', () => {
+  it('logs the usage carried by an AiSpentError before degrading', async () => {
+    const out = await runWithTenantAsync('owner_a', () =>
+      tryAiWithGuard({
+        endpoint: 'planting-window',
+        userId: 'u1',
+        prompt: async () => {
+          throw new AiSpentError('invalid planting window', META);
+        }
+      })
+    );
+    expect(out.provenance).toBe('fallback');
+    expect(recordCall).toHaveBeenCalledTimes(1);
+    expect(recordCall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        endpoint: 'planting-window',
+        inputTokens: 1200,
+        outputTokens: 450,
+        usdEstimate: 0.042,
+        success: false,
+        errorClass: 'invalid-response',
+        provenance: 'fallback'
+      })
+    );
+    expect(ownerSeen).toEqual(['owner_a']);
+  });
+
+  it('logs nothing for an ordinary thrown error', async () => {
+    await runWithTenantAsync('owner_a', () =>
+      tryAiWithGuard({
+        endpoint: 'planting-window',
+        userId: 'u1',
+        prompt: async () => {
+          throw new Error('upstream 500');
+        }
+      })
+    );
     expect(recordCall).not.toHaveBeenCalled();
   });
 });

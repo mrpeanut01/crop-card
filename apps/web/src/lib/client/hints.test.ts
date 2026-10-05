@@ -57,6 +57,16 @@ describe('hints', () => {
     expect(JSON.parse(localStorage.getItem('cropcard.hints.pending.u1') ?? '[]')).toEqual([]);
   });
 
+  it('keeps queued dismissals past the first 50 for the next flush', async () => {
+    const keys = Array.from({ length: 60 }, (_, i) => `hint_${i}`);
+    localStorage.setItem('cropcard.hints.pending.u1', JSON.stringify(keys));
+    const f = fakeFetch();
+    await initHints('u1', f.fn);
+    const left = JSON.parse(localStorage.getItem('cropcard.hints.pending.u1') ?? '[]');
+    expect(left).toEqual(keys.slice(50));
+    expect(f.server.size).toBe(50);
+  });
+
   it('keeps an offline dismissal queued and flushes it on the next load', async () => {
     const offline = fakeFetch({ offline: true });
     await initHints('u1', offline.fn);

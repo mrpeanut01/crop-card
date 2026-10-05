@@ -4,6 +4,9 @@
   import { fmt as prefsFmt } from '$lib/prefsState.svelte';
   import { createT, type TranslateKey } from '$lib/i18n';
   import { cropDisplayName } from '$lib/i18n/cropName';
+  import StaleEditChoice from '$lib/components/records/StaleEditChoice.svelte';
+  import { isEditConflictBody, type EditConflictBody } from '$lib/edits/conflict';
+  import { keepMineBody } from '$lib/edits/resolve';
 
   const { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -54,20 +57,33 @@
     return prefsFmt.instant(ms);
   }
 
-  async function changeStatus(action: 'mark-harvested' | 'archive' | 'mark-failed' | 'reactivate') {
+  type StatusAction = 'mark-harvested' | 'archive' | 'mark-failed' | 'reactivate';
+  type StatusBody = { action: StatusAction; base: { status: string } };
+  let stale = $state<{ body: StatusBody; conflict: EditConflictBody } | null>(null);
+
+  function changeStatus(action: StatusAction) {
+    return sendStatus({ action, base: { status: data.crop.status } });
+  }
+
+  async function sendStatus(body: StatusBody) {
     busy = true;
     actionError = null;
     try {
       const res = await fetch(`/api/crops/${data.crop.id}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ action })
+        body: JSON.stringify(body)
       });
       if (!res.ok) {
         const out = await res.json().catch(() => ({}));
+        if (res.status === 409 && isEditConflictBody(out)) {
+          stale = { body, conflict: out };
+          return;
+        }
         actionError = out.error ?? tr('crops.failed');
         return;
       }
+      stale = null;
       window.location.reload();
     } catch (e) {
       actionError = e instanceof Error ? e.message : String(e);
@@ -135,6 +151,15 @@
 
 {#if actionError}
   <p class="error" role="alert">{actionError}</p>
+{/if}
+{#if stale}
+  {@const s = stale}
+  <StaleEditChoice
+    conflict={s.conflict}
+    {busy}
+    onKeepMine={() => sendStatus(keepMineBody(s.body, s.conflict))}
+    onReload={() => window.location.reload()}
+  />
 {/if}
 
 <section class="card actions">

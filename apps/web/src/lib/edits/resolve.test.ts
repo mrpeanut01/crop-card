@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { editConflicts, type EditConflictBody, type EditValues } from './conflict';
-import { mergeComplete, rebaseEdit, touchedFields, type EditBody } from './resolve';
+import { keepMineBody, mergeComplete, rebaseEdit, touchedFields, type EditBody } from './resolve';
 
 function conflictFor(
   action: string,
@@ -178,5 +178,23 @@ describe('rebaseEdit (U-04)', () => {
         }
       )
     );
+  });
+});
+
+describe('keepMineBody', () => {
+  it('moves every base entry to the stored value and keeps the change', () => {
+    const conflict = {
+      error: 'x',
+      code: 'EDIT_CONFLICT' as const,
+      target: 'stock' as const,
+      id: 's1',
+      action: 'set-quantity',
+      fields: [{ field: 'onHand' as const, base: 10, mine: 7, theirs: 4 }],
+      current: { onHand: 4 }
+    };
+    expect(keepMineBody({ quantity: 7, base: { onHand: 10 } }, conflict)).toEqual({
+      quantity: 7,
+      base: { onHand: 4 }
+    });
   });
 });

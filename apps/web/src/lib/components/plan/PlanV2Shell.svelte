@@ -347,11 +347,12 @@
   }
 
   // ── Nav actions ───────────────────────────────────────────────────
-  function selectBlock(id: string) {
+  function selectBlockFromMap(id: string) {
     const sp = new URLSearchParams($page.url.searchParams);
     sp.set('block', id);
     sp.delete('field');
     sp.delete('planting');
+    sp.delete('map');
     goto(`/plan?${sp.toString()}`, { keepFocus: true, noScroll: true });
   }
   function selectPlanting(idx: number) {
@@ -542,7 +543,7 @@
     {selectedBlockId}
     {farmLabel}
     {canEdit}
-    onSelect={selectBlock}
+    onSelect={selectBlockFromMap}
   />
 </div>
 

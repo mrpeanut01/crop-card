@@ -23,6 +23,7 @@
     fields?: OverlayFieldInput[];
     selectedBlockId?: string;
     farmLabel?: string;
+    /** Selects a block and closes the overlay (one navigation). */
     onSelect?: (blockId: string) => void;
     /** False for helpers, who can view the farm map but not edit it. */
     canEdit?: boolean;
@@ -71,9 +72,11 @@
     return kindStyle(fieldId ? kindByField.get(fieldId) : 'field').color;
   }
 
+  /** `onSelect` closes the overlay itself: calling onClose too would start
+   *  a second navigation from the old URL and undo the selection. */
   function pick(id: string) {
-    onSelect?.(id);
-    onClose();
+    if (onSelect) onSelect(id);
+    else onClose();
   }
 
   function plantingsLabel(id: string): string {

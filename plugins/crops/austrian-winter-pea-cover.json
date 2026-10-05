@@ -14,7 +14,21 @@
     "Disk lightly to keep the tender residue for short-term erosion control"
   ],
   "plantingGuide": {
-    "recommendedLbsPerAcre": 70
+    "recommendedLbsPerAcre": 70,
+    "seedingRate": {
+      "drilledLbsPerAcre": {
+        "min": 50,
+        "max": 80
+      },
+      "broadcastLbsPerAcre": {
+        "min": 90,
+        "max": 100
+      },
+      "drillRowSpacingIn": {
+        "min": 6,
+        "max": 12
+      }
+    }
   },
   "notes": "Cool-season N-fixer; pairs well with cereal rye or oats. Highest N contribution of common winter legumes (~150 lb N / acre at full biomass).",
   "harvestStyle": "cover-crop-termination",

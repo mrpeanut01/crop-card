@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { loadCropLookup } from './cropLookup';
 import { loadPhase32DataKinds, type Phase32DataKinds } from './registryDataKinds';
 
 // OR-07: every shipped animal-health plugin's organicUse must match its
@@ -88,7 +89,9 @@ function citationParts(citation: string): { section: string; markers: string[] }
 let kinds: Phase32DataKinds;
 
 beforeAll(async () => {
-  kinds = await loadPhase32DataKinds(path.join(REPO_ROOT, 'plugins'));
+  kinds = await loadPhase32DataKinds(path.join(REPO_ROOT, 'plugins'), {
+    crops: await loadCropLookup(path.join(REPO_ROOT, 'plugins'))
+  });
 });
 
 describe('animal-health organicUse gate (OR-07)', () => {

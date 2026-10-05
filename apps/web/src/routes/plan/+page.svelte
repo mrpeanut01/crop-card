@@ -2,9 +2,11 @@
   import { stockUnitLabel } from '$lib/stock/units';
   import { cropDisplayName, cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import EditConflictChoice from '$lib/components/records/EditConflictChoice.svelte';
+  import StaleEditChoice from '$lib/components/records/StaleEditChoice.svelte';
+  import { keepMineBody } from '$lib/edits/resolve';
   import { runRecordEdits, type RecordEditPayload, type RecordEditRun } from '$lib/edits/queue';
   import { rebaseEdit, type ConflictChoice } from '$lib/edits/resolve';
-  import type { EditConflictBody, EditValue } from '$lib/edits/conflict';
+  import { isEditConflictBody, type EditConflictBody, type EditValue } from '$lib/edits/conflict';
   import { onMount } from 'svelte';
   import { createT, type TranslateKey } from '$lib/i18n';
   import { calendarEventCrop, calendarEventTitle } from '$lib/calendar/eventTitle';
@@ -1173,9 +1175,11 @@
       // skipped (the AI sometimes proposes a slot for an assignment
       // that's already been removed from the swim-lane).
       const cropIdLookup = new Map<string, string>();
+      const seenById = new Map<string, { plantingDate: number; blockId: string }>();
       for (const p of data.swimPlantings ?? []) {
         const key = `${p.stockItemId ?? p.cropId}:${p.blockId}`;
         cropIdLookup.set(key, p.cropId);
+        seenById.set(p.cropId, { plantingDate: p.plantingDateMs, blockId: p.blockId });
       }
       const failures: string[] = [];
       for (const r of rows) {
@@ -1187,7 +1191,8 @@
           body: JSON.stringify({
             action: 'set-schedule',
             plantingDate: r.plantingDateMs,
-            blockId: r.blockId
+            blockId: r.blockId,
+            base: seenById.get(cropId)
           })
         });
         if (!res.ok) {
@@ -1621,19 +1626,14 @@
       const crop = data.blocks.flatMap((b) => b.plantings).find((p) => p.id === cropId);
       if (!crop || crop.blockId === targetId) return;
       try {
-        const r = await fetch(`/api/crops/${encodeURIComponent(cropId)}`, {
-          method: 'PATCH',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            action: 'set-schedule',
-            plantingDate: crop.plantingDate,
-            blockId: targetId
-          })
+        const out = await sendDragSchedule(cropId, {
+          action: 'set-schedule',
+          plantingDate: crop.plantingDate ?? null,
+          blockId: targetId,
+          base: { plantingDate: crop.plantingDate ?? null, blockId: crop.blockId }
         });
-        if (r.ok) await invalidateAll();
-        else {
-          const j = await r.json().catch(() => ({}));
-          plantingError = j?.error ?? tr('plan.page.moveCropFailed', { status: r.status });
+        if (out.status === 'error') {
+          plantingError = out.error ?? tr('plan.page.moveCropFailed', { status: out.httpStatus });
         }
       } catch (err) {
         plantingError = err instanceof Error ? err.message : tr('plan.page.networkError');
@@ -1965,22 +1965,78 @@
       const planting = data.swimPlantings?.find((p) => p.cropId === payload.cropId);
       const pluginId = planting?.cropPluginId;
       const snapped = pluginId ? snapPlantingDate(pluginId, droppedMs) : droppedMs;
-      const r = await fetch(`/api/crops/${encodeURIComponent(payload.cropId)}`, {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          action: 'set-schedule',
-          plantingDate: snapped,
-          blockId
-        })
+      const out = await sendDragSchedule(payload.cropId, {
+        action: 'set-schedule',
+        plantingDate: snapped,
+        blockId,
+        base: planting
+          ? { plantingDate: planting.plantingDateMs, blockId: planting.blockId }
+          : undefined
       });
-      if (!r.ok) {
-        const e = await r.json().catch(() => ({}));
-        alert(tr('plan.page.moveFailed', { detail: e.error ?? r.statusText }));
-        return;
+      if (out.status === 'error') {
+        alert(tr('plan.page.moveFailed', { detail: out.error ?? String(out.httpStatus) }));
       }
+      return;
     }
     await invalidateAll();
+  }
+
+  type DragScheduleBody = {
+    action: 'set-schedule';
+    plantingDate: number | null;
+    blockId: string;
+    base?: { plantingDate: number | null; blockId: string };
+  };
+  /** A drag that lost to another device's edit, waiting on Keep or Reload. */
+  let staleDrag = $state<{
+    cropId: string;
+    body: DragScheduleBody;
+    conflict: EditConflictBody;
+  } | null>(null);
+  let staleDragBusy = $state(false);
+
+  /** One drag-to-move write. A 409 EDIT_CONFLICT shows the short choice
+   *  instead of an error; anything else saved reloads the page data. */
+  async function sendDragSchedule(
+    cropId: string,
+    body: DragScheduleBody
+  ): Promise<
+    | { status: 'saved' }
+    | { status: 'conflict' }
+    | { status: 'error'; error?: string; httpStatus: number }
+  > {
+    const r = await fetch(`/api/crops/${encodeURIComponent(cropId)}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok) {
+      staleDrag = null;
+      await invalidateAll();
+      return { status: 'saved' };
+    }
+    if (r.status === 409 && isEditConflictBody(j)) {
+      staleDrag = { cropId, body, conflict: j };
+      await invalidateAll();
+      return { status: 'conflict' };
+    }
+    return { status: 'error', error: j?.error, httpStatus: r.status };
+  }
+
+  async function keepStaleDrag(): Promise<void> {
+    if (!staleDrag) return;
+    const { cropId, body, conflict } = staleDrag;
+    staleDragBusy = true;
+    try {
+      const out = await sendDragSchedule(cropId, keepMineBody(body, conflict));
+      if (out.status === 'error') {
+        staleDrag = null;
+        plantingError = out.error ?? tr('plan.page.moveCropFailed', { status: out.httpStatus });
+      }
+    } finally {
+      staleDragBusy = false;
+    }
   }
 
   // Build the palette card list from data.scheduleCatalog (server-side).
@@ -3883,7 +3939,34 @@
   />
 {/if}
 
+{#if staleDrag}
+  {@const sd = staleDrag}
+  <div class="stale-drag">
+    <StaleEditChoice
+      conflict={sd.conflict}
+      names={{ blockNames: editBlockNames }}
+      busy={staleDragBusy}
+      onKeepMine={keepStaleDrag}
+      onReload={async () => {
+        staleDrag = null;
+        await invalidateAll();
+      }}
+    />
+  </div>
+{/if}
+
 <style>
+  .stale-drag {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 1rem;
+    max-width: 32rem;
+    margin: 0 auto;
+    z-index: 60;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    border-radius: 8px;
+  }
   /* Phase 25b (#81) — legacy /plan tabbed editor lives inside a
      <details>, collapsed by default. PlanV2Shell above is the
      Almanac IA; this block preserves every existing flow until

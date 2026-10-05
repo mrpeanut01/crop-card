@@ -1008,6 +1008,17 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'recui.conflict.field.scheduledFor': 'Fecha límite',
   'recui.conflict.field.title': 'Título',
   'recui.conflict.field.varietyDisplayName': 'Nombre de la variedad',
+  'recui.conflict.field.footprint': 'Lugar en la cama',
+  'recui.conflict.field.onHand': 'En existencia',
+  'recui.conflict.field.status': 'Estado',
+  'recui.conflict.footprintValue':
+    '{w} por {l} pies, a {x} pies a lo ancho y {y} pies hacia dentro',
+  'recui.conflict.lede.stock':
+    'Otra persona cambió la cantidad en existencia después de que abriste esto.',
+  'recui.stale.heading': 'Cambió en otro dispositivo',
+  'recui.stale.keepMine': 'Guardar mi cambio',
+  'recui.stale.reload': 'Volver a cargar',
+  'recui.stale.now': 'Ahora en la granja: {value}',
   'recui.conflict.heading': 'Tu cambio en {label} no se guardó',
   'recui.conflict.keepMine': 'Quedarme con lo mío',
   'recui.conflict.keepTheirs': 'Quedarme con lo otro',

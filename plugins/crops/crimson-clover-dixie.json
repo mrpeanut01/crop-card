@@ -17,6 +17,12 @@
     "seedDepthIn": {
       "min": 0.25,
       "max": 0.5
+    },
+    "seedingRate": {
+      "broadcastLbsPerAcre": {
+        "min": 22,
+        "max": 30
+      }
     }
   },
   "harvestIndicators": [

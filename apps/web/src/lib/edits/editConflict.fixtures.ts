@@ -8,6 +8,7 @@ import { createField } from '$lib/db/fields';
 import { createBlock } from '$lib/db/blocks';
 import { createPlanned, setSchedule, updateDetails } from '$lib/db/crops';
 import { createTask } from '$lib/db/tasks';
+import { createStockItem, receiveLot } from '$lib/db/stock';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 
 export const APR_1 = Date.UTC(2027, 3, 1);
@@ -61,6 +62,78 @@ export function seedEditFarm(prefix = 'edits'): EditFarm {
     });
     return { ownerId, blockA, blockB, cropId: crop.id, taskId: task.id, helperId, otherHelperId };
   });
+}
+
+export interface GardenEditFarm {
+  ownerId: string;
+  bed1: string;
+  bed2: string;
+  cropId: string;
+  stockId: string;
+  ownerUserId: string;
+}
+
+export const FP = { x_in: 0, y_in: 0, w_in: 24, l_in: 24 } as const;
+
+/** A garden Area with two sized beds, a planned planting placed in bed 1
+ *  and a seed stock item with 10 on hand. */
+export function seedGardenEditFarm(prefix = 'edits-garden'): GardenEditFarm {
+  const ownerId = `${prefix}-${randomUUID()}`;
+  db.insert(owners)
+    .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
+    .run();
+  const ownerUserId = seedMember(ownerId, 'owner');
+  return runWithTenant(ownerId, () => {
+    const area = createField({ name: 'Kitchen', kind: 'garden', widthFt: 20, lengthFt: 30 });
+    const bed = (name: string, xFt: number) =>
+      createBlock({
+        name,
+        fieldId: area.id,
+        kind: 'bed',
+        widthFt: 4,
+        lengthFt: 8,
+        xFt,
+        yFt: 3,
+        bedStyle: 'raised'
+      }).id;
+    const bed1 = bed('Bed 1', 2);
+    const bed2 = bed('Bed 2', 8);
+    const crop = createPlanned({
+      blockId: bed1,
+      cropPluginId: 'lettuce-black-seeded-simpson',
+      varietyDisplayName: 'Lettuce',
+      plantingDate: APR_1,
+      placement: {
+        footprint: { ...FP },
+        spacingIn: null,
+        rowSpacingIn: null,
+        spacingPattern: 'square',
+        plantCount: null,
+        plantCountProvenance: null
+      }
+    });
+    const item = createStockItem({
+      category: 'seed',
+      displayName: 'Lettuce seed',
+      defaultUnit: 'count'
+    });
+    receiveLot({ stockItemId: item.id, receivedQuantity: 10, unit: 'count' });
+    return { ownerId, bed1, bed2, cropId: crop.id, stockId: item.id, ownerUserId };
+  });
+}
+
+export function postEvent(path: string, id: string, body: unknown, opts: PatchOpts = {}) {
+  const url = new URL(`http://localhost${path.replace(':id', id)}`);
+  return {
+    params: { id },
+    url,
+    locals: { locale: opts.locale ?? 'en' },
+    request: new Request(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+  } as never;
 }
 
 export interface PatchOpts {

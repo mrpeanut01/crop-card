@@ -28,4 +28,15 @@ describe('formatEditValue (U-06)', () => {
     expect(editFieldLabel('quantityPlanted', 'es')).toBe('Cantidad sembrada');
     expect(formatEditValue('quantityPlanted', null, { ...ctx, locale: 'es' })).toBe('Sin valor');
   });
+
+  it('reads status, spot and on-hand values', () => {
+    expect(formatEditValue('status', 'harvested', ctx)).toBe('harvested');
+    expect(formatEditValue('status', 'failed', { ...ctx, locale: 'es' })).not.toBe('failed');
+    expect(formatEditValue('footprint', { x_in: 0, y_in: 18, w_in: 24, l_in: 30 }, ctx)).toBe(
+      '2 by 2.5 ft, 0 ft across and 1.5 ft in'
+    );
+    expect(formatEditValue('onHand', 4.5, ctx)).toBe('4.5');
+    expect(editFieldLabel('onHand', 'es')).toBe('En existencia');
+    expect(editFieldLabel('footprint')).toBe('Spot in the bed');
+  });
 });

@@ -53,6 +53,35 @@ describe('buildCareGuideCard', () => {
     ]);
   });
 
+  it('lists spacing and first fruit per tree size class, leading the sections', () => {
+    const tree = {
+      pluginId: 'apple-test',
+      displayName: 'Apple — Test',
+      version: '1.0.0',
+      cropFamily: 'orchard',
+      treeSizeClasses: [
+        { sizeClass: 'standard' as const, minSpacingFt: 30, yearsToBearing: { min: 6, max: 10 } },
+        { sizeClass: 'dwarf' as const, minSpacingFt: 8, yearsToBearing: { min: 3, max: 3 } }
+      ]
+    };
+    const withTree = { ...snap, cropPlugins: { ...snap.cropPlugins, 'apple-test': tree } };
+    const card = buildCareGuideCard(withTree, 'apple-test')!;
+    expect(card.facts.find((f) => f.label === 'Spacing')).toBeUndefined();
+    expect(card.sections[0]).toEqual({
+      title: 'Spacing by tree size',
+      items: [
+        'Spacing and first fruit depend on the rootstock. The nursery tag says whether a tree is dwarf, semi-dwarf or standard.',
+        'Dwarf: at least 8 ft apart, first fruit in 3 years',
+        'Standard: at least 30 ft apart, first fruit in 6–10 years'
+      ],
+      provenance: 'plugin'
+    });
+    const es = buildCareGuideCard(withTree, 'apple-test', { locale: 'es' })!;
+    expect(es.sections[0].items[2]).toBe(
+      'Estándar: al menos 30 ft entre árboles, primera fruta en 6 a 10 años'
+    );
+  });
+
   it("uses the plugin's own pruning steps over family tips", () => {
     const { sections } = careGuideSections({
       ...snap.cropPlugins['tomato-cherokee-purple'],
@@ -118,6 +147,67 @@ describe('buildCareGuideCard', () => {
     expect(card.facts).toEqual([]);
     expect(card.sections[0].items[0]).toMatch(/no growing guide yet/);
     expect(card.provenance).toHaveLength(1);
+  });
+
+  it('shows sourced seeding rates for a drilled crop instead of the legacy row spacing', () => {
+    const rye = {
+      pluginId: 'rye',
+      displayName: 'Rye',
+      version: '1',
+      cropFamily: 'cover-grass',
+      defaultRowSpacingInches: 6,
+      plantingGuide: {
+        seedingRate: {
+          drilledLbsPerAcre: { min: 60, max: 120 },
+          broadcastLbsPerAcre: { min: 90, max: 160 },
+          drillRowSpacingIn: { min: 6, max: 8 }
+        }
+      }
+    };
+    const s = sampleSnapshot({ plantings: [], cropPlugins: { rye } });
+    expect(buildCareGuideCard(s, 'rye')!.facts).toEqual([
+      { label: 'Seed rate, drilled', value: '60–120 lb/ac', provenance: 'plugin' },
+      { label: 'Seed rate, broadcast', value: '90–160 lb/ac', provenance: 'plugin' },
+      { label: 'Drill rows', value: '6–8 in', provenance: 'plugin' }
+    ]);
+    const metric = buildCareGuideCard(s, 'rye', {
+      prefs: { timeZone: 'UTC', units: 'metric' }
+    })!;
+    expect(metric.facts[0].value).toBe('67–135 kg/ha');
+    const es = buildCareGuideCard(s, 'rye', {
+      prefs: { timeZone: 'UTC', units: 'us', locale: 'es' }
+    })!;
+    expect(es.facts.map((f) => f.label)).toEqual([
+      'Dosis con sembradora',
+      'Dosis al voleo',
+      'Distancia entre hileras'
+    ]);
+  });
+
+  it('shows a small-grain seed count and a row-crop population', () => {
+    const plugins = {
+      wheat: {
+        pluginId: 'wheat',
+        displayName: 'Wheat',
+        version: '1',
+        cropFamily: 'cereal-grain',
+        plantingGuide: { seedingRate: { drilledSeedsPerSqFt: { min: 22, max: 30 } } }
+      },
+      corn: {
+        pluginId: 'corn',
+        displayName: 'Corn',
+        version: '1',
+        cropFamily: 'corn',
+        plantingGuide: { seedingRate: { seedsPerAcre: { min: 28000, max: 32000 } } }
+      }
+    };
+    const s = sampleSnapshot({ plantings: [], cropPlugins: plugins });
+    expect(buildCareGuideCard(s, 'wheat')!.facts).toEqual([
+      { label: 'Seeds, drilled', value: '22–30 per sq ft', provenance: 'plugin' }
+    ]);
+    expect(buildCareGuideCard(s, 'corn')!.facts).toEqual([
+      { label: 'Seeding population', value: '28,000–32,000/ac', provenance: 'plugin' }
+    ]);
   });
 
   it('builds one card per referenced plugin and null for unknown ids', () => {

@@ -12,7 +12,13 @@
   "plantingGuide": {
     "soilTempMinF": 40,
     "rowSpacingIn": 7,
-    "recommendedLbsPerAcre": 96
+    "recommendedLbsPerAcre": 96,
+    "seedingRate": {
+      "drillRowSpacingIn": {
+        "min": 6,
+        "max": 8
+      }
+    }
   },
   "harvestIndicators": [
     "Heads turn cream-tan",

@@ -4,6 +4,7 @@ import {
   SPLIT_GROUP_ID_PATTERN,
   apportionLotQuantity,
   mintSplitGroupId,
+  splitGroupBlockIds,
   splitGroupBlocks,
   splitGroupIds,
   splitLots,
@@ -169,5 +170,24 @@ describe('splitNoun (R-20)', () => {
     expect(splitNoun(['a', 'b'], ['a', 'b', 'c'])).toBe('beds');
     expect(splitNoun(['a', 'x'], new Set(['a']))).toBe('blocks');
     expect(splitNoun([], ['a'])).toBe('blocks');
+  });
+});
+
+describe('splitGroupBlockIds', () => {
+  it('matches splitGroupBlocks: distinct live blocks, groups on two or more, sorted', () => {
+    expect(
+      splitGroupBlockIds([
+        { splitGroupId: 'sg_b', blockId: 'b3', status: 'active' },
+        { splitGroupId: 'sg_b', blockId: 'b1', status: 'harvested' },
+        { splitGroupId: 'sg_b', blockId: 'b1', status: 'planned' },
+        { splitGroupId: 'sg_b', blockId: 'b2', status: 'archived' },
+        { splitGroupId: 'sg_a', blockId: 'b1', status: 'active' },
+        { splitGroupId: 'sg_a', blockId: 'b2', status: 'failed' }
+      ])
+    ).toEqual({ sg_b: ['b1', 'b3'] });
+  });
+
+  it('is empty for no parts', () => {
+    expect(splitGroupBlockIds([])).toEqual({});
   });
 });

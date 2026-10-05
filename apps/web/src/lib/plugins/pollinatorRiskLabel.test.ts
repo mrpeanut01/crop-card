@@ -14,9 +14,9 @@ const FROM_TOXICITY: Record<string, string> = {
   'relatively-nontoxic': 'low'
 };
 
-// checkPollinatorBloom reads only the legacy pollinatorRisk, so it must say what the
-// label-sourced pollinator block says. A label silent on bees with no bloom restriction
-// is left as it was: the label settles nothing for the legacy field.
+// checkPollinatorBloom gates on the riskier of the legacy pollinatorRisk and the block
+// (riskFromLabel), so keeping the hint in step means shipped verdicts never move. A label
+// silent on bees with no bloom restriction is left as it was: it settles nothing.
 function expectedRisk(p: Pollinator): string | undefined | 'any' {
   const restricted = (p.bloomRestriction ?? 'none') !== 'none';
   const fromTox = FROM_TOXICITY[p.beeToxicity];

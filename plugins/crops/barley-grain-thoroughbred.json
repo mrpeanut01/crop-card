@@ -12,7 +12,13 @@
   "plantingGuide": {
     "soilTempMinF": 50,
     "rowSpacingIn": 7,
-    "recommendedLbsPerAcre": 96
+    "recommendedLbsPerAcre": 96,
+    "seedingRate": {
+      "drilledSeedsPerSqFt": {
+        "min": 30,
+        "max": 30
+      }
+    }
   },
   "harvestIndicators": [
     "Heads tan + nodding",

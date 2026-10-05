@@ -22,6 +22,7 @@
 
 import type { BlockWithPlantings } from '$lib/db/blocks';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { inRowSpacingOf, rowSpacingOf } from '$lib/garden/plantCount';
 
 export const DEFAULT_PERIMETER_BUFFER_FT = 3;
 const SQFT_PER_ACRE = 43_560;
@@ -81,9 +82,8 @@ export function footprintSqFt(plugin: CropPlugin): number {
   // Why MAX rather than sum: the row footprint represents the *seeded*
   // plot the plant claims; vine spread represents what it actually fills
   // at maturity. The bigger of the two is the real space requirement.
-  const row = plugin.plantingGuide?.rowSpacingIn ?? plugin.defaultRowSpacingInches ?? 12;
-  const inRow = plugin.plantingGuide?.inRowSpacingIn;
-  const inRowAvg = inRow ? (inRow.min + inRow.max) / 2 : 12;
+  const row = rowSpacingOf(plugin).inches;
+  const inRowAvg = inRowSpacingOf(plugin).inches;
   const rowSqFt = row * FT_PER_INCH * (inRowAvg * FT_PER_INCH);
 
   const explicitCanopy = plugin.plantingGuide?.matureCanopyFtSq ?? 0;

@@ -12,7 +12,13 @@
   "plantingGuide": {
     "soilTempMinF": 50,
     "rowSpacingIn": 7,
-    "recommendedLbsPerAcre": 18
+    "recommendedLbsPerAcre": 18,
+    "seedingRate": {
+      "drillRowSpacingIn": {
+        "min": 6,
+        "max": 8
+      }
+    }
   },
   "cropOperationModel": "perennial-multi-cut",
   "hayOperations": {

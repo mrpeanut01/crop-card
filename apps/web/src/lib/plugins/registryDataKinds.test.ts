@@ -281,7 +281,9 @@ describe('loadPhase32DataKinds', () => {
   });
 
   it('yields empty registries when the folders are missing', async () => {
-    const kinds = await loadPhase32DataKinds(path.join(tmpdir(), 'nope-nope-p32'));
+    const kinds = await loadPhase32DataKinds(path.join(tmpdir(), 'nope-nope-p32'), {
+      crops: FIXTURE_ORCHARD_CROPS
+    });
     expect(kinds.species.all()).toEqual([]);
     expect(kinds.animalHealth.all()).toEqual([]);
     expect(kinds.pestModels.all()).toEqual([]);
@@ -289,7 +291,41 @@ describe('loadPhase32DataKinds', () => {
     expect(kinds.failed).toEqual([]);
   });
 
-  it('resolves no orchard calendar host crop without a crop lookup', async () => {
+  it('keeps one calendar per host crop and audience, newest edition first (OP-3)', async () => {
+    await withTmp(async (tmp) => {
+      await mkdir(path.join(tmp, 'orchard-calendars'));
+      const write = (name: string, over: Record<string, unknown>) =>
+        writeFile(
+          path.join(tmp, 'orchard-calendars', `${name}.json`),
+          JSON.stringify({ ...FIXTURE_ORCHARD_CALENDAR, ...over })
+        );
+      const year = String(FIXTURE_ORCHARD_EDITION_YEAR);
+      const last = String(FIXTURE_ORCHARD_EDITION_YEAR - 1);
+      await write('old', { pluginId: 'tf-old', edition: last });
+      await write('new', { pluginId: 'tf-new', edition: year });
+      const home = structuredClone(FIXTURE_ORCHARD_CALENDAR);
+      home.stages[1].windows[0].purpose = 'scout';
+      await write('home', { ...home, pluginId: 'tf-home', edition: last, audience: 'home' });
+      await write('fig-a', { pluginId: 'tf-fig-a', hostCropPluginIds: ['test-fixture-fig'] });
+      await write('fig-b', { pluginId: 'tf-fig-b', hostCropPluginIds: ['test-fixture-fig'] });
+      const kinds = await loadPhase32DataKinds(tmp, {
+        crops: FIXTURE_ORCHARD_CROPS,
+        now: new Date(Date.UTC(FIXTURE_ORCHARD_EDITION_YEAR, 5, 1))
+      });
+      expect(kinds.failed).toEqual([]);
+      expect(kinds.orchardCalendars.all().map((c) => c.pluginId)).toEqual(['tf-home', 'tf-new']);
+      expect(kinds.supersededCalendars.map((c) => c.pluginId).sort()).toEqual([
+        'tf-fig-a',
+        'tf-fig-b',
+        'tf-old'
+      ]);
+      expect(kinds.supersededCalendars.find((c) => c.pluginId === 'tf-old')?.reason).toMatch(
+        /superseded/
+      );
+    });
+  });
+
+  it('says how to fix an expired edition', async () => {
     await withTmp(async (tmp) => {
       await mkdir(path.join(tmp, 'orchard-calendars'));
       await writeFile(
@@ -297,10 +333,13 @@ describe('loadPhase32DataKinds', () => {
         JSON.stringify(FIXTURE_ORCHARD_CALENDAR)
       );
       const kinds = await loadPhase32DataKinds(tmp, {
-        now: new Date(Date.UTC(FIXTURE_ORCHARD_EDITION_YEAR, 5, 1))
+        crops: FIXTURE_ORCHARD_CROPS,
+        now: new Date(Date.UTC(FIXTURE_ORCHARD_EDITION_YEAR + 2, 0, 1))
       });
       expect(kinds.orchardCalendars.all()).toEqual([]);
-      expect(kinds.failed).toHaveLength(1);
+      expect(JSON.stringify(kinds.failed[0].error)).toMatch(
+        /replace the file with the current edition/
+      );
     });
   });
 

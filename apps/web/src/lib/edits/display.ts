@@ -4,7 +4,7 @@
 
 import { t, type MessageKey } from '$lib/i18n';
 import { cropDisplayName } from '$lib/i18n/cropName';
-import type { EditField, EditValue } from './conflict';
+import type { EditField, EditFootprint, EditValue } from './conflict';
 
 export interface EditDisplayContext {
   locale?: string | null;
@@ -25,8 +25,23 @@ export const EDIT_FIELD_KEY: Readonly<Record<EditField, MessageKey>> = {
   title: 'recui.conflict.field.title',
   body: 'recui.conflict.field.body',
   scheduledFor: 'recui.conflict.field.scheduledFor',
-  assigneeUserId: 'recui.conflict.field.assigneeUserId'
+  assigneeUserId: 'recui.conflict.field.assigneeUserId',
+  status: 'recui.conflict.field.status',
+  footprint: 'recui.conflict.field.footprint',
+  onHand: 'recui.conflict.field.onHand'
 };
+
+const STATUS_KEY: Readonly<Record<string, MessageKey>> = {
+  planned: 'crops.status.planned',
+  active: 'crops.status.active',
+  harvested: 'crops.status.harvested',
+  failed: 'crops.status.failed',
+  archived: 'crops.status.archived'
+};
+
+function feet(inches: number): string {
+  return String(Math.round((inches / 12) * 10) / 10);
+}
 
 export function editFieldLabel(field: EditField, locale?: string | null): string {
   return t(locale, EDIT_FIELD_KEY[field]);
@@ -50,6 +65,18 @@ export function formatEditValue(
     return list.map((k) => ctx.useLabels?.[k] ?? humanizeKey(k)).join(', ');
   }
   if (v === null || v === '') return t(ctx.locale, 'recui.conflict.notSet');
+  if (field === 'footprint' && typeof v === 'object' && !Array.isArray(v)) {
+    const fp = v as EditFootprint;
+    return t(ctx.locale, 'recui.conflict.footprintValue', {
+      w: feet(fp.w_in),
+      l: feet(fp.l_in),
+      x: feet(fp.x_in),
+      y: feet(fp.y_in)
+    });
+  }
+  if (field === 'status' && typeof v === 'string' && STATUS_KEY[v]) {
+    return t(ctx.locale, STATUS_KEY[v]);
+  }
   if (field === 'plantingDate' || field === 'scheduledFor') {
     return typeof v === 'number' ? ctx.day(v) : String(v);
   }

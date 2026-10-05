@@ -262,6 +262,54 @@ describe('card snapshot cross-tenant isolation', () => {
     }
   });
 
+  it('split seed lots: parts are counted per Owner even when two farms share a group id', async () => {
+    const sg = `sg_${randomUUID()}`;
+    const seedSplit = (ownerId: string) => {
+      ensureOwner(ownerId);
+      return runWithTenant(ownerId, () => {
+        const tag = randomUUID().slice(0, 6);
+        const field = createField({ name: `${ownerId}-split-${tag}`, kind: 'garden' });
+        const beds = [0, 1, 2, 3].map((i) =>
+          createBlock({ name: `${ownerId}-sbed-${i}-${tag}`, fieldId: field.id, acres: 0.01 })
+        );
+        const statuses = ['active', 'harvested', 'archived', 'planned'] as const;
+        const ids = statuses.map((status, i) => {
+          const id = `split-${ownerId}-${i}-${tag}`;
+          db.insert(crops)
+            .values(
+              tenantValues({
+                id,
+                blockId: beds[i].id,
+                cropPluginId: 'tomato-cherokee-purple',
+                varietyDisplayName: `${ownerId} split ${i}`,
+                plantingDate: new Date(now - 200 * DAY),
+                harvestedAt: status === 'harvested' ? new Date(now - 90 * DAY) : null,
+                status,
+                splitGroupId: sg
+              })
+            )
+            .run();
+          return id;
+        });
+        return { ownerId, beds: beds.map((b) => b.id), ids };
+      });
+    };
+    const p = seedSplit(`cards-split-p-${randomUUID().slice(0, 6)}`);
+    const q = seedSplit(`cards-split-q-${randomUUID().slice(0, 6)}`);
+    for (const [self, other] of [
+      [p, q],
+      [q, p]
+    ] as const) {
+      const snap = await runWithTenantAsync(self.ownerId, () => buildFarmSnapshot({ now }));
+      expect(snap.version).toBe(5);
+      expect(snap.plantings.find((x) => x.id === self.ids[0])?.splitGroupId).toBe(sg);
+      expect(snap.splitGroups?.[sg]).toEqual([self.beds[0], self.beds[1], self.beds[3]].sort());
+      for (const id of [...other.beds, ...other.ids]) expect(mentions(snap, id), id).toBe(false);
+      const card = buildDeck(snap, { now }).find((c) => c.key === `pl_${self.ids[0]}`);
+      expect(card?.sections.some((s) => s.title === 'One seed lot in 3 beds')).toBe(true);
+    }
+  });
+
   it('property: any number of plantings on either farm never crosses over', async () => {
     await fc.assert(
       fc.asyncProperty(

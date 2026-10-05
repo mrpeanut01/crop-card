@@ -16,8 +16,10 @@ import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/so
 /** 2 since 32D: animals, flocks, care plans and precomputed holds.
  *  3 since 32E: open seed-starting trays on each planting.
  *  4 since 33B: the owner-entered organic status line on Areas, animals
- *  and groups. */
-export const FARM_SNAPSHOT_VERSION = 4 as const;
+ *  and groups.
+ *  5: Phase 35 split seed lots (`splitGroupId` on plantings and
+ *  `splitGroups`). */
+export const FARM_SNAPSHOT_VERSION = 5 as const;
 
 export type SnapshotProvenance = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
@@ -104,6 +106,9 @@ export interface SnapshotPlanting {
   /** Trays not yet transplanted, for the offline germination stepper
    *  (E1-18). Absent on bundles saved before version 3. */
   trays?: SnapshotSeedTray[];
+  /** Phase 35: the seed lot split this planting is a part of. Absent on
+   *  bundles saved before version 5 and when it is not a part. */
+  splitGroupId?: string;
 }
 
 export interface SnapshotSeedTray {
@@ -198,6 +203,14 @@ export interface SnapshotMinMax {
   max: number;
 }
 
+export interface SnapshotSeedingRate {
+  drilledLbsPerAcre?: SnapshotMinMax;
+  broadcastLbsPerAcre?: SnapshotMinMax;
+  drilledSeedsPerSqFt?: SnapshotMinMax;
+  seedsPerAcre?: SnapshotMinMax;
+  drillRowSpacingIn?: SnapshotMinMax;
+}
+
 /** The subset of a crop plugin the Planting, Area and Care Guide cards read. */
 export interface SnapshotCropPlugin {
   pluginId: string;
@@ -219,11 +232,21 @@ export interface SnapshotCropPlugin {
     hardenOffDays?: SnapshotMinMax;
     germinationTempF?: SnapshotMinMax;
     dtmFrom?: 'direct-seed' | 'transplant';
+    /** Sourced seeding rates for drilled, broadcast or row-planted crops. */
+    seedingRate?: SnapshotSeedingRate;
   };
   harvestIndicators?: string[];
   notes?: string;
+  /** Tree fruit spacing and bearing age per size class (sourced). */
+  treeSizeClasses?: SnapshotTreeSizeClass[];
   /** The plugin's pruning and thinning steps (never its spray tasks). */
   careTasks?: SnapshotCareTask[];
+}
+
+export interface SnapshotTreeSizeClass {
+  sizeClass: 'dwarf' | 'semi-dwarf' | 'standard';
+  minSpacingFt: number;
+  yearsToBearing: SnapshotMinMax;
 }
 
 export interface SnapshotCareTask {
@@ -433,7 +456,7 @@ export interface SnapshotCarryoverLine {
 }
 
 export interface FarmSnapshot {
-  version: typeof FARM_SNAPSHOT_VERSION | 3 | 2 | 1;
+  version: typeof FARM_SNAPSHOT_VERSION | 4 | 3 | 2 | 1;
   ownerId: string;
   farmName: string | null;
   generatedAt: number;
@@ -445,6 +468,11 @@ export interface FarmSnapshot {
   areas: SnapshotArea[];
   blocks: SnapshotBlock[];
   plantings: SnapshotPlanting[];
+  /** Phase 35: split group id -> the ids of every block holding a live
+   *  part (any status but archived or failed, as /plan counts them), for
+   *  groups on two or more blocks that a planting here belongs to. Absent
+   *  on bundles saved before version 5. */
+  splitGroups?: Record<string, string[]>;
   tasks: SnapshotTask[];
   /** Phase 32F (F1-11): active working members, names only. Never hours
    *  or money, since one snapshot serves every role. */

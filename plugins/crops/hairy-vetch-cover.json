@@ -19,5 +19,13 @@
     "continuous": true,
     "beeAttractive": true
   },
-  "archetype": "cover-crop.termination"
+  "archetype": "cover-crop.termination",
+  "plantingGuide": {
+    "seedingRate": {
+      "drilledLbsPerAcre": {
+        "min": 15,
+        "max": 20
+      }
+    }
+  }
 }

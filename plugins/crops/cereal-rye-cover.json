@@ -31,5 +31,17 @@
         "heavy-nitrogen"
       ]
     }
-  ]
+  ],
+  "plantingGuide": {
+    "seedingRate": {
+      "drilledLbsPerAcre": {
+        "min": 60,
+        "max": 120
+      },
+      "broadcastLbsPerAcre": {
+        "min": 90,
+        "max": 160
+      }
+    }
+  }
 }

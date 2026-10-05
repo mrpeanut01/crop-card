@@ -74,6 +74,9 @@ export function orchardSourceFileProblems(file: OrchardSourcesFile): string[] {
       for (const k of ['url', 'publisher', 'date', 'quote', 'edition', 'page'] as const) {
         if (typeof s[k] !== 'string' || s[k].trim() === '') problems.push(`${at}: missing ${k}`);
       }
+      if (typeof s.quote === 'string' && s.quote.includes(' / ') && !s.note?.trim()) {
+        problems.push(`${at}: a quote joining table cells with " / " needs a note saying so`);
+      }
       const host = typeof s.url === 'string' ? hostOf(s.url) : null;
       if (!host) problems.push(`${at}: url must be https`);
       else if (!/\.(edu|gov)$/.test(host))
@@ -128,6 +131,22 @@ export function orchardCalendarProblems(
     if (hit) problems.push(`${id} ${at}: names the library product or ingredient ${hit}`);
   };
 
+  const ownEdition = (key: string) =>
+    (file.entries[key]?.sources ?? []).filter(
+      (s) => !isPageReaderSource(s) && s.edition === calendar.edition
+    );
+  const guideHost = hostOf(calendar.guide.url);
+  const cited = calendar.stages.flatMap((st) => [
+    st.recognise.sourceKey,
+    ...st.windows.flatMap((w) => w.sourceKeys)
+  ]);
+  const ownHosts = new Set(cited.flatMap((key) => ownEdition(key).map((s) => hostOf(s.url))));
+  if (!guideHost || !ownHosts.has(guideHost)) {
+    problems.push(
+      `${id}: guide host ${guideHost} matches no source of edition ${calendar.edition}`
+    );
+  }
+
   const families: readonly string[] = calendar.hostCropFamilies;
   for (const crop of calendar.hostCropPluginIds) {
     const family = ctx.cropFamilyOf(crop);
@@ -152,6 +171,48 @@ export function orchardCalendarProblems(
     for (const w of stage.windows) {
       checkCopy(w.note, `${at} window ${w.id} note`);
       for (const key of w.sourceKeys) resolves(key, `${at} window ${w.id}`);
+      if (!w.sourceKeys.some((key) => ownEdition(key).length > 0)) {
+        problems.push(
+          `${id} ${at} window ${w.id}: no source of the calendar's edition ${calendar.edition} (OP-16)`
+        );
+      }
+    }
+  }
+  return problems;
+}
+
+/** Problems across every shipped calendar (ruling OP-16): a target id keeps
+ *  one kind, and every source key is used by a calendar unless it records
+ *  an absence (`gateEligible: false` with a note). */
+export function orchardCrossCalendarProblems(
+  calendars: readonly OrchardCalendarPlugin[],
+  file: OrchardSourcesFile
+): string[] {
+  const problems: string[] = [];
+  const kinds = new Map<string, Set<string>>();
+  const used = new Set<string>();
+  for (const c of calendars) {
+    for (const stage of c.stages) {
+      used.add(stage.recognise.sourceKey);
+      if (stage.recognise.gddEstimate) used.add(stage.recognise.gddEstimate.sourceKey);
+      for (const w of stage.windows) {
+        w.sourceKeys.forEach((k) => used.add(k));
+        for (const t of w.targets) {
+          kinds.set(t.id, new Set([...(kinds.get(t.id) ?? []), t.kind]));
+        }
+      }
+    }
+  }
+  for (const [target, set] of kinds) {
+    if (set.size > 1)
+      problems.push(`target ${target} has more than one kind: ${[...set].join(', ')}`);
+  }
+  const ids = calendars.map((c) => c.pluginId);
+  for (const [key, entry] of Object.entries(file.entries)) {
+    if (!ids.some((pid) => key.startsWith(`${pid}.`))) {
+      problems.push(`${key}: does not start with a shipped calendar's pluginId`);
+    } else if (!used.has(key) && !(entry.gateEligible === false && entry.note?.trim())) {
+      problems.push(`${key}: is not used by any calendar`);
     }
   }
   return problems;

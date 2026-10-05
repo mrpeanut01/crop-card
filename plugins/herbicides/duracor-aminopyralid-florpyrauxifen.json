@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'DuraCor'; 'aminopyralid'). Conventional synthetic herbicide; label carries no organic-production statement."},
   "defaultUnit": "fl-oz",
+  "formulation": "SC",
   "pluginSchemaVersion": "1.1",
   "grazingRestrictions": {
     "grazeDays": 0,

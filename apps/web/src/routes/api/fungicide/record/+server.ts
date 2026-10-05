@@ -216,7 +216,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
       checkPollinatorBloom(
         products.map((p) => ({
           pluginId: p.pluginId,
-          pollinatorRisk: p.pollinatorRisk ?? 'unknown'
+          pollinatorRisk: p.pollinatorRisk ?? 'unknown',
+          pollinator: p.pollinator
         })),
         cropsInBlock,
         occurredAt,

@@ -14,6 +14,7 @@ import {
   FORAGE_TRIGGER_SOURCE_KEYS,
   isPageReaderSource
 } from '$lib/forage/hazardSources';
+import { SEEDING_RATE_KEYS } from './schemas';
 import type {
   ForageHazard,
   ForageHazardKind,
@@ -141,10 +142,38 @@ export const CROP_SOURCED_GUIDE_FIELDS = [
 export function cropFactPaths(c: CropPlugin): string[] {
   const guide = c.plantingGuide ?? {};
   const paths = present('', guide, [...CROP_SOURCED_GUIDE_FIELDS]);
+  if (guide.seedingRate)
+    paths.push(...present('seedingRate.', guide.seedingRate, [...SEEDING_RATE_KEYS]));
   for (const entry of c.animalToxicity ?? []) {
     for (const id of entry.speciesIds) paths.push(`animalToxicity.${id}`);
   }
+  for (const row of c.treeSizeClasses ?? []) paths.push(`treeSizeClasses.${row.sizeClass}`);
   return paths;
+}
+
+/** A tree size class row's spacing and bearing age must both appear in its
+ *  quote (a range as "2-3" or "2–3"). Returns "pluginId: problem" lines. */
+export function treeSizeClassQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'treeSizeClasses'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    for (const row of c.treeSizeClasses ?? []) {
+      const key = `treeSizeClasses.${row.sizeClass}`;
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[key]);
+      if (!entry.success) continue;
+      const { min, max } = row.yearsToBearing;
+      const years = min === max ? `${min}` : `${min}[-–]${max}`;
+      if (!new RegExp(`(^|[^\\d.])${row.minSpacingFt}([^\\d.]|$)`).test(entry.data.quote)) {
+        gaps.push(`${c.pluginId}: ${key} quote does not state ${row.minSpacingFt} ft`);
+      }
+      if (!new RegExp(`(^|[^\\d])${years}([^\\d]|$)`).test(entry.data.quote)) {
+        gaps.push(`${c.pluginId}: ${key} quote does not state ${min}-${max} years`);
+      }
+    }
+  }
+  return gaps;
 }
 
 /** OC-1 (docs/design/ORCHARD_CALENDAR.md): crop seasonal task rows never

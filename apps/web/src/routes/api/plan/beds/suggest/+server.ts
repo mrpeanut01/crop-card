@@ -1,6 +1,10 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { getStockItem } from '$lib/db/stock';
-import { resolveSpacing } from '$lib/garden/plantCount';
+import {
+  FALLBACK_SPACING_IN,
+  FALLBACK_SPACING_PROVENANCE,
+  resolveSpacing
+} from '$lib/garden/plantCount';
 import { bedLayoutRequestSchema } from '$lib/plan/bedLayoutApi';
 import {
   checkBedProposal,
@@ -55,6 +59,7 @@ export const POST: RequestHandler = async (event) => {
   }
   const registry = await getRegistry();
   const crops: BedLayoutCrop[] = [];
+  const noSpacing: string[] = [];
   const seen = new Set<string>();
   for (const s of parsed.data.seeds) {
     if (seen.has(s.stockItemId)) continue;
@@ -69,6 +74,8 @@ export const POST: RequestHandler = async (event) => {
     const plugin = item.pluginId ? registry.get(item.pluginId)?.plugin : undefined;
     const crop = plugin && plugin.type === 'crop' ? plugin : undefined;
     const spacing = resolveSpacing(crop as never, 'square');
+    if (spacing.source === FALLBACK_SPACING_PROVENANCE)
+      noSpacing.push(item.shortName ?? item.displayName);
     crops.push({
       key: item.id,
       name: item.shortName ?? item.displayName,
@@ -89,13 +96,20 @@ export const POST: RequestHandler = async (event) => {
       })}`
     : '';
 
+  const noSpacingMsg = noSpacing.length
+    ? t(locale, 'wizard.beds.noSpacing', {
+        list: noSpacing.join(', '),
+        inches: FALLBACK_SPACING_IN
+      })
+    : null;
+
   const fallback = (why: string, limit: ReturnType<typeof aiLimitOf> = null) => ({
     beds: plain,
     provenance: 'fallback' as const,
     note: null,
     message: `${t(locale, 'wizard.beds.fallbackMsg', {
       why: limit ? aiLimitReason(limit, locale) : t(locale, WHY[why], { max: MAX_SUGGESTED_BEDS })
-    })}${leftover}`,
+    })}${leftover}${noSpacingMsg ? ` ${noSpacingMsg}` : ''}`,
     unplaced,
     aiLimit: limit
   });
@@ -137,5 +151,5 @@ export const POST: RequestHandler = async (event) => {
   }
   if (!checked || !checked.ok) return json(fallback('invalid'));
   const beds: SuggestedBed[] = checked.beds;
-  return json({ beds, provenance: 'ai', note, message: null, unplaced: [], aiLimit: null });
+  return json({ beds, provenance: 'ai', note, message: noSpacingMsg, unplaced: [], aiLimit: null });
 };

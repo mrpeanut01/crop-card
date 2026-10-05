@@ -5,7 +5,8 @@
  * its declared `bloomWindow` AND `beeAttractive` is not explicitly
  * false. Used by both `/spray/insecticide` and `/spray` (herbicide) —
  * the kernel doesn't care about the chemistry class, just the bee
- * toxicity flag (`pollinatorRisk`).
+ * toxicity flag (`pollinatorRisk`, raised by a label `pollinator` block
+ * through `effectivePollinatorRisk`).
  *
  * Per the v2 addendum field-by-field map, the verdict carries
  * `provenance: 'plugin'` (bloom window + bee-tox both from plugins)
@@ -21,12 +22,63 @@
 import { dateTimeFormat } from '$lib/intlCache';
 import { DEFAULT_FARM_TIME_ZONE } from './animalWithdrawal';
 import type { SafetyViolation } from './types';
+import type { PollinatorData } from './pollinatorProtection';
 
 export type PollinatorRisk = 'none' | 'low' | 'moderate' | 'high' | 'unknown';
+
+export type LabelPollinator = Pick<PollinatorData, 'beeToxicity' | 'bloomRestriction'>;
 
 export interface SprayedProduct {
   pluginId: string;
   pollinatorRisk?: PollinatorRisk;
+  /** Label-sourced bee data (#530). Can only make a product riskier than `pollinatorRisk`. */
+  pollinator?: LabelPollinator;
+}
+
+const RISK_RANK: Record<PollinatorRisk, number> = {
+  none: 0,
+  low: 1,
+  moderate: 2,
+  unknown: 3,
+  high: 4
+};
+
+const RISKY: readonly PollinatorRisk[] = ['moderate', 'high', 'unknown'];
+
+/**
+ * The legacy risk a label pollinator block implies (the mapping
+ * `lib/plugins/pollinatorRiskLabel.test.ts` holds the shipped plugins to).
+ * A bee-silent label with no bloom restriction settles nothing, so it
+ * returns undefined and the legacy hint stands.
+ */
+export function riskFromLabel(p: LabelPollinator): PollinatorRisk | undefined {
+  const restricted = p.bloomRestriction !== 'none';
+  switch (p.beeToxicity) {
+    case 'highly-toxic':
+      return 'high';
+    case 'toxic':
+      return 'moderate';
+    case 'relatively-nontoxic':
+      return restricted ? 'moderate' : 'low';
+    default:
+      return restricted ? 'unknown' : undefined;
+  }
+}
+
+/**
+ * RULES_VERSION 0.7.2: the riskier of the legacy hint (missing reads as
+ * `unknown`) and the label block. Label data never lowers the hint, so an
+ * `unknown` or nontoxic label cannot clear a product the hint gates.
+ */
+export function effectivePollinatorRisk(p: SprayedProduct): PollinatorRisk {
+  const legacy: PollinatorRisk = p.pollinatorRisk ?? 'unknown';
+  const fromLabel = p.pollinator ? riskFromLabel(p.pollinator) : undefined;
+  if (fromLabel === undefined) return legacy;
+  return RISK_RANK[fromLabel] > RISK_RANK[legacy] ? fromLabel : legacy;
+}
+
+export function isRiskyForBloom(p: SprayedProduct): boolean {
+  return RISKY.includes(effectivePollinatorRisk(p));
 }
 
 export interface CropInBlock {
@@ -101,8 +153,7 @@ export function checkPollinatorBloom(
 ): SafetyViolation[] {
   // Conservative — treat 'unknown' as risky (matches Phase 21's
   // philosophy-filter default-deny behavior for unknown compliance).
-  const RISKY: PollinatorRisk[] = ['moderate', 'high', 'unknown'];
-  const risky = proposed.filter((p) => RISKY.includes(p.pollinatorRisk ?? 'unknown'));
+  const risky = proposed.filter(isRiskyForBloom);
   if (risky.length === 0) return [];
 
   const inBloom = cropsInBlock.filter((c) => isInBloom(c, now, timeZone));

@@ -16,6 +16,7 @@ import {
   type SnapshotPlanting
 } from '$lib/cards/snapshot';
 import { listMapFeatureViews } from '$lib/db/mapFeatures';
+import { splitGroupBlockIds } from '$lib/plan/splitGroup';
 
 const DAY_MS = 86_400_000;
 const TASK_HORIZON_DAYS = 30;
@@ -48,7 +49,8 @@ export function buildMapSnapshot(
 
   const perBlockHistory = new Map<string, number>();
   const plantings: SnapshotPlanting[] = [];
-  for (const c of listCrops()) {
+  const crops = listCrops();
+  for (const c of crops) {
     if (!blockIds.has(c.blockId)) continue;
     if (c.status !== 'planned' && c.status !== 'active' && c.status !== 'harvested') continue;
     if (c.status === 'harvested') {
@@ -71,9 +73,18 @@ export function buildMapSnapshot(
       plantCount: null,
       plantCountProvenance: null,
       sourceProvenance: null,
-      ...(c.footprint ? { footprint: c.footprint, spacingPattern: c.spacingPattern ?? null } : {})
+      ...(c.footprint ? { footprint: c.footprint, spacingPattern: c.spacingPattern ?? null } : {}),
+      ...(c.splitGroupId ? { splitGroupId: c.splitGroupId } : {})
     });
   }
+  const shownGroups = new Set(plantings.flatMap((p) => p.splitGroupId ?? []));
+  const splitGroups = splitGroupBlockIds(
+    crops.flatMap((c) =>
+      c.splitGroupId && shownGroups.has(c.splitGroupId)
+        ? [{ splitGroupId: c.splitGroupId, blockId: c.blockId, status: c.status }]
+        : []
+    )
+  );
 
   const tasks = listTasks({ status: 'open', toMs: now + TASK_HORIZON_DAYS * DAY_MS, limit: 500 })
     .filter((t) => !t.supersededByTaskId)
@@ -97,6 +108,7 @@ export function buildMapSnapshot(
     areas: snapshotAreas(fields),
     blocks: snapshotBlocks(blocks),
     plantings,
+    splitGroups,
     tasks,
     equipment: [],
     stock: [],

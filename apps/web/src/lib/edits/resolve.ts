@@ -91,3 +91,15 @@ export function mergeComplete(
 ): boolean {
   return conflict.fields.length > 0 && conflict.fields.every((f) => merge[f.field] !== undefined);
 }
+
+/** Keep mine for a direct-manipulation write (a drag, a status button, a
+ *  count): the same body with each `base` entry set to what is stored now,
+ *  so the next send overwrites the other change on purpose. */
+export function keepMineBody<B extends { base?: EditValues }>(
+  body: B,
+  conflict: EditConflictBody
+): B {
+  const base: EditValues = {};
+  for (const f of Object.keys(body.base ?? {}) as EditField[]) base[f] = currentValue(conflict, f);
+  return { ...body, base };
+}

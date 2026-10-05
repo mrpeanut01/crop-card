@@ -3,7 +3,6 @@
   "type": "insecticide",
   "version": "1.0.0",
   "defaultUnit": "fl-oz",
-  "formulation": "SC",
   "pluginSchemaVersion": "1.1",
   "displayName": "Majestene (Burkholderia spp. A396, OMRI nematicide)",
   "activeIngredients": [

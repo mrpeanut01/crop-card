@@ -3414,12 +3414,12 @@
       "note": "Nichino America SDS 027 (101419), section 1. Agrees with PPLS 'Emulsifiable Concentrate' and the inactive brand 'ET-751 2.5% EC'."
     },
     "cease-omri": {
-      "formulation": "L",
-      "sourceUrl": "https://www.domyown.com/msds/CEASEPRODUCTINFORMATIONSHEET.pdf",
-      "docDate": "2012-11",
-      "page": 2,
-      "quote": "Cease, a liquid formulation, easily goes into suspension.",
-      "note": "BioWorks product information sheet ('Copyright © 2012 BioWorks Inc.', code 12-11), retailer-hosted copy of the registrant's document; it cites the earlier reg 69592-19-68539 for the same Cease product. 'liquid formulation' -> L, as for zerotol and oxidate. The current label calls it 'An Aqueous Suspension Biofungicide' (no code); PPLS lists Soluble Concentrate. Liquid either way."
+      "formulation": "SC",
+      "sourceUrl": "https://labelsds.com/images/user_uploads/Cease%20Label%208-9-23.pdf",
+      "docDate": "2023-08-09",
+      "page": 1,
+      "quote": "QST 713 strain of Bacillus subtilis* ... 1.34% ... CEASE® Aqueous Suspension Biofungicide",
+      "note": "BioWorks label for 264-1155-68539 (distributor product of Bayer's 264-1155, B. subtilis QST 713 1.34%), registrant-issued copy on labelsds.com. Panel ruling 2026-10-04 (#553), 3-0: label 'aqueous suspension' -> SC, as for cyd-x, stargus, sevin-xlr-plus and serenade-aso, and the current label outranks the 2012 BioWorks information sheet ('a liquid formulation') that #554 had used for L. The BioWorks SDS (2019) says only 'Physical State suspension'. PPLS lists the parent Rhapsody ASO as Soluble Concentrate, which conflicts. Liquid either way."
     },
     "mycotrol-eso": {
       "formulation": "ES",
@@ -3429,37 +3429,13 @@
       "quote": "Trade name : Mycotrol® ESO Synonyms : N/A 1.2. Recommended use and restrictions on use Recommended use : Emulsifiable Suspension Mycoinsecticide",
       "note": "Certis USA SDS v1.0 (supplier Certis USA LLC), section 1, distributor-hosted copy. 'Emulsifiable Suspension' -> ES, the code already used for the same B. bassiana GHA formula in botanigard-es-beauveria. The specimen label says it 'contains emulsifiers' and mixes 'to form an emulsion'. PPLS says EC."
     },
-    "weed-zap-citronella": {
-      "formulation": "L",
-      "sourceUrl": "https://jhbiotech.com/docs/Weed-Zap-2020.pdf",
-      "docDate": "2020",
-      "page": 1,
-      "quote": "Form: Liquid",
-      "note": "JH Biotech's own Weed Zap information flyer (linked from jhbiotech.com/plant-products/weed-zap), product-form field. 'Liquid' -> L, as for zerotol and oxidate. FIFRA 25(b) product, so there is no EPA label; the label calls it 'WEED ZAP concentrate'. The JH SDS section 9 agrees ('Physical state liquid')."
-    },
     "spear-lep": {
       "formulation": "SL",
       "sourceUrl": "https://vestaron.com/wp-content/uploads/SPEAR-LEP-Tech-Sheet-US.pdf",
       "docDate": "2025-05-06",
       "page": 2,
       "quote": "PRODUCT INFORMATION EPA REG # 88847-6 AI GS-OMEGA/KAPPA-HXTX-HV1A Formulation Soluble Liquid",
-      "note": "Vestaron US tech sheet (05.06.25). 'Soluble Liquid' -> SL; agrees with PPLS 'Soluble Concentrate' and the sibling brand 'VST-006340 SL'. The tech sheet prints EPA Reg 88847-6, not the plugin's 56336-97; that number needs its own check."
-    },
-    "champ-dp": {
-      "formulation": "DF",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/055146-00057-20030127.pdf",
-      "docDate": "2003-01-27",
-      "page": 1,
-      "quote": "1. Company/Product Number 55146-57 ... 4. Company/Product (Name) Nufarm Champion Formula 2 Dry Flowable Fungicide",
-      "note": "Registrant's EPA Form 8570-1 inside the EPA label file for 55146-57; the label in the same file (p3) is the 'Champ Dry Prill' brand of that registered product. 'Dry Flowable' -> DF. Nufarm's bulletin calls it 'dry prill' (no code); PPLS says Water Dispersible Granule. Dry either way, matching the lb rate."
-    },
-    "majestene-nematicide": {
-      "formulation": "SC",
-      "sourceUrl": "https://www.fbn.com/api/store/market/documents/sds/majestene.pdf",
-      "docDate": "2023-10-18",
-      "page": 1,
-      "quote": "PRODUCT NAME: MAJESTENE ® REGISTRATION NO: 84059-14 SUPPLIER: ProFarm Group ... SYNONYM: MBI-305 EP, Majestene SC",
-      "note": "ProFarm (registrant) SDS MBI-SDS-0009 rev 10, sections 1 and 3, retailer-hosted copy. The code is printed only in the trade-name synonym 'Majestene SC' -> SC; section 9 'PHYSICAL STATE: Liquid'. PPLS says Emulsifiable Concentrate. Not applied to venerate-xc: the synonym ties SC to Majestene's MBI-305, while Venerate's master formulation is MBI-206."
+      "note": "Vestaron US tech sheet (05.06.25). 'Soluble Liquid' -> SL; agrees with PPLS 'Soluble Concentrate' and the sibling brand 'VST-006340 SL'. The sheet prints EPA Reg 88847-6 because it predates the transfer: PPLS transfer_history for 56336-97 reads previous_eparegno 88847-6, Vestaron Corporation, transferred May 7, 2026, to Suterra, LLC, with SPEAR-LEP among its alternate brands, so the plugin's 56336-97 is the current number (Panel ruling 2026-10-04 (#553), 3-0)."
     },
     "phostrol-phosphonate": {
       "formulation": "L",
@@ -3468,6 +3444,30 @@
       "page": 1,
       "quote": "EPA Reg. No. 55146-83 Active Ingr. mono- and dibasic sodium, potassium and ammonium phosphites (53.6%) Formulation liquid Chem. Family phosphite",
       "note": "Nufarm product bulletin (©2015 Nufarm, 15-AG-0033), retailer-hosted copy; labelled Formulation field reads 'liquid' -> L. Case normalized from the PDF's stylized text. PPLS says Soluble Concentrate; liquid either way."
+    },
+    "serenade-aso": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01152-20250212.pdf",
+      "docDate": "2025-02-12",
+      "page": 4,
+      "quote": "SERENADE® ASO AN AQUEOUS SUSPENSION BIOFUNGICIDE",
+      "note": "Panel ruling 2026-10-04 (#553), 3-0: label 'aqueous suspension' -> SC (CIPAC: 'SC: Suspension concentrate (= flowable concentrate)'), as for cyd-x, stargus and sevin-xlr-plus; AS is not a separate code and is not added to the enum. Not F: unlike quintec, the label never says 'flowable'. Bayer's US product page reads '1.34% AS' and Bayer's GB SDS for Serenade ASO (12.12.2024, s3.2) 'Suspension concentrate (=flowable concentrate)(SC)' (corroboration only, different UVP). US SDSs say only 'Form suspension'. PPLS says Emulsifiable Concentrate, which conflicts."
+    },
+    "intrepid-edge": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00666-20170629.pdf",
+      "docDate": "2017-06-29",
+      "page": 12,
+      "quote": "Add different formulation types in the following order: 1. Water dispersible granules 2. Wettable powders 3. GF-3028 and other aqueous suspensions",
+      "note": "GF-3028 is the base name of 62719-666; INTREPID EDGE is its PPLS alternate brand. Panel ruling 2026-10-04 (#553), 3-0: the US label's own mixing order classes the product among aqueous suspensions -> SC (same mapping as serenade-aso; tank-mix-list precedent of quintec, forum, cevya, outlook). Corteva Australia's same-strength Intrepid Edge SC is corroboration only: a foreign registration with no shared product code is never the source (jms-stylet-oil precedent). US SDS says only 'Physical state Liquid'; PPLS says Emulsifiable Concentrate, which conflicts."
+    },
+    "previcur-flex-propamocarb": {
+      "formulation": "SL",
+      "sourceUrl": "https://cropscience.bayer.co.uk/download/previcur-flex.pdf",
+      "docDate": "2024-12-13",
+      "page": 3,
+      "quote": "3.2 Mixtures Chemical nature Soluble concentrate (SL) Propamocarb hydrochoride 722 g/l (600g/l propamocarb)",
+      "note": "Bayer (registrant) GB SDS, Version 1/GB. Panel ruling 2026-10-04 (#553), 2-0 with one panelist conditional on this rule: a registrant's SDS from another country counts when it carries the same SDS number and product code as the US SDS. Bayer's US SDS (Version 6.0/USA, 03/26/2024, https://www.fbn.com/api/store/market/documents/sds/previcur-flex.pdf) has the same SDS Number 102000000806 and Product code (UVP) 05933765, but says only 'Form Liquid' and 'completely miscible'; 722 g/l is 6.0 lb/gal, matching the US label's 'Contains 6.0 lbs. propamocarb hydrochloride ... per gallon' (000264-00678-20240816). Rejected: Bayer's US product page ('6 lb/gal emulsifiable concentrate', marketing copy that does not fit a fully miscible salt) and PPLS 'Flowable Concentrate'."
     }
   },
   "dataCorrections": {

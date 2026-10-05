@@ -9,7 +9,7 @@
   import { Wind, CloudRain, MapPin, ChevronRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import WeatherIcon from './WeatherIcon.svelte';
-  import type { TodayWeather } from '$lib/today/weatherSummary';
+  import { RAIN_POP_PCT, type TodayWeather } from '$lib/today/weatherSummary';
   import { fmt } from '$lib/prefsState.svelte';
 
   interface Props {
@@ -30,6 +30,20 @@
     onOpenForecast
   }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
+  const rainHint = $derived.by(() => {
+    if (weather.status !== 'ok') return null;
+    const wet = weather.days.slice(0, 3).filter((d) => d.popPct >= RAIN_POP_PCT);
+    const day = (d: string) => fmt.day(d, 'weekday').toLowerCase();
+    if (wet.length === 1)
+      return tr('today.weather.rainOne', { pct: wet[0].popPct, day: day(wet[0].date) });
+    if (wet.length >= 2) {
+      return tr('today.weather.rainRange', {
+        from: day(wet[0].date),
+        to: day(wet[wet.length - 1].date)
+      });
+    }
+    return null;
+  });
 </script>
 
 <header class="hdr">
@@ -69,10 +83,10 @@
             ><span class="mono">{fmt.qty(w.windMph, 'speed')}</span>
           </span>
         {/if}
-        {#if w.rainHint}
+        {#if rainHint}
           <span class="w-cell">
             <CloudRain size={16} strokeWidth={1.75} aria-hidden="true" /><span class="mono"
-              >{w.rainHint}</span
+              >{rainHint}</span
             >
           </span>
         {/if}

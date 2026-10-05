@@ -356,6 +356,8 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'today.weather.local': 'Clima local',
   'today.weather.low': 'Mín.',
   'today.weather.noLocation': 'No hay ubicación de granja para el pronóstico',
+  'today.weather.rainOne': '{pct}% lluvia {day}',
+  'today.weather.rainRange': 'lluvia {from}→{to}',
   'today.weather.setLocation': 'Define la ubicación de tu granja para ver el pronóstico',
   'today.weather.unavailable': 'El clima no está disponible ahora',
   'today.weather.wind': 'Viento',

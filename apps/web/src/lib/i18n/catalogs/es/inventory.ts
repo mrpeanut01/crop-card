@@ -692,6 +692,7 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'stockui.receipt.savePlugins.one': 'Guardar {count} complemento',
   'stockui.receipt.savePlugins.other': 'Guardar {count} complementos',
   'stockui.receipt.done': 'Listo',
+  'stockui.receipt.savedRow': 'Guardado',
   'stockui.api.notFound': 'no se encontró',
   'stockui.api.unknownItem': 'artículo de existencias desconocido',
   'stockui.api.lotNotFound': 'no se encontró el lote',

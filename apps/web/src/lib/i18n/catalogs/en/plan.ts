@@ -336,6 +336,7 @@ export const enPlan = {
   'plan.page.moveCropFailed': 'failed to move crop ({status})',
   'plan.page.moveFailed': 'Could not move planting: {detail}',
   'plan.page.networkError': 'network error',
+  'plan.page.moveBlockFailed': 'Could not move the block ({status}).',
   'plan.page.nudge.failed': 'Nudge failed: {detail}',
   'plan.page.opt.btn': '✨ Optimize Schedule',
   'plan.page.opt.title':

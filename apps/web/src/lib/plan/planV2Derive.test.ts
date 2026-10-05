@@ -8,7 +8,8 @@ import {
   fmtAcres,
   plantingHarvestLabel,
   plantingRoleLabel,
-  plantingStatus
+  plantingStatus,
+  scheduledTaskTiming
 } from './planV2Derive';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -129,5 +130,31 @@ describe('blockStatus', () => {
     expect(blockStatusTone('active')).toBe('forest');
     expect(blockStatusTone('planned')).toBe('sky');
     expect(blockStatusTone('empty')).toBe('neutral');
+  });
+});
+
+describe('scheduledTaskTiming', () => {
+  const NY = { timeZone: 'America/New_York', units: 'us' as const };
+
+  it('labels a timed evening task by its local day, not the UTC day', () => {
+    const due = Date.UTC(2026, 9, 6, 3, 30);
+    const now = Date.UTC(2026, 9, 5, 14);
+    const r = scheduledTaskTiming(due, now, NY);
+    expect(r.dateLabel).toMatch(/Oct 5/);
+    expect(r.status).toBe('today');
+  });
+
+  it('keeps a date-only task on its stored day and does not call tomorrow today', () => {
+    const due = Date.UTC(2026, 9, 6);
+    const now = Date.UTC(2026, 9, 5, 14);
+    const r = scheduledTaskTiming(due, now, NY);
+    expect(r.dateLabel).toMatch(/Oct 6/);
+    expect(r.status).toBe('scheduled');
+  });
+
+  it('marks a task from yesterday overdue even within 24 hours', () => {
+    const due = Date.UTC(2026, 9, 4);
+    const now = Date.UTC(2026, 9, 5, 14);
+    expect(scheduledTaskTiming(due, now, NY).status).toBe('overdue');
   });
 });

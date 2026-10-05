@@ -32,8 +32,11 @@
     /** "2026 · Apr → Oct" caption above the axis. Optional override; we
      *  derive from `currentYear` otherwise. */
     yearLabel?: string;
+    /** The plan's season year (`getActivePlanningYear`); the axis spans
+     *  Apr → Oct of it. Falls back to the current year. */
+    seasonYear?: number;
   }
-  const { plantings, events, daysToMaturityById = {}, yearLabel }: Props = $props();
+  const { plantings, events, daysToMaturityById = {}, yearLabel, seasonYear }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
 
   const MONTHS = $derived([
@@ -64,19 +67,17 @@
   }
 
   // Compute the axis: April 1 → October 31 of the active year.
-  function axisBounds(): { startMs: number; endMs: number; year: number } {
-    const year = new Date().getFullYear();
-    const start = new Date(year, 3, 1, 0, 0, 0).getTime(); // Apr 1
-    const end = new Date(year, 9, 31, 23, 59, 59).getTime(); // Oct 31
+  function axisBounds(year: number): { startMs: number; endMs: number; year: number } {
+    const start = Date.UTC(year, 3, 1);
+    const end = Date.UTC(year, 10, 1) - 1;
     return { startMs: start, endMs: end, year };
   }
-  const bounds = $derived(axisBounds());
-  const todayPct = $derived(
-    Math.min(
-      100,
-      Math.max(0, ((Date.now() - bounds.startMs) / (bounds.endMs - bounds.startMs)) * 100)
-    )
-  );
+  const bounds = $derived(axisBounds(seasonYear ?? new Date().getFullYear()));
+  const todayPct = $derived.by(() => {
+    const now = Date.now();
+    if (now < bounds.startMs || now > bounds.endMs) return null;
+    return ((now - bounds.startMs) / (bounds.endMs - bounds.startMs)) * 100;
+  });
   const computedYearLabel = $derived(
     yearLabel ?? tr('planui.season.yearLabel', { year: bounds.year })
   );
@@ -161,7 +162,9 @@
       {#each MONTHS as mo, i (i)}
         <span class="month" style:left="{(i / (MONTHS.length - 1)) * 100}%">{mo}</span>
       {/each}
-      <span class="today-pin" style:left="{todayPct}%">{tr('planui.season.today')}</span>
+      {#if todayPct !== null}
+        <span class="today-pin" style:left="{todayPct}%">{tr('planui.season.today')}</span>
+      {/if}
     </div>
   </div>
 
@@ -174,7 +177,9 @@
         <span class="label-text">{shownName.split(' ').slice(0, 3).join(' ')}</span>
       </div>
       <div class="gantt-track">
-        <div class="today-line" style:left="{todayPct}%"></div>
+        {#if todayPct !== null}
+          <div class="today-line" style:left="{todayPct}%"></div>
+        {/if}
         {#each ws as w, j (j)}
           <div
             class="window"

@@ -342,6 +342,7 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plan.page.moveCropFailed': 'no se pudo mover el cultivo ({status})',
   'plan.page.moveFailed': 'No se pudo mover la siembra: {detail}',
   'plan.page.networkError': 'error de red',
+  'plan.page.moveBlockFailed': 'No se pudo mover el bloque ({status}).',
   'plan.page.nudge.failed': 'No se pudo mover: {detail}',
   'plan.page.opt.btn': '✨ Optimizar calendario',
   'plan.page.opt.title':

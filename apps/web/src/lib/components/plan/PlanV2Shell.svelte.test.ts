@@ -323,3 +323,41 @@ describe('PlanV2Shell keep-in-one-bed errors', () => {
     }
   });
 });
+
+describe('PlanV2Shell map overlay', () => {
+  const square = (x: number) =>
+    JSON.stringify({
+      type: 'Polygon',
+      coordinates: [
+        [
+          [x, 0],
+          [x + 0.001, 0],
+          [x + 0.001, 0.001],
+          [x, 0.001],
+          [x, 0]
+        ]
+      ]
+    });
+  const TWO = [
+    { ...BLOCKS[0], geometryGeojson: square(-77) },
+    { ...BLOCKS[0], id: 'b2', name: 'Block B', plantings: [], geometryGeojson: square(-76.99) }
+  ] as unknown as BlockWithPlantings[];
+
+  it('picking a block selects it and closes the map in one navigation', async () => {
+    const { goto } = await import('$app/navigation');
+    vi.mocked(goto).mockClear();
+    currentUrl = new URL('http://localhost/plan?map=open&block=b1');
+    try {
+      mount({ blocks: TWO, tasks: [], events: [], cropMeta: CROP_META });
+      const b2 = document.querySelector('g[data-block-id="b2"]');
+      expect(b2).not.toBeNull();
+      await fireEvent.click(b2!);
+      expect(vi.mocked(goto)).toHaveBeenCalledTimes(1);
+      const url = new URL(String(vi.mocked(goto).mock.calls[0][0]), 'http://localhost');
+      expect(url.searchParams.get('block')).toBe('b2');
+      expect(url.searchParams.has('map')).toBe(false);
+    } finally {
+      currentUrl = new URL('http://localhost/plan');
+    }
+  });
+});

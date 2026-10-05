@@ -236,24 +236,34 @@
   async function acceptCompanions(suggestion: CompanionSuggestion) {
     if (!advisor) return;
     advisorBusy = true;
+    const { blockId, primaryDateMs } = advisor;
+    let created = 0;
     try {
       for (const m of suggestion.members) {
-        const date = advisor.primaryDateMs + m.plantingOffsetDays * 24 * 60 * 60 * 1000;
-        const res = await fetch(`/api/blocks/${encodeURIComponent(advisor.blockId)}/plantings`, {
+        const date = primaryDateMs + m.plantingOffsetDays * 24 * 60 * 60 * 1000;
+        const res = await fetch(`/api/blocks/${encodeURIComponent(blockId)}/plantings`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ cropPluginId: m.cropPluginId, plantingDate: date })
         });
         if (!res.ok) {
-          const out = await res.json();
-          plantingError = out.error ?? `HTTP ${res.status}`;
+          const out = await res.json().catch(() => ({}));
+          plantingError = out.error ?? tr('plan.page.addPlantingFailed', { status: res.status });
           return;
         }
+        created++;
       }
       advisor = null;
-      await invalidateAll();
+    } catch (e) {
+      plantingError = e instanceof Error ? e.message : tr('plan.page.networkError');
     } finally {
       advisorBusy = false;
+      if (created > 0) {
+        // Members already saved stay saved; closing the advisor keeps a
+        // retry from adding them a second time.
+        advisor = null;
+        await invalidateAll();
+      }
     }
   }
 
@@ -507,7 +517,7 @@
     const { target } = workflowStepRoute(stepId, data.seasonWorkflow ?? [], data.locale);
     if (!target) return;
     if (target.kind === 'wizard') {
-      openWizard(target.wizardStep);
+      if (data.canEdit) openWizard(target.wizardStep);
     } else if (target.kind === 'calendar') {
       const sp = new URLSearchParams($page.url.searchParams);
       sp.set('tab', 'calendar');
@@ -1655,6 +1665,7 @@
 
     const isCrossField = sourceBlock.fieldId !== targetBlock.fieldId;
 
+    if (isCrossField && !data.canEdit) return;
     if (isCrossField && targetBlock.fieldId) {
       // Cross-field move: PATCH the block's fieldId, then invalidate so the
       // page reflects the new parent. Update the saved order first so the
@@ -1676,8 +1687,12 @@
           body: JSON.stringify({ fieldId: targetBlock.fieldId })
         });
         if (r.ok) await invalidateAll();
+        else {
+          const j = await r.json().catch(() => ({}));
+          plantingError = j?.error ?? tr('plan.page.moveBlockFailed', { status: r.status });
+        }
       } catch {
-        // network error — order is still saved locally; user can retry
+        plantingError = tr('plan.page.networkError');
       }
       return;
     }
@@ -1696,7 +1711,7 @@
   }
 
   function onFieldRowDragOver(ev: DragEvent, fieldId: string) {
-    if (!cropsReorderDragId) return;
+    if (!cropsReorderDragId || !data.canEdit) return;
     ev.preventDefault();
     if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
     fieldDropOverId = fieldId;
@@ -1705,7 +1720,7 @@
     if (fieldDropOverId === fieldId) fieldDropOverId = null;
   }
   async function onFieldRowDrop(ev: DragEvent, fieldId: string) {
-    if (!cropsReorderDragId) return;
+    if (!cropsReorderDragId || !data.canEdit) return;
     ev.preventDefault();
     const sourceId = cropsReorderDragId;
     cropsReorderDragId = null;
@@ -1731,8 +1746,12 @@
         body: JSON.stringify({ fieldId })
       });
       if (r.ok) await invalidateAll();
+      else {
+        const j = await r.json().catch(() => ({}));
+        plantingError = j?.error ?? tr('plan.page.moveBlockFailed', { status: r.status });
+      }
     } catch {
-      // network error — order is still saved locally; user can retry
+      plantingError = tr('plan.page.networkError');
     }
   }
 
@@ -2016,7 +2035,7 @@
   <WorkflowStrip
     seasonYear={data.currentYear ?? new Date().getFullYear()}
     steps={withStepRoutes(data.seasonWorkflow, data.locale)}
-    onOpenWizard={() => openWizard()}
+    onOpenWizard={data.canEdit ? () => openWizard() : undefined}
     onSelectStep={handleWorkflowStep}
     calendarHref="/plan/calendar?year={data.currentYear ?? new Date().getFullYear()}"
   />
@@ -2105,12 +2124,13 @@
       }
     ])
   )}
-  onOpenWizard={() => openWizard()}
+  onOpenWizard={data.canEdit ? () => openWizard() : undefined}
   onAddTask={(blockId, plantingId) => {
     addTaskTarget = { blockId, plantingId };
   }}
   canEdit={data.canEdit}
   keepInOneBedCrops={data.keepInOneBedCrops ?? []}
+  seasonYear={data.currentYear}
   onAddBlock={data.canEdit
     ? () => {
         showNewBlockModal = true;
@@ -2121,12 +2141,14 @@
         editBlockTargetId = blockId;
       }
     : undefined}
-  onAddPlanting={(blockId) => {
-    const block = data.blocks.find((b) => b.id === blockId);
-    addPlantingTargetBlockId = blockId;
-    addPlantingTargetBlockName = block?.name ?? tr('plan.page.thisBlock');
-    showNewPlantingModal = true;
-  }}
+  onAddPlanting={data.canEdit
+    ? (blockId) => {
+        const block = data.blocks.find((b) => b.id === blockId);
+        addPlantingTargetBlockId = blockId;
+        addPlantingTargetBlockName = block?.name ?? tr('plan.page.thisBlock');
+        showNewPlantingModal = true;
+      }
+    : undefined}
 />
 
 {#if data.canEdit && data.blocks.length > 0 && data.blocks.every((b) => b.plantings.length === 0)}
@@ -3405,7 +3427,7 @@
               <div class="num">{dayNum(cell.iso)}</div>
               {#if cell.events.length > 0}
                 <ul class="events">
-                  {#each cell.events.slice(0, 3) as e (e.kind + e.cropPluginId + e.startMs)}
+                  {#each cell.events.slice(0, 3) as e, ei (ei)}
                     <li
                       class="event {e.kind}"
                       title="{calendarEventTitle(e, data.locale)} — {calendarEventCrop(

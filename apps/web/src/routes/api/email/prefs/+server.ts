@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { requireInteractiveUser } from '$lib/server/auth';
 import { isReadOnly } from '$lib/server/session';
@@ -8,7 +9,7 @@ import { requestIp, setEmailAlertPref } from '$lib/server/emailPrefs';
 /** GET — the signed-in user's alert email choices on the active Owner. */
 export const GET: RequestHandler = (event) => {
   const u = requireInteractiveUser(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.err.noActiveOwner'));
   return json({ prefs: getEmailPrefsForUser(u.id), email: u.email });
 };
 
@@ -20,17 +21,17 @@ export const GET: RequestHandler = (event) => {
  */
 export const POST: RequestHandler = async (event) => {
   const u = requireInteractiveUser(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
-  if (isReadOnly(u.role)) throw error(403, 'inspector accounts cannot receive alerts');
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.err.noActiveOwner'));
+  if (isReadOnly(u.role)) throw error(403, t(event.locals?.locale, 'api.err.alertsInspector'));
   const body = (await event.request.json().catch(() => null)) as {
     category?: unknown;
     enabled?: unknown;
   } | null;
   if (!isEmailAlertCategory(body?.category) || typeof body?.enabled !== 'boolean') {
-    throw error(400, 'category and enabled are required');
+    throw error(400, t(event.locals?.locale, 'api.err.categoryEnabled'));
   }
   if (body.enabled && !u.email) {
-    throw error(409, 'Add an email address in Account settings first.');
+    throw error(409, t(event.locals?.locale, 'api.err.addEmailFirst'));
   }
   const prefs = setEmailAlertPref({
     userId: u.id,

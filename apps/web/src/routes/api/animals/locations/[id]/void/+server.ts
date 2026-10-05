@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { getLocation, voidStay } from '$lib/db/animalLocations';
 import { holdVoidSchema } from '$lib/animals/holdVoidSchema';
@@ -21,8 +22,8 @@ export const POST: RequestHandler = async (event) => {
             result.reason === 'group-change' ? 'GROUP_CHANGE' : 'NOT_LATEST',
             409,
             result.reason === 'group-change'
-              ? 'This move changed a group. Move the animal again instead.'
-              : 'Only the latest move can be voided.'
+              ? t(event.locals?.locale, 'api.err.moveChangedGroup')
+              : t(event.locals?.locale, 'api.err.latestMoveVoidOnly')
           );
         }
         return result;
@@ -30,6 +31,6 @@ export const POST: RequestHandler = async (event) => {
     );
   } catch (e) {
     if (e instanceof AnimalRuleError) return e.toResponse();
-    return json({ error: 'Could not void this move.' }, { status: 500 });
+    return json({ error: t(event.locals?.locale, 'api.err.voidMoveFailed') }, { status: 500 });
   }
 };

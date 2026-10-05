@@ -49,37 +49,46 @@ const patchSchema = z.discriminatedUnion('action', [
   })
 ]);
 
-export const GET: RequestHandler = ({ params }) => {
-  if (!params.id) throw error(400, 'id required');
+export const GET: RequestHandler = ({ params, locals }) => {
+  if (!params.id) throw error(400, t(locals?.locale, 'stockui.api.idRequired'));
   const c = getCutting(params.id);
-  if (!c) throw error(404, 'cutting not found');
+  if (!c) throw error(404, t(locals?.locale, 'api.err.cuttingNotFound'));
   return json({ cutting: c });
 };
 
 export const PATCH: RequestHandler = async (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
 
   const cutting = getCutting(event.params.id);
-  if (!cutting) throw error(404, 'cutting not found');
+  if (!cutting) throw error(404, t(event.locals?.locale, 'api.err.cuttingNotFound'));
   if (isTerminal(cutting.status)) {
-    return json({ error: `cutting is already ${cutting.status}` }, { status: 409 });
+    return json(
+      { error: t(event.locals?.locale, 'api.err.cuttingAlready', { status: cutting.status }) },
+      { status: 409 }
+    );
   }
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({
           path: i.path.join('.'),
           message: i.message
@@ -102,7 +111,7 @@ export const PATCH: RequestHandler = async (event) => {
   const advanceAt = parsed.data.occurredAt ?? now;
   if (advanceAt > now + MAX_FUTURE_SKEW_MS) {
     return json(
-      { error: 'A hay step cannot be dated in the future.', code: 'IN_THE_FUTURE' },
+      { error: t(event.locals?.locale, 'api.err.hayStepFuture'), code: 'IN_THE_FUTURE' },
       { status: 400 }
     );
   }
@@ -118,7 +127,7 @@ export const PATCH: RequestHandler = async (event) => {
   const registry = await getRegistry();
   const cropRecord = registry.get(cutting.cropPluginId);
   if (!cropRecord || cropRecord.plugin.type !== 'crop' || !cropRecord.plugin.hayOperations) {
-    return json({ error: 'crop plugin missing or no hayOperations declared' }, { status: 500 });
+    return json({ error: t(event.locals?.locale, 'api.err.noHayOperations') }, { status: 500 });
   }
   const spec: HayOperationsSpec = {
     steps: [...cropRecord.plugin.hayOperations.steps],
@@ -133,10 +142,18 @@ export const PATCH: RequestHandler = async (event) => {
   const proposed: HayStep | null =
     parsed.data.step ?? nextStep(spec.steps as HayStep[], cutting.status);
   if (!proposed) {
-    return json({ error: 'no further steps in plugin steps[]' }, { status: 409 });
+    return json({ error: t(event.locals?.locale, 'api.err.noFurtherSteps') }, { status: 409 });
   }
   if (!canAdvance(spec.steps as HayStep[], cutting.status, proposed)) {
-    return json({ error: `cannot advance from ${cutting.status} to ${proposed}` }, { status: 409 });
+    return json(
+      {
+        error: t(event.locals?.locale, 'api.err.cannotAdvance', {
+          from: cutting.status,
+          to: proposed
+        })
+      },
+      { status: 409 }
+    );
   }
 
   // Phase 32C (C-28): every step after the mow runs the haying-interval
@@ -216,13 +233,16 @@ export const PATCH: RequestHandler = async (event) => {
  * FR-09 48-hour lock only the owner can, with `?force=true`.
  */
 export const DELETE: RequestHandler = async (eventCtx) => {
-  if (!eventCtx.params.id) throw error(400, 'id required');
+  if (!eventCtx.params.id) throw error(400, t(eventCtx.locals?.locale, 'stockui.api.idRequired'));
   const auth = currentUser(eventCtx);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(eventCtx.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
   const existing = getCutting(eventCtx.params.id);
-  if (!existing) throw error(404, 'cutting not found');
+  if (!existing) throw error(404, t(eventCtx.locals?.locale, 'api.err.cuttingNotFound'));
   const locale = eventCtx.locals?.locale;
   if (Date.now() - (existing.mowAt ?? existing.createdAt) >= LOCK_WINDOW_MS) {
     if (auth?.role !== 'owner') {

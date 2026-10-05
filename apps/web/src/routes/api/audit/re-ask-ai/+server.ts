@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * POST /api/audit/re-ask-ai
  *
@@ -29,14 +30,15 @@ import { getApiKey } from '$lib/server/scanResult';
 /** List candidate rows the owner could re-ask. */
 export const GET: RequestHandler = (event) => {
   const u = currentUser(event);
-  if (!u) return json({ error: 'sign-in required' }, { status: 401 });
+  if (!u)
+    return json({ error: t(event.locals?.locale, 'api.err.signInRequired') }, { status: 401 });
   if (u.role !== 'owner') {
-    return json({ error: 'owner role required' }, { status: 403 });
+    return json({ error: t(event.locals?.locale, 'api.err.ownerRequired') }, { status: 403 });
   }
   if (!getApiKey()) {
     return json(
       {
-        error: 'no API key configured',
+        error: t(event.locals?.locale, 'api.err.noApiKey'),
         hint: "Save a key on /settings/ai first; the audit re-run can't fire without one."
       },
       { status: 412 }
@@ -70,13 +72,17 @@ export const GET: RequestHandler = (event) => {
  *  context in ai_call_log. */
 export const POST: RequestHandler = async (event) => {
   const u = currentUser(event);
-  if (!u) return json({ error: 'sign-in required' }, { status: 401 });
+  if (!u)
+    return json({ error: t(event.locals?.locale, 'api.err.signInRequired') }, { status: 401 });
   if (u.role !== 'owner') {
-    return json({ error: 'owner role required' }, { status: 403 });
+    return json({ error: t(event.locals?.locale, 'api.err.ownerRequired') }, { status: 403 });
   }
   if (!getApiKey()) {
     return json(
-      { error: 'no API key configured', hint: 'Save a key on /settings/ai first.' },
+      {
+        error: t(event.locals?.locale, 'api.err.noApiKey'),
+        hint: t(event.locals?.locale, 'api.err.saveKeyFirst')
+      },
       { status: 412 }
     );
   }
@@ -85,7 +91,7 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
 
   if (body.rowId) {
@@ -101,13 +107,13 @@ export const POST: RequestHandler = async (event) => {
       .get();
     if (!row) {
       return json(
-        { error: 'row not found or not a fallback row', rowId: body.rowId },
+        { error: t(event.locals?.locale, 'api.err.notFallbackRow'), rowId: body.rowId },
         { status: 404 }
       );
     }
     return json(
       {
-        error: 'per-endpoint re-run not yet implemented',
+        error: t(event.locals?.locale, 'api.err.perEndpointRerun'),
         endpoint: row.endpoint,
         rowId: row.id,
         plannedPhase: 26,
@@ -119,7 +125,7 @@ export const POST: RequestHandler = async (event) => {
 
   return json(
     {
-      error: 'bulk re-run not yet implemented',
+      error: t(event.locals?.locale, 'api.err.bulkRerun'),
       plannedPhase: 26,
       hint: 'Future: { all: true } will iterate the candidate list returned by GET. Today, both single-row and bulk re-runs return 501.'
     },

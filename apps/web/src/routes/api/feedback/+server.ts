@@ -20,18 +20,22 @@ export const _requestSchema = feedbackSubmitSchema;
 export const POST: RequestHandler = async (event) => {
   const user = requireUser(event);
   if (event.locals?.authVia === 'bearer') {
-    return json({ error: 'feedback is sent from a signed-in browser' }, { status: 403 });
+    return json({ error: t(event.locals?.locale, 'api.err.feedbackBrowser') }, { status: 403 });
   }
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = feedbackSubmitSchema.safeParse(body);
   if (!parsed.success) {
     return json(
-      { error: parsed.error.issues[0]?.message ?? 'invalid request', issues: parsed.error.issues },
+      {
+        error:
+          parsed.error.issues[0]?.message ?? t(event.locals?.locale, 'stockui.api.invalidRequest'),
+        issues: parsed.error.issues
+      },
       { status: 400 }
     );
   }

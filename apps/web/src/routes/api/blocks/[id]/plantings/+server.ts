@@ -73,30 +73,30 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
 
   const blockId = event.params.id;
   if (!blockId || !getBlock(blockId)) {
-    return json({ error: 'unknown block' }, { status: 404 });
+    return json({ error: t(event.locals?.locale, 'api.err.unknownBlock') }, { status: 404 });
   }
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = plantingSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
-  }
-  if (parsed.data.purchase && parsed.data.stockItemId) {
     return json(
-      { error: 'send either stockItemId (seed on hand) or purchase (newly bought), not both' },
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
       { status: 400 }
     );
+  }
+  if (parsed.data.purchase && parsed.data.stockItemId) {
+    return json({ error: t(event.locals?.locale, 'api.err.seedOrPurchase') }, { status: 400 });
   }
 
   const registry = await getRegistry();
   const plugin = registry.get(parsed.data.cropPluginId);
   if (!plugin || plugin.plugin.type !== 'crop') {
-    return json({ error: 'unknown crop plugin' }, { status: 404 });
+    return json({ error: t(event.locals?.locale, 'api.err.unknownCropPlugin') }, { status: 404 });
   }
 
   const { footprint, spacingPattern, spacingIn, rowSpacingIn, plantCount } = parsed.data;

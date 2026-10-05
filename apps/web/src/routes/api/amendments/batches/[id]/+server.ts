@@ -34,7 +34,7 @@ export const PATCH: RequestHandler = async (event) => {
   requireMutator(event);
   const batch = getBatch(event.params.id ?? '');
   if (!batch) return refusal(404, 'NOT_FOUND', t(event.locals?.locale, 'amend.api.batchNotFound'));
-  const body = await readJson(event.request);
+  const body = await readJson(event.request, event.locals?.locale);
   if (body instanceof Response) return body;
   const parsed = batchPatchSchema.safeParse(body);
   if (!parsed.success) return invalidBody(localIssues(parsed.error.issues, event.locals?.locale));

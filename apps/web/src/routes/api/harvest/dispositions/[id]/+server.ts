@@ -40,7 +40,8 @@ export const _requestSchema = dispositionPatchSchema;
 
 export const PATCH: RequestHandler = async (event) => {
   const user = currentUser(event);
-  if (!user) return problem(401, 'UNAUTHENTICATED', 'Sign in to change this record.');
+  if (!user)
+    return problem(401, 'UNAUTHENTICATED', t(event.locals?.locale, 'api.err.signInChangeRecord'));
   if (!canMutate(user.role)) {
     return problem(403, 'READ_ONLY', t(event.locals.locale, 'harvestui.disp.err.readOnlyChange'));
   }
@@ -48,7 +49,7 @@ export const PATCH: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return problem(400, 'INVALID_BODY', 'The request body is not JSON.');
+    return problem(400, 'INVALID_BODY', t(event.locals?.locale, 'api.err.bodyNotJson'));
   }
   const parsed = dispositionPatchSchema.safeParse(body);
   if (!parsed.success) {
@@ -158,7 +159,8 @@ export const PATCH: RequestHandler = async (event) => {
 
 export const DELETE: RequestHandler = async (event) => {
   const user = currentUser(event);
-  if (!user) return problem(401, 'UNAUTHENTICATED', 'Sign in to change this record.');
+  if (!user)
+    return problem(401, 'UNAUTHENTICATED', t(event.locals?.locale, 'api.err.signInChangeRecord'));
   if (!canMutate(user.role)) {
     return problem(403, 'READ_ONLY', t(event.locals.locale, 'harvestui.disp.err.readOnlyChange'));
   }

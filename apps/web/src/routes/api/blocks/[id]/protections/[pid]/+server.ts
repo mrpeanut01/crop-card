@@ -17,7 +17,8 @@ export const DELETE: RequestHandler = (event) => {
   }
   requireOwner(event);
   const block = getBlock(event.params.id!);
-  if (!block) throw error(404, 'block not found');
-  if (!deleteBlockProtection(block.id, event.params.pid!)) throw error(404, 'cover not found');
+  if (!block) throw error(404, t(event.locals?.locale, 'api.err.blockNotFound'));
+  if (!deleteBlockProtection(block.id, event.params.pid!))
+    throw error(404, t(event.locals?.locale, 'api.err.coverNotFound'));
   return json({ ok: true });
 };

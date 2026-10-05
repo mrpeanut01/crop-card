@@ -33,7 +33,7 @@ export const _requestSchema = withdrawalEntrySchema;
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
   if (!isInteractiveOwner(event, user)) return interactiveOwnerRefusal();
-  const body = await parseBody(event.request, withdrawalEntrySchema);
+  const body = await parseBody(event.request, withdrawalEntrySchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const record = getHealthEvent(event.params.id ?? '');
   if (!record)

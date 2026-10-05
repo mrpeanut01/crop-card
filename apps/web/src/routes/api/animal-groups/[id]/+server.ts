@@ -44,7 +44,7 @@ export const PATCH: RequestHandler = async (event) => {
   const user = requireOwner(event);
   const group = event.params.id ? getAnimalGroup(event.params.id) : undefined;
   if (!group) return notFound(event.locals?.locale);
-  const body = await parseBody(event.request, animalGroupPatchSchema);
+  const body = await parseBody(event.request, animalGroupPatchSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const input = body.data;
   if (input.status === 'archived' && group.status === 'active' && activeMemberCount(group.id) > 0) {
@@ -127,13 +127,13 @@ export const DELETE: RequestHandler = async (event) => {
   if (outcome === 'not-found') return notFound(event.locals?.locale);
   if (outcome === 'has-members') {
     return json(
-      { error: 'This group still has named animals.', code: 'GROUP_HAS_MEMBERS' },
+      { error: t(event.locals?.locale, 'api.err.groupHasMembers'), code: 'GROUP_HAS_MEMBERS' },
       { status: 409 }
     );
   }
   if (outcome === 'has-records') {
     return json(
-      { error: 'This group has records. Archive it instead.', code: 'ANIMAL_HAS_RECORDS' },
+      { error: t(event.locals?.locale, 'api.err.groupHasRecords'), code: 'ANIMAL_HAS_RECORDS' },
       { status: 409 }
     );
   }

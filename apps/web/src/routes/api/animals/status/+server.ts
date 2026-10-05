@@ -25,7 +25,7 @@ const CULL_INSTEAD = 'You can still record it as culled, with the meat not used.
  *  exposure gate first (C-17); nobody can override it. */
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const user = requireMutator(event);
-  const body = await parseBody(event.request, animalStatusSchema);
+  const body = await parseBody(event.request, animalStatusSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const input = body.data;
   if (firstUnknownRef(assertAnimalSubject('subjectId', input.subjectType, input.subjectId))) {

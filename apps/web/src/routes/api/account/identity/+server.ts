@@ -56,7 +56,7 @@ export const DELETE: RequestHandler = async (event) => {
   const user = requireInteractiveUser(event);
   const body = (await event.request.json().catch(() => null)) as { kind?: unknown } | null;
   if (body?.kind !== 'email' && body?.kind !== 'phone') {
-    return json({ error: "kind must be 'email' or 'phone'" }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.err.identityKind') }, { status: 400 });
   }
   const r = unlinkIdentity(user.id, body.kind);
   if (!r.ok) {

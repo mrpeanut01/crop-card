@@ -14,23 +14,23 @@ import { testEmailLimiter } from '$lib/server/testEmailLimit';
  *  opted in to at least one alert kind on this farm. */
 export const POST: RequestHandler = async (event) => {
   const u = requireInteractiveUser(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
-  if (!u.email) throw error(409, 'Add an email address in Account settings first.');
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.err.noActiveOwner'));
+  if (!u.email) throw error(409, t(event.locals?.locale, 'api.err.addEmailFirst'));
   const prefs = getEmailPrefsForUser(u.id);
   if (!Object.values(prefs).some(Boolean)) {
-    throw error(409, 'Turn on at least one email alert first.');
+    throw error(409, t(event.locals?.locale, 'api.err.turnOnAlert'));
   }
   if (isEmailSuppressed(u.email)) {
-    throw error(409, 'Your email provider reported this address as unsubscribed or bouncing.');
+    throw error(409, t(event.locals?.locale, 'api.err.emailSuppressed'));
   }
   let origin: string;
   try {
     origin = magicLinkOrigin(event.url.origin);
   } catch {
-    throw error(503, "Email links aren't configured on this server");
+    throw error(503, t(event.locals?.locale, 'api.err.emailNotConfigured'));
   }
   if (!testEmailLimiter.tryTake(u.id)) {
-    throw error(429, "That's enough test emails for now. Try again in an hour.");
+    throw error(429, t(event.locals?.locale, 'api.err.testEmailLimit'));
   }
   const loc = event.locals.locale;
   try {
@@ -52,7 +52,7 @@ export const POST: RequestHandler = async (event) => {
     });
   } catch (e) {
     console.error('[email] test send failed', e instanceof Error ? e.message : e);
-    throw error(503, "We couldn't send the email just now.");
+    throw error(503, t(event.locals?.locale, 'api.err.emailSendFailed'));
   }
   return json({ sent: 1, to: u.email });
 };

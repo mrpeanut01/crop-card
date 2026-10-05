@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { grazingAttestationSchema } from '$lib/animals/recordApiSchemas';
 import { insertGrazingAttestation } from '$lib/db/grazingAttestations';
@@ -27,7 +28,7 @@ function refusal(code: string, error: string, status = 409): Response {
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
   if (!isInteractiveOwner(event, user)) return interactiveOwnerRefusal();
-  const body = await parseBody(event.request, grazingAttestationSchema);
+  const body = await parseBody(event.request, grazingAttestationSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const input = body.data;
   const foreign = rejectForeignRefs(assertField('fieldId', input.fieldId));
@@ -55,7 +56,7 @@ export const POST: RequestHandler = async (event) => {
     if (apps.length === 0) {
       return refusal(
         'UNKNOWN_APPLICATION',
-        'That application is not on this Area, or it is too old to affect grazing.',
+        t(event.locals?.locale, 'api.err.attestUnknownApplication'),
         400
       );
     }
@@ -68,7 +69,7 @@ export const POST: RequestHandler = async (event) => {
     if (!app) {
       return refusal(
         'PRODUCT_REQUIRED',
-        'That application used more than one product. Say which product the label is for.',
+        t(event.locals?.locale, 'api.err.attestProductRequired'),
         400
       );
     }

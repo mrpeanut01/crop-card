@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { fillRequestSchema } from '$lib/garden/api';
 import type { CropPlugin } from '$lib/plugins/schemas';
@@ -17,11 +18,14 @@ export const POST: RequestHandler = async (event) => {
   try {
     raw = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = fillRequestSchema.safeParse(raw);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const locale = event.locals?.locale;
   const bed = resolveDesignableBed(event.params.blockId ?? '', locale);

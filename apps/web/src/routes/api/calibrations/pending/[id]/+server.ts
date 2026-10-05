@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * Owner-only endpoints for reviewing helper-submitted calibrations.
  *
@@ -17,7 +18,10 @@ export const POST: RequestHandler = (event) => {
   requireOwner(event);
   const id = event.params.id;
   if (!id || !getPendingCalibration(id)) {
-    return json({ error: 'unknown pending calibration' }, { status: 404 });
+    return json(
+      { error: t(event.locals?.locale, 'api.err.unknownPendingCalibration') },
+      { status: 404 }
+    );
   }
   approvePendingCalibration(id);
   return json({ status: 'approved' });
@@ -27,7 +31,10 @@ export const DELETE: RequestHandler = (event) => {
   requireOwner(event);
   const id = event.params.id;
   if (!id || !getPendingCalibration(id)) {
-    return json({ error: 'unknown pending calibration' }, { status: 404 });
+    return json(
+      { error: t(event.locals?.locale, 'api.err.unknownPendingCalibration') },
+      { status: 404 }
+    );
   }
   rejectPendingCalibration(id);
   return json({ status: 'rejected' });

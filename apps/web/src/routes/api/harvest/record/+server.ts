@@ -154,36 +154,51 @@ export const POST: RequestHandler = withClientRecordId(async (requestEvent) => {
   try {
     body = await request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json(
+      { error: t(requestEvent.locals?.locale, 'stockui.api.invalidJson') },
+      { status: 400 }
+    );
   }
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      {
+        error: t(requestEvent.locals?.locale, 'stockui.api.invalidRequest'),
+        issues: parsed.error.issues
+      },
+      { status: 400 }
+    );
   }
   const block = getBlock(parsed.data.blockId);
   if (!block) {
-    return json({ error: 'unknown block' }, { status: 404 });
+    return json({ error: t(requestEvent.locals?.locale, 'api.err.unknownBlock') }, { status: 404 });
   }
   const foreign = rejectForeignRefs(['cropId', parsed.data.cropId, getCrop]);
   if (foreign) return foreign;
   const registry = await getRegistry();
   const plugin = registry.get(parsed.data.cropPluginId);
   if (!plugin || plugin.plugin.type !== 'crop') {
-    return json({ error: 'unknown crop plugin' }, { status: 404 });
+    return json(
+      { error: t(requestEvent.locals?.locale, 'api.err.unknownCropPlugin') },
+      { status: 404 }
+    );
   }
   const planting = parsed.data.cropId ? getCrop(parsed.data.cropId) : undefined;
   if (planting && planting.cropPluginId !== parsed.data.cropPluginId) {
     return json(
       {
         error: 'CROP_MISMATCH',
-        message: 'That planting is a different crop. Pick the crop that was harvested.'
+        message: t(requestEvent.locals?.locale, 'api.err.cropMismatchCrop')
       },
       { status: 400 }
     );
   }
   if (planting && planting.blockId !== block.id) {
     return json(
-      { error: 'CROP_MISMATCH', message: 'That planting is on a different block.' },
+      {
+        error: 'CROP_MISMATCH',
+        message: t(requestEvent.locals?.locale, 'api.err.cropMismatchBlock')
+      },
       { status: 400 }
     );
   }
@@ -235,7 +250,7 @@ export const POST: RequestHandler = withClientRecordId(async (requestEvent) => {
   // change or block move cannot slip a hay cut past the gate and guard.
   const here = getBlock(block.id);
   if (!here) {
-    return json({ error: 'unknown block' }, { status: 404 });
+    return json({ error: t(requestEvent.locals?.locale, 'api.err.unknownBlock') }, { status: 404 });
   }
   let hayRulesVersion: string | undefined;
   const blockPlantings = listCrops({ blockId: here.id, statuses: ['planned', 'active'] });

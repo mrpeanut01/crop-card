@@ -56,14 +56,14 @@ export const PATCH: RequestHandler = async (event) => {
   const user = requireMutator(event);
   const animal = event.params.id ? getAnimal(event.params.id) : undefined;
   if (!animal) return notFound(event.locals?.locale);
-  const body = await parseBody(event.request, animalPatchSchema);
+  const body = await parseBody(event.request, animalPatchSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const input = body.data;
   const keys = Object.keys(input);
 
   if (user.role !== 'owner' && keys.some((k) => !HELPER_KEYS.has(k))) {
     return json(
-      { error: 'Only the owner can change this. Helpers can add a photo.', code: 'OWNER_ONLY' },
+      { error: t(event.locals?.locale, 'api.err.animalOwnerOnly'), code: 'OWNER_ONLY' },
       { status: 403 }
     );
   }
@@ -71,7 +71,7 @@ export const PATCH: RequestHandler = async (event) => {
   if (gone && keys.some((k) => !GONE_KEYS.has(k))) {
     return json(
       {
-        error: 'This animal is no longer here. Only notes and the photo can change.',
+        error: t(event.locals?.locale, 'api.err.animalGone'),
         code: 'READ_ONLY'
       },
       { status: 409 }
@@ -146,8 +146,8 @@ export const PATCH: RequestHandler = async (event) => {
           {
             error:
               checked.error === 'too-large'
-                ? 'The photo is too large. It must be a JPEG under 300 KB.'
-                : 'The photo must be a JPEG.',
+                ? t(event.locals?.locale, 'api.err.photoTooLarge')
+                : t(event.locals?.locale, 'api.err.photoJpeg'),
             code: 'BAD_PHOTO'
           },
           { status: 400 }
@@ -223,7 +223,7 @@ export const PATCH: RequestHandler = async (event) => {
   return json({
     animal: getAnimal(animal.id),
     flagChanges,
-    warnings: input.tag !== undefined ? tagWarnings(input.tag, animal.id) : []
+    warnings: input.tag !== undefined ? tagWarnings(input.tag, animal.id, event.locals?.locale) : []
   });
 };
 
@@ -242,7 +242,7 @@ export const DELETE: RequestHandler = async (event) => {
   if (outcome === 'not-found') return notFound(event.locals?.locale);
   if (outcome === 'has-records') {
     return json(
-      { error: 'This animal has records. Archive it instead.', code: 'ANIMAL_HAS_RECORDS' },
+      { error: t(event.locals?.locale, 'api.err.animalHasRecords'), code: 'ANIMAL_HAS_RECORDS' },
       { status: 409 }
     );
   }

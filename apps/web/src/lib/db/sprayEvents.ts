@@ -221,45 +221,6 @@ export function findRecentEditableEventForBlock(
   return event;
 }
 
-/**
- * Phase 21b follow-up — replace the editable fields on a spray event.
- * Refuses if the row is locked (assertEditable throws RecordLockedError).
- * Does NOT touch blockId / sprayerId / performedById — those are
- * row-identity fields. Callers needing to change those should abort +
- * insert a new event.
- */
-export function updateSprayEvent(
-  id: string,
-  input: {
-    occurredAt?: number;
-    products?: SprayEventInput['products'];
-    conditions?: SprayEventInput['conditions'];
-    pluginHashes?: Record<string, string>;
-    customRateOverride?: boolean;
-    cropId?: string | null;
-  }
-): SprayEvent {
-  const existing = getSprayEvent(id);
-  if (!existing) throw new Error(`unknown spray event: ${id}`);
-  assertEditable(existing);
-  const updates: Record<string, unknown> = {};
-  if (input.occurredAt !== undefined) updates.occurredAt = new Date(input.occurredAt);
-  if (input.products !== undefined) updates.productsJson = JSON.stringify(input.products);
-  if (input.conditions !== undefined) updates.conditionsJson = JSON.stringify(input.conditions);
-  if (input.pluginHashes !== undefined)
-    updates.pluginHashesJson = JSON.stringify(input.pluginHashes);
-  if (input.customRateOverride !== undefined) updates.customRateOverride = input.customRateOverride;
-  if (input.cropId !== undefined) updates.cropId = input.cropId;
-  const row = db
-    .update(sprayEvents)
-    .set(updates)
-    .where(withTenant(sprayEvents, eq(sprayEvents.id, id)))
-    .returning()
-    .get();
-  if (!row) throw new Error(`spray event row vanished during update: ${id}`);
-  return rowToEvent(row);
-}
-
 export function recordsApproachingRetention(now: number = Date.now()): SprayEvent[] {
   // The alert should fire only in the 30-day pre-expiry window: records aged
   // between (retention - alert) and the full retention window. Without the

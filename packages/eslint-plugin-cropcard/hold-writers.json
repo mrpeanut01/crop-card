@@ -52,7 +52,6 @@
   "updateAnimal",
   "updateAnimalGroup",
   "updateBlock",
-  "updateSprayEvent",
   "voidCutting",
   "voidStay",
   "writeHealthRecord",

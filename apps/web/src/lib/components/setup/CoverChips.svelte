@@ -50,7 +50,7 @@
   function dayOf(ms: number | null): string | null {
     if (ms === null) return null;
     const d = new Date(ms);
-    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const iso = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
     return formatDay(iso, page.data?.locale);
   }
 

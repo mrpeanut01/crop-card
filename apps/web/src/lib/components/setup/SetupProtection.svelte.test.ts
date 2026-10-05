@@ -62,6 +62,21 @@ describe('SetupProtection', () => {
     });
   });
 
+  it('saves cover dates as date-only UTC midnight, like frost dates', async () => {
+    const onDone = vi.fn();
+    const { container } = render(SetupProtection, { ...props, canEdit: true, onDone });
+    const [inst, rem] = container.querySelectorAll<HTMLInputElement>('input[type="date"]');
+    await fireEvent.input(inst, { target: { value: '2027-10-15' } });
+    await fireEvent.input(rem, { target: { value: '2027-11-30' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Add cover' }));
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      installedOn: Date.UTC(2027, 9, 15),
+      removedOn: Date.UTC(2027, 10, 30)
+    });
+  });
+
   it('refuses a shift past 120 days before saving', async () => {
     render(SetupProtection, { ...props, canEdit: true, onDone: vi.fn() });
     await fireEvent.input(screen.getByLabelText('Spring: days earlier'), {

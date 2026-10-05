@@ -4,207 +4,157 @@
     {
       "pluginId": "2-4-d-amine",
       "field": "formulation",
-      "reason": "Generic plugin with no single product label; 2,4-D amine jugs differ by registrant, so no one label's formulation statement applies (checked 2026-09-25)."
+      "reason": "Generic 2,4-D amine plugin with no brand or EPA number. Amine jugs from different registrants differ in salt, strength and label wording, so the formulation code has to come from the jug on hand (rechecked 2026-10-04)."
     },
     {
       "pluginId": "24d",
       "field": "formulation",
-      "reason": "Generic plugin with no single label: dozens of 2,4-D amine registrations differ in strength and label wording, so the formulation code must come from the jug on hand rather than one chosen label."
+      "reason": "Generic 2,4-D plugin with no brand or EPA number. Dozens of 2,4-D registrations (amine salts, esters, choline) differ in formulation, so no one label's code applies (rechecked 2026-10-04)."
     },
     {
       "pluginId": "chaparral-aminopyralid-metsulfuron",
       "field": "formulation",
-      "reason": "Chaparral label (EPA 62719-597, 2024 and 2011 versions, plus Greenbook specimen) names no formulation type; only PPLS record says 'Water Dispersible Granule'. Product is dry, measured by volumetric cylinder or scale in ounces."
+      "reason": "Labels (62719-597, 2024 and 2011, plus Greenbook specimen), the Corteva 2019 fact sheet and the Dow SDS (v5.1, 2016, section 9 'Physical state Granules') name no formulation type. Only PPLS ('Water Dispersible Granule') and retailer blurbs say WDG. Rechecked 2026-10-04."
     },
     {
       "pluginId": "corn-gluten-meal-pre",
       "field": "formulation",
-      "reason": "Generic 25(b) material with no single product label: corn gluten meal is sold as meal, powder, granules or pellets by many marketers (OMRI lists many). Plugin names no brand, so no label formulation to cite."
+      "reason": "Generic FIFRA 25(b) material with no brand: corn gluten meal is sold as meal, powder, granules or pellets by many marketers, so no single label or tech sheet names its form (rechecked 2026-10-04)."
     },
     {
       "pluginId": "crossbow",
       "field": "formulation",
-      "reason": "Crossbow label (62719-260, 2025-02-04) prints no formulation code or name (grep for emulsifiable/concentrate/formulation found none). PPLS lists 'Emulsifiable Concentrate', which counts only as corroboration."
+      "reason": "Crossbow label (62719-260, 2025-02-04) prints no formulation code or name, and no Corteva tech sheet, SDS line or product page naming one was found (the corteva.com Crossbow page is gone). PPLS 'Emulsifiable Concentrate' is corroboration only. Rechecked 2026-10-04."
     },
     {
       "pluginId": "ct-test-herbicide-clickthrough",
       "field": "formulation",
-      "reason": "E2E clickthrough test fixture, not a real product; no label, so no formulation code applies."
-    },
-    {
-      "pluginId": "duracor-aminopyralid-florpyrauxifen",
-      "field": "formulation",
-      "reason": "The DuraCor label (GF-3850, 62719-739, 2019-11-26) prints no formulation code or formulation name. PPLS lists 'Emulsifiable Concentrate', which counts only as corroboration. Needs a printed label or tech sheet."
-    },
-    {
-      "pluginId": "et-herbicide-pyraflufen",
-      "field": "formulation",
-      "reason": "The ET Herbicide/Defoliant label (71711-7, 2026-09-03, p3) prints no formulation code or name ('Contains 0.208 lb. pyraflufen ethyl per gallon'). PPLS lists 'Emulsifiable Concentrate'; its inactive brand name is 'ET-751 2.5% EC'. Corroboration only."
+      "reason": "E2E clickthrough test fixture, not a real product: no label exists, so no formulation code applies."
     },
     {
       "pluginId": "glyphosate-generic",
       "field": "formulation",
-      "reason": "Generic 'Glyphosate 41%' names no single product; formulation must come from the specific jug's label (41% IPA-salt products are typically soluble liquids, but not verified per product)."
+      "reason": "Generic 'Glyphosate 41%' with no brand or EPA number. Most 41% IPA-salt jugs are soluble liquids, but that is not printed for any one product, so the code must come from the jug's label (rechecked 2026-10-04)."
     },
     {
       "pluginId": "grazonnext-hl",
       "field": "formulation",
-      "reason": "GrazonNext HL master label (62719-628, 2017-03-13) prints no formulation code or wording; only the PPLS record says Emulsifiable Concentrate, which the brief allows as corroboration only. Newer PPLS files are supplemental labels."
+      "reason": "GrazonNext HL master label (62719-628, 2017) and the Corteva 2019 fact sheet print no formulation code or wording, and the product page has none. PPLS says Emulsifiable Concentrate, which is doubtful for two amine salts. Rechecked 2026-10-04."
     },
     {
       "pluginId": "halex-gt",
       "field": "formulation",
-      "reason": "Halex GT label (EPA 100-1282, 2025-01-15 and 2008-08-18 versions) prints no formulation type or code, only 'DoseLock Formulation Technology' and a.i. per gallon. PPLS record says 'Emulsifiable Concentrate' (corroboration only, not label)."
+      "reason": "Halex GT labels (100-1282, 2025 and 2008), the Syngenta SDS (2023-05-30, only 'Appearance: liquid') and the DoseLock info sheet print no formulation type or code, only 'DoseLock Formulation Technology'. PPLS 'Emulsifiable Concentrate' is corroboration only. Rechecked 2026-10-04."
     },
     {
       "pluginId": "liberty-ultra",
       "field": "formulation",
-      "reason": "Liberty ULTRA label (EPA 7969-500, 2025-10-30 and 2024-10-22) prints no formulation code or type; says only it 'is a water-soluble nonselective herbicide' and 'is formulated to mix readily in water'. PPLS formulations field is empty."
-    },
-    {
-      "pluginId": "me-too-lachlor-ii",
-      "field": "formulation",
-      "reason": "Me-Too-Lachlor II label (19713-549, 2023-01-04) prints no formulation code or wording ('7.8 pounds of active ingredient per gallon' only); PPLS record says Emulsifiable Concentrate, usable only as corroboration."
+      "reason": "Liberty ULTRA label (7969-500, 2025 and 2024) says only it 'is a water-soluble nonselective herbicide'; the BASF SDS (v2.0, 2024-10-29) gives 'Form: liquid' and 'completely soluble'. No BASF document prints soluble liquid/SL. PPLS formulations field is empty. Rechecked 2026-10-04."
     },
     {
       "pluginId": "phydura-clove-citric",
       "field": "formulation",
-      "reason": "The manufacturer label (Soil Technologies Corp., OMRI 10/2022) calls it only a liquid 'herbicide CONCENTRATE' (clove oil 1.0%, 'SHAKE WELL'); it prints no formulation code or type that maps to the enum. The product is FIFRA 25(b) minimum-risk, so there is no EPA label."
+      "reason": "FIFRA 25(b) product with no EPA label. The manufacturer label calls it only a liquid 'herbicide CONCENTRATE' and the Soil Technologies SDS (2017-02-23) gives only 'Physical State: Liquid'; neither names a formulation type. Rechecked 2026-10-04."
     },
     {
       "pluginId": "resicore-rev",
       "field": "formulation",
-      "reason": "Label (GF-4556, 62719-756, 2025-04-04, p3) calls it only 'An encapsulated herbicide'. It is a premix with encapsulated acetochlor, so CS vs ZC can't be settled, and it prints no code. PPLS formulation field is empty."
+      "reason": "Label (62719-756, 2025) and the Corteva tech bulletin (020567 COR 09/24) call it only 'encapsulated' (encapsulated acetochlor in a premix with mesotrione and clopyralid), so CS vs ZC cannot be settled. Trade press says ZC (not a registrant source). PPLS formulation field is empty."
     },
     {
       "pluginId": "stinger",
       "field": "formulation",
-      "reason": "Stinger label (EPA 62719-73, 2019-03-11 and 2014-09-23 versions) prints no formulation code or type; states only clopyralid MEA salt 40.9% (3 lb ae/gal). PPLS record says 'Emulsifiable Concentrate' (not corroborated by label)."
-    },
-    {
-      "pluginId": "weed-zap-citronella",
-      "field": "formulation",
-      "reason": "Weed Zap is a FIFRA 25(b) exempt product (no EPA label). JH Biotech label (2014) calls it only 'WEED ZAP concentrate' (45% clove oil, 45% cinnamon oil); no EC/SL/L code or formulation term. JH product profile says 'Form: Liquid' (not label)."
+      "reason": "Stinger labels (62719-73, 2019 and 2014) and the corteva.com product page print no formulation code or type; the label states only clopyralid MEA salt 40.9% (3 lb ae/gal). PPLS says 'Emulsifiable Concentrate', doubtful for an amine salt. Rechecked 2026-10-04."
     },
     {
       "pluginId": "bt-kurstaki",
       "field": "defaultUnit",
-      "reason": "Generic Btk entry with no label rate; the unit depends on which Bt product (dry DF/WG in lb vs liquid in fl oz) is purchased. Checked 2026-09-25, no single label applies."
+      "reason": "Generic Btk active-ingredient plugin with no label rate: the unit (lb for DF/WG, fl oz for liquids) depends on which Bt product is bought, so none can be set (rechecked 2026-10-04)."
     },
     {
       "pluginId": "bt-kurstaki",
       "field": "formulation",
-      "reason": "Generic Btk entry: registered Btk products span DF, WG, WP, liquid and dust formulations (e.g. Javelin 6.4 WG, DiPel dust/DF), so no single label code applies. Use the brand plugins (dipel-df, javelin-wg)."
+      "reason": "Generic Btk active-ingredient plugin with no brand or rate: registered Btk products are DF, WG, WP, liquid and dust (Javelin WG, DiPel DF), so no single code applies. Use the brand plugins (dipel-df, javelin-wg)."
     },
     {
       "pluginId": "intrepid-edge",
       "field": "formulation",
-      "reason": "Sources disagree: US label (62719-666, 2017 PPLS and 12-07-22 specimen) prints no code and only groups it with 'aqueous suspensions', separately from ECs; PPLS formulation field says Emulsifiable Concentrate. Likely SC; needs review."
+      "reason": "No US registrant document prints a code: the US label groups it with 'aqueous suspensions', and the US SDS says only 'Physical state Liquid'. Corteva Australia's Intrepid Edge (same 300 + 60 g/L) is an SC, but under a different (APVMA) registration. PPLS says EC. Rechecked 2026-10-04."
     },
     {
       "pluginId": "isomate-c-plus-pheromone",
       "field": "formulation",
-      "reason": "Hand-applied pheromone dispenser (PPLS formulation 'Impregnated Materials', Isomate-C Plus EPA 53575-6); no spray formulation code applies."
+      "reason": "Hand-applied pheromone twist-tie dispenser (PPLS 'Impregnated Materials'). The enum only has spray, granule and dust codes, each mapped to liquid or dry, and neither fits a dispenser. Formulation only feeds the liquid/dry default-unit derivation, and the plugin already sets defaultUnit 'count', so no schema change is proposed."
     },
     {
       "pluginId": "jms-stylet-oil-omri",
       "field": "formulation",
-      "reason": "Label (65564-1, PPLS 2011-07-19; Organic JMS Stylet-Oil specimen) prints no formulation code or type, only 'Mineral Oil 97.1%' diluted as a 'spray emulsion'. PPLS type 'Oils (no added pesticide)' maps to no code. Checked 2026-09-25."
+      "reason": "Label 65564-1 prints only 'spray emulsion'; the JMS Flower Farms Organic Stylet-Oil SDS (2002) says 'paraffinic oil plus non-ionic emulsification system', not a formulation type. 'Emulsifiable concentrate' appears only in a New Zealand SDS issued by Etec Crop Solutions (NZ registration, 2017)."
     },
     {
       "pluginId": "jms-stylet-oil",
       "field": "formulation",
-      "reason": "Label 65564-1 (2011-07-19) prints no formulation code or name (only 'dilute spray emulsion'); PPLS type is 'Oils (no added pesticide)'. Undiluted 97.1% paraffinic oil, a liquid with no matching code."
+      "reason": "Label 65564-1 (2011) prints only 'dilute spray emulsion'; the JMS Flower Farms SDS (1994) says 'paraffinic distillate plus non-ionic emulsification system', not a formulation type. 'Emulsifiable concentrate' appears only in a New Zealand SDS issued by Etec Crop Solutions (NZ registration). PPLS type 'Oils (no added pesticide)'."
     },
     {
       "pluginId": "m-pede",
       "field": "formulation",
-      "reason": "M-Pede label (10163-324, accepted 2021-01-21) prints no formulation code or type; it only says 'The formulation is based on potassium salts of naturally derived fatty acids'. PPLS lists 'Soluble Concentrate' (SL) but that is an EPA-record field only."
+      "reason": "M-Pede label (10163-324, 2021) says only 'The formulation is based on potassium salts of naturally derived fatty acids'; the Gowan SDS (2012-01-12) gives only 'Appearance: Yellow liquid'. PPLS 'Soluble Concentrate' is corroboration only. Rechecked 2026-10-04."
     },
     {
       "pluginId": "madex-hp-virus",
       "field": "formulation",
-      "reason": "Madex HP label (EPA 69553-1, 2026-09-22) prints no formulation code or name; it only says to mix with water, 0.5-3.0 fl oz/acre. PPLS type is 'Ready-to-Use Solution', which conflicts with dilution use. Liquid virus product, no confirmable code."
-    },
-    {
-      "pluginId": "majestene-nematicide",
-      "field": "formulation",
-      "reason": "Master label for Majestene (base 'MBI-206 EP', EPA 84059-14, accepted 2026-02-02) prints no formulation code or type; it is a liquid of heat-killed Burkholderia cells. PPLS field says Emulsifiable Concentrate, not on the label. Checked 2026-09-25."
-    },
-    {
-      "pluginId": "mycotrol-eso",
-      "field": "formulation",
-      "reason": "Mycotrol ESO is an alternate brand on the Mycotrol ES master label (EPA 82074-1), which sells the same formula as ES, OD, SC, SE and EW brands; PPLS says EC. No single code for 'Mycotrol ESO'."
+      "reason": "Madex HP label (69553-1, 2026) prints no formulation and PPLS says 'Ready-to-Use Solution', which conflicts with dilution use. 'SC' appears only as the test substance in the Certis SDS ecotox table and on Andermatt's sheet for the sibling brand Madex, not for Madex HP. Rechecked 2026-10-04."
     },
     {
       "pluginId": "nematode-steinernema-feltiae",
       "field": "formulation",
-      "reason": "Live beneficial nematodes are sold as infective juveniles in sachets/carrier (Koppert Entonem: sachets of 50 or 250 million). No spray formulation code applies."
-    },
-    {
-      "pluginId": "spear-lep",
-      "field": "formulation",
-      "reason": "Spear-Lep is an alternate brand of VST-006340 LC (now EPA 56336-97); siblings are 'Spear-T Liquid Concentrate' and 'VST-006340 SL', PPLS says Soluble Concentrate. Spear-Lep itself names no code."
+      "reason": "Live beneficial nematodes sold as infective juveniles in sachets or carrier (e.g. Koppert Entonem, 50 or 250 million). No enum code (all mapped to liquid or dry) describes a live organism. Formulation only feeds the default-unit derivation and defaultUnit 'count' is set, so no schema change is proposed."
     },
     {
       "pluginId": "spinosad",
       "field": "defaultUnit",
-      "reason": "Generic active-ingredient entry with no ratePerAcre. The unit (fl-oz for SC, oz for WP) depends on which spinosad product is bought, so none can be derived."
+      "reason": "Generic spinosad active-ingredient plugin with no ratePerAcre: the unit (fl oz for SC, oz for WP) depends on which product is bought, so none can be set (rechecked 2026-10-04)."
     },
     {
       "pluginId": "spinosad",
       "field": "formulation",
-      "reason": "Generic active-ingredient entry. Spinosad is sold as SC (Entrust SC, Success), WP (Entrust 80W) and other formulations, so no single code applies without a specific product."
+      "reason": "Generic spinosad active-ingredient plugin with no brand or rate: spinosad is sold as SC (Entrust SC, Success) and WP (Entrust 80W), so no single code applies."
     },
     {
       "pluginId": "trichogramma-egg-parasitoid",
       "field": "formulation",
-      "reason": "Live parasitoid release, sold as parasitized-egg cards or cups (Beneficial Insectary TRICHOforce B: 100,000 card or 8 oz cup). No spray formulation code applies."
+      "reason": "Live parasitoid release sold as parasitized-egg cards or cups (e.g. TRICHOforce B). No enum code (all mapped to liquid or dry) describes a live insect release. Formulation only feeds the default-unit derivation and defaultUnit 'count' is set, so no schema change is proposed."
     },
     {
       "pluginId": "venerate-xc",
       "field": "formulation",
-      "reason": "Venerate XC is an alternate brand of MBI-206 EP (EPA 84059-14); the label names no standard formulation code or type ('EP' is not one). PPLS lists Emulsifiable Concentrate, unconfirmed on label."
+      "reason": "Venerate XC is an alternate brand of MBI-206 EP (EPA 84059-14); its label names no standard code ('EP' is not one). The only printed SC on this registration is the Majestene SDS synonym 'MBI-305 EP, Majestene SC', a different internal formulation code. PPLS says EC."
     },
     {
       "pluginId": "voliam-xpress",
       "field": "formulation",
-      "reason": "Voliam Xpress label (100-1320, 2025-05-09) prints no code, only 'an aqueous based formulation'. PPLS says 'Emulsifiable Concentrate'. Sister Besiege calls it a Zeon Concentrate (CS + SC), which has no listed code. Liquid."
-    },
-    {
-      "pluginId": "cease-omri",
-      "field": "formulation",
-      "reason": "Cease label (264-1155-68539) calls it 'An Aqueous Suspension Biofungicide' with no code; PPLS lists base reg 264-1155 as Soluble Concentrate. Live-microbe suspension, no mapped code; SC is closest but unconfirmed."
-    },
-    {
-      "pluginId": "champ-dp",
-      "field": "formulation",
-      "reason": "Label (055146-00057-20220727) prints no formulation code or standard formulation words; Nufarm's product bulletin says 'FORMULATION dry prill' (not a mapped code). PPLS record says Water Dispersible Granule; dry product either way."
+      "reason": "Voliam Xpress label (100-1320, 2025) says only 'an aqueous based formulation'; the Syngenta SDS (2015-06-30) gives only 'Light beige to brown liquid'. Sister Besiege is a Zeon Concentrate (CS + SC), which is unprinted for Voliam. PPLS says EC. Rechecked 2026-10-04."
     },
     {
       "pluginId": "mycoshield-oxytetracycline",
       "field": "formulation",
-      "reason": "Mycoshield label 55146-97 (2019-11-07 master) prints no formulation code or formulation words (only 'Agricultural Antibiotic/Bactericide'). PPLS record says Wettable Powder (WP), corroboration only; needs label/tech sheet wording."
-    },
-    {
-      "pluginId": "phostrol-phosphonate",
-      "field": "formulation",
-      "reason": "Phostrol label (055146-00083-20211208) prints no formulation code or formulation words (rates in pints product/A). PPLS record says Soluble Concentrate (SL) but label corroboration is missing; liquid either way."
+      "reason": "Mycoshield label (55146-97, 2019 master and 2007) prints no formulation words; the Nufarm SDS (2018-03-26) says only 'Light to dark brown powder', which fits WP or SP. Only PPLS (WP) and a USDA AMS report say wettable powder. Rechecked 2026-10-04."
     },
     {
       "pluginId": "previcur-flex-propamocarb",
       "field": "formulation",
-      "reason": "Previcur Flex label (264-678, 2024-08-16) names no formulation code or type (only '6.0 lbs ... per gallon'); PPLS field says 'Flowable Concentrate'. Liquid, but no label formulation to cite."
+      "reason": "Previcur Flex label (264-678, 2024) names no formulation (only '6.0 lbs ... per gallon'). Bayer's product page Formulation field says '6 lb/gal emulsifiable concentrate' while PPLS says 'Flowable Concentrate' and propamocarb HCl is water-soluble; a product page alone is not a label, tech sheet or SDS. Needs a ruling."
     },
     {
       "pluginId": "prophyt-phosphonate",
       "field": "formulation",
-      "reason": "ProPhyt master label 42519-22 (2025-10-24) prints no formulation code or formulation words (only 'systemic biofungicide containing potassium phosphite'); PPLS record says Soluble Concentrate (SL), corroboration only."
+      "reason": "ProPhyt master label (42519-22, 2025) prints no formulation words; the Helena SDS (2019-11-05) says 'Transparent blue liquid' and the product page only 'Easy-to-use liquid' (marketing, no Formulation field). PPLS 'Soluble Concentrate' is corroboration only. Rechecked 2026-10-04."
     },
     {
       "pluginId": "serenade-aso",
       "field": "formulation",
-      "reason": "Serenade ASO label 264-1152 (2025-02-12) says 'AN AQUEOUS SUSPENSION BIOFUNGICIDE' with no code; PPLS lists Emulsifiable Concentrate, which conflicts. Live-microbe suspension; SC is closest but unconfirmed."
+      "reason": "Serenade ASO label (264-1152, 2025) says 'AN AQUEOUS SUSPENSION BIOFUNGICIDE' with no code, and Bayer's product page Formulation field reads '1.34% AS'; AS is not an enum code and mapping it to SC needs a ruling. PPLS lists Emulsifiable Concentrate, which conflicts."
     },
     {
       "pluginId": "2-4-d-amine",

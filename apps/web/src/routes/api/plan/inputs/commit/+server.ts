@@ -45,6 +45,7 @@ import { createTask, type RelatedEventTable } from '$lib/db/tasks';
 import { withTenant } from '$lib/db/tenant';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
+import { t } from '$lib/i18n';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { insertPlanRevision } from '$lib/plan/revisions';
 import { getActiveSession, markSessionCompleted } from '$lib/db/wizardChat';
@@ -135,6 +136,9 @@ export const POST: RequestHandler = async (event) => {
   if (!auth) return json({ error: 'authentication required' }, { status: 401 });
   if (!canMutate(auth.role)) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
+  }
+  if (auth.role !== 'owner') {
+    return json({ error: t(event.locals?.locale, 'amend.err.ownerOnly') }, { status: 403 });
   }
   // Task text is stored and read by everyone on the farm, so it stays in
   // US/label units regardless of who commits the plan.

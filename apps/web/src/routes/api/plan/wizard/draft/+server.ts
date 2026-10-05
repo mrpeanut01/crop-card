@@ -15,6 +15,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
+import { t } from '$lib/i18n';
 import { deleteDraft, draftPayloadSchema, getDraft, saveDraft } from '$lib/wizard/drafts';
 
 const saveSchema = z.object({
@@ -33,6 +34,9 @@ export const POST: RequestHandler = async (event) => {
   if (!auth) return json({ error: 'authentication required' }, { status: 401 });
   if (!canMutate(auth.role)) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
+  }
+  if (auth.role !== 'owner') {
+    return json({ error: t(event.locals?.locale, 'amend.err.ownerOnly') }, { status: 403 });
   }
 
   let body: unknown;
@@ -75,6 +79,9 @@ export const DELETE: RequestHandler = async (event) => {
   if (!auth) return json({ error: 'authentication required' }, { status: 401 });
   if (!canMutate(auth.role)) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
+  }
+  if (auth.role !== 'owner') {
+    return json({ error: t(event.locals?.locale, 'amend.err.ownerOnly') }, { status: 403 });
   }
   const planId = activePlanId(event.url.searchParams.get('planId') ?? undefined);
   const deleted = deleteDraft(planId);

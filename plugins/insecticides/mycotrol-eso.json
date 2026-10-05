@@ -3,6 +3,7 @@
   "type": "insecticide",
   "version": "1.0.0",
   "defaultUnit": "fl-oz",
+  "formulation": "ES",
   "pluginSchemaVersion": "1.1",
   "displayName": "Mycotrol ESO (Beauveria bassiana GHA, OMRI)",
   "activeIngredients": [

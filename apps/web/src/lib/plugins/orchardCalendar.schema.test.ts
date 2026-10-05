@@ -62,7 +62,11 @@ describe('orchard calendar schema', () => {
       ['stageId', 'fixture-pink'],
       ['stageName', 'Test fixture petal fall'],
       ['windowId', 'fixture-petal-fall-check'],
-      ['note', 'Test fixture: check at bloom.']
+      ['note', 'Test fixture: check at bloom.'],
+      ['stageName', 'Test fixture white bud'],
+      ['stageName', 'Test fixture popcorn'],
+      ['stageName', 'Test fixture balloon'],
+      ['note', 'Test fixture: first blossoms open.']
     ] as const) {
       const c = clone();
       const stage = c.stages[0];
@@ -74,6 +78,45 @@ describe('orchard calendar schema', () => {
       stage.windows[0].pollinatorSensitive = true;
       expect(issues(c), field).toEqual([]);
     }
+  });
+
+  it('needs an audience and a cited .edu or .gov guide (OP-1)', () => {
+    const noAudience = clone() as Record<string, unknown>;
+    delete noAudience.audience;
+    expect(issues(noAudience).length).toBeGreaterThan(0);
+    expect(issues({ ...clone(), audience: 'garden' }).length).toBeGreaterThan(0);
+    const noGuide = clone() as Record<string, unknown>;
+    delete noGuide.guide;
+    expect(issues(noGuide).length).toBeGreaterThan(0);
+    for (const url of ['http://a.example.edu/g', 'https://example.com/g', 'not a url']) {
+      const c = clone();
+      c.guide.url = url;
+      expect(issues(c).join(), url).toMatch(/guide/);
+    }
+    const title = clone();
+    title.guide.title = '2026 Spray Bulletin for Commercial Tree Fruit Growers';
+    expect(issues(title)).toEqual([]);
+  });
+
+  it('limits a home calendar to scout, cultural, sanitation, bloom and harvest-prep (OP-2)', () => {
+    const homeClone = () => {
+      const c = { ...clone(), audience: 'home' };
+      c.stages[1].windows[0].purpose = 'scout';
+      return c;
+    };
+    expect(issues(homeClone())).toEqual([]);
+    for (const purpose of ['disease-risk', 'pest-risk']) {
+      const c = homeClone();
+      c.stages[0].windows[0].purpose = purpose;
+      expect(issues(c).join(), purpose).toMatch(/home calendar may not carry/);
+      expect(issues({ ...c, audience: 'commercial' }), purpose).toEqual([]);
+    }
+    const cover = homeClone();
+    cover.stages[0].name = 'First cover';
+    expect(issues(cover).join()).toMatch(/cover stage/);
+    const coverId = homeClone();
+    coverId.stages[0].id = 'summer-covers';
+    expect(issues(coverId).join()).toMatch(/cover stage/);
   });
 
   it('checks the edition format', () => {
@@ -164,7 +207,19 @@ describe('orchard calendar copy guard', () => {
     'Respete el plazo de seguridad.',
     'Use cobre en punta verde.',
     'Un fungicida ahora.',
-    'Rociar con azufre.'
+    'Rociar con azufre.',
+    'Check the label.',
+    'Revise la etiqueta.',
+    'Leaf curl protection goes on before bud swell.',
+    'Protect the blossoms.',
+    'La protección empieza aquí.',
+    'Bees are working the flowers.',
+    'Watch for pollinators.',
+    'Cuidado con las abejas.',
+    'No risk below 50 F.',
+    'Sin riesgo con frío.',
+    "Scab can't infect dry leaves.",
+    "Blight won't spread in cool weather."
   ];
 
   it.each(refused)('refuses %s', (text) => {
@@ -176,11 +231,10 @@ describe('orchard calendar copy guard', () => {
     'Half-inch green: about 1/2 inch of leaf shows.',
     'Remove mummies and prune out cankers.',
     'Watch for long wet periods above 50 F.',
-    'Check the label.',
     'Gala apples drop near harvest.',
+    'Scab infects in long wet periods, 33 to 76 F.',
     'Thin to 1 fruit per cluster on 2 Gala trees.',
     'Las yemas se hinchan y muestran puntas plateadas.',
-    'Revise la etiqueta.',
     'Quite las frutas momificadas.'
   ];
 
@@ -215,6 +269,8 @@ describe('published orchard calendar JSON Schema', () => {
         'pluginId',
         'type',
         'version',
+        'audience',
+        'guide',
         'edition',
         'hostCropFamilies',
         'hostCropPluginIds',

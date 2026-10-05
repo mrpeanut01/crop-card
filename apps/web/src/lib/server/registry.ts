@@ -204,6 +204,12 @@ export async function getDataKinds(): Promise<Phase32DataKinds> {
       kinds.failed.map((f) => `${path.basename(f.file)}: ${f.error.message}`)
     );
   }
+  if (kinds.supersededCalendars.length > 0) {
+    console.warn(
+      '[registry] some orchard calendars were not loaded:',
+      kinds.supersededCalendars.map((c) => `${c.pluginId}: ${c.reason}`)
+    );
+  }
   if (degreeDayFixtureEnabled(process.env)) {
     for (const m of E2E_PEST_MODELS)
       if (!kinds.pestModels.has(m.pluginId)) kinds.pestModels.register(m);

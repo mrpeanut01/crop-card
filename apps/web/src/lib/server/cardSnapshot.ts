@@ -224,11 +224,13 @@ export function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
           startIndoorsWeeks: p.plantingGuide.startIndoorsWeeks,
           hardenOffDays: p.plantingGuide.hardenOffDays,
           germinationTempF: p.plantingGuide.germinationTempF,
-          dtmFrom: p.plantingGuide.dtmFrom
+          dtmFrom: p.plantingGuide.dtmFrom,
+          ...(p.plantingGuide.seedingRate ? { seedingRate: p.plantingGuide.seedingRate } : {})
         }
       : undefined,
     harvestIndicators: p.harvestIndicators,
     notes: p.notes,
+    ...(p.treeSizeClasses ? { treeSizeClasses: p.treeSizeClasses } : {}),
     ...(careTasks.length ? { careTasks } : {})
   };
 }

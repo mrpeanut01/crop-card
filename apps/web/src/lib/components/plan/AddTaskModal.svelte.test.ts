@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import AddTaskModal from './AddTaskModal.svelte';
+import { dueYmd, formatCalendarDate } from '$lib/prefs';
 
 beforeEach(() => {
   if (!HTMLDialogElement.prototype.showModal) {
@@ -58,8 +59,12 @@ describe('AddTaskModal (#122)', () => {
       kind: 'primary',
       blockId: 'b1',
       cropId: 'p2',
-      scheduledFor: Date.parse('2026-06-03T00:00:00')
+      scheduledFor: Date.UTC(2026, 5, 3)
     });
+    for (const zone of ['America/New_York', 'UTC', 'Asia/Tokyo', 'Pacific/Honolulu']) {
+      expect(dueYmd(body.scheduledFor, zone)).toBe('2026-06-03');
+    }
+    expect(formatCalendarDate(body.scheduledFor, 'month-day')).toBe('Jun 3');
   });
 
   it('Cancel closes without writing', async () => {

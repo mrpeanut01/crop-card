@@ -14,7 +14,17 @@
     "Close mowing, or partial tillage that leaves roots undisturbed, only suppresses it"
   ],
   "plantingGuide": {
-    "recommendedLbsPerAcre": 4
+    "recommendedLbsPerAcre": 4,
+    "seedingRate": {
+      "drilledLbsPerAcre": {
+        "min": 3,
+        "max": 9
+      },
+      "broadcastLbsPerAcre": {
+        "min": 5,
+        "max": 14
+      }
+    }
   },
   "notes": "Low-growing perennial — works as a living mulch in orchard alleyways or vegetable interplant. N-fixer + pollinator-friendly.",
   "harvestStyle": "cover-crop-termination",

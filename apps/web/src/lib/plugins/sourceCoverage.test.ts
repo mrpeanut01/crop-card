@@ -25,6 +25,7 @@ import {
   seasonalTaskWordingProblems,
   stageTemplateWordingProblems,
   speciesFactPaths,
+  treeSizeClassQuoteGaps,
   type SourceMap
 } from './sourceCoverage';
 
@@ -169,6 +170,86 @@ describe('fact paths', () => {
       'startIndoorsWeeks',
       'animalToxicity.dog',
       'animalToxicity.cat'
+    ]);
+  });
+
+  it('asks for a source for every seeding rate value', () => {
+    const base = {
+      pluginId: 'crop-test',
+      type: 'crop',
+      displayName: 'Test Crop',
+      version: '1',
+      cropFamily: 'solanaceae',
+      harvestStyle: 'continuous-fruit',
+      bloomWindow: { daysFromPlantingMin: 1, daysFromPlantingMax: 2, beeAttractive: false }
+    };
+    const crop = cropPluginSchema.parse({
+      ...base,
+      plantingGuide: {
+        seedingRate: {
+          drilledLbsPerAcre: { min: 60, max: 120 },
+          broadcastLbsPerAcre: { min: 90, max: 160 },
+          drillRowSpacingIn: { min: 6, max: 8 }
+        }
+      }
+    });
+    expect(cropFactPaths(crop)).toEqual([
+      'seedingRate.drilledLbsPerAcre',
+      'seedingRate.broadcastLbsPerAcre',
+      'seedingRate.drillRowSpacingIn'
+    ]);
+    expect(() =>
+      cropPluginSchema.parse({
+        ...base,
+        plantingGuide: { seedingRate: { drilledLbsPerAcre: { min: 1, max: 2 }, rateGuess: 3 } }
+      })
+    ).toThrow();
+  });
+});
+
+describe('tree size classes', () => {
+  const crop = cropPluginSchema.parse({
+    pluginId: 'apple-test',
+    type: 'crop',
+    displayName: 'Apple Test',
+    version: '1',
+    cropFamily: 'orchard',
+    harvestStyle: 'tree-fruit-multi-pick',
+    bloomWindow: { monthsOfYear: [4], beeAttractive: true },
+    treeSizeClasses: [
+      { sizeClass: 'dwarf', minSpacingFt: 8, yearsToBearing: { min: 2, max: 3 } },
+      { sizeClass: 'standard', minSpacingFt: 30, yearsToBearing: { min: 6, max: 10 } }
+    ]
+  });
+
+  it('lists one source path per size class', () => {
+    expect(cropFactPaths(crop)).toEqual(['treeSizeClasses.dwarf', 'treeSizeClasses.standard']);
+  });
+
+  it('refuses two rows for one size class', () => {
+    const rows = [
+      { sizeClass: 'dwarf', minSpacingFt: 8, yearsToBearing: { min: 2, max: 3 } },
+      { sizeClass: 'dwarf', minSpacingFt: 10, yearsToBearing: { min: 2, max: 3 } }
+    ];
+    expect(cropPluginSchema.safeParse({ ...crop, treeSizeClasses: rows }).success).toBe(false);
+  });
+
+  it('needs the quote to state both the spacing and the bearing age', () => {
+    const sources: SourceMap = {
+      'apple-test': {
+        'treeSizeClasses.dwarf': {
+          ...FIXTURE_SOURCE,
+          quote: 'row "Apple - dwarf | 8 | 2 | 2–3 | 30-35 |"'
+        },
+        'treeSizeClasses.standard': {
+          ...FIXTURE_SOURCE,
+          quote: 'row "Apple - standard | 18 | 8 | 6-8 |"'
+        }
+      }
+    };
+    expect(treeSizeClassQuoteGaps([crop], sources)).toEqual([
+      'apple-test: treeSizeClasses.standard quote does not state 30 ft',
+      'apple-test: treeSizeClasses.standard quote does not state 6-10 years'
     ]);
   });
 });

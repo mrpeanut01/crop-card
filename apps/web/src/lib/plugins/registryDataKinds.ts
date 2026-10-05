@@ -92,7 +92,7 @@ export function validateOrchardCalendar(
   if (edition !== ctx.currentYear && edition !== ctx.currentYear - 1) {
     issues.push({
       path: 'edition',
-      message: `edition ${plugin.edition} is not ${ctx.currentYear} or ${ctx.currentYear - 1}`
+      message: `edition ${plugin.edition} is not ${ctx.currentYear} or ${ctx.currentYear - 1}: replace the file with the current edition`
     });
   }
   const families: readonly string[] = plugin.hostCropFamilies;
@@ -143,6 +143,10 @@ export class DataKindRegistry<T extends { pluginId: string }> {
     return this.byId.has(pluginId);
   }
 
+  delete(pluginId: string): boolean {
+    return this.byId.delete(pluginId);
+  }
+
   all(): T[] {
     return [...this.byId.values()].sort((a, b) => a.pluginId.localeCompare(b.pluginId));
   }
@@ -173,19 +177,56 @@ export interface Phase32DataKinds {
   pestModels: DataKindRegistry<PestModelPlugin>;
   orchardCalendars: DataKindRegistry<OrchardCalendarPlugin>;
   failed: DataKindFailure[];
+  /** Calendars dropped because a newer edition hosts the same crop for the
+   *  same audience, or refused because another of the same edition does
+   *  (ruling OP-3). */
+  supersededCalendars: { pluginId: string; reason: string }[];
 }
 
 export interface DataKindLoadOptions {
-  /** Without it, no orchard calendar host crop resolves. */
-  crops?: CropLookup;
+  /** Orchard calendar host crops resolve against it (ruling OP-15). */
+  crops: CropLookup;
   now?: Date;
+}
+
+/** Ruling OP-3: at most one calendar per (host crop, audience). The newest
+ *  edition wins; two of the same edition are both refused. */
+export function resolveCalendarConflicts(
+  calendars: DataKindRegistry<OrchardCalendarPlugin>
+): { pluginId: string; reason: string }[] {
+  const byKey = new Map<string, OrchardCalendarPlugin[]>();
+  for (const c of calendars.all()) {
+    for (const crop of c.hostCropPluginIds) {
+      const key = `${crop}|${c.audience}`;
+      byKey.set(key, [...(byKey.get(key) ?? []), c]);
+    }
+  }
+  const dropped = new Map<string, string>();
+  for (const [key, group] of byKey) {
+    if (group.length < 2) continue;
+    const [crop, audience] = key.split('|');
+    const newest = Math.max(...group.map((c) => Number(c.edition)));
+    const top = group.filter((c) => Number(c.edition) === newest);
+    for (const c of group) {
+      if (Number(c.edition) < newest) {
+        dropped.set(c.pluginId, `superseded for ${crop} (${audience}) by edition ${newest}`);
+      } else if (top.length > 1) {
+        dropped.set(
+          c.pluginId,
+          `refused: ${top.map((t) => t.pluginId).join(', ')} both host ${crop} (${audience}) in edition ${newest}`
+        );
+      }
+    }
+  }
+  for (const id of dropped.keys()) calendars.delete(id);
+  return [...dropped].map(([pluginId, reason]) => ({ pluginId, reason }));
 }
 
 /** Loads species first, so animal-health label uses can be checked against
  *  them. Missing folders yield empty registries. */
 export async function loadPhase32DataKinds(
   pluginsRoot: string,
-  opts: DataKindLoadOptions = {}
+  opts: DataKindLoadOptions
 ): Promise<Phase32DataKinds> {
   const failed: DataKindFailure[] = [];
   const species = new DataKindRegistry('species plugin', validateSpecies);
@@ -197,12 +238,13 @@ export async function loadPhase32DataKinds(
   const pestModels = new DataKindRegistry('pest model', validatePestModel);
   await loadInto(pestModels, path.join(pluginsRoot, PEST_MODELS_DIR), failed);
   const calendarContext: OrchardCalendarContext = {
-    cropFamilyOf: (id) => opts.crops?.cropFamilyOf(id),
+    cropFamilyOf: (id) => opts.crops.cropFamilyOf(id),
     currentYear: (opts.now ?? new Date()).getUTCFullYear()
   };
   const orchardCalendars = new DataKindRegistry('orchard calendar', (raw) =>
     validateOrchardCalendar(raw, calendarContext)
   );
   await loadInto(orchardCalendars, path.join(pluginsRoot, ORCHARD_CALENDARS_DIR), failed);
-  return { species, animalHealth, pestModels, orchardCalendars, failed };
+  const supersededCalendars = resolveCalendarConflicts(orchardCalendars);
+  return { species, animalHealth, pestModels, orchardCalendars, failed, supersededCalendars };
 }

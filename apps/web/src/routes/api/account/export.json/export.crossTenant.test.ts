@@ -387,12 +387,15 @@ describe('GET /api/account/export.json', () => {
       expect(operations.ledgerEntryChanges).toBeUndefined();
       expect(text).not.toContain(farm.phase32.rowIds.ledger_entries);
       expect(text).not.toContain(farm.phase32.rowIds.ledger_entry_changes);
+      // A disposition's sale link is money too.
+      expect(text).not.toContain(farm.phase33.phase32.rowIds.ledger_entries);
       expect(operations.taskTimeEntries?.map((r) => r.id)).toEqual([mine]);
       expect(text).not.toContain(farm.phase32.rowIds.task_time_entries);
 
       const owner = await exportFor(farm.ownerId, 'owner');
       expect(owner.text).toContain(farm.phase32.rowIds.ledger_entries);
       expect(owner.text).toContain(farm.phase32.rowIds.ledger_entry_changes);
+      expect(owner.text).toContain(farm.phase33.phase32.rowIds.ledger_entries);
       expect(owner.text).toContain(farm.phase32.rowIds.task_time_entries);
     }
   );

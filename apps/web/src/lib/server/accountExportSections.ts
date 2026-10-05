@@ -210,12 +210,20 @@ export function soilTestSection() {
 
 type Phase33Groups = typeof PHASE_33_TABLE_GROUPS;
 
-export function phase33Sections(): {
+/** A disposition's link to a sale is money, so only the owner sees it
+ *  (as `presentDisposition` does in the app). */
+export function phase33Sections(viewer: ExportViewer): {
   organic: Section<Phase33Groups['organic']>;
   amendments: Section<Phase33Groups['amendments']>;
 } {
+  const organic = readGroup(PHASE_33_TABLE_GROUPS.organic);
+  if (viewer.role !== 'owner') {
+    organic.harvestDispositions = (
+      organic.harvestDispositions as Array<Record<string, unknown>>
+    ).map((d) => ({ ...d, ledgerEntryId: null }));
+  }
   return {
-    organic: readGroup(PHASE_33_TABLE_GROUPS.organic),
+    organic,
     amendments: readGroup(PHASE_33_TABLE_GROUPS.amendments)
   };
 }

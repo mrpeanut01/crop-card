@@ -758,6 +758,14 @@ export const enWizard = {
   'planui.opt.placeholder': 'Describe what to change, or paste a plan you have in mind…',
   'planui.opt.inputAria': 'Chat input',
   'planui.opt.send': 'Send',
+  'planui.opt.proposedDone': 'Done — proposed new dates. Click "Apply to grid" when you\'re ready.',
+  'planui.opt.fbNoKey': '⚠ No Anthropic API key configured — proposal unchanged.',
+  'planui.opt.fbUnavailable': '⚠ Claude is unavailable — proposal unchanged.',
+  'planui.opt.fbRejected':
+    '⚠ Could not apply that change cleanly. Validators rejected the proposal; the schedule above stays as it is.',
+  'planui.opt.why': 'Why:',
+  'planui.opt.applied':
+    '✅ Applied to the grid. Check the swim-lane behind this sidebar — the new dates are live.',
   'group.wiz.requestFailedStatus': 'request failed ({status})',
   'group.wiz.requestFailed': 'request failed',
   'group.wiz.commitFailed': 'commit failed',

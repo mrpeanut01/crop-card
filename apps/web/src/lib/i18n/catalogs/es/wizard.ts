@@ -784,6 +784,15 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'planui.opt.placeholder': 'Describe qué cambiar o pega un plan que tengas en mente…',
   'planui.opt.inputAria': 'Mensaje del chat',
   'planui.opt.send': 'Enviar',
+  'planui.opt.proposedDone':
+    'Listo, se propusieron fechas nuevas. Haga clic en "Aplicar a la cuadrícula" cuando esté listo.',
+  'planui.opt.fbNoKey': '⚠ No hay una clave de API de Anthropic configurada; la propuesta no cambió.',
+  'planui.opt.fbUnavailable': '⚠ Claude no está disponible; la propuesta no cambió.',
+  'planui.opt.fbRejected':
+    '⚠ No se pudo aplicar ese cambio. Los validadores rechazaron la propuesta; el calendario de arriba se queda como está.',
+  'planui.opt.why': 'Por qué:',
+  'planui.opt.applied':
+    '✅ Se aplicó a la cuadrícula. Revise el carril detrás de esta barra lateral: las fechas nuevas ya están vigentes.',
   'group.wiz.requestFailedStatus': 'la solicitud falló ({status})',
   'group.wiz.requestFailed': 'la solicitud falló',
   'group.wiz.commitFailed': 'no se pudo guardar',

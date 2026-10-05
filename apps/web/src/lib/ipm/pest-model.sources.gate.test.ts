@@ -2,6 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { loadCropLookup } from '$lib/plugins/cropLookup';
 import { loadPhase32DataKinds, type Phase32DataKinds } from '$lib/plugins/registryDataKinds';
 import { checkSources, pestModelFactPaths, type SourceMap } from '$lib/plugins/sourceCoverage';
 import { isTestPluginId } from '$lib/plugins/testPlugins';
@@ -15,7 +16,9 @@ const sources: SourceMap = existsSync(SOURCES)
 
 let kinds: Phase32DataKinds;
 beforeAll(async () => {
-  kinds = await loadPhase32DataKinds(path.join(REPO_ROOT, 'plugins'));
+  kinds = await loadPhase32DataKinds(path.join(REPO_ROOT, 'plugins'), {
+    crops: await loadCropLookup(path.join(REPO_ROOT, 'plugins'))
+  });
 });
 
 // Ruling E5-6: a model ships only with its base, cutoff, method, biofix and

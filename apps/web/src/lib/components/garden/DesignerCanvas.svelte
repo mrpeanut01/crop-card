@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { currentPrefs } from '$lib/prefsState.svelte';
   import { pageCropName } from '$lib/i18n/pageCropName';
   import { onMount, tick } from 'svelte';
   import { footprintBounds, pointFt, pointInBedIn, rectFt, snap } from '$lib/garden/geometry';
@@ -955,7 +956,7 @@
       {tr('garden.canvas.previewPos', {
         x: ft(d.preview.rect.x),
         y: ft(d.preview.rect.y)
-      })} · {sizeLabel(d.preview.rect.w, d.preview.rect.l)}
+      })} · {sizeLabel(d.preview.rect.w, d.preview.rect.l, currentPrefs().units)}
     </p>
   {/if}
 </div>

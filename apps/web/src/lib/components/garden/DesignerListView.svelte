@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { currentPrefs } from '$lib/prefsState.svelte';
   import { pageCropName } from '$lib/i18n/pageCropName';
   import type { BedPresetId } from '$lib/garden/types';
   import type { MessageKey } from '$lib/i18n';
@@ -101,7 +102,7 @@
             <span class="name">{bed.name}</span>
             <span class="cells">
               <span>{bedKindLabel(bed, tr)}</span>
-              <span>{sizeLabel(bed.widthFt, bed.lengthFt)}</span>
+              <span>{sizeLabel(bed.widthFt, bed.lengthFt, currentPrefs().units)}</span>
               <span>{tr('garden.list.position', { x: ft(bed.rect.x), y: ft(bed.rect.y) })}</span>
               {#if bed.rotationDeg}<span>{tr('garden.list.turned', { deg: bed.rotationDeg })}</span
                 >{/if}

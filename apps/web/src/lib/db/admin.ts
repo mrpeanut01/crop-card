@@ -740,7 +740,20 @@ export function deleteBlockCascade(id: string): DeleteSummary {
 
 // ─── Per-equipment ──────────────────────────────────────────────────────
 
-/** @hold-exempt: only clears the sprayer link on insecticide records; no hold reads it */
+/** Herbicide spray records name their sprayer and the column cannot be
+ *  cleared, so a sprayer they name cannot be deleted (retire it instead). */
+export function equipmentHasSprayRecords(id: string): boolean {
+  return (
+    db
+      .select({ id: sprayEvents.id })
+      .from(sprayEvents)
+      .where(withTenant(sprayEvents, eq(sprayEvents.sprayerId, id)))
+      .limit(1)
+      .all().length > 0
+  );
+}
+
+/** @hold-exempt: only clears the sprayer link on insecticide and fungicide records; no hold reads it */
 export function deleteEquipmentCascade(id: string): DeleteSummary {
   const removed: Record<string, number> = {};
   removed.pending_calibrations = del(pendingCalibrations, eq(pendingCalibrations.equipmentId, id));
@@ -754,6 +767,10 @@ export function deleteEquipmentCascade(id: string): DeleteSummary {
   db.update(insecticideEvents)
     .set({ sprayerId: null })
     .where(withTenant(insecticideEvents, eq(insecticideEvents.sprayerId, id)))
+    .run();
+  db.update(fungicideEvents)
+    .set({ sprayerId: null })
+    .where(withTenant(fungicideEvents, eq(fungicideEvents.sprayerId, id)))
     .run();
   removed.equipment = del(equipment, eq(equipment.id, id));
   return { removed };

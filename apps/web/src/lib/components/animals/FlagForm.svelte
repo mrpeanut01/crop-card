@@ -75,7 +75,14 @@
   <button type="button" class="af-ghost" onclick={() => (open = true)}>{title}</button>
 {:else}
   <form class="af-form flag-form" onsubmit={submit} novalidate aria-label={title}>
-    <p class={strong ? 'strong' : 'af-note'} role={strong ? 'alert' : 'note'}>{warning}</p>
+    <p
+      class={strong ? 'strong' : 'af-note'}
+      role={strong ? 'alert' : 'note'}
+      lang="en"
+      data-english-only="safety"
+    >
+      {warning}
+    </p>
     <label class="af-label" for="{uid}-reason">{tr('animals.why')}</label>
     <input
       id="{uid}-reason"

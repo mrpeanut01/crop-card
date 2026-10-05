@@ -27,15 +27,17 @@
 {#if summary}
   <details class="toxic" data-testid="toxic-plants">
     <summary>
-      <span class="line">{where ? `At ${where}: ${summary}` : summary}</span>
+      <span class="line" lang="en" data-english-only="safety"
+        >{where ? `At ${where}: ${summary}` : summary}</span
+      >
       <Provenance source="plugin" compact />
     </summary>
-    <ul>
+    <ul lang="en" data-english-only="safety">
       {#each lines as line, i (i)}
         <li>{line}</li>
       {/each}
     </ul>
-    <p class="advice">{TOXIC_ADVICE}</p>
+    <p class="advice" lang="en" data-english-only="safety">{TOXIC_ADVICE}</p>
   </details>
 {/if}
 

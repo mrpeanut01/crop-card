@@ -140,6 +140,7 @@ describe('Card section', () => {
     expect(s.collapsible).toBe(true);
     expect(s.provenance).toBe('plugin');
     expect(s.safety).toBe(true);
+    expect(s.englishOnly).toBe('all');
     expect(s.items.at(-1)).toBe(TOXIC_ADVICE);
   });
 

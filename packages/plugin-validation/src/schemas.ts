@@ -1365,6 +1365,10 @@ export const fungicidePluginSchema = pluginBase.extend({
   /** Phase 29 (#132) — label rainfast interval: hours of dry weather needed after application before rain no longer washes the product off. Optional; the /spray/fungicide dry-window advisory defaults to 4h when absent. */
   rainfastHours: z.number().positive().max(72).optional(),
   pollinatorRisk: z.enum(["none", "low", "moderate", "high"]).optional(),
+  /** #530 — label bee-toxicity + bloom restriction, same shape as insecticides
+   *  (`pollinatorProtectionSchema`). The fungicide bloom gate reads the riskier of
+   *  this and `pollinatorRisk`, so label data can only add a block. */
+  pollinator: pollinatorProtectionSchema.optional(),
   /** Fungicides rarely require sprayer decon (no herbicide cross-contam class) but a few do (e.g., copper after a Bordeaux mix). */
   deconRequired: z.boolean().optional(),
   targetDiseases: z.array(z.string().min(1)).optional(),

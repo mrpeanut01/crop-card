@@ -1,6 +1,9 @@
 export const enToday = {
   'tasks.member.fallback': 'Farm member',
   'tasks.member.phoneEnding': 'phone ending {digits}',
+  'tasks.assign.err.askOwner': 'Ask the owner.',
+  'tasks.assign.err.closed': 'This job is already closed, so who did it stays as it was.',
+  'tasks.assign.err.notMember': 'That person is not a member of this farm.',
   'tasks.assign.loadFailed': 'Could not load the farm members.',
   'tasks.assign.loading': 'Loading the farm members…',
   'tasks.assign.members': 'Farm members',

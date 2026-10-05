@@ -115,8 +115,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
 
   const assigneeUserId = d.assigneeUserId ?? null;
   if (assigneeUserId) {
-    if (!canAssignTasks(auth)) return assignRefusal();
-    const refused = rejectUnassignable(assigneeUserId);
+    if (!canAssignTasks(auth)) return assignRefusal(event.locals?.locale);
+    const refused = rejectUnassignable(assigneeUserId, event.locals?.locale);
     if (refused) return refused;
   }
 

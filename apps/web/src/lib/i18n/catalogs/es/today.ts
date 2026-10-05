@@ -3,6 +3,9 @@ import type { MessageKey } from '../en';
 export const esToday: Partial<Record<MessageKey, string>> = {
   'tasks.member.fallback': 'Miembro de la granja',
   'tasks.member.phoneEnding': 'teléfono que termina en {digits}',
+  'tasks.assign.err.askOwner': 'Pregúntale al propietario.',
+  'tasks.assign.err.closed': 'Esta tarea ya está cerrada, así que quién la hizo queda como estaba.',
+  'tasks.assign.err.notMember': 'Esa persona no es miembro de esta granja.',
   'tasks.assign.loadFailed': 'No se pudieron cargar los miembros de la granja.',
   'tasks.assign.loading': 'Cargando los miembros de la granja…',
   'tasks.assign.members': 'Miembros de la granja',

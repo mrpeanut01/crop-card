@@ -64,4 +64,22 @@ describe('saveTaskTime (D-29)', () => {
     expect(out).toEqual({ status: 'error', message: 'Too old.' });
     expect(await db().pendingSprayRecords.count()).toBe(0);
   });
+
+  it('a server error queues the row under the id it sent, like the deploy fence', async () => {
+    for (const res of [
+      new Response('boom', { status: 500 }),
+      new Response('{}', {
+        status: 503,
+        headers: { 'x-cropcard-updating': '1', 'retry-after': '5' }
+      })
+    ]) {
+      await db().pendingSprayRecords.clear();
+      const fetchFn = vi.fn(async () => res);
+      const out = await saveTaskTime('tk_1', input, fetchFn as never, () => true);
+      expect(out).toEqual({ status: 'queued' });
+      const [, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
+      const [row] = await db().pendingSprayRecords.toArray();
+      expect(row.id).toBe((init.headers as Record<string, string>)[CLIENT_RECORD_HEADER]);
+    }
+  });
 });

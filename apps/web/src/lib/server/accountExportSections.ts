@@ -216,12 +216,17 @@ export function phase33Sections(viewer: ExportViewer): {
   organic: Section<Phase33Groups['organic']>;
   amendments: Section<Phase33Groups['amendments']>;
 } {
-  const organic = readGroup(PHASE_33_TABLE_GROUPS.organic);
-  if (viewer.role !== 'owner') {
-    organic.harvestDispositions = (
-      organic.harvestDispositions as Array<Record<string, unknown>>
-    ).map((d) => ({ ...d, ledgerEntryId: null }));
-  }
+  const read = readGroup(PHASE_33_TABLE_GROUPS.organic);
+  const organic =
+    viewer.role === 'owner'
+      ? read
+      : {
+          ...read,
+          harvestDispositions: read.harvestDispositions.map((d) => ({
+            ...(d as Record<string, unknown>),
+            ledgerEntryId: null
+          }))
+        };
   return {
     organic,
     amendments: readGroup(PHASE_33_TABLE_GROUPS.amendments)

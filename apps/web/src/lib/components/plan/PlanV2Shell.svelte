@@ -35,6 +35,7 @@
   import PlantingCard from './PlantingCard.svelte';
   import SeasonTimelineCard from './SeasonTimelineCard.svelte';
   import ScheduledTasksCard, { type ScheduledRow } from './ScheduledTasksCard.svelte';
+  import { taskSourceLabel } from '$lib/tasks/source';
   import MapOverlay from './MapOverlay.svelte';
   import type { OverlayFieldInput } from '$lib/plan/mapOverlayLayout';
   import {
@@ -328,7 +329,7 @@
           title: t.title,
           plantingLabel: planting ? cropName(planting).split(' ').slice(0, 2).join(' ') : undefined,
           plantingColor: planting ? plantingColor(planting.id) : undefined,
-          source: t.pluginTemplateKey ?? tr('planui.shell.manual'),
+          source: taskSourceLabel(t.pluginTemplateKey, locale),
           status: timing.status
         };
       });

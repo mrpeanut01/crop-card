@@ -214,6 +214,20 @@ describe('recordsUnified — listUnifiedRecords', () => {
     });
   });
 
+  it('leaves scout observations after the end of the date range out', () => {
+    const ownerId = `rec-owner-${randomUUID().slice(0, 6)}`;
+    const userId = `rec-user-${randomUUID().slice(0, 6)}`;
+    ensureOwner(ownerId);
+    ensureUser(userId);
+    const seeded = seedAllKinds(ownerId, userId);
+    runWithTenant(ownerId, () => {
+      const toMs = Date.now() - 24 * 60 * 60 * 1000;
+      const records = listUnifiedRecords({ kinds: ['scout'], toMs });
+      expect(records.find((r) => r.rowId === seeded.ids.scout)).toBeUndefined();
+      expect(records.every((r) => r.occurredAt <= toMs)).toBe(true);
+    });
+  });
+
   it('surfaces the hay cutting branch with cutting #, status, bale + moisture (#326)', () => {
     const ownerId = `rec-hay-${randomUUID().slice(0, 6)}`;
     const userId = `rec-hay-user-${randomUUID().slice(0, 6)}`;

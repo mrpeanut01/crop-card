@@ -346,6 +346,7 @@ export function listUnifiedRecords(
     const events = listScoutObservations({
       blockId: filters.blockId,
       fromMs: filters.fromMs,
+      toMs: filters.toMs,
       limit: perKindLimit
     });
     for (const e of events) {

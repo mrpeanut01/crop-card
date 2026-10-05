@@ -89,7 +89,7 @@ export function loadFillInputs(
     unplaced.push({ cropPluginId: id, varietyDisplayName: plugin.displayName, plants: null });
   }
   const history = bedCrops.filter(
-    (c) => c.plantingDate != null && new Date(c.plantingDate).getFullYear() < req.seasonYear
+    (c) => c.plantingDate != null && new Date(c.plantingDate).getUTCFullYear() < req.seasonYear
   );
   return {
     ctx: {
@@ -165,7 +165,7 @@ export function buildPromptInput(
       footprint: i.footprint
     })),
     history: inputs.history.slice(0, 12).map((c) => ({
-      year: new Date(c.plantingDate!).getFullYear(),
+      year: new Date(c.plantingDate!).getUTCFullYear(),
       name: c.varietyDisplayName,
       family: inputs.crops[c.cropPluginId]?.cropFamily ?? 'unknown'
     })),

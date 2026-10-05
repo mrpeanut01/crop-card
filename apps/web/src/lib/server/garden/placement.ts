@@ -185,7 +185,7 @@ export function sharedSpaceWarnings(
   locale?: string | null
 ): string[] {
   if (!crop.footprint || crop.plantingDate == null) return [];
-  const year = new Date(crop.plantingDate).getFullYear();
+  const year = new Date(crop.plantingDate).getUTCFullYear();
   const { firstFallFrostMs, lastSpringFrostMs } = bedFrostMs(crop.blockId, year);
   const mine = plantingOccupancy(
     placedPlantingFromCrop(crop, lookup(crop.cropPluginId)),
@@ -230,7 +230,7 @@ export function linkedSowingClash(
 ): string | null {
   if (target.plantingDateMs == null) return null;
   const plugin = lookup(current.cropPluginId);
-  const year = new Date(target.plantingDateMs).getFullYear();
+  const year = new Date(target.plantingDateMs).getUTCFullYear();
   const { firstFallFrostMs, lastSpringFrostMs } = bedFrostMs(target.blockId, year);
   const mine = plantingOccupancy(
     {

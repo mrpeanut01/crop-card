@@ -236,24 +236,34 @@
   async function acceptCompanions(suggestion: CompanionSuggestion) {
     if (!advisor) return;
     advisorBusy = true;
+    const { blockId, primaryDateMs } = advisor;
+    let created = 0;
     try {
       for (const m of suggestion.members) {
-        const date = advisor.primaryDateMs + m.plantingOffsetDays * 24 * 60 * 60 * 1000;
-        const res = await fetch(`/api/blocks/${encodeURIComponent(advisor.blockId)}/plantings`, {
+        const date = primaryDateMs + m.plantingOffsetDays * 24 * 60 * 60 * 1000;
+        const res = await fetch(`/api/blocks/${encodeURIComponent(blockId)}/plantings`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ cropPluginId: m.cropPluginId, plantingDate: date })
         });
         if (!res.ok) {
-          const out = await res.json();
-          plantingError = out.error ?? `HTTP ${res.status}`;
+          const out = await res.json().catch(() => ({}));
+          plantingError = out.error ?? tr('plan.page.addPlantingFailed', { status: res.status });
           return;
         }
+        created++;
       }
       advisor = null;
-      await invalidateAll();
+    } catch (e) {
+      plantingError = e instanceof Error ? e.message : tr('plan.page.networkError');
     } finally {
       advisorBusy = false;
+      if (created > 0) {
+        // Members already saved stay saved; closing the advisor keeps a
+        // retry from adding them a second time.
+        advisor = null;
+        await invalidateAll();
+      }
     }
   }
 

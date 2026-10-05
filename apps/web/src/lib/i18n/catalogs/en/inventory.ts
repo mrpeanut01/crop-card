@@ -4,6 +4,8 @@ export const enInventory = {
   'inv.add.pageTitle': 'New {type} — CropCard',
   'inv.add.amendmentTitle': 'New manure or compost pile',
   'inv.add.hayName': 'Hay, {cutting}',
+  'inv.add.hayCuttingLabel': '{block} cutting {n} ({year})',
+  'inv.add.hayBlockFallback': 'a hay block',
   'inv.edit.pageTitle': 'Edit {type} — CropCard',
   'inv.breadcrumb': 'Breadcrumb',
   'inv.allType': '← All {type}',

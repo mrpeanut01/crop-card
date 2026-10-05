@@ -142,6 +142,10 @@
     }
     if (from) params.set('from', from);
     if (to) params.set('to', to);
+    for (const keep of ['year', 'watering']) {
+      const v = page.url.searchParams.get(keep);
+      if (v) params.set(keep, v);
+    }
     const qs = params.toString();
     return qs ? `/records?${qs}` : '/records';
   }
@@ -193,7 +197,7 @@
   });
 
   function changeYear(value: string) {
-    const params = new URLSearchParams(exportQuery.replace(/^\?/, ''));
+    const params = new URLSearchParams(page.url.searchParams);
     params.set('year', value);
     goto(`/records?${params.toString()}`, { invalidateAll: true, keepFocus: true });
   }

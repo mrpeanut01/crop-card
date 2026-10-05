@@ -7,6 +7,7 @@ import { canMutate } from '$lib/server/session';
 import { getCutting } from '$lib/db/hayCuttings';
 import { getBlock } from '$lib/db/blocks';
 import { dayContext } from '$lib/server/amendmentRoutes';
+import { t } from '$lib/i18n';
 
 /** Sprint 8 / Phase 27D — add route. The form component owns submit
  *  state, this loader validates the `:type` param, threads `aiEnabled` so
@@ -39,7 +40,11 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
       const block = getBlock(cutting.blockId);
       hayCutting = {
         id: cutting.id,
-        label: `${block?.name ?? 'a hay block'} cutting ${cutting.cuttingNumber} (${cutting.year})`
+        label: t(locals.locale, 'inv.add.hayCuttingLabel', {
+          block: block?.name ?? t(locals.locale, 'inv.add.hayBlockFallback'),
+          n: cutting.cuttingNumber,
+          year: cutting.year
+        })
       };
     }
   }

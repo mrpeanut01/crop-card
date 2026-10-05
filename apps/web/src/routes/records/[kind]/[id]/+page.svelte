@@ -73,6 +73,7 @@
     if (kind === 'harvest') return '/harvest';
     if (kind === 'scout') return '/scout';
     if (kind === 'fertility') return '/fertility';
+    if (kind === 'hay') return '/hay';
     if (kind === 'planting') return '/plan';
     return null;
   }

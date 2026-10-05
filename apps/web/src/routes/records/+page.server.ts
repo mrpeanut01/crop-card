@@ -30,10 +30,9 @@ import {
  *
  * The legacy spray-only loader unioned `listSprayEvents` straight into
  * the page. The Almanac design treats /records as a 9-kind audit ledger;
- * `listUnifiedRecords` is the new source of truth. The sprayer filter is
- * preserved for back-compat (still used by `/records/pending` and the
- * existing CSV/PDF exports), but the table itself is no longer
- * spray-only.
+ * `listUnifiedRecords` is the new source of truth. A picked sprayer keeps
+ * the table to the spray, insecticide and fungicide records made with it;
+ * the CSV/PDF exports read the same `sprayerId`.
  */
 export const load: PageServerLoad = async (event) => {
   const { url } = event;
@@ -52,7 +51,22 @@ export const load: PageServerLoad = async (event) => {
         .filter((k) => (RECORD_KINDS as readonly string[]).includes(k)) as RecordKind[])
     : [...RECORD_KINDS];
 
-  const allRecords = listUnifiedRecords({ blockId, fromMs, toMs }, prefs);
+  const unfiltered = listUnifiedRecords({ blockId, fromMs, toMs }, prefs);
+  const allRecords = sprayerId
+    ? (() => {
+        const range = { blockId, fromMs, toMs, limit: 10_000 };
+        const keys = new Set([
+          ...listSprayEvents({ ...range, sprayerId }).map((e) => `spray:${e.id}`),
+          ...listInsecticideEvents(range)
+            .filter((e) => e.sprayerId === sprayerId)
+            .map((e) => `insecticide:${e.id}`),
+          ...listFungicideEvents(range)
+            .filter((e) => e.sprayerId === sprayerId)
+            .map((e) => `fungicide:${e.id}`)
+        ]);
+        return unfiltered.filter((r) => keys.has(`${r.kind}:${r.rowId}`));
+      })()
+    : unfiltered;
 
   // Filter chips operate over the already-fetched superset so the
   // count chips stay accurate when the operator toggles them.

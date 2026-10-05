@@ -5,7 +5,7 @@ import { t } from '$lib/i18n';
 import type { PageServerLoad } from './$types';
 import { getLedgerEntry, listLedgerChanges } from '$lib/db/ledger';
 import { requireMoneyReader } from '$lib/finance/access';
-import { enteredByNames, farmNames } from '$lib/finance/profit.server';
+import { currentSeasonYear, enteredByNames, farmNames } from '$lib/finance/profit.server';
 import { entryFormOptions } from '$lib/finance/formOptions.server';
 import type { EntryFormValue } from '$lib/finance/formTypes';
 import { farmTimeZone } from '$lib/db/userProfile';
@@ -38,7 +38,7 @@ export const load: PageServerLoad = async (event) => {
     quantity: entry.quantity,
     unit: entry.unit
   };
-  const year = new Date(entry.occurredAt).getUTCFullYear();
+  const year = currentSeasonYear(entry.occurredAt);
   return {
     value,
     options,

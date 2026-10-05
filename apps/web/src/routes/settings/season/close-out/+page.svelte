@@ -82,7 +82,10 @@
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        submitError = body.message ?? tr('settings.close.reopenFailed', { status: res.status });
+        submitError =
+          body.error === 'REOPEN_WINDOW_EXPIRED'
+            ? tr('settings.close.permanent')
+            : tr('settings.close.reopenFailed', { status: res.status });
         return;
       }
       justClosed = false;

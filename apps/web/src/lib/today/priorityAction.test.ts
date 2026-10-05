@@ -5,11 +5,7 @@ import type { CalendarEvent } from '$lib/calendar/engine';
 
 const NOW = new Date('2026-05-24T15:00:00Z').getTime();
 const DAY = 24 * 60 * 60 * 1000;
-const dayStart = (() => {
-  const d = new Date(NOW);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-})();
+const dayStart = Date.UTC(2026, 4, 24);
 
 function task(over: Partial<Task>): Task {
   return {
@@ -69,10 +65,8 @@ describe('derivePriorityAction', () => {
       now: NOW
     });
     expect(result?.title).toBe('Overdue task');
-    // 3 days before NOW (15:00), but dayStart (today midnight) is only
-    // 2 full days after the task's scheduledFor — that's "2 days late"
-    // in the user-perceived sense.
-    expect(result?.overdueDays).toBe(2);
+    // Due May 21, today is May 24 in the owner's zone.
+    expect(result?.overdueDays).toBe(3);
   });
 
   it('falls back to today derived event if no tasks are due', () => {
@@ -81,7 +75,7 @@ describe('derivePriorityAction', () => {
       derivedEvents: [
         ev({
           kind: 'spray-window',
-          startMs: dayStart + 3 * 60 * 60 * 1000,
+          startMs: dayStart,
           title: 'Herbicide window opens'
         })
       ],
@@ -133,6 +127,43 @@ describe('derivePriorityAction', () => {
       now: NOW
     });
     expect(result?.scope).toContainEqual(['Scheduled', 'Sun, May 24']);
+  });
+
+  it("judges today in the owner's zone, not the server's", () => {
+    // 9 PM in New York on May 24 is already May 25 in UTC.
+    const evening = Date.parse('2026-05-25T01:00:00Z');
+    const result = derivePriorityAction({
+      openPrimaries: [task({ scheduledFor: Date.UTC(2026, 4, 24) })],
+      derivedEvents: [],
+      blockNameById: blocks,
+      now: evening,
+      timeZone: 'America/New_York'
+    });
+    expect(result?.overdueDays).toBeUndefined();
+    expect(result?.scope).toContainEqual(['Scheduled', 'Sun, May 24']);
+  });
+
+  it('labels a timed task by its day in the owner zone', () => {
+    const result = derivePriorityAction({
+      openPrimaries: [task({ scheduledFor: Date.parse('2026-05-25T01:00:00Z') })],
+      derivedEvents: [],
+      blockNameById: blocks,
+      now: Date.parse('2026-05-24T15:00:00Z'),
+      timeZone: 'America/New_York'
+    });
+    expect(result?.overdueDays).toBeUndefined();
+    expect(result?.scope).toContainEqual(['Scheduled', 'Sun, May 24']);
+  });
+
+  it('leaves out tasks due after tomorrow in the owner zone', () => {
+    const result = derivePriorityAction({
+      openPrimaries: [task({ scheduledFor: Date.UTC(2026, 4, 27) })],
+      derivedEvents: [],
+      blockNameById: blocks,
+      now: Date.parse('2026-05-26T03:00:00Z'),
+      timeZone: 'America/New_York'
+    });
+    expect(result).toBeNull();
   });
 
   it('routes insecticide tasks to /spray/insecticide', () => {

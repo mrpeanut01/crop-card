@@ -675,6 +675,7 @@ export const enInventory = {
   'stockui.receipt.savePlugins.one': 'Save {count} plugin',
   'stockui.receipt.savePlugins.other': 'Save {count} plugins',
   'stockui.receipt.done': 'Done',
+  'stockui.receipt.savedRow': 'Saved',
   'stockui.api.notFound': 'not found',
   'stockui.api.unknownItem': 'unknown stock item',
   'stockui.api.lotNotFound': 'lot not found',

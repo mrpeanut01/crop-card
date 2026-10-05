@@ -33,7 +33,7 @@ import {
   type PushAlert
 } from './triggers';
 import type { VapidConfig } from './webPush';
-import { DEFAULT_LOCALE, type Locale } from '$lib/i18n';
+import { DEFAULT_LOCALE, t, type Locale } from '$lib/i18n';
 import { recipientLocales } from '$lib/server/recipientLocale';
 import { localeField } from '$lib/server/messageLocale';
 
@@ -73,7 +73,8 @@ export function digestEligible(members: readonly MemberRole[]): Map<string, stri
 
 export async function weeklyDigestForOwner(
   ownerId: string,
-  farmName: string,
+  /** Null when the farm has no name: each recipient reads "your farm". */
+  farmName: string | null,
   members: readonly MemberRole[],
   now: number,
   deps: DigestDeps
@@ -143,7 +144,7 @@ export async function weeklyDigestForOwner(
     if (deps.emailOrigin) {
       const mail = await sendDigestEmail({
         ownerId,
-        farmName,
+        farmName: farmName ?? t(locale, 'email.yourFarm'),
         userId,
         alert,
         members,

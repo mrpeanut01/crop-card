@@ -15,7 +15,7 @@ import { isEmailSuppressed } from '$lib/db/contactSuppressions';
 import type { EmailAlertCategory } from '$lib/email/alertCategories';
 import { dispatchEmail, PINGRAM_TYPE } from '$lib/server/email';
 import { unsubscribeLinks } from '$lib/server/emailUnsubscribe';
-import { DEFAULT_LOCALE, type Locale } from '$lib/i18n';
+import { DEFAULT_LOCALE, t, type Locale } from '$lib/i18n';
 import { recipientLocales } from '$lib/server/recipientLocale';
 import { localeField } from '$lib/server/messageLocale';
 import type { MemberRole } from './dispatch';
@@ -96,7 +96,8 @@ export interface AlertEmailLocales {
 
 export async function sendAlertEmails(
   ownerId: string,
-  farmName: string,
+  /** Null when the farm has no name: each recipient reads "your farm". */
+  farmName: string | null,
   alert: PushAlert,
   members: MemberRole[],
   origin: string,
@@ -122,7 +123,7 @@ export async function sendAlertEmails(
         kind: 'field-alert',
         to: r.email,
         category: alert.kind,
-        farmName,
+        farmName: farmName ?? t(locale, 'email.yourFarm'),
         title: message.title,
         body: message.body,
         actionUrl: new URL(message.url, origin).toString(),

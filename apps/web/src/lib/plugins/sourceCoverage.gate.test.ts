@@ -62,13 +62,20 @@ let kinds: Phase32DataKinds;
 beforeAll(async () => {
   library = new PluginRegistry();
   await loadPluginsFromDirectory(library, PLUGINS_DIR);
-  kinds = await loadPhase32DataKinds(PLUGINS_DIR);
+  kinds = await loadPhase32DataKinds(PLUGINS_DIR, {
+    crops: {
+      cropFamilyOf: (id) => {
+        const p = library.get(id)?.plugin;
+        return p?.type === 'crop' ? p.cropFamily : undefined;
+      }
+    }
+  });
 });
 
 const isSpecies = (id: string) => kinds.species.has(id);
 
 describe('Phase 32 data plugins load cleanly', () => {
-  it('every species, animal-health and pest-model file registers', () => {
+  it('every species, animal-health, pest-model and orchard calendar file registers', () => {
     expect(kinds.failed.map((f) => `${path.basename(f.file)}: ${f.error.message}`)).toEqual([]);
   });
 });

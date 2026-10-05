@@ -1,0 +1,854 @@
+{
+  "pluginId": "pome-va-2026",
+  "type": "orchard-calendar",
+  "version": "1.0.0",
+  "edition": "2026",
+  "hostCropFamilies": ["orchard"],
+  "hostCropPluginIds": [
+    "apple-cortland",
+    "apple-fuji",
+    "apple-gala",
+    "apple-honeycrisp",
+    "apple-orchard"
+  ],
+  "stages": [
+    {
+      "id": "dormant",
+      "name": "Dormant",
+      "order": 0,
+      "recognise": {
+        "description": "Fruit buds are inactive. This is the overwintering stage.",
+        "sourceKey": "pome-va-2026.dormant.description"
+      },
+      "windows": [
+        {
+          "id": "dormant-blight-pruning",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Prune out every blighted limb and shoot each year so fewer cankers carry fire blight into spring.",
+          "sourceKeys": [
+            "pome-va-2026.dormant.fire-blight",
+            "pome-va-2026.dormant.targets"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "silver-tip",
+      "name": "Silver tip",
+      "order": 1,
+      "recognise": {
+        "description": "Fruit bud scales have separated at the tip, showing light gray tissue.",
+        "sourceKey": "pome-va-2026.silver-tip.description"
+      },
+      "windows": [
+        {
+          "id": "silver-tip-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "san-jose-scale",
+              "kind": "pest"
+            },
+            {
+              "id": "rosy-apple-aphid",
+              "kind": "pest"
+            },
+            {
+              "id": "green-aphids",
+              "kind": "pest"
+            },
+            {
+              "id": "european-red-mite",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Listed for silver tip through green tip. Aphids are harder to deal with once they are inside curled leaves. Check the label.",
+          "sourceKeys": [
+            "pome-va-2026.silver-tip.pests",
+            "pome-va-2026.silver-tip.aphids"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "green-tip",
+      "name": "Green tip",
+      "order": 2,
+      "recognise": {
+        "description": "Fruit buds have broken at the tip, showing about a sixteenth of an inch of green.",
+        "sourceKey": "pome-va-2026.green-tip.description"
+      },
+      "windows": [
+        {
+          "id": "green-tip-scab-weather",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "apple-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "long-wet-periods",
+              "kind": "weather"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Scab spores from last year's fallen leaves are released in spring rains from about bud break. Watch for long wet periods.",
+          "sourceKeys": ["pome-va-2026.green-tip.scab"]
+        }
+      ]
+    },
+    {
+      "id": "half-inch-green",
+      "name": "Half-inch green",
+      "order": 3,
+      "recognise": {
+        "description": "About half an inch of leaf tissue sticks out of the fruit buds.",
+        "sourceKey": "pome-va-2026.half-inch-green.description"
+      },
+      "windows": [
+        {
+          "id": "half-inch-green-scab",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "apple-scab",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "The guide starts primary scab protection at half-inch green and carries it through the stages that follow. Check the label.",
+          "sourceKeys": ["pome-va-2026.half-inch-green.diseases"]
+        },
+        {
+          "id": "half-inch-green-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "san-jose-scale",
+              "kind": "pest"
+            },
+            {
+              "id": "rosy-apple-aphid",
+              "kind": "pest"
+            },
+            {
+              "id": "green-aphids",
+              "kind": "pest"
+            },
+            {
+              "id": "european-red-mite",
+              "kind": "pest"
+            },
+            {
+              "id": "redbanded-leafroller",
+              "kind": "pest"
+            },
+            {
+              "id": "defoliating-caterpillars",
+              "kind": "pest"
+            },
+            {
+              "id": "oriental-fruit-moth",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Defoliating caterpillars here are tent caterpillars, cankerworms and cutworms. Check the label.",
+          "sourceKeys": ["pome-va-2026.half-inch-green.pests"]
+        }
+      ]
+    },
+    {
+      "id": "tight-cluster",
+      "name": "Tight cluster",
+      "order": 4,
+      "recognise": {
+        "description": "Blossom buds are mostly exposed and tightly grouped on short stems.",
+        "sourceKey": "pome-va-2026.tight-cluster.description"
+      },
+      "windows": [
+        {
+          "id": "tight-cluster-diseases",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "apple-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "powdery-mildew",
+              "kind": "disease"
+            },
+            {
+              "id": "apple-rusts",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Listed for tight cluster to pre-pink. Check the label.",
+          "sourceKeys": ["pome-va-2026.tight-cluster.diseases"]
+        },
+        {
+          "id": "tight-cluster-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "rosy-apple-aphid",
+              "kind": "pest"
+            },
+            {
+              "id": "green-aphids",
+              "kind": "pest"
+            },
+            {
+              "id": "european-red-mite",
+              "kind": "pest"
+            },
+            {
+              "id": "green-fruitworm",
+              "kind": "pest"
+            },
+            {
+              "id": "tarnished-plant-bug",
+              "kind": "pest"
+            },
+            {
+              "id": "tentiform-leafminer",
+              "kind": "pest"
+            },
+            {
+              "id": "oriental-fruit-moth",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Listed for tight cluster to pre-pink. Check the label.",
+          "sourceKeys": ["pome-va-2026.tight-cluster.pests"]
+        },
+        {
+          "id": "tight-cluster-fruitworm-tap",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "green-fruitworm",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "From pre-pink, tap limbs over a sheet. Green fruitworm larvae curl up when knocked loose.",
+          "sourceKeys": ["pome-va-2026.tight-cluster.fruitworm"]
+        },
+        {
+          "id": "tight-cluster-blight-cankers",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Fire blight bacteria start multiplying in old cankers around tight cluster, weeks before any symptom shows.",
+          "sourceKeys": ["pome-va-2026.tight-cluster.fire-blight"]
+        }
+      ]
+    },
+    {
+      "id": "pink",
+      "name": "Pink",
+      "order": 5,
+      "recognise": {
+        "description": "Every blossom bud in the cluster is pink and the stems are fully extended.",
+        "sourceKey": "pome-va-2026.pink.description"
+      },
+      "windows": [
+        {
+          "id": "pink-diseases",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "apple-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "apple-rusts",
+              "kind": "disease"
+            },
+            {
+              "id": "powdery-mildew",
+              "kind": "disease"
+            },
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Pink through petal fall is a critical time for quince rust in orchards that have had it. Check the label.",
+          "sourceKeys": ["pome-va-2026.pink.diseases"]
+        },
+        {
+          "id": "pink-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "defoliating-caterpillars",
+              "kind": "pest"
+            },
+            {
+              "id": "european-red-mite",
+              "kind": "pest"
+            },
+            {
+              "id": "european-apple-sawfly",
+              "kind": "pest"
+            },
+            {
+              "id": "oriental-fruit-moth",
+              "kind": "pest"
+            },
+            {
+              "id": "mullein-bug",
+              "kind": "pest"
+            },
+            {
+              "id": "dogwood-borer",
+              "kind": "pest"
+            },
+            {
+              "id": "codling-moth",
+              "kind": "pest"
+            },
+            {
+              "id": "green-fruitworm",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Bloom is close. Bees will soon be working the flowers. Check the label.",
+          "sourceKeys": ["pome-va-2026.pink.pests"]
+        },
+        {
+          "id": "pink-traps",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "san-jose-scale",
+              "kind": "pest"
+            },
+            {
+              "id": "gypsy-moth",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Hang a pheromone trap and check it for male San Jose scale. Start watching for gypsy moth.",
+          "sourceKeys": ["pome-va-2026.pink.traps"]
+        },
+        {
+          "id": "pink-sawfly-traps",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "european-apple-sawfly",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "White sticky traps catch European apple sawfly adults between pink and petal fall.",
+          "sourceKeys": ["pome-va-2026.pink.sawfly"]
+        }
+      ]
+    },
+    {
+      "id": "bloom",
+      "name": "Bloom",
+      "order": 6,
+      "recognise": {
+        "description": "Blossom buds are open.",
+        "sourceKey": "pome-va-2026.bloom.description"
+      },
+      "windows": [
+        {
+          "id": "bloom-blight-weather",
+          "purpose": "bloom",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            },
+            {
+              "id": "warm-wet-bloom",
+              "kind": "weather"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Open flowers with petals can be infected when dew or rain comes on warm days. Flowers at petal fall resist infection.",
+          "sourceKeys": ["pome-va-2026.bloom.fire-blight"]
+        },
+        {
+          "id": "bloom-bees",
+          "purpose": "bloom",
+          "targets": [],
+          "pollinatorSensitive": true,
+          "note": "Bees are working the flowers. The guide lists nothing for insects during bloom. Check the label.",
+          "sourceKeys": ["pome-va-2026.bloom.bees"]
+        }
+      ]
+    },
+    {
+      "id": "petal-fall",
+      "name": "Petal fall",
+      "order": 7,
+      "recognise": {
+        "description": "About three quarters of the petals have fallen.",
+        "sourceKey": "pome-va-2026.petal-fall.description"
+      },
+      "windows": [
+        {
+          "id": "petal-fall-diseases",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "apple-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "powdery-mildew",
+              "kind": "disease"
+            },
+            {
+              "id": "apple-rusts",
+              "kind": "disease"
+            },
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            },
+            {
+              "id": "fruit-rots",
+              "kind": "disease"
+            },
+            {
+              "id": "frogeye-leaf-spot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Check the label.",
+          "sourceKeys": ["pome-va-2026.petal-fall.diseases"]
+        },
+        {
+          "id": "petal-fall-scab-lesions",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "apple-scab",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Look over the leaves around the flower clusters for the first scab lesions.",
+          "sourceKeys": ["pome-va-2026.petal-fall.scab-lesions"]
+        },
+        {
+          "id": "petal-fall-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "redbanded-leafroller",
+              "kind": "pest"
+            },
+            {
+              "id": "plum-curculio",
+              "kind": "pest"
+            },
+            {
+              "id": "rosy-apple-aphid",
+              "kind": "pest"
+            },
+            {
+              "id": "oriental-fruit-moth",
+              "kind": "pest"
+            },
+            {
+              "id": "european-red-mite",
+              "kind": "pest"
+            },
+            {
+              "id": "green-fruitworm",
+              "kind": "pest"
+            },
+            {
+              "id": "defoliating-caterpillars",
+              "kind": "pest"
+            },
+            {
+              "id": "tentiform-leafminer",
+              "kind": "pest"
+            },
+            {
+              "id": "white-apple-leafhopper",
+              "kind": "pest"
+            },
+            {
+              "id": "codling-moth",
+              "kind": "pest"
+            },
+            {
+              "id": "european-apple-sawfly",
+              "kind": "pest"
+            },
+            {
+              "id": "mullein-bug",
+              "kind": "pest"
+            },
+            {
+              "id": "dogwood-borer",
+              "kind": "pest"
+            },
+            {
+              "id": "san-jose-scale",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Bees may still be on late flowers and blooming ground cover. Check the label.",
+          "sourceKeys": [
+            "pome-va-2026.petal-fall.pests",
+            "pome-va-2026.petal-fall.bees"
+          ]
+        },
+        {
+          "id": "petal-fall-scout",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "redbanded-leafroller",
+              "kind": "pest"
+            },
+            {
+              "id": "plum-curculio",
+              "kind": "pest"
+            },
+            {
+              "id": "white-apple-leafhopper",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Watch for newly hatched leafroller larvae and curculio moving in. Check leaf undersides for white apple leafhopper nymphs, which run forward or backward when disturbed.",
+          "sourceKeys": ["pome-va-2026.petal-fall.scout"]
+        },
+        {
+          "id": "petal-fall-blight-strikes",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "From petal fall on, watch for early fire blight strikes and cut them out promptly.",
+          "sourceKeys": ["pome-va-2026.petal-fall.fire-blight"]
+        }
+      ]
+    },
+    {
+      "id": "first-cover",
+      "name": "First cover",
+      "order": 8,
+      "recognise": {
+        "description": "About a week after petal fall.",
+        "sourceKey": "pome-va-2026.first-cover.description"
+      },
+      "windows": [
+        {
+          "id": "first-cover-diseases",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "apple-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "powdery-mildew",
+              "kind": "disease"
+            },
+            {
+              "id": "apple-rusts",
+              "kind": "disease"
+            },
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            },
+            {
+              "id": "fruit-rots",
+              "kind": "disease"
+            },
+            {
+              "id": "frogeye-leaf-spot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Check the label.",
+          "sourceKeys": ["pome-va-2026.first-cover.diseases"]
+        },
+        {
+          "id": "first-cover-cedar-galls",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "apple-rusts",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Where rust is a problem, check nearby cedar galls. Rust risk lasts until their spore horns stop swelling when wet.",
+          "sourceKeys": ["pome-va-2026.first-cover.cedar-galls"]
+        },
+        {
+          "id": "first-cover-blight-cutting",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Cut out blight strikes in dry weather, sterilize the pruners and take the cut wood out of the orchard. Repeat weekly if needed.",
+          "sourceKeys": ["pome-va-2026.first-cover.blight-cutting"]
+        },
+        {
+          "id": "first-cover-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "plum-curculio",
+              "kind": "pest"
+            },
+            {
+              "id": "european-red-mite",
+              "kind": "pest"
+            },
+            {
+              "id": "white-apple-leafhopper",
+              "kind": "pest"
+            },
+            {
+              "id": "codling-moth",
+              "kind": "pest"
+            },
+            {
+              "id": "periodical-cicada",
+              "kind": "pest"
+            },
+            {
+              "id": "green-aphids",
+              "kind": "pest"
+            },
+            {
+              "id": "woolly-apple-aphid",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Check the label.",
+          "sourceKeys": ["pome-va-2026.first-cover.pests"]
+        }
+      ]
+    },
+    {
+      "id": "summer-covers",
+      "name": "Summer covers",
+      "order": 9,
+      "recognise": {
+        "description": "From the second cover on, about every 10 to 14 days until a few weeks before harvest.",
+        "sourceKey": "pome-va-2026.summer-covers.description"
+      },
+      "windows": [
+        {
+          "id": "summer-diseases",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "apple-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "powdery-mildew",
+              "kind": "disease"
+            },
+            {
+              "id": "apple-rusts",
+              "kind": "disease"
+            },
+            {
+              "id": "fruit-rots",
+              "kind": "disease"
+            },
+            {
+              "id": "frogeye-leaf-spot",
+              "kind": "disease"
+            },
+            {
+              "id": "brooks-spot",
+              "kind": "disease"
+            },
+            {
+              "id": "sooty-blotch",
+              "kind": "disease"
+            },
+            {
+              "id": "fly-speck",
+              "kind": "disease"
+            },
+            {
+              "id": "black-rot",
+              "kind": "disease"
+            },
+            {
+              "id": "white-rot",
+              "kind": "disease"
+            },
+            {
+              "id": "bitter-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Once primary scab is controlled, summer diseases take over: Brooks spot, sooty blotch, fly speck and fruit rots. Mildew risk lasts until shoots stop growing. Check the label.",
+          "sourceKeys": [
+            "pome-va-2026.summer-covers.diseases",
+            "pome-va-2026.summer-covers.shift"
+          ]
+        },
+        {
+          "id": "summer-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "tentiform-leafminer",
+              "kind": "pest"
+            },
+            {
+              "id": "european-red-mite",
+              "kind": "pest"
+            },
+            {
+              "id": "two-spotted-spider-mite",
+              "kind": "pest"
+            },
+            {
+              "id": "codling-moth",
+              "kind": "pest"
+            },
+            {
+              "id": "san-jose-scale",
+              "kind": "pest"
+            },
+            {
+              "id": "variegated-leafroller",
+              "kind": "pest"
+            },
+            {
+              "id": "tufted-apple-budmoth",
+              "kind": "pest"
+            },
+            {
+              "id": "green-aphids",
+              "kind": "pest"
+            },
+            {
+              "id": "oriental-fruit-moth",
+              "kind": "pest"
+            },
+            {
+              "id": "woolly-apple-aphid",
+              "kind": "pest"
+            },
+            {
+              "id": "brown-marmorated-stink-bug",
+              "kind": "pest"
+            },
+            {
+              "id": "rose-leafhopper",
+              "kind": "pest"
+            },
+            {
+              "id": "apple-maggot",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Check the label.",
+          "sourceKeys": ["pome-va-2026.summer-covers.pests"]
+        },
+        {
+          "id": "summer-scale-crawlers",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "san-jose-scale",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Around second cover, wrap black electrical tape sticky side out around a scale-infested branch to catch the yellow crawlers.",
+          "sourceKeys": ["pome-va-2026.summer-covers.scale-crawlers"]
+        },
+        {
+          "id": "summer-leafroller-eggs",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "variegated-leafroller",
+              "kind": "pest"
+            },
+            {
+              "id": "tufted-apple-budmoth",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Leafrollers start laying eggs. Look for egg masses and use pheromone traps to tell which species are present.",
+          "sourceKeys": ["pome-va-2026.summer-covers.leafrollers"]
+        },
+        {
+          "id": "summer-sanitation",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "fruit-rots",
+              "kind": "disease"
+            },
+            {
+              "id": "black-rot",
+              "kind": "disease"
+            },
+            {
+              "id": "bitter-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Remove prunings, cankers, dead wood and fruit mummies from the trees.",
+          "sourceKeys": ["pome-va-2026.summer-covers.sanitation"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,353 @@
+{
+  "pluginId": "pear-va-2026",
+  "type": "orchard-calendar",
+  "version": "1.0.0",
+  "edition": "2026",
+  "hostCropFamilies": ["orchard"],
+  "hostCropPluginIds": ["pear-bartlett", "pear-bosc"],
+  "stages": [
+    {
+      "id": "dormant",
+      "name": "Dormant",
+      "order": 0,
+      "recognise": {
+        "description": "Fruit buds are inactive. This is the overwintering stage.",
+        "sourceKey": "pear-va-2026.dormant.description"
+      },
+      "windows": [
+        {
+          "id": "dormant-blight-pruning",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Prune out every blighted limb and shoot each year so fewer cankers carry fire blight into spring.",
+          "sourceKeys": [
+            "pear-va-2026.dormant.fire-blight",
+            "pear-va-2026.dormant.targets"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "swollen-bud",
+      "name": "Swollen bud",
+      "order": 1,
+      "recognise": {
+        "description": "Fruit buds are swollen and the scales have separated, showing lighter tissue.",
+        "sourceKey": "pear-va-2026.swollen-bud.description"
+      },
+      "windows": [
+        {
+          "id": "swollen-bud-psylla-eggs",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "pear-psylla",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Check buds with a hand lens for tiny yellow oval pear psylla eggs, usually found at bud swell.",
+          "sourceKeys": ["pear-va-2026.swollen-bud.psylla"]
+        }
+      ]
+    },
+    {
+      "id": "bud-burst",
+      "name": "Bud burst",
+      "order": 2,
+      "recognise": {
+        "description": "Fruit buds have broken at the tip, showing the tips of the blossom buds.",
+        "sourceKey": "pear-va-2026.bud-burst.description"
+      },
+      "windows": [
+        {
+          "id": "bud-burst-psylla",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "pear-psylla",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "The guide lists pear psylla from dormant through green tip. Check the label.",
+          "sourceKeys": ["pear-va-2026.swollen-bud.psylla"]
+        }
+      ]
+    },
+    {
+      "id": "green-cluster",
+      "name": "Green cluster",
+      "order": 3,
+      "recognise": {
+        "description": "Blossom buds are green, mostly separated in the cluster, on lengthened stems.",
+        "sourceKey": "pear-va-2026.green-cluster.description"
+      },
+      "windows": [
+        {
+          "id": "green-cluster-diseases",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "pear-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "pear-leaf-spot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Check the label.",
+          "sourceKeys": ["pear-va-2026.green-cluster.diseases"]
+        },
+        {
+          "id": "green-cluster-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "pear-psylla",
+              "kind": "pest"
+            },
+            {
+              "id": "san-jose-scale",
+              "kind": "pest"
+            },
+            {
+              "id": "tarnished-plant-bug",
+              "kind": "pest"
+            },
+            {
+              "id": "climbing-cutworms",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Check the label.",
+          "sourceKeys": ["pear-va-2026.green-cluster.pests"]
+        },
+        {
+          "id": "green-cluster-plant-bug-jar",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "tarnished-plant-bug",
+              "kind": "pest"
+            },
+            {
+              "id": "climbing-cutworms",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Jar limbs over a sheet on the ground to find tarnished plant bugs. Climbing cutworms feed at night and hide in the ground cover by day.",
+          "sourceKeys": ["pear-va-2026.green-cluster.pests"]
+        }
+      ]
+    },
+    {
+      "id": "white-bud",
+      "name": "White bud",
+      "order": 4,
+      "recognise": {
+        "description": "Blossom buds are white, separated in the cluster, on lengthened stems.",
+        "sourceKey": "pear-va-2026.white-bud.description"
+      },
+      "windows": [
+        {
+          "id": "white-bud-diseases",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "pear-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "pear-leaf-spot",
+              "kind": "disease"
+            },
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            },
+            {
+              "id": "warm-wet-bloom",
+              "kind": "weather"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Fire blight needs open blossoms or soft new growth, warm weather, and rain or humid air together. The first blossoms open soon. Check the label.",
+          "sourceKeys": ["pear-va-2026.white-bud.diseases"]
+        },
+        {
+          "id": "white-bud-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "pear-psylla",
+              "kind": "pest"
+            },
+            {
+              "id": "tarnished-plant-bug",
+              "kind": "pest"
+            },
+            {
+              "id": "green-fruitworm",
+              "kind": "pest"
+            },
+            {
+              "id": "european-red-mite",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Bloom is close. Bees will soon be working the flowers. Check the label.",
+          "sourceKeys": ["pear-va-2026.white-bud.pests"]
+        }
+      ]
+    },
+    {
+      "id": "bloom",
+      "name": "Bloom",
+      "order": 5,
+      "recognise": {
+        "description": "Blossom buds are open.",
+        "sourceKey": "pear-va-2026.bloom.description"
+      },
+      "windows": [
+        {
+          "id": "bloom-diseases",
+          "purpose": "bloom",
+          "targets": [
+            {
+              "id": "pear-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "pear-leaf-spot",
+              "kind": "disease"
+            },
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Check the label.",
+          "sourceKeys": ["pear-va-2026.bloom.diseases"]
+        },
+        {
+          "id": "bloom-bees",
+          "purpose": "bloom",
+          "targets": [],
+          "pollinatorSensitive": true,
+          "note": "Bees are working the flowers. The guide lists nothing for insects during bloom. Check the label.",
+          "sourceKeys": ["pear-va-2026.bloom.bees"]
+        }
+      ]
+    },
+    {
+      "id": "petal-fall",
+      "name": "Petal fall to fifth cover",
+      "order": 6,
+      "recognise": {
+        "description": "About three quarters of the petals have fallen.",
+        "sourceKey": "pear-va-2026.petal-fall.description"
+      },
+      "windows": [
+        {
+          "id": "petal-fall-diseases",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "pear-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "pear-leaf-spot",
+              "kind": "disease"
+            },
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            },
+            {
+              "id": "sooty-blotch",
+              "kind": "disease"
+            },
+            {
+              "id": "fly-speck",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Listed for petal fall through fifth cover. Check the label.",
+          "sourceKeys": ["pear-va-2026.petal-fall.diseases"]
+        },
+        {
+          "id": "petal-fall-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "pear-psylla",
+              "kind": "pest"
+            },
+            {
+              "id": "tarnished-plant-bug",
+              "kind": "pest"
+            },
+            {
+              "id": "stink-bugs",
+              "kind": "pest"
+            },
+            {
+              "id": "european-red-mite",
+              "kind": "pest"
+            },
+            {
+              "id": "two-spotted-spider-mite",
+              "kind": "pest"
+            },
+            {
+              "id": "plum-curculio",
+              "kind": "pest"
+            },
+            {
+              "id": "codling-moth",
+              "kind": "pest"
+            },
+            {
+              "id": "oriental-fruit-moth",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Listed for petal fall through fifth cover. To protect pollinators, the guide says to consider waiting until after first cover for some of these. Check the label.",
+          "sourceKeys": [
+            "pear-va-2026.petal-fall.pests",
+            "pear-va-2026.petal-fall.bees"
+          ]
+        },
+        {
+          "id": "petal-fall-blight-strikes",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "From petal fall on, watch for early fire blight strikes and cut them out promptly.",
+          "sourceKeys": ["pear-va-2026.petal-fall.fire-blight"]
+        }
+      ]
+    }
+  ]
+}

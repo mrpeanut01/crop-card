@@ -1,4 +1,1359 @@
 {
   "$comment": "Ruling OC-8. Quotes behind every orchard calendar on plugins/orchard-calendars/*.json, keyed by the sourceKey a stage description, degree-day estimate or window names. Each entry is { sources: [{ url, publisher, date, quote, edition, page, note? }], gateEligible?, note? } from an https .edu or .gov page, quoted word for word. A degree-day estimate ships only from an entry with gateEligible true, which needs two agreeing sources from different hosts (ruling OC-5); where the guides disagree or only one gives a value, record both or the one with gateEligible false and say why in note. Sources from a page reader's extraction never count. No product, product class, rate, brand, PHI or REI is ever recorded here (OC-2). Empty until a local agent works docs/design/ORCHARD_CALENDAR.md 'Needs a local agent'; checked by apps/web/src/lib/plugins/orchardCalendar.sources.gate.test.ts.",
-  "entries": {}
+  "entries": {
+    "pear-va-2026.bloom.bees": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "WARNING - DO NOT APPLY INSECTICIDES DURING BLOOM.",
+          "edition": "2026",
+          "page": "99"
+        }
+      ]
+    },
+    "pear-va-2026.bloom.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Bloom: Blossom buds open (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pear-va-2026.bloom.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "BLOOM SPRAY / Scab / Leaf spot / Fireblight",
+          "edition": "2026",
+          "page": "99",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pear-va-2026.bud-burst.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Bud Burst: Equivalent to green tip stage in apple. Fruit buds broken at tip, showing tips of blossom buds. (Applies to pear, sweet and tart cherry, plum and prune).",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pear-va-2026.dormant.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Dormant: Fruit buds relatively inactive. This is the overwintering stage, (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pear-va-2026.dormant.fire-blight": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Dormant season Thorough pruning to remove all blighted limbs and shoots every year reduces the number and distribution of canker sites available the following spring.",
+          "edition": "2026",
+          "page": "95",
+          "note": "Table 12, Aggressive Fire Blight Management, in the section 'Fire Blight in Apples and Pears'."
+        }
+      ]
+    },
+    "pear-va-2026.dormant.targets": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Pears / DORMANT SPRAY: Diseases / Fireblight",
+          "edition": "2026",
+          "page": "97",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pear-va-2026.green-cluster.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Green Cluster: Applies only to pear, plum and prune. Blossom buds green, mostly separated in the cluster, stems lengthened.",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pear-va-2026.green-cluster.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "GREEN CLUSTER BUD SPRAY / Disease Effectiveness Suggested Chemicals / Scab / Leaf spot",
+          "edition": "2026",
+          "page": "97",
+          "note": "The bulletin labels this first green cluster table 'Insects', but its column heading and cells are diseases. Quoted from the table: the stage heading, the column heading, then the disease cells in order, joined with ' / '. Product, effectiveness and rate columns are left out."
+        }
+      ]
+    },
+    "pear-va-2026.green-cluster.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "GREEN CLUSTER BUD SPRAY: Insects / Pear psylla (PP) / San Jose Scale (SJS) / Tarnished plant bug (TPB) / Climbing cutworms (CC)",
+          "edition": "2026",
+          "page": "98",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Monitor appearance of TPB by jarring tree limbs over a sheet placed on the ground; TPB will fall from limbs to sheet.",
+          "edition": "2026",
+          "page": "98"
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "CC feed in trees at night and hide in ground cover during the day.",
+          "edition": "2026",
+          "page": "98"
+        }
+      ]
+    },
+    "pear-va-2026.petal-fall.bees": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Consider withholding until after first cover, in order to protect pollinators.",
+          "edition": "2026",
+          "page": "101",
+          "note": "Footnote 7 to the pear petal fall through fifth cover insect table."
+        }
+      ]
+    },
+    "pear-va-2026.petal-fall.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Petal Fall: After about 75 per cent of the petals have fallen (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pear-va-2026.petal-fall.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PETAL FALL, FIRST THROUGH FIFTH COVER SPRAYS: Diseases / Scab / Leaf spot / Fireblight / Sooty blotch and fly speck",
+          "edition": "2026",
+          "page": "100",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pear-va-2026.petal-fall.fire-blight": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Postbloom through bud set Control sucking insect pests to reduce the incidence of shoot blight. Monitor orchards closely for early blight symptoms and remove these promptly before extensive necrosis develops.",
+          "edition": "2026",
+          "page": "95",
+          "note": "Table 12, Aggressive Fire Blight Management."
+        }
+      ]
+    },
+    "pear-va-2026.petal-fall.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PETAL FALL, FIRST THROUGH FIFTH COVER SPRAYS: Insects / Pear psylla (PP) / Tarnished plant bug / Stink bugs (SB) / Mites (ERM/TSM) / Plum curculio (PC) / Codling moth (CM) / Oriental fruit moth (OFM)",
+          "edition": "2026",
+          "page": "100",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pear-va-2026.swollen-bud.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Swollen Bud: Equivalentto silvertip stage in apple. Fruit buds swollen, scales separated to expose areas of lighter colored tissue. (Applies to all fruits except apple).",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there. 'Equivalentto' and 'silvertip' are printed run together on the page."
+        }
+      ]
+    },
+    "pear-va-2026.swollen-bud.psylla": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "DORMANT-GREEN TIP SPRAY: Insects / Pear psylla (PP)",
+          "edition": "2026",
+          "page": "97",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Examine buds with hand lens. Apply first spray when tiny yellow oval eggs are found - usually at bud swell.",
+          "edition": "2026",
+          "page": "97"
+        }
+      ]
+    },
+    "pear-va-2026.white-bud.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "White Bud: Applies to pear, sweet and tart cherry, plum and prune. Blossom buds white, separated in the cluster and stems lengthened.",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pear-va-2026.white-bud.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "WHITE BUD (POPCORN) SPRAY: Diseases / Scab / Leaf spot / Fireblight",
+          "edition": "2026",
+          "page": "98",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "The conditions favorable for fireblight include all of the following: (1) open blossoms and succulent young growth; (2) a temperature of 65oF or higher; and (3) rainfall, or a relative humidity of 60% or higher.",
+          "edition": "2026",
+          "page": "98"
+        }
+      ]
+    },
+    "pear-va-2026.white-bud.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "WHITE BUD (POPCORN) SPRAY: Insects / Pear psylla (PP) / Tarnished plant bug (TPB) / Green fruitworms (GFW) / Mites (ERM)",
+          "edition": "2026",
+          "page": "99",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pome-va-2026.bloom.bees": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Insecticides should not be applied during bloom. Install pheromone trap and inspect for male San Jose scale. Begin monitoring for gypsy moth.",
+          "edition": "2026",
+          "page": "64"
+        }
+      ]
+    },
+    "pome-va-2026.bloom.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Bloom: Blossom buds open (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-va-2026.bloom.fire-blight": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "The minimum requirements for blossom infection and the order in which they must occur are: 1) flowers must be open with petals intact (flowers in petal fall are resistant); 2) an accumulation of at least 198 degree hours above 65˚F; 3) a wetting event as dew or rain; and, 4) an average daily temperature of 60˚F.",
+          "edition": "2026",
+          "page": "94"
+        }
+      ]
+    },
+    "pome-va-2026.dormant.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Dormant: Fruit buds relatively inactive. This is the overwintering stage, (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-va-2026.dormant.fire-blight": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Dormant season Thorough pruning to remove all blighted limbs and shoots every year reduces the number and distribution of canker sites available the following spring.",
+          "edition": "2026",
+          "page": "95",
+          "note": "Table 12, Aggressive Fire Blight Management, in the section 'Fire Blight in Apples and Pears'."
+        }
+      ]
+    },
+    "pome-va-2026.dormant.targets": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "DORMANT SPRAYS / Fireblight",
+          "edition": "2026",
+          "page": "59",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pome-va-2026.first-cover.blight-cutting": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "In cutting out blight infections, pruning equipment should be sterilized and all pruned cankers should be removed from the orchard. This operation may need to be repeated on a weekly basis. Better results are achieved if the pruning operation is conducted during dry weather.",
+          "edition": "2026",
+          "page": "68"
+        }
+      ]
+    },
+    "pome-va-2026.first-cover.cedar-galls": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "In rust problem areas, maintain control for rusts until spore horns on cedar galls no longer expand when wetted.",
+          "edition": "2026",
+          "page": "68"
+        }
+      ]
+    },
+    "pome-va-2026.first-cover.description": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Cover sprays are applied beginning 1 week after petal fall and are repeated every 10-14 days until 2-3 weeks prior to harvest.",
+          "edition": "2026",
+          "page": "93"
+        }
+      ]
+    },
+    "pome-va-2026.first-cover.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "FIRST COVER SPRAY: Diseases / Scab / Powdery mildew / Rusts / Fireblight / Rots and frogeye leaf spot",
+          "edition": "2026",
+          "page": "68",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pome-va-2026.first-cover.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "FIRST COVER SPRAY: Insects / Curculio (PC) / Mites (ERM) / White apple leafhopper (WALH) / Codling moth (CM) / Periodical cicada (C) / Green aphid (SA/AA) / Woolly apple aphid (WAA)",
+          "edition": "2026",
+          "page": "69",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pome-va-2026.gdd": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Spray timing can be improved for codling moth, tufted apple bud moth and oriental fruit moth through the use of degree-days.",
+          "edition": "2026",
+          "page": "1",
+          "note": "The bulletin's degree-day guidance (pp. 1-2, Tables 29 and 30) counts insect development from a trap biofix for these three moths. It gives no degree-day range for any bud stage, and the Penn State Tree Fruit Production Guide (AGRS-045, 2026-2027) is a paid download that was not read, so no stage has a second source. Per OC-5 no gddEstimate ships."
+        }
+      ],
+      "gateEligible": false,
+      "note": "No bud-stage degree-day estimate ships (OC-5): VCE 456-419 gives degree days only for moth flights counted from a trap biofix, and Penn State AGRS-045 (2026-2027), the planned second source, is sold as a paid download and was not read. Stages are known only when the owner marks them."
+    },
+    "pome-va-2026.green-tip.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Green Tip: Applies only to apple. Fruit buds broken at tip, showing about 1 /16 inch (1 -2 mm) green.",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-va-2026.green-tip.scab": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "The apple scab fungus overwinters in the previous year's infected leaves on the orchard floor. In the spring, usually around the time of bud break, ascospores are formed and released during periods of rain.",
+          "edition": "2026",
+          "page": "93"
+        }
+      ]
+    },
+    "pome-va-2026.half-inch-green.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Half-inch Green: (Centimeter green): Applies only to apple and peach. In apple, when about V2 inch (1 cm) of leaf tissue is projecting from the fruit buds.",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there. The bulletin's digitized page prints 'V2' where the original reads one-half (the stage's own name, Half-inch Green, and the '(1 cm)' that follows agree)."
+        }
+      ]
+    },
+    "pome-va-2026.half-inch-green.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "1/4 – 1/2 INCH GREEN SPRAY : Diseases / Scab",
+          "edition": "2026",
+          "page": "60",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "For control of primary infections, sprays are usually timed according to tree phenology (growth stages), with the first spray at 1/2 inch green and additional sprays at tight cluster, full pink, bloom, and petal fall.",
+          "edition": "2026",
+          "page": "93"
+        }
+      ]
+    },
+    "pome-va-2026.half-inch-green.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "1/4 – 1/2 INCH GREEN SPRAY : Insects / San Jose Scale (SJS) / Rosy apple aphid (RAA) / Green aphid (SA/AA) / Mite eggs / Redbanded leafroller eggs (RBLR) / Defoliating caterpillars / Oriental fruit moth (OFM)",
+          "edition": "2026",
+          "page": "61",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Defoliating caterpillars include tent caterpillars, cankerworms, and cutworms.",
+          "edition": "2026",
+          "page": "61"
+        }
+      ]
+    },
+    "pome-va-2026.petal-fall.bees": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "CAUTION: To avoid killing bees, do not spray pesticides on open blooms of trees or ground vegetation.",
+          "edition": "2026",
+          "page": "67"
+        }
+      ]
+    },
+    "pome-va-2026.petal-fall.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Petal Fall: After about 75 per cent of the petals have fallen (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PETAL FALL SPRAY (when most petals have fallen)",
+          "edition": "2026",
+          "page": "65"
+        }
+      ]
+    },
+    "pome-va-2026.petal-fall.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PETAL FALL SPRAY (when most petals have fallen) : Diseases / Scab / Powdery Mildew / Rusts / Fireblight / Rots and frogeye leaf spot",
+          "edition": "2026",
+          "page": "65",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pome-va-2026.petal-fall.fire-blight": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Postbloom through bud set Control sucking insect pests to reduce the incidence of shoot blight. Monitor orchards closely for early blight symptoms and remove these promptly before extensive necrosis develops.",
+          "edition": "2026",
+          "page": "95",
+          "note": "Table 12, Aggressive Fire Blight Management."
+        }
+      ]
+    },
+    "pome-va-2026.petal-fall.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PETAL FALL SPRAY : Insects / Redbanded leafroller (RBLR) / Curculio (PC) / Rosy apple aphid (RAA) / Oriental fruit moth (OFM) / Mites (ERM) / Green fruitworms (GFW) / Defoliating caterpillars / Tentiform leafminers (TLM) / White apple leafhopper (WALH) / Codling moth (CM) / European apple sawfly (EAS) / Mullein bug (MB) / Dogwood borer (DB) / San Jose Scale (SJS)",
+          "edition": "2026",
+          "page": "66",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pome-va-2026.petal-fall.scab-lesions": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Carefully inspect flower cluster leaves for primary scab lesions.",
+          "edition": "2026",
+          "page": "65"
+        }
+      ]
+    },
+    "pome-va-2026.petal-fall.scout": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Monitor orchards carefully for newly hatched leafroller larvae and inward migration of curculio.",
+          "edition": "2026",
+          "page": "67"
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Examine undersides of leaves for newly hatched WALH nymphs. Nymphs move rapidly forward, or backward when disturbed.",
+          "edition": "2026",
+          "page": "67"
+        }
+      ]
+    },
+    "pome-va-2026.pink.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Pink: Applies only to apple and peach. For apple, all blossom buds in cluster pink, stems fully extended.",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-va-2026.pink.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PINK AND BLOOM SPRAYS / Scab / Rusts and mildew / Fireblight",
+          "edition": "2026",
+          "page": "64",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PINK THROUGH PETAL FALL STAGE IS A VERY CRITICAL PERIOD TO PROTECT AGAINST QUINCE RUST IN PROBLEM ORCHARDS.",
+          "edition": "2026",
+          "page": "64"
+        }
+      ]
+    },
+    "pome-va-2026.pink.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PINK SPRAYS AND MATING DISRUPTION THROUGH BLOOM / Defoliating caterpillars / Mites (ERM) / European apple sawfly (EAS) / Oriental fruit moth (OFM) / Mullein bug (MB) / Dogwood Borer (DB) / Codling moth (CM) / Green fruitworm (GFW)",
+          "edition": "2026",
+          "page": "64",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pome-va-2026.pink.sawfly": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Control EAS if a problem last year, or if 5.5 adults are captured between pink and petal fall on white sticky traps if a prebloom insecticide was applied.",
+          "edition": "2026",
+          "page": "67"
+        }
+      ]
+    },
+    "pome-va-2026.pink.traps": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Insecticides should not be applied during bloom. Install pheromone trap and inspect for male San Jose scale. Begin monitoring for gypsy moth.",
+          "edition": "2026",
+          "page": "64"
+        }
+      ]
+    },
+    "pome-va-2026.silver-tip.aphids": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Aphids are best controlled with the silver-tip or 1/4-1/2\" green spray, otherwise they will be within curled leaves and protected from insecticides.",
+          "edition": "2026",
+          "page": "59"
+        }
+      ]
+    },
+    "pome-va-2026.silver-tip.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Silver Tip: Applies only to apple. Fruit bud scales separated at tip, showing light gray tissue.",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-va-2026.silver-tip.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "SILVER TIP - GREEN TIP SPRAY / San Jose Scale (SJS) / Rosy apple aphid (RAA) / Green aphid (SA/AA) / Mite eggs (ERM)",
+          "edition": "2026",
+          "page": "59",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pome-va-2026.summer-covers.description": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Cover sprays are applied beginning 1 week after petal fall and are repeated every 10-14 days until 2-3 weeks prior to harvest.",
+          "edition": "2026",
+          "page": "93"
+        }
+      ]
+    },
+    "pome-va-2026.summer-covers.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "SECOND COVER SPRAY / Scab / Powdery mildew / Rusts / Rots and frogeye leaf spot / Brooks spot",
+          "edition": "2026",
+          "page": "70",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "THIRD COVER SPRAY: Diseases / Scab and Mildew / Brooks spot / Sooty blotch and fly speck / Black rot and white rot / Bitter rot",
+          "edition": "2026",
+          "page": "73",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pome-va-2026.summer-covers.leafrollers": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Members of the leafroller complex will begin laying eggs. Start looking for egg masses while monitoring orchard. Determine species present using pheromone traps.",
+          "edition": "2026",
+          "page": "72"
+        }
+      ]
+    },
+    "pome-va-2026.summer-covers.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "SECOND COVER SPRAY: Insects / Tentiform leafminer (TLM) / Mites (ERM/TSM) / Codling moth (CM) / San Jose scale (SJS) / Variegated leafroller and tufted apple budmoth (VLR + TBM) / Green aphid (SA/AA) / Oriental fruit moth (OFM) / Woolly apple aphid (WAA) / Brown marmorated stink bug (BMSB)",
+          "edition": "2026",
+          "page": "71",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "THIRD COVER SPRAY: Insects / Rose leafhopper (RLH) / Apple maggot (AM)",
+          "edition": "2026",
+          "page": "74",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pome-va-2026.summer-covers.sanitation": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Remove prunings, cankers, dead wood from the trees. b. Remove fruit mummies from the trees when feasible.",
+          "edition": "2026",
+          "page": "73",
+          "note": "From 'Improved cultural practices for better summer disease management', printed with the third cover spray."
+        }
+      ]
+    },
+    "pome-va-2026.summer-covers.scale-crawlers": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "SJS crawlers appear now. Yellow crawlers may be detected by capturing them on a ring of black electrical tape tightly encircling a scale infested branch, sticky side out.",
+          "edition": "2026",
+          "page": "72"
+        }
+      ]
+    },
+    "pome-va-2026.summer-covers.shift": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "In some years, primary scab and rust inoculum may be depleted by the time for the second cover spray. If this is the case and primary scab has been well controlled, the spray program should be aimed more at control of “summer diseases” including Brooks spot, sooty blotch, fly speck, and rots. If mildew is a problem, maintain mildew protection until shoot growth hardens off.",
+          "edition": "2026",
+          "page": "70"
+        }
+      ]
+    },
+    "pome-va-2026.tight-cluster.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Tight Cluster: Applies only to apple. Blossom buds mostly exposed, tightly grouped, stems short.",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-va-2026.tight-cluster.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "TIGHT CLUSTER - PREPINK SPRAY : Diseases / Scab / Powdery Mildew / Rusts",
+          "edition": "2026",
+          "page": "62",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pome-va-2026.tight-cluster.fire-blight": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "In the spring, as the daily average temperature increases and early bud development begins mobilizing stored carbohydrates, the overwintering bacteria multiply and initiate new infections in bark tissues at about 90-96 cumulative degree days above 55˚F after green tip (approx. tight cluster to open cluster stage of spur bud development). Symptoms of these first infections won't be apparent until several weeks after bloom",
+          "edition": "2026",
+          "page": "94",
+          "note": "Only the stage and the fact are used. The degree-day figure is a single-source disease estimate, not a bud-stage estimate, and does not ship (OC-5)."
+        }
+      ]
+    },
+    "pome-va-2026.tight-cluster.fruitworm": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Early detection of GFW is important. Tap tree limbs over sheet beginning at prepink. GFW larvae will curl up (grub-like) when dislodged from tree.",
+          "edition": "2026",
+          "page": "63"
+        }
+      ]
+    },
+    "pome-va-2026.tight-cluster.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "TIGHT CLUSTER - PREPINK SPRAY : Insects / Rosy apple aphid (RAA) / Green aphid (SA/AA) / Mites (ERM) / Green fruitworms (GFW) / Tarnished plant bug (TPB) / Tentiform leafminers (TLM) / Oriental fruit moth",
+          "edition": "2026",
+          "page": "63",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.bloom.apothecia": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "In spring, during the blossom period, examine the orchard floor for apothecia, the cup-shaped fungal structures that produce ascospores. Their presence should be considered a potential plant disease emergency.",
+          "edition": "2026",
+          "page": "115"
+        }
+      ]
+    },
+    "stone-fruit-va-2026.bloom.blossom-survey": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "In spring, survey the orchard for blossom infection and prune out any cankers and infected shoots.",
+          "edition": "2026",
+          "page": "115"
+        }
+      ]
+    },
+    "stone-fruit-va-2026.bloom.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Bloom: Blossom buds open (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.bloom.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "BLOOM PERIOD SPRAY / Brown rot blossom blight",
+          "edition": "2026",
+          "page": "103",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.covers.borer-traps": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Pyrethroids give good control of adults. Monitor with pheromone trap for proper timing.",
+          "edition": "2026",
+          "page": "106",
+          "note": "Footnote 3 to the peach first cover insect table, on lesser peachtree borer adults. Only the trap monitoring is used."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.covers.canker-surgery": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Cankers on trunks and large limbs can be surgically removed in June or July when trees heal most rapidly. Surgery should be performed in dry weather with a forecast of dry conditions for at least three days.",
+          "edition": "2026",
+          "page": "114"
+        }
+      ]
+    },
+    "stone-fruit-va-2026.covers.description": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "CAUTION: Do not extend intervals between cover sprays more than 14 days.",
+          "edition": "2026",
+          "page": "105",
+          "note": "Footnote to the peach first cover disease table; the second and third cover tables repeat it."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.covers.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "FIRST COVER SPRAY : Diseases / Scab / Brown rot / Rusty spot",
+          "edition": "2026",
+          "page": "105",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "THIRD COVER SPRAY : Diseases / Brown rot / Rusty spot",
+          "edition": "2026",
+          "page": "108",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Fungicide applications for brown rot control are not required for green fruit after the pit-hardening stage. Resume fungicide applications as fruit begin to color or as weather favorable for brown rot development occurs.",
+          "edition": "2026",
+          "page": "108"
+        }
+      ]
+    },
+    "stone-fruit-va-2026.covers.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "FIRST COVER SPRAY: Insects / Tarnished plant bug (TPB) / Stink bugs (SB) / Oriental fruit moth (OFM) / Periodical cicada (C) / Lesser peachtree borer adults (LPTB)",
+          "edition": "2026",
+          "page": "106",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "FOURTH AND FIFTH COVER SPRAYS: Insects / Stink bugs (SB) / Plum curculio (PC) / Western flower thrips (WFT) / Oriental fruit moth (OFM) / Leafrollers (RBLR,VLR,TABM) / Japanese beetle (JB) / Cicada (C) / Mites (ERM,TSM)",
+          "edition": "2026",
+          "page": "109",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.dormant.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Dormant: Fruit buds relatively inactive. This is the overwintering stage, (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.dormant.leaf-curl": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Peaches and Nectarines / DORMANT SPRAY: Diseases / Leaf curl",
+          "edition": "2026",
+          "page": "101",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Dormant fungicide application for peach leaf curl should be timed early with warm temperatures and always before bud swelling.",
+          "edition": "2026",
+          "page": "113",
+          "note": "Note to Table 13, Seasonal Activity of Peach Diseases."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.dormant.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "DORMANT SPRAY : Insects / San Jose Scale (SJS) / Mite eggs (ERM)",
+          "edition": "2026",
+          "page": "101",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.dormant.pruning": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Prune correctly and at the proper time. Infection at pruning cuts is less frequent when pruning is delayed until spring. Delay pruning until the first forecasts of warm, dry weather.",
+          "edition": "2026",
+          "page": "114",
+          "note": "From the peach canker (Cytospora canker) discussion."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.fall.description": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Apply at early leaf drop to protect the leaf abscission scars from fall infection and subsequent overwintering twig infection.",
+          "edition": "2026",
+          "page": "111"
+        }
+      ]
+    },
+    "stone-fruit-va-2026.fall.leaf-scars": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Treatments with copper compounds are suggested where bacterial spot and leaf curl have been problems",
+          "edition": "2026",
+          "page": "111",
+          "note": "Under FALL PRE-DORMANT SPRAY. Only the diseases and the leaf-drop timing are used; the product named here is left out (OC-2)."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.gdd": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Optimal spray timings for oriental fruit moth control in apple and peach differ through the season and are based on accumulated DD from separate biofix dates established for each crop at the beginning of each season (See Table 30).",
+          "edition": "2026",
+          "page": "2",
+          "note": "The bulletin's peach degree days count oriental fruit moth from a trap biofix. It gives no degree-day range for any peach bud stage."
+        }
+      ],
+      "gateEligible": false,
+      "note": "No bud-stage degree-day estimate ships (OC-5): VCE 456-419 gives degree days only for moth flights counted from a trap biofix, and Penn State AGRS-045 (2026-2027), the planned second source, is sold as a paid download and was not read. Stages are known only when the owner marks them."
+    },
+    "stone-fruit-va-2026.petal-fall.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Petal Fall: After about 75 per cent of the petals have fallen (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.petal-fall.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PETAL FALL SPRAY: Diseases / Brown rot / Scab / Rusty Spot",
+          "edition": "2026",
+          "page": "103",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.petal-fall.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PETAL FALL SPRAY: Insects / Tarnished plant bug (TPB) / Stink bugs (SB) / Green peach aphid (GPA) / Plum curculio (PC) / Western flower thrips (WFT)",
+          "edition": "2026",
+          "page": "104",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.pink.aphid-check": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "In most years, control of GPA is not required before petal fall; however, lower small (half inch) leaves should be checked carefully for the presence of immigrating adults or newly deposited nymphs.",
+          "edition": "2026",
+          "page": "103"
+        }
+      ]
+    },
+    "stone-fruit-va-2026.pink.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "For peach, when the blossom bud shows a pink tip.",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.pink.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PINK SPRAY: Diseases / Brown rot blossom blight",
+          "edition": "2026",
+          "page": "102",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.pink.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PINK SPRAY: Insects / Tarnished plant bug (TPB) / Green peach aphid (GPA) / Oriental fruit moth (OFM)",
+          "edition": "2026",
+          "page": "102",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.preharvest.description": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Starting two to three weeks before harvest, shorten the spray interval to 7-10 days.",
+          "edition": "2026",
+          "page": "110"
+        }
+      ]
+    },
+    "stone-fruit-va-2026.preharvest.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PRE-HARVEST SPRAYS / Brown rot / Rhizopus rot",
+          "edition": "2026",
+          "page": "110",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.preharvest.sanitation": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Remove all remaining fruit from the tree after the final picking. This practice limits infection of fruit peduncles and twigs, thus reducing the number of brown rot cankers.",
+          "edition": "2026",
+          "page": "115"
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Avoid dumping rotten fruit in one location, which could become the starting point for disease and insect outbreaks in the following season.",
+          "edition": "2026",
+          "page": "115"
+        }
+      ]
+    },
+    "stone-fruit-va-2026.shuck-split.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Shuck: The shuck is the dried floral remnant which in the stone fruits partially covers the newly-set fruit. As the fruit grows, the shuck splits and soon is sloughed off.",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.shuck-split.diseases": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "SHUCK SPLIT, SHUCK FALL SPRAYS: Diseases / Scab / Brown rot / Rusty Spot",
+          "edition": "2026",
+          "page": "104",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "stone-fruit-va-2026.shuck-split.pests": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "SHUCK SPLIT, SHUCK FALL SPRAYS: Insects / Tarnished plant bug (TPB) / Stink bugs (SB) / Green peach aphid (GPA) / Plum curculio (PC) / Oriental fruit moth (OFM) / Lesser peachtree borer / White peach scale",
+          "edition": "2026",
+          "page": "105",
+          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "CAUTION: Applications at both shuck split and shuck fall are important to prevent catfacing injury.",
+          "edition": "2026",
+          "page": "105"
+        }
+      ]
+    },
+    "stone-fruit-va-2026.shuck-split.thinning": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Thin all cultivars prior to the pit-hardening stage of fruit development. Fruit thinned after pit hardening may serve as a source of brown rot later in the season.",
+          "edition": "2026",
+          "page": "115"
+        }
+      ]
+    },
+    "stone-fruit-va-2026.swollen-bud.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-04",
+          "quote": "Swollen Bud: Equivalentto silvertip stage in apple. Fruit buds swollen, scales separated to expose areas of lighter colored tissue. (Applies to all fruits except apple).",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there. 'Equivalentto' and 'silvertip' are printed run together on the page."
+        }
+      ]
+    }
+  }
 }

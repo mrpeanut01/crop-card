@@ -1,0 +1,508 @@
+{
+  "pluginId": "stone-fruit-va-2026",
+  "type": "orchard-calendar",
+  "version": "1.0.0",
+  "edition": "2026",
+  "hostCropFamilies": ["stone-fruit"],
+  "hostCropPluginIds": ["peach-elberta", "peach-redhaven"],
+  "stages": [
+    {
+      "id": "dormant",
+      "name": "Dormant",
+      "order": 0,
+      "recognise": {
+        "description": "Fruit buds are inactive. This is the overwintering stage.",
+        "sourceKey": "stone-fruit-va-2026.dormant.description"
+      },
+      "windows": [
+        {
+          "id": "dormant-leaf-curl",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "peach-leaf-curl",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Leaf curl protection has to be in place before the buds swell, earlier after a warm late winter. Check the label.",
+          "sourceKeys": ["stone-fruit-va-2026.dormant.leaf-curl"]
+        },
+        {
+          "id": "dormant-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "san-jose-scale",
+              "kind": "pest"
+            },
+            {
+              "id": "european-red-mite",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Check the label.",
+          "sourceKeys": ["stone-fruit-va-2026.dormant.pests"]
+        },
+        {
+          "id": "dormant-pruning-timing",
+          "purpose": "cultural",
+          "targets": [
+            {
+              "id": "peach-canker",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Pruning cuts are infected less often when pruning waits until spring. Wait for the first forecast of warm, dry weather.",
+          "sourceKeys": ["stone-fruit-va-2026.dormant.pruning"]
+        }
+      ]
+    },
+    {
+      "id": "swollen-bud",
+      "name": "Swollen bud",
+      "order": 1,
+      "recognise": {
+        "description": "Fruit buds are swollen and the scales have separated, showing lighter tissue.",
+        "sourceKey": "stone-fruit-va-2026.swollen-bud.description"
+      },
+      "windows": []
+    },
+    {
+      "id": "pink",
+      "name": "Pink",
+      "order": 2,
+      "recognise": {
+        "description": "The blossom bud shows a pink tip.",
+        "sourceKey": "stone-fruit-va-2026.pink.description"
+      },
+      "windows": [
+        {
+          "id": "pink-diseases",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Brown rot blossom blight. Check the label.",
+          "sourceKeys": ["stone-fruit-va-2026.pink.diseases"]
+        },
+        {
+          "id": "pink-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "tarnished-plant-bug",
+              "kind": "pest"
+            },
+            {
+              "id": "green-peach-aphid",
+              "kind": "pest"
+            },
+            {
+              "id": "oriental-fruit-moth",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Bloom is close. Bees will soon be working the flowers. Check the label.",
+          "sourceKeys": ["stone-fruit-va-2026.pink.pests"]
+        },
+        {
+          "id": "pink-aphid-check",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "green-peach-aphid",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Check the small lower leaves carefully for arriving green peach aphid adults or new nymphs.",
+          "sourceKeys": ["stone-fruit-va-2026.pink.aphid-check"]
+        }
+      ]
+    },
+    {
+      "id": "bloom",
+      "name": "Bloom",
+      "order": 3,
+      "recognise": {
+        "description": "Blossom buds are open.",
+        "sourceKey": "stone-fruit-va-2026.bloom.description"
+      },
+      "windows": [
+        {
+          "id": "bloom-brown-rot",
+          "purpose": "bloom",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Brown rot blossom blight. Bees are working the flowers. Check the label.",
+          "sourceKeys": ["stone-fruit-va-2026.bloom.diseases"]
+        },
+        {
+          "id": "bloom-apothecia",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Look on the orchard floor for small brown cup-shaped brown rot fruiting bodies. Finding them is a disease emergency.",
+          "sourceKeys": ["stone-fruit-va-2026.bloom.apothecia"]
+        },
+        {
+          "id": "bloom-blossom-survey",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Survey for blossom infection during bloom, then prune out cankers and infected shoots.",
+          "sourceKeys": ["stone-fruit-va-2026.bloom.blossom-survey"]
+        }
+      ]
+    },
+    {
+      "id": "petal-fall",
+      "name": "Petal fall",
+      "order": 4,
+      "recognise": {
+        "description": "About three quarters of the petals have fallen.",
+        "sourceKey": "stone-fruit-va-2026.petal-fall.description"
+      },
+      "windows": [
+        {
+          "id": "petal-fall-diseases",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            },
+            {
+              "id": "peach-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "rusty-spot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Check the label.",
+          "sourceKeys": ["stone-fruit-va-2026.petal-fall.diseases"]
+        },
+        {
+          "id": "petal-fall-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "tarnished-plant-bug",
+              "kind": "pest"
+            },
+            {
+              "id": "stink-bugs",
+              "kind": "pest"
+            },
+            {
+              "id": "green-peach-aphid",
+              "kind": "pest"
+            },
+            {
+              "id": "plum-curculio",
+              "kind": "pest"
+            },
+            {
+              "id": "western-flower-thrips",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Bees may still be on late flowers. Check the label.",
+          "sourceKeys": ["stone-fruit-va-2026.petal-fall.pests"]
+        }
+      ]
+    },
+    {
+      "id": "shuck-split",
+      "name": "Shuck split and shuck fall",
+      "order": 5,
+      "recognise": {
+        "description": "The dried flower remnant covering the young fruit splits and soon falls away.",
+        "sourceKey": "stone-fruit-va-2026.shuck-split.description"
+      },
+      "windows": [
+        {
+          "id": "shuck-diseases",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "peach-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            },
+            {
+              "id": "rusty-spot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Check the label.",
+          "sourceKeys": ["stone-fruit-va-2026.shuck-split.diseases"]
+        },
+        {
+          "id": "shuck-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "tarnished-plant-bug",
+              "kind": "pest"
+            },
+            {
+              "id": "stink-bugs",
+              "kind": "pest"
+            },
+            {
+              "id": "green-peach-aphid",
+              "kind": "pest"
+            },
+            {
+              "id": "plum-curculio",
+              "kind": "pest"
+            },
+            {
+              "id": "oriental-fruit-moth",
+              "kind": "pest"
+            },
+            {
+              "id": "lesser-peachtree-borer",
+              "kind": "pest"
+            },
+            {
+              "id": "white-peach-scale",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "The guide marks both shuck split and shuck fall as important for preventing catfacing injury. Check the label.",
+          "sourceKeys": ["stone-fruit-va-2026.shuck-split.pests"]
+        },
+        {
+          "id": "shuck-thinning",
+          "purpose": "cultural",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Thin every variety before pit hardening. Fruit thinned later can feed brown rot later in the season.",
+          "sourceKeys": ["stone-fruit-va-2026.shuck-split.thinning"]
+        }
+      ]
+    },
+    {
+      "id": "covers",
+      "name": "Covers",
+      "order": 6,
+      "recognise": {
+        "description": "After shuck fall, at intervals of no more than 14 days.",
+        "sourceKey": "stone-fruit-va-2026.covers.description"
+      },
+      "windows": [
+        {
+          "id": "cover-diseases",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "peach-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            },
+            {
+              "id": "rusty-spot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "The guide drops brown rot protection for green fruit after pit hardening and takes it up again as fruit colors or when the weather favors brown rot. Check the label.",
+          "sourceKeys": ["stone-fruit-va-2026.covers.diseases"]
+        },
+        {
+          "id": "cover-pests",
+          "purpose": "pest-risk",
+          "targets": [
+            {
+              "id": "tarnished-plant-bug",
+              "kind": "pest"
+            },
+            {
+              "id": "stink-bugs",
+              "kind": "pest"
+            },
+            {
+              "id": "oriental-fruit-moth",
+              "kind": "pest"
+            },
+            {
+              "id": "periodical-cicada",
+              "kind": "pest"
+            },
+            {
+              "id": "lesser-peachtree-borer",
+              "kind": "pest"
+            },
+            {
+              "id": "plum-curculio",
+              "kind": "pest"
+            },
+            {
+              "id": "western-flower-thrips",
+              "kind": "pest"
+            },
+            {
+              "id": "leafrollers",
+              "kind": "pest"
+            },
+            {
+              "id": "japanese-beetle",
+              "kind": "pest"
+            },
+            {
+              "id": "european-red-mite",
+              "kind": "pest"
+            },
+            {
+              "id": "two-spotted-spider-mite",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Listed for first through fifth cover. Check the label.",
+          "sourceKeys": ["stone-fruit-va-2026.covers.pests"]
+        },
+        {
+          "id": "cover-borer-traps",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "lesser-peachtree-borer",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Use a pheromone trap to time lesser peachtree borer adults.",
+          "sourceKeys": ["stone-fruit-va-2026.covers.borer-traps"]
+        },
+        {
+          "id": "cover-canker-surgery",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "peach-canker",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "June or July is when trees heal fastest, so cut cankers out of trunks and large limbs then, in dry weather with at least three dry days forecast.",
+          "sourceKeys": ["stone-fruit-va-2026.covers.canker-surgery"]
+        }
+      ]
+    },
+    {
+      "id": "preharvest",
+      "name": "Pre-harvest",
+      "order": 7,
+      "recognise": {
+        "description": "The last two to three weeks before harvest.",
+        "sourceKey": "stone-fruit-va-2026.preharvest.description"
+      },
+      "windows": [
+        {
+          "id": "preharvest-rots",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            },
+            {
+              "id": "rhizopus-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Check the label.",
+          "sourceKeys": ["stone-fruit-va-2026.preharvest.diseases"]
+        }
+      ]
+    },
+    {
+      "id": "fall",
+      "name": "Early leaf drop",
+      "order": 8,
+      "recognise": {
+        "description": "Early leaf drop in the fall, after harvest.",
+        "sourceKey": "stone-fruit-va-2026.fall.description"
+      },
+      "windows": [
+        {
+          "id": "after-harvest-sanitation",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Pick off all fruit left on the trees after the last harvest, and do not dump rotten fruit in one spot.",
+          "sourceKeys": ["stone-fruit-va-2026.preharvest.sanitation"]
+        },
+        {
+          "id": "fall-leaf-scars",
+          "purpose": "disease-risk",
+          "targets": [
+            {
+              "id": "bacterial-spot",
+              "kind": "disease"
+            },
+            {
+              "id": "peach-leaf-curl",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Where bacterial spot or leaf curl has been a problem, leaf scars can be infected at early leaf drop and carry the disease over winter. Check the label.",
+          "sourceKeys": [
+            "stone-fruit-va-2026.fall.leaf-scars",
+            "stone-fruit-va-2026.fall.description"
+          ]
+        }
+      ]
+    }
+  ]
+}

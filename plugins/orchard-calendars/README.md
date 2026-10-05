@@ -2,7 +2,7 @@
 
 One JSON file per tree fruit calendar edition (for example `pome-va-2026.json`). Each file is validated with `orchardCalendarPluginSchema` in `packages/plugin-validation/src/schemas.ts`; the author-facing JSON Schema is `schemas/orchard-calendar.schema.json`. Rulings: `docs/design/ORCHARD_CALENDAR.md` (OC-1 to OC-8).
 
-This folder stays empty until a local agent lands sourced data, following "Needs a local agent" in `docs/design/ORCHARD_CALENDAR.md`. The cloud build environment cannot open the Virginia Tech or Penn State guides, so nothing here may be written from memory.
+`pome-va-2026.json` (apple), `pear-va-2026.json` and `stone-fruit-va-2026.json` (peach) were sourced by a local agent on 2026-10-04; see "Local agent pass" in `docs/design/ORCHARD_CALENDAR.md`. Nothing here may be written from memory. A calendar hosts only crops its guide chapter covers: pear has its own file because the bulletin gives pear its own stages and windows.
 
 Rules:
 

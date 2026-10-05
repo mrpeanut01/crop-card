@@ -733,28 +733,40 @@ export interface SetQuantityResult {
   lot?: StockLot;
 }
 
+function onHandLots(stockItemId: string) {
+  return db
+    .select()
+    .from(stockLots)
+    .where(
+      withTenant(
+        stockLots,
+        and(eq(stockLots.stockItemId, stockItemId), eq(stockLots.quantityStatus, 'existing'))
+      )
+    )
+    .orderBy(desc(stockLots.receivedAt))
+    .all();
+}
+
+function onHandHundredths(lots: ReadonlyArray<{ id: string }>): number {
+  let total = 0;
+  for (const lot of lots) total += lotBalanceHundredths(lot.id);
+  return total;
+}
+
+/** On-hand quantity of one item, the same sum `setOnHandQuantity` adjusts
+ *  from (existing lots only; ordered and planned lots are not on hand). */
+export function onHandQuantity(stockItemId: string): number {
+  return fromHundredths(onHandHundredths(onHandLots(stockItemId)));
+}
+
 export function setOnHandQuantity(input: SetQuantityInput): SetQuantityResult {
   const item = getStockItem(input.stockItemId);
   if (!item) throw new Error(`unknown stock item: ${input.stockItemId}`);
   if (input.targetQuantity < 0) throw new Error('targetQuantity must be ≥ 0');
 
   const targetHundredths = toHundredths(input.targetQuantity);
-  const lots = db
-    .select()
-    .from(stockLots)
-    .where(
-      withTenant(
-        stockLots,
-        and(eq(stockLots.stockItemId, item.id), eq(stockLots.quantityStatus, 'existing'))
-      )
-    )
-    .orderBy(desc(stockLots.receivedAt))
-    .all();
-
-  let currentHundredths = 0;
-  for (const lot of lots) {
-    currentHundredths += lotBalanceHundredths(lot.id);
-  }
+  const lots = onHandLots(item.id);
+  const currentHundredths = onHandHundredths(lots);
   const deltaHundredths = targetHundredths - currentHundredths;
   const result: SetQuantityResult = {
     itemId: item.id,

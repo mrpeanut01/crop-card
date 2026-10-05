@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EDIT_CONFLICT_API_NOTE } from '$lib/edits/conflict';
 import { MAX_FEED_USE_LB } from './animalStock';
 import { ALL_STOCK_UNITS, type StockUnit } from './units';
 import { QUANTITY_STATUSES } from './quantityStatus';
@@ -81,3 +82,20 @@ export const stockLotCreateSchema = z.object({
 });
 
 export type StockLotCreate = z.infer<typeof stockLotCreateSchema>;
+
+/** POST /api/stock/{id}/set-quantity. Owner only. `base.onHand` is the
+ *  on-hand quantity the device showed when the count was typed. */
+export const setQuantityBaseSchema = z
+  .object({ onHand: z.number().nonnegative().nullable().optional() })
+  .strict();
+
+export const setQuantitySchema = z
+  .object({
+    quantity: z.number().nonnegative(),
+    notes: z.string().max(500).optional(),
+    base: setQuantityBaseSchema.optional()
+  })
+  .describe(
+    'Set the on-hand quantity after a physical count. Saved as one adjustment against the newest on-hand lot, or a new lot when there is none.' +
+      EDIT_CONFLICT_API_NOTE
+  );

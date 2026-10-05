@@ -4,6 +4,7 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
   import Hint from '$lib/components/ui/Hint.svelte';
+  import StaleEditChoice from '$lib/components/records/StaleEditChoice.svelte';
   import DesignerCanvas from '$lib/components/garden/DesignerCanvas.svelte';
   import DesignerToolbar from '$lib/components/garden/DesignerToolbar.svelte';
   import DesignerListView from '$lib/components/garden/DesignerListView.svelte';
@@ -300,6 +301,17 @@
         >{tr('garden.page.dismiss')}</button
       >
     </div>
+  {/if}
+
+  {#if d.stalePlacement}
+    {@const sp = d.stalePlacement}
+    <StaleEditChoice
+      conflict={sp.conflict}
+      names={{ blockNames: Object.fromEntries(d.beds.map((b) => [b.blockId, b.name])) }}
+      busy={d.saving > 0}
+      onKeepMine={() => void d.keepStalePlacement()}
+      onReload={() => window.location.reload()}
+    />
   {/if}
 
   {#if d.conflict}

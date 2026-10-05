@@ -26,6 +26,8 @@
   import { page } from '$app/state';
   import { untrack } from 'svelte';
   import InvSection from './InvSection.svelte';
+  import StaleEditChoice from '$lib/components/records/StaleEditChoice.svelte';
+  import { isEditConflictBody, type EditConflictBody } from '$lib/edits/conflict';
   import { invTypeWord, qtyStatusLabel } from './typeLabel';
   import InvField from './InvField.svelte';
   import LibraryPicker from './LibraryPicker.svelte';
@@ -174,7 +176,12 @@
   );
   let notes = $state(untrack(() => existing?.notes ?? prefill?.notes ?? ''));
   let barcode = $state(untrack(() => existing?.barcode ?? prefill?.barcode ?? ''));
-  const initialOnHand = untrack(() => existing?.onHand ?? null);
+  /** On hand as this form last saw it; sent as `base` with a new count. */
+  let baseOnHand = $state<number | null>(untrack(() => existing?.onHand ?? null));
+  let qtyConflict = $state<EditConflictBody | null>(null);
+
+  /** Stops the save when another device changed on hand since the form opened. */
+  class QuantityConflict extends Error {}
   let quantity = $state<number | null>(
     untrack(() => existing?.onHand ?? prefill?.quantity ?? null)
   );
@@ -390,9 +397,10 @@
   }
 
   // ─── Submit ────────────────────────────────────────────────────────────
-  async function handleSubmit(e: SubmitEvent): Promise<void> {
-    e.preventDefault();
+  async function handleSubmit(e?: SubmitEvent): Promise<void> {
+    e?.preventDefault();
     error = null;
+    qtyConflict = null;
     if (!validate()) return;
     submitting = true;
     try {
@@ -405,10 +413,22 @@
       if (onSaved) onSaved({ id: savedId });
       else goto(`/inventory?type=${type}`);
     } catch (err) {
+      if (err instanceof QuantityConflict) return;
       error = err instanceof Error ? err.message : String(err);
     } finally {
       submitting = false;
     }
+  }
+
+  function keepMyCount(): void {
+    const theirs = qtyConflict?.current.onHand;
+    baseOnHand = typeof theirs === 'number' ? theirs : null;
+    void handleSubmit();
+  }
+
+  function reloadAfterConflict(): void {
+    dirty = false;
+    window.location.reload();
   }
 
   async function postJson(url: string, method: string, body: unknown): Promise<Response> {
@@ -454,11 +474,22 @@
     if (existing) {
       const res = await postJson(`/api/stock/${existing.id}`, 'PATCH', payload);
       if (!res.ok) throw new Error(await apiError(res));
-      if (quantity != null && quantity !== initialOnHand) {
+      if (quantity != null && quantity !== baseOnHand) {
         const q = await postJson(`/api/stock/${existing.id}/set-quantity`, 'POST', {
           quantity,
-          notes: 'Changed on the edit form'
+          notes: 'Changed on the edit form',
+          base: { onHand: baseOnHand }
         });
+        if (q.status === 409) {
+          const body = await q
+            .clone()
+            .json()
+            .catch(() => null);
+          if (isEditConflictBody(body)) {
+            qtyConflict = body;
+            throw new QuantityConflict();
+          }
+        }
         if (!q.ok) {
           throw new Error(tr('inv.form.err.qtyNotChanged', { error: await apiError(q) }));
         }
@@ -820,6 +851,14 @@
 
   {#if error}
     <p class="error-banner" role="alert">{error}</p>
+  {/if}
+  {#if qtyConflict}
+    <StaleEditChoice
+      conflict={qtyConflict}
+      busy={submitting}
+      onKeepMine={keepMyCount}
+      onReload={reloadAfterConflict}
+    />
   {/if}
 
   <footer class="save-footer">

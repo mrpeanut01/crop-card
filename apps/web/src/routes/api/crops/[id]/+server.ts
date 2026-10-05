@@ -5,7 +5,8 @@
  *   bed (owner only); see lib/server/garden/placement.ts.
  *
  * Status transitions stamp `harvested_at` / `archived_at` automatically.
- * `edit-details` and `set-schedule` take an optional `base` and answer 409
+ * `edit-details`, `set-schedule`, `set-placement` and the status actions
+ * take an optional `base` and answer 409
  * `EDIT_CONFLICT` on a stale edit (Phase 36, lib/server/editConflict.ts).
  * Inspector role is read-only at the hooks layer.
  */
@@ -28,7 +29,14 @@ import { currentUser } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
 import { cropPatchSchema } from '$lib/crops/apiSchemas';
-import { cropLookupFrom, failureResponse, writeFootprint } from '$lib/server/garden/placement';
+import {
+  cropLookupFrom,
+  failureResponse,
+  gardenFailure,
+  writeFootprint,
+  type GardenFailure
+} from '$lib/server/garden/placement';
+import { t } from '$lib/i18n';
 import { getRegistry } from '$lib/server/registry';
 import { db } from '$lib/db/client';
 import { withClientRecordId } from '$lib/server/clientRecordId';
@@ -45,6 +53,14 @@ import {
 } from '$lib/server/seedStartTasks';
 
 export const _requestSchema = cropPatchSchema;
+
+/** Thrown inside the checked edit so a refused placement writes nothing and
+ *  never marks an offline replay as saved. */
+class PlacementRefused extends Error {
+  constructor(readonly failure: GardenFailure) {
+    super(failure.body.error);
+  }
+}
 const patchSchema = cropPatchSchema;
 
 const ACTION_TO_STATUS = {
@@ -91,16 +107,46 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
         { status: 403 }
       );
     }
-    const { action: _action, ...request } = parsed.data;
-    const result = writeFootprint(
-      event.params.id,
-      request,
-      cropLookupFrom(await getRegistry()),
-      undefined,
-      event.locals?.locale
-    );
-    if (!result.ok) return failureResponse(result);
-    return json(result.response);
+    const { action: _action, base, ...request } = parsed.data;
+    const id = event.params.id;
+    if (!getCrop(id)) {
+      return failureResponse(
+        gardenFailure(404, t(event.locals?.locale, 'gardenlib.place.notFound'))
+      );
+    }
+    const lookup = cropLookupFrom(await getRegistry());
+    let out;
+    try {
+      out = runCheckedEdit(event, {
+        target: 'planting',
+        id,
+        action: 'set-placement',
+        base,
+        mine: changedValues({
+          blockId: request.blockId,
+          footprint: request.footprint,
+          plantingDate: request.plantingDateMs
+        }),
+        locale: event.locals?.locale,
+        read: () => getCrop(id),
+        values: plantingEditValues,
+        write: () => {
+          const result = writeFootprint(id, request, lookup, undefined, event.locals?.locale);
+          if (!result.ok) throw new PlacementRefused(result);
+          return result.response;
+        }
+      });
+    } catch (e) {
+      if (e instanceof PlacementRefused) return failureResponse(e.failure);
+      throw e;
+    }
+    if (!out.ok) {
+      if (out.status === 409) return editConflictResponse(out.body);
+      return failureResponse(
+        gardenFailure(404, t(event.locals?.locale, 'gardenlib.place.notFound'))
+      );
+    }
+    return json(out.value);
   }
 
   if (parsed.data.action === 'set-establishment') {
@@ -223,9 +269,26 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
     return json({ crop: out.value });
   }
 
+  const id = event.params.id;
+  if (!getCrop(id)) throw error(404, 'crop not found');
   const status = ACTION_TO_STATUS[parsed.data.action];
-  const updated = updateStatus(event.params.id, status, parsed.data.occurredAt);
-  return json({ crop: updated });
+  const occurredAt = parsed.data.occurredAt;
+  const out = runCheckedEdit(event, {
+    target: 'planting',
+    id,
+    action: parsed.data.action,
+    base: parsed.data.base,
+    mine: { status },
+    locale: event.locals?.locale,
+    read: () => getCrop(id),
+    values: plantingEditValues,
+    write: () => updateStatus(id, status, occurredAt)
+  });
+  if (!out.ok) {
+    if (out.status === 409) return editConflictResponse(out.body);
+    throw error(404, 'crop not found');
+  }
+  return json({ crop: out.value });
 });
 
 /**

@@ -90,6 +90,7 @@ import {
 } from './format';
 import { createT, type MessageKey, type Translator } from '$lib/i18n';
 import { plantingInGround } from '$lib/garden/inGround';
+import { isEditConflictBody, type EditConflictBody, type EditFootprint } from '$lib/edits/conflict';
 import { deterministicPlantingWindow } from '$lib/plan/plantingWindow';
 import type { BedFrostView } from '$lib/climate/protectionView';
 
@@ -190,10 +191,20 @@ export class WriteError extends Error {
   constructor(
     message: string,
     readonly code: GardenErrorResponse['code'] | null,
-    readonly offline: boolean
+    readonly offline: boolean,
+    /** Set when another device changed the planting first (409 EDIT_CONFLICT). */
+    readonly editConflict: EditConflictBody | null = null
   ) {
     super(message);
   }
+}
+
+/** A placement that lost to another device's edit. The planting is shown
+ *  where it is now; `keepMine` sends the same change again on purpose. */
+export interface StalePlacement {
+  cropId: string;
+  conflict: EditConflictBody;
+  body: Omit<FootprintWriteRequest, 'spacingPattern'> & { spacingPattern?: SpacingPattern };
 }
 
 const DEFAULT_CROP_LENGTH_IN = 24;
@@ -216,6 +227,29 @@ function errorText(
     return tr('garden.page.viewOnly');
   }
   return body?.error ?? tr('garden.err.saveStatus', { status });
+}
+
+/** The planting with the spot, bed and date the server says it has now. */
+export function withCurrentPlacement(
+  planting: PlacedPlanting,
+  conflict: EditConflictBody
+): PlacedPlanting {
+  const cur = conflict.current;
+  const fp = cur.footprint;
+  return {
+    ...planting,
+    blockId: typeof cur.blockId === 'string' ? cur.blockId : planting.blockId,
+    footprint:
+      fp === null
+        ? null
+        : fp && typeof fp === 'object' && !Array.isArray(fp)
+          ? { ...(fp as EditFootprint) }
+          : planting.footprint,
+    plantingDateMs:
+      typeof cur.plantingDate === 'number' || cur.plantingDate === null
+        ? cur.plantingDate
+        : planting.plantingDateMs
+  };
 }
 
 export function nextBedName(
@@ -262,6 +296,7 @@ export class DesignerState {
   cropTargetBedId = $state<string | null>(null);
   confirmDeleteBedId = $state<string | null>(null);
   conflict = $state<RoomConflict | null>(null);
+  stalePlacement = $state<StalePlacement | null>(null);
   status = $state('');
   alert = $state('');
   private alertTimer: ReturnType<typeof setTimeout> | null = null;
@@ -698,6 +733,10 @@ export class DesignerState {
         throw new WriteError(this.tr('garden.err.offlineWrite'), 'OFFLINE', true);
       }
       const body = (await res.json().catch(() => null)) as (T & GardenErrorResponse) | null;
+      const raw: unknown = body;
+      if (res.status === 409 && isEditConflictBody(raw)) {
+        throw new WriteError(raw.error, null, false, raw);
+      }
       if (!res.ok)
         throw new WriteError(errorText(body, res.status, url, this.tr), body?.code ?? null, false);
       if (write) this.lastSavedAt = Date.now();
@@ -1691,15 +1730,21 @@ export class DesignerState {
     const key = `crop:${id}`;
     if (!this.confirmedPlantings.has(id)) this.confirmedPlantings.set(id, prev);
     const since = this.mark();
-    const { seq, done } = this.queueWrite(key, () =>
-      this.request<FootprintWriteResponse>(`/api/crops/${encodeURIComponent(id)}`, {
+    const { seq, done } = this.queueWrite(key, () => {
+      const seen = this.confirmedPlantings.get(id) ?? prev;
+      return this.request<FootprintWriteResponse>(`/api/crops/${encodeURIComponent(id)}`, {
         method: 'PATCH',
         json: {
           action: 'set-placement',
-          ...({ ...body, spacingPattern: pattern } satisfies FootprintWriteRequest)
+          ...({ ...body, spacingPattern: pattern } satisfies FootprintWriteRequest),
+          base: {
+            blockId: seen.blockId,
+            footprint: seen.footprint,
+            plantingDate: seen.plantingDateMs
+          }
         }
-      })
-    );
+      });
+    });
     try {
       const res = await done;
       if (this.isLatestWrite(key, seq)) {
@@ -1712,14 +1757,31 @@ export class DesignerState {
       for (const w of res.warnings ?? []) this.say(w, since);
       return res;
     } catch (e) {
+      const stale = e instanceof WriteError ? e.editConflict : null;
       if (this.isLatestWrite(key, seq)) {
-        const back = this.confirmedPlantings.get(id) ?? prev;
+        const confirmed = this.confirmedPlantings.get(id) ?? prev;
+        const back = stale ? withCurrentPlacement(confirmed, stale) : confirmed;
         this.confirmedPlantings.delete(id);
         this.replacePlanting(back);
+        if (stale) {
+          this.stalePlacement = { cropId: id, conflict: stale, body };
+          return null;
+        }
       }
+      if (stale) return null;
       this.fail(e);
       return null;
     }
+  }
+
+  /** Keep my change: the same placement again, now checked against where
+   *  the planting is on the farm. */
+  keepStalePlacement(): Promise<FootprintWriteResponse | null> {
+    const stale = this.stalePlacement;
+    this.stalePlacement = null;
+    const p = stale && this.design.plantings.find((q) => q.cropId === stale.cropId);
+    if (!stale || !p) return Promise.resolve(null);
+    return this.writeFootprint(p, stale.body);
   }
 
   setPlantingSize(cropId: string, wFt: number, lFt: number): Promise<unknown> {

@@ -37,7 +37,9 @@
   <p class="lede">
     {conflict.target === 'task'
       ? tr('recui.conflict.lede.task')
-      : tr('recui.conflict.lede.planting')}
+      : conflict.target === 'stock'
+        ? tr('recui.conflict.lede.stock')
+        : tr('recui.conflict.lede.planting')}
   </p>
   <ul class="fields">
     {#each conflict.fields as f (f.field)}

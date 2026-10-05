@@ -13,12 +13,25 @@ export const CROP_STATUS_ACTIONS = [
   'reactivate'
 ] as const;
 
+export const CROP_STATUSES = ['planned', 'active', 'harvested', 'failed', 'archived'] as const;
+
+/** The status the device last saw before pressing a status button. Only
+ *  `status` is checked: other keys are dropped, so another device's detail
+ *  or date edit never blocks a status change (E-07). */
+export const cropStatusBaseSchema = z.object({
+  status: z.enum(CROP_STATUSES).nullable().optional()
+});
+
 export const cropStatusPatchSchema = z
   .object({
     action: z.enum(CROP_STATUS_ACTIONS),
-    occurredAt: z.number().int().optional()
+    occurredAt: z.number().int().optional(),
+    base: cropStatusBaseSchema.optional()
   })
-  .describe('Change the planting status. Harvested and archived dates are stamped for you.');
+  .describe(
+    'Change the planting status. Harvested and archived dates are stamped for you.' +
+      EDIT_CONFLICT_NOTE
+  );
 
 /** The values the device last saw for `set-schedule`'s fields (Phase 36, E-03). */
 export const cropScheduleBaseSchema = z

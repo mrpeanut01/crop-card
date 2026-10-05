@@ -18,6 +18,7 @@
   import LotQuantities from '../LotQuantities.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatRateText, formatStockQuantity } from '$lib/stock/units';
+  import { pollinatorLabelText } from '$lib/pollinator/labelText';
   import type { PesticideDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
 
   type Props = Omit<PesticideDetailPayload, 'type'>;
@@ -76,6 +77,9 @@
             : '—'}
           tone="locked"
         />
+        {#if plugin?.pollinator || plugin?.pollinatorRisk}
+          <InvKVP label="Pollinators" value={pollinatorLabelText(plugin)} tone="locked" />
+        {/if}
         {#if plugin?.activeIngredients?.length}
           <div class="ai-list">
             {#each plugin.activeIngredients as ai, idx (idx)}

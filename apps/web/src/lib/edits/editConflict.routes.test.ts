@@ -57,7 +57,9 @@ describe('PATCH /api/crops/:id edit-details with base', () => {
         quantityUnit: 'ft',
         harvestUseCases: null,
         plantingDate: APR_1,
-        blockId: farm.blockA
+        blockId: farm.blockA,
+        status: 'active',
+        footprint: null
       });
       const crop = getCrop(farm.cropId)!;
       expect(crop.varietyDisplayName).toBe('Romaine');
@@ -180,7 +182,7 @@ describe('PATCH /api/crops/:id set-schedule with base', () => {
     });
   });
 
-  it('never refuses status actions, even with a stale base', async () => {
+  it('never refuses a status action over a stale base for other fields (E-07)', async () => {
     const farm = seedEditFarm();
     await runWithTenant(farm.ownerId, async () => {
       await patchCrop(farm.cropId, { action: 'edit-details', varietyDisplayName: 'Romaine' });

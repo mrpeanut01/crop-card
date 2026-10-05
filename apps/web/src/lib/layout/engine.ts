@@ -22,6 +22,7 @@
  */
 
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { rowSpacingOf } from '$lib/garden/plantCount';
 import { cropCastsShade } from '$lib/calendar/engine';
 import { rotationLookbackForFamily } from '$lib/calendar/rotation';
 import type { BlockWithPlantings, SunExposure } from '$lib/db/blocks';
@@ -515,7 +516,7 @@ function scoreBlock(
   if (fit < needed) score += w.fragmentationPenalty;
 
   // 7) narrow-block penalty — block min-dimension < 2 × rowSpacing
-  const rowIn = plugin.plantingGuide?.rowSpacingIn ?? plugin.defaultRowSpacingInches ?? 12;
+  const rowIn = rowSpacingOf(plugin).inches;
   const minDimFt = blockMinDimensionFt(block);
   if (minDimFt != null && minDimFt < 2 * (rowIn * FT_PER_INCH)) {
     score += w.narrowBlockPenalty;

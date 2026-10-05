@@ -42,8 +42,7 @@ No migration and no Dexie version bump. `lib/edits/conflict.ts` (client-safe) ho
 
 #### Follow-ups
 
-- `POST /api/stock/:id/set-quantity` (owner-only physical count, online only) has no conflict check yet (E-02).
-- Crop drag-to-move on the Gantt, the garden designer's placement, `PlantingGroupWizard`'s `set-schedule`, crop status buttons and `AssignSheet` send no `base`, so they still write last-wins (E-02).
+- Done after 36: `POST /api/stock/:id/set-quantity` (field `onHand`, target `stock`), `set-placement` (fields `blockId`, `footprint`, `plantingDate`), the four status actions (field `status`) and the Gantt and block-header drags (`set-schedule`) take or send `base` through the same `runCheckedEdit`. The status base checks only `status` and drops other keys, so another device's detail or date edit still never blocks a status change (E-07); a status that moved on to a third value is refused. Clients that cannot fit the per-field picker show `StaleEditChoice.svelte` (Keep my change or Reload), with the server's current spot shown in the designer. `PlantingGroupWizard`'s `set-schedule` and `AssignSheet` still send no `base`.
 - Task edits have no form that queues offline; only the /plan planting modal queues `record-edit` rows (U-01).
 - Peak worker and main-thread memory on the Azure container after deploy (R-05, R-13).
 

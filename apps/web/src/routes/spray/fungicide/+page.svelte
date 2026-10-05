@@ -19,6 +19,8 @@
   import { organicInputClass } from '$lib/organic/inputCompliance';
   import { checkFungicideTankMixCompat } from '$lib/safety/fungicideTankMix';
   import { checkFracRotation } from '$lib/safety/fracRotation';
+  import { isRiskyForBloom } from '$lib/safety/pollinatorBloom';
+  import { pollinatorLabelText } from '$lib/pollinator/labelText';
   import LeafWetDial from '$lib/components/spray/LeafWetDial.svelte';
   import RainSparkline from '$lib/components/spray/RainSparkline.svelte';
   import DryWindowGate from '$lib/components/spray/DryWindowGate.svelte';
@@ -240,6 +242,18 @@
   });
 
   const selectedBlock = $derived(data.blocks.find((b) => b.id === selectedBlockId) ?? null);
+  const bloomRisk = $derived.by(() => {
+    const blooming = selectedBlock?.bloomingCropPluginIds ?? [];
+    if (blooming.length === 0) return null;
+    const risky = selectedFungicides.filter((f) =>
+      isRiskyForBloom({
+        pluginId: f.pluginId,
+        pollinatorRisk: f.pollinatorRisk,
+        pollinator: f.pollinator ?? undefined
+      })
+    );
+    return risky.length > 0 ? { blooming, risky } : null;
+  });
   const ctxPasture = $derived(
     pastureNotice({
       blockIds: selectedBlock ? [selectedBlock.id] : [],
@@ -390,6 +404,21 @@
   />
 </div>
 
+{#if bloomRisk}
+  <div
+    class="tank-mix-banner incompat"
+    role="alert"
+    data-testid="fungicide-bloom-notice"
+    lang="en"
+    data-english-only="safety"
+  >
+    <strong>Bees.</strong>
+    {bloomRisk.risky.map((f) => `${f.displayName} (${pollinatorLabelText(f)})`).join(', ')}:
+    bee-toxic during bloom on {bloomRisk.blooming.join(', ')}. Wait for bloom to end, spray at dusk
+    after foragers have left, or rotate to a low-risk product.
+  </div>
+{/if}
+
 {#each tankMixIssues as issue (issue.code)}
   <div class="tank-mix-banner" class:incompat={issue.severity === 'incompatible'} role="alert">
     <strong>{issue.severity === 'incompatible' ? 'Phytotoxicity risk' : 'Caution'}.</strong>
@@ -449,8 +478,10 @@
                       onchange={() => toggleProduct(f.pluginId)}
                     />
                     <span class="prod-name">{f.displayName}</span>
-                    <span class="prod-meta">
-                      REI {f.reEntryIntervalHours}h · PHI {f.preHarvestIntervalDays}d
+                    <span class="prod-meta" lang="en" data-english-only="safety">
+                      REI {f.reEntryIntervalHours}h · PHI {f.preHarvestIntervalDays}d · {pollinatorLabelText(
+                        f
+                      )}
                     </span>
                   </label>
                 </li>

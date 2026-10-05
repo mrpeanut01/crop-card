@@ -77,11 +77,6 @@
       "reason": "Generic Btk active-ingredient plugin with no brand or rate: registered Btk products are DF, WG, WP, liquid and dust (Javelin WG, DiPel DF), so no single code applies. Use the brand plugins (dipel-df, javelin-wg)."
     },
     {
-      "pluginId": "intrepid-edge",
-      "field": "formulation",
-      "reason": "No US registrant document prints a code: the US label groups it with 'aqueous suspensions', and the US SDS says only 'Physical state Liquid'. Corteva Australia's Intrepid Edge (same 300 + 60 g/L) is an SC, but under a different (APVMA) registration. PPLS says EC. Rechecked 2026-10-04."
-    },
-    {
       "pluginId": "isomate-c-plus-pheromone",
       "field": "formulation",
       "reason": "Hand-applied pheromone twist-tie dispenser (PPLS 'Impregnated Materials'). The enum only has spray, granule and dust codes, each mapped to liquid or dry, and neither fits a dispenser. Formulation only feeds the liquid/dry default-unit derivation, and the plugin already sets defaultUnit 'count', so no schema change is proposed."
@@ -129,7 +124,7 @@
     {
       "pluginId": "venerate-xc",
       "field": "formulation",
-      "reason": "Venerate XC is an alternate brand of MBI-206 EP (EPA 84059-14); its label names no standard code ('EP' is not one). The only printed SC on this registration is the Majestene SDS synonym 'MBI-305 EP, Majestene SC', a different internal formulation code. PPLS says EC."
+      "reason": "Venerate XC is an alternate brand of MBI-206 EP (EPA 84059-14); its label names no standard code ('EP' is not one). The only printed SC on 84059-14 is the trade-name synonym 'MBI-305 EP, Majestene SC' in the ProFarm SDS (MBI-SDS-0009 rev 10, 2023), which is likely a non-US trade name (rev 9's note says 'Update synonyms', and the French/African distributor Elephant Vert sells a MAJESTENE SC); the US master label (MBI-206 EP, 2026-02-02) lists MAJESTENE and VENERATE brands side by side and never mentions MBI-305 or SC. PPLS says Emulsifiable Concentrate. Majestene and Venerate XC are one US product and stay gapped together (panel ruling 2026-10-04, #553, 3-0)."
     },
     {
       "pluginId": "voliam-xpress",
@@ -142,19 +137,9 @@
       "reason": "Mycoshield label (55146-97, 2019 master and 2007) prints no formulation words; the Nufarm SDS (2018-03-26) says only 'Light to dark brown powder', which fits WP or SP. Only PPLS (WP) and a USDA AMS report say wettable powder. Rechecked 2026-10-04."
     },
     {
-      "pluginId": "previcur-flex-propamocarb",
-      "field": "formulation",
-      "reason": "Previcur Flex label (264-678, 2024) names no formulation (only '6.0 lbs ... per gallon'). Bayer's product page Formulation field says '6 lb/gal emulsifiable concentrate' while PPLS says 'Flowable Concentrate' and propamocarb HCl is water-soluble; a product page alone is not a label, tech sheet or SDS. Needs a ruling."
-    },
-    {
       "pluginId": "prophyt-phosphonate",
       "field": "formulation",
       "reason": "ProPhyt master label (42519-22, 2025) prints no formulation words; the Helena SDS (2019-11-05) says 'Transparent blue liquid' and the product page only 'Easy-to-use liquid' (marketing, no Formulation field). PPLS 'Soluble Concentrate' is corroboration only. Rechecked 2026-10-04."
-    },
-    {
-      "pluginId": "serenade-aso",
-      "field": "formulation",
-      "reason": "Serenade ASO label (264-1152, 2025) says 'AN AQUEOUS SUSPENSION BIOFUNGICIDE' with no code, and Bayer's product page Formulation field reads '1.34% AS'; AS is not an enum code and mapping it to SC needs a ruling. PPLS lists Emulsifiable Concentrate, which conflicts."
     },
     {
       "pluginId": "2-4-d-amine",
@@ -250,6 +235,21 @@
       "pluginId": "dimethoate-4ec",
       "field": "epaRegistrationNumber",
       "reason": "Generic plugin: several active dimethoate 4EC registrations (Loveland 34704-207, Drexel 19713-231, UPL 70506-453, FMC 279-3541); the number depends on the jug on hand. The previous 5905-368 was Omni Supreme Spray (a mineral oil). Rechecked 2026-10-03 (#530): the plugin notes say Loveland Products, but Loveland's 34704-207 is titled 'DIMETHOATE 400' on PPLS and on every label file (2007-2014), never 'Dimethoate 4EC', so it is not taken as the plugin's product."
+    },
+    {
+      "pluginId": "majestene-nematicide",
+      "field": "formulation",
+      "reason": "Majestene is an alternate brand of MBI-206 EP (EPA 84059-14), whose 2026-02-02 master label prints no formulation code or type (SDS section 9: 'PHYSICAL STATE: Liquid'). The only printed SC on 84059-14 is the trade-name synonym 'MBI-305 EP, Majestene SC' in the ProFarm SDS (MBI-SDS-0009 rev 10, 2023), which is likely a non-US trade name (rev 9's note says 'Update synonyms', and the French/African distributor Elephant Vert sells a MAJESTENE SC); the US master label (MBI-206 EP, 2026-02-02) lists MAJESTENE and VENERATE brands side by side and never mentions MBI-305 or SC. PPLS says Emulsifiable Concentrate. Majestene and Venerate XC are one US product and stay gapped together (panel ruling 2026-10-04, #553, 3-0)."
+    },
+    {
+      "pluginId": "champ-dp",
+      "field": "formulation",
+      "reason": "Both labels in PPLS (055146-00057-20030127 and -20220727) say only 'Champ Dry Prill', and Nufarm's bulletin says 'FORMULATION dry prill' (not a code); the Nufarm SDS (2015) gives only 'Teal blue granular solid', 'Dispersible'. The only 'Dry Flowable' is the 2003 EPA Form 8570-1 product name 'Nufarm Champion Formula 2 Dry Flowable Fungicide', an application form, not a label, tech sheet or SDS, so the #554 DF fill was reverted (panel ruling 2026-10-04, #553, 2-1). PPLS says Water Dispersible Granule. Dry product either way, matching the lb rate."
+    },
+    {
+      "pluginId": "weed-zap-citronella",
+      "field": "formulation",
+      "reason": "FIFRA 25(b) product with no EPA label; the JH Biotech label calls it only 'WEED ZAP concentrate'. JH's flyer ('WeedZap Info 1-1-20') and SDS say only 'Form: Liquid' / 'Physical state liquid', a physical state like the refused liberty-ultra and m-pede evidence, so the #554 L fill was reverted (panel ruling 2026-10-04, #553, 3-0: L only when a registrant document says 'liquid formulation' or has a 'Formulation: liquid' field)."
     }
   ]
 }

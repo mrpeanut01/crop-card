@@ -7,6 +7,7 @@ import type { AiLimit } from '$lib/billing/aiLimit';
  */
 
 import { z } from 'zod';
+import { EDIT_CONFLICT_API_NOTE } from '$lib/edits/conflict';
 import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
 import { footprintSchema, SPACING_PATTERNS, spacingInSchema } from '$lib/farm/footprint';
 import type { DesignableAreaKind } from '$lib/farm/areaKinds';
@@ -94,9 +95,22 @@ export const footprintWriteSchema = z.strictObject({
   plantingDateMs: epochMs.nullable().optional()
 });
 export type FootprintWriteRequest = z.infer<typeof footprintWriteSchema>;
-export const setPlacementPatchSchema = footprintWriteSchema.extend({
-  action: z.literal('set-placement')
+/** The spot, bed and date the device last saw (Phase 36 conflict check).
+ *  Keys are the conflict field names, so the date is `plantingDate`. */
+export const placementBaseSchema = z.strictObject({
+  blockId: id.nullable().optional(),
+  footprint: footprintSchema.nullable().optional(),
+  plantingDate: epochMs.nullable().optional()
 });
+export const setPlacementPatchSchema = footprintWriteSchema
+  .extend({
+    action: z.literal('set-placement'),
+    base: placementBaseSchema.optional()
+  })
+  .describe(
+    'Owner only. Place, move or clear the planting in a garden bed, and optionally move its date.' +
+      EDIT_CONFLICT_API_NOTE
+  );
 
 export interface FootprintWriteResponse {
   planting: PlacedPlanting;

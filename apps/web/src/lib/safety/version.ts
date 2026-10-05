@@ -45,5 +45,9 @@
  * Issue #469 — 0.7.1: the prohibited-drug table was checked against 21 CFR
  * 530.41 (eCFR, 2026-09-28). The influenza A paragraphs are (d)(1) and
  * (d)(2), not (b)(1) and (b)(2); no drug was added or removed.
+ * #530 — 0.7.2: the fungicide bloom gate (`checkPollinatorBloom`) also reads
+ * the plugin's label `pollinator` block and gates on the riskier of it and
+ * the legacy `pollinatorRisk` hint (`effectivePollinatorRisk`). Label data
+ * can only add a block; shipped fungicides keep the verdicts they had.
  */
-export const RULES_VERSION = '0.7.1' as const;
+export const RULES_VERSION = '0.7.2' as const;

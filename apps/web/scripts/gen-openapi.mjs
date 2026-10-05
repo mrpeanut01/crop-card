@@ -120,6 +120,7 @@ import { CLIENT_RECORD_HEADER } from '../src/lib/clientRecordHeader.ts';
 import {
   feedUseSchema,
   seedSourcingPatchSchema,
+  setQuantitySchema,
   stockLotCreateSchema
 } from '../src/lib/stock/apiSchemas.ts';
 import {
@@ -1515,6 +1516,41 @@ const paths = {
     }
   },
 
+  '/api/stock/{id}/set-quantity': {
+    post: {
+      summary: 'Set the on-hand quantity after a count',
+      description:
+        'Owner only. Saves the difference as one `adjustment` movement against the newest on-hand lot, or receives a new lot when there is none. Ordered and planned lots are not touched. Send `base.onHand` with the on-hand quantity you showed; when someone else changed it since, nothing is saved and the answer is 409 `EDIT_CONFLICT` with `current.onHand`.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [idPath('id', 'Stock item id.')],
+      requestBody: jsonBody(setQuantitySchema),
+      responses: {
+        200: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['result'],
+          properties: {
+            result: {
+              type: 'object',
+              required: ['itemId', 'previousQuantity', 'newQuantity', 'delta'],
+              properties: {
+                itemId: { type: 'string' },
+                previousQuantity: { type: 'number' },
+                newQuantity: { type: 'number' },
+                delta: { type: 'number' }
+              }
+            }
+          }
+        }),
+        400: errorResponse('Invalid body.'),
+        ...OWNER_ERRORS,
+        404: errorResponse('Stock item not found for the active Owner.'),
+        409: errorResponse(
+          'On hand changed since the device last saw it (`EDIT_CONFLICT`, with `fields` and `current`).'
+        )
+      }
+    }
+  },
+
   '/api/stock/{id}/use': {
     post: {
       summary: 'Take feed or bedding off stock',
@@ -2544,7 +2580,7 @@ const paths = {
         ),
         404: jsonResponse('Planting not found for the active Owner.', gardenErrorRef),
         409: jsonResponse(
-          'Already in the ground (`IN_GROUND`), the spot is taken for a linked sowing (`OVERLAP`), the block is not a sized bed in a garden (`NOT_DESIGNABLE`), a split that could not be made, or `change-plugin` on the anchor of a planting group.',
+          'Already in the ground (`IN_GROUND`), the spot is taken for a linked sowing (`OVERLAP`), the block is not a sized bed in a garden (`NOT_DESIGNABLE`), a split that could not be made, `change-plugin` on the anchor of a planting group, or a stale edit sent with `base` (`EDIT_CONFLICT`, with `fields` and `current`) on `edit-details`, `set-schedule`, `set-placement` or a status action.',
           gardenErrorRef
         ),
         501: errorResponse('`change-plugin` is not available yet.')

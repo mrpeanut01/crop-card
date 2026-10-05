@@ -28,8 +28,15 @@ export function plantingEditValues(c: Crop): EditValues {
     quantityUnit: c.quantityUnit ?? null,
     harvestUseCases: c.harvestUseCases ?? null,
     plantingDate: c.plantingDate ?? null,
-    blockId: c.blockId
+    blockId: c.blockId,
+    status: c.status,
+    footprint: c.footprint ?? null
   };
+}
+
+/** A stock item's on-hand quantity as stored now (`set-quantity`). */
+export function stockEditValues(onHand: number): EditValues {
+  return { onHand };
 }
 
 /** Every in-scope field of a task as stored now (C-E1). */

@@ -27,7 +27,21 @@ type Op =
   | { device: 0 | 1; kind: 'set-schedule'; plantingDate: number | null; block: 'A' | 'B' | null }
   | { device: 0 | 1; kind: 'task-edit'; patch: Record<string, unknown> }
   | { device: 0 | 1; kind: 'reschedule'; scheduledFor: number }
-  | { device: 0 | 1; kind: 'assign'; who: 0 | 1 | 2 };
+  | { device: 0 | 1; kind: 'assign'; who: 0 | 1 | 2 }
+  | { device: 0 | 1; kind: 'status'; action: StatusAction };
+
+type StatusAction = 'mark-harvested' | 'archive' | 'mark-failed' | 'reactivate';
+const STATUS_OF: Record<StatusAction, string> = {
+  'mark-harvested': 'harvested',
+  archive: 'archived',
+  'mark-failed': 'failed',
+  reactivate: 'active'
+};
+/** Fields an action may change besides its own (set-schedule moves a
+ *  planting between planned and active). */
+const SIDE_EFFECTS: Record<string, readonly EditField[]> = {
+  'planting:set-schedule': ['status']
+};
 
 const device = fc.constantFrom(0 as const, 1 as const);
 const someOf = <T extends Record<string, fc.Arbitrary<unknown>>>(r: T) =>
@@ -68,6 +82,11 @@ const opArb: fc.Arbitrary<Op> = fc.oneof(
     device,
     kind: fc.constant('assign' as const),
     who: fc.constantFrom(0 as const, 1 as const, 2 as const)
+  }),
+  fc.record({
+    device,
+    kind: fc.constant('status' as const),
+    action: fc.constantFrom<StatusAction>('mark-harvested', 'archive', 'mark-failed', 'reactivate')
   })
 );
 
@@ -106,6 +125,10 @@ async function send(farm: EditFarm, view: View, op: Exclude<Op, { kind: 'refresh
       plantingDate: op.plantingDate,
       ...(blockId ? { blockId } : {})
     };
+  } else if (op.kind === 'status') {
+    target = 'planting';
+    mine = { status: STATUS_OF[op.action] };
+    body = { action: op.action };
   } else if (op.kind === 'task-edit') {
     target = 'task';
     mine = op.patch as EditValues;
@@ -174,7 +197,7 @@ describe('no stale edit overwrites silently (E-10)', () => {
                 const wasMine = sameEditValue(before[target][f], mine[f]);
                 expect(wasBase || wasMine).toBe(true);
                 expect(sameEditValue(after[target][f], mine[f])).toBe(true);
-              } else {
+              } else if (!(SIDE_EFFECTS[`${target}:${action}`] ?? []).includes(f)) {
                 expect(sameEditValue(after[target][f], before[target][f])).toBe(true);
               }
             }

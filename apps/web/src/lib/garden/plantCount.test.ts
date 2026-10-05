@@ -60,7 +60,16 @@ describe('resolveSpacing', () => {
     });
   });
 
-  it('falls back to defaultRowSpacingInches both ways', () => {
+  it('never uses defaultRowSpacingInches as in-row spacing', () => {
+    expect(resolveSpacing({ ...buttercrunch, defaultRowSpacingInches: 7 }, 'square')).toEqual({
+      inRowIn: 12,
+      rowIn: 7,
+      pattern: 'square',
+      source: 'fallback'
+    });
+  });
+
+  it('uses the tagged placeholder in-row when the plugin has no in-row range', () => {
     expect(resolveSpacing(buttercrunch, 'square')).toEqual({
       inRowIn: 12,
       rowIn: 12,

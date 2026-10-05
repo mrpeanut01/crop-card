@@ -108,6 +108,30 @@ export function splitGroupBlocks(
   return byGroup;
 }
 
+/** Group id -> its live blocks' ids (sorted), for groups on two or more
+ *  blocks, from bare planting rows. Same rules as `splitGroupBlocks`. */
+export function splitGroupBlockIds(
+  parts: ReadonlyArray<{ splitGroupId: string; blockId: string; status?: string }>
+): Record<string, string[]> {
+  const byBlock = new Map<string, { splitGroupId: string; status?: string }[]>();
+  for (const p of parts) {
+    const list = byBlock.get(p.blockId) ?? [];
+    list.push(p);
+    byBlock.set(p.blockId, list);
+  }
+  const groups = splitGroupBlocks(
+    [...byBlock].map(([id, plantings]) => ({ id, name: '', plantings }))
+  );
+  const out: Record<string, string[]> = {};
+  for (const g of [...groups.keys()].sort()) {
+    out[g] = groups
+      .get(g)!
+      .map((b) => b.blockId)
+      .sort();
+  }
+  return out;
+}
+
 /** "beds" when every block is a garden or greenhouse bed, else "blocks" (R-20). */
 export function splitNoun(
   blockIds: ReadonlyArray<string>,

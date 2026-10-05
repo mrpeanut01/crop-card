@@ -41,7 +41,8 @@ function toSnapshotPlanting(r: typeof crops.$inferSelect): SnapshotPlanting {
     sourceProvenance: r.sourceProvenance ?? null,
     ...layoutOf(r),
     ...(r.establishment ? { establishment: r.establishment } : {}),
-    ...(r.sownIndoorsAt ? { sownIndoorsAt: r.sownIndoorsAt.getTime() } : {})
+    ...(r.sownIndoorsAt ? { sownIndoorsAt: r.sownIndoorsAt.getTime() } : {}),
+    ...(r.splitGroupId ? { splitGroupId: r.splitGroupId } : {})
   };
 }
 
@@ -90,6 +91,22 @@ export function listPlantingsForCardsByIds(ids: readonly string[]): SnapshotPlan
     .where(withTenant(crops, inArray(crops.id, [...ids])))
     .all()
     .map(toSnapshotPlanting);
+}
+
+/** Every planting in the named split groups, in any status, so the
+ *  snapshot can count a group's parts the way /plan does (Phase 35, R-22). */
+export function listSplitGroupParts(
+  groupIds: readonly string[]
+): Array<{ splitGroupId: string; blockId: string; status: string }> {
+  if (!groupIds.length) return [];
+  return db
+    .select({ splitGroupId: crops.splitGroupId, blockId: crops.blockId, status: crops.status })
+    .from(crops)
+    .where(withTenant(crops, inArray(crops.splitGroupId, [...groupIds])))
+    .all()
+    .flatMap((r) =>
+      r.splitGroupId ? [{ splitGroupId: r.splitGroupId, blockId: r.blockId, status: r.status }] : []
+    );
 }
 
 /** The planting a harvest or hay record most likely belongs to when it

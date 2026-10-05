@@ -3,6 +3,7 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadPluginsFromDirectory } from './loader';
 import { PluginRegistry } from './registry';
+import { cropLookupOf } from './cropLookup';
 import { loadPhase32DataKinds, type Phase32DataKinds } from './registryDataKinds';
 import type { CropPlugin } from './schemas';
 import { PERENNIAL_DAYOFYEAR_TEMPLATES } from './growthStageTemplates';
@@ -62,14 +63,7 @@ let kinds: Phase32DataKinds;
 beforeAll(async () => {
   library = new PluginRegistry();
   await loadPluginsFromDirectory(library, PLUGINS_DIR);
-  kinds = await loadPhase32DataKinds(PLUGINS_DIR, {
-    crops: {
-      cropFamilyOf: (id) => {
-        const p = library.get(id)?.plugin;
-        return p?.type === 'crop' ? p.cropFamily : undefined;
-      }
-    }
-  });
+  kinds = await loadPhase32DataKinds(PLUGINS_DIR, { crops: cropLookupOf(library) });
 });
 
 const isSpecies = (id: string) => kinds.species.has(id);

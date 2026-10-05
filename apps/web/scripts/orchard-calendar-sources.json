@@ -78,19 +78,6 @@
         }
       ]
     },
-    "pear-va-2026.dormant.targets": {
-      "sources": [
-        {
-          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
-          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
-          "date": "2026-10-04",
-          "quote": "Pears / DORMANT SPRAY: Diseases / Fireblight",
-          "edition": "2026",
-          "page": "97",
-          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
-        }
-      ]
-    },
     "pear-va-2026.green-cluster.description": {
       "sources": [
         {
@@ -146,19 +133,6 @@
         }
       ]
     },
-    "pear-va-2026.petal-fall.bees": {
-      "sources": [
-        {
-          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
-          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
-          "date": "2026-10-04",
-          "quote": "Consider withholding until after first cover, in order to protect pollinators.",
-          "edition": "2026",
-          "page": "101",
-          "note": "Footnote 7 to the pear petal fall through fifth cover insect table."
-        }
-      ]
-    },
     "pear-va-2026.petal-fall.description": {
       "sources": [
         {
@@ -169,6 +143,15 @@
           "edition": "1976",
           "page": "PDF page 10",
           "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PETAL FALL, FIRST THROUGH FIFTH COVER SPRAYS: Diseases",
+          "edition": "2026",
+          "page": "100",
+          "note": "The pear chapter's table heading, which sets the span this stage covers."
         }
       ]
     },
@@ -352,19 +335,6 @@
           "edition": "2026",
           "page": "95",
           "note": "Table 12, Aggressive Fire Blight Management, in the section 'Fire Blight in Apples and Pears'."
-        }
-      ]
-    },
-    "pome-va-2026.dormant.targets": {
-      "sources": [
-        {
-          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
-          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
-          "date": "2026-10-04",
-          "quote": "DORMANT SPRAYS / Fireblight",
-          "edition": "2026",
-          "page": "59",
-          "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
         }
       ]
     },
@@ -594,6 +564,15 @@
           "edition": "2026",
           "page": "66",
           "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "GFW, if present, must be controlled at this time to prevent fruit injury",
+          "edition": "2026",
+          "page": "67",
+          "note": "Footnote 4, which limits the green fruitworm target. Only the condition is used."
         }
       ]
     },
@@ -673,6 +652,15 @@
           "edition": "2026",
           "page": "64",
           "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Apply at pink only if damage was severe in preceding year. Otherwise treat at petal fall if threshold is exceeded.",
+          "edition": "2026",
+          "page": "64",
+          "note": "Footnote 5, on European apple sawfly (EAS), which limits that target. Only the condition is used."
         }
       ]
     },
@@ -803,6 +791,15 @@
           "edition": "2026",
           "page": "74",
           "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "AM is seldom a problem in our region, except when an abandoned orchard is nearby.",
+          "edition": "2026",
+          "page": "75",
+          "note": "Footnote 2 to the third cover insect table, which limits the apple maggot target."
         }
       ]
     },
@@ -988,10 +985,19 @@
           "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
           "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
           "date": "2026-10-04",
-          "quote": "CAUTION: Do not extend intervals between cover sprays more than 14 days.",
+          "quote": "FIRST COVER SPRAY : Diseases",
           "edition": "2026",
           "page": "105",
-          "note": "Footnote to the peach first cover disease table; the second and third cover tables repeat it."
+          "note": "Table heading (its footnote marker left out): the first of the peach cover stages, after the shuck split and shuck fall tables."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "PRE-HARVEST SPRAYS",
+          "edition": "2026",
+          "page": "110",
+          "note": "Table heading: the stage that follows the fourth and fifth covers."
         }
       ]
     },
@@ -1076,6 +1082,15 @@
           "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
           "date": "2026-10-04",
           "quote": "Dormant fungicide application for peach leaf curl should be timed early with warm temperatures and always before bud swelling.",
+          "edition": "2026",
+          "page": "113",
+          "note": "Note to Table 13, Seasonal Activity of Peach Diseases."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "As it happened in 2017, the Mid-Atlantic region experienced an unusually warm February that influenced bud swelling and infection by Taphrina deformans (leaf curl) earlier than normal.",
           "edition": "2026",
           "page": "113",
           "note": "Note to Table 13, Seasonal Activity of Peach Diseases."
@@ -1184,6 +1199,15 @@
           "edition": "2026",
           "page": "104",
           "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech, West Virginia University and University of Maryland Extension: 2026 Spray Bulletin for Commercial Tree Fruit Growers, VCE Publication 456-419 (ENTO-638)",
+          "date": "2026-10-04",
+          "quote": "Control WFT now if scarring has been a problem.",
+          "edition": "2026",
+          "page": "104",
+          "note": "Footnote 2, which limits the western flower thrips target. Only the condition is used."
         }
       ]
     },

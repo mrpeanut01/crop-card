@@ -1,7 +1,14 @@
 {
   "pluginId": "stone-fruit-va-2026",
   "type": "orchard-calendar",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "audience": "commercial",
+  "guide": {
+    "publisher": "Virginia Cooperative Extension (Virginia Tech, West Virginia University, University of Maryland Extension)",
+    "title": "2026 Spray Bulletin for Commercial Tree Fruit Growers",
+    "publicationId": "VCE 456-419",
+    "url": "https://www.pubs.ext.vt.edu/456/456-419/456-419.html"
+  },
   "edition": "2026",
   "hostCropFamilies": ["stone-fruit"],
   "hostCropPluginIds": ["peach-elberta", "peach-redhaven"],
@@ -25,7 +32,7 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Leaf curl protection has to be in place before the buds swell, earlier after a warm late winter. Check the label.",
+          "note": "Leaf curl infects as the buds swell, and earlier than usual after a warm late winter.",
           "sourceKeys": ["stone-fruit-va-2026.dormant.leaf-curl"]
         },
         {
@@ -42,7 +49,6 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Check the label.",
           "sourceKeys": ["stone-fruit-va-2026.dormant.pests"]
         },
         {
@@ -89,7 +95,7 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Brown rot blossom blight. Check the label.",
+          "note": "Brown rot blossom blight.",
           "sourceKeys": ["stone-fruit-va-2026.pink.diseases"]
         },
         {
@@ -110,8 +116,11 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Bloom is close. Bees will soon be working the flowers. Check the label.",
-          "sourceKeys": ["stone-fruit-va-2026.pink.pests"]
+          "note": "In most years green peach aphid needs no action before petal fall. Check the small lower leaves for it instead.",
+          "sourceKeys": [
+            "stone-fruit-va-2026.pink.pests",
+            "stone-fruit-va-2026.pink.aphid-check"
+          ]
         },
         {
           "id": "pink-aphid-check",
@@ -147,7 +156,7 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Brown rot blossom blight. Bees are working the flowers. Check the label.",
+          "note": "Brown rot blossom blight.",
           "sourceKeys": ["stone-fruit-va-2026.bloom.diseases"]
         },
         {
@@ -160,7 +169,7 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Look on the orchard floor for small brown cup-shaped brown rot fruiting bodies. Finding them is a disease emergency.",
+          "note": "Look on the orchard floor for small brown cup-shaped brown rot fruiting bodies. Finding them is a potential disease emergency.",
           "sourceKeys": ["stone-fruit-va-2026.bloom.apothecia"]
         },
         {
@@ -205,7 +214,6 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Check the label.",
           "sourceKeys": ["stone-fruit-va-2026.petal-fall.diseases"]
         },
         {
@@ -234,7 +242,7 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Bees may still be on late flowers. Check the label.",
+          "note": "Western flower thrips only where fruit scarring has been a problem.",
           "sourceKeys": ["stone-fruit-va-2026.petal-fall.pests"]
         }
       ]
@@ -266,7 +274,6 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Check the label.",
           "sourceKeys": ["stone-fruit-va-2026.shuck-split.diseases"]
         },
         {
@@ -303,7 +310,6 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "The guide marks both shuck split and shuck fall as important for preventing catfacing injury. Check the label.",
           "sourceKeys": ["stone-fruit-va-2026.shuck-split.pests"]
         },
         {
@@ -326,7 +332,7 @@
       "name": "Covers",
       "order": 6,
       "recognise": {
-        "description": "After shuck fall, at intervals of no more than 14 days.",
+        "description": "From first cover after shuck fall until the pre-harvest period.",
         "sourceKey": "stone-fruit-va-2026.covers.description"
       },
       "windows": [
@@ -348,7 +354,7 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "The guide drops brown rot protection for green fruit after pit hardening and takes it up again as fruit colors or when the weather favors brown rot. Check the label.",
+          "note": "After pit hardening, green fruit is at less brown rot risk. Risk returns as fruit colors or in weather that favors brown rot.",
           "sourceKeys": ["stone-fruit-va-2026.covers.diseases"]
         },
         {
@@ -401,7 +407,7 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Listed for first through fifth cover. Check the label.",
+          "note": "Listed for first through fifth cover.",
           "sourceKeys": ["stone-fruit-va-2026.covers.pests"]
         },
         {
@@ -455,7 +461,6 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Check the label.",
           "sourceKeys": ["stone-fruit-va-2026.preharvest.diseases"]
         }
       ]
@@ -496,7 +501,7 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Where bacterial spot or leaf curl has been a problem, leaf scars can be infected at early leaf drop and carry the disease over winter. Check the label.",
+          "note": "Where bacterial spot or leaf curl has been a problem, leaf scars can be infected at early leaf drop and carry the disease over winter.",
           "sourceKeys": [
             "stone-fruit-va-2026.fall.leaf-scars",
             "stone-fruit-va-2026.fall.description"

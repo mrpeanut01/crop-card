@@ -1078,7 +1078,10 @@ export const grazingRestrictionsSchema = z
     hayDays: labelDays.optional(),
     lactatingDairyGrazeDays: labelDays.optional(),
     meatAnimalRemovalBeforeSlaughterDays: labelDays.optional(),
-    speciesExceptions: z.array(grazingSpeciesExceptionSchema).max(20).optional(),
+    speciesExceptions: z
+      .array(grazingSpeciesExceptionSchema)
+      .max(20)
+      .optional(),
     /** The label forbids use on grazed or hayed land. */
     notForPasture: z.boolean().optional(),
     /** Residue survives in manure from animals that grazed treated forage. */
@@ -1978,7 +1981,22 @@ export const ORCHARD_TARGET_KINDS = ["disease", "pest", "weather"] as const;
 export const ORCHARD_GDD_BIOFIX_KINDS = ["january-1", "calendar-date"] as const;
 
 /** Stages and windows near bloom, which must be pollinator sensitive. */
-export const ORCHARD_BLOOM_WORDS = /pink|bloom|petal[\s-]*fall/i;
+export const ORCHARD_BLOOM_WORDS =
+  /pink|bloom|blossom|petal[\s-]*fall|white[\s-]*bud|balloon|popcorn/i;
+
+/** Who a calendar is written for (ruling OP-1). A home calendar is the
+ *  garden tier of OC-4. */
+export const ORCHARD_CALENDAR_AUDIENCES = ["commercial", "home"] as const;
+
+/** Window purposes a home calendar may carry (ruling OP-2): no risk
+ *  windows, which read as an expected spray program. */
+export const ORCHARD_HOME_WINDOW_PURPOSES = [
+  "scout",
+  "cultural",
+  "sanitation",
+  "bloom",
+  "harvest-prep",
+] as const;
 
 const ORCHARD_UNIT =
   "(?:fl\\.?\\s*oz|oz|ounces?|onzas?|lbs?|libras?|pounds?|pints?|pt|qt|quarts?|gal(?:lons?|[oó]n|ones)?|%|percent|por\\s*ciento|ml|litros?|liters?|litres?|l|per\\s+acre|por\\s+acre|/\\s*a(?:cre)?|/\\s*100\\s*gal)(?![a-zñ])";
@@ -1996,6 +2014,19 @@ export const ORCHARD_COPY_RULES: readonly { re: RegExp; reason: string }[] = [
     reason: "PHI or REI",
   },
   { re: /\bsafe(?:ly)?\b|\bsegur[oa]s?\b/i, reason: "the word safe" },
+  {
+    re: /\bprotect(?:ion|ed|ing|s)?\b|protecci[oó]n|\bproteg/i,
+    reason: "protection wording",
+  },
+  { re: /\blabel\b|etiqueta/i, reason: "a label line (the app shows it)" },
+  {
+    re: /\bbees?\b|pollinat|\babejas?\b|poliniz/i,
+    reason: "a bee or pollinator line (the app shows it)",
+  },
+  {
+    re: /\bno\s+risk\b|sin\s+riesgo|\bcan(?:'|’)?t\s+infect|\bcannot\s+infect|\bwon(?:'|’)?t\b/i,
+    reason: "a no-risk claim",
+  },
   { re: /recommend|recomend/i, reason: "a recommendation" },
   {
     re: /spray|insecticid|pesticid|fungicid|herbicid|bactericid|miticid|\bapply|\bapplication|pulveriz|rociar|roc[ií]e|fumig|aplicar|aplicaci[oó]n|plaguicid/i,
@@ -2095,6 +2126,26 @@ export const orchardStageSchema = z.strictObject({
 });
 export type OrchardStage = z.infer<typeof orchardStageSchema>;
 
+/** The publication a calendar is drawn from, shown as a citation (ruling
+ *  OP-1). Not run through the copy guard: guide titles say "Spray
+ *  Bulletin". */
+export const orchardGuideSchema = z.strictObject({
+  publisher: z.string().trim().min(1).max(120),
+  title: z.string().trim().min(1).max(200),
+  publicationId: z.string().trim().min(1).max(40),
+  url: z
+    .string()
+    .url()
+    .refine((u) => {
+      try {
+        const url = new URL(u);
+        return url.protocol === "https:" && /\.(edu|gov)$/i.test(url.hostname);
+      } catch {
+        return false;
+      }
+    }, "guide url must be an https .edu or .gov page"),
+});
+
 export const orchardCalendarPluginSchema = z
   .strictObject({
     pluginId: z
@@ -2102,6 +2153,8 @@ export const orchardCalendarPluginSchema = z
       .regex(pluginIdRegex, "pluginId must be kebab-case ≤64 chars"),
     type: z.literal("orchard-calendar"),
     version: z.string().min(1),
+    audience: z.enum(ORCHARD_CALENDAR_AUDIENCES),
+    guide: orchardGuideSchema,
     /** The guide's edition year. The loader refuses a calendar that is not
      *  the current or previous year's edition. */
     edition: z.string().regex(/^\d{4}$/, "edition is a 4-digit year"),
@@ -2154,6 +2207,18 @@ export const orchardCalendarPluginSchema = z
           [s.id, s.name, w.id, w.note ?? ""].some((t) =>
             ORCHARD_BLOOM_WORDS.test(t),
           );
+        if (
+          c.audience === "home" &&
+          !(ORCHARD_HOME_WINDOW_PURPOSES as readonly string[]).includes(
+            w.purpose,
+          )
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["stages", si, "windows", wi, "purpose"],
+            message: `a home calendar may not carry a ${w.purpose} window`,
+          });
+        }
         if (nearBloom && !w.pollinatorSensitive) {
           ctx.addIssue({
             code: "custom",
@@ -2165,5 +2230,16 @@ export const orchardCalendarPluginSchema = z
       }),
     );
     unique(windowIds, (i) => windowPaths[i], "window ids");
+    if (c.audience === "home") {
+      c.stages.forEach((s, si) => {
+        if (/cover/i.test(s.id) || /cover/i.test(s.name)) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["stages", si, "name"],
+            message: "a home calendar stage may not be a cover stage",
+          });
+        }
+      });
+    }
   });
 export type OrchardCalendarPlugin = z.infer<typeof orchardCalendarPluginSchema>;

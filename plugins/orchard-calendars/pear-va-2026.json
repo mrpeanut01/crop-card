@@ -1,7 +1,14 @@
 {
   "pluginId": "pear-va-2026",
   "type": "orchard-calendar",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "audience": "commercial",
+  "guide": {
+    "publisher": "Virginia Cooperative Extension (Virginia Tech, West Virginia University, University of Maryland Extension)",
+    "title": "2026 Spray Bulletin for Commercial Tree Fruit Growers",
+    "publicationId": "VCE 456-419",
+    "url": "https://www.pubs.ext.vt.edu/456/456-419/456-419.html"
+  },
   "edition": "2026",
   "hostCropFamilies": ["orchard"],
   "hostCropPluginIds": ["pear-bartlett", "pear-bosc"],
@@ -26,10 +33,7 @@
           ],
           "pollinatorSensitive": false,
           "note": "Prune out every blighted limb and shoot each year so fewer cankers carry fire blight into spring.",
-          "sourceKeys": [
-            "pear-va-2026.dormant.fire-blight",
-            "pear-va-2026.dormant.targets"
-          ]
+          "sourceKeys": ["pear-va-2026.dormant.fire-blight"]
         }
       ]
     },
@@ -76,7 +80,7 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "The guide lists pear psylla from dormant through green tip. Check the label.",
+          "note": "The guide lists pear psylla from dormant through green tip.",
           "sourceKeys": ["pear-va-2026.swollen-bud.psylla"]
         }
       ]
@@ -104,7 +108,6 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Check the label.",
           "sourceKeys": ["pear-va-2026.green-cluster.diseases"]
         },
         {
@@ -129,7 +132,6 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Check the label.",
           "sourceKeys": ["pear-va-2026.green-cluster.pests"]
         },
         {
@@ -182,7 +184,7 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Fire blight needs open blossoms or soft new growth, warm weather, and rain or humid air together. The first blossoms open soon. Check the label.",
+          "note": "Fire blight needs open blossoms or soft new growth, warm weather, and rain or humid air together. The first blossoms open soon.",
           "sourceKeys": ["pear-va-2026.white-bud.diseases"]
         },
         {
@@ -207,7 +209,6 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Bloom is close. Bees will soon be working the flowers. Check the label.",
           "sourceKeys": ["pear-va-2026.white-bud.pests"]
         }
       ]
@@ -239,7 +240,6 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Check the label.",
           "sourceKeys": ["pear-va-2026.bloom.diseases"]
         },
         {
@@ -247,7 +247,6 @@
           "purpose": "bloom",
           "targets": [],
           "pollinatorSensitive": true,
-          "note": "Bees are working the flowers. The guide lists nothing for insects during bloom. Check the label.",
           "sourceKeys": ["pear-va-2026.bloom.bees"]
         }
       ]
@@ -257,7 +256,7 @@
       "name": "Petal fall to fifth cover",
       "order": 6,
       "recognise": {
-        "description": "About three quarters of the petals have fallen.",
+        "description": "From petal fall, when about three quarters of the petals have fallen, through fifth cover.",
         "sourceKey": "pear-va-2026.petal-fall.description"
       },
       "windows": [
@@ -287,7 +286,7 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Listed for petal fall through fifth cover. Check the label.",
+          "note": "Listed for petal fall through fifth cover.",
           "sourceKeys": ["pear-va-2026.petal-fall.diseases"]
         },
         {
@@ -328,11 +327,8 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Listed for petal fall through fifth cover. To protect pollinators, the guide says to consider waiting until after first cover for some of these. Check the label.",
-          "sourceKeys": [
-            "pear-va-2026.petal-fall.pests",
-            "pear-va-2026.petal-fall.bees"
-          ]
+          "note": "Listed for petal fall through fifth cover.",
+          "sourceKeys": ["pear-va-2026.petal-fall.pests"]
         },
         {
           "id": "petal-fall-blight-strikes",

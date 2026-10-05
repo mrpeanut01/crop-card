@@ -3,6 +3,7 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { animals } from '$lib/db/schema';
 import { FIXTURE_PET_SPECIES, FIXTURE_SPECIES } from './dataKinds.fixtures';
+import { loadCropLookup } from './cropLookup';
 import { DataKindRegistry, loadPhase32DataKinds, validateSpecies } from './registryDataKinds';
 import type { SpeciesPlugin } from './schemas';
 import {
@@ -32,11 +33,10 @@ describe('shipped species library', () => {
   let species: DataKindRegistry<SpeciesPlugin>;
 
   beforeAll(async () => {
-    const kinds = await loadPhase32DataKinds(PLUGINS_DIR);
-    // Orchard calendars need the crop library to resolve hosts; their own gate loads them with it.
-    expect(
-      kinds.failed.filter((f) => !f.file.includes(`${path.sep}orchard-calendars${path.sep}`))
-    ).toEqual([]);
+    const kinds = await loadPhase32DataKinds(PLUGINS_DIR, {
+      crops: await loadCropLookup(PLUGINS_DIR)
+    });
+    expect(kinds.failed).toEqual([]);
     species = kinds.species;
   });
 

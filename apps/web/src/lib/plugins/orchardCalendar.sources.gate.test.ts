@@ -11,6 +11,7 @@ import {
 } from './orchardCalendar.fixtures';
 import {
   orchardCalendarProblems,
+  orchardCrossCalendarProblems,
   orchardSourceFileProblems,
   type OrchardSourcesFile
 } from './orchardCalendarSources';
@@ -66,6 +67,11 @@ describe('shipped orchard calendars', () => {
     const json = files.filter((f) => f.endsWith('.json'));
     expect(kinds.failed.filter((f) => f.file.startsWith(CALENDAR_DIR))).toEqual([]);
     expect(kinds.orchardCalendars.all()).toHaveLength(json.length);
+    expect(kinds.supersededCalendars).toEqual([]);
+  });
+
+  it('every source key is used, and each target id keeps one kind (OP-16)', () => {
+    expect(orchardCrossCalendarProblems(kinds.orchardCalendars.all(), SOURCES)).toEqual([]);
   });
 
   it('the sources file is well formed', () => {
@@ -85,6 +91,63 @@ describe('shipped orchard calendars', () => {
 });
 
 describe('orchard calendar gate on the fixture', () => {
+  it('passes the cross-calendar checks', () => {
+    const sources = structuredClone(FIXTURE_ORCHARD_SOURCES);
+    const rekeyed = { entries: {} as OrchardSourcesFile['entries'] };
+    const c = fixture();
+    for (const [k, v] of Object.entries(sources.entries)) {
+      rekeyed.entries[`${c.pluginId}.${k}`] = v;
+    }
+    for (const st of c.stages) {
+      st.recognise.sourceKey = `${c.pluginId}.${st.recognise.sourceKey}`;
+      if (st.recognise.gddEstimate) {
+        st.recognise.gddEstimate.sourceKey = `${c.pluginId}.${st.recognise.gddEstimate.sourceKey}`;
+      }
+      for (const w of st.windows) w.sourceKeys = w.sourceKeys.map((k) => `${c.pluginId}.${k}`);
+    }
+    expect(orchardCrossCalendarProblems([c], rekeyed)).toEqual([]);
+
+    const orphan = structuredClone(rekeyed);
+    orphan.entries[`${c.pluginId}.unused`] = orphan.entries[`${c.pluginId}.fixture.dormant.prune`];
+    orphan.entries['other.key'] = orphan.entries[`${c.pluginId}.fixture.dormant.prune`];
+    const problems = orchardCrossCalendarProblems([c], orphan).join('\n');
+    expect(problems).toMatch(/unused: is not used/);
+    expect(problems).toMatch(/other.key: does not start/);
+    orphan.entries[`${c.pluginId}.unused`] = {
+      ...orphan.entries[`${c.pluginId}.unused`],
+      gateEligible: false,
+      note: 'Test fixture: records an absence.'
+    };
+    expect(orchardCrossCalendarProblems([c], orphan).join()).not.toMatch(/unused: is not used/);
+
+    const kindClash = structuredClone(c);
+    kindClash.stages[0].windows[0].targets = [{ id: 'fixture-scab', kind: 'pest' }];
+    expect(orchardCrossCalendarProblems([kindClash], rekeyed).join()).toMatch(
+      /fixture-scab has more than one kind/
+    );
+  });
+
+  it('needs a source of the calendar edition on every window and a matching guide host (OP-16)', () => {
+    const old = structuredClone(FIXTURE_ORCHARD_SOURCES);
+    for (const s of old.entries['fixture.dormant.prune'].sources) s.edition = '2019';
+    expect(orchardCalendarProblems(fixture(), old, fixtureCtx).join()).toMatch(
+      /fixture-prune: no source of the calendar's edition/
+    );
+    const c = fixture();
+    c.guide.url = 'https://elsewhere.example.gov/guide';
+    expect(orchardCalendarProblems(c, FIXTURE_ORCHARD_SOURCES, fixtureCtx).join()).toMatch(
+      /guide host elsewhere.example.gov/
+    );
+  });
+
+  it('needs a note on a quote joining table cells', () => {
+    const sources = structuredClone(FIXTURE_ORCHARD_SOURCES);
+    sources.entries['fixture.dormant.prune'].sources[0].quote = 'HEADING / Cell';
+    expect(orchardSourceFileProblems(sources).join()).toMatch(/needs a note/);
+    sources.entries['fixture.dormant.prune'].sources[0].note = 'Test fixture: joined table cells.';
+    expect(orchardSourceFileProblems(sources)).toEqual([]);
+  });
+
   it('passes the fixture', () => {
     expect(orchardSourceFileProblems(FIXTURE_ORCHARD_SOURCES)).toEqual([]);
     expect(orchardCalendarProblems(fixture(), FIXTURE_ORCHARD_SOURCES, fixtureCtx)).toEqual([]);

@@ -13,6 +13,13 @@ export const FIXTURE_ORCHARD_CALENDAR = {
   pluginId: 'test-fixture-orchard-calendar',
   type: 'orchard-calendar',
   version: '0.0.0-test',
+  audience: 'commercial',
+  guide: {
+    publisher: 'Test fixture publisher',
+    title: 'Test fixture guide',
+    publicationId: 'TF-1',
+    url: 'https://a.example.edu/guide'
+  },
   edition: '2026',
   hostCropFamilies: ['orchard'],
   hostCropPluginIds: ['test-fixture-apple'],
@@ -79,7 +86,7 @@ export const FIXTURE_ORCHARD_CALENDAR = {
           purpose: 'bloom',
           targets: [{ id: 'fixture-blight', kind: 'disease' }],
           pollinatorSensitive: true,
-          note: 'Test fixture: bees are working the flowers. Check the label.',
+          note: 'Test fixture: most flowers are open.',
           sourceKeys: ['fixture.bloom.watch']
         }
       ]

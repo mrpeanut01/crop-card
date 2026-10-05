@@ -1,7 +1,14 @@
 {
   "pluginId": "pome-va-2026",
   "type": "orchard-calendar",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "audience": "commercial",
+  "guide": {
+    "publisher": "Virginia Cooperative Extension (Virginia Tech, West Virginia University, University of Maryland Extension)",
+    "title": "2026 Spray Bulletin for Commercial Tree Fruit Growers",
+    "publicationId": "VCE 456-419",
+    "url": "https://www.pubs.ext.vt.edu/456/456-419/456-419.html"
+  },
   "edition": "2026",
   "hostCropFamilies": ["orchard"],
   "hostCropPluginIds": [
@@ -32,10 +39,7 @@
           ],
           "pollinatorSensitive": false,
           "note": "Prune out every blighted limb and shoot each year so fewer cankers carry fire blight into spring.",
-          "sourceKeys": [
-            "pome-va-2026.dormant.fire-blight",
-            "pome-va-2026.dormant.targets"
-          ]
+          "sourceKeys": ["pome-va-2026.dormant.fire-blight"]
         }
       ]
     },
@@ -70,7 +74,7 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Listed for silver tip through green tip. Aphids are harder to deal with once they are inside curled leaves. Check the label.",
+          "note": "Listed for silver tip through green tip. Aphids are harder to deal with once they are inside curled leaves.",
           "sourceKeys": [
             "pome-va-2026.silver-tip.pests",
             "pome-va-2026.silver-tip.aphids"
@@ -125,8 +129,11 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "The guide starts primary scab protection at half-inch green and carries it through the stages that follow. Check the label.",
-          "sourceKeys": ["pome-va-2026.half-inch-green.diseases"]
+          "note": "Primary scab season: new leaves can be infected from here on during long wet periods.",
+          "sourceKeys": [
+            "pome-va-2026.half-inch-green.diseases",
+            "pome-va-2026.green-tip.scab"
+          ]
         },
         {
           "id": "half-inch-green-pests",
@@ -162,7 +169,7 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Defoliating caterpillars here are tent caterpillars, cankerworms and cutworms. Check the label.",
+          "note": "Defoliating caterpillars here are tent caterpillars, cankerworms and cutworms.",
           "sourceKeys": ["pome-va-2026.half-inch-green.pests"]
         }
       ]
@@ -194,7 +201,7 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Listed for tight cluster to pre-pink. Check the label.",
+          "note": "Listed for tight cluster to pre-pink.",
           "sourceKeys": ["pome-va-2026.tight-cluster.diseases"]
         },
         {
@@ -231,7 +238,7 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Listed for tight cluster to pre-pink. Check the label.",
+          "note": "Listed for tight cluster to pre-pink.",
           "sourceKeys": ["pome-va-2026.tight-cluster.pests"]
         },
         {
@@ -256,7 +263,7 @@
               "kind": "disease"
             }
           ],
-          "pollinatorSensitive": false,
+          "pollinatorSensitive": true,
           "note": "Fire blight bacteria start multiplying in old cankers around tight cluster, weeks before any symptom shows.",
           "sourceKeys": ["pome-va-2026.tight-cluster.fire-blight"]
         }
@@ -293,7 +300,7 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Pink through petal fall is a critical time for quince rust in orchards that have had it. Check the label.",
+          "note": "Pink through petal fall is a critical time for quince rust in orchards that have had it.",
           "sourceKeys": ["pome-va-2026.pink.diseases"]
         },
         {
@@ -334,7 +341,7 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Bloom is close. Bees will soon be working the flowers. Check the label.",
+          "note": "European apple sawfly is listed at pink only where its damage was severe the year before.",
           "sourceKeys": ["pome-va-2026.pink.pests"]
         },
         {
@@ -346,12 +353,12 @@
               "kind": "pest"
             },
             {
-              "id": "gypsy-moth",
+              "id": "spongy-moth",
               "kind": "pest"
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Hang a pheromone trap and check it for male San Jose scale. Start watching for gypsy moth.",
+          "note": "Hang a pheromone trap and check it for male San Jose scale. Start watching for spongy moth (gypsy moth).",
           "sourceKeys": ["pome-va-2026.pink.traps"]
         },
         {
@@ -400,7 +407,6 @@
           "purpose": "bloom",
           "targets": [],
           "pollinatorSensitive": true,
-          "note": "Bees are working the flowers. The guide lists nothing for insects during bloom. Check the label.",
           "sourceKeys": ["pome-va-2026.bloom.bees"]
         }
       ]
@@ -444,7 +450,6 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Check the label.",
           "sourceKeys": ["pome-va-2026.petal-fall.diseases"]
         },
         {
@@ -522,10 +527,11 @@
             }
           ],
           "pollinatorSensitive": true,
-          "note": "Bees may still be on late flowers and blooming ground cover. Check the label.",
+          "note": "Green fruitworm only if present. European apple sawfly only if it was a problem last year or traps pass the guide's count.",
           "sourceKeys": [
             "pome-va-2026.petal-fall.pests",
-            "pome-va-2026.petal-fall.bees"
+            "pome-va-2026.petal-fall.bees",
+            "pome-va-2026.pink.sawfly"
           ]
         },
         {
@@ -603,7 +609,6 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Check the label.",
           "sourceKeys": ["pome-va-2026.first-cover.diseases"]
         },
         {
@@ -616,7 +621,7 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Where rust is a problem, check nearby cedar galls. Rust risk lasts until their spore horns stop swelling when wet.",
+          "note": "Where rust is a problem, check nearby cedar galls. The guide ties the end of the rust period to spore horns that no longer swell when wet.",
           "sourceKeys": ["pome-va-2026.first-cover.cedar-galls"]
         },
         {
@@ -666,7 +671,6 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Check the label.",
           "sourceKeys": ["pome-va-2026.first-cover.pests"]
         }
       ]
@@ -676,7 +680,7 @@
       "name": "Summer covers",
       "order": 9,
       "recognise": {
-        "description": "From the second cover on, about every 10 to 14 days until a few weeks before harvest.",
+        "description": "From second cover until a few weeks before harvest.",
         "sourceKey": "pome-va-2026.summer-covers.description"
       },
       "windows": [
@@ -730,7 +734,7 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Once primary scab is controlled, summer diseases take over: Brooks spot, sooty blotch, fly speck and fruit rots. Mildew risk lasts until shoots stop growing. Check the label.",
+          "note": "In some years primary scab and rust are spent by second cover, and Brooks spot, sooty blotch, fly speck and fruit rots become the main concern. Where mildew is a problem, it stays a concern until shoots harden off.",
           "sourceKeys": [
             "pome-va-2026.summer-covers.diseases",
             "pome-va-2026.summer-covers.shift"
@@ -794,7 +798,7 @@
             }
           ],
           "pollinatorSensitive": false,
-          "note": "Check the label.",
+          "note": "Apple maggot is seldom a problem here except near an abandoned orchard.",
           "sourceKeys": ["pome-va-2026.summer-covers.pests"]
         },
         {

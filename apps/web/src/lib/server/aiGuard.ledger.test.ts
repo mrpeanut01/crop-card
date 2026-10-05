@@ -14,6 +14,7 @@ import {
   spendSnapshot
 } from './aiGuard';
 import { tryAiWithGuard } from './aiDegrade';
+import { AiSpentError } from './aiCost';
 
 const DAY = 86_400_000;
 
@@ -203,6 +204,61 @@ describe('calls in flight hold their reserve', () => {
       expect(tried.provenance).toBe('fallback');
       expect(guardLedgerSize()).toBe(0);
       expect(checkGuard(f.userId, 'allocate').ok).toBe(true);
+    });
+  });
+  it('a billed error logs one row and removes exactly one hold beside another settled call', async () => {
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-test';
+    const f = farm('farm');
+    await runWithTenant(f.ownerId, async () => {
+      const other = reserveGuard(f.userId, 'allocate');
+      expect(other.ok).toBe(true);
+      if (other.ok) other.hold?.settle(0.2);
+      expect(guardLedgerSize()).toBe(1);
+      const tried = await tryAiWithGuard({
+        endpoint: 'allocate',
+        userId: f.userId,
+        prompt: async () => {
+          throw new AiSpentError('bad shape', {
+            model: 'test',
+            inputTokens: 100,
+            cachedInputTokens: 0,
+            outputTokens: 100,
+            usdEstimate: 0.1
+          });
+        }
+      });
+      expect(tried.provenance).toBe('fallback');
+      expect(guardLedgerSize()).toBe(1);
+    });
+  });
+
+  it('a late timed-out call logs one row and removes exactly one hold beside another settled call', async () => {
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-test';
+    const f = farm('farm');
+    let finish!: (v: unknown) => void;
+    const late = new Promise((r) => (finish = r));
+    await runWithTenant(f.ownerId, async () => {
+      const other = reserveGuard(f.userId, 'allocate');
+      if (other.ok) other.hold?.settle(0.2);
+      const tried = await tryAiWithGuard({
+        endpoint: 'allocate',
+        userId: f.userId,
+        timeoutMs: 5,
+        prompt: () => late as Promise<{ meta: unknown }>
+      });
+      expect(tried.provenance).toBe('fallback');
+      expect(guardLedgerSize()).toBe(2);
+      finish({
+        meta: {
+          model: 'test',
+          inputTokens: 100,
+          cachedInputTokens: 0,
+          outputTokens: 100,
+          usdEstimate: 0.1
+        }
+      });
+      await new Promise((r) => setTimeout(r, 0));
+      expect(guardLedgerSize()).toBe(1);
     });
   });
 });

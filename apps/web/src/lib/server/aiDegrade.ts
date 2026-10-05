@@ -132,9 +132,8 @@ function meterLateSettle<T>(
         if (ownerId) runWithTenant(ownerId, write);
         else write();
       } catch (err) {
-        console.error(`[ai] ${args.endpoint} late recordCall failed`, err);
-      } finally {
         hold?.release();
+        console.error(`[ai] ${args.endpoint} late recordCall failed`, err);
       }
     },
     () => hold?.release()
@@ -142,15 +141,17 @@ function meterLateSettle<T>(
 }
 
 /** Claude answered but the prompt function threw: the call was still billed,
- *  so its usage is logged against the farm's budget and daily cap. */
+ *  so its usage is logged against the farm's budget and daily cap. The logged
+ *  row takes over one settled hold, so returns true when the caller must not
+ *  release its own hold as well. */
 function meterSpentError<T>(
   err: AiSpentError,
   args: TryAiWithGuardArgs<T>,
   reason: FallbackReason,
   hold: GuardHold | null
-): void {
+): boolean {
   const usage = usageFromMeta({ meta: err.meta });
-  if (!usage || usage.inputTokens + usage.outputTokens <= 0) return;
+  if (!usage || usage.inputTokens + usage.outputTokens <= 0) return false;
   hold?.settle(usage.usdEstimate);
   try {
     recordCall({
@@ -167,8 +168,10 @@ function meterSpentError<T>(
       fallbackReason: reason,
       attemptedAiAt: Date.now()
     });
+    return true;
   } catch (e) {
     console.error(`[ai] ${args.endpoint} recordCall failed`, e);
+    return false;
   }
 }
 
@@ -244,7 +247,7 @@ export async function tryAiWithGuard<T>(args: TryAiWithGuardArgs<T>): Promise<De
       meterLateSettle(state.pending, args, ownerId, hold);
       keepHold = true;
     } else if (state.error instanceof AiSpentError) {
-      meterSpentError(state.error, args, reason, hold);
+      keepHold = meterSpentError(state.error, args, reason, hold);
     }
     return {
       provenance: 'fallback',

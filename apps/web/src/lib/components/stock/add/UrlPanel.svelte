@@ -44,6 +44,7 @@
   let existingType = $state<InventoryType | null>(null);
 
   async function runLookup(): Promise<void> {
+    if (lookingUp || busy) return;
     const u = url.trim();
     if (!/^https?:\/\//i.test(u)) {
       lookupError = tr('stockui.url.enterFull');

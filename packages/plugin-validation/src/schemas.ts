@@ -753,6 +753,37 @@ export const forageHazardsSchema = z
     message: "one forageHazards entry per kind",
   });
 
+// Tree fruit spacing and bearing age depend on the rootstock, which a
+// cultivar plugin doesn't name. Each row needs a source under
+// `treeSizeClasses.<sizeClass>` in apps/web/scripts/crop-data-sources.json
+// whose quote states both numbers. Display only: nothing sizes a bed or
+// dates a harvest from it until a planting records its size class.
+
+export const TREE_SIZE_CLASSES = ["dwarf", "semi-dwarf", "standard"] as const;
+export type TreeSizeClass = (typeof TREE_SIZE_CLASSES)[number];
+
+export const treeSizeClassesSchema = z
+  .array(
+    z.strictObject({
+      sizeClass: z.enum(TREE_SIZE_CLASSES),
+      /** Minimum distance between trees, in feet. */
+      minSpacingFt: z.number().positive().max(60),
+      yearsToBearing: z
+        .object({
+          min: z.number().int().positive().max(15),
+          max: z.number().int().positive().max(15),
+        })
+        .refine((v) => v.min <= v.max, { message: "min must be ≤ max" }),
+    }),
+  )
+  .min(1)
+  .max(TREE_SIZE_CLASSES.length)
+  .refine(
+    (rows) => new Set(rows.map((r) => r.sizeClass)).size === rows.length,
+    { message: "one treeSizeClasses entry per size class" },
+  );
+export type TreeSizeClassRow = z.infer<typeof treeSizeClassesSchema>[number];
+
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal("crop"),
   cropFamily: z.preprocess(
@@ -930,6 +961,8 @@ export const cropPluginSchema = pluginBase.extend({
   animalToxicity: animalToxicitySchema.optional(),
   /** Phase 33C — prussic acid and nitrate risk. Advisory callouts only. */
   forageHazards: forageHazardsSchema.optional(),
+  /** Spacing and bearing age per tree size class (dwarf to standard). */
+  treeSizeClasses: treeSizeClassesSchema.optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),

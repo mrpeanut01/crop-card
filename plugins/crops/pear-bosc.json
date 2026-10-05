@@ -35,5 +35,15 @@
     ],
     "beeAttractive": true
   },
-  "archetype": "tree-fruit-multi-pick"
+  "archetype": "tree-fruit-multi-pick",
+  "treeSizeClasses": [
+    {
+      "sizeClass": "standard",
+      "minSpacingFt": 25,
+      "yearsToBearing": {
+        "min": 5,
+        "max": 8
+      }
+    }
+  ]
 }

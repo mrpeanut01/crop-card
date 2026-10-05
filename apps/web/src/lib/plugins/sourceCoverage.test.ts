@@ -25,6 +25,7 @@ import {
   seasonalTaskWordingProblems,
   stageTemplateWordingProblems,
   speciesFactPaths,
+  treeSizeClassQuoteGaps,
   type SourceMap
 } from './sourceCoverage';
 
@@ -169,6 +170,53 @@ describe('fact paths', () => {
       'startIndoorsWeeks',
       'animalToxicity.dog',
       'animalToxicity.cat'
+    ]);
+  });
+});
+
+describe('tree size classes', () => {
+  const crop = cropPluginSchema.parse({
+    pluginId: 'apple-test',
+    type: 'crop',
+    displayName: 'Apple Test',
+    version: '1',
+    cropFamily: 'orchard',
+    harvestStyle: 'tree-fruit-multi-pick',
+    bloomWindow: { monthsOfYear: [4], beeAttractive: true },
+    treeSizeClasses: [
+      { sizeClass: 'dwarf', minSpacingFt: 8, yearsToBearing: { min: 2, max: 3 } },
+      { sizeClass: 'standard', minSpacingFt: 30, yearsToBearing: { min: 6, max: 10 } }
+    ]
+  });
+
+  it('lists one source path per size class', () => {
+    expect(cropFactPaths(crop)).toEqual(['treeSizeClasses.dwarf', 'treeSizeClasses.standard']);
+  });
+
+  it('refuses two rows for one size class', () => {
+    const rows = [
+      { sizeClass: 'dwarf', minSpacingFt: 8, yearsToBearing: { min: 2, max: 3 } },
+      { sizeClass: 'dwarf', minSpacingFt: 10, yearsToBearing: { min: 2, max: 3 } }
+    ];
+    expect(cropPluginSchema.safeParse({ ...crop, treeSizeClasses: rows }).success).toBe(false);
+  });
+
+  it('needs the quote to state both the spacing and the bearing age', () => {
+    const sources: SourceMap = {
+      'apple-test': {
+        'treeSizeClasses.dwarf': {
+          ...FIXTURE_SOURCE,
+          quote: 'row "Apple - dwarf | 8 | 2 | 2–3 | 30-35 |"'
+        },
+        'treeSizeClasses.standard': {
+          ...FIXTURE_SOURCE,
+          quote: 'row "Apple - standard | 18 | 8 | 6-8 |"'
+        }
+      }
+    };
+    expect(treeSizeClassQuoteGaps([crop], sources)).toEqual([
+      'apple-test: treeSizeClasses.standard quote does not state 30 ft',
+      'apple-test: treeSizeClasses.standard quote does not state 6-10 years'
     ]);
   });
 });

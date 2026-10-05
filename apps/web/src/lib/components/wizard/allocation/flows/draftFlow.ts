@@ -12,6 +12,20 @@ const VALID_STEPS: Step[] = [
   'commit'
 ];
 
+/** The step a saved draft re-opens on. The allocation, schedule and inputs
+ *  live only in memory, so a draft saved on Review or later re-opens on
+ *  Blocks with its selections, one click from generating the plan again;
+ *  the Season Setup gate is never skipped. */
+export function resumeStepFor(saved: string): Step | null {
+  if (!(VALID_STEPS as string[]).includes(saved)) return null;
+  const step = saved as Step;
+  if (step === 'season-setup') return null;
+  if (step === 'review' || step === 'schedule' || step === 'inputs' || step === 'commit') {
+    return 'blocks';
+  }
+  return step;
+}
+
 /** #173 — Save & resume later: snapshot the in-progress step + form state
  *  to /api/plan/wizard/draft, restore it on re-open, clear it on commit. */
 export class DraftFlow {
@@ -65,6 +79,7 @@ export class DraftFlow {
   hydrateDraft(): void {
     if (this.#w.draftHydrated) return;
     this.#w.draftHydrated = true;
+    const stepAtStart = this.#w.step;
     (async () => {
       try {
         const res = await fetch('/api/plan/wizard/draft');
@@ -97,8 +112,9 @@ export class DraftFlow {
         if (body.draft.payload.chatDraft) {
           this.#w.chatDraft = body.draft.payload.chatDraft;
         }
-        if ((VALID_STEPS as string[]).includes(body.draft.step)) {
-          this.#w.step = body.draft.step as Step;
+        const resumeStep = resumeStepFor(body.draft.step);
+        if (resumeStep && this.#w.activeSetup && this.#w.step === stepAtStart) {
+          this.#w.step = resumeStep;
         }
       } catch {
         // Resume is best-effort — keep the wizard usable even if the

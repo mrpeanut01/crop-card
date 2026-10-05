@@ -83,15 +83,12 @@
   async function loadMeta(id: string) {
     try {
       const res = await fetch(`/api/documents/${encodeURIComponent(id)}`);
-      if (res.ok) {
-        meta = ((await res.json()) as { document: DocumentMeta }).document;
-        metaMissing = false;
-      } else {
-        meta = null;
-        metaMissing = true;
-      }
+      const next = res.ok ? ((await res.json()) as { document: DocumentMeta }).document : null;
+      if (id !== documentId) return;
+      meta = next;
+      metaMissing = !res.ok;
     } catch {
-      meta = null;
+      if (id === documentId) meta = null;
     }
   }
 

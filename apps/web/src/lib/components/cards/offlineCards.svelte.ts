@@ -31,6 +31,7 @@ export class OfflineCards {
    *  the tab's key and every stored Card instead, and shows nothing. */
   start(ownerId: string | null | undefined): () => void {
     const onSnapshot = () => void this.load();
+    let stopped = false;
     (async () => {
       if (!ownerId) {
         try {
@@ -52,10 +53,12 @@ export class OfflineCards {
       }
       await this.load();
       const { SNAPSHOT_EVENT, syncCardSnapshot } = await import('$lib/client/cardSync');
+      if (stopped) return;
       window.addEventListener(SNAPSHOT_EVENT, onSnapshot);
       if (navigator.onLine !== false) void syncCardSnapshot();
     })();
     return () => {
+      stopped = true;
       import('$lib/client/cardSync')
         .then(({ SNAPSHOT_EVENT }) => window.removeEventListener(SNAPSHOT_EVENT, onSnapshot))
         .catch(() => undefined);

@@ -740,20 +740,25 @@ export function deleteBlockCascade(id: string): DeleteSummary {
 
 // ─── Per-equipment ──────────────────────────────────────────────────────
 
-/** Herbicide spray records name their sprayer and the column cannot be
- *  cleared, so a sprayer they name cannot be deleted (retire it instead). */
+/** Whether any herbicide, insecticide or fungicide record names this
+ *  equipment as its sprayer. Spray records are never edited to let gear go,
+ *  so such a sprayer cannot be deleted (retire it instead). */
 export function equipmentHasSprayRecords(id: string): boolean {
-  return (
+  const named = <T extends TenantScopedTable>(table: T, where: SQL): boolean =>
     db
-      .select({ id: sprayEvents.id })
-      .from(sprayEvents)
-      .where(withTenant(sprayEvents, eq(sprayEvents.sprayerId, id)))
+      .select()
+      .from(table as SQLiteTable)
+      .where(withTenant(table, where))
       .limit(1)
-      .all().length > 0
+      .all().length > 0;
+  return (
+    named(sprayEvents, eq(sprayEvents.sprayerId, id)) ||
+    named(insecticideEvents, eq(insecticideEvents.sprayerId, id)) ||
+    named(fungicideEvents, eq(fungicideEvents.sprayerId, id))
   );
 }
 
-/** @hold-exempt: only clears the sprayer link on insecticide and fungicide records; no hold reads it */
+/** @hold-exempt: only clears the sprayer link on insecticide records; no hold reads it */
 export function deleteEquipmentCascade(id: string): DeleteSummary {
   const removed: Record<string, number> = {};
   removed.pending_calibrations = del(pendingCalibrations, eq(pendingCalibrations.equipmentId, id));
@@ -767,10 +772,6 @@ export function deleteEquipmentCascade(id: string): DeleteSummary {
   db.update(insecticideEvents)
     .set({ sprayerId: null })
     .where(withTenant(insecticideEvents, eq(insecticideEvents.sprayerId, id)))
-    .run();
-  db.update(fungicideEvents)
-    .set({ sprayerId: null })
-    .where(withTenant(fungicideEvents, eq(fungicideEvents.sprayerId, id)))
     .run();
   removed.equipment = del(equipment, eq(equipment.id, id));
   return { removed };

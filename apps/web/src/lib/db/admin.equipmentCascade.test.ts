@@ -31,9 +31,10 @@ function seed() {
 }
 
 describe('deleting a sprayer', () => {
-  it('clears the sprayer from fungicide applications instead of failing', () => {
+  it('reports a sprayer that a fungicide application names, and leaves the record alone', () => {
     const s = seed();
     runWithTenant(s.ownerId, () => {
+      expect(equipmentHasSprayRecords(s.sprayerId)).toBe(false);
       const fung = insertFungicideEvent({
         blockId: s.blockId,
         sprayerId: s.sprayerId,
@@ -44,9 +45,15 @@ describe('deleting a sprayer', () => {
         rulesVersion: 'test',
         pluginHashes: {}
       });
-      expect(equipmentHasSprayRecords(s.sprayerId)).toBe(false);
+      expect(equipmentHasSprayRecords(s.sprayerId)).toBe(true);
+      expect(getFungicideEvent(fung.id)?.sprayerId).toBe(s.sprayerId);
+    });
+  });
+
+  it('lets a sprayer with no records go', () => {
+    const s = seed();
+    runWithTenant(s.ownerId, () => {
       expect(() => deleteEquipmentCascade(s.sprayerId)).not.toThrow();
-      expect(getFungicideEvent(fung.id)?.sprayerId).toBeUndefined();
     });
   });
 

@@ -104,7 +104,8 @@ export const PATCH: RequestHandler = async (event) => {
  * Cascade-removes equipment_state, equipment_log, and pending_calibrations
  * for this row, nulls out tasks.equipment_id + insecticide_events.sprayerId,
  * then drops the equipment row itself. Owner only (Invariant 8); a sprayer
- * that herbicide spray records name answers 409 HAS_SPRAY_RECORDS.
+ * that any spray, insecticide or fungicide record names answers 409
+ * HAS_SPRAY_RECORDS; spray records are never edited to let gear go.
  */
 export const DELETE: RequestHandler = (event) => {
   requireOwner(event);

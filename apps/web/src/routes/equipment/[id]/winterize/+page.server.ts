@@ -18,8 +18,7 @@ export const load: PageServerLoad = ({ params, locals }) => {
     equipment,
     sprayer,
     protocol,
-    // Helper+ may run winterization (same crew as UC-04 decon). Read-only
-    // inspector sessions have no mutating user; the API also enforces.
-    canWinterize: locals.user != null
+    // Owner only, like recording a decon; the API also enforces.
+    canWinterize: locals.user?.role === 'owner'
   };
 };

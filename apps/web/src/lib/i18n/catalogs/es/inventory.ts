@@ -699,6 +699,8 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'stockui.api.idRequired': 'falta el id',
   'equip.api.hasSprayRecords':
     'Hay registros de aplicación que nombran esta aspersora, así que se queda en el archivo. Mejor dala de baja.',
+  'equip.api.winterizeOwnerOnly':
+    'Solo el dueño puede registrar la preparación para el invierno, porque borra la descontaminación y la calibración. Pídeselo al dueño.',
   'equip.api.specSprayerOnly': 'el tanque y la boquilla son solo para aspersoras',
   'stockui.api.seedImpersonating':
     'No se puede registrar el origen de la semilla mientras suplantas a una granja.',

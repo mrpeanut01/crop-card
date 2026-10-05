@@ -29,7 +29,7 @@
 
 {#if chips.length > 0}
   <div class="holds" data-testid="hold-chips">
-    <ul>
+    <ul lang="en" data-english-only="safety">
       {#each chips as c (c.food)}
         <li class="chip {c.tone}">
           <strong>{c.title}</strong>

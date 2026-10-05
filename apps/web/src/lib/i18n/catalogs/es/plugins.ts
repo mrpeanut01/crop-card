@@ -196,6 +196,8 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'cardsui.photo.take': 'Tomar o elegir una foto',
   'cardsui.photo.taken': 'Tomada el {date}',
   'cardsui.photo.title': 'Pregunta sobre una foto',
+  'cardsui.photo.tooLarge':
+    'No se pudo achicar lo suficiente esa foto. Prueba con una toma más cercana y sencilla.',
   'cardsui.photo.unreadable': 'No se pudo leer esa foto.',
   'cardsui.photo.which': '¿Qué siembra?',
   'cardsui.photo.withPhoto': '(con foto)',

@@ -186,6 +186,7 @@ export const enPlugins = {
   'cardsui.photo.take': 'Take or choose a photo',
   'cardsui.photo.taken': 'Taken {date}',
   'cardsui.photo.title': 'Ask about a photo',
+  'cardsui.photo.tooLarge': 'That photo could not be made small enough. Try a closer, simpler shot.',
   'cardsui.photo.unreadable': 'That photo could not be read.',
   'cardsui.photo.which': 'Which planting?',
   'cardsui.photo.withPhoto': '(with photo)',

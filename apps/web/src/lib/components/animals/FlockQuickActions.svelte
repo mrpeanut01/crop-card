@@ -432,9 +432,17 @@
           {#each areas as a (a.id)}<option value={a.id}>{a.name}</option>{/each}
         </select>
         {#if movePre.verdict === 'stop'}
-          <p class="af-note" role="alert" data-testid="move-stop">{movePre.message}</p>
+          <p
+            class="af-note"
+            role="alert"
+            data-testid="move-stop"
+            lang="en"
+            data-english-only="safety"
+          >
+            {movePre.message}
+          </p>
         {:else if movePre.verdict === 'warn'}
-          <p class="af-note">{movePre.message}</p>
+          <p class="af-note" lang="en" data-english-only="safety">{movePre.message}</p>
         {/if}
         <button
           class="af-primary wide"

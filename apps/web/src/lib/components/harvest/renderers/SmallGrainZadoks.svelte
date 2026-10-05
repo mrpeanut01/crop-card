@@ -4,7 +4,7 @@
   import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
-  import { fmtRange } from './format';
+  import { fmtRange, parseMoisturePct } from './format';
   import { stageForDaysFromPlanting, zadoksNumber } from '$lib/plan/smallGrain';
 
   const props: RendererProps = $props();
@@ -27,11 +27,11 @@
     // #322 — moisture travels as a structured number so the kernel gate is reachable.
     const tag = moisturePct.trim() ? `moisture=${moisturePct}%` : '';
     const lot = [input.lotNumber, tag].filter(Boolean).join(' · ').trim();
-    const moisture = parseFloat(moisturePct);
+    const moisture = parseMoisturePct(moisturePct);
     return props.onCommit({
       quantity: input.quantity,
       lotNumber: lot || undefined,
-      moisturePct: Number.isFinite(moisture) ? moisture : undefined
+      moisturePct: moisture
     });
   }
 

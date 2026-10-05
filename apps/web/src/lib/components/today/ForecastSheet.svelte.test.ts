@@ -7,6 +7,9 @@ import WeatherStrip from './WeatherStrip.svelte';
 import ForecastSheet from './ForecastSheet.svelte';
 import type { TodayWeather } from '$lib/today/weatherSummary';
 
+const page = vi.hoisted(() => ({ data: {} as Record<string, unknown> }));
+vi.mock('$app/state', () => ({ page }));
+
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
     this.open = true;
@@ -60,6 +63,26 @@ describe('Current conditions', () => {
     expect(btn).toHaveTextContent('No farm location set');
     await fireEvent.click(btn);
     expect(onOpenForecast).toHaveBeenCalled();
+  });
+});
+
+describe('Current conditions rain hint', () => {
+  const strip = (weather: TodayWeather) =>
+    render(WeatherStrip, { dateLabel: '', greeting: '', subtitle: '', weather });
+
+  it('names the rainy day from the forecast days', () => {
+    page.data = {};
+    strip(ok);
+    expect(screen.getByTestId('current-conditions')).toHaveTextContent('80% rain wed');
+  });
+
+  it('is in the viewer language, not English', () => {
+    page.data = { locale: 'es' };
+    strip(ok);
+    const btn = screen.getByTestId('current-conditions');
+    expect(btn).toHaveTextContent('80% lluvia');
+    expect(btn).not.toHaveTextContent('80% rain');
+    page.data = {};
   });
 });
 

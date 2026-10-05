@@ -24,7 +24,12 @@
   const grazingArea = $derived(stop?.grazingFieldIds?.[0] ?? null);
 </script>
 
-<Modal open={stop !== null} {onClose} title={stop ? (TITLE[stop.code] ?? 'Stop') : 'Stop'}>
+<Modal
+  open={stop !== null}
+  {onClose}
+  title={stop ? (TITLE[stop.code] ?? 'Stop') : 'Stop'}
+  safetyTitle
+>
   {#if stop}
     <div class="stop" role="alert" data-testid="food-stop" lang="en" data-english-only="safety">
       <p class="lead">{stop.error}</p>

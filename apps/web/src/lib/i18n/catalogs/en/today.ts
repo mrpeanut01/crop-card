@@ -360,6 +360,8 @@ export const enToday = {
   'today.weather.local': 'Local weather',
   'today.weather.low': 'Low',
   'today.weather.noLocation': 'No farm location set for the forecast',
+  'today.weather.rainOne': '{pct}% rain {day}',
+  'today.weather.rainRange': 'rain {from}→{to}',
   'today.weather.setLocation': 'Set your farm location to see the forecast',
   'today.weather.unavailable': 'Weather unavailable right now',
   'today.weather.wind': 'Wind',

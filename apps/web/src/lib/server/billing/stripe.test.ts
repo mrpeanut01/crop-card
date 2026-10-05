@@ -51,6 +51,23 @@ describe('stripe webhook signature verification', () => {
     );
   });
 
+  it('accepts any of several v1 signatures (secret roll), in either order', () => {
+    const now = 1_700_000_000_000;
+    const ts = Math.floor(now / 1000);
+    const body = '{"id":"evt_roll"}';
+    const good = signStripeBody(body, SECRET, ts).split('v1=')[1];
+    const old = createHmac('sha256', 'whsec_old').update(`${ts}.${body}`).digest('hex');
+    expect(() =>
+      verifyWebhookSignature(body, `t=${ts},v1=${good},v1=${old}`, SECRET, now)
+    ).not.toThrow();
+    expect(() =>
+      verifyWebhookSignature(body, `t=${ts},v1=${old},v1=${good}`, SECRET, now)
+    ).not.toThrow();
+    expect(() => verifyWebhookSignature(body, `t=${ts},v1=${old}`, SECRET, now)).toThrow(
+      /mismatch/
+    );
+  });
+
   it('rejects a non-numeric timestamp value', () => {
     const sig = 't=abc,v1=ff';
     expect(() => verifyWebhookSignature('{}', sig, SECRET)).toThrow(

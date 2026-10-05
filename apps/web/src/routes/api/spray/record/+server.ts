@@ -13,8 +13,8 @@
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { closeTaskForRecord } from '$lib/server/recordTaskClose';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
-import { sprayCropStageSchema, sprayRecordSchema } from '$lib/records/apiSchemas';
+import { sprayRecordSchema } from '$lib/records/apiSchemas';
+import { resolveSprayCrops, standingCropPluginIds } from '$lib/server/sprayCrops';
 import { computeTankMixDilutions } from '$lib/dilution/calculator';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
@@ -131,17 +131,19 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     return json({ error: 'custom rate override requires owner role' }, { status: 403 });
   }
 
-  const enrichCrop = (c: z.infer<typeof sprayCropStageSchema>) => ({
-    ...c,
-    cropFamily: c.cropFamily ?? registry.cropFamilyOf(c.cropPluginId),
-    traits: registry.cropTraitsOf(c.cropPluginId)
-  });
+  // FR-03: judge the spray against the block's plantings on file as well
+  // as the crops the client names, with the registry's crop families.
+  const crops = resolveSprayCrops(
+    parsed.data.blockCrops,
+    standingCropPluginIds(getBlock(parsed.data.blockId)?.plantings ?? [], occurredAt),
+    registry
+  );
 
   const ctx: SprayContext = {
     occurredAt,
     products,
-    crop: enrichCrop(parsed.data.blockCrops.primary),
-    coPlantedCrops: parsed.data.blockCrops.coPlanted?.map(enrichCrop),
+    crop: crops.primary,
+    coPlantedCrops: crops.coPlanted,
     sprayer: {
       id: stored.id,
       lastChemistryClass: stored.lastChemistryClass,

@@ -208,6 +208,7 @@ export const enFarm = {
   'farm.zone.noneWide': 'No station with enough winters within {mi} mi at a similar elevation.',
   'farm.zone.noneNear': 'No station with enough winters within {mi} mi.',
   'farm.zone.looking': 'Looking it up…',
+  'farm.zone.failed': 'Could not look it up right now.',
   'farm.zone.stationEstimate': 'Station estimate: zone {zone}.',
   'farm.zone.note':
     'Average coldest night of the year, 1991-2020: {temp}. {est}, not the USDA map. Nothing in CropCard is limited by it.',

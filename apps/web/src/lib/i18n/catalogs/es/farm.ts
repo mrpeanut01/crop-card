@@ -213,6 +213,7 @@ export const esFarm: Partial<Record<MessageKey, string>> = {
     'No hay ninguna estación con suficientes inviernos a menos de {mi} mi y a una elevación similar.',
   'farm.zone.noneNear': 'No hay ninguna estación con suficientes inviernos a menos de {mi} mi.',
   'farm.zone.looking': 'Buscando…',
+  'farm.zone.failed': 'No se pudo consultar en este momento.',
   'farm.zone.stationEstimate': 'Estimación de la estación: zona {zone}.',
   'farm.zone.note':
     'Noche más fría del año en promedio, 1991-2020: {temp}. {est}, no el mapa del USDA. Nada en CropCard depende de esto.',

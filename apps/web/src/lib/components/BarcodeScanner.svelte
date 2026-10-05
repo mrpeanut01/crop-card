@@ -46,12 +46,20 @@
     });
   }
 
+  let destroyed = false;
+
   async function startCamera() {
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
+      const s = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
       });
-      if (!videoEl) return;
+      // Closed while the permission prompt or camera start was pending:
+      // release the camera instead of leaving it running unseen.
+      if (destroyed || !videoEl) {
+        s.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      stream = s;
       videoEl.srcObject = stream;
       await videoEl.play();
       status = 'scanning';
@@ -119,6 +127,8 @@
     startCamera();
   });
   onDestroy(() => {
+    destroyed = true;
+    status = 'done';
     stopCamera();
   });
 </script>

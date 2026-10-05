@@ -472,4 +472,21 @@ describe('POST /api/plantings/[id]/photo-help', () => {
       expect(await png.json()).toMatchObject({ code: 'not-jpeg' });
     });
   });
+
+  it('tells a Spanish speaker to type a question in Spanish', async () => {
+    await runWithTenant(seedOwner(), async () => {
+      const crop = seedPlanting();
+      const res = (await POST({
+        params: { id: crop.id },
+        locals: { locale: 'es' },
+        request: new Request(`http://localhost/api/plantings/${crop.id}/photo-help`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ question: 'other', text: ' ' })
+        })
+      } as never)) as Response;
+      expect(res.status).toBe(400);
+      expect((await res.json()).error).toBe('Escribe una pregunta o elige una de las opciones.');
+    });
+  });
 });

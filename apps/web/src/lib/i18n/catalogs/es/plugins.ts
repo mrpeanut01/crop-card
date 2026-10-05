@@ -164,6 +164,7 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'cardsui.photo.deleteFailed': 'No se eliminó. Inténtalo de nuevo con señal.',
   'cardsui.photo.deleteQ': '¿Eliminar esta entrada?',
   'cardsui.photo.failed': 'No se pudo enviar. Inténtalo de nuevo.',
+  'cardsui.photo.needQuestion': 'Escribe una pregunta o elige una de las opciones.',
   'cardsui.photo.growingOnly':
     'Las respuestas son solo sobre el cultivo. Para cualquier cosa que vayas a aplicar, usa el flujo de aspersión y la etiqueta del producto.',
   'cardsui.photo.jEmpty': 'Aún no hay nada. Las notas y las preguntas con foto aparecen aquí.',

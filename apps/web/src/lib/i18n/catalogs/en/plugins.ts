@@ -157,6 +157,7 @@ export const enPlugins = {
   'cardsui.photo.deleteFailed': 'That did not delete. Try again with signal.',
   'cardsui.photo.deleteQ': 'Delete this entry?',
   'cardsui.photo.failed': 'That did not go through. Try again.',
+  'cardsui.photo.needQuestion': 'Type a question or pick one of the chips.',
   'cardsui.photo.growingOnly':
     'Answers are about growing only. For anything you would spray, use the Spray flow and the product label.',
   'cardsui.photo.jEmpty': 'Nothing here yet. Notes and photo questions show up here.',

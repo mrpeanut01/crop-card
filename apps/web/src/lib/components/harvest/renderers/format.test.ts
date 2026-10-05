@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fmtQtyRange, fmtRange, usText } from './format';
+import { fmtQtyRange, fmtRange, parseMoisturePct, usText } from './format';
 
 describe('fmtRange (#274)', () => {
   it('renders a singular value when min equals max', () => {
@@ -39,5 +39,24 @@ describe('usText', () => {
   it('returns empty for missing values', () => {
     expect(usText(null)).toBe('');
     expect(usText(Number.NaN)).toBe('');
+  });
+});
+
+describe('parseMoisturePct', () => {
+  it('reads a comma decimal as a decimal, not a truncated whole number', () => {
+    expect(parseMoisturePct('13,9')).toBe(13.9);
+    expect(parseMoisturePct(' 22,5 % ')).toBe(22.5);
+  });
+
+  it('reads a dot decimal and a bare number', () => {
+    expect(parseMoisturePct('13.9')).toBe(13.9);
+    expect(parseMoisturePct('15')).toBe(15);
+    expect(parseMoisturePct('14%')).toBe(14);
+  });
+
+  it('is undefined when nothing usable was typed', () => {
+    expect(parseMoisturePct('')).toBeUndefined();
+    expect(parseMoisturePct('   ')).toBeUndefined();
+    expect(parseMoisturePct('wet')).toBeUndefined();
   });
 });

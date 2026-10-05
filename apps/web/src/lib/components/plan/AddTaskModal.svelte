@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import Modal from '$lib/components/ui/Modal.svelte';
   import { fmt } from '$lib/prefsState.svelte';
   import { createT } from '$lib/i18n';
@@ -47,8 +48,11 @@
   let submitting = $state(false);
   let error = $state<string | null>(null);
 
+  // Reset only when the form opens: the assignee list arriving (or a parent
+  // re-render) must not wipe what the owner has already typed.
   $effect(() => {
-    if (open) {
+    if (!open) return;
+    untrack(() => {
       title = '';
       date = todayIso();
       plantingId = defaultPlantingId ?? '';
@@ -56,7 +60,7 @@
       assigneeId = '';
       error = null;
       if (canAssign && members === null) void loadMembers();
-    }
+    });
   });
 
   async function loadMembers() {

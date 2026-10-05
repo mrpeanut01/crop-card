@@ -4,6 +4,8 @@ export const enInventory = {
   'inv.add.pageTitle': 'New {type} — CropCard',
   'inv.add.amendmentTitle': 'New manure or compost pile',
   'inv.add.hayName': 'Hay, {cutting}',
+  'inv.add.hayCuttingLabel': '{block} cutting {n} ({year})',
+  'inv.add.hayBlockFallback': 'a hay block',
   'inv.edit.pageTitle': 'Edit {type} — CropCard',
   'inv.breadcrumb': 'Breadcrumb',
   'inv.allType': '← All {type}',
@@ -673,6 +675,7 @@ export const enInventory = {
   'stockui.receipt.savePlugins.one': 'Save {count} plugin',
   'stockui.receipt.savePlugins.other': 'Save {count} plugins',
   'stockui.receipt.done': 'Done',
+  'stockui.receipt.savedRow': 'Saved',
   'stockui.api.notFound': 'not found',
   'stockui.api.unknownItem': 'unknown stock item',
   'stockui.api.lotNotFound': 'lot not found',
@@ -680,6 +683,10 @@ export const enInventory = {
   'stockui.api.invalidRequest': 'invalid request',
   'stockui.api.inspectorReadOnly': 'inspector role is read-only',
   'stockui.api.idRequired': 'id required',
+  'equip.api.hasSprayRecords':
+    'Spray records name this sprayer, so it stays on file. Retire it instead.',
+  'equip.api.winterizeOwnerOnly':
+    'Only the owner can record winterizing, since it clears the decon and calibration. Ask the owner.',
   'equip.api.specSprayerOnly': 'tank and nozzle are for sprayers',
   'stockui.api.seedImpersonating': 'Seed sourcing cannot be entered while impersonating a farm.',
   'stockui.api.seedLotNotFound': 'This lot was not found.',
@@ -715,5 +722,27 @@ export const enInventory = {
   'equip.w.ledeStrict':
     "End-of-season storage prep. Confirm each step before the next one opens. The final decon uses the class-specific protocol for this sprayer's last load.",
   'equip.w.ledeStandard':
-    "End-of-season storage prep. Confirm each step before the next one opens. The final decon uses the standard protocol for this sprayer's last load."
+    "End-of-season storage prep. Confirm each step before the next one opens. The final decon uses the standard protocol for this sprayer's last load.",
+  'scanai.noKey': 'No Anthropic API key configured. Add it on the Settings page.',
+  'scanai.this.label': 'this label',
+  'scanai.this.page': 'this page',
+  'scanai.this.barcode': 'this barcode',
+  'scanai.the.label': 'the label',
+  'scanai.the.page': 'the page',
+  'scanai.the.barcode': 'the barcode',
+  'scanai.rejected':
+    'Claude could not read {thing}{detail}. Try a clearer or smaller photo, or use Manual entry.',
+  'scanai.failed': 'Claude could not read {thing}{detail}. Try again, or use Manual entry.',
+  'scanai.timeout': 'Claude took too long to read {thing}. Try again, or use Manual entry.',
+  'scanai.unavailable': 'AI is unavailable right now. Use Manual entry.',
+  'scanai.limited': '{reason}. Manual entry still works.',
+  'scanai.overloaded': "Anthropic's API is busy right now. Please try again in a moment.",
+  'scanai.url.invalid-url': 'URL is not valid',
+  'scanai.url.bad-scheme': 'URL must use http or https',
+  'scanai.url.credentials': 'URL must not contain credentials',
+  'scanai.url.blocked-address': 'URL must be a public http(s) address',
+  'scanai.url.bad-redirect': 'Redirect to an invalid URL',
+  'scanai.url.loadFailed': 'Could not load page',
+  'scanai.url.noInfo': 'Page contained no readable product info — try a different URL.',
+  'stockui.barcode.notFoundAi': 'Barcode not in OpenFoodFacts. {message}'
 } as const;

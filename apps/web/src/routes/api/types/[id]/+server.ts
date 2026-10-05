@@ -13,6 +13,7 @@ import {
   updateTaxonomyTerm
 } from '$lib/db/taxonomy';
 import { requireOwner } from '$lib/server/auth';
+import { t } from '$lib/i18n';
 
 const patchSchema = z.object({
   name: z.string().min(1).max(80).optional(),
@@ -22,17 +23,23 @@ const patchSchema = z.object({
 export const PATCH: RequestHandler = async (event) => {
   requireOwner(event);
   if (!event.params.id || !getTaxonomyTerm(event.params.id)) {
-    return json({ error: 'unknown taxonomy term' }, { status: 404 });
+    return json(
+      { error: t(event.locals?.locale, 'api.errB.unknownTaxonomyTerm') },
+      { status: 404 }
+    );
   }
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   try {
     const term = updateTaxonomyTerm(event.params.id, parsed.data);
@@ -47,7 +54,11 @@ export const PATCH: RequestHandler = async (event) => {
 
 export const DELETE: RequestHandler = (event) => {
   requireOwner(event);
-  if (!event.params.id) return json({ error: 'unknown taxonomy term' }, { status: 404 });
+  if (!event.params.id)
+    return json(
+      { error: t(event.locals?.locale, 'api.errB.unknownTaxonomyTerm') },
+      { status: 404 }
+    );
   try {
     deleteTaxonomyTerm(event.params.id);
     return json({ ok: true });

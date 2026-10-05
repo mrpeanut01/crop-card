@@ -85,4 +85,20 @@ describe('stock receipt ledger — Sprint 4 #200', () => {
       // 1000 received - 300 used = 700 hundredths = 7 lb
       expect(total?.total ?? 0).toBe(700);
     }));
+
+  it('reports the fulfilled amount exactly when a use spans several lots', () =>
+    runWithTenant(TEST_OWNER_ID, () => {
+      const item = createStockItem({
+        category: 'herbicide',
+        displayName: uniq('Fulfilled sum probe'),
+        defaultUnit: 'gal'
+      });
+      for (let i = 0; i < 3; i++) {
+        receiveLot({ stockItemId: item.id, receivedQuantity: 0.1, unit: 'gal' });
+      }
+      const res = decrementForUse({ stockItemId: item.id, amount: 0.3, unit: 'gal' });
+      expect(res.movements).toHaveLength(3);
+      expect(res.fulfilled).toBe(0.3);
+      expect(res.shortfall).toBe(0);
+    }));
 });

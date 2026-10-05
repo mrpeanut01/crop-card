@@ -1,6 +1,7 @@
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { getStockItem, updateStockItem } from '$lib/db/stock';
 import { requireOwner } from '$lib/server/auth';
+import { t } from '$lib/i18n';
 
 /**
  * POST /api/stock/[id]/planter-plate
@@ -16,20 +17,25 @@ import { requireOwner } from '$lib/server/auth';
 export const POST: RequestHandler = async (event) => {
   requireOwner(event);
   const id = event.params.id;
-  if (!id) throw error(400, 'id required');
+  if (!id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const item = getStockItem(id);
-  if (!item) throw error(404, `unknown stock item: ${id}`);
-  if (item.category !== 'seed') throw error(400, 'item is not a seed');
+  if (!item) throw error(404, t(event.locals?.locale, 'api.errB.unknownStockItemId', { id }));
+  if (item.category !== 'seed') throw error(400, t(event.locals?.locale, 'api.errB.itemNotSeed'));
 
-  const body = (await event.request.json()) as { planterPlateConfig?: Record<string, unknown> };
+  let body: { planterPlateConfig?: Record<string, unknown> } | null;
+  try {
+    body = (await event.request.json()) as typeof body;
+  } catch {
+    throw error(400, t(event.locals?.locale, 'stockui.api.invalidJsonShort'));
+  }
   if (!body?.planterPlateConfig || typeof body.planterPlateConfig !== 'object') {
-    throw error(400, 'planterPlateConfig required');
+    throw error(400, t(event.locals?.locale, 'api.errB.plateConfigRequired'));
   }
   if (
     !('plateNumber' in body.planterPlateConfig) ||
     typeof body.planterPlateConfig.plateNumber !== 'string'
   ) {
-    throw error(400, 'planterPlateConfig.plateNumber required');
+    throw error(400, t(event.locals?.locale, 'api.errB.plateNumberRequired'));
   }
 
   let existing: Record<string, unknown> = {};

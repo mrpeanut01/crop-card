@@ -1,6 +1,7 @@
 import { anthropicClient } from './anthropicClient';
 import { selectModel, estimateUsd, type AiResultMeta } from './aiPlanning';
 import { extractJsonObject } from './aiJsonExtract';
+import { AiSpentError } from './aiCost';
 import { getApiKey } from './scanResult';
 import {
   formatDay,
@@ -118,7 +119,13 @@ export async function suggestPlantingWindow(
     usdEstimate: 0
   };
   meta.usdEstimate = estimateUsd(meta, choice, usage);
-  return { window: parsePlantingWindowResponse(text, input.year, input.frost), meta };
+  let window: PlantingWindow;
+  try {
+    window = parsePlantingWindowResponse(text, input.year, input.frost);
+  } catch (err) {
+    throw new AiSpentError(err instanceof Error ? err.message : 'invalid planting window', meta);
+  }
+  return { window, meta };
 }
 
 const CACHE_TTL_MS = 7 * 86_400_000;

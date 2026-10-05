@@ -4,6 +4,7 @@ import { t } from '$lib/i18n';
 import { currentOwnerId, runWithTenant } from '$lib/db/tenant';
 import { checkGuard, recordCall, reserveGuard, type GuardHold, type GuardOutcome } from './aiGuard';
 import { aiTry, type FallbackReason } from './aiTry';
+import { AiSpentError } from './aiCost';
 import { getApiKey } from './scanResult';
 
 /** Planning + plugin-lookup calls routinely run far longer than aiTry's 6s
@@ -131,13 +132,47 @@ function meterLateSettle<T>(
         if (ownerId) runWithTenant(ownerId, write);
         else write();
       } catch (err) {
-        console.error(`[ai] ${args.endpoint} late recordCall failed`, err);
-      } finally {
         hold?.release();
+        console.error(`[ai] ${args.endpoint} late recordCall failed`, err);
       }
     },
     () => hold?.release()
   );
+}
+
+/** Claude answered but the prompt function threw: the call was still billed,
+ *  so its usage is logged against the farm's budget and daily cap. The logged
+ *  row takes over one settled hold, so returns true when the caller must not
+ *  release its own hold as well. */
+function meterSpentError<T>(
+  err: AiSpentError,
+  args: TryAiWithGuardArgs<T>,
+  reason: FallbackReason,
+  hold: GuardHold | null
+): boolean {
+  const usage = usageFromMeta({ meta: err.meta });
+  if (!usage || usage.inputTokens + usage.outputTokens <= 0) return false;
+  hold?.settle(usage.usdEstimate);
+  try {
+    recordCall({
+      userId: args.userId,
+      endpoint: args.endpoint,
+      model: usage.model,
+      inputTokens: usage.inputTokens,
+      cachedInputTokens: usage.cachedInputTokens,
+      outputTokens: usage.outputTokens,
+      usdEstimate: usage.usdEstimate,
+      success: false,
+      errorClass: 'invalid-response',
+      provenance: 'fallback',
+      fallbackReason: reason,
+      attemptedAiAt: Date.now()
+    });
+    return true;
+  } catch (e) {
+    console.error(`[ai] ${args.endpoint} recordCall failed`, e);
+    return false;
+  }
 }
 
 /** The guard's refusal, trimmed to what a banner and upgrade nudge need. */
@@ -211,6 +246,8 @@ export async function tryAiWithGuard<T>(args: TryAiWithGuardArgs<T>): Promise<De
       controller.abort();
       meterLateSettle(state.pending, args, ownerId, hold);
       keepHold = true;
+    } else if (state.error instanceof AiSpentError) {
+      keepHold = meterSpentError(state.error, args, reason, hold);
     }
     return {
       provenance: 'fallback',

@@ -15,6 +15,7 @@ import { canRemoveLog } from '$lib/server/irrigationApi';
 import { resolveTarget, sqFtOf } from '$lib/server/waterAdvice.server';
 import { GAUGE_LOOKBACK_MS } from '$lib/weather/waterBalance';
 import { WATER_TARGET_SOURCE, waterTargetKey } from '$lib/weather/waterSources';
+import { t } from '$lib/i18n';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -38,7 +39,8 @@ export const GET: RequestHandler = (event) => {
   const user = requireUser(event);
   const fieldId = event.url.searchParams.get('fieldId') ?? '';
   const field = getField(fieldId);
-  if (!field) return json({ error: 'No such Area' }, { status: 404 });
+  if (!field)
+    return json({ error: t(event.locals?.locale, 'api.errB.noSuchArea') }, { status: 404 });
   const now = Date.now();
 
   const areas = listFields({ kinds: ['garden', 'field'] });

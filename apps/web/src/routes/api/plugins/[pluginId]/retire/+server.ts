@@ -19,12 +19,14 @@ import {
 } from '$lib/server/pluginLifecycle';
 import { AnimalRuleError } from '$lib/server/animals';
 import { lifecycleErrorMessage } from '$lib/plugins/lifecycleMessage';
+import { t } from '$lib/i18n';
 
 export const POST: RequestHandler = async (event) => {
   const global = event.url.searchParams.get('scope') === 'global';
   const user = global ? requireSuperadmin(event) : requireOwner(event);
   const pluginId = event.params.pluginId;
-  if (!pluginId) return json({ error: 'pluginId is required' }, { status: 400 });
+  if (!pluginId)
+    return json({ error: t(event.locals?.locale, 'api.errB.pluginIdIsRequired') }, { status: 400 });
   try {
     await (global ? retirePlugin(pluginId) : retirePluginForOwner(pluginId, { event, user }));
     return json({ pluginId, retired: true, scope: global ? 'global' : 'owner' });

@@ -192,7 +192,7 @@
       const reply: string =
         typeof body.reply === 'string' && body.reply.trim().length > 0
           ? body.reply
-          : 'Done — proposed new dates. Click "Apply to grid" when you\'re ready.';
+          : tr('planui.opt.proposedDone');
       const fallback: string | undefined = body?.meta?.fallback;
       const violations: string[] = Array.isArray(body?.meta?.violations)
         ? body.meta.violations
@@ -201,11 +201,12 @@
       if (fallback) {
         const header =
           fallback === 'no-api-key'
-            ? '⚠ No Anthropic API key configured — proposal unchanged.'
+            ? tr('planui.opt.fbNoKey')
             : fallback === 'ai-unavailable'
-              ? '⚠ Claude is unavailable — proposal unchanged.'
-              : '⚠ Could not apply that change cleanly. Validators rejected the proposal; the schedule above stays as it is.';
-        const violationLine = violations.length > 0 ? `\n\nWhy:\n• ${violations.join('\n• ')}` : '';
+              ? tr('planui.opt.fbUnavailable')
+              : tr('planui.opt.fbRejected');
+        const violationLine =
+          violations.length > 0 ? `\n\n${tr('planui.opt.why')}\n• ${violations.join('\n• ')}` : '';
         display = `${header}${violationLine}\n\n${reply}`;
         // Don't buffer a proposed schedule when the AI's output failed
         // validation — Apply would just write the previous dates back.
@@ -245,8 +246,7 @@
         ...messages,
         {
           role: 'assistant',
-          content:
-            '✅ Applied to the grid. Check the swim-lane behind this sidebar — the new dates are live.'
+          content: tr('planui.opt.applied')
         }
       ];
       queueScrollChat();

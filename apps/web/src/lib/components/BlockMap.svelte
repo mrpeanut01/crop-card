@@ -994,7 +994,7 @@
           fillOpacity: isLine ? 0 : 0.18
         })
       });
-      const kindText = locale && locale !== 'en' ? shadeKindLabel(s.kind, locale) : s.kind;
+      const kindText = shadeKindLabel(s.kind, locale);
       const tooltipText = `${s.name} · ${kindText} · ${fmt.qty(s.heightFt, 'distance')}${s.isDeciduous ? ` · ${tr('farm.editor.deciduous')}` : ''}`;
       layer.bindTooltip(escapeHtml(tooltipText), { direction: 'top' });
       const id = (layer as unknown as { _leaflet_id: number })._leaflet_id;
@@ -1644,7 +1644,7 @@
 
   async function submitFeatureDraft() {
     if (!featureDraft || featureDraft.busy || !onCreateMapFeature) return;
-    const checked = bodyFromDraft(featureDraft.kind, featureDraft.form);
+    const checked = bodyFromDraft(featureDraft.kind, featureDraft.form, locale);
     if (!checked.ok) {
       featureDraft.error = checked.message;
       return;

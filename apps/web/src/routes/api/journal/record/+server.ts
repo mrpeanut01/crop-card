@@ -16,7 +16,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const who = await journalWriter(event);
   if (!who.ok) return who.response;
   const parsed = queuedJournalSchema.safeParse(await readJson(event));
-  if (!parsed.success) return badRequest(parsed.error);
+  if (!parsed.success) return badRequest(parsed.error, event.locals?.locale);
   const { cropId, ...entry } = parsed.data;
   return addJournalEntry(event, cropId, who.userId, entry);
 });

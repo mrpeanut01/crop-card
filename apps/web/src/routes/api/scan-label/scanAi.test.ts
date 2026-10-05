@@ -132,6 +132,44 @@ describe('no-key', () => {
   });
 });
 
+describe('fallback messages follow the request language (Invariant 9)', () => {
+  const esLabel = () => event('/api/scan-label', { image: 'aGVsbG8=' }, { locale: 'es' });
+
+  it('English with no locale is byte-identical', async () => {
+    const body = await (await scanLabel(labelEvent())).json();
+    expect(body.message).toBe('No Anthropic API key configured. Add it on the Settings page.');
+  });
+
+  it('Spanish no-key keeps the machine reason the client reads', async () => {
+    const body = await (await scanLabel(esLabel())).json();
+    expect(body.fallbackReason).toBe('no-key');
+    expect(body.message).toMatch(/No hay una clave de API de Anthropic/);
+  });
+
+  it('Spanish Claude failure names the label in Spanish', async () => {
+    m.getApiKey.mockReturnValue('sk-test');
+    m.claudeVisionLookup.mockRejectedValue(new Error('boom'));
+    const body = await (await scanLabel(esLabel())).json();
+    expect(body.message).toBe(
+      'Claude no pudo leer la etiqueta (boom). Inténtalo de nuevo, o usa la entrada manual.'
+    );
+  });
+
+  it('Spanish guard refusal reads the limit detail, not the English message', async () => {
+    m.getApiKey.mockReturnValue('sk-test');
+    m.checkGuard.mockReturnValue({
+      ok: false,
+      reason: 'quota-exceeded',
+      status: 429,
+      message: 'Daily scan-label quota of 40 reached.',
+      detail: 'daily-quota'
+    });
+    const body = await (await scanLabel(esLabel())).json();
+    expect(body.message).toMatch(/La entrada manual sigue funcionando\.$/);
+    expect(body.message).not.toMatch(/quota/);
+  });
+});
+
 describe('aiGuard short-circuit', () => {
   beforeEach(() => m.getApiKey.mockReturnValue('sk-test'));
 
@@ -333,6 +371,25 @@ describe('scan-url input errors (not AI degradation)', () => {
     m.fetchPageContent.mockResolvedValue({ ...PAGE, jsonLd: [], bodyText: 'tiny' });
     const res = await scanUrl(urlEvent());
     expect(res.status).toBe(422);
+    expect((await res.json()).message).toBe(
+      'Page contained no readable product info — try a different URL.'
+    );
     expect(m.claudeUrlLookup).not.toHaveBeenCalled();
+  });
+
+  it('input errors follow the caller language', async () => {
+    const es = () => event('/api/scan-url', { url: 'https://shop.example/p' }, { locale: 'es' });
+    m.fetchPageContent.mockRejectedValue(
+      new SafeFetchError('blocked-address', 'URL must be a public http(s) address')
+    );
+    expect((await (await scanUrl(es())).json()).message).toBe(
+      'La URL debe ser una dirección http(s) pública'
+    );
+    m.fetchPageContent.mockRejectedValue(new Error('Could not load page: ECONNRESET'));
+    expect((await (await scanUrl(es())).json()).message).toBe('No se pudo cargar la página');
+    m.fetchPageContent.mockResolvedValue({ ...PAGE, jsonLd: [], bodyText: 'tiny' });
+    expect((await (await scanUrl(es())).json()).message).toBe(
+      'La página no tenía información legible del producto; prueba con otra URL.'
+    );
   });
 });

@@ -10,6 +10,12 @@ on:
     - cron: '17 9 * * 1'
   workflow_dispatch:
   workflow_call:
+    inputs:
+      ref:
+        description: Ref to check out (blank = the triggering ref). release.yml passes the tag.
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -25,6 +31,8 @@ jobs:
       actions: read
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
       - uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
@@ -39,6 +47,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
       - uses: pnpm/action-setup@v6
         with:
           version: 9.12.3

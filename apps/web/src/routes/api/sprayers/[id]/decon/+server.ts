@@ -13,12 +13,13 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { requireOwner } from '$lib/server/auth';
 import { getSprayer, recordDecon } from '$lib/server/sprayers';
+import { t } from '$lib/i18n';
 
 export const POST: RequestHandler = (event) => {
   requireOwner(event);
   const id = event.params.id;
   if (!id || !getSprayer(id)) {
-    return json({ error: 'unknown sprayer id' }, { status: 404 });
+    return json({ error: t(event.locals?.locale, 'api.errB.unknownSprayerId') }, { status: 404 });
   }
   const updated = recordDecon(id, Date.now());
   return json({ sprayer: updated });

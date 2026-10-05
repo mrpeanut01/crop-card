@@ -34,8 +34,17 @@
     }
     busy = true;
     try {
-      const { resizePhoto } = await import('$lib/client/photoResize');
-      const photo = await resizePhoto(file);
+      const { PhotoTooLargeError, resizePhoto } = await import('$lib/client/photoResize');
+      let photo: string;
+      try {
+        photo = await resizePhoto(file);
+      } catch (err) {
+        error =
+          err instanceof PhotoTooLargeError
+            ? tr('cardsui.photo.tooLarge')
+            : tr('cardsui.photo.unreadable');
+        return;
+      }
       const res = await fetch(`/api/animals/${animalId}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
@@ -47,12 +56,7 @@
       }
       await onDone();
     } catch (err) {
-      error =
-        err instanceof TypeError
-          ? tr('animals.offline')
-          : err instanceof Error
-            ? err.message
-            : String(err);
+      error = err instanceof TypeError ? tr('animals.offline') : tr('cardsui.photo.unreadable');
     } finally {
       busy = false;
     }

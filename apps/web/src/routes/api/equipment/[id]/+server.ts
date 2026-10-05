@@ -1,7 +1,7 @@
 import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
-import { deleteEquipmentCascade } from '$lib/db/admin';
+import { deleteEquipmentCascade, equipmentHasSprayRecords } from '$lib/db/admin';
 import { db } from '$lib/db/client';
 import {
   appendEquipmentLog,
@@ -11,12 +11,13 @@ import {
   updateEquipmentState
 } from '$lib/db/equipment';
 import { currentUser, requireOwner } from '$lib/server/auth';
-import { canMutate } from '$lib/server/session';
 
-export const GET: RequestHandler = ({ params, url }) => {
-  if (!params.id) return json({ error: 'id required' }, { status: 400 });
+export const GET: RequestHandler = ({ params, url, locals }) => {
+  if (!params.id)
+    return json({ error: t(locals?.locale, 'stockui.api.idRequired') }, { status: 400 });
   const equipment = getEquipment(params.id);
-  if (!equipment) return json({ error: 'not found' }, { status: 404 });
+  if (!equipment)
+    return json({ error: t(locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   const logLimit = Number(url.searchParams.get('logLimit') ?? '50');
   const log = listEquipmentLog(params.id, { limit: logLimit });
   return json({ equipment, log });
@@ -104,21 +105,23 @@ export const PATCH: RequestHandler = async (event) => {
  *
  * Cascade-removes equipment_state, equipment_log, and pending_calibrations
  * for this row, nulls out tasks.equipment_id + insecticide_events.sprayerId,
- * then drops the equipment row itself.
+ * then drops the equipment row itself. Owner only (Invariant 8); a sprayer
+ * that any spray, insecticide or fungicide record names answers 409
+ * HAS_SPRAY_RECORDS; spray records are never edited to let gear go.
  */
 export const DELETE: RequestHandler = (event) => {
-  const auth = currentUser(event);
-  if (auth && !canMutate(auth.role)) {
-    return json(
-      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
-      { status: 403 }
-    );
-  }
+  requireOwner(event);
   if (!event.params.id)
     return json({ error: t(event.locals?.locale, 'stockui.api.idRequired') }, { status: 400 });
   const equipment = getEquipment(event.params.id);
   if (!equipment)
     return json({ error: t(event.locals?.locale, 'stockui.api.notFound') }, { status: 404 });
+  if (equipmentHasSprayRecords(equipment.id)) {
+    return json(
+      { error: t(event.locals?.locale, 'equip.api.hasSprayRecords'), code: 'HAS_SPRAY_RECORDS' },
+      { status: 409 }
+    );
+  }
   const result = deleteEquipmentCascade(event.params.id);
   return json(result);
 };

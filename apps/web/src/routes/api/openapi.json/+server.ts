@@ -8,31 +8,20 @@
  * CI runs `git diff --exit-code` on it to catch drift between intent and
  * served file.
  *
+ * The document is inlined at build time (`?raw`). Reading it from a path
+ * relative to this module broke in production: the bundled endpoint lives
+ * under build/server/entries/**, where no static/ directory exists.
+ *
  * Cached one hour (`Cache-Control: public, max-age=3600`) — agents that
  * pull the doc once per tool-build are fine; live workflows that need
  * the latest can bust via query string.
  */
 
 import type { RequestHandler } from '@sveltejs/kit';
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-// Layout: apps/web/src/routes/api/openapi.json/+server.ts → ../../../../static/openapi.json
-const ARTIFACT_PATH = resolve(__dirname, '../../../../static/openapi.json');
-
-let cachedJson: string | null = null;
-
-async function loadJson(): Promise<string> {
-  if (cachedJson !== null) return cachedJson;
-  cachedJson = await readFile(ARTIFACT_PATH, 'utf-8');
-  return cachedJson;
-}
+import openapiDoc from '../../../../static/openapi.json?raw';
 
 export const GET: RequestHandler = async () => {
-  const json = await loadJson();
-  return new Response(json, {
+  return new Response(openapiDoc, {
     status: 200,
     headers: {
       'content-type': 'application/json',

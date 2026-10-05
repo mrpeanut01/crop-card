@@ -31,6 +31,7 @@
   let lookup = $state<ZoneLookup | null>(null);
   let elevationKnown = $state(false);
   let loaded = $state(false);
+  let failed = $state(false);
   let typed = $state(untrack(() => manualZone ?? ''));
   let seq = 0;
 
@@ -52,10 +53,20 @@
     const mine = ++seq;
     const t = setTimeout(async () => {
       const elevationFt = await elevationAt(la, lo);
-      const result = await lookupZone(la, lo, { elevationFt });
+      let result: ZoneLookup | null;
+      try {
+        result = await lookupZone(la, lo, { elevationFt });
+      } catch {
+        if (mine !== seq) return;
+        lookup = null;
+        failed = true;
+        loaded = true;
+        return;
+      }
       if (mine !== seq) return;
       lookup = result;
       elevationKnown = elevationFt !== null;
+      failed = false;
       loaded = true;
     }, 250);
     return () => clearTimeout(t);
@@ -85,6 +96,8 @@
       />
     {:else if lat == null || lon == null}
       <span class="muted">{tr('farm.zone.setLocation')}</span>
+    {:else if loaded && failed}
+      <span class="muted" data-testid="zone-failed">{tr('farm.zone.failed')}</span>
     {:else if loaded}
       <span class="muted" data-testid="zone-none"
         >{elevationKnown

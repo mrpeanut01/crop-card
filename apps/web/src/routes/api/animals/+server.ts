@@ -1,9 +1,10 @@
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { listAnimals, type AnimalListStatus } from '$lib/db/animals';
 import { getField } from '$lib/db/fields';
 import { animalCreateSchema } from '$lib/animals/apiSchemas';
 import { requireOwner } from '$lib/server/auth';
-import { assertAnimalSubject, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertAnimalSubject, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { createAnimalWithHousing, getSpecies, parseBody, ruleResponse } from '$lib/server/animals';
 import { getAnimalGroupSummary } from '$lib/db/animalGroups';
 import { farmTimeZone } from '$lib/db/userProfile';
@@ -13,9 +14,10 @@ import { seedSpeciesCarePlans } from '$lib/server/carePlans';
 
 const LIST_STATUSES: readonly AnimalListStatus[] = ['active', 'gone', 'archived', 'all'];
 
-export const GET: RequestHandler = ({ url }) => {
+export const GET: RequestHandler = ({ url, locals }) => {
   const status = (url.searchParams.get('status') ?? 'active') as AnimalListStatus;
-  if (!LIST_STATUSES.includes(status)) return json({ error: 'unknown status' }, { status: 400 });
+  if (!LIST_STATUSES.includes(status))
+    return json({ error: t(locals?.locale, 'api.err.unknownStatus') }, { status: 400 });
   const ungrouped = url.searchParams.get('ungrouped');
   return json({
     animals: listAnimals({
@@ -32,16 +34,18 @@ export const _requestSchema = animalCreateSchema;
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
-  const body = await parseBody(event.request, animalCreateSchema);
+  const body = await parseBody(event.request, animalCreateSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const input = body.data;
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['housingFieldId', input.housingFieldId, getField],
     assertAnimalSubject('groupId', 'group', input.groupId)
   );
   if (foreign) return foreign;
   const species = await getSpecies(input.speciesId);
-  if (!species) return json({ error: 'unknown speciesId' }, { status: 400 });
+  if (!species)
+    return json({ error: t(event.locals?.locale, 'api.err.unknownSpecies') }, { status: 400 });
   const group = input.groupId ? getAnimalGroupSummary(input.groupId) : undefined;
   const now = Date.now();
   const gate = await grazingPlacementGate(

@@ -336,6 +336,7 @@ export const enPlan = {
   'plan.page.moveCropFailed': 'failed to move crop ({status})',
   'plan.page.moveFailed': 'Could not move planting: {detail}',
   'plan.page.networkError': 'network error',
+  'plan.page.moveBlockFailed': 'Could not move the block ({status}).',
   'plan.page.nudge.failed': 'Nudge failed: {detail}',
   'plan.page.opt.btn': '✨ Optimize Schedule',
   'plan.page.opt.title':
@@ -361,6 +362,8 @@ export const enPlan = {
     'Only the {count} visible blocks will be reset; hidden blocks stay as-is. ',
   'plan.page.reset.title':
     'Unschedule every crop, disband groups, remove materialized tasks, then immediately re-run the deterministic auto-schedule. Harvested / archived crops untouched.',
+  'plan.page.seedCommitFailed': 'could not save these plantings ({status})',
+  'plan.page.seedPlanFailed': 'could not plan these seeds ({status})',
   'plan.page.season.cancelEdits': 'Cancel edits',
   'plan.page.season.captured':
     'Your {year} season setup is captured. Continue to the next stage — define where things are growing.',
@@ -688,6 +691,8 @@ export const enPlan = {
   'plan.design.notInCopy': "This garden isn't in the copy saved on this device.",
   'plan.design.didNotLoad': "The garden designer didn't load. Try again.",
   'plan.design.notDesignable': 'This Area has no garden designer. Only gardens and greenhouses do.',
+  'crops.api.deleteLockedOwnerOnly':
+    'This planting has records older than 48 hours, so only the owner can delete it. Ask the owner.',
   'crops.err.missingBlock': "This planting's bed or block is missing.",
   'plan.swimlane.eastIndex': 'E{n}',
   'plan.grazing.docTitle': 'Grazing times · {area} · CropCard',

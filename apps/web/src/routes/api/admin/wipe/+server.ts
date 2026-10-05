@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * POST /api/admin/wipe
  *
@@ -27,14 +28,14 @@ const inputSchema = z.object({
 
 export const POST: RequestHandler = async (event) => {
   const auth = currentUser(event);
-  if (!auth) throw error(401, 'sign-in required');
-  if (auth.role !== 'owner') throw error(403, 'owner role required for wipe');
+  if (!auth) throw error(401, t(event.locals?.locale, 'api.err.signInRequired'));
+  if (auth.role !== 'owner') throw error(403, t(event.locals?.locale, 'api.err.wipeOwnerRequired'));
   // C-35 §0: wiping erases every withdrawal and grazing hold with the
   // records, so an API token or an impersonating superadmin never can.
   if (!isInteractiveOwner(event, auth)) {
     return json(
       {
-        error: 'Only the owner, signed in on their own account, can wipe the farm.',
+        error: t(event.locals?.locale, 'api.err.wipeInteractiveOwner'),
         code: 'INTERACTIVE_OWNER_ONLY'
       },
       { status: 403 }
@@ -45,13 +46,16 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = inputSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'pass {"confirm":"WIPE-EVERYTHING"} to proceed',
+        error: t(event.locals?.locale, 'api.err.wipeConfirm'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }

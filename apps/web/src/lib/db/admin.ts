@@ -13,7 +13,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { type SQL, and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
+import { type SQL, and, eq, inArray, isNotNull, isNull, lte, or } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
 import { plantingInGround } from '$lib/garden/inGround';
@@ -61,7 +61,9 @@ import {
   pendingCalibrations,
   rainGaugeReadings,
   recordDeletions,
+  scoutObservations,
   seedStarts,
+  shadeSources,
   soilTests,
   sprayEvents,
   sprayers,
@@ -81,6 +83,7 @@ import {
 import { ownerStoragePrefix } from './documents';
 import { unlinkMapFeaturesFromField } from './mapFeatures';
 import { liveHoldParams } from './holdParams';
+import { LOCK_WINDOW_MS } from './recordKinds';
 import { evaluateLock as evaluateSprayLock, getSprayEvent } from './sprayEvents';
 import { evaluateLock as evaluateInsecticideLock, getInsecticideEvent } from './insecticideEvents';
 import { evaluateLock as evaluateFungicideLock, getFungicideEvent } from './fungicideEvents';
@@ -400,6 +403,12 @@ export function deleteCropCascade(
     .where(withTenant(insecticideEvents, eq(insecticideEvents.cropId, id)))
     .all()
     .map((r) => r.id);
+  const fungicideIds = db
+    .select({ id: fungicideEvents.id })
+    .from(fungicideEvents)
+    .where(withTenant(fungicideEvents, eq(fungicideEvents.cropId, id)))
+    .all()
+    .map((r) => r.id);
   const fertilityIds = db
     .select({ id: fertilityApplications.id })
     .from(fertilityApplications)
@@ -417,6 +426,12 @@ export function deleteCropCascade(
     removed.stock_movements_insecticide = db
       .delete(stockMovements)
       .where(withTenant(stockMovements, inArray(stockMovements.insecticideEventId, insecticideIds)))
+      .run().changes;
+  }
+  if (fungicideIds.length) {
+    removed.stock_movements_fungicide = db
+      .delete(stockMovements)
+      .where(withTenant(stockMovements, inArray(stockMovements.fungicideEventId, fungicideIds)))
       .run().changes;
   }
   if (fertilityIds.length) {
@@ -463,8 +478,22 @@ export function deleteCropCascade(
       });
     }
   }
+  for (const fid of fungicideIds) {
+    const e = getFungicideEvent(fid);
+    if (e) {
+      writeDeletionTombstone('fungicide', fid, e, {
+        reason: 'planting deleted',
+        deletedFromFieldId: opts.deletedFromFieldId
+      });
+    }
+  }
   removed.spray_events = del(sprayEvents, eq(sprayEvents.cropId, id));
   removed.insecticide_events = del(insecticideEvents, eq(insecticideEvents.cropId, id));
+  removed.fungicide_events = del(fungicideEvents, eq(fungicideEvents.cropId, id));
+  db.update(scoutObservations)
+    .set({ cropId: null })
+    .where(withTenant(scoutObservations, eq(scoutObservations.cropId, id)))
+    .run();
   removed.fertility_applications = del(fertilityApplications, eq(fertilityApplications.cropId, id));
   removed.harvest_dispositions = deleteDispositionsOfHarvests(
     harvestIdsWhere(eq(harvestEvents.cropId, id)),
@@ -477,6 +506,39 @@ export function deleteCropCascade(
   removed.crops = del(crops, eq(crops.id, id));
 
   return { removed };
+}
+
+/** FR-09 / Invariant 5: whether deleting this planting would destroy a
+ *  record already past its 48-hour lock (a spray, insecticide, fungicide,
+ *  harvest or hay cutting dated 48 hours or more ago). */
+export function cropHasLockedRecords(id: string, nowMs: number = Date.now()): boolean {
+  const cutoff = new Date(nowMs - LOCK_WINDOW_MS);
+  const any = <T extends TenantScopedTable>(table: T, where: SQL | undefined): boolean =>
+    db
+      .select()
+      .from(table as SQLiteTable)
+      .where(withTenant(table, where))
+      .limit(1)
+      .all().length > 0;
+  return (
+    any(sprayEvents, and(eq(sprayEvents.cropId, id), lte(sprayEvents.occurredAt, cutoff))) ||
+    any(
+      insecticideEvents,
+      and(eq(insecticideEvents.cropId, id), lte(insecticideEvents.occurredAt, cutoff))
+    ) ||
+    any(
+      fungicideEvents,
+      and(eq(fungicideEvents.cropId, id), lte(fungicideEvents.occurredAt, cutoff))
+    ) ||
+    any(harvestEvents, and(eq(harvestEvents.cropId, id), lte(harvestEvents.occurredAt, cutoff))) ||
+    any(
+      hayCuttings,
+      and(
+        eq(hayCuttings.cropId, id),
+        or(lte(hayCuttings.mowAt, cutoff), lte(hayCuttings.createdAt, cutoff))
+      )
+    )
+  );
 }
 
 // ─── Per-block (the heaviest cascade) ───────────────────────────────────
@@ -607,6 +669,12 @@ export function deleteBlockCascade(id: string): DeleteSummary {
     .where(withTenant(insecticideEvents, eq(insecticideEvents.blockId, id)))
     .all()
     .map((r) => r.id);
+  const blockFungicideIds = db
+    .select({ id: fungicideEvents.id })
+    .from(fungicideEvents)
+    .where(withTenant(fungicideEvents, eq(fungicideEvents.blockId, id)))
+    .all()
+    .map((r) => r.id);
   for (const sid of blockSprayIds) {
     const e = getSprayEvent(sid);
     if (e) {
@@ -621,6 +689,20 @@ export function deleteBlockCascade(id: string): DeleteSummary {
         deletedFromFieldId
       });
     }
+  }
+  for (const fid of blockFungicideIds) {
+    const e = getFungicideEvent(fid);
+    if (e) {
+      writeDeletionTombstone('fungicide', fid, e, { reason: 'block deleted', deletedFromFieldId });
+    }
+  }
+  if (blockFungicideIds.length) {
+    removed.stock_movements_block_fungicide = db
+      .delete(stockMovements)
+      .where(
+        withTenant(stockMovements, inArray(stockMovements.fungicideEventId, blockFungicideIds))
+      )
+      .run().changes;
   }
   if (blockSprayIds.length) {
     removed.stock_movements_block_spray = db
@@ -639,6 +721,8 @@ export function deleteBlockCascade(id: string): DeleteSummary {
 
   removed.spray_events_block = del(sprayEvents, eq(sprayEvents.blockId, id));
   removed.insecticide_events_block = del(insecticideEvents, eq(insecticideEvents.blockId, id));
+  removed.fungicide_events_block = del(fungicideEvents, eq(fungicideEvents.blockId, id));
+  removed.scout_observations = del(scoutObservations, eq(scoutObservations.blockId, id));
   removed.harvest_dispositions_block = deleteDispositionsOfHarvests(
     harvestIdsWhere(eq(harvestEvents.blockId, id)),
     'block deleted'
@@ -660,23 +744,50 @@ export function deleteBlockCascade(id: string): DeleteSummary {
 
 // ─── Per-equipment ──────────────────────────────────────────────────────
 
+/** Whether any herbicide, insecticide or fungicide record names this
+ *  equipment as its sprayer. Spray records are never edited to let gear go,
+ *  so such a sprayer cannot be deleted (retire it instead). */
+export function equipmentHasSprayRecords(id: string): boolean {
+  const named = <T extends TenantScopedTable>(table: T, where: SQL): boolean =>
+    db
+      .select()
+      .from(table as SQLiteTable)
+      .where(withTenant(table, where))
+      .limit(1)
+      .all().length > 0;
+  return (
+    named(sprayEvents, eq(sprayEvents.sprayerId, id)) ||
+    named(insecticideEvents, eq(insecticideEvents.sprayerId, id)) ||
+    named(fungicideEvents, eq(fungicideEvents.sprayerId, id))
+  );
+}
+
 /** @hold-exempt: only clears the sprayer link on insecticide records; no hold reads it */
 export function deleteEquipmentCascade(id: string): DeleteSummary {
-  const removed: Record<string, number> = {};
-  removed.pending_calibrations = del(pendingCalibrations, eq(pendingCalibrations.equipmentId, id));
-  removed.equipment_log = del(equipmentLog, eq(equipmentLog.equipmentId, id));
-  removed.equipment_state = del(equipmentState, eq(equipmentState.equipmentId, id));
-  removed.crop_equipment = del(cropEquipment, eq(cropEquipment.equipmentId, id));
-  db.update(tasks)
-    .set({ equipmentId: null })
-    .where(withTenant(tasks, eq(tasks.equipmentId, id)))
-    .run();
-  db.update(insecticideEvents)
-    .set({ sprayerId: null })
-    .where(withTenant(insecticideEvents, eq(insecticideEvents.sprayerId, id)))
-    .run();
-  removed.equipment = del(equipment, eq(equipment.id, id));
-  return { removed };
+  return db.transaction(() => {
+    const removed: Record<string, number> = {};
+    removed.pending_calibrations = del(
+      pendingCalibrations,
+      eq(pendingCalibrations.equipmentId, id)
+    );
+    removed.equipment_log = del(equipmentLog, eq(equipmentLog.equipmentId, id));
+    removed.equipment_state = del(equipmentState, eq(equipmentState.equipmentId, id));
+    removed.crop_equipment = del(cropEquipment, eq(cropEquipment.equipmentId, id));
+    db.update(tasks)
+      .set({ equipmentId: null })
+      .where(withTenant(tasks, eq(tasks.equipmentId, id)))
+      .run();
+    db.update(insecticideEvents)
+      .set({ sprayerId: null })
+      .where(withTenant(insecticideEvents, eq(insecticideEvents.sprayerId, id)))
+      .run();
+    db.update(fungicideEvents)
+      .set({ sprayerId: null })
+      .where(withTenant(fungicideEvents, eq(fungicideEvents.sprayerId, id)))
+      .run();
+    removed.equipment = del(equipment, eq(equipment.id, id));
+    return { removed };
+  });
 }
 
 // ─── Per-field (Phase 13) ───────────────────────────────────────────────
@@ -696,6 +807,10 @@ export function deleteFieldCascade(id: string): DeleteSummary {
     }
   }
   unlinkMapFeaturesFromField(id);
+  db.update(shadeSources)
+    .set({ fieldId: null })
+    .where(withTenant(shadeSources, eq(shadeSources.fieldId, id)))
+    .run();
   removed.animal_locations = del(animalLocations, eq(animalLocations.fieldId, id));
   removed.fields = del(fields, eq(fields.id, id));
   return { removed };
@@ -798,70 +913,78 @@ function wipeDocuments(): Record<string, number> {
 
 /** @hold-exempt: the owner wipes the whole farm, every record with it (GDPR erase) */
 export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
-  const removed: Record<string, number> = {};
-  // Order: leaf rows first. Each `del(table, ...)` filters by active Owner.
-  // The `isNotNull(table.id)` predicate is a tautology that lets the helper
-  // run a tenant-scoped DELETE without a more specific filter.
-  removed.harvest_dispositions = del(harvestDispositions, isNotNull(harvestDispositions.id));
-  removed.organic_treatment_reviews = del(
-    organicTreatmentReviews,
-    isNotNull(organicTreatmentReviews.id)
-  );
-  removed.organic_status_events = del(organicStatusEvents, isNotNull(organicStatusEvents.id));
-  removed.amendment_dismissals = del(amendmentDismissals, isNotNull(amendmentDismissals.id));
-  removed.amendment_bioassays = del(amendmentBioassays, isNotNull(amendmentBioassays.id));
-  removed.amendment_batch_inputs = del(amendmentBatchInputs, isNotNull(amendmentBatchInputs.id));
-  removed.amendment_batches = del(amendmentBatches, isNotNull(amendmentBatches.id));
-  removed.forage_tests = del(forageTests, isNotNull(forageTests.id));
-  Object.assign(removed, wipeDocuments());
-  removed.ledger_entry_changes = del(ledgerEntryChanges, isNotNull(ledgerEntryChanges.id));
-  removed.ledger_entries = del(ledgerEntries, isNotNull(ledgerEntries.id));
-  removed.task_time_entries = del(taskTimeEntries, isNotNull(taskTimeEntries.id));
-  removed.animal_care_plans = del(animalCarePlans, isNotNull(animalCarePlans.id));
-  removed.animal_health_events = del(animalHealthEvents, isNotNull(animalHealthEvents.id));
-  removed.animal_production_logs = del(animalProductionLogs, isNotNull(animalProductionLogs.id));
-  removed.animal_status_events = del(animalStatusEvents, isNotNull(animalStatusEvents.id));
-  removed.animal_flag_changes = del(animalFlagChanges, isNotNull(animalFlagChanges.id));
-  removed.hold_corrections = del(holdCorrections, isNotNull(holdCorrections.id));
-  removed.animal_locations = del(animalLocations, isNotNull(animalLocations.id));
-  removed.grazing_attestations = del(grazingAttestations, isNotNull(grazingAttestations.id));
-  removed.animals = del(animals, isNotNull(animals.id));
-  removed.animal_groups = del(animalGroups, isNotNull(animalGroups.id));
-  removed.seed_starts = del(seedStarts, isNotNull(seedStarts.id));
-  removed.block_protections = del(blockProtections, isNotNull(blockProtections.id));
-  removed.irrigation_events = del(irrigationEvents, isNotNull(irrigationEvents.id));
-  removed.rain_gauge_readings = del(rainGaugeReadings, isNotNull(rainGaugeReadings.id));
-  removed.stock_movements = del(stockMovements, isNotNull(stockMovements.id));
-  removed.tasks = del(tasks, isNotNull(tasks.id));
-  removed.crop_equipment = del(cropEquipment, isNotNull(cropEquipment.id));
-  removed.spray_events = del(sprayEvents, isNotNull(sprayEvents.id));
-  removed.harvest_events = del(harvestEvents, isNotNull(harvestEvents.id));
-  removed.insecticide_events = del(insecticideEvents, isNotNull(insecticideEvents.id));
-  removed.hay_cuttings = del(hayCuttings, isNotNull(hayCuttings.id));
-  removed.fertility_applications = del(fertilityApplications, isNotNull(fertilityApplications.id));
-  removed.fertility_credits = del(fertilityCredits, isNotNull(fertilityCredits.id));
-  removed.soil_tests = del(soilTests, isNotNull(soilTests.id));
-  removed.pending_calibrations = del(pendingCalibrations, isNotNull(pendingCalibrations.id));
-  removed.stock_lots = del(stockLots, isNotNull(stockLots.id));
-  removed.stock_items = del(stockItems, isNotNull(stockItems.id));
-  removed.crops = del(crops, isNotNull(crops.id));
-  if (!opts.keepEquipment) {
-    removed.equipment_log = del(equipmentLog, isNotNull(equipmentLog.id));
-    removed.equipment_state = del(equipmentState, isNotNull(equipmentState.equipmentId));
-    removed.equipment = del(equipment, isNotNull(equipment.id));
-    removed.sprayers = del(sprayers, isNotNull(sprayers.id));
-  }
-  removed.blocks = del(blocks, isNotNull(blocks.id));
-  removed.map_feature_areas = del(mapFeatureAreas, isNotNull(mapFeatureAreas.featureId));
-  removed.map_features = del(mapFeatures, isNotNull(mapFeatures.id));
-  removed.fields = del(fields, isNotNull(fields.id));
-  // Null out any orphan task.linkedToTaskId references (rare but possible
-  // if a partial delete left dangling pointers). Tenant-scoped.
-  db.update(tasks)
-    .set({ linkedToTaskId: null })
-    .where(withTenant(tasks, and(isNotNull(tasks.linkedToTaskId))!))
-    .run();
-  return { removed };
+  return db.transaction(() => {
+    const removed: Record<string, number> = {};
+    // Order: leaf rows first. Each `del(table, ...)` filters by active Owner.
+    // The `isNotNull(table.id)` predicate is a tautology that lets the helper
+    // run a tenant-scoped DELETE without a more specific filter.
+    removed.harvest_dispositions = del(harvestDispositions, isNotNull(harvestDispositions.id));
+    removed.organic_treatment_reviews = del(
+      organicTreatmentReviews,
+      isNotNull(organicTreatmentReviews.id)
+    );
+    removed.organic_status_events = del(organicStatusEvents, isNotNull(organicStatusEvents.id));
+    removed.amendment_dismissals = del(amendmentDismissals, isNotNull(amendmentDismissals.id));
+    removed.amendment_bioassays = del(amendmentBioassays, isNotNull(amendmentBioassays.id));
+    removed.amendment_batch_inputs = del(amendmentBatchInputs, isNotNull(amendmentBatchInputs.id));
+    removed.amendment_batches = del(amendmentBatches, isNotNull(amendmentBatches.id));
+    removed.forage_tests = del(forageTests, isNotNull(forageTests.id));
+    Object.assign(removed, wipeDocuments());
+    removed.ledger_entry_changes = del(ledgerEntryChanges, isNotNull(ledgerEntryChanges.id));
+    removed.ledger_entries = del(ledgerEntries, isNotNull(ledgerEntries.id));
+    removed.task_time_entries = del(taskTimeEntries, isNotNull(taskTimeEntries.id));
+    removed.animal_care_plans = del(animalCarePlans, isNotNull(animalCarePlans.id));
+    removed.animal_health_events = del(animalHealthEvents, isNotNull(animalHealthEvents.id));
+    removed.animal_production_logs = del(animalProductionLogs, isNotNull(animalProductionLogs.id));
+    removed.animal_status_events = del(animalStatusEvents, isNotNull(animalStatusEvents.id));
+    removed.animal_flag_changes = del(animalFlagChanges, isNotNull(animalFlagChanges.id));
+    removed.hold_corrections = del(holdCorrections, isNotNull(holdCorrections.id));
+    removed.animal_locations = del(animalLocations, isNotNull(animalLocations.id));
+    removed.grazing_attestations = del(grazingAttestations, isNotNull(grazingAttestations.id));
+    removed.animals = del(animals, isNotNull(animals.id));
+    removed.animal_groups = del(animalGroups, isNotNull(animalGroups.id));
+    removed.seed_starts = del(seedStarts, isNotNull(seedStarts.id));
+    removed.block_protections = del(blockProtections, isNotNull(blockProtections.id));
+    removed.irrigation_events = del(irrigationEvents, isNotNull(irrigationEvents.id));
+    removed.rain_gauge_readings = del(rainGaugeReadings, isNotNull(rainGaugeReadings.id));
+    removed.stock_movements = del(stockMovements, isNotNull(stockMovements.id));
+    removed.tasks = del(tasks, isNotNull(tasks.id));
+    removed.crop_equipment = del(cropEquipment, isNotNull(cropEquipment.id));
+    removed.spray_events = del(sprayEvents, isNotNull(sprayEvents.id));
+    removed.harvest_events = del(harvestEvents, isNotNull(harvestEvents.id));
+    removed.insecticide_events = del(insecticideEvents, isNotNull(insecticideEvents.id));
+    removed.fungicide_events = del(fungicideEvents, isNotNull(fungicideEvents.id));
+    removed.scout_observations = del(scoutObservations, isNotNull(scoutObservations.id));
+    removed.hay_cuttings = del(hayCuttings, isNotNull(hayCuttings.id));
+    removed.fertility_applications = del(
+      fertilityApplications,
+      isNotNull(fertilityApplications.id)
+    );
+    removed.fertility_credits = del(fertilityCredits, isNotNull(fertilityCredits.id));
+    removed.soil_tests = del(soilTests, isNotNull(soilTests.id));
+    removed.pending_calibrations = del(pendingCalibrations, isNotNull(pendingCalibrations.id));
+    removed.stock_lots = del(stockLots, isNotNull(stockLots.id));
+    removed.stock_items = del(stockItems, isNotNull(stockItems.id));
+    removed.crops = del(crops, isNotNull(crops.id));
+    if (!opts.keepEquipment) {
+      removed.equipment_log = del(equipmentLog, isNotNull(equipmentLog.id));
+      removed.equipment_state = del(equipmentState, isNotNull(equipmentState.equipmentId));
+      removed.equipment = del(equipment, isNotNull(equipment.id));
+      removed.sprayers = del(sprayers, isNotNull(sprayers.id));
+    }
+    removed.blocks = del(blocks, isNotNull(blocks.id));
+    removed.map_feature_areas = del(mapFeatureAreas, isNotNull(mapFeatureAreas.featureId));
+    removed.map_features = del(mapFeatures, isNotNull(mapFeatures.id));
+    removed.shade_sources = del(shadeSources, isNotNull(shadeSources.id));
+    removed.fields = del(fields, isNotNull(fields.id));
+    // Null out any orphan task.linkedToTaskId references (rare but possible
+    // if a partial delete left dangling pointers). Tenant-scoped.
+    db.update(tasks)
+      .set({ linkedToTaskId: null })
+      .where(withTenant(tasks, and(isNotNull(tasks.linkedToTaskId))!))
+      .run();
+    return { removed };
+  });
 }
 
 /**

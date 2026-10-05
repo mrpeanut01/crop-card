@@ -15,6 +15,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
+import { t } from '$lib/i18n';
 import { deleteDraft, draftPayloadSchema, getDraft, saveDraft } from '$lib/wizard/drafts';
 
 const saveSchema = z.object({
@@ -30,22 +31,29 @@ function activePlanId(override: string | undefined): string {
 
 export const POST: RequestHandler = async (event) => {
   const auth = currentUser(event);
-  if (!auth) return json({ error: 'authentication required' }, { status: 401 });
+  if (!auth)
+    return json({ error: t(event.locals?.locale, 'api.errB.authRequired') }, { status: 401 });
   if (!canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
+  }
+  if (auth.role !== 'owner') {
+    return json({ error: t(event.locals?.locale, 'amend.err.ownerOnly') }, { status: 403 });
   }
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = saveSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -64,7 +72,8 @@ export const POST: RequestHandler = async (event) => {
 
 export const GET: RequestHandler = async (event) => {
   const auth = currentUser(event);
-  if (!auth) return json({ error: 'authentication required' }, { status: 401 });
+  if (!auth)
+    return json({ error: t(event.locals?.locale, 'api.errB.authRequired') }, { status: 401 });
   const planId = activePlanId(event.url.searchParams.get('planId') ?? undefined);
   const draft = getDraft(planId);
   return json({ draft });
@@ -72,9 +81,16 @@ export const GET: RequestHandler = async (event) => {
 
 export const DELETE: RequestHandler = async (event) => {
   const auth = currentUser(event);
-  if (!auth) return json({ error: 'authentication required' }, { status: 401 });
+  if (!auth)
+    return json({ error: t(event.locals?.locale, 'api.errB.authRequired') }, { status: 401 });
   if (!canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
+  }
+  if (auth.role !== 'owner') {
+    return json({ error: t(event.locals?.locale, 'amend.err.ownerOnly') }, { status: 403 });
   }
   const planId = activePlanId(event.url.searchParams.get('planId') ?? undefined);
   const deleted = deleteDraft(planId);

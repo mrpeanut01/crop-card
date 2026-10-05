@@ -1497,12 +1497,13 @@ export class DesignerState {
     const since = this.mark();
     try {
       if (existing) {
-        await this.writeFootprint(existing, {
+        const saved = await this.writeFootprint(existing, {
           blockId,
           footprint: fp,
           spacingPattern: existing.spacing.pattern,
           plantingDateMs: existing.plantingDateMs === dateMs ? undefined : dateMs
         });
+        if (!saved) return;
       } else {
         const created = await this.createPlantings([
           {

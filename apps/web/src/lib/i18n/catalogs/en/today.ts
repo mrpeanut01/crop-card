@@ -1,6 +1,9 @@
 export const enToday = {
   'tasks.member.fallback': 'Farm member',
   'tasks.member.phoneEnding': 'phone ending {digits}',
+  'tasks.assign.err.askOwner': 'Ask the owner.',
+  'tasks.assign.err.closed': 'This job is already closed, so who did it stays as it was.',
+  'tasks.assign.err.notMember': 'That person is not a member of this farm.',
   'tasks.assign.loadFailed': 'Could not load the farm members.',
   'tasks.assign.loading': 'Loading the farm members…',
   'tasks.assign.members': 'Farm members',
@@ -286,6 +289,18 @@ export const enToday = {
     'Counts as rain since {when}, the 24 hours before you read it. Empty the gauge after you read it.',
   'today.watering.enterAmount': 'Enter how much you watered.',
   'today.watering.enterGauge': 'Enter the inches in the gauge. Enter 0 if it is dry.',
+  'today.watering.err.bedNotInArea': 'That bed is not in this Area.',
+  'today.watering.err.gaugeFuture': 'The gauge reading time is in the future.',
+  'today.watering.err.gaugeOld': 'The gauge reading time is more than a year ago.',
+  'today.watering.err.noGauge': 'No such gauge reading',
+  'today.watering.err.noLog': 'No such watering log',
+  'today.watering.err.removeGauge':
+    'Only the owner or the person who entered it can remove it. Ask the owner.',
+  'today.watering.err.removeLog':
+    'Only the owner or the person who logged it can remove it. Ask the owner.',
+  'today.watering.err.targetOwnerOnly': 'Only the owner sets the water target. Ask the owner.',
+  'today.watering.err.wateringFuture': 'The watering time is in the future.',
+  'today.watering.err.wateringOld': 'The watering time is more than a year ago.',
   'today.watering.gallons': 'Gallons',
   'today.watering.gaugeSaved': 'Gauge reading saved.',
   'today.watering.gaugeSavedQueued':
@@ -345,6 +360,8 @@ export const enToday = {
   'today.weather.local': 'Local weather',
   'today.weather.low': 'Low',
   'today.weather.noLocation': 'No farm location set for the forecast',
+  'today.weather.rainOne': '{pct}% rain {day}',
+  'today.weather.rainRange': 'rain {from}→{to}',
   'today.weather.setLocation': 'Set your farm location to see the forecast',
   'today.weather.unavailable': 'Weather unavailable right now',
   'today.weather.wind': 'Wind',

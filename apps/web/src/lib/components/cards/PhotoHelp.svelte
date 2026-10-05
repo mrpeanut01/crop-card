@@ -25,7 +25,7 @@
     topicFor
   } from '$lib/journal/photoHelp';
   import type { PhotoHelpTarget } from '$lib/journal/targets';
-  import { resizePhoto } from '$lib/client/photoResize';
+  import { PhotoTooLargeError, resizePhoto } from '$lib/client/photoResize';
   import type { QueuedJournalRow } from '$lib/client/journalQueue';
   import { DEFAULT_PREFS, formatInstant, type Prefs } from '$lib/prefs';
   import { createT } from '$lib/i18n';
@@ -89,18 +89,22 @@
   }
 
   async function loadJournal(): Promise<void> {
-    if (!cropId) return;
+    const id = cropId;
+    if (!id) return;
     if (!online()) {
       journalState = 'offline';
       return;
     }
     journalState = 'loading';
     try {
-      const res = await fetch(`/api/plantings/${encodeURIComponent(cropId)}/journal`);
+      const res = await fetch(`/api/plantings/${encodeURIComponent(id)}/journal`);
       if (!res.ok) throw new Error(String(res.status));
-      entries = ((await res.json()) as { entries: JournalEntry[] }).entries;
+      const next = ((await res.json()) as { entries: JournalEntry[] }).entries;
+      if (id !== cropId) return;
+      entries = next;
       journalState = 'ready';
     } catch {
+      if (id !== cropId) return;
       journalState = online() ? 'error' : 'offline';
     }
   }
@@ -138,6 +142,7 @@
 
   function pickTarget(id: string) {
     chosenId = id;
+    entries = [];
     shown = null;
     queuedNotes = [];
     confirmDelete = null;
@@ -156,7 +161,10 @@
       photo = await resizePhoto(file);
     } catch (err) {
       photo = null;
-      photoError = err instanceof Error ? err.message : tr('cardsui.photo.unreadable');
+      photoError =
+        err instanceof PhotoTooLargeError
+          ? tr('cardsui.photo.tooLarge')
+          : tr('cardsui.photo.unreadable');
     } finally {
       photoBusy = false;
     }
@@ -228,6 +236,7 @@
     askError = null;
     shown = null;
     const q = question;
+    const askedFor = cropId;
     const text = chip ? typed : typed.trim();
     try {
       if (!online()) {
@@ -264,7 +273,7 @@
         queued: false,
         aiLimit: body.aiLimit ?? null
       };
-      if (body.entry) entries = [body.entry, ...entries];
+      if (body.entry && askedFor === cropId) entries = [body.entry, ...entries];
       photo = null;
       chip = null;
       typed = '';
@@ -275,13 +284,14 @@
 
   async function saveNote() {
     const text = note.trim();
-    if (!cropId || !text || noteBusy) return;
+    const savedFor = cropId;
+    if (!savedFor || !text || noteBusy) return;
     noteBusy = true;
     noteMessage = null;
     try {
       if (online()) {
         try {
-          const res = await fetch(`/api/plantings/${encodeURIComponent(cropId)}/journal`, {
+          const res = await fetch(`/api/plantings/${encodeURIComponent(savedFor)}/journal`, {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ kind: 'note', text })
@@ -291,7 +301,7 @@
             error?: string;
           };
           if (res.ok && body.entry) {
-            entries = [body.entry, ...entries];
+            if (savedFor === cropId) entries = [body.entry, ...entries];
             note = '';
             noteMessage = tr('cardsui.photo.noteSaved');
             return;

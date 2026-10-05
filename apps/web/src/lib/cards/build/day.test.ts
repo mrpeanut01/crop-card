@@ -37,6 +37,29 @@ describe('buildDayCard', () => {
     expect(later.sections).toEqual([{ title: 'Due', items: ['First cutting · North cut'] }]);
   });
 
+  it('puts a date-only task (UTC midnight) on its own day, not the evening before', () => {
+    const now = Date.parse('2026-06-04T13:00:00Z');
+    const dated = sampleSnapshot({
+      tasks: [
+        {
+          id: 'tk_dated',
+          title: 'Turn the compost',
+          category: 'other',
+          scheduledFor: Date.parse('2026-06-05T00:00:00Z'),
+          cropId: null,
+          blockId: null,
+          equipmentId: null
+        }
+      ]
+    });
+    const today = buildDayCard(dated, '2026-06-04', { prefs, now })!;
+    expect(today.facts).toEqual([
+      { label: 'Due', value: 'Nothing scheduled', provenance: 'data' }
+    ]);
+    const tomorrow = buildDayCard(dated, '2026-06-05', { prefs, now })!;
+    expect(tomorrow.facts).toEqual([{ label: 'Due', value: '1', provenance: 'data' }]);
+  });
+
   it('rejects malformed days', () => {
     expect(buildDayCard(snap, '2026-13-40')).toBeNull();
     expect(buildDayCard(snap, 'today')).toBeNull();

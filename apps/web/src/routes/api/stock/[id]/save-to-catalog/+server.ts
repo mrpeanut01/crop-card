@@ -22,6 +22,7 @@ import { AnimalRuleError } from '$lib/server/animals';
 import { requireOwner } from '$lib/server/auth';
 import { prefsFor } from '$lib/db/userProfile';
 import { todayYmd } from '$lib/prefs';
+import { t } from '$lib/i18n';
 
 const TYPE_NAME_TO_CROP_FAMILY: Record<string, string> = {
   Corn: 'corn',
@@ -56,25 +57,28 @@ function slugify(name: string): string {
 
 export const POST: RequestHandler = async (event) => {
   const owner = requireOwner(event);
-  if (!event.params.id) return json({ error: 'id required' }, { status: 400 });
+  if (!event.params.id)
+    return json({ error: t(event.locals?.locale, 'stockui.api.idRequired') }, { status: 400 });
   const item = getStockItem(event.params.id);
-  if (!item) return json({ error: 'unknown stock item' }, { status: 404 });
+  if (!item)
+    return json({ error: t(event.locals?.locale, 'stockui.api.unknownItem') }, { status: 404 });
   if (item.category !== 'seed') {
-    return json({ error: 'catalog save is only supported for seed items' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.errB.catalogSeedOnly') }, { status: 400 });
   }
   if (item.pluginId) {
-    return json({ error: 'item is already linked to a catalog entry' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.errB.alreadyLinked') }, { status: 400 });
   }
   if (!item.typeId) {
-    return json({ error: 'set a Type first so we can map it to a crop family' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.errB.setTypeFirst') }, { status: 400 });
   }
   const term = getTaxonomyTerm(item.typeId);
-  if (!term) return json({ error: 'unknown Type on item' }, { status: 400 });
+  if (!term)
+    return json({ error: t(event.locals?.locale, 'api.errB.unknownTypeOnItem') }, { status: 400 });
   const cropFamily = TYPE_NAME_TO_CROP_FAMILY[term.name];
   if (!cropFamily) {
     return json(
       {
-        error: `Type "${term.name}" doesn't map to a known crop family. Use one of the default seed Types or open a plugin authoring flow manually.`
+        error: t(event.locals?.locale, 'api.errB.typeNoFamily', { name: term.name })
       },
       { status: 400 }
     );

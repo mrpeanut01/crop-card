@@ -265,3 +265,28 @@ describe('describeFeature and featureCounts', () => {
     expect([...counts.keys()]).toEqual([...MAP_FEATURE_KINDS]);
   });
 });
+
+describe('map feature validation messages', () => {
+  const msg = (r: { ok: true } | { ok: false; message: string }) => (r.ok ? null : r.message);
+
+  it('stay byte-identical in English without a locale', () => {
+    expect(msg(parseFeatureGeometry('gate', '{'))).toBe('geometry is not valid JSON');
+    expect(msg(parseFeatureGeometry('gate', null))).toBe('geometry is missing');
+    expect(msg(parseFeatureGeometry('hydrant', { type: 'LineString', coordinates: [] }))).toBe(
+      'a hydrant / waterer needs a Point geometry'
+    );
+    expect(msg(parseFeatureGeometry('path', { type: 'LineString', coordinates: [[1, 1]] }))).toBe(
+      'a line needs at least two different points'
+    );
+    expect(msg(validateFeatureDetails('water_source', { source: 'nope' }))).toBe(
+      "details don't fit a water source"
+    );
+  });
+
+  it('follow the locale', () => {
+    expect(msg(parseFeatureGeometry('gate', null, 'es'))).toBe('falta la geometría');
+    expect(msg(validateFeatureDetails('water_source', { source: 'nope' }, 'es'))).toBe(
+      'los detalles no corresponden a: fuente de agua'
+    );
+  });
+});

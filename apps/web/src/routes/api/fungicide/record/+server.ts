@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * POST /api/fungicide/record
  *
@@ -31,6 +32,7 @@ import {
   type StockItem
 } from '$lib/db/stock';
 import { ensureSystemUser } from '$lib/db/users';
+import { farmTimeZone } from '$lib/db/userProfile';
 import type { FungicidePlugin, CropPlugin } from '$lib/plugins/schemas';
 import { checkEnvironment } from '$lib/safety/environment';
 import type { HerbicideProduct, SafetyResult, SprayContext } from '$lib/safety';
@@ -51,7 +53,7 @@ import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 
 /** Coarse sprayer-load token for the cross-contamination state machine
  *  (#321). Fungicides carry FRAC codes, not an HRAC ChemistryClass, so the
@@ -67,28 +69,32 @@ const DAY_MS = 24 * HOUR_MS;
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
 
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
     );
   }
 
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['blockId', parsed.data.blockId, getBlock],
     ['cropId', parsed.data.cropId, getCrop]
   );
@@ -98,7 +104,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const occurredAt = parsed.data.occurredAt ?? Date.now();
 
   // UC-44 — SEASON_CLOSED gate. Refuse writes dated inside a closed season.
-  const seasonClosed = checkSeasonClosed(occurredAt);
+  const seasonClosed = checkSeasonClosed(occurredAt, event.locals?.locale);
   if (seasonClosed) {
     return json(
       { error: seasonClosed.code, message: seasonClosed.message, year: seasonClosed.year },
@@ -121,7 +127,10 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   }
 
   if (missing.length > 0) {
-    return json({ error: 'unknown fungicide pluginIds', missing }, { status: 404 });
+    return json(
+      { error: t(event.locals?.locale, 'api.err.unknownFungicides'), missing },
+      { status: 404 }
+    );
   }
 
   const envViolations = checkEnvironment(parsed.data.conditions);
@@ -211,7 +220,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
           pollinator: p.pollinator
         })),
         cropsInBlock,
-        occurredAt
+        occurredAt,
+        farmTimeZone()
       ),
     {
       plannedSpray: { productPluginIds: parsed.data.productPluginIds },
@@ -237,7 +247,10 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   // allows unattributed passes); the gate + calibrated GPA no-op then.
   const sprayer = parsed.data.sprayerId ? getSprayer(parsed.data.sprayerId) : undefined;
   if (parsed.data.sprayerId && !sprayer) {
-    return json({ error: `unknown sprayer: ${parsed.data.sprayerId}` }, { status: 404 });
+    return json(
+      { error: t(event.locals?.locale, 'api.err.unknownSprayer', { id: parsed.data.sprayerId }) },
+      { status: 404 }
+    );
   }
 
   // Cross-contamination gate (UC-04 / UC-32). Copper fungicides in

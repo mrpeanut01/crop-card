@@ -885,6 +885,7 @@ export function decrementForUse(input: {
     : [];
 
   let remaining = requestedHundredths;
+  let fulfilledHundredths = 0;
   for (const lot of [...lots, ...expectedLots]) {
     if (remaining <= 0) break;
     const expected = lot.quantityStatus !== 'existing';
@@ -930,8 +931,9 @@ export function decrementForUse(input: {
       .get();
     result.movements.push(rowToMovement(movement));
     remaining -= take;
-    result.fulfilled += fromHundredths(take);
+    fulfilledHundredths += take;
   }
+  result.fulfilled = fromHundredths(fulfilledHundredths);
 
   if (remaining > 0) {
     result.shortfall = fromHundredths(remaining);

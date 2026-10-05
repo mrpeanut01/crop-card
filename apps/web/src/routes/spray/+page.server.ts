@@ -61,12 +61,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       const plannedCropNames = b.plantings
         .filter((p) => p.plantingDate == null || p.plantingDate > now)
         .map((p) => p.varietyDisplayName);
-      // Phase 21b follow-up — find a still-editable (within 48h lock
-      // window) spray_event on this block. When set, the multi-block
-      // record loop PATCHes that event instead of POSTing a new one,
-      // so the operator can refine a recent record without creating a
-      // duplicate.
-      const editable = findRecentEditableEventForBlock(b.id);
+      const recent = findRecentEditableEventForBlock(b.id);
       return {
         id: b.id,
         label: b.name,
@@ -78,13 +73,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         crops,
         preplant: isPreplant,
         plannedCropNames,
-        existingEvent: editable
-          ? {
-              id: editable.id,
-              occurredAt: editable.occurredAt,
-              productPluginIds: editable.products.map((p) => p.pluginId)
-            }
-          : null
+        recentEvent: recent ? { id: recent.id, occurredAt: recent.occurredAt } : null
       };
     });
 

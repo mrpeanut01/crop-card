@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * GET    /api/finance/entries/:id: one entry and its change history.
  * PATCH  /api/finance/entries/:id: change it. No lock (OPS-9).
@@ -21,12 +22,13 @@ import { farmNames, presentEntries } from '$lib/finance/profit.server';
 
 export const _requestSchema = ledgerEntryPatchSchema;
 
-const notFound = () => json({ error: 'No such entry.' }, { status: 404 });
+const notFound = (locale: string | null | undefined) =>
+  json({ error: t(locale, 'api.err.noSuchEntry') }, { status: 404 });
 
 export const GET: RequestHandler = async (event) => {
   requireMoneyReader(event);
   const entry = getLedgerEntry(event.params.id!);
-  if (!entry) return notFound();
+  if (!entry) return notFound(event.locals?.locale);
   const [presented] = presentEntries([entry], await farmNames());
   return json({ entry: presented, changes: listLedgerChanges(entry.id) });
 };
@@ -34,9 +36,10 @@ export const GET: RequestHandler = async (event) => {
 export const PATCH: RequestHandler = async (event) => {
   const user = requireMoneyWriter(event);
   const current = getLedgerEntry(event.params.id!);
-  if (!current) return notFound();
+  if (!current) return notFound(event.locals?.locale);
   const read = await readBody(event.request);
-  if (!read.ok) return json({ error: 'invalid JSON body' }, { status: 400 });
+  if (!read.ok)
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   const parsed = ledgerEntryPatchSchema.safeParse(read.body);
   if (!parsed.success) return invalidBody(parsed.error);
   const patch = Object.fromEntries(Object.entries(parsed.data).filter(([, v]) => v !== undefined));
@@ -45,7 +48,7 @@ export const PATCH: RequestHandler = async (event) => {
   if (refused) return refused;
   try {
     const entry = updateLedgerEntry(current.id, next, user.id);
-    return entry ? json({ entry }) : notFound();
+    return entry ? json({ entry }) : notFound(event.locals?.locale);
   } catch (e) {
     if (e instanceof LotAlreadyExpensedError) return lotConflict(e.entryId, event.locals.locale);
     throw e;
@@ -55,5 +58,5 @@ export const PATCH: RequestHandler = async (event) => {
 export const DELETE: RequestHandler = (event) => {
   const user = requireMoneyWriter(event);
   const entry = softDeleteLedgerEntry(event.params.id!, user.id);
-  return entry ? json({ entry }) : notFound();
+  return entry ? json({ entry }) : notFound(event.locals?.locale);
 };

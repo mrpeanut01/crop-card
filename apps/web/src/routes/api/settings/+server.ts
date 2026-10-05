@@ -18,6 +18,9 @@ import { currentOwnerId } from '$lib/db/tenant';
 import { resolvePlan } from '$lib/server/billing/plans';
 import { markFrostField } from '$lib/climate/frostSettings.server';
 import type { FrostField } from '$lib/climate/frostSuggest';
+import { isDemoUser } from '$lib/server/demo/lifecycle';
+import { demoBlockedResponse } from '$lib/server/demo/guard';
+import { t } from '$lib/i18n';
 
 const FROST_FIELD_BY_KEY: Partial<Record<string, FrostField>> = {
   [SETTINGS_KEYS.lastFrost]: 'lastFrost',
@@ -37,6 +40,24 @@ const PLAIN_KEYS = [
 ] as const;
 const ALLOWED_KEYS = [...SECRET_KEYS, ...PLAIN_KEYS] as const;
 type SettingKey = (typeof ALLOWED_KEYS)[number];
+
+/** A demo farm keeps AI off (its cap is seeded at 0); its visitor may not
+ *  change the key or the limits here any more than on /settings/ai. */
+const AI_KEYS: readonly string[] = [
+  'anthropic_api_key',
+  SETTINGS_KEYS.aiMonthlyUsdCap,
+  SETTINGS_KEYS.aiDailyCallQuota
+];
+
+function demoAiRefusal(
+  user: Parameters<typeof isDemoUser>[0],
+  key: string,
+  locale?: string | null
+): Response | null {
+  return isDemoUser(user) && AI_KEYS.includes(key)
+    ? demoBlockedResponse('/api/settings', false, locale)
+    : null;
+}
 
 const mmDdRe = /^(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$/;
 
@@ -120,15 +141,17 @@ export async function GET(event) {
 }
 
 export async function POST(event) {
-  requireOwner(event);
+  const user = requireOwner(event);
   const body = (await event.request.json().catch(() => null)) as {
     key?: string;
     value?: unknown;
   } | null;
   if (!body || typeof body.key !== 'string' || !ALLOWED_KEYS.includes(body.key as SettingKey)) {
-    error(400, 'invalid key');
+    error(400, t(event.locals?.locale, 'api.errB.invalidKey'));
   }
   const key = body.key as SettingKey;
+  const demo = demoAiRefusal(user, key, event.locals?.locale);
+  if (demo) return demo;
   let serialized: string | null;
   try {
     serialized =
@@ -146,9 +169,12 @@ export async function POST(event) {
 }
 
 export async function DELETE(event) {
-  requireOwner(event);
+  const user = requireOwner(event);
   const key = event.url.searchParams.get('key') as SettingKey | null;
-  if (!key || !ALLOWED_KEYS.includes(key)) error(400, 'invalid key');
+  if (!key || !ALLOWED_KEYS.includes(key))
+    error(400, t(event.locals?.locale, 'api.errB.invalidKey'));
+  const demo = demoAiRefusal(user, key, event.locals?.locale);
+  if (demo) return demo;
   deleteSetting(key);
   const frostField = FROST_FIELD_BY_KEY[key];
   if (frostField) markFrostField(frostField, 'fallback');

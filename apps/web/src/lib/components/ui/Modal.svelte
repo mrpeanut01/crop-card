@@ -13,9 +13,19 @@
     footer?: Snippet;
     /** When false, clicking the backdrop won't close. Esc still works. */
     closeOnBackdrop?: boolean;
+    /** The title is safety text that stays English in every language. */
+    safetyTitle?: boolean;
   }
 
-  let { open, onClose, title, children, footer, closeOnBackdrop = true }: Props = $props();
+  const {
+    open,
+    onClose,
+    title,
+    children,
+    footer,
+    closeOnBackdrop = true,
+    safetyTitle = false
+  }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
   const uid = $props.id();
   const titleId = `modal-title-${uid}`;
@@ -57,7 +67,11 @@
 <dialog bind:this={dialog} oncancel={onCancel} onclick={onBackdropClick} aria-labelledby={titleId}>
   <div class="shell" role="document">
     <header>
-      <h2 id={titleId} class="serif">{title}</h2>
+      {#if safetyTitle}
+        <h2 id={titleId} class="serif" lang="en" data-english-only="safety">{title}</h2>
+      {:else}
+        <h2 id={titleId} class="serif">{title}</h2>
+      {/if}
       <button type="button" class="close" aria-label={tr('ui.close')} onclick={onClose}>×</button>
     </header>
     <div class="body">{@render children()}</div>

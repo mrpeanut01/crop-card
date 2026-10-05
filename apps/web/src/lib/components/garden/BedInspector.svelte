@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { currentPrefs } from '$lib/prefsState.svelte';
   import { pageCropName } from '$lib/i18n/pageCropName';
   import { tick } from 'svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
@@ -289,7 +290,7 @@
   <header class="head">
     <h2>{bed.name}</h2>
     <span class="sub"
-      >{sizeLabel(bed.widthFt, bed.lengthFt)} · {bed.kind === 'container'
+      >{sizeLabel(bed.widthFt, bed.lengthFt, currentPrefs().units)} · {bed.kind === 'container'
         ? tr('garden.bedStyle.container')
         : bed.bedStyle
           ? bedStyleLabel(bed.bedStyle, tr)
@@ -591,7 +592,7 @@
                     /></span
                   >{/if}
                 <span class="pmeta"
-                  >{sizeLabel(p.footprint.w_in / 12, p.footprint.l_in / 12)} · {patternLabel(
+                  >{sizeLabel(p.footprint.w_in / 12, p.footprint.l_in / 12, currentPrefs().units)} · {patternLabel(
                     p.spacing.pattern,
                     tr
                   )}</span
@@ -930,7 +931,11 @@
                       {fit.fits ? tr('garden.insp.fitsSeason') : fit.reason} · {tr(
                         'garden.insp.madeFor',
                         {
-                          size: sizeLabel(recipe.bedSize.widthFt, recipe.bedSize.lengthFt)
+                          size: sizeLabel(
+                            recipe.bedSize.widthFt,
+                            recipe.bedSize.lengthFt,
+                            currentPrefs().units
+                          )
                         }
                       )}
                     </span>
@@ -949,11 +954,11 @@
                     {pageCropName(prop.cropPluginId, prop.varietyDisplayName)} · {shortDate(
                       prop.plantingDateMs,
                       tr
-                    )} · {sizeLabel(prop.footprint.w_in / 12, prop.footprint.l_in / 12)} · {countOf(
-                      'plant',
-                      prop.plantCount,
-                      tr
-                    )}
+                    )} · {sizeLabel(
+                      prop.footprint.w_in / 12,
+                      prop.footprint.l_in / 12,
+                      currentPrefs().units
+                    )} · {countOf('plant', prop.plantCount, tr)}
                   </span>
                   <span class="prov-inline"><Provenance source={prop.provenance} compact /></span>
                   <label class="accept">
@@ -1011,11 +1016,11 @@
                   >{pageCropName(prop.cropPluginId, prop.varietyDisplayName)} · {shortDate(
                     prop.plantingDateMs,
                     tr
-                  )} · {sizeLabel(prop.footprint.w_in / 12, prop.footprint.l_in / 12)} · {countOf(
-                    'plant',
-                    prop.plantCount,
-                    tr
-                  )}</span
+                  )} · {sizeLabel(
+                    prop.footprint.w_in / 12,
+                    prop.footprint.l_in / 12,
+                    currentPrefs().units
+                  )} · {countOf('plant', prop.plantCount, tr)}</span
                 >
                 <span class="pmeta">{prop.note ?? spotText(prop.footprint)}</span>
                 <span class="prov-inline"><Provenance source={prop.provenance} compact /></span>

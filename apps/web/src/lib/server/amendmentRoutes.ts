@@ -68,7 +68,7 @@ export function checkDay(
     return {
       response: json(
         {
-          error: 'invalid request',
+          error: t(locale, 'stockui.api.invalidRequest'),
           issues: [{ path: field, message: t(locale, 'amend.api.useRealDate') }]
         },
         { status: 400 }
@@ -169,10 +169,13 @@ export function batchView(
   };
 }
 
-export async function readJson(request: Request): Promise<unknown | Response> {
+export async function readJson(
+  request: Request,
+  locale?: string | null
+): Promise<unknown | Response> {
   try {
     return await request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json({ error: t(locale, 'stockui.api.invalidJsonShort') }, { status: 400 });
   }
 }

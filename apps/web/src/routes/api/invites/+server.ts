@@ -13,25 +13,26 @@ import { unscopedQueryNote } from '$lib/db/tenant';
 /** GET /api/invites — list invites for the active Owner. */
 export const GET: RequestHandler = (event) => {
   const u = requireOwner(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.errB.noActiveOwner'));
   return json({ invites: listInvitesForOwner(u.activeOwnerId) });
 };
 
 /** POST /api/invites — issue a new invite. Body: `{ email, role, message? }`. */
 export const POST: RequestHandler = async (event) => {
   const u = requireOwner(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.errB.noActiveOwner'));
 
   const body = await event.request.json().catch(() => null);
-  if (!body || typeof body !== 'object') throw error(400, 'invalid body');
+  if (!body || typeof body !== 'object')
+    throw error(400, t(event.locals?.locale, 'api.errB.invalidBody'));
   const inviteeEmail = String(body.email ?? '').trim();
   const role = String(body.role ?? 'helper');
   const message = body.message ? String(body.message) : undefined;
   if (!inviteeEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteeEmail)) {
-    throw error(400, 'invalid email');
+    throw error(400, t(event.locals?.locale, 'api.errB.invalidEmail'));
   }
   if (!['helper', 'inspector', 'custom-operator'].includes(role)) {
-    throw error(400, 'invalid role');
+    throw error(400, t(event.locals?.locale, 'api.errB.invalidRole'));
   }
 
   if (roleTakesSeat(role)) {
@@ -94,10 +95,10 @@ export const POST: RequestHandler = async (event) => {
 /** DELETE /api/invites?id=<inviteId> — revoke an outstanding invite. */
 export const DELETE: RequestHandler = (event) => {
   const u = requireOwner(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.errB.noActiveOwner'));
   const inviteId = event.url.searchParams.get('id');
-  if (!inviteId) throw error(400, 'id required');
+  if (!inviteId) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const ok = revokeInvite(u.activeOwnerId, inviteId);
-  if (!ok) throw error(404, 'invite not found');
+  if (!ok) throw error(404, t(event.locals?.locale, 'api.errB.inviteNotFound'));
   return json({ ok: true });
 };

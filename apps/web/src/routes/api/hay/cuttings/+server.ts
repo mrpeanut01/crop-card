@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * GET  /api/hay/cuttings?blockId=X&year=Y  — list cuttings.
  * POST /api/hay/cuttings                   — create a new cutting (status='mowing').
@@ -26,10 +27,11 @@ import { RULES_VERSION } from '$lib/safety/version';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { hayCutGate } from '$lib/server/grazingGate';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { MAX_FUTURE_SKEW_MS } from '$lib/animals/model';
+import { checkSeasonClosed } from '$lib/server/seasonClose';
 
 export const _requestSchema = hayCuttingSchema;
 const inputSchema = hayCuttingSchema;
@@ -45,20 +47,26 @@ export const GET: RequestHandler = ({ url }) => {
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = inputSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({
           path: i.path.join('.'),
           message: i.message
@@ -68,7 +76,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     );
   }
 
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['blockId', parsed.data.blockId, getBlock],
     ['cropId', parsed.data.cropId, getCrop]
   );
@@ -77,8 +86,16 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const now = Date.now();
   if (parsed.data.mowAt !== undefined && parsed.data.mowAt > now + MAX_FUTURE_SKEW_MS) {
     return json(
-      { error: 'A mow cannot be dated in the future.', code: 'IN_THE_FUTURE' },
+      { error: t(event.locals?.locale, 'api.err.mowFuture'), code: 'IN_THE_FUTURE' },
       { status: 400 }
+    );
+  }
+  // UC-44 — SEASON_CLOSED gate. A mow is a dated field record.
+  const seasonClosed = checkSeasonClosed(parsed.data.mowAt ?? now, event.locals?.locale);
+  if (seasonClosed) {
+    return json(
+      { error: seasonClosed.code, message: seasonClosed.message, year: seasonClosed.year },
+      { status: 422 }
     );
   }
   const hayGate = await hayCutGate(
@@ -95,7 +112,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (!cropRecord || cropRecord.plugin.type !== 'crop' || !cropRecord.plugin.hayOperations) {
     return json(
       {
-        error: `cropPluginId must reference a crop plugin with hayOperations declared`,
+        error: t(event.locals?.locale, 'api.err.hayPluginRequired'),
         cropPluginId: parsed.data.cropPluginId
       },
       { status: 400 }

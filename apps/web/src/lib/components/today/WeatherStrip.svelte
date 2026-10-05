@@ -9,7 +9,7 @@
   import { Wind, CloudRain, MapPin, ChevronRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import WeatherIcon from './WeatherIcon.svelte';
-  import type { TodayWeather } from '$lib/today/weatherSummary';
+  import { rainHint, type TodayWeather } from '$lib/today/weatherSummary';
   import { fmt } from '$lib/prefsState.svelte';
 
   interface Props {
@@ -30,6 +30,11 @@
     onOpenForecast
   }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
+  const rain = $derived(
+    weather.status === 'ok'
+      ? rainHint(weather.days, tr, (d) => fmt.day(d, 'weekday').toLowerCase())
+      : null
+  );
 </script>
 
 <header class="hdr">
@@ -69,10 +74,10 @@
             ><span class="mono">{fmt.qty(w.windMph, 'speed')}</span>
           </span>
         {/if}
-        {#if w.rainHint}
+        {#if rain}
           <span class="w-cell">
             <CloudRain size={16} strokeWidth={1.75} aria-hidden="true" /><span class="mono"
-              >{w.rainHint}</span
+              >{rain}</span
             >
           </span>
         {/if}

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { deriveWinterizeAlerts, startOfSeason, type SprayerWinterizeInput } from './winterizeAlert';
 
 const NOW = new Date('2026-07-04T12:00:00Z').getTime();
-const SEASON_START = startOfSeason(NOW);
+const SEASON_START = startOfSeason(NOW, 'America/New_York');
 const LAST_SEASON = new Date('2025-08-01T00:00:00Z').getTime();
 const THIS_SEASON = new Date('2026-05-01T00:00:00Z').getTime();
 
@@ -80,5 +80,17 @@ describe('deriveWinterizeAlerts (UC-45 spring reminder)', () => {
       NOW
     );
     expect(out.map((a) => a.sprayerId)).toEqual(['a']);
+  });
+
+  it('the season starts on Jan 1 of the farm calendar', () => {
+    // 04:00 UTC on Jan 1 is still Dec 31 on a Virginia farm: last season.
+    const newYearsEveNy = Date.parse('2026-01-01T04:00:00Z');
+    const now = Date.parse('2026-03-01T12:00:00Z');
+    const s = sprayer({
+      lastSprayedAt: Date.parse('2026-02-01T12:00:00Z'),
+      winterizedAt: newYearsEveNy
+    });
+    expect(deriveWinterizeAlerts([s], now, undefined, 'America/New_York')).toHaveLength(1);
+    expect(deriveWinterizeAlerts([s], now, undefined, 'UTC')).toHaveLength(0);
   });
 });

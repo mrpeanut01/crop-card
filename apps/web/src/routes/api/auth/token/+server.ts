@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * POST /api/auth/token — mint a new owner-scoped Bearer token. Returns the
  *                        plaintext ONCE; UI is responsible for the copy-once
@@ -16,7 +17,7 @@ import { issueToken, listTokensForOwner } from '$lib/server/apiTokens';
 
 export const GET: RequestHandler = (event) => {
   const u = requireOwner(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.err.noActiveOwner'));
   // Bearer-authed tokens can list, but only their own tenant's tokens — the
   // requireOwner check above already runs the request inside that tenant.
   return json({ tokens: listTokensForOwner(u.activeOwnerId) });
@@ -24,21 +25,22 @@ export const GET: RequestHandler = (event) => {
 
 export const POST: RequestHandler = async (event) => {
   const u = requireOwner(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.err.noActiveOwner'));
 
   // Bearer-authed requests cannot mint NEW tokens — that would let a leaked
   // agent token bootstrap a longer-lived one. The mint surface is cookie-
   // session-only.
   if (event.locals.authVia === 'bearer') {
-    throw error(403, 'minting new tokens requires a cookie session');
+    throw error(403, t(event.locals?.locale, 'api.err.mintCookieOnly'));
   }
 
   const body = await event.request.json().catch(() => null);
-  if (!body || typeof body !== 'object') throw error(400, 'invalid body');
+  if (!body || typeof body !== 'object')
+    throw error(400, t(event.locals?.locale, 'api.err.invalidBody'));
   const label = String(body.label ?? '').trim();
   const isServiceAccount = body.isServiceAccount === true;
   if (!label || label.length > 64) {
-    throw error(400, 'label required (max 64 chars)');
+    throw error(400, t(event.locals?.locale, 'api.err.tokenLabel'));
   }
 
   const issued = issueToken({

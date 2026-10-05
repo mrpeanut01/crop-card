@@ -5,6 +5,8 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'inv.add.pageTitle': 'Nuevo: {type} · CropCard',
   'inv.add.amendmentTitle': 'Nueva pila de estiércol o composta',
   'inv.add.hayName': 'Heno, {cutting}',
+  'inv.add.hayCuttingLabel': '{block}, corte {n} ({year})',
+  'inv.add.hayBlockFallback': 'un bloque de heno',
   'inv.edit.pageTitle': 'Editar: {type} · CropCard',
   'inv.breadcrumb': 'Ruta de navegación',
   'inv.allType': '← Todo en {type}',
@@ -690,6 +692,7 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'stockui.receipt.savePlugins.one': 'Guardar {count} complemento',
   'stockui.receipt.savePlugins.other': 'Guardar {count} complementos',
   'stockui.receipt.done': 'Listo',
+  'stockui.receipt.savedRow': 'Guardado',
   'stockui.api.notFound': 'no se encontró',
   'stockui.api.unknownItem': 'artículo de existencias desconocido',
   'stockui.api.lotNotFound': 'no se encontró el lote',
@@ -697,6 +700,10 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'stockui.api.invalidRequest': 'solicitud no válida',
   'stockui.api.inspectorReadOnly': 'el rol de inspector es de solo lectura',
   'stockui.api.idRequired': 'falta el id',
+  'equip.api.hasSprayRecords':
+    'Hay registros de aplicación que nombran esta aspersora, así que se queda en el archivo. Mejor dala de baja.',
+  'equip.api.winterizeOwnerOnly':
+    'Solo el dueño puede registrar la preparación para el invierno, porque borra la descontaminación y la calibración. Pídeselo al dueño.',
   'equip.api.specSprayerOnly': 'el tanque y la boquilla son solo para aspersoras',
   'stockui.api.seedImpersonating':
     'No se puede registrar el origen de la semilla mientras suplantas a una granja.',
@@ -733,5 +740,31 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'equip.w.ledeStrict':
     'Preparación para guardar al final de la temporada. Confirma cada paso antes de que se abra el siguiente. La descontaminación final usa el protocolo específico de la clase para la última carga de esta aspersora.',
   'equip.w.ledeStandard':
-    'Preparación para guardar al final de la temporada. Confirma cada paso antes de que se abra el siguiente. La descontaminación final usa el protocolo estándar para la última carga de esta aspersora.'
+    'Preparación para guardar al final de la temporada. Confirma cada paso antes de que se abra el siguiente. La descontaminación final usa el protocolo estándar para la última carga de esta aspersora.',
+  'scanai.noKey':
+    'No hay una clave de API de Anthropic configurada. Agrégala en la página de Configuración.',
+  'scanai.this.label': 'esta etiqueta',
+  'scanai.this.page': 'esta página',
+  'scanai.this.barcode': 'este código de barras',
+  'scanai.the.label': 'la etiqueta',
+  'scanai.the.page': 'la página',
+  'scanai.the.barcode': 'el código de barras',
+  'scanai.rejected':
+    'Claude no pudo leer {thing}{detail}. Prueba con una foto más clara o más pequeña, o usa la entrada manual.',
+  'scanai.failed':
+    'Claude no pudo leer {thing}{detail}. Inténtalo de nuevo, o usa la entrada manual.',
+  'scanai.timeout':
+    'Claude tardó demasiado en leer {thing}. Inténtalo de nuevo, o usa la entrada manual.',
+  'scanai.unavailable': 'La IA no está disponible en este momento. Usa la entrada manual.',
+  'scanai.limited': '{reason}. La entrada manual sigue funcionando.',
+  'scanai.overloaded':
+    'La API de Anthropic está ocupada en este momento. Inténtalo de nuevo en un momento.',
+  'scanai.url.invalid-url': 'La URL no es válida',
+  'scanai.url.bad-scheme': 'La URL debe usar http o https',
+  'scanai.url.credentials': 'La URL no debe contener credenciales',
+  'scanai.url.blocked-address': 'La URL debe ser una dirección http(s) pública',
+  'scanai.url.bad-redirect': 'La página redirige a una URL no válida',
+  'scanai.url.loadFailed': 'No se pudo cargar la página',
+  'scanai.url.noInfo': 'La página no tenía información legible del producto; prueba con otra URL.',
+  'stockui.barcode.notFoundAi': 'El código de barras no está en OpenFoodFacts. {message}'
 };

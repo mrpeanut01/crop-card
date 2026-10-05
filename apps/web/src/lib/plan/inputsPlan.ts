@@ -894,7 +894,7 @@ function planForPlanting(
               return {
                 plugin: f,
                 rateAmount: rate || null,
-                rateUnit: f.applicationRange?.unit?.replace('-per-acre', '') ?? 'lb'
+                rateUnit: 'lb'
               };
             })
             .filter(suppliesBudget),

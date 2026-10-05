@@ -2,10 +2,12 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { requireUser } from './auth';
 import { recordCall, reserveGuard, type GuardOutcome, type TokenQuotaContext } from './aiGuard';
 import { aiTry, type FallbackReason } from './aiTry';
+import { aiLimitOf } from './aiDegrade';
+import { aiLimitReason } from '$lib/billing/aiLimit';
+import { t } from '$lib/i18n';
 import {
   AnthropicOverloadedError,
   getApiKey,
-  NO_KEY_MESSAGE,
   type ScanCallUsage,
   type ScanResult,
   type ScanUsageSink
@@ -45,11 +47,13 @@ export class ScanInputError extends Error {
   }
 }
 
+export type ScanSubject = 'label' | 'page' | 'barcode';
+
 export interface RunScanAiArgs {
   event: RequestEvent;
   endpoint: ScanEndpoint;
-  /** Noun used in the human fallback message ("label", "page"). */
-  subject: string;
+  /** What was read, named in the fallback message in the request's language. */
+  subject: ScanSubject;
   call: (onUsage: ScanUsageSink) => Promise<Partial<ScanResult>>;
   timeoutMs?: number;
 }
@@ -173,6 +177,15 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
   if (!promptStarted.value) hold?.release();
   if (result.provenance === 'ai') return { ok: true, result: result.value };
 
+  const locale = args.event.locals?.locale ?? null;
+  const english = !locale || locale === 'en';
+  const thisThing = t(locale, `scanai.this.${args.subject}`);
+  const theThing = t(locale, `scanai.the.${args.subject}`);
+  const errDetail =
+    state.callError instanceof Error && state.callError.message
+      ? ` (${state.callError.message})`
+      : '';
+
   if (state.callError instanceof ScanInputError) {
     return {
       ok: false,
@@ -182,17 +195,13 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
   }
 
   if (result.fallbackReason === 'rate-limit' && isRejectedRequest(state.callError)) {
-    const detail =
-      state.callError instanceof Error && state.callError.message
-        ? ` (${state.callError.message})`
-        : '';
     return {
       ok: false,
       status: 422,
       body: {
         found: false,
         source: 'none',
-        message: `Claude could not read this ${args.subject}${detail}. Try a clearer or smaller photo, or use Manual entry.`
+        message: t(locale, 'scanai.rejected', { thing: thisThing, detail: errDetail })
       }
     };
   }
@@ -200,22 +209,28 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
   const reason = result.fallbackReason ?? 'rate-limit';
   switch (reason) {
     case 'no-key':
-      return { ok: false, status: 503, body: fallbackBody('no-key', NO_KEY_MESSAGE) };
+      return { ok: false, status: 503, body: fallbackBody('no-key', t(locale, 'scanai.noKey')) };
     case 'over-cap':
     case 'rate-limit':
       if (guardBlock) {
         log(null, { provenance: 'fallback', reason });
+        const limit = english ? null : aiLimitOf(guardBlock);
         return {
           ok: false,
           status: guardBlock.status,
-          body: fallbackBody(reason, `${guardBlock.message} Manual entry still works.`)
+          body: fallbackBody(
+            reason,
+            limit
+              ? t(locale, 'scanai.limited', { reason: aiLimitReason(limit, locale) })
+              : `${guardBlock.message} Manual entry still works.`
+          )
         };
       }
       if (state.callError instanceof AnthropicOverloadedError) {
         return {
           ok: false,
           status: 503,
-          body: fallbackBody('rate-limit', state.callError.message, true)
+          body: fallbackBody('rate-limit', t(locale, 'scanai.overloaded'), true)
         };
       }
       return {
@@ -223,11 +238,7 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
         status: 503,
         body: fallbackBody(
           'rate-limit',
-          `Claude could not read the ${args.subject}${
-            state.callError instanceof Error && state.callError.message
-              ? ` (${state.callError.message})`
-              : ''
-          }. Try again, or use Manual entry.`,
+          t(locale, 'scanai.failed', { thing: theThing, detail: errDetail }),
           true
         )
       };
@@ -236,17 +247,13 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
       return {
         ok: false,
         status: 504,
-        body: fallbackBody(
-          'timeout',
-          `Claude took too long to read the ${args.subject}. Try again, or use Manual entry.`,
-          true
-        )
+        body: fallbackBody('timeout', t(locale, 'scanai.timeout', { thing: theThing }), true)
       };
     default:
       return {
         ok: false,
         status: 503,
-        body: fallbackBody(reason, `AI is unavailable right now. Use Manual entry.`)
+        body: fallbackBody(reason, t(locale, 'scanai.unavailable'))
       };
   }
 }

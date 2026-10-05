@@ -180,7 +180,7 @@ describe('computeWithdrawalClear — label data', () => {
   it('stamps the rules version and product', () => {
     const c = clear(treat());
     expect(c.rulesVersion).toBe(RULES_VERSION);
-    expect(RULES_VERSION).toBe('0.7.2');
+    expect(RULES_VERSION).toBe('0.7.4');
     expect(c.product).toBe('Test Dewormer');
   });
 

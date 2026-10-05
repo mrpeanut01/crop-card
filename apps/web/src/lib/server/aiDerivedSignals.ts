@@ -17,7 +17,18 @@
  * persist them across deploys.
  */
 
+import { createHash } from 'node:crypto';
+
 const TTL_MS = 10 * 60 * 1000;
+
+/** A sub-key for a signal that depends on more than the farm context: the
+ *  contextVersion only covers block basics, frost dates and the crop
+ *  catalog, so anything else the signal reads (existing plantings, block
+ *  sizes, companion rules, plugin spacing) must be hashed in here or a
+ *  stale signal is served after that data changes. */
+export function contentKey(parts: unknown): string {
+  return createHash('sha256').update(JSON.stringify(parts)).digest('hex');
+}
 const MAX_ENTRIES_PER_VERSION = 16;
 
 /**

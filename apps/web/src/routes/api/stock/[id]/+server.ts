@@ -13,9 +13,8 @@ import { getTaxonomyTerm } from '$lib/db/taxonomy';
 import { STOCK_CATEGORIES } from '$lib/stock/categories';
 import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
 import { currentUser } from '$lib/server/auth';
-import { canMutate } from '$lib/server/session';
 import { requireOwner } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { checkAnimalStockWrite } from '$lib/server/animalStockRules';
 import { lotsForRole } from '$lib/finance/redact';
 
@@ -76,7 +75,11 @@ export const PATCH: RequestHandler = async (event) => {
       { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
       { status: 400 }
     );
-  const foreign = rejectForeignRefs(['typeId', parsed.data.typeId, getTaxonomyTerm]);
+  const foreign = rejectForeignRefsIn(event.locals?.locale, [
+    'typeId',
+    parsed.data.typeId,
+    getTaxonomyTerm
+  ]);
   if (foreign) return foreign;
   const next = parsed.data;
   const refused = await checkAnimalStockWrite({
@@ -93,16 +96,11 @@ export const PATCH: RequestHandler = async (event) => {
  * DELETE /api/stock/:id
  *
  * Cascade-removes stock_lots + stock_movements for this SKU and nulls
- * out fertility_applications.stockItemId references.
+ * out fertility_applications.stockItemId references. Owner only, like every
+ * other inventory mutation (Invariant 8).
  */
 export const DELETE: RequestHandler = (event) => {
-  const auth = currentUser(event);
-  if (auth && !canMutate(auth.role)) {
-    return json(
-      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
-      { status: 403 }
-    );
-  }
+  requireOwner(event);
   if (!event.params.id)
     return json({ error: t(event.locals?.locale, 'stockui.api.idRequired') }, { status: 400 });
   const item = getStockItem(event.params.id);

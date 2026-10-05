@@ -12,6 +12,7 @@ import { getStockItemByPluginId } from '$lib/db/stock';
 import { requireUser } from '$lib/server/auth';
 import { runScanAi, ScanInputError } from '$lib/server/scanAi';
 import { assertUrlAllowed, POLICY_ERROR_CODES, SafeFetchError } from '$lib/server/safeFetch';
+import { t } from '$lib/i18n';
 
 const requestSchema = z.object({
   url: z.string().trim().min(1).max(2048).url()
@@ -19,12 +20,24 @@ const requestSchema = z.object({
 
 const SCAN_URL_TIMEOUT_MS = 45_000;
 
-async function loadPage(url: string): Promise<FetchedPageContent> {
+type PolicyCode = 'invalid-url' | 'bad-scheme' | 'credentials' | 'blocked-address' | 'bad-redirect';
+
+/** The page-load or URL-policy error in the caller's language. English keeps
+ *  the underlying message as it was. */
+function urlErrorMessage(e: unknown, fallback: string, locale?: string | null): string {
+  if (!locale || locale === 'en') return e instanceof Error ? e.message : fallback;
+  if (e instanceof SafeFetchError && POLICY_ERROR_CODES.has(e.code)) {
+    return t(locale, `scanai.url.${e.code as PolicyCode}`);
+  }
+  return t(locale, 'scanai.url.loadFailed');
+}
+
+async function loadPage(url: string, locale?: string | null): Promise<FetchedPageContent> {
   let content: FetchedPageContent;
   try {
     content = await fetchPageContent(url);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Could not load page';
+    const msg = urlErrorMessage(e, 'Could not load page', locale);
     const policy = e instanceof SafeFetchError && POLICY_ERROR_CODES.has(e.code);
     throw new ScanInputError(policy ? 400 : 502, msg);
   }
@@ -34,7 +47,7 @@ async function loadPage(url: string): Promise<FetchedPageContent> {
     content.selects.length > 0 ||
     content.tables.length > 0;
   if (!hasSignal) {
-    throw new ScanInputError(422, 'Page contained no readable product info — try a different URL.');
+    throw new ScanInputError(422, t(locale, 'scanai.url.noInfo'));
   }
   return content;
 }
@@ -43,12 +56,12 @@ export async function POST(event) {
   requireUser(event);
   const body = await event.request.json().catch(() => null);
   const parsed = requestSchema.safeParse(body);
-  if (!parsed.success) error(400, 'invalid request');
+  if (!parsed.success) error(400, t(event.locals?.locale, 'stockui.api.invalidRequest'));
   const { url } = parsed.data;
   try {
     assertUrlAllowed(url);
   } catch (e) {
-    error(400, e instanceof Error ? e.message : 'URL must be a public http(s) address');
+    error(400, urlErrorMessage(e, 'URL must be a public http(s) address', event.locals?.locale));
   }
 
   const ai = await runScanAi({
@@ -56,7 +69,7 @@ export async function POST(event) {
     endpoint: 'scan-url',
     subject: 'page',
     timeoutMs: SCAN_URL_TIMEOUT_MS,
-    call: async (onUsage) => claudeUrlLookup(await loadPage(url), onUsage)
+    call: async (onUsage) => claudeUrlLookup(await loadPage(url, event.locals?.locale), onUsage)
   });
   if (!ai.ok) return json(ai.body, { status: ai.status });
   const result = ai.result;

@@ -30,6 +30,7 @@ import {
   type StockItem
 } from '$lib/db/stock';
 import { ensureSystemUser } from '$lib/db/users';
+import { farmTimeZone } from '$lib/db/userProfile';
 import type { InsecticidePlugin, CropPlugin } from '$lib/plugins/schemas';
 import { checkEnvironment } from '$lib/safety/environment';
 import type { HerbicideProduct, SafetyResult, SprayContext } from '$lib/safety';
@@ -59,7 +60,8 @@ import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
+import { t } from '$lib/i18n';
 
 /** Coarse sprayer-load token for the cross-contamination state machine
  *  (#321). Insecticides carry IRAC groups, not an HRAC ChemistryClass, so
@@ -90,28 +92,32 @@ function occurredAtError(occurredAt: number, now: number): string | null {
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
 
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
     );
   }
 
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['blockId', parsed.data.blockId, getBlock],
     ['cropId', parsed.data.cropId, getCrop]
   );
@@ -123,7 +129,10 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     const err = occurredAtError(parsed.data.occurredAt, now);
     if (err) {
       return json(
-        { error: 'invalid request', issues: [{ path: 'occurredAt', message: err }] },
+        {
+          error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
+          issues: [{ path: 'occurredAt', message: err }]
+        },
         { status: 400 }
       );
     }
@@ -131,7 +140,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const occurredAt = parsed.data.occurredAt ?? now;
 
   // UC-44 — SEASON_CLOSED gate. Refuse writes dated inside a closed season.
-  const seasonClosed = checkSeasonClosed(occurredAt);
+  const seasonClosed = checkSeasonClosed(occurredAt, event.locals?.locale);
   if (seasonClosed) {
     return json(
       { error: seasonClosed.code, message: seasonClosed.message, year: seasonClosed.year },
@@ -154,7 +163,10 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   }
 
   if (missing.length > 0) {
-    return json({ error: 'unknown insecticide pluginIds', missing }, { status: 404 });
+    return json(
+      { error: t(event.locals?.locale, 'api.errB.unknownInsecticidePlugins'), missing },
+      { status: 404 }
+    );
   }
 
   // Environmental gate (wind / temp / rain) — same kernel module as herbicides.
@@ -253,7 +265,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     });
   // #130 — label pollinator gate (RULES_VERSION 0.5.6). Label language is
   // law, so this is not routed through the KERNEL_DRY_RUN wrapper.
-  const pluginSaysInBloom = cropsInBlock.some((c) => isInBloom(c, occurredAt));
+  const timeZone = farmTimeZone();
+  const pluginSaysInBloom = cropsInBlock.some((c) => isInBloom(c, occurredAt, timeZone));
   const bloomStatus: BloomStatus =
     parsed.data.bloomStatus ?? (pluginSaysInBloom ? 'in-bloom' : 'unknown');
   const bloomStatusSource: AttestedBloomSource = parsed.data.bloomStatus
@@ -273,7 +286,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     bloomStatus,
     applicationTime: new Date(occurredAt),
     sunTimes: sunTimesFor(lat, lon, new Date(occurredAt)),
-    attestedNoForagers: parsed.data.attestedNoForagers
+    attestedNoForagers: parsed.data.attestedNoForagers,
+    timeZone
   });
   const pollinatorBlock = pollinatorViolations(pollinator);
   if (pollinatorBlock.length > 0) {
@@ -302,7 +316,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         const rec = registry.get(id);
         return rec && rec.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : null;
       },
-      occurredAt
+      occurredAt,
+      timeZone
     )
   });
 
@@ -325,7 +340,14 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   // GPA simply no-op when no sprayer is selected.
   const sprayer = parsed.data.sprayerId ? getSprayer(parsed.data.sprayerId) : undefined;
   if (parsed.data.sprayerId && !sprayer) {
-    return json({ error: `unknown sprayer: ${parsed.data.sprayerId}` }, { status: 404 });
+    return json(
+      {
+        error: t(event.locals?.locale, 'api.errB.unknownSprayer', {
+          id: parsed.data.sprayerId ?? ''
+        })
+      },
+      { status: 404 }
+    );
   }
 
   // Cross-contamination gate (UC-04 / UC-32). If the tank last carried a

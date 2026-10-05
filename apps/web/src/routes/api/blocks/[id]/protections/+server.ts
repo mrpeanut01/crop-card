@@ -43,7 +43,7 @@ function yearParam(url: URL): number {
 export const GET: RequestHandler = (event) => {
   requireUser(event);
   const block = getBlock(event.params.id!);
-  if (!block) throw error(404, 'block not found');
+  if (!block) throw error(404, t(event.locals?.locale, 'api.err.blockNotFound'));
   return json(view(block.id, yearParam(event.url), event.locals?.locale));
 };
 
@@ -54,16 +54,19 @@ export const POST: RequestHandler = async (event) => {
   }
   requireOwner(event);
   const block = getBlock(event.params.id!);
-  if (!block) throw error(404, 'block not found');
+  if (!block) throw error(404, t(event.locals?.locale, 'api.err.blockNotFound'));
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = blockProtectionCreateSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const d = parsed.data;
   const shifts = resolveNewProtection(d.kind, {

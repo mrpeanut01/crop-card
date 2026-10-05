@@ -138,13 +138,18 @@
   const MIN_LANE_W = 110;
   const LANE_GAP_PX = 4;
 
-  const yearStart = $derived(new Date(props.year, 0, 1).getTime());
-  const yearEnd = $derived(new Date(props.year + 1, 0, 1).getTime());
+  // Planting dates are calendar days stored at UTC midnight, and every
+  // row is one UTC day, so the grid starts on a UTC day too. A local
+  // midnight start shifted every dropped date by the zone offset (to the
+  // previous day east of UTC).
+  const yearStart = $derived(Date.UTC(props.year, 0, 1));
+  const yearEnd = $derived(Date.UTC(props.year + 1, 0, 1));
   const visibleStart = $derived.by(() => {
     const candidates = props.plantings
       .filter((p) => p.endMs >= yearStart)
       .map((p) => p.plantingDateMs);
-    return candidates.length === 0 ? yearStart : Math.min(yearStart, ...candidates);
+    const start = candidates.length === 0 ? yearStart : Math.min(yearStart, ...candidates);
+    return Math.floor(start / DAY_MS) * DAY_MS;
   });
   const visibleEnd = $derived.by(() => {
     const candidates: number[] = [];

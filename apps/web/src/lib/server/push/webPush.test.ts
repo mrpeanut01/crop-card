@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { createECDH, createPublicKey, randomBytes, verify } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
+import { assertResolvesPublic } from '$lib/server/safeFetch';
+import { endpointSchema } from './validate';
 import {
   MAX_PAYLOAD_BYTES,
   b64urlDecode,
@@ -226,5 +228,43 @@ describe('sendWebPush', () => {
     });
     expect(out.kind).toBe('failed');
     expect(f).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['a private address literal', 'https://169.254.169.254/latest', undefined],
+    ['localhost', 'https://localhost:8443/x', undefined],
+    ['a name that resolves inside the network', 'https://push.example.net/x', '10.1.2.3']
+  ])('refuses %s without calling fetch', async (_label, endpoint, resolvesTo) => {
+    const f = fetchReturning(201);
+    const resolver = async () => [{ address: resolvesTo ?? '93.184.216.34', family: 4 }];
+    const out = await sendWebPush({ ...browserKeys().target, endpoint }, 'x', vapid(), {
+      fetchImpl: f as unknown as typeof fetch,
+      checkEndpoint: (url) => assertResolvesPublic(url, resolver)
+    });
+    expect(out).toMatchObject({ kind: 'failed', status: null });
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it('does not follow a push service redirect', async () => {
+    const f = fetchReturning(201);
+    await sendWebPush(browserKeys().target, 'x', vapid(), {
+      fetchImpl: f as unknown as typeof fetch
+    });
+    const [, init] = f.mock.calls[0] as unknown as [string, RequestInit];
+    expect(init.redirect).toBe('manual');
+  });
+});
+
+describe('subscription endpoint validation', () => {
+  it('refuses private and loopback push endpoints at subscribe time', () => {
+    for (const endpoint of [
+      'https://127.0.0.1/x',
+      'https://10.0.0.5/x',
+      'https://[::1]/x',
+      'https://localhost/x'
+    ]) {
+      expect(endpointSchema.safeParse(endpoint).success).toBe(false);
+    }
+    expect(endpointSchema.safeParse('https://fcm.googleapis.com/fcm/send/abc').success).toBe(true);
   });
 });

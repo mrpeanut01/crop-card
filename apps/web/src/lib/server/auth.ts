@@ -15,6 +15,7 @@ import { error, redirect, type RequestEvent } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
+import { t } from '$lib/i18n';
 import { activeAssignmentsForUser } from '$lib/db/users';
 import { normalizeEmail, normalizePhone } from '$lib/identity';
 import {
@@ -77,20 +78,21 @@ export function currentUser(event: RequestEvent): AuthenticatedUser | null {
 
 export function requireUser(event: RequestEvent): AuthenticatedUser {
   const u = currentUser(event);
-  if (!u) throw error(401, 'authentication required');
+  if (!u) throw error(401, t(event.locals?.locale, 'api.err.authRequired'));
   return u;
 }
 
 export function requireOwner(event: RequestEvent): AuthenticatedUser {
   const u = requireUser(event);
-  if (u.role !== 'owner') throw error(403, 'owner role required');
+  if (u.role !== 'owner') throw error(403, t(event.locals?.locale, 'api.err.ownerRequired'));
   return u;
 }
 
 /** Inspector role is read-only across all surfaces; reject any mutation. */
 export function requireMutator(event: RequestEvent): AuthenticatedUser {
   const u = requireUser(event);
-  if (!canMutate(u.role)) throw error(403, 'inspector role is read-only');
+  if (!canMutate(u.role))
+    throw error(403, t(event.locals?.locale, 'stockui.api.inspectorReadOnly'));
   return u;
 }
 
@@ -101,9 +103,9 @@ export function requireMutator(event: RequestEvent): AuthenticatedUser {
 export function requireInteractiveUser(event: RequestEvent): AuthenticatedUser {
   const u = requireUser(event);
   if (event.locals?.authVia === 'bearer') {
-    throw error(403, 'sign-in identities can only be changed from a signed-in browser');
+    throw error(403, t(event.locals?.locale, 'api.err.identityBrowserOnly'));
   }
-  if (u.impersonating) throw error(403, 'not available while impersonating');
+  if (u.impersonating) throw error(403, t(event.locals?.locale, 'api.err.notWhileImpersonating'));
   return u;
 }
 
@@ -125,9 +127,9 @@ export function isInspectorSession(event: RequestEvent): boolean {
  *  superadmins act across tenants. */
 export function requireSuperadmin(event: RequestEvent): AuthenticatedUser {
   const u = requireUser(event);
-  if (!u.isSuperadmin) throw error(403, 'superadmin required');
+  if (!u.isSuperadmin) throw error(403, t(event.locals?.locale, 'api.err.superadminRequired'));
   if (event.locals?.authVia === 'bearer') {
-    throw error(403, 'superadmin actions require an interactive session');
+    throw error(403, t(event.locals?.locale, 'api.err.superadminInteractive'));
   }
   return u;
 }

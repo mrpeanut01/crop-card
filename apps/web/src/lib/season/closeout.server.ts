@@ -9,6 +9,8 @@
  * are computed here so a hand-crafted POST can't skip them.
  */
 
+import { farmTimeZone } from '$lib/db/userProfile';
+import { localDayStartMs } from '$lib/safety/animalWithdrawal';
 import { listCrops, type Crop } from '$lib/db/crops';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 
@@ -53,8 +55,9 @@ export function buildCloseoutPreflight(year: number): CloseoutPreflight {
   }));
   const unresolvedCount = plantings.filter((p) => !p.resolved).length;
 
-  const fromMs = new Date(year, 0, 1).getTime();
-  const toMs = new Date(year + 1, 0, 1).getTime() - 1;
+  const tz = farmTimeZone();
+  const fromMs = localDayStartMs(`${year}-01-01`, tz) ?? Date.UTC(year, 0, 1);
+  const toMs = (localDayStartMs(`${year + 1}-01-01`, tz) ?? Date.UTC(year + 1, 0, 1)) - 1;
   const events = listHarvestEvents({ fromMs, toMs });
   const byCropPlugin: Record<string, number> = {};
   for (const e of events) {

@@ -19,7 +19,8 @@ import {
   assertField,
   assertStockLot,
   firstUnknownRef,
-  rejectForeignRefs
+  rejectForeignRefs,
+  rejectForeignRefsIn
 } from './foreignRefs';
 
 const tag = randomUUID().slice(0, 8);
@@ -154,6 +155,12 @@ describe('rejectForeignRefs with the Phase 32 checkers', () => {
     );
     expect(res?.status).toBe(400);
     expect(await res?.json()).toEqual({ error: 'unknown stockLotId' });
+  });
+
+  it('names the field in the caller language with rejectForeignRefsIn', async () => {
+    const res = inA(() => rejectForeignRefsIn('es', assertStockLot('stockLotId', b.stockLotId)));
+    expect(res?.status).toBe(400);
+    expect(await res?.json()).toEqual({ error: 'stockLotId desconocido' });
   });
 });
 

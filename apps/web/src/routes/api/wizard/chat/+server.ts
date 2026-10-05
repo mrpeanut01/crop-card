@@ -23,6 +23,7 @@ import {
   markSessionCompleted,
   type WizardStep
 } from '$lib/db/wizardChat';
+import { t } from '$lib/i18n';
 
 const postSchema = z.object({
   planId: z.string().min(1).max(64),
@@ -38,23 +39,27 @@ const postSchema = z.object({
 
 export const POST: RequestHandler = async (event) => {
   const auth = currentUser(event);
-  if (!auth) return json({ error: 'authentication required' }, { status: 401 });
+  if (!auth)
+    return json({ error: t(event.locals?.locale, 'api.errB.authRequired') }, { status: 401 });
   if (!canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
 
   const parsed = postSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -78,10 +83,12 @@ export const POST: RequestHandler = async (event) => {
 
 export const GET: RequestHandler = async (event) => {
   const auth = currentUser(event);
-  if (!auth) return json({ error: 'authentication required' }, { status: 401 });
+  if (!auth)
+    return json({ error: t(event.locals?.locale, 'api.errB.authRequired') }, { status: 401 });
 
   const planId = event.url.searchParams.get('planId');
-  if (!planId) return json({ error: 'planId required' }, { status: 400 });
+  if (!planId)
+    return json({ error: t(event.locals?.locale, 'api.errB.planIdRequired') }, { status: 400 });
 
   const stepParam = event.url.searchParams.get('step');
   const step: WizardStep | undefined =

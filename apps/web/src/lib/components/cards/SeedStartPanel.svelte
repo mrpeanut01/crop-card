@@ -26,7 +26,11 @@
   const timing = $derived(plugin ? resolveSeedStartTiming(plugin) : null);
   const germ = $derived(plugin?.plantingGuide?.germinationTempF);
   let added = $state<SnapshotSeedTray[]>([]);
-  const trays = $derived([...(planting?.trays ?? []), ...added]);
+  const trays = $derived.by(() => {
+    const known = planting?.trays ?? [];
+    const ids = new Set(known.map((t) => t.id));
+    return [...known, ...added.filter((t) => !ids.has(t.id))];
+  });
   const shown = $derived(
     !!planting && (planting.establishment === 'transplant' || trays.length > 0)
   );

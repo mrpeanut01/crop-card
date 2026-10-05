@@ -3,6 +3,9 @@ import type { MessageKey } from '../en';
 export const esToday: Partial<Record<MessageKey, string>> = {
   'tasks.member.fallback': 'Miembro de la granja',
   'tasks.member.phoneEnding': 'teléfono que termina en {digits}',
+  'tasks.assign.err.askOwner': 'Pregúntale al propietario.',
+  'tasks.assign.err.closed': 'Esta tarea ya está cerrada, así que quién la hizo queda como estaba.',
+  'tasks.assign.err.notMember': 'Esa persona no es miembro de esta granja.',
   'tasks.assign.loadFailed': 'No se pudieron cargar los miembros de la granja.',
   'tasks.assign.loading': 'Cargando los miembros de la granja…',
   'tasks.assign.members': 'Miembros de la granja',
@@ -297,6 +300,19 @@ export const esToday: Partial<Record<MessageKey, string>> = {
     'Cuenta como lluvia desde {when}, las 24 horas antes de leerlo. Vacía el pluviómetro después de leerlo.',
   'today.watering.enterAmount': 'Escribe cuánto regaste.',
   'today.watering.enterGauge': 'Escribe las pulgadas del pluviómetro. Escribe 0 si está seco.',
+  'today.watering.err.bedNotInArea': 'Esa cama de cultivo no está en esta Área.',
+  'today.watering.err.gaugeFuture': 'La hora de la lectura del pluviómetro está en el futuro.',
+  'today.watering.err.gaugeOld': 'La lectura del pluviómetro es de hace más de un año.',
+  'today.watering.err.noGauge': 'No existe esa lectura del pluviómetro',
+  'today.watering.err.noLog': 'No existe ese registro de riego',
+  'today.watering.err.removeGauge':
+    'Solo el propietario o quien la anotó puede quitarla. Pregunta al propietario.',
+  'today.watering.err.removeLog':
+    'Solo el propietario o quien lo registró puede quitarlo. Pregunta al propietario.',
+  'today.watering.err.targetOwnerOnly':
+    'Solo el propietario fija la meta de agua. Pregunta al propietario.',
+  'today.watering.err.wateringFuture': 'La hora del riego está en el futuro.',
+  'today.watering.err.wateringOld': 'El riego es de hace más de un año.',
   'today.watering.gallons': 'Galones',
   'today.watering.gaugeSaved': 'Lectura del pluviómetro guardada.',
   'today.watering.gaugeSavedQueued':
@@ -356,6 +372,8 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'today.weather.local': 'Clima local',
   'today.weather.low': 'Mín.',
   'today.weather.noLocation': 'No hay ubicación de granja para el pronóstico',
+  'today.weather.rainOne': '{pct}% de lluvia el {day}',
+  'today.weather.rainRange': 'lluvia {from}→{to}',
   'today.weather.setLocation': 'Define la ubicación de tu granja para ver el pronóstico',
   'today.weather.unavailable': 'El clima no está disponible ahora',
   'today.weather.wind': 'Viento',

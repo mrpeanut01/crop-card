@@ -13,6 +13,7 @@ vi.mock('$lib/server/dbMaintenance', () => ({
     durationMs: 0
   }))
 }));
+import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
 import { runWithTenant, runWithTenantAsync } from '$lib/db/tenant';
@@ -224,6 +225,23 @@ describe('email channel in the alert scheduler', () => {
     );
     expect(s.emailed).toBe(0);
     expect(readOutbox()).toHaveLength(0);
+  });
+
+  it('a farm with no name reads "your farm" in each recipient\'s language', async () => {
+    vi.stubEnv('CROPCARD_LOCALES', 'en,es');
+    const ownerId = seedOwner();
+    db.update(owners).set({ name: '' }).where(eq(owners.id, ownerId)).run();
+    const en = seedUser(ownerId, 'owner');
+    const es = seedUser(ownerId, 'owner');
+    db.update(users).set({ locale: 'es' }).where(eq(users.id, es.userId)).run();
+    for (const u of [en, es]) consentIn(ownerId, u.userId, 'decon-due');
+    const now = Date.now();
+    dirtySprayer(ownerId, now - 2 * HOUR);
+    await runWithTenantAsync(ownerId, () =>
+      processOwnerAlerts(ownerId, { config: null, emailOrigin: ORIGIN, now: () => now })
+    );
+    expect(readOutbox(en.email!)[0].subject).toMatch(/ · your farm$/);
+    expect(readOutbox(es.email!)[0].subject).toMatch(/ · tu granja$/);
   });
 
   it('sends no email when the scheduler has no email origin', async () => {

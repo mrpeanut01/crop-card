@@ -251,6 +251,7 @@ PARAMS=(
   --parameters location="$LOCATION" image="$IMAGE" containerRegistryServer="$REGISTRY"
   --parameters keyVaultName="$KV" hasPingramKey="$HAS_PINGRAM" hasPostmarkToken="$HAS_POSTMARK" hasAnthropicKey="$HAS_ANTHROPIC"
   --parameters hasPushTickSecret="$HAS_PUSH_TICK" hasVapidKeys="$HAS_VAPID"
+  --parameters presentSecrets="$PRESENT_JSON"
 )
 [ -n "${EMAIL_FROM:-}" ] && PARAMS+=(--parameters emailFrom="$EMAIL_FROM")
 [ -n "${ALERT_EMAIL:-}" ] && PARAMS+=(--parameters alertEmail="$ALERT_EMAIL")

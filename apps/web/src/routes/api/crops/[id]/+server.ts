@@ -12,7 +12,7 @@
  */
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
-import { deleteCropCascade } from '$lib/db/admin';
+import { cropHasLockedRecords, deleteCropCascade } from '$lib/db/admin';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { getBlock } from '$lib/db/blocks';
 import {
@@ -26,8 +26,9 @@ import {
 } from '$lib/db/crops';
 import { reanchorCropTasks } from '$lib/db/tasks';
 import { currentUser } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
+import { t } from '$lib/i18n';
 import { cropPatchSchema } from '$lib/crops/apiSchemas';
 import {
   cropLookupFrom,
@@ -36,7 +37,6 @@ import {
   writeFootprint,
   type GardenFailure
 } from '$lib/server/garden/placement';
-import { t } from '$lib/i18n';
 import { getRegistry } from '$lib/server/registry';
 import { db } from '$lib/db/client';
 import { withClientRecordId } from '$lib/server/clientRecordId';
@@ -70,31 +70,37 @@ const ACTION_TO_STATUS = {
   reactivate: 'active'
 } as const;
 
-export const GET: RequestHandler = ({ params }) => {
-  if (!params.id) throw error(400, 'id required');
+export const GET: RequestHandler = ({ params, locals }) => {
+  if (!params.id) throw error(400, t(locals?.locale, 'stockui.api.idRequired'));
   const c = getCrop(params.id);
-  if (!c) throw error(404, 'crop not found');
+  if (!c) throw error(404, t(locals?.locale, 'api.err.cropNotFound'));
   return json({ crop: c });
 };
 
 export const PATCH: RequestHandler = withClientRecordId(async (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -103,7 +109,7 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
   if (parsed.data.action === 'set-placement') {
     if (auth?.role !== 'owner') {
       return json(
-        { error: 'The farm owner places crops in beds.', code: 'READ_ONLY' },
+        { error: t(event.locals?.locale, 'api.err.ownerPlacesCrops'), code: 'READ_ONLY' },
         { status: 403 }
       );
     }
@@ -151,10 +157,13 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
 
   if (parsed.data.action === 'set-establishment') {
     if (auth?.role !== 'owner') {
-      return json({ error: 'Ask the owner.', code: 'READ_ONLY' }, { status: 403 });
+      return json(
+        { error: t(event.locals?.locale, 'api.err.askOwner'), code: 'READ_ONLY' },
+        { status: 403 }
+      );
     }
     const crop = getCrop(event.params.id);
-    if (!crop) throw error(404, 'crop not found');
+    if (!crop) throw error(404, t(event.locals?.locale, 'api.err.cropNotFound'));
     const plugin = cropLookupFrom(await getRegistry())(crop.cropPluginId);
     const { establishment, startIndoors, sowIndoorsOn } = parsed.data;
     const id = event.params.id;
@@ -176,13 +185,15 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
   }
 
   if (parsed.data.action === 'unschedule') {
-    if (!getCrop(event.params.id)) throw error(404, 'crop not found');
+    if (!getCrop(event.params.id))
+      throw error(404, t(event.locals?.locale, 'api.err.cropNotFound'));
     const result = unscheduleCrop(event.params.id);
     return json({ ok: true, ...result });
   }
 
   if (parsed.data.action === 'split') {
-    if (!getCrop(event.params.id)) throw error(404, 'crop not found');
+    if (!getCrop(event.params.id))
+      throw error(404, t(event.locals?.locale, 'api.err.cropNotFound'));
     try {
       const out = splitCrop(event.params.id, parsed.data.parts);
       return json({ crops: out });
@@ -193,7 +204,7 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
 
   if (parsed.data.action === 'edit-details') {
     const id = event.params.id;
-    if (!getCrop(id)) throw error(404, 'crop not found');
+    if (!getCrop(id)) throw error(404, t(event.locals?.locale, 'api.err.cropNotFound'));
     const patch = {
       varietyDisplayName: parsed.data.varietyDisplayName,
       quantityPlanted: parsed.data.quantityPlanted ?? undefined,
@@ -213,7 +224,7 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
     });
     if (!out.ok) {
       if (out.status === 409) return editConflictResponse(out.body);
-      throw error(404, 'crop not found');
+      throw error(404, t(event.locals?.locale, 'api.err.cropNotFound'));
     }
     return json({ crop: out.value });
   }
@@ -222,20 +233,23 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
     if (isGroupAnchorWithMembers(event.params.id)) {
       return json(
         {
-          error:
-            'Cannot swap plugin on a group anchor. Disband the group first so companion offsets stay coherent.'
+          error: t(event.locals?.locale, 'api.err.groupAnchorSwap')
         },
         { status: 409 }
       );
     }
-    return json({ error: 'change-plugin not yet implemented' }, { status: 501 });
+    return json({ error: t(event.locals?.locale, 'api.err.changePluginTodo') }, { status: 501 });
   }
 
   if (parsed.data.action === 'set-schedule') {
     const id = event.params.id;
     const before = getCrop(id);
-    if (!before) throw error(404, 'crop not found');
-    const foreign = rejectForeignRefs(['blockId', parsed.data.blockId, getBlock]);
+    if (!before) throw error(404, t(event.locals?.locale, 'api.err.cropNotFound'));
+    const foreign = rejectForeignRefsIn(event.locals?.locale, [
+      'blockId',
+      parsed.data.blockId,
+      getBlock
+    ]);
     if (foreign) return foreign;
     const plugin = cropLookupFrom(await getRegistry())(before.cropPluginId);
     const newMs = parsed.data.plantingDate;
@@ -264,7 +278,7 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
     });
     if (!out.ok) {
       if (out.status === 409) return editConflictResponse(out.body);
-      throw error(404, 'crop not found');
+      throw error(404, t(event.locals?.locale, 'api.err.cropNotFound'));
     }
     return json({ crop: out.value });
   }
@@ -300,13 +314,22 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
  * pointing at the deleted events.
  */
 export const DELETE: RequestHandler = async (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
   const c = getCrop(event.params.id);
-  if (!c) throw error(404, 'crop not found');
+  if (!c) throw error(404, t(event.locals?.locale, 'api.err.cropNotFound'));
+  if (auth?.role !== 'owner' && cropHasLockedRecords(c.id)) {
+    return json(
+      { error: t(event.locals?.locale, 'crops.api.deleteLockedOwnerOnly'), code: 'RECORD_LOCKED' },
+      { status: 403 }
+    );
+  }
   const id = event.params.id;
   const guarded = await tryGuardedHoldWrite(event, auth, () => deleteCropCascade(id));
   if (!guarded.ok) return guarded.response;

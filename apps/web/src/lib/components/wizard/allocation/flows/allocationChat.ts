@@ -107,15 +107,16 @@ export class AllocationChatFlow {
       typeof body.reply === 'string' && body.reply.trim().length > 0
         ? body.reply
         : fallback
-          ? 'The plan above is unchanged.'
-          : 'Done — updated the plan above.';
+          ? wt('wizard.chat.planUnchanged')
+          : wt('wizard.chat.planUpdated');
     let reply = aiReply;
     if (fallback) {
       const header =
         fallback === 'engine-only'
-          ? '⚠ Could not apply the change cleanly — the planning rules flagged it. The plan above is unchanged.'
-          : `⚠ The plan above is unchanged (${fallback}).`;
-      const violationLine = violations.length > 0 ? `\n\nWhy:\n• ${violations.join('\n• ')}` : '';
+          ? wt('wizard.chat.planRulesFlagged')
+          : wt('wizard.chat.planUnchangedReason', { reason: fallback });
+      const violationLine =
+        violations.length > 0 ? `\n\n${wt('wizard.chat.why')}\n• ${violations.join('\n• ')}` : '';
       const overrideHint =
         Array.isArray(body?.meta?.rejectedAssignments) && body.meta.rejectedAssignments.length > 0
           ? `\n\n${wt('wizard.override.hint')}`

@@ -56,7 +56,10 @@ export function soilTempForDayOfYear(
   const rightIdx = (leftIdx + 1) % 12;
   const leftDay =
     leftIdx === 11 && dayOfYear < monthMidDays[0] ? monthMidDays[11] - 365 : monthMidDays[leftIdx];
-  const rightDay = rightIdx === 0 && leftIdx === 11 ? monthMidDays[0] : monthMidDays[rightIdx];
+  const rightDay =
+    rightIdx === 0 && dayOfYear >= monthMidDays[11]
+      ? monthMidDays[0] + 365
+      : monthMidDays[rightIdx];
   const span = rightDay - leftDay;
   const t = span > 0 ? (dayOfYear - leftDay) / span : 0;
   const left = profile.monthlyMeanF[leftIdx];

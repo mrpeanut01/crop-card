@@ -9,7 +9,7 @@ import { getStockItem, IncompatibleUnitError, receiveLot } from '$lib/db/stock';
 import { requireOwner } from '$lib/server/auth';
 import { stockLotCreateSchema } from '$lib/stock/apiSchemas';
 import { HAY_LOT_CATEGORIES } from '$lib/amendments/model';
-import { assertHayCutting, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertHayCutting, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 
 export const _requestSchema = stockLotCreateSchema;
 
@@ -37,12 +37,13 @@ export const POST: RequestHandler = async (event) => {
       return json(
         {
           error: 'NOT_FEED_LOT',
-          message: 'Only feed and bedding lots can come from a hay cutting.'
+          message: t(event.locals?.locale, 'api.errB.notFeedLot')
         },
         { status: 400 }
       );
     }
-    const bad = rejectForeignRefs(
+    const bad = rejectForeignRefsIn(
+      event.locals?.locale,
       assertHayCutting('sourceHayCuttingId', parsed.data.sourceHayCuttingId)
     );
     if (bad) return bad;

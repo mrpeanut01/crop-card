@@ -49,5 +49,12 @@
  * the plugin's label `pollinator` block and gates on the riskier of it and
  * the legacy `pollinatorRisk` hint (`effectivePollinatorRisk`). Label data
  * can only add a block; shipped fungicides keep the verdicts they had.
+ * 0.7.3: the bloom gate (`pollinatorBloom.ts`) reads a crop's calendar
+ * bloom months on the farm's clock instead of UTC, so a May-blooming crop
+ * still reads in bloom on a Virginia evening of May 31.
+ * 0.7.4: the hold ledger's grazing exposure (`exposureSpansFast`) keeps a
+ * dated grazing interval running until it clears, as the grazing gate
+ * does, when animals arrive after the exact end of the lookback but before
+ * the interval's farm-local midnight (an interval as long as the lookback).
  */
-export const RULES_VERSION = '0.7.2' as const;
+export const RULES_VERSION = '0.7.4' as const;

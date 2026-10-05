@@ -105,9 +105,14 @@
       sub: [
         tr('settings.index.pieces', { count: data.counts.equipment }),
         tr('settings.index.sprayers', { count: data.counts.sprayers }),
-        ...(data.counts.dirtySprayers > 0 ? [`${data.counts.dirtySprayers} needs decon`] : [])
+        ...(data.counts.dirtySprayers > 0
+          ? [tr('settings.index.needsDecon', { count: data.counts.dirtySprayers })]
+          : [])
       ].join(' · '),
-      badge: data.counts.dirtySprayers > 0 ? { tone: 'rust', text: 'Decon needed' } : undefined,
+      badge:
+        data.counts.dirtySprayers > 0
+          ? { tone: 'rust', text: tr('settings.equip.deconNeeded') }
+          : undefined,
       ownerOnly: true
     },
     {

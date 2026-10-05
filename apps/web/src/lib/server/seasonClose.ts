@@ -16,6 +16,9 @@
 
 import { eq } from 'drizzle-orm';
 import { RULES_VERSION } from '$lib/safety/version';
+import { t } from '$lib/i18n';
+import { ymdInZone } from '$lib/prefs';
+import { farmTimeZone } from '$lib/db/userProfile';
 import { db } from '$lib/db/client';
 import { seasonCloseouts } from '$lib/db/schema';
 import { withTenant } from '$lib/db/tenant';
@@ -40,10 +43,11 @@ export interface SeasonClosedBlock {
   message: string;
 }
 
-/** The calendar year (local time) a record timestamp falls in. Season
- *  close-outs are keyed on this year. */
-export function seasonYearOf(occurredAtMs: number): number {
-  return new Date(occurredAtMs).getFullYear();
+/** The farm-local calendar year a record timestamp falls in. Season
+ *  close-outs are keyed on this year; the server runs in UTC, so reading
+ *  the process's local year would put a US Dec 31 evening in next year. */
+export function seasonYearOf(occurredAtMs: number, timeZone: string = farmTimeZone()): number {
+  return Number(ymdInZone(occurredAtMs, timeZone).slice(0, 4));
 }
 
 /**
@@ -55,7 +59,10 @@ export function seasonYearOf(occurredAtMs: number): number {
  * One check-site: endpoints translate a non-null result into a 422 with the
  * `SEASON_CLOSED` code. Do not re-implement the year→closed lookup elsewhere.
  */
-export function checkSeasonClosed(occurredAtMs: number): SeasonClosedBlock | null {
+export function checkSeasonClosed(
+  occurredAtMs: number,
+  locale?: string | null
+): SeasonClosedBlock | null {
   const year = seasonYearOf(occurredAtMs);
   const active = getActiveCloseout(year);
   if (!active) return null;
@@ -63,7 +70,7 @@ export function checkSeasonClosed(occurredAtMs: number): SeasonClosedBlock | nul
     code: SEASON_CLOSED,
     year,
     closedAt: active.closedAt,
-    message: `The ${year} season is closed. Records dated in ${year} can no longer be added or changed. Reopen the season first if a correction is needed.`
+    message: t(locale, 'settings.close.recordRefused', { year })
   };
 }
 

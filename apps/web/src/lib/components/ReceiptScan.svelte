@@ -34,6 +34,8 @@
     line: ReceiptLineItem;
     candidate: Candidate | null;
     accepted: boolean;
+    /** Uploaded by an earlier Save; never sent again. */
+    saved?: boolean;
   };
 
   let { onClose }: { onClose: () => void } = $props();
@@ -52,7 +54,7 @@
   let commitErrors = $state<Array<{ lineIndex: number; message: string }>>([]);
 
   const acceptedCount = $derived(
-    proposals.filter((p) => p.accepted && p.candidate?.candidate).length
+    proposals.filter((p) => p.accepted && !p.saved && p.candidate?.candidate).length
   );
 
   function handleFile(e: Event) {
@@ -161,11 +163,14 @@
   }
 
   function toggleAccept(i: number) {
-    proposals = proposals.map((p) => (p.lineIndex === i ? { ...p, accepted: !p.accepted } : p));
+    proposals = proposals.map((p) =>
+      p.lineIndex === i && !p.saved ? { ...p, accepted: !p.accepted } : p
+    );
   }
 
   async function commitAccepted() {
-    const toCommit = proposals.filter((p) => p.accepted && p.candidate?.candidate);
+    if (commitBusy) return;
+    const toCommit = proposals.filter((p) => p.accepted && !p.saved && p.candidate?.candidate);
     if (toCommit.length === 0) return;
     commitBusy = true;
     commitSummary = null;
@@ -189,6 +194,9 @@
           ];
         } else {
           savedCount++;
+          proposals = proposals.map((x) =>
+            x.lineIndex === p.lineIndex ? { ...x, accepted: false, saved: true } : x
+          );
         }
       } catch (e) {
         commitErrors = [
@@ -307,8 +315,8 @@
               <label class="row">
                 <input
                   type="checkbox"
-                  checked={p.accepted}
-                  disabled={!cand || !!hasIssues}
+                  checked={p.accepted || !!p.saved}
+                  disabled={!cand || !!hasIssues || !!p.saved}
                   onchange={() => toggleAccept(p.lineIndex)}
                 />
                 <div class="row-main">
@@ -318,6 +326,8 @@
                       <span class="type-pill type-{cand.type as string}">{cand.type as string}</span
                       >
                       {#if c?.confidence}<span class="conf conf-{c.confidence}">{c.confidence}</span
+                        >{/if}
+                      {#if p.saved}<span class="saved-tag">{tr('stockui.receipt.savedRow')}</span
                         >{/if}
                     {:else}
                       <em class="muted"
@@ -602,6 +612,13 @@
   }
   .type-companion {
     background: #6b3fa0;
+  }
+  .saved-tag {
+    padding: 0.05rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    background: #d8f0d8;
+    color: #1f5e3a;
   }
   .conf {
     padding: 0.05rem 0.4rem;

@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * PUT /api/blocks/:id/geometry — set or replace a block's GeoJSON polygon.
  * DELETE /api/blocks/:id/geometry — clear it.
@@ -33,34 +34,34 @@ const geomSchema = z.union([
 
 export const PUT: RequestHandler = async (event) => {
   const { params, request } = event;
-  if (!params.id) throw error(400, 'block id required');
+  if (!params.id) throw error(400, t(event.locals?.locale, 'api.err.blockIdParamRequired'));
   requireOwner(event);
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    throw error(400, 'invalid JSON');
+    throw error(400, t(event.locals?.locale, 'stockui.api.invalidJsonShort'));
   }
   const parsed = geomSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'expected GeoJSON Polygon / MultiPolygon / Feature / FeatureCollection',
+        error: t(event.locals?.locale, 'api.err.expectedGeoJson'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
     );
   }
   const block = setBlockGeometry(params.id, JSON.stringify(parsed.data));
-  if (!block) throw error(404, 'block not found');
+  if (!block) throw error(404, t(event.locals?.locale, 'api.err.blockNotFound'));
   return json({ block });
 };
 
 export const DELETE: RequestHandler = (event) => {
   const { params } = event;
-  if (!params.id) throw error(400, 'block id required');
+  if (!params.id) throw error(400, t(event.locals?.locale, 'api.err.blockIdParamRequired'));
   requireOwner(event);
   const block = setBlockGeometry(params.id, null);
-  if (!block) throw error(404, 'block not found');
+  if (!block) throw error(404, t(event.locals?.locale, 'api.err.blockNotFound'));
   return json({ block });
 };

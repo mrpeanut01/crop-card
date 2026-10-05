@@ -1,4 +1,4 @@
-import { formatCalendarDate, ymdInZone } from '$lib/prefs';
+import { dueYmd, formatCalendarDate, ymdInZone } from '$lib/prefs';
 import {
   cardHref,
   cardKey,
@@ -55,7 +55,7 @@ function capitalize(s: string): string {
 
 function tasksOn(snapshot: FarmSnapshot, ymd: string, opts: ResolvedOptions): SnapshotTask[] {
   return sortTasks(
-    snapshot.tasks.filter((t) => ymdInZone(t.scheduledFor, opts.prefs.timeZone) === ymd)
+    snapshot.tasks.filter((t) => dueYmd(t.scheduledFor, opts.prefs.timeZone) === ymd)
   );
 }
 
@@ -73,7 +73,7 @@ export function buildDayCard(
   const overdue =
     ymd === today
       ? sortTasks(
-          snapshot.tasks.filter((t) => ymdInZone(t.scheduledFor, opts.prefs.timeZone) < today)
+          snapshot.tasks.filter((t) => dueYmd(t.scheduledFor, opts.prefs.timeZone) < today)
         )
       : [];
 

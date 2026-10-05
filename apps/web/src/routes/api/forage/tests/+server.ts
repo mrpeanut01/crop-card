@@ -12,7 +12,7 @@ import { zonedDayStartMs } from '$lib/exports/dateRange';
 import { forageTestCreateSchema } from '$lib/forage/apiSchemas';
 import { DEFAULT_PREFS, todayYmd } from '$lib/prefs';
 import { requireMutator, requireUser } from '$lib/server/auth';
-import { assertHayCutting, assertStockLot, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertHayCutting, assertStockLot, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { checkLabReport } from '$lib/server/soilTestDocument';
 import { localIssues } from '$lib/server/amendmentRoutes';
 import { t } from '$lib/i18n';
@@ -38,13 +38,13 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return refusal(400, 'INVALID', 'invalid JSON');
+    return refusal(400, 'INVALID', t(event.locals?.locale, 'stockui.api.invalidJsonShort'));
   }
   const parsed = forageTestCreateSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: localIssues(parsed.error.issues, event.locals?.locale).map((i) => ({
           path: i.path.join('.'),
           message: i.message
@@ -57,7 +57,8 @@ export const POST: RequestHandler = async (event) => {
   if (input.documentId && user.role !== 'owner') {
     return refusal(403, 'OWNER_ONLY', t(event.locals?.locale, 'forage.api.ownerAttach'));
   }
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['blockId', input.blockId, getBlock],
     assertHayCutting('hayCuttingId', input.hayCuttingId),
     assertStockLot('stockLotId', input.stockLotId)
@@ -70,7 +71,7 @@ export const POST: RequestHandler = async (event) => {
   if (!day) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: [{ path: 'sampledOn', message: t(event.locals?.locale, 'amend.api.useRealDate') }]
       },
       { status: 400 }
@@ -107,7 +108,7 @@ export const GET: RequestHandler = (event) => {
   const hayCuttingId = q.get('hayCuttingId') ?? undefined;
   const stockLotId = q.get('stockLotId') ?? undefined;
   if (!blockId && !hayCuttingId && !stockLotId) {
-    return refusal(400, 'INVALID', 'Name a blockId, hayCuttingId or stockLotId.');
+    return refusal(400, 'INVALID', t(event.locals?.locale, 'api.err.forageNameSubject'));
   }
   return json(
     { tests: listForageTests({ blockId, hayCuttingId, stockLotId }) },

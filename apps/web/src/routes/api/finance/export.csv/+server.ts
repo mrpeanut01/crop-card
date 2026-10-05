@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /** GET /api/finance/export.csv?year=: the season's live entries as CSV
  *  (F2-16). Owner only. Derived costs and labour are not rows. */
 
@@ -18,7 +19,8 @@ import { ymdInZone } from '$lib/prefs';
 export const GET: RequestHandler = async (event) => {
   requireMoneyReader(event);
   const year = parseYear(event.url.searchParams.get('year'), currentSeasonYear());
-  if (year === null) return json({ error: 'year must be a four-digit year' }, { status: 400 });
+  if (year === null)
+    return json({ error: t(event.locals?.locale, 'api.err.yearFourDigits') }, { status: 400 });
   const { fromMs, toMs } = seasonBounds(year);
   const tz = farmTimeZone();
   const entries = presentEntries(

@@ -13,8 +13,8 @@
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { closeTaskForRecord } from '$lib/server/recordTaskClose';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
-import { sprayCropStageSchema, sprayRecordSchema } from '$lib/records/apiSchemas';
+import { sprayRecordSchema } from '$lib/records/apiSchemas';
+import { resolveSprayCrops, standingCropPluginIds } from '$lib/server/sprayCrops';
 import { computeTankMixDilutions } from '$lib/dilution/calculator';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
@@ -46,9 +46,10 @@ import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { bestEffort, errorText } from '$lib/server/recordWrite';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = sprayRecordSchema;
 const requestSchema = sprayRecordSchema;
@@ -59,21 +60,22 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   try {
     body = await request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
 
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
     );
   }
 
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['blockId', parsed.data.blockId, getBlock],
     ['cropId', parsed.data.cropId, getCrop]
   );
@@ -83,7 +85,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const occurredAt = parsed.data.occurredAt ?? Date.now();
 
   // UC-44 — SEASON_CLOSED gate. Refuse writes dated inside a closed season.
-  const seasonClosed = checkSeasonClosed(occurredAt);
+  const seasonClosed = checkSeasonClosed(occurredAt, event.locals?.locale);
   if (seasonClosed) {
     return json(
       { error: seasonClosed.code, message: seasonClosed.message, year: seasonClosed.year },
@@ -114,34 +116,45 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   }
 
   if (missing.length > 0) {
-    return json({ error: 'unknown herbicide pluginIds', missing }, { status: 404 });
+    return json(
+      { error: t(event.locals?.locale, 'api.errB.unknownHerbicidePlugins'), missing },
+      { status: 404 }
+    );
   }
 
   const stored = getSprayer(parsed.data.sprayer.id);
   if (!stored) {
-    return json({ error: `unknown sprayer: ${parsed.data.sprayer.id}` }, { status: 404 });
+    return json(
+      { error: t(event.locals?.locale, 'api.errB.unknownSprayer', { id: parsed.data.sprayer.id }) },
+      { status: 404 }
+    );
   }
 
   // Role gates (FR-09 / NFR-09).
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
   if (parsed.data.customRateOverride && auth?.role !== 'owner') {
-    return json({ error: 'custom rate override requires owner role' }, { status: 403 });
+    return json({ error: t(event.locals?.locale, 'api.errB.rateOverrideOwner') }, { status: 403 });
   }
 
-  const enrichCrop = (c: z.infer<typeof sprayCropStageSchema>) => ({
-    ...c,
-    cropFamily: c.cropFamily ?? registry.cropFamilyOf(c.cropPluginId),
-    traits: registry.cropTraitsOf(c.cropPluginId)
-  });
+  // FR-03: judge the spray against the block's plantings on file as well
+  // as the crops the client names, with the registry's crop families.
+  const crops = resolveSprayCrops(
+    parsed.data.blockCrops,
+    standingCropPluginIds(getBlock(parsed.data.blockId)?.plantings ?? [], occurredAt),
+    registry
+  );
 
   const ctx: SprayContext = {
     occurredAt,
     products,
-    crop: enrichCrop(parsed.data.blockCrops.primary),
-    coPlantedCrops: parsed.data.blockCrops.coPlanted?.map(enrichCrop),
+    crop: crops.primary,
+    coPlantedCrops: crops.coPlanted,
     sprayer: {
       id: stored.id,
       lastChemistryClass: stored.lastChemistryClass,

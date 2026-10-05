@@ -8,7 +8,8 @@ import { z } from 'zod';
 import { getField } from '$lib/db/fields';
 import { createShadeSource, listShadeSources } from '$lib/db/shadeSources';
 import { requireOwner } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
+import { t } from '$lib/i18n';
 
 const KINDS = [
   'tree-row',
@@ -44,13 +45,20 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
-  const foreign = rejectForeignRefs(['fieldId', parsed.data.fieldId, getField]);
+  const foreign = rejectForeignRefsIn(event.locals?.locale, [
+    'fieldId',
+    parsed.data.fieldId,
+    getField
+  ]);
   if (foreign) return foreign;
   return json({ shadeSource: createShadeSource(parsed.data) }, { status: 201 });
 };

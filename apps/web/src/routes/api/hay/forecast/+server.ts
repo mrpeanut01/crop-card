@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * GET /api/hay/forecast?blockId=X
  *
@@ -19,7 +20,7 @@ function coord(raw: string | null): number {
   return raw === null || raw.trim() === '' ? NaN : Number(raw);
 }
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url, locals }) => {
   const blockId = url.searchParams.get('blockId');
   let lat = coord(url.searchParams.get('lat'));
   let lon = coord(url.searchParams.get('lon'));
@@ -27,12 +28,11 @@ export const GET: RequestHandler = async ({ url }) => {
 
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
     const location = resolveWeatherLocation(blockId);
-    if (!location) throw error(404, 'block not found');
+    if (!location) throw error(404, t(locals?.locale, 'api.err.blockNotFound'));
     if (location.source === 'farm-default') {
       return json(
         {
-          error:
-            'no mapped block and no farm location; set one on /settings/farm or pass &lat=&lon=',
+          error: t(locals?.locale, 'api.err.noForecastLocation'),
           blockId
         },
         { status: 400 }
@@ -46,7 +46,10 @@ export const GET: RequestHandler = async ({ url }) => {
     return json({ forecast, lat, lon, source });
   } catch (err) {
     if (err instanceof WeatherFetchError) {
-      return json({ error: 'NWS upstream failed', detail: err.message }, { status: 502 });
+      return json(
+        { error: t(locals?.locale, 'api.err.nwsFailed'), detail: err.message },
+        { status: 502 }
+      );
     }
     throw err;
   }

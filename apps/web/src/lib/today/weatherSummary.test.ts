@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import { createT } from '$lib/i18n';
+import { formatCalendarDate } from '$lib/prefs';
 import {
   forecastDays,
+  rainHint,
   skyFor,
   summarizeForecast,
   summarizeForecastSafely,
@@ -39,30 +42,38 @@ describe('summarizeForecast', () => {
     const result = summarizeForecast([day({ highF: 70 })]);
     expect(result?.windMph).toBeUndefined();
   });
+});
 
-  it('skips rain hint when next 3 days are all dry', () => {
-    const result = summarizeForecast([
-      day({ date: '2026-05-24', popPct: 5 }),
-      day({ date: '2026-05-25', popPct: 10 }),
-      day({ date: '2026-05-26', popPct: 0 })
-    ]);
-    expect(result?.rainHint).toBeUndefined();
+describe('rainHint', () => {
+  const hint = (days: ForecastDay[], locale: string | null = null) =>
+    rainHint(days, createT(locale), (iso) =>
+      formatCalendarDate(iso, 'weekday', {}, locale).toLowerCase()
+    );
+
+  it('is null when the next 3 days are all dry', () => {
+    expect(
+      hint([
+        day({ date: '2026-05-24', popPct: 5 }),
+        day({ date: '2026-05-25', popPct: 10 }),
+        day({ date: '2026-05-26', popPct: 0 })
+      ])
+    ).toBeNull();
   });
 
-  it('emits single-day rain hint when only one wet day', () => {
-    const result = summarizeForecast([
-      day({ date: '2026-05-24', popPct: 5 }),
-      day({ date: '2026-05-25', popPct: 45 })
-    ]);
-    expect(result?.rainHint).toBe('45% rain mon');
+  it('names the one wet day', () => {
+    expect(
+      hint([day({ date: '2026-05-24', popPct: 5 }), day({ date: '2026-05-25', popPct: 45 })])
+    ).toBe('45% rain mon');
   });
 
-  it('emits range rain hint when ≥2 wet days', () => {
-    const result = summarizeForecast([
-      day({ date: '2026-05-24', popPct: 50 }), // sun
-      day({ date: '2026-05-25', popPct: 60 }) // mon
-    ]);
-    expect(result?.rainHint).toBe('rain sun→mon');
+  it('gives a range when two or more days are wet', () => {
+    expect(
+      hint([day({ date: '2026-05-24', popPct: 50 }), day({ date: '2026-05-25', popPct: 60 })])
+    ).toBe('rain sun→mon');
+  });
+
+  it('words the hint in the viewer language', () => {
+    expect(hint([day({ date: '2026-05-25', popPct: 45 })], 'es')).toBe('45% de lluvia el lun');
   });
 });
 

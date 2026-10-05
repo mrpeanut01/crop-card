@@ -11,6 +11,7 @@ import { matchHealthPluginByNada } from '$lib/stock/animalStock';
 import { runScanAi } from '$lib/server/scanAi';
 import { findTaxonomyTermByName, inventoryDomain } from '$lib/db/taxonomy';
 import { getStockItemByPluginId } from '$lib/db/stock';
+import { t } from '$lib/i18n';
 
 const requestSchema = z.object({
   image: z.string().min(1),
@@ -22,7 +23,7 @@ const requestSchema = z.object({
 export async function POST(event) {
   const body = await event.request.json().catch(() => null);
   const parsed = requestSchema.safeParse(body);
-  if (!parsed.success) error(400, 'invalid request');
+  if (!parsed.success) error(400, t(event.locals?.locale, 'stockui.api.invalidRequest'));
 
   const { image, barcode, target } = parsed.data;
 

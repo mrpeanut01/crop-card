@@ -32,7 +32,8 @@ export const _requestSchema = dispositionCreateSchema;
 
 export const GET: RequestHandler = async (event) => {
   const user = currentUser(event);
-  if (!user) return problem(401, 'UNAUTHENTICATED', 'Sign in to see where this harvest went.');
+  if (!user)
+    return problem(401, 'UNAUTHENTICATED', t(event.locals?.locale, 'api.err.signInHarvestSee'));
   const harvest = getHarvestEvent(event.params.id ?? '');
   if (!harvest)
     return problem(404, 'NOT_FOUND', t(event.locals.locale, 'harvestui.disp.err.noHarvest'));
@@ -41,7 +42,8 @@ export const GET: RequestHandler = async (event) => {
 
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const user = currentUser(event);
-  if (!user) return problem(401, 'UNAUTHENTICATED', 'Sign in to record where a harvest went.');
+  if (!user)
+    return problem(401, 'UNAUTHENTICATED', t(event.locals?.locale, 'api.err.signInHarvestRecord'));
   if (!canMutate(user.role)) {
     return problem(403, 'READ_ONLY', t(event.locals.locale, 'harvestui.disp.err.readOnlyAdd'));
   }
@@ -49,7 +51,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return problem(400, 'INVALID_BODY', 'The request body is not JSON.');
+    return problem(400, 'INVALID_BODY', t(event.locals?.locale, 'api.err.bodyNotJson'));
   }
   const parsed = dispositionCreateSchema.safeParse(body);
   if (!parsed.success) {
@@ -76,7 +78,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     event.locals.locale
   );
   if (dated) return problem(400, dated.error, dated.message);
-  const closed = checkSeasonClosed(occurredAt);
+  const closed = checkSeasonClosed(occurredAt, event.locals?.locale);
   if (closed) {
     return json(
       { error: closed.code, message: closed.message, year: closed.year },

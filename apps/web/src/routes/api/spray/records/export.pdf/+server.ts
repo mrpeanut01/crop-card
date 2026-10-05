@@ -54,7 +54,7 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
   const sprayerId = event.url.searchParams.get('sprayerId') ?? undefined;
   const blockId = event.url.searchParams.get('blockId') ?? undefined;
   const { fromMs, toMs } = parseExportDateRange(event.url.searchParams, prefs);
-  const events = listSprayEvents({ limit: 10_000, sprayerId, blockId, fromMs, toMs });
+  const events = listSprayEvents({ sprayerId, blockId, fromMs, toMs });
   const generatedAt = new Date();
   const generatedDay = localDay(generatedAt, prefs);
 

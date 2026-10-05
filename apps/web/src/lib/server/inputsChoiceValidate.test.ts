@@ -92,6 +92,23 @@ describe('manual input choices (#480)', () => {
     ).toMatch(/not a known herbicide/);
   });
 
+  it('converts the rate to the label unit before comparing (2 qt is over a 2 pt ceiling)', () => {
+    const ctx = { products, cropPlugins, philosophy: 'conventional' as const };
+    expect(validateManualChoices([choice({ rateAmount: 2, rateUnit: 'qt' })], ctx)[0]).toMatch(
+      /above its label rate \(2 pt per acre\)/
+    );
+    expect(validateManualChoices([choice({ rateAmount: 32, rateUnit: 'fl-oz' })], ctx)).toEqual([]);
+  });
+
+  it('refuses a rate in a unit that cannot be converted, and a rate not above zero', () => {
+    const ctx = { products, cropPlugins, philosophy: 'conventional' as const };
+    expect(validateManualChoices([choice({ rateAmount: 1, rateUnit: 'lb' })], ctx)[0]).toMatch(
+      /must be in pt per acre/
+    );
+    expect(validateManualChoices([choice({ rateAmount: -4 })], ctx)[0]).toMatch(/above zero/);
+    expect(validateManualChoices([choice({ rateAmount: 0 })], ctx)[0]).toMatch(/above zero/);
+  });
+
   it('skips rows with no product', () => {
     expect(
       validateManualChoices([choice({ productPluginId: null, productSource: 'plugin' })], {

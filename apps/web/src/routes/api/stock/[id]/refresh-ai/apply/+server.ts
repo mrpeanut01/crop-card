@@ -26,6 +26,7 @@ import {
   type UpdateItemInput
 } from '$lib/db/stock';
 import { requireOwner } from '$lib/server/auth';
+import { t } from '$lib/i18n';
 
 const bodySchema = z.object({
   acceptedKeys: z.array(z.string().min(1)).max(20)
@@ -50,22 +51,26 @@ const FORMULATION_KEYS = new Set(['npk', 'formulationType', 'productClass']);
 export const POST: RequestHandler = async (event) => {
   requireOwner(event);
   const id = event.params.id;
-  if (!id) return json({ error: 'missing id' }, { status: 400 });
+  if (!id) return json({ error: t(event.locals?.locale, 'api.errB.missingId') }, { status: 400 });
   const item = getStockItem(id);
-  if (!item) return json({ error: 'item not found' }, { status: 404 });
+  if (!item)
+    return json({ error: t(event.locals?.locale, 'api.errB.itemNotFound') }, { status: 404 });
   if (!item.pendingRefreshJson) {
-    return json({ error: 'no pending refresh on this item' }, { status: 409 });
+    return json({ error: t(event.locals?.locale, 'api.errB.noPendingRefresh') }, { status: 409 });
   }
 
   let raw: unknown;
   try {
     raw = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = bodySchema.safeParse(raw);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const acceptedKeys = new Set(parsed.data.acceptedKeys);
   if (acceptedKeys.size === 0) {
@@ -78,7 +83,7 @@ export const POST: RequestHandler = async (event) => {
   try {
     pending = JSON.parse(item.pendingRefreshJson) as Record<string, unknown>;
   } catch {
-    return json({ error: 'pending refresh JSON corrupted' }, { status: 500 });
+    return json({ error: t(event.locals?.locale, 'api.errB.pendingCorrupted') }, { status: 500 });
   }
 
   const existingSeedMeta = safeParseObject(item.metadataJson) ?? {};

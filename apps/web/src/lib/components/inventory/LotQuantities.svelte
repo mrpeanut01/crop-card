@@ -59,6 +59,9 @@
       }
       await invalidateAll();
       return true;
+    } catch (err) {
+      error = err instanceof Error ? err.message : String(err);
+      return false;
     } finally {
       busy = false;
     }

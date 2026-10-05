@@ -22,15 +22,20 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { wipeCurrentPlan } from '$lib/db/admin';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
+import { t } from '$lib/i18n';
 
 export const DELETE: RequestHandler = async (event) => {
   const auth = currentUser(event);
-  if (!auth) return json({ error: 'authentication required' }, { status: 401 });
+  if (!auth)
+    return json({ error: t(event.locals?.locale, 'api.errB.authRequired') }, { status: 401 });
   if (!canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
   if (auth.role !== 'owner' && !auth.isSuperadmin) {
-    return json({ error: 'only the owner can reset the plan' }, { status: 403 });
+    return json({ error: t(event.locals?.locale, 'api.errB.resetOwnerOnly') }, { status: 403 });
   }
 
   const summary = wipeCurrentPlan();

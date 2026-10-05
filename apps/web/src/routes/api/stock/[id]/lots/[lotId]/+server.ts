@@ -1,7 +1,7 @@
 /**
  * PATCH  /api/stock/:id/lots/:lotId — owner moves an ordered or planned lot
  *        between those states, or marks it received (on hand).
- * DELETE /api/stock/:id/lots/:lotId — drop a single lot + its movements.
+ * DELETE /api/stock/:id/lots/:lotId — owner drops a single lot + its movements.
  */
 
 import { t } from '$lib/i18n';
@@ -14,8 +14,7 @@ import {
   QUANTITY_STATUSES,
   setLotQuantityStatus
 } from '$lib/db/stock';
-import { currentUser, requireOwner } from '$lib/server/auth';
-import { canMutate } from '$lib/server/session';
+import { requireOwner } from '$lib/server/auth';
 
 const patchSchema = z.object({
   quantityStatus: z.enum(QUANTITY_STATUSES),
@@ -25,7 +24,7 @@ const patchSchema = z.object({
 export const PATCH: RequestHandler = async (event) => {
   const user = requireOwner(event);
   const { id, lotId } = event.params;
-  if (!id || !lotId) throw error(400, 'lotId required');
+  if (!id || !lotId) throw error(400, t(event.locals?.locale, 'api.errB.lotIdRequired'));
   if (!listLotsForItem(id).some((l) => l.id === lotId)) {
     return json({ error: t(event.locals?.locale, 'stockui.api.lotNotFound') }, { status: 404 });
   }
@@ -52,13 +51,11 @@ export const PATCH: RequestHandler = async (event) => {
 };
 
 export const DELETE: RequestHandler = (event) => {
-  if (!event.params.lotId) throw error(400, 'lotId required');
-  const auth = currentUser(event);
-  if (auth && !canMutate(auth.role)) {
-    return json(
-      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
-      { status: 403 }
-    );
+  requireOwner(event);
+  const { id, lotId } = event.params;
+  if (!id || !lotId) throw error(400, t(event.locals?.locale, 'api.errB.lotIdRequired'));
+  if (!listLotsForItem(id).some((l) => l.id === lotId)) {
+    return json({ error: t(event.locals?.locale, 'stockui.api.lotNotFound') }, { status: 404 });
   }
-  return json(deleteStockLotCascade(event.params.lotId));
+  return json(deleteStockLotCascade(lotId));
 };

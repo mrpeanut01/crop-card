@@ -9,9 +9,10 @@ import {
   assertCrop,
   assertField,
   assertStockLot,
-  rejectForeignRefs
+  rejectForeignRefsIn
 } from '$lib/server/foreignRefs';
 import { writeRecord } from '$lib/server/recordWrite';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = seedStartCreateSchema;
 
@@ -19,7 +20,8 @@ export const _requestSchema = seedStartCreateSchema;
 export const GET: RequestHandler = (event) => {
   requireUser(event);
   const cropId = event.url.searchParams.get('cropId');
-  if (!cropId) return json({ error: 'cropId required' }, { status: 400 });
+  if (!cropId)
+    return json({ error: t(event.locals?.locale, 'api.errB.cropIdRequired') }, { status: 400 });
   return json({ trays: listSeedStartsForCrops([cropId]) });
 };
 
@@ -30,7 +32,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const body = await parseBody(event.request, seedStartCreateSchema);
   if (!body.ok) return body.response;
   const input = body.data;
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     assertCrop('cropId', input.cropId),
     assertField('locationAreaId', input.locationAreaId),
     assertStockLot('stockLotId', input.stockLotId)
@@ -38,7 +41,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (foreign) return foreign;
   if (input.sownAt > Date.now() + MAX_FUTURE_SKEW_MS) {
     return json(
-      { error: 'A tray cannot be sown in the future.', code: 'IN_THE_FUTURE' },
+      { error: t(event.locals?.locale, 'api.errB.traySownFuture'), code: 'IN_THE_FUTURE' },
       { status: 400 }
     );
   }

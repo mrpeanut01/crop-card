@@ -2,7 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 import { requireUser } from '$lib/server/auth';
-import { canReopen } from '$lib/server/seasonClose';
+import { canReopen, seasonYearOf } from '$lib/server/seasonClose';
 import { getCloseout } from '$lib/db/seasonCloseouts';
 import { buildCloseoutPreflight } from '$lib/season/closeout.server';
 
@@ -12,7 +12,7 @@ export const load: PageServerLoad = (event) => {
   const u = requireUser(event);
   if (!u.activeOwnerId) throw redirect(303, '/owner-picker');
 
-  const year = new Date().getFullYear();
+  const year = seasonYearOf(Date.now());
   const preflight = buildCloseoutPreflight(year);
   const existing = getCloseout(year);
   const closed = !!existing && existing.reopenedAt === null;

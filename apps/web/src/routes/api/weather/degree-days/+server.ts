@@ -11,11 +11,13 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { currentUser } from '$lib/server/auth';
 import { loadDegreeDays } from '$lib/server/degreeDays.server';
 import { degreeDaysQuerySchema } from '$lib/ipm/apiSchemas';
+import { t } from '$lib/i18n';
 
 export const _querySchema = degreeDaysQuerySchema;
 
 export const GET: RequestHandler = async (event) => {
-  if (!currentUser(event)) return json({ error: 'authentication required' }, { status: 401 });
+  if (!currentUser(event))
+    return json({ error: t(event.locals?.locale, 'api.errB.authRequired') }, { status: 401 });
   const parsed = degreeDaysQuerySchema.safeParse({
     model: event.url.searchParams.get('model') ?? undefined,
     year: event.url.searchParams.get('year') ?? undefined
@@ -23,7 +25,7 @@ export const GET: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -32,7 +34,8 @@ export const GET: RequestHandler = async (event) => {
   const now = Date.now();
   const thisYear = new Date(now).getFullYear();
   const year = parsed.data.year ?? thisYear;
-  if (year > thisYear) return json({ error: 'year is in the future' }, { status: 400 });
+  if (year > thisYear)
+    return json({ error: t(event.locals?.locale, 'api.errB.yearFuture') }, { status: 400 });
   const result = await loadDegreeDays({
     year,
     modelId: parsed.data.model,
@@ -40,7 +43,7 @@ export const GET: RequestHandler = async (event) => {
     locale: event.locals?.locale
   });
   if (parsed.data.model && result.models.length === 0) {
-    return json({ error: 'pest model not found' }, { status: 404 });
+    return json({ error: t(event.locals?.locale, 'api.errB.pestModelNotFound') }, { status: 404 });
   }
   return json(result, { headers: { 'cache-control': 'private, max-age=300' } });
 };

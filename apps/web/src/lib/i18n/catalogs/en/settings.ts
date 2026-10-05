@@ -153,6 +153,8 @@ export const enSettings = {
   'feedback.kind.other': 'Something else',
   'feedback.sheet.retry': 'That did not go through. Please try again.',
   'feedback.sheet.retryLater': 'That did not go through. Please try again in a moment.',
+  'feedback.api.rateLimited':
+    'You have sent a lot of feedback in the last hour. Please try again later.',
   'feedback.sheet.offline':
     "You're offline. Your note is still here, so send it when you're back online.",
   'feedback.sheet.thanks': 'Thanks, we got it.',
@@ -252,6 +254,8 @@ export const enSettings = {
   'settings.index.pieces.other': '{count} pieces',
   'settings.index.sprayers.one': '{count} sprayer & calibration',
   'settings.index.sprayers.other': '{count} sprayers & calibration',
+  'settings.index.needsDecon.one': '{count} needs decon',
+  'settings.index.needsDecon.other': '{count} need decon',
   'settings.index.plugins.label': 'Plugins & crop library',
   'settings.index.plugins.sub': '{loaded} loaded · {failed} failed',
   'settings.index.documents.label': 'Documents',
@@ -536,6 +540,8 @@ export const enSettings = {
   'settings.close.hint':
     "Closing the season locks every {year} record. No spray, insecticide, fungicide, harvest, or hay-cutting entry dated in {year} can be added or changed afterward — the same way a spray record locks 48 hours after it's written. You have 7 days to reopen if you close by mistake.",
   'settings.close.helperBanner': 'Helper view — only the farm owner can close or reopen a season.',
+  'settings.close.recordRefused':
+    'The {year} season is closed. Records dated in {year} can no longer be added or changed. Reopen the season first if a correction is needed.',
   'settings.close.closedBadge': '{year} season closed',
   'settings.close.nextTitle': "Season closed. What's next?",
   'settings.close.nextHint':
@@ -665,6 +671,7 @@ export const enSettings = {
   'settings.ai.gated.3': "Free-text 'ask the assistant' on Plan v2 + Today",
   'settings.ai.works.0':
     'All five wizard steps run fully manually — drag Gantt bars, click edit, fill forms',
+  'settings.ai.works.1': 'Safety kernel + decon + retention logic are local and never call AI',
   'settings.ai.works.2': 'CSV import / export · plugins · all calendar derivations',
   'settings.ai.ep.allocate': 'Plan, schedule and refine',
   'settings.ai.ep.plugin-search': 'Search → web lookup',

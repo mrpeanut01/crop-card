@@ -70,13 +70,18 @@ function ownerNameOf(ownerId: string | null): string {
 
 function performerNameOf(userId: string): string {
   unscopedQueryNote('VDACS export needs human-readable applicator label, users is a global table');
-  const row = db.select({ email: users.email }).from(users).where(eq(users.id, userId)).get();
-  return row?.email ?? userId;
+  const row = db
+    .select({ email: users.email, phone: users.phone })
+    .from(users)
+    .where(eq(users.id, userId))
+    .get();
+  return row ? identityLabel(row) : userId;
 }
 
 interface DeconRow {
   id: string;
   occurredAt: number;
+  equipmentId: string;
   equipmentLabel: string;
   performedById?: string;
   notes?: string;
@@ -106,6 +111,7 @@ function listDeconForExport(filters: { fromMs?: number; toMs?: number }): DeconR
     .map((r) => ({
       id: r.id,
       occurredAt: r.occurredAt.getTime(),
+      equipmentId: r.equipmentId,
       equipmentLabel: r.equipmentLabel ?? r.equipmentId,
       performedById: r.performedById ?? undefined,
       notes: r.notes ?? undefined
@@ -203,36 +209,27 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
     sprayerId,
     blockId,
     fromMs,
-    toMs,
-    limit: 10_000
+    toMs
   });
+  // A sprayer filter keeps only that sprayer's applications and decons;
+  // harvest, hay and fertility rows have no sprayer, so they are left out.
+  const onSprayer = (e: { sprayerId?: string | null }) => !sprayerId || e.sprayerId === sprayerId;
   const insecticides = listInsecticideEvents({
     blockId,
     fromMs,
-    toMs,
-    limit: 10_000
-  });
+    toMs
+  }).filter(onSprayer);
   const fungicides = listFungicideEvents({
     blockId,
     fromMs,
-    toMs,
-    limit: 10_000
-  });
-  const harvests = listHarvestEvents({
-    blockId,
-    fromMs,
     toMs
-  });
-  const hays = listHayForExport({ blockId, fromMs, toMs });
-  const decons = listDeconForExport({
-    fromMs,
-    toMs
-  });
-  const fertilities = listFertilityForExport({
-    blockId,
-    fromMs,
-    toMs
-  });
+  }).filter(onSprayer);
+  const harvests = sprayerId ? [] : listHarvestEvents({ blockId, fromMs, toMs });
+  const hays = sprayerId ? [] : listHayForExport({ blockId, fromMs, toMs });
+  const decons = listDeconForExport({ fromMs, toMs }).filter(
+    (d) => !sprayerId || d.equipmentId === sprayerId
+  );
+  const fertilities = sprayerId ? [] : listFertilityForExport({ blockId, fromMs, toMs });
 
   const unified: UnifiedRow[] = [];
 

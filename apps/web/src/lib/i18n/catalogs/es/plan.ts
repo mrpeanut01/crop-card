@@ -342,6 +342,7 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plan.page.moveCropFailed': 'no se pudo mover el cultivo ({status})',
   'plan.page.moveFailed': 'No se pudo mover la siembra: {detail}',
   'plan.page.networkError': 'error de red',
+  'plan.page.moveBlockFailed': 'No se pudo mover el bloque ({status}).',
   'plan.page.nudge.failed': 'No se pudo mover: {detail}',
   'plan.page.opt.btn': '✨ Optimizar calendario',
   'plan.page.opt.title':
@@ -368,6 +369,8 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
     'Solo se restablecerán los {count} bloques visibles; los bloques ocultos no cambian. ',
   'plan.page.reset.title':
     'Quita la programación de todos los cultivos, disuelve grupos, elimina las tareas generadas y vuelve a ejecutar de inmediato la programación automática determinista. Los cultivos cosechados o archivados no se tocan.',
+  'plan.page.seedCommitFailed': 'no se pudieron guardar estas siembras ({status})',
+  'plan.page.seedPlanFailed': 'no se pudo planificar estas semillas ({status})',
   'plan.page.season.cancelEdits': 'Cancelar cambios',
   'plan.page.season.captured':
     'Se guardó la configuración de tu temporada {year}. Continúa a la siguiente etapa: define dónde están creciendo las cosas.',
@@ -709,6 +712,8 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plan.design.didNotLoad': 'El diseñador del huerto no cargó. Inténtalo de nuevo.',
   'plan.design.notDesignable':
     'Esta área no tiene diseñador de huerto. Solo los huertos y los invernaderos lo tienen.',
+  'crops.api.deleteLockedOwnerOnly':
+    'Esta siembra tiene registros de hace más de 48 horas, así que solo el dueño puede eliminarla. Pídeselo al dueño.',
   'crops.err.missingBlock': 'Falta la cama de cultivo o el bloque de esta siembra.',
   'plan.swimlane.eastIndex': 'E{n}',
   'plan.grazing.docTitle': 'Tiempos de pastoreo · {area} · CropCard',

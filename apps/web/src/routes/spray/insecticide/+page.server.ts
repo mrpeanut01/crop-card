@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { geometryCentroid, listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
+import { farmTimeZone } from '$lib/db/userProfile';
 import { listInsecticideEvents, activeReEntryRestrictions } from '$lib/db/insecticideEvents';
 import { scoutLogByBlock as scoutLogFromTable } from '$lib/db/scoutObservations';
 import { getRegistry } from '$lib/server/registry';
@@ -74,6 +75,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   const farm = getFarmLatLon();
   const now = Date.now();
+  const timeZone = farmTimeZone();
 
   const allBlocks = listBlocks();
   const cropPlugin = (id: string): CropPlugin | null => {
@@ -99,7 +101,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
           rec && rec.plugin.type === 'crop' ? (rec.plugin as CropPlugin).bloomWindow : undefined;
         return isInBloom(
           { cropPluginId: p.cropPluginId, plantedAt: p.plantingDate, bloomWindow },
-          now
+          now,
+          timeZone
         );
       });
       return {
@@ -109,7 +112,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         lat: location.lat,
         lon: location.lon,
         bloomingCropPluginIds: Array.from(new Set(blooming.map((p) => p.cropPluginId))),
-        pollinatorNeighbors: pollinatorNeighbors(b.id, allBlocks, cropPlugin, now)
+        pollinatorNeighbors: pollinatorNeighbors(b.id, allBlocks, cropPlugin, now, timeZone)
       };
     }),
     recentEvents: listInsecticideEvents({ limit: 20 }),

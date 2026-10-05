@@ -22,6 +22,9 @@ export class SeedLinkState {
   linkError = $state<string | null>(null);
   linkAssigningId = $state<string | null>(null);
   #linkDebounceHandle: ReturnType<typeof setTimeout> | null = null;
+  /** Only the newest search may write results (a slow answer for an older
+   *  query, a cleared box or a closed picker is dropped). */
+  #linkSeq = 0;
 
   constructor(w: AllocationWizardState) {
     this.#w = w;
@@ -41,6 +44,10 @@ export class SeedLinkState {
   }
 
   openLinkPicker(stockItemId: string): void {
+    if (this.#linkDebounceHandle) clearTimeout(this.#linkDebounceHandle);
+    this.#linkDebounceHandle = null;
+    this.#linkSeq++;
+    this.linkSearching = false;
     this.linkPickerOpenFor = stockItemId;
     this.linkQuery = '';
     this.linkResults = [];
@@ -48,6 +55,8 @@ export class SeedLinkState {
   }
 
   closeLinkPicker(): void {
+    this.#linkSeq++;
+    this.linkSearching = false;
     this.linkPickerOpenFor = null;
     this.linkQuery = '';
     this.linkResults = [];
@@ -62,6 +71,8 @@ export class SeedLinkState {
     if (this.#linkDebounceHandle) clearTimeout(this.#linkDebounceHandle);
     const q = this.linkQuery.trim();
     if (q.length < 2) {
+      this.#linkSeq++;
+      this.linkSearching = false;
       this.linkResults = [];
       return;
     }
@@ -71,6 +82,7 @@ export class SeedLinkState {
   }
 
   async runLinkSearch(q: string): Promise<void> {
+    const seq = ++this.#linkSeq;
     this.linkSearching = true;
     this.linkError = null;
     try {
@@ -84,15 +96,17 @@ export class SeedLinkState {
         body: JSON.stringify({ query: q, hintType: 'crop', skipWebSearch: true })
       });
       const body = await res.json();
+      if (seq !== this.#linkSeq) return;
       if (!res.ok) {
         this.linkError = body.error ?? `HTTP ${res.status}`;
         return;
       }
       this.linkResults = (body.candidates ?? []) as PluginCandidate[];
     } catch (err) {
+      if (seq !== this.#linkSeq) return;
       this.linkError = err instanceof Error ? err.message : String(err);
     } finally {
-      this.linkSearching = false;
+      if (seq === this.#linkSeq) this.linkSearching = false;
     }
   }
 

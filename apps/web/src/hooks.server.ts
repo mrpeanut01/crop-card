@@ -236,6 +236,24 @@ export function csrfDecision(input: {
 }
 
 /**
+ * API tokens drive `/api/**` only. Every write outside it is a form action
+ * of the cookie-session UI, and several of those mint a session cookie
+ * (Owner picker, invite accept, onboarding, sign-in), so a token used there
+ * would turn into a full browser session for any farm its user belongs to.
+ */
+export function bearerWriteOutsideApi(input: {
+  method: string;
+  pathname: string;
+  authVia?: 'cookie' | 'bearer';
+}): boolean {
+  return (
+    input.authVia === 'bearer' &&
+    MUTATION_METHODS.has(input.method) &&
+    !input.pathname.startsWith('/api/')
+  );
+}
+
+/**
  * Cross-site form guard, moved here from SvelteKit's built-in
  * `csrf.checkOrigin` (see svelte.config.js) with the same rule: a POST, PUT,
  * PATCH or DELETE with a form content type must carry this app's Origin.
@@ -458,6 +476,18 @@ const handleRequest: Handle = async ({ event, resolve: resolvePage }) => {
     event.locals.tokenId = resolved.tokenId;
     event.locals.isServiceAccountToken = resolved.isServiceAccount;
     if (!isFenced()) touchToken(resolved.tokenId);
+    if (
+      bearerWriteOutsideApi({
+        method: event.request.method,
+        pathname: event.url.pathname,
+        authVia: 'bearer'
+      })
+    ) {
+      return json(
+        { error: 'API tokens can only call /api/** endpoints' },
+        { status: 403, headers: { 'cache-control': 'no-store' } }
+      );
+    }
   } else {
     const fromCookie = currentUser(event);
     user = fromCookie ? revalidateCookieUser(fromCookie) : null;

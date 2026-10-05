@@ -4,24 +4,27 @@ import { listSubscriptionsForUser } from '$lib/db/pushSubscriptions';
 import { sendToSubscriptions } from '$lib/server/push/dispatch';
 import { testSchema } from '$lib/server/push/validate';
 import { readVapidConfig } from '$lib/server/push/webPush';
+import { recipientLocale } from '$lib/server/recipientLocale';
+import { t } from '$lib/i18n';
 
 /** NFR-06 — send a test notification to the caller's own subscriptions on
  *  the active Owner (optionally just one endpoint). */
 export const POST: RequestHandler = async (event) => {
   const u = requireMutator(event);
-  if (!u.activeOwnerId) throw error(400, 'no active owner');
+  if (!u.activeOwnerId) throw error(400, t(event.locals?.locale, 'api.errB.noActiveOwner'));
   const config = readVapidConfig();
-  if (!config) throw error(503, "Push isn't configured on this server");
+  if (!config) throw error(503, t(event.locals?.locale, 'api.errB.pushNotConfigured'));
   const parsed = testSchema.safeParse(await event.request.json().catch(() => ({})));
   if (!parsed.success) throw error(400, parsed.error.issues[0]?.message ?? 'invalid body');
   const endpoint = parsed.data.endpoint;
   const subs = listSubscriptionsForUser(u.id).filter((s) => !endpoint || s.endpoint === endpoint);
-  if (subs.length === 0) throw error(404, 'no push subscription for this user');
+  if (subs.length === 0) throw error(404, t(event.locals?.locale, 'api.errB.noPushSub'));
+  const locale = recipientLocale(u.id);
   const summary = await sendToSubscriptions(
     subs,
     {
-      title: 'CropCard test notification',
-      body: 'Push alerts are working on this device.',
+      title: t(locale, 'push.test.title'),
+      body: t(locale, 'push.test.body'),
       url: '/settings/notifications',
       tag: 'cropcard-test',
       kind: 'test'

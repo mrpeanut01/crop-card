@@ -14,6 +14,7 @@ import {
   exposureFloorFor,
   exposureHolds,
   exposureSpans,
+  exposureSpansFast,
   parseExposureFloor,
   serializeExposureFloor,
   stayWasExposed,
@@ -768,4 +769,111 @@ describe('attested intervals longer than the 365-day lookback (review round 1)',
     } as unknown as Omit<GrazingExposureInput, 'atMs'>);
     expect(spans.length).toBeGreaterThan(0);
   });
+});
+
+describe('the ledger fast exposure path against the gate (0.7.3)', () => {
+  const yearLong: GrazingRestrictions = {
+    source: 'test label',
+    grazeDays: GRAZING_LOOKBACK_DAYS,
+    hayDays: GRAZING_LOOKBACK_DAYS,
+    lactatingDairyGrazeDays: GRAZING_LOOKBACK_DAYS,
+    meatAnimalRemovalBeforeSlaughterDays: 0
+  };
+
+  it('holds milk and eggs of animals arriving after the exact lookback, before the interval clears', () => {
+    const arrive = T + GRAZING_LOOKBACK_DAYS * DAY_MS + 3_600_000;
+    const clears = roundedClearMs(T, GRAZING_LOOKBACK_DAYS, TZ);
+    expect(arrive).toBeLessThan(clears);
+    for (const food of ['milk', 'eggs'] as Food[]) {
+      const base = input({
+        apps: [app({ restrictions: yearLong })],
+        stays: [{ fieldId: 'f1', fromMs: arrive, toMs: arrive + DAY_MS }],
+        food
+      });
+      expect(exposureHolds({ ...base, atMs: arrive }).length, food).toBeGreaterThan(0);
+      const spans = exposureSpansFast(base);
+      expect(
+        spans.some((s) => s.fromMs <= arrive && arrive < s.toMs),
+        food
+      ).toBe(true);
+    }
+  });
+
+  it('exposureSpansFast holds exactly when exposureHolds does, with intervals near the lookback', () => {
+    const daysArb = fc.option(
+      fc.oneof(
+        { arbitrary: fc.integer({ min: 0, max: 40 }), weight: 1 },
+        {
+          arbitrary: fc.integer({ min: GRAZING_LOOKBACK_DAYS, max: GRAZING_LOOKBACK_DAYS + 2 }),
+          weight: 3
+        }
+      ),
+      { nil: undefined }
+    );
+    const restrictionsArb: fc.Arbitrary<GrazingRestrictions | null> = fc.oneof(
+      fc.constant(null),
+      fc.record({
+        source: fc.constant('label'),
+        grazeDays: daysArb,
+        lactatingDairyGrazeDays: daysArb,
+        meatAnimalRemovalBeforeSlaughterDays: fc.option(fc.integer({ min: 0, max: 30 }), {
+          nil: undefined
+        }),
+        notForPasture: fc.option(fc.boolean(), { nil: undefined })
+      })
+    );
+    fc.assert(
+      fc.property(
+        fc.array(
+          fc.record({ at: fc.integer({ min: T, max: T + 2 * DAY_MS }), r: restrictionsArb }),
+          { minLength: 1, maxLength: 3 }
+        ),
+        fc.array(
+          fc.record({
+            from: fc.oneof(
+              fc.integer({ min: T, max: T + 400 * DAY_MS }),
+              fc.integer({
+                min: T + (GRAZING_LOOKBACK_DAYS - 1) * DAY_MS,
+                max: T + (GRAZING_LOOKBACK_DAYS + 3) * DAY_MS
+              })
+            ),
+            length: fc.integer({ min: 1, max: 10 * DAY_MS })
+          }),
+          { minLength: 1, maxLength: 3 }
+        ),
+        fc.constantFrom<Food>('meat', 'milk', 'eggs'),
+        fc.boolean(),
+        (apps, stays, food, lactating) => {
+          const applications = apps.map((a, i) =>
+            app({ ref: `spray:e${i}`, appliedAtMs: a.at, restrictions: a.r })
+          );
+          const base = {
+            stays: stays.map((s) => ({ fieldId: 'f1', fromMs: s.from, toMs: s.from + s.length })),
+            applicationsByField: new Map([['f1', applications]]),
+            subject: { speciesId: 'sheep', lactating },
+            food,
+            timeZone: TZ,
+            registryMaxIntervalDays: GRAZING_LOOKBACK_DAYS
+          };
+          const spans = exposureSpansFast(base);
+          const points: number[] = [];
+          for (const s of base.stays) points.push(s.fromMs, s.fromMs + 1, s.toMs - 1);
+          for (const s of spans) {
+            points.push(s.fromMs, s.fromMs - 1);
+            if (Number.isFinite(s.toMs)) points.push(s.toMs, s.toMs - 1);
+          }
+          for (const a of applications) {
+            const edge = a.appliedAtMs + GRAZING_LOOKBACK_DAYS * DAY_MS;
+            points.push(edge, edge + 1, startOfNextLocalDay(edge, TZ) - 1);
+          }
+          for (const t of points) {
+            const gate = exposureHolds({ ...base, atMs: t }).length > 0;
+            const ledger = spans.some((s) => s.fromMs <= t && t < s.toMs);
+            expect(ledger, `t=${t}`).toBe(gate);
+          }
+        }
+      ),
+      { numRuns: 500 }
+    );
+  }, 60_000);
 });

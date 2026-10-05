@@ -159,6 +159,8 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
   'feedback.kind.other': 'Otra cosa',
   'feedback.sheet.retry': 'No se pudo enviar. Inténtalo de nuevo.',
   'feedback.sheet.retryLater': 'No se pudo enviar. Inténtalo de nuevo en un momento.',
+  'feedback.api.rateLimited':
+    'Has enviado muchos comentarios en la última hora. Inténtalo de nuevo más tarde.',
   'feedback.sheet.offline':
     'Estás sin conexión. Tu nota sigue aquí, así que envíala cuando vuelvas a tener conexión.',
   'feedback.sheet.thanks': 'Gracias, lo recibimos.',
@@ -259,6 +261,8 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
   'settings.index.pieces.other': '{count} piezas',
   'settings.index.sprayers.one': '{count} aspersora y calibración',
   'settings.index.sprayers.other': '{count} aspersoras y calibración',
+  'settings.index.needsDecon.one': '{count} sin descontaminar',
+  'settings.index.needsDecon.other': '{count} sin descontaminar',
   'settings.index.plugins.label': 'Complementos y biblioteca de cultivos',
   'settings.index.plugins.sub': '{loaded} cargados · {failed} con error',
   'settings.index.documents.label': 'Documentos',
@@ -550,6 +554,8 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
     'Cerrar la temporada bloquea todos los registros de {year}. Después no se puede agregar ni cambiar ninguna entrada de aspersión, insecticida, fungicida, cosecha o corte de heno con fecha de {year}, igual que un registro de aspersión se bloquea 48 horas después de escribirse. Tienes 7 días para reabrirla si la cierras por error.',
   'settings.close.helperBanner':
     'Vista de ayudante: solo el propietario de la granja puede cerrar o reabrir una temporada.',
+  'settings.close.recordRefused':
+    'La temporada {year} está cerrada. Ya no se pueden añadir ni cambiar registros con fecha de {year}. Reabre la temporada primero si hace falta una corrección.',
   'settings.close.closedBadge': 'Temporada {year} cerrada',
   'settings.close.nextTitle': 'Temporada cerrada. ¿Qué sigue?',
   'settings.close.nextHint':
@@ -691,6 +697,8 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
   'settings.ai.gated.3': 'Pregunta libre al asistente en Plan v2 + Hoy',
   'settings.ai.works.0':
     'Los cinco pasos del asistente funcionan totalmente a mano: arrastra las barras de Gantt, haz clic en editar, llena formularios',
+  'settings.ai.works.1':
+    'El núcleo de seguridad, la descontaminación y la retención de registros funcionan en local y nunca llaman a la IA',
   'settings.ai.works.2':
     'Importación / exportación CSV · complementos · todos los cálculos del calendario',
   'settings.ai.ep.allocate': 'Planificar, programar y ajustar',

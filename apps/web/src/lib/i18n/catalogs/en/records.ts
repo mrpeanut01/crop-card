@@ -208,6 +208,7 @@ export const enRecords = {
   'finance.seasonNav': 'Season',
   'finance.which': 'Which entries',
   'harvestui.addMore': "+ Add something else you're picking",
+  'harvestui.err.future': 'A harvest cannot be dated in the future.',
   'harvestui.badge.early': '⏳ too early',
   'harvestui.badge.harvested': '✓ harvested',
   'harvestui.badge.past': '⚠ past window',
@@ -379,6 +380,10 @@ export const enRecords = {
   'harvestui.upcoming': 'Upcoming windows',
   'harvestui.upcomingWindows': 'upcoming windows ·',
   'harvestui.windowRange': 'Window {range}',
+  'hayui.api.deleteLockedOwnerOnly':
+    'This cutting is older than 48 hours, so only the owner can delete it. Ask the owner.',
+  'hayui.api.deleteLockedForce':
+    'This cutting is older than 48 hours and is locked. Confirm the delete to remove it anyway.',
   'hayui.abort': 'Abort',
   'hayui.abortConfirm': 'Abort this cutting? Use only if mow → bale was scrapped.',
   'hayui.advance': 'Advance — {step}',

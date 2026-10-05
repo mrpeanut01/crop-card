@@ -1,4 +1,5 @@
 import { redirect } from '@sveltejs/kit';
+import { seasonYearOf } from '$lib/server/seasonClose';
 import type { PageServerLoad } from './$types';
 
 import { requireOwner } from '$lib/server/auth';
@@ -17,7 +18,7 @@ export const load: PageServerLoad = (event) => {
 
   return {
     currentYear: year,
-    calendarYear: new Date().getFullYear(),
+    calendarYear: seasonYearOf(Date.now()),
     readOnly: pastView,
     planningYear,
     existing: loadSeasonSetup(year),

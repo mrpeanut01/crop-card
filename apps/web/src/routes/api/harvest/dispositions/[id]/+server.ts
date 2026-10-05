@@ -31,7 +31,7 @@ import { farmTimeZone, prefsFor } from '$lib/db/userProfile';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
-import { assertLedgerEntry, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertLedgerEntry, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { farmHasOrganicStatus } from '$lib/harvest/organicAtHarvest.server';
 import { dispositionNotices, presentDisposition, problem } from '$lib/server/harvestDispositions';
 import { t } from '$lib/i18n';
@@ -40,7 +40,8 @@ export const _requestSchema = dispositionPatchSchema;
 
 export const PATCH: RequestHandler = async (event) => {
   const user = currentUser(event);
-  if (!user) return problem(401, 'UNAUTHENTICATED', 'Sign in to change this record.');
+  if (!user)
+    return problem(401, 'UNAUTHENTICATED', t(event.locals?.locale, 'api.err.signInChangeRecord'));
   if (!canMutate(user.role)) {
     return problem(403, 'READ_ONLY', t(event.locals.locale, 'harvestui.disp.err.readOnlyChange'));
   }
@@ -48,7 +49,7 @@ export const PATCH: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return problem(400, 'INVALID_BODY', 'The request body is not JSON.');
+    return problem(400, 'INVALID_BODY', t(event.locals?.locale, 'api.err.bodyNotJson'));
   }
   const parsed = dispositionPatchSchema.safeParse(body);
   if (!parsed.success) {
@@ -81,7 +82,10 @@ export const PATCH: RequestHandler = async (event) => {
         t(event.locals.locale, 'harvestui.disp.err.moneyImpersonating')
       );
     }
-    const foreign = rejectForeignRefs(assertLedgerEntry('ledgerEntryId', ledgerEntryId));
+    const foreign = rejectForeignRefsIn(
+      event.locals?.locale,
+      assertLedgerEntry('ledgerEntryId', ledgerEntryId)
+    );
     if (foreign) return foreign;
   }
 
@@ -126,7 +130,7 @@ export const PATCH: RequestHandler = async (event) => {
       if (dated) return problem(400, dated.error, dated.message);
     }
     for (const at of new Set([existing.occurredAt, fields.occurredAt ?? existing.occurredAt])) {
-      const closed = checkSeasonClosed(at);
+      const closed = checkSeasonClosed(at, event.locals?.locale);
       if (closed) {
         return json(
           { error: closed.code, message: closed.message, year: closed.year },
@@ -158,7 +162,8 @@ export const PATCH: RequestHandler = async (event) => {
 
 export const DELETE: RequestHandler = async (event) => {
   const user = currentUser(event);
-  if (!user) return problem(401, 'UNAUTHENTICATED', 'Sign in to change this record.');
+  if (!user)
+    return problem(401, 'UNAUTHENTICATED', t(event.locals?.locale, 'api.err.signInChangeRecord'));
   if (!canMutate(user.role)) {
     return problem(403, 'READ_ONLY', t(event.locals.locale, 'harvestui.disp.err.readOnlyChange'));
   }

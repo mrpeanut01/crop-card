@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { requireOwner } from '$lib/server/auth';
 import { buildCloseoutPreflight } from '$lib/season/closeout.server';
 import { closeSeason, reopenSeason } from '$lib/server/seasonClose';
+import { t } from '$lib/i18n';
 
 const bodySchema = z.discriminatedUnion('action', [
   z.object({
@@ -56,7 +57,7 @@ export async function POST(event) {
           error: 'REOPEN_WINDOW_EXPIRED',
           year: res.year,
           closedAt: res.closedAt,
-          message: 'The 7-day reopen window has passed; this season close is permanent.'
+          message: t(event.locals?.locale, 'api.errB.reopenExpired')
         },
         { status: 409 }
       );

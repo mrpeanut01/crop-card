@@ -11,7 +11,7 @@ import { getTaxonomyTerm } from '$lib/db/taxonomy';
 import { STOCK_CATEGORIES } from '$lib/stock/categories';
 import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
 import { requireOwner } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { checkAnimalStockWrite } from '$lib/server/animalStockRules';
 
 export const GET: RequestHandler = () => {
@@ -57,7 +57,11 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
-  const foreign = rejectForeignRefs(['typeId', parsed.data.typeId, getTaxonomyTerm]);
+  const foreign = rejectForeignRefsIn(event.locals?.locale, [
+    'typeId',
+    parsed.data.typeId,
+    getTaxonomyTerm
+  ]);
   if (foreign) return foreign;
   const refused = await checkAnimalStockWrite(parsed.data);
   if (refused) return refused;

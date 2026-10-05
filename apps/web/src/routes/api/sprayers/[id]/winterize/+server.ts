@@ -6,22 +6,30 @@
  * `equipment_state.winterized_at`, clears chemistry via decon semantics,
  * and nulls calibration so `/calibrate` shows "Uncalibrated" next spring.
  *
- * Helper+ may run it — same crew as UC-04 decon (a helper can execute the
- * physical winterization). `requireMutator` rejects read-only inspectors.
+ * Owner only: it clears the tank's chemistry and decon state and the
+ * calibration, the same safety-state reset that the owner-only decon
+ * record makes (Invariant 8), so a helper gets "Ask the owner".
  * Server enforces the timestamp; client cannot fabricate the log history.
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { requireMutator } from '$lib/server/auth';
+import { t } from '$lib/i18n';
 import { getSprayer, recordWinterization, type WinterizeStep } from '$lib/server/sprayers';
 
 const ALLOWED_KINDS = new Set(['decon', 'maintenance', 'inspection']);
 
 export const POST: RequestHandler = async (event) => {
   const user = requireMutator(event);
+  if (user.role !== 'owner') {
+    return json(
+      { error: t(event.locals?.locale, 'equip.api.winterizeOwnerOnly'), askOwner: true },
+      { status: 403 }
+    );
+  }
   const id = event.params.id;
   if (!id || !getSprayer(id)) {
-    return json({ error: 'unknown sprayer id' }, { status: 404 });
+    return json({ error: t(event.locals?.locale, 'api.errB.unknownSprayerId') }, { status: 404 });
   }
 
   const body = (await event.request.json().catch(() => ({}))) as {
@@ -49,7 +57,7 @@ export const POST: RequestHandler = async (event) => {
   }
 
   if (steps.length === 0) {
-    return json({ error: 'no winterization steps supplied' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.errB.noWinterizeSteps') }, { status: 400 });
   }
 
   const updated = recordWinterization(id, steps, { performedById: user.id });

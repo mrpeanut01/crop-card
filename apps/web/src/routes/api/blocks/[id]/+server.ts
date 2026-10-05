@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * GET    /api/blocks/:id  — fetch one block with its plantings
  * PATCH  /api/blocks/:id  — edit name/acres/blockLabel/fieldId (Phase 13)
@@ -25,33 +26,36 @@ import { farmTimeZone } from '$lib/db/userProfile';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 
 export const GET: RequestHandler = (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const block = getBlock(event.params.id);
-  if (!block) throw error(404, 'block not found');
+  if (!block) throw error(404, t(event.locals?.locale, 'api.err.blockNotFound'));
   return json({ block });
 };
 
 export const _requestSchema = blockPatchSchema;
 
 export const PATCH: RequestHandler = async (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const user = requireOwner(event);
   const block = getBlock(event.params.id);
-  if (!block) throw error(404, 'block not found');
+  if (!block) throw error(404, t(event.locals?.locale, 'api.err.blockNotFound'));
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = blockPatchSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const newArea = parsed.data.fieldId ? getField(parsed.data.fieldId) : undefined;
   if (parsed.data.fieldId && !newArea) {
-    return json({ error: 'unknown fieldId' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.err.unknownFieldId') }, { status: 400 });
   }
   if (newArea && newArea.id !== block.fieldId) {
     const refusal = await blockReassignRefusal(block.id, farmTimeZone());
@@ -108,17 +112,17 @@ export const PATCH: RequestHandler = async (event) => {
 };
 
 export const DELETE: RequestHandler = async (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const user = requireOwner(event);
   const block = getBlock(event.params.id);
-  if (!block) throw error(404, 'block not found');
+  if (!block) throw error(404, t(event.locals?.locale, 'api.err.blockNotFound'));
   const held = await blocksDeleteRefusal(block.fieldId ?? null, [block.id], farmTimeZone());
   if (held) return json(held, { status: 409 });
   if (event.url.searchParams.get('ifEmpty') === '1') {
     if (blockHasRecords(block.id)) {
       return json(
         {
-          error: `${block.name} has records, so it stays. Delete it from the Plan page if you really mean it.`,
+          error: t(event.locals?.locale, 'api.err.blockHasRecords', { name: block.name }),
           code: 'BED_HAS_RECORDS'
         },
         { status: 409 }

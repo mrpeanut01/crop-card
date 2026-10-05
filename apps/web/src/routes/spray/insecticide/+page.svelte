@@ -24,6 +24,7 @@
   import { checkNearbyPollinatorBlocks } from '$lib/pollinator/nearbyBlocks';
   import { pollinatorLabelText } from '$lib/pollinator/labelText';
   import { sunTimesFor } from '$lib/safety/sunTimes';
+  import { checkIpmThreshold } from '$lib/safety/ipmThreshold';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { createT } from '$lib/i18n';
   import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
@@ -118,7 +119,26 @@
   // also enforces this server-side (HTTP 422 IPM_THRESHOLD_NOT_MET) — the
   // gate here is a glove-operability layer so the operator gets an
   // immediate blocker instead of a network round-trip on submit.
-  const ipmBlocked = $derived(!!primaryThreshold && !ipmTriggered);
+  // Mirrors the server: the latest observation of any declared threshold,
+  // including the one typed on this page, must reach it.
+  const ipmBlocked = $derived.by(() => {
+    if (!selectedInsecticide || selectedInsecticide.scoutingThresholds.length === 0) return false;
+    const recent = [...(data.scoutLogByBlock[selectedBlockId] ?? [])];
+    if (scoutPest && scoutValue !== null) {
+      recent.push({ pest: scoutPest, metric: scoutMetric, value: scoutValue, occurredAt: nowMs });
+    }
+    return (
+      checkIpmThreshold(
+        [
+          {
+            pluginId: selectedInsecticide.pluginId,
+            scoutingThresholds: selectedInsecticide.scoutingThresholds
+          }
+        ],
+        recent
+      ).length > 0
+    );
+  });
 
   // #130 — pollinator-protection gate. Same pure kernel evaluator the
   // server runs; the server re-checks on submit (422 POLLINATOR_BLOCK).
@@ -177,7 +197,7 @@
   const stepperData = $derived.by<Array<{ label: string; state: StepState }>>(() => {
     const hasBlock = !!selectedBlockId;
     const hasProduct = !!selectedPluginId;
-    const ipmReady = !primaryThreshold || ipmTriggered;
+    const ipmReady = !ipmBlocked;
     const hasObservation = !!scoutPest && scoutValue !== null;
     return [
       { label: tr('sprayui.step.block'), state: hasBlock ? 'done' : 'active' },

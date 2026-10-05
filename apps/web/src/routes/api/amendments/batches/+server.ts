@@ -29,7 +29,7 @@ export const GET: RequestHandler = async (event) => {
 
 export const POST: RequestHandler = async (event) => {
   const user = requireMutator(event);
-  const body = await readJson(event.request);
+  const body = await readJson(event.request, event.locals?.locale);
   if (body instanceof Response) return body;
   const parsed = batchCreateSchema.safeParse(body);
   if (!parsed.success) return invalidBody(localIssues(parsed.error.issues, event.locals?.locale));

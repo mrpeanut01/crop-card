@@ -8,6 +8,7 @@ import { recordCall } from '$lib/server/aiGuard';
 import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import { getRegistry } from '$lib/server/registry';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { t } from '$lib/i18n';
 
 const bodySchema = z.object({
   afterCropId: z.string().min(1)
@@ -19,15 +20,19 @@ export const POST: RequestHandler = async (event) => {
   try {
     raw = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = bodySchema.safeParse(raw);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
 
   const prior = getCrop(parsed.data.afterCropId);
-  if (!prior) return json({ error: 'crop not found' }, { status: 404 });
+  if (!prior)
+    return json({ error: t(event.locals?.locale, 'api.errB.cropNotFound') }, { status: 404 });
   const registry = await getRegistry();
   const priorPlugin = registry.get(prior.cropPluginId)?.plugin as CropPlugin | undefined;
   const priorFamily = priorPlugin?.cropFamily ?? 'unknown';

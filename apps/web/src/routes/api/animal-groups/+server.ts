@@ -1,9 +1,10 @@
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { listAnimalGroups } from '$lib/db/animalGroups';
 import { getField } from '$lib/db/fields';
 import { animalGroupCreateSchema } from '$lib/animals/apiSchemas';
 import { requireOwner } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { createGroupWithMembers, getSpecies, parseBody, ruleResponse } from '$lib/server/animals';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { grazingPlacementGate } from '$lib/server/grazingGate';
@@ -13,9 +14,10 @@ import { seedSpeciesCarePlans } from '$lib/server/carePlans';
 const LIST_STATUSES = ['active', 'archived', 'all'] as const;
 type ListStatus = (typeof LIST_STATUSES)[number];
 
-export const GET: RequestHandler = ({ url }) => {
+export const GET: RequestHandler = ({ url, locals }) => {
   const status = (url.searchParams.get('status') ?? 'active') as ListStatus;
-  if (!LIST_STATUSES.includes(status)) return json({ error: 'unknown status' }, { status: 400 });
+  if (!LIST_STATUSES.includes(status))
+    return json({ error: t(locals?.locale, 'api.err.unknownStatus') }, { status: 400 });
   return json({
     groups: listAnimalGroups({
       status,
@@ -29,13 +31,18 @@ export const _requestSchema = animalGroupCreateSchema;
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
-  const body = await parseBody(event.request, animalGroupCreateSchema);
+  const body = await parseBody(event.request, animalGroupCreateSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const input = body.data;
-  const foreign = rejectForeignRefs(['housingFieldId', input.housingFieldId, getField]);
+  const foreign = rejectForeignRefsIn(event.locals?.locale, [
+    'housingFieldId',
+    input.housingFieldId,
+    getField
+  ]);
   if (foreign) return foreign;
   const species = await getSpecies(input.speciesId);
-  if (!species) return json({ error: 'unknown speciesId' }, { status: 400 });
+  if (!species)
+    return json({ error: t(event.locals?.locale, 'api.err.unknownSpecies') }, { status: 400 });
   const now = Date.now();
   const gate = await grazingPlacementGate(
     {

@@ -66,12 +66,17 @@ describe('deriveSeasonGlance', () => {
 });
 
 describe('startOfYear', () => {
-  it('returns Jan 1 of the current year', () => {
-    const sot = startOfYear(new Date('2026-05-24T15:00:00').getTime());
-    const d = new Date(sot);
-    expect(d.getMonth()).toBe(0);
-    expect(d.getDate()).toBe(1);
-    expect(d.getFullYear()).toBe(2026);
-    expect(d.getHours()).toBe(0);
+  it('returns Jan 1 00:00 on the farm calendar, not the server one', () => {
+    const ny = 'America/New_York';
+    expect(startOfYear(Date.parse('2026-05-24T15:00:00Z'), ny)).toBe(
+      Date.parse('2026-01-01T05:00:00Z')
+    );
+    // 2027-01-01 03:00 UTC is still Dec 31 2026 on a Virginia farm.
+    expect(startOfYear(Date.parse('2027-01-01T03:00:00Z'), ny)).toBe(
+      Date.parse('2026-01-01T05:00:00Z')
+    );
+    expect(startOfYear(Date.parse('2027-01-01T03:00:00Z'), 'Asia/Tokyo')).toBe(
+      Date.parse('2026-12-31T15:00:00Z')
+    );
   });
 });

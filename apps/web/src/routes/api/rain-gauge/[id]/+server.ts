@@ -8,15 +8,17 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { deleteRainGaugeReading, getRainGaugeReading } from '$lib/db/irrigation';
 import { requireUser } from '$lib/server/auth';
 import { canRemoveLog } from '$lib/server/irrigationApi';
+import { t } from '$lib/i18n';
 
 export const DELETE: RequestHandler = (event) => {
   const user = requireUser(event);
   const row = getRainGaugeReading(event.params.id ?? '');
-  if (!row) return json({ error: 'No such gauge reading' }, { status: 404 });
+  if (!row)
+    return json({ error: t(event.locals?.locale, 'today.watering.err.noGauge') }, { status: 404 });
   if (!canRemoveLog(user, row.recordedById)) {
     return json(
       {
-        error: 'Only the owner or the person who entered it can remove it. Ask the owner.',
+        error: t(event.locals?.locale, 'today.watering.err.removeGauge'),
         askOwner: true
       },
       { status: 403 }

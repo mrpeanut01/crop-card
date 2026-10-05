@@ -435,6 +435,7 @@ export const esGarden: Partial<Record<MessageKey, string>> = {
     '{name} ya está en la tierra, así que su fecha no puede pasar de hoy. Mejor registra una siembra nueva.',
   'gardenlib.place.spotPastEdge': 'Ese lugar se sale del borde de {bed}.',
   'gardenlib.place.runsPast': '{name} se sale del borde de {bed}.',
+  'gardenlib.place.unknownPlugin': 'cultivo de la biblioteca desconocido {id}',
   'gardenlib.layout.areaTooSmall':
     '{name} no puede hacerse tan pequeño. Esto quedaría fuera del nuevo borde: {names}. Primero mueve {them}.',
   'gardenlib.layout.it': 'esa cama',

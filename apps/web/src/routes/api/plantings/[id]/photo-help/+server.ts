@@ -11,6 +11,7 @@ import {
 import { answerPhotoHelp } from '$lib/server/photoHelp';
 import { getRegistry } from '$lib/server/registry';
 import { sprayTermsFor } from '$lib/server/sprayTerms';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = photoHelpSchema;
 
@@ -21,13 +22,13 @@ export const POST: RequestHandler = async (event) => {
   const who = await journalWriter(event);
   if (!who.ok) return who.response;
   const parsed = photoHelpSchema.safeParse(await readJson(event));
-  if (!parsed.success) return badRequest(parsed.error);
+  if (!parsed.success) return badRequest(parsed.error, event.locals?.locale);
   if (parsed.data.question === 'other' && !parsed.data.text.trim()) {
-    return json({ error: 'Type a question or pick one of the chips.' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'cardsui.photo.needQuestion') }, { status: 400 });
   }
-  const crop = cropOr404(event.params.id);
+  const crop = cropOr404(event.params.id, event.locals?.locale);
   if (crop instanceof Response) return crop;
-  const photo = cleanPhoto(parsed.data.photo);
+  const photo = cleanPhoto(parsed.data.photo, event.locals?.locale);
   if (!photo.ok) return photo.response;
 
   const registry = await getRegistry();

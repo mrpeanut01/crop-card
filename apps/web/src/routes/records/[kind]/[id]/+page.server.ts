@@ -15,12 +15,13 @@
 import { error } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
-import { listSprayEvents, evaluateLock as evaluateSprayLock } from '$lib/db/sprayEvents';
-import { listInsecticideEvents } from '$lib/db/insecticideEvents';
+import { evaluateLock as evaluateSprayLock, getSprayEvent } from '$lib/db/sprayEvents';
+import { getInsecticideEvent } from '$lib/db/insecticideEvents';
 import type { PollinatorAttestation } from '$lib/records/pollinatorAttestation';
-import { listFungicideEvents } from '$lib/db/fungicideEvents';
-import { listScoutObservations } from '$lib/db/scoutObservations';
+import { getFungicideEvent } from '$lib/db/fungicideEvents';
+import { getScoutObservation } from '$lib/db/scoutObservations';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
+import { getCutting } from '$lib/db/hayCuttings';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/server/sprayers';
 import { db } from '$lib/db/client';
@@ -65,7 +66,7 @@ export const load: PageServerLoad = async (event) => {
   let pollinator: PollinatorAttestation | null = null;
 
   if (kind === 'spray') {
-    const ev = listSprayEvents({ limit: 10_000 }).find((e) => e.id === rowId);
+    const ev = getSprayEvent(rowId);
     if (!ev) throw error(404, 'spray record not found');
     occurredAt = ev.occurredAt;
     lockedAt = ev.lockedAt ?? evaluateSprayLock(ev);
@@ -81,7 +82,7 @@ export const load: PageServerLoad = async (event) => {
       customRateOverride: ev.customRateOverride
     };
   } else if (kind === 'insecticide') {
-    const ev = listInsecticideEvents({ limit: 10_000 }).find((e) => e.id === rowId);
+    const ev = getInsecticideEvent(rowId);
     if (!ev) throw error(404, 'insecticide record not found');
     occurredAt = ev.occurredAt;
     lockedAt = ev.lockedAt;
@@ -103,7 +104,7 @@ export const load: PageServerLoad = async (event) => {
       preHarvestClearAt: ev.preHarvestClearAt
     };
   } else if (kind === 'fungicide') {
-    const ev = listFungicideEvents({ limit: 10_000 }).find((e) => e.id === rowId);
+    const ev = getFungicideEvent(rowId);
     if (!ev) throw error(404, 'fungicide record not found');
     occurredAt = ev.occurredAt;
     lockedAt = ev.lockedAt;
@@ -119,7 +120,7 @@ export const load: PageServerLoad = async (event) => {
       preHarvestClearAt: ev.preHarvestClearAt
     };
   } else if (kind === 'scout') {
-    const ev = listScoutObservations({ limit: 10_000 }).find((e) => e.id === rowId);
+    const ev = getScoutObservation(rowId);
     if (!ev) throw error(404, 'scout record not found');
     occurredAt = ev.occurredAt;
     locked = isLocked(occurredAt, undefined, now);
@@ -141,6 +142,23 @@ export const load: PageServerLoad = async (event) => {
       cropPluginId: ev.cropPluginId,
       quantity: ev.quantity,
       lotNumber: ev.lotNumber
+    };
+  } else if (kind === 'hay') {
+    const c = getCutting(rowId);
+    if (!c) throw error(404, 'hay record not found');
+    occurredAt = c.mowAt ?? c.baleAt ?? c.storedAt ?? c.createdAt;
+    locked = isLocked(occurredAt, undefined, now);
+    performerLabel = performerEmail(c.performedById);
+    detail = {
+      blockLabel: blockLabelById.get(c.blockId) ?? c.blockId,
+      cropPluginId: c.cropPluginId,
+      cuttingNumber: c.cuttingNumber,
+      status: c.status,
+      baleType: c.baleType,
+      balesQuantity: c.balesQuantity,
+      baleMoisturePct: c.baleMoisturePct,
+      rulesVersion: c.rulesVersion,
+      notes: c.notes
     };
   } else if (kind === 'fertility') {
     const row = db
@@ -201,6 +219,7 @@ export const load: PageServerLoad = async (event) => {
       payloadJson: row.payloadJson
     };
   }
+  if (!detail) throw error(404, 'record not found');
 
   return {
     kind,

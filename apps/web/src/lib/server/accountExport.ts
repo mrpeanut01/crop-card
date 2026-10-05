@@ -127,17 +127,21 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
   const hayCuttings = listCuttings({});
 
   // API-token METADATA only — never the plaintext token or its hash.
+  // Listing a farm's tokens is owner-only (GET /api/auth/token), so anyone
+  // else's export carries only their own.
   const apiTokens = user.activeOwnerId
-    ? listTokensForOwner(user.activeOwnerId).map((t) => ({
-        id: t.id,
-        label: t.label,
-        userId: t.userId,
-        isServiceAccount: t.isServiceAccount,
-        createdAt: new Date(t.createdAt).toISOString(),
-        lastUsedAt: t.lastUsedAt ? new Date(t.lastUsedAt).toISOString() : null,
-        requestCount: t.requestCount,
-        revokedAt: t.revokedAt ? new Date(t.revokedAt).toISOString() : null
-      }))
+    ? listTokensForOwner(user.activeOwnerId)
+        .filter((t) => user.role === 'owner' || t.userId === user.id)
+        .map((t) => ({
+          id: t.id,
+          label: t.label,
+          userId: t.userId,
+          isServiceAccount: t.isServiceAccount,
+          createdAt: new Date(t.createdAt).toISOString(),
+          lastUsedAt: t.lastUsedAt ? new Date(t.lastUsedAt).toISOString() : null,
+          requestCount: t.requestCount,
+          revokedAt: t.revokedAt ? new Date(t.revokedAt).toISOString() : null
+        }))
     : [];
 
   const journalPhotos = journalPhotoFacts();
@@ -216,16 +220,16 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
       calibratedGpa: s.calibratedGpa ?? null
     })),
     events: {
-      spray: listSprayEvents({ limit: 10_000 }),
-      insecticide: listInsecticideEvents({ limit: 10_000 }).map((e) => ({
+      spray: listSprayEvents(),
+      insecticide: listInsecticideEvents().map((e) => ({
         ...e,
         bloomStatus: e.bloomStatus ?? null,
         bloomStatusSource: e.bloomStatusSource ?? null,
         attestedNoForagers: e.attestedNoForagers ?? null,
         pollinatorVerdict: e.pollinatorVerdict ?? null
       })),
-      fungicide: listFungicideEvents({ limit: 10_000 }),
-      scout: listScoutObservations({ limit: 10_000 }),
+      fungicide: listFungicideEvents(),
+      scout: listScoutObservations(),
       harvest: listHarvestEvents(),
       fertility,
       planting,
@@ -240,7 +244,7 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
       photoBytes: journalPhotos.get(e.id)?.photoBytes ?? 0
     })),
     ...recordSections(user),
-    ...phase33Sections(),
+    ...phase33Sections(user),
     documents: documentSection(user),
     apiTokens,
     relatedDownloads: {

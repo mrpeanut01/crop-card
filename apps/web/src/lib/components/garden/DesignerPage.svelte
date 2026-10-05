@@ -13,7 +13,15 @@
   import PlantingEstablishment from '$lib/components/garden/PlantingEstablishment.svelte';
   import TimeScrubber from '$lib/components/garden/TimeScrubber.svelte';
   import { DesignerState, setDesigner } from '$lib/components/garden/designerState.svelte';
-  import { countOf, ft, longDate, parseYmd, shortDate, ymd } from '$lib/components/garden/format';
+  import {
+    countOf,
+    ft,
+    longDate,
+    parseYmd,
+    shortDate,
+    sizeLabel,
+    ymd
+  } from '$lib/components/garden/format';
   import { loadSnapshot } from '$lib/client/cardStore';
   import { designFromSnapshot } from '$lib/garden/design';
   import { areaKindLabel } from '$lib/farm/areaKinds';
@@ -60,7 +68,7 @@
 
   const areaName = $derived(d.canvas.name);
   const areaCardHref = $derived(cardHref('area', cardKey('area', d.canvas.areaId)));
-  const sizeText = $derived(`${ft(d.canvas.widthFt)}×${ft(d.canvas.lengthFt)} ft`);
+  const sizeText = $derived(sizeLabel(d.canvas.widthFt, d.canvas.lengthFt, currentPrefs().units));
   const areaKindText = $derived(
     data.areaKind === 'garden' || data.areaKind === 'greenhouse'
       ? tr(`garden.kind.${data.areaKind}` as MessageKey)
@@ -115,6 +123,7 @@
     const goOnline = () => {
       d.offline = false;
       if (data.offline) void invalidateAll();
+      else if (d.design.readOnlyReason === 'offline') void restoreOnlineDesign();
     };
     window.addEventListener('offline', goOffline);
     window.addEventListener('online', goOnline);
@@ -137,6 +146,15 @@
     } catch {
       /* no snapshot store in this browser: keep the page's own copy */
     }
+  }
+
+  /** Back online after the page swapped to the read-only offline copy:
+   *  fetch the design again so the owner can edit without a reload. */
+  async function restoreOnlineDesign(): Promise<void> {
+    await invalidateAll();
+    if (d.offline || data.offline) return;
+    d.design = data.design;
+    d.history = data.history;
   }
 
   function setView(v: 'canvas' | 'list'): void {

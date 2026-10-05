@@ -185,6 +185,7 @@ export function toxicSection(
     items: [...toxicLines(findings, plural), TOXIC_ADVICE],
     provenance: 'plugin',
     safety: true,
+    englishOnly: 'all',
     collapsible: true
   };
 }

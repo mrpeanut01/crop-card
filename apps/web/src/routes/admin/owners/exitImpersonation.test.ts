@@ -195,3 +195,61 @@ describe('admin/owners exitImpersonation action (#221)', () => {
     expect(auditRows(sa.id)).toHaveLength(0);
   });
 });
+
+describe('admin/owners impersonate action', () => {
+  function impersonateEvent(saId: string, saEmail: string, ownerId: string) {
+    const event = makeEvent({
+      id: saId,
+      email: saEmail,
+      phone: null,
+      isSuperadmin: true,
+      activeOwnerId: null,
+      activeRole: 'owner',
+      impersonating: false
+    });
+    const fd = new FormData();
+    fd.set('ownerId', ownerId);
+    (event as { request: Request }).request = new Request(
+      'http://localhost/admin/owners?/impersonate',
+      { method: 'POST', body: fd }
+    );
+    return event;
+  }
+
+  function impersonateRows(userId: string) {
+    return db
+      .select()
+      .from(superadminAudit)
+      .where(
+        and(eq(superadminAudit.superadminUserId, userId), eq(superadminAudit.action, 'impersonate'))
+      )
+      .all();
+  }
+
+  it('refuses an owner id that does not exist, with no session change or audit row', async () => {
+    const sa = seedUser(true);
+    const event = impersonateEvent(sa.id, sa.email, 'owner_does_not_exist');
+    const out = (await actions.impersonate(event as never)) as { status?: number };
+    expect(out?.status).toBe(404);
+    expect(readSession(event.cookies)?.impersonating).toBe(false);
+    expect(impersonateRows(sa.id)).toHaveLength(0);
+  });
+
+  it('impersonates an existing owner', async () => {
+    const target = seedOwner();
+    const sa = seedUser(true);
+    const event = impersonateEvent(sa.id, sa.email, target);
+    let thrown: unknown;
+    try {
+      await actions.impersonate(event as never);
+    } catch (e) {
+      thrown = e;
+    }
+    expect(isRedirect(thrown as never)).toBe(true);
+    expect(readSession(event.cookies)).toMatchObject({
+      impersonating: true,
+      activeOwnerId: target
+    });
+    expect(impersonateRows(sa.id)).toHaveLength(1);
+  });
+});

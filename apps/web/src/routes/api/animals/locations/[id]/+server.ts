@@ -27,7 +27,7 @@ export const DELETE: RequestHandler = async (event) => {
     return json({ error: t(event.locals?.locale, 'animallib.api.moveNotFound') }, { status: 404 });
   return json(
     result.reason === 'not-latest'
-      ? { error: 'Only the latest move can be removed.', code: 'NOT_LATEST' }
+      ? { error: t(event.locals?.locale, 'api.err.latestMoveOnly'), code: 'NOT_LATEST' }
       : {
           error: t(event.locals?.locale, 'animallib.api.moveChangedGroup'),
           code: 'GROUP_CHANGE'

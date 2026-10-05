@@ -113,11 +113,14 @@ export const GET: RequestHandler = async (event) => {
   const sprayerId = url.searchParams.get('sprayerId') ?? undefined;
   const { fromMs, toMs } = parseExportDateRange(url.searchParams, prefs);
 
-  const sprays = listSprayEvents({ blockId, sprayerId, fromMs, toMs, limit: 10_000 });
-  const insecticides = listInsecticideEvents({ blockId, fromMs, toMs, limit: 10_000 });
-  const fungicides = listFungicideEvents({ blockId, fromMs, toMs, limit: 10_000 });
-  const harvests = listHarvestEvents({ blockId, fromMs, toMs });
-  const hay = listHayForExport({ blockId, fromMs, toMs });
+  const sprays = listSprayEvents({ blockId, sprayerId, fromMs, toMs });
+  // A sprayer filter keeps only that sprayer's applications: harvest and
+  // hay rows have no sprayer, so they are left out (as in export.csv).
+  const onSprayer = (e: { sprayerId?: string | null }) => !sprayerId || e.sprayerId === sprayerId;
+  const insecticides = listInsecticideEvents({ blockId, fromMs, toMs }).filter(onSprayer);
+  const fungicides = listFungicideEvents({ blockId, fromMs, toMs }).filter(onSprayer);
+  const harvests = sprayerId ? [] : listHarvestEvents({ blockId, fromMs, toMs });
+  const hay = sprayerId ? [] : listHayForExport({ blockId, fromMs, toMs });
   const blocks = new Map(listBlocks().map((b) => [b.id, b]));
   const registry = await getRegistry();
 

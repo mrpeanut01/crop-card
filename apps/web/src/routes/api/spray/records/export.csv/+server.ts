@@ -42,7 +42,7 @@ export const GET: RequestHandler = async (event) => {
   const sprayerId = event.url.searchParams.get('sprayerId') ?? undefined;
   const blockId = event.url.searchParams.get('blockId') ?? undefined;
   const { fromMs, toMs } = parseExportDateRange(event.url.searchParams, prefs);
-  const events = listSprayEvents({ limit: 10_000, sprayerId, blockId, fromMs, toMs });
+  const events = listSprayEvents({ sprayerId, blockId, fromMs, toMs });
 
   // T1 / T2 — id → name lookups.
   const blockNameById = new Map(listBlocks().map((b) => [b.id, b.blockLabel ?? b.name]));

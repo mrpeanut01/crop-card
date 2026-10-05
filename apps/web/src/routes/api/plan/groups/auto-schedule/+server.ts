@@ -21,6 +21,7 @@ import { frostDatesForYear } from '$lib/schedule/settings';
 import { LOUDOUN_VA, soilTempEarliestDayMs } from '$lib/weather/normals';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
+import { t } from '$lib/i18n';
 
 const bodySchema = z.object({
   year: z.number().int().min(2000).max(2100).optional(),
@@ -42,7 +43,10 @@ export const POST: RequestHandler = async (event) => {
   }
   const parsed = bodySchema.safeParse(raw);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
 
   const year = parsed.data.year ?? getActivePlanningYear();
@@ -55,7 +59,7 @@ export const POST: RequestHandler = async (event) => {
         : null;
   const blocks = idFilter ? allBlocks.filter((b) => idFilter.has(b.id)) : allBlocks;
   if (blocks.length === 0) {
-    return json({ error: 'no blocks available' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.errB.noBlocks') }, { status: 400 });
   }
   const blockIdSet = new Set(blocks.map((b) => b.id));
 

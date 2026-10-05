@@ -40,6 +40,9 @@ import {
 } from '$lib/safety/userAddedRestrictionsFromStock';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer } from '$lib/server/sprayers';
+import { getBlock, type BlockWithPlantings } from '$lib/db/blocks';
+import { resolveSprayCrops, standingCropPluginIds } from '$lib/server/sprayCrops';
+import { t } from '$lib/i18n';
 
 const cropStageInput = z.object({
   cropPluginId: z.string().min(1),
@@ -60,6 +63,8 @@ const sprayerInput = z.union([
 
 const requestSchema = z.object({
   occurredAt: z.number().int().optional(),
+  /** The block being sprayed: its plantings on file join the crops below. */
+  blockId: z.string().min(1).optional(),
   blockCrops: z.object({
     primary: cropStageInput,
     coPlanted: z.array(cropStageInput).optional()
@@ -86,19 +91,19 @@ const requestSchema = z.object({
     .optional()
 });
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
 
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -130,7 +135,10 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   if (missing.length > 0) {
-    return json({ error: 'unknown herbicide pluginIds', missing }, { status: 404 });
+    return json(
+      { error: t(locals?.locale, 'api.errB.unknownHerbicidePlugins'), missing },
+      { status: 404 }
+    );
   }
 
   // Hydrate sprayer state from server when the caller passes just an id;
@@ -150,18 +158,26 @@ export const POST: RequestHandler = async ({ request }) => {
     sprayerState = parsed.data.sprayer as SprayContext['sprayer'];
   }
 
-  // Fill cropFamily + traits from registry if the caller didn't supply them.
-  const enrichCrop = (c: z.infer<typeof cropStageInput>) => ({
-    ...c,
-    cropFamily: c.cropFamily ?? registry.cropFamilyOf(c.cropPluginId),
-    traits: registry.cropTraitsOf(c.cropPluginId)
-  });
+  // FR-03: the block's plantings on file join the crops the caller names,
+  // and the registry's crop families win over the caller's.
+  const occurredAt = parsed.data.occurredAt ?? Date.now();
+  let plantings: BlockWithPlantings['plantings'] = [];
+  if (parsed.data.blockId) {
+    const block = getBlock(parsed.data.blockId);
+    if (!block) return json({ error: t(locals?.locale, 'api.errB.unknownBlock') }, { status: 404 });
+    plantings = block.plantings;
+  }
+  const crops = resolveSprayCrops(
+    parsed.data.blockCrops,
+    standingCropPluginIds(plantings, occurredAt),
+    registry
+  );
 
   const ctx: SprayContext = {
-    occurredAt: parsed.data.occurredAt ?? Date.now(),
+    occurredAt,
     products,
-    crop: enrichCrop(parsed.data.blockCrops.primary),
-    coPlantedCrops: parsed.data.blockCrops.coPlanted?.map(enrichCrop),
+    crop: crops.primary,
+    coPlantedCrops: crops.coPlanted,
     sprayer: sprayerState,
     conditions: parsed.data.conditions
   };

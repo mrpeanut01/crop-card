@@ -1,5 +1,5 @@
 import { firstDayOfWeek } from '$lib/intlCache';
-import { formatCalendarDate, ymdInZone } from '$lib/prefs';
+import { dueYmd, formatCalendarDate, ymdInZone } from '$lib/prefs';
 import { t, t as translate } from '$lib/i18n';
 import {
   cardHref,
@@ -213,7 +213,7 @@ export function calendarEntry(
   timeZone: string,
   locale?: string | null
 ): CardCalendarEntry {
-  const overdue = ymdInZone(t.scheduledFor, timeZone) < todayYmd || undefined;
+  const overdue = dueYmd(t.scheduledFor, timeZone) < todayYmd || undefined;
   const person = t.assigneeUserId
     ? snapshot.people?.find((p) => p.id === t.assigneeUserId)
     : undefined;
@@ -337,14 +337,14 @@ function buildPeriodCard(
 
   const filters: CalendarFilters = { area: options.area ?? null, who: options.who ?? null };
   const inPeriod = sortTasks(snapshot.tasks).filter((t) => {
-    const ymd = ymdInZone(t.scheduledFor, tz);
+    const ymd = dueYmd(t.scheduledFor, tz);
     return ymd >= spec.firstYmd && ymd <= spec.lastYmd && ymd >= window.firstYmd;
   });
   const { tasks, farmWideHidden } = filterCalendarTasks(snapshot, inPeriod, filters);
 
   const byDay = new Map<string, CardCalendarEntry[]>();
   for (const t of tasks) {
-    const ymd = ymdInZone(t.scheduledFor, tz);
+    const ymd = dueYmd(t.scheduledFor, tz);
     const list = byDay.get(ymd) ?? [];
     list.push(calendarEntry(snapshot, t, today, tz, loc));
     byDay.set(ymd, list);
@@ -375,7 +375,7 @@ function buildPeriodCard(
     overflow
   };
 
-  const overdueCount = tasks.filter((t) => ymdInZone(t.scheduledFor, tz) < today).length;
+  const overdueCount = tasks.filter((t) => dueYmd(t.scheduledFor, tz) < today).length;
   const facts: CardFact[] = [
     {
       label: tr('cards.cal.openTasks'),

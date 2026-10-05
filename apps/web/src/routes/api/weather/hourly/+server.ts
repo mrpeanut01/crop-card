@@ -11,14 +11,16 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { currentUser } from '$lib/server/auth';
 import { getHourlyForecastSafely, resolveWeatherLocation } from '$lib/server/weatherHourly';
 import { deriveHourly } from '$lib/weather/leafWet';
+import { t } from '$lib/i18n';
 
 export const GET: RequestHandler = async (event) => {
   if (!currentUser(event)) {
-    return json({ error: 'authentication required' }, { status: 401 });
+    return json({ error: t(event.locals?.locale, 'api.errB.authRequired') }, { status: 401 });
   }
   const blockId = event.url.searchParams.get('blockId');
   const location = resolveWeatherLocation(blockId);
-  if (!location) return json({ error: 'block not found' }, { status: 404 });
+  if (!location)
+    return json({ error: t(event.locals?.locale, 'api.errB.blockNotFound') }, { status: 404 });
 
   const rawRainfast = event.url.searchParams.get('rainfastHours');
   const rainfastHours = rawRainfast === null ? undefined : Number(rawRainfast);
@@ -26,7 +28,7 @@ export const GET: RequestHandler = async (event) => {
     rainfastHours !== undefined &&
     (!Number.isFinite(rainfastHours) || rainfastHours <= 0 || rainfastHours > 72)
   ) {
-    return json({ error: 'rainfastHours must be in (0, 72]' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.errB.rainfastRange') }, { status: 400 });
   }
 
   const now = Date.now();

@@ -48,11 +48,14 @@ export const POST: RequestHandler = async (event) => {
   try {
     raw = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = bedLayoutRequestSchema.safeParse(raw);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const registry = await getRegistry();
   const crops: BedLayoutCrop[] = [];
@@ -63,7 +66,10 @@ export const POST: RequestHandler = async (event) => {
     seen.add(s.stockItemId);
     const item = getStockItem(s.stockItemId);
     if (!item || item.category !== 'seed') {
-      return json({ error: 'unknown seed', stockItemId: s.stockItemId }, { status: 404 });
+      return json(
+        { error: t(event.locals?.locale, 'api.errB.unknownSeed'), stockItemId: s.stockItemId },
+        { status: 404 }
+      );
     }
     const plugin = item.pluginId ? registry.get(item.pluginId)?.plugin : undefined;
     const crop = plugin && plugin.type === 'crop' ? plugin : undefined;

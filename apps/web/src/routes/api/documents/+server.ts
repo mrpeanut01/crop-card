@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * POST /api/documents — upload one file (raw body) into the farm's vault.
  * GET  /api/documents — list the documents the caller may read.
@@ -37,13 +38,13 @@ function queryObject(url: URL): Record<string, string> {
 export const POST: RequestHandler = async (event) => {
   const user = requireUser(event);
   if (user.role !== 'owner') {
-    return documentRefusal(403, 'OWNER_ONLY', 'Only the farm owner can upload documents.');
+    return documentRefusal(403, 'OWNER_ONLY', t(event.locals?.locale, 'api.err.uploadOwnerOnly'));
   }
   const parsed = documentUploadQuerySchema.safeParse(queryObject(event.url));
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         code: 'INVALID',
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
@@ -105,7 +106,7 @@ export const GET: RequestHandler = (event) => {
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         code: 'INVALID',
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },

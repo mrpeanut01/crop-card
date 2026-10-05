@@ -45,7 +45,8 @@ import { createTask, type RelatedEventTable } from '$lib/db/tasks';
 import { withTenant } from '$lib/db/tenant';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { t } from '$lib/i18n';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { insertPlanRevision } from '$lib/plan/revisions';
 import { getActiveSession, markSessionCompleted } from '$lib/db/wizardChat';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
@@ -132,9 +133,16 @@ function applicationBody(app: z.infer<typeof applicationSchema>, prefs: Prefs): 
 
 export const POST: RequestHandler = async (event) => {
   const auth = currentUser(event);
-  if (!auth) return json({ error: 'authentication required' }, { status: 401 });
+  if (!auth)
+    return json({ error: t(event.locals?.locale, 'api.errB.authRequired') }, { status: 401 });
   if (!canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
+  }
+  if (auth.role !== 'owner') {
+    return json({ error: t(event.locals?.locale, 'amend.err.ownerOnly') }, { status: 403 });
   }
   // Task text is stored and read by everyone on the farm, so it stays in
   // US/label units regardless of who commits the plan.
@@ -144,14 +152,14 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
 
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -171,7 +179,8 @@ export const POST: RequestHandler = async (event) => {
   const blockIds = new Set<string>();
   for (const a of parsed.data.applications) blockIds.add(a.blockId);
   for (const s of parsed.data.scoutTasks) blockIds.add(s.blockId);
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ...Array.from(blockIds, (id) => ['blockId', id, getBlock] as const)
   );
   if (foreign) return foreign;
@@ -191,7 +200,12 @@ export const POST: RequestHandler = async (event) => {
     });
     if (problems.length > 0) {
       return json(
-        { error: `Some picked products cannot be used: ${problems.join(' ')}`, problems },
+        {
+          error: t(event.locals?.locale, 'api.errB.productsUnusable', {
+            problems: problems.join(' ')
+          }),
+          problems
+        },
         { status: 422 }
       );
     }

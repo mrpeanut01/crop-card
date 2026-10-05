@@ -1,4 +1,6 @@
 import type { BedStyle } from '$lib/farm/areaKinds';
+import type { DisplayUnits } from '$lib/profile';
+import { UNITS } from '$lib/prefs';
 import { createT, type MessageKey, type Translator, type TranslateKey } from '$lib/i18n';
 import { plantingInGround, type GroundFacts } from '$lib/garden/inGround';
 import { familyLabel } from '$lib/garden/rotation';
@@ -56,8 +58,11 @@ export function feet(n: number, tr: Translator = EN): string {
   return tr('garden.feet', { count: Number(ft(n)), n: ft(n) });
 }
 
-export function sizeLabel(widthFt: number, lengthFt: number): string {
-  return `${ft(widthFt)}×${ft(lengthFt)} ft`;
+/** "4×8 ft", or "1.2×2.4 m" for a metric viewer; sizes are stored in feet. */
+export function sizeLabel(widthFt: number, lengthFt: number, units: DisplayUnits = 'us'): string {
+  if (units !== 'metric') return `${ft(widthFt)}×${ft(lengthFt)} ft`;
+  const m = UNITS.distance.toMetric;
+  return `${ft(m(widthFt))}×${ft(m(lengthFt))} m`;
 }
 
 export function bedStyleLabel(style: BedStyle, tr: Translator = EN): string {

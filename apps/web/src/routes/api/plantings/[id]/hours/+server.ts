@@ -13,10 +13,13 @@ import { t } from '$lib/i18n';
  */
 export const GET: RequestHandler = (event) => {
   const auth = currentUser(event);
-  if (!auth?.activeOwnerId) return json({ error: 'sign in first' }, { status: 401 });
-  if (auth.role !== 'owner') return json({ error: 'Owner role required.' }, { status: 403 });
+  if (!auth?.activeOwnerId)
+    return json({ error: t(event.locals?.locale, 'api.errB.signInFirst') }, { status: 401 });
+  if (auth.role !== 'owner')
+    return json({ error: t(event.locals?.locale, 'api.errB.ownerRoleRequired') }, { status: 403 });
   const id = event.params.id ?? '';
-  if (!getCrop(id)) return json({ error: 'planting not found' }, { status: 404 });
+  if (!getCrop(id))
+    return json({ error: t(event.locals?.locale, 'api.errB.plantingNotFound') }, { status: 404 });
   const rows = listTimeEntriesForCrop(id);
   const perUser = sumMinutes(rows, 'user');
   const names = memberNamesByIds([...perUser.keys()], event.locals?.locale);

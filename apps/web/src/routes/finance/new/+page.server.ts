@@ -12,7 +12,7 @@ import type { PageServerLoad } from './$types';
 import { requireMoneyWriter } from '$lib/finance/access';
 import { expenseCategoryForStock, type LedgerKind } from '$lib/finance/categories';
 import { formatMoney } from '$lib/finance/money';
-import { farmNames } from '$lib/finance/profit.server';
+import { currentSeasonYear, farmNames } from '$lib/finance/profit.server';
 import { entryFormOptions, harvestSummary, lotSummary } from '$lib/finance/formOptions.server';
 import type { EntryFormValue } from '$lib/finance/formTypes';
 import { liveExpenseForLot } from '$lib/db/ledger';
@@ -109,6 +109,6 @@ export const load: PageServerLoad = async (event) => {
     }
   }
 
-  const year = new Date(value.occurredAt).getUTCFullYear();
+  const year = currentSeasonYear(value.occurredAt);
   return { value, options, linkNote, alreadyExpensed, backHref: `/finance?year=${year}` };
 };

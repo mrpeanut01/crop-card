@@ -10,6 +10,9 @@
  * spray, without blocking anything.
  */
 
+import { zonedYearStartMs } from '$lib/exports/dateRange';
+import { DEFAULT_PREFS } from '$lib/prefs';
+
 export interface SprayerWinterizeInput {
   id: string;
   label: string;
@@ -29,10 +32,10 @@ export interface WinterizeAlert {
   uncalibrated: boolean;
 }
 
-/** Epoch-ms of Jan 1 (local) for the year containing `nowMs`. */
-export function startOfSeason(nowMs: number): number {
-  const d = new Date(nowMs);
-  return new Date(d.getFullYear(), 0, 1).getTime();
+/** Epoch-ms of Jan 1 on the farm's calendar (pass `farmTimeZone()`) for
+ *  the year containing `nowMs`. */
+export function startOfSeason(nowMs: number, timeZone: string): number {
+  return zonedYearStartMs(nowMs, timeZone);
 }
 
 function lastActivity(s: SprayerWinterizeInput): number {
@@ -49,9 +52,11 @@ export function deriveWinterizeAlerts(
   nowMs: number = Date.now(),
   /** Sprayers known to have been used before this season. When given, a
    *  sprayer new this season (nothing to winterize yet) is left out. */
-  usedBeforeSeason?: ReadonlySet<string>
+  usedBeforeSeason?: ReadonlySet<string>,
+  /** The farm's zone (`farmTimeZone()`), so the season starts on its Jan 1. */
+  timeZone: string = DEFAULT_PREFS.timeZone
 ): WinterizeAlert[] {
-  const seasonStart = startOfSeason(nowMs);
+  const seasonStart = startOfSeason(nowMs, timeZone);
   const alerts: WinterizeAlert[] = [];
   for (const s of sprayers) {
     const touchedThisSeason = lastActivity(s) >= seasonStart;

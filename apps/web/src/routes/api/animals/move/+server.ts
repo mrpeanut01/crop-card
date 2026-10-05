@@ -7,7 +7,7 @@ import { hasClientRecordId, withClientRecordId } from '$lib/server/clientRecordI
 import {
   assertAnimalSubject,
   firstUnknownRef,
-  rejectForeignRefs,
+  rejectForeignRefsIn,
   type ForeignRef
 } from '$lib/server/foreignRefs';
 import { guardedHoldWrite } from '$lib/server/holdGuard';
@@ -32,14 +32,15 @@ export const _requestSchema = animalMoveSchema;
  *  helper to get the owner. */
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const user = requireMutator(event);
-  const body = await parseBody(event.request, animalMoveSchema);
+  const body = await parseBody(event.request, animalMoveSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const input = body.data;
 
   if (firstUnknownRef(assertAnimalSubject('subjectId', input.subjectType, input.subjectId))) {
     return json({ error: unknownSubjectMessage, code: 'UNKNOWN_SUBJECT' }, { status: 400 });
   }
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    event.locals?.locale,
     ['fieldId', input.fieldId, getField],
     assertAnimalSubject('toGroupId', 'group', input.toGroupId),
     ...(input.animalIds ?? []).map((id): ForeignRef =>

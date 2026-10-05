@@ -61,9 +61,9 @@ export async function saveTaskTime(
     if (looksOffline(e)) return queue(payload, id);
     throw e;
   }
-  if (isUpdatingResponse(res)) {
+  if (res.status >= 500) {
     const out = await queue(payload, id);
-    scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
+    scheduleDrain(isUpdatingResponse(res) ? (retryAfterSeconds(res) + 2) * 1000 : 15_000);
     return out;
   }
   if (!res.ok) return { status: 'error', message: await errorMessage(res, locale) };

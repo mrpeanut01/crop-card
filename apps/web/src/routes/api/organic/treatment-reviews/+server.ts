@@ -22,13 +22,19 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = treatmentReviewSchema.safeParse(body);
   if (!parsed.success) return invalidBody(parsed.error.issues);
   const input = parsed.data;
   if (!getHealthEvent(input.healthEventId)) {
-    return json({ error: 'unknown healthEventId' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'api.errB.unknownHealthEventId') },
+      { status: 400 }
+    );
   }
   const plugins = await organicHealthPlugins();
   const row = organicTreatmentOutcomes({ plugins }).find(

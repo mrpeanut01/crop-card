@@ -198,9 +198,7 @@
    *  recordSpray when the operator commits a multi-block pass. */
   type RecordOutcome =
     | { kind: 'created'; eventId: string }
-    | { kind: 'updated'; eventId: string }
     | { kind: 'skipped-stop' }
-    | { kind: 'skipped-locked' }
     | { kind: 'failed'; error: string };
   let recordOutcomes = $state<Map<string, RecordOutcome>>(new Map());
 
@@ -412,7 +410,7 @@
    * Phase 21b follow-up — dynamic safety + dilution re-evaluation.
    * Replaces the "Check safety" button: any change to the inputs that
    * affect the kernel verdict (blocks, herbicides, sprayer, tank
-   * size, corn height) re-fires evaluate() after a short debounce.
+   * size, corn height, conditions) re-fires evaluate() after a short debounce.
    * Recording stays an explicit click — the operator confirms the
    * Spray Card before persisting.
    *
@@ -426,6 +424,9 @@
   // would create an infinite reschedule loop on every herbicide /
   // block click).
   let evalDebounceHandle: ReturnType<typeof setTimeout> | null = null;
+  // Plain counter: only the newest evaluate() may write its verdict, so a
+  // slow response for an older selection never replaces a newer one.
+  let evalSeq = 0;
   $effect(() => {
     // Read every input the kernel cares about so Svelte's reactivity
     // wires this effect to all of them. Order matters: declare in
@@ -434,11 +435,20 @@
     // touch shared form fields
     void tankSizeGallons;
     void cornHeightIn;
+    void windMph;
+    void tempF;
+    void rainMm;
+    void selectedHerbicideIds.join(',');
     if (!inputsReady) {
+      evalSeq++;
+      if (evalDebounceHandle) clearTimeout(evalDebounceHandle);
+      evalDebounceHandle = null;
+      evaluating = false;
       result = null;
       perBlockResults = new Map();
       return;
     }
+    evalSeq++;
     if (evalDebounceHandle) clearTimeout(evalDebounceHandle);
     evalDebounceHandle = setTimeout(() => {
       evalDebounceHandle = null;
@@ -478,6 +488,7 @@
 
   async function evaluate() {
     if (selectedBlocks.length === 0 || selectedHerbicideIds.length === 0 || !sprayer) return;
+    const seq = ++evalSeq;
     evaluating = true;
     lastError = null;
     result = null;
@@ -490,6 +501,7 @@
       const calls = selectedBlocks.map(async (b) => {
         const blockCrops = buildKernelCropsFor(b);
         const body = {
+          blockId: b.id,
           blockCrops,
           productPluginIds: selectedHerbicideIds,
           sprayer: { id: sprayer.id },
@@ -508,6 +520,7 @@
         return { blockId: b.id, evalResult: (await res.json()) as EvaluateResult };
       });
       const outcomes = await Promise.allSettled(calls);
+      if (seq !== evalSeq) return;
       const map = new Map<string, EvaluateResult>();
       const failures: string[] = [];
       for (const o of outcomes) {
@@ -529,9 +542,9 @@
         lastError = failures.join(' • ');
       }
     } catch (e) {
-      lastError = e instanceof Error ? e.message : String(e);
+      if (seq === evalSeq) lastError = e instanceof Error ? e.message : String(e);
     } finally {
-      evaluating = false;
+      if (seq === evalSeq) evaluating = false;
     }
   }
 
@@ -571,10 +584,7 @@
    * Phase 21b follow-up — multi-block record dispatcher. For each
    * selected block:
    *   • Skip if kernel said STOP (partial-OK policy).
-   *   • If block has an existing editable spray_event today (within
-   *     the 48h lock), PATCH it (the operator is refining a recent
-   *     record).
-   *   • Else POST a new spray_event.
+   *   • Else POST a new spray_event (a second pass is its own record).
    * Fires all in parallel; aggregates per-block outcomes into
    * `recordOutcomes` for the summary display.
    *
@@ -628,25 +638,12 @@
         continue;
       }
       try {
-        const existingId = b.existingEvent?.id;
-        const url = existingId
-          ? `/api/spray/record/${encodeURIComponent(existingId)}`
-          : '/api/spray/record';
-        const method = existingId ? 'PATCH' : 'POST';
-        // PATCH endpoint expects a slightly different body — no
-        // top-level `blockId` (the URL identifies the row). Build a
-        // PATCH-friendly variant by stripping it.
-        const patchBody = existingId
-          ? (({ blockId: _unused, sprayer: _sprayer, tankSizeGallons: _tank, ...rest }) => rest)(
-              body
-            )
-          : body;
-        const res = await fetch(url, {
-          method,
+        const res = await fetch('/api/spray/record', {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(patchBody)
+          body: JSON.stringify(body)
         });
-        if (!existingId && isUpdatingResponse(res)) {
+        if (isUpdatingResponse(res)) {
           const { enqueueSprayRecord, scheduleDrain } = await import('$lib/client/syncQueue');
           const queueId = await enqueueSprayRecord(body);
           scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
@@ -657,20 +654,13 @@
         }
         const respData = await res.json().catch(() => ({}));
         if (!res.ok) {
-          if (res.status === 409 && existingId) {
-            outcomes.set(b.id, { kind: 'skipped-locked' });
-          } else {
-            outcomes.set(b.id, {
-              kind: 'failed',
-              error: respData.error ?? `HTTP ${res.status}`
-            });
-          }
+          outcomes.set(b.id, {
+            kind: 'failed',
+            error: respData.error ?? `HTTP ${res.status}`
+          });
           continue;
         }
-        outcomes.set(b.id, {
-          kind: existingId ? 'updated' : 'created',
-          eventId: respData.event.id
-        });
+        outcomes.set(b.id, { kind: 'created', eventId: respData.event.id });
         await noteHoldWrite('herbicide', { blockId: b.id });
         if (respData.taskClose) taskOutcome = respData.taskClose;
       } catch (e) {
@@ -702,8 +692,7 @@
     // successful outcome — preserves the legacy single-block confirm
     // panel for deep-link / single-select flows.
     const successes = [...outcomes.values()].filter(
-      (o): o is RecordOutcome & { kind: 'created' | 'updated'; eventId: string } =>
-        o.kind === 'created' || o.kind === 'updated'
+      (o): o is RecordOutcome & { kind: 'created'; eventId: string } => o.kind === 'created'
     );
     if (successes.length === 1) {
       recordedId = successes[0].eventId;
@@ -910,13 +899,10 @@
               {/each}
             </ul>
           {/if}
-          {#if b.existingEvent}
-            <!-- Phase 21b follow-up — block has a still-editable spray
-                 event from earlier today. Recording will PATCH it
-                 instead of creating a duplicate. -->
+          {#if b.recentEvent}
             <p class="existing-event-tag">
-              {tr('sprayui.block.willUpdate')}
-              {fmt.instant(b.existingEvent.occurredAt, 'time')}
+              {tr('sprayui.block.sprayedRecently')}
+              {fmt.instant(b.recentEvent.occurredAt, 'datetime')}
             </p>
           {/if}
         </button>
@@ -1451,24 +1437,14 @@
               <span class="pb-name">{b.label}</span>
               {#if oc?.kind === 'created'}
                 <span class="pb-tag pb-ok">{tr('sprayui.card.created')}</span>
-              {:else if oc?.kind === 'updated'}
-                <span class="pb-tag pb-ok">{tr('sprayui.card.updated')}</span>
               {:else if oc?.kind === 'skipped-stop'}
                 <span class="pb-tag pb-stop" lang="en" data-english-only="safety"
                   >⛔ skipped (STOP)</span
                 >
-              {:else if oc?.kind === 'skipped-locked'}
-                <span class="pb-tag pb-stop" lang="en" data-english-only="safety"
-                  >🔒 skipped (locked &gt; 48h)</span
-                >
               {:else if oc?.kind === 'failed'}
                 <span class="pb-tag pb-stop">{tr('sprayui.card.failed', { error: oc.error })}</span>
               {:else if pr?.ok}
-                <span class="pb-tag pb-ok"
-                  >{b.existingEvent
-                    ? tr('sprayui.card.willUpdate')
-                    : tr('sprayui.card.willRecord')}</span
-                >
+                <span class="pb-tag pb-ok">{tr('sprayui.card.willRecord')}</span>
               {:else if pr && !pr.ok}
                 <span class="pb-tag pb-stop" lang="en" data-english-only="safety"
                   >⛔ STOP — {pr.violations[0]?.code ?? 'see violations'}</span

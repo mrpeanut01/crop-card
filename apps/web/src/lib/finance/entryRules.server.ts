@@ -15,7 +15,7 @@ import {
   assertField,
   assertHarvestEvent,
   assertStockLot,
-  rejectForeignRefs
+  rejectForeignRefsIn
 } from '$lib/server/foreignRefs';
 import { MAX_FUTURE_MS, ledgerEntryProblem } from './apiSchemas';
 import { t } from '$lib/i18n';
@@ -50,7 +50,8 @@ export function checkEntry(
   if (input.occurredAt > now + MAX_FUTURE_MS) {
     return json({ error: t(locale, 'finance.err.future'), code: 'IN_THE_FUTURE' }, { status: 400 });
   }
-  const foreign = rejectForeignRefs(
+  const foreign = rejectForeignRefsIn(
+    locale,
     assertCrop('cropId', input.cropId),
     assertField('fieldId', input.fieldId),
     assertBlock('blockId', input.blockId),

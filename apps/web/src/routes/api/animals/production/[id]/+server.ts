@@ -24,10 +24,10 @@ import { RULES_VERSION } from '$lib/safety/version';
 
 export const _requestSchema = productionPatchSchema;
 
-const locked = () =>
+const locked = (locale: string | null | undefined) =>
   json(
     {
-      error: 'This log is locked (48 hours have passed). It can only be changed to discarded.',
+      error: t(locale, 'api.err.logLocked'),
       code: 'RECORD_LOCKED'
     },
     { status: 409 }
@@ -42,7 +42,7 @@ const locked = () =>
  */
 export const PATCH: RequestHandler = async (event) => {
   const user = requireMutator(event);
-  const body = await parseBody(event.request, productionPatchSchema);
+  const body = await parseBody(event.request, productionPatchSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const log = getProductionLog(event.params.id ?? '');
   if (!log)
@@ -54,7 +54,8 @@ export const PATCH: RequestHandler = async (event) => {
   let warnings: ReturnType<typeof warningsFor> = [];
   if (!isSaferUseChange(log.use, use)) {
     const subject = resolveSubject(log.subjectType, log.subjectId);
-    if (evaluateProductionLock(log, subject?.foodProducing ?? true) !== undefined) return locked();
+    if (evaluateProductionLock(log, subject?.foodProducing ?? true) !== undefined)
+      return locked(event.locals?.locale);
     const male = milkFromMaleRefusal({ ...log, use });
     if (male) return male;
     const check = await gateProduction({
@@ -94,10 +95,10 @@ export const DELETE: RequestHandler = async (event) => {
   const force = event.url.searchParams.get('force') === 'true';
   const reason = event.url.searchParams.get('reason')?.trim().slice(0, 500) || null;
   if (lockedAt !== undefined) {
-    if (!force) return locked();
+    if (!force) return locked(event.locals?.locale);
     if (user.role !== 'owner') {
       return json(
-        { error: 'Only the owner can remove a locked log. Ask the owner.', code: 'OWNER_ONLY' },
+        { error: t(event.locals?.locale, 'api.err.lockedLogOwner'), code: 'OWNER_ONLY' },
         { status: 403 }
       );
     }

@@ -2,7 +2,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { getField } from '$lib/db/fields';
 import { createMapFeature, listMapFeatures } from '$lib/db/mapFeatures';
 import { requireOwner } from '$lib/server/auth';
-import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { parseKindFilter } from '$lib/farm/kindFilter';
 import { mapFeatureCreateSchema } from '$lib/farm/apiSchemas';
 import {
@@ -12,10 +12,12 @@ import {
   validateFeatureDetails
 } from '$lib/farm/mapFeatures';
 import { checkAreaIds } from '$lib/server/mapFeatureAreaIds';
+import { t } from '$lib/i18n';
 
-export const GET: RequestHandler = ({ url }) => {
+export const GET: RequestHandler = ({ url, locals }) => {
   const kinds = parseKindFilter(url.searchParams.get('kind'), MAP_FEATURE_KINDS);
-  if (kinds === 'invalid') return json({ error: 'unknown kind' }, { status: 400 });
+  if (kinds === 'invalid')
+    return json({ error: t(locals?.locale, 'api.errB.unknownKind') }, { status: 400 });
   const fieldId = url.searchParams.get('fieldId') ?? undefined;
   const all = listMapFeatures({ fieldId });
   return json({ mapFeatures: kinds ? all.filter((f) => kinds.includes(f.kind)) : all });
@@ -29,22 +31,25 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = _requestSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const { kind, name, fieldId } = parsed.data;
-  const geom = parseFeatureGeometry(kind, parsed.data.geometry);
+  const geom = parseFeatureGeometry(kind, parsed.data.geometry, event.locals?.locale);
   if (!geom.ok) return json({ error: geom.message }, { status: 400 });
-  const details = validateFeatureDetails(kind, parsed.data.details);
+  const details = validateFeatureDetails(kind, parsed.data.details, event.locals?.locale);
   if (!details.ok) return json({ error: details.message }, { status: 400 });
-  const foreign = rejectForeignRefs(['fieldId', fieldId, getField]);
+  const foreign = rejectForeignRefsIn(event.locals?.locale, ['fieldId', fieldId, getField]);
   if (foreign) return foreign;
   const areaIds = parsed.data.areaIds;
   if (areaIds !== undefined) {
-    const bad = checkAreaIds(kind, areaIds);
+    const bad = checkAreaIds(kind, areaIds, event.locals?.locale);
     if (bad) return bad;
   }
   const mapFeature = createMapFeature({

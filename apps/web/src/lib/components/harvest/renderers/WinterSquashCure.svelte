@@ -6,7 +6,7 @@
   import type { RendererProps } from './types';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
-  import { fmtQtyRange, usText } from './format';
+  import { fmtQtyRange, parseMoisturePct, usText } from './format';
 
   const props: RendererProps = $props();
   const tr = $derived(createT(page.data?.locale));
@@ -27,11 +27,11 @@
     const quantity = usText(totalLb) ? `${usText(totalLb)} lb` : input.quantity;
     const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
     // #322 — moisture also travels as a structured number so the kernel gate is reachable.
-    const moisture = parseFloat(moisturePct);
+    const moisture = parseMoisturePct(moisturePct);
     return props.onCommit({
       quantity,
       lotNumber: lot || undefined,
-      moisturePct: Number.isFinite(moisture) ? moisture : undefined
+      moisturePct: moisture
     });
   }
 </script>

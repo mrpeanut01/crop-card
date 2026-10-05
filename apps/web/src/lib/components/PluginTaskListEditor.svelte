@@ -98,11 +98,11 @@
     helpText: string;
     /** Which timing inputs to render. */
     variant: 'preTasks' | 'postTasks' | 'seasonalTasks';
-    /** Two-way bound array of rows. */
+    /** Two-way bound array of rows (`bind:rows`). */
     rows: PluginTaskRow[];
   }
 
-  const props: Props = $props();
+  let { label, helpText, variant, rows = $bindable() }: Props = $props();
 
   const SEASONAL_KINDS = [
     'spray',
@@ -121,29 +121,29 @@
       title: '',
       body: '',
       category: '',
-      ...(props.variant === 'seasonalTasks' ? { kind: 'cultural', windowDays: 7 } : {})
+      ...(variant === 'seasonalTasks' ? { kind: 'cultural', windowDays: 7 } : {})
     };
   }
 
   function addRow() {
-    props.rows.push(emptyRow());
+    rows.push(emptyRow());
   }
 
   function removeRow(i: number) {
-    props.rows.splice(i, 1);
+    rows.splice(i, 1);
   }
 </script>
 
 <section class="plugin-tasks-editor">
   <header class="head">
-    <h3>{props.label}</h3>
-    <p class="help">{props.helpText}</p>
+    <h3>{label}</h3>
+    <p class="help">{helpText}</p>
   </header>
 
-  {#if props.rows.length === 0}
-    <p class="empty">{tr('pluginui.tasks.empty', { variant: props.variant })}</p>
+  {#if rows.length === 0}
+    <p class="empty">{tr('pluginui.tasks.empty', { variant: variant })}</p>
   {:else}
-    {#each props.rows as row, i (i)}
+    {#each rows as row, i (i)}
       <div class="row card-tight">
         <div class="row-top">
           <label class="field flex-grow">
@@ -152,7 +152,7 @@
               type="text"
               bind:value={row.title}
               oninput={() => {
-                row.key = resolveKey(row, i, props.rows);
+                row.key = resolveKey(row, i, rows);
               }}
               placeholder={tr('pluginui.tasks.titlePh')}
             />
@@ -182,7 +182,7 @@
             </select>
           </label>
 
-          {#if props.variant === 'preTasks'}
+          {#if variant === 'preTasks'}
             <label class="field">
               <span class="label-text">{tr('pluginui.tasks.daysBeforePlant')}</span>
               <input type="number" min="0" bind:value={row.daysBeforePlant} />
@@ -191,7 +191,7 @@
               <span class="label-text">{tr('pluginui.tasks.daysBeforeHarvest')}</span>
               <input type="number" min="0" bind:value={row.daysBeforeFirstHarvest} />
             </label>
-          {:else if props.variant === 'postTasks'}
+          {:else if variant === 'postTasks'}
             <label class="field">
               <span class="label-text">{tr('pluginui.tasks.daysAfterPlant')}</span>
               <input type="number" min="0" bind:value={row.daysAfterPlant} />

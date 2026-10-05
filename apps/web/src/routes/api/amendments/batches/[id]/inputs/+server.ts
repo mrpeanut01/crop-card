@@ -17,7 +17,7 @@ import { invalidBody } from '$lib/organic/access.server';
 import { batchInputCreateSchema } from '$lib/amendments/apiSchemas';
 import { batchReaches } from '$lib/amendments/carryover';
 import { AMENDMENT_LOT_CATEGORIES } from '$lib/amendments/model';
-import { assertAnimalSubject, rejectForeignRefs } from '$lib/server/foreignRefs';
+import { assertAnimalSubject, rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { loadCarryoverData } from '$lib/server/amendmentChain';
 import {
   batchView,
@@ -35,7 +35,7 @@ export const POST: RequestHandler = async (event) => {
   const user = requireMutator(event);
   const batch = getBatch(event.params.id ?? '');
   if (!batch) return refusal(404, 'NOT_FOUND', t(event.locals?.locale, 'amend.api.batchNotFound'));
-  const body = await readJson(event.request);
+  const body = await readJson(event.request, event.locals?.locale);
   if (body instanceof Response) return body;
   const parsed = batchInputCreateSchema.safeParse(body);
   if (!parsed.success) return invalidBody(localIssues(parsed.error.issues, event.locals?.locale));
@@ -53,16 +53,21 @@ export const POST: RequestHandler = async (event) => {
   }
 
   if (input.inputType === 'animal' || input.inputType === 'group') {
-    const bad = rejectForeignRefs(assertAnimalSubject('inputId', input.inputType, input.inputId));
+    const bad = rejectForeignRefsIn(
+      event.locals?.locale,
+      assertAnimalSubject('inputId', input.inputType, input.inputId)
+    );
     if (bad) return bad;
   } else if (input.inputType === 'batch') {
-    if (!getBatch(input.inputId)) return json({ error: 'unknown inputId' }, { status: 400 });
+    if (!getBatch(input.inputId))
+      return json({ error: t(event.locals?.locale, 'api.err.unknownInputId') }, { status: 400 });
     if (batchReaches(listBatchInputs(), input.inputId, batch.id)) {
       return refusal(409, 'BATCH_CYCLE', t(event.locals?.locale, 'amend.api.cycle'));
     }
   } else {
     const lot = getAmendmentLot(input.inputId);
-    if (!lot) return json({ error: 'unknown inputId' }, { status: 400 });
+    if (!lot)
+      return json({ error: t(event.locals?.locale, 'api.err.unknownInputId') }, { status: 400 });
     if (!(AMENDMENT_LOT_CATEGORIES as readonly string[]).includes(lot.category)) {
       return refusal(
         400,

@@ -16,7 +16,8 @@
 
 import type { CalendarEvent } from '$lib/calendar/engine';
 import type { Task } from '$lib/db/tasks';
-import { formatCalendarDate } from '$lib/prefs';
+import { DEFAULT_TIME_ZONE } from '$lib/profile';
+import { dueYmd, formatDueDay, ymdInZone } from '$lib/prefs';
 import { t } from '$lib/i18n';
 import { taskDisplayTitle } from '$lib/tasks/title';
 
@@ -60,10 +61,8 @@ const DERIVED_TONE_MAP: Record<string, PriorityAction['toneTag']> = {
   'curing-ready': 'harvest'
 };
 
-function startOfToday(now = Date.now()): number {
-  const d = new Date(now);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
+function daysBetweenYmd(fromYmd: string, toYmd: string): number {
+  return Math.round((Date.parse(toYmd) - Date.parse(fromYmd)) / DAY_MS);
 }
 
 function ctaForTask(
@@ -127,30 +126,33 @@ export interface DerivePriorityInputs {
   now?: number;
   /** The viewer's language for the CTA and scope labels; English when unset. */
   locale?: string | null;
+  /** The owner's zone: what "today" is and which day a timed task falls on. */
+  timeZone?: string;
 }
 
 export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityAction | null {
   const now = inputs.now ?? Date.now();
   const locale = inputs.locale;
-  const dayStart = startOfToday(now);
-  const tomorrowEnd = dayStart + 2 * DAY_MS;
+  const timeZone = inputs.timeZone ?? DEFAULT_TIME_ZONE;
+  const prefs = { timeZone, units: 'us' as const, locale: locale ?? undefined };
+  const today = ymdInZone(now, timeZone);
 
   const candidates = [...inputs.openPrimaries]
-    .filter((t) => t.scheduledFor < tomorrowEnd)
+    .filter((t) => daysBetweenYmd(today, dueYmd(t.scheduledFor, timeZone)) <= 1)
     .sort((a, b) => a.scheduledFor - b.scheduledFor);
 
   const top = candidates[0];
   if (top) {
     const cta = ctaForTask(top, locale);
-    const overdueDays =
-      top.scheduledFor < dayStart ? Math.floor((dayStart - top.scheduledFor) / DAY_MS) : undefined;
+    const late = daysBetweenYmd(dueYmd(top.scheduledFor, timeZone), today);
+    const overdueDays = late > 0 ? late : undefined;
     const blockName = top.blockId ? inputs.blockNameById.get(top.blockId) : undefined;
     const scope: Array<[string, string]> = [];
     if (blockName) scope.push([t(locale, 'today.pa.scope.block'), blockName]);
     if (top.equipmentId) scope.push([t(locale, 'today.pa.scope.equipment'), top.equipmentId]);
     scope.push([
       t(locale, 'today.pa.scope.scheduled'),
-      formatCalendarDate(top.scheduledFor, 'month-day', { weekday: 'short' }, locale)
+      formatDueDay(top.scheduledFor, prefs, 'month-day', { weekday: 'short' })
     ]);
     return {
       kind: 'task',
@@ -169,7 +171,7 @@ export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityActi
 
   // Fall back to a derived event opening today (only user-actionable kinds).
   const dayEvents = inputs.derivedEvents
-    .filter((e) => e.startMs >= dayStart && e.startMs < dayStart + DAY_MS)
+    .filter((e) => dueYmd(e.startMs, timeZone) === today)
     .filter((e) => DERIVED_TONE_MAP[e.kind] !== undefined)
     .sort((a, b) => a.startMs - b.startMs);
   const ev = dayEvents[0];
@@ -181,7 +183,7 @@ export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityActi
     if (blockName) scope.push([t(locale, 'today.pa.scope.block'), blockName]);
     scope.push([
       t(locale, 'today.pa.scope.windowCloses'),
-      formatCalendarDate(ev.endMs, 'month-day', { weekday: 'short' }, locale)
+      formatDueDay(ev.endMs, prefs, 'month-day', { weekday: 'short' })
     ]);
     return {
       kind: 'derived',

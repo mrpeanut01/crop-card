@@ -26,7 +26,7 @@
   ];
   const ALWAYS_WORKS = $derived([
     tr('settings.ai.works.0'),
-    'Safety kernel + decon + retention logic are local and never call AI',
+    tr('settings.ai.works.1'),
     tr('settings.ai.works.2')
   ]);
 

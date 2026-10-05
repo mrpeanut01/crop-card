@@ -11,6 +11,7 @@
   import { reHarvestArchetype, reHarvestLabel } from '$lib/components/harvest/reHarvest';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { ymdInZone } from '$lib/prefs';
+  import { harvestYtdCsv } from '$lib/harvest/ytdCsv';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
   import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
@@ -273,19 +274,15 @@
   }
 
   function exportYtdCsv() {
-    const rows = [
-      ['Date', 'Block', 'Crop plugin', 'Quantity', 'Lot #'],
-      ...eventsYtd.map((e) => [
+    const csv = harvestYtdCsv(
+      eventsYtd.map((e) => [
         ymdInZone(e.occurredAt, currentPrefs().timeZone),
         e.blockName ?? e.blockId,
         e.cropPluginId,
         e.quantity ?? '',
         e.lotNumber ?? ''
       ])
-    ];
-    const csv = rows
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
+    );
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

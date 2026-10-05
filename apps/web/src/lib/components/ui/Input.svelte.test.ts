@@ -12,6 +12,21 @@ describe('Input', () => {
     expect(screen.getByLabelText('Field name')).toBeInTheDocument();
   });
 
+  it('two inputs get distinct default ids without crypto.randomUUID', () => {
+    const original = crypto.randomUUID;
+    Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true });
+    try {
+      render(Input, { label: 'First' });
+      render(Input, { label: 'Second' });
+      const a = screen.getByLabelText('First').id;
+      const b = screen.getByLabelText('Second').id;
+      expect(a).toMatch(/^input-/);
+      expect(a).not.toBe(b);
+    } finally {
+      Object.defineProperty(crypto, 'randomUUID', { value: original, configurable: true });
+    }
+  });
+
   it('renders a hint with aria-describedby pointing at it', () => {
     render(Input, { label: 'Acres', hint: 'In whole numbers' });
     const input = screen.getByLabelText('Acres');

@@ -3,6 +3,7 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { createT } from '$lib/i18n';
+  import { selectDeconProtocol } from '$lib/safety/deconProtocol';
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -20,7 +21,7 @@
     metricNote?: () => string;
   };
 
-  const STEPS: Step[] = [
+  const GENERIC_STEPS: Step[] = [
     {
       key: 'drain',
       title: 'Drain tank fully',
@@ -65,8 +66,28 @@
     }
   ];
 
+  // Paraquat, glufosinate and copper carry a stricter SOP than the ammonia
+  // soak (UC-45); walk that one when the sprayer last carried them.
+  const protocol = $derived(selectDeconProtocol(sprayer?.lastChemistryClass));
+  const STEPS = $derived<Step[]>(
+    protocol.strict
+      ? protocol.steps.map((body, i) => ({
+          key: `${protocol.id}-${i}`,
+          title: body.split(/[:.]/)[0],
+          body
+        }))
+      : GENERIC_STEPS
+  );
+
   let stepIndex = $state(0);
-  const currentStep = $derived(STEPS[stepIndex]);
+  const currentStep = $derived(STEPS[Math.min(stepIndex, STEPS.length - 1)]);
+
+  function restartSteps() {
+    stepIndex = 0;
+    stopTimer();
+    timerStartedAt = null;
+    timerSkipped = false;
+  }
 
   // 30-minute ammonia timer
   const TIMER_MS = 30 * 60 * 1000;
@@ -164,7 +185,7 @@
 
 <section class="step">
   <h2>{tr('sprayui.dc.sprayer')}</h2>
-  <select bind:value={selectedSprayerId}>
+  <select bind:value={selectedSprayerId} onchange={restartSteps}>
     {#each data.sprayers as s (s.id)}
       <option value={s.id}>{s.label}</option>
     {/each}
@@ -174,6 +195,13 @@
       {tr('sprayui.dc.lastCarried')} <strong>{sprayer.lastChemistryClass}</strong>
       {tr('sprayui.dc.at')}
       {sprayer.lastSprayedAt ? fmt.instant(sprayer.lastSprayedAt) : tr('sprayui.dc.unknown')}
+    </p>
+  {/if}
+
+  {#if protocol.strict}
+    <p class="warn" lang="en" data-english-only="safety" data-testid="decon-strict-protocol">
+      <strong>{protocol.label}.</strong>
+      {protocol.rationale}
     </p>
   {/if}
 

@@ -75,11 +75,16 @@
   // (free, no-quota) query so completions appear as the operator types.
   // The web tier stays opt-in behind the button below.
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+  // Only the newest search may write results: a slow answer for an older
+  // query (or one sent before the box was cleared) is dropped.
+  let searchSeq = 0;
   function onQueryInput(): void {
     clearTimeout(debounceTimer);
     searchError = null;
     const q = query.trim();
     if (q.length < 2) {
+      searchSeq++;
+      searching = false;
       candidates = [];
       searchSource = null;
       return;
@@ -89,11 +94,13 @@
   onDestroy(() => clearTimeout(debounceTimer));
 
   async function runSearch(includeWeb: boolean, silent = false): Promise<void> {
+    if (!silent) clearTimeout(debounceTimer);
     const q = query.trim();
     if (q.length < 2) {
       if (!silent) searchError = tr('stockui.search.min');
       return;
     }
+    const seq = ++searchSeq;
     searching = true;
     if (!silent) searchError = null;
     if (includeWeb) searchedWeb = true;
@@ -104,6 +111,7 @@
         body: JSON.stringify({ query: q, hintType, skipWebSearch: !includeWeb })
       });
       const body = await res.json();
+      if (seq !== searchSeq) return;
       if (!res.ok && !Array.isArray(body.candidates)) {
         if (!silent) searchError = body.error ?? tr('stockui.httpStatus', { status: res.status });
         return;
@@ -112,13 +120,16 @@
       searchSource = body.source ?? null;
       searchMeta = body.meta ?? null;
     } catch (e) {
+      if (seq !== searchSeq) return;
       if (!silent) searchError = e instanceof Error ? e.message : String(e);
     } finally {
-      searching = false;
+      if (seq === searchSeq) searching = false;
     }
   }
 
   function reset() {
+    searchSeq++;
+    searching = false;
     candidates = [];
     searchSource = null;
     searchMeta = null;

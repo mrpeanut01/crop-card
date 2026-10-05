@@ -115,3 +115,43 @@ describe('/spray/insecticide pollinator gate (#130)', () => {
     expect(recordButton()).not.toBeDisabled();
   });
 });
+
+describe('/spray/insecticide IPM gate mirrors the kernel', () => {
+  const threshold = { pest: 'aphid', metric: 'count-per-plant', threshold: 5 };
+  function ipmData(log: Array<{ value: number; occurredAt: number }>) {
+    const d = data({ beeToxicity: 'relatively-nontoxic', bloomRestriction: 'none' }, []);
+    d.insecticides[0].scoutingThresholds = [threshold] as never[];
+    (d as Record<string, unknown>).scoutLogByBlock = {
+      b1: log.map((o) => ({ pest: 'aphid', metric: 'count-per-plant', ...o }))
+    };
+    return d;
+  }
+
+  it('a latest count equal to the threshold clears the gate', () => {
+    render(Page, {
+      props: { data: ipmData([{ value: 5, occurredAt: Date.now() - 1000 }]) } as never
+    });
+    expect(recordButton()).not.toBeDisabled();
+  });
+
+  it('an observation typed on the page clears the gate', async () => {
+    render(Page, { props: { data: ipmData([]) } as never });
+    expect(recordButton()).toBeDisabled();
+    await fireEvent.input(document.getElementById('scout-pest')!, { target: { value: 'aphid' } });
+    await fireEvent.input(document.getElementById('scout-value')!, { target: { value: '7' } });
+    expect(recordButton()).not.toBeDisabled();
+  });
+
+  it('a lower latest count still blocks', () => {
+    const now = Date.now();
+    render(Page, {
+      props: {
+        data: ipmData([
+          { value: 9, occurredAt: now - 3 * 86_400_000 },
+          { value: 2, occurredAt: now - 1000 }
+        ])
+      } as never
+    });
+    expect(recordButton()).toBeDisabled();
+  });
+});

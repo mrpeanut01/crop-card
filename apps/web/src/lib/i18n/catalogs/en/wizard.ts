@@ -194,6 +194,13 @@ export const enWizard = {
   'planui.sched.empty': 'Nothing scheduled in this window.',
   'planui.sched.openAria': 'open',
   'planui.sched.openTask': 'Open task',
+  'planui.sched.srcCare': 'Care plan',
+  'planui.sched.srcCompanion': 'Companion check',
+  'planui.sched.srcCrop': 'Crop plan',
+  'planui.sched.srcEquipment': 'Equipment',
+  'planui.sched.srcSeedStart': 'Seed start',
+  'planui.sched.srcSuggestion': 'Suggestion',
+  'planui.sched.srcTemplate': 'Plan template',
   'planui.sched.statusOverdue': 'overdue',
   'planui.sched.statusScheduled': 'scheduled',
   'planui.sched.statusToday': 'today',
@@ -758,6 +765,14 @@ export const enWizard = {
   'planui.opt.placeholder': 'Describe what to change, or paste a plan you have in mind…',
   'planui.opt.inputAria': 'Chat input',
   'planui.opt.send': 'Send',
+  'planui.opt.proposedDone': 'Done — proposed new dates. Click "Apply to grid" when you\'re ready.',
+  'planui.opt.fbNoKey': '⚠ No Anthropic API key configured — proposal unchanged.',
+  'planui.opt.fbUnavailable': '⚠ Claude is unavailable — proposal unchanged.',
+  'planui.opt.fbRejected':
+    '⚠ Could not apply that change cleanly. Validators rejected the proposal; the schedule above stays as it is.',
+  'planui.opt.why': 'Why:',
+  'planui.opt.applied':
+    '✅ Applied to the grid. Check the swim-lane behind this sidebar — the new dates are live.',
   'group.wiz.requestFailedStatus': 'request failed ({status})',
   'group.wiz.requestFailed': 'request failed',
   'group.wiz.commitFailed': 'commit failed',
@@ -956,6 +971,20 @@ export const enWizard = {
   'wizard.override.applied':
     'Applied the AI plan over the validator. The table above shows the new layout. The size and space checks were set aside, so check the plant counts before you commit.',
   'wizard.err.schedule': 'schedule request failed',
+  'wizard.chat.planUnchanged': 'The plan above is unchanged.',
+  'wizard.chat.planUpdated': 'Done — updated the plan above.',
+  'wizard.chat.planRulesFlagged':
+    '⚠ Could not apply the change cleanly — the planning rules flagged it. The plan above is unchanged.',
+  'wizard.chat.planUnchangedReason': '⚠ The plan above is unchanged ({reason}).',
+  'wizard.chat.why': 'Why:',
+  'wizard.chat.scheduleUnchanged': 'The schedule above is unchanged.',
+  'wizard.chat.scheduleUpdated': 'Done — updated the dates above.',
+  'wizard.chat.scheduleNoKey':
+    '⚠ No Anthropic API key configured — the schedule above is unchanged.',
+  'wizard.chat.scheduleUnavailable': '⚠ Claude is unavailable — the schedule above is unchanged.',
+  'wizard.chat.scheduleRulesFlagged':
+    '⚠ Could not apply the change — it would break a planting window, stagger, or companion offset. The schedule above is unchanged.',
+  'wizard.chat.validatorViolations': 'Validator violations:',
   'wizard.poll.noGeometry':
     "Couldn't check isolation between {blockA} and {blockB} — add geometry to one or both to enable the check.",
   'wizard.poll.isolated':

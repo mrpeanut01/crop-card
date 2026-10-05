@@ -9,8 +9,7 @@
  */
 
 import type { ForecastDay } from '$lib/hay/types';
-import { formatCalendarDate } from '$lib/prefs';
-import { t } from '$lib/i18n';
+import type { Translator } from '$lib/i18n';
 
 export type WeatherSky =
   | 'clear'
@@ -33,17 +32,10 @@ export interface WeatherSummary {
   windMph?: number;
   /** Free-form forecast string for today ("Mostly sunny"). */
   shortForecast?: string;
-  /** "0.4 in tue→wed" style rain hint covering the next 2 days, if any
-   *  daily POP ≥ 30%. Undefined when the period is dry. */
-  rainHint?: string;
 }
 
 /** Rain chance at or above which the strip and the calendar mention rain. */
 export const RAIN_POP_PCT = 30;
-
-function dayLabel(iso: string, locale?: string | null): string {
-  return formatCalendarDate(iso, 'weekday', {}, locale).toLowerCase();
-}
 
 export function skyFor(shortForecast: string | undefined, night: boolean): WeatherSky {
   const f = (shortForecast ?? '').toLowerCase();
@@ -56,11 +48,7 @@ export function skyFor(shortForecast: string | undefined, night: boolean): Weath
   return night ? 'clear-night' : 'clear';
 }
 
-/** `locale` words the rain hint; without one it stays English. */
-export function summarizeForecast(
-  days: ForecastDay[],
-  locale?: string | null
-): WeatherSummary | null {
+export function summarizeForecast(days: ForecastDay[]): WeatherSummary | null {
   const today = days[0];
   if (!today) return null;
   const night = today.overnightOnly === true;
@@ -71,29 +59,34 @@ export function summarizeForecast(
     windMph: today.windMph !== undefined ? Math.round(today.windMph) : undefined,
     shortForecast: today.shortForecast
   };
-  const next = days.slice(0, 3).filter((d) => d.popPct >= RAIN_POP_PCT);
-  if (next.length === 1) {
-    summary.rainHint = t(locale, 'today.weather.rainOn', {
-      pct: next[0].popPct,
-      day: dayLabel(next[0].date, locale)
-    });
-  } else if (next.length >= 2) {
-    summary.rainHint = t(locale, 'today.weather.rainRange', {
-      from: dayLabel(next[0].date, locale),
-      to: dayLabel(next[next.length - 1].date, locale)
-    });
-  }
   return summary;
+}
+
+/** "45% rain mon" or "rain sun→mon" over the next three days, null when
+ *  they are dry. `day` names a date in the viewer's language. */
+export function rainHint(
+  days: readonly Pick<ForecastDay, 'date' | 'popPct'>[],
+  tr: Translator,
+  day: (iso: string) => string
+): string | null {
+  const wet = days.slice(0, 3).filter((d) => d.popPct >= RAIN_POP_PCT);
+  if (wet.length === 1)
+    return tr('today.weather.rainOne', { pct: wet[0].popPct, day: day(wet[0].date) });
+  if (wet.length >= 2)
+    return tr('today.weather.rainRange', {
+      from: day(wet[0].date),
+      to: day(wet[wet.length - 1].date)
+    });
+  return null;
 }
 
 /** Wrap `summarizeForecast` so any error → null and never crashes the page. */
 export function summarizeForecastSafely(
-  days: ForecastDay[] | null | undefined,
-  locale?: string | null
+  days: ForecastDay[] | null | undefined
 ): WeatherSummary | null {
   if (!days || days.length === 0) return null;
   try {
-    return summarizeForecast(days, locale);
+    return summarizeForecast(days);
   } catch {
     return null;
   }

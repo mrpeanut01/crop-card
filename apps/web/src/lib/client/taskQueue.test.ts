@@ -6,7 +6,8 @@ import {
   listQueuedTaskActions,
   parseQueuedTask,
   queueTaskAction,
-  queuedActionMap
+  queuedActionMap,
+  sendTaskClose
 } from './taskQueue';
 
 const ACTIVE_KEY = 'cropcard.activeOwnerId';
@@ -152,5 +153,61 @@ describe('time on Done in the offline queue (F1-13)', () => {
       ),
       { numRuns: 20 }
     );
+  });
+});
+
+describe('sendTaskClose', () => {
+  const body = { taskId: 't1', action: 'complete', occurredAt: 1 };
+
+  it('a saved close returns the body and sends the client record id', async () => {
+    const fetchFn = vi.fn(async () => new Response('{"alreadyClosed":true}', { status: 200 }));
+    expect(await sendTaskClose(body, 'cid_1', fetchFn as never)).toEqual({
+      kind: 'saved',
+      body: { alreadyClosed: true }
+    });
+    const [url, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('/api/tasks/close');
+    expect(new Headers(init.headers).get('x-cropcard-client-record-id')).toBe('cid_1');
+  });
+
+  it('the deploy fence queues and retries after Retry-After', async () => {
+    const fetchFn = vi.fn(
+      async () =>
+        new Response('{}', {
+          status: 503,
+          headers: { 'x-cropcard-updating': '1', 'retry-after': '5' }
+        })
+    );
+    expect(await sendTaskClose(body, 'cid', fetchFn as never)).toEqual({
+      kind: 'queue',
+      drainInMs: 7000,
+      updating: true
+    });
+  });
+
+  it('any other server error or a lost request queues', async () => {
+    const err = vi.fn(async () => new Response('boom', { status: 500 }));
+    expect(await sendTaskClose(body, 'cid', err as never)).toEqual({
+      kind: 'queue',
+      drainInMs: 15_000,
+      updating: false
+    });
+    const lost = vi.fn(async () => {
+      throw new TypeError('Failed to fetch');
+    });
+    expect(await sendTaskClose(body, 'cid', lost as never)).toEqual({
+      kind: 'queue',
+      drainInMs: null,
+      updating: false
+    });
+  });
+
+  it('a 4xx is a refusal with the server error', async () => {
+    const fetchFn = vi.fn(async () => new Response('{"error":"Nope"}', { status: 403 }));
+    expect(await sendTaskClose(body, 'cid', fetchFn as never)).toEqual({
+      kind: 'refused',
+      status: 403,
+      error: 'Nope'
+    });
   });
 });

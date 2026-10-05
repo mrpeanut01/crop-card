@@ -65,7 +65,12 @@
         return;
       }
       if (!body.found) {
-        lookupError = tr('stockui.barcode.notFound');
+        // A fallback (no key, AI limit, AI down) carries the server's
+        // translated reason; a plain miss keeps the generic message.
+        lookupError =
+          body.provenance === 'fallback' && typeof body.message === 'string' && body.message
+            ? tr('stockui.barcode.notFoundAi', { message: body.message })
+            : tr('stockui.barcode.notFound');
         return;
       }
       // Bridge ScanResult → StockEntryDraft. The barcode tier carries

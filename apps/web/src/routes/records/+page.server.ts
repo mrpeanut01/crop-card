@@ -87,7 +87,7 @@ export const load: PageServerLoad = async (event) => {
   const availableYears = Array.from(
     new Set<number>([currentYear, ...listYearsWithCrops(), selectedYear])
   ).sort((a, b) => b - a);
-  const yearSummary = await buildYearSummary(selectedYear, user.activeOwnerId, prefs, {
+  const yearSummary = await buildYearSummary(selectedYear, user.activeOwnerId, undefined, {
     includeCosts: user.role === 'owner'
   });
 

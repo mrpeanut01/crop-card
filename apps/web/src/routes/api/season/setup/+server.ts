@@ -18,6 +18,7 @@ import { requireOwner } from '$lib/server/auth';
 import { saveSeasonSetup } from '$lib/season/setup.server';
 import { listSprayers } from '$lib/server/sprayers';
 import { deriveWinterizeAlerts, startOfSeason } from '$lib/today/winterizeAlert';
+import { farmTimeZone } from '$lib/db/userProfile';
 import { equipmentIdsActiveBefore } from '$lib/db/equipment';
 
 const bodySchema = z.object({
@@ -48,10 +49,12 @@ export async function POST(event) {
   // UC-45 — informational (assists, never gates): flag active sprayers that
   // were used this season but not winterized after the prior one so the
   // operator sees the spring reminder right after saving setup.
+  const zone = farmTimeZone();
   const winterizeAlerts = deriveWinterizeAlerts(
     listSprayers(),
     Date.now(),
-    equipmentIdsActiveBefore(startOfSeason(Date.now()))
+    equipmentIdsActiveBefore(startOfSeason(Date.now(), zone)),
+    zone
   );
   return json({ setup, winterizeAlerts });
 }

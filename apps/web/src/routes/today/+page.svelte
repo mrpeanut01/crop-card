@@ -59,7 +59,6 @@
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatDueDay } from '$lib/prefs';
   import { dateTimeFormat } from '$lib/intlCache';
-  import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
   import { formatHours } from '$lib/labour/hours';
   import {
     isClosedStatus,
@@ -435,25 +434,24 @@
         await queueAction(taskId, action, reason, minutes, clientId);
         return true;
       }
-      let res: Response;
-      try {
-        res = await fetch('/api/tasks/close', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', [CLIENT_RECORD_HEADER]: clientId },
-          body: JSON.stringify(body)
-        });
-      } catch {
+      const { sendTaskClose } = await import('$lib/client/taskQueue');
+      const sent = await sendTaskClose(body, clientId);
+      if (sent.kind === 'queue') {
         await queueAction(taskId, action, reason, minutes, clientId);
+        if (sent.updating) liveMessage = tr('recui.updatingQueued');
+        if (sent.drainInMs !== null) {
+          const { scheduleDrain } = await import('$lib/client/syncQueue');
+          scheduleDrain(sent.drainInMs);
+        }
         return true;
       }
-      if (!res.ok) {
-        const out = await res.json().catch(() => ({}));
+      if (sent.kind === 'refused') {
         actionError = tr('today.err.saveFailed', {
-          detail: out.error ?? tr('today.err.serverSaid', { status: res.status })
+          detail: sent.error ?? tr('today.err.serverSaid', { status: sent.status })
         });
         return false;
       }
-      const out = (await res.json().catch(() => null)) as {
+      const out = sent.body as {
         seedStart?: { step?: string; cropId?: string } | null;
         alreadyClosed?: boolean;
         timeSaved?: boolean;

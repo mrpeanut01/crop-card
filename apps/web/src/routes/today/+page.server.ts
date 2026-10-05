@@ -222,10 +222,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     timeZone: prefs.timeZone
   });
 
-  const weather = await loadTodayWeather(locals?.locale);
+  const weather = await loadTodayWeather();
 
   // YTD spray count = spray + insecticide + fungicide events since Jan 1.
-  const yearStart = startOfYear(now);
+  const farmZone = careTimeZone;
+  const yearStart = startOfYear(now, farmZone);
   const spraysYTD =
     listSprayEvents({ fromMs: yearStart, toMs: now }).length +
     listInsecticideEvents({ fromMs: yearStart, toMs: now }).length +
@@ -253,7 +254,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const winterizeAlerts = deriveWinterizeAlerts(
     sprayers,
     now,
-    equipmentIdsActiveBefore(startOfSeason(now))
+    equipmentIdsActiveBefore(startOfSeason(now, farmZone)),
+    farmZone
   );
 
   const coveredLogs = isOwner ? coveredLogAlerts(await healthPlugins(), farmTimeZone(), now) : [];

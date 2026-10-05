@@ -325,7 +325,7 @@ export async function processOwnerAlerts(
   if (isDigestSendWindow(now)) {
     const d = await weeklyDigestForOwner(
       ownerId,
-      ownerRow(ownerId)?.name ?? 'your farm',
+      ownerRow(ownerId)?.name || null,
       members,
       now,
       deps
@@ -338,7 +338,7 @@ export async function processOwnerAlerts(
     summary.emailFailed += d.emailFailed;
   }
   if (alerts.length === 0) return summary;
-  const farmName = ownerRow(ownerId)?.name ?? 'your farm';
+  const farmName = ownerRow(ownerId)?.name || null;
   const localeOf = recipientLocales(members.map((m) => m.userId));
   const translated = new Map<Locale, Map<string, PushAlert>>();
   const inLocale = (batch: PushAlert[], locale: Locale): PushAlert => {

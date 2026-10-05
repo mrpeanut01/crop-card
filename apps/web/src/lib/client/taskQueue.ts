@@ -1,4 +1,6 @@
 import type { QueuedTaskAction } from '$lib/tasks/status';
+import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
+import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
 
 export interface QueuedTaskPayload {
   taskId: string;
@@ -87,4 +89,43 @@ export function queuedActionMap(rows: readonly QueuedTaskRow[]): Map<string, Que
   const out = new Map<string, QueuedTaskAction>();
   for (const r of rows) if (!r.rejected) out.set(r.taskId, r.action);
   return out;
+}
+
+export type TaskCloseSend =
+  | { kind: 'saved'; body: unknown }
+  | { kind: 'queue'; drainInMs: number | null; updating: boolean }
+  | { kind: 'refused'; status: number; error: string | null };
+
+/** One online try of POST /api/tasks/close. A network error, a server error
+ *  or the deploy fence's 503 answer `queue`: the caller keeps the close on
+ *  the phone under the same client record id, and `drainInMs` says when to
+ *  retry (null: wait for signal). Only a 4xx is a refusal. */
+export async function sendTaskClose(
+  body: unknown,
+  clientId: string,
+  fetchFn: typeof fetch = fetch
+): Promise<TaskCloseSend> {
+  let res: Response;
+  try {
+    res = await fetchFn('/api/tasks/close', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', [CLIENT_RECORD_HEADER]: clientId },
+      body: JSON.stringify(body)
+    });
+  } catch {
+    return { kind: 'queue', drainInMs: null, updating: false };
+  }
+  if (res.status >= 500) {
+    const updating = isUpdatingResponse(res);
+    return {
+      kind: 'queue',
+      drainInMs: updating ? (retryAfterSeconds(res) + 2) * 1000 : 15_000,
+      updating
+    };
+  }
+  if (!res.ok) {
+    const out = (await res.json().catch(() => null)) as { error?: string } | null;
+    return { kind: 'refused', status: res.status, error: out?.error ?? null };
+  }
+  return { kind: 'saved', body: await res.json().catch(() => null) };
 }

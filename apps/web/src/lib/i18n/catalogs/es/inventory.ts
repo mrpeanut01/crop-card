@@ -739,5 +739,24 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'equip.w.ledeStrict':
     'Preparación para guardar al final de la temporada. Confirma cada paso antes de que se abra el siguiente. La descontaminación final usa el protocolo específico de la clase para la última carga de esta aspersora.',
   'equip.w.ledeStandard':
-    'Preparación para guardar al final de la temporada. Confirma cada paso antes de que se abra el siguiente. La descontaminación final usa el protocolo estándar para la última carga de esta aspersora.'
+    'Preparación para guardar al final de la temporada. Confirma cada paso antes de que se abra el siguiente. La descontaminación final usa el protocolo estándar para la última carga de esta aspersora.',
+  'scanai.noKey':
+    'No hay una clave de API de Anthropic configurada. Agrégala en la página de Configuración.',
+  'scanai.this.label': 'esta etiqueta',
+  'scanai.this.page': 'esta página',
+  'scanai.this.barcode': 'este código de barras',
+  'scanai.the.label': 'la etiqueta',
+  'scanai.the.page': 'la página',
+  'scanai.the.barcode': 'el código de barras',
+  'scanai.rejected':
+    'Claude no pudo leer {thing}{detail}. Prueba con una foto más clara o más pequeña, o usa la entrada manual.',
+  'scanai.failed':
+    'Claude no pudo leer {thing}{detail}. Inténtalo de nuevo, o usa la entrada manual.',
+  'scanai.timeout':
+    'Claude tardó demasiado en leer {thing}. Inténtalo de nuevo, o usa la entrada manual.',
+  'scanai.unavailable': 'La IA no está disponible en este momento. Usa la entrada manual.',
+  'scanai.limited': '{reason}. La entrada manual sigue funcionando.',
+  'scanai.overloaded':
+    'La API de Anthropic está ocupada en este momento. Inténtalo de nuevo en un momento.',
+  'stockui.barcode.notFoundAi': 'El código de barras no está en OpenFoodFacts. {message}'
 };

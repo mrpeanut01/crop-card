@@ -76,6 +76,12 @@ export function listAllOwners(): OwnerSummary[] {
 
 /** Sets the farm's gate status only. The plan comes from Stripe (or a plan
  *  override), so flipping this never grants or removes a paid plan. */
+/** True when an Owner row with this id exists (cross-tenant by design). */
+export function ownerExists(ownerId: string): boolean {
+  unscopedQueryNote('superadmin checks an impersonation target across tenants');
+  return !!db.select({ id: owners.id }).from(owners).where(eq(owners.id, ownerId)).get();
+}
+
 export function setBillingStatus(
   ownerId: string,
   status: 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended',

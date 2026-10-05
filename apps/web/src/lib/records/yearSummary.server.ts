@@ -16,7 +16,8 @@ import { stockItems, stockLots, stockMovements } from '$lib/db/schema';
 import { withTenant } from '$lib/db/tenant';
 import { lotCostCentsPerUnit } from '$lib/finance/unitCost';
 import { zonedDayStartMs } from '$lib/exports/dateRange';
-import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
+import type { Prefs } from '$lib/prefs';
+import { farmTimeZone } from '$lib/db/userProfile';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { listSprayEvents } from '$lib/db/sprayEvents';
@@ -91,10 +92,12 @@ function movementCostRows(fromMs: number, toMs: number): MovementCostRow[] {
 export async function buildYearSummary(
   year: number,
   ownerId: string | null,
-  prefs: Pick<Prefs, 'timeZone'> = DEFAULT_PREFS,
+  /** The zone the year runs in; the farm's (`farmTimeZone()`) when omitted. */
+  prefs: Pick<Prefs, 'timeZone'> | undefined,
   opts: { includeCosts: boolean }
 ): Promise<YearSummaryForViewer> {
-  const { fromMs, toMs } = yearBounds(year, prefs.timeZone);
+  const timeZone = prefs?.timeZone ?? farmTimeZone();
+  const { fromMs, toMs } = yearBounds(year, timeZone);
 
   const sprayEvents = listSprayEvents({ fromMs, toMs, limit: 100_000 });
   const insecticideEvents = listInsecticideEvents({ fromMs, toMs, limit: 100_000 });
@@ -184,7 +187,8 @@ export async function buildYearSummary(
     acresForBlock: (blockId) => acresByBlock.get(blockId) ?? 0,
     archetypeForPlugin: (cropPluginId) => archetypeForPlugin(registry, cropPluginId),
     productAllowed: (productId) => productAllowedUnder(registry, productId, philosophy),
-    animals: await buildYearAnimalSection({ fromMs, toMs })
+    animals: await buildYearAnimalSection({ fromMs, toMs }),
+    timeZone
   });
   return opts.includeCosts ? summary : { ...summary, inputCosts: null };
 }

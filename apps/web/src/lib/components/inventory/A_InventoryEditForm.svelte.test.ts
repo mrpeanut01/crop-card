@@ -509,7 +509,46 @@ describe('A_InventoryEditForm — seed quantity and crop category (#472, #473)',
     await vi.waitFor(() => expect(calls()).toHaveLength(2));
     expect(calls()[0][0]).toBe('/api/stock/sk1');
     expect(calls()[1][0]).toBe('/api/stock/sk1/set-quantity');
-    expect(JSON.parse(calls()[1][1].body)).toMatchObject({ quantity: 60 });
+    expect(JSON.parse(calls()[1][1].body)).toMatchObject({ quantity: 60, base: { onHand: 100 } });
+  });
+
+  it('shows the short choice when on hand changed elsewhere, and Keep my change resends', async () => {
+    let refused = false;
+    globalThis.fetch = vi.fn(async (url: string) => {
+      if (url.endsWith('/set-quantity') && !refused) {
+        refused = true;
+        return new Response(
+          JSON.stringify({
+            error: 'Someone else changed this while you were editing. Nothing was saved.',
+            code: 'EDIT_CONFLICT',
+            target: 'stock',
+            id: 'sk1',
+            action: 'set-quantity',
+            fields: [{ field: 'onHand', base: 100, mine: 60, theirs: 80 }],
+            current: { onHand: 80 }
+          }),
+          { status: 409, headers: { 'content-type': 'application/json' } }
+        );
+      }
+      return new Response(JSON.stringify({ item: { id: 'sk1' } }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' }
+      });
+    }) as never;
+    const { container, findByText, getByRole } = render(A_InventoryEditForm, {
+      type: 'seed',
+      library,
+      existing: existingSeed
+    });
+    const qty = container.querySelector('#quantity') as HTMLInputElement;
+    await fireEvent.input(qty, { target: { value: '60' } });
+    await fireEvent.submit(container.querySelector('form')!);
+    expect(await findByText('Changed on another device')).toBeInTheDocument();
+    expect(container.querySelector('.error-banner')).toBeNull();
+    await fireEvent.click(getByRole('button', { name: 'Keep my change' }));
+    await vi.waitFor(() => expect(calls()).toHaveLength(4));
+    expect(calls()[3][0]).toBe('/api/stock/sk1/set-quantity');
+    expect(JSON.parse(calls()[3][1].body)).toMatchObject({ quantity: 60, base: { onHand: 80 } });
   });
 
   it('edit leaves the quantity alone when unchanged, and locks the unit once stocked', async () => {

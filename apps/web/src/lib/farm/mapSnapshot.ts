@@ -7,6 +7,7 @@ import {
   type SnapshotPlanting
 } from '$lib/cards/snapshot';
 import type { AreaKind, BedStyle, BlockKind } from './areaKinds';
+import { splitGroupBlockIds } from '$lib/plan/splitGroup';
 
 /** The field and block shapes the map pages already load, minus server types. */
 export interface MapAreaInput {
@@ -41,6 +42,9 @@ export interface MapBlockInput {
     plantingDate: number | null;
     quantityPlanted?: number;
     quantityUnit?: string;
+    /** Phase 35 split parts; `status` only decides which parts count. */
+    splitGroupId?: string | null;
+    status?: string;
   }>;
 }
 
@@ -112,8 +116,16 @@ export function snapshotFromMapData(input: {
       rowSpacingIn: null,
       plantCount: null,
       plantCountProvenance: null,
-      sourceProvenance: null
+      sourceProvenance: null,
+      ...(p.splitGroupId ? { splitGroupId: p.splitGroupId } : {})
     }))
+  );
+  const splitGroups = splitGroupBlockIds(
+    input.blocks.flatMap((b) =>
+      (b.plantings ?? []).flatMap((p) =>
+        p.splitGroupId ? [{ splitGroupId: p.splitGroupId, blockId: b.id, status: p.status }] : []
+      )
+    )
   );
   return {
     version: FARM_SNAPSHOT_VERSION,
@@ -125,6 +137,7 @@ export function snapshotFromMapData(input: {
     areas: snapshotAreas(input.fields),
     blocks: snapshotBlocks(input.blocks),
     plantings,
+    ...(Object.keys(splitGroups).length ? { splitGroups } : {}),
     tasks: [],
     equipment: [],
     stock: [],

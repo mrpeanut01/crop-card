@@ -29,6 +29,7 @@ import {
 } from './common';
 import { SQFT_PER_ACRE, formatAreaAcres, formatFeet, formatSize, sizeBasis } from './size';
 import { areaCareLinks } from './careGuide';
+import { snapshotSplitFor, splitLine } from './split';
 import { DEFAULT_AREA_KIND, isDesignable } from '$lib/farm/areaKinds';
 import { watererNamesFor } from '$lib/farm/mapFeatures';
 import { designFromSnapshot, designerHref } from '$lib/garden/design';
@@ -81,11 +82,15 @@ function plantingLine(
   p: SnapshotPlanting,
   block: SnapshotBlock | undefined,
   showDate: boolean,
-  locale?: string | null
+  snapshot: FarmSnapshot,
+  opts: ResolvedOptions
 ): string {
+  const locale = opts.prefs.locale;
   const where = block ? ` · ${blockDisplayName(block, locale)}` : '';
   const when = showDate && p.plantingDate ? ` · ${monthDay(p.plantingDate, locale)}` : '';
-  return `${plantingName(p, locale)}${where}${when}`;
+  const split = snapshotSplitFor(snapshot, p);
+  const lot = split ? ` · ${splitLine(split, opts.tr)}` : '';
+  return `${plantingName(p, locale)}${where}${when}${lot}`;
 }
 
 /** A bed's own width by length when it has them; stored acres are rounded
@@ -261,7 +266,7 @@ function baseAreaCard(
     sections.push({
       title: tr('cards.area.growingNow'),
       items: capped(
-        active.map((p) => plantingLine(p, blockById.get(p.blockId), false, loc)),
+        active.map((p) => plantingLine(p, blockById.get(p.blockId), false, snapshot, opts)),
         opts
       )
     });
@@ -270,7 +275,7 @@ function baseAreaCard(
     sections.push({
       title: tr('cards.fact.planned'),
       items: capped(
-        planned.map((p) => plantingLine(p, blockById.get(p.blockId), true, loc)),
+        planned.map((p) => plantingLine(p, blockById.get(p.blockId), true, snapshot, opts)),
         opts
       )
     });

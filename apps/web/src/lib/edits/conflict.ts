@@ -6,17 +6,27 @@
  *  `EDIT_CONFLICT` when any of those fields has moved on to a third value. */
 
 export const EDIT_CONFLICT_CODE = 'EDIT_CONFLICT' as const;
-export type EditTarget = 'planting' | 'task';
+export type EditTarget = 'planting' | 'task' | 'stock';
 export type PlantingEditField =
   | 'varietyDisplayName'
   | 'quantityPlanted'
   | 'quantityUnit'
   | 'harvestUseCases'
   | 'plantingDate'
-  | 'blockId';
+  | 'blockId'
+  | 'status'
+  | 'footprint';
 export type TaskEditField = 'title' | 'body' | 'scheduledFor' | 'assigneeUserId';
-export type EditField = PlantingEditField | TaskEditField;
-export type EditValue = string | number | null | readonly string[];
+export type StockEditField = 'onHand';
+export type EditField = PlantingEditField | TaskEditField | StockEditField;
+/** A planting's spot in its bed, in inches (the garden designer's footprint). */
+export interface EditFootprint {
+  readonly x_in: number;
+  readonly y_in: number;
+  readonly w_in: number;
+  readonly l_in: number;
+}
+export type EditValue = string | number | null | readonly string[] | EditFootprint;
 export type EditValues = Partial<Record<EditField, EditValue>>;
 export interface EditConflictField {
   field: EditField;
@@ -40,7 +50,9 @@ export const PLANTING_EDIT_FIELDS: readonly PlantingEditField[] = [
   'quantityUnit',
   'harvestUseCases',
   'plantingDate',
-  'blockId'
+  'blockId',
+  'status',
+  'footprint'
 ];
 export const TASK_EDIT_FIELDS: readonly TaskEditField[] = [
   'title',
@@ -48,6 +60,7 @@ export const TASK_EDIT_FIELDS: readonly TaskEditField[] = [
   'scheduledFor',
   'assigneeUserId'
 ];
+export const STOCK_EDIT_FIELDS: readonly StockEditField[] = ['onHand'];
 
 /** Appended to the OpenAPI description of every checked action (E-13). */
 export const EDIT_CONFLICT_API_NOTE =
@@ -64,13 +77,31 @@ export const EDIT_FIELDS_BY_ACTION: Readonly<Record<string, readonly EditField[]
   'planting:set-schedule': ['plantingDate', 'blockId'],
   'task:edit': ['title', 'body'],
   'task:reschedule': ['scheduledFor'],
-  'task:assign': ['assigneeUserId']
+  'task:assign': ['assigneeUserId'],
+  'planting:set-placement': ['blockId', 'footprint', 'plantingDate'],
+  'planting:mark-harvested': ['status'],
+  'planting:archive': ['status'],
+  'planting:mark-failed': ['status'],
+  'planting:reactivate': ['status'],
+  'stock:set-quantity': ['onHand']
 };
 
 const EDIT_FIELD_SET: ReadonlySet<string> = new Set<string>([
   ...PLANTING_EDIT_FIELDS,
-  ...TASK_EDIT_FIELDS
+  ...TASK_EDIT_FIELDS,
+  ...STOCK_EDIT_FIELDS
 ]);
+
+const FOOTPRINT_KEYS = ['x_in', 'y_in', 'w_in', 'l_in'] as const;
+
+function isFootprint(x: unknown): x is EditFootprint {
+  if (!x || typeof x !== 'object' || Array.isArray(x)) return false;
+  const o = x as Record<string, unknown>;
+  return (
+    Object.keys(o).length === FOOTPRINT_KEYS.length &&
+    FOOTPRINT_KEYS.every((k) => typeof o[k] === 'number' && Number.isFinite(o[k]))
+  );
+}
 
 function sortedSet(list: readonly string[]): string[] {
   return [...new Set(list)].sort();
@@ -80,6 +111,10 @@ export function sameEditValue(a: EditValue | undefined, b: EditValue | undefined
   const x = a ?? null;
   const y = b ?? null;
   if (x === null || y === null) return x === y;
+  if (isFootprint(x) || isFootprint(y)) {
+    if (!isFootprint(x) || !isFootprint(y)) return false;
+    return FOOTPRINT_KEYS.every((k) => x[k] === y[k]);
+  }
   if (Array.isArray(x) || Array.isArray(y)) {
     if (!Array.isArray(x) || !Array.isArray(y)) return false;
     const sx = sortedSet(x as readonly string[]);
@@ -115,6 +150,7 @@ export function editConflicts(
 
 function isEditValue(x: unknown): x is EditValue {
   if (x === null || typeof x === 'string' || typeof x === 'number') return true;
+  if (isFootprint(x)) return true;
   return Array.isArray(x) && x.every((v) => typeof v === 'string');
 }
 
@@ -125,7 +161,7 @@ export function isEditConflictBody(x: unknown): x is EditConflictBody {
   if (typeof o.error !== 'string' || typeof o.id !== 'string' || typeof o.action !== 'string') {
     return false;
   }
-  if (o.target !== 'planting' && o.target !== 'task') return false;
+  if (o.target !== 'planting' && o.target !== 'task' && o.target !== 'stock') return false;
   if (!Array.isArray(o.fields)) return false;
   for (const f of o.fields) {
     if (!f || typeof f !== 'object') return false;

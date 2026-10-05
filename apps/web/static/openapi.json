@@ -7975,6 +7975,162 @@
         }
       }
     },
+    "/api/stock/{id}/set-quantity": {
+      "post": {
+        "summary": "Set the on-hand quantity after a count",
+        "description": "Owner only. Saves the difference as one `adjustment` movement against the newest on-hand lot, or receives a new lot when there is none. Ordered and planned lots are not touched. Send `base.onHand` with the on-hand quantity you showed; when someone else changed it since, nothing is saved and the answer is 409 `EDIT_CONFLICT` with `current.onHand`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Stock item id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "quantity": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "base": {
+                    "type": "object",
+                    "properties": {
+                      "onHand": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "quantity"
+                ],
+                "description": "Set the on-hand quantity after a physical count. Saved as one adjustment against the newest on-hand lot, or a new lot when there is none. Send `base` with the value of each field you change as you last saw it. If someone else has changed one of those fields since, nothing is saved and the answer is 409 with `code: \"EDIT_CONFLICT\"`, `fields` (each conflicting field with `base`, `mine` and `theirs`) and `current` (every editable field as stored now). A field changed without a `base` entry is not checked."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "result"
+                  ],
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "required": [
+                        "itemId",
+                        "previousQuantity",
+                        "newQuantity",
+                        "delta"
+                      ],
+                      "properties": {
+                        "itemId": {
+                          "type": "string"
+                        },
+                        "previousQuantity": {
+                          "type": "number"
+                        },
+                        "newQuantity": {
+                          "type": "number"
+                        },
+                        "delta": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stock item not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "On hand changed since the device last saw it (`EDIT_CONFLICT`, with `fields` and `current`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/stock/{id}/use": {
       "post": {
         "summary": "Take feed or bedding off stock",
@@ -13465,12 +13621,34 @@
                         "type": "integer",
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "planned",
+                                  "active",
+                                  "harvested",
+                                  "failed",
+                                  "archived"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
                       }
                     },
                     "required": [
                       "action"
                     ],
-                    "description": "Change the planting status. Harvested and archived dates are stamped for you."
+                    "description": "Change the planting status. Harvested and archived dates are stamped for you. Send `base` with the value of each field you change as you last saw it. If someone else has changed one of those fields since, nothing is saved and the answer is 409 with `code: \"EDIT_CONFLICT\"`, `fields` (each conflicting field with `base`, `mine` and `theirs`) and `current` (every editable field as stored now). A field changed without a `base` entry is not checked."
                   },
                   {
                     "type": "object",
@@ -13798,6 +13976,75 @@
                       "action": {
                         "type": "string",
                         "const": "set-placement"
+                      },
+                      "base": {
+                        "type": "object",
+                        "properties": {
+                          "blockId": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "footprint": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "x_in": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 240000
+                                  },
+                                  "y_in": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 240000
+                                  },
+                                  "w_in": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 240000
+                                  },
+                                  "l_in": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 240000
+                                  }
+                                },
+                                "required": [
+                                  "x_in",
+                                  "y_in",
+                                  "w_in",
+                                  "l_in"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "plantingDate": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "additionalProperties": false
                       }
                     },
                     "required": [
@@ -13806,7 +14053,8 @@
                       "spacingPattern",
                       "action"
                     ],
-                    "additionalProperties": false
+                    "additionalProperties": false,
+                    "description": "Owner only. Place, move or clear the planting in a garden bed, and optionally move its date. Send `base` with the value of each field you change as you last saw it. If someone else has changed one of those fields since, nothing is saved and the answer is 409 with `code: \"EDIT_CONFLICT\"`, `fields` (each conflicting field with `base`, `mine` and `theirs`) and `current` (every editable field as stored now). A field changed without a `base` entry is not checked."
                   }
                 ]
               }
@@ -13954,7 +14202,7 @@
             }
           },
           "409": {
-            "description": "Already in the ground (`IN_GROUND`), the spot is taken for a linked sowing (`OVERLAP`), the block is not a sized bed in a garden (`NOT_DESIGNABLE`), a split that could not be made, or `change-plugin` on the anchor of a planting group.",
+            "description": "Already in the ground (`IN_GROUND`), the spot is taken for a linked sowing (`OVERLAP`), the block is not a sized bed in a garden (`NOT_DESIGNABLE`), a split that could not be made, `change-plugin` on the anchor of a planting group, or a stale edit sent with `base` (`EDIT_CONFLICT`, with `fields` and `current`) on `edit-details`, `set-schedule`, `set-placement` or a status action.",
             "content": {
               "application/json": {
                 "schema": {

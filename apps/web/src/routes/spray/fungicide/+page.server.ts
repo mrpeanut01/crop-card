@@ -24,6 +24,8 @@ import { getUserAiEnabled } from '$lib/server/aiTry';
 import { canSetUp, setupAreas } from '$lib/server/setupContext';
 import { organicBlocksForNotice } from '$lib/server/organicNotice';
 import { loadTaskContext } from '$lib/server/recordTaskClose';
+import { isInBloom } from '$lib/safety/pollinatorBloom';
+import type { CropPlugin } from '$lib/plugins/schemas';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
   const cropId = url.searchParams.get('crop');
@@ -45,7 +47,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         reEntryIntervalHours: p.reEntryIntervalHours,
         preHarvestIntervalDays: p.preHarvestIntervalDays,
         rainfastHours: p.rainfastHours ?? null,
-        pollinatorRisk: p.pollinatorRisk ?? 'unknown',
+        pollinatorRisk: p.pollinatorRisk ?? ('unknown' as const),
+        pollinator: p.pollinator ?? null,
         ratePerAcre: p.ratePerAcre,
         gpaCalibration: p.gpaCalibration,
         deconRequired: p.deconRequired ?? false,
@@ -74,6 +77,23 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     };
   }
 
+  const now = Date.now();
+  const bloomingCropPluginIds = (b: (typeof blocks)[number]): string[] => {
+    const ids = new Set<string>();
+    for (const p of b.plantings) {
+      if (p.plantingDate == null) continue;
+      const rec = registry.get(p.cropPluginId);
+      const bloomWindow =
+        rec && rec.plugin.type === 'crop' ? (rec.plugin as CropPlugin).bloomWindow : undefined;
+      if (
+        isInBloom({ cropPluginId: p.cropPluginId, plantedAt: p.plantingDate, bloomWindow }, now)
+      ) {
+        ids.add(p.cropPluginId);
+      }
+    }
+    return [...ids];
+  };
+
   const taskContext = loadTaskContext(url.searchParams.get('task'));
   return {
     fungicides: fungicidePlugins,
@@ -88,7 +108,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       id: b.id,
       name: b.name,
       acres: b.acres ?? null,
-      cropPluginIds: b.plantings.map((p) => p.cropPluginId)
+      cropPluginIds: b.plantings.map((p) => p.cropPluginId),
+      bloomingCropPluginIds: bloomingCropPluginIds(b)
     })),
     sprayers: listSprayers(),
     recentEvents: listFungicideEvents({ limit: 20 }),

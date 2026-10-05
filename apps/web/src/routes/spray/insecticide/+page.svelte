@@ -22,6 +22,7 @@
   import PollinatorGatePanel from '$lib/components/spray/PollinatorGatePanel.svelte';
   import { checkPollinatorProtection, type BloomStatus } from '$lib/safety/pollinatorProtection';
   import { checkNearbyPollinatorBlocks } from '$lib/pollinator/nearbyBlocks';
+  import { pollinatorLabelText } from '$lib/pollinator/labelText';
   import { sunTimesFor } from '$lib/safety/sunTimes';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { createT } from '$lib/i18n';
@@ -356,9 +357,7 @@
             {#if p.preHarvestIntervalDays !== undefined}
               · PHI {p.preHarvestIntervalDays}d
             {/if}
-            · {p.pollinator
-              ? `Bees: ${p.pollinator.beeToxicity}${p.pollinator.bloomRestriction === 'none' ? '' : ` · ${p.pollinator.bloomRestriction}`}`
-              : `Pollinator risk ${p.pollinatorRisk}`}
+            · {pollinatorLabelText(p)}
             {#if p.epaRegistrationNumber}· EPA {p.epaRegistrationNumber}{/if}
           </div>
           {#if p.scoutingThresholds.length}

@@ -134,6 +134,12 @@
   {protocol.strict ? tr('equip.w.ledeStrict') : tr('equip.w.ledeStandard')}
 </p>
 
+{#if !data.canWinterize}
+  <p class="warn" role="note" data-testid="winterize-owner-only">
+    {tr('equip.api.winterizeOwnerOnly')}
+  </p>
+{/if}
+
 <section class="step">
   <h2>{tr('equip.w.sprayer')}</h2>
   <p class="who">
@@ -173,7 +179,12 @@
 
     <div class="actions">
       <button type="button" onclick={back} disabled={stepIndex === 0}>{tr('equip.w.back')}</button>
-      <button type="button" class="primary" onclick={next} disabled={submitting}>
+      <button
+        type="button"
+        class="primary"
+        onclick={next}
+        disabled={submitting || (stepIndex === steps.length - 1 && !data.canWinterize)}
+      >
         {stepIndex === steps.length - 1
           ? submitting
             ? tr('equip.w.recording')

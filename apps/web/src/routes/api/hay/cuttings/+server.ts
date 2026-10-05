@@ -90,7 +90,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     );
   }
   // UC-44 — SEASON_CLOSED gate. A mow is a dated field record.
-  const seasonClosed = checkSeasonClosed(parsed.data.mowAt ?? now);
+  const seasonClosed = checkSeasonClosed(parsed.data.mowAt ?? now, event.locals?.locale);
   if (seasonClosed) {
     return json(
       { error: seasonClosed.code, message: seasonClosed.message, year: seasonClosed.year },

@@ -709,6 +709,8 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plan.design.didNotLoad': 'El diseñador del huerto no cargó. Inténtalo de nuevo.',
   'plan.design.notDesignable':
     'Esta área no tiene diseñador de huerto. Solo los huertos y los invernaderos lo tienen.',
+  'crops.api.deleteLockedOwnerOnly':
+    'Esta siembra tiene registros de hace más de 48 horas, así que solo el dueño puede eliminarla. Pídeselo al dueño.',
   'crops.err.missingBlock': 'Falta la cama de cultivo o el bloque de esta siembra.',
   'plan.swimlane.eastIndex': 'E{n}',
   'plan.grazing.docTitle': 'Tiempos de pastoreo · {area} · CropCard',

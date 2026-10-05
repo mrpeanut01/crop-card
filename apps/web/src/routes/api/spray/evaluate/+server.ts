@@ -40,6 +40,8 @@ import {
 } from '$lib/safety/userAddedRestrictionsFromStock';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer } from '$lib/server/sprayers';
+import { getBlock, type BlockWithPlantings } from '$lib/db/blocks';
+import { resolveSprayCrops, standingCropPluginIds } from '$lib/server/sprayCrops';
 
 const cropStageInput = z.object({
   cropPluginId: z.string().min(1),
@@ -60,6 +62,8 @@ const sprayerInput = z.union([
 
 const requestSchema = z.object({
   occurredAt: z.number().int().optional(),
+  /** The block being sprayed: its plantings on file join the crops below. */
+  blockId: z.string().min(1).optional(),
   blockCrops: z.object({
     primary: cropStageInput,
     coPlanted: z.array(cropStageInput).optional()
@@ -150,18 +154,26 @@ export const POST: RequestHandler = async ({ request }) => {
     sprayerState = parsed.data.sprayer as SprayContext['sprayer'];
   }
 
-  // Fill cropFamily + traits from registry if the caller didn't supply them.
-  const enrichCrop = (c: z.infer<typeof cropStageInput>) => ({
-    ...c,
-    cropFamily: c.cropFamily ?? registry.cropFamilyOf(c.cropPluginId),
-    traits: registry.cropTraitsOf(c.cropPluginId)
-  });
+  // FR-03: the block's plantings on file join the crops the caller names,
+  // and the registry's crop families win over the caller's.
+  const occurredAt = parsed.data.occurredAt ?? Date.now();
+  let plantings: BlockWithPlantings['plantings'] = [];
+  if (parsed.data.blockId) {
+    const block = getBlock(parsed.data.blockId);
+    if (!block) return json({ error: 'unknown block' }, { status: 404 });
+    plantings = block.plantings;
+  }
+  const crops = resolveSprayCrops(
+    parsed.data.blockCrops,
+    standingCropPluginIds(plantings, occurredAt),
+    registry
+  );
 
   const ctx: SprayContext = {
-    occurredAt: parsed.data.occurredAt ?? Date.now(),
+    occurredAt,
     products,
-    crop: enrichCrop(parsed.data.blockCrops.primary),
-    coPlantedCrops: parsed.data.blockCrops.coPlanted?.map(enrichCrop),
+    crop: crops.primary,
+    coPlantedCrops: crops.coPlanted,
     sprayer: sprayerState,
     conditions: parsed.data.conditions
   };

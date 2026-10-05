@@ -13,7 +13,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { type SQL, and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
+import { type SQL, and, eq, inArray, isNotNull, isNull, lte, or } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
 import { plantingInGround } from '$lib/garden/inGround';
@@ -83,6 +83,7 @@ import {
 import { ownerStoragePrefix } from './documents';
 import { unlinkMapFeaturesFromField } from './mapFeatures';
 import { liveHoldParams } from './holdParams';
+import { LOCK_WINDOW_MS } from './recordKinds';
 import { evaluateLock as evaluateSprayLock, getSprayEvent } from './sprayEvents';
 import { evaluateLock as evaluateInsecticideLock, getInsecticideEvent } from './insecticideEvents';
 import { evaluateLock as evaluateFungicideLock, getFungicideEvent } from './fungicideEvents';
@@ -402,16 +403,16 @@ export function deleteCropCascade(
     .where(withTenant(insecticideEvents, eq(insecticideEvents.cropId, id)))
     .all()
     .map((r) => r.id);
-  const fertilityIds = db
-    .select({ id: fertilityApplications.id })
-    .from(fertilityApplications)
-    .where(withTenant(fertilityApplications, eq(fertilityApplications.cropId, id)))
-    .all()
-    .map((r) => r.id);
   const fungicideIds = db
     .select({ id: fungicideEvents.id })
     .from(fungicideEvents)
     .where(withTenant(fungicideEvents, eq(fungicideEvents.cropId, id)))
+    .all()
+    .map((r) => r.id);
+  const fertilityIds = db
+    .select({ id: fertilityApplications.id })
+    .from(fertilityApplications)
+    .where(withTenant(fertilityApplications, eq(fertilityApplications.cropId, id)))
     .all()
     .map((r) => r.id);
 
@@ -505,6 +506,39 @@ export function deleteCropCascade(
   removed.crops = del(crops, eq(crops.id, id));
 
   return { removed };
+}
+
+/** FR-09 / Invariant 5: whether deleting this planting would destroy a
+ *  record already past its 48-hour lock (a spray, insecticide, fungicide,
+ *  harvest or hay cutting dated 48 hours or more ago). */
+export function cropHasLockedRecords(id: string, nowMs: number = Date.now()): boolean {
+  const cutoff = new Date(nowMs - LOCK_WINDOW_MS);
+  const any = <T extends TenantScopedTable>(table: T, where: SQL | undefined): boolean =>
+    db
+      .select()
+      .from(table as SQLiteTable)
+      .where(withTenant(table, where))
+      .limit(1)
+      .all().length > 0;
+  return (
+    any(sprayEvents, and(eq(sprayEvents.cropId, id), lte(sprayEvents.occurredAt, cutoff))) ||
+    any(
+      insecticideEvents,
+      and(eq(insecticideEvents.cropId, id), lte(insecticideEvents.occurredAt, cutoff))
+    ) ||
+    any(
+      fungicideEvents,
+      and(eq(fungicideEvents.cropId, id), lte(fungicideEvents.occurredAt, cutoff))
+    ) ||
+    any(harvestEvents, and(eq(harvestEvents.cropId, id), lte(harvestEvents.occurredAt, cutoff))) ||
+    any(
+      hayCuttings,
+      and(
+        eq(hayCuttings.cropId, id),
+        or(lte(hayCuttings.mowAt, cutoff), lte(hayCuttings.createdAt, cutoff))
+      )
+    )
+  );
 }
 
 // ─── Per-block (the heaviest cascade) ───────────────────────────────────
@@ -709,6 +743,24 @@ export function deleteBlockCascade(id: string): DeleteSummary {
 }
 
 // ─── Per-equipment ──────────────────────────────────────────────────────
+
+/** Whether any herbicide, insecticide or fungicide record names this
+ *  equipment as its sprayer. Spray records are never edited to let gear go,
+ *  so such a sprayer cannot be deleted (retire it instead). */
+export function equipmentHasSprayRecords(id: string): boolean {
+  const named = <T extends TenantScopedTable>(table: T, where: SQL): boolean =>
+    db
+      .select()
+      .from(table as SQLiteTable)
+      .where(withTenant(table, where))
+      .limit(1)
+      .all().length > 0;
+  return (
+    named(sprayEvents, eq(sprayEvents.sprayerId, id)) ||
+    named(insecticideEvents, eq(insecticideEvents.sprayerId, id)) ||
+    named(fungicideEvents, eq(fungicideEvents.sprayerId, id))
+  );
+}
 
 /** @hold-exempt: only clears the sprayer link on insecticide records; no hold reads it */
 export function deleteEquipmentCascade(id: string): DeleteSummary {

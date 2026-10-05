@@ -501,6 +501,7 @@
       const calls = selectedBlocks.map(async (b) => {
         const blockCrops = buildKernelCropsFor(b);
         const body = {
+          blockId: b.id,
           blockCrops,
           productPluginIds: selectedHerbicideIds,
           sprayer: { id: sprayer.id },

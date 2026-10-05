@@ -21,6 +21,7 @@ const ENDPOINTS = [
   'insecticide/record/+server.ts',
   'fungicide/record/+server.ts',
   'harvest/record/+server.ts',
+  'hay/cuttings/+server.ts',
   'hay/cuttings/[id]/+server.ts',
   'harvest/[id]/dispositions/+server.ts',
   'harvest/dispositions/[id]/+server.ts'

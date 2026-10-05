@@ -21,7 +21,12 @@ export const POST: RequestHandler = async (event) => {
   if (!item) throw error(404, `unknown stock item: ${id}`);
   if (item.category !== 'seed') throw error(400, 'item is not a seed');
 
-  const body = (await event.request.json()) as { planterPlateConfig?: Record<string, unknown> };
+  let body: { planterPlateConfig?: Record<string, unknown> } | null;
+  try {
+    body = (await event.request.json()) as typeof body;
+  } catch {
+    throw error(400, 'invalid JSON');
+  }
   if (!body?.planterPlateConfig || typeof body.planterPlateConfig !== 'object') {
     throw error(400, 'planterPlateConfig required');
   }

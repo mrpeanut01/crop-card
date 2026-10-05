@@ -27,6 +27,7 @@ vi.mock('$lib/db/insecticideEvents', () => ({
     {
       id: 'i-new',
       blockId: 'b1',
+      sprayerId: 'sp1',
       performedById: 'u1',
       occurredAt: T + 1000,
       products: [product],
@@ -58,9 +59,9 @@ vi.mock('$lib/db/client', () => ({
 
 import { GET } from './+server';
 
-async function rows() {
+async function rows(query = '') {
   const res = await GET({
-    url: new URL('http://localhost/api/spray/records/export.usda.csv')
+    url: new URL(`http://localhost/api/spray/records/export.usda.csv${query}`)
   } as never);
   const text = await res.text();
   const body = text
@@ -112,5 +113,16 @@ describe('USDA CSV — #130 pollinator columns', () => {
     } finally {
       prefs.timeZone = 'America/New_York';
     }
+  });
+
+  it("keeps only the filtered sprayer's insecticide rows under a sprayer filter", async () => {
+    const all = await rows();
+    expect(all.data.map((r) => r.product_name)).toEqual(
+      expect.arrayContaining(['Pyrethroid', 'Legacy'])
+    );
+    const filtered = await rows('?sprayerId=sp1');
+    const names = filtered.data.map((r) => r.product_name);
+    expect(names).toContain('Pyrethroid');
+    expect(names).not.toContain('Legacy');
   });
 });

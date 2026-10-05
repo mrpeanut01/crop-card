@@ -682,6 +682,10 @@ export const enInventory = {
   'stockui.api.invalidRequest': 'invalid request',
   'stockui.api.inspectorReadOnly': 'inspector role is read-only',
   'stockui.api.idRequired': 'id required',
+  'equip.api.hasSprayRecords':
+    'Spray records name this sprayer, so it stays on file. Retire it instead.',
+  'equip.api.winterizeOwnerOnly':
+    'Only the owner can record winterizing, since it clears the decon and calibration. Ask the owner.',
   'equip.api.specSprayerOnly': 'tank and nozzle are for sprayers',
   'stockui.api.seedImpersonating': 'Seed sourcing cannot be entered while impersonating a farm.',
   'stockui.api.seedLotNotFound': 'This lot was not found.',

@@ -688,6 +688,8 @@ export const enPlan = {
   'plan.design.notInCopy': "This garden isn't in the copy saved on this device.",
   'plan.design.didNotLoad': "The garden designer didn't load. Try again.",
   'plan.design.notDesignable': 'This Area has no garden designer. Only gardens and greenhouses do.',
+  'crops.api.deleteLockedOwnerOnly':
+    'This planting has records older than 48 hours, so only the owner can delete it. Ask the owner.',
   'crops.err.missingBlock': "This planting's bed or block is missing.",
   'plan.swimlane.eastIndex': 'E{n}',
   'plan.grazing.docTitle': 'Grazing times · {area} · CropCard',

@@ -105,6 +105,22 @@ describe('/api/blocks garden bed layout', () => {
     role.current = 'owner';
   });
 
+  it('refuses an overlapping bed that takes the garden default kind', async () => {
+    await runWithTenant(seedOwner(), async () => {
+      const { garden } = kitchen();
+      const overlap = await create({
+        name: 'Bed 3',
+        fieldId: garden.id,
+        widthFt: 4,
+        lengthFt: 8,
+        xFt: 3,
+        yFt: 4
+      });
+      expect(overlap.status).toBe(409);
+      expect(await overlap.json()).toMatchObject({ code: 'OVERLAP' });
+    });
+  });
+
   it('refuses a bed that overlaps another or runs past the garden edge', async () => {
     await runWithTenant(seedOwner(), async () => {
       const { garden, bed2 } = kitchen();

@@ -44,7 +44,7 @@ export const POST: RequestHandler = async (event) => {
     {
       id: '',
       name: parsed.data.name,
-      kind: parsed.data.kind ?? DEFAULT_BLOCK_KIND,
+      kind,
       fieldId: parsed.data.fieldId,
       widthFt: parsed.data.widthFt,
       lengthFt: parsed.data.lengthFt,

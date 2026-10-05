@@ -168,7 +168,7 @@ function usableFromGeometry(
   const ftPerLon = FT_PER_DEGREE_LAT * Math.cos((meanLat * Math.PI) / 180);
   const projected = ring.map<[number, number]>((p) => [p[0] * ftPerLon, p[1] * FT_PER_DEGREE_LAT]);
 
-  const cleaned = stripDuplicateLastVertex(projected);
+  const cleaned = dropRedundantVertices(stripDuplicateLastVertex(projected));
   if (cleaned.length < 3) return null;
 
   const fullArea = Math.abs(signedArea(cleaned));
@@ -247,6 +247,37 @@ function stripDuplicateLastVertex(ring: [number, number][]): [number, number][] 
   const b = ring[ring.length - 1];
   if (a[0] === b[0] && a[1] === b[1]) return ring.slice(0, -1);
   return ring;
+}
+
+/** Removes repeated vertices and vertices that lie on the straight line
+ *  between their neighbours; the inset intersects adjacent edge lines and
+ *  has no answer for a zero-length or straight-through corner. */
+function dropRedundantVertices(ring: [number, number][]): [number, number][] {
+  let pts = ring.filter((p, i) => {
+    const next = ring[(i + 1) % ring.length];
+    return p[0] !== next[0] || p[1] !== next[1];
+  });
+  let changed = true;
+  while (changed && pts.length >= 3) {
+    changed = false;
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[(i + pts.length - 1) % pts.length];
+      const b = pts[i];
+      const c = pts[(i + 1) % pts.length];
+      const ux = b[0] - a[0];
+      const uy = b[1] - a[1];
+      const vx = c[0] - b[0];
+      const vy = c[1] - b[1];
+      const cross = ux * vy - uy * vx;
+      const dot = ux * vx + uy * vy;
+      if (Math.abs(cross) <= 1e-9 * Math.hypot(ux, uy) * Math.hypot(vx, vy) && dot > 0) {
+        pts = pts.filter((_, j) => j !== i);
+        changed = true;
+        break;
+      }
+    }
+  }
+  return pts;
 }
 
 function signedArea(ring: [number, number][]): number {

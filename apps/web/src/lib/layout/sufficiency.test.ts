@@ -75,6 +75,32 @@ describe('usableSqft — geometry inset', () => {
     expect(result.sqft).toBe(0);
   });
 
+  it('ignores a point on an edge and a repeated vertex when insetting', () => {
+    const lat = 39;
+    const lon = -77;
+    const ftPerLon = FT_PER_DEGREE_LAT * Math.cos((lat * Math.PI) / 180);
+    const dLat = 60 / FT_PER_DEGREE_LAT;
+    const dLon = 60 / ftPerLon;
+    const geometryGeojson = JSON.stringify({
+      type: 'Polygon',
+      coordinates: [
+        [
+          [lon, lat],
+          [lon, lat + dLat / 2],
+          [lon, lat + dLat],
+          [lon + dLon, lat + dLat],
+          [lon + dLon, lat + dLat],
+          [lon + dLon, lat],
+          [lon, lat]
+        ]
+      ]
+    });
+    const result = usableSqft({ acres: undefined, geometryGeojson });
+    expect(result.geometryFallback).toBe(false);
+    expect(result.sqft).toBeGreaterThan(54 * 54 * 0.98);
+    expect(result.sqft).toBeLessThan(54 * 54 * 1.02);
+  });
+
   it('honors a custom buffer', () => {
     const result = usableSqft({ acres: undefined, geometryGeojson: squareGeoJson(60) }, 10);
     // 40×40 = 1600 sqft

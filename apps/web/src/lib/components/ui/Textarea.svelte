@@ -8,11 +8,15 @@
     value?: string;
   }
 
+  // Same on the server and in the browser, so hydration keeps the label's
+  // `for` and works outside a secure context (no crypto.randomUUID).
+  const uid = $props.id();
+
   let {
     label,
     hint,
     error,
-    id = `textarea-${crypto.randomUUID().slice(0, 8)}`,
+    id = `textarea-${uid}`,
     rows = 4,
     value = $bindable(''),
     ...rest

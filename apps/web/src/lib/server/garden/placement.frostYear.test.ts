@@ -23,7 +23,7 @@ import type { Crop } from '$lib/db/crops';
 import { linkedSowingClash, sharedSpaceWarnings } from './placement';
 
 const NEW_YEAR_UTC = Date.UTC(2027, 0, 1, 2);
-const FOOTPRINT = { x: 0, y: 0, w: 1, h: 1 } as unknown as Crop['footprint'];
+const FOOTPRINT = { x_in: 0, y_in: 0, w_in: 12, l_in: 12 };
 const savedTz = process.env.TZ;
 
 beforeAll(() => {

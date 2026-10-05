@@ -786,7 +786,8 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'planui.opt.send': 'Enviar',
   'planui.opt.proposedDone':
     'Listo, se propusieron fechas nuevas. Haga clic en "Aplicar a la cuadrícula" cuando esté listo.',
-  'planui.opt.fbNoKey': '⚠ No hay una clave de API de Anthropic configurada; la propuesta no cambió.',
+  'planui.opt.fbNoKey':
+    '⚠ No hay una clave de API de Anthropic configurada; la propuesta no cambió.',
   'planui.opt.fbUnavailable': '⚠ Claude no está disponible; la propuesta no cambió.',
   'planui.opt.fbRejected':
     '⚠ No se pudo aplicar ese cambio. Los validadores rechazaron la propuesta; el calendario de arriba se queda como está.',
@@ -1007,7 +1008,8 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.chat.scheduleUpdated': 'Listo, se actualizaron las fechas de arriba.',
   'wizard.chat.scheduleNoKey':
     '⚠ No hay una clave de API de Anthropic configurada; el calendario de arriba no cambió.',
-  'wizard.chat.scheduleUnavailable': '⚠ Claude no está disponible; el calendario de arriba no cambió.',
+  'wizard.chat.scheduleUnavailable':
+    '⚠ Claude no está disponible; el calendario de arriba no cambió.',
   'wizard.chat.scheduleRulesFlagged':
     '⚠ No se pudo aplicar el cambio: rompería una ventana de siembra, un escalonamiento o un desfase de compañeras. El calendario de arriba no cambió.',
   'wizard.chat.validatorViolations': 'Infracciones del validador:',

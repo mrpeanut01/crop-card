@@ -206,9 +206,7 @@
               ? tr('planui.opt.fbUnavailable')
               : tr('planui.opt.fbRejected');
         const violationLine =
-          violations.length > 0
-            ? `\n\n${tr('planui.opt.why')}\n• ${violations.join('\n• ')}`
-            : '';
+          violations.length > 0 ? `\n\n${tr('planui.opt.why')}\n• ${violations.join('\n• ')}` : '';
         display = `${header}${violationLine}\n\n${reply}`;
         // Don't buffer a proposed schedule when the AI's output failed
         // validation — Apply would just write the previous dates back.

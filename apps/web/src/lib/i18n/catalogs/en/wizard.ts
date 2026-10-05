@@ -972,7 +972,8 @@ export const enWizard = {
   'wizard.chat.why': 'Why:',
   'wizard.chat.scheduleUnchanged': 'The schedule above is unchanged.',
   'wizard.chat.scheduleUpdated': 'Done — updated the dates above.',
-  'wizard.chat.scheduleNoKey': '⚠ No Anthropic API key configured — the schedule above is unchanged.',
+  'wizard.chat.scheduleNoKey':
+    '⚠ No Anthropic API key configured — the schedule above is unchanged.',
   'wizard.chat.scheduleUnavailable': '⚠ Claude is unavailable — the schedule above is unchanged.',
   'wizard.chat.scheduleRulesFlagged':
     '⚠ Could not apply the change — it would break a planting window, stagger, or companion offset. The schedule above is unchanged.',

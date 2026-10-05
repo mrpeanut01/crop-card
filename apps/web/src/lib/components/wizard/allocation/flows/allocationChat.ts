@@ -116,9 +116,7 @@ export class AllocationChatFlow {
           ? wt('wizard.chat.planRulesFlagged')
           : wt('wizard.chat.planUnchangedReason', { reason: fallback });
       const violationLine =
-        violations.length > 0
-          ? `\n\n${wt('wizard.chat.why')}\n• ${violations.join('\n• ')}`
-          : '';
+        violations.length > 0 ? `\n\n${wt('wizard.chat.why')}\n• ${violations.join('\n• ')}` : '';
       const overrideHint =
         Array.isArray(body?.meta?.rejectedAssignments) && body.meta.rejectedAssignments.length > 0
           ? `\n\n${wt('wizard.override.hint')}`

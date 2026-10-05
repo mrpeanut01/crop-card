@@ -277,13 +277,16 @@ export interface ClonedPlanting {
   clamped: boolean;
 }
 
-/** Shift a ms timestamp forward one calendar year, preserving month/day. */
+/** Shift a ms timestamp forward one calendar year, preserving month/day;
+ *  Feb 29 becomes Feb 28. */
 export function shiftOneYear(ms: number): number {
   const d = new Date(ms);
+  const year = d.getUTCFullYear() + 1;
+  const lastDay = new Date(Date.UTC(year, d.getUTCMonth() + 1, 0)).getUTCDate();
   return Date.UTC(
-    d.getUTCFullYear() + 1,
+    year,
     d.getUTCMonth(),
-    d.getUTCDate(),
+    Math.min(d.getUTCDate(), lastDay),
     d.getUTCHours(),
     d.getUTCMinutes(),
     d.getUTCSeconds()

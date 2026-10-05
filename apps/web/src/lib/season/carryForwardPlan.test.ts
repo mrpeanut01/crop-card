@@ -215,6 +215,10 @@ describe('shiftOneYear', () => {
     const shifted = shiftOneYear(Date.UTC(2025, 4, 15, 12, 0, 0));
     expect(shifted).toBe(Date.UTC(2026, 4, 15, 12, 0, 0));
   });
+
+  it('moves Feb 29 to Feb 28, not into March', () => {
+    expect(shiftOneYear(Date.UTC(2028, 1, 29, 12))).toBe(Date.UTC(2029, 1, 28, 12));
+  });
 });
 
 describe('clonePlantings', () => {

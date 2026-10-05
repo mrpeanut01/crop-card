@@ -5,6 +5,7 @@ import { isHttpError } from '@sveltejs/kit';
 import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
 import { getFeedback } from '$lib/db/feedback';
+import { FEEDBACK_HOURLY_LIMIT } from '$lib/feedback/model';
 import { POST } from './+server';
 
 function seedUser(): string {
@@ -20,6 +21,7 @@ function event(opts: {
   role?: string;
   ownerId?: string | null;
   authVia?: 'cookie' | 'bearer';
+  locale?: string;
   body?: unknown;
   raw?: string;
 }) {
@@ -33,6 +35,7 @@ function event(opts: {
     locals: opts.userId
       ? {
           authVia: opts.authVia ?? 'cookie',
+          locale: opts.locale,
           user: {
             id: opts.userId,
             email: null,
@@ -68,6 +71,20 @@ describe('POST /api/feedback', () => {
         POST(event({ userId: u, authVia: 'bearer', body: { kind: 'bug', message: 'hello' } }))
       )
     ).toBe(403);
+  });
+
+  it('says the hourly limit in the person’s language', async () => {
+    const u = seedUser();
+    for (let i = 0; i < FEEDBACK_HOURLY_LIMIT; i++) {
+      await POST(event({ userId: u, body: { kind: 'idea', message: `note ${i}` } }));
+    }
+    const res = await POST(
+      event({ userId: u, locale: 'es', body: { kind: 'idea', message: 'one more' } })
+    );
+    expect(res.status).toBe(429);
+    expect(((await res.json()) as { error: string }).error).toBe(
+      'Has enviado muchos comentarios en la última hora. Inténtalo de nuevo más tarde.'
+    );
   });
 
   it('400s on bad JSON or a bad body', async () => {

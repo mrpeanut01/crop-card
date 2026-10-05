@@ -153,6 +153,8 @@ export const enSettings = {
   'feedback.kind.other': 'Something else',
   'feedback.sheet.retry': 'That did not go through. Please try again.',
   'feedback.sheet.retryLater': 'That did not go through. Please try again in a moment.',
+  'feedback.api.rateLimited':
+    'You have sent a lot of feedback in the last hour. Please try again later.',
   'feedback.sheet.offline':
     "You're offline. Your note is still here, so send it when you're back online.",
   'feedback.sheet.thanks': 'Thanks, we got it.',

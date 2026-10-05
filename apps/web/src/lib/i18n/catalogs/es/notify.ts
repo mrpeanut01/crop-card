@@ -3,6 +3,8 @@ import type { MessageKey } from '../en';
 export const esNotify: Partial<Record<MessageKey, string>> = {
   'push.list.pair': '{a} y {b}',
   'push.list.more': '{list} y {count} más',
+  'push.test.title': 'Notificación de prueba de CropCard',
+  'push.test.body': 'Las alertas push funcionan en este dispositivo.',
   'push.decon.title': 'Descontaminación pendiente · {sprayer}',
   'push.decon.body':
     '{sprayer} todavía tiene restos de {chemistry}. Usa el asistente de descontaminación antes de la próxima carga.',

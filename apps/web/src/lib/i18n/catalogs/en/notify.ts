@@ -1,6 +1,8 @@
 export const enNotify = {
   'push.list.pair': '{a} and {b}',
   'push.list.more': '{list} and {count} more',
+  'push.test.title': 'CropCard test notification',
+  'push.test.body': 'Push alerts are working on this device.',
   'push.decon.title': 'Decon due · {sprayer}',
   'push.decon.body':
     '{sprayer} still carries {chemistry}. Run the decon wizard before the next load.',

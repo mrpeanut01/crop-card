@@ -23,6 +23,7 @@ import {
   randomBytes,
   sign
 } from 'node:crypto';
+import { assertResolvesPublic } from '$lib/server/safeFetch';
 
 export const DEFAULT_VAPID_SUBJECT = 'mailto:hello@cropcard.io';
 
@@ -232,6 +233,9 @@ export type SendOutcome =
 
 export interface SendOptions {
   fetchImpl?: typeof fetch;
+  /** Refuses an endpoint that is not a public address. Defaults to a DNS
+   *  check, skipped when `fetchImpl` is injected (tests). */
+  checkEndpoint?: (url: URL) => Promise<unknown>;
   ttlSeconds?: number;
   urgency?: 'very-low' | 'low' | 'normal' | 'high';
   nowMs?: number;
@@ -257,9 +261,18 @@ export async function sendWebPush(
   } catch (err) {
     return { kind: 'failed', status: null, message: (err as Error).message };
   }
+  const checkEndpoint = opts.checkEndpoint ?? (opts.fetchImpl ? null : assertResolvesPublic);
+  if (checkEndpoint) {
+    try {
+      await checkEndpoint(new URL(target.endpoint));
+    } catch (err) {
+      return { kind: 'failed', status: null, message: (err as Error).message };
+    }
+  }
   const doFetch = opts.fetchImpl ?? fetch;
   try {
     const res = await doFetch(target.endpoint, {
+      redirect: 'manual',
       method: 'POST',
       headers: {
         Authorization: authorization,

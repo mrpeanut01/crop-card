@@ -9,6 +9,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SessionPayload, SessionRole } from '$lib/server/session';
 import { DEFAULT_PUSH_PREFS, type PushPrefs } from '$lib/push/prefs';
 import { generateVapidKeys } from '$lib/server/push/webPush';
+import { db } from '$lib/db/client';
+import { users } from '$lib/db/schema';
 
 let session: { userId: string; role: SessionRole } | null = null;
 
@@ -235,6 +237,24 @@ describe('/api/push/test', () => {
     expect(res.status).toBe(200);
     const [subs] = sendToSubscriptions.mock.calls[0] as unknown as [Array<{ userId: string }>];
     expect(subs.map((s) => s.userId)).toEqual(['user-helper']);
+  });
+
+  it('sends the test message in the recipient’s saved language', async () => {
+    vi.stubEnv('CROPCARD_LOCALES', 'en,es');
+    const userId = `user-es-${randomBytes(4).toString('hex')}`;
+    db.insert(users)
+      .values({ id: userId, email: `${userId}@push.test`, locale: 'es' })
+      .run();
+    session = { userId, role: 'helper' };
+    await call(() => subPost(makeEvent(subscriptionBody('https://push.example.net/es'))));
+    expect((await call(() => testPost(makeEvent({})))).status).toBe(200);
+    const [, message] = sendToSubscriptions.mock.calls.at(-1) as unknown as [
+      unknown,
+      { title: string; body: string }
+    ];
+    expect(message.title).toBe('Notificación de prueba de CropCard');
+    expect(message.body).toBe('Las alertas push funcionan en este dispositivo.');
+    vi.unstubAllEnvs();
   });
 
   it('404 without a subscription, 503 without VAPID, 403 for inspectors', async () => {

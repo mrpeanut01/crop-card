@@ -51,14 +51,15 @@ export function verifyWebhookSignature(
   if (!signatureHeader) {
     throw new StripeWebhookError('missing Stripe-Signature header', 400);
   }
-  const parts = signatureHeader.split(',').reduce<Record<string, string>>((acc, part) => {
-    const [k, v] = part.split('=');
-    if (k && v) acc[k] = v;
-    return acc;
-  }, {});
-  const t = parts.t;
-  const v1 = parts.v1;
-  if (!t || !v1) {
+  let t: string | undefined;
+  const v1s: string[] = [];
+  for (const part of signatureHeader.split(',')) {
+    const [k, v] = part.trim().split('=');
+    if (!k || !v) continue;
+    if (k === 't') t = v;
+    else if (k === 'v1') v1s.push(v);
+  }
+  if (!t || v1s.length === 0) {
     throw new StripeWebhookError('malformed Stripe-Signature header', 400);
   }
   const tsSeconds = Number(t);
@@ -72,12 +73,14 @@ export function verifyWebhookSignature(
       400
     );
   }
-  const expected = createHmac('sha256', secret).update(`${t}.${rawBody}`).digest('hex');
-  const actual = Buffer.from(v1, 'hex');
-  const expectedBuf = Buffer.from(expected, 'hex');
-  if (actual.length !== expectedBuf.length || !timingSafeEqual(actual, expectedBuf)) {
-    throw new StripeWebhookError('Stripe-Signature mismatch', 400);
-  }
+  const expectedBuf = createHmac('sha256', secret).update(`${t}.${rawBody}`).digest();
+  // While a webhook secret is being rolled Stripe sends one v1 per live
+  // secret, in no promised order; any one matching is enough.
+  const matched = v1s.some((v1) => {
+    const actual = Buffer.from(v1, 'hex');
+    return actual.length === expectedBuf.length && timingSafeEqual(actual, expectedBuf);
+  });
+  if (!matched) throw new StripeWebhookError('Stripe-Signature mismatch', 400);
 }
 
 /**

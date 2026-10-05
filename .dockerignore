@@ -1,22 +1,28 @@
-node_modules
+# Docker matches each pattern against the whole path from the context root,
+# so a bare name only covers the top level; `**/` covers nested copies
+# (apps/*/node_modules, apps/*/.svelte-kit, local dev databases, infra/.env.dev).
+# `build` and `data` stay top-level only: src/lib/cards/build and
+# src/lib/climate/data are source.
+**/node_modules
 .pnpm-store
-.svelte-kit
+**/.svelte-kit
 build
+apps/*/build
 dist
 coverage
-playwright-report
-test-results
+**/playwright-report
+**/test-results
 data
-*.db
-*.db-journal
-*.db-shm
-*.db-wal
-.env
-.env.*
+**/*.db
+**/*.db-journal
+**/*.db-shm
+**/*.db-wal
+**/.env
+**/.env.*
 .git
 .github
 .idea
 .vscode
-.DS_Store
+**/.DS_Store
 *.md
 !README.md

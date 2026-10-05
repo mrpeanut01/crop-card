@@ -159,6 +159,8 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
   'feedback.kind.other': 'Otra cosa',
   'feedback.sheet.retry': 'No se pudo enviar. Inténtalo de nuevo.',
   'feedback.sheet.retryLater': 'No se pudo enviar. Inténtalo de nuevo en un momento.',
+  'feedback.api.rateLimited':
+    'Has enviado muchos comentarios en la última hora. Inténtalo de nuevo más tarde.',
   'feedback.sheet.offline':
     'Estás sin conexión. Tu nota sigue aquí, así que envíala cuando vuelvas a tener conexión.',
   'feedback.sheet.thanks': 'Gracias, lo recibimos.',

@@ -13,6 +13,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth';
 import { submitFeedback } from '$lib/server/feedback';
 import { feedbackSubmitSchema } from '$lib/feedback/model';
+import { t } from '$lib/i18n';
 
 export const _requestSchema = feedbackSubmitSchema;
 
@@ -37,7 +38,7 @@ export const POST: RequestHandler = async (event) => {
   const result = submitFeedback(user, parsed.data, event.request.headers.get('user-agent'));
   if (!result.ok) {
     return json(
-      { error: 'You have sent a lot of feedback in the last hour. Please try again later.' },
+      { error: t(event.locals?.locale, 'feedback.api.rateLimited') },
       { status: 429, headers: { 'retry-after': '3600' } }
     );
   }

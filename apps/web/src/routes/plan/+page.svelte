@@ -1860,6 +1860,7 @@
       return;
     }
     planning = true;
+    plantingError = null;
     try {
       const r = await fetch('/api/crops/plan', {
         method: 'POST',
@@ -1875,9 +1876,14 @@
       });
       if (!r.ok) {
         currentPlan = null;
+        const j = await r.json().catch(() => ({}));
+        plantingError = j?.error ?? tr('plan.page.seedPlanFailed', { status: r.status });
         return;
       }
       currentPlan = await r.json();
+    } catch (err) {
+      currentPlan = null;
+      plantingError = err instanceof Error ? err.message : tr('plan.page.networkError');
     } finally {
       planning = false;
     }
@@ -1891,6 +1897,7 @@
   async function commitSeedPlan() {
     if (pendingSeeds.length === 0) return;
     committing = true;
+    plantingError = null;
     try {
       const r = await fetch('/api/crops/commit', {
         method: 'POST',
@@ -1910,7 +1917,12 @@
         pendingSeeds = [];
         currentPlan = null;
         await invalidateAll();
+      } else {
+        const j = await r.json().catch(() => ({}));
+        plantingError = j?.error ?? tr('plan.page.seedCommitFailed', { status: r.status });
       }
+    } catch (err) {
+      plantingError = err instanceof Error ? err.message : tr('plan.page.networkError');
     } finally {
       committing = false;
     }

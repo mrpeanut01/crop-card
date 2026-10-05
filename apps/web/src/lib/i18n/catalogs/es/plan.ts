@@ -369,6 +369,8 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
     'Solo se restablecerán los {count} bloques visibles; los bloques ocultos no cambian. ',
   'plan.page.reset.title':
     'Quita la programación de todos los cultivos, disuelve grupos, elimina las tareas generadas y vuelve a ejecutar de inmediato la programación automática determinista. Los cultivos cosechados o archivados no se tocan.',
+  'plan.page.seedCommitFailed': 'no se pudieron guardar estas siembras ({status})',
+  'plan.page.seedPlanFailed': 'no se pudo planificar estas semillas ({status})',
   'plan.page.season.cancelEdits': 'Cancelar cambios',
   'plan.page.season.captured':
     'Se guardó la configuración de tu temporada {year}. Continúa a la siguiente etapa: define dónde están creciendo las cosas.',

@@ -362,6 +362,8 @@ export const enPlan = {
     'Only the {count} visible blocks will be reset; hidden blocks stay as-is. ',
   'plan.page.reset.title':
     'Unschedule every crop, disband groups, remove materialized tasks, then immediately re-run the deterministic auto-schedule. Harvested / archived crops untouched.',
+  'plan.page.seedCommitFailed': 'could not save these plantings ({status})',
+  'plan.page.seedPlanFailed': 'could not plan these seeds ({status})',
   'plan.page.season.cancelEdits': 'Cancel edits',
   'plan.page.season.captured':
     'Your {year} season setup is captured. Continue to the next stage — define where things are growing.',

@@ -38,9 +38,8 @@ describe.each([
 ] as const)('%s', (_name, Component) => {
   it('stops the camera when closed before the camera finished starting', async () => {
     const cam = pendingCamera();
-    const { unmount } = render(Component as never, {
-      props: { onCapture: vi.fn(), onDetected: vi.fn(), onClose: vi.fn() }
-    });
+    const props = { onCapture: vi.fn(), onDetected: vi.fn(), onClose: vi.fn() };
+    const { unmount } = render(Component as typeof LabelCapture, { props });
     await vi.waitFor(() => expect(cam.getUserMedia).toHaveBeenCalled());
     unmount();
     cam.grant();

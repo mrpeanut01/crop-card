@@ -169,10 +169,13 @@ export function batchView(
   };
 }
 
-export async function readJson(request: Request): Promise<unknown | Response> {
+export async function readJson(
+  request: Request,
+  locale?: string | null
+): Promise<unknown | Response> {
   try {
     return await request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json({ error: t(locale, 'stockui.api.invalidJsonShort') }, { status: 400 });
   }
 }

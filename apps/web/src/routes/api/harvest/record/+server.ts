@@ -28,6 +28,7 @@ import { getBaseRegistry, getRegistry } from '$lib/server/registry';
 import type { PluginRegistry } from '$lib/plugins';
 import { evaluateHarvestMoisture, HARVEST_MOISTURE_BLOCK } from '$lib/safety/harvestMoisture';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
+import { t } from '$lib/i18n';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { evaluateHarvestPhi, type AppliedSpray } from '$lib/schedule/harvestPhi';
 import { resolveArchetype } from '$lib/plugins/schemas';
@@ -36,6 +37,7 @@ import { RULES_VERSION } from '$lib/safety/version';
 import { currentUser } from '$lib/server/auth';
 import { farmTimeZone } from '$lib/db/userProfile';
 
+const FUTURE_SLACK_MS = 5 * 60 * 1000;
 const PHI_LOOKBACK_MS = 120 * 24 * 60 * 60 * 1000;
 
 /**
@@ -209,6 +211,14 @@ export const POST: RequestHandler = withClientRecordId(async (requestEvent) => {
     }
   }
   const occurredAt = parsed.data.occurredAt ?? Date.now();
+  // A future date would skip the PHI warning for sprays still inside their
+  // interval; hay cuttings already refuse it.
+  if (occurredAt > Date.now() + FUTURE_SLACK_MS) {
+    return json(
+      { error: t(requestEvent.locals?.locale, 'harvestui.err.future'), code: 'IN_THE_FUTURE' },
+      { status: 400 }
+    );
+  }
   // UC-44 — SEASON_CLOSED gate. Refuse writes dated inside a closed season.
   const closed = checkSeasonClosed(occurredAt, requestEvent.locals?.locale);
   if (closed) {

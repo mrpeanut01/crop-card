@@ -220,6 +220,7 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'finance.seasonNav': 'Temporada',
   'finance.which': 'Qué registros',
   'harvestui.addMore': '+ Agregar otra cosa que estás cosechando',
+  'harvestui.err.future': 'Una cosecha no puede tener fecha en el futuro.',
   'harvestui.badge.early': '⏳ muy pronto',
   'harvestui.badge.harvested': '✓ cosechada',
   'harvestui.badge.past': '⚠ fuera de ventana',

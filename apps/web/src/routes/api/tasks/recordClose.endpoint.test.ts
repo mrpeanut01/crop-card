@@ -337,6 +337,17 @@ describe('record endpoints close the task they were started from', () => {
     expect(res.body.taskClose).toBeNull();
   });
 
+  it('a harvest dated in the future is refused', async () => {
+    const farm = seedFarm('harvest-future');
+    const res = await call(HARVEST, farm.ownerId, '/api/harvest/record', {
+      blockId: farm.blockId,
+      cropPluginId: 'tomato-amish-paste',
+      occurredAt: Date.now() + 2 * 24 * 60 * 60 * 1000
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('IN_THE_FUTURE');
+  });
+
   it('an inspector is refused before anything closes', async () => {
     const farm = seedFarm('scout-inspector');
     const t = task(farm, { blockId: farm.blockId });

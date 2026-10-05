@@ -208,6 +208,7 @@ export const enRecords = {
   'finance.seasonNav': 'Season',
   'finance.which': 'Which entries',
   'harvestui.addMore': "+ Add something else you're picking",
+  'harvestui.err.future': 'A harvest cannot be dated in the future.',
   'harvestui.badge.early': '⏳ too early',
   'harvestui.badge.harvested': '✓ harvested',
   'harvestui.badge.past': '⚠ past window',

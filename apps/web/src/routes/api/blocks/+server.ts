@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { createBlock, listBlocks } from '$lib/db/blocks';
 import { blockCreateSchema } from '$lib/farm/apiSchemas';
@@ -9,9 +10,10 @@ import { requireOwner } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { bedLayoutProblem } from '$lib/server/garden/bedLayout';
 
-export const GET: RequestHandler = ({ url }) => {
+export const GET: RequestHandler = ({ url, locals }) => {
   const kinds = parseKindFilter(url.searchParams.get('kind'), BLOCK_KINDS);
-  if (kinds === 'invalid') return json({ error: 'unknown kind' }, { status: 400 });
+  if (kinds === 'invalid')
+    return json({ error: t(locals?.locale, 'api.err.unknownKind') }, { status: 400 });
   return json({ blocks: listBlocks(kinds ? { kinds } : {}) });
 };
 
@@ -23,11 +25,14 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = blockCreateSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const foreign = rejectForeignRefs(['fieldId', parsed.data.fieldId, getField]);
   if (foreign) return foreign;

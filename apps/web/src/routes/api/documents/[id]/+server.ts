@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * GET    /api/documents/:id — metadata, for anyone who may read the file.
  * DELETE /api/documents/:id — the signed-in owner deletes the file.
@@ -29,7 +30,7 @@ export const DELETE: RequestHandler = async (event) => {
     return documentRefusal(
       403,
       'INTERACTIVE_OWNER_ONLY',
-      'Only the owner, signed in on their own account, can delete a file.'
+      t(event.locals?.locale, 'api.err.docDeleteOwner')
     );
   }
   const row = getDocument(event.params.id ?? '');
@@ -38,7 +39,7 @@ export const DELETE: RequestHandler = async (event) => {
     return documentRefusal(
       409,
       'PHOTO_DOCUMENT',
-      'Remove this photo from its journal entry or animal.'
+      t(event.locals?.locale, 'api.err.removePhotoFirst')
     );
   }
   const deleted = await discardDocument(row.id, user.id);

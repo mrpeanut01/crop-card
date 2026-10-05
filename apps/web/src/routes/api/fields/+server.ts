@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * GET  /api/fields  — list all fields (Areas) with block-count + acres rollup;
  *                     `?kind=garden,greenhouse` filters by Area kind
@@ -11,9 +12,10 @@ import { fieldCreateSchema } from '$lib/farm/apiSchemas';
 import { AREA_KINDS, validateAreaDetails } from '$lib/farm/areaKinds';
 import { parseKindFilter } from '$lib/farm/kindFilter';
 
-export const GET: RequestHandler = ({ url }) => {
+export const GET: RequestHandler = ({ url, locals }) => {
   const kinds = parseKindFilter(url.searchParams.get('kind'), AREA_KINDS);
-  if (kinds === 'invalid') return json({ error: 'unknown kind' }, { status: 400 });
+  if (kinds === 'invalid')
+    return json({ error: t(locals?.locale, 'api.err.unknownKind') }, { status: 400 });
   return json({ fields: listFields(kinds ? { kinds } : {}) });
 };
 
@@ -25,16 +27,22 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = fieldCreateSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const { geometryGeojson, kind = 'field', details: rawDetails, ...rest } = parsed.data;
   const details = validateAreaDetails(kind, rawDetails);
   if (!details.ok) {
-    return json({ error: 'invalid details for kind', issues: details.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'api.err.invalidDetailsForKind'), issues: details.issues },
+      { status: 400 }
+    );
   }
   const field = createField({
     ...rest,

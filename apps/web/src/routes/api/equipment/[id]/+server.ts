@@ -12,10 +12,12 @@ import {
 } from '$lib/db/equipment';
 import { currentUser, requireOwner } from '$lib/server/auth';
 
-export const GET: RequestHandler = ({ params, url }) => {
-  if (!params.id) return json({ error: 'id required' }, { status: 400 });
+export const GET: RequestHandler = ({ params, url, locals }) => {
+  if (!params.id)
+    return json({ error: t(locals?.locale, 'stockui.api.idRequired') }, { status: 400 });
   const equipment = getEquipment(params.id);
-  if (!equipment) return json({ error: 'not found' }, { status: 404 });
+  if (!equipment)
+    return json({ error: t(locals?.locale, 'stockui.api.notFound') }, { status: 404 });
   const logLimit = Number(url.searchParams.get('logLimit') ?? '50');
   const log = listEquipmentLog(params.id, { limit: logLimit });
   return json({ equipment, log });

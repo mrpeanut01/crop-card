@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { getBlock } from '$lib/db/blocks';
 import { insertSoilTest, listSoilTestsForBlock } from '$lib/db/fertility';
@@ -16,13 +17,16 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = soilTestCreateSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
@@ -47,8 +51,9 @@ export const POST: RequestHandler = async (event) => {
   return json({ soilTest: { ...persisted, documentId: documentId ?? null } }, { status: 201 });
 };
 
-export const GET: RequestHandler = ({ url }) => {
+export const GET: RequestHandler = ({ url, locals }) => {
   const blockId = url.searchParams.get('blockId');
-  if (!blockId) return json({ error: 'blockId required' }, { status: 400 });
+  if (!blockId)
+    return json({ error: t(locals?.locale, 'api.err.blockIdRequired') }, { status: 400 });
   return json({ soilTests: listSoilTestsForBlock(blockId) });
 };

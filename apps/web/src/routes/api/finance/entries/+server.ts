@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * GET  /api/finance/entries?year=&state=live|deleted: the season's ledger.
  * POST /api/finance/entries: add an expense or income.
@@ -29,10 +30,11 @@ export const _requestSchema = ledgerEntryCreateSchema;
 export const GET: RequestHandler = async (event) => {
   requireMoneyReader(event);
   const year = parseYear(event.url.searchParams.get('year'), currentSeasonYear());
-  if (year === null) return json({ error: 'year must be a four-digit year' }, { status: 400 });
+  if (year === null)
+    return json({ error: t(event.locals?.locale, 'api.err.yearFourDigits') }, { status: 400 });
   const stateParam = event.url.searchParams.get('state') ?? 'live';
   if (stateParam !== 'live' && stateParam !== 'deleted') {
-    return json({ error: 'state must be live or deleted' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'api.err.stateLiveDeleted') }, { status: 400 });
   }
   const { fromMs, toMs } = seasonBounds(year);
   const entries = listLedgerEntries({ fromMs, toMs, state: stateParam });
@@ -42,7 +44,8 @@ export const GET: RequestHandler = async (event) => {
 export const POST: RequestHandler = async (event) => {
   const user = requireMoneyWriter(event);
   const read = await readBody(event.request);
-  if (!read.ok) return json({ error: 'invalid JSON body' }, { status: 400 });
+  if (!read.ok)
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   const parsed = ledgerEntryCreateSchema.safeParse(read.body);
   if (!parsed.success) return invalidBody(parsed.error);
   const refused = checkEntry(parsed.data, Date.now(), event.locals.locale);

@@ -23,13 +23,17 @@ export const GET: RequestHandler = async (event) => {
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
-  const body = await readJson(event.request);
+  const body = await readJson(event.request, event.locals?.locale);
   if (body instanceof Response) return body;
   const parsed = dismissalCreateSchema.safeParse(body);
   if (!parsed.success) return invalidBody(localIssues(parsed.error.issues, event.locals?.locale));
   const input = parsed.data;
   const application = getFertilityApplication(input.fertilityApplicationId);
-  if (!application) return json({ error: 'unknown fertilityApplicationId' }, { status: 400 });
+  if (!application)
+    return json(
+      { error: t(event.locals?.locale, 'api.err.unknownFertilityApplication') },
+      { status: 400 }
+    );
   if (application.blockId !== input.blockId) {
     return refusal(400, 'BLOCK_MISMATCH', t(event.locals?.locale, 'amend.api.blockMismatch'));
   }

@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * GET    /api/fields/:id  — fetch one field
  * PATCH  /api/fields/:id  — edit name/acres/location/notes/geometry/kind/details
@@ -19,33 +20,37 @@ import { farmTimeZone } from '$lib/db/userProfile';
 import { blocksDeleteRefusal } from '$lib/server/areaGrazing';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 
-export const GET: RequestHandler = ({ params }) => {
-  if (!params.id) throw error(400, 'id required');
+export const GET: RequestHandler = ({ params, locals }) => {
+  if (!params.id) throw error(400, t(locals?.locale, 'stockui.api.idRequired'));
   const field = getField(params.id);
-  if (!field) throw error(404, 'field not found');
+  if (!field) throw error(404, t(locals?.locale, 'api.err.fieldNotFound'));
   return json({ field });
 };
 
 export const _requestSchema = fieldPatchSchema;
 
 export const PATCH: RequestHandler = async (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const user = requireOwner(event);
-  if (!getField(event.params.id)) throw error(404, 'field not found');
+  if (!getField(event.params.id))
+    throw error(404, t(event.locals?.locale, 'api.err.fieldNotFound'));
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   // Read after the body arrives, so a slow request does not act on an
   // Area kind another write has since changed.
   const existing = getField(event.params.id);
-  if (!existing) throw error(404, 'field not found');
+  if (!existing) throw error(404, t(event.locals?.locale, 'api.err.fieldNotFound'));
   const parsed = fieldPatchSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const nextKind = parsed.data.kind ?? existing.kind;
   if (
@@ -55,8 +60,7 @@ export const PATCH: RequestHandler = async (event) => {
   ) {
     return json(
       {
-        error:
-          'Animals live on this Area, and they cannot live on a natural area, water or a boundary. Move them first.',
+        error: t(event.locals?.locale, 'api.err.animalsOnAreaKind'),
         code: 'AREA_HAS_ANIMALS'
       },
       { status: 409 }
@@ -88,7 +92,10 @@ export const PATCH: RequestHandler = async (event) => {
   if (rawDetails !== undefined) {
     const checked = validateAreaDetails(rest.kind ?? existing.kind, rawDetails);
     if (!checked.ok) {
-      return json({ error: 'invalid details for kind', issues: checked.issues }, { status: 400 });
+      return json(
+        { error: t(event.locals?.locale, 'api.err.invalidDetailsForKind'), issues: checked.issues },
+        { status: 400 }
+      );
     }
     details = checked.details;
   }
@@ -107,9 +114,10 @@ export const PATCH: RequestHandler = async (event) => {
 };
 
 export const DELETE: RequestHandler = async (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const user = requireOwner(event);
-  if (!getField(event.params.id)) throw error(404, 'field not found');
+  if (!getField(event.params.id))
+    throw error(404, t(event.locals?.locale, 'api.err.fieldNotFound'));
   const fieldId = event.params.id;
   const held = await blocksDeleteRefusal(
     fieldId,
@@ -124,7 +132,7 @@ export const DELETE: RequestHandler = async (event) => {
   if (housedSubjectCount(event.params.id) > 0) {
     return json(
       {
-        error: 'Animals live on this Area. Move them somewhere else before deleting it.',
+        error: t(event.locals?.locale, 'api.err.animalsOnAreaDelete'),
         code: 'AREA_HAS_ANIMALS'
       },
       { status: 409 }
@@ -133,8 +141,7 @@ export const DELETE: RequestHandler = async (event) => {
   if (fieldHoldsGroupHistory(event.params.id)) {
     return json(
       {
-        error:
-          "A group was split or an animal changed group here. That record shows which animals share the group's treatments and grazing, so this place has to stay. Rename it instead.",
+        error: t(event.locals?.locale, 'api.err.areaHasLineage'),
         code: 'AREA_HAS_GROUP_HISTORY'
       },
       { status: 409 }

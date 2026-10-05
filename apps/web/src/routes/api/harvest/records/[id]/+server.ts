@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * DELETE /api/harvest/records/:id?force=true — remove a harvest event row.
  *
@@ -17,20 +18,26 @@ import { canMutate } from '$lib/server/session';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 
 export const DELETE: RequestHandler = async (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
   const force = event.url.searchParams.get('force') === 'true';
   if (force && auth?.role !== 'owner') {
-    return json({ error: 'force-delete of locked records requires owner role' }, { status: 403 });
+    return json({ error: t(event.locals?.locale, 'api.err.forceDeleteOwner') }, { status: 403 });
   }
   const existing = getHarvestEvent(event.params.id);
-  if (!existing) throw error(404, 'harvest record not found');
+  if (!existing) throw error(404, t(event.locals?.locale, 'api.err.harvestNotFound'));
   if (countDispositionsForHarvest(existing.id) > 0) {
     return json(
-      { error: 'HARVEST_HAS_DISPOSITIONS', message: 'Remove where it went first.' },
+      {
+        error: 'HARVEST_HAS_DISPOSITIONS',
+        message: t(event.locals?.locale, 'api.err.removeDispositionsFirst')
+      },
       { status: 409 }
     );
   }

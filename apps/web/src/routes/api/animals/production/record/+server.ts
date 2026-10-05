@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 import { lateLabel } from '$lib/records/lateLabel';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { productionRecordSchema } from '$lib/animals/recordApiSchemas';
@@ -34,7 +35,7 @@ export const _requestSchema = productionRecordSchema;
  */
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const user = requireMutator(event);
-  const body = await parseBody(event.request, productionRecordSchema);
+  const body = await parseBody(event.request, productionRecordSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const input = body.data;
   if (firstUnknownRef(assertAnimalSubject('subjectId', input.subjectType, input.subjectId))) {
@@ -44,7 +45,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const occurredAt = input.occurredAt ?? now;
   if (occurredAt > now + MAX_FUTURE_SKEW_MS) {
     return json(
-      { error: 'A log cannot be dated in the future.', code: 'IN_THE_FUTURE' },
+      { error: t(event.locals?.locale, 'api.err.logInFuture'), code: 'IN_THE_FUTURE' },
       { status: 400 }
     );
   }

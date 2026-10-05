@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * GET /api/account/export.zip — the GDPR export with every stored file
  * (A-40). `export.json` is the same object `export.json` returns; each live
@@ -78,7 +79,7 @@ async function exportZip(event: RequestEvent): Promise<Response> {
     return documentRefusal(
       403,
       'INTERACTIVE_OWNER_ONLY',
-      'Only the owner, signed in on their own account, can download the full export.'
+      t(event.locals?.locale, 'api.err.exportInteractiveOwner')
     );
   }
   const payload = await buildAccountExport(event);

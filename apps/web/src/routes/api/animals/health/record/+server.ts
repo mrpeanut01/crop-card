@@ -22,7 +22,7 @@ export const _requestSchema = healthRecordSchema;
  */
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const user = requireMutator(event);
-  const body = await parseBody(event.request, healthRecordSchema);
+  const body = await parseBody(event.request, healthRecordSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const ready = await prepareHealthRecord(event, user, body.data);
   if (!ready.ok) return ready.response;

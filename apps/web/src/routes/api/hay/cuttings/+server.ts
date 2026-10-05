@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * GET  /api/hay/cuttings?blockId=X&year=Y  — list cuttings.
  * POST /api/hay/cuttings                   — create a new cutting (status='mowing').
@@ -46,20 +47,26 @@ export const GET: RequestHandler = ({ url }) => {
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON' }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidJsonShort') },
+      { status: 400 }
+    );
   }
   const parsed = inputSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         issues: parsed.error.issues.map((i) => ({
           path: i.path.join('.'),
           message: i.message
@@ -78,7 +85,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const now = Date.now();
   if (parsed.data.mowAt !== undefined && parsed.data.mowAt > now + MAX_FUTURE_SKEW_MS) {
     return json(
-      { error: 'A mow cannot be dated in the future.', code: 'IN_THE_FUTURE' },
+      { error: t(event.locals?.locale, 'api.err.mowFuture'), code: 'IN_THE_FUTURE' },
       { status: 400 }
     );
   }
@@ -104,7 +111,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (!cropRecord || cropRecord.plugin.type !== 'crop' || !cropRecord.plugin.hayOperations) {
     return json(
       {
-        error: `cropPluginId must reference a crop plugin with hayOperations declared`,
+        error: t(event.locals?.locale, 'api.err.hayPluginRequired'),
         cropPluginId: parsed.data.cropPluginId
       },
       { status: 400 }

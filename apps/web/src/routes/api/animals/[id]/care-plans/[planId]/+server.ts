@@ -26,7 +26,7 @@ export const PATCH: RequestHandler = async (event) => {
   requireOwner(event);
   const plan = planFor(event.params.id, event.params.planId);
   if (!plan) return notFound(event.locals?.locale);
-  const body = await parseBody(event.request, carePlanPatchSchema);
+  const body = await parseBody(event.request, carePlanPatchSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const input = body.data;
   if (input.lastDoneOn && !(input.intervalDays ?? plan.intervalDays)) {

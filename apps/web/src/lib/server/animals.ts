@@ -9,6 +9,7 @@
 import { json } from '@sveltejs/kit';
 import type { z } from 'zod';
 import { db } from '$lib/db/client';
+import { t } from '$lib/i18n';
 import {
   findTagConflicts,
   getAnimal,
@@ -112,13 +113,17 @@ export type Parsed<T> = { ok: true; data: T } | { ok: false; response: Response 
 
 export async function parseBody<S extends z.ZodType>(
   request: Request,
-  schema: S
+  schema: S,
+  locale?: string | null
 ): Promise<Parsed<z.infer<S>>> {
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return { ok: false, response: json({ error: 'invalid JSON body' }, { status: 400 }) };
+    return {
+      ok: false,
+      response: json({ error: t(locale, 'stockui.api.invalidJson') }, { status: 400 })
+    };
   }
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -126,7 +131,7 @@ export async function parseBody<S extends z.ZodType>(
       ok: false,
       response: json(
         {
-          error: parsed.error.issues[0]?.message ?? 'invalid request',
+          error: parsed.error.issues[0]?.message ?? t(locale, 'stockui.api.invalidRequest'),
           issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
         },
         { status: 400 }
@@ -146,11 +151,17 @@ function label(a: Pick<Animal, 'name' | 'tag'>): string {
   return a.name ?? (a.tag ? `tag ${a.tag}` : 'another animal');
 }
 
-export function tagWarnings(tag: string | null | undefined, excludeId?: string): Warning[] {
+export function tagWarnings(
+  tag: string | null | undefined,
+  excludeId?: string,
+  locale?: string | null
+): Warning[] {
   if (!tag?.trim()) return [];
   return findTagConflicts(tag, excludeId).map((a) => ({
     code: 'TAG_IN_USE' as const,
-    message: `Tag ${tag.trim()} is already used by ${label(a)}.`,
+    message: locale
+      ? t(locale, 'api.err.tagInUse', { tag: tag.trim(), name: label(a) })
+      : `Tag ${tag.trim()} is already used by ${label(a)}.`,
     animalId: a.id
   }));
 }

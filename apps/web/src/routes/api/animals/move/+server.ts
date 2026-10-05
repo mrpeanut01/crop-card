@@ -32,7 +32,7 @@ export const _requestSchema = animalMoveSchema;
  *  helper to get the owner. */
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const user = requireMutator(event);
-  const body = await parseBody(event.request, animalMoveSchema);
+  const body = await parseBody(event.request, animalMoveSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const input = body.data;
 

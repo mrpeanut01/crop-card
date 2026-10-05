@@ -32,7 +32,7 @@ export const POST: RequestHandler = async (event) => {
       { status: 409 }
     );
   }
-  const body = await parseBody(event.request, carePlanCreateSchema);
+  const body = await parseBody(event.request, carePlanCreateSchema, event.locals?.locale);
   if (!body.ok) return body.response;
   const plan = createCarePlan(subject.subjectType, subject.subjectId, body.data);
   return json({ plan }, { status: 201 });

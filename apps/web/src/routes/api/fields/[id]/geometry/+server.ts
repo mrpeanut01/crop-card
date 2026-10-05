@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * PUT    /api/fields/:id/geometry — set or replace a field's GeoJSON boundary.
  * DELETE /api/fields/:id/geometry — clear it.
@@ -32,35 +33,36 @@ const geomSchema = z.union([
 ]);
 
 export const PUT: RequestHandler = async (event) => {
-  if (!event.params.id) throw error(400, 'field id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'api.err.fieldIdParamRequired'));
   requireOwner(event);
-  if (!getField(event.params.id)) throw error(404, 'field not found');
+  if (!getField(event.params.id))
+    throw error(404, t(event.locals?.locale, 'api.err.fieldNotFound'));
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    throw error(400, 'invalid JSON');
+    throw error(400, t(event.locals?.locale, 'stockui.api.invalidJsonShort'));
   }
   const parsed = geomSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'expected GeoJSON Polygon / MultiPolygon / Feature / FeatureCollection',
+        error: t(event.locals?.locale, 'api.err.expectedGeoJson'),
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
       { status: 400 }
     );
   }
   const field = updateField(event.params.id, { geometryGeojson: JSON.stringify(parsed.data) });
-  if (!field) throw error(404, 'field not found');
+  if (!field) throw error(404, t(event.locals?.locale, 'api.err.fieldNotFound'));
   return json({ field });
 };
 
 export const DELETE: RequestHandler = (event) => {
-  if (!event.params.id) throw error(400, 'field id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'api.err.fieldIdParamRequired'));
   requireOwner(event);
   const field = updateField(event.params.id, { geometryGeojson: null });
-  if (!field) throw error(404, 'field not found');
+  if (!field) throw error(404, t(event.locals?.locale, 'api.err.fieldNotFound'));
   return json({ field });
 };

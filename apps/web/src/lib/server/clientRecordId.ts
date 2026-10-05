@@ -7,6 +7,7 @@ import {
 } from '$lib/db/clientRecords';
 import { currentOwnerId } from '$lib/db/tenant';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
+import { t } from '$lib/i18n';
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{8,80}$/;
 
@@ -51,14 +52,11 @@ export function markClientRecordSaved(event: { request: Request }): void {
   claim.saved = true;
 }
 
-function answerForHeldElsewhere(key: string): Response {
+function answerForHeldElsewhere(key: string, locale?: string | null): Response {
   if (clientRecordStatus(key) === 'done') {
     return json({ ok: true, duplicate: true }, { status: 200 });
   }
-  return json(
-    { error: 'This record is already being saved. It will retry shortly.' },
-    { status: 503 }
-  );
+  return json({ error: t(locale, 'api.err.recordSavingElsewhere') }, { status: 503 });
 }
 
 /** Makes a record endpoint safe to replay from the offline queue. A request
@@ -76,18 +74,19 @@ export function withClientRecordId(handler: RequestHandler): RequestHandler {
     const key = raw && ID_PATTERN.test(raw) ? raw : null;
     if (!key || !currentOwnerId()) return handler(event);
     const claimed = claimClientRecord(key, event.url.pathname);
-    if (claimed.status !== 'claimed') return answerForHeldElsewhere(key);
+    if (claimed.status !== 'claimed') return answerForHeldElsewhere(key, event.locals?.locale);
     const claim: HeldClaim = { key, token: claimed.token, saved: false, lost: false };
     claims.set(event.request, claim);
     let res: Response;
     try {
       res = await handler(event);
     } catch (e) {
-      if (claim.lost || e instanceof ClientRecordClaimLost) return answerForHeldElsewhere(key);
+      if (claim.lost || e instanceof ClientRecordClaimLost)
+        return answerForHeldElsewhere(key, event.locals?.locale);
       releaseClientRecord(key, claim.token);
       throw e;
     }
-    if (claim.lost) return answerForHeldElsewhere(key);
+    if (claim.lost) return answerForHeldElsewhere(key, event.locals?.locale);
     if (!res.ok) {
       releaseClientRecord(key, claim.token);
     } else if (!claim.saved && !completeClientRecord(key, claim.token)) {

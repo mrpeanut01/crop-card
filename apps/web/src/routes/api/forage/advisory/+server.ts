@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * GET /api/forage/advisory?fieldId=<id> | ?hayCuttingId=<id> (Phase 33C,
  * M-53). Every role. The prussic acid and nitrate advisory for an Area or a
@@ -17,7 +18,7 @@ export const GET: RequestHandler = async (event) => {
     return json(
       {
         error: 'INVALID',
-        message: 'Ask about one Area (fieldId) or one hay cutting (hayCuttingId).'
+        message: t(event.locals?.locale, 'api.err.forageAskOne')
       },
       { status: 400 }
     );
@@ -33,7 +34,7 @@ export const GET: RequestHandler = async (event) => {
   } catch (e) {
     if (e instanceof ForageTargetNotFound) {
       return json(
-        { error: 'NOT_FOUND', message: 'That place or cutting is not on this farm.' },
+        { error: 'NOT_FOUND', message: t(event.locals?.locale, 'api.err.forageNotOnFarm') },
         { status: 404 }
       );
     }

@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /**
  * GET  /api/crops/:id/equipment  — list bindings for this crop
  * POST /api/crops/:id/equipment  — bind equipment to the crop with a role
@@ -17,9 +18,9 @@ import { currentUser } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
 
-export const GET: RequestHandler = ({ params }) => {
-  if (!params.id) throw error(400, 'id required');
-  if (!getCrop(params.id)) throw error(404, 'crop not found');
+export const GET: RequestHandler = ({ params, locals }) => {
+  if (!params.id) throw error(400, t(locals?.locale, 'stockui.api.idRequired'));
+  if (!getCrop(params.id)) throw error(404, t(locals?.locale, 'api.err.cropNotFound'));
   return json({ bindings: listCropEquipment(params.id) });
 };
 
@@ -30,22 +31,28 @@ const postSchema = z.object({
 });
 
 export const POST: RequestHandler = async (event) => {
-  if (!event.params.id) throw error(400, 'id required');
+  if (!event.params.id) throw error(400, t(event.locals?.locale, 'stockui.api.idRequired'));
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.inspectorReadOnly') },
+      { status: 403 }
+    );
   }
-  if (!getCrop(event.params.id)) throw error(404, 'crop not found');
+  if (!getCrop(event.params.id)) throw error(404, t(event.locals?.locale, 'api.err.cropNotFound'));
 
   let body: unknown;
   try {
     body = await event.request.json();
   } catch {
-    return json({ error: 'invalid JSON body' }, { status: 400 });
+    return json({ error: t(event.locals?.locale, 'stockui.api.invalidJson') }, { status: 400 });
   }
   const parsed = postSchema.safeParse(body);
   if (!parsed.success) {
-    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+    return json(
+      { error: t(event.locals?.locale, 'stockui.api.invalidRequest'), issues: parsed.error.issues },
+      { status: 400 }
+    );
   }
   const foreign = rejectForeignRefs(['equipmentId', parsed.data.equipmentId, getEquipment]);
   if (foreign) return foreign;

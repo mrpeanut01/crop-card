@@ -6,6 +6,7 @@ import { isInteractiveOwner } from './interactiveOwner';
 import { tryGuardedHoldWrite } from './holdGuard';
 import { LOCK_WINDOW_MS } from '$lib/db/recordKinds';
 import { DATE_RULE_COPY } from '$lib/animals/holdGuardCopy';
+import { t } from '$lib/i18n';
 
 /**
  * C-35 §5: the one way to shorten a hold. Only the owner, signed in on
@@ -25,15 +26,16 @@ export async function voidRecord(
   if (!isInteractiveOwner(event, user)) {
     return json(
       {
-        error: 'Only the owner, signed in on their own account, can void an entry.',
+        error: t(event.locals?.locale, 'api.err.voidOwnerOnly'),
         code: 'OWNER_ONLY'
       },
       { status: 403 }
     );
   }
-  const body = await parseBody(event.request, holdVoidSchema);
+  const body = await parseBody(event.request, holdVoidSchema, event.locals?.locale);
   if (!body.ok) return body.response;
-  if (!target) return json({ error: 'Record not found.' }, { status: 404 });
+  if (!target)
+    return json({ error: t(event.locals?.locale, 'api.err.recordNotFound') }, { status: 404 });
   if (target.createdAtMs === null || !(Date.now() - target.createdAtMs <= LOCK_WINDOW_MS)) {
     return json({ error: DATE_RULE_COPY.VOID_TOO_LATE, code: 'VOID_TOO_LATE' }, { status: 409 });
   }

@@ -51,8 +51,7 @@ export const DELETE: RequestHandler = async (event) => {
   if (lockedAt !== undefined && !force) {
     return json(
       {
-        error:
-          'This record is locked (48 hours have passed). The owner can still remove it with a reason.',
+        error: t(event.locals?.locale, 'api.err.treatmentLocked'),
         code: 'RECORD_LOCKED'
       },
       { status: 409 }

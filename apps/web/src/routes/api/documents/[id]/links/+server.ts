@@ -1,3 +1,4 @@
+import { t } from '$lib/i18n';
 /** POST /api/documents/:id/links — the owner attaches a file to a subject. */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
@@ -16,13 +17,13 @@ export const POST: RequestHandler = async (event) => {
   try {
     body = await event.request.json();
   } catch {
-    return documentRefusal(400, 'INVALID', 'invalid JSON');
+    return documentRefusal(400, 'INVALID', t(event.locals?.locale, 'stockui.api.invalidJsonShort'));
   }
   const parsed = documentLinkCreateSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
-        error: 'invalid request',
+        error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
         code: 'INVALID',
         issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
       },
@@ -32,18 +33,10 @@ export const POST: RequestHandler = async (event) => {
   const row = getDocument(event.params.id ?? '', { includeDeleted: true });
   if (!row) return documentNotFound();
   if (row.deletedAt) {
-    return documentRefusal(
-      409,
-      'DOCUMENT_DELETED',
-      'This file was deleted, so it cannot be attached.'
-    );
+    return documentRefusal(409, 'DOCUMENT_DELETED', t(event.locals?.locale, 'api.err.docDeleted'));
   }
   if (isPhotoKind(row.kind)) {
-    return documentRefusal(
-      409,
-      'PHOTO_DOCUMENT',
-      'Photos stay with their journal entry or animal.'
-    );
+    return documentRefusal(409, 'PHOTO_DOCUMENT', t(event.locals?.locale, 'api.err.photoStays'));
   }
   const { subjectType, subjectId } = parsed.data;
   const bad = firstUnknownRef(assertDocumentSubject('subjectId', subjectType, subjectId));

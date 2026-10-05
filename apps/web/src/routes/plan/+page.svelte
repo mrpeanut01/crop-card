@@ -2111,6 +2111,7 @@
   }}
   canEdit={data.canEdit}
   keepInOneBedCrops={data.keepInOneBedCrops ?? []}
+  seasonYear={data.currentYear}
   onAddBlock={data.canEdit
     ? () => {
         showNewBlockModal = true;

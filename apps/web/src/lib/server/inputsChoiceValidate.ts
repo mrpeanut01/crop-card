@@ -13,6 +13,7 @@ import type { Philosophy } from '$lib/season/setup';
 import { checkCropCompatibility } from '$lib/safety/cropCompatibility';
 import type { ChemistryClass } from '$lib/safety/types';
 import type { CropPlugin, HerbicidePlugin } from '$lib/plugins/schemas';
+import { rateCeilingProblem } from '$lib/plan/rateCeiling';
 
 export interface ManualChoice {
   id: string;
@@ -21,6 +22,7 @@ export interface ManualChoice {
   productPluginId: string | null;
   productCategory: 'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer';
   rateAmount: number | null;
+  rateUnit?: string | null;
   productSource?: string;
 }
 
@@ -70,9 +72,21 @@ export function validateManualChoices(
         continue;
       }
     }
-    const ceiling = (plugin as { ratePerAcre?: { amount?: number } }).ratePerAcre?.amount;
-    if (typeof ceiling === 'number' && app.rateAmount != null && app.rateAmount > ceiling) {
-      problems.push(`${plugin.displayName} is above its label rate (${ceiling} per acre).`);
+    const ceiling = (plugin as { ratePerAcre?: { amount?: number; unit?: string } }).ratePerAcre;
+    if (typeof ceiling?.amount === 'number' && app.rateAmount != null) {
+      const label = { amount: ceiling.amount, unit: ceiling.unit ?? null };
+      const problem = rateCeilingProblem(app.rateAmount, app.rateUnit, label);
+      if (problem === 'over') {
+        problems.push(
+          `${plugin.displayName} is above its label rate (${label.amount}${label.unit ? ` ${label.unit}` : ''} per acre).`
+        );
+      } else if (problem === 'unit') {
+        problems.push(
+          `${plugin.displayName} rate must be in ${label.unit ?? 'its label unit'} per acre, not ${app.rateUnit}.`
+        );
+      } else if (problem === 'not-positive') {
+        problems.push(`${plugin.displayName} needs a rate above zero.`);
+      }
     }
   }
   return problems;

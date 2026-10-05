@@ -43,6 +43,7 @@ import { checkChemistryCompatibility } from '$lib/safety/chemistry';
 import { getApiKey } from './scanResult';
 import { estimateUsd, selectModel, type AiResultMeta } from './aiPlanning';
 import { extractJsonObject } from './aiJsonExtract';
+import { rateCeilingProblem } from '$lib/plan/rateCeiling';
 
 const MAX_OUTPUT_TOKENS = 3000;
 
@@ -123,7 +124,7 @@ export async function planInputsWithAI(input: AiInputsPlanInput): Promise<AiInpu
     return { plan: deterministic, meta: aiCall.meta };
   }
 
-  const refined = applySubstitutions(deterministic, substitutions);
+  const refined = applySubstitutions(deterministic, substitutions, input);
   const validation = validateAiPlan(refined, input);
 
   if (!validation.ok) {
@@ -193,7 +194,7 @@ export async function refineInputs(input: {
   }
 
   const substitutions = parseSubstitutions(aiCall.parsed);
-  const refined = applySubstitutions(input.previousPlan, substitutions);
+  const refined = applySubstitutions(input.previousPlan, substitutions, input.base);
   const validation = validateAiPlan(refined, input.base);
 
   if (!validation.ok) {
@@ -406,9 +407,20 @@ function parseSubstitutions(raw: unknown): AiInputsSubstitution[] {
   return out;
 }
 
-function applySubstitutions(
+function catalogDisplayName(input: InputsPlanInput, pluginId: string): string | null {
+  for (const cat of ['herbicides', 'insecticides', 'fungicides', 'fertilizers'] as const) {
+    const hit = input.productPlugins[cat].find((p) => p.pluginId === pluginId);
+    if (hit) return hit.displayName;
+  }
+  return null;
+}
+
+/** The product name always comes from the catalog, never from Claude, so a
+ *  task title cannot name a different product than the one planned. */
+export function applySubstitutions(
   plan: InputsPlan,
-  subs: ReadonlyArray<AiInputsSubstitution>
+  subs: ReadonlyArray<AiInputsSubstitution>,
+  input: InputsPlanInput
 ): InputsPlan {
   if (subs.length === 0) return plan;
   const byId = new Map(subs.map((s) => [s.applicationId, s]));
@@ -418,7 +430,7 @@ function applySubstitutions(
     return {
       ...app,
       productPluginId: sub.productPluginId,
-      productDisplayName: sub.productDisplayName,
+      productDisplayName: catalogDisplayName(input, sub.productPluginId) ?? sub.productDisplayName,
       rateAmount: sub.rateAmount,
       rateUnit: sub.rateUnit,
       totalAmount: Math.round(sub.rateAmount * app.acres * 100) / 100,
@@ -451,6 +463,13 @@ export function validateAiPlan(plan: InputsPlan, input: InputsPlanInput): Valida
     const plugin = pluginById.get(app.productPluginId);
     if (!plugin) {
       violations.push(`unknown-product:${app.productPluginId}`);
+      continue;
+    }
+
+    // 0. The product must be the slot's own kind: a herbicide in a
+    //    fungicide slot would skip the crop compatibility check below.
+    if ((plugin as { type?: string }).type !== app.productCategory) {
+      violations.push(`category-mismatch:${app.id}:${app.productPluginId}`);
       continue;
     }
 
@@ -488,9 +507,16 @@ export function validateAiPlan(plan: InputsPlan, input: InputsPlanInput): Valida
 
     // 4. Rate ceiling.
     if (hasRate(plugin) && app.rateAmount != null) {
-      const ceiling = plugin.ratePerAcre.amount;
-      if (app.rateAmount > ceiling) {
-        violations.push(`rate-over-ceiling:${app.id}:${app.rateAmount}>${ceiling}`);
+      const ceiling = plugin.ratePerAcre;
+      const problem = rateCeilingProblem(app.rateAmount, app.rateUnit, ceiling);
+      if (problem === 'over') {
+        violations.push(
+          `rate-over-ceiling:${app.id}:${app.rateAmount} ${app.rateUnit ?? ''}>${ceiling.amount} ${ceiling.unit}`
+        );
+      } else if (problem === 'unit') {
+        violations.push(`rate-unit-mismatch:${app.id}:${app.rateUnit}`);
+      } else if (problem === 'not-positive') {
+        violations.push(`rate-not-positive:${app.id}:${app.rateAmount}`);
       }
     }
   }

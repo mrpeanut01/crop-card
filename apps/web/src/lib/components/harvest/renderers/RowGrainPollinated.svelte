@@ -4,6 +4,7 @@
   import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
+  import { parseMoisturePct } from './format';
 
   const props: RendererProps = $props();
   const tr = $derived(createT(page.data?.locale));
@@ -24,11 +25,11 @@
     const quantity = bushels.trim() ? `${bushels} bu` : input.quantity;
     const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
     // #322 — moisture also travels as a structured number so the kernel gate is reachable.
-    const moisture = parseFloat(moisturePct);
+    const moisture = parseMoisturePct(moisturePct);
     return props.onCommit({
       quantity,
       lotNumber: lot || undefined,
-      moisturePct: Number.isFinite(moisture) ? moisture : undefined
+      moisturePct: moisture
     });
   }
 </script>

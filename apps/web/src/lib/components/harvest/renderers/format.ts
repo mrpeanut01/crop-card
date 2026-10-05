@@ -27,3 +27,13 @@ export function usText(v: number | null | undefined): string {
   if (v === null || v === undefined || !Number.isFinite(v)) return '';
   return String(Number(v.toFixed(2)));
 }
+
+/** A typed moisture %, read the way the operator meant it: "13,9" (a
+ *  comma-decimal keyboard) is 13.9, never 13, so the harvest-moisture gate
+ *  sees the real value. Undefined when nothing usable was typed. */
+export function parseMoisturePct(text: string): number | undefined {
+  const t = text.trim();
+  if (!t) return undefined;
+  const n = parseFloat(t.includes(',') && !t.includes('.') ? t.replace(',', '.') : t);
+  return Number.isFinite(n) ? n : undefined;
+}

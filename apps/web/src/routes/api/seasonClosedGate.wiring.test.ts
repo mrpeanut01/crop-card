@@ -36,6 +36,15 @@ describe('SEASON_CLOSED gate wiring', () => {
     });
   }
 
+  it('every call passes the request locale, so the refusal reads in its language', () => {
+    for (const rel of ENDPOINTS) {
+      const src = readFileSync(path.join(here, rel), 'utf8');
+      const calls = [...src.matchAll(/checkSeasonClosed\(([^;]*?)\);/g)].map((m) => m[1]);
+      expect(calls.length, rel).toBeGreaterThan(0);
+      for (const args of calls) expect(args, rel).toMatch(/,\s*[\w.?]*locale\s*$/);
+    }
+  });
+
   it('every endpoint uses the shared helper (no copied year→closed lookup)', () => {
     for (const rel of ENDPOINTS) {
       const src = readFileSync(path.join(here, rel), 'utf8');

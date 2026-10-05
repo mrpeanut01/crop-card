@@ -6,8 +6,10 @@ import {
   allocateDeterministic,
   buildAllocationPrompt,
   buildCandidacyMatrix,
+  hashInputsForMatrix,
   validateAiPlan
 } from './aiAllocation';
+import type { Crop } from '$lib/db/crops';
 
 function plugin(over: Partial<CropPlugin> & { pluginId: string }): CropPlugin {
   return {
@@ -696,5 +698,38 @@ describe('engine advisories for blocks with no size (review)', () => {
     const result = allocateDeterministic(input, 'no-api-key');
     expect(result.unplaced.length).toBeGreaterThan(0);
     expect(result.advisories.join(' ')).not.toMatch(/no size yet/);
+  });
+});
+
+describe('hashInputsForMatrix (cached candidacy matrix key)', () => {
+  it('changes when a planting lands on a picked block, so a stale plantsFit is never reused', () => {
+    const before = makeInput();
+    const after: PlanInput = {
+      ...before,
+      existingCrops: [
+        {
+          id: 'c1',
+          blockId: 'A',
+          cropPluginId: 'lettuce',
+          status: 'planned',
+          quantityPlanted: 400
+        } as unknown as Crop
+      ]
+    };
+    expect(buildCandidacyMatrix(after)[0].plantsFit).toBeLessThan(
+      buildCandidacyMatrix(before)[0].plantsFit
+    );
+    expect(hashInputsForMatrix(after)).not.toBe(hashInputsForMatrix(before));
+  });
+
+  it('changes when a block is resized or a companion rule changes, and is stable otherwise', () => {
+    const base = makeInput();
+    expect(hashInputsForMatrix(makeInput())).toBe(hashInputsForMatrix(base));
+    expect(hashInputsForMatrix({ ...base, blocks: [block('A', 0.25), block('B', 0.5)] })).not.toBe(
+      hashInputsForMatrix(base)
+    );
+    expect(
+      hashInputsForMatrix({ ...base, companions: { lettuce: { goodWith: [], badWith: ['x'] } } })
+    ).not.toBe(hashInputsForMatrix(base));
   });
 });

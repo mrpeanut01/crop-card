@@ -25,7 +25,7 @@ import {
   type FarmContext
 } from './aiPlanning';
 import { recordAiCall } from './aiCallStats';
-import { getDerivedSignal, setDerivedSignal } from './aiDerivedSignals';
+import { contentKey, getDerivedSignal, setDerivedSignal } from './aiDerivedSignals';
 import { appendTurn, buildThreadedMessages } from './aiPlanningSession';
 import { getApiKey } from './scanResult';
 
@@ -1046,15 +1046,17 @@ function appendGroupsTurn(
  *  ids, year). Used as the derived-signal subKey so a stale matrix from a
  *  different draft set doesn't get reused. */
 function hashInputsForMatrix(input: GroupPlanningInput): string {
-  const draftKey = input.drafts
-    .map((d) => `${d.id}:${d.cropPluginId}:${d.blockId}`)
-    .sort()
-    .join(',');
-  const blockKey = input.blocks
-    .map((b) => b.id)
-    .sort()
-    .join(',');
-  return `${input.year}|${draftKey}|${blockKey}`;
+  const pluginIds = [...new Set(input.drafts.map((d) => d.cropPluginId))].sort();
+  return `groups:${contentKey({
+    drafts: input.drafts,
+    blocks: input.blocks,
+    plugins: pluginIds.map((id) => input.pluginIndex[id] ?? null),
+    soilTempEarliestByCrop: input.soilTempEarliestByCrop,
+    lastSpringFrostMs: input.lastSpringFrostMs,
+    firstFallFrostMs: input.firstFallFrostMs,
+    year: input.year,
+    densityByDraft: input.densityByDraft ?? null
+  })}`;
 }
 
 function addMeta(target: AiResultMeta, src: AiResultMeta): void {

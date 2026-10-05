@@ -53,7 +53,7 @@ import {
   type FarmContext
 } from './aiPlanning';
 import { recordAiCall } from './aiCallStats';
-import { getDerivedSignal, setDerivedSignal } from './aiDerivedSignals';
+import { contentKey, getDerivedSignal, setDerivedSignal } from './aiDerivedSignals';
 import { appendTurn, buildThreadedMessages } from './aiPlanningSession';
 import { getApiKey } from './scanResult';
 import {
@@ -1837,20 +1837,24 @@ function appendAllocateTurn(
 /** Stable hash of the allocation-specific inputs (seed list + block ids).
  *  Used as the `subKey` for the candidacy-matrix derived signal so a fresh
  *  seed/block selection doesn't reuse a stale matrix from a prior call. */
-function hashInputsForMatrix(input: PlanInput): string {
-  const seedKey = input.seeds
-    .map(
-      (s) => `${s.stockItemId}:${s.cropPluginId}:${s.quantityPlants}:${s.fillToCapacity ? 'f' : ''}`
-    )
-    .sort()
-    .join(',');
-  const beds = new Set(input.bedBlockIds ?? []);
-  const blockKey = input.blocks
-    .map((b) => `${b.id}${beds.has(b.id) ? ':bed' : ''}`)
-    .sort()
-    .join(',');
-  return `${seedKey}|${blockKey}`;
+export function hashInputsForMatrix(input: PlanInput): string {
+  const pluginIds = new Set<string>([
+    ...input.seeds.map((s) => s.cropPluginId),
+    ...input.existingCrops.map((c) => c.cropPluginId)
+  ]);
+  return `alloc:${contentKey({
+    seeds: input.seeds,
+    blocks: input.blocks,
+    axes: input.axes,
+    existingCrops: input.existingCrops,
+    companions: input.companions,
+    bedBlockIds: input.bedBlockIds ?? [],
+    plugins: [...pluginIds].sort().map((id) => input.pluginIndex[id] ?? null),
+    day: Math.floor((input.nowMs ?? Date.now()) / DAY_MS_MATRIX)
+  })}`;
 }
+
+const DAY_MS_MATRIX = 86_400_000;
 
 function addMeta(target: AiResultMeta, src: AiResultMeta): void {
   target.inputTokens += src.inputTokens;

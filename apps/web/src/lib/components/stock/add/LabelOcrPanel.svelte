@@ -75,6 +75,8 @@
   let preview = $state<string | null>(null); // data: URL for the preview card
   let extracting = $state(false);
   let extractError = $state<string | null>(null);
+  /** The server's machine reason (`fallbackReason`) for the last failure. */
+  let extractReason = $state<string | null>(null);
   // #248 — camera modal lifecycle. Mounted on demand so getUserMedia
   // only fires when the operator explicitly asks for the camera.
   let cameraOpen = $state(false);
@@ -137,17 +139,15 @@
     }
   }
 
-  // #250 / #251 — detect the canonical no-key error string so the
-  // error CTA can recover (link to settings + offer Manual) rather
-  // than offer the useless "Try another photo" loop. The server
-  // string lives at apps/web/src/lib/server/scanResult.ts:738.
-  const isNoKeyError = $derived(
-    !!extractError && /No Anthropic API key configured/i.test(extractError)
-  );
+  // #250 / #251 — the server's `fallbackReason: 'no-key'` lets the error
+  // CTA recover (link to settings + offer Manual) rather than offer the
+  // useless "Try another photo" loop. The message itself is translated.
+  const isNoKeyError = $derived(!!extractError && extractReason === 'no-key');
 
   async function runExtract(dataUrl: string): Promise<void> {
     extracting = true;
     extractError = null;
+    extractReason = null;
     try {
       const res = await fetch('/api/scan-label', {
         method: 'POST',
@@ -155,13 +155,14 @@
         body: JSON.stringify(target ? { image: dataUrl, target } : { image: dataUrl })
       });
       const body = await res.json();
+      extractReason = typeof body.fallbackReason === 'string' ? body.fallbackReason : null;
       if (!res.ok) {
         extractError =
           body.message ?? body.error ?? tr('stockui.httpStatus', { status: res.status });
         return;
       }
       if (!body.found) {
-        extractError = tr('stockui.ocr.notIdentified');
+        extractError = body.message ?? tr('stockui.ocr.notIdentified');
         return;
       }
       const draft = target ? draftFromMedScan(body) : draftFromScanResult(body, 'ai');

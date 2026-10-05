@@ -721,5 +721,20 @@ export const enInventory = {
   'equip.w.ledeStrict':
     "End-of-season storage prep. Confirm each step before the next one opens. The final decon uses the class-specific protocol for this sprayer's last load.",
   'equip.w.ledeStandard':
-    "End-of-season storage prep. Confirm each step before the next one opens. The final decon uses the standard protocol for this sprayer's last load."
+    "End-of-season storage prep. Confirm each step before the next one opens. The final decon uses the standard protocol for this sprayer's last load.",
+  'scanai.noKey': 'No Anthropic API key configured. Add it on the Settings page.',
+  'scanai.this.label': 'this label',
+  'scanai.this.page': 'this page',
+  'scanai.this.barcode': 'this barcode',
+  'scanai.the.label': 'the label',
+  'scanai.the.page': 'the page',
+  'scanai.the.barcode': 'the barcode',
+  'scanai.rejected':
+    'Claude could not read {thing}{detail}. Try a clearer or smaller photo, or use Manual entry.',
+  'scanai.failed': 'Claude could not read {thing}{detail}. Try again, or use Manual entry.',
+  'scanai.timeout': 'Claude took too long to read {thing}. Try again, or use Manual entry.',
+  'scanai.unavailable': 'AI is unavailable right now. Use Manual entry.',
+  'scanai.limited': '{reason}. Manual entry still works.',
+  'scanai.overloaded': "Anthropic's API is busy right now. Please try again in a moment.",
+  'stockui.barcode.notFoundAi': 'Barcode not in OpenFoodFacts. {message}'
 } as const;

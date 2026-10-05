@@ -988,6 +988,20 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.override.applied':
     'Se aplicó el plan de la IA por encima del validador. La tabla de arriba muestra la nueva distribución. Se pasaron por alto las revisiones de tamaño y espacio, así que revise la cantidad de plantas antes de guardar.',
   'wizard.err.schedule': 'falló la solicitud del calendario',
+  'wizard.chat.planUnchanged': 'El plan de arriba no cambió.',
+  'wizard.chat.planUpdated': 'Listo, se actualizó el plan de arriba.',
+  'wizard.chat.planRulesFlagged':
+    '⚠ No se pudo aplicar el cambio: las reglas de planificación lo marcaron. El plan de arriba no cambió.',
+  'wizard.chat.planUnchangedReason': '⚠ El plan de arriba no cambió ({reason}).',
+  'wizard.chat.why': 'Por qué:',
+  'wizard.chat.scheduleUnchanged': 'El calendario de arriba no cambió.',
+  'wizard.chat.scheduleUpdated': 'Listo, se actualizaron las fechas de arriba.',
+  'wizard.chat.scheduleNoKey':
+    '⚠ No hay una clave de API de Anthropic configurada; el calendario de arriba no cambió.',
+  'wizard.chat.scheduleUnavailable': '⚠ Claude no está disponible; el calendario de arriba no cambió.',
+  'wizard.chat.scheduleRulesFlagged':
+    '⚠ No se pudo aplicar el cambio: rompería una ventana de siembra, un escalonamiento o un desfase de compañeras. El calendario de arriba no cambió.',
+  'wizard.chat.validatorViolations': 'Infracciones del validador:',
   'wizard.poll.noGeometry':
     'No se pudo revisar el aislamiento entre {blockA} y {blockB}. Dibuja uno o ambos en el mapa para activar la revisión.',
   'wizard.poll.isolated':

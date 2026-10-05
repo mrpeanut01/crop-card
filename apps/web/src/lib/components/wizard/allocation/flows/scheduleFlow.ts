@@ -151,18 +151,20 @@ export class ScheduleFlow {
       typeof body.reply === 'string' && body.reply.trim().length > 0
         ? body.reply
         : fallback
-          ? 'The schedule above is unchanged.'
-          : 'Done — updated the dates above.';
+          ? wt('wizard.chat.scheduleUnchanged')
+          : wt('wizard.chat.scheduleUpdated');
     let reply = aiReply;
     if (fallback) {
       const header =
         fallback === 'no-api-key'
-          ? '⚠ No Anthropic API key configured — the schedule above is unchanged.'
+          ? wt('wizard.chat.scheduleNoKey')
           : fallback === 'ai-unavailable'
-            ? '⚠ Claude is unavailable — the schedule above is unchanged.'
-            : '⚠ Could not apply the change — it would break a planting window, stagger, or companion offset. The schedule above is unchanged.';
+            ? wt('wizard.chat.scheduleUnavailable')
+            : wt('wizard.chat.scheduleRulesFlagged');
       const violationLine =
-        violations.length > 0 ? `\n\nValidator violations:\n• ${violations.join('\n• ')}` : '';
+        violations.length > 0
+          ? `\n\n${wt('wizard.chat.validatorViolations')}\n• ${violations.join('\n• ')}`
+          : '';
       reply = `${header}${violationLine}\n\n${aiReply}`;
     }
     this.#w.scheduleChatMessages = [

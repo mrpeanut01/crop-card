@@ -4,6 +4,8 @@ import { listSubscriptionsForUser } from '$lib/db/pushSubscriptions';
 import { sendToSubscriptions } from '$lib/server/push/dispatch';
 import { testSchema } from '$lib/server/push/validate';
 import { readVapidConfig } from '$lib/server/push/webPush';
+import { recipientLocale } from '$lib/server/recipientLocale';
+import { t } from '$lib/i18n';
 
 /** NFR-06 — send a test notification to the caller's own subscriptions on
  *  the active Owner (optionally just one endpoint). */
@@ -17,11 +19,12 @@ export const POST: RequestHandler = async (event) => {
   const endpoint = parsed.data.endpoint;
   const subs = listSubscriptionsForUser(u.id).filter((s) => !endpoint || s.endpoint === endpoint);
   if (subs.length === 0) throw error(404, 'no push subscription for this user');
+  const locale = recipientLocale(u.id);
   const summary = await sendToSubscriptions(
     subs,
     {
-      title: 'CropCard test notification',
-      body: 'Push alerts are working on this device.',
+      title: t(locale, 'push.test.title'),
+      body: t(locale, 'push.test.body'),
       url: '/settings/notifications',
       tag: 'cropcard-test',
       kind: 'test'

@@ -61,6 +61,7 @@ import {
   pendingCalibrations,
   rainGaugeReadings,
   recordDeletions,
+  scoutObservations,
   seedStarts,
   soilTests,
   sprayEvents,
@@ -400,6 +401,12 @@ export function deleteCropCascade(
     .where(withTenant(insecticideEvents, eq(insecticideEvents.cropId, id)))
     .all()
     .map((r) => r.id);
+  const fungicideIds = db
+    .select({ id: fungicideEvents.id })
+    .from(fungicideEvents)
+    .where(withTenant(fungicideEvents, eq(fungicideEvents.cropId, id)))
+    .all()
+    .map((r) => r.id);
   const fertilityIds = db
     .select({ id: fertilityApplications.id })
     .from(fertilityApplications)
@@ -417,6 +424,12 @@ export function deleteCropCascade(
     removed.stock_movements_insecticide = db
       .delete(stockMovements)
       .where(withTenant(stockMovements, inArray(stockMovements.insecticideEventId, insecticideIds)))
+      .run().changes;
+  }
+  if (fungicideIds.length) {
+    removed.stock_movements_fungicide = db
+      .delete(stockMovements)
+      .where(withTenant(stockMovements, inArray(stockMovements.fungicideEventId, fungicideIds)))
       .run().changes;
   }
   if (fertilityIds.length) {
@@ -463,8 +476,19 @@ export function deleteCropCascade(
       });
     }
   }
+  for (const fid of fungicideIds) {
+    const e = getFungicideEvent(fid);
+    if (e) {
+      writeDeletionTombstone('fungicide', fid, e, {
+        reason: 'planting deleted',
+        deletedFromFieldId: opts.deletedFromFieldId
+      });
+    }
+  }
   removed.spray_events = del(sprayEvents, eq(sprayEvents.cropId, id));
   removed.insecticide_events = del(insecticideEvents, eq(insecticideEvents.cropId, id));
+  removed.fungicide_events = del(fungicideEvents, eq(fungicideEvents.cropId, id));
+  removed.scout_observations = del(scoutObservations, eq(scoutObservations.cropId, id));
   removed.fertility_applications = del(fertilityApplications, eq(fertilityApplications.cropId, id));
   removed.harvest_dispositions = deleteDispositionsOfHarvests(
     harvestIdsWhere(eq(harvestEvents.cropId, id)),
@@ -607,6 +631,26 @@ export function deleteBlockCascade(id: string): DeleteSummary {
     .where(withTenant(insecticideEvents, eq(insecticideEvents.blockId, id)))
     .all()
     .map((r) => r.id);
+  const blockFungicideIds = db
+    .select({ id: fungicideEvents.id })
+    .from(fungicideEvents)
+    .where(withTenant(fungicideEvents, eq(fungicideEvents.blockId, id)))
+    .all()
+    .map((r) => r.id);
+  for (const fid of blockFungicideIds) {
+    const e = getFungicideEvent(fid);
+    if (e) {
+      writeDeletionTombstone('fungicide', fid, e, { reason: 'block deleted', deletedFromFieldId });
+    }
+  }
+  if (blockFungicideIds.length) {
+    removed.stock_movements_block_fungicide = db
+      .delete(stockMovements)
+      .where(
+        withTenant(stockMovements, inArray(stockMovements.fungicideEventId, blockFungicideIds))
+      )
+      .run().changes;
+  }
   for (const sid of blockSprayIds) {
     const e = getSprayEvent(sid);
     if (e) {
@@ -639,6 +683,8 @@ export function deleteBlockCascade(id: string): DeleteSummary {
 
   removed.spray_events_block = del(sprayEvents, eq(sprayEvents.blockId, id));
   removed.insecticide_events_block = del(insecticideEvents, eq(insecticideEvents.blockId, id));
+  removed.fungicide_events_block = del(fungicideEvents, eq(fungicideEvents.blockId, id));
+  removed.scout_observations_block = del(scoutObservations, eq(scoutObservations.blockId, id));
   removed.harvest_dispositions_block = deleteDispositionsOfHarvests(
     harvestIdsWhere(eq(harvestEvents.blockId, id)),
     'block deleted'

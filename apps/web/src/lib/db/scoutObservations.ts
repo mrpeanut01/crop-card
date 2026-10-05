@@ -11,7 +11,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { desc, eq, gte } from 'drizzle-orm';
+import { desc, eq, gte, lte } from 'drizzle-orm';
 import { db } from './client';
 import { scoutObservations } from './schema';
 import { tenantValues, withTenant } from './tenant';
@@ -75,6 +75,7 @@ export interface ListFilters {
   pest?: string;
   metric?: string;
   fromMs?: number;
+  toMs?: number;
   limit?: number;
 }
 
@@ -85,6 +86,9 @@ export function listScoutObservations(filters: ListFilters = {}): ScoutObservati
     filters.metric ? eq(scoutObservations.metric, filters.metric) : undefined,
     filters.fromMs !== undefined
       ? gte(scoutObservations.occurredAt, new Date(filters.fromMs))
+      : undefined,
+    filters.toMs !== undefined
+      ? lte(scoutObservations.occurredAt, new Date(filters.toMs))
       : undefined
   ];
 

@@ -27,9 +27,13 @@ env:
 jobs:
   gate:
     uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ inputs.tag || github.ref }}
 
   security:
     uses: ./.github/workflows/security.yml
+    with:
+      ref: ${{ inputs.tag || github.ref }}
     permissions:
       contents: read
       security-events: write

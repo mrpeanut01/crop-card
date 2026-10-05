@@ -11,6 +11,12 @@ on:
   pull_request:
     branches: [main]
   workflow_call:
+    inputs:
+      ref:
+        description: Ref to check out (blank = the triggering ref). release.yml passes the tag.
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -26,6 +32,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
       - uses: pnpm/action-setup@v6
         with:
           version: 9.12.3
@@ -51,6 +59,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
       - uses: pnpm/action-setup@v6
         with:
           version: 9.12.3
@@ -67,6 +77,8 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
       - uses: pnpm/action-setup@v6
         with:
           version: 9.12.3
@@ -112,6 +124,8 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
       - uses: actions/dependency-review-action@v5
         with:
           fail-on-severity: high
@@ -122,6 +136,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
       - name: Install Bicep
         run: az bicep install
       - name: Build Bicep

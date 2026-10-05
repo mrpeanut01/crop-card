@@ -9,7 +9,7 @@
  * Run: `pnpm gen:safety-snapshot` (from repo root) or
  *      `pnpm -F @cropcard/plugin-validation gen:safety-snapshot`.
  *
- * CI gates on drift via `git diff --exit-code packages/plugin-validation/src/safetySnapshot.ts`.
+ * CI gates on drift through apps/web/src/lib/plugins/safetySnapshot.drift.test.ts.
  */
 
 import { writeFileSync } from 'node:fs';

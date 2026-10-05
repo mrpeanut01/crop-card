@@ -507,7 +507,7 @@
     const { target } = workflowStepRoute(stepId, data.seasonWorkflow ?? [], data.locale);
     if (!target) return;
     if (target.kind === 'wizard') {
-      openWizard(target.wizardStep);
+      if (data.canEdit) openWizard(target.wizardStep);
     } else if (target.kind === 'calendar') {
       const sp = new URLSearchParams($page.url.searchParams);
       sp.set('tab', 'calendar');
@@ -2016,7 +2016,7 @@
   <WorkflowStrip
     seasonYear={data.currentYear ?? new Date().getFullYear()}
     steps={withStepRoutes(data.seasonWorkflow, data.locale)}
-    onOpenWizard={() => openWizard()}
+    onOpenWizard={data.canEdit ? () => openWizard() : undefined}
     onSelectStep={handleWorkflowStep}
     calendarHref="/plan/calendar?year={data.currentYear ?? new Date().getFullYear()}"
   />
@@ -2105,7 +2105,7 @@
       }
     ])
   )}
-  onOpenWizard={() => openWizard()}
+  onOpenWizard={data.canEdit ? () => openWizard() : undefined}
   onAddTask={(blockId, plantingId) => {
     addTaskTarget = { blockId, plantingId };
   }}
@@ -2122,12 +2122,14 @@
         editBlockTargetId = blockId;
       }
     : undefined}
-  onAddPlanting={(blockId) => {
-    const block = data.blocks.find((b) => b.id === blockId);
-    addPlantingTargetBlockId = blockId;
-    addPlantingTargetBlockName = block?.name ?? tr('plan.page.thisBlock');
-    showNewPlantingModal = true;
-  }}
+  onAddPlanting={data.canEdit
+    ? (blockId) => {
+        const block = data.blocks.find((b) => b.id === blockId);
+        addPlantingTargetBlockId = blockId;
+        addPlantingTargetBlockName = block?.name ?? tr('plan.page.thisBlock');
+        showNewPlantingModal = true;
+      }
+    : undefined}
 />
 
 {#if data.canEdit && data.blocks.length > 0 && data.blocks.every((b) => b.plantings.length === 0)}

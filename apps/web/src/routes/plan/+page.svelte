@@ -1676,8 +1676,12 @@
           body: JSON.stringify({ fieldId: targetBlock.fieldId })
         });
         if (r.ok) await invalidateAll();
+        else {
+          const j = await r.json().catch(() => ({}));
+          plantingError = j?.error ?? tr('plan.page.moveBlockFailed', { status: r.status });
+        }
       } catch {
-        // network error — order is still saved locally; user can retry
+        plantingError = tr('plan.page.networkError');
       }
       return;
     }
@@ -1731,8 +1735,12 @@
         body: JSON.stringify({ fieldId })
       });
       if (r.ok) await invalidateAll();
+      else {
+        const j = await r.json().catch(() => ({}));
+        plantingError = j?.error ?? tr('plan.page.moveBlockFailed', { status: r.status });
+      }
     } catch {
-      // network error — order is still saved locally; user can retry
+      plantingError = tr('plan.page.networkError');
     }
   }
 

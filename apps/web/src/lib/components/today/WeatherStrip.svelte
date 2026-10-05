@@ -35,7 +35,7 @@
     const wet = weather.days.slice(0, 3).filter((d) => d.popPct >= RAIN_POP_PCT);
     const day = (d: string) => fmt.day(d, 'weekday').toLowerCase();
     if (wet.length === 1)
-      return tr('today.weather.rainOne', { pct: wet[0].popPct, day: day(wet[0].date) });
+      return tr('today.weather.rainOn', { pct: wet[0].popPct, day: day(wet[0].date) });
     if (wet.length >= 2) {
       return tr('today.weather.rainRange', {
         from: day(wet[0].date),

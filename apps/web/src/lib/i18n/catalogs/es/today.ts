@@ -373,7 +373,6 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'today.weather.low': 'Mín.',
   'today.weather.noLocation': 'No hay ubicación de granja para el pronóstico',
   'today.weather.rainOn': '{pct}% de lluvia el {day}',
-  'today.weather.rainOne': '{pct}% de lluvia el {day}',
   'today.weather.rainRange': 'lluvia {from}→{to}',
   'today.weather.setLocation': 'Define la ubicación de tu granja para ver el pronóstico',
   'today.weather.unavailable': 'El clima no está disponible ahora',

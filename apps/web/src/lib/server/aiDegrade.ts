@@ -4,6 +4,7 @@ import { t } from '$lib/i18n';
 import { currentOwnerId, runWithTenant } from '$lib/db/tenant';
 import { checkGuard, recordCall, reserveGuard, type GuardHold, type GuardOutcome } from './aiGuard';
 import { aiTry, type FallbackReason } from './aiTry';
+import { AiSpentError } from './aiCost';
 import { getApiKey } from './scanResult';
 
 /** Planning + plugin-lookup calls routinely run far longer than aiTry's 6s
@@ -140,6 +141,37 @@ function meterLateSettle<T>(
   );
 }
 
+/** Claude answered but the prompt function threw: the call was still billed,
+ *  so its usage is logged against the farm's budget and daily cap. */
+function meterSpentError<T>(
+  err: AiSpentError,
+  args: TryAiWithGuardArgs<T>,
+  reason: FallbackReason,
+  hold: GuardHold | null
+): void {
+  const usage = usageFromMeta({ meta: err.meta });
+  if (!usage || usage.inputTokens + usage.outputTokens <= 0) return;
+  hold?.settle(usage.usdEstimate);
+  try {
+    recordCall({
+      userId: args.userId,
+      endpoint: args.endpoint,
+      model: usage.model,
+      inputTokens: usage.inputTokens,
+      cachedInputTokens: usage.cachedInputTokens,
+      outputTokens: usage.outputTokens,
+      usdEstimate: usage.usdEstimate,
+      success: false,
+      errorClass: 'invalid-response',
+      provenance: 'fallback',
+      fallbackReason: reason,
+      attemptedAiAt: Date.now()
+    });
+  } catch (e) {
+    console.error(`[ai] ${args.endpoint} recordCall failed`, e);
+  }
+}
+
 /** The guard's refusal, trimmed to what a banner and upgrade nudge need. */
 export function aiLimitOf(guard: GuardOutcome): AiLimit | null {
   if (guard.ok || !guard.detail) return null;
@@ -211,6 +243,8 @@ export async function tryAiWithGuard<T>(args: TryAiWithGuardArgs<T>): Promise<De
       controller.abort();
       meterLateSettle(state.pending, args, ownerId, hold);
       keepHold = true;
+    } else if (state.error instanceof AiSpentError) {
+      meterSpentError(state.error, args, reason, hold);
     }
     return {
       provenance: 'fallback',

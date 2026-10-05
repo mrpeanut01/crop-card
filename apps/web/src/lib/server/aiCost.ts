@@ -23,3 +23,22 @@ export function usageSurchargeUsd(
     searches * WEB_SEARCH_USD_PER_REQUEST
   );
 }
+
+/** Thrown by a prompt function when Claude answered (and billed) but the
+ *  answer was unusable. `tryAiWithGuard` logs `meta` so the spend still
+ *  counts toward the farm's budget and daily cap before degrading. */
+export class AiSpentError extends Error {
+  constructor(
+    message: string,
+    readonly meta: {
+      model: string;
+      inputTokens: number;
+      cachedInputTokens: number;
+      outputTokens: number;
+      usdEstimate: number;
+    }
+  ) {
+    super(message);
+    this.name = 'AiSpentError';
+  }
+}

@@ -737,5 +737,12 @@ export const enInventory = {
   'scanai.unavailable': 'AI is unavailable right now. Use Manual entry.',
   'scanai.limited': '{reason}. Manual entry still works.',
   'scanai.overloaded': "Anthropic's API is busy right now. Please try again in a moment.",
+  'scanai.url.invalid-url': 'URL is not valid',
+  'scanai.url.bad-scheme': 'URL must use http or https',
+  'scanai.url.credentials': 'URL must not contain credentials',
+  'scanai.url.blocked-address': 'URL must be a public http(s) address',
+  'scanai.url.bad-redirect': 'Redirect to an invalid URL',
+  'scanai.url.loadFailed': 'Could not load page',
+  'scanai.url.noInfo': 'Page contained no readable product info — try a different URL.',
   'stockui.barcode.notFoundAi': 'Barcode not in OpenFoodFacts. {message}'
 } as const;

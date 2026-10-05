@@ -759,5 +759,12 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'scanai.limited': '{reason}. La entrada manual sigue funcionando.',
   'scanai.overloaded':
     'La API de Anthropic está ocupada en este momento. Inténtalo de nuevo en un momento.',
+  'scanai.url.invalid-url': 'La URL no es válida',
+  'scanai.url.bad-scheme': 'La URL debe usar http o https',
+  'scanai.url.credentials': 'La URL no debe contener credenciales',
+  'scanai.url.blocked-address': 'La URL debe ser una dirección http(s) pública',
+  'scanai.url.bad-redirect': 'La página redirige a una URL no válida',
+  'scanai.url.loadFailed': 'No se pudo cargar la página',
+  'scanai.url.noInfo': 'La página no tenía información legible del producto; prueba con otra URL.',
   'stockui.barcode.notFoundAi': 'El código de barras no está en OpenFoodFacts. {message}'
 };

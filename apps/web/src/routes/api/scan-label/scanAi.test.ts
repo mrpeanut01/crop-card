@@ -371,6 +371,25 @@ describe('scan-url input errors (not AI degradation)', () => {
     m.fetchPageContent.mockResolvedValue({ ...PAGE, jsonLd: [], bodyText: 'tiny' });
     const res = await scanUrl(urlEvent());
     expect(res.status).toBe(422);
+    expect((await res.json()).message).toBe(
+      'Page contained no readable product info — try a different URL.'
+    );
     expect(m.claudeUrlLookup).not.toHaveBeenCalled();
+  });
+
+  it('input errors follow the caller language', async () => {
+    const es = () => event('/api/scan-url', { url: 'https://shop.example/p' }, { locale: 'es' });
+    m.fetchPageContent.mockRejectedValue(
+      new SafeFetchError('blocked-address', 'URL must be a public http(s) address')
+    );
+    expect((await (await scanUrl(es())).json()).message).toBe(
+      'La URL debe ser una dirección http(s) pública'
+    );
+    m.fetchPageContent.mockRejectedValue(new Error('Could not load page: ECONNRESET'));
+    expect((await (await scanUrl(es())).json()).message).toBe('No se pudo cargar la página');
+    m.fetchPageContent.mockResolvedValue({ ...PAGE, jsonLd: [], bodyText: 'tiny' });
+    expect((await (await scanUrl(es())).json()).message).toBe(
+      'La página no tenía información legible del producto; prueba con otra URL.'
+    );
   });
 });

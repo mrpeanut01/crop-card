@@ -11,7 +11,7 @@
  * the user's time zone rather than UTC.
  */
 
-import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
+import { DEFAULT_PREFS, ymdInZone, type Prefs } from '$lib/prefs';
 import { dateTimeFormat } from '$lib/intlCache';
 
 const YMD = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -44,6 +44,13 @@ export function zonedDayStartMs(y: number, m: number, d: number, timeZone: strin
   const guess = Date.UTC(y, m - 1, d);
   const first = guess - zoneOffsetMs(guess, timeZone);
   return guess - zoneOffsetMs(first, timeZone);
+}
+
+/** Epoch ms of 00:00 on Jan 1 in `timeZone` of the year `nowMs` falls in
+ *  there, the same year `seasonYearOf` gives. */
+export function zonedYearStartMs(nowMs: number, timeZone: string): number {
+  const year = Number(ymdInZone(nowMs, timeZone).slice(0, 4));
+  return zonedDayStartMs(year, 1, 1, timeZone);
 }
 
 function parseMs(raw: string | null, timeZone: string): number | undefined {

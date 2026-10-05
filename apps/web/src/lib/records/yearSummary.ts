@@ -32,6 +32,8 @@
 import type { Philosophy } from '$lib/season/setup';
 import type { Archetype } from '$lib/plugins/schemas';
 import type { YearAnimalSection } from './yearSummaryAnimals';
+import { zonedDayStartMs } from '$lib/exports/dateRange';
+import { DEFAULT_PREFS } from '$lib/prefs';
 
 // ─── Public shape ───────────────────────────────────────────────────────
 
@@ -201,6 +203,8 @@ export interface ComputeYearSummaryInput {
   productAllowed: (productId: string) => boolean | undefined;
   /** 33B: the animal section, built by `yearSummaryAnimals`. */
   animals?: YearAnimalSection | null;
+  /** The farm's zone (`farmTimeZone()`): the year runs Jan 1 to Jan 1 there. */
+  timeZone?: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -343,8 +347,9 @@ export function computeYearSummary(input: ComputeYearSummaryInput): YearSummary 
   const scoutFunnel = computeScoutFunnel(input.applications, input.scoutObservations);
 
   // Decon + calibration compliance.
-  const yearStartMs = Date.UTC(input.year, 0, 1);
-  const yearEndMs = Date.UTC(input.year + 1, 0, 1);
+  const zone = input.timeZone ?? DEFAULT_PREFS.timeZone;
+  const yearStartMs = zonedDayStartMs(input.year, 1, 1, zone);
+  const yearEndMs = zonedDayStartMs(input.year + 1, 1, 1, zone);
   let calibrated = 0;
   let calibratedThisYear = 0;
   let deconThisYear = 0;

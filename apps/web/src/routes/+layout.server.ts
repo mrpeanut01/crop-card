@@ -7,7 +7,7 @@ import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { unscopedQueryNote } from '$lib/db/tenant';
-import { profileFor } from '$lib/db/userProfile';
+import { farmTimeZone, profileFor } from '$lib/db/userProfile';
 import { DEFAULT_PREFS } from '$lib/prefs';
 import { identityName } from '$lib/identity';
 import { expiringSoon, lowStockItems } from '$lib/db/stock';
@@ -55,7 +55,8 @@ export const load: LayoutServerLoad = ({ locals }) => {
           winterize: deriveWinterizeAlerts(
             sprayers,
             Date.now(),
-            equipmentIdsActiveBefore(startOfSeason(Date.now()))
+            equipmentIdsActiveBefore(startOfSeason(Date.now(), farmTimeZone())),
+            farmTimeZone()
           ),
           lowStock: lowStockItems(),
           expiring: expiringSoon(30).map((e) => ({

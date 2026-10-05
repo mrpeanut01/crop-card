@@ -2,6 +2,7 @@ import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db } from './client';
 import { helperAssignments, userAvatars, users } from './schema';
 import { currentOwnerId, unscopedQueryNote } from './tenant';
+import { requestMemo } from './requestMemo';
 import type { AvatarMime, DisplayUnits } from '$lib/profile';
 import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
 
@@ -158,7 +159,7 @@ export function farmZoneSource(): { userId: string; timeZone: string } | null {
  * midnight by changing their own setting.
  */
 export function farmTimeZone(): string {
-  return farmZoneSource()?.timeZone || DEFAULT_PREFS.timeZone;
+  return requestMemo('farmTimeZone', () => farmZoneSource()?.timeZone || DEFAULT_PREFS.timeZone);
 }
 
 /** The farms this account owns (active owner assignments). */

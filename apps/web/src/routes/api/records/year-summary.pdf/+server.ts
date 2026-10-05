@@ -49,7 +49,7 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
   const year =
     yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : Number(today.slice(0, 4));
 
-  const summary = await buildYearSummary(year, user.activeOwnerId, prefs, {
+  const summary = await buildYearSummary(year, user.activeOwnerId, undefined, {
     includeCosts: user.role === 'owner'
   });
 

@@ -10,6 +10,7 @@
  */
 
 import type { CalendarEvent } from '$lib/calendar/engine';
+import { zonedYearStartMs } from '$lib/exports/dateRange';
 
 export interface SeasonGlance {
   activePlantings: number;
@@ -19,11 +20,9 @@ export interface SeasonGlance {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function startOfYear(now = Date.now()): number {
-  const d = new Date(now);
-  d.setMonth(0, 1);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
+/** Jan 1 00:00 on the farm's calendar (pass `farmTimeZone()`). */
+export function startOfYear(now: number, timeZone: string): number {
+  return zonedYearStartMs(now, timeZone);
 }
 
 export interface DeriveSeasonGlanceInputs {

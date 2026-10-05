@@ -330,4 +330,31 @@ describe('computeYearSummary — compliance stats', () => {
     expect(out.compliance.calibratedThisYear).toBe(1);
     expect(out.compliance.deconEventsThisYear).toBe(1);
   });
+
+  it('the year runs Jan 1 to Jan 1 on the farm calendar, not UTC', () => {
+    const sprayers = [
+      // Dec 31 2025 23:00 in Virginia (04:00Z Jan 1): last year there.
+      { calibratedGpa: 15, calibrationDateMs: Date.parse('2026-01-01T04:00:00Z') },
+      // Dec 31 2026 22:00 in Virginia (03:00Z Jan 1 2027): this year there.
+      { calibratedGpa: 15, calibrationDateMs: Date.parse('2027-01-01T03:00:00Z') }
+    ];
+    const eve = [sprayers[0]];
+    expect(
+      computeYearSummary(baseInput({ sprayers: eve, timeZone: 'America/New_York' })).compliance
+        .calibratedThisYear
+    ).toBe(0);
+    expect(
+      computeYearSummary(baseInput({ sprayers: eve, timeZone: 'UTC' })).compliance
+        .calibratedThisYear
+    ).toBe(1);
+    const ny = computeYearSummary(baseInput({ sprayers, timeZone: 'America/New_York' }));
+    expect(ny.compliance.calibratedThisYear).toBe(1);
+    const tokyo = computeYearSummary(
+      baseInput({
+        sprayers: [{ calibratedGpa: 15, calibrationDateMs: Date.parse('2026-12-31T16:00:00Z') }],
+        timeZone: 'Asia/Tokyo'
+      })
+    );
+    expect(tokyo.compliance.calibratedThisYear).toBe(0);
+  });
 });

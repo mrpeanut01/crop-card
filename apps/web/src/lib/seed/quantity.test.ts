@@ -159,6 +159,16 @@ describe('seedsToPlants — fallback flag', () => {
     const r = seedsToPlants({ unit: 'lb', quantity: 1, plugin: seeded });
     expect(r?.fellBackToFamilyDefault).toBe(true);
   });
+  it('does not flag fallback when the plugin declares seedsPerLb directly', () => {
+    const seeded = plugin({
+      pluginId: 'x',
+      cropFamily: 'corn',
+      plantingGuide: { seedsPerLb: 2000 }
+    });
+    const r = seedsToPlants({ unit: 'lb', quantity: 1, plugin: seeded });
+    expect(r?.rawSeeds).toBe(2000);
+    expect(r?.fellBackToFamilyDefault).toBe(false);
+  });
   it('does not flag fallback when both seedsPerAcre and recommendedLbsPerAcre are present', () => {
     const seeded = plugin({
       pluginId: 'x',

@@ -1149,6 +1149,34 @@ describe('planInputs — on-hand products first (#480)', () => {
     }
   });
 
+  it('labels a deficit-sized fertilizer rate in lb even when the label rate is per ton or gallon', () => {
+    const pool = buildProductPool();
+    pool.fertilizers = [
+      {
+        ...buildFertilizer('compost-ton', {
+          analysis: { n: 1, p: 0.5, k: 1 },
+          organic: true,
+          nonGmoCompliant: true,
+          transitioningAllowed: true
+        }),
+        applicationRange: { min: 2, max: 10, unit: 'ton-per-acre' }
+      } as FertilizerPlugin
+    ];
+    const result = planInputs(
+      buildBaseInput({
+        plantings: [buildPlanting('p1', 'b1', 'corn-1')],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { 'corn-1': buildCrop('corn', 'corn-1') },
+        productPlugins: pool,
+        seasonSetup: buildSetup('conventional', 'synthetic')
+      })
+    );
+    const app = result.applications.find((a) => a.slot === 'pre-plant-fertility')!;
+    expect(app.productPluginId).toBe('compost-ton');
+    expect(app.rateUnit).toBe('lb');
+    expect(app.rateAmount).toBeGreaterThan(1000);
+  });
+
   it('never offers a fertilizer that supplies none of the budget (lime, copper)', () => {
     const pool = buildProductPool();
     pool.fertilizers.push(

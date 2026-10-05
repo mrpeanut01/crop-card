@@ -594,7 +594,10 @@ export function reanchorCropTasks(
     .map(rowToTask);
   let shifted = 0;
   let flaggedStale = 0;
+  const handled = new Set<string>();
   for (const t of primary) {
+    if (handled.has(t.id)) continue;
+    handled.add(t.id);
     if (t.completedAt || t.abortedAt) continue;
     if (t.userOverridden) {
       db.update(tasks)
@@ -611,7 +614,7 @@ export function reanchorCropTasks(
       .run();
     shifted++;
     // Cascade through pre/post tasks linked to this primary.
-    const pre = reanchorPluginPrePost(t.id, t.scheduledFor, newFor);
+    const pre = reanchorPluginPrePost(t.id, t.scheduledFor, newFor, handled);
     shifted += pre.shifted;
     flaggedStale += pre.flaggedStale;
   }
@@ -621,7 +624,10 @@ export function reanchorCropTasks(
 export function reanchorPluginPrePost(
   primaryTaskId: string,
   oldScheduledFor: number,
-  newScheduledFor: number
+  newScheduledFor: number,
+  /** Ids already moved or flagged in this pass; a linked task that also
+   *  carries the crop id must move once, not twice. */
+  handled: Set<string> = new Set()
 ): { shifted: number; flaggedStale: number } {
   const delta = newScheduledFor - oldScheduledFor;
   if (delta === 0) return { shifted: 0, flaggedStale: 0 };
@@ -634,6 +640,8 @@ export function reanchorPluginPrePost(
   let shifted = 0;
   let flaggedStale = 0;
   for (const t of linked) {
+    if (handled.has(t.id)) continue;
+    handled.add(t.id);
     if (t.completedAt || t.abortedAt) continue;
     if (t.userOverridden) {
       db.update(tasks)

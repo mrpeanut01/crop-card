@@ -5,7 +5,6 @@
   "version": "1.0.0",
   "epaRegistrationNumber": "55146-57",
   "defaultUnit": "lb",
-  "formulation": "DF",
   "applicationTiming": "COVER",
   "activeIngredients": [
     {

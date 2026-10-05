@@ -232,8 +232,16 @@ export interface SnapshotCropPlugin {
   };
   harvestIndicators?: string[];
   notes?: string;
+  /** Tree fruit spacing and bearing age per size class (sourced). */
+  treeSizeClasses?: SnapshotTreeSizeClass[];
   /** The plugin's pruning and thinning steps (never its spray tasks). */
   careTasks?: SnapshotCareTask[];
+}
+
+export interface SnapshotTreeSizeClass {
+  sizeClass: 'dwarf' | 'semi-dwarf' | 'standard';
+  minSpacingFt: number;
+  yearsToBearing: SnapshotMinMax;
 }
 
 export interface SnapshotCareTask {

@@ -9,7 +9,12 @@ import {
   type CardModel,
   type CardSection
 } from '../model';
-import type { FarmSnapshot, SnapshotCareTask, SnapshotCropPlugin } from '../snapshot';
+import type {
+  FarmSnapshot,
+  SnapshotCareTask,
+  SnapshotCropPlugin,
+  SnapshotTreeSizeClass
+} from '../snapshot';
 import { t, type MessageKey } from '$lib/i18n';
 import { cropDisplayName } from '$lib/i18n/cropName';
 import {
@@ -20,7 +25,7 @@ import {
   type ResolvedOptions,
   plantingName
 } from './common';
-import { formatInches } from './size';
+import { formatFeet, formatInches } from './size';
 import { seedingFacts } from './seeding';
 import { familyCareTips, type CareTip, type FamilyCareTips } from './careTips';
 import { CARE_SECTION, filterSprayAdviceItems, growerFacingText } from '$lib/journal/photoHelp';
@@ -33,6 +38,37 @@ function familyLabel(family: string, opts: ResolvedOptions): string {
     return opts.tr(`cards.family.${family}` as MessageKey);
   const s = family.replace(/[-_.]+/g, ' ').trim();
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : opts.tr('cards.care.crop');
+}
+
+const TREE_SIZE_ORDER = ['dwarf', 'semi-dwarf', 'standard'] as const;
+
+/** Spacing and first fruit per tree size class, since a cultivar plugin
+ *  can't know the rootstock the grower bought. */
+export function treeSizeSection(
+  rows: readonly SnapshotTreeSizeClass[] | undefined,
+  opts: Pick<ResolvedOptions, 'tr' | 'prefs'>
+): CardSection | null {
+  if (!rows?.length) return null;
+  const sorted = [...rows].sort(
+    (a, b) => TREE_SIZE_ORDER.indexOf(a.sizeClass) - TREE_SIZE_ORDER.indexOf(b.sizeClass)
+  );
+  return {
+    title: opts.tr('cards.care.treeSize'),
+    items: [
+      opts.tr('cards.care.treeSizeLede'),
+      ...sorted.map((r) =>
+        opts.tr('cards.care.treeSizeRow', {
+          size: opts.tr(`cards.care.treeSize.${r.sizeClass}`),
+          spacing: formatFeet(r.minSpacingFt, opts.prefs),
+          years:
+            r.yearsToBearing.min === r.yearsToBearing.max
+              ? opts.tr('cards.years.count', { count: r.yearsToBearing.min })
+              : opts.tr('cards.years.range', { min: r.yearsToBearing.min, max: r.yearsToBearing.max })
+        })
+      )
+    ],
+    provenance: 'plugin'
+  };
 }
 
 function careTaskLine(t: SnapshotCareTask): string {
@@ -156,6 +192,8 @@ export function buildCareGuideCard(
   }
 
   const { sections, tips } = careGuideSections(plugin, snapshot.sprayTerms, loc);
+  const treeSize = treeSizeSection(plugin.treeSizeClasses, opts);
+  if (treeSize) sections.unshift(treeSize);
 
   const blocks = new Map(snapshot.blocks.map((b) => [b.id, b]));
   const growing = snapshot.plantings

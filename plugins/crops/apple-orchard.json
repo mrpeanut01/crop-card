@@ -69,5 +69,31 @@
       "severity": "toxic",
       "note": "Wilted leaves are the most dangerous. Keep animals away from fallen or pruned branches."
     }
+  ],
+  "treeSizeClasses": [
+    {
+      "sizeClass": "dwarf",
+      "minSpacingFt": 8,
+      "yearsToBearing": {
+        "min": 2,
+        "max": 3
+      }
+    },
+    {
+      "sizeClass": "semi-dwarf",
+      "minSpacingFt": 18,
+      "yearsToBearing": {
+        "min": 4,
+        "max": 6
+      }
+    },
+    {
+      "sizeClass": "standard",
+      "minSpacingFt": 30,
+      "yearsToBearing": {
+        "min": 6,
+        "max": 10
+      }
+    }
   ]
 }

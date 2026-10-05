@@ -28,6 +28,8 @@ export const esCards: Partial<Record<MessageKey, string>> = {
   'cards.task.whySkipped': 'Por qué se omitió',
   'cards.days.count': '{count} días',
   'cards.days.range': '{min} a {max} días',
+  'cards.years.count': '{count} años',
+  'cards.years.range': '{min} a {max} años',
   'cards.fact.spacing': 'Distancia',
   'cards.fact.rowSpacing': 'Entre surcos',
   'cards.fact.plants': 'Plantas',
@@ -59,6 +61,13 @@ export const esCards: Partial<Record<MessageKey, string>> = {
   'cards.care.prune': 'Tutores y poda',
   'cards.care.problems': 'Problemas comunes',
   'cards.care.onYourFarm': 'En tu granja',
+  'cards.care.treeSize': 'Distancia según el tamaño del árbol',
+  'cards.care.treeSizeLede':
+    'La distancia y la primera fruta dependen del portainjerto. La etiqueta del vivero dice si el árbol es enano, semienano o estándar.',
+  'cards.care.treeSizeRow': '{size}: al menos {spacing} entre árboles, primera fruta en {years}',
+  'cards.care.treeSize.dwarf': 'Enano',
+  'cards.care.treeSize.semi-dwarf': 'Semienano',
+  'cards.care.treeSize.standard': 'Estándar',
   'cards.care.noGuide':
     'Este cultivo todavía no tiene guía de cultivo. Revisa el sobre de semillas para ver la distancia y la profundidad.',
   'cards.care.kicker': 'Guía de cuidado · {family}',

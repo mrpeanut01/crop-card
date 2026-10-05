@@ -228,6 +228,7 @@ export function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
       : undefined,
     harvestIndicators: p.harvestIndicators,
     notes: p.notes,
+    ...(p.treeSizeClasses ? { treeSizeClasses: p.treeSizeClasses } : {}),
     ...(careTasks.length ? { careTasks } : {})
   };
 }

@@ -95,7 +95,7 @@
 
   async function submit(e: SubmitEvent) {
     e.preventDefault();
-    const occurredAt = localInputToMs(at);
+    const occurredAt = localInputToMs(at, Date.now());
     if (occurredAt === null) {
       error = tr('animals.prod.pickWhen');
       return;

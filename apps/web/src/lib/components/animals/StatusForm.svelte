@@ -56,7 +56,7 @@
     e.preventDefault();
     error = null;
     canCullInstead = false;
-    const occurredAt = localInputToMs(at);
+    const occurredAt = localInputToMs(at, Date.now());
     if (occurredAt === null) {
       error = tr('animals.status.pickWhen');
       return;

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
   import Kicker from '$lib/components/ui/Kicker.svelte';
@@ -20,6 +21,12 @@
   const view = $derived(data.view);
   const calendar = $derived(data.calendar);
 
+  // Buttons stay off until hydration: a click before it is lost, and the
+  // guide form would fall back to a native GET submit.
+  let ready = $state(false);
+  onMount(() => {
+    ready = true;
+  });
   let busy = $state(false);
   let message = $state<string | null>(null);
   let failure = $state<string | null>(null);
@@ -110,7 +117,7 @@
   ></svelte:head
 >
 
-<div class="orchard" data-testid="orchard-calendar">
+<div class="orchard" data-testid="orchard-calendar" data-ready={ready}>
   <header>
     <Kicker>{tr('orchardui.kicker')}</Kicker>
     <h1 class="serif">{tr('orchardui.title')}</h1>
@@ -160,7 +167,9 @@
             </label>
           {/each}
         </fieldset>
-        <button type="submit" class="btn" disabled={busy}>{tr('orchardui.choice.save')}</button>
+        <button type="submit" class="btn" disabled={busy || !ready}
+          >{tr('orchardui.choice.save')}</button
+        >
       </form>
     {:else if !data.isOwner}
       <p class="hint">{tr('orchardui.askOwner')}</p>
@@ -194,8 +203,11 @@
               })}
         </p>
         {#if data.canMark}
-          <button type="button" class="btn ghost" disabled={busy} onclick={() => mark(null)}
-            >{tr('orchardui.clearMark')}</button
+          <button
+            type="button"
+            class="btn ghost"
+            disabled={busy || !ready}
+            onclick={() => mark(null)}>{tr('orchardui.clearMark')}</button
           >
         {/if}
       {:else}
@@ -220,7 +232,7 @@
             <button
               type="button"
               class="btn mark"
-              disabled={busy}
+              disabled={busy || !ready}
               data-testid="mark-{s.id}"
               onclick={() => mark(s.id)}>{tr('orchardui.markHere')}</button
             >
@@ -258,7 +270,7 @@
                       <button
                         type="button"
                         class="btn ghost"
-                        disabled={busy}
+                        disabled={busy || !ready}
                         data-testid="schedule-{w.id}"
                         onclick={() => schedule(w.id)}>{tr('orchardui.schedule')}</button
                       >

@@ -64,6 +64,7 @@ import { getDataKinds, getRegistry } from './registry';
 import { sprayTermsFor } from './sprayTerms';
 import { listMapFeatureViews } from '$lib/db/mapFeatures';
 import { splitGroupBlockIds } from '$lib/plan/splitGroup';
+import { orchardSnapshotPart } from './orchardSnapshot';
 
 const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
@@ -564,6 +565,21 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     if (product) sprayProducts[product.pluginId] = product;
   }
 
+  const areas = listAreas().map((a) => ({
+    ...toArea(a),
+    organicStatus: organic.line('field', a.id)
+  }));
+  const blocks = listBlocks({ plantings: 'none' })
+    .map(toBlock)
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const orchard = await orchardSnapshotPart({
+    plantings,
+    blocks,
+    areas,
+    now: windowNow,
+    locale: opts.locale
+  });
+
   return {
     version: FARM_SNAPSHOT_VERSION,
     ownerId,
@@ -572,10 +588,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     rulesVersion: RULES_VERSION,
     origin: opts.origin ?? null,
     locale: opts.locale ?? DEFAULT_LOCALE,
-    areas: listAreas().map((a) => ({ ...toArea(a), organicStatus: organic.line('field', a.id) })),
-    blocks: listBlocks({ plantings: 'none' })
-      .map(toBlock)
-      .sort((a, b) => a.id.localeCompare(b.id)),
+    areas,
+    blocks,
     plantings,
     splitGroups: splitGroupBlockIds(
       listSplitGroupParts([...new Set(plantings.flatMap((p) => p.splitGroupId ?? []))])
@@ -603,7 +617,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     emergencyContacts: loadEmergencyContacts(),
     soilTests: latestSoilTestsPerBlock(listSoilTests(), labReportForSoilTests()),
     ...(await animalSnapshotPart(windowNow, opts.locale)),
-    carryover: snapshotCarryover(await loadCarryoverLines(windowNow))
+    carryover: snapshotCarryover(await loadCarryoverLines(windowNow)),
+    ...(orchard ? { orchard } : {})
   };
 }
 

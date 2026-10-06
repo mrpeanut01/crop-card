@@ -796,6 +796,10 @@ export const enPlan = {
   'orchardui.panelMarked': '{crop}: marked {stage}',
   'orchardui.panelUnmarked': '{crop}: no stage marked',
   'orchardui.areaHeading': 'Seasonal calendar',
+  'orchardui.saved.asOf': 'Saved copy from {time}.',
+  'orchardui.saved.noMark': 'No stage marked for {year} in this saved copy.',
+  'orchardui.saved.markNeedsConnection': 'Marking a stage needs a connection.',
+  'orchardui.saved.stageWatch': 'What to watch for at {stage}',
   'orchardui.setup.heading': 'Orchard guide choices',
   'orchardui.setup.lede':
     'These Areas use the guide you picked instead of the automatic one. Check them each season.',

@@ -72,7 +72,7 @@ Details at [app.cropcard.io/pricing](https://app.cropcard.io/pricing).
 
 ## Feedback welcome
 
-The most useful thing you can send right now is product feedback: what works, what's confusing, what's missing in your own operation. Use **Send feedback** in the app's More menu, or open an [issue](https://github.com/mrpeanut01/crop-card/issues). Please read the [contributing guidance](./CONTRIBUTING.md) before opening a pull request.
+The most useful thing you can send right now is product feedback: what works, what's confusing, what's missing in your own operation. Use **Send feedback** in the account menu (your avatar, top right), or open an [issue](https://github.com/mrpeanut01/crop-card/issues). Please read the [contributing guidance](./CONTRIBUTING.md) before opening a pull request.
 
 ---
 
@@ -138,6 +138,8 @@ pnpm db:migrate    # apply migrations
 - [Almanac UI design](./docs/design/almanac/) and the [AI provenance addendum](./docs/design/almanac/AI_PROVENANCE_ADDENDUM.md)
 - [Pricing and tiers](./docs/design/PRICING_AND_TIERS.md)
 - [Plugin spec](./docs/plugin-spec.md)
+- [Restore runbook](./docs/ops/restore-runbook.md) and [email consent](./docs/email-consent.md)
+- [Research briefs](./docs/research/) for the sourced-data work that needs a local agent
 
 ## License
 

@@ -4,6 +4,8 @@ One JSON file per tree fruit calendar edition (for example `pome-va-2026.json`).
 
 `pome-va-2026.json` (apple), `pear-va-2026.json` and `stone-fruit-va-2026.json` (peach) were sourced by a local agent on 2026-10-04 from VCE 456-419; see "Local agent pass" in `docs/design/ORCHARD_CALENDAR.md`. Nothing here may be written from memory. A calendar hosts only crops its guide chapter covers: pear has its own file because the bulletin gives pear its own stages and windows.
 
+`pome-home-va-2026.json`, `pear-home-va-2026.json` and `stone-fruit-home-va-2026.json` are the home-grounds (`audience: home`) editions, sourced on 2026-10-05 from the Home Fruit chapter (ENTO-634-C) of VCE 456-018, the 2026 Pest Management Guide: Home Grounds and Animals; see "Home-grounds pass" in `docs/design/ORCHARD_CALENDAR.md`. They quote the chapter's General Cultural Controls, disease and insect biology and Table 3.4's stage and infection-condition columns, never its spray schedules (Tables 3.5 to 3.7). Stage definitions come from the same Cornell bulletin as the commercial calendars. The chapter's text layer prints page 3-N on PDF page N, so these entries cite "PDF page N" and map with `pageOffset: 0`.
+
 Rules:
 
 - Data only. A calendar lists stages, how to recognise each one, and windows with a purpose (scout, cultural, sanitation, disease-risk, pest-risk, bloom, harvest-prep) and their disease, pest or weather targets.

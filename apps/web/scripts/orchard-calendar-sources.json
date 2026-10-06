@@ -1,6 +1,242 @@
 {
   "$comment": "Ruling OC-8. Quotes behind every orchard calendar on plugins/orchard-calendars/*.json, keyed by the sourceKey a stage description, degree-day estimate or window names. Each entry is { sources: [{ url, publisher, date, quote, edition, page, note? }], gateEligible?, note? } from an https .edu or .gov page, quoted word for word. A degree-day estimate ships only from an entry with gateEligible true, which needs two agreeing sources from different hosts (ruling OC-5); where the guides disagree or only one gives a value, record both or the one with gateEligible false and say why in note. Sources from a page reader's extraction never count. No product, product class, rate, brand, PHI or REI is ever recorded here (OC-2). Empty until a local agent works docs/design/ORCHARD_CALENDAR.md 'Needs a local agent'; checked by apps/web/src/lib/plugins/orchardCalendar.sources.gate.test.ts.",
   "entries": {
+    "pear-home-va-2026.bloom.bees": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Do not apply insecticides at bloom.",
+          "edition": "2026",
+          "page": "PDF page 6",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-6."
+        }
+      ]
+    },
+    "pear-home-va-2026.bloom.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Bloom: Blossom buds open (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pear-home-va-2026.bloom.fire-blight-ooze": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The bacterial ooze usually appears first when the trees are in the late-pink to early-bloom stage of development. Wind-blown rain and insects help spread the causal bacteria from the oozing cankers to the developing blossoms and young leaves where new infections may develop.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The disease usually appears in the spring as blossom, leaf, and twig blight. Infected blossoms suddenly wilt and soon turn light to dark brown.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        }
+      ]
+    },
+    "pear-home-va-2026.bloom.no-pruning": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Avoid any pruning during the blossom period and immediately thereafter.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        }
+      ]
+    },
+    "pear-home-va-2026.dormant.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Dormant: Fruit buds relatively inactive. This is the overwintering stage, (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pear-home-va-2026.dormant.fire-blight": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The causal bacteria overwinter in living host tissue at the margins of cankers on the larger twigs, branches, and trunk.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Thus, home fruit growers should attempt to manage their trees so as to prevent extensive rapid growth of young shoots in varieties of pear and apple especially susceptible to blight. The excessive use of nitrogenous fertilizers and the cultivation of the orchard to promote excessive growth and excessive pruning should be avoided.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "As a rule, fire blight is much worse on tissues that are succulent.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Host vigor – Maintain proper levels of host vigor. Nutrient-deficient trees are more prone to some diseases and insects; conversely, overly vigorous trees are more vulnerable to other pests.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        }
+      ]
+    },
+    "pear-home-va-2026.dormant.mummies": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Sanitation – Remove mummified fruit from trees, and dropped fruit from the ground.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        }
+      ]
+    },
+    "pear-home-va-2026.dormant.pruning": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Prune out all dead and decaying branches because such wood may harbor insects and diseases. Remove all healthy prunings from the tree because these can be colonized by rot fungi and increase inoculum levels of some rot diseases.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Trees should be “opened up” to allow spray and sunlight penetration.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        }
+      ]
+    },
+    "pear-home-va-2026.fruit-set.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Fruit Set: A stage ranging from about 4 (cherry) to 10 (peach) days after bloom when the blossoms that have or have not set fruit, initially, are clearly evident (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pear-home-va-2026.fruit-set.fire-blight-fruit": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Fruit infection may occur on apples and pears. The fruit becomes water-soaked with numerous exuding droplets of bacterial ooze.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Still later, the fruit shrivels, turns brown on apple or black on pear and usually remains attached to the spur.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        }
+      ]
+    },
+    "pear-home-va-2026.fruit-set.thinning": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Thinning – It is important to thin fruit properly to provide good disease and insect control. Thin all tree fruits so that the mature fruits will not touch each other.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        }
+      ]
+    },
+    "pear-home-va-2026.fruit-set.water-sprouts": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Water sprouts or suckers should be removed as they are formed on susceptible varieties. Their removal will often prevent canker formation on limbs, trunks, and roots of the trees.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        }
+      ]
+    },
+    "pear-home-va-2026.petal-fall.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Petal Fall: After about 75 per cent of the petals have fallen (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pear-home-va-2026.petal-fall.fire-blight": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The leaves on the blighted terminals, as in spur blight, turn brown on apple or dark brown to black on pear and remain attached throughout the growing season, and in many cases they remain attached after the healthy leaves have fallen in the fall. A characteristic symptom of twig-blight is the bending of the blighted terminal, which resembles a shepherd’s crook.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        }
+      ]
+    },
     "pear-va-2026.bloom.bees": {
       "sources": [
         {
@@ -272,6 +508,668 @@
           "edition": "2026",
           "page": "99",
           "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "pome-home-va-2026.bloom.bees": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Do not apply insecticides at bloom.",
+          "edition": "2026",
+          "page": "PDF page 6",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-6."
+        }
+      ]
+    },
+    "pome-home-va-2026.bloom.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Bloom: Blossom buds open (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-home-va-2026.bloom.fire-blight": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Fire blight / Bloom to mid-season / Open blossoms, daily mean above 60ºF, wetting",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "Quoted from Table 3.4, A Checklist of Major Apple Diseases in Virginia: the disease, its usual stage of occurrence and its infection conditions, joined with ' / '. The footnote marker on the stage column is left out; that footnote points to the spray schedule, which is not used (OP-2). Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The disease usually appears in the spring as blossom, leaf, and twig blight. Infected blossoms suddenly wilt and soon turn light to dark brown.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        }
+      ]
+    },
+    "pome-home-va-2026.bloom.no-pruning": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Avoid any pruning during the blossom period and immediately thereafter.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        }
+      ]
+    },
+    "pome-home-va-2026.dormant.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Dormant: Fruit buds relatively inactive. This is the overwintering stage, (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-home-va-2026.dormant.fire-blight": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The causal bacteria overwinter in living host tissue at the margins of cankers on the larger twigs, branches, and trunk.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Thus, home fruit growers should attempt to manage their trees so as to prevent extensive rapid growth of young shoots in varieties of pear and apple especially susceptible to blight. The excessive use of nitrogenous fertilizers and the cultivation of the orchard to promote excessive growth and excessive pruning should be avoided.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "As a rule, fire blight is much worse on tissues that are succulent.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Host vigor – Maintain proper levels of host vigor. Nutrient-deficient trees are more prone to some diseases and insects; conversely, overly vigorous trees are more vulnerable to other pests.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        }
+      ]
+    },
+    "pome-home-va-2026.dormant.mummies": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Sanitation – Remove mummified fruit from trees, and dropped fruit from the ground.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "It is important that all mummified fruit and cankered branches be removed during the pruning operation, since they may supply inoculum for new infections.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        }
+      ]
+    },
+    "pome-home-va-2026.dormant.pruning": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Prune out all dead and decaying branches because such wood may harbor insects and diseases. Remove all healthy prunings from the tree because these can be colonized by rot fungi and increase inoculum levels of some rot diseases.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Trees should be “opened up” to allow spray and sunlight penetration.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        }
+      ]
+    },
+    "pome-home-va-2026.fruit-set.curculio": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Plum Curculio – Injury is in the form of small crescent-shaped cuts in the skin of small fruits. An egg is deposited in a small hole at one end of the incision.",
+          "edition": "2026",
+          "page": "PDF page 14",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-14."
+        }
+      ]
+    },
+    "pome-home-va-2026.fruit-set.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Fruit Set: A stage ranging from about 4 (cherry) to 10 (peach) days after bloom when the blossoms that have or have not set fruit, initially, are clearly evident (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-home-va-2026.fruit-set.thinning": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Thinning – It is important to thin fruit properly to provide good disease and insect control. Thin all tree fruits so that the mature fruits will not touch each other.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        }
+      ]
+    },
+    "pome-home-va-2026.green-tip.aphids": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Infestations may be noted by the curling and wrinkling of leaves near young apples, but, by this time, much of the fruit will be lost. At weekly intervals, beginning when the leaves are about 1/4 inch long, look for aphids in the foliage.",
+          "edition": "2026",
+          "page": "PDF page 14",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-14."
+        }
+      ]
+    },
+    "pome-home-va-2026.green-tip.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Green Tip: Applies only to apple. Fruit buds broken at tip, showing about 1 /16 inch (1 -2 mm) green.",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-home-va-2026.green-tip.scab": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Scab / Green tip to whenever conditions are favorable / Extended wet periods, 33º to 76ºF",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "Quoted from Table 3.4, A Checklist of Major Apple Diseases in Virginia: the disease, its usual stage of occurrence and its infection conditions, joined with ' / '. The footnote marker on the stage column is left out; that footnote points to the spray schedule, which is not used (OP-2). Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The apple scab fungus overwinters in the dead apple leaves under the trees.",
+          "edition": "2026",
+          "page": "PDF page 9",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-9."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Spring rains cause the perithecia to discharge ascospores into the air where they are carried by the air current to the new green leaves and opening fruit buds of the apple tree.",
+          "edition": "2026",
+          "page": "PDF page 9",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-9."
+        }
+      ]
+    },
+    "pome-home-va-2026.late-season.bitter-pit": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "One distinctive characteristic of this type of corking is that it does not appear until near harvest time or during fruit storage.",
+          "edition": "2026",
+          "page": "PDF page 14",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-14."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The maturity of the fruit at harvest affects the occurrence of bitter pit. Early harvested fruit is more susceptible than fruit picked at maturity.",
+          "edition": "2026",
+          "page": "PDF page 14",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-14."
+        }
+      ]
+    },
+    "pome-home-va-2026.late-season.description": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Table 3.4 - A Checklist of Major Apple Diseases in Virginia / Early season / Mid-season / Late season",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "Quoted from Table 3.4: the table title and its three season row headings, joined with ' / '. The guide groups apple diseases by these seasons. Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The infections start slowly but progress rapidly as the fruit approaches maturity.",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        }
+      ]
+    },
+    "pome-home-va-2026.late-season.dropped-fruit": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Sanitation – Remove mummified fruit from trees, and dropped fruit from the ground.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Some insects are also fostered by allowing dropped fruit to remain, such as the apple maggot and spotted-wing drosophila.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        }
+      ]
+    },
+    "pome-home-va-2026.late-season.fruit-rots": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Late season / Black rot / Pink to late season / Warm and wet periods, hail / Bitter rot / Mid- to late season / insect or mechanical fruit injury / White rot / Mid- to late season",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "Quoted from Table 3.4, A Checklist of Major Apple Diseases in Virginia: the disease, its usual stage of occurrence and its infection conditions, joined with ' / '. The footnote marker on the stage column is left out; that footnote points to the spray schedule, which is not used (OP-2). Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Bitter rot begins on the fruit as small, light brown spots just under the skin. These spots grow rapidly in warm, moist weather.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "As the rot progresses, the decayed tissue is firm and leathery. Eventually, the decayed fruit becomes shrunken and mummified.",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        }
+      ]
+    },
+    "pome-home-va-2026.mid-season.apple-maggot-traps": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "For a small number of backyard trees, commercially available apple maggot traps (red spheres or yellow panels) can help reduce infestation, with one trap hung per tree.",
+          "edition": "2026",
+          "page": "PDF page 14",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-14."
+        }
+      ]
+    },
+    "pome-home-va-2026.mid-season.codling-moth": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Codling Moth – Presence of this pest is usually recognized by a hole bored into the side or blossom end of the fruit.",
+          "edition": "2026",
+          "page": "PDF page 14",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-14."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "There are two or three generations in Virginia.",
+          "edition": "2026",
+          "page": "PDF page 14",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-14."
+        }
+      ]
+    },
+    "pome-home-va-2026.mid-season.description": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Table 3.4 - A Checklist of Major Apple Diseases in Virginia / Early season / Mid-season / Late season",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "Quoted from Table 3.4: the table title and its three season row headings, joined with ' / '. The guide groups apple diseases by these seasons. Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        }
+      ]
+    },
+    "pome-home-va-2026.mid-season.dropped-fruit": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Picking up dropped fruit promptly will aid in its control by preventing entry into the ground for pupation.",
+          "edition": "2026",
+          "page": "PDF page 14",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-14."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Sanitation – Remove mummified fruit from trees, and dropped fruit from the ground.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        }
+      ]
+    },
+    "pome-home-va-2026.mid-season.fire-blight": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Fire blight / Bloom to mid-season / Open blossoms, daily mean above 60ºF, wetting",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "Quoted from Table 3.4, A Checklist of Major Apple Diseases in Virginia: the disease, its usual stage of occurrence and its infection conditions, joined with ' / '. The footnote marker on the stage column is left out; that footnote points to the spray schedule, which is not used (OP-2). Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The leaves on the blighted terminals, as in spur blight, turn brown on apple or dark brown to black on pear and remain attached throughout the growing season, and in many cases they remain attached after the healthy leaves have fallen in the fall. A characteristic symptom of twig-blight is the bending of the blighted terminal, which resembles a shepherd’s crook.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Fruit infection may occur on apples and pears. The fruit becomes water-soaked with numerous exuding droplets of bacterial ooze.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        }
+      ]
+    },
+    "pome-home-va-2026.mid-season.mites": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "They produce a stippling of the leaves by puncturing the cells of the leaf and sucking out the juices.",
+          "edition": "2026",
+          "page": "PDF page 14",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-14."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "A hand lens is required for accurate observation of these parts. Do not apply miticides on a preventative basis. Many predators of mites are native to Virginia and can help control this pest if not killed by sprays.",
+          "edition": "2026",
+          "page": "PDF page 14",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-14."
+        }
+      ]
+    },
+    "pome-home-va-2026.mid-season.san-jose-scale": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "When scales settle on the fruit, reddish rings occur around the insect on the fruit skin. There are two generations during the growing season, one occurring in late May or early June and the other in August.",
+          "edition": "2026",
+          "page": "PDF page 15",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-15."
+        }
+      ]
+    },
+    "pome-home-va-2026.mid-season.sooty-blotch": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Sooty blotch / 2nd cover to harvest / Moderate and wet, optimum 65ºF / Fly speck / 2nd cover to harvest / Moderate and wet",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "Quoted from Table 3.4, A Checklist of Major Apple Diseases in Virginia: the disease, its usual stage of occurrence and its infection conditions, joined with ' / '. The footnote marker on the stage column is left out; that footnote points to the spray schedule, which is not used (OP-2). Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The development of these diseases is favored by moderate temperatures and high humidity. Infection may occur as early as June, but late-summer infection is the major concern with these diseases.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        }
+      ]
+    },
+    "pome-home-va-2026.mid-season.water-sprouts": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Water sprouts or suckers should be removed as they are formed on susceptible varieties. Their removal will often prevent canker formation on limbs, trunks, and roots of the trees.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        }
+      ]
+    },
+    "pome-home-va-2026.petal-fall.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Petal Fall: After about 75 per cent of the petals have fallen (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-home-va-2026.petal-fall.scab-lesions": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The first visible sign of infection is a light brown or olive colored spot. Depending on the temperature, first visible symptoms may show as soon as eight days after the initial penetration by the ascospore.",
+          "edition": "2026",
+          "page": "PDF page 9",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-9."
+        }
+      ]
+    },
+    "pome-home-va-2026.pink.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Pink: Applies only to apple and peach. For apple, all blossom buds in cluster pink, stems fully extended.",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-home-va-2026.pink.fire-blight-ooze": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The bacterial ooze usually appears first when the trees are in the late-pink to early-bloom stage of development. Wind-blown rain and insects help spread the causal bacteria from the oozing cankers to the developing blossoms and young leaves where new infections may develop.",
+          "edition": "2026",
+          "page": "PDF page 11",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-11."
+        }
+      ]
+    },
+    "pome-home-va-2026.pink.quince-rust": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Quince rust / Pink to 1st cover / Extended wet periods above 56ºF",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "Quoted from Table 3.4, A Checklist of Major Apple Diseases in Virginia: the disease, its usual stage of occurrence and its infection conditions, joined with ' / '. The footnote marker on the stage column is left out; that footnote points to the spray schedule, which is not used (OP-2). Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        }
+      ]
+    },
+    "pome-home-va-2026.tight-cluster.cedar-rust": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Cedar apple rust / Tight cluster to 2nd cover / Extended wet periods above 56ºF",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "Quoted from Table 3.4, A Checklist of Major Apple Diseases in Virginia: the disease, its usual stage of occurrence and its infection conditions, joined with ' / '. The footnote marker on the stage column is left out; that footnote points to the spray schedule, which is not used (OP-2). Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Red cedar is the alternate host for both the cedar-apple and quince rusts and severity of these diseases is related to the distance of the apple tree from infected cedars in the area.",
+          "edition": "2026",
+          "page": "PDF page 9",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-9."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Cedar-apple rust galls, or “cedar apples,” are located on the twigs of cedar. They develop masses of gelatinous spore horns",
+          "edition": "2026",
+          "page": "PDF page 9",
+          "note": "The sentence runs onto the next page; its end is the next source. Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-9."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "during rainy periods, early in the growing season, from which spores are discharged that infect the apple.",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "The end of the sentence begun on the page before (the previous source). Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        }
+      ]
+    },
+    "pome-home-va-2026.tight-cluster.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Tight Cluster: Applies only to apple. Blossom buds mostly exposed, tightly grouped, stems short.",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "pome-home-va-2026.tight-cluster.mildew": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Powdery mildew / Leaves; tight cluster, until shoot growth stops / Dry weather, 50º to 75ºF",
+          "edition": "2026",
+          "page": "PDF page 10",
+          "note": "Quoted from Table 3.4, A Checklist of Major Apple Diseases in Virginia: the disease, its usual stage of occurrence and its infection conditions, joined with ' / '. The footnote marker on the stage column is left out; that footnote points to the spray schedule, which is not used (OP-2). Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-10."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The first symptoms are felt-like patches of fungus mycelium on the lower surfaces of leaves, which soon become crinkled and curled.",
+          "edition": "2026",
+          "page": "PDF page 9",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-9."
         }
       ]
     },
@@ -901,6 +1799,404 @@
           "edition": "2026",
           "page": "63",
           "note": "Quoted from the bulletin's table: the stage heading, then the pest or disease cells of that table in order, joined with ' / '. Footnote markers and the product, effectiveness and rate columns are left out; only the targets are used."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.bloom.bees": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Do not apply insecticides at bloom.",
+          "edition": "2026",
+          "page": "PDF page 6",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-6."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.bloom.brown-rot": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The brown rot fungus spores attack the blossoms, twigs, and fruit. Blossom blight and early twig infections establish centers of infection which may supply inoculum for fruit infection during periods of rainfall throughout the growing season.",
+          "edition": "2026",
+          "page": "PDF page 15",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-15."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.bloom.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Bloom: Blossom buds open (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.dormant.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Dormant: Fruit buds relatively inactive. This is the overwintering stage, (applies to all fruits).",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.dormant.mummies": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The brown rot fungus may overwinter on old, decayed fruit, also called mummies, on the ground, mummies on the tree, and in twig cankers.",
+          "edition": "2026",
+          "page": "PDF page 15",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-15."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Remove mummified fruit during the dormant season",
+          "edition": "2026",
+          "page": "PDF page 15",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-15."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.dormant.pruning": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Prune out all dead and decaying branches because such wood may harbor insects and diseases. Remove all healthy prunings from the tree because these can be colonized by rot fungi and increase inoculum levels of some rot diseases.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "They grow and reproduce in dead or dying wood in the trees.",
+          "edition": "2026",
+          "page": "PDF page 16",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-16."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Any dead or dying branch of trees should be removed as soon as possible and destroyed.",
+          "edition": "2026",
+          "page": "PDF page 16",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-16."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.fruit-growth.borers": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The adult moths emerge from May to September.",
+          "edition": "2026",
+          "page": "PDF page 16",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-16."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Borer injury is evident by masses of gum and sawdust-like “frass” occurring at the base of the tree.",
+          "edition": "2026",
+          "page": "PDF page 16",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-16."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The borers usually feed in the larger limbs and trunks of the trees.",
+          "edition": "2026",
+          "page": "PDF page 16",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-16."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Both peach tree borer and lesser peachtree borer may be monitored with pheromone traps.",
+          "edition": "2026",
+          "page": "PDF page 16",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-16."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.fruit-growth.dead-wood": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Any dead or dying branch of trees should be removed as soon as possible and destroyed. Sap oozing from numerous buds and small holes in the branches is a good indication of infestation.",
+          "edition": "2026",
+          "page": "PDF page 16",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-16."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.fruit-growth.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Shuck: The shuck is the dried floral remnant which in the stone fruits partially covers the newly-set fruit. As the fruit grows, the shuck splits and soon is sloughed off.",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Peaches appear to be an excellent host for brown marmorated stink bug and fruit injury from bug feeding may be found from the early stages of development through harvest.",
+          "edition": "2026",
+          "page": "PDF page 18",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-18."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.fruit-growth.oriental-fruit-moth": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Trees should be examined for new or young terminals that die suddenly to determine if larvae tunneling in the shoots are the cause.",
+          "edition": "2026",
+          "page": "PDF page 16",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-16."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.fruit-growth.peach-scab": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The disease first appears on the fruit as small, poorly defined, olivaceous spots less than 1/16 inch in diameter, usually on the upper exposed surface of the fruit.",
+          "edition": "2026",
+          "page": "PDF page 15",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-15."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Since the cork area cannot expand with growth of the fruit, fissures or cracks appear in the fruit, providing avenues for brown rot infection.",
+          "edition": "2026",
+          "page": "PDF page 15",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-15."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.fruit-growth.scales": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The white peach scale is easily recognized because the white females give a branch a white-washed appearance when they are abundant.",
+          "edition": "2026",
+          "page": "PDF page 16",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-16."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.fruit-growth.stink-bugs": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "External injury appears as thin streams of whitish, jelly-like ooze from feeding sites, known as gummosis, and sunken, discolored and distorted areas on the surface.",
+          "edition": "2026",
+          "page": "PDF page 18",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-18."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "There are two generations of brown marmorated stink bug in Virginia and bugs are present from about May through mid-October.",
+          "edition": "2026",
+          "page": "PDF page 18",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-18."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.pink.brown-rot": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The brown rot fungus becomes active about the time pink begins to show in the buds, provided there is sufficient rainfall.",
+          "edition": "2026",
+          "page": "PDF page 15",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-15."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.pink.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "For peach, when the blossom bud shows a pink tip.",
+          "edition": "1976",
+          "page": "PDF page 10",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.ripening.brown-rot": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Brown rot on the fruit becomes more evident as the fruit approaches maturity. The first evidence of the rot is the appearance of a small, circular, brown spot that enlarges very rapidly as the fruit approaches maturity. The rotted fruit soon becomes covered with ash colored tufts of conida.",
+          "edition": "2026",
+          "page": "PDF page 15",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-15."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.ripening.description": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Brown rot on the fruit becomes more evident as the fruit approaches maturity.",
+          "edition": "2026",
+          "page": "PDF page 15",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-15."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.ripening.dropped-fruit": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Sanitation – Remove mummified fruit from trees, and dropped fruit from the ground.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "These masses of spores supply inoculum to infect other fruit.",
+          "edition": "2026",
+          "page": "PDF page 15",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-15."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.shuck-split.curculio": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Plum Curculio – Injury is in the form of small crescent-shaped cuts in the skin of small fruits. An egg is deposited in a small hole at one end of the incision.",
+          "edition": "2026",
+          "page": "PDF page 16",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-16."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.shuck-split.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Shuck: The shuck is the dried floral remnant which in the stone fruits partially covers the newly-set fruit. As the fruit grows, the shuck splits and soon is sloughed off.",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.shuck-split.thinning": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "Thinning – It is important to thin fruit properly to provide good disease and insect control. Thin all tree fruits so that the mature fruits will not touch each other.",
+          "edition": "2026",
+          "page": "PDF page 1",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-1."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.swollen-bud.description": {
+      "sources": [
+        {
+          "url": "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content",
+          "publisher": "New York State Agricultural Experiment Station, Cornell University: P. J. Chapman and Gertrude A. Catlin, Growth Stages in Fruit Trees - From Dormant to Fruit Set, New York's Food and Life Sciences Bulletin No. 58 (handle 1813/5062)",
+          "date": "2026-10-05",
+          "quote": "Swollen Bud: Equivalentto silvertip stage in apple. Fruit buds swollen, scales separated to expose areas of lighter colored tissue. (Applies to all fruits except apple).",
+          "edition": "1976",
+          "page": "PDF page 9",
+          "note": "1976 bulletin, read from the PDF's text layer and checked against the rendered page. Page is the PDF page; the bulletin prints no page numbers there. 'Equivalentto' and 'silvertip' are printed run together on the page."
+        }
+      ]
+    },
+    "stone-fruit-home-va-2026.swollen-bud.leaf-curl": {
+      "sources": [
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "With the coming of spring and the swelling of the buds, if conditions of moisture and temperature are suitable, the spores germinate, and those that come into contact with the young developing leaves cause an infection.",
+          "edition": "2026",
+          "page": "PDF page 15",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-15."
+        },
+        {
+          "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf",
+          "publisher": "Virginia Cooperative Extension, Virginia Tech: 2026 Pest Management Guide: Home Grounds and Animals, VCE Publication 456-018, chapter 3, Home Fruit: Disease and Insects (ENTO-634-C)",
+          "date": "2026-10-05",
+          "quote": "The infected leaves are thickened, and, as they develop, the leaf becomes folded with edges curling inward, so that the undersurface of the leaf is a series of concaved chambers. Very shortly after leaf symptoms appear, it turns red to purple and becomes extremely obvious.",
+          "edition": "2026",
+          "page": "PDF page 15",
+          "note": "Page is the PDF page of the Home Fruit chapter PDF, which prints it as 3-15."
         }
       ]
     },

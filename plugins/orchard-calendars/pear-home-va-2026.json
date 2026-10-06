@@ -1,0 +1,170 @@
+{
+  "pluginId": "pear-home-va-2026",
+  "type": "orchard-calendar",
+  "version": "1.0.0",
+  "audience": "home",
+  "guide": {
+    "publisher": "Virginia Cooperative Extension (Virginia Tech)",
+    "title": "2026 Pest Management Guide: Home Grounds and Animals",
+    "publicationId": "VCE 456-018",
+    "url": "https://www.pubs.ext.vt.edu/456/456-018/456-018.html"
+  },
+  "edition": "2026",
+  "hostCropFamilies": ["orchard"],
+  "hostCropPluginIds": ["pear-bartlett", "pear-bosc"],
+  "stages": [
+    {
+      "id": "dormant",
+      "name": "Dormant",
+      "order": 0,
+      "recognise": {
+        "description": "Fruit buds are inactive. This is the overwintering stage.",
+        "sourceKey": "pear-home-va-2026.dormant.description"
+      },
+      "windows": [
+        {
+          "id": "dormant-pruning",
+          "purpose": "cultural",
+          "targets": [],
+          "pollinatorSensitive": false,
+          "note": "Prune out dead and decaying branches, open the tree to sunlight, and take every pruning off the tree. Prunings left in the tree can be colonized by rot fungi.",
+          "sourceKeys": ["pear-home-va-2026.dormant.pruning"]
+        },
+        {
+          "id": "dormant-mummies",
+          "purpose": "sanitation",
+          "targets": [],
+          "pollinatorSensitive": false,
+          "note": "Remove mummified fruit from the trees and dropped fruit from the ground.",
+          "sourceKeys": ["pear-home-va-2026.dormant.mummies"]
+        },
+        {
+          "id": "dormant-blight-vigor",
+          "purpose": "cultural",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Fire blight bacteria overwinter at the edges of cankers. Avoid heavy nitrogen and heavy pruning that push fast, soft shoot growth, which blight attacks most.",
+          "sourceKeys": ["pear-home-va-2026.dormant.fire-blight"]
+        }
+      ]
+    },
+    {
+      "id": "bloom",
+      "name": "Bloom",
+      "order": 1,
+      "recognise": {
+        "description": "Blossom buds are open.",
+        "sourceKey": "pear-home-va-2026.bloom.description"
+      },
+      "windows": [
+        {
+          "id": "bloom-blight-ooze",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Check old cankers for milky-white to cream ooze, which usually first shows by early bloom, and watch for blossoms that suddenly wilt and turn brown.",
+          "sourceKeys": ["pear-home-va-2026.bloom.fire-blight-ooze"]
+        },
+        {
+          "id": "bloom-no-pruning",
+          "purpose": "cultural",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Do not prune during bloom or just after it.",
+          "sourceKeys": ["pear-home-va-2026.bloom.no-pruning"]
+        },
+        {
+          "id": "bloom-bees",
+          "purpose": "bloom",
+          "targets": [],
+          "pollinatorSensitive": true,
+          "sourceKeys": ["pear-home-va-2026.bloom.bees"]
+        }
+      ]
+    },
+    {
+      "id": "petal-fall",
+      "name": "Petal fall",
+      "order": 2,
+      "recognise": {
+        "description": "About three quarters of the petals have fallen.",
+        "sourceKey": "pear-home-va-2026.petal-fall.description"
+      },
+      "windows": [
+        {
+          "id": "petal-fall-blight-strikes",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Look for blighted shoots that bend over like a shepherd's crook, with dark brown to black leaves that stay attached.",
+          "sourceKeys": ["pear-home-va-2026.petal-fall.fire-blight"]
+        }
+      ]
+    },
+    {
+      "id": "fruit-set",
+      "name": "Fruit set",
+      "order": 3,
+      "recognise": {
+        "description": "A few days after bloom, when it is clear which blossoms have set fruit.",
+        "sourceKey": "pear-home-va-2026.fruit-set.description"
+      },
+      "windows": [
+        {
+          "id": "fruit-set-thinning",
+          "purpose": "cultural",
+          "targets": [],
+          "pollinatorSensitive": false,
+          "note": "Thin the fruit so that no two pears will touch when they are mature.",
+          "sourceKeys": ["pear-home-va-2026.fruit-set.thinning"]
+        },
+        {
+          "id": "fruit-set-water-sprouts",
+          "purpose": "cultural",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "On blight-prone varieties, take off water sprouts and suckers as they form.",
+          "sourceKeys": ["pear-home-va-2026.fruit-set.water-sprouts"]
+        },
+        {
+          "id": "fruit-set-blighted-fruit",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Look for water-soaked fruit with drops of ooze. Infected pears later shrivel, turn black and usually stay on the spur.",
+          "sourceKeys": ["pear-home-va-2026.fruit-set.fire-blight-fruit"]
+        }
+      ]
+    }
+  ]
+}

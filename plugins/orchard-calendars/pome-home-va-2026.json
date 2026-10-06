@@ -1,0 +1,487 @@
+{
+  "pluginId": "pome-home-va-2026",
+  "type": "orchard-calendar",
+  "version": "1.0.0",
+  "audience": "home",
+  "guide": {
+    "publisher": "Virginia Cooperative Extension (Virginia Tech)",
+    "title": "2026 Pest Management Guide: Home Grounds and Animals",
+    "publicationId": "VCE 456-018",
+    "url": "https://www.pubs.ext.vt.edu/456/456-018/456-018.html"
+  },
+  "edition": "2026",
+  "hostCropFamilies": ["orchard"],
+  "hostCropPluginIds": [
+    "apple-cortland",
+    "apple-fuji",
+    "apple-gala",
+    "apple-honeycrisp",
+    "apple-orchard"
+  ],
+  "stages": [
+    {
+      "id": "dormant",
+      "name": "Dormant",
+      "order": 0,
+      "recognise": {
+        "description": "Fruit buds are inactive. This is the overwintering stage.",
+        "sourceKey": "pome-home-va-2026.dormant.description"
+      },
+      "windows": [
+        {
+          "id": "dormant-pruning",
+          "purpose": "cultural",
+          "targets": [],
+          "pollinatorSensitive": false,
+          "note": "Prune out dead and decaying branches, open the tree to sunlight, and take every pruning off the tree. Prunings left in the tree can be colonized by rot fungi.",
+          "sourceKeys": ["pome-home-va-2026.dormant.pruning"]
+        },
+        {
+          "id": "dormant-mummies",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "black-rot",
+              "kind": "disease"
+            },
+            {
+              "id": "bitter-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "While pruning, remove mummified fruit and cankered branches from the trees and dropped fruit from the ground.",
+          "sourceKeys": ["pome-home-va-2026.dormant.mummies"]
+        },
+        {
+          "id": "dormant-blight-vigor",
+          "purpose": "cultural",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Fire blight bacteria overwinter at the edges of cankers. Avoid heavy nitrogen and heavy pruning that push fast, soft shoot growth, which blight attacks most.",
+          "sourceKeys": ["pome-home-va-2026.dormant.fire-blight"]
+        }
+      ]
+    },
+    {
+      "id": "green-tip",
+      "name": "Green tip",
+      "order": 1,
+      "recognise": {
+        "description": "Fruit buds have broken at the tip, showing about a sixteenth of an inch of green.",
+        "sourceKey": "pome-home-va-2026.green-tip.description"
+      },
+      "windows": [
+        {
+          "id": "green-tip-scab-weather",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "apple-scab",
+              "kind": "disease"
+            },
+            {
+              "id": "long-wet-periods",
+              "kind": "weather"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Scab spores from last year's fallen leaves reach the new leaves in spring rains, from green tip on. Extended wet periods between 33 and 76°F favor infection.",
+          "sourceKeys": ["pome-home-va-2026.green-tip.scab"]
+        },
+        {
+          "id": "green-tip-aphids",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "rosy-apple-aphid",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Once the leaves are about a quarter inch long, look in the foliage for rosy apple aphid each week. By the time leaves curl near the young apples, much of the fruit is lost.",
+          "sourceKeys": ["pome-home-va-2026.green-tip.aphids"]
+        }
+      ]
+    },
+    {
+      "id": "tight-cluster",
+      "name": "Tight cluster",
+      "order": 2,
+      "recognise": {
+        "description": "Blossom buds are mostly exposed and tightly grouped on short stems.",
+        "sourceKey": "pome-home-va-2026.tight-cluster.description"
+      },
+      "windows": [
+        {
+          "id": "tight-cluster-mildew",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "powdery-mildew",
+              "kind": "disease"
+            },
+            {
+              "id": "dry-mild-weather",
+              "kind": "weather"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Powdery mildew shows from tight cluster until shoot growth stops: felt-like patches under the leaves, which crinkle and curl. Dry weather between 50 and 75°F favors infection.",
+          "sourceKeys": ["pome-home-va-2026.tight-cluster.mildew"]
+        },
+        {
+          "id": "tight-cluster-cedar-rust",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "cedar-apple-rust",
+              "kind": "disease"
+            },
+            {
+              "id": "long-wet-periods",
+              "kind": "weather"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Cedar apple rust can infect from tight cluster on. Galls on nearby red cedars put out jelly-like spore horns in rainy spells. Extended wet periods above 56°F favor infection.",
+          "sourceKeys": ["pome-home-va-2026.tight-cluster.cedar-rust"]
+        }
+      ]
+    },
+    {
+      "id": "pink",
+      "name": "Pink",
+      "order": 3,
+      "recognise": {
+        "description": "Every blossom bud in the cluster is pink and the stems are fully extended.",
+        "sourceKey": "pome-home-va-2026.pink.description"
+      },
+      "windows": [
+        {
+          "id": "pink-blight-ooze",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Check old cankers for milky-white to cream ooze, which usually first shows from late pink to early bloom. Wind-blown rain and insects carry it to the blossoms.",
+          "sourceKeys": ["pome-home-va-2026.pink.fire-blight-ooze"]
+        },
+        {
+          "id": "pink-quince-rust",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "quince-rust",
+              "kind": "disease"
+            },
+            {
+              "id": "long-wet-periods",
+              "kind": "weather"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Quince rust can infect fruit from pink on. Extended wet periods above 56°F favor infection.",
+          "sourceKeys": ["pome-home-va-2026.pink.quince-rust"]
+        }
+      ]
+    },
+    {
+      "id": "bloom",
+      "name": "Bloom",
+      "order": 4,
+      "recognise": {
+        "description": "Blossom buds are open.",
+        "sourceKey": "pome-home-va-2026.bloom.description"
+      },
+      "windows": [
+        {
+          "id": "bloom-blight-weather",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            },
+            {
+              "id": "warm-wet-bloom",
+              "kind": "weather"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Watch for blossoms that suddenly wilt and turn brown. Open blossoms that get wet when the daily mean is above 60°F favor infection.",
+          "sourceKeys": ["pome-home-va-2026.bloom.fire-blight"]
+        },
+        {
+          "id": "bloom-no-pruning",
+          "purpose": "cultural",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Do not prune during bloom or just after it.",
+          "sourceKeys": ["pome-home-va-2026.bloom.no-pruning"]
+        },
+        {
+          "id": "bloom-bees",
+          "purpose": "bloom",
+          "targets": [],
+          "pollinatorSensitive": true,
+          "sourceKeys": ["pome-home-va-2026.bloom.bees"]
+        }
+      ]
+    },
+    {
+      "id": "petal-fall",
+      "name": "Petal fall",
+      "order": 5,
+      "recognise": {
+        "description": "About three quarters of the petals have fallen.",
+        "sourceKey": "pome-home-va-2026.petal-fall.description"
+      },
+      "windows": [
+        {
+          "id": "petal-fall-scab-lesions",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "apple-scab",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Look over the leaves for light brown or olive spots, the first sign of scab. They can show as soon as eight days after an infection.",
+          "sourceKeys": ["pome-home-va-2026.petal-fall.scab-lesions"]
+        }
+      ]
+    },
+    {
+      "id": "fruit-set",
+      "name": "Fruit set",
+      "order": 6,
+      "recognise": {
+        "description": "A few days after bloom, when it is clear which blossoms have set fruit.",
+        "sourceKey": "pome-home-va-2026.fruit-set.description"
+      },
+      "windows": [
+        {
+          "id": "fruit-set-thinning",
+          "purpose": "cultural",
+          "targets": [],
+          "pollinatorSensitive": false,
+          "note": "Thin the fruit so that no two apples will touch when they are mature.",
+          "sourceKeys": ["pome-home-va-2026.fruit-set.thinning"]
+        },
+        {
+          "id": "fruit-set-curculio",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "plum-curculio",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Look on the small fruit for crescent-shaped cuts in the skin, the mark of plum curculio egg laying.",
+          "sourceKeys": ["pome-home-va-2026.fruit-set.curculio"]
+        }
+      ]
+    },
+    {
+      "id": "mid-season",
+      "name": "Mid-season",
+      "order": 7,
+      "recognise": {
+        "description": "The middle of the season, between the early-season and late-season groups in the guide's apple disease checklist.",
+        "sourceKey": "pome-home-va-2026.mid-season.description"
+      },
+      "windows": [
+        {
+          "id": "mid-season-blight-strikes",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Look for blighted shoots that bend over like a shepherd's crook, with brown leaves that stay attached, and for water-soaked fruit with drops of ooze.",
+          "sourceKeys": ["pome-home-va-2026.mid-season.fire-blight"]
+        },
+        {
+          "id": "mid-season-water-sprouts",
+          "purpose": "cultural",
+          "targets": [
+            {
+              "id": "fire-blight",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "On blight-prone varieties, take off water sprouts and suckers as they form.",
+          "sourceKeys": ["pome-home-va-2026.mid-season.water-sprouts"]
+        },
+        {
+          "id": "mid-season-codling-moth",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "codling-moth",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Look for holes bored into the fruit. Codling moth has two or three generations a year here.",
+          "sourceKeys": ["pome-home-va-2026.mid-season.codling-moth"]
+        },
+        {
+          "id": "mid-season-san-jose-scale",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "san-jose-scale",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "San Jose scale has two generations a season, one in late May or early June and one in August. Settled scales leave reddish rings on the fruit skin.",
+          "sourceKeys": ["pome-home-va-2026.mid-season.san-jose-scale"]
+        },
+        {
+          "id": "mid-season-mites",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "two-spotted-spider-mite",
+              "kind": "pest"
+            },
+            {
+              "id": "european-red-mite",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Look for stippled leaves and use a hand lens to tell two-spotted spider mite from European red mite. Native predators can help control mites.",
+          "sourceKeys": ["pome-home-va-2026.mid-season.mites"]
+        },
+        {
+          "id": "mid-season-maggot-traps",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "apple-maggot",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Hang one apple maggot trap, a red sphere or a yellow panel, in each backyard tree.",
+          "sourceKeys": ["pome-home-va-2026.mid-season.apple-maggot-traps"]
+        },
+        {
+          "id": "mid-season-dropped-fruit",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "apple-maggot",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Pick up dropped fruit promptly so apple maggot larvae cannot go into the ground.",
+          "sourceKeys": ["pome-home-va-2026.mid-season.dropped-fruit"]
+        },
+        {
+          "id": "mid-season-sooty-blotch",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "sooty-blotch",
+              "kind": "disease"
+            },
+            {
+              "id": "fly-speck",
+              "kind": "disease"
+            },
+            {
+              "id": "moderate-humid-weather",
+              "kind": "weather"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Sooty blotch and fly speck can infect from June, but late summer matters most. Moderate temperatures and high humidity favor them.",
+          "sourceKeys": ["pome-home-va-2026.mid-season.sooty-blotch"]
+        }
+      ]
+    },
+    {
+      "id": "late-season",
+      "name": "Late season",
+      "order": 8,
+      "recognise": {
+        "description": "The guide's late season, as the fruit nears maturity and harvest.",
+        "sourceKey": "pome-home-va-2026.late-season.description"
+      },
+      "windows": [
+        {
+          "id": "late-season-fruit-rots",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "black-rot",
+              "kind": "disease"
+            },
+            {
+              "id": "bitter-rot",
+              "kind": "disease"
+            },
+            {
+              "id": "white-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Look for fruit rots: small brown spots that grow, firm leathery decay, and fruit that shrinks into mummies. Bitter rot often starts at insect or other fruit injuries.",
+          "sourceKeys": ["pome-home-va-2026.late-season.fruit-rots"]
+        },
+        {
+          "id": "late-season-dropped-fruit",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "apple-maggot",
+              "kind": "pest"
+            },
+            {
+              "id": "black-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Keep picking up dropped fruit and remove mummified fruit from the trees.",
+          "sourceKeys": ["pome-home-va-2026.late-season.dropped-fruit"]
+        },
+        {
+          "id": "late-season-pick-mature",
+          "purpose": "harvest-prep",
+          "targets": [],
+          "pollinatorSensitive": false,
+          "note": "Pick apples at maturity. Fruit picked early gets more bitter pit, which shows near harvest or in storage.",
+          "sourceKeys": ["pome-home-va-2026.late-season.bitter-pit"]
+        }
+      ]
+    }
+  ]
+}

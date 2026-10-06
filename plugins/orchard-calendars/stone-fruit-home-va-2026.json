@@ -1,0 +1,309 @@
+{
+  "pluginId": "stone-fruit-home-va-2026",
+  "type": "orchard-calendar",
+  "version": "1.0.0",
+  "audience": "home",
+  "guide": {
+    "publisher": "Virginia Cooperative Extension (Virginia Tech)",
+    "title": "2026 Pest Management Guide: Home Grounds and Animals",
+    "publicationId": "VCE 456-018",
+    "url": "https://www.pubs.ext.vt.edu/456/456-018/456-018.html"
+  },
+  "edition": "2026",
+  "hostCropFamilies": ["stone-fruit"],
+  "hostCropPluginIds": ["peach-elberta", "peach-redhaven"],
+  "stages": [
+    {
+      "id": "dormant",
+      "name": "Dormant",
+      "order": 0,
+      "recognise": {
+        "description": "Fruit buds are inactive. This is the overwintering stage.",
+        "sourceKey": "stone-fruit-home-va-2026.dormant.description"
+      },
+      "windows": [
+        {
+          "id": "dormant-mummies",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Remove brown rot mummies from the trees and the ground during the dormant season.",
+          "sourceKeys": ["stone-fruit-home-va-2026.dormant.mummies"]
+        },
+        {
+          "id": "dormant-pruning",
+          "purpose": "cultural",
+          "targets": [
+            {
+              "id": "shothole-borer",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Prune out dead and dying branches, where shothole borers breed, and take every pruning off the tree.",
+          "sourceKeys": ["stone-fruit-home-va-2026.dormant.pruning"]
+        }
+      ]
+    },
+    {
+      "id": "swollen-bud",
+      "name": "Swollen bud",
+      "order": 1,
+      "recognise": {
+        "description": "Fruit buds are swollen and the scales have separated, showing lighter tissue.",
+        "sourceKey": "stone-fruit-home-va-2026.swollen-bud.description"
+      },
+      "windows": [
+        {
+          "id": "swollen-bud-leaf-curl",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "peach-leaf-curl",
+              "kind": "disease"
+            },
+            {
+              "id": "moist-weather",
+              "kind": "weather"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Leaf curl can infect the young leaves as the buds swell, when moisture and temperature suit it, before anything shows. As infected leaves develop they thicken, curl and turn red to purple.",
+          "sourceKeys": ["stone-fruit-home-va-2026.swollen-bud.leaf-curl"]
+        }
+      ]
+    },
+    {
+      "id": "pink",
+      "name": "Pink",
+      "order": 2,
+      "recognise": {
+        "description": "The blossom bud shows a pink tip.",
+        "sourceKey": "stone-fruit-home-va-2026.pink.description"
+      },
+      "windows": [
+        {
+          "id": "pink-brown-rot-rain",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            },
+            {
+              "id": "rainy-weather",
+              "kind": "weather"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Brown rot becomes active about the time pink shows in the buds, if there is enough rain.",
+          "sourceKeys": ["stone-fruit-home-va-2026.pink.brown-rot"]
+        }
+      ]
+    },
+    {
+      "id": "bloom",
+      "name": "Bloom",
+      "order": 3,
+      "recognise": {
+        "description": "Blossom buds are open.",
+        "sourceKey": "stone-fruit-home-va-2026.bloom.description"
+      },
+      "windows": [
+        {
+          "id": "bloom-blossom-blight",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": true,
+          "note": "Look for blighted blossoms and twigs. They can feed fruit rot in rainy spells for the rest of the season.",
+          "sourceKeys": ["stone-fruit-home-va-2026.bloom.brown-rot"]
+        },
+        {
+          "id": "bloom-bees",
+          "purpose": "bloom",
+          "targets": [],
+          "pollinatorSensitive": true,
+          "sourceKeys": ["stone-fruit-home-va-2026.bloom.bees"]
+        }
+      ]
+    },
+    {
+      "id": "shuck-split",
+      "name": "Shuck split and shuck fall",
+      "order": 4,
+      "recognise": {
+        "description": "The dried flower remnant covering the young fruit splits and soon falls away.",
+        "sourceKey": "stone-fruit-home-va-2026.shuck-split.description"
+      },
+      "windows": [
+        {
+          "id": "shuck-thinning",
+          "purpose": "cultural",
+          "targets": [],
+          "pollinatorSensitive": false,
+          "note": "Thin the fruit so that no two peaches will touch when they are mature.",
+          "sourceKeys": ["stone-fruit-home-va-2026.shuck-split.thinning"]
+        },
+        {
+          "id": "shuck-curculio",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "plum-curculio",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Look on the small fruit for crescent-shaped cuts in the skin, the mark of plum curculio egg laying.",
+          "sourceKeys": ["stone-fruit-home-va-2026.shuck-split.curculio"]
+        }
+      ]
+    },
+    {
+      "id": "fruit-growth",
+      "name": "Fruit growth",
+      "order": 5,
+      "recognise": {
+        "description": "After the shuck falls, while the young fruit grows toward maturity.",
+        "sourceKey": "stone-fruit-home-va-2026.fruit-growth.description"
+      },
+      "windows": [
+        {
+          "id": "fruit-growth-shoot-flagging",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "oriental-fruit-moth",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Look for new or young shoot tips that die suddenly; oriental fruit moth larvae may be tunneling in them.",
+          "sourceKeys": [
+            "stone-fruit-home-va-2026.fruit-growth.oriental-fruit-moth"
+          ]
+        },
+        {
+          "id": "fruit-growth-borers",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "peachtree-borer",
+              "kind": "pest"
+            },
+            {
+              "id": "lesser-peachtree-borer",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Check the trunk base and larger limbs for gum mixed with sawdust-like frass. Peachtree borer moths emerge from May to September. Both borers can be monitored with pheromone traps.",
+          "sourceKeys": ["stone-fruit-home-va-2026.fruit-growth.borers"]
+        },
+        {
+          "id": "fruit-growth-stink-bugs",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "brown-marmorated-stink-bug",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Look for thin streams of whitish jelly-like ooze and sunken, misshapen spots on the fruit. The bugs are around from about May through mid-October.",
+          "sourceKeys": ["stone-fruit-home-va-2026.fruit-growth.stink-bugs"]
+        },
+        {
+          "id": "fruit-growth-scales",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "white-peach-scale",
+              "kind": "pest"
+            },
+            {
+              "id": "san-jose-scale",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Look for scale on the branches. Abundant white peach scale makes a branch look white-washed.",
+          "sourceKeys": ["stone-fruit-home-va-2026.fruit-growth.scales"]
+        },
+        {
+          "id": "fruit-growth-peach-scab",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "peach-scab",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Look for small olive spots on the upper, exposed side of the fruit. Scabbed fruit can crack and let brown rot in.",
+          "sourceKeys": ["stone-fruit-home-va-2026.fruit-growth.peach-scab"]
+        },
+        {
+          "id": "fruit-growth-dead-wood",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "shothole-borer",
+              "kind": "pest"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Sap oozing from buds and small holes in branches points to shothole borer. Remove and destroy dead or dying branches as soon as you find them.",
+          "sourceKeys": ["stone-fruit-home-va-2026.fruit-growth.dead-wood"]
+        }
+      ]
+    },
+    {
+      "id": "ripening",
+      "name": "Ripening",
+      "order": 6,
+      "recognise": {
+        "description": "The fruit nears maturity and ripens on the tree.",
+        "sourceKey": "stone-fruit-home-va-2026.ripening.description"
+      },
+      "windows": [
+        {
+          "id": "ripening-brown-rot",
+          "purpose": "scout",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Look for small round brown spots that spread fast on ripening fruit, then ash-colored tufts of spores.",
+          "sourceKeys": ["stone-fruit-home-va-2026.ripening.brown-rot"]
+        },
+        {
+          "id": "ripening-dropped-fruit",
+          "purpose": "sanitation",
+          "targets": [
+            {
+              "id": "brown-rot",
+              "kind": "disease"
+            }
+          ],
+          "pollinatorSensitive": false,
+          "note": "Take mummified fruit off the trees and pick up dropped fruit. Rotting fruit supplies spores that infect other fruit.",
+          "sourceKeys": ["stone-fruit-home-va-2026.ripening.dropped-fruit"]
+        }
+      ]
+    }
+  ]
+}

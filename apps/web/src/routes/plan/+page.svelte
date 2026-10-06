@@ -5257,7 +5257,7 @@
     font-size: 0.82rem;
   }
   .edit-season-btn {
-    min-height: 36px;
+    min-height: 48px;
     padding: 0.35rem 0.85rem;
     background: white;
     color: var(--color-forest);

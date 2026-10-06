@@ -69,6 +69,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    min-height: 48px;
     padding: 8px 14px 10px;
     background: transparent;
     border: none;

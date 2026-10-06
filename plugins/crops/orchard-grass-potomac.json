@@ -8,9 +8,7 @@
     "min": 365,
     "max": 1825
   },
-  "defaultRowSpacingInches": 7,
   "plantingGuide": {
-    "recommendedLbsPerAcre": 14,
     "seedingRate": {
       "drilledLbsPerAcre": {
         "min": 10,

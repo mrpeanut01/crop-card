@@ -8,13 +8,11 @@
     "min": 180,
     "max": 220
   },
-  "defaultRowSpacingInches": 7,
   "harvestIndicators": [
     "Mow or disk after full bloom, the stage with the most nitrogen",
     "Disk lightly to keep the tender residue for short-term erosion control"
   ],
   "plantingGuide": {
-    "recommendedLbsPerAcre": 70,
     "seedingRate": {
       "drilledLbsPerAcre": {
         "min": 50,

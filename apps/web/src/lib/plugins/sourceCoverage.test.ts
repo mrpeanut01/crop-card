@@ -275,6 +275,22 @@ describe('fact paths', () => {
       'test-crop: seedingRate.seedBasis quote does not say bulk'
     ]);
   });
+
+  it('reads a row width written as "7-inch to 8-inch"', () => {
+    const crop = cropPluginSchema.parse({
+      ...SEEDING_BASE,
+      plantingGuide: { seedingRate: { drillRowSpacingIn: { min: 7, max: 8 } } }
+    });
+    const src = (quote: string): SourceMap => ({
+      'test-crop': { 'seedingRate.drillRowSpacingIn': { ...FIXTURE_SOURCE, quote } }
+    });
+    expect(
+      seedingRateQuoteGaps([crop], src('a drill that plants in 7-inch to 8-inch rows'))
+    ).toEqual([]);
+    expect(
+      seedingRateQuoteGaps([crop], src('a drill that plants in 17-inch to 8-inch rows'))
+    ).toEqual(['test-crop: seedingRate.drillRowSpacingIn quote does not state 7-8']);
+  });
 });
 
 describe('tree size classes', () => {

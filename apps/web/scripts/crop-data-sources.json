@@ -23,7 +23,14 @@
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Alfalfa",
       "date": "December 15, 2023",
       "quote": "Method of planting 6-8 inch rows or solid-seeded.",
-      "note": "Rates are left empty: VCE 15-25 lbs alone (method not stated), Penn State 15-18 pure stand, Missouri G4652 drilled 12-15 PLS."
+      "note": "The drilled rate comes from Missouri G4652; broadcast is empty because Missouri gives only a ceiling (up to 20)."
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://extension.missouri.edu/publications/g4652",
+      "publisher": "University of Missouri Extension G4652, Seeding Rates, Dates and Depths for Common Missouri Forages (Harley D. Naumann)",
+      "date": "September 2017, revised September 2026",
+      "quote": "Missouri G4652 Table 1. Pure stands, columns \"Type | Seeding rate (pounds of live seed per acre) | Seeding date (Spring, Fall, Dormant or frost seeding) | Depth\"; row \"Alfalfa Perennial, warm-season legume Drilled: 12 – 15 Broadcast: Up to 20 Up to mid-April Late August – late September 1/4 – 1/2 inch\"",
+      "note": "Forage pure-stand rate; the plugin is a hay alfalfa, so it counts. The only source that ties an alfalfa rate to a method: VCE 424-100 15-25, Penn State 15-18, Kentucky AGR-18 and Utah 15-20 name no method (panel ruling 2026-10-05, #551, 2-1). Broadcast stays empty: 'Up to 20' is a ceiling, not a range. 'Live seed' is not 'pure live seed', so no seedBasis."
     }
   },
   "apple-cortland": {
@@ -320,7 +327,14 @@
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Barley",
       "date": "December 15, 2023",
       "quote": "Rate of seeding 120 lbs/A (hulled) or approximately 30 seeds/sq ft (18 seeds/drill foot in 7-inch rows)",
-      "note": "Hulled barley; Thoroughbred is hulled. The next row says planting with a grain drill is best. The 120 lb figure is left empty: Missouri G4652 prints drilled 80-110 PLS (forage context)."
+      "note": "Hulled barley; Thoroughbred is hulled. The next row says planting with a grain drill is best."
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Barley",
+      "date": "December 15, 2023",
+      "quote": "Rate of seeding 120 lbs/A (hulled) or approximately 30 seeds/sq ft (18 seeds/drill foot in 7-inch rows) Method of planting Planting with a grain drill is best, but broadcast disk-in to a depth of 1-1 1/2 inches can be successful.",
+      "note": "Hulled barley; Thoroughbred is hulled. Counted as a drilled rate (panel ruling 2026-10-05, #551, 2-1): restated per drill foot and the method row names the grain drill first. Missouri G4652's drilled 80-110 is a forage pure-stand rate and does not count for a grain plugin. No seed basis stated."
     }
   },
   "basil-genovese": {
@@ -501,7 +515,7 @@
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Buckwheat",
       "date": "2007",
       "quote": "In untilled, minimally tilled or clean-tilled soils, drill 50 to 60 lb./A at 1/2 to 11/2 inches deep in 6 to 8 inch rows.",
-      "note": "Chart 3B prints drilled 48-70, which overlaps; the crop page's range is used (overlap rule, panel ruling 2026-10-04). Broadcast is left empty: the page gives only a ceiling ('broadcast up to 96 lb./A') and Chart 3B says 50-90."
+      "note": "Chart 3B prints drilled 48-70, which overlaps; the crop page's range is used (overlap rule, panel ruling 2026-10-04). Broadcast is left empty: the page gives only a ceiling ('broadcast up to 96 lb./A') and Chart 3B says 50-90. Broadcast stays empty permanently unless a source changes (panel ruling 2026-10-05, 3-0): the page's 'up to 96' is a ceiling, not a range."
     },
     "seedingRate.seedBasis": {
       "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
@@ -839,7 +853,21 @@
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Red Clover",
       "date": "December 15, 2023",
       "quote": "Plant in 6-8 inch rows or solid-seeded usually with a grass.",
-      "note": "Red clover generally. Rates are left empty: VCE 8-10 lbs alone, Penn State 10-12, Missouri and Kentucky 8-12, none tied to a method."
+      "note": "Red clover generally. The drilled rate is left empty (SARE page 10-12 with grains vs Chart 3B 8-10, touching only at 10); broadcast 10-12 comes from the SARE page."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/red-clover/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Red Clover",
+      "date": "2007",
+      "quote": "It can be overseeded at 10 to 12 lb./A into: Dormant winter grains before ground thaws. This “frostseeding” method relies on movement of the freeze-thaw cycle to work seed into sufficient seed-soil contact for germination.",
+      "note": "Frost seeding is broadcast. Chart 3B's red clover row prints broadcast 10-12, the same range. Species-level red clover; no mammoth figure found. Drilled stays empty (panel ruling 2026-10-05, #551, 3-0): the page says 'drilled at 10 to 12 lb./A with spring-sown grains' and Chart 3B says 8-10 for a pure stand; they share only 10, which counts as a disagreement (touching endpoints, panel ruling 2026-10-05, #551). MD and PA NRCS 340 (10) are drilled-only comparisons; Missouri G4652 '8 – 12', VCE 8-10 and Kentucky AGR-18 name no method; Ohio ANR-0132 is an MCCC pure live seed baseline."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Charts",
+      "date": "2007",
+      "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
+      "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
     }
   },
   "collards-georgia-southern": {
@@ -863,7 +891,7 @@
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn",
       "date": "December 15, 2023",
       "quote": "Rate of planting On soils with high production potential where good production practices are followed, plant 25,000 to 33,000 kernels per acre. If planted on droughty soils, the rate of planting should be decreased by 10%-15%.",
-      "note": "Single source (VCE). Kernels planted per acre on soils with high production potential; the same sentence lowers the rate 10-15% on droughty soils. Penn State Extension's 30,000 plants per acre is a final stand, a different measure, so it is not a second source. No row width is sourced."
+      "note": "Single source (VCE). Kernels planted per acre on soils with high production potential; the same sentence lowers the rate 10-15% on droughty soils. Penn State Extension's 30,000 plants per acre is a final stand, a different measure, so it is not a second source. No row width is sourced. Row width stays empty permanently unless a source changes (panel ruling 2026-10-05, 3-0): Iowa State's 'The most common row spacing for corn across the Corn Belt is 30 inches' and Nebraska G2216 describe practice, not a recommendation."
     }
   },
   "corn-sweet-bodacious": {
@@ -896,6 +924,13 @@
       "date": "2007",
       "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
       "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
+    },
+    "seedDepthIn": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/cowpeas/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Cowpeas",
+      "date": "2007",
+      "quote": "In a moist seedbed, drill cowpeas 1 to 2 inches deep at about 30 to 90 lb./A, using the higher rate in drier or cooler areas or for larger-seeded cultivars (361, 422).",
+      "note": "Seed depth, sourced panel ruling 2026-10-05, #551; the source-coverage gate does not check this field. Chart 3B (1-1 1/2), the NRCS Cowpea Plant Guide (1 to 2) and PA NRCS 340 (1.0-1.5) overlap."
     }
   },
   "crimson-clover-cover": {
@@ -948,6 +983,13 @@
       "date": "2007",
       "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
       "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
+    },
+    "seedDepthIn": {
+      "url": "https://efotg.sc.egov.usda.gov/api/CPSFile/54221/340_PA_PS_Cover_Crop_2025_pdf",
+      "publisher": "USDA NRCS Pennsylvania, Conservation Practice Specification 340 Cover Crop, Table 2",
+      "date": "November 2025",
+      "quote": "Crimson Clover 15 0.25 – 0.5",
+      "note": "Seed depth, sourced panel ruling 2026-10-05, #551; the source-coverage gate does not check this field. Table 2 row (species, seeding rate lb/ac, depth in). SARE's crimson page prints no depth; Chart 3B and MD NRCS 340 also give 1/4-1/2. Kept 2-1: the NRCS Crimson Clover Plant Guide splits by soil ('no more than ¼ inch in clay soils and ½ to ¾ inch in sandy soils'), each touching this range at an endpoint."
     }
   },
   "cucumber-regal-f1-seed": {
@@ -987,6 +1029,13 @@
       "publisher": "University of Maryland Extension, Home and Garden Information Center",
       "date": "2026-08-07",
       "quote": "UMD HGIC, Cover Crops For Gardens: \"In most years, forage/daikon radish and spring oats will winter-kill (die out due to the cold), leaving a mat of dead vegetation. The debris can be treated as a mulch (planted through in the spring) or turned-under.\""
+    },
+    "seedingRate.notRecorded": {
+      "url": "https://extension.umd.edu/resource/no-till-spring-vegetables-after-forage-radish-cover-crop",
+      "publisher": "University of Maryland Extension FS-1134, No-Till Spring Vegetables After Forage Radish Cover Crop",
+      "date": "July 2020, updated June 13, 2024",
+      "quote": "Recommended seeding rates for the popular Tillage Radish brand are 6 lbs/acre drilled, though research trials at the University of Maryland generally used a higher seeding rate of 8-9 lbs/acre. Broadcast rates are higher (9-12 lbs/acre), and germination from broadcast cover crop seed is greater when seed-soil contact is increased by cultipacking (crushing dirt clods, removing air pockets, and pressing down small stones to form a smooth, firm seedbed) or light incorporation.",
+      "note": "Why both rates are empty (panel ruling 2026-10-05, #551, 3-0 drilled, 2-1 broadcast): drilled, the SARE page's 8-12 (Chart 3B 8-13, UW A4191 10-12, MD NRCS 340 8, Kentucky AGR-18 oilseed radish 10) does not overlap UMD's 6 or PA NRCS 340's 5. Broadcast, SARE's 12-20 shares only 12 with UMD's 9-12, and a single shared endpoint counts as a disagreement (as for orchardgrass). Ohio ANR-0125 (2-4/3-5 pure live seed) is an MCCC baseline and Virginia DCR SL-8B's 6-8 names no method. Penn State Agronomy Guide 2025 is paywalled and was not read."
     }
   },
   "dill-mammoth": {
@@ -1278,6 +1327,13 @@
       "date": "2007",
       "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
       "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
+    },
+    "seedingRate.drillRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Hairy Vetch",
+      "date": "December 15, 2023",
+      "quote": "Plant 20-30 lbs alone; 10-15 lbs in mixtures; usually mixed with 1/2-1 bushel of small grain. Plant in 6-8 inch rows with small grains or solid-seeded.",
+      "note": "Single source; the same VCE wording already sources drill rows for oats, wheat, alfalfa and red clover (panel ruling 2026-10-05, #551, 3-0). Species-level. VCE's 20-30 lbs has no method, so it does not count against the SARE rates."
     }
   },
   "hairy-vetch-purple-bounty": {
@@ -1301,6 +1357,20 @@
       "date": "2007",
       "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
       "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
+    },
+    "seedingRate.drillRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Hairy Vetch",
+      "date": "December 15, 2023",
+      "quote": "Plant 20-30 lbs alone; 10-15 lbs in mixtures; usually mixed with 1/2-1 bushel of small grain. Plant in 6-8 inch rows with small grains or solid-seeded.",
+      "note": "Single source; the same VCE wording already sources drill rows for oats, wheat, alfalfa and red clover (panel ruling 2026-10-05, #551, 3-0). Species-level. VCE's 20-30 lbs has no method, so it does not count against the SARE rates."
+    },
+    "seedDepthIn": {
+      "url": "https://www.sare.org/wp-content/uploads/chart3b-planting.pdf",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Chart 3B Planting",
+      "date": "2007",
+      "quote": "SARE MCCP Chart 3B Planting, columns \"Species | Depth | Drilled lb./A | Drilled bu/A | Broadcast lb./A | Broadcast bu/A | oz./100 ft2 | Cost ($/lb.) | Cost/A drilled | Cost/A broadcast | Inoc. Type | Reseeds\"; row \"Hairy vetch | 1/2–1 1/2 | 15–20 |  | 25–40 |  | 2 | 1.70–2.50 | 35 | 65 | pea, vetch | S\"",
+      "note": "Seed depth, sourced panel ruling 2026-10-05, #551; the source-coverage gate does not check this field. SARE's hairy vetch page prints no depth. PA NRCS 340 (0.5-1.0) and the NRCS Hairy Vetch Plant Guide (2023, '½ to ¾ inch') overlap. Species-level."
     }
   },
   "hops-cascade": {
@@ -1423,7 +1493,7 @@
       "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Medics",
       "date": "2007",
       "quote": "Seeding rate is 8 to 10 lb./A for black medic, 12 to 20 lb./A for larger-seeded (snail, gamma and burr) annual medics.",
-      "note": "The rate sits in the page's drilling paragraph ('Drill 1/4 to 1/2 inch deep ...'). Chart 3B's medic row (drilled 8-22) covers all medics, larger-seeded ones included. Broadcast is left empty: the only figure (Chart 3B, 12-26) is for all medics."
+      "note": "The rate sits in the page's drilling paragraph ('Drill 1/4 to 1/2 inch deep ...'). Chart 3B's medic row (drilled 8-22) covers all medics, larger-seeded ones included. Broadcast is left empty: the only figure (Chart 3B, 12-26) is for all medics. Broadcast stays empty permanently unless a source changes (panel ruling 2026-10-05, 3-0); the UC SAREP black medic page could not be opened (403)."
     },
     "seedingRate.seedBasis": {
       "url": "https://www.sare.org/publications/managing-cover-crops-profitably/charts/",
@@ -1431,6 +1501,13 @@
       "date": "2007",
       "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
       "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
+    },
+    "seedDepthIn": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/legume-cover-crops/medics/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Medics",
+      "date": "2007",
+      "quote": "Drill 1/4 to 1/2 inch deep (using a double-disk or hoe-type drill) into a firm seed bed as you would for alfalfa.",
+      "note": "Seed depth, sourced panel ruling 2026-10-05, #551; the source-coverage gate does not check this field. Chart 3B's medic row agrees."
     }
   },
   "mint-spearmint": {
@@ -1471,6 +1548,13 @@
       "date": "2007",
       "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
       "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
+    },
+    "seedDepthIn": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/brassicas-and-mustards/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Brassicas and Mustards",
+      "date": "2007",
+      "quote": "Mustard. Drill 5-12 lb./A ¼–¾ in. deep or broadcast 10-15 lb./A.",
+      "note": "Seed depth, sourced panel ruling 2026-10-05, #551; the source-coverage gate does not check this field. Was 0.25-0.5 (unsourced). MD and PA NRCS 340 give 0.25-0.75."
     }
   },
   "nasturtium-companion": {
@@ -1494,6 +1578,13 @@
       "publisher": "University of Maryland Extension, Home and Garden Information Center",
       "date": "2026-08-07",
       "quote": "UMD HGIC, Cover Crops For Gardens: \"Oats are killed by the first hard freeze, leaving a brown decomposing mat in spring.\" ... \"In spring, any remaining debris can be forked into the soil or raked aside to mulch around new plants.\""
+    },
+    "seedingRate.notRecorded": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/oats/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Oats",
+      "date": "2007",
+      "quote": "If drilling oats, seed at 2 to 3 bushels per acre 1/2 to 1 inch deep, or 1 1/2 inches when growing grain you plan to harrow for weed control.",
+      "note": "Why every seeding rate is empty (panel ruling 2026-10-05, #551, 3-0): the crop page prints bushels only (drill 2-3 bu) and Chart 3B prints drilled 80-110 lb (2.5-3.5 bu) and broadcast 110-140 lb (3.5-4.5 bu), so the page and chart disagree and a lb figure would need a bushel weight no source prints. Other drilled figures: VCE 65-80, MD NRCS 340 95, PA NRCS 340 80, UGA C814 90-120, Kentucky AGR-18 '80 lb (drilled) 120 lb (broadcast)' pure live seed; Missouri G4652 90-120 (forage) and Ohio ANR-0116 30-60 (MCCC baseline) are not counted. No source prints a cover-crop drill row width (VCE's 6-8 in is the grain-oats sentence; panel split 2026-10-04). Penn State Agronomy Guide 2025 is paywalled and was not read."
     }
   },
   "oats-grain-jerry": {
@@ -1502,7 +1593,14 @@
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Oats",
       "date": "December 15, 2023",
       "quote": "Plant at 65-80 lbs or 12-15 seeds per row foot in 6-8 inch rows or solid-seeded.",
-      "note": "Spring oats sentence; the plugin is spring grain oats. The lb rate is left empty: Missouri G4652 prints drilled 90-120 PLS (forage context)."
+      "note": "Spring oats sentence; the plugin is spring grain oats. The same sentence sources the drilled lb rate."
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Oats",
+      "date": "December 15, 2023",
+      "quote": "Spring oats: March 5-April 1 in Piedmont; March 15-April 10 in areas west of the Blue Ridge. Spring oats are not recommended in Eastern Virginia. Plant at 65-80 lbs or 12-15 seeds per row foot in 6-8 inch rows or solid-seeded.",
+      "note": "Counted as a drilled rate (panel ruling 2026-10-05, #551, 2-1): the rate is restated per row foot in 6-8 inch rows; 'or solid-seeded' extends it, it does not remove the rows. Missouri G4652's drilled 90-120 is a forage pure-stand rate (live seed) and does not count for a grain plugin; Kentucky AGR-18 gives oats for grain as seeds per sq ft with no method. No seed basis stated."
     }
   },
   "onion-candy-sweet-f1": {
@@ -1642,7 +1740,7 @@
       "publisher": "University of Arkansas System Division of Agriculture, Orchardgrass for Forage (FSA3154)",
       "date": "FSA3154-PD-10-20N (October 2020)",
       "quote": "Seeding rate: 10-12 lbs/acre drilled; 12-15 lbs broadcast",
-      "note": "Pure stand; the sheet lists Potomac among varieties that did well in Kentucky and Tennessee trials. Overlapping method-split sources: UGA Circular 814 'D: 10-15 lbs/A B: 15-20 lbs/A' and Missouri G4652 drilled 8-15 (pounds of live seed). VCE 424-100 and Penn State print 8-12 pure stand and Kentucky AGR-64 15-20, none naming a method, so they are not counted. Basis not stated, so no seedBasis. Broadcast is left empty: 12-15 here vs 15-20 in UGA C814 (panel ruling 2026-10-04)."
+      "note": "Pure stand; the sheet lists Potomac among varieties that did well in Kentucky and Tennessee trials. Overlapping method-split sources: UGA Circular 814 'D: 10-15 lbs/A B: 15-20 lbs/A' and Missouri G4652 drilled 8-15 (pounds of live seed). VCE 424-100 and Penn State print 8-12 pure stand and Kentucky AGR-64 15-20, none naming a method, so they are not counted. Basis not stated, so no seedBasis. Broadcast is left empty: 12-15 here vs 15-20 in UGA C814 (panel ruling 2026-10-04). Broadcast stays empty permanently unless a source changes: a single shared endpoint (15) is a disagreement (panel ruling 2026-10-05, 2-1)."
     }
   },
   "oregano-greek": {
@@ -1812,6 +1910,13 @@
       "date": "June 2025",
       "quote": "Drill/Plant at 1/4-inch (3-5 lbs./acre PLS**)",
       "note": "The sheet's footnote reads '**Pure Live Seed'."
+    },
+    "seedDepthIn": {
+      "url": "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_phta.pdf",
+      "publisher": "USDA NRCS Plant Guide, Lacy phacelia (Phacelia tanacetifolia)",
+      "date": "Published September 2018",
+      "quote": "It is recommended to drill the seed to a ¼-inch depth to ensure good seed to soil contact, although broadcast seeding followed by cultivation may also be successful.",
+      "note": "Seed depth, sourced panel ruling 2026-10-05, #551; the source-coverage gate does not check this field. Was 0.25-0.5 (unsourced); the guide gives one depth."
     }
   },
   "plum-methley": {
@@ -2349,6 +2454,13 @@
       "publisher": "UF/IFAS Extension (EDIS ENY-717, Management of Nematodes and Soil Fertility with Sunn Hemp Cover Crop)",
       "date": "2022-01 (revised; originally 2004-09)",
       "quote": "UF/IFAS ENY-717: \"Sunn hemp is most commonly used as a green manure, where it is grown for 2 to 3 months before cash crop planting and then incorporated into the soil at early blooming stage.\" Also: \"When plowed under at early bloom stage, nitrogen recovery of this leguminous plant is the highest.\""
+    },
+    "seedingRate.notRecorded": {
+      "url": "https://www.ctahr.hawaii.edu/oc/freepubs/pdf/SA-GM-11.pdf",
+      "publisher": "University of Hawaii CTAHR SA-GM-11, Green Manure Crops: 'Tropic Sun' Sunnhemp (Valenzuela and Smith)",
+      "date": "Aug. 2002",
+      "quote": "Into a well prepared weed-free seedbed, broadcast pure live seed at 40–60 lb/acre (45–67 kg/ha), or drill at 30– 50 lb/acre (34–56 kg/ha) to a depth of 1⁄2–1 inch (12–25 mm) in rows 6 inches (15 cm) apart.",
+      "note": "Why both rates are empty (panel ruling 2026-10-05, #551, 2-1; the agronomist panelist would have shipped this green-manure range): CTAHR and the NRCS Sunn Hemp Plant Guide (one origin, Rotar and Joy) give 30-50 drilled and 40-60 broadcast pure live seed for green manure, and Missouri G4652 (30/40) and Kentucky AGR-18 (30/50 pure live seed) agree, but MD and PA NRCS 340 print 10 for a single-species cover, counted as a drilled rate, which does not overlap. The card has no purpose label to say a rate is for green manure (follow-up issue linked to #555). NRCS Iowa 10/15 and Ohio ANR-0133 14-20/16-22 are MCCC pure live seed baselines, not counted. Revisit once a purpose field exists."
     }
   },
   "sunn-hemp-tropic-sun": {
@@ -2357,7 +2469,14 @@
       "publisher": "University of Hawaii CTAHR, Sustainable and Organic Agriculture Program, 'Tropic Sun' Sunn Hemp",
       "date": "Text last updated on 9/25/2009",
       "quote": "Drilled: 30-50 lbs. pure live seed per acre (34-56 kg/ha) in 6-inch rows.",
-      "note": "The CTAHR green manure sheet SA-GM-11 (Aug. 2002) also says rows 6 inches apart; both credit Rotar & Joy. The 36 to 42 inch rows on the same page are for seed production. Rates are left empty: CTAHR prints 30-50 drilled and 40-60 broadcast pure live seed, NRCS Iowa (May 2025) prints 10 and 15 pure live seed."
+      "note": "The CTAHR green manure sheet SA-GM-11 (Aug. 2002) also says rows 6 inches apart; both credit Rotar & Joy. The 36 to 42 inch rows on the same page are for seed production. Rates are left empty (panel ruling 2026-10-05, #551, 2-1): CTAHR, the NRCS Plant Guide, Missouri G4652 and Kentucky AGR-18 give 30-50 drilled / 40-60 broadcast for green manure, MD and PA NRCS 340 give 10 for a general cover; see sunn-hemp-cover's seedingRate.notRecorded."
+    },
+    "seedDepthIn": {
+      "url": "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_crju.pdf",
+      "publisher": "USDA NRCS Plant Guide, Sunn Hemp (Crotalaria juncea)",
+      "date": "Edited 05jun06",
+      "quote": "seed should be broadcast or drilled and covered ½ to 1 inch deep into a well prepared, weed-free seedbed.",
+      "note": "Seed depth, sourced panel ruling 2026-10-05, #551; the source-coverage gate does not check this field. CTAHR SA-GM-11 gives the same 1/2-1 inch; NRCS Iowa (1/2-1 1/2) and UF SS-AGR-444 ('one inch or less') overlap; Ohio ANR-0133 is an MCCC baseline."
     }
   },
   "sweet-corn-american-dream-f1-seed": {
@@ -3106,7 +3225,21 @@
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Wheat",
       "date": "December 15, 2023",
       "quote": "Plant 120-150 lbs per acre (36 seeds per sq ft or 20 seeds per drill foot in 7-inch rows). Plant in 6-8 inch rows or solid-seeded.",
-      "note": "The October 2004 VCE Crop and Soil Environmental News wheat seeding article also tables 6, 7 and 8 inch rows. Rates are left empty: 36 seeds per sq ft here vs 30-35 in the 2004 article, and 120-150 lb here vs Missouri G4652 drilled 90-100 PLS (forage)."
+      "note": "The October 2004 VCE Crop and Soil Environmental News wheat seeding article also tables 6, 7 and 8 inch rows. The same sentence sources the drilled lb rate."
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Wheat",
+      "date": "December 15, 2023",
+      "quote": "Plant 120-150 lbs per acre (36 seeds per sq ft or 20 seeds per drill foot in 7-inch rows). Plant in 6-8 inch rows or solid-seeded.",
+      "note": "Counted as a drilled rate (panel ruling 2026-10-05, #551, 2-1): restated per drill foot in 7-inch rows. Missouri G4652's drilled 90-100 is a forage pure-stand rate and does not count for a grain plugin. Seeds per sq ft stay empty: 36 here vs 30-35 in the October 2004 VCE Crop and Soil Environmental News article, the October 2015 Virginia Ag Pest and Crop Advisory ('a seeding rate of 30-35 seeds per square foot') and Kentucky AGR-18 (no overlap, permanent until a source changes)."
+    },
+    "seedDepthIn": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/winter-wheat/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Winter Wheat",
+      "date": "2007",
+      "quote": "Drill 60 to 120 lb./A (1 to 2 bushels) into a firm seedbed at a 1/2- to 11/2-inch depth",
+      "note": "Seed depth, sourced panel ruling 2026-10-05, #551; the source-coverage gate does not check this field. The web text prints '11/2' for 1 1/2 (Chart 3B's wheat row: 1/2–1 1/2). Was 1-1.5 (unsourced); PA NRCS 340 winter wheat 1.0-1.5 overlaps. VCE 424-100 gives no depth."
     }
   },
   "white-clover-cover": {
@@ -3166,6 +3299,13 @@
       "date": "2007",
       "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
       "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
+    },
+    "seedDepthIn": {
+      "url": "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_pisa6.pdf",
+      "publisher": "USDA NRCS Plant Guide for pea (Pisum sativum), Pullman Plant Materials Center",
+      "date": "Published June 2012",
+      "quote": "Seed is planted at a depth of 1.5 to 3 inches in rows spaced 6 to 12 inches apart (Elzebroek and Wind, 2008).",
+      "note": "Seed depth, sourced panel ruling 2026-10-05, #551; the source-coverage gate does not check this field. Chart 3B's field pea row also gives 1 1/2-3."
     }
   },
   "pear-bartlett": {
@@ -3184,6 +3324,63 @@
       "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-04)",
       "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Pear - standard | 25 | 3 | 5-8 | 35-45 |\"",
       "note": "Cornell Guide to Growing Fruit at Home, Table 2: \"Pear, standard 20 20 5\" and \"Pear, Old Home/quince 15 15 4\". VCE 426-841 Table 1 also lists \"Pear - dwarf | 12 | 1/2 | 3-4 | 15-20 |\" but the same page says dwarf pear trees \"are not recommended because trees may not survive more than five years due to disease and incompatibility problems\", so no dwarf row ships."
+    }
+  },
+  "timothy-climax": {
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://extension.missouri.edu/publications/g4652",
+      "publisher": "University of Missouri Extension G4652, Seeding Rates, Dates and Depths for Common Missouri Forages (Harley D. Naumann)",
+      "date": "September 2017, revised September 2026",
+      "quote": "Missouri G4652 Table 1. Pure stands, columns \"Type | Seeding rate (pounds of live seed per acre) | Seeding date (Spring, Fall, Dormant or frost seeding) | Depth\"; row \"Timothy Perennial, cool-season grass Drilled: 4 – 6 Broadcast: 8 – 10 February – March Mid-August – early September 1/4 – 1/2 inch\"",
+      "note": "Forage pure-stand rate; the plugin is a hay timothy, so it counts (panel ruling 2026-10-05, #551). Kentucky AGR-84 Timothy, the crop guide, gives the same 'plant at the rate of 4 to 6 lb of seed per acre' for pure stands, in the paragraph on tilled seedbeds and no-till drilling. VCE 424-100 ('8-10 lbs alone'), Kentucky AGR-18 and Tennessee give 8-10 or 8 with no method, so they do not count. Missouri says 'live seed' but not 'pure live seed', so no seedBasis is set."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://extension.missouri.edu/publications/g4652",
+      "publisher": "University of Missouri Extension G4652, Seeding Rates, Dates and Depths for Common Missouri Forages (Harley D. Naumann)",
+      "date": "September 2017, revised September 2026",
+      "quote": "Missouri G4652 Table 1. Pure stands, columns \"Type | Seeding rate (pounds of live seed per acre) | Seeding date (Spring, Fall, Dormant or frost seeding) | Depth\"; row \"Timothy Perennial, cool-season grass Drilled: 4 – 6 Broadcast: 8 – 10 February – March Mid-August – early September 1/4 – 1/2 inch\"",
+      "note": "Single method-specific source; Missouri adds 'Higher seeding rates within the recommended range are generally appropriate for average to low-productivity soils and for broadcast seeding systems.' Shipped panel ruling 2026-10-05, #551, 2-1 (precedent panelist wanted a crop-guide anchor). The reseller Green Cover's 15/25 is not a primary source."
+    },
+    "seedingRate.drillRowSpacingIn": {
+      "url": "https://publications.ca.uky.edu/sites/publications.ca.uky.edu/files/agr84.pdf",
+      "publisher": "University of Kentucky Cooperative Extension AGR-84, Timothy (Lacefield, Henning, Phillips and Rasnake)",
+      "date": "Issued 11-1980, last printed 10-2002",
+      "quote": "Any no-till drill that plants in 7-inch to 8-inch rows and is set to deliver seed at the proper rate and depth will produce high yielding stands of timothy with only one pass across a field.",
+      "note": "Crop guide; single source for the drill row width (panel ruling 2026-10-05, #551, 3-0)."
+    }
+  },
+  "millet-japanese-cover": {
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_eces.pdf",
+      "publisher": "USDA NRCS Plant Guide, Japanese millet (Echinochloa esculenta)",
+      "date": "Published 09/2014",
+      "quote": "It can be broadcast at 20 lb/ac and covered lightly ¼ in deep for wildlife food planting (Stewart and West, 2004) or directly seeded into mud flats or well-prepared fields.",
+      "note": "Crop guide's single figure; UGA C814 (broadcast 20-25) and Kentucky AGR-18 ('20 lb (broadcast)', pure live seed) contain it (panel ruling 2026-10-05, #551, 3-0). The guide's '20–25 lb/ac' names no method. Drilled stays empty: UGA C814 15-20, AGR-18 10 and MD/PA NRCS 340 25 and 20 do not all overlap. NRCS Iowa (12/14) and Ohio ANR-0115 (12-15/14-17) are MCCC pure live seed baselines, not counted. No seed basis stated."
+    }
+  },
+  "sorghum-grain-pioneer": {
+    "seedingRate.seedsPerAcre": {
+      "url": "https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/AGR18.pdf",
+      "publisher": "University of Kentucky Cooperative Extension AGR-18, Grain, Forage, and Cover Crop Guide for Kentucky",
+      "date": "Issued 7-2020",
+      "quote": "Kentucky AGR-18 table, columns \"Species Scientific Name | Uses | Common Units | Desired Plant Density | Seeding Rate Pure Live Seed/ac | Seeding Depth (inches)\"; row \"Sorghum, Grain (Milo) Sorghum bicolor | grain | 56 lb/bu 24,000 seeds/lb | 60,000/ac | 60,000 to 80,000 seeds | 3/4 to 1-1/4\"",
+      "note": "Row read from the PDF layout and written with its column names; 60,000/ac is the desired plant density, 60,000 to 80,000 the seeds planted. Single source; nothing disagrees (panel ruling 2026-10-05, #551, 3-0). The lb rate stays empty: VCE 424-100 'Plant for grain at 5-7 lbs in rows' (wide rows, not a drill) and UGA C814 D 6-8, and University of Delaware Weekly Crop Update (May 16, 2008) says 'Do not plant using the older suggestions of pounds per acre since grain sorghum seed size has varied from almost 8,000 seed per pound up to 18,000 seed per pound.' Row width stays empty: Delaware's 7-10 in and AGR-18's '15\" or less' compare yield and lodging, they do not recommend a width."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/AGR18.pdf",
+      "publisher": "University of Kentucky Cooperative Extension AGR-18, Grain, Forage, and Cover Crop Guide for Kentucky",
+      "date": "Issued 7-2020",
+      "quote": "Seeding Rate Pure Live Seed/ac",
+      "note": "Column header of the AGR-18 table the seeds-per-acre range comes from."
+    }
+  },
+  "tillage-radish-driller": {
+    "seedingRate.notRecorded": {
+      "url": "https://extension.umd.edu/resource/no-till-spring-vegetables-after-forage-radish-cover-crop",
+      "publisher": "University of Maryland Extension FS-1134, No-Till Spring Vegetables After Forage Radish Cover Crop",
+      "date": "July 2020, updated June 13, 2024",
+      "quote": "Recommended seeding rates for the popular Tillage Radish brand are 6 lbs/acre drilled, though research trials at the University of Maryland generally used a higher seeding rate of 8-9 lbs/acre. Broadcast rates are higher (9-12 lbs/acre)",
+      "note": "Why both rates are empty (panel ruling 2026-10-05, #551, 2-1): UMD's brand rate (6 drilled, 9-12 broadcast) does not overlap SARE's forage radish 8-12 drilled and shares only 12 with SARE's 12-20 broadcast; PA NRCS 340 says 5. The brand owner (DLF / La Crosse Seed) prints 'Seeding Rate - Alone/New (Lbs./Acre) 3-8' with no method, so it does not count."
     }
   }
 }

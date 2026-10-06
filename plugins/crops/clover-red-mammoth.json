@@ -8,15 +8,18 @@
     "min": 90,
     "max": 365
   },
-  "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "soilTempMinF": 40,
-    "recommendedLbsPerAcre": 12,
     "seedingRate": {
+      "broadcastLbsPerAcre": {
+        "min": 10,
+        "max": 12
+      },
       "drillRowSpacingIn": {
         "min": 6,
         "max": 8
-      }
+      },
+      "seedBasis": "bulk"
     }
   },
   "harvestIndicators": [

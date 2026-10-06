@@ -8,7 +8,6 @@
     "min": 60,
     "max": 90
   },
-  "defaultRowSpacingInches": 7,
   "harvestIndicators": [
     "Mow when stalks reach 3 to 4 feet tall, leaving at least 6 inches of stubble",
     "Disk while plants are still vegetative to speed decomposition",
@@ -16,7 +15,6 @@
   ],
   "plantingGuide": {
     "soilTempMinF": 65,
-    "recommendedLbsPerAcre": 35,
     "seedingRate": {
       "drilledLbsPerAcre": {
         "min": 35,

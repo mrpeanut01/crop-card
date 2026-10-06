@@ -8,9 +8,21 @@
     "min": 365,
     "max": 1825
   },
-  "defaultRowSpacingInches": 7,
   "plantingGuide": {
-    "recommendedLbsPerAcre": 8
+    "seedingRate": {
+      "drilledLbsPerAcre": {
+        "min": 4,
+        "max": 6
+      },
+      "broadcastLbsPerAcre": {
+        "min": 8,
+        "max": 10
+      },
+      "drillRowSpacingIn": {
+        "min": 7,
+        "max": 8
+      }
+    }
   },
   "harvestIndicators": [
     "Boot stage to early head emergence"

@@ -197,6 +197,14 @@
                 {#if f.provenance && variant === 'screen'}
                   <Provenance source={f.provenance} compact />
                 {/if}
+                {#if f.note}
+                  <span class="fact-note" data-fact-note
+                    >{#if f.provenance && variant === 'compact'}<Provenance
+                        source={f.provenance}
+                        compact
+                      />{/if}{f.note}</span
+                  >
+                {/if}
               </dd>
             </div>
           {/each}
@@ -527,6 +535,15 @@
     border: 1px solid var(--pill-rust-bd);
     color: var(--pill-rust-fg);
     font-weight: 600;
+  }
+  .fact-note {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-soft);
   }
   .notices {
     margin: 0;

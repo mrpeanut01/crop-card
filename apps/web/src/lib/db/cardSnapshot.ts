@@ -4,6 +4,7 @@
  * categories, the active Owner's display name).
  */
 
+import { isTypicalTimingTask } from '$lib/schedule/typicalTiming';
 import { and, asc, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
 import { db } from './client';
 import { animalCarePlans, animalHealthEvents, crops, owners, tasks } from './schema';
@@ -155,7 +156,8 @@ export function listOpenTasksForCards(fromMs: number, toMs: number): SnapshotTas
       blockId: t.blockId ?? null,
       equipmentId: t.equipmentId ?? null,
       ...(t.assigneeUserId ? { assigneeUserId: t.assigneeUserId } : {}),
-      ...(t.relatedEventTable ? { relatedEventTable: t.relatedEventTable } : {})
+      ...(t.relatedEventTable ? { relatedEventTable: t.relatedEventTable } : {}),
+      ...(isTypicalTimingTask(t) ? { pluginTemplateKey: t.pluginTemplateKey } : {})
     }))
     .sort((a, b) => a.scheduledFor - b.scheduledFor || a.id.localeCompare(b.id));
 }

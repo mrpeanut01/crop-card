@@ -9,12 +9,15 @@
    */
   import Card from '$lib/components/ui/Card.svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
+  import TypicalTimingNote from '$lib/components/tasks/TypicalTimingNote.svelte';
 
   export interface RecommendationItem {
     id: string;
     title: string;
     crop?: string;
     window: string;
+    /** OP-22: the window is a seasonal row's unsourced typical date. */
+    typical?: boolean;
   }
 
   interface Props {
@@ -48,6 +51,7 @@
           {#if s.crop}{s.crop} ·
           {/if}<span class="mono">{s.window}</span>
         </div>
+        {#if s.typical}<TypicalTimingNote />{/if}
         {#if onSchedule}
           <button type="button" class="schedule" onclick={() => onSchedule(s.id)}>
             {tr('today.rec.scheduleTask')}

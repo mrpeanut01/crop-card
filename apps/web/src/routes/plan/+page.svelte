@@ -10,6 +10,7 @@
   import { onMount } from 'svelte';
   import { createT, type TranslateKey } from '$lib/i18n';
   import { calendarEventCrop, calendarEventTitle } from '$lib/calendar/eventTitle';
+  import { isTypicalTimingEvent } from '$lib/schedule/typicalTiming';
   import { goto, invalidateAll } from '$app/navigation';
   import { browser } from '$app/env';
   import { page } from '$app/state';
@@ -22,6 +23,7 @@
   import AllocationWizard from '$lib/components/AllocationWizard.svelte';
   import WorkflowStrip from '$lib/components/plan/WorkflowStrip.svelte';
   import ProvenancePanel from '$lib/components/plan/ProvenancePanel.svelte';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
   // Phase 25b (#81) — Plan v2 Almanac shell. Renders the new IA (left
   // rail + block header + plantings tabs/grid + timeline + scheduled
   // tasks) on top of the legacy tabbed editor (now in a <details>).
@@ -3495,15 +3497,18 @@
               {#if cell.events.length > 0}
                 <ul class="events">
                   {#each cell.events.slice(0, 3) as e, ei (ei)}
+                    {@const typical = isTypicalTimingEvent(e)}
                     <li
                       class="event {e.kind}"
+                      data-typical-timing={typical ? '' : undefined}
                       title="{calendarEventTitle(e, data.locale)} — {calendarEventCrop(
                         e,
                         data.locale
-                      )}"
+                      )}{typical ? ` · ${tr('tasks.typicalTiming')}` : ''}"
                     >
                       <span class="dot" aria-hidden="true"></span>
                       <span class="label">{calendarEventTitle(e, data.locale)}</span>
+                      {#if typical}<Provenance source="fallback" compact />{/if}
                     </li>
                   {/each}
                   {#if cell.events.length > 3}

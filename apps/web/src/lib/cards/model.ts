@@ -44,6 +44,9 @@ export interface CardFact {
   printValue?: string;
   /** Label and value stay English by rule (rates, REI, PHI, decon). */
   englishOnly?: boolean;
+  /** One short line under the value, on every variant (OP-22's
+   *  "Typical timing. Adjust to your farm."). */
+  note?: string;
 }
 
 export interface CardAction {

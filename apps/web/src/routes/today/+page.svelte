@@ -31,6 +31,8 @@
   import GettingStartedCard from '$lib/components/today/GettingStartedCard.svelte';
   import AlphaWelcome from '$lib/components/feedback/AlphaWelcome.svelte';
   import { buildTaskCard } from '$lib/cards/build/task';
+  import { isTypicalTimingEvent } from '$lib/schedule/typicalTiming';
+  import TypicalTimingNote from '$lib/components/tasks/TypicalTimingNote.svelte';
   import { taskPlanHref } from '$lib/cards/build/common';
   import { taskStart } from '$lib/tasks/start';
   import { plantingCardHref } from '$lib/cards/model';
@@ -294,7 +296,8 @@
       id: `${e.kind}:${e.blockId}:${e.startMs}:${i}`,
       title: calendarEventTitle(e, data.locale),
       crop: cropDisplayNameByEnglish(e.varietyDisplayName, data.locale),
-      window: fmt.day(e.startMs, 'month-day')
+      window: fmt.day(e.startMs, 'month-day'),
+      typical: isTypicalTimingEvent(e)
     }))
   );
 
@@ -625,6 +628,7 @@
             : e.kind.replace(/-/g, ' ')}</span
         ></span
       >
+      {#if isTypicalTimingEvent(e)}<TypicalTimingNote />{/if}
       {#if e.body}<span class="s-body">{calendarEventBody(e, data.locale)}</span>{/if}
       {#if waiting}<span><QueuedBadge /></span>{/if}
     </div>

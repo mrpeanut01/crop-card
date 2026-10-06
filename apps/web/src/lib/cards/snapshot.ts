@@ -144,6 +144,8 @@ export interface SnapshotTask {
   assigneeUserId?: string | null;
   /** The record the task becomes, when it names one. Absent on older bundles. */
   relatedEventTable?: string | null;
+  /** Where the task came from (OP-22 typical timing). Absent on older bundles. */
+  pluginTemplateKey?: string | null;
 }
 
 /** A farm member who can be given tasks, by name only (F1-11). */

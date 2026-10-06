@@ -30,6 +30,7 @@ import {
   stageTemplateWordingProblems,
   speciesFactPaths,
   seedingRateQuoteGaps,
+  treeRowSpacingGaps,
   treeSizeClassQuoteGaps,
   type SourceMap
 } from './sourceCoverage';
@@ -712,5 +713,59 @@ describe('stageTemplateWordingProblems (OC-1)', () => {
         }
       })
     ).toEqual(['vine-fruit dormant: inspect has a number']);
+  });
+});
+
+describe('#587 tree row spacing', () => {
+  const base = cropPluginSchema.parse({
+    pluginId: 'cherry-test',
+    type: 'crop',
+    displayName: 'Cherry Test',
+    version: '1',
+    cropFamily: 'stone-fruit',
+    harvestStyle: 'tree-fruit-multi-pick',
+    archetype: 'tree-fruit-multi-pick',
+    bloomWindow: { monthsOfYear: [4], beeAttractive: true },
+    defaultRowSpacingInches: 300,
+    plantingGuide: { rowSpacingIn: 216 }
+  });
+
+  it('needs a source for a tree crop row spacing', () => {
+    expect(cropFactPaths(base)).toEqual(['rowSpacingIn', 'defaultRowSpacingInches']);
+    expect(checkSources([{ pluginId: base.pluginId, paths: cropFactPaths(base) }], {})).toEqual([
+      { pluginId: 'cherry-test', path: 'rowSpacingIn', problem: 'missing' },
+      { pluginId: 'cherry-test', path: 'defaultRowSpacingInches', problem: 'missing' }
+    ]);
+  });
+
+  it('leaves a non-tree crop row spacing ungated', () => {
+    const veg = { ...base, archetype: 'continuous-harvest-fruit' as const };
+    expect(cropFactPaths(veg)).toEqual([]);
+    expect(treeRowSpacingGaps([veg], {})).toEqual([]);
+  });
+
+  it('needs the quote to state the number in inches or feet', () => {
+    const sources: SourceMap = {
+      'cherry-test': {
+        rowSpacingIn: { ...FIXTURE_SOURCE, quote: 'rows 18 feet apart' },
+        defaultRowSpacingInches: { ...FIXTURE_SOURCE, quote: 'Suggested Spacing (ft) 25 x 30' }
+      }
+    };
+    expect(treeRowSpacingGaps([base], sources)).toEqual([
+      'cherry-test: defaultRowSpacingInches quote does not say the figure is between rows'
+    ]);
+  });
+
+  it('refuses any row spacing on a crop with a size class table', () => {
+    const tree = {
+      ...base,
+      treeSizeClasses: [
+        { sizeClass: 'dwarf' as const, minSpacingFt: 8, yearsToBearing: { min: 2, max: 3 } }
+      ]
+    };
+    expect(treeRowSpacingGaps([tree], {})).toEqual([
+      'cherry-test: rowSpacingIn is never read when treeSizeClasses spaces the crop',
+      'cherry-test: defaultRowSpacingInches is never read when treeSizeClasses spaces the crop'
+    ]);
   });
 });

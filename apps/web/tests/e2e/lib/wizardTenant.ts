@@ -18,7 +18,8 @@ export type WizardTenant = {
 
 export type WizardTenantOptions = {
   seasonSetup?: boolean;
-  seeds?: Array<{ displayName: string; pluginId: string; quantity: number }>;
+  /** `unit` defaults to seeds; a cover crop is bought by the pound. */
+  seeds?: Array<{ displayName: string; pluginId: string; quantity: number; unit?: string }>;
   blocks?: Array<{ name: string; acres: number }>;
   /** Plant one crop on the first block so the wizard gates on plan-state. */
   existingPlanting?: boolean;
@@ -26,7 +27,7 @@ export type WizardTenantOptions = {
   priorPlanting?: boolean;
 };
 
-const DEFAULT_SEEDS = [
+const DEFAULT_SEEDS: NonNullable<WizardTenantOptions['seeds']> = [
   { displayName: 'Bush Bean — Provider', pluginId: 'bush-bean-provider', quantity: 200 },
   { displayName: 'Beet — Detroit Dark Red', pluginId: 'beet-detroit-dark-red', quantity: 300 }
 ];
@@ -102,7 +103,7 @@ export async function provisionWizardTenant(
     const { item } = await postJson<{ item: { id: string } }>(page, '/api/stock', {
       category: 'seed',
       displayName: s.displayName,
-      defaultUnit: 'seeds',
+      defaultUnit: s.unit ?? 'seeds',
       pluginId: s.pluginId
     });
     await postJson(page, `/api/stock/${item.id}/set-quantity`, { quantity: s.quantity });

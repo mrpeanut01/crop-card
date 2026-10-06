@@ -387,7 +387,7 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
     'Se guardará como gallinero o corral de {species}. Agrega su tamaño en los detalles del lugar en el mapa de la granja para obtener una sugerencia de cuántos animales caben.',
   'setup.housing.errName': 'Ponle un nombre al lugar.',
   'setup.housing.farmMap': 'mapa de la granja',
-  'setup.housing.nameEnoughPost': '',
+  'setup.housing.nameEnoughPost': '.',
   'setup.housing.nameEnoughPre': 'Con un nombre basta. Puedes dibujarlo después en el ',
   'setup.housing.newAria': 'Lugar nuevo',
   'setup.housing.phBarn': 'p. ej., Establo rojo',

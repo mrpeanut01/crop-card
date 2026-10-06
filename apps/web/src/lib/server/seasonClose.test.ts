@@ -132,13 +132,16 @@ describe('checkSeasonClosed gate', () => {
 
     fc.assert(
       fc.property(
-        // Any month/day/hour within a year, and any year in a wide band.
+        // Any month/day within a year, and any year in a wide band. The gate
+        // buckets by the farm's zone (America/New_York by default), so build
+        // instants at 12:00-21:59 UTC, which are the same calendar date there
+        // in EST and EDT whatever zone the test process runs in.
         fc.integer({ min: 0, max: 11 }),
         fc.integer({ min: 1, max: 28 }),
-        fc.integer({ min: 0, max: 23 }),
+        fc.integer({ min: 12, max: 21 }),
         fc.integer({ min: 2010, max: 2070 }),
         (month, day, hour, year) => {
-          const ts = new Date(year, month, day, hour).getTime();
+          const ts = Date.UTC(year, month, day, hour, 30);
           return runWithTenant(owner, () => {
             const blocked = checkSeasonClosed(ts);
             if (year === closedYear) {
@@ -150,6 +153,18 @@ describe('checkSeasonClosed gate', () => {
       ),
       { numRuns: 300 }
     );
+  });
+
+  it('turns the year at farm-local midnight, not UTC midnight', () => {
+    const owner = freshOwner();
+    runWithTenant(owner, () => {
+      closeSeason({ year: 2040, ...baseSnapshot });
+      // America/New_York is UTC-5 in winter.
+      expect(checkSeasonClosed(Date.UTC(2040, 0, 1, 4, 30))).toBeNull();
+      expect(checkSeasonClosed(Date.UTC(2040, 0, 1, 5, 30))?.code).toBe(SEASON_CLOSED);
+      expect(checkSeasonClosed(Date.UTC(2041, 0, 1, 4, 30))?.code).toBe(SEASON_CLOSED);
+      expect(checkSeasonClosed(Date.UTC(2041, 0, 1, 5, 30))).toBeNull();
+    });
   });
 });
 

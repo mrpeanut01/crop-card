@@ -32,7 +32,7 @@ export const GET: RequestHandler = ({ url }) => {
 const createSchema = z.object({
   type: z.enum(TYPES as [EquipmentType, ...EquipmentType[]]),
   typeId: z.string().min(1).optional(),
-  label: z.string().min(1).max(120),
+  label: z.string().trim().min(1).max(120),
   spec: z.record(z.string(), z.unknown()).optional(),
   notes: z.string().max(500).optional()
 });

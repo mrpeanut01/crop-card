@@ -1,0 +1,45 @@
+{
+  "pluginId": "ivomec-plus-injection",
+  "displayName": "Ivomec Plus Injection (ivermectin and clorsulon) for Cattle",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "dewormer",
+  "activeIngredients": [
+    {
+      "name": "Ivermectin"
+    },
+    {
+      "name": "Clorsulon"
+    }
+  ],
+  "approval": {
+    "kind": "NADA",
+    "number": "140-833"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "injection-sc"
+      ],
+      "withdrawal": {
+        "meatDays": 21
+      }
+    },
+    {
+      "speciesId": "cattle",
+      "class": "lactating-dairy",
+      "routes": [
+        "injection-sc"
+      ],
+      "withdrawal": {
+        "doNotUseFor": [
+          "milk"
+        ]
+      }
+    }
+  ],
+  "notes": "The label also says a withdrawal period has not been established in pre-ruminating calves and not to use in calves to be processed for veal."
+}

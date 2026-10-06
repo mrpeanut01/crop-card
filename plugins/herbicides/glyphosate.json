@@ -20,5 +20,6 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "notes": "No single registrant, so no grazingRestrictions ship (ruling P571-3): grazing, haying, lactating dairy and pre-slaughter intervals differ between generic labels. Grazing reads unknown until the owner enters the number from the label they bought, or picks a branded plugin."
 }

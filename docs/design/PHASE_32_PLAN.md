@@ -1326,6 +1326,8 @@ A three-person panel (farmer/extension agronomist, data integrity/food safety, p
 
 Shipped under these rulings: `ivomec-plus-injection` (NADA 140-833, cattle 21 days, not for female dairy cattle of breeding age), `noromectin-injection` (ANADA 200-437, cattle 35 and swine 18 days), `noromectin-pour-on` (ANADA 200-272, cattle 48 days), `ultrabac-7`, `ultrabac-8`, `ultrabac-cd` (cattle and sheep 21 days), `ct-permethrin-1-pour-on` (EPA 47000-150) and cattle and sheep rows on Gordon's. A side effect of P571-1: `mergeStored` lets a stored unknown give way on recompute, so permethrin treatments already saved for cattle or sheep lose their "withdrawal not known" hold, the same as the #501 herbicide zeros did for grazing. Left out: Ultra Boss (773-84; PPLS's newest label is 2013, before the permethrin registration review) and Durasect (1007-90; the 2026-02-25 PPLS label returns 404 and the 2013 scan does not extract).
 
+**Owner rulings 2026-10-06.** P571-1: keep the permethrin zeros, including that stored "withdrawal not known" holds on permethrin treatments already saved for the named cattle and sheep give way on recompute (as the #501 herbicide zeros did for grazing). P571-2: vaccine milk stays unknown for UltraBac 7, 8 and CD, Covexin 8 and Vision 7; the owner clears milk with a label entry where the label allows.
+
 ## Deferred
 
 These items are out of Phase 32. Items marked "Phase 33 first" lead the next phase.

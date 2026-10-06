@@ -167,7 +167,9 @@
             </label>
           {/each}
         </fieldset>
-        <button type="submit" class="btn" disabled={busy || !ready}>{tr('orchardui.choice.save')}</button>
+        <button type="submit" class="btn" disabled={busy || !ready}
+          >{tr('orchardui.choice.save')}</button
+        >
       </form>
     {:else if !data.isOwner}
       <p class="hint">{tr('orchardui.askOwner')}</p>
@@ -201,8 +203,11 @@
               })}
         </p>
         {#if data.canMark}
-          <button type="button" class="btn ghost" disabled={busy || !ready} onclick={() => mark(null)}
-            >{tr('orchardui.clearMark')}</button
+          <button
+            type="button"
+            class="btn ghost"
+            disabled={busy || !ready}
+            onclick={() => mark(null)}>{tr('orchardui.clearMark')}</button
           >
         {/if}
       {:else}

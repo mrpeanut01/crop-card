@@ -302,7 +302,7 @@ describe('card snapshot cross-tenant isolation', () => {
       [q, p]
     ] as const) {
       const snap = await runWithTenantAsync(self.ownerId, () => buildFarmSnapshot({ now }));
-      expect(snap.version).toBe(7);
+      expect(snap.version).toBe(8);
       expect(snap.plantings.find((x) => x.id === self.ids[0])).toMatchObject({
         splitGroupId: sg,
         treeSizeClass: 'dwarf',

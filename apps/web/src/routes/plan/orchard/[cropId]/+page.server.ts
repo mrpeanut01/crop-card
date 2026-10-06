@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { t } from '$lib/i18n';
 import { beeLineFor } from '$lib/orchard/appLines';
-import { showsLabelLine, shownWindows } from '$lib/orchard/calendar';
+import { orchardCalendarView } from '$lib/orchard/calendarView';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { loadOrchardPlantingView } from '$lib/server/orchardCalendar.server';
@@ -32,26 +32,8 @@ export const load: PageServerLoad = async (event) => {
     },
     calendar: calendar
       ? {
-          pluginId: calendar.pluginId,
-          audience: calendar.audience,
-          edition: calendar.edition,
-          guide: calendar.guide,
-          beeLine: beeLineFor(calendar.guide.publicationId),
-          stages: [...calendar.stages]
-            .sort((a, b) => a.order - b.order)
-            .map((s) => ({
-              id: s.id,
-              name: s.name,
-              description: s.recognise.description,
-              windows: shownWindows(calendar, s, view.lowInput).map((w) => ({
-                id: w.id,
-                purpose: w.purpose,
-                targets: w.targets,
-                note: w.note,
-                pollinatorSensitive: w.pollinatorSensitive,
-                labelLine: showsLabelLine(calendar, w)
-              }))
-            }))
+          ...orchardCalendarView(calendar, view.lowInput),
+          beeLine: beeLineFor(calendar.guide.publicationId)
         }
       : null,
     canMark: role !== null && canMutate(role),

@@ -260,7 +260,10 @@
     {#if card.kind === 'planting' && snapshot}
       <SeedStartPanel {snapshot} plantingId={key.slice(key.indexOf('_') + 1)} {role} />
       <PlantingHours plantingId={key.slice(key.indexOf('_') + 1)} {role} />
-      <OrchardPanel cropId={key.slice(key.indexOf('_') + 1)} />
+      <OrchardPanel cropId={key.slice(key.indexOf('_') + 1)} {snapshot} />
+    {/if}
+    {#if card.kind === 'area' && snapshot}
+      <OrchardPanel areaId={key.slice(key.indexOf('_') + 1)} {snapshot} />
     {/if}
     <CareGuideList cards={careCards} {prefs} {now} />
     {#key key}

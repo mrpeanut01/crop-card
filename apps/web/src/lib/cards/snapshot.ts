@@ -11,6 +11,8 @@ import type { EmergencyContact } from '$lib/farm/emergencyContacts';
 import type { AreaKind, BedStyle, BlockKind } from '$lib/farm/areaKinds';
 import type { MapFeatureView } from '$lib/farm/mapFeatures';
 import type { Footprint, SpacingPattern } from '$lib/farm/footprint';
+import type { AudienceChoice } from '$lib/orchard/calendar';
+import type { OrchardCalendarView } from '$lib/orchard/calendarView';
 import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/soilInterpret';
 
 /** 2 since 32D: animals, flocks, care plans and precomputed holds.
@@ -22,8 +24,9 @@ import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/so
  *  6 since #555: Planting and Care Guide cards size seed by area for crops
  *  sown by area, so cached copies are rebuilt.
  *  7: plantings carry `treeSizeClass` (#548) and `sowingMethod` (#555), and
- *  Planting cards show tree spacing and the saved method's seed amount. */
-export const FARM_SNAPSHOT_VERSION = 7 as const;
+ *  Planting cards show tree spacing and the saved method's seed amount.
+ *  8 since #593: orchard calendars and this year's stage marks (`orchard`). */
+export const FARM_SNAPSHOT_VERSION = 8 as const;
 
 export type SnapshotProvenance = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
@@ -466,6 +469,32 @@ export interface SnapshotAreaHold {
   status: SnapshotHoldStatus;
 }
 
+/** One planting's orchard calendar line (#593), resolved on the server the
+ *  way `/api/orchard/plantings/[id]` resolves it (OP-4 guide, OR-9 out of
+ *  date, OR-2 marks whose stage left the calendar dropped). */
+export interface SnapshotOrchardPlanting {
+  cropId: string;
+  status: 'calendar' | 'out-of-date' | 'none';
+  audience: AudienceChoice;
+  /** Key into `SnapshotOrchard.calendars` when `status` is `calendar`. */
+  calendarId: string | null;
+  /** This year's mark (`SnapshotOrchard.year`), read-only offline (#593). */
+  mark: { stageId: string; markedAt: number; markedByName: string } | null;
+}
+
+export interface SnapshotOrchard {
+  /** The farm-local year the marks are for; a copy read in a later year
+   *  shows no mark. */
+  year: number;
+  /** The zone that year is counted in (the farm's). */
+  timeZone: string;
+  lowInput: boolean;
+  /** Only the calendars the farm's plantings resolve to, already filtered
+   *  for the season (OR-8). No bee line: screens add it from app code. */
+  calendars: Record<string, OrchardCalendarView>;
+  plantings: SnapshotOrchardPlanting[];
+}
+
 /** A Phase 33C after-spread line on a block (M-52), precomputed text. */
 export interface SnapshotCarryoverLine {
   blockId: string;
@@ -474,7 +503,7 @@ export interface SnapshotCarryoverLine {
 }
 
 export interface FarmSnapshot {
-  version: typeof FARM_SNAPSHOT_VERSION | 6 | 5 | 4 | 3 | 2 | 1;
+  version: typeof FARM_SNAPSHOT_VERSION | 7 | 6 | 5 | 4 | 3 | 2 | 1;
   ownerId: string;
   farmName: string | null;
   generatedAt: number;
@@ -534,6 +563,9 @@ export interface FarmSnapshot {
   taskWindow?: { fromMs: number; toMs: number };
   /** 33C carryover lines per block. Absent on bundles saved before it. */
   carryover?: SnapshotCarryoverLine[];
+  /** #593 orchard calendars and stage marks. Absent on bundles saved before
+   *  it and on farms with no tree fruit, grape or blueberry plantings. */
+  orchard?: SnapshotOrchard;
 }
 
 /** One map line or point, as the map and the Farm Map Card read it. */

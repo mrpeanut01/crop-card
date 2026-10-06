@@ -269,7 +269,7 @@ describe('offline snapshot (B-16)', () => {
       effectiveOn: '2025-01-01'
     });
     const snap = await runWithTenantAsync(farm.ownerId, () => buildFarmSnapshot());
-    expect(snap.version).toBe(7);
+    expect(snap.version).toBe(8);
     expect(snap.areas.find((a) => a.id === farm.fieldId)?.organicStatus).toBe(
       'Organic (owner-entered, effective Jan 1, 2025, certifier OCIA)'
     );

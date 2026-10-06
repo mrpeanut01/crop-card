@@ -819,6 +819,10 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'orchardui.panelMarked': '{crop}: marcado {stage}',
   'orchardui.panelUnmarked': '{crop}: sin etapa marcada',
   'orchardui.areaHeading': 'Calendario de temporada',
+  'orchardui.saved.asOf': 'Copia guardada el {time}.',
+  'orchardui.saved.noMark': 'No hay etapa marcada para {year} en esta copia guardada.',
+  'orchardui.saved.markNeedsConnection': 'Para marcar una etapa necesitas conexión.',
+  'orchardui.saved.stageWatch': 'Qué vigilar en {stage}',
   'orchardui.setup.heading': 'Guías elegidas para los huertos',
   'orchardui.setup.lede':
     'Estas zonas usan la guía que elegiste en lugar de la automática. Revísalas cada temporada.',

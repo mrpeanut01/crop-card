@@ -18,11 +18,18 @@
   "notes": "East Malling 9 dwarfing apple rootstock. 25 to 35% of standard tree size. Standard for tall-spindle high-density orchards. Requires permanent trellis.",
   "harvestStyle": "tree-fruit-multi-pick",
   "bloomWindow": {
-    "monthsOfYear": [
-      4,
-      5
-    ],
+    "monthsOfYear": [4, 5],
     "beeAttractive": true
   },
-  "archetype": "tree-fruit-multi-pick"
+  "archetype": "tree-fruit-multi-pick",
+  "treeSizeClasses": [
+    {
+      "sizeClass": "dwarf",
+      "minSpacingFt": 8,
+      "yearsToBearing": {
+        "min": 2,
+        "max": 3
+      }
+    }
+  ]
 }

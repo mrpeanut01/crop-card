@@ -2042,6 +2042,15 @@
       "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
     }
   },
+  "rootstock-apple-m9": {
+    "treeSizeClasses.dwarf": {
+      "url": "https://pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension, Tree Fruit in the Home Garden, Publication 426-841 (Virginia Tech)",
+      "date": "2020-09-21 (publication date shown on the page; accessed 2026-10-05)",
+      "quote": "VCE 426-841, Table 1, \"Space requirement, yield, bearing age, and life expectancy of tree fruits\", columns \"Fruit | Minimum Distance Between Plants (feet) | Approximate Yield Per Plant (bushels) | Bearing Age (years) | Life Expectancy (years)\"; row \"Apple - dwarf | 8 | 2 | 2-3 | 30-35 |\". Same page, on rootstocks: \"the same variety of apple will produce a 16- to 18-foot tree on the rootstock Malling Merton (MM)111, down to a dwarf tree of 7 to 8 feet on a Malling (M)9 rootstock.\" and \"Trees on M.9 rootstock will often produce crops in two to three years.\"",
+      "note": "Panel ruling 2026-10-05 (#548), 2-1: VCE itself calls a tree on M.9 a dwarf, so this is VCE's apple dwarf row, the same row the five apple plugins carry. NC State Extension Gardener Handbook ch. 15 (https://content.ces.ncsu.edu/extension-gardener-handbook/15-tree-fruit-and-nuts) agrees on bearing age, Table 15-3 \"M.9 | 35 | 20 | 2 – 3\" (Fruit-Bearing Age (Years)), and its Table 15-4 recommended distance \"M.9** | 4 – 8 | 3 – 5 | 6 – 11\" (nonspur, spur, very vigorous cultivars) reaches 8 for nonspur cultivars; NC State's Production Guide for Smaller Orchard Plantings, Table 3, gives \"M.9 and M.9 sized trees* | 4-8 | 3-5 | 6-8\". Penn State Home Orchards Table 4.3 gives \"Malling 9 | 35 | 3-5 x 12\" (suggested spacing, ft) and Cornell's Guide to Growing Fruit at Home (New York, not used) \"Apple, M.9 7 13 3-5\"; the data-integrity panelist voted to ship nothing because those closer spacings depend on growth habit and do not overlap VCE's 8 ft minimum. VCE adds that M.9EMLA \"is very dwarfing, has a rather weak root system, and must have mechanical support\"."
+    }
+  },
   "rosemary-tuscan-blue": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",

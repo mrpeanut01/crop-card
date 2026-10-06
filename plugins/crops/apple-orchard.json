@@ -2,7 +2,7 @@
   "pluginId": "apple-orchard",
   "type": "crop",
   "displayName": "Apple (Orchard)",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "cropFamily": "orchard",
   "harvestIndicators": [
     "Variety-specific color break",
@@ -40,7 +40,7 @@
       "dayOfYear": 270,
       "windowDays": 30,
       "title": "Apple harvest window",
-      "body": "Pick to color + brix indicators (above).",
+      "body": "Pick by the harvest cues in this crop's Care Guide.",
       "category": "harvest"
     }
   ],

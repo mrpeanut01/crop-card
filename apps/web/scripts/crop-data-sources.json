@@ -383,6 +383,13 @@
       "date": "2022-05-05",
       "quote": "VCE 426-840, Small Fruit in the Home Garden: Table 1, Average bearing age (years): \"Blackberry (erect) | 10 | 5 | 5-10 | 1 | 5-12\"; text: \"raspberries and blackberries ... will usually yield a moderate crop of fruit the second year after planting and a full crop in the third season.\"",
       "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095)."
+    },
+    "seasonalTasks.tip-primocanes": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: \"Blackberry plants should be summer top pruned when the young shoots (primocanes) are about 5 feet tall.\"",
+      "note": "OP-20 panel 2026-10-05 (docs/design/ORCHARD_CALENDAR.md, table \"OP-20 number rulings\"). Q5 (3-0): 4 ft had no source and is replaced by 5 ft. Agreeing semi-erect sources: Oregon State Extension (\"tipped to about 3 feet (erect) or 5 feet (semi-erect)\", on a page that names Triple Crown) and Missouri Extension G6000 (\"summer tip them at 5 feet\"). NC State and Missouri State train semi-erect canes to the top wire, which does not conflict."
     }
   },
   "bloody-butcher-ornamental-corn-raw-untreated-non-gmo-1-2-lb": {
@@ -414,6 +421,20 @@
       "date": "2022-05-05",
       "quote": "VCE 426-840, Small Fruit in the Home Garden: Table 1, Average bearing age (years): \"Blueberry | 6 | 5 | 4-6 | 3 | 20-30\"",
       "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095). The text adds that \"Some varieties of blueberry will bear the second year after planting. Full production is reached in about six years\"."
+    },
+    "seasonalTasks.winter-prune": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: \"Locate the oldest canes and prune out one of every six existing canes; cut as close to the ground as possible.\" Same page: \"A mature blueberry bush should have 10 to 15 canes: two to three canes each of 1-, 2-, 3-, 4-, and 5-year-old canes (fig. 3).\"",
+      "note": "OP-20 panel 2026-10-05 (docs/design/ORCHARD_CALENDAR.md, table \"OP-20 number rulings\"). Q7 (3-0): one of every six kept in words, inside UVM Extension's \"Up to one fifth of all canes can be removed per year\" ceiling. Q8 (3-0): the unsourced 6-8 cane target is replaced by VCE's 10 to 15; Penn State gives 10 to 15, UVM 10 to 20 and 15 to 20, UMaine six to ten, all overlapping."
+    },
+    "seasonalTasks.harvest": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: \"Picking is usually necessary only once every five to seven days, more frequently if bird pressure is high.\"",
+      "note": "OP-20 panel 2026-10-05 (docs/design/ORCHARD_CALENDAR.md, table \"OP-20 number rulings\"). Q9 (3-0): kept in words as VCE writes it; Mississippi State Extension P3801 agrees (\"harvest every five to seven days\")."
     }
   },
   "bmr-sorghum-sudan": {
@@ -1193,6 +1214,13 @@
       "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
       "quote": "ASPCA, Garlic (Allium sativum): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: N-propyl disulfide\"",
       "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "seasonalTasks.garlic-plant": {
+      "url": "https://www.uvm.edu/extension/news/growing-great-garlic",
+      "publisher": "University of Vermont Extension",
+      "date": "2022-10-05",
+      "quote": "University of Vermont Extension, Growing Great Garlic: \"Mulching garlic with a thick layer of clean straw after planting helps control weeds and retain soil moisture.\"",
+      "note": "OP-20 panel 2026-10-05 (docs/design/ORCHARD_CALENDAR.md, table \"OP-20 number rulings\"). Q6 (3-0): the 4-6 in depth was dropped because the sources disagree (Iowa State 4 to 6 in, Penn State a good four inches, UMN three to four, a Cornell blog three). The planting window wording carries no number and is not sourced here."
     }
   },
   "garlic-spanish-roja-hardneck": {
@@ -1271,6 +1299,27 @@
       "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
       "quote": "Merck Veterinary Manual: \"Multiple varieties of Vitis vinifera fruit have been reported as toxic in dogs, including fresh grapes, dried grapes (raisins and currants), and processed grape products.\"",
       "note": "The article title covers Vitis spp. (American and hybrid grapes as well as V. vinifera). 'Currants' in the quote are dried grapes, not Ribes currants, so the currant plugins carry no entry. Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "seasonalTasks.winter-prune": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: \"Of the many variations of the vertical trellis, the single-trunk, four-arm Kniffin system is the most popular (fig. 7).\"",
+      "note": "OP-20 panel 2026-10-05 (docs/design/ORCHARD_CALENDAR.md, table \"OP-20 number rulings\"). Q10 (3-0): four-arm Kniffin kept in words; University of Illinois Extension names umbrella Kniffin for vigorous American grapes (\"Other systems such as the “Geneva Double Curtain” and “Umbrella Kniffin” training systems can also be used for vigorous American hybrid grape vines.\"). Q11 (3-0): \"80%\" was dropped; NC State, Illinois and NMSU say 80 to 90 percent, Iowa State over 90 and Oregon State about 90, so the share stays unnumbered."
+    },
+    "seasonalTasks.early-shoot-thin": {
+      "url": "https://extension.psu.edu/shoot-thinning-considerations-in-bunch-grape-vineyards",
+      "publisher": "Penn State Extension",
+      "date": "2021-06-25",
+      "quote": "Penn State Extension, Shoot Thinning Considerations in Bunch Grape Vineyards: \"The earliest stage to begin shoot thinning (approximately 3 inches; left), an ideal stage to shoot thin (approximately 5 to 7 inches; center), and the latest stage to efficiently shoot thin before shoots lignify at the base and tendrils grab neighboring shoots (approximately 10 to 12 inches; right).\" Same page: \"Shoot thinning is practiced in wine grape vineyards and sometimes in Concord vineyards where crop management is of concern.\"",
+      "note": "OP-20 panel 2026-10-05 (docs/design/ORCHARD_CALENDAR.md, table \"OP-20 number rulings\"). Q12 (3-0): \"6 in\" had no source naming it; Penn State is the source that mentions Concord, so its ideal 5 to 7 inches ships. UC IPM (6 to 12 inches) and University of Georgia viticulture (six to eight inches) overlap it."
+    },
+    "seasonalTasks.harvest": {
+      "url": "https://nygpadmin.cce.cornell.edu/pdf/newsletter_update/pdf703_pdf.pdf",
+      "publisher": "Cornell Cooperative Extension, Lake Erie Regional Grape Program (Crop Update)",
+      "date": "2022-09-29",
+      "quote": "Cornell Cooperative Extension Lake Erie Regional Grape Program Crop Update: \"To meet processor standards and maintain economic viability, Concord growers need to manage vineyards so that they maximize tonnage, while reaching soluble solid levels of at least 16° Brix at harvest.\"",
+      "note": "OP-20 panel 2026-10-05 (docs/design/ORCHARD_CALENDAR.md, table \"OP-20 number rulings\"). Q13 (3-0): kept as the juice processor minimum. The same program's crop updates of 2022-10-13 (\"16 Brix (+/- 0.5)\") and 2018-09-06 (\"a minimum of 16 brix\") agree; VCE 426-840 gives no Brix value."
     }
   },
   "grape-marquette": {
@@ -2122,6 +2171,20 @@
       "date": "2022-05-05",
       "quote": "VCE 426-840, Small Fruit in the Home Garden, Table 1 (Minimum distance between rows (feet) | Minimum distance between plants (feet) | Annual yield per plant (pounds) | Average bearing age (years) | Life expectancy (years)): \"Raspberry (red) | 8 | 3 | 3-5 | 1 | 5-12\"",
       "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention. Heritage is primocane-fruiting; the publication does not give a separate first-crop age for primocane types."
+    },
+    "seasonalTasks.mow-canes-down": {
+      "url": "https://publications.ca.uky.edu/sites/publications.ca.uky.edu/files/NEP247.pdf",
+      "publisher": "University of Kentucky Cooperative Extension (NEP-247)",
+      "date": "2025-07",
+      "quote": "University of Kentucky NEP-247: \"For primocane raspberries, cut all canes down to the ground after they are dormant but before new growth starts.\"",
+      "note": "OP-20 panel 2026-10-05 (docs/design/ORCHARD_CALENDAR.md, table \"OP-20 number rulings\"). Q4 (3-0): the \"1 in\" stubble height was dropped; no .edu or .gov source gives one, and UMD, UMN, UW and NC State all say to the ground or the soil surface."
+    },
+    "seasonalTasks.harvest": {
+      "url": "https://content.ces.ncsu.edu/harvesting-and-postharvest-management",
+      "publisher": "NC State Extension (Southeast Regional Caneberry Production Guide, ch. 13)",
+      "date": "2023-02-23",
+      "quote": "NC State Extension, Harvesting and Postharvest Management: \"Cool the fruit as soon as possible after harvest.\"",
+      "note": "OP-20 panel 2026-10-05 (docs/design/ORCHARD_CALENDAR.md, table \"OP-20 number rulings\"). Q4 (3-0): \"every 2-3 d\" was dropped because the sources disagree (NC State daily, Kentucky daily or every other day, Cornell at least every other day, UW Bayfield slides 2-3 and 2-4 days, VCE 423-701 one to five times per week). \"32-34 °F\" was dropped (VCE near 32 F, Penn State 32 to 35, NC State 33 to 35, Iowa State 31 to 32) and \"within 1 h\" has no .edu or .gov source."
     }
   },
   "rhubarb-victoria": {
@@ -2399,6 +2462,27 @@
       "date": "2022-05-05",
       "quote": "VCE 426-840, Small Fruit in the Home Garden: \"Under the matted-row system used by many home gardeners, runner plants are allowed to set freely in all directions. The original plants should be set 18 to 24 inches apart in the row.\"",
       "note": "The spacing depends on the planting system (the same publication gives 12 to 16 inches for the hill or plasticulture system). The plugin names its system in its own notes (\"Standard June-bearing matted-row variety\"), so the matted-row figure applies. The Cornell Guide to Growing Fruit at Home Table 2 gives June-bearing strawberry 2 ft between plants, inside this range."
+    },
+    "seasonalTasks.frost-watch": {
+      "url": "https://extension.umn.edu/strawberry-farming/protect-strawberries-spring-freeze-and-frost",
+      "publisher": "University of Minnesota Extension",
+      "date": "Reviewed in 2021",
+      "quote": "University of Minnesota Extension, Protect strawberries from spring freeze and frost: \"Once the blossoms are open, they are damaged at 30° F.\" Same page: \"So this only works if water is continuously applied during the freezing period and until temperatures rise above freezing.\" and \"Not applying enough water or stopping irrigation too early during a nighttime freeze, can cause more damage than not irrigating at all.\"",
+      "note": "OP-20 panel 2026-10-05 (docs/design/ORCHARD_CALENDAR.md, table \"OP-20 number rulings\"). Q1 (2-1): 30 °F kept; overhead irrigation kept only with the UMN operating caveat. Agreeing sources: UMaine Highmoor Strawberry IPM Newsletter 2023-05-16 (\"At the open blossom stage: 30 °F\"), Cornell berry blog 2020-05-06 Table 1 (open blossom 30), NC State Strawberry Growers Information (critical temperature of 30 F). The irrigation start temperature is left out because the sources disagree (UMN below 34 °F, UMaine before freezing, NC State by wet bulb)."
+    },
+    "seasonalTasks.row-renovation": {
+      "url": "https://yardandgarden.extension.iastate.edu/faq/how-do-you-renovate-june-bearing-strawberries",
+      "publisher": "Iowa State University Extension and Outreach (Yard and Garden)",
+      "date": "2023-05-17",
+      "quote": "Iowa State Yard and Garden, How do you renovate June-bearing strawberries?: \"mowing off the leaves 1 inch above the crowns of the plants with a rotary mower within 1 week of the last harvest.\"",
+      "note": "OP-20 panel 2026-10-05 (docs/design/ORCHARD_CALENDAR.md, table \"OP-20 number rulings\"). Q2 (2-1): \"within 1 week\" kept; UMN (\"Renovation should start immediately after the end of harvest.\") and VCE 426-840 (\"soon after harvest (mid-July)\") agree it starts right after harvest. The \"narrow rows to 12 in\" width was dropped because the sources disagree: Iowa State 8-to-12-inch strips, UMN as little as 6 inches growing to 12 to 14, VCE a 16 to 18 inch bed. The mowing height is not shown (Iowa State and VCE 1 inch, UMN about two inches)."
+    },
+    "seasonalTasks.winter-mulch": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: \"Mulch should be applied 2 to 4 inches deep over and around the plants after the first freezing weather in the fall when the soil is below 50 F (usually around mid- December).\"",
+      "note": "OP-20 panel 2026-10-05 (docs/design/ORCHARD_CALENDAR.md, table \"OP-20 number rulings\"). Q3 (3-0): the row carries no number. The 3 in depth was dropped because the sources disagree (VCE 2 to 4 in, UMN 2 to 3, Iowa State 3 to 5, UNL four, UMaine 6 to 8), and no .edu or .gov source gives \"after 2-3 hard frosts\" (UMaine says \"a few hard frosts\"). \"Before sustained cold\" follows UMN (\"mulch before consistent cold weather sets in\")."
     }
   },
   "strawflower-king-silvery-white": {

@@ -66,7 +66,7 @@
     TASK_STATUSES,
     type TaskStatus
   } from '$lib/tasks/status';
-  import { taskDisplayTitle } from '$lib/tasks/title';
+  import { taskDisplayBody, taskDisplayTitle } from '$lib/tasks/title';
   import {
     defaultAssigneeWho,
     memberNameIn,
@@ -112,7 +112,11 @@
   const rejected = $derived(new Set(queuedRows.filter((r) => r.rejected).map((r) => r.taskId)));
 
   const tasks = $derived(
-    (data.deckTasks as Task[]).map((t) => ({ ...t, title: taskDisplayTitle(t, page.data?.locale) }))
+    (data.deckTasks as Task[]).map((t) => ({
+      ...t,
+      title: taskDisplayTitle(t, page.data?.locale),
+      body: taskDisplayBody(t, page.data?.locale)
+    }))
   );
   const isTaskStatus = (s: string | undefined): s is TaskStatus =>
     (TASK_STATUSES as readonly (string | undefined)[]).includes(s);

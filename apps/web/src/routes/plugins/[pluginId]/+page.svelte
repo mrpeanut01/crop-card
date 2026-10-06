@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cropDisplayName } from '$lib/i18n/cropName';
+  import { seasonalRowText } from '$lib/i18n/seasonalTaskText';
   import { goto, invalidateAll } from '$app/navigation';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import PluginRef from '$lib/components/PluginRef.svelte';
@@ -222,6 +223,16 @@
   function asArray<T>(v: unknown): T[] {
     return Array.isArray(v) ? (v as T[]) : [];
   }
+  function seasonalText(t: Record<string, unknown>, part: 'title' | 'body'): string {
+    return seasonalRowText(
+      asStr(plugin?.pluginId),
+      asStr(t.key),
+      part,
+      asStr(t[part]) ?? '',
+      page.data?.locale
+    );
+  }
+
   function asStr(v: unknown): string | undefined {
     return typeof v === 'string' && v.length > 0 ? v : undefined;
   }
@@ -1037,7 +1048,7 @@
               {#each seasonalTasks as t, idx (idx)}
                 <li>
                   {#if t.category}<span class="task-cat">{taskCategoryLabel(t.category)}</span>{/if}
-                  <strong>{t.title}</strong>
+                  <strong>{seasonalText(t, 'title')}</strong>
                   {#if t.kind}<span class="muted">· {seasonalKindLabel(t.kind)}</span>{/if}
                   {#if t.dayOfYear != null}<span class="muted"
                       >· {tr('plugins.detail.dayOfYear', { day: t.dayOfYear as number })}</span
@@ -1050,7 +1061,7 @@
                   {#if t.windowDays != null}<span class="muted"
                       >· {tr('plugins.detail.window', { days: t.windowDays as number })}</span
                     >{/if}
-                  {#if asStr(t.body)}<p class="body">{t.body}</p>{/if}
+                  {#if asStr(t.body)}<p class="body">{seasonalText(t, 'body')}</p>{/if}
                 </li>
               {/each}
             </ul>

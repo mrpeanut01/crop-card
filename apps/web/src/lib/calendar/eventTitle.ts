@@ -1,10 +1,12 @@
 /** A calendar event's title in the viewer's language, for display only.
  *  The engine builds English titles; this rebuilds the common shapes from
  *  the event's fields and leaves any other title as it is, with only the
- *  crop name swapped. Stage names and plugin text stay as written. */
+ *  crop name swapped. Stage names and plugin text stay as written, except a
+ *  crop seasonal row still carrying its shipped English (OP-21). */
 
 import { t, type MessageKey } from '$lib/i18n';
 import { cropDisplayName, cropDisplayNameByEnglish } from '$lib/i18n/cropName';
+import { seasonalRowText, seasonalTitleWithCrop } from '$lib/i18n/seasonalTaskText';
 import type { CalendarEvent } from './engine';
 
 const HARVEST_TARGET_KEYS: Record<string, MessageKey> = {
@@ -54,6 +56,16 @@ export function calendarEventTitle(e: TitleEvent, locale?: string | null): strin
   for (const [prefix, key] of PREFIXED) {
     if (e.title === `${prefix}${variety}`) return t(locale, key, { name });
   }
+  const taskKey = typeof e.detail?.taskKey === 'string' ? e.detail.taskKey : null;
+  if (taskKey && e.cropPluginId) {
+    const seasonal = seasonalTitleWithCrop(e.title, locale, {
+      pluginId: e.cropPluginId,
+      rowKey: taskKey,
+      crop: variety,
+      cropShown: name
+    });
+    if (seasonal !== e.title) return seasonal;
+  }
   const label = typeof e.detail?.label === 'string' ? e.detail.label : null;
   if (label !== null && e.title === `Harvest target — ${label}: ${variety}`) {
     return t(locale, 'plan.cal.title.harvestTarget', {
@@ -71,12 +83,15 @@ export function calendarEventCrop(e: TitleEvent, locale?: string | null): string
 
 export const HARVEST_READINESS_BODY = 'Use crop-specific readiness indicators before harvest.';
 
-/** The event's body in `locale`: the engine's own harvest line is
- *  translated; plugin text and spray-window notes stay as written. */
+/** The event's body in `locale`: the engine's own harvest line and a crop
+ *  seasonal row's shipped English are translated; other plugin text and
+ *  spray-window notes stay as written. */
 export function calendarEventBody(
-  e: Pick<CalendarEvent, 'body'>,
+  e: Pick<CalendarEvent, 'body'> & Partial<Pick<CalendarEvent, 'cropPluginId' | 'detail'>>,
   locale?: string | null
 ): string | undefined {
-  if (!locale || locale === 'en' || e.body !== HARVEST_READINESS_BODY) return e.body;
-  return t(locale, 'plan.cal.body.harvestReadiness');
+  if (!locale || locale === 'en' || e.body === undefined) return e.body;
+  if (e.body === HARVEST_READINESS_BODY) return t(locale, 'plan.cal.body.harvestReadiness');
+  const taskKey = typeof e.detail?.taskKey === 'string' ? e.detail.taskKey : null;
+  return seasonalRowText(e.cropPluginId, taskKey, 'body', e.body, locale);
 }

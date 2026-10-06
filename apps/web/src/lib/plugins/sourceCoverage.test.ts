@@ -24,6 +24,8 @@ import {
   isPastureLabelled,
   missingWithdrawals,
   pestModelFactPaths,
+  numbersIn,
+  seasonalTaskNumberGaps,
   seasonalTaskWordingProblems,
   stageTemplateWordingProblems,
   speciesFactPaths,
@@ -550,6 +552,118 @@ describe('seasonalTaskWordingProblems (OC-1)', () => {
       ])
     ).toEqual([]);
   });
+
+  it('refuses "label" but keeps row cover and frost protection (OP-21)', () => {
+    expect(
+      seasonalTaskWordingProblems([
+        crop([
+          {
+            key: 'a',
+            kind: 'scout',
+            title: 'Bloom frost watch',
+            body: 'Row cover for protection.'
+          },
+          { key: 'b', kind: 'cultural', title: 'Mulch', body: 'Follow the label.' },
+          { key: 'c', kind: 'cultural', title: 'Labels on trays', body: 'Mark each tray.' }
+        ])
+      ])
+    ).toEqual([
+      'test-crop seasonalTasks.b: body says "label"',
+      'test-crop seasonalTasks.c: title says "Labels"'
+    ]);
+  });
+});
+
+describe('seasonalTaskNumberGaps (OP-21)', () => {
+  const crop = (rows: Record<string, unknown>[], field = 'seasonalTasks') =>
+    ({ pluginId: 'test-crop', [field]: rows }) as unknown as Parameters<
+      typeof seasonalTaskNumberGaps
+    >[0][number];
+  const entry = (quote: string) => ({
+    url: 'https://extension.example.edu/page',
+    publisher: 'Example Extension',
+    date: '2024-01-01',
+    quote
+  });
+
+  it('reads every number a row writes', () => {
+    expect(numbersIn('Pick every 2–3 d. Cool to 32–34 °F within 1 h; remove 1/6; 1.5 in')).toEqual([
+      '2',
+      '3',
+      '32',
+      '34',
+      '1',
+      '1',
+      '6',
+      '1.5'
+    ]);
+  });
+
+  it('passes rows with no numbers and rows whose quote states every number', () => {
+    const sources = {
+      'test-crop': {
+        'seasonalTasks.mulch': entry('Apply 3 to 4 inches of straw after the soil freezes.'),
+        'orchardSeasonalTasks.harvest': entry('Check fruit 1,000 times, every 7 days.')
+      }
+    };
+    expect(
+      seasonalTaskNumberGaps(
+        [
+          crop([
+            { key: 'scout', title: 'Scout', body: 'Look for beetles.' },
+            { key: 'mulch', title: 'Mulch 3–4 in', body: 'Straw after the soil freezes.' }
+          ]),
+          crop(
+            [{ key: 'harvest', title: 'Pick', body: 'Every 7 d; 1000 checks.' }],
+            'orchardSeasonalTasks'
+          )
+        ],
+        sources
+      )
+    ).toEqual([]);
+  });
+
+  it('fails a number with no source, or a quote that does not state it', () => {
+    const sources = {
+      'test-crop': {
+        'seasonalTasks.frost': entry('Open blossoms are killed at 30°F or lower.'),
+        'seasonalTasks.bad': { url: 'http://x.example.com', quote: 'short' }
+      }
+    };
+    expect(
+      seasonalTaskNumberGaps(
+        [
+          crop([
+            { key: 'frost', title: 'Frost watch', body: 'Blossoms freeze at 28 °F; 300 h.' },
+            { key: 'none', title: 'Tip at 4 ft' },
+            { key: 'bad', title: 'Thin at 6 in' }
+          ])
+        ],
+        sources
+      )
+    ).toEqual([
+      'test-crop seasonalTasks.frost: quote does not state 28',
+      'test-crop seasonalTasks.frost: quote does not state 300',
+      'test-crop seasonalTasks.none: no source for 4',
+      'test-crop seasonalTasks.bad: no source for 6'
+    ]);
+  });
+
+  it('does not count a number inside a longer one', () => {
+    const sources = {
+      'test-crop': { 'seasonalTasks.a': entry('Remove 16 canes and 0.5 of the 30.') }
+    };
+    expect(
+      seasonalTaskNumberGaps(
+        [crop([{ key: 'a', title: 'Remove 6 canes', body: '5 or 3' }])],
+        sources
+      )
+    ).toEqual([
+      'test-crop seasonalTasks.a: quote does not state 6',
+      'test-crop seasonalTasks.a: quote does not state 5',
+      'test-crop seasonalTasks.a: quote does not state 3'
+    ]);
+  });
 });
 
 describe('stageTemplateWordingProblems (OC-1)', () => {
@@ -585,5 +699,18 @@ describe('stageTemplateWordingProblems (OC-1)', () => {
         orchard: { stages: [{ code: 'bloom', inspect: 'Avoid insecticides; use a fungicide.' }] }
       })
     ).toEqual(['orchard bloom: inspect says "fungicide"']);
+  });
+
+  it('refuses any number in a stage hint (OP-21)', () => {
+    expect(
+      stageTemplateWordingProblems({
+        'vine-fruit': {
+          stages: [
+            { code: 'dormant', inspect: 'Cane pruning window (Concord = 4-arm Kniffin).' },
+            { code: 'harvest', inspect: 'Characteristic foxy aroma (Concord).' }
+          ]
+        }
+      })
+    ).toEqual(['vine-fruit dormant: inspect has a number']);
   });
 });

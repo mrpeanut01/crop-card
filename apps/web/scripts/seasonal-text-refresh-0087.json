@@ -1,0 +1,93 @@
+[
+  {
+    "templateKey": "crop:strawberry-jewel:seasonal:row-renovation",
+    "oldTitle": "Renovate matted rows post-harvest",
+    "newTitle": "Renovate matted rows post-harvest",
+    "oldBody": "Mow tops, narrow rows to 12 in, fertilize, irrigate. Within 1 wk of last harvest.",
+    "newBody": "Within 1 week of the last harvest, mow off the leaves; then narrow the rows, fertilize and irrigate."
+  },
+  {
+    "templateKey": "crop:strawberry-jewel:seasonal:winter-mulch",
+    "oldTitle": "Apply straw winter mulch",
+    "newTitle": "Apply straw winter mulch",
+    "oldBody": "3 in straw after 2–3 hard frosts but before sustained cold.",
+    "newBody": "Spread straw over the plants after the first freezing weather in fall, before sustained cold."
+  },
+  {
+    "templateKey": "crop:strawberry-jewel:seasonal:frost-watch",
+    "oldTitle": "Bloom frost watch",
+    "newTitle": "Bloom frost watch",
+    "oldBody": "Open blossoms freeze at 30 °F; row cover + irrigation can save a crop.",
+    "newBody": "Open blossoms are damaged at 30 °F. Cover rows on frost nights. Overhead irrigation protects only while water runs continuously until temperatures rise above freezing; stopping too early can do more damage than not irrigating."
+  },
+  {
+    "templateKey": "crop:raspberry-heritage:seasonal:mow-canes-down",
+    "oldTitle": "Mow primocane raspberry to ground (winter)",
+    "newTitle": "Mow primocane raspberry to ground (winter)",
+    "oldBody": "Single-crop management: cut all canes 1 in tall after dormancy; new canes will fruit Aug-Oct.",
+    "newBody": "Single-crop management: cut all canes to the ground after dormancy; new canes will fruit Aug-Oct."
+  },
+  {
+    "templateKey": "crop:raspberry-heritage:seasonal:harvest",
+    "oldTitle": "Fall raspberry harvest",
+    "newTitle": "Fall raspberry harvest",
+    "oldBody": "Pick every 2–3 d. Cool berries to 32–34 °F within 1 h.",
+    "newBody": "Pick ripe berries often. Cool the fruit as soon as possible after harvest."
+  },
+  {
+    "templateKey": "crop:blackberry-triple-crown:seasonal:tip-primocanes",
+    "oldTitle": "Tip primocanes at 4 ft",
+    "newTitle": "Tip primocanes at about 5 ft",
+    "oldBody": "Encourages lateral branching for next year's crop.",
+    "newBody": "Encourages lateral branching for next year's crop."
+  },
+  {
+    "templateKey": "crop:garlic-music-hardneck:seasonal:garlic-plant",
+    "oldTitle": "Plant garlic cloves",
+    "newTitle": "Plant garlic cloves",
+    "oldBody": "Mid-Oct → mid-Nov. Mulch 4–6 in straw after planting.",
+    "newBody": "Mid-Oct → mid-Nov. Mulch with a thick layer of straw after planting."
+  },
+  {
+    "templateKey": "crop:blueberry-bluecrop:seasonal:winter-prune",
+    "oldTitle": "Winter pruning (dormant)",
+    "newTitle": "Winter pruning (dormant)",
+    "oldBody": "Remove 1/6 oldest canes; thin twiggy growth. Aim for 6–8 productive canes per mature bush.",
+    "newBody": "Prune out one of every six existing canes, oldest first, close to the ground; thin twiggy growth. A mature bush should have 10 to 15 canes."
+  },
+  {
+    "templateKey": "crop:blueberry-bluecrop:seasonal:harvest",
+    "oldTitle": "Harvest window",
+    "newTitle": "Harvest window",
+    "oldBody": "Pick every 5–7 d; berries fully blue + drop into hand without pull.",
+    "newBody": "Pick every five to seven days, more often if birds are a problem; berries fully blue + drop into hand without pull."
+  },
+  {
+    "templateKey": "crop:grape-concord:seasonal:winter-prune",
+    "oldTitle": "Winter pruning (dormant)",
+    "newTitle": "Winter pruning (dormant)",
+    "oldBody": "Cane prune to 4-arm Kniffin or umbrella Kniffin. 80% of last year's wood removed.",
+    "newBody": "Cane prune to four-arm Kniffin or umbrella Kniffin. Remove most of last year's wood."
+  },
+  {
+    "templateKey": "crop:grape-concord:seasonal:early-shoot-thin",
+    "oldTitle": "Shoot thinning at 6 in",
+    "newTitle": "Shoot thinning at 5 to 7 in",
+    "oldBody": "Remove non-count shoots and weak shoots from cordon to balance crop.",
+    "newBody": "Remove non-count shoots and weak shoots from cordon to balance crop."
+  },
+  {
+    "templateKey": "crop:grape-concord:seasonal:harvest",
+    "oldTitle": "Concord harvest",
+    "newTitle": "Concord harvest",
+    "oldBody": "Brix ≥ 16 + characteristic foxy aroma. Single-pass mechanical or hand.",
+    "newBody": "At least 16° Brix (the juice processor minimum) + characteristic foxy aroma. Single-pass mechanical or hand."
+  },
+  {
+    "templateKey": null,
+    "oldTitle": "Apple harvest window",
+    "newTitle": "Apple harvest window",
+    "oldBody": "Pick to color + brix indicators (above).",
+    "newBody": "Pick by the harvest cues in this crop's Care Guide."
+  }
+]

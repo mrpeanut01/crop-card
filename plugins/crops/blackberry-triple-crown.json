@@ -2,7 +2,7 @@
   "pluginId": "blackberry-triple-crown",
   "type": "crop",
   "displayName": "Blackberry — Triple Crown (thornless)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "bramble",
   "daysToMaturity": {
     "min": 365,
@@ -30,7 +30,7 @@
       "kind": "pruning",
       "dayOfYear": 175,
       "windowDays": 21,
-      "title": "Tip primocanes at 4 ft",
+      "title": "Tip primocanes at about 5 ft",
       "body": "Encourages lateral branching for next year's crop.",
       "category": "prune"
     },

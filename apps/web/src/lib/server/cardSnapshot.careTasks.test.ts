@@ -22,7 +22,7 @@ describe('careTasksOf', () => {
       ],
       orchardSeasonalTasks: [
         {
-          key: 'dormant-oil',
+          key: 'post-bloom-thinning',
           dayOfYear: 40,
           windowDays: 7,
           title: 'Dormant oil',
@@ -32,9 +32,9 @@ describe('careTasksOf', () => {
       ]
     } as unknown as CropPlugin;
     expect(careTasksOf(plugin)).toEqual([
-      { title: 'Winter pruning (dormant)' },
-      { title: 'Shoot thinning at 6 in', body: 'Keep 2 per spur.' },
-      { title: 'Dormant prune' }
+      { key: 'a', title: 'Winter pruning (dormant)' },
+      { key: 'c', title: 'Shoot thinning at 6 in', body: 'Keep 2 per spur.' },
+      { key: 'harvest', title: 'Dormant prune' }
     ]);
   });
 

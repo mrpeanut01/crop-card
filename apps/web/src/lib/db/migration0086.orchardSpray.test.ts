@@ -24,7 +24,10 @@ function folderWithout(tag: string): string {
   const journal = JSON.parse(readFileSync(journalPath, 'utf8')) as {
     entries: { tag: string }[];
   };
-  journal.entries = journal.entries.filter((e) => e.tag !== tag);
+  journal.entries = journal.entries.slice(
+    0,
+    journal.entries.findIndex((e) => e.tag === tag)
+  );
   writeFileSync(journalPath, JSON.stringify(journal));
   return dir;
 }

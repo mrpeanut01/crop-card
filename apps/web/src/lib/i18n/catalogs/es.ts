@@ -17,6 +17,7 @@ import { esNotify } from './es/notify';
 import { esAmend } from './es/amend';
 import { esApierrB } from './es/apierrB';
 import { esApierrA } from './es/apierrA';
+import { esSeasonal } from './es/seasonal';
 
 /**
  * Spanish (F5-8). Machine-drafted, then corrected and signed off by the
@@ -45,7 +46,8 @@ export const ES_PARTS: ReadonlyArray<Partial<Record<MessageKey, string>>> = [
   esNotify,
   esAmend,
   esApierrB,
-  esApierrA
+  esApierrA,
+  esSeasonal
 ];
 
 export const es: Partial<Record<MessageKey, string>> = Object.assign({}, ...ES_PARTS);

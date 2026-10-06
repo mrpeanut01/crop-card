@@ -15,6 +15,7 @@
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
   import { cropDisplayName } from '$lib/i18n/cropName';
+  import { seasonalRowText } from '$lib/i18n/seasonalTaskText';
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
   import { currentPrefs } from '$lib/prefsState.svelte';
@@ -28,6 +29,18 @@
   /** Phase 27C / #237 fix — flatten range-shaped objects so the detail
    *  card stops rendering "[object Object]" for fields like
    *  postHarvestCuring.durationWeeks. */
+  function seasonalTitle(row: unknown): string {
+    const r = (row ?? {}) as { key?: unknown; title?: unknown };
+    if (typeof r.title !== 'string') return formatField(row);
+    return seasonalRowText(
+      plugin.pluginId,
+      typeof r.key === 'string' ? r.key : null,
+      'title',
+      r.title,
+      page.data?.locale
+    );
+  }
+
   function formatField(v: unknown): string {
     if (v == null) return '—';
     if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
@@ -153,7 +166,7 @@
       <InvSection title={tr('inv.crop.seasonalTasks')} kicker={tr('inv.crop.fromLibrary')}>
         <ul class="bullet-list">
           {#each seasonalTasks.slice(0, 8) as t, idx (idx)}
-            <li>{formatField(t)}</li>
+            <li>{seasonalTitle(t)}</li>
           {/each}
         </ul>
       </InvSection>

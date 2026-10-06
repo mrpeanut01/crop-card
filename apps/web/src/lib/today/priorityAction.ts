@@ -19,7 +19,7 @@ import type { Task } from '$lib/db/tasks';
 import { DEFAULT_TIME_ZONE } from '$lib/profile';
 import { dueYmd, formatDueDay, ymdInZone } from '$lib/prefs';
 import { t } from '$lib/i18n';
-import { taskDisplayTitle } from '$lib/tasks/title';
+import { taskDisplayBody, taskDisplayTitle } from '$lib/tasks/title';
 
 export type PriorityActionKind = 'task' | 'derived';
 
@@ -157,7 +157,7 @@ export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityActi
     return {
       kind: 'task',
       title: taskDisplayTitle(top, locale),
-      body: top.body,
+      body: taskDisplayBody(top, locale),
       toneTag: toneForTask(top),
       scope,
       ctaHref: cta.href,

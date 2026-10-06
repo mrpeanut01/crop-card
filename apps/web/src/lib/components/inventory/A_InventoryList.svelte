@@ -431,6 +431,7 @@
   }
   .search-row input {
     flex: 1;
+    min-height: 48px;
     padding: 8px 12px;
     border: 1px solid var(--color-divider, #e5e7e0);
     border-radius: 6px;

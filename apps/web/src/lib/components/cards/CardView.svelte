@@ -454,6 +454,7 @@
     display: inline-flex;
     align-items: center;
     min-height: 48px;
+    min-width: 48px;
   }
   .title a:hover {
     text-decoration: underline;

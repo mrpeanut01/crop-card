@@ -103,9 +103,13 @@
   --page-padding: 28px;
 
   /* Buttons */
-  --btn-height-primary: 42px;
-  --btn-height-ghost: 36px;
-  --btn-height-min-tap: 44px;
+  /* Every button is at least 48px tall, office screens included: one tap
+     size for gloved hands (CLAUDE.md, panel ruling T-1 2026-10-05). */
+  --btn-height-primary: 48px;
+  --btn-height-ghost: 48px;
+  --btn-height-min-tap: 48px;
+  /* Drawn chevron for every single <select> (ruling T-3). */
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%234a4f46' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 
   /* Type scale */
   --font-size-meta: 11px;

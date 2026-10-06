@@ -909,11 +909,11 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 10px;
+    padding: 0 0 0 10px;
     border: 1px solid var(--color-divider);
     border-radius: var(--radius-input, 6px);
     background: var(--color-paper);
-    min-height: 36px;
+    min-height: 48px;
   }
   .year-select select {
     border: none;
@@ -1031,7 +1031,7 @@
     font-family: inherit;
     font-size: 13px;
     font-weight: 600;
-    min-height: 36px;
+    min-height: 48px;
     border: 1px solid var(--color-divider);
     background: var(--color-paper);
     color: var(--color-ink);
@@ -1094,7 +1094,8 @@
   .kind-chip {
     background: transparent;
     border: 0;
-    padding: 0;
+    padding: 0 4px;
+    min-height: 48px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -1126,7 +1127,7 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 4px 8px;
+    padding: 0 8px;
     border: 1px solid var(--color-divider, #d9cfb7);
     border-radius: var(--radius-input, 6px);
     background: var(--color-cream, #f8f3e8);
@@ -1134,6 +1135,7 @@
     color: var(--color-ink-soft, #4a4f46);
   }
   .inline-input input {
+    min-height: 48px;
     border: 0;
     background: transparent;
     font-family: inherit;
@@ -1144,6 +1146,7 @@
     outline: 0;
   }
   .clear-range {
+    min-height: 48px;
     background: transparent;
     border: 0;
     color: var(--color-rust, #a64a2a);
@@ -1316,7 +1319,10 @@
     color: var(--color-ink-muted, #7a7f75);
     display: inline-flex;
     align-items: center;
-    padding: 4px;
+    justify-content: center;
+    min-width: 48px;
+    min-height: 48px;
+    vertical-align: middle;
     border-radius: 4px;
   }
   .drill:hover,
@@ -1413,7 +1419,8 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    margin-top: 10px;
+    min-height: 48px;
+    margin-top: 2px;
     font-size: 12.5px;
     color: var(--color-forest-deep, #1f3a28);
     font-weight: 600;

@@ -56,3 +56,42 @@ table,
   line-height: 48px;
   font-size: 22px;
 }
+
+/* One <select> style app-wide (panel ruling T-3, 2026-10-05). WebKit draws a
+   native select 23-27px tall and ignores min-height unless appearance is
+   none, so every single select drops the native look, keeps a 48px glove
+   target and gets a drawn chevron with room for it. Component styles are
+   scoped (`select.svelte-x` beats a bare `select`), so only these
+   properties are !important; a component that must override one has to use
+   !important too. Background colour, border, radius and font stay with the
+   component. Listboxes (multiple or size > 1) keep the native look. */
+select:not([multiple]):not([size]),
+select[size='1'] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  min-height: 48px !important;
+  padding-inline-end: 32px !important;
+  background-image: var(--select-chevron) !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 12px 8px !important;
+}
+
+/* High-contrast modes: give the control back to the system so its arrow
+   follows the system colours. */
+@media (forced-colors: active) {
+  select:not([multiple]):not([size]),
+  select[size='1'] {
+    -webkit-appearance: auto !important;
+    appearance: auto !important;
+    background-image: none !important;
+    padding-inline-end: revert !important;
+  }
+}
+
+@media print {
+  select:not([multiple]):not([size]),
+  select[size='1'] {
+    min-height: 0 !important;
+  }
+}

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import {
   ageText,
@@ -70,14 +70,55 @@ describe('date inputs', () => {
     expect(msToDateInput(null)).toBe('');
   });
 
-  it('round-trips a local date and time to the minute', () => {
-    fc.assert(
-      fc.property(fc.integer({ min: 0, max: 4_000_000_000_000 }), (ms) => {
-        const minute = Math.floor(ms / 60_000) * 60_000;
-        expect(localInputToMs(msToLocalInput(minute))).toBe(minute);
-      })
-    );
+  describe.each(['America/New_York', 'Europe/London', 'Australia/Lord_Howe', 'UTC'])(
+    'in %s',
+    (zone) => {
+      let saved: string | undefined;
+      beforeAll(() => {
+        saved = process.env.TZ;
+        process.env.TZ = zone;
+      });
+      afterAll(() => {
+        if (saved === undefined) delete process.env.TZ;
+        else process.env.TZ = saved;
+      });
+
+      it('round-trips a local date and time to the minute, through the repeated hour', () => {
+        fc.assert(
+          fc.property(
+            fc.integer({ min: Date.UTC(2000, 0, 1), max: Date.UTC(2100, 0, 1) }),
+            (ms) => {
+              const minute = Math.floor(ms / 60_000) * 60_000;
+              expect(localInputToMs(msToLocalInput(minute), minute)).toBe(minute);
+            }
+          ),
+          { numRuns: 500 }
+        );
+      });
+    }
+  );
+
+  it('keeps "now" in the hour the clocks fall back', () => {
+    const saved = process.env.TZ;
+    process.env.TZ = 'America/New_York';
+    try {
+      const edt = Date.UTC(2026, 10, 1, 5, 30);
+      const est = Date.UTC(2026, 10, 1, 6, 30);
+      expect(msToLocalInput(edt)).toBe('2026-11-01T01:30');
+      expect(msToLocalInput(est)).toBe('2026-11-01T01:30');
+      expect(localInputToMs('2026-11-01T01:30', est)).toBe(est);
+      expect(localInputToMs('2026-11-01T01:30', edt)).toBe(edt);
+      expect(localInputToMs('2026-11-01T01:30')).toBe(edt);
+      expect(localInputToMs('2026-11-01T03:15', est)).toBe(Date.UTC(2026, 10, 1, 8, 15));
+    } finally {
+      if (saved === undefined) delete process.env.TZ;
+      else process.env.TZ = saved;
+    }
+  });
+
+  it('refuses text that is not a date and time', () => {
     expect(localInputToMs('yesterday')).toBeNull();
+    expect(localInputToMs('yesterday', Date.now())).toBeNull();
   });
 });
 

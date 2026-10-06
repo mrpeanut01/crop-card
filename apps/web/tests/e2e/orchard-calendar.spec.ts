@@ -71,6 +71,12 @@ async function plantTree(
   return { areaId: field.id, blockId: block.id, cropId: planting.id };
 }
 
+// The page's buttons do nothing until it hydrates, so wait for that first.
+async function openOrchard(page: Page, cropId: string): Promise<void> {
+  await page.goto(`/plan/orchard/${cropId}`);
+  await expect(page.getByTestId('orchard-calendar')).toHaveAttribute('data-ready', 'true');
+}
+
 test.describe('orchard calendar', () => {
   test.describe.configure({ timeout: 150_000 });
 
@@ -81,7 +87,7 @@ test.describe('orchard calendar', () => {
     await createOnboardedFarm(page, { growing: ['fields'] });
     const apple = await plantTree(page, 'apple-gala');
 
-    await page.goto(`/plan/orchard/${apple.cropId}`);
+    await openOrchard(page, apple.cropId);
     const guide = page.getByTestId('orchard-guide');
     await expect(guide.getByRole('heading', { name: 'Commercial orchard guide' })).toBeVisible();
     await expect(guide).toContainText('VCE 456-419');
@@ -124,7 +130,7 @@ test.describe('orchard calendar', () => {
     ).not.toBeChecked();
 
     // Clearing the mark goes back to the plain prompt.
-    await page.goto(`/plan/orchard/${apple.cropId}`);
+    await openOrchard(page, apple.cropId);
     await page.getByRole('button', { name: 'Clear the mark' }).click();
     await expect(page.getByText('Mark the stage when you see it.')).toBeVisible();
   });
@@ -136,7 +142,7 @@ test.describe('orchard calendar', () => {
     await createOnboardedFarm(page, { growing: ['garden'] });
     const apple = await plantTree(page, 'apple-gala', 'garden');
 
-    await page.goto(`/plan/orchard/${apple.cropId}`);
+    await openOrchard(page, apple.cropId);
     const guide = page.getByTestId('orchard-guide');
     await expect(guide.getByRole('heading', { name: 'Home grounds guide' })).toBeVisible();
     await expect(guide).toContainText('VCE 456-018');
@@ -157,7 +163,7 @@ test.describe('orchard calendar', () => {
     await signInNewUser(page, 'orchard-fig');
     await createOnboardedFarm(page, { growing: ['fields'] });
     const fig = await plantTree(page, 'fig-celeste');
-    await page.goto(`/plan/orchard/${fig.cropId}`);
+    await openOrchard(page, fig.cropId);
     await expect(page.getByTestId('orchard-none')).toHaveText(
       'No seasonal calendar for this crop yet.'
     );
@@ -174,7 +180,7 @@ test.describe('orchard calendar in Spanish (OP-29)', () => {
     await createOnboardedFarm(page, { growing: ['fields'] });
     const apple = await plantTree(page, 'apple-gala');
     await post(page, '/api/me/locale', { locale: 'es' });
-    await page.goto(`/plan/orchard/${apple.cropId}`);
+    await openOrchard(page, apple.cropId);
     await expect(page.getByRole('heading', { name: 'Calendario de temporada' })).toBeVisible();
     await expect(page.locator('li.stage[data-stage="pink"] .stage-head')).toContainText(
       'Botón rosado'

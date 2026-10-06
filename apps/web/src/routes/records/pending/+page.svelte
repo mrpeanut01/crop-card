@@ -165,7 +165,7 @@
     }
     let at: number | undefined;
     if (action === 'redate') {
-      const ms = localInputToMs(redateValue);
+      const ms = localInputToMs(redateValue, Date.now());
       if (ms === null) {
         lastDrainResult = tr('records.pending.errDate');
         return;

@@ -47,7 +47,7 @@
 
   function build(): WithdrawalEntryInput | string {
     if (source === 'course-end') {
-      const ms = localInputToMs(endedAt);
+      const ms = localInputToMs(endedAt, Date.now());
       return ms === null
         ? 'Pick when the last dose was given.'
         : { kind: 'course-end', endedAt: ms };

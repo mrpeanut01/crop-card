@@ -84,7 +84,7 @@
     error = null;
     attestHref = null;
     saveToday = false;
-    const movedAt = when === 'now' ? Date.now() : localInputToMs(earlier);
+    const movedAt = when === 'now' ? Date.now() : localInputToMs(earlier, Date.now());
     if (movedAt === null) {
       error = tr('animals.move.pickWhen');
       return;

@@ -108,7 +108,13 @@ export function msToLocalInput(ms: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export function localInputToMs(value: string): number | null {
+const HALF_HOUR = 1_800_000;
+
+/** A `<input type="datetime-local">` value back to epoch ms. When the clocks
+ *  fall back, one wall-clock minute names two instants and `Date` picks the
+ *  earlier; with `near` (pass `Date.now()` on a form that defaults to now) the
+ *  instant closest to it wins, so "now" in the repeated hour stays now. */
+export function localInputToMs(value: string, near?: number): number | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value.trim());
   if (!m) return null;
   const d = new Date(
@@ -118,7 +124,15 @@ export function localInputToMs(value: string): number | null {
     Number(m[4]),
     Number(m[5])
   ).getTime();
-  return Number.isFinite(d) ? d : null;
+  if (!Number.isFinite(d)) return null;
+  if (near === undefined || !Number.isFinite(near)) return d;
+  const shown = msToLocalInput(d);
+  let best = d;
+  for (let k = 1; k <= 4; k++) {
+    const c = d + k * HALF_HOUR;
+    if (msToLocalInput(c) === shown && Math.abs(c - near) < Math.abs(best - near)) best = c;
+  }
+  return best;
 }
 
 export interface AreaOption {

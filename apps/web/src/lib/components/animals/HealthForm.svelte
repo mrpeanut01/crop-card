@@ -71,7 +71,7 @@
   const hasProduct = $derived(
     namesProduct({ productName, productPluginId, stockItemId }) && kind !== 'note'
   );
-  const atMs = $derived(localInputToMs(at));
+  const atMs = $derived(localInputToMs(at, Date.now()));
   const lockNote = $derived(
     foodProducing && atMs !== null && locksWhenSaved(kind, hasProduct, atMs, Date.now())
   );
@@ -104,7 +104,7 @@
       if (askUse) body.labelUse = labelUse;
       if (moreDoses) body.courseOpen = true;
       else if (lastDose) {
-        const end = localInputToMs(lastDose);
+        const end = localInputToMs(lastDose, Date.now());
         if (end === null || end < body.administeredAt) {
           error = 'The last dose cannot be before the first dose.';
           return;

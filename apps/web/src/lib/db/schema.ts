@@ -798,7 +798,13 @@ export const crops = tenantScoped(
       sownIndoorsAt: integer('sown_indoors_at', { mode: 'timestamp_ms' }),
       /** Phase 35: one seed lot planted across several blocks. Every part
        *  carries the same `sg_<uuid>` the wizard minted at commit. */
-      splitGroupId: text('split_group_id')
+      splitGroupId: text('split_group_id'),
+      /** #548: the owner's answer to "Tree size" (`dwarf | semi-dwarf |
+       *  standard`, checked in code; always `manual`). NULL = not sure. */
+      treeSizeClass: text('tree_size_class'),
+      /** #555: Drilled or Broadcast for a crop sown by area (`drilled |
+       *  broadcast`, checked in code). NULL = the plugin's default method. */
+      sowingMethod: text('sowing_method')
     },
     (table) => ({
       ownerBlockIdx: index('crops_owner_block_idx').on(table.ownerId, table.blockId),

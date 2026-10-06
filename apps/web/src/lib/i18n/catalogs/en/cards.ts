@@ -510,5 +510,13 @@ export const enCards = {
   'cards.cal.seeTaskSprayCard': 'See the task for its Spray Card',
   'cards.cal.sprayNotice':
     'Spray tasks show no rates or mixing steps. Use the Spray Card for those.',
-  'cards.fact.seedForArea': 'Seed needed'
+  'cards.fact.seedForArea': 'Seed needed',
+  'cards.fact.treeSize': 'Tree size',
+  'cards.fact.firstFruit': 'First fruit',
+  'cards.tree.notSure': 'Not sure',
+  'cards.tree.depends': 'Depends on tree size ({range}); pick a tree size to plan.',
+  'cards.tree.atLeast': 'At least {spacing} apart',
+  'cards.tree.expectFruit': 'Expect first fruit {from}–{to}',
+  'cards.tree.expectFruitYear': 'Expect first fruit in {year}',
+  'cards.tree.afterPlanting': '{years} after planting'
 } as const;

@@ -26,14 +26,14 @@ import {
   type BuildOptions,
   type ResolvedOptions
 } from './common';
-import { formatInches } from './size';
+import { formatFeet, formatInches } from './size';
 import { seedingFacts } from './seeding';
-import { careGuideHref, careLinkLabel } from './careGuide';
+import { careGuideHref, careLinkLabel, treeSizeSection } from './careGuide';
 import { ymdInZone } from '$lib/prefs';
 import { cropDisplayName } from '$lib/i18n/cropName';
 import { filterSprayAdviceItems } from '$lib/journal/photoHelp';
 import { snapshotSplitFor, splitLine } from './split';
-import { defaultSowMethod, spacingModel, SQFT_PER_ACRE } from '$lib/plan/spacingModel';
+import { plantingSowMethod, spacingModel, SQFT_PER_ACRE } from '$lib/plan/spacingModel';
 import { seedAmountLine } from '$lib/plan/seedAmountText';
 import type { SnapshotBlock } from '../snapshot';
 
@@ -89,7 +89,7 @@ function areaFacts(
   if (sqft !== null) {
     const line = seedAmountLine(
       model,
-      defaultSowMethod(model),
+      plantingSowMethod(model, p.sowingMethod),
       sqft,
       opts.prefs.units,
       opts.prefs.locale
@@ -102,6 +102,58 @@ function areaFacts(
   }
   facts.push({ label: tr('cards.fact.plants'), value: tr('plan.area.noCount') });
   return facts;
+}
+
+/** #548: a tree crop is spaced by the planting's size class. Known: that
+ *  row's spacing (`plugin`) and the first-fruit years as advice only. Not
+ *  known: "Not sure" and the sentence that it depends on tree size; the
+ *  card adds the class table. Never a single harvest date. */
+function treeFacts(
+  p: SnapshotPlanting,
+  plugin: SnapshotCropPlugin | undefined,
+  opts: ResolvedOptions
+): CardFact[] {
+  const { tr } = opts;
+  const model = spacingModel(plugin, p.treeSizeClass);
+  if (model.kind !== 'tree') return [];
+  const sizeName = (c: string) => tr(`cards.care.treeSize.${c}` as 'cards.care.treeSize.dwarf');
+  if (!model.known) {
+    const small = model.classes[0];
+    const big = model.classes[model.classes.length - 1];
+    const range =
+      small === big
+        ? `${sizeName(small.sizeClass)} ${formatFeet(small.minSpacingFt, opts.prefs)}`
+        : `${sizeName(small.sizeClass)} ${formatFeet(small.minSpacingFt, opts.prefs)} – ${sizeName(big.sizeClass)} ${formatFeet(big.minSpacingFt, opts.prefs)}`;
+    return [
+      { label: tr('cards.fact.treeSize'), value: tr('cards.tree.notSure') },
+      {
+        label: tr('cards.fact.spacing'),
+        value: tr('cards.tree.depends', { range }),
+        provenance: 'plugin'
+      }
+    ];
+  }
+  const { yearsToBearing: years } = model.row;
+  const plantedYear = p.plantingDate ? Number(p.plantingDate.slice(0, 4)) : NaN;
+  const fruit = Number.isFinite(plantedYear)
+    ? years.min === years.max
+      ? tr('cards.tree.expectFruitYear', { year: plantedYear + years.min })
+      : tr('cards.tree.expectFruit', { from: plantedYear + years.min, to: plantedYear + years.max })
+    : tr('cards.tree.afterPlanting', {
+        years:
+          years.min === years.max
+            ? tr('cards.years.count', { count: years.min })
+            : tr('cards.years.range', { min: years.min, max: years.max })
+      });
+  return [
+    { label: tr('cards.fact.treeSize'), value: sizeName(model.row.sizeClass), provenance: 'manual' },
+    {
+      label: tr('cards.fact.spacing'),
+      value: tr('cards.tree.atLeast', { spacing: formatFeet(model.row.minSpacingFt, opts.prefs) }),
+      provenance: 'plugin'
+    },
+    { label: tr('cards.fact.firstFruit'), value: fruit, provenance: 'plugin' }
+  ];
 }
 
 function spacingFacts(
@@ -223,9 +275,15 @@ export function buildPlantingCard(
     }
   }
 
-  const byArea = spacingModel(plugin).kind === 'area';
+  const spacing = spacingModel(plugin, p.treeSizeClass);
+  const spacingKind = spacing.kind;
+  const byArea = spacingKind === 'area';
   if (byArea) {
     facts.push(...areaFacts(p, plugin, block, opts));
+  } else if (spacingKind === 'tree') {
+    facts.push(...treeFacts(p, plugin, opts));
+    const count = countFact(p, opts);
+    if (count) facts.push(count);
   } else {
     facts.push(...spacingFacts(p, plugin, opts));
     const count = countFact(p, opts);
@@ -255,6 +313,10 @@ export function buildPlantingCard(
   // It is left as saved; the card says to plan it again by area.
   if (byArea && p.plantCount !== null && p.plantCountProvenance === 'fallback') {
     sections.push({ title: tr('plan.area.replan'), items: [] });
+  }
+  if (spacing.kind === 'tree' && !spacing.known) {
+    const table = treeSizeSection(plugin?.treeSizeClasses, opts);
+    if (table) sections.push(table);
   }
   const split = snapshotSplitFor(snapshot, p);
   if (split) {

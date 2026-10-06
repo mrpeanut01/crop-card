@@ -1,3 +1,4 @@
+import { isSavedSowMethod, type SavedSowMethod } from '$lib/plan/spacingModel';
 import type { InputsPlanApplication, InputsPlanScoutTask } from '$lib/plan/inputsPlan';
 import { fmtDateMs } from '../format';
 import { establishmentPayload } from '$lib/schedule/seedStart';
@@ -38,6 +39,14 @@ export class CommitFlow {
 
   constructor(w: AllocationWizardState) {
     this.#w = w;
+  }
+
+  /** #555: the Drilled or Broadcast choice the Seeds step showed, so the
+   *  planting's cards use that rate. */
+  sowingMethodFor(cropPluginId: string): { sowingMethod?: SavedSowMethod } {
+    if (!this.#w.isAreaCrop(cropPluginId)) return {};
+    const method = this.#w.sowMethodFor(cropPluginId);
+    return isSavedSowMethod(method) ? { sowingMethod: method } : {};
   }
 
   /** The grower's "Seed or seedling?" answer for a crop, as request fields.
@@ -193,6 +202,7 @@ export class CommitFlow {
             ...(r.plantingDateMs !== undefined ? { plantingDate: r.plantingDateMs } : {}),
             sourceProvenance: r.sourceProvenance,
             ...(r.splitGroupId ? { splitGroupId: r.splitGroupId } : {}),
+            ...this.sowingMethodFor(r.cropPluginId),
             ...this.answerFor(r.cropPluginId)
           })
         });

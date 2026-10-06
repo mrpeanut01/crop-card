@@ -41,6 +41,9 @@
   } from '$lib/climate/protectionView';
   import { availableQuantityText } from '$lib/stock/quantityStatus';
   import SeedOrSeedling from './SeedOrSeedling.svelte';
+  import TreeSizeChips from './TreeSizeChips.svelte';
+  import SowMethodChips from './SowMethodChips.svelte';
+  import type { SavedSowMethod, TreeSizeClass, TreeSizeRow } from '$lib/plan/spacingModel';
   import {
     establishmentPayload,
     type Establishment,
@@ -54,6 +57,10 @@
     soilTempMinF?: number | null;
     dtmMaxDays?: number | null;
     seedStart?: SeedStartPluginSlice['plantingGuide'];
+    /** #548: the plugin's tree size rows; the picker shows only with some. */
+    treeSizeClasses?: TreeSizeRow[];
+    /** #555: methods with a sourced rate; the toggle shows for two. */
+    sowMethods?: SavedSowMethod[];
   };
 
   interface Props {
@@ -112,6 +119,8 @@
   let establishment = $state<Establishment | null>(null);
   let startIndoors = $state(true);
   let sowIndoorsOn = $state('');
+  let treeSizeClass = $state<TreeSizeClass | null>(null);
+  let sowingMethod = $state<SavedSowMethod | null>(null);
   let bedFrost = $state<BedFrostView | null>(null);
   let coverSheetOpen = $state(false);
   let bedFrostSeq = 0;
@@ -134,6 +143,16 @@
     if (!pickedCrop) return null;
     const entry = cropCatalog.find((c) => c.pluginId === pickedCrop.pluginId);
     return { cropFamily: entry?.cropFamily ?? undefined, plantingGuide: entry?.seedStart };
+  });
+  const pickedEntry = $derived(
+    pickedCrop ? cropCatalog.find((c) => c.pluginId === pickedCrop.pluginId) : undefined
+  );
+  const treeClasses = $derived(pickedEntry?.treeSizeClasses ?? []);
+  const methodChoices = $derived(pickedEntry?.sowMethods ?? []);
+  $effect(() => {
+    void pickedEntry;
+    treeSizeClass = null;
+    sowingMethod = methodChoices[0] ?? null;
   });
   const seedUnits = $derived(pickedSeed ? unitsCompatibleWith(pickedSeed.defaultUnit) : []);
   const plantUnitOptions = $derived(
@@ -184,6 +203,8 @@
     establishment = null;
     startIndoors = true;
     sowIndoorsOn = '';
+    treeSizeClass = null;
+    sowingMethod = null;
     error = null;
   }
 
@@ -370,6 +391,8 @@
       payload.quantityUnit = plantUnit;
     }
     Object.assign(payload, establishmentPayload(establishment, startIndoors, sowIndoorsOn));
+    if (treeSizeClass && treeClasses.length > 0) payload.treeSizeClass = treeSizeClass;
+    if (sowingMethod && methodChoices.length > 1) payload.sowingMethod = sowingMethod;
     if (pickedSeed) {
       payload.stockItemId = pickedSeed.stockItemId;
     } else if (boughtQty != null && boughtQty > 0) {
@@ -608,6 +631,12 @@
             bind:startIndoors
             bind:sowIndoorsOn
           />
+          {#if treeClasses.length > 0}
+            <TreeSizeChips classes={treeClasses} bind:value={treeSizeClass} />
+          {/if}
+          {#if methodChoices.length > 1}
+            <SowMethodChips methods={methodChoices} bind:value={sowingMethod} />
+          {/if}
         {/if}
 
         <fieldset class="amounts">

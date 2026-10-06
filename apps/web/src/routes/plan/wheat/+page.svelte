@@ -15,7 +15,7 @@
   } from '$lib/weather/leafWet';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
-  import { defaultSowMethod } from '$lib/plan/spacingModel';
+  import { plantingSowMethod } from '$lib/plan/spacingModel';
   import { seedAmountLine } from '$lib/plan/seedAmountText';
   import { createT } from '$lib/i18n';
 
@@ -145,7 +145,7 @@
       {#if plan.spacing.kind === 'area' && c.areaSqFt}
         {@const line = seedAmountLine(
           plan.spacing,
-          defaultSowMethod(plan.spacing),
+          plantingSowMethod(plan.spacing, c.sowingMethod),
           c.areaSqFt,
           currentPrefs().units,
           data.locale

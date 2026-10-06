@@ -6,7 +6,11 @@
  *   in-row spacing. The crop is sown across ground (drilled or broadcast),
  *   so there is no plant count; seed is measured per area from the
  *   source's printed range.
- * - `unknown`: neither. Consumers keep the tagged `FALLBACK_SPACING_IN`.
+ * - `tree`: no in-row spacing but a sourced `treeSizeClasses` table (#548).
+ *   Trees are spaced by the planting's size class (`plugin`); with no
+ *   class (or one the table lacks) the widest class is used, tagged
+ *   `fallback`, so capacity is never overstated.
+ * - `unknown`: none of these. Consumers keep the tagged `FALLBACK_SPACING_IN`.
  *
  * Only `seedingRate` drives area math. The unsourced legacy
  * `plantingGuide.seedsPerAcre`, `recommendedLbsPerAcre` and `seedsPerLb`
@@ -42,8 +46,31 @@ export interface SeedingRateFields {
   seedBasis?: 'bulk' | 'pls';
 }
 
+export const TREE_SIZE_CLASSES = ['dwarf', 'semi-dwarf', 'standard'] as const;
+export type TreeSizeClass = (typeof TREE_SIZE_CLASSES)[number];
+
+export function isTreeSizeClass(v: unknown): v is TreeSizeClass {
+  return typeof v === 'string' && (TREE_SIZE_CLASSES as readonly string[]).includes(v);
+}
+
+/** #555 leftover: the sowing method saved on a planting. `planted` (a
+ *  population rate) is never a choice, so it is not stored. */
+export const SAVED_SOW_METHODS = ['drilled', 'broadcast'] as const;
+export type SavedSowMethod = (typeof SAVED_SOW_METHODS)[number];
+
+export function isSavedSowMethod(v: unknown): v is SavedSowMethod {
+  return typeof v === 'string' && (SAVED_SOW_METHODS as readonly string[]).includes(v);
+}
+
+export interface TreeSizeRow {
+  sizeClass: TreeSizeClass;
+  minSpacingFt: number;
+  yearsToBearing: MinMax;
+}
+
 export interface SpacingCropFields {
   defaultRowSpacingInches?: number | null;
+  treeSizeClasses?: readonly TreeSizeRow[] | null;
   plantingGuide?: {
     rowSpacingIn?: number | null;
     inRowSpacingIn?: MinMax | null;
@@ -70,6 +97,19 @@ export type SpacingModel =
       drillRowIn?: MinMax;
       seedBasis?: 'bulk' | 'pls';
     }
+  | {
+      kind: 'tree';
+      /** The plugin's rows, smallest tree first. */
+      classes: TreeSizeRow[];
+      /** The row spacing and counts use: the planting's class, else the
+       *  widest one. */
+      row: TreeSizeRow;
+      /** True when `row` is the planting's own size class. */
+      known: boolean;
+      /** Minimum distance between trees, in inches. */
+      spacingIn: number;
+      provenance: 'plugin' | 'fallback';
+    }
   | { kind: 'unknown' };
 
 function positive(n: unknown): n is number {
@@ -81,13 +121,46 @@ function range(r: MinMax | null | undefined): MinMax | undefined {
   return { min: Math.max(0, Math.min(r.min, r.max)), max: Math.max(r.min, r.max) };
 }
 
-export function spacingModel(crop: SpacingCropFields | null | undefined): SpacingModel {
+const TREE_ORDER: Record<TreeSizeClass, number> = { dwarf: 0, 'semi-dwarf': 1, standard: 2 };
+
+/** The plugin's usable tree size rows, smallest tree first. */
+export function treeSizeRows(
+  crop: Pick<SpacingCropFields, 'treeSizeClasses'> | null | undefined
+): TreeSizeRow[] {
+  return (crop?.treeSizeClasses ?? [])
+    .filter((r) => isTreeSizeClass(r.sizeClass) && positive(r.minSpacingFt))
+    .slice()
+    .sort((a, b) => TREE_ORDER[a.sizeClass] - TREE_ORDER[b.sizeClass]);
+}
+
+function treeModel(classes: TreeSizeRow[], treeSizeClass: string | null | undefined): SpacingModel {
+  const chosen = classes.find((r) => r.sizeClass === treeSizeClass);
+  const widest = classes.reduce((a, b) => (b.minSpacingFt > a.minSpacingFt ? b : a));
+  const row = chosen ?? widest;
+  return {
+    kind: 'tree',
+    classes,
+    row,
+    known: !!chosen,
+    spacingIn: row.minSpacingFt * 12,
+    provenance: chosen ? 'plugin' : 'fallback'
+  };
+}
+
+/** `treeSizeClass` is the planting's answer to "Tree size" (#548); it only
+ *  matters for a crop with a `treeSizeClasses` table. */
+export function spacingModel(
+  crop: SpacingCropFields | null | undefined,
+  treeSizeClass?: string | null
+): SpacingModel {
   const guide = crop?.plantingGuide ?? undefined;
   const inRow = range(guide?.inRowSpacingIn);
   if (inRow && (inRow.min + inRow.max) / 2 > 0) {
     const row = guide?.rowSpacingIn ?? crop?.defaultRowSpacingInches;
     return { kind: 'in-row', inRowIn: inRow, rowIn: positive(row) ? row : null };
   }
+  const trees = treeSizeRows(crop);
+  if (trees.length > 0) return treeModel(trees, treeSizeClass);
   const rate = guide?.seedingRate;
   if (!rate) return { kind: 'unknown' };
   const rates: AreaRate[] = [];
@@ -122,6 +195,21 @@ export function sowMethods(model: SpacingModel): SowMethod[] {
  *  drill), else the one method it has. */
 export function defaultSowMethod(model: SpacingModel): SowMethod | null {
   return sowMethods(model)[0] ?? null;
+}
+
+/** The method a planting is sown by: its saved one when the plugin has a
+ *  rate for it, else the default (#555 leftover). */
+export function plantingSowMethod(
+  model: SpacingModel,
+  saved: string | null | undefined
+): SowMethod | null {
+  if (
+    model.kind === 'area' &&
+    isSavedSowMethod(saved) &&
+    model.rates.some((r) => r.method === saved)
+  )
+    return saved;
+  return defaultSowMethod(model);
 }
 
 /** The sourced rate for a method; an unknown or missing method falls back

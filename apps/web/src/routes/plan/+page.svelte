@@ -31,6 +31,9 @@
   import NewBlockModal from '$lib/components/plan/NewBlockModal.svelte';
   import EditBlockModal from '$lib/components/plan/EditBlockModal.svelte';
   import NewPlantingModal from '$lib/components/plan/NewPlantingModal.svelte';
+  import TreeSizeChips from '$lib/components/plan/TreeSizeChips.svelte';
+  import SowMethodChips from '$lib/components/plan/SowMethodChips.svelte';
+  import type { SavedSowMethod, TreeSizeClass, TreeSizeRow } from '$lib/plan/spacingModel';
   import AddTaskModal from '$lib/components/plan/AddTaskModal.svelte';
   import Hint from '$lib/components/ui/Hint.svelte';
   import WhereWillThisGrow from '$lib/components/plan/WhereWillThisGrow.svelte';
@@ -866,6 +869,13 @@
     harvestUseCases: string[];
     harvestUseCasesOriginal: string[];
     availableHarvestUseCases: Array<{ key: string; label: string }>;
+    /** #548 / #555: single-field, last-write-wins choices (no `base`). */
+    treeSizeClass: TreeSizeClass | null;
+    treeSizeClassOriginal: TreeSizeClass | null;
+    treeClasses: TreeSizeRow[];
+    sowingMethod: SavedSowMethod | null;
+    sowingMethodOriginal: SavedSowMethod | null;
+    methodChoices: SavedSowMethod[];
   }>({
     varietyDisplayName: '',
     shortName: '',
@@ -877,7 +887,13 @@
     quantityUnit: '',
     harvestUseCases: [],
     harvestUseCasesOriginal: [],
-    availableHarvestUseCases: []
+    availableHarvestUseCases: [],
+    treeSizeClass: null,
+    treeSizeClassOriginal: null,
+    treeClasses: [],
+    sowingMethod: null,
+    sowingMethodOriginal: null,
+    methodChoices: []
   });
   let editBusy = $state(false);
   let editError = $state<string | null>(null);
@@ -965,7 +981,20 @@
       quantityUnit: planting.quantityUnit ?? '',
       harvestUseCases: currentSelection,
       harvestUseCasesOriginal: currentSelection.slice(),
-      availableHarvestUseCases: available
+      availableHarvestUseCases: available,
+      ...(() => {
+        const entry = data.cropCatalog.find((c) => c.pluginId === planting.cropPluginId);
+        const methodChoices = entry?.sowMethods ?? [];
+        const sowing = planting.sowingMethod ?? methodChoices[0] ?? null;
+        return {
+          treeSizeClass: planting.treeSizeClass ?? null,
+          treeSizeClassOriginal: planting.treeSizeClass ?? null,
+          treeClasses: entry?.treeSizeClasses ?? [],
+          sowingMethod: sowing,
+          sowingMethodOriginal: sowing,
+          methodChoices
+        };
+      })()
     };
     editSeen = {
       varietyDisplayName: planting.varietyDisplayName,
@@ -1067,6 +1096,33 @@
     return true;
   }
 
+  /** #548 / #555: tree size and sowing method are owner-only, single-field
+   *  and last write wins, so they go straight to the server. */
+  async function saveShapeChoices(): Promise<boolean> {
+    if (!editCropId || !data.canEdit) return true;
+    const bodies: Array<Record<string, unknown>> = [];
+    if (editForm.treeSizeClass !== editForm.treeSizeClassOriginal)
+      bodies.push({ action: 'set-tree-size', treeSizeClass: editForm.treeSizeClass });
+    if (
+      editForm.methodChoices.length > 1 &&
+      editForm.sowingMethod !== editForm.sowingMethodOriginal
+    )
+      bodies.push({ action: 'set-sowing-method', sowingMethod: editForm.sowingMethod });
+    for (const body of bodies) {
+      const r = await fetch(`/api/crops/${encodeURIComponent(editCropId)}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body)
+      }).catch(() => null);
+      if (!r || !r.ok) {
+        const e = r ? await r.json().catch(() => ({})) : {};
+        editError = (e as { error?: string }).error ?? tr('plan.page.networkError');
+        return false;
+      }
+    }
+    return true;
+  }
+
   async function finishEditRun(run: RecordEditRun) {
     if (run.status === 'conflict') {
       editConflict = { conflict: run.conflict, remaining: run.remaining };
@@ -1083,6 +1139,7 @@
       return;
     }
     if (!(await saveShortName())) return;
+    if (!(await saveShapeChoices())) return;
     closeEditCrop();
     await invalidateAll();
   }
@@ -2267,7 +2324,9 @@
     cropFamily: c.cropFamily ?? undefined,
     soilTempMinF: c.soilTempMinF,
     dtmMaxDays: c.daysToMaturity?.max ?? null,
-    seedStart: c.seedStart
+    seedStart: c.seedStart,
+    treeSizeClasses: c.treeSizeClasses,
+    sowMethods: c.sowMethods
   }))}
   seedStock={seedStockData.map((s) => ({
     stockItemId: s.stockItemId,
@@ -3268,6 +3327,20 @@
                   </label>
                 </div>
                 <p class="hint">{tr('plan.page.bar.dateHint')}</p>
+                {#if data.canEdit && editForm.treeClasses.length > 0}
+                  <TreeSizeChips
+                    classes={editForm.treeClasses}
+                    bind:value={editForm.treeSizeClass}
+                    disabled={editBusy}
+                  />
+                {/if}
+                {#if data.canEdit && editForm.methodChoices.length > 1}
+                  <SowMethodChips
+                    methods={editForm.methodChoices}
+                    bind:value={editForm.sowingMethod}
+                    disabled={editBusy}
+                  />
+                {/if}
 
                 <fieldset class="harvest-uses">
                   <legend>{tr('plan.page.bar.harvestWindow')}</legend>

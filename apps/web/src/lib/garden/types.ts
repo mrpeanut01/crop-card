@@ -89,6 +89,12 @@ export interface GardenCrop {
   archetype?: string;
   daysToMaturity?: { min: number; max: number };
   defaultRowSpacingInches?: number;
+  /** #548: spacing and bearing age by tree size. */
+  treeSizeClasses?: Array<{
+    sizeClass: 'dwarf' | 'semi-dwarf' | 'standard';
+    minSpacingFt: number;
+    yearsToBearing: { min: number; max: number };
+  }>;
   plantingGuide?: {
     rowSpacingIn?: number;
     inRowSpacingIn?: { min: number; max: number };
@@ -150,6 +156,9 @@ export interface PlacedPlanting {
   /** Phase 32E. Only the harvest estimate reads them (`maturityStartMs`). */
   establishment?: 'direct-seed' | 'transplant' | null;
   sownIndoorsAtMs?: number | null;
+  /** #548 "Tree size" and #555 Drilled or Broadcast. Absent when not set. */
+  treeSizeClass?: string;
+  sowingMethod?: string;
 }
 
 export type PlantingSourceProvenance = 'ai' | 'fallback' | 'plugin';

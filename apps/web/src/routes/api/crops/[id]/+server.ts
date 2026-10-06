@@ -25,6 +25,8 @@ import {
   updateStatus
 } from '$lib/db/crops';
 import { reanchorCropTasks } from '$lib/db/tasks';
+import { setSowingMethod, setTreeSizeClass } from '$lib/db/crops';
+import { sowMethods, spacingModel, treeSizeRows } from '$lib/plan/spacingModel';
 import { currentUser } from '$lib/server/auth';
 import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
@@ -40,6 +42,7 @@ import {
 import { getRegistry } from '$lib/server/registry';
 import { db } from '$lib/db/client';
 import { withClientRecordId } from '$lib/server/clientRecordId';
+import { writeRecord } from '$lib/server/recordWrite';
 import {
   changedValues,
   editConflictResponse,
@@ -182,6 +185,43 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
       crop: getCrop(id),
       seedStart: { ...outcome, notes: localizeSeedStartNotes(outcome.notes, event.locals?.locale) }
     });
+  }
+
+  // #548 / #555: single-field, owner-only, last write wins (no `base`).
+  if (parsed.data.action === 'set-tree-size' || parsed.data.action === 'set-sowing-method') {
+    if (auth?.role !== 'owner') {
+      return json(
+        { error: t(event.locals?.locale, 'api.err.askOwner'), code: 'READ_ONLY' },
+        { status: 403 }
+      );
+    }
+    const id = event.params.id;
+    const crop = getCrop(id);
+    if (!crop) throw error(404, t(event.locals?.locale, 'api.err.cropNotFound'));
+    const plugin = cropLookupFrom(await getRegistry())(crop.cropPluginId);
+    if (parsed.data.action === 'set-tree-size') {
+      const value = parsed.data.treeSizeClass;
+      if (value !== null && !treeSizeRows(plugin).some((r) => r.sizeClass === value)) {
+        return json(
+          { error: t(event.locals?.locale, 'api.err.treeSizeNotOffered'), code: 'NOT_OFFERED' },
+          { status: 400 }
+        );
+      }
+      writeRecord(event, () => setTreeSizeClass(id, value));
+    } else {
+      const value = parsed.data.sowingMethod;
+      if (value !== null && !(sowMethods(spacingModel(plugin)) as string[]).includes(value)) {
+        return json(
+          {
+            error: t(event.locals?.locale, 'api.err.sowingMethodNotOffered'),
+            code: 'NOT_OFFERED'
+          },
+          { status: 400 }
+        );
+      }
+      writeRecord(event, () => setSowingMethod(id, value));
+    }
+    return json({ crop: getCrop(id) });
   }
 
   if (parsed.data.action === 'unschedule') {

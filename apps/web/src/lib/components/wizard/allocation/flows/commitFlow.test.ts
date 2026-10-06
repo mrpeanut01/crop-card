@@ -46,6 +46,7 @@ function fakeWizard(assignments: ReturnType<typeof a>[]) {
     },
     isFillToBed: () => false,
     isAreaCrop: (id: string) => id === 'cereal-rye-cover',
+    sowMethodFor: (id: string) => (id === 'cereal-rye-cover' ? 'drilled' : null),
     blockNameFor: (id: string) => (id === 'n' ? 'North Bed' : 'South Bed'),
     discardDraft: vi.fn(async () => {})
   };
@@ -157,7 +158,9 @@ describe('CommitFlow split lots (R-12, R-18, R-19)', () => {
     const rye = calls.find((c) => c.body.cropPluginId === 'cereal-rye-cover')!;
     expect(rye.body.plannedPlants).toBeUndefined();
     expect(rye.body.quantityPlanted).toBe(101);
+    expect(rye.body.sowingMethod).toBe('drilled');
     const beet = calls.find((c) => c.body.cropPluginId !== 'cereal-rye-cover')!;
     expect(beet.body.plannedPlants).toBe(40);
+    expect(beet.body.sowingMethod).toBeUndefined();
   });
 });

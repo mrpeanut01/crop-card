@@ -118,7 +118,9 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
         plantingDate: p.plantingDate ? new Date(p.plantingDate).toISOString() : null,
         quantityPlanted: p.quantityPlanted ?? null,
         quantityUnit: p.quantityUnit ?? null,
-        splitGroupId: p.splitGroupId ?? null
+        splitGroupId: p.splitGroupId ?? null,
+        treeSizeClass: p.treeSizeClass ?? null,
+        sowingMethod: p.sowingMethod ?? null
       }))
   );
 
@@ -147,7 +149,7 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
   const journalPhotos = journalPhotoFacts();
 
   return {
-    schemaVersion: '1.5.0',
+    schemaVersion: '1.6.0',
     generatedAt: new Date().toISOString(),
     generator: `CropCard v${APP_VERSION}`,
     rulesVersion: RULES_VERSION,
@@ -206,7 +208,9 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
         plantingDate: p.plantingDate ? new Date(p.plantingDate).toISOString() : null,
         quantityPlanted: p.quantityPlanted ?? null,
         quantityUnit: p.quantityUnit ?? null,
-        splitGroupId: p.splitGroupId ?? null
+        splitGroupId: p.splitGroupId ?? null,
+        treeSizeClass: p.treeSizeClass ?? null,
+        sowingMethod: p.sowingMethod ?? null
       }))
     })),
     mapFeatures: mapFeatureSection(),

@@ -285,7 +285,8 @@ describe('card snapshot cross-tenant isolation', () => {
                 plantingDate: new Date(now - 200 * DAY),
                 harvestedAt: status === 'harvested' ? new Date(now - 90 * DAY) : null,
                 status,
-                splitGroupId: sg
+                splitGroupId: sg,
+                ...(i === 0 ? { treeSizeClass: 'dwarf', sowingMethod: 'drilled' } : {})
               })
             )
             .run();
@@ -301,8 +302,12 @@ describe('card snapshot cross-tenant isolation', () => {
       [q, p]
     ] as const) {
       const snap = await runWithTenantAsync(self.ownerId, () => buildFarmSnapshot({ now }));
-      expect(snap.version).toBe(6);
-      expect(snap.plantings.find((x) => x.id === self.ids[0])?.splitGroupId).toBe(sg);
+      expect(snap.version).toBe(7);
+      expect(snap.plantings.find((x) => x.id === self.ids[0])).toMatchObject({
+        splitGroupId: sg,
+        treeSizeClass: 'dwarf',
+        sowingMethod: 'drilled'
+      });
       expect(snap.splitGroups?.[sg]).toEqual([self.beds[0], self.beds[1], self.beds[3]].sort());
       for (const id of [...other.beds, ...other.ids]) expect(mentions(snap, id), id).toBe(false);
       const card = buildDeck(snap, { now }).find((c) => c.key === `pl_${self.ids[0]}`);

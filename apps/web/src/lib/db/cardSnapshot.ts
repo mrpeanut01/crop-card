@@ -6,6 +6,7 @@
 
 import { isTypicalTimingTask } from '$lib/schedule/typicalTiming';
 import { and, asc, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
+import { isSavedSowMethod, isTreeSizeClass } from '$lib/plan/spacingModel';
 import { db } from './client';
 import { animalCarePlans, animalHealthEvents, crops, owners, tasks } from './schema';
 import { requireOwnerId, unscopedQueryNote, withTenant } from './tenant';
@@ -43,7 +44,9 @@ function toSnapshotPlanting(r: typeof crops.$inferSelect): SnapshotPlanting {
     ...layoutOf(r),
     ...(r.establishment ? { establishment: r.establishment } : {}),
     ...(r.sownIndoorsAt ? { sownIndoorsAt: r.sownIndoorsAt.getTime() } : {}),
-    ...(r.splitGroupId ? { splitGroupId: r.splitGroupId } : {})
+    ...(r.splitGroupId ? { splitGroupId: r.splitGroupId } : {}),
+    ...(isTreeSizeClass(r.treeSizeClass) ? { treeSizeClass: r.treeSizeClass } : {}),
+    ...(isSavedSowMethod(r.sowingMethod) ? { sowingMethod: r.sowingMethod } : {})
   };
 }
 

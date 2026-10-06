@@ -617,6 +617,13 @@
       "when": 1791252997886,
       "tag": "0087_seasonal_text_refresh",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "6",
+      "when": 1791256770083,
+      "tag": "0088_crop_tree_size_sowing_method",
+      "breakpoints": true
     }
   ]
 }

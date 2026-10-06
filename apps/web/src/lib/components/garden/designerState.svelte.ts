@@ -1700,12 +1700,17 @@ export class DesignerState {
     const prev = planting;
     const pattern = body.spacingPattern ?? planting.spacing.pattern;
     const kept = planting.spacing.source === 'manual';
-    const spacing = resolveSpacing(this.crop(planting.cropPluginId), pattern, {
-      inRowIn:
-        body.spacingIn !== undefined ? body.spacingIn : kept ? planting.spacing.inRowIn : null,
-      rowIn:
-        body.rowSpacingIn !== undefined ? body.rowSpacingIn : kept ? planting.spacing.rowIn : null
-    });
+    const spacing = resolveSpacing(
+      this.crop(planting.cropPluginId),
+      pattern,
+      {
+        inRowIn:
+          body.spacingIn !== undefined ? body.spacingIn : kept ? planting.spacing.inRowIn : null,
+        rowIn:
+          body.rowSpacingIn !== undefined ? body.rowSpacingIn : kept ? planting.spacing.rowIn : null
+      },
+      planting.treeSizeClass
+    );
     const fp = body.footprint === undefined ? planting.footprint : body.footprint;
     const count =
       body.plantCount != null

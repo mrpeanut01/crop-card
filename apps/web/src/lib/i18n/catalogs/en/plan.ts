@@ -729,5 +729,8 @@ export const enPlan = {
   'plan.area.typeYours': 'Type yours',
   'plan.area.yourRate': 'Your rate (lb/acre)',
   'plan.area.yourRateMetric': 'Your rate (kg/ha)',
-  'plan.area.clearRate': 'Clear'
+  'plan.area.clearRate': 'Clear',
+  'plan.tree.label': 'Tree size',
+  'plan.tree.hint': 'On the nursery tag, often as rootstock (M.9 = dwarf).',
+  'plan.sow.label': 'Sown by'
 } as const;

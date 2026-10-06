@@ -75,6 +75,8 @@ export interface DesignPlantingInput {
   groupSystemKind: PlacedPlanting['groupSystemKind'];
   groupRole?: PlacedPlanting['groupRole'];
   sourceProvenance?: PlacedPlanting['sourceProvenance'];
+  treeSizeClass?: string | null;
+  sowingMethod?: string | null;
 }
 
 export interface DesignInput {
@@ -151,10 +153,12 @@ export function placedPlanting(
   p: DesignPlantingInput,
   crop: GardenCrop | undefined
 ): PlacedPlanting {
-  const spacing = resolveSpacing(crop, p.spacingPattern ?? 'square', {
-    inRowIn: p.spacingIn,
-    rowIn: p.rowSpacingIn
-  });
+  const spacing = resolveSpacing(
+    crop,
+    p.spacingPattern ?? 'square',
+    { inRowIn: p.spacingIn, rowIn: p.rowSpacingIn },
+    p.treeSizeClass
+  );
   let count = p.plantCount;
   let provenance = p.plantCountProvenance;
   if (spacing.mode === 'area') {
@@ -182,7 +186,9 @@ export function placedPlanting(
     groupId: p.groupId,
     groupSystemKind: p.groupSystemKind,
     groupRole: p.groupRole ?? null,
-    sourceProvenance: p.sourceProvenance ?? null
+    sourceProvenance: p.sourceProvenance ?? null,
+    ...(p.treeSizeClass ? { treeSizeClass: p.treeSizeClass } : {}),
+    ...(p.sowingMethod ? { sowingMethod: p.sowingMethod } : {})
   };
 }
 
@@ -335,7 +341,9 @@ export function designFromSnapshot(
       plantCount: p.plantCount,
       plantCountProvenance: p.plantCountProvenance,
       groupId: p.groupId ?? null,
-      groupSystemKind: p.groupSystemKind ?? null
+      groupSystemKind: p.groupSystemKind ?? null,
+      treeSizeClass: p.treeSizeClass ?? null,
+      sowingMethod: p.sowingMethod ?? null
     }));
   const frost = snapshot.frost;
   const provenance: ProvenanceTag = frost ? frost.provenance : 'fallback';

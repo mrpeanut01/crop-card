@@ -124,12 +124,15 @@ export interface PlacementInput {
  *  from the client. */
 export function resolvePlacement(
   input: PlacementInput,
-  crop: GardenCrop | undefined
+  crop: GardenCrop | undefined,
+  treeSizeClass?: string | null
 ): CropPlacement {
-  const spacing = resolveSpacing(crop, input.spacingPattern, {
-    inRowIn: input.spacingIn ?? null,
-    rowIn: input.rowSpacingIn ?? null
-  });
+  const spacing = resolveSpacing(
+    crop,
+    input.spacingPattern,
+    { inRowIn: input.spacingIn ?? null, rowIn: input.rowSpacingIn ?? null },
+    treeSizeClass
+  );
   let count: number | null = null;
   let provenance: CropPlacement['plantCountProvenance'] = null;
   if (spacing.mode === 'area') {
@@ -165,10 +168,12 @@ export function placedPlantingFromCrop(crop: Crop, plugin: GardenCrop | undefine
     plantingDateMs: crop.plantingDate,
     harvestedAtMs: crop.harvestedAt ?? null,
     footprint: crop.footprint ?? null,
-    spacing: resolveSpacing(plugin, pattern, {
-      inRowIn: crop.spacingIn ?? null,
-      rowIn: crop.rowSpacingIn ?? null
-    }),
+    spacing: resolveSpacing(
+      plugin,
+      pattern,
+      { inRowIn: crop.spacingIn ?? null, rowIn: crop.rowSpacingIn ?? null },
+      crop.treeSizeClass
+    ),
     plantCount: byArea ? null : (crop.plantCount ?? null),
     plantCountProvenance: byArea ? null : (crop.plantCountProvenance ?? null),
     groupId: crop.groupId ?? null,
@@ -176,7 +181,9 @@ export function placedPlantingFromCrop(crop: Crop, plugin: GardenCrop | undefine
     groupRole: crop.groupRole ?? null,
     sourceProvenance: crop.sourceProvenance ?? null,
     establishment: crop.establishment ?? null,
-    sownIndoorsAtMs: crop.sownIndoorsAt ?? null
+    sownIndoorsAtMs: crop.sownIndoorsAt ?? null,
+    ...(crop.treeSizeClass ? { treeSizeClass: crop.treeSizeClass } : {}),
+    ...(crop.sowingMethod ? { sowingMethod: crop.sowingMethod } : {})
   };
 }
 
@@ -396,7 +403,11 @@ export function writeFootprint(
     }
   }
   const plugin = lookup(current.cropPluginId);
-  const placement = resolvePlacement(mergePlacementInput(current, req), plugin);
+  const placement = resolvePlacement(
+    mergePlacementInput(current, req),
+    plugin,
+    current.treeSizeClass
+  );
 
   return db.transaction(() => {
     setPlacement(cropId, placement, req.blockId);

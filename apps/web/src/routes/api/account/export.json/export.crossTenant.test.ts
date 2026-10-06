@@ -31,7 +31,7 @@ import { createCutting } from '$lib/db/hayCuttings';
 import { runWithTenantAsync, runWithTenant, tenantValues, withTenant } from '$lib/db/tenant';
 import { createField } from '$lib/db/fields';
 import { createBlock } from '$lib/db/blocks';
-import { createPlanned } from '$lib/db/crops';
+import { createPlanned, setSowingMethod, setTreeSizeClass } from '$lib/db/crops';
 import { createMapFeature } from '$lib/db/mapFeatures';
 import { insertSoilTest } from '$lib/db/fertility';
 import { insertJournalEntry } from '$lib/db/plantingJournal';
@@ -81,6 +81,8 @@ function seed(label: string): Seeded {
       cropPluginId: 'tomato-amish-paste',
       varietyDisplayName: 'Amish Paste tomato'
     });
+    setTreeSizeClass(crop.id, 'dwarf');
+    setSowingMethod(crop.id, 'drilled');
     const feature = createMapFeature({
       kind: 'fence',
       name: `${label} fence`,
@@ -248,6 +250,11 @@ describe('GET /api/account/export.json', () => {
       }>;
       const bed = blocks.find((x) => x.id === self.bedId);
       expect(bed).toMatchObject({ fieldId: self.areaId, kind: 'bed', widthFt: 4 });
+      const planted = (bed as unknown as { plantings: Array<Record<string, unknown>> }).plantings;
+      expect(planted[0]).toMatchObject({
+        treeSizeClass: 'dwarf',
+        sowingMethod: 'drilled'
+      });
       expect(Object.keys(bed!.layout)).toEqual(
         expect.arrayContaining(['xFt', 'yFt', 'rotationDeg', 'bedStyle'])
       );
@@ -351,7 +358,7 @@ describe('GET /api/account/export.json', () => {
     });
 
     const { json } = await exportFor(farm.ownerId);
-    expect(json.schemaVersion).toBe('1.5.0');
+    expect(json.schemaVersion).toBe('1.6.0');
     const hay = json.hayCuttings as Array<{ id: string; recordedLate: boolean }>;
     expect(hay.find((c) => c.id === late)?.recordedLate).toBe(true);
     expect(hay.find((c) => c.id === onTime)?.recordedLate).toBe(false);

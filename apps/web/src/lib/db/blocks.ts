@@ -34,6 +34,12 @@ import { geojsonAreaAcres } from '$lib/geo/area';
 import { sketchAcres, storedSketchAcres } from '$lib/farm/sketch';
 import { DEFAULT_BLOCK_KIND, type BedStyle, type BlockKind } from '$lib/farm/areaKinds';
 import { placementColumns, type CropPlacement } from './crops';
+import {
+  isSavedSowMethod,
+  isTreeSizeClass,
+  type SavedSowMethod,
+  type TreeSizeClass
+} from '$lib/plan/spacingModel';
 
 export type TillageMethod = 'conventional' | 'reduced-till' | 'no-till';
 export type SunExposure = 'full' | 'partial' | 'shade';
@@ -90,6 +96,9 @@ export interface PlantingRecord {
   status?: 'planned' | 'active' | 'harvested' | 'failed' | 'archived';
   /** Phase 35: shared by every part of one seed lot planted in several blocks. */
   splitGroupId?: string | null;
+  /** #548 "Tree size" and #555 Drilled or Broadcast; null when not set. */
+  treeSizeClass?: TreeSizeClass | null;
+  sowingMethod?: SavedSowMethod | null;
 }
 
 export interface BlockWithPlantings extends Block {
@@ -226,7 +235,9 @@ export function listBlocks(opts: ListBlocksOptions = {}): BlockWithPlantings[] {
       establishment: p.establishment ?? null,
       sownIndoorsAt: p.sownIndoorsAt?.getTime() ?? null,
       status: p.status,
-      splitGroupId: p.splitGroupId ?? null
+      splitGroupId: p.splitGroupId ?? null,
+      treeSizeClass: isTreeSizeClass(p.treeSizeClass) ? p.treeSizeClass : null,
+      sowingMethod: isSavedSowMethod(p.sowingMethod) ? p.sowingMethod : null
     });
     grouped.set(p.blockId, list);
   }
@@ -262,7 +273,9 @@ export function getBlock(id: string): BlockWithPlantings | undefined {
       establishment: p.establishment ?? null,
       sownIndoorsAt: p.sownIndoorsAt?.getTime() ?? null,
       status: p.status,
-      splitGroupId: p.splitGroupId ?? null
+      splitGroupId: p.splitGroupId ?? null,
+      treeSizeClass: isTreeSizeClass(p.treeSizeClass) ? p.treeSizeClass : null,
+      sowingMethod: isSavedSowMethod(p.sowingMethod) ? p.sowingMethod : null
     }));
   return { ...rowToBlock(row), plantings };
 }
@@ -444,6 +457,8 @@ export function addPlanting(input: {
   status?: 'planned' | 'active';
   /** Phase 35: the seed lot's split group (`sg_<uuid>`), when split. */
   splitGroupId?: string;
+  treeSizeClass?: TreeSizeClass;
+  sowingMethod?: SavedSowMethod;
 }): PlantingRecord {
   if (input.plantingDate === null && input.quantityPlanted !== undefined && !input.placement) {
     const conds = [
@@ -453,7 +468,13 @@ export function addPlanting(input: {
       isNull(plantingRecords.plantingDate),
       input.splitGroupId
         ? eq(plantingRecords.splitGroupId, input.splitGroupId)
-        : isNull(plantingRecords.splitGroupId)
+        : isNull(plantingRecords.splitGroupId),
+      input.treeSizeClass
+        ? eq(plantingRecords.treeSizeClass, input.treeSizeClass)
+        : isNull(plantingRecords.treeSizeClass),
+      input.sowingMethod
+        ? eq(plantingRecords.sowingMethod, input.sowingMethod)
+        : isNull(plantingRecords.sowingMethod)
     ];
     if (input.quantityUnit) {
       conds.push(eq(plantingRecords.quantityUnit, input.quantityUnit));
@@ -510,6 +531,8 @@ export function addPlanting(input: {
         quantityUnit: input.quantityUnit ?? null,
         sourceProvenance: input.sourceProvenance ?? null,
         splitGroupId: input.splitGroupId ?? null,
+        treeSizeClass: input.treeSizeClass ?? null,
+        sowingMethod: input.sowingMethod ?? null,
         ...(input.placement
           ? placementColumns(input.placement)
           : input.plannedPlants !== undefined

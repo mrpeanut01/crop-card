@@ -28,6 +28,8 @@ export interface SmallGrainCandidate {
   plantingDate: number | null;
   /** #555: the ground of the block this planting is on. */
   areaSqFt: number | null;
+  /** #555: Drilled or Broadcast saved on the planting. */
+  sowingMethod: 'drilled' | 'broadcast' | null;
 }
 
 export interface SmallGrainFungicideNote {
@@ -77,6 +79,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         displayName: crop.displayName,
         varietyDisplayName: p.varietyDisplayName,
         plantingDate: p.plantingDate,
+        sowingMethod: p.sowingMethod ?? null,
         areaSqFt:
           b.widthFt && b.lengthFt
             ? b.widthFt * b.lengthFt

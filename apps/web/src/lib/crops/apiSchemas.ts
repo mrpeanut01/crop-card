@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { EDIT_CONFLICT_API_NOTE as EDIT_CONFLICT_NOTE } from '$lib/edits/conflict';
 import { setPlacementPatchSchema } from '$lib/garden/api';
 import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
+import { SAVED_SOW_METHODS, TREE_SIZE_CLASSES } from '$lib/plan/spacingModel';
 
 /** Request body of `PATCH /api/crops/:id`, one variant per `action`. Kept free
  *  of server imports so the OpenAPI generator can publish it. */
@@ -112,8 +113,30 @@ export const cropSetEstablishmentPatchSchema = z
     'Owner only. Change "Seed or seedling?". Seed or bought seedlings skip the open seed-start tasks; seedlings started indoors write them again.'
   );
 
+export const cropSetTreeSizePatchSchema = z
+  .object({
+    action: z.literal('set-tree-size'),
+    /** Null is "Not sure". */
+    treeSizeClass: z.enum(TREE_SIZE_CLASSES).nullable()
+  })
+  .describe(
+    'Owner only. Set the tree size (dwarf, semi-dwarf or standard) the owner read off the nursery tag; null is "Not sure". It sets the spacing and the first-fruit advice only. Last write wins.'
+  );
+
+export const cropSetSowingMethodPatchSchema = z
+  .object({
+    action: z.literal('set-sowing-method'),
+    /** Null goes back to the crop's default method. */
+    sowingMethod: z.enum(SAVED_SOW_METHODS).nullable()
+  })
+  .describe(
+    'Owner only. Set Drilled or Broadcast for a crop sown by area, so its seed amount uses that rate; null goes back to the default. Last write wins.'
+  );
+
 export const cropPatchSchema = z.discriminatedUnion('action', [
   cropSetEstablishmentPatchSchema,
+  cropSetTreeSizePatchSchema,
+  cropSetSowingMethodPatchSchema,
   cropStatusPatchSchema,
   cropSchedulePatchSchema,
   cropChangePluginPatchSchema,

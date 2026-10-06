@@ -193,11 +193,15 @@ export function careTasksOf(p: CropPlugin): SnapshotCareTask[] {
   for (const t of p.seasonalTasks ?? []) {
     if (t.kind === 'spray' || t.category === 'spray') continue;
     if (!CARE_TASK_KINDS.has(t.kind) && t.category !== 'prune') continue;
-    out.push(t.body ? { title: t.title, body: t.body } : { title: t.title });
+    out.push(
+      t.body ? { key: t.key, title: t.title, body: t.body } : { key: t.key, title: t.title }
+    );
   }
   for (const t of p.orchardSeasonalTasks ?? []) {
     if (t.category !== 'prune') continue;
-    out.push(t.body ? { title: t.title, body: t.body } : { title: t.title });
+    out.push(
+      t.body ? { key: t.key, title: t.title, body: t.body } : { key: t.key, title: t.title }
+    );
   }
   return out;
 }

@@ -13,7 +13,7 @@ import { eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
 import { calendarEventTitle } from '$lib/calendar/eventTitle';
-import { taskDisplayTitle } from '$lib/tasks/title';
+import { taskDisplayBody, taskDisplayTitle } from '$lib/tasks/title';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const crop = getCrop(params.id);
@@ -87,7 +87,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     cuttings,
     fertilityApps,
     soilTests,
-    tasks: tasks.map((task) => ({ ...task, title: taskDisplayTitle(task, locals.locale) })),
+    tasks: tasks.map((task) => ({
+      ...task,
+      title: taskDisplayTitle(task, locals.locale),
+      body: taskDisplayBody(task, locals.locale)
+    })),
     projected
   };
 };

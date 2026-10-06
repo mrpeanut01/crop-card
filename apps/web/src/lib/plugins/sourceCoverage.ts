@@ -224,6 +224,9 @@ export function seedingRateQuoteGaps(
 export const SEASONAL_PESTICIDE_WORDS =
   /\b(fungicides?|insecticides?|bactericides?|herbicides?|pesticides?|miticides?|nematicides?|pyrethroids?|captan|sulfur|lime-sulfur|copper|streptomycin|apogee|mancozeb|chlorothalonil|myclobutanil|strobilurins?|tank[- ]?mix(es|ed)?|spray(s|ing|ed)?|oils?)\b/i;
 export const SEASONAL_PESTICIDE_ACRONYMS = /\b(FRAC|IRAC|PHI|REI|DMI|SDHI)\b/;
+/** OP-21: a seasonal row never points at a label ("cover" and "protection"
+ *  stay allowed, since row cover and frost protection are cultural). */
+export const SEASONAL_LABEL_WORD = /\blabels?\b/i;
 
 export function seasonalTaskWordingProblems(
   crops: readonly Pick<CropPlugin, 'pluginId' | 'seasonalTasks' | 'orchardSeasonalTasks'>[]
@@ -250,7 +253,9 @@ export function seasonalTaskWordingProblems(
           ['body', row.body ?? '']
         ] as const) {
           const hit =
-            text.match(SEASONAL_PESTICIDE_WORDS) ?? text.match(SEASONAL_PESTICIDE_ACRONYMS);
+            text.match(SEASONAL_PESTICIDE_WORDS) ??
+            text.match(SEASONAL_PESTICIDE_ACRONYMS) ??
+            text.match(SEASONAL_LABEL_WORD);
           if (hit) out.push(`${at}: ${part} says "${hit[0]}"`);
         }
       }
@@ -275,6 +280,53 @@ export function stageTemplateWordingProblems(
       const text = (st.inspect ?? '').replace(STAGE_BLOOM_CAUTION, '');
       const hit = text.match(SEASONAL_PESTICIDE_WORDS) ?? text.match(SEASONAL_PESTICIDE_ACRONYMS);
       if (hit) out.push(`${family} ${st.code}: inspect says "${hit[0]}"`);
+      if (/\d/.test(st.inspect ?? '')) out.push(`${family} ${st.code}: inspect has a number`);
+    }
+  }
+  return out;
+}
+
+/** The numbers written in a piece of text: "2–3" is 2 and 3, "1/6" is 1 and
+ *  6, "1.5" stays 1.5. */
+export function numbersIn(text: string): string[] {
+  return [...text.matchAll(/\d+(?:\.\d+)?/g)].map((m) => m[0]);
+}
+
+function quoteStates(quote: string, n: string): boolean {
+  const plain = quote.replace(/(\d),(?=\d{3})/g, '$1');
+  return new RegExp(`(^|[^\\d.])${n.replace('.', '\\.')}([^\\d]|$)`).test(plain);
+}
+
+/** OP-21: a number in a seasonal row's title or body ships only with a
+ *  source entry under `seasonalTasks.<key>` or `orchardSeasonalTasks.<key>`
+ *  whose quote states every number the row writes. Returns
+ *  "pluginId field.key: problem" lines. */
+export function seasonalTaskNumberGaps(
+  crops: readonly Pick<CropPlugin, 'pluginId' | 'seasonalTasks' | 'orchardSeasonalTasks'>[],
+  sources: SourceMap
+): string[] {
+  const out: string[] = [];
+  for (const c of crops) {
+    const lists = [
+      ['seasonalTasks', c.seasonalTasks ?? []],
+      ['orchardSeasonalTasks', c.orchardSeasonalTasks ?? []]
+    ] as const;
+    for (const [field, rows] of lists) {
+      for (const row of rows as readonly { key: string; title: string; body?: string }[]) {
+        const path = `${field}.${row.key}`;
+        const numbers = [...new Set(numbersIn(`${row.title} ${row.body ?? ''}`))];
+        if (numbers.length === 0) continue;
+        const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[path]);
+        if (!entry.success) {
+          out.push(`${c.pluginId} ${path}: no source for ${numbers.join(', ')}`);
+          continue;
+        }
+        for (const n of numbers) {
+          if (!quoteStates(entry.data.quote, n)) {
+            out.push(`${c.pluginId} ${path}: quote does not state ${n}`);
+          }
+        }
+      }
     }
   }
   return out;

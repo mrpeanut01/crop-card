@@ -610,6 +610,13 @@
       "when": 1791134904144,
       "tag": "0086_remove_orchard_spray_tasks",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "6",
+      "when": 1791252997886,
+      "tag": "0087_seasonal_text_refresh",
+      "breakpoints": true
     }
   ]
 }

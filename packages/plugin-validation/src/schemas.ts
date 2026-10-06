@@ -541,15 +541,8 @@ export type HarvestMoistureGate = z.infer<typeof harvestMoistureGateSchema>;
  * could anchor to bud-break instead).
  */
 export const orchardSeasonalTaskSchema = z.object({
-  key: z.enum([
-    "dormant-oil",
-    "pre-bloom-fungicide",
-    "bloom-fungicide",
-    "post-bloom-thinning",
-    "summer-cover-spray",
-    "pre-harvest-cover-spray",
-    "harvest",
-  ]),
+  /** OP-21 (docs/design/ORCHARD_CALENDAR.md): the spray keys left with OC-1. */
+  key: z.enum(["post-bloom-thinning", "harvest"]),
   /** Days from January 1 of each season-year (positive int 1-366). */
   dayOfYear: z.number().int().min(1).max(366),
   windowDays: z.number().int().min(1).max(60).default(7),

@@ -432,12 +432,7 @@
           "key": {
             "type": "string",
             "enum": [
-              "dormant-oil",
-              "pre-bloom-fungicide",
-              "bloom-fungicide",
               "post-bloom-thinning",
-              "summer-cover-spray",
-              "pre-harvest-cover-spray",
               "harvest"
             ]
           },

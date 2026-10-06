@@ -2,7 +2,7 @@
   "pluginId": "garlic-music-hardneck",
   "type": "crop",
   "displayName": "Garlic — Music (hardneck, Porcelain)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "allium",
   "daysToMaturity": {
     "min": 240,
@@ -36,7 +36,7 @@
       "dayOfYear": 295,
       "windowDays": 21,
       "title": "Plant garlic cloves",
-      "body": "Mid-Oct → mid-Nov. Mulch 4–6 in straw after planting.",
+      "body": "Mid-Oct → mid-Nov. Mulch with a thick layer of straw after planting.",
       "category": "plant"
     },
     {

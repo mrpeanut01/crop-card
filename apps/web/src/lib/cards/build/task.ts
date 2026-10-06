@@ -7,6 +7,7 @@ import {
   type QueuedTaskAction,
   type TaskStatus
 } from '$lib/tasks/status';
+import { taskDisplayBody, taskDisplayTitle } from '$lib/tasks/title';
 import {
   cardHref,
   cardKey,
@@ -134,7 +135,8 @@ export function buildTaskCardFrom(
     });
 
   const sections: CardSection[] = [];
-  if (task.body?.trim()) sections.push({ title: tr('cards.notes'), items: [task.body.trim()] });
+  const notes = taskDisplayBody(task, opts.prefs.locale)?.trim();
+  if (notes) sections.push({ title: tr('cards.notes'), items: [notes] });
   if (ctx.before?.length) sections.push({ title: tr('cards.task.kind.pre'), items: ctx.before });
   if (ctx.after?.length) sections.push({ title: tr('cards.task.kind.post'), items: ctx.after });
 
@@ -143,7 +145,7 @@ export function buildTaskCardFrom(
     kind: 'task',
     key,
     kicker,
-    title: task.title,
+    title: taskDisplayTitle(task, opts.prefs.locale),
     facts,
     sections,
     asOf: ctx.asOf,

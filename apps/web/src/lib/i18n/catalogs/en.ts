@@ -16,6 +16,7 @@ import { enNotify } from './en/notify';
 import { enAmend } from './en/amend';
 import { enApierrB } from './en/apierrB';
 import { enApierrA } from './en/apierrA';
+import { enSeasonal } from './en/seasonal';
 
 /**
  * The English catalog is the source of every message key (F5-2). Keys are
@@ -41,7 +42,8 @@ export const EN_PARTS = [
   enNotify,
   enAmend,
   enApierrB,
-  enApierrA
+  enApierrA,
+  enSeasonal
 ] as const;
 
 export const en = {
@@ -62,7 +64,8 @@ export const en = {
   ...enNotify,
   ...enAmend,
   ...enApierrB,
-  ...enApierrA
+  ...enApierrA,
+  ...enSeasonal
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -17,6 +17,7 @@ import {
   grazingFactPaths,
   missingWithdrawals,
   pestModelFactPaths,
+  seasonalTaskNumberGaps,
   seasonalTaskWordingProblems,
   stageTemplateWordingProblems,
   sourceEntrySchema,
@@ -251,6 +252,13 @@ describe('OC-1 crop seasonal tasks carry no spray advice', () => {
     expect(
       stageTemplateWordingProblems(PERENNIAL_DAYOFYEAR_TEMPLATES),
       'stage hints may not name sprays or pesticides (docs/design/ORCHARD_CALENDAR.md OC-1)'
+    ).toEqual([]);
+  });
+
+  it('every number in a seasonal row is quoted from its source (OP-20, OP-21)', () => {
+    expect(
+      seasonalTaskNumberGaps(library.crops(), cropSources),
+      'quote the number under seasonalTasks.<key> or orchardSeasonalTasks.<key> in crop-data-sources.json, or drop it'
     ).toEqual([]);
   });
 

@@ -2,7 +2,7 @@
   "pluginId": "grape-concord",
   "type": "crop",
   "displayName": "Grape — Concord (American)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "cropFamily": "vine-fruit",
   "preHarvestIntervalDays": 14,
   "daysToMaturity": {
@@ -23,7 +23,7 @@
       "dayOfYear": 60,
       "windowDays": 30,
       "title": "Winter pruning (dormant)",
-      "body": "Cane prune to 4-arm Kniffin or umbrella Kniffin. 80% of last year's wood removed.",
+      "body": "Cane prune to four-arm Kniffin or umbrella Kniffin. Remove most of last year's wood.",
       "category": "prune"
     },
     {
@@ -31,7 +31,7 @@
       "kind": "thinning",
       "dayOfYear": 130,
       "windowDays": 21,
-      "title": "Shoot thinning at 6 in",
+      "title": "Shoot thinning at 5 to 7 in",
       "body": "Remove non-count shoots and weak shoots from cordon to balance crop.",
       "category": "prune"
     },
@@ -50,7 +50,7 @@
       "dayOfYear": 250,
       "windowDays": 28,
       "title": "Concord harvest",
-      "body": "Brix ≥ 16 + characteristic foxy aroma. Single-pass mechanical or hand.",
+      "body": "At least 16° Brix (the juice processor minimum) + characteristic foxy aroma. Single-pass mechanical or hand.",
       "category": "harvest"
     }
   ],

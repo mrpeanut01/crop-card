@@ -2,7 +2,7 @@
   "pluginId": "strawberry-jewel",
   "type": "crop",
   "displayName": "Strawberry — Jewel (June-bearing)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "small-fruit",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
@@ -23,7 +23,7 @@
       "dayOfYear": 195,
       "windowDays": 21,
       "title": "Renovate matted rows post-harvest",
-      "body": "Mow tops, narrow rows to 12 in, fertilize, irrigate. Within 1 wk of last harvest.",
+      "body": "Within 1 week of the last harvest, mow off the leaves; then narrow the rows, fertilize and irrigate.",
       "category": "till"
     },
     {
@@ -32,7 +32,7 @@
       "dayOfYear": 335,
       "windowDays": 21,
       "title": "Apply straw winter mulch",
-      "body": "3 in straw after 2–3 hard frosts but before sustained cold.",
+      "body": "Spread straw over the plants after the first freezing weather in fall, before sustained cold.",
       "category": "fertilize"
     },
     {
@@ -50,7 +50,7 @@
       "dayOfYear": 105,
       "windowDays": 30,
       "title": "Bloom frost watch",
-      "body": "Open blossoms freeze at 30 °F; row cover + irrigation can save a crop.",
+      "body": "Open blossoms are damaged at 30 °F. Cover rows on frost nights. Overhead irrigation protects only while water runs continuously until temperatures rise above freezing; stopping too early can do more damage than not irrigating.",
       "category": "scout"
     }
   ],

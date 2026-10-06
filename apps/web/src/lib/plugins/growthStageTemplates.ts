@@ -700,7 +700,7 @@ const perennialVineFruit: PerennialStageTemplate = {
       dayOfYearStart: 1,
       dayOfYearEnd: 60,
       bodyKind: 'dormant',
-      inspect: 'Cane pruning window (Concord = 4-arm Kniffin).'
+      inspect: 'Cane pruning window.'
     },
     {
       code: 'bud-break',
@@ -738,7 +738,7 @@ const perennialVineFruit: PerennialStageTemplate = {
       dayOfYearStart: 240,
       dayOfYearEnd: 290,
       bodyKind: 'ripening',
-      inspect: 'Brix ≥16 + characteristic foxy aroma (Concord).'
+      inspect: 'Sugar rises; characteristic foxy aroma (Concord).'
     }
   ],
   harvestStageCode: 'harvest',

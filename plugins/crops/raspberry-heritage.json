@@ -2,7 +2,7 @@
   "pluginId": "raspberry-heritage",
   "type": "crop",
   "displayName": "Raspberry — Heritage (red, primocane-fruiting)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "cropFamily": "bramble",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
@@ -23,7 +23,7 @@
       "dayOfYear": 60,
       "windowDays": 30,
       "title": "Mow primocane raspberry to ground (winter)",
-      "body": "Single-crop management: cut all canes 1 in tall after dormancy; new canes will fruit Aug-Oct.",
+      "body": "Single-crop management: cut all canes to the ground after dormancy; new canes will fruit Aug-Oct.",
       "category": "till"
     },
     {
@@ -41,7 +41,7 @@
       "dayOfYear": 225,
       "windowDays": 60,
       "title": "Fall raspberry harvest",
-      "body": "Pick every 2–3 d. Cool berries to 32–34 °F within 1 h.",
+      "body": "Pick ripe berries often. Cool the fruit as soon as possible after harvest.",
       "category": "harvest"
     }
   ],

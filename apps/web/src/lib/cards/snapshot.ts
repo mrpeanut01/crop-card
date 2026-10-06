@@ -251,6 +251,8 @@ export interface SnapshotTreeSizeClass {
 }
 
 export interface SnapshotCareTask {
+  /** The plugin row key, so the Care Guide can show the row in the viewer's language. */
+  key?: string;
   title: string;
   body?: string;
 }

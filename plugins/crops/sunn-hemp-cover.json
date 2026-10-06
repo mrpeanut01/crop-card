@@ -8,13 +8,11 @@
     "min": 60,
     "max": 90
   },
-  "defaultRowSpacingInches": 7,
   "harvestIndicators": [
     "Incorporate at early bloom, after 2 to 3 months of growth"
   ],
   "plantingGuide": {
-    "soilTempMinF": 65,
-    "recommendedLbsPerAcre": 30
+    "soilTempMinF": 65
   },
   "notes": "Tropical legume — heat-loving N-fixer. Excellent summer rotation crop in vegetable systems. Frost-kills.",
   "harvestStyle": "cover-crop-termination",

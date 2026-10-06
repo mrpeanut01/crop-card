@@ -183,8 +183,8 @@ function numberPattern(n: number): string {
 }
 
 /** A seeding rate range must appear in its quote ("60-120", "60–120",
- *  "60 to 120", "6- to 7-inch", "25,000 to 33,000"; one figure when
- *  min = max), and a seed basis must match the quote: `pls` names pure live
+ *  "60 to 120", "6- to 7-inch", "7-inch to 8-inch", "25,000 to 33,000"; one
+ *  figure when min = max), and a seed basis must match the quote: `pls` names pure live
  *  seed and `bulk` never does. Returns "pluginId: problem" lines. */
 export function seedingRateQuoteGaps(
   crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'plantingGuide'>>,
@@ -203,7 +203,7 @@ export function seedingRateQuoteGaps(
       const body =
         r.min === r.max
           ? numberPattern(r.min)
-          : `${numberPattern(r.min)}-?\\s*(?:-|–|—|to)\\s*${numberPattern(r.max)}`;
+          : `${numberPattern(r.min)}(?:-inch)?-?\\s*(?:-|–|—|to)\\s*${numberPattern(r.max)}`;
       if (!new RegExp(`(^|[^\\d.,])${body}([^\\d]|$)`).test(entry.data.quote)) {
         gaps.push(`${c.pluginId}: seedingRate.${key} quote does not state ${r.min}-${r.max}`);
       }

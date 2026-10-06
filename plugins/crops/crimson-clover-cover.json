@@ -8,10 +8,8 @@
     "min": 180,
     "max": 240
   },
-  "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "soilTempMinF": 50,
-    "recommendedLbsPerAcre": 22,
     "seedingRate": {
       "drilledLbsPerAcre": {
         "min": 15,

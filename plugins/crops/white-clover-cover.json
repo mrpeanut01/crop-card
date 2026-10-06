@@ -8,13 +8,11 @@
     "min": 90,
     "max": 365
   },
-  "defaultRowSpacingInches": 7,
   "harvestIndicators": [
     "Kill by thoroughly uprooting and incorporating it (plow, field cultivate, undercut or rotary till)",
     "Close mowing, or partial tillage that leaves roots undisturbed, only suppresses it"
   ],
   "plantingGuide": {
-    "recommendedLbsPerAcre": 4,
     "seedingRate": {
       "drilledLbsPerAcre": {
         "min": 3,

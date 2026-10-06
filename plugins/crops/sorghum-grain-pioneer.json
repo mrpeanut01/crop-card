@@ -12,7 +12,13 @@
   "plantingGuide": {
     "soilTempMinF": 65,
     "rowSpacingIn": 30,
-    "recommendedLbsPerAcre": 8
+    "seedingRate": {
+      "seedsPerAcre": {
+        "min": 60000,
+        "max": 80000
+      },
+      "seedBasis": "pls"
+    }
   },
   "harvestIndicators": [
     "Black layer at seed base",

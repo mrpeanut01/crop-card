@@ -197,12 +197,6 @@ export function careTasksOf(p: CropPlugin): SnapshotCareTask[] {
       t.body ? { key: t.key, title: t.title, body: t.body } : { key: t.key, title: t.title }
     );
   }
-  for (const t of p.orchardSeasonalTasks ?? []) {
-    if (t.category !== 'prune') continue;
-    out.push(
-      t.body ? { key: t.key, title: t.title, body: t.body } : { key: t.key, title: t.title }
-    );
-  }
   return out;
 }
 

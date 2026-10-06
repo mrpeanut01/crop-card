@@ -229,14 +229,11 @@ export const SEASONAL_PESTICIDE_ACRONYMS = /\b(FRAC|IRAC|PHI|REI|DMI|SDHI)\b/;
 export const SEASONAL_LABEL_WORD = /\blabels?\b/i;
 
 export function seasonalTaskWordingProblems(
-  crops: readonly Pick<CropPlugin, 'pluginId' | 'seasonalTasks' | 'orchardSeasonalTasks'>[]
+  crops: readonly Pick<CropPlugin, 'pluginId' | 'seasonalTasks'>[]
 ): string[] {
   const out: string[] = [];
   for (const c of crops) {
-    const lists = [
-      ['seasonalTasks', c.seasonalTasks ?? []],
-      ['orchardSeasonalTasks', c.orchardSeasonalTasks ?? []]
-    ] as const;
+    const lists = [['seasonalTasks', c.seasonalTasks ?? []]] as const;
     for (const [field, rows] of lists) {
       for (const row of rows as readonly {
         key: string;
@@ -298,19 +295,16 @@ function quoteStates(quote: string, n: string): boolean {
 }
 
 /** OP-21: a number in a seasonal row's title or body ships only with a
- *  source entry under `seasonalTasks.<key>` or `orchardSeasonalTasks.<key>`
+ *  source entry under `seasonalTasks.<key>`
  *  whose quote states every number the row writes. Returns
  *  "pluginId field.key: problem" lines. */
 export function seasonalTaskNumberGaps(
-  crops: readonly Pick<CropPlugin, 'pluginId' | 'seasonalTasks' | 'orchardSeasonalTasks'>[],
+  crops: readonly Pick<CropPlugin, 'pluginId' | 'seasonalTasks'>[],
   sources: SourceMap
 ): string[] {
   const out: string[] = [];
   for (const c of crops) {
-    const lists = [
-      ['seasonalTasks', c.seasonalTasks ?? []],
-      ['orchardSeasonalTasks', c.orchardSeasonalTasks ?? []]
-    ] as const;
+    const lists = [['seasonalTasks', c.seasonalTasks ?? []]] as const;
     for (const [field, rows] of lists) {
       for (const row of rows as readonly { key: string; title: string; body?: string }[]) {
         const path = `${field}.${row.key}`;

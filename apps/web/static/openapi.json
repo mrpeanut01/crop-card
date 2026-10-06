@@ -19384,6 +19384,670 @@
         }
       }
     },
+    "/api/orchard/plantings/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Planting (crop) id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Orchard calendar summary for a planting",
+        "description": "Any member of the farm. Which seasonal calendar guide the planting's Area uses and why (`manual` for the owner's choice, `data` for the Area kind or farm profile), whether the crop has a calendar (`calendar`), had one the loader dropped (`out-of-date`), has none yet (`none`) or never shows one (`none-wanted`), and the block's stage mark for this year. Display only; it never gates a record.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The summary.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "cropId",
+                    "status",
+                    "audience",
+                    "calendar",
+                    "stage",
+                    "mark",
+                    "href"
+                  ],
+                  "properties": {
+                    "cropId": {
+                      "type": "string"
+                    },
+                    "cropPluginId": {
+                      "type": "string"
+                    },
+                    "cropName": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "calendar",
+                        "out-of-date",
+                        "none",
+                        "none-wanted"
+                      ]
+                    },
+                    "audience": {
+                      "type": "object"
+                    },
+                    "calendar": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "stage": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "mark": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "href": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Planting not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orchard/plantings/{id}/stage": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Planting (crop) id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "put": {
+        "summary": "Mark or clear the orchard stage",
+        "description": "Owners and helpers; inspectors are read-only. Marks the stage the planting's block is at for this farm-local year (`manual`), or clears it with `stageId: null`. A pink, white bud or bloom mark only ever starts the insecticide form's bloom answer at in bloom; nothing here can say not in bloom. A stage the calendar does not have answers 400 `UNKNOWN_STAGE`; a crop with no calendar answers 409 `NO_CALENDAR`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "stageId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "stageId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The summary after the change.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "cropId",
+                    "status",
+                    "audience",
+                    "calendar",
+                    "stage",
+                    "mark",
+                    "href"
+                  ],
+                  "properties": {
+                    "cropId": {
+                      "type": "string"
+                    },
+                    "cropPluginId": {
+                      "type": "string"
+                    },
+                    "cropName": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "calendar",
+                        "out-of-date",
+                        "none",
+                        "none-wanted"
+                      ]
+                    },
+                    "audience": {
+                      "type": "object"
+                    },
+                    "calendar": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "stage": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "mark": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "href": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or `UNKNOWN_STAGE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Planting not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`NO_CALENDAR`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orchard/plantings/{id}/scout-task": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Planting (crop) id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Schedule a scouting task from a calendar window",
+        "description": "Owners and helpers. Creates one task for today on the planting's block, category `scout` (or `prune` for cultural and sanitation windows), titled by the app (\"Scout: <targets>\" or \"Check: <stage>\"). Never a spray task and never the window note. A second request for the same window and year answers 200 with `alreadyScheduled: true`. A window that is not shown (for example a risk window in an organic season) answers 400 `UNKNOWN_WINDOW`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "windowId": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+                  }
+                },
+                "required": [
+                  "windowId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Already scheduled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "task",
+                    "alreadyScheduled"
+                  ],
+                  "properties": {
+                    "task": {
+                      "type": "object"
+                    },
+                    "alreadyScheduled": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "task"
+                  ],
+                  "properties": {
+                    "task": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or `UNKNOWN_WINDOW`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Planting not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`NO_CALENDAR`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orchard/areas/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Area id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Orchard calendar summaries for an Area",
+        "description": "Any member of the farm. The orchard calendar summary of every current planting in the Area that has, or should have, a seasonal calendar.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Summaries.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "areaId",
+                    "plantings"
+                  ],
+                  "properties": {
+                    "areaId": {
+                      "type": "string"
+                    },
+                    "plantings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "cropId",
+                          "status",
+                          "audience",
+                          "calendar",
+                          "stage",
+                          "mark",
+                          "href"
+                        ],
+                        "properties": {
+                          "cropId": {
+                            "type": "string"
+                          },
+                          "cropPluginId": {
+                            "type": "string"
+                          },
+                          "cropName": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "calendar",
+                              "out-of-date",
+                              "none",
+                              "none-wanted"
+                            ]
+                          },
+                          "audience": {
+                            "type": "object"
+                          },
+                          "calendar": {
+                            "type": [
+                              "object",
+                              "null"
+                            ]
+                          },
+                          "stage": {
+                            "type": [
+                              "object",
+                              "null"
+                            ]
+                          },
+                          "mark": {
+                            "type": [
+                              "object",
+                              "null"
+                            ]
+                          },
+                          "href": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Area not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orchard/areas/{id}/audience": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Area id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "put": {
+        "summary": "Choose an Area's orchard calendar guide",
+        "description": "Owner only. `home` or `commercial` overrides the automatic guide for the Area (`manual`); `null` goes back to automatic. Choosing `commercial` needs `confirmCommercial: true`, since that guide is written for commercial orchards; without it the answer is 400 `CONFIRM_COMMERCIAL`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "audience": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "home",
+                          "commercial"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "confirmCommercial": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "audience"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "areaId",
+                    "audience"
+                  ],
+                  "properties": {
+                    "areaId": {
+                      "type": "string"
+                    },
+                    "audience": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or `CONFIRM_COMMERCIAL`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Area not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/finance/entries": {
       "get": {
         "summary": "List money entries for a season",

@@ -23,6 +23,7 @@
   import FlockQuickActions from '$lib/components/animals/FlockQuickActions.svelte';
   import SeedStartPanel from '$lib/components/cards/SeedStartPanel.svelte';
   import PlantingHours from '$lib/components/cards/PlantingHours.svelte';
+  import OrchardPanel from '$lib/components/orchard/OrchardPanel.svelte';
   import TaskTimer from '$lib/components/tasks/TaskTimer.svelte';
   import { isClosedStatus, type TaskStatus } from '$lib/tasks/status';
 
@@ -259,6 +260,7 @@
     {#if card.kind === 'planting' && snapshot}
       <SeedStartPanel {snapshot} plantingId={key.slice(key.indexOf('_') + 1)} {role} />
       <PlantingHours plantingId={key.slice(key.indexOf('_') + 1)} {role} />
+      <OrchardPanel cropId={key.slice(key.indexOf('_') + 1)} />
     {/if}
     <CareGuideList cards={careCards} {prefs} {now} />
     {#key key}

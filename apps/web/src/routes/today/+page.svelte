@@ -543,7 +543,6 @@
     'harvest-window': 'today.event.harvestWindow',
     planting: 'today.event.planting',
     'cover-termination': 'today.event.cover',
-    'orchard-task': 'today.event.orchard',
     'seasonal-task': 'today.event.seasonal',
     'curing-progress': 'today.event.curing',
     'curing-ready': 'today.event.curing',
@@ -591,15 +590,6 @@
           href: `/spray?block=${encodeURIComponent(e.blockId)}&windowStage=BURNDOWN`,
           label: 'today.cta.burndown'
         };
-      case 'orchard-task': {
-        const taskKey = (e.detail?.taskKey as string | undefined) ?? '';
-        if (taskKey === 'harvest') return { href: '/harvest', label: 'today.cta.harvest' };
-        if (/spray|fungicide|oil/.test(taskKey)) {
-          const params = new URLSearchParams({ block: e.blockId });
-          return { href: `/spray?${params.toString()}`, label: 'today.cta.orchardSpray' };
-        }
-        return { href: `/plan#block-${e.blockId}`, label: 'today.cta.blockPlan' };
-      }
     }
     return null;
   }

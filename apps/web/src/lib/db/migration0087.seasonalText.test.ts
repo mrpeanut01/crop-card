@@ -6,6 +6,8 @@ import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { describe, expect, it } from 'vitest';
+import { en } from '$lib/i18n/catalogs/en';
+import { RETIRED_SEASONAL_KEYS } from '$lib/i18n/seasonalTaskText';
 import {
   textRefreshMigrationSql,
   validateTextRefreshRows,
@@ -197,9 +199,13 @@ describe(`migration ${TAG}`, () => {
         string,
         { key: string; title: string; body?: string }[] | undefined
       >;
-      const row = [...(plugin.seasonalTasks ?? []), ...(plugin.orchardSeasonalTasks ?? [])].find(
-        (x) => x.key === rowKey
-      );
+      const retiredTitle = `seasonal.${pluginId}.${rowKey}.title`;
+      const row = RETIRED_SEASONAL_KEYS.includes(retiredTitle)
+        ? {
+            title: (en as Record<string, string>)[retiredTitle],
+            body: (en as Record<string, string>)[`seasonal.${pluginId}.${rowKey}.body`]
+          }
+        : (plugin.seasonalTasks ?? []).find((x) => x.key === rowKey);
       expect(row, key).toBeDefined();
       shipped.set(key, row!);
       expect(r.newTitle, key).toBe(row!.title);

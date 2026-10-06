@@ -1,5 +1,5 @@
 /** Display-only seasonal task text (OP-21, docs/design/ORCHARD_CALENDAR.md).
- *  A crop plugin's `seasonalTasks` / `orchardSeasonalTasks` rows are English
+ *  A crop plugin's `seasonalTasks` rows are English
  *  data, and a task made from one stores that English. The English catalog
  *  holds the shipped text of every row under `seasonal.<pluginId>.<rowKey>.
  *  <title|body>`; the viewer's language replaces a title or body only while
@@ -11,6 +11,14 @@ import { en } from './catalogs/en';
 import { cropDisplayNameByEnglish } from './cropName';
 
 export type SeasonalPart = 'title' | 'body';
+
+/** Rows a plugin no longer ships whose text stays in the catalog, so tasks
+ *  a farmer already scheduled from them still read in their language
+ *  (OP-27: apple's harvest row left with `orchardSeasonalTasks`). */
+export const RETIRED_SEASONAL_KEYS: readonly string[] = [
+  'seasonal.apple-orchard.harvest.title',
+  'seasonal.apple-orchard.harvest.body'
+];
 
 const PREFIX = 'seasonal.';
 const SEP = ' — ';

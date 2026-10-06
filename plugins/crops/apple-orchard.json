@@ -2,7 +2,7 @@
   "pluginId": "apple-orchard",
   "type": "crop",
   "displayName": "Apple (Orchard)",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "cropFamily": "orchard",
   "harvestIndicators": [
     "Variety-specific color break",
@@ -26,22 +26,15 @@
     },
     "storageLocation": "Cold storage; high humidity"
   },
-  "orchardSeasonalTasks": [
+  "seasonalTasks": [
     {
       "key": "post-bloom-thinning",
+      "kind": "thinning",
       "dayOfYear": 140,
       "windowDays": 14,
       "title": "Hand fruit thinning",
       "body": "Thin to one fruit per cluster for size + return-bloom.",
       "category": "prune"
-    },
-    {
-      "key": "harvest",
-      "dayOfYear": 270,
-      "windowDays": 30,
-      "title": "Apple harvest window",
-      "body": "Pick by the harvest cues in this crop's Care Guide.",
-      "category": "harvest"
     }
   ],
   "notes": "Perennial. Treat orchard boundary as a no-spray buffer for residual corn/pumpkin herbicides.",

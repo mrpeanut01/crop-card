@@ -16,6 +16,9 @@
     sunriseLabel: string | null;
     /** Advisory only — other blocks in foraging range; never blocks. */
     nearby?: NearbyPollinatorAdvisory;
+    /** A pink or bloom stage marked on the orchard calendar (OC-3). It only
+     *  ever starts the answer at in bloom; the operator can still change it. */
+    stageMark?: { stage: string; markedOn: string } | null;
   }
 
   let {
@@ -26,7 +29,8 @@
     hasPluginData,
     sunsetLabel,
     sunriseLabel,
-    nearby
+    nearby,
+    stageMark = null
   }: Props = $props();
 
   const needsForagerAttestation = $derived(
@@ -55,6 +59,13 @@
 
 <fieldset class="bloom" lang="en" data-english-only="safety">
   <legend>Is the crop or any flowering weed in bloom in this block?</legend>
+  {#if stageMark}
+    <p class="hint" data-testid="pollinator-stage-mark">
+      <Provenance source="manual" detail="orchard stage mark" compact />
+      Marked {stageMark.stage} on {stageMark.markedOn} on the seasonal calendar, so this starts at in
+      bloom.
+    </p>
+  {/if}
   {#if bloomingCrops.length > 0}
     <p class="hint">
       <Provenance source="plugin" detail="crop bloom window" compact />

@@ -2,6 +2,7 @@
   import { invalidateAll } from '$app/navigation';
   import Modal from '$lib/components/ui/Modal.svelte';
   import CardView from '$lib/components/cards/CardView.svelte';
+  import OrchardPanel from '$lib/components/orchard/OrchardPanel.svelte';
   import AreaDetailsFields from './AreaDetailsFields.svelte';
   import { buildAreaCard } from '$lib/cards/build';
   import { withSnapshotCarryover } from '$lib/cards/build/area';
@@ -301,6 +302,7 @@
           </form>
         {:else}
           {#if card}<CardView {card} {prefs} />{/if}
+          {#if open}<OrchardPanel areaId={area.id} />{/if}
           {#if housing && housing.total > 0}
             <a class="empty-action" href="/animals" data-testid="area-animals-link">
               {petsLayout ? tr('farm.sheet.openPets') : tr('farm.sheet.openAnimals')}

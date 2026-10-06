@@ -5,6 +5,8 @@ import {
   seasonalTitleWithCrop
 } from '$lib/i18n/seasonalTaskText';
 import { seedStartStepOf } from '$lib/schedule/seedStart';
+import { orchardScoutTitleIn } from '$lib/orchard/appLines';
+import { parseScoutTaskKey } from '$lib/orchard/calendar';
 
 const SOW = /^Sow (.+) indoors$/;
 const HARDEN = /^Start hardening off (.+)$/;
@@ -39,6 +41,7 @@ export function taskDisplayTitle(task: TaskText, locale?: string | null): string
   const row = SEASONAL_KEY.exec(key);
   if (row) return seasonalRowText(row[1], row[2], 'title', task.title, locale);
   if (DERIVED_SEASONAL.test(key)) return seasonalTitleWithCrop(task.title, locale);
+  if (parseScoutTaskKey(key)) return orchardScoutTitleIn(task.title, locale);
   return task.title;
 }
 

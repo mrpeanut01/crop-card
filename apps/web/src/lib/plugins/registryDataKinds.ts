@@ -181,6 +181,39 @@ export interface Phase32DataKinds {
    *  same audience, or refused because another of the same edition does
    *  (ruling OP-3). */
   supersededCalendars: { pluginId: string; reason: string }[];
+  /** Calendars the loader dropped (an expired edition, a refused file, or
+   *  two of one edition), by the raw crops and audience they named, so a
+   *  crop can read "This crop's seasonal calendar is out of date" (OP-28).
+   *  Nothing else of a dropped file is kept. */
+  droppedCalendars: DroppedCalendar[];
+}
+
+export interface DroppedCalendar {
+  file: string | null;
+  pluginId: string | null;
+  audience: 'commercial' | 'home' | null;
+  hostCropPluginIds: string[];
+}
+
+/** The crops and audience a dropped calendar file named, read only when
+ *  they have the right shape; anything else names no crop. */
+export function droppedCalendarHosts(raw: unknown, file: string | null): DroppedCalendar {
+  const r =
+    raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+  const ids = Array.isArray(r.hostCropPluginIds)
+    ? r.hostCropPluginIds.filter(
+        (x): x is string => typeof x === 'string' && /^[a-z0-9][a-z0-9-]{0,63}$/.test(x)
+      )
+    : [];
+  const audience = r.audience === 'commercial' || r.audience === 'home' ? r.audience : null;
+  const pluginId = typeof r.pluginId === 'string' ? r.pluginId : null;
+  return {
+    file,
+    pluginId,
+    audience,
+    hostCropPluginIds:
+      Array.isArray(r.hostCropPluginIds) && ids.length === r.hostCropPluginIds.length ? ids : []
+  };
 }
 
 export interface DataKindLoadOptions {
@@ -244,7 +277,33 @@ export async function loadPhase32DataKinds(
   const orchardCalendars = new DataKindRegistry('orchard calendar', (raw) =>
     validateOrchardCalendar(raw, calendarContext)
   );
-  await loadInto(orchardCalendars, path.join(pluginsRoot, ORCHARD_CALENDARS_DIR), failed);
+  const calendarFailed: DataKindFailure[] = [];
+  const calendarDir = path.join(pluginsRoot, ORCHARD_CALENDARS_DIR);
+  await loadInto(orchardCalendars, calendarDir, calendarFailed);
+  failed.push(...calendarFailed);
+  const droppedCalendars: DroppedCalendar[] = [];
+  for (const f of calendarFailed) {
+    try {
+      droppedCalendars.push(
+        droppedCalendarHosts(JSON.parse(await readFile(f.file, 'utf-8')), f.file)
+      );
+    } catch {
+      continue;
+    }
+  }
+  const before = new Map(orchardCalendars.all().map((c) => [c.pluginId, c]));
   const supersededCalendars = resolveCalendarConflicts(orchardCalendars);
-  return { species, animalHealth, pestModels, orchardCalendars, failed, supersededCalendars };
+  for (const s of supersededCalendars) {
+    const c = before.get(s.pluginId);
+    if (c && s.reason.startsWith('refused')) droppedCalendars.push(droppedCalendarHosts(c, null));
+  }
+  return {
+    species,
+    animalHealth,
+    pestModels,
+    orchardCalendars,
+    failed,
+    supersededCalendars,
+    droppedCalendars
+  };
 }

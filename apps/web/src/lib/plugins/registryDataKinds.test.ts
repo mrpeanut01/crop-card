@@ -18,6 +18,7 @@ import { loadPluginsFromDirectory } from './loader';
 import { PluginRegistrationError, PluginRegistry } from './registry';
 import {
   DataKindRegistry,
+  droppedCalendarHosts,
   loadPhase32DataKinds,
   validateAnimalHealth,
   validateOrchardCalendar,
@@ -341,6 +342,48 @@ describe('loadPhase32DataKinds', () => {
         /replace the file with the current edition/
       );
     });
+  });
+
+  it('remembers which crops a dropped calendar named, and nothing else (OP-28)', async () => {
+    await withTmp(async (tmp) => {
+      await mkdir(path.join(tmp, 'orchard-calendars'));
+      await writeFile(
+        path.join(tmp, 'orchard-calendars', 'c.json'),
+        JSON.stringify(FIXTURE_ORCHARD_CALENDAR)
+      );
+      await writeFile(path.join(tmp, 'orchard-calendars', 'broken.json'), '{ not json');
+      const kinds = await loadPhase32DataKinds(tmp, {
+        crops: FIXTURE_ORCHARD_CROPS,
+        now: new Date(Date.UTC(FIXTURE_ORCHARD_EDITION_YEAR + 2, 0, 1))
+      });
+      expect(kinds.droppedCalendars).toEqual([
+        {
+          file: path.join(tmp, 'orchard-calendars', 'c.json'),
+          pluginId: FIXTURE_ORCHARD_CALENDAR.pluginId,
+          audience: FIXTURE_ORCHARD_CALENDAR.audience,
+          hostCropPluginIds: FIXTURE_ORCHARD_CALENDAR.hostCropPluginIds
+        }
+      ]);
+      expect(Object.keys(kinds.droppedCalendars[0]).sort()).toEqual([
+        'audience',
+        'file',
+        'hostCropPluginIds',
+        'pluginId'
+      ]);
+    });
+  });
+
+  it('a malformed dropped calendar names no crop', () => {
+    expect(droppedCalendarHosts({ hostCropPluginIds: ['ok', 7], audience: 'x' }, null)).toEqual({
+      file: null,
+      pluginId: null,
+      audience: null,
+      hostCropPluginIds: []
+    });
+    expect(droppedCalendarHosts('nope', null).hostCropPluginIds).toEqual([]);
+    expect(droppedCalendarHosts({ hostCropPluginIds: ['Bad Id'] }, null).hostCropPluginIds).toEqual(
+      []
+    );
   });
 
   it('keeps the library loader away from the Phase 32 folders', async () => {

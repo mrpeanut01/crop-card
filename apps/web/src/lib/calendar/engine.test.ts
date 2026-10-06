@@ -207,7 +207,7 @@ describe('FR-18 cover-crop termination tied to next cash-crop date', () => {
   });
 });
 
-describe('FR-10 orchard seasonal tasks', () => {
+describe('OP-27 apple thinning is a seasonal row', () => {
   const apple: CropPlugin = {
     pluginId: 'apple',
     type: 'crop',
@@ -216,32 +216,21 @@ describe('FR-10 orchard seasonal tasks', () => {
     cropFamily: 'orchard',
     harvestStyle: 'tree-fruit-multi-pick',
     bloomWindow: { monthsOfYear: [4, 5], beeAttractive: true },
-    orchardSeasonalTasks: [
+    seasonalTasks: [
       {
         key: 'post-bloom-thinning',
+        kind: 'thinning',
         dayOfYear: 140,
         windowDays: 14,
         title: 'Hand fruit thinning'
-      },
-      {
-        key: 'harvest',
-        dayOfYear: 270,
-        windowDays: 30,
-        title: 'Apple harvest window'
       }
     ]
   };
 
-  it('emits one orchard-task per plugin task per season-year (3 years)', () => {
+  it('emits one seasonal-task per season-year (3 years) and no orchard-task kind', () => {
     const events = eventsForPlanting(planting(apple, Date.UTC(2026, 0, 15)), apple);
-    const orchard = events.filter((e) => e.kind === 'orchard-task');
-    // 2 task templates × 3 years = 6 events
-    expect(orchard).toHaveLength(6);
-  });
-
-  it('skips non-orchard crops', () => {
-    const events = eventsForPlanting(planting(corn, Date.UTC(2026, 4, 5)), corn);
-    expect(events.some((e) => e.kind === 'orchard-task')).toBe(false);
+    expect(events.filter((e) => e.kind === 'seasonal-task')).toHaveLength(3);
+    expect(events.some((e) => (e.kind as string) === 'orchard-task')).toBe(false);
   });
 });
 

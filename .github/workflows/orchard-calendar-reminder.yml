@@ -1,0 +1,48 @@
+name: orchard-calendar-reminder
+
+# OP-28 (docs/design/ORCHARD_CALENDAR.md): the orchard calendars in
+# plugins/orchard-calendars/ follow guides that are re-issued every year
+# (VCE 456-419 and VCE 456-018). Each 15 January this opens one reminder
+# issue for the maintainer to replace them with the new editions, worked by
+# a local agent and signed off by the owner. The loader keeps an edition only
+# through the end of the following year; after that the crop reads "This
+# crop's seasonal calendar is out of date".
+on:
+  schedule:
+    - cron: "0 13 15 1 *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open the reminder issue (once a year)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          year="$(date -u +%Y)"
+          title="Replace the orchard calendar editions for ${year}"
+          if gh issue list --repo "$REPO" --state open --search "\"${title}\" in:title" --json title --jq '.[].title' | grep -Fxq "$title"; then
+            echo "An open issue already says: ${title}"
+            exit 0
+          fi
+          body="$(cat <<EOF
+          The orchard calendars in \`plugins/orchard-calendars/\` follow guides that are re-issued every year (ruling OP-28 in \`docs/design/ORCHARD_CALENDAR.md\`). Replace each one with the ${year} edition:
+
+          - [ ] Check whether VCE 456-419 (2026 Spray Bulletin for Commercial Tree Fruit Growers) and VCE 456-018 (Pest Management Guide: Home Grounds and Animals) have a ${year} edition.
+          - [ ] For each calendar, write the new file (new \`pluginId\`, \`edition\` and \`guide\`) in place of the old one, as \`plugins/orchard-calendars/README.md\` says. Do not keep two editions side by side.
+          - [ ] Re-check every quote against the new guide with \`apps/web/scripts/check-orchard-quotes.mjs\` and update \`apps/web/scripts/orchard-calendar-sources.json\`.
+          - [ ] Update the English and Spanish calendar text in \`apps/web/src/lib/i18n/catalogs/{en,es}/orchard.ts\` and the app-owned bee lines in \`apps/web/src/lib/orchard/appLines.ts\` (the orchard calendar gates fail until they match).
+          - [ ] Owner sign-off on the new calendars.
+
+          Until a new edition ships, last year's calendar keeps showing until the end of ${year}; after that the crop reads "This crop's seasonal calendar is out of date".
+          EOF
+          )"
+          gh issue create --repo "$REPO" --title "$title" --body "$body"

@@ -1,5 +1,5 @@
 /** Crop seasonal task rows (OP-21, docs/design/ORCHARD_CALENDAR.md): the
- *  shipped English of every `seasonalTasks` / `orchardSeasonalTasks` row,
+ *  shipped English of every `seasonalTasks` row (plus `RETIRED_SEASONAL_KEYS`),
  *  keyed `seasonal.<pluginId>.<rowKey>.<title|body>`. Shown through
  *  `lib/i18n/seasonalTaskText.ts` only while the stored text still equals
  *  this English; `seasonalTaskText.test.ts` keeps it equal to the plugins. */

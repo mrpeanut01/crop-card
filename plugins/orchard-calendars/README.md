@@ -29,4 +29,6 @@ Checking quotes (OP-18). The guide PDFs are never committed. Download them, extr
 
 Each new edition (OP-28). The guides are re-issued every year. Replace each file with the new edition (new `pluginId`, `edition` and `guide`) instead of adding a second one, re-check every quote against the new guide, and update the source entries. The loader keeps an edition only through the end of the following year and then refuses it with "replace the file with the current edition", which also fails the gate test in CI.
 
+Shown text (#562). The app shows calendars on `/plan/orchard/[cropId]`. Every stage name, stage description and window note also lives in `apps/web/src/lib/i18n/catalogs/{en,es}/orchard.ts`, keyed by id (OP-29): the English entry must equal the plugin text and the Spanish entry must pass the copy guard, or `orchardCalendarText.test.ts` fails. Target labels are app-owned in the same files, so a new target id needs an English and a Spanish label. The bee line and "Check the label." are the app's (`apps/web/src/lib/orchard/appLines.ts`), never the plugin's.
+
 Tests use a test-only fixture (`apps/web/src/lib/plugins/orchardCalendar.fixtures.ts`), never a file in this folder.

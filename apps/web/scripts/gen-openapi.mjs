@@ -114,6 +114,11 @@ import {
 } from '../src/lib/animals/recordApiSchemas.ts';
 import { holdVoidSchema } from '../src/lib/animals/holdVoidSchema.ts';
 import { biofixPutSchema } from '../src/lib/ipm/apiSchemas.ts';
+import {
+  orchardAudiencePutSchema,
+  orchardScoutTaskSchema,
+  orchardStagePutSchema
+} from '../src/lib/orchard/apiSchemas.ts';
 import { CARD_RECORD_KINDS } from '../src/lib/db/recordKinds.ts';
 import { emergencyContactSchema } from '../src/lib/farm/emergencyContacts.ts';
 import { CLIENT_RECORD_HEADER } from '../src/lib/clientRecordHeader.ts';
@@ -3697,6 +3702,153 @@ const paths = {
         400: errorResponse('Invalid body, `BIOFIX_NOT_TRAP` or `IN_THE_FUTURE`.'),
         ...AUTH_ERRORS,
         404: errorResponse('Pest model not found.')
+      }
+    }
+  },
+
+  '/api/orchard/plantings/{id}': {
+    parameters: [idPath('id', 'Planting (crop) id.')],
+    get: {
+      summary: 'Orchard calendar summary for a planting',
+      description:
+        "Any member of the farm. Which seasonal calendar guide the planting's Area uses and why (`manual` for the owner's choice, `data` for the Area kind or farm profile), whether the crop has a calendar (`calendar`), had one the loader dropped (`out-of-date`), has none yet (`none`) or never shows one (`none-wanted`), and the block's stage mark for this year. Display only; it never gates a record.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The summary.', {
+          type: 'object',
+          required: ['cropId', 'status', 'audience', 'calendar', 'stage', 'mark', 'href'],
+          properties: {
+            cropId: { type: 'string' },
+            cropPluginId: { type: 'string' },
+            cropName: { type: 'string' },
+            status: { type: 'string', enum: ['calendar', 'out-of-date', 'none', 'none-wanted'] },
+            audience: { type: 'object' },
+            calendar: { type: ['object', 'null'] },
+            stage: { type: ['object', 'null'] },
+            mark: { type: ['object', 'null'] },
+            href: { type: 'string' }
+          }
+        }),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('Planting not found.')
+      }
+    }
+  },
+  '/api/orchard/plantings/{id}/stage': {
+    parameters: [idPath('id', 'Planting (crop) id.')],
+    put: {
+      summary: 'Mark or clear the orchard stage',
+      description:
+        "Owners and helpers; inspectors are read-only. Marks the stage the planting's block is at for this farm-local year (`manual`), or clears it with `stageId: null`. A pink, white bud or bloom mark only ever starts the insecticide form's bloom answer at in bloom; nothing here can say not in bloom. A stage the calendar does not have answers 400 `UNKNOWN_STAGE`; a crop with no calendar answers 409 `NO_CALENDAR`.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(orchardStagePutSchema),
+      responses: {
+        200: jsonResponse('The summary after the change.', {
+          type: 'object',
+          required: ['cropId', 'status', 'audience', 'calendar', 'stage', 'mark', 'href'],
+          properties: {
+            cropId: { type: 'string' },
+            cropPluginId: { type: 'string' },
+            cropName: { type: 'string' },
+            status: { type: 'string', enum: ['calendar', 'out-of-date', 'none', 'none-wanted'] },
+            audience: { type: 'object' },
+            calendar: { type: ['object', 'null'] },
+            stage: { type: ['object', 'null'] },
+            mark: { type: ['object', 'null'] },
+            href: { type: 'string' }
+          }
+        }),
+        400: errorResponse('Invalid body or `UNKNOWN_STAGE`.'),
+        ...AUTH_ERRORS,
+        404: errorResponse('Planting not found.'),
+        409: errorResponse('`NO_CALENDAR`.')
+      }
+    }
+  },
+  '/api/orchard/plantings/{id}/scout-task': {
+    parameters: [idPath('id', 'Planting (crop) id.')],
+    post: {
+      summary: 'Schedule a scouting task from a calendar window',
+      description:
+        'Owners and helpers. Creates one task for today on the planting\'s block, category `scout` (or `prune` for cultural and sanitation windows), titled by the app ("Scout: <targets>" or "Check: <stage>"). Never a spray task and never the window note. A second request for the same window and year answers 200 with `alreadyScheduled: true`. A window that is not shown (for example a risk window in an organic season) answers 400 `UNKNOWN_WINDOW`.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(orchardScoutTaskSchema),
+      responses: {
+        200: jsonResponse('Already scheduled.', {
+          type: 'object',
+          required: ['task', 'alreadyScheduled'],
+          properties: { task: { type: 'object' }, alreadyScheduled: { type: 'boolean' } }
+        }),
+        201: jsonResponse('Created.', {
+          type: 'object',
+          required: ['task'],
+          properties: { task: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body or `UNKNOWN_WINDOW`.'),
+        ...AUTH_ERRORS,
+        404: errorResponse('Planting not found.'),
+        409: errorResponse('`NO_CALENDAR`.')
+      }
+    }
+  },
+  '/api/orchard/areas/{id}': {
+    parameters: [idPath('id', 'Area id.')],
+    get: {
+      summary: 'Orchard calendar summaries for an Area',
+      description:
+        'Any member of the farm. The orchard calendar summary of every current planting in the Area that has, or should have, a seasonal calendar.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Summaries.', {
+          type: 'object',
+          required: ['areaId', 'plantings'],
+          properties: {
+            areaId: { type: 'string' },
+            plantings: {
+              type: 'array',
+              items: {
+                type: 'object',
+                required: ['cropId', 'status', 'audience', 'calendar', 'stage', 'mark', 'href'],
+                properties: {
+                  cropId: { type: 'string' },
+                  cropPluginId: { type: 'string' },
+                  cropName: { type: 'string' },
+                  status: {
+                    type: 'string',
+                    enum: ['calendar', 'out-of-date', 'none', 'none-wanted']
+                  },
+                  audience: { type: 'object' },
+                  calendar: { type: ['object', 'null'] },
+                  stage: { type: ['object', 'null'] },
+                  mark: { type: ['object', 'null'] },
+                  href: { type: 'string' }
+                }
+              }
+            }
+          }
+        }),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('Area not found.')
+      }
+    }
+  },
+  '/api/orchard/areas/{id}/audience': {
+    parameters: [idPath('id', 'Area id.')],
+    put: {
+      summary: "Choose an Area's orchard calendar guide",
+      description:
+        'Owner only. `home` or `commercial` overrides the automatic guide for the Area (`manual`); `null` goes back to automatic. Choosing `commercial` needs `confirmCommercial: true`, since that guide is written for commercial orchards; without it the answer is 400 `CONFIRM_COMMERCIAL`.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(orchardAudiencePutSchema),
+      responses: {
+        200: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['areaId', 'audience'],
+          properties: { areaId: { type: 'string' }, audience: { type: ['string', 'null'] } }
+        }),
+        400: errorResponse('Invalid body or `CONFIRM_COMMERCIAL`.'),
+        ...AUTH_ERRORS,
+        404: errorResponse('Area not found.')
       }
     }
   },

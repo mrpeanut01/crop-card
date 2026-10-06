@@ -707,13 +707,16 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    min-height: 48px;
     margin: 0;
     font-weight: normal;
   }
   .frac-items input[type='checkbox'] {
-    width: auto;
+    width: 24px;
+    height: 24px;
     min-height: auto;
     margin: 0;
+    flex: 0 0 auto;
   }
   .prod-meta {
     color: var(--color-ink-muted);

@@ -238,6 +238,7 @@ export const enFarm = {
   'farm.fig.farmMap': 'Farm map',
   'farm.fig.empty': 'Nothing is drawn or sized yet, so there is no picture to show.',
   'farm.fig.sketched': ', sketched from entered sizes',
+  'farm.fig.numbered': 'Numbered Areas',
   'farm.fig.legend': 'Legend',
   'farm.fig.placed': 'Placed from the sizes you entered, not surveyed.',
   'farm.fig.unplaced':

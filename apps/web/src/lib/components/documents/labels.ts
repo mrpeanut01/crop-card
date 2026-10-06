@@ -1,6 +1,7 @@
 import { createT, type MessageKey, type Translator } from '$lib/i18n';
 import {
   BACKUP_COPY_NOTE,
+  HEIC_DOCUMENT_COPY,
   VAULT_OFF_COPY,
   type DocumentKind,
   type DocumentSubjectType
@@ -40,6 +41,7 @@ export const DOCUMENT_SUBJECT_KEYS = {
 const KNOWN_COPY: Record<string, MessageKey> = {
   [VAULT_OFF_COPY]: 'docs.copy.vaultOff',
   [BACKUP_COPY_NOTE]: 'docs.copy.backupNote',
+  [HEIC_DOCUMENT_COPY]: 'docs.copy.heic',
   'Uploads need a connection.': 'docs.copy.needsConnection',
   'Only the farm owner can upload files.': 'docs.copy.ownerOnly',
   'This file is bigger than 20 MB. Use a smaller file.': 'docs.copy.tooBig',

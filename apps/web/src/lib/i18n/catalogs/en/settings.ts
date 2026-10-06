@@ -191,6 +191,7 @@ export const enSettings = {
   'docs.subject.amendment-batch': 'manure or compost batch',
   'docs.subject.forage-test': 'forage test',
   'docs.subject.farm': 'farm',
+  'docs.copy.heic': "HEIC photos can't be stored. Save it as a JPEG or PDF and upload that.",
   'docs.copy.vaultOff': "Document storage isn't set up yet.",
   'docs.copy.backupNote':
     "When you delete a file, it is removed at once. Our storage provider's backup copies are removed within 30 days.",

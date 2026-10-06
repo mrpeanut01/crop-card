@@ -6,6 +6,7 @@
   import { kindStyle } from '$lib/farm/kindStyle';
   import type { OverlayBlockInput, OverlayFieldInput } from '$lib/plan/mapOverlayLayout';
   import { layoutFarmFigure } from '$lib/farm/featureFigure';
+  import { placeFigureLabels } from '$lib/farm/figureLabels';
   import {
     MAP_FEATURE_KINDS,
     MAP_FEATURE_STYLE,
@@ -42,6 +43,7 @@
     `${layout.minX - pad} ${layout.minY - pad} ${layout.width + pad * 2} ${layout.height + pad * 2}`
   );
   const fontSize = $derived(span * 0.03);
+  const areaLabels = $derived(placeFigureLabels(layout.fields, fontSize));
   const legend = $derived(
     AREA_KINDS.filter((k) => layout.fields.some((f) => kindById.get(f.id) === k))
   );
@@ -110,17 +112,18 @@
           >
         </g>
       {/each}
-      {#each layout.fields as f (f.id)}
+      {#each areaLabels.labels as l (l.id)}
         <text
-          x={f.labelX}
-          y={f.labelY}
+          x={l.x}
+          y={l.y}
+          class:number={l.n !== null}
           style:font-size="{fontSize}px"
           text-anchor="middle"
-          dominant-baseline="middle">{f.name}</text
+          dominant-baseline="middle">{l.text ?? l.n}</text
         >
       {/each}
     </svg>
-    {#if legend.length || featureLegend.length}
+    {#if legend.length || featureLegend.length || areaLabels.legend.length}
       <figcaption>
         <ul class="legend" aria-label={tr('farm.fig.legend')}>
           {#each legend as k (k)}
@@ -141,6 +144,13 @@
             </li>
           {/each}
         </ul>
+        {#if areaLabels.legend.length}
+          <ol class="numbered" aria-label={tr('farm.fig.numbered')} data-testid="farm-map-numbered">
+            {#each areaLabels.legend as row (row.n)}
+              <li><span class="n" aria-hidden="true">{row.n}</span> {row.name}</li>
+            {/each}
+          </ol>
+        {/if}
         {#if layout.mode === 'sketch'}
           <p class="note">{tr('farm.fig.placed')}</p>
         {/if}
@@ -204,6 +214,22 @@
     stroke: var(--color-paper);
     stroke-width: 0.25em;
     stroke-linejoin: round;
+  }
+  text.number {
+    font-weight: 800;
+  }
+  .numbered {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    font-size: 13px;
+    color: var(--color-ink);
+  }
+  .numbered .n {
+    font-weight: 800;
   }
   figcaption {
     padding: 10px 12px;

@@ -198,6 +198,8 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'cardsui.photo.title': 'Pregunta sobre una foto',
   'cardsui.photo.tooLarge':
     'No se pudo achicar lo suficiente esa foto. Prueba con una toma más cercana y sencilla.',
+  'cardsui.photo.heic':
+    'Este navegador no puede abrir fotos HEIC. Guarda la foto como JPEG, vuelve a tomarla con la cámara o usa Safari en un iPhone o Mac.',
   'cardsui.photo.unreadable': 'No se pudo leer esa foto.',
   'cardsui.photo.which': '¿Qué siembra?',
   'cardsui.photo.withPhoto': '(con foto)',

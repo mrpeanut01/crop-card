@@ -197,6 +197,8 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
   'docs.subject.amendment-batch': 'lote de estiércol o compost',
   'docs.subject.forage-test': 'análisis de forraje',
   'docs.subject.farm': 'granja',
+  'docs.copy.heic':
+    'Las fotos HEIC no se pueden guardar. Guárdala como JPEG o PDF y sube ese archivo.',
   'docs.copy.vaultOff': 'El almacenamiento de documentos aún no está configurado.',
   'docs.copy.backupNote':
     'Cuando eliminas un archivo, se borra de inmediato. Las copias de respaldo de nuestro proveedor de almacenamiento se eliminan en un máximo de 30 días.',

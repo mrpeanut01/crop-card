@@ -3,6 +3,7 @@
   import Avatar from '$lib/components/ui/Avatar.svelte';
   import { page } from '$app/state';
   import { createT } from '$lib/i18n';
+  import { fileLooksLikeHeic } from '$lib/photoFormat';
 
   interface Props {
     name: string;
@@ -64,7 +65,11 @@
       try {
         body = await downsize(file);
       } catch {
-        status = { tone: 'error', text: tr('settings.avatar.unreadable') };
+        const heic = await fileLooksLikeHeic(file);
+        status = {
+          tone: 'error',
+          text: heic ? tr('cardsui.photo.heic') : tr('settings.avatar.unreadable')
+        };
         return;
       }
       const res = await fetch('/api/account/avatar', {
@@ -118,7 +123,7 @@
       id="avatar-file"
       class="visually-hidden"
       type="file"
-      accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+      accept="image/jpeg,image/png,image/webp"
       onchange={onPick}
       disabled={busy}
     />

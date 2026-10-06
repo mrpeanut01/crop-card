@@ -85,14 +85,18 @@ export class OfflineCards {
 
   async togglePin(key: string): Promise<void> {
     const store = await import('$lib/client/cardStore');
-    if (this.isPinned(key)) {
-      await store.unpinCard(key);
-    } else {
-      await store.pinCard(key);
-      const { requestPersistentStorage } = await import('$lib/client/offlineStorage');
-      this.storageKept = await requestPersistentStorage();
-    }
+    const pinning = !this.isPinned(key);
+    if (pinning) await store.pinCard(key);
+    else await store.unpinCard(key);
     this.pinned = (await store.listPinned()).map((p) => p.key);
+    if (pinning) void this.keepStorage();
+  }
+
+  /** Firefox answers `persist()` only after the person replies to its
+   *  permission prompt, so the pin shows first and this never blocks it. */
+  private async keepStorage(): Promise<void> {
+    const { requestPersistentStorage } = await import('$lib/client/offlineStorage');
+    this.storageKept = await requestPersistentStorage();
   }
 
   allPinned(keys: readonly string[]): boolean {
@@ -105,9 +109,8 @@ export class OfflineCards {
     const store = await import('$lib/client/cardStore');
     const now = Date.now();
     for (let i = 0; i < keys.length; i++) await store.pinCard(keys[i], now - i);
-    const { requestPersistentStorage } = await import('$lib/client/offlineStorage');
-    this.storageKept = await requestPersistentStorage();
     this.pinned = (await store.listPinned()).map((p) => p.key);
+    void this.keepStorage();
   }
 
   async unpinAll(keys: readonly string[]): Promise<void> {

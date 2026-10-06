@@ -25,7 +25,7 @@
     topicFor
   } from '$lib/journal/photoHelp';
   import type { PhotoHelpTarget } from '$lib/journal/targets';
-  import { PhotoTooLargeError, resizePhoto } from '$lib/client/photoResize';
+  import { PhotoHeicError, PhotoTooLargeError, resizePhoto } from '$lib/client/photoResize';
   import type { QueuedJournalRow } from '$lib/client/journalQueue';
   import { DEFAULT_PREFS, formatInstant, type Prefs } from '$lib/prefs';
   import { createT } from '$lib/i18n';
@@ -164,7 +164,9 @@
       photoError =
         err instanceof PhotoTooLargeError
           ? tr('cardsui.photo.tooLarge')
-          : tr('cardsui.photo.unreadable');
+          : err instanceof PhotoHeicError
+            ? tr('cardsui.photo.heic')
+            : tr('cardsui.photo.unreadable');
     } finally {
       photoBusy = false;
     }

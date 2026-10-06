@@ -657,6 +657,11 @@
 </SetupSheet>
 
 <style>
+  details > summary {
+    min-height: 48px;
+    padding-block: 12px;
+    cursor: pointer;
+  }
   .spray-almanac-chrome {
     margin-bottom: 22px;
   }

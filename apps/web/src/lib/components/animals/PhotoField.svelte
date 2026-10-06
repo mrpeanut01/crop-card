@@ -34,7 +34,8 @@
     }
     busy = true;
     try {
-      const { PhotoTooLargeError, resizePhoto } = await import('$lib/client/photoResize');
+      const { PhotoHeicError, PhotoTooLargeError, resizePhoto } =
+        await import('$lib/client/photoResize');
       let photo: string;
       try {
         photo = await resizePhoto(file);
@@ -42,7 +43,9 @@
         error =
           err instanceof PhotoTooLargeError
             ? tr('cardsui.photo.tooLarge')
-            : tr('cardsui.photo.unreadable');
+            : err instanceof PhotoHeicError
+              ? tr('cardsui.photo.heic')
+              : tr('cardsui.photo.unreadable');
         return;
       }
       const res = await fetch(`/api/animals/${animalId}`, {

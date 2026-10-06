@@ -480,6 +480,9 @@
   details summary {
     cursor: pointer;
     list-style: none;
+    display: flex;
+    align-items: center;
+    min-height: 48px;
   }
   details summary h2 {
     display: inline-block;

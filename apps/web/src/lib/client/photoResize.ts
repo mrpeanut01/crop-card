@@ -10,6 +10,7 @@ import {
   fitWithin,
   stripJpegMetadata
 } from '$lib/journal/photo';
+import { fileLooksLikeHeic } from '$lib/photoFormat';
 
 const QUALITIES = [0.82, 0.72, 0.62, 0.52, 0.42];
 const MIN_DIM = 320;
@@ -17,6 +18,13 @@ const MIN_DIM = 320;
 export class PhotoTooLargeError extends Error {
   constructor() {
     super('That photo could not be made small enough. Try a closer, simpler shot.');
+  }
+}
+
+/** A HEIC/HEIF photo this browser cannot decode (only Safari can). */
+export class PhotoHeicError extends Error {
+  constructor() {
+    super("This browser can't open HEIC photos.");
   }
 }
 
@@ -51,7 +59,13 @@ function toJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null
 
 /** A JPEG data URL no larger than 1024 px on its long side and 300 KB. */
 export async function resizePhoto(file: Blob): Promise<string> {
-  const src = await loadBitmap(file);
+  let src: ImageBitmap | HTMLImageElement;
+  try {
+    src = await loadBitmap(file);
+  } catch (err) {
+    if (await fileLooksLikeHeic(file)) throw new PhotoHeicError();
+    throw err;
+  }
   const natural = sizeOf(src);
   let maxDim = MAX_PHOTO_DIM;
   while (maxDim >= MIN_DIM) {

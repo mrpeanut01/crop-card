@@ -188,6 +188,8 @@ export const enPlugins = {
   'cardsui.photo.title': 'Ask about a photo',
   'cardsui.photo.tooLarge':
     'That photo could not be made small enough. Try a closer, simpler shot.',
+  'cardsui.photo.heic':
+    "This browser can't open HEIC photos. Save the photo as a JPEG, take it again with the camera, or use Safari on an iPhone or Mac.",
   'cardsui.photo.unreadable': 'That photo could not be read.',
   'cardsui.photo.which': 'Which planting?',
   'cardsui.photo.withPhoto': '(with photo)',

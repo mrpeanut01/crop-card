@@ -1065,6 +1065,11 @@
   details {
     margin-top: 0.5rem;
   }
+  details > summary {
+    min-height: 48px;
+    padding-block: 12px;
+    cursor: pointer;
+  }
   .indicators-inline {
     margin-top: 0.5rem;
     padding: 0.5rem 0.75rem;

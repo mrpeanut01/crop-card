@@ -8,7 +8,7 @@
     "min": 730,
     "max": 1460
   },
-  "defaultRowSpacingInches": 96,
+  "defaultRowSpacingInches": 120,
   "plantingGuide": {
     "inRowSpacingIn": {
       "min": 60,

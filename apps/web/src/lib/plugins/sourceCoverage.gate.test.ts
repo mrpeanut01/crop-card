@@ -22,7 +22,7 @@ import {
   stageTemplateWordingProblems,
   sourceEntrySchema,
   seedingRateQuoteGaps,
-  treeRowSpacingGaps,
+  rowSpacingGaps,
   treeSizeClassQuoteGaps,
   speciesFactPaths,
   type ForageSourceEntry,
@@ -181,8 +181,8 @@ describe('Phase 32A source coverage gate', () => {
     expect(crops.filter((c) => c.treeSizeClasses).length).toBeGreaterThan(0);
   });
 
-  it('#587: a tree crop carries no unsourced or unread row spacing', () => {
-    expect(treeRowSpacingGaps(library.crops(), cropSources)).toEqual([]);
+  it('#587 / #591: no crop carries an unsourced or unread row spacing', () => {
+    expect(rowSpacingGaps(library.crops(), cropSources)).toEqual([]);
   });
 
   it('every seeding rate quote states its range and seed basis', () => {

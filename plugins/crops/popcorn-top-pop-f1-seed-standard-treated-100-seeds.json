@@ -14,7 +14,6 @@
       "max": 12
     },
     "soilTempMinF": 60,
-    "rowSpacingIn": 9,
     "seedDepthIn": {
       "min": 1,
       "max": 1

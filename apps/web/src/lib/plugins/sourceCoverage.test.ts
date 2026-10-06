@@ -31,7 +31,7 @@ import {
   stageTemplateWordingProblems,
   speciesFactPaths,
   seedingRateQuoteGaps,
-  treeRowSpacingGaps,
+  rowSpacingGaps,
   treeSizeClassQuoteGaps,
   type SourceMap
 } from './sourceCoverage';
@@ -802,7 +802,7 @@ describe('stageTemplateWordingProblems (OC-1)', () => {
   });
 });
 
-describe('#587 tree row spacing', () => {
+describe('#587 / #591 row spacing', () => {
   const base = cropPluginSchema.parse({
     pluginId: 'cherry-test',
     type: 'crop',
@@ -824,10 +824,74 @@ describe('#587 tree row spacing', () => {
     ]);
   });
 
-  it('leaves a non-tree crop row spacing ungated', () => {
+  it('#591: gates a non-tree crop row spacing too', () => {
     const veg = { ...base, archetype: 'continuous-harvest-fruit' as const };
-    expect(cropFactPaths(veg)).toEqual([]);
-    expect(treeRowSpacingGaps([veg], {})).toEqual([]);
+    expect(cropFactPaths(veg)).toEqual(['rowSpacingIn', 'defaultRowSpacingInches']);
+    const sources: SourceMap = {
+      'cherry-test': {
+        rowSpacingIn: { ...FIXTURE_SOURCE, quote: 'Distance between rows | 24-36 in' },
+        defaultRowSpacingInches: { ...FIXTURE_SOURCE, quote: 'rows 25 feet apart' }
+      }
+    };
+    expect(rowSpacingGaps([veg], sources)).toEqual([
+      'cherry-test: rowSpacingIn quote does not state 216 in'
+    ]);
+  });
+
+  it('#591: accepts feet written as a word', () => {
+    const veg = cropPluginSchema.parse({
+      ...base,
+      archetype: 'continuous-harvest-fruit',
+      defaultRowSpacingInches: undefined,
+      plantingGuide: { rowSpacingIn: 24 }
+    });
+    const quote = (q: string): SourceMap => ({
+      'cherry-test': { rowSpacingIn: { ...FIXTURE_SOURCE, quote: q } }
+    });
+    expect(
+      rowSpacingGaps([veg], quote('one foot between plants, two feet between the rows'))
+    ).toEqual([]);
+    expect(rowSpacingGaps([veg], quote('three feet between the rows'))).toEqual([
+      'cherry-test: rowSpacingIn quote does not state 24 in'
+    ]);
+  });
+
+  it('#591: one rowSpacingIn source covers an equal defaultRowSpacingInches', () => {
+    const veg = cropPluginSchema.parse({
+      ...base,
+      archetype: 'continuous-harvest-fruit',
+      defaultRowSpacingInches: 30,
+      plantingGuide: { rowSpacingIn: 30 }
+    });
+    expect(cropFactPaths(veg)).toEqual(['rowSpacingIn']);
+    const sources: SourceMap = {
+      'cherry-test': {
+        rowSpacingIn: { ...FIXTURE_SOURCE, quote: 'Distance between rows | 30-36 in' }
+      }
+    };
+    expect(rowSpacingGaps([veg], sources)).toEqual([]);
+    const unequal = { ...veg, defaultRowSpacingInches: 36 };
+    expect(cropFactPaths(unequal)).toEqual(['rowSpacingIn', 'defaultRowSpacingInches']);
+  });
+
+  it("#591: a tree crop's in-row spacing quote states both ends", () => {
+    const tree = cropPluginSchema.parse({
+      ...base,
+      defaultRowSpacingInches: undefined,
+      plantingGuide: { inRowSpacingIn: { min: 120, max: 180 } }
+    });
+    expect(cropFactPaths(tree)).toEqual(['inRowSpacingIn']);
+    const sources: SourceMap = {
+      'cherry-test': {
+        inRowSpacingIn: {
+          ...FIXTURE_SOURCE,
+          quote: 'Minimum Spacing Between Trees (feet): Figs | 10'
+        }
+      }
+    };
+    expect(rowSpacingGaps([tree], sources)).toEqual([
+      'cherry-test: inRowSpacingIn quote does not state 180 in'
+    ]);
   });
 
   it('needs the quote to state the number in inches or feet', () => {
@@ -837,7 +901,7 @@ describe('#587 tree row spacing', () => {
         defaultRowSpacingInches: { ...FIXTURE_SOURCE, quote: 'Suggested Spacing (ft) 25 x 30' }
       }
     };
-    expect(treeRowSpacingGaps([base], sources)).toEqual([
+    expect(rowSpacingGaps([base], sources)).toEqual([
       'cherry-test: defaultRowSpacingInches quote does not say the figure is between rows'
     ]);
   });
@@ -849,7 +913,7 @@ describe('#587 tree row spacing', () => {
         { sizeClass: 'dwarf' as const, minSpacingFt: 8, yearsToBearing: { min: 2, max: 3 } }
       ]
     };
-    expect(treeRowSpacingGaps([tree], {})).toEqual([
+    expect(rowSpacingGaps([tree], {})).toEqual([
       'cherry-test: rowSpacingIn is never read when treeSizeClasses spaces the crop',
       'cherry-test: defaultRowSpacingInches is never read when treeSizeClasses spaces the crop'
     ]);

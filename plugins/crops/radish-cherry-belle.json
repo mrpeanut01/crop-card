@@ -8,7 +8,7 @@
     "min": 22,
     "max": 28
   },
-  "defaultRowSpacingInches": 12,
+  "defaultRowSpacingInches": 6,
   "harvestIndicators": [
     "Roots ~1 in diameter"
   ],

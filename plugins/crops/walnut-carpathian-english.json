@@ -13,8 +13,8 @@
   "plantingGuide": {
     "soilTempMinF": 55,
     "inRowSpacingIn": {
-      "min": 300,
-      "max": 420
+      "min": 360,
+      "max": 600
     }
   },
   "agronomy": {

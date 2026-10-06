@@ -10,10 +10,8 @@
     "min": 60,
     "max": 90
   },
-  "defaultRowSpacingInches": 14,
   "plantingGuide": {
     "soilTempMinF": 60,
-    "rowSpacingIn": 14,
     "inRowSpacingIn": {
       "min": 14,
       "max": 14

@@ -8,7 +8,7 @@
     "min": 80,
     "max": 90
   },
-  "defaultRowSpacingInches": 60,
+  "defaultRowSpacingInches": 36,
   "harvestIndicators": [
     "Dark green rind with tiny orange spot",
     "Hard rind"

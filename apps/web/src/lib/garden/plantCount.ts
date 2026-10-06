@@ -63,10 +63,12 @@ function treeSpacing(
   return model.kind === 'tree' ? { inches: model.spacingIn, provenance: model.provenance } : null;
 }
 
-/** Row spacing: the plugin's row spacing, then `defaultRowSpacingInches`,
- *  else the tagged placeholder. A tree crop uses its size class (#548), or
- *  else its minimum distance between trees both ways (#587: no allowed
- *  source gives a between-row figure for tree fruit). */
+/** Row spacing: the plugin's row spacing, then `defaultRowSpacingInches`.
+ *  A tree crop uses its size class (#548), or else its minimum distance
+ *  between trees both ways (#587: no allowed source gives a between-row
+ *  figure for tree fruit). Any other crop with no sourced row spacing is
+ *  spaced square at its in-row spacing, tagged `fallback` (#591 ruling Q2),
+ *  else the tagged placeholder. */
 export function rowSpacingOf(
   crop: SpacingFields | undefined,
   treeSizeClass?: string | null
@@ -77,8 +79,9 @@ export function rowSpacingOf(
   if (positive(row)) return { inches: row, provenance: 'plugin' };
   const def = crop?.defaultRowSpacingInches;
   if (positive(def)) return { inches: def, provenance: 'plugin' };
-  if (crop?.archetype === 'tree-fruit-multi-pick') return inRowSpacingOf(crop);
-  return { inches: FALLBACK_SPACING_IN, provenance: FALLBACK_SPACING_PROVENANCE };
+  const inRow = inRowSpacingOf(crop);
+  if (crop?.archetype === 'tree-fruit-multi-pick') return inRow;
+  return { inches: inRow.inches, provenance: FALLBACK_SPACING_PROVENANCE };
 }
 
 /** In-row spacing: the midpoint of the plugin's in-row range, else the tagged

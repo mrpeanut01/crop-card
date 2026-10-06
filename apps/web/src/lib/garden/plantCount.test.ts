@@ -1,7 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { FALLBACK_SPACING_IN, footprintForCount, plantCount, resolveSpacing } from './plantCount';
+import {
+  FALLBACK_SPACING_IN,
+  footprintForCount,
+  plantCount,
+  resolveSpacing,
+  rowSpacingOf
+} from './plantCount';
 import type { GardenCrop, PlantSpacing, SpacingPattern } from './types';
+
+describe('#591 row spacing with none on file', () => {
+  it('spaces rows square at the in-row midpoint, tagged fallback', () => {
+    const hops = {
+      archetype: 'perennial-vine-quality',
+      plantingGuide: { inRowSpacingIn: { min: 36, max: 42 } }
+    };
+    expect(rowSpacingOf(hops)).toEqual({ inches: 39, provenance: 'fallback' });
+  });
+
+  it('keeps the placeholder when no spacing is on file at all', () => {
+    expect(rowSpacingOf({})).toEqual({ inches: FALLBACK_SPACING_IN, provenance: 'fallback' });
+  });
+
+  it('uses a sourced row spacing as plugin data', () => {
+    expect(rowSpacingOf({ plantingGuide: { rowSpacingIn: 48 } })).toEqual({
+      inches: 48,
+      provenance: 'plugin'
+    });
+  });
+});
 
 const tomato: GardenCrop = {
   pluginId: 'tomato-celebrity-f1',

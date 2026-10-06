@@ -404,7 +404,7 @@
       },
       {
         "widthFt": 4,
-        "lengthFt": 25,
+        "lengthFt": 23,
         "crops": [
           {
             "key": "st_9",
@@ -416,9 +416,9 @@
           {
             "key": "st_8",
             "name": "melon",
-            "plants": 19,
-            "rows": 4,
-            "lengthFt": 12
+            "plants": 4,
+            "rows": 1,
+            "lengthFt": 10
           }
         ]
       },
@@ -429,8 +429,8 @@
           {
             "key": "st_8",
             "name": "melon",
-            "plants": 40,
-            "rows": 4,
+            "plants": 10,
+            "rows": 1,
             "lengthFt": 25
           }
         ]
@@ -442,8 +442,8 @@
           {
             "key": "st_8",
             "name": "melon",
-            "plants": 40,
-            "rows": 4,
+            "plants": 10,
+            "rows": 1,
             "lengthFt": 25
           }
         ]
@@ -453,7 +453,7 @@
       {
         "key": "st_8",
         "name": "melon",
-        "plants": 217
+        "plants": 292
       },
       {
         "key": "st_3",

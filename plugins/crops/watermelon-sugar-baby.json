@@ -8,7 +8,7 @@
     "min": 75,
     "max": 85
   },
-  "defaultRowSpacingInches": 84,
+  "defaultRowSpacingInches": 60,
   "harvestIndicators": [
     "Tendril nearest fruit dries + browns",
     "Dull thump (not ringing)",

@@ -158,11 +158,31 @@ export function cropFactPaths(c: CropPlugin): string[] {
     for (const id of entry.speciesIds) paths.push(`animalToxicity.${id}`);
   }
   for (const row of c.treeSizeClasses ?? []) paths.push(`treeSizeClasses.${row.sizeClass}`);
-  if (isTreeCrop(c)) {
-    if (guide.rowSpacingIn !== undefined) paths.push('rowSpacingIn');
-    if (c.defaultRowSpacingInches !== undefined) paths.push('defaultRowSpacingInches');
-  }
+  for (const [, key] of rowSpacingFields(c)) if (!paths.includes(key)) paths.push(key);
+  if (isTreeCrop(c) && guide.inRowSpacingIn !== undefined) paths.push('inRowSpacingIn');
   return paths;
+}
+
+type RowSpacingKey = 'rowSpacingIn' | 'defaultRowSpacingInches';
+
+/** #591: the row spacing fields a crop carries, each with the source key that
+ *  covers it. `defaultRowSpacingInches` shares the `rowSpacingIn` source only
+ *  when the two values are equal (ruling Q5); a different value needs its own. */
+export function rowSpacingFields(
+  c: Pick<CropPlugin, 'plantingGuide' | 'defaultRowSpacingInches'>
+): Array<[field: RowSpacingKey, sourceKey: RowSpacingKey, inches: number]> {
+  const out: Array<[RowSpacingKey, RowSpacingKey, number]> = [];
+  const row = c.plantingGuide?.rowSpacingIn;
+  const def = c.defaultRowSpacingInches;
+  if (row !== undefined) out.push(['rowSpacingIn', 'rowSpacingIn', row]);
+  if (def !== undefined) {
+    out.push([
+      'defaultRowSpacingInches',
+      row === def ? 'rowSpacingIn' : 'defaultRowSpacingInches',
+      def
+    ]);
+  }
+  return out;
 }
 
 /** #587: a tree crop (archetype `tree-fruit-multi-pick`, or one with a size
@@ -173,11 +193,41 @@ export function isTreeCrop(c: Pick<CropPlugin, 'archetype' | 'treeSizeClasses'>)
   return c.archetype === 'tree-fruit-multi-pick' || (c.treeSizeClasses?.length ?? 0) > 0;
 }
 
-/** #587: a tree crop's row spacing quote must state the number, in inches or
- *  as feet, and name rows, and a crop with a size class table carries no row spacing at all
- *  (the table spaces it both ways, so the value would never be read).
- *  Returns "pluginId: problem" lines. */
-export function treeRowSpacingGaps(
+const FEET_WORDS = [
+  'one',
+  'two',
+  'three',
+  'four',
+  'five',
+  'six',
+  'seven',
+  'eight',
+  'nine',
+  'ten',
+  'eleven',
+  'twelve'
+];
+
+/** The quote states the figure in inches, in feet, or in feet as a word
+ *  ("two feet between the rows"). */
+function statesInches(quote: string, inches: number): boolean {
+  const figures = [numberPattern(inches)];
+  const feet = inches / 12;
+  if (Number.isInteger(feet)) figures.push(numberPattern(feet));
+  if (figures.some((f) => new RegExp(`(^|[^\\d.])${f}([^\\d]|$)`).test(quote))) return true;
+  const word = Number.isInteger(feet) ? FEET_WORDS[feet - 1] : undefined;
+  return !!word && new RegExp(`\\b${word}[- ](foot|feet)\\b`, 'i').test(quote);
+}
+
+/** #587 / #591: every crop's row spacing (`plantingGuide.rowSpacingIn`,
+ *  `defaultRowSpacingInches`) quote must state the number, in inches or as
+ *  feet, and name rows; a crop with a size class table carries no row spacing
+ *  at all (the table spaces it both ways, so the value would never be read).
+ *  A tree crop's in-row spacing (its minimum distance between trees, used
+ *  both ways) must state both ends of its range. Missing sources are
+ *  reported by `checkSources` over `cropFactPaths`. Returns "pluginId:
+ *  problem" lines. */
+export function rowSpacingGaps(
   crops: ReadonlyArray<
     Pick<
       CropPlugin,
@@ -188,28 +238,29 @@ export function treeRowSpacingGaps(
 ): string[] {
   const gaps: string[] = [];
   for (const c of crops) {
-    if (!isTreeCrop(c)) continue;
-    const values: Array<[string, number | undefined]> = [
-      ['rowSpacingIn', c.plantingGuide?.rowSpacingIn],
-      ['defaultRowSpacingInches', c.defaultRowSpacingInches]
-    ];
-    for (const [key, inches] of values) {
-      if (inches === undefined) continue;
+    for (const [field, key, inches] of rowSpacingFields(c)) {
       if (c.treeSizeClasses?.length) {
-        gaps.push(`${c.pluginId}: ${key} is never read when treeSizeClasses spaces the crop`);
+        gaps.push(`${c.pluginId}: ${field} is never read when treeSizeClasses spaces the crop`);
         continue;
       }
       const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[key]);
       if (!entry.success) continue;
-      const figures = [numberPattern(inches)];
-      if (Number.isInteger(inches / 12)) figures.push(numberPattern(inches / 12));
-      const stated = figures.some((f) =>
-        new RegExp(`(^|[^\\d.])${f}([^\\d]|$)`).test(entry.data.quote)
-      );
-      if (!stated) gaps.push(`${c.pluginId}: ${key} quote does not state ${inches} in`);
+      if (!statesInches(entry.data.quote, inches)) {
+        gaps.push(`${c.pluginId}: ${field} quote does not state ${inches} in`);
+      }
       // #587 ruling R2: an unlabelled "A x B" spacing never counts as rows.
       if (!/\brows?\b/i.test(entry.data.quote)) {
-        gaps.push(`${c.pluginId}: ${key} quote does not say the figure is between rows`);
+        gaps.push(`${c.pluginId}: ${field} quote does not say the figure is between rows`);
+      }
+    }
+    const inRow = c.plantingGuide?.inRowSpacingIn;
+    if (isTreeCrop(c) && inRow) {
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.inRowSpacingIn);
+      if (!entry.success) continue;
+      for (const end of new Set([inRow.min, inRow.max])) {
+        if (!statesInches(entry.data.quote, end)) {
+          gaps.push(`${c.pluginId}: inRowSpacingIn quote does not state ${end} in`);
+        }
       }
     }
   }

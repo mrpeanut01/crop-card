@@ -16,6 +16,10 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'cardsui.cal.today': 'hoy',
   'cardsui.care.title': 'Cómo cuidarla',
   'cardsui.clearSelection': 'Borrar selección',
+  'cardsui.part': 'Tarjeta {n} de {of}',
+  'cardsui.continued': 'Sigue en la tarjeta {next}. Use las {of} tarjetas.',
+  'cardsui.printsAs':
+    'Se imprime en {n} tarjetas numeradas en este papel. Manténgalas juntas; no se omite nada.',
   'cardsui.cutShort': '¿Se cortó? La tarjeta en línea tiene la lista completa.',
   'cardsui.empty.addAnimals': 'Agregar animales',
   'cardsui.empty.addPesticide': 'Agregar un pesticida',

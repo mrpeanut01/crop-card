@@ -14,6 +14,10 @@ export const enPlugins = {
   'cardsui.cal.today': 'today',
   'cardsui.care.title': 'How to care for it',
   'cardsui.clearSelection': 'Clear selection',
+  'cardsui.part': 'Card {n} of {of}',
+  'cardsui.continued': 'Continued on card {next}. Use all {of} cards.',
+  'cardsui.printsAs':
+    'Prints as {n} numbered cards on this paper. Keep them together; nothing is left off.',
   'cardsui.cutShort': 'Cut short? The live card has the full list.',
   'cardsui.empty.addAnimals': 'Add animals',
   'cardsui.empty.addPesticide': 'Add a pesticide',

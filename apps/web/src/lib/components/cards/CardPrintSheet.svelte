@@ -5,6 +5,7 @@
   import type { Snippet } from 'svelte';
   import type { CardModel, CardPrintLayout } from '$lib/cards/model';
   import { paginateCards, printLinkFor } from '$lib/cards/print';
+  import { wholePrintParts } from '$lib/cards/printPack';
   import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
   import { createT } from '$lib/i18n';
   import { page as pageState } from '$app/state';
@@ -35,7 +36,14 @@
   const tr = $derived(createT(pageState.data?.locale));
   const pages = $derived(
     paginateCards(
-      cards.map((card) => ({ card, link: printLinkFor(origin, card.key) })),
+      cards.flatMap((card) => {
+        const link = printLinkFor(origin, card.key);
+        return wholePrintParts(card, layout, {
+          locale: pageState.data?.locale,
+          qr: !!link,
+          url: link?.url ?? null
+        }).map((part) => ({ card: part, link }));
+      }),
       layout
     )
   );
@@ -51,7 +59,7 @@
       data-page-layout={page.landscape ? 'letter-landscape' : undefined}
       data-page-part={page.part}
     >
-      {#each page.items as { card, link } (card.key)}
+      {#each page.items as { card, link } (`${card.key}#${card.printPart?.n ?? 0}`)}
         <div class="print-cell">
           {#if page.part === 'list' && card.calendar}
             <article

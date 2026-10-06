@@ -73,9 +73,14 @@
     )
   );
   const link = $derived(variant === 'print' ? printLink : null);
-  const safetyFirst = $derived(variant === 'print' ? card.sections.filter((s) => s.safety) : []);
+  /** Whole-print cards (#581) keep the packer's order and never fade. */
+  const whole = $derived(variant === 'print' && !!card.printWhole);
+  const part = $derived(whole ? card.printPart : undefined);
+  const safetyFirst = $derived(
+    variant === 'print' && !whole ? card.sections.filter((s) => s.safety) : []
+  );
   const bodySections = $derived(
-    variant === 'print' ? card.sections.filter((s) => !s.safety) : card.sections
+    variant === 'print' && !whole ? card.sections.filter((s) => !s.safety) : card.sections
   );
   const shownSections = $derived(
     variant === 'compact'
@@ -91,6 +96,8 @@
 <article
   class="cardview kind-{card.kind} v-{variant}"
   class:selected
+  class:whole
+  class:has-qr={whole && !!link}
   style:--strip={card.accent}
   data-card-kind={card.kind}
   data-card-key={card.key}
@@ -102,7 +109,15 @@
     {#if variant === 'print' && !kickerNamesKind}
       <div class="kind-label">{tr(CARD_KIND_LABEL_KEYS[card.kind])}</div>
     {/if}
-    {#if badges && variant !== 'print'}
+    {#if part}
+      <div class="kicker-row part-row">
+        <div class="kicker">{card.kicker}</div>
+        <span class="part" data-print-part="{part.n}/{part.of}"
+          >{tr('cardsui.part', { n: part.n, of: part.of })}{#if part.ref}
+            · {part.ref}{/if}</span
+        >
+      </div>
+    {:else if badges && variant !== 'print'}
       <div class="kicker-row">
         <div class="kicker">{card.kicker}</div>
         {@render badges()}
@@ -178,7 +193,7 @@
       {#if facts.length}
         <dl class="facts">
           {#each facts as f, i (`${i}-${f.label}`)}
-            <div class="fact">
+            <div class="fact" class:wide={variant === 'print' && f.printWide}>
               {#if f.englishOnly}
                 <dt><span lang="en" data-english-only="safety">{f.label}</span></dt>
               {:else}
@@ -283,7 +298,12 @@
         {/if}
       {/each}
     </div>
-    {#if variant === 'print' && bodySections.length && !complete}
+    {#if part && part.n < part.of}
+      <p class="continued" data-print-continued>
+        {tr('cardsui.continued', { next: part.n + 1, of: part.of })}
+      </p>
+    {/if}
+    {#if variant === 'print' && !whole && bodySections.length && !complete}
       <p class="more">
         {#if card.kind === 'spray'}<span lang="en" data-english-only="safety"
             >Cut short? The label and the live card have the full directions.</span
@@ -291,7 +311,32 @@
       </p>
     {/if}
 
-    {#if showAsOf || card.rulesVersion || variant !== 'compact'}
+    {#if whole}
+      {#if link}
+        <div class="whole-qr">
+          <svg
+            class="qr"
+            viewBox="0 0 {link.qr.size} {link.qr.size}"
+            shape-rendering="crispEdges"
+            role="img"
+            aria-label={tr('cardsui.qr', { url: link.url })}
+          >
+            <rect width={link.qr.size} height={link.qr.size} fill="#fff" />
+            <path d={link.qr.d} fill="#000" />
+          </svg>
+          <span class="short-url mono">{link.url}</span>
+        </div>
+      {/if}
+      <footer class="foot">
+        <span class="asof">{tr('cardsui.asOf', { date: asOf })}</span>
+        {#if card.rulesVersion}
+          <span class="rules mono"
+            >{tr('cardsui.rulesVersion', { version: card.rulesVersion })}</span
+          >
+        {/if}
+        <span class="prov-text">{provText}</span>
+      </footer>
+    {:else if showAsOf || card.rulesVersion || variant !== 'compact'}
       <footer class="foot">
         {#if showAsOf || variant === 'print'}
           <span class="asof">{tr('cardsui.asOf', { date: asOf })}</span>
@@ -313,7 +358,7 @@
       </footer>
     {/if}
 
-    {#if link}
+    {#if link && !whole}
       <div class="qr-row">
         <svg
           class="qr"
@@ -700,6 +745,108 @@
   }
   .v-print .qr-row {
     flex: 0 0 auto;
+  }
+  /* Whole-print cards (#581): fixed sizes the packer in printPack.ts
+     estimates against (WHOLE_PRINT). Nothing fades; overflow is a bug the
+     print-fit e2e test catches. */
+  .v-print.whole,
+  .v-print.whole * {
+    line-height: 1.25;
+  }
+  .v-print.whole .body {
+    padding: 0.1in 0.12in;
+    gap: 0.05in;
+  }
+  .v-print.whole .content {
+    -webkit-mask-image: none;
+    mask-image: none;
+    padding-bottom: 0;
+    gap: 0.05in;
+  }
+  .v-print.whole .part-row {
+    justify-content: space-between;
+    gap: 0 0.1in;
+  }
+  .v-print.whole .kicker,
+  .v-print.whole .part {
+    font-size: 8pt;
+  }
+  .v-print.whole .part {
+    font-weight: 700;
+    color: #000;
+  }
+  .v-print.whole .title {
+    font-size: 13pt;
+  }
+  .v-print.whole .notices {
+    font-size: 8.5pt;
+    gap: 1pt;
+  }
+  .v-print.whole .facts {
+    gap: 0.04in 0.12in;
+    padding: 0.03in 0;
+    border-width: 0.5pt;
+  }
+  .v-print.whole dt {
+    font-size: 7pt;
+    letter-spacing: 0.06em;
+  }
+  .v-print.whole dd {
+    font-size: 10pt;
+    font-weight: 600;
+  }
+  .v-print.whole .fact.wide {
+    grid-column: 1 / -1;
+  }
+  .v-print.whole .fact {
+    gap: 0.02in;
+    break-inside: avoid;
+  }
+  .v-print.whole .section h4 {
+    font-size: 7.5pt;
+    margin-bottom: 0.03in;
+    color: #000;
+    font-weight: 700;
+  }
+  .v-print.whole .section ul {
+    font-size: 9pt;
+    padding-left: 1.1em;
+  }
+  .v-print.whole p.next {
+    font-size: 9pt;
+  }
+  .continued {
+    margin: 0;
+    flex: 0 0 auto;
+    font-size: 8pt;
+    font-weight: 700;
+  }
+  .v-print.whole.has-qr .body {
+    position: relative;
+    padding-right: calc(0.12in + 0.78in);
+  }
+  .v-print.whole .whole-qr {
+    position: absolute;
+    top: 0.1in;
+    right: 0.12in;
+    width: 0.7in;
+    display: flex;
+    flex-direction: column;
+    gap: 0.03in;
+  }
+  .v-print.whole .whole-qr .qr {
+    width: 0.7in;
+    height: 0.7in;
+  }
+  .v-print.whole .whole-qr .short-url {
+    font-size: 6pt;
+    overflow-wrap: anywhere;
+  }
+  .v-print.whole .foot {
+    font-size: 7pt;
+    border-top-width: 0.5pt;
+    padding-top: 0.03in;
+    gap: 0 0.06in;
   }
   .v-print.kind-week .content,
   .v-print.kind-month .content {

@@ -109,7 +109,9 @@ function calibrateFirstCard(
     ],
     provenance: [{ source: 'data', detail: tr('cards.spray.provSprayer') }],
     notices,
-    englishOnlyNotices: [...notices]
+    englishOnlyNotices: [...notices],
+    printWhole: true,
+    printRepeatNotices: [SPRAY_RECHECK_NOTICE]
   };
 }
 
@@ -152,7 +154,8 @@ function dilutionFacts(
         label: `Per ${trimNumber(tank, 1)}-gal tank`,
         value: line.display,
         provenance: 'plugin',
-        englishOnly: true
+        englishOnly: true,
+        core: true
       },
       {
         label: 'Tank covers',
@@ -169,7 +172,8 @@ function dilutionFacts(
       label: 'Per acre',
       value: `${line.display} in ${trimNumber(gpa, 1)} gal water`,
       provenance: 'plugin',
-      englishOnly: true
+      englishOnly: true,
+      core: true
     }
   ];
 }
@@ -193,6 +197,7 @@ function deconSection(
       items: [`Last load was ${last}.`, ...protocol.steps],
       safety: true,
       englishOnly: 'all',
+      ownCard: true,
       required: true
     };
   }
@@ -241,18 +246,40 @@ function productCard(
   const calibratedOn = sprayer.state?.calibrationDate;
   const { tr } = opts;
 
+  const epa: CardFact = {
+    label: tr('cards.spray.epaReg'),
+    value: product.epaRegistrationNumber ?? tr('cards.spray.epaMissing'),
+    provenance: 'plugin',
+    core: true
+  };
   const facts: CardFact[] = [
-    {
-      label: tr('cards.spray.epaReg'),
-      value: product.epaRegistrationNumber ?? tr('cards.spray.epaMissing'),
-      provenance: 'plugin'
-    },
     {
       label: 'Rate',
       value: rateText(product) ?? 'See label',
       provenance: 'plugin',
-      englishOnly: true
+      englishOnly: true,
+      core: true
     },
+    ...dilutionFacts(product, gpa, tank),
+    {
+      label: 'REI',
+      value:
+        product.reEntryIntervalHours !== null ? `${product.reEntryIntervalHours} h` : 'See label',
+      provenance: 'plugin',
+      englishOnly: true,
+      core: true
+    },
+    {
+      label: 'PHI',
+      value:
+        product.preHarvestIntervalDays !== null
+          ? `${product.preHarvestIntervalDays} d`
+          : 'See label',
+      provenance: 'plugin',
+      englishOnly: true,
+      core: true
+    },
+    epa,
     {
       label: tr('cards.record.sprayer'),
       value: calibratedOn
@@ -262,23 +289,6 @@ function productCard(
           })
         : `${trimNumber(gpa, 1)} GPA`,
       provenance: 'data'
-    },
-    ...dilutionFacts(product, gpa, tank),
-    {
-      label: 'REI',
-      value:
-        product.reEntryIntervalHours !== null ? `${product.reEntryIntervalHours} h` : 'See label',
-      provenance: 'plugin',
-      englishOnly: true
-    },
-    {
-      label: 'PHI',
-      value:
-        product.preHarvestIntervalDays !== null
-          ? `${product.preHarvestIntervalDays} d`
-          : 'See label',
-      provenance: 'plugin',
-      englishOnly: true
     }
   ];
   if (product.targets.length) {
@@ -326,7 +336,10 @@ function productCard(
     sections,
     provenance: mergeProvenance(provenance),
     notices,
-    englishOnlyNotices: [...notices]
+    englishOnlyNotices: [...notices],
+    printWhole: true,
+    printRepeatNotices: [SPRAY_RECHECK_NOTICE],
+    printRef: `${epa.label} ${epa.value}`
   };
 }
 

@@ -18,8 +18,10 @@ import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/so
  *  4 since 33B: the owner-entered organic status line on Areas, animals
  *  and groups.
  *  5: Phase 35 split seed lots (`splitGroupId` on plantings and
- *  `splitGroups`). */
-export const FARM_SNAPSHOT_VERSION = 5 as const;
+ *  `splitGroups`).
+ *  6 since #555: Planting and Care Guide cards size seed by area for crops
+ *  sown by area, so cached copies are rebuilt. */
+export const FARM_SNAPSHOT_VERSION = 6 as const;
 
 export type SnapshotProvenance = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
@@ -459,7 +461,7 @@ export interface SnapshotCarryoverLine {
 }
 
 export interface FarmSnapshot {
-  version: typeof FARM_SNAPSHOT_VERSION | 4 | 3 | 2 | 1;
+  version: typeof FARM_SNAPSHOT_VERSION | 5 | 4 | 3 | 2 | 1;
   ownerId: string;
   farmName: string | null;
   generatedAt: number;

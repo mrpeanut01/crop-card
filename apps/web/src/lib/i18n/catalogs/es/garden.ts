@@ -462,5 +462,6 @@ export const esGarden: Partial<Record<MessageKey, string>> = {
   'gardenlib.page.offlineNotSaved':
     'Estás sin conexión y este jardín todavía no está guardado en este dispositivo. Ábrelo una vez con señal, o abre tus Tarjetas guardadas.',
   'gardenlib.page.notInCopy': 'Este jardín no está en la copia guardada en este dispositivo.',
-  'gardenlib.page.didntLoad': 'El diseñador de jardín no cargó. Inténtalo de nuevo.'
+  'gardenlib.page.didntLoad': 'El diseñador de jardín no cargó. Inténtalo de nuevo.',
+  'garden.canvas.sownAcross': 'Sembrado en toda la cama'
 };

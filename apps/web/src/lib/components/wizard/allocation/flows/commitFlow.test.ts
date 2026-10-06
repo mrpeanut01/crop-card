@@ -45,6 +45,7 @@ function fakeWizard(assignments: ReturnType<typeof a>[]) {
       onCommitted
     },
     isFillToBed: () => false,
+    isAreaCrop: (id: string) => id === 'cereal-rye-cover',
     blockNameFor: (id: string) => (id === 'n' ? 'North Bed' : 'South Bed'),
     discardDraft: vi.fn(async () => {})
   };
@@ -145,5 +146,18 @@ describe('CommitFlow split lots (R-12, R-18, R-19)', () => {
     expect(groups.size).toBe(1);
     expect([...groups][0]).toMatch(/^sg_/);
     expect(calls.every((c) => typeof c.body.plantingDate === 'number')).toBe(true);
+  });
+
+  it('sends no plant count for a crop sown by area (#555)', async () => {
+    const { w } = fakeWizard([
+      { ...a('bean', 'n', 300), cropPluginId: 'cereal-rye-cover', varietyDisplayName: 'Rye' },
+      a('beet', 's', 40)
+    ]);
+    await new CommitFlow(w).commit();
+    const rye = calls.find((c) => c.body.cropPluginId === 'cereal-rye-cover')!;
+    expect(rye.body.plannedPlants).toBeUndefined();
+    expect(rye.body.quantityPlanted).toBe(101);
+    const beet = calls.find((c) => c.body.cropPluginId !== 'cereal-rye-cover')!;
+    expect(beet.body.plannedPlants).toBe(40);
   });
 });

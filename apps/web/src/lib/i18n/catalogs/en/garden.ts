@@ -444,5 +444,6 @@ export const enGarden = {
   'gardenlib.page.offlineNotSaved':
     "You're offline, and this garden isn't saved on this device yet. Open it once with signal, or open your saved Cards.",
   'gardenlib.page.notInCopy': "This garden isn't in the copy saved on this device.",
-  'gardenlib.page.didntLoad': "The garden designer didn't load. Try again."
+  'gardenlib.page.didntLoad': "The garden designer didn't load. Try again.",
+  'garden.canvas.sownAcross': 'Sown across the bed'
 } as const;

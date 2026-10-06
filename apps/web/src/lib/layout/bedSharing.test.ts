@@ -128,6 +128,41 @@ describe('bed geometry', () => {
     expect(freeBedShare(b, existing, index)).toBeCloseTo(0.5);
   });
 
+  it('an existing crop sown by area takes its ground, never its old placeholder count (#555)', () => {
+    const b = bed('b', 4, 25);
+    const rye = {
+      pluginId: 'rye',
+      type: 'crop',
+      displayName: 'rye',
+      version: '1.0.0',
+      cropFamily: 'cover-grass',
+      plantingGuide: { seedingRate: { broadcastLbsPerAcre: { min: 90, max: 160 } } }
+    } as unknown as CropPlugin;
+    const idx = { ...index, rye };
+    const placed = [
+      {
+        blockId: 'b',
+        cropPluginId: 'rye',
+        status: 'planned',
+        plantCount: 900_000,
+        footprint: { x_in: 0, y_in: 0, w_in: 48, l_in: 120 }
+      }
+    ] as unknown as Crop[];
+    expect(existingBedShare(b, placed, idx)).toBeCloseTo(40 / 100);
+    const sown = [
+      {
+        blockId: 'b',
+        cropPluginId: 'rye',
+        status: 'active',
+        quantityPlanted: 0.1,
+        quantityUnit: 'lb'
+      }
+    ] as unknown as Crop[];
+    expect(existingBedShare(b, sown, idx)).toBeCloseTo(((0.1 / 160) * 43_560) / 100);
+    const unknown = [{ blockId: 'b', cropPluginId: 'rye', status: 'active' }] as unknown as Crop[];
+    expect(existingBedShare(b, unknown, idx)).toBeCloseTo(0.5);
+  });
+
   it('a fill-to-bed planting saved with its plant count fills the bed', () => {
     const b = bed('b');
     const existing = [

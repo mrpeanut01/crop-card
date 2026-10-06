@@ -18,7 +18,7 @@ export interface BedLayoutAiResult {
   beds: Array<{
     widthFt: number;
     lengthFt: number;
-    crops: Array<{ key: string; plants: number }>;
+    crops: Array<{ key: string; plants?: number; areaSqFt?: number }>;
   }> | null;
   note: string | null;
   meta: AiResultMeta;
@@ -33,13 +33,15 @@ export function buildBedLayoutPrompt(
     `The owner's usual bed is ${opts.bedWidthFt} ft wide and at most ${opts.maxBedLengthFt} ft long.`,
     '',
     'Seed to place (key: name, family, plants, in-row spacing, spacing between rows):',
-    ...crops.map(
-      (c) =>
-        `- ${c.key}: ${c.name}, ${c.family ?? 'unknown family'}, ${c.plants} plants, ${c.inRowIn} in in-row, ${c.rowIn} in between rows`
+    ...crops.map((c) =>
+      c.byArea
+        ? `- ${c.key}: ${c.name}, ${c.family ?? 'unknown family'}, sown across ${c.plants} sq ft (drilled or broadcast: no rows and no plant count)`
+        : `- ${c.key}: ${c.name}, ${c.family ?? 'unknown family'}, ${c.plants} plants, ${c.inRowIn} in in-row, ${c.rowIn} in between rows`
     ),
     '',
     'Rules:',
     '- Place every plant of every seed exactly once. A seed may be split across beds.',
+    '- A seed "sown across" square feet takes ground, not plants: give it "areaSqFt" (whole square feet) and never "plants". Its square feet must add up exactly.',
     `- Each bed is at most ${opts.bedWidthFt} ft wide and at most ${opts.maxBedLengthFt} ft long. A bed may be wider only when one row of a crop in it needs more width, and longer only when one plant needs more length. At most ${MAX_SUGGESTED_BEDS} beds.`,
     "- Crops run in rows across the bed's width, one after another along its length, at the spacing given. Make each bed long enough for them.",
     '- Keep a crop family together where you can, and put tall crops in their own beds so they do not shade short ones.',
@@ -56,7 +58,13 @@ const replySchema = z.object({
         widthFt: z.number().finite(),
         lengthFt: z.number().finite(),
         crops: z
-          .array(z.object({ key: z.string().min(1).max(128), plants: z.number().finite() }))
+          .array(
+            z.object({
+              key: z.string().min(1).max(128),
+              plants: z.number().finite().optional(),
+              areaSqFt: z.number().finite().optional()
+            })
+          )
           .max(40)
       })
     )

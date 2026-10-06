@@ -14,6 +14,27 @@ import type { Crop } from '$lib/db/crops';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { DESIGNABLE_AREA_KINDS } from '$lib/farm/areaKinds';
 import { footprintSqFt, plantsFitUsable, usableSqft } from './sufficiency';
+import { areaForSeed, defaultSowMethod, spacingModel } from '$lib/plan/spacingModel';
+
+/** #555: square feet an existing planting of a crop sown by area takes:
+ *  its placed footprint, else the ground its recorded seed covers at the
+ *  high rate. Null when neither is known (callers then assume half). Its
+ *  plant count is ignored: an older plan may hold a count made from the
+ *  12 in placeholder. */
+export function existingAreaSqFt(
+  c: Pick<Crop, 'footprint' | 'quantityPlanted' | 'quantityUnit'>,
+  plugin: CropPlugin
+): number | null {
+  if (c.footprint && c.footprint.w_in > 0 && c.footprint.l_in > 0) {
+    return (c.footprint.w_in * c.footprint.l_in) / 144;
+  }
+  if (c.quantityPlanted != null && c.quantityPlanted > 0 && c.quantityUnit) {
+    const model = spacingModel(plugin);
+    const area = areaForSeed(model, defaultSowMethod(model), c.quantityPlanted, c.quantityUnit);
+    if (area) return area.sqft;
+  }
+  return null;
+}
 
 /** The shares on one shared bed may add up to this at most. */
 export const BED_SHARE_CAP = 1;
@@ -77,6 +98,11 @@ export function existingBedShare(
     const plugin = pluginIndex[c.cropPluginId];
     if (!plugin) continue;
     const fit = bedPlantsFit(block, plugin);
+    if (spacingModel(plugin).kind === 'area') {
+      const sqft = existingAreaSqFt(c, plugin);
+      share += sqft !== null && fit > 0 ? sqft / footprintSqFt(plugin) / fit : 0.5;
+      continue;
+    }
     if (c.plantCount != null && c.plantCount > 0 && fit > 0) share += c.plantCount / fit;
     else if (c.quantityPlanted != null && fit > 0) share += c.quantityPlanted / fit;
     else share += 0.5;

@@ -23,6 +23,24 @@ function plugin(id: string, family: string, rowIn: number, inRowIn: number): Cro
   } as CropPlugin;
 }
 
+function areaPlugin(id: string, family: string): CropPlugin {
+  return {
+    pluginId: id,
+    type: 'crop',
+    displayName: id,
+    version: '1.0.0',
+    cropFamily: family,
+    defaultRowSpacingInches: 7,
+    plantingGuide: {
+      seedingRate: {
+        drilledLbsPerAcre: { min: 60, max: 120 },
+        broadcastLbsPerAcre: { min: 90, max: 160 }
+      }
+    },
+    daysToMaturity: { min: 50, max: 80 }
+  } as CropPlugin;
+}
+
 const PLUGINS: Record<string, CropPlugin> = {
   lettuce: plugin('lettuce', 'leafy-green', 12, 8),
   kale: plugin('kale', 'leafy-green', 18, 12),
@@ -33,7 +51,10 @@ const PLUGINS: Record<string, CropPlugin> = {
   cornA: plugin('cornA', 'corn', 30, 9),
   cornB: plugin('cornB', 'corn', 30, 9),
   squash: plugin('squash', 'cucurbit', 60, 36),
-  tomato: plugin('tomato', 'solanaceae', 36, 24)
+  tomato: plugin('tomato', 'solanaceae', 36, 24),
+  // #555: crops sown by area, whose engine units are square feet.
+  rye: areaPlugin('rye', 'cover-grass'),
+  clover: areaPlugin('clover', 'legume')
 };
 const IDS = Object.keys(PLUGINS);
 const SUNS = ['full', 'partial', 'shade', undefined] as const;
@@ -267,6 +288,35 @@ describe('split engine properties', () => {
     expect(split).toBeGreaterThan(20);
     expect(left).toBeGreaterThan(20);
     expect(kept).toBeGreaterThan(5);
+  });
+
+  it('plans crops sown by area in square feet, never past the ground (#555)', () => {
+    let areaParts = 0;
+    fc.assert(
+      fc.property(planInputArb, (input) => {
+        const plan = planLayout(input);
+        for (const a of plan.assignments) {
+          const byArea = a.cropPluginId === 'rye' || a.cropPluginId === 'clover';
+          if (!byArea) {
+            expect(a.areaSqFt).toBeUndefined();
+            continue;
+          }
+          areaParts++;
+          expect(a.areaSqFt).toBe(a.plants);
+          const block = input.blocks.find((b) => b.id === a.blockId)!;
+          const ground =
+            block.widthFt && block.lengthFt
+              ? block.widthFt * block.lengthFt
+              : (block.acres ?? 0) * 43_560;
+          expect(a.plants).toBeLessThanOrEqual(Math.ceil(ground) + 1e-9);
+        }
+        for (const r of plan.leftover) {
+          expect(r.byArea === true).toBe(r.cropPluginId === 'rye' || r.cropPluginId === 'clover');
+        }
+      }),
+      { numRuns: 300, seed: 555 }
+    );
+    expect(areaParts).toBeGreaterThan(20);
   });
 
   it('is deterministic', () => {

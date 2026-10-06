@@ -46,12 +46,41 @@ export function fmtElapsed(ms: number): string {
   return `${m}m ${String(rem).padStart(2, '0')}s`;
 }
 
-export function sufficiencyChip(s: SufficiencyResult): {
+/** For a crop sown by area (#555) `area` formats the engine's square feet,
+ *  so no chip or tip calls them plants. */
+export function sufficiencyChip(
+  s: SufficiencyResult,
+  area?: (sqft: number) => string
+): {
   label: string;
   cls: string;
   tooltip: string;
 } {
   const pct = Math.round(s.utilizationPct * 100);
+  if (area) {
+    const available = area(s.plantsAvailable);
+    const fit = area(s.plantsFit);
+    if (s.status === 'match') {
+      return {
+        label: wt('wizard.suff.fills', { pct }),
+        cls: 'chip-match',
+        tooltip: wt('wizard.suff.fillsTipArea', { available, fit })
+      };
+    }
+    if (s.status === 'surplus') {
+      const n = area(s.leftoverPlants);
+      return {
+        label: wt('wizard.suff.extraArea', { n }),
+        cls: 'chip-surplus',
+        tooltip: wt('wizard.suff.extraTipArea', { available, fit, n })
+      };
+    }
+    return {
+      label: wt('wizard.suff.deficit', { pct }),
+      cls: 'chip-deficit',
+      tooltip: wt('wizard.suff.deficitTipArea', { available, pct, fit })
+    };
+  }
   if (s.status === 'match') {
     return {
       label: wt('wizard.suff.fills', { pct }),

@@ -7,6 +7,20 @@ import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
 import { companionIndex } from '$lib/plugins/companionRelations';
 import type { PluginRegistry } from '$lib/plugins/registry';
 import type { SeedSelection } from '$lib/plan/allocationApi';
+import { isAreaCrop } from '$lib/plan/spacingModel';
+import type { Assignment } from '$lib/layout/engine';
+
+/** #555: an assignment of a crop sown by area carries its square feet as
+ *  `areaSqFt`; its `plants` is then engine units, not a plant count. */
+export function withAreaSqFt<T extends Pick<Assignment, 'cropPluginId' | 'plants'>>(
+  assignments: ReadonlyArray<T>,
+  pluginIndex: Readonly<Record<string, CropPlugin>>
+): Array<T & { areaSqFt?: number }> {
+  return assignments.map((a) => {
+    const plugin = pluginIndex[a.cropPluginId];
+    return plugin && isAreaCrop(plugin) ? { ...a, areaSqFt: a.plants } : a;
+  });
+}
 
 export type AllocationInputResult =
   | { ok: true; planInput: PlanInput; companionSystems: CompanionPlugin[] }
@@ -61,14 +75,18 @@ export function buildAllocationInput(
 
   const bedIds = new Set(sharedBedBlockIds(selectedBlocks, listFields()));
   const seeds: SeedRequest[] = seedSelections.map((s) => {
-    const fill = s.fillToBed === true;
+    const byArea = isAreaCrop(pluginIndex[s.cropPluginId]);
+    // #555: a crop sown by area is planned in square feet. Without an area
+    // (its amount is not known, or an older client sent a plant count) it
+    // is sized to the space it gets.
+    const fill = s.fillToBed === true || (byArea && !(s.areaSqFt && s.areaSqFt > 0));
+    const units = byArea ? Math.max(1, Math.ceil(s.areaSqFt ?? 0)) : (s.quantityPlants as number);
     return {
       stockItemId: s.stockItemId,
       cropPluginId: s.cropPluginId,
       varietyDisplayName: s.varietyDisplayName,
-      quantityPlants: fill
-        ? fillCap(pluginIndex[s.cropPluginId], selectedBlocks, bedIds)
-        : (s.quantityPlants as number),
+      quantityPlants: fill ? fillCap(pluginIndex[s.cropPluginId], selectedBlocks, bedIds) : units,
+      ...(byArea ? { byArea: true } : {}),
       sunRequirement: s.sunRequirement,
       ...(fill ? { fillToCapacity: true } : {}),
       ...(s.keepInOneBed === true ? { keepInOneBed: true } : {})

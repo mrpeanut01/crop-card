@@ -6,10 +6,17 @@ import { BED_LENGTH_LIMITS, BED_WIDTH_LIMITS } from './bedLayout';
 export const bedLayoutRequestSchema = z.object({
   seeds: z
     .array(
-      z.object({
-        stockItemId: z.string().min(1).max(128),
-        plants: z.number().int().positive().max(100_000)
-      })
+      z
+        .object({
+          stockItemId: z.string().min(1).max(128),
+          plants: z.number().int().positive().max(100_000).optional(),
+          /** #555: square feet for a crop sown by area. */
+          areaSqFt: z.number().int().positive().max(1_000_000).optional()
+        })
+        .refine((s) => s.plants !== undefined || s.areaSqFt !== undefined, {
+          message: 'plants or areaSqFt is required',
+          path: ['plants']
+        })
     )
     .min(1)
     .max(40),

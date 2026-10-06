@@ -17,6 +17,7 @@ import type { FrostDatesIso, PlantingWindow } from '$lib/plan/plantingWindow';
 import { extractJsonObject } from './aiJsonExtract';
 import { estimateUsd, selectModel, type AiResultMeta } from './aiPlanning';
 import { getApiKey } from './scanResult';
+import { isAreaCrop } from '$lib/plan/spacingModel';
 
 export const MAX_AI_PROPOSALS = 12;
 const MAX_NOTE_CHARS = 140;
@@ -28,9 +29,12 @@ export interface GardenFillCropFact {
   name: string;
   family: string;
   daysToMaturity: { min: number; max: number } | null;
-  inRowSpacingIn: number;
-  rowSpacingIn: number;
+  /** Null for a crop sown by area (#555): it has no rows of plants. */
+  inRowSpacingIn: number | null;
+  rowSpacingIn: number | null;
   plants: number | null;
+  /** #555: sown across the ground (drilled or broadcast). */
+  byArea?: boolean;
   /** Planting dates the server accepts for this crop this season. */
   window?: { earliest: string; latest: string } | null;
 }
@@ -62,6 +66,9 @@ function fmtFootprint(fp: Footprint | null): string {
 function cropLine(c: GardenFillCropFact): string {
   const dtm = c.daysToMaturity ? `${c.daysToMaturity.min}-${c.daysToMaturity.max}` : 'unknown';
   const window = c.window ? `, plant between ${c.window.earliest} and ${c.window.latest}` : '';
+  if (c.byArea || c.inRowSpacingIn === null || c.rowSpacingIn === null) {
+    return `- ${c.cropPluginId}: ${c.name}, ${c.family}, ${dtm} days to maturity, sown across an area (no plant count)${window}`;
+  }
   const plants = c.plants ? `, wants ${c.plants} plants` : '';
   return `- ${c.cropPluginId}: ${c.name}, ${c.family}, ${dtm} days to maturity, ${c.inRowSpacingIn} in in-row, ${c.rowSpacingIn} in between rows${window}${plants}`;
 }
@@ -109,6 +116,7 @@ export function buildGardenFillPrompt(input: GardenFillPromptInput): string {
     `- plantingDate is YYYY-MM-DD in ${input.seasonYear}. When a recipe date falls outside a crop's "plant between" dates, the "plant between" dates win.`,
     '- Fill the free space: give each planting enough room for several plants at its spacing, and use a later crop to follow an early one in the same spot.',
     '- Each crop must be ready to harvest before the first fall frost.',
+    '- A crop "sown across an area" gets a footprint only: never give it a plant count.',
     `- At most ${MAX_AI_PROPOSALS} plantings. pattern is "square" (rows), "offset" (intensive) or "sfg" (square foot).`,
     `- note: one plain sentence under ${MAX_NOTE_CHARS} characters, or omit it.`,
     '',
@@ -165,7 +173,11 @@ const aiProposalSchema = z.object({
   plantingDate: z.string().regex(ISO_DAY),
   footprint: footprintSchema,
   pattern: z.enum(SPACING_PATTERNS).optional(),
-  note: z.string().optional()
+  note: z.string().optional(),
+  /** Not asked for. A proposal that gives one for a crop sown by area is
+   *  refused (#555). */
+  plantCount: z.unknown().optional(),
+  plants: z.unknown().optional()
 });
 
 function sanitizeNote(note: string | undefined): string | null {
@@ -227,6 +239,7 @@ export function validateFillProposals(
     const crop = ctx.crops[p.cropPluginId];
     const window = ctx.plantingWindow(p.cropPluginId);
     if (!crop || !window) continue;
+    if (isAreaCrop(crop) && (p.plantCount !== undefined || p.plants !== undefined)) continue;
     if (p.plantingDate < window.earliest || p.plantingDate > window.latest) continue;
     if (!p.plantingDate.startsWith(String(ctx.seasonYear))) continue;
     const plantingDateMs = dayFromIso(p.plantingDate);

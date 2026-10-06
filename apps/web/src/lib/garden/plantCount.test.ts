@@ -174,8 +174,8 @@ describe('plantCount', () => {
         fc.integer({ min: 0, max: 200 }),
         (pattern, inRow, row, w, l, dw, dl) => {
           const s = spacing(inRow, row, pattern);
-          const small = plantCount({ w_in: w, l_in: l }, s).count;
-          const big = plantCount({ w_in: w + dw, l_in: l + dl }, s).count;
+          const small = plantCount({ w_in: w, l_in: l }, s).count ?? 0;
+          const big = plantCount({ w_in: w + dw, l_in: l + dl }, s).count ?? 0;
           expect(big).toBeGreaterThanOrEqual(small);
           expect(small).toBeGreaterThanOrEqual(1);
           expect(Number.isInteger(small)).toBe(true);

@@ -16,6 +16,7 @@ import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import { frostDatesForYear } from '$lib/schedule/settings';
 import { LOUDOUN_VA, soilTempEarliestDayMs } from '$lib/weather/normals';
 import { footprintSqFt, plantsFitUsable } from '$lib/layout/sufficiency';
+import { isAreaCrop } from '$lib/plan/spacingModel';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 import { t } from '$lib/i18n';
@@ -127,6 +128,8 @@ export const POST: RequestHandler = async (event) => {
     if (!plug) continue;
     const block = blocksById.get(draft.blockId);
     if (!block) continue;
+    // #555: a crop sown by area has no plant count to weigh density with.
+    if (isAreaCrop(plug)) continue;
     const footprint = footprintSqFt(plug);
     const plantsFit = footprint > 0 ? plantsFitUsable(block, plug) : null;
     // Seed quantity comes from the stock-item with matching displayName,

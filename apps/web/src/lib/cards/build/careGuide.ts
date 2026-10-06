@@ -28,9 +28,13 @@ import {
 } from './common';
 import { formatFeet, formatInches } from './size';
 import { seedingFacts } from './seeding';
+import { defaultSowMethod, spacingModel } from '$lib/plan/spacingModel';
+import { seedAmountLine } from '$lib/plan/seedAmountText';
 import { familyCareTips, type CareTip, type FamilyCareTips } from './careTips';
 import { CARE_SECTION, filterSprayAdviceItems, growerFacingText } from '$lib/journal/photoHelp';
 import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
+
+const SQM_PER_SQFT = 0.09290304;
 
 const MAX_PLANTINGS = 6;
 
@@ -166,6 +170,24 @@ export function buildCareGuideCard(
     });
   }
   facts.push(...seedingFacts(guide?.seedingRate, opts));
+  // #555: for a crop sown by area, the seed for a small garden patch from
+  // the same rates, so the Care Guide and the Planting card agree.
+  const model = spacingModel(plugin);
+  if (model.kind === 'area') {
+    const patch = opts.prefs.units === 'metric' ? 10 / SQM_PER_SQFT : 100;
+    const line = seedAmountLine(
+      model,
+      defaultSowMethod(model),
+      patch,
+      opts.prefs.units,
+      opts.prefs.locale
+    );
+    facts.push({
+      label: tr('cards.fact.seedForArea'),
+      value: line.text,
+      ...(line.provenance ? { provenance: line.provenance } : {})
+    });
+  }
   const rows = guide?.rowSpacingIn ?? plugin.defaultRowSpacingInches;
   if (rows && !guide?.seedingRate?.drillRowSpacingIn) {
     facts.push({

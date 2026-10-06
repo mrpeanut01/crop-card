@@ -9,12 +9,19 @@
 
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { rowSpacingOf } from '$lib/garden/plantCount';
+import { isAreaCrop } from '$lib/plan/spacingModel';
 import type { BlockWithPlantings, SunExposure } from '$lib/db/blocks';
 import type { Crop } from '$lib/db/crops';
 import { rotationLookbackForFamily } from '$lib/calendar/rotation';
 import { pluginsCross } from '$lib/plan/pollination';
 import { plantsFitUsable } from './sufficiency';
-import { bedPlantsFit, freeBedShare, plantsForShare, SHARE_EPSILON } from './bedSharing';
+import {
+  bedPlantsFit,
+  existingAreaSqFt,
+  freeBedShare,
+  plantsForShare,
+  SHARE_EPSILON
+} from './bedSharing';
 import type { Assignment, PlanInput, SeedRequest } from './engine';
 
 export type BlockStatus =
@@ -37,7 +44,9 @@ export interface LeftoverBlock {
 export interface LeftoverReport {
   stockItemId: string;
   cropPluginId: string;
+  /** Engine units left: plants, or square feet when `byArea` (#555). */
   plantsLeft: number;
+  byArea?: true;
   blocks: LeftoverBlock[];
 }
 
@@ -185,6 +194,7 @@ export function isNarrow(
   plugin: CropPlugin,
   sharedBed: boolean
 ): boolean {
+  if (isAreaCrop(plugin)) return false;
   const rowIn = rowSpacingOf(plugin).inches;
   const minDimFt = sharedBed ? bedMinDimFt(block) : sqrtAcresFt(block);
   return minDimFt != null && minDimFt < ((sharedBed ? 1 : 2) * rowIn) / 12;
@@ -207,7 +217,10 @@ function fieldExistingUsage(input: PlanInput, block: BlockWithPlantings): number
     if (c.blockId !== block.id || !isActiveCrop(c)) continue;
     const cropPlugin = input.pluginIndex[c.cropPluginId];
     if (!cropPlugin) continue;
-    if (c.quantityPlanted != null) sum += c.quantityPlanted;
+    if (isAreaCrop(cropPlugin)) {
+      const sqft = existingAreaSqFt(c, cropPlugin);
+      sum += sqft ?? plantsFitUsable(block, cropPlugin) * 0.5;
+    } else if (c.quantityPlanted != null) sum += c.quantityPlanted;
     else sum += plantsFitUsable(block, cropPlugin) * 0.5;
   }
   return sum;
@@ -263,7 +276,8 @@ export function fieldShareUsed(
     const plugin = input.pluginIndex[c.cropPluginId];
     if (!plugin) continue;
     const fit = plantsFitUsable(block, plugin);
-    if (c.quantityPlanted != null && fit > 0) share += c.quantityPlanted / fit;
+    const units = isAreaCrop(plugin) ? existingAreaSqFt(c, plugin) : (c.quantityPlanted ?? null);
+    if (units != null && fit > 0) share += units / fit;
     else share += 0.5;
   }
   for (const a of placed) {
@@ -382,10 +396,12 @@ export function leftoverReports(
       const status = blockStatusFor(input, seed, b.id, placed);
       if (status) blocks.push(status);
     }
+    const plugin = input.pluginIndex[seed.cropPluginId];
     out.push({
       stockItemId: seed.stockItemId,
       cropPluginId: seed.cropPluginId,
       plantsLeft: left,
+      ...(plugin && isAreaCrop(plugin) ? { byArea: true as const } : {}),
       blocks
     });
   }

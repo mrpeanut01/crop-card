@@ -268,7 +268,7 @@ test.describe('allocation wizard', () => {
       'No Anthropic API key configured'
     );
     await expect(body(page)).toContainText('AI off · deterministic allocator');
-    for (const col of ['Seed', 'Block', 'Plants', 'Block fit', 'Why', 'Source']) {
+    for (const col of ['Seed', 'Block', 'Plants or area', 'Block fit', 'Why', 'Source']) {
       await expect(body(page).getByRole('columnheader', { name: col, exact: true })).toBeVisible();
     }
     const chat = body(page).getByRole('region', { name: 'Refine plan with AI' });

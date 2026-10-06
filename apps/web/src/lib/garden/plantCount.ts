@@ -4,6 +4,7 @@
  */
 
 import { FOOTPRINT_SNAP_IN, SFG_SNAP_IN } from './geometry';
+import { AREA_UNIT_SQFT, spacingModel, type SeedingRateFields } from '$lib/plan/spacingModel';
 import type {
   Footprint,
   GardenCrop,
@@ -27,8 +28,12 @@ interface SpacingFields {
   plantingGuide?: {
     rowSpacingIn?: number | null;
     inRowSpacingIn?: { min: number; max: number } | null;
+    seedingRate?: SeedingRateFields | null;
   } | null;
 }
+
+/** Side of one engine unit for a crop sown by area (one square foot). */
+export const AREA_UNIT_IN = Math.sqrt(AREA_UNIT_SQFT) * 12;
 
 const EPS = 1e-9;
 const SFG_CELL_IN = 12;
@@ -68,6 +73,11 @@ export function resolveSpacing(
   pattern: SpacingPattern,
   override?: { inRowIn?: number | null; rowIn?: number | null }
 ): PlantSpacing {
+  // #555: a crop sown by area has no rows of counted plants, so a typed
+  // spacing does not turn it into one.
+  if (spacingModel(crop).kind === 'area') {
+    return { inRowIn: AREA_UNIT_IN, rowIn: AREA_UNIT_IN, pattern, source: 'plugin', mode: 'area' };
+  }
   const inRow = inRowSpacingOf(crop);
   const guideRow = crop?.plantingGuide?.rowSpacingIn;
   let inRowIn = inRow.inches;
@@ -136,6 +146,7 @@ export function plantCount(
 ): PlantCountResult {
   const provenance =
     spacing.source === 'plugin' ? 'data' : spacing.source === 'manual' ? 'manual' : 'fallback';
+  if (spacing.mode === 'area') return { count: null, rows: 0, perRow: 0, provenance, mode: 'area' };
   if (!positive(spacing.inRowIn) || !positive(spacing.rowIn)) {
     return { count: 1, rows: 1, perRow: 1, provenance };
   }
@@ -152,7 +163,8 @@ export function plantCount(
 
 /** Smallest footprint of the bed's own width that holds `plants`, used when a
  *  crop is tapped into a bed with a planned quantity. Width is the bed's
- *  width snapped down to the pattern's step; length grows in steps. */
+ *  width snapped down to the pattern's step; length grows in steps. For a
+ *  crop sown by area `plants` is square feet. */
 export function footprintForCount(
   plants: number,
   spacing: PlantSpacing,
@@ -160,8 +172,13 @@ export function footprintForCount(
 ): Pick<Footprint, 'w_in' | 'l_in'> {
   const step = spacing.pattern === 'sfg' ? SFG_SNAP_IN : FOOTPRINT_SNAP_IN;
   const w = Math.max(step, Math.floor(bedWidthIn / step + EPS) * step);
+  if (spacing.mode === 'area') {
+    const sqIn = Math.max(1, Number.isFinite(plants) ? plants : 1) * AREA_UNIT_SQFT * 144;
+    return { w_in: w, l_in: Math.max(step, Math.ceil(sqIn / w / step - EPS) * step) };
+  }
   const want = Math.max(1, Math.ceil(Number.isFinite(plants) ? plants : 1));
-  const holds = (n: number) => plantCount({ w_in: w, l_in: n * step }, spacing).count >= want;
+  const holds = (n: number) =>
+    (plantCount({ w_in: w, l_in: n * step }, spacing).count ?? 0) >= want;
   const reach = Math.max(spacing.inRowIn, spacing.rowIn, SFG_CELL_IN);
   let hi = Math.max(1, Math.ceil((want * reach * 2 + 2 * SFG_CELL_IN) / step));
   if (!holds(hi)) return { w_in: w, l_in: hi * step };

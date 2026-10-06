@@ -14,6 +14,9 @@
     type WeatherProvenance
   } from '$lib/weather/leafWet';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
+  import { defaultSowMethod } from '$lib/plan/spacingModel';
+  import { seedAmountLine } from '$lib/plan/seedAmountText';
   import { createT } from '$lib/i18n';
 
   const { data } = $props();
@@ -139,6 +142,19 @@
         )}
       </div>
       <h1 class="serif">{c.displayName}</h1>
+      {#if plan.spacing.kind === 'area' && c.areaSqFt}
+        {@const line = seedAmountLine(
+          plan.spacing,
+          defaultSowMethod(plan.spacing),
+          c.areaSqFt,
+          currentPrefs().units,
+          data.locale
+        )}
+        <p class="seed-line" data-testid="wheat-seed-amount">
+          {#if line.provenance}<Provenance source={line.provenance} compact />{/if}
+          {line.text}
+        </p>
+      {/if}
       <p class="lede">
         {c.varietyDisplayName} · {tr('plan.wheat.planted', { date: fmtDate(c.plantingDate, true) })}
         {#if harvestStage}· {tr('plan.wheat.harvestTarget', {
@@ -227,6 +243,12 @@
     line-height: 1.1;
     color: var(--color-forest-deep);
     letter-spacing: -0.02em;
+  }
+  .seed-line {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0.25rem 0;
   }
   .lede {
     margin: 4px 0 0;

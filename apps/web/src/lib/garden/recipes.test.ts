@@ -48,7 +48,8 @@ const CROPS: Record<string, GardenCrop> = Object.fromEntries(
     'pole-bean-kentucky-wonder',
     'winter-squash-delicata',
     'tomato-roma-vf',
-    'basil-genovese'
+    'basil-genovese',
+    'buckwheat-cover'
   ].map((id) => [id, crop(id)])
 );
 
@@ -286,6 +287,25 @@ describe('deterministicFill', () => {
       footprint: { x_in: 0, y_in: 0, w_in: 48, l_in: 18 },
       plantCount: 12
     });
+  });
+
+  it('fills a crop sown by area by area, with no plant count (#555)', () => {
+    const short = ctx({ lastSpringFrostMs: utc(5, 20), firstFallFrostMs: utc(8, 10) });
+    const plan = deterministicFillPlan(
+      recipes,
+      [
+        // An older plan's 12 in placeholder count is not carried over.
+        { cropPluginId: 'buckwheat-cover', varietyDisplayName: 'Buckwheat', plants: null },
+        { cropPluginId: 'lettuce-buttercrunch', varietyDisplayName: 'Buttercrunch', plants: 8 }
+      ],
+      short,
+      utc(5, 25)
+    );
+    const buck = plan.proposals.find((p) => p.cropPluginId === 'buckwheat-cover')!;
+    expect(buck.plantCount).toBeNull();
+    expect(buck.spacing.mode).toBe('area');
+    expect(buck.provenance).toBe('fallback');
+    expect(buck.footprint).toMatchObject({ w_in: 48, l_in: 48 });
   });
 
   it('returns nothing when the bed is full', () => {

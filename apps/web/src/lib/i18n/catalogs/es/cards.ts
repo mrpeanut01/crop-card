@@ -524,5 +524,6 @@ export const esCards: Partial<Record<MessageKey, string>> = {
   'cards.cal.seeSprayCard': 'Ver la tarjeta de aplicación',
   'cards.cal.seeTaskSprayCard': 'Abre la tarea para ver su tarjeta de aplicación',
   'cards.cal.sprayNotice':
-    'Las tareas de aplicación no muestran dosis ni pasos de mezcla. Para eso usa la tarjeta de aplicación.'
+    'Las tareas de aplicación no muestran dosis ni pasos de mezcla. Para eso usa la tarjeta de aplicación.',
+  'cards.fact.seedForArea': 'Semilla necesaria'
 };

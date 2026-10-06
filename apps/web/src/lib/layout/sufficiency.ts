@@ -23,6 +23,7 @@
 import type { BlockWithPlantings } from '$lib/db/blocks';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { inRowSpacingOf, rowSpacingOf } from '$lib/garden/plantCount';
+import { AREA_UNIT_SQFT, isAreaCrop } from '$lib/plan/spacingModel';
 
 export const DEFAULT_PERIMETER_BUFFER_FT = 3;
 const SQFT_PER_ACRE = 43_560;
@@ -73,7 +74,11 @@ export function plantsFitUsable(
   return Math.floor(area.sqft / perPlantSqft);
 }
 
+/** Square feet one engine unit of the crop takes. For a crop sown by area
+ *  (#555) the unit is one square foot, so the engine's "plants" of it are
+ *  square feet and no plant count is ever derived. */
 export function footprintSqFt(plugin: CropPlugin): number {
+  if (isAreaCrop(plugin)) return AREA_UNIT_SQFT;
   // v1.3 — pick the largest of three signals so we don't under-size vining
   // or wide-canopy crops:
   //   1) Explicit per-plant matureCanopyFtSq (operator-supplied truth)

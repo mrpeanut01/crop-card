@@ -500,7 +500,7 @@ export const enWizard = {
   'wizard.review.staggerTip': 'Plant ≥{days} d apart from: {partners}.',
   'wizard.review.thBlock': 'Block',
   'wizard.review.thFit': 'Block fit',
-  'wizard.review.thPlants': 'Plants',
+  'wizard.review.thPlants': 'Plants or area',
   'wizard.review.thSeed': 'Seed',
   'wizard.review.thSource': 'Source',
   'wizard.review.thWhy': 'Why',
@@ -522,7 +522,7 @@ export const enWizard = {
   'wizard.schedule.succession': 'Succession sowing',
   'wizard.schedule.thBlock': 'Block',
   'wizard.schedule.thDate': 'Planting date',
-  'wizard.schedule.thPlants': 'Plants',
+  'wizard.schedule.thPlants': 'Plants or area',
   'wizard.schedule.thSeed': 'Seed',
   'wizard.schedule.thWhy': 'Why',
   'wizard.seedchat.change':
@@ -602,7 +602,7 @@ export const enWizard = {
   'wizard.seeds.sheetTitle': 'Add seed to inventory',
   'wizard.seeds.skip': 'Skip — I’ll add seed stock later',
   'wizard.seeds.thAvailable': 'Available',
-  'wizard.seeds.thPlants': '≈ plants',
+  'wizard.seeds.thPlants': '≈ plants or area',
   'wizard.seeds.thQuantity': 'Quantity',
   'wizard.seeds.thVariety': 'Variety',
   'wizard.seeds.typeMore': 'Type at least 2 letters to search your crops.',
@@ -1046,5 +1046,17 @@ export const enWizard = {
   'planui.zad.stage.Z65': 'Mid-anthesis',
   'planui.zad.stage.Z75': 'Medium milk',
   'planui.zad.stage.Z85': 'Soft dough',
-  'planui.zad.stage.Z92': 'Harvest-ripe (grain hard)'
+  'planui.zad.stage.Z92': 'Harvest-ripe (grain hard)',
+  'wizard.suff.fillsTipArea':
+    'Your seed covers {available}, the right size for this block ({fit}).',
+  'wizard.suff.extraArea': '{n} of seed extra',
+  'wizard.suff.extraTipArea':
+    'Your seed covers {available} but the block has {fit}, so seed for about {n} will be left over.',
+  'wizard.suff.deficitTipArea': "Your seed covers {available}, only {pct}% of the block's {fit}.",
+  'wizard.review.didntFitArea':
+    "{name}: seed for {area} didn't fit in the blocks you picked. Keep the seed for later, or go back and pick more space.",
+  'wizard.beds.areaOnly':
+    'This crop is sown across the bed, so send the square feet it covers, not a plant count.',
+  'wizard.beds.leftoverItemArea': '{area} sq ft of {name}',
+  'wizard.blocks.cropArea': '{name}: sown across {area}'
 } as const;

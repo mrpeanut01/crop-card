@@ -2,7 +2,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { requireOwner } from '$lib/server/auth';
 import { getRegistry } from '$lib/server/registry';
-import { buildAllocationInput } from '$lib/server/allocationInput';
+import { buildAllocationInput, withAreaSqFt } from '$lib/server/allocationInput';
 import { seedSelectionSchema } from '$lib/plan/allocationApi';
 import { buildFarmContextWithCache } from '$lib/server/aiContext';
 import { allocate, allocateDeterministic, type AllocationResult } from '$lib/server/aiAllocation';
@@ -95,7 +95,7 @@ export const POST: RequestHandler = async (event) => {
   }
 
   return json({
-    assignments: result.assignments,
+    assignments: withAreaSqFt(result.assignments, planInput.pluginIndex),
     unplaced: result.unplaced,
     leftover: result.leftover,
     sharedBedBlockIds: [...(planInput.bedBlockIds ?? [])],

@@ -188,6 +188,7 @@
 
   function spacingText(c: GardenCrop): string {
     const s = resolveSpacing(c, 'square');
+    if (s.mode === 'area') return tr('garden.canvas.sownAcross');
     return tr('garden.crop.apart', { n: Math.round(s.inRowIn) });
   }
 

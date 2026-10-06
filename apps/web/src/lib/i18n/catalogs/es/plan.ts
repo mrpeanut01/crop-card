@@ -732,5 +732,25 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plan.split.err.invalid': 'Envía un cultivo y si se mantiene en una cama.',
   'plan.split.err.unknownCrop': 'Ese cultivo no está en la biblioteca de cultivos.',
   'plan.cal.body.harvestReadiness':
-    'Antes de cosechar, revisa las señales de madurez propias de cada cultivo.'
+    'Antes de cosechar, revisa las señales de madurez propias de cada cultivo.',
+  'plan.area.method.broadcast': 'Al voleo',
+  'plan.area.method.drilled': 'Con sembradora',
+  'plan.area.method.planted': 'Sembrado',
+  'plan.area.amountWeight': '{method}: {amount} para {area}',
+  'plan.area.amountSeeds': '{method}: {amount} semillas para {area}',
+  'plan.area.notKnown':
+    'No se sabe cuánta semilla lleva este cultivo. Las fuentes no coinciden o no dan una cifra; revisa la etiqueta de tu semilla.',
+  'plan.area.noCount':
+    'El número de plantas no se aplica a los cultivos sembrados con sembradora o al voleo.',
+  'plan.area.replan':
+    'Esta siembra se planificó con un número de plantas provisional. Vuelve a planificarla para calcularla por superficie.',
+  'plan.area.label': 'Semilla por superficie',
+  'plan.area.covers': 'Cubre unos {area} con la dosis más alta de la fuente',
+  'plan.area.coversManual': 'Cubre unos {area} con tu dosis',
+  'plan.area.sizedToBed': 'No se sabe la cantidad, así que se ajustará a la cama.',
+  'plan.area.methodToggle': 'Cómo lo siembras',
+  'plan.area.typeYours': 'Escribe la tuya',
+  'plan.area.yourRate': 'Tu dosis (lb/acre)',
+  'plan.area.yourRateMetric': 'Tu dosis (kg/ha)',
+  'plan.area.clearRate': 'Borrar'
 };

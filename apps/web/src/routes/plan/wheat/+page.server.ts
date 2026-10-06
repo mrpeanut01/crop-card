@@ -16,6 +16,7 @@ import {
   type GrowthHabit,
   type SmallGrainStage
 } from '$lib/plan/smallGrain';
+import { spacingModel, SQFT_PER_ACRE, type SpacingModel } from '$lib/plan/spacingModel';
 
 export interface SmallGrainCandidate {
   plantingId: string;
@@ -25,6 +26,8 @@ export interface SmallGrainCandidate {
   displayName: string;
   varietyDisplayName: string;
   plantingDate: number | null;
+  /** #555: the ground of the block this planting is on. */
+  areaSqFt: number | null;
 }
 
 export interface SmallGrainFungicideNote {
@@ -35,6 +38,8 @@ export interface SmallGrainFungicideNote {
 export interface SmallGrainPlanView {
   candidate: SmallGrainCandidate;
   acres: number | null;
+  /** #555: how the crop takes up space, for the seed-by-area line. */
+  spacing: SpacingModel;
   habit: GrowthHabit;
   daysToMaturity: { min: number; max: number } | null;
   stages: SmallGrainStage[];
@@ -71,7 +76,13 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         cropPluginId: p.cropPluginId,
         displayName: crop.displayName,
         varietyDisplayName: p.varietyDisplayName,
-        plantingDate: p.plantingDate
+        plantingDate: p.plantingDate,
+        areaSqFt:
+          b.widthFt && b.lengthFt
+            ? b.widthFt * b.lengthFt
+            : b.acres && b.acres > 0
+              ? b.acres * SQFT_PER_ACRE
+              : null
       });
     }
   }
@@ -110,6 +121,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     plan = {
       candidate: selected,
       acres: blocks.find((b) => b.id === selected!.blockId)?.acres ?? null,
+      spacing: spacingModel(crop),
       habit,
       daysToMaturity: crop.daysToMaturity ?? null,
       stages,

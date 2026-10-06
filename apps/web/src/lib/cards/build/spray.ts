@@ -64,6 +64,21 @@ function sprayers(snapshot: FarmSnapshot): SnapshotEquipment[] {
   return snapshot.equipment.filter((e) => e.type === 'sprayer');
 }
 
+/** A Spray Card never prints a blank name or a label without a value
+ *  (SC-1, SC-2): farm plugin copies and sprayer labels only promise one
+ *  character, which can be whitespace. */
+export function printableProduct(product: SnapshotSprayProduct): SnapshotSprayProduct {
+  const displayName = product.displayName.trim() || product.pluginId;
+  const targets = product.targets.map((t) => t.trim()).filter(Boolean);
+  const mixSteps = product.mixSteps.map((m) => m.trim()).filter(Boolean);
+  return { ...product, displayName, targets, mixSteps };
+}
+
+function printableSprayer(sprayer: SnapshotEquipment, tr: ResolvedOptions['tr']): SnapshotEquipment {
+  const label = sprayer.label.trim() || tr('cards.record.sprayer');
+  return label === sprayer.label ? sprayer : { ...sprayer, label };
+}
+
 function positiveTank(sprayer: SnapshotEquipment): number | null {
   const t = sprayer.tankGal;
   return typeof t === 'number' && Number.isFinite(t) && t > 0 ? t : null;
@@ -87,10 +102,11 @@ function baseCard(
 
 function calibrateFirstCard(
   snapshot: FarmSnapshot,
-  sprayer: SnapshotEquipment,
+  rawSprayer: SnapshotEquipment,
   id: string,
   { tr }: ResolvedOptions
 ): CardModel {
+  const sprayer = printableSprayer(rawSprayer, tr);
   const notices = sprayNotices(snapshot);
   return {
     ...baseCard(snapshot, sprayer, id),
@@ -236,11 +252,13 @@ export function beforeYouSpray(product: SnapshotSprayProduct): string[] {
 
 function productCard(
   snapshot: FarmSnapshot,
-  sprayer: SnapshotEquipment,
-  product: SnapshotSprayProduct,
+  rawSprayer: SnapshotEquipment,
+  rawProduct: SnapshotSprayProduct,
   gpa: number,
   opts: ResolvedOptions
 ): CardModel {
+  const sprayer = printableSprayer(rawSprayer, opts.tr);
+  const product = printableProduct(rawProduct);
   const id = sprayCardId(sprayer.id, product.pluginId);
   const tank = positiveTank(sprayer);
   const calibratedOn = sprayer.state?.calibrationDate;
@@ -362,9 +380,9 @@ export function buildSprayCard(
 
 export function buildSprayCards(snapshot: FarmSnapshot, options: BuildOptions = {}): CardModel[] {
   const opts = resolveOptions(snapshot, options);
-  const products = Object.values(snapshot.sprayProducts ?? {}).sort((a, b) =>
-    a.displayName.localeCompare(b.displayName)
-  );
+  const products = Object.values(snapshot.sprayProducts ?? {})
+    .map(printableProduct)
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
   const out: CardModel[] = [];
   for (const sprayer of sprayers(snapshot)) {
     const gpa = sprayer.state?.calibratedGpa;

@@ -25,7 +25,7 @@ export const GET: RequestHandler = ({ params, url, locals }) => {
 
 const patchSchema = z
   .object({
-    label: z.string().min(1).max(120).optional(),
+    label: z.string().trim().min(1).max(120).optional(),
     notes: z.string().max(500).optional(),
     /** Sprayer tank size and nozzle; null clears one. */
     spec: z

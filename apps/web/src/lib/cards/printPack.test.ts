@@ -26,11 +26,16 @@ const LAST_LOADS = [
 ];
 const CTX = { locale: null, qr: true, url: 'https://app.cropcard.io/c/sp_eq_boom~24d' };
 
-function card(product: SnapshotSprayProduct, last: string | null, tankGal = 50): CardModel {
+function card(
+  product: SnapshotSprayProduct,
+  last: string | null,
+  tankGal = 50,
+  label = '50-gal boom'
+): CardModel {
   const sprayer: SnapshotEquipment = {
     id: 'eq_boom',
     type: 'sprayer',
-    label: '50-gal boom',
+    label,
     tankGal,
     state: {
       calibratedGpa: 15,
@@ -64,6 +69,9 @@ function checkParts(
   parts.forEach((p, i) => {
     expect(p.printPart).toMatchObject({ n: i + 1, of });
     expect(p.title).toBe(whole.title);
+    expect(p.title.trim()).not.toBe('');
+    expect(p.kicker?.trim()).toBeTruthy();
+    for (const sec of p.sections) for (const item of sec.items) expect(item.trim()).not.toBe('');
     expect(p.key).toBe(whole.key);
     for (const n of whole.printRepeatNotices ?? []) expect(p.notices).toContain(n);
     for (const f of p.facts) expect(f.value.trim()).not.toBe('');
@@ -131,6 +139,15 @@ describe('wrapLines', () => {
   });
 });
 
+/** CI counterexample (fast-check seed -615220557): a whitespace-only name and target. */
+const CI_BLANK_NAME = {
+  displayName: ' ',
+  targets: [' '],
+  mixSteps: [] as string[],
+  rainfast: null,
+  type: 'herbicide' as const
+};
+
 describe('wholePrintParts', () => {
   it('leaves other cards and full-page paper alone', () => {
     const c = card(SAMPLE_HERBICIDE, 'glufosinate');
@@ -164,11 +181,39 @@ describe('wholePrintParts', () => {
     checkParts(c, parts, 'index-4x6');
   });
 
+  it('never prints a blank name, target or mix step from a whitespace-only farm copy', () => {
+    for (const base of [SAMPLE_HERBICIDE, SAMPLE_FUNGICIDE]) {
+      const c = card(
+        {
+          ...base,
+          displayName: ' \t ',
+          targets: [' ', 'Pigweed '],
+          mixSteps: ['  ', ' Fill half']
+        },
+        null,
+        50,
+        '  '
+      );
+      expect(c.title).toBe(base.pluginId);
+      expect(c.kicker).not.toMatch(/^\s|\s{2}/);
+      expect(c.facts.find((f) => f.label === 'Target')?.value).toBe('Pigweed');
+      expect(c.sections.find((s) => s.title === 'Mix order')?.items).toEqual(['Fill half']);
+      for (const layout of LAYOUTS) checkParts(c, wholePrintParts(c, layout, CTX), layout);
+    }
+    const allBlank = card({ ...SAMPLE_FUNGICIDE, targets: [' '], mixSteps: [' '] }, null);
+    expect(allBlank.facts.some((f) => f.label === 'Target')).toBe(false);
+    expect(allBlank.sections.find((s) => s.title === 'Mix order')?.items).toEqual([
+      'Follow the mixing directions on the label.'
+    ]);
+  });
+
   it('holds the rulings for random products, tanks, loads and paper', () => {
+    const text = (max: number) =>
+      fc.oneof(fc.string({ minLength: 1, maxLength: max }), fc.stringMatching(/^[ \t\n]{1,6}$/));
     const product = fc.record({
-      displayName: fc.string({ minLength: 1, maxLength: 70 }),
-      targets: fc.array(fc.string({ minLength: 1, maxLength: 30 }), { maxLength: 12 }),
-      mixSteps: fc.array(fc.string({ minLength: 1, maxLength: 140 }), { maxLength: 8 }),
+      displayName: text(70),
+      targets: fc.array(text(30), { maxLength: 12 }),
+      mixSteps: fc.array(text(140), { maxLength: 8 }),
       rainfast: fc.option(fc.integer({ min: 1, max: 24 }), { nil: null }),
       type: fc.constantFrom('herbicide', 'fungicide')
     });
@@ -179,7 +224,8 @@ describe('wholePrintParts', () => {
         fc.option(fc.integer({ min: 1, max: 500 }), { nil: null }),
         fc.constantFrom(...LAYOUTS),
         fc.constantFrom('en', 'es'),
-        (p, last, tank, layout, locale) => {
+        fc.oneof(fc.constant('50-gal boom'), text(40)),
+        (p, last, tank, layout, locale, label) => {
           const base = p.type === 'herbicide' ? SAMPLE_HERBICIDE : SAMPLE_FUNGICIDE;
           const c = card(
             {
@@ -190,12 +236,13 @@ describe('wholePrintParts', () => {
               rainfastHours: p.rainfast
             },
             last,
-            tank ?? 0
+            tank ?? 0,
+            label
           );
           checkParts(c, wholePrintParts(c, layout, { ...CTX, locale }), layout, locale);
         }
       ),
-      { numRuns: 300 }
+      { numRuns: 300, examples: [[CI_BLANK_NAME, null, null, 'index-4x6', 'en', ' ']] }
     );
   });
 });

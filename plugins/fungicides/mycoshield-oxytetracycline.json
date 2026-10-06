@@ -3,6 +3,7 @@
   "type": "fungicide",
   "version": "1.0.0",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Mycoshield'; only hit is an unrelated 'Farmonic MycoShield Mycorrhizal Inoculant', Farmonic Biotech, fbp-19475). Nufarm Mycoshield label makes no organic statement."},
+  "formulation": "WP",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "displayName": "Mycoshield (oxytetracycline, bactericide)",

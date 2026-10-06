@@ -29,6 +29,7 @@ import type {
 import { footprintsOverlap } from '$lib/garden/geometry';
 import { intervalsOverlapInTime, plantingOccupancy, shortDate } from '$lib/garden/occupancy';
 import { plantCount, resolveSpacing } from '$lib/garden/plantCount';
+import { isAreaCrop } from '$lib/plan/spacingModel';
 import type { GardenCrop, PlacedPlanting, PlantingStatus } from '$lib/garden/types';
 import { bedFrostMs } from '$lib/server/blockFrost.server';
 import { db } from '$lib/db/client';
@@ -131,7 +132,9 @@ export function resolvePlacement(
   });
   let count: number | null = null;
   let provenance: CropPlacement['plantCountProvenance'] = null;
-  if (input.plantCount != null) {
+  if (spacing.mode === 'area') {
+    // #555: a crop sown by area never gets a plant count, typed or computed.
+  } else if (input.plantCount != null) {
     count = input.plantCount;
     provenance = 'manual';
   } else if (input.footprint) {
@@ -151,6 +154,7 @@ export function resolvePlacement(
 
 export function placedPlantingFromCrop(crop: Crop, plugin: GardenCrop | undefined): PlacedPlanting {
   const pattern = crop.spacingPattern ?? 'square';
+  const byArea = isAreaCrop(plugin);
   return {
     cropId: crop.id,
     blockId: crop.blockId,
@@ -165,8 +169,8 @@ export function placedPlantingFromCrop(crop: Crop, plugin: GardenCrop | undefine
       inRowIn: crop.spacingIn ?? null,
       rowIn: crop.rowSpacingIn ?? null
     }),
-    plantCount: crop.plantCount ?? null,
-    plantCountProvenance: crop.plantCountProvenance ?? null,
+    plantCount: byArea ? null : (crop.plantCount ?? null),
+    plantCountProvenance: byArea ? null : (crop.plantCountProvenance ?? null),
     groupId: crop.groupId ?? null,
     groupSystemKind: crop.groupSystemKind ?? null,
     groupRole: crop.groupRole ?? null,

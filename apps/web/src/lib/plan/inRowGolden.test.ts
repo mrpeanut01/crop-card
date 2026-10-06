@@ -66,7 +66,10 @@ const FROZEN: CropPlugin[] = [
   frozen('tomato', 'solanaceae', { rowSpacingIn: 48, inRowSpacingIn: { min: 18, max: 24 } }, 48),
   frozen('lettuce', 'leafy-green', { rowSpacingIn: 12, inRowSpacingIn: { min: 8, max: 12 } }),
   frozen('bean', 'legume', { rowSpacingIn: 18, inRowSpacingIn: { min: 2, max: 4 } }),
-  frozen('squash', 'cucurbit', { inRowSpacingIn: { min: 36, max: 48 }, vineSpreadFt: { min: 6, max: 10 } }),
+  frozen('squash', 'cucurbit', {
+    inRowSpacingIn: { min: 36, max: 48 },
+    vineSpreadFt: { min: 6, max: 10 }
+  }),
   frozen('onion', 'allium', { rowSpacingIn: 12, inRowSpacingIn: { min: 4, max: 4 } }),
   frozen('kale', 'brassica', { rowSpacingIn: 24, inRowSpacingIn: { min: 12, max: 18 } }),
   frozen('mystery', 'herb-culinary', {}, 30),
@@ -79,7 +82,7 @@ const FIELD = block('field', { acres: 0.1 });
 const BED = block('bed', { acres: 100 / 43_560, widthFt: 4, lengthFt: 25 });
 
 describe('in-row crops keep their pre-#555 spacing math', () => {
-  it('per-crop footprints, spacing and plant counts', async () => {
+  it('per-crop footprints, spacing and plant counts', () => {
     const rows = inRow.map((p) => {
       const fp = { w_in: 48, l_in: 96 };
       return {
@@ -114,7 +117,7 @@ describe('in-row crops keep their pre-#555 spacing math', () => {
     expect(compared).toBeGreaterThan(golden.length * 0.8);
   });
 
-  it('engine and bed layout output on real in-row crops', async () => {
+  it('engine and bed layout output on real in-row crops', () => {
     const pick = FROZEN;
     const pluginIndex = Object.fromEntries(pick.map((p) => [p.pluginId, p]));
     const blocks = [
@@ -150,8 +153,12 @@ describe('in-row crops keep their pre-#555 spacing math', () => {
       })),
       { bedWidthFt: 4, maxBedLengthFt: 25 }
     );
-    await expect(JSON.stringify({ plan, beds }, null, 1)).toMatchFileSnapshot(
-      './__golden__/inRowLayout.json'
+    const file = resolve(__dirname, '__golden__/inRowLayout.json');
+    if (process.env.GOLDEN_WRITE === '1') {
+      writeFileSync(file, JSON.stringify({ plan, beds }, null, 1) + '\n');
+    }
+    expect(JSON.parse(JSON.stringify({ plan, beds }))).toEqual(
+      JSON.parse(readFileSync(file, 'utf8'))
     );
   });
 });

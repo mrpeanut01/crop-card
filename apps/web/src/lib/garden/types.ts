@@ -1,3 +1,4 @@
+import type { SeedingRateFields } from '$lib/plan/spacingModel';
 /**
  * Garden designer contract (Phase 30E). Spec: docs/design/GARDEN_DESIGNER.md.
  *
@@ -98,6 +99,8 @@ export interface GardenCrop {
     hardenOffDays?: { min: number; max: number };
     dtmFrom?: 'direct-seed' | 'transplant';
     transplantOffsetDays?: number;
+    /** #555: sourced seeding rates for a crop sown by area. */
+    seedingRate?: SeedingRateFields;
   };
 }
 
@@ -108,13 +111,17 @@ export interface PlantSpacing {
   rowIn: number;
   pattern: SpacingPattern;
   source: SpacingSource;
+  /** #555: `area` for a crop sown across the ground; it has no plant count. */
+  mode?: 'in-row' | 'area';
 }
 
 export interface PlantCountResult {
-  count: number;
+  /** Null for a crop sown by area: a plant count does not apply. */
+  count: number | null;
   rows: number;
   perRow: number;
   provenance: PlantCountProvenance;
+  mode?: 'in-row' | 'area';
 }
 
 export type PlantingStatus = 'planned' | 'active' | 'harvested' | 'failed' | 'archived';
@@ -245,7 +252,8 @@ export interface ProposedPlanting {
   plantingDateMs: number;
   footprint: Footprint;
   spacing: PlantSpacing;
-  plantCount: number;
+  /** Null for a crop sown by area (#555). */
+  plantCount: number | null;
   provenance: Extract<ProvenanceTag, 'plugin' | 'ai' | 'fallback'>;
   note: string | null;
   /** Earlier proposal in the same sequence this one follows in time. */

@@ -25,6 +25,8 @@ import {
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { writeRecord } from '$lib/server/recordWrite';
 import { SPLIT_GROUP_ID_PATTERN } from '$lib/plan/splitGroup';
+import { isAreaCrop } from '$lib/plan/spacingModel';
+import type { CropPlugin } from '$lib/plugins/schemas';
 import { t } from '$lib/i18n';
 import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
 import { applyPlantingEstablishment, localizeSeedStartNotes } from '$lib/server/seedStartTasks';
@@ -143,7 +145,11 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
       quantityUnit: parsed.data.quantityUnit,
       sourceProvenance: parsed.data.sourceProvenance,
       placement,
-      plannedPlants: placement ? undefined : parsed.data.plannedPlants,
+      // #555: a crop sown by area never stores a plant count.
+      plannedPlants:
+        placement || isAreaCrop(plugin.plugin as CropPlugin)
+          ? undefined
+          : parsed.data.plannedPlants,
       status: placement ? 'planned' : undefined,
       splitGroupId: parsed.data.splitGroupId
     });

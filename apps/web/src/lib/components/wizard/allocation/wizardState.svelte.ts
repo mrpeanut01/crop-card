@@ -3,6 +3,14 @@ import { currentPrefs } from '$lib/prefsState.svelte';
 import type { Prefs } from '$lib/prefs';
 import { seedStockUnit, seedsToPlants, type SeedPluginShape } from '$lib/seed/quantity';
 import { footprintSqFt } from '$lib/layout/sufficiency';
+import {
+  areaForSeed,
+  defaultSowMethod,
+  spacingModel,
+  type AreaSize,
+  type SowMethod,
+  type SpacingModel
+} from '$lib/plan/spacingModel';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { SeasonSetup } from '$lib/season/setup';
 import type { InputsPlanProvisionalPlanting } from '$lib/plan/inputsPlan';
@@ -162,6 +170,11 @@ export class AllocationWizardState {
    *  or planned). They go to allocate as "fill the bed" and are sized by
    *  the space they get, tagged `fallback`. */
   fillToBedSeeds = $state<Set<string>>(new Set());
+  /** #555: the sowing method chosen per crop sown by area (Broadcast by
+   *  default when the plugin has both rates). */
+  sowMethodByCrop = $state<Map<string, SowMethod>>(new Map());
+  /** #555: the farmer's own seeding rate, lb/acre, per crop (`manual`). */
+  manualRateByCrop = $state<Map<string, number>>(new Map());
   /** #480 — Inputs step product picks (application id → product id). */
   inputOverrides = $state<Record<string, string>>({});
   selectedBlockIds = $state<Set<string>>(new Set());
@@ -361,6 +374,8 @@ export class AllocationWizardState {
     [...this.selectedSeeds.entries()]
       .filter(([id, qty]) => qty > 0 && !this.fillToBedSeeds.has(id))
       .reduce((sum, [id, qty]) => {
+        const area = this.areaFor(id, qty);
+        if (area) return sum + area.sqft;
         const plants = this.plantsFor(id, qty) ?? 0;
         const shape = this.pluginShapeFor(id);
         if (!plants || !shape) return sum;
@@ -424,9 +439,61 @@ export class AllocationWizardState {
     };
   }
 
+  /** #555: how the crop takes up space, from its plugin. */
+  spacingFor(cropPluginId: string | null | undefined): SpacingModel {
+    if (!cropPluginId) return { kind: 'unknown' };
+    return spacingModel({ plantingGuide: this.props.plantingGuides[cropPluginId] });
+  }
+
+  isAreaCrop(cropPluginId: string | null | undefined): boolean {
+    return this.spacingFor(cropPluginId).kind === 'area';
+  }
+
+  sowMethodFor(cropPluginId: string): SowMethod | null {
+    const model = this.spacingFor(cropPluginId);
+    const chosen = this.sowMethodByCrop.get(cropPluginId);
+    return chosen && model.kind === 'area' && model.rates.some((r) => r.method === chosen)
+      ? chosen
+      : defaultSowMethod(model);
+  }
+
+  setSowMethod(cropPluginId: string, method: SowMethod) {
+    this.sowMethodByCrop = new Map(this.sowMethodByCrop).set(cropPluginId, method);
+  }
+
+  manualRateFor(cropPluginId: string): number | null {
+    return this.manualRateByCrop.get(cropPluginId) ?? null;
+  }
+
+  setManualRate(cropPluginId: string, lbPerAcre: number | null) {
+    const next = new Map(this.manualRateByCrop);
+    if (lbPerAcre && lbPerAcre > 0 && Number.isFinite(lbPerAcre)) next.set(cropPluginId, lbPerAcre);
+    else next.delete(cropPluginId);
+    this.manualRateByCrop = next;
+  }
+
+  /** #555: square feet a seed lot of a crop sown by area covers, at the
+   *  high end of its rate (or the farmer's own). Null when the crop is not
+   *  sown by area or its amount is not known. */
+  areaFor(stockItemId: string, quantity: number): AreaSize | null {
+    const entry = this.props.seedStock.find((s) => s.stockItemId === stockItemId);
+    if (!entry?.cropPluginId) return null;
+    const model = this.spacingFor(entry.cropPluginId);
+    if (model.kind !== 'area') return null;
+    return areaForSeed(
+      model,
+      this.sowMethodFor(entry.cropPluginId),
+      quantity,
+      seedStockUnit(entry.defaultUnit),
+      this.manualRateFor(entry.cropPluginId)
+    );
+  }
+
   plantsFor(stockItemId: string, quantity: number): number | null {
     const entry = this.props.seedStock.find((s) => s.stockItemId === stockItemId);
     if (!entry) return null;
+    // #555: a crop sown by area has no plant count.
+    if (this.isAreaCrop(entry.cropPluginId)) return null;
     const result = seedsToPlants({
       unit: seedStockUnit(entry.defaultUnit),
       quantity,

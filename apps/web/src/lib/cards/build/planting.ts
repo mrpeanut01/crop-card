@@ -33,6 +33,9 @@ import { ymdInZone } from '$lib/prefs';
 import { cropDisplayName } from '$lib/i18n/cropName';
 import { filterSprayAdviceItems } from '$lib/journal/photoHelp';
 import { snapshotSplitFor, splitLine } from './split';
+import { defaultSowMethod, spacingModel, SQFT_PER_ACRE } from '$lib/plan/spacingModel';
+import { seedAmountLine } from '$lib/plan/seedAmountText';
+import type { SnapshotBlock } from '../snapshot';
 
 const MAX_UPCOMING = 3;
 
@@ -55,6 +58,50 @@ export function harvestWindow(
 
 function plantingSource(p: SnapshotPlanting): ProvenanceSource {
   return p.sourceProvenance ?? 'manual';
+}
+
+/** Square feet a planting covers: its placed spot, else its bed or block. */
+export function plantingAreaSqFt(
+  p: Pick<SnapshotPlanting, 'footprint'>,
+  block: Pick<SnapshotBlock, 'widthFt' | 'lengthFt' | 'acres'> | undefined
+): number | null {
+  if (p.footprint && p.footprint.w_in > 0 && p.footprint.l_in > 0) {
+    return (p.footprint.w_in * p.footprint.l_in) / 144;
+  }
+  if (block?.widthFt && block.lengthFt) return block.widthFt * block.lengthFt;
+  if (block?.acres && block.acres > 0) return block.acres * SQFT_PER_ACRE;
+  return null;
+}
+
+/** #555: a crop sown by area gets its sourced rates and the seed for this
+ *  planting's ground (the source's range, never a midpoint), not a spacing. */
+function areaFacts(
+  p: SnapshotPlanting,
+  plugin: SnapshotCropPlugin | undefined,
+  block: SnapshotBlock | undefined,
+  opts: ResolvedOptions
+): CardFact[] {
+  const { tr } = opts;
+  const guide = plugin?.plantingGuide;
+  const facts: CardFact[] = [...seedingFacts(guide?.seedingRate, opts)];
+  const model = spacingModel(plugin);
+  const sqft = plantingAreaSqFt(p, block);
+  if (sqft !== null) {
+    const line = seedAmountLine(
+      model,
+      defaultSowMethod(model),
+      sqft,
+      opts.prefs.units,
+      opts.prefs.locale
+    );
+    facts.push({
+      label: tr('cards.fact.seedForArea'),
+      value: line.text,
+      ...(line.provenance ? { provenance: line.provenance } : {})
+    });
+  }
+  facts.push({ label: tr('cards.fact.plants'), value: tr('plan.area.noCount') });
+  return facts;
 }
 
 function spacingFacts(
@@ -176,9 +223,14 @@ export function buildPlantingCard(
     }
   }
 
-  facts.push(...spacingFacts(p, plugin, opts));
-  const count = countFact(p, opts);
-  if (count) facts.push(count);
+  const byArea = spacingModel(plugin).kind === 'area';
+  if (byArea) {
+    facts.push(...areaFacts(p, plugin, block, opts));
+  } else {
+    facts.push(...spacingFacts(p, plugin, opts));
+    const count = countFact(p, opts);
+    if (count) facts.push(count);
+  }
   if (p.minutesLogged && p.minutesLogged > 0) {
     facts.push({
       label: tr('cards.fact.timeLogged'),
@@ -199,6 +251,11 @@ export function buildPlantingCard(
 
   const tasks = sortTasks(snapshot.tasks.filter((t) => t.cropId === p.id));
   const sections: CardSection[] = [];
+  // #555: an older plan gave this crop a count from the 12 in placeholder.
+  // It is left as saved; the card says to plan it again by area.
+  if (byArea && p.plantCount !== null && p.plantCountProvenance === 'fallback') {
+    sections.push({ title: tr('plan.area.replan'), items: [] });
+  }
   const split = snapshotSplitFor(snapshot, p);
   if (split) {
     sections.push({

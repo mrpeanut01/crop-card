@@ -1083,5 +1083,18 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'planui.zad.stage.Z65': 'Antesis media',
   'planui.zad.stage.Z75': 'Grano lechoso medio',
   'planui.zad.stage.Z85': 'Grano pastoso blando',
-  'planui.zad.stage.Z92': 'Madurez de cosecha (grano duro)'
+  'planui.zad.stage.Z92': 'Madurez de cosecha (grano duro)',
+  'wizard.suff.fillsTipArea':
+    'Tu semilla cubre {available}, el tamaño justo para este bloque ({fit}).',
+  'wizard.suff.extraArea': 'Semilla de sobra para {n}',
+  'wizard.suff.extraTipArea':
+    'Tu semilla cubre {available}, pero el bloque tiene {fit}: sobrará semilla para unos {n}.',
+  'wizard.suff.deficitTipArea':
+    'Tu semilla cubre {available}, solo el {pct}% de los {fit} del bloque.',
+  'wizard.review.didntFitArea':
+    '{name}: la semilla para {area} no cupo en los bloques que elegiste. Guarda la semilla para después, o vuelve y elige más espacio.',
+  'wizard.beds.areaOnly':
+    'Este cultivo se siembra en toda la cama, así que envía los pies cuadrados que cubre, no un número de plantas.',
+  'wizard.beds.leftoverItemArea': '{area} pies cuadrados de {name}',
+  'wizard.blocks.cropArea': '{name}: sembrado en {area}'
 };

@@ -3,6 +3,7 @@
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
   import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
+  import { areaText } from '$lib/plan/seedAmountText';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import EditBlockModal from '$lib/components/plan/EditBlockModal.svelte';
   import { fmt } from '$lib/prefsState.svelte';
@@ -67,11 +68,16 @@
 
   // #475: beds sized for the seed being planted. Width and longest bed are
   // the owner's own numbers; the defaults only fill the fields.
+  // #555: a crop sown by area goes as square feet, never a plant count.
   const countedSeeds = $derived(
     [...w.selectedSeeds.entries()]
       .filter(([id, qty]) => qty > 0 && !w.fillToBedSeeds.has(id))
-      .map(([id, qty]) => ({ stockItemId: id, plants: Math.round(w.plantsFor(id, qty) ?? 0) }))
-      .filter((s) => s.plants > 0)
+      .map(([id, qty]) => {
+        const area = w.areaFor(id, qty);
+        if (area) return { stockItemId: id, areaSqFt: Math.max(1, Math.round(area.sqft)) };
+        return { stockItemId: id, plants: Math.round(w.plantsFor(id, qty) ?? 0) };
+      })
+      .filter((s) => ((s.areaSqFt ?? 0) || (s.plants ?? 0)) > 0)
   );
   let bedWidthFt = $state<number | null>(DEFAULT_BED_WIDTH_FT);
   let maxBedLengthFt = $state<number | null>(DEFAULT_MAX_BED_LENGTH_FT);
@@ -341,11 +347,16 @@
             <span class="muted">
               {bed.crops
                 .map((c) =>
-                  tr('wizard.blocks.cropRows', {
-                    name: cropDisplayNameByEnglish(c.name, page.data?.locale),
-                    plants: c.plants,
-                    count: c.rows
-                  })
+                  c.areaSqFt != null
+                    ? tr('wizard.blocks.cropArea', {
+                        name: cropDisplayNameByEnglish(c.name, page.data?.locale),
+                        area: areaText(c.areaSqFt, w.prefs.units)
+                      })
+                    : tr('wizard.blocks.cropRows', {
+                        name: cropDisplayNameByEnglish(c.name, page.data?.locale),
+                        plants: c.plants,
+                        count: c.rows
+                      })
                 )
                 .join('; ')}
             </span>

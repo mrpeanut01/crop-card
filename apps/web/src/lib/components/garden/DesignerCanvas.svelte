@@ -782,6 +782,7 @@
               {@const stage = d.stageText(p.cropId)}
               {@const psel = d.selectedCropId === p.cropId}
               {@const notPlaced = !p.footprint}
+              {@const byArea = p.spacing.mode === 'area'}
               {@const glyph = familyGlyph(p.cropFamily)}
               {@const iconFt = Math.min(pr.w - 0.1, pr.l - 0.1, fontFt * 1.3)}
               {@const showIcon = iconFt * pxPerFt >= 12}
@@ -796,15 +797,20 @@
                 data-family-glyph={glyph.key}
                 role="button"
                 tabindex={selected || psel ? 0 : -1}
-                aria-label="{pageCropName(p.cropPluginId, p.varietyDisplayName)}{p.plantCount
-                  ? `, ${tr('garden.crop.plantsMeta', { count: p.plantCount })}`
-                  : ''}{stage ? `, ${stage.toLowerCase()}` : ''}{notPlaced
+                aria-label="{pageCropName(p.cropPluginId, p.varietyDisplayName)}{byArea
+                  ? `, ${tr('garden.canvas.sownAcross').toLowerCase()}`
+                  : p.plantCount
+                    ? `, ${tr('garden.crop.plantsMeta', { count: p.plantCount })}`
+                    : ''}{stage ? `, ${stage.toLowerCase()}` : ''}{notPlaced
                   ? `, ${tr('garden.canvas.notPlacedLower')}`
                   : ''}, {tr(`garden.glyph.${glyph.key}` as MessageKey).toLowerCase()}"
                 onkeydown={(e) => onPlantingKey(e, p)}
               >
                 <rect
-                  class="fp"
+                  class="fp {byArea && when === 'now'
+                    ? `fam-bg fam-${familyTone(p.cropFamily)}`
+                    : ''}"
+                  data-area={byArea ? 'true' : undefined}
                   x={pr.x}
                   y={pr.y}
                   width={pr.w}
@@ -845,6 +851,15 @@
                       y={pr.y + fontFt * 2}
                       font-size={fontFt * 0.8}
                       >{fitText(tr('garden.list.notPlaced'), pr.w - 0.3, fontFt * 0.8)}</text
+                    >
+                  {:else if byArea && !stage && pr.l * pxPerFt > 34}
+                    <text
+                      class="stage"
+                      data-testid="footprint-area-note"
+                      x={pr.x + 0.15}
+                      y={pr.y + fontFt * 2}
+                      font-size={fontFt * 0.8}
+                      >{fitText(tr('garden.canvas.sownAcross'), pr.w - 0.3, fontFt * 0.8)}</text
                     >
                   {:else if stage && pr.l * pxPerFt > 34}
                     <text

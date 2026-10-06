@@ -74,6 +74,38 @@ export const POST: RequestHandler = async (event) => {
     const plugin = item.pluginId ? registry.get(item.pluginId)?.plugin : undefined;
     const crop = plugin && plugin.type === 'crop' ? plugin : undefined;
     const spacing = resolveSpacing(crop as never, 'square');
+    if (spacing.mode === 'area') {
+      // #555: sown by area. It needs square feet; a plant count is refused.
+      if (s.areaSqFt === undefined || s.plants !== undefined) {
+        return json(
+          {
+            error: t(event.locals?.locale, 'wizard.beds.areaOnly'),
+            stockItemId: s.stockItemId,
+            code: 'AREA_CROP'
+          },
+          { status: 400 }
+        );
+      }
+      crops.push({
+        key: item.id,
+        name: item.shortName ?? item.displayName,
+        family: crop?.cropFamily ?? null,
+        plants: s.areaSqFt,
+        inRowIn: spacing.inRowIn,
+        rowIn: spacing.rowIn,
+        byArea: true
+      });
+      continue;
+    }
+    if (s.plants === undefined) {
+      return json(
+        {
+          error: t(event.locals?.locale, 'stockui.api.invalidRequest'),
+          stockItemId: s.stockItemId
+        },
+        { status: 400 }
+      );
+    }
     if (spacing.source === FALLBACK_SPACING_PROVENANCE)
       noSpacing.push(item.shortName ?? item.displayName);
     crops.push({
@@ -91,7 +123,11 @@ export const POST: RequestHandler = async (event) => {
     ? ` ${t(locale, 'wizard.beds.leftover', {
         max: MAX_SUGGESTED_BEDS,
         list: unplaced
-          .map((u) => t(locale, 'wizard.beds.leftoverItem', { count: u.plants, name: u.name }))
+          .map((u) =>
+            u.byArea
+              ? t(locale, 'wizard.beds.leftoverItemArea', { area: u.plants, name: u.name })
+              : t(locale, 'wizard.beds.leftoverItem', { count: u.plants, name: u.name })
+          )
           .join(', ')
       })}`
     : '';

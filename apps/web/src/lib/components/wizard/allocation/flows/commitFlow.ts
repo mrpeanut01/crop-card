@@ -184,7 +184,11 @@ export class CommitFlow {
             // #471 — a fill-to-bed seed has no counted quantity to record.
             quantityPlanted: r.quantity,
             quantityUnit: r.unit,
-            plannedPlants: r.plants > 0 ? Math.round(r.plants) : undefined,
+            // #555: a crop sown by area has no plant count to record.
+            plannedPlants:
+              r.plants > 0 && !this.#w.isAreaCrop(r.cropPluginId)
+                ? Math.round(r.plants)
+                : undefined,
             stockItemId: r.stockItemId,
             ...(r.plantingDateMs !== undefined ? { plantingDate: r.plantingDateMs } : {}),
             sourceProvenance: r.sourceProvenance,

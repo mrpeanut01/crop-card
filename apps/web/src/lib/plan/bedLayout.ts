@@ -20,17 +20,24 @@ export interface BedLayoutCrop {
   key: string;
   name: string;
   family: string | null;
+  /** Plants, or square feet for a crop sown by area (`byArea`). */
   plants: number;
   inRowIn: number;
   rowIn: number;
+  /** #555: drilled or broadcast across the bed; no rows, no plant count. */
+  byArea?: boolean;
 }
 
 export interface SuggestedBedCrop {
   key: string;
   name: string;
+  /** Plants, or the same square feet as `areaSqFt` for a crop sown by area. */
   plants: number;
+  /** 0 for a crop sown by area. */
   rows: number;
   lengthFt: number;
+  /** #555: set for a crop sown by area; it then has no plant count. */
+  areaSqFt?: number;
 }
 
 export interface SuggestedBed {
@@ -52,22 +59,37 @@ export function rowsAcross(widthFt: number, rowIn: number): number {
 
 /** Feet of bed this many plants take in a bed of this width. */
 export function lengthNeededFt(
-  crop: Pick<BedLayoutCrop, 'inRowIn' | 'rowIn'>,
+  crop: Pick<BedLayoutCrop, 'inRowIn' | 'rowIn' | 'byArea'>,
   plants: number,
   widthFt: number
 ): number {
   if (plants <= 0) return 0;
+  if (crop.byArea) return Math.ceil(plants / Math.max(widthFt, 0.1) - 1e-9);
   const perFt = (rowsAcross(widthFt, crop.rowIn) * 12) / Math.max(crop.inRowIn, 0.1);
   return Math.ceil(plants / perFt - 1e-9);
 }
 
 /** The narrowest bed a crop fits in: the owner's width, or one row wide
  *  when a single row is wider than that. */
-export function widthFor(crop: Pick<BedLayoutCrop, 'rowIn'>, bedWidthFt: number): number {
+export function widthFor(
+  crop: Pick<BedLayoutCrop, 'rowIn' | 'byArea'>,
+  bedWidthFt: number
+): number {
+  if (crop.byArea) return bedWidthFt;
   return Math.max(bedWidthFt, Math.ceil(crop.rowIn / 12 - 1e-9));
 }
 
 function segment(crop: BedLayoutCrop, plants: number, widthFt: number): SuggestedBedCrop {
+  if (crop.byArea) {
+    return {
+      key: crop.key,
+      name: crop.name,
+      plants,
+      rows: 0,
+      lengthFt: lengthNeededFt(crop, plants, widthFt),
+      areaSqFt: plants
+    };
+  }
   return {
     key: crop.key,
     name: crop.name,
@@ -86,8 +108,9 @@ function onePlantFt(crop: BedLayoutCrop, widthFt: number): number {
 
 export interface BedPlan {
   beds: SuggestedBed[];
-  /** Plants that did not fit in the first MAX_SUGGESTED_BEDS beds. */
-  unplaced: Array<{ key: string; name: string; plants: number }>;
+  /** Plants (square feet when `byArea`) that did not fit in the first
+   *  MAX_SUGGESTED_BEDS beds. */
+  unplaced: Array<{ key: string; name: string; plants: number; byArea?: true }>;
 }
 
 export function planBeds(crops: readonly BedLayoutCrop[], opts: BedLayoutOptions): BedPlan {
@@ -104,7 +127,9 @@ export function planBeds(crops: readonly BedLayoutCrop[], opts: BedLayoutOptions
   const open = new Map<number, SuggestedBed>();
   for (const crop of ordered) {
     const width = widthFor(crop, opts.bedWidthFt);
-    const perFt = (rowsAcross(width, crop.rowIn) * 12) / Math.max(crop.inRowIn, 0.1);
+    const perFt = crop.byArea
+      ? width
+      : (rowsAcross(width, crop.rowIn) * 12) / Math.max(crop.inRowIn, 0.1);
     let left = crop.plants;
     while (left > 0) {
       let bed = open.get(width);
@@ -127,7 +152,12 @@ export function planBeds(crops: readonly BedLayoutCrop[], opts: BedLayoutOptions
   for (const b of kept)
     for (const c of b.crops) placed.set(c.key, (placed.get(c.key) ?? 0) + c.plants);
   const unplaced = ordered
-    .map((c) => ({ key: c.key, name: c.name, plants: c.plants - (placed.get(c.key) ?? 0) }))
+    .map((c) => ({
+      key: c.key,
+      name: c.name,
+      plants: c.plants - (placed.get(c.key) ?? 0),
+      ...(c.byArea ? { byArea: true as const } : {})
+    }))
     .filter((u) => u.plants > 0);
   return { beds: kept, unplaced };
 }
@@ -150,7 +180,7 @@ export function checkBedProposal(
   proposal: ReadonlyArray<{
     widthFt: number;
     lengthFt: number;
-    crops: ReadonlyArray<{ key: string; plants: number }>;
+    crops: ReadonlyArray<{ key: string; plants?: number; areaSqFt?: number }>;
   }>,
   crops: readonly BedLayoutCrop[],
   opts: BedLayoutOptions
@@ -175,10 +205,16 @@ export function checkBedProposal(
     for (const c of p.crops) {
       const crop = byKey.get(c.key);
       if (!crop) return { ok: false, reason: `unknown seed ${c.key}` };
-      if (!Number.isInteger(c.plants) || c.plants <= 0) return { ok: false, reason: 'bad count' };
-      if (crop.rowIn > widthFt * 12 + 1e-9) return { ok: false, reason: 'row wider than bed' };
-      segs.push(segment(crop, c.plants, widthFt));
-      placed.set(c.key, (placed.get(c.key) ?? 0) + c.plants);
+      // #555: a crop sown by area takes square feet, never a plant count.
+      if (crop.byArea && c.plants !== undefined)
+        return { ok: false, reason: 'plant count for a crop sown by area' };
+      const units = crop.byArea ? c.areaSqFt : c.plants;
+      if (units === undefined || !Number.isInteger(units) || units <= 0)
+        return { ok: false, reason: 'bad count' };
+      if (!crop.byArea && crop.rowIn > widthFt * 12 + 1e-9)
+        return { ok: false, reason: 'row wider than bed' };
+      segs.push(segment(crop, units, widthFt));
+      placed.set(c.key, (placed.get(c.key) ?? 0) + units);
     }
     const bedCrops = p.crops.map((c) => byKey.get(c.key)!);
     const widest = Math.max(...bedCrops.map((c) => widthFor(c, opts.bedWidthFt)));

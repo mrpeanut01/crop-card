@@ -301,7 +301,7 @@ describe('card snapshot cross-tenant isolation', () => {
       [q, p]
     ] as const) {
       const snap = await runWithTenantAsync(self.ownerId, () => buildFarmSnapshot({ now }));
-      expect(snap.version).toBe(5);
+      expect(snap.version).toBe(6);
       expect(snap.plantings.find((x) => x.id === self.ids[0])?.splitGroupId).toBe(sg);
       expect(snap.splitGroups?.[sg]).toEqual([self.beds[0], self.beds[1], self.beds[3]].sort());
       for (const id of [...other.beds, ...other.ids]) expect(mentions(snap, id), id).toBe(false);

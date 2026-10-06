@@ -63,6 +63,7 @@ import {
   type PollinationLayer
 } from '$lib/plan/pollinationLayer';
 import { detectCompanionGroups } from '$lib/plan/companionOffsets';
+import { isAreaCrop } from '$lib/plan/spacingModel';
 import type { CompanionGroupMarker, PollinationConstraint } from '$lib/plan/types';
 
 const MAX_OUTPUT_TOKENS = 4000;
@@ -933,14 +934,29 @@ export function buildAllocationPrompt(
   input: PlanInput,
   pollinationLayer?: PollinationLayer
 ): string {
+  const byArea = (s: (typeof input.seeds)[number]) => {
+    const plugin = input.pluginIndex[s.cropPluginId];
+    return !!plugin && isAreaCrop(plugin);
+  };
   const seedLines = input.seeds.map(
     (s) =>
       `- ${s.stockItemId} | ${s.varietyDisplayName} | plugin=${s.cropPluginId} | ` +
       (s.fillToCapacity
         ? `available_plants=not set (size it to the space you give it, at most ${s.quantityPlants})`
         : `available_plants=${s.quantityPlants}`) +
+      (byArea(s) ? ' | sown_by_area=Y' : '') +
       (s.keepInOneBed && !s.fillToCapacity ? ' | keep_in_one_bed=Y' : '')
   );
+  const areaSeeds = input.seeds.filter(byArea);
+  const areaSection =
+    areaSeeds.length > 0
+      ? [
+          '',
+          'SOWN BY AREA (seeds marked sown_by_area=Y are drilled or broadcast, such as cover crops and small grains):',
+          '- For these seeds every "plants" number (available_plants, plantsFit, plantsAvailable and the plants you return) is SQUARE FEET of ground, not a count of plants. Give each one ground, never a number of plants.',
+          '- Never say how many plants such a crop has in the rationale; talk about the square feet it covers.'
+        ]
+      : [];
   const keepSeeds = input.seeds.filter((s) => s.keepInOneBed && !s.fillToCapacity);
   const bedIds = new Set(input.bedBlockIds ?? []);
   const freeShareOf = (blockId: string) =>
@@ -1013,6 +1029,7 @@ export function buildAllocationPrompt(
       ...blockLines,
       '',
       ...sharedBedSection,
+      ...areaSection,
       '',
       'CANDIDACY MATRIX (one row per seed × block):',
       matrixHeader,

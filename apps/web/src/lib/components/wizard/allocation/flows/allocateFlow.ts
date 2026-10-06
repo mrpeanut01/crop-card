@@ -38,6 +38,26 @@ export class AllocateFlow {
             ...keep
           };
         }
+        if (this.#w.isAreaCrop(entry.cropPluginId)) {
+          // #555: sown by area. Its square feet, or sized to the bed when
+          // the amount is not known.
+          const area = this.#w.areaFor(stockItemId, quantity);
+          return area
+            ? {
+                stockItemId,
+                cropPluginId: entry.cropPluginId!,
+                varietyDisplayName,
+                areaSqFt: Math.max(1, Math.round(area.sqft)),
+                ...keep
+              }
+            : {
+                stockItemId,
+                cropPluginId: entry.cropPluginId!,
+                varietyDisplayName,
+                fillToBed: true as const,
+                ...keep
+              };
+        }
         const plants = this.#w.plantsFor(stockItemId, quantity);
         return {
           stockItemId,

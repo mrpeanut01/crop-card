@@ -168,7 +168,12 @@ describe('buildCareGuideCard', () => {
     expect(buildCareGuideCard(s, 'rye')!.facts).toEqual([
       { label: 'Seed rate, drilled', value: '60–120 lb/ac', provenance: 'plugin' },
       { label: 'Seed rate, broadcast', value: '90–160 lb/ac', provenance: 'plugin' },
-      { label: 'Drill rows', value: '6–8 in', provenance: 'plugin' }
+      { label: 'Drill rows', value: '6–8 in', provenance: 'plugin' },
+      {
+        label: 'Seed needed',
+        value: 'Broadcast: 3.3–5.9 oz for 100 sq ft',
+        provenance: 'data'
+      }
     ]);
     const metric = buildCareGuideCard(s, 'rye', {
       prefs: { timeZone: 'UTC', units: 'metric' }
@@ -180,8 +185,11 @@ describe('buildCareGuideCard', () => {
     expect(es.facts.map((f) => f.label)).toEqual([
       'Dosis con sembradora',
       'Dosis al voleo',
-      'Entre hileras de sembradora'
+      'Entre hileras de sembradora',
+      'Semilla necesaria'
     ]);
+    expect(es.facts[3].value).toBe('Al voleo: 3.3–5.9 oz para 100 sq ft');
+    expect(metric.facts[3].value).toBe('Broadcast: 100–180 g for 10 m²');
   });
 
   it('says what the seed rates weigh when the source states it', () => {
@@ -201,7 +209,8 @@ describe('buildCareGuideCard', () => {
     const s = sampleSnapshot({ plantings: [], cropPlugins: { phacelia } });
     expect(buildCareGuideCard(s, 'phacelia')!.facts.map((f) => f.value)).toEqual([
       '3–5 lb/ac, pure live seed',
-      '4–6 lb/ac, pure live seed'
+      '4–6 lb/ac, pure live seed',
+      'Broadcast: 0.1–0.3 oz for 100 sq ft'
     ]);
     const es = buildCareGuideCard(s, 'phacelia', {
       prefs: { timeZone: 'UTC', units: 'us', locale: 'es' }
@@ -228,10 +237,20 @@ describe('buildCareGuideCard', () => {
     };
     const s = sampleSnapshot({ plantings: [], cropPlugins: plugins });
     expect(buildCareGuideCard(s, 'wheat')!.facts).toEqual([
-      { label: 'Seeds, drilled', value: '22–30 per sq ft', provenance: 'plugin' }
+      { label: 'Seeds, drilled', value: '22–30 per sq ft', provenance: 'plugin' },
+      {
+        label: 'Seed needed',
+        value: 'Drilled: 2,200–3,000 seeds for 100 sq ft',
+        provenance: 'data'
+      }
     ]);
     expect(buildCareGuideCard(s, 'corn')!.facts).toEqual([
-      { label: 'Seeding population', value: '28,000–32,000/ac', provenance: 'plugin' }
+      { label: 'Seeding population', value: '28,000–32,000/ac', provenance: 'plugin' },
+      {
+        label: 'Seed needed',
+        value: 'Planted: 64–74 seeds for 100 sq ft',
+        provenance: 'data'
+      }
     ]);
   });
 

@@ -1,490 +1,490 @@
 {
- "plan": {
-  "assignments": [
-   {
-    "stockItemId": "st_0",
-    "cropPluginId": "tomato",
-    "varietyDisplayName": "tomato",
-    "blockId": "f1",
-    "plants": 20,
-    "score": 30
-   },
-   {
-    "stockItemId": "st_9",
-    "cropPluginId": "corn",
-    "varietyDisplayName": "corn",
-    "blockId": "f1",
-    "plants": 353,
-    "score": 30
-   },
-   {
-    "stockItemId": "st_5",
-    "cropPluginId": "kale",
-    "varietyDisplayName": "kale",
-    "blockId": "f1",
-    "plants": 205,
-    "score": 30
-   },
-   {
-    "stockItemId": "st_6",
-    "cropPluginId": "mystery",
-    "varietyDisplayName": "mystery",
-    "blockId": "f2",
-    "plants": 242,
-    "score": 30
-   },
-   {
-    "stockItemId": "st_4",
-    "cropPluginId": "onion",
-    "varietyDisplayName": "onion",
-    "blockId": "f1",
-    "plants": 168,
-    "score": 30
-   },
-   {
-    "stockItemId": "st_7",
-    "cropPluginId": "nothing",
-    "varietyDisplayName": "nothing",
-    "blockId": "f1",
-    "plants": 279,
-    "score": 30
-   },
-   {
-    "stockItemId": "st_1",
-    "cropPluginId": "lettuce",
-    "varietyDisplayName": "lettuce",
-    "blockId": "f1",
-    "plants": 57,
-    "score": 30
-   },
-   {
-    "stockItemId": "st_2",
-    "cropPluginId": "bean",
-    "varietyDisplayName": "bean",
-    "blockId": "f1",
-    "plants": 94,
-    "score": 30
-   },
-   {
-    "stockItemId": "st_8",
-    "cropPluginId": "melon",
-    "varietyDisplayName": "melon",
-    "blockId": "b1",
-    "plants": 3,
-    "score": 0
-   },
-   {
-    "stockItemId": "st_8",
-    "cropPluginId": "melon",
-    "varietyDisplayName": "melon",
-    "blockId": "b2",
-    "plants": 3,
-    "score": 0
-   },
-   {
-    "stockItemId": "st_8",
-    "cropPluginId": "melon",
-    "varietyDisplayName": "melon",
-    "blockId": "b1",
-    "plants": 3,
-    "score": 0
-   }
-  ],
-  "unplaced": [
-   {
-    "stockItemId": "st_3",
-    "cropPluginId": "squash",
-    "varietyDisplayName": "squash",
-    "quantityPlants": 131
-   },
-   {
-    "stockItemId": "st_8",
-    "cropPluginId": "melon",
-    "varietyDisplayName": "melon",
-    "quantityPlants": 307
-   }
-  ],
-  "diagnostics": [
-   {
-    "stockItemId": "st_3",
-    "cropPluginId": "squash",
-    "reason": "every selected bed is already full"
-   },
-   {
-    "stockItemId": "st_8",
-    "cropPluginId": "melon",
-    "reason": "9 of 316 plants fit; 307 left over"
-   }
-  ],
-  "leftover": [
-   {
-    "stockItemId": "st_3",
-    "cropPluginId": "squash",
-    "plantsLeft": 131,
-    "blocks": [
-     {
-      "blockId": "f1",
-      "status": "full"
-     },
-     {
-      "blockId": "f2",
-      "status": "full"
-     },
-     {
-      "blockId": "b1",
-      "status": "full"
-     },
-     {
-      "blockId": "b2",
-      "status": "too-small"
-     }
+  "plan": {
+    "assignments": [
+      {
+        "stockItemId": "st_0",
+        "cropPluginId": "tomato",
+        "varietyDisplayName": "tomato",
+        "blockId": "f1",
+        "plants": 20,
+        "score": 30
+      },
+      {
+        "stockItemId": "st_9",
+        "cropPluginId": "corn",
+        "varietyDisplayName": "corn",
+        "blockId": "f1",
+        "plants": 353,
+        "score": 30
+      },
+      {
+        "stockItemId": "st_5",
+        "cropPluginId": "kale",
+        "varietyDisplayName": "kale",
+        "blockId": "f1",
+        "plants": 205,
+        "score": 30
+      },
+      {
+        "stockItemId": "st_6",
+        "cropPluginId": "mystery",
+        "varietyDisplayName": "mystery",
+        "blockId": "f2",
+        "plants": 242,
+        "score": 30
+      },
+      {
+        "stockItemId": "st_4",
+        "cropPluginId": "onion",
+        "varietyDisplayName": "onion",
+        "blockId": "f1",
+        "plants": 168,
+        "score": 30
+      },
+      {
+        "stockItemId": "st_7",
+        "cropPluginId": "nothing",
+        "varietyDisplayName": "nothing",
+        "blockId": "f1",
+        "plants": 279,
+        "score": 30
+      },
+      {
+        "stockItemId": "st_1",
+        "cropPluginId": "lettuce",
+        "varietyDisplayName": "lettuce",
+        "blockId": "f1",
+        "plants": 57,
+        "score": 30
+      },
+      {
+        "stockItemId": "st_2",
+        "cropPluginId": "bean",
+        "varietyDisplayName": "bean",
+        "blockId": "f1",
+        "plants": 94,
+        "score": 30
+      },
+      {
+        "stockItemId": "st_8",
+        "cropPluginId": "melon",
+        "varietyDisplayName": "melon",
+        "blockId": "b1",
+        "plants": 3,
+        "score": 0
+      },
+      {
+        "stockItemId": "st_8",
+        "cropPluginId": "melon",
+        "varietyDisplayName": "melon",
+        "blockId": "b2",
+        "plants": 3,
+        "score": 0
+      },
+      {
+        "stockItemId": "st_8",
+        "cropPluginId": "melon",
+        "varietyDisplayName": "melon",
+        "blockId": "b1",
+        "plants": 3,
+        "score": 0
+      }
+    ],
+    "unplaced": [
+      {
+        "stockItemId": "st_3",
+        "cropPluginId": "squash",
+        "varietyDisplayName": "squash",
+        "quantityPlants": 131
+      },
+      {
+        "stockItemId": "st_8",
+        "cropPluginId": "melon",
+        "varietyDisplayName": "melon",
+        "quantityPlants": 307
+      }
+    ],
+    "diagnostics": [
+      {
+        "stockItemId": "st_3",
+        "cropPluginId": "squash",
+        "reason": "every selected bed is already full"
+      },
+      {
+        "stockItemId": "st_8",
+        "cropPluginId": "melon",
+        "reason": "9 of 316 plants fit; 307 left over"
+      }
+    ],
+    "leftover": [
+      {
+        "stockItemId": "st_3",
+        "cropPluginId": "squash",
+        "plantsLeft": 131,
+        "blocks": [
+          {
+            "blockId": "f1",
+            "status": "full"
+          },
+          {
+            "blockId": "f2",
+            "status": "full"
+          },
+          {
+            "blockId": "b1",
+            "status": "full"
+          },
+          {
+            "blockId": "b2",
+            "status": "too-small"
+          }
+        ]
+      },
+      {
+        "stockItemId": "st_8",
+        "cropPluginId": "melon",
+        "plantsLeft": 307,
+        "blocks": [
+          {
+            "blockId": "f1",
+            "status": "full"
+          },
+          {
+            "blockId": "f2",
+            "status": "full"
+          },
+          {
+            "blockId": "b1",
+            "status": "full"
+          },
+          {
+            "blockId": "b2",
+            "status": "full"
+          }
+        ]
+      }
     ]
-   },
-   {
-    "stockItemId": "st_8",
-    "cropPluginId": "melon",
-    "plantsLeft": 307,
-    "blocks": [
-     {
-      "blockId": "f1",
-      "status": "full"
-     },
-     {
-      "blockId": "f2",
-      "status": "full"
-     },
-     {
-      "blockId": "b1",
-      "status": "full"
-     },
-     {
-      "blockId": "b2",
-      "status": "full"
-     }
+  },
+  "beds": {
+    "beds": [
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_4",
+            "name": "onion",
+            "plants": 168,
+            "rows": 4,
+            "lengthFt": 14
+          },
+          {
+            "key": "st_5",
+            "name": "kale",
+            "plants": 17,
+            "rows": 2,
+            "lengthFt": 11
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_5",
+            "name": "kale",
+            "plants": 40,
+            "rows": 2,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_5",
+            "name": "kale",
+            "plants": 40,
+            "rows": 2,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_5",
+            "name": "kale",
+            "plants": 40,
+            "rows": 2,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_5",
+            "name": "kale",
+            "plants": 40,
+            "rows": 2,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_5",
+            "name": "kale",
+            "plants": 28,
+            "rows": 2,
+            "lengthFt": 18
+          },
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 8,
+            "rows": 1,
+            "lengthFt": 7
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 30,
+            "rows": 1,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 30,
+            "rows": 1,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 30,
+            "rows": 1,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 30,
+            "rows": 1,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 30,
+            "rows": 1,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 30,
+            "rows": 1,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 30,
+            "rows": 1,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 30,
+            "rows": 1,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 30,
+            "rows": 1,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 30,
+            "rows": 1,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 30,
+            "rows": 1,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_9",
+            "name": "corn",
+            "plants": 15,
+            "rows": 1,
+            "lengthFt": 13
+          },
+          {
+            "key": "st_8",
+            "name": "melon",
+            "plants": 19,
+            "rows": 4,
+            "lengthFt": 12
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_8",
+            "name": "melon",
+            "plants": 40,
+            "rows": 4,
+            "lengthFt": 25
+          }
+        ]
+      },
+      {
+        "widthFt": 4,
+        "lengthFt": 25,
+        "crops": [
+          {
+            "key": "st_8",
+            "name": "melon",
+            "plants": 40,
+            "rows": 4,
+            "lengthFt": 25
+          }
+        ]
+      }
+    ],
+    "unplaced": [
+      {
+        "key": "st_8",
+        "name": "melon",
+        "plants": 217
+      },
+      {
+        "key": "st_3",
+        "name": "squash",
+        "plants": 131
+      },
+      {
+        "key": "st_6",
+        "name": "mystery",
+        "plants": 242
+      },
+      {
+        "key": "st_1",
+        "name": "lettuce",
+        "plants": 57
+      },
+      {
+        "key": "st_2",
+        "name": "bean",
+        "plants": 94
+      },
+      {
+        "key": "st_7",
+        "name": "nothing",
+        "plants": 279
+      },
+      {
+        "key": "st_0",
+        "name": "tomato",
+        "plants": 20
+      }
     ]
-   }
-  ]
- },
- "beds": {
-  "beds": [
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_4",
-      "name": "onion",
-      "plants": 168,
-      "rows": 4,
-      "lengthFt": 14
-     },
-     {
-      "key": "st_5",
-      "name": "kale",
-      "plants": 17,
-      "rows": 2,
-      "lengthFt": 11
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_5",
-      "name": "kale",
-      "plants": 40,
-      "rows": 2,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_5",
-      "name": "kale",
-      "plants": 40,
-      "rows": 2,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_5",
-      "name": "kale",
-      "plants": 40,
-      "rows": 2,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_5",
-      "name": "kale",
-      "plants": 40,
-      "rows": 2,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_5",
-      "name": "kale",
-      "plants": 28,
-      "rows": 2,
-      "lengthFt": 18
-     },
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 8,
-      "rows": 1,
-      "lengthFt": 7
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 30,
-      "rows": 1,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 30,
-      "rows": 1,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 30,
-      "rows": 1,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 30,
-      "rows": 1,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 30,
-      "rows": 1,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 30,
-      "rows": 1,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 30,
-      "rows": 1,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 30,
-      "rows": 1,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 30,
-      "rows": 1,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 30,
-      "rows": 1,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 30,
-      "rows": 1,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_9",
-      "name": "corn",
-      "plants": 15,
-      "rows": 1,
-      "lengthFt": 13
-     },
-     {
-      "key": "st_8",
-      "name": "melon",
-      "plants": 19,
-      "rows": 4,
-      "lengthFt": 12
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_8",
-      "name": "melon",
-      "plants": 40,
-      "rows": 4,
-      "lengthFt": 25
-     }
-    ]
-   },
-   {
-    "widthFt": 4,
-    "lengthFt": 25,
-    "crops": [
-     {
-      "key": "st_8",
-      "name": "melon",
-      "plants": 40,
-      "rows": 4,
-      "lengthFt": 25
-     }
-    ]
-   }
-  ],
-  "unplaced": [
-   {
-    "key": "st_8",
-    "name": "melon",
-    "plants": 217
-   },
-   {
-    "key": "st_3",
-    "name": "squash",
-    "plants": 131
-   },
-   {
-    "key": "st_6",
-    "name": "mystery",
-    "plants": 242
-   },
-   {
-    "key": "st_1",
-    "name": "lettuce",
-    "plants": 57
-   },
-   {
-    "key": "st_2",
-    "name": "bean",
-    "plants": 94
-   },
-   {
-    "key": "st_7",
-    "name": "nothing",
-    "plants": 279
-   },
-   {
-    "key": "st_0",
-    "name": "tomato",
-    "plants": 20
-   }
-  ]
- }
+  }
 }

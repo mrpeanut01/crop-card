@@ -3,6 +3,9 @@
   import { createT } from '$lib/i18n';
   import type { CropPlugin } from '$lib/plugins/schemas';
   import { seedStockUnit, seedsToPlants } from '$lib/seed/quantity';
+  import { areaForSeed, defaultSowMethod, spacingModel } from '$lib/plan/spacingModel';
+  import { areaText } from '$lib/plan/seedAmountText';
+  import { currentPrefs } from '$lib/prefsState.svelte';
 
   type StockEntry = {
     stockItemId: string;
@@ -71,8 +74,21 @@
     quantity = next;
   }
 
+  // #555: a crop sown by area covers ground; it has no plant count.
+  const areaModel = $derived(spacingModel(plugin));
+  const areaCovered = $derived(
+    areaModel.kind === 'area'
+      ? areaForSeed(
+          areaModel,
+          defaultSowMethod(areaModel),
+          quantity,
+          seedStockUnit(stock.defaultUnit)
+        )
+      : null
+  );
+
   const plantEquivalent = $derived.by(() => {
-    if (!plugin) return null;
+    if (!plugin || areaModel.kind === 'area') return null;
     const result = seedsToPlants({
       unit: seedStockUnit(stock.defaultUnit),
       quantity,
@@ -86,7 +102,9 @@
     onConfirm({
       quantity,
       unit: stock.defaultUnit,
-      quantityPlants: plantEquivalent ?? Math.max(1, Math.round(quantity))
+      quantityPlants: areaCovered
+        ? Math.max(1, Math.round(areaCovered.sqft))
+        : (plantEquivalent ?? Math.max(1, Math.round(quantity)))
     });
   }
 
@@ -175,7 +193,13 @@
         </button>
       </div>
 
-      {#if plantEquivalent !== null}
+      {#if areaCovered}
+        <p class="qm-plants" data-testid="qm-area">
+          {tr('plan.area.covers', { area: areaText(areaCovered.sqft, currentPrefs().units) })}
+        </p>
+      {:else if areaModel.kind === 'area'}
+        <p class="qm-plants">{tr('plan.area.notKnown')}</p>
+      {:else if plantEquivalent !== null}
         <p class="qm-plants">
           ≈ <strong>{plantEquivalent.toLocaleString()}</strong>
           {tr('planui.qty.plants')}

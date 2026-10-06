@@ -1046,5 +1046,17 @@ export const enWizard = {
   'planui.zad.stage.Z65': 'Mid-anthesis',
   'planui.zad.stage.Z75': 'Medium milk',
   'planui.zad.stage.Z85': 'Soft dough',
-  'planui.zad.stage.Z92': 'Harvest-ripe (grain hard)'
+  'planui.zad.stage.Z92': 'Harvest-ripe (grain hard)',
+  'wizard.suff.fillsTipArea':
+    'Your seed covers {available}, the right size for this block ({fit}).',
+  'wizard.suff.extraArea': '{n} of seed extra',
+  'wizard.suff.extraTipArea':
+    'Your seed covers {available} but the block has {fit}, so seed for about {n} will be left over.',
+  'wizard.suff.deficitTipArea': "Your seed covers {available}, only {pct}% of the block's {fit}.",
+  'wizard.review.didntFitArea':
+    "{name}: seed for {area} didn't fit in the blocks you picked. Keep the seed for later, or go back and pick more space.",
+  'wizard.beds.areaOnly':
+    'This crop is sown across the bed, so send the square feet it covers, not a plant count.',
+  'wizard.beds.leftoverItemArea': '{area} sq ft of {name}',
+  'wizard.blocks.cropArea': '{name}: sown across {area}'
 } as const;

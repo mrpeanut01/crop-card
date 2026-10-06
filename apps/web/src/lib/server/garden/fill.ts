@@ -11,6 +11,7 @@ import type { FillRequest, FillResponse } from '$lib/garden/api';
 import { longDate, occupancyIntervals } from '$lib/garden/occupancy';
 import { t, type MessageKey } from '$lib/i18n';
 import { resolveSpacing } from '$lib/garden/plantCount';
+import { isAreaCrop } from '$lib/plan/spacingModel';
 import {
   dayOf,
   deterministicFillPlan,
@@ -79,7 +80,9 @@ export function loadFillInputs(
     unplaced.push({
       cropPluginId: c.cropPluginId,
       varietyDisplayName: c.varietyDisplayName,
-      plants: c.plantCount ?? null
+      // #555: a crop sown by area has no plant count (an older plan may
+      // hold one made from the 12 in placeholder); it gets an area share.
+      plants: isAreaCrop(crops[c.cropPluginId]) ? null : (c.plantCount ?? null)
     });
   }
   for (const id of req.cropPluginIds ?? []) {
@@ -113,15 +116,17 @@ function cropFact(
   window: PlantingWindow | null = null
 ): GardenFillCropFact {
   const spacing = resolveSpacing(crop, 'square');
+  const byArea = spacing.mode === 'area';
   return {
     window: window ? { earliest: window.earliest, latest: window.latest } : null,
     cropPluginId: crop.pluginId,
     name: crop.displayName,
     family: crop.cropFamily,
     daysToMaturity: crop.daysToMaturity ?? null,
-    inRowSpacingIn: spacing.inRowIn,
-    rowSpacingIn: spacing.rowIn,
-    plants
+    inRowSpacingIn: byArea ? null : spacing.inRowIn,
+    rowSpacingIn: byArea ? null : spacing.rowIn,
+    plants: byArea ? null : plants,
+    ...(byArea ? { byArea: true } : {})
   };
 }
 

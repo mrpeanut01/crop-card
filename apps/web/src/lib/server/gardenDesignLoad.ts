@@ -64,6 +64,10 @@ export function gardenCropOf(p: CropPlugin): GardenCrop {
   }
   const seedStart = seedStartGuide(p);
   if (seedStart) out.plantingGuide = { ...out.plantingGuide, ...seedStart };
+  // #555: a crop sown by area is told apart by its sourced seeding rate.
+  if (guide?.seedingRate) {
+    out.plantingGuide = { ...out.plantingGuide, seedingRate: structuredClone(guide.seedingRate) };
+  }
   return out;
 }
 

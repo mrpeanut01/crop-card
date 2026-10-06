@@ -9,6 +9,7 @@
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
   import { pageCropName } from '$lib/i18n/pageCropName';
+  import { areaText } from '$lib/plan/seedAmountText';
 
   const w = getWizardContext();
   const tr = $derived(createT(page.data?.locale));
@@ -89,7 +90,11 @@
             </td>
             <td>{w.blockNameFor(p.blockId)}</td>
             <td>{fmtDateMs(p.plantingDateMs)}</td>
-            <td>{p.plants.toLocaleString()}</td>
+            <td
+              >{w.isAreaCrop(p.cropPluginId)
+                ? areaText(p.plants, w.prefs.units)
+                : p.plants.toLocaleString()}</td
+            >
             <td class="why">{p.rationale}</td>
           </tr>
         {/each}

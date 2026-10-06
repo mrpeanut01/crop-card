@@ -23,6 +23,7 @@
 
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { rowSpacingOf } from '$lib/garden/plantCount';
+import { isAreaCrop } from '$lib/plan/spacingModel';
 import { cropCastsShade } from '$lib/calendar/engine';
 import { rotationLookbackForFamily } from '$lib/calendar/rotation';
 import type { BlockWithPlantings, SunExposure } from '$lib/db/blocks';
@@ -51,6 +52,8 @@ export interface SeedRequest {
   /** Phase 35 (R-14): keep this counted seed on one block; what does not
    *  fit there is left over instead of spreading to other blocks. */
   keepInOneBed?: boolean;
+  /** #555: a crop sown by area. `quantityPlants` is then square feet. */
+  byArea?: boolean;
 }
 
 export interface Assignment {
@@ -58,7 +61,11 @@ export interface Assignment {
   cropPluginId: string;
   varietyDisplayName: string;
   blockId: string;
+  /** Engine units: plants, or square feet for a crop sown by area. */
   plants: number;
+  /** #555: set for a crop sown by area; the same square feet as `plants`,
+   *  which is then not a plant count. */
+  areaSqFt?: number;
   quantityPlanted?: number;
   quantityUnit?: string;
   /** Per-block placement score for UI debug chips; higher = better fit. */
@@ -127,7 +134,19 @@ const MIN_SCORE_LOOSE = 0;
 
 // ─── Public API ──────────────────────────────────────────────────────────
 
-export function planLayout(input: PlanInput): PlanResult {
+export function planLayout(given: PlanInput): PlanResult {
+  // #555: whether a seed is sown by area comes from its plugin, never the caller.
+  const input: PlanInput = {
+    ...given,
+    seeds: given.seeds.map((s) => {
+      const plugin = given.pluginIndex[s.cropPluginId];
+      const byArea = !!plugin && isAreaCrop(plugin);
+      if (byArea === !!s.byArea) return s;
+      const { byArea: _drop, ...rest } = s;
+      void _drop;
+      return byArea ? { ...rest, byArea: true } : rest;
+    })
+  };
   const result = planWithoutReport(input);
   return { ...result, leftover: leftoverReports(input, result.assignments) };
 }
@@ -222,7 +241,7 @@ function planFieldLayout(input: PlanInput): RawResult {
       reason:
         left === null
           ? noFitReason(seed, state, input)
-          : `${seed.quantityPlants - left} of ${seed.quantityPlants} plants fit; ${left} left over`
+          : `${seed.quantityPlants - left} of ${unitsText(seed, seed.quantityPlants)} fit; ${left} left over`
     });
   }
 
@@ -236,8 +255,14 @@ function part(seed: SeedRequest, blockId: string, plants: number, score: number)
     varietyDisplayName: seed.varietyDisplayName,
     blockId,
     plants,
+    ...(seed.byArea ? { areaSqFt: plants } : {}),
     score
   };
+}
+
+/** "N plants" or, for a crop sown by area, "N sq ft" (diagnostics only). */
+function unitsText(seed: SeedRequest, n: number): string {
+  return seed.byArea ? `${n} sq ft` : `${n} plants`;
 }
 
 // ─── Sorting ─────────────────────────────────────────────────────────────
@@ -516,9 +541,10 @@ function scoreBlock(
   if (fit < needed) score += w.fragmentationPenalty;
 
   // 7) narrow-block penalty — block min-dimension < 2 × rowSpacing
+  // A crop sown by area (#555) has no rows, so no block is too narrow.
   const rowIn = rowSpacingOf(plugin).inches;
   const minDimFt = blockMinDimensionFt(block);
-  if (minDimFt != null && minDimFt < 2 * (rowIn * FT_PER_INCH)) {
+  if (!isAreaCrop(plugin) && minDimFt != null && minDimFt < 2 * (rowIn * FT_PER_INCH)) {
     score += w.narrowBlockPenalty;
   }
 
@@ -776,7 +802,7 @@ function packSharedBeds(
       cropPluginId: seed.cropPluginId,
       reason:
         got > 0
-          ? `${got} of ${seed.quantityPlants} plants fit; ${left} left over`
+          ? `${got} of ${unitsText(seed, seed.quantityPlants)} fit; ${left} left over`
           : bedNoFitReason(seed, beds, input, placedAll)
     });
   }

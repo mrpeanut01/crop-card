@@ -196,6 +196,47 @@ describe('buildPlantingCard', () => {
     expect(tokyo.sections[0].items[0]).toBe('Stake + prune suckers (due today)');
   });
 
+  it('sizes seed by area for a crop sown by area, with no plant count (#555)', () => {
+    const s = sampleSnapshot();
+    s.cropPlugins['cereal-rye-cover'] = {
+      pluginId: 'cereal-rye-cover',
+      displayName: 'Cereal rye',
+      version: '1.0.0',
+      cropFamily: 'cover-grass',
+      defaultRowSpacingInches: 7,
+      plantingGuide: {
+        seedingRate: {
+          drilledLbsPerAcre: { min: 60, max: 120 },
+          broadcastLbsPerAcre: { min: 90, max: 160 },
+          seedBasis: 'bulk'
+        }
+      }
+    } as never;
+    s.plantings[0] = {
+      ...s.plantings[0],
+      cropPluginId: 'cereal-rye-cover',
+      blockId: 'b_bed1',
+      spacingIn: null,
+      plantCount: 2400,
+      plantCountProvenance: 'fallback'
+    };
+    const card = buildPlantingCard(s, 'p_tom')!;
+    expect(fact(card, 'Seed needed')).toEqual({
+      label: 'Seed needed',
+      value: 'Broadcast: 1–1.9 oz for 32 sq ft',
+      provenance: 'data'
+    });
+    expect(fact(card, 'Plants')?.value).toBe("Plant count doesn't apply to drilled crops.");
+    expect(card.facts.some((f) => /2,?400/.test(f.value))).toBe(false);
+    expect(fact(card, 'Spacing')).toBeUndefined();
+    expect(fact(card, 'Row spacing')).toBeUndefined();
+    expect(card.sections[0].title).toMatch(/Plan it again to size it by area/);
+    const es = buildPlantingCard(s, 'p_tom', { prefs: { timeZone: 'UTC', units: 'us', locale: 'es' } })!;
+    expect(es.facts.find((f) => f.label === 'Semilla necesaria')?.value).toBe(
+      'Al voleo: 1–1.9 oz para 32 sq ft'
+    );
+  });
+
   it('builds one card per planting', () => {
     expect(buildPlantingCards(snap).map((c) => c.key)).toEqual([
       'pl_p_tom',

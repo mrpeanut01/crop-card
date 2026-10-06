@@ -12,6 +12,7 @@
   import { cropDisplayName } from '$lib/i18n/cropName';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { areaText, seedAmountLine } from '$lib/plan/seedAmountText';
 
   const w = getWizardContext();
   const tr = $derived(createT(page.data?.locale));
@@ -198,13 +199,34 @@
         {@const a = row.assignment}
         {@const key = `${a.stockItemId}:${a.blockId}`}
         {@const suff = w.response.sufficiency[key]}
-        {@const chip = suff ? sufficiencyChip(suff) : null}
+        {@const byArea = w.isAreaCrop(a.cropPluginId)}
+        {@const chip = suff
+          ? sufficiencyChip(suff, byArea ? (n) => areaText(n, w.prefs.units) : undefined)
+          : null}
         {@const poll = pollinationSummary(a.stockItemId, a.blockId)}
         {@const splitN = w.splitLotCounts.get(a.stockItemId)}
         <tr data-split={splitN ? a.stockItemId : undefined}>
           <td class="cell-seed">{w.varietyDisplayFor(a.stockItemId)}</td>
           <td data-label={tr('wizard.review.thBlock')}>{w.blockNameFor(a.blockId)}</td>
-          <td data-label={tr('wizard.review.thPlants')}>{a.plants.toLocaleString()}</td>
+          <td data-label={tr('wizard.review.thPlants')}>
+            {#if byArea}
+              {@const line = seedAmountLine(
+                w.spacingFor(a.cropPluginId),
+                w.sowMethodFor(a.cropPluginId),
+                a.plants,
+                w.prefs.units,
+                page.data?.locale,
+                w.manualRateFor(a.cropPluginId)
+              )}
+              <span data-testid="review-area">{areaText(a.plants, w.prefs.units)}</span>
+              <span class="seed-line" data-testid="review-seed-amount">
+                {#if line.provenance}<Provenance source={line.provenance} compact />{/if}
+                {line.text}
+              </span>
+            {:else}
+              {a.plants.toLocaleString()}
+            {/if}
+          </td>
           <td class="cell-fit">
             {#if chip}
               <span class={`chip chip-sm ${chip.cls}`} title={chip.tooltip}>{chip.label}</span>
@@ -247,10 +269,17 @@
           {:else if w.isFillToBed(u.stockItemId)}
             {tr('wizard.review.noRoom', { name: w.varietyDisplayFor(u.stockItemId) })}
           {:else}
-            {tr('wizard.review.didntFit', {
-              name: w.varietyDisplayFor(u.stockItemId),
-              count: u.quantityPlants
-            })}
+            {#if w.isAreaCrop(u.cropPluginId)}
+              {tr('wizard.review.didntFitArea', {
+                name: w.varietyDisplayFor(u.stockItemId),
+                area: areaText(u.quantityPlants, w.prefs.units)
+              })}
+            {:else}
+              {tr('wizard.review.didntFit', {
+                name: w.varietyDisplayFor(u.stockItemId),
+                count: u.quantityPlants
+              })}
+            {/if}
             {@const report = leftoverByLot.get(u.stockItemId)}
             {#if report && report.blocks.length > 0}
               <ul class="leftover-reasons" data-testid="leftover-reasons">
@@ -347,6 +376,13 @@
   .keep-toggle:disabled {
     opacity: 0.6;
     cursor: progress;
+  }
+  .seed-line {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: #4a5d4a;
   }
   .leftover-reasons {
     margin: 0.35rem 0 0.25rem;

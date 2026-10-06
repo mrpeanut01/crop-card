@@ -26,19 +26,27 @@ const TOMATO: GardenCrop = {
   daysToMaturity: { min: 70, max: 80 }
 };
 
+const BUCKWHEAT: GardenCrop = {
+  pluginId: 'buckwheat',
+  displayName: 'Buckwheat',
+  cropFamily: 'cover-grass',
+  daysToMaturity: { min: 30, max: 45 },
+  plantingGuide: { seedingRate: { drilledLbsPerAcre: { min: 50, max: 60 } } }
+};
+
 const window = { earliest: '2027-03-04', prime: '2027-03-18', latest: '2027-08-01', note: null };
 
 function ctx(over: Partial<FillValidationContext> = {}): FillValidationContext {
   return {
     bed: { blockId: 'bed', widthFt: 4, lengthFt: 8 },
-    crops: { lettuce: LETTUCE, tomato: TOMATO },
+    crops: { lettuce: LETTUCE, tomato: TOMATO, buckwheat: BUCKWHEAT },
     lastSpringFrostMs: utc(4, 15),
     firstFallFrostMs: utc(10, 24),
     intervals: [],
     seasonYear: 2027,
     dateMs: utc(4, 1),
     plantingWindow: (id) =>
-      id === 'lettuce'
+      id === 'lettuce' || id === 'buckwheat'
         ? window
         : id === 'tomato'
           ? { earliest: '2027-04-22', prime: '2027-04-29', latest: '2027-07-01', note: null }
@@ -128,6 +136,26 @@ describe('validateFillProposals', () => {
       ['ai1', 72, utc(6, 10)],
       ['ai2', 36, utc(4, 5)]
     ]);
+  });
+
+  it('gives a crop sown by area ground, never a plant count (#555)', () => {
+    const fp = { x_in: 0, y_in: 0, w_in: 48, l_in: 48 };
+    const [p] = validateFillProposals(
+      [{ cropPluginId: 'buckwheat', plantingDate: '2027-05-01', footprint: fp }],
+      ctx()
+    );
+    expect(p).toMatchObject({ cropPluginId: 'buckwheat', plantCount: null, provenance: 'ai' });
+    expect(p.spacing.mode).toBe('area');
+    for (const extra of [{ plantCount: 400 }, { plants: 400 }]) {
+      expect(
+        validateFillProposals(
+          [{ cropPluginId: 'buckwheat', plantingDate: '2027-05-01', footprint: fp, ...extra }],
+          ctx()
+        )
+      ).toEqual([]);
+    }
+    // An in-row crop may still carry one (it is recomputed from spacing).
+    expect(validateFillProposals([lettuce({ plantCount: 3 })], ctx())[0].plantCount).toBe(8);
   });
 
   it('keeps at most twelve', () => {

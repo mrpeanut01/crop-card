@@ -710,5 +710,24 @@ export const enPlan = {
   'plan.split.err.ownerOnly': 'Only the farm owner can change this. Ask the owner.',
   'plan.split.err.invalid': 'Send a crop and whether to keep it in one bed.',
   'plan.split.err.unknownCrop': 'That crop is not in the crop library.',
-  'plan.cal.body.harvestReadiness': 'Use crop-specific readiness indicators before harvest.'
+  'plan.cal.body.harvestReadiness': 'Use crop-specific readiness indicators before harvest.',
+  'plan.area.method.broadcast': 'Broadcast',
+  'plan.area.method.drilled': 'Drilled',
+  'plan.area.method.planted': 'Planted',
+  'plan.area.amountWeight': '{method}: {amount} for {area}',
+  'plan.area.amountSeeds': '{method}: {amount} seeds for {area}',
+  'plan.area.notKnown':
+    'Seed amount not known for this crop. Sources disagree or give none; check your seed tag.',
+  'plan.area.noCount': "Plant count doesn't apply to drilled crops.",
+  'plan.area.replan':
+    'This planting was planned with a placeholder plant count. Plan it again to size it by area.',
+  'plan.area.label': 'Seed by area',
+  'plan.area.covers': 'Covers about {area} at the top of the source rate',
+  'plan.area.coversManual': 'Covers about {area} at your rate',
+  'plan.area.sizedToBed': 'Amount not known, so it will be sized to the bed.',
+  'plan.area.methodToggle': 'How you sow it',
+  'plan.area.typeYours': 'Type yours',
+  'plan.area.yourRate': 'Your rate (lb/acre)',
+  'plan.area.yourRateMetric': 'Your rate (kg/ha)',
+  'plan.area.clearRate': 'Clear'
 } as const;

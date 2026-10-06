@@ -509,5 +509,6 @@ export const enCards = {
   'cards.cal.seeSprayCard': 'See the Spray Card',
   'cards.cal.seeTaskSprayCard': 'See the task for its Spray Card',
   'cards.cal.sprayNotice':
-    'Spray tasks show no rates or mixing steps. Use the Spray Card for those.'
+    'Spray tasks show no rates or mixing steps. Use the Spray Card for those.',
+  'cards.fact.seedForArea': 'Seed needed'
 } as const;

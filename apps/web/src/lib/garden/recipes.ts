@@ -37,6 +37,7 @@ export type RecipeFit = { fits: true } | { fits: false; reason: string };
 const DAY_MS = 86_400_000;
 const SECTION_SNAP_IN = 6;
 const PACKED_LENGTH_IN = 24;
+const FOOTPRINT_STEP_IN = 6;
 
 export function frostFreeDays(lastSpringFrostMs: number, firstFallFrostMs: number): number {
   return Math.round((firstFallFrostMs - lastSpringFrostMs) / DAY_MS);
@@ -385,10 +386,16 @@ function packUnplaced(
       { firstFallFrostMs: ctx.firstFallFrostMs, lastSpringFrostMs: ctx.lastSpringFrostMs }
     );
     if (!timing || timing.harvestStartMs > ctx.firstFallFrostMs) return;
+    // #555: a crop sown by area has no plant count; it gets an even share of
+    // the bed's length (never less than the packed strip).
+    const areaShareIn =
+      Math.floor(bedLIn / Math.max(1, unplaced.length) / FOOTPRINT_STEP_IN) * FOOTPRINT_STEP_IN;
     const want =
-      item.plants && item.plants > 0
-        ? footprintForCount(item.plants, spacing, bedWIn)
-        : { w_in: bedWIn, l_in: Math.min(PACKED_LENGTH_IN, bedLIn) };
+      spacing.mode === 'area'
+        ? { w_in: bedWIn, l_in: Math.min(bedLIn, Math.max(PACKED_LENGTH_IN, areaShareIn)) }
+        : item.plants && item.plants > 0
+          ? footprintForCount(item.plants, spacing, bedWIn)
+          : { w_in: bedWIn, l_in: Math.min(PACKED_LENGTH_IN, bedLIn) };
     const taken: Footprint[] = [
       ...ctx.intervals
         .filter((iv) => iv.blockId === bed.blockId && timesOverlap(iv, timing))

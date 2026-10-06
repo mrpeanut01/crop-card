@@ -157,7 +157,11 @@ export function placedPlanting(
   });
   let count = p.plantCount;
   let provenance = p.plantCountProvenance;
-  if (p.footprint && (count == null || provenance !== 'manual')) {
+  if (spacing.mode === 'area') {
+    // #555: sown by area. A count saved by an older plan is not shown.
+    count = null;
+    provenance = null;
+  } else if (p.footprint && (count == null || provenance !== 'manual')) {
     const computed = plantCount(p.footprint, spacing);
     count = computed.count;
     provenance = computed.provenance;

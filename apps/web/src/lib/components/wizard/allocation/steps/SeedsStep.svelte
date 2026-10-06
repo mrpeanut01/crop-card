@@ -8,6 +8,7 @@
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
   import { pageCropName } from '$lib/i18n/pageCropName';
+  import AreaSeedCell from './AreaSeedCell.svelte';
 
   const w = getWizardContext();
   const tr = $derived(createT(page.data?.locale));
@@ -389,7 +390,16 @@
                 {/if}
               </td>
               <td data-label={tr('wizard.seeds.thPlants')}>
-                {fill ? '—' : plants !== null ? plants.toLocaleString() : '—'}
+                {#if s.cropPluginId && w.isAreaCrop(s.cropPluginId)}
+                  <AreaSeedCell
+                    stockItemId={s.stockItemId}
+                    cropPluginId={s.cropPluginId}
+                    quantity={fill ? 0 : qty}
+                    {checked}
+                  />
+                {:else}
+                  {fill ? '—' : plants !== null ? plants.toLocaleString() : '—'}
+                {/if}
               </td>
             </tr>
           {/each}

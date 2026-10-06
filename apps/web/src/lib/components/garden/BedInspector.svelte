@@ -1,6 +1,8 @@
 <script lang="ts">
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { pageCropName } from '$lib/i18n/pageCropName';
+  import { defaultSowMethod, spacingModel } from '$lib/plan/spacingModel';
+  import { seedAmountLine } from '$lib/plan/seedAmountText';
   import { tick } from 'svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import AiLimitNudge from '$lib/components/billing/AiLimitNudge.svelte';
@@ -153,6 +155,19 @@
       return `${tr('garden.insp.keepApart', { a: an, b: bn })}${why}`;
     }
     return `${tr('garden.insp.goodNeighbours', { a: an, b: bn })}${h.benefit ? ` ${h.benefit}` : ''}`;
+  }
+
+  /** #555: the seed line for a crop sown by area over its footprint. */
+  function areaSeedLine(p: PlacedPlanting) {
+    const model = spacingModel(d.crop(p.cropPluginId));
+    const sqft = p.footprint ? (p.footprint.w_in * p.footprint.l_in) / 144 : 0;
+    return seedAmountLine(model, defaultSowMethod(model), sqft, currentPrefs().units, d.locale);
+  }
+
+  function proposalCount(prop: { plantCount: number | null }): string {
+    return prop.plantCount != null
+      ? countOf('plant', prop.plantCount, tr)
+      : tr('garden.canvas.sownAcross');
   }
 
   function countDetail(p: PlacedPlanting): string | undefined {
@@ -577,7 +592,23 @@
                   · {tr('garden.insp.sowingOf', { n: place + 1, total: series.length })}{/if}
               </span>
             </div>
-            {#if p.footprint}
+            {#if p.footprint && p.spacing.mode === 'area'}
+              {@const line = areaSeedLine(p)}
+              <div class="count" data-testid="area-seed-amount">
+                <span>{tr('plan.area.noCount')}</span>
+                <span class="pmeta"
+                  >{#if line.provenance}<Provenance source={line.provenance} compact />{/if}
+                  {line.text}</span
+                >
+                <span class="pmeta"
+                  >{sizeLabel(
+                    p.footprint.w_in / 12,
+                    p.footprint.l_in / 12,
+                    currentPrefs().units
+                  )}</span
+                >
+              </div>
+            {:else if p.footprint}
               <div class="count" data-testid="plant-count">
                 <span
                   >{p.plantCount != null
@@ -674,27 +705,29 @@
                       {/each}
                     </select>
                   </label>
-                  <label>
-                    {tr('garden.insp.plants')}
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={p.plantCount ?? ''}
-                      aria-label={tr('garden.insp.plantCount', { name: p.varietyDisplayName })}
-                      onchange={(e) => {
-                        const n = Math.round(Number((e.currentTarget as HTMLInputElement).value));
-                        if (n >= 1) void d.setPlantCount(p.cropId, n);
-                      }}
-                    />
-                  </label>
-                  {#if p.plantCountProvenance === 'manual'}
-                    <button
-                      type="button"
-                      class="btn"
-                      onclick={() => d.setPlantCount(p.cropId, null)}
-                      >{tr('garden.insp.recount')}</button
-                    >
+                  {#if p.spacing.mode !== 'area'}
+                    <label>
+                      {tr('garden.insp.plants')}
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={p.plantCount ?? ''}
+                        aria-label={tr('garden.insp.plantCount', { name: p.varietyDisplayName })}
+                        onchange={(e) => {
+                          const n = Math.round(Number((e.currentTarget as HTMLInputElement).value));
+                          if (n >= 1) void d.setPlantCount(p.cropId, n);
+                        }}
+                      />
+                    </label>
+                    {#if p.plantCountProvenance === 'manual'}
+                      <button
+                        type="button"
+                        class="btn"
+                        onclick={() => d.setPlantCount(p.cropId, null)}
+                        >{tr('garden.insp.recount')}</button
+                      >
+                    {/if}
                   {/if}
                 </div>
               {/if}
@@ -958,7 +991,7 @@
                       prop.footprint.w_in / 12,
                       prop.footprint.l_in / 12,
                       currentPrefs().units
-                    )} · {countOf('plant', prop.plantCount, tr)}
+                    )} · {proposalCount(prop)}
                   </span>
                   <span class="prov-inline"><Provenance source={prop.provenance} compact /></span>
                   <label class="accept">
@@ -1020,7 +1053,7 @@
                     prop.footprint.w_in / 12,
                     prop.footprint.l_in / 12,
                     currentPrefs().units
-                  )} · {countOf('plant', prop.plantCount, tr)}</span
+                  )} · {proposalCount(prop)}</span
                 >
                 <span class="pmeta">{prop.note ?? spotText(prop.footprint)}</span>
                 <span class="prov-inline"><Provenance source={prop.provenance} compact /></span>

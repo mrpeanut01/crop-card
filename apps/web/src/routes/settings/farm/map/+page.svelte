@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { browser } from '$app/environment';
+  import { browser } from '$app/env';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import FarmMapEditor from '$lib/components/farm/FarmMapEditor.svelte';
   import { createT } from '$lib/i18n';

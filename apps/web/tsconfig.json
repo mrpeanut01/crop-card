@@ -1,5 +1,7 @@
 {
-  "extends": "./.svelte-kit/tsconfig.json",
+  "extends": "$app/tsconfig",
+  "include": ["src", "tests", "vite.config.ts", "playwright.config.ts"],
+  "exclude": ["src/service-worker"],
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
@@ -12,6 +14,6 @@
     "moduleResolution": "bundler",
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
-    "types": ["node"]
+    "types": ["node", "$app/types"]
   }
 }

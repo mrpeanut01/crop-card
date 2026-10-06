@@ -1,7 +1,7 @@
 /**
  * CSRF / Origin bridge — six-scenario matrix (Phase 24, Sub-task B / #56).
  *
- * SvelteKit's built-in `csrf.checkOrigin` is disabled in svelte.config.js;
+ * SvelteKit's built-in `csrf.checkOrigin` is disabled in vite.config.ts;
  * the real guard is the `csrfDecision()` helper in hooks.server.ts. This
  * test exercises that helper directly so we get fast, hermetic coverage
  * of every (authVia × Origin × path) corner without spinning up the

@@ -55,7 +55,7 @@
   );
 
   function pickYear(y: number) {
-    goto(`/plan/calendar?year=${y}`, { noScroll: true });
+    goto(`/plan/calendar?year=${y}`, { reset: false });
   }
 
   const FROST_KEY = {

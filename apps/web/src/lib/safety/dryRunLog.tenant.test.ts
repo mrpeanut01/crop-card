@@ -1,7 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-
-vi.mock('$env/dynamic/private', () => ({ env: { KERNEL_DRY_RUN: '1' } }));
 
 import { db } from '$lib/db/client';
 import { kernelDryRunLog, owners } from '$lib/db/schema';
@@ -29,6 +27,14 @@ function rowsFor(ownerId: string, blockId: string) {
 }
 
 describe('recordDryRun tenant stamping (Invariant 6)', () => {
+  const savedFlag = process.env.KERNEL_DRY_RUN;
+  beforeAll(() => {
+    process.env.KERNEL_DRY_RUN = '1';
+  });
+  afterAll(() => {
+    if (savedFlag === undefined) delete process.env.KERNEL_DRY_RUN;
+    else process.env.KERNEL_DRY_RUN = savedFlag;
+  });
   it('stamps the active Owner and is invisible to other Owners', () => {
     ensureOwner(OWNER_A);
     ensureOwner(OWNER_B);

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ChevronRight, Plus, Map, MapPin, Crosshair } from 'lucide-svelte';
-  import { browser } from '$app/environment';
+  import { browser } from '$app/env';
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';

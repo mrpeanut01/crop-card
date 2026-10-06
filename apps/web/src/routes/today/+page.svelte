@@ -322,7 +322,7 @@
       if (v === null) url.searchParams.delete(k);
       else url.searchParams.set(k, v);
     }
-    void goto(`${url.pathname}${url.search}`, { noScroll: true, keepFocus: true });
+    void goto(`${url.pathname}${url.search}`, { reset: false });
   }
   function setView(v: TodayView) {
     if (v === view) return;

@@ -94,7 +94,7 @@
   );
 
   function seasonHref(year: number): string {
-    const url = new URL(page.url);
+    const url = new URL(page.url.href);
     url.searchParams.set('season', String(year));
     url.searchParams.delete('on');
     return `${url.pathname}${url.search}`;

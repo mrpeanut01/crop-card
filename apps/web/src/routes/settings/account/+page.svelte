@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { browser } from '$app/environment';
+  import { browser } from '$app/env';
   import { Lock, FileText } from 'lucide-svelte';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';

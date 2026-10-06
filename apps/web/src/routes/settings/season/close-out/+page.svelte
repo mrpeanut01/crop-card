@@ -1,6 +1,6 @@
 <script lang="ts">
   import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
-  import { browser } from '$app/environment';
+  import { browser } from '$app/env';
   import { invalidateAll } from '$app/navigation';
   import { ChevronRight, Check, X, Lock } from 'lucide-svelte';
   import type { PageData } from './$types';

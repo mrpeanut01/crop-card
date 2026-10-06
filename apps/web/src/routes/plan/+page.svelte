@@ -11,8 +11,8 @@
   import { createT, type TranslateKey } from '$lib/i18n';
   import { calendarEventCrop, calendarEventTitle } from '$lib/calendar/eventTitle';
   import { goto, invalidateAll } from '$app/navigation';
-  import { browser } from '$app/environment';
-  import { page } from '$app/stores';
+  import { browser } from '$app/env';
+  import { page } from '$app/state';
   import BlockMap from '$lib/components/BlockMap.svelte';
   import { fmt as prefsFmt } from '$lib/prefsState.svelte';
   import CropPickerModal from '$lib/components/CropPickerModal.svelte';
@@ -132,7 +132,7 @@
   const FROST = $derived(data.frostDates);
 
   function tabHref(tab: PlanTab): string {
-    const sp = new URLSearchParams($page.url.searchParams);
+    const sp = new URLSearchParams(page.url.search);
     sp.set('tab', tab);
     sp.delete('ym');
     sp.delete('fieldId');
@@ -147,7 +147,7 @@
    *  switch silently no-op'd. Use this helper any time the destination
    *  URL needs an explicit view choice. */
   function calendarHref(targetView: 'swimlane' | 'grid'): string {
-    const sp = new URLSearchParams($page.url.searchParams);
+    const sp = new URLSearchParams(page.url.search);
     sp.set('tab', 'calendar');
     sp.set('view', targetView);
     sp.delete('ym');
@@ -521,19 +521,19 @@
     if (target.kind === 'wizard') {
       if (data.canEdit) openWizard(target.wizardStep);
     } else if (target.kind === 'calendar') {
-      const sp = new URLSearchParams($page.url.searchParams);
+      const sp = new URLSearchParams(page.url.search);
       sp.set('tab', 'calendar');
       sp.set('view', 'swimlane');
       detailOpen = true;
-      await goto(`/plan?${sp.toString()}`, { keepFocus: true, noScroll: true });
+      await goto(`/plan?${sp.toString()}`, { reset: false });
       revealById('legacy-plan');
     } else if (target.kind === 'tasks') {
       revealById('plan-scheduled-tasks');
     } else if (target.kind === 'provenance') {
       if (data.tab !== 'overview') {
-        const sp = new URLSearchParams($page.url.searchParams);
+        const sp = new URLSearchParams(page.url.search);
         sp.set('tab', 'overview');
-        await goto(`/plan?${sp.toString()}`, { keepFocus: true, noScroll: true });
+        await goto(`/plan?${sp.toString()}`, { reset: false });
       }
       revealById('plan-provenance');
     }
@@ -569,7 +569,7 @@
   // blocks within the field scope".
   type ScheduleFilter = { fieldId: string | null; blockIds: string[] };
   // Per farm: the filter holds field/block ids that mean nothing elsewhere.
-  const FILTER_LS_KEY = `cropcard:schedule-filter:v1:${$page.data.user?.activeOwnerId ?? 'none'}`;
+  const FILTER_LS_KEY = `cropcard:schedule-filter:v1:${page.data.user?.activeOwnerId ?? 'none'}`;
   let selectedFieldId = $state<string | null>(null);
   let selectedBlockIds = $state<Set<string>>(new Set());
   let filterLoaded = $state(false);
@@ -1559,21 +1559,20 @@
   }
 
   onMount(() => {
-    cropsTabOrder = loadBlockOrder($page.data.user?.activeOwnerId);
-    const w = $page.url.searchParams.get('wizard');
+    cropsTabOrder = loadBlockOrder(page.data.user?.activeOwnerId);
+    const w = page.url.searchParams.get('wizard');
     if (w === 'allocation' || w === 'season-setup') {
       openWizard(w);
-      const sp = new URLSearchParams($page.url.searchParams);
+      const sp = new URLSearchParams(page.url.search);
       sp.delete('wizard');
       const qs = sp.toString();
       void goto(`/plan${qs ? `?${qs}` : ''}`, {
-        replaceState: true,
-        keepFocus: true,
-        noScroll: true
+        replace: true,
+        reset: false
       });
       return;
     }
-    const sp = $page.url.searchParams;
+    const sp = page.url.searchParams;
     const deepLinked = ['map', 'block', 'planting', 'tab'].some((k) => sp.has(k));
     const hasSomewhere = data.blocks.length > 0 || sp.get('setup') === 'skip';
     if (data.emptySeason && data.canEdit && !deepLinked && hasSomewhere) openWizard();
@@ -1678,7 +1677,7 @@
           ? [...filtered, sourceId]
           : [...filtered.slice(0, targetIdx), sourceId, ...filtered.slice(targetIdx)];
       cropsTabOrder = newOrder;
-      saveBlockOrder($page.data.user?.activeOwnerId, newOrder);
+      saveBlockOrder(page.data.user?.activeOwnerId, newOrder);
 
       try {
         const r = await fetch(`/api/blocks/${encodeURIComponent(sourceId)}`, {
@@ -1702,7 +1701,7 @@
     if (!next) return;
     const merged = mergeFieldOrder(cropsTabOrder, currentIds, next);
     cropsTabOrder = merged;
-    saveBlockOrder($page.data.user?.activeOwnerId, merged);
+    saveBlockOrder(page.data.user?.activeOwnerId, merged);
   }
   function onCropsHeaderDragEnd() {
     cropsReorderDragId = null;
@@ -1737,7 +1736,7 @@
     const filtered = baseOrder.filter((id) => id !== sourceId);
     const newOrder = [...filtered, sourceId];
     cropsTabOrder = newOrder;
-    saveBlockOrder($page.data.user?.activeOwnerId, newOrder);
+    saveBlockOrder(page.data.user?.activeOwnerId, newOrder);
 
     try {
       const r = await fetch(`/api/blocks/${encodeURIComponent(sourceId)}`, {
@@ -2069,7 +2068,7 @@
   }
 
   function calendarFilterUrl(fieldId: string, blockId: string): string {
-    const sp = new URLSearchParams($page.url.searchParams);
+    const sp = new URLSearchParams(page.url.search);
     sp.set('tab', 'calendar');
     if (fieldId) sp.set('fieldId', fieldId);
     else sp.delete('fieldId');
@@ -2238,7 +2237,7 @@
   onCreated={async (newBlockId: string) => {
     showNewBlockModal = false;
     await invalidateAll();
-    await goto(`?block=${newBlockId}`, { keepFocus: true, noScroll: true });
+    await goto(`?block=${newBlockId}`, { reset: false });
   }}
 />
 

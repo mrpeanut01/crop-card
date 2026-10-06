@@ -7,7 +7,7 @@
 
 import { statSync } from 'node:fs';
 import { monitorEventLoopDelay, performance, type IntervalHistogram } from 'node:perf_hooks';
-import type { Handle } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit/hooks';
 import { databasePath } from '$lib/db/client';
 import { dbCounters, runWithDbTiming } from '$lib/db/instrument';
 import {

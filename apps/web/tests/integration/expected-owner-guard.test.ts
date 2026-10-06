@@ -122,7 +122,7 @@ describe('GET /api/session/active-owner', () => {
     const cookies = sessionOn(ownerA);
     const res = await handle({
       event: event(cookies, '/api/session/active-owner'),
-      resolve: (ev) => activeOwnerGet(ev as never)
+      resolve: async (ev) => activeOwnerGet(ev as never)
     });
     expect(res.status).toBe(200);
     expect(res.headers.get('cache-control')).toBe('no-store');
@@ -133,7 +133,7 @@ describe('GET /api/session/active-owner', () => {
   it('401s without a session', async () => {
     const res = await handle({
       event: event(fakeCookies(), '/api/session/active-owner'),
-      resolve: (ev) => activeOwnerGet(ev as never)
+      resolve: async (ev) => activeOwnerGet(ev as never)
     });
     expect(res.status).toBe(401);
   });

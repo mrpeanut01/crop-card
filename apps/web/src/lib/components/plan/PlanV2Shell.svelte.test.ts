@@ -3,15 +3,17 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
-import { readable } from 'svelte/store';
 import type { BlockWithPlantings } from '$lib/db/blocks';
 import type { CalendarEvent } from '$lib/calendar/engine';
 
 let currentUrl = new URL('http://localhost/plan');
 
-vi.mock('$app/stores', () => ({
+vi.mock('$app/state', () => ({
   page: {
-    subscribe: (fn: (v: { url: URL }) => void) => readable({ url: currentUrl }).subscribe(fn)
+    get url() {
+      return currentUrl;
+    },
+    data: {}
   }
 }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));

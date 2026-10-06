@@ -10,7 +10,7 @@
    */
 
   import { onMount, onDestroy } from 'svelte';
-  import { browser } from '$app/environment';
+  import { browser } from '$app/env';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import AreaDetailsFields from '$lib/components/farm/AreaDetailsFields.svelte';
   import MapFeatureFields from '$lib/components/farm/MapFeatureFields.svelte';

@@ -4,7 +4,7 @@ import { sampleSnapshot } from '$lib/cards/build/fixtures';
 const env = vi.hoisted(() => ({ browser: true }));
 const store = vi.hoisted(() => ({ row: null as unknown }));
 
-vi.mock('$app/environment', () => ({
+vi.mock('$app/env', () => ({
   get browser() {
     return env.browser;
   }

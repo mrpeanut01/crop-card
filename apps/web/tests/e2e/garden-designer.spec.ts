@@ -488,6 +488,7 @@ test.describe('helper', () => {
     const helper = await inviteHelper(page, browser);
     for (const view of ['canvas', 'list'] as const) {
       await helper.goto(`/plan/areas/${areaId}/design?view=${view}`);
+      await expect(helper.getByTestId('garden-designer')).toHaveAttribute('data-ready', 'true');
       await expect(helper.getByTestId('readonly-banner')).toHaveText(
         'View only. The farm owner changes the layout.'
       );

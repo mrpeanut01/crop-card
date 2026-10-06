@@ -1,7 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
-  import type { SubmitFunction } from '@sveltejs/kit';
+  import type { SubmitFunction } from '$app/forms';
   import { createT, type MessageKey } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';

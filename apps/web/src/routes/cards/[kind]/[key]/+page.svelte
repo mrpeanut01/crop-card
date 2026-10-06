@@ -103,7 +103,7 @@
           time: formatInstant(snapshot.generatedAt, prefs, 'time')
         })
       : '';
-    replaceState(withoutPrintParam(page.url), page.state);
+    replaceState(withoutPrintParam(new URL(page.url.href)), page.state);
     void tick().then(print);
   });
   const pinned = $derived(cards.isPinned(key));

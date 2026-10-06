@@ -1,6 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import type { SubmitFunction } from '@sveltejs/kit';
+  import type { SubmitFunction } from '$app/forms';
   import type { SignInChannel } from '$lib/identity';
   import AlphaBanner from '$lib/components/feedback/AlphaBanner.svelte';
   import type { ActionData, PageData } from './$types';

@@ -17,13 +17,13 @@ export interface CardViewParams {
 
 const FILTER_VALUE = /^[A-Za-z0-9_.:-]{1,80}$/;
 
-function filterParam(search: URLSearchParams, name: string): string | undefined {
+function filterParam(search: Pick<URLSearchParams, 'get'>, name: string): string | undefined {
   const v = search.get(name);
   return v && FILTER_VALUE.test(v) ? v : undefined;
 }
 
 /** Reads the query the garden designer's Print button sends to a card. */
-export function cardViewParams(search: URLSearchParams, kind: string): CardViewParams {
+export function cardViewParams(search: Pick<URLSearchParams, 'get'>, kind: string): CardViewParams {
   const on = kind === 'area' ? ymdToUtcMs(search.get('on')) : null;
   const after = Number(search.get('after'));
   const calendar = kind === 'week' || kind === 'month';

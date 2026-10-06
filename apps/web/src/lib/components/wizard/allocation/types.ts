@@ -81,6 +81,8 @@ export type AllocationResponse = {
     varietyDisplayName: string;
     blockId: string;
     plants: number;
+    /** #600: the crop's spacing has no source; plants and fit use the placeholder. */
+    spacingProvenance?: 'fallback';
   }>;
   unplaced: Array<{ stockItemId: string; cropPluginId: string; quantityPlants: number }>;
   sufficiency: Record<string, SufficiencyResult>;

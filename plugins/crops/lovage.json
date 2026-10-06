@@ -15,8 +15,8 @@
     "soilTempMinF": 55,
     "rowSpacingIn": 30,
     "inRowSpacingIn": {
-      "min": 24,
-      "max": 36
+      "min": 30,
+      "max": 30
     }
   },
   "agronomy": {

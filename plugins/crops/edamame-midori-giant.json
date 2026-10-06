@@ -10,10 +10,6 @@
   },
   "defaultRowSpacingInches": 15,
   "plantingGuide": {
-    "inRowSpacingIn": {
-      "min": 5,
-      "max": 5
-    }
   },
   "harvestIndicators": [
     "Pods plump (R6 stage)",

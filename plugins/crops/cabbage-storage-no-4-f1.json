@@ -15,7 +15,7 @@
     "soilTempMinF": 45,
     "rowSpacingIn": 18,
     "inRowSpacingIn": {
-      "min": 14,
+      "min": 12,
       "max": 18
     },
     "establishment": "transplant",

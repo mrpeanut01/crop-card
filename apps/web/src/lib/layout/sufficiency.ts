@@ -78,7 +78,20 @@ export function plantsFitUsable(
  *  (#555) the unit is one square foot, so the engine's "plants" of it are
  *  square feet and no plant count is ever derived. */
 export function footprintSqFt(plugin: CropPlugin): number {
-  if (isAreaCrop(plugin)) return AREA_UNIT_SQFT;
+  return footprintOf(plugin).sqft;
+}
+
+export interface Footprint {
+  sqft: number;
+  /** `fallback` when the footprint comes from a spacing with no source
+   *  (the tagged `FALLBACK_SPACING_IN` placeholder or a fallback row, #591,
+   *  #600), so every plant count or fit derived from it carries the tag
+   *  (Invariant 7). */
+  provenance: 'plugin' | 'fallback';
+}
+
+export function footprintOf(plugin: CropPlugin): Footprint {
+  if (isAreaCrop(plugin)) return { sqft: AREA_UNIT_SQFT, provenance: 'plugin' };
   // v1.3 — pick the largest of three signals so we don't under-size vining
   // or wide-canopy crops:
   //   1) Explicit per-plant matureCanopyFtSq (operator-supplied truth)
@@ -87,9 +100,9 @@ export function footprintSqFt(plugin: CropPlugin): number {
   // Why MAX rather than sum: the row footprint represents the *seeded*
   // plot the plant claims; vine spread represents what it actually fills
   // at maturity. The bigger of the two is the real space requirement.
-  const row = rowSpacingOf(plugin).inches;
-  const inRowAvg = inRowSpacingOf(plugin).inches;
-  const rowSqFt = row * FT_PER_INCH * (inRowAvg * FT_PER_INCH);
+  const row = rowSpacingOf(plugin);
+  const inRow = inRowSpacingOf(plugin);
+  const rowSqFt = row.inches * FT_PER_INCH * (inRow.inches * FT_PER_INCH);
 
   const explicitCanopy = plugin.plantingGuide?.matureCanopyFtSq ?? 0;
 
@@ -102,7 +115,10 @@ export function footprintSqFt(plugin: CropPlugin): number {
     vineSqFt = Math.PI * radius * radius;
   }
 
-  return Math.max(rowSqFt, vineSqFt, explicitCanopy);
+  const sqft = Math.max(rowSqFt, vineSqFt, explicitCanopy);
+  const fromSpacing = rowSqFt >= vineSqFt && rowSqFt >= explicitCanopy;
+  const unsourced = row.provenance === 'fallback' || inRow.provenance === 'fallback';
+  return { sqft, provenance: fromSpacing && unsourced ? 'fallback' : 'plugin' };
 }
 
 export type SufficiencyStatus = 'deficit' | 'match' | 'surplus';

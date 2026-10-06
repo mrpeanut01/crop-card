@@ -521,6 +521,8 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.review.thBlock': 'Bloque',
   'wizard.review.thFit': 'Ajuste al bloque',
   'wizard.review.thPlants': 'Plantas o superficie',
+  'wizard.review.spacingFallback':
+    'Este cultivo no tiene espaciamiento registrado, así que esta cantidad usa un valor provisional de 12 pulgadas. Revise el sobre de semillas.',
   'wizard.review.thSeed': 'Semilla',
   'wizard.review.thSource': 'Origen',
   'wizard.review.thWhy': 'Por qué',

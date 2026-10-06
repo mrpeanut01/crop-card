@@ -9,10 +9,6 @@
     "max": 55
   },
   "plantingGuide": {
-    "inRowSpacingIn": {
-      "min": 18,
-      "max": 18
-    }
   },
   "harvestIndicators": [
     "Foliage harvest pre-bolt",

@@ -10,10 +10,6 @@
   },
   "plantingGuide": {
     "soilTempMinF": 55,
-    "inRowSpacingIn": {
-      "min": 1.5,
-      "max": 3
-    },
     "seedDepthIn": {
       "min": 1.25,
       "max": 1.75

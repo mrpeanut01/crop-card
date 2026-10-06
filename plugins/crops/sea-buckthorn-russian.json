@@ -11,11 +11,7 @@
     "max": 1460
   },
   "plantingGuide": {
-    "soilTempMinF": 40,
-    "inRowSpacingIn": {
-      "min": 60,
-      "max": 96
-    }
+    "soilTempMinF": 40
   },
   "agronomy": {
     "lifecycle": "perennial",

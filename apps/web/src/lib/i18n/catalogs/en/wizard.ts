@@ -501,6 +501,8 @@ export const enWizard = {
   'wizard.review.thBlock': 'Block',
   'wizard.review.thFit': 'Block fit',
   'wizard.review.thPlants': 'Plants or area',
+  'wizard.review.spacingFallback':
+    'No spacing on file for this crop, so this count uses a 12 in placeholder. Check your seed packet.',
   'wizard.review.thSeed': 'Seed',
   'wizard.review.thSource': 'Source',
   'wizard.review.thWhy': 'Why',

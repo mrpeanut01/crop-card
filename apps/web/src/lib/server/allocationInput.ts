@@ -1,7 +1,7 @@
 import { listBlocks, type BlockWithPlantings } from '$lib/db/blocks';
 import { listCrops } from '$lib/db/crops';
 import { listFields } from '$lib/db/fields';
-import type { PlanInput, SeedRequest } from '$lib/layout/engine';
+import { withSpacingProvenance, type PlanInput, type SeedRequest } from '$lib/layout/engine';
 import { blockCapacity, sharedBedBlockIds } from '$lib/layout/bedSharing';
 import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
 import { companionIndex } from '$lib/plugins/companionRelations';
@@ -11,15 +11,20 @@ import { isAreaCrop } from '$lib/plan/spacingModel';
 import type { Assignment } from '$lib/layout/engine';
 
 /** #555: an assignment of a crop sown by area carries its square feet as
- *  `areaSqFt`; its `plants` is then engine units, not a plant count. */
+ *  `areaSqFt`; its `plants` is then engine units, not a plant count. #600:
+ *  one whose crop has no sourced spacing carries `spacingProvenance:
+ *  'fallback'`, for the engine's and Claude's plans alike. */
 export function withAreaSqFt<T extends Pick<Assignment, 'cropPluginId' | 'plants'>>(
   assignments: ReadonlyArray<T>,
   pluginIndex: Readonly<Record<string, CropPlugin>>
-): Array<T & { areaSqFt?: number }> {
-  return assignments.map((a) => {
-    const plugin = pluginIndex[a.cropPluginId];
-    return plugin && isAreaCrop(plugin) ? { ...a, areaSqFt: a.plants } : a;
-  });
+): Array<T & { areaSqFt?: number; spacingProvenance?: 'fallback' }> {
+  return withSpacingProvenance(
+    assignments.map((a) => {
+      const plugin = pluginIndex[a.cropPluginId];
+      return plugin && isAreaCrop(plugin) ? { ...a, areaSqFt: a.plants } : a;
+    }),
+    pluginIndex
+  );
 }
 
 export type AllocationInputResult =

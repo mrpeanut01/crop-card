@@ -11,10 +11,6 @@
   },
   "defaultRowSpacingInches": 96,
   "plantingGuide": {
-    "inRowSpacingIn": {
-      "min": 72,
-      "max": 72
-    }
   },
   "seasonalTasks": [
     {

@@ -11,11 +11,7 @@
     "max": 120
   },
   "plantingGuide": {
-    "soilTempMinF": 45,
-    "inRowSpacingIn": {
-      "min": 6,
-      "max": 9
-    }
+    "soilTempMinF": 45
   },
   "agronomy": {
     "lifecycle": "annual",

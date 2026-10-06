@@ -15,8 +15,8 @@
     "soilTempMinF": 45,
     "rowSpacingIn": 18,
     "inRowSpacingIn": {
-      "min": 10,
-      "max": 12
+      "min": 12,
+      "max": 18
     },
     "establishment": "transplant",
     "startIndoorsWeeks": {

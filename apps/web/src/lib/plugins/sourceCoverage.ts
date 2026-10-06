@@ -159,7 +159,7 @@ export function cropFactPaths(c: CropPlugin): string[] {
   }
   for (const row of c.treeSizeClasses ?? []) paths.push(`treeSizeClasses.${row.sizeClass}`);
   for (const [, key] of rowSpacingFields(c)) if (!paths.includes(key)) paths.push(key);
-  if (isTreeCrop(c) && guide.inRowSpacingIn !== undefined) paths.push('inRowSpacingIn');
+  if (guide.inRowSpacingIn !== undefined) paths.push('inRowSpacingIn');
   return paths;
 }
 
@@ -208,23 +208,42 @@ const FEET_WORDS = [
   'twelve'
 ];
 
-/** The quote states the figure in inches, in feet, or in feet as a word
- *  ("two feet between the rows"). */
+/** Fractions sources print instead of decimals ("3/4-1 in", "1½"). */
+const FRACTIONS: Record<string, string[]> = {
+  '.25': ['1/4', '¼'],
+  '.5': ['1/2', '½'],
+  '.75': ['3/4', '¾']
+};
+
+function fractionPatterns(n: number): string[] {
+  const whole = Math.floor(n);
+  const forms = FRACTIONS[String(n - whole).replace(/^0/, '')];
+  if (!forms) return [];
+  return forms.map((f) => (whole === 0 ? f : `${whole}(?:[- ]|\\s)?${f}`));
+}
+
+/** The quote states the figure in inches (as a decimal or a fraction), in
+ *  feet, or in feet as a word ("two feet between the rows"). */
 function statesInches(quote: string, inches: number): boolean {
-  const figures = [numberPattern(inches)];
+  const figures = [numberPattern(inches), ...fractionPatterns(inches)];
   const feet = inches / 12;
-  if (Number.isInteger(feet)) figures.push(numberPattern(feet));
+  if (Number.isInteger(feet) || Number.isInteger(feet * 2)) {
+    figures.push(numberPattern(feet), ...fractionPatterns(feet));
+  }
   if (figures.some((f) => new RegExp(`(^|[^\\d.])${f}([^\\d]|$)`).test(quote))) return true;
   const word = Number.isInteger(feet) ? FEET_WORDS[feet - 1] : undefined;
-  return !!word && new RegExp(`\\b${word}[- ](foot|feet)\\b`, 'i').test(quote);
+  if (word && new RegExp(`\\b${word}[- ](foot|feet)\\b`, 'i').test(quote)) return true;
+  // #600: inches as a word ("six to twelve-inches apart").
+  const inchWord = Number.isInteger(inches) ? FEET_WORDS[inches - 1] : undefined;
+  return !!inchWord && /\binch/i.test(quote) && new RegExp(`\\b${inchWord}\\b`, 'i').test(quote);
 }
 
 /** #587 / #591: every crop's row spacing (`plantingGuide.rowSpacingIn`,
  *  `defaultRowSpacingInches`) quote must state the number, in inches or as
  *  feet, and name rows; a crop with a size class table carries no row spacing
  *  at all (the table spaces it both ways, so the value would never be read).
- *  A tree crop's in-row spacing (its minimum distance between trees, used
- *  both ways) must state both ends of its range. Missing sources are
+ *  Every crop's in-row spacing quote is checked by `inRowSpacingQuoteGaps`
+ *  (#600). Missing sources are
  *  reported by `checkSources` over `cropFactPaths`. Returns "pluginId:
  *  problem" lines. */
 export function rowSpacingGaps(
@@ -254,15 +273,57 @@ export function rowSpacingGaps(
       }
     }
     const inRow = c.plantingGuide?.inRowSpacingIn;
-    if (isTreeCrop(c) && inRow) {
-      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.inRowSpacingIn);
-      if (!entry.success) continue;
-      for (const end of new Set([inRow.min, inRow.max])) {
-        if (!statesInches(entry.data.quote, end)) {
-          gaps.push(`${c.pluginId}: inRowSpacingIn quote does not state ${end} in`);
-        }
-      }
+    if (inRow) gaps.push(...inRowSpacingQuoteGaps(c, inRow, sources));
+  }
+  return gaps;
+}
+
+/** #600: hosts outside .edu and .gov that publish land-grant extension
+ *  work (UF/IFAS EDIS is served from the Florida library network). */
+const EXTENSION_HOSTS_OUTSIDE_EDU_GOV = ['journals.flvc.org'];
+
+/** #600: an in-row source is a land-grant extension or government page;
+ *  seed-company catalogs never count (#591 ruling Q3). */
+export function isAllowedSpacingSource(url: string): boolean {
+  let host: string;
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+  return (
+    host.endsWith('.edu') || host.endsWith('.gov') || EXTENSION_HOSTS_OUTSIDE_EDU_GOV.includes(host)
+  );
+}
+
+/** #600: the quote says the figure is spacing between plants, not rows
+ *  ("Distance between plants in row", "12 inches apart", "thin to 4
+ *  inches", "in-row spacing"). An unlabelled "18 x 36" names no axis. */
+const IN_ROW_WORDS =
+  /\bbetween plants\b|\bplants? in (the )?rows?\b|\bin[- ]row\b|\bin the row\b|\bapart\b|\bthin(ned|ning)?\b|\bplant spacing\b|\bwithin (a |the )?rows?\b|\bin all directions\b|\brow plants\b|\bbetween (trees|vines|bushes|hills|crowns|bulbs|cloves)\b/i;
+
+/** #591 / #600: every crop's in-row spacing quote comes from an allowed
+ *  host, states both ends of the stored range and, off tree crops (whose
+ *  minimum distance between trees is used both ways), names the in-row
+ *  axis. */
+function inRowSpacingQuoteGaps(
+  c: Pick<CropPlugin, 'pluginId' | 'archetype' | 'treeSizeClasses'>,
+  inRow: { min: number; max: number },
+  sources: SourceMap
+): string[] {
+  const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.inRowSpacingIn);
+  if (!entry.success) return [];
+  const gaps: string[] = [];
+  if (!isAllowedSpacingSource(entry.data.url)) {
+    gaps.push(`${c.pluginId}: inRowSpacingIn source is not an extension or government page`);
+  }
+  for (const end of new Set([inRow.min, inRow.max])) {
+    if (!statesInches(entry.data.quote, end)) {
+      gaps.push(`${c.pluginId}: inRowSpacingIn quote does not state ${end} in`);
     }
+  }
+  if (!isTreeCrop(c) && !IN_ROW_WORDS.test(entry.data.quote)) {
+    gaps.push(`${c.pluginId}: inRowSpacingIn quote does not say the figure is between plants`);
   }
   return gaps;
 }

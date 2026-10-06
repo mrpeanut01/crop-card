@@ -110,7 +110,7 @@ describe('CardView', () => {
     expect(container.querySelector('.qr')).toBeNull();
   });
 
-  it('print: decon-first and bee cautions sit above the clipped content on a spray card', () => {
+  it('print: a decon-first Spray Card prints as numbered whole cards, decon first (#581)', () => {
     const gear = sampleGearSnapshot();
     const product = gear.sprayProducts!['24d'];
     gear.sprayProducts!['24d'] = {
@@ -118,22 +118,41 @@ describe('CardView', () => {
       pollinator: { beeToxicity: 'highly-toxic', bloomRestriction: 'prohibited-during-bloom' }
     } as typeof product;
     const card = buildSprayCard(gear, 'eq_boom~24d')!;
-    const { container } = render(CardView, { card, variant: 'print', prefs });
-    const safety = [...container.querySelectorAll('[data-safety-section]')];
-    const body = container.querySelector('.body')!;
-    const content = container.querySelector('.content')!;
-    expect(safety.map((s) => s.querySelector('h4')?.textContent)).toEqual([
-      card.sections[0].title,
-      'Before you spray'
-    ]);
     expect(card.sections[0].title).toMatch(/^Decon first/);
-    for (const s of safety) {
-      expect(s.parentElement).toBe(body);
-      expect(content.contains(s)).toBe(false);
+    for (const layout of ['index-4x6', 'index-3x5', 'letter-4up'] as const) {
+      const { container, unmount } = render(CardPrintSheet, {
+        cards: [card],
+        layout,
+        prefs,
+        origin: 'https://app.cropcard.io',
+        preview: true
+      });
+      const cells = [...container.querySelectorAll('.print-cell')];
+      const of = cells.length;
+      expect(of).toBeGreaterThan(1);
+      cells.forEach((cell, i) => {
+        expect(cell.querySelector('[data-print-part]')?.getAttribute('data-print-part')).toBe(
+          `${i + 1}/${of}`
+        );
+        expect(cell.querySelector('.qr')).not.toBeNull();
+        expect(cell.querySelector('.asof')).not.toBeNull();
+        expect(cell.querySelector('.notices')?.textContent).toMatch(/Recheck weather/);
+        expect(!!cell.querySelector('[data-print-continued]')).toBe(i < of - 1);
+      });
+      expect(container.querySelector('.more')).toBeNull();
+      expect(cells[0].querySelector('h4')?.textContent).toMatch(/^Decon first/);
+      const text = cells.map((c) => c.textContent ?? '').join('\n');
+      expect(text.indexOf('Decon first: Ammonia')).toBeLessThan(text.indexOf('Rate'));
+      for (const label of ['Rate', 'REI', 'PHI', 'Per 50-gal tank']) {
+        const dt = [...container.querySelectorAll('dt')].find((d) => d.textContent === label)!;
+        expect(dt).toBeDefined();
+        expect(dt.parentElement?.querySelector('dd')?.textContent?.trim()).not.toBe('');
+        expect(dt.querySelector('[data-english-only="safety"]')).not.toBeNull();
+      }
+      expect(text).toMatch(/Mix order/);
+      expect(text).toMatch(/bloom/);
+      unmount();
     }
-    expect(safety[1].textContent).toMatch(/bloom/);
-    expect(container.querySelector('.notices')?.textContent).toMatch(/Decon first/);
-    expect(container.querySelector('.more')?.textContent).toMatch(/label/);
   });
 
   it('print: skips the kind label when the kicker already names the kind', () => {

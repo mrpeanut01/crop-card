@@ -47,6 +47,11 @@ export interface CardFact {
   /** One short line under the value, on every variant (OP-22's
    *  "Typical timing. Adjust to your farm."). */
   note?: string;
+  /** A whole-print card (Spray Card) prints these first and never leaves
+   *  them off (#581: rate, per-tank amount, REI, PHI, EPA reg. no.). */
+  core?: boolean;
+  /** Set by the print packer: the fact spans both print columns. */
+  printWide?: boolean;
 }
 
 export interface CardAction {
@@ -74,6 +79,9 @@ export interface CardSection {
   englishOnly?: 'items' | 'all';
   /** In a mixed section, the items that stay English by rule. */
   englishOnlyItems?: string[];
+  /** A whole-print card prints this section on its own card(s), first in
+   *  the set (the decon SOP that has to run before mixing, #581). */
+  ownCard?: boolean;
 }
 
 export interface CardProvenance {
@@ -196,6 +204,23 @@ export interface CardModel {
   accent?: string;
   /** The card this one folds under on /cards: an animal's Flock Card. */
   parentKey?: string;
+  /** Print never fades or drops anything: on small paper the card splits
+   *  into numbered cards, each fact and section whole (#581). */
+  printWhole?: boolean;
+  /** Whole-print cards: the notices every card of the set repeats. */
+  printRepeatNotices?: string[];
+  /** Whole-print cards: printed beside "Card N of M" on every card but the
+   *  first product card, so a loose card names its product. */
+  printRef?: string;
+  /** Set on the numbered cards a whole-print card splits into. */
+  printPart?: CardPrintPart;
+}
+
+export interface CardPrintPart {
+  n: number;
+  of: number;
+  /** Shown beside the card number (EPA reg. no. on Spray Cards). */
+  ref?: string;
 }
 
 export const STALE_NOTICE = 'This card is more than a day old. Refresh it before you rely on it.';

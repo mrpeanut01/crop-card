@@ -11,7 +11,8 @@
   import { OfflineCards } from '$lib/components/cards/offlineCards.svelte';
   import { barnPinKeys, buildCard } from '$lib/cards/build';
   import { isCardKind, type CardPrintLayout } from '$lib/cards/model';
-  import { PRINT_LAYOUTS, isCalendarKind, needsFullPage } from '$lib/cards/print';
+  import { PRINT_LAYOUTS, isCalendarKind, needsFullPage, printLinkFor } from '$lib/cards/print';
+  import { wholePrintParts } from '$lib/cards/printPack';
   import { CARD_KIND_LABEL_KEYS } from '$lib/components/cards/kindLabels';
   import { createT } from '$lib/i18n';
   import { installNudgeWanted } from '$lib/client/offlineStorage';
@@ -85,6 +86,15 @@
       who: view.who
     });
     return built && built.kind === kind ? built : null;
+  });
+  const printParts = $derived.by(() => {
+    if (!card?.printWhole || !snapshot) return 1;
+    const link = printLinkFor(snapshot.origin, card.key);
+    return wholePrintParts(card, layout, {
+      locale: page.data?.locale,
+      qr: !!link,
+      url: link?.url ?? null
+    }).length;
   });
   const taskOpen = $derived(
     !queuedClose && !(card?.status && isClosedStatus(card.status.id as TaskStatus))
@@ -217,6 +227,11 @@
           </label>
         {/each}
       </fieldset>
+      {#if printParts > 1}
+        <p class="hint" data-testid="print-parts-note">
+          {tr('cardsui.printsAs', { n: printParts })}
+        </p>
+      {/if}
     {/if}
     <p class="hint">{tr('cardsui.printHelp')}</p>
     {#if card.kind === 'flock' && snapshot}

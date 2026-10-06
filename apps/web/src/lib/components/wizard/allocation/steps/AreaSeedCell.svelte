@@ -5,7 +5,7 @@
   import { page } from '$app/state';
   import { fromDisplay, toDisplay } from '$lib/prefs';
   import { sowMethods } from '$lib/plan/spacingModel';
-  import { areaText, sowMethodLabel } from '$lib/plan/seedAmountText';
+  import { areaText, modelPurpose, sowMethodLabel, withPurpose } from '$lib/plan/seedAmountText';
 
   /** #555: the Plants cell for a crop sown by area. It shows the ground the
    *  seed covers (never a plant count), the Drilled / Broadcast toggle when
@@ -59,7 +59,11 @@
       <Provenance source={area.provenance} compact />
       {area.provenance === 'manual'
         ? tr('plan.area.coversManual', { area: areaText(area.sqft, units) })
-        : tr('plan.area.covers', { area: areaText(area.sqft, units) })}
+        : withPurpose(
+            tr('plan.area.covers', { area: areaText(area.sqft, units) }),
+            modelPurpose(model),
+            page.data?.locale
+          )}
     </span>
   {:else if checked}
     <span class="area-unknown" data-testid="area-not-known">

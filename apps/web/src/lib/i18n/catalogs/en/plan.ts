@@ -807,5 +807,8 @@ export const enPlan = {
   'orchardui.err.unknownWindow': 'That window is not in this calendar.',
   'orchardui.err.confirmCommercial': 'Confirm that you want the commercial guide.',
   'orchardui.err.areaNotFound': 'That Area is not on this farm.',
-  'orchardui.err.save': 'Could not save. Try again.'
+  'orchardui.err.save': 'Could not save. Try again.',
+  'plan.area.withPurpose': '{text}, {purpose}',
+  'plan.area.purpose.smother': 'rate for smothering weeds',
+  'plan.area.purpose.green-manure': 'rate for green manure'
 } as const;

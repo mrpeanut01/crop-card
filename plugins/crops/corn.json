@@ -58,6 +58,10 @@
       "seedsPerAcre": {
         "min": 25000,
         "max": 33000
+      },
+      "droughtySoilCutPct": {
+        "min": 10,
+        "max": 15
       }
     }
   }

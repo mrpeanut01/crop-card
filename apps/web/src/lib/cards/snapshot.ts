@@ -222,6 +222,9 @@ export interface SnapshotSeedingRate {
   seedsPerAcre?: SnapshotMinMax;
   drillRowSpacingIn?: SnapshotMinMax;
   seedBasis?: 'bulk' | 'pls';
+  purpose?: 'smother' | 'green-manure';
+  droughtySoilCutPct?: SnapshotMinMax;
+  sownBy?: ('drilled' | 'broadcast')[];
 }
 
 /** The subset of a crop plugin the Planting, Area and Care Guide cards read. */

@@ -20,6 +20,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { anthropicClient } from './anthropicClient';
+import { t } from '$lib/i18n';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { Crop } from '$lib/db/crops';
 import {
@@ -84,6 +85,9 @@ export interface ScheduleOptions {
    *  upstream error): skip Claude and return the deterministic path with
    *  this message in place of the no-key copy. */
   degradeMessage?: string;
+  /** The app language for the deterministic scheduler's own sentences.
+   *  English without one; prompts to Claude stay English. */
+  locale?: string | null;
 }
 
 export interface ScheduleResult {
@@ -183,8 +187,10 @@ export async function refineSchedule(
       rationale: input.previousRationale,
       advisories: input.previousAdvisories,
       reply: options.degradeMessage
-        ? `${options.degradeMessage} The current dates are unchanged.`
-        : "I can't refine the schedule without an Anthropic API key. The current dates are unchanged.",
+        ? t(options.locale, 'wizard.engine.sched.refineDegraded', {
+            message: options.degradeMessage
+          })
+        : t(options.locale, 'wizard.engine.sched.refineNoKey'),
       windows,
       successionFits,
       meta: {
@@ -469,12 +475,12 @@ export async function schedulePlantings(
     `[ai-schedule] apiKey present=${!!apiKey} envKey=${!!process.env.ANTHROPIC_API_KEY} settingsKey=${!!(apiKey && !process.env.ANTHROPIC_API_KEY)}`
   );
   if (!apiKey || options.degradeMessage) {
-    const det = buildDeterministicSchedule(input, windows, successionFits);
+    const det = buildDeterministicSchedule(input, windows, successionFits, options.locale);
     return {
       scheduled: det,
       rationale: options.degradeMessage
-        ? `${options.degradeMessage} Defaulted every planting to its earliest feasible date.`
-        : 'No Anthropic API key configured — defaulted every planting to its earliest feasible date.',
+        ? t(options.locale, 'wizard.engine.sched.degraded', { message: options.degradeMessage })
+        : t(options.locale, 'wizard.engine.sched.noKey'),
       advisories: [],
       windows,
       successionFits,
@@ -558,13 +564,12 @@ export async function schedulePlantings(
   }
 
   if (!validated || !validated.valid) {
-    const det = buildDeterministicSchedule(input, windows, successionFits);
+    const det = buildDeterministicSchedule(input, windows, successionFits, options.locale);
     const failedViolations = validated?.valid === false ? validated.violations : firstViolations;
     const diagnosis = diagnoseScheduleProblem(input, windows);
     return {
       scheduled: det,
-      rationale:
-        "AI scheduling output didn't validate (even after a corrective retry) — the deterministic scheduler took over. It honored cross-pollination staggers, companion offsets, and succession spacing where it could; review the dates and refine via chat if anything looks off.",
+      rationale: t(options.locale, 'wizard.engine.sched.invalid'),
       advisories: [],
       windows,
       successionFits,
@@ -1128,7 +1133,8 @@ function validateScheduleResponse(
 export function buildDeterministicSchedule(
   input: ScheduleInput,
   windows: ScheduleWindow[],
-  fits: SuccessionFit[]
+  fits: SuccessionFit[],
+  locale?: string | null
 ): ScheduledPlanting[] {
   const windowsByKey = new Map<string, ScheduleWindow>();
   for (const w of windows) windowsByKey.set(`${w.stockItemId}:${w.blockId}`, w);
@@ -1242,18 +1248,26 @@ export function buildDeterministicSchedule(
             g.members.some((m) => m.stockItemId === a.stockItemId)
           );
           const member = group?.members.find((m) => m.stockItemId === a.stockItemId);
-          rationale = `Anchored to companion group (anchor + ${member?.daysFromAnchor ?? 0} d).`;
+          rationale = t(locale, 'wizard.engine.sched.anchored', {
+            days: member?.daysFromAnchor ?? 0
+          });
         } else if (partners.length > 0 && baseDate > w.earliestMs) {
-          rationale = `Bumped forward from ${formatDateMs(w.earliestMs)} to clear cross-pollination staggers.`;
+          rationale = t(locale, 'wizard.engine.sched.bumped', {
+            date: formatDateMs(w.earliestMs)
+          });
         } else if (clamped) {
-          rationale = `Clamped to latest viable date — staggers couldn't fit cleanly. Refine via chat.`;
+          rationale = t(locale, 'wizard.engine.sched.clamped');
         } else {
           rationale = isSuccession
-            ? `First of ${n} successions — earliest feasible date.`
-            : `Earliest feasible planting date for this block + variety.`;
+            ? t(locale, 'wizard.engine.sched.firstOf', { n })
+            : t(locale, 'wizard.engine.sched.earliest');
         }
       } else {
-        rationale = `Succession ${i + 1} of ${n}, ${fit!.suggestedIntervalDays} d after the prior.`;
+        rationale = t(locale, 'wizard.engine.sched.succession', {
+          i: i + 1,
+          n,
+          days: fit!.suggestedIntervalDays
+        });
       }
       out.push({
         stockItemId: a.stockItemId,

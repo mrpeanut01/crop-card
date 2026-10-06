@@ -21,5 +21,13 @@
     ],
     "beeAttractive": false
   },
-  "archetype": "cover-crop.termination"
+  "archetype": "cover-crop.termination",
+  "plantingGuide": {
+    "seedingRate": {
+      "sownBy": [
+        "drilled",
+        "broadcast"
+      ]
+    }
+  }
 }

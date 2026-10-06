@@ -4,7 +4,7 @@
   import type { CropPlugin } from '$lib/plugins/schemas';
   import { seedStockUnit, seedsToPlants } from '$lib/seed/quantity';
   import { areaForSeed, defaultSowMethod, spacingModel } from '$lib/plan/spacingModel';
-  import { areaText } from '$lib/plan/seedAmountText';
+  import { areaText, modelPurpose, withPurpose } from '$lib/plan/seedAmountText';
   import { currentPrefs } from '$lib/prefsState.svelte';
 
   type StockEntry = {
@@ -195,7 +195,11 @@
 
       {#if areaCovered}
         <p class="qm-plants" data-testid="qm-area">
-          {tr('plan.area.covers', { area: areaText(areaCovered.sqft, currentPrefs().units) })}
+          {withPurpose(
+            tr('plan.area.covers', { area: areaText(areaCovered.sqft, currentPrefs().units) }),
+            modelPurpose(areaModel),
+            page.data?.locale
+          )}
         </p>
       {:else if areaModel.kind === 'area'}
         <p class="qm-plants">{tr('plan.area.notKnown')}</p>

@@ -362,6 +362,42 @@
                 "bulk",
                 "pls"
               ]
+            },
+            "purpose": {
+              "type": "string",
+              "enum": [
+                "smother",
+                "green-manure"
+              ]
+            },
+            "droughtySoilCutPct": {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "max": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "min",
+                "max"
+              ],
+              "additionalProperties": false
+            },
+            "sownBy": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "drilled",
+                  "broadcast"
+                ]
+              }
             }
           },
           "additionalProperties": false

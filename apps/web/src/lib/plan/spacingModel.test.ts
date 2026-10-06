@@ -284,3 +284,35 @@ describe('bed layout for a crop sown by area', () => {
     );
   });
 });
+
+describe('seeding purpose and sown-by markers (#576)', () => {
+  const byId = (id: string) => {
+    const p = ALL.find((c) => c.pluginId === id);
+    if (!p) throw new Error(id);
+    return p;
+  };
+
+  it('puts the purpose on every amount from a purpose-tagged rate, never on your own rate', () => {
+    const model = spacingModel(byId('sunn-hemp-cover'));
+    expect(model).toMatchObject({ kind: 'area', purpose: 'green-manure', seedBasis: 'pls' });
+    expect(seedAmountLine(model, 'drilled', 43_560, 'us')).toEqual({
+      text: 'Drilled: 30–50 lb for 1 ac, rate for green manure',
+      provenance: 'data'
+    });
+    expect(seedAmountLine(model, 'drilled', 43_560, 'us', 'es').text).toMatch(
+      /, dosis para abono verde$/
+    );
+    expect(seedAmountLine(model, 'drilled', 43_560, 'us', null, 20).text).not.toMatch(/green/);
+    const sorghum = spacingModel(byId('sorghum-sudangrass-cover'));
+    expect(seedAmountLine(sorghum, null, 1200, 'us').text).toMatch(/, rate for smothering weeds$/);
+  });
+
+  it('plans a sown-by crop with no agreed rate by area, amount not known', () => {
+    for (const id of ['oats-cover-spring', 'daikon-radish-cover', 'tillage-radish-driller']) {
+      const model = spacingModel(byId(id));
+      expect(model).toEqual({ kind: 'area', rates: [] });
+      expect(seedAmountLine(model, null, 1200, 'us').provenance).toBeNull();
+      expect(resolveSpacing(byId(id) as never, 'square').mode).toBe('area');
+    }
+  });
+});

@@ -30,5 +30,13 @@
         "heavy-nitrogen"
       ]
     }
-  ]
+  ],
+  "plantingGuide": {
+    "seedingRate": {
+      "sownBy": [
+        "drilled",
+        "broadcast"
+      ]
+    }
+  }
 }

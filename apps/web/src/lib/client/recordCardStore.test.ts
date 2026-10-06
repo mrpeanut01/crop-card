@@ -164,7 +164,8 @@ describe('recordCardStore', () => {
     expect(pinned[0].key).toBe(key('p99'));
     await unpinRecordCard(key('p5'));
     expect(await pinRecordCard(key('p100'))).toBe('pinned');
-  });
+    // 101 fake IndexedDB writes: about 0.2 s alone, near 3 s in a loaded full run.
+  }, 30_000);
 
   it('forget drops the row and its pin', async () => {
     await saveRecordCard(model('r1'));

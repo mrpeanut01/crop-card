@@ -79,5 +79,6 @@ describe('vault store: Owner prefixes never cross', () => {
       }),
       { numRuns: 40 }
     );
-  });
+    // 40 fast-check runs against the filesystem store: about 0.8 s alone, past 3 s in a loaded full run.
+  }, 30_000);
 });

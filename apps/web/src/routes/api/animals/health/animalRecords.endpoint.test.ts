@@ -282,7 +282,9 @@ describe('the hen withdrawal and discard journey', () => {
     });
   });
 
-  // 110 sequential writes, each checked against the whole farm's hold ledger (C-35).
+  // 110 sequential writes, each checked against the whole farm's hold ledger
+  // (C-35): about 2.6 s alone, 11 to 17 s with three full runs sharing the
+  // machine and past 20 s with four.
   it('finds the newest treatment even after more than 50 other records (C-06)', async () => {
     await runWithTenantAsync(seedOwner(), async () => {
       const { groupId, henId } = await flock();
@@ -325,7 +327,7 @@ describe('the hen withdrawal and discard journey', () => {
         }
       ]);
     });
-  }, 20_000);
+  }, 60_000);
 
   it('marks a log saved more than 48 hours late', async () => {
     await runWithTenantAsync(seedOwner(), async () => {

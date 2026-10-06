@@ -157,7 +157,8 @@ describe('starting a demo', () => {
       }
     );
     expect(limited.res?.status).toBe(200);
-  });
+    // Seeds six whole demo farms: about 0.7 s alone, past 4 s in a loaded full run.
+  }, 30_000);
 
   it('a signed-in grower is sent to their own farm instead', async () => {
     const userId = `u-${randomUUID()}`;

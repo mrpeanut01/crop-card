@@ -12,7 +12,7 @@ import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$lib/db/client', () => ({ setDbReadOnly: vi.fn(() => 4096) }));
 
@@ -106,6 +106,17 @@ afterAll(async () => {
   await rm(dir, { recursive: true, force: true });
 });
 
+// Each test starts from an empty store and no restored file, so none depends
+// on what an earlier test left behind (vitest --sequence.shuffle).
+beforeEach(async () => {
+  blobs.clear();
+  for (const suffix of ['', '-wal', '-shm']) {
+    await rm(path.join(dir, `restored.db${suffix}`), { force: true });
+  }
+});
+
+afterEach(() => _resetHandoffForTests());
+
 const storage = () => ({
   AZURE_STORAGE_ACCOUNT: 'acct',
   AZURE_STORAGE_KEY: Buffer.from('k').toString('base64'),
@@ -145,7 +156,6 @@ describe('deploy handoff, old writer to new container', () => {
   });
 
   it('the new container waits until the old one has fenced and proven its last frame', async () => {
-    blobs.delete('_ops/handoff/request.json');
     startHandoffWatcher({
       ...storage(),
       HANDOFF_FENCE: '1',
@@ -191,11 +201,14 @@ describe('restore guard (verify-restore)', () => {
     expect(blobs.has('_ops/initialized.json')).toBe(false);
   });
 
-  it('refuses to serve when the replica has generations but nothing was restored', async () => {
+  const replicaHasGeneration = () =>
     blobs.set('cropcard.db/generations/g1/snapshots/00000000.snapshot.lz4', {
       body: '',
       etag: '"s"'
     });
+
+  it('refuses to serve when the replica has generations but nothing was restored', async () => {
+    replicaHasGeneration();
     const r = await runHandoff('verify-restore', {
       DB_PATH: restored(),
       LITESTREAM_REPLICA_PATH: 'cropcard.db'
@@ -205,6 +218,7 @@ describe('restore guard (verify-restore)', () => {
   });
 
   it('accepts a sane restore, marks the replica initialized, and refuses zero owners', async () => {
+    replicaHasGeneration();
     const Database = (await import('better-sqlite3')).default;
     const db = new Database(restored());
     db.exec(

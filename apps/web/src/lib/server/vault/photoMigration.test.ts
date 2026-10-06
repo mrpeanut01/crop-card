@@ -1,19 +1,17 @@
 // @vitest-environment node
 /**
  * The photo migration, the unreferenced-photo sweep, the wipe queue and the
- * orphan sweep walk every farm, so this file runs on its own SQLite file:
- * it must never move or delete another test file's rows.
+ * orphan sweep walk every farm; like every test file this one runs on its
+ * own database clone (tests/vitestSetup.ts), so it never moves or deletes
+ * another test file's rows.
  */
-import { execSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { existsSync, statSync, unlinkSync } from 'node:fs';
+import { statSync } from 'node:fs';
 import { readdir, utimes } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const DB_FILE = path.join(tmpdir(), `cropcard-photomig-${process.pid}-${Date.now()}.db`);
-const previousUrl = process.env.DATABASE_URL;
+const DB_FILE = process.env.DATABASE_URL!.replace(/^file:/, '');
 
 import { eq } from 'drizzle-orm';
 import { db, sqliteHandle } from '$lib/db/client';
@@ -53,25 +51,6 @@ function bigJpeg(n: number, seed = 1): Uint8Array {
   }
   return cat(plain.subarray(0, plain.length - 2), fill, [0xff, 0xd9]);
 }
-
-beforeAll(() => {
-  process.env.DATABASE_URL = `file:${DB_FILE}`;
-  execSync('node ./scripts/migrate.mjs', {
-    cwd: path.resolve(import.meta.dirname, '../../../..'),
-    env: { ...process.env, DATABASE_URL: `file:${DB_FILE}` },
-    stdio: 'pipe'
-  });
-});
-
-afterAll(() => {
-  try {
-    sqliteHandle().close();
-  } catch {
-    /* never opened */
-  }
-  process.env.DATABASE_URL = previousUrl;
-  for (const s of ['', '-wal', '-shm']) if (existsSync(DB_FILE + s)) unlinkSync(DB_FILE + s);
-});
 
 let vault: ReturnType<typeof useTestVault>;
 beforeEach(() => {

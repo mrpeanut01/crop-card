@@ -283,7 +283,8 @@ describe('a replayed 422 becomes a recoverable row', () => {
       ),
       { numRuns: 40 }
     );
-  });
+    // 40 fast-check runs over fake IndexedDB: about 0.3 s alone, past 4 s in a loaded full run.
+  }, 30_000);
 });
 
 describe('feed use (D1-16)', () => {

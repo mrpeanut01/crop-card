@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { error } from '@sveltejs/kit';
 
 const m = vi.hoisted(() => ({
@@ -141,11 +141,17 @@ import { POST as VOID_INSECTICIDE } from '../../routes/api/insecticide/[id]/void
 import { DELETE as DELETE_SPRAY } from '../../routes/api/spray/records/[id]/+server';
 import { DELETE as DELETE_INSECTICIDE } from '../../routes/api/insecticide/[id]/+server';
 import { POST as UPLOAD_PLUGIN } from '../../routes/api/plugins/upload/+server';
+import { getBaseRegistry, resetRegistry } from '$lib/server/registry';
 
 const TZ = 'America/New_York';
 
 let ownerId = '';
 let farm: Farm;
+
+// Loading the shared plugin library takes about 1.4 s alone and several
+// seconds in a loaded full run. Load it once here so it never lands inside
+// whichever test happens to touch it first.
+beforeAll(() => getBaseRegistry(), 60_000);
 
 beforeEach(() => {
   m.role = 'owner';
@@ -1077,7 +1083,6 @@ describe('C-35 the farm clock (review round 1)', () => {
 
   it('prepares again when the shared library reloads while it waits (review round 8)', async () => {
     await inFarm(async () => {
-      const { resetRegistry } = await import('$lib/server/registry');
       let resets = 0;
       m.onRegistry = () => {
         if (resets >= 1) return;
@@ -1090,8 +1095,13 @@ describe('C-35 the farm clock (review round 1)', () => {
       m.onRegistry = () => resetRegistry();
       const e = await refusal(write('owner', () => spray(farm, Date.now() - DAY, 'guard-known')));
       expect(e.code).toBe('PLUGINS_RELOADING');
+      m.onRegistry = undefined;
+      await getBaseRegistry();
     });
-  });
+    // Loads the whole shared plugin library three times (about 1.4 s each
+    // alone), leaving it loaded for the next test; a loaded full run can
+    // stretch that well past the 5 s default.
+  }, 30_000);
 
   it('rebuilds the farm plugin view inside the transaction when a farm copy landed meanwhile (review round 8)', async () => {
     await inFarm(async () => {

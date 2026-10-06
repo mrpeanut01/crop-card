@@ -249,17 +249,20 @@ describe('VDACS PDF (G2-07..G2-09)', () => {
   });
 
   it('includes hay rows in the integrity hash (G2-09)', async () => {
-    const before = (await run(a, vdacsPdf, '/x')).headers.get('X-CropCard-Integrity-Hash');
-    runWithTenant(a.ownerId, () =>
+    // Its own farm: adding a cutting to farm `a` would change what the other
+    // tests in this file count, whatever order they run in.
+    const c = seed('c');
+    const before = (await run(c, vdacsPdf, '/x')).headers.get('X-CropCard-Integrity-Hash');
+    runWithTenant(c.ownerId, () =>
       createCutting({
-        blockId: a.blockId,
+        blockId: c.blockId,
         cropPluginId: 'alfalfa-vernema',
         year: 2026,
         mowAt: Date.now() - 30_000,
         rulesVersion: 'rv-test'
       })
     );
-    const after = (await run(a, vdacsPdf, '/x')).headers.get('X-CropCard-Integrity-Hash');
+    const after = (await run(c, vdacsPdf, '/x')).headers.get('X-CropCard-Integrity-Hash');
     expect(after).not.toBe(before);
   });
 });

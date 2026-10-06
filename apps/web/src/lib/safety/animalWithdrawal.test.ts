@@ -2315,5 +2315,6 @@ describe('round 4: withdrawal properties against an independent oracle', () => {
       ),
       { numRuns: 300 }
     );
-  });
+    // 300 fast-check runs: about 0.5 s alone, past 2.5 s in a loaded full run.
+  }, 30_000);
 });

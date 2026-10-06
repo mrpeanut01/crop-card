@@ -3,8 +3,9 @@ import { randomUUID } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fc from 'fast-check';
 
-// The real pass prunes and recomputes storage across the shared test DB at
-// today's date, which races other files' fixtures and their last-run key.
+// The real pass prunes and recomputes storage across the whole database at
+// today's date and claims the once-a-day slot, which this file's fixtures and
+// its timing assertions should not depend on.
 vi.mock('$lib/server/dbMaintenance', () => ({
   runDbMaintenance: vi.fn(async () => ({
     ran: false,

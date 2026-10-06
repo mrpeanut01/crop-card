@@ -269,7 +269,8 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
       ),
       { numRuns: 100 }
     );
-  });
+    // 100 fast-check runs over fake IndexedDB: well under 1 s alone, past 2 s in a loaded full run.
+  }, 30_000);
 
   it('drainQueue only POSTs the active owner’s rows, to the kind’s endpoint, and never touches foreign rows', async () => {
     await fc.assert(
@@ -328,7 +329,8 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
       ),
       { numRuns: 100 }
     );
-  });
+    // 100 fast-check runs over fake IndexedDB: well under 1 s alone, near 3 s in a loaded full run.
+  }, 30_000);
 
   it('rows enqueued with no active owner are tagged unassigned and never drain under any owner', async () => {
     await fc.assert(
@@ -360,7 +362,8 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
       ),
       { numRuns: 50 }
     );
-  });
+    // 50 fast-check runs over fake IndexedDB: well under 1 s alone, near 3 s in a loaded full run.
+  }, 30_000);
 
   type Op =
     | { t: 'switch'; owner: string | null }

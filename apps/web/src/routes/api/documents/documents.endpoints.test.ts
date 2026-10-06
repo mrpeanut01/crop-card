@@ -658,5 +658,6 @@ describe('GET /api/documents paging', () => {
       query = { before: String(body.nextBefore), beforeId: body.nextBeforeId! };
     }
     expect(ids.size).toBe(103);
-  });
+    // 103 uploads through the endpoint: about 0.6 s alone, near 3 s in a loaded full run.
+  }, 30_000);
 });

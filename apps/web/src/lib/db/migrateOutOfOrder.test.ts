@@ -1,11 +1,11 @@
 // @vitest-environment node
-import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
 import { describe, expect, it } from 'vitest';
 import { applyOutOfOrderMigrations } from '../../../scripts/migrateOutOfOrder.mjs';
+import { runMigrations } from '../../../scripts/migrateRunner.mjs';
 
 type Entry = { idx: number; when: number; tag: string; sql: string };
 
@@ -42,16 +42,11 @@ const theirs: Entry[] = [
 ];
 const ours: Entry = { idx: 74, when: 5000, tag: '0074_ours', sql: 'CREATE TABLE t74 (id text);' };
 
+// The same steps `scripts/migrate.mjs` runs at boot, in this process: a
+// Node process per call was most of this file's time and timed out under a
+// loaded full run. The CLI wrapper itself runs in tests/globalSetup.ts.
 function migrateWith(dbPath: string, dir: string) {
-  execFileSync('node', ['./scripts/migrate.mjs'], {
-    env: {
-      ...process.env,
-      DATABASE_URL: `file:${dbPath}`,
-      MIGRATIONS_FOLDER: dir,
-      PLUGINS_DIR: dir
-    },
-    stdio: 'pipe'
-  });
+  runMigrations({ dbPath, migrationsFolder: dir, pluginsRoot: dir, log: () => {} });
 }
 
 function tables(dbPath: string): string[] {
@@ -67,7 +62,7 @@ function tables(dbPath: string): string[] {
   return names;
 }
 
-describe('migrate.mjs with branches merged in either order', () => {
+describe('the boot migration with branches merged in either order', () => {
   it('applies migrations stamped before the last applied one instead of skipping them', () => {
     const dbPath = join(mkdtempSync(join(tmpdir(), 'migdb-')), 'x.db');
     migrateWith(dbPath, folder([base, ours]));

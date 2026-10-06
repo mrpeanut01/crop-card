@@ -22,6 +22,8 @@ import { getHarvestDisposition } from '$lib/db/harvestDispositions';
 import { closeSeason } from '$lib/server/seasonClose';
 import { projectActiveFarm } from '$lib/server/holdGuard';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
+import { buildRecordCards } from '$lib/server/recordCards';
+import { DEFAULT_PREFS } from '$lib/prefs';
 import { GET as LIST, POST as CREATE } from './[id]/dispositions/+server';
 import { DELETE as REMOVE, PATCH as EDIT } from './dispositions/[id]/+server';
 import { DELETE as REMOVE_HARVEST } from './records/[id]/+server';
@@ -640,8 +642,6 @@ describe('harvest record card (B-36)', () => {
   it('lists where the harvest went, read-only and without money', async () => {
     const farm = seedFarm('card');
     await add(farm, { kind: 'sold', quantity: 4, unit: 'lb', recipient: 'Market' });
-    const { buildRecordCards } = await import('$lib/server/recordCards');
-    const { DEFAULT_PREFS } = await import('$lib/prefs');
     const out = await runWithTenantAsync(farm.ownerId, () =>
       buildRecordCards('harvest', farm.harvestId, { prefs: DEFAULT_PREFS, origin: null })
     );

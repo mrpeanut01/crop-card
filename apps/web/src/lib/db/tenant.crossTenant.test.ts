@@ -17,7 +17,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 
 import { runWithTenant } from './tenant';
@@ -199,10 +199,16 @@ function ensureCrossTenantTestUser(ownerId: string): string {
 }
 
 describe('cross-tenant isolation', () => {
-  it('seeds two owners with disjoint data', () => {
-    const aIds = seedOwner(OWNER_A);
-    const bIds = seedOwner(OWNER_B);
+  // Seeded before any test so each test stands alone, whatever order the
+  // tests run in (vitest --sequence.shuffle).
+  let aIds: ReturnType<typeof seedOwner>;
+  let bIds: ReturnType<typeof seedOwner>;
+  beforeAll(() => {
+    aIds = seedOwner(OWNER_A);
+    bIds = seedOwner(OWNER_B);
+  });
 
+  it('seeds two owners with disjoint data', () => {
     // Sanity: the two id-sets are disjoint.
     for (const id of aIds.blockIds) expect(bIds.blockIds.has(id)).toBe(false);
     for (const id of aIds.fieldIds) expect(bIds.fieldIds.has(id)).toBe(false);

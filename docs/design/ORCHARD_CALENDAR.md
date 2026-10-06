@@ -253,3 +253,12 @@ Every number left in a non-spray `seasonalTasks` / `orchardSeasonalTasks` row is
 | Q13 | grape-concord `harvest`                        | Keep "at least 16° Brix" as the juice processor minimum (Cornell Lake Erie Regional Grape Program).                                                                                                                              | 3-0  |
 
 Also in the PR: apple's "(above)" pointer now points to the crop's Care Guide harvest cues; the `perennialVineFruit` hints lost "4-arm" and "Brix ≥16"; `seasonalTaskNumberGaps` (any digit in a row needs a quote stating it), the "label" refusal and the no-digit stage-hint check in the source-coverage gate; patch bumps on the seven edited plugins; migration 0087 written by `scripts/gen-text-refresh-migration.ts` from `scripts/seasonal-text-refresh-0087.json` (`lib/db/textRefreshMigration.ts`, 0086's matching, compare-and-set); `seasonal.<pluginId>.<rowKey>.<title|body>` catalog keys (`catalogs/{en,es}/seasonal.ts`) shown through `lib/i18n/seasonalTaskText.ts` only while the text equals the shipped English; and the `orchardSeasonalTask` key enum reduced to `post-bloom-thinning` and `harvest`.
+
+## OP-22 as built (#561, 2026-10-05)
+
+Unsourced seasonal dates are labelled at display time; there is no migration and no new column. `lib/schedule/typicalTiming.ts` holds the two checks: `isTypicalTimingTask` (a `plugin_template_key` of `crop:<id>:seasonal:<row>`, `derived:seasonal-task:*` or `derived:orchard-task:*`) and `isTypicalTimingEvent` (calendar `seasonal-task` and `orchard-task` events, plus `stage-window` events from the perennial day-of-year templates, `detail.system === 'perennial-calendar'`). Where it shows, with `fallback` provenance and "Typical timing. Adjust to your farm." (`tasks.typicalTiming`, en and es):
+
+- Task Cards (the /today Day deck, the Week and Month sheets, the offline `/cards/task/*` page): the When fact gets `provenance: 'fallback'` and a `note`, a new optional `CardFact` field shown on every variant. Done and skipped tasks show their real date with no label. Open snapshot tasks carry `pluginTemplateKey` only when it is a typical-timing key.
+- /today suggestions and Recommendations, the Planting page's tasks and projected events, and the /plan month grid (compact chip and tooltip).
+
+Nothing reads it for safety; a farmer's reschedule keeps the label, since the template key is the only signal and no column was added.

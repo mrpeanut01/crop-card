@@ -439,6 +439,7 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'tasks.seedStart.sow': 'Sembrar {crop} bajo techo',
   'tasks.seedStart.harden': 'Empezar a aclimatar {crop}',
   'tasks.seedStart.transplant': 'Trasplantar {crop} a {bed}',
+  'tasks.typicalTiming': 'Fecha habitual. Ajústala a tu finca.',
   'today.pa.cta.openSpray': 'Abrir aplicación',
   'today.pa.cta.recordHarvest': 'Registrar cosecha',
   'today.pa.cta.openHay': 'Abrir heno',

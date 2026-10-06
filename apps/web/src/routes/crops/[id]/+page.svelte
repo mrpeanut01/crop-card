@@ -1,6 +1,8 @@
 <script lang="ts">
   import { ChevronRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
+  import TypicalTimingNote from '$lib/components/tasks/TypicalTimingNote.svelte';
+  import { isTypicalTimingEvent, isTypicalTimingTask } from '$lib/schedule/typicalTiming';
   import { fmt as prefsFmt } from '$lib/prefsState.svelte';
   import { createT, type TranslateKey } from '$lib/i18n';
   import { cropDisplayName } from '$lib/i18n/cropName';
@@ -243,6 +245,7 @@
           <span class="kind-chip">{label('crops.taskKind', t.kind)}</span>
           {#if t.completedAt}<span class="status status-harvested">{tr('crops.done')}</span>{/if}
           {#if t.abortedAt}<span class="status status-failed">{tr('crops.aborted')}</span>{/if}
+          {#if !t.completedAt && !t.abortedAt && isTypicalTimingTask(t)}<TypicalTimingNote />{/if}
         </li>
       {/each}
     </ul>
@@ -394,6 +397,7 @@
           <span class="when">{fmtDay(p.startMs)}</span>
           <strong>{p.title}</strong>
           <span class="kind-chip">{label('crops.eventKind', p.kind)}</span>
+          {#if isTypicalTimingEvent(p)}<TypicalTimingNote />{/if}
         </li>
       {/each}
     </ul>

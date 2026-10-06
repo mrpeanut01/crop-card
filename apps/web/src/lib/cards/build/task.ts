@@ -8,6 +8,7 @@ import {
   type TaskStatus
 } from '$lib/tasks/status';
 import { taskDisplayBody, taskDisplayTitle } from '$lib/tasks/title';
+import { isTypicalTimingTask } from '$lib/schedule/typicalTiming';
 import {
   cardHref,
   cardKey,
@@ -122,7 +123,12 @@ export function buildTaskCardFrom(
     .filter(Boolean)
     .join(' · ');
 
-  const facts: CardFact[] = [{ label: tr('cards.task.when'), value: whenText(task, status, opts) }];
+  const when: CardFact = { label: tr('cards.task.when'), value: whenText(task, status, opts) };
+  if (status !== 'done' && status !== 'skipped' && isTypicalTimingTask(task)) {
+    when.provenance = 'fallback';
+    when.note = tr('tasks.typicalTiming');
+  }
+  const facts: CardFact[] = [when];
   if (ctx.where) facts.push({ label: tr('cards.task.where'), value: ctx.where, provenance: 'data' });
   if (ctx.equipmentLabel) facts.push({ label: tr('cards.task.equipment'), value: ctx.equipmentLabel });
   if (ctx.assignee?.trim())
@@ -201,7 +207,8 @@ export function buildTaskCardFromSnapshot(
       category: task.category,
       scheduledFor: task.scheduledFor,
       blockId,
-      cropId: planting?.id ?? null
+      cropId: planting?.id ?? null,
+      pluginTemplateKey: task.pluginTemplateKey ?? null
     },
     {
       where: where || null,

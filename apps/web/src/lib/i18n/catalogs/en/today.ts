@@ -425,6 +425,7 @@ export const enToday = {
   'tasks.seedStart.sow': 'Sow {crop} indoors',
   'tasks.seedStart.harden': 'Start hardening off {crop}',
   'tasks.seedStart.transplant': 'Transplant {crop} to {bed}',
+  'tasks.typicalTiming': 'Typical timing. Adjust to your farm.',
   'today.pa.cta.openSpray': 'Open spray flow',
   'today.pa.cta.recordHarvest': 'Record harvest',
   'today.pa.cta.openHay': 'Open hay flow',

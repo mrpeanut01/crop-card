@@ -313,6 +313,9 @@
   .actions {
     text-align: right;
   }
+  .actions :global(.btn[type='submit']) {
+    min-height: 48px;
+  }
   .violations {
     margin: 0.5rem 0 0;
     padding-left: 1.25rem;

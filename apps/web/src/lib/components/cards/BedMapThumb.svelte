@@ -215,8 +215,10 @@
     fill: #000;
     font-weight: 700;
   }
+  /* An Area Card with a bed map prints on its own letter page (needsFullPage),
+     so the map can be big enough to read the bed and planting names. */
   .print svg {
-    max-height: 1.6in;
+    max-height: 3.5in;
     border-color: #000;
   }
   .pname,

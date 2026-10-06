@@ -1,6 +1,7 @@
 import type { DocumentMeta } from './apiSchemas';
 import type { DocumentKind, DocumentSubjectType } from './kinds';
-import { VAULT_OFF_COPY } from './kinds';
+import { HEIC_DOCUMENT_COPY, VAULT_OFF_COPY } from './kinds';
+import { fileLooksLikeHeic } from '$lib/photoFormat';
 
 export type UploadResult =
   { ok: true; document: DocumentMeta } | { ok: false; code: string; message: string };
@@ -39,6 +40,9 @@ export async function uploadDocument(
     error?: string;
   };
   if (res.ok && body.document) return { ok: true, document: body.document };
+  if (body.code === 'UNSUPPORTED_TYPE' && (await fileLooksLikeHeic(file))) {
+    return { ok: false, code: body.code, message: HEIC_DOCUMENT_COPY };
+  }
   return {
     ok: false,
     code: body.code ?? `HTTP_${res.status}`,

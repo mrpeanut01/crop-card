@@ -245,6 +245,7 @@ export const esFarm: Partial<Record<MessageKey, string>> = {
   'farm.fig.farmMap': 'Mapa de la granja',
   'farm.fig.empty': 'Aún no hay nada dibujado ni con medidas, así que no hay imagen que mostrar.',
   'farm.fig.sketched': ', dibujado a partir de las medidas ingresadas',
+  'farm.fig.numbered': 'Áreas numeradas',
   'farm.fig.legend': 'Leyenda',
   'farm.fig.placed': 'Colocado según las medidas que ingresaste, no medido en el terreno.',
   'farm.fig.unplaced':

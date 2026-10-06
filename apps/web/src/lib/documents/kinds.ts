@@ -86,6 +86,9 @@ function trim(n: number, digits: number): string {
 
 export const DOCUMENT_ACCEPT = 'application/pdf,image/jpeg,image/png,image/webp,text/csv,.csv';
 
+export const HEIC_DOCUMENT_COPY =
+  "HEIC photos can't be stored. Save it as a JPEG or PDF and upload that.";
+
 export const BACKUP_COPY_NOTE =
   "When you delete a file, it is removed at once. Our storage provider's backup copies are removed within 30 days.";
 

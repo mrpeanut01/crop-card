@@ -142,8 +142,18 @@ export const CROP_SOURCED_GUIDE_FIELDS = [
 export function cropFactPaths(c: CropPlugin): string[] {
   const guide = c.plantingGuide ?? {};
   const paths = present('', guide, [...CROP_SOURCED_GUIDE_FIELDS]);
-  if (guide.seedingRate)
-    paths.push(...present('seedingRate.', guide.seedingRate, [...SEEDING_RATE_KEYS, 'seedBasis']));
+  if (guide.seedingRate) {
+    const rate = guide.seedingRate;
+    paths.push(
+      ...present('seedingRate.', rate, [
+        ...SEEDING_RATE_KEYS,
+        'seedBasis',
+        'purpose',
+        'droughtySoilCutPct'
+      ])
+    );
+    for (const m of rate.sownBy ?? []) paths.push(`seedingRate.sownBy.${m}`);
+  }
   for (const entry of c.animalToxicity ?? []) {
     for (const id of entry.speciesIds) paths.push(`animalToxicity.${id}`);
   }
@@ -237,10 +247,24 @@ function numberPattern(n: number): string {
   return frac ? `${grouped}\\.${frac}` : grouped;
 }
 
+const PURPOSE_WORDS: Record<'smother' | 'green-manure', RegExp> = {
+  smother: /\bsmother/i,
+  'green-manure': /\bgreen[- ]manure/i
+};
+
+const SOWN_WORDS: Record<'drilled' | 'broadcast', RegExp> = {
+  drilled: /\bdrill/i,
+  broadcast: /\bbroadcast/i
+};
+
 /** A seeding rate range must appear in its quote ("60-120", "60–120",
  *  "60 to 120", "6- to 7-inch", "7-inch to 8-inch", "25,000 to 33,000"; one
  *  figure when min = max), and a seed basis must match the quote: `pls` names pure live
- *  seed and `bulk` never does. Returns "pluginId: problem" lines. */
+ *  seed and `bulk` never does. #576: a purpose quote names the purpose and
+ *  shares a rate entry's URL; a droughty-soil cut states its percent range,
+ *  "droughty" and the high-potential condition; each `sownBy` method's quote
+ *  names it; a seedingRate needs a rate, a row width or `sownBy`. Returns
+ *  "pluginId: problem" lines. */
 export function seedingRateQuoteGaps(
   crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'plantingGuide'>>,
   sources: SourceMap
@@ -267,6 +291,50 @@ export function seedingRateQuoteGaps(
       const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.['seedingRate.seedBasis']);
       if (entry.success && pls.test(entry.data.quote) !== (rate.seedBasis === 'pls')) {
         gaps.push(`${c.pluginId}: seedingRate.seedBasis quote does not say ${rate.seedBasis}`);
+      }
+    }
+    const entryFor = (key: string) => {
+      const e = sourceEntrySchema.safeParse(sources[c.pluginId]?.[`seedingRate.${key}`]);
+      return e.success ? e.data : null;
+    };
+    const rateKeys = SEEDING_RATE_KEYS.filter((k) => k !== 'drillRowSpacingIn' && rate[k]);
+    if (!SEEDING_RATE_KEYS.some((k) => rate[k]) && !rate.sownBy?.length) {
+      gaps.push(`${c.pluginId}: seedingRate has no rate, row width or sownBy`);
+    }
+    if (rate.purpose) {
+      const entry = entryFor('purpose');
+      if (entry) {
+        if (!PURPOSE_WORDS[rate.purpose].test(entry.quote)) {
+          gaps.push(`${c.pluginId}: seedingRate.purpose quote does not say ${rate.purpose}`);
+        }
+        const urls = rateKeys.map((k) => entryFor(k)?.url).filter(Boolean);
+        if (!urls.includes(entry.url)) {
+          gaps.push(`${c.pluginId}: seedingRate.purpose is not from a rate's own source`);
+        }
+      }
+      if (rateKeys.length === 0) gaps.push(`${c.pluginId}: seedingRate.purpose has no rate`);
+    }
+    if (rate.droughtySoilCutPct) {
+      const entry = entryFor('droughtySoilCutPct');
+      const { min, max } = rate.droughtySoilCutPct;
+      const pct = new RegExp(`(^|[^\\d])${min}%?\\s*(?:-|–|—|to)\\s*${max}%`);
+      if (
+        entry &&
+        !(
+          pct.test(entry.quote) &&
+          /droughty/i.test(entry.quote) &&
+          /high production potential/i.test(entry.quote)
+        )
+      ) {
+        gaps.push(
+          `${c.pluginId}: seedingRate.droughtySoilCutPct quote does not state ${min}-${max}% on droughty soils against a high-potential rate`
+        );
+      }
+    }
+    for (const m of rate.sownBy ?? []) {
+      const entry = entryFor(`sownBy.${m}`);
+      if (entry && !SOWN_WORDS[m].test(entry.quote)) {
+        gaps.push(`${c.pluginId}: seedingRate.sownBy.${m} quote does not name ${m}`);
       }
     }
   }

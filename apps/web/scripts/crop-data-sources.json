@@ -920,6 +920,13 @@
       "date": "December 15, 2023",
       "quote": "Rate of planting On soils with high production potential where good production practices are followed, plant 25,000 to 33,000 kernels per acre. If planted on droughty soils, the rate of planting should be decreased by 10%-15%.",
       "note": "Single source (VCE). Kernels planted per acre on soils with high production potential; the same sentence lowers the rate 10-15% on droughty soils. Penn State Extension's 30,000 plants per acre is a final stand, a different measure, so it is not a second source. No row width is sourced. Row width stays empty permanently unless a source changes (panel ruling 2026-10-05, 3-0): Iowa State's 'The most common row spacing for corn across the Corn Belt is 30 inches' and Nebraska G2216 describe practice, not a recommendation."
+    },
+    "seedingRate.droughtySoilCutPct": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn",
+      "date": "December 15, 2023",
+      "quote": "Rate of planting On soils with high production potential where good production practices are followed, plant 25,000 to 33,000 kernels per acre. If planted on droughty soils, the rate of planting should be decreased by 10%-15%.",
+      "note": "The same VCE sentence as seedsPerAcre: the 25,000-33,000 rate is for soils with high production potential, lowered 10-15% on droughty soils. Shown as a card note; planning math is unchanged (panel ruling 2026-10-05, #576, 2-1; the data-integrity panelist would also have labelled the rate itself)."
     }
   },
   "corn-sweet-bodacious": {
@@ -1064,6 +1071,20 @@
       "date": "July 2020, updated June 13, 2024",
       "quote": "Recommended seeding rates for the popular Tillage Radish brand are 6 lbs/acre drilled, though research trials at the University of Maryland generally used a higher seeding rate of 8-9 lbs/acre. Broadcast rates are higher (9-12 lbs/acre), and germination from broadcast cover crop seed is greater when seed-soil contact is increased by cultipacking (crushing dirt clods, removing air pockets, and pressing down small stones to form a smooth, firm seedbed) or light incorporation.",
       "note": "Why both rates are empty (panel ruling 2026-10-05, #551, 3-0 drilled, 2-1 broadcast): drilled, the SARE page's 8-12 (Chart 3B 8-13, UW A4191 10-12, MD NRCS 340 8, Kentucky AGR-18 oilseed radish 10) does not overlap UMD's 6 or PA NRCS 340's 5. Broadcast, SARE's 12-20 shares only 12 with UMD's 9-12, and a single shared endpoint counts as a disagreement (as for orchardgrass). Ohio ANR-0125 (2-4/3-5 pure live seed) is an MCCC baseline and Virginia DCR SL-8B's 6-8 names no method. Penn State Agronomy Guide 2025 is paywalled and was not read."
+    },
+    "seedingRate.sownBy.drilled": {
+      "url": "https://extension.umd.edu/resource/no-till-spring-vegetables-after-forage-radish-cover-crop",
+      "publisher": "University of Maryland Extension FS-1134, No-Till Spring Vegetables After Forage Radish Cover Crop",
+      "date": "July 2020, updated June 13, 2024",
+      "quote": "Recommended seeding rates for the popular Tillage Radish brand are 6 lbs/acre drilled, though research trials at the University of Maryland generally used a higher seeding rate of 8-9 lbs/acre.",
+      "note": "Names the method only; the rates stay empty (see seedingRate.notRecorded). sownBy makes the crop planned by area with \"Seed amount not known\" instead of the 12 in placeholder spacing (panel ruling 2026-10-05, #576, 3-0 for area mode, 2-1 for a sourced marker over an empty seedingRate)."
+    },
+    "seedingRate.sownBy.broadcast": {
+      "url": "https://extension.umd.edu/resource/no-till-spring-vegetables-after-forage-radish-cover-crop",
+      "publisher": "University of Maryland Extension FS-1134, No-Till Spring Vegetables After Forage Radish Cover Crop",
+      "date": "July 2020, updated June 13, 2024",
+      "quote": "Broadcast rates are higher (9-12 lbs/acre), and germination from broadcast cover crop seed is greater when seed-soil contact is increased by cultipacking (crushing dirt clods, removing air pockets, and pressing down small stones to form a smooth, firm seedbed) or light incorporation.",
+      "note": "Names the method only; the rates stay empty (see seedingRate.notRecorded). sownBy makes the crop planned by area with \"Seed amount not known\" instead of the 12 in placeholder spacing (panel ruling 2026-10-05, #576, 3-0 for area mode, 2-1 for a sourced marker over an empty seedingRate)."
     }
   },
   "dill-mammoth": {
@@ -1641,6 +1662,20 @@
       "date": "2007",
       "quote": "If drilling oats, seed at 2 to 3 bushels per acre 1/2 to 1 inch deep, or 1 1/2 inches when growing grain you plan to harrow for weed control.",
       "note": "Why every seeding rate is empty (panel ruling 2026-10-05, #551, 3-0): the crop page prints bushels only (drill 2-3 bu) and Chart 3B prints drilled 80-110 lb (2.5-3.5 bu) and broadcast 110-140 lb (3.5-4.5 bu), so the page and chart disagree and a lb figure would need a bushel weight no source prints. Other drilled figures: VCE 65-80, MD NRCS 340 95, PA NRCS 340 80, UGA C814 90-120, Kentucky AGR-18 '80 lb (drilled) 120 lb (broadcast)' pure live seed; Missouri G4652 90-120 (forage) and Ohio ANR-0116 30-60 (MCCC baseline) are not counted. No source prints a cover-crop drill row width (VCE's 6-8 in is the grain-oats sentence; panel split 2026-10-04). Penn State Agronomy Guide 2025 is paywalled and was not read."
+    },
+    "seedingRate.sownBy.drilled": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/oats/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Oats",
+      "date": "2007",
+      "quote": "If drilling oats, seed at 2 to 3 bushels per acre 1/2 to 1 inch deep, or 1 1/2 inches when growing grain you plan to harrow for weed control.",
+      "note": "Names the method only; the rates stay empty (see seedingRate.notRecorded). sownBy makes the crop planned by area with \"Seed amount not known\" instead of the 12 in placeholder spacing (panel ruling 2026-10-05, #576, 3-0 for area mode, 2-1 for a sourced marker over an empty seedingRate)."
+    },
+    "seedingRate.sownBy.broadcast": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/oats/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Oats",
+      "date": "2007",
+      "quote": "Broadcasting or overseeding will give the best results for the least cost, unless seeding into heavy residue.",
+      "note": "Names the method only; the rates stay empty (see seedingRate.notRecorded). sownBy makes the crop planned by area with \"Seed amount not known\" instead of the 12 in placeholder spacing (panel ruling 2026-10-05, #576, 3-0 for area mode, 2-1 for a sourced marker over an empty seedingRate)."
     }
   },
   "oats-grain-jerry": {
@@ -2388,6 +2423,13 @@
       "date": "2007",
       "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
       "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
+    },
+    "seedingRate.purpose": {
+      "url": "https://www.sare.org/publications/managing-cover-crops-profitably/nonlegume-cover-crops/sorghum-sudangrass/",
+      "publisher": "SARE, Managing Cover Crops Profitably 3rd ed., Sorghum-Sudangrass",
+      "date": "2007",
+      "quote": "These rates provide a quicker canopy to smother weeds than lower rates used for forage production, but they require mowing or grazing to prevent lodging.",
+      "note": "The sentence right after the rate sentence on the same page, so the purpose belongs to the shipped 35-40 drilled and 40-50 broadcast rates (panel ruling 2026-10-05, #576, 3-0). PA NRCS 340 prints 20 for an adequate single-species stand and says to raise it 25% when the purpose is weed suppression; 25 still does not overlap 35-40, so the label makes the shipped rate honest about its use, it does not make it agree with NRCS."
     }
   },
   "southern-pea-pinkeye-purple-hull": {
@@ -2569,12 +2611,33 @@
       "date": "2022-01 (revised; originally 2004-09)",
       "quote": "UF/IFAS ENY-717: \"Sunn hemp is most commonly used as a green manure, where it is grown for 2 to 3 months before cash crop planting and then incorporated into the soil at early blooming stage.\" Also: \"When plowed under at early bloom stage, nitrogen recovery of this leguminous plant is the highest.\""
     },
-    "seedingRate.notRecorded": {
-      "url": "https://www.ctahr.hawaii.edu/oc/freepubs/pdf/SA-GM-11.pdf",
-      "publisher": "University of Hawaii CTAHR SA-GM-11, Green Manure Crops: 'Tropic Sun' Sunnhemp (Valenzuela and Smith)",
-      "date": "Aug. 2002",
-      "quote": "Into a well prepared weed-free seedbed, broadcast pure live seed at 40–60 lb/acre (45–67 kg/ha), or drill at 30– 50 lb/acre (34–56 kg/ha) to a depth of 1⁄2–1 inch (12–25 mm) in rows 6 inches (15 cm) apart.",
-      "note": "Why both rates are empty (panel ruling 2026-10-05, #551, 2-1; the agronomist panelist would have shipped this green-manure range): CTAHR and the NRCS Sunn Hemp Plant Guide (one origin, Rotar and Joy) give 30-50 drilled and 40-60 broadcast pure live seed for green manure, and Missouri G4652 (30/40) and Kentucky AGR-18 (30/50 pure live seed) agree, but MD and PA NRCS 340 print 10 for a single-species cover, counted as a drilled rate, which does not overlap. The card has no purpose label to say a rate is for green manure (follow-up issue linked to #555). NRCS Iowa 10/15 and Ohio ANR-0133 14-20/16-22 are MCCC pure live seed baselines, not counted. Revisit once a purpose field exists."
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://cms.ctahr.hawaii.edu/soap/Resources/Sustainable-and-Organic-Topics/Tropic-Sun-sunn-hemp",
+      "publisher": "University of Hawaii CTAHR, Sustainable and Organic Agriculture Program, 'Tropic Sun' Sunn Hemp",
+      "date": "Text last updated on 9/25/2009",
+      "quote": "Drilled: 30-50 lbs. pure live seed per acre (34-56 kg/ha) in 6-inch rows.",
+      "note": "Green-manure rates, shipped with purpose green-manure (panel ruling 2026-10-05, #576, 3-0, re-running #551 Q1): the CTAHR green manure sheet SA-GM-11 (Aug. 2002) and the NRCS Sunn Hemp Plant Guide (one origin, Rotar and Joy) print the same 30-50 drilled and 40-60 broadcast, and Missouri G4652 (30/40) and Kentucky AGR-18 (30/50 pure live seed) agree. MD and PA NRCS 340 print 10, the rate \"needed to establish an adequate stand for a single species cover crop\", a different purpose, so with the purpose shown on every seed line it is no longer a disagreement. Species-level rates from the Tropic Sun page; no other cultivar figure was found. NRCS Iowa 10/15 and Ohio ANR-0133 14-20/16-22 are MCCC pure live seed baselines, not counted."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://cms.ctahr.hawaii.edu/soap/Resources/Sustainable-and-Organic-Topics/Tropic-Sun-sunn-hemp",
+      "publisher": "University of Hawaii CTAHR, Sustainable and Organic Agriculture Program, 'Tropic Sun' Sunn Hemp",
+      "date": "Text last updated on 9/25/2009",
+      "quote": "Broadcast: 40-60 lbs. pure live seed per acre (45-67 kg/ha).",
+      "note": "Green-manure rates, shipped with purpose green-manure (panel ruling 2026-10-05, #576, 3-0, re-running #551 Q1): the CTAHR green manure sheet SA-GM-11 (Aug. 2002) and the NRCS Sunn Hemp Plant Guide (one origin, Rotar and Joy) print the same 30-50 drilled and 40-60 broadcast, and Missouri G4652 (30/40) and Kentucky AGR-18 (30/50 pure live seed) agree. MD and PA NRCS 340 print 10, the rate \"needed to establish an adequate stand for a single species cover crop\", a different purpose, so with the purpose shown on every seed line it is no longer a disagreement. Species-level rates from the Tropic Sun page; no other cultivar figure was found. NRCS Iowa 10/15 and Ohio ANR-0133 14-20/16-22 are MCCC pure live seed baselines, not counted."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://cms.ctahr.hawaii.edu/soap/Resources/Sustainable-and-Organic-Topics/Tropic-Sun-sunn-hemp",
+      "publisher": "University of Hawaii CTAHR, Sustainable and Organic Agriculture Program, 'Tropic Sun' Sunn Hemp",
+      "date": "Text last updated on 9/25/2009",
+      "quote": "Drilled: 30-50 lbs. pure live seed per acre (34-56 kg/ha) in 6-inch rows.",
+      "note": "Both rates on this page are stated as pure live seed. In SA-GM-11 the words \"pure live seed\" grammatically cover only the broadcast rate, so the basis is taken from this page."
+    },
+    "seedingRate.purpose": {
+      "url": "https://cms.ctahr.hawaii.edu/soap/Resources/Sustainable-and-Organic-Topics/Tropic-Sun-sunn-hemp",
+      "publisher": "University of Hawaii CTAHR, Sustainable and Organic Agriculture Program, 'Tropic Sun' Sunn Hemp",
+      "date": "Text last updated on 9/25/2009",
+      "quote": "Green manure crop used to add nitrogen and organic matter",
+      "note": "From the page summary, same page as the rates. The page also says \"Recommended in Hawai`i for green manure with vegetable crops and ornamentals\"; SA-GM-11 is in CTAHR's \"Green Manure Crops\" series."
     }
   },
   "sunn-hemp-tropic-sun": {
@@ -2583,7 +2646,7 @@
       "publisher": "University of Hawaii CTAHR, Sustainable and Organic Agriculture Program, 'Tropic Sun' Sunn Hemp",
       "date": "Text last updated on 9/25/2009",
       "quote": "Drilled: 30-50 lbs. pure live seed per acre (34-56 kg/ha) in 6-inch rows.",
-      "note": "The CTAHR green manure sheet SA-GM-11 (Aug. 2002) also says rows 6 inches apart; both credit Rotar & Joy. The 36 to 42 inch rows on the same page are for seed production. Rates are left empty (panel ruling 2026-10-05, #551, 2-1): CTAHR, the NRCS Plant Guide, Missouri G4652 and Kentucky AGR-18 give 30-50 drilled / 40-60 broadcast for green manure, MD and PA NRCS 340 give 10 for a general cover; see sunn-hemp-cover's seedingRate.notRecorded."
+      "note": "The CTAHR green manure sheet SA-GM-11 (Aug. 2002) also says rows 6 inches apart; both credit Rotar & Joy. The 36 to 42 inch rows on the same page are for seed production. Rates ship as green-manure rates (panel ruling 2026-10-05, #576); see seedingRate.drilledLbsPerAcre."
     },
     "seedDepthIn": {
       "url": "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_crju.pdf",
@@ -2591,6 +2654,34 @@
       "date": "Edited 05jun06",
       "quote": "seed should be broadcast or drilled and covered ½ to 1 inch deep into a well prepared, weed-free seedbed.",
       "note": "Seed depth, sourced panel ruling 2026-10-05, #551; the source-coverage gate does not check this field. CTAHR SA-GM-11 gives the same 1/2-1 inch; NRCS Iowa (1/2-1 1/2) and UF SS-AGR-444 ('one inch or less') overlap; Ohio ANR-0133 is an MCCC baseline."
+    },
+    "seedingRate.drilledLbsPerAcre": {
+      "url": "https://cms.ctahr.hawaii.edu/soap/Resources/Sustainable-and-Organic-Topics/Tropic-Sun-sunn-hemp",
+      "publisher": "University of Hawaii CTAHR, Sustainable and Organic Agriculture Program, 'Tropic Sun' Sunn Hemp",
+      "date": "Text last updated on 9/25/2009",
+      "quote": "Drilled: 30-50 lbs. pure live seed per acre (34-56 kg/ha) in 6-inch rows.",
+      "note": "Green-manure rates, shipped with purpose green-manure (panel ruling 2026-10-05, #576, 3-0, re-running #551 Q1): the CTAHR green manure sheet SA-GM-11 (Aug. 2002) and the NRCS Sunn Hemp Plant Guide (one origin, Rotar and Joy) print the same 30-50 drilled and 40-60 broadcast, and Missouri G4652 (30/40) and Kentucky AGR-18 (30/50 pure live seed) agree. MD and PA NRCS 340 print 10, the rate \"needed to establish an adequate stand for a single species cover crop\", a different purpose, so with the purpose shown on every seed line it is no longer a disagreement. Species-level rates from the Tropic Sun page; no other cultivar figure was found. NRCS Iowa 10/15 and Ohio ANR-0133 14-20/16-22 are MCCC pure live seed baselines, not counted."
+    },
+    "seedingRate.broadcastLbsPerAcre": {
+      "url": "https://cms.ctahr.hawaii.edu/soap/Resources/Sustainable-and-Organic-Topics/Tropic-Sun-sunn-hemp",
+      "publisher": "University of Hawaii CTAHR, Sustainable and Organic Agriculture Program, 'Tropic Sun' Sunn Hemp",
+      "date": "Text last updated on 9/25/2009",
+      "quote": "Broadcast: 40-60 lbs. pure live seed per acre (45-67 kg/ha).",
+      "note": "Green-manure rates, shipped with purpose green-manure (panel ruling 2026-10-05, #576, 3-0, re-running #551 Q1): the CTAHR green manure sheet SA-GM-11 (Aug. 2002) and the NRCS Sunn Hemp Plant Guide (one origin, Rotar and Joy) print the same 30-50 drilled and 40-60 broadcast, and Missouri G4652 (30/40) and Kentucky AGR-18 (30/50 pure live seed) agree. MD and PA NRCS 340 print 10, the rate \"needed to establish an adequate stand for a single species cover crop\", a different purpose, so with the purpose shown on every seed line it is no longer a disagreement. Species-level rates from the Tropic Sun page; no other cultivar figure was found. NRCS Iowa 10/15 and Ohio ANR-0133 14-20/16-22 are MCCC pure live seed baselines, not counted."
+    },
+    "seedingRate.seedBasis": {
+      "url": "https://cms.ctahr.hawaii.edu/soap/Resources/Sustainable-and-Organic-Topics/Tropic-Sun-sunn-hemp",
+      "publisher": "University of Hawaii CTAHR, Sustainable and Organic Agriculture Program, 'Tropic Sun' Sunn Hemp",
+      "date": "Text last updated on 9/25/2009",
+      "quote": "Drilled: 30-50 lbs. pure live seed per acre (34-56 kg/ha) in 6-inch rows.",
+      "note": "Both rates on this page are stated as pure live seed. In SA-GM-11 the words \"pure live seed\" grammatically cover only the broadcast rate, so the basis is taken from this page."
+    },
+    "seedingRate.purpose": {
+      "url": "https://cms.ctahr.hawaii.edu/soap/Resources/Sustainable-and-Organic-Topics/Tropic-Sun-sunn-hemp",
+      "publisher": "University of Hawaii CTAHR, Sustainable and Organic Agriculture Program, 'Tropic Sun' Sunn Hemp",
+      "date": "Text last updated on 9/25/2009",
+      "quote": "Green manure crop used to add nitrogen and organic matter",
+      "note": "From the page summary, same page as the rates. The page also says \"Recommended in Hawai`i for green manure with vegetable crops and ornamentals\"; SA-GM-11 is in CTAHR's \"Green Manure Crops\" series."
     }
   },
   "sweet-corn-american-dream-f1-seed": {
@@ -3495,6 +3586,20 @@
       "date": "July 2020, updated June 13, 2024",
       "quote": "Recommended seeding rates for the popular Tillage Radish brand are 6 lbs/acre drilled, though research trials at the University of Maryland generally used a higher seeding rate of 8-9 lbs/acre. Broadcast rates are higher (9-12 lbs/acre)",
       "note": "Why both rates are empty (panel ruling 2026-10-05, #551, 2-1): UMD's brand rate (6 drilled, 9-12 broadcast) does not overlap SARE's forage radish 8-12 drilled and shares only 12 with SARE's 12-20 broadcast; PA NRCS 340 says 5. The brand owner (DLF / La Crosse Seed) prints 'Seeding Rate - Alone/New (Lbs./Acre) 3-8' with no method, so it does not count."
+    },
+    "seedingRate.sownBy.drilled": {
+      "url": "https://extension.umd.edu/resource/no-till-spring-vegetables-after-forage-radish-cover-crop",
+      "publisher": "University of Maryland Extension FS-1134, No-Till Spring Vegetables After Forage Radish Cover Crop",
+      "date": "July 2020, updated June 13, 2024",
+      "quote": "Recommended seeding rates for the popular Tillage Radish brand are 6 lbs/acre drilled, though research trials at the University of Maryland generally used a higher seeding rate of 8-9 lbs/acre.",
+      "note": "Names the method only; the rates stay empty (see seedingRate.notRecorded). sownBy makes the crop planned by area with \"Seed amount not known\" instead of the 12 in placeholder spacing (panel ruling 2026-10-05, #576, 3-0 for area mode, 2-1 for a sourced marker over an empty seedingRate)."
+    },
+    "seedingRate.sownBy.broadcast": {
+      "url": "https://extension.umd.edu/resource/no-till-spring-vegetables-after-forage-radish-cover-crop",
+      "publisher": "University of Maryland Extension FS-1134, No-Till Spring Vegetables After Forage Radish Cover Crop",
+      "date": "July 2020, updated June 13, 2024",
+      "quote": "Broadcast rates are higher (9-12 lbs/acre), and germination from broadcast cover crop seed is greater when seed-soil contact is increased by cultipacking (crushing dirt clods, removing air pockets, and pressing down small stones to form a smooth, firm seedbed) or light incorporation.",
+      "note": "Names the method only; the rates stay empty (see seedingRate.notRecorded). sownBy makes the crop planned by area with \"Seed amount not known\" instead of the 12 in placeholder spacing (panel ruling 2026-10-05, #576, 3-0 for area mode, 2-1 for a sourced marker over an empty seedingRate)."
     }
   },
   "quince-orange": {

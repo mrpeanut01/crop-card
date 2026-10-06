@@ -60,7 +60,8 @@ export const POST: RequestHandler = async (event) => {
         planningSessionId: parsed.data.planningSessionId,
         contextCacheHit: built.cacheHit,
         contextVersion: built.contextVersion,
-        companionSystems
+        companionSystems,
+        locale: event.locals?.locale
       });
     }
   });
@@ -75,7 +76,8 @@ export const POST: RequestHandler = async (event) => {
       tag === 'quota-exceeded' && !tried.guard.ok && tried.guard.reason === 'cap-exceeded'
         ? 'over-cap'
         : tag,
-      tag === 'ai-unavailable' ? fallbackMessage : undefined
+      tag === 'ai-unavailable' ? fallbackMessage : undefined,
+      event.locals?.locale
     );
     recordFallback(user.id, 'allocate', tried.fallbackReason);
   } else {

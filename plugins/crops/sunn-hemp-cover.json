@@ -12,7 +12,19 @@
     "Incorporate at early bloom, after 2 to 3 months of growth"
   ],
   "plantingGuide": {
-    "soilTempMinF": 65
+    "soilTempMinF": 65,
+    "seedingRate": {
+      "drilledLbsPerAcre": {
+        "min": 30,
+        "max": 50
+      },
+      "broadcastLbsPerAcre": {
+        "min": 40,
+        "max": 60
+      },
+      "seedBasis": "pls",
+      "purpose": "green-manure"
+    }
   },
   "notes": "Tropical legume — heat-loving N-fixer. Excellent summer rotation crop in vegetable systems. Frost-kills.",
   "harvestStyle": "cover-crop-termination",

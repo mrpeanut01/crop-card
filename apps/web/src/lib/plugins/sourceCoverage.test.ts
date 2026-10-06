@@ -13,6 +13,7 @@ import {
   pestModelPluginSchema,
   seedingRateSchema,
   SEEDING_RATE_KEYS,
+  SEEDING_RATE_QUALIFIER_KEYS,
   speciesPluginSchema
 } from './schemas';
 import {
@@ -232,7 +233,7 @@ describe('fact paths', () => {
   });
 
   it('keeps SEEDING_RATE_KEYS in step with the schema', () => {
-    expect([...SEEDING_RATE_KEYS, 'seedBasis'].sort()).toEqual(
+    expect([...SEEDING_RATE_KEYS, ...SEEDING_RATE_QUALIFIER_KEYS].sort()).toEqual(
       Object.keys(seedingRateSchema.shape).sort()
     );
   });
@@ -277,6 +278,97 @@ describe('fact paths', () => {
       'test-crop: seedingRate.drillRowSpacingIn quote does not state 6-7',
       'test-crop: seedingRate.seedBasis quote does not say bulk'
     ]);
+  });
+
+  it('#576: gates purpose, the droughty-soil cut and sownBy as sourced facts', () => {
+    const crop = cropPluginSchema.parse({
+      ...SEEDING_BASE,
+      plantingGuide: {
+        seedingRate: {
+          drilledLbsPerAcre: { min: 30, max: 50 },
+          seedsPerAcre: { min: 25000, max: 33000 },
+          purpose: 'green-manure',
+          droughtySoilCutPct: { min: 10, max: 15 }
+        }
+      }
+    });
+    expect(cropFactPaths(crop)).toEqual([
+      'seedingRate.drilledLbsPerAcre',
+      'seedingRate.seedsPerAcre',
+      'seedingRate.purpose',
+      'seedingRate.droughtySoilCutPct'
+    ]);
+    const quoted = (quote: string, url = FIXTURE_SOURCE.url) => ({ ...FIXTURE_SOURCE, url, quote });
+    const vce =
+      'On soils with high production potential where good production practices are followed, plant 25,000 to 33,000 kernels per acre. If planted on droughty soils, the rate of planting should be decreased by 10%-15%.';
+    const ok: SourceMap = {
+      'test-crop': {
+        'seedingRate.drilledLbsPerAcre': quoted('Drilled: 30-50 lbs. pure live seed per acre'),
+        'seedingRate.seedsPerAcre': quoted(vce),
+        'seedingRate.purpose': quoted('Green manure crop used to add nitrogen'),
+        'seedingRate.droughtySoilCutPct': quoted(vce)
+      }
+    };
+    expect(seedingRateQuoteGaps([crop], ok)).toEqual([]);
+    const bad: SourceMap = {
+      'test-crop': {
+        'seedingRate.drilledLbsPerAcre': quoted('Drilled: 30-50 lbs. pure live seed per acre'),
+        'seedingRate.seedsPerAcre': quoted(vce),
+        'seedingRate.purpose': quoted('A green manure crop', 'https://example.org/other'),
+        'seedingRate.droughtySoilCutPct': quoted('decrease by 10%-20% on droughty soils')
+      }
+    };
+    expect(seedingRateQuoteGaps([crop], bad)).toEqual([
+      "test-crop: seedingRate.purpose is not from a rate's own source",
+      'test-crop: seedingRate.droughtySoilCutPct quote does not state 10-15% on droughty soils against a high-potential rate'
+    ]);
+    expect(
+      seedingRateQuoteGaps([crop], {
+        'test-crop': { ...ok['test-crop'], 'seedingRate.purpose': quoted('forage rates') }
+      })
+    ).toEqual(['test-crop: seedingRate.purpose quote does not say green-manure']);
+    expect(seedingRateSchema.safeParse({ purpose: 'general-cover' }).success).toBe(false);
+  });
+
+  it('#576: a sownBy method needs a quote naming it, and a seedingRate needs content', () => {
+    const crop = cropPluginSchema.parse({
+      ...SEEDING_BASE,
+      plantingGuide: { seedingRate: { sownBy: ['drilled', 'broadcast'] } }
+    });
+    expect(cropFactPaths(crop)).toEqual([
+      'seedingRate.sownBy.drilled',
+      'seedingRate.sownBy.broadcast'
+    ]);
+    const quoted = (quote: string) => ({ ...FIXTURE_SOURCE, quote });
+    expect(
+      seedingRateQuoteGaps([crop], {
+        'test-crop': {
+          'seedingRate.sownBy.drilled': quoted('If drilling oats, seed at 2 to 3 bushels'),
+          'seedingRate.sownBy.broadcast': quoted('Broadcasting or overseeding will give')
+        }
+      })
+    ).toEqual([]);
+    expect(
+      seedingRateQuoteGaps([crop], {
+        'test-crop': {
+          'seedingRate.sownBy.drilled': quoted('Seed at 2 to 3 bushels'),
+          'seedingRate.sownBy.broadcast': quoted('Broadcasting or overseeding will give')
+        }
+      })
+    ).toEqual(['test-crop: seedingRate.sownBy.drilled quote does not name drilled']);
+    const empty = cropPluginSchema.parse({ ...SEEDING_BASE, plantingGuide: { seedingRate: {} } });
+    expect(seedingRateQuoteGaps([empty], {})).toEqual([
+      'test-crop: seedingRate has no rate, row width or sownBy'
+    ]);
+    const purposeOnly = cropPluginSchema.parse({
+      ...SEEDING_BASE,
+      plantingGuide: { seedingRate: { sownBy: ['drilled'], purpose: 'smother' } }
+    });
+    expect(seedingRateQuoteGaps([purposeOnly], {})).toEqual([
+      'test-crop: seedingRate.purpose has no rate'
+    ]);
+    expect(seedingRateSchema.safeParse({ sownBy: [] }).success).toBe(false);
+    expect(seedingRateSchema.safeParse({ sownBy: ['drilled', 'drilled'] }).success).toBe(false);
   });
 
   it('reads a row width written as "7-inch to 8-inch"', () => {

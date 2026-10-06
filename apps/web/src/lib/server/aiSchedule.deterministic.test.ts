@@ -153,6 +153,14 @@ describe('buildDeterministicSchedule — must-stagger enforcement', () => {
     const scheduled = buildDeterministicSchedule(noStagger, windows, fits);
     const dates = scheduled.map((p) => p.plantingDateMs);
     expect(dates.every((d) => d === dates[0])).toBe(true);
+    const es = buildDeterministicSchedule(noStagger, windows, fits, 'es');
+    expect(es.map((p) => p.rationale)).toEqual(
+      scheduled.map((p) =>
+        p.rationale === 'Earliest feasible planting date for this block + variety.'
+          ? 'Fecha de siembra posible más temprana para este bloque y variedad.'
+          : expect.not.stringMatching(/feasible|Succession|Anchored/)
+      )
+    );
   });
 
   it('honors companion-group anchor + offset', () => {

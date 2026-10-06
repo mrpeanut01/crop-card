@@ -56,6 +56,14 @@ export const DTM_ANCHORS = ["direct-seed", "transplant"] as const;
 
 export const SEED_BASES = ["bulk", "pls"] as const;
 
+/** #576: what a source says a seeding rate is for. Only purposes a shipped
+ *  source states; add one when a source needs it. */
+export const SEEDING_PURPOSES = ["smother", "green-manure"] as const;
+
+/** #576: how a crop with no agreed rate is sown, so it is planned by area
+ *  ("Seed amount not known") instead of a placeholder plant spacing. */
+export const SOWN_BY_METHODS = ["drilled", "broadcast"] as const;
+
 /** Drilled, broadcast or row-planted field crops (cover crops, forage
  *  stands, small grains, corn, sorghum), which extension sources describe by
  *  seeding rate and row width instead of an in-row distance. Every value is
@@ -77,16 +85,38 @@ export const seedingRateSchema = z
      *  seed (`pls`). Set only when a source states it, with its own
      *  `seedingRate.seedBasis` entry. */
     seedBasis: z.enum(SEED_BASES).optional(),
+    /** #576: the purpose the source gives these rates for (a smother crop,
+     *  green manure). Its `seedingRate.purpose` entry shares a rate entry's
+     *  URL. Absent means the source states none. */
+    purpose: z.enum(SEEDING_PURPOSES).optional(),
+    /** #576: percent fewer seeds the source says to plant on droughty soils
+     *  (the rate itself is for soils with high production potential). */
+    droughtySoilCutPct: minMaxNumber.optional(),
+    /** #576: methods a source names for a crop whose rates are not
+     *  recorded; one `seedingRate.sownBy.<method>` entry each. */
+    sownBy: z
+      .array(z.enum(SOWN_BY_METHODS))
+      .min(1)
+      .refine((a) => new Set(a).size === a.length, { message: "duplicate method" })
+      .optional(),
   })
   .strict();
 
-/** The range keys of `seedingRateSchema` (everything but `seedBasis`). */
+/** The rate range keys of `seedingRateSchema`; `SEEDING_RATE_QUALIFIER_KEYS`
+ *  are the rest. */
 export const SEEDING_RATE_KEYS = [
   "drilledLbsPerAcre",
   "broadcastLbsPerAcre",
   "drilledSeedsPerSqFt",
   "seedsPerAcre",
   "drillRowSpacingIn",
+] as const;
+
+export const SEEDING_RATE_QUALIFIER_KEYS = [
+  "seedBasis",
+  "purpose",
+  "droughtySoilCutPct",
+  "sownBy",
 ] as const;
 
 export const plantingGuideSchema = z

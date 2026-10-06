@@ -1096,5 +1096,61 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.beds.areaOnly':
     'Este cultivo se siembra en toda la cama, así que envía los pies cuadrados que cubre, no un número de plantas.',
   'wizard.beds.leftoverItemArea': '{area} pies cuadrados de {name}',
-  'wizard.blocks.cropArea': '{name}: sembrado en {area}'
+  'wizard.blocks.cropArea': '{name}: sembrado en {area}',
+  'wizard.engine.fb.noKey':
+    'Plan generado por el motor determinista (no hay clave de API de Anthropic configurada).',
+  'wizard.engine.fb.overCap':
+    'Plan generado por el motor determinista (se agotó la ayuda de IA de este mes; se renueva el día 1).',
+  'wizard.engine.fb.quota':
+    'Plan generado por el motor determinista (se agotó el límite diario de planificación con IA; se renueva a la medianoche UTC).',
+  'wizard.engine.fb.unavailable': 'Plan generado por el motor determinista ({detail})',
+  'wizard.engine.fb.unavailableDefault': 'Claude no está disponible en este momento.',
+  'wizard.engine.fb.invalid':
+    'Plan generado por el motor determinista porque la respuesta de la IA no pasó la validación dos veces.',
+  'wizard.engine.placed': 'colocado por el motor determinista',
+  'wizard.engine.placedDot': 'colocado por el motor determinista.',
+  'wizard.engine.why.match': 'tu cantidad de semilla es justa para este bloque',
+  'wizard.engine.why.surplus':
+    'el bloque admite unas {fit} plantas y tienes semilla para unas {avail}; sobra semilla para unas {extra} plantas',
+  'wizard.engine.why.surplusArea':
+    'el bloque tiene espacio para unos {fit} pies cuadrados y tu semilla cubre unos {avail} pies cuadrados; sobra semilla para unos {extra} pies cuadrados',
+  'wizard.engine.why.fill':
+    'no se sabe la cantidad de semilla, así que se ajusta al espacio que recibe',
+  'wizard.engine.why.deficit': 'solo tienes semilla para un {pct}% de este bloque',
+  'wizard.engine.why.sunFull': 'el sol es adecuado',
+  'wizard.engine.why.sunPartial': 'el sol es aceptable pero no ideal',
+  'wizard.engine.why.rotation':
+    'hace poco hubo aquí un cultivo de la misma familia; se usó como último recurso',
+  'wizard.engine.why.narrow':
+    'el bloque es angosto para el espaciado entre hileras de este cultivo',
+  'wizard.engine.why.threeSisters':
+    'parte de un grupo de las tres hermanas (maíz / frijol / calabaza)',
+  'wizard.engine.adv.underused':
+    '{block} quedaría sembrado solo en un {pct}% con tu semilla de {seed}. Considera agregar un cultivo acompañante rápido, pedir más semilla o achicar la cama.',
+  'wizard.engine.adv.family':
+    'Todos los bloques elegidos quedaron con un cultivo de la familia {family}. Repartir la familia entre años o dejar un bloque para otra cosa reduciría el riesgo de enfermedades.',
+  'wizard.engine.adv.narrow':
+    '{block} es algo angosto para {seed}. Ensancharlo unos pies, o combinarlo con un cultivo de espaciado más cerrado, te dejaría sembrar mejor.',
+  'wizard.engine.adv.unsized':
+    'Los bloques que elegiste aún no tienen tamaño, así que no se pudo colocar semilla. Dale ancho y largo a cada cama y vuelve a planificar.',
+  'wizard.engine.adv.unplaced':
+    'No se pudo colocar parte de la semilla ({names}). Considera abrir una cama nueva, planear una siembra escalonada en unas semanas o intercambiar o guardar el sobrante.',
+  'wizard.engine.sched.noKey':
+    'No hay clave de API de Anthropic configurada: cada siembra quedó en su fecha posible más temprana.',
+  'wizard.engine.sched.degraded': '{message} Cada siembra quedó en su fecha posible más temprana.',
+  'wizard.engine.sched.anchored': 'Anclada al grupo de acompañantes (ancla + {days} d).',
+  'wizard.engine.sched.bumped':
+    'Se adelantó desde el {date} para respetar los escalonamientos por polinización cruzada.',
+  'wizard.engine.sched.clamped':
+    'Se fijó en la última fecha viable: los escalonamientos no cabían bien. Ajústalo en el chat.',
+  'wizard.engine.sched.firstOf': 'Primera de {n} siembras escalonadas: fecha posible más temprana.',
+  'wizard.engine.sched.earliest':
+    'Fecha de siembra posible más temprana para este bloque y variedad.',
+  'wizard.engine.sched.succession':
+    'Siembra escalonada {i} de {n}, {days} d después de la anterior.',
+  'wizard.engine.sched.invalid':
+    'La respuesta de la IA para el calendario no pasó la validación (ni después de un reintento), así que tomó el control el programador determinista. Respetó los escalonamientos por polinización cruzada, los desfases de acompañantes y el espaciado de las siembras escalonadas donde pudo; revisa las fechas y ajústalas en el chat si algo no se ve bien.',
+  'wizard.engine.sched.refineNoKey':
+    'No puedo ajustar el calendario sin una clave de API de Anthropic. Las fechas actuales no cambian.',
+  'wizard.engine.sched.refineDegraded': '{message} Las fechas actuales no cambian.'
 };

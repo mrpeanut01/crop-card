@@ -11,6 +11,7 @@ import {
   seedAmountFor,
   SQFT_PER_ACRE,
   type SeedAmount,
+  type SeedingPurpose,
   type SowMethod,
   type SpacingModel
 } from './spacingModel';
@@ -26,8 +27,30 @@ export function sowMethodLabel(method: SowMethod, locale?: string | null): strin
   return t(locale, `plan.area.method.${method}`);
 }
 
-/** "Broadcast: 3.2–4.1 lb for 1,200 sq ft", or null when the amount is
- *  not known. */
+/** #576: "rate for green manure", for a source rate given for one purpose. */
+export function purposeText(purpose: SeedingPurpose, locale?: string | null): string {
+  return t(locale, `plan.area.purpose.${purpose}`);
+}
+
+/** #576 (PU-4): the purpose goes on every line that shows or is sized from
+ *  a purpose-tagged source rate, never on the farmer's own rate. */
+export function withPurpose(
+  text: string,
+  purpose: SeedingPurpose | undefined,
+  locale?: string | null
+): string {
+  return purpose
+    ? t(locale, 'plan.area.withPurpose', { text, purpose: purposeText(purpose, locale) })
+    : text;
+}
+
+/** The purpose of an area crop's source rates, if the source gives one. */
+export function modelPurpose(model: SpacingModel): SeedingPurpose | undefined {
+  return model.kind === 'area' ? model.purpose : undefined;
+}
+
+/** "Broadcast: 3.2–4.1 lb for 1,200 sq ft", plus the source's purpose when
+ *  it gives one ("…, rate for green manure"). */
 export function seedAmountText(
   amount: SeedAmount,
   sqft: number,
@@ -39,9 +62,11 @@ export function seedAmountText(
     amount: formatSeedAmount(amount, units),
     area: areaText(sqft, units)
   };
-  return amount.kind === 'seeds'
-    ? t(locale, 'plan.area.amountSeeds', params)
-    : t(locale, 'plan.area.amountWeight', params);
+  const text =
+    amount.kind === 'seeds'
+      ? t(locale, 'plan.area.amountSeeds', params)
+      : t(locale, 'plan.area.amountWeight', params);
+  return withPurpose(text, amount.provenance === 'data' ? amount.purpose : undefined, locale);
 }
 
 export interface SeedAmountLine {

@@ -830,5 +830,8 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'orchardui.err.unknownWindow': 'Esa ventana no está en este calendario.',
   'orchardui.err.confirmCommercial': 'Confirma que quieres la guía comercial.',
   'orchardui.err.areaNotFound': 'Esa zona no está en esta finca.',
-  'orchardui.err.save': 'No se pudo guardar. Inténtalo de nuevo.'
+  'orchardui.err.save': 'No se pudo guardar. Inténtalo de nuevo.',
+  'plan.area.withPurpose': '{text}, {purpose}',
+  'plan.area.purpose.smother': 'dosis para sofocar malezas',
+  'plan.area.purpose.green-manure': 'dosis para abono verde'
 };

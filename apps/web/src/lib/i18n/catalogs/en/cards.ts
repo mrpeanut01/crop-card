@@ -518,5 +518,10 @@ export const enCards = {
   'cards.tree.atLeast': 'At least {spacing} apart',
   'cards.tree.expectFruit': 'Expect first fruit {from}–{to}',
   'cards.tree.expectFruitYear': 'Expect first fruit in {year}',
-  'cards.tree.afterPlanting': '{years} after planting'
+  'cards.tree.afterPlanting': '{years} after planting',
+  'cards.fact.sownBy': 'How it is sown',
+  'cards.fact.sownByEither': '{a} or {b}',
+  'cards.fact.droughtySoil': 'Droughty soils',
+  'cards.fact.droughtyCut':
+    'The rate is for soils with high production potential. On droughty soils, plant {pct} fewer.'
 } as const;

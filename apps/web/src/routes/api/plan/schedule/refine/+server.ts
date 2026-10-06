@@ -158,7 +158,10 @@ export const POST: RequestHandler = async (event) => {
     previousAdvisories: parsed.data.previousAdvisories,
     transcript: parsed.data.transcript
   };
-  const options = { planningSessionId: parsed.data.planningSessionId };
+  const options = {
+    planningSessionId: parsed.data.planningSessionId,
+    locale: event.locals?.locale
+  };
 
   const tried = await tryAiWithGuard({
     endpoint: 'allocate',

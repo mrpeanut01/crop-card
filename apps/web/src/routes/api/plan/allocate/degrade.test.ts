@@ -111,7 +111,8 @@ describe('/api/plan/allocate degradation', () => {
     expect(m.allocateDeterministic).toHaveBeenCalledWith(
       expect.anything(),
       'ai-unavailable',
-      expect.stringMatching(/internal server error/)
+      expect.stringMatching(/internal server error/),
+      undefined
     );
     expect(m.recordCall).toHaveBeenCalledWith(
       expect.objectContaining({ provenance: 'fallback', inputTokens: 0, outputTokens: 0 })
@@ -125,6 +126,7 @@ describe('/api/plan/allocate degradation', () => {
     expect(m.allocateDeterministic).toHaveBeenCalledWith(
       expect.anything(),
       'no-api-key',
+      undefined,
       undefined
     );
     expect(m.buildFarmContextWithCache).not.toHaveBeenCalled();
@@ -140,7 +142,12 @@ describe('/api/plan/allocate degradation', () => {
     });
     const res = await post();
     expect(res.status).toBe(200);
-    expect(m.allocateDeterministic).toHaveBeenCalledWith(expect.anything(), 'over-cap', undefined);
+    expect(m.allocateDeterministic).toHaveBeenCalledWith(
+      expect.anything(),
+      'over-cap',
+      undefined,
+      undefined
+    );
     expect((await res.json()).guardMessage).toMatch(/cap reached/);
     expect(m.allocate).not.toHaveBeenCalled();
   });
@@ -156,6 +163,7 @@ describe('/api/plan/allocate degradation', () => {
     expect(m.allocateDeterministic).toHaveBeenCalledWith(
       expect.anything(),
       'quota-exceeded',
+      undefined,
       undefined
     );
   });

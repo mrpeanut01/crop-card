@@ -533,5 +533,10 @@ export const esCards: Partial<Record<MessageKey, string>> = {
   'cards.tree.atLeast': 'Al menos {spacing} entre árboles',
   'cards.tree.expectFruit': 'Primera fruta esperada entre {from} y {to}',
   'cards.tree.expectFruitYear': 'Primera fruta esperada en {year}',
-  'cards.tree.afterPlanting': '{years} después de plantar'
+  'cards.tree.afterPlanting': '{years} después de plantar',
+  'cards.fact.sownBy': 'Cómo se siembra',
+  'cards.fact.sownByEither': '{a} o {b}',
+  'cards.fact.droughtySoil': 'Suelos propensos a sequía',
+  'cards.fact.droughtyCut':
+    'La dosis es para suelos de alto potencial productivo. En suelos propensos a sequía, siembra un {pct} menos.'
 };

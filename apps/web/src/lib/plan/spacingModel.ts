@@ -44,6 +44,7 @@ export interface SeedingRateFields {
   seedsPerAcre?: MinMax;
   drillRowSpacingIn?: MinMax;
   seedBasis?: 'bulk' | 'pls';
+  purpose?: SeedingPurpose;
 }
 
 export const TREE_SIZE_CLASSES = ['dwarf', 'semi-dwarf', 'standard'] as const;
@@ -67,6 +68,9 @@ export interface TreeSizeRow {
   minSpacingFt: number;
   yearsToBearing: MinMax;
 }
+
+/** #576: what the source's rates are for; travels with every amount. */
+export type SeedingPurpose = 'smother' | 'green-manure';
 
 export interface SpacingCropFields {
   defaultRowSpacingInches?: number | null;
@@ -96,6 +100,7 @@ export type SpacingModel =
       rates: AreaRate[];
       drillRowIn?: MinMax;
       seedBasis?: 'bulk' | 'pls';
+      purpose?: SeedingPurpose;
     }
   | {
       kind: 'tree';
@@ -178,7 +183,8 @@ export function spacingModel(
     kind: 'area',
     rates,
     ...(drillRowIn ? { drillRowIn } : {}),
-    ...(rate.seedBasis ? { seedBasis: rate.seedBasis } : {})
+    ...(rate.seedBasis ? { seedBasis: rate.seedBasis } : {}),
+    ...(rate.purpose ? { purpose: rate.purpose } : {})
   };
 }
 
@@ -283,8 +289,15 @@ export type SeedAmount =
       lb: MinMax;
       provenance: 'data' | 'manual';
       seedBasis?: 'bulk' | 'pls';
+      purpose?: SeedingPurpose;
     }
-  | { kind: 'seeds'; method: SowMethod; seeds: MinMax; provenance: 'data' };
+  | {
+      kind: 'seeds';
+      method: SowMethod;
+      seeds: MinMax;
+      provenance: 'data';
+      purpose?: SeedingPurpose;
+    };
 
 /** Seed for `sqft` of ground: the rate's range times the area, never a
  *  midpoint. Null when the amount is not known for this crop. */
@@ -313,7 +326,8 @@ export function seedAmountFor(
       method: rate.method,
       lb: { min: rate.lbPerAcre.min * acres, max: rate.lbPerAcre.max * acres },
       provenance: 'data',
-      ...(model.seedBasis ? { seedBasis: model.seedBasis } : {})
+      ...(model.seedBasis ? { seedBasis: model.seedBasis } : {}),
+      ...(model.purpose ? { purpose: model.purpose } : {})
     };
   }
   if (rate.seedsPerSqFt) {
@@ -321,7 +335,8 @@ export function seedAmountFor(
       kind: 'seeds',
       method: rate.method,
       seeds: { min: rate.seedsPerSqFt.min * sqft, max: rate.seedsPerSqFt.max * sqft },
-      provenance: 'data'
+      provenance: 'data',
+      ...(model.purpose ? { purpose: model.purpose } : {})
     };
   }
   if (rate.seedsPerAcre) {
@@ -329,7 +344,8 @@ export function seedAmountFor(
       kind: 'seeds',
       method: rate.method,
       seeds: { min: rate.seedsPerAcre.min * acres, max: rate.seedsPerAcre.max * acres },
-      provenance: 'data'
+      provenance: 'data',
+      ...(model.purpose ? { purpose: model.purpose } : {})
     };
   }
   return null;

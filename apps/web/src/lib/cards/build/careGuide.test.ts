@@ -287,6 +287,66 @@ describe('buildCareGuideCard', () => {
     ]);
   });
 
+  it('#576: shows the purpose, the droughty-soil cut and how a crop is sown', () => {
+    const plugins = {
+      sunn: {
+        pluginId: 'sunn',
+        displayName: 'Sunn hemp',
+        version: '1',
+        cropFamily: 'cover-legume',
+        plantingGuide: {
+          seedingRate: {
+            drilledLbsPerAcre: { min: 30, max: 50 },
+            seedBasis: 'pls' as const,
+            purpose: 'green-manure' as const
+          }
+        }
+      },
+      corn: {
+        pluginId: 'corn',
+        displayName: 'Corn',
+        version: '1',
+        cropFamily: 'corn',
+        plantingGuide: {
+          seedingRate: {
+            seedsPerAcre: { min: 25000, max: 33000 },
+            droughtySoilCutPct: { min: 10, max: 15 }
+          }
+        }
+      },
+      oats: {
+        pluginId: 'oats',
+        displayName: 'Oats',
+        version: '1',
+        cropFamily: 'cereal-grain',
+        plantingGuide: { seedingRate: { sownBy: ['drilled' as const, 'broadcast' as const] } }
+      }
+    };
+    const s = sampleSnapshot({ plantings: [], cropPlugins: plugins });
+    expect(buildCareGuideCard(s, 'sunn')!.facts.map((f) => f.value)).toEqual([
+      '30–50 lb/ac, pure live seed, rate for green manure',
+      'Drilled: 1.1–1.9 oz for 100 sq ft, rate for green manure'
+    ]);
+    expect(buildCareGuideCard(s, 'corn')!.facts[1]).toEqual({
+      label: 'Droughty soils',
+      value:
+        'The rate is for soils with high production potential. On droughty soils, plant 10–15% fewer.',
+      provenance: 'plugin'
+    });
+    const oats = buildCareGuideCard(s, 'oats')!.facts;
+    expect(oats[0]).toEqual({
+      label: 'How it is sown',
+      value: 'Drilled or broadcast',
+      provenance: 'plugin'
+    });
+    expect(oats[1].value).toMatch(/^Seed amount not known/);
+    const es = (id: string) =>
+      buildCareGuideCard(s, id, { prefs: { timeZone: 'UTC', units: 'us', locale: 'es' } })!.facts;
+    expect(es('sunn')[0].value).toBe('30–50 lb/ac, semilla pura viva, dosis para abono verde');
+    expect(es('corn')[1].label).toBe('Suelos propensos a sequía');
+    expect(es('oats')[0].value).toBe('Con sembradora o al voleo');
+  });
+
   it('builds one card per referenced plugin and null for unknown ids', () => {
     expect(buildCareGuideCards(snap).map((c) => c.key)).toEqual([
       'cg_bean-provider',

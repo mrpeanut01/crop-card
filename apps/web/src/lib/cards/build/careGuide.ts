@@ -28,7 +28,7 @@ import {
 } from './common';
 import { formatFeet, formatInches } from './size';
 import { seedingFacts } from './seeding';
-import { defaultSowMethod, spacingModel } from '$lib/plan/spacingModel';
+import { plantingSowMethod, spacingModel, type SowMethod } from '$lib/plan/spacingModel';
 import { seedAmountLine } from '$lib/plan/seedAmountText';
 import { familyCareTips, type CareTip, type FamilyCareTips } from './careTips';
 import { CARE_SECTION, filterSprayAdviceItems, growerFacingText } from '$lib/journal/photoHelp';
@@ -172,24 +172,29 @@ export function buildCareGuideCard(
   facts.push(...seedingFacts(guide?.seedingRate, opts));
   // #555: for a crop sown by area, the seed for a small garden patch from
   // the same rates, so the Care Guide and the Planting card agree.
+  // The methods the farm's plantings of this crop are sown by (#555
+  // leftover), else the default one.
   const model = spacingModel(plugin);
   if (model.kind === 'area') {
     const patch = opts.prefs.units === 'metric' ? 10 / SQM_PER_SQFT : 100;
-    const line = seedAmountLine(
-      model,
-      defaultSowMethod(model),
-      patch,
-      opts.prefs.units,
-      opts.prefs.locale
-    );
-    facts.push({
-      label: tr('cards.fact.seedForArea'),
-      value: line.text,
-      ...(line.provenance ? { provenance: line.provenance } : {})
-    });
+    const methods = new Set<SowMethod | null>();
+    for (const p of snapshot.plantings) {
+      if (p.cropPluginId === cropPluginId && p.status !== 'harvested')
+        methods.add(plantingSowMethod(model, p.sowingMethod));
+    }
+    if (!methods.size) methods.add(plantingSowMethod(model, null));
+    for (const method of methods) {
+      const line = seedAmountLine(model, method, patch, opts.prefs.units, opts.prefs.locale);
+      facts.push({
+        label: tr('cards.fact.seedForArea'),
+        value: line.text,
+        ...(line.provenance ? { provenance: line.provenance } : {})
+      });
+    }
   }
+  // #548: a tree crop is spaced by its size class table, not a row value.
   const rows = guide?.rowSpacingIn ?? plugin.defaultRowSpacingInches;
-  if (rows && !guide?.seedingRate?.drillRowSpacingIn) {
+  if (rows && !guide?.seedingRate?.drillRowSpacingIn && !plugin.treeSizeClasses?.length) {
     facts.push({
       label: tr('cards.fact.rowSpacing'),
       value: formatInches(rows, opts.prefs),

@@ -27,6 +27,12 @@ import {
 } from './tasks';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import {
+  isSavedSowMethod,
+  isTreeSizeClass,
+  type SavedSowMethod,
+  type TreeSizeClass
+} from '$lib/plan/spacingModel';
+import {
   parseFootprint,
   serializeFootprint,
   type Footprint,
@@ -78,6 +84,10 @@ export interface Crop {
   sownIndoorsAt?: number;
   /** Phase 35: the split group shared by every part of one seed lot. */
   splitGroupId?: string | null;
+  /** #548: the owner's "Tree size" answer (always `manual`). */
+  treeSizeClass?: TreeSizeClass;
+  /** #555: Drilled or Broadcast, for a crop sown by area. */
+  sowingMethod?: SavedSowMethod;
 }
 
 export type PlantingSource = 'ai' | 'fallback' | 'plugin';
@@ -134,6 +144,8 @@ function rowToCrop(row: typeof crops.$inferSelect): Crop {
   if (row.establishment) out.establishment = row.establishment;
   if (row.sownIndoorsAt) out.sownIndoorsAt = row.sownIndoorsAt.getTime();
   if (row.splitGroupId) out.splitGroupId = row.splitGroupId;
+  if (isTreeSizeClass(row.treeSizeClass)) out.treeSizeClass = row.treeSizeClass;
+  if (isSavedSowMethod(row.sowingMethod)) out.sowingMethod = row.sowingMethod;
   if (row.harvestUseCases) {
     try {
       const parsed = JSON.parse(row.harvestUseCases);
@@ -195,6 +207,23 @@ export function setEstablishment(
 ): void {
   db.update(crops)
     .set({ establishment })
+    .where(withTenant(crops, eq(crops.id, id)))
+    .run();
+}
+
+/** #548: writes the "Tree size" answer; null is "Not sure". Last write wins. */
+export function setTreeSizeClass(id: string, treeSizeClass: TreeSizeClass | null): void {
+  db.update(crops)
+    .set({ treeSizeClass })
+    .where(withTenant(crops, eq(crops.id, id)))
+    .run();
+}
+
+/** #555: writes Drilled or Broadcast; null goes back to the plugin's
+ *  default. Last write wins. */
+export function setSowingMethod(id: string, sowingMethod: SavedSowMethod | null): void {
+  db.update(crops)
+    .set({ sowingMethod })
     .where(withTenant(crops, eq(crops.id, id)))
     .run();
 }
@@ -475,7 +504,9 @@ export function splitCrop(id: string, parts: number): Crop[] {
           plantingDate: original.plantingDate != null ? new Date(original.plantingDate) : null,
           status: original.status,
           quantityPlantedHundredths: shares[i] as number | null,
-          quantityUnit: original.quantityUnit ?? null
+          quantityUnit: original.quantityUnit ?? null,
+          treeSizeClass: original.treeSizeClass ?? null,
+          sowingMethod: original.sowingMethod ?? null
           // Intentionally NOT copying group fields — see docstring.
         })
       )

@@ -135,5 +135,7 @@ export const enApierrA = {
   'api.err.unknownSprayer': 'unknown sprayer: {id}',
   'api.err.cuttingAlready': 'cutting is already {status}',
   'api.err.cannotAdvance': 'cannot advance from {from} to {to}',
-  'api.err.tagInUse': 'Tag {tag} is already used by {name}.'
+  'api.err.tagInUse': 'Tag {tag} is already used by {name}.',
+  'api.err.treeSizeNotOffered': 'This crop has no row for that tree size.',
+  'api.err.sowingMethodNotOffered': 'This crop has no seeding rate for that method.'
 } as const;

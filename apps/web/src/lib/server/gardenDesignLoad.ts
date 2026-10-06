@@ -55,6 +55,7 @@ export function gardenCropOf(p: CropPlugin): GardenCrop {
   if (p.archetype) out.archetype = p.archetype;
   if (p.daysToMaturity) out.daysToMaturity = { ...p.daysToMaturity };
   if (p.defaultRowSpacingInches) out.defaultRowSpacingInches = p.defaultRowSpacingInches;
+  if (p.treeSizeClasses?.length) out.treeSizeClasses = structuredClone(p.treeSizeClasses);
   const guide = p.plantingGuide;
   if (guide && (guide.rowSpacingIn || guide.inRowSpacingIn || guide.soilTempMinF)) {
     out.plantingGuide = {};
@@ -186,7 +187,9 @@ export async function loadGardenDesign(
     groupId: r.groupId ?? null,
     groupSystemKind: r.groupSystemKind ?? null,
     groupRole: r.groupRole ?? null,
-    sourceProvenance: r.sourceProvenance ?? null
+    sourceProvenance: r.sourceProvenance ?? null,
+    treeSizeClass: r.treeSizeClass ?? null,
+    sowingMethod: r.sowingMethod ?? null
   }));
 
   const frost = designFrostForYear(opts.seasonYear);

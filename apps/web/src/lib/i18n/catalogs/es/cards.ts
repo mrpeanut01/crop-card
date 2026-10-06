@@ -525,5 +525,13 @@ export const esCards: Partial<Record<MessageKey, string>> = {
   'cards.cal.seeTaskSprayCard': 'Abre la tarea para ver su tarjeta de aplicación',
   'cards.cal.sprayNotice':
     'Las tareas de aplicación no muestran dosis ni pasos de mezcla. Para eso usa la tarjeta de aplicación.',
-  'cards.fact.seedForArea': 'Semilla necesaria'
+  'cards.fact.seedForArea': 'Semilla necesaria',
+  'cards.fact.treeSize': 'Tamaño del árbol',
+  'cards.fact.firstFruit': 'Primera fruta',
+  'cards.tree.notSure': 'No sé',
+  'cards.tree.depends': 'Depende del tamaño del árbol ({range}); elige un tamaño para planificar.',
+  'cards.tree.atLeast': 'Al menos {spacing} entre árboles',
+  'cards.tree.expectFruit': 'Primera fruta esperada entre {from} y {to}',
+  'cards.tree.expectFruitYear': 'Primera fruta esperada en {year}',
+  'cards.tree.afterPlanting': '{years} después de plantar'
 };

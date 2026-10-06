@@ -289,7 +289,9 @@ describe('openapi.json', () => {
         'unschedule',
         'split',
         'set-placement',
-        'set-establishment'
+        'set-establishment',
+        'set-tree-size',
+        'set-sowing-method'
       ])
     );
     expect(JSON.stringify(doc.paths['/api/crops/{id}'].patch)).not.toContain('not yet published');

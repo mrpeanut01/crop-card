@@ -14,6 +14,7 @@
  *   Stock has been promoted to its own /stock route.
  */
 
+import { isSavedSowMethod, sowMethods, spacingModel, treeSizeRows } from '$lib/plan/spacingModel';
 import { seedStartGuide } from '$lib/schedule/seedStart';
 import type { PageServerLoad } from './$types';
 import { t } from '$lib/i18n';
@@ -176,7 +177,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         daysToMaturity: c.daysToMaturity,
         soilTempMinF: c.plantingGuide?.soilTempMinF ?? null,
         archetype: resolveArchetype(c),
-        seedStart: seedStartGuide(c)
+        seedStart: seedStartGuide(c),
+        treeSizeClasses: treeSizeRows(c),
+        sowMethods: sowMethods(spacingModel(c)).filter(isSavedSowMethod)
       };
     })
     .sort((a, b) => a.displayName.localeCompare(b.displayName));
@@ -480,6 +483,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
        *  Unit fields instead of showing empty "unchanged" placeholders. */
       quantityPlanted?: number;
       quantityUnit?: string;
+      /** #548 "Tree size" and #555 Drilled or Broadcast, for the edit modal. */
+      treeSizeClass?: 'dwarf' | 'semi-dwarf' | 'standard' | null;
+      sowingMethod?: 'drilled' | 'broadcast' | null;
     }
     const swimPlantings: SwimPlanting[] = [];
     // listCrops gives us the group fields; index by cropId so we can decorate
@@ -604,6 +610,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
           // record; the edit modal is read-only on this field.
           quantityPlanted: cropMeta?.quantityPlanted,
           quantityUnit: cropMeta?.quantityUnit,
+          treeSizeClass: cropMeta?.treeSizeClass ?? null,
+          sowingMethod: cropMeta?.sowingMethod ?? null,
           // Surface every harvest target as a (key, label) pair the modal
           // renders as a checkbox. Pulled from the SAME source the swim-
           // lane render uses — `stageTable` is `resolveGrowthStageTable(plug)`

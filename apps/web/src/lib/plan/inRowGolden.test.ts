@@ -35,7 +35,8 @@ function spacingInput(p: CropPlugin) {
     inRowSpacingIn: g.inRowSpacingIn ?? null,
     vineSpreadFt: g.vineSpreadFt ?? null,
     matureCanopyFtSq: g.matureCanopyFtSq ?? null,
-    seedingRate: g.seedingRate ?? null
+    seedingRate: g.seedingRate ?? null,
+    ...(p.treeSizeClasses ? { treeSizeClasses: p.treeSizeClasses } : {})
   };
 }
 

@@ -752,5 +752,8 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plan.area.typeYours': 'Escribe la tuya',
   'plan.area.yourRate': 'Tu dosis (lb/acre)',
   'plan.area.yourRateMetric': 'Tu dosis (kg/ha)',
-  'plan.area.clearRate': 'Borrar'
+  'plan.area.clearRate': 'Borrar',
+  'plan.tree.label': 'Tamaño del árbol',
+  'plan.tree.hint': 'En la etiqueta del vivero, a menudo como portainjerto (M.9 = enano).',
+  'plan.sow.label': 'Forma de siembra'
 };

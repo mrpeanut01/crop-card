@@ -23,7 +23,7 @@ test.describe('account export, Phase 33 sections', () => {
       string,
       unknown
     >;
-    expect(json.schemaVersion).toBe('1.5.0');
+    expect(json.schemaVersion).toBe('1.6.0');
     expect(json.documents).toEqual([]);
     expect(json.organic).toEqual({
       statusEvents: [],
@@ -42,7 +42,7 @@ test.describe('account export, Phase 33 sections', () => {
     const res = await helper.request.get('/api/account/export.json');
     expect(res.status()).toBe(200);
     const helperJson = (await res.json()) as Record<string, unknown>;
-    expect(helperJson.schemaVersion).toBe('1.5.0');
+    expect(helperJson.schemaVersion).toBe('1.6.0');
     expect(helperJson).not.toHaveProperty('documents');
     expect(helperJson).toHaveProperty('organic');
     await helper.context().close();

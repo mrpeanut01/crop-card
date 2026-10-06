@@ -192,6 +192,39 @@ describe('buildCareGuideCard', () => {
     expect(metric.facts[3].value).toBe('Broadcast: 100–180 g for 10 m²');
   });
 
+  it('sizes seed by the methods the farm saved on its plantings (#555)', () => {
+    const rye = {
+      pluginId: 'rye',
+      displayName: 'Rye',
+      version: '1',
+      cropFamily: 'cover-grass',
+      plantingGuide: {
+        seedingRate: {
+          drilledLbsPerAcre: { min: 60, max: 120 },
+          broadcastLbsPerAcre: { min: 90, max: 160 }
+        }
+      }
+    };
+    const planting = sampleSnapshot().plantings[0];
+    const seedLines = (methods: Array<'drilled' | 'broadcast' | undefined>) => {
+      const s = sampleSnapshot({
+        cropPlugins: { rye },
+        plantings: methods.map((m, i) => ({
+          ...planting,
+          id: `p_${i}`,
+          cropPluginId: 'rye',
+          ...(m ? { sowingMethod: m } : {})
+        }))
+      });
+      return buildCareGuideCard(s, 'rye')!
+        .facts.filter((f) => f.label === 'Seed needed')
+        .map((f) => f.value.split(':')[0]);
+    };
+    expect(seedLines(['drilled'])).toEqual(['Drilled']);
+    expect(seedLines([undefined])).toEqual(['Broadcast']);
+    expect(seedLines(['drilled', 'broadcast', 'drilled'])).toEqual(['Drilled', 'Broadcast']);
+  });
+
   it('says what the seed rates weigh when the source states it', () => {
     const phacelia = {
       pluginId: 'phacelia',

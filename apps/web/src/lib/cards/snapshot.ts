@@ -20,8 +20,10 @@ import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/so
  *  5: Phase 35 split seed lots (`splitGroupId` on plantings and
  *  `splitGroups`).
  *  6 since #555: Planting and Care Guide cards size seed by area for crops
- *  sown by area, so cached copies are rebuilt. */
-export const FARM_SNAPSHOT_VERSION = 6 as const;
+ *  sown by area, so cached copies are rebuilt.
+ *  7: plantings carry `treeSizeClass` (#548) and `sowingMethod` (#555), and
+ *  Planting cards show tree spacing and the saved method's seed amount. */
+export const FARM_SNAPSHOT_VERSION = 7 as const;
 
 export type SnapshotProvenance = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
@@ -111,6 +113,12 @@ export interface SnapshotPlanting {
   /** Phase 35: the seed lot split this planting is a part of. Absent on
    *  bundles saved before version 5 and when it is not a part. */
   splitGroupId?: string;
+  /** #548: the owner's "Tree size" answer (`manual`). Absent when not
+   *  set and on bundles saved before version 7. */
+  treeSizeClass?: 'dwarf' | 'semi-dwarf' | 'standard';
+  /** #555: Drilled or Broadcast for a crop sown by area. Absent when not
+   *  set (the default method) and on bundles saved before version 7. */
+  sowingMethod?: 'drilled' | 'broadcast';
 }
 
 export interface SnapshotSeedTray {
@@ -463,7 +471,7 @@ export interface SnapshotCarryoverLine {
 }
 
 export interface FarmSnapshot {
-  version: typeof FARM_SNAPSHOT_VERSION | 5 | 4 | 3 | 2 | 1;
+  version: typeof FARM_SNAPSHOT_VERSION | 6 | 5 | 4 | 3 | 2 | 1;
   ownerId: string;
   farmName: string | null;
   generatedAt: number;

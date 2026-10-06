@@ -25,7 +25,14 @@ import {
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { writeRecord } from '$lib/server/recordWrite';
 import { SPLIT_GROUP_ID_PATTERN } from '$lib/plan/splitGroup';
-import { isAreaCrop } from '$lib/plan/spacingModel';
+import {
+  isAreaCrop,
+  SAVED_SOW_METHODS,
+  sowMethods,
+  spacingModel,
+  TREE_SIZE_CLASSES,
+  treeSizeRows
+} from '$lib/plan/spacingModel';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { t } from '$lib/i18n';
 import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
@@ -64,6 +71,12 @@ const plantingSchema = z.object({
   plannedPlants: z.number().int().positive().max(100_000).optional(),
   /** Phase 35: the wizard's id for one seed lot planted in several blocks. */
   splitGroupId: z.string().regex(SPLIT_GROUP_ID_PATTERN).optional(),
+  /** #548: the "Tree size" answer, for a crop with a tree size table.
+   *  Ignored for any other crop; always `manual`. */
+  treeSizeClass: z.enum(TREE_SIZE_CLASSES).optional(),
+  /** #555: Drilled or Broadcast, for a crop sown by area with that rate.
+   *  Ignored for any other crop. */
+  sowingMethod: z.enum(SAVED_SOW_METHODS).optional(),
   /** Phase 32E "Seed or seedling?" (E1-10). */
   ...plantingEstablishmentFields
 });
@@ -101,6 +114,18 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     return json({ error: t(event.locals?.locale, 'api.err.unknownCropPlugin') }, { status: 404 });
   }
 
+  const cropPlugin = plugin.plugin as CropPlugin;
+  const treeSizeClass = treeSizeRows(cropPlugin).some(
+    (r) => r.sizeClass === parsed.data.treeSizeClass
+  )
+    ? parsed.data.treeSizeClass
+    : undefined;
+  const sowingMethod =
+    parsed.data.sowingMethod &&
+    (sowMethods(spacingModel(cropPlugin)) as string[]).includes(parsed.data.sowingMethod)
+      ? parsed.data.sowingMethod
+      : undefined;
+
   const { footprint, spacingPattern, spacingIn, rowSpacingIn, plantCount } = parsed.data;
   const placing =
     footprint !== undefined ||
@@ -129,7 +154,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         rowSpacingIn,
         plantCount
       },
-      cropLookupFrom(registry)(parsed.data.cropPluginId)
+      cropLookupFrom(registry)(parsed.data.cropPluginId),
+      treeSizeClass
     );
   }
 
@@ -151,7 +177,9 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
           ? undefined
           : parsed.data.plannedPlants,
       status: placement ? 'planned' : undefined,
-      splitGroupId: parsed.data.splitGroupId
+      splitGroupId: parsed.data.splitGroupId,
+      treeSizeClass,
+      sowingMethod
     });
     const seedStart = applyPlantingEstablishment(
       planting.id,

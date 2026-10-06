@@ -13614,6 +13614,63 @@
                     "properties": {
                       "action": {
                         "type": "string",
+                        "const": "set-tree-size"
+                      },
+                      "treeSizeClass": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "dwarf",
+                              "semi-dwarf",
+                              "standard"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "treeSizeClass"
+                    ],
+                    "description": "Owner only. Set the tree size (dwarf, semi-dwarf or standard) the owner read off the nursery tag; null is \"Not sure\". It sets the spacing and the first-fruit advice only. Last write wins."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "const": "set-sowing-method"
+                      },
+                      "sowingMethod": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "drilled",
+                              "broadcast"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "sowingMethod"
+                    ],
+                    "description": "Owner only. Set Drilled or Broadcast for a crop sown by area, so its seed amount uses that rate; null goes back to the default. Last write wins."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
                         "enum": [
                           "mark-harvested",
                           "archive",

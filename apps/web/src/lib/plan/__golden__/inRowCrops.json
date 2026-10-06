@@ -265,43 +265,69 @@
       "inRowSpacingIn": null,
       "vineSpreadFt": null,
       "matureCanopyFtSq": null,
-      "seedingRate": null
+      "seedingRate": null,
+      "treeSizeClasses": [
+        {
+          "sizeClass": "dwarf",
+          "minSpacingFt": 8,
+          "yearsToBearing": {
+            "min": 2,
+            "max": 3
+          }
+        },
+        {
+          "sizeClass": "semi-dwarf",
+          "minSpacingFt": 18,
+          "yearsToBearing": {
+            "min": 4,
+            "max": 6
+          }
+        },
+        {
+          "sizeClass": "standard",
+          "minSpacingFt": 30,
+          "yearsToBearing": {
+            "min": 6,
+            "max": 10
+          }
+        }
+      ]
     },
-    "footprintSqFt": 14,
+    "footprintSqFt": 900,
     "row": {
-      "inches": 168,
-      "provenance": "plugin"
+      "inches": 360,
+      "provenance": "fallback"
     },
     "inRow": {
-      "inches": 12,
+      "inches": 360,
       "provenance": "fallback"
     },
     "spacing": {
-      "inRowIn": 12,
-      "rowIn": 168,
+      "inRowIn": 360,
+      "rowIn": 360,
       "pattern": "square",
       "source": "fallback"
     },
     "square": {
-      "count": 8,
+      "count": 1,
       "rows": 1,
-      "perRow": 8,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "offset": {
-      "count": 30,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "sfg": {
-      "count": 32,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
-    "fieldFit": 264,
-    "bedFit": 7,
+    "fieldFit": 4,
+    "bedFit": 0,
     "narrowBed": true,
     "narrowField": false
   },
@@ -313,43 +339,69 @@
       "inRowSpacingIn": null,
       "vineSpreadFt": null,
       "matureCanopyFtSq": null,
-      "seedingRate": null
+      "seedingRate": null,
+      "treeSizeClasses": [
+        {
+          "sizeClass": "dwarf",
+          "minSpacingFt": 8,
+          "yearsToBearing": {
+            "min": 2,
+            "max": 3
+          }
+        },
+        {
+          "sizeClass": "semi-dwarf",
+          "minSpacingFt": 18,
+          "yearsToBearing": {
+            "min": 4,
+            "max": 6
+          }
+        },
+        {
+          "sizeClass": "standard",
+          "minSpacingFt": 30,
+          "yearsToBearing": {
+            "min": 6,
+            "max": 10
+          }
+        }
+      ]
     },
-    "footprintSqFt": 14,
+    "footprintSqFt": 900,
     "row": {
-      "inches": 168,
-      "provenance": "plugin"
+      "inches": 360,
+      "provenance": "fallback"
     },
     "inRow": {
-      "inches": 12,
+      "inches": 360,
       "provenance": "fallback"
     },
     "spacing": {
-      "inRowIn": 12,
-      "rowIn": 168,
+      "inRowIn": 360,
+      "rowIn": 360,
       "pattern": "square",
       "source": "fallback"
     },
     "square": {
-      "count": 8,
+      "count": 1,
       "rows": 1,
-      "perRow": 8,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "offset": {
-      "count": 30,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "sfg": {
-      "count": 32,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
-    "fieldFit": 264,
-    "bedFit": 7,
+    "fieldFit": 4,
+    "bedFit": 0,
     "narrowBed": true,
     "narrowField": false
   },
@@ -361,43 +413,69 @@
       "inRowSpacingIn": null,
       "vineSpreadFt": null,
       "matureCanopyFtSq": null,
-      "seedingRate": null
+      "seedingRate": null,
+      "treeSizeClasses": [
+        {
+          "sizeClass": "dwarf",
+          "minSpacingFt": 8,
+          "yearsToBearing": {
+            "min": 2,
+            "max": 3
+          }
+        },
+        {
+          "sizeClass": "semi-dwarf",
+          "minSpacingFt": 18,
+          "yearsToBearing": {
+            "min": 4,
+            "max": 6
+          }
+        },
+        {
+          "sizeClass": "standard",
+          "minSpacingFt": 30,
+          "yearsToBearing": {
+            "min": 6,
+            "max": 10
+          }
+        }
+      ]
     },
-    "footprintSqFt": 14,
+    "footprintSqFt": 900,
     "row": {
-      "inches": 168,
-      "provenance": "plugin"
+      "inches": 360,
+      "provenance": "fallback"
     },
     "inRow": {
-      "inches": 12,
+      "inches": 360,
       "provenance": "fallback"
     },
     "spacing": {
-      "inRowIn": 12,
-      "rowIn": 168,
+      "inRowIn": 360,
+      "rowIn": 360,
       "pattern": "square",
       "source": "fallback"
     },
     "square": {
-      "count": 8,
+      "count": 1,
       "rows": 1,
-      "perRow": 8,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "offset": {
-      "count": 30,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "sfg": {
-      "count": 32,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
-    "fieldFit": 264,
-    "bedFit": 7,
+    "fieldFit": 4,
+    "bedFit": 0,
     "narrowBed": true,
     "narrowField": false
   },
@@ -409,43 +487,69 @@
       "inRowSpacingIn": null,
       "vineSpreadFt": null,
       "matureCanopyFtSq": null,
-      "seedingRate": null
+      "seedingRate": null,
+      "treeSizeClasses": [
+        {
+          "sizeClass": "dwarf",
+          "minSpacingFt": 8,
+          "yearsToBearing": {
+            "min": 2,
+            "max": 3
+          }
+        },
+        {
+          "sizeClass": "semi-dwarf",
+          "minSpacingFt": 18,
+          "yearsToBearing": {
+            "min": 4,
+            "max": 6
+          }
+        },
+        {
+          "sizeClass": "standard",
+          "minSpacingFt": 30,
+          "yearsToBearing": {
+            "min": 6,
+            "max": 10
+          }
+        }
+      ]
     },
-    "footprintSqFt": 14,
+    "footprintSqFt": 900,
     "row": {
-      "inches": 168,
-      "provenance": "plugin"
+      "inches": 360,
+      "provenance": "fallback"
     },
     "inRow": {
-      "inches": 12,
+      "inches": 360,
       "provenance": "fallback"
     },
     "spacing": {
-      "inRowIn": 12,
-      "rowIn": 168,
+      "inRowIn": 360,
+      "rowIn": 360,
       "pattern": "square",
       "source": "fallback"
     },
     "square": {
-      "count": 8,
+      "count": 1,
       "rows": 1,
-      "perRow": 8,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "offset": {
-      "count": 30,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "sfg": {
-      "count": 32,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
-    "fieldFit": 264,
-    "bedFit": 7,
+    "fieldFit": 4,
+    "bedFit": 0,
     "narrowBed": true,
     "narrowField": false
   },
@@ -457,43 +561,69 @@
       "inRowSpacingIn": null,
       "vineSpreadFt": null,
       "matureCanopyFtSq": null,
-      "seedingRate": null
+      "seedingRate": null,
+      "treeSizeClasses": [
+        {
+          "sizeClass": "dwarf",
+          "minSpacingFt": 8,
+          "yearsToBearing": {
+            "min": 2,
+            "max": 3
+          }
+        },
+        {
+          "sizeClass": "semi-dwarf",
+          "minSpacingFt": 18,
+          "yearsToBearing": {
+            "min": 4,
+            "max": 6
+          }
+        },
+        {
+          "sizeClass": "standard",
+          "minSpacingFt": 30,
+          "yearsToBearing": {
+            "min": 6,
+            "max": 10
+          }
+        }
+      ]
     },
-    "footprintSqFt": 20,
+    "footprintSqFt": 900,
     "row": {
-      "inches": 240,
-      "provenance": "plugin"
+      "inches": 360,
+      "provenance": "fallback"
     },
     "inRow": {
-      "inches": 12,
+      "inches": 360,
       "provenance": "fallback"
     },
     "spacing": {
-      "inRowIn": 12,
-      "rowIn": 240,
+      "inRowIn": 360,
+      "rowIn": 360,
       "pattern": "square",
       "source": "fallback"
     },
     "square": {
-      "count": 8,
+      "count": 1,
       "rows": 1,
-      "perRow": 8,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "offset": {
-      "count": 30,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "sfg": {
-      "count": 32,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
-    "fieldFit": 185,
-    "bedFit": 5,
+    "fieldFit": 4,
+    "bedFit": 0,
     "narrowBed": true,
     "narrowField": false
   },
@@ -10546,43 +10676,53 @@
       "inRowSpacingIn": null,
       "vineSpreadFt": null,
       "matureCanopyFtSq": null,
-      "seedingRate": null
+      "seedingRate": null,
+      "treeSizeClasses": [
+        {
+          "sizeClass": "standard",
+          "minSpacingFt": 25,
+          "yearsToBearing": {
+            "min": 5,
+            "max": 8
+          }
+        }
+      ]
     },
-    "footprintSqFt": 20,
+    "footprintSqFt": 625,
     "row": {
-      "inches": 240,
-      "provenance": "plugin"
+      "inches": 300,
+      "provenance": "fallback"
     },
     "inRow": {
-      "inches": 12,
+      "inches": 300,
       "provenance": "fallback"
     },
     "spacing": {
-      "inRowIn": 12,
-      "rowIn": 240,
+      "inRowIn": 300,
+      "rowIn": 300,
       "pattern": "square",
       "source": "fallback"
     },
     "square": {
-      "count": 8,
+      "count": 1,
       "rows": 1,
-      "perRow": 8,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "offset": {
-      "count": 30,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "sfg": {
-      "count": 32,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
-    "fieldFit": 185,
-    "bedFit": 5,
+    "fieldFit": 5,
+    "bedFit": 0,
     "narrowBed": true,
     "narrowField": false
   },
@@ -10594,43 +10734,53 @@
       "inRowSpacingIn": null,
       "vineSpreadFt": null,
       "matureCanopyFtSq": null,
-      "seedingRate": null
+      "seedingRate": null,
+      "treeSizeClasses": [
+        {
+          "sizeClass": "standard",
+          "minSpacingFt": 25,
+          "yearsToBearing": {
+            "min": 5,
+            "max": 8
+          }
+        }
+      ]
     },
-    "footprintSqFt": 14,
+    "footprintSqFt": 625,
     "row": {
-      "inches": 168,
-      "provenance": "plugin"
+      "inches": 300,
+      "provenance": "fallback"
     },
     "inRow": {
-      "inches": 12,
+      "inches": 300,
       "provenance": "fallback"
     },
     "spacing": {
-      "inRowIn": 12,
-      "rowIn": 168,
+      "inRowIn": 300,
+      "rowIn": 300,
       "pattern": "square",
       "source": "fallback"
     },
     "square": {
-      "count": 8,
+      "count": 1,
       "rows": 1,
-      "perRow": 8,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "offset": {
-      "count": 30,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "sfg": {
-      "count": 32,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
-    "fieldFit": 264,
-    "bedFit": 7,
+    "fieldFit": 5,
+    "bedFit": 0,
     "narrowBed": true,
     "narrowField": false
   },
@@ -13717,43 +13867,53 @@
       "inRowSpacingIn": null,
       "vineSpreadFt": null,
       "matureCanopyFtSq": null,
-      "seedingRate": null
+      "seedingRate": null,
+      "treeSizeClasses": [
+        {
+          "sizeClass": "dwarf",
+          "minSpacingFt": 8,
+          "yearsToBearing": {
+            "min": 2,
+            "max": 3
+          }
+        }
+      ]
     },
-    "footprintSqFt": 12,
+    "footprintSqFt": 64,
     "row": {
-      "inches": 144,
-      "provenance": "plugin"
+      "inches": 96,
+      "provenance": "fallback"
     },
     "inRow": {
-      "inches": 12,
+      "inches": 96,
       "provenance": "fallback"
     },
     "spacing": {
-      "inRowIn": 12,
-      "rowIn": 144,
+      "inRowIn": 96,
+      "rowIn": 96,
       "pattern": "square",
       "source": "fallback"
     },
     "square": {
-      "count": 8,
+      "count": 1,
       "rows": 1,
-      "perRow": 8,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "offset": {
-      "count": 30,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
     "sfg": {
-      "count": 32,
-      "rows": 4,
-      "perRow": 8,
+      "count": 1,
+      "rows": 1,
+      "perRow": 1,
       "provenance": "fallback"
     },
-    "fieldFit": 308,
-    "bedFit": 8,
+    "fieldFit": 57,
+    "bedFit": 1,
     "narrowBed": true,
     "narrowField": false
   },

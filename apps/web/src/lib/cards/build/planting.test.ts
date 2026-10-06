@@ -237,6 +237,93 @@ describe('buildPlantingCard', () => {
     );
   });
 
+  it('uses the saved sowing method on the planting for the seed amount (#555)', () => {
+    const s = sampleSnapshot();
+    s.cropPlugins['cereal-rye-cover'] = {
+      pluginId: 'cereal-rye-cover',
+      displayName: 'Cereal rye',
+      version: '1.0.0',
+      cropFamily: 'cover-grass',
+      plantingGuide: {
+        seedingRate: {
+          drilledLbsPerAcre: { min: 60, max: 120 },
+          broadcastLbsPerAcre: { min: 90, max: 160 }
+        }
+      }
+    } as never;
+    s.plantings[0] = {
+      ...s.plantings[0],
+      cropPluginId: 'cereal-rye-cover',
+      blockId: 'b_bed1',
+      spacingIn: null,
+      sowingMethod: 'drilled'
+    };
+    const card = buildPlantingCard(s, 'p_tom')!;
+    expect(fact(card, 'Seed needed')?.value).toMatch(/^Drilled: /);
+  });
+
+  describe('tree size (#548)', () => {
+    function treeSnap(treeSizeClass?: 'dwarf' | 'semi-dwarf' | 'standard') {
+      const s = sampleSnapshot();
+      s.cropPlugins['apple-gala'] = {
+        pluginId: 'apple-gala',
+        displayName: 'Gala apple',
+        version: '1.0.0',
+        cropFamily: 'pome-fruit',
+        treeSizeClasses: [
+          { sizeClass: 'dwarf', minSpacingFt: 8, yearsToBearing: { min: 2, max: 3 } },
+          { sizeClass: 'standard', minSpacingFt: 30, yearsToBearing: { min: 6, max: 10 } }
+        ]
+      } as never;
+      s.plantings[0] = {
+        ...s.plantings[0],
+        cropPluginId: 'apple-gala',
+        plantingDate: '2027-03-20',
+        spacingIn: null,
+        rowSpacingIn: null,
+        harvestWindow: null,
+        ...(treeSizeClass ? { treeSizeClass } : {})
+      };
+      return s;
+    }
+
+    it('known: that row spacing (plugin) and first-fruit years as advice', () => {
+      const card = buildPlantingCard(treeSnap('dwarf'), 'p_tom')!;
+      expect(fact(card, 'Tree size')).toEqual({
+        label: 'Tree size',
+        value: 'Dwarf',
+        provenance: 'manual'
+      });
+      expect(fact(card, 'Spacing')).toEqual({
+        label: 'Spacing',
+        value: 'At least 8 ft apart',
+        provenance: 'plugin'
+      });
+      expect(fact(card, 'First fruit')?.value).toBe('Expect first fruit 2029–2030');
+      expect(card.sections.some((sec) => sec.title === 'Spacing by tree size')).toBe(false);
+      expect(fact(card, 'Harvest')).toBeUndefined();
+    });
+
+    it('not sure: the class table and the depends sentence, no single date', () => {
+      const card = buildPlantingCard(treeSnap(), 'p_tom')!;
+      expect(fact(card, 'Tree size')?.value).toBe('Not sure');
+      expect(fact(card, 'Spacing')?.value).toBe(
+        'Depends on tree size (Dwarf 8 ft – Standard 30 ft); pick a tree size to plan.'
+      );
+      expect(fact(card, 'First fruit')).toBeUndefined();
+      expect(card.sections.some((sec) => sec.title === 'Spacing by tree size')).toBe(true);
+    });
+
+    it('reads in Spanish', () => {
+      const es = buildPlantingCard(treeSnap('standard'), 'p_tom', {
+        prefs: { timeZone: 'UTC', units: 'us', locale: 'es' }
+      })!;
+      expect(es.facts.find((f) => f.label === 'Primera fruta')?.value).toBe(
+        'Primera fruta esperada entre 2033 y 2037'
+      );
+    });
+  });
+
   it('builds one card per planting', () => {
     expect(buildPlantingCards(snap).map((c) => c.key)).toEqual([
       'pl_p_tom',

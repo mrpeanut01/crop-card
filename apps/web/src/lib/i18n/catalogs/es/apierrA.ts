@@ -143,5 +143,7 @@ export const esApierrA: Partial<Record<MessageKey, string>> = {
   'api.err.unknownSprayer': 'pulverizador desconocido: {id}',
   'api.err.cuttingAlready': 'el corte ya está en {status}',
   'api.err.cannotAdvance': 'no se puede avanzar de {from} a {to}',
-  'api.err.tagInUse': 'El arete {tag} ya lo usa {name}.'
+  'api.err.tagInUse': 'El arete {tag} ya lo usa {name}.',
+  'api.err.treeSizeNotOffered': 'Este cultivo no tiene una fila para ese tamaño de árbol.',
+  'api.err.sowingMethodNotOffered': 'Este cultivo no tiene una dosis de siembra para ese método.'
 };

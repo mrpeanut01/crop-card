@@ -14,7 +14,7 @@ import type { Crop } from '$lib/db/crops';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { DESIGNABLE_AREA_KINDS } from '$lib/farm/areaKinds';
 import { footprintSqFt, plantsFitUsable, usableSqft } from './sufficiency';
-import { areaForSeed, defaultSowMethod, spacingModel } from '$lib/plan/spacingModel';
+import { areaForSeed, plantingSowMethod, spacingModel } from '$lib/plan/spacingModel';
 
 /** #555: square feet an existing planting of a crop sown by area takes:
  *  its placed footprint, else the ground its recorded seed covers at the
@@ -22,7 +22,7 @@ import { areaForSeed, defaultSowMethod, spacingModel } from '$lib/plan/spacingMo
  *  plant count is ignored: an older plan may hold a count made from the
  *  12 in placeholder. */
 export function existingAreaSqFt(
-  c: Pick<Crop, 'footprint' | 'quantityPlanted' | 'quantityUnit'>,
+  c: Pick<Crop, 'footprint' | 'quantityPlanted' | 'quantityUnit' | 'sowingMethod'>,
   plugin: CropPlugin
 ): number | null {
   if (c.footprint && c.footprint.w_in > 0 && c.footprint.l_in > 0) {
@@ -30,7 +30,12 @@ export function existingAreaSqFt(
   }
   if (c.quantityPlanted != null && c.quantityPlanted > 0 && c.quantityUnit) {
     const model = spacingModel(plugin);
-    const area = areaForSeed(model, defaultSowMethod(model), c.quantityPlanted, c.quantityUnit);
+    const area = areaForSeed(
+      model,
+      plantingSowMethod(model, c.sowingMethod),
+      c.quantityPlanted,
+      c.quantityUnit
+    );
     if (area) return area.sqft;
   }
   return null;

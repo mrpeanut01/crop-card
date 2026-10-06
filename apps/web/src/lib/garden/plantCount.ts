@@ -4,7 +4,12 @@
  */
 
 import { FOOTPRINT_SNAP_IN, SFG_SNAP_IN } from './geometry';
-import { AREA_UNIT_SQFT, spacingModel, type SeedingRateFields } from '$lib/plan/spacingModel';
+import {
+  AREA_UNIT_SQFT,
+  spacingModel,
+  type SeedingRateFields,
+  type TreeSizeRow
+} from '$lib/plan/spacingModel';
 import type {
   Footprint,
   GardenCrop,
@@ -25,6 +30,7 @@ export interface SpacingValue {
 
 interface SpacingFields {
   defaultRowSpacingInches?: number | null;
+  treeSizeClasses?: readonly TreeSizeRow[] | null;
   plantingGuide?: {
     rowSpacingIn?: number | null;
     inRowSpacingIn?: { min: number; max: number } | null;
@@ -46,9 +52,24 @@ function fl(value: number): number {
   return Math.max(0, Math.floor(value + EPS));
 }
 
+/** #548: a tree crop is spaced by its size class both ways (the minimum
+ *  distance between trees); null for any other crop. */
+function treeSpacing(
+  crop: SpacingFields | undefined,
+  treeSizeClass?: string | null
+): SpacingValue | null {
+  const model = spacingModel(crop, treeSizeClass);
+  return model.kind === 'tree' ? { inches: model.spacingIn, provenance: model.provenance } : null;
+}
+
 /** Row spacing: the plugin's row spacing, then `defaultRowSpacingInches`,
- *  else the tagged placeholder. */
-export function rowSpacingOf(crop: SpacingFields | undefined): SpacingValue {
+ *  else the tagged placeholder. A tree crop uses its size class (#548). */
+export function rowSpacingOf(
+  crop: SpacingFields | undefined,
+  treeSizeClass?: string | null
+): SpacingValue {
+  const tree = treeSpacing(crop, treeSizeClass);
+  if (tree) return tree;
   const row = crop?.plantingGuide?.rowSpacingIn;
   if (positive(row)) return { inches: row, provenance: 'plugin' };
   const def = crop?.defaultRowSpacingInches;
@@ -58,7 +79,12 @@ export function rowSpacingOf(crop: SpacingFields | undefined): SpacingValue {
 
 /** In-row spacing: the midpoint of the plugin's in-row range, else the tagged
  *  placeholder. Row spacing is never used as in-row spacing. */
-export function inRowSpacingOf(crop: SpacingFields | undefined): SpacingValue {
+export function inRowSpacingOf(
+  crop: SpacingFields | undefined,
+  treeSizeClass?: string | null
+): SpacingValue {
+  const tree = treeSpacing(crop, treeSizeClass);
+  if (tree) return tree;
   const range = crop?.plantingGuide?.inRowSpacingIn;
   const mid = range ? (range.min + range.max) / 2 : NaN;
   if (positive(mid)) return { inches: mid, provenance: 'plugin' };
@@ -71,19 +97,24 @@ export function inRowSpacingOf(crop: SpacingFields | undefined): SpacingValue {
 export function resolveSpacing(
   crop: GardenCrop | undefined,
   pattern: SpacingPattern,
-  override?: { inRowIn?: number | null; rowIn?: number | null }
+  override?: { inRowIn?: number | null; rowIn?: number | null },
+  treeSizeClass?: string | null
 ): PlantSpacing {
   // #555: a crop sown by area has no rows of counted plants, so a typed
   // spacing does not turn it into one.
   if (spacingModel(crop).kind === 'area') {
     return { inRowIn: AREA_UNIT_IN, rowIn: AREA_UNIT_IN, pattern, source: 'plugin', mode: 'area' };
   }
-  const inRow = inRowSpacingOf(crop);
+  const inRow = inRowSpacingOf(crop, treeSizeClass);
+  const tree = treeSpacing(crop, treeSizeClass);
   const guideRow = crop?.plantingGuide?.rowSpacingIn;
   let inRowIn = inRow.inches;
   let rowIn: number;
   let source: PlantSpacing['source'];
-  if (inRow.provenance === 'plugin') {
+  if (tree) {
+    rowIn = tree.inches;
+    source = tree.provenance;
+  } else if (inRow.provenance === 'plugin') {
     rowIn = positive(guideRow) ? guideRow : inRow.inches;
     source = 'plugin';
   } else {

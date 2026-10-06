@@ -96,7 +96,7 @@ describe('animal snapshot from the kernel', () => {
     for (const k of ['animals', 'animalGroups', 'animalHolds', 'areaHolds', 'carePlans'] as const) {
       expect(k in snap).toBe(false);
     }
-    expect(snap.version).toBe(6);
+    expect(snap.version).toBe(7);
   });
 
   it('ships the flock, its species and the holds the guard would compare', async () => {

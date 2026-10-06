@@ -1,7 +1,7 @@
 <script lang="ts">
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { pageCropName } from '$lib/i18n/pageCropName';
-  import { defaultSowMethod, spacingModel } from '$lib/plan/spacingModel';
+  import { plantingSowMethod, spacingModel } from '$lib/plan/spacingModel';
   import { seedAmountLine } from '$lib/plan/seedAmountText';
   import { tick } from 'svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
@@ -161,7 +161,13 @@
   function areaSeedLine(p: PlacedPlanting) {
     const model = spacingModel(d.crop(p.cropPluginId));
     const sqft = p.footprint ? (p.footprint.w_in * p.footprint.l_in) / 144 : 0;
-    return seedAmountLine(model, defaultSowMethod(model), sqft, currentPrefs().units, d.locale);
+    return seedAmountLine(
+      model,
+      plantingSowMethod(model, p.sowingMethod),
+      sqft,
+      currentPrefs().units,
+      d.locale
+    );
   }
 
   function proposalCount(prop: { plantCount: number | null }): string {

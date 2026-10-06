@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { createT } from '$lib/i18n';
   import { cropDisplayName } from '$lib/i18n/cropName';
   import { Sparkle } from 'lucide-svelte';
@@ -115,8 +115,8 @@
     seasonYear
   }: Props = $props();
 
-  const tr = $derived(createT($page.data?.locale));
-  const locale = $derived($page.data?.locale);
+  const tr = $derived(createT(page.data?.locale));
+  const locale = $derived(page.data?.locale);
   const cropName = (p: { cropPluginId: string; varietyDisplayName: string }) =>
     cropDisplayName(p.cropPluginId, p.varietyDisplayName, locale);
   const prefs = $derived(currentPrefs());
@@ -163,7 +163,7 @@
           blockId: x.blockId,
           name: x.blockName,
           href: planSelectHref(
-            $page.url.searchParams,
+            page.url.searchParams,
             x.areaId && areas.some((a) => a.id === x.areaId) ? x.areaId : NO_AREA,
             x.blockId
           )
@@ -193,8 +193,8 @@
     }
   }
 
-  const fieldParam = $derived($page.url.searchParams.get('field'));
-  const blockParam = $derived($page.url.searchParams.get('block'));
+  const fieldParam = $derived(page.url.searchParams.get('field'));
+  const blockParam = $derived(page.url.searchParams.get('block'));
   const selectedAreaId = $derived.by(() => {
     if (fieldParam === NO_AREA && blocks.some((b) => areaIdOf(b) === NO_AREA)) return NO_AREA;
     if (fieldParam && areas.some((a) => a.id === fieldParam)) return fieldParam;
@@ -210,16 +210,16 @@
     return areaBlocks[0]?.id;
   });
   const plantingIdxParam = $derived.by(() => {
-    const raw = $page.url.searchParams.get('planting');
+    const raw = page.url.searchParams.get('planting');
     if (raw === null) return null;
     if (raw === 'all') return -1;
     const n = parseInt(raw, 10);
     return Number.isFinite(n) ? n : null;
   });
-  const mapOpen = $derived($page.url.searchParams.get('map') === 'open');
+  const mapOpen = $derived(page.url.searchParams.get('map') === 'open');
 
   const selectedBlock = $derived(blocks.find((b) => b.id === selectedBlockId));
-  const railCards = $derived(planRailCards(snapshot, areas, blocks, $page.url.searchParams, prefs));
+  const railCards = $derived(planRailCards(snapshot, areas, blocks, page.url.searchParams, prefs));
   const areaCard = $derived.by(() => {
     if (!selectedArea) return null;
     const card = planAreaCard(snapshot, selectedArea, prefs);
@@ -255,7 +255,7 @@
     selectedAreaId
       ? areaBlocks.map((b) =>
           withCarryover(
-            planBlockCard(b, $page.url.searchParams, selectedAreaId, cropDays, prefs),
+            planBlockCard(b, page.url.searchParams, selectedAreaId, cropDays, prefs),
             snapshotCarryoverLines(snapshot, [b.id]),
             { locale }
           )
@@ -349,27 +349,27 @@
 
   // ── Nav actions ───────────────────────────────────────────────────
   function selectBlockFromMap(id: string) {
-    const sp = new URLSearchParams($page.url.searchParams);
+    const sp = new URLSearchParams(page.url.search);
     sp.set('block', id);
     sp.delete('field');
     sp.delete('planting');
     sp.delete('map');
-    goto(`/plan?${sp.toString()}`, { keepFocus: true, noScroll: true });
+    goto(`/plan?${sp.toString()}`, { reset: false });
   }
   function selectPlanting(idx: number) {
-    const sp = new URLSearchParams($page.url.searchParams);
+    const sp = new URLSearchParams(page.url.search);
     sp.set('planting', idx === -1 ? 'all' : String(idx));
-    goto(`/plan?${sp.toString()}`, { keepFocus: true, noScroll: true });
+    goto(`/plan?${sp.toString()}`, { reset: false });
   }
   function openMap() {
-    const sp = new URLSearchParams($page.url.searchParams);
+    const sp = new URLSearchParams(page.url.search);
     sp.set('map', 'open');
-    goto(`/plan?${sp.toString()}`, { keepFocus: true, noScroll: true });
+    goto(`/plan?${sp.toString()}`, { reset: false });
   }
   function closeMap() {
-    const sp = new URLSearchParams($page.url.searchParams);
+    const sp = new URLSearchParams(page.url.search);
     sp.delete('map');
-    goto(`/plan?${sp.toString()}`, { keepFocus: true, noScroll: true });
+    goto(`/plan?${sp.toString()}`, { reset: false });
   }
 </script>
 

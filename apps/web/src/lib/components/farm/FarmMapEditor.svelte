@@ -8,7 +8,7 @@
    * No $lib/db/* imports (server-only invariant); BlockMap is browser-guarded.
    */
   import { invalidateAll } from '$app/navigation';
-  import { browser } from '$app/environment';
+  import { browser } from '$app/env';
   import { onMount, tick, untrack } from 'svelte';
   import BlockMap from '$lib/components/BlockMap.svelte';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';

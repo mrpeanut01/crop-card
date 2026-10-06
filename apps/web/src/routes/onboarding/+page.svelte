@@ -1,6 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import { browser } from '$app/environment';
+  import { browser } from '$app/env';
   import { untrack } from 'svelte';
   import { page } from '$app/state';
   import { createT, type MessageKey } from '$lib/i18n';

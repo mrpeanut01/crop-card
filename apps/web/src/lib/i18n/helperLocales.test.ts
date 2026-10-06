@@ -60,13 +60,20 @@ describe('finance/access refusals', () => {
     const ev = (role: string, locale: string, impersonating = false) =>
       ({ locals: { locale, user: { role, impersonating } } }) as unknown as RequestEvent;
     expect(() => requireMoneyReader(ev('helper', 'en'))).toThrow(
-      expect.objectContaining({ status: 403, body: { message: MONEY_OWNER_ONLY } })
+      expect.objectContaining({
+        status: 403,
+        body: expect.objectContaining({ message: MONEY_OWNER_ONLY })
+      })
     );
     expect(() => requireMoneyReader(ev('helper', 'es'))).toThrow(
-      expect.objectContaining({ body: { message: moneyOwnerOnlyText('es') } })
+      expect.objectContaining({
+        body: expect.objectContaining({ message: moneyOwnerOnlyText('es') })
+      })
     );
     expect(() => requireMoneyWriter(ev('owner', 'es', true))).toThrow(
-      expect.objectContaining({ body: { message: moneyNoImpersonationText('es') } })
+      expect.objectContaining({
+        body: expect.objectContaining({ message: moneyNoImpersonationText('es') })
+      })
     );
   });
 });

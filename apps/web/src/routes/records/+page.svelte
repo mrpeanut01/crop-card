@@ -81,7 +81,7 @@
   const isAllKinds = $derived(data.activeKinds.length === RECORD_KINDS.length);
 
   const wateringHref = $derived.by(() => {
-    const params = new URLSearchParams(page.url.searchParams);
+    const params = new URLSearchParams(page.url.search);
     if (data.watering.active) params.delete('watering');
     else params.set('watering', '1');
     const qs = params.toString();
@@ -101,7 +101,7 @@
 
   const loadMoreHref = $derived.by(() => {
     if (data.nextShow === null) return null;
-    const params = new URLSearchParams(page.url.searchParams);
+    const params = new URLSearchParams(page.url.search);
     params.set('show', String(data.nextShow));
     return `/records?${params.toString()}`;
   });
@@ -155,7 +155,7 @@
     if (set.has(kind)) set.delete(kind);
     else set.add(kind);
     const next = set.size === 0 ? [...RECORD_KINDS] : (Array.from(set) as RecordKind[]);
-    goto(urlFor({ kinds: next }), { invalidateAll: true, keepFocus: true });
+    goto(urlFor({ kinds: next }), { refreshAll: true, reset: false });
   }
 
   function applyFilter(field: 'sprayerId' | 'blockId', value: string) {
@@ -197,9 +197,9 @@
   });
 
   function changeYear(value: string) {
-    const params = new URLSearchParams(page.url.searchParams);
+    const params = new URLSearchParams(page.url.search);
     params.set('year', value);
-    goto(`/records?${params.toString()}`, { invalidateAll: true, keepFocus: true });
+    goto(`/records?${params.toString()}`, { refreshAll: true, reset: false });
   }
 
   function fmtCents(cents: number): string {
@@ -519,7 +519,7 @@
         class="kind-chip watering-chip"
         class:active={data.watering.active}
         aria-pressed={data.watering.active}
-        onclick={() => goto(wateringHref, { noScroll: true, keepFocus: true })}
+        onclick={() => goto(wateringHref, { reset: false })}
         data-testid="watering-chip"
       >
         <Pill tone="sky">{tr('records.filter.watering')}</Pill>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { dev } from '$app/environment';
+  import { dev } from '$app/env';
   // Fonts: `@font-face` declarations in $lib/styles/type.css use a local()
   // → CDN fallback chain so a missing font asset never crashes a route.
   // No npm dep on fontsource intentionally — the static `import` from

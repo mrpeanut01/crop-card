@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { error, redirect } from '@sveltejs/kit';
 import type { DesignerPageData, GardenDesignResponse } from '$lib/garden/api';
 import { resolvePlanningYear, type PlanningFrost } from '$lib/season/planningYear';

@@ -1,10 +1,13 @@
+import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
-import type { VitePWAOptions } from 'vite-plugin-pwa';
+import type { VitePluginPWAAPI, VitePWAOptions } from 'vite-plugin-pwa';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { transform } from 'esbuild';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir, rename } from 'node:fs/promises';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { TenantCachePlugin } from './src/lib/client/swTenantKey.ts';
 
@@ -33,15 +36,11 @@ const SW_MODULES = [
 ];
 
 function cropcardSwModules(): Plugin {
-  let ssr = false;
   return {
     name: 'cropcard:sw-modules',
     apply: 'build',
-    configResolved(config) {
-      ssr = !!config.build.ssr;
-    },
     async generateBundle() {
-      if (ssr) return;
+      if (this.environment.config.consumer !== 'client') return;
       for (const mod of SW_MODULES) {
         const source = await readFile(mod.source, 'utf-8');
         const { code } = await transform(source, {
@@ -58,6 +57,43 @@ function cropcardSwModules(): Plugin {
           source: `${code}\n${mod.install}\n`
         });
       }
+    }
+  };
+}
+
+// @vite-pwa/sveltekit 1.1.0 writes the service worker from the SSR build's
+// closeBundle, keyed on `build.ssr`, which SvelteKit 3's environment build
+// never sets. This runs vite-plugin-pwa's generateSW after SvelteKit's own
+// buildApp (both builds done) and before the adapter, which only serves files
+// that are in the client output when it runs, then moves sw.js and the Workbox
+// runtime into that output the way the upstream plugin did.
+function cropcardPwaServiceWorker(): Plugin {
+  return {
+    name: 'cropcard:pwa-service-worker',
+    apply: 'build',
+    async buildApp(builder) {
+      const pwa = builder.config.plugins.find((p) => p.name === 'vite-plugin-pwa') as
+        (Plugin & { api?: VitePluginPWAAPI }) | undefined;
+      const api = pwa?.api;
+      if (!api || api.disabled) throw new Error('vite-plugin-pwa is not configured');
+      await api.generateSW();
+      const output = join(builder.config.root, '.svelte-kit/output');
+      const client = join(output, 'client');
+      for (const dir of [join(output, 'server'), builder.config.build.outDir]) {
+        let files: string[];
+        try {
+          files = await readdir(dir);
+        } catch {
+          continue;
+        }
+        for (const f of files) {
+          if (f === 'sw.js' || /^workbox-[\w-]+\.js$/.test(f)) {
+            await rename(join(dir, f), join(client, f));
+          }
+        }
+      }
+      const written = await readdir(client);
+      if (!written.includes('sw.js')) throw new Error('service worker was not generated');
     }
   };
 }
@@ -104,7 +140,23 @@ const SHELL_REVISION = process.env.BUILD_SHA || String(Date.now());
 export default defineConfig({
   plugins: [
     cropcardSwModules(),
-    sveltekit(),
+    sveltekit({
+      preprocess: vitePreprocess(),
+      adapter: adapter({ out: 'build' }),
+      alias: { $lib: 'src/lib' },
+      // Phase 30F — root-absolute asset URLs. The service worker answers every
+      // offline /cards/** navigation with the one precached /cards shell, so
+      // its `/_app/…` links must not depend on the depth of the URL it serves.
+      paths: { relative: false },
+      // SvelteKit's own cross-site form check runs before `handle` and refuses
+      // every form-encoded POST without a same-origin Origin header. RFC 8058
+      // one-click unsubscribe is exactly that (the mail provider POSTs
+      // `List-Unsubscribe=One-Click` from its servers), so the check moves into
+      // hooks.server.ts (`formCsrfForbidden`), identical in behaviour except for
+      // that one signed-token endpoint. `csrfDecision()` still vets JSON
+      // mutations as before (Phase 24).
+      csrf: { trustedOrigins: ['*'] }
+    }),
     SvelteKitPWA({
       strategies: 'generateSW',
       registerType: 'prompt',
@@ -220,7 +272,8 @@ export default defineConfig({
       devOptions: {
         enabled: false
       }
-    })
+    }),
+    cropcardPwaServiceWorker()
   ],
   server: {
     host: '0.0.0.0',

@@ -1,10 +1,5 @@
-import {
-  json,
-  redirect,
-  type Handle,
-  type HandleServerError,
-  type ServerInit
-} from '@sveltejs/kit';
+import { json, redirect } from '@sveltejs/kit';
+import type { Handle, HandleServerError, ServerInit } from '@sveltejs/kit/hooks';
 import { currentUser } from '$lib/server/auth';
 import { canMutate, clearSession, type SessionRole } from '$lib/server/session';
 import { activeAssignmentsForUser } from '$lib/db/users';
@@ -64,8 +59,16 @@ export const init: ServerInit = () => {
  * Add the same shape to client errors via `+error.svelte` if the need
  * surfaces — for now server visibility is the priority.
  */
-export const handleError: HandleServerError = ({ error, event, status, message }) => {
-  const summary = error instanceof Error ? error.message : String(error ?? 'unknown error');
+export const handleError: HandleServerError = (input) => {
+  const { error, event } = input;
+  // SvelteKit 3 also passes errors thrown with `error(...)` here; those are
+  // expected responses, so only framework, validation and unknown errors log.
+  if (input.kind === 'app') return undefined;
+  const known = input.kind === 'unknown' ? null : input.error;
+  const status = known?.status ?? 500;
+  const message = known?.message ?? 'Internal Error';
+  const summary =
+    error instanceof Error ? error.message : (known?.message ?? String(error ?? 'unknown error'));
   const stack = error instanceof Error ? error.stack : undefined;
   // ANSI red for visibility in the docker logs stream.
   console.error(
@@ -88,7 +91,7 @@ export const handleError: HandleServerError = ({ error, event, status, message }
   if (stack) console.error('\x1b[1;31m[server-error stack]\x1b[0m\n' + stack);
   // Surface the actual message in dev so the browser overlay / inline 500
   // shows it. In prod we keep the opaque default for security.
-  if (process.env.NODE_ENV !== 'production') {
+  if (input.kind === 'unknown' && process.env.NODE_ENV !== 'production') {
     return { message: `Server error: ${summary}` };
   }
   return undefined;
@@ -255,7 +258,7 @@ export function bearerWriteOutsideApi(input: {
 
 /**
  * Cross-site form guard, moved here from SvelteKit's built-in
- * `csrf.checkOrigin` (see svelte.config.js) with the same rule: a POST, PUT,
+ * `csrf.checkOrigin` (see the sveltekit() options in vite.config.ts) with the same rule: a POST, PUT,
  * PATCH or DELETE with a form content type must carry this app's Origin.
  * The one exception is the RFC 8058 one-click unsubscribe, which mail
  * providers POST server-to-server with no Origin; its signed token is the
@@ -395,7 +398,12 @@ const handleFenced: Handle = async (input) => {
     input.event.request.headers.get('content-length')
   );
   if (tooLarge) return tooLarge;
-  input.event.request = capChunkedBody(input.event.request, input.event.url.pathname);
+  // `event.request` is read-only on the type since SvelteKit 3, but the event
+  // is a plain object and `resolve` reads the request from it.
+  (input.event as { request: Request }).request = capChunkedBody(
+    input.event.request,
+    input.event.url.pathname
+  );
   const fenced = isFenced()
     ? fenceResponse(input.event.request, true, requestLocale(input.event, null))
     : null;
@@ -519,7 +527,7 @@ const handleRequest: Handle = async ({ event, resolve: resolvePage }) => {
   const anonymous = isAnonymousRequest(path, event.isDataRequest);
 
   // Phase 24 — CSRF / Origin bridge. SvelteKit's built-in check is
-  // disabled globally in svelte.config.js; we replace it with the
+  // disabled globally in vite.config.ts; we replace it with the
   // targeted guard in csrfDecision() above so external Bearer agents
   // can call /api/** from arbitrary origins while cookie sessions stay
   // strictly same-origin.

@@ -20,7 +20,6 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { env } from '$env/dynamic/private';
 import { db } from '$lib/db/client';
 import { kernelDryRunLog } from '$lib/db/schema';
 import { currentOwnerId, tenantValues } from '$lib/db/tenant';
@@ -37,7 +36,7 @@ export interface DryRunRecord {
 }
 
 export function isDryRunActive(): boolean {
-  const flag = env.KERNEL_DRY_RUN;
+  const flag = process.env.KERNEL_DRY_RUN;
   return flag === '1' || flag === 'true';
 }
 

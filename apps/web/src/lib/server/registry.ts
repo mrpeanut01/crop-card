@@ -9,7 +9,7 @@
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { dev } from '$app/environment';
+import { dev } from '$app/env';
 import { loadPluginsFromDirectory, PluginRegistry } from '$lib/plugins';
 import { loadBedRecipes, type BedRecipeRegistry } from '$lib/plugins/bedRecipes';
 import { loadPhase32DataKinds, type Phase32DataKinds } from '$lib/plugins/registryDataKinds';

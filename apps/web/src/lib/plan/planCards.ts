@@ -27,6 +27,9 @@ import { t } from '$lib/i18n';
 import { cropDisplayName } from '$lib/i18n/cropName';
 import { plantingStatus, type PlantingStatus } from './planV2Derive';
 
+/** `page.url.searchParams` is read-only since SvelteKit 3. */
+type ReadonlySearchParams = Pick<URLSearchParams, 'get' | 'has' | 'toString'>;
+
 const DAY_MS = 86_400_000;
 const PALETTE = [
   '#7a8f5a',
@@ -107,11 +110,11 @@ function blockAcres(b: {
 export const NO_AREA = 'none';
 
 export function planSelectHref(
-  current: URLSearchParams,
+  current: ReadonlySearchParams,
   areaId: string,
   blockId?: string | null
 ): string {
-  const sp = new URLSearchParams(current);
+  const sp = new URLSearchParams(current.toString());
   sp.set('field', areaId);
   sp.delete('planting');
   if (blockId) sp.set('block', blockId);
@@ -137,7 +140,7 @@ export function planRailCards(
   snapshot: FarmSnapshot,
   areas: readonly PlanAreaEntry[],
   blocks: readonly BlockWithPlantings[],
-  current: URLSearchParams,
+  current: ReadonlySearchParams,
   prefs: Prefs = DEFAULT_PREFS,
   now: number = Date.now()
 ): RailAreaCard[] {
@@ -204,7 +207,7 @@ function railCard(
   areaId: string,
   kind: AreaKind,
   blocks: readonly BlockWithPlantings[],
-  current: URLSearchParams,
+  current: ReadonlySearchParams,
   now: number,
   locale?: string | null
 ): RailAreaCard {
@@ -263,7 +266,7 @@ const STATUS_TONE: Record<PlantingStatus, CardStatus['tone']> = {
 
 export function planBlockCard(
   block: BlockWithPlantings,
-  current: URLSearchParams,
+  current: ReadonlySearchParams,
   areaId: string,
   cropDays: Record<string, number | undefined>,
   prefs: Prefs = DEFAULT_PREFS,

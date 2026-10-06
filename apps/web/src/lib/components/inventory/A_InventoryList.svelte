@@ -11,7 +11,7 @@
    * Detail dispatch: `apps/web/src/routes/inventory/[type]/[id]/`.
    */
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import { createT } from '$lib/i18n';
   import { invTypeWord } from './typeLabel';
@@ -55,7 +55,7 @@
     canAddAmendment = false
   }: Props = $props();
 
-  const tr = $derived(createT($page.data?.locale));
+  const tr = $derived(createT(page.data?.locale));
 
   const visibleTypes = $derived(
     visibleProp ?? visibleInventoryTypes({ stockCounts: counts, hasAnimals: false, active: type })
@@ -73,18 +73,18 @@
   });
 
   function switchType(next: InventoryType): void {
-    const url = new URL($page.url);
+    const url = new URL(page.url.href);
     url.searchParams.set('type', next);
     // Reset mode when switching: pesticide/fertility/seed default to stock,
     // crop forces catalog.
     url.searchParams.delete('mode');
-    goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
+    goto(url.pathname + url.search, { reset: false });
   }
 
   function switchMode(next: 'stock' | 'catalog'): void {
-    const url = new URL($page.url);
+    const url = new URL(page.url.href);
     url.searchParams.set('mode', next);
-    goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
+    goto(url.pathname + url.search, { reset: false });
   }
 
   function navigateTo(row: InventoryRow): void {
@@ -272,9 +272,9 @@
                 <td class="muted">
                   {type === 'seed'
                     ? row.cropName
-                      ? cropDisplayNameByEnglish(row.cropName, $page.data?.locale)
+                      ? cropDisplayNameByEnglish(row.cropName, page.data?.locale)
                       : '—'
-                    : stockCategoryLabel(row.category, $page.data?.locale)}
+                    : stockCategoryLabel(row.category, page.data?.locale)}
                 </td>
                 <td class="num" class:low={row.isLow}>
                   {formatStockQuantity(row.onHand, row.defaultUnit, currentPrefs(), {

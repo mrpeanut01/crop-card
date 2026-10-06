@@ -1,5 +1,4 @@
-import { dev } from '$app/environment';
-import { env } from '$env/dynamic/private';
+import { dev } from '$app/env';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -11,7 +10,7 @@ import type { PageServerLoad } from './$types';
 //
 // Phase 30 Card renderer preview (screen, compact, print) on sample data.
 export const load: PageServerLoad = async ({ locals }) => {
-  const enabled = dev || locals.user?.isSuperadmin || env.ENABLE_DEV_ROUTES === '1';
+  const enabled = dev || locals.user?.isSuperadmin || process.env.ENABLE_DEV_ROUTES === '1';
   if (!enabled) {
     throw error(404, 'Not found');
   }

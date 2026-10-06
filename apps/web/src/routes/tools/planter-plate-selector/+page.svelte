@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { untrack } from 'svelte';
   import {
     cellCountRecommendation,
@@ -52,7 +52,7 @@
   const round1 = (n: number) => Math.round(n * 10) / 10;
 
   // Query params for deep-linking (e.g., from an AI suggestion).
-  const qp = (k: string): string | null => $page.url.searchParams.get(k);
+  const qp = (k: string): string | null => page.url.searchParams.get(k);
   const qpNum = (k: string): number | undefined => {
     const v = qp(k);
     if (v === null || v === '') return undefined;

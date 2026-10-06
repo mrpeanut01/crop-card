@@ -4,7 +4,6 @@
   "displayName": "Apricot — Moorpark",
   "version": "1.0.0",
   "cropFamily": "stone-fruit",
-  "defaultRowSpacingInches": 216,
   "harvestIndicators": [
     "Orange ground color",
     "Slight give at pit end"

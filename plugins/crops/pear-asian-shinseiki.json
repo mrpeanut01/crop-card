@@ -4,7 +4,6 @@
   "displayName": "Pear — Asian, Shinseiki",
   "version": "1.0.0",
   "cropFamily": "orchard",
-  "defaultRowSpacingInches": 240,
   "harvestIndicators": [
     "Tree-ripe (unlike European pears)",
     "Yellow-skin variety"

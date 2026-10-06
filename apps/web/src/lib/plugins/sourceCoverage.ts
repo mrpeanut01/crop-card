@@ -148,7 +148,62 @@ export function cropFactPaths(c: CropPlugin): string[] {
     for (const id of entry.speciesIds) paths.push(`animalToxicity.${id}`);
   }
   for (const row of c.treeSizeClasses ?? []) paths.push(`treeSizeClasses.${row.sizeClass}`);
+  if (isTreeCrop(c)) {
+    if (guide.rowSpacingIn !== undefined) paths.push('rowSpacingIn');
+    if (c.defaultRowSpacingInches !== undefined) paths.push('defaultRowSpacingInches');
+  }
   return paths;
+}
+
+/** #587: a tree crop (archetype `tree-fruit-multi-pick`, or one with a size
+ *  class table) is spaced by its size class rows or its sourced minimum
+ *  distance between trees; a between-row value must be sourced like any
+ *  other number. */
+export function isTreeCrop(c: Pick<CropPlugin, 'archetype' | 'treeSizeClasses'>): boolean {
+  return c.archetype === 'tree-fruit-multi-pick' || (c.treeSizeClasses?.length ?? 0) > 0;
+}
+
+/** #587: a tree crop's row spacing quote must state the number, in inches or
+ *  as feet, and name rows, and a crop with a size class table carries no row spacing at all
+ *  (the table spaces it both ways, so the value would never be read).
+ *  Returns "pluginId: problem" lines. */
+export function treeRowSpacingGaps(
+  crops: ReadonlyArray<
+    Pick<
+      CropPlugin,
+      'pluginId' | 'archetype' | 'treeSizeClasses' | 'plantingGuide' | 'defaultRowSpacingInches'
+    >
+  >,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    if (!isTreeCrop(c)) continue;
+    const values: Array<[string, number | undefined]> = [
+      ['rowSpacingIn', c.plantingGuide?.rowSpacingIn],
+      ['defaultRowSpacingInches', c.defaultRowSpacingInches]
+    ];
+    for (const [key, inches] of values) {
+      if (inches === undefined) continue;
+      if (c.treeSizeClasses?.length) {
+        gaps.push(`${c.pluginId}: ${key} is never read when treeSizeClasses spaces the crop`);
+        continue;
+      }
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[key]);
+      if (!entry.success) continue;
+      const figures = [numberPattern(inches)];
+      if (Number.isInteger(inches / 12)) figures.push(numberPattern(inches / 12));
+      const stated = figures.some((f) =>
+        new RegExp(`(^|[^\\d.])${f}([^\\d]|$)`).test(entry.data.quote)
+      );
+      if (!stated) gaps.push(`${c.pluginId}: ${key} quote does not state ${inches} in`);
+      // #587 ruling R2: an unlabelled "A x B" spacing never counts as rows.
+      if (!/\brows?\b/i.test(entry.data.quote)) {
+        gaps.push(`${c.pluginId}: ${key} quote does not say the figure is between rows`);
+      }
+    }
+  }
+  return gaps;
 }
 
 /** A tree size class row's spacing and bearing age must both appear in its

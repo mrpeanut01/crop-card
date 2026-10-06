@@ -5,7 +5,6 @@
   "version": "1.0.1",
   "cropFamily": "orchard",
   "preHarvestIntervalDays": 14,
-  "defaultRowSpacingInches": 240,
   "postHarvestCuring": {
     "method": "Pick green; ripen 5–7 d at 65–70 °F or store 30–32 °F",
     "durationWeeks": {

@@ -6,10 +6,8 @@
   "pluginSchemaVersion": "1.1",
   "cropFamily": "orchard",
   "preHarvestIntervalDays": 7,
-  "defaultRowSpacingInches": 168,
   "plantingGuide": {
-    "soilTempMinF": 45,
-    "rowSpacingIn": 168
+    "soilTempMinF": 45
   },
   "agronomy": {
     "lifecycle": "perennial",

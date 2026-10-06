@@ -56,7 +56,6 @@ const DERIVED_TONE_MAP: Record<string, PriorityAction['toneTag']> = {
   'spray-window': 'spray',
   'harvest-window': 'harvest',
   'cover-termination': 'planting',
-  'orchard-task': 'task',
   'seasonal-task': 'task',
   'curing-ready': 'harvest'
 };

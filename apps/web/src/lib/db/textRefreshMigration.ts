@@ -28,7 +28,15 @@ export interface TextRefreshOptions {
   prefix: string;
   /** `abort_reason` written on tasks made from removed rows. */
   abortReason?: string;
+  /** OP-27: the calendar engine no longer has an `orchard-task` kind, so
+   *  every `derived:orchard-task:` key becomes `derived:seasonal-task:`
+   *  (the same block and start), keeping an already scheduled suggestion
+   *  matched. A key whose new spelling the Owner already holds is left. */
+  retireOrchardTaskKeys?: boolean;
 }
+
+const ORCHARD_KEY_PREFIX = 'derived:orchard-task:';
+const SEASONAL_KEY_PREFIX = 'derived:seasonal-task:';
 
 const BREAK = '\n--> statement-breakpoint\n';
 const DERIVED =
@@ -132,6 +140,16 @@ export function textRefreshMigrationSql(
         `\t\`title\` = coalesce((SELECT \`e\`.\`new_title\` || substr(\`tasks\`.\`title\`, length(\`e\`.\`old_title\`) + 1) FROM \`${p}_edited\` \`e\` WHERE \`e\`.\`old_title\` <> \`e\`.\`new_title\` AND substr(\`tasks\`.\`title\`, 1, length(\`e\`.\`old_title\`) + 3) = \`e\`.\`old_title\` || ' — '), \`title\`),\n` +
         `\t\`body\` = coalesce((SELECT \`e\`.\`new_body\` FROM \`${p}_edited\` \`e\` WHERE \`e\`.\`old_body\` = \`tasks\`.\`body\`), \`body\`)\n` +
         `WHERE \`completed_at\` IS NULL AND \`aborted_at\` IS NULL AND (\`plugin_template_key\` LIKE 'derived:orchard-task:%' OR \`plugin_template_key\` LIKE 'derived:seasonal-task:%');`
+    );
+  }
+
+  if (opts.retireOrchardTaskKeys) {
+    const rest = `substr(\`tasks\`.\`plugin_template_key\`, ${ORCHARD_KEY_PREFIX.length + 1})`;
+    out.push(
+      `UPDATE \`tasks\` SET \`plugin_template_key\` = '${SEASONAL_KEY_PREFIX}' || ${rest}\n` +
+        `WHERE \`plugin_template_key\` LIKE '${ORCHARD_KEY_PREFIX}%' AND NOT EXISTS (\n` +
+        `\tSELECT 1 FROM \`tasks\` \`d\` WHERE \`d\`.\`owner_id\` = \`tasks\`.\`owner_id\` AND \`d\`.\`plugin_template_key\` = '${SEASONAL_KEY_PREFIX}' || ${rest}\n` +
+        `);`
     );
   }
 

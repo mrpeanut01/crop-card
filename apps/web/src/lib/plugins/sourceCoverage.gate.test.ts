@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadPluginsFromDirectory } from './loader';
@@ -258,14 +258,20 @@ describe('OC-1 crop seasonal tasks carry no spray advice', () => {
   it('every number in a seasonal row is quoted from its source (OP-20, OP-21)', () => {
     expect(
       seasonalTaskNumberGaps(library.crops(), cropSources),
-      'quote the number under seasonalTasks.<key> or orchardSeasonalTasks.<key> in crop-data-sources.json, or drop it'
+      'quote the number under seasonalTasks.<key> in crop-data-sources.json, or drop it'
     ).toEqual([]);
   });
 
+  it('no crop plugin carries the retired orchardSeasonalTasks list (OP-27)', () => {
+    const dir = path.join(PLUGINS_DIR, 'crops');
+    const carrying = readdirSync(dir)
+      .filter((f) => f.endsWith('.json'))
+      .filter((f) => 'orchardSeasonalTasks' in JSON.parse(readFileSync(path.join(dir, f), 'utf8')));
+    expect(carrying, 'move the rows into seasonalTasks').toEqual([]);
+  });
+
   it('still checks the rows the orchard and berry plugins keep', () => {
-    const rows = library
-      .crops()
-      .flatMap((c) => [...(c.seasonalTasks ?? []), ...(c.orchardSeasonalTasks ?? [])]);
+    const rows = library.crops().flatMap((c) => c.seasonalTasks ?? []);
     expect(rows.length).toBeGreaterThan(10);
   });
 });

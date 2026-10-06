@@ -48,7 +48,6 @@ export type CalendarEventKind =
   | 'companion-trigger'
   | 'harvest-window'
   | 'cover-termination'
-  | 'orchard-task'
   | 'seasonal-task'
   | 'curing-progress'
   | 'curing-ready'
@@ -426,29 +425,6 @@ export function eventsForPlanting(
         title: `Terminate cover: ${planting.varietyDisplayName}`,
         body: 'No follow-up planting recorded yet — generic spring termination window. Add the next cash-crop planting to /plan to anchor this exactly.'
       });
-    }
-  }
-
-  // Orchard seasonal tasks (FR-10) — perennial families render multi-year.
-  // Each task fires once per calendar year on the plugin's `dayOfYear`.
-  if (crop.cropFamily === 'orchard' && crop.orchardSeasonalTasks?.length) {
-    const seasonYears = orchardSeasonYears(plant);
-    for (const year of seasonYears) {
-      for (const task of crop.orchardSeasonalTasks) {
-        const start = dayOfYearToMs(year, task.dayOfYear);
-        events.push({
-          kind: 'orchard-task',
-          blockId: planting.blockId,
-          cropId: planting.id,
-          cropPluginId: planting.cropPluginId,
-          varietyDisplayName: planting.varietyDisplayName,
-          startMs: start,
-          endMs: start + (task.windowDays ?? 7) * DAY_MS,
-          title: `${task.title} — ${planting.varietyDisplayName}`,
-          body: task.body,
-          detail: { taskKey: task.key, year }
-        });
-      }
     }
   }
 

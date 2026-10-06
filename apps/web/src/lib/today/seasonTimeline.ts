@@ -206,12 +206,6 @@ function spanKindForEvent(e: SeasonEventIn): SeasonSpanKind | null {
       return 'harvest';
     case 'cover-termination':
       return 'till';
-    case 'orchard-task': {
-      const key = String(e.detail?.taskKey ?? '');
-      if (key === 'harvest') return 'harvest';
-      if (/spray|fungicide|oil/.test(key)) return 'spray';
-      return null;
-    }
     default:
       return null;
   }

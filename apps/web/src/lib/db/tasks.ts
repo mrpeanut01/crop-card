@@ -244,6 +244,9 @@ export interface CreateTaskInput {
   relatedEventTable?: RelatedEventTable;
   relatedEventId?: string;
   pluginTemplateKey?: string;
+  /** The swim-lane category, when the caller knows it (the orchard
+   *  calendar's scouting task, OC-7). */
+  category?: TaskCategory;
   createdById?: string;
   /** Carried over when a task is rewritten (F1-7). */
   assigneeUserId?: string | null;
@@ -268,6 +271,7 @@ export function createTask(input: CreateTaskInput): Task {
         relatedEventTable: input.relatedEventTable ?? null,
         relatedEventId: input.relatedEventId ?? null,
         pluginTemplateKey: input.pluginTemplateKey ?? null,
+        ...(input.category ? { category: input.category } : {}),
         createdById: input.createdById ?? null,
         assigneeUserId: input.assigneeUserId ?? null,
         assignedAt: input.assigneeUserId && input.assignedAt ? new Date(input.assignedAt) : null

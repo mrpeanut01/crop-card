@@ -14,6 +14,9 @@ import { pollinatorNeighbors } from '$lib/server/pollinatorNeighbors';
 import { canSetUp, setupAreas } from '$lib/server/setupContext';
 import { organicBlocksForNotice } from '$lib/server/organicNotice';
 import { loadTaskContext } from '$lib/server/recordTaskClose';
+import { listStageMarks } from '$lib/db/orchardCalendar';
+import { bloomPrefillFromMarks } from '$lib/orchard/calendar';
+import { orchardYear } from '$lib/server/orchardCalendar.server';
 
 /**
  * Phase 25d (#95) — IPM-gate scout data. Primary path reads from the
@@ -76,6 +79,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const farm = getFarmLatLon();
   const now = Date.now();
   const timeZone = farmTimeZone();
+  const stageMarks = listStageMarks(orchardYear(now));
 
   const allBlocks = listBlocks();
   const cropPlugin = (id: string): CropPlugin | null => {
@@ -112,6 +116,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         lat: location.lat,
         lon: location.lon,
         bloomingCropPluginIds: Array.from(new Set(blooming.map((p) => p.cropPluginId))),
+        stageBloom: bloomPrefillFromMarks(stageMarks.get(b.id) ?? null),
         pollinatorNeighbors: pollinatorNeighbors(b.id, allBlocks, cropPlugin, now, timeZone)
       };
     }),

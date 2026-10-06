@@ -535,26 +535,8 @@ export const harvestMoistureGateSchema = z.object({
 export type HarvestMoistureGate = z.infer<typeof harvestMoistureGateSchema>;
 
 /**
- * Orchard-specific seasonal task templates (FR-10). Each entry fires once
- * per planting per year at the given offset from `referenceDate` (the
- * planting date is treated as the season anchor for v1; phase-9 follow-up
- * could anchor to bud-break instead).
- */
-export const orchardSeasonalTaskSchema = z.object({
-  /** OP-21 (docs/design/ORCHARD_CALENDAR.md): the spray keys left with OC-1. */
-  key: z.enum(["post-bloom-thinning", "harvest"]),
-  /** Days from January 1 of each season-year (positive int 1-366). */
-  dayOfYear: z.number().int().min(1).max(366),
-  windowDays: z.number().int().min(1).max(60).default(7),
-  title: z.string().min(1),
-  body: z.string().optional(),
-  /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
-  category: taskCategorySchema.optional(),
-});
-
-/**
- * Generic seasonal task — works for any crop family (Phase 9 generalization
- * of orchardSeasonalTasks). Either `dayOfYear` (calendar-anchored, perennials)
+ * Generic seasonal task — works for any crop family (Phase 9; OP-27 retired
+ * the orchard-only list). Either `dayOfYear` (calendar-anchored, perennials)
  * or `daysAfterPlanting` (relative, annuals) drives the start time.
  * Perennial families (orchard, stone-fruit, small-fruit, bramble, vine-fruit,
  * forage) render across multiple calendar years; annuals render once.
@@ -834,9 +816,6 @@ export const cropPluginSchema = pluginBase.extend({
   plantingGuide: plantingGuideSchema.optional(),
   /** Curing instructions + duration, surfaced on /harvest (FR-08). */
   postHarvestCuring: postHarvestCuringSchema.optional(),
-  /** Orchard-only seasonal task list (FR-10). Kept for back-compat; new
-   *  plugins should prefer the generic `seasonalTasks` field. */
-  orchardSeasonalTasks: z.array(orchardSeasonalTaskSchema).optional(),
   /** Generic seasonal task list (Phase 9). Works for any crop family. */
   seasonalTasks: z.array(seasonalTaskSchema).optional(),
   // ─── v1.1 additions (HCD Guide §4) ──────────────────────────────────

@@ -119,7 +119,6 @@ export interface ScheduleCatalogItem {
   preHarvestIntervalDays?: number;
   soilTempMinF?: number;
   seasonalTasks?: CropPlugin['seasonalTasks'];
-  orchardSeasonalTasks?: CropPlugin['orchardSeasonalTasks'];
   cornType?: CornType;
 }
 
@@ -398,7 +397,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
           preHarvestIntervalDays: c.preHarvestIntervalDays,
           soilTempMinF: c.plantingGuide?.soilTempMinF,
           seasonalTasks: c.seasonalTasks,
-          orchardSeasonalTasks: c.orchardSeasonalTasks,
           cornType: c.cornType
         };
       })

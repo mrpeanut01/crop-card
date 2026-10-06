@@ -11,6 +11,7 @@
    */
 
   import { untrack } from 'svelte';
+  import OrchardGuideChoices from '$lib/components/orchard/OrchardGuideChoices.svelte';
   import { page } from '$app/state';
   import { createT } from '$lib/i18n';
   import type { SeasonSetup } from '$lib/season/setup';
@@ -223,6 +224,7 @@
       </button>
     </div>
   </form>
+  <OrchardGuideChoices />
 </div>
 
 <style>

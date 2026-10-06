@@ -26,7 +26,9 @@
   import { sunTimesFor } from '$lib/safety/sunTimes';
   import { checkIpmThreshold } from '$lib/safety/ipmThreshold';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
-  import { createT } from '$lib/i18n';
+  import { createT, t, type MessageKey } from '$lib/i18n';
+  import { formatInstant } from '$lib/prefs';
+  import { prefillBloomStatus } from '$lib/orchard/calendar';
   import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
   import type { RecordTaskClose } from '$lib/tasks/recordClose';
 
@@ -151,11 +153,13 @@
   });
   $effect(() => {
     void selectedBlockId;
-    const prefill = untrack(() =>
-      (data.blocks.find((b) => b.id === selectedBlockId)?.bloomingCropPluginIds.length ?? 0) > 0
-        ? 'in-bloom'
-        : 'unknown'
-    );
+    const prefill = untrack(() => {
+      const b = data.blocks.find((x) => x.id === selectedBlockId);
+      return prefillBloomStatus({
+        bloomWindowSaysBlooming: (b?.bloomingCropPluginIds.length ?? 0) > 0,
+        stageMark: b?.stageBloom ?? null
+      });
+    });
     bloomStatus = prefill;
     attestedNoForagers = false;
   });
@@ -620,6 +624,19 @@
       bind:bloomStatus
       bind:attestedNoForagers
       bloomingCrops={selectedBlock?.bloomingCropPluginIds ?? []}
+      stageMark={selectedBlock?.stageBloom
+        ? {
+            stage: t('en', `orchard.stage.${selectedBlock.stageBloom.stageId}` as MessageKey),
+            markedOn: formatInstant(
+              selectedBlock.stageBloom.markedAt,
+              {
+                ...currentPrefs(),
+                locale: 'en'
+              },
+              'month-day'
+            )
+          }
+        : null}
       hasPluginData={!!selectedInsecticide?.pollinator}
       sunsetLabel={sunTimes ? fmtClock(sunTimes.sunset) : null}
       sunriseLabel={sunTimes ? fmtClock(sunTimes.sunrise) : null}

@@ -8,6 +8,7 @@ import { taskDisplayBody, taskDisplayTitle } from '$lib/tasks/title';
 import { en } from './catalogs/en';
 import { es } from './catalogs/es';
 import {
+  RETIRED_SEASONAL_KEYS,
   seasonalMessageKey,
   seasonalRowText,
   seasonalTextByEnglish,
@@ -31,7 +32,7 @@ describe('seasonal row catalog (OP-21)', () => {
   it('holds the shipped English of every seasonal row, and nothing else', () => {
     const expected = new Map<string, string>();
     for (const c of library.crops()) {
-      const rows = [...(c.seasonalTasks ?? []), ...(c.orchardSeasonalTasks ?? [])];
+      const rows = c.seasonalTasks ?? [];
       const keys = rows.map((r) => r.key);
       expect(new Set(keys).size, c.pluginId).toBe(keys.length);
       for (const r of rows) {
@@ -40,6 +41,7 @@ describe('seasonal row catalog (OP-21)', () => {
       }
     }
     expect(expected.size).toBeGreaterThan(20);
+    for (const k of RETIRED_SEASONAL_KEYS) expected.set(k, EN[k]);
     const actual = new Map(seasonalKeys().map((k) => [k, EN[k]]));
     expect(actual).toEqual(expected);
   });

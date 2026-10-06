@@ -484,17 +484,14 @@ describe('seasonalTaskWordingProblems (OC-1)', () => {
             category: 'till'
           }
         ]),
-        crop(
-          [
-            {
-              key: 'post-bloom-thinning',
-              title: 'Hand fruit thinning',
-              body: 'Thin to one fruit per cluster.',
-              category: 'prune'
-            }
-          ],
-          'orchardSeasonalTasks'
-        )
+        crop([
+          {
+            key: 'post-bloom-thinning',
+            title: 'Hand fruit thinning',
+            body: 'Thin to one fruit per cluster.',
+            category: 'prune'
+          }
+        ])
       ])
     ).toEqual([]);
   });
@@ -503,11 +500,11 @@ describe('seasonalTaskWordingProblems (OC-1)', () => {
     expect(
       seasonalTaskWordingProblems([
         crop([{ key: 'a', kind: 'spray', title: 'Look at leaves' }]),
-        crop([{ key: 'b', title: 'Look at leaves', category: 'spray' }], 'orchardSeasonalTasks')
+        crop([{ key: 'b', title: 'Look at leaves', category: 'spray' }])
       ])
     ).toEqual([
       'test-crop seasonalTasks.a: kind spray',
-      'test-crop orchardSeasonalTasks.b: category spray'
+      'test-crop seasonalTasks.b: category spray'
     ]);
   });
 
@@ -603,7 +600,7 @@ describe('seasonalTaskNumberGaps (OP-21)', () => {
     const sources = {
       'test-crop': {
         'seasonalTasks.mulch': entry('Apply 3 to 4 inches of straw after the soil freezes.'),
-        'orchardSeasonalTasks.harvest': entry('Check fruit 1,000 times, every 7 days.')
+        'seasonalTasks.harvest': entry('Check fruit 1,000 times, every 7 days.')
       }
     };
     expect(
@@ -613,10 +610,7 @@ describe('seasonalTaskNumberGaps (OP-21)', () => {
             { key: 'scout', title: 'Scout', body: 'Look for beetles.' },
             { key: 'mulch', title: 'Mulch 3–4 in', body: 'Straw after the soil freezes.' }
           ]),
-          crop(
-            [{ key: 'harvest', title: 'Pick', body: 'Every 7 d; 1000 checks.' }],
-            'orchardSeasonalTasks'
-          )
+          crop([{ key: 'harvest', title: 'Pick', body: 'Every 7 d; 1000 checks.' }])
         ],
         sources
       )

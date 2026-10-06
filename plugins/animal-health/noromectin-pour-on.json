@@ -1,0 +1,42 @@
+{
+  "pluginId": "noromectin-pour-on",
+  "displayName": "Noromectin Pour-On (ivermectin) for Cattle",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "external-parasiticide",
+  "activeIngredients": [
+    {
+      "name": "Ivermectin"
+    }
+  ],
+  "approval": {
+    "kind": "ANADA",
+    "number": "200-272"
+  },
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "pour-on"
+      ],
+      "withdrawal": {
+        "meatDays": 48
+      }
+    },
+    {
+      "speciesId": "cattle",
+      "class": "lactating-dairy",
+      "routes": [
+        "pour-on"
+      ],
+      "withdrawal": {
+        "doNotUseFor": [
+          "milk"
+        ]
+      }
+    }
+  ],
+  "notes": "Generic of Ivomec Pour-On. The label also says a withdrawal period has not been established in pre-ruminating calves and not to use in calves to be processed for veal."
+}

@@ -56,7 +56,20 @@ const NOT_LISTED_DECISIONS: Readonly<Record<string, { decision: 'unknown'; reaso
   'gordons-livestock-backrubber-pour-on': {
     decision: 'unknown',
     reason: 'permethrin: 205.601 versus 205.603 left open in the research'
-  }
+  },
+  'ct-permethrin-1-pour-on': {
+    decision: 'unknown',
+    reason: 'permethrin: 205.601 versus 205.603 left open in the research'
+  },
+  'ivomec-plus-injection': {
+    decision: 'unknown',
+    reason: 'ivermectin and clorsulon: no sourced synthetic finding'
+  },
+  'noromectin-injection': {
+    decision: 'unknown',
+    reason: 'ivermectin: no sourced synthetic finding'
+  },
+  'noromectin-pour-on': { decision: 'unknown', reason: 'ivermectin: no sourced synthetic finding' }
 };
 
 type Expected = 'allowed' | 'allowed-with-conditions' | 'not-allowed' | 'unknown';

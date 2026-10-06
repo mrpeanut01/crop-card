@@ -1,7 +1,7 @@
 {
-  "pluginId": "gordons-livestock-backrubber-pour-on",
-  "displayName": "Gordon's Livestock Backrubber & Pour-On (permethrin 0.25%, EI-792)",
-  "version": "1.1.0",
+  "pluginId": "ct-permethrin-1-pour-on",
+  "displayName": "CT Permethrin 1% Pour-On (Prozap Insectrin 1% Pour-On)",
+  "version": "1.0.0",
   "type": "animal-health",
   "productKind": "external-parasiticide",
   "activeIngredients": [
@@ -11,7 +11,7 @@
   ],
   "approval": {
     "kind": "EPA",
-    "number": "2217-861"
+    "number": "47000-150"
   },
   "marketingStatus": "otc",
   "labelUses": [
@@ -44,17 +44,7 @@
       "withdrawal": {
         "meatDays": 0
       }
-    },
-    {
-      "speciesId": "pig",
-      "class": "all",
-      "routes": [
-        "pour-on"
-      ],
-      "withdrawal": {
-        "meatDays": 5
-      }
     }
   ],
-  "notes": "Label (2024-05-20) gives a 5-day slaughter interval for swine only. Beef and dairy cattle, calves and sheep are labelled pour-on use sites with no slaughter or milk interval, recorded as 0 per the #571 panel (ruling P571-1); sheep milk is not a labelled use and stays unknown. The backrubber method is not modelled as a route."
+  "notes": "Chem-Tech label (2025-09-25), alternate brand Prozap Insectrin 1% Pour-On. It names lactating and non-lactating dairy cattle, beef cattle, calves and sheep (keds) with no slaughter or milk interval, recorded as 0 per the #571 panel (ruling P571-1); sheep milk is not a labelled use and stays unknown. Back-rubber and premises uses are not modelled."
 }

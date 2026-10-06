@@ -582,5 +582,18 @@
       }
     }
   },
-  "pastureAllowlist": []
+  "pastureAllowlist": [
+    {
+      "pluginId": "2-4-d-amine",
+      "reason": "Generic 2,4-D amine with no single registrant (ruling P571-3, issue #571): generic labels differ on grazing, haying, lactating dairy and pre-slaughter intervals, so no value ships and grazing reads unknown by design; the owner enters the number from the label they bought."
+    },
+    {
+      "pluginId": "24d",
+      "reason": "Generic 2,4-D amine with no single registrant (ruling P571-3, issue #571): generic labels differ on grazing, haying, lactating dairy and pre-slaughter intervals, so no value ships and grazing reads unknown by design; the owner enters the number from the label they bought."
+    },
+    {
+      "pluginId": "glyphosate-generic",
+      "reason": "Generic glyphosate 41% with no single registrant (ruling P571-3, issue #571): generic labels differ on grazing, haying, lactating dairy and pre-slaughter intervals, so no value ships and grazing reads unknown by design; the owner enters the number from the label they bought."
+    }
+  ]
 }

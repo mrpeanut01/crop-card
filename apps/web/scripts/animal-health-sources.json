@@ -388,6 +388,170 @@
         "publisher": "PBI/Gordon Corporation, EI-792 Insecticide (alt. brand Livestock Backrubber & Pour-On), EPA Reg. No. 2217-861, EPA-stamped label",
         "date": "2024-05-20",
         "quote": "Do not slaughter swine within 5 days of last treatment."
+      },
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/002217-00861-20240520.pdf",
+        "publisher": "PBI/Gordon Corporation, EI-792 Insecticide (alt. brand Livestock Backrubber & Pour-On), EPA Reg. No. 2217-861, EPA-stamped label",
+        "date": "2024-05-20",
+        "quote": "POUR ON TECHNIQUE: Apply undiluted to beef cattle, dairy cattle, calves and sheep along back and down face at 1/2 to 2 fl.oz. per 100 lb body weight of animal up to a maximum of 20 fl.oz. per animal.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30, extended to EPA-registered livestock pesticides by the #571 panel (ruling P571-1). Closest label text: the pour-on use direction naming cattle; the label gives a slaughter interval for swine only."
+      },
+      "withdrawal.cattle.lactating-dairy.milkHours": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/002217-00861-20240520.pdf",
+        "publisher": "PBI/Gordon Corporation, EI-792 Insecticide (alt. brand Livestock Backrubber & Pour-On), EPA Reg. No. 2217-861, EPA-stamped label",
+        "date": "2024-05-20",
+        "quote": "Treat lactating dairy cows after milking is completed.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30, extended to EPA-registered livestock pesticides by the #571 panel (ruling P571-1). Closest label text: the only lactating dairy direction; no milk discard is stated."
+      },
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/002217-00861-20240520.pdf",
+        "publisher": "PBI/Gordon Corporation, EI-792 Insecticide (alt. brand Livestock Backrubber & Pour-On), EPA Reg. No. 2217-861, EPA-stamped label",
+        "date": "2024-05-20",
+        "quote": "POUR ON TECHNIQUE: Apply undiluted to beef cattle, dairy cattle, calves and sheep along back and down face at 1/2 to 2 fl.oz. per 100 lb body weight of animal up to a maximum of 20 fl.oz. per animal.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30, extended to EPA-registered livestock pesticides by the #571 panel (ruling P571-1). Closest label text: the pour-on use direction naming sheep; the label gives a slaughter interval for swine only."
+      }
+    },
+    "ivomec-plus-injection": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=50ce5909-7c1a-49f7-bdae-c0c65acc4f23",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec Plus (ivermectin and clorsulon) Injection label (Rev. 04/2022), DailyMed",
+        "date": "2024-06-27",
+        "quote": "Do not treat cattle within 21 days of slaughter."
+      },
+      "withdrawal.cattle.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=50ce5909-7c1a-49f7-bdae-c0c65acc4f23",
+        "publisher": "Boehringer Ingelheim Animal Health USA, Ivomec Plus (ivermectin and clorsulon) Injection label (Rev. 04/2022), DailyMed",
+        "date": "2024-06-27",
+        "quote": "Because a withdrawal time in milk has not been established, do not use in female dairy cattle of breeding age.",
+        "note": "The label says female dairy cattle of breeding age; read here as lactating dairy, the stricter of the two."
+      }
+    },
+    "noromectin-injection": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=67eefc16-33e8-422a-a677-dbd0f09b69a4",
+        "publisher": "Norbrook Laboratories, Noromectin (ivermectin) Injection for Cattle and Swine label (Rev. 01/2025), DailyMed",
+        "date": "2025-01-29",
+        "quote": "Do not treat cattle within 35 days of slaughter."
+      },
+      "withdrawal.cattle.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=67eefc16-33e8-422a-a677-dbd0f09b69a4",
+        "publisher": "Norbrook Laboratories, Noromectin (ivermectin) Injection for Cattle and Swine label (Rev. 01/2025), DailyMed",
+        "date": "2025-01-29",
+        "quote": "Because a withdrawal time in milk has not been established, do not use in female dairy cattle of breeding age.",
+        "note": "The label says female dairy cattle of breeding age; read here as lactating dairy, the stricter of the two."
+      },
+      "withdrawal.pig.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=67eefc16-33e8-422a-a677-dbd0f09b69a4",
+        "publisher": "Norbrook Laboratories, Noromectin (ivermectin) Injection for Cattle and Swine label (Rev. 01/2025), DailyMed",
+        "date": "2025-01-29",
+        "quote": "Do not treat swine within 18 days of slaughter."
+      }
+    },
+    "noromectin-pour-on": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ad81f5cd-f4c8-4310-b87e-7dacbcc181f6",
+        "publisher": "Norbrook Laboratories, Noromectin Pour-On (ivermectin topical solution) for Cattle label, DailyMed",
+        "date": "2020-05-19",
+        "quote": "Cattle must not be treated within 48 days of slaughter for human consumption."
+      },
+      "withdrawal.cattle.lactating-dairy.doNotUseFor": {
+        "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ad81f5cd-f4c8-4310-b87e-7dacbcc181f6",
+        "publisher": "Norbrook Laboratories, Noromectin Pour-On (ivermectin topical solution) for Cattle label, DailyMed",
+        "date": "2020-05-19",
+        "quote": "Because a withdrawal time in milk has not been established, do not use in female dairy cattle of breeding age.",
+        "note": "The label says female dairy cattle of breeding age; read here as lactating dairy, the stricter of the two."
+      }
+    },
+    "ultrabac-7": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://www.zoetisus.com/products/cattle/ultrabac-7/",
+        "publisher": "Zoetis, UltraBac 7 product page reproducing the label (zoetisus.com)",
+        "date": "2026-10-06",
+        "quote": "Do not vaccinate within 21 days before slaughter.",
+        "note": "Manufacturer product page reproducing the label (text read from the page content JSON at /content/pages/products/cattle/ultrabac-7.json); the PDF label was not reachable. Milk is left unknown (ruling P571-2)."
+      },
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://www.zoetisus.com/products/cattle/ultrabac-7/",
+        "publisher": "Zoetis, UltraBac 7 product page reproducing the label (zoetisus.com)",
+        "date": "2026-10-06",
+        "quote": "Do not vaccinate within 21 days before slaughter.",
+        "note": "Manufacturer product page reproducing the label (text read from the page content JSON at /content/pages/products/cattle/ultrabac-7.json); the PDF label was not reachable. Milk is left unknown (ruling P571-2)."
+      },
+      "organicUse": {
+        "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+        "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+        "date": "2026-10-01",
+        "quote": "(4) Biologics\u2014Vaccines. (f) Excipients\u2014only for use in the manufacture of drugs and biologics used to treat organic livestock when the excipient is: (1) Identified by the FDA as Generally Recognized As Safe; (2) Approved by the FDA as a food additive; (3) Included in the FDA review and approval of a New Animal Drug Application or New Drug Application; or (4) Approved by APHIS for use in veterinary biologics.",
+        "note": "Copied word for word from apps/web/scripts/nop-sources.json entries[\"livestock.ultrabac-7\"] (status allowed)."
+      }
+    },
+    "ultrabac-8": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://www.zoetisus.com/products/cattle/ultrabac-8/",
+        "publisher": "Zoetis, UltraBac 8 product page reproducing the label (zoetisus.com)",
+        "date": "2026-10-06",
+        "quote": "Do not vaccinate within 21 days before slaughter.",
+        "note": "Manufacturer product page reproducing the label (text read from the page content JSON at /content/pages/products/cattle/ultrabac-8.json); the PDF label was not reachable. Milk is left unknown (ruling P571-2)."
+      },
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://www.zoetisus.com/products/cattle/ultrabac-8/",
+        "publisher": "Zoetis, UltraBac 8 product page reproducing the label (zoetisus.com)",
+        "date": "2026-10-06",
+        "quote": "Do not vaccinate within 21 days before slaughter.",
+        "note": "Manufacturer product page reproducing the label (text read from the page content JSON at /content/pages/products/cattle/ultrabac-8.json); the PDF label was not reachable. Milk is left unknown (ruling P571-2)."
+      },
+      "organicUse": {
+        "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+        "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+        "date": "2026-10-01",
+        "quote": "(4) Biologics\u2014Vaccines. (f) Excipients\u2014only for use in the manufacture of drugs and biologics used to treat organic livestock when the excipient is: (1) Identified by the FDA as Generally Recognized As Safe; (2) Approved by the FDA as a food additive; (3) Included in the FDA review and approval of a New Animal Drug Application or New Drug Application; or (4) Approved by APHIS for use in veterinary biologics.",
+        "note": "Copied word for word from apps/web/scripts/nop-sources.json entries[\"livestock.ultrabac-8\"] (status allowed)."
+      }
+    },
+    "ultrabac-cd": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://www.zoetisus.com/products/cattle/ultrabac-cd/",
+        "publisher": "Zoetis, UltraBac CD product page reproducing the label (zoetisus.com)",
+        "date": "2026-10-06",
+        "quote": "Do not vaccinate within 21 days before slaughter.",
+        "note": "Manufacturer product page reproducing the label (text read from the page content JSON at /content/pages/products/cattle/ultrabac-cd.json); the PDF label was not reachable. Milk is left unknown (ruling P571-2)."
+      },
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://www.zoetisus.com/products/cattle/ultrabac-cd/",
+        "publisher": "Zoetis, UltraBac CD product page reproducing the label (zoetisus.com)",
+        "date": "2026-10-06",
+        "quote": "Do not vaccinate within 21 days before slaughter.",
+        "note": "Manufacturer product page reproducing the label (text read from the page content JSON at /content/pages/products/cattle/ultrabac-cd.json); the PDF label was not reachable. Milk is left unknown (ruling P571-2)."
+      },
+      "organicUse": {
+        "url": "https://www.ecfr.gov/current/title-7/part-205/section-205.603",
+        "publisher": "USDA Agricultural Marketing Service, National Organic Program, 7 CFR 205.603 and 205.604, via eCFR (up to date as of 2026-09-29)",
+        "date": "2026-10-01",
+        "quote": "(4) Biologics\u2014Vaccines. (f) Excipients\u2014only for use in the manufacture of drugs and biologics used to treat organic livestock when the excipient is: (1) Identified by the FDA as Generally Recognized As Safe; (2) Approved by the FDA as a food additive; (3) Included in the FDA review and approval of a New Animal Drug Application or New Drug Application; or (4) Approved by APHIS for use in veterinary biologics.",
+        "note": "Copied word for word from apps/web/scripts/nop-sources.json entries[\"livestock.ultrabac-cd\"] (status allowed)."
+      }
+    },
+    "ct-permethrin-1-pour-on": {
+      "withdrawal.cattle.all.meatDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/047000-00150-20250925.pdf",
+        "publisher": "Chem-Tech, Ltd., CT Permethrin 1% Pour-On (alt. brand Prozap Insectrin 1% Pour-On), EPA Reg. No. 47000-150, EPA-stamped label",
+        "date": "2025-09-25",
+        "quote": "For use on lactating and non-lactating dairy cattle, beef cattle and calves to control lice, horn flies, horse flies, stables flies, mosquitoes, black flies, tick and sheep keds.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30, extended to EPA-registered livestock pesticides by the #571 panel (ruling P571-1). Closest label text: the use statement naming cattle; the label states no slaughter interval."
+      },
+      "withdrawal.cattle.lactating-dairy.milkHours": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/047000-00150-20250925.pdf",
+        "publisher": "Chem-Tech, Ltd., CT Permethrin 1% Pour-On (alt. brand Prozap Insectrin 1% Pour-On), EPA Reg. No. 47000-150, EPA-stamped label",
+        "date": "2025-09-25",
+        "quote": "Wash teats of animals before milking.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30, extended to EPA-registered livestock pesticides by the #571 panel (ruling P571-1). Closest label text: the dairy-barn direction; the use statement names lactating dairy cattle and no milk discard is stated."
+      },
+      "withdrawal.sheep.all.meatDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/047000-00150-20250925.pdf",
+        "publisher": "Chem-Tech, Ltd., CT Permethrin 1% Pour-On (alt. brand Prozap Insectrin 1% Pour-On), EPA Reg. No. 47000-150, EPA-stamped label",
+        "date": "2025-09-25",
+        "quote": "Sheep Keds Pour along back line and down face. Apply \u00bc fl. oz. (7.5cc) per 50 lbs. body weight of animal, 3 fl. oz. for any one animal over a 14 day period.",
+        "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30, extended to EPA-registered livestock pesticides by the #571 panel (ruling P571-1). Closest label text: the sheep ked direction; the label states no slaughter interval."
       }
     }
   }

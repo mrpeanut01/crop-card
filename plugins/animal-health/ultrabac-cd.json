@@ -1,0 +1,41 @@
+{
+  "pluginId": "ultrabac-cd",
+  "displayName": "Zoetis UltraBac CD (Cl. perfringens Types C & D bacterin-toxoid)",
+  "version": "1.0.0",
+  "type": "animal-health",
+  "productKind": "vaccine",
+  "activeIngredients": [
+    {
+      "name": "Clostridium perfringens Types C & D bacterin-toxoid"
+    }
+  ],
+  "marketingStatus": "otc",
+  "labelUses": [
+    {
+      "speciesId": "cattle",
+      "class": "all",
+      "routes": [
+        "injection-sc"
+      ],
+      "withdrawal": {
+        "meatDays": 21
+      }
+    },
+    {
+      "speciesId": "sheep",
+      "class": "all",
+      "routes": [
+        "injection-sc"
+      ],
+      "withdrawal": {
+        "meatDays": 21
+      }
+    }
+  ],
+  "organicUse": {
+    "status": "allowed",
+    "citation": "7 CFR 205.603(a)(4)",
+    "conditions": "(f) Excipients\u2014only for use in the manufacture of drugs and biologics used to treat organic livestock when the excipient is: (1) Identified by the FDA as Generally Recognized As Safe; (2) Approved by the FDA as a food additive; (3) Included in the FDA review and approval of a New Animal Drug Application or New Drug Application; or (4) Approved by APHIS for use in veterinary biologics."
+  },
+  "notes": "Enterotoxemia vaccine for healthy cattle and sheep (cattle 2 mL, sheep 1 mL, subcutaneous). The label states one slaughter restriction and no milk or egg restriction, so none is recorded and milk stays unknown (ruling P571-2)."
+}

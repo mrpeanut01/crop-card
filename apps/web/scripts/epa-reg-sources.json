@@ -3082,14 +3082,6 @@
       "quote": "6. Emulsifiable concentrates (such as Outlook or oil concentrate when applicable)",
       "note": "Mixing-order list names Outlook as an EC; p16 also warns about 'Tank mixing Outlook with other emulsifiable concentrate (EC) formulated products'. PPLS 7969-156 formulation 'Emulsifiable Concentrate' corroborates."
     },
-    "oxidate-2-0": {
-      "formulation": "L",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00012-20210903.pdf",
-      "docDate": "2021-09-03",
-      "page": 6,
-      "quote": "ZeroTol 2.0 is a liquid bactericide/fungicide used to treat and control plant pathogens",
-      "note": "OxiDate® 2.0 is an alternate brand of ZeroTol 2.0 (p3). PPLS formulation field: 'Soluble Concentrate' (SL); both liquid."
-    },
     "permit": {
       "formulation": "WDG",
       "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00002-20250911.pdf",
@@ -3342,14 +3334,6 @@
       "page": 5,
       "quote": "This package contains Zampro® fungicide, a suspension concentrate (SC) with two active ingredients, ametoctradin and dimethomorph."
     },
-    "zerotol-2-0-sanitizer": {
-      "formulation": "L",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00012-20210903.pdf",
-      "docDate": "2021-09-03",
-      "page": 6,
-      "quote": "ZeroTol 2.0 is a liquid bactericide/fungicide used to treat and control plant pathogens on indoor, gree[nhouse]...",
-      "note": "No code printed; label word 'liquid' maps to L. PPLS record formulation is 'Soluble Concentrate' (SL), so a reviewer may prefer SL; the two disagree."
-    },
     "zidua-pro": {
       "formulation": "SC",
       "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00365-20171228.pdf",
@@ -3468,6 +3452,22 @@
       "page": 3,
       "quote": "3.2 Mixtures Chemical nature Soluble concentrate (SL) Propamocarb hydrochoride 722 g/l (600g/l propamocarb)",
       "note": "Bayer (registrant) GB SDS, Version 1/GB. Panel ruling 2026-10-04 (#553), 2-0 with one panelist conditional on this rule: a registrant's SDS from another country counts when it carries the same SDS number and product code as the US SDS. Bayer's US SDS (Version 6.0/USA, 03/26/2024, https://www.fbn.com/api/store/market/documents/sds/previcur-flex.pdf) has the same SDS Number 102000000806 and Product code (UVP) 05933765, but says only 'Form Liquid' and 'completely miscible'; 722 g/l is 6.0 lb/gal, matching the US label's 'Contains 6.0 lbs. propamocarb hydrochloride ... per gallon' (000264-00678-20240816). Rejected: Bayer's US product page ('6 lb/gal emulsifiable concentrate', marketing copy that does not fit a fully miscible salt) and PPLS 'Flowable Concentrate'."
+    },
+    "mycoshield-oxytetracycline": {
+      "formulation": "WP",
+      "sourceUrl": "https://cdn.nufarm.com/wp-content/uploads/sites/28/2018/09/11145621/Nufarm_PIB_Mycoshield_15-AG-0030.pdf",
+      "docDate": "2020-05-19",
+      "page": 1,
+      "quote": "EPA REG. NO.  55146-97 ... FORMULATION  wettable powder",
+      "note": "Nufarm (registrant) Product Information Bulletin 15-AG-0030-D (©2019; PDF created 2020-05-19), 'AT-A-GLANCE INFO' box, linked from nufarm.com/usst/product/mycoshield/. Same wording in bulletins 19-AG-0017-B and 19-AG-0021-B. Labels 55146-97 (2007-2020) and the Nufarm SDS (2018, 'brown powder') name no type. Same kind of source as phostrol-phosphonate. PPLS 'Wettable Powder' corroborates. Panel ruling 2026-10-05 (#553), 3-0."
+    },
+    "resicore-rev": {
+      "formulation": "ZC",
+      "sourceUrl": "https://www.corteva.com/content/dam/dpagco/corteva/na/us/en/files/product-page-resources/resicore-xl-pdf/DOC-Resicore-REV-Mixing-Handling-Guide-NA-US.pdf",
+      "docDate": "2025-02-18",
+      "page": 1,
+      "quote": "Resicore® REV herbicide is a (ZC) formulation which is a mixed formulation of CS and SC and is a stable aqueous suspension of microcapsules and solid fine particles, each of which contains one or more active ingredients.",
+      "note": "Corteva (registrant) 'Resicore REV Mixing and Handling Guide', footer '©2025 Corteva 020567-3 (02/25)', linked from Corteva's US Resicore REV product page; p2 mixing order also lists 'Resicore® REV herbicide (ZC)'. Label 62719-756 (2022, 2025), the 09/24 tech bulletin and SDS 800080102101 say only 'encapsulated' or 'liquid'. Same class of source as duracor (Corteva US product-page PDF). PPLS formulation field is empty. Panel ruling 2026-10-05 (#553), 3-0."
     }
   },
   "dataCorrections": {

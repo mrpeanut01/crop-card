@@ -13,8 +13,8 @@
     "soilTempMinF": 60,
     "rowSpacingIn": 48,
     "inRowSpacingIn": {
-      "min": 8,
-      "max": 12
+      "min": 12,
+      "max": 18
     },
     "vineSpreadFt": {
       "min": 5,

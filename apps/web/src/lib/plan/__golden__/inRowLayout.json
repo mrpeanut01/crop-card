@@ -31,7 +31,8 @@
         "varietyDisplayName": "mystery",
         "blockId": "f2",
         "plants": 242,
-        "score": 30
+        "score": 30,
+        "spacingProvenance": "fallback"
       },
       {
         "stockItemId": "st_4",
@@ -47,7 +48,8 @@
         "varietyDisplayName": "nothing",
         "blockId": "f1",
         "plants": 279,
-        "score": 30
+        "score": 30,
+        "spacingProvenance": "fallback"
       },
       {
         "stockItemId": "st_1",

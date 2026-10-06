@@ -13,11 +13,7 @@
   "defaultRowSpacingInches": 12,
   "plantingGuide": {
     "soilTempMinF": 40,
-    "rowSpacingIn": 12,
-    "inRowSpacingIn": {
-      "min": 6,
-      "max": 8
-    }
+    "rowSpacingIn": 12
   },
   "agronomy": {
     "lifecycle": "perennial",

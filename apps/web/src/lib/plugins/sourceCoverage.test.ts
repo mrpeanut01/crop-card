@@ -32,6 +32,7 @@ import {
   speciesFactPaths,
   seedingRateQuoteGaps,
   rowSpacingGaps,
+  isAllowedSpacingSource,
   treeSizeClassQuoteGaps,
   type SourceMap
 } from './sourceCoverage';
@@ -802,6 +803,8 @@ describe('stageTemplateWordingProblems (OC-1)', () => {
   });
 });
 
+const EXT_SOURCE = { ...FIXTURE_SOURCE, url: 'https://extension.example.edu/spacing.pdf' };
+
 describe('#587 / #591 row spacing', () => {
   const base = cropPluginSchema.parse({
     pluginId: 'cherry-test',
@@ -884,7 +887,7 @@ describe('#587 / #591 row spacing', () => {
     const sources: SourceMap = {
       'cherry-test': {
         inRowSpacingIn: {
-          ...FIXTURE_SOURCE,
+          ...EXT_SOURCE,
           quote: 'Minimum Spacing Between Trees (feet): Figs | 10'
         }
       }
@@ -917,5 +920,99 @@ describe('#587 / #591 row spacing', () => {
       'cherry-test: rowSpacingIn is never read when treeSizeClasses spaces the crop',
       'cherry-test: defaultRowSpacingInches is never read when treeSizeClasses spaces the crop'
     ]);
+  });
+});
+
+describe('#600 in-row spacing', () => {
+  const veg = cropPluginSchema.parse({
+    pluginId: 'bean-test',
+    type: 'crop',
+    displayName: 'Bean Test',
+    version: '1',
+    cropFamily: 'legume',
+    harvestStyle: 'dry-seed-legume',
+    archetype: 'dry-seed-legume',
+    bloomWindow: { monthsOfYear: [6], beeAttractive: false },
+    plantingGuide: { inRowSpacingIn: { min: 0.75, max: 1 } }
+  });
+  const quote = (q: string, url = EXT_SOURCE.url): SourceMap => ({
+    'bean-test': { inRowSpacingIn: { ...EXT_SOURCE, url, quote: q } }
+  });
+
+  it('gates every crop in-row spacing, not only tree crops', () => {
+    expect(cropFactPaths(veg)).toEqual(['inRowSpacingIn']);
+    expect(checkSources([{ pluginId: 'bean-test', paths: cropFactPaths(veg) }], {})).toEqual([
+      { pluginId: 'bean-test', path: 'inRowSpacingIn', problem: 'missing' }
+    ]);
+  });
+
+  it('accepts a table row that names the in-row column and states both ends', () => {
+    expect(
+      rowSpacingGaps(
+        [veg],
+        quote(
+          'Table 5 (Crop | Distance between plants in row | Distance between rows): "Radish | 3/4-1 in | 6-12 in"'
+        )
+      )
+    ).toEqual([]);
+  });
+
+  it('needs both ends of the range', () => {
+    expect(rowSpacingGaps([veg], quote('Distance between plants in row | 1-2 in'))).toEqual([
+      'bean-test: inRowSpacingIn quote does not state 0.75 in'
+    ]);
+  });
+
+  it('refuses an unlabelled spacing that names no axis', () => {
+    expect(rowSpacingGaps([veg], quote('Spacing: 3/4 to 1 inch x 12 inches'))).toEqual([
+      'bean-test: inRowSpacingIn quote does not say the figure is between plants'
+    ]);
+  });
+
+  it('refuses a seed-company page (#591 ruling Q3)', () => {
+    expect(
+      rowSpacingGaps(
+        [veg],
+        quote('Spacing in Row: 3/4-1 in, thin to stand', 'https://www.seeds.example.com/bean')
+      )
+    ).toEqual(['bean-test: inRowSpacingIn source is not an extension or government page']);
+  });
+
+  it('allows extension and government hosts, and UF/IFAS EDIS', () => {
+    expect(isAllowedSpacingSource('https://www.pubs.ext.vt.edu/426/426-331/426-331.html')).toBe(
+      true
+    );
+    expect(isAllowedSpacingSource('https://plants.usda.gov/x.pdf')).toBe(true);
+    expect(isAllowedSpacingSource('https://journals.flvc.org/edis/article/download/1/2')).toBe(
+      true
+    );
+    expect(isAllowedSpacingSource('https://www.harrisseeds.com/products/1')).toBe(false);
+    expect(isAllowedSpacingSource('not a url')).toBe(false);
+  });
+
+  it('reads inches as words, ½ feet and "within a row"', () => {
+    const words = cropPluginSchema.parse({
+      ...veg,
+      plantingGuide: { inRowSpacingIn: { min: 6, max: 12 } }
+    });
+    expect(
+      rowSpacingGaps(
+        [words],
+        quote('Direct seed six to twelve-inches apart, rows three feet apart')
+      )
+    ).toEqual([]);
+    const hop = cropPluginSchema.parse({
+      ...veg,
+      plantingGuide: { inRowSpacingIn: { min: 42, max: 42 } }
+    });
+    expect(rowSpacingGaps([hop], quote('plants spaced 3½ feet within a row'))).toEqual([]);
+  });
+
+  it('reads feet and half feet for in-row ranges', () => {
+    const vine = cropPluginSchema.parse({
+      ...veg,
+      plantingGuide: { inRowSpacingIn: { min: 18, max: 48 } }
+    });
+    expect(rowSpacingGaps([vine], quote('Set plants 1.5 to 4 feet apart in the row'))).toEqual([]);
   });
 });

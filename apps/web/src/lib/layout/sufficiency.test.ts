@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_PERIMETER_BUFFER_FT,
+  footprintOf,
   footprintSqFt,
   plantsFitUsable,
   sufficiencyOf,
   usableSqft
 } from './sufficiency';
+import { withSpacingProvenance } from './engine';
 import type { CropPlugin } from '$lib/plugins/schemas';
 
 const SQFT_PER_ACRE = 43_560;
@@ -179,6 +181,59 @@ describe('footprintSqFt — vine spread + canopy override', () => {
       daysToMaturity: { min: 60, max: 70 }
     } as CropPlugin;
     expect(footprintSqFt(odd)).toBe(50);
+  });
+});
+
+describe('#600 footprint provenance', () => {
+  const crop = (guide: CropPlugin['plantingGuide']): CropPlugin =>
+    ({
+      pluginId: 'p',
+      type: 'crop',
+      displayName: 'P',
+      version: '1.0.0',
+      cropFamily: 'leafy-green',
+      plantingGuide: guide
+    }) as CropPlugin;
+
+  it('is plugin when both spacings are sourced', () => {
+    expect(footprintOf(crop({ rowSpacingIn: 18, inRowSpacingIn: { min: 6, max: 12 } }))).toEqual({
+      sqft: 1.125,
+      provenance: 'plugin'
+    });
+  });
+
+  it('is fallback when the in-row spacing is the 12 in placeholder', () => {
+    const f = footprintOf(crop({ rowSpacingIn: 18 }));
+    expect(f).toEqual({ sqft: 1.5, provenance: 'fallback' });
+  });
+
+  it('is fallback when the row is spaced square at the in-row midpoint', () => {
+    expect(footprintOf(crop({ inRowSpacingIn: { min: 6, max: 12 } })).provenance).toBe('fallback');
+  });
+
+  it('is fallback with no spacing at all', () => {
+    expect(footprintOf(crop(undefined))).toEqual({ sqft: 1, provenance: 'fallback' });
+  });
+
+  it('is plugin when a sourced vine spread outweighs a placeholder spacing', () => {
+    expect(footprintOf(crop({ vineSpreadFt: { min: 6, max: 10 } })).provenance).toBe('plugin');
+  });
+
+  it('tags engine assignments of unsourced crops only', () => {
+    const index = {
+      a: { ...crop({ rowSpacingIn: 18, inRowSpacingIn: { min: 6, max: 12 } }), pluginId: 'a' },
+      b: { ...crop({ rowSpacingIn: 18 }), pluginId: 'b' }
+    };
+    expect(
+      withSpacingProvenance(
+        [{ cropPluginId: 'a' }, { cropPluginId: 'b' }, { cropPluginId: 'z' }],
+        index
+      )
+    ).toEqual([
+      { cropPluginId: 'a' },
+      { cropPluginId: 'b', spacingProvenance: 'fallback' },
+      { cropPluginId: 'z' }
+    ]);
   });
 });
 

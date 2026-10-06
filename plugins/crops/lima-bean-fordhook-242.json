@@ -11,8 +11,8 @@
   "defaultRowSpacingInches": 24,
   "plantingGuide": {
     "inRowSpacingIn": {
-      "min": 4,
-      "max": 4
+      "min": 3,
+      "max": 6
     }
   },
   "harvestIndicators": [

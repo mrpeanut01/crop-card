@@ -10,10 +10,6 @@
   },
   "defaultRowSpacingInches": 24,
   "plantingGuide": {
-    "inRowSpacingIn": {
-      "min": 12,
-      "max": 12
-    }
   },
   "harvestIndicators": [
     "Foliage cut as needed",

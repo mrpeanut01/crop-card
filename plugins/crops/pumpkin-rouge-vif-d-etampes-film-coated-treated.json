@@ -10,7 +10,7 @@
   },
   "plantingGuide": {
     "inRowSpacingIn": {
-      "min": 36,
+      "min": 24,
       "max": 48
     },
     "soilTempMinF": 70,

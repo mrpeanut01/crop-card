@@ -127,7 +127,7 @@ describe('applyRecipe', () => {
     expect(new Set(app.plantings.map((p) => p.provenance))).toEqual(new Set(['plugin']));
     expect(app.plantings[0]).toMatchObject({
       cropPluginId: 'lettuce-black-seeded-simpson',
-      plantCount: 9,
+      plantCount: 12,
       note: 'Each sowing takes the next quarter of the bed.'
     });
   });

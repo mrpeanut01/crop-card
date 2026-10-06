@@ -9,10 +9,6 @@
     "max": 1095
   },
   "plantingGuide": {
-    "inRowSpacingIn": {
-      "min": 96,
-      "max": 96
-    }
   },
   "harvestIndicators": [
     "Brix 22–24",

@@ -224,6 +224,11 @@
                 {line.text}
               </span>
             {:else}
+              {#if a.spacingProvenance === 'fallback'}<span
+                  data-testid="review-spacing-fallback"
+                  title={tr('wizard.review.spacingFallback')}
+                  ><Provenance source="fallback" compact /></span
+                >{/if}
               {a.plants.toLocaleString()}
             {/if}
           </td>

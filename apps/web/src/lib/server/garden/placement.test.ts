@@ -94,7 +94,7 @@ describe('writeFootprint', () => {
         footprint: HALF,
         plantCount: 24,
         plantCountProvenance: 'data',
-        spacing: { inRowIn: 8, rowIn: 12, pattern: 'square', source: 'plugin' },
+        spacing: { inRowIn: 7, rowIn: 12, pattern: 'square', source: 'plugin' },
         cropFamily: 'leafy-green'
       });
       expect(out.response.reanchored).toBeNull();

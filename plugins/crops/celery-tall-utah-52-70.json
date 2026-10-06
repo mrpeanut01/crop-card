@@ -10,10 +10,6 @@
   },
   "defaultRowSpacingInches": 16,
   "plantingGuide": {
-    "inRowSpacingIn": {
-      "min": 6,
-      "max": 6
-    }
   },
   "harvestIndicators": [
     "Stalks 12–18 in",

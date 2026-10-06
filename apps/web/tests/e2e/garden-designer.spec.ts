@@ -311,10 +311,10 @@ for (const viewport of [PHONE, DESKTOP]) {
       await addCropToSelected(page, 'Salanova', /Salanova/);
       await bed1.getByRole('tab', { name: 'Plantings' }).click();
       const row = await setPlantingSize(page, /Salanova/, 3, 15);
-      await expect(row.getByTestId('plant-count')).toContainText('60 plants');
+      await expect(row.getByTestId('plant-count')).toContainText('75 plants');
       await expect(row.locator('[data-provenance="data"]')).toBeVisible();
       await row.getByLabel(/spacing pattern/).selectOption('offset');
-      await expect(row.getByTestId('plant-count')).toContainText('78 plants');
+      await expect(row.getByTestId('plant-count')).toContainText('125 plants');
 
       await row.getByRole('button', { name: 'Add succession' }).click();
       const succ = row.getByTestId('succession-sheet');

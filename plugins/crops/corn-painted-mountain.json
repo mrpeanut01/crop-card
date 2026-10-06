@@ -15,7 +15,7 @@
     "soilTempMinF": 50,
     "rowSpacingIn": 30,
     "inRowSpacingIn": {
-      "min": 8,
+      "min": 10,
       "max": 12
     }
   },

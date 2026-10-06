@@ -28,7 +28,7 @@ import { cropCastsShade } from '$lib/calendar/engine';
 import { rotationLookbackForFamily } from '$lib/calendar/rotation';
 import type { BlockWithPlantings, SunExposure } from '$lib/db/blocks';
 import type { Crop } from '$lib/db/crops';
-import { footprintSqFt } from './sufficiency';
+import { footprintOf, footprintSqFt } from './sufficiency';
 import { bedPlantsFit, plantsForShare } from './bedSharing';
 import { bedFreeAfter, blockRuleOut, leftoverReports, roomFor, type LeftoverReport } from './split';
 
@@ -70,6 +70,9 @@ export interface Assignment {
   quantityUnit?: string;
   /** Per-block placement score for UI debug chips; higher = better fit. */
   score: number;
+  /** #600: set when the crop's spacing has no source, so the block fit
+   *  behind `plants` used the tagged placeholder (Invariant 7). */
+  spacingProvenance?: 'fallback';
 }
 
 export interface PlanDiagnostic {
@@ -148,7 +151,25 @@ export function planLayout(given: PlanInput): PlanResult {
     })
   };
   const result = planWithoutReport(input);
-  return { ...result, leftover: leftoverReports(input, result.assignments) };
+  return {
+    ...result,
+    assignments: withSpacingProvenance(result.assignments, input.pluginIndex),
+    leftover: leftoverReports(input, result.assignments)
+  };
+}
+
+/** #600: tags each assignment whose crop footprint comes from an unsourced
+ *  spacing. Idempotent; never removes a tag. */
+export function withSpacingProvenance<T extends Pick<Assignment, 'cropPluginId'>>(
+  assignments: ReadonlyArray<T>,
+  pluginIndex: Readonly<Record<string, CropPlugin>>
+): Array<T & { spacingProvenance?: 'fallback' }> {
+  return assignments.map((a) => {
+    const plugin = pluginIndex[a.cropPluginId];
+    return plugin && footprintOf(plugin).provenance === 'fallback'
+      ? { ...a, spacingProvenance: 'fallback' as const }
+      : a;
+  });
 }
 
 type RawResult = Omit<PlanResult, 'leftover'>;

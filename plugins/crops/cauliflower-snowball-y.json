@@ -11,7 +11,7 @@
   "defaultRowSpacingInches": 24,
   "plantingGuide": {
     "inRowSpacingIn": {
-      "min": 15,
+      "min": 12,
       "max": 24
     },
     "establishment": "transplant",

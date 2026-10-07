@@ -19,6 +19,7 @@ import { randomUUID } from 'node:crypto';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
+import { runShifted } from '$lib/server/clock';
 import { runWithTenant } from '$lib/db/tenant';
 import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
@@ -234,6 +235,20 @@ describe('reopenSeason', () => {
       const almostExpired = Date.now() - (REOPEN_WINDOW_MS - 60_000);
       closeSeason({ year: 2050, ...baseSnapshot, closedAt: almostExpired });
       expect(canReopen(2050)).toBe(true);
+    });
+  });
+
+  it('a close on a fast-forwarded demo clock keeps its reopen window (#750)', () => {
+    const owner = freshOwner();
+    const yearMs = 365 * 24 * 60 * 60 * 1000;
+    runShifted(yearMs, () => {
+      runWithTenant(owner, () => {
+        const res = closeSeason({ year: 2051, ...baseSnapshot });
+        expect(res.ok).toBe(true);
+        if (res.ok) expect(Math.abs(res.closeout.closedAt - Date.now())).toBeLessThan(60_000);
+        expect(canReopen(2051)).toBe(true);
+        expect(reopenSeason(2051).ok).toBe(true);
+      });
     });
   });
 

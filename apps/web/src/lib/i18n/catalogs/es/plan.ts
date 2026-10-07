@@ -643,6 +643,8 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
     'Las familias anteriores ({families}) ya pasaron su periodo de espera; puedes volver a sembrarlas.',
   'season.rot.warn':
     'Rota y evita {families}: volver a sembrarlas aquí arriesga que pasen enfermedades o plagas dentro del periodo de espera de {years} años.',
+  'season.rot.standing':
+    'Sigue en pie: {names}. Los árboles, las vides y los arbustos se quedan en la tierra, así que este bloque no está libre para sembrar.',
   'season.rot.suggest':
     'Considera rotar y evitar {families}; se sembraron aquí la temporada pasada.',
   'season.stock.expired': 'Ya está vencido; no lo pases a la nueva temporada.',

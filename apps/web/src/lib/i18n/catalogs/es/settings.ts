@@ -591,6 +591,31 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
     '{count} siembra sigue activa o planeada. Marca cada una como cosechada / fallida / archivada en',
   'settings.close.unresolved.other':
     '{count} siembras siguen activas o planeadas. Marca cada una como cosechada / fallida / archivada en',
+  'settings.close.bulkTitle': 'Resolver siembras de una vez',
+  'settings.close.bulkSelectAll': 'Seleccionar todas ({count})',
+  'settings.close.bulkMarkAs': 'Marcar las seleccionadas como',
+  'settings.close.bulkHarvested': 'Cosechadas',
+  'settings.close.bulkFailed': 'Terminadas (perdidas)',
+  'settings.close.bulkArchived': 'Archivadas',
+  'settings.close.bulkApply.one': 'Marcar {count} siembra…',
+  'settings.close.bulkApply.other': 'Marcar {count} siembras…',
+  'settings.close.bulkConfirm.one':
+    '¿Marcar {count} siembra como {status}? Todavía puedes cambiar una siembra en Plan antes de cerrar la temporada.',
+  'settings.close.bulkConfirm.other':
+    '¿Marcar {count} siembras como {status}? Todavía puedes cambiar una siembra en Plan antes de cerrar la temporada.',
+  'settings.close.bulkConfirmBtn': 'Sí, marcarlas',
+  'settings.close.bulkCancel': 'Cancelar',
+  'settings.close.bulkSaving': 'Guardando…',
+  'settings.close.bulkDone.one': '{count} siembra marcada.',
+  'settings.close.bulkDone.other': '{count} siembras marcadas.',
+  'settings.close.bulkFailedMsg': 'No se pudieron marcar las siembras ({status}).',
+  'settings.close.bulkNetwork':
+    'No se pudo conectar con el servidor. Inténtalo de nuevo con conexión.',
+  'settings.close.bulkClosed':
+    'La temporada {year} está cerrada. Reábrela para cambiar sus siembras.',
+  'settings.close.plantingRowAria': '{name}, {block}, {date}',
+  'settings.close.noBlock': 'Sin bloque',
+  'settings.close.noDate': 'Sin fecha',
   'settings.close.planLink': 'Plan →',
   'settings.close.harvestTitle': 'Resumen de cosecha revisado',
   'settings.close.harvestEvents.one': '{count} evento de cosecha registrado en {year}.',

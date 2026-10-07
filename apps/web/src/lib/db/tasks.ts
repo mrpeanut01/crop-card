@@ -115,8 +115,11 @@ export interface ListFilters {
   equipmentId?: string;
   status?: TaskStatus;
   kind?: TaskKind;
+  pluginTemplateKey?: string;
   limit?: number;
 }
+
+export const INPUTS_PLAN_TEMPLATE_KEY = 'inputs-plan';
 
 function taskConditions(filters: ListFilters) {
   const conds = [];
@@ -126,6 +129,7 @@ function taskConditions(filters: ListFilters) {
   if (filters.blockId) conds.push(eq(tasks.blockId, filters.blockId));
   if (filters.equipmentId) conds.push(eq(tasks.equipmentId, filters.equipmentId));
   if (filters.kind) conds.push(eq(tasks.kind, filters.kind));
+  if (filters.pluginTemplateKey) conds.push(eq(tasks.pluginTemplateKey, filters.pluginTemplateKey));
   if (filters.status === 'open') {
     conds.push(isNull(tasks.completedAt));
     conds.push(isNull(tasks.abortedAt));
@@ -208,6 +212,16 @@ export function countTasks(filters: Omit<ListFilters, 'limit'> = {}): number {
     .where(withTenant(tasks, taskConditions(filters)))
     .get();
   return row?.n ?? 0;
+}
+
+/** Inputs-plan tasks scheduled in `year`, so an earlier season's inputs
+ *  plan never marks a later season's step done (#755). */
+export function countInputsPlanTasksInYear(year: number): number {
+  return countTasks({
+    pluginTemplateKey: INPUTS_PLAN_TEMPLATE_KEY,
+    fromMs: new Date(year, 0, 1).getTime(),
+    toMs: new Date(year + 1, 0, 1).getTime() - 1
+  });
 }
 
 export function getTask(id: string): Task | undefined {

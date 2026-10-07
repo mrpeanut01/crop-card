@@ -18,6 +18,8 @@ import { listLotsForItem, listStockItems, recordMovement } from '$lib/db/stock';
 import { listSprayers } from '$lib/db/sprayers';
 import { defaultCoverCredit } from '$lib/fertility/coverCropCredits';
 import { resolveArchetype } from '$lib/plugins/schemas';
+import { resolveCropAgronomy } from '$lib/plugins/familyDefaults';
+import { cropDisplayName } from '$lib/i18n/cropName';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
 import { frostDatesForYear } from '$lib/schedule/settings';
@@ -94,6 +96,32 @@ function inYear(crop: Crop, year: number): boolean {
   return new Date(crop.plantingDate).getFullYear() === year;
 }
 
+const PERENNIAL_ARCHETYPES: ReadonlySet<string> = new Set([
+  'tree-fruit-multi-pick',
+  'perennial-vine-quality'
+]);
+
+function isPerennial(crop: Crop, pluginIndex: Record<string, CropPlugin>): boolean {
+  const plug = pluginIndex[crop.cropPluginId];
+  if (!plug) return false;
+  return (
+    resolveCropAgronomy(plug).lifecycle === 'perennial' ||
+    PERENNIAL_ARCHETYPES.has(resolveArchetype(plug))
+  );
+}
+
+/** A perennial in the ground by the end of `year` that was never marked
+ *  failed or archived still stands there next season (#751). */
+export function isStandingPerennial(
+  crop: Crop,
+  year: number,
+  pluginIndex: Record<string, CropPlugin>
+): boolean {
+  if (crop.status !== 'active' && crop.status !== 'harvested') return false;
+  if (crop.plantingDate === null || new Date(crop.plantingDate).getFullYear() > year) return false;
+  return isPerennial(crop, pluginIndex);
+}
+
 /** Async entry: resolves the plugin registry, then runs the deterministic
  *  orchestration. This is what the endpoint + loader call. `runCarryForward`
  *  is the sync core, split out so it can be exercised with an injected
@@ -136,6 +164,14 @@ export function runCarryForward(
     lookbackByFamily[fam] = declared ?? rotationLookbackFallback(fam);
   }
 
+  const standingByBlock = new Map<string, Crop[]>();
+  for (const c of allCrops) {
+    if (!isStandingPerennial(c, fromYear, pluginIndex)) continue;
+    const arr = standingByBlock.get(c.blockId) ?? [];
+    arr.push(c);
+    standingByBlock.set(c.blockId, arr);
+  }
+
   const cropsByBlock = new Map<string, Crop[]>();
   for (const c of priorCrops) {
     const arr = cropsByBlock.get(c.blockId) ?? [];
@@ -157,7 +193,10 @@ export function runCarryForward(
     const rotInput: BlockRotationInput = {
       blockId: b.id,
       blockName: b.name,
-      priorPlantings
+      priorPlantings,
+      standing: (standingByBlock.get(b.id) ?? []).map((c) => ({
+        varietyDisplayName: cropDisplayName(c.cropPluginId, c.varietyDisplayName, input.locale)
+      }))
     };
     return buildRotationSuggestion(rotInput, lookbackByFamily, fromYear, toYear, input.locale);
   });
@@ -193,7 +232,8 @@ export function runCarryForward(
     plantingDateMs: c.plantingDate,
     status: c.status,
     quantityPlanted: c.quantityPlanted,
-    quantityUnit: c.quantityUnit
+    quantityUnit: c.quantityUnit,
+    perennial: isPerennial(c, pluginIndex)
   }));
 
   const windows = scheduleWindowsFor(cloneCandidates, pluginIndex, allCrops, toYear, nowMs);

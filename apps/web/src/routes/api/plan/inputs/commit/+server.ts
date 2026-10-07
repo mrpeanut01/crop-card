@@ -41,7 +41,7 @@ import { getBlock } from '$lib/db/blocks';
 import { db } from '$lib/db/client';
 import { listCrops } from '$lib/db/crops';
 import { tasks } from '$lib/db/schema';
-import { createTask, type RelatedEventTable } from '$lib/db/tasks';
+import { INPUTS_PLAN_TEMPLATE_KEY, createTask, type RelatedEventTable } from '$lib/db/tasks';
 import { withTenant } from '$lib/db/tenant';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
@@ -56,8 +56,6 @@ import { getRegistry } from '$lib/server/registry';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { validateManualChoices } from '$lib/server/inputsChoiceValidate';
 import type { CropPlugin } from '$lib/plugins/schemas';
-
-const INPUTS_PLAN_TEMPLATE_KEY = 'inputs-plan';
 
 const applicationSchema = z.object({
   id: z.string().min(1),

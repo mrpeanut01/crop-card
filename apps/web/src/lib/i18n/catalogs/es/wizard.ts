@@ -494,6 +494,8 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
     'Plan del motor determinista: mira la columna "Por qué" para el razonamiento de cada fila.',
   'wizard.review.error': 'Error: {error}',
   'wizard.review.fallbackDetail': 'asignador determinista',
+  'wizard.review.fbAiOff':
+    'La IA está desactivada en esta granja, así que el motor determinista hizo este plan con las reglas del plugin y tus bloques.',
   'wizard.review.fbInvalid':
     'Plan generado por el motor determinista después de que la respuesta de la IA falló la validación dos veces.',
   'wizard.review.fbNoKey':
@@ -528,6 +530,8 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.review.thWhy': 'Por qué',
   'wizard.review.unsized':
     '{name}: los bloques que elegiste aún no tienen tamaño, así que no se pudo ubicar nada. Vuelve a Bloques, toca Editar y dale a la cama un ancho y un largo.',
+  'wizard.schedule.aiOff':
+    '🛟 La IA está desactivada en esta granja, así que el programador determinista eligió estas fechas. Se respetan los escalonamientos y los desfases de compañeras.',
   'wizard.schedule.aiHelp':
     '🛟 La IA necesitó ayuda: tomó el control el programador determinista. Mira el chat de abajo para ver qué falló y ajusta desde ahí.',
   'wizard.schedule.error': 'Error: {error}',
@@ -569,6 +573,8 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
     '🛟 No pude acomodar tu calendario con limpieza. El plan determinista de arriba es una opción segura, pero esto podría ayudar:',
   'wizard.seedchat.sCouldntFitRetry':
     '🛟 No pude acomodar tu calendario con limpieza, ni siquiera tras reintentar. El plan determinista de arriba respeta todas las restricciones firmes, pero no es necesariamente el arreglo más elegante.',
+  'wizard.seedchat.sAiOff':
+    '🛟 Elegí las fechas con el programador determinista (la IA está desactivada en esta granja). Se respetan los escalonamientos y los desfases de compañeras.',
   'wizard.seedchat.sNoKey':
     '🛟 Elegí las fechas con el programador determinista (sin clave de API de Anthropic). Se respetan los escalonamientos y los desfases de compañeras.',
   'wizard.seedchat.sProposed': '📅 Las fechas de siembra propuestas están arriba.',
@@ -1015,6 +1021,8 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.chat.why': 'Por qué:',
   'wizard.chat.scheduleUnchanged': 'El calendario de arriba no cambió.',
   'wizard.chat.scheduleUpdated': 'Listo, se actualizaron las fechas de arriba.',
+  'wizard.chat.scheduleAiOff':
+    '⚠ La IA está desactivada en esta granja; el calendario de arriba no cambió.',
   'wizard.chat.scheduleNoKey':
     '⚠ No hay una clave de API de Anthropic configurada; el calendario de arriba no cambió.',
   'wizard.chat.scheduleUnavailable':

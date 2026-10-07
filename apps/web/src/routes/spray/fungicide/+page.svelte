@@ -607,26 +607,16 @@
 
   {#snippet legendStrip()}
     <ProvenanceLegend
-      shown={aiEnabled
-        ? ['plugin', 'data', 'ai', 'manual']
-        : ['plugin', 'data', 'fallback', 'manual']}
+      shown={['plugin', 'data', 'fallback', 'manual']}
       note={aiEnabled ? tr('sprayui.legend.funAi') : tr('sprayui.legend.funNoAi')}
     />
   {/snippet}
 
   {#snippet tankMixProvenance()}
-    <!-- FRAC groups come from plugin JSON (activeIngredients[].fracCode) —
-         always a `plugin` badge. If the operator added a second product
-         the AI tier could propose a rotation-safe pairing; until #89
-         lands that, the second-product badge defaults to fallback. -->
     {#if selectedFungicides.length > 0}
       <Provenance source="plugin" detail={tr('sprayui.prov.fracKernel')} compact />
       {#if selectedFungicides.length > 1}
-        {#if aiEnabled}
-          <Provenance source="ai" confidence={0.84} compact />
-        {:else}
-          <Provenance source="fallback" detail={tr('sprayui.prov.rotationHint')} compact />
-        {/if}
+        <Provenance source="fallback" detail={tr('sprayui.prov.rotationHint')} compact />
       {/if}
     {/if}
   {/snippet}

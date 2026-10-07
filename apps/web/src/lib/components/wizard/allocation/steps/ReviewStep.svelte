@@ -126,17 +126,21 @@
 {:else if w.response}
   {#if w.response.meta.fallback}
     <div class="aw-banner warn" role="alert" aria-live="assertive">
-      {w.response.meta.fallback === 'no-api-key'
-        ? tr('wizard.review.fbNoKey')
-        : w.response.meta.fallback === 'over-cap'
-          ? tr('wizard.review.fbOverCap')
-          : w.response.meta.fallback === 'quota-exceeded'
-            ? tr('wizard.review.fbQuota')
-            : w.response.meta.fallback === 'ai-unavailable'
-              ? tr('wizard.review.fbUnavailable')
-              : tr('wizard.review.fbInvalid')}
+      {w.response.meta.aiOff
+        ? tr('wizard.review.fbAiOff')
+        : w.response.meta.fallback === 'no-api-key'
+          ? tr('wizard.review.fbNoKey')
+          : w.response.meta.fallback === 'over-cap'
+            ? tr('wizard.review.fbOverCap')
+            : w.response.meta.fallback === 'quota-exceeded'
+              ? tr('wizard.review.fbQuota')
+              : w.response.meta.fallback === 'ai-unavailable'
+                ? tr('wizard.review.fbUnavailable')
+                : tr('wizard.review.fbInvalid')}
     </div>
-    {#if w.response.meta.fallback === 'quota-exceeded'}
+    {#if w.response.meta.aiOff}
+      <!-- AI is off for this farm: no usage chip to show. -->
+    {:else if w.response.meta.fallback === 'quota-exceeded'}
       <AiUsageChip planning />
     {:else if w.response.meta.fallback === 'over-cap'}
       <AiUsageChip />

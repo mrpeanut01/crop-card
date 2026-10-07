@@ -256,6 +256,7 @@ export const esSprayui: Partial<Record<MessageKey, string>> = {
   'sprayui.ins.protocol': 'Protocolo de aplicación',
   'sprayui.ins.submit': 'Registrar aplicación',
   'sprayui.ins.product': 'Insecticida',
+  'sprayui.ins.pickProduct': 'Elija un insecticida',
   'sprayui.obs.pest': 'Plaga',
   'sprayui.obs.pestPlaceholder': 'p. ej. chinche de la calabaza, ECB',
   'sprayui.obs.metric': 'Medida',

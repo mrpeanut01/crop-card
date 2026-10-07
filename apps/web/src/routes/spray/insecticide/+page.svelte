@@ -47,7 +47,9 @@
   let selectedBlockId = $state<string>(
     untrack(() => data.preselectedBlockId ?? data.blocks[0]?.id ?? '')
   );
-  let selectedPluginId = $state<string>(untrack(() => data.insecticides[0]?.pluginId ?? ''));
+  let selectedPluginId = $state<string>(
+    untrack(() => (data.insecticides.length === 1 ? data.insecticides[0].pluginId : ''))
+  );
 
   let spotSheetOpen = $state(false);
   async function onSpotAdded(r: SetupSpotResult) {
@@ -464,6 +466,9 @@
   {#snippet productSection()}
     <label for="insecticide-product">{tr('sprayui.ins.product')}</label>
     <select id="insecticide-product" bind:value={selectedPluginId} required>
+      {#if data.insecticides.length !== 1}
+        <option value="" disabled>{tr('sprayui.ins.pickProduct')}</option>
+      {/if}
       {#each data.insecticides as p (p.pluginId)}
         <option value={p.pluginId}>{p.displayName}</option>
       {/each}
@@ -517,25 +522,14 @@
 
   {#snippet legendStrip()}
     <ProvenanceLegend
-      shown={aiEnabled
-        ? ['plugin', 'data', 'ai', 'manual']
-        : ['plugin', 'data', 'fallback', 'manual']}
+      shown={['plugin', 'data', 'fallback', 'manual']}
       note={aiEnabled ? tr('sprayui.legend.ai') : tr('sprayui.legend.noAi')}
     />
   {/snippet}
 
   {#snippet tankMixProvenance()}
-    <!-- Stub badges per the v2 spec: row-1 product is always plugin
-         (safety-kernel rotation); subsequent products are ai/fallback.
-         Single-product UI today renders just the plugin badge; real
-         per-row wiring lands when the tank-mix calculator is on this
-         shell (deferred to a follow-up). -->
     <Provenance source="plugin" detail={tr('sprayui.prov.rotationKernel')} compact />
-    {#if aiEnabled}
-      <Provenance source="ai" confidence={0.84} compact />
-    {:else}
-      <Provenance source="fallback" detail={tr('sprayui.prov.deterministic')} compact />
-    {/if}
+    <Provenance source="fallback" detail={tr('sprayui.prov.deterministic')} compact />
   {/snippet}
 
   {#snippet ipmGate()}

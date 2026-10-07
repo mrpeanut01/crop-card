@@ -24,6 +24,13 @@ export const ZERO_USAGE = {
 /** Legacy `meta.fallback` tag the planning UIs already branch on. */
 export type DegradeTag = 'no-api-key' | 'quota-exceeded' | 'ai-unavailable';
 
+/** The guard refused because the farm's owner turned AI off (limit 0, every
+ *  demo farm). Planning responses carry this as `meta.aiOff` so the UI says
+ *  "AI is off for this farm" instead of "used up" or "needed help" (#692). */
+export function farmAiOff(guard: GuardOutcome): boolean {
+  return !guard.ok && guard.detail === 'owner-disabled';
+}
+
 export function degradeTag(reason: FallbackReason, guard: GuardOutcome): DegradeTag {
   if (reason === 'no-key') return 'no-api-key';
   if (!guard.ok) return 'quota-exceeded';

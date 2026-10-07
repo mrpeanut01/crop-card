@@ -90,7 +90,7 @@
     /** Per-tank-row provenance badges. Renders inside the productSection
      *  card after the product list. Pages place `<Provenance>` per row;
      *  row 1 is always `plugin` (rotation kernel), rows 2+ are
-     *  `ai`/`fallback` depending on aiEnabled. */
+     *  `fallback` (no Claude call backs these rows; #644). */
     tankMixProvenance?: Snippet;
     /** IPM threshold gate panel (insecticide-only). Pages render a card
      *  containing the threshold dial + 5-wk history + `<Provenance>`

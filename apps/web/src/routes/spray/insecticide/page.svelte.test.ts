@@ -183,3 +183,19 @@ describe('/spray/insecticide sprayer picker (#736)', () => {
     expect(screen.getByTestId('sprayer-empty')).toBeTruthy();
   });
 });
+
+describe('/spray/insecticide provenance (#644)', () => {
+  it('shows no ai badge and pre-selects nothing when there is a choice, even with AI on', () => {
+    const d = data({ beeToxicity: 'relatively-nontoxic', bloomRestriction: 'none' }, []);
+    d.insecticides = [
+      insecticide('acramite', { beeToxicity: 'relatively-nontoxic', bloomRestriction: 'none' }),
+      insecticide('neonic', { beeToxicity: 'relatively-nontoxic', bloomRestriction: 'none' })
+    ];
+    d.aiEnabled = true;
+    const { container } = render(Page, { props: { data: d } as never });
+    expect(container.querySelector('[data-provenance="ai"]')).toBeNull();
+    expect(container.querySelector('[data-provenance="fallback"]')).not.toBeNull();
+    expect((container.querySelector('#insecticide-product') as HTMLSelectElement).value).toBe('');
+    expect(recordButton()).toBeDisabled();
+  });
+});

@@ -135,6 +135,7 @@ export function planBeds(crops: readonly BedLayoutCrop[], opts: BedLayoutOptions
       let bed = open.get(width);
       let fits = bed ? Math.floor(perFt * (maxLen - bed.lengthFt) + 1e-9) : 0;
       if (!bed || fits < 1) {
+        if (beds.length > MAX_SUGGESTED_BEDS) break;
         bed = { widthFt: width, lengthFt: 0, crops: [] };
         beds.push(bed);
         open.set(width, bed);

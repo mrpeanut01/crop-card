@@ -80,7 +80,8 @@ export interface MatrixRow {
   plantsAvailable: number;
   sufficiency: SufficiencyResult['status'];
   utilizationPct: number;
-  sunMatch: 'full' | 'partial' | 'none';
+  /** #690: `unknown` when the block's sun was never recorded. */
+  sunMatch: 'full' | 'partial' | 'none' | 'unknown';
   rotationOk: boolean;
   companionGoodHere: string[];
   companionBadHere: string[];
@@ -880,7 +881,8 @@ export function buildCandidacyMatrix(input: PlanInput): MatrixRow[] {
 
       // Phase 35 (R-17): the same helpers the engine's rule-outs use, so
       // the prompt and the validator agree.
-      const sunMatch = sunMatchOf(seed, plugin, block.sunExposure ?? null);
+      const sunMatch =
+        block.sunExposure == null ? 'unknown' : sunMatchOf(seed, plugin, block.sunExposure);
       const rotationOk = rotationConflict(input, plugin, block.id) === null;
       const placedHere = new Set(cropsOnBlock(input, block.id, []));
       const goodHere = compEntry.goodWith.filter((p) => placedHere.has(p));
@@ -1044,11 +1046,11 @@ export function buildAllocationPrompt(
       "- plantsAvailable = how many plants the farmer's seed quantity will produce",
       '- sufficiency: "match" = seed quantity fills the block (within ±10%); "surplus" = farmer has more seed than the block can hold (some left over); "deficit" = farmer doesn\'t have enough seed to fill the block',
       '- utilization = plantsAvailable / plantsFit (e.g. 0.55 means only 55% of the block would be planted)',
-      '- sunMatch: "full" = block sun exactly matches what the crop wants; "partial" = acceptable but not ideal; "none" = wrong sun for this crop',
+      '- sunMatch: "full" = block sun exactly matches what the crop wants; "partial" = acceptable but not ideal; "none" = wrong sun for this crop; "unknown" = the block\'s sun is not recorded (never say it is acceptable or ideal)',
       '- rotationOk: Y = no same-family crop planted recently on this block; N = recent same-family planting (rotation rule violated)',
       '- compGood / compBad = neighbouring crops already on the block that pair well or badly with this seed',
       "- narrow: Y = the block is physically too narrow for this crop's row spacing (rows wouldn't fit cleanly)",
-      '- threeSisters: Y = the seed is corn / legume / or cucurbit (the three-sisters trio bonuses if grouped)',
+      '- threeSisters: Y = the seed is corn / legume / or cucurbit (the three-sisters trio bonuses if grouped). Only call a row three sisters when corn, a legume and a cucurbit all end up on that block',
       '',
       'Rules (selection):',
       '- Total plants assigned for each stockItemId must equal its plantsAvailable (or as close as possible).',
@@ -1070,7 +1072,7 @@ export function buildAllocationPrompt(
       '- Prefer sufficiency=match > surplus > deficit, but never push surplus past 1.25× when alternatives exist.',
       '',
       'Soft preferences:',
-      '- Prefer sunMatch=full > partial > none.',
+      '- Prefer sunMatch=full > partial = unknown > none.',
       '- Prefer rotationOk=Y. Only use rotationOk=N when no Y options remain.',
       '- When threeSisters=Y for corn+legume+cucurbit, group them on the same block when capacity allows.',
       '- Avoid blocks with narrow=Y for that crop.',
@@ -1503,7 +1505,12 @@ function engineFallback(
     const row = matrix.find((r) => r.stockItemId === a.stockItemId && r.blockId === a.blockId);
     const seed = input.seeds.find((s) => s.stockItemId === a.stockItemId);
     perRowRationale[`${a.stockItemId}:${a.blockId}`] = row
-      ? engineRationale(row, seed, locale)
+      ? engineRationale(
+          row,
+          seed,
+          locale,
+          threeSistersOnBlock(input, a.blockId, result.assignments)
+        )
       : t(locale, 'wizard.engine.placed');
   }
   const layer = buildPollinationLayer(input);
@@ -1640,7 +1647,8 @@ function engineAdvisories(
 function engineRationale(
   row: MatrixRow,
   seed?: Pick<SeedRequest, 'fillToCapacity' | 'byArea'>,
-  locale?: string | null
+  locale?: string | null,
+  threeSistersHere = false
 ): string {
   const bits: string[] = [];
   if (seed?.fillToCapacity) {
@@ -1663,17 +1671,34 @@ function engineRationale(
   }
   if (row.sunMatch === 'full') bits.push(t(locale, 'wizard.engine.why.sunFull'));
   else if (row.sunMatch === 'partial') bits.push(t(locale, 'wizard.engine.why.sunPartial'));
+  else if (row.sunMatch === 'unknown') bits.push(t(locale, 'wizard.engine.why.sunUnknown'));
   if (!row.rotationOk) {
     bits.push(t(locale, 'wizard.engine.why.rotation'));
   }
   if (row.narrowBlock) {
     bits.push(t(locale, 'wizard.engine.why.narrow'));
   }
-  if (row.threeSistersCandidate) bits.push(t(locale, 'wizard.engine.why.threeSisters'));
+  if (row.threeSistersCandidate && threeSistersHere)
+    bits.push(t(locale, 'wizard.engine.why.threeSisters'));
   return bits.length > 0 ? bits.join('. ') + '.' : t(locale, 'wizard.engine.placedDot');
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
+
+/** #690: corn, a legume and a cucurbit all on the block (its standing crops
+ *  plus this plan), the same test the engine's three-sisters bonus uses. */
+export function threeSistersOnBlock(
+  input: PlanInput,
+  blockId: string,
+  assignments: ReadonlyArray<Pick<Assignment, 'blockId' | 'cropPluginId'>>
+): boolean {
+  const families = new Set<string>();
+  for (const id of cropsOnBlock(input, blockId, assignments)) {
+    const family = input.pluginIndex[id]?.cropFamily;
+    if (family) families.add(family);
+  }
+  return families.has('corn') && families.has('legume') && families.has('cucurbit');
+}
 
 function computeSufficiencyByPair(
   assignments: ReadonlyArray<Assignment>,

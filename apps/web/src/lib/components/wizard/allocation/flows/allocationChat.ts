@@ -1,5 +1,6 @@
 import type { AllocationWizardState } from '../wizardState.svelte';
-import { wt } from '../wt';
+import { wlocale, wt } from '../wt';
+import { planRefusalText } from '$lib/plan/requestRefusal';
 import type { ChatMsg } from '../types';
 import type { AllocateFlow } from './allocateFlow';
 
@@ -87,7 +88,12 @@ export class AllocationChatFlow {
     });
     const body = await res.json();
     if (!res.ok) {
-      this.#w.chatError = body?.error ?? `HTTP ${res.status}`;
+      this.#w.chatError = planRefusalText(
+        body,
+        res.status,
+        wlocale(),
+        seedSelections.map((s) => s.varietyDisplayName)
+      );
       this.#w.allocationChatMessages = this.#w.allocationChatMessages.slice(0, -1);
       this.#w.chatDraft = text;
       return;

@@ -6,7 +6,7 @@ import { blockCapacity, sharedBedBlockIds } from '$lib/layout/bedSharing';
 import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
 import { companionIndex } from '$lib/plugins/companionRelations';
 import type { PluginRegistry } from '$lib/plugins/registry';
-import type { SeedSelection } from '$lib/plan/allocationApi';
+import { MAX_PLAN_PLANTS, type SeedSelection } from '$lib/plan/allocationApi';
 import { isAreaCrop } from '$lib/plan/spacingModel';
 import type { Assignment } from '$lib/layout/engine';
 
@@ -40,7 +40,7 @@ export function fillCap(
 ): number {
   let total = 0;
   for (const b of blocks) total += blockCapacity(b, plugin, bedIds.has(b.id));
-  return Math.max(1, Math.min(1_000_000, total));
+  return Math.max(1, Math.min(MAX_PLAN_PLANTS, total));
 }
 
 /** Builds the allocate / refine `PlanInput` from the wizard's selections:

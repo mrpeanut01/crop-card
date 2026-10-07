@@ -6,6 +6,8 @@ import type { AllocationWizardState } from '../wizardState.svelte';
 import type { AllocationResponse, ScheduledPlanting } from '../types';
 import { apportionLotQuantity, splitGroupIds } from '$lib/plan/splitGroup';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
+import { isRetryableStatus, planRefusalText } from '$lib/plan/requestRefusal';
+import { wlocale } from '../wt';
 
 /** One planting the commit step posts, kept in wizard state so a retry
  *  sends the same body, client record id and split group id. */
@@ -101,7 +103,8 @@ export class CommitFlow {
    *  client record ids and split group ids, so a row that saved on the
    *  server but looked failed in the browser is never saved twice. */
   async retryFailed() {
-    const failed = new Set(this.#w.commitFailedKeys);
+    const info = this.#w.commitFailInfo;
+    const failed = new Set(this.#w.commitFailedKeys.filter((k) => info[k]?.retryable !== false));
     const rows = this.#w.commitRows.filter((r) => failed.has(r.key));
     if (rows.length === 0) return;
     this.#w.commitRetrying = true;
@@ -178,8 +181,10 @@ export class CommitFlow {
       total: this.#w.commitRows.length,
       failed: []
     };
+    const info = { ...this.#w.commitFailInfo };
     for (const r of rows) {
       let ok: boolean;
+      delete info[r.key];
       try {
         const res = await fetch(`/api/blocks/${r.blockId}/plantings`, {
           method: 'POST',
@@ -207,8 +212,16 @@ export class CommitFlow {
           })
         });
         ok = res.ok;
+        if (!ok) {
+          const body = await res.json().catch(() => null);
+          info[r.key] = {
+            reason: planRefusalText(body, res.status, wlocale()),
+            retryable: isRetryableStatus(res.status)
+          };
+        }
       } catch {
         ok = false;
+        info[r.key] = { reason: null, retryable: true };
       }
       if (!ok) failedNow.push(r.key);
       this.#w.commitProgress = {
@@ -219,17 +232,53 @@ export class CommitFlow {
     for (const k of failedNow) stillFailed.add(k);
     const order = this.#w.commitRows.map((r) => r.key).filter((k) => stillFailed.has(k));
     this.#w.commitFailedKeys = order;
+    this.#w.commitFailInfo = Object.fromEntries(
+      order.filter((k) => info[k]).map((k) => [k, info[k]])
+    );
     const labels = new Map(this.#w.commitRows.map((r) => [r.key, r.label]));
     this.#w.commitProgress = {
       ...this.#w.commitProgress,
       done: this.#w.commitRows.length - order.length,
       failed: order.map((k) => labels.get(k) ?? k)
     };
-    if (order.length === 0) {
-      await this.commitAcceptedInputs();
-      await this.#w.discardDraft();
-      this.#w.props.onCommitted();
+    if (order.length === 0) await this.finish();
+  }
+
+  async finish() {
+    await this.commitAcceptedInputs();
+    await this.#w.discardDraft();
+    this.#w.props.onCommitted();
+  }
+
+  /** #722: ends the commit with the rows that saved. The Inputs Plan tasks
+   *  for a planting that did not save are left out. */
+  async finishWithoutFailed() {
+    const failed = new Set(this.#w.commitFailedKeys);
+    const unsaved = new Set(
+      this.#w.commitRows
+        .filter((r) => failed.has(r.key))
+        .map((r) => `${r.blockId}:${r.cropPluginId}`)
+    );
+    const saved = new Set(
+      this.#w.commitRows
+        .filter((r) => !failed.has(r.key))
+        .map((r) => `${r.blockId}:${r.cropPluginId}`)
+    );
+    const keep = (x: { blockId: string; cropPluginId: string }) => {
+      const k = `${x.blockId}:${x.cropPluginId}`;
+      return !unsaved.has(k) || saved.has(k);
+    };
+    const accepted = this.#w.acceptedInputs;
+    if (accepted) {
+      this.#w.acceptedInputs = {
+        ...accepted,
+        applications: accepted.applications.filter(keep),
+        scoutTasks: accepted.scoutTasks.filter(keep)
+      };
     }
+    this.#w.commitFailedKeys = [];
+    this.#w.commitFailInfo = {};
+    await this.finish();
   }
 
   /** POST the operator-accepted Inputs Plan rows as tasks (Phase 21 /

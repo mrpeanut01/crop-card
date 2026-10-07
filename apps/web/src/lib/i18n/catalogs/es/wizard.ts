@@ -1006,6 +1006,22 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.qty.status.planned': 'por comprar',
   'wizard.qty.notCounted': 'Aún sin contar',
   'wizard.qty.part': '{amount} {unit} {status}',
+  'wizard.refusal.http': 'La solicitud fue rechazada (HTTP {status}).',
+  'wizard.refusal.field.plants': 'número de plantas',
+  'wizard.refusal.field.area': 'área',
+  'wizard.refusal.field.quantity': 'cantidad de semilla',
+  'wizard.refusal.seedTooBig':
+    '{seed}: el {field} es más de lo que un plan puede tomar (como máximo {max}). Planifique parte de esta semilla o baje la cantidad en el paso Semillas.',
+  'wizard.refusal.tooBig':
+    'El {field} es más de lo que una siembra puede tener (como máximo {max}).',
+  'wizard.refusal.seedTooSmall': '{seed}: el {field} debe ser al menos {min}.',
+  'wizard.refusal.tooSmall': 'El {field} debe ser al menos {min}.',
+  'wizard.refusal.seedInvalid': '{seed}: no se pudo usar el {field}. Revíselo en el paso Semillas.',
+  'wizard.refusal.invalid': 'El plan no se pudo guardar así ({field}).',
+  'wizard.commit.stopped': 'Se guardaron {done} de {total}.',
+  'wizard.commit.noRetry':
+    'Intentarlo de nuevo no ayudará con estas. Vuelva a Revisión y cámbielas, o termine sin ellas.',
+  'wizard.commit.finishWithout': 'Terminar sin estas',
   'wizard.err.request': 'la solicitud falló',
   'wizard.err.chat': 'falló el mensaje del chat',
   'wizard.override.hint':
@@ -1128,6 +1144,7 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
     'no se sabe la cantidad de semilla, así que se ajusta al espacio que recibe',
   'wizard.engine.why.deficit': 'solo tienes semilla para un {pct}% de este bloque',
   'wizard.engine.why.sunFull': 'el sol es adecuado',
+  'wizard.engine.why.sunUnknown': 'no se ha registrado el sol de este bloque',
   'wizard.engine.why.sunPartial': 'el sol es aceptable pero no ideal',
   'wizard.engine.why.rotation':
     'hace poco hubo aquí un cultivo de la misma familia; se usó como último recurso',

@@ -5,10 +5,20 @@
 
   const w = getWizardContext();
   const tr = $derived(createT(page.data?.locale));
+  const canRetry = $derived(
+    w.commitFailedKeys.some((k) => w.commitFailInfo[k]?.retryable !== false)
+  );
+  const noRetry = $derived(
+    w.commitFailedKeys.some((k) => w.commitFailInfo[k]?.retryable === false)
+  );
 </script>
 
 <p class="aw-loading">
-  {tr('wizard.commit.progress', { done: w.commitProgress.done, total: w.commitProgress.total })}
+  {#if w.commitProgress.failed.length > 0 && !w.commitRetrying}
+    {tr('wizard.commit.stopped', { done: w.commitProgress.done, total: w.commitProgress.total })}
+  {:else}
+    {tr('wizard.commit.progress', { done: w.commitProgress.done, total: w.commitProgress.total })}
+  {/if}
 </p>
 <progress value={w.commitProgress.done} max={w.commitProgress.total}></progress>
 {#if w.inputsCommitError}
@@ -20,17 +30,34 @@
     <p>{tr('wizard.commit.retryHead')}</p>
     <ul>
       {#each w.commitProgress.failed as f, idx (idx)}
-        <li data-testid="commit-failed-row">{f}</li>
+        {@const reason = w.commitFailInfo[w.commitFailedKeys[idx]]?.reason}
+        <li data-testid="commit-failed-row">
+          {f}
+          {#if reason}<span class="reason" data-testid="commit-failed-reason">{reason}</span>{/if}
+        </li>
       {/each}
     </ul>
-    <button
-      type="button"
-      class="retry"
-      data-testid="commit-retry"
-      onclick={() => void w.retryFailedCommits()}
-    >
-      {tr('wizard.commit.retry')}
-    </button>
+    {#if canRetry}
+      <button
+        type="button"
+        class="retry"
+        data-testid="commit-retry"
+        onclick={() => void w.retryFailedCommits()}
+      >
+        {tr('wizard.commit.retry')}
+      </button>
+    {/if}
+    {#if noRetry}
+      <p>{tr('wizard.commit.noRetry')}</p>
+      <button
+        type="button"
+        class="retry secondary"
+        data-testid="commit-finish-without"
+        onclick={() => void w.finishWithoutFailedCommits()}
+      >
+        {tr('wizard.commit.finishWithout')}
+      </button>
+    {/if}
   </div>
 {:else if w.commitRetrying}
   <p class="aw-loading" aria-live="polite">{tr('wizard.commit.retrying')}</p>
@@ -55,6 +82,16 @@
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+  }
+  .reason {
+    display: block;
+    font-size: 0.9rem;
+  }
+  .retry.secondary {
+    margin-top: 0.5rem;
+    background: transparent;
+    color: var(--color-forest);
+    border: 2px solid var(--color-forest);
   }
   progress {
     width: 100%;

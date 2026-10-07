@@ -2,6 +2,7 @@
   import { getWizardContext } from '../wizardState.svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { planRefusalText } from '$lib/plan/requestRefusal';
   import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import { areaText } from '$lib/plan/seedAmountText';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
@@ -112,7 +113,16 @@
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        suggestError = body.error ?? `HTTP ${res.status}`;
+        suggestError = planRefusalText(
+          body,
+          res.status,
+          page.data?.locale,
+          countedSeeds.map(
+            (s) =>
+              w.props.seedStock.find((e) => e.stockItemId === s.stockItemId)?.displayName ??
+              s.stockItemId
+          )
+        );
         return;
       }
       suggestion = body;

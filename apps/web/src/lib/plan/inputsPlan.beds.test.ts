@@ -336,6 +336,29 @@ describe('#721 fertilizer approach and units', () => {
     }
   });
 
+  it('still offers an organic fertilizer the farm already holds', () => {
+    const plan = planInputs(
+      input({
+        plantings,
+        blocks: [block('b1', 1)],
+        cropPlugins: { corn },
+        seasonSetup: setup({ fertilityApproach: 'synthetic' }),
+        productPlugins: { herbicides: [], insecticides: [], fungicides: [], fertilizers },
+        existingStock: [
+          {
+            pluginId: 'bat-guano',
+            category: 'fertilizer',
+            displayName: 'Bat guano',
+            defaultUnit: 'lb',
+            onHand: 50
+          }
+        ]
+      })
+    );
+    const pre = plan.applications.find((a) => a.slot === 'pre-plant-fertility')!;
+    expect(pre.options?.some((o) => o.pluginId === 'bat-guano')).toBe(true);
+  });
+
   it('keeps organic fertilizers for a mixed approach', () => {
     const plan = planInputs(
       input({

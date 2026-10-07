@@ -685,12 +685,13 @@ function allowedCandidates<T extends Parameters<typeof isProductAllowed>[0]>(
  *  `'n'` puts the highest-N first; `'balanced'` puts products with all
  *  three nutrients first. Compost and cover-crop approaches prefer
  *  `organic === true` products when any are allowed, and the synthetic
- *  approach prefers the ones that are not. */
+ *  approach prefers the ones that are not, keeping any the farm holds. */
 function fertilizerPreference(
   pool: ReadonlyArray<FertilizerPlugin>,
   philosophy: Philosophy,
   emphasis: 'n' | 'balanced',
-  approach: FertilityApproach
+  approach: FertilityApproach,
+  held: ReadonlySet<string> = new Set()
 ): FertilizerPlugin[] {
   const allowed = pool.filter((p) => isProductAllowed(p, philosophy));
   if (allowed.length === 0) return [];
@@ -698,7 +699,7 @@ function fertilizerPreference(
     approach === 'compost-amendments' || approach === 'cover-crop-credits'
       ? allowed.filter((p) => p.organic === true)
       : approach === 'synthetic'
-        ? allowed.filter((p) => p.organic !== true)
+        ? allowed.filter((p) => p.organic !== true || held.has(p.pluginId))
         : allowed;
   const pool2 = approachFiltered.length > 0 ? approachFiltered : allowed;
   if (emphasis === 'n') return [...pool2].sort((a, b) => b.analysis.n - a.analysis.n);
@@ -888,6 +889,9 @@ function planForPlanting(
   bed: BedPlan | undefined
 ): PerPlantingOutput {
   const { seasonSetup, productPlugins, soilTests, fertilityCredits, year } = input;
+  const held = new Set(
+    input.existingStock.filter((st) => st.pluginId && st.onHand > 0).map((st) => st.pluginId!)
+  );
   const applications: InputsPlanApplication[] = [];
   const scoutTasks: InputsPlanScoutTask[] = [];
   const warnings: PlannerWarning[] = [];
@@ -1027,7 +1031,8 @@ function planForPlanting(
             productPlugins.fertilizers,
             seasonSetup.philosophy,
             emphasis,
-            seasonSetup.fertilityApproach
+            seasonSetup.fertilityApproach,
+            held
           )
             .map((f) => {
               const rate = fertilizerRateFromDeficit(deficit, f);
@@ -1097,7 +1102,8 @@ function planForPlanting(
           productPlugins.fertilizers,
           seasonSetup.philosophy,
           'n',
-          seasonSetup.fertilityApproach
+          seasonSetup.fertilityApproach,
+          held
         )
           .map((f) => ({
             plugin: f,

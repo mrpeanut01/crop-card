@@ -57,6 +57,8 @@ export const esGarden: Partial<Record<MessageKey, string>> = {
   'garden.family.herb-culinary': 'Hierbas',
   'garden.family.cereal-grain': 'Cereales de grano pequeño',
   'garden.family.forage': 'Forraje',
+  'garden.family.forage-grass': 'Heno y pasto de gramíneas',
+  'garden.family.perennial-vegetable': 'Hortalizas perennes',
   'garden.family.cover-grass': 'Cultivos de cobertura de pastos',
   'garden.family.cover-legume': 'Cultivos de cobertura de leguminosas',
   'garden.family.broadleaf-companion': 'Compañeras con flor',

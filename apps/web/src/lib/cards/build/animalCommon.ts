@@ -56,7 +56,7 @@ const FACT_LABEL_KEY: Record<string, MessageKey> = {
 
 const FACT_VALUE_KEY: Record<string, MessageKey> = {
   'Not set': 'cards.animal.notSet',
-  'Eggs, milk, meat or work': 'cards.animal.purpose.production',
+  'Food or work': 'cards.animal.purpose.production',
   Pet: 'cards.animal.purpose.pet',
   'Pet and production': 'cards.animal.purpose.mixed'
 };

@@ -16,6 +16,7 @@
   } from '$lib/animals/healthCopy';
   import type { HealthRecordInput } from '$lib/animals/recordApiSchemas';
   import type { HealthEventKind } from '$lib/safety/animalWithdrawal';
+  import { doseUnitFor, type HealthStockOption } from '$lib/animals/healthStock';
 
   interface Props {
     subjectType: 'animal' | 'group';
@@ -26,7 +27,7 @@
     /** Only the owner can say a product was used as the label says (C-10, C-19). */
     isOwner?: boolean;
     products: { id: string; name: string }[];
-    stock: { id: string; name: string; unit: string }[];
+    stock: HealthStockOption[];
     onDone: (result: { warnings?: { message: string }[] }, text: string) => void;
     /** A care task (32D) fixes what was given and posts elsewhere. */
     lockedKind?: HealthEventKind;
@@ -77,6 +78,13 @@
   );
   const askUse = $derived(hasProduct && showHolds);
   const showVet = $derived(kind === 'vet-visit' || (askUse && labelUse === 'extra-label-vet'));
+
+  function pickStock() {
+    const item = stock.find((s) => s.id === stockItemId);
+    if (!item) return;
+    if (!doseUnit.trim()) doseUnit = doseUnitFor(item.unit);
+    if (!lotNumber.trim() && item.lotNumber) lotNumber = item.lotNumber;
+  }
 
   async function submit(e: SubmitEvent) {
     e.preventDefault();
@@ -187,7 +195,7 @@
       <label class="af-label" for="{uid}-stock">
         Taken from stock <span class="af-optional">(optional)</span>
       </label>
-      <select id="{uid}-stock" class="af-input" bind:value={stockItemId}>
+      <select id="{uid}-stock" class="af-input" bind:value={stockItemId} onchange={pickStock}>
         <option value="">Not from stock</option>
         {#each stock as s (s.id)}<option value={s.id}>{s.name} ({s.unit})</option>{/each}
       </select>
@@ -204,7 +212,6 @@
           type="text"
           maxlength="20"
           list="{uid}-units"
-          placeholder="mL"
           bind:value={doseUnit}
         />
       </label>

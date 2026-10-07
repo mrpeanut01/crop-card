@@ -800,7 +800,9 @@
                               "stone-fruit",
                               "cereal-grain",
                               "forage",
-                              "herb-culinary"
+                              "herb-culinary",
+                              "forage-grass",
+                              "perennial-vegetable"
                             ]
                           },
                           "heightInches": {
@@ -843,7 +845,9 @@
                                 "stone-fruit",
                                 "cereal-grain",
                                 "forage",
-                                "herb-culinary"
+                                "herb-culinary",
+                                "forage-grass",
+                                "perennial-vegetable"
                               ]
                             },
                             "heightInches": {
@@ -8372,7 +8376,8 @@
                       "seeds",
                       "bag",
                       "bag-50lb",
-                      "bag-25kg"
+                      "bag-25kg",
+                      "bale"
                     ]
                   },
                   "lotNumber": {

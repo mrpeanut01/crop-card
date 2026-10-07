@@ -574,6 +574,20 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'units.qty.seeds.other': '{n} semillas',
   'units.qty.bags.one': '{n} bolsa',
   'units.qty.bags.other': '{n} bolsas',
+  'inv.feed.baleSize': 'Tamaño de la paca',
+  'inv.feed.oneBale': 'Una paca',
+  'inv.feed.setBaleOwner':
+    'Indique cuántas libras tiene una paca en la página de edición para descontar heno en libras.',
+  'inv.feed.setBaleHelper': 'Pida al dueño que indique primero cuántas libras tiene una paca.',
+  'inv.form.lbPerBale': 'Libras en una paca',
+  'inv.form.lbPerBaleHint':
+    'Pese algunas pacas o use el peso de su recibo. Se necesita para descontar heno del inventario en libras.',
+  'inv.form.err.lbPerBale': 'Las libras en una paca deben ser más de 0',
+  'stockui.feed.needsLbPerBale':
+    'Primero indique cuántas libras tiene una paca en la página de edición.',
+  'units.label.bale': 'Paca',
+  'units.qty.bales.one': '{n} paca',
+  'units.qty.bales.other': '{n} pacas',
   'stockui.feed.needsLbPerBag':
     'Primero indica en la página de edición cuántas libras trae una bolsa.',
   'stockui.feed.unitNotWeight':

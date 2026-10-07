@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { HealthStockOption } from '$lib/animals/healthStock';
   import { fmt } from '$lib/prefsState.svelte';
   import './animalForms.css';
   import HealthForm from './HealthForm.svelte';
@@ -26,7 +27,7 @@
     isOwner: boolean;
     canAct: boolean;
     products: { id: string; name: string }[];
-    stock: { id: string; name: string; unit: string }[];
+    stock: HealthStockOption[];
     onChanged: (text: string) => void;
   }
 

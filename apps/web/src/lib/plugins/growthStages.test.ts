@@ -186,7 +186,14 @@ describe('resolveGrowthStageTable', () => {
 
 describe('FAMILY_STAGE_TEMPLATES coverage', () => {
   it('covers every non-perennial CropFamily', () => {
-    const perennial = ['orchard', 'stone-fruit', 'small-fruit', 'bramble', 'vine-fruit'];
+    const perennial = [
+      'orchard',
+      'stone-fruit',
+      'small-fruit',
+      'bramble',
+      'vine-fruit',
+      'perennial-vegetable'
+    ];
     for (const [family, table] of Object.entries(FAMILY_STAGE_TEMPLATES)) {
       if (perennial.includes(family)) {
         expect(table).toBeNull();

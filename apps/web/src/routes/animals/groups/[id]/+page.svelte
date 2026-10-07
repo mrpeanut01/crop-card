@@ -201,6 +201,7 @@
       active={group.status === 'active'}
       products={data.care.products}
       stock={data.care.stock}
+      suggestionsLeft={data.care.suggestionsLeft}
       onChanged={(t) => refresh(t)}
     />
   {/if}

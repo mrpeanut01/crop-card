@@ -457,6 +457,7 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'hayui.title': 'Heno y forraje',
   'hayui.balesToFeed': 'Agregar estas pacas al alimento',
   'hayui.tl.bale': 'Empacar: {ts}',
+  'hayui.baleCount': '{n} pacas',
   'hayui.tl.mow': 'Segar: {ts}',
   'hayui.tl.rake': 'Rastrillar: {ts}',
   'hayui.tl.store': 'Almacenar: {ts}',

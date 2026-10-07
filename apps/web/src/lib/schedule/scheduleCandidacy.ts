@@ -36,6 +36,7 @@ const FAMILY_HARDINESS: Record<string, Hardiness> = {
   root: 'hardy',
   'cereal-grain': 'hardy',
   forage: 'hardy',
+  'forage-grass': 'hardy',
   'culinary-herb': 'half-hardy',
   'herb-culinary': 'half-hardy',
   'cover-grass': 'hardy',

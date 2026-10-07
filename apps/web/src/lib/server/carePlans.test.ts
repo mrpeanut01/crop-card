@@ -64,6 +64,7 @@ import { addDaysYmd, careTaskId, msToYmd } from '$lib/animals/carePlans';
 import { ymdInZone } from '$lib/prefs';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { materializeCareTasks } from './carePlans';
+import { loadCareSection } from './careView';
 import { listTimeEntriesForTask } from '$lib/db/taskTime';
 
 import { POST as CREATE } from '../../routes/api/animals/+server';
@@ -753,6 +754,24 @@ describe('species defaults and the care-plan API', () => {
         provenance: 'manual'
       });
       expect(getTask(careTaskId(plans[0].id, addDaysYmd(today(), 10)))).toBeDefined();
+    });
+  });
+
+  it('offers "Add suggested care" only when the species has a suggestion to add (#681)', async () => {
+    await runWithTenantAsync(seedOwner(), async () => {
+      const { groupId } = await goats();
+      expect((await loadCareSection('group', groupId, 'goat', today())).suggestionsLeft).toBe(0);
+      const rex = await dog();
+      expect((await loadCareSection('animal', rex, 'dog', today())).suggestionsLeft).toBe(0);
+      const [plan] = listCarePlansForSubject('animal', rex);
+      await call(DELETE_PLAN, `/animals/${rex}/care-plans/${plan.id}`, 'DELETE', {
+        params: { id: rex, planId: plan.id }
+      });
+      const left = (await loadCareSection('animal', rex, 'dog', today())).suggestionsLeft;
+      const added = await call(DEFAULTS, `/animals/${rex}/care-plans/defaults`, 'POST', {
+        params: { id: rex }
+      });
+      expect(added.body.added).toHaveLength(left);
     });
   });
 

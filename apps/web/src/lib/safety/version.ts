@@ -56,5 +56,13 @@
  * dated grazing interval running until it clears, as the grazing gate
  * does, when animals arrive after the exact end of the lookback but before
  * the interval's farm-local midnight (an interval as long as the lookback).
+ * 0.7.5: the herbicide kill matrix gains the `unclassified` class (#654,
+ * no verified HRAC group, lethal to every family, so Eptam and corn gluten
+ * meal no longer borrow a stand-in class), the `forage-grass` family (#726,
+ * grass hay and pasture, stopped by ACCase and every class that stops
+ * cereals, grass cover or forage) and the `perennial-vegetable` family
+ * (#671, asparagus, stopped by every class until a label-sourced row
+ * lands). Pollinator reasons no longer call an unknown-toxicity product
+ * bee-toxic (#677); verdicts are unchanged.
  */
-export const RULES_VERSION = '0.7.4' as const;
+export const RULES_VERSION = '0.7.5' as const;

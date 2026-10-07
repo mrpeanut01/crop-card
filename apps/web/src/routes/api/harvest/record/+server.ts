@@ -112,7 +112,12 @@ type CropPluginShape = Parameters<typeof resolveArchetype>[0] & {
 function isForage(plugin: CropPluginShape | undefined, override?: string | null): boolean {
   if (override === 'forage-cutting-cycle') return true;
   if (!plugin) return false;
-  if (plugin.hayOperations || plugin.cropFamily === 'forage') return true;
+  if (
+    plugin.hayOperations ||
+    plugin.cropFamily === 'forage' ||
+    plugin.cropFamily === 'forage-grass'
+  )
+    return true;
   return resolveArchetype(plugin) === 'forage-cutting-cycle';
 }
 

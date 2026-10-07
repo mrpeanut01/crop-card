@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { displayFoods, holdChips, isFoodStop, withExposure } from './holdCopy';
+import {
+  discardStopOf,
+  displayFoods,
+  holdChips,
+  isFoodStop,
+  productionKindsFor,
+  withExposure
+} from './holdCopy';
 import type { FoodHoldSummary } from '$lib/safety/animalWithdrawal';
 import type { ExposureVerdict } from '$lib/safety/grazingExposure';
 import { locksWhenSaved } from './healthCopy';
@@ -206,5 +213,39 @@ describe('withExposure names which rule has no date (review round 4)', () => {
     const [chip] = holdChips({ meat: clear, milk: clear, eggs: h }, TZ);
     expect(chip.title).toBe('HOLD eggs: withdrawal and grazing time not known');
     expect(chip).toMatchObject({ grazingUnknown: true, withdrawalUnknown: true });
+  });
+});
+
+describe('discardStopOf (#714)', () => {
+  it('turns a hold guard refusal that only allows discard into a stop', () => {
+    const body = { error: 'X is on record', code: 'OUT_OF_ORDER', resubmitAs: 'discard' };
+    expect(discardStopOf(409, body)).toEqual({ error: 'X is on record', code: 'OUT_OF_ORDER' });
+    expect(discardStopOf(422, { ...body, code: 'HOLD_ACTIVE' })?.code).toBe('HOLD_ACTIVE');
+  });
+
+  it('keeps the food gate stops and ignores every other refusal', () => {
+    const stop = {
+      error: 'e',
+      code: 'WITHDRAWAL_ACTIVE',
+      resubmitAs: 'discard',
+      overridable: false
+    };
+    expect(discardStopOf(422, stop)).toBe(stop);
+    expect(discardStopOf(409, { error: 'e', code: 'OUT_OF_ORDER' })).toBeNull();
+    expect(
+      discardStopOf(409, { error: 'e', code: 'HOLD_WOULD_SHORTEN', resubmitAs: 'discard' })
+    ).toBeNull();
+    expect(
+      discardStopOf(400, { error: 'e', code: 'OUT_OF_ORDER', resubmitAs: 'discard' })
+    ).toBeNull();
+    expect(discardStopOf(409, null)).toBeNull();
+  });
+});
+
+describe('productionKindsFor (#650)', () => {
+  it('offers eggs and milk only when the subject gives them, weight always', () => {
+    expect(productionKindsFor(['eggs', 'meat'])).toEqual(['eggs', 'weight']);
+    expect(productionKindsFor(['milk', 'meat'])).toEqual(['milk', 'weight']);
+    expect(productionKindsFor([])).toEqual(['weight']);
   });
 });

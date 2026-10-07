@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { resolveSprayCrops, standingCropPluginIds } from './sprayCrops';
+import { plantingStandsForBloom, resolveSprayCrops, standingCropPluginIds } from './sprayCrops';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 
 const FAMILIES: Record<string, CropFamily> = {
@@ -82,5 +82,45 @@ describe('resolveSprayCrops', () => {
         }
       })
     );
+  });
+});
+
+describe('plantingStandsForBloom (#676)', () => {
+  const statusArb = fc.constantFrom('planned', 'active', 'harvested', 'failed', 'archived');
+  const stampArb = fc.option(fc.integer({ min: 0, max: 1_000 }), { nil: null });
+  const plantingArb = fc.record({
+    cropPluginId: fc.constant('squash'),
+    plantingDate: stampArb,
+    status: statusArb,
+    harvestedAt: stampArb,
+    archivedAt: stampArb
+  });
+
+  it('never counts a planting that is not in the ground yet', () => {
+    fc.assert(
+      fc.property(plantingArb, fc.integer({ min: 0, max: 1_000 }), (p, at) => {
+        if (p.plantingDate == null || p.plantingDate > at) {
+          expect(plantingStandsForBloom(p, at)).toBe(false);
+        }
+      })
+    );
+  });
+
+  it('only a harvest or archive dated on or before the spray removes a planted crop', () => {
+    fc.assert(
+      fc.property(plantingArb, fc.integer({ min: 0, max: 1_000 }), (p, at) => {
+        if (p.plantingDate == null || p.plantingDate > at) return;
+        const gone =
+          (p.status === 'harvested' || p.status === 'archived') &&
+          [p.harvestedAt, p.archivedAt].some((t) => t != null && t <= at);
+        expect(plantingStandsForBloom(p, at)).toBe(!gone);
+      })
+    );
+  });
+
+  it('a failed planting still counts', () => {
+    expect(
+      plantingStandsForBloom({ cropPluginId: 'x', plantingDate: 1, status: 'failed' }, 10)
+    ).toBe(true);
   });
 });

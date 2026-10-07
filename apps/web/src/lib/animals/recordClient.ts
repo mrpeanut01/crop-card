@@ -7,7 +7,7 @@
 import type { HealthRecordInput, ProductionRecordInput } from './recordApiSchemas';
 import type { FeedUseInput } from '$lib/stock/apiSchemas';
 import { errorFromResponse } from './display';
-import { isFoodStop, type FoodStop } from './holdCopy';
+import { discardStopOf, type FoodStop } from './holdCopy';
 import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 
@@ -65,12 +65,13 @@ async function submit(
     scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
     return out;
   }
-  if (res.status === 422) {
+  if (res.status === 422 || res.status === 409) {
     const out = (await res
       .clone()
       .json()
       .catch(() => null)) as unknown;
-    if (isFoodStop(out)) return { status: 'stopped', stop: out };
+    const stop = discardStopOf(res.status, out);
+    if (stop) return { status: 'stopped', stop };
   }
   if (!res.ok) return { status: 'error', message: await errorFromResponse(res, locale) };
   const out = (await res.json().catch(() => ({}))) as { warnings?: { message: string }[] };

@@ -118,6 +118,7 @@ import {
   backfillHoldParamsEverywhere,
   zoneChangeShortensHolds,
   changeOwnerZone,
+  openerName,
   type GuardOptions
 } from './holdGuard';
 import { MAX_FUTURE_SKEW_MS } from '$lib/animals/model';
@@ -1321,3 +1322,32 @@ describe('C-35 §2 the registry-wide interval behind unknown holds (review round
 function readHoldParamsFor(id: string): string | undefined {
   return readHoldParams('spray').get(id);
 }
+
+describe('openerName (#714)', () => {
+  const at = Date.UTC(2026, 9, 7, 12);
+  const dose = (productName: string | null, productPluginId: string | null) =>
+    ({
+      kind: 'dose',
+      treatment: { productName, productPluginId, administeredAtMs: at }
+    }) as unknown as Parameters<typeof openerName>[0][number];
+  const library = (id: string) =>
+    id === 'safe-guard-suspension'
+      ? {
+          pluginId: id,
+          displayName: 'Safe-Guard Suspension 10% (fenbendazole)',
+          activeIngredients: [],
+          labelUses: []
+        }
+      : undefined;
+
+  it('names a library product by its display name, never its plugin id', () => {
+    expect(openerName([dose(null, 'safe-guard-suspension')], at, library)).toBe(
+      'Safe-Guard Suspension 10% (fenbendazole)'
+    );
+  });
+
+  it('keeps a typed name, and never shows a plugin id it cannot name', () => {
+    expect(openerName([dose('My wormer', 'safe-guard-suspension')], at, library)).toBe('My wormer');
+    expect(openerName([dose(null, 'retired-plugin')], at, library)).toBe('A treatment');
+  });
+});

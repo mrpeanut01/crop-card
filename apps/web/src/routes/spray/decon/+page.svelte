@@ -3,7 +3,7 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { createT } from '$lib/i18n';
-  import { selectDeconProtocol } from '$lib/safety/deconProtocol';
+  import { selectDeconProtocol, deconIntro } from '$lib/safety/deconProtocol';
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -174,8 +174,7 @@
 
 <h1>{tr('sprayui.dc.title')}</h1>
 <p class="lede" lang="en" data-english-only="safety">
-  Clean the sprayer before it carries a different chemistry. Confirm each step to unlock the next.
-  The app times the 30-minute ammonia soak.
+  {deconIntro(protocol)}
 </p>
 {#if !data.canRecord}
   <p class="ask-owner" role="note" data-testid="decon-ask-owner">

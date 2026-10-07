@@ -440,6 +440,7 @@ export const enRecords = {
   'hayui.title': 'Hay & Forage',
   'hayui.balesToFeed': 'Add these bales to feed',
   'hayui.tl.bale': 'Bale: {ts}',
+  'hayui.baleCount': '{n} bales',
   'hayui.tl.mow': 'Mow: {ts}',
   'hayui.tl.rake': 'Rake: {ts}',
   'hayui.tl.store': 'Store: {ts}',

@@ -205,3 +205,46 @@ describe('checkNearbyPollinatorBlocks — properties', () => {
     );
   });
 });
+
+describe('checkNearbyPollinatorBlocks — beds in the same Area (#676)', () => {
+  it('a blooming bed in the same Area with no geometry drives the warning', () => {
+    const r = checkNearbyPollinatorBlocks({
+      beeToxicity: 'highly-toxic',
+      neighbors: [{ ...block('bed5', null), sameArea: true }]
+    });
+    expect(r.status).toBe('warn');
+    expect(r.blocks.map((b) => b.blockId)).toEqual(['bed5']);
+    expect(r.blocks[0].sameArea).toBe(true);
+    expect(r.unknownDistance).toHaveLength(0);
+  });
+
+  it('a same-Area bed counts as in range even when its centroid is past the radius', () => {
+    const r = checkNearbyPollinatorBlocks({
+      beeToxicity: 'toxic',
+      neighbors: [{ ...block('far', 9000), sameArea: true }]
+    });
+    expect(r.status).toBe('warn');
+  });
+
+  it('property: marking a neighbour as same-Area never lowers the verdict or drops it', () => {
+    const toxArb = fc.constantFrom<BeeToxicity>(
+      'highly-toxic',
+      'toxic',
+      'relatively-nontoxic',
+      'unknown'
+    );
+    const distArb = fc.option(fc.integer({ min: 0, max: 20_000 }), { nil: null });
+    fc.assert(
+      fc.property(toxArb, distArb, fc.boolean(), (t, d, bloom) => {
+        const n = block('n', d, [squash(bloom)]);
+        const plain = checkNearbyPollinatorBlocks({ beeToxicity: t, neighbors: [n] });
+        const same = checkNearbyPollinatorBlocks({
+          beeToxicity: t,
+          neighbors: [{ ...n, sameArea: true }]
+        });
+        if (plain.status === 'warn') expect(same.status).toBe('warn');
+        expect(same.blocks.map((b) => b.blockId)).toEqual(['n']);
+      })
+    );
+  });
+});

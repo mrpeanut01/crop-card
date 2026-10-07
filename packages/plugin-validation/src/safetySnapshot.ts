@@ -24,7 +24,8 @@ export const CHEMISTRY_CLASSES = [
   'ppo-inhibitor',
   'als-imidazolinone',
   'vlcfa-pyroxasulfone',
-  'clomazone'
+  'clomazone',
+  'unclassified'
 ] as const;
 
 export const CROP_FAMILIES = [
@@ -47,7 +48,9 @@ export const CROP_FAMILIES = [
   'stone-fruit',
   'cereal-grain',
   'forage',
-  'herb-culinary'
+  'herb-culinary',
+  'forage-grass',
+  'perennial-vegetable'
 ] as const;
 
 export type ChemistryClass = (typeof CHEMISTRY_CLASSES)[number];
@@ -57,78 +60,83 @@ export interface ChemistryProfile {
   killsFamilies: ReadonlyArray<CropFamily>;
   notes: string;
   /** HRAC global mode-of-action group number. */
-  hracGroup: number;
+  hracGroup: number | null;
 }
 
 export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryProfile>> = {
   'synthetic-auxin': {
     hracGroup: 4,
-    killsFamilies: ['cucurbit', 'legume', 'broadleaf-companion', 'orchard', 'solanaceae', 'brassica', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'herb-culinary', 'cover-legume'],
+    killsFamilies: ['cucurbit', 'legume', 'broadleaf-companion', 'orchard', 'solanaceae', 'brassica', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'herb-culinary', 'cover-legume', 'perennial-vegetable'],
     notes: "2,4-D, dicamba and similar HRAC 4 auxin mimics. Highly drift-prone over broadleaves. Cereal grain (wheat, oats, barley) and grass hay are class-tolerant — true grasses. Soybean RR2-Xtend / dicamba-tolerant cultivars need explicit cultivar opt-in via labelClaims.safeForCropPluginIds."
   },
   chloroacetamide: {
     hracGroup: 15,
-    killsFamilies: ['cucurbit', 'broadleaf-companion', 'orchard', 'solanaceae', 'brassica', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'herb-culinary', 'cover-legume'],
+    killsFamilies: ['cucurbit', 'broadleaf-companion', 'orchard', 'solanaceae', 'brassica', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'herb-culinary', 'cover-legume', 'perennial-vegetable'],
     notes: "Me-Too-Lachlor / S-metolachlor / acetochlor (HRAC 15, formerly K3). Soil-active VLCFA inhibitor; persistent residue. Soybean / corn / cotton / peanut are label-tolerant via deep seed placement; tomato / pepper labels are rate-sensitive — claim explicitly via safeForCropPluginIds."
   },
   'hppd-inhibitor': {
     hracGroup: 27,
-    killsFamilies: ['cucurbit', 'legume', 'broadleaf-companion', 'orchard', 'solanaceae', 'brassica', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'herb-culinary', 'cover-legume', 'forage'],
+    killsFamilies: ['cucurbit', 'legume', 'broadleaf-companion', 'orchard', 'solanaceae', 'brassica', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'herb-culinary', 'cover-legume', 'forage', 'forage-grass', 'perennial-vegetable'],
     notes: "Mesotrione, tembotrione (HRAC 27). Corn / cereal-tolerant only; lethal to broadleaves."
   },
   'accase-inhibitor': {
     hracGroup: 1,
-    killsFamilies: ['corn', 'cover-grass', 'cereal-grain'],
-    notes: "Clethodim, sethoxydim, fluazifop (HRAC 1). Selective grass killer — DO NOT spray over corn or cereals."
+    killsFamilies: ['corn', 'cover-grass', 'cereal-grain', 'forage-grass', 'perennial-vegetable'],
+    notes: "Clethodim, sethoxydim, fluazifop (HRAC 1). Selective grass killer — DO NOT spray over corn, cereals or grass hay and pasture."
   },
   glyphosate: {
     hracGroup: 9,
-    killsFamilies: ['corn', 'cucurbit', 'legume', 'broadleaf-companion', 'orchard', 'cover-grass', 'cover-legume', 'solanaceae', 'brassica', 'allium', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'cereal-grain', 'forage', 'herb-culinary'],
+    killsFamilies: ['corn', 'cucurbit', 'legume', 'broadleaf-companion', 'orchard', 'cover-grass', 'cover-legume', 'solanaceae', 'brassica', 'allium', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'cereal-grain', 'forage', 'herb-culinary', 'forage-grass', 'perennial-vegetable'],
     notes: "Non-selective EPSPS inhibitor (HRAC 9). Pre-plant burndown only; never over standing crop unless trait-resistant + labelClaims.safeForCropPluginIds asserts it."
   },
   sulfonylurea: {
     hracGroup: 2,
-    killsFamilies: ['legume', 'broadleaf-companion', 'solanaceae', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'herb-culinary', 'cover-legume'],
+    killsFamilies: ['legume', 'broadleaf-companion', 'solanaceae', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'herb-culinary', 'cover-legume', 'perennial-vegetable'],
     notes: "Stadia-class (HRAC 2 SU). Corn-tolerant POST; check pumpkin label for stage window. Some cereal-grain SUs exist (e.g., Harmony SG) but default-block."
   },
   'microtubule-inhibitor': {
     hracGroup: 3,
-    killsFamilies: ['allium'],
+    killsFamilies: ['allium', 'perennial-vegetable'],
     notes: "Pendimethalin (Prowl H2O), trifluralin (Treflan), HRAC 3 dinitroanilines. PRE soil-active. Corn / soybean / cereals / vegetables are label-tolerant via deep seedbed placement. Alliums (shallow + bulb-sensitive) are not."
   },
   'photosystem-ii-triazine': {
     hracGroup: 5,
-    killsFamilies: ['cucurbit', 'legume', 'broadleaf-companion', 'solanaceae', 'brassica', 'allium', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'stone-fruit', 'herb-culinary', 'cover-legume', 'forage'],
+    killsFamilies: ['cucurbit', 'legume', 'broadleaf-companion', 'solanaceae', 'brassica', 'allium', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'stone-fruit', 'herb-culinary', 'cover-legume', 'forage', 'forage-grass', 'perennial-vegetable'],
     notes: "Atrazine, simazine, metribuzin (HRAC 5). Corn / sorghum tolerant; established orchard / vineyard FLOOR use is label-allowed via simazine (Princep); deeper-rooted perennial trees + vines tolerate residual when foliar contact is avoided. Long soil persistence — rotation restrictions apply."
   },
   'photosystem-i-diquat': {
     hracGroup: 22,
-    killsFamilies: ['corn', 'cucurbit', 'legume', 'broadleaf-companion', 'orchard', 'cover-grass', 'cover-legume', 'solanaceae', 'brassica', 'allium', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'cereal-grain', 'forage', 'herb-culinary'],
+    killsFamilies: ['corn', 'cucurbit', 'legume', 'broadleaf-companion', 'orchard', 'cover-grass', 'cover-legume', 'solanaceae', 'brassica', 'allium', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'cereal-grain', 'forage', 'herb-culinary', 'forage-grass', 'perennial-vegetable'],
     notes: "Paraquat (Gramoxone SL), diquat (HRAC 22). Non-selective contact burndown. Restricted-use; strict drift + PPE requirements."
   },
   glufosinate: {
     hracGroup: 10,
-    killsFamilies: ['corn', 'cucurbit', 'legume', 'broadleaf-companion', 'orchard', 'cover-grass', 'cover-legume', 'solanaceae', 'brassica', 'allium', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'cereal-grain', 'forage', 'herb-culinary'],
+    killsFamilies: ['corn', 'cucurbit', 'legume', 'broadleaf-companion', 'orchard', 'cover-grass', 'cover-legume', 'solanaceae', 'brassica', 'allium', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'cereal-grain', 'forage', 'herb-culinary', 'forage-grass', 'perennial-vegetable'],
     notes: "Liberty / Liberty Ultra (HRAC 10). Non-selective burndown unless trait-resistant. Tank residue cannot be safely applied over any non-trait crop."
   },
   'ppo-inhibitor': {
     hracGroup: 14,
-    killsFamilies: ['cucurbit', 'broadleaf-companion', 'solanaceae', 'brassica', 'leafy-green', 'root', 'apiaceae', 'herb-culinary', 'cover-legume'],
+    killsFamilies: ['cucurbit', 'broadleaf-companion', 'solanaceae', 'brassica', 'leafy-green', 'root', 'apiaceae', 'herb-culinary', 'cover-legume', 'perennial-vegetable'],
     notes: "Fomesafen (Reflex), flumioxazin (Valor), sulfentrazone, lactofen (Cobra) — HRAC 14 PPO inhibitors. Soybean / dry-bean / snap-bean POST-tolerant; perennial fruit (orchard / blueberry / grape / bramble) labels exist for soil-applied flumioxazin under established stands."
   },
   'als-imidazolinone': {
     hracGroup: 2,
-    killsFamilies: ['corn', 'cucurbit', 'broadleaf-companion', 'orchard', 'solanaceae', 'brassica', 'allium', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'cereal-grain', 'herb-culinary', 'cover-grass'],
+    killsFamilies: ['corn', 'cucurbit', 'broadleaf-companion', 'orchard', 'solanaceae', 'brassica', 'allium', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'cereal-grain', 'herb-culinary', 'cover-grass', 'forage-grass', 'perennial-vegetable'],
     notes: "Imazethapyr (Pursuit), imazamox (Beyond) — HRAC 2 IMI subset. Legume + alfalfa-tolerant POST (soybean, dry bean, alfalfa); long soil residual restricts rotation to corn / cucurbits / vegetables for 12-26 mo. Clearfield/IMI-resistant wheat must opt back in via labelClaims.safeForCropPluginIds."
   },
   'vlcfa-pyroxasulfone': {
     hracGroup: 15,
-    killsFamilies: ['cucurbit', 'broadleaf-companion', 'orchard', 'solanaceae', 'brassica', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'herb-culinary', 'cover-legume'],
+    killsFamilies: ['cucurbit', 'broadleaf-companion', 'orchard', 'solanaceae', 'brassica', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'herb-culinary', 'cover-legume', 'perennial-vegetable'],
     notes: "Pyroxasulfone (Zidua, Anthem MAXX) — HRAC 15 isoxazoline VLCFA inhibitor. Soil-active PRE; corn / soybean / cereal label-tolerant."
   },
   clomazone: {
     hracGroup: 13,
-    killsFamilies: ['corn', 'broadleaf-companion', 'orchard', 'brassica', 'leafy-green', 'apiaceae', 'small-fruit', 'bramble', 'stone-fruit', 'forage', 'herb-culinary'],
+    killsFamilies: ['corn', 'broadleaf-companion', 'orchard', 'brassica', 'leafy-green', 'apiaceae', 'small-fruit', 'bramble', 'stone-fruit', 'forage', 'herb-culinary', 'forage-grass', 'perennial-vegetable'],
     notes: "Clomazone (Command 3ME) — HRAC 13 carotenoid biosynthesis inhibitor. Pumpkin / soybean / pepper / tomato tolerant; severe bleaching on broadleaves and corn."
+  },
+  unclassified: {
+    hracGroup: null,
+    killsFamilies: ['corn', 'cucurbit', 'legume', 'broadleaf-companion', 'orchard', 'cover-grass', 'cover-legume', 'solanaceae', 'brassica', 'allium', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'cereal-grain', 'forage', 'herb-culinary', 'forage-grass', 'perennial-vegetable'],
+    notes: "No verified mode-of-action class on file (#654), such as a natural product with no HRAC group or a product whose group is not yet quoted from its label. Lethal to every family until a sourced class replaces it."
   }
 };

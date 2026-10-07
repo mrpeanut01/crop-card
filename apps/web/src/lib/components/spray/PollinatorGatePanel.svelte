@@ -137,7 +137,11 @@
             {#each [...nearby.blocks, ...nearby.unknownDistance] as b (b.blockId)}
               <li class="nearby-row" data-testid="nearby-block-{b.blockId}">
                 <span class="nearby-name">{b.name}</span>
-                <span class="mono nearby-dist">{formatDistance(b.distanceFt, currentPrefs())}</span>
+                <span class="mono nearby-dist"
+                  >{b.sameArea && b.distanceFt === null
+                    ? 'same area'
+                    : formatDistance(b.distanceFt, currentPrefs())}</span
+                >
                 <span class="nearby-why">
                   {b.reason === 'in-bloom' ? 'in bloom' : 'bee-attractive'} · {b.crops.join(', ')}
                 </span>

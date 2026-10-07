@@ -85,4 +85,40 @@ describe('pollinatorNeighbors', () => {
   it('returns nothing when the treated block is not in the list', () => {
     expect(pollinatorNeighbors('other-owner-block', blocks, lookup, AT)).toEqual([]);
   });
+
+  it('marks beds in the treated block Area as sameArea (#676)', () => {
+    const inArea = (b: BlockWithPlantings, fieldId: string) => ({ ...b, fieldId });
+    const out = pollinatorNeighbors(
+      'treated',
+      [
+        inArea(blk('treated', undefined, [['squash', AT - 60 * DAY]]), 'garden'),
+        inArea(blk('bed5', undefined, [['squash', AT - 60 * DAY]]), 'garden'),
+        inArea(blk('meadow', undefined, [['squash', AT - 60 * DAY]]), 'hay')
+      ],
+      lookup,
+      AT
+    );
+    const by = Object.fromEntries(out.map((n) => [n.blockId, n]));
+    expect(by.bed5.sameArea).toBe(true);
+    expect(by.meadow.sameArea).toBeUndefined();
+  });
+
+  it('drops plantings harvested or archived before the spray, keeps later ones (#676)', () => {
+    const b = blk('done', square(39.101, -77.5), [['squash', AT - 60 * DAY]]);
+    const withStatus = (status: 'harvested' | 'archived', stamp: number | null) => ({
+      ...b,
+      plantings: b.plantings.map((p) => ({
+        ...p,
+        status,
+        ...(status === 'harvested' ? { harvestedAt: stamp } : { archivedAt: stamp })
+      }))
+    });
+    const treated = blk('treated', square(39.1, -77.5), [['squash', AT - 60 * DAY]]);
+    const ids = (x: BlockWithPlantings) =>
+      pollinatorNeighbors('treated', [treated, x], lookup, AT).map((n) => n.blockId);
+    expect(ids(withStatus('harvested', AT - DAY))).toEqual([]);
+    expect(ids(withStatus('archived', AT - DAY))).toEqual([]);
+    expect(ids(withStatus('harvested', AT + DAY))).toEqual(['done']);
+    expect(ids(withStatus('harvested', null))).toEqual(['done']);
+  });
 });

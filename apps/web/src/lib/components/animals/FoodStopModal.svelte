@@ -19,7 +19,9 @@
     PROHIBITED_DRUG: 'Never for food',
     GRAZING_INTERVAL: 'Grazed where it was sprayed',
     GRAZING_UNKNOWN: 'Grazing time not known',
-    GRAZING_PROHIBITED: 'Grazed where the label forbids it'
+    GRAZING_PROHIBITED: 'Grazed where the label forbids it',
+    HOLD_ACTIVE: 'Inside a hold on file',
+    OUT_OF_ORDER: 'A treatment on file comes after this date'
   };
   const grazingArea = $derived(stop?.grazingFieldIds?.[0] ?? null);
 </script>

@@ -16,7 +16,7 @@ export type SolidUnit = 'oz' | 'lb' | 'kg' | 'g';
  *  AllocationWizard + SeedQuantityModal seed-math; it isn't convertible to
  *  any weight or volume unit. `count` covers transplants, plugs, packets
  *  with a labelled count, and any other "discrete plantable item." */
-export type CountUnit = 'count' | 'seeds' | 'bag' | 'bag-50lb' | 'bag-25kg';
+export type CountUnit = 'count' | 'seeds' | 'bag' | 'bag-50lb' | 'bag-25kg' | 'bale';
 export type StockUnit = LiquidUnit | SolidUnit | CountUnit;
 
 export const ALL_STOCK_UNITS: ReadonlyArray<StockUnit> = [
@@ -33,7 +33,8 @@ export const ALL_STOCK_UNITS: ReadonlyArray<StockUnit> = [
   'seeds',
   'bag',
   'bag-50lb',
-  'bag-25kg'
+  'bag-25kg',
+  'bale'
 ];
 
 const LIQUID_FL_OZ_PER_UNIT: Record<LiquidUnit, number> = {
@@ -146,7 +147,8 @@ const UNIT_LABELS: Record<StockUnit, string> = {
   seeds: 'Seeds',
   bag: 'Bag',
   'bag-50lb': '50 lb bag',
-  'bag-25kg': '25 kg bag'
+  'bag-25kg': '25 kg bag',
+  bale: 'Bale'
 };
 
 const UNIT_LABEL_KEYS: Partial<Record<StockUnit, MessageKey>> = {
@@ -154,7 +156,8 @@ const UNIT_LABEL_KEYS: Partial<Record<StockUnit, MessageKey>> = {
   seeds: 'units.label.seeds',
   bag: 'units.label.bag',
   'bag-50lb': 'units.label.bag50lb',
-  'bag-25kg': 'units.label.bag25kg'
+  'bag-25kg': 'units.label.bag25kg',
+  bale: 'units.label.bale'
 };
 
 /** Human label for a unit picker. For seed, 'count' reads as Seeds too. */
@@ -188,6 +191,11 @@ export function formatStockQuantity(
   }
   if (unit === 'bag') {
     return t(locale, Math.abs(amount) === 1 ? 'units.qty.bags.one' : 'units.qty.bags.other', {
+      n: num(amount, opts.digits ?? 2)
+    });
+  }
+  if (unit === 'bale') {
+    return t(locale, Math.abs(amount) === 1 ? 'units.qty.bales.one' : 'units.qty.bales.other', {
       n: num(amount, opts.digits ?? 2)
     });
   }

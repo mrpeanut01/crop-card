@@ -121,7 +121,7 @@ export function crossingHoldMessage(
   whenMs: number,
   timeZone?: string
 ): string {
-  return `${product} is on record for ${subject} on ${day(whenMs, timeZone)}, after the date entered. Save as discarded, or record it when it happens.`;
+  return `${product} is on record for ${subject} on ${day(whenMs, timeZone)}, after the date entered, so this entry can only be saved as discarded.`;
 }
 
 /** A record card and export label for records saved late (C-35 §1). */

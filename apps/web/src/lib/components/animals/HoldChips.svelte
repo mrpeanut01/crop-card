@@ -40,8 +40,9 @@
     {#if withdrawalUnknown}
       <p class="hint" lang="en" data-english-only="safety">
         {#if isOwner}
-          Add the withdrawal from the label or your vet
-          {#if healthHref}on the <a href={healthHref}>health page</a>{/if}.
+          {#if healthHref}Add the withdrawal from the label or your vet on the <a href={healthHref}
+              >health page</a
+            >.{:else}Add the withdrawal from the label or your vet.{/if}
         {:else}
           Ask the owner to add the withdrawal from the label or the vet.
         {/if}

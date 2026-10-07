@@ -561,6 +561,19 @@ export const enInventory = {
   'units.qty.seeds.other': '{n} seeds',
   'units.qty.bags.one': '{n} bag',
   'units.qty.bags.other': '{n} bags',
+  'inv.feed.baleSize': 'Bale size',
+  'inv.feed.oneBale': 'One bale',
+  'inv.feed.setBaleOwner':
+    'Set how many pounds are in one bale on the edit page to take hay off in pounds.',
+  'inv.feed.setBaleHelper': 'Ask the owner to set how many pounds are in one bale first.',
+  'inv.form.lbPerBale': 'Pounds in one bale',
+  'inv.form.lbPerBaleHint':
+    'Weigh a few bales or use the weight on your receipt. Needed to take hay off stock in pounds.',
+  'inv.form.err.lbPerBale': 'Pounds in one bale must be more than 0',
+  'stockui.feed.needsLbPerBale': 'Set how many pounds are in one bale on the edit page first.',
+  'units.label.bale': 'Bale',
+  'units.qty.bales.one': '{n} bale',
+  'units.qty.bales.other': '{n} bales',
   'stockui.feed.needsLbPerBag': 'Set how many pounds are in one bag on the edit page first.',
   'stockui.feed.unitNotWeight':
     'This item is counted in {unit}, so pounds cannot be taken off it. Change the count on the edit page.',

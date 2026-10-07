@@ -1,6 +1,6 @@
+import { healthStockOptions } from '$lib/server/healthStockOptions';
 import type { PageServerLoad } from './$types';
 import { evaluateHealthLock, listHealthEvents } from '$lib/db/animalHealth';
-import { listStockItems } from '$lib/db/stock';
 import { healthPlugins, toTreatment } from '$lib/server/animalRecords';
 import { getDataKinds } from '$lib/server/registry';
 import { loadRecordPageBase } from '$lib/animals/recordPages.server';
@@ -113,13 +113,6 @@ export const load: PageServerLoad = async (event) => {
     products: library
       .map((p) => ({ id: p.pluginId, name: p.displayName }))
       .sort((a, b) => a.name.localeCompare(b.name)),
-    stock: listStockItems()
-      .filter((s) => s.category !== 'feed' && s.category !== 'bedding')
-      .sort(
-        (a, b) =>
-          Number(b.category === 'animal-health') - Number(a.category === 'animal-health') ||
-          a.displayName.localeCompare(b.displayName)
-      )
-      .map((s) => ({ id: s.id, name: s.displayName, unit: s.defaultUnit }))
+    stock: await healthStockOptions()
   };
 };

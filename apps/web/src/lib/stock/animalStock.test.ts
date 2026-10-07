@@ -63,6 +63,21 @@ describe('feedUseAmount', () => {
     if (!r.ok) expect(r.code).toBe('NEEDS_LB_PER_BAG');
   });
 
+  it('converts pounds into bales only with the owner lb per bale (#765)', () => {
+    const bale = (lbPerBale?: number) => ({
+      defaultUnit: 'bale',
+      metadataJson: lbPerBale ? JSON.stringify({ feed: { lbPerBale } }) : undefined
+    });
+    expect(feedUseAmount(bale(40), 20)).toEqual({ ok: true, amount: 0.5, unit: 'bale' });
+    const r = feedUseAmount(bale(), 20, 'en');
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.code).toBe('NEEDS_LB_PER_BAG');
+      expect(r.message).toMatch(/one bale/);
+    }
+    expect(feedMeta(JSON.stringify({ feed: { lbPerBale: 0 } })).lbPerBale).toBeUndefined();
+  });
+
   it('passes pounds straight through for weight units', () => {
     expect(feedUseAmount({ defaultUnit: 'kg' }, 2)).toEqual({ ok: true, amount: 2, unit: 'lb' });
   });

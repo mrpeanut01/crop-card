@@ -12,7 +12,8 @@ import {
 } from '$lib/db/animalCarePlans';
 import { listOpenCareTasks } from '$lib/db/careTasks';
 import { speciesCareNote } from './carePlans';
-import { listStockItems } from '$lib/db/stock';
+import { healthStockOptions } from './healthStockOptions';
+import type { HealthStockOption } from '$lib/animals/healthStock';
 import type { Task } from '$lib/db/tasks';
 import {
   careCardTitle,
@@ -100,7 +101,7 @@ export function careCards(
  *  loaded when a card needs the health form. */
 export async function careCloseFormData(cards: readonly CareCardView[]): Promise<{
   products: { id: string; name: string }[];
-  stock: { id: string; name: string; unit: string }[];
+  stock: HealthStockOption[];
 }> {
   if (!cards.some((c) => isHoldBearingCare(c.careKind))) return { products: [], stock: [] };
   const library = (await getDataKinds()).animalHealth.all();
@@ -108,7 +109,7 @@ export async function careCloseFormData(cards: readonly CareCardView[]): Promise
     products: library
       .map((p) => ({ id: p.pluginId, name: p.displayName }))
       .sort((a, b) => a.name.localeCompare(b.name)),
-    stock: listStockItems().map((s) => ({ id: s.id, name: s.displayName, unit: s.defaultUnit }))
+    stock: await healthStockOptions()
   };
 }
 
@@ -123,11 +124,18 @@ export async function loadCareSection(
   plans: CarePlanView[];
   cards: CareCardView[];
   products: { id: string; name: string }[];
-  stock: { id: string; name: string; unit: string }[];
+  stock: HealthStockOption[];
+  /** #681: species care suggestions not on this subject yet. */
+  suggestionsLeft: number;
 }> {
   const plans = listCarePlansForSubject(subjectType, subjectId);
-  if (plans.length === 0) return { plans: [], cards: [], products: [], stock: [] };
   const species = (await getDataKinds()).species.get(speciesId);
+  const suggestionsLeft = (species?.careDefaults ?? []).filter(
+    (d) => !plans.some((p) => p.kind === d.kind && p.title === d.title)
+  ).length;
+  if (plans.length === 0) {
+    return { plans: [], cards: [], products: [], stock: [], suggestionsLeft };
+  }
   const planIds = new Set(plans.map((p) => p.id));
   const open = listOpenCareTasks().filter((t) => {
     const meta = parseCareMeta(t.recurrenceJson);
@@ -151,6 +159,7 @@ export async function loadCareSection(
       note: speciesCareNote(species, p)
     })),
     cards,
-    ...(await careCloseFormData(cards))
+    ...(await careCloseFormData(cards)),
+    suggestionsLeft
   };
 }

@@ -56,6 +56,27 @@ export function isFoodStop(body: unknown): body is FoodStop {
   );
 }
 
+/** #650: the production kinds to offer: eggs and milk only when the
+ *  subject gives them (`displayFoods`), weight always. */
+export function productionKindsFor(foods: readonly Food[]): ('eggs' | 'milk' | 'weight')[] {
+  return [...(['eggs', 'milk'] as const).filter((k) => foods.includes(k)), 'weight' as const];
+}
+
+const DISCARD_ONLY_CODES = new Set(['HOLD_ACTIVE', 'OUT_OF_ORDER']);
+
+/** A refused food or sale declaration whose only way to save is as
+ *  discarded: a food gate stop (422) or a hold guard refusal (`HOLD_ACTIVE`
+ *  for a date inside a hold, `OUT_OF_ORDER` for one before a hold on file). */
+export function discardStopOf(status: number, body: unknown): FoodStop | null {
+  if (status === 422 && isFoodStop(body)) return body;
+  if (status !== 409 && status !== 422) return null;
+  if (typeof body !== 'object' || body === null) return null;
+  const b = body as Record<string, unknown>;
+  if (typeof b.error !== 'string' || typeof b.code !== 'string') return null;
+  if (!DISCARD_ONLY_CODES.has(b.code) || b.resubmitAs !== 'discard') return null;
+  return { error: b.error, code: b.code };
+}
+
 /** C-33: the foods to show for a subject: the ones its species gives, meat
  *  for any animal that is or was a food animal, and no milk or eggs for a
  *  male. Display only; the gate and the stored verdict cover every food. */

@@ -6,7 +6,8 @@
   import { localInputToMs, msToLocalInput } from '$lib/animals/display';
   import { errorText, unitLabel, useLabel } from './labels';
   import { USE_CHOICES } from '$lib/animals/healthCopy';
-  import { isFoodStop, type FoodStop } from '$lib/animals/holdCopy';
+  import { discardStopOf, productionKindsFor, type FoodStop } from '$lib/animals/holdCopy';
+  import type { Food } from '$lib/safety/animalWithdrawal';
   import type { ProductionRecordInput, ProductionKind } from '$lib/animals/recordApiSchemas';
   import type { ProductionUse } from '$lib/safety/animalWithdrawal';
   import { createT } from '$lib/i18n';
@@ -16,12 +17,20 @@
     subjectType: 'animal' | 'group';
     subjectId: string;
     defaultKind: ProductionKind;
+    /** The foods this subject gives; eggs and milk show only when listed. */
+    foods: readonly Food[];
     isOwner: boolean;
     onStopped: (stop: FoodStop) => void;
     onDone: (text: string, warnings: string[]) => void;
   }
 
-  const { subjectType, subjectId, defaultKind, isOwner, onStopped, onDone }: Props = $props();
+  const { subjectType, subjectId, defaultKind, foods, isOwner, onStopped, onDone }: Props =
+    $props();
+  const kinds = $derived(productionKindsFor(foods));
+  // svelte-ignore state_referenced_locally
+  const startKind: ProductionKind = productionKindsFor(foods).includes(defaultKind)
+    ? defaultKind
+    : productionKindsFor(foods)[0];
   const uid = $props.id();
   const tr = $derived(createT(page.data?.locale));
 
@@ -31,11 +40,9 @@
     weight: [{ value: 'lb' }, { value: 'kg' }]
   };
 
-  // svelte-ignore state_referenced_locally
-  let kind = $state<ProductionKind>(defaultKind);
+  let kind = $state<ProductionKind>(startKind);
   let quantity = $state<number | null>(null);
-  // svelte-ignore state_referenced_locally
-  let unit = $state<ProductionRecordInput['unit']>(UNITS[defaultKind][0].value);
+  let unit = $state<ProductionRecordInput['unit']>(UNITS[startKind][0].value);
   let use = $state<ProductionUse>('food');
   let at = $state(msToLocalInput(Date.now()));
   let saving = $state(false);
@@ -60,12 +67,26 @@
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body)
       });
+      if (res.status === 409 && body.use !== 'discard') {
+        const out = (await res
+          .clone()
+          .json()
+          .catch(() => null)) as unknown;
+        const found = discardStopOf(409, out);
+        if (found) {
+          pending = body;
+          stop = found;
+          onStopped(found);
+          return;
+        }
+      }
       if (res.status === 422) {
         const out = (await res.json().catch(() => null)) as unknown;
-        if (isFoodStop(out)) {
+        const found = discardStopOf(422, out);
+        if (found) {
           pending = body;
-          stop = out;
-          onStopped(out);
+          stop = found;
+          onStopped(found);
           return;
         }
         const msg = (out as { error?: unknown } | null)?.error;
@@ -127,8 +148,8 @@
 </script>
 
 <form class="af-form" onsubmit={submit} novalidate aria-label={tr('animals.prod.logAria')}>
-  <div class="af-segment three">
-    {#each ['eggs', 'milk', 'weight'] as const as k (k)}
+  <div class="af-segment" style:grid-template-columns="repeat({kinds.length}, 1fr)">
+    {#each kinds as k (k)}
       <label class="af-tile" class:on={kind === k}>
         <input
           type="radio"
@@ -203,9 +224,3 @@
     pending = null;
   }}
 />
-
-<style>
-  .three {
-    grid-template-columns: repeat(3, 1fr);
-  }
-</style>

@@ -98,6 +98,7 @@
         subjectType={subject.type}
         subjectId={subject.id}
         {defaultKind}
+        foods={data.foods}
         isOwner={data.isOwner}
         onStopped={stopped}
         onDone={done}

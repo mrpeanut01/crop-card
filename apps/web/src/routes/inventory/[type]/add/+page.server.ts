@@ -32,7 +32,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
       hayCutting: null
     };
   }
-  let hayCutting: { id: string; label: string } | null = null;
+  let hayCutting: { id: string; label: string; bales: number | null } | null = null;
   const cuttingId = url.searchParams.get('hayCuttingId');
   if (type === 'feed' && cuttingId) {
     const cutting = getCutting(cuttingId);
@@ -44,7 +44,8 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
           block: block?.name ?? t(locals.locale, 'inv.add.hayBlockFallback'),
           n: cutting.cuttingNumber,
           year: cutting.year
-        })
+        }),
+        bales: cutting.balesQuantity && cutting.balesQuantity > 0 ? cutting.balesQuantity : null
       };
     }
   }

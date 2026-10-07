@@ -809,6 +809,53 @@ export function setOnHandQuantity(input: SetQuantityInput): SetQuantityResult {
   return result;
 }
 
+/** On-hand, unexpired lots of an item in the order a use draws them. */
+function drawableLots(stockItemId: string, now: number) {
+  return db
+    .select()
+    .from(stockLots)
+    .where(
+      withTenant(
+        stockLots,
+        and(
+          eq(stockLots.stockItemId, stockItemId),
+          eq(stockLots.quantityStatus, 'existing'),
+          or(isNull(stockLots.expiresAt), gt(stockLots.expiresAt, new Date(now)))
+        )
+      )
+    )
+    .orderBy(asc(stockLots.receivedAt))
+    .all();
+}
+
+/** The lot numbers a use of `amount` would draw from, oldest first, without
+ *  writing anything. With no amount (or one in a unit the item cannot take),
+ *  the lot a use would draw from first. */
+export function lotNumbersForUse(input: {
+  stockItemId: string;
+  amount?: number | null;
+  unit?: StockUnit | null;
+  occurredAt?: number;
+}): string[] {
+  const item = getStockItem(input.stockItemId);
+  if (!item) return [];
+  const requested =
+    input.amount && input.amount > 0 && input.unit
+      ? toStorage(input.amount, input.unit, item.defaultUnit)
+      : null;
+  let remaining = requested ?? 1;
+  const out: string[] = [];
+  for (const lot of drawableLots(item.id, input.occurredAt ?? Date.now())) {
+    if (remaining <= 0) break;
+    const balance = lotBalanceHundredths(lot.id);
+    if (balance <= 0) continue;
+    const number = lot.lotNumber?.trim();
+    if (number && !out.includes(number)) out.push(number);
+    remaining -= Math.min(balance, remaining);
+  }
+  return out;
+}
+
 export interface DecrementResult {
   itemId: string;
   requested: number;
@@ -852,21 +899,7 @@ export function decrementForUse(input: {
   if (requestedHundredths <= 0) return result;
 
   const now = input.occurredAt ?? Date.now();
-  const lots = db
-    .select()
-    .from(stockLots)
-    .where(
-      withTenant(
-        stockLots,
-        and(
-          eq(stockLots.stockItemId, item.id),
-          eq(stockLots.quantityStatus, 'existing'),
-          or(isNull(stockLots.expiresAt), gt(stockLots.expiresAt, new Date(now)))
-        )
-      )
-    )
-    .orderBy(asc(stockLots.receivedAt))
-    .all();
+  const lots = drawableLots(item.id, now);
 
   const expectedLots = input.drawExpected
     ? (['ordered', 'planned'] as const).flatMap((status) =>

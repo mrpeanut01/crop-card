@@ -125,7 +125,7 @@ export const enAnimals = {
   'animals.breed': 'Breed',
   'animals.cameFrom': 'Came from',
   'animals.keptFor': 'Kept for',
-  'animals.purpose.production': 'Eggs, milk, meat or work',
+  'animals.purpose.production': 'Food or work',
   'animals.purpose.pet': 'A pet',
   'animals.purpose.mixed': 'Both',
   'animals.howMuchFood': 'How much food',
@@ -604,5 +604,9 @@ export const enAnimals = {
   'animallib.food.milk':
     '{who} count as food animals because people drink their milk or eat their meat.',
   'animallib.food.meat': '{who} count as food animals because people eat their meat.',
-  'animallib.food.usRules': '{who} count as food animals under US rules, even when kept as pets.'
+  'animallib.food.usRules': '{who} count as food animals under US rules, even when kept as pets.',
+  'animals.stock.wrongUnit':
+    'The dose was saved, but {name} is counted in {unit}, so nothing was taken off stock. Adjust it on the inventory page.',
+  'animals.stock.noUnit':
+    'The dose was saved without a unit, so nothing was taken off {name}. Add a unit to the dose to take it off stock.'
 } as const;

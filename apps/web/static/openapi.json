@@ -8372,7 +8372,8 @@
                       "seeds",
                       "bag",
                       "bag-50lb",
-                      "bag-25kg"
+                      "bag-25kg",
+                      "bale"
                     ]
                   },
                   "lotNumber": {

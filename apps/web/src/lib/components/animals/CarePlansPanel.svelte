@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { HealthStockOption } from '$lib/animals/healthStock';
   import { fmt } from '$lib/prefsState.svelte';
   import './animalForms.css';
   import Provenance from '$lib/components/ui/Provenance.svelte';
@@ -27,7 +28,9 @@
     canAct: boolean;
     active: boolean;
     products: { id: string; name: string }[];
-    stock: { id: string; name: string; unit: string }[];
+    stock: HealthStockOption[];
+    /** #681: species care suggestions not on file yet; the button hides at 0. */
+    suggestionsLeft: number;
     onChanged: (text: string) => void;
   }
 
@@ -42,6 +45,7 @@
     active,
     products,
     stock,
+    suggestionsLeft,
     onChanged
   }: Props = $props();
   const uid = $props.id();
@@ -270,15 +274,17 @@
         >
           {tr('animals.care.add')}
         </button>
-        <button
-          type="button"
-          class="af-ghost"
-          disabled={busy}
-          onclick={() =>
-            send(`${base}/defaults`, 'POST', undefined, tr('animals.care.suggestionsChecked'))}
-        >
-          {tr('animals.care.addSuggested')}
-        </button>
+        {#if suggestionsLeft > 0}
+          <button
+            type="button"
+            class="af-ghost"
+            disabled={busy}
+            onclick={() =>
+              send(`${base}/defaults`, 'POST', undefined, tr('animals.care.suggestionsChecked'))}
+          >
+            {tr('animals.care.addSuggested')}
+          </button>
+        {/if}
       </div>
     {/if}
   {:else if !isOwner && plans.length > 0}

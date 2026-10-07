@@ -108,10 +108,11 @@ export function closeSeason(input: CloseSeasonInput): CloseSeasonResult {
     return { ok: false, code: 'ALREADY_CLOSED', year: input.year };
   }
 
+  const closedAt = input.closedAt ?? Date.now();
   const snapshot = {
     version: 1,
     rulesVersion: RULES_VERSION,
-    closedAtIso: new Date(input.closedAt ?? Date.now()).toISOString(),
+    closedAtIso: new Date(closedAt).toISOString(),
     plantingResolutions: input.plantingResolutions,
     harvestRollup: input.harvestRollup,
     pendingCount: input.pendingCount
@@ -130,7 +131,7 @@ export function closeSeason(input: CloseSeasonInput): CloseSeasonResult {
     year: input.year,
     snapshotJson: JSON.stringify(snapshot),
     closedById: input.closedById ?? null,
-    closedAt: input.closedAt
+    closedAt
   });
   return { ok: true, closeout };
 }

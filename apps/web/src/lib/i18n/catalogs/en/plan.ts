@@ -625,6 +625,8 @@ export const enPlan = {
     'Prior families ({families}) are outside their plant-back window — safe to rotate back.',
   'season.rot.warn':
     'Rotate away from {families} — replanting here risks disease/pest carryover inside the {years}-year plant-back window.',
+  'season.rot.standing':
+    'Still standing: {names}. Trees, vines and bushes stay in the ground, so this block is not free to plant.',
   'season.rot.suggest': 'Consider rotating away from {families} — planted here last season.',
   'season.stock.expired': 'Already past expiry — do not carry into the new season.',
   'season.stock.expiring': 'Expires early next season — use first or reorder before planting.',

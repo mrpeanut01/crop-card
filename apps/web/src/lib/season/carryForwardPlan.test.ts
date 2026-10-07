@@ -428,7 +428,8 @@ describe('summarizeCarryForward', () => {
           severity: 'warn',
           priorFamilies: ['brassica'],
           message: '',
-          avoidFamilies: ['brassica']
+          avoidFamilies: ['brassica'],
+          standing: []
         },
         {
           blockId: 'b2',
@@ -436,7 +437,8 @@ describe('summarizeCarryForward', () => {
           severity: 'ok',
           priorFamilies: [],
           message: '',
-          avoidFamilies: []
+          avoidFamilies: [],
+          standing: []
         }
       ],
       stock: [

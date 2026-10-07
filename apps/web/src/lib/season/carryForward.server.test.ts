@@ -152,4 +152,75 @@ describe('runCarryForward (UC-47 orchestration)', () => {
       expect(r.applied).toBeNull();
     });
   });
+
+  it('shows blocks of standing fruit trees and vines as occupied, never free (#751)', () => {
+    const owner = `${OWNER}-perennial`;
+    runWithTenant(owner, () => {
+      seedOwner(owner);
+      const index: Record<string, CropPlugin> = {
+        ...pluginIndex,
+        'apple-gala': makePlugin({
+          pluginId: 'apple-gala',
+          cropFamily: 'orchard',
+          archetype: 'tree-fruit-multi-pick'
+        } as never),
+        'grape-concord': makePlugin({
+          pluginId: 'grape-concord',
+          cropFamily: 'vine-fruit',
+          archetype: 'perennial-vine-quality'
+        } as never),
+        'strawberry-june': makePlugin({ pluginId: 'strawberry-june', cropFamily: 'small-fruit' })
+      };
+      const orchard = createBlock({ name: 'Orchard', acres: 1 });
+      const vines = createBlock({ name: 'Vines', acres: 1 });
+      const berries = createBlock({ name: 'Berries', acres: 1 });
+      const pulled = createBlock({ name: 'Pulled', acres: 1 });
+      const empty = createBlock({ name: 'Empty', acres: 1 });
+
+      const apple = addPlanting({
+        blockId: orchard.id,
+        cropPluginId: 'apple-gala',
+        varietyDisplayName: 'Gala',
+        plantingDate: Date.UTC(2016, 3, 1)
+      });
+      updateStatus(apple.id, 'harvested', Date.UTC(2025, 8, 20));
+      const grape = addPlanting({
+        blockId: vines.id,
+        cropPluginId: 'grape-concord',
+        varietyDisplayName: 'Concord',
+        plantingDate: Date.UTC(2019, 3, 1)
+      });
+      updateStatus(grape.id, 'active');
+      const berry = addPlanting({
+        blockId: berries.id,
+        cropPluginId: 'strawberry-june',
+        varietyDisplayName: 'Earliglow',
+        plantingDate: Date.UTC(2025, 3, 1)
+      });
+      updateStatus(berry.id, 'harvested', Date.UTC(2025, 5, 10));
+      const gone = addPlanting({
+        blockId: pulled.id,
+        cropPluginId: 'apple-gala',
+        varietyDisplayName: 'Gala',
+        plantingDate: Date.UTC(2015, 3, 1)
+      });
+      updateStatus(gone.id, 'archived');
+
+      const r = runCarryForward({ fromYear: 2025, toYear: 2026, apply: false, nowMs: NOW }, index);
+      const rot = (id: string) => r.rotation.find((x) => x.blockId === id)!;
+      for (const [block, name] of [
+        [orchard, 'Gala'],
+        [vines, 'Concord'],
+        [berries, 'Earliglow']
+      ] as const) {
+        expect(rot(block.id).severity).toBe('warn');
+        expect(rot(block.id).standing).toEqual([name]);
+        expect(rot(block.id).message).toContain('Still standing');
+        expect(rot(block.id).message).not.toContain('free to plant anything');
+      }
+      expect(rot(pulled.id).standing).toEqual([]);
+      expect(rot(empty.id).severity).toBe('ok');
+      expect(r.clonedPlantings.some((c) => c.sourcePlantingId === berry.id)).toBe(false);
+    });
+  });
 });

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
+  import { cropDisplayName } from '$lib/i18n/cropName';
+  import { fmt } from '$lib/prefsState.svelte';
   import { browser } from '$app/env';
   import { invalidateAll } from '$app/navigation';
   import { ChevronRight, Check, X, Lock } from 'lucide-svelte';
@@ -38,6 +39,58 @@
   const plantingsOk = $derived(data.preflight.plantingsResolved);
   const allGreen = $derived(pendingOk && plantingsOk && harvestAttested);
   const showHandoff = $derived(data.closed || justClosed);
+
+  type BulkStatus = 'harvested' | 'failed' | 'archived';
+  const unresolved = $derived(data.preflight.plantings.filter((p) => !p.resolved));
+  let selected = $state<string[]>([]);
+  let bulkStatus = $state<BulkStatus>('harvested');
+  let confirming = $state(false);
+  let bulkSaving = $state(false);
+  let bulkMessage = $state<string | null>(null);
+  const openIds = $derived(new Set(unresolved.map((p) => p.cropId)));
+  const chosen = $derived(selected.filter((id) => openIds.has(id)));
+  const allSelected = $derived(unresolved.length > 0 && chosen.length === unresolved.length);
+
+  function toggleAll(on: boolean) {
+    selected = on ? unresolved.map((p) => p.cropId) : [];
+    confirming = false;
+  }
+
+  function toggleOne(id: string, on: boolean) {
+    selected = on ? [...selected.filter((x) => x !== id), id] : selected.filter((x) => x !== id);
+    confirming = false;
+  }
+
+  async function bulkResolve() {
+    submitError = null;
+    bulkMessage = null;
+    bulkSaving = true;
+    try {
+      const res = await fetch('/api/season/resolve-plantings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ year: data.year, status: bulkStatus, cropIds: chosen })
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        submitError =
+          typeof body.message === 'string'
+            ? body.message
+            : tr('settings.close.bulkFailedMsg', { status: res.status });
+        return;
+      }
+      const body = (await res.json()) as { resolved: number };
+      bulkMessage = tr('settings.close.bulkDone', { count: body.resolved });
+      selected = [];
+      confirming = false;
+      await invalidateAll();
+    } catch {
+      submitError = tr('settings.close.bulkNetwork');
+    } finally {
+      bulkSaving = false;
+    }
+  }
 
   async function closeSeason() {
     submitError = null;
@@ -213,14 +266,99 @@
           </span>
         </div>
         {#if !plantingsOk}
-          <ul class="unresolved-list">
-            {#each data.preflight.plantings.filter((p) => !p.resolved) as p (p.cropId)}
-              <li>
-                {cropDisplayNameByEnglish(p.varietyDisplayName, data.locale)}
-                <span class="muted">({statusLabel(p.status)})</span>
-              </li>
-            {/each}
-          </ul>
+          <div class="unresolved">
+            {#if data.isOwner}
+              <label class="bulk-all">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onchange={(e) => toggleAll(e.currentTarget.checked)}
+                />
+                {tr('settings.close.bulkSelectAll', { count: unresolved.length })}
+              </label>
+            {/if}
+            <ul class="unresolved-list" class:selectable={data.isOwner}>
+              {#each unresolved as p (p.cropId)}
+                {@const name = cropDisplayName(p.cropPluginId, p.varietyDisplayName, data.locale)}
+                {@const block = p.blockName ?? tr('settings.close.noBlock')}
+                {@const date =
+                  p.plantingDate === null ? tr('settings.close.noDate') : fmt.day(p.plantingDate)}
+                <li>
+                  {#if data.isOwner}
+                    <label class="planting-row">
+                      <input
+                        type="checkbox"
+                        checked={chosen.includes(p.cropId)}
+                        onchange={(e) => toggleOne(p.cropId, e.currentTarget.checked)}
+                        aria-label={tr('settings.close.plantingRowAria', { name, block, date })}
+                      />
+                      <span class="planting-name">{name}</span>
+                      <span class="muted">{block} · {date} · {statusLabel(p.status)}</span>
+                    </label>
+                  {:else}
+                    <span class="planting-name">{name}</span>
+                    <span class="muted">{block} · {date} · {statusLabel(p.status)}</span>
+                  {/if}
+                </li>
+              {/each}
+            </ul>
+            {#if data.isOwner}
+              <div class="bulk-bar" aria-label={tr('settings.close.bulkTitle')} role="group">
+                <label class="bulk-status">
+                  {tr('settings.close.bulkMarkAs')}
+                  <select
+                    bind:value={bulkStatus}
+                    onchange={() => (confirming = false)}
+                    disabled={bulkSaving}
+                  >
+                    <option value="harvested">{tr('settings.close.bulkHarvested')}</option>
+                    <option value="failed">{tr('settings.close.bulkFailed')}</option>
+                    <option value="archived">{tr('settings.close.bulkArchived')}</option>
+                  </select>
+                </label>
+                {#if confirming}
+                  <p class="hint" role="status">
+                    {tr('settings.close.bulkConfirm', {
+                      count: chosen.length,
+                      status: statusLabel(bulkStatus)
+                    })}
+                  </p>
+                  <div class="bulk-actions">
+                    <button
+                      type="button"
+                      class="secondary-btn solid"
+                      disabled={bulkSaving || chosen.length === 0}
+                      onclick={bulkResolve}
+                    >
+                      {bulkSaving
+                        ? tr('settings.close.bulkSaving')
+                        : tr('settings.close.bulkConfirmBtn')}
+                    </button>
+                    <button
+                      type="button"
+                      class="secondary-btn"
+                      disabled={bulkSaving}
+                      onclick={() => (confirming = false)}
+                    >
+                      {tr('settings.close.bulkCancel')}
+                    </button>
+                  </div>
+                {:else}
+                  <button
+                    type="button"
+                    class="secondary-btn"
+                    disabled={chosen.length === 0}
+                    onclick={() => (confirming = true)}
+                  >
+                    {tr('settings.close.bulkApply', { count: chosen.length })}
+                  </button>
+                {/if}
+              </div>
+            {/if}
+          </div>
+        {/if}
+        {#if bulkMessage}
+          <p class="hint bulk-done" role="status">{bulkMessage}</p>
         {/if}
       </div>
 
@@ -386,12 +524,81 @@
   .check-body a {
     color: #1f5e3a;
   }
+  .unresolved,
+  .bulk-done {
+    grid-column: 1 / -1;
+  }
+  .unresolved {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
   .unresolved-list {
-    grid-column: 2;
     margin: 0.25rem 0 0;
     padding-left: 1.1rem;
     font-size: 0.85rem;
     color: #4a5a4a;
+    max-height: 26rem;
+    overflow-y: auto;
+  }
+  .unresolved-list.selectable {
+    list-style: none;
+    padding-left: 0;
+  }
+  .unresolved-list li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.5rem;
+  }
+  .planting-row,
+  .bulk-all {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 0.5rem;
+    min-height: 48px;
+    cursor: pointer;
+  }
+  .bulk-all {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #22331f;
+  }
+  .planting-row input,
+  .bulk-all input {
+    width: 22px;
+    height: 22px;
+  }
+  .planting-name {
+    font-weight: 600;
+    color: #22331f;
+  }
+  .bulk-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #d8cfb4;
+  }
+  .bulk-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #22331f;
+  }
+  .bulk-status select {
+    min-height: 48px;
+  }
+  .bulk-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .secondary-btn.solid {
+    background: #1f5e3a;
+    color: #fff;
   }
   .attest-check {
     display: flex;

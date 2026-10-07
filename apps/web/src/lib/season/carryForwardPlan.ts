@@ -51,6 +51,9 @@ export interface BlockRotationInput {
   blockName: string;
   /** Prior-season plantings that occupied this block. */
   priorPlantings: PriorPlanting[];
+  /** Perennials (trees, vines, bushes, stands) still standing here at the
+   *  end of the prior season, whatever year they were planted (#751). */
+  standing?: Array<{ varietyDisplayName: string }>;
 }
 
 export interface RotationSuggestion {
@@ -64,6 +67,8 @@ export interface RotationSuggestion {
   /** Families to avoid replanting here next year (same-family + inside the
    *  plant-back lookback). */
   avoidFamilies: string[];
+  /** Names of the perennials still standing on this block (#751). */
+  standing: string[];
 }
 
 /** Defensible default plant-back lookback when the caller has no resolved
@@ -89,6 +94,25 @@ export function buildRotationSuggestion(
   toYear: number,
   locale?: string | null
 ): RotationSuggestion {
+  const base = rotationAdvice(block, lookbackByFamily, fromYear, toYear, locale);
+  const standing = [...new Set((block.standing ?? []).map((s) => s.varietyDisplayName))].sort();
+  if (standing.length === 0) return base;
+  const standingText = t(locale, 'season.rot.standing', { names: standing.join(', ') });
+  return {
+    ...base,
+    severity: 'warn',
+    standing,
+    message: base.priorFamilies.length > 0 ? `${standingText} ${base.message}` : standingText
+  };
+}
+
+function rotationAdvice(
+  block: BlockRotationInput,
+  lookbackByFamily: Record<string, number>,
+  fromYear: number,
+  toYear: number,
+  locale?: string | null
+): RotationSuggestion {
   const relevant = block.priorPlantings.filter(
     (p) => p.status === 'harvested' || p.status === 'active' || p.status === 'planned'
   );
@@ -101,7 +125,8 @@ export function buildRotationSuggestion(
       severity: 'ok',
       priorFamilies: [],
       message: t(locale, 'season.rot.none'),
-      avoidFamilies: []
+      avoidFamilies: [],
+      standing: []
     };
   }
 
@@ -128,7 +153,8 @@ export function buildRotationSuggestion(
       severity: 'ok',
       priorFamilies,
       message: t(locale, 'season.rot.ok', { families: priorFamilies.join(', ') }),
-      avoidFamilies: []
+      avoidFamilies: [],
+      standing: []
     };
   }
 
@@ -147,7 +173,8 @@ export function buildRotationSuggestion(
     severity: worst,
     priorFamilies,
     message,
-    avoidFamilies: [...new Set(avoidFamilies)].sort()
+    avoidFamilies: [...new Set(avoidFamilies)].sort(),
+    standing: []
   };
 }
 
@@ -248,6 +275,8 @@ export interface PlantingCloneCandidate {
   status: string;
   quantityPlanted?: number;
   quantityUnit?: string;
+  /** A perennial stays in the ground, so it is never replanted (#751). */
+  perennial?: boolean;
 }
 
 export interface ScheduleWindowLite {
@@ -299,7 +328,8 @@ export function shiftOneYear(ms: number): number {
  * Clone prior accepted plantings into next-season drafts. Each source date is
  * shifted +1 year, then clamped into the re-validated `[earliestMs, latestMs]`
  * schedule window for that (block, crop). Undated plantings clone with a null
- * date. Only `harvested` / `active` plantings clone (drafts/failed skip).
+ * date. Only `harvested` / `active` plantings clone (drafts/failed skip), and
+ * perennials never clone because they are still standing.
  */
 export function clonePlantings(
   candidates: readonly PlantingCloneCandidate[],
@@ -312,6 +342,7 @@ export function clonePlantings(
   const out: ClonedPlanting[] = [];
   for (const c of candidates) {
     if (c.status !== 'harvested' && c.status !== 'active') continue;
+    if (c.perennial) continue;
 
     let plantingDateMs: number | null = null;
     let dateProvenance: CloneDateProvenance = 'no-source-date';

@@ -24,7 +24,7 @@ function groupCodesFor(plugin: Plugin): GroupChip[] {
   if (plugin.type === 'herbicide') {
     for (const ai of plugin.activeIngredients ?? []) {
       const g = hracGroupOf(ai.chemistryClass);
-      if (g !== undefined) out.push({ kind: 'HRAC', group: String(g) });
+      if (g != null) out.push({ kind: 'HRAC', group: String(g) });
     }
   } else if (plugin.type === 'insecticide') {
     for (const ai of plugin.activeIngredients ?? []) {

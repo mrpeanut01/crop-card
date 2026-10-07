@@ -1,7 +1,7 @@
 {
   "pluginId": "eptam-eptc",
   "type": "herbicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Eptam'; only an unrelated silicone adjuvant returned). Conventional synthetic thiocarbamate (EPTC) herbicide, Gowan Eptam 7-E EPA 10163-283; label makes no organic-production claim."},
   "defaultUnit": "fl-oz",
   "formulation": "EC",
@@ -10,7 +10,7 @@
   "activeIngredients": [
     {
       "name": "EPTC",
-      "chemistryClass": "vlcfa-pyroxasulfone"
+      "chemistryClass": "unclassified"
     }
   ],
   "ratePerAcre": {
@@ -22,5 +22,5 @@
   "requiresAMS": false,
   "deconRequired": false,
   "epaRegistrationNumber": "10163-283",
-  "notes": "Gowan Group 15 thiocarbamate VLCFA inhibitor. Incorporate within 30 min to avoid volatility loss. Strong on yellow nutsedge. chemistryClass tag is the nearest enum match; EPTC is technically Group 15 thiocarbamate, not pyroxasulfone family."
+  "notes": "Gowan Group 15 thiocarbamate VLCFA inhibitor. Incorporate within 30 min to avoid volatility loss. Strong on yellow nutsedge. chemistryClass is unclassified until its label group is quoted into the sources file (#654), so the safety kernel treats it as lethal to every crop family."
 }

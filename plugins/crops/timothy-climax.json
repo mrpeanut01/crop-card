@@ -2,8 +2,8 @@
   "pluginId": "timothy-climax",
   "type": "crop",
   "displayName": "Timothy — Climax (cool-season grass hay)",
-  "version": "1.0.0",
-  "cropFamily": "forage",
+  "version": "1.0.1",
+  "cropFamily": "forage-grass",
   "daysToMaturity": {
     "min": 365,
     "max": 1825

@@ -2,9 +2,9 @@
   "pluginId": "sudangrass-piper",
   "type": "crop",
   "displayName": "Sudangrass Piper (forage)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
-  "cropFamily": "forage",
+  "cropFamily": "forage-grass",
   "preHarvestIntervalDays": 14,
   "daysToMaturity": {
     "min": 60,

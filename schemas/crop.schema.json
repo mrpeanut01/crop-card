@@ -51,7 +51,9 @@
         "stone-fruit",
         "cereal-grain",
         "forage",
-        "herb-culinary"
+        "herb-culinary",
+        "forage-grass",
+        "perennial-vegetable"
       ]
     },
     "defaultRowSpacingInches": {
@@ -1123,7 +1125,8 @@
               "ppo-inhibitor",
               "als-imidazolinone",
               "vlcfa-pyroxasulfone",
-              "clomazone"
+              "clomazone",
+              "unclassified"
             ]
           },
           "stageCode": {

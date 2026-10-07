@@ -109,6 +109,8 @@ const CROP_FAMILIES_FOR_PROMPT = [
   'apiaceae',
   'cereal-grain',
   'forage',
+  'forage-grass',
+  'perennial-vegetable',
   'cover-crop',
   'culinary-herb',
   'broadleaf-companion'

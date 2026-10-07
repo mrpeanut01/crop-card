@@ -21,7 +21,8 @@ export const CHEMISTRY_CLASSES = [
   'ppo-inhibitor', // HRAC 14 — fomesafen, flumioxazin, sulfentrazone, lactofen
   'als-imidazolinone', // HRAC 2 (IMI subset) — imazethapyr, imazamox, imazaquin
   'vlcfa-pyroxasulfone', // HRAC 15 — pyroxasulfone (newer VLCFA inhibitor)
-  'clomazone' // HRAC 13 — clomazone (carotenoid biosynthesis)
+  'clomazone', // HRAC 13 — clomazone (carotenoid biosynthesis)
+  'unclassified' // no verified HRAC group on file; the kernel treats it as lethal to every family (#654)
 ] as const;
 
 export type ChemistryClass = (typeof CHEMISTRY_CLASSES)[number];

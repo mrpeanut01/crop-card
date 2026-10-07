@@ -22,6 +22,8 @@ const FAMILY_KEYS: Record<CropFamily, MessageKey> = {
   'stone-fruit': 'family.stone-fruit',
   'cereal-grain': 'family.cereal-grain',
   forage: 'family.forage',
+  'forage-grass': 'family.forage-grass',
+  'perennial-vegetable': 'family.perennial-vegetable',
   'herb-culinary': 'family.herb-culinary'
 };
 

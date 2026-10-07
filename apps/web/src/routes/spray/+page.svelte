@@ -30,6 +30,7 @@
   import OrganicInputNotice from '$lib/components/organic/OrganicInputNotice.svelte';
   import { organicInputClass } from '$lib/organic/inputCompliance';
   import { createT } from '$lib/i18n';
+  import type { MessageKey } from '$lib/i18n';
   import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
   import type { RecordTaskClose } from '$lib/tasks/recordClose';
 
@@ -969,7 +970,9 @@
           <small
             >{h.applicationTiming ?? tr('sprayui.herb.unspecifiedTiming')} • {h.contactOrganic
               ? tr('sprayui.herb.contact')
-              : h.chemistryClasses.join(', ')}</small
+              : h.chemistryClasses
+                  .map((c) => tr(`sprayui.chemclass.${c}` as MessageKey))
+                  .join(', ')}</small
           >
           <small data-testid="herbicide-rate-preview" lang="en" data-english-only="safety">
             {herbicideRatePreview(h.ratePerAcre, sprayer, currentPrefs()).label}

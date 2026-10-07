@@ -314,7 +314,9 @@
               "stone-fruit",
               "cereal-grain",
               "forage",
-              "herb-culinary"
+              "herb-culinary",
+              "forage-grass",
+              "perennial-vegetable"
             ]
           }
         }

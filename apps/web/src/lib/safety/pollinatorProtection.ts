@@ -123,6 +123,16 @@ export function aggregatePollinatorData(products: PollinatorProduct[]): Pollinat
   return out;
 }
 
+function daylightSubject(tox: BeeToxicity): string {
+  if (tox === 'unknown') {
+    return 'Daylight application of a product whose bee toxicity is not known, so treat it as bee-toxic';
+  }
+  if (tox === 'relatively-nontoxic') {
+    return 'Daylight application of a product whose label restricts use around bloom';
+  }
+  return 'Daylight application of a bee-toxic product';
+}
+
 export function isDaylight(at: Date, sun: SunTimes): boolean {
   const t = at.getTime();
   return t >= sun.sunrise.getTime() && t < sun.sunset.getTime();
@@ -153,6 +163,7 @@ export function checkPollinatorProtection(
   const { beeToxicity, bloomRestriction, residualToxicityHours } = data;
   const bloom = input.bloomStatus;
   const hazardous = beeToxicity !== 'relatively-nontoxic';
+  const toxUnknown = beeToxicity === 'unknown';
   const flowersPossible = bloom !== 'not-in-bloom';
   const checks: PollinatorCheck[] = [];
 
@@ -178,8 +189,12 @@ export function checkPollinatorProtection(
       label: TOX_LABEL[beeToxicity],
       reason:
         bloom === 'in-bloom'
-          ? 'Bee-toxic product on a blooming block — spray after foragers leave and mow flowering weeds first.'
-          : 'Bee-toxic product and bloom status is not attested — check the crop and weeds for open flowers.'
+          ? toxUnknown
+            ? 'Bee toxicity is not known for this product, so treat it as bee-toxic on a blooming block — spray after foragers leave and mow flowering weeds first.'
+            : 'Bee-toxic product on a blooming block — spray after foragers leave and mow flowering weeds first.'
+          : toxUnknown
+            ? 'Bee toxicity is not known for this product and bloom status is not attested — check the crop and weeds for open flowers.'
+            : 'Bee-toxic product and bloom status is not attested — check the crop and weeds for open flowers.'
     });
   }
 
@@ -275,7 +290,7 @@ export function checkPollinatorProtection(
       status: 'warn',
       label: 'Time of day',
       reason: input.sunTimes
-        ? `Daylight application of a bee-toxic product — best practice is after sunset (${fmtTime(input.sunTimes.sunset, input.timeZone)}).`
+        ? `${daylightSubject(beeToxicity)} — best practice is after sunset (${fmtTime(input.sunTimes.sunset, input.timeZone)}).`
         : 'Sunrise/sunset unavailable — best practice is to spray after sunset.'
     });
   } else {

@@ -425,3 +425,55 @@ describe('checkPollinatorProtection — sunset time in the farm zone', () => {
     expect(check(r, 'time-of-day').status).toBe('block');
   });
 });
+
+describe('checkPollinatorProtection — wording matches the label data (#677)', () => {
+  const UNKNOWN_NONE: PollinatorData = { beeToxicity: 'unknown', bloomRestriction: 'none' };
+
+  it('never calls an unknown-toxicity product bee-toxic, and keeps its warnings', () => {
+    const r = run(UNKNOWN_NONE, 'unknown', NOON);
+    expect(check(r, 'time-of-day').status).toBe('warn');
+    expect(check(r, 'time-of-day').reason).toMatch(/bee toxicity is not known/);
+    expect(check(r, 'bee-toxicity').status).toBe('warn');
+    expect(check(r, 'bee-toxicity').reason).toMatch(/not known/);
+    const inBloom = run(UNKNOWN_NONE, 'in-bloom', NOON);
+    expect(check(inBloom, 'bee-toxicity').status).toBe('warn');
+    expect(check(inBloom, 'bee-toxicity').reason).toMatch(/treat it as bee-toxic/);
+  });
+
+  it('keeps the bee-toxic wording for toxic and highly toxic products', () => {
+    expect(check(run(HT_NONE, 'in-bloom', NOON), 'time-of-day').reason).toMatch(
+      /^Daylight application of a bee-toxic product/
+    );
+  });
+
+  it('a relatively nontoxic product restricted around bloom is not called bee-toxic', () => {
+    const r = run(
+      { beeToxicity: 'relatively-nontoxic', bloomRestriction: 'prohibited-during-bloom' },
+      'in-bloom',
+      NOON
+    );
+    expect(check(r, 'time-of-day').reason).not.toMatch(/bee-toxic product/);
+  });
+
+  it('property: only toxic or highly toxic data is ever called a bee-toxic product', () => {
+    fc.assert(
+      fc.property(arbInput, (i) => {
+        const r = evaluate(i);
+        const says = r.checks.some((c) => /bee-toxic product/i.test(c.reason));
+        if (says) expect(['toxic', 'highly-toxic']).toContain(i.data.beeToxicity);
+      }),
+      { numRuns: 300 }
+    );
+  });
+
+  it('property: unknown toxicity gets the same statuses as highly toxic', () => {
+    fc.assert(
+      fc.property(arbInput, (i) => {
+        const unknown = evaluate({ ...i, data: { ...i.data, beeToxicity: 'unknown' } });
+        const toxic = evaluate({ ...i, data: { ...i.data, beeToxicity: 'highly-toxic' } });
+        expect(unknown.checks.map((c) => c.status)).toEqual(toxic.checks.map((c) => c.status));
+      }),
+      { numRuns: 300 }
+    );
+  });
+});

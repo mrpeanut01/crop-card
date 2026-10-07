@@ -7,7 +7,8 @@
  * bee-toxic product is about to go on while another block on the farm, within
  * foraging range, carries a planting that is in bloom now or whose crop plugin
  * declares it bee-attractive. Neighbours without block geometry are listed
- * with an unknown distance and never drive the warning.
+ * with an unknown distance and never drive the warning, unless they sit in
+ * the same Area as the treated block (#676), which counts as within range.
  *
  * Pure and client-safe: distances and bloom flags are computed by the caller
  * (`lib/server/pollinatorNeighbors.ts`).
@@ -42,6 +43,8 @@ export interface NeighborBlock {
   name: string;
   /** Centroid-to-centroid distance in feet; null when either block lacks geometry. */
   distanceFt: number | null;
+  /** In the same Area as the treated block, so within range whatever the geometry. */
+  sameArea?: boolean;
   crops: NeighborCrop[];
 }
 
@@ -49,6 +52,7 @@ export interface NearbyBlockHit {
   blockId: string;
   name: string;
   distanceFt: number | null;
+  sameArea?: boolean;
   reason: NearbyReason;
   crops: string[];
 }
@@ -94,6 +98,7 @@ function hitFor(n: NeighborBlock): NearbyBlockHit | null {
     blockId: n.blockId,
     name: n.name,
     distanceFt: n.distanceFt,
+    ...(n.sameArea ? { sameArea: true } : {}),
     reason: relevant.some((c) => c.inBloomNow) ? 'in-bloom' : 'bee-attractive',
     crops: Array.from(new Set(relevant.map((c) => c.displayName ?? c.cropPluginId)))
   };
@@ -108,9 +113,12 @@ export function checkNearbyPollinatorBlocks(
   for (const n of input.neighbors) {
     const hit = hitFor(n);
     if (!hit) continue;
-    if (hit.distanceFt === null || !Number.isFinite(hit.distanceFt)) {
+    const known = hit.distanceFt !== null && Number.isFinite(hit.distanceFt);
+    if (!known && hit.sameArea) {
+      blocks.push({ ...hit, distanceFt: null });
+    } else if (!known) {
       unknownDistance.push({ ...hit, distanceFt: null });
-    } else if (hit.distanceFt <= radiusFt) {
+    } else if (hit.sameArea || (hit.distanceFt as number) <= radiusFt) {
       blocks.push(hit);
     }
   }

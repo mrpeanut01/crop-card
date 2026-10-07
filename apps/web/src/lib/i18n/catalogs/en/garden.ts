@@ -55,6 +55,8 @@ export const enGarden = {
   'garden.family.herb-culinary': 'Herbs',
   'garden.family.cereal-grain': 'Small grains',
   'garden.family.forage': 'Forage',
+  'garden.family.forage-grass': 'Grass hay and pasture',
+  'garden.family.perennial-vegetable': 'Perennial vegetables',
   'garden.family.cover-grass': 'Grass cover crops',
   'garden.family.cover-legume': 'Legume cover crops',
   'garden.family.broadleaf-companion': 'Flowering companions',

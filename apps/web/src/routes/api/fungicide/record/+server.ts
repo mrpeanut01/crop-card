@@ -54,6 +54,7 @@ import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
 import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
+import { plantingStandsForBloom } from '$lib/server/sprayCrops';
 
 /** Coarse sprayer-load token for the cross-contamination state machine
  *  (#321). Fungicides carry FRAC codes, not an HRAC ChemistryClass, so the
@@ -199,7 +200,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
 
   const block = getBlock(parsed.data.blockId);
   const cropsInBlock: CropInBlock[] = (block?.plantings ?? [])
-    .filter((p): p is typeof p & { plantingDate: number } => p.plantingDate != null)
+    .filter((p): p is typeof p & { plantingDate: number } => plantingStandsForBloom(p, occurredAt))
     .map((p) => {
       const rec = registry.get(p.cropPluginId);
       const cropPlugin: CropPlugin | null =

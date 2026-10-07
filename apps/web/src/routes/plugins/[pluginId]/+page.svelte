@@ -169,7 +169,7 @@
     if (plugin.type === 'herbicide') {
       for (const ai of ais) {
         const g = hracGroupOf(ai.chemistryClass as Parameters<typeof hracGroupOf>[0]);
-        if (g !== undefined) out.push({ kind: 'HRAC', group: String(g) });
+        if (g != null) out.push({ kind: 'HRAC', group: String(g) });
       }
     } else if (plugin.type === 'insecticide') {
       for (const ai of ais) {

@@ -662,6 +662,8 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'family.stone-fruit': 'Frutales de hueso',
   'family.cereal-grain': 'Cereales de grano',
   'family.forage': 'Forraje',
+  'family.forage-grass': 'Heno y pasto de gramíneas',
+  'family.perennial-vegetable': 'Hortalizas perennes',
   'family.herb-culinary': 'Hierbas culinarias',
   'archetype.unknown': 'Sin definir',
   'archetype.small-grain.zadoks': 'Cereal de grano pequeño (etapas Zadoks)',

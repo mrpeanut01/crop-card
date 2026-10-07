@@ -41,6 +41,8 @@ export const FAMILY_SUCCESSION_DAYS: Record<CropFamily, number> = {
   'small-fruit': 0,
   orchard: 0,
   forage: 0,
+  'forage-grass': 0,
+  'perennial-vegetable': 0,
   'cereal-grain': 0,
   'cover-grass': 0,
   'cover-legume': 0

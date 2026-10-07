@@ -450,6 +450,7 @@ export function archetypeForFamilyFallback(family: string): Archetype {
     case "broadleaf-companion":
       return "winter-squash-cure";
     case "forage":
+    case "forage-grass":
       return "forage-cutting-cycle";
     case "cover-grass":
     case "cover-legume":

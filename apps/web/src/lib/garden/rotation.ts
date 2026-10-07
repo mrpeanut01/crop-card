@@ -33,6 +33,8 @@ const FAMILY_LABELS: Record<string, string> = {
   'herb-culinary': 'Herbs',
   'cereal-grain': 'Small grains',
   forage: 'Forage',
+  'forage-grass': 'Grass hay and pasture',
+  'perennial-vegetable': 'Perennial vegetables',
   'cover-grass': 'Grass cover crops',
   'cover-legume': 'Legume cover crops',
   'broadleaf-companion': 'Flowering companions'

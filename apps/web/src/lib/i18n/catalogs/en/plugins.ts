@@ -644,6 +644,8 @@ export const enPlugins = {
   'family.stone-fruit': 'Stone fruit',
   'family.cereal-grain': 'Small grains',
   'family.forage': 'Forage',
+  'family.forage-grass': 'Grass hay and pasture',
+  'family.perennial-vegetable': 'Perennial vegetables',
   'family.herb-culinary': 'Herbs',
   'archetype.unknown': 'Not set',
   'archetype.small-grain.zadoks': 'Small grain (Zadoks stages)',

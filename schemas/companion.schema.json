@@ -107,7 +107,9 @@
         "stone-fruit",
         "cereal-grain",
         "forage",
-        "herb-culinary"
+        "herb-culinary",
+        "forage-grass",
+        "perennial-vegetable"
       ]
     },
     "members": {
@@ -137,7 +139,9 @@
               "stone-fruit",
               "cereal-grain",
               "forage",
-              "herb-culinary"
+              "herb-culinary",
+              "forage-grass",
+              "perennial-vegetable"
             ]
           },
           "role": {

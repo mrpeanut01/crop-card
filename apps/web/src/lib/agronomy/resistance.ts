@@ -50,7 +50,9 @@ export function checkResistanceRotation(args: {
   const hracPrior = priorByKind.get('HRAC') ?? new Set<string>();
   for (const h of args.herbicides ?? []) {
     for (const ai of h.activeIngredients) {
-      const g = String(hracGroupOf(ai.chemistryClass));
+      const group = hracGroupOf(ai.chemistryClass);
+      if (group == null) continue;
+      const g = String(group);
       if (hracPrior.has(g)) {
         warnings.push({
           group: g,

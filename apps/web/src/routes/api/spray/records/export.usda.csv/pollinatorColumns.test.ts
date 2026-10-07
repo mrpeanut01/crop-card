@@ -72,7 +72,7 @@ async function rows(query = '') {
 }
 
 describe('USDA CSV — #130 pollinator columns', () => {
-  it('appends the four columns after record_kind, then the two G2 columns', async () => {
+  it('appends the four columns after record_kind, then the G2 and #760 columns', async () => {
     const { meta } = await rows();
     const f = meta.fields ?? [];
     expect(f.slice(f.indexOf('record_kind'))).toEqual([
@@ -82,7 +82,11 @@ describe('USDA CSV — #130 pollinator columns', () => {
       'attested_no_foragers',
       'pollinator_verdict',
       'recorded_late',
-      'days_after_date'
+      'days_after_date',
+      'mode_of_action',
+      'total_amount_unit',
+      'harvest_quantity',
+      'rei_hours'
     ]);
   });
 

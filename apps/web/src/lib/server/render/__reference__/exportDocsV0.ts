@@ -4,6 +4,11 @@
  * log and the certifier pack summary before they moved to `PdfJobDoc`.
  * The equivalence test renders these and the new builders from the same
  * data and compares the bytes. Never import this from app code.
+ *
+ * Deliberate output changes are made here too, marked "Amended with the
+ * live builder", so the test keeps proving the worker transport renders
+ * what the function-based builder would: #746 (funnel heading), #759
+ * (VDACS column widths and certification note), #764 (hay cuttings).
  */
 
 import pdfmake, { type DocumentDefinition } from 'pdfmake';
@@ -13,7 +18,7 @@ import { identityLabel } from '$lib/identity';
 import { formatInstant, formatQuantity, unitLabel, zoneAbbrev, type Prefs } from '$lib/prefs';
 import { LATE_LEGEND } from '$lib/records/lateLabel';
 import { headCountText, type YearAnimalSection } from '$lib/records/yearSummaryAnimals';
-import type { YearSummaryForViewer } from '$lib/records/yearSummary';
+import { hayHarvestLine, type YearSummaryForViewer } from '$lib/records/yearSummary';
 import {
   TREATMENT_LOG_STATE_LABEL,
   withdrawalText,
@@ -214,14 +219,21 @@ export function vdacsDocV0(i: {
       {
         table: {
           headerRows: 1,
-          widths: ['auto', 'auto', 55, 55, '*', 45, 80, 65, 'auto', 80, 'auto'],
+          // Amended with the live builder for #759 (fixed widths, 12 columns).
+          widths: [46, 40, 58, 44, '*', 52, 30, 60, 46, 52, 54, 34],
           body: tableBody
         },
         layout: {
           fillColor: (rowIndex: number) => (rowIndex === 0 ? '#1f5e3a' : null),
           hLineColor: () => '#cccccc',
           vLineColor: () => '#cccccc'
-        }
+        },
+        style: 'cell'
+      },
+      {
+        text: 'Applicator certification numbers are not captured by CropCard; write the number beside each applicator when an inspector asks for it.',
+        style: 'sub',
+        margin: [0, 8, 0, 0]
       },
       {
         text: '\nRetention: minimum 2 years from occurrence (NFR-05). Records are immutable after the 48-hour FR-09 lock window. Plugin hashes embedded per record allow tamper-evident auditing.',
@@ -233,8 +245,9 @@ export function vdacsDocV0(i: {
     styles: {
       h1: { fontSize: 16, bold: true, color: '#1f5e3a', margin: [0, 0, 0, 4] },
       sub: { fontSize: 9, color: '#555555' },
-      th: { color: 'white', bold: true, fontSize: 9 },
-      kind: { fontSize: 9, bold: true, color: '#1f5e3a' },
+      th: { color: 'white', bold: true, fontSize: 7.5 },
+      cell: { fontSize: 7 },
+      kind: { fontSize: 7, bold: true, color: '#1f5e3a' },
       mono: { fontSize: 8, color: '#1f5e3a' },
       farmName: { fontSize: 13, bold: true, color: '#1f5e3a' },
       farmSub: { fontSize: 8, color: '#555555' },
@@ -492,6 +505,13 @@ export function yearSummaryDocV0(i: {
             layout: tableLayout()
           }
         : { text: 'No harvest events recorded this year.', style: 'empty' },
+      // Amended with the live builder for #764 (hay cuttings).
+      ...(summary.hay
+        ? [
+            { text: 'Hay cuttings', style: 'h3' },
+            { text: hayHarvestLine(summary.hay), style: 'body' }
+          ]
+        : []),
 
       ...(inputCosts && costBody
         ? [
@@ -508,7 +528,8 @@ export function yearSummaryDocV0(i: {
           ]
         : []),
 
-      { text: 'Scout → spray funnel', style: 'h2', margin: [0, 14, 0, 0] },
+      // Amended with the live builder for #746 (WinAnsi has no arrow).
+      { text: 'Scout to spray funnel', style: 'h2', margin: [0, 14, 0, 0] },
       {
         text: `${summary.scoutFunnel.scoutObservations} scout observation(s) · ${summary.scoutFunnel.thresholdTriggeredApplications} threshold-triggered application(s) · ${summary.scoutFunnel.spraysAvoided} spray(s) avoided (observation with no follow-up application within 14 days).`,
         style: 'body'
@@ -533,6 +554,7 @@ export function yearSummaryDocV0(i: {
     styles: {
       h1: { fontSize: 18, bold: true, color: '#1f5e3a', margin: [0, 0, 0, 2] },
       h2: { fontSize: 12, bold: true, color: '#1f5e3a', margin: [0, 8, 0, 4] },
+      h3: { fontSize: 10, bold: true, color: '#1f5e3a', margin: [0, 8, 0, 2] },
       sub: { fontSize: 9, color: '#555555' },
       body: { fontSize: 10, color: '#333333' },
       empty: { fontSize: 9, italics: true, color: '#888888' },

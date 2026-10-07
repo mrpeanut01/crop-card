@@ -10,8 +10,8 @@
  * Sprint 2 (#204):
  *   - `applicator` resolves to the human-readable email (or display name)
  *     instead of the internal user UUID.
- *   - `target_pest` falls back to the plugin's first target weed/pest
- *     when no scout observation accompanies the row.
+ *   - `target_pest` is what the operator recorded (the scout or disease
+ *     observation); blank otherwise, never the label's target list (#760).
  *   - EPA reg # is also pulled for fungicides (previously only herbicide
  *     + insecticide branches set it).
  *
@@ -43,7 +43,15 @@
  *   target_pest, weather_wind_mph, weather_temp_f, warning,
  *   crop_commodity, applicator_cert_no, total_amount_applied, moisture_pct,
  *   record_kind, bloom_status, bloom_status_source, attested_no_foragers,
- *   pollinator_verdict, recorded_late, days_after_date
+ *   pollinator_verdict, recorded_late, days_after_date, mode_of_action,
+ *   total_amount_unit, harvest_quantity, rei_hours
+ *
+ * #760: `active_ingredients` names the label's active ingredients; the
+ * mode-of-action groups move to an appended `mode_of_action` column
+ * ("IRAC 3A", "FRAC 3"). `total_amount_applied` is a bare number in the
+ * appended `total_amount_unit`; a harvest's quantity text goes in the
+ * appended `harvest_quantity`. `rei_hours` is the record's restricted-entry
+ * interval, blank when not on file (herbicide plugins carry none).
  *
  * Phase 32G (G2-07, G2-08): hay cuttings are `record_kind = hay` rows (mow
  * date, block, performer, crop, bale moisture). `recorded_late` is yes, no,
@@ -77,6 +85,13 @@ import { unscopedQueryNote } from '$lib/db/tenant';
 import { identityLabel } from '$lib/identity';
 import { listHayForExport, type HayExportRow } from '$lib/records/hayExport.server';
 import { lateCells, UNTRACKED_LATE_CELLS, type LateCells } from '$lib/records/lateLabel';
+import {
+  activeIngredientNames,
+  cropTreated,
+  modeOfActionLabels,
+  recordedTarget,
+  reiHoursFor
+} from '$lib/records/exportFacts';
 
 function applicatorMap(userIds: string[]): Map<string, string> {
   const ids = Array.from(new Set(userIds.filter(Boolean)));
@@ -88,21 +103,6 @@ function applicatorMap(userIds: string[]): Map<string, string> {
     .where(inArray(users.id, ids))
     .all();
   return new Map(rows.map((r) => [r.id, identityLabel(r)]));
-}
-
-function targetPestFor(
-  plugin: { type?: string; targetPests?: string[]; targetDiseases?: string[] } | undefined
-): string {
-  if (!plugin) return '';
-  if (plugin.type === 'insecticide' && plugin.targetPests && plugin.targetPests.length > 0) {
-    return plugin.targetPests.slice(0, 3).join('; ');
-  }
-  if (plugin.type === 'fungicide' && plugin.targetDiseases && plugin.targetDiseases.length > 0) {
-    return plugin.targetDiseases.slice(0, 3).join('; ');
-  }
-  // Herbicides have no standalone targetWeeds list in the schema; the
-  // NRCS form treats the column as optional for non-bug applications.
-  return '';
 }
 
 export const GET: RequestHandler = async (event) => {
@@ -124,17 +124,35 @@ export const GET: RequestHandler = async (event) => {
   const blocks = new Map(listBlocks().map((b) => [b.id, b]));
   const registry = await getRegistry();
 
-  // Crop/commodity treated — the block's plantings name the crop under the
-  // application. Multiple plantings on one block join with "; ". Resolved
-  // to the registry displayName when available, else the plugin id.
-  function cropCommodityFor(block: BlockWithPlantings | undefined): string {
-    if (!block || block.plantings.length === 0) return '';
-    const names = new Set<string>();
-    for (const p of block.plantings) {
-      const plugin = registry.get(p.cropPluginId)?.plugin as { displayName?: string } | undefined;
-      names.add(plugin?.displayName ?? p.varietyDisplayName ?? p.cropPluginId);
-    }
-    return Array.from(names).slice(0, 3).join('; ');
+  // Crop/commodity treated: the record's planting when it names one on the
+  // block, else the block's plantings joined with "; ".
+  function cropCommodityFor(block: BlockWithPlantings | undefined, cropId?: string): string {
+    if (!block) return '';
+    return cropTreated(
+      cropId,
+      block.plantings,
+      (id) => (registry.get(id)?.plugin as { displayName?: string } | undefined)?.displayName
+    );
+  }
+
+  function totalAmountUnit(rate: { unit: string } | undefined, total: string): string {
+    return total && rate ? rate.unit.split('/')[0] : '';
+  }
+
+  function reiCell(
+    e: { occurredAt: number; reEntryClearAt?: number },
+    products: ReadonlyArray<{ pluginId: string }>
+  ): string {
+    const hours = reiHoursFor(
+      e.occurredAt,
+      e.reEntryClearAt,
+      products.map(
+        (p) =>
+          (registry.get(p.pluginId)?.plugin as { reEntryIntervalHours?: number } | undefined)
+            ?.reEntryIntervalHours
+      )
+    );
+    return hours === undefined ? '' : String(hours);
   }
 
   // total_amount_applied = rate/acre × acres. Blank when either is missing
@@ -174,7 +192,12 @@ export const GET: RequestHandler = async (event) => {
     moisture_pct: string;
     record_kind: string;
   } & PollinatorAttestationCells &
-    LateCells;
+    LateCells & {
+      mode_of_action: string;
+      total_amount_unit: string;
+      harvest_quantity: string;
+      rei_hours: string;
+    };
   const rows: Row[] = [];
 
   // Data-gap (#326): no applicator pesticide-certification number is
@@ -190,12 +213,19 @@ export const GET: RequestHandler = async (event) => {
   function rowsForSprayEvent(e: (typeof sprays)[number]) {
     const block = blocks.get(e.blockId);
     const acres = block?.acres;
-    const commodity = cropCommodityFor(block);
+    const commodity = cropCommodityFor(block, e.cropId);
     const wind = e.conditions.windMph;
     const temp = e.conditions.tempF;
     for (const p of e.products) {
+      const total = totalAmountApplied(p.rate?.amount, acres);
       const plugin = registry.get(p.pluginId)?.plugin as
-        { type?: string; displayName?: string; epaRegistrationNumber?: string } | undefined;
+        | {
+            type?: string;
+            displayName?: string;
+            epaRegistrationNumber?: string;
+            activeIngredients?: { name?: string }[];
+          }
+        | undefined;
       const epa =
         plugin && (plugin.type === 'herbicide' || plugin.type === 'insecticide')
           ? (plugin.epaRegistrationNumber ?? '')
@@ -206,21 +236,25 @@ export const GET: RequestHandler = async (event) => {
         applicator: applicatorLabel(e.performedById),
         product_name: plugin?.displayName ?? p.pluginId,
         epa_reg_no: epa,
-        active_ingredients: p.chemistryClasses.join(' / '),
+        active_ingredients: activeIngredientNames(plugin),
         rate_per_acre: p.rate?.amount?.toString() ?? '',
         rate_unit: p.rate?.unit ?? '',
         area_acres: acres !== undefined ? String(acres) : '',
-        target_pest: targetPestFor(plugin),
+        target_pest: '',
         weather_wind_mph: String(wind),
         weather_temp_f: String(temp),
         warning: epa ? '' : 'MISSING_EPA_REG',
         crop_commodity: commodity,
         applicator_cert_no: APPLICATOR_CERT_NO,
-        total_amount_applied: totalAmountApplied(p.rate?.amount, acres),
+        total_amount_applied: total,
         moisture_pct: '',
         record_kind: 'application',
         ...EMPTY_POLLINATOR_CELLS,
-        ...UNTRACKED_LATE_CELLS
+        ...UNTRACKED_LATE_CELLS,
+        mode_of_action: modeOfActionLabels('herbicide', p.chemistryClasses).join(' / '),
+        total_amount_unit: totalAmountUnit(p.rate, total),
+        harvest_quantity: '',
+        rei_hours: ''
       });
     }
   }
@@ -228,12 +262,15 @@ export const GET: RequestHandler = async (event) => {
   function rowsForInsecticideEvent(e: (typeof insecticides)[number]) {
     const block = blocks.get(e.blockId);
     const acres = block?.acres;
-    const commodity = cropCommodityFor(block);
+    const commodity = cropCommodityFor(block, e.cropId);
     const wind = e.conditions.windMph;
     const temp = e.conditions.tempF;
+    const rei = reiCell(e, e.products);
     for (const p of e.products) {
+      const total = totalAmountApplied(p.rate?.amount, acres);
       const plugin = registry.get(p.pluginId)?.plugin as
-        { type?: string; epaRegistrationNumber?: string; targetPests?: string[] } | undefined;
+        | { type?: string; epaRegistrationNumber?: string; activeIngredients?: { name?: string }[] }
+        | undefined;
       const epa =
         plugin && plugin.type === 'insecticide' ? (plugin.epaRegistrationNumber ?? '') : '';
       rows.push({
@@ -242,24 +279,25 @@ export const GET: RequestHandler = async (event) => {
         applicator: applicatorLabel(e.performedById),
         product_name: p.displayName,
         epa_reg_no: epa,
-        // targetPestFor handles the targetPests / targetDiseases lookup;
-        // here we keep IRAC mode-of-action codes as the active-ingredient
-        // breakdown that USDA reviewers expect.
-        active_ingredients: p.iracGroups.map((g) => `IRAC ${g}`).join(' / '),
+        active_ingredients: activeIngredientNames(plugin),
         rate_per_acre: p.rate?.amount?.toString() ?? '',
         rate_unit: p.rate?.unit ?? '',
         area_acres: acres !== undefined ? String(acres) : '',
-        target_pest: e.scoutObservation?.pest ?? targetPestFor(plugin),
+        target_pest: recordedTarget(e),
         weather_wind_mph: String(wind),
         weather_temp_f: String(temp),
         warning: epa ? '' : 'MISSING_EPA_REG',
         crop_commodity: commodity,
         applicator_cert_no: APPLICATOR_CERT_NO,
-        total_amount_applied: totalAmountApplied(p.rate?.amount, acres),
+        total_amount_applied: total,
         moisture_pct: '',
         record_kind: 'application',
         ...pollinatorAttestationCells(e),
-        ...UNTRACKED_LATE_CELLS
+        ...UNTRACKED_LATE_CELLS,
+        mode_of_action: modeOfActionLabels('insecticide', p.iracGroups).join(' / '),
+        total_amount_unit: totalAmountUnit(p.rate, total),
+        harvest_quantity: '',
+        rei_hours: rei
       });
     }
   }
@@ -267,12 +305,15 @@ export const GET: RequestHandler = async (event) => {
   function rowsForFungicideEvent(e: (typeof fungicides)[number]) {
     const block = blocks.get(e.blockId);
     const acres = block?.acres;
-    const commodity = cropCommodityFor(block);
+    const commodity = cropCommodityFor(block, e.cropId);
     const wind = e.conditions.windMph;
     const temp = e.conditions.tempF;
+    const rei = reiCell(e, e.products);
     for (const p of e.products) {
+      const total = totalAmountApplied(p.rate?.amount, acres);
       const plugin = registry.get(p.pluginId)?.plugin as
-        { type?: string; epaRegistrationNumber?: string; targetPests?: string[] } | undefined;
+        | { type?: string; epaRegistrationNumber?: string; activeIngredients?: { name?: string }[] }
+        | undefined;
       const epa = plugin && plugin.type === 'fungicide' ? (plugin.epaRegistrationNumber ?? '') : '';
       rows.push({
         date_iso: localDay(e.occurredAt, prefs),
@@ -280,21 +321,25 @@ export const GET: RequestHandler = async (event) => {
         applicator: applicatorLabel(e.performedById),
         product_name: p.displayName,
         epa_reg_no: epa,
-        active_ingredients: p.fracCodes.map((g) => `FRAC ${g}`).join(' / '),
+        active_ingredients: activeIngredientNames(plugin),
         rate_per_acre: p.rate?.amount?.toString() ?? '',
         rate_unit: p.rate?.unit ?? '',
         area_acres: acres !== undefined ? String(acres) : '',
-        target_pest: e.diseaseObservation?.disease ?? targetPestFor(plugin),
+        target_pest: recordedTarget(e),
         weather_wind_mph: String(wind),
         weather_temp_f: String(temp),
         warning: epa ? '' : 'MISSING_EPA_REG',
         crop_commodity: commodity,
         applicator_cert_no: APPLICATOR_CERT_NO,
-        total_amount_applied: totalAmountApplied(p.rate?.amount, acres),
+        total_amount_applied: total,
         moisture_pct: '',
         record_kind: 'application',
         ...EMPTY_POLLINATOR_CELLS,
-        ...UNTRACKED_LATE_CELLS
+        ...UNTRACKED_LATE_CELLS,
+        mode_of_action: modeOfActionLabels('fungicide', p.fracCodes).join(' / '),
+        total_amount_unit: totalAmountUnit(p.rate, total),
+        harvest_quantity: '',
+        rei_hours: rei
       });
     }
   }
@@ -322,11 +367,15 @@ export const GET: RequestHandler = async (event) => {
       warning: '',
       crop_commodity: plugin?.displayName ?? e.cropPluginId,
       applicator_cert_no: '',
-      total_amount_applied: e.quantity ?? '',
+      total_amount_applied: '',
       moisture_pct: e.moisturePct !== undefined ? String(e.moisturePct) : '',
       record_kind: 'harvest',
       ...EMPTY_POLLINATOR_CELLS,
-      ...UNTRACKED_LATE_CELLS
+      ...UNTRACKED_LATE_CELLS,
+      mode_of_action: '',
+      total_amount_unit: '',
+      harvest_quantity: e.quantity ?? '',
+      rei_hours: ''
     });
   }
 
@@ -356,7 +405,11 @@ export const GET: RequestHandler = async (event) => {
       moisture_pct: c.baleMoisturePct !== undefined ? String(c.baleMoisturePct) : '',
       record_kind: 'hay',
       ...EMPTY_POLLINATOR_CELLS,
-      ...lateCells(c.recordedLate, h.daysLate)
+      ...lateCells(c.recordedLate, h.daysLate),
+      mode_of_action: '',
+      total_amount_unit: '',
+      harvest_quantity: '',
+      rei_hours: ''
     });
   }
 

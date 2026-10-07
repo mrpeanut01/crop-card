@@ -505,6 +505,12 @@ export const enRecords = {
   'records.funnel.observations': 'observations',
   'records.funnel.threshold': 'threshold-triggered',
   'records.h1': 'Records.',
+  'records.hay.bales': '{n} {type} bale(s)',
+  'records.hay.cuttings': '{n} cutting(s) on {blocks} block(s)',
+  'records.hay.moisture': 'Bale moisture {min}% / {mean}% / {max}%',
+  'records.hay.noBales': 'No bale count recorded',
+  'records.hay.noMoisture': 'Bale moisture not recorded',
+  'records.hay.title': 'Hay cuttings',
   'records.inspector.body':
     'Invite a VDACS inspector or CSA member as a read-only inspector. They sign in with their own account and see this view without edit access.',
   'records.inspector.invite': 'Invite an inspector',

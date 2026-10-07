@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { plantingStandsForBloom, resolveSprayCrops, standingCropPluginIds } from './sprayCrops';
+import {
+  plantingPlannedAt,
+  plantingStandsForBloom,
+  resolveSprayCrops,
+  standingCropPluginIds
+} from './sprayCrops';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 
 const FAMILIES: Record<string, CropFamily> = {
@@ -22,12 +27,73 @@ describe('standingCropPluginIds', () => {
           { cropPluginId: 'a', plantingDate: now - 1, status: 'active' },
           { cropPluginId: 'b', plantingDate: now + 1, status: 'active' },
           { cropPluginId: 'c', plantingDate: null, status: 'planned' },
-          { cropPluginId: 'd', plantingDate: now - 1, status: 'harvested' },
-          { cropPluginId: 'e', plantingDate: now - 1, status: 'planned' }
+          { cropPluginId: 'd', plantingDate: now - 10, status: 'harvested', harvestedAt: now - 5 },
+          { cropPluginId: 'e', plantingDate: now - 1, status: 'planned' },
+          { cropPluginId: 'f', plantingDate: now - 10, status: 'archived', archivedAt: now - 5 }
         ],
         now
       )
     ).toEqual(['a', 'e']);
+  });
+
+  it('#637: a harvested crop drops out from its harvest, so the block is pre-plant again', () => {
+    const plantings = [
+      { cropPluginId: 'corn', plantingDate: now - 200, status: 'harvested', harvestedAt: now - 50 },
+      { cropPluginId: 'bean', plantingDate: now + 20, status: 'planned' }
+    ];
+    expect(standingCropPluginIds(plantings, now)).toEqual([]);
+    expect(plantings.filter((p) => plantingPlannedAt(p, now)).map((p) => p.cropPluginId)).toEqual([
+      'bean'
+    ]);
+  });
+
+  it('#637: a backdated record still sees a crop that was in the ground on its date', () => {
+    const plantings = [
+      { cropPluginId: 'corn', plantingDate: now - 200, status: 'harvested', harvestedAt: now - 50 }
+    ];
+    expect(standingCropPluginIds(plantings, now - 60)).toEqual(['corn']);
+    expect(standingCropPluginIds(plantings, now - 50)).toEqual([]);
+  });
+
+  it('#637: keeps failed plantings and gone ones with no date on file', () => {
+    expect(
+      standingCropPluginIds(
+        [
+          { cropPluginId: 'a', plantingDate: now - 1, status: 'failed' },
+          { cropPluginId: 'b', plantingDate: now - 1, status: 'harvested' },
+          { cropPluginId: 'c', plantingDate: now - 1, status: 'archived', archivedAt: null }
+        ],
+        now
+      )
+    ).toEqual(['a', 'b', 'c']);
+  });
+
+  it('never drops a planting that stood at the spray time (property)', () => {
+    const status = fc.constantFrom('planned', 'active', 'harvested', 'archived', 'failed');
+    const stamp = fc.option(fc.integer({ min: 0, max: 2_000 }), { nil: null });
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 2_000 }),
+        status,
+        stamp,
+        stamp,
+        fc.integer({ min: 0, max: 2_000 }),
+        (plantingDate, st, harvestedAt, archivedAt, at) => {
+          const p = { cropPluginId: 'x', plantingDate, status: st, harvestedAt, archivedAt };
+          const stood =
+            plantingDate <= at &&
+            [harvestedAt, archivedAt].every(
+              (t) => t == null || t > at || !['harvested', 'archived'].includes(st)
+            );
+          const gone =
+            plantingDate <= at &&
+            ['harvested', 'archived'].includes(st) &&
+            [harvestedAt, archivedAt].some((t) => t != null && t <= at);
+          expect(standingCropPluginIds([p], at).length === 1).toBe(stood && !gone);
+          if (plantingDate > at) expect(standingCropPluginIds([p], at)).toEqual([]);
+        }
+      )
+    );
   });
 });
 

@@ -180,6 +180,7 @@ const cases: Case[] = [
       call(insecticidePost, {
         blockId: B.blockId,
         productPluginIds: ['insecticide:none'],
+        sprayerId: 'none',
         conditions
       })
   ],
@@ -191,6 +192,7 @@ const cases: Case[] = [
         blockId: A.blockId,
         cropId: B.cropId,
         productPluginIds: ['insecticide:none'],
+        sprayerId: 'none',
         conditions
       })
   ],
@@ -201,6 +203,7 @@ const cases: Case[] = [
       call(fungicidePost, {
         blockId: B.blockId,
         productPluginIds: ['fungicide:none'],
+        sprayerId: 'none',
         conditions
       })
   ],
@@ -212,6 +215,7 @@ const cases: Case[] = [
         blockId: A.blockId,
         cropId: B.cropId,
         productPluginIds: ['fungicide:none'],
+        sprayerId: 'none',
         conditions
       })
   ],

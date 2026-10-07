@@ -27,33 +27,17 @@ export interface BlockPlantingFacts {
   cropPluginId: string;
   plantingDate: number | null;
   status?: string;
+  harvestedAt?: number | null;
+  archivedAt?: number | null;
 }
 
-const GONE_STATUSES = new Set(['harvested', 'archived', 'failed']);
-
-/** Plantings standing on the block at `atMs`: dated on or before it and
- *  not harvested out, archived or failed. Undated or later plantings are
- *  plans, so a block holding only plans stays a pre-plant block. */
-export function standingCropPluginIds(
-  plantings: readonly BlockPlantingFacts[],
-  atMs: number
-): string[] {
-  return plantings
-    .filter(
-      (p) => !GONE_STATUSES.has(p.status ?? '') && p.plantingDate != null && p.plantingDate <= atMs
-    )
-    .map((p) => p.cropPluginId);
-}
-
-/** #676: whether a planting is in the ground at `atMs` for the bloom gate
- *  and the nearby-blocks advisory. It must be dated on or before `atMs`; a
- *  harvested or archived planting stops counting only from the moment it
- *  was marked so, so a backdated record still sees it. A failed planting,
- *  or a gone one with no date on file, still counts. */
-export function plantingStandsForBloom(
-  p: BlockPlantingFacts & { harvestedAt?: number | null; archivedAt?: number | null },
-  atMs: number
-): boolean {
+/** #676 / #637: whether a planting is in the ground at `atMs`. It must be
+ *  dated on or before `atMs`; a harvested or archived planting stops
+ *  counting only from the moment it was marked so, so a backdated record
+ *  still sees it. A failed planting, or a gone one with no date on file,
+ *  still counts, since the kernel is never judged against fewer crops than
+ *  may be standing. Undated or later plantings are plans. */
+export function plantingStandsAt(p: BlockPlantingFacts, atMs: number): boolean {
   if (p.plantingDate == null || p.plantingDate > atMs) return false;
   if (p.status !== 'harvested' && p.status !== 'archived') return true;
   const stamps = [p.harvestedAt, p.archivedAt].filter(
@@ -61,6 +45,24 @@ export function plantingStandsForBloom(
   );
   if (stamps.length === 0) return true;
   return Math.min(...stamps) > atMs;
+}
+
+export const plantingStandsForBloom = plantingStandsAt;
+
+/** Crops standing on the block at `atMs` (see `plantingStandsAt`). A block
+ *  holding only plans stays a pre-plant block. */
+export function standingCropPluginIds(
+  plantings: readonly BlockPlantingFacts[],
+  atMs: number
+): string[] {
+  return plantings.filter((p) => plantingStandsAt(p, atMs)).map((p) => p.cropPluginId);
+}
+
+/** A planting that is still a plan at `atMs`: undated or dated later, and
+ *  not harvested, archived or failed. */
+export function plantingPlannedAt(p: BlockPlantingFacts, atMs: number): boolean {
+  if (p.status === 'harvested' || p.status === 'archived' || p.status === 'failed') return false;
+  return p.plantingDate == null || p.plantingDate > atMs;
 }
 
 export function resolveSprayCrops(

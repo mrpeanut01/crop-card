@@ -3,7 +3,7 @@
  *
  * (#319) The stock decrement must scale by the SPRAYER's stored calibrated
  * GPA, not the plugin default. We assert the calibrated GPA is threaded into
- * `computeRatedDilution`.
+ * `appliedProductAmount`.
  *
  * (#321) The endpoint must (a) run the cross-contamination gate before
  * persisting — blocking a spray whose tank last carried a different
@@ -33,7 +33,7 @@ const {
   getRegistry,
   getSprayer,
   recordSpray,
-  computeRatedDilution,
+  appliedProductAmount,
   insertInsecticideEvent,
   decrementForUse,
   getStockItem,
@@ -43,17 +43,7 @@ const {
   getRegistry: vi.fn(),
   getSprayer: vi.fn(),
   recordSpray: vi.fn(),
-  computeRatedDilution: vi.fn(() => ({
-    pluginId: 'insect-1',
-    displayName: 'Bug Off',
-    productAmount: 4,
-    unit: 'fl-oz',
-    display: '4 fl-oz',
-    acresCovered: 1,
-    gpaUsed: 18,
-    ratePerAcre: { amount: 4, unit: 'fl-oz' },
-    customRateApplied: false
-  })),
+  appliedProductAmount: vi.fn(),
   insertInsecticideEvent: vi.fn(() => ({ id: 'evt-1' })),
   decrementForUse: vi.fn(() => ({ notes: [] })),
   getStockItem: vi.fn(() => undefined),
@@ -64,7 +54,7 @@ vi.mock('$lib/server/auth', () => ({ currentUser }));
 vi.mock('$lib/server/session', () => ({ canMutate: (r: string) => r !== 'inspector' }));
 vi.mock('$lib/server/registry', () => ({ getRegistry }));
 vi.mock('$lib/server/sprayers', () => ({ getSprayer, recordSpray }));
-vi.mock('$lib/dilution/calculator', () => ({ computeRatedDilution }));
+vi.mock('$lib/dilution/calculator', () => ({ appliedProductAmount }));
 vi.mock('$lib/db/insecticideEvents', () => ({
   insertInsecticideEvent,
   listInsecticideEvents: vi.fn(() => [])
@@ -91,6 +81,11 @@ const closeTaskForRecord = vi.hoisted(() =>
 vi.mock('$lib/server/recordTaskClose', () => ({ closeTaskForRecord }));
 
 import { POST } from './+server';
+import { getBlock } from '$lib/db/blocks';
+
+const { appliedProductAmount: realApplied } = await vi.importActual<
+  typeof import('$lib/dilution/calculator')
+>('$lib/dilution/calculator');
 import { sqliteHandle } from '$lib/db/client';
 
 const INSECT_PLUGIN = {
@@ -116,6 +111,7 @@ function makeEvent(body: unknown) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  appliedProductAmount.mockImplementation(realApplied);
   currentUser.mockReturnValue({ id: 'u1', role: 'owner' });
   getRegistry.mockResolvedValue({
     get: (id: string) => (id === 'insect-1' ? { plugin: INSECT_PLUGIN, hash: 'h1' } : undefined)
@@ -132,7 +128,7 @@ const baseBody = {
 };
 
 describe('#319 — insecticide decrement uses the sprayer calibrated GPA', () => {
-  it('threads the sprayer calibratedGpa (18) into computeRatedDilution, not 15', async () => {
+  it('threads the sprayer calibratedGpa (18) into the deduction, not 15', async () => {
     getSprayer.mockReturnValue({
       id: 'spr-1',
       calibratedGpa: 18,
@@ -140,7 +136,11 @@ describe('#319 — insecticide decrement uses the sprayer calibrated GPA', () =>
     });
     const res = await POST(makeEvent(baseBody));
     expect(res.status).toBe(200);
-    expect(computeRatedDilution).toHaveBeenCalledWith(expect.anything(), 18, 18);
+    expect(appliedProductAmount).toHaveBeenCalledWith(expect.anything(), {
+      acres: null,
+      tankSizeGallons: 18,
+      calibratedGpa: 18
+    });
   });
 
   it('falls back to plugin default (undefined GPA arg) on an uncalibrated sprayer', async () => {
@@ -151,7 +151,11 @@ describe('#319 — insecticide decrement uses the sprayer calibrated GPA', () =>
     });
     const res = await POST(makeEvent(baseBody));
     expect(res.status).toBe(200);
-    expect(computeRatedDilution).toHaveBeenCalledWith(expect.anything(), 18, undefined);
+    expect(appliedProductAmount).toHaveBeenCalledWith(expect.anything(), {
+      acres: null,
+      tankSizeGallons: 18,
+      calibratedGpa: undefined
+    });
   });
 });
 
@@ -266,5 +270,39 @@ describe('Start closes the task in the same transaction (TC-04)', () => {
     getSprayer.mockReturnValue({ id: 'spr-1', calibratedGpa: 18, lastChemistryClass: undefined });
     const res = await POST(makeEvent(baseBody));
     expect((await res.json()).taskClose).toBeNull();
+  });
+});
+
+describe('#762 — the insecticide deduction is rate times the block acres', () => {
+  it('takes 4 fl-oz/A over 15 ac, not one tank', async () => {
+    getSprayer.mockReturnValue({ id: 'spr-1', calibratedGpa: 18, lastChemistryClass: undefined });
+    vi.mocked(getBlock).mockReturnValue({ plantings: [], acres: 15 } as never);
+    getStockItemByPluginId.mockReturnValueOnce({ id: 'stock-1' } as never);
+    const res = await Promise.resolve(POST(makeEvent(baseBody))).finally(() =>
+      vi.mocked(getBlock).mockReturnValue({ plantings: [] } as never)
+    );
+    expect(res.status).toBe(200);
+    expect(decrementForUse).toHaveBeenCalledWith(
+      expect.objectContaining({ stockItemId: 'stock-1', amount: 60, unit: 'fl-oz' })
+    );
+  });
+});
+
+describe('#736 — a sprayer is required', () => {
+  it('400 without a sprayer, and nothing is written', async () => {
+    const { sprayerId: _omit, ...noSprayer } = baseBody;
+    const res = await POST(makeEvent(noSprayer));
+    expect(res.status).toBe(400);
+    expect((await res.json()).issues).toEqual(
+      expect.arrayContaining([expect.objectContaining({ path: 'sprayerId' })])
+    );
+    expect(insertInsecticideEvent).not.toHaveBeenCalled();
+  });
+
+  it('404 for a sprayer that is not on the farm', async () => {
+    getSprayer.mockReturnValue(undefined);
+    const res = await POST(makeEvent(baseBody));
+    expect(res.status).toBe(404);
+    expect(insertInsecticideEvent).not.toHaveBeenCalled();
   });
 });

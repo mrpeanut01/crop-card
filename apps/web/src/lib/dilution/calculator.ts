@@ -175,3 +175,30 @@ export function computeRatedDilution(
     customRateApplied: false
   };
 }
+
+export interface AppliedAmount {
+  amount: number;
+  unit: HerbicidePlugin['ratePerAcre']['unit'];
+  /** `area`: rate times the acres treated. `tank`: the area is not on file,
+   *  so one tank at the sprayer's GPA stands in. */
+  basis: 'area' | 'tank';
+}
+
+/** #762: the product one pass put on the ground, for the stock deduction:
+ *  rate times the acres treated, in the rate's own unit, falling back to one
+ *  tank only when the treated area is unknown. */
+export function appliedProductAmount(
+  product: RatedProduct,
+  opts: { acres?: number | null; tankSizeGallons: number; calibratedGpa?: number }
+): AppliedAmount {
+  const { acres } = opts;
+  if (acres != null && Number.isFinite(acres) && acres > 0) {
+    return {
+      amount: product.ratePerAcre.amount * acres,
+      unit: product.ratePerAcre.unit,
+      basis: 'area'
+    };
+  }
+  const line = computeRatedDilution(product, opts.tankSizeGallons, opts.calibratedGpa);
+  return { amount: line.productAmount, unit: line.unit, basis: 'tank' };
+}

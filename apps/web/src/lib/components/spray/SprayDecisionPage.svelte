@@ -106,6 +106,8 @@
     noBlocks?: Snippet;
     /** One line under the submit button (the task-close note, TC-14). */
     afterSubmit?: Snippet;
+    /** #736: the sprayer picker, so the cross-contamination gate runs. */
+    sprayerSection?: Snippet;
   }
 
   let {
@@ -138,7 +140,8 @@
     pollinatorGate,
     diseaseGate,
     noBlocks,
-    afterSubmit
+    afterSubmit,
+    sprayerSection
   }: Props = $props();
 
   // `aiEnabled` is destructured for the page-level snippets that read it
@@ -204,6 +207,13 @@
     <section class="card">
       <h2>{tr('sprayui.dp.observation')}</h2>
       {@render observation()}
+    </section>
+  {/if}
+
+  {#if sprayerSection}
+    <section class="card" data-testid="sprayer-section">
+      <h2>{tr('sprayui.dp.sprayer')}</h2>
+      {@render sprayerSection()}
     </section>
   {/if}
 

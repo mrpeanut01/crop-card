@@ -33,7 +33,10 @@ const { getRegistry, getBlock, listBlocks, geometryCentroid, insertInsecticideEv
 vi.mock('$lib/server/auth', () => ({ currentUser: () => ({ id: 'u1', role: 'owner' }) }));
 vi.mock('$lib/server/session', () => ({ canMutate: (r: string) => r !== 'inspector' }));
 vi.mock('$lib/server/registry', () => ({ getRegistry }));
-vi.mock('$lib/server/sprayers', () => ({ getSprayer: vi.fn(), recordSpray: vi.fn() }));
+vi.mock('$lib/server/sprayers', () => ({
+  getSprayer: vi.fn(() => ({ id: 'spr-1', calibratedGpa: 20, lastChemistryClass: undefined })),
+  recordSpray: vi.fn()
+}));
 vi.mock('$lib/server/seasonClose', () => ({ checkSeasonClosed: () => null }));
 vi.mock('$lib/db/insecticideEvents', () => ({
   insertInsecticideEvent,
@@ -109,6 +112,7 @@ function post(body: Record<string, unknown>) {
       method: 'POST',
       body: JSON.stringify({
         blockId: 'blk-1',
+        sprayerId: 'spr-1',
         conditions: { windMph: 3, tempF: 70, rainForecastMmNext24h: 0 },
         ...body
       }),

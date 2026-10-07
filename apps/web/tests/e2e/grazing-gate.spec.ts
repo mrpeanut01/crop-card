@@ -44,7 +44,12 @@ async function seedSprayedPasture(page: Page) {
     headCount: 12,
     housingFieldId: barn.id
   });
+  const { equipment: sprayer } = await post<{ equipment: { id: string } }>(page, '/api/equipment', {
+    type: 'sprayer',
+    label: 'Backpack sprayer'
+  });
   const { event } = await post<{ event: { id: string } }>(page, '/api/fungicide/record', {
+    sprayerId: sprayer.id,
     blockId: block.id,
     productPluginIds: ['champ-dp'],
     conditions: { windMph: 4, tempF: 70, rainForecastMmNext24h: 0 }
@@ -67,7 +72,7 @@ test.describe('grazing gate on moves', () => {
     await page.setViewportSize(PHONE);
     const farm = await seedSprayedPasture(page);
     await tryMove(page, farm.groupId, farm.pastureId);
-    const stop = page.getByRole('alert');
+    const stop = page.getByRole('alert').filter({ hasText: 'North pasture was sprayed' });
     await expect(stop).toContainText('North pasture was sprayed with');
     await expect(stop).toContainText(
       "Food animals can't go there until the owner adds the grazing time from the label."
@@ -92,7 +97,9 @@ test.describe('grazing gate on moves', () => {
     const helper = await provisionHelper(page, browser);
     await helper.setViewportSize(PHONE);
     await tryMove(helper, farm.groupId, farm.pastureId);
-    await expect(helper.getByRole('alert')).toContainText('Ask the owner.');
+    await expect(
+      helper.getByRole('alert').filter({ hasText: 'North pasture was sprayed' })
+    ).toContainText('Ask the owner.');
     await noHorizontalOverflow(helper);
     const api = await helper.request.post('/api/animals/move', {
       data: { subjectType: 'group', subjectId: farm.groupId, fieldId: farm.pastureId },
@@ -139,7 +146,9 @@ test.describe('grazing gate on moves', () => {
     await page.setViewportSize(PHONE);
     const farm = await seedSprayedPasture(page);
     await tryMove(page, farm.groupId, farm.pastureId);
-    await expect(page.getByRole('alert')).toContainText('North pasture was sprayed with');
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'North pasture was sprayed' })
+    ).toContainText('North pasture was sprayed with');
     await page.getByRole('link', { name: 'Add the grazing time from the label' }).click();
     await page.waitForURL(`**/plan/areas/${farm.pastureId}/grazing`);
     await page.waitForLoadState('networkidle');

@@ -13,7 +13,7 @@ import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { closeTaskForRecord } from '$lib/server/recordTaskClose';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { insecticideRecordSchema } from '$lib/records/apiSchemas';
-import { computeRatedDilution } from '$lib/dilution/calculator';
+import { appliedProductAmount } from '$lib/dilution/calculator';
 import {
   insertInsecticideEvent,
   listInsecticideEvents,
@@ -333,17 +333,15 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     );
   }
 
-  // #321 — load the sprayer so the cross-contamination gate and the
-  // calibrated-GPA decrement both read real tank state (mirrors the
-  // herbicide path). A missing sprayer id is not fatal here (the
-  // insecticide flow allows unattributed passes); the gate + calibrated
-  // GPA simply no-op when no sprayer is selected.
-  const sprayer = parsed.data.sprayerId ? getSprayer(parsed.data.sprayerId) : undefined;
-  if (parsed.data.sprayerId && !sprayer) {
+  // #321 / #736 — the sprayer is required, so the cross-contamination gate
+  // and the calibrated-GPA decrement always read real tank state (mirrors
+  // the herbicide path).
+  const sprayer = getSprayer(parsed.data.sprayerId);
+  if (!sprayer) {
     return json(
       {
         error: t(event.locals?.locale, 'api.errB.unknownSprayer', {
-          id: parsed.data.sprayerId ?? ''
+          id: parsed.data.sprayerId
         })
       },
       { status: 404 }
@@ -354,24 +352,22 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   // different chemistry category and no decon has been recorded since,
   // block and route to the decon wizard — same rule the herbicide path
   // runs, now wired into the insecticide flow.
-  if (sprayer) {
-    const contamination = checkCrossContaminationForClasses([INSECTICIDE_LOAD_CLASS], {
-      id: sprayer.id,
-      lastChemistryClass: sprayer.lastChemistryClass,
-      lastSprayedAt: sprayer.lastSprayedAt,
-      lastDeconAt: sprayer.lastDeconAt
-    });
-    if (contamination.violations.length > 0) {
-      return json(
-        {
-          error: 'cross-contamination gate failed; decon required before this spray',
-          violations: contamination.violations,
-          requiresDecon: contamination.requiresDecon,
-          ruleVersion: RULES_VERSION
-        },
-        { status: 422 }
-      );
-    }
+  const contamination = checkCrossContaminationForClasses([INSECTICIDE_LOAD_CLASS], {
+    id: sprayer.id,
+    lastChemistryClass: sprayer.lastChemistryClass,
+    lastSprayedAt: sprayer.lastSprayedAt,
+    lastDeconAt: sprayer.lastDeconAt
+  });
+  if (contamination.violations.length > 0) {
+    return json(
+      {
+        error: 'cross-contamination gate failed; decon required before this spray',
+        violations: contamination.violations,
+        requiresDecon: contamination.requiresDecon,
+        ruleVersion: RULES_VERSION
+      },
+      { status: 422 }
+    );
   }
 
   // Phase 17 (Track 2.4) — resolve stock items once for the augmenter + decrement.
@@ -418,7 +414,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
           }) as HerbicideProduct
       ),
       crop: { cropPluginId: parsed.data.cropId ?? 'unknown' },
-      sprayer: { id: parsed.data.sprayerId ?? 'unknown' },
+      sprayer: { id: parsed.data.sprayerId },
       conditions: parsed.data.conditions
     };
     const stub: SafetyResult = { ok: true, violations: [], requiresDecon: false };
@@ -481,28 +477,33 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
       // pass (e.g. a herbicide after this insecticide) trips the cross-
       // contamination gate. Mirrors the herbicide path's post-persist
       // recordSpray call.
-      if (sprayer) recordSpray(sprayer.id, INSECTICIDE_LOAD_CLASS, occurredAt);
+      recordSpray(sprayer.id, INSECTICIDE_LOAD_CLASS, occurredAt);
 
       // Auto-decrement stock (best-effort; warns on shortfall, never blocks).
       const stockResults: DecrementResult[] = [];
       const stockWarnings: string[] = [];
       if (parsed.data.tankSizeGallons) {
         // #319 — scale the decrement by the sprayer's stored calibrated GPA, not
-        // the plugin default. `computeRatedDilution` coalesces null/undefined
+        // the plugin default. `appliedProductAmount` coalesces null/undefined
         // calibratedGpa to the plugin's `gpaCalibration` fallback, matching the
         // herbicide path (an 18-GPA rig now decrements ~20% more product).
-        const effectiveGpa = sprayer?.calibratedGpa ?? undefined;
+        const effectiveGpa = sprayer.calibratedGpa ?? undefined;
+        // #762 — rate times the block's acres; one tank only without an area.
+        const treatedAcres = block?.acres ?? null;
         for (const p of products) {
           if (!p.ratePerAcre) continue;
-          const line = computeRatedDilution(
+          const line = appliedProductAmount(
             {
               pluginId: p.pluginId,
               displayName: p.displayName,
               ratePerAcre: p.ratePerAcre,
               gpaCalibration: p.gpaCalibration ?? 15
             },
-            parsed.data.tankSizeGallons,
-            effectiveGpa
+            {
+              acres: treatedAcres,
+              tankSizeGallons: parsed.data.tankSizeGallons,
+              calibratedGpa: effectiveGpa
+            }
           );
           const stockItem = stockByPluginId.get(p.pluginId);
           if (!stockItem) {
@@ -514,7 +515,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
           const dec = bestEffort(() =>
             decrementForUse({
               stockItemId: stockItem.id,
-              amount: line.productAmount,
+              amount: line.amount,
               unit: line.unit as StockUnit,
               insecticideEventId: persisted.id,
               performedById: performer.id,

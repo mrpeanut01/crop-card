@@ -6,7 +6,9 @@
   import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
   import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
   import SetupSpot from '$lib/components/setup/SetupSpot.svelte';
-  import type { SetupSpotResult } from '$lib/setup/types';
+  import SetupSprayer from '$lib/components/setup/SetupSprayer.svelte';
+  import SprayerPicker from '$lib/components/spray/SprayerPicker.svelte';
+  import type { SetupSpotResult, SetupSprayerResult } from '$lib/setup/types';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import SprayDecisionPage from '$lib/components/spray/SprayDecisionPage.svelte';
   import SprayStepper, { type StepState } from '$lib/components/spray/SprayStepper.svelte';
@@ -77,7 +79,29 @@
   let windMph = $state(5);
   let tempF = $state(72);
   let rainPct = $state(10);
-  let tankSize = $state<number | null>(25);
+  let tankSize = $state<number | null>(
+    untrack(() => (data.sprayers.length === 1 ? (data.sprayers[0].tankGal ?? 25) : 25))
+  );
+
+  // #736: the sprayer is required so the server's cross-contamination gate
+  // always runs. Only a farm with one sprayer starts with it picked.
+  let selectedSprayerId = $state<string>(
+    untrack(() => (data.sprayers.length === 1 ? data.sprayers[0].id : ''))
+  );
+  let sprayerSheetOpen = $state(false);
+  let sprayerSheetTitle = $state<string | null>(null);
+  let needsDecon = $state(false);
+  function onPickSprayer(s: { tankGal?: number }) {
+    if (s.tankGal) tankSize = s.tankGal;
+    needsDecon = false;
+  }
+  async function onSprayerAdded(r: SetupSprayerResult) {
+    sprayerSheetOpen = false;
+    sprayerSheetTitle = null;
+    await invalidateAll();
+    selectedSprayerId = r.sprayerId;
+    await focusAfterSetup(`[data-sprayer-id="${CSS.escape(r.sprayerId)}"]`);
+  }
 
   let result = $state<string | null>(null);
   let warnings = $state<string[]>([]);
@@ -208,6 +232,7 @@
 
   const canSubmit = $derived(
     !!selectedBlockId &&
+      !!selectedSprayerId &&
       selectedPluginIds.length > 0 &&
       !tankMixBlocked &&
       !fracBlocked &&
@@ -317,7 +342,9 @@
     taskQueued = false;
     warnings = [];
     violations = [];
+    needsDecon = false;
     const body: Record<string, unknown> = {
+      sprayerId: selectedSprayerId,
       blockId: selectedBlockId,
       productPluginIds: selectedPluginIds,
       conditions: {
@@ -351,6 +378,7 @@
       if (!res.ok) {
         error = payload.error ?? 'failed to record';
         if (Array.isArray(payload.violations)) violations = payload.violations;
+        needsDecon = payload.requiresDecon === true;
         return;
       }
       await noteHoldWrite('fungicide', body);
@@ -445,7 +473,22 @@
   submitLabel={tr('sprayui.fun.submit')}
   onSubmit={recordSpray}
 >
+  {#snippet sprayerSection()}
+    <SprayerPicker
+      sprayers={data.sprayers}
+      bind:selectedId={selectedSprayerId}
+      canEdit={data.setup.canEdit}
+      onAdd={() => (sprayerSheetOpen = true)}
+      onPick={onPickSprayer}
+    />
+  {/snippet}
+
   {#snippet afterSubmit()}
+    {#if needsDecon && selectedSprayerId}
+      <a class="decon-link" href={`/spray/decon?sprayer=${encodeURIComponent(selectedSprayerId)}`}
+        >{tr('sprayui.card.openDecon')}</a
+      >
+    {/if}
     <TaskCloseNote
       task={data.taskContext}
       record={{
@@ -641,7 +684,33 @@
   {/snippet}
 </SetupSheet>
 
+<SetupSheet
+  open={sprayerSheetOpen}
+  kicker={tr('sprayui.sheet.kicker')}
+  title={sprayerSheetTitle ?? tr('sprayui.sheet.whichSprayer')}
+  onDone={onSprayerAdded}
+  onClose={() => {
+    sprayerSheetOpen = false;
+    sprayerSheetTitle = null;
+  }}
+>
+  {#snippet children(done)}
+    <SetupSprayer
+      templates={data.setup.sprayerTemplates}
+      canEdit={data.setup.canEdit}
+      onCreated={(r) => (sprayerSheetTitle = tr('sprayui.sheet.calibrate', { name: r.label }))}
+      onDone={done}
+    />
+  {/snippet}
+</SetupSheet>
+
 <style>
+  .decon-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-weight: 600;
+  }
   .spray-almanac-chrome {
     margin-bottom: 22px;
   }

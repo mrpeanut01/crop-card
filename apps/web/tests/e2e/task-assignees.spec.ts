@@ -184,7 +184,13 @@ test.describe('task assignees and time on Done', () => {
     await helper.waitForLoadState('networkidle');
     await expect(card(helper, ids.stake).locator('[data-card-status="done"]')).toHaveText('Done');
 
-    const hours = await page.request.get(`/api/plantings/${ids.cropId}/hours`);
+    // The owner's request context sat idle through the helper's offline flow,
+    // past the preview server's 5 s keep-alive timeout, so its pooled socket can
+    // be reset under the request. Unlike the browser, the API context does not
+    // retry that on its own; these GETs are idempotent.
+    const hours = await page.request.get(`/api/plantings/${ids.cropId}/hours`, {
+      maxRetries: 2
+    });
     expect(hours.ok(), await hours.text()).toBe(true);
     const body = (await hours.json()) as {
       totalMinutes: number;
@@ -194,7 +200,9 @@ test.describe('task assignees and time on Done', () => {
     expect(body.byPerson).toHaveLength(1);
     expect(body.byPerson[0].name).toMatch(/^helper-/);
 
-    const helperHours = await helper.request.get(`/api/plantings/${ids.cropId}/hours`);
+    const helperHours = await helper.request.get(`/api/plantings/${ids.cropId}/hours`, {
+      maxRetries: 2
+    });
     expect(helperHours.status()).toBe(403);
 
     await page.goto(`/cards/planting/pl_${ids.cropId}`);

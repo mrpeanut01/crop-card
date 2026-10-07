@@ -4,6 +4,7 @@ import {
   convert,
   formatRateText,
   formatStockQuantity,
+  perAcreRateUnit,
   fromHundredths,
   isLabelUnitCategory,
   isSeedCountUnit,
@@ -110,6 +111,13 @@ describe('formatRateText', () => {
   });
   it('leaves unrecognised units alone', () => {
     expect(formatRateText(2, 'tons/ac', { units: 'metric' })).toBe('2 tons/ac');
+  });
+  it('shows a label rate code per acre (#661)', () => {
+    expect(formatRateText(1.92, perAcreRateUnit('fl-oz'))).toBe('1.92 fl oz/acre');
+    expect(formatRateText(1, perAcreRateUnit('pt'))).toBe('1 pt/acre');
+    expect(
+      formatRateText(1.92, perAcreRateUnit('fl-oz'), { units: 'metric' }, { labelUnit: true })
+    ).toMatch(/^1\.92 fl oz\/acre \(.+\/ha\)$/);
   });
 });
 

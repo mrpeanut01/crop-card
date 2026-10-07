@@ -13,6 +13,8 @@
 
 import type { HerbicidePlugin } from '$lib/plugins/schemas';
 
+type RateUnit = NonNullable<HerbicidePlugin['ratePerAcre']>['unit'];
+
 export interface DilutionInput {
   herbicide: HerbicidePlugin;
   /** Operator's calibrated gallons-per-acre, from FR-12. Defaults to the
@@ -21,18 +23,18 @@ export interface DilutionInput {
   /** Tank size in gallons, e.g. 50. Must be a positive integer. */
   tankSizeGallons: number;
   /** Optional override of the plugin's per-acre rate. */
-  customRatePerAcre?: { amount: number; unit: HerbicidePlugin['ratePerAcre']['unit'] };
+  customRatePerAcre?: { amount: number; unit: RateUnit };
 }
 
 export interface DilutionLine {
   pluginId: string;
   displayName: string;
   productAmount: number;
-  unit: HerbicidePlugin['ratePerAcre']['unit'];
+  unit: RateUnit;
   display: string;
   acresCovered: number;
   gpaUsed: number;
-  ratePerAcre: { amount: number; unit: HerbicidePlugin['ratePerAcre']['unit'] };
+  ratePerAcre: { amount: number; unit: RateUnit };
   customRateApplied: boolean;
 }
 
@@ -40,7 +42,7 @@ export interface DilutionLine {
  * Convert an amount to fluid ounces for arithmetic, then back to the original
  * unit at the end. Liquid-only — solid units (lb, oz) are returned as-is.
  */
-const FL_OZ_PER_UNIT: Record<HerbicidePlugin['ratePerAcre']['unit'], number | null> = {
+const FL_OZ_PER_UNIT: Record<RateUnit, number | null> = {
   'fl-oz': 1,
   pt: 16,
   qt: 32,
@@ -48,12 +50,12 @@ const FL_OZ_PER_UNIT: Record<HerbicidePlugin['ratePerAcre']['unit'], number | nu
   lb: null
 };
 
-function toFlOz(amount: number, unit: HerbicidePlugin['ratePerAcre']['unit']): number | null {
+function toFlOz(amount: number, unit: RateUnit): number | null {
   const factor = FL_OZ_PER_UNIT[unit];
   return factor === null ? null : amount * factor;
 }
 
-function formatDisplay(amount: number, unit: HerbicidePlugin['ratePerAcre']['unit']): string {
+function formatDisplay(amount: number, unit: RateUnit): string {
   const rounded = Math.round(amount * 100) / 100;
   return `${rounded} ${unit}`;
 }
@@ -65,6 +67,7 @@ export function computeDilution(input: DilutionInput): DilutionLine {
   }
 
   const ratePerAcre = input.customRatePerAcre ?? herbicide.ratePerAcre;
+  if (!ratePerAcre) throw new Error(`${herbicide.pluginId} has no label rate on file`);
   const gpaUsed = input.calibratedGpa ?? herbicide.gpaCalibration ?? 15;
   if (gpaUsed <= 0) throw new Error('calibratedGpa must be positive');
 
@@ -114,9 +117,15 @@ export function computeTankMixDilutions(
   tankSizeGallons: number,
   calibratedGpa?: number
 ): DilutionLine[] {
-  return products.map((herbicide) =>
-    computeDilution({ herbicide, tankSizeGallons, calibratedGpa })
-  );
+  return products
+    .filter((herbicide) => herbicide.ratePerAcre)
+    .map((herbicide) => computeDilution({ herbicide, tankSizeGallons, calibratedGpa }));
+}
+
+/** #737 — products with no label rate on file. They get no mix amount; the
+ *  spray flow says "Check the label" for them instead. */
+export function productsWithoutRate(products: HerbicidePlugin[]): string[] {
+  return products.filter((p) => !p.ratePerAcre).map((p) => p.pluginId);
 }
 
 /**
@@ -128,7 +137,7 @@ export function computeTankMixDilutions(
 export interface RatedProduct {
   pluginId: string;
   displayName: string;
-  ratePerAcre: { amount: number; unit: HerbicidePlugin['ratePerAcre']['unit'] };
+  ratePerAcre: { amount: number; unit: RateUnit };
   gpaCalibration?: number;
 }
 
@@ -178,7 +187,7 @@ export function computeRatedDilution(
 
 export interface AppliedAmount {
   amount: number;
-  unit: HerbicidePlugin['ratePerAcre']['unit'];
+  unit: RateUnit;
   /** `area`: rate times the acres treated. `tank`: the area is not on file,
    *  so one tank at the sprayer's GPA stands in. */
   basis: 'area' | 'tank';

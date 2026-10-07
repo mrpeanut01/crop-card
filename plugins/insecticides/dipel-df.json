@@ -1,8 +1,8 @@
 {
   "pluginId": "dipel-df",
   "type": "insecticide",
-  "displayName": "DiPel DF (Valent Bt aizawai-kurstaki — OMRI)",
-  "version": "1.0.0",
+  "displayName": "DiPel DF (Valent Bt kurstaki)",
+  "version": "1.0.1",
   "epaRegistrationNumber": "73049-39",
   "defaultUnit": "lb",
   "formulation": "DF",
@@ -27,12 +27,9 @@
   ],
   "pollinatorRisk": "none",
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
-  "notes": "Bt IRAC 11A. OMRI organic. Caterpillar-only — no broadleaf insect activity. Eat-to-kill, slow but selective.",
+  "notes": "Bt IRAC 11A. Caterpillar-only — no broadleaf insect activity. Eat-to-kill, slow but selective.",
   "complianceFlags": {
-    "omriListed": false,
-    "certifiedOrganicAllowed": false,
-    "nonGmoCompliant": true,
-    "transitioningAllowed": false
+    "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1",
   "scoutingThresholds": [

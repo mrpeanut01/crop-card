@@ -221,6 +221,7 @@
     violations: Violation[];
     requiresDecon: boolean;
     dilutions?: Dilution[];
+    noLabelRate?: string[];
     tankMixOrder?: TankMixStep[];
     ruleVersion: string;
     pluginHashes: Record<string, string>;
@@ -400,6 +401,10 @@
     perBlockResults = new Map();
     recordOutcomes = new Map();
     recordedId = null;
+  }
+
+  function herbicideName(id: string): string {
+    return data.allHerbicides.find((h) => h.pluginId === id)?.displayName ?? id;
   }
 
   function toggleHerbicide(id: string) {
@@ -978,7 +983,9 @@
                   .join(', ')}</small
           >
           <small data-testid="herbicide-rate-preview" lang="en" data-english-only="safety">
-            {herbicideRatePreview(h.ratePerAcre, sprayer, currentPrefs()).label}
+            {h.ratePerAcre
+              ? herbicideRatePreview(h.ratePerAcre, sprayer, currentPrefs()).label
+              : 'No label rate on file. Check the label.'}
             {#if h.requiresAMS}• AMS{/if}
             {#if h.deconRequired}• decon{/if}
           </small>
@@ -1370,6 +1377,17 @@
                   {#if perTankSecondary.length > 0}
                     <small class="alt-units">≈ {perTankSecondary.join(' · ')}</small>
                   {/if}
+                </td>
+              </tr>
+            {/each}
+            {#each result.noLabelRate ?? [] as id (id)}
+              <tr data-testid="no-label-rate">
+                <td>{herbicideName(id)}</td>
+                <td colspan="2">
+                  <strong lang="en" data-english-only="safety"
+                    >No label rate on file. Check the label for the rate and growth stage on this
+                    crop.</strong
+                  >
                 </td>
               </tr>
             {/each}

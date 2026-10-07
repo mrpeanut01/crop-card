@@ -141,6 +141,64 @@
       ],
       "additionalProperties": false
     },
+    "reEntryIntervalHours": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "preHarvestIntervalDays": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "preHarvestIntervalsByCrop": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cropPluginId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cropFamily": {
+            "type": "string",
+            "enum": [
+              "corn",
+              "cucurbit",
+              "legume",
+              "broadleaf-companion",
+              "orchard",
+              "cover-grass",
+              "cover-legume",
+              "solanaceae",
+              "brassica",
+              "allium",
+              "leafy-green",
+              "root",
+              "apiaceae",
+              "small-fruit",
+              "bramble",
+              "vine-fruit",
+              "stone-fruit",
+              "cereal-grain",
+              "forage",
+              "herb-culinary",
+              "forage-grass",
+              "perennial-vegetable"
+            ]
+          },
+          "preHarvestIntervalDays": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "preHarvestIntervalDays"
+        ],
+        "additionalProperties": false
+      }
+    },
     "gpaCalibration": {
       "default": 15,
       "type": "integer",
@@ -387,8 +445,7 @@
     "displayName",
     "version",
     "type",
-    "activeIngredients",
-    "ratePerAcre"
+    "activeIngredients"
   ],
   "additionalProperties": false
 }

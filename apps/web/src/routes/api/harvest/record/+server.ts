@@ -34,6 +34,8 @@ import { evaluateHarvestPhi, type AppliedSpray } from '$lib/schedule/harvestPhi'
 import { resolveArchetype } from '$lib/plugins/schemas';
 import { hayCutGate } from '$lib/server/grazingGate';
 import { RULES_VERSION } from '$lib/safety/version';
+import { phiDaysForCrop, type PhiProduct } from '$lib/safety/preHarvestInterval';
+import { phiCropOf } from '$lib/server/phiCrops';
 import { currentUser } from '$lib/server/auth';
 import { farmTimeZone } from '$lib/db/userProfile';
 
@@ -44,13 +46,15 @@ const PHI_LOOKBACK_MS = 120 * 24 * 60 * 60 * 1000;
  * #324 — assemble the applied-spray facts on this block for the PHI check.
  * Insecticide + fungicide events persist `preHarvestClearAt`, so we derive
  * their PHI days from that; herbicide spray events don't, so we look up each
- * product's `preHarvestIntervalDays` from the registry.
+ * product's PHI for the harvested crop from the registry (#661).
  */
 function gatherAppliedSprays(
   blockId: string,
   harvestMs: number,
-  registry: PluginRegistry
+  registry: PluginRegistry,
+  cropPluginId: string
 ): AppliedSpray[] {
+  const crop = phiCropOf(registry, cropPluginId);
   const fromMs = harvestMs - PHI_LOOKBACK_MS;
   const DAY_MS = 24 * 60 * 60 * 1000;
   const out: AppliedSpray[] = [];
@@ -88,8 +92,7 @@ function gatherAppliedSprays(
   for (const ev of listSprayEvents({ blockId, fromMs })) {
     for (const p of ev.products) {
       const rec = registry.get(p.pluginId);
-      const phiDays = (rec?.plugin as { preHarvestIntervalDays?: number } | undefined)
-        ?.preHarvestIntervalDays;
+      const phiDays = rec ? phiDaysForCrop(rec.plugin as PhiProduct, crop).days : null;
       if (!phiDays || phiDays <= 0) continue;
       const name = (rec?.plugin as { displayName?: string } | undefined)?.displayName ?? p.pluginId;
       out.push({ productName: name, kind: 'herbicide', appliedMs: ev.occurredAt, phiDays });
@@ -294,7 +297,7 @@ export const POST: RequestHandler = withClientRecordId(async (requestEvent) => {
   // warning rather than refuse the record. The harvest still commits; the
   // warning rides on the response so the operator sees it.
   const phi = evaluateHarvestPhi(
-    gatherAppliedSprays(parsed.data.blockId, occurredAt, registry),
+    gatherAppliedSprays(parsed.data.blockId, occurredAt, registry, parsed.data.cropPluginId),
     occurredAt
   );
 

@@ -41,6 +41,7 @@
     lots={data.lots}
     movements={data.movements}
     plugin={data.plugin}
+    phiByCrop={data.phiByCrop}
   />
 {:else if data.type === 'fertility'}
   <FertilityDetail

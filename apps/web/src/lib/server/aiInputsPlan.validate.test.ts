@@ -106,6 +106,26 @@ describe('aiInputsPlan validator holes', () => {
     ]);
   });
 
+  it('refuses a rate for a herbicide with no label rate on file (#737)', () => {
+    const noRate = { ...herbicide, pluginId: 'no-rate', ratePerAcre: undefined };
+    const noRateInput = {
+      ...input,
+      productPlugins: { ...input.productPlugins, herbicides: [herbicide, noRate] }
+    } as unknown as InputsPlanInput;
+    const v = validateAiPlan(
+      planWith({
+        productPluginId: 'no-rate',
+        productCategory: 'herbicide',
+        slot: 'burndown',
+        cropPluginId: 'none',
+        rateAmount: 1,
+        rateUnit: 'pt'
+      }),
+      noRateInput
+    );
+    expect(v.violations).toEqual([expect.stringMatching(/^rate-not-on-file:/)]);
+  });
+
   it("names the substituted product from the catalog, never from Claude's text", () => {
     const out = applySubstitutions(
       planWith({ productPluginId: null, productDisplayName: null }),

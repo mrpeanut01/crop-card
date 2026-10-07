@@ -518,6 +518,8 @@ export function validateAiPlan(plan: InputsPlan, input: InputsPlanInput): Valida
       } else if (problem === 'not-positive') {
         violations.push(`rate-not-positive:${app.id}:${app.rateAmount}`);
       }
+    } else if (app.rateAmount != null && (plugin as { type?: string }).type === 'herbicide') {
+      violations.push(`rate-not-on-file:${app.id}:${app.rateAmount} ${app.rateUnit ?? ''}`);
     }
   }
 

@@ -6,6 +6,8 @@
  * registration so it cannot shorten a future one either.
  */
 
+import { phiDaysForCrop, type PhiCrop, type PhiProduct } from '$lib/safety/preHarvestInterval';
+
 /** Intervals where a smaller number is a shorter hold. */
 const INTERVAL_KEYS = new Set([
   'grazeDays',
@@ -35,7 +37,15 @@ const CLASS_WIDTH: Record<string, number> = {
 };
 
 /** Keys that identify one element of an array across the two copies. */
-const IDENTITY_KEYS = ['speciesId', 'cropPluginId', 'cropId', 'crop', 'class', 'lactating'];
+const IDENTITY_KEYS = [
+  'speciesId',
+  'cropPluginId',
+  'cropFamily',
+  'cropId',
+  'crop',
+  'class',
+  'lactating'
+];
 
 export interface HoldFieldChange {
   field: string;
@@ -114,10 +124,42 @@ function walk(shared: Json, farm: Json, path: string, out: HoldFieldChange[]): v
   }
 }
 
+function asPhiProduct(v: Json): PhiProduct {
+  return isObject(v) ? (v as PhiProduct) : {};
+}
+
+/** #661: a by-crop PHI the farm copy adds can shorten a crop's PHI that the
+ *  walk cannot see (the shared copy gave that crop the longest value). */
+function phiByCropShortenings(shared: Json, farm: Json, out: HoldFieldChange[]): void {
+  const s = asPhiProduct(shared);
+  const f = asPhiProduct(farm);
+  if (!f.preHarvestIntervalsByCrop?.length) return;
+  const crops: PhiCrop[] = [
+    { cropPluginId: null, family: null },
+    ...f.preHarvestIntervalsByCrop.map((e) => ({
+      cropPluginId: e.cropPluginId ?? null,
+      family: e.cropFamily ?? null
+    }))
+  ];
+  for (const crop of crops) {
+    const before = phiDaysForCrop(s, crop).days ?? 0;
+    const after = phiDaysForCrop(f, crop).days ?? 0;
+    if (after < before) {
+      const at = crop.cropPluginId ?? crop.family ?? 'unlisted crops';
+      out.push({
+        field: `preHarvestIntervalsByCrop[${at}]`,
+        shared: show(before),
+        farm: show(after)
+      });
+    }
+  }
+}
+
 /** Every hold field the farm copy would shorten, in reading order. */
 export function pluginShortensHold(shared: Json, farm: Json): HoldFieldChange[] {
   const out: HoldFieldChange[] = [];
   walk(shared, farm, '', out);
+  phiByCropShortenings(shared, farm, out);
   return out;
 }
 

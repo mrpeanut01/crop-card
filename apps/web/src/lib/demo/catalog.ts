@@ -498,7 +498,7 @@ export const DEMO_PRODUCTS: Readonly<Record<string, DemoProduct>> = {
     pluginId: 'dipel-df',
     kind: 'insecticide',
     dir: 'insecticides',
-    displayName: 'DiPel DF (Valent Bt aizawai-kurstaki — OMRI)',
+    displayName: 'DiPel DF (Valent Bt kurstaki)',
     unit: 'lb',
     rate: { amount: 1, unit: 'lb' },
     codes: ['11A'],

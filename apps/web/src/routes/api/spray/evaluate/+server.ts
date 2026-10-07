@@ -21,7 +21,11 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
-import { computeTankMixDilutions, type DilutionLine } from '$lib/dilution/calculator';
+import {
+  computeTankMixDilutions,
+  productsWithoutRate,
+  type DilutionLine
+} from '$lib/dilution/calculator';
 import { getStockItem, getStockItemByPluginId, type StockItem } from '$lib/db/stock';
 import type { HerbicidePlugin } from '$lib/plugins/schemas';
 import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
@@ -192,6 +196,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   const result = augmentSafetyResult(kernelResult, ctx, restrictions);
 
   let dilutions: DilutionLine[] | undefined;
+  let noLabelRate: string[] | undefined;
   let tankMixOrder: TankMixStep[] | undefined;
   if (result.ok) {
     const tankSize = parsed.data.tankSizeGallons ?? 50;
@@ -202,12 +207,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     // back to the herbicide-plugin default rather than treating null as 0.
     const effectiveGpa = parsed.data.calibratedGpa ?? stored?.calibratedGpa ?? undefined;
     dilutions = computeTankMixDilutions(fullProducts, tankSize, effectiveGpa);
+    noLabelRate = productsWithoutRate(fullProducts);
     tankMixOrder = buildTankMixSteps(fullProducts);
   }
 
   return json({
     ...result,
     dilutions,
+    noLabelRate,
     tankMixOrder,
     ruleVersion: RULES_VERSION,
     pluginHashes,

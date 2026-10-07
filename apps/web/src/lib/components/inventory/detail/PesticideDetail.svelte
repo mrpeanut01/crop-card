@@ -17,13 +17,16 @@
   import InvKVP from '../InvKVP.svelte';
   import LotQuantities from '../LotQuantities.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
-  import { formatRateText, formatStockQuantity } from '$lib/stock/units';
+  import { formatRateText, formatStockQuantity, perAcreRateUnit } from '$lib/stock/units';
   import { pollinatorLabelText } from '$lib/pollinator/labelText';
   import type { PesticideDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
 
   type Props = Omit<PesticideDetailPayload, 'type'>;
-  const { item, lots, movements, plugin }: Props = $props();
+  const { item, lots, movements, plugin, phiByCrop = [] }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
+  const phiLongest = $derived(
+    Math.max(...phiByCrop.map((r) => r.days), plugin?.preHarvestIntervalDays ?? 0)
+  );
 
   const stockQty = (v: number, digits?: number) =>
     formatStockQuantity(v, item.defaultUnit, currentPrefs(), { digits, labelUnit: true });
@@ -64,19 +67,43 @@
 
     <div lang="en" data-english-only="safety">
       <InvSection title="Safety kernel" kicker="From the product label">
-        <InvKVP label="EPA reg" value={plugin?.epaRegistrationNumber ?? '—'} tone="locked" />
+        <InvKVP
+          label="EPA reg"
+          value={plugin?.epaRegistrationNumber ?? 'Not on file'}
+          tone="locked"
+        />
         <InvKVP
           label="Re-entry interval"
-          value={plugin?.reEntryIntervalHours != null ? `${plugin.reEntryIntervalHours} h` : '—'}
+          value={plugin?.reEntryIntervalHours != null
+            ? `${plugin.reEntryIntervalHours} h`
+            : 'Not on file. Check the label.'}
           tone="locked"
         />
-        <InvKVP
-          label="Pre-harvest interval"
-          value={plugin?.preHarvestIntervalDays != null
-            ? `${plugin.preHarvestIntervalDays} d`
-            : '—'}
-          tone="locked"
-        />
+        {#if phiByCrop.length}
+          {#each phiByCrop as row, i (i)}
+            <InvKVP
+              label={`Pre-harvest interval, ${row.crop}`}
+              value={`${row.days} d`}
+              tone="locked"
+            />
+          {/each}
+          <p class="phi-note" data-testid="phi-by-crop-note">
+            Crops not listed: {phiLongest} d, the longest on file. Check the label.
+          </p>
+        {:else}
+          <InvKVP
+            label="Pre-harvest interval"
+            value={plugin?.preHarvestIntervalDays != null
+              ? `${plugin.preHarvestIntervalDays} d`
+              : 'Not on file. Check the label.'}
+            tone="locked"
+          />
+          {#if plugin?.preHarvestIntervalDays != null}
+            <p class="phi-note" data-testid="phi-single-note">
+              One value on file for every crop. The label may list a longer PHI for your crop.
+            </p>
+          {/if}
+        {/if}
         {#if plugin?.pollinator || plugin?.pollinatorRisk}
           <InvKVP label="Pollinators" value={pollinatorLabelText(plugin)} tone="locked" />
         {/if}
@@ -98,7 +125,7 @@
           label={tr('inv.pest.defaultRate')}
           value={formatRateText(
             plugin.ratePerAcre.amount,
-            plugin.ratePerAcre.unit,
+            perAcreRateUnit(plugin.ratePerAcre.unit),
             currentPrefs(),
             {
               labelUnit: true
@@ -210,6 +237,11 @@
     background: var(--color-rust-tint, #fce8e8);
     color: var(--color-rust, #a23a3a);
     font-size: 0.9rem;
+  }
+  .phi-note {
+    margin: 4px 0 8px;
+    font-size: 0.85rem;
+    color: var(--color-ink-muted, #6a6f63);
   }
   .empty {
     color: var(--color-ink-muted, #6a6f63);

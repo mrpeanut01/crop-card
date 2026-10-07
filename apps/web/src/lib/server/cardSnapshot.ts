@@ -4,6 +4,7 @@
  * pesticide plugins come from the Owner's registry view.
  */
 
+import { longestPhiDays } from '$lib/safety/preHarvestInterval';
 import { loadCarryoverLines, snapshotCarryover } from '$lib/server/areaCarryover';
 import { DEFAULT_LOCALE } from '$lib/i18n/locales';
 import { listOpenSeedStarts } from '$lib/db/seedStarts';
@@ -242,10 +243,10 @@ export function toSprayProduct(p: Plugin): SnapshotSprayProduct | null {
       displayName: p.displayName,
       version: p.version,
       epaRegistrationNumber: p.epaRegistrationNumber ?? null,
-      ratePerAcre: p.ratePerAcre,
+      ratePerAcre: p.ratePerAcre ?? null,
       gpaCalibration: p.gpaCalibration ?? null,
-      reEntryIntervalHours: null,
-      preHarvestIntervalDays: null,
+      reEntryIntervalHours: p.reEntryIntervalHours ?? null,
+      preHarvestIntervalDays: longestPhiDays(p),
       targets: [],
       loadClasses: [...new Set(p.activeIngredients.map((ai) => ai.chemistryClass))],
       mixSteps: buildTankMixSteps([p]).map((s) => s.instruction),
@@ -263,7 +264,7 @@ export function toSprayProduct(p: Plugin): SnapshotSprayProduct | null {
       ratePerAcre: p.ratePerAcre ?? null,
       gpaCalibration: p.gpaCalibration ?? null,
       reEntryIntervalHours: p.reEntryIntervalHours,
-      preHarvestIntervalDays: p.preHarvestIntervalDays ?? null,
+      preHarvestIntervalDays: longestPhiDays(p),
       targets: p.targetPests ?? [],
       loadClasses: ['insecticide-load'],
       mixSteps: [],
@@ -283,7 +284,7 @@ export function toSprayProduct(p: Plugin): SnapshotSprayProduct | null {
       ratePerAcre: p.ratePerAcre,
       gpaCalibration: p.gpaCalibration ?? null,
       reEntryIntervalHours: p.reEntryIntervalHours,
-      preHarvestIntervalDays: p.preHarvestIntervalDays,
+      preHarvestIntervalDays: longestPhiDays(p),
       targets: p.targetDiseases ?? [],
       loadClasses: ['fungicide-load'],
       mixSteps: [],

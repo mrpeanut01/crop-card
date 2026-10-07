@@ -1200,6 +1200,27 @@ export const grazingRestrictionsSchema = z
   );
 export type GrazingRestrictions = z.infer<typeof grazingRestrictionsSchema>;
 
+/**
+ * #661 — a label PHI for one crop or crop family. A pesticide label lists
+ * PHIs by crop; the top-level `preHarvestIntervalDays` is one value for
+ * every crop. Exactly one of `cropPluginId` / `cropFamily`. Each value needs
+ * a quoted label source in apps/web/scripts/epa-reg-sources.json
+ * (`phiByCrop`). Read only through `phiDaysForCrop` in
+ * apps/web/src/lib/safety/preHarvestInterval.ts: a listed crop gets its own
+ * value, any other crop the longest value on file.
+ */
+export const preHarvestIntervalByCropSchema = z
+  .object({
+    cropPluginId: z.string().min(1).optional(),
+    cropFamily: z.enum(CROP_FAMILIES).optional(),
+    preHarvestIntervalDays: z.number().int().nonnegative(),
+  })
+  .strict()
+  .refine((e) => (e.cropPluginId === undefined) !== (e.cropFamily === undefined), {
+    message: "give exactly one of cropPluginId or cropFamily",
+  });
+export type PreHarvestIntervalByCrop = z.infer<typeof preHarvestIntervalByCropSchema>;
+
 export const herbicidePluginSchema = pluginBase.extend({
   type: z.literal("herbicide"),
   activeIngredients: z.array(activeIngredientSchema).min(1),
@@ -1208,10 +1229,22 @@ export const herbicidePluginSchema = pluginBase.extend({
   applicationTiming: z
     .enum(["BURNDOWN", "PRE", "POST", "POST-DIRECTED"])
     .optional(),
-  ratePerAcre: z.object({
-    amount: z.number().positive(),
-    unit: z.enum(["oz", "fl-oz", "lb", "pt", "qt"]),
-  }),
+  /** #737 — optional: a product with no label-sourced default rate leaves it
+   *  out, and the spray flow shows "Check the label" instead of a mix. */
+  ratePerAcre: z
+    .object({
+      amount: z.number().positive(),
+      unit: z.enum(["oz", "fl-oz", "lb", "pt", "qt"]),
+    })
+    .optional(),
+  /** #640 — label restricted-entry interval. Optional: shown as "not on file"
+   *  when missing. Each value needs a quoted label source in
+   *  apps/web/scripts/epa-reg-sources.json (`rei`). */
+  reEntryIntervalHours: z.number().int().nonnegative().optional(),
+  /** #640 — label PHI for every crop, when the label gives one value. */
+  preHarvestIntervalDays: z.number().int().nonnegative().optional(),
+  /** #661 — label PHIs by crop. See `preHarvestIntervalByCropSchema`. */
+  preHarvestIntervalsByCrop: z.array(preHarvestIntervalByCropSchema).optional(),
   /** GPA the dilutionTable values are calibrated for (default 15 per FR-02). */
   gpaCalibration: z.number().int().nonnegative().default(15),
   dilutionTable: dilutionTableSchema.optional(),
@@ -1351,6 +1384,8 @@ export const insecticidePluginSchema = pluginBase.extend({
   reEntryIntervalHours: z.number().int().nonnegative(),
   /** Phase 9 additions — all optional for back-compat with v1 plugins. */
   preHarvestIntervalDays: z.number().int().nonnegative().optional(),
+  /** #661 — label PHIs by crop. See `preHarvestIntervalByCropSchema`. */
+  preHarvestIntervalsByCrop: z.array(preHarvestIntervalByCropSchema).optional(),
   ratePerAcre: z
     .object({
       amount: z.number().positive(),
@@ -1437,6 +1472,8 @@ export const fungicidePluginSchema = pluginBase.extend({
   dilutionTable: dilutionTableSchema.optional(),
   reEntryIntervalHours: z.number().int().nonnegative(),
   preHarvestIntervalDays: z.number().int().nonnegative(),
+  /** #661 — label PHIs by crop. See `preHarvestIntervalByCropSchema`. */
+  preHarvestIntervalsByCrop: z.array(preHarvestIntervalByCropSchema).optional(),
   /** Phase 29 (#132) — label rainfast interval: hours of dry weather needed after application before rain no longer washes the product off. Optional; the /spray/fungicide dry-window advisory defaults to 4h when absent. */
   rainfastHours: z.number().positive().max(72).optional(),
   pollinatorRisk: z.enum(["none", "low", "moderate", "high"]).optional(),

@@ -40,7 +40,7 @@ function localDay(ms: number): string {
 
 function dayMs(iso: string): number {
   const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).getTime();
+  return Date.UTC(y, m - 1, d);
 }
 
 /** The farm's frost lines for season `year`, each with the provenance of

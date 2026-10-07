@@ -81,8 +81,16 @@ test.describe('/plan/calendar sowing calendar', () => {
     );
 
     await page.emulateMedia({ media: 'print' });
-    await expect(cal.locator('.print-head')).toBeVisible();
-    await expect(cal.locator('.print-head')).toContainText('Sowing calendar, Season');
+    const top = cal.getByTestId('print-top');
+    await expect(top).toBeVisible();
+    await expect(top).toContainText('Sowing calendar, Season');
+    expect(
+      await top.evaluate((el) => {
+        const facts = el.parentElement?.querySelector('.facts');
+        return !!facts && !!(el.compareDocumentPosition(facts) & Node.DOCUMENT_POSITION_FOLLOWING);
+      })
+    ).toBe(true);
+    await expect(cal.locator('thead .print-head')).toBeVisible();
     await expect(cal.getByRole('button', { name: 'Print' })).toBeHidden();
     await expect(page.locator('nav').first()).toBeHidden();
     await expect(dated.getByTestId('row-dates')).toBeVisible();

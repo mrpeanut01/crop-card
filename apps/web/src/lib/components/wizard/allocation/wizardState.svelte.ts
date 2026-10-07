@@ -618,6 +618,10 @@ export class AllocationWizardState {
     this.#schedule.advanceToInputs();
   }
 
+  setPlantingDate(index: number, isoDay: string) {
+    return this.#schedule.setPlantingDate(index, isoDay);
+  }
+
   provisionalPlantings(): InputsPlanProvisionalPlanting[] {
     return this.#schedule.provisionalPlantings();
   }

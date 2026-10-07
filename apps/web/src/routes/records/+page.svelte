@@ -17,6 +17,7 @@
   import { kindLabel } from '$lib/components/records/kindLabel';
   import { archetypeLabel } from '$lib/plugins/familyLabel';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { formatDueDay } from '$lib/prefs';
   import { localStamp } from '$lib/exports/localTime';
 
   let { data } = $props();
@@ -181,7 +182,7 @@
   }
 
   function fmtDate(ms: number | null): string {
-    return ms ? fmt.instant(ms, 'date') : '—';
+    return ms ? formatDueDay(ms, currentPrefs(), 'date') : '—';
   }
 
   const summary = $derived(data.summary);

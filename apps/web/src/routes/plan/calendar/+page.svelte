@@ -6,7 +6,7 @@
   import { cardHref, cardKey } from '$lib/cards/model';
   import type { ProvenanceSourceName } from '$lib/provenanceLabels';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
-  import { ymdInZone } from '$lib/prefs';
+  import { formatDueDay, ymdInZone } from '$lib/prefs';
   import { periodCardPrintHref } from '$lib/cards/build/calendar';
   import { SHORT_DAY_HOURS, PERSEPHONE_NAME_SOURCED } from '$lib/calendar/persephone';
   import type { RowNote, SowingBar } from '$lib/calendar/sowingCalendar';
@@ -22,8 +22,8 @@
   const span = $derived(Math.max(DAY_MS, cal.toMs - cal.fromMs));
   const pos = (ms: number) => Math.min(100, Math.max(0, ((ms - cal.fromMs) / span) * 100));
   const width = (a: number, b: number) => Math.max(0.6, pos(b) - pos(a));
-  const date = (ms: number) => fmt.instant(ms, 'date');
-  const shortDate = (ms: number) => fmt.instant(ms, 'date', { year: undefined });
+  const date = (ms: number) => formatDueDay(ms, currentPrefs(), 'date');
+  const shortDate = (ms: number) => formatDueDay(ms, currentPrefs(), 'date', { year: undefined });
 
   const ordered = $derived([...data.years].sort((a, b) => a - b));
   const earlier = $derived(ordered.filter((y) => y < data.year).at(-1) ?? null);
@@ -49,7 +49,7 @@
   });
 
   const shortSpans = $derived(cal.shortDays.status === 'spans' ? cal.shortDays.spans : []);
-  const printedOn = $derived(date(data.nowMs));
+  const printedOn = $derived(fmt.instant(data.nowMs, 'date'));
   const monthTasksHref = $derived(
     periodCardPrintHref('month', ymdInZone(data.nowMs, currentPrefs().timeZone))
   );
@@ -189,14 +189,31 @@
     <p class="hint">{tr('plan.cal.printHint')}</p>
   </header>
 
+  <div class="print-only print-head print-top" data-testid="print-top">
+    <span class="farm">{farmName}</span>
+    <span>{tr('plan.cal.printTitle', { year: data.year })}</span>
+    <span class="printed">{tr('plan.cal.printedOn', { date: printedOn })}</span>
+  </div>
+
   <section class="facts" aria-label={tr('plan.cal.frostDaylight')}>
     <ul class="frost-list">
       {#each cal.frostLines as l (l.kind)}
         <li data-frost={l.kind}>
           <span class="sw frost" class:hard={l.kind.startsWith('hard')}></span>
           {tr(FROST_KEY[l.kind])}: <strong>{date(l.ms)}</strong>
-          <span class="screen-only"><Provenance source={l.provenance} compact /></span>
-          <span class="print-only prov">({tr(PROV_KEY[l.provenance])})</span>
+          <span class="screen-only"
+            ><Provenance
+              source={l.provenance}
+              label={l.provenance === 'data' ? tr('onboard.frost.weatherService') : undefined}
+              long={l.provenance === 'data' ? tr('onboard.frost.refLong') : undefined}
+              compact
+            /></span
+          >
+          <span class="print-only prov"
+            >({l.provenance === 'data'
+              ? tr('onboard.frost.weatherService')
+              : tr(PROV_KEY[l.provenance])})</span
+          >
         </li>
       {/each}
     </ul>
@@ -765,6 +782,11 @@
     }
     .print-head span {
       margin-right: 16px;
+    }
+    .print-top {
+      padding: 0 0 6px;
+      font-size: 14pt;
+      color: #000;
     }
     .print-head .farm {
       font-weight: 700;

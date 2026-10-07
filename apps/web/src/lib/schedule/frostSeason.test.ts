@@ -13,7 +13,7 @@ const md = (mmdd: string) => {
 };
 const local = (ms: number) => {
   const d = new Date(ms);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return d.toISOString().slice(0, 10);
 };
 
 describe('frostSeasonShape', () => {
@@ -92,8 +92,8 @@ describe('frostDatesFromMmDd', () => {
     fc.assert(
       fc.property(fc.integer({ min: 2000, max: 2100 }), mmdd, mmdd, (year, last, first) => {
         const f = frostDatesFromMmDd(year, last, first);
-        const ly = new Date(f.lastSpringFrostMs).getFullYear();
-        const fy = new Date(f.firstFallFrostMs).getFullYear();
+        const ly = new Date(f.lastSpringFrostMs).getUTCFullYear();
+        const fy = new Date(f.firstFallFrostMs).getUTCFullYear();
         return ly >= year - 1 && ly <= year && fy >= year && fy <= year + 1;
       })
     );

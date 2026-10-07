@@ -162,12 +162,12 @@
           <span class="sr-only">
             {timeline.band.source === 'frost'
               ? tr('today.season.bandFrost', {
-                  start: fmt.instant(timeline.band.startMs, 'date'),
-                  end: fmt.instant(timeline.band.endMs, 'date')
+                  start: fmt.day(timeline.band.startMs, 'date'),
+                  end: fmt.day(timeline.band.endMs, 'date')
                 })
               : tr('today.season.bandPlanting', {
-                  start: fmt.instant(timeline.band.startMs, 'date'),
-                  end: fmt.instant(timeline.band.endMs, 'date')
+                  start: fmt.day(timeline.band.startMs, 'date'),
+                  end: fmt.day(timeline.band.endMs, 'date')
                 })}
           </span>
         </div>

@@ -37,6 +37,7 @@ import { t } from '$lib/i18n';
 import { plantingInGround } from '$lib/garden/inGround';
 import type { PluginRegistry } from '$lib/plugins';
 import { applyPlantingEstablishment, seedStartTasksOnFirstDate } from '$lib/server/seedStartTasks';
+import { syncPlantingTask } from '$lib/server/plantingTask';
 
 export type CropLookup = (pluginId: string) => GardenCrop | undefined;
 
@@ -418,7 +419,10 @@ export function writeFootprint(
         if (current.plantingDate != null) unscheduleCrop(cropId);
       } else if (req.plantingDateMs !== current.plantingDate) {
         const moved = movePlantingDate(cropId, req.plantingDateMs, nowMs);
-        if (current.plantingDate == null) seedStartTasksOnFirstDate(cropId, plugin, nowMs);
+        if (current.plantingDate == null) {
+          seedStartTasksOnFirstDate(cropId, plugin, nowMs);
+          syncPlantingTask(cropId, nowMs);
+        }
         reanchored = moved?.reanchored ?? null;
         followers = (moved?.followers ?? []).map((f) =>
           placedPlantingFromCrop(f, lookup(f.cropPluginId))
@@ -491,6 +495,7 @@ export function createPlacedPlantings(
         },
         plugin
       );
+      syncPlantingTask(created.id);
       for (const n of outcome.notes) if (!seedStartNotes.includes(n)) seedStartNotes.push(n);
       return placedPlantingFromCrop(getCrop(created.id) ?? created, plugin);
     });

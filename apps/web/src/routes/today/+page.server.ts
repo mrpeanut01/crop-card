@@ -16,7 +16,7 @@ import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { expiringSoon, lowStockItems } from '$lib/db/stock';
 import { existingTemplateKeys, listTasks } from '$lib/db/tasks';
-import { suggestionTemplateKey } from '$lib/today/calendar';
+import { dropPlantedSuggestions, suggestionTemplateKey } from '$lib/today/calendar';
 import {
   eventsForHarvest,
   eventsForPlanting,
@@ -174,8 +174,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       anchor,
       grid,
       tasks: rangeTasks.filter((t) => t.scheduledFor >= fromMs - DAY_MS && notCare(t)),
-      suggestions: allEvents.filter(
-        (e) => e.endMs >= Math.max(fromMs, dayStart) && e.startMs < toMs + DAY_MS
+      suggestions: dropPlantedSuggestions(
+        allEvents.filter((e) => e.endMs >= Math.max(fromMs, dayStart) && e.startMs < toMs + DAY_MS),
+        rangeTasks
       ),
       scheduledKeys: []
     };
@@ -273,7 +274,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     plantingNames[p.id] = { name: p.varietyDisplayName, blockId: p.blockId };
 
   const dayCandidates = view === 'day' ? eventsToday(allEvents, now) : [];
-  const upcomingCandidates = upcomingEvents(allEvents, 14, now);
+  const upcomingCandidates = dropPlantedSuggestions(upcomingEvents(allEvents, 14, now), [
+    ...deckTasks,
+    ...allOpenPrimaries
+  ]);
   const alreadyScheduled = existingTemplateKeys(
     [...dayCandidates, ...upcomingCandidates].map(suggestionTemplateKey)
   );

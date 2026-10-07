@@ -54,8 +54,8 @@ export function frostSeasonYears(
   };
 }
 
-/** Local-midnight ms of both frost dates for season `year`; a missing or
- *  unreadable date uses the Loudoun default. */
+/** UTC-midnight ms (calendar days, like planting dates) of both frost dates
+ *  for season `year`; a missing or unreadable date uses the Loudoun default. */
 export function frostDatesFromMmDd(
   year: number,
   lastMmDd: string | null | undefined,
@@ -65,7 +65,7 @@ export function frostDatesFromMmDd(
   const first = parseMmDd(firstMmDd ?? undefined) ?? parseMmDd(LOUDOUN_DEFAULT_FIRST_FROST_MMDD)!;
   const years = frostSeasonYears(year, last, first);
   return {
-    lastSpringFrostMs: new Date(years.lastSpringYear, last.month, last.day).getTime(),
-    firstFallFrostMs: new Date(years.firstFallYear, first.month, first.day).getTime()
+    lastSpringFrostMs: Date.UTC(years.lastSpringYear, last.month, last.day),
+    firstFallFrostMs: Date.UTC(years.firstFallYear, first.month, first.day)
   };
 }

@@ -136,6 +136,10 @@ export type ScheduledPlanting = {
   plants: number;
   successionIndex?: { i: number; n: number };
   rationale: string;
+  /** Set when the farmer typed the date on the Schedule step (#723). */
+  dateProvenance?: 'manual';
+  /** The scheduler's date before the farmer changed it. */
+  proposedDateMs?: number;
 };
 export type ScheduleDiagnosis = { summary: string; suggestions: string[] };
 export type ScheduleResponse = {

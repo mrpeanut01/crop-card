@@ -17,6 +17,7 @@ import type { CropPlugin } from '$lib/plugins/schemas';
 import type { Crop } from '$lib/db/crops';
 import { plantingOccupancy } from '$lib/garden/occupancy';
 import type { SeasonFrostMs } from '$lib/climate/effectiveFrost';
+import { isWinterSmallGrain } from '$lib/calendar/cropStages';
 
 const ONE_DAY_MS = 86_400_000;
 
@@ -100,6 +101,9 @@ export interface ScheduleWindow {
   /** True when existing plantings occupy the block for the whole
    *  [earliest, latest] window, so there is no free sub-window at all. */
   blockFull?: boolean;
+  /** Winter-habit small grain sown the fall before the season's harvest:
+   *  the window ends at the previous year's first fall frost. */
+  fallSown?: boolean;
 }
 
 export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] {
@@ -128,16 +132,26 @@ export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] 
 
     const blockFrost = input.frostByBlock?.[a.blockId] ?? frostDates;
     const frostFree = input.frostByBlock?.[a.blockId]?.frostFree === true;
-    const naturalEarliest = frostFree
-      ? blockFrost.lastSpringFrostMs
-      : earliestPlantingMs(hardiness, blockFrost.lastSpringFrostMs);
-    const earliestMs = Math.max(naturalEarliest, tomorrowMs);
-    // latestMs guards against unfit DTM; if the season has already passed
-    // (today is past the natural latest), keep the floor at tomorrow so the
-    // operator sees a future date with a clear "won't mature this year"
-    // signal via the chat rather than a date in the past.
-    const naturalLatest = blockFrost.firstFallFrostMs - dtmMax * ONE_DAY_MS - 14 * ONE_DAY_MS;
-    const latestMs = Math.max(earliestMs + ONE_DAY_MS, naturalLatest);
+    const fallSown = !!plug && isWinterSmallGrain(plug);
+    let earliestMs: number;
+    let latestMs: number;
+    if (fallSown) {
+      const fallEnd = previousYearMs(blockFrost.firstFallFrostMs);
+      earliestMs = Math.max(fallSowingEarliestMs(fallEnd), tomorrowMs);
+      latestMs = Math.max(earliestMs + ONE_DAY_MS, fallEnd);
+    } else {
+      const naturalEarliest = frostFree
+        ? blockFrost.lastSpringFrostMs
+        : blockFrost.lastSpringFrostMs +
+          earliestOffsetDays(plug?.plantingGuide?.soilTempMinF, plug?.cropFamily) * ONE_DAY_MS;
+      earliestMs = Math.max(naturalEarliest, tomorrowMs);
+      // latestMs guards against unfit DTM; if the season has already passed
+      // (today is past the natural latest), keep the floor at tomorrow so the
+      // operator sees a future date with a clear "won't mature this year"
+      // signal via the chat rather than a date in the past.
+      const naturalLatest = blockFrost.firstFallFrostMs - dtmMax * ONE_DAY_MS - 14 * ONE_DAY_MS;
+      latestMs = Math.max(earliestMs + ONE_DAY_MS, naturalLatest);
+    }
 
     const { free, full } = freeSubWindowsForBlock(
       occupiedByBlock[a.blockId] ?? [],
@@ -153,7 +167,8 @@ export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] 
       hardiness,
       dtmDaysMax: dtmMax,
       freeSubWindows: free,
-      ...(full ? { blockFull: true } : {})
+      ...(full ? { blockFull: true } : {}),
+      ...(fallSown ? { fallSown: true } : {})
     });
   }
   return out;
@@ -169,8 +184,10 @@ export function hardinessFrom(
   cropFamily: string | null | undefined
 ): Hardiness {
   if (typeof soilTempMinF === 'number') {
-    if (soilTempMinF >= 65) return 'tender';
-    if (soilTempMinF >= 50) return 'half-hardy';
+    if (soilTempMinF >= TENDER_SOIL_TEMP_F) return 'tender';
+    if (soilTempMinF >= WARM_SOIL_TEMP_F) {
+      return cropFamily && FAMILY_HARDINESS[cropFamily] === 'tender' ? 'tender' : 'half-hardy';
+    }
     return 'hardy';
   }
   return (cropFamily && FAMILY_HARDINESS[cropFamily]) || 'half-hardy';
@@ -190,9 +207,38 @@ export const EARLIEST_OFFSET_DAYS: Record<Hardiness, number> = {
   hardy: -42
 };
 
+const TENDER_SOIL_TEMP_F = 65;
+const WARM_SOIL_TEMP_F = 50;
+
+/** Days from the last spring frost to the earliest sensible planting. A crop
+ *  whose plugin needs soil at 50 °F or warmer waits for the soil, so it never
+ *  goes in before the last frost (#691). */
+export function earliestOffsetDays(
+  soilTempMinF: number | null | undefined,
+  cropFamily: string | null | undefined
+): number {
+  const days = EARLIEST_OFFSET_DAYS[hardinessFrom(soilTempMinF, cropFamily)];
+  if (typeof soilTempMinF === 'number' && soilTempMinF >= WARM_SOIL_TEMP_F) {
+    return Math.max(days, 0);
+  }
+  return days;
+}
+
 /** Earliest plantable date relative to the last spring frost. */
 export function earliestPlantingMs(hardiness: Hardiness, lastSpringFrostMs: number): number {
   return lastSpringFrostMs + EARLIEST_OFFSET_DAYS[hardiness] * ONE_DAY_MS;
+}
+
+/** A fall-sown crop's window opens as far ahead of the first fall frost as a
+ *  hardy crop's opens ahead of the last spring frost. */
+export function fallSowingEarliestMs(firstFallFrostMs: number): number {
+  return firstFallFrostMs + EARLIEST_OFFSET_DAYS.hardy * ONE_DAY_MS;
+}
+
+function previousYearMs(ms: number): number {
+  const d = new Date(ms);
+  d.setUTCFullYear(d.getUTCFullYear() - 1);
+  return d.getTime();
 }
 
 interface OccupiedWindow {

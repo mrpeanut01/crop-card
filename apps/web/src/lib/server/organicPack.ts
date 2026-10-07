@@ -9,7 +9,7 @@
  */
 
 import type { Prefs } from '$lib/prefs';
-import { formatInstant } from '$lib/prefs';
+import { formatCalendarDate, formatInstant } from '$lib/prefs';
 import { listFields } from '$lib/db/fields';
 import { listBlocks } from '$lib/db/blocks';
 import { listAnimals } from '$lib/db/animals';
@@ -358,7 +358,7 @@ export async function buildOrganicPackData(opts: OrganicPackOptions): Promise<Pa
     if (!inWindow(c.plantingDate)) continue;
     activity.push({
       atMs: c.plantingDate!,
-      date: day(c.plantingDate!),
+      date: formatCalendarDate(c.plantingDate!, 'date', {}, opts.prefs.locale),
       activity: 'Planting',
       block: blockName(c.blockId),
       area: areaOfBlock(c.blockId),

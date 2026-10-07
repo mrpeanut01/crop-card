@@ -64,6 +64,7 @@ export function kindForTask(t: {
 export interface SuggestionLike {
   kind: string;
   blockId: string;
+  cropId?: string;
   startMs: number;
   endMs: number;
   title: string;
@@ -91,6 +92,17 @@ export const PASSIVE_EVENT_KINDS = new Set([
   'shade-window',
   'curing-progress'
 ]);
+
+/** #622: a planting that already has a plant task (open, done or skipped)
+ *  needs no "Plant <variety>" suggestion beside it. */
+export function dropPlantedSuggestions<E extends SuggestionLike>(
+  suggestions: readonly E[],
+  tasks: readonly { cropId?: string; category?: TaskCategory; relatedEventTable?: string }[]
+): E[] {
+  const planted = new Set<string>();
+  for (const t of tasks) if (t.cropId && kindForTask(t) === 'planting') planted.add(t.cropId);
+  return suggestions.filter((s) => !(s.kind === 'planting' && s.cropId && planted.has(s.cropId)));
+}
 
 /** The key a Schedule from /today writes, so a scheduled suggestion is
  *  not offered twice. */

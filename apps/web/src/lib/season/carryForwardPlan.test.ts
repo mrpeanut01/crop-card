@@ -224,6 +224,7 @@ describe('shiftOneYear', () => {
 describe('clonePlantings', () => {
   function cand(over: Partial<PlantingCloneCandidate> = {}): PlantingCloneCandidate {
     return {
+      sourcePlantingId: 'p1',
       blockId: 'b1',
       cropPluginId: 'sweet-corn-ambrosia',
       varietyDisplayName: 'Ambrosia',
@@ -288,6 +289,14 @@ describe('clonePlantings', () => {
     // Only the active planting survives; ClonedPlanting intentionally drops
     // the source `status` field.
     expect(out[0].varietyDisplayName).toBe('Ambrosia');
+  });
+
+  it('keeps each source planting id so two plantings of one crop in one block stay distinct', () => {
+    const out = clonePlantings(
+      [cand({ sourcePlantingId: 'p1' }), cand({ sourcePlantingId: 'p2' })],
+      [window]
+    );
+    expect(out.map((c) => c.sourcePlantingId)).toEqual(['p1', 'p2']);
   });
 
   it('preserves quantity + unit', () => {
@@ -467,6 +476,7 @@ describe('summarizeCarryForward', () => {
       ],
       clonedPlantings: [
         {
+          sourcePlantingId: 'p1',
           blockId: 'b1',
           cropPluginId: 'x',
           varietyDisplayName: 'X',

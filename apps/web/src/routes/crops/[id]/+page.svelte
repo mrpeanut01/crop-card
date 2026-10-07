@@ -9,9 +9,11 @@
   import StaleEditChoice from '$lib/components/records/StaleEditChoice.svelte';
   import { isEditConflictBody, type EditConflictBody } from '$lib/edits/conflict';
   import { keepMineBody } from '$lib/edits/resolve';
+  import { calendarEventKeys } from '$lib/calendar/eventKey';
 
   const { data } = $props();
   const tr = $derived(createT(data.locale));
+  const projectedKeys = $derived(calendarEventKeys(data.projected));
   const plantingName = $derived(
     cropDisplayName(data.crop.cropPluginId, data.crop.varietyDisplayName, data.locale)
   );
@@ -392,7 +394,7 @@
     <h2>{tr('crops.projected', { count: data.projected.length })}</h2>
     <p class="hint">{tr('crops.projectedHint')}</p>
     <ul>
-      {#each data.projected as p (p.kind + p.startMs + p.title)}
+      {#each data.projected as p, i (projectedKeys[i])}
         <li>
           <span class="when">{fmtDay(p.startMs)}</span>
           <strong>{p.title}</strong>

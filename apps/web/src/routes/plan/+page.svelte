@@ -3892,7 +3892,7 @@
                   {/if}
                   {#if sprayWindows(row.engineEvents).length > 0}
                     <ul class="sched-events">
-                      {#each sprayWindows(row.engineEvents) as s (s.startMs)}
+                      {#each sprayWindows(row.engineEvents) as s, k (k)}
                         <li class="sched-event">
                           <span class="sched-dot spray-window"></span>
                           <span

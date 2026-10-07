@@ -132,7 +132,7 @@ export const esAnimals: Partial<Record<MessageKey, string>> = {
   'animals.breed': 'Raza',
   'animals.cameFrom': 'Procedencia',
   'animals.keptFor': 'Se cría para',
-  'animals.purpose.production': 'Huevos, leche, carne o trabajo',
+  'animals.purpose.production': 'Alimento o trabajo',
   'animals.purpose.pet': 'Mascota',
   'animals.purpose.mixed': 'Ambos',
   'animals.howMuchFood': 'Cuánta comida',
@@ -623,5 +623,9 @@ export const esAnimals: Partial<Record<MessageKey, string>> = {
   'animallib.food.meat':
     '{who}: cuentan como animales para alimento porque la gente come su carne.',
   'animallib.food.usRules':
-    '{who}: cuentan como animales para alimento según las normas de EE. UU., aunque se tengan como mascotas.'
+    '{who}: cuentan como animales para alimento según las normas de EE. UU., aunque se tengan como mascotas.',
+  'animals.stock.wrongUnit':
+    'La dosis se guardó, pero {name} se cuenta en {unit}, así que no se descontó nada del inventario. Ajústelo en la página de inventario.',
+  'animals.stock.noUnit':
+    'La dosis se guardó sin unidad, así que no se descontó nada de {name}. Agregue una unidad a la dosis para descontarla del inventario.'
 };

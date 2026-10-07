@@ -436,7 +436,7 @@
           <li>{tr('hayui.tl.rake', { ts: fmtTs(c.rakeAt) })}</li>
           <li>
             {tr('hayui.tl.bale', { ts: fmtTs(c.baleAt) })}{c.baleType
-              ? ` (${c.baleType}, ${c.baleMoisturePct ?? '?'}%)`
+              ? ` (${c.balesQuantity ? `${tr('hayui.baleCount', { n: c.balesQuantity })}, ` : ''}${c.baleType}, ${c.baleMoisturePct ?? '?'}%)`
               : ''}
           </li>
           <li>{tr('hayui.tl.store', { ts: fmtTs(c.storedAt) })}</li>

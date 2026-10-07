@@ -12,7 +12,7 @@ import type { HealthRecordInput } from '$lib/animals/recordApiSchemas';
 import { MAX_FUTURE_SKEW_MS } from '$lib/animals/model';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 import { insertHealthEvent, type AnimalHealthEvent } from '$lib/db/animalHealth';
-import { getStockItem } from '$lib/db/stock';
+import { getStockItem, lotNumbersForUse } from '$lib/db/stock';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { LOCK_WINDOW_MS } from '$lib/db/recordKinds';
 import type { AuthenticatedUser } from './auth';
@@ -96,7 +96,7 @@ export async function prepareHealthRecord(
         timeZone: farmTimeZone(),
         plugins,
         subject,
-        stock: planHealthStock(input, (id) => plugins(id) !== undefined)
+        stock: planHealthStock(input, (id) => plugins(id) !== undefined, event.locals?.locale)
       }
     }
   };
@@ -116,7 +116,7 @@ export function writeHealthRecord(prepared: PreparedHealth): SavedHealth {
     productName: stock.productName,
     stockProductText: stock.stockProductText,
     stockItemId: stock.stockItemId,
-    lotNumber: input.lotNumber ?? null,
+    lotNumber: input.lotNumber ?? stockLotNumber(stock, input.administeredAt),
     dose: input.dose ?? null,
     doseUnit: input.doseUnit ?? null,
     route: input.route ?? null,
@@ -154,6 +154,21 @@ export function writeHealthRecord(prepared: PreparedHealth): SavedHealth {
     occurredAt: input.administeredAt
   });
   return { row, clear, stockWarnings };
+}
+
+/** #745: the lot of the bottle a dose was taken from, when none was typed. */
+function stockLotNumber(
+  stock: PreparedHealth['ctx']['stock'],
+  administeredAt: number
+): string | null {
+  if (!stock.stockItemId) return null;
+  const numbers = lotNumbersForUse({
+    stockItemId: stock.stockItemId,
+    amount: stock.deduct?.amount ?? null,
+    unit: stock.deduct?.unit ?? null,
+    occurredAt: administeredAt
+  });
+  return numbers.length > 0 ? numbers.join(', ').slice(0, 80) : null;
 }
 
 /** The health endpoint's 201 body for what `writeHealthRecord` saved. */

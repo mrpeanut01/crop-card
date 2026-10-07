@@ -116,6 +116,10 @@
           <p class="empty" role="note">
             {canEdit ? tr('inv.feed.setBagOwner') : tr('inv.feed.setBagHelper')}
           </p>
+        {:else if item.defaultUnit === 'bale' && !feed.lbPerBale}
+          <p class="empty" role="note">
+            {canEdit ? tr('inv.feed.setBaleOwner') : tr('inv.feed.setBaleHelper')}
+          </p>
         {:else}
           {#if subjects.length > 0}
             <label class="field">
@@ -192,6 +196,12 @@
     </InvSection>
 
     <InvSection title={tr('inv.feed.bagAndScoop')}>
+      {#if item.defaultUnit === 'bale'}
+        <InvKVP
+          label={tr('inv.feed.oneBale')}
+          value={feed.lbPerBale ? lbText(feed.lbPerBale) : tr('inv.feed.notSet')}
+        />
+      {/if}
       <InvKVP
         label={tr('inv.feed.oneBag')}
         value={feed.lbPerBag

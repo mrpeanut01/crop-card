@@ -19,8 +19,9 @@ export function isFeedCategory(c: string | null | undefined): c is FeedCategory 
   return c === 'feed' || c === 'bedding';
 }
 
-/** Units the feed form offers. A bag needs the owner's pounds per bag. */
-export const FEED_UNITS: readonly StockUnit[] = ['bag', 'lb', 'kg'];
+/** Units the feed form offers. A bag needs the owner's pounds per bag; a
+ *  bale (#765) takes the owner's pounds per bale for use in pounds. */
+export const FEED_UNITS: readonly StockUnit[] = ['bag', 'bale', 'lb', 'kg'];
 
 /** Units the medicine form offers: bottles are read in mL or fl oz, tubs
  *  and boluses by weight or count. */
@@ -41,6 +42,8 @@ export const MAX_FEED_USE_LB = 5000;
 
 export interface FeedMeta {
   lbPerBag?: number;
+  /** Owner-typed; never a default (#765). */
+  lbPerBale?: number;
   scoopLb?: number;
   /** Always `manual`: the owner typed it. */
   scoopProvenance?: 'manual';
@@ -83,6 +86,8 @@ export function feedMeta(json: string | null | undefined): FeedMeta {
   const out: FeedMeta = {};
   const lbPerBag = positive(raw.lbPerBag);
   if (lbPerBag !== undefined) out.lbPerBag = lbPerBag;
+  const lbPerBale = positive(raw.lbPerBale);
+  if (lbPerBale !== undefined) out.lbPerBale = lbPerBale;
   const scoopLb = positive(raw.scoopLb);
   if (scoopLb !== undefined) {
     out.scoopLb = scoopLb;
@@ -130,6 +135,7 @@ const LB_PER_KG = 1 / 0.45359237;
  *  fixed-size bag units are unit definitions, not agronomy numbers. */
 export function lbPerBagUnit(unit: string, meta: FeedMeta): number | null {
   if (unit === 'bag') return meta.lbPerBag ?? null;
+  if (unit === 'bale') return meta.lbPerBale ?? null;
   if (unit === 'bag-50lb') return 50;
   if (unit === 'bag-25kg') return 25 * LB_PER_KG;
   return null;
@@ -151,11 +157,14 @@ export function feedUseAmount(
     return { ok: true, amount: lb, unit: 'lb' };
   }
   const perBag = lbPerBagUnit(unit, feedMeta(item.metadataJson));
-  if (unit === 'bag' && perBag === null) {
+  if ((unit === 'bag' || unit === 'bale') && perBag === null) {
     return {
       ok: false,
       code: 'NEEDS_LB_PER_BAG',
-      message: t(locale, 'stockui.feed.needsLbPerBag')
+      message: t(
+        locale,
+        unit === 'bale' ? 'stockui.feed.needsLbPerBale' : 'stockui.feed.needsLbPerBag'
+      )
     };
   }
   if (perBag === null) {

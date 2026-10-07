@@ -308,7 +308,7 @@ export const esCards: Partial<Record<MessageKey, string>> = {
   'cards.animal.fact.howMany': 'Cuántos',
   'cards.animal.fact.named': 'Con nombre',
   'cards.animal.notSet': 'Sin definir',
-  'cards.animal.purpose.production': 'Huevos, leche, carne o trabajo',
+  'cards.animal.purpose.production': 'Alimento o trabajo',
   'cards.animal.purpose.pet': 'Mascota',
   'cards.animal.purpose.mixed': 'Mascota y producción',
   'cards.animal.provSpeciesCare': 'cuidados predeterminados de la especie',

@@ -559,10 +559,19 @@ function declarationKeys(f: HoldFact, fieldOfBlock: Map<string, string | null>):
   return [];
 }
 
-function openerName(facts: readonly HoldFact[], atMs: number): string {
+export function openerName(
+  facts: readonly HoldFact[],
+  atMs: number,
+  plugins?: PluginLookup
+): string {
   for (const f of facts) {
     if (f.kind === 'dose' && f.treatment.administeredAtMs === atMs) {
-      return f.treatment.productName?.trim() || f.treatment.productPluginId || 'A treatment';
+      const t = f.treatment;
+      const pluginId = t.productPluginId;
+      const pluginName = pluginId
+        ? (plugins?.(pluginId)?.displayName ?? t.snapshotProduct?.displayName)?.trim()
+        : undefined;
+      return t.productName?.trim() || pluginName || 'A treatment';
     }
     if (f.kind === 'application' && f.application.appliedAtMs === atMs) {
       return f.application.productName;
@@ -605,7 +614,7 @@ function orderRefusal(
           'OUT_OF_ORDER',
           409,
           crossingHoldMessage(
-            openerName(loaded.facts, crossing.fromMs),
+            openerName(loaded.facts, crossing.fromMs, loaded.ctx.plugins),
             label,
             crossing.fromMs,
             loaded.ctx.timeZone

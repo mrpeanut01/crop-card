@@ -59,4 +59,35 @@ describe('HealthForm', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(sent().labelUse).toBeUndefined();
   });
+
+  it('fills the unit and lot from the picked bottle so the dose comes off stock (#648, #745)', async () => {
+    render(HealthForm, {
+      ...base,
+      stock: [{ id: 's1', name: 'Safe-Guard', unit: 'ml', lotNumber: 'SG-2611' }]
+    });
+    await fireEvent.change(screen.getByLabelText(/Taken from stock/), { target: { value: 's1' } });
+    await fireEvent.input(screen.getByLabelText(/Dose/), { target: { value: '5' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(sent()).toMatchObject({
+      stockItemId: 's1',
+      dose: 5,
+      doseUnit: 'mL',
+      lotNumber: 'SG-2611'
+    });
+  });
+
+  it('keeps a unit and lot the farmer already typed', async () => {
+    render(HealthForm, {
+      ...base,
+      stock: [{ id: 's1', name: 'Safe-Guard', unit: 'ml', lotNumber: 'SG-2611' }]
+    });
+    await fireEvent.input(screen.getByLabelText(/Product/), { target: { value: 'Safe-Guard' } });
+    await fireEvent.input(screen.getByLabelText(/^Unit/), { target: { value: 'fl-oz' } });
+    await fireEvent.input(screen.getByLabelText(/Lot number/), { target: { value: 'OTHER' } });
+    await fireEvent.change(screen.getByLabelText(/Taken from stock/), { target: { value: 's1' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(sent()).toMatchObject({ doseUnit: 'fl-oz', lotNumber: 'OTHER' });
+  });
 });

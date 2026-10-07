@@ -725,6 +725,76 @@ describe('stock (C-34)', () => {
   });
 });
 
+describe('stock unit and lot (#648, #745)', () => {
+  it('says to add a unit when a dose has none, and takes the lot from the bottle', async () => {
+    await runWithTenantAsync(seedOwner(), async () => {
+      const { groupId } = await flock();
+      const item = createStockItem({
+        category: 'animal-health',
+        displayName: 'Flock wormer',
+        defaultUnit: 'ml'
+      });
+      receiveLot({ stockItemId: item.id, receivedQuantity: 100, unit: 'ml', lotNumber: 'SG-2611' });
+      const noUnit = await health({
+        subjectType: 'group',
+        subjectId: groupId,
+        kind: 'deworm',
+        stockItemId: item.id,
+        dose: 5,
+        administeredAt: Date.now()
+      });
+      expect(noUnit.status).toBe(201);
+      expect(noUnit.body.warnings[0].code).toBe('STOCK_NOT_DEDUCTED');
+      expect(noUnit.body.warnings[0].message).toMatch(/without a unit/);
+      expect(noUnit.body.event.lotNumber).toBe('SG-2611');
+
+      const typed = await health({
+        subjectType: 'group',
+        subjectId: groupId,
+        kind: 'deworm',
+        stockItemId: item.id,
+        dose: 5,
+        doseUnit: 'mL',
+        lotNumber: 'TYPED-1',
+        administeredAt: Date.now()
+      });
+      expect(typed.body.event.lotNumber).toBe('TYPED-1');
+      expect(
+        listMovementsForItem(item.id).filter((mv) => mv.reason === 'animal-treatment')
+      ).toHaveLength(1);
+    });
+  });
+
+  it('names every lot a dose spans, oldest first', async () => {
+    await runWithTenantAsync(seedOwner(), async () => {
+      const { groupId } = await flock();
+      const item = createStockItem({
+        category: 'animal-health',
+        displayName: 'Two bottles',
+        defaultUnit: 'ml'
+      });
+      receiveLot({
+        stockItemId: item.id,
+        receivedQuantity: 3,
+        unit: 'ml',
+        lotNumber: 'OLD'
+      });
+      await new Promise((r) => setTimeout(r, 5));
+      receiveLot({ stockItemId: item.id, receivedQuantity: 50, unit: 'ml', lotNumber: 'NEW' });
+      const both = await health({
+        subjectType: 'group',
+        subjectId: groupId,
+        kind: 'deworm',
+        stockItemId: item.id,
+        dose: 5,
+        doseUnit: 'mL',
+        administeredAt: Date.now()
+      });
+      expect(both.body.event.lotNumber).toBe('OLD, NEW');
+    });
+  });
+});
+
 describe('stock after a delete (review round 8)', () => {
   it('gives the dose back when it was never given, and keeps it used when it was', async () => {
     await runWithTenantAsync(seedOwner(), async () => {

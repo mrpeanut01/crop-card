@@ -148,7 +148,13 @@
   // Phase 32D: feed bag size and scoop (D0-13), the medicated refusal
   // (D0-14) and a medicine's NADA number (D0-15).
   const initialFeed = untrack(() => feedMeta(existing?.metadataJson));
-  let lbPerBag = $state<number | null>(initialFeed.lbPerBag ?? null);
+  let lbPerBag = $state<number | null>(
+    untrack(() =>
+      existing?.defaultUnit === 'bale'
+        ? (initialFeed.lbPerBale ?? null)
+        : (initialFeed.lbPerBag ?? null)
+    )
+  );
   let scoopLb = $state<number | null>(initialFeed.scoopLb ?? null);
   let medicated = $state(false);
   const initialNada = untrack(() => {
@@ -382,6 +388,9 @@
       if (defaultUnit === 'bag' && !(lbPerBag != null && lbPerBag > 0)) {
         fieldErrors.lbPerBag = tr('inv.form.err.lbPerBag');
       }
+      if (defaultUnit === 'bale' && lbPerBag != null && !(lbPerBag > 0)) {
+        fieldErrors.lbPerBag = tr('inv.form.err.lbPerBale');
+      }
       if (scoopLb != null && !(scoopLb > 0)) fieldErrors.scoopLb = tr('inv.form.err.scoop');
       if (linksHayCutting && !(quantity != null && Number.isFinite(quantity) && quantity > 0)) {
         fieldErrors.quantity = tr('inv.form.err.hayQuantity');
@@ -443,6 +452,7 @@
     if (isFeed) {
       return withMetaSection(existing?.metadataJson, 'feed', {
         lbPerBag: defaultUnit === 'bag' && lbPerBag ? lbPerBag : undefined,
+        lbPerBale: defaultUnit === 'bale' && lbPerBag ? lbPerBag : undefined,
         scoopLb: scoopLb && scoopLb > 0 ? scoopLb : undefined
       });
     }
@@ -620,7 +630,10 @@
   </InvSection>
 
   {#if isFeed}
-    <InvSection title={tr('inv.feed.bagAndScoop')} kicker={tr('inv.feed.feed')}>
+    <InvSection
+      title={defaultUnit === 'bale' ? tr('inv.feed.baleSize') : tr('inv.feed.bagAndScoop')}
+      kicker={tr('inv.feed.feed')}
+    >
       <InvField
         id="medicated"
         label={tr('inv.form.medicated')}
@@ -647,10 +660,10 @@
       {/if}
       <InvField
         id="lbPerBag"
-        label={tr('inv.form.lbPerBag')}
+        label={defaultUnit === 'bale' ? tr('inv.form.lbPerBale') : tr('inv.form.lbPerBag')}
         chip={defaultUnit === 'bag' ? 'required' : undefined}
         error={fieldErrors.lbPerBag}
-        hint={tr('inv.form.lbPerBagHint')}
+        hint={defaultUnit === 'bale' ? tr('inv.form.lbPerBaleHint') : tr('inv.form.lbPerBagHint')}
       >
         <input
           id="lbPerBag"
@@ -661,24 +674,26 @@
           bind:value={lbPerBag}
         />
       </InvField>
-      <InvField
-        id="scoopLb"
-        label={tr('inv.form.scoopLb')}
-        error={fieldErrors.scoopLb}
-        hint={tr('inv.form.scoopHint')}
-      >
-        <div class="with-prov">
-          <input
-            id="scoopLb"
-            type="number"
-            inputmode="decimal"
-            step="any"
-            min="0"
-            bind:value={scoopLb}
-          />
-          {#if scoopLb}<Provenance source="manual" compact />{/if}
-        </div>
-      </InvField>
+      {#if defaultUnit !== 'bale'}
+        <InvField
+          id="scoopLb"
+          label={tr('inv.form.scoopLb')}
+          error={fieldErrors.scoopLb}
+          hint={tr('inv.form.scoopHint')}
+        >
+          <div class="with-prov">
+            <input
+              id="scoopLb"
+              type="number"
+              inputmode="decimal"
+              step="any"
+              min="0"
+              bind:value={scoopLb}
+            />
+            {#if scoopLb}<Provenance source="manual" compact />{/if}
+          </div>
+        </InvField>
+      {/if}
     </InvSection>
   {/if}
 

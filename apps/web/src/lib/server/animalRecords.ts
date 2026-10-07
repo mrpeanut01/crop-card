@@ -7,6 +7,7 @@
  * the tenant-scoped repos.
  */
 
+import { t } from '$lib/i18n';
 import { getAnimal, type Animal } from '$lib/db/animals';
 import { getAnimalGroup, type AnimalGroup } from '$lib/db/animalGroups';
 import { listGroupIdsSplitFrom, listLocationsForSubject } from '$lib/db/animalLocations';
@@ -605,7 +606,8 @@ export function planHealthStock(
     dose?: number | null;
     doseUnit?: string | null;
   },
-  isHealthPlugin: (pluginId: string) => boolean
+  isHealthPlugin: (pluginId: string) => boolean,
+  locale?: string | null
 ): StockPlan {
   const warnings: RecordWarning[] = [];
   let productPluginId = input.productPluginId ?? null;
@@ -632,7 +634,12 @@ export function planHealthStock(
     } else {
       warnings.push({
         code: 'STOCK_NOT_DEDUCTED',
-        message: `The dose was saved, but ${item.displayName} is counted in ${item.defaultUnit}, so nothing was taken off stock. Adjust it on the inventory page.`
+        message: input.doseUnit?.trim()
+          ? t(locale, 'animals.stock.wrongUnit', {
+              name: item.displayName,
+              unit: item.defaultUnit
+            })
+          : t(locale, 'animals.stock.noUnit', { name: item.displayName })
       });
     }
   }

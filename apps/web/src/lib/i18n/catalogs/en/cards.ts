@@ -305,7 +305,7 @@ export const enCards = {
   'cards.animal.fact.howMany': 'How many',
   'cards.animal.fact.named': 'Named',
   'cards.animal.notSet': 'Not set',
-  'cards.animal.purpose.production': 'Eggs, milk, meat or work',
+  'cards.animal.purpose.production': 'Food or work',
   'cards.animal.purpose.pet': 'Pet',
   'cards.animal.purpose.mixed': 'Pet and production',
   'cards.animal.provSpeciesCare': 'species care defaults',

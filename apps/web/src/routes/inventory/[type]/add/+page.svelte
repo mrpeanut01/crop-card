@@ -31,7 +31,8 @@
     prefill={{
       category: 'feed',
       displayName: tr('inv.add.hayName', { cutting: data.hayCutting.label }),
-      defaultUnit: 'lb',
+      defaultUnit: data.hayCutting.bales ? 'bale' : 'lb',
+      quantity: data.hayCutting.bales ?? undefined,
       source: 'manual'
     }}
   />

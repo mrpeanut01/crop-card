@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CHEMISTRY_CLASSES, SPRAYER_LOAD_CLASSES, type SprayerLoadClass } from './types';
-import { hasStrictDeconProtocol, selectDeconProtocol } from './deconProtocol';
+import { deconIntro, hasStrictDeconProtocol, selectDeconProtocol } from './deconProtocol';
+import fc from 'fast-check';
 
 describe('deconProtocol — class-specific SOP selection (UC-45)', () => {
   it('paraquat (photosystem-i-diquat) → bleach + TSP + 3 rinses', () => {
@@ -79,5 +80,34 @@ describe('deconProtocol — class-specific SOP selection (UC-45)', () => {
       expect(p.steps.length).toBeGreaterThan(0);
       expect(p.rationale.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('deconIntro — the intro matches the protocol walked (#685)', () => {
+  it('mentions the ammonia soak only for the generic protocol', () => {
+    const classes: (SprayerLoadClass | null)[] = [
+      null,
+      ...CHEMISTRY_CLASSES,
+      ...SPRAYER_LOAD_CLASSES
+    ];
+    fc.assert(
+      fc.property(fc.constantFrom(...classes), (cls) => {
+        const protocol = selectDeconProtocol(cls);
+        const intro = deconIntro(protocol);
+        if (protocol.strict) {
+          expect(intro).not.toMatch(/30-minute/);
+          expect(intro).toContain(protocol.label);
+          expect(intro).toContain('no ammonia soak');
+        } else {
+          expect(intro).toContain('30-minute ammonia soak');
+        }
+      })
+    );
+  });
+
+  it('the copper SOP intro names the copper protocol', () => {
+    expect(deconIntro(selectDeconProtocol('fungicide-load'))).toContain(
+      'Copper fungicide decon (strict SOP)'
+    );
   });
 });

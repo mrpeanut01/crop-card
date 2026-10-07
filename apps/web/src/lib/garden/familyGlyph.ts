@@ -101,6 +101,7 @@ const BY_FAMILY: Record<string, GlyphKey> = {
   'cereal-grain': 'grain',
   'cover-grass': 'grain',
   forage: 'grain',
+  'forage-grass': 'grain',
   'herb-culinary': 'herb',
   'small-fruit': 'fruit',
   bramble: 'fruit',

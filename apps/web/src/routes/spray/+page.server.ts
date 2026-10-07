@@ -92,7 +92,12 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       const hracGroups = contactOrganic
         ? []
         : Array.from(
-            new Set(chemistryClasses.map((c) => String(hracGroupOf(c))).filter((g) => g.length > 0))
+            new Set(
+              chemistryClasses
+                .map((c) => hracGroupOf(c))
+                .filter((g): g is number => g != null)
+                .map(String)
+            )
           );
       return {
         pluginId: h.pluginId,

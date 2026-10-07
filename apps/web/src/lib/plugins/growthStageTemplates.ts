@@ -583,11 +583,13 @@ export const FAMILY_STAGE_TEMPLATES: Record<CropFamily, GrowthStageTable | null>
   allium: alliumSimpleTable,
   'herb-culinary': herbCulinarySimpleTable,
   forage: forageSimpleTable,
+  'forage-grass': forageSimpleTable,
   'cover-grass': coverSimpleTable,
   'cover-legume': coverSimpleTable,
   'broadleaf-companion': broadleafCompanionSimpleTable,
   // Perennial families — null here; calendar engine routes to perennial path.
   orchard: null,
+  'perennial-vegetable': null,
   'stone-fruit': null,
   'small-fruit': null,
   bramble: null,

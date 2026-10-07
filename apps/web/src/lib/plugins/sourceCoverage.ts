@@ -577,8 +577,9 @@ export function isPastureLabelled(
 ): boolean {
   const claims = p.labelClaims as
     { safeForCropPluginIds?: string[]; safeForCropFamilies?: string[] } | undefined;
-  if (claims?.safeForCropFamilies?.includes('forage')) return true;
-  if (claims?.safeForCropPluginIds?.some((id) => cropFamilyOf(id) === 'forage')) return true;
+  const forage = (f: string | undefined) => f === 'forage' || f === 'forage-grass';
+  if (claims?.safeForCropFamilies?.some(forage)) return true;
+  if (claims?.safeForCropPluginIds?.some((id) => forage(cropFamilyOf(id)))) return true;
   const { grazingRestrictions: _ignored, ...rest } = p;
   return PASTURE_WORDS.test(JSON.stringify(rest));
 }

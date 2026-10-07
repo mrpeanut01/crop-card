@@ -109,6 +109,16 @@ export function selectDeconProtocol(
   return STRICT_PROTOCOLS[lastChemistryClass] ?? GENERIC_AMMONIA;
 }
 
+/** The decon page's opening sentence, matching the protocol it walks. Only
+ *  the generic protocol has the timed ammonia soak. */
+export function deconIntro(protocol: DeconProtocol): string {
+  const lead =
+    'Clean the sprayer before it carries a different chemistry. Confirm each step to unlock the next.';
+  return protocol.strict
+    ? `${lead} This sprayer gets the ${protocol.label}; it has no ammonia soak.`
+    : `${lead} The app times the 30-minute ammonia soak.`;
+}
+
 /** True when the class carries a stricter-than-generic decon SOP. */
 export function hasStrictDeconProtocol(
   lastChemistryClass: SprayerLoadClass | undefined | null

@@ -95,6 +95,8 @@ export const enCards = {
   'cards.family.stone-fruit': 'Stone fruit',
   'cards.family.cereal-grain': 'Cereal grain',
   'cards.family.forage': 'Forage',
+  'cards.family.forage-grass': 'Grass hay and pasture',
+  'cards.family.perennial-vegetable': 'Perennial vegetables',
   'cards.family.herb-culinary': 'Herb culinary',
   'cards.tipLabel.solanaceae': 'tomatoes, peppers and eggplant',
   'cards.tipLabel.cucurbit': 'squash, cucumbers and melons',

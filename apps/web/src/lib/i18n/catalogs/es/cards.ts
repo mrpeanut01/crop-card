@@ -97,6 +97,8 @@ export const esCards: Partial<Record<MessageKey, string>> = {
   'cards.family.stone-fruit': 'Frutas de hueso',
   'cards.family.cereal-grain': 'Cereales',
   'cards.family.forage': 'Forraje',
+  'cards.family.forage-grass': 'Heno y pasto de gramíneas',
+  'cards.family.perennial-vegetable': 'Hortalizas perennes',
   'cards.family.herb-culinary': 'Hierbas culinarias',
   'cards.tipLabel.solanaceae': 'tomates, chiles y berenjenas',
   'cards.tipLabel.cucurbit': 'calabazas, pepinos y melones',

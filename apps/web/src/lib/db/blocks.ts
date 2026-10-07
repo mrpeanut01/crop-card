@@ -94,6 +94,9 @@ export interface PlantingRecord {
   sownIndoorsAt?: number | null;
   /** Set by `listBlocks`; watering advice counts only active plantings. */
   status?: 'planned' | 'active' | 'harvested' | 'failed' | 'archived';
+  /** #676: when it was marked harvested or archived, for the bloom gates. */
+  harvestedAt?: number | null;
+  archivedAt?: number | null;
   /** Phase 35: shared by every part of one seed lot planted in several blocks. */
   splitGroupId?: string | null;
   /** #548 "Tree size" and #555 Drilled or Broadcast; null when not set. */
@@ -235,6 +238,8 @@ export function listBlocks(opts: ListBlocksOptions = {}): BlockWithPlantings[] {
       establishment: p.establishment ?? null,
       sownIndoorsAt: p.sownIndoorsAt?.getTime() ?? null,
       status: p.status,
+      harvestedAt: p.harvestedAt?.getTime() ?? null,
+      archivedAt: p.archivedAt?.getTime() ?? null,
       splitGroupId: p.splitGroupId ?? null,
       treeSizeClass: isTreeSizeClass(p.treeSizeClass) ? p.treeSizeClass : null,
       sowingMethod: isSavedSowMethod(p.sowingMethod) ? p.sowingMethod : null
@@ -273,6 +278,8 @@ export function getBlock(id: string): BlockWithPlantings | undefined {
       establishment: p.establishment ?? null,
       sownIndoorsAt: p.sownIndoorsAt?.getTime() ?? null,
       status: p.status,
+      harvestedAt: p.harvestedAt?.getTime() ?? null,
+      archivedAt: p.archivedAt?.getTime() ?? null,
       splitGroupId: p.splitGroupId ?? null,
       treeSizeClass: isTreeSizeClass(p.treeSizeClass) ? p.treeSizeClass : null,
       sowingMethod: isSavedSowMethod(p.sowingMethod) ? p.sowingMethod : null

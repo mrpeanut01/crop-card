@@ -75,7 +75,7 @@ export interface ChemistryProfile {
   killsFamilies: ReadonlyArray<CropFamily>;
   notes: string;
   /** HRAC global mode-of-action group number. */
-  hracGroup: number;
+  hracGroup: number | null;
 }`;
 
 const body = [

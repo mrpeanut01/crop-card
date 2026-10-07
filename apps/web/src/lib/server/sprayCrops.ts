@@ -45,6 +45,24 @@ export function standingCropPluginIds(
     .map((p) => p.cropPluginId);
 }
 
+/** #676: whether a planting is in the ground at `atMs` for the bloom gate
+ *  and the nearby-blocks advisory. It must be dated on or before `atMs`; a
+ *  harvested or archived planting stops counting only from the moment it
+ *  was marked so, so a backdated record still sees it. A failed planting,
+ *  or a gone one with no date on file, still counts. */
+export function plantingStandsForBloom(
+  p: BlockPlantingFacts & { harvestedAt?: number | null; archivedAt?: number | null },
+  atMs: number
+): boolean {
+  if (p.plantingDate == null || p.plantingDate > atMs) return false;
+  if (p.status !== 'harvested' && p.status !== 'archived') return true;
+  const stamps = [p.harvestedAt, p.archivedAt].filter(
+    (t): t is number => t != null && Number.isFinite(t)
+  );
+  if (stamps.length === 0) return true;
+  return Math.min(...stamps) > atMs;
+}
+
 export function resolveSprayCrops(
   client: { primary: ClientSprayCrop; coPlanted?: readonly ClientSprayCrop[] },
   standing: readonly string[],

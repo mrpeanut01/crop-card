@@ -2,9 +2,9 @@
   "pluginId": "asparagus-purple-passion",
   "type": "crop",
   "displayName": "Asparagus Purple Passion (purple spears)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
-  "cropFamily": "allium",
+  "cropFamily": "perennial-vegetable",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
     "min": 730,

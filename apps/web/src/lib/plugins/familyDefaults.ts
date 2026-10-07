@@ -35,6 +35,8 @@ const ROTATION_LOOKBACK_YEARS_BY_FAMILY: Record<string, number> = {
   'small-fruit': 0,
   'vine-fruit': 0,
   forage: 0,
+  'forage-grass': 0,
+  'perennial-vegetable': 0,
   hay: 0,
   'small-grain': 0
 };
@@ -69,6 +71,7 @@ const REFERENCE_DENSITY_BY_FAMILY: Record<string, number> = {
   allium: 80000,
   'herb-culinary': 60000,
   forage: 200000,
+  'forage-grass': 200000,
   'cover-grass': 1_000_000,
   'cover-legume': 500_000,
   'broadleaf-companion': 60000
@@ -80,7 +83,9 @@ const PERENNIAL_FAMILIES: ReadonlySet<string> = new Set([
   'small-fruit',
   'bramble',
   'vine-fruit',
-  'forage'
+  'forage',
+  'forage-grass',
+  'perennial-vegetable'
 ]);
 
 const COVER_FAMILIES: ReadonlySet<string> = new Set(['cover-grass', 'cover-legume', 'cover']);

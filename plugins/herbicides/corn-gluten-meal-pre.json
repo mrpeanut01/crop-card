@@ -1,14 +1,14 @@
 {
   "pluginId": "corn-gluten-meal-pre",
   "type": "herbicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "displayName": "Corn Gluten Meal (organic PRE)",
   "activeIngredients": [
     {
       "name": "corn gluten meal",
-      "chemistryClass": "microtubule-inhibitor"
+      "chemistryClass": "unclassified"
     }
   ],
   "ratePerAcre": {

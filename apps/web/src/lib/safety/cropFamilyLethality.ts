@@ -32,8 +32,14 @@ export const CROP_FAMILIES = [
   'vine-fruit', // grape (Vitis), kiwi
   'stone-fruit', // peach, plum, cherry, apricot, nectarine (Prunus)
   'cereal-grain', // wheat, oats, barley, rye-grain, sorghum, millet (cash crop, not cover)
-  'forage', // alfalfa, clover-hay, timothy, orchard-grass-hay
-  'herb-culinary' // basil, oregano, thyme, rosemary, sage, mint, chives
+  'forage', // legume hay and pasture: alfalfa, clover
+  'herb-culinary', // basil, oregano, thyme, rosemary, sage, mint, chives
+  // #726: grass hay and pasture are true grasses, split from legume forage so
+  // the grass killers (ACCase and the other classes lethal to cereals) stop them.
+  'forage-grass', // orchardgrass, timothy, sudangrass, sorghum-sudangrass
+  // #671: asparagus (Asparagaceae). No class is decided from labels yet, so
+  // every class treats it as lethal until its own row is sourced.
+  'perennial-vegetable' // asparagus
 ] as const;
 
 export type CropFamily = (typeof CROP_FAMILIES)[number];
@@ -41,8 +47,9 @@ export type CropFamily = (typeof CROP_FAMILIES)[number];
 export interface ChemistryProfile {
   killsFamilies: ReadonlyArray<CropFamily>;
   notes: string;
-  /** HRAC global mode-of-action group number. Used for UI badges + resistance hints. */
-  hracGroup: number;
+  /** HRAC global mode-of-action group number. Used for UI badges + resistance
+   *  hints. Null when no group is on file (`unclassified`). */
+  hracGroup: number | null;
 }
 
 /**
@@ -71,7 +78,8 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'vine-fruit',
       'stone-fruit',
       'herb-culinary',
-      'cover-legume'
+      'cover-legume',
+      'perennial-vegetable'
     ],
     notes:
       '2,4-D, dicamba and similar HRAC 4 auxin mimics. Highly drift-prone over broadleaves. Cereal grain (wheat, oats, barley) and grass hay are class-tolerant — true grasses. Soybean RR2-Xtend / dicamba-tolerant cultivars need explicit cultivar opt-in via labelClaims.safeForCropPluginIds.'
@@ -92,7 +100,8 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'vine-fruit',
       'stone-fruit',
       'herb-culinary',
-      'cover-legume'
+      'cover-legume',
+      'perennial-vegetable'
     ],
     notes:
       'Me-Too-Lachlor / S-metolachlor / acetochlor (HRAC 15, formerly K3). Soil-active VLCFA inhibitor; persistent residue. Soybean / corn / cotton / peanut are label-tolerant via deep seed placement; tomato / pepper labels are rate-sensitive — claim explicitly via safeForCropPluginIds.'
@@ -115,15 +124,17 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'stone-fruit',
       'herb-culinary',
       'cover-legume',
-      'forage'
+      'forage',
+      'forage-grass',
+      'perennial-vegetable'
     ],
     notes: 'Mesotrione, tembotrione (HRAC 27). Corn / cereal-tolerant only; lethal to broadleaves.'
   },
   'accase-inhibitor': {
     hracGroup: 1,
-    killsFamilies: ['corn', 'cover-grass', 'cereal-grain'],
+    killsFamilies: ['corn', 'cover-grass', 'cereal-grain', 'forage-grass', 'perennial-vegetable'],
     notes:
-      'Clethodim, sethoxydim, fluazifop (HRAC 1). Selective grass killer — DO NOT spray over corn or cereals.'
+      'Clethodim, sethoxydim, fluazifop (HRAC 1). Selective grass killer — DO NOT spray over corn, cereals or grass hay and pasture.'
   },
   glyphosate: {
     hracGroup: 9,
@@ -147,7 +158,9 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'stone-fruit',
       'cereal-grain',
       'forage',
-      'herb-culinary'
+      'herb-culinary',
+      'forage-grass',
+      'perennial-vegetable'
     ],
     notes:
       'Non-selective EPSPS inhibitor (HRAC 9). Pre-plant burndown only; never over standing crop unless trait-resistant + labelClaims.safeForCropPluginIds asserts it.'
@@ -166,7 +179,8 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'vine-fruit',
       'stone-fruit',
       'herb-culinary',
-      'cover-legume'
+      'cover-legume',
+      'perennial-vegetable'
     ],
     notes:
       'Stadia-class (HRAC 2 SU). Corn-tolerant POST; check pumpkin label for stage window. Some cereal-grain SUs exist (e.g., Harmony SG) but default-block.'
@@ -175,7 +189,7 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
   // ─── Phase 9 expansion ──────────────────────────────────────────────────
   'microtubule-inhibitor': {
     hracGroup: 3,
-    killsFamilies: ['allium'],
+    killsFamilies: ['allium', 'perennial-vegetable'],
     notes:
       'Pendimethalin (Prowl H2O), trifluralin (Treflan), HRAC 3 dinitroanilines. PRE soil-active. Corn / soybean / cereals / vegetables are label-tolerant via deep seedbed placement. Alliums (shallow + bulb-sensitive) are not.'
   },
@@ -196,7 +210,9 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'stone-fruit',
       'herb-culinary',
       'cover-legume',
-      'forage'
+      'forage',
+      'forage-grass',
+      'perennial-vegetable'
     ],
     notes:
       'Atrazine, simazine, metribuzin (HRAC 5). Corn / sorghum tolerant; established orchard / vineyard FLOOR use is label-allowed via simazine (Princep); deeper-rooted perennial trees + vines tolerate residual when foliar contact is avoided. Long soil persistence — rotation restrictions apply.'
@@ -223,7 +239,9 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'stone-fruit',
       'cereal-grain',
       'forage',
-      'herb-culinary'
+      'herb-culinary',
+      'forage-grass',
+      'perennial-vegetable'
     ],
     notes:
       'Paraquat (Gramoxone SL), diquat (HRAC 22). Non-selective contact burndown. Restricted-use; strict drift + PPE requirements.'
@@ -250,7 +268,9 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'stone-fruit',
       'cereal-grain',
       'forage',
-      'herb-culinary'
+      'herb-culinary',
+      'forage-grass',
+      'perennial-vegetable'
     ],
     notes:
       'Liberty / Liberty Ultra (HRAC 10). Non-selective burndown unless trait-resistant. Tank residue cannot be safely applied over any non-trait crop.'
@@ -266,7 +286,8 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'root',
       'apiaceae',
       'herb-culinary',
-      'cover-legume'
+      'cover-legume',
+      'perennial-vegetable'
     ],
     notes:
       'Fomesafen (Reflex), flumioxazin (Valor), sulfentrazone, lactofen (Cobra) — HRAC 14 PPO inhibitors. Soybean / dry-bean / snap-bean POST-tolerant; perennial fruit (orchard / blueberry / grape / bramble) labels exist for soil-applied flumioxazin under established stands.'
@@ -290,7 +311,9 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'stone-fruit',
       'cereal-grain',
       'herb-culinary',
-      'cover-grass'
+      'cover-grass',
+      'forage-grass',
+      'perennial-vegetable'
     ],
     notes:
       'Imazethapyr (Pursuit), imazamox (Beyond) — HRAC 2 IMI subset. Legume + alfalfa-tolerant POST (soybean, dry bean, alfalfa); long soil residual restricts rotation to corn / cucurbits / vegetables for 12-26 mo. Clearfield/IMI-resistant wheat must opt back in via labelClaims.safeForCropPluginIds.'
@@ -311,7 +334,8 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'vine-fruit',
       'stone-fruit',
       'herb-culinary',
-      'cover-legume'
+      'cover-legume',
+      'perennial-vegetable'
     ],
     notes:
       'Pyroxasulfone (Zidua, Anthem MAXX) — HRAC 15 isoxazoline VLCFA inhibitor. Soil-active PRE; corn / soybean / cereal label-tolerant.'
@@ -329,10 +353,18 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'bramble',
       'stone-fruit',
       'forage',
-      'herb-culinary'
+      'herb-culinary',
+      'forage-grass',
+      'perennial-vegetable'
     ],
     notes:
       'Clomazone (Command 3ME) — HRAC 13 carotenoid biosynthesis inhibitor. Pumpkin / soybean / pepper / tomato tolerant; severe bleaching on broadleaves and corn.'
+  },
+  unclassified: {
+    hracGroup: null,
+    killsFamilies: [...CROP_FAMILIES],
+    notes:
+      'No verified mode-of-action class on file (#654), such as a natural product with no HRAC group or a product whose group is not yet quoted from its label. Lethal to every family until a sourced class replaces it.'
   }
 } as const;
 
@@ -344,6 +376,6 @@ export function killsFamily(cls: ChemistryClass, family: CropFamily): boolean {
   return CHEMISTRY_KILL_MATRIX[cls].killsFamilies.includes(family);
 }
 
-export function hracGroupOf(cls: ChemistryClass): number {
+export function hracGroupOf(cls: ChemistryClass): number | null {
   return CHEMISTRY_KILL_MATRIX[cls].hracGroup;
 }

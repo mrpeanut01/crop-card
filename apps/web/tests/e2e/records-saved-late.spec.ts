@@ -70,7 +70,7 @@ test.describe('records saved after their date (32G G2)', () => {
       .filter((l) => !l.startsWith('#'))
       .join('\n');
     const parsed = papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true });
-    expect((parsed.meta.fields ?? []).slice(-2)).toEqual(['recorded_late', 'days_after_date']);
+    expect((parsed.meta.fields ?? []).slice(-6, -4)).toEqual(['recorded_late', 'days_after_date']);
     const hay = parsed.data.filter((r) => r.record_kind === 'hay');
     expect(hay.map((r) => r.recorded_late).sort()).toEqual(['no', 'yes']);
     expect(hay.find((r) => r.recorded_late === 'yes')?.days_after_date).toBe('3');

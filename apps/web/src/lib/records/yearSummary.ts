@@ -82,6 +82,20 @@ export interface HarvestArchetypeTotal {
   };
 }
 
+/** #764: hay cuttings in the harvest section (null when none this year). */
+export interface HaySummary {
+  cuttingCount: number;
+  blockCount: number;
+  /** Bales by type, most first; cuttings with no bale count are left out. */
+  bales: Array<{ baleType: string; count: number }>;
+  moisture: {
+    sampleCount: number;
+    min: number | null;
+    max: number | null;
+    mean: number | null;
+  };
+}
+
 export interface InputCostLine {
   category: string;
   /** Total inferred spend, in cents, for consumption of this category. */
@@ -124,6 +138,7 @@ export interface YearSummary {
   chemistryClassAcreage: ChemistryClassAcreage[];
   philosophy: PhilosophyRollup;
   harvestByArchetype: HarvestArchetypeTotal[];
+  hay: HaySummary | null;
   inputCosts: {
     lines: InputCostLine[];
     totalCents: number;
@@ -163,6 +178,13 @@ export interface HarvestRow {
   lotNumber?: string;
 }
 
+export interface HayRow {
+  blockId: string;
+  baleType?: string;
+  balesQuantity?: number;
+  baleMoisturePct?: number;
+}
+
 export interface ScoutRow {
   blockId: string;
   occurredAtMs: number;
@@ -191,6 +213,8 @@ export interface ComputeYearSummaryInput {
   philosophy: Philosophy;
   applications: SprayApplicationRow[];
   harvests: HarvestRow[];
+  /** Hay cuttings mowed in the year (#764). */
+  hayCuttings?: HayRow[];
   scoutObservations: ScoutRow[];
   movements: MovementCostRow[];
   sprayers: SprayerComplianceRow[];
@@ -340,6 +364,8 @@ export function computeYearSummary(input: ComputeYearSummaryInput): YearSummary 
     })
     .sort((a, b) => b.eventCount - a.eventCount);
 
+  const hay = computeHaySummary(input.hayCuttings ?? []);
+
   // Input costs from consumption movements × lot cost.
   const inputCosts = computeInputCosts(input.movements);
 
@@ -395,6 +421,7 @@ export function computeYearSummary(input: ComputeYearSummaryInput): YearSummary 
       unknownApplications: unknown
     },
     harvestByArchetype,
+    hay,
     inputCosts,
     scoutFunnel,
     compliance: {
@@ -405,6 +432,64 @@ export function computeYearSummary(input: ComputeYearSummaryInput): YearSummary 
     },
     animals: input.animals ?? null
   };
+}
+
+function moistureStats(values: number[]): HaySummary['moisture'] {
+  const sampleCount = values.length;
+  if (!sampleCount) return { sampleCount, min: null, max: null, mean: null };
+  return {
+    sampleCount,
+    min: Math.min(...values),
+    max: Math.max(...values),
+    mean: Math.round((values.reduce((s, x) => s + x, 0) / sampleCount) * 100) / 100
+  };
+}
+
+export function computeHaySummary(rows: readonly HayRow[]): HaySummary | null {
+  if (rows.length === 0) return null;
+  const bales = new Map<string, number>();
+  const moistures: number[] = [];
+  for (const r of rows) {
+    if (r.baleType && typeof r.balesQuantity === 'number' && r.balesQuantity > 0) {
+      bales.set(r.baleType, (bales.get(r.baleType) ?? 0) + r.balesQuantity);
+    }
+    if (typeof r.baleMoisturePct === 'number' && Number.isFinite(r.baleMoisturePct)) {
+      moistures.push(r.baleMoisturePct);
+    }
+  }
+  return {
+    cuttingCount: rows.length,
+    blockCount: new Set(rows.map((r) => r.blockId)).size,
+    bales: [...bales.entries()]
+      .map(([baleType, count]) => ({ baleType, count }))
+      .sort((a, b) => b.count - a.count || a.baleType.localeCompare(b.baleType)),
+    moisture: moistureStats(moistures)
+  };
+}
+
+const BALE_LABEL_EN: Record<string, string> = {
+  'small-square': 'small square',
+  'large-round': 'large round',
+  'large-square': 'large square'
+};
+
+/** English line for the year summary PDF (exports stay English). */
+export function hayHarvestLine(hay: HaySummary): string {
+  const parts = [`${hay.cuttingCount} cutting(s) on ${hay.blockCount} block(s)`];
+  parts.push(
+    hay.bales.length
+      ? hay.bales
+          .map((b) => `${b.count} ${BALE_LABEL_EN[b.baleType] ?? b.baleType} bale(s)`)
+          .join(', ')
+      : 'no bale count recorded'
+  );
+  const m = hay.moisture;
+  parts.push(
+    m.mean === null
+      ? 'bale moisture not recorded'
+      : `bale moisture (min/mean/max) ${m.min}% / ${m.mean}% / ${m.max}%`
+  );
+  return parts.join(' · ');
 }
 
 export function computeInputCosts(movements: MovementCostRow[]): {

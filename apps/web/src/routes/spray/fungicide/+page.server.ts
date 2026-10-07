@@ -21,11 +21,12 @@ import { getRegistry } from '$lib/server/registry';
 import { loadSprayPastureContext } from '$lib/server/pastureAnimals';
 import { listSprayers } from '$lib/server/sprayers';
 import { getUserAiEnabled } from '$lib/server/aiTry';
-import { canSetUp, setupAreas } from '$lib/server/setupContext';
+import { canSetUp, setupAreas, setupSprayerTemplates } from '$lib/server/setupContext';
 import { organicBlocksForNotice } from '$lib/server/organicNotice';
 import { loadTaskContext } from '$lib/server/recordTaskClose';
 import { isInBloom } from '$lib/safety/pollinatorBloom';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { standingCropPluginIds } from '$lib/server/sprayCrops';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
   const cropId = url.searchParams.get('crop');
@@ -108,7 +109,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       id: b.id,
       name: b.name,
       acres: b.acres ?? null,
-      cropPluginIds: b.plantings.map((p) => p.cropPluginId),
+      cropPluginIds: Array.from(new Set(standingCropPluginIds(b.plantings, now))),
       bloomingCropPluginIds: bloomingCropPluginIds(b)
     })),
     sprayers: listSprayers(),
@@ -122,7 +123,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     },
     // Phase 25d (#89) v2-addendum — drives AI-on vs AI-off variant.
     aiEnabled: getUserAiEnabled(locals.user?.id),
-    setup: { canEdit: canSetUp(locals.user?.role), areas: setupAreas() },
+    setup: {
+      canEdit: canSetUp(locals.user?.role),
+      areas: setupAreas(),
+      sprayerTemplates: setupSprayerTemplates()
+    },
     taskContext
   };
 };

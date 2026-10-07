@@ -16,6 +16,27 @@ export interface VdacsDocInput {
   tableBody: unknown[][];
 }
 
+/** Landscape Letter less the 40 pt side margins. */
+export const VDACS_CONTENT_WIDTH = 792 - 40 - 40;
+
+/** Date, Kind, Block / crop, Sprayer, Product, Target, REI, Area / total,
+ *  Cond., Applicator, Pollinator, Lock. Every column but Product is fixed,
+ *  so a long cell wraps instead of pushing the table off the page (#759). */
+export const VDACS_TABLE_WIDTHS: (number | '*')[] = [
+  46,
+  40,
+  58,
+  44,
+  '*',
+  52,
+  30,
+  60,
+  46,
+  52,
+  54,
+  34
+];
+
 /** `/api/records/export.vdacs.pdf`. */
 export function vdacsDoc(i: VdacsDocInput): PdfJobDoc {
   return {
@@ -45,10 +66,16 @@ export function vdacsDoc(i: VdacsDocInput): PdfJobDoc {
         {
           table: {
             headerRows: 1,
-            widths: ['auto', 'auto', 55, 55, '*', 45, 80, 65, 'auto', 80, 'auto'],
+            widths: VDACS_TABLE_WIDTHS,
             body: i.tableBody
           },
-          layout: CC_TABLE
+          layout: CC_TABLE,
+          style: 'cell'
+        },
+        {
+          text: 'Applicator certification numbers are not captured by CropCard; write the number beside each applicator when an inspector asks for it.',
+          style: 'sub',
+          margin: [0, 8, 0, 0]
         },
         {
           text: '\nRetention: minimum 2 years from occurrence (NFR-05). Records are immutable after the 48-hour FR-09 lock window. Plugin hashes embedded per record allow tamper-evident auditing.',
@@ -60,8 +87,9 @@ export function vdacsDoc(i: VdacsDocInput): PdfJobDoc {
       styles: {
         h1: { fontSize: 16, bold: true, color: '#1f5e3a', margin: [0, 0, 0, 4] },
         sub: { fontSize: 9, color: '#555555' },
-        th: { color: 'white', bold: true, fontSize: 9 },
-        kind: { fontSize: 9, bold: true, color: '#1f5e3a' },
+        th: { color: 'white', bold: true, fontSize: 7.5 },
+        cell: { fontSize: 7 },
+        kind: { fontSize: 7, bold: true, color: '#1f5e3a' },
         mono: { fontSize: 8, color: '#1f5e3a' },
         farmName: { fontSize: 13, bold: true, color: '#1f5e3a' },
         farmSub: { fontSize: 8, color: '#555555' },

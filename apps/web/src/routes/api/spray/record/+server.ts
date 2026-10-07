@@ -15,7 +15,7 @@ import { closeTaskForRecord } from '$lib/server/recordTaskClose';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { sprayRecordSchema } from '$lib/records/apiSchemas';
 import { resolveSprayCrops, standingCropPluginIds } from '$lib/server/sprayCrops';
-import { computeTankMixDilutions, productsWithoutRate } from '$lib/dilution/calculator';
+import { appliedProductAmount, productsWithoutRate } from '$lib/dilution/calculator';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { insertSprayEvent } from '$lib/db/sprayEvents';
@@ -259,14 +259,27 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
       const stockWarnings: string[] = [];
       if (parsed.data.tankSizeGallons) {
         // #190 / F-02 — stored.calibratedGpa may be null on an uncalibrated
-        // sprayer; coalesce so computeTankMixDilutions falls back to the
+        // sprayer; coalesce so the one-tank fallback falls back to the
         // herbicide-plugin GPA default rather than treating null as 0.
         const effectiveGpa = stored?.calibratedGpa ?? undefined;
-        const lines = computeTankMixDilutions(
-          fullProducts,
-          parsed.data.tankSizeGallons,
-          effectiveGpa
-        );
+        // #762 — take what the pass put on the block (rate times acres), not
+        // one tank; one tank stands in only when the block has no area.
+        // #737 — a product with no label rate on file gets no stock draw.
+        const acres = getBlock(parsed.data.blockId)?.acres ?? null;
+        const tankSizeGallons = parsed.data.tankSizeGallons;
+        const lines = fullProducts.flatMap((p) => {
+          const ratePerAcre = p.ratePerAcre;
+          if (!ratePerAcre) return [];
+          return [
+            {
+              pluginId: p.pluginId,
+              ...appliedProductAmount(
+                { ...p, ratePerAcre },
+                { acres, tankSizeGallons, calibratedGpa: effectiveGpa }
+              )
+            }
+          ];
+        });
         for (const id of productsWithoutRate(fullProducts)) {
           stockWarnings.push(
             `${id}: no label rate on file, so stock was not decremented; adjust it on /inventory`
@@ -283,7 +296,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
           const dec = bestEffort(() =>
             decrementForUse({
               stockItemId: stockItem.id,
-              amount: line.productAmount,
+              amount: line.amount,
               unit: line.unit as StockUnit,
               sprayEventId: persisted.id,
               performedById: performer.id,

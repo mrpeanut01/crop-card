@@ -143,6 +143,12 @@ export const enSprayui = {
   'sprayui.chemclass.clomazone': 'clomazone',
   'sprayui.chemclass.unclassified': 'class not on file',
   'sprayui.herb.contact': 'contact, no HRAC group',
+  'sprayui.dp.sprayer': 'Sprayer',
+  'sprayui.sprayer.pickHint':
+    'Pick the sprayer you are using. Its last load is checked before this application is saved.',
+  'sprayui.card.excluded':
+    'Not included: {blocks}. The safety check stopped it, so its area is left out of these totals and it will not be recorded.',
+  'sprayui.pageTitle': '{title} · CropCard',
   'sprayui.h.sprayer': '3. Sprayer',
   'sprayui.sprayer.emptyLead': 'Which sprayer?',
   'sprayui.sprayer.emptyBody':
@@ -242,6 +248,7 @@ export const enSprayui = {
   'sprayui.ins.protocol': 'Application protocol',
   'sprayui.ins.submit': 'Record application',
   'sprayui.ins.product': 'Insecticide',
+  'sprayui.ins.pickProduct': 'Pick an insecticide',
   'sprayui.obs.pest': 'Pest',
   'sprayui.obs.pestPlaceholder': 'e.g. squash bug, ECB',
   'sprayui.obs.metric': 'Metric',

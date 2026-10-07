@@ -5,6 +5,7 @@
   import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
   import { goto, invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
+  import { splitSprayable, sprayableAcres } from '$lib/spray/sprayableBlocks';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
   import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
@@ -91,7 +92,7 @@
       const initial =
         data.preselect.blockId && data.blocks.find((b) => b.id === data.preselect.blockId)
           ? data.preselect.blockId
-          : (data.blocks[0]?.id ?? '');
+          : '';
       return new Set(initial ? [initial] : []);
     })
   );
@@ -290,7 +291,8 @@
   );
 
   /**
-   * Phase 21b follow-up — total acres across all selected blocks. Used
+   * Phase 21b follow-up — total acres across the selected blocks the
+   * kernel passed (#735: a stopped block is not sprayed or recorded). Used
    * to scale the dilution display from "per tank" to "total spray
    * pass" so the operator sees the actual product needed and the
    * tank count required to cover everything.
@@ -300,7 +302,8 @@
    * any selected block is missing acres so the dilution math is
    * understood to be a lower bound.
    */
-  const totalAcres = $derived(selectedBlocks.reduce((sum, b) => sum + (b.acres ?? 0), 0));
+  const sprayPass = $derived(splitSprayable(selectedBlocks, perBlockResults));
+  const totalAcres = $derived(sprayableAcres(sprayPass.sprayable));
   const blocksMissingAcres = $derived(
     selectedBlocks.filter((b) => b.acres == null || b.acres <= 0).map((b) => b.label)
   );
@@ -1247,6 +1250,14 @@
         >
       </header>
 
+      {#if sprayPass.stopped.length > 0}
+        <p class="excluded-blocks" role="note" data-testid="spray-excluded-blocks">
+          {tr('sprayui.card.excluded', {
+            blocks: sprayPass.stopped.map((b) => b.label).join(', ')
+          })}
+        </p>
+      {/if}
+
       {#if result.dilutions}
         <!-- Phase 21b follow-up — Spray Card top summary: the headline
              math that an operator can read at a glance. Acres × GPA
@@ -1447,8 +1458,8 @@
       {#if selectedBlocks.length > 1 || perBlockResults.size > 1}
         <!-- Phase 21b follow-up — per-block verdict + apply intent for
              multi-block passes. The shared dilution / tank-mix output
-             above applies to every OK block; STOP blocks are listed
-             here so the operator can deselect them before recording. -->
+             above is sized for the OK blocks only (#735); STOP blocks are
+             listed here and skipped when recording. -->
         <h3>{tr('sprayui.card.perBlock')}</h3>
         <ul class="per-block-status">
           {#each selectedBlocks as b (b.id)}
@@ -2024,6 +2035,11 @@
     margin-top: 1.5rem;
     padding: 1.25rem;
     border-radius: 8px;
+  }
+  .excluded-blocks {
+    margin: 0 0 10px;
+    color: var(--color-rust);
+    font-weight: 600;
   }
   .result.ok {
     background: var(--pill-forest-bg);

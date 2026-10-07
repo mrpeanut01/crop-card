@@ -133,6 +133,31 @@ describe('/api/plan/allocate degradation', () => {
     expect(m.allocate).not.toHaveBeenCalled();
   });
 
+  it('farm AI turned off → meta.aiOff so Review says AI is off, not used up (#692)', async () => {
+    m.checkGuard.mockReturnValue({
+      ok: false,
+      reason: 'cap-exceeded',
+      status: 402,
+      detail: 'owner-disabled',
+      message: 'AI help is turned off for this farm.'
+    });
+    const body = await (await post()).json();
+    expect(body.meta.aiOff).toBe(true);
+    expect(m.allocate).not.toHaveBeenCalled();
+  });
+
+  it('a used-up monthly budget is not reported as AI off', async () => {
+    m.checkGuard.mockReturnValue({
+      ok: false,
+      reason: 'cap-exceeded',
+      status: 402,
+      detail: 'monthly-budget',
+      message: 'Used up.'
+    });
+    const body = await (await post()).json();
+    expect(body.meta.aiOff).toBe(false);
+  });
+
   it('monthly cap reached → over-cap engine plan with the guard message', async () => {
     m.checkGuard.mockReturnValue({
       ok: false,

@@ -149,6 +149,12 @@ export const esSprayui: Partial<Record<MessageKey, string>> = {
   'sprayui.chemclass.clomazone': 'clomazona',
   'sprayui.chemclass.unclassified': 'clase no registrada',
   'sprayui.herb.contact': 'de contacto, sin grupo HRAC',
+  'sprayui.dp.sprayer': 'Aspersora',
+  'sprayui.sprayer.pickHint':
+    'Elige la aspersora que vas a usar. Se revisa su última carga antes de guardar esta aplicación.',
+  'sprayui.card.excluded':
+    'No incluido: {blocks}. La revisión de seguridad lo detuvo, así que su área queda fuera de estos totales y no se registrará.',
+  'sprayui.pageTitle': '{title} · CropCard',
   'sprayui.h.sprayer': '3. Aspersora',
   'sprayui.sprayer.emptyLead': '¿Qué aspersora?',
   'sprayui.sprayer.emptyBody':
@@ -250,6 +256,7 @@ export const esSprayui: Partial<Record<MessageKey, string>> = {
   'sprayui.ins.protocol': 'Protocolo de aplicación',
   'sprayui.ins.submit': 'Registrar aplicación',
   'sprayui.ins.product': 'Insecticida',
+  'sprayui.ins.pickProduct': 'Elija un insecticida',
   'sprayui.obs.pest': 'Plaga',
   'sprayui.obs.pestPlaceholder': 'p. ej. chinche de la calabaza, ECB',
   'sprayui.obs.metric': 'Medida',

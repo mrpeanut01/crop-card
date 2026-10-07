@@ -7,7 +7,7 @@ import { seedSelectionSchema } from '$lib/plan/allocationApi';
 import { buildFarmContextWithCache } from '$lib/server/aiContext';
 import { allocate, allocateDeterministic, type AllocationResult } from '$lib/server/aiAllocation';
 import { recordCall } from '$lib/server/aiGuard';
-import { degradeTag, recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
+import { degradeTag, farmAiOff, recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 import { t } from '$lib/i18n';
 
@@ -112,6 +112,7 @@ export const POST: RequestHandler = async (event) => {
       model: result.meta.model,
       usdEstimate: result.meta.usdEstimate,
       fallback: result.meta.fallback,
+      aiOff: farmAiOff(tried.guard),
       violationsOnFirstAttempt: result.meta.violationsOnFirstAttempt
     },
     spend: tried.guard.ok ? tried.guard.spend : null,

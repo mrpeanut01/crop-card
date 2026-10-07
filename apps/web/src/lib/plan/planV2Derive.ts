@@ -1,4 +1,5 @@
 import { eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
+import { harvestWindowFromEvents, type HarvestWindowSpan } from '$lib/calendar/harvestWindow';
 import type { BlockWithPlantings, PlantingRecord } from '$lib/db/blocks';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { t } from '$lib/i18n';
@@ -84,7 +85,18 @@ export function blockHarvestWindowLabel(
   now: number = Date.now(),
   locale?: string | null
 ): string | undefined {
-  const open = events.filter((e) => e.kind === 'harvest-window' && e.endMs >= now);
+  const cropIds = new Set(
+    events.filter((e) => e.kind === 'harvest-window').map((e) => e.cropId ?? '')
+  );
+  const open = [...cropIds]
+    .map((id) =>
+      harvestWindowFromEvents(
+        events.filter((e) => (e.cropId ?? '') === id),
+        id,
+        now
+      )
+    )
+    .filter((w): w is HarvestWindowSpan => w !== null && w.endMs >= now);
   if (open.length === 0) return undefined;
   const start = Math.min(...open.map((e) => e.startMs));
   const end = Math.max(...open.map((e) => e.endMs));
@@ -93,16 +105,16 @@ export function blockHarvestWindowLabel(
   return a === b ? a : `${a} – ${b}`;
 }
 
-/** Start of the planting's earliest harvest window from the engine. */
+/** Start of the planting's harvest window from the engine: the one open
+ *  now, else the next (#680, the same window /harvest shows). */
 export function plantingHarvestLabel(
   events: readonly CalendarEvent[],
   plantingId: string,
-  locale?: string | null
+  locale?: string | null,
+  now: number = Date.now()
 ): string | undefined {
-  const starts = events
-    .filter((e) => e.kind === 'harvest-window' && e.cropId === plantingId)
-    .map((e) => e.startMs);
-  return starts.length ? fmtMonthDay(Math.min(...starts), locale) : undefined;
+  const window = harvestWindowFromEvents(events, plantingId, now);
+  return window ? fmtMonthDay(window.startMs, locale) : undefined;
 }
 
 export type BlockStatus = 'empty' | 'planned' | 'active' | 'mature';

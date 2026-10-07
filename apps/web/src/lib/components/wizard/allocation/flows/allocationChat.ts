@@ -146,6 +146,9 @@ export class AllocationChatFlow {
       { role: 'assistant', content: reply }
     ];
     void this.#w.persistChatMessage('allocation', 'assistant', reply);
+    // #709: a degraded refine echoes the plan unchanged; keep the plan's own
+    // provenance and companion groups instead of the echo's.
+    const planUnchanged = body?.meta?.model === 'echo';
     this.#w.response = {
       assignments: body.assignments,
       unplaced: body.unplaced ?? [],
@@ -159,10 +162,11 @@ export class AllocationChatFlow {
       geometryMissingBlockIds: Array.isArray(body.geometryMissingBlockIds)
         ? body.geometryMissingBlockIds
         : response.geometryMissingBlockIds,
-      companionGroups: Array.isArray(body.companionGroups)
-        ? body.companionGroups
-        : response.companionGroups,
-      meta: body.meta ?? response.meta
+      companionGroups:
+        !planUnchanged && Array.isArray(body.companionGroups)
+          ? body.companionGroups
+          : response.companionGroups,
+      meta: planUnchanged ? response.meta : (body.meta ?? response.meta)
     };
   }
 

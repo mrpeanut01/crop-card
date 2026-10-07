@@ -37,6 +37,8 @@ function data(pollinator: unknown, bloomingCropPluginIds: string[]) {
         bloomingCropPluginIds
       }
     ],
+    sprayers: [{ id: 's1', label: 'Boom', calibratedGpa: 20 }],
+    setup: { canEdit: true, areas: [], sprayerTemplates: [] },
     recentEvents: [],
     activeREI: [],
     preselectedBlockId: 'b1',
@@ -152,6 +154,48 @@ describe('/spray/insecticide IPM gate mirrors the kernel', () => {
         ])
       } as never
     });
+    expect(recordButton()).toBeDisabled();
+  });
+});
+
+describe('/spray/insecticide sprayer picker (#736)', () => {
+  const quiet = { beeToxicity: 'relatively-nontoxic', bloomRestriction: 'none' };
+  it('with two sprayers, Record waits until one is picked', async () => {
+    const d = {
+      ...data(quiet, []),
+      sprayers: [
+        { id: 's1', label: 'Boom', calibratedGpa: 20, lastChemistryClass: 'synthetic-auxin' },
+        { id: 's2', label: 'Backpack', calibratedGpa: null }
+      ]
+    };
+    render(Page, { props: { data: d } as never });
+    expect(recordButton()).toBeDisabled();
+    const boom = document.querySelector('[data-sprayer-id="s1"]') as HTMLElement;
+    expect(boom.textContent).toMatch(/synthetic-auxin/);
+    await fireEvent.click(boom);
+    expect(boom.getAttribute('aria-pressed')).toBe('true');
+    expect(recordButton()).not.toBeDisabled();
+  });
+
+  it('with no sprayer on the farm, Record stays off and offers to add one', () => {
+    render(Page, { props: { data: { ...data(quiet, []), sprayers: [] } } as never });
+    expect(recordButton()).toBeDisabled();
+    expect(screen.getByTestId('sprayer-empty')).toBeTruthy();
+  });
+});
+
+describe('/spray/insecticide provenance (#644)', () => {
+  it('shows no ai badge and pre-selects nothing when there is a choice, even with AI on', () => {
+    const d = data({ beeToxicity: 'relatively-nontoxic', bloomRestriction: 'none' }, []);
+    d.insecticides = [
+      insecticide('acramite', { beeToxicity: 'relatively-nontoxic', bloomRestriction: 'none' }),
+      insecticide('neonic', { beeToxicity: 'relatively-nontoxic', bloomRestriction: 'none' })
+    ];
+    d.aiEnabled = true;
+    const { container } = render(Page, { props: { data: d } as never });
+    expect(container.querySelector('[data-provenance="ai"]')).toBeNull();
+    expect(container.querySelector('[data-provenance="fallback"]')).not.toBeNull();
+    expect((container.querySelector('#insecticide-product') as HTMLSelectElement).value).toBe('');
     expect(recordButton()).toBeDisabled();
   });
 });

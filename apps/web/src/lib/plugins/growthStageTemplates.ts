@@ -243,7 +243,7 @@ const zadoksTable: GrowthStageTable = {
 
 const cucurbitBBCHStages: GrowthStage[] = [
   stage('BBCH-09', 'Emergence', 5, 12, 'vegetative', 'Cotyledons unfolded.'),
-  stage('BBCH-15', '5-leaf', 18, 28, 'vegetative', 'Vine begins to run. POST grass window opens.'),
+  stage('BBCH-15', '5-leaf', 18, 28, 'vegetative', 'POST grass window opens.'),
   stage(
     'BBCH-51',
     'First flower visible',
@@ -282,7 +282,7 @@ const cucurbitBBCHStages: GrowthStage[] = [
     60,
     85,
     'ripening',
-    'Slip-test the stem (melons), hollow sound (squash), color/size for cucumber.'
+    'Slip-test the stem (melons), hollow sound (squash).'
   )
 ];
 
@@ -514,7 +514,6 @@ const forageSimpleStages: GrowthStage[] = [
 
 const forageSimpleTable: GrowthStageTable = {
   system: 'simple',
-  referenceDtmDays: 60,
   stages: forageSimpleStages,
   harvestTargets: [
     target('first-cut-bud', 'First cut hay', 'silage'),
@@ -544,7 +543,6 @@ const coverSimpleStages: GrowthStage[] = [
 
 const coverSimpleTable: GrowthStageTable = {
   system: 'simple',
-  referenceDtmDays: 90,
   stages: coverSimpleStages,
   harvestTargets: [target('terminate', 'Terminate (no harvest)', 'silage')]
 };
@@ -792,7 +790,6 @@ const perennialSmallFruit: PerennialStageTemplate = {
 
 export const PERENNIAL_DAYOFYEAR_TEMPLATES: Partial<Record<CropFamily, PerennialStageTemplate>> = {
   orchard: perennialDeciduousFruit,
-  'stone-fruit': perennialDeciduousFruit,
   'vine-fruit': perennialVineFruit,
   'small-fruit': perennialSmallFruit,
   bramble: perennialSmallFruit
@@ -807,12 +804,73 @@ export const PERENNIAL_DAYOFYEAR_TEMPLATES: Partial<Record<CropFamily, Perennial
  *      Caller should consult PERENNIAL_DAYOFYEAR_TEMPLATES instead.
  */
 export function resolveGrowthStageTable(plug: CropPlugin): GrowthStageTable | null {
+  const table = baseGrowthStageTable(plug);
+  return table ? fitTableToCrop(plug, table) : null;
+}
+
+function baseGrowthStageTable(plug: CropPlugin): GrowthStageTable | null {
   if (plug.growthStageTable) return plug.growthStageTable;
   if (plug.zadoksStages?.length) {
     const normalized = normalizeZadoksToGrowthStageTable(plug.zadoksStages);
     if (normalized) return normalized;
   }
+  if (plug.archetype === 'cover-crop.termination') return coverSimpleTable;
   return FAMILY_STAGE_TEMPLATES[plug.cropFamily] ?? null;
+}
+
+const COVER_FAMILIES: ReadonlySet<string> = new Set(['cover-grass', 'cover-legume']);
+const MATURE_FRUIT_STAGE_CODES: ReadonlySet<string> = new Set(['BBCH-81', 'BBCH-89']);
+
+/** True for a crop that is grown to be turned under, never harvested. */
+export function isNoHarvestCover(plug: Pick<CropPlugin, 'archetype' | 'cropFamily'>): boolean {
+  return plug.archetype === 'cover-crop.termination' || COVER_FAMILIES.has(plug.cropFamily);
+}
+
+/** #642: cucurbits picked before they ripen (cucumbers, summer squash). */
+export function isImmatureFruitCucurbit(
+  plug: Pick<CropPlugin, 'cropFamily' | 'pluginId' | 'displayName'>
+): boolean {
+  if (plug.cropFamily !== 'cucurbit') return false;
+  const label = `${plug.pluginId} ${plug.displayName}`;
+  return /\b(cucumbers?|zucchini|courgettes?|cucuzza|patty ?pan|crookneck)\b|summer[- ]squash/i.test(
+    label
+  );
+}
+
+/** #624: which harvest a corn variety is grown for. `cornType` wins; a
+ *  variety without one is read from its name. Null when neither says. */
+export function cornHarvestUse(
+  plug: Pick<CropPlugin, 'cornType' | 'pluginId' | 'displayName'>
+): 'fresh' | 'dry' | null {
+  const type = plug.cornType;
+  if (type === 'sweet') return 'fresh';
+  if (type === 'dual-purpose') return null;
+  if (type) return 'dry';
+  const label = `${plug.pluginId} ${plug.displayName}`;
+  if (/\bsweet\b/i.test(label)) return 'fresh';
+  if (/\b(dent|field|feed|flint|flour|popcorn|ornamental)\b/i.test(label)) return 'dry';
+  return null;
+}
+
+function fitTableToCrop(plug: CropPlugin, table: GrowthStageTable): GrowthStageTable {
+  if (isNoHarvestCover(plug)) return { ...table, harvestTargets: [] };
+  if (!plug.growthStageTable && isImmatureFruitCucurbit(plug)) {
+    return {
+      ...table,
+      stages: table.stages.filter((s) => !MATURE_FRUIT_STAGE_CODES.has(s.code)),
+      harvestTargets: []
+    };
+  }
+  if (plug.cropFamily === 'corn') {
+    const use = cornHarvestUse(plug);
+    if (use) {
+      const kept = table.harvestTargets.filter(
+        (t) => (t.useCase === 'fresh-eating') === (use === 'fresh')
+      );
+      if (kept.length) return { ...table, harvestTargets: kept };
+    }
+  }
+  return table;
 }
 
 export function resolvePerennialTemplate(plug: CropPlugin): PerennialStageTemplate | null {

@@ -6,7 +6,7 @@ import { getRegistry } from '$lib/server/registry';
 import { buildFarmContextWithCache } from '$lib/server/aiContext';
 import { schedulePlantings } from '$lib/server/aiSchedule';
 import { recordCall } from '$lib/server/aiGuard';
-import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
+import { farmAiOff, recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import type { FallbackReason } from '$lib/server/aiTry';
 import { frostDatesForYear } from '$lib/schedule/settings';
 import { plannerFrostByBlock } from '$lib/server/blockFrost.server';
@@ -169,6 +169,7 @@ export const POST: RequestHandler = async (event) => {
       model: result.meta.model,
       usdEstimate: result.meta.usdEstimate,
       fallback: result.meta.fallback,
+      aiOff: farmAiOff(tried.guard),
       violations: result.meta.violations,
       diagnosis: result.meta.diagnosis,
       provenance,

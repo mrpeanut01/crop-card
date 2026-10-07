@@ -38,6 +38,8 @@ import {
   type YearSummaryForViewer
 } from './yearSummary';
 import { buildYearAnimalSection } from './yearSummaryAnimals.server';
+import { listHayForExport } from './hayExport.server';
+import { modeOfActionLabels } from './exportFacts';
 
 const FILTERABLE_PLUGIN_TYPES = new Set(['herbicide', 'insecticide', 'fungicide', 'fertilizer']);
 
@@ -103,6 +105,7 @@ export async function buildYearSummary(
   const insecticideEvents = listInsecticideEvents({ fromMs, toMs });
   const fungicideEvents = listFungicideEvents({ fromMs, toMs });
   const harvestEvents = listHarvestEvents({ fromMs, toMs });
+  const hayCuttings = listHayForExport({ fromMs, toMs });
   const scoutObs = listScoutObservations({ fromMs }).filter(
     (o) => o.occurredAt >= fromMs && o.occurredAt <= toMs
   );
@@ -136,7 +139,7 @@ export async function buildYearSummary(
       products: e.products.map((p) => ({
         productId: p.pluginId,
         displayName: p.displayName ?? p.pluginId,
-        classes: p.iracGroups ?? []
+        classes: modeOfActionLabels('insecticide', p.iracGroups ?? [])
       })),
       observation: e.scoutObservation
         ? { value: e.scoutObservation.value, threshold: e.scoutObservation.threshold }
@@ -151,7 +154,7 @@ export async function buildYearSummary(
       products: e.products.map((p) => ({
         productId: p.pluginId,
         displayName: p.displayName ?? p.pluginId,
-        classes: p.fracCodes ?? []
+        classes: modeOfActionLabels('fungicide', p.fracCodes ?? [])
       })),
       observation: e.diseaseObservation
         ? { value: e.diseaseObservation.value, threshold: e.diseaseObservation.threshold }
@@ -172,6 +175,12 @@ export async function buildYearSummary(
       occurredAtMs: h.occurredAt,
       quantity: h.quantity,
       lotNumber: h.lotNumber
+    })),
+    hayCuttings: hayCuttings.map(({ cutting: c }) => ({
+      blockId: c.blockId,
+      baleType: c.baleType,
+      balesQuantity: c.balesQuantity,
+      baleMoisturePct: c.baleMoisturePct
     })),
     scoutObservations: scoutObs.map((o) => ({
       blockId: o.blockId,

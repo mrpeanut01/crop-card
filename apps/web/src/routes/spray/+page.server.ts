@@ -7,6 +7,7 @@ import { listSprayers } from '$lib/server/sprayers';
 import { canSetUp, setupAreas, setupBlocks, setupSprayerTemplates } from '$lib/server/setupContext';
 import { organicBlocksForNotice } from '$lib/server/organicNotice';
 import { loadTaskContext } from '$lib/server/recordTaskClose';
+import { plantingPlannedAt, plantingStandsAt } from '$lib/server/sprayCrops';
 
 /**
  * Load real blocks from DB. Deep-link query params:
@@ -36,7 +37,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const dbBlocks = listBlocks();
   // Phase 21b follow-up — pre-plant detection. A block is "pre-plant"
   // when none of its plantings are CURRENTLY IN THE GROUND
-  // (plantingDate is null or > now). The crop kill-matrix check
+  // (#637: plans, and harvested or archived plantings, do not count). The crop kill-matrix check
   // (CROP_INCOMPATIBLE STOP) should not fire on a block that has no
   // crop in the ground yet — that's exactly the burndown use case
   // (Glyphosate before planting corn, etc.). When pre-plant, the UI
@@ -45,9 +46,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const blocks = dbBlocks
     .filter((b) => b.plantings.length > 0)
     .map((b) => {
-      const activePlantings = b.plantings.filter(
-        (p) => p.plantingDate != null && p.plantingDate <= now
-      );
+      const activePlantings = b.plantings.filter((p) => plantingStandsAt(p, now));
       const isPreplant = activePlantings.length === 0;
       // Crops list reflects ONLY plantings already in the ground.
       // The kernel evaluates against this set, so a pre-plant block
@@ -59,7 +58,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       // operator knows what's planned — important context for choosing
       // a burndown product that won't leave residue affecting them.
       const plannedCropNames = b.plantings
-        .filter((p) => p.plantingDate == null || p.plantingDate > now)
+        .filter((p) => plantingPlannedAt(p, now))
         .map((p) => p.varietyDisplayName);
       const recent = findRecentEditableEventForBlock(b.id);
       return {

@@ -1,7 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 
 const apiKey = vi.hoisted(() => ({ value: '' }));
+const farm = vi.hoisted(() => ({ ownerId: null as string | null, cap: null as number | null }));
 vi.mock('./scanResult', () => ({ getApiKey: () => apiKey.value }));
+vi.mock('$lib/db/tenant', () => ({ currentOwnerId: () => farm.ownerId }));
+vi.mock('$lib/schedule/settings', () => ({ getAiMonthlyUsdCapSetting: () => farm.cap }));
 
 import { aiTry, getUserAiEnabled } from './aiTry';
 
@@ -17,6 +20,21 @@ describe('getUserAiEnabled', () => {
     expect(getUserAiEnabled('user_a')).toBe(false);
     apiKey.value = 'sk-ant-test';
     expect(getUserAiEnabled(null)).toBe(false);
+  });
+
+  it('is off when the farm turned AI off, as every demo farm does (#611)', () => {
+    apiKey.value = 'sk-ant-test';
+    farm.ownerId = 'owner_a';
+    farm.cap = 0;
+    expect(getUserAiEnabled('user_a')).toBe(false);
+    farm.cap = 4;
+    expect(getUserAiEnabled('user_a')).toBe(true);
+    farm.cap = null;
+    expect(getUserAiEnabled('user_a')).toBe(true);
+    farm.ownerId = null;
+    farm.cap = 0;
+    expect(getUserAiEnabled('user_a')).toBe(true);
+    farm.cap = null;
   });
 });
 

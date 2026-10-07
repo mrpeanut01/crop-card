@@ -8,10 +8,10 @@ import { complianceChromeLevel } from '$lib/records/complianceChrome';
 import { getFarmProfile } from '$lib/onboarding/state.server';
 import { listSprayers } from '$lib/server/sprayers';
 import { hasSoilTest } from '$lib/db/fertility';
-import { listYearsWithCrops } from '$lib/db/crops';
+import { defaultSummaryYear, listYearsWithRecords } from '$lib/records/recordYears.server';
 import { requireUser } from '$lib/server/auth';
 import { buildYearSummary } from '$lib/records/yearSummary.server';
-import { prefsFor } from '$lib/db/userProfile';
+import { farmTimeZone, prefsFor } from '$lib/db/userProfile';
 import { parseExportDateRange } from '$lib/exports/dateRange';
 import { todayYmd } from '$lib/prefs';
 import { pageOf, parseShow } from '$lib/records/pagination';
@@ -78,14 +78,19 @@ export const load: PageServerLoad = async (event) => {
   const approaching = recordsApproachingRetention();
 
   // UC-46 — Year in review. Deterministic aggregate for the selected year.
-  // The year selector defaults to the current calendar year; the option
-  // list unions the current year with every year that has planting data.
+  // The option list unions the current year with every year that has any
+  // record the summary reads, or a planting (#744). With no year in the
+  // URL it opens on the current year, or on the latest earlier year with
+  // records when the current year has none.
   const currentYear = Number(todayYmd(prefs).slice(0, 4));
+  const recordYears = listYearsWithRecords(farmTimeZone());
   const yearParamRaw = url.searchParams.get('year');
   const selectedYear =
-    yearParamRaw && /^\d{4}$/.test(yearParamRaw) ? Number(yearParamRaw) : currentYear;
+    yearParamRaw && /^\d{4}$/.test(yearParamRaw)
+      ? Number(yearParamRaw)
+      : defaultSummaryYear(currentYear, recordYears);
   const availableYears = Array.from(
-    new Set<number>([currentYear, ...listYearsWithCrops(), selectedYear])
+    new Set<number>([currentYear, ...recordYears, selectedYear])
   ).sort((a, b) => b - a);
   const yearSummary = await buildYearSummary(selectedYear, user.activeOwnerId, undefined, {
     includeCosts: user.role === 'owner'

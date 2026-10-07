@@ -16,6 +16,8 @@
  * Spec: docs/design/almanac/AI_PROVENANCE_ADDENDUM.md ("aiTry helper").
  */
 
+import { currentOwnerId } from '$lib/db/tenant';
+import { getAiMonthlyUsdCapSetting } from '$lib/schedule/settings';
 import { getApiKey } from './scanResult';
 
 export type FallbackReason = 'no-key' | 'over-cap' | 'offline' | 'rate-limit' | 'timeout';
@@ -109,8 +111,11 @@ export async function aiTry<T>(args: AiTryArgs<T>): Promise<AiTryResult<T>> {
 }
 
 /**
- * Whether a signed-in user sees the AI-on variant: true whenever a Claude
- * key is configured (env var or the owner setting saved on /settings/ai).
+ * Whether a signed-in user sees the AI-on variant: true when a Claude key is
+ * configured (env var or the owner setting saved on /settings/ai) and the
+ * active farm has not turned AI off (owner limit 0, which every demo farm
+ * has). Mirrors the guard's `owner-disabled` refusal so pages never claim AI
+ * is on for a farm where every call degrades (#611).
  *
  * `users.ai_enabled` is deliberately not consulted. It defaults to false,
  * only flips for the account that saved the key, and has no toggle in the
@@ -119,5 +124,12 @@ export async function aiTry<T>(args: AiTryArgs<T>): Promise<AiTryResult<T>> {
  */
 export function getUserAiEnabled(userId: string | null | undefined): boolean {
   if (!userId) return false;
-  return !!getApiKey();
+  if (!getApiKey()) return false;
+  return !isFarmAiTurnedOff();
+}
+
+/** The active farm's owner set the monthly AI limit to 0. */
+export function isFarmAiTurnedOff(): boolean {
+  if (!currentOwnerId()) return false;
+  return getAiMonthlyUsdCapSetting() === 0;
 }

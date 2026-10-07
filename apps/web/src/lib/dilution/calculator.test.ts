@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { HerbicidePlugin } from '$lib/plugins/schemas';
-import { computeDilution, computeTankMixDilutions, productsWithoutRate } from './calculator';
+import fc from 'fast-check';
+import {
+  appliedProductAmount,
+  computeDilution,
+  computeTankMixDilutions,
+  productsWithoutRate
+} from './calculator';
 
 const auxin: HerbicidePlugin = {
   pluginId: '24d',
@@ -92,5 +98,55 @@ describe('computeTankMixDilutions', () => {
     expect(lines.map((l) => l.pluginId)).toEqual(['24d']);
     expect(productsWithoutRate([auxin, noRate])).toEqual(['no-rate']);
     expect(() => computeDilution({ herbicide: noRate, tankSizeGallons: 50 })).toThrow();
+  });
+});
+
+describe('appliedProductAmount (#762)', () => {
+  const roundup = {
+    pluginId: 'roundup',
+    displayName: 'Roundup PowerMAX 3',
+    ratePerAcre: { amount: 22, unit: 'fl-oz' as const },
+    gpaCalibration: 15
+  };
+
+  it('takes rate times acres, not one tank', () => {
+    expect(
+      appliedProductAmount(roundup, { acres: 15, tankSizeGallons: 200, calibratedGpa: 18 })
+    ).toEqual({ amount: 330, unit: 'fl-oz', basis: 'area' });
+  });
+
+  it('keeps the rate unit for dry products', () => {
+    const surround = { ...roundup, ratePerAcre: { amount: 25, unit: 'lb' as const } };
+    expect(appliedProductAmount(surround, { acres: 2, tankSizeGallons: 100 })).toEqual({
+      amount: 50,
+      unit: 'lb',
+      basis: 'area'
+    });
+  });
+
+  it('falls back to one tank when the area is unknown', () => {
+    for (const acres of [null, undefined, 0, Number.NaN]) {
+      const out = appliedProductAmount(roundup, { acres, tankSizeGallons: 200, calibratedGpa: 18 });
+      expect(out.basis).toBe('tank');
+      expect(out.amount).toBeCloseTo((22 * 200) / 18, 6);
+    }
+  });
+
+  it('never depends on the tank size once the area is known (property)', () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: 0.01, max: 1000, noNaN: true }),
+        fc.double({ min: 0.01, max: 500, noNaN: true }),
+        fc.double({ min: 1, max: 2000, noNaN: true }),
+        fc.double({ min: 1, max: 200, noNaN: true }),
+        (rate, acres, tank, gpa) => {
+          const p = { ...roundup, ratePerAcre: { amount: rate, unit: 'pt' as const } };
+          const out = appliedProductAmount(p, { acres, tankSizeGallons: tank, calibratedGpa: gpa });
+          expect(out.basis).toBe('area');
+          expect(out.unit).toBe('pt');
+          expect(out.amount).toBeCloseTo(rate * acres, 6);
+        }
+      )
+    );
   });
 });

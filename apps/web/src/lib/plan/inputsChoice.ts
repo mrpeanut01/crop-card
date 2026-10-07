@@ -213,9 +213,7 @@ export function buildShoppingList(
       totalNeeded: round2(item.totalNeeded),
       onHand: round2(known),
       shortfall: Math.max(0, round2(item.totalNeeded - known)),
-      ...(onHand == null
-        ? { stockUnitMismatch: rows.find((r) => r.onHand > 0)?.unit ?? undefined }
-        : {}),
+      ...(onHand == null ? mismatchFields(rows) : {}),
       appliesToPlantingIds: [...item.appliesToPlantingIds].sort()
     });
   }
@@ -225,6 +223,23 @@ export function buildShoppingList(
     return a.displayName.localeCompare(b.displayName);
   });
   return items;
+}
+
+/** The stock the rate could not be compared with, in the unit it is kept
+ *  in, so the list never reads it as none on hand. */
+function mismatchFields(
+  rows: ReadonlyArray<ShoppingStockRow>
+): Pick<InputsPlanShoppingItem, 'stockUnitMismatch' | 'stockOnHandInStockUnit'> {
+  const unit = rows.find((r) => r.onHand > 0)?.unit ?? undefined;
+  if (!unit) return {};
+  const amount = onHandInUnit(
+    rows.map((r) => ({ amount: r.onHand, unit: r.unit ?? unit })),
+    unit
+  );
+  return {
+    stockUnitMismatch: unit,
+    ...(amount != null ? { stockOnHandInStockUnit: round2(amount) } : {})
+  };
 }
 
 /** Flattens the plan's per-product balances into shopping-list rows.

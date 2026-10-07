@@ -9,6 +9,7 @@ import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listTasks } from '$lib/db/tasks';
 import { t } from '$lib/i18n';
 import { eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
+import { applySeasonSprayFilter } from '$lib/season/sprayWindowFilter.server';
 import type { PluginRegistry } from '$lib/plugins';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import {
@@ -120,6 +121,9 @@ export function loadSeasonView(
       }));
       events.push(...eventsForPlanting(record, rec.plugin as CropPlugin, { blockPlantings }));
     }
+    const allowed = applySeasonSprayFilter(events, () => registry.herbicides(), now);
+    events.length = 0;
+    events.push(...allowed);
 
     const { prepStartMs } = seasonWindow(y, frost);
     const { nextPrepMs: followingEnd } = seasonWindow(y + 1, frost);

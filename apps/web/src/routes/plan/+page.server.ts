@@ -14,6 +14,7 @@
  *   Stock has been promoted to its own /stock route.
  */
 
+import { applySeasonSprayFilter } from '$lib/season/sprayWindowFilter.server';
 import { isSavedSowMethod, sowMethods, spacingModel, treeSizeRows } from '$lib/plan/spacingModel';
 import { seedStartGuide } from '$lib/schedule/seedStart';
 import type { PageServerLoad } from './$types';
@@ -881,6 +882,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         );
       }
     }
+    const seasonEvents = applySeasonSprayFilter(allEvents, () => registry.herbicides());
+    allEvents.length = 0;
+    allEvents.push(...seasonEvents);
     const harvests = listHarvestEvents();
     for (const h of harvests) {
       const rec = registry.get(h.cropPluginId);

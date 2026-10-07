@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, like, lt, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, like, lt, notExists, sql } from 'drizzle-orm';
 import { db, sqliteHandle } from '../client';
 import { blobDeletions, helperAssignments, owners, users } from '../schema';
 import { unscopedQueryNote } from '../tenant';
@@ -98,6 +98,58 @@ export function purgeExpiredDemoOwners(now = Date.now(), limit = 25): number {
       purged++;
     } catch (err) {
       console.error('[demo] failed to purge an expired demo farm', id, err);
+    }
+  }
+  return purged;
+}
+
+/** Deletes a demo user that never got as far as creating a farm. */
+export function deleteFarmlessDemoUser(userId: string): void {
+  unscopedQueryNote('demo cleanup deletes one farmless demo user by id');
+  db.delete(users)
+    .where(
+      and(
+        eq(users.id, userId),
+        like(users.email, `%@${DEMO_EMAIL_DOMAIN}`),
+        notExists(
+          db
+            .select({ u: helperAssignments.userId })
+            .from(helperAssignments)
+            .where(eq(helperAssignments.userId, userId))
+        )
+      )
+    )
+    .run();
+}
+
+/** Farmless demo users whose time is up (a "Start from scratch" visitor who
+ *  left before naming a farm). */
+export function purgeExpiredFarmlessDemoUsers(now = Date.now(), limit = 25): number {
+  unscopedQueryNote('demo expiry sweep reads farmless demo users across all tenants');
+  const ids = db
+    .select({ id: users.id })
+    .from(users)
+    .where(
+      and(
+        like(users.email, `%@${DEMO_EMAIL_DOMAIN}`),
+        lt(users.createdAt, new Date(now - DEMO_TTL_MS)),
+        notExists(
+          db
+            .select({ u: helperAssignments.userId })
+            .from(helperAssignments)
+            .where(eq(helperAssignments.userId, users.id))
+        )
+      )
+    )
+    .limit(limit)
+    .all();
+  let purged = 0;
+  for (const { id } of ids) {
+    try {
+      deleteFarmlessDemoUser(id);
+      purged++;
+    } catch (err) {
+      console.error('[demo] failed to delete an expired farmless demo user', id, err);
     }
   }
   return purged;

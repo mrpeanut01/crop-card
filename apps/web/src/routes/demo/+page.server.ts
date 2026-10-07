@@ -7,10 +7,10 @@ export const load: PageServerLoad = () => {
   throw redirect(307, '/');
 };
 
-function begin(event: Parameters<Actions[string]>[0]) {
+function begin(event: Parameters<Actions[string]>[0], blank = false) {
   const user = event.locals.user;
   if (user && !isDemoUser(user)) throw redirect(303, '/today');
-  const result = startDemo(event);
+  const result = startDemo(event, Date.now(), { blank });
   if (!result.ok) {
     const key =
       result.reason === 'rate-limited'
@@ -22,7 +22,7 @@ function begin(event: Parameters<Actions[string]>[0]) {
       demoError: t(event.locals.locale, key)
     });
   }
-  throw redirect(303, '/today');
+  throw redirect(303, blank ? '/onboarding' : '/today');
 }
 
 export const actions: Actions = {
@@ -30,6 +30,10 @@ export const actions: Actions = {
   reset: async (event) => {
     if (!isDemoUser(event.locals.user)) throw redirect(303, '/today');
     return begin(event);
+  },
+  scratch: async (event) => {
+    if (!isDemoUser(event.locals.user)) throw redirect(303, '/today');
+    return begin(event, true);
   },
   end: async (event) => {
     if (isDemoUser(event.locals.user)) endDemo(event);

@@ -8,7 +8,7 @@
  * the tables listed in RETENTION_RULES are pruned, each on its own clock.
  */
 
-import { purgeExpiredDemoOwners } from '$lib/db/demo/purge';
+import { purgeExpiredDemoOwners, purgeExpiredFarmlessDemoUsers } from '$lib/db/demo/purge';
 import { eq } from 'drizzle-orm';
 import { db, sqliteHandle } from '$lib/db/client';
 import { systemState } from '$lib/db/schema';
@@ -208,6 +208,7 @@ async function run(opts: MaintenanceOptions): Promise<MaintenanceResult> {
     if (n < 10) break;
     await yieldToEventLoop();
   }
+  if (!isFenced()) purgeExpiredFarmlessDemoUsers(now, 100);
   const vault = isFenced() ? undefined : await vaultUpkeep(now);
   const storageOwners = isFenced() ? 0 : recomputeAllStorageUsage(now);
   if (!isFenced()) sqliteHandle().pragma('optimize');

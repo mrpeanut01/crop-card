@@ -16,8 +16,7 @@ describe('demoBlocksWrite', () => {
     ['POST', '/settings/ai'],
     ['POST', '/api/plugins/upload'],
     ['POST', '/api/documents'],
-    ['POST', '/api/scan-url'],
-    ['POST', '/onboarding']
+    ['POST', '/api/scan-url']
   ])('blocks %s %s', (method, path) => {
     expect(demoBlocksWrite(method, path)).toBe(true);
   });
@@ -30,6 +29,7 @@ describe('demoBlocksWrite', () => {
     ['PATCH', '/api/blocks/b1'],
     ['POST', '/api/feedback'],
     ['POST', '/api/me/locale'],
+    ['POST', '/onboarding'],
     ['POST', '/api/invitesx'],
     ['POST', '/settings/aim']
   ])('allows %s %s', (method, path) => {

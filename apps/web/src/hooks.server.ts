@@ -22,10 +22,8 @@ import { startRuntimeMetrics, withServerTiming } from '$lib/server/runtimeMetric
 import { scheduleBootMaintenance } from '$lib/server/dbMaintenance';
 import { scheduleBootHoldBackfill } from '$lib/server/holdParamsBoot';
 import { DEFAULT_LOCALE, enabledLocales } from '$lib/i18n/locales';
-import { demoSessionExpired, isDemoUser } from '$lib/server/demo/lifecycle';
+import { demoSessionExpired, discardDemo, isDemoUser } from '$lib/server/demo/lifecycle';
 import { demoBlockedResponse, demoBlocksWrite } from '$lib/server/demo/guard';
-import { purgeDemoOwner } from '$lib/db/demo/purge';
-import { isDemoOwnerId } from '$lib/demo/identity';
 import { LOCALE_COOKIE, fillHtmlLang, resolveLocale } from '$lib/i18n/resolve';
 
 /** Deploy handoff fence: hold the writer lease and release it to a newer
@@ -506,13 +504,7 @@ const handleRequest: Handle = async ({ event, resolve: resolvePage }) => {
     }
   }
   if (user && event.locals.authVia === 'cookie' && isDemoUser(user) && demoSessionExpired(user)) {
-    if (isDemoOwnerId(user.activeOwnerId)) {
-      try {
-        purgeDemoOwner(user.activeOwnerId!);
-      } catch (err) {
-        console.error('[demo] failed to purge an expired demo farm', err);
-      }
-    }
+    discardDemo(user);
     clearSession(event.cookies);
     user = null;
     event.locals.user = undefined;

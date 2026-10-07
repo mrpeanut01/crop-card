@@ -31,6 +31,13 @@ import {
   starterAreasForAnswers
 } from '$lib/onboarding/steps';
 import { inferFirstName, suggestedFarmName } from '$lib/onboarding/names';
+import {
+  demoExpiryFor,
+  insertDemoOwner,
+  isDemoUser,
+  newDemoOwnerId
+} from '$lib/server/demo/lifecycle';
+import { DEMO_TTL_MS } from '$lib/demo/identity';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals, url }) => {
@@ -44,7 +51,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
   });
   if (route.kind === 'redirect') throw redirect(route.status, route.location);
 
-  const firstName = inferFirstName(user?.email);
+  const firstName = isDemoUser(user) ? null : inferFirstName(user?.email);
   if (route.screen === 'farm') {
     return {
       screen: 'farm' as const,
@@ -145,39 +152,55 @@ export const actions: Actions = {
 
     const now = new Date(Date.now());
     const planningYear = Number(fd.get('planningYear'));
-    const ownerId = `owner_${randomUUID().slice(0, 12)}`;
+    const demo = isDemoUser(user);
+    const ownerId = demo ? newDemoOwnerId() : `owner_${randomUUID().slice(0, 12)}`;
     const slug = uniqueSlug(slugify(farmName));
 
-    db.transaction(() => {
-      unscopedQueryNote('onboarding writes the new owner + assignment + subscription rows');
-      db.insert(owners)
-        .values({
-          id: ownerId,
-          name: farmName,
-          slug,
-          billingStatus: 'trial',
-          pluginOverridesRevision: 0,
-          createdAt: now
-        })
-        .run();
-      db.insert(helperAssignments)
-        .values({
+    // A "Start from scratch" demo visitor's farm keeps a demo id, so it is
+    // erased with the demo, and keeps the demo's clock rather than restarting it.
+    const demoExpiry = demo ? demoExpiryFor(user) : null;
+    if (demo && demoExpiry === null) throw redirect(303, '/?demo=expired');
+    if (demo) {
+      db.transaction(() =>
+        insertDemoOwner({
           ownerId,
           userId: user.id,
-          roleWithinOwner: 'owner',
-          acceptedAt: now,
-          status: 'active',
-          createdAt: now
+          name: farmName,
+          slug,
+          createdAt: new Date(demoExpiry! - DEMO_TTL_MS)
         })
-        .onConflictDoUpdate({
-          target: [helperAssignments.ownerId, helperAssignments.userId],
-          set: { roleWithinOwner: 'owner', status: 'active', acceptedAt: now }
-        })
-        .run();
-      db.insert(ownerSubscriptions)
-        .values({ ownerId, planCode: 'free', status: 'trial', createdAt: now, updatedAt: now })
-        .run();
-    });
+      );
+    } else
+      db.transaction(() => {
+        unscopedQueryNote('onboarding writes the new owner + assignment + subscription rows');
+        db.insert(owners)
+          .values({
+            id: ownerId,
+            name: farmName,
+            slug,
+            billingStatus: 'trial',
+            pluginOverridesRevision: 0,
+            createdAt: now
+          })
+          .run();
+        db.insert(helperAssignments)
+          .values({
+            ownerId,
+            userId: user.id,
+            roleWithinOwner: 'owner',
+            acceptedAt: now,
+            status: 'active',
+            createdAt: now
+          })
+          .onConflictDoUpdate({
+            target: [helperAssignments.ownerId, helperAssignments.userId],
+            set: { roleWithinOwner: 'owner', status: 'active', acceptedAt: now }
+          })
+          .run();
+        db.insert(ownerSubscriptions)
+          .values({ ownerId, planCode: 'free', status: 'trial', createdAt: now, updatedAt: now })
+          .run();
+      });
 
     runWithTenant(ownerId, () => {
       setOnboardingStatus('in-progress');
@@ -186,15 +209,19 @@ export const actions: Actions = {
       if (frost?.ok && frost.plan) applyFrostPlan(frost.plan);
     });
 
-    writeSession(event.cookies, {
-      id: user.id,
-      email: user.email,
-      phone: user.phone,
-      isSuperadmin: user.isSuperadmin,
-      activeOwnerId: ownerId,
-      activeRole: 'owner',
-      iat: user.sessionIssuedAt
-    });
+    writeSession(
+      event.cookies,
+      {
+        id: user.id,
+        email: user.email,
+        phone: user.phone,
+        isSuperadmin: user.isSuperadmin,
+        activeOwnerId: ownerId,
+        activeRole: 'owner',
+        iat: user.sessionIssuedAt
+      },
+      ...(demo ? [Math.max(60_000, demoExpiry! - Date.now())] : [])
+    );
     throw redirect(303, '/onboarding');
   },
 

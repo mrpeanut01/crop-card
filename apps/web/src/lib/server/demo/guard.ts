@@ -24,7 +24,6 @@ export const DEMO_BLOCKED_WRITES = [
   '/api/plugins/upload',
   '/api/documents',
   '/api/scan-url',
-  '/onboarding',
   '/api/session/switch-owner'
 ] as const;
 

@@ -522,6 +522,12 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'records.funnel.observations': 'observaciones',
   'records.funnel.threshold': 'activadas por umbral',
   'records.h1': 'Registros.',
+  'records.hay.bales': '{n} paca(s) {type}',
+  'records.hay.cuttings': '{n} corte(s) en {blocks} bloque(s)',
+  'records.hay.moisture': 'Humedad de las pacas {min}% / {mean}% / {max}%',
+  'records.hay.noBales': 'Sin número de pacas registrado',
+  'records.hay.noMoisture': 'Humedad de las pacas no registrada',
+  'records.hay.title': 'Cortes de heno',
   'records.inspector.body':
     'Invita a un inspector de VDACS o a un miembro de CSA como inspector de solo lectura. Inician sesión con su propia cuenta y ven esta vista sin poder editar.',
   'records.inspector.invite': 'Invitar a un inspector',

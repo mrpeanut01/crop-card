@@ -17,12 +17,21 @@
  * Phase 32G (G2-07, G2-08) appends `record_kind` (application | hay),
  * `crop_commodity`, `moisture_pct`, `recorded_late` (yes | no | blank when
  * the kind does not track it) and `days_after_date`.
+ *
+ * #761: insecticide and fungicide applications are rows too. Two columns
+ * are appended: `pesticide_type` (herbicide | insecticide | fungicide on
+ * application rows) and `product_names` (display names, `|`-joined, in the
+ * same order as the ids in `products`). Their `chemistryClasses` cell holds
+ * the labelled mode-of-action groups ("IRAC 3A", "FRAC 3").
  */
 
 import { type RequestHandler } from '@sveltejs/kit';
 import papa from 'papaparse';
 
 import { evaluateLock, listSprayEvents } from '$lib/db/sprayEvents';
+import { listInsecticideEvents } from '$lib/db/insecticideEvents';
+import { listFungicideEvents } from '$lib/db/fungicideEvents';
+import { lockedNow, modeOfActionLabels } from '$lib/records/exportFacts';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { requireUser } from '$lib/server/auth';
@@ -43,6 +52,13 @@ export const GET: RequestHandler = async (event) => {
   const blockId = event.url.searchParams.get('blockId') ?? undefined;
   const { fromMs, toMs } = parseExportDateRange(event.url.searchParams, prefs);
   const events = listSprayEvents({ sprayerId, blockId, fromMs, toMs });
+  const onSprayer = (e: { sprayerId?: string | null }) => !sprayerId || e.sprayerId === sprayerId;
+  const insecticides = listInsecticideEvents({ blockId, fromMs, toMs }).filter(onSprayer);
+  const fungicides = listFungicideEvents({ blockId, fromMs, toMs }).filter(onSprayer);
+  const registry = await getRegistry();
+  const productName = (pluginId: string) =>
+    (registry.get(pluginId)?.plugin as { displayName?: string } | undefined)?.displayName ??
+    pluginId;
 
   // T1 / T2 — id → name lookups.
   const blockNameById = new Map(listBlocks().map((b) => [b.id, b.blockLabel ?? b.name]));
@@ -74,14 +90,56 @@ export const GET: RequestHandler = async (event) => {
     record_kind: 'application',
     crop_commodity: '',
     moisture_pct: '',
-    ...UNTRACKED_LATE_CELLS
+    ...UNTRACKED_LATE_CELLS,
+    pesticide_type: 'herbicide',
+    product_names: e.products.map((p) => productName(p.pluginId)).join('|')
   }));
+
+  for (const [kind, list] of [
+    ['insecticide', insecticides],
+    ['fungicide', fungicides]
+  ] as const) {
+    for (const e of list) {
+      const groups =
+        kind === 'insecticide'
+          ? (e as (typeof insecticides)[number]).products.flatMap((p) => p.iracGroups)
+          : (e as (typeof fungicides)[number]).products.flatMap((p) => p.fracCodes);
+      rows.push({
+        id: e.id,
+        occurredAtIso: new Date(e.occurredAt).toISOString(),
+        occurredAtLocal: localStamp(e.occurredAt, prefs),
+        blockId: e.blockId,
+        blockName: blockNameById.get(e.blockId) ?? '(unknown block)',
+        sprayerId: e.sprayerId ?? '',
+        sprayerName: e.sprayerId ? (sprayerNameById.get(e.sprayerId) ?? '(unknown sprayer)') : '',
+        performedById: e.performedById,
+        products: e.products.map((p) => p.pluginId).join('|'),
+        chemistryClasses: modeOfActionLabels(kind, groups).join('|'),
+        windMph: e.conditions.windMph,
+        tempF: e.conditions.tempF,
+        rainForecastMmNext24h: '',
+        conditionsProvenance:
+          (e.conditions as { conditionsProvenance?: string }).conditionsProvenance ?? 'default',
+        rulesVersion: e.rulesVersion,
+        pluginHashes: Object.entries(e.pluginHashes)
+          .map(([id, h]) => `${id}:${h.slice(0, 16)}`)
+          .join('|'),
+        customRateOverride: 'false',
+        locked: lockedNow(e) ? 'true' : 'false',
+        record_kind: 'application',
+        crop_commodity: '',
+        moisture_pct: '',
+        ...UNTRACKED_LATE_CELLS,
+        pesticide_type: kind,
+        product_names: e.products.map((p) => p.displayName || productName(p.pluginId)).join('|')
+      });
+    }
+  }
 
   // G2-07: hay cuttings ride along as `record_kind = hay` rows (a sprayer
   // filter leaves them out). Every column added after #326 is appended, so
   // existing importers keep their positions.
   if (!sprayerId) {
-    const registry = await getRegistry();
     const now = Date.now();
     for (const { cutting: c, occurredAt, daysLate } of listHayForExport({
       blockId,
@@ -111,11 +169,13 @@ export const GET: RequestHandler = async (event) => {
         record_kind: 'hay',
         crop_commodity: crop?.displayName ?? c.cropPluginId,
         moisture_pct: c.baleMoisturePct !== undefined ? String(c.baleMoisturePct) : '',
-        ...lateCells(c.recordedLate, daysLate)
+        ...lateCells(c.recordedLate, daysLate),
+        pesticide_type: '',
+        product_names: ''
       });
     }
-    rows.sort((a, b) => String(b.occurredAtIso).localeCompare(String(a.occurredAtIso)));
   }
+  rows.sort((a, b) => String(b.occurredAtIso).localeCompare(String(a.occurredAtIso)));
 
   const csvBody = papa.unparse(rows, { header: true });
 

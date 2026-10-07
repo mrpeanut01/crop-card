@@ -1,7 +1,7 @@
 import { RULES_VERSION } from '$lib/safety/version';
 import { APP_VERSION } from '$lib/version';
 import { formatInstant, formatQuantity, unitLabel, zoneAbbrev, type Prefs } from '$lib/prefs';
-import type { YearSummaryForViewer } from '$lib/records/yearSummary';
+import { hayHarvestLine, type YearSummaryForViewer } from '$lib/records/yearSummary';
 import { animalSectionPdf } from '$lib/records/yearSummaryAnimalsPdf';
 import { CC_TABLE, PAGE, type PdfJobDoc } from '../pdfSpec';
 import { signatureFooter } from './parts';
@@ -144,6 +144,12 @@ export function yearSummaryDoc(i: YearSummaryDocInput): PdfJobDoc {
               layout: CC_TABLE
             }
           : { text: 'No harvest events recorded this year.', style: 'empty' },
+        ...(summary.hay
+          ? [
+              { text: 'Hay cuttings', style: 'h3' },
+              { text: hayHarvestLine(summary.hay), style: 'body' }
+            ]
+          : []),
 
         ...(inputCosts && costBody
           ? [
@@ -160,7 +166,7 @@ export function yearSummaryDoc(i: YearSummaryDocInput): PdfJobDoc {
             ]
           : []),
 
-        { text: 'Scout → spray funnel', style: 'h2', margin: [0, 14, 0, 0] },
+        { text: 'Scout to spray funnel', style: 'h2', margin: [0, 14, 0, 0] },
         {
           text: `${summary.scoutFunnel.scoutObservations} scout observation(s) · ${summary.scoutFunnel.thresholdTriggeredApplications} threshold-triggered application(s) · ${summary.scoutFunnel.spraysAvoided} spray(s) avoided (observation with no follow-up application within 14 days).`,
           style: 'body'
@@ -185,6 +191,7 @@ export function yearSummaryDoc(i: YearSummaryDocInput): PdfJobDoc {
       styles: {
         h1: { fontSize: 18, bold: true, color: '#1f5e3a', margin: [0, 0, 0, 2] },
         h2: { fontSize: 12, bold: true, color: '#1f5e3a', margin: [0, 8, 0, 4] },
+        h3: { fontSize: 10, bold: true, color: '#1f5e3a', margin: [0, 8, 0, 2] },
         sub: { fontSize: 9, color: '#555555' },
         body: { fontSize: 10, color: '#333333' },
         empty: { fontSize: 9, italics: true, color: '#888888' },

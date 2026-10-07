@@ -18,7 +18,10 @@
  *   - Cover page: farm identity + integrity hash + filter context
  *   - Pesticide application table (chronological, all three flows); the
  *     Pollinator column carries the #130 bloom attestation + gate verdict
- *     on insecticide rows (blank on other kinds and pre-#130 rows)
+ *     on insecticide rows (blank on other kinds and pre-#130 rows). #759:
+ *     every column has a fixed width that fits landscape Letter, the block
+ *     cell names the crop, and Target and REI columns show what the record
+ *     carries ("Not recorded" / "Not on file" otherwise).
  *   - Integrity note: SHA-256 of the canonical row set + per-record plugin hashes
  *   - Per-page header (farm + date + page #) and signature footer
  */
@@ -60,6 +63,13 @@ import { formatInstant, zoneAbbrev } from '$lib/prefs';
 import { LOCK_WINDOW_MS } from '$lib/db/recordKinds';
 import { listHayForExport } from '$lib/records/hayExport.server';
 import { lateLabel } from '$lib/records/lateLabel';
+import {
+  cropTreated,
+  lockedNow,
+  recordedTarget,
+  reiHoursFor,
+  reiText
+} from '$lib/records/exportFacts';
 
 function ownerNameOf(ownerId: string | null): string {
   if (!ownerId) return '(unknown farm)';
@@ -182,6 +192,10 @@ interface UnifiedRow {
   areaLine?: string;
   /** Product applied in total: per-acre rate × area. */
   totalLine?: string;
+  /** #759: crop treated, recorded target and REI on pesticide rows. */
+  cropLine?: string;
+  targetLine?: string;
+  reiLine?: string;
 }
 
 export const GET: RequestHandler = (event) => withRenderRefusal(event, () => exportPdf(event));
@@ -200,7 +214,29 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
   const blocks = listBlocks();
   const blockLabelById = new Map(blocks.map((b) => [b.id, b.blockLabel ?? b.name]));
   const blockAcresById = new Map(blocks.map((b) => [b.id, b.acres ?? null]));
+  const blockById = new Map(blocks.map((b) => [b.id, b]));
   const registry = await getRegistry();
+  const pluginName = (id: string) => {
+    const plugin = registry.get(id)?.plugin;
+    return plugin && 'displayName' in plugin ? plugin.displayName : undefined;
+  };
+  const cropFor = (blockId: string, cropId: string | undefined) =>
+    cropTreated(cropId, blockById.get(blockId)?.plantings ?? [], pluginName) || 'Not on file';
+  const reiFor = (
+    ev: { occurredAt: number; reEntryClearAt?: number },
+    products: ReadonlyArray<{ pluginId: string }>
+  ) =>
+    reiText(
+      reiHoursFor(
+        ev.occurredAt,
+        ev.reEntryClearAt,
+        products.map((p) => {
+          const plugin = registry.get(p.pluginId)?.plugin as
+            { reEntryIntervalHours?: number } | undefined;
+          return plugin?.reEntryIntervalHours;
+        })
+      )
+    );
   const farmName = ownerNameOf(user.activeOwnerId);
   const generatedAt = new Date();
   const generatedDay = localDay(generatedAt, prefs);
@@ -271,7 +307,10 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
       customRateOverride: ev.customRateOverride === true,
       pollinatorLine: '',
       areaLine: areaTreatedLine(blockAcresById.get(ev.blockId)),
-      totalLine: totalAppliedLine(sprayNames, blockAcresById.get(ev.blockId))
+      totalLine: totalAppliedLine(sprayNames, blockAcresById.get(ev.blockId)),
+      cropLine: cropFor(ev.blockId, ev.cropId),
+      targetLine: 'Not recorded',
+      reiLine: reiFor(ev, ev.products)
     });
   }
   for (const ev of insecticides) {
@@ -299,14 +338,17 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
       ),
       rulesVersion: ev.rulesVersion,
       pluginHashes: ev.pluginHashes,
-      locked: Boolean(ev.lockedAt),
+      locked: lockedNow(ev),
       customRateOverride: false,
       pollinatorLine: pollinatorAttestationSummary(ev),
       areaLine: areaTreatedLine(blockAcresById.get(ev.blockId)),
       totalLine: totalAppliedLine(
         ev.products.map((p) => ({ name: p.displayName, rate: p.rate })),
         blockAcresById.get(ev.blockId)
-      )
+      ),
+      cropLine: cropFor(ev.blockId, ev.cropId),
+      targetLine: recordedTarget(ev) || 'Not recorded',
+      reiLine: reiFor(ev, ev.products)
     });
   }
   for (const ev of fungicides) {
@@ -331,14 +373,17 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
       ),
       rulesVersion: ev.rulesVersion,
       pluginHashes: ev.pluginHashes,
-      locked: Boolean(ev.lockedAt),
+      locked: lockedNow(ev),
       customRateOverride: false,
       pollinatorLine: '',
       areaLine: areaTreatedLine(blockAcresById.get(ev.blockId)),
       totalLine: totalAppliedLine(
         ev.products.map((p) => ({ name: p.displayName, rate: p.rate })),
         blockAcresById.get(ev.blockId)
-      )
+      ),
+      cropLine: cropFor(ev.blockId, ev.cropId),
+      targetLine: recordedTarget(ev) || 'Not recorded',
+      reiLine: reiFor(ev, ev.products)
     });
   }
   // #326 — harvest rows carry crop/commodity, quantity, and stored moisture
@@ -472,11 +517,12 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
     [
       { text: `Date (${zoneCaption(prefs, generatedAt)})`, style: 'th' },
       { text: 'Kind', style: 'th' },
-      { text: 'Block', style: 'th' },
+      { text: 'Block / crop', style: 'th' },
       { text: 'Sprayer', style: 'th' },
       { text: 'Product / EPA / Rate per acre', style: 'th' },
-      { text: 'Area', style: 'th' },
-      { text: 'Total applied', style: 'th' },
+      { text: 'Target', style: 'th' },
+      { text: 'REI', style: 'th' },
+      { text: 'Area / total applied', style: 'th' },
       { text: 'Cond.', style: 'th' },
       { text: 'Applicator', style: 'th' },
       { text: 'Pollinator', style: 'th' },
@@ -487,13 +533,14 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
     tableBody.push([
       localStamp(r.occurredAt, prefs),
       { text: r.kind, style: 'kind' },
-      r.blockLabel,
+      r.cropLine ? `${r.blockLabel}\n${r.cropLine}` : r.blockLabel,
       r.sprayerLabel,
       r.productLines,
-      r.areaLine ?? '—',
-      r.totalLine ?? '—',
+      r.targetLine ?? '—',
+      r.reiLine ?? '—',
+      [r.areaLine, r.totalLine].filter(Boolean).join('\n') || '—',
       r.conditionLine,
-      r.performer,
+      { text: r.performer, wordBreak: 'break-all' },
       r.pollinatorLine,
       r.locked ? 'LOCKED' : 'editable'
     ]);

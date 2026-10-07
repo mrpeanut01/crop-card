@@ -117,6 +117,14 @@ export function yearSummary(withCosts = true): YearSummaryForViewer {
         moisture: { min: null, max: null, mean: null }
       }
     ],
+    hay: withCosts
+      ? {
+          cuttingCount: 3,
+          blockCount: 2,
+          bales: [{ baleType: 'small-square', count: 400 }],
+          moisture: { sampleCount: 2, min: 14, max: 16, mean: 15 }
+        }
+      : null,
     inputCosts: withCosts
       ? {
           lines: [

@@ -86,7 +86,7 @@ describe('render equivalence with the pre-36 builders (R-03)', () => {
   });
 
   it('VDACS audit pack', async () => {
-    const tableBody = exportTable(140, 11);
+    const tableBody = exportTable(140, 12);
     const common = {
       farmName: 'Hill Farm',
       generatedDay: 'Sep 30, 2026',

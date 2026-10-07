@@ -210,6 +210,13 @@
     return fmt.qty(acres, 'area', { digits: 2, bare: true });
   }
 
+  function baleLabel(type: string): string {
+    if (type === 'small-square') return tr('hayui.baleSmallSquare');
+    if (type === 'large-round') return tr('hayui.baleLargeRound');
+    if (type === 'large-square') return tr('hayui.baleLargeSquare');
+    return type;
+  }
+
   function fmtMoisture(m: { min: number | null; mean: number | null; max: number | null }): string {
     return m.mean === null ? '—' : `${m.min}% / ${m.mean}% / ${m.max}%`;
   }
@@ -442,8 +449,33 @@
               {/each}
             </tbody>
           </table>
-        {:else}
+        {:else if !yearSummary.hay}
           <p class="empty">{tr('records.card.noHarvest')}</p>
+        {/if}
+        {#if yearSummary.hay}
+          {@const hay = yearSummary.hay}
+          <h4 class="hay-title">{tr('records.hay.title')}</h4>
+          <ul class="hay-lines">
+            <li>{tr('records.hay.cuttings', { n: hay.cuttingCount, blocks: hay.blockCount })}</li>
+            <li>
+              {#if hay.bales.length}
+                {hay.bales
+                  .map((b) => tr('records.hay.bales', { n: b.count, type: baleLabel(b.baleType) }))
+                  .join(', ')}
+              {:else}
+                {tr('records.hay.noBales')}
+              {/if}
+            </li>
+            <li class="mono muted">
+              {hay.moisture.mean === null
+                ? tr('records.hay.noMoisture')
+                : tr('records.hay.moisture', {
+                    min: hay.moisture.min ?? '',
+                    mean: hay.moisture.mean,
+                    max: hay.moisture.max ?? ''
+                  })}
+            </li>
+          </ul>
         {/if}
       </article>
 
@@ -965,6 +997,17 @@
     font-size: 13px;
     font-weight: 700;
     color: var(--color-forest-deep, #1f3a28);
+  }
+  .hay-title {
+    margin: 10px 0 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-forest-deep, #1f3a28);
+  }
+  .hay-lines {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12px;
   }
   .mini-table {
     width: 100%;

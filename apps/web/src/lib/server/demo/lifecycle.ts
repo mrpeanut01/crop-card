@@ -5,7 +5,13 @@ import { db } from '$lib/db/client';
 import { helperAssignments, ownerSubscriptions, owners, userHints, users } from '$lib/db/schema';
 import { runWithTenant, unscopedQueryNote } from '$lib/db/tenant';
 import { DEMO_FARM_NAME, seedDemoFarm } from '$lib/db/demo/seed';
-import { countDemoOwners, purgeDemoOwner, purgeExpiredDemoOwners } from '$lib/db/demo/purge';
+import {
+  countDemoOwners,
+  deleteFarmlessDemoUser,
+  purgeDemoOwner,
+  purgeExpiredDemoOwners,
+  purgeExpiredFarmlessDemoUsers
+} from '$lib/db/demo/purge';
 import {
   DEMO_EMAIL_DOMAIN,
   DEMO_OWNER_PREFIX,
@@ -16,6 +22,8 @@ import {
 } from '$lib/demo/identity';
 import { demoLocalizer } from '$lib/demo/localize';
 import { createSendLimiter } from '$lib/server/sendLimiter';
+import { setSetting } from '$lib/db/settings';
+import { SETTINGS_KEYS } from '$lib/schedule/constants';
 import { clearSession, writeSession } from '$lib/server/session';
 import type { AuthenticatedUser } from '$lib/server/auth';
 
@@ -46,6 +54,77 @@ export function isDemoUser(user: Pick<AuthenticatedUser, 'email'> | null | undef
   return !!user && isDemoEmail(user.email);
 }
 
+function newDemoToken(): string {
+  return randomUUID().replace(/-/g, '').slice(0, 16);
+}
+
+function insertDemoUser(
+  token: string,
+  createdAt: Date,
+  locale?: string | null
+): { userId: string; email: string } {
+  const userId = `user_demo_${token}`;
+  const email = `visitor-${token}@${DEMO_EMAIL_DOMAIN}`;
+  unscopedQueryNote('demo start writes the new demo user and its seen hints');
+  db.insert(users)
+    .values({
+      id: userId,
+      email,
+      displayName: demoLocalizer(locale)('Demo visitor'),
+      ...(locale && locale !== 'en' ? { locale } : {}),
+      createdAt
+    })
+    .run();
+  for (const hintKey of DEMO_SEEN_HINTS) {
+    db.insert(userHints).values({ userId, hintKey, seenAt: createdAt }).run();
+  }
+  return { userId, email };
+}
+
+/** The owner, membership and plan rows of an empty demo farm. Onboarding
+ *  calls this for a "Start from scratch" visitor so the farm they create
+ *  still carries a demo id, expires on the demo clock and has AI off. */
+export function insertDemoOwner(input: {
+  ownerId: string;
+  userId: string;
+  name: string;
+  slug: string;
+  createdAt: Date;
+}): void {
+  const { ownerId, userId, name, slug, createdAt } = input;
+  if (!isDemoOwnerId(ownerId)) throw new Error('insertDemoOwner: not a demo owner id');
+  unscopedQueryNote('demo start writes the new demo owner, membership and plan rows');
+  db.insert(owners)
+    .values({
+      id: ownerId,
+      name,
+      slug,
+      billingStatus: 'active',
+      pluginOverridesRevision: 0,
+      createdAt
+    })
+    .run();
+  db.insert(helperAssignments)
+    .values({
+      ownerId,
+      userId,
+      roleWithinOwner: 'owner',
+      status: 'active',
+      acceptedAt: createdAt,
+      createdAt
+    })
+    .run();
+  db.insert(ownerSubscriptions)
+    .values({ ownerId, planCode: 'free', status: 'active', createdAt, updatedAt: createdAt })
+    .run();
+  runWithTenant(ownerId, () => setSetting(SETTINGS_KEYS.aiMonthlyUsdCap, '0'));
+}
+
+/** A new demo owner id for a visitor who started from scratch. */
+export function newDemoOwnerId(): string {
+  return `${DEMO_OWNER_PREFIX}${newDemoToken()}`;
+}
+
 /** Creates the user, farm, membership and plan rows for one visitor and
  *  fills the farm. A seed failure removes the half-built farm. */
 export function createDemoFarm(
@@ -56,48 +135,19 @@ export function createDemoFarm(
   userId: string;
   email: string;
 } {
-  const token = randomUUID().replace(/-/g, '').slice(0, 16);
+  const token = newDemoToken();
   const ownerId = `${DEMO_OWNER_PREFIX}${token}`;
-  const userId = `user_demo_${token}`;
-  const email = `visitor-${token}@${DEMO_EMAIL_DOMAIN}`;
   const createdAt = new Date(now);
-  db.transaction(() => {
-    unscopedQueryNote('demo start writes the new demo user, owner, membership and plan rows');
-    db.insert(users)
-      .values({
-        id: userId,
-        email,
-        displayName: demoLocalizer(locale)('Demo visitor'),
-        ...(locale && locale !== 'en' ? { locale } : {}),
-        createdAt
-      })
-      .run();
-    db.insert(owners)
-      .values({
-        id: ownerId,
-        name: DEMO_FARM_NAME,
-        slug: `demo-${token}`,
-        billingStatus: 'active',
-        pluginOverridesRevision: 0,
-        createdAt
-      })
-      .run();
-    db.insert(helperAssignments)
-      .values({
-        ownerId,
-        userId,
-        roleWithinOwner: 'owner',
-        status: 'active',
-        acceptedAt: createdAt,
-        createdAt
-      })
-      .run();
-    db.insert(ownerSubscriptions)
-      .values({ ownerId, planCode: 'free', status: 'active', createdAt, updatedAt: createdAt })
-      .run();
-    for (const hintKey of DEMO_SEEN_HINTS) {
-      db.insert(userHints).values({ userId, hintKey, seenAt: createdAt }).run();
-    }
+  const { userId, email } = db.transaction(() => {
+    const u = insertDemoUser(token, createdAt, locale);
+    insertDemoOwner({
+      ownerId,
+      userId: u.userId,
+      name: DEMO_FARM_NAME,
+      slug: `demo-${token}`,
+      createdAt
+    });
+    return u;
   });
   try {
     runWithTenant(ownerId, () => seedDemoFarm({ ownerId, userId, now, locale }));
@@ -108,7 +158,29 @@ export function createDemoFarm(
   return { ownerId, userId, email };
 }
 
-export const purgeExpiredDemos = purgeExpiredDemoOwners;
+/** A "Start from scratch" visitor: a demo user with no farm yet, so the
+ *  app opens on onboarding like a new sign-up. */
+export function createBlankDemoUser(
+  now = Date.now(),
+  locale?: string | null
+): { userId: string; email: string } {
+  const token = newDemoToken();
+  return db.transaction(() => insertDemoUser(token, new Date(now), locale));
+}
+
+function demoUserCreatedAt(userId: string): number | null {
+  unscopedQueryNote('demo expiry reads the demo user creation time by id');
+  const row = db
+    .select({ createdAt: users.createdAt })
+    .from(users)
+    .where(eq(users.id, userId))
+    .get();
+  return row ? row.createdAt.getTime() : null;
+}
+
+export function purgeExpiredDemos(now = Date.now(), limit = 25): number {
+  return purgeExpiredDemoOwners(now, limit) + purgeExpiredFarmlessDemoUsers(now, limit);
+}
 
 function demoOwnerCreatedAt(ownerId: string): number | null {
   unscopedQueryNote('demo expiry reads the demo owner creation time by id');
@@ -123,8 +195,13 @@ function demoOwnerCreatedAt(ownerId: string): number | null {
 /** When the visitor's demo farm will be deleted, or null when the user is
  *  not on a demo farm. */
 export function demoExpiryFor(user: AuthenticatedUser | null | undefined): number | null {
-  if (!user || !isDemoUser(user) || !isDemoOwnerId(user.activeOwnerId)) return null;
-  const created = demoOwnerCreatedAt(user.activeOwnerId!);
+  if (!user || !isDemoUser(user)) return null;
+  if (!user.activeOwnerId) {
+    const created = demoUserCreatedAt(user.id);
+    return created === null ? null : demoExpiresAt(created);
+  }
+  if (!isDemoOwnerId(user.activeOwnerId)) return null;
+  const created = demoOwnerCreatedAt(user.activeOwnerId);
   return created === null ? null : demoExpiresAt(created);
 }
 
@@ -132,7 +209,7 @@ export function demoExpiryFor(user: AuthenticatedUser | null | undefined): numbe
  *  lifetime), so every demo request checks the farm's own clock. */
 export function demoSessionExpired(user: AuthenticatedUser, now = Date.now()): boolean {
   if (!isDemoUser(user)) return false;
-  if (!isDemoOwnerId(user.activeOwnerId)) return true;
+  if (user.activeOwnerId && !isDemoOwnerId(user.activeOwnerId)) return true;
   const expires = demoExpiryFor(user);
   return expires === null || expires <= now;
 }
@@ -146,19 +223,35 @@ function clientKey(event: RequestEvent): string {
 }
 
 export type StartDemoResult =
-  { ok: true; ownerId: string } | { ok: false; reason: 'disabled' | 'rate-limited' | 'busy' };
+  | { ok: true; ownerId: string | null }
+  | { ok: false; reason: 'disabled' | 'rate-limited' | 'busy' };
 
 /** Starts a fresh demo farm for this browser and signs it in. A visitor
- *  already on a demo farm gets that farm deleted first (Reset). */
-export function startDemo(event: RequestEvent, now = Date.now()): StartDemoResult {
+ *  already on a demo farm gets that farm deleted first (Reset). With
+ *  `blank`, no farm is made: the visitor lands on onboarding and builds
+ *  their own (Start from scratch). */
+export function startDemo(
+  event: RequestEvent,
+  now = Date.now(),
+  opts: { blank?: boolean } = {}
+): StartDemoResult {
   if (!demoEnabled()) return { ok: false, reason: 'disabled' };
   const current = event.locals.user;
   if (!current || !isDemoUser(current)) {
     if (!startLimiter.tryTake(clientKey(event), now)) return { ok: false, reason: 'rate-limited' };
   }
   purgeExpiredDemos(now, 10);
-  if (current && isDemoUser(current)) endDemoFarm(current);
+  if (current && isDemoUser(current)) discardDemo(current);
   if (countDemoOwners() >= maxDemoFarms()) return { ok: false, reason: 'busy' };
+  if (opts.blank) {
+    const { userId, email } = createBlankDemoUser(now, event.locals.locale);
+    writeSession(
+      event.cookies,
+      { id: userId, email, phone: null, activeOwnerId: null, activeRole: 'owner' },
+      DEMO_TTL_MS
+    );
+    return { ok: true, ownerId: null };
+  }
   const { ownerId, userId, email } = createDemoFarm(now, event.locals.locale);
   writeSession(
     event.cookies,
@@ -174,10 +267,13 @@ export function startDemo(event: RequestEvent, now = Date.now()): StartDemoResul
   return { ok: true, ownerId };
 }
 
-function endDemoFarm(user: AuthenticatedUser): void {
-  if (!isDemoUser(user) || !isDemoOwnerId(user.activeOwnerId)) return;
+/** Deletes the visitor's demo farm, or their farmless demo user when they
+ *  started from scratch and have not named a farm yet. */
+export function discardDemo(user: AuthenticatedUser): void {
+  if (!isDemoUser(user)) return;
   try {
-    purgeDemoOwner(user.activeOwnerId!);
+    if (isDemoOwnerId(user.activeOwnerId)) purgeDemoOwner(user.activeOwnerId!);
+    else if (!user.activeOwnerId) deleteFarmlessDemoUser(user.id);
   } catch (err) {
     console.error('[demo] failed to purge demo farm on exit', err);
   }
@@ -186,6 +282,6 @@ function endDemoFarm(user: AuthenticatedUser): void {
 /** Leaves the demo: deletes the farm now rather than at expiry. */
 export function endDemo(event: RequestEvent): void {
   const user = event.locals.user;
-  if (user) endDemoFarm(user);
+  if (user) discardDemo(user);
   clearSession(event.cookies);
 }

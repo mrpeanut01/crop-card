@@ -19,6 +19,9 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'entry.demo.reset': 'Reiniciar demostración',
   'entry.demo.resetConfirm':
     '¿Empezar de nuevo con una granja de demostración nueva? Se borrarán tus cambios.',
+  'entry.demo.scratch': 'Empezar desde cero',
+  'entry.demo.scratchConfirm':
+    '¿Empezar una granja de demostración vacía y configurarla tú mismo, como un usuario nuevo? Se borrarán la granja de ejemplo y tus cambios.',
   'entry.demo.leave': 'Salir y registrarse',
   'entry.demo.try': 'Qué probar',
   'entry.demo.try.week': 'Las tareas de esta semana',

@@ -31,6 +31,10 @@
       cancel();
       return;
     }
+    if (action.search.includes('scratch') && !confirm(tr('entry.demo.scratchConfirm'))) {
+      cancel();
+      return;
+    }
     busy = true;
     return async ({ result, update }) => {
       if (result.type === 'redirect') {
@@ -55,20 +59,23 @@
       {/each}
     </ul>
   </details>
-  {#snippet action()}
-    <div class="demo-actions">
-      <form method="POST" action="/demo?/reset" use:enhance={fullReload}>
-        <button type="submit" class="demo-btn" disabled={busy} data-testid="demo-reset">
-          {tr('entry.demo.reset')}
-        </button>
-      </form>
-      <form method="POST" action="/demo?/end" use:enhance={fullReload}>
-        <button type="submit" class="demo-btn ghost" disabled={busy} data-testid="demo-leave">
-          {tr('entry.demo.leave')}
-        </button>
-      </form>
-    </div>
-  {/snippet}
+  <div class="demo-actions">
+    <form method="POST" action="/demo?/reset" use:enhance={fullReload}>
+      <button type="submit" class="demo-btn" disabled={busy} data-testid="demo-reset">
+        {tr('entry.demo.reset')}
+      </button>
+    </form>
+    <form method="POST" action="/demo?/scratch" use:enhance={fullReload}>
+      <button type="submit" class="demo-btn" disabled={busy} data-testid="demo-scratch">
+        {tr('entry.demo.scratch')}
+      </button>
+    </form>
+    <form method="POST" action="/demo?/end" use:enhance={fullReload}>
+      <button type="submit" class="demo-btn ghost" disabled={busy} data-testid="demo-leave">
+        {tr('entry.demo.leave')}
+      </button>
+    </form>
+  </div>
 </Banner>
 
 <style>
@@ -105,6 +112,7 @@
     text-decoration: underline;
   }
   .demo-actions {
+    margin-top: 4px;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;

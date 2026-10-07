@@ -13,6 +13,9 @@ export const enEntry = {
     "You're exploring a demo farm. Change anything you like; this copy is yours alone and is cleared at {time}.",
   'entry.demo.reset': 'Reset demo',
   'entry.demo.resetConfirm': 'Start over with a fresh demo farm? Your changes will be cleared.',
+  'entry.demo.scratch': 'Start from scratch',
+  'entry.demo.scratchConfirm':
+    'Start an empty demo farm and set it up yourself, as a new user would? The sample farm and your changes will be cleared.',
   'entry.demo.leave': 'Leave and sign up',
   'entry.demo.try': 'Things to try',
   'entry.demo.try.week': "This week's tasks",

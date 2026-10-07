@@ -69,7 +69,13 @@ test.describe('owner voids (32G G4)', () => {
       acres: 2,
       fieldId: pasture.id
     });
+    const { equipment: sprayer } = await post<{ equipment: { id: string } }>(
+      page,
+      '/api/equipment',
+      { type: 'sprayer', label: 'Backpack sprayer' }
+    );
     const { event } = await post<{ event: { id: string } }>(page, '/api/fungicide/record', {
+      sprayerId: sprayer.id,
       blockId: block.id,
       productPluginIds: ['champ-dp'],
       conditions: { windMph: 4, tempF: 70, rainForecastMmNext24h: 0 }

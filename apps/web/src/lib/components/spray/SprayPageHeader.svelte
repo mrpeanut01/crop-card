@@ -50,6 +50,8 @@
   const ledeText = $derived(lede ?? tr(`sprayui.header.lede.${chemistry}`));
 </script>
 
+<svelte:head><title>{tr('sprayui.pageTitle', { title: titleText })}</title></svelte:head>
+
 <header class="page-header">
   <Kicker>{kickerText}</Kicker>
   <h1 class="serif">{titleText}</h1>

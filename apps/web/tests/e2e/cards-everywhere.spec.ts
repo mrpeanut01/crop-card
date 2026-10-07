@@ -292,7 +292,13 @@ test.describe('cards everywhere', () => {
     await page.setViewportSize(DESKTOP);
     const farm = await seedFarm(page);
     expect(farm.tomatoId).not.toBe('');
+    const { equipment: sprayer } = await post<{ equipment: { id: string } }>(
+      page,
+      '/api/equipment',
+      { type: 'sprayer', label: 'Backpack sprayer' }
+    );
     await post(page, '/api/fungicide/record', {
+      sprayerId: sprayer.id,
       blockId: farm.bedId,
       cropId: farm.tomatoId,
       productPluginIds: ['champ-dp'],

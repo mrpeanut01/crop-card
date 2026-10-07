@@ -1168,6 +1168,7 @@
                 "required": [
                   "blockId",
                   "productPluginIds",
+                  "sprayerId",
                   "conditions"
                 ]
               }
@@ -1381,6 +1382,7 @@
                 "required": [
                   "blockId",
                   "productPluginIds",
+                  "sprayerId",
                   "conditions"
                 ]
               }

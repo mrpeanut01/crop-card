@@ -19,7 +19,12 @@ vi.mock('$lib/server/holdGuard', async () => {
 
 const DAY = 86_400_000;
 const m = vi.hoisted(() => ({
-  plantings: [] as Array<{ cropPluginId: string; plantingDate: number | null; status: string }>,
+  plantings: [] as Array<{
+    cropPluginId: string;
+    plantingDate: number | null;
+    status: string;
+    harvestedAt?: number;
+  }>,
   insertSprayEvent: vi.fn(() => ({ id: 'evt-1' }))
 }));
 
@@ -128,11 +133,38 @@ describe('POST /api/spray/record against the block on file', () => {
     m.plantings = [
       { cropPluginId: 'pumpkin-howden', plantingDate: Date.now() + 20 * DAY, status: 'active' },
       { cropPluginId: 'bean-provider', plantingDate: null, status: 'planned' },
-      { cropPluginId: 'bean-provider', plantingDate: Date.now() - 200 * DAY, status: 'harvested' }
+      {
+        cropPluginId: 'bean-provider',
+        plantingDate: Date.now() - 200 * DAY,
+        status: 'harvested',
+        harvestedAt: Date.now() - 100 * DAY
+      }
     ];
     const res = await call(RECORD, body(PRE_PLANT));
     expect(res.status).toBe(200);
     expect(m.insertSprayEvent).toHaveBeenCalledOnce();
+  });
+
+  it('#637: a backdated record is judged against a crop harvested after its date', async () => {
+    m.plantings = [
+      {
+        cropPluginId: 'pumpkin-howden',
+        plantingDate: Date.now() - 100 * DAY,
+        status: 'harvested',
+        harvestedAt: Date.now() - 2 * DAY
+      }
+    ];
+    const res = await call(RECORD, { ...body(PRE_PLANT), occurredAt: Date.now() - 5 * DAY });
+    expect(res.status).toBe(422);
+    expect(m.insertSprayEvent).not.toHaveBeenCalled();
+  });
+
+  it('#637: a harvested crop with no harvest time on file still counts', async () => {
+    m.plantings = [
+      { cropPluginId: 'pumpkin-howden', plantingDate: Date.now() - 100 * DAY, status: 'harvested' }
+    ];
+    const res = await call(RECORD, body(PRE_PLANT));
+    expect(res.status).toBe(422);
   });
 
   it('carries the measured height to the corn on file for the stage gate', async () => {

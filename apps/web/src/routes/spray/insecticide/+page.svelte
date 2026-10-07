@@ -6,7 +6,9 @@
   import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
   import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
   import SetupSpot from '$lib/components/setup/SetupSpot.svelte';
-  import type { SetupSpotResult } from '$lib/setup/types';
+  import SetupSprayer from '$lib/components/setup/SetupSprayer.svelte';
+  import SprayerPicker from '$lib/components/spray/SprayerPicker.svelte';
+  import type { SetupSpotResult, SetupSprayerResult } from '$lib/setup/types';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import SprayDecisionPage from '$lib/components/spray/SprayDecisionPage.svelte';
   import SprayStepper, { type StepState } from '$lib/components/spray/SprayStepper.svelte';
@@ -106,7 +108,29 @@
   let windMph = $state(5);
   let tempF = $state(72);
   let rainPct = $state(10);
-  let tankSize = $state<number | null>(25);
+  let tankSize = $state<number | null>(
+    untrack(() => (data.sprayers.length === 1 ? (data.sprayers[0].tankGal ?? 25) : 25))
+  );
+
+  // #736: the sprayer is required so the server's cross-contamination gate
+  // always runs. Only a farm with one sprayer starts with it picked.
+  let selectedSprayerId = $state<string>(
+    untrack(() => (data.sprayers.length === 1 ? data.sprayers[0].id : ''))
+  );
+  let sprayerSheetOpen = $state(false);
+  let sprayerSheetTitle = $state<string | null>(null);
+  let needsDecon = $state(false);
+  function onPickSprayer(s: { tankGal?: number }) {
+    if (s.tankGal) tankSize = s.tankGal;
+    needsDecon = false;
+  }
+  async function onSprayerAdded(r: SetupSprayerResult) {
+    sprayerSheetOpen = false;
+    sprayerSheetTitle = null;
+    await invalidateAll();
+    selectedSprayerId = r.sprayerId;
+    await focusAfterSetup(`[data-sprayer-id="${CSS.escape(r.sprayerId)}"]`);
+  }
   let result = $state<string | null>(null);
   let error = $state<string | null>(null);
   let violations = $state<
@@ -195,7 +219,11 @@
   const fmtClock = (d: Date) => fmt.instant(d, 'time');
 
   const canSubmit = $derived(
-    !!selectedBlockId && !!selectedPluginId && !ipmBlocked && !pollinatorBlocked
+    !!selectedBlockId &&
+      !!selectedPluginId &&
+      !!selectedSprayerId &&
+      !ipmBlocked &&
+      !pollinatorBlocked
   );
 
   const stepperData = $derived.by<Array<{ label: string; state: StepState }>>(() => {
@@ -287,7 +315,9 @@
     taskOutcome = null;
     taskQueued = false;
     violations = [];
+    needsDecon = false;
     const body: Record<string, unknown> = {
+      sprayerId: selectedSprayerId,
       blockId: selectedBlockId,
       occurredAt: Date.now(),
       productPluginIds: [selectedPluginId],
@@ -328,6 +358,7 @@
       if (!res.ok) {
         error = respData.error ?? 'failed to record';
         if (Array.isArray(respData.violations)) violations = respData.violations;
+        needsDecon = respData.requiresDecon === true;
         return;
       }
       await noteHoldWrite('insecticide', body);
@@ -358,60 +389,6 @@
     }
   }
 </script>
-
-<section class="card library">
-  <h2>{tr('sprayui.ins.library')}</h2>
-  {#if data.insecticides.length === 0}
-    <p>
-      {tr('sprayui.ins.noPlugins')} <code>plugins/insecticides/</code>.
-    </p>
-  {:else}
-    <ul class="library-list">
-      {#each data.insecticides as p (p.pluginId)}
-        <li>
-          <strong>{p.displayName}</strong>
-          {#each p.iracGroups as g, idx (idx)}
-            <GroupCodeBadge kind="IRAC" group={g} />
-          {/each}
-          {#if p.targetPests.length}
-            <span class="pests">— {p.targetPests.join(', ')}</span>
-          {/if}
-          <div class="meta" lang="en" data-english-only="safety">
-            REI {p.reEntryIntervalHours}h
-            {#if p.preHarvestIntervalDays !== undefined}
-              · PHI {p.preHarvestIntervalDays}d
-            {/if}
-            · {pollinatorLabelText(p)}
-            {#if p.epaRegistrationNumber}· EPA {p.epaRegistrationNumber}{/if}
-          </div>
-          {#if p.scoutingThresholds.length}
-            <details>
-              <summary>{tr('sprayui.ins.thresholds')}</summary>
-              <ul>
-                {#each p.scoutingThresholds as t (t.pest + t.metric)}
-                  <li lang="en" data-english-only="safety">
-                    {t.pest}: spray at {t.threshold}
-                    {t.metric}
-                  </li>
-                {/each}
-              </ul>
-            </details>
-          {/if}
-          {#if p.applicationProtocol.length}
-            <details>
-              <summary>{tr('sprayui.ins.protocol')}</summary>
-              <ol>
-                {#each p.applicationProtocol as s, i (i)}
-                  <li>{s.step}{s.detail ? ` — ${s.detail}` : ''}</li>
-                {/each}
-              </ol>
-            </details>
-          {/if}
-        </li>
-      {/each}
-    </ul>
-  {/if}
-</section>
 
 <div class="spray-almanac-chrome">
   <SprayStepper steps={stepperData} />
@@ -457,7 +434,22 @@
   submitLabel={tr('sprayui.ins.submit')}
   onSubmit={recordSpray}
 >
+  {#snippet sprayerSection()}
+    <SprayerPicker
+      sprayers={data.sprayers}
+      bind:selectedId={selectedSprayerId}
+      canEdit={data.setup.canEdit}
+      onAdd={() => (sprayerSheetOpen = true)}
+      onPick={onPickSprayer}
+    />
+  {/snippet}
+
   {#snippet afterSubmit()}
+    {#if needsDecon && selectedSprayerId}
+      <a class="decon-link" href={`/spray/decon?sprayer=${encodeURIComponent(selectedSprayerId)}`}
+        >{tr('sprayui.card.openDecon')}</a
+      >
+    {/if}
     <TaskCloseNote
       task={data.taskContext}
       record={{
@@ -661,6 +653,60 @@
   {/snippet}
 </SprayDecisionPage>
 
+<details class="card library" data-testid="insecticide-library">
+  <summary><h2>{tr('sprayui.ins.library')}</h2></summary>
+  {#if data.insecticides.length === 0}
+    <p>
+      {tr('sprayui.ins.noPlugins')} <code>plugins/insecticides/</code>.
+    </p>
+  {:else}
+    <ul class="library-list">
+      {#each data.insecticides as p (p.pluginId)}
+        <li>
+          <strong>{p.displayName}</strong>
+          {#each p.iracGroups as g, idx (idx)}
+            <GroupCodeBadge kind="IRAC" group={g} />
+          {/each}
+          {#if p.targetPests.length}
+            <span class="pests">— {p.targetPests.join(', ')}</span>
+          {/if}
+          <div class="meta" lang="en" data-english-only="safety">
+            REI {p.reEntryIntervalHours}h
+            {#if p.preHarvestIntervalDays !== undefined}
+              · PHI {p.preHarvestIntervalDays}d
+            {/if}
+            · {pollinatorLabelText(p)}
+            {#if p.epaRegistrationNumber}· EPA {p.epaRegistrationNumber}{/if}
+          </div>
+          {#if p.scoutingThresholds.length}
+            <details>
+              <summary>{tr('sprayui.ins.thresholds')}</summary>
+              <ul>
+                {#each p.scoutingThresholds as t (t.pest + t.metric)}
+                  <li lang="en" data-english-only="safety">
+                    {t.pest}: spray at {t.threshold}
+                    {t.metric}
+                  </li>
+                {/each}
+              </ul>
+            </details>
+          {/if}
+          {#if p.applicationProtocol.length}
+            <details>
+              <summary>{tr('sprayui.ins.protocol')}</summary>
+              <ol>
+                {#each p.applicationProtocol as s, i (i)}
+                  <li>{s.step}{s.detail ? ` — ${s.detail}` : ''}</li>
+                {/each}
+              </ol>
+            </details>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</details>
+
 <SetupSheet
   open={spotSheetOpen}
   kicker={tr('sprayui.sheet.kicker')}
@@ -673,7 +719,33 @@
   {/snippet}
 </SetupSheet>
 
+<SetupSheet
+  open={sprayerSheetOpen}
+  kicker={tr('sprayui.sheet.kicker')}
+  title={sprayerSheetTitle ?? tr('sprayui.sheet.whichSprayer')}
+  onDone={onSprayerAdded}
+  onClose={() => {
+    sprayerSheetOpen = false;
+    sprayerSheetTitle = null;
+  }}
+>
+  {#snippet children(done)}
+    <SetupSprayer
+      templates={data.setup.sprayerTemplates}
+      canEdit={data.setup.canEdit}
+      onCreated={(r) => (sprayerSheetTitle = tr('sprayui.sheet.calibrate', { name: r.label }))}
+      onDone={done}
+    />
+  {/snippet}
+</SetupSheet>
+
 <style>
+  .decon-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-weight: 600;
+  }
   details > summary {
     min-height: 48px;
     padding-block: 12px;
@@ -698,9 +770,12 @@
     padding: 1rem 1.25rem;
     margin: 0 0 1rem;
   }
-  .library h2,
   .recent h2 {
     margin: 0 0 0.5rem;
+  }
+  .library > summary h2 {
+    display: inline;
+    margin: 0;
   }
   .library-list {
     list-style: none;

@@ -63,7 +63,13 @@ test.describe('grazing advisories', () => {
   test('a sprayed pasture shows its grazing hold on the Area Card', async ({ page }) => {
     await page.setViewportSize(PHONE);
     const farm = await seedPasture(page);
+    const { equipment: sprayer } = await post<{ equipment: { id: string } }>(
+      page,
+      '/api/equipment',
+      { type: 'sprayer', label: 'Backpack sprayer' }
+    );
     await post(page, '/api/fungicide/record', {
+      sprayerId: sprayer.id,
       blockId: farm.blockId,
       productPluginIds: ['champ-dp'],
       conditions: { windMph: 4, tempF: 70, rainForecastMmNext24h: 0 }

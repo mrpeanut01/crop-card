@@ -48,7 +48,8 @@ export const insecticideRecordSchema = z.object({
   occurredAt: z.number().int().optional(),
   productPluginIds: z.array(z.string().min(1)).min(1),
   stockItemIds: z.array(z.string().min(1).nullable()).optional(),
-  sprayerId: z.string().min(1).optional(),
+  /** #736: required, so the cross-contamination gate always runs. */
+  sprayerId: z.string().min(1),
   conditions: conditionsSchema,
   scout: z
     .object({
@@ -73,7 +74,8 @@ export const fungicideRecordSchema = z.object({
   occurredAt: z.number().int().optional(),
   productPluginIds: z.array(z.string().min(1)).min(1),
   stockItemIds: z.array(z.string().min(1).nullable()).optional(),
-  sprayerId: z.string().min(1).optional(),
+  /** #736: required, so the cross-contamination gate always runs. */
+  sprayerId: z.string().min(1),
   conditions: conditionsSchema,
   disease: z
     .object({

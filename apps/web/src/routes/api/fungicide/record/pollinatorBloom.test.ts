@@ -24,17 +24,7 @@ vi.mock('$lib/server/sprayers', () => ({
   recordSpray: vi.fn()
 }));
 vi.mock('$lib/dilution/calculator', () => ({
-  computeRatedDilution: () => ({
-    pluginId: 'fung-1',
-    displayName: 'Bee Hazard',
-    productAmount: 6,
-    unit: 'fl-oz',
-    display: '6 fl-oz',
-    acresCovered: 1,
-    gpaUsed: 20,
-    ratePerAcre: { amount: 6, unit: 'fl-oz' },
-    customRateApplied: false
-  })
+  appliedProductAmount: () => ({ amount: 6, unit: 'fl-oz', basis: 'tank' })
 }));
 vi.mock('$lib/db/fungicideEvents', () => ({
   insertFungicideEvent,

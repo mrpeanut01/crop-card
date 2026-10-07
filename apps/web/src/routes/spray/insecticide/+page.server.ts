@@ -11,12 +11,14 @@ import { getFarmLatLon } from '$lib/schedule/settings';
 import { isInBloom } from '$lib/safety/pollinatorBloom';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { pollinatorNeighbors } from '$lib/server/pollinatorNeighbors';
-import { canSetUp, setupAreas } from '$lib/server/setupContext';
+import { canSetUp, setupAreas, setupSprayerTemplates } from '$lib/server/setupContext';
 import { organicBlocksForNotice } from '$lib/server/organicNotice';
 import { loadTaskContext } from '$lib/server/recordTaskClose';
 import { listStageMarks } from '$lib/db/orchardCalendar';
 import { bloomPrefillFromMarks } from '$lib/orchard/calendar';
 import { orchardYear } from '$lib/server/orchardCalendar.server';
+import { standingCropPluginIds } from '$lib/server/sprayCrops';
+import { listSprayers } from '$lib/server/sprayers';
 
 /**
  * Phase 25d (#95) — IPM-gate scout data. Primary path reads from the
@@ -112,7 +114,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       return {
         id: b.id,
         name: b.name,
-        cropPluginIds: b.plantings.map((p) => p.cropPluginId),
+        cropPluginIds: Array.from(new Set(standingCropPluginIds(b.plantings, now))),
         lat: location.lat,
         lon: location.lon,
         bloomingCropPluginIds: Array.from(new Set(blooming.map((p) => p.cropPluginId))),
@@ -120,6 +122,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         pollinatorNeighbors: pollinatorNeighbors(b.id, allBlocks, cropPlugin, now, timeZone)
       };
     }),
+    sprayers: listSprayers(),
     recentEvents: listInsecticideEvents({ limit: 20 }),
     activeREI: activeReEntryRestrictions(),
     preselectedBlockId:
@@ -129,7 +132,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     taskContext,
     // Phase 25d (#89) v2-addendum — drives AI-on vs AI-off variant.
     aiEnabled: getUserAiEnabled(locals.user?.id),
-    setup: { canEdit: canSetUp(locals.user?.role), areas: setupAreas() },
+    setup: {
+      canEdit: canSetUp(locals.user?.role),
+      areas: setupAreas(),
+      sprayerTemplates: setupSprayerTemplates()
+    },
     // Phase 25d (#89) — feeds the IPM threshold gate dial + sparkline.
     // Read from past insecticide events' scoutObservationJson until a
     // dedicated scout-events table lands (TODO future PR).

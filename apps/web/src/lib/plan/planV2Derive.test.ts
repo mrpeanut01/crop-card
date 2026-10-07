@@ -80,8 +80,9 @@ describe('blockHarvestWindowLabel', () => {
     startMs: PLANT + s * DAY,
     endMs: PLANT + e * DAY
   });
-  it('spans the open harvest windows', () => {
-    const label = blockHarvestWindowLabel([hw(90, 100), hw(110, 120)], PLANT);
+  it("spans each planting's current harvest window", () => {
+    const other = (s: number, e: number): CalendarEvent => ({ ...hw(s, e), cropId: 'p2' });
+    const label = blockHarvestWindowLabel([hw(90, 100), hw(400, 410), other(110, 120)], PLANT);
     expect(label).toBe('Jul 30 – Aug 29');
   });
   it('drops closed windows and returns undefined when none remain', () => {
@@ -96,16 +97,24 @@ describe('blockHarvestWindowLabel', () => {
 });
 
 describe('plantingHarvestLabel', () => {
-  it('uses the earliest harvest-window start for the planting', () => {
-    const hw = (cropId: string, s: number): CalendarEvent => ({
-      ...STAGES[0],
-      cropId,
-      kind: 'harvest-window',
-      startMs: PLANT + s * DAY,
-      endMs: PLANT + (s + 10) * DAY
-    });
-    expect(plantingHarvestLabel([hw('p1', 120), hw('p1', 90), hw('p2', 10)], 'p1')).toBe('Jul 30');
-    expect(plantingHarvestLabel(STAGES, 'p1')).toBeUndefined();
+  const hw = (cropId: string, s: number): CalendarEvent => ({
+    ...STAGES[0],
+    cropId,
+    kind: 'harvest-window',
+    startMs: PLANT + s * DAY,
+    endMs: PLANT + (s + 10) * DAY
+  });
+  it('uses the next harvest-window start for the planting', () => {
+    expect(
+      plantingHarvestLabel([hw('p1', 120), hw('p1', 90), hw('p2', 10)], 'p1', null, PLANT)
+    ).toBe('Jul 30');
+    expect(plantingHarvestLabel(STAGES, 'p1', null, PLANT)).toBeUndefined();
+  });
+  it('uses the window open now over an earlier closed one (#680)', () => {
+    const events = [hw('p1', 90), hw('p1', 455)];
+    expect(plantingHarvestLabel(events, 'p1', null, PLANT + 460 * DAY)).toBe(
+      plantingHarvestLabel([hw('p1', 455)], 'p1', null, PLANT)
+    );
   });
 });
 

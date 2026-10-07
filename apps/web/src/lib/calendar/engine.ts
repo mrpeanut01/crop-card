@@ -14,22 +14,19 @@ import type { Block, PlantingRecord } from '$lib/db/blocks';
 import { maturityStartMs } from '$lib/schedule/seedStart';
 import type { HarvestEvent } from '$lib/db/harvestEvents';
 import type { ShadeSource } from '$lib/db/shadeSources';
-import {
-  resolveGrowthStageTable,
-  resolvePerennialTemplate
-} from '$lib/plugins/growthStageTemplates';
+import { isNoHarvestCover, resolvePerennialTemplate } from '$lib/plugins/growthStageTemplates';
 import {
   resolveCropAgronomy,
   resolveCastsShade,
-  familyReferenceSeedsPerAcre as familyReferenceSeedsPerAcreFromDefaults
+  familyReferenceSeedsPerAcre as familyReferenceSeedsPerAcreFromDefaults,
+  DEFAULT_COVER_TERMINATION_LEAD_DAYS
 } from '$lib/plugins/familyDefaults';
 import {
-  projectStages,
-  projectHarvestTargets,
   projectPerennialStages,
   projectPerennialHarvestTargets,
   type ProjectedStage
 } from './stageProjection';
+import { projectCropStages } from './cropStages';
 import {
   projectShadeImpacts,
   type ShadeEmitter,
@@ -130,6 +127,12 @@ export interface EventContext {
    * `transplant` and `direct-sow` events for the planting.
    */
   seedStart?: SeedStartFacts;
+  /**
+   * The moment the calendar is read at. Perennials get this season's
+   * yearly windows rather than the ones right after planting. Defaults to
+   * the current time.
+   */
+  now?: number;
 }
 
 /**
@@ -208,12 +211,23 @@ export function eventsForPlanting(
   // resolved stage table is available, emit one stage-window event per stage.
   // Corn additionally derives its POST spray windows from the projected V2/V4
   // stages so /scout deeplinks (?windowStage=V2-V3) keep working.
-  const stageTable = resolveGrowthStageTable(crop);
-  const projected: ProjectedStage[] = stageTable
-    ? projectStages(plant, stageTable, crop.daysToMaturity)
-    : [];
+  const stageProjection = projectCropStages(plant, crop);
+  const stageTable = stageProjection?.table ?? null;
+  let projected: ProjectedStage[] = stageProjection?.projected ?? [];
+  const noHarvestCover = isNoHarvestCover(crop);
+  const coverLeadDays = agronomy.isCoverCrop
+    ? agronomy.terminationLeadDaysMin
+    : (crop.agronomy?.terminationLeadDaysMin ?? DEFAULT_COVER_TERMINATION_LEAD_DAYS);
+  const coverNext = noHarvestCover ? nextPlantingAfter(planting, ctx) : undefined;
+  const coverEnd = coverNext ? coverNext.plantingDate! - coverLeadDays * DAY_MS : null;
+  if (coverEnd !== null) {
+    projected = projected
+      .filter((s) => s.startMs < coverEnd)
+      .map((s) => (s.endMs > coverEnd ? { ...s, endMs: coverEnd } : s));
+  }
   if (stageTable && projected.length) {
     for (const s of projected) {
+      const typical = stageProjection?.typicalCodes.has(s.code) ?? false;
       events.push({
         kind: 'stage-window',
         blockId: planting.blockId,
@@ -222,14 +236,15 @@ export function eventsForPlanting(
         varietyDisplayName: planting.varietyDisplayName,
         startMs: s.startMs,
         endMs: s.endMs,
-        title: `${s.code} — ${s.name}`,
+        title: stageTable.system === 'simple' ? s.name : `${s.code} — ${s.name}`,
         body: s.inspect,
         detail: {
           stageCode: s.code,
           stageName: s.name,
           system: stageTable.system,
           bodyKind: s.bodyKind,
-          isHarvestTargetStage: s.isHarvestTargetStage
+          isHarvestTargetStage: s.isHarvestTargetStage,
+          ...(typical ? { typicalTiming: true } : {})
         }
       });
     }
@@ -387,20 +402,14 @@ export function eventsForPlanting(
   // Cover-crop termination ahead of any cash-crop succession (FR-18).
   // B4 — termination-lead minimum is now plugin-declared
   // (`agronomy.terminationLeadDaysMin`) with a family default of 14 days.
-  if (agronomy.isCoverCrop) {
-    const nextCashCrop = (ctx.blockPlantings ?? [])
-      .filter(
-        (p) => p.id !== planting.id && p.plantingDate != null && p.plantingDate > plant
-        // The cash-crop check is family-aware in the caller; here we only
-        // need "any other planting after this cover crop in the same block."
-      )
-      .sort((a, b) => a.plantingDate! - b.plantingDate!)[0];
+  if (agronomy.isCoverCrop || noHarvestCover) {
+    const nextCashCrop = nextPlantingAfter(planting, ctx);
 
     if (nextCashCrop) {
       // Spec FR-18: terminate ≥`leadMin` days before the next cash-crop plant
       // date. Window opens 7 days earlier than `leadMin` and closes at
       // `leadMin` — operator has a 7-day window to do the burndown.
-      const leadMin = agronomy.terminationLeadDaysMin;
+      const leadMin = coverLeadDays;
       events.push({
         kind: 'cover-termination',
         blockId: planting.blockId,
@@ -436,7 +445,7 @@ export function eventsForPlanting(
     // also explicitly declare `agronomy.lifecycle: 'perennial'` to opt in
     // outside the family default set.
     const years = agronomy.isPerennial
-      ? orchardSeasonYears(plant)
+      ? orchardSeasonYears(plant, ctx.now)
       : [new Date(plant).getFullYear()];
     for (const year of years) {
       for (const task of crop.seasonalTasks) {
@@ -464,7 +473,8 @@ export function eventsForPlanting(
   const perennialTemplate = resolvePerennialTemplate(crop);
   const perennialHarvestTargets: { startMs: number; endMs: number; label: string }[] = [];
   if (perennialTemplate) {
-    const years = orchardSeasonYears(plant);
+    const years = orchardSeasonYears(plant, ctx.now);
+    const bearingFrom = plant + (crop.daysToMaturity?.min ?? 0) * DAY_MS;
     for (const year of years) {
       const projP = projectPerennialStages(perennialTemplate, year);
       for (const s of projP) {
@@ -490,6 +500,7 @@ export function eventsForPlanting(
       }
       const ph = projectPerennialHarvestTargets(perennialTemplate, projP);
       for (const t of ph) {
+        if (t.endMs < bearingFrom) continue;
         perennialHarvestTargets.push({ startMs: t.startMs, endMs: t.endMs, label: t.label });
       }
     }
@@ -512,9 +523,14 @@ export function eventsForPlanting(
       },
       crop
     ) ?? plant) - plant;
-  if (stageTable && projected.length) {
-    const harvestTargets = projectHarvestTargets(projected, stageTable);
-    for (const t of harvestTargets) {
+  const stageHarvestTargets = noHarvestCover
+    ? []
+    : (stageProjection?.harvestTargets ?? []).filter((t) =>
+        projected.some((s) => s.code === t.stageCode)
+      );
+  if (stageHarvestTargets.length) {
+    for (const t of stageHarvestTargets) {
+      const typical = stageProjection?.typicalCodes.has(t.stageCode) ?? false;
       events.push({
         kind: 'harvest-window',
         blockId: planting.blockId,
@@ -530,7 +546,8 @@ export function eventsForPlanting(
           label: t.label,
           useCase: t.useCase,
           dtmMin: crop.daysToMaturity?.min,
-          dtmMax: crop.daysToMaturity?.max
+          dtmMax: crop.daysToMaturity?.max,
+          ...(typical ? { typicalTiming: true } : {})
         }
       });
     }
@@ -546,10 +563,10 @@ export function eventsForPlanting(
         endMs: t.endMs,
         title: `Harvest window: ${planting.varietyDisplayName}`,
         body: 'Use crop-specific readiness indicators before harvest.',
-        detail: { label: t.label }
+        detail: { label: t.label, system: 'perennial-calendar', typicalTiming: true }
       });
     }
-  } else {
+  } else if (!noHarvestCover && !agronomy.isPerennial) {
     const dtm = crop.daysToMaturity;
     if (dtm) {
       const from = plant + maturityShift;
@@ -571,11 +588,23 @@ export function eventsForPlanting(
   return events;
 }
 
-/** For an orchard planting at `plantedAtMs`, the years we render seasonal
- *  tasks for: this calendar year, plus the next 2 (perennial). */
-function orchardSeasonYears(plantedAtMs: number): number[] {
-  const start = new Date(plantedAtMs).getFullYear();
+/** For a perennial planting at `plantedAtMs`, the years we render seasonal
+ *  tasks and stages for: three years starting with last year (so a window
+ *  that runs into January stays visible), never before the planting year. */
+function orchardSeasonYears(plantedAtMs: number, now: number = Date.now()): number[] {
+  const start = Math.max(new Date(plantedAtMs).getFullYear(), new Date(now).getFullYear() - 1);
   return [start, start + 1, start + 2];
+}
+
+function nextPlantingAfter(
+  planting: PlantingRecord,
+  ctx: EventContext
+): PlantingRecord | undefined {
+  const plant = planting.plantingDate;
+  if (plant == null) return undefined;
+  return (ctx.blockPlantings ?? [])
+    .filter((p) => p.id !== planting.id && p.plantingDate != null && p.plantingDate > plant)
+    .sort((a, b) => a.plantingDate! - b.plantingDate!)[0];
 }
 
 function dayOfYearToMs(year: number, dayOfYear: number): number {

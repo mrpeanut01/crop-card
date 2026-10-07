@@ -17,6 +17,7 @@ import { canMutate } from '$lib/server/session';
 import { dispositionViewsFor } from '$lib/server/harvestDispositions';
 import { farmHasOrganicStatus } from '$lib/harvest/organicAtHarvest.server';
 import { loadTaskContext } from '$lib/server/recordTaskClose';
+import { harvestWindowFor } from '$lib/calendar/harvestWindow';
 
 /** F2-15: owners see "Record a sale"; a quiet garden household only once
  *  the farm has any ledger entry. Helpers never see it. */
@@ -104,7 +105,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     for (const p of b.plantings) {
       const rec = registry.get(p.cropPluginId);
       const crop = rec?.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : undefined;
-      const dtm = crop?.daysToMaturity;
       const key = plantingHarvestKey({ cropId: p.id, blockId: b.id, cropPluginId: p.cropPluginId });
       const priorPickCount = pickCountByPlanting.get(key) ?? 0;
       const lastPickMs = lastPickByPlanting.get(key);
@@ -127,9 +127,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       if (forageWindow) {
         windowStartMs = forageWindow.windowStartMs;
         windowEndMs = forageWindow.windowEndMs;
-      } else if (dtm && p.plantingDate !== null) {
-        windowStartMs = p.plantingDate + dtm.min * DAY_MS;
-        windowEndMs = p.plantingDate + dtm.max * DAY_MS;
+      } else if (crop && p.plantingDate !== null) {
+        const window = harvestWindowFor(p, crop, { now, blockPlantings: b.plantings });
+        windowStartMs = window?.startMs;
+        windowEndMs = window?.endMs;
       }
 
       if (windowStartMs !== undefined && windowEndMs !== undefined) {

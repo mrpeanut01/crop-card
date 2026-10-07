@@ -15,11 +15,13 @@ export function isTypicalTimingTask(task: { pluginTemplateKey?: string | null })
 }
 
 /** A calendar event placed on a seasonal row's day of year or days after
- *  planting, or on a perennial stage template's day range. */
+ *  planting, on a perennial stage template's day range, or on a typical
+ *  spring date (winter small grains, #629). */
 export function isTypicalTimingEvent(e: {
   kind: string;
   detail?: Record<string, unknown> | null;
 }): boolean {
   if (e.kind === 'seasonal-task' || e.kind === 'orchard-task') return true;
+  if (e.detail?.typicalTiming === true) return true;
   return e.kind === 'stage-window' && e.detail?.system === 'perennial-calendar';
 }

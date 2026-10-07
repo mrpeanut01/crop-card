@@ -85,12 +85,11 @@ import {
   resolvePerennialTemplate
 } from '$lib/plugins/growthStageTemplates';
 import {
-  projectStages,
-  projectHarvestTargets,
   projectPerennialStages,
   projectPerennialHarvestTargets,
   currentStage as currentStageOf
 } from '$lib/calendar/stageProjection';
+import { projectCropStages } from '$lib/calendar/cropStages';
 import { getRegistry } from '$lib/server/registry';
 import { suggestCompanions, type CompanionSuggestion } from '$lib/calendar/companions';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
@@ -515,11 +514,12 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         let nextStage: SwimPlanting['nextStage'];
         let harvestTargets: SwimPlanting['harvestTargets'];
 
-        const stageTable = resolveGrowthStageTable(plug);
+        const cropStages = projectCropStages(p.plantingDate, plug);
+        const stageTable = cropStages?.table ?? resolveGrowthStageTable(plug);
         const perennial = resolvePerennialTemplate(plug);
-        if (stageTable) {
-          stageSystem = stageTable.system;
-          const projected = projectStages(p.plantingDate, stageTable, plug.daysToMaturity);
+        if (cropStages) {
+          stageSystem = cropStages.table.system;
+          const projected = cropStages.projected;
           const cur = currentStageOf(projected, nowMs);
           if (cur.current) {
             currentStage = {
@@ -537,7 +537,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
               daysToStart: cur.daysToNext ?? 0
             };
           }
-          harvestTargets = projectHarvestTargets(projected, stageTable);
+          harvestTargets = cropStages.harvestTargets;
           // Phase 21b follow-up — operator-selected harvest windows.
           // Filter the plugin's projected harvest targets so the
           // swim-lane bar only renders the windows the operator

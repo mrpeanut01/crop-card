@@ -29,17 +29,23 @@ export interface DeriveSeasonGlanceInputs {
   activePlantings: number;
   spraysYTD: number;
   derivedEvents: CalendarEvent[];
+  /** Open harvest tasks; one already due counts as today (#618). */
+  harvestTasks?: ReadonlyArray<{ scheduledFor: number }>;
   now?: number;
 }
 
+/** Days until the next harvest: 0 while any harvest window is open or a
+ *  harvest task is due (#618), else the days until the next one starts. */
 export function deriveSeasonGlance(inputs: DeriveSeasonGlanceInputs): SeasonGlance {
   const now = inputs.now ?? Date.now();
-  const nextHarvest = inputs.derivedEvents
-    .filter((e) => e.kind === 'harvest-window' && e.startMs >= now)
-    .sort((a, b) => a.startMs - b.startMs)[0];
-  const daysToNextHarvest = nextHarvest
-    ? Math.max(0, Math.ceil((nextHarvest.startMs - now) / DAY_MS))
-    : null;
+  const starts: number[] = [];
+  for (const e of inputs.derivedEvents) {
+    if (e.kind !== 'harvest-window' || e.endMs < now) continue;
+    starts.push(e.startMs);
+  }
+  for (const t of inputs.harvestTasks ?? []) starts.push(t.scheduledFor);
+  const next = starts.length ? Math.min(...starts) : null;
+  const daysToNextHarvest = next === null ? null : Math.max(0, Math.ceil((next - now) / DAY_MS));
   return {
     activePlantings: inputs.activePlantings,
     spraysYTD: inputs.spraysYTD,

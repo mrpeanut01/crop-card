@@ -54,6 +54,7 @@ import {
   localizeSeedStartNotes,
   seedStartTasksOnFirstDate
 } from '$lib/server/seedStartTasks';
+import { syncPlantingTask } from '$lib/server/plantingTask';
 
 export const _requestSchema = cropPatchSchema;
 
@@ -170,8 +171,8 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
     const plugin = cropLookupFrom(await getRegistry())(crop.cropPluginId);
     const { establishment, startIndoors, sowIndoorsOn } = parsed.data;
     const id = event.params.id;
-    const outcome = db.transaction(() =>
-      applyPlantingEstablishment(
+    const outcome = db.transaction(() => {
+      const applied = applyPlantingEstablishment(
         id,
         {
           establishment,
@@ -179,8 +180,10 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
           sowIndoorsOn
         },
         plugin
-      )
-    );
+      );
+      syncPlantingTask(id);
+      return applied;
+    });
     return json({
       crop: getCrop(id),
       seedStart: { ...outcome, notes: localizeSeedStartNotes(outcome.notes, event.locals?.locale) }
@@ -312,7 +315,10 @@ export const PATCH: RequestHandler = withClientRecordId(async (event) => {
         if (oldMs != null && newMs != null && oldMs !== newMs) {
           reanchorCropTasks(id, oldMs, newMs);
         }
-        if (oldMs == null && newMs != null) seedStartTasksOnFirstDate(id, plugin);
+        if (oldMs == null && newMs != null) {
+          seedStartTasksOnFirstDate(id, plugin);
+          syncPlantingTask(id);
+        }
         return result;
       }
     });

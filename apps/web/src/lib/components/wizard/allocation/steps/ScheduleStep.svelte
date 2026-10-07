@@ -3,7 +3,7 @@
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
   import AiProgress from '../AiProgress.svelte';
   import ChatPanel from '../ChatPanel.svelte';
-  import { fmtDateMs } from '../format';
+  import { scheduleDayIso, type ScheduleDateError } from '../flows/scheduleFlow';
   import { getWizardContext } from '../wizardState.svelte';
   import SeedOrSeedling from '$lib/components/plan/SeedOrSeedling.svelte';
   import { createT } from '$lib/i18n';
@@ -13,7 +13,21 @@
 
   const w = getWizardContext();
   const tr = $derived(createT(page.data?.locale));
-  const aiEnabled = $derived(w.props.aiEnabled);
+  const aiEnabled = $derived(
+    w.props.aiEnabled && !w.scheduleResponse?.meta.aiOff && !w.scheduleResponse?.meta.fallback
+  );
+  const proposedSource = $derived(
+    w.scheduleResponse?.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'
+  );
+  let dateErrors = $state<Record<number, ScheduleDateError>>({});
+
+  function onDateChange(i: number, value: string) {
+    const err = w.setPlantingDate(i, value);
+    const next = { ...dateErrors };
+    if (err) next[i] = err;
+    else delete next[i];
+    dateErrors = next;
+  }
 
   const scheduledCrops = $derived.by(() => {
     const seen = new Map<string, string>();
@@ -64,7 +78,7 @@
     <p class="aw-rationale">
       {w.scheduleResponse.rationale}
       <Provenance
-        source={w.scheduleResponse.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
+        source={proposedSource}
         detail={w.scheduleResponse.meta.fallback ? tr('wizard.schedule.fallbackDetail') : undefined}
         compact
       />
@@ -91,7 +105,29 @@
               {/if}
             </td>
             <td>{w.blockNameFor(p.blockId)}</td>
-            <td>{fmtDateMs(p.plantingDateMs)}</td>
+            <td class="date-cell">
+              <input
+                type="date"
+                class="aw-date"
+                value={scheduleDayIso(p.plantingDateMs)}
+                aria-label={tr('wizard.schedule.dateLabel', {
+                  crop: pageCropName(p.cropPluginId, p.varietyDisplayName),
+                  block: w.blockNameFor(p.blockId)
+                })}
+                aria-invalid={dateErrors[i] ? 'true' : undefined}
+                aria-describedby={dateErrors[i] ? `aw-date-err-${i}` : undefined}
+                data-testid="wizard-schedule-date"
+                onchange={(e) => onDateChange(i, e.currentTarget.value)}
+              />
+              <Provenance source={p.dateProvenance ?? proposedSource} compact />
+              {#if dateErrors[i]}
+                <span class="aw-date-err" id="aw-date-err-{i}" role="alert">
+                  {dateErrors[i] === 'range'
+                    ? tr('wizard.schedule.dateRange')
+                    : tr('wizard.schedule.dateInvalid')}
+                </span>
+              {/if}
+            </td>
             <td
               >{w.isAreaCrop(p.cropPluginId)
                 ? areaText(p.plants, w.prefs.units)
@@ -211,6 +247,24 @@
     border-radius: 999px;
     font-size: 0.85rem;
     font-weight: 600;
+  }
+  .date-cell {
+    white-space: nowrap;
+  }
+  .aw-date {
+    min-height: 48px;
+    padding: 0 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #cbd5cb;
+    border-radius: 6px;
+    background: white;
+  }
+  .aw-date-err {
+    display: block;
+    color: #b22222;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: normal;
   }
   .why {
     color: #4a5d4a;

@@ -534,6 +534,9 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
     '🛟 La IA está desactivada en esta granja, así que el programador determinista eligió estas fechas. Se respetan los escalonamientos y los desfases de compañeras.',
   'wizard.schedule.aiHelp':
     '🛟 La IA necesitó ayuda: tomó el control el programador determinista. Mira el chat de abajo para ver qué falló y ajusta desde ahí.',
+  'wizard.schedule.dateLabel': 'Fecha de siembra de {crop} en {block}',
+  'wizard.schedule.dateInvalid': 'Escribe una fecha completa.',
+  'wizard.schedule.dateRange': 'Elige una fecha dentro de un año de la propuesta.',
   'wizard.schedule.error': 'Error: {error}',
   'wizard.schedule.fallbackDetail': 'programador determinista',
   'wizard.schedule.noKey':
@@ -541,7 +544,7 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.schedule.noteAi':
     'Fechas propuestas por la IA dentro de ventanas del plugin · todas editables',
   'wizard.schedule.noteOff':
-    'IA desactivada · programador determinista · ventanas del plugin + tus registros',
+    'IA desactivada · programador determinista · ventanas del plugin + tus registros · todas editables',
   'wizard.schedule.notes': 'Notas del calendario:',
   'wizard.schedule.retry': 'Reintentar',
   'wizard.schedule.sosLede':

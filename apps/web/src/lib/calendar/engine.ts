@@ -465,8 +465,10 @@ export function eventsForPlanting(
     const years = agronomy.isPerennial
       ? orchardSeasonYears(plant, ctx.now)
       : [new Date(plant).getFullYear()];
+    const plantYear = new Date(plant).getFullYear();
     for (const year of years) {
       for (const task of crop.seasonalTasks) {
+        if (task.category === 'plant' && year === plantYear) continue;
         const start = task.dayOfYear
           ? dayOfYearToMs(year, task.dayOfYear)
           : plant + (task.daysAfterPlanting ?? 0) * DAY_MS;

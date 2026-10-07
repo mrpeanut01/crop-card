@@ -514,12 +514,16 @@ export const enWizard = {
     '🛟 AI is off for this farm, so the deterministic scheduler picked these dates. Staggers + companion offsets honored.',
   'wizard.schedule.aiHelp':
     '🛟 AI needed help — deterministic scheduler took over. See chat below for what tripped it up and refine from there.',
+  'wizard.schedule.dateLabel': 'Planting date for {crop} in {block}',
+  'wizard.schedule.dateInvalid': 'Enter a full date.',
+  'wizard.schedule.dateRange': 'Pick a date within a year of the proposed one.',
   'wizard.schedule.error': 'Error: {error}',
   'wizard.schedule.fallbackDetail': 'deterministic scheduler',
   'wizard.schedule.noKey':
     '🛟 Dates picked by the deterministic scheduler (no Anthropic API key). Staggers + companion offsets honored.',
   'wizard.schedule.noteAi': 'Dates AI-proposed within plugin-derived windows · all editable',
-  'wizard.schedule.noteOff': 'AI off · deterministic scheduler · plugin windows + your records',
+  'wizard.schedule.noteOff':
+    'AI off · deterministic scheduler · plugin windows + your records · all editable',
   'wizard.schedule.notes': 'Schedule notes:',
   'wizard.schedule.retry': 'Retry',
   'wizard.schedule.sosLede':

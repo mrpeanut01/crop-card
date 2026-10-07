@@ -4,6 +4,7 @@ import { intlLocale } from '$lib/prefs';
 import {
   EARLIEST_OFFSET_DAYS,
   defaultDtmFor,
+  earliestOffsetDays,
   hardinessFrom,
   type Hardiness
 } from '$lib/schedule/scheduleCandidacy';
@@ -80,7 +81,10 @@ export function deterministicPlantingWindow(
   const hardiness = hardinessFrom(crop.soilTempMinF, crop.cropFamily);
   const dtm = crop.dtmMaxDays ?? defaultDtmFor(hardiness);
   if (frost.frostFree) return frostFreeWindow(frost, dtm, locale);
-  const earliest = addDays(frost.lastSpring, EARLIEST_OFFSET_DAYS[hardiness]);
+  const earliest = addDays(
+    frost.lastSpring,
+    earliestOffsetDays(crop.soilTempMinF, crop.cropFamily)
+  );
   const naturalLatest = addDays(frost.firstFall, -(dtm + MATURITY_BUFFER_DAYS));
 
   if (naturalLatest < earliest) {

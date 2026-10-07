@@ -302,7 +302,14 @@ test.describe('allocation wizard', () => {
       'Dates picked by the deterministic scheduler'
     );
     const scheduleRows = body(page).locator('table.aw-table tbody tr');
-    await expect(scheduleRows.first()).toContainText(/[A-Z][a-z]{2} \d{1,2}, \d{4}/);
+    const firstDate = scheduleRows.first().getByTestId('wizard-schedule-date');
+    await expect(firstDate).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
+    const proposed = await firstDate.inputValue();
+    const typed = `${Number(proposed.slice(0, 4))}-06-01`;
+    await firstDate.fill(typed);
+    await firstDate.dispatchEvent('change');
+    await expect(firstDate).toHaveValue(typed);
+    await expect(scheduleRows.first().getByRole('alert')).toHaveCount(0);
     const accept = footer(page).getByRole('button', { name: /^Accept dates → inputs plan/ });
     await expect(accept).toHaveText(`Accept dates → inputs plan (${await scheduleRows.count()})`);
 

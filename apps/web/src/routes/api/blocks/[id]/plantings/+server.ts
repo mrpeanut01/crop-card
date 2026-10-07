@@ -38,6 +38,7 @@ import { t } from '$lib/i18n';
 import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
 import { applyPlantingEstablishment, localizeSeedStartNotes } from '$lib/server/seedStartTasks';
 import { MAX_PLAN_PLANTS } from '$lib/plan/allocationApi';
+import { syncPlantingTask } from '$lib/server/plantingTask';
 
 const stockUnit = z.enum(ALL_STOCK_UNITS as unknown as [StockUnit, ...StockUnit[]]);
 
@@ -191,6 +192,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
       },
       plugin.plugin.type === 'crop' ? plugin.plugin : undefined
     );
+    syncPlantingTask(planting.id);
 
     let stockItemId = parsed.data.stockItemId;
     let purchased: { stockItemId: string } | undefined;

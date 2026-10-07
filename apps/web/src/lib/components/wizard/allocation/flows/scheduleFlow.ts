@@ -3,6 +3,28 @@ import type { AllocationWizardState } from '../wizardState.svelte';
 import type { ScheduleResponse } from '../types';
 import { wt } from '../wt';
 
+export type ScheduleDateError = 'invalid' | 'range';
+
+const YEAR_MS = 366 * 86_400_000;
+const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** A `yyyy-mm-dd` value as UTC midnight, or null when it names no real day. */
+export function parseScheduleDay(iso: string): number | null {
+  const m = ISO_DAY.exec(iso.trim());
+  if (!m) return null;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const ms = Date.UTC(y, mo - 1, d);
+  const back = new Date(ms);
+  if (back.getUTCFullYear() !== y || back.getUTCMonth() !== mo - 1 || back.getUTCDate() !== d) {
+    return null;
+  }
+  return ms;
+}
+
+export function scheduleDayIso(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
 /** Step 3 → 4 → 5: POST /api/plan/schedule, the schedule refine chat, and
  *  the handoff into the Inputs Plan step. */
 export class ScheduleFlow {
@@ -183,6 +205,26 @@ export class ScheduleFlow {
       advisories: Array.isArray(body.advisories) ? body.advisories : scheduleResponse.advisories,
       meta: body.meta ?? scheduleResponse.meta
     };
+  }
+
+  /** #723: the farmer types a planting date for one row. Returns an error
+   *  key when the value is not a usable day, else stores it as `manual`. */
+  setPlantingDate(index: number, isoDay: string): ScheduleDateError | null {
+    const current = this.#w.scheduleResponse;
+    const row = current?.scheduled[index];
+    if (!current || !row) return null;
+    const ms = parseScheduleDay(isoDay);
+    if (ms === null) return 'invalid';
+    const proposed = row.proposedDateMs ?? row.plantingDateMs;
+    if (Math.abs(ms - proposed) > YEAR_MS) return 'range';
+    if (ms === row.plantingDateMs) return null;
+    const scheduled = current.scheduled.map((s, i) =>
+      i === index
+        ? { ...s, plantingDateMs: ms, dateProvenance: 'manual' as const, proposedDateMs: proposed }
+        : s
+    );
+    this.#w.scheduleResponse = { ...current, scheduled };
+    return null;
   }
 
   /** Phase 21b / B-28 — between Schedule and Commit. Advances to the

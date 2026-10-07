@@ -376,9 +376,9 @@ describe('scheduleCandidacy for a season that crosses the new year', () => {
   it('opens a long window from late winter to fall at a Gulf-coast station', () => {
     const w = windowFor();
     expect(formatDateMs(gulf.firstFallFrostMs)).toBe(`${year + 1}-01-06`);
-    expect(formatDateMs(w.earliestMs)).toBe(`${year}-01-17`);
+    expect(formatDateMs(w.earliestMs)).toBe(`${year}-02-07`);
     expect(formatDateMs(w.latestMs)).toBe(`${year}-10-04`);
-    expect(w.latestMs - w.earliestMs).toBeGreaterThan(250 * 86_400_000);
+    expect(w.latestMs - w.earliestMs).toBeGreaterThan(230 * 86_400_000);
   });
 
   it('still frees the bed after a continuous-harvest crop ends at the January frost', () => {

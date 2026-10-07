@@ -1,6 +1,8 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import { t } from '$lib/i18n';
-import { endDemo, isDemoUser, startDemo } from '$lib/server/demo/lifecycle';
+import { endDemo, fastForwardDemo, isDemoUser, startDemo } from '$lib/server/demo/lifecycle';
+import { parseFastForwardChoice } from '$lib/demo/fastForward';
+import { realNow } from '$lib/server/clock';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => {
@@ -10,7 +12,7 @@ export const load: PageServerLoad = () => {
 function begin(event: Parameters<Actions[string]>[0], blank = false) {
   const user = event.locals.user;
   if (user && !isDemoUser(user)) throw redirect(303, '/today');
-  const result = startDemo(event, Date.now(), { blank });
+  const result = startDemo(event, realNow(), { blank });
   if (!result.ok) {
     const key =
       result.reason === 'rate-limited'
@@ -34,6 +36,18 @@ export const actions: Actions = {
   scratch: async (event) => {
     if (!isDemoUser(event.locals.user)) throw redirect(303, '/today');
     return begin(event, true);
+  },
+  forward: async (event) => {
+    if (!isDemoUser(event.locals.user)) throw redirect(303, '/today');
+    const fd = await event.request.formData();
+    const choice = parseFastForwardChoice(String(fd.get('to') ?? ''));
+    if (!choice) return fail(400, { demoError: t(event.locals.locale, 'entry.demo.ff.errChoice') });
+    const result = fastForwardDemo(event, choice);
+    if (!result.ok) {
+      if (result.reason === 'not-demo') throw redirect(303, '/today');
+      return fail(400, { demoError: t(event.locals.locale, 'entry.demo.ff.errTooFar') });
+    }
+    throw redirect(303, '/today');
   },
   end: async (event) => {
     if (isDemoUser(event.locals.user)) endDemo(event);

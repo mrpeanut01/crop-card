@@ -8,6 +8,7 @@
 
 import { NWS_BASE, USER_AGENT, WeatherFetchError } from './weather';
 import { safeFetch, type SafeFetchOptions } from './safeFetch';
+import { realNow } from '$lib/server/clock';
 
 export const FROST_EVENTS = [
   'Frost Advisory',
@@ -136,7 +137,7 @@ export async function fetchActiveAlertsBody(
   opts: Pick<SafeFetchOptions, 'resolver' | 'connector'> & { now?: number } = {}
 ): Promise<unknown> {
   const url = nwsAlertsUrl(lat, lon);
-  const now = opts.now ?? Date.now();
+  const now = opts.now ?? realNow();
   const hit = cache.get(url);
   if (hit && now - hit.at < NWS_ALERTS_CACHE_MS) return hit.body;
   let text: string;

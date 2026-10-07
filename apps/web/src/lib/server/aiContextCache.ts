@@ -24,6 +24,7 @@
 
 import { createHash } from 'node:crypto';
 import type { FarmContext } from './aiPlanning';
+import { realNow } from '$lib/server/clock';
 
 const TTL_MS = 10 * 60 * 1000;
 const MAX_ENTRIES = 8;
@@ -68,7 +69,7 @@ export function getCachedFarmContext(contextVersion: string): CacheEntry | null 
     stats.misses++;
     return null;
   }
-  if (Date.now() - entry.cachedAt > TTL_MS) {
+  if (realNow() - entry.cachedAt > TTL_MS) {
     cache.delete(contextVersion);
     stats.invalidations++;
     stats.misses++;
@@ -93,7 +94,7 @@ export function setCachedFarmContext(
     contextVersion,
     context,
     prebuiltSystemPrompt,
-    cachedAt: Date.now(),
+    cachedAt: realNow(),
     hits: 0
   };
   cache.set(contextVersion, entry);
@@ -136,7 +137,7 @@ export function getAiContextCacheStats(): {
     entries: Array.from(cache.values()).map((e) => ({
       version: e.contextVersion,
       hits: e.hits,
-      ageMs: Date.now() - e.cachedAt
+      ageMs: realNow() - e.cachedAt
     }))
   };
 }

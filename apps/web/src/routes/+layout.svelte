@@ -224,7 +224,7 @@
 {/if}
 
 {#if data.demo}
-  <DemoBanner expiresAt={data.demo.expiresAt} />
+  <DemoBanner demo={data.demo} />
 {/if}
 
 {#if data.billingGrace && !page.url.pathname.startsWith('/settings/billing')}

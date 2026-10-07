@@ -14,6 +14,7 @@ import points from './__fixtures__/nws-points-lwx.json';
 import pointsMob from './__fixtures__/nws-points-mob.json';
 import pointsBzn from './__fixtures__/nws-points-tfx-bozeman.json';
 import { WeatherFetchError } from './weather';
+import { runShifted } from './clock';
 import {
   expandValidTime,
   getHourlyForecast,
@@ -206,6 +207,20 @@ describe('getHourlyForecast', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(second.hours).toEqual(first.hours);
     expect(second.fetchedAt).toBe(now);
+  });
+
+  it('a demo request on a fast-forwarded clock caches on the real clock', async () => {
+    mockNws();
+    const lat = freshLat();
+    const before = Date.now();
+    await runShifted(400 * 86_400_000, () => getHourlyForecast(lat, -77.5));
+    const row = db
+      .select()
+      .from(weatherForecastCache)
+      .where(eq(weatherForecastCache.cacheKey, hourlyCacheKey(lat, -77.5)))
+      .get();
+    expect(row!.fetchedAt.getTime()).toBeLessThan(before + 60_000);
+    expect(row!.expiresAt.getTime()).toBeLessThanOrEqual(Date.now() + HOURLY_CACHE_TTL_MS);
   });
 
   it('refetches after the TTL and upserts the same cache row', async () => {

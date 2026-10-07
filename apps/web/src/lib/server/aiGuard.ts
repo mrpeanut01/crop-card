@@ -43,6 +43,7 @@ import {
 import type { AiLimitDetail } from '$lib/billing/aiLimit';
 import { resolvePlan } from './billing/plans';
 import { incrementUsageCounter } from './superadmin';
+import { realNow } from '$lib/server/clock';
 
 export interface TokenQuotaContext {
   tokenId: string;
@@ -83,13 +84,13 @@ export type GuardOutcome =
       upgrade?: PaidPlanId | null;
     };
 
-function utcDayStart(now = Date.now()): number {
+function utcDayStart(now = realNow()): number {
   const d = new Date(now);
   d.setUTCHours(0, 0, 0, 0);
   return d.getTime();
 }
 
-function utcMonthStart(now = Date.now()): number {
+function utcMonthStart(now = realNow()): number {
   const d = new Date(now);
   return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 0, 0, 0, 0);
 }
@@ -168,7 +169,7 @@ const SETTLED_TTL_MS = 2 * 60_000;
 const holds = new Map<number, LedgerHold>();
 let nextHoldId = 1;
 
-function liveHolds(now = Date.now()): LedgerHold[] {
+function liveHolds(now = realNow()): LedgerHold[] {
   const out: LedgerHold[] = [];
   for (const h of holds.values()) {
     const ttl = h.settled ? SETTLED_TTL_MS : IN_FLIGHT_TTL_MS;
@@ -191,7 +192,7 @@ function heldCalls(filter: (h: LedgerHold) => boolean): number {
 }
 
 function openHold(input: Omit<LedgerHold, 'id' | 'at' | 'settled' | 'day' | 'month'>): GuardHold {
-  const now = Date.now();
+  const now = realNow();
   const hold: LedgerHold = {
     ...input,
     id: nextHoldId++,
@@ -207,7 +208,7 @@ function openHold(input: Omit<LedgerHold, 'id' | 'at' | 'settled' | 'day' | 'mon
       if (!h) return;
       h.usd = Number.isFinite(usd) && usd > 0 ? usd : 0;
       h.settled = true;
-      h.at = Date.now();
+      h.at = realNow();
     },
     adjust(usd: number) {
       const h = holds.get(hold.id);
@@ -289,7 +290,7 @@ export function resetDeploymentSpendMemo(): void {
   deploymentSpendMemo = null;
 }
 
-function deploymentUsdSpent(now = Date.now()): number {
+function deploymentUsdSpent(now = realNow()): number {
   const monthStart = utcMonthStart(now);
   const memo = deploymentSpendMemo;
   if (memo && memo.monthStart === monthStart && now - memo.at < DEPLOYMENT_SPEND_TTL_MS) {
@@ -315,7 +316,7 @@ export function resetFreePoolCache(): void {
   freePoolCache = null;
 }
 
-function freePoolUsdSpent(now = Date.now()): number {
+function freePoolUsdSpent(now = realNow()): number {
   const monthStart = utcMonthStart(now);
   if (
     freePoolCache &&
@@ -362,7 +363,7 @@ function activePlan(): ResolvedPlan {
     subscription: null,
     ownerCreatedAt: 0,
     boostEligible: false,
-    now: Date.now()
+    now: realNow()
   });
 }
 

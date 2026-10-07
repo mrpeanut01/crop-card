@@ -9,6 +9,7 @@ import {
   DEMO_TTL_MS,
   isDemoOwnerId
 } from '$lib/demo/identity';
+import { realNow } from '$lib/server/clock';
 
 /** Global tables that carry an owner id for context only and outlive the
  *  farm (feedback triage, the superadmin audit trail). */
@@ -90,7 +91,7 @@ export function countDemoOwners(): number {
 
 /** Deletes up to `limit` demo farms whose time is up, oldest first.
  *  @hold-exempt: only whole demo farms are erased */
-export function purgeExpiredDemoOwners(now = Date.now(), limit = 25): number {
+export function purgeExpiredDemoOwners(now = realNow(), limit = 25): number {
   let purged = 0;
   for (const id of listExpiredDemoOwnerIds(now - DEMO_TTL_MS, limit)) {
     try {
@@ -124,7 +125,7 @@ export function deleteFarmlessDemoUser(userId: string): void {
 
 /** Farmless demo users whose time is up (a "Start from scratch" visitor who
  *  left before naming a farm). */
-export function purgeExpiredFarmlessDemoUsers(now = Date.now(), limit = 25): number {
+export function purgeExpiredFarmlessDemoUsers(now = realNow(), limit = 25): number {
   unscopedQueryNote('demo expiry sweep reads farmless demo users across all tenants');
   const ids = db
     .select({ id: users.id })

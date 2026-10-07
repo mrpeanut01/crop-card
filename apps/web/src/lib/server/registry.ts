@@ -19,6 +19,7 @@ import { currentOwnerId } from '$lib/db/tenant';
 import { HIDDEN_PAYLOAD, listEffectiveOverrides, overridesRevision } from '$lib/db/pluginOverrides';
 import { listAllCurrent } from '$lib/db/pluginVersions';
 import { runtimeCatalogOverlay } from './pluginCatalogOverlay';
+import { realNow } from '$lib/server/clock';
 
 let cached: { registry: PluginRegistry; loadedAt: number; failures: string[] } | null = null;
 let cachedRecipes: BedRecipeRegistry | null = null;
@@ -115,7 +116,7 @@ export async function getBaseRegistry(): Promise<PluginRegistry> {
   baseGeneration += 1;
   cached = {
     registry,
-    loadedAt: Date.now(),
+    loadedAt: realNow(),
     failures: result.failed.map((f) => `${path.basename(f.file)}: ${f.error.message}`)
   };
   if (cached.failures.length > 0) {

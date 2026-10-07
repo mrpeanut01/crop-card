@@ -15,6 +15,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { weatherForecastCache } from '$lib/db/schema';
 import { getFarmLatLon } from '$lib/schedule/settings';
+import { realNow } from '$lib/server/clock';
 
 const USER_AGENT = '(cropcard-pwa, ops@cropcard.local)';
 const FORECAST_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
@@ -41,7 +42,7 @@ function readCache(key: string): ForecastDay[] | null {
     .get();
   if (!row) return null;
   const expiresAt = row.expiresAt instanceof Date ? row.expiresAt.getTime() : Number(row.expiresAt);
-  if (Date.now() > expiresAt) return null;
+  if (realNow() > expiresAt) return null;
   try {
     return JSON.parse(row.payloadJson) as ForecastDay[];
   } catch {
@@ -50,7 +51,7 @@ function readCache(key: string): ForecastDay[] | null {
 }
 
 function writeCache(key: string, days: ForecastDay[]) {
-  const now = Date.now();
+  const now = realNow();
   const expires = now + FORECAST_TTL_MS;
   const existing = db
     .select()

@@ -20,6 +20,7 @@
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { Cookies } from '@sveltejs/kit';
+import { realNow } from '$lib/server/clock';
 
 const COOKIE_NAME = 'cropcard.session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -139,7 +140,7 @@ function verify(cookie: string): SessionPayload | null {
     return null;
   }
   const p = parsed as Partial<SessionPayload>;
-  if (typeof p.exp !== 'number' || p.exp < Date.now()) return null;
+  if (typeof p.exp !== 'number' || p.exp < realNow()) return null;
   const email = typeof p.email === 'string' ? p.email : null;
   const phone = typeof p.phone === 'string' ? p.phone : null;
   if (!email && !phone) return null;
@@ -196,8 +197,8 @@ export function writeSession(
     activeOwnerId: user.activeOwnerId,
     activeRole: user.activeRole,
     impersonating: user.impersonating,
-    iat: user.iat ?? Date.now(),
-    exp: Date.now() + ttlMs
+    iat: user.iat ?? realNow(),
+    exp: realNow() + ttlMs
   };
   cookies.set(COOKIE_NAME, sign(payload), {
     path: '/',

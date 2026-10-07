@@ -8,6 +8,7 @@
   import { calendarEventBody, calendarEventTitle } from '$lib/calendar/eventTitle';
   import { periodCardPrintHref, printRangeNote, periodPrintable } from '$lib/cards/build/calendar';
   import type { CalendarEvent } from '$lib/calendar/engine';
+  import { calendarEventKeys } from '$lib/calendar/eventKey';
   import type { Task } from '$lib/db/tasks';
   import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
   import Banner from '$lib/components/ui/Banner.svelte';
@@ -258,6 +259,7 @@
   const todayEvents = $derived(
     eventsForWindow([], data.eventsToday as CalendarEvent[], 'today', data.nowMs)
   );
+  const todayEventKeys = $derived(calendarEventKeys(todayEvents));
 
   const forecastByDate = $derived(
     data.weather.status === 'ok' ? weatherByDate(data.weather.days) : {}
@@ -987,7 +989,7 @@
         {tr('today.sugg.hint')}
       </p>
       <ul class="suggestions" aria-label={tr('today.sugg.aria')}>
-        {#each todayEvents as e (e.kind + e.blockId + e.startMs + e.title)}
+        {#each todayEvents as e, i (todayEventKeys[i])}
           <li>{@render suggestionCard(e)}</li>
         {/each}
       </ul>

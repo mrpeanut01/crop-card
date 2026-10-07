@@ -184,6 +184,7 @@ export function runCarryForward(
   // Re-validate shifted dates against the schedule candidacy window for the
   // new season, computed from frost dates + block occupancy of the toYear.
   const cloneCandidates: PlantingCloneCandidate[] = priorCrops.map((c) => ({
+    sourcePlantingId: c.id,
     blockId: c.blockId,
     cropPluginId: c.cropPluginId,
     varietyDisplayName: c.varietyDisplayName,

@@ -238,6 +238,7 @@ export function classifyStockCarry(
 // ─── 3. Planting-template clone ────────────────────────────────────────────
 
 export interface PlantingCloneCandidate {
+  sourcePlantingId: string;
   blockId: string;
   cropPluginId: string;
   varietyDisplayName: string;
@@ -259,6 +260,7 @@ export interface ScheduleWindowLite {
 export type CloneDateProvenance = 'shifted-plus-one-year' | 'clamped-to-window' | 'no-source-date';
 
 export interface ClonedPlanting {
+  sourcePlantingId: string;
   blockId: string;
   cropPluginId: string;
   varietyDisplayName: string;
@@ -338,6 +340,7 @@ export function clonePlantings(
     }
 
     out.push({
+      sourcePlantingId: c.sourcePlantingId,
       blockId: c.blockId,
       cropPluginId: c.cropPluginId,
       varietyDisplayName: c.varietyDisplayName,

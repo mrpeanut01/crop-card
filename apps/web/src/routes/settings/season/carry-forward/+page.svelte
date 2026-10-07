@@ -143,7 +143,7 @@
       <p class="hint">{tr('settings.carry.noClone')}</p>
     {:else}
       <ul class="rows">
-        {#each data.preview.clonedPlantings as c (`${c.blockId}-${c.cropPluginId}`)}
+        {#each data.preview.clonedPlantings as c (c.sourcePlantingId)}
           <li class="row">
             <span class="row-title"
               >{cropDisplayNameByEnglish(c.varietyDisplayName, data.locale)}</span

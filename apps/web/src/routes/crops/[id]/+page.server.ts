@@ -10,6 +10,7 @@ import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listTasks } from '$lib/db/tasks';
 import { eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
+import { applySeasonSprayFilter } from '$lib/season/sprayWindowFilter.server';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
 import { calendarEventTitle } from '$lib/calendar/eventTitle';
@@ -61,7 +62,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       },
       cropPlugin,
       { blockPlantings: block.plantings }
-    ).map((e) => ({ ...e, title: calendarEventTitle(e, locals.locale) }));
+    );
+    projected = applySeasonSprayFilter(projected, () => registry.herbicides()).map((e) => ({
+      ...e,
+      title: calendarEventTitle(e, locals.locale)
+    }));
   }
 
   return {

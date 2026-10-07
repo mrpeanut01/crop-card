@@ -889,18 +889,21 @@ export const enWizard = {
   'inputs.warn.noCompliant.title': 'No compliant product for {name}',
   'inputs.warn.noCompliant.body':
     '{reason} — review on /settings/season and /inventory, or relax the philosophy filter.',
-  'inputs.warn.yield.title': 'Yield goal missing for {name}',
+  'inputs.warn.yield.title': 'No fertility planned for {name}',
   'inputs.warn.yield.body':
-    'Family "{family}" has no yield-goal default. N/P/K rates use a conservative fallback; edit the planting to set a target yield for sharper rates.',
+    'The crop library has no nutrient default for the "{family}" family, so no pre-plant fertility was planned for it. Use your soil test and extension guide to set a rate.',
   'inputs.warn.purpose.title': 'Spray-window purpose missing on {name}',
   'inputs.warn.purpose.body':
     'Crop plugin "{plugin}" has a "{window}" window without a tagged purpose — that window was skipped. File a plugin issue or add the purpose field.',
   'inputs.warn.anchor.title': 'No planting date set on {name}',
   'inputs.warn.anchor.body':
     'Schedule a planting date in the Schedule step so applications can anchor to it.',
-  'inputs.warn.stage.title': 'No IPM scout cadence library for {name}',
+  'inputs.warn.stage.title': 'No growth-stage table for {name}',
   'inputs.warn.stage.body':
-    'Crop plugin "{plugin}" isn\'t in the growth-stage table — a general 7-day scouting reminder was added in place of the targeted cadence.',
+    'Crop plugin "{plugin}" times some spray windows by growth stage but has no growth-stage table, so those windows were not planned. Check the product label for timing on this crop.',
+  'inputs.warn.herb.title': 'No herbicide planned for some crops',
+  'inputs.warn.herb.body':
+    'The crop library has no herbicide timing for {names}, so no herbicide was planned for them. Check the label of the herbicide you use for its timing on each crop.',
   'inputs.loadFailed': 'failed to load plan',
   'inputs.title': 'Inputs plan',
   'inputs.lede':
@@ -935,6 +938,8 @@ export const enWizard = {
   'inputs.pickProduct': 'Pick a product',
   'inputs.pickProductShort': 'pick product',
   'inputs.rateMissing': 'No rate for this product here. Check its label for the amount.',
+  'inputs.bedWide.one': 'Covers the whole bed once, for its {count} planting.',
+  'inputs.bedWide.other': 'Covers the whole bed once, for its {count} plantings.',
   'inputs.scout': 'scout',
   'inputs.every': 'every {n}d',
   'inputs.warnings': 'Warnings ({n})',
@@ -948,6 +953,8 @@ export const enWizard = {
   'inputs.need': 'Need:',
   'inputs.onHand': 'On hand:',
   'inputs.unitMismatch': 'You have some, kept in {unit}. Check the label to see if it covers this.',
+  'inputs.unitMismatchOnHand':
+    'You have {amount} on hand. There is no density on file to turn {unit} into {need}, so check the label to see if it covers this.',
   'inputs.buy': 'Buy:',
   'inputs.coveredShort': 'Covered',
   'inputs.unsizedList.one':

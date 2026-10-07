@@ -28,6 +28,7 @@ import type { CropPlugin } from '$lib/plugins/schemas';
 import type { PluginRegistry } from '$lib/plugins';
 import { listPlantingsForCardsByIds } from '$lib/db/cardSnapshot';
 import { getRegistry } from '$lib/server/registry';
+import { applySeasonSprayFilter } from '$lib/season/sprayWindowFilter.server';
 import { listSprayers } from '$lib/server/sprayers';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { loadTodayWeather } from '$lib/server/todayWeather';
@@ -111,6 +112,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       );
     }
   }
+
+  const seasonEvents = applySeasonSprayFilter(allEvents, () => registry.herbicides(), now);
+  allEvents.length = 0;
+  allEvents.push(...seasonEvents);
 
   // FR-08 curing reminders. Every view below starts at today, so a harvest
   // matters only while its longest curing window can still be open.

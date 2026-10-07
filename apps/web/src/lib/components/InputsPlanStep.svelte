@@ -147,6 +147,17 @@
           title: tr('inputs.warn.noCompliant.title', { name: plantingName }),
           body: tr('inputs.warn.noCompliant.body', { reason: noCompliantReason(w) })
         };
+      case 'no-herbicide-timing': {
+        const names = [
+          ...new Set(
+            w.plantingIds.map((id) => plantings.find((p) => p.id === id)?.varietyDisplayName ?? id)
+          )
+        ];
+        return {
+          title: tr('inputs.warn.herb.title'),
+          body: tr('inputs.warn.herb.body', { names: names.join(', ') })
+        };
+      }
       case 'missing-yield-goal':
         return {
           title: tr('inputs.warn.yield.title', { name: plantingName }),
@@ -472,6 +483,11 @@
                         <Provenance source={sourceFor(app)} compact />
                       </div>
                       <p class="rationale">{localizeRationale(app.rationale, currentPrefs())}</p>
+                      {#if (app.coversPlantingIds?.length ?? 0) > 1}
+                        <p class="rationale" data-testid="bed-wide">
+                          {tr('inputs.bedWide', { count: app.coversPlantingIds?.length ?? 0 })}
+                        </p>
+                      {/if}
                       {#if app.rateAmount != null && app.rateUnit}
                         <p class="rate-line">{formatApplicationRateLine(app, currentPrefs())}</p>
                       {:else if app.productPluginId}
@@ -558,16 +574,36 @@
                       )}</strong
                     ></span
                   >
-                  <span
-                    >{tr('inputs.onHand')}
-                    {formatInputAmount(item.onHand, item.unit, item.category, currentPrefs())}</span
-                  >
-                  {#if item.stockUnitMismatch}
-                    <span class="unit-mismatch"
-                      >{tr('inputs.unitMismatch', { unit: item.stockUnitMismatch })}</span
+                  {#if item.stockUnitMismatch && item.stockOnHandInStockUnit != null}
+                    <span class="unit-mismatch" data-testid="unit-mismatch"
+                      >{tr('inputs.unitMismatchOnHand', {
+                        amount: formatInputAmount(
+                          item.stockOnHandInStockUnit,
+                          item.stockUnitMismatch,
+                          item.category,
+                          currentPrefs()
+                        ),
+                        unit: item.stockUnitMismatch,
+                        need: item.unit
+                      })}</span
                     >
+                  {:else}
+                    <span
+                      >{tr('inputs.onHand')}
+                      {formatInputAmount(
+                        item.onHand,
+                        item.unit,
+                        item.category,
+                        currentPrefs()
+                      )}</span
+                    >
+                    {#if item.stockUnitMismatch}
+                      <span class="unit-mismatch"
+                        >{tr('inputs.unitMismatch', { unit: item.stockUnitMismatch })}</span
+                      >
+                    {/if}
                   {/if}
-                  {#if item.shortfall > 0}
+                  {#if !item.stockUnitMismatch && item.shortfall > 0}
                     <span class="shortfall"
                       >{tr('inputs.buy')}
                       {formatInputAmount(
@@ -577,7 +613,7 @@
                         currentPrefs()
                       )}</span
                     >
-                  {:else}
+                  {:else if !item.stockUnitMismatch}
                     <span class="covered">✓ {tr('inputs.coveredShort')}</span>
                   {/if}
                 </div>

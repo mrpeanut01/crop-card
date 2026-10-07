@@ -921,18 +921,21 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'inputs.warn.noCompliant.title': 'No hay un producto compatible para {name}',
   'inputs.warn.noCompliant.body':
     '{reason} Revisa /settings/season y /inventory, o flexibiliza el filtro de enfoque.',
-  'inputs.warn.yield.title': 'Falta la meta de rendimiento de {name}',
+  'inputs.warn.yield.title': 'No se planificó fertilización para {name}',
   'inputs.warn.yield.body':
-    'La familia "{family}" no tiene una meta de rendimiento predeterminada. Las dosis de N/P/K usan un valor conservador; edita la siembra y pon una meta de rendimiento para dosis más precisas.',
+    'La biblioteca de cultivos no tiene valores de nutrientes predeterminados para la familia "{family}", así que no se planificó fertilización antes de sembrar. Usa tu análisis de suelo y la guía de extensión para fijar una dosis.',
   'inputs.warn.purpose.title': 'Falta el propósito de la ventana de aplicación en {name}',
   'inputs.warn.purpose.body':
     'El complemento de cultivo "{plugin}" tiene una ventana "{window}" sin propósito marcado, así que se omitió. Reporta el problema del complemento o agrega el campo de propósito.',
   'inputs.warn.anchor.title': '{name} no tiene fecha de siembra',
   'inputs.warn.anchor.body':
     'Programa una fecha de siembra en el paso Calendario para que las aplicaciones se basen en ella.',
-  'inputs.warn.stage.title': 'No hay una frecuencia de monitoreo MIP para {name}',
+  'inputs.warn.stage.title': 'No hay tabla de etapas de crecimiento para {name}',
   'inputs.warn.stage.body':
-    'El complemento de cultivo "{plugin}" no está en la tabla de etapas de crecimiento, así que se agregó un recordatorio general de monitoreo cada 7 días en lugar de la frecuencia específica.',
+    'El complemento de cultivo "{plugin}" fija algunas ventanas de aplicación por etapa de crecimiento, pero no tiene tabla de etapas, así que esas ventanas no se planificaron. Revisa la etiqueta del producto para saber cuándo aplicarlo en este cultivo.',
+  'inputs.warn.herb.title': 'No se planificó herbicida para algunos cultivos',
+  'inputs.warn.herb.body':
+    'La biblioteca de cultivos no tiene fechas de herbicida para {names}, así que no se planificó herbicida para ellos. Revisa la etiqueta del herbicida que uses para saber cuándo aplicarlo en cada cultivo.',
   'inputs.loadFailed': 'no se pudo cargar el plan',
   'inputs.title': 'Plan de insumos',
   'inputs.lede':
@@ -969,6 +972,8 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'inputs.pickProductShort': 'elige producto',
   'inputs.rateMissing':
     'No hay dosis para este producto aquí. Revisa su etiqueta para saber la cantidad.',
+  'inputs.bedWide.one': 'Cubre toda la cama una vez, para su {count} siembra.',
+  'inputs.bedWide.other': 'Cubre toda la cama una vez, para sus {count} siembras.',
   'inputs.scout': 'monitoreo',
   'inputs.every': 'cada {n} d',
   'inputs.warnings': 'Advertencias ({n})',
@@ -982,6 +987,8 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'inputs.need': 'Necesitas:',
   'inputs.onHand': 'En existencia:',
   'inputs.unitMismatch': 'Tienes algo, guardado en {unit}. Revisa la etiqueta para ver si alcanza.',
+  'inputs.unitMismatchOnHand':
+    'Tienes {amount} en existencia. No hay una densidad registrada para convertir {unit} a {need}, así que revisa la etiqueta para ver si alcanza.',
   'inputs.buy': 'Comprar:',
   'inputs.coveredShort': 'Cubierto',
   'inputs.unsizedList.one':

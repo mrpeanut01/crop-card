@@ -283,7 +283,14 @@ export function eventsForPlanting(
         endMs,
         title: w.title,
         body: w.body,
-        detail: { chemistryClass: w.chemistryClass, stage: w.stageCode, anchor: w.anchor }
+        detail: {
+          chemistryClass: w.chemistryClass,
+          stage: w.stageCode,
+          anchor: w.anchor,
+          purpose: w.purpose,
+          weedStrategyGate: w.weedStrategyGate,
+          plantedAt: plant
+        }
       });
     }
   }
@@ -305,7 +312,12 @@ export function eventsForPlanting(
       endMs: v2 ? v2.endMs : plant + 22 * DAY_MS,
       title: 'POST broadleaf scout window (V2–V3)',
       body: 'Scout block; if ≥3 broadleaves per 10 sq ft, plan a 2,4-D spray. Block-level lockout if companions are co-planted.',
-      detail: { stage: 'V2-V3' }
+      detail: {
+        stage: 'V2-V3',
+        chemistryClass: 'synthetic-auxin',
+        purpose: 'post-emergent',
+        plantedAt: plant
+      }
     });
     events.push({
       kind: 'spray-window',
@@ -317,7 +329,12 @@ export function eventsForPlanting(
       endMs: v6 ? v6.endMs : v4 ? v4.endMs : plant + 35 * DAY_MS,
       title: 'POST grass + late broadleaf window (V4–V6)',
       body: 'Window for Mesotrione + Stadia. Verify decon if sprayer last ran auxin.',
-      detail: { stage: 'V4-V6' }
+      detail: {
+        stage: 'V4-V6',
+        chemistryClass: 'hppd-inhibitor',
+        purpose: 'post-emergent',
+        plantedAt: plant
+      }
     });
   }
 
@@ -395,7 +412,8 @@ export function eventsForPlanting(
       startMs: plant + 30 * DAY_MS,
       endMs: plant + 60 * DAY_MS,
       title: 'POST grass window (Clethodim)',
-      body: 'For grass escapes in the pumpkin block. Verify sprayer never carried auxin without decon.'
+      body: 'For grass escapes in the pumpkin block. Verify sprayer never carried auxin without decon.',
+      detail: { chemistryClass: 'accase-inhibitor', purpose: 'post-emergent', plantedAt: plant }
     });
   }
 

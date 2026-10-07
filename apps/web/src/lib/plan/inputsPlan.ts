@@ -60,6 +60,7 @@ import type {
 } from '$lib/plugins/schemas';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 import { isProductAllowed } from '$lib/season/philosophyFilter';
+import { effectiveWeedGate, weedStrategyAllows } from '$lib/season/sprayWindowFilter';
 import { nCreditForIntent } from '$lib/fertility/coverCropCredits';
 import type {
   FertilityApproach,
@@ -88,25 +89,11 @@ export type { InputsPlanProductOption, ProductSource, StockCoverage } from './in
 
 /* ─── Tier comparators ──────────────────────────────────────────────── */
 
-const WEED_TIER: Record<WeedStrategy, number> = {
-  'cultivate-first': 0,
-  'pre-emergence-ok': 1,
-  'post-emergence-ok': 2
-};
-
 const PEST_TIER: Record<PestStrategy, number> = {
   minimal: 0,
   ipm: 1,
   preventive: 2
 };
-
-/** A spray window with `weedStrategyGate: G` emits when the season-setup
- *  tier is at least G. Absent gate = always emit (back-compat with v1
- *  plugins that lack the field). */
-function weedGateAllows(gate: WeedStrategy | undefined, setup: WeedStrategy): boolean {
-  if (!gate) return true;
-  return WEED_TIER[setup] >= WEED_TIER[gate];
-}
 
 function pestGateAllows(gate: 'preventive' | 'ipm' | undefined, setup: PestStrategy): boolean {
   if (!gate) return true;
@@ -296,6 +283,9 @@ export interface InputsPlanApplication {
   /** #480 — every product the farmer may pick for this slot, on-hand first
    *  (enough, then some, then none). */
   options?: InputsPlanProductOption[];
+  /** #710 — a pre-plant application covers the whole bed once, for every
+   *  planting in it. */
+  coversPlantingIds?: string[];
 }
 
 /** A recurring scout reminder — surfaced in `tasks` with a recurrence
@@ -325,6 +315,8 @@ export interface InputsPlanShoppingItem {
   /** Set to the stock's unit when the farm has this product but in a unit
    *  the rate cannot be converted to (a volume against a weight). */
   stockUnitMismatch?: string;
+  /** #721 — that stock's balance in its own unit. */
+  stockOnHandInStockUnit?: number;
   appliesToPlantingIds: string[];
 }
 
@@ -338,7 +330,16 @@ export type PlannerWarning =
   | {
       kind: 'missing-yield-goal';
       plantingId: string;
+      cropPluginId?: string;
       cropFamily: string;
+    }
+  | {
+      /** #720 — crops whose library entry has no herbicide timing, so no
+       *  herbicide was planned for them although the weed strategy allows
+       *  one. One warning for the whole plan. */
+      kind: 'no-herbicide-timing';
+      plantingId: string;
+      plantingIds: string[];
     }
   | {
       kind: 'missing-spray-window-purpose';
@@ -683,7 +684,8 @@ function allowedCandidates<T extends Parameters<typeof isProductAllowed>[0]>(
 /** Fertilizers in preference order for the requested nutrient emphasis:
  *  `'n'` puts the highest-N first; `'balanced'` puts products with all
  *  three nutrients first. Compost and cover-crop approaches prefer
- *  `organic === true` products when any are allowed. */
+ *  `organic === true` products when any are allowed, and the synthetic
+ *  approach prefers the ones that are not. */
 function fertilizerPreference(
   pool: ReadonlyArray<FertilizerPlugin>,
   philosophy: Philosophy,
@@ -695,7 +697,9 @@ function fertilizerPreference(
   const approachFiltered =
     approach === 'compost-amendments' || approach === 'cover-crop-credits'
       ? allowed.filter((p) => p.organic === true)
-      : allowed;
+      : approach === 'synthetic'
+        ? allowed.filter((p) => p.organic !== true)
+        : allowed;
   const pool2 = approachFiltered.length > 0 ? approachFiltered : allowed;
   if (emphasis === 'n') return [...pool2].sort((a, b) => b.analysis.n - a.analysis.n);
   const complete = (p: FertilizerPlugin) =>
@@ -735,6 +739,138 @@ function applicationId(plantingId: string, slot: string, index: number): string 
   return `${plantingId}::${slot}::${index}`;
 }
 
+function isWeedPurpose(purpose: SprayWindowPurpose | undefined): boolean {
+  return purpose === 'burndown' || purpose === 'pre-emergent' || purpose === 'post-emergent';
+}
+
+/* ─── Per-bed facts (#710) ──────────────────────────────────────────── */
+
+/** A bed is prepared once a season, whatever is grown in it: one pre-plant
+ *  fertility pass before its first planting, sized for the hungriest crop
+ *  family in it, and one cover-crop termination. */
+interface BedPlan {
+  firstPlantingId: string;
+  firstPlantingMs: number;
+  plantingIds: string[];
+  fertility?: {
+    leadPlantingId: string;
+    families: string[];
+    removal: { n: number; p: number; k: number };
+  };
+}
+
+function planBeds(input: InputsPlanInput): Map<string, BedPlan> {
+  const byBlock = new Map<
+    string,
+    Array<{ planting: InputsPlanProvisionalPlanting; crop: CropPlugin }>
+  >();
+  const blockIds = new Set(input.blocks.map((b) => b.id));
+  for (const planting of input.plantings) {
+    const crop = input.cropPlugins[planting.cropPluginId];
+    if (!crop || !blockIds.has(planting.blockId) || planting.plantingDate == null) continue;
+    const list = byBlock.get(planting.blockId) ?? [];
+    list.push({ planting, crop });
+    byBlock.set(planting.blockId, list);
+  }
+  const beds = new Map<string, BedPlan>();
+  for (const [blockId, list] of byBlock) {
+    const sorted = list
+      .map((x, i) => ({ ...x, i }))
+      .sort((a, b) => a.planting.plantingDate! - b.planting.plantingDate! || a.i - b.i);
+    const first = sorted[0];
+    const bed: BedPlan = {
+      firstPlantingId: first.planting.id,
+      firstPlantingMs: first.planting.plantingDate!,
+      plantingIds: sorted.map((x) => x.planting.id)
+    };
+    const fed = sorted.filter((x) => FAMILY_REMOVAL_DEFAULTS[x.crop.cropFamily]);
+    if (fed.length > 0) {
+      const removal = { n: 0, p: 0, k: 0 };
+      const families: string[] = [];
+      for (const x of fed) {
+        const d = FAMILY_REMOVAL_DEFAULTS[x.crop.cropFamily]!;
+        removal.n = Math.max(removal.n, d.nRemovalLbPerAcre);
+        removal.p = Math.max(removal.p, d.pRemovalLbPerAcre);
+        removal.k = Math.max(removal.k, d.kRemovalLbPerAcre);
+        if (!families.includes(x.crop.cropFamily)) families.push(x.crop.cropFamily);
+      }
+      bed.fertility = { leadPlantingId: fed[0].planting.id, families, removal };
+    }
+    beds.set(blockId, bed);
+  }
+  return beds;
+}
+
+/** One scout reminder per bed and pest list: successions and crops of one
+ *  family in a bed share a walk (#710). */
+function mergeScoutTasks(
+  tasks: ReadonlyArray<InputsPlanScoutTask>,
+  input: InputsPlanInput
+): InputsPlanScoutTask[] {
+  const nameOf = new Map(input.plantings.map((p) => [p.id, p.varietyDisplayName]));
+  const groups = new Map<string, InputsPlanScoutTask[]>();
+  for (const t of tasks) {
+    const family = input.cropPlugins[t.cropPluginId]?.cropFamily ?? t.cropPluginId;
+    const key = `${t.blockId}\u0000${family}`;
+    const list = groups.get(key) ?? [];
+    list.push(t);
+    groups.set(key, list);
+  }
+  const out: InputsPlanScoutTask[] = [];
+  for (const list of groups.values()) {
+    if (list.length === 1) {
+      out.push(list[0]);
+      continue;
+    }
+    const sorted = [...list].sort((a, b) => a.windowStartMs - b.windowStartMs);
+    const lead = sorted[0];
+    const cadence = FAMILY_SCOUT_CADENCE[input.cropPlugins[lead.cropPluginId]?.cropFamily];
+    const names = [...new Set(sorted.map((t) => nameOf.get(t.plantingId) ?? t.cropPluginId))];
+    out.push({
+      ...lead,
+      title: cadence ? `Scout ${names.join(', ')} for ${cadence.targets}` : lead.title,
+      recurrenceDays: Math.min(...sorted.map((t) => t.recurrenceDays)),
+      windowStartMs: lead.windowStartMs,
+      windowEndMs: Math.max(...sorted.map((t) => t.windowEndMs))
+    });
+  }
+  return out;
+}
+
+function warningKey(w: PlannerWarning, cropOf: (plantingId: string) => string): string {
+  switch (w.kind) {
+    case 'no-compliant-product':
+      return `${w.kind}|${cropOf(w.plantingId)}|${w.slot}|${w.reason}`;
+    case 'missing-yield-goal':
+      return `${w.kind}|${cropOf(w.plantingId)}`;
+    case 'missing-spray-window-purpose':
+      return `${w.kind}|${w.cropPluginId}|${w.windowTitle}`;
+    case 'no-growth-stage-table':
+      return `${w.kind}|${w.cropPluginId}`;
+    case 'missing-anchor-date':
+    case 'no-herbicide-timing':
+      return `${w.kind}|${w.plantingId}`;
+  }
+}
+
+/** One warning per crop and kind, not one per planting or per window (#721). */
+function dedupeWarnings(
+  warnings: ReadonlyArray<PlannerWarning>,
+  input: InputsPlanInput
+): PlannerWarning[] {
+  const cropOfPlanting = new Map(input.plantings.map((p) => [p.id, p.cropPluginId]));
+  const cropOf = (id: string) => cropOfPlanting.get(id) ?? id;
+  const seen = new Set<string>();
+  const out: PlannerWarning[] = [];
+  for (const w of warnings) {
+    const key = warningKey(w, cropOf);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(w);
+  }
+  return out;
+}
+
 /* ─── Per-planting decisions ─────────────────────────────────────── */
 
 interface PerPlantingOutput {
@@ -748,7 +884,8 @@ function planForPlanting(
   block: Block,
   crop: CropPlugin,
   input: InputsPlanInput,
-  stockLeft: Map<string, StockAmount[]>
+  stockLeft: Map<string, StockAmount[]>,
+  bed: BedPlan | undefined
 ): PerPlantingOutput {
   const { seasonSetup, productPlugins, soilTests, fertilityCredits, year } = input;
   const applications: InputsPlanApplication[] = [];
@@ -791,7 +928,7 @@ function planForPlanting(
     }
 
     // Strategy gates.
-    if (!weedGateAllows(window.weedStrategyGate, seasonSetup.weedStrategy)) continue;
+    if (!weedStrategyAllows(effectiveWeedGate(window), seasonSetup.weedStrategy)) continue;
     if (!pestGateAllows(window.pestStrategyGate, seasonSetup.pestStrategy)) continue;
 
     const dates = resolveWindowDates(window, plantingDateMs, crop);
@@ -845,13 +982,16 @@ function planForPlanting(
   /* 2. Pre-plant fertility (synthesized) ─────────────────────────── */
 
   const removal = FAMILY_REMOVAL_DEFAULTS[crop.cropFamily];
-  if (!removal) {
+  const bedFert = bed?.fertility;
+  if (!removal && !bedFert) {
     warnings.push({
       kind: 'missing-yield-goal',
       plantingId: planting.id,
+      cropPluginId: crop.pluginId,
       cropFamily: crop.cropFamily
     });
-  } else if (plantingDateMs != null && acres > 0) {
+  } else if (bed && bedFert && bedFert.leadPlantingId === planting.id && acres > 0) {
+    const bedRemoval = bedFert.removal;
     const test = latestSoilTest(soilTests, planting.blockId);
     const explicitCredits = sumCredits(fertilityCredits, planting.blockId, year);
     const soilCredits = {
@@ -860,9 +1000,9 @@ function planForPlanting(
       k: kCreditFromSoilTestLbPerAcre(test)
     };
     const deficit = {
-      n: removal.nRemovalLbPerAcre - soilCredits.n - explicitCredits.n,
-      p: removal.pRemovalLbPerAcre - soilCredits.p - explicitCredits.p,
-      k: removal.kRemovalLbPerAcre - soilCredits.k - explicitCredits.k
+      n: bedRemoval.n - soilCredits.n - explicitCredits.n,
+      p: bedRemoval.p - soilCredits.p - explicitCredits.p,
+      k: bedRemoval.k - soilCredits.k - explicitCredits.k
     };
 
     // UC-47 — prefer the per-block credit from ACTUAL terminated cover crops
@@ -913,8 +1053,8 @@ function planForPlanting(
         });
       }
 
-      const windowEnd = plantingDateMs - 7 * DAY_MS;
-      const windowStart = plantingDateMs - 21 * DAY_MS;
+      const windowEnd = bed.firstPlantingMs - 7 * DAY_MS;
+      const windowStart = bed.firstPlantingMs - 21 * DAY_MS;
 
       applications.push({
         id: applicationId(planting.id, 'pre-plant-fertility', 0),
@@ -928,12 +1068,13 @@ function planForPlanting(
         applicationDateMs: windowStart,
         acres,
         ...choice,
+        coversPlantingIds: bed.plantingIds,
         rationale:
           `Pre-plant fertility budget: ` +
           `N ${Math.max(0, deficit.n).toFixed(0)} lb/ac, ` +
           `P₂O₅ ${Math.max(0, deficit.p).toFixed(0)} lb/ac, ` +
           `K₂O ${Math.max(0, deficit.k).toFixed(0)} lb/ac ` +
-          `(${crop.cropFamily} removal at family default − soil credits − fertility credits` +
+          `(${bedFert.families.join(' / ')} removal at family default − soil credits − fertility credits` +
           (coverNCredit > 0
             ? ` − ${coverNCredit} lb-N/ac cover-crop credit (${seasonSetup.coverCropIntent})`
             : '') +
@@ -1010,6 +1151,7 @@ function planForPlanting(
   if (
     seasonSetup.coverCropIntent !== 'none' &&
     plantingDateMs != null &&
+    bed?.firstPlantingId === planting.id &&
     !(crop.sprayWindows ?? []).some((w) => w.purpose === 'cover-terminate')
   ) {
     const useHerbicide = seasonSetup.weedStrategy !== 'cultivate-first';
@@ -1049,6 +1191,7 @@ function planForPlanting(
       applicationDateMs: terminateDateMs,
       acres,
       ...choice,
+      coversPlantingIds: bed.plantingIds,
       productDisplayName:
         choice.productDisplayName ??
         (useHerbicide ? null : `${mechanicalTerminate} (no herbicide)`),
@@ -1162,16 +1305,33 @@ export function planInputs(input: InputsPlanInput): InputsPlan {
   const allApplications: InputsPlanApplication[] = [];
   const allScoutTasks: InputsPlanScoutTask[] = [];
   const allWarnings: PlannerWarning[] = [];
+  const beds = planBeds(input);
+  const noHerbicideTiming: string[] = [];
+  const herbicidesAllowed = input.seasonSetup.weedStrategy !== 'cultivate-first';
 
   for (const planting of input.plantings) {
     const block = blockById.get(planting.blockId);
     const crop = input.cropPlugins[planting.cropPluginId];
     if (!block || !crop) continue;
 
-    const out = planForPlanting(planting, block, crop, input, stockLeft);
+    const out = planForPlanting(planting, block, crop, input, stockLeft, beds.get(block.id));
     allApplications.push(...out.applications);
     allScoutTasks.push(...out.scoutTasks);
     allWarnings.push(...out.warnings);
+    if (
+      herbicidesAllowed &&
+      crop.archetype !== 'cover-crop.termination' &&
+      !(crop.sprayWindows ?? []).some((w) => isWeedPurpose(w.purpose))
+    ) {
+      noHerbicideTiming.push(planting.id);
+    }
+  }
+  if (noHerbicideTiming.length > 0) {
+    allWarnings.push({
+      kind: 'no-herbicide-timing',
+      plantingId: noHerbicideTiming[0],
+      plantingIds: noHerbicideTiming
+    });
   }
 
   const shoppingList = buildShoppingList(
@@ -1185,10 +1345,10 @@ export function planInputs(input: InputsPlanInput): InputsPlan {
 
   return {
     applications: allApplications,
-    scoutTasks: allScoutTasks,
+    scoutTasks: mergeScoutTasks(allScoutTasks, input),
     shoppingList,
     stockOnHand,
-    warnings: allWarnings,
+    warnings: dedupeWarnings(allWarnings, input),
     meta: {
       year: input.year,
       philosophy: input.seasonSetup.philosophy,

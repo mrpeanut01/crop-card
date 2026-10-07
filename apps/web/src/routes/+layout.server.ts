@@ -18,7 +18,8 @@ import { PLANS } from '$lib/billing/plans';
 import { resolvePlan } from '$lib/server/billing/plans';
 import { animalsNavLabel } from '$lib/animals/profile.server';
 import { enabledLocales } from '$lib/i18n/locales';
-import { demoExpiryFor } from '$lib/server/demo/lifecycle';
+import { demoExpiryFor, demoFarmState } from '$lib/server/demo/lifecycle';
+import type { DemoFarmKind } from '$lib/demo/fastForward';
 
 export const load: LayoutServerLoad = ({ locals }) => {
   // A sprayer is "dirty" when it has carried chemistry that has not yet been
@@ -145,10 +146,18 @@ export const load: LayoutServerLoad = ({ locals }) => {
 
   const profile = locals.user ? profileFor(locals.user.id) : null;
 
-  let demo: { expiresAt: number } | null = null;
+  let demo: {
+    expiresAt: number;
+    kind: DemoFarmKind | null;
+    offsetMs: number;
+    today: number;
+  } | null = null;
   try {
     const expiresAt = demoExpiryFor(locals.user);
-    if (expiresAt !== null) demo = { expiresAt };
+    if (expiresAt !== null) {
+      const state = demoFarmState(locals.user?.activeOwnerId);
+      demo = { expiresAt, kind: state.kind, offsetMs: state.offsetMs, today: Date.now() };
+    }
   } catch (err) {
     console.error('[demo] layout failed to read the demo expiry', err);
   }

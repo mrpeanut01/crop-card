@@ -6,10 +6,40 @@
   import { fmt } from '$lib/prefsState.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
 
-  const { expiresAt }: { expiresAt: number } = $props();
+  import {
+    DEMO_PHASES,
+    DEMO_STEPS,
+    MAX_DEMO_OFFSET_MS,
+    currentPhase,
+    nextPhaseStart,
+    type DemoFarmKind
+  } from '$lib/demo/fastForward';
+  import { DAY_MS, ymdOf } from '$lib/demo/time';
+
+  const {
+    demo
+  }: {
+    demo: { expiresAt: number; kind: DemoFarmKind | null; offsetMs: number; today: number };
+  } = $props();
   const tr = $derived(createT(page.data?.locale));
 
   let busy = $state(false);
+  let error = $state<string | null>(null);
+
+  const daysAhead = $derived(Math.round(demo.offsetMs / DAY_MS));
+  const roomMs = $derived(MAX_DEMO_OFFSET_MS - demo.offsetMs);
+  const phases = $derived(
+    demo.kind === 'sample'
+      ? DEMO_PHASES.filter((p) => p.id !== currentPhase(demo.today))
+          .map((p) => ({
+            id: p.id,
+            at: nextPhaseStart(p.id, demo.today)
+          }))
+          .filter((p) => p.at - demo.today <= roomMs)
+          .sort((a, b) => a.at - b.at)
+      : []
+  );
+  const steps = $derived(DEMO_STEPS.filter((s) => s.days * DAY_MS <= roomMs));
 
   const tryLinks: Array<{ href: string; key: MessageKey }> = [
     { href: '/today?view=week', key: 'entry.demo.try.week' },
@@ -35,6 +65,15 @@
       cancel();
       return;
     }
+    if (
+      action.search.includes('forward') &&
+      demo.kind === 'sample' &&
+      !confirm(tr('entry.demo.ff.confirmSample'))
+    ) {
+      cancel();
+      return;
+    }
+    error = null;
     busy = true;
     return async ({ result, update }) => {
       if (result.type === 'redirect') {
@@ -42,6 +81,11 @@
         return;
       }
       busy = false;
+      if (result.type === 'failure') {
+        const msg = (result.data as { demoError?: unknown } | undefined)?.demoError;
+        error = typeof msg === 'string' ? msg : tr('entry.demo.ff.errTooFar');
+        return;
+      }
       await update();
     };
   };
@@ -49,8 +93,13 @@
 
 <Banner tone="sky">
   <span data-testid="demo-banner">
-    {tr('entry.demo.banner', { time: fmt.instant(expiresAt, 'time') })}
+    {tr('entry.demo.banner', { time: fmt.instant(demo.expiresAt, 'time') })}
   </span>
+  {#if daysAhead > 0}
+    <p class="ff-today" data-testid="demo-date">
+      {tr('entry.demo.ff.today', { date: fmt.day(ymdOf(demo.today), 'date-long') })}
+    </p>
+  {/if}
   <details class="try">
     <summary>{tr('entry.demo.try')}</summary>
     <ul>
@@ -59,6 +108,49 @@
       {/each}
     </ul>
   </details>
+  {#if demo.kind && (steps.length || phases.length)}
+    <details class="try ff" data-testid="demo-ff">
+      <summary>{tr('entry.demo.ff.title')}</summary>
+      <p class="ff-note">
+        {demo.kind === 'sample' ? tr('entry.demo.ff.noteSample') : tr('entry.demo.ff.noteScratch')}
+      </p>
+      <form method="POST" action="/demo?/forward" use:enhance={fullReload} class="ff-row">
+        {#each steps as s (s.id)}
+          <button
+            type="submit"
+            name="to"
+            value={`step:${s.id}`}
+            class="ff-btn"
+            disabled={busy}
+            data-testid={`demo-ff-${s.id}`}
+          >
+            {tr(`entry.demo.ff.step.${s.id}` as MessageKey)}
+          </button>
+        {/each}
+      </form>
+      {#if phases.length}
+        <p class="ff-sub">{tr('entry.demo.ff.jump')}</p>
+        <form method="POST" action="/demo?/forward" use:enhance={fullReload} class="ff-row">
+          {#each phases as p (p.id)}
+            <button
+              type="submit"
+              name="to"
+              value={`phase:${p.id}`}
+              class="ff-btn"
+              disabled={busy}
+              data-testid={`demo-ff-phase-${p.id}`}
+            >
+              <span>{tr(`entry.demo.ff.phase.${p.id}` as MessageKey)}</span>
+              <span class="ff-when">{fmt.day(ymdOf(p.at), 'month-day')}</span>
+            </button>
+          {/each}
+        </form>
+      {/if}
+    </details>
+  {/if}
+  {#if error}
+    <p class="ff-error" role="alert">{error}</p>
+  {/if}
   <div class="demo-actions">
     <form method="POST" action="/demo?/reset" use:enhance={fullReload}>
       <button type="submit" class="demo-btn" disabled={busy} data-testid="demo-reset">
@@ -79,6 +171,50 @@
 </Banner>
 
 <style>
+  .ff-today {
+    margin: 4px 0 0;
+    font-weight: 600;
+  }
+  .ff-note,
+  .ff-sub {
+    margin: 0 0 6px;
+  }
+  .ff-sub {
+    font-weight: 600;
+  }
+  .ff-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    margin: 0 0 8px;
+  }
+  .ff-btn {
+    min-height: 48px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    line-height: 1.2;
+  }
+  .ff-when {
+    font-size: 0.85em;
+    opacity: 0.85;
+  }
+  .ff-btn:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+  .ff-error {
+    margin: 4px 0 0;
+    font-weight: 600;
+  }
   .try {
     margin-top: 4px;
   }

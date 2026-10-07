@@ -28,6 +28,7 @@ import { safeFetch, type SafeFetchOptions } from '$lib/server/safeFetch';
 import { floorHour, HOUR_MS, type HourlyPoint, type WeatherProvenance } from '$lib/weather/leafWet';
 import { routineRainHours, type RainHour } from '$lib/weather/metarRain';
 import stationData from './stations/ghcnh-stations-us.json';
+import { toRealTime } from '$lib/server/clock';
 
 export const NCEI_ADS_BASE = 'https://www.ncei.noaa.gov/access/services/data/v1';
 export const OBSERVED_MAX_STATION_MILES = 30;
@@ -419,6 +420,7 @@ export async function getObservedHours(
   now: number = Date.now(),
   deps: ObservedDeps = {}
 ): Promise<ObservedWeather> {
+  now = toRealTime(now);
   const start = floorHour(Math.max(fromMs, now - OBSERVED_MAX_SPAN_DAYS * DAY_MS));
   if (start >= now) return empty(null);
   const stations = nearestObservedStations(lat, lon);
@@ -513,6 +515,7 @@ export async function getObservedRain(
   now: number = Date.now(),
   deps: ObservedDeps = {}
 ): Promise<ObservedRain> {
+  now = toRealTime(now);
   const cached = readObservedRainCache(station.icao, now);
   if (cached) return { station, hours: cached, error: null };
   try {

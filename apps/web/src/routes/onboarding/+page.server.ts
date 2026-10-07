@@ -38,6 +38,7 @@ import {
   newDemoOwnerId
 } from '$lib/server/demo/lifecycle';
 import { DEMO_TTL_MS } from '$lib/demo/identity';
+import { realNow } from '$lib/server/clock';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals, url }) => {
@@ -167,7 +168,8 @@ export const actions: Actions = {
           userId: user.id,
           name: farmName,
           slug,
-          createdAt: new Date(demoExpiry! - DEMO_TTL_MS)
+          createdAt: new Date(demoExpiry! - DEMO_TTL_MS),
+          kind: 'scratch'
         })
       );
     } else
@@ -220,7 +222,7 @@ export const actions: Actions = {
         activeRole: 'owner',
         iat: user.sessionIssuedAt
       },
-      ...(demo ? [Math.max(60_000, demoExpiry! - Date.now())] : [])
+      ...(demo ? [Math.max(60_000, demoExpiry! - realNow())] : [])
     );
     throw redirect(303, '/onboarding');
   },

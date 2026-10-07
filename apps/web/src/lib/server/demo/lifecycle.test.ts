@@ -9,8 +9,16 @@ import { SETTINGS_KEYS } from '$lib/schedule/constants';
 import { DEMO_TTL_MS } from '$lib/demo/identity';
 import type { AuthenticatedUser } from '$lib/server/auth';
 import { purgeExpiredFarmlessDemoUsers } from '$lib/db/demo/purge';
+import type { RequestEvent } from '@sveltejs/kit';
+import { listCrops } from '$lib/db/crops';
+import { DAY_MS, ymdOf } from '$lib/demo/time';
+import { realNow, runShifted } from '$lib/server/clock';
 import {
   createBlankDemoUser,
+  createDemoFarm,
+  demoFarmState,
+  fastForwardDemo,
+  purgeExpiredDemos,
   demoExpiryFor,
   demoSessionExpired,
   discardDemo,
@@ -44,7 +52,14 @@ describe('Start from scratch demo', () => {
     const { userId, email } = createBlankDemoUser(now);
     const ownerId = newDemoOwnerId();
     db.transaction(() =>
-      insertDemoOwner({ ownerId, userId, name: 'My Farm', slug: ownerId, createdAt: new Date(now) })
+      insertDemoOwner({
+        ownerId,
+        userId,
+        name: 'My Farm',
+        slug: ownerId,
+        createdAt: new Date(now),
+        kind: 'scratch'
+      })
     );
     expect(runWithTenant(ownerId, () => getSetting(SETTINGS_KEYS.aiMonthlyUsdCap))).toBe('0');
     discardDemo(asUser(userId, email, ownerId));
@@ -60,7 +75,8 @@ describe('Start from scratch demo', () => {
         userId,
         name: 'x',
         slug: 'x',
-        createdAt: new Date()
+        createdAt: new Date(),
+        kind: 'scratch'
       })
     ).toThrow();
   });
@@ -83,5 +99,93 @@ describe('Start from scratch demo', () => {
     expect(userExists(old.userId)).toBe(false);
     expect(userExists(fresh.userId)).toBe(true);
     expect(userExists(realId)).toBe(true);
+  });
+});
+
+function fakeEvent(user: AuthenticatedUser): RequestEvent & { written: unknown[] } {
+  const written: unknown[] = [];
+  return {
+    locals: { user, locale: 'en' },
+    cookies: { set: (...a: unknown[]) => written.push(a), delete: () => {} },
+    written
+  } as unknown as RequestEvent & { written: unknown[] };
+}
+
+function ownerCreatedAt(id: string): number | undefined {
+  return db.select().from(owners).where(eq(owners.id, id)).get()?.createdAt.getTime();
+}
+
+describe('demo fast forward', () => {
+  it('rebuilds the sample farm for the new date and keeps the expiry', () => {
+    const now = realNow();
+    const first = createDemoFarm(now - 3_600_000);
+    const user = asUser(first.userId, first.email, first.ownerId);
+    const created = ownerCreatedAt(first.ownerId)!;
+    expect(demoFarmState(first.ownerId)).toEqual({ kind: 'sample', offsetMs: 0 });
+
+    const event = fakeEvent(user);
+    const result = fastForwardDemo(event, { phase: 'midsummer' }, now);
+    expect(result.ok).toBe(true);
+    const offsetMs = (result as { offsetMs: number }).offsetMs;
+    expect(ymdOf(now + offsetMs).slice(5)).toBe('07-25');
+
+    expect(ownerCreatedAt(first.ownerId)).toBeUndefined();
+    expect(userExists(first.userId)).toBe(false);
+    expect(event.written).toHaveLength(1);
+    const newOwner = db
+      .select()
+      .from(helperAssignments)
+      .all()
+      .map((r) => r.ownerId)
+      .find(
+        (id) =>
+          id.startsWith('owner_demo_') &&
+          id !== first.ownerId &&
+          demoFarmState(id).offsetMs === offsetMs
+      )!;
+    expect(newOwner).toBeTruthy();
+    expect(ownerCreatedAt(newOwner)).toBe(created);
+    const plantings = runWithTenant(newOwner, () => listCrops());
+    expect(plantings.some((c) => (c.plantingDate ?? 0) > now)).toBe(true);
+  });
+
+  it('only moves the clock on a farm built from scratch', () => {
+    const now = realNow();
+    const { userId, email } = createBlankDemoUser(now);
+    const ownerId = newDemoOwnerId();
+    db.transaction(() =>
+      insertDemoOwner({
+        ownerId,
+        userId,
+        name: 'Mine',
+        slug: ownerId,
+        createdAt: new Date(now),
+        kind: 'scratch'
+      })
+    );
+    const user = asUser(userId, email, ownerId);
+    const week = fastForwardDemo(fakeEvent(user), { step: 'week' }, now);
+    expect(week).toEqual({ ok: true, offsetMs: 7 * DAY_MS });
+    expect(demoFarmState(ownerId)).toEqual({ kind: 'scratch', offsetMs: 7 * DAY_MS });
+    expect(ownerCreatedAt(ownerId)).toBe(now);
+    const more = fastForwardDemo(fakeEvent(user), { step: 'day' }, now);
+    expect(more).toEqual({ ok: true, offsetMs: 8 * DAY_MS });
+    discardDemo(user);
+  });
+
+  it('refuses a farm that is not a demo farm', () => {
+    const user = asUser('u_real', 'someone@example.com', 'owner_real');
+    expect(fastForwardDemo(fakeEvent(user), { step: 'day' })).toEqual({
+      ok: false,
+      reason: 'not-demo'
+    });
+  });
+
+  it("a shifted request never expires other visitors' farms", () => {
+    const now = realNow();
+    const other = createBlankDemoUser(now);
+    runShifted(400 * DAY_MS, () => purgeExpiredDemos());
+    expect(userExists(other.userId)).toBe(true);
+    discardDemo(asUser(other.userId, other.email, null));
   });
 });

@@ -61,6 +61,7 @@ export type {
   DegreeDaysResult,
   DegreeDayStation
 } from '$lib/ipm/degreeDayResult';
+import { toRealTime } from '$lib/server/clock';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** A failed fetch is remembered briefly so a cold outage does not stall every page. */
@@ -211,6 +212,7 @@ export async function getDailyTemps(
   now: number,
   deps: DegreeDayDeps = {}
 ): Promise<{ days: DailyTemps[]; error: string | null }> {
+  now = toRealTime(now);
   const key = gddDailyKey(station.ghcnId, year);
   const cached = readCache(key, now);
   if (cached)

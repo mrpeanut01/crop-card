@@ -1,4 +1,5 @@
 import { safeFetch, type SafeFetchOptions, type SafeFetchResponse } from './safeFetch';
+import { realNow } from '$lib/server/clock';
 
 export const CENSUS_GEOCODER_URL =
   'https://geocoding.geo.census.gov/geocoder/locations/onelineaddress';
@@ -81,7 +82,7 @@ export const GEOCODE_PER_MINUTE = 20;
 const hits = new Map<string, number[]>();
 
 /** In-process sliding window (single replica, Invariant 3). */
-export function allowGeocode(key: string, now = Date.now()): boolean {
+export function allowGeocode(key: string, now = realNow()): boolean {
   const recent = (hits.get(key) ?? []).filter((t) => now - t < WINDOW_MS);
   if (recent.length >= GEOCODE_PER_MINUTE) {
     hits.set(key, recent);

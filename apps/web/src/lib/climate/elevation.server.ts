@@ -4,6 +4,7 @@ import { db } from '$lib/db/client';
 import { weatherForecastCache } from '$lib/db/schema';
 import { safeFetch, type SafeFetchOptions, type SafeFetchResponse } from '$lib/server/safeFetch';
 import { validElevationFt } from './zone';
+import { realNow } from '$lib/server/clock';
 
 /**
  * Ground elevation for a point from the USGS Elevation Point Query Service
@@ -127,7 +128,7 @@ export function elevationFtAt(
 ): Promise<number | null> {
   if (!validPoint(lat, lon)) return Promise.resolve(null);
   const key = elevationCacheKey(lat, lon);
-  const now = opts.now ?? Date.now();
+  const now = opts.now ?? realNow();
   const cached = readCache(key, now);
   if (cached.hit) return Promise.resolve(cached.elevationFt);
   const pending = inFlight.get(key);
@@ -147,7 +148,7 @@ export const ELEVATION_PER_MINUTE = 30;
 const hits = new Map<string, number[]>();
 
 /** In-process sliding window (single replica, Invariant 3). */
-export function allowElevationLookup(key: string, now = Date.now()): boolean {
+export function allowElevationLookup(key: string, now = realNow()): boolean {
   const recent = (hits.get(key) ?? []).filter((t) => now - t < WINDOW_MS);
   if (recent.length >= ELEVATION_PER_MINUTE) {
     hits.set(key, recent);

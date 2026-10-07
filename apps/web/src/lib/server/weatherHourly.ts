@@ -15,6 +15,7 @@ import { weatherForecastCache } from '$lib/db/schema';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 import { fetchNwsPoints, nwsFetch, WeatherFetchError } from '$lib/server/weather';
 import { floorHour, HOUR_MS, type HourlyPoint, type WeatherProvenance } from '$lib/weather/leafWet';
+import { toRealTime } from '$lib/server/clock';
 
 export const HOURLY_CACHE_TTL_MS = 60 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 8000;
@@ -173,6 +174,7 @@ export async function getHourlyForecast(
   lon: number,
   now: number = Date.now()
 ): Promise<HourlyForecast> {
+  now = toRealTime(now);
   const key = hourlyCacheKey(lat, lon);
   const cached = readCache(key, now);
   if (cached) return cached;

@@ -10,6 +10,7 @@ import { db } from './client';
 import { feedbackSubmissions, owners, users } from './schema';
 import { unscopedQueryNote } from './tenant';
 import type { FeedbackKind, FeedbackStatus } from '$lib/feedback/model';
+import { realNow } from '$lib/server/clock';
 
 export interface FeedbackRow {
   id: string;
@@ -63,7 +64,7 @@ export interface NewFeedback {
 
 export function insertFeedback(input: NewFeedback): FeedbackRow {
   unscopedQueryNote('feedback_submissions is a global triage queue; owner_id is context only');
-  const now = new Date(input.now ?? Date.now());
+  const now = new Date(input.now ?? realNow());
   const id = `fb_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
   db.insert(feedbackSubmissions)
     .values({
@@ -137,7 +138,7 @@ export function feedbackStatusCounts(): Record<FeedbackStatus, number> {
 export function updateFeedbackTriage(
   id: string,
   patch: { status: FeedbackStatus; adminNotes: string | null },
-  now = Date.now()
+  now = realNow()
 ): FeedbackRow | null {
   unscopedQueryNote('superadmin triage');
   db.update(feedbackSubmissions)
@@ -147,7 +148,7 @@ export function updateFeedbackTriage(
   return getFeedback(id);
 }
 
-export function setFeedbackGithubUrl(id: string, url: string, now = Date.now()): void {
+export function setFeedbackGithubUrl(id: string, url: string, now = realNow()): void {
   unscopedQueryNote('superadmin triage');
   db.update(feedbackSubmissions)
     .set({ githubIssueUrl: url, updatedAt: new Date(now) })

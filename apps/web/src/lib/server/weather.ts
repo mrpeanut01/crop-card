@@ -20,6 +20,7 @@ import { randomUUID } from 'node:crypto';
 import { db } from '$lib/db/client';
 import { weatherForecastCache } from '$lib/db/schema';
 import type { ForecastDay } from '$lib/hay/types';
+import { realNow } from '$lib/server/clock';
 
 export const NWS_BASE = 'https://api.weather.gov';
 export const USER_AGENT = 'cropcard.farm (cropcard-app, contact: github.com/mrpeanut01/crop-card)';
@@ -172,7 +173,7 @@ export async function getForecastWithMeta(
   lon: number
 ): Promise<{ days: ForecastDay[]; fetchedAt: number }> {
   const key = cacheKey(lat, lon);
-  const now = Date.now();
+  const now = realNow();
   const cached = db
     .select()
     .from(weatherForecastCache)

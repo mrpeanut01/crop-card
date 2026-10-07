@@ -97,6 +97,66 @@ test.describe('demo farm from the sign-in page', () => {
     expect(errors).toEqual([]);
   });
 
+  test('fast forward rebuilds the sample farm on a later date', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto('/');
+    await page.getByTestId('demo-start').click();
+    await page.waitForURL('**/today');
+    await expect(page.getByTestId('demo-date')).toHaveCount(0);
+
+    await page.getByTestId('demo-ff').locator('summary').click();
+    page.once('dialog', (d) => d.accept());
+    await page.getByTestId('demo-ff-week').click();
+    await page.waitForURL('**/today');
+    await expect(page.getByTestId('demo-date')).toBeVisible();
+    const ahead = await page.evaluate(() => Date.now() - performance.timeOrigin);
+    expect(ahead).toBeGreaterThan(6.5 * 86_400_000);
+    await expectNoOverflow(page);
+
+    await page.getByTestId('demo-ff').locator('summary').click();
+    page.once('dialog', (d) => d.accept());
+    const phase = page.locator('[data-testid^="demo-ff-phase-"]').first();
+    const when = (await phase.locator('.ff-when').textContent())!.trim();
+    await phase.click();
+    await page.waitForURL('**/today');
+    await expect(page.getByTestId('demo-date')).toContainText(when.split(' ')[0]);
+    for (const path of ['/plan', '/records', '/harvest', '/animals']) {
+      const res = await page.goto(path);
+      expect(res?.status(), path).toBeLessThan(400);
+    }
+    expect(errors).toEqual([]);
+  });
+
+  test('a farm built from scratch only moves its clock', async ({ page, context }) => {
+    await context.grantPermissions(['geolocation']);
+    await context.setGeolocation({ latitude: 39.137, longitude: -77.714 });
+    await page.goto('/');
+    await page.getByTestId('demo-start').click();
+    await page.waitForURL('**/today');
+    page.once('dialog', (d) => d.accept());
+    await page.getByTestId('demo-scratch').click();
+    await page.waitForURL('**/onboarding');
+    await expect(page.getByTestId('demo-ff')).toHaveCount(0);
+    await page.getByLabel('Farm name').fill('Clock Acres');
+    await page.getByRole('button', { name: 'Use my location' }).click();
+    await page.getByRole('button', { name: /^Continue/ }).click();
+    await page.getByText('A garden', { exact: true }).click();
+    await page.getByRole('button', { name: /Take me to Today/ }).click();
+    await expect(page).toHaveURL(/\/today$/, { timeout: 15_000 });
+
+    await page.getByTestId('demo-ff').locator('summary').click();
+    await expect(page.getByTestId('demo-ff-phase-midsummer')).toHaveCount(0);
+    await page.getByTestId('demo-ff-month').click();
+    await page.waitForURL('**/today');
+    await expect(page.getByTestId('demo-date')).toBeVisible();
+    const fields = await page.request.get('/api/fields');
+    const body = (await fields.json()) as
+      { fields?: Array<{ name: string }> } | Array<{ name: string }>;
+    const names = (Array.isArray(body) ? body : (body.fields ?? [])).map((f) => f.name);
+    expect(names).toContain('Kitchen Garden');
+  });
+
   test('outward-facing settings refuse politely', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('demo-start').click();

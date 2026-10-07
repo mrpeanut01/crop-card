@@ -22,7 +22,14 @@ import { startRuntimeMetrics, withServerTiming } from '$lib/server/runtimeMetric
 import { scheduleBootMaintenance } from '$lib/server/dbMaintenance';
 import { scheduleBootHoldBackfill } from '$lib/server/holdParamsBoot';
 import { DEFAULT_LOCALE, enabledLocales } from '$lib/i18n/locales';
-import { demoSessionExpired, discardDemo, isDemoUser } from '$lib/server/demo/lifecycle';
+import {
+  demoFarmState,
+  demoSessionExpired,
+  discardDemo,
+  isDemoUser
+} from '$lib/server/demo/lifecycle';
+import { runShifted } from '$lib/server/clock';
+import { clientClockScript } from '$lib/demo/clientClock';
 import { demoBlockedResponse, demoBlocksWrite } from '$lib/server/demo/guard';
 import { LOCALE_COOKIE, fillHtmlLang, resolveLocale } from '$lib/i18n/resolve';
 
@@ -621,7 +628,20 @@ const handleRequest: Handle = async ({ event, resolve: resolvePage }) => {
       activeOwnerId
     );
   }
-  const response = await runWithTenantAsync(activeOwnerId, () => Promise.resolve(resolve(event)));
+  const clockOffset =
+    isDemoUser(user) && path !== '/demo' ? demoFarmState(activeOwnerId).offsetMs : 0;
+  const response = await runWithTenantAsync(activeOwnerId, () =>
+    clockOffset > 0
+      ? runShifted(clockOffset, () =>
+          Promise.resolve(
+            resolve(event, {
+              transformPageChunk: ({ html }) =>
+                html.replace('<head>', `<head>${clientClockScript(clockOffset)}`)
+            })
+          )
+        )
+      : Promise.resolve(resolve(event))
+  );
   return withOwnerHeader(response, activeOwnerId, event.locals.locale);
 };
 

@@ -1,3 +1,4 @@
+import { realNow } from '$lib/server/clock';
 export interface SendWindow {
   ms: number;
   max: number;
@@ -10,7 +11,7 @@ export function createSendLimiter(windows: readonly SendWindow[]) {
   const longest = Math.max(...windows.map((w) => w.ms));
   return {
     /** Records the send and returns true when every window has room. */
-    tryTake(key: string, now = Date.now()): boolean {
+    tryTake(key: string, now = realNow()): boolean {
       const recent = (sends.get(key) ?? []).filter((t) => now - t < longest);
       const full = windows.some((w) => recent.filter((t) => now - t < w.ms).length >= w.max);
       if (full) {

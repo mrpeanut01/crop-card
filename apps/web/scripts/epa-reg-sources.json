@@ -4305,5 +4305,11 @@
       "quote": "LALGUARD M52 OD is composed of spores of the insect pathogenic fungus Metarhizium brunneum strain F52.",
       "note": "64137-33 is now branded LALGUARD M52 OD (Met52 EC brand dropped 2022); OD is the code in the brand name. OMRI lists only LALGUARD M52 GR (agb-19015), not the OD, and the label carries no organic statement."
     }
+  },
+  "rei": {
+    "$comment": "#640 — label restricted-entry interval for herbicide plugins. One entry per plugin carrying reEntryIntervalHours: { reEntryIntervalHours, sourceUrl, docDate, page, quote }, where the quote is the label's own REI sentence and states the number of hours. Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read (the EPA PPLS host was unreachable from the 2026-10-07 build environment)."
+  },
+  "phiByCrop": {
+    "$comment": "#661 — label pre-harvest intervals by crop. One list per plugin carrying preHarvestIntervalsByCrop: [{ cropPluginId | cropFamily, preHarvestIntervalDays, sourceUrl, docDate, page, quote }], where the quote names the crop and states the number of days. Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read."
   }
 }

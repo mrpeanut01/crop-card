@@ -217,6 +217,11 @@ export function isLabelUnitCategory(category: string | null | undefined): boolea
 const ACRES_PER_HA = 2.471053814671653;
 const PER_AREA = /^\s*(fl[\s-]?oz|pt|qt|gal|oz|lb)s?\s*(?:\/|-per-|\s+per\s+)\s*(?:ac|acre|a)\s*$/i;
 
+/** A label rate unit code as a per-acre unit ("fl-oz" → "fl oz/acre"). */
+export function perAcreRateUnit(unit: string): string {
+  return `${unit === 'fl-oz' ? 'fl oz' : unit}/acre`;
+}
+
 /** A per-acre rate whose unit is free text ("22 fl oz/ac", "150 lb/acre").
  *  Label rates keep the label unit first; other rates convert outright.
  *  Units that aren't a plain weight or volume per acre stay as written. */

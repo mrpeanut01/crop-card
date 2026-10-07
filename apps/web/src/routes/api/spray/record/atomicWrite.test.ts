@@ -70,7 +70,8 @@ vi.mock('$lib/db/stock', () => ({
 vi.mock('$lib/db/tasks', () => ({ completeTask: m.completeTask, getTask: m.getTask }));
 vi.mock('$lib/db/users', () => ({ ensureSystemUser: async () => ({ id: 'sys' }) }));
 vi.mock('$lib/dilution/calculator', () => ({
-  computeTankMixDilutions: () => [{ pluginId: 'herb-1', productAmount: 3, unit: 'fl-oz' }]
+  computeTankMixDilutions: () => [{ pluginId: 'herb-1', productAmount: 3, unit: 'fl-oz' }],
+  productsWithoutRate: () => []
 }));
 vi.mock('$lib/safety', async (importOriginal) => ({
   ...(await importOriginal<typeof import('$lib/safety')>()),

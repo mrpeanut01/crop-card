@@ -64,5 +64,10 @@
  * (#671, asparagus, stopped by every class until a label-sourced row
  * lands). Pollinator reasons no longer call an unknown-toxicity product
  * bee-toxic (#677); verdicts are unchanged.
+ * #661 — 0.7.6: a pesticide's PHI is read per crop
+ * (`preHarvestInterval.ts`). A label's by-crop PHI applies to that crop
+ * (or its family); a crop the table does not list, or an unknown crop,
+ * gets the longest PHI on file, never the shortest. Products with one PHI
+ * keep the verdicts they had.
  */
-export const RULES_VERSION = '0.7.5' as const;
+export const RULES_VERSION = '0.7.6' as const;

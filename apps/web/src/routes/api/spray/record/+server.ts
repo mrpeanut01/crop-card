@@ -15,7 +15,7 @@ import { closeTaskForRecord } from '$lib/server/recordTaskClose';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { sprayRecordSchema } from '$lib/records/apiSchemas';
 import { resolveSprayCrops, standingCropPluginIds } from '$lib/server/sprayCrops';
-import { computeTankMixDilutions } from '$lib/dilution/calculator';
+import { computeTankMixDilutions, productsWithoutRate } from '$lib/dilution/calculator';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { insertSprayEvent } from '$lib/db/sprayEvents';
@@ -267,6 +267,11 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
           parsed.data.tankSizeGallons,
           effectiveGpa
         );
+        for (const id of productsWithoutRate(fullProducts)) {
+          stockWarnings.push(
+            `${id}: no label rate on file, so stock was not decremented; adjust it on /inventory`
+          );
+        }
         for (const line of lines) {
           const stockItem = stockByPluginId.get(line.pluginId);
           if (!stockItem) {

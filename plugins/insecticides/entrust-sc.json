@@ -1,8 +1,8 @@
 {
   "pluginId": "entrust-sc",
   "type": "insecticide",
-  "displayName": "Entrust SC (Corteva spinosad — OMRI)",
-  "version": "1.0.0",
+  "displayName": "Entrust SC (Corteva spinosad)",
+  "version": "1.0.1",
   "epaRegistrationNumber": "62719-621",
   "defaultUnit": "fl-oz",
   "formulation": "SC",
@@ -28,12 +28,9 @@
   ],
   "pollinatorRisk": "high",
   "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only","residualToxicityHours":3},
-  "notes": "OMRI-listed organic spinosad. Same a.i. as Tracer/Success — different formulation. Apply at sunset to avoid bee toxicity.",
+  "notes": "Spinosad. Same a.i. as Tracer/Success — different formulation. Apply at sunset to avoid bee toxicity.",
   "complianceFlags": {
-    "omriListed": false,
-    "certifiedOrganicAllowed": false,
-    "nonGmoCompliant": true,
-    "transitioningAllowed": false
+    "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1",
   "scoutingThresholds": [

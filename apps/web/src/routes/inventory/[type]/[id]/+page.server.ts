@@ -50,6 +50,8 @@ import { lotsForRole } from '$lib/finance/redact';
 import { farmOrganicChrome } from '$lib/organic/status.server';
 import { seedSourcingForLots, type LotSeedSourcing } from '$lib/stock/seedSourcing.server';
 import { amendmentDetail, type AmendmentDetailPayload } from '$lib/server/amendmentDetail';
+import type { PhiProduct } from '$lib/safety/preHarvestInterval';
+import { cropFamilyLabel } from '$lib/plugins/familyLabel';
 
 export interface PesticideDetailPayload {
   type: 'pesticide';
@@ -67,6 +69,8 @@ export interface PesticideDetailPayload {
     pollinatorRisk?: string;
     pollinator?: PollinatorLabelFields['pollinator'];
   };
+  /** #661 — the label's PHI by crop, named for display. */
+  phiByCrop: Array<{ crop: string; days: number }>;
 }
 
 export interface FertilityDetailPayload {
@@ -293,14 +297,32 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
   const movements = listMovementsForItem(id, 25);
 
   let plugin: Record<string, unknown> | undefined;
+  let phiByCrop: PesticideDetailPayload['phiByCrop'] = [];
   if (item.pluginId) {
     const registry = await getRegistry();
     const rec = registry.get(item.pluginId);
     plugin = rec?.plugin as Record<string, unknown> | undefined;
+    const table = (plugin as PhiProduct | undefined)?.preHarvestIntervalsByCrop ?? [];
+    phiByCrop = table.map((e) => {
+      const cropPlugin = e.cropPluginId ? registry.get(e.cropPluginId)?.plugin : undefined;
+      return {
+        crop: e.cropPluginId
+          ? (cropPlugin?.displayName ?? e.cropPluginId)
+          : cropFamilyLabel(e.cropFamily),
+        days: e.preHarvestIntervalDays
+      };
+    });
   }
 
   if (type === 'pesticide') {
-    return { type, item, lots, movements, plugin: plugin as PesticideDetailPayload['plugin'] };
+    return {
+      type,
+      item,
+      lots,
+      movements,
+      plugin: plugin as PesticideDetailPayload['plugin'],
+      phiByCrop
+    };
   }
   if (type === 'fertility') {
     return { type, item, lots, movements, plugin: plugin as FertilityDetailPayload['plugin'] };

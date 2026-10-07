@@ -40,6 +40,8 @@ import {
   type StockPluginPair
 } from '$lib/safety/userAddedRestrictionsFromStock';
 import { RULES_VERSION } from '$lib/safety/version';
+import { phiDaysForCrops } from '$lib/safety/preHarvestInterval';
+import { phiCropsFor } from '$lib/server/phiCrops';
 import { checkIpmThreshold, type ScoutObservation } from '$lib/safety/ipmThreshold';
 import { isInBloom, type CropInBlock } from '$lib/safety/pollinatorBloom';
 import {
@@ -439,9 +441,13 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     }
   }
 
-  // Worst-case REI / PHI across the tank.
+  // Worst-case REI / PHI across the tank and every crop on the block (#661).
   const reiHours = Math.max(...products.map((p) => p.reEntryIntervalHours));
-  const phiDays = Math.max(0, ...products.map((p) => p.preHarvestIntervalDays ?? 0));
+  const phiCrops = phiCropsFor(registry, [
+    ...(block?.plantings ?? []).map((p) => p.cropPluginId),
+    parsed.data.cropId ? getCrop(parsed.data.cropId)?.cropPluginId : null
+  ]);
+  const phiDays = Math.max(0, ...products.map((p) => phiDaysForCrops(p, phiCrops) ?? 0));
   const reEntryClearAt = occurredAt + reiHours * HOUR_MS;
   const preHarvestClearAt = phiDays > 0 ? occurredAt + phiDays * DAY_MS : undefined;
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { HerbicidePlugin } from '$lib/plugins/schemas';
-import { computeDilution, computeTankMixDilutions } from './calculator';
+import { computeDilution, computeTankMixDilutions, productsWithoutRate } from './calculator';
 
 const auxin: HerbicidePlugin = {
   pluginId: '24d',
@@ -84,5 +84,13 @@ describe('computeTankMixDilutions', () => {
     expect(lines[0].pluginId).toBe('24d');
     expect(lines[1].pluginId).toBe('stadia');
     expect(new Set(lines.map((l) => l.acresCovered)).size).toBe(1);
+  });
+
+  it('leaves out a product with no label rate on file and names it (#737)', () => {
+    const noRate: HerbicidePlugin = { ...auxin, pluginId: 'no-rate', ratePerAcre: undefined };
+    const lines = computeTankMixDilutions([auxin, noRate], 50);
+    expect(lines.map((l) => l.pluginId)).toEqual(['24d']);
+    expect(productsWithoutRate([auxin, noRate])).toEqual(['no-rate']);
+    expect(() => computeDilution({ herbicide: noRate, tankSizeGallons: 50 })).toThrow();
   });
 });

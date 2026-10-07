@@ -54,9 +54,11 @@
   {:else if w.scheduleResponse}
     {#if w.scheduleResponse.meta.fallback}
       <div class="aw-banner info" role="alert" aria-live="assertive">
-        {w.scheduleResponse.meta.fallback === 'no-api-key'
-          ? tr('wizard.schedule.noKey')
-          : tr('wizard.schedule.aiHelp')}
+        {w.scheduleResponse.meta.aiOff
+          ? tr('wizard.schedule.aiOff')
+          : w.scheduleResponse.meta.fallback === 'no-api-key'
+            ? tr('wizard.schedule.noKey')
+            : tr('wizard.schedule.aiHelp')}
       </div>
     {/if}
     <p class="aw-rationale">

@@ -248,6 +248,7 @@ export const enSprayui = {
   'sprayui.ins.protocol': 'Application protocol',
   'sprayui.ins.submit': 'Record application',
   'sprayui.ins.product': 'Insecticide',
+  'sprayui.ins.pickProduct': 'Pick an insecticide',
   'sprayui.obs.pest': 'Pest',
   'sprayui.obs.pestPlaceholder': 'e.g. squash bug, ECB',
   'sprayui.obs.metric': 'Metric',

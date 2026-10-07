@@ -100,6 +100,8 @@ export type AllocationResponse = {
     model: string;
     usdEstimate: number;
     fallback?: 'engine-only' | 'no-api-key' | 'over-cap' | 'quota-exceeded' | 'ai-unavailable';
+    /** The farm's owner turned AI off (#692). */
+    aiOff?: boolean;
     violationsOnFirstAttempt?: string[];
   };
 };
@@ -144,6 +146,7 @@ export type ScheduleResponse = {
     model: string;
     usdEstimate: number;
     fallback?: 'deterministic' | 'no-api-key' | 'ai-unavailable';
+    aiOff?: boolean;
     violations?: string[];
     diagnosis?: ScheduleDiagnosis;
   };

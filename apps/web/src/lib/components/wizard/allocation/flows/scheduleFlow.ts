@@ -46,7 +46,11 @@ export class ScheduleFlow {
       const fb = scheduleResponse.meta.fallback;
       if (fb === 'no-api-key' || fb === 'ai-unavailable') {
         lines.push(
-          fb === 'no-api-key' ? wt('wizard.seedchat.sNoKey') : wt('wizard.seedchat.sUnavailable')
+          scheduleResponse.meta.aiOff
+            ? wt('wizard.seedchat.sAiOff')
+            : fb === 'no-api-key'
+              ? wt('wizard.seedchat.sNoKey')
+              : wt('wizard.seedchat.sUnavailable')
         );
         if (scheduleResponse.rationale) lines.push(scheduleResponse.rationale);
         lines.push('');
@@ -155,8 +159,9 @@ export class ScheduleFlow {
           : wt('wizard.chat.scheduleUpdated');
     let reply = aiReply;
     if (fallback) {
-      const header =
-        fallback === 'no-api-key'
+      const header = body?.meta?.aiOff
+        ? wt('wizard.chat.scheduleAiOff')
+        : fallback === 'no-api-key'
           ? wt('wizard.chat.scheduleNoKey')
           : fallback === 'ai-unavailable'
             ? wt('wizard.chat.scheduleUnavailable')

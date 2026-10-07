@@ -211,6 +211,9 @@ export class AllocationWizardState {
    *  and the keys of the rows that did not save. */
   commitRows = $state<CommitRow[]>([]);
   commitFailedKeys = $state<string[]>([]);
+  /** #722: why each failed row did not save, and whether trying again can
+   *  help (a refused request never can). */
+  commitFailInfo = $state<Record<string, { reason: string | null; retryable: boolean }>>({});
   commitRetrying = $state(false);
 
   /** Phase 35 (R-15): crop plugin ids kept in one bed for this run, prefilled
@@ -629,6 +632,10 @@ export class AllocationWizardState {
 
   commitScheduled(plantings: ScheduledPlanting[]) {
     return this.#commit.commitScheduled(plantings);
+  }
+
+  finishWithoutFailedCommits(): Promise<void> {
+    return this.#commit.finishWithoutFailed();
   }
 
   retryFailedCommits(): Promise<void> {

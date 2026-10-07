@@ -966,6 +966,22 @@ export const enWizard = {
   'wizard.qty.status.planned': 'planned',
   'wizard.qty.notCounted': 'Not counted yet',
   'wizard.qty.part': '{amount} {unit} {status}',
+  'wizard.refusal.http': 'The request was refused (HTTP {status}).',
+  'wizard.refusal.field.plants': 'plant count',
+  'wizard.refusal.field.area': 'area',
+  'wizard.refusal.field.quantity': 'seed amount',
+  'wizard.refusal.seedTooBig':
+    '{seed}: the {field} is more than one plan can take (at most {max}). Plan part of this seed, or lower the amount on the Seeds step.',
+  'wizard.refusal.tooBig': 'The {field} is more than one planting can hold (at most {max}).',
+  'wizard.refusal.seedTooSmall': '{seed}: the {field} must be at least {min}.',
+  'wizard.refusal.tooSmall': 'The {field} must be at least {min}.',
+  'wizard.refusal.seedInvalid':
+    '{seed}: the {field} could not be used. Check it on the Seeds step.',
+  'wizard.refusal.invalid': 'The plan could not be saved as it is ({field}).',
+  'wizard.commit.stopped': 'Saved {done} of {total}.',
+  'wizard.commit.noRetry':
+    'Trying again will not help these. Go back to Review and change them, or finish without them.',
+  'wizard.commit.finishWithout': 'Finish without these',
   'wizard.err.request': 'request failed',
   'wizard.err.chat': 'chat request failed',
   'wizard.override.hint':
@@ -1081,6 +1097,7 @@ export const enWizard = {
   'wizard.engine.why.fill': 'the seed amount is not known, so it is sized to the space it gets',
   'wizard.engine.why.deficit': 'you only have enough seed for about {pct}% of this block',
   'wizard.engine.why.sunFull': 'sun is a good match',
+  'wizard.engine.why.sunUnknown': 'sun is not recorded for this block',
   'wizard.engine.why.sunPartial': 'sun is acceptable but not ideal',
   'wizard.engine.why.rotation': 'a same-family crop was here recently — used as a last resort',
   'wizard.engine.why.narrow': "the block is narrow for this crop's row spacing",

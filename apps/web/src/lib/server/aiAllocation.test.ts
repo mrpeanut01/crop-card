@@ -74,7 +74,7 @@ describe('buildCandidacyMatrix', () => {
       expect(row.cropPluginId).toBe('lettuce');
       expect(row.plantsFit).toBeGreaterThan(0);
       expect(['deficit', 'match', 'surplus']).toContain(row.sufficiency);
-      expect(['full', 'partial', 'none']).toContain(row.sunMatch);
+      expect(['full', 'partial', 'none', 'unknown']).toContain(row.sunMatch);
       expect(typeof row.rotationOk).toBe('boolean');
       expect(Array.isArray(row.companionGoodHere)).toBe(true);
       expect(row.usableSqft).toBeGreaterThan(0);

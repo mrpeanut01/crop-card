@@ -37,6 +37,7 @@ import type { CropPlugin } from '$lib/plugins/schemas';
 import { t } from '$lib/i18n';
 import { plantingEstablishmentFields } from '$lib/seedStart/apiSchemas';
 import { applyPlantingEstablishment, localizeSeedStartNotes } from '$lib/server/seedStartTasks';
+import { MAX_PLAN_PLANTS } from '$lib/plan/allocationApi';
 
 const stockUnit = z.enum(ALL_STOCK_UNITS as unknown as [StockUnit, ...StockUnit[]]);
 
@@ -68,7 +69,7 @@ const plantingSchema = z.object({
   /** Plants the planning wizard gave this planting, recorded without
    *  placing it in a bed. Keeps a fill-to-bed planting's size on record so
    *  later plans see how much of a shared bed it takes. */
-  plannedPlants: z.number().int().positive().max(100_000).optional(),
+  plannedPlants: z.number().int().positive().max(MAX_PLAN_PLANTS).optional(),
   /** Phase 35: the wizard's id for one seed lot planted in several blocks. */
   splitGroupId: z.string().regex(SPLIT_GROUP_ID_PATTERN).optional(),
   /** #548: the "Tree size" answer, for a crop with a tree size table.

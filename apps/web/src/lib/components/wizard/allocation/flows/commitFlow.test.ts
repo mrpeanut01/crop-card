@@ -31,6 +31,7 @@ function fakeWizard(assignments: ReturnType<typeof a>[]) {
     commitProgress: { done: 0, total: 0, failed: [] as string[] },
     commitRows: [] as unknown[],
     commitFailedKeys: [] as string[],
+    commitFailInfo: {} as Record<string, { reason: string | null; retryable: boolean }>,
     commitRetrying: false,
     establishmentByCrop: {},
     selectedSeeds: new Map([
@@ -55,7 +56,7 @@ function fakeWizard(assignments: ReturnType<typeof a>[]) {
 
 type Call = { url: string; headers: Record<string, string>; body: Record<string, unknown> };
 let calls: Call[];
-let fail: (c: Call) => 'ok' | 'error' | 'throw';
+let fail: (c: Call) => 'ok' | 'error' | 'throw' | 'refused';
 
 beforeEach(() => {
   calls = [];
@@ -71,6 +72,14 @@ beforeEach(() => {
       calls.push(call);
       const outcome = fail(call);
       if (outcome === 'throw') throw new TypeError('network down');
+      if (outcome === 'refused')
+        return new Response(
+          JSON.stringify({
+            error: 'invalid request',
+            issues: [{ code: 'too_big', maximum: 100000, path: ['plannedPlants'] }]
+          }),
+          { status: 400 }
+        );
       return new Response(JSON.stringify(outcome === 'ok' ? { planting: {} } : { error: 'x' }), {
         status: outcome === 'ok' ? 201 : 500
       });
@@ -162,5 +171,52 @@ describe('CommitFlow split lots (R-12, R-18, R-19)', () => {
     const beet = calls.find((c) => c.body.cropPluginId !== 'cereal-rye-cover')!;
     expect(beet.body.plannedPlants).toBe(40);
     expect(beet.body.sowingMethod).toBeUndefined();
+  });
+
+  it('shows why a row was refused and never retries a request that cannot succeed (#722)', async () => {
+    const { w, raw, onCommitted } = fakeWizard([a('bean', 'n', 60), a('bean', 's', 40)]);
+    fail = (c) =>
+      c.url.includes('/blocks/n/') ? 'refused' : c.url.includes('/blocks/s/') ? 'error' : 'ok';
+    const flow = new CommitFlow(w);
+    await flow.commit();
+    const [north, south] = raw.commitFailedKeys;
+    expect(raw.commitFailInfo[north]).toEqual({
+      reason: 'The plant count is more than one planting can hold (at most 100,000).',
+      retryable: false
+    });
+    expect(raw.commitFailInfo[south]).toEqual({ reason: 'x', retryable: true });
+
+    calls = [];
+    fail = () => 'ok';
+    await flow.retryFailed();
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toContain('/blocks/s/');
+    expect(raw.commitFailedKeys).toEqual([north]);
+    expect(raw.commitProgress.failed).toEqual(['Bean → North Bed']);
+    expect(onCommitted).not.toHaveBeenCalled();
+
+    calls = [];
+    await flow.finishWithoutFailed();
+    expect(calls.some((c) => c.url.includes('/plantings'))).toBe(false);
+    expect(raw.commitFailedKeys).toEqual([]);
+    expect(onCommitted).toHaveBeenCalledTimes(1);
+  });
+
+  it("finishing without a failed row drops only that planting's inputs tasks", async () => {
+    const { w, raw } = fakeWizard([a('bean', 'n', 60), a('beet', 's', 40)]);
+    const app = (blockId: string, cropPluginId: string) => ({ blockId, cropPluginId });
+    raw.acceptedInputs = {
+      applications: [app('n', 'bush-bean-provider'), app('s', 'beet-detroit-dark-red')],
+      scoutTasks: [app('n', 'bush-bean-provider')],
+      aiRefined: false
+    } as unknown as null;
+    fail = (c) => (c.url.includes('/blocks/n/') ? 'refused' : 'ok');
+    const flow = new CommitFlow(w);
+    await flow.commit();
+    calls = [];
+    await flow.finishWithoutFailed();
+    const commit = calls.find((c) => c.url === '/api/plan/inputs/commit')!;
+    expect(commit.body.applications).toEqual([app('s', 'beet-detroit-dark-red')]);
+    expect(commit.body.scoutTasks).toEqual([]);
   });
 });

@@ -2,6 +2,7 @@ import type { AllocationWizardState } from '../wizardState.svelte';
 import type { AllocationResponse } from '../types';
 import { pollinationNote } from '$lib/plan/pollinationNote';
 import { wlocale, wt } from '../wt';
+import { planRefusalText, type RefusalBody } from '$lib/plan/requestRefusal';
 
 /** Step 2 → 3: POST /api/plan/allocate and seed the allocation chat with
  *  the response's pollination notes + advisories. */
@@ -138,12 +139,17 @@ export class AllocateFlow {
           blockIds: [...this.#w.selectedBlockIds]
         })
       });
-      const body = (await res.json()) as AllocationResponse | { error: string };
       if (!res.ok) {
-        this.#w.error = 'error' in body ? body.error : `HTTP ${res.status}`;
+        const body = (await res.json().catch(() => null)) as RefusalBody | null;
+        this.#w.error = planRefusalText(
+          body,
+          res.status,
+          wlocale(),
+          seedSelections.map((s) => s.varietyDisplayName)
+        );
         return;
       }
-      this.#w.response = body as AllocationResponse;
+      this.#w.response = (await res.json()) as AllocationResponse;
       this.seedChatFromAdvisories(this.#w.response);
     } catch (err) {
       this.#w.error = err instanceof Error ? err.message : wt('wizard.err.request');

@@ -6430,6 +6430,20 @@
       "date": "Updated: September 3, 2024 (accessed 2026-10-06)",
       "quote": "UMD Extension, Optimizing Corn Silage: Planting Decisions, Row Spacing: \"Row spacing refers to how much distance is in between each row of corn in the field. The standard practice is to plant with a row spacing of 30 inches.\"; \"Use of 15 and 20 inch rows are now being seen.\"",
       "note": "Standard 30 in; UMD notes 15- and 20-inch rows also in use, and NC State organic guide says 20 in has worked; these narrower options are alternatives rather than a contradiction of the 30-inch standard. VCE 424-100 'Corn, Field Corn' gives no row width. The page is framed around silage corn but the row-spacing statement is for corn generally. Pioneer P1257AM is a commercial dent hybrid. Lower end of the between-row figure (#591 ruling Q1). Also read: https://content.ces.ncsu.edu/north-carolina-organic-commodities-production-guide/chapter-3-crop-production-management-corn (as narrow as 20 in (organic, with cultivator changes), not counted)."
+    },
+    "seedingRate.seedsPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn",
+      "date": "December 15, 2023",
+      "quote": "Rate of planting On soils with high production potential where good production practices are followed, plant 25,000 to 33,000 kernels per acre. If planted on droughty soils, the rate of planting should be decreased by 10%-15%.",
+      "note": "Same VCE Agronomy Handbook sentence as the generic corn plugin; VCE's Corn section is field corn and Pioneer P1257AM is a field dent hybrid, so the crop-type figure applies (#591 ruling Q3; #689). Kernels planted per acre on soils with high production potential."
+    },
+    "seedingRate.droughtySoilCutPct": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn",
+      "date": "December 15, 2023",
+      "quote": "Rate of planting On soils with high production potential where good production practices are followed, plant 25,000 to 33,000 kernels per acre. If planted on droughty soils, the rate of planting should be decreased by 10%-15%.",
+      "note": "Same VCE Agronomy Handbook sentence as the generic corn plugin; VCE's Corn section is field corn and Pioneer P1257AM is a field dent hybrid, so the crop-type figure applies (#591 ruling Q3; #689). Shown as a card note; planning math is unchanged (#576)."
     }
   },
   "corn-bloody-butcher": {

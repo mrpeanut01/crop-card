@@ -59,7 +59,7 @@ import type { CropPlugin, Plugin } from '$lib/plugins/schemas';
 import { pollinatorDataFor } from '$lib/safety/pollinatorProtection';
 import { buildTankMixSteps } from '$lib/safety/tankMixOrder';
 import { RULES_VERSION } from '$lib/safety/version';
-import { eventsForPlanting } from '$lib/calendar/engine';
+import { harvestWindowFor } from '$lib/calendar/harvestWindow';
 import { getDataKinds, getRegistry } from './registry';
 import { sprayTermsFor } from './sprayTerms';
 import { listMapFeatureViews } from '$lib/db/mapFeatures';
@@ -480,15 +480,16 @@ function utcDay(ms: number): string {
 }
 
 /** The engine's harvest window for a planting, so a Planting Card and /plan
- *  show the same dates. */
+ *  show the same dates (#680: the window open at `now`, else the next). */
 export function engineHarvestWindow(
   p: SnapshotPlanting,
-  crop: CropPlugin
+  crop: CropPlugin,
+  now: number = Date.now()
 ): { start: string; end: string } | null {
   if (!p.plantingDate) return null;
   const plantingDate = Date.parse(p.plantingDate);
   if (!Number.isFinite(plantingDate)) return null;
-  const windows = eventsForPlanting(
+  const window = harvestWindowFor(
     {
       id: p.id,
       blockId: p.blockId,
@@ -498,13 +499,11 @@ export function engineHarvestWindow(
       establishment: p.establishment ?? null,
       sownIndoorsAt: p.sownIndoorsAt ?? null
     },
-    crop
-  ).filter((e) => e.kind === 'harvest-window');
-  if (!windows.length) return null;
-  return {
-    start: utcDay(Math.min(...windows.map((e) => e.startMs))),
-    end: utcDay(Math.max(...windows.map((e) => e.endMs)))
-  };
+    crop,
+    { now }
+  );
+  if (!window) return null;
+  return { start: utcDay(window.startMs), end: utcDay(window.endMs) };
 }
 
 /** The time the snapshot's date windows are cut at: `now` rounded down to
@@ -546,7 +545,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
   }
   for (const p of plantings) {
     const rec = registry.get(p.cropPluginId);
-    if (rec?.plugin.type === 'crop') p.harvestWindow = engineHarvestWindow(p, rec.plugin);
+    if (rec?.plugin.type === 'crop')
+      p.harvestWindow = engineHarvestWindow(p, rec.plugin, windowNow);
   }
   attachOpenTrays(plantings);
   const minutes = minutesByCrop(plantings.map((p) => p.id));

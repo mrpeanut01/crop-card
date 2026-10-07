@@ -61,6 +61,39 @@ describe('buildPlantingCard', () => {
     );
   });
 
+  it('shows a past-year planting with its year and no day count once bearing (#686)', () => {
+    const tom = snap.plantings.find((p) => p.id === 'p_tom')!;
+    const peachSnap = sampleSnapshot({
+      plantings: [
+        ...snap.plantings,
+        {
+          ...tom,
+          id: 'p_peach',
+          cropPluginId: 'peach-test',
+          varietyDisplayName: 'Redhaven peach',
+          status: 'active',
+          plantingDate: '2020-04-01',
+          harvestWindow: null
+        }
+      ],
+      cropPlugins: {
+        ...snap.cropPlugins,
+        'peach-test': {
+          pluginId: 'peach-test',
+          displayName: 'Redhaven peach',
+          version: '1.0.0',
+          cropFamily: 'stone-fruit',
+          daysToMaturity: { min: 1095, max: 1460 }
+        }
+      }
+    });
+    const card = buildPlantingCard(peachSnap, 'p_peach')!;
+    expect(fact(card, 'Planted')?.value).toMatch(/2020/);
+    expect(fact(card, 'Day')).toBeUndefined();
+    expect(fact(card, 'Harvest')).toBeUndefined();
+    expect(fact(card, 'Matures')).toBeUndefined();
+  });
+
   it('picks the earliest open task as the one next action, overdue first', () => {
     const card = buildPlantingCard(snap, 'p_tom')!;
     expect(card.next).toEqual({

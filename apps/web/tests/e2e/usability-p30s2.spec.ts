@@ -70,7 +70,7 @@ test.describe('persona usability fixes', () => {
       block: { id: string };
     };
     await post(page, `/api/blocks/${block.id}/plantings`, {
-      cropPluginId: 'apple-orchard',
+      cropPluginId: 'peach-redhaven',
       plantingDate: Date.now() - 400 * 86_400_000
     });
     await page.goto('/harvest');

@@ -29,7 +29,8 @@ import {
 import { formatFeet, formatInches } from './size';
 import { seedingFacts } from './seeding';
 import { careGuideHref, careLinkLabel, treeSizeSection } from './careGuide';
-import { ymdInZone } from '$lib/prefs';
+import { formatCalendarDate, ymdInZone } from '$lib/prefs';
+import { isPerennialFamily } from '$lib/plugins/familyDefaults';
 import { cropDisplayName } from '$lib/i18n/cropName';
 import { filterSprayAdviceItems } from '$lib/journal/photoHelp';
 import { snapshotSplitFor, splitLine } from './split';
@@ -225,11 +226,18 @@ export function buildPlantingCard(
   const facts: CardFact[] = [];
   const src = plantingSource(p);
 
+  const perennial = !!plugin && isPerennialFamily(plugin.cropFamily);
+  const ageDays = p.plantingDate ? daysBetweenYmd(p.plantingDate, today) : null;
+  const bearing =
+    perennial && ageDays !== null && ageDays >= (plugin?.daysToMaturity?.min ?? 0);
   if (p.plantingDate) {
     const future = (daysBetweenYmd(today, p.plantingDate) ?? 0) > 0;
+    const sameYear = p.plantingDate.slice(0, 4) === today.slice(0, 4);
     facts.push({
       label: p.status === 'planned' || future ? tr('cards.fact.sow') : tr('cards.fact.planted'),
-      value: monthDay(p.plantingDate, loc),
+      value: sameYear
+        ? monthDay(p.plantingDate, loc)
+        : formatCalendarDate(p.plantingDate, 'date', {}, loc),
       provenance: src
     });
   } else {
@@ -240,7 +248,12 @@ export function buildPlantingCard(
     });
   }
 
-  const window = p.harvestWindow ?? harvestWindow(p.plantingDate, plugin);
+  const window =
+    p.harvestWindow !== undefined
+      ? p.harvestWindow
+      : perennial
+        ? null
+        : harvestWindow(p.plantingDate, plugin);
   if (p.status === 'harvested' && p.harvestedAt) {
     facts.push({
       label: tr('cards.fact.harvested'),
@@ -251,9 +264,9 @@ export function buildPlantingCard(
     facts.push({
       label: tr('cards.fact.harvest'),
       value: dateRange(window.start, window.end, loc),
-      provenance: 'plugin'
+      provenance: perennial ? 'fallback' : 'plugin'
     });
-  } else if (plugin?.daysToMaturity) {
+  } else if (plugin?.daysToMaturity && !bearing) {
     const { min, max } = plugin.daysToMaturity;
     facts.push({
       label: tr('cards.fact.matures'),
@@ -263,8 +276,8 @@ export function buildPlantingCard(
   }
 
   if (p.status === 'active' && p.plantingDate) {
-    const day = daysBetweenYmd(p.plantingDate, today);
-    if (day !== null && day >= 0) {
+    const day = ageDays;
+    if (day !== null && day >= 0 && !bearing) {
       facts.push({
         label: tr('cards.fact.day'),
         value: plugin?.daysToMaturity

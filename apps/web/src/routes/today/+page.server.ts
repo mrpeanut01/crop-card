@@ -105,7 +105,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       if (!cropRecord || cropRecord.plugin.type !== 'crop') continue;
       allEvents.push(
         ...eventsForPlanting(planting, cropRecord.plugin as CropPlugin, {
-          blockPlantings: b.plantings
+          blockPlantings: b.plantings,
+          now
         })
       );
     }
@@ -235,6 +236,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     activePlantings: totalPlantings,
     spraysYTD,
     derivedEvents: allEvents,
+    harvestTasks: allOpenPrimaries.filter((t) => t.category === 'harvest'),
     now
   });
 

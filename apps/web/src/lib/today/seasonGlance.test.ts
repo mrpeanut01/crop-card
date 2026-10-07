@@ -41,14 +41,49 @@ describe('deriveSeasonGlance', () => {
     expect(out.daysToNextHarvest).toBe(3);
   });
 
-  it('ignores past harvest windows', () => {
+  it('ignores harvest windows that have closed', () => {
     const out = deriveSeasonGlance({
       activePlantings: 1,
       spraysYTD: 0,
       now: NOW,
-      derivedEvents: [ev({ startMs: NOW - 5 * DAY }), ev({ startMs: NOW + 10 * DAY })]
+      derivedEvents: [
+        ev({ startMs: NOW - 20 * DAY, endMs: NOW - 5 * DAY }),
+        ev({ startMs: NOW + 10 * DAY, endMs: NOW + 20 * DAY })
+      ]
     });
     expect(out.daysToNextHarvest).toBe(10);
+  });
+
+  it('counts a window that is already open as today (#618)', () => {
+    const out = deriveSeasonGlance({
+      activePlantings: 1,
+      spraysYTD: 0,
+      now: NOW,
+      derivedEvents: [
+        ev({ startMs: NOW - 5 * DAY, endMs: NOW + 5 * DAY }),
+        ev({ startMs: NOW + 15 * DAY, endMs: NOW + 20 * DAY })
+      ]
+    });
+    expect(out.daysToNextHarvest).toBe(0);
+  });
+
+  it('counts open harvest tasks, an overdue one as today (#618)', () => {
+    const base = { activePlantings: 1, spraysYTD: 0, now: NOW };
+    const later = [ev({ startMs: NOW + 15 * DAY, endMs: NOW + 20 * DAY })];
+    expect(
+      deriveSeasonGlance({
+        ...base,
+        derivedEvents: later,
+        harvestTasks: [{ scheduledFor: NOW + 1 * DAY }]
+      }).daysToNextHarvest
+    ).toBe(1);
+    expect(
+      deriveSeasonGlance({
+        ...base,
+        derivedEvents: later,
+        harvestTasks: [{ scheduledFor: NOW - 2 * DAY }]
+      }).daysToNextHarvest
+    ).toBe(0);
   });
 
   it('ignores non-harvest events', () => {

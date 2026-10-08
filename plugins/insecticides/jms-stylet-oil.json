@@ -12,7 +12,7 @@
     }
   ],
   "reEntryIntervalHours": 4,
-  "preHarvestIntervalDays": 0,
+  "preHarvestIntervalDays": 14,
   "ratePerAcre": {
     "amount": 3,
     "unit": "qt"

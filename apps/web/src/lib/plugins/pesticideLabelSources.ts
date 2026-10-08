@@ -6,7 +6,9 @@
  * - a herbicide `reEntryIntervalHours` needs a `rei` entry whose quote
  *   states the hours;
  * - every `preHarvestIntervalsByCrop` row needs a `phiByCrop` entry for the
- *   same crop or family whose quote states the days;
+ *   same crop (`cropPluginId`, or one of a shared `cropPluginIds` list) or
+ *   family whose quote states the days; a crop is listed once per plugin and
+ *   names a crop plugin in the library;
  * - a display name that says OMRI may not sit beside flags that mark the
  *   product not allowed for organic use;
  * - a herbicide default `ratePerAcre` ships only as `rateProvenance:
@@ -55,9 +57,18 @@ function hasUrl(s: QuotedSource): boolean {
   return typeof s.sourceUrl === 'string' && /^https:\/\//.test(s.sourceUrl);
 }
 
+type PhiSource = QuotedSource & {
+  cropPluginId?: unknown;
+  cropPluginIds?: unknown;
+  cropFamily?: unknown;
+};
+
+/** `cropPluginIds`, when given, are the crop plugins in the library; a
+ *  by-crop PHI naming any other id is a gap. */
 export function pesticideLabelSourceGaps(
   plugins: readonly LabelSourcePlugin[],
-  sources: LabelSources
+  sources: LabelSources,
+  cropPluginIds?: ReadonlySet<string>
 ): string[] {
   const gaps: string[] = [];
   for (const p of plugins) {
@@ -74,12 +85,20 @@ export function pesticideLabelSourceGaps(
       }
     }
     if (p.type === 'herbicide') gaps.push(...rateGaps(p, sources), ...classGaps(p, sources));
+    const seen = new Set<string>();
     for (const row of p.preHarvestIntervalsByCrop ?? []) {
       const key = row.cropPluginId ?? row.cropFamily ?? '?';
+      if (seen.has(key)) gaps.push(`${p.pluginId}: PHI for ${key} is listed twice`);
+      seen.add(key);
+      if (row.cropPluginId && cropPluginIds && !cropPluginIds.has(row.cropPluginId)) {
+        gaps.push(`${p.pluginId}: PHI names ${row.cropPluginId}, which is not a crop plugin`);
+      }
       const list = sources.phiByCrop?.[p.pluginId];
-      const match = (Array.isArray(list) ? list : []).find(
-        (s: QuotedSource & { cropPluginId?: unknown; cropFamily?: unknown }) =>
-          (s.cropPluginId ?? s.cropFamily) === key
+      const match = (Array.isArray(list) ? list : []).find((s: PhiSource) =>
+        row.cropPluginId
+          ? s.cropPluginId === key ||
+            (Array.isArray(s.cropPluginIds) && s.cropPluginIds.includes(key))
+          : s.cropFamily === key
       ) as (QuotedSource & { preHarvestIntervalDays?: unknown }) | undefined;
       if (!match) gaps.push(`${p.pluginId}: PHI for ${key} has no phiByCrop source`);
       else if (

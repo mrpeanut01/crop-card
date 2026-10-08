@@ -25,12 +25,21 @@ function loadPesticides(): LabelSourcePlugin[] {
   return out;
 }
 
+function loadCropIds(): Set<string> {
+  const full = path.join(REPO_ROOT, 'plugins', 'crops');
+  return new Set(
+    readdirSync(full)
+      .filter((x) => x.endsWith('.json'))
+      .map((f) => JSON.parse(readFileSync(path.join(full, f), 'utf8')).pluginId as string)
+  );
+}
+
 const base: LabelSourcePlugin = { pluginId: 'x', type: 'herbicide', displayName: 'X' };
 const url = 'https://www3.epa.gov/pesticides/chem_search/ppls/000100-00818-20240521.pdf';
 
 describe('pesticide label sources (#640 #661 #716)', () => {
   it('every shipped REI, by-crop PHI and OMRI name is sourced and consistent', () => {
-    expect(pesticideLabelSourceGaps(loadPesticides(), SOURCES)).toEqual([]);
+    expect(pesticideLabelSourceGaps(loadPesticides(), SOURCES, loadCropIds())).toEqual([]);
   });
 
   it('refuses a herbicide REI with no quote that states the hours', () => {
@@ -88,6 +97,67 @@ describe('pesticide label sources (#640 #661 #716)', () => {
         }
       })
     ).toEqual([]);
+  });
+
+  it('accepts one quote shared by a list of crop plugins', () => {
+    const p = {
+      ...base,
+      preHarvestIntervalsByCrop: [
+        { cropPluginId: 'tomato-a', preHarvestIntervalDays: 5 },
+        { cropPluginId: 'tomato-b', preHarvestIntervalDays: 5 },
+        { cropFamily: 'corn', preHarvestIntervalDays: 21 }
+      ]
+    };
+    const shared = {
+      cropPluginIds: ['tomato-a', 'tomato-b'],
+      preHarvestIntervalDays: 5,
+      sourceUrl: url,
+      quote: 'Tomato ... Do not apply within 5 days of harvest.'
+    };
+    const corn = {
+      cropFamily: 'corn',
+      preHarvestIntervalDays: 21,
+      sourceUrl: url,
+      quote: 'Field Corn ... Do not apply within 21 days of harvest.'
+    };
+    expect(pesticideLabelSourceGaps([p], { phiByCrop: { x: [shared, corn] } })).toEqual([]);
+    expect(
+      pesticideLabelSourceGaps([p], {
+        phiByCrop: { x: [{ ...shared, cropPluginIds: ['tomato-a'] }, corn] }
+      })
+    ).toEqual(['x: PHI for tomato-b has no phiByCrop source']);
+    // A shared id list never stands in for a family row.
+    expect(
+      pesticideLabelSourceGaps([p], {
+        phiByCrop: { x: [shared, { ...corn, cropFamily: undefined, cropPluginIds: ['corn'] }] }
+      })
+    ).toEqual(['x: PHI for corn has no phiByCrop source']);
+  });
+
+  it('refuses a crop listed twice or a crop id that is not in the library', () => {
+    const src = {
+      cropPluginIds: ['corn'],
+      preHarvestIntervalDays: 21,
+      sourceUrl: url,
+      quote: 'Corn ... Do not apply within 21 days of harvest.'
+    };
+    const twice = {
+      ...base,
+      preHarvestIntervalsByCrop: [
+        { cropPluginId: 'corn', preHarvestIntervalDays: 21 },
+        { cropPluginId: 'corn', preHarvestIntervalDays: 21 }
+      ]
+    };
+    expect(pesticideLabelSourceGaps([twice], { phiByCrop: { x: [src] } })).toEqual([
+      'x: PHI for corn is listed twice'
+    ]);
+    const once = { ...base, preHarvestIntervalsByCrop: [twice.preHarvestIntervalsByCrop[0]] };
+    expect(
+      pesticideLabelSourceGaps([once], { phiByCrop: { x: [src] } }, new Set(['corn']))
+    ).toEqual([]);
+    expect(
+      pesticideLabelSourceGaps([once], { phiByCrop: { x: [src] } }, new Set(['wheat']))
+    ).toEqual(['x: PHI names corn, which is not a crop plugin']);
   });
 
   it('refuses an OMRI name beside not-allowed flags', () => {

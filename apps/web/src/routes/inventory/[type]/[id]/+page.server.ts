@@ -303,15 +303,18 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
     const rec = registry.get(item.pluginId);
     plugin = rec?.plugin as Record<string, unknown> | undefined;
     const table = (plugin as PhiProduct | undefined)?.preHarvestIntervalsByCrop ?? [];
-    phiByCrop = table.map((e) => {
+    // A label table can name a hundred crop plugins; one row per interval.
+    const byDays = new Map<number, string[]>();
+    for (const e of table) {
       const cropPlugin = e.cropPluginId ? registry.get(e.cropPluginId)?.plugin : undefined;
-      return {
-        crop: e.cropPluginId
-          ? (cropPlugin?.displayName ?? e.cropPluginId)
-          : cropFamilyLabel(e.cropFamily),
-        days: e.preHarvestIntervalDays
-      };
-    });
+      const name = e.cropPluginId
+        ? (cropPlugin?.displayName ?? e.cropPluginId)
+        : cropFamilyLabel(e.cropFamily);
+      byDays.set(e.preHarvestIntervalDays, [...(byDays.get(e.preHarvestIntervalDays) ?? []), name]);
+    }
+    phiByCrop = [...byDays.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([days, names]) => ({ crop: names.join(', '), days }));
   }
 
   if (type === 'pesticide') {

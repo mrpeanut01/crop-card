@@ -8263,7 +8263,7 @@
     }
   },
   "ingredientLethality": {
-    "$comment": "#768 per-active-ingredient lethality in apps/web/src/lib/safety/ingredientLethality.ts. One entry per ingredient key: { killsFamilies, sources: [{ pluginId, sourceUrl, docDate, page, quote }], labelledFamilies?, note }. killsFamilies are only added to the ingredient's chemistry-class row, never removed. A grass family is added when a label carrying the ingredient shows it controls, injures or must not be followed by a crop of that family and no label carrying it is registered on a crop of that family. Pages are PDF pages of the EPA-stamped PPLS file. Checked by ingredientLethality.test.ts.",
+    "$comment": "#768 per-active-ingredient lethality in apps/web/src/lib/safety/ingredientLethality.ts. One entry per ingredient key: { killsFamilies, sources: [{ pluginId, sourceUrl, docDate, page, quote }], labelledFamilies?, killsCropPlugins?, labelledOnlyIn?, cropPluginSources?, note }. killsFamilies are only added to the ingredient's chemistry-class row, never removed. A grass family is added when a label carrying the ingredient shows it controls, injures or must not be followed by a crop of that family and no label carrying it is registered on a crop of that family. Pages are PDF pages of the EPA-stamped PPLS file. Checked by ingredientLethality.test.ts. Ruling LF-1 (docs/design/LABEL_FOLLOWUP_RULINGS.md): killsCropPlugins (crop plugin id to family) stops those plugins by id, and labelledOnlyIn { families, cropPluginIds } stops every other plugin of those families; cropPluginSources quotes the label lines that name or rule out the crops. Both only add stops and must match the kernel row.",
     "nicosulfuron": {
       "killsFamilies": ["cereal-grain", "cover-grass", "forage-grass"],
       "sources": [
@@ -8307,6 +8307,10 @@
     "metsulfuron": {
       "killsFamilies": ["corn", "cereal-grain", "cover-grass"],
       "labelledFamilies": ["forage-grass"],
+      "killsCropPlugins": {
+        "timothy-climax": "forage-grass",
+        "orchard-grass-potomac": "forage-grass"
+      },
       "sources": [
         {
           "pluginId": "chaparral-aminopyralid-metsulfuron",
@@ -8337,7 +8341,16 @@
         "page": 22,
         "quote": "Chaparral may be applied to established native grasses such as wheatgrasses, bluestems, and grama, and to other established pasture grasses such as bermudagrass, bluegrass, orchardgrass, bromegrass, and tall fescue"
       },
-      "note": "Forage-grass is not added: Chaparral is labelled on established pasture grasses (swarm 2026-10-07, 3-0, kept the class row non-lethal to forage-grass so this use works). The same label also says 'x Do not use on Timothy hay or other cool-season grasses grown for hay.' (p16); the kill matrix works by family and cannot tell a timothy or orchardgrass hay field from a pasture, so that restriction is not enforced by the kernel."
+      "cropPluginSources": [
+        {
+          "pluginId": "chaparral-aminopyralid-metsulfuron",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+          "docDate": "2024-09-27",
+          "page": 16,
+          "quote": "x Do not use on Timothy hay or other cool-season grasses grown for hay."
+        }
+      ],
+      "note": "Forage-grass is not added as a family: Chaparral is labelled on established pasture grasses (swarm 2026-10-07, 3-0, kept the class row non-lethal to forage-grass so this use works). Ruling LF-1 (3-0) stops it by crop plugin on every shipped cool-season forage-grass plugin with archetype forage-cutting-cycle (timothy-climax, orchard-grass-potomac), from the label's 'Do not use on Timothy hay or other cool-season grasses grown for hay.' (p16, repeated p31 and p47). Pasture has no crop plugin, so the pasture use stands. Warm-season forage grass (sudangrass-piper, bmr-sorghum-sudan) is unchanged. A farm-uploaded hay plugin under a new id is judged by family only. Checked 2026-10-08: Chaparral is the only shipped plugin carrying metsulfuron, so the corn, cereal-grain and cover-grass additions stop no metsulfuron product labelled for wheat. A metsulfuron product labelled on wheat or barley (such as Ally) would be stopped on them by this row, so it needs its own handling before it ships; ingredientLethality.test.ts fails when a new plugin carrying metsulfuron is added."
     },
     "chlorimuron": {
       "killsFamilies": ["corn", "cereal-grain", "cover-grass", "forage-grass"],
@@ -8355,6 +8368,37 @@
     "thifensulfuron": {
       "killsFamilies": ["forage-grass"],
       "labelledFamilies": ["corn", "cereal-grain", "cover-grass"],
+      "labelledOnlyIn": {
+        "families": ["cereal-grain", "cover-grass"],
+        "cropPluginIds": [
+          "wheat-hard-red-spring",
+          "wheat-hard-white-winter",
+          "wheat-soft-red-winter",
+          "barley-grain-thoroughbred",
+          "barley-hulless-streaker",
+          "oats-grain-jerry",
+          "oats-hulless-streaker",
+          "oats-cover-spring",
+          "triticale-fridge"
+        ]
+      },
+      "killsCropPlugins": {
+        "broomcorn-mennonite": "cereal-grain",
+        "einkorn-blackbeard": "cereal-grain",
+        "emmer-vernal": "cereal-grain",
+        "foxtail-millet-japanese": "cereal-grain",
+        "pearl-millet-tifleaf": "cereal-grain",
+        "proso-millet-cope": "cereal-grain",
+        "rye-grain-aroostook": "cereal-grain",
+        "sorghum-grain-pioneer": "cereal-grain",
+        "spelt-oberkulmer": "cereal-grain",
+        "teff-grain-tiffany": "cereal-grain",
+        "buckwheat-cover": "cover-grass",
+        "cereal-rye-cover": "cover-grass",
+        "daikon-radish-cover": "cover-grass",
+        "millet-japanese-cover": "cover-grass",
+        "sorghum-sudangrass-cover": "cover-grass"
+      },
       "sources": [
         {
           "pluginId": "harmony-sg-thifensulfuron",
@@ -8371,7 +8415,37 @@
         "page": 4,
         "quote": "HARMONY® SG is for use on soybeans, corn, cereals, pre- plant burndown, post-harvest burndown, and fallow in"
       },
-      "note": "Corn and cereal-grain are labelled (wheat, barley, oats, triticale, field corn), and oats is also a cover-grass crop, so those families stay as the class has them. The label carries no pasture or hay use. The cereal-grain family also holds rye, sorghum and millets, which the label does not name; the kill matrix works by family, so a block of those is not stopped."
+      "cropPluginSources": [
+        {
+          "pluginId": "harmony-sg-thifensulfuron",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+          "docDate": "2020-04-17",
+          "page": 11,
+          "quote": "Wheat (Including Durum), Barley, Triticale and Winter Oats Make applications after the crop is in the 2-leaf stage, but before the flag leaf is visible. Spring Oats Make applications after the crop is in the 3-leaf stage, but before jointing."
+        },
+        {
+          "pluginId": "harmony-sg-thifensulfuron",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+          "docDate": "2020-04-17",
+          "page": 11,
+          "quote": "Apply 0.75 ounce HARMONY® SG per acre to wheat (including durum), barley or triticale for postemergence broadleaf weed control."
+        },
+        {
+          "pluginId": "harmony-sg-thifensulfuron",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+          "docDate": "2020-04-17",
+          "page": 12,
+          "quote": "Apply 0.45 to 0.6 ounce HARMONY® SG per acre to oats (Spring and Winter) for postemergence broadleaf weed control."
+        },
+        {
+          "pluginId": "harmony-sg-thifensulfuron",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+          "docDate": "2020-04-17",
+          "page": 7,
+          "quote": "Carefully observe all sprayer cleanup instructions both prior to and after using this product, as spray tank residue may damage crops other than wheat, barley, oats, triticale, corn or soybeans."
+        }
+      ],
+      "note": "Corn and cereal-grain are labelled (wheat, barley, oats, triticale, field corn), and oats is also a cover-grass crop, so those families stay as the class has them. The label carries no pasture or hay use. Ruling LF-1 (3-0): over the crop the label names only wheat (including durum), barley, oats (spring and winter) and triticale, so in the cereal-grain and cover-grass families only those plugins pass (labelledOnlyIn) and every other plugin is stopped by id until a label quote names it: rye, grain sorghum, broomcorn, the millets, teff, the ancient wheats spelt, einkorn and emmer (the label says wheat including durum and names none of them), and the other cover crops. Grain sorghum and rice appear on the label only as crops a burndown may go before ('up to the day of planting grain sorghum and rice', p13) and as rotation crops (p16), not over the crop. Field corn and soybeans keep their labelled use through their own families. The spring oat varieties Ogle, Porter and Premier are named as ones not to treat (p11); no shipped plugin is one of them."
     },
     "halosulfuron": {
       "killsFamilies": [],

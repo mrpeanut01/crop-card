@@ -149,6 +149,63 @@
         "fallback"
       ]
     },
+    "ratePerAcreByCrop": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cropPluginId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "maxAmount": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "oz",
+              "fl-oz",
+              "lb",
+              "pt",
+              "qt"
+            ]
+          }
+        },
+        "required": [
+          "cropPluginId",
+          "amount",
+          "unit"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "stageLimitByCrop": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cropPluginId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "limit": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "cropPluginId",
+          "limit"
+        ],
+        "additionalProperties": false
+      }
+    },
     "reEntryIntervalHours": {
       "type": "integer",
       "minimum": 0,

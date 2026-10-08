@@ -16,6 +16,7 @@
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
   import FallbackRateLine from '$lib/components/spray/FallbackRateLine.svelte';
+  import CropLabelRates from '$lib/components/spray/CropLabelRates.svelte';
   import { isFallbackRate } from '$lib/plugins/rateProvenance';
   import LotQuantities from '../LotQuantities.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
@@ -24,7 +25,7 @@
   import type { PesticideDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
 
   type Props = Omit<PesticideDetailPayload, 'type'>;
-  const { item, lots, movements, plugin, phiByCrop = [] }: Props = $props();
+  const { item, lots, movements, plugin, phiByCrop = [], rateByCrop = [] }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
   const rateFallback = $derived(isFallbackRate(plugin));
   const phiLongest = $derived(
@@ -143,6 +144,7 @@
       {:else}
         <p class="empty">{tr('inv.pest.noRate')}</p>
       {/if}
+      <CropLabelRates rows={rateByCrop} />
     </InvSection>
   </div>
 

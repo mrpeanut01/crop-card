@@ -52,6 +52,7 @@ import { seedSourcingForLots, type LotSeedSourcing } from '$lib/stock/seedSourci
 import { amendmentDetail, type AmendmentDetailPayload } from '$lib/server/amendmentDetail';
 import type { PhiProduct } from '$lib/safety/preHarvestInterval';
 import { cropFamilyLabel } from '$lib/plugins/familyLabel';
+import { cropRateRows, type CropRateRow } from '$lib/plugins/cropRate';
 
 export interface PesticideDetailPayload {
   type: 'pesticide';
@@ -71,6 +72,8 @@ export interface PesticideDetailPayload {
   };
   /** #661 — the label's PHI by crop, named for display. */
   phiByCrop: Array<{ crop: string; days: number }>;
+  /** #737 — the label's rates and stage limits by crop. */
+  rateByCrop?: CropRateRow[];
 }
 
 export interface FertilityDetailPayload {
@@ -298,6 +301,7 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
 
   let plugin: Record<string, unknown> | undefined;
   let phiByCrop: PesticideDetailPayload['phiByCrop'] = [];
+  let rateByCrop: CropRateRow[] = [];
   if (item.pluginId) {
     const registry = await getRegistry();
     const rec = registry.get(item.pluginId);
@@ -315,6 +319,12 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
     phiByCrop = [...byDays.entries()]
       .sort(([a], [b]) => a - b)
       .map(([days, names]) => ({ crop: names.join(', '), days }));
+    if (plugin?.type === 'herbicide') {
+      rateByCrop = cropRateRows(
+        plugin as Parameters<typeof cropRateRows>[0],
+        (id) => registry.get(id)?.plugin.displayName ?? id
+      );
+    }
   }
 
   if (type === 'pesticide') {
@@ -324,7 +334,8 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
       lots,
       movements,
       plugin: plugin as PesticideDetailPayload['plugin'],
-      phiByCrop
+      phiByCrop,
+      rateByCrop
     };
   }
   if (type === 'fertility') {

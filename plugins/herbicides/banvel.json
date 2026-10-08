@@ -4,7 +4,7 @@
   "displayName": "Banvel Herbicide (UPL dicamba DMA 4 lb/gal)",
   "epaRegistrationNumber": "70506-461",
   "reEntryIntervalHours": 24,
-  "version": "1.0.1",
+  "version": "1.1.0",
   "defaultUnit": "fl-oz",
   "formulation": "SL",
   "applicationTiming": "POST",
@@ -17,6 +17,48 @@
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 4,
+  "ratePerAcreByCrop": [
+    {
+      "cropPluginId": "wheat-soft-red-winter",
+      "amount": 2,
+      "maxAmount": 4,
+      "unit": "fl-oz"
+    },
+    {
+      "cropPluginId": "barley-grain-thoroughbred",
+      "amount": 2,
+      "maxAmount": 4,
+      "unit": "fl-oz"
+    },
+    {
+      "cropPluginId": "corn-feed-dent-pioneer",
+      "amount": 0.5,
+      "maxAmount": 1,
+      "unit": "pt"
+    }
+  ],
+  "stageLimitByCrop": [
+    {
+      "cropPluginId": "wheat-soft-red-winter",
+      "limit": "DICAMBA DMA 4# AG herbicide MUST BE APPLIED TO FALL SEEDED WHEAT PRIOR TO THE JOINTING STAGE."
+    },
+    {
+      "cropPluginId": "barley-grain-thoroughbred",
+      "limit": "DICAMBA DMA 4# AG MUST BE APPLIED TO FALL SEEDED BARLEY PRIOR TO THE JOINTING STAGE."
+    },
+    {
+      "cropPluginId": "corn-feed-dent-pioneer",
+      "limit": "DICAMBA DMA 4# AG at 1 pint per treated acre may be applied during the period from corn emergence through the five leaf stage or 8 inches tall, whichever comes first. Reduce the rate to ½ pint per treated acre if corn is growing on coarse textured soils (sand, sandy loam, loamy sand)."
+    },
+    {
+      "cropPluginId": "corn-feed-dent-pioneer",
+      "limit": "Application of DICAMBA DMA 4# AG at ½ pint per treated acre may be made from 8 to 36 inch tall corn or 15 days before tassel emergence, whichever comes first."
+    },
+    {
+      "cropPluginId": "corn-feed-dent-pioneer",
+      "limit": "DO NOT exceed a total of 1 ½ pints of DICAMBA DMA 4# AG per treated acre per crop year."
+    }
+  ],
   "labelClaims": {
     "safeForCropPluginIds": [
       "corn-feed-dent-pioneer",

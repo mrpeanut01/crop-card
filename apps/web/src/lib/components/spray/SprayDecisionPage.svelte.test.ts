@@ -55,6 +55,23 @@ describe('SprayDecisionPage', () => {
     expect(screen.getByRole('option', { name: 'South field' })).toBeInTheDocument();
   });
 
+  it('shows a garden bed in square feet, never 0 ac (#675)', () => {
+    render(SprayDecisionPage, {
+      ...baseProps,
+      blocks: [{ id: 'bed1', name: 'Bed 1', acres: 100 / 43_560 }],
+      blockId: 'bed1'
+    });
+    expect(screen.getByRole('option', { name: 'Bed 1 · 100 sq ft' })).toBeInTheDocument();
+  });
+
+  it('names the block in the re-entry banner (#673)', () => {
+    render(SprayDecisionPage, {
+      ...baseProps,
+      activeREI: [{ id: 'r1', blockId: 'b1', reEntryClearAt: Date.now() }]
+    });
+    expect(screen.getByText(/North field — re-entry clear/)).toBeInTheDocument();
+  });
+
   it('metric users see label-first area and converted condition hints; inputs stay US', () => {
     page.data = { prefs: { timeZone: 'America/New_York', units: 'metric' } };
     render(SprayDecisionPage, { ...baseProps });

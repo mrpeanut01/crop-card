@@ -5,6 +5,7 @@ import {
   formatInstant,
   formatLabelRate,
   formatArea,
+  formatLabelArea,
   formatQuantity,
   fromDisplay,
   todayYmd,
@@ -45,6 +46,9 @@ export const fmt = {
   /** Acres for display; garden-sized areas read in sq ft or m². */
   area: (acres: number | null | undefined, opts?: { digits?: number }) =>
     formatArea(acres, currentPrefs(), opts),
+  /** Block size on spray pages: label units for fields, sq ft for beds. */
+  labelArea: (acres: number | null | undefined, opts?: FormatOpts) =>
+    formatLabelArea(acres, currentPrefs(), opts),
   toDisplay: (v: number, q: Quantity) => toDisplay(v, q, currentPrefs()),
   fromDisplay: (v: number, q: Quantity) => fromDisplay(v, q, currentPrefs()),
   today: () => todayYmd(currentPrefs()),

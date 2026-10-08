@@ -76,6 +76,40 @@ describe('/spray/fungicide pollinator label data (#530)', () => {
     expect(notice.getAttribute('data-english-only')).toBe('safety');
   });
 
+  it('names the crop and block instead of ids, and sizes the block (#673 #675)', () => {
+    const d = {
+      ...data(['squash'], ['peroxide']),
+      cropNames: { squash: 'Butternut Squash' },
+      blocks: [
+        {
+          id: 'f6034532-uuid',
+          name: 'Apple Row',
+          acres: 0.13,
+          cropPluginIds: ['squash'],
+          bloomingCropPluginIds: ['squash']
+        }
+      ],
+      preselect: { blockId: 'f6034532-uuid', cropId: null, taskId: null, productPluginIds: [] },
+      recentEvents: [
+        {
+          id: 'e1',
+          blockId: 'f6034532-uuid',
+          occurredAt: Date.now(),
+          products: [{ pluginId: 'quiet', displayName: 'quiet' }],
+          preHarvestClearAt: null
+        }
+      ]
+    };
+    const { container } = render(Page, { props: { data: d } as never });
+    const text = container.textContent ?? '';
+    expect(text).toContain('Butternut Squash');
+    expect(text).toContain('Apple Row · 0.13 ac');
+    expect(text).toMatch(/Target diseases/i);
+    expect(text).not.toMatch(/Target weeds/i);
+    expect(text).not.toContain('f6034532');
+    expect(text).not.toMatch(/Phase 26/);
+  });
+
   it('no notice for a bee-silent label with a low hint, or out of bloom', () => {
     const a = render(Page, { props: { data: data(['squash'], ['quiet']) } as never });
     expect(screen.queryByTestId('fungicide-bloom-notice')).toBeNull();

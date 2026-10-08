@@ -305,6 +305,19 @@ export function formatArea(
   return formatQuantity(acres, 'area', prefs, { ...opts, locale: prefs.locale });
 }
 
+/** A block size on the spray pages: label units first for a field
+ *  ("1.5 ac (0.61 ha)") and sq ft or m² for a garden bed, never "0 ac". */
+export function formatLabelArea(
+  acres: number | null | undefined,
+  prefs: Pick<Prefs, 'units' | 'locale'>,
+  opts: FormatOpts = {}
+): string {
+  if (acres !== null && acres !== undefined && acres > 0 && acres < SMALL_AREA_ACRES) {
+    return formatArea(acres, prefs);
+  }
+  return formatLabelRate(acres, 'area', prefs, opts);
+}
+
 /** Label-unit first, metric alongside for metric users:
  *  "22 fl oz/ac (1,608 mL/ha)". Use for anything read off a pesticide
  *  label or fed to the dilution/calibration kernel. */

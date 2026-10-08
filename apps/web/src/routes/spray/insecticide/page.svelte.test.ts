@@ -4,9 +4,11 @@
  * #130 — pollinator-protection tiles render and gate the Record button.
  */
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 
-vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
+const nav = vi.hoisted(() => ({ invalidateAll: vi.fn(async () => {}) }));
+vi.mock('$app/navigation', () => ({ goto: vi.fn(), invalidateAll: nav.invalidateAll }));
+vi.mock('$lib/animals/recordClient', () => ({ noteHoldWrite: vi.fn(async () => {}) }));
 
 import Page from './+page.svelte';
 
@@ -197,5 +199,46 @@ describe('/spray/insecticide provenance (#644)', () => {
     expect(container.querySelector('[data-provenance="fallback"]')).not.toBeNull();
     expect((container.querySelector('#insecticide-product') as HTMLSelectElement).value).toBe('');
     expect(recordButton()).toBeDisabled();
+  });
+});
+
+describe('/spray/insecticide after saving (#673)', () => {
+  it('refreshes the page data so Recent applications shows the new record', async () => {
+    nav.invalidateAll.mockClear();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ event: { reEntryClearAt: Date.now() } }), { status: 200 })
+      )
+    );
+    try {
+      render(Page, {
+        props: {
+          data: data({ beeToxicity: 'relatively-nontoxic', bloomRestriction: 'none' }, [])
+        } as never
+      });
+      await fireEvent.click(recordButton());
+      await waitFor(() => expect(nav.invalidateAll).toHaveBeenCalled());
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('names the block in Recent applications, never its id', () => {
+    const d = {
+      ...data({ beeToxicity: 'relatively-nontoxic', bloomRestriction: 'none' }, []),
+      recentEvents: [
+        {
+          id: 'e1',
+          blockId: 'b1',
+          occurredAt: Date.now(),
+          products: [{ pluginId: 'neonic', displayName: 'neonic' }],
+          scoutObservation: null
+        }
+      ]
+    };
+    const { container } = render(Page, { props: { data: d } as never });
+    expect(container.textContent).toMatch(/neonic\s+on North/);
   });
 });

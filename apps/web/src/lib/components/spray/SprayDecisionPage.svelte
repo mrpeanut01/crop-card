@@ -6,6 +6,7 @@
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { page } from '$app/state';
   import { createT } from '$lib/i18n';
+  import { blockNameMap } from '$lib/spray/contextLabels';
 
   /** Shell shared by `/spray/insecticide` + `/spray/fungicide`. Owns the
    *  header, block selector, conditions, submit, banner stack, and the
@@ -160,7 +161,7 @@
   );
 </script>
 
-<SprayPageHeader {chemistry} {title} {lede} {activeREI} {gates} />
+<SprayPageHeader {chemistry} {title} {lede} {activeREI} blockNames={blockNameMap(blocks)} {gates} />
 
 {#if legendStrip}
   <div class="legend-strip">{@render legendStrip()}</div>
@@ -178,7 +179,7 @@
         <option value="">{tr('sprayui.dp.pickBlock')}</option>
         {#each blocks as b (b.id)}
           <option value={b.id}
-            >{b.name}{b.acres ? ` · ${fmt.label(b.acres, 'area', { digits: 2 })}` : ''}</option
+            >{b.name}{b.acres ? ` · ${fmt.labelArea(b.acres, { digits: 2 })}` : ''}</option
           >
         {/each}
       </select>

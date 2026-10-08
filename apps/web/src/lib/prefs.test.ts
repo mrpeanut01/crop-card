@@ -5,6 +5,7 @@ import {
   formatArea,
   formatCalendarDate,
   formatInstant,
+  formatLabelArea,
   formatLabelRate,
   formatQuantity,
   fromDisplay,
@@ -102,6 +103,23 @@ describe('formatting', () => {
     expect(formatLabelRate(22, 'flOzPerArea', us)).toBe('22 fl oz/ac');
     expect(formatLabelRate(22, 'flOzPerArea', metric)).toBe('22 fl oz/ac (1,608 mL/ha)');
     expect(formatLabelRate(null, 'flOzPerArea', metric)).toBe('—');
+  });
+});
+
+describe('formatLabelArea: spray block sizes (#675)', () => {
+  it('reads a garden bed in square feet and a field in label units', () => {
+    expect(formatLabelArea(100 / 43_560, us)).toBe('100 sq ft');
+    expect(formatLabelArea(0.13, us)).toBe('0.13 ac');
+    expect(formatLabelArea(1.5, metric)).toBe('1.5 ac (0.61 ha)');
+    expect(formatLabelArea(null, us)).toBe('—');
+  });
+
+  it('never prints 0 ac for a block with any area', () => {
+    fc.assert(
+      fc.property(fc.double({ min: 1e-6, max: 5000, noNaN: true }), (acres) => {
+        expect(formatLabelArea(acres, us)).not.toMatch(/^0 ac/);
+      })
+    );
   });
 });
 

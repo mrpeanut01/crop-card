@@ -34,11 +34,12 @@ describe('SprayPageHeader', () => {
     expect(screen.getByText('Custom lede.')).toBeInTheDocument();
   });
 
-  it('renders the default gate pills for fungicide (3 pills)', () => {
-    render(SprayPageHeader, { chemistry: 'fungicide' });
+  it('renders the default gate pills for fungicide, with no roadmap text (#674)', () => {
+    const { container } = render(SprayPageHeader, { chemistry: 'fungicide' });
     expect(screen.getByText(/FRAC rotation/)).toBeInTheDocument();
-    expect(screen.getByText(/Disease forecast/)).toBeInTheDocument();
     expect(screen.getByText(/Rain\/dew/)).toBeInTheDocument();
+    expect(screen.queryByText(/Disease forecast/)).not.toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/Phase \d/);
   });
 
   it('renders the default gate pills for herbicide (2 pills)', () => {
@@ -53,7 +54,18 @@ describe('SprayPageHeader', () => {
       activeREI: [{ id: 'rei-1', blockId: 'block-abc', reEntryClearAt: Date.now() + 3_600_000 }]
     });
     expect(screen.getByText(/Active insecticide re-entry intervals/)).toBeInTheDocument();
-    expect(screen.getByText(/Block block-abc/)).toBeInTheDocument();
+    expect(screen.getByText(/Removed block — re-entry clear/)).toBeInTheDocument();
+    expect(screen.queryByText(/block-abc/)).not.toBeInTheDocument();
+  });
+
+  it('names the block in the re-entry banner, never its id (#673)', () => {
+    render(SprayPageHeader, {
+      chemistry: 'fungicide',
+      activeREI: [{ id: 'rei-1', blockId: 'f6034532-uuid', reEntryClearAt: Date.now() }],
+      blockNames: { 'f6034532-uuid': 'Bed 1' }
+    });
+    expect(screen.getByText(/Bed 1 — re-entry clear/)).toBeInTheDocument();
+    expect(screen.queryByText(/f6034532/)).not.toBeInTheDocument();
   });
 
   it('renders the re-entry clear time in the user zone', () => {

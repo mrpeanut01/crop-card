@@ -6,11 +6,12 @@
   import Banner from '$lib/components/ui/Banner.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import type { Snippet } from 'svelte';
+  import { blockNameOf } from '$lib/spray/contextLabels';
 
   /** Shared header pattern across the three spray-decision pages:
    *   1. kicker + serif H1 + lede
-   *   2. gate-slot row of "Phase 25d" / "Phase 26" pills indicating which
-   *      kernel gates will fire on this chemistry
+   *   2. gate-slot row of pills naming the gates that run on this
+   *      chemistry
    *   3. active-REI Banner when any block is in re-entry lockout
    *
    * Consumers pass:
@@ -20,9 +21,7 @@
    *   - lede (overrideable, defaults per chemistry)
    *   - activeREI[] for the lockout banner
    *
-   * A `gates` snippet lets a page swap in custom gate pills (e.g.,
-   * /spray/fungicide adds a "Disease forecast" pill on top of the
-   * default FRAC + rain/dew pair).
+   * A `gates` snippet lets a page swap in custom gate pills.
    */
 
   type Chemistry = 'herbicide' | 'insecticide' | 'fungicide';
@@ -38,11 +37,13 @@
     title?: string;
     lede?: string;
     activeREI?: ActiveREI[];
+    /** Block id → name for the re-entry banner. */
+    blockNames?: Record<string, string>;
     /** Override the default gate-slot pills entirely. */
     gates?: Snippet;
   }
 
-  const { chemistry, title, lede, activeREI = [], gates }: Props = $props();
+  const { chemistry, title, lede, activeREI = [], blockNames = {}, gates }: Props = $props();
 
   const tr = $derived(createT(page.data?.locale));
   const kickerText = $derived(tr(`sprayui.header.kicker.${chemistry}`));
@@ -70,7 +71,6 @@
   {:else if chemistry === 'fungicide'}
     <Pill tone="forest">{tr('sprayui.header.gate.frac')}</Pill>
     <Pill tone="sky">{tr('sprayui.header.gate.dryWindow')}</Pill>
-    <Pill tone="neutral">{tr('sprayui.header.gate.forecast')}</Pill>
   {/if}
 </div>
 
@@ -81,7 +81,9 @@
       <ul class="rei-list">
         {#each activeREI as e (e.id)}
           <li>
-            Block {e.blockId} — re-entry clear {fmt.instant(e.reEntryClearAt ?? 0)}
+            {blockNameOf(blockNames, e.blockId, 'Removed block')} — re-entry clear {fmt.instant(
+              e.reEntryClearAt ?? 0
+            )}
           </li>
         {/each}
       </ul>

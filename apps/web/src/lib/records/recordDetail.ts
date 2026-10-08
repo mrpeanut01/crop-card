@@ -192,6 +192,7 @@ export function harvestDetail(
     quantity?: string | null;
     lotNumber?: string | null;
     moisturePct?: number | null;
+    detailLines?: string[];
   },
   prefs: P
 ): RecordDetailView {
@@ -207,6 +208,8 @@ export function harvestDetail(
     rows.push({ label: L(prefs, 'records.field.lot'), value: input.lotNumber.trim() });
   if (typeof input.moisturePct === 'number')
     rows.push({ label: L(prefs, 'records.field.moisture'), value: `${input.moisturePct}%` });
+  if (input.detailLines?.length)
+    rows.push({ label: L(prefs, 'records.field.readings'), value: input.detailLines.join(' · ') });
   return {
     rows,
     technical: [{ label: L(prefs, 'records.field.cropId'), value: input.cropPluginId }]

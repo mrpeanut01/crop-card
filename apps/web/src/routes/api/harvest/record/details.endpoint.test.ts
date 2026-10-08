@@ -80,6 +80,31 @@ describe('POST /api/harvest/record details (#662, #718)', () => {
     expect(saved.lotNumber).toBeUndefined();
     expect(saved.cropId).toBe(farm.cropId);
     expect(saved.details).toEqual({ pickNumber: 3, marketablePct: 92 });
+    expect(saved.performedById).toBe('hdet-owner');
+  });
+
+  it('the harvest record card shows the readings and who recorded it (#749)', async () => {
+    const farm = seed();
+    const res = await post(farm.ownerId, {
+      blockId: farm.blockId,
+      cropId: farm.cropId,
+      cropPluginId: 'tomato-amish-paste',
+      quantity: '6.5 lb',
+      lotNumber: 'TOM-1',
+      details: { pickNumber: 3, marketablePct: 92 }
+    });
+    const { buildRecordCards } = await import('$lib/server/recordCards');
+    const { DEFAULT_PREFS } = await import('$lib/prefs');
+    const result = await runWithTenantAsync(farm.ownerId, () =>
+      buildRecordCards('harvest', res.body.event.id, { prefs: DEFAULT_PREFS })
+    );
+    const card = result!.cards[0];
+    expect(card.kind).toBe('harvest');
+    expect(card.facts.find((f) => f.label === 'Recorded by')?.value).toBe('hdet-owner@test.local');
+    expect(card.facts.find((f) => f.label === 'Lot')?.value).toBe('TOM-1');
+    const readings = card.sections.find((s) => s.title === 'Readings');
+    expect(readings?.items.join(' | ')).toMatch(/3/);
+    expect(readings?.items.join(' | ')).toMatch(/92/);
   });
 
   it('keeps a grower lot code exactly as typed', async () => {

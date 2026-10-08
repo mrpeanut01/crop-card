@@ -309,7 +309,8 @@ export const POST: RequestHandler = withClientRecordId(async (requestEvent) => {
     quantity: parsed.data.quantity,
     lotNumber: parsed.data.lotNumber,
     moisturePct: parsed.data.moisturePct,
-    details: parsed.data.details
+    details: parsed.data.details,
+    performedById: currentUser(requestEvent)?.id
   };
   let taskClose: RecordTaskClose | null = null;
   const closeTask = (event: HarvestEvent) => {

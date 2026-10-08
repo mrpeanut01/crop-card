@@ -44,6 +44,9 @@ import { getRegistry } from './registry';
 import { lateLabel } from '$lib/records/lateLabel';
 import { hayDaysLate } from '$lib/records/hayExport.server';
 import { observationLine } from '$lib/records/metricLabel';
+import { harvestDetailLines } from '$lib/harvest/details';
+import { createT } from '$lib/i18n';
+import { formatCalendarDate, formatQuantity } from '$lib/prefs';
 import { cropDisplayName } from '$lib/i18n/cropName';
 
 /** G2-06: the hay record card's "Saved N days after its date" line. */
@@ -282,6 +285,13 @@ export async function buildRecordCards(
         lotNumber: ev.lotNumber ?? null,
         moisturePct: ev.moisturePct ?? null,
         plantingId: planting ? planting.id : null,
+        detailLines: harvestDetailLines(
+          ev.details,
+          createT(ctx.prefs.locale),
+          (v, q) => formatQuantity(v, q, ctx.prefs),
+          (ymd) => formatCalendarDate(ymd, 'date', {}, ctx.prefs.locale)
+        ),
+        performerLabel: performer(ev.performedById),
         locked: isLocked(ev.occurredAt, ev.lockedAt, now)
       },
       cardOpts

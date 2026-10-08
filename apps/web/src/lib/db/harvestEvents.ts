@@ -34,6 +34,8 @@ export interface HarvestEventInput {
   rulesVersion?: string;
   /** #662: the form's readings, never packed into the lot number. */
   details?: HarvestDetails;
+  /** #749: the signed-in user who saved it. */
+  performedById?: string;
 }
 
 export interface HarvestEvent extends HarvestEventInput {
@@ -63,7 +65,8 @@ export function insertHarvestEvent(input: HarvestEventInput): HarvestEvent {
         lotNumber: input.lotNumber ?? null,
         moisturePct: input.moisturePct ?? null,
         rulesVersion: input.rulesVersion ?? null,
-        detailsJson: serializeDetails(input.details)
+        detailsJson: serializeDetails(input.details),
+        performedById: input.performedById ?? null
       })
     )
     .returning()
@@ -121,6 +124,7 @@ function rowToEvent(row: typeof harvestEvents.$inferSelect): HarvestEvent {
     moisturePct: row.moisturePct ?? undefined,
     ...(row.rulesVersion ? { rulesVersion: row.rulesVersion } : {}),
     ...(details ? { details } : {}),
+    ...(row.performedById ? { performedById: row.performedById } : {}),
     lockedAt: row.lockedAt?.getTime()
   };
 }

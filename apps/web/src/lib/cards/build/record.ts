@@ -293,6 +293,9 @@ export interface HarvestRecordCardInput {
   moisturePct: number | null;
   /** The Planting Card this harvest came from, when one is on file. */
   plantingId: string | null;
+  /** #662 form readings (pick number, Brix, ...), already worded. */
+  detailLines?: string[];
+  performerLabel?: string | null;
   locked: boolean;
 }
 
@@ -329,6 +332,15 @@ export function buildHarvestRecordCard(
     });
   if (input.blockLabel)
     facts.push({ label: t(loc, 'cards.record.block'), value: input.blockLabel, provenance: 'data' });
+  if (input.performerLabel)
+    facts.push({
+      label: t(loc, 'cards.record.recordedBy'),
+      value: input.performerLabel,
+      provenance: 'data'
+    });
+  const sections: CardSection[] = input.detailLines?.length
+    ? [{ title: t(loc, 'cards.record.readings'), items: input.detailLines, provenance: 'manual' }]
+    : [];
   const links = [openRecordLink('harvest', input.rowId, loc)];
   if (input.plantingId)
     links.push({
@@ -342,7 +354,7 @@ export function buildHarvestRecordCard(
     title: input.cropLabel,
     status: lockStatus(input.locked, loc),
     facts,
-    sections: [],
+    sections,
     asOf: opts.now,
     provenance: [
       { source: 'manual', detail: t(loc, 'cards.record.provHarvest') },

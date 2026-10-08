@@ -957,7 +957,9 @@ export const harvestEvents = tenantScoped(
       /** #662: the harvest form's archetype readings (pick number, grade,
        *  Brix, cut height, ...) as `HarvestDetails` JSON, kept out of the
        *  lot number, which stays the grower's own traceability code. */
-      detailsJson: text('details_json')
+      detailsJson: text('details_json'),
+      /** #749: who saved the harvest. Null on harvests saved before 0091. */
+      performedById: text('performed_by_id')
     },
     (table) => ({
       ownerOccurredIdx: index('harvest_events_owner_occurred_idx').on(

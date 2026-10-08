@@ -58,11 +58,20 @@ const MONTHS = [
 ];
 
 export const OUTSIDE_WINDOW_NOTE =
-  'This period is outside the saved Cards. Open it while online.';
+  'Week and Month Cards cover the last two weeks and the next two months. See this period in Today.';
 export const EARLIER_DAYS_NOTE = 'Earlier days are not on this card.';
 
 export function outsideWindowNote(locale?: string | null): string {
   return t(locale, 'cards.cal.outsideWindow');
+}
+
+/** /today's Week or Month view for the period a Week or Month Card key
+ *  names (`wk_2027-05-03`, `mo_2027-05`); /today when the key is not one. */
+export function periodTodayHref(kind: string, key: string): string {
+  const id = key.slice(key.indexOf('_') + 1);
+  if (kind === 'week' && /^\d{4}-\d{2}-\d{2}$/.test(id)) return `/today?view=week&at=${id}`;
+  if (kind === 'month' && /^\d{4}-\d{2}$/.test(id)) return `/today?view=month&at=${id}-01`;
+  return '/today';
 }
 
 /** English keeps the hand-built names; other languages use `Intl`. */
@@ -388,6 +397,14 @@ function buildPeriodCard(
 
   const notices: string[] = [];
   if (earlierShown) notices.push(tr('cards.cal.earlierDays'));
+  const olderOpen = snapshot.taskWindow?.olderOpen ?? 0;
+  if (olderOpen > 0 && (earlierShown || (spec.firstYmd <= today && today <= spec.lastYmd)))
+    notices.push(
+      tr('cards.cal.olderOpen', {
+        count: olderOpen,
+        date: shortMonthDay(window.firstYmd, loc)
+      })
+    );
   if (farmWideHidden) notices.push(tr('cards.cal.farmWideHidden', { count: farmWideHidden }));
   if (tasks.some((t) => isSprayTask(t)))
     notices.push(tr('cards.cal.sprayNotice'));

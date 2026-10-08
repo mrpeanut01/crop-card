@@ -5,7 +5,7 @@
  */
 
 import { isTypicalTimingTask } from '$lib/schedule/typicalTiming';
-import { and, asc, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
+import { and, asc, count, eq, gte, inArray, isNull, lt, lte, or } from 'drizzle-orm';
 import { isSavedSowMethod, isTreeSizeClass } from '$lib/plan/spacingModel';
 import { db } from './client';
 import { animalCarePlans, animalHealthEvents, crops, owners, tasks } from './schema';
@@ -134,6 +134,26 @@ export function plantingIdForRecord(
 }
 
 /** Open tasks scheduled between `fromMs` and `toMs`, oldest first. */
+/** Open tasks dated before the snapshot's task window (#758). */
+export function countOpenTasksBefore(fromMs: number): number {
+  return (
+    db
+      .select({ n: count() })
+      .from(tasks)
+      .where(
+        withTenant(
+          tasks,
+          and(
+            isNull(tasks.completedAt),
+            isNull(tasks.abortedAt),
+            lt(tasks.scheduledFor, new Date(fromMs))
+          )
+        )
+      )
+      .get()?.n ?? 0
+  );
+}
+
 export function listOpenTasksForCards(fromMs: number, toMs: number): SnapshotTask[] {
   return db
     .select()

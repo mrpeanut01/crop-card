@@ -11,8 +11,44 @@ const METRIC_KEY: Record<string, MessageKey> = {
   'percent-leaf-area': 'recui.metric.pctLeafArea',
   'lesion-count-per-leaf': 'recui.metric.lesionCountPerLeaf',
   'plants-infected-pct': 'recui.metric.plantsInfectedPct',
+  'eggs-per-plant': 'recui.metric.eggsPerPlant',
   note: 'recui.metric.note'
 };
+
+/** The metrics an insecticide label's scouting threshold can use, in the
+ *  order a counting form offers them. */
+export const PEST_COUNT_METRICS = [
+  'count-per-plant',
+  'count-per-leaf',
+  'count-per-trap-per-week',
+  'eggs-per-plant',
+  'pct-defoliation',
+  'pct-infested-plants'
+] as const;
+export type PestCountMetric = (typeof PEST_COUNT_METRICS)[number];
+
+const PEST_KEY: Record<string, MessageKey> = {
+  'broadleaf-weed': 'recui.pest.broadleafWeed'
+};
+
+/** A scout observation's subject as words: app codes ("broadleaf-weed")
+ *  are translated, pest names typed by people or plugins stay as written. */
+export function scoutPestLabel(pest: string, locale?: string | null): string {
+  const key = PEST_KEY[pest];
+  return key ? t(locale, key) : pest;
+}
+
+/** The farmer's own words in a counted observation's notes
+ *  ("spots=[1,2] decision=SKIP note: aphids" → "aphids"). */
+export function scoutNoteText(metric: string, notes: string | null | undefined): string | null {
+  const raw = (notes ?? '').trim();
+  if (!raw) return null;
+  if (metric === 'note') return raw;
+  const at = raw.indexOf('note: ');
+  if (at < 0) return null;
+  const text = raw.slice(at + 'note: '.length).trim();
+  return text || null;
+}
 
 /** A scout or disease metric code ("count-per-leaf") as words. Unknown
  *  codes read as their words with the dashes taken out. */
@@ -31,7 +67,7 @@ export function observationLine(
   notes: string | null | undefined,
   locale?: string | null
 ): string {
-  const who = subject.trim();
+  const who = locale ? scoutPestLabel(subject.trim(), locale) : subject.trim();
   if (metric === 'note') {
     const text = (notes ?? '').trim();
     const note = text.length > 80 ? `${text.slice(0, 79)}…` : text;

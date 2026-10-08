@@ -193,7 +193,11 @@ export const esCards: Partial<Record<MessageKey, string>> = {
   'cards.day.dueToday': 'Para hoy',
   'cards.day.kicker': 'Día · {date}',
   'cards.cal.outsideWindow':
-    'Este periodo está fuera de las tarjetas guardadas. Ábrelo cuando tengas conexión.',
+    'Las tarjetas de semana y mes cubren las últimas dos semanas y los próximos dos meses. Mira este periodo en Hoy.',
+  'cards.cal.olderOpen.one':
+    '1 tarea abierta de antes del {date} no está en esta tarjeta. Mírala en Hoy.',
+  'cards.cal.olderOpen.other':
+    '{count} tareas abiertas de antes del {date} no están en esta tarjeta. Míralas en Hoy.',
   'cards.cal.earlierDays': 'Los días anteriores no están en esta tarjeta.',
   'cards.cal.range': '{from} al {to}',
   'cards.cal.careTask': 'Tarea de cuidado de animales',
@@ -461,11 +465,9 @@ export const esCards: Partial<Record<MessageKey, string>> = {
   'cards.tip.leafy-green.problems.0':
     'El calor fuerte del verano suele provocar que la planta se espigue (saque un tallo con semilla) y que el sabor se vuelva amargo.',
   'cards.tip.leafy-green.problems.1': 'Las babosas y los caracoles pueden comerse las hojas.',
-  'cards.tip.root.prune.0': 'Ralea las zanahorias a 2 o 3 pulgadas entre plantas.',
   'cards.tip.root.problems.0':
     'Las zanahorias prefieren suelo franco o arenoso, sin piedras ni terrones.',
   'cards.tip.root.problems.1': 'Raíces agrietadas: riego disparejo.',
-  'cards.tip.apiaceae.prune.0': 'Ralea las zanahorias a 2 o 3 pulgadas entre plantas.',
   'cards.tip.apiaceae.problems.0':
     'El gusano del perejil, la oruga de una mariposa cola de golondrina, se come las hojas de la zanahoria.',
   'cards.tip.legume.feed.0':

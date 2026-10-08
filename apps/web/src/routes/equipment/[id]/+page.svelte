@@ -224,7 +224,9 @@
     </div>
   {/if}
   <p class="meta">
-    <span class="type-badge">{equipmentTypeLabel(eq.type, data.locale)}</span>
+    <span class="type-badge"
+      >{data.templateCategory ?? equipmentTypeLabel(eq.type, data.locale)}</span
+    >
     <code>{eq.id}</code>
   </p>
 </header>

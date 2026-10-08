@@ -16,6 +16,10 @@ export const enRecords = {
   'calib.label.sprayWidth': 'Spray width (in)',
   'calib.label.stride': 'Your stride (ft)',
   'calib.lastCalibrated': 'Last calibrated {date}',
+  'calib.empty.kicker': 'Calibrate',
+  'calib.empty.title': 'No sprayer on the farm yet',
+  'calib.empty.body':
+    'Add the sprayer you use, then walk the calibration right here. Pick the kind closest to yours.',
   'calib.lede':
     '1/128-acre method (UC-10, FR-12). Walk the calibration distance at your normal spray speed, collect output in a jug, and the fluid ounces you collect equals your gallons-per-acre. The dilution calculator uses this GPA to scale every product rate.',
   'calib.outsideBand':
@@ -703,7 +707,24 @@ export const enRecords = {
   'scout.keptAgain': 'Kept on this phone. Save another?',
   'scout.kicker': 'Scout',
   'scout.lede':
-    "Jot down what you notice on a walk. Counting weeds? The weed count below tells you whether it's time to spray.",
+    "Jot down what you notice on a walk, count a pest or disease against the label's action threshold, or count weeds to see whether they need control.",
+  'scout.pest.title': 'Pest or disease count',
+  'scout.pest.help':
+    "Count a pest or disease on representative plants. Pick a name from the list so the count matches an insecticide label's action threshold; /spray/insecticide checks it before recording.",
+  'scout.pest.label': 'Pest or disease',
+  'scout.pest.placeholder': 'e.g. squash bug',
+  'scout.pest.metric': 'What you counted',
+  'scout.pest.value': 'Count',
+  'scout.pest.thresholds': 'Action thresholds on insecticide labels on file:',
+  'scout.pest.noThreshold':
+    'No insecticide label on file sets an action threshold for this pest and count. The count is still saved.',
+  'scout.pest.save': 'Save pest count',
+  'scout.pest.errCanSave': 'Name the pest or disease and enter a count before saving.',
+  'scout.weed.noHerbicideHelp':
+    'Your season plan says no herbicides: when the count is over, cultivate, mulch or hand-weed.',
+  'scout.weed.noHerbicideAction':
+    'Your season plan says no herbicides: cultivate, mulch or hand-weed this spot.',
+  'scout.savedNote': 'Saved to the farm.',
   'scout.noObs':
     'No observations recorded for this block yet — count a few spots above and save to start building the trend.',
   'scout.notSaved': 'Not saved - see Pending records',
@@ -1009,6 +1030,8 @@ export const enRecords = {
   'recui.metric.lesionCountPerLeaf': 'Lesions per leaf',
   'recui.metric.plantsInfectedPct': '% plants infected',
   'recui.metric.note': 'Note',
+  'recui.metric.eggsPerPlant': 'Eggs per plant',
+  'recui.pest.broadleafWeed': 'Broadleaf weeds',
   'recui.metric.count': 'Count',
   'records.plannedNote':
     'Planned plantings not in the ground yet: {n}. They stay on the plan, not in your records, until their planting date.',

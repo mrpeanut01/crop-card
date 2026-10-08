@@ -38,6 +38,13 @@
   import WatchForStrip from '$lib/components/scout/WatchForStrip.svelte';
   import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
   import type { RecordTaskClose } from '$lib/tasks/recordClose';
+  import {
+    PEST_COUNT_METRICS,
+    scoutMetricLabel,
+    scoutPestLabel,
+    type PestCountMetric
+  } from '$lib/records/metricLabel';
+  import { pestOptionsFor, thresholdsFor } from '$lib/scout/pestOptions';
 
   interface QueuedObservation {
     id: string;
@@ -74,6 +81,14 @@
   ]);
   let maxHeight = $state<number | null>(null);
 
+  let pestName = $state('');
+  let pestMetric = $state<PestCountMetric>('count-per-plant');
+  let pestValue = $state<number | null>(null);
+  const pestText = $derived(pestName.trim());
+  const canSavePest = $derived(pestText.length > 0 && pestValue != null && pestValue >= 0);
+  /** Which save button the status line belongs to. */
+  let lastKind = $state<'walk' | 'pest'>('walk');
+
   let saving = $state(false);
   let saveError = $state<string | null>(null);
   let saveSuccess = $state(false);
@@ -93,6 +108,10 @@
   );
 
   const selectedBlock = $derived(data.blocks.find((b) => b.id === selectedBlockId));
+  const pestOptions = $derived(
+    pestOptionsFor(selectedBlock?.scoutTargets ?? [], data.pestThresholds)
+  );
+  const matchingThresholds = $derived(thresholdsFor(data.pestThresholds, pestText, pestMetric));
 
   /** Prior observations for the selected block, newest first. Comes from
    *  `listScoutObservations({ blockId, fromMs })` in the loader. */
@@ -172,13 +191,14 @@
     spotsEdited = true;
   }
 
-  async function saveObservation(): Promise<void> {
+  async function saveObservation(kind: 'walk' | 'pest' = 'walk'): Promise<void> {
+    lastKind = kind;
     if (!selectedBlockId) {
       saveError = tr('scout.errPickSpot');
       return;
     }
-    if (!canSave) {
-      saveError = tr('scout.errCanSave');
+    if (kind === 'walk' ? !canSave : !canSavePest) {
+      saveError = kind === 'walk' ? tr('scout.errCanSave') : tr('scout.pest.errCanSave');
       return;
     }
     saving = true;
@@ -192,7 +212,16 @@
       // raw per-spot counts + the tallest-weed measurement preserved in
       // notes so the IPM evaluator can read the canonical average AND
       // historical context lives in the audit trail.
-      if (!counted) {
+      if (kind === 'pest') {
+        payload = {
+          blockId: selectedBlockId,
+          pest: pestText.slice(0, 80),
+          metric: pestMetric,
+          value: pestValue ?? 0,
+          occurredAt: Date.now()
+        };
+        if (noteText) payload.notes = `note: ${noteText}`.slice(0, 500);
+      } else if (!counted) {
         payload = {
           blockId: selectedBlockId,
           pest: 'note',
@@ -247,6 +276,7 @@
       if (saved?.taskClose?.status !== 'already-closed') taskOutcome = saved?.taskClose ?? null;
       saveSuccess = true;
       note = '';
+      if (kind === 'pest') pestValue = null;
       await invalidateAll();
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -267,10 +297,38 @@
     }
   }
 
+  function fmtValue(v: number): string {
+    return String(Number(v.toFixed(2)));
+  }
+
   function fmtDate(ms: number): string {
     return fmt.instant(ms, 'month-day');
   }
 </script>
+
+{#snippet saveStatus()}
+  <TaskCloseNote
+    task={taskCtx}
+    record={{ blockId: selectedBlockId }}
+    outcome={taskOutcome}
+    queued={saveQueued}
+  />
+  {#if saveQueued}
+    <p class="queued-note" role="status">
+      {tr('scout.queuedNote')}
+    </p>
+  {:else if uploaded}
+    <p class="queued-note" role="status" data-testid="scout-uploaded">
+      {tr('scout.uploadedNote')}
+    </p>
+  {/if}
+  {#if saveError}
+    <p class="error" role="alert">{saveError}</p>
+  {/if}
+  {#if saveSuccess && !uploaded}
+    <p class="queued-note" role="status" data-testid="scout-saved">{tr('scout.savedNote')}</p>
+  {/if}
+{/snippet}
 
 <svelte:head>
   <title>{tr('scout.pageTitle')}</title>
@@ -368,10 +426,74 @@
 
 <div class="card-wrap">
   <Card>
+    <h2>{tr('scout.pest.title')}</h2>
+    <p class="meta">{tr('scout.pest.help')}</p>
+    <div class="pest-grid">
+      <label for="scout-pest">{tr('scout.pest.label')}</label>
+      <input
+        id="scout-pest"
+        type="text"
+        maxlength="80"
+        list="scout-pest-options"
+        placeholder={tr('scout.pest.placeholder')}
+        bind:value={pestName}
+      />
+      <datalist id="scout-pest-options">
+        {#each pestOptions as p (p)}
+          <option value={p}></option>
+        {/each}
+      </datalist>
+      <label for="scout-pest-metric">{tr('scout.pest.metric')}</label>
+      <select id="scout-pest-metric" bind:value={pestMetric}>
+        {#each PEST_COUNT_METRICS as m (m)}
+          <option value={m}>{scoutMetricLabel(m, data.locale)}</option>
+        {/each}
+      </select>
+      <label for="scout-pest-value">{tr('scout.pest.value')}</label>
+      <input id="scout-pest-value" type="number" min="0" step="any" bind:value={pestValue} />
+    </div>
+    {#if pestText}
+      {#if matchingThresholds.length > 0}
+        <div class="thresholds" data-testid="scout-pest-thresholds">
+          <p class="meta">{tr('scout.pest.thresholds')}</p>
+          <ul lang="en" data-english-only="safety">
+            {#each matchingThresholds as th (th.product)}
+              <li class:met={pestValue != null && pestValue >= th.threshold}>
+                {th.product}: ≥{th.threshold}
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {:else}
+        <p class="meta" data-testid="scout-pest-no-threshold">{tr('scout.pest.noThreshold')}</p>
+      {/if}
+    {/if}
+    <div class="result-actions">
+      <button
+        type="button"
+        class="save"
+        data-testid="scout-pest-save"
+        onclick={() => saveObservation('pest')}
+        disabled={saving || !canSavePest || !selectedBlockId}
+      >
+        {saving && lastKind === 'pest' ? tr('scout.saving') : tr('scout.pest.save')}
+      </button>
+    </div>
+    {#if lastKind === 'pest'}
+      {@render saveStatus()}
+    {/if}
+  </Card>
+</div>
+
+<div class="card-wrap">
+  <Card>
     <h2>{tr('scout.weed.title')}</h2>
     <p class="meta">
       {tr('scout.weed.help', { height: fmt.qty(2, 'length') })}
     </p>
+    {#if data.noHerbicides}
+      <p class="meta">{tr('scout.weed.noHerbicideHelp')}</p>
+    {/if}
     {#each spots as _, i (i)}
       <label class="spot">
         {tr('scout.weed.spotLabel', { n: i + 1 })}
@@ -427,20 +549,22 @@
     <button
       type="button"
       class="save"
-      onclick={saveObservation}
+      onclick={() => saveObservation('walk')}
       disabled={saving || !canSave || !selectedBlockId}
     >
-      {saving
+      {saving && lastKind === 'walk'
         ? tr('scout.saving')
-        : uploaded
-          ? tr('scout.uploadedAgain')
-          : saveSuccess
-            ? tr('scout.savedAgain')
-            : saveQueued
-              ? tr('scout.keptAgain')
-              : tr('scout.save')}
+        : lastKind !== 'walk'
+          ? tr('scout.save')
+          : uploaded
+            ? tr('scout.uploadedAgain')
+            : saveSuccess
+              ? tr('scout.savedAgain')
+              : saveQueued
+                ? tr('scout.keptAgain')
+                : tr('scout.save')}
     </button>
-    {#if result.decision === 'SPRAY'}
+    {#if result.decision === 'SPRAY' && !data.noHerbicides}
       <a href={planSprayHref} class="primary">
         {selectedBlock
           ? tr('scout.planSprayFor', { name: selectedBlock.name })
@@ -448,23 +572,11 @@
       </a>
     {/if}
   </div>
-  <TaskCloseNote
-    task={taskCtx}
-    record={{ blockId: selectedBlockId }}
-    outcome={taskOutcome}
-    queued={saveQueued}
-  />
-  {#if saveQueued}
-    <p class="queued-note" role="status">
-      {tr('scout.queuedNote')}
-    </p>
-  {:else if uploaded}
-    <p class="queued-note" role="status" data-testid="scout-uploaded">
-      {tr('scout.uploadedNote')}
-    </p>
+  {#if data.noHerbicides && result.decision === 'SPRAY'}
+    <p class="meta" data-testid="scout-no-herbicide">{tr('scout.weed.noHerbicideAction')}</p>
   {/if}
-  {#if saveError}
-    <p class="error" role="alert">{saveError}</p>
+  {#if lastKind === 'walk'}
+    {@render saveStatus()}
   {/if}
 </section>
 
@@ -484,10 +596,10 @@
             {#if q.metric === 'note'}
               <span class="hist-note">{tr('scout.noteWord')}</span>
             {:else}
-              <span class="hist-pest">{q.pest}</span>
+              <span class="hist-pest">{scoutPestLabel(q.pest, data.locale)}</span>
               <span class="hist-value">
-                {q.value.toFixed(2)}
-                <span class="hist-metric">{q.metric}</span>
+                {fmtValue(q.value)}
+                <span class="hist-metric">{scoutMetricLabel(q.metric, data.locale)}</span>
               </span>
             {/if}
             {#if q.rejected}
@@ -511,13 +623,16 @@
             {#if o.metric === 'note'}
               <span class="hist-note">{o.note ?? tr('scout.noteWord')}</span>
             {:else}
-              <span class="hist-pest">{o.pest}</span>
+              <span class="hist-pest">{scoutPestLabel(o.pest, data.locale)}</span>
               <span class="hist-value">
-                {o.value.toFixed(2)}
-                <span class="hist-metric">{o.metric}</span>
+                {fmtValue(o.value)}
+                <span class="hist-metric">{scoutMetricLabel(o.metric, data.locale)}</span>
               </span>
-              {#if o.value >= 3}
+              {#if o.metric === 'avg-per-10sqft' && o.value >= 3}
                 <Pill tone="rust">{tr('scout.overThreshold')}</Pill>
+              {/if}
+              {#if o.note}
+                <span class="hist-note hist-note-line">{o.note}</span>
               {/if}
             {/if}
           </li>
@@ -546,6 +661,36 @@
   .hist-note {
     flex: 1;
     color: var(--color-ink);
+  }
+  .hist-note-line {
+    flex-basis: 100%;
+    font-size: 0.9rem;
+  }
+  .pest-grid {
+    display: grid;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+  }
+  .pest-grid label {
+    color: var(--color-ink-soft);
+    font-size: var(--font-size-caption);
+  }
+  .pest-grid input,
+  .pest-grid select {
+    min-height: 48px;
+    padding: 0 10px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input);
+    background: var(--color-paper);
+    font-size: 1rem;
+  }
+  .thresholds ul {
+    margin: 0.3rem 0 0;
+    padding-left: 1.2rem;
+  }
+  .thresholds li.met {
+    color: var(--color-rust);
+    font-weight: 600;
   }
   .page-header {
     display: flex;

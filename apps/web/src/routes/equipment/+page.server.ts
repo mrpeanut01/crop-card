@@ -1,6 +1,8 @@
 import type { PageServerLoad } from './$types';
 import { listEquipment } from '$lib/db/equipment';
 import { EQUIPMENT_DOMAIN, listTaxonomyTerms } from '$lib/db/taxonomy';
+import { SEED_EQUIPMENT_TEMPLATES, templateCategoryFor } from '$lib/server/equipmentTemplates';
+import { templateText } from '$lib/equipment/templateText';
 
 export const load: PageServerLoad = ({ locals, url }) => {
   const equipment = listEquipment();
@@ -10,9 +12,14 @@ export const load: PageServerLoad = ({ locals, url }) => {
   // #219 — lowercase normalize so taxonomy "Sprayer" + legacy enum "sprayer"
   // collapse into one filter chip instead of two (the counts Map was keying
   // on the raw string and splitting one logical type).
+  const locale = locals?.locale;
   const equipmentWithType = equipment.map((e) => {
     const tn = e.typeId ? typeById.get(e.typeId)?.name : undefined;
-    return { ...e, typeName: (tn ?? e.type).toLowerCase() };
+    return {
+      ...e,
+      typeName: (tn ?? e.type).toLowerCase(),
+      templateCategory: templateCategoryFor(e.spec, locale)
+    };
   });
   const canEdit = locals.user?.role === 'owner';
   const addParam = url.searchParams.get('add');
@@ -25,6 +32,15 @@ export const load: PageServerLoad = ({ locals, url }) => {
     equipment: equipmentWithType,
     types,
     canEdit,
-    addType
+    addType,
+    templates: canEdit
+      ? SEED_EQUIPMENT_TEMPLATES.map((t) => ({
+          templateId: t.templateId,
+          type: t.type,
+          category: templateText(t.templateId, 'category', t.category, locale),
+          label: templateText(t.templateId, 'label', t.label, locale),
+          spec: t.spec ?? {}
+        }))
+      : []
   };
 };

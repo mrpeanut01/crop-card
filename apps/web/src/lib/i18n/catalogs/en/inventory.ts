@@ -617,6 +617,8 @@ export const enInventory = {
   'equip.viewOnly': 'View only',
   'equip.viewOnlyNote':
     'Helper role can browse equipment + log maintenance entries. Owners create + retire.',
+  'equip.add.template': 'Start from a template',
+  'equip.add.templateNone': 'None, describe it myself',
   'equip.add.title': 'Add equipment',
   'equip.add.type': 'Type',
   'equip.add.typePh': 'Tractor',

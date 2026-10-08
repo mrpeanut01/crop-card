@@ -190,7 +190,11 @@ export const enCards = {
   'cards.day.due': 'Due',
   'cards.day.dueToday': 'Due today',
   'cards.day.kicker': 'Day · {date}',
-  'cards.cal.outsideWindow': 'This period is outside the saved Cards. Open it while online.',
+  'cards.cal.outsideWindow':
+    'Week and Month Cards cover the last two weeks and the next two months. See this period in Today.',
+  'cards.cal.olderOpen.one': '1 open task from before {date} is not on this card. See it in Today.',
+  'cards.cal.olderOpen.other':
+    '{count} open tasks from before {date} are not on this card. See them in Today.',
   'cards.cal.earlierDays': 'Earlier days are not on this card.',
   'cards.cal.range': '{from} to {to}',
   'cards.cal.careTask': 'Animal care task',
@@ -452,10 +456,8 @@ export const enCards = {
   'cards.tip.leafy-green.problems.0':
     'High summer heat usually causes bolting (a seed stalk) and bitter flavor.',
   'cards.tip.leafy-green.problems.1': 'Slugs and snails may feed on the leaves.',
-  'cards.tip.root.prune.0': 'Thin carrots to 2 to 3 inches between plants.',
   'cards.tip.root.problems.0': 'Carrots prefer loamy or sandy soil free of stones and clods.',
   'cards.tip.root.problems.1': 'Cracked roots: uneven watering.',
-  'cards.tip.apiaceae.prune.0': 'Thin carrots to 2 to 3 inches between plants.',
   'cards.tip.apiaceae.problems.0':
     'The parsleyworm, a swallowtail butterfly caterpillar, feeds on carrot leaves.',
   'cards.tip.legume.feed.0':

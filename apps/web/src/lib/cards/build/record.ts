@@ -19,7 +19,7 @@ import type { SnapshotSprayProduct } from '../snapshot';
 import { SPRAY_RECHECK_NOTICE, SPRAY_REFERENCE_NOTICE, beforeYouSpray } from './spray';
 import { trimNumber } from './common';
 import { t } from '$lib/i18n';
-import { scoutMetricLabel } from '$lib/records/metricLabel';
+import { scoutMetricLabel, scoutPestLabel } from '$lib/records/metricLabel';
 
 export const RECORD_COPY_NOTICE = 'Read-only copy of a saved record. The record is the legal copy.';
 export const OPEN_RECORD_LABEL = 'Open full record';
@@ -268,7 +268,8 @@ export function buildScoutRecordCard(
     kind: 'scout',
     key,
     kicker: [t(loc, 'cards.record.scout'), input.blockLabel].filter(Boolean).join(' · '),
-    title: input.pest.trim() || t(loc, 'cards.record.scoutNote'),
+    title: (loc ? scoutPestLabel(input.pest.trim(), loc) : input.pest.trim()) ||
+      t(loc, 'cards.record.scoutNote'),
     status: lockStatus(input.locked, loc),
     facts,
     sections,

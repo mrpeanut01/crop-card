@@ -52,6 +52,22 @@
   let creating = $state(false);
   let createError = $state<string | null>(null);
 
+  // #647: a starter-library template fills the form and rides along as
+  // `spec.templateId`, so the template's prep and cleanup tasks attach.
+  let templateId = $state('');
+  const pickedTemplate = $derived(data.templates.find((t) => t.templateId === templateId) ?? null);
+  function applyTemplate() {
+    const tpl = pickedTemplate;
+    if (!tpl) return;
+    const term = data.types.find((t) => t.name.toLowerCase() === tpl.type);
+    newTypeName = term?.name ?? tpl.type.charAt(0).toUpperCase() + tpl.type.slice(1);
+    newLabel = tpl.label;
+    const tank = tpl.spec.tankGal;
+    newTankGal = typeof tank === 'number' ? tank : null;
+    const nozzle = tpl.spec.nozzle;
+    newNozzle = typeof nozzle === 'string' ? nozzle : '';
+  }
+
   /** Resolve newTypeName → typeId, prompting to add a new term if it doesn't
    *  match an existing equipment type. Returns { ok: false } when the user
    *  cancels the prompt or the create fails. */
@@ -102,8 +118,12 @@
         creating = false;
         return;
       }
-      const spec: Record<string, unknown> = {};
+      const tpl = pickedTemplate;
+      const spec: Record<string, unknown> =
+        tpl && tpl.type === typeRes.legacyType ? { ...tpl.spec, templateId: tpl.templateId } : {};
       if (typeRes.legacyType === 'sprayer') {
+        delete spec.tankGal;
+        delete spec.nozzle;
         if (newTankGal != null && newTankGal > 0) spec.tankGal = newTankGal;
         if (newNozzle.trim()) spec.nozzle = newNozzle.trim();
       }
@@ -128,6 +148,7 @@
       newTypeName = '';
       newTankGal = null;
       newNozzle = '';
+      templateId = '';
       await invalidateAll();
     } catch (e) {
       createError = e instanceof Error ? e.message : String(e);
@@ -207,6 +228,15 @@
           >{equipmentTypeDescription(t.name, t.description, data.locale)}</option
         >{/each}
     </datalist>
+    <label class="field template-field">
+      <span>{tr('equip.add.template')}</span>
+      <select bind:value={templateId} onchange={applyTemplate} data-testid="equip-template">
+        <option value="">{tr('equip.add.templateNone')}</option>
+        {#each data.templates as tpl (tpl.templateId)}
+          <option value={tpl.templateId}>{tpl.category} · {tpl.label}</option>
+        {/each}
+      </select>
+    </label>
     <div class="add-grid">
       <label class="field">
         <span>{tr('equip.add.type')}</span>
@@ -286,7 +316,9 @@
       <li class="card item type-{e.type}">
         <header>
           <a href="/equipment/{e.id}"><strong>{e.label}</strong></a>
-          <span class="type-badge">{equipmentTypeLabel(e.typeName, data.locale)}</span>
+          <span class="type-badge"
+            >{e.templateCategory ?? equipmentTypeLabel(e.typeName, data.locale)}</span
+          >
           {#if e.retiredAt}<span class="retired"
               >{tr('equip.retired', { date: fmtTs(e.retiredAt) })}</span
             >{/if}
@@ -400,6 +432,15 @@
     color: var(--color-ink-soft);
     margin: 0.4rem 0 0;
     font-style: italic;
+  }
+  .template-field {
+    margin-bottom: 0.75rem;
+  }
+  .template-field select {
+    width: 100%;
+    min-height: 48px;
+    font-weight: 400;
+    font-size: 1rem;
   }
   .add-grid {
     display: grid;

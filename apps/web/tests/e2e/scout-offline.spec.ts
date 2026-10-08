@@ -38,3 +38,22 @@ test('a plain note saves without any weed counts', async ({ page }) => {
   await expect(page.getByRole('button', { name: /Saved/ })).toBeVisible();
   await expect(page.getByText(text)).toBeVisible();
 });
+
+test('a pest count saves with its note and reads in words (#713 #731)', async ({ page }) => {
+  await signInAsDemoOwner(page);
+  await page.goto('/scout');
+  await page.waitForLoadState('networkidle');
+  const pest = `squash bug ${Date.now()}`;
+  const note = `Eggs under the leaves ${Date.now()}`;
+  await page.getByLabel(/What did you notice/).fill(note);
+  await page.getByLabel('Pest or disease', { exact: true }).fill(pest);
+  await expect(page.getByTestId('scout-pest-no-threshold')).toBeVisible();
+  await page.getByLabel('What you counted').selectOption('count-per-plant');
+  await page.getByLabel('Count', { exact: true }).fill('4');
+  await page.getByTestId('scout-pest-save').click();
+  await expect(page.getByTestId('scout-saved')).toHaveText('Saved to the farm.');
+  const row = page.locator('.history li', { hasText: pest });
+  await expect(row).toContainText('Per plant');
+  await expect(row).toContainText(note);
+  await expect(page.locator('.history')).not.toContainText('count-per-plant');
+});

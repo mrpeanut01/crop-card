@@ -37,6 +37,7 @@ import { listBlocks } from '$lib/db/blocks';
 import {
   activeOwnerName,
   listCarePlansForCards,
+  countOpenTasksBefore,
   listOpenTasksForCards,
   listPlantingsForCards,
   listSplitGroupParts,
@@ -602,7 +603,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     people: listAssignableMembers(ownerId, opts.locale).map((m) => ({ id: m.id, name: m.name })),
     taskWindow: {
       fromMs: windowNow - SNAPSHOT_TASK_PAST_DAYS * DAY_MS,
-      toMs: windowNow + SNAPSHOT_TASK_FUTURE_DAYS * DAY_MS
+      toMs: windowNow + SNAPSHOT_TASK_FUTURE_DAYS * DAY_MS,
+      olderOpen: countOpenTasksBefore(windowNow - SNAPSHOT_TASK_PAST_DAYS * DAY_MS)
     },
     equipment: listEquipment()
       .filter((e) => e.retiredAt === undefined)

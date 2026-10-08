@@ -8,8 +8,14 @@ import { canMutate } from '$lib/server/session';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { ymdInZone } from '$lib/prefs';
 import { loadTaskContext } from '$lib/server/recordTaskClose';
+import { scoutNoteText } from '$lib/records/metricLabel';
+import { getRegistry } from '$lib/server/registry';
+import { scoutTargetsForFamily } from '$lib/plan/inputsPlan';
+import { loadSeasonSetup } from '$lib/season/setup.server';
+import { getActivePlanningYear } from '$lib/season/planningYear.server';
+import type { CropPlugin } from '$lib/plugins/schemas';
 
-export const load: PageServerLoad = ({ url, locals }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
   const taskContext = loadTaskContext(url.searchParams.get('task'));
   const cropId = url.searchParams.get('crop');
   let preselectedBlockId = url.searchParams.get('block');
@@ -43,23 +49,60 @@ export const load: PageServerLoad = ({ url, locals }) => {
       metric: o.metric,
       value: o.value,
       occurredAt: o.occurredAt,
-      note: o.metric === 'note' ? (o.notes ?? null) : null
+      note: scoutNoteText(o.metric, o.notes)
     });
   }
 
+  const registry = await getRegistry();
+  const pestThresholds: Array<{
+    pest: string;
+    metric: string;
+    threshold: number;
+    product: string;
+  }> = [];
+  for (const r of registry.all()) {
+    if (r.plugin.type !== 'insecticide') continue;
+    for (const th of r.plugin.scoutingThresholds ?? []) {
+      pestThresholds.push({
+        pest: th.pest,
+        metric: th.metric,
+        threshold: th.threshold,
+        product: r.plugin.displayName
+      });
+    }
+  }
+  const scoutTargets = (cropPluginIds: string[]): string[] => {
+    const out = new Set<string>();
+    for (const id of cropPluginIds) {
+      const rec = registry.get(id);
+      if (rec?.plugin.type !== 'crop') continue;
+      for (const t of scoutTargetsForFamily((rec.plugin as CropPlugin).cropFamily)) out.add(t);
+    }
+    return [...out];
+  };
+  const todayYmd = ymdInZone(Date.now(), farmTimeZone());
+  const thisYear = Number(todayYmd.slice(0, 4));
+  const season = loadSeasonSetup(thisYear) ?? loadSeasonSetup(getActivePlanningYear());
+
   return {
-    blocks: listBlocks().map((b) => ({
-      id: b.id,
-      name: b.name,
-      cropPluginIds: b.plantings.map((p) => p.cropPluginId)
-    })),
+    blocks: listBlocks().map((b) => {
+      const cropPluginIds = b.plantings.map((p) => p.cropPluginId);
+      return {
+        id: b.id,
+        name: b.name,
+        cropPluginIds,
+        scoutTargets: scoutTargets(cropPluginIds)
+      };
+    }),
+    pestThresholds,
+    noHerbicides: season?.weedStrategy === 'cultivate-first',
     preselectedBlockId,
     preselectedCropId: cropId,
     taskContext,
     windowStage: url.searchParams.get('windowStage') ?? null,
     observationsByBlock,
     setup: { canEdit: canSetUp(locals.user?.role), areas: setupAreas() },
-    todayYmd: ymdInZone(Date.now(), farmTimeZone()),
+    todayYmd,
     canRecordCatch: !!locals.user && canMutate(locals.user.role),
     // Phase 32E (E5): streamed so a cold weather fetch never holds the page.
     degreeDays: loadDegreeDays({

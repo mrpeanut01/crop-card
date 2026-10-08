@@ -9,6 +9,7 @@
  * apart from row ids.
  */
 
+import { demoEquipmentLastUsed } from '$lib/demo/equipmentUse';
 import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -516,6 +517,10 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
       )
       .run();
     bump('records.hay_cutting');
+  }
+  for (const [key, at] of demoEquipmentLastUsed(t, now)) {
+    if (DEMO_EQUIPMENT.find((e) => e.key === key)?.calibratedGpa !== undefined) continue;
+    updateEquipmentState(equipmentId.get(key)!, { lastUsedAt: at });
   }
 
   // Scouting, fertility, journal, seed trays.

@@ -153,6 +153,116 @@ describe('pesticide label sources (#640 #661 #716)', () => {
     ).toEqual(['x: PHI for corn has no phiByCrop source']);
   });
 
+  it('accepts a 0-day PHI quoted as day-of-harvest wording, and no other day count', () => {
+    const p = {
+      ...base,
+      preHarvestIntervalsByCrop: [{ cropPluginId: 'strawberry', preHarvestIntervalDays: 0 }]
+    };
+    const src = (quote: string) => ({
+      phiByCrop: {
+        x: [{ cropPluginId: 'strawberry', preHarvestIntervalDays: 0, sourceUrl: url, quote }]
+      }
+    });
+    expect(
+      pesticideLabelSourceGaps([p], src('Strawberry ... May be applied the day of harvest.'))
+    ).toEqual([]);
+    expect(
+      pesticideLabelSourceGaps(
+        [p],
+        src('Strawberry ... can be applied up to and including the day of harvest')
+      )
+    ).toEqual([]);
+    expect(
+      pesticideLabelSourceGaps([p], src('Strawberry ... Do not apply within 3 days of harvest.'))
+    ).toEqual(['x: phiByCrop source does not quote 0 days for strawberry']);
+    const seven = {
+      ...base,
+      preHarvestIntervalsByCrop: [{ cropPluginId: 'strawberry', preHarvestIntervalDays: 7 }]
+    };
+    expect(
+      pesticideLabelSourceGaps([seven], {
+        phiByCrop: {
+          x: [
+            {
+              cropPluginId: 'strawberry',
+              preHarvestIntervalDays: 7,
+              sourceUrl: url,
+              quote: 'Strawberry ... the day of harvest.'
+            }
+          ]
+        }
+      })
+    ).toEqual(['x: phiByCrop source does not quote 7 days for strawberry']);
+  });
+
+  it('keeps a crop plugin row apart from a family row of the same name', () => {
+    const p = {
+      ...base,
+      preHarvestIntervalsByCrop: [
+        { cropFamily: 'corn', preHarvestIntervalDays: 49 },
+        { cropPluginId: 'corn', preHarvestIntervalDays: 36 }
+      ]
+    };
+    const sources = {
+      phiByCrop: {
+        x: [
+          {
+            cropFamily: 'corn',
+            preHarvestIntervalDays: 49,
+            sourceUrl: url,
+            quote: 'Sweet corn ... 49 days before the harvest of fodder'
+          },
+          {
+            cropPluginIds: ['corn'],
+            preHarvestIntervalDays: 36,
+            sourceUrl: url,
+            quote: 'Field corn ... 36 days before the harvest of grain'
+          }
+        ]
+      }
+    };
+    expect(pesticideLabelSourceGaps([p], sources, new Set(['corn']))).toEqual([]);
+  });
+
+  it('reads a PHI stated in whole weeks or split across label lines', () => {
+    const p = {
+      ...base,
+      preHarvestIntervalsByCrop: [
+        { cropPluginId: 'peach', preHarvestIntervalDays: 21 },
+        { cropPluginId: 'hops', preHarvestIntervalDays: 14 },
+        { cropPluginId: 'squash', preHarvestIntervalDays: 0 }
+      ]
+    };
+    const row = (id: string, d: number, quote: string) => ({
+      cropPluginId: id,
+      preHarvestIntervalDays: d,
+      sourceUrl: url,
+      quote
+    });
+    expect(
+      pesticideLabelSourceGaps([p], {
+        phiByCrop: {
+          x: [
+            row('peach', 21, 'PEACH ... NOTE: Do not apply three weeks prior to harvest.'),
+            row('hops', 14, 'HOPS ... Discontinue use 2 weeks before harvest.'),
+            row('squash', 0, 'Squash ... up to and including the day ... of harvest.')
+          ]
+        }
+      })
+    ).toEqual([]);
+    expect(
+      pesticideLabelSourceGaps([p], {
+        phiByCrop: {
+          x: [
+            row('peach', 21, 'PEACH ... Do not apply two weeks prior to harvest.'),
+            row('hops', 14, 'HOPS ... Discontinue use 2 weeks before harvest.'),
+            row('squash', 0, 'Squash ... up to and including the day ... of harvest.')
+          ]
+        }
+      })
+    ).toEqual(['x: phiByCrop source does not quote 21 days for peach']);
+  });
+
   it('refuses a crop listed twice or a crop id that is not in the library', () => {
     const src = {
       cropPluginIds: ['corn'],

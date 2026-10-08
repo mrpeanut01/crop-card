@@ -14,6 +14,19 @@
   "gpaCalibration": 15,
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 30,
+  "preHarvestIntervalsByCrop": [
+    { "cropPluginId": "wheat-hard-red-spring", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "wheat-hard-white-winter", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "wheat-soft-red-winter", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "barley-grain-thoroughbred", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "barley-hulless-streaker", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "oats-grain-jerry", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "oats-hulless-streaker", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "rye-grain-aroostook", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "triticale-fridge", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "soybean-asgrow-roundup-ready-2-xtend", "preHarvestIntervalDays": 30 },
+    { "cropFamily": "corn", "preHarvestIntervalDays": 20 }
+  ],
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "7969-246",
   "targetDiseases": [

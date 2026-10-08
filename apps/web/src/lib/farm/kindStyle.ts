@@ -113,7 +113,7 @@ export const AREA_NAME_PLACEHOLDER: Readonly<Record<AreaKind, string>> = {
   field: 'e.g. Home Field',
   garden: 'e.g. Kitchen Garden',
   greenhouse: 'e.g. High Tunnel',
-  orchard: 'e.g. Apple Orchard',
+  orchard: 'e.g. Orchard',
   pasture: 'e.g. Hayfield',
   barn: 'e.g. Bank Barn',
   coop_pen: 'e.g. Chicken Coop',

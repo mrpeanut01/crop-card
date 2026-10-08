@@ -80,6 +80,8 @@ export interface SketchLayout {
   width: number;
   height: number;
   fields: SketchFieldRect[];
+  /** Names of Areas with a block drawn past their edge. */
+  overflowing: string[];
   /** Fields and blocks with neither dimensions nor acres; they can't be drawn. */
   unsized: string[];
 }
@@ -126,7 +128,23 @@ function shelfPack<T extends { w: number; h: number }>(
   return { placed, width, height: placed.length ? y + rowH : 0 };
 }
 
-export function layoutSketch(fields: SketchInput[], blocks: SketchBlockInput[]): SketchLayout {
+export interface SketchLabelSpace {
+  /** Width an Area's label needs, in feet at the drawing's scale. */
+  widthFt: (field: SketchInput) => number;
+  /** Height kept above each Area for its label, in feet. */
+  heightFt: number;
+}
+
+/**
+ * Lays the Areas out as boxes. Each Area takes the room of its box, any
+ * blocks drawn past its edge and, when `labels` is given, its label above
+ * it, so a neighbour's box or name never lands on top of either.
+ */
+export function layoutSketch(
+  fields: SketchInput[],
+  blocks: SketchBlockInput[],
+  labels?: SketchLabelSpace
+): SketchLayout {
   const unsized: string[] = [];
 
   const sizedBlocksByField = new Map<
@@ -145,12 +163,16 @@ export function layoutSketch(fields: SketchInput[], blocks: SketchBlockInput[]):
     sizedBlocksByField.set(key, list);
   }
 
+  const labelH = labels ? Math.max(0, labels.heightFt) : 0;
   const fieldBoxes: Array<{
     field: SketchInput;
     w: number;
     h: number;
     measured: boolean;
     blocks: SketchBlockRect[];
+    /** The room the Area takes when packed: box, overflow and label. */
+    footW: number;
+    footH: number;
   }> = [];
 
   for (const f of fields) {
@@ -165,11 +187,14 @@ export function layoutSketch(fields: SketchInput[], blocks: SketchBlockInput[]):
     const packed = shelfPack(own, rowWidth, innerGap);
     const w = s ? s.w : packed.width;
     const h = s ? s.h : packed.height;
+    const labelW = labels ? Math.max(0, labels.widthFt(f)) : 0;
     fieldBoxes.push({
       field: f,
       w,
       h,
       measured: s?.measured ?? false,
+      footW: Math.max(w, packed.width, labelW),
+      footH: labelH + Math.max(h, packed.height),
       blocks: packed.placed.map(({ item, x, y }) => ({
         id: item.id,
         name: item.name,
@@ -183,28 +208,30 @@ export function layoutSketch(fields: SketchInput[], blocks: SketchBlockInput[]):
     });
   }
 
-  if (fieldBoxes.length === 0) return { width: 0, height: 0, fields: [], unsized };
+  if (fieldBoxes.length === 0) return { width: 0, height: 0, fields: [], unsized, overflowing: [] };
 
-  const totalArea = fieldBoxes.reduce((sum, f) => sum + f.w * f.h, 0);
-  const widest = Math.max(...fieldBoxes.map((f) => f.w));
-  const largestSide = Math.max(...fieldBoxes.map((f) => Math.max(f.w, f.h)));
+  const footprints = fieldBoxes.map((box) => ({ box, w: box.footW, h: box.footH }));
+  const totalArea = footprints.reduce((sum, f) => sum + f.w * f.h, 0);
+  const widest = Math.max(...footprints.map((f) => f.w));
+  const largestSide = Math.max(...footprints.map((f) => Math.max(f.w, f.h)));
   const gap = Math.max(10, largestSide * 0.06);
   const rowWidth = Math.max(widest, Math.sqrt(totalArea) * 1.6);
-  const packed = shelfPack(fieldBoxes, rowWidth, gap);
+  const packed = shelfPack(footprints, rowWidth, gap);
 
   return {
     width: packed.width,
     height: packed.height,
     unsized,
-    fields: packed.placed.map(({ item, x, y }) => ({
-      id: item.field.id,
-      name: item.field.name,
+    overflowing: fieldBoxes.filter((f) => f.blocks.some((b) => !b.fits)).map((f) => f.field.name),
+    fields: packed.placed.map(({ item: { box }, x, y }) => ({
+      id: box.field.id,
+      name: box.field.name,
       x,
-      y,
-      w: item.w,
-      h: item.h,
-      measured: item.measured,
-      blocks: item.blocks.map((b) => ({ ...b, x: b.x + x, y: b.y + y }))
+      y: y + labelH,
+      w: box.w,
+      h: box.h,
+      measured: box.measured,
+      blocks: box.blocks.map((b) => ({ ...b, x: b.x + x, y: b.y + y + labelH }))
     }))
   };
 }
@@ -223,4 +250,45 @@ export function withSketchAcres<
   if (patch.acres !== undefined) return patch;
   const acres = sketchAcres(patch.widthFt, patch.lengthFt);
   return acres === undefined ? patch : { ...patch, acres };
+}
+
+/** True when typed width × length and the drawn size disagree by more
+ *  than a tenth, so the sketch size is shown as different from the drawing. */
+export function sketchDimsDiffer(
+  acres: number | null | undefined,
+  widthFt: number | null | undefined,
+  lengthFt: number | null | undefined
+): boolean {
+  const typed = sketchAcres(widthFt, lengthFt);
+  if (typed === undefined || acres == null || !(acres > 0)) return false;
+  return Math.abs(typed - acres) / Math.max(typed, acres) > 0.1;
+}
+
+export interface AreaBlockCheck {
+  /** Set when the blocks add up to more than the Area. */
+  over: { blocksAcres: number; areaAcres: number } | null;
+  /** Block names used more than once in the Area, as first typed. */
+  duplicates: string[];
+}
+
+/** Advisory checks for one Area's blocks; nothing here refuses a save. */
+export function checkAreaBlocks(
+  areaAcres: number | null | undefined,
+  blocks: ReadonlyArray<{ name: string; acres?: number | null }>
+): AreaBlockCheck {
+  const blocksAcres = blocks.reduce((sum, b) => sum + (b.acres && b.acres > 0 ? b.acres : 0), 0);
+  const over =
+    areaAcres != null && areaAcres > 0 && blocksAcres > areaAcres * 1.01 + 1e-9
+      ? { blocksAcres, areaAcres }
+      : null;
+  const seen = new Map<string, { name: string; count: number }>();
+  for (const b of blocks) {
+    const key = b.name.trim().toLocaleLowerCase();
+    if (!key) continue;
+    const hit = seen.get(key);
+    if (hit) hit.count += 1;
+    else seen.set(key, { name: b.name.trim(), count: 1 });
+  }
+  const duplicates = [...seen.values()].filter((v) => v.count > 1).map((v) => v.name);
+  return { over, duplicates };
 }

@@ -26,7 +26,7 @@ export const esFarm: Partial<Record<MessageKey, string>> = {
   'farm.kindPh.field': 'p. ej. Campo principal',
   'farm.kindPh.garden': 'p. ej. Huerto de la cocina',
   'farm.kindPh.greenhouse': 'p. ej. Túnel alto',
-  'farm.kindPh.orchard': 'p. ej. Huerta de manzanos',
+  'farm.kindPh.orchard': 'p. ej. Huerta frutal',
   'farm.kindPh.pasture': 'p. ej. Campo de heno',
   'farm.kindPh.barn': 'p. ej. Granero de la ladera',
   'farm.kindPh.coop_pen': 'p. ej. Gallinero',
@@ -257,6 +257,8 @@ export const esFarm: Partial<Record<MessageKey, string>> = {
     'Boceto de la granja: {count} campos dibujados a escala según sus medidas',
   'farm.sketch.openCard': 'Abrir la tarjeta de {name}, {kind}',
   'farm.sketch.pastEdge': '(se sale del borde del campo)',
+  'farm.sketch.blocksPastEdge':
+    'Hay bloques que se salen del borde de {names}. Revisa sus medidas.',
   'farm.sketch.sizeFromArea': '(tamaño según el área)',
   'farm.sketch.caption':
     'Solo un boceto: las cajas se dibujan a escala según las medidas que ingresaste, pero su ubicación se acomoda automáticamente. Dibuja en el mapa cuando quieras límites reales para las distancias de polinización y la sombra.',
@@ -345,6 +347,10 @@ export const esFarm: Partial<Record<MessageKey, string>> = {
   'farm.editor.plantingCount.one': '{count} siembra',
   'farm.editor.plantingCount.other': '{count} siembras',
   'farm.editor.notOnMap': 'no está en el mapa',
+  'farm.editor.sketchDims': 'boceto {dims}',
+  'farm.editor.sketchDimsDiffer': 'boceto {dims}, distinto del tamaño dibujado',
+  'farm.editor.blocksOverArea': 'Los bloques suman {blocks}; {name} mide {area}.',
+  'farm.editor.blockNameReused': 'Hay más de un bloque llamado {name} en {area}.',
   'farm.editor.editBlock': 'Editar bloque',
   'farm.editor.deleteBlock': 'Eliminar bloque',
   'farm.editor.code': 'Código',

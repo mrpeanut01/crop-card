@@ -25,7 +25,14 @@
   import { page } from '$app/state';
   import { kindLabel, kindPlaceholder, shadeLabel } from '$lib/components/farm/farmLabels';
   import { markHintSeen } from '$lib/client/hints';
-  import { SQFT_PER_ACRE, acresForApi, formatFt, sketchAcres } from '$lib/farm/sketch';
+  import {
+    SQFT_PER_ACRE,
+    acresForApi,
+    checkAreaBlocks,
+    formatFt,
+    sketchAcres,
+    sketchDimsDiffer
+  } from '$lib/farm/sketch';
   import { AREA_KINDS, isCropBearing, type AreaDetails, type AreaKind } from '$lib/farm/areaKinds';
   import { kindCounts, kindStyle, type AddPick } from '$lib/farm/kindStyle';
   import {
@@ -186,6 +193,19 @@
     return item.widthFt && item.lengthFt
       ? `${formatFt(item.widthFt, currentPrefs()).replace(/ \S+$/, '')} × ${formatFt(item.lengthFt, currentPrefs())}`
       : null;
+  }
+
+  function dimsLabel(item: {
+    widthFt?: number;
+    lengthFt?: number;
+    acres?: number;
+    geometryGeojson?: string | null;
+  }): string | null {
+    const dims = dimsText(item);
+    if (!dims || !item.geometryGeojson) return dims;
+    return sketchDimsDiffer(item.acres, item.widthFt, item.lengthFt)
+      ? tr('farm.editor.sketchDimsDiffer', { dims })
+      : tr('farm.editor.sketchDims', { dims });
   }
 
   // ─── BlockMap draw callbacks ──────────────────────────────────────────────
@@ -1251,6 +1271,7 @@
       {@const fieldBlocks = blocks.filter((b) => b.fieldId === f.id)}
       {@const fieldAcresDisplay = f.acres ?? (f.blockAcresTotal > 0 ? f.blockAcresTotal : null)}
       {@const fKind = f.kind ?? 'field'}
+      {@const blockCheck = checkAreaBlocks(f.acres, fieldBlocks)}
       <div class="field-group" data-area-row={f.id}>
         <div class="field-row">
           <span class="field-swatch" style:--kind={kindStyle(fKind).color} aria-hidden="true"
@@ -1268,7 +1289,7 @@
                 fieldAcresDisplay,
                 currentPrefs()
               )}{/if}
-            {#if dimsText(f)}· {dimsText(f)}{/if}
+            {#if dimsLabel(f)}· {dimsLabel(f)}{/if}
           </span>
           {#if canEdit}
             <button
@@ -1298,6 +1319,21 @@
             >
           {/if}
         </div>
+
+        {#if blockCheck.over}
+          <p class="area-warn" data-testid="area-blocks-over">
+            {tr('farm.editor.blocksOverArea', {
+              blocks: formatAreaAcres(blockCheck.over.blocksAcres, currentPrefs()),
+              name: f.name,
+              area: formatAreaAcres(blockCheck.over.areaAcres, currentPrefs())
+            })}
+          </p>
+        {/if}
+        {#each blockCheck.duplicates as dup (dup)}
+          <p class="area-warn" data-testid="area-blocks-duplicate">
+            {tr('farm.editor.blockNameReused', { name: dup, area: f.name })}
+          </p>
+        {/each}
 
         {#if editingFieldId === f.id}
           <div class="inline-edit">
@@ -1362,7 +1398,7 @@
                       count: b.plantings.length
                     })}
                   {/if}
-                  {#if dimsText(b)}{acresDisplay || b.plantings.length > 0 ? ' · ' : ''}{dimsText(
+                  {#if dimsLabel(b)}{acresDisplay || b.plantings.length > 0 ? ' · ' : ''}{dimsLabel(
                       b
                     )}{/if}
                   {#if !b.geometryGeojson}<span class="not-drawn">{tr('farm.editor.notOnMap')}</span
@@ -2132,6 +2168,7 @@
   }
   .field-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
   }
@@ -2163,6 +2200,8 @@
     text-decoration-color: var(--color-divider);
     text-underline-offset: 3px;
     cursor: pointer;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
   .field-name:hover {
     text-decoration-color: currentColor;
@@ -2214,6 +2253,15 @@
     color: var(--color-ink-muted);
     font-size: 12px;
     margin-right: auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .area-warn {
+    margin: 4px 0 0 1.5rem;
+    color: var(--color-rust, #a64a2a);
+    font-size: 12.5px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
   }
   .field-notes {
     margin: 4px 0 0 1.5rem;
@@ -2228,6 +2276,7 @@
   }
   .block-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
     padding: 6px 0 6px 1.5rem;
@@ -2237,13 +2286,17 @@
     color: var(--color-forest-deep);
   }
   .block-name {
+    min-width: 0;
     color: var(--color-ink);
     font-weight: 600;
+    overflow-wrap: anywhere;
   }
   .block-stats {
+    min-width: 0;
     color: var(--color-ink-muted);
     font-size: 11.5px;
     margin-right: auto;
+    overflow-wrap: anywhere;
   }
   .not-drawn {
     color: var(--color-rust, #a64a2a);

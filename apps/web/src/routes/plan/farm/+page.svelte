@@ -164,7 +164,8 @@
   }
   @media (max-width: 768px) {
     .continue-bar {
-      bottom: calc(72px + env(safe-area-inset-bottom, 0));
+      position: static;
+      box-shadow: none;
     }
   }
   .continue-bar p {

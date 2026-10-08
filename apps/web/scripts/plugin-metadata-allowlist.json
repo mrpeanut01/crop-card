@@ -250,6 +250,16 @@
       "pluginId": "zerotol-2-0-sanitizer",
       "field": "formulation",
       "reason": "No 70299-12 label (all 8 PPLS labels 2011-2021), BioSafe specimen label (OxiDate 2.0 V16.3 and CA V16.1, ZeroTol 2.0 V16.3) or BioSafe SDS (2017, 2019 SDS-033 rev 05, 2023 SDS-6000, 2025 SDS 5100 and 6000 v1) names a formulation: they say only 'ZeroTol 2.0 is a liquid bactericide/fungicide' and 'Physical state Liquid'. The L value from that sentence was removed because L counts only for 'liquid formulation' or a 'Formulation: liquid' field (rule of 2026-10-04). PPLS 'Soluble Concentrate' is corroboration only. defaultUnit fl-oz is set directly, so unit derivation is unaffected. Permanent gap (panel ruling 2026-10-05, #553, 3-0): reopen only if the registrant publishes a qualifying label, tech sheet or SDS."
+    },
+    {
+      "pluginId": "caramba-metconazole",
+      "field": "formulation",
+      "reason": "Added 2026-10-08 (#659). The EPA-stamped Caramba label (7969-246, 2013-06-13, scanned) prints no formulation code or formulation words; it gives only the active ingredient and '0.75 pound of metconazole per gallon'. No BASF US tech sheet or SDS naming a type was found, and a bare 'liquid' physical state never counts. Reopen when PPLS (down on 2026-10-08) or BASF shows a label, tech sheet or SDS that names the type."
+    },
+    {
+      "pluginId": "sphaerex",
+      "field": "formulation",
+      "reason": "Added 2026-10-08 (#659). The EPA-stamped Sphaerex label (7969-473, 2022-02-25) prints no formulation code or formulation words. The BASF US SDS (revision 2021/09/15) gives only 'Form: liquid', a bare physical state, which never counts. The Canadian label (PCP 34263) calls it an emulsifiable concentrate, but a foreign registration with no shared product code never counts. Reopen when a US label, tech sheet or SDS names the type."
     }
   ]
 }

@@ -1,0 +1,45 @@
+{
+  "pluginId": "caramba-metconazole",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No listing on the OMRI Products List (searched 2026-10-08: 'Caramba' and 'metconazole'; no Caramba product). Conventional DMI; label makes no organic statement."},
+  "defaultUnit": "fl-oz",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Caramba (metconazole)",
+  "applicationTiming": "BLOOM",
+  "activeIngredients": [
+    { "name": "metconazole", "fracCode": "3" }
+  ],
+  "ratePerAcre": { "amount": 13.5, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 30,
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
+  "epaRegistrationNumber": "7969-246",
+  "targetDiseases": [
+    "Fusarium head blight",
+    "black point",
+    "leaf blotch",
+    "net blotch",
+    "powdery mildew",
+    "rust",
+    "scald",
+    "Septoria leaf and glume blotch",
+    "spot blotch",
+    "tan spot"
+  ],
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "wheat-soft-red-winter",
+      "wheat-hard-red-spring",
+      "wheat-hard-white-winter",
+      "barley-grain-thoroughbred",
+      "barley-hulless-streaker",
+      "oats-grain-jerry",
+      "oats-hulless-streaker",
+      "rye-grain-aroostook",
+      "triticale-fridge"
+    ]
+  },
+  "notes": "BASF FRAC 3 DMI (EPA label 2013-06-13). Barley, oats, rye, triticale and wheat: head blight (head scab) is suppression only at 13.5 to 17 fl oz per acre, applied at the beginning of anthesis; leaf diseases 10 to 14 fl oz per acre. At most 34 fl oz per acre per season and 2 Group 3 applications per season, 30 day PHI. The 30 day PHI is also the longest on the label, so it applies to every crop."
+}

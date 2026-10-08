@@ -2,7 +2,7 @@
   "pluginId": "permit",
   "type": "herbicide",
   "displayName": "Permit (Gowan halosulfuron-methyl, corn label)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "WDG",
   "epaRegistrationNumber": "81880-2",
   "defaultUnit": "oz",
@@ -17,6 +17,7 @@
     "amount": 1,
     "unit": "oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "requiresAMS": true,
   "deconRequired": true,

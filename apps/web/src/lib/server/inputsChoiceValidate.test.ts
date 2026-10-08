@@ -8,6 +8,7 @@ const herbicide = (pluginId: string, chemistryClass: string, flags = {}) => ({
   displayName: pluginId,
   activeIngredients: [{ name: pluginId, chemistryClass }],
   ratePerAcre: { amount: 2, unit: 'pt' },
+  rateProvenance: 'label',
   complianceFlags: flags
 });
 
@@ -117,5 +118,29 @@ describe('manual input choices (#480)', () => {
         philosophy: 'conventional'
       })
     ).toEqual([]);
+  });
+
+  it('never treats a typical (fallback) herbicide rate as a ceiling (#737 swarm 2026-10-07)', () => {
+    const typical = new Map(products);
+    const typ = {
+      ...herbicide('typ', 'ppo-inhibitor', { nonGmoCompliant: true }),
+      rateProvenance: 'fallback'
+    };
+    typical.set('typ', typ);
+    const ctx = { products: typical, cropPlugins, philosophy: 'conventional' as const };
+    expect(validateManualChoices([choice({ productPluginId: 'typ', rateAmount: 2 })], ctx)).toEqual(
+      []
+    );
+    expect(
+      validateManualChoices(
+        [choice({ productPluginId: 'typ', rateAmount: 1, rateUnit: 'qt' })],
+        ctx
+      )
+    ).toEqual([]);
+    for (const rateAmount of [1, 1.9, 2.1]) {
+      const problems = validateManualChoices([choice({ productPluginId: 'typ', rateAmount })], ctx);
+      expect(problems).toHaveLength(1);
+      expect(problems[0]).toMatch(/no label rate on file, only a typical rate/);
+    }
   });
 });

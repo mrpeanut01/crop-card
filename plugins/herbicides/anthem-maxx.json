@@ -2,7 +2,7 @@
   "pluginId": "anthem-maxx",
   "type": "herbicide",
   "displayName": "Anthem MAXX (FMC)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "SC",
   "epaRegistrationNumber": "279-3468",
   "defaultUnit": "fl-oz",
@@ -21,6 +21,7 @@
     "amount": 4.5,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 3,

@@ -2,7 +2,7 @@
   "pluginId": "roundup-powermax-3",
   "type": "herbicide",
   "displayName": "Roundup PowerMAX 3 (Ruveon; formerly Bayer)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "SL",
   "epaRegistrationNumber": "105211-118",
   "defaultUnit": "fl-oz",
@@ -17,6 +17,7 @@
     "amount": 22,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "dilutionTable": {
     "10gal": {

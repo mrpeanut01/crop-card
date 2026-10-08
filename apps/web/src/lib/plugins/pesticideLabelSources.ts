@@ -8,7 +8,10 @@
  * - every `preHarvestIntervalsByCrop` row needs a `phiByCrop` entry for the
  *   same crop or family whose quote states the days;
  * - a display name that says OMRI may not sit beside flags that mark the
- *   product not allowed for organic use.
+ *   product not allowed for organic use;
+ * - a herbicide default `ratePerAcre` ships only as `rateProvenance:
+ *   'label'` with a `rate` entry whose quote states the amount, or as an
+ *   explicit `rateProvenance: 'fallback'` (swarm 2026-10-07, #737).
  */
 
 export interface LabelSourcePlugin {
@@ -16,6 +19,8 @@ export interface LabelSourcePlugin {
   type: string;
   displayName: string;
   reEntryIntervalHours?: number;
+  ratePerAcre?: { amount: number; unit: string };
+  rateProvenance?: string;
   preHarvestIntervalsByCrop?: ReadonlyArray<{
     cropPluginId?: string;
     cropFamily?: string;
@@ -32,6 +37,7 @@ interface QuotedSource {
 export interface LabelSources {
   rei?: Record<string, unknown>;
   phiByCrop?: Record<string, unknown>;
+  rate?: Record<string, unknown>;
 }
 
 function statesNumber(quote: unknown, n: number): boolean {
@@ -60,6 +66,7 @@ export function pesticideLabelSourceGaps(
         gaps.push(`${p.pluginId}: rei source does not quote ${p.reEntryIntervalHours} hours`);
       }
     }
+    if (p.type === 'herbicide') gaps.push(...rateGaps(p, sources));
     for (const row of p.preHarvestIntervalsByCrop ?? []) {
       const key = row.cropPluginId ?? row.cropFamily ?? '?';
       const list = sources.phiByCrop?.[p.pluginId];
@@ -87,4 +94,30 @@ export function pesticideLabelSourceGaps(
     }
   }
   return gaps;
+}
+
+function rateGaps(p: LabelSourcePlugin, sources: LabelSources): string[] {
+  const s = sources.rate?.[p.pluginId] as
+    (QuotedSource & { ratePerAcre?: { amount?: unknown; unit?: unknown } }) | undefined;
+  if (!p.ratePerAcre) {
+    return p.rateProvenance ? [`${p.pluginId}: rateProvenance set but no ratePerAcre`] : [];
+  }
+  if (p.rateProvenance === 'fallback') {
+    return s ? [`${p.pluginId}: has a quoted label rate but is marked fallback`] : [];
+  }
+  if (p.rateProvenance !== 'label') {
+    return [`${p.pluginId}: ratePerAcre needs a rate label quote or rateProvenance "fallback"`];
+  }
+  if (!s) return [`${p.pluginId}: label ratePerAcre has no rate source`];
+  if (
+    s.ratePerAcre?.amount !== p.ratePerAcre.amount ||
+    s.ratePerAcre?.unit !== p.ratePerAcre.unit ||
+    !hasUrl(s) ||
+    !statesNumber(s.quote, p.ratePerAcre.amount)
+  ) {
+    return [
+      `${p.pluginId}: rate source does not quote ${p.ratePerAcre.amount} ${p.ratePerAcre.unit}`
+    ];
+  }
+  return [];
 }

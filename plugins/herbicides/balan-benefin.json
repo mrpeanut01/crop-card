@@ -1,7 +1,7 @@
 {
   "pluginId": "balan-benefin",
   "type": "herbicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Balan', 'benefin', 'benfluralin'; hits were unrelated products). Label (34704-746, accepted 2025-11-05) makes no organic-production claim; conventional synthetic herbicide."},
   "defaultUnit": "lb",
   "formulation": "DF",
@@ -17,6 +17,7 @@
     "amount": 4,
     "unit": "lb"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "applicationTiming": "PRE",
   "requiresAMS": false,

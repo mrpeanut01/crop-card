@@ -4311,5 +4311,8 @@
   },
   "phiByCrop": {
     "$comment": "#661 — label pre-harvest intervals by crop. One list per plugin carrying preHarvestIntervalsByCrop: [{ cropPluginId | cropFamily, preHarvestIntervalDays, sourceUrl, docDate, page, quote }], where the quote names the crop and states the number of days. Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read."
+  },
+  "rate": {
+    "$comment": "#737 herbicide rate provenance (swarm 2026-10-07, 3-0). One entry per herbicide plugin marked rateProvenance \"label\": { ratePerAcre: { amount, unit }, sourceUrl, docDate, page, quote }, where the quote is the label's own rate sentence and states the amount. Every other shipped herbicide default rate carries rateProvenance \"fallback\" and is shown as \"Typical rate, not from the label. Check the label before mixing.\" Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read; notes elsewhere in this file that say a plugin rate is within a label range are summaries, not quotes."
   }
 }

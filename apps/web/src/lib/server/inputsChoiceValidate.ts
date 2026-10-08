@@ -13,7 +13,8 @@ import type { Philosophy } from '$lib/season/setup';
 import { checkCropCompatibility } from '$lib/safety/cropCompatibility';
 import type { ChemistryClass } from '$lib/safety/types';
 import type { CropPlugin, HerbicidePlugin } from '$lib/plugins/schemas';
-import { rateCeilingProblem } from '$lib/plan/rateCeiling';
+import { rateCeilingProblem, rateMatches } from '$lib/plan/rateCeiling';
+import { isFallbackRate } from '$lib/plugins/rateProvenance';
 
 export interface ManualChoice {
   id: string;
@@ -73,7 +74,14 @@ export function validateManualChoices(
       }
     }
     const ceiling = (plugin as { ratePerAcre?: { amount?: number; unit?: string } }).ratePerAcre;
-    if (typeof ceiling?.amount === 'number' && app.rateAmount != null) {
+    if (typeof ceiling?.amount === 'number' && app.rateAmount != null && isFallbackRate(plugin)) {
+      if (
+        !rateMatches(app.rateAmount, app.rateUnit, { amount: ceiling.amount, unit: ceiling.unit })
+      )
+        problems.push(
+          `${plugin.displayName} has no label rate on file, only a typical rate (${ceiling.amount}${ceiling.unit ? ` ${ceiling.unit}` : ''} per acre). Check the label.`
+        );
+    } else if (typeof ceiling?.amount === 'number' && app.rateAmount != null) {
       const label = { amount: ceiling.amount, unit: ceiling.unit ?? null };
       const problem = rateCeilingProblem(app.rateAmount, app.rateUnit, label);
       if (problem === 'over') {

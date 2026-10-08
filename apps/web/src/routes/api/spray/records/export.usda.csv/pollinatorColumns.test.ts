@@ -86,7 +86,8 @@ describe('USDA CSV — #130 pollinator columns', () => {
       'mode_of_action',
       'total_amount_unit',
       'harvest_quantity',
-      'rei_hours'
+      'rei_hours',
+      'rate_note'
     ]);
   });
 

@@ -2,7 +2,7 @@
   "pluginId": "princep-4l",
   "type": "herbicide",
   "displayName": "Princep 4L (Syngenta simazine)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "epaRegistrationNumber": "100-526",
   "defaultUnit": "fl-oz",
   "formulation": "L",
@@ -17,6 +17,7 @@
     "amount": 1.6,
     "unit": "qt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 6,

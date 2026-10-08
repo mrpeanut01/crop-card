@@ -2,7 +2,7 @@
   "pluginId": "acuron",
   "type": "herbicide",
   "displayName": "Acuron (Syngenta premix)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "ZC",
   "epaRegistrationNumber": "100-1466",
   "defaultUnit": "fl-oz",
@@ -29,6 +29,7 @@
     "amount": 2.5,
     "unit": "qt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 6,

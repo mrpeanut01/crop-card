@@ -312,6 +312,9 @@ export interface SnapshotSprayProduct {
   version: string;
   epaRegistrationNumber: string | null;
   ratePerAcre: { amount: number; unit: SnapshotRateUnit } | null;
+  /** Herbicides (#737 swarm 2026-10-07): `plugin` for a label-quoted rate,
+   *  `fallback` for a typical one. Missing reads as `fallback`. */
+  rateProvenance?: 'plugin' | 'fallback' | null;
   gpaCalibration: number | null;
   reEntryIntervalHours: number | null;
   preHarvestIntervalDays: number | null;

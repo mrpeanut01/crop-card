@@ -2,7 +2,7 @@
   "pluginId": "atrazine-4l-generic",
   "type": "herbicide",
   "displayName": "Atrazine 4L (generic)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "fl-oz",
   "formulation": "L",
   "applicationTiming": "PRE",
@@ -16,6 +16,7 @@
     "amount": 2,
     "unit": "qt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "requiresAMS": false,
   "deconRequired": true,

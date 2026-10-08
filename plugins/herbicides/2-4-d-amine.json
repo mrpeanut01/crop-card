@@ -2,7 +2,7 @@
   "pluginId": "2-4-d-amine",
   "type": "herbicide",
   "displayName": "2,4-D Amine",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
   "activeIngredients": [
@@ -15,6 +15,7 @@
     "amount": 1,
     "unit": "pt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "dilutionTable": {
     "10gal": {

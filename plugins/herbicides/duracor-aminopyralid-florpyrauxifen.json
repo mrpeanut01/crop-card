@@ -1,7 +1,7 @@
 {
   "pluginId": "duracor-aminopyralid-florpyrauxifen",
   "type": "herbicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'DuraCor'; 'aminopyralid'). Conventional synthetic herbicide; label carries no organic-production statement."},
   "defaultUnit": "fl-oz",
   "formulation": "SC",
@@ -31,6 +31,7 @@
     "amount": 16,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "applicationTiming": "POST",
   "requiresAMS": false,

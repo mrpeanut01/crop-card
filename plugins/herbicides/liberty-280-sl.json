@@ -2,7 +2,7 @@
   "pluginId": "liberty-280-sl",
   "type": "herbicide",
   "displayName": "Liberty 280 SL (BASF)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "epaRegistrationNumber": "7969-448",
   "defaultUnit": "fl-oz",
   "formulation": "SL",
@@ -17,6 +17,7 @@
     "amount": 32,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "dilutionTable": {
     "10gal": {

@@ -1237,6 +1237,12 @@ export const herbicidePluginSchema = pluginBase.extend({
       unit: z.enum(["oz", "fl-oz", "lb", "pt", "qt"]),
     })
     .optional(),
+  /** #737 (swarm 2026-10-07) — where `ratePerAcre` comes from. `label` needs a
+   *  quoted label source in apps/web/scripts/epa-reg-sources.json (`rate`);
+   *  `fallback` is a typical rate shown with "not from the label". A rate
+   *  with neither is read as `fallback`, and the source gate refuses a
+   *  shipped herbicide rate without one. */
+  rateProvenance: z.enum(["label", "fallback"]).optional(),
   /** #640 — label restricted-entry interval. Optional: shown as "not on file"
    *  when missing. Each value needs a quoted label source in
    *  apps/web/scripts/epa-reg-sources.json (`rei`). */

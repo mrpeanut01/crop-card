@@ -7,6 +7,7 @@
  */
 
 import { and, eq } from 'drizzle-orm';
+import { recordedRateProvenance } from '$lib/plugins/rateProvenance';
 import { buildEquipmentCard, buildPlantingCard } from '$lib/cards/build';
 import {
   buildHarvestRecordCard,
@@ -110,7 +111,9 @@ async function productsFor(
     pluginId: string;
     displayName?: string;
     rate?: { amount: number; unit: string };
-  }>
+    rateProvenance?: string;
+  }>,
+  herbicide = false
 ): Promise<SprayRecordProduct[]> {
   const registry = await getRegistry();
   return products.map((p) => {
@@ -120,6 +123,8 @@ async function productsFor(
       pluginId: p.pluginId,
       displayName: p.displayName ?? label?.displayName ?? p.pluginId,
       rate: p.rate ?? null,
+      rateFallback:
+        herbicide && !!p.rate && recordedRateProvenance(p.rateProvenance) === 'fallback',
       label
     };
   });
@@ -176,7 +181,7 @@ export async function buildRecordCards(
         occurredAt: ev.occurredAt,
         blockLabel: blockLabels().get(ev.blockId) ?? null,
         sprayerLabel: sprayer?.label ?? null,
-        products: await productsFor(ev.products),
+        products: await productsFor(ev.products, true),
         conditions: {
           windMph: ev.conditions.windMph,
           tempF: ev.conditions.tempF,

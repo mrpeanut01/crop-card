@@ -1,7 +1,7 @@
 {
   "pluginId": "accent-q-nicosulfuron",
   "type": "herbicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Accent Q', 'Accent'). Conventional synthetic sulfonylurea (nicosulfuron) herbicide; label (EPA Reg. 352-773) makes no organic-production claim."},
   "formulation": "WDG",
   "pluginSchemaVersion": "1.1",
@@ -16,6 +16,7 @@
     "amount": 0.9,
     "unit": "oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "applicationTiming": "POST",
   "requiresAMS": true,

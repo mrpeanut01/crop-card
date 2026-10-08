@@ -203,7 +203,7 @@ describe('spray CSV (G2-07, G2-08)', () => {
 describe('USDA CSV (G2-07, G2-08)', () => {
   it('carries recorded_late and days_after_date before the #760 columns', async () => {
     const { meta } = parseCsv(await (await run(a, usdaCsv, '/x')).text());
-    expect((meta.fields ?? []).slice(-6, -4)).toEqual(['recorded_late', 'days_after_date']);
+    expect((meta.fields ?? []).slice(-7, -5)).toEqual(['recorded_late', 'days_after_date']);
     expect((meta.fields ?? []).slice(0, 2)).toEqual(['date_iso', 'block_label']);
   });
 

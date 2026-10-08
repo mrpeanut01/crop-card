@@ -2,7 +2,7 @@
   "pluginId": "liberty-ultra",
   "type": "herbicide",
   "displayName": "Liberty ULTRA (BASF)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "epaRegistrationNumber": "7969-500",
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
@@ -16,6 +16,7 @@
     "amount": 24,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "requiresAMS": true,
   "deconRequired": true,

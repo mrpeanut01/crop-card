@@ -39,6 +39,9 @@ export interface SprayEventInput {
     pluginId: string;
     chemistryClasses: ChemistryClass[];
     rate?: { amount: number; unit: string };
+    /** #737 swarm 2026-10-07: `plugin` when the rate was a label-quoted one.
+     *  Missing on older rows, which read as `fallback`. */
+    rateProvenance?: 'plugin' | 'fallback';
   }>;
   /** #320 — `conditionsProvenance` distinguishes operator-measured
    *  readings from synthetic defaults. Stored inside the conditionsJson

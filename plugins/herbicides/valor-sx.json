@@ -2,7 +2,7 @@
   "pluginId": "valor-sx",
   "type": "herbicide",
   "displayName": "Valor SX (Valent flumioxazin)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "WDG",
   "epaRegistrationNumber": "59639-99",
   "defaultUnit": "oz",
@@ -17,6 +17,7 @@
     "amount": 2,
     "unit": "oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 4,

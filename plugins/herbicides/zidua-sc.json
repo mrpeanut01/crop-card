@@ -2,7 +2,7 @@
   "pluginId": "zidua-sc",
   "type": "herbicide",
   "displayName": "Zidua SC (BASF pyroxasulfone)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "epaRegistrationNumber": "7969-374",
   "defaultUnit": "fl-oz",
   "formulation": "SC",
@@ -17,6 +17,7 @@
     "amount": 2.5,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 3,

@@ -16,6 +16,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { sprayRecordSchema } from '$lib/records/apiSchemas';
 import { resolveSprayCrops, standingCropPluginIds } from '$lib/server/sprayCrops';
 import { appliedProductAmount, productsWithoutRate } from '$lib/dilution/calculator';
+import { herbicideRateProvenance } from '$lib/plugins/rateProvenance';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { insertSprayEvent } from '$lib/db/sprayEvents';
@@ -228,7 +229,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         products: fullProducts.map((p) => ({
           pluginId: p.pluginId,
           chemistryClasses: Array.from(new Set(p.activeIngredients.map((ai) => ai.chemistryClass))),
-          rate: p.ratePerAcre
+          rate: p.ratePerAcre,
+          ...(p.ratePerAcre ? { rateProvenance: herbicideRateProvenance(p) ?? 'fallback' } : {})
         })),
         conditions: {
           ...parsed.data.conditions,

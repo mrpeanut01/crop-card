@@ -59,6 +59,7 @@ import { requireOwnerId } from '$lib/db/tenant';
 import type { CropPlugin, Plugin } from '$lib/plugins/schemas';
 import { pollinatorDataFor } from '$lib/safety/pollinatorProtection';
 import { buildTankMixSteps } from '$lib/safety/tankMixOrder';
+import { herbicideRateProvenance } from '$lib/plugins/rateProvenance';
 import { RULES_VERSION } from '$lib/safety/version';
 import { harvestWindowFor } from '$lib/calendar/harvestWindow';
 import { getDataKinds, getRegistry } from './registry';
@@ -244,6 +245,7 @@ export function toSprayProduct(p: Plugin): SnapshotSprayProduct | null {
       version: p.version,
       epaRegistrationNumber: p.epaRegistrationNumber ?? null,
       ratePerAcre: p.ratePerAcre ?? null,
+      rateProvenance: herbicideRateProvenance(p),
       gpaCalibration: p.gpaCalibration ?? null,
       reEntryIntervalHours: p.reEntryIntervalHours ?? null,
       preHarvestIntervalDays: longestPhiDays(p),

@@ -2,7 +2,7 @@
   "pluginId": "callisto",
   "type": "herbicide",
   "displayName": "Callisto (Syngenta mesotrione)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "SC",
   "epaRegistrationNumber": "100-1131",
   "defaultUnit": "fl-oz",
@@ -17,6 +17,7 @@
     "amount": 3,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "requiresAMS": true,
   "deconRequired": false,

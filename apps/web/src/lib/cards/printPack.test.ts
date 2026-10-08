@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
+import { FALLBACK_RATE_LINE } from '$lib/plugins/rateProvenance';
 import { getRegistry } from '$lib/server/registry';
 import { toSprayProduct } from '$lib/server/cardSnapshot';
 import { RULES_VERSION } from '$lib/safety/version';
@@ -157,7 +158,7 @@ describe('wholePrintParts', () => {
   });
 
   it('prints the decon SOP first and the rate, tank amount, REI, PHI and mix order after it (#581)', () => {
-    const c = card(SAMPLE_HERBICIDE, 'photosystem-i-diquat');
+    const c = card({ ...SAMPLE_HERBICIDE, rateProvenance: 'plugin' }, 'photosystem-i-diquat');
     for (const layout of LAYOUTS) {
       const parts = wholePrintParts(c, layout, CTX);
       expect(parts.length).toBeGreaterThanOrEqual(2);
@@ -171,6 +172,19 @@ describe('wholePrintParts', () => {
       for (const p of parts.filter((x) => x !== product))
         expect(p.printPart?.ref).toBe('EPA reg. no. 34704-120');
       checkParts(c, parts, layout);
+    }
+  });
+
+  it('prints a typical (fallback) rate with its line on the same card, on every paper (#737)', () => {
+    const c = card(SAMPLE_HERBICIDE, 'photosystem-i-diquat');
+    for (const layout of LAYOUTS) {
+      const parts = wholePrintParts(c, layout, CTX);
+      const rate = parts.flatMap((p) => p.facts).find((f) => f.label === 'Rate')!;
+      expect(rate.provenance).toBe('fallback');
+      expect(rate.note).toBe(FALLBACK_RATE_LINE);
+      const firstProduct = parts.find((p) => !p.sections.some((s) => s.ownCard))!;
+      expect(firstProduct.notices?.[0]).toMatch(/^Decon first/);
+      checkParts(c, parts, layout, undefined, true);
     }
   });
 

@@ -15,6 +15,8 @@
   import { page } from '$app/state';
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
+  import FallbackRateLine from '$lib/components/spray/FallbackRateLine.svelte';
+  import { isFallbackRate } from '$lib/plugins/rateProvenance';
   import LotQuantities from '../LotQuantities.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatRateText, formatStockQuantity, perAcreRateUnit } from '$lib/stock/units';
@@ -24,6 +26,7 @@
   type Props = Omit<PesticideDetailPayload, 'type'>;
   const { item, lots, movements, plugin, phiByCrop = [] }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
+  const rateFallback = $derived(isFallbackRate(plugin));
   const phiLongest = $derived(
     Math.max(...phiByCrop.map((r) => r.days), plugin?.preHarvestIntervalDays ?? 0)
   );
@@ -119,7 +122,10 @@
       </InvSection>
     </div>
 
-    <InvSection title={tr('inv.pest.rate')} kicker={tr('inv.pest.labelDerived')}>
+    <InvSection
+      title={tr('inv.pest.rate')}
+      kicker={rateFallback ? tr('inv.pest.typicalRate') : tr('inv.pest.labelDerived')}
+    >
       {#if plugin?.ratePerAcre}
         <InvKVP
           label={tr('inv.pest.defaultRate')}
@@ -133,6 +139,7 @@
           )}
           tone="mono"
         />
+        {#if rateFallback}<FallbackRateLine />{/if}
       {:else}
         <p class="empty">{tr('inv.pest.noRate')}</p>
       {/if}

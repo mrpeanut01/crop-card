@@ -200,11 +200,12 @@ describe('USDA CSV (#760)', () => {
   it('names label active ingredients and moves MoA groups to mode_of_action', async () => {
     const text = await (await run(a, usdaCsv, '/x')).text();
     const { data, meta } = parseCsv(text);
-    expect((meta.fields ?? []).slice(-4)).toEqual([
+    expect((meta.fields ?? []).slice(-5)).toEqual([
       'mode_of_action',
       'total_amount_unit',
       'harvest_quantity',
-      'rei_hours'
+      'rei_hours',
+      'rate_note'
     ]);
     const warrior = data.find((r) => r.product_name === 'Warrior II')!;
     expect(warrior.active_ingredients).toBe('lambda-cyhalothrin');
@@ -221,6 +222,8 @@ describe('USDA CSV (#760)', () => {
     expect(herb.active_ingredients).not.toBe('synthetic-auxin');
     expect(herb.active_ingredients.length).toBeGreaterThan(0);
     expect(herb.rei_hours).toBe('');
+    expect(herb.rate_note).toBe('Typical rate, not from the label. Check the label before mixing.');
+    expect(warrior.rate_note).toBe('');
     expect(text).not.toContain(b.tag);
   });
 

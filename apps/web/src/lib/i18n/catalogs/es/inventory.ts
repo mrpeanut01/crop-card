@@ -314,6 +314,7 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'inv.pest.productId': 'Id del producto',
   'inv.pest.rate': 'Dosis de aplicación',
   'inv.pest.labelDerived': 'Según la etiqueta',
+  'inv.pest.typicalRate': 'Típica, no de la etiqueta',
   'inv.pest.defaultRate': 'Dosis predeterminada',
   'inv.pest.noRate': 'La etiqueta del producto no indica una dosis predeterminada.',
   'inv.storageReorder': 'Almacenamiento y reposición',

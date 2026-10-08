@@ -2,7 +2,7 @@
   "pluginId": "stinger",
   "type": "herbicide",
   "displayName": "Stinger (Corteva clopyralid)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "epaRegistrationNumber": "62719-73",
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
@@ -16,6 +16,7 @@
     "amount": 0.25,
     "unit": "pt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 4,

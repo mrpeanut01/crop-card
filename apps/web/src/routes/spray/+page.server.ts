@@ -1,4 +1,5 @@
 import { isContactOrganic } from '$lib/plugins/contactOrganic';
+import { herbicideRateProvenance } from '$lib/plugins/rateProvenance';
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
 import { loadSprayPastureContext } from '$lib/server/pastureAnimals';
@@ -107,6 +108,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         activeNames: h.activeIngredients.map((ai) => ai.name),
         hracGroups,
         ratePerAcre: h.ratePerAcre,
+        rateProvenance: herbicideRateProvenance(h),
         gpaCalibration: h.gpaCalibration,
         requiresAMS: h.requiresAMS ?? false,
         deconRequired: h.deconRequired ?? false,

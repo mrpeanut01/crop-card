@@ -2,7 +2,7 @@
   "pluginId": "dual-ii-magnum",
   "type": "herbicide",
   "displayName": "Dual II Magnum (Syngenta)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "EC",
   "epaRegistrationNumber": "100-818",
   "defaultUnit": "fl-oz",
@@ -17,6 +17,7 @@
     "amount": 1.33,
     "unit": "pt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "dilutionTable": {
     "10gal": {

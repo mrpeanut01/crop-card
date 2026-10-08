@@ -1,0 +1,60 @@
+{
+  "items": [
+    {
+      "eparegno": "264-1210",
+      "productname": "XtendiMax® With VaporGrip® Technology",
+      "registereddate": null,
+      "cancel_flag": "Yes",
+      "cancellationreason": "Other",
+      "product_status": "Inactive",
+      "product_status_date": "February 6, 2024",
+      "signal_word": "Caution",
+      "rup_yn": "Yes",
+      "formulations": [],
+      "active_ingredients": [
+        {
+          "pc_code": "128931",
+          "active_ing": "Dicamba, diglycolamine salt",
+          "cas_number": "104040-79-1",
+          "active_ing_percent": 42.8
+        }
+      ],
+      "inactive_brand_names": [],
+      "transfer_flag": "No",
+      "transfer_history": [],
+      "pdffiles": [
+        {
+          "epa_reg_num": "264-1210",
+          "pdffile": "000264-01210-20240312.pdf",
+          "pdffile_accepted_date": "March 12, 2024"
+        },
+        {
+          "epa_reg_num": "264-1210",
+          "pdffile": "000264-01210-20230216.pdf",
+          "pdffile_accepted_date": "February 16, 2023"
+        },
+        {
+          "epa_reg_num": "264-1210",
+          "pdffile": "000264-01210-20220315.pdf",
+          "pdffile_accepted_date": "March 15, 2022"
+        },
+        {
+          "epa_reg_num": "264-1210",
+          "pdffile": "000264-01210-20201105.pdf",
+          "pdffile_accepted_date": "November 5, 2020"
+        },
+        {
+          "epa_reg_num": "264-1210",
+          "pdffile": "000264-01210-20201027.pdf",
+          "pdffile_accepted_date": "October 27, 2020"
+        }
+      ],
+      "altbrandnames": [
+        {
+          "altbrandname": "M1768 Herbicide"
+        }
+      ],
+      "types": []
+    }
+  ]
+}

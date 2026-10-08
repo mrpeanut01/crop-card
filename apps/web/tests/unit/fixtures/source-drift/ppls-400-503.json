@@ -1,0 +1,130 @@
+{
+  "items": [
+    {
+      "eparegno": "70506-536",
+      "productname": "ACRAMITE-50WS",
+      "registereddate": null,
+      "cancel_flag": "No",
+      "cancellationreason": null,
+      "product_status": "Active",
+      "product_status_date": "February 4, 2002",
+      "signal_word": "Caution",
+      "rup_yn": "No",
+      "formulations": [
+        {
+          "formulation": "Water Soluble Packaging"
+        }
+      ],
+      "active_ingredients": [
+        {
+          "pc_code": "000586",
+          "active_ing": "Bifenazate",
+          "cas_number": "149877-41-8",
+          "active_ing_percent": 50
+        }
+      ],
+      "inactive_brand_names": [],
+      "transfer_flag": "Yes",
+      "transfer_history": [
+        {
+          "previous_eparegno": "400-503",
+          "previous_company": "MACDERMID AGRICULTURAL SOLUTIONS, INC.",
+          "transferred_date": "June 9, 2021"
+        }
+      ],
+      "pdffiles": [
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20201216.pdf",
+          "pdffile_accepted_date": "December 16, 2020"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20141222.pdf",
+          "pdffile_accepted_date": "December 22, 2014"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20140904.pdf",
+          "pdffile_accepted_date": "September 4, 2014"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20110217.pdf",
+          "pdffile_accepted_date": "February 17, 2011"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20101217.pdf",
+          "pdffile_accepted_date": "December 17, 2010"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20101015.pdf",
+          "pdffile_accepted_date": "October 15, 2010"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20100126.pdf",
+          "pdffile_accepted_date": "January 26, 2010"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20081117.pdf",
+          "pdffile_accepted_date": "November 17, 2008"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20080325.pdf",
+          "pdffile_accepted_date": "March 25, 2008"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20080107.pdf",
+          "pdffile_accepted_date": "January 7, 2008"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20071115.pdf",
+          "pdffile_accepted_date": "November 15, 2007"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20070227.pdf",
+          "pdffile_accepted_date": "February 27, 2007"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20040629.pdf",
+          "pdffile_accepted_date": "June 29, 2004"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20040211.pdf",
+          "pdffile_accepted_date": "February 11, 2004"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20031010.pdf",
+          "pdffile_accepted_date": "October 10, 2003"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20030926.pdf",
+          "pdffile_accepted_date": "September 26, 2003"
+        },
+        {
+          "epa_reg_num": "400-503",
+          "pdffile": "000400-00503-20020204.pdf",
+          "pdffile_accepted_date": "February 4, 2002"
+        }
+      ],
+      "altbrandnames": [],
+      "types": [
+        {
+          "type": "MITICIDE"
+        }
+      ]
+    }
+  ]
+}

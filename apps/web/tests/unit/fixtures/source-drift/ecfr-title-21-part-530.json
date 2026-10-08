@@ -1,0 +1,24 @@
+{
+  "content_versions": [
+    {
+      "date": "2016-12-31",
+      "amendment_date": "2016-12-31",
+      "issue_date": "2016-12-31",
+      "identifier": "530.41",
+      "name": "§ 530.41   Drugs prohibited for extralabel use in animals.",
+      "part": "530",
+      "substantive": true,
+      "removed": false,
+      "subpart": "E",
+      "title": "21",
+      "type": "section"
+    }
+  ],
+  "meta": {
+    "title": "21",
+    "part": "530",
+    "result_count": "18",
+    "latest_amendment_date": "2016-12-31",
+    "latest_issue_date": "2016-12-31"
+  }
+}

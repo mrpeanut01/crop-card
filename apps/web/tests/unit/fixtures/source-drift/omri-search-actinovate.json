@@ -1,0 +1,125 @@
+{
+  "@odata.context": "https://omri.search.windows.net/indexes('ubersearch-prod')/$metadata#docs(*)",
+  "@odata.count": 17,
+  "@search.facets": {
+    "ContentType": [
+      {
+        "value": "product",
+        "count": 15
+      },
+      {
+        "value": "manufacturer",
+        "count": 1
+      },
+      {
+        "value": "press_release",
+        "count": 1
+      }
+    ]
+  },
+  "value": [
+    {
+      "@search.score": 2.0617292,
+      "Id": "product-18375-en",
+      "ContentType": "product",
+      "ContentTitle": null,
+      "EnglishContentTitle": "Novozymes Actinovate® SP Biological Fungicide",
+      "SpanishContentTitle": null,
+      "RulingBody": "NOP",
+      "Class": ["CP"],
+      "Language": "en",
+      "Status": "restricted",
+      "EntityId": "22755403",
+      "ManufacturerId": "3483",
+      "Blob": "{\"Status\":\"Allowed with Restrictions\",\"Classification\":\"Crop Pest, Weed, and Disease Control\",\"FullCode\":\"nbl-5406\",\"Company\":\"Novozymes BioAg\",\"ManufacturerCode\":\"nbl\",\"Categories\":[\"Microbial Products\"],\"Restrictions\":[\"May only be used if the requirements of 205.206(e) are met, which require the use of preventive, mechanical, physical, and other pest, weed, and disease management practices.\"],\"Cautions\":[],\"Notations\":[],\"DateListed\":\"2014-12-22T00:00:00\",\"Expiration\":\"2027-09-01T00:00:00\"}",
+      "ArticleRevisionDate": null,
+      "AudienceTermIds": []
+    },
+    {
+      "@search.score": 2.0348413,
+      "Id": "product-67749-en",
+      "ContentType": "product",
+      "ContentTitle": "Novozymes Actinovate® SP Biological Fungicide",
+      "EnglishContentTitle": null,
+      "SpanishContentTitle": null,
+      "RulingBody": "COR",
+      "Class": ["CP"],
+      "Language": null,
+      "Status": "restricted",
+      "EntityId": "22762731",
+      "ManufacturerId": "3483",
+      "Blob": "{\"Status\":\"Allowed with Restrictions\",\"Classification\":\"Crop Pest, Weed, and Disease Control\",\"FullCode\":\"nbl-21131\",\"Company\":\"Novozymes BioAg\",\"ManufacturerCode\":\"nbl\",\"Categories\":[\"Microorganisms and Microbial Products\"],\"Restrictions\":[\"May only be used if the requirements of CAN/CGSB-32.310 subclause 5.6.2 are met, which require the use of organic management practices and mechanical techniques.\"],\"Cautions\":[],\"Notations\":[],\"DateListed\":\"2024-12-06T00:00:00\",\"Expiration\":\"2027-09-01T00:00:00\"}",
+      "ArticleRevisionDate": null,
+      "AudienceTermIds": []
+    },
+    {
+      "@search.score": 1.9760528,
+      "Id": "product-18373-en",
+      "ContentType": "product",
+      "ContentTitle": null,
+      "EnglishContentTitle": "Novozymes Actinovate® AG Biological Fungicide",
+      "SpanishContentTitle": null,
+      "RulingBody": "NOP",
+      "Class": ["CP"],
+      "Language": "en",
+      "Status": "restricted",
+      "EntityId": "22755402",
+      "ManufacturerId": "3483",
+      "Blob": "{\"Status\":\"Allowed with Restrictions\",\"Classification\":\"Crop Pest, Weed, and Disease Control\",\"FullCode\":\"nbl-5404\",\"Company\":\"Novozymes BioAg\",\"ManufacturerCode\":\"nbl\",\"Categories\":[\"Microbial Products\"],\"Restrictions\":[\"May only be used if the requirements of 205.206(e) are met, which require the use of preventive, mechanical, physical, and other pest, weed, and disease management practices.\"],\"Cautions\":[],\"Notations\":[],\"DateListed\":\"2014-12-22T00:00:00\",\"Expiration\":\"2027-09-01T00:00:00\"}",
+      "ArticleRevisionDate": null,
+      "AudienceTermIds": []
+    },
+    {
+      "@search.score": 1.3788952,
+      "Id": "product-7019-en",
+      "ContentType": "product",
+      "ContentTitle": null,
+      "EnglishContentTitle": "Novozymes Actinovate®  Lawn & Garden Biological Fungicide For Residential/Home and Garden Use",
+      "SpanishContentTitle": null,
+      "RulingBody": "NOP",
+      "Class": ["CP"],
+      "Language": "en",
+      "Status": "restricted",
+      "EntityId": "22754448",
+      "ManufacturerId": "3483",
+      "Blob": "{\"Status\":\"Allowed with Restrictions\",\"Classification\":\"Crop Pest, Weed, and Disease Control\",\"FullCode\":\"nbl-1522\",\"Company\":\"Novozymes BioAg\",\"ManufacturerCode\":\"nbl\",\"Categories\":[\"Microbial Products\"],\"Restrictions\":[\"May only be used if the requirements of 205.206(e) are met, which require the use of preventive, mechanical, physical, and other pest, weed, and disease management practices.\"],\"Cautions\":[],\"Notations\":[],\"DateListed\":\"2009-05-19T00:00:00\",\"Expiration\":\"2027-09-01T00:00:00\"}",
+      "ArticleRevisionDate": null,
+      "AudienceTermIds": []
+    },
+    {
+      "@search.score": 0.054122664,
+      "Id": "product-1306-en",
+      "ContentType": "product",
+      "ContentTitle": null,
+      "EnglishContentTitle": "Acadian Seaplants Dried Kelp",
+      "SpanishContentTitle": null,
+      "RulingBody": "NOP",
+      "Class": ["LF"],
+      "Language": "en",
+      "Status": "allowed",
+      "EntityId": "22754113",
+      "ManufacturerId": "424",
+      "Blob": "{\"Status\":\"Allowed\",\"Classification\":\"Livestock Feed Ingredients\",\"FullCode\":\"acd-9275\",\"Company\":\"Acadian Seaplants Limited\",\"ManufacturerCode\":\"acd\",\"Categories\":[\"Aquatic Plant Products\"],\"Restrictions\":[],\"Cautions\":[],\"Notations\":[],\"DateListed\":\"2002-04-22T00:00:00\",\"Expiration\":\"2026-12-01T00:00:00\"}",
+      "ArticleRevisionDate": null,
+      "AudienceTermIds": []
+    },
+    {
+      "@search.score": 0.03422307,
+      "Id": "product-14328-en",
+      "ContentType": "product",
+      "ContentTitle": null,
+      "EnglishContentTitle": "Acadian® Marine Plant Extract Powder 0.5 l 0.0 l 17",
+      "SpanishContentTitle": null,
+      "RulingBody": "NOP",
+      "Class": ["CF"],
+      "Language": "en",
+      "Status": "allowed",
+      "EntityId": "22754913",
+      "ManufacturerId": "424",
+      "Blob": "{\"Status\":\"Allowed\",\"Classification\":\"Crop Fertilizers and Soil Amendments\",\"FullCode\":\"acd-3420\",\"Company\":\"Acadian Seaplants Limited\",\"ManufacturerCode\":\"acd\",\"Categories\":[\"Aquatic Plant Products, synthetically extracted\"],\"Restrictions\":[],\"Cautions\":[],\"Notations\":[],\"DateListed\":\"2012-08-22T00:00:00\",\"Expiration\":\"2026-12-01T00:00:00\"}",
+      "ArticleRevisionDate": null,
+      "AudienceTermIds": []
+    }
+  ],
+  "resultsPerPage": 50
+}

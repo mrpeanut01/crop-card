@@ -12,9 +12,12 @@ async function expectNoOverflow(page: Page): Promise<void> {
 /** On a phone the banner folds its options behind one toggle (#679). */
 async function openDemoOptions(page: Page): Promise<void> {
   const toggle = page.getByTestId('demo-options-toggle');
-  if ((await toggle.isVisible()) && (await toggle.getAttribute('aria-expanded')) !== 'true') {
-    await toggle.click();
-  }
+  await page.waitForLoadState('load');
+  if (!(await toggle.isVisible())) return;
+  await expect(async () => {
+    if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true', { timeout: 500 });
+  }).toPass({ timeout: 10_000 });
 }
 
 /** The production sign-in mode: the demo must work without direct login. */
@@ -203,8 +206,7 @@ test.describe('demo farm from the sign-in page', () => {
     await expect(page.getByTestId('demo-reset')).toBeHidden();
     const toggle = page.getByTestId('demo-options-toggle');
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    await toggle.click();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await openDemoOptions(page);
     await expect(page.getByTestId('demo-reset')).toBeVisible();
     await expect(page.locator('.try summary svg').first()).toBeVisible();
   });

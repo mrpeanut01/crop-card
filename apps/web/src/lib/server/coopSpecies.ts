@@ -5,7 +5,7 @@ import { getDataKinds } from '$lib/server/registry';
 
 /** Species choices for the coop or pen form, in tile order, plus the
  *  onboarding answer used to prefill it. */
-export async function loadCoopSpecies(): Promise<{
+export async function loadCoopSpecies(locale?: string | null): Promise<{
   coopSpecies: CoopSpeciesOption[];
   farmAnimals: ReturnType<typeof getFarmAnimals>;
 }> {
@@ -14,6 +14,6 @@ export async function loadCoopSpecies(): Promise<{
   const coopSpecies = order
     .map((id) => species.get(id))
     .filter((p): p is NonNullable<typeof p> => !!p)
-    .map(coopSpeciesOption);
+    .map((p) => coopSpeciesOption(p, locale));
   return { coopSpecies, farmAnimals: getFarmAnimals() };
 }

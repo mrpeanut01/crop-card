@@ -209,8 +209,11 @@ export function layoutSketch(fields: SketchInput[], blocks: SketchBlockInput[]):
   };
 }
 
-export function formatFt(n: number, prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS): string {
-  return formatQuantity(n, 'distance', prefs, { digits: 0 });
+export function formatFt(
+  n: number,
+  prefs: Pick<Prefs, 'units' | 'locale'> = DEFAULT_PREFS
+): string {
+  return formatQuantity(n, 'distance', prefs, { digits: 0, locale: prefs.locale });
 }
 
 /** Fills `acres` from width × length when a patch sets both and leaves acres out. */

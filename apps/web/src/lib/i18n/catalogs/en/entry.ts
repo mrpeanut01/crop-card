@@ -851,5 +851,11 @@ export const enEntry = {
   'entry.layout.impersonatingThisOwner': 'this Owner',
   'entry.layout.exitImpersonation': 'Exit impersonation',
   'entry.land.smsConsentTranslation':
-    'CropCard will text you a sign-in code. Message and data rates may apply. Reply STOP to opt out, HELP for help.'
+    'CropCard will text you a sign-in code. Message and data rates may apply. Reply STOP to opt out, HELP for help.',
+  'onboard.starter.kitchenGarden': 'Kitchen Garden',
+  'onboard.starter.homeField': 'Home Field',
+  'onboard.starter.hayfield': 'Hayfield',
+  'onboard.starter.highTunnel': 'High Tunnel',
+  'onboard.starter.barn': 'Barn',
+  'onboard.starter.chickenCoop': 'Chicken Coop'
 } as const;

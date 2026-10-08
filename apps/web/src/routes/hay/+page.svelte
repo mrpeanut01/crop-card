@@ -5,6 +5,7 @@
   import { untrack } from 'svelte';
   import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
+  import { forecastWords } from '$lib/today/forecastText';
   import { grazingTimeHref } from '$lib/animals/holdCopy';
   import HoldVoidPanel from '$lib/components/records/HoldVoidPanel.svelte';
   import HayForageSection from '$lib/components/forage/HayForageSection.svelte';
@@ -363,13 +364,14 @@
         </thead>
         <tbody>
           {#each forecast.slice(0, 5) as d (d.date)}
+            {@const words = forecastWords(d.shortForecast, data.locale)}
             <tr class:wet={d.popPct > 30}>
               <td>{fmt.day(d.date, 'date', { weekday: 'short' })}</td>
               <td>{fmt.qty(d.highF, 'temperature', { bare: true })}</td>
               <td>{fmt.qty(d.lowF, 'temperature', { bare: true })}</td>
               <td>{d.popPct}%</td>
               <td>{d.windMph !== undefined ? fmt.qty(d.windMph, 'speed') : '—'}</td>
-              <td>{d.shortForecast ?? ''}</td>
+              <td lang={words?.lang ?? undefined}>{words?.text ?? ''}</td>
             </tr>
           {/each}
         </tbody>

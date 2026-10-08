@@ -1,0 +1,89 @@
+{
+  "content_versions": [
+    {
+      "date": "2016-12-20",
+      "amendment_date": "2016-12-20",
+      "issue_date": "2016-12-20",
+      "identifier": "301.2",
+      "name": "§ 301.2   Definitions.",
+      "part": "301",
+      "substantive": true,
+      "removed": false,
+      "subpart": null,
+      "title": "9",
+      "type": "section"
+    },
+    {
+      "date": "2018-05-31",
+      "amendment_date": "2018-05-31",
+      "issue_date": "2018-05-31",
+      "identifier": "301.2",
+      "name": "§ 301.2   Definitions.",
+      "part": "301",
+      "substantive": true,
+      "removed": false,
+      "subpart": null,
+      "title": "9",
+      "type": "section"
+    },
+    {
+      "date": "2018-07-30",
+      "amendment_date": "2018-07-30",
+      "issue_date": "2018-07-30",
+      "identifier": "301.2",
+      "name": "§ 301.2   Definitions.",
+      "part": "301",
+      "substantive": true,
+      "removed": false,
+      "subpart": null,
+      "title": "9",
+      "type": "section"
+    },
+    {
+      "date": "2018-07-30",
+      "amendment_date": "2018-07-30",
+      "issue_date": "2019-01-14",
+      "identifier": "301.2",
+      "name": "§ 301.2   Definitions.",
+      "part": "301",
+      "substantive": false,
+      "removed": false,
+      "subpart": null,
+      "title": "9",
+      "type": "section"
+    },
+    {
+      "date": "2019-10-01",
+      "amendment_date": "2019-10-01",
+      "issue_date": "2019-10-01",
+      "identifier": "301.2",
+      "name": "§ 301.2   Definitions.",
+      "part": "301",
+      "substantive": true,
+      "removed": false,
+      "subpart": null,
+      "title": "9",
+      "type": "section"
+    },
+    {
+      "date": "2019-12-02",
+      "amendment_date": "2019-12-02",
+      "issue_date": "2019-12-02",
+      "identifier": "301.2",
+      "name": "§ 301.2   Definitions.",
+      "part": "301",
+      "substantive": true,
+      "removed": false,
+      "subpart": null,
+      "title": "9",
+      "type": "section"
+    }
+  ],
+  "meta": {
+    "title": "9",
+    "part": "301",
+    "result_count": "7",
+    "latest_amendment_date": "2019-12-02",
+    "latest_issue_date": "2019-12-02"
+  }
+}

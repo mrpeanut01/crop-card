@@ -1,0 +1,88 @@
+name: source-drift
+
+# Flags label and source drift for review; never changes data. Runs
+# apps/web/scripts/check-source-drift.mjs against every *-sources.json file:
+# newer stamped EPA labels, cancelled or transferred registrations (PPLS),
+# expiring OMRI listings, amended CFR sections (eCFR) and changed .edu/.gov
+# pages (source-fingerprints.json). Findings go into one rolling issue,
+# "Label and source drift", labelled needs-research, worked with
+# docs/research/source-refresh-prompt.md. Ticked items stay ticked across
+# runs; the issue closes itself once nothing is open. A run with nothing to
+# report and no open issue does nothing. Like orchard-calendar-reminder.yml
+# it only reads the repo and writes issues.
+#
+# Weekly: PPLS, OMRI, eCFR and pages. Monthly (the 1st): --verify-quotes
+# re-downloads every quoted PDF and checks each quote is still in it word for
+# word. A source that does not answer is listed as "could not check", never as
+# no change; when a whole service is unreachable the run warns.
+on:
+  schedule:
+    - cron: "17 11 * * 1"
+    - cron: "41 11 1 * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Which check to run
+        type: choice
+        options: [weekly, verify-quotes]
+        default: weekly
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-drift
+  cancel-in-progress: false
+
+jobs:
+  weekly:
+    if: (github.event_name == 'schedule' && github.event.schedule == '17 11 * * 1') || (github.event_name == 'workflow_dispatch' && inputs.mode == 'weekly')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Install pdftotext (reads a changed PDF page's quotes)
+        run: sudo apt-get update -q && sudo apt-get install -y -q poppler-utils
+      - name: Check sources and update the drift issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node apps/web/scripts/check-source-drift.mjs --publish --json drift-report.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: source-drift-report
+          path: drift-report.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+  verify-quotes:
+    if: (github.event_name == 'schedule' && github.event.schedule == '41 11 1 * *') || (github.event_name == 'workflow_dispatch' && inputs.mode == 'verify-quotes')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Install pdftotext
+        run: sudo apt-get update -q && sudo apt-get install -y -q poppler-utils
+      - name: Check every quote against its PDF and update the drift issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node apps/web/scripts/check-source-drift.mjs --verify-quotes --publish --json quote-report.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: source-drift-quotes-report
+          path: quote-report.json
+          if-no-files-found: ignore
+          retention-days: 30

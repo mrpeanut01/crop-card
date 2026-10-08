@@ -1,0 +1,234 @@
+{
+  "items": [
+    {
+      "eparegno": "100-497",
+      "productname": "AATREX 4L HERBICIDE",
+      "registereddate": null,
+      "cancel_flag": "No",
+      "cancellationreason": null,
+      "product_status": "Active",
+      "product_status_date": "December 31, 1969",
+      "signal_word": "Caution",
+      "rup_yn": "Yes",
+      "formulations": [
+        {
+          "formulation": "Emulsifiable Concentrate"
+        }
+      ],
+      "active_ingredients": [
+        {
+          "pc_code": "080803",
+          "active_ing": "Atrazine",
+          "cas_number": "1912-24-9",
+          "active_ing_percent": 42.6
+        }
+      ],
+      "inactive_brand_names": [],
+      "transfer_flag": "No",
+      "transfer_history": [],
+      "pdffiles": [
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-20240708.pdf",
+          "pdffile_accepted_date": "July 8, 2024"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-20211110.pdf",
+          "pdffile_accepted_date": "November 10, 2021"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-20121121.pdf",
+          "pdffile_accepted_date": "November 21, 2012"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-20090501.pdf",
+          "pdffile_accepted_date": "May 1, 2009"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-20060110.pdf",
+          "pdffile_accepted_date": "January 10, 2006"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-20050718.pdf",
+          "pdffile_accepted_date": "July 18, 2005"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-20040914.pdf",
+          "pdffile_accepted_date": "September 14, 2004"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-20040811.pdf",
+          "pdffile_accepted_date": "August 11, 2004"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-20031006.pdf",
+          "pdffile_accepted_date": "October 6, 2003"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-20010316.pdf",
+          "pdffile_accepted_date": "March 16, 2001"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-20000928.pdf",
+          "pdffile_accepted_date": "September 28, 2000"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-20000731.pdf",
+          "pdffile_accepted_date": "July 31, 2000"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19980821.pdf",
+          "pdffile_accepted_date": "August 21, 1998"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19980521.pdf",
+          "pdffile_accepted_date": "May 21, 1998"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19970725.pdf",
+          "pdffile_accepted_date": "July 25, 1997"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19970319.pdf",
+          "pdffile_accepted_date": "March 19, 1997"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19940715.pdf",
+          "pdffile_accepted_date": "July 15, 1994"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19940601.pdf",
+          "pdffile_accepted_date": "June 1, 1994"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19930706.pdf",
+          "pdffile_accepted_date": "July 6, 1993"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19921125.pdf",
+          "pdffile_accepted_date": "November 25, 1992"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19920617.pdf",
+          "pdffile_accepted_date": "June 17, 1992"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19900808.pdf",
+          "pdffile_accepted_date": "August 8, 1990"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19900223.pdf",
+          "pdffile_accepted_date": "February 23, 1990"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19870109.pdf",
+          "pdffile_accepted_date": "January 9, 1987"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19861015.pdf",
+          "pdffile_accepted_date": "October 15, 1986"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19860610.pdf",
+          "pdffile_accepted_date": "June 10, 1986"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19860327.pdf",
+          "pdffile_accepted_date": "March 27, 1986"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19860320.pdf",
+          "pdffile_accepted_date": "March 20, 1986"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19851104.pdf",
+          "pdffile_accepted_date": "November 4, 1985"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19850412.pdf",
+          "pdffile_accepted_date": "April 12, 1985"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19850313.pdf",
+          "pdffile_accepted_date": "March 13, 1985"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19840816.pdf",
+          "pdffile_accepted_date": "August 16, 1984"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19840606.pdf",
+          "pdffile_accepted_date": "June 6, 1984"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19840327.pdf",
+          "pdffile_accepted_date": "March 27, 1984"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19831213.pdf",
+          "pdffile_accepted_date": "December 13, 1983"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19820916.pdf",
+          "pdffile_accepted_date": "September 16, 1982"
+        },
+        {
+          "epa_reg_num": "100-497",
+          "pdffile": "000100-00497-19820309.pdf",
+          "pdffile_accepted_date": "March 9, 1982"
+        }
+      ],
+      "altbrandnames": [
+        {
+          "altbrandname": "AATREX 4LC"
+        },
+        {
+          "altbrandname": "AATREX 4LC (FOR COMMERCIAL APPLICATIONS ONLY)"
+        },
+        {
+          "altbrandname": "ATRAZINE 4L HERBICIDE"
+        }
+      ],
+      "types": [
+        {
+          "type": "HERBICIDE TERRESTRIAL"
+        }
+      ]
+    }
+  ]
+}

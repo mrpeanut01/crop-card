@@ -1,0 +1,2137 @@
+{
+  "$comment": "Baseline for apps/web/scripts/check-source-drift.mjs (.github/workflows/source-drift.yml). pages: one fingerprint per cited .edu or .gov URL other than PPLS labels and eCFR (HTTP status, Last-Modified, ETag, and a sha256 of the page text, or of the bytes for a PDF); refresh one after a reviewer confirmed its quotes with --only pages --update-fingerprints --url <url>. acknowledged: finding ids that need no data change, each with a reason a reviewer can check; an id names the state seen, so a later change shows up again. Never edit by hand to hide drift; see docs/research/source-refresh-prompt.md.",
+  "acknowledged": {},
+  "pages": {
+    "http://www.gardening.cornell.edu/homegardening/scene05f6.html": {
+      "status": 200,
+      "lastModified": "Sat, 06 Aug 2016 14:59:37 GMT",
+      "etag": null,
+      "hash": "sha256:67ec87b78a05acfb7457d7522eefcf8da2442a699fccfa54574f7cecc67445a1",
+      "checkedOn": "2026-10-08"
+    },
+    "https://agresearch.montana.edu/warc/research_current/research_past/herbsandoils/chamomile.html": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:c542a1332aeb3078ccd5ec19d53f9214fa32458c998ef860981627310f526622",
+      "checkedOn": "2026-10-08"
+    },
+    "https://blogs.cornell.edu/hightunnels/flowers/cut-flowers/cut-flower-crops/sweet-pea/": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:1d5d7db01b676ca6d2b29debbf219558112795dddfe00944268a6d79bc3af95b",
+      "checkedOn": "2026-10-08"
+    },
+    "https://blogs.ifas.ufl.edu/charlotteco/2020/06/04/yard-long-beans-plus-or-minus-thirty-six-inches/": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 17:51:34 GMT",
+      "etag": null,
+      "hash": "sha256:1bbcaf9467b373390a2b0d6d6f847a21ce95206148f864129fb3af92324caa4e",
+      "checkedOn": "2026-10-08"
+    },
+    "https://bookstore.ksre.ksu.edu/pubs/MF3040.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 02 May 2024 14:36:53 GMT",
+      "etag": null,
+      "hash": "sha256:cb881c3ec7a3c16f7e945890ecdecb0470d746a3279db64bf03bb741225098db",
+      "checkedOn": "2026-10-08"
+    },
+    "https://bookstore.ksre.ksu.edu/pubs/MF3607.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 02 May 2024 14:49:21 GMT",
+      "etag": null,
+      "hash": "sha256:a89e86ed2b39ab905f14719cfec23347fa9cf565af3b175b2bdfc93d0c9807ab",
+      "checkedOn": "2026-10-08"
+    },
+    "https://caldwell.ces.ncsu.edu/2020/07/herbicide-damage-in-the-garden": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:ae70873ffaebbc8d2784449d5f21478aa5f20a6c75a1f5031fb2d1a9ac6d65ff",
+      "checkedOn": "2026-10-08"
+    },
+    "https://carroll.ext.vt.edu/content/dam/carroll_ext_vt_edu/teutsch_nitrates_prussic_acid_forages_09aug2010.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 04 May 2017 20:28:32 GMT",
+      "etag": "\"1f4e1-54eb89dcd9c00\"",
+      "hash": "sha256:0ac9e6abf89e00d5ba5bb20f6a72c36754c487b309ce79ab6c75efde7a1bad5b",
+      "checkedOn": "2026-10-08"
+    },
+    "https://ccd.uky.edu/sites/default/files/2024-11/ccd-cp-055_stevia.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 14 Nov 2024 19:14:38 GMT",
+      "etag": "\"c0c80-626e44302485b\"",
+      "hash": "sha256:57398cb0a0c904f7f616aa9537ca3374535a6f22cf7b97e6bfa3599931ebb222",
+      "checkedOn": "2026-10-08"
+    },
+    "https://ccfruitandnuts.ucanr.edu/sites/default/files/2012-03/139130.pdf": {
+      "status": 200,
+      "lastModified": "Sun, 16 Feb 2025 12:00:05 GMT",
+      "etag": "\"67b1d345-50d51\"",
+      "hash": "sha256:6225e98a24469fbadbc373feb1a3aeff68b010f39bb536a1de97a27827f81d50",
+      "checkedOn": "2026-10-08"
+    },
+    "https://class.ucanr.edu/sites/default/files/2011-05/91525.pdf": {
+      "status": 200,
+      "lastModified": "Sun, 16 Feb 2025 09:26:05 GMT",
+      "etag": "\"67b1af2d-24f69\"",
+      "hash": "sha256:8dd2f5a242651cc813a7a7816be8d3e07d5561b5f907fb12fba11203aa714828",
+      "checkedOn": "2026-10-08"
+    },
+    "https://cms.ctahr.hawaii.edu/soap/Resources/Sustainable-and-Organic-Topics/Tropic-Sun-sunn-hemp": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "checkedOn": "2026-10-08"
+    },
+    "https://content.ces.ncsu.edu/central-north-carolina-planting-calendar-for-annual-vegetables-fruits-and-herbs": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:b6dcd809f03c45edddf7a39963d9da0a4be199ed21d2640e5f32e7bc12fd81f6",
+      "checkedOn": "2026-10-08"
+    },
+    "https://content.ces.ncsu.edu/cultivation-of-ramps-allium-tricoccum-and-a-burdickii": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:0afb8549189b5ad4c77c02b8a94bcbaa13c20bcc693150b43f314b27538e1c93",
+      "checkedOn": "2026-10-08"
+    },
+    "https://content.ces.ncsu.edu/extension-gardener-handbook/15-tree-fruit-and-nuts": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:ebf475d772dabfc84839718bc05a2ad512f0cb2c583419930953d75a47c3e673",
+      "checkedOn": "2026-10-08"
+    },
+    "https://content.ces.ncsu.edu/harvesting-and-postharvest-management": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:75c96eaec7d63c56c776858e66fc1d5a6df9e853cccef27583dd63a43c9da1fb",
+      "checkedOn": "2026-10-08"
+    },
+    "https://content.ces.ncsu.edu/home-vegetable-gardening-a-quick-reference-guide": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:6a4c2001b7ad195e73f4c4f949bb5ec5e0de297edb5487d6510aafa38c8efaa9",
+      "checkedOn": "2026-10-08"
+    },
+    "https://content.ces.ncsu.edu/soybean-planting-decisions": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:6846db680470a078d65d5db012ec0d915824016dc023b11ef2b1a184128c9b6c",
+      "checkedOn": "2026-10-08"
+    },
+    "https://content.ces.ncsu.edu/tarnished-plant-bug-in-strawberries": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:d48f91334b85056f1515787d237193b43133893b594424302556835630d0b0d0",
+      "checkedOn": "2026-10-08"
+    },
+    "https://crops.extension.iastate.edu/post/frosted-forages-and-fall-risks-managing-prussic-acid-and-bloat-grazing-systems": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:58:41 GMT",
+      "etag": "\"1791485921-gzip\"",
+      "hash": "sha256:635224595986d000fa0a621620d60860aa5684b59061010d89cef6c3e4d03703",
+      "checkedOn": "2026-10-08"
+    },
+    "https://cropwatch.unl.edu/2019/forage-hazards-following-freeze-event": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 17:58:05 GMT",
+      "etag": "W/\"1791482285\"",
+      "hash": "sha256:9d3076b0553685c4f4bb90e4dcff89c6b353b42adc6356cbb2be3393bfbe4c99",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=152cde64-ff22-4a3e-bb78-65e159dbe6b6": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:bac7b43288b63cc113880cf537c21022fe19f49f551d42bc493f4c32bed1d353",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=42685f13-73db-413b-bc6e-43431f098f8e": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:7d49cde9b7545eb3537691bb3ac77e4c23c1e290043470f76a7657e5f1d1ab4b",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=50ce5909-7c1a-49f7-bdae-c0c65acc4f23": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:2b8ac3599a035efd3cbab95409f1172a1330477d6de5e4d4006b0f94710a8c2a",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=67eefc16-33e8-422a-a677-dbd0f09b69a4": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:498a5db8ab40c3a654913d3052286cb1975b3805fc6992618d83d776b0fca75b",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=7cf8669c-c000-4645-962e-891946c0e54b": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:744a1b6153610cf630812fa5c9f928d94b70a7ef85c6d82adf0157a244f8d8a3",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=831141f7-9458-4de5-9ddc-d183e220fbb7": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:d2576990e7faf4e91646da88f5d4a2d0290430db983f6c237826d20ea8526692",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=84fe39b2-0423-479a-b81f-198e2fb4e826": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:78639f30e0ca5833173c14bfaaab53403df94c39891091aa17a8128b99dde7d8",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=9188886a-54bc-4c68-9f1d-37a20e031076": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:36f1ff04a03f245aa48437a3299d56c0289843231b7fec6567cdf25d5922d689",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=933980d5-8495-4ff3-b543-349b5994626f": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:28dae00800634f340ca75b5ad170fd4e2271af1ad80ce32f4c8733d4ee4a38da",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=94cf5818-f27d-4374-87ad-54a2d9ce6ef1": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:8bd91d62f525aedcfa5dd39a32971e874dc68a784ba6ff5eb7da0acc933abe95",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=a3ee24dc-527f-4880-a55e-acd33b833192": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:297dc77b1ec5ee4a656ba4790b56209d62f772427ed6250a12b27295eecfb181",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=aa2d9a4d-a442-4d1c-a7bd-17b09d8ab718": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:c58e0ee8fba4abdc0c874d86ca4482da6c2bfe8d02d8c04de14296879456d865",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=ad81f5cd-f4c8-4310-b87e-7dacbcc181f6": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:fa630b3762a9a1957782c485ff2aae543eb51dd360224e6896f13123e98cd8a8",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=b9b31948-0fad-4666-bba3-d31e1c38779e": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:2c63b215e801bb03c32045bc74c7da0fcd4d156cc6c38e3e4d0cc023f3cd5f1e",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=baf0da35-573e-4abb-bdef-18870d5f5f72": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:e3f06a701b05fc63ae93e64480eea8a5bb02cb1494d9fb619c45d06ac883fe05",
+      "checkedOn": "2026-10-08"
+    },
+    "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=f542114b-d049-4921-96a4-4047ecc07e13": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:a3955953f315a1567d88f1a5401d8ffff95d2df65abcdeb61f8692b0a0e33910",
+      "checkedOn": "2026-10-08"
+    },
+    "https://ecommons.cornell.edu/server/api/core/bitstreams/317dc529-3265-4f8c-87a2-473c2e3e790b/content": {
+      "status": 200,
+      "lastModified": "Wed, 21 Jan 2026 15:56:27 GMT",
+      "etag": "W/\"e44270368fc7516c98ebedee68fb71ea\"",
+      "hash": "sha256:41524f64c8a488a9f1e44f2d5334aa2a5b55ed4b0264bf43250261d5b063e065",
+      "checkedOn": "2026-10-08"
+    },
+    "https://ecommons.cornell.edu/server/api/core/bitstreams/7e177801-b193-4487-b604-a0b1b9f2e18a/content": {
+      "status": 200,
+      "lastModified": "Wed, 21 Jan 2026 16:50:48 GMT",
+      "etag": "W/\"d5e3e351da96bf1c315cc143f1bdb123\"",
+      "hash": "sha256:3355e6978c165f9bbeb582b39cbf35bafe71e2dca896bf6df90e1eff66a9b14e",
+      "offPage": [
+        "currant-red-lake.daysToMaturity.url",
+        "grape-cabernet-franc.daysToMaturity.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://edis.ifas.ufl.edu/publication/HS132": {
+      "status": 200,
+      "lastModified": null,
+      "etag": "\"23f0mwccrj2bec\"",
+      "hash": "sha256:4b3c4b6ca6c907978851c3ea4e3bded49005a52804b45e58c42bcde3d28f82e8",
+      "checkedOn": "2026-10-08"
+    },
+    "https://edis.ifas.ufl.edu/publication/HS1407/pdf": {
+      "status": 200,
+      "lastModified": null,
+      "etag": "W/\"114595-S2HoQJ4c/++NHtBu4b8Y+fl1FpE\"",
+      "hash": "sha256:47baf35f92b3f879cbe7999d0810be95fc417fd9b27fea175af8c80e31658134",
+      "checkedOn": "2026-10-08"
+    },
+    "https://edis.ifas.ufl.edu/publication/HS1435": {
+      "status": 200,
+      "lastModified": null,
+      "etag": "\"ogm51skzog26ir\"",
+      "hash": "sha256:909faaa1482b0d2a69ef39c713b20f10300544a3080637afb381d5795c11092f",
+      "checkedOn": "2026-10-08"
+    },
+    "https://edis.ifas.ufl.edu/publication/NG043": {
+      "status": 200,
+      "lastModified": null,
+      "etag": "\"13zvl9ke7kx2pa6\"",
+      "hash": "sha256:9eb394e68879bb58d4349f15afa1a5c3bfdcc096dc111b0bf5b7bde05ffaf9df",
+      "checkedOn": "2026-10-08"
+    },
+    "https://efotg.sc.egov.usda.gov/api/CPSFile/54221/340_PA_PS_Cover_Crop_2025_pdf": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:b42ebc7f856b5a98241f6b9a5a5dc3174f8a39158cc2043d00efaad12e6caa33",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension-store.montana.edu/montguides/how-to-prevent-non-target-injury-of-broadleaf-crops-and-vegetables-by-residual-herbicides": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:6722d7d6bbcefc42db2a11e883e8c38d429099e5e699dd794c8a7593ca371919",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.colostate.edu/resource/nitrate-poisoning/": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:abafe7f945ed6c678183c57649c43c7220563a0a0c8463690cda739136aa1f5f",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.colostate.edu/topic-areas/yard-garden/currants-gooseberries-and-jostaberries-7-005/": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:e80713389919a93bae798055be16ace5a7bf33d5e120e3cf29407c64b3ce1515",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.illinois.edu/media/8828/download": {
+      "status": 200,
+      "lastModified": "Tue, 17 Mar 2026 22:26:46 GMT",
+      "etag": null,
+      "hash": "sha256:7e7165e15c4d5fe97c65a25259468a6e067c14a947f8438b6ad330924fe3f0ae",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.msstate.edu/publications/snapdragon-antirrhinum-majus-for-the-farmer-florist": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:55d412fb8eed973d1ad8a6fe898152df259c5d51d459e513dc94517f7b2249a6",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.msstate.edu/publications/zinnias-zinnia-elegans-for-the-farmer-florist": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:fed08cbf373690128d3b8d2495b772cacebde93c3e4c528c455caa07d0d68f03",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.oregonstate.edu/news/sweet-peas-add-color-fragrance-oregon-gardens": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:32:44 GMT",
+      "etag": null,
+      "hash": "sha256:1aa00d5fd6fe7d1e093cd32d1c35e81430b275bc72d6bd7c74e1025a40336430",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.oregonstate.edu/node/210886": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:42:03 GMT",
+      "etag": null,
+      "hash": "sha256:bce6cd6ee653b21a61100e4b3f6c4aa8f05761788c559b5c4b5b9a9cee0a0c72",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.oregonstate.edu/sites/default/files/documents/em9077.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 20 Dec 2024 01:23:28 GMT",
+      "etag": null,
+      "hash": "sha256:6a40717fc2733f9ef2cdbdb0eef858fd7db02bfb7ac423e51e09f4a0847bed61",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.oregonstate.edu/sites/default/files/documents/em9307.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 20 Dec 2024 01:23:53 GMT",
+      "etag": null,
+      "hash": "sha256:485d7d66c3796f3a3b81777c9f48e149de4ba58eb0c18aff208aefcbdcd89d04",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.psu.edu/cereal-rye-as-a-cover-crop": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:ebc42f08068f3e17c94ab8a496a9ecd9701a805bf261eeb7d770146a955de078",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.psu.edu/elderberry-in-the-garden-and-the-kitchen": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:be9034ba01213c4507a414ce2d153cf12e30971332f439fb2863ef8883c1c926",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.psu.edu/home-fruit-plantings-gooseberries-and-currants": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:982b174c66b3fdb40dad744229bdb6d14a5bdf1f958240d7eaee7bf7399c75a8",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.psu.edu/programs/master-gardener/counties/york/vegetable-guides/vegetable-seed-planting-guide/@@download/file/Vegetable-Seed-Planting-Guide.pdf": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:6c3ba84022920b53e35e4d32d6f90a2b53d1de0b37381631a4cbb3b1c64dd8f9",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.psu.edu/shoot-thinning-considerations-in-bunch-grape-vineyards": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:ae64815f1d069be817989e7e2251ea2cba0f2ac81ffaf07dee0b12da09887981",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.sdstate.edu/sites/default/files/2021-08/P-00205-04.pdf": {
+      "status": 200,
+      "lastModified": "Tue, 19 Aug 2025 15:31:53 GMT",
+      "etag": "\"68a498e9-2c6c6\"",
+      "hash": "sha256:888349a7598f6baf4350a6ea6ac0afd11967730524b2a7a70ed6eaac6f157151",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/basil": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:18:01 GMT",
+      "etag": "\"1791483481-gzip\"",
+      "hash": "sha256:a9713c8cdcadac75bb84c5a5357c044ff79db97a55c0267054a464fc03a0655f",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/chives": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:43 GMT",
+      "etag": "\"1791484903-gzip\"",
+      "hash": "sha256:10e39b6fa6dc92e87b5cc55597d3c04d4a02b38b856faa900ab53b6d09b2bbc3",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/cover-crops-gardens": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:10:30 GMT",
+      "etag": "\"1791483030-gzip\"",
+      "hash": "sha256:adabfa9831534dbab46762910e4b8c5151ffc0d6d077478efceb54eaa35fd9fe",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/growing-lettuce-home-garden": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:40 GMT",
+      "etag": "\"1791484900-gzip\"",
+      "hash": "sha256:ec5c69b1e655c400a033ab535d675ab81b571035bc4ab233d5ca3e60de9f8357",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/growing-pumpkins-home-garden": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:13:16 GMT",
+      "etag": "\"1791483196-gzip\"",
+      "hash": "sha256:1586b2b0112ae61cf3300f21375c01f11ab6039cf4ba061440a9d685223c9e98",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/growing-radishes-home-garden": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:09:04 GMT",
+      "etag": "\"1791482944-gzip\"",
+      "hash": "sha256:7fd9026e94aae6f7f0cd1632af1335c765f4fb982724ffe9cd94a3e024d99cd6",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/growing-raspberries-and-blackberries-home-garden": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:12:13 GMT",
+      "etag": "\"1791483133-gzip\"",
+      "hash": "sha256:e404f0376856768c0da7cd9f5516ecdf34d3b4e0a87f148705c7294fb50aeb2f",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/growing-strawberries-home-garden": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:09:01 GMT",
+      "etag": "\"1791482941-gzip\"",
+      "hash": "sha256:6c7ba52d54c2306f3a6d605b4a0683e80edb5c380f1af6a9a63e38eb5e22120a",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/hardening-vegetable-seedlings-home-garden": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:18:04 GMT",
+      "etag": "\"1791483484-gzip\"",
+      "hash": "sha256:b2b79337d25fce1d854742f39ba54ba5de66a56d77d3c5b12d5543990e070b8e",
+      "offPage": [
+        "broccoli-arcadia-f1.hardenOffDays.url",
+        "broccoli-de-cicco.hardenOffDays.url",
+        "broccoli-romanesco.hardenOffDays.url",
+        "cabbage-early-jersey-wakefield.hardenOffDays.url",
+        "cabbage-pointed-caraflex.hardenOffDays.url",
+        "cabbage-red-acre.hardenOffDays.url",
+        "cabbage-savoy-king.hardenOffDays.url",
+        "cabbage-storage-no-4-f1.hardenOffDays.url",
+        "cauliflower-cheddar-f1.hardenOffDays.url",
+        "cauliflower-snowball-y.hardenOffDays.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/marjoram-sweet": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:13:49 GMT",
+      "etag": "\"1791483229-gzip\"",
+      "hash": "sha256:a8d0e2eb748e0c3f16e03532648830010b877853068613436dbff451e0932d1f",
+      "offPage": [
+        "marjoram-sweet.rowSpacingIn.url",
+        "marjoram-sweet.inRowSpacingIn.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/nasturtium": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:05:37 GMT",
+      "etag": "\"1791482737-gzip\"",
+      "hash": "sha256:50742e47068ddb39e831665dcd213e521d411b7e534a5452a8197e325b72fbd5",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/no-till-spring-vegetables-after-forage-radish-cover-crop": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:19:49 GMT",
+      "etag": "\"1791483589-gzip\"",
+      "hash": "sha256:53945fe2a3b6ad803f472e08837596175dc9ce20509d7e94b58d6d6357edd3d5",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/onions": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:16:07 GMT",
+      "etag": "\"1791483367-gzip\"",
+      "hash": "sha256:40da7a390f96f20106e63c459b9ea0067632bd6dd1d3cdf8244c63a67535bf97",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/optimizing-corn-silage-planting-decisions-0": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:43 GMT",
+      "etag": "\"1791484903-gzip\"",
+      "hash": "sha256:af69ef0f6097a7f3debc9e31f6b8d92c65369d654a421ad4476cdfd3dcf4c64d",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/squash-vine-borer-vegetables": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:17:35 GMT",
+      "etag": "\"1791483455-gzip\"",
+      "hash": "sha256:56bfc27d9795fcfb6d3fdf2be228b0f4595a074788f6370d5784983e90b73d2f",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/resource/starting-vegetable-seeds-indoors": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:12:24 GMT",
+      "etag": "\"1791483144-gzip\"",
+      "hash": "sha256:6c4f34a000e98fafa76c55ff24cc81f01132645336a372779a7fcfe6c7b89e29",
+      "offPage": [
+        "broccoli-arcadia-f1.startIndoorsWeeks.url",
+        "broccoli-de-cicco.startIndoorsWeeks.url",
+        "broccoli-romanesco.startIndoorsWeeks.url",
+        "cabbage-early-jersey-wakefield.startIndoorsWeeks.url",
+        "cabbage-pointed-caraflex.startIndoorsWeeks.url",
+        "cabbage-red-acre.startIndoorsWeeks.url",
+        "cabbage-savoy-king.startIndoorsWeeks.url",
+        "cabbage-storage-no-4-f1.startIndoorsWeeks.url",
+        "cauliflower-cheddar-f1.startIndoorsWeeks.url",
+        "cauliflower-snowball-y.startIndoorsWeeks.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/sites/extension.umd.edu/files/2026-02/Parsnips.pdf": {
+      "status": 200,
+      "lastModified": "Mon, 23 Feb 2026 16:18:29 GMT",
+      "etag": null,
+      "hash": "sha256:8914764b5466893398eb9b7d4475c9f932573564eea8ca7babb94e1cc4e59e17",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umd.edu/sites/extension.umd.edu/files/publications/Hops%20in%20Maryland%20FS%201091.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 01 Jan 1970 00:00:00 GMT",
+      "etag": null,
+      "hash": "sha256:83ec773385b96f5ec5685ee3fd20bf00c221d6a86347384090fa0c3d4101b14b",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umn.edu/strawberry-farming/protect-strawberries-spring-freeze-and-frost": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:51 GMT",
+      "etag": null,
+      "hash": "sha256:a65a41101bc6d433cefce0d1a7922e9ebc34a27267c4f41b779276f2fab63650",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umn.edu/vegetables/growing-beans": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 17:05:10 GMT",
+      "etag": null,
+      "hash": "sha256:a35dda60571ec092e24a19b852c69b9eeba8af3da091c56e4a61fec50247ae7b",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umn.edu/vegetables/growing-cucumbers": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 17:09:04 GMT",
+      "etag": null,
+      "hash": "sha256:bc2b82b8b35d7ca7d17cc69cb578f30049953de6ad6692fbd60787b084e49d4b",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umn.edu/vegetables/growing-garlic": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 17:06:16 GMT",
+      "etag": null,
+      "hash": "sha256:13b63eebd4dea9082d3e3502caeeae8398044f58879c1e9cc7d266efd0c3c5cb",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umn.edu/vegetables/growing-onions": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 17:08:06 GMT",
+      "etag": null,
+      "hash": "sha256:80015e5a58c2d67491e1795aa7cd557f7af51c35123b38ae5bc4045297d529c4",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umn.edu/vegetables/growing-tomatillos-and-ground-cherries": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 17:12:45 GMT",
+      "etag": null,
+      "hash": "sha256:57d373305ba3dac5ae0c3d219e1c9158ebc514bcf6950dd11e5d063a82828319",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umn.edu/vegetables/growing-tomatoes": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 17:05:17 GMT",
+      "etag": null,
+      "hash": "sha256:7e71bc4191bffc2819639162ff802c950143e640cfefadf1b8b613edfaf2d600",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umn.edu/yard-and-garden-insects/flea-beetles": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 17:02:06 GMT",
+      "etag": null,
+      "hash": "sha256:da84468617886d5caafbf346b405549321b6d47261074ad9d7b72d4d04528e81",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.umn.edu/yard-and-garden/growing-herbs": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 17:11:23 GMT",
+      "etag": null,
+      "hash": "sha256:ecc6a1c8af4814c4a3d69b7df8cb2a730b881197218666832535c52bd161620f",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.unh.edu/blog/2019/05/tomato-troubles-cultural-practices-combat-insects-diseases": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:f032fef2702eb632694c970afdf18e565ea91383c1f630f31e3841b6244b721c",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/productionhort/research/strawflower-cut-flower-production-in-utah": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:3bb37f76240e0d6a9ba95b4e4b9f27f309bfb29634b5ad0a1a675d3680cadb59",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/productionhort/research/sunflower-cut-flower-production-in-utah": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:e12807c849b1ff930452244fa2b49914706d60747057cba96074e6d8cfe8771d",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/vegetableguide/leafy-greens/planting-spacing": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:49c85f6c14968bb3530dc689f7b7fc2702b9879bd486c8e81a1ac55a65148efe",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/yardandgarden/files/Dahlias.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 26 Feb 2021 16:45:12 GMT",
+      "etag": "\"1aef0-5bc3ffdecfd9f\"",
+      "hash": "sha256:51e824da937b6668482c99ffd6f0cba44f45780034bf73217637b3f5d3901c6a",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/yardandgarden/research/cosmos-in-the-garden.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 17 Apr 2025 23:05:12 GMT",
+      "etag": "\"ac70-633016f24e08e\"",
+      "hash": "sha256:6ae9f3b55c0191d9dd7627f41ed675380f1bcb9fe607e659453215540a213a9e",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/yardandgarden/research/fennel-in-the-garden.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 11 Jul 2025 19:25:21 GMT",
+      "etag": "\"12f8f-639ac45687191\"",
+      "hash": "sha256:37fcfa6c232733315803a4759986c6de759b828ca8cb9eb96cffe0b3f7f64172",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/yardandgarden/research/goji-in-the-garden": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:8e88d7969af39fc7ddb957908210ef50dcd967007d15ed489608aed56be75237",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/yardandgarden/research/haskap-in-the-garden": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:57ba6301ff6977bddb2961f14b4e0f456cf7e7f4b148dccebbab3b896916663e",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/yardandgarden/research/honeydew-and-other-melons-in-the-garden": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:0ee0f1e6ce3cea29040b2bccf19996aaee023139b1ee8e03149a89833ce8a37a",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/yardandgarden/research/lambs-lettuce-in-the-garden.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 17 Apr 2025 23:15:46 GMT",
+      "etag": "\"b418-6330194edefd0\"",
+      "hash": "sha256:295eaa58f7399669a6837e43208b0ff2721728d096cf4a10ac2b25d37870ae78",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/yardandgarden/research/new-zealand-spinach-in-the-garden.php": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:e2900ce39545928e0d24104ebdbbbf8abc96f1d9e4ee0e2418a513c978eb61de",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/yardandgarden/research/shallots-in-the-garden.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 17 Apr 2025 23:15:39 GMT",
+      "etag": "\"b096-633019476ce92\"",
+      "hash": "sha256:6b61bc01fdfc9595f4428abfbfb880e2e7c14b3996e331568fa51a6e284426c1",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/yardandgarden/research/walnuts-in-the-home-orchard": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:60f091b2e3091ec58e077bfcce65d44ad927155e393900ced9e12a5074ae0f9f",
+      "checkedOn": "2026-10-08"
+    },
+    "https://extension.usu.edu/yardandgarden/research/watercress-in-the-garden": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:7f23bfacbfe294faec11b198d3e351a933ec4ee52b69cf7ee2234e71fe71a3ba",
+      "checkedOn": "2026-10-08"
+    },
+    "https://fdn.montana.edu/extension/carbon/documents/ag%20nit%20tox%20mt.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 20 Sep 2024 00:53:37 GMT",
+      "etag": null,
+      "hash": "sha256:6126e90695ae5e21e915f3e166fbf73842c0316c3383a7fc47a3cd08d8ee5532",
+      "offPage": [
+        "entries.nitrate.classes.montana.sources.0.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://fyi.extension.wisc.edu/forage/files/2014/01/SorghumsFOF.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 29 Jun 2017 02:38:46 GMT",
+      "etag": "\"2097e3684cbf19169f53e4af20434651\"",
+      "hash": "sha256:ee2cf887f80eafa964b3cf887ab798c61de7e657b4da8bedcfa13179156c8abf",
+      "checkedOn": "2026-10-08"
+    },
+    "https://gaston.ces.ncsu.edu/2024/10/growing-harvesting-luffa/": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:4307b64dd77683b5c68cb874d936e229cbba399475da1b1c08f72bdfb0a342b2",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hgic.clemson.edu/factsheet/blueberry/": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:53:05 GMT",
+      "etag": null,
+      "hash": "sha256:7c4344bfcb691c1576be2fdd4e99051fb1d4ed79752817475c5c52b2feedfd5a",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hgic.clemson.edu/factsheet/broccoli/": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:53:04 GMT",
+      "etag": null,
+      "hash": "sha256:1276282495d01f406531b9b34ed9efe1995b95845e4d29ae380a1b530e74eb9c",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hgic.clemson.edu/factsheet/carrot/": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:53:07 GMT",
+      "etag": null,
+      "hash": "sha256:67f101fdf9aa64da83ba1e84bf6d2b09c1a6776a174eea612d0fa0608f1f6bd9",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hgic.clemson.edu/factsheet/lettuce/": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:53:05 GMT",
+      "etag": null,
+      "hash": "sha256:a6a1babfc59e634d3e20959633e185bebc8d918912315eaae0b217dd6bc2559e",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hgic.clemson.edu/factsheet/sweet-corn/": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:53:05 GMT",
+      "etag": null,
+      "hash": "sha256:6c5dec898974a7ba00e81dcaec34e978bc61c44154d66ecc21875c009e02e77e",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hgic.clemson.edu/factsheet/tomato/": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:53:04 GMT",
+      "etag": null,
+      "hash": "sha256:3e6d783ce80a852aaa72e7fa8c6a506d339e97b86c8ec8d8a404fbd1bf083b3f",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hort.extension.wisc.edu/articles/imported-cabbageworm/": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:c8ee93e29800a9f71a19266fd719712a858c02846f7a114804ed58c0159385ec",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hort.extension.wisc.edu/articles/nasturtium-tropaeolum-majus/": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:069125d58bbb7e535df343924d6c98fa4bed1839f8fd9b0e78414788afc0d21d",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hort.extension.wisc.edu/files/2014/11/Potato-Leafhoppers.pdf": {
+      "status": 200,
+      "lastModified": "Wed, 03 Jun 2020 17:42:25 GMT",
+      "etag": "\"009844e0cd82ed952881da28fe6b109a\"",
+      "hash": "sha256:9c9003d582c6b2320b9b86509ff5de52a9253ecb358cde6c90cd543e0ab9e232",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hort.purdue.edu/newcrop/afcm/broomcorn.html": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:ca619b4d4f807403f36d02b91aebcbae0c9357dd5a7c1b186801089ff4e4ef3e",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hort.purdue.edu/newcrop/afcm/quinoa.html": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:7f0c8ce55d42174c7f3887e81b5e223e16b40d04b4c033f953d4900b420a125a",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hort.purdue.edu/newcrop/afcm/sorghum.html": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:7c8cd94609fcbfd385ae1d9411053223e3feda2aa5d2b64cb074f3ee1e21c85c",
+      "checkedOn": "2026-10-08"
+    },
+    "https://horticulture.oregonstate.edu/oregon-vegetables/dill-0": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:45 GMT",
+      "etag": null,
+      "hash": "sha256:cdbba6303541070d9ec56b1cf3d437d6e0ba948383cc0a4a1571b24c17c47be7",
+      "checkedOn": "2026-10-08"
+    },
+    "https://hortscans.ces.ncsu.edu/uploads/p/r/producin_5257040dc110d.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 09 Feb 2017 21:13:32 GMT",
+      "etag": "\"f11ed-5481f7410d700\"",
+      "hash": "sha256:69aed516d0ae6508b84409fa243129fcd9ccf87150b8ec9592d49c4878465dd1",
+      "checkedOn": "2026-10-08"
+    },
+    "https://ndsu.edu/agriculture/sites/default/files/2024-05/h61.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 16 May 2024 18:01:16 GMT",
+      "etag": "\"d2d1a-61896057857d5\"",
+      "hash": "sha256:baf1517a8597e10177d0e9e29aa27df69b0a1b856cc3476d76ee756502c7a481",
+      "checkedOn": "2026-10-08"
+    },
+    "https://njaes.rutgers.edu/fs1372/": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:a277a9252b795fa9448ede3b752e5b1505bce834e5515ad160710250cc89bc95",
+      "checkedOn": "2026-10-08"
+    },
+    "https://njaes.rutgers.edu/pubs/commercial-veg-rec/celery.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 23 Apr 2026 15:18:12 GMT",
+      "etag": "\"1229be6634d3dc1:0\"",
+      "hash": "sha256:6d2708f8860b0649feb27f53817cb7b056f9c6a6c92e6a8cab5dc88239359ed0",
+      "checkedOn": "2026-10-08"
+    },
+    "https://njaes.rutgers.edu/pubs/commercial-veg-rec/greens-mustard-turnip.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 23 Apr 2026 15:31:54 GMT",
+      "etag": "\"a6b8b25036d3dc1:0\"",
+      "hash": "sha256:34905ca676fd5cb784f84c6224c6ed989b74c0fee07c4efbc45e0bd46d379821",
+      "checkedOn": "2026-10-08"
+    },
+    "https://njaes.rutgers.edu/pubs/commercial-veg-rec/lettuce-endive-escarole.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 23 Apr 2026 15:35:24 GMT",
+      "etag": "\"1e358ecd36d3dc1:0\"",
+      "hash": "sha256:3bb87cbb7b4757e75f81cfe1b1a8a70a886b997b9cb719ed81ae413e0fc365cd",
+      "checkedOn": "2026-10-08"
+    },
+    "https://nygpadmin.cce.cornell.edu/pdf/newsletter_update/pdf703_pdf.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 30 Sep 2022 15:00:22 GMT",
+      "etag": null,
+      "hash": "sha256:3fd8205c3c61ba54ea9870ad4e9fca87f923d294081fea6c1bbd8a9120e4cc0a",
+      "checkedOn": "2026-10-08"
+    },
+    "https://ohioline.osu.edu/factsheet/anr-0157": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 13:51:44 GMT",
+      "etag": "\"1791467504-gzip\"",
+      "hash": "sha256:7807e1d21a4bd173197e5fcc6100932b1c9bd75869e64647278162ade5b938ac",
+      "checkedOn": "2026-10-08"
+    },
+    "https://pender.ces.ncsu.edu/news/how-to-water-vegetables-and-herbs/": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:853f3cce639966ef74e5f3c564dbd0564ffe1a8869653cd2f6b0a19b732716ac",
+      "offPage": [
+        "entries.gallonsPerSqFtInch.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://plants.ces.ncsu.edu/plants/agastache-foeniculum/": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:8d4261468e9aeaa072f847cd27ed2b87c5b7b08fac799b981c091a8bf0d023ea",
+      "checkedOn": "2026-10-08"
+    },
+    "https://plants.usda.gov/DocumentLibrary/factsheet/pdf/fs_amals.pdf": {
+      "status": 200,
+      "lastModified": "Tue, 17 Nov 2020 20:23:18 GMT",
+      "etag": "\"229b767c1fbdd61:0\"",
+      "hash": "sha256:ea1d8f1f6d37db21d215b0a5a1bc62df3beb122fd0364abc50f0c23c33edb9e1",
+      "checkedOn": "2026-10-08"
+    },
+    "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_crju.pdf": {
+      "status": 200,
+      "lastModified": "Tue, 17 Nov 2020 20:24:02 GMT",
+      "etag": "\"ae51bd961fbdd61:0\"",
+      "hash": "sha256:1f0572fe177afdfe650e38913bfc7709ff12ac51b5bd5bbc72b84c76d7c5ec46",
+      "checkedOn": "2026-10-08"
+    },
+    "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_eces.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 02 Oct 2014 13:47:35 GMT",
+      "etag": "\"f0a5f76b47decf1:0\"",
+      "hash": "sha256:8fcf96b901697a0e7354000173328b785f608f059bdfda7d685bd358640e5be2",
+      "checkedOn": "2026-10-08"
+    },
+    "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_ecpu.pdf": {
+      "status": 200,
+      "lastModified": "Tue, 17 Nov 2020 20:24:02 GMT",
+      "etag": "\"752ed961fbdd61:0\"",
+      "hash": "sha256:7df4718544702021cf5539fe130831ccfa4e510f6b2e1d02d75aa31dc6b1a161",
+      "checkedOn": "2026-10-08"
+    },
+    "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_phta.pdf": {
+      "status": 200,
+      "lastModified": "Mon, 24 Sep 2018 17:30:28 GMT",
+      "etag": "\"092f6482c54d41:0\"",
+      "hash": "sha256:3940d1b2abe3fd7b048372520daa09febdd27436ebf021e6b198e809002c6bde",
+      "checkedOn": "2026-10-08"
+    },
+    "https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_pisa6.pdf": {
+      "status": 200,
+      "lastModified": "Tue, 15 Jan 2013 19:10:03 GMT",
+      "etag": "\"d0b83cec53f3cd1:0\"",
+      "hash": "sha256:ca784c6bbe9aca451f7ee19826bcfe1408cfc5934a44475d974030bea4095202",
+      "checkedOn": "2026-10-08"
+    },
+    "https://publications.ca.uky.edu/files/ID223.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 07 Feb 2025 04:16:33 GMT",
+      "etag": "\"67a58921-e1b1a\"",
+      "hash": "sha256:215d9c09311dd904aeabd9cba8deeb15a731955fef6d27f13b5c2fee303e3c94",
+      "checkedOn": "2026-10-08"
+    },
+    "https://publications.ca.uky.edu/sites/publications.ca.uky.edu/files/agr84.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 07 Feb 2025 04:16:53 GMT",
+      "etag": "\"67a58935-1802f\"",
+      "hash": "sha256:1dc2c036b3bdcfe547cb9ae4cb7cfc4c13525f7f090ad51050a7ef9dc5d87ce1",
+      "checkedOn": "2026-10-08"
+    },
+    "https://publications.ca.uky.edu/sites/publications.ca.uky.edu/files/amaranth.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 07 Feb 2025 04:16:53 GMT",
+      "etag": "\"67a58935-6b282\"",
+      "hash": "sha256:df4d02522e31b297140743f388246235af3ea503b42eb05a52846c3ec4fe4945",
+      "checkedOn": "2026-10-08"
+    },
+    "https://publications.ca.uky.edu/sites/publications.ca.uky.edu/files/celery.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 07 Feb 2025 04:16:55 GMT",
+      "etag": "\"67a58937-1218e0\"",
+      "hash": "sha256:ebab70d831430f31abd1bdc0d75fe8fe614c2b29dc5753e7579323ea1d2bac0a",
+      "checkedOn": "2026-10-08"
+    },
+    "https://publications.ca.uky.edu/sites/publications.ca.uky.edu/files/malabar.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 07 Feb 2025 04:17:11 GMT",
+      "etag": "\"67a58947-18a6fd\"",
+      "hash": "sha256:8ddb5001c7ee9ed9a5e4d0f8cf0368dd6aac07bc3840fe1ff83677ff0c7afa16",
+      "checkedOn": "2026-10-08"
+    },
+    "https://publications.ca.uky.edu/sites/publications.ca.uky.edu/files/NEP247.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 21 Aug 2025 15:45:43 GMT",
+      "etag": "\"68a73f27-547aeb\"",
+      "hash": "sha256:172b12a9a38c0ac6dc5923f075cae60a5c49366bb33db53eb1f8a85c2f5d4f49",
+      "checkedOn": "2026-10-08"
+    },
+    "https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/AGR18.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 07 Feb 2025 04:16:09 GMT",
+      "etag": "\"67a58909-7f2ea\"",
+      "hash": "sha256:fb959ec0036bfff06175851980ba7eb11435c3438efc8e11ea51931bca2da297",
+      "checkedOn": "2026-10-08"
+    },
+    "https://pubs.ext.vt.edu/426/426-841/426-841.html": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:42 GMT",
+      "etag": "\"23b70-65d58953f3281-gzip\"",
+      "hash": "sha256:b63fa4f8fd5c6d999c73aa16998503d42157472c5663028f6dba218b343c22ea",
+      "checkedOn": "2026-10-08"
+    },
+    "https://smallfarms.oregonstate.edu/smallfarms/herbicide-carryover-hay-manure-compost-and-grass-clippings": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:39 GMT",
+      "etag": null,
+      "hash": "sha256:b65ac3d42f8f3710fdc79ad3c07780184e23ae445679917959e09470b39f356a",
+      "checkedOn": "2026-10-08"
+    },
+    "https://ucanr.edu/sites/default/files/2025-07/Use_and_%20Culture_of_%20Culinary_%20Herbs_2507_0.pdf": {
+      "status": 200,
+      "lastModified": "Sat, 19 Jul 2025 01:27:31 GMT",
+      "etag": "\"687af483-28e41\"",
+      "hash": "sha256:cb7084d16b4277953fc02b3d34bcd3e8e3891e5a47d53db0ddb5374cb0588e36",
+      "offPage": [
+        "chervil.rowSpacingIn.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://utbeef.tennessee.edu/?p=6396": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:37613ce5680a1b6fc13922ba6170e2e95fc6cf58ce1edc8fb2720bca4eabbc4a",
+      "checkedOn": "2026-10-08"
+    },
+    "https://vtechworks.lib.vt.edu/handle/10919/55302": {
+      "status": 200,
+      "lastModified": null,
+      "etag": "W/\"61b96-f0qPwTYlUM90qyY5DPnpaf043ds\"",
+      "hash": "sha256:d8ae3ac63a0f35903c1b6098b35525db38c238574d6b18e40d8325875fdfe5e1",
+      "offPage": [
+        "peach-elberta.harvestSeason.url",
+        "peach-redhaven.harvestSeason.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://wilkes.ces.ncsu.edu/2023/03/growing-tomatillos-in-the-home-garden/": {
+      "status": 200,
+      "lastModified": null,
+      "etag": null,
+      "hash": "sha256:99779a13abdfdc9950dff40aa4420fb2b82c22efd25d9309d8df34906b2e94fe",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.extension.purdue.edu/extmedia/AY/AY-378-W.pdf": {
+      "status": 200,
+      "lastModified": "Wed, 20 Jul 2022 20:23:53 GMT",
+      "etag": "\"2851a1769cd81:0\"",
+      "hash": "sha256:35193501a32369408a406f23c494b2cebbbdffff1aae82b39a8c71632d6ea40b",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.faa.gov/documentLibrary/media/Notice/N_JO_7900.12.pdf": {
+      "status": 200,
+      "lastModified": "Mon, 07 Oct 2019 14:02:29 GMT",
+      "etag": "\"80c8bdb177dd51:0\"",
+      "hash": "sha256:79b0ac55154bf0fc25aa74cf6c82ea5305325eabbfaed791c4b21caabeae7a90",
+      "offPage": [
+        "entries.metarPrecipSensorOut.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.fda.gov/media/133411/download": {
+      "status": 200,
+      "lastModified": "Tue, 10 Dec 2019 12:07:52 GMT",
+      "etag": null,
+      "hash": "sha256:0a79dc71076343b4b635bffb1f50a30abde035dccc31dc5c758d6aaa5ee780b7",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/426/426-331/426-331.html": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:42 GMT",
+      "etag": "\"1e10a-65d58953460fa-gzip\"",
+      "hash": "sha256:7c9e2b49ce013954ce04dbd9c28e1de966b278aa0871e2621663a18dad16f902",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/426/426-402/426-402.html": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:42 GMT",
+      "etag": "\"1760f-65d5895406719-gzip\"",
+      "hash": "sha256:fe6fa8a0e247aac3abb7809d9d970bc4c3dcd61016ec98b94c191dff979af78b",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/426/426-405/426-405.html": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:54 GMT",
+      "etag": "\"16553-65d5895ec4aeb-gzip\"",
+      "hash": "sha256:85ca4e7e9f39434524f2e14895375dab98650f7c50123f93b51e61323ac6e97b",
+      "offPage": [
+        "sweet-corn-american-dream-f1-seed.harvestIndicators.url",
+        "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds.harvestIndicators.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/426/426-406/426-406.html": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:44 GMT",
+      "etag": "\"1aaf3-65d5895609d2d-gzip\"",
+      "hash": "sha256:cba44f04c1417c8f73e49c6c170a4089a24a55c6eba0ea6d2c740ccbf1d896e9",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/426/426-411/426-411.html": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:39:47 GMT",
+      "etag": "\"19573-65d588e5f63a1-gzip\"",
+      "hash": "sha256:5cf1afb184b5717b2a7a36c9b9e14012043dc462adb335dfec10e472a34dd3d5",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/426/426-420/426-420.html": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:43 GMT",
+      "etag": "\"1c626-65d58954f2c57-gzip\"",
+      "hash": "sha256:d81d050d7bff83e81d35f68e20d8e75451a41b0f0a8736d39d555f3235740b35",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/426/426-422/426-422.html": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:43 GMT",
+      "etag": "\"1c526-65d58954d058f-gzip\"",
+      "hash": "sha256:503ef4b8874f40fbc99bb9c1f642f8c621ddafd0f78e3f76f9c829e10722f525",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/426/426-840/426-840.html": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:40:05 GMT",
+      "etag": "\"2bdfd-65d588f70bff8-gzip\"",
+      "hash": "sha256:2807cf50259941bdeecd09a3e4baf28777573dd015bf35abd30d879b04c4cca1",
+      "offPage": [
+        "blueberry-bluecrop.defaultRowSpacingInches.url",
+        "blueberry-duke-northern-highbush.rowSpacingIn.url",
+        "blueberry-pink-lemonade.rowSpacingIn.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/426/426-841/426-841.html": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:42 GMT",
+      "etag": "\"23b70-65d58953f3281-gzip\"",
+      "hash": "sha256:b63fa4f8fd5c6d999c73aa16998503d42157472c5663028f6dba218b343c22ea",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/456/456-420/456-420.html": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:47 GMT",
+      "etag": "\"1558a-65d58958ee0e7-gzip\"",
+      "hash": "sha256:ea350cf312c8168a95c4c1debd87ff3cbe495239d68a68955d9815d72d1406db",
+      "offPage": [
+        "parsley-italian-flat-leaf.defaultRowSpacingInches.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf": {
+      "status": 200,
+      "lastModified": "Fri, 15 Dec 2023 16:20:19 GMT",
+      "etag": "\"cc37e-60c8ec6b676c0\"",
+      "hash": "sha256:33a77f123577d50cf85f4ea52909a572d1422f36884fbdffc1642f70205eedcc",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299.pdf": {
+      "status": 200,
+      "lastModified": "Mon, 11 Dec 2023 20:51:11 GMT",
+      "etag": "\"8b9a92-60c42180acdc0\"",
+      "hash": "sha256:62c70ef79630b5a1fa75e23f77c0e68776eb616aa18c26b7846b043471ed8d6d",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf": {
+      "status": 200,
+      "lastModified": "Tue, 20 Jan 2026 20:26:59 GMT",
+      "etag": "\"12b34ae-648d7a1252ac0\"",
+      "hash": "sha256:574df11d6b00e485b64d87059ee15ed48900d011baf909e5ee9d31498ff6af8c",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-018/ENTO-634-C.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 22 Jan 2026 15:49:29 GMT",
+      "etag": "\"1d4653-648fbfc691440\"",
+      "hash": "sha256:d85c57155f22c373765a8aabb5fcc369da2b32cdc5018e7cbd300fdf5a7c8bf4",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 29 Jan 2026 16:08:27 GMT",
+      "etag": "\"78a1f9-64989112134c0\"",
+      "hash": "sha256:69eb7a4461a9e435ea34605405414c035ecd874b54befbbea730474b8002adf5",
+      "offPage": [
+        "entries.pome-va-2026.half-inch-green.pests.sources.0.url",
+        "entries.pome-va-2026.summer-covers.diseases.sources.1.url",
+        "entries.pome-va-2026.tight-cluster.diseases.sources.0.url",
+        "entries.stone-fruit-va-2026.covers.diseases.sources.1.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-420/SPES-776.pdf": {
+      "status": 200,
+      "lastModified": "Tue, 03 Feb 2026 15:11:08 GMT",
+      "etag": "\"b429e0-649ecd95b1b00\"",
+      "hash": "sha256:0b364164b8318fb5f53e53ebc292b53c1dfbf9533be2927ee15504bdc28a0d15",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.pubs.ext.vt.edu/SPES/spes-455/spes-455.html": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:45 GMT",
+      "etag": "\"1f32d-65d5895706823-gzip\"",
+      "hash": "sha256:20aa4edca2a98d3bd5f149b82cbb801023138252d2b1c90fb81e9a3191bf15e4",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.uaex.uada.edu/publications/PDF/FSA-6088.pdf": {
+      "status": 200,
+      "lastModified": "Tue, 08 Apr 2025 18:36:46 GMT",
+      "etag": "\"4a4d22fb5a8db1:0\"",
+      "hash": "sha256:73395c48516f2816e615949966849cd5dbb915c4b6b47e2948d9ff11f69d8a6f",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.uaex.uada.edu/publications/pdf/FSA3154.pdf": {
+      "status": 200,
+      "lastModified": "Wed, 03 Jun 2026 15:00:20 GMT",
+      "etag": "\"28f968b269f3dc1:0\"",
+      "hash": "sha256:ac992853e1830b2daf4fd9085956f686afbeb3c489b8fc303bd88bcd881c3860",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.umass.edu/agriculture-food-environment/crops-dairy-livestock-equine/fact-sheets/housing-working-facilites-for-goats": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:35:41 GMT",
+      "etag": null,
+      "hash": "sha256:f141127ab59d16d0a361266342ca7ec070a2a3eb4760cbf913bc0b178016c200",
+      "offPage": [
+        "entries.goat.housingSpace.indoorSqFtPerAnimal.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.umass.edu/agriculture-food-environment/crops-dairy-livestock-equine/fact-sheets/housing-working-facilities-for-sheep": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:42:14 GMT",
+      "etag": null,
+      "hash": "sha256:8afb9ce157d95dfdf5eafa03aef6dba73d6f0d2a7edc84eaeec2ab34ad1a58ec",
+      "offPage": [
+        "entries.sheep.housingSpace.indoorSqFtPerAnimal.url"
+      ],
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.umass.edu/agriculture-food-environment/vegetable/fact-sheets/onion-thrips": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:41:47 GMT",
+      "etag": null,
+      "hash": "sha256:2a6fc563c2987571e6a8e016b48ff986db54345c2ced040d46bdadd138923660",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.uvm.edu/~saffron/pages/factsheets/SaffronplantingforhomegardenersSept2021.pdf": {
+      "status": 200,
+      "lastModified": "Thu, 16 Mar 2023 19:05:00 GMT",
+      "etag": "\"42f01-5f7092325cf00\"",
+      "hash": "sha256:5bb91c5a75d54b4537f51e81465233df71a522c0b051ed85041bdc101a2446f9",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www.uvm.edu/extension/news/growing-great-garlic": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:53:10 GMT",
+      "etag": "\"1791485590-zstd\"",
+      "hash": "sha256:6253f655d66c40ad9c531cac476736a57726b942b5006c235d2388e35fd32af3",
+      "checkedOn": "2026-10-08"
+    },
+    "https://www3.epa.gov/pesticides/chem_search/ppls/OR070014-20241008.pdf": {
+      "status": 200,
+      "lastModified": "Wed, 09 Oct 2024 17:45:04 GMT",
+      "etag": "\"79684-6240ed05dcd8f\"",
+      "hash": "sha256:2e9de4d8282755b41d70152f899f861ac4af8d5d7e9169ca2e5ec1b3d8a07f61",
+      "checkedOn": "2026-10-08"
+    },
+    "https://yardandgarden.extension.iastate.edu/faq/how-do-you-renovate-june-bearing-strawberries": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:58:18 GMT",
+      "etag": "\"1791485898-gzip\"",
+      "hash": "sha256:6a702efc100cfdcb70f654ab4e9e1ddafa1b7ac369412abe1f75cb9bff760f7a",
+      "checkedOn": "2026-10-08"
+    },
+    "https://yardandgarden.extension.iastate.edu/how-to/growing-and-harvesting-ornamental-corn": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:58:00 GMT",
+      "etag": "\"1791485880-gzip\"",
+      "hash": "sha256:d208acfc1c2e5a28e964bc7bd3910b695a32d9c3c23b71feb070e3a3a49c1e1a",
+      "checkedOn": "2026-10-08"
+    },
+    "https://yardandgarden.extension.iastate.edu/how-to/growing-bee-balm-home-garden": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:58:37 GMT",
+      "etag": "\"1791485917-gzip\"",
+      "hash": "sha256:7ccf50bad816592c3fb1ecacdc3d509f118fd9313cb3d2a67306b3ac4255f8f8",
+      "checkedOn": "2026-10-08"
+    },
+    "https://yardandgarden.extension.iastate.edu/how-to/growing-garlic-home-garden": {
+      "status": 200,
+      "lastModified": "Thu, 08 Oct 2026 18:57:58 GMT",
+      "etag": "\"1791485878-gzip\"",
+      "hash": "sha256:56fb2585573d446539895523d72276c723884be8edf14b398fda5d80704010a2",
+      "checkedOn": "2026-10-08"
+    }
+  },
+  "quoteBaseline": {
+    "quote:crop-data-sources.json:chervil.rowSpacingIn.url:4b801adc6daa": {
+      "url": "https://ucanr.edu/sites/default/files/2025-07/Use_and_%20Culture_of_%20Culinary_%20Herbs_2507_0.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:dataCorrections.actara.0.sourceUrl:bdf38fdc5868": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00938-20131203.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:dataCorrections.portal-xlo.0.sourceUrl:dcc6ea550bf7": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00040-20240111.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:defaultUnit.can-17-calcium-ammonium-nitrate.sourceUrl:333665b003a6": {
+      "url": "https://www.yara.us/contentassets/280676bbae1c466799e9d22b57225584/yaraliva-can-17-bulk-label.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:entries.anthem-maxx.sourceUrl:80d3841fdf98": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03468-20251125.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:entries.curzate-60df-cymoxanil.sourceUrl:fdd925b6c644": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00592-20210505.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:entries.harmony-sg-thifensulfuron.sourceUrl:ca6b9a660022": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:entries.kanemite-acequinocyl.sourceUrl:f3f05797e8e2": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00447-20211001.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:entries.kocide-3000-o.sourceUrl:c8d346c6e0c7": {
+      "url": "https://www.certisbio.com/hubfs/20250114%2091411-11-70051%20K3000-O%20Specimen%20Lbl.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:entries.me-too-lachlor-ii.sourceUrl:8df0e1313475": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/019713-00549-20230104.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:entries.omega-500f-fluazinam.sourceUrl:e7234f40eb6a": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00001-20240226.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:entries.prophyt-phosphonate.sourceUrl:750186c4421c": {
+      "url": "https://s3-us-west-1.amazonaws.com/agrian-cg-fs1-production/pdfs/Helena_ProPhyt1u_Label.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:entries.ranman.sourceUrl:2aa4cc901676": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00003-20260625.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:entries.sencor-metribuzin.sourceUrl:078e69f0a2a1": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00738-20140218.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:entries.spear-lep.sourceUrl:962d926dd971": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/088847-00006-20220928.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:entries.zerotol-2-0-sanitizer.sourceUrl:7f68416ad173": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00012-20210903.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:formulation.manzate-pro-stick.sourceUrl:9b2de4521c7e": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00234-20260416.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.acramite-bifenazate.0.sourceUrl:01fb20b04758": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00503-20201216.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.acramite-bifenazate.11.sourceUrl:7216a1174968": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00503-20201216.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.acramite-bifenazate.12.sourceUrl:e2d5f4fc1eaf": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00503-20201216.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.acramite-bifenazate.2.sourceUrl:fc8adc20e301": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00503-20201216.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.acramite-bifenazate.4.sourceUrl:09393c23cd27": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00503-20201216.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.acramite-bifenazate.8.sourceUrl:f6a2d19eeb12": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00503-20201216.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.actara.12.sourceUrl:bdf38fdc5868": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00938-20131203.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.actara.7.sourceUrl:9b343eee8510": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00938-20131203.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.actigard-50wg.2.sourceUrl:18e69cd3ea62": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00922-20211102.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.actigard-50wg.3.sourceUrl:62c578892b04": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00922-20211102.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.admire-pro.0.sourceUrl:00c7179d3608": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00827-20190917.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.admire-pro.1.sourceUrl:b77a2dac228d": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00827-20190917.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.admire-pro.13.sourceUrl:91d01864fa1f": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00827-20190917.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.admire-pro.18.sourceUrl:bc30be13d350": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00827-20190917.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.admire-pro.5.sourceUrl:1a9f7b786afe": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00827-20190917.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.agrimek-sc.11.sourceUrl:8357adb330cd": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.agrimek-sc.12.sourceUrl:3cd8723548cb": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.agrimek-sc.15.sourceUrl:eb26976845a5": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.agrimek-sc.19.sourceUrl:e351a05b18c4": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.agrimek-sc.22.sourceUrl:78e37ee2110c": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.agrimek-sc.23.sourceUrl:78e37ee2110c": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.agrimek-sc.25.sourceUrl:47852d45a23c": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.agrimek-sc.5.sourceUrl:b607b4194208": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.agrimek-sc.6.sourceUrl:77b695f61ef7": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.agrimek-sc.7.sourceUrl:3869117e396a": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.agrimek-sc.9.sourceUrl:02b8faa5ef65": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.altacor-chlorantraniliprole.0.sourceUrl:feb34f320349": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09607-20180702.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.altacor-chlorantraniliprole.1.sourceUrl:646492e8821d": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09607-20180702.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.altacor-chlorantraniliprole.10.sourceUrl:40db8043dc14": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09607-20180702.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.altacor-chlorantraniliprole.3.sourceUrl:c011d70b7db6": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09607-20180702.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.altacor-chlorantraniliprole.7.sourceUrl:2f3708b4d884": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09607-20180702.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.altacor-chlorantraniliprole.8.sourceUrl:dbcc56015941": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09607-20180702.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.altacor-chlorantraniliprole.9.sourceUrl:dbcc56015941": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09607-20180702.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.aprovia.1.sourceUrl:919e6ee995c3": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01471-20241030.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.aprovia.2.sourceUrl:cd5b6d8fa8cf": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01471-20241030.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.aprovia.3.sourceUrl:7a79bf7aefe9": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01471-20241030.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.aprovia.4.sourceUrl:984579f72128": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01471-20241030.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.aprovia.6.sourceUrl:31173bba9410": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01471-20241030.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.asana-xl.10.sourceUrl:65380a9f796f": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00209-20260414.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.asana-xl.15.sourceUrl:aa58a5a711d1": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00209-20260414.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.asana-xl.16.sourceUrl:d9a66fdf036b": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00209-20260414.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.asana-xl.2.sourceUrl:2e8f897d40fb": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00209-20260414.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.asana-xl.3.sourceUrl:69e5646cb6ad": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00209-20260414.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.assail-30sg.14.sourceUrl:9f3491d33175": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00036-20210611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.avaunt-evo.0.sourceUrl:0aa989a1af66": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20240822.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.avaunt-evo.1.sourceUrl:065ec327f80f": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20240822.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.avaunt-evo.14.sourceUrl:099b9b6e2798": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20240822.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.avaunt-evo.15.sourceUrl:099b9b6e2798": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20240822.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.avaunt-evo.3.sourceUrl:9218b7057f89": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20240822.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.avaunt-evo.6.sourceUrl:5ed522a7000a": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20240822.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.avaunt-evo.9.sourceUrl:142d53773631": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20240822.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.baythroid-xl.2.sourceUrl:2f6324851005": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.bravo-weather-stik.2.sourceUrl:f5897141bf66": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/050534-00188-20140822.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.brigade-2ec.0.sourceUrl:b70eb08527f1": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03313-20260630.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.brigade-2ec.19.sourceUrl:9966ea483821": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03313-20260630.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.brigade-2ec.6.sourceUrl:664a5860ea72": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03313-20260630.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.captan-80wdg.0.sourceUrl:596c286efcea": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00029-20180226.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.captan-80wdg.1.sourceUrl:7865fe4b8715": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00029-20180226.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.captan-80wdg.2.sourceUrl:176ce702729b": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00029-20180226.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.captan-80wdg.3.sourceUrl:85d85d21cb66": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00029-20180226.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.captan-80wdg.4.sourceUrl:bf2274c8398d": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00029-20180226.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.cevya-mefentrifluconazole.5.sourceUrl:54c2f9f6edd6": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00407-20230112.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.champ-dp.0.sourceUrl:db65933806b4": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/055146-00057-20220727.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.champ-dp.1.sourceUrl:b48d031553c7": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/055146-00057-20220727.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.champ-dp.3.sourceUrl:f626355fcd77": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/055146-00057-20220727.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.coragen.6.sourceUrl:07f9efc46f3a": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.cuprofix-ultra-disperss.11.sourceUrl:860bd8c7ceb6": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00201-20251204.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.cuprofix-ultra-disperss.6.sourceUrl:a514381982bf": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00201-20251204.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.cuprofix-ultra-disperss.8.sourceUrl:67ead4d35b8a": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00201-20251204.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.cuprofix-ultra-disperss.9.sourceUrl:29be5eb33655": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00201-20251204.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.curzate-60df-cymoxanil.0.sourceUrl:7a864a487d83": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00592-20181019.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.dimilin-2l.3.sourceUrl:0c5b0a982386": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00461-20201102.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.elevate-50wdg.1.sourceUrl:5dfd3ddd0a8f": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00446-20260303.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.elevate-50wdg.8.sourceUrl:03eaabb7b718": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00446-20260303.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.entrust-sc.19.sourceUrl:14cd48722bf4": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.entrust-sc.20.sourceUrl:38144b1e1d5f": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.entrust-sc.21.sourceUrl:9cf8532839d2": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.entrust-sc.27.sourceUrl:cc08739b0e1b": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.entrust-sc.5.sourceUrl:2cc892c0cdb0": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.entrust-sc.6.sourceUrl:9ccdfe89112f": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.exirel.0.sourceUrl:1dab5d958d2b": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.exirel.1.sourceUrl:996dec42ffe5": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.exirel.13.sourceUrl:911370b6e6d6": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.exirel.14.sourceUrl:2c4363353272": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.exirel.3.sourceUrl:a9876e317c1c": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.exirel.5.sourceUrl:2f828ab5e0ef": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.exirel.6.sourceUrl:982f8e64eb0f": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.exirel.7.sourceUrl:9d2d0e0b42b8": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.exirel.9.sourceUrl:ef7cb9a0f594": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.intrepid-edge.11.sourceUrl:e4abb4755ee6": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00666-20170629.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.intrepid-edge.12.sourceUrl:31725b77e51e": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00666-20170629.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.intrepid-edge.17.sourceUrl:2ad86f52871d": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00666-20170629.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.intrepid-edge.18.sourceUrl:2b325debd5f2": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00666-20170629.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.intrepid-edge.26.sourceUrl:3fe2f009b95c": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00666-20170629.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.intrepid-edge.4.sourceUrl:9580ab407791": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00666-20170629.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.intrepid-edge.5.sourceUrl:c5505a2b0586": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00666-20170629.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.kocide-3000-o.1.sourceUrl:05842162e586": {
+      "url": "https://www.certisbio.com/hubfs/20250114%2091411-11-70051%20K3000-O%20Specimen%20Lbl.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.kocide-3000-o.4.sourceUrl:a5c26a8d7575": {
+      "url": "https://www.certisbio.com/hubfs/20250114%2091411-11-70051%20K3000-O%20Specimen%20Lbl.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.kocide-3000-o.5.sourceUrl:07722a944c7a": {
+      "url": "https://www.certisbio.com/hubfs/20250114%2091411-11-70051%20K3000-O%20Specimen%20Lbl.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.kocide-3000-o.7.sourceUrl:66b60e7a9d46": {
+      "url": "https://www.certisbio.com/hubfs/20250114%2091411-11-70051%20K3000-O%20Specimen%20Lbl.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.lannate-lv.13.sourceUrl:7e8846577a49": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00055-20241010.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.lannate-lv.26.sourceUrl:8e4afd5c412e": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00055-20241010.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.lannate-lv.4.sourceUrl:d8d920be4067": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00055-20241010.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.0.sourceUrl:54fe1281ea90": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.11.sourceUrl:9a94af06fc19": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.12.sourceUrl:0835707ea132": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.13.sourceUrl:c565e542cc00": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.18.sourceUrl:2de7a3f8c687": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.25.sourceUrl:32128d83cd72": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.7.sourceUrl:f2ad02fb34ea": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.8.sourceUrl:801b03d27a29": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.movento.13.sourceUrl:b0b91903db96": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01050-20170628.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.movento.2.sourceUrl:67945f90ae46": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01050-20170628.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.mycoshield-oxytetracycline.1.sourceUrl:27f7a7499205": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/055146-00097-20191107.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.omega-500f-fluazinam.7.sourceUrl:0803fa7cdc81": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00001-20240226.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.omega-500f-fluazinam.8.sourceUrl:a2432e023c3a": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00001-20240226.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.orondis-opti.1.sourceUrl:9189bf488812": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01591-20240515.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.portal-xlo.17.sourceUrl:43b4894488d8": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00040-20240111.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.portal-xlo.6.sourceUrl:dcc6ea550bf7": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00040-20240111.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.quadris-flowable.14.sourceUrl:665c36af373d": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.quadris-flowable.20.sourceUrl:739450247f52": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.quadris-flowable.27.sourceUrl:1608adf4d172": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.radiant-sc.20.sourceUrl:684323187068": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.radiant-sc.21.sourceUrl:38144b1e1d5f": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.radiant-sc.22.sourceUrl:9cf8532839d2": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.radiant-sc.27.sourceUrl:edacacdf0ef2": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.radiant-sc.29.sourceUrl:1b909265346d": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.radiant-sc.32.sourceUrl:40f40b207a9e": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.radiant-sc.6.sourceUrl:c18ff224f6d1": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.radiant-sc.7.sourceUrl:78f6ad59ba98": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.radiant-sc.8.sourceUrl:f07c7d81a85c": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20260611.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.rally-40wsp.10.sourceUrl:f44aa3735a98": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00410-20180227.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.rally-40wsp.13.sourceUrl:29da47c14aad": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00410-20180227.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.rally-40wsp.2.sourceUrl:fd6da73867a9": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00410-20180227.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.rally-40wsp.9.sourceUrl:827c25a6d4b2": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00410-20180227.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.revus.1.sourceUrl:fe7e849e65cf": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01254-20251016.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.revus.10.sourceUrl:0ed45e146702": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01254-20251016.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.revus.4.sourceUrl:c098444ab70e": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01254-20251016.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.revus.6.sourceUrl:02cc1446ceb1": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01254-20251016.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.revus.7.sourceUrl:ffc463cc02d4": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01254-20251016.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.revus.9.sourceUrl:a7afe9661a52": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01254-20251016.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.ridomil-gold-sl.13.sourceUrl:10891510ef1b": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01202-20230621.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.scala-sc.2.sourceUrl:bae4d48b691b": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00788-20170222.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.0.sourceUrl:dc017a7e91bb": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.1.sourceUrl:91eec062cf92": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.11.sourceUrl:56d4d774ee71": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.12.sourceUrl:e9225b24220a": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.14.sourceUrl:0f327d530a5f": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.17.sourceUrl:edfbc3278b8f": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.19.sourceUrl:e55c1e87beef": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.2.sourceUrl:f83d1b44bfa0": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.20.sourceUrl:bc81d4ad4e3a": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.21.sourceUrl:338b56ad1c64": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.3.sourceUrl:e14868053d14": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.4.sourceUrl:6ec3398caa54": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.5.sourceUrl:61b0d4e255e8": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.7.sourceUrl:c45fb2503735": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.8.sourceUrl:e4ecc654b1a1": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sevin-xlr-plus.9.sourceUrl:8fa7406feb18": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sivanto-prime.14.sourceUrl:46fbb9c043a6": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01141-20200924.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sivanto-prime.25.sourceUrl:15d6ae143f0c": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01141-20200924.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.sivanto-prime.26.sourceUrl:92858099599b": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01141-20200924.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.tilt-36ec-propiconazole.8.sourceUrl:c58095cc0745": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.topsin-m-wsb.9.sourceUrl:1cf1b4279632": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00125-20260625.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.velum-prime-fluopyram-nematicide.11.sourceUrl:b1b617c64d84": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01078-20260903.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.velum-prime-fluopyram-nematicide.19.sourceUrl:8a33bc8f8602": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01078-20260903.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.voliam-xpress.7.sourceUrl:f180b6658f9b": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01320-20250509.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.voliam-xpress.8.sourceUrl:c908e800ee22": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01320-20250509.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.warrior-ii-with-zeon.10.sourceUrl:e91bebed79b4": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.warrior-ii-with-zeon.11.sourceUrl:044496b6b285": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.warrior-ii-with-zeon.14.sourceUrl:1de6fc137420": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:phiByCrop.warrior-ii-with-zeon.15.sourceUrl:9c2e0871ceb7": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:pollinator.aliette-wdg-fosetyl-al.sourceUrl:c967d420ca48": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00516-20190719.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:rateByCrop.banvel.2.sourceUrl:1ec76fe75535": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:stageLimitByCrop.banvel.2.sourceUrl:1ec76fe75535": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:stageLimitByCrop.banvel.4.sourceUrl:992f62fc78d3": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:forage-toxicity-sources.json:entries.nitrate.classes.montana.sources.0.url:66ceaebe5b6a": {
+      "url": "https://fdn.montana.edu/extension/carbon/documents/ag%20nit%20tox%20mt.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:grazing-sources.json:entries.banvel.hayDays.url:bcab56032b22": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:grazing-sources.json:entries.banvel.lactatingDairyGrazeDays.url:bcab56032b22": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:orchard-calendar-sources.json:entries.pome-va-2026.half-inch-green.pests.sources.0.url:9d8c09e29cf4": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:orchard-calendar-sources.json:entries.pome-va-2026.summer-covers.diseases.sources.1.url:a18d2f1b591f": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:orchard-calendar-sources.json:entries.pome-va-2026.tight-cluster.diseases.sources.0.url:492b916edff4": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:orchard-calendar-sources.json:entries.stone-fruit-va-2026.covers.diseases.sources.1.url:00376c950bda": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:water-sources.json:entries.metarPrecipSensorOut.url:f721b557b4be": {
+      "url": "https://www.faa.gov/documentLibrary/media/Notice/N_JO_7900.12.pdf",
+      "on": "2026-10-08"
+    }
+  }
+}

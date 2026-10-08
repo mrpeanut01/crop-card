@@ -28,3 +28,23 @@ export function rateCeilingProblem(
   }
   return inCeilingUnit > ceiling.amount + 1e-9 ? 'over' : null;
 }
+
+/** True when the rate equals `rate` once converted to its unit. A typical
+ *  (fallback) herbicide rate is never a legal maximum, so a plan may only
+ *  repeat it, not tune below or above it (#737 swarm 2026-10-07). */
+export function rateMatches(
+  rateAmount: number,
+  rateUnit: string | null | undefined,
+  rate: { amount: number; unit?: string | null }
+): boolean {
+  if (!Number.isFinite(rateAmount) || rateAmount <= 0) return false;
+  let inUnit = rateAmount;
+  if (rateUnit && rate.unit && rateUnit !== rate.unit) {
+    const from = asUnit(rateUnit);
+    const to = asUnit(rate.unit);
+    const converted = from && to ? convert(rateAmount, from, to) : null;
+    if (converted === null) return false;
+    inUnit = converted;
+  }
+  return Math.abs(inUnit - rate.amount) <= 1e-6 * Math.max(1, rate.amount);
+}

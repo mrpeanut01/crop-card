@@ -308,6 +308,7 @@ export const enInventory = {
   'inv.pest.productId': 'Product id',
   'inv.pest.rate': 'Application rate',
   'inv.pest.labelDerived': 'Label-derived',
+  'inv.pest.typicalRate': 'Typical, not from the label',
   'inv.pest.defaultRate': 'Default rate',
   'inv.pest.noRate': 'No default rate on the product label.',
   'inv.storageReorder': 'Storage & reorder',

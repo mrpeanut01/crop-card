@@ -9,6 +9,8 @@
   import { rangeText } from '$lib/plugins/rangeText';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatRateText } from '$lib/stock/units';
+  import FallbackRateLine from '$lib/components/spray/FallbackRateLine.svelte';
+  import { isFallbackRate } from '$lib/plugins/rateProvenance';
   import { createT } from '$lib/i18n';
   import { cropFamilyLabel } from '$lib/plugins/familyLabel';
   import { TASK_CATEGORY_VALUES, labelForTaskCategory } from '$lib/plan/taskCategory';
@@ -580,7 +582,10 @@
         {#if rate}
           <div class="stat">
             <dt>{tr('plugins.detail.rate')}</dt>
-            <dd>{labelRate(rate)}</dd>
+            <dd>
+              {labelRate(rate)}
+              {#if isFallbackRate(plugin)}<FallbackRateLine />{/if}
+            </dd>
           </div>
         {/if}
         {#if asNum(plugin.gpaCalibration) !== undefined}

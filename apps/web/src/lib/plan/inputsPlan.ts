@@ -47,6 +47,7 @@
  */
 
 import type { Block } from '$lib/db/blocks';
+import { herbicideRateProvenance, type RateProvenance } from '$lib/plugins/rateProvenance';
 import type { FertilityCredit, SoilTest } from '$lib/db/fertility';
 import { toPpm } from '$lib/fertility/soilInterpret';
 import type {
@@ -277,6 +278,9 @@ export interface InputsPlanApplication {
   /** Per-acre rate in the product plugin's native units. */
   rateAmount: number | null;
   rateUnit: string | null;
+  /** Herbicides (#737 swarm 2026-10-07): `fallback` when the rate is a
+   *  typical one, not from the label. */
+  rateProvenance?: RateProvenance | null;
   /** Block acreage. */
   acres: number;
   /** Total product needed = `rateAmount × acres`. `null` when no product. */
@@ -534,6 +538,7 @@ interface Candidate {
   plugin: { pluginId: string; displayName: string };
   rateAmount: number | null;
   rateUnit: string | null;
+  rateProvenance?: RateProvenance | null;
 }
 
 /** A fertilizer that supplies none of the budgeted nutrients (lime, gypsum,
@@ -573,6 +578,7 @@ function rankCandidates(
         displayName: c.plugin.displayName,
         rateAmount: c.rateAmount,
         rateUnit: c.rateUnit,
+        ...(c.rateProvenance ? { rateProvenance: c.rateProvenance } : {}),
         totalAmount: total,
         onHand: round2(onHand ?? 0),
         stock: stockCoverage(onHand, total)
@@ -597,6 +603,7 @@ function chooseProduct(
   | 'productDisplayName'
   | 'rateAmount'
   | 'rateUnit'
+  | 'rateProvenance'
   | 'totalAmount'
   | 'productSource'
   | 'options'
@@ -624,6 +631,7 @@ function chooseProduct(
     productDisplayName: pick.plugin.displayName,
     rateAmount: pick.rateAmount,
     rateUnit: pick.rateUnit,
+    ...(pick.rateProvenance ? { rateProvenance: pick.rateProvenance } : {}),
     totalAmount: total,
     productSource: pick.option.stock === 'none' ? 'plugin' : 'data',
     options
@@ -640,7 +648,13 @@ function rateOf(p: unknown): { amount: number; unit: string } | undefined {
 
 function rateCandidate(p: { pluginId: string; displayName: string }): Candidate {
   const rate = rateOf(p);
-  return { plugin: p, rateAmount: rate?.amount ?? null, rateUnit: rate?.unit ?? null };
+  const rateProvenance = herbicideRateProvenance(p);
+  return {
+    plugin: p,
+    rateAmount: rate?.amount ?? null,
+    rateUnit: rate?.unit ?? null,
+    ...(rateProvenance ? { rateProvenance } : {})
+  };
 }
 
 /** True when the herbicide's chemistry would not harm the standing crop. */

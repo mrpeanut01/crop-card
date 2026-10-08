@@ -43,7 +43,8 @@ import { checkChemistryCompatibility } from '$lib/safety/chemistry';
 import { getApiKey } from './scanResult';
 import { estimateUsd, selectModel, type AiResultMeta } from './aiPlanning';
 import { extractJsonObject } from './aiJsonExtract';
-import { rateCeilingProblem } from '$lib/plan/rateCeiling';
+import { rateCeilingProblem, rateMatches } from '$lib/plan/rateCeiling';
+import { herbicideRateProvenance, isFallbackRate } from '$lib/plugins/rateProvenance';
 
 const MAX_OUTPUT_TOKENS = 3000;
 
@@ -281,12 +282,13 @@ function buildSystemPrompt(): string {
   return `You are a farm-input substitution assistant. Given a deterministic input plan and the available product catalog, propose product substitutions that better match the operator's setup. You must NOT add, remove, or re-date applications. You may only:
 
 1. Swap one productPluginId for another in the same category (herbicide / insecticide / fungicide / fertilizer).
-2. Tune rate within the plugin's labeled ceiling.
+2. Tune rate within the plugin's labeled ceiling, only when the catalog entry's rateSource is "label".
 
 Constraints — your output MUST satisfy all of:
 - The chosen plugin appears in the catalog list.
 - The plugin is philosophy-compliant per the listed compliance flags.
 - Rate ≤ the plugin's ratePerAcre ceiling.
+- A herbicide whose rateSource is "typical-not-label" has a typical rate, not a label maximum: use that rate exactly and never present it as the label rate.
 
 CRITICAL — Output format:
 - Respond with a single raw JSON object. Nothing else.
@@ -353,7 +355,8 @@ function buildCatalogSummary(input: InputsPlanInput): {
       pluginId: p.pluginId,
       displayName: p.displayName,
       flags: p.complianceFlags ?? {},
-      rate: p.ratePerAcre
+      rate: p.ratePerAcre,
+      rateSource: herbicideRateProvenance(p) === 'plugin' ? 'label' : 'typical-not-label'
     })),
     insecticides: input.productPlugins.insecticides.map((p) => ({
       pluginId: p.pluginId,
@@ -433,6 +436,9 @@ export function applySubstitutions(
       productDisplayName: catalogDisplayName(input, sub.productPluginId) ?? sub.productDisplayName,
       rateAmount: sub.rateAmount,
       rateUnit: sub.rateUnit,
+      rateProvenance: herbicideRateProvenance(
+        input.productPlugins.herbicides.find((p) => p.pluginId === sub.productPluginId)
+      ),
       totalAmount: Math.round(sub.rateAmount * app.acres * 100) / 100,
       productSource: 'ai' as const,
       rationale: `${app.rationale} (AI: ${sub.rationale})`
@@ -505,8 +511,15 @@ export function validateAiPlan(plan: InputsPlan, input: InputsPlanInput): Valida
       }
     }
 
-    // 4. Rate ceiling.
-    if (hasRate(plugin) && app.rateAmount != null) {
+    // 4. Rate ceiling. A typical (fallback) herbicide rate is not from the
+    //    label, so it is never a ceiling: the plan may only repeat it.
+    if (hasRate(plugin) && app.rateAmount != null && isFallbackRate(plugin)) {
+      if (!rateMatches(app.rateAmount, app.rateUnit, plugin.ratePerAcre)) {
+        violations.push(
+          `rate-not-from-label:${app.id}:${app.rateAmount} ${app.rateUnit ?? ''}!=${plugin.ratePerAcre.amount} ${plugin.ratePerAcre.unit}`
+        );
+      }
+    } else if (hasRate(plugin) && app.rateAmount != null) {
       const ceiling = plugin.ratePerAcre;
       const problem = rateCeilingProblem(app.rateAmount, app.rateUnit, ceiling);
       if (problem === 'over') {

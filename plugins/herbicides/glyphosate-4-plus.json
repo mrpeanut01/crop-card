@@ -2,7 +2,7 @@
   "pluginId": "glyphosate-4-plus",
   "type": "herbicide",
   "displayName": "Glyphosate 4 Plus",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "SL",
   "epaRegistrationNumber": "81927-9",
   "defaultUnit": "fl-oz",
@@ -17,6 +17,7 @@
     "amount": 32,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "dilutionTable": {
     "10gal": {

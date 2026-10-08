@@ -141,6 +141,13 @@
       ],
       "additionalProperties": false
     },
+    "rateProvenance": {
+      "type": "string",
+      "enum": [
+        "label",
+        "fallback"
+      ]
+    },
     "reEntryIntervalHours": {
       "type": "integer",
       "minimum": 0,

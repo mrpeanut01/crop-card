@@ -2,7 +2,7 @@
   "pluginId": "touchdown-hitech",
   "type": "herbicide",
   "displayName": "Touchdown HiTech (Syngenta)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "SL",
   "epaRegistrationNumber": "100-1182",
   "defaultUnit": "fl-oz",
@@ -17,6 +17,7 @@
     "amount": 24,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "requiresAMS": true,
   "deconRequired": false,

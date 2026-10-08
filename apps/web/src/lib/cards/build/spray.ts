@@ -5,6 +5,7 @@ import { TOX_LABEL } from '$lib/safety/pollinatorProtection';
 import { RULES_VERSION } from '$lib/safety/version';
 import type { SprayerLoadClass } from '$lib/safety/types';
 import { formatInstant } from '$lib/prefs';
+import { FALLBACK_RATE_LINE } from '$lib/plugins/rateProvenance';
 import {
   cardHref,
   cardKey,
@@ -131,6 +132,23 @@ function calibrateFirstCard(
   };
 }
 
+/** Swarm 2026-10-07 (#737): a herbicide rate counts as the label's only
+ *  when the snapshot says so; an older snapshot without the field reads as
+ *  a typical rate. */
+export function sprayRateIsFallback(p: SnapshotSprayProduct): boolean {
+  return p.type === 'herbicide' && !!p.ratePerAcre && p.rateProvenance !== 'plugin';
+}
+
+function rateFactProvenance(
+  p: SnapshotSprayProduct,
+  withNote = false
+): Pick<CardFact, 'provenance' | 'note'> {
+  if (!sprayRateIsFallback(p)) return { provenance: 'plugin' };
+  return withNote
+    ? { provenance: 'fallback', note: FALLBACK_RATE_LINE }
+    : { provenance: 'fallback' };
+}
+
 function rateText(p: SnapshotSprayProduct): string | null {
   if (!p.ratePerAcre) return null;
   return `${trimNumber(p.ratePerAcre.amount, 2)} ${p.ratePerAcre.unit}/A`;
@@ -169,7 +187,7 @@ function dilutionFacts(
       {
         label: `Per ${trimNumber(tank, 1)}-gal tank`,
         value: line.display,
-        provenance: 'plugin',
+        ...rateFactProvenance(product),
         englishOnly: true,
         core: true
       },
@@ -187,7 +205,7 @@ function dilutionFacts(
     {
       label: 'Per acre',
       value: `${line.display} in ${trimNumber(gpa, 1)} gal water`,
-      provenance: 'plugin',
+      ...rateFactProvenance(product),
       englishOnly: true,
       core: true
     }
@@ -274,7 +292,7 @@ function productCard(
     {
       label: 'Rate',
       value: rateText(product) ?? 'See label',
-      provenance: 'plugin',
+      ...rateFactProvenance(product, true),
       englishOnly: true,
       core: true
     },

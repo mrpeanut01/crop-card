@@ -2,7 +2,7 @@
   "pluginId": "lumax-ez",
   "type": "herbicide",
   "displayName": "Lumax EZ (Syngenta premix)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "ZC",
   "epaRegistrationNumber": "100-1442",
   "defaultUnit": "fl-oz",
@@ -25,6 +25,7 @@
     "amount": 2.5,
     "unit": "qt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 6,

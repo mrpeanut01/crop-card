@@ -1,7 +1,7 @@
 {
   "pluginId": "raptor-imazamox",
   "type": "herbicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Raptor', 'imazamox'; hits were unrelated products). Label (241-379, accepted 2021-04-30) makes no organic-production claim; conventional synthetic herbicide."},
   "formulation": "SL",
   "defaultUnit": "fl-oz",
@@ -17,6 +17,7 @@
     "amount": 5,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "applicationTiming": "POST",
   "requiresAMS": true,

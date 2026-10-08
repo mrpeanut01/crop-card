@@ -13,6 +13,7 @@
  */
 
 import { nutrientFromStorage } from '$lib/fertility/applicationMath';
+import { recordedRateProvenance } from '$lib/plugins/rateProvenance';
 import { error } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
@@ -142,7 +143,11 @@ export const load: PageServerLoad = async (event) => {
         blockLabel: blockLabel(ev.blockId),
         blockAcres: blockById.get(ev.blockId)?.acres ?? null,
         sprayerLabel: sprayerLabelById.get(ev.sprayerId) ?? null,
-        products: products(ev.products),
+        products: products(ev.products).map((p, i) => ({
+          ...p,
+          rateFallback:
+            !!p.rate && recordedRateProvenance(ev.products[i]?.rateProvenance) === 'fallback'
+        })),
         conditions: ev.conditions,
         customRateOverride: ev.customRateOverride,
         notes: ev.notes,

@@ -10,6 +10,7 @@ export const SAMPLE_HERBICIDE: SnapshotSprayProduct = {
   version: '1.0.0',
   epaRegistrationNumber: '34704-120',
   ratePerAcre: { amount: 16, unit: 'fl-oz' },
+  rateProvenance: 'fallback',
   gpaCalibration: 15,
   reEntryIntervalHours: null,
   preHarvestIntervalDays: null,

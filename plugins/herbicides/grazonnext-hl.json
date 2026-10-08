@@ -1,7 +1,7 @@
 {
   "pluginId": "grazonnext-hl",
   "type": "herbicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'GrazonNext', 'aminopyralid'; hits were unrelated products). Label (62719-628 master label accepted 2017-03-13) makes no organic-production claim; conventional synthetic herbicide."},
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
@@ -30,6 +30,7 @@
     "amount": 2,
     "unit": "pt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "applicationTiming": "POST",
   "requiresAMS": false,

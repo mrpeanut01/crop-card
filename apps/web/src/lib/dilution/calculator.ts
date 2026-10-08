@@ -12,6 +12,7 @@
  */
 
 import type { HerbicidePlugin } from '$lib/plugins/schemas';
+import { herbicideRateProvenance, type RateProvenance } from '$lib/plugins/rateProvenance';
 
 type RateUnit = NonNullable<HerbicidePlugin['ratePerAcre']>['unit'];
 
@@ -36,6 +37,9 @@ export interface DilutionLine {
   gpaUsed: number;
   ratePerAcre: { amount: number; unit: RateUnit };
   customRateApplied: boolean;
+  /** Swarm 2026-10-07 (#737): `fallback` for a typical herbicide rate that is
+   *  not from the label, `manual` for a custom rate, `null` when unknown. */
+  rateProvenance: RateProvenance | 'manual' | null;
 }
 
 /**
@@ -68,6 +72,9 @@ export function computeDilution(input: DilutionInput): DilutionLine {
 
   const ratePerAcre = input.customRatePerAcre ?? herbicide.ratePerAcre;
   if (!ratePerAcre) throw new Error(`${herbicide.pluginId} has no label rate on file`);
+  const rateProvenance = input.customRatePerAcre
+    ? 'manual'
+    : herbicideRateProvenance({ ...herbicide, type: 'herbicide' });
   const gpaUsed = input.calibratedGpa ?? herbicide.gpaCalibration ?? 15;
   if (gpaUsed <= 0) throw new Error('calibratedGpa must be positive');
 
@@ -86,7 +93,8 @@ export function computeDilution(input: DilutionInput): DilutionLine {
       acresCovered,
       gpaUsed,
       ratePerAcre,
-      customRateApplied: input.customRatePerAcre != null
+      customRateApplied: input.customRatePerAcre != null,
+      rateProvenance
     };
   }
 
@@ -104,7 +112,8 @@ export function computeDilution(input: DilutionInput): DilutionLine {
     acresCovered,
     gpaUsed,
     ratePerAcre,
-    customRateApplied: input.customRatePerAcre != null
+    customRateApplied: input.customRatePerAcre != null,
+    rateProvenance
   };
 }
 
@@ -166,7 +175,8 @@ export function computeRatedDilution(
       acresCovered,
       gpaUsed,
       ratePerAcre,
-      customRateApplied: false
+      customRateApplied: false,
+      rateProvenance: null
     };
   }
   const totalFlOz = ratePerAcreFlOz * acresCovered;
@@ -181,7 +191,8 @@ export function computeRatedDilution(
     acresCovered,
     gpaUsed,
     ratePerAcre,
-    customRateApplied: false
+    customRateApplied: false,
+    rateProvenance: null
   };
 }
 

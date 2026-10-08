@@ -2,7 +2,7 @@
   "pluginId": "prowl-h2o",
   "type": "herbicide",
   "displayName": "Prowl H2O (BASF)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "CS",
   "epaRegistrationNumber": "241-418",
   "defaultUnit": "fl-oz",
@@ -17,6 +17,7 @@
     "amount": 2,
     "unit": "qt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "dilutionTable": {
     "10gal": {

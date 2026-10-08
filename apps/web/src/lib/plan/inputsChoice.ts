@@ -7,6 +7,7 @@
 
 import { ALL_STOCK_UNITS, convert, type StockUnit } from '$lib/stock/units';
 import type { InputsPlanApplication, InputsPlanShoppingItem } from './inputsPlan';
+import type { RateProvenance } from '$lib/plugins/rateProvenance';
 
 /** How much of a product the farm already has for one application. */
 export type StockCoverage = 'enough' | 'some' | 'none';
@@ -21,6 +22,8 @@ export interface InputsPlanProductOption {
   displayName: string;
   rateAmount: number | null;
   rateUnit: string | null;
+  /** Herbicides: `fallback` when the rate is typical, not from the label. */
+  rateProvenance?: RateProvenance | null;
   totalAmount: number | null;
   onHand: number;
   stock: StockCoverage;
@@ -123,6 +126,7 @@ export function applyProductChoice(
     productDisplayName: option.displayName,
     rateAmount: option.rateAmount,
     rateUnit: option.rateUnit,
+    rateProvenance: option.rateProvenance ?? null,
     totalAmount: option.totalAmount,
     productSource: 'manual'
   };

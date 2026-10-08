@@ -1,7 +1,7 @@
 {
   "pluginId": "method-aminocyclopyrachlor",
   "type": "herbicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Method 240SL'; 'aminocyclopyrachlor'). Conventional synthetic herbicide; label carries no organic-production statement."},
   "defaultUnit": "fl-oz",
   "formulation": "SL",
@@ -17,6 +17,7 @@
     "amount": 5,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "applicationTiming": "POST",
   "requiresAMS": false,

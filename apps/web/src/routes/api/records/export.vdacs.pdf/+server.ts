@@ -27,6 +27,7 @@
  */
 
 import { nutrientFromStorage } from '$lib/fertility/applicationMath';
+import { FALLBACK_RATE_LINE, recordedRateProvenance } from '$lib/plugins/rateProvenance';
 import { createHash } from 'node:crypto';
 import { type RequestEvent, type RequestHandler } from '@sveltejs/kit';
 import {
@@ -280,7 +281,13 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
             ? plugin.epaRegistrationNumber
             : undefined;
         const rate = perAcre(p.rate);
-        return [name, epa ? `EPA ${epa}` : 'EPA missing', rate].filter(Boolean).join(' · ');
+        const typical =
+          p.rate && recordedRateProvenance(p.rateProvenance) === 'fallback'
+            ? FALLBACK_RATE_LINE
+            : '';
+        return [name, epa ? `EPA ${epa}` : 'EPA missing', rate, typical]
+          .filter(Boolean)
+          .join(' · ');
       })
       .join('\n');
     const sprayNames = ev.products.map((p) => {

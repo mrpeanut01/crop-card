@@ -101,4 +101,44 @@ describe('pesticide label sources (#640 #661 #716)', () => {
       pesticideLabelSourceGaps([{ ...base, displayName: 'Thing (OMRI)', complianceFlags: {} }], {})
     ).toEqual([]);
   });
+
+  describe('herbicide default rates (#737 swarm 2026-10-07)', () => {
+    const rate = { amount: 32, unit: 'fl-oz' };
+    it('refuses a rate with neither a label quote nor rateProvenance fallback', () => {
+      expect(pesticideLabelSourceGaps([{ ...base, ratePerAcre: rate }], {})).toHaveLength(1);
+      expect(
+        pesticideLabelSourceGaps([{ ...base, ratePerAcre: rate, rateProvenance: 'fallback' }], {})
+      ).toEqual([]);
+      expect(pesticideLabelSourceGaps([base], {})).toEqual([]);
+    });
+
+    it('refuses a label rate without a quote that states the amount', () => {
+      const p = { ...base, ratePerAcre: rate, rateProvenance: 'label' };
+      expect(pesticideLabelSourceGaps([p], {})).toHaveLength(1);
+      expect(
+        pesticideLabelSourceGaps([p], {
+          rate: { x: { ratePerAcre: rate, sourceUrl: url, quote: 'Apply 22 fl oz per acre' } }
+        })
+      ).toHaveLength(1);
+      expect(
+        pesticideLabelSourceGaps([p], {
+          rate: { x: { ratePerAcre: rate, sourceUrl: url, quote: 'Apply 32 fl oz per acre' } }
+        })
+      ).toEqual([]);
+    });
+
+    it('refuses a quoted label rate that is still marked fallback', () => {
+      expect(
+        pesticideLabelSourceGaps([{ ...base, ratePerAcre: rate, rateProvenance: 'fallback' }], {
+          rate: { x: { ratePerAcre: rate, sourceUrl: url, quote: 'Apply 32 fl oz per acre' } }
+        })
+      ).toHaveLength(1);
+    });
+
+    it('every shipped herbicide with a default rate marks where it comes from', () => {
+      const herbicides = loadPesticides().filter((p) => p.type === 'herbicide' && p.ratePerAcre);
+      expect(herbicides.length).toBeGreaterThan(50);
+      for (const h of herbicides) expect(['label', 'fallback']).toContain(h.rateProvenance);
+    });
+  });
 });

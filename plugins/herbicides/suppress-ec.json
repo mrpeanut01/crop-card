@@ -1,7 +1,7 @@
 {
   "pluginId": "suppress-ec",
   "type": "herbicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "fl-oz",
   "formulation": "EC",
   "pluginSchemaVersion": "1.1",
@@ -20,6 +20,7 @@
     "amount": 6,
     "unit": "qt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 75,
   "applicationTiming": "POST",
   "requiresAMS": false,

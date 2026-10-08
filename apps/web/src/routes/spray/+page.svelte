@@ -17,6 +17,7 @@
   import { killsFamily, type CropFamily } from '$lib/safety/cropFamilyLethality';
   import { CHEMISTRY_CLASSES, type ChemistryClass } from '$lib/safety/types';
   import { herbicideRatePreview } from '$lib/dilution/ratePreview';
+  import FallbackRateLine from '$lib/components/spray/FallbackRateLine.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
   import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
@@ -216,6 +217,7 @@
     acresCovered: number;
     gpaUsed: number;
     customRateApplied: boolean;
+    rateProvenance?: 'plugin' | 'fallback' | 'manual' | null;
   };
   type TankMixStep = { order: number; instruction: string; productPluginId?: string };
   type EvaluateResult = {
@@ -999,6 +1001,7 @@
             {#if h.requiresAMS}• AMS{/if}
             {#if h.deconRequired}• decon{/if}
           </small>
+          {#if h.rateProvenance === 'fallback'}<FallbackRateLine />{/if}
         </button>
       {/each}
     </div>
@@ -1369,7 +1372,10 @@
                 : []}
               {@const perTankSecondary = secondaryUnits(d.productAmount, d.unit as DilutionUnit)}
               <tr>
-                <td>{d.displayName}</td>
+                <td>
+                  {d.displayName}
+                  {#if d.rateProvenance === 'fallback'}<FallbackRateLine />{/if}
+                </td>
                 <td>
                   {#if totalAcres > 0}
                     <strong>{sd ? sd.totalDisplay : d.display}</strong>
@@ -1417,7 +1423,10 @@
             {@const rate = d.productAmount / Math.max(0.0001, d.acresCovered)}
             {@const fills = buildLastTankFills(remainingAcresLastTank, gpa, rate, tankSizeGallons)}
             <table class="fill-table">
-              <caption>{d.displayName}</caption>
+              <caption>
+                {d.displayName}
+                {#if d.rateProvenance === 'fallback'}<FallbackRateLine />{/if}
+              </caption>
               <thead>
                 <tr>
                   <th>{tr('sprayui.card.water')}</th>

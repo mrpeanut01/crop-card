@@ -1,7 +1,7 @@
 {
   "pluginId": "ct-test-herbicide-clickthrough",
   "displayName": "CT Test Herbicide Clickthrough",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "type": "herbicide",
@@ -15,5 +15,6 @@
     "amount": 32,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15
 }

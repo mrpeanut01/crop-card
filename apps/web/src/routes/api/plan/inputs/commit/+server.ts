@@ -52,6 +52,7 @@ import { getActiveSession, markSessionCompleted } from '$lib/db/wizardChat';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 import { DEFAULT_PREFS, formatCalendarDate, type Prefs } from '$lib/prefs';
 import { formatApplicationRateLine, localizeRationale } from '$lib/plan/inputsPlanFormat';
+import { FALLBACK_RATE_LINE, isFallbackRate } from '$lib/plugins/rateProvenance';
 import { getRegistry } from '$lib/server/registry';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { validateManualChoices } from '$lib/server/inputsChoiceValidate';
@@ -119,10 +120,15 @@ function applicationTitle(app: z.infer<typeof applicationSchema>): string {
 
 /** Format the task body — surfaces the rate + total so the operator
  *  has the dilution math anchor without re-running the planner. */
-function applicationBody(app: z.infer<typeof applicationSchema>, prefs: Prefs): string {
+function applicationBody(
+  app: z.infer<typeof applicationSchema>,
+  prefs: Prefs,
+  fallbackRate: boolean
+): string {
   const parts = [localizeRationale(app.rationale, prefs)];
   const rateLine = formatApplicationRateLine(app, prefs);
   if (rateLine) parts.push(`Rate: ${rateLine} total.`);
+  if (rateLine && fallbackRate) parts.push(FALLBACK_RATE_LINE);
   if (!app.productPluginId) {
     parts.push(`No philosophy-compliant product selected — pick one before executing.`);
   }
@@ -247,6 +253,7 @@ export const POST: RequestHandler = async (event) => {
   }
 
   const created: string[] = [];
+  const registryNow = await getRegistry();
 
   for (const app of parsed.data.applications) {
     const cropId = cropByBlockAndPluginId.get(`${app.blockId}:${app.cropPluginId}`);
@@ -256,7 +263,11 @@ export const POST: RequestHandler = async (event) => {
       title,
       assigneeUserId: kept?.id ?? null,
       assignedAt: kept?.at ?? null,
-      body: applicationBody(app, prefs),
+      body: applicationBody(
+        app,
+        prefs,
+        app.productPluginId ? isFallbackRate(registryNow.get(app.productPluginId)?.plugin) : false
+      ),
       kind: 'primary',
       blockId: app.blockId,
       cropId,

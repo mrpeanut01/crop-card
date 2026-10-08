@@ -44,7 +44,7 @@
  *   crop_commodity, applicator_cert_no, total_amount_applied, moisture_pct,
  *   record_kind, bloom_status, bloom_status_source, attested_no_foragers,
  *   pollinator_verdict, recorded_late, days_after_date, mode_of_action,
- *   total_amount_unit, harvest_quantity, rei_hours
+ *   total_amount_unit, harvest_quantity, rei_hours, rate_note
  *
  * #760: `active_ingredients` names the label's active ingredients; the
  * mode-of-action groups move to an appended `mode_of_action` column
@@ -53,6 +53,9 @@
  * appended `harvest_quantity`. `rei_hours` is the record's restricted-entry
  * interval, blank when not on file (herbicide plugins carry none).
  *
+ * #737 (swarm 2026-10-07): `rate_note` says when a herbicide row's rate was
+ * a typical rate, not one quoted from the label; blank otherwise.
+ *
  * Phase 32G (G2-07, G2-08): hay cuttings are `record_kind = hay` rows (mow
  * date, block, performer, crop, bale moisture). `recorded_late` is yes, no,
  * or blank when the kind does not track it; `days_after_date` is the whole
@@ -60,6 +63,7 @@
  */
 
 import { type RequestHandler } from '@sveltejs/kit';
+import { FALLBACK_RATE_LINE, recordedRateProvenance } from '$lib/plugins/rateProvenance';
 import { inArray } from 'drizzle-orm';
 import papa from 'papaparse';
 import { listBlocks } from '$lib/db/blocks';
@@ -198,6 +202,7 @@ export const GET: RequestHandler = async (event) => {
       total_amount_unit: string;
       harvest_quantity: string;
       rei_hours: string;
+      rate_note: string;
     };
   const rows: Row[] = [];
 
@@ -255,7 +260,11 @@ export const GET: RequestHandler = async (event) => {
         mode_of_action: modeOfActionLabels('herbicide', p.chemistryClasses).join(' / '),
         total_amount_unit: totalAmountUnit(p.rate, total),
         harvest_quantity: '',
-        rei_hours: ''
+        rei_hours: '',
+        rate_note:
+          p.rate && recordedRateProvenance(p.rateProvenance) === 'fallback'
+            ? FALLBACK_RATE_LINE
+            : ''
       });
     }
   }
@@ -298,7 +307,8 @@ export const GET: RequestHandler = async (event) => {
         mode_of_action: modeOfActionLabels('insecticide', p.iracGroups).join(' / '),
         total_amount_unit: totalAmountUnit(p.rate, total),
         harvest_quantity: '',
-        rei_hours: rei
+        rei_hours: rei,
+        rate_note: ''
       });
     }
   }
@@ -340,7 +350,8 @@ export const GET: RequestHandler = async (event) => {
         mode_of_action: modeOfActionLabels('fungicide', p.fracCodes).join(' / '),
         total_amount_unit: totalAmountUnit(p.rate, total),
         harvest_quantity: '',
-        rei_hours: rei
+        rei_hours: rei,
+        rate_note: ''
       });
     }
   }
@@ -376,7 +387,8 @@ export const GET: RequestHandler = async (event) => {
       mode_of_action: '',
       total_amount_unit: '',
       harvest_quantity: e.quantity ?? '',
-      rei_hours: ''
+      rei_hours: '',
+      rate_note: ''
     });
   }
 
@@ -410,7 +422,8 @@ export const GET: RequestHandler = async (event) => {
       mode_of_action: '',
       total_amount_unit: '',
       harvest_quantity: '',
-      rei_hours: ''
+      rei_hours: '',
+      rate_note: ''
     });
   }
 

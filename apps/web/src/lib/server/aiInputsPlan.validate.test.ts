@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import fc from 'fast-check';
 import type { InputsPlan, InputsPlanInput } from '$lib/plan/inputsPlan';
 import { applySubstitutions, validateAiPlan } from './aiInputsPlan';
 
@@ -8,6 +9,7 @@ const herbicide = {
   displayName: '2,4-D Amine',
   activeIngredients: [{ name: '2,4-D', chemistryClass: 'synthetic-auxin' }],
   ratePerAcre: { amount: 32, unit: 'fl-oz' },
+  rateProvenance: 'label',
   complianceFlags: {}
 };
 const fungicide = {
@@ -142,5 +144,79 @@ describe('aiInputsPlan validator holes', () => {
       input
     );
     expect(out.applications[0].productDisplayName).toBe('Copper');
+  });
+
+  describe('a typical (fallback) herbicide rate is never a ceiling (#737 swarm 2026-10-07)', () => {
+    const typical = { ...herbicide, pluginId: 'typical', rateProvenance: 'fallback' };
+    const typicalInput = {
+      ...input,
+      productPlugins: { ...input.productPlugins, herbicides: [herbicide, typical] }
+    } as unknown as InputsPlanInput;
+    const at = (rateAmount: number, rateUnit = 'fl-oz') =>
+      validateAiPlan(
+        planWith({
+          productPluginId: 'typical',
+          productCategory: 'herbicide',
+          slot: 'burndown',
+          cropPluginId: 'none',
+          rateAmount,
+          rateUnit
+        }),
+        typicalInput
+      );
+
+    it('keeps the typical rate as it is, in any convertible unit', () => {
+      expect(at(32).ok).toBe(true);
+      expect(at(2, 'pt').ok).toBe(true);
+    });
+
+    it('refuses any other rate, below or above, as not from the label', () => {
+      fc.assert(
+        fc.property(
+          fc.double({ min: 0.01, max: 500, noNaN: true }).filter((n) => Math.abs(n - 32) > 1e-3),
+          (rate) => {
+            expect(at(rate).violations).toEqual([expect.stringMatching(/^rate-not-from-label:/)]);
+          }
+        )
+      );
+    });
+
+    it('a herbicide with no rateProvenance is read as typical too', () => {
+      const bare = { ...herbicide, pluginId: 'bare', rateProvenance: undefined };
+      const bareInput = {
+        ...input,
+        productPlugins: { ...input.productPlugins, herbicides: [bare] }
+      } as unknown as InputsPlanInput;
+      const v = validateAiPlan(
+        planWith({
+          productPluginId: 'bare',
+          productCategory: 'herbicide',
+          slot: 'burndown',
+          cropPluginId: 'none',
+          rateAmount: 16,
+          rateUnit: 'fl-oz'
+        }),
+        bareInput
+      );
+      expect(v.violations).toEqual([expect.stringMatching(/^rate-not-from-label:/)]);
+    });
+
+    it('tags an AI substitution with the product rate provenance', () => {
+      const out = applySubstitutions(
+        planWith({ productPluginId: null, productCategory: 'herbicide', slot: 'burndown' }),
+        [
+          {
+            applicationId: 'a1',
+            productPluginId: 'typical',
+            productDisplayName: 'x',
+            rateAmount: 32,
+            rateUnit: 'fl-oz',
+            rationale: 'r'
+          }
+        ],
+        typicalInput
+      );
+      expect(out.applications[0].rateProvenance).toBe('fallback');
+    });
   });
 });

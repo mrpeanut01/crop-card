@@ -2,7 +2,7 @@
   "pluginId": "stadia",
   "type": "herbicide",
   "displayName": "Stadia (Atticus halosulfuron-methyl 75% WDG)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "epaRegistrationNumber": "91234-31",
   "defaultUnit": "oz",
   "formulation": "WDG",
@@ -12,10 +12,6 @@
       "chemistryClass": "sulfonylurea"
     }
   ],
-  "ratePerAcre": {
-    "amount": 0.75,
-    "unit": "oz"
-  },
   "labelClaims": {
     "safeForCropPluginIds": [
       "corn-feed-dent-pioneer",

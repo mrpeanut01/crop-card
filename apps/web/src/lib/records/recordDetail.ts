@@ -8,6 +8,7 @@
 import { t, type MessageKey } from '$lib/i18n';
 import { formatArea, formatInstant, formatQuantity, type Prefs } from '$lib/prefs';
 import { observationLine } from './metricLabel';
+import { FALLBACK_RATE_LINE } from '$lib/plugins/rateProvenance';
 
 export interface DetailRow {
   label: string;
@@ -28,6 +29,8 @@ export interface DetailProduct {
   /** null when the label is on file with no number; undefined when the plugin is gone. */
   epaRegistrationNumber?: string | null;
   rate?: { amount: number; unit: string };
+  /** #737 swarm 2026-10-07: a herbicide rate that was not from the label. */
+  rateFallback?: boolean;
 }
 
 export interface DetailObservation {
@@ -77,6 +80,7 @@ function productLine(p: DetailProduct, acres: number | null, custom: boolean): s
     parts.push(`${rateText(p.rate)}${custom ? ', custom rate' : ''}`);
     if (acres !== null && acres > 0)
       parts.push(`total ${round2(p.rate.amount * acres)} ${p.rate.unit.split('/')[0].trim()}`);
+    if (p.rateFallback) parts.push(FALLBACK_RATE_LINE);
   } else {
     parts.push('rate not recorded');
   }

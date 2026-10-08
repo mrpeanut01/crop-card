@@ -2,7 +2,7 @@
   "pluginId": "mesotrione-4sc",
   "type": "herbicide",
   "displayName": "Mesotrione 4SC",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "fl-oz",
   "formulation": "SC",
   "applicationTiming": "POST",
@@ -16,6 +16,7 @@
     "amount": 3,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "dilutionTable": {
     "10gal": {

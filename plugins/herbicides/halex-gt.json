@@ -2,7 +2,7 @@
   "pluginId": "halex-gt",
   "type": "herbicide",
   "displayName": "Halex GT (Syngenta)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "epaRegistrationNumber": "100-1282",
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
@@ -24,6 +24,7 @@
     "amount": 3.6,
     "unit": "pt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "requiresAMS": true,
   "deconRequired": true,

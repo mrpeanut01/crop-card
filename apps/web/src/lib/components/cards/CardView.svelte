@@ -217,7 +217,9 @@
                     >{#if f.provenance && variant === 'compact'}<Provenance
                         source={f.provenance}
                         compact
-                      />{/if}{f.note}</span
+                      />{/if}{#if f.englishOnly}<span lang="en" data-english-only="safety"
+                        >{f.note}</span
+                      >{:else}{f.note}{/if}</span
                   >
                 {/if}
               </dd>

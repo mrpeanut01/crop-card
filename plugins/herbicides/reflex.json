@@ -2,7 +2,7 @@
   "pluginId": "reflex",
   "type": "herbicide",
   "displayName": "Reflex (Syngenta fomesafen)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "SL",
   "epaRegistrationNumber": "100-993",
   "defaultUnit": "fl-oz",
@@ -17,6 +17,7 @@
     "amount": 1.5,
     "unit": "pt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "dilutionTable": {
     "10gal": {

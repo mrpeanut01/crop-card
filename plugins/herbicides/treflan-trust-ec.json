@@ -2,7 +2,7 @@
   "pluginId": "treflan-trust-ec",
   "type": "herbicide",
   "displayName": "Treflan / Trust HFP (trifluralin EC)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "fl-oz",
   "formulation": "EC",
   "applicationTiming": "PRE",
@@ -16,6 +16,7 @@
     "amount": 1.5,
     "unit": "pt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 5,

@@ -5,6 +5,7 @@
  */
 
 import { formatInstant, formatQuantity, type Prefs } from '$lib/prefs';
+import { FALLBACK_RATE_LINE } from '$lib/plugins/rateProvenance';
 import {
   mergeProvenance,
   plantingCardHref,
@@ -37,6 +38,8 @@ export interface SprayRecordProduct {
   displayName: string;
   /** The rate saved on the record, if one was. */
   rate: { amount: number; unit: string } | null;
+  /** #737 swarm 2026-10-07: a herbicide rate that was not from the label. */
+  rateFallback?: boolean;
   /** Label facts from the product plugin; null when it is no longer installed. */
   label: SnapshotSprayProduct | null;
 }
@@ -119,7 +122,13 @@ export function buildSprayRecordCard(
     const rate = p.rate
       ? `${trimNumber(p.rate.amount, 2)} ${p.rate.unit}/A${input.customRateOverride ? ', custom rate' : ''}`
       : 'Rate not recorded';
-    facts.push({ label: p.displayName, value: rate, provenance: 'manual', englishOnly: true });
+    facts.push({
+      label: p.displayName,
+      value: rate,
+      provenance: p.rateFallback ? 'fallback' : 'manual',
+      englishOnly: true,
+      ...(p.rateFallback ? { note: FALLBACK_RATE_LINE } : {})
+    });
   }
   if (input.products.length === 1 && input.products[0].label) {
     facts.push({

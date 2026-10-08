@@ -2,7 +2,7 @@
   "pluginId": "me-too-lachlor-ii",
   "type": "herbicide",
   "displayName": "Me-Too-Lachlor II",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "epaRegistrationNumber": "19713-549",
   "defaultUnit": "fl-oz",
   "formulation": "EC",
@@ -17,6 +17,7 @@
     "amount": 1.33,
     "unit": "pt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "dilutionTable": {
     "10gal": {

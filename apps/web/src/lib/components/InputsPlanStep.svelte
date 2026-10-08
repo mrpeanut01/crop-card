@@ -45,6 +45,7 @@
   } from '$lib/plan/inputsChoice';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import FallbackRateLine from '$lib/components/spray/FallbackRateLine.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
   interface Props {
@@ -490,6 +491,7 @@
                       {/if}
                       {#if app.rateAmount != null && app.rateUnit}
                         <p class="rate-line">{formatApplicationRateLine(app, currentPrefs())}</p>
+                        {#if app.rateProvenance === 'fallback'}<FallbackRateLine />{/if}
                       {:else if app.productPluginId}
                         <p class="rate-line" data-testid="rate-missing">
                           {tr('inputs.rateMissing')}

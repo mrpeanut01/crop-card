@@ -2,7 +2,7 @@
   "pluginId": "warrant",
   "type": "herbicide",
   "displayName": "Warrant (Bayer encapsulated acetochlor)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "CS",
   "epaRegistrationNumber": "524-591",
   "defaultUnit": "fl-oz",
@@ -17,6 +17,7 @@
     "amount": 3,
     "unit": "pt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 3,

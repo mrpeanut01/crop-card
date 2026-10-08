@@ -1,7 +1,7 @@
 {
   "pluginId": "capreno-thiencarbazone-tembotrione",
   "type": "herbicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Capreno', 'tembotrione'; the 3 'Capreno' hits are unrelated copper products). Label (264-1063, accepted 2026-02-10) makes no organic-production claim; conventional synthetic herbicide."},
   "formulation": "SC",
   "defaultUnit": "fl-oz",
@@ -21,6 +21,7 @@
     "amount": 3,
     "unit": "fl-oz"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 15,
   "applicationTiming": "POST",
   "requiresAMS": true,

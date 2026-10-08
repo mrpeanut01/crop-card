@@ -99,7 +99,11 @@ function textHeight(text: string, widthIn: number, pt: number, em: number): numb
 const P = WHOLE_PRINT.pt;
 
 function factWide(f: CardFact, colW: number): boolean {
-  return wrapLines(f.value, colW, P.dd, EM.text) > 2 || wrapLines(f.label, colW, P.dt, EM.caps) > 1;
+  return (
+    wrapLines(f.value, colW, P.dd, EM.text) > 2 ||
+    wrapLines(f.label, colW, P.dt, EM.caps) > 1 ||
+    (!!f.note && wrapLines(f.note, colW, P.dd, EM.text) > 2)
+  );
 }
 
 function factHeight(f: CardFact, w: number): number {

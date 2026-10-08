@@ -1,7 +1,7 @@
 {
   "pluginId": "axxe-ammonium-nonanoate",
   "type": "herbicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "SL",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
@@ -16,6 +16,7 @@
     "amount": 9,
     "unit": "qt"
   },
+  "rateProvenance": "fallback",
   "gpaCalibration": 50,
   "applicationTiming": "POST",
   "requiresAMS": false,

@@ -1,7 +1,7 @@
 {
   "pluginId": "sencor-metribuzin",
   "type": "herbicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Sencor'; 'metribuzin'). Conventional synthetic herbicide; label carries no organic-production statement."},
   "defaultUnit": "lb",
   "formulation": "DF",
@@ -13,10 +13,6 @@
       "chemistryClass": "photosystem-ii-triazine"
     }
   ],
-  "ratePerAcre": {
-    "amount": 0.66,
-    "unit": "lb"
-  },
   "gpaCalibration": 15,
   "applicationTiming": "PRE",
   "requiresAMS": false,

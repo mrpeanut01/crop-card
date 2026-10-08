@@ -110,6 +110,8 @@ test.describe('Phase 33C spread warnings', () => {
     await open(page, `/fertility?block=${bedId}`);
     await page.getByRole('heading', { name: 'Record fertilizer application' }).click();
     await page.getByTestId('fertility-batch').selectOption(batch.id);
+    await page.getByTestId('fertility-source').fill('Goat manure');
+    await page.getByTestId('fertility-rate').fill('2');
     await page.getByRole('button', { name: 'Record', exact: true }).click();
     const prompt = page.getByTestId('carryover-confirm');
     await expect(prompt).toBeVisible();

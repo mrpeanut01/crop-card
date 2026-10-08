@@ -39,7 +39,9 @@ export const soilTestCreateSchema = z.object({
 
 export type SoilTestCreate = z.infer<typeof soilTestCreateSchema>;
 
-/** Body of `POST /api/fertility/applications`. `amendmentBatchId` names the
+/** Body of `POST /api/fertility/applications`. `stockItemId` names the
+ *  inventory item the product came from; rate x block acres is taken from
+ *  its on-hand lots (#763). `amendmentBatchId` names the
  *  manure or compost batch spread; `confirmCarryover` is the `factsHash`
  *  from a 409 `CARRYOVER_CONFIRM` the person confirmed (33C, M-45). */
 export const fertilityApplicationCreateSchema = z.object({
@@ -51,9 +53,10 @@ export const fertilityApplicationCreateSchema = z.object({
   stockItemId: z.string().optional(),
   ratePerAcre: z.number().nonnegative(),
   rateUnit: z.string().min(1).max(40),
-  nLbPerAcre: z.number().nonnegative().optional(),
-  pLbPerAcre: z.number().nonnegative().optional(),
-  kLbPerAcre: z.number().nonnegative().optional(),
+  /** Missing or null is stored as not known, never as 0 (#738). */
+  nLbPerAcre: z.number().nonnegative().nullable().optional(),
+  pLbPerAcre: z.number().nonnegative().nullable().optional(),
+  kLbPerAcre: z.number().nonnegative().nullable().optional(),
   notes: z.string().max(500).optional(),
   amendmentBatchId: z.string().min(1).max(80).optional(),
   confirmCarryover: z.string().min(1).max(64).optional()

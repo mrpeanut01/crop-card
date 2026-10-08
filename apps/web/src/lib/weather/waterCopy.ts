@@ -98,7 +98,8 @@ function uniformTitle(
   balance: WaterBalance,
   open: BedVerdict[],
   tz: string,
-  locale: Loc
+  locale: Loc,
+  areaKind?: string | null
 ) {
   const v = balance.verdict;
   const m = (key: MessageKey, params: Record<string, string> = {}) =>
@@ -118,7 +119,12 @@ function uniformTitle(
     return { title: m('advice.water.coveredTitle'), lines: [t(locale, 'advice.water.covered')] };
   }
   if (balance.reason === 'no-target') {
-    return { title: m('advice.water.noTargetTitle'), lines: [t(locale, 'advice.water.noTarget')] };
+    return {
+      title: m('advice.water.noTargetTitle'),
+      lines: [
+        t(locale, areaKind === 'field' ? 'advice.water.noTargetField' : 'advice.water.noTarget')
+      ]
+    };
   }
   if (balance.reason === 'amount-not-logged') {
     const latest = latestUnknownLog(open);
@@ -157,9 +163,28 @@ export function rainTotalLine(
   return t(locale, 'advice.water.rainPartial', { span, inches });
 }
 
+/** A card with no target sorts after every card that has a verdict. */
+export const NO_TARGET_SORT_OFFSET = 50;
+
+/** The watering logged on the open beds this week, the least of them when
+ *  beds differ (#732). Null when none was logged with a known amount. */
+export function wateredLine(open: readonly BedVerdict[], locale?: Loc): string | null {
+  const amounts = open.map((x) => x.wateredIn);
+  if (amounts.length === 0) return null;
+  const least = Math.min(...amounts);
+  const most = Math.max(...amounts);
+  if (most <= 0) return null;
+  if (least === most) return t(locale, 'advice.water.wateredWeek', { inches: inchesText(least) });
+  return least > 0
+    ? t(locale, 'advice.water.wateredWeekAtLeast', { inches: inchesText(least) })
+    : t(locale, 'advice.water.wateredWeekSome');
+}
+
 export interface WaterCardInput {
   fieldId: string;
   areaName: string;
+  /** The Area's kind; a field Area has no default target (#724). */
+  areaKind?: string | null;
   balance: WaterBalance;
   /** The nearest station even when too far to count, for the detail line. */
   nearestStation: StationRef | null;
@@ -217,7 +242,7 @@ export function wateringCard(input: WaterCardInput): TodayAdviceCard {
   let title: string;
   const lines: string[] = [];
   if (uniform) {
-    const u = uniformTitle(input.areaName, b, open, tz, loc);
+    const u = uniformTitle(input.areaName, b, open, tz, loc, input.areaKind);
     title = u.title;
     lines.push(...u.lines);
     if (open.length > 0 && covered.length > 0) {
@@ -238,6 +263,8 @@ export function wateringCard(input: WaterCardInput): TodayAdviceCard {
   if (b.rainIn !== null && b.reason !== 'greenhouse') {
     lines.push(rainTotalLine(b.rainIn, b.rainTrusted, b.coveredHours, loc));
   }
+  const watered = wateredLine(open, loc);
+  if (watered) lines.push(watered);
   if (input.forecastIn !== null && input.forecastIn >= 0.05) {
     lines.push(t(loc, 'advice.water.forecast', { inches: inchesText(input.forecastIn) }));
   }
@@ -269,6 +296,7 @@ export function wateringCard(input: WaterCardInput): TodayAdviceCard {
         fieldId: input.fieldId
       }
     ],
-    sortKey: 100 + verdictRank(b.verdict) * 10
+    sortKey:
+      100 + verdictRank(b.verdict) * 10 + (b.reason === 'no-target' ? NO_TARGET_SORT_OFFSET : 0)
   };
 }

@@ -315,9 +315,9 @@
           <strong>{f.source}</strong>
           <small
             >{f.ratePerAcre}
-            {f.rateUnit} · N {f.nLbPerAcre?.toFixed(0) ?? 0} P {f.pLbPerAcre?.toFixed(0) ?? 0} K {f.kLbPerAcre?.toFixed(
+            {f.rateUnit} · N {f.nLbPerAcre?.toFixed(0) ?? '—'} P {f.pLbPerAcre?.toFixed(0) ?? '—'} K {f.kLbPerAcre?.toFixed(
               0
-            ) ?? 0}</small
+            ) ?? '—'}</small
           >
         </li>
       {/each}

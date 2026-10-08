@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { untrack } from 'svelte';
-  import { createT } from '$lib/i18n';
+  import { onMount, untrack } from 'svelte';
+  import { createT, type MessageKey } from '$lib/i18n';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
-  import { formatRateText } from '$lib/stock/units';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import SetupSoilTest from '$lib/components/setup/SetupSoilTest.svelte';
   import type { SetupSoilTestResult } from '$lib/fertility/soilTestForm';
@@ -15,6 +14,13 @@
   import { page } from '$app/state';
   import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
   import { recordCloseMessageKey, type RecordTaskCloseStatus } from '$lib/tasks/recordClose';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
+  import { formatRateText, formatStockQuantity } from '$lib/stock/units';
+  import {
+    FERTILITY_RATE_UNITS,
+    nutrientsFromAnalysis,
+    type Analysis
+  } from '$lib/fertility/applicationMath';
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -31,14 +37,81 @@
     return key ? tr(key) : null;
   });
 
-  // Application form
-  let appSource = $state('10-10-10');
-  let appRate = $state(200);
-  let appUnit = $state('lb-per-acre');
-  let appN = $state<number | null>(20);
-  let appP = $state<number | null>(20);
-  let appK = $state<number | null>(20);
+  // Application form. Nothing is prefilled as a value (#738): a nutrient
+  // the farmer leaves blank is saved as not known.
+  const FLASH_KEY = 'cropcard.fertility.flash';
+  let appSource = $state('');
+  let appStockId = $state('');
+  let appDate = $state(untrack(() => data.today));
+  let appRate = $state<number | null>(null);
+  let appUnit = $state<string>('lb-per-acre');
+  let appUnitOther = $state('');
+  let appN = $state<number | null>(null);
+  let appP = $state<number | null>(null);
+  let appK = $state<number | null>(null);
+  let npkTyped = $state(false);
+  let npkFromAnalysis = $state(false);
   let appBatch = $state('');
+  let stockNotes = $state<string[]>([]);
+
+  onMount(() => {
+    try {
+      const raw = sessionStorage.getItem(FLASH_KEY);
+      if (raw) {
+        sessionStorage.removeItem(FLASH_KEY);
+        const notes = JSON.parse(raw) as unknown;
+        if (Array.isArray(notes)) stockNotes = notes.filter((n) => typeof n === 'string');
+      }
+    } catch {
+      /* storage can be blocked; the notes are a convenience */
+    }
+  });
+
+  const pickedStock = $derived(data.fertilizerStock.find((i) => i.id === appStockId) ?? null);
+  const analysisFor = $derived.by((): { label: string; analysis: Analysis } | null => {
+    const byId = (id: string | null | undefined) =>
+      id ? data.fertilizers.find((f) => f.id === id) : undefined;
+    const typed = appSource.trim().toLowerCase();
+    const plugin =
+      byId(pickedStock?.pluginId) ??
+      (typed
+        ? data.fertilizers.find(
+            (f) => f.id.toLowerCase() === typed || f.displayName.toLowerCase() === typed
+          )
+        : undefined);
+    if (!plugin?.analysis) return null;
+    const a = plugin.analysis;
+    return { label: `${a.n}-${a.p}-${a.k}`, analysis: a };
+  });
+  const rateUnitCode = $derived(appUnit === 'other' ? appUnitOther.trim() : appUnit);
+  const computedNpk = $derived(
+    analysisFor ? nutrientsFromAnalysis(appRate, rateUnitCode, analysisFor.analysis) : null
+  );
+
+  $effect(() => {
+    const c = computedNpk;
+    if (untrack(() => npkTyped)) return;
+    appN = c?.n ?? null;
+    appP = c?.p ?? null;
+    appK = c?.k ?? null;
+    npkFromAnalysis = c !== null;
+  });
+
+  function pickStock() {
+    const item = pickedStock;
+    if (item) appSource = item.displayName;
+  }
+
+  function markNpkTyped() {
+    npkTyped = true;
+    npkFromAnalysis = false;
+  }
+
+  function occurredAtFor(ymd: string): number | undefined {
+    if (!ymd || ymd === data.today) return undefined;
+    const ms = new Date(`${ymd}T12:00`).getTime();
+    return Number.isFinite(ms) ? Math.min(ms, Date.now()) : undefined;
+  }
   let confirmFacts = $state<CarryoverConfirmBody | null>(null);
 
   // Credit form
@@ -52,7 +125,10 @@
   const organicProducts = $derived.by(() => {
     const source = appSource.trim();
     if (!source) return [];
-    const mark = data.fertilizerMarks[source];
+    const mark =
+      (pickedStock?.pluginId ? data.fertilizerMarks[pickedStock.pluginId] : undefined) ??
+      data.fertilizerMarks[source] ??
+      Object.values(data.fertilizerMarks).find((m) => m.displayName === source);
     return [
       {
         name: mark?.displayName ?? source,
@@ -62,16 +138,27 @@
       }
     ];
   });
-  const fertilizerChoices = $derived(
-    Object.entries(data.fertilizerMarks).sort((a, b) =>
-      a[1].displayName.localeCompare(b[1].displayName)
-    )
-  );
+  const UNIT_KEYS: Record<(typeof FERTILITY_RATE_UNITS)[number], MessageKey> = {
+    'lb-per-acre': 'fert.unit.lb-per-acre',
+    'oz-per-acre': 'fert.unit.oz-per-acre',
+    'gal-per-acre': 'fert.unit.gal-per-acre',
+    'qt-per-acre': 'fert.unit.qt-per-acre',
+    'pt-per-acre': 'fert.unit.pt-per-acre',
+    'fl-oz-per-acre': 'fert.unit.fl-oz-per-acre'
+  };
 
   const rateUnit = $derived(fmt.unit('weightPerArea'));
   const npk = (v: number | null | undefined) =>
-    fmt.qty(v ?? 0, 'weightPerArea', { digits: 0, bare: true });
+    v === null || v === undefined
+      ? tr('fert.notKnown')
+      : fmt.qty(v, 'weightPerArea', { digits: 0, bare: true });
   const perAc = (v: number) => fmt.qty(v, 'weightPerArea', { digits: 1, bare: true });
+  const budgetCell = (v: number, unknown: number) =>
+    unknown === 0
+      ? perAc(v)
+      : v > 0
+        ? tr('fert.atLeast', { value: perAc(v) })
+        : tr('fert.notKnown');
 
   async function reload(taskClose?: RecordTaskCloseStatus | null) {
     const url = new URL(window.location.href);
@@ -87,6 +174,10 @@
 
   async function recordApplication(e: Event) {
     e.preventDefault();
+    if (appRate === null || !Number.isFinite(appRate)) {
+      error = tr('fert.err.rateRequired');
+      return;
+    }
     await postApplication(undefined);
   }
 
@@ -100,12 +191,14 @@
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           blockId,
-          source: appSource,
+          source: appSource.trim(),
+          ...(appStockId ? { stockItemId: appStockId } : {}),
+          ...(occurredAtFor(appDate) !== undefined ? { occurredAt: occurredAtFor(appDate) } : {}),
           ratePerAcre: appRate,
-          rateUnit: appUnit,
-          nLbPerAcre: appN ?? undefined,
-          pLbPerAcre: appP ?? undefined,
-          kLbPerAcre: appK ?? undefined,
+          rateUnit: rateUnitCode,
+          nLbPerAcre: appN,
+          pLbPerAcre: appP,
+          kLbPerAcre: appK,
           amendmentBatchId: appBatch || undefined,
           confirmCarryover,
           ...(data.taskContext ? { taskId: data.taskContext.id } : {})
@@ -122,6 +215,14 @@
       }
       confirmFacts = null;
       message = tr('fert.msgApp');
+      const notes: string[] = Array.isArray(out.stock?.notes) ? out.stock.notes : [];
+      if (notes.length) {
+        try {
+          sessionStorage.setItem(FLASH_KEY, JSON.stringify(notes));
+        } catch {
+          /* the notes are a convenience */
+        }
+      }
       reload(out.taskClose?.status ?? null);
     } catch (e2) {
       error = e2 instanceof Error ? e2.message : String(e2);
@@ -241,9 +342,9 @@
       <tbody>
         <tr>
           <th scope="row">{tr('fert.applications')}</th>
-          <td>{perAc(data.budget.nDeliveredLbPerAcre)}</td>
-          <td>{perAc(data.budget.pDeliveredLbPerAcre)}</td>
-          <td>{perAc(data.budget.kDeliveredLbPerAcre)}</td>
+          <td>{budgetCell(data.budget.nDeliveredLbPerAcre, data.budget.nUnknownApplications)}</td>
+          <td>{budgetCell(data.budget.pDeliveredLbPerAcre, data.budget.pUnknownApplications)}</td>
+          <td>{budgetCell(data.budget.kDeliveredLbPerAcre, data.budget.kUnknownApplications)}</td>
         </tr>
         <tr>
           <th scope="row">{tr('fert.credits')}</th>
@@ -253,16 +354,22 @@
         </tr>
         <tr class="total">
           <th scope="row">{tr('fert.total')}</th>
-          <td>{perAc(data.budget.totalNLbPerAcre)}</td>
-          <td>{perAc(data.budget.totalPLbPerAcre)}</td>
-          <td>{perAc(data.budget.totalKLbPerAcre)}</td>
+          <td>{budgetCell(data.budget.totalNLbPerAcre, data.budget.nUnknownApplications)}</td>
+          <td>{budgetCell(data.budget.totalPLbPerAcre, data.budget.pUnknownApplications)}</td>
+          <td>{budgetCell(data.budget.totalKLbPerAcre, data.budget.kUnknownApplications)}</td>
         </tr>
       </tbody>
     </table>
+    {#if data.budget.nUnknownApplications + data.budget.pUnknownApplications + data.budget.kUnknownApplications > 0}
+      <p class="hint" data-testid="fertility-budget-unknown">{tr('fert.budgetUnknown')}</p>
+    {/if}
   </section>
 {/if}
 
 {#if message}<p class="success">{message}</p>{/if}
+{#each stockNotes as note, i (i)}
+  <p class="success" role="status" data-testid="fertility-stock-note">{note}</p>
+{/each}
 {#if savedTaskLine}
   <p class="success" data-testid="task-close-note" role="status">{savedTaskLine}</p>
 {/if}
@@ -272,31 +379,91 @@
   <summary><h2>{tr('fert.recordApp')}</h2></summary>
   <form onsubmit={recordApplication}>
     <label
+      >{tr('fert.date')}
+      <input
+        type="date"
+        required
+        max={data.today}
+        bind:value={appDate}
+        data-testid="fertility-date"
+      /></label
+    >
+    {#if data.fertilizerStock.length}
+      <label
+        >{tr('fert.fromStock')}
+        <select bind:value={appStockId} onchange={pickStock} data-testid="fertility-stock">
+          <option value="">{tr('fert.fromStockNone')}</option>
+          {#each data.fertilizerStock as item (item.id)}
+            <option value={item.id}
+              >{item.displayName} ({tr('fert.onHand', {
+                amount: formatStockQuantity(item.onHand, item.defaultUnit, currentPrefs())
+              })})</option
+            >
+          {/each}
+        </select>
+      </label>
+    {/if}
+    <label
       >{tr('fert.source')}
       <input
         type="text"
+        required
         bind:value={appSource}
-        list={fertilizerChoices.length ? 'fertilizer-plugins' : undefined}
+        placeholder={tr('fert.sourcePlaceholder')}
+        list="fertilizer-plugins"
+        data-testid="fertility-source"
       /></label
     >
-    {#if fertilizerChoices.length}
-      <datalist id="fertilizer-plugins">
-        {#each fertilizerChoices as [id, m] (id)}
-          <option value={id}>{m.displayName}</option>
-        {/each}
-      </datalist>
-    {/if}
-    <label>{tr('fert.rate')} <input type="number" min="0" step="any" bind:value={appRate} /></label>
-    <label>{tr('fert.unit')} <input type="text" bind:value={appUnit} /></label>
+    <datalist id="fertilizer-plugins">
+      {#each data.fertilizers as f (f.id)}
+        <option value={f.displayName}></option>
+      {/each}
+    </datalist>
     <label
+      >{tr('fert.rate')}
+      <input
+        type="number"
+        min="0"
+        step="any"
+        required
+        placeholder={tr('fert.ratePlaceholder')}
+        bind:value={appRate}
+        data-testid="fertility-rate"
+      /></label
+    >
+    <label
+      >{tr('fert.unit')}
+      <select bind:value={appUnit} data-testid="fertility-unit">
+        {#each FERTILITY_RATE_UNITS as u (u)}
+          <option value={u}>{tr(UNIT_KEYS[u])}</option>
+        {/each}
+        <option value="other">{tr('fert.unitOther')}</option>
+      </select>
+    </label>
+    {#if appUnit === 'other'}
+      <label
+        >{tr('fert.unitOtherText')}
+        <input type="text" required maxlength="40" bind:value={appUnitOther} /></label
+      >
+    {/if}
+    <p class="hint">{tr('fert.npkHint')}</p>
+    {#if npkFromAnalysis && analysisFor}
+      <p class="hint" data-testid="fertility-npk-from-analysis">
+        <Provenance source="plugin" />
+        {tr('fert.npkFromAnalysis', { analysis: analysisFor.label })}
+      </p>
+    {:else if analysisFor && !npkTyped && appRate !== null}
+      <p class="hint">{tr('fert.npkNoAnalysis', { analysis: analysisFor.label })}</p>
+    {/if}
+    <label oninput={markNpkTyped}
       >{tr('fert.nDelivered', { unit: rateUnit })}
       <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={appN} /></label
     >
-    <label
+    <label oninput={markNpkTyped}
       >{tr('fert.pDelivered', { unit: rateUnit })}
       <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={appP} /></label
     >
-    <label
+    <label oninput={markNpkTyped}
       >{tr('fert.kDelivered', { unit: rateUnit })}
       <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={appK} /></label
     >
@@ -385,8 +552,8 @@
         <li>
           {fmt.instant(a.occurredAt, 'date')} —
           {a.source} · {formatRateText(a.ratePerAcre, a.rateUnit, currentPrefs())}
-          ({npk(a.nLbPerAcre)} N · {npk(a.pLbPerAcre)} P ·
-          {npk(a.kLbPerAcre)} K {rateUnit})
+          (N {npk(a.nLbPerAcre)} · P {npk(a.pLbPerAcre)} · K {npk(a.kLbPerAcre)}
+          {rateUnit})
           {#if a.batchName}
             <br /><em class="hint"
               >{a.confirmed

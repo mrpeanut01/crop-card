@@ -12,6 +12,7 @@
  *        before the 48h FR-09 window closes.
  */
 
+import { nutrientFromStorage } from '$lib/fertility/applicationMath';
 import { error } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
@@ -175,9 +176,9 @@ export const load: PageServerLoad = async (event) => {
       source: row.source,
       ratePerAcre: row.ratePerAcreHundredths / 100,
       rateUnit: row.rateUnit,
-      nLbPerAcre: row.nDeliveredHundredths / 100,
-      pLbPerAcre: row.pDeliveredHundredths / 100,
-      kLbPerAcre: row.kDeliveredHundredths / 100,
+      nLbPerAcre: nutrientFromStorage(row.nDeliveredHundredths),
+      pLbPerAcre: nutrientFromStorage(row.pDeliveredHundredths),
+      kLbPerAcre: nutrientFromStorage(row.kDeliveredHundredths),
       notes: row.notes
     };
   } else if (kind === 'planting') {

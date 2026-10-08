@@ -17,6 +17,7 @@
  * payload, and to give the audit table a stable per-row fingerprint.
  */
 
+import { nutrientFromStorage } from '$lib/fertility/applicationMath';
 import { createHash } from 'node:crypto';
 import { inArray } from 'drizzle-orm';
 import { db } from './client';
@@ -216,9 +217,9 @@ function listFertilityApplicationsAll(filters: {
     stockItemId: row.stockItemId ?? undefined,
     ratePerAcre: row.ratePerAcreHundredths / 100,
     rateUnit: row.rateUnit,
-    nLbPerAcre: row.nDeliveredHundredths / 100,
-    pLbPerAcre: row.pDeliveredHundredths / 100,
-    kLbPerAcre: row.kDeliveredHundredths / 100,
+    nLbPerAcre: nutrientFromStorage(row.nDeliveredHundredths),
+    pLbPerAcre: nutrientFromStorage(row.pDeliveredHundredths),
+    kLbPerAcre: nutrientFromStorage(row.kDeliveredHundredths),
     performedById: row.performedById ?? undefined,
     notes: row.notes ?? undefined
   }));

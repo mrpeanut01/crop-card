@@ -100,12 +100,20 @@ export function sqFtOf(row: {
   return null;
 }
 
-/** An owner-typed target (`manual`) or the sourced default (`fallback`). */
-export function resolveTarget(raw: string | null | undefined): WaterTarget | null {
+/** Area kinds the sourced default target covers. Its quote is about
+ *  vegetables, so rain-fed field Areas get one only when the owner types it (#724). */
+export const DEFAULT_TARGET_AREA_KINDS: ReadonlySet<string> = new Set(['garden']);
+
+/** An owner-typed target (`manual`) or, for a garden Area, the sourced default (`fallback`). */
+export function resolveTarget(
+  raw: string | null | undefined,
+  areaKind: string | null | undefined
+): WaterTarget | null {
   const n = raw === null || raw === undefined ? NaN : Number(raw);
   if (Number.isFinite(n) && n >= WATER_TARGET_MIN_IN && n <= WATER_TARGET_MAX_IN) {
     return { inches: n, provenance: 'manual' };
   }
+  if (!areaKind || !DEFAULT_TARGET_AREA_KINDS.has(areaKind)) return null;
   return DEFAULT_WEEKLY_TARGET_IN === null
     ? null
     : { inches: DEFAULT_WEEKLY_TARGET_IN, provenance: 'fallback' };
@@ -180,7 +188,7 @@ export function loadAreasForBeds(
           lengthFt: r.fLength,
           geometryGeojson: r.fGeo
         }),
-        target: resolveTarget(r.target),
+        target: resolveTarget(r.target, r.fieldKind),
         beds: []
       };
       areas.set(r.fieldId, area);
@@ -407,6 +415,7 @@ export async function wateringCards(
     wateringCard({
       fieldId: r.area.fieldId,
       areaName: r.area.name,
+      areaKind: r.area.kind,
       balance: r.balance,
       nearestStation: r.nearestStation,
       forecastIn: r.forecastIn,

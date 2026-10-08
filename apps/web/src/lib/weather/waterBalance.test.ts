@@ -89,6 +89,26 @@ describe('waterBalance verdicts', () => {
     expect(b.station?.distanceMi).toBe(25);
   });
 
+  it('counts logged watering with the rain known so far when rain is partial (#732)', () => {
+    const far = { name: 'Far AP (KFAR)', distanceMi: 25 };
+    const gauges = [{ fromMs: NOW - 24 * H, toMs: NOW, inches: 0.4 }];
+    const log = (inches: number) => ({
+      occurredAtMs: NOW - 2 * H,
+      blockId: null,
+      inches,
+      gallons: null,
+      durationMin: null
+    });
+    const short = waterBalance(input({ station: far, gauges, logs: [log(0.5)] }));
+    expect(short.verdict).toBe('unknown');
+    expect(short.reason).toBe('rain-unknown');
+    expect(short.perBed[0].wateredIn).toBe(0.5);
+    const enough = waterBalance(input({ station: far, gauges, logs: [log(0.6)] }));
+    expect(enough.verdict).toBe('ok');
+    const wateringAlone = waterBalance(input({ station: far, logs: [log(1)] }));
+    expect(wateringAlone.verdict).toBe('ok');
+  });
+
   it('is unknown when hourly coverage is under 90%', () => {
     const rain = stationHours(0).slice(0, 150);
     const b = waterBalance(input({ stationRain: rain }));
@@ -273,6 +293,37 @@ describe('waterBalance properties', () => {
           );
           const known = miles <= 10 ? vals.filter((v) => v !== null).length : 0;
           if (known < 152) expect(b.verdict).toBe('unknown');
+        }
+      )
+    );
+  });
+
+  it('with rain partly known, says ok exactly when known rain plus watering meets the target', () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: 0, max: 2, noNaN: true }),
+        fc.double({ min: 0, max: 2, noNaN: true }),
+        (gaugeIn, wateredIn) => {
+          const b = waterBalance(
+            input({
+              station: null,
+              gauges: [{ fromMs: NOW - 24 * H, toMs: NOW, inches: gaugeIn }],
+              logs: [
+                {
+                  occurredAtMs: NOW - H,
+                  blockId: null,
+                  inches: wateredIn,
+                  gallons: null,
+                  durationMin: null
+                }
+              ]
+            })
+          );
+          const rain = b.rainIn ?? 0;
+          const logged = b.perBed[0].wateredIn;
+          if (logged > 0 && rain + logged >= 1) expect(b.verdict).toBe('ok');
+          else expect(b.verdict).toBe('unknown');
+          expect(['skip', 'water']).not.toContain(b.verdict);
         }
       )
     );

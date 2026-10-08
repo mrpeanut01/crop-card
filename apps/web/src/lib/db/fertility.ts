@@ -19,6 +19,7 @@ import {
   type LabRatings,
   type UnitsBasis
 } from '$lib/fertility/soilInterpret';
+import { nutrientFromStorage, nutrientToStorage } from '$lib/fertility/applicationMath';
 
 // ─── soil_tests ──────────────────────────────────────────────────────────
 
@@ -151,9 +152,10 @@ export interface FertilityApplicationInput {
   stockItemId?: string;
   ratePerAcre: number;
   rateUnit: string;
-  nLbPerAcre?: number;
-  pLbPerAcre?: number;
-  kLbPerAcre?: number;
+  /** N, P₂O₅ and K₂O delivered; missing or null is not known (#738). */
+  nLbPerAcre?: number | null;
+  pLbPerAcre?: number | null;
+  kLbPerAcre?: number | null;
   performedById?: string;
   notes?: string;
   /** The manure or compost batch spread (33C). */
@@ -176,9 +178,9 @@ function rowToApplication(row: typeof fertilityApplications.$inferSelect): Ferti
     stockItemId: row.stockItemId ?? undefined,
     ratePerAcre: row.ratePerAcreHundredths / 100,
     rateUnit: row.rateUnit,
-    nLbPerAcre: row.nDeliveredHundredths / 100,
-    pLbPerAcre: row.pDeliveredHundredths / 100,
-    kLbPerAcre: row.kDeliveredHundredths / 100,
+    nLbPerAcre: nutrientFromStorage(row.nDeliveredHundredths),
+    pLbPerAcre: nutrientFromStorage(row.pDeliveredHundredths),
+    kLbPerAcre: nutrientFromStorage(row.kDeliveredHundredths),
     performedById: row.performedById ?? undefined,
     notes: row.notes ?? undefined,
     amendmentBatchId: row.amendmentBatchId ?? undefined,
@@ -200,9 +202,9 @@ export function insertFertilityApplication(input: FertilityApplicationInput): Fe
         stockItemId: input.stockItemId ?? null,
         ratePerAcreHundredths: Math.round(input.ratePerAcre * 100),
         rateUnit: input.rateUnit,
-        nDeliveredHundredths: Math.round((input.nLbPerAcre ?? 0) * 100),
-        pDeliveredHundredths: Math.round((input.pLbPerAcre ?? 0) * 100),
-        kDeliveredHundredths: Math.round((input.kLbPerAcre ?? 0) * 100),
+        nDeliveredHundredths: nutrientToStorage(input.nLbPerAcre),
+        pDeliveredHundredths: nutrientToStorage(input.pLbPerAcre),
+        kDeliveredHundredths: nutrientToStorage(input.kLbPerAcre),
         performedById: input.performedById ?? null,
         notes: input.notes ?? null,
         amendmentBatchId: input.amendmentBatchId ?? null,
@@ -314,6 +316,11 @@ export interface FertilityBudget {
   totalNLbPerAcre: number;
   totalPLbPerAcre: number;
   totalKLbPerAcre: number;
+  /** Applications this year with that nutrient not known; the delivered
+   *  and total figures are then a lower bound (#738). */
+  nUnknownApplications: number;
+  pUnknownApplications: number;
+  kUnknownApplications: number;
 }
 
 export function fertilityBudgetForBlock(blockId: string, year: number): FertilityBudget {
@@ -343,6 +350,9 @@ export function fertilityBudgetForBlock(blockId: string, year: number): Fertilit
     kCreditedLbPerAcre: kCredited,
     totalNLbPerAcre: nDelivered + nCredited,
     totalPLbPerAcre: pDelivered + pCredited,
-    totalKLbPerAcre: kDelivered + kCredited
+    totalKLbPerAcre: kDelivered + kCredited,
+    nUnknownApplications: apps.filter((a) => a.nLbPerAcre == null).length,
+    pUnknownApplications: apps.filter((a) => a.pLbPerAcre == null).length,
+    kUnknownApplications: apps.filter((a) => a.kLbPerAcre == null).length
   };
 }

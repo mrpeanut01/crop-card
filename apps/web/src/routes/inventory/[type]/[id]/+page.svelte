@@ -42,6 +42,7 @@
     movements={data.movements}
     plugin={data.plugin}
     phiByCrop={data.phiByCrop}
+    rateByCrop={data.rateByCrop}
   />
 {:else if data.type === 'fertility'}
   <FertilityDetail

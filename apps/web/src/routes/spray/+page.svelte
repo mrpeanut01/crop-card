@@ -19,6 +19,8 @@
   import { CHEMISTRY_CLASSES, type ChemistryClass } from '$lib/safety/types';
   import { herbicideRatePreview } from '$lib/dilution/ratePreview';
   import FallbackRateLine from '$lib/components/spray/FallbackRateLine.svelte';
+  import CropLabelRates from '$lib/components/spray/CropLabelRates.svelte';
+  import type { CropRateRow } from '$lib/plugins/cropRate';
   import Banner from '$lib/components/ui/Banner.svelte';
   import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
@@ -227,6 +229,7 @@
     requiresDecon: boolean;
     dilutions?: Dilution[];
     noLabelRate?: string[];
+    cropLabel?: Array<{ pluginId: string; rows: CropRateRow[] }>;
     tankMixOrder?: TankMixStep[];
     ruleVersion: string;
     pluginHashes: Record<string, string>;
@@ -1008,6 +1011,9 @@
             {#if h.deconRequired}• decon{/if}
           </small>
           {#if h.rateProvenance === 'fallback'}<FallbackRateLine />{/if}
+          {#if h.hasCropRates}<small data-testid="crop-rate-hint"
+              >{tr('sprayui.cropRate.byCropHint')}</small
+            >{/if}
         </button>
       {/each}
     </div>
@@ -1413,6 +1419,10 @@
             {/each}
           </tbody>
         </table>
+        {#each result.cropLabel ?? [] as note (note.pluginId)}
+          <h4 class="crop-rate-product">{herbicideName(note.pluginId)}</h4>
+          <CropLabelRates rows={note.rows} mixNote />
+        {/each}
 
         <!-- Last-tank fill increments. Crystal-clear "pour this much
              water, then mix in this much chemical" with round-up/down

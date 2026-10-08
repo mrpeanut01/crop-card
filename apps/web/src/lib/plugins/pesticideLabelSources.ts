@@ -19,7 +19,11 @@
  *   explicit `rateProvenance: 'fallback'` (swarm 2026-10-07, #737);
  * - a herbicide whose chemistry class is in `LABEL_SOURCED_CLASSES` needs a
  *   `chemistryClass` entry for that class whose quote states the HRAC group
- *   (#654).
+ *   (#654);
+ * - every herbicide `ratePerAcreByCrop` row needs a `rateByCrop` entry for
+ *   the same crop whose quote states the amount (and the maximum, when one
+ *   is given), and every `stageLimitByCrop` row a `stageLimitByCrop` entry
+ *   for the same crop whose quote contains the limit sentence (#737).
  */
 
 export const LABEL_SOURCED_CLASSES: Readonly<Record<string, number>> = { thiocarbamate: 15 };
@@ -31,6 +35,13 @@ export interface LabelSourcePlugin {
   reEntryIntervalHours?: number;
   ratePerAcre?: { amount: number; unit: string };
   rateProvenance?: string;
+  ratePerAcreByCrop?: ReadonlyArray<{
+    cropPluginId: string;
+    amount: number;
+    maxAmount?: number;
+    unit: string;
+  }>;
+  stageLimitByCrop?: ReadonlyArray<{ cropPluginId: string; limit: string }>;
   preHarvestIntervalsByCrop?: ReadonlyArray<{
     cropPluginId?: string;
     cropFamily?: string;
@@ -55,10 +66,39 @@ export interface LabelSources {
   rate?: Record<string, unknown>;
   chemistryClass?: Record<string, unknown>;
   complianceFlags?: Record<string, unknown>;
+  rateByCrop?: Record<string, unknown>;
+  stageLimitByCrop?: Record<string, unknown>;
 }
 
 function statesNumber(quote: unknown, n: number): boolean {
   return typeof quote === 'string' && new RegExp(`(^|[^0-9.])${n}([^0-9]|$)`).test(quote);
+}
+
+const FRACTIONS: Record<string, readonly string[]> = {
+  '0.25': ['1/4', '¼'],
+  '0.5': ['1/2', '½'],
+  '0.75': ['3/4', '¾']
+};
+
+/** A quote states an amount as a decimal or, for quarters and halves, as a
+ *  label fraction ("½ pint", "1 1/2 pints"). */
+export function statesAmount(quote: unknown, n: number): boolean {
+  if (typeof quote !== 'string') return false;
+  if (statesNumber(quote, n)) return true;
+  const whole = Math.floor(n);
+  const frac = FRACTIONS[String(Math.round((n - whole) * 100) / 100)];
+  if (!frac) return false;
+  return frac.some((f) => {
+    const forms = whole === 0 ? [f] : [`${whole} ${f}`, `${whole}${f}`];
+    return forms.some((form) => {
+      const esc = form.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+      return new RegExp(`(^|[^0-9/])${esc}([^0-9/]|$)`).test(quote);
+    });
+  });
+}
+
+function normalizeSpace(s: string): string {
+  return s.replace(/\s+/g, ' ').trim();
 }
 
 function hasUrl(s: QuotedSource): boolean {
@@ -92,7 +132,9 @@ export function pesticideLabelSourceGaps(
         gaps.push(`${p.pluginId}: rei source does not quote ${p.reEntryIntervalHours} hours`);
       }
     }
-    if (p.type === 'herbicide') gaps.push(...rateGaps(p, sources), ...classGaps(p, sources));
+    if (p.type === 'herbicide') {
+      gaps.push(...rateGaps(p, sources), ...classGaps(p, sources), ...rateByCropGaps(p, sources));
+    }
     const seen = new Set<string>();
     for (const row of p.preHarvestIntervalsByCrop ?? []) {
       const key = row.cropPluginId ?? row.cropFamily ?? '?';
@@ -224,4 +266,41 @@ function organicFlagGaps(p: LabelSourcePlugin, sources: LabelSources): string[] 
       : [];
   }
   return [`${p.pluginId}: ${set.join(', ')} true with no OMRI listing or 7 CFR 205 quote`];
+}
+
+type CropRow = QuotedSource & { cropPluginId?: unknown };
+
+function cropRows(list: unknown, cropPluginId: string): CropRow[] {
+  return (Array.isArray(list) ? (list as CropRow[]) : []).filter(
+    (s) => s.cropPluginId === cropPluginId
+  );
+}
+
+function rateByCropGaps(p: LabelSourcePlugin, sources: LabelSources): string[] {
+  const gaps: string[] = [];
+  for (const row of p.ratePerAcreByCrop ?? []) {
+    const match = cropRows(sources.rateByCrop?.[p.pluginId], row.cropPluginId).find((s) => {
+      const r = s as CropRow & { amount?: unknown; maxAmount?: unknown; unit?: unknown };
+      return r.amount === row.amount && r.maxAmount === row.maxAmount && r.unit === row.unit;
+    });
+    if (!match) {
+      gaps.push(`${p.pluginId}: rate for ${row.cropPluginId} has no matching rateByCrop source`);
+    } else if (
+      !hasUrl(match) ||
+      !statesAmount(match.quote, row.amount) ||
+      (row.maxAmount !== undefined && !statesAmount(match.quote, row.maxAmount))
+    ) {
+      gaps.push(`${p.pluginId}: rateByCrop source does not quote the rate for ${row.cropPluginId}`);
+    }
+  }
+  for (const row of p.stageLimitByCrop ?? []) {
+    const limit = normalizeSpace(row.limit);
+    const ok = cropRows(sources.stageLimitByCrop?.[p.pluginId], row.cropPluginId).some(
+      (s) => hasUrl(s) && typeof s.quote === 'string' && normalizeSpace(s.quote).includes(limit)
+    );
+    if (!ok) {
+      gaps.push(`${p.pluginId}: stage limit for ${row.cropPluginId} has no quote containing it`);
+    }
+  }
+  return gaps;
 }

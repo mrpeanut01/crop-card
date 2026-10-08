@@ -205,6 +205,15 @@ export const enSprayui = {
   'sprayui.saving': 'Saving…',
   'sprayui.size.save': 'Save size',
   'sprayui.card.chemicals': 'Chemicals needed',
+  'sprayui.cropRate.title': 'Label rates by crop',
+  'sprayui.cropRate.crop': 'Crop',
+  'sprayui.cropRate.rate': 'Label rate per acre',
+  'sprayui.cropRate.limits': 'Label limits',
+  'sprayui.cropRate.mixedAtLow':
+    'The mix uses the low end of the label rate for this crop. Use more only as the label allows for your weeds and soil.',
+  'sprayui.cropRate.noRate': 'No label rate on file for this crop. Check the label.',
+  'sprayui.cropRate.byCropHint':
+    'Label rate depends on the crop. The mix uses it when every crop on the block has one on file.',
   'sprayui.card.product': 'Product',
   'sprayui.card.totalNeeded': 'Total needed',
   'sprayui.card.perTank': 'Per full {gal}-gal tank',

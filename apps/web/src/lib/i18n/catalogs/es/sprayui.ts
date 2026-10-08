@@ -210,6 +210,16 @@ export const esSprayui: Partial<Record<MessageKey, string>> = {
   'sprayui.saving': 'Guardando…',
   'sprayui.size.save': 'Guardar tamaño',
   'sprayui.card.chemicals': 'Productos químicos necesarios',
+  'sprayui.cropRate.title': 'Dosis de la etiqueta por cultivo',
+  'sprayui.cropRate.crop': 'Cultivo',
+  'sprayui.cropRate.rate': 'Dosis de la etiqueta por acre',
+  'sprayui.cropRate.limits': 'Límites de la etiqueta',
+  'sprayui.cropRate.mixedAtLow':
+    'La mezcla usa el extremo bajo de la dosis de la etiqueta para este cultivo. Use más solo si la etiqueta lo permite para sus malezas y su suelo.',
+  'sprayui.cropRate.noRate':
+    'No hay dosis de la etiqueta registrada para este cultivo. Revise la etiqueta.',
+  'sprayui.cropRate.byCropHint':
+    'La dosis de la etiqueta depende del cultivo. La mezcla la usa cuando todos los cultivos del bloque tienen una registrada.',
   'sprayui.card.product': 'Producto',
   'sprayui.card.totalNeeded': 'Total necesario',
   'sprayui.card.perTank': 'Por tanque lleno de {gal} gal',

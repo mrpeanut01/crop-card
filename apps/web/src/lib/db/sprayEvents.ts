@@ -14,7 +14,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, gte, lte } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, or } from 'drizzle-orm';
 import type {
   ChemistryClass,
   ConditionsProvenance,
@@ -55,6 +55,8 @@ export interface SprayEventInput {
   pluginHashes: Record<string, string>;
   customRateOverride?: boolean;
   notes?: string;
+  /** #640: set only when every herbicide in the tank had an REI on file. */
+  reEntryClearAt?: number;
 }
 
 export interface SprayEvent extends SprayEventInput {
@@ -88,7 +90,8 @@ function rowToEvent(row: typeof sprayEvents.$inferSelect): SprayEvent {
     rulesVersion: row.rulesVersion,
     pluginHashes: JSON.parse(row.pluginHashesJson),
     customRateOverride: row.customRateOverride,
-    lockedAt: row.lockedAt ? row.lockedAt.getTime() : undefined
+    lockedAt: row.lockedAt ? row.lockedAt.getTime() : undefined,
+    reEntryClearAt: row.reEntryClearAt?.getTime()
   };
 }
 
@@ -108,7 +111,8 @@ export function insertSprayEvent(input: SprayEventInput): SprayEvent {
         conditionsJson: JSON.stringify(input.conditions),
         rulesVersion: input.rulesVersion,
         pluginHashesJson: JSON.stringify(input.pluginHashes),
-        customRateOverride: input.customRateOverride ?? false
+        customRateOverride: input.customRateOverride ?? false,
+        reEntryClearAt: input.reEntryClearAt ? new Date(input.reEntryClearAt) : null
       })
     )
     .returning()
@@ -234,4 +238,26 @@ export function recordsApproachingRetention(now: number = Date.now()): SprayEven
   // `tenantWhere` inside `listSprayEvents` is the canonical scope.
   void tenantWhere;
   return listSprayEvents({ fromMs: alertStart, toMs: alertEnd });
+}
+
+/**
+ * #640: herbicide sprays that may still be inside a re-entry interval: a
+ * stored clear time at or after `now`, or saved within `lookbackMs` (the
+ * longest herbicide REI in the library), whose REI is read from the library.
+ */
+export function sprayEventsForReEntry(now: number, lookbackMs: number): SprayEvent[] {
+  return db
+    .select()
+    .from(sprayEvents)
+    .where(
+      withTenant(
+        sprayEvents,
+        or(
+          gte(sprayEvents.reEntryClearAt, new Date(now)),
+          gte(sprayEvents.occurredAt, new Date(now - Math.max(0, lookbackMs)))
+        )
+      )
+    )
+    .all()
+    .map(rowToEvent);
 }

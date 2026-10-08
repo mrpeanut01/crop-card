@@ -1267,6 +1267,42 @@ export const preHarvestIntervalByCropSchema = z
   });
 export type PreHarvestIntervalByCrop = z.infer<typeof preHarvestIntervalByCropSchema>;
 
+const herbicideRateUnitSchema = z.enum(["oz", "fl-oz", "lb", "pt", "qt"]);
+
+/**
+ * #737 — a label rate for one crop. `amount` is the lowest rate the label
+ * gives for that crop and is the one the spray mix uses; `maxAmount` is the
+ * label's highest single-application rate for it, when the label gives a
+ * range. Each row needs a quoted label source in
+ * apps/web/scripts/epa-reg-sources.json (`rateByCrop`).
+ */
+export const herbicideRateByCropSchema = z
+  .object({
+    cropPluginId: z.string().min(1),
+    amount: z.number().positive(),
+    maxAmount: z.number().positive().optional(),
+    unit: herbicideRateUnitSchema,
+  })
+  .strict()
+  .refine((r) => r.maxAmount === undefined || r.maxAmount >= r.amount, {
+    message: "maxAmount must be at least amount",
+  });
+export type HerbicideRateByCrop = z.infer<typeof herbicideRateByCropSchema>;
+
+/**
+ * #737 — a label growth-stage or seasonal limit for one crop, as the label's
+ * own sentence (shown in English). Each row needs a quoted label source in
+ * apps/web/scripts/epa-reg-sources.json (`stageLimitByCrop`) whose quote
+ * contains `limit`.
+ */
+export const herbicideStageLimitByCropSchema = z
+  .object({
+    cropPluginId: z.string().min(1),
+    limit: z.string().trim().min(1),
+  })
+  .strict();
+export type HerbicideStageLimitByCrop = z.infer<typeof herbicideStageLimitByCropSchema>;
+
 export const herbicidePluginSchema = pluginBase.extend({
   type: z.literal("herbicide"),
   activeIngredients: z.array(activeIngredientSchema).min(1),
@@ -1289,6 +1325,11 @@ export const herbicidePluginSchema = pluginBase.extend({
    *  with neither is read as `fallback`, and the source gate refuses a
    *  shipped herbicide rate without one. */
   rateProvenance: z.enum(["label", "fallback"]).optional(),
+  /** #737 — label rates by crop. When every crop on the sprayed block has a
+   *  row with the same rate, the spray mix uses it as a label rate. */
+  ratePerAcreByCrop: z.array(herbicideRateByCropSchema).optional(),
+  /** #737 — label growth-stage and seasonal limits by crop. */
+  stageLimitByCrop: z.array(herbicideStageLimitByCropSchema).optional(),
   /** #640 — label restricted-entry interval. Optional: shown as "not on file"
    *  when missing. Each value needs a quoted label source in
    *  apps/web/scripts/epa-reg-sources.json (`rei`). */

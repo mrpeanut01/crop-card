@@ -826,6 +826,29 @@ export const treeSizeClassesSchema = z
   );
 export type TreeSizeClassRow = z.infer<typeof treeSizeClassesSchema>[number];
 
+// #686: a perennial's yearly harvest period as month and day. Needs a source
+// under `harvestSeason` in apps/web/scripts/crop-data-sources.json whose quote
+// states both dates. The calendar repeats it each bearing year; an end before
+// the start runs into the next year.
+
+const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const;
+
+export const monthDaySchema = z
+  .strictObject({
+    month: z.number().int().min(1).max(12),
+    day: z.number().int().min(1).max(31),
+  })
+  .refine((v) => v.day <= DAYS_IN_MONTH[v.month - 1], {
+    message: "day is past the end of the month",
+  });
+export type MonthDay = z.infer<typeof monthDaySchema>;
+
+export const harvestSeasonSchema = z.strictObject({
+  start: monthDaySchema,
+  end: monthDaySchema,
+});
+export type HarvestSeason = z.infer<typeof harvestSeasonSchema>;
+
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal("crop"),
   cropFamily: z.preprocess(
@@ -1002,6 +1025,8 @@ export const cropPluginSchema = pluginBase.extend({
   forageHazards: forageHazardsSchema.optional(),
   /** Spacing and bearing age per tree size class (dwarf to standard). */
   treeSizeClasses: treeSizeClassesSchema.optional(),
+  /** #686: sourced yearly harvest period for a perennial. */
+  harvestSeason: harvestSeasonSchema.optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),

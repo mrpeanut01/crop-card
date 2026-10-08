@@ -34,6 +34,7 @@ import {
   rowSpacingGaps,
   isAllowedSpacingSource,
   treeSizeClassQuoteGaps,
+  harvestSeasonQuoteGaps,
   type SourceMap
 } from './sourceCoverage';
 
@@ -433,6 +434,55 @@ describe('tree size classes', () => {
       'apple-test: treeSizeClasses.standard quote does not state 30 ft',
       'apple-test: treeSizeClasses.standard quote does not state 6-10 years'
     ]);
+  });
+});
+
+describe('#686 harvest season', () => {
+  const crop = {
+    pluginId: 'peach-test',
+    harvestSeason: { start: { month: 7, day: 25 }, end: { month: 8, day: 3 } }
+  };
+  const entry = (quote: string, url = 'https://vtechworks.lib.vt.edu/handle/10919/55302') => ({
+    'peach-test': { harvestSeason: { url, publisher: 'VCE', date: '2009', quote } }
+  });
+
+  it('asks for a source and accepts a quote that states both dates', () => {
+    expect(
+      cropFactPaths(cropPluginSchema.parse({ ...SEEDING_BASE, harvestSeason: crop.harvestSeason }))
+    ).toContain('harvestSeason');
+    expect(harvestSeasonQuoteGaps([crop], entry('Harvest begins July 25 to Aug. 3.'))).toEqual([]);
+    const sameMonth = {
+      ...crop,
+      harvestSeason: { start: { month: 8, day: 25 }, end: { month: 8, day: 31 } }
+    };
+    expect(harvestSeasonQuoteGaps([sameMonth], entry('Harvest season is Aug. 25 to 31.'))).toEqual(
+      []
+    );
+    expect(
+      harvestSeasonQuoteGaps([sameMonth], entry('Harvest season is Aug. 25 to Aug. 31.'))
+    ).toEqual([]);
+  });
+
+  it('refuses a quote missing a date, a wrong day or a non-extension page', () => {
+    expect(harvestSeasonQuoteGaps([crop], entry('Harvest begins July 2 to Aug. 30.'))).toEqual([
+      'peach-test: harvestSeason quote does not state the start date',
+      'peach-test: harvestSeason quote does not state the end date'
+    ]);
+    expect(
+      harvestSeasonQuoteGaps(
+        [crop],
+        entry('Harvest begins July 25 to Aug. 3.', 'https://example.com/x')
+      )
+    ).toEqual(['peach-test: harvestSeason source is not an extension or government page']);
+  });
+
+  it('refuses a day past the end of the month', () => {
+    expect(() =>
+      cropPluginSchema.parse({
+        ...SEEDING_BASE,
+        harvestSeason: { start: { month: 6, day: 31 }, end: { month: 7, day: 2 } }
+      })
+    ).toThrow();
   });
 });
 

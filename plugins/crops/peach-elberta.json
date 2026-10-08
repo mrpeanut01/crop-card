@@ -2,7 +2,7 @@
   "pluginId": "peach-elberta",
   "type": "crop",
   "displayName": "Peach Elberta (heirloom)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "stone-fruit",
   "preHarvestIntervalDays": 7,
@@ -49,5 +49,15 @@
       "severity": "toxic",
       "note": "Wilted leaves are the most dangerous. Keep animals away from fallen or pruned branches."
     }
-  ]
+  ],
+  "harvestSeason": {
+    "start": {
+      "month": 8,
+      "day": 25
+    },
+    "end": {
+      "month": 8,
+      "day": 31
+    }
+  }
 }

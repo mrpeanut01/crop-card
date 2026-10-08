@@ -2,7 +2,7 @@
   "pluginId": "peach-redhaven",
   "type": "crop",
   "displayName": "Peach — Redhaven",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "cropFamily": "stone-fruit",
   "preHarvestIntervalDays": 7,
   "daysToMaturity": {
@@ -55,5 +55,15 @@
       "severity": "toxic",
       "note": "Wilted leaves are the most dangerous. Keep animals away from fallen or pruned branches."
     }
-  ]
+  ],
+  "harvestSeason": {
+    "start": {
+      "month": 7,
+      "day": 25
+    },
+    "end": {
+      "month": 8,
+      "day": 3
+    }
+  }
 }

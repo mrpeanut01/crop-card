@@ -202,11 +202,34 @@ describe('#686 perennial fruit each year', () => {
     expect(new Date(w!.startMs).getFullYear()).toBe(2026);
   });
 
-  it('borrows no apple-season window for a peach', () => {
-    const peach = plugin('peach-redhaven');
-    const events = eventsForPlanting(planting(peach, Date.UTC(2020, 3, 1)), peach, { now });
+  it('borrows no apple-season window for a stone fruit with no sourced season', () => {
+    const cherry = plugin('cherry-tart-montmorency');
+    expect(cherry.harvestSeason).toBeUndefined();
+    const events = eventsForPlanting(planting(cherry, Date.UTC(2018, 3, 1)), cherry, { now });
     expect(of(events, 'harvest-window')).toEqual([]);
     expect(of(events, 'stage-window')).toEqual([]);
+  });
+
+  it('gives a bearing peach its sourced yearly window, not typical timing', () => {
+    const peach = plugin('peach-redhaven');
+    const p = planting(peach, Date.UTC(2020, 3, 1));
+    const w = harvestWindowFor(p, peach, { now: new Date(2026, 6, 1).getTime() })!;
+    expect(w.startMs).toBe(new Date(2026, 6, 25).getTime());
+    expect(w.endMs).toBe(new Date(2026, 7, 4).getTime() - 1);
+    const events = of(eventsForPlanting(p, peach, { now }), 'harvest-window');
+    expect(events.length).toBeGreaterThan(0);
+    for (const e of events) expect(isTypicalTimingEvent(e)).toBe(false);
+    expect(of(eventsForPlanting(p, peach, { now }), 'stage-window')).toEqual([]);
+  });
+
+  it('gives a young peach no window before its years to first crop', () => {
+    const peach = plugin('peach-elberta');
+    const sown = new Date(2026, 3, 1).getTime();
+    const events = eventsForPlanting(planting(peach, sown), peach, { now });
+    const years = of(events, 'harvest-window').map((e) => new Date(e.startMs).getFullYear());
+    expect(years).not.toContain(2026);
+    expect(years).not.toContain(2027);
+    expect(years).not.toContain(2028);
   });
 
   it('shows no harvest before the years to first crop have passed', () => {

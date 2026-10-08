@@ -16,7 +16,7 @@
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { resolveSeedsPerLb } from '$lib/plugins/familyDefaults';
 
-export type SeedUnit = 'lb' | 'oz' | 'g' | 'kg' | 'seeds' | 'packets' | 'count';
+export type SeedUnit = 'lb' | 'oz' | 'g' | 'kg' | 'seeds' | 'packets' | 'count' | 'plants';
 
 /** Subset of CropPlugin we actually read. Lets clients build a thin
  *  object from plantingGuides + cropCatalog without holding the whole
@@ -89,7 +89,7 @@ export function seedsToPlants(input: SeedsToPlantsInput): SeedsToPlantsResult | 
     return { rawSeeds: raw, plants: Math.round(raw * germ), fellBackToFamilyDefault: false };
   }
 
-  if (unit === 'count') {
+  if (unit === 'count' || unit === 'plants') {
     // `count` is used for transplants, plugs, packet labels like "25 count" —
     // the quantity already represents discrete plantable units, so no
     // germination discount is applied. 1 count → 1 plant.

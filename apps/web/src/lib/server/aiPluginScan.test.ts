@@ -11,6 +11,7 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+  localAnimalHealthMatches,
   localFuzzyMatchPlugins,
   localMatchScore,
   pluginSearchTokens,
@@ -155,5 +156,57 @@ describe('localFuzzyMatchPlugins', () => {
       expect(m.validation.ok).toBe(true);
       expect(m.candidate).not.toBeNull();
     }
+  });
+});
+
+describe('names with short or joined parts (#658)', () => {
+  it.each(['2,4-D', '2,4', '24d', '2 4 d', '2,4-D amine'])(
+    'a search for %s finds 2,4-D Amine',
+    async (query) => {
+      const ids = (await localFuzzyMatchPlugins(query, 'herbicide')).map(
+        (m) => m.candidate?.pluginId
+      );
+      expect(ids).toContain('2-4-d-amine');
+      expect(ids).toContain('24d');
+    }
+  );
+
+  it('finds a hyphenated crop name typed as one word', async () => {
+    const ids = (await localFuzzyMatchPlugins('orchardgrass', 'crop')).map(
+      (m) => m.candidate?.pluginId
+    );
+    expect(ids).toContain('orchard-grass-potomac');
+  });
+
+  it('still needs every query word to match', () => {
+    const tokens = pluginSearchTokens({
+      pluginId: '2-4-d-amine',
+      displayName: '2,4-D Amine',
+      activeIngredients: [{ name: '2,4-D dimethylamine salt' }]
+    });
+    expect(localMatchScore('2,4-D', tokens)).toBeGreaterThan(0.6);
+    expect(localMatchScore('2,4-DB', tokens)).toBe(0);
+    expect(localMatchScore('mcpa', tokens)).toBe(0);
+  });
+});
+
+describe('localAnimalHealthMatches (#695)', () => {
+  it.each([
+    ['Safe-Guard', 'safe-guard-suspension'],
+    ['fenbendazole', 'safe-guard-suspension'],
+    ['128-620', 'safe-guard-suspension'],
+    ['NADA 128-620', 'safe-guard-suspension'],
+    ['Cydectin', 'cydectin-pour-on'],
+    ['Ivomec', 'ivomec-injection']
+  ])('a search for %s finds %s', async (query, pluginId) => {
+    const hits = await localAnimalHealthMatches(query);
+    expect(hits.map((h) => h.candidate.pluginId)).toContain(pluginId);
+  });
+
+  it('returns the approval number for the form and nothing for an unknown name', async () => {
+    const [hit] = await localAnimalHealthMatches('Safe-Guard');
+    expect(hit.candidate.approval).toEqual({ kind: 'NADA', number: '128-620' });
+    expect(hit.candidate.type).toBe('animal-health');
+    expect(await localAnimalHealthMatches('zzzz')).toEqual([]);
   });
 });

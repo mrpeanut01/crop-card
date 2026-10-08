@@ -56,6 +56,10 @@ function unitWord(amount: number, unit: string, locale?: string | null): string 
     if (!locale) return amount === 1 ? 'seed' : 'seeds';
     return t(locale, 'wizard.qty.seeds', { count: amount });
   }
+  if (unit === 'plants') {
+    if (!locale) return amount === 1 ? 'plant' : 'plants';
+    return t(locale, 'wizard.qty.plants', { count: amount });
+  }
   if (unit === 'packets') {
     if (!locale) return amount === 1 ? 'packet' : 'packets';
     return t(locale, 'wizard.qty.packets', { count: amount });

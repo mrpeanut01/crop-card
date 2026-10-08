@@ -73,7 +73,13 @@ export function buildStockCard(
   const loc = opts.prefs.locale;
   const today = ymdInZone(opts.now, opts.prefs.timeZone);
   const qty = (n: number) =>
-    loc && loc !== 'en' && (isSeedCountUnit(item.unit, item.category) || item.unit === 'bag')
+    (loc &&
+      loc !== 'en' &&
+      (isSeedCountUnit(item.unit, item.category) ||
+        item.unit === 'bag' ||
+        item.unit === 'plants')) ||
+    item.unit === 'yd3' ||
+    item.unit === 'ft3'
       ? formatStockQuantity(n, item.unit, opts.prefs, { category: item.category, digits: 2 })
       : `${trimNumber(n, 2)} ${item.unit}`;
 

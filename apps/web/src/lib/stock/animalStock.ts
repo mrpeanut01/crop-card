@@ -219,6 +219,28 @@ export function normalizeNada(raw: string | null | undefined): NadaNumber | null
   return { kind: m[1].toUpperCase() as ApprovalKind, number: `${m[2]}-${m[3]}` };
 }
 
+const BARE_NADA_RE = /^\s*#?\s*(\d{3})\s*[-\s]?\s*(\d{3})\s*$/;
+
+/** A number typed without its NADA or ANADA word ("128-620"). */
+export function isBareNadaNumber(raw: string | null | undefined): boolean {
+  return BARE_NADA_RE.test(raw ?? '');
+}
+
+/** The typed approval number. A bare number takes the kind of the linked
+ *  library product only when the numbers match; otherwise the word is
+ *  needed, since NADA and ANADA numbers are separate series (#697). */
+export function nadaFromInput(
+  raw: string | null | undefined,
+  linked?: NadaNumber | null
+): NadaNumber | null {
+  const full = normalizeNada(raw);
+  if (full) return full;
+  const m = BARE_NADA_RE.exec(raw ?? '');
+  if (!m || !linked) return null;
+  const number = `${m[1]}-${m[2]}`;
+  return linked.number === number ? { kind: linked.kind, number } : null;
+}
+
 export function formatNada(n: NadaNumber): string {
   return `${n.kind} ${n.number}`;
 }

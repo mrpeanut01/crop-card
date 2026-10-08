@@ -46,7 +46,7 @@ export const enInventory = {
   'inv.list.kpi.distinctArchetypes': 'Distinct archetypes',
   'inv.list.kpi.source': 'Source',
   'inv.list.kpi.activeSkus': 'Active SKUs',
-  'inv.list.kpi.onHandSum': 'On hand (Σ)',
+  'inv.list.kpi.withStock': 'With stock on hand',
   'inv.list.kpi.reorderSoon': 'Reorder soon',
   'inv.list.kpi.expiring60': 'Expiring 60d',
   'inv.list.kpi.batches': 'Batches',
@@ -116,6 +116,7 @@ export const enInventory = {
   'inv.seed.noCategory':
     'No crop category linked yet. Pick one with Edit so the planner can use this seed.',
   'inv.seed.germination': 'Germination & treatment',
+  'inv.seed.plantStock': 'Planting stock',
   'inv.seed.atSourcing': 'At sourcing',
   'inv.seed.notes': 'Notes',
   'inv.seed.plantingParams': 'Planting parameters',
@@ -282,6 +283,12 @@ export const enInventory = {
   'inv.form.haySource':
     'These bales come from {cutting}. Enter how much you are putting in stock, and feed used from this lot is traced back to that cutting. The link is saved with that amount, so it is needed here.',
   'inv.form.err.nada': 'Type it the way the label prints it, e.g. NADA 141-061',
+  'inv.form.err.nadaPrefix':
+    'Add NADA or ANADA before the number, the way the label prints it, e.g. NADA 141-061',
+  'inv.form.hint.nada':
+    'On the label, e.g. NADA 141-061. Withdrawal times are never read from a scan; you enter them from the label or your vet when you record a treatment.',
+  'inv.form.hint.medLink':
+    'Only link the exact product on the label. Its withdrawal times apply to every treatment from this bottle.',
   'inv.form.err.reorder': 'Reorder threshold cannot be negative',
   'inv.form.err.cropVersioned':
     'Crop categories are versioned. Upload a new version in the crop library.',
@@ -321,7 +328,8 @@ export const enInventory = {
   'inv.form.searchProducts': 'Search products',
   'inv.form.unit': 'Unit',
   'inv.form.unitLocked': 'The unit is fixed once stock is on hand.',
-  'inv.form.unitSeed': 'Count seeds, or use a weight for bulk seed bought by the ounce or pound.',
+  'inv.form.unitSeed':
+    'Count seeds, count plants for crowns, trees, bushes and transplants, or use a weight for bulk seed bought by the ounce or pound.',
   'inv.form.onHandLabel': 'On hand ({unit})',
   'inv.form.howMuch': 'How much do you have? ({unit})',
   'inv.form.hint.onHandShed':
@@ -329,6 +337,8 @@ export const enInventory = {
   'inv.form.hint.onHandAdjust': 'Changing this records an adjustment in the stock history.',
   'inv.form.hint.firstLot':
     'Saved as the first lot. Leave blank if you have not counted it yet; the planner sizes it to the bed.',
+  'inv.form.hint.firstLotOther':
+    'Saved as the first lot. Leave blank if you have not counted it yet; you can add it later.',
   'inv.form.alsoHave': 'You also have {what}. When it arrives, tap Mark received on',
   'inv.form.itemPage': 'the item page',
   'inv.form.alsoHaveAfter': 'instead of changing On hand here, so it is not counted twice.',
@@ -336,6 +346,8 @@ export const enInventory = {
   'inv.form.lotHint': 'Optional. Printed on the label or packet.',
   'inv.form.statusHint':
     'Ordered and planned amounts help the planner lay out beds, but only on-hand stock counts as in the shed.',
+  'inv.form.statusHintOther':
+    'Ordered and planned amounts are kept apart; only on-hand stock counts as in the shed.',
   'inv.form.reorderHint': 'Flag it as Reorder Soon when on hand drops below this number',
   'inv.form.barcode': 'Barcode',
   'inv.form.barcodeHint': 'EAN / UPC / GTIN, used by the Barcode method',
@@ -431,9 +443,9 @@ export const enInventory = {
   'stockui.search.quota':
     'Daily AI quota exhausted — only library matches shown. Try again tomorrow or upgrade from /settings/ai.',
   'stockui.search.nothingWeb':
-    'Nothing found in your library or on the web. Try a different name or use the Manual tab.',
+    'Nothing found in your library or on the web. Try a different name or choose “{tab}”.',
   'stockui.search.nothingLibrary':
-    'Nothing found in your library. Try a different name or use the Manual tab.',
+    'Nothing found in your library. Try a different name or choose “{tab}”.',
   'stockui.search.source': 'Source:',
   'stockui.search.localLibrary': 'local library',
   'stockui.search.claudeWeb': 'Claude web search',
@@ -557,6 +569,11 @@ export const enInventory = {
   'units.label.bag': 'Bag',
   'units.label.bag50lb': '50 lb bag',
   'units.label.bag25kg': '25 kg bag',
+  'units.label.plants': 'Plants',
+  'units.label.yd3': 'yd³ (cubic yard)',
+  'units.label.ft3': 'ft³ (cubic foot)',
+  'units.qty.plants.one': '{n} plant',
+  'units.qty.plants.other': '{n} plants',
   'units.qty.seeds.one': '{n} seed',
   'units.qty.seeds.other': '{n} seeds',
   'units.qty.bags.one': '{n} bag',

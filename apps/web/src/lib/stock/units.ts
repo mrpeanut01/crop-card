@@ -16,8 +16,11 @@ export type SolidUnit = 'oz' | 'lb' | 'kg' | 'g';
  *  AllocationWizard + SeedQuantityModal seed-math; it isn't convertible to
  *  any weight or volume unit. `count` covers transplants, plugs, packets
  *  with a labelled count, and any other "discrete plantable item." */
-export type CountUnit = 'count' | 'seeds' | 'bag' | 'bag-50lb' | 'bag-25kg' | 'bale';
-export type StockUnit = LiquidUnit | SolidUnit | CountUnit;
+export type CountUnit = 'count' | 'seeds' | 'plants' | 'bag' | 'bag-50lb' | 'bag-25kg' | 'bale';
+/** Bulk volume for compost, manure and mulch (#687). Never converted to a
+ *  weight: that needs a bulk density, which is not on file. */
+export type BulkVolumeUnit = 'yd3' | 'ft3';
+export type StockUnit = LiquidUnit | SolidUnit | CountUnit | BulkVolumeUnit;
 
 export const ALL_STOCK_UNITS: ReadonlyArray<StockUnit> = [
   'fl-oz',
@@ -31,11 +34,26 @@ export const ALL_STOCK_UNITS: ReadonlyArray<StockUnit> = [
   'g',
   'count',
   'seeds',
+  'plants',
   'bag',
   'bag-50lb',
   'bag-25kg',
-  'bale'
+  'bale',
+  'yd3',
+  'ft3'
 ];
+
+const SEED_OR_FEED_ONLY: ReadonlySet<StockUnit> = new Set(['seeds', 'plants', 'bag', 'bale']);
+const BULK_VOLUME: ReadonlySet<StockUnit> = new Set(['yd3', 'ft3']);
+
+/** Units the pesticide and fertility forms offer. Seed counts, plants, feed
+ *  bags and bales belong to their own types; bulk volume (cubic yards and
+ *  feet) is for fertility stock such as compost and manure (#687). */
+export function inputStockUnits(type: 'pesticide' | 'fertility'): StockUnit[] {
+  return ALL_STOCK_UNITS.filter(
+    (u) => !SEED_OR_FEED_ONLY.has(u) && (type === 'fertility' || !BULK_VOLUME.has(u))
+  );
+}
 
 const LIQUID_FL_OZ_PER_UNIT: Record<LiquidUnit, number> = {
   ml: 1 / 29.5735295625,
@@ -52,11 +70,24 @@ const MASS_GRAMS_PER_UNIT: Record<SolidUnit, number> = {
   kg: 1000
 };
 
+const BULK_FT3_PER_UNIT: Record<BulkVolumeUnit, number> = {
+  ft3: 1,
+  yd3: 27
+};
+
 function isLiquid(u: StockUnit): u is LiquidUnit {
   return u === 'ml' || u === 'fl-oz' || u === 'pt' || u === 'qt' || u === 'gal';
 }
 function isSolid(u: StockUnit): u is SolidUnit {
   return u === 'g' || u === 'oz' || u === 'lb' || u === 'kg';
+}
+function isBulkVolume(u: StockUnit): u is BulkVolumeUnit {
+  return u === 'yd3' || u === 'ft3';
+}
+/** A plant on a planting and a plant in seed stock are the same thing; the
+ *  planting form's "plants" unit is stored as 'count' (#719). */
+function isPlantCount(u: StockUnit): boolean {
+  return u === 'plants' || u === 'count';
 }
 
 /**
@@ -71,6 +102,10 @@ export function convert(amount: number, from: StockUnit, to: StockUnit): number 
   if (isSolid(from) && isSolid(to)) {
     return (amount * MASS_GRAMS_PER_UNIT[from]) / MASS_GRAMS_PER_UNIT[to];
   }
+  if (isBulkVolume(from) && isBulkVolume(to)) {
+    return (amount * BULK_FT3_PER_UNIT[from]) / BULK_FT3_PER_UNIT[to];
+  }
+  if (isPlantCount(from) && isPlantCount(to)) return amount;
   return null;
 }
 
@@ -97,6 +132,7 @@ export function toStorage(
 }
 
 const ML_PER_FL_OZ = 29.5735295625;
+const M3_PER_FT3 = 0.028316846592;
 const GRAMS_PER_OZ = 28.349523125;
 
 const num = (v: number, digits: number) =>
@@ -111,6 +147,7 @@ function metricEquivalent(amount: number, unit: StockUnit): string | null {
     const g = amount * (unit === 'lb' ? 16 : 1) * GRAMS_PER_OZ;
     return Math.abs(g) < 1000 ? `${num(g, 0)} g` : `${num(g / 1000, 1)} kg`;
   }
+  if (isBulkVolume(unit)) return `${num(amount * BULK_FT3_PER_UNIT[unit] * M3_PER_FT3, 2)} m³`;
   return null;
 }
 
@@ -124,9 +161,10 @@ export interface StockDisplayOpts {
   locale?: string | null;
 }
 
-/** Units offered for seed (#473): a seed count first, then weights for bulk
- *  seed bought by the ounce or pound. No weight-to-count conversion. */
-export const SEED_UNITS: ReadonlyArray<StockUnit> = ['seeds', 'oz', 'lb', 'g'];
+/** Units offered for seed (#473): a seed count first, then plants for
+ *  crowns, bare-root trees, bushes and transplants (#719), then weights for
+ *  bulk seed bought by the ounce or pound. No weight-to-count conversion. */
+export const SEED_UNITS: ReadonlyArray<StockUnit> = ['seeds', 'plants', 'oz', 'lb', 'g'];
 
 /** Seeds are counted in 'seeds'; older seed rows use 'count' for the same thing. */
 export function isSeedCountUnit(unit: string, category: string | null | undefined): boolean {
@@ -145,15 +183,21 @@ const UNIT_LABELS: Record<StockUnit, string> = {
   g: 'g',
   count: 'Count',
   seeds: 'Seeds',
+  plants: 'Plants',
   bag: 'Bag',
   'bag-50lb': '50 lb bag',
   'bag-25kg': '25 kg bag',
-  bale: 'Bale'
+  bale: 'Bale',
+  yd3: 'yd³',
+  ft3: 'ft³'
 };
 
 const UNIT_LABEL_KEYS: Partial<Record<StockUnit, MessageKey>> = {
   count: 'units.label.count',
   seeds: 'units.label.seeds',
+  plants: 'units.label.plants',
+  yd3: 'units.label.yd3',
+  ft3: 'units.label.ft3',
   bag: 'units.label.bag',
   'bag-50lb': 'units.label.bag50lb',
   'bag-25kg': 'units.label.bag25kg',
@@ -199,7 +243,13 @@ export function formatStockQuantity(
       n: num(amount, opts.digits ?? 2)
     });
   }
-  const us = `${opts.digits === undefined ? amount.toFixed(1) : num(amount, opts.digits)} ${unit}`;
+  if (unit === 'plants') {
+    return t(locale, Math.abs(amount) === 1 ? 'units.qty.plants.one' : 'units.qty.plants.other', {
+      n: num(amount, opts.digits ?? 0)
+    });
+  }
+  const shown = unit === 'yd3' || unit === 'ft3' ? UNIT_LABELS[unit] : unit;
+  const us = `${opts.digits === undefined ? amount.toFixed(1) : num(amount, opts.digits)} ${shown}`;
   if (prefs.units !== 'metric') return us;
   const metric = (ALL_STOCK_UNITS as ReadonlyArray<string>).includes(unit)
     ? metricEquivalent(amount, unit as StockUnit)

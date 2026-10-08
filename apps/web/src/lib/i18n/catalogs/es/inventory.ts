@@ -48,7 +48,7 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'inv.list.kpi.distinctArchetypes': 'Arquetipos distintos',
   'inv.list.kpi.source': 'Origen',
   'inv.list.kpi.activeSkus': 'Productos activos',
-  'inv.list.kpi.onHandSum': 'En existencia (Σ)',
+  'inv.list.kpi.withStock': 'Con existencias',
   'inv.list.kpi.reorderSoon': 'Reponer pronto',
   'inv.list.kpi.expiring60': 'Vencen en 60 d',
   'inv.list.kpi.batches': 'Lotes',
@@ -118,6 +118,7 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'inv.seed.noCategory':
     'Aún no hay una categoría de cultivo vinculada. Elige una con Editar para que el plan pueda usar esta semilla.',
   'inv.seed.germination': 'Germinación y tratamiento',
+  'inv.seed.plantStock': 'Material de plantación',
   'inv.seed.atSourcing': 'Al adquirirla',
   'inv.seed.notes': 'Notas',
   'inv.seed.plantingParams': 'Parámetros de siembra',
@@ -287,6 +288,12 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'inv.form.haySource':
     'Estas pacas vienen de {cutting}. Escribe cuánto vas a guardar, y el alimento que se use de este lote queda ligado a ese corte. El enlace se guarda con esa cantidad, así que hace falta aquí.',
   'inv.form.err.nada': 'Escríbelo como lo imprime la etiqueta, p. ej. NADA 141-061',
+  'inv.form.err.nadaPrefix':
+    'Agrega NADA o ANADA antes del número, como lo imprime la etiqueta, p. ej. NADA 141-061',
+  'inv.form.hint.nada':
+    'En la etiqueta, p. ej. NADA 141-061. Los tiempos de retiro nunca se leen de un escaneo; los escribes de la etiqueta o de tu veterinario cuando registras un tratamiento.',
+  'inv.form.hint.medLink':
+    'Vincula solo el producto exacto de la etiqueta. Sus tiempos de retiro se aplican a cada tratamiento con este frasco.',
   'inv.form.err.reorder': 'El umbral de reposición no puede ser negativo',
   'inv.form.err.cropVersioned':
     'Las categorías de cultivo tienen versiones. Sube una versión nueva en la biblioteca de cultivos.',
@@ -331,7 +338,7 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'inv.form.unit': 'Unidad',
   'inv.form.unitLocked': 'La unidad queda fija una vez que hay existencias.',
   'inv.form.unitSeed':
-    'Cuenta semillas, o usa un peso para semilla a granel comprada por onza o libra.',
+    'Cuenta semillas, cuenta plantas para coronas, árboles, arbustos y trasplantes, o usa un peso para semilla a granel comprada por onza o libra.',
   'inv.form.onHandLabel': 'En existencia ({unit})',
   'inv.form.howMuch': '¿Cuánto tienes? ({unit})',
   'inv.form.hint.onHandShed':
@@ -340,6 +347,8 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
     'Al cambiarlo se registra un ajuste en el historial de existencias.',
   'inv.form.hint.firstLot':
     'Se guarda como el primer lote. Déjalo vacío si aún no lo has contado; el plan lo ajusta a la cama.',
+  'inv.form.hint.firstLotOther':
+    'Se guarda como el primer lote. Déjalo vacío si aún no lo has contado; puedes agregarlo después.',
   'inv.form.alsoHave': 'También tienes {what}. Cuando llegue, toca Marcar como recibido en',
   'inv.form.itemPage': 'la página del artículo',
   'inv.form.alsoHaveAfter':
@@ -348,6 +357,8 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'inv.form.lotHint': 'Opcional. Viene impreso en la etiqueta o el sobre.',
   'inv.form.statusHint':
     'Las cantidades pedidas y planeadas ayudan al plan a distribuir las camas, pero solo lo que está en existencia cuenta como estar en el cobertizo.',
+  'inv.form.statusHintOther':
+    'Las cantidades pedidas y planeadas se guardan aparte; solo lo que está en existencia cuenta como estar en el cobertizo.',
   'inv.form.reorderHint': 'Márcalo como Reponer pronto cuando lo que tienes baje de este número',
   'inv.form.barcode': 'Código de barras',
   'inv.form.barcodeHint': 'EAN / UPC / GTIN, lo usa el método de código de barras',
@@ -444,9 +455,9 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'stockui.search.quota':
     'Se agotó la cuota diaria de IA: solo se muestran coincidencias de la biblioteca. Inténtalo mañana o mejora tu plan desde /settings/ai.',
   'stockui.search.nothingWeb':
-    'No se encontró nada en tu biblioteca ni en la web. Prueba otro nombre o usa la pestaña Manual.',
+    'No se encontró nada en tu biblioteca ni en la web. Prueba otro nombre o elige «{tab}».',
   'stockui.search.nothingLibrary':
-    'No se encontró nada en tu biblioteca. Prueba otro nombre o usa la pestaña Manual.',
+    'No se encontró nada en tu biblioteca. Prueba otro nombre o elige «{tab}».',
   'stockui.search.source': 'Origen:',
   'stockui.search.localLibrary': 'biblioteca local',
   'stockui.search.claudeWeb': 'búsqueda web de Claude',
@@ -570,6 +581,11 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'units.label.bag': 'Bolsa',
   'units.label.bag50lb': 'Bolsa de 50 lb',
   'units.label.bag25kg': 'Bolsa de 25 kg',
+  'units.label.plants': 'Plantas',
+  'units.label.yd3': 'yd³ (yarda cúbica)',
+  'units.label.ft3': 'ft³ (pie cúbico)',
+  'units.qty.plants.one': '{n} planta',
+  'units.qty.plants.other': '{n} plantas',
   'units.qty.seeds.one': '{n} semilla',
   'units.qty.seeds.other': '{n} semillas',
   'units.qty.bags.one': '{n} bolsa',

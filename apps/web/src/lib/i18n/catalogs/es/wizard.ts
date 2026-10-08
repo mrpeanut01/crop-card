@@ -1025,6 +1025,8 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.qty.seeds.other': 'semillas',
   'wizard.qty.packets.one': 'sobre',
   'wizard.qty.packets.other': 'sobres',
+  'wizard.qty.plants.one': 'planta',
+  'wizard.qty.plants.other': 'plantas',
   'wizard.qty.status.existing': 'en existencia',
   'wizard.qty.status.ordered': 'en pedido',
   'wizard.qty.status.planned': 'por comprar',

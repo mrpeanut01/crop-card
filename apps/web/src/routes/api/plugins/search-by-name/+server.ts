@@ -24,6 +24,7 @@ import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import {
   AnthropicOverloadedError,
   claudePluginSearchByName,
+  localAnimalHealthMatches,
   localFuzzyMatchPlugins,
   type PluginCandidate,
   type PluginKindHint
@@ -35,7 +36,8 @@ const PLUGIN_KIND_HINTS = [
   'insecticide',
   'fungicide',
   'fertilizer',
-  'companion'
+  'companion',
+  'animal-health'
 ] as const;
 
 const requestSchema = z.object({
@@ -64,6 +66,14 @@ export const POST: RequestHandler = async (event) => {
     );
   }
   const { query, hintType, skipWebSearch } = parsed.data;
+
+  if (hintType === 'animal-health') {
+    return json({
+      candidates: await localAnimalHealthMatches(query),
+      source: 'local',
+      meta: { skippedWebSearch: true }
+    });
+  }
 
   const localMatches = await localFuzzyMatchPlugins(query, hintType as PluginKindHint | undefined);
   const hasConfidentLocal = localMatches.some((m) => (m.score ?? 0) >= LOCAL_CONFIDENT_THRESHOLD);

@@ -87,7 +87,10 @@
       {/if}
     </InvSection>
 
-    <InvSection title={tr('inv.seed.germination')} kicker={tr('inv.seed.atSourcing')}>
+    <InvSection
+      title={item.defaultUnit === 'plants' ? tr('inv.seed.plantStock') : tr('inv.seed.germination')}
+      kicker={tr('inv.seed.atSourcing')}
+    >
       <InvKVP label={tr('inv.seed.notes')} value={item.notes ?? '—'} />
     </InvSection>
 

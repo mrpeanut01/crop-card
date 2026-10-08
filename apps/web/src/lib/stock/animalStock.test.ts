@@ -6,8 +6,10 @@ import {
   feedUseAmount,
   feedUseNote,
   formatNada,
+  isBareNadaNumber,
   isFeedCategory,
   matchHealthPluginByNada,
+  nadaFromInput,
   normalizeNada,
   onHandLb,
   parseFeedUseNote,
@@ -249,5 +251,27 @@ describe('movement words in Spanish', () => {
     expect(movementReasonText('spray-event', 'es')).toBe('aplicación');
     expect(stockCategoryLabel('animal-health')).toBe('animal-health');
     expect(stockCategoryLabel('fuel', 'es')).toBe('combustible');
+  });
+});
+
+describe('nadaFromInput (#697)', () => {
+  const linked = { kind: 'NADA' as const, number: '128-620' };
+
+  it('reads a full number as before', () => {
+    expect(nadaFromInput('ANADA 200-437', linked)).toEqual({ kind: 'ANADA', number: '200-437' });
+  });
+
+  it('takes the linked product kind for a bare number only when the numbers match', () => {
+    expect(nadaFromInput('128-620', linked)).toEqual({ kind: 'NADA', number: '128-620' });
+    expect(nadaFromInput('128620', linked)).toEqual({ kind: 'NADA', number: '128-620' });
+    expect(nadaFromInput('141-061', linked)).toBeNull();
+    expect(nadaFromInput('128-620', null)).toBeNull();
+  });
+
+  it('knows a bare number from a malformed one', () => {
+    expect(isBareNadaNumber('128-620')).toBe(true);
+    expect(isBareNadaNumber(' 128 620 ')).toBe(true);
+    expect(isBareNadaNumber('NADA 12')).toBe(false);
+    expect(isBareNadaNumber('12-620')).toBe(false);
   });
 });

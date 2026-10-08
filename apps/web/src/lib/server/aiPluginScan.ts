@@ -26,7 +26,7 @@ import { z } from 'zod';
 import { PluginRegistrationError, PluginRegistry, pluginSchema, type Plugin } from '$lib/plugins';
 import { pesticideFormulationSchema, pluginDefaultUnitSchema } from '$lib/plugins/schemas';
 import { withResolvedDefaultUnit } from '$lib/plugins/inputMetadata';
-import { getRegistry } from './registry';
+import { getDataKinds, getRegistry } from './registry';
 import { AnthropicOverloadedError, getApiKey } from './scanResult';
 import { selectModel, estimateUsd, type AiResultMeta } from './aiPlanning';
 
@@ -638,15 +638,54 @@ function searchTokens(text: string): string[] {
     .filter((t) => t.length >= 2);
 }
 
-/** Search tokens for a plugin: display name, id and active ingredients. */
+const MAX_JOINED_PARTS = 4;
+
+/** Runs of neighbouring name parts written together, so a name with short
+ *  pieces still has a searchable word: "2,4-D" gives "24", "24d" and "4d",
+ *  "Orchard-Grass" gives "orchardgrass" (#658). */
+function joinedTokens(text: string): string[] {
+  const parts = text
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+  const out: string[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    let joined = parts[i];
+    for (let j = i + 1; j < Math.min(parts.length, i + MAX_JOINED_PARTS); j++) {
+      joined += parts[j];
+      out.push(joined);
+    }
+  }
+  return out;
+}
+
+/** The words of a query: each typed word with its punctuation taken out, so
+ *  "2,4-D" is one word ("24d"). A query of only one-letter pieces ("2 4 d")
+ *  is read as one word too. */
+function queryTerms(query: string): string[] {
+  const words = query
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => w.replace(/[^a-z0-9]+/g, ''))
+    .filter((w) => w.length >= 2);
+  if (words.length > 0) return [...new Set(words)];
+  const whole = query.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  return whole.length >= 2 ? [whole] : [];
+}
+
+/** Search tokens for a plugin: display name, id and active ingredients,
+ *  plus joined neighbouring parts of each. */
 export function pluginSearchTokens(plugin: {
   pluginId: string;
   displayName: string;
   activeIngredients?: ReadonlyArray<{ name?: string }>;
 }): Set<string> {
-  const out = new Set([...searchTokens(plugin.displayName), ...searchTokens(plugin.pluginId)]);
-  for (const ai of plugin.activeIngredients ?? []) {
-    if (ai.name) for (const t of searchTokens(ai.name)) out.add(t);
+  const texts = [plugin.displayName, plugin.pluginId];
+  for (const ai of plugin.activeIngredients ?? []) if (ai.name) texts.push(ai.name);
+  const out = new Set<string>();
+  for (const text of texts) {
+    for (const t of searchTokens(text)) out.add(t);
+    for (const t of joinedTokens(text)) out.add(t);
   }
   return out;
 }
@@ -657,7 +696,7 @@ export function pluginSearchTokens(plugin: {
  *  may be the start of a name word ("roundu" finds "Roundup"). Returns 0
  *  unless every query word matches something. */
 export function localMatchScore(query: string, tokens: ReadonlySet<string>): number {
-  const q = [...new Set(searchTokens(query))];
+  const q = queryTerms(query);
   if (q.length === 0 || tokens.size === 0) return 0;
   let covered = 0;
   let matchedNameTokens = 0;
@@ -687,7 +726,7 @@ export async function localFuzzyMatchPlugins(
   limit = LOCAL_MAX_CANDIDATES
 ): Promise<PluginCandidate[]> {
   if (!query || query.trim().length < 2) return [];
-  if (searchTokens(query).length === 0) return [];
+  if (queryTerms(query).length === 0) return [];
   const registry = await getRegistry();
   const scored = registry
     .all()
@@ -718,6 +757,59 @@ export async function localFuzzyMatchPlugins(
     validation: { ok: true, schemaIssues: [], bypassIssues: [] },
     score: s.score
   }));
+}
+
+export interface AnimalHealthCandidate {
+  source: 'local';
+  candidate: {
+    pluginId: string;
+    type: 'animal-health';
+    displayName: string;
+    activeIngredients: Array<{ name: string }>;
+    approval: { kind: 'NADA' | 'ANADA'; number: string } | null;
+  };
+  validation: { ok: true; schemaIssues: []; bypassIssues: [] };
+  score: number;
+}
+
+/** Local search of the animal-health library by name, id, active
+ *  ingredient and NADA or ANADA number (#695). These products are their own
+ *  data kind, outside the crop and input registry; there is no web tier. */
+export async function localAnimalHealthMatches(
+  query: string,
+  limit = LOCAL_MAX_CANDIDATES
+): Promise<AnimalHealthCandidate[]> {
+  if (!query || query.trim().length < 2) return [];
+  if (queryTerms(query).length === 0) return [];
+  const products = (await getDataKinds()).animalHealth.all();
+  return products
+    .map((p) => {
+      const approval = p.approval
+        ? { kind: p.approval.kind as 'NADA' | 'ANADA', number: p.approval.number }
+        : null;
+      const tokens = pluginSearchTokens(p);
+      if (approval) {
+        const text = `${approval.kind} ${approval.number}`;
+        for (const t of searchTokens(text)) tokens.add(t);
+        for (const t of joinedTokens(text)) tokens.add(t);
+      }
+      return { p, approval, score: localMatchScore(query, tokens) };
+    })
+    .filter((m) => m.score > 0)
+    .sort((a, b) => b.score - a.score || a.p.displayName.localeCompare(b.p.displayName))
+    .slice(0, limit)
+    .map(({ p, approval, score }) => ({
+      source: 'local' as const,
+      candidate: {
+        pluginId: p.pluginId,
+        type: 'animal-health' as const,
+        displayName: p.displayName,
+        activeIngredients: (p.activeIngredients ?? []).map((a) => ({ name: a.name })),
+        approval
+      },
+      validation: { ok: true as const, schemaIssues: [] as [], bypassIssues: [] as [] },
+      score
+    }));
 }
 
 // ─── Streaming variant for live status updates ─────────────────────────

@@ -8,6 +8,7 @@
   import type { StockUnit } from '$lib/stock/units';
   import type { StockCategory } from '$lib/db/stock';
   import type { InventoryType } from '$lib/inventory/types';
+  import { sameNameDetails } from '$lib/plugins/sameName';
 
   /**
    * Phase 25d (#89) — Method 2 of the 5-method add waterfall.
@@ -32,6 +33,7 @@
       shortName?: string;
       defaultUnit?: string;
       activeIngredients?: ReadonlyArray<unknown>;
+      approval?: { kind: 'NADA' | 'ANADA'; number: string } | null;
       [k: string]: unknown;
     } | null;
     confidence?: 'high' | 'medium' | 'low';
@@ -55,8 +57,15 @@
   // Map the inventory type onto the search endpoint's hintType enum.
   // Pesticide is ambiguous (herb/insect/fungicide) so it stays unhinted.
   const hintType = $derived(
-    type === 'seed' ? 'crop' : type === 'fertility' ? 'fertilizer' : undefined
+    type === 'seed'
+      ? 'crop'
+      : type === 'fertility'
+        ? 'fertilizer'
+        : type === 'animal-health'
+          ? 'animal-health'
+          : undefined
   );
+  const webTier = $derived(aiEnabled && type !== 'animal-health');
 
   let query = $state('');
   let searching = $state(false);
@@ -166,6 +175,15 @@
   function pickCandidate(cand: SearchCandidate): void {
     if (!cand.candidate) return;
     const c = cand.candidate;
+    if (c.type === 'animal-health') {
+      const health: StockEntryDraft = { source: 'plugin', displayName: c.displayName };
+      if (c.approval) health.nada = { kind: c.approval.kind, number: c.approval.number };
+      if (c.pluginId && c.displayName) {
+        health.suggestedHealthPlugin = { pluginId: c.pluginId, displayName: c.displayName };
+      }
+      void onSubmit(health);
+      return;
+    }
     const draft: StockEntryDraft = {
       // Local matches are deterministic library hits → 'plugin' source.
       // Web-search hits used AI → 'ai' source. The Provenance addendum
@@ -180,6 +198,8 @@
     void onSubmit(draft);
   }
 
+  const candidateDetails = $derived(sameNameDetails(candidates.map((c) => c.candidate ?? {})));
+
   const hasConfidentLocal = $derived(
     candidates.some((c) => c.source === 'local' && (c.score ?? 0) >= 0.6)
   );
@@ -187,7 +207,7 @@
 
 <div class="search-panel">
   <p class="lede">
-    {tr('stockui.search.lede')}{#if aiEnabled}
+    {tr('stockui.search.lede')}{#if webTier}
       {tr('stockui.search.ledeAi')}{/if}
   </p>
 
@@ -225,7 +245,9 @@
 
   {#if candidates.length === 0 && searchSource && !searching}
     <p class="empty">
-      {searchedWeb ? tr('stockui.search.nothingWeb') : tr('stockui.search.nothingLibrary')}
+      {searchedWeb
+        ? tr('stockui.search.nothingWeb', { tab: tr('inv.add.method.manual') })
+        : tr('stockui.search.nothingLibrary', { tab: tr('inv.add.method.manual') })}
     </p>
   {/if}
 
@@ -249,12 +271,14 @@
     <ul class="candidates">
       {#each candidates as cand, i (i)}
         {@const c = cand.candidate}
+        {@const detail = candidateDetails[i]}
         <li class="card" class:no-plugin={!c}>
           <div class="card-head">
             <div class="card-title">
               {c?.displayName ?? c?.pluginId ?? tr('stockui.search.unparsed')}
               <Provenance source={cand.source === 'local' ? 'plugin' : 'ai'} compact />
             </div>
+            {#if detail}<div class="card-detail">{detail}</div>{/if}
             <div class="card-meta">
               {#if c?.type}<span class="kind">{c.type}</span>{/if}
               {#if cand.confidence}<span class="conf conf-{cand.confidence}">{cand.confidence}</span
@@ -281,7 +305,7 @@
     </ul>
   {/if}
 
-  {#if candidates.length > 0 && !hasConfidentLocal && !searchedWeb && aiEnabled}
+  {#if candidates.length > 0 && !hasConfidentLocal && !searchedWeb && webTier}
     <div class="web-prompt">
       <p>{tr('stockui.search.webPrompt')}</p>
       <button type="button" onclick={() => runSearch(true)} disabled={busy || searching}>
@@ -426,6 +450,10 @@
     font-size: 14px;
     font-weight: 600;
     color: var(--color-ink);
+  }
+  .card-detail {
+    font-size: 12.5px;
+    color: var(--color-ink-soft);
   }
   .card-meta {
     display: flex;

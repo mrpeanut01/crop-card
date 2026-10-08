@@ -191,6 +191,8 @@
   }
 </script>
 
+<svelte:head><title>{tr('core.docTitle', { title: eq.label })}</title></svelte:head>
+
 <header class="head">
   <a href="/equipment" class="back">{tr('equip.d.allEquipment')}</a>
   {#if editingLabel}

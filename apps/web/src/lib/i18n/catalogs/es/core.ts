@@ -37,6 +37,7 @@ export const esCore: Partial<Record<MessageKey, string>> = {
   'onboarding.language.note':
     'Puedes cambiarlo cuando quieras en Configuración o con el botón EN / ES de la parte superior.',
 
+  'core.docTitle': '{title} · CropCard',
   'account.pageTitle': 'Cuenta e inicio de sesión · CropCard',
   'account.title': 'Cuenta e inicio de sesión',
   'account.kicker': 'Perfil del propietario',

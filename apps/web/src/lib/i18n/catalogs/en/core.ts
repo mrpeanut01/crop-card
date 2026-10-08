@@ -41,6 +41,7 @@ export const enCore = {
   'onboarding.language.note':
     'You can change it any time in Settings or with the EN / ES button at the top.',
 
+  'core.docTitle': '{title} · CropCard',
   'account.pageTitle': 'Account & sign-in · CropCard',
   'account.title': 'Account & sign-in',
   'account.kicker': 'Owner profile',

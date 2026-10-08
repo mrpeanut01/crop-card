@@ -881,9 +881,9 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
     'Se imprimen en la parte superior de tu Tarjeta del mapa de la granja, para que cualquiera en la granja pueda pedir ayuda.',
   'settings.farm.seeCard': 'Ver la Tarjeta del mapa de la granja',
   'settings.farm.seasonTitle': 'Configuración de la temporada {year}',
-  'settings.farm.seasonLedeA':
-    'La configuración de temporada se sincroniza desde el asistente: edítala en',
-  'settings.farm.seasonLedeB': 'o desde el asistente de planificación.',
+  'settings.farm.seasonLede':
+    'La configuración de temporada se comparte con el asistente de planificación. Cámbiala en los ajustes de temporada o desde el asistente.',
+  'settings.farm.seasonLink': 'Ajustes de temporada',
   'settings.billing.billedYear': '{price} al año',
   'settings.billing.billedMonth': '{price} al mes',
   'settings.billing.notSetUp': 'La facturación aún no está configurada en este servidor.',

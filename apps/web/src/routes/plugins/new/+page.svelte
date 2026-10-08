@@ -751,6 +751,8 @@
   }
 </script>
 
+<svelte:head><title>{tr('core.docTitle', { title: tr('plugins.new.h1') })}</title></svelte:head>
+
 <h1>{tr('plugins.new.h1')}</h1>
 
 {#if !data.canEdit}

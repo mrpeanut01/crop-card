@@ -126,6 +126,8 @@
   }
 </script>
 
+<svelte:head><title>{tr('core.docTitle', { title: tr('equip.w.title') })}</title></svelte:head>
+
 <header class="head">
   <a href="/equipment/{encodeURIComponent(eq.id)}" class="back">← {eq.label}</a>
   <h1>{tr('equip.w.title')}</h1>

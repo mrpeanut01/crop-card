@@ -9,7 +9,7 @@
     FORAGE_LAB_MAX,
     FORAGE_NITRATE_UNITS,
     FORAGE_RATING_MAX,
-    NITRATE_UNIT_LABELS,
+    nitrateUnitLabel,
     RATING_BASES,
     ratingBasisLabel
   } from '$lib/forage/model';
@@ -121,7 +121,7 @@
         <select bind:value={draft.nitrateUnits}>
           <option value="">{tr('forage.form.pickUnits')}</option>
           {#each FORAGE_NITRATE_UNITS as u (u)}
-            <option value={u}>{NITRATE_UNIT_LABELS[u]}</option>
+            <option value={u}>{nitrateUnitLabel(u, locale)}</option>
           {/each}
         </select>
       </label>

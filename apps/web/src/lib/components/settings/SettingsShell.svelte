@@ -190,7 +190,7 @@
     font-size: 13.5px;
     font-weight: 600;
     cursor: pointer;
-    min-height: 38px;
+    min-height: var(--btn-height-ghost);
     display: inline-flex;
     align-items: center;
   }
@@ -204,7 +204,7 @@
     font-size: 13.5px;
     font-weight: 600;
     cursor: pointer;
-    min-height: 40px;
+    min-height: var(--btn-height-primary);
   }
   .primary:disabled {
     opacity: 0.6;

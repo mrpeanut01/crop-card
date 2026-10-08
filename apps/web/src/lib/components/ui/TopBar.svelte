@@ -846,6 +846,10 @@
     }
     .brand-cluster {
       min-width: 0;
+      overflow: hidden;
+    }
+    .brand-link {
+      flex-shrink: 0;
     }
     .right {
       gap: 4px;
@@ -858,6 +862,14 @@
       top: 64px;
       width: auto;
       max-width: none;
+    }
+  }
+
+  /* Narrow phones: the right-hand controls need the room, so the leaf mark
+     alone keeps the home link instead of a clipped wordmark (#678). */
+  @media (max-width: 480px) {
+    .brand {
+      display: none;
     }
   }
 </style>

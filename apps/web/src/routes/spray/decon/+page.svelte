@@ -173,6 +173,8 @@
   }
 </script>
 
+<svelte:head><title>{tr('core.docTitle', { title: tr('sprayui.dc.title') })}</title></svelte:head>
+
 <h1>{tr('sprayui.dc.title')}</h1>
 <p class="lede" lang="en" data-english-only="safety">
   {deconIntro(protocol)}

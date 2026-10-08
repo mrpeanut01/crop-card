@@ -7,6 +7,7 @@ import {
   nitrateAsTyped,
   nitrateConvertedText
 } from './interpret';
+import { FORAGE_NITRATE_UNITS, NITRATE_UNIT_LABELS, nitrateUnitLabel } from './model';
 
 describe('convertNitrate (M-59)', () => {
   it('converts ppm nitrate to nitrate-nitrogen by 0.23', () => {
@@ -61,6 +62,22 @@ describe('convertNitrate (M-59)', () => {
     expect(nitrateConvertedText(0.5, 'pct-nitrate')).toBe(
       'About 5,000 ppm nitrate or 1,150 ppm nitrate-nitrogen (converted)'
     );
+  });
+
+  it('gives the units and the converted line in Spanish, keeping the English byte-identical (#741)', () => {
+    expect(nitrateAsTyped(3500, 'ppm-nitrate', 'en')).toBe(nitrateAsTyped(3500, 'ppm-nitrate'));
+    expect(nitrateConvertedText(3500, 'ppm-nitrate', 'en')).toBe(
+      nitrateConvertedText(3500, 'ppm-nitrate')
+    );
+    expect(nitrateAsTyped(3500, 'ppm-nitrate', 'es')).toMatch(/ppm de nitrato \(NO3\)$/);
+    const es = nitrateConvertedText(3500, 'ppm-nitrate', 'es');
+    expect(es).toMatch(/^Aproximadamente 805 ppm de nitrógeno de nitrato \(convertido\)$/);
+    expect(es).not.toMatch(/nitrate/);
+    for (const u of FORAGE_NITRATE_UNITS) {
+      expect(nitrateUnitLabel(u, 'en')).toBe(NITRATE_UNIT_LABELS[u]);
+      expect(nitrateUnitLabel(u, 'es')).not.toBe(NITRATE_UNIT_LABELS[u]);
+      expect(nitrateUnitLabel(u, 'es')).toContain(NITRATE_UNIT_LABELS[u].match(/\(([^)]+)\)/)![1]);
+    }
   });
 
   it('uses the two sourced factors', () => {

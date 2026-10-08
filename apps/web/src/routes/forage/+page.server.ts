@@ -1,4 +1,6 @@
 import { error } from '@sveltejs/kit';
+import { listFields } from '$lib/db/fields';
+import { CROP_AREA_KINDS } from '$lib/farm/areaKinds';
 import type { PageServerLoad } from './$types';
 import { getBlock } from '$lib/db/blocks';
 import { getCutting } from '$lib/db/hayCuttings';
@@ -19,7 +21,7 @@ import { t } from '$lib/i18n';
  *  33C, M-61). Every role reads; owner, helper and custom operator record. */
 export const load: PageServerLoad = async (event) => {
   const q = event.url.searchParams;
-  const fieldId = q.get('fieldId');
+  const fieldId = q.get('fieldId') || q.get('area');
   const blockId = q.get('blockId');
   const hayCuttingId = q.get('hayCuttingId');
   const stockLotId = q.get('stockLotId');
@@ -61,7 +63,16 @@ export const load: PageServerLoad = async (event) => {
     filter = { stockLotId };
     backHref = '/inventory';
   } else {
-    error(400, t(locale, 'forage.page.nameOne'));
+    const areas = listFields({ kinds: CROP_AREA_KINDS }).map((a) => ({ id: a.id, name: a.name }));
+    return {
+      title: t(locale, 'forage.page.pickTitle'),
+      target: null,
+      blocks: [],
+      tests: [],
+      backHref,
+      access: forageAccess(currentUser(event)?.role),
+      picker: areas
+    };
   }
 
   const timeZone = farmTimeZone();
@@ -82,6 +93,7 @@ export const load: PageServerLoad = async (event) => {
     blocks,
     tests,
     backHref,
-    access: forageAccess(currentUser(event)?.role)
+    access: forageAccess(currentUser(event)?.role),
+    picker: null
   };
 };

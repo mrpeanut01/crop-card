@@ -210,6 +210,10 @@
   }
 </script>
 
+<svelte:head
+  ><title>{tr('core.docTitle', { title: tr('records.pending.title') })}</title></svelte:head
+>
+
 <h1>{tr('records.pending.title')}</h1>
 <p class="lede">
   {tr('records.pending.lede')}

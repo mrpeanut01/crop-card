@@ -208,6 +208,12 @@ export const esAmend: Partial<Record<MessageKey, string>> = {
   'forage.basis.not-stated': 'base no indicada',
   'forage.notConverted':
     'Sin convertir: no hay un factor de conversión registrado para el nitrato de potasio.',
+  'forage.unit.ppm-nitrate': 'ppm de nitrato (NO3)',
+  'forage.unit.ppm-nitrate-n': 'ppm de nitrógeno de nitrato (NO3-N)',
+  'forage.unit.pct-nitrate': '% de nitrato (NO3)',
+  'forage.unit.pct-kno3': '% de nitrato de potasio (KNO3)',
+  'forage.convertedPpmNitrate': '{n} ppm de nitrato',
+  'forage.convertedPpmNitrateN': '{n} ppm de nitrógeno de nitrato',
   'forage.converted': 'Aproximadamente {values} (convertido)',
   'forage.orPair': '{a} o {b}',
   'forage.test.rating':
@@ -279,7 +285,11 @@ export const esAmend: Partial<Record<MessageKey, string>> = {
   'forage.page.blockNotFound': 'Bloque no encontrado',
   'forage.page.cuttingNotFound': 'Corte de heno no encontrado',
   'forage.page.lotNotFound': 'Lote de alimento no encontrado',
-  'forage.page.nameOne': 'Indica un Área, bloque, corte de heno o lote de alimento.',
+  'forage.page.pickTitle': 'Elige un Área',
+  'forage.page.pickLede':
+    'Los análisis de forraje se archivan por Área. Elige una para ver o registrar sus análisis.',
+  'forage.page.pickNone': 'Esta granja todavía no tiene Áreas de cultivo ni de pastoreo.',
+  'forage.page.pickPlan': 'Ir a Plan',
 
   'forage.api.oneTarget': 'Elige solo uno: un bloque, un corte de heno o un lote de alimento.',
   'forage.api.valueUnits':

@@ -19,7 +19,7 @@ import { saveSeasonSetup } from '$lib/season/setup.server';
 import { listSprayers } from '$lib/server/sprayers';
 import { deriveWinterizeAlerts, startOfSeason } from '$lib/today/winterizeAlert';
 import { farmTimeZone } from '$lib/db/userProfile';
-import { equipmentIdsActiveBefore } from '$lib/db/equipment';
+import { equipmentLastActiveBefore } from '$lib/db/equipment';
 
 const bodySchema = z.object({
   year: z.number().int().min(2000).max(3000),
@@ -53,7 +53,7 @@ export async function POST(event) {
   const winterizeAlerts = deriveWinterizeAlerts(
     listSprayers(),
     Date.now(),
-    equipmentIdsActiveBefore(startOfSeason(Date.now(), zone)),
+    equipmentLastActiveBefore(startOfSeason(Date.now(), zone)),
     zone
   );
   return json({ setup, winterizeAlerts });

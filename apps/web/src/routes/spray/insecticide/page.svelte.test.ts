@@ -171,7 +171,7 @@ describe('/spray/insecticide sprayer picker (#736)', () => {
     render(Page, { props: { data: d } as never });
     expect(recordButton()).toBeDisabled();
     const boom = document.querySelector('[data-sprayer-id="s1"]') as HTMLElement;
-    expect(boom.textContent).toMatch(/synthetic-auxin/);
+    expect(boom.textContent).toMatch(/Synthetic auxin \(HRAC 4\)/);
     await fireEvent.click(boom);
     expect(boom.getAttribute('aria-pressed')).toBe('true');
     expect(recordButton()).not.toBeDisabled();

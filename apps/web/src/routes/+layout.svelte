@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
   import { onMount } from 'svelte';
   import { dev } from '$app/env';
   // Fonts: `@font-face` declarations in $lib/styles/type.css use a local()
@@ -268,7 +269,9 @@
         ? 's'
         : ''} decontamination:
       {#each data.dirtySprayers as s, i (s.id)}
-        {i > 0 ? ', ' : ''}<strong>{s.label}</strong> ({s.lastChemistryClass}){/each}
+        {i > 0 ? ', ' : ''}<strong>{s.label}</strong> ({chemistryClassLabel(
+          s.lastChemistryClass ?? ''
+        )}){/each}
       {#if data.user?.role === 'owner'}
         <a
           class="decon-cta"

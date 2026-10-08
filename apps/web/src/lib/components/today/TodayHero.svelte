@@ -30,8 +30,11 @@
     /** Closes a plain task through the shared Done sheet (F1-12). */
     onDone?: (taskId: string, minutes: number | undefined) => void;
     busy?: boolean;
+    /** Animal care jobs listed below the hero (#683): with any, the empty
+     *  state never says nothing needs doing. */
+    careDue?: number;
   }
-  const { action, aiEnabled, onSkip, onDone, busy = false }: Props = $props();
+  const { action, aiEnabled, onSkip, onDone, busy = false, careDue = 0 }: Props = $props();
 
   let skipOpen = $state(false);
   let doneOpen = $state(false);
@@ -154,10 +157,15 @@
       <div class="empty-icon">
         <Check size={20} strokeWidth={2} />
       </div>
-      <h2 class="serif action-title">{tr('today.hero.caughtUp')}</h2>
-      <p class="action-body">
-        {tr('today.hero.caughtUpBody')}
-      </p>
+      {#if careDue > 0}
+        <h2 class="serif action-title">{tr('today.hero.careDue', { count: careDue })}</h2>
+        <p class="action-body">{tr('today.hero.careDueBody')}</p>
+      {:else}
+        <h2 class="serif action-title">{tr('today.hero.caughtUp')}</h2>
+        <p class="action-body">
+          {tr('today.hero.caughtUpBody')}
+        </p>
+      {/if}
     </div>
   {/if}
 </Card>

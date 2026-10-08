@@ -1,4 +1,5 @@
 import { t } from '$lib/i18n';
+import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
 import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
 import type { WinterizeAlert } from './winterizeAlert';
 
@@ -29,7 +30,7 @@ export function buildNavAlerts(input: NavAlertInput, locale?: string | null): Na
     out.push({
       id: `decon:${s.id}`,
       tone: 'rust',
-      label: `${s.label} needs decon${s.lastChemistryClass ? ` (${s.lastChemistryClass})` : ''}`,
+      label: `${s.label} needs decon${s.lastChemistryClass ? ` (${chemistryClassLabel(s.lastChemistryClass)})` : ''}`,
       href: `/spray/decon?sprayer=${encodeURIComponent(s.id)}`
     });
   }

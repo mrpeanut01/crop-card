@@ -31,6 +31,7 @@
   import OrganicInputNotice from '$lib/components/organic/OrganicInputNotice.svelte';
   import { organicInputClass } from '$lib/organic/inputCompliance';
   import { createT } from '$lib/i18n';
+  import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
   import type { MessageKey } from '$lib/i18n';
   import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
   import type { RecordTaskClose } from '$lib/tasks/recordClose';
@@ -1033,7 +1034,9 @@
             >
             {#if s.lastChemistryClass}
               <small class="warn"
-                >{tr('sprayui.sprayer.lastLoad', { class: s.lastChemistryClass })}</small
+                >{tr('sprayui.sprayer.lastLoad', {
+                  class: chemistryClassLabel(s.lastChemistryClass, data.locale)
+                })}</small
               >
             {:else}
               <small class="ok">{tr('sprayui.sprayer.clean')}</small>

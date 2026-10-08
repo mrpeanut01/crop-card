@@ -4,6 +4,9 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
   import { createT, type MessageKey } from '$lib/i18n';
+  import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
+  import { expiringStockLine, lowStockLine } from '$lib/today/stockLines';
+  import { distinctRecommendations, recommendationCropLines } from '$lib/today/recommendations';
   import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
   import { calendarEventBody, calendarEventTitle } from '$lib/calendar/eventTitle';
   import { periodCardPrintHref, printRangeNote, periodPrintable } from '$lib/cards/build/calendar';
@@ -60,7 +63,7 @@
   import { pendingForWho, pendingSchedules, serverTemplateKeys } from '$lib/today/pendingSchedules';
   import QueuedBadge from '$lib/components/ui/QueuedBadge.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
-  import { formatDueDay } from '$lib/prefs';
+  import { dueYmd, formatDueDay, withYearIfOther, ymdInZone } from '$lib/prefs';
   import { dateTimeFormat } from '$lib/intlCache';
   import { formatHours } from '$lib/labour/hours';
   import {
@@ -82,8 +85,11 @@
 
   const aiEnabled = $derived(data.aiEnabled);
   const gardenOnly = $derived(data.farmProfile === 'garden');
-  const nothingPlanted = $derived(data.counts.blocks === 0 || data.counts.plantings === 0);
+  const nothingPlanted = $derived(
+    (data.counts.blocks === 0 || data.counts.plantings === 0) && !page.data?.animalsNavLabel
+  );
   const prefs = $derived(currentPrefs());
+  const todayYmdNow = $derived(ymdInZone(data.nowMs, prefs.timeZone));
   const canAct = $derived(!!data.user && data.user.role !== 'inspector');
   const view = $derived<TodayView>(data.view);
 
@@ -249,7 +255,14 @@
         kind: l.task.kind === 'post-task' ? 'post-task' : 'pre-task',
         status: l.status,
         queued: l.queued !== null,
-        due: formatDueDay(l.task.scheduledFor, prefs, 'month-day', { weekday: 'short' }),
+        due: formatDueDay(
+          l.task.scheduledFor,
+          prefs,
+          'month-day',
+          withYearIfOther(dueYmd(l.task.scheduledFor, prefs.timeZone), todayYmdNow, {
+            weekday: 'short'
+          })
+        ),
         body: l.task.body ?? null
       }))
     }))
@@ -293,15 +306,21 @@
       (e) => !queuedScheduleKeys.has(suggestionTemplateKey(e))
     )
   );
-  const recommendationItems = $derived.by<RecommendationItem[]>(() =>
-    upcomingShown.slice(0, 8).map((e: CalendarEvent, i: number) => ({
+  const recommendedEvents = $derived(distinctRecommendations(upcomingShown, 8));
+  const recommendationItems = $derived.by<RecommendationItem[]>(() => {
+    const crops = recommendationCropLines(
+      recommendedEvents,
+      (e) => cropDisplayNameByEnglish(e.varietyDisplayName, data.locale),
+      (id) => data.blockNames[id]
+    );
+    return recommendedEvents.map((e: CalendarEvent, i: number) => ({
       id: `${e.kind}:${e.blockId}:${e.startMs}:${i}`,
       title: calendarEventTitle(e, data.locale),
-      crop: cropDisplayNameByEnglish(e.varietyDisplayName, data.locale),
+      crop: crops[i],
       window: fmt.day(e.startMs, 'month-day'),
       typical: isTypicalTimingEvent(e)
-    }))
-  );
+    }));
+  });
 
   let forecastOpen = $state(false);
 
@@ -715,6 +734,7 @@
       ? (taskId, minutes) => closeTask(taskId, 'complete', undefined, minutes)
       : undefined}
     {busy}
+    careDue={data.animalCare.reduce((n, c) => n + c.items.length, 0)}
   />
   <QuickActions profile={data.farmProfile} />
 </div>
@@ -736,7 +756,7 @@
       {#each data.deconAlerts as s (s.id)}
         <li>
           <strong>{s.label}</strong>
-          <span class="pill">last load: {s.lastChemistryClass}</span>
+          <span class="pill">last load: {chemistryClassLabel(s.lastChemistryClass ?? '')}</span>
           <a href="/spray/decon?sprayer={encodeURIComponent(s.id)}"
             >{data.user?.role === 'owner' ? 'Run the cleanout' : 'See the cleanout steps'}</a
           >
@@ -940,7 +960,14 @@
               </div>
               <p class="s-meta">
                 {tr('today.pending.due', {
-                  day: formatDueDay(r.scheduledFor, prefs, 'month-day', { weekday: 'short' })
+                  day: formatDueDay(
+                    r.scheduledFor,
+                    prefs,
+                    'month-day',
+                    withYearIfOther(dueYmd(r.scheduledFor, prefs.timeZone), todayYmdNow, {
+                      weekday: 'short'
+                    })
+                  )
                 })}{#if where}
                   · {where}{/if}
               </p>
@@ -1050,7 +1077,7 @@
     onSchedule={canAct
       ? (id) => {
           const idx = recommendationItems.findIndex((r) => r.id === id);
-          const ev = upcomingShown[idx];
+          const ev = recommendedEvents[idx];
           if (ev) scheduleFromEvent(ev);
         }
       : undefined}
@@ -1066,11 +1093,7 @@
         <li>
           <a href="/inventory/{STOCK_CATEGORY_TO_INVENTORY_TYPE[i.category] ?? 'pesticide'}/{i.id}"
             >{i.displayName}</a
-          >: {tr('today.stock.lowLine', {
-            onHand: i.onHand,
-            unit: i.defaultUnit,
-            threshold: i.reorderThreshold
-          })}
+          >: {lowStockLine(i, prefs)}
         </li>
       {/each}
     </ul>
@@ -1086,11 +1109,7 @@
             href="/inventory/{STOCK_CATEGORY_TO_INVENTORY_TYPE[e.category] ??
               'pesticide'}/{e.itemId}">{e.itemName}</a
           >
-          {#if e.lotNumber}<code>{e.lotNumber}</code>{/if}: {tr('today.stock.expiryLine', {
-            balance: e.balance,
-            unit: e.unit,
-            count: e.daysUntilExpiry
-          })}
+          {#if e.lotNumber}<code>{e.lotNumber}</code>{/if}: {expiringStockLine(e, prefs)}
         </li>
       {/each}
     </ul>

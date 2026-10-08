@@ -125,6 +125,16 @@ export function dueYmd(ms: number, timeZone: string): string {
   return isUtcMidnight(ms) ? new Date(ms).toISOString().slice(0, 10) : ymdInZone(ms, timeZone);
 }
 
+/** #747: `extra` plus the year when `dayYmd` is not in `todayYmd`'s year,
+ *  so a date a year back never reads like last week. */
+export function withYearIfOther(
+  dayYmd: string,
+  todayYmd: string,
+  extra: Intl.DateTimeFormatOptions = {}
+): Intl.DateTimeFormatOptions {
+  return dayYmd.slice(0, 4) === todayYmd.slice(0, 4) ? extra : { ...extra, year: 'numeric' };
+}
+
 /** A due day rendered with the same rule as `dueYmd`. */
 export function formatDueDay(
   ms: number,

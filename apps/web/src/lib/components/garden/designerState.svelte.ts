@@ -91,7 +91,7 @@ import {
 import { createT, type MessageKey, type Translator } from '$lib/i18n';
 import { plantingInGround } from '$lib/garden/inGround';
 import { isEditConflictBody, type EditConflictBody, type EditFootprint } from '$lib/edits/conflict';
-import { deterministicPlantingWindow } from '$lib/plan/plantingWindow';
+import { deterministicPlantingWindow, plantingWindowCropOf } from '$lib/plan/plantingWindow';
 import type { BedFrostView } from '$lib/climate/protectionView';
 
 export type CropChoice =
@@ -617,11 +617,9 @@ export class DesignerState {
     const crop = this.crop(pluginId);
     const frost = this.frostFor(blockId);
     const w = deterministicPlantingWindow(
-      {
-        cropFamily: crop?.cropFamily ?? null,
-        soilTempMinF: crop?.plantingGuide?.soilTempMinF ?? null,
-        dtmMaxDays: crop?.daysToMaturity?.max ?? null
-      },
+      crop
+        ? plantingWindowCropOf(crop)
+        : { cropFamily: null, soilTempMinF: null, dtmMaxDays: null },
       {
         lastSpring: ymd(frost.lastSpringFrostMs),
         firstFall: ymd(frost.firstFallFrostMs),

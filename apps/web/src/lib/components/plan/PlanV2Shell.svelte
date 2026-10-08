@@ -40,7 +40,9 @@
   import MapOverlay from './MapOverlay.svelte';
   import type { OverlayFieldInput } from '$lib/plan/mapOverlayLayout';
   import {
+    blockCompanions,
     blockHarvestWindowLabel,
+    blocksOnView,
     blockStatus,
     blockStatusLabel,
     blockStatusTone,
@@ -65,7 +67,14 @@
     /** Plugin index used to derive crop name + DTM for plantings. */
     cropMeta: Record<
       string,
-      { displayName: string; daysToMaturity?: number; cropFamily?: string; archetype?: string }
+      {
+        displayName: string;
+        daysToMaturity?: number;
+        cropFamily?: string;
+        archetype?: string;
+        /** #623: a perennial still stands after it is marked harvested. */
+        perennial?: boolean;
+      }
     >;
     /** When the user clicks "Add planting" / "Refine with AI" / etc. */
     onOpenWizard?: () => void;
@@ -95,7 +104,7 @@
     seasonYear?: number;
   }
   const {
-    blocks,
+    blocks: allBlocks,
     tasks,
     events = [],
     farmLabel,
@@ -116,6 +125,8 @@
     seasonYear
   }: Props = $props();
 
+  const onView = $derived(blocksOnView(allBlocks, (id) => cropMeta[id]?.perennial ?? false));
+  const blocks = $derived(onView.blocks);
   const tr = $derived(createT(page.data?.locale));
   const locale = $derived(page.data?.locale);
   const cropName = (p: { cropPluginId: string; varietyDisplayName: string }) =>
@@ -270,7 +281,8 @@
   function plantingCarryover(cropPluginId: string) {
     return isSensitiveFamily(cropMeta[cropPluginId]?.cropFamily) ? blockCarryover : [];
   }
-  const isPoly = $derived(plantings.length > 1);
+  const multi = $derived(plantings.length > 1);
+  const endedHere = $derived(selectedBlock ? (onView.endedCount.get(selectedBlock.id) ?? 0) : 0);
 
   /** Active planting tab index; defaults to -1 (all) for poly, 0 otherwise. */
   const activePlantingIdx = $derived.by(() => {
@@ -278,11 +290,11 @@
     if (plantingIdxParam !== null) {
       // Clamp to bounds.
       if (plantingIdxParam < -1 || plantingIdxParam >= plantings.length) {
-        return isPoly ? -1 : 0;
+        return multi ? -1 : 0;
       }
       return plantingIdxParam;
     }
-    return isPoly ? -1 : 0;
+    return multi ? -1 : 0;
   });
   const activePlanting = $derived(activePlantingIdx >= 0 ? plantings[activePlantingIdx] : null);
 
@@ -291,14 +303,28 @@
   const blockEvents = $derived.by<CalendarEvent[]>(() => {
     if (!selectedBlock) return [];
     const id = selectedBlock.id;
-    return events.filter((e) => e.blockId === id).sort((a, b) => a.startMs - b.startMs);
+    const shown = new Set(plantings.map((p) => p.id));
+    return events
+      .filter((e) => e.blockId === id && (!e.cropId || shown.has(e.cropId)))
+      .sort((a, b) => a.startMs - b.startMs);
   });
 
   const headerStatus = $derived(
     blockStatus(
-      plantings.map((p) => plantingStatus(p.plantingDate, cropMeta[p.cropPluginId]?.daysToMaturity))
+      plantings.map((p) =>
+        plantingStatus(
+          p.plantingDate,
+          cropMeta[p.cropPluginId]?.daysToMaturity,
+          Date.now(),
+          p.status
+        )
+      )
     )
   );
+  const companionMap = $derived(
+    blockCompanions(plantings, blockEvents, (id) => cropMeta[id]?.daysToMaturity)
+  );
+  const isPoly = $derived([...companionMap.values()].some((c) => c.length > 0));
   const harvestWindowLabel = $derived(blockHarvestWindowLabel(blockEvents, Date.now(), locale));
 
   const daysToMaturityById = $derived.by<Record<string, number>>(() => {
@@ -336,10 +362,10 @@
       });
   });
 
-  /** Companions for a given planting = the other plantings in the same
-   *  block (everything that isn't this row). */
+  /** #623: the other shown plantings in the block that share time in the
+   *  ground with this one, not every planting the block ever had. */
   function companionsFor(plantingId: string) {
-    return plantings.filter((p) => p.id !== plantingId);
+    return companionMap.get(plantingId) ?? [];
   }
 
   function smallGrainHref(plantingId: string, archetype?: string): string | undefined {
@@ -446,9 +472,16 @@
         onEditBlock={onEditBlock ? () => onEditBlock(selectedBlock.id) : undefined}
         askOwner={!canEdit}
         onAddPlanting={onAddPlanting ? () => onAddPlanting(selectedBlock.id) : undefined}
+        polyculture={isPoly}
       />
 
-      {#if isPoly}
+      {#if endedHere > 0}
+        <p class="ended-note" data-testid="plan-ended-plantings">
+          {tr('planui.shell.earlierPlantings', { count: endedHere })}
+        </p>
+      {/if}
+
+      {#if multi}
         <PlantingsTabStrip {plantings} activeIdx={activePlantingIdx} onSelect={selectPlanting} />
       {/if}
 
@@ -614,6 +647,11 @@
   }
   .ghost-btn:hover {
     border-color: var(--color-forest-deep);
+  }
+  .ended-note {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-ink-soft);
   }
   .card-empty {
     background: var(--color-paper);

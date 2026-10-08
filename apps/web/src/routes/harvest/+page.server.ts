@@ -24,6 +24,8 @@ import { dispositionViewsFor } from '$lib/server/harvestDispositions';
 import { farmHasOrganicStatus } from '$lib/harvest/organicAtHarvest.server';
 import { loadTaskContext } from '$lib/server/recordTaskClose';
 import { harvestWindowFor } from '$lib/calendar/harvestWindow';
+import { plantingOnView } from '$lib/plan/planV2Derive';
+import { isPerennialCrop } from '$lib/plugins/perennial';
 
 /** F2-15: owners see "Record a sale"; a quiet garden household only once
  *  the farm has any ledger entry or (#733) has marked a harvest Sold.
@@ -118,6 +120,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     for (const p of b.plantings) {
       const rec = registry.get(p.cropPluginId);
       const crop = rec?.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : undefined;
+      if (p.id !== focusPlantingId && !plantingOnView(p, !!crop && isPerennialCrop(crop))) {
+        continue;
+      }
       const key = plantingHarvestKey({ cropId: p.id, blockId: b.id, cropPluginId: p.cropPluginId });
       const priorPickCount = pickCountByPlanting.get(key) ?? 0;
       const lastPickMs = lastPickByPlanting.get(key);

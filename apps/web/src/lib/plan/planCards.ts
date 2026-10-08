@@ -70,14 +70,14 @@ export function growingFacts(
     varietyDisplayName: string;
     cropPluginId?: string;
     plantingDate: number | null;
+    status?: PlantingRecord['status'];
   }[],
   now: number = Date.now(),
   locale?: string | null
 ): CardFact[] {
-  const planned = plantings.filter(
-    (p) => plantingStatus(p.plantingDate, undefined, now) === 'planned'
-  );
-  const growing = plantings.filter((p) => !planned.includes(p));
+  const statuses = plantings.map((p) => plantingStatus(p.plantingDate, undefined, now, p.status));
+  const planned = plantings.filter((_, i) => statuses[i] === 'planned');
+  const growing = plantings.filter((_, i) => statuses[i] !== 'planned' && statuses[i] !== 'ended');
   const facts: CardFact[] = [
     {
       label: t(locale, 'plantui.card.growing'),
@@ -261,7 +261,9 @@ export function planAreaCard(
 const STATUS_TONE: Record<PlantingStatus, CardStatus['tone']> = {
   planned: 'sky',
   active: 'forest',
-  mature: 'wheat'
+  mature: 'wheat',
+  harvested: 'neutral',
+  ended: 'neutral'
 };
 
 export function planBlockCard(
@@ -285,11 +287,11 @@ export function planBlockCard(
   if (size) facts.push({ label: t(locale, 'plantui.card.size'), value: size, provenance: 'data' });
   facts.push(...growingFacts(block.plantings, now, locale));
   const statuses = block.plantings.map((p) =>
-    plantingStatus(p.plantingDate, cropDays[p.cropPluginId], now)
+    plantingStatus(p.plantingDate, cropDays[p.cropPluginId], now, p.status)
   );
   const status: CardStatus | undefined = statuses.includes('active')
     ? { label: t(locale, 'plantui.status.active'), tone: 'forest' }
-    : statuses.length && statuses.every((s) => s === 'mature')
+    : statuses.length && statuses.every((s) => s === 'mature' || s === 'harvested')
       ? { label: t(locale, 'plantui.status.mature'), tone: 'wheat' }
       : statuses.length
         ? { label: t(locale, 'plantui.status.planned'), tone: 'sky' }
@@ -356,7 +358,12 @@ export function sourceTagLabel(tag: PlantingSourceTag, locale?: string | null): 
 /** The /plan Planting card: status, role, stage, planted, harvest, amount. */
 export function planPlantingCard(input: PlanPlantingCardInput): CardModel {
   const { planting, locale } = input;
-  const status = plantingStatus(planting.plantingDate, input.daysToMaturity, input.now);
+  const status = plantingStatus(
+    planting.plantingDate,
+    input.daysToMaturity,
+    input.now,
+    planting.status
+  );
   const planted =
     planting.plantingDate == null
       ? t(locale, 'plantui.status.planned')

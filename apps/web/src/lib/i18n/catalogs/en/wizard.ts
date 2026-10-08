@@ -234,10 +234,15 @@ export const enWizard = {
   'planui.shell.blocksNoArea': 'Blocks not in an Area',
   'planui.shell.manual': 'Manual',
   'planui.shell.noPlantings': 'This block has no plantings yet.',
+  'planui.shell.earlierPlantings.one':
+    '{count} earlier planting here was harvested or ended. It is in Records.',
+  'planui.shell.earlierPlantings.other':
+    '{count} earlier plantings here were harvested or ended. They are in Records.',
   'planui.shell.nothingPlanted': 'Nothing is planted here yet.',
   'planui.shell.planHere': 'Plan a crop here',
   'planui.sos.needDate': 'Seed-start tasks are made once the planting has a date.',
   'planui.sos.noIndoor': 'No indoor tasks for bought seedlings.',
+  'planui.sos.alreadyInGround': 'This date has passed, so no seed-start tasks are made.',
   'planui.sos.seed': 'Seed',
   'planui.sos.seedling': 'Seedling',
   'planui.sos.sowBefore': 'Sow {weeks} before transplant.',

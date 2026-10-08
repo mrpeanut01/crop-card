@@ -1,9 +1,14 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import type { CropPlugin } from '$lib/plugins/schemas';
 import {
   dateFit,
   deterministicPlantingWindow,
   formatDay,
   isValidWindow,
+  plantingWindowCropOf,
   type FrostDatesIso
 } from './plantingWindow';
 
@@ -131,5 +136,85 @@ describe('deterministicPlantingWindow frostFree (Phase 32E)', () => {
     expect(
       deterministicPlantingWindow({ cropFamily: 'brassica' }, { ...f, frostFree: false })
     ).toEqual(deterministicPlantingWindow({ cropFamily: 'brassica' }, f));
+  });
+});
+
+describe('dateFit in the typed date own year (#646)', () => {
+  const w = { earliest: '2027-03-05', prime: '2027-03-19', latest: '2027-08-17', note: null };
+
+  it('judges an earlier or later year by month and day', () => {
+    expect(dateFit('2019-04-10', w)).toBe('ok');
+    expect(dateFit('2019-02-10', w)).toBe('early');
+    expect(dateFit('2019-09-10', w)).toBe('late');
+    expect(dateFit('2031-06-01', w)).toBe('ok');
+  });
+
+  it('keeps a window that crosses the new year whole in every year', () => {
+    const fall = { earliest: '2026-12-01', prime: '2027-01-10', latest: '2027-03-01', note: null };
+    expect(dateFit('2020-12-15', fall)).toBe('ok');
+    expect(dateFit('2021-02-01', fall)).toBe('ok');
+    expect(dateFit('2021-04-01', fall)).toBe('late');
+    expect(dateFit('2027-12-15', fall)).toBe('ok');
+  });
+
+  it('agrees with the plain comparison in the window year', () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: 364 }), (d) => {
+        const iso = new Date(Date.UTC(2027, 0, 1) + d * 86_400_000).toISOString().slice(0, 10);
+        const plain = iso < w.earliest ? 'early' : iso > w.latest ? 'late' : 'ok';
+        expect(dateFit(iso, w)).toBe(plain);
+      })
+    );
+  });
+});
+
+function plugin(id: string): CropPlugin {
+  const root = process.env.PLUGINS_DIR ?? resolve(process.cwd(), '../../plugins');
+  return JSON.parse(readFileSync(resolve(root, 'crops', `${id}.json`), 'utf8')) as CropPlugin;
+}
+
+describe('perennial planting window (#672)', () => {
+  it.each([
+    'peach-redhaven',
+    'blueberry-bluecrop',
+    'grape-concord',
+    'strawberry-jewel',
+    'apple-honeycrisp',
+    'asparagus-jersey-knight',
+    'alfalfa-vernema'
+  ])('%s gets a window, never a one-day tight fit', (id) => {
+    const facts = plantingWindowCropOf(plugin(id));
+    expect(facts.perennial).toBe(true);
+    expect(facts.dtmMaxDays).toBeNull();
+    const w = deterministicPlantingWindow(facts, LOUDOUN);
+    expect(w.earliest < w.latest).toBe(true);
+    expect(w.note).toMatch(/perennial/);
+    expect(w.note).not.toMatch(/Tight fit/);
+  });
+
+  it('ignores years to a first crop even when they are passed in', () => {
+    const w = deterministicPlantingWindow(
+      { cropFamily: 'stone-fruit', dtmMaxDays: 1460, perennial: true },
+      LOUDOUN
+    );
+    expect(w.latest > w.earliest).toBe(true);
+    expect(
+      deterministicPlantingWindow({ cropFamily: 'stone-fruit', dtmMaxDays: 1460 }, LOUDOUN).note
+    ).toMatch(/Tight fit/);
+  });
+
+  it('leaves an annual unchanged', () => {
+    const facts = plantingWindowCropOf(plugin('tomato-amish-paste'));
+    expect(facts.perennial).toBe(false);
+    expect(facts.dtmMaxDays).not.toBeNull();
+  });
+
+  it('says it in Spanish', () => {
+    const w = deterministicPlantingWindow(
+      plantingWindowCropOf(plugin('peach-redhaven')),
+      LOUDOUN,
+      'es'
+    );
+    expect(w.note).toMatch(/perenne/);
   });
 });

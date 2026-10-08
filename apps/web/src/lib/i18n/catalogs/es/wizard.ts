@@ -244,10 +244,15 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'planui.shell.blocksNoArea': 'Bloques fuera de un área',
   'planui.shell.manual': 'Manual',
   'planui.shell.noPlantings': 'Este bloque aún no tiene siembras.',
+  'planui.shell.earlierPlantings.one':
+    '{count} siembra anterior aquí se cosechó o terminó. Está en Registros.',
+  'planui.shell.earlierPlantings.other':
+    '{count} siembras anteriores aquí se cosecharon o terminaron. Están en Registros.',
   'planui.shell.nothingPlanted': 'Aún no hay nada sembrado aquí.',
   'planui.shell.planHere': 'Planear un cultivo aquí',
   'planui.sos.needDate': 'Las tareas de inicio de semilla se crean cuando la siembra tiene fecha.',
   'planui.sos.noIndoor': 'No hay tareas en interior para plántulas compradas.',
+  'planui.sos.alreadyInGround': 'Esta fecha ya pasó, así que no se crean tareas de semillero.',
   'planui.sos.seed': 'Semilla',
   'planui.sos.seedling': 'Plántula',
   'planui.sos.sowBefore': 'Siembra {weeks} antes del trasplante.',

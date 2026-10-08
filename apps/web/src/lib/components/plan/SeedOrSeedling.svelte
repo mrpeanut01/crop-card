@@ -28,6 +28,9 @@
     inGroundOn?: string;
     idPrefix?: string;
     compact?: boolean;
+    /** #645: a tree, vine or other perennial, set out as nursery stock, so
+     *  "start these from seed indoors" starts unticked. */
+    perennial?: boolean;
   }
 
   let {
@@ -38,7 +41,8 @@
     sowIndoorsOn = $bindable(''),
     inGroundOn = '',
     idPrefix = 'sos',
-    compact = false
+    compact = false,
+    perennial = false
   }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
 
@@ -51,9 +55,18 @@
     lastPlugin = plugin;
     touched = false;
     establishment = preselect;
-    startIndoors = true;
+    startIndoors = !perennial;
     sowIndoorsOn = '';
   });
+
+  const inGroundPast = $derived(isPastDay(inGroundOn));
+
+  function isPastDay(iso: string): boolean {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return iso < today;
+  }
 
   const timing = $derived(plugin ? resolveSeedStartTiming(plugin) : null);
   const sowKnown = $derived(!!timing?.startIndoorsWeeks);
@@ -97,7 +110,9 @@
     {/if}
   </div>
 
-  {#if establishment === 'transplant'}
+  {#if establishment === 'transplant' && inGroundPast}
+    <p class="hint" data-testid="sos-already-in-ground">{tr('planui.sos.alreadyInGround')}</p>
+  {:else if establishment === 'transplant'}
     <label class="check">
       <input type="checkbox" bind:checked={startIndoors} />
       <span>{tr('planui.sos.startIndoors')}</span>

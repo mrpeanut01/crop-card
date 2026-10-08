@@ -4,6 +4,8 @@
   import { nextStep as engineNextStep } from '$lib/hay';
   import { untrack } from 'svelte';
   import { createT } from '$lib/i18n';
+  import { cropDisplayName } from '$lib/i18n/cropName';
+  import { mowTriggerText } from '$lib/hay/mowTriggerText';
   import { fmt } from '$lib/prefsState.svelte';
   import { forecastWords } from '$lib/today/forecastText';
   import { grazingTimeHref } from '$lib/animals/holdCopy';
@@ -290,7 +292,9 @@
     <select bind:value={blockId}>
       {#each data.blocks as b (b.id)}
         <option value={b.id}>
-          {b.name}{b.hayPlanting ? ` — ${b.hayPlanting.varietyDisplayName}` : ''}
+          {b.name}{b.hayPlanting
+            ? ` — ${cropDisplayName(b.hayPlanting.cropPluginId, b.hayPlanting.varietyDisplayName, data.locale)}`
+            : ''}
         </option>
       {/each}
     </select>
@@ -303,7 +307,8 @@
     {tr('hayui.variety')}
     <select bind:value={cropPluginId}>
       {#each data.hayCrops as c (c.pluginId)}
-        <option value={c.pluginId}>{c.displayName}</option>
+        <option value={c.pluginId}>{cropDisplayName(c.pluginId, c.displayName, data.locale)}</option
+        >
       {/each}
     </select>
   </label>
@@ -328,16 +333,18 @@
     {#if planted && planted.cropPluginId !== selectedCrop.pluginId}
       <p class="hint" data-testid="hay-thresholds-note">
         {tr('hayui.thresholdsNote', {
-          crop: selectedCrop.displayName,
-          planted: planted.varietyDisplayName
+          crop: cropDisplayName(selectedCrop.pluginId, selectedCrop.displayName, data.locale),
+          planted: cropDisplayName(planted.cropPluginId, planted.varietyDisplayName, data.locale)
         })}
       </p>
     {/if}
     <p class="hint">
-      {tr('hayui.mowTrigger')} <strong>{selectedCrop.hayOperations?.mowTrigger ?? '—'}</strong>{tr(
-        'hayui.dryWindow',
-        { days: selectedCrop.hayOperations?.weatherWindowDays ?? '' }
-      )}
+      {tr('hayui.mowTrigger')}
+      <strong
+        >{selectedCrop.hayOperations?.mowTrigger
+          ? mowTriggerText(selectedCrop.hayOperations.mowTrigger, data.locale)
+          : '—'}</strong
+      >{tr('hayui.dryWindow', { days: selectedCrop.hayOperations?.weatherWindowDays ?? '' })}
     </p>
     <button class="secondary" onclick={fetchForecast} disabled={busy || !blockId}>
       {busy ? tr('hayui.fetching') : tr('hayui.checkForecast')}

@@ -86,7 +86,7 @@
       {tr('feedback.welcome.p2a')}
       <strong>{tr('feedback.alpha.send')}</strong>
       {tr('feedback.welcome.p2b')}
-      <strong>{tr('feedback.alpha.more')}</strong>{tr('feedback.alpha.menuEnd')}
+      <strong>{tr('feedback.alpha.account')}</strong>{tr('feedback.alpha.menuEnd')}
     </p>
     <div class="actions">
       <button type="button" class="primary" onclick={close} data-autofocus

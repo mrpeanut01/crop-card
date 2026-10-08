@@ -485,10 +485,13 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'hayui.forecastNearest':
     'Este bloque no está en el mapa, así que este es el pronóstico del bloque con mapa más cercano.',
   'hayui.lede':
-    'Flujo de corte en varios pasos con control de ventana de clima y revisión de seguridad de humedad de la paca (FR-19, FR-21, FR-22). Cada corte registra segar → voltear → rastrillar → empacar → almacenar; el núcleo aplica los umbrales de humedad del plugin en el paso de empacar.',
+    'Flujo de corte en varios pasos con control de ventana de clima y revisión de seguridad de humedad de la paca. Cada corte registra segar → voltear → rastrillar → empacar → almacenar; la revisión de seguridad aplica los límites de humedad del cultivo en el paso de empacar.',
   'hayui.load': 'Cargar',
   'hayui.moisture': 'Humedad %',
   'hayui.mowDecision': '1: Decisión de segar',
+  'hayui.mowCue.bootToEarlyHead': 'de embuchamiento a inicio de espigado en el primer corte',
+  'hayui.mowCue.quarterToHalfBloom': 'de 1/4 a 1/2 de floración',
+  'hayui.mowCue.tenPctBloomOr28d': '10% de floración o 28 días después del corte anterior',
   'hayui.mowTrigger': 'Señal para segar:',
   'hayui.noCuttings': 'No hay cortes registrados para este bloque y año.',
   'hayui.pickBlock': 'Elige un bloque',

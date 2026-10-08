@@ -47,6 +47,9 @@ describe('AlphaWelcome', () => {
     render(AlphaWelcome);
     await vi.waitFor(() => expect(isOpen()).toBe(true));
     expect(screen.getByText(/alpha review/)).toBeInTheDocument();
+    expect(screen.getByText(/is always in the/).textContent).toMatch(
+      /Send feedback\s+is always in the\s+account menu \(top right\)\./
+    );
     await fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
     expect(isOpen()).toBe(false);
     expect(localStorage.getItem('cropcard.alpha-welcome.seen')).toBe('1');

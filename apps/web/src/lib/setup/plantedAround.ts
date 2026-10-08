@@ -1,3 +1,7 @@
+import { t } from '$lib/i18n';
+import { intlLocale } from '$lib/prefs';
+import { dateTimeFormat } from '$lib/intlCache';
+
 const MONTH_NAMES = [
   'January',
   'February',
@@ -26,14 +30,19 @@ export function ymd(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+function monthLabel(d: Date, locale?: string | null): string {
+  if (!locale || locale === 'en') return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+  return dateTimeFormat(intlLocale(locale), { month: 'long', year: 'numeric' }).format(d);
+}
+
 /** The last `count` months, newest first, keyed `YYYY-MM`. */
-export function recentMonths(now: Date, count = 12): MonthOption[] {
+export function recentMonths(now: Date, count = 12, locale?: string | null): MonthOption[] {
   const out: MonthOption[] = [];
   for (let i = 0; i < count; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     out.push({
       key: `${d.getFullYear()}-${pad(d.getMonth() + 1)}`,
-      label: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`
+      label: monthLabel(d, locale)
     });
   }
   return out;
@@ -44,6 +53,10 @@ export function recentMonths(now: Date, count = 12): MonthOption[] {
 export const OLDER_KEY = 'older';
 
 export const OLDER_OPTION: MonthOption = { key: OLDER_KEY, label: 'More than a year ago' };
+
+export function olderOption(locale?: string | null): MonthOption {
+  return { key: OLDER_KEY, label: t(locale, 'setup.plant.olderThanYear') };
+}
 
 /** Mid-month for a `YYYY-MM` key, never later than today. `older` picks the
  *  same month two years back as an editable starting point. */

@@ -5,6 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import SetupPlantingBackfill from './SetupPlantingBackfill.svelte';
 
+const page = vi.hoisted(() => ({ data: {} as Record<string, unknown> }));
+vi.mock('$app/state', () => ({ page }));
+
 const catalog = [
   { pluginId: 'alfalfa', displayName: 'Alfalfa', cropFamily: 'legume' },
   { pluginId: 'tomato', displayName: 'Tomato', cropFamily: 'solanaceae' }
@@ -31,9 +34,29 @@ beforeEach(() => {
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
+  page.data = {};
 });
 
 describe('SetupPlantingBackfill', () => {
+  it('shows months and crop families in Spanish', async () => {
+    page.data = { locale: 'es' };
+    render(SetupPlantingBackfill, {
+      blocks,
+      areas: [],
+      canEdit: true,
+      onDone: vi.fn(),
+      catalog,
+      now: NOW
+    });
+    const month = screen.getByLabelText('Sembrado alrededor de') as HTMLSelectElement;
+    const labels = [...month.options].map((o) => o.textContent?.trim());
+    expect(labels[0]).toBe('septiembre de 2026');
+    expect(labels.at(-1)).toBe('Hace más de un año');
+    await fireEvent.input(screen.getByLabelText('¿Qué es?'), { target: { value: 'tom' } });
+    expect(await screen.findByText('Familia del tomate')).toBeTruthy();
+    expect(screen.queryByText('solanaceae')).toBeNull();
+  });
+
   it('offers an empty Area as a whole spot and a New spot option alongside blocks', async () => {
     const onDone = vi.fn();
     render(SetupPlantingBackfill, {

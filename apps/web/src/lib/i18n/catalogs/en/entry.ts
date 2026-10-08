@@ -429,6 +429,7 @@ export const enEntry = {
   'setup.plant.matchesAria': 'Matching crops',
   'setup.plant.noMatch': 'No crop by that name yet. Try a shorter word.',
   'setup.plant.pickExisting': 'Pick an existing spot instead',
+  'setup.plant.olderThanYear': 'More than a year ago',
   'setup.plant.plantedAround': 'Planted around',
   'setup.plant.saveContinue': 'Save and continue',
   'setup.plant.submit': 'Save planting',

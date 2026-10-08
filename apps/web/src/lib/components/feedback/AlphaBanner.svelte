@@ -42,7 +42,7 @@
         <a href={signInHref}>{tr('feedback.banner.signIn')}</a>{tr('feedback.banner.p2')}
         <strong>{tr('feedback.alpha.send')}</strong>
         {tr('feedback.alpha.in')}
-        <strong>{tr('feedback.alpha.more')}</strong>{tr('feedback.alpha.menuEnd')}
+        <strong>{tr('feedback.alpha.account')}</strong>{tr('feedback.alpha.menuEnd')}
       </p>
     </div>
     <button

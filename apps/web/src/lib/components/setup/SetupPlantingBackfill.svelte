@@ -3,13 +3,14 @@
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
   import { cropDisplayName } from '$lib/i18n/cropName';
+  import { cropFamilyLabel } from '$lib/plugins/familyLabel';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import SetupSpot from './SetupSpot.svelte';
   import SpotSelect from './SpotSelect.svelte';
   import { emptyAreas } from '$lib/setup/spot';
   import {
-    OLDER_OPTION,
     dateForMonth,
+    olderOption,
     plantingDateMs,
     recentMonths,
     ymd
@@ -48,7 +49,10 @@
   const cropName = (c: CropOption) => cropDisplayName(c.pluginId, c.displayName, page.data?.locale);
   const uid = $props.id();
   const now = untrack(() => nowProp ?? new Date());
-  const months = [...recentMonths(now, 12), OLDER_OPTION];
+  const months = $derived([
+    ...recentMonths(now, 12, page.data?.locale),
+    olderOption(page.data?.locale)
+  ]);
 
   let catalog = $state<CropOption[]>(untrack(() => catalogProp ?? []));
   let catalogError = $state<string | null>(null);
@@ -71,8 +75,9 @@
       label: b.areaName && b.areaName !== b.name ? `${b.name} · ${b.areaName}` : b.name
     }))
   );
-  let month = $state(months[0].key);
-  let date = $state(untrack(() => dateForMonth(months[0].key, now) ?? ymd(now)));
+  const firstMonthKey = untrack(() => months[0].key);
+  let month = $state(firstMonthKey);
+  let date = $state(untrack(() => dateForMonth(firstMonthKey, now) ?? ymd(now)));
   let saving = $state(false);
   let error = $state<string | null>(null);
 
@@ -196,7 +201,9 @@
       {#if catalogError}
         {catalogError}
       {:else if crop}
-        {cropName(crop)}{crop.cropFamily ? ` · ${crop.cropFamily}` : ''}
+        {cropName(crop)}{crop.cropFamily
+          ? ` · ${cropFamilyLabel(crop.cropFamily, page.data?.locale)}`
+          : ''}
       {:else}
         {tr('setup.plant.typing')}
       {/if}
@@ -207,7 +214,8 @@
           <li>
             <button type="button" class="match" onclick={() => pickCrop(m)}>
               <span>{cropName(m)}</span>
-              {#if m.cropFamily}<small>{m.cropFamily}</small>{/if}
+              {#if m.cropFamily}<small>{cropFamilyLabel(m.cropFamily, page.data?.locale)}</small
+                >{/if}
             </button>
           </li>
         {/each}

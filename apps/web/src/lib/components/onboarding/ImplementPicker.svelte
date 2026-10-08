@@ -3,6 +3,7 @@
   import { Check, Plus, X } from 'lucide-svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { templateText } from '$lib/equipment/templateText';
   import {
     IMPLEMENT_GROUPS,
     IMPLEMENT_TYPES,
@@ -110,9 +111,17 @@
               onchange={() => toggle(t.templateId)}
             />
             <span class="item-body">
-              <span class="item-cat">{t.category}{isOwned ? tr('onboard.impl.onFarm') : ''}</span>
-              <span class="item-label">{t.label}</span>
-              <span class="item-desc">{t.description}</span>
+              <span class="item-cat"
+                >{templateText(t.templateId, 'category', t.category, page.data?.locale)}{isOwned
+                  ? tr('onboard.impl.onFarm')
+                  : ''}</span
+              >
+              <span class="item-label"
+                >{templateText(t.templateId, 'label', t.label, page.data?.locale)}</span
+              >
+              <span class="item-desc"
+                >{templateText(t.templateId, 'description', t.description, page.data?.locale)}</span
+              >
             </span>
           </label>
         {/each}

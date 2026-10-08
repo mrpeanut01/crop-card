@@ -71,6 +71,7 @@ export const enPlugins = {
   'cardsui.kind.planting': 'Planting',
   'cardsui.kind.profit': 'Season profit',
   'cardsui.kind.scout': 'Scout',
+  'cardsui.kind.harvest': 'Harvest',
   'cardsui.kind.soilTest': 'Soil test',
   'cardsui.kind.spray': 'Spray',
   'cardsui.kind.stock': 'Seed & stock',

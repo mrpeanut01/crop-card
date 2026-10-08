@@ -7,6 +7,7 @@
 import { formatInstant, formatQuantity, type Prefs } from '$lib/prefs';
 import {
   mergeProvenance,
+  plantingCardHref,
   recordCardKey,
   recordHref,
   type CardFact,
@@ -18,6 +19,7 @@ import type { SnapshotSprayProduct } from '../snapshot';
 import { SPRAY_RECHECK_NOTICE, SPRAY_REFERENCE_NOTICE, beforeYouSpray } from './spray';
 import { trimNumber } from './common';
 import { t } from '$lib/i18n';
+import { scoutMetricLabel } from '$lib/records/metricLabel';
 
 export const RECORD_COPY_NOTICE = 'Read-only copy of a saved record. The record is the legal copy.';
 export const OPEN_RECORD_LABEL = 'Open full record';
@@ -228,11 +230,6 @@ export interface ScoutRecordCardInput {
   locked: boolean;
 }
 
-function metricLabel(metric: string): string {
-  const s = metric.replace(/[-_]+/g, ' ').trim();
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Count';
-}
-
 export function buildScoutRecordCard(
   input: ScoutRecordCardInput,
   opts: RecordCardOptions
@@ -243,9 +240,14 @@ export function buildScoutRecordCard(
       label: t(loc, 'cards.record.seen'),
       value: formatInstant(input.occurredAt, opts.prefs, 'datetime'),
       provenance: 'data'
-    },
-    { label: metricLabel(input.metric), value: trimNumber(input.value, 2), provenance: 'manual' }
+    }
   ];
+  if (input.metric !== 'note')
+    facts.push({
+      label: scoutMetricLabel(input.metric, loc),
+      value: trimNumber(input.value, 2),
+      provenance: 'manual'
+    });
   if (input.blockLabel)
     facts.push({ label: t(loc, 'cards.record.block'), value: input.blockLabel, provenance: 'data' });
   if (input.plantingLabel) {
@@ -278,6 +280,77 @@ export function buildScoutRecordCard(
     href: recordHref('scout', input.rowId),
     notices: [copyNotice(loc)],
     links: [openRecordLink('scout', input.rowId, loc)]
+  };
+}
+
+export interface HarvestRecordCardInput {
+  rowId: string;
+  occurredAt: number;
+  blockLabel: string | null;
+  cropLabel: string;
+  quantity: string | null;
+  lotNumber: string | null;
+  moisturePct: number | null;
+  /** The Planting Card this harvest came from, when one is on file. */
+  plantingId: string | null;
+  locked: boolean;
+}
+
+/** #749: a harvest's own read-only card (date, amount, lot), with the
+ *  Planting Card as a link. */
+export function buildHarvestRecordCard(
+  input: HarvestRecordCardInput,
+  opts: RecordCardOptions
+): CardModel {
+  const loc = opts.prefs.locale;
+  const facts: CardFact[] = [
+    {
+      label: t(loc, 'cards.record.harvested'),
+      value: formatInstant(input.occurredAt, opts.prefs, 'date'),
+      provenance: 'manual'
+    },
+    {
+      label: t(loc, 'cards.record.quantity'),
+      value: input.quantity?.trim() || t(loc, 'cards.record.notRecorded'),
+      provenance: 'manual'
+    }
+  ];
+  if (input.lotNumber?.trim())
+    facts.push({
+      label: t(loc, 'cards.record.lot'),
+      value: input.lotNumber.trim(),
+      provenance: 'manual'
+    });
+  if (input.moisturePct !== null)
+    facts.push({
+      label: t(loc, 'cards.record.moisture'),
+      value: `${trimNumber(input.moisturePct, 1)}%`,
+      provenance: 'manual'
+    });
+  if (input.blockLabel)
+    facts.push({ label: t(loc, 'cards.record.block'), value: input.blockLabel, provenance: 'data' });
+  const links = [openRecordLink('harvest', input.rowId, loc)];
+  if (input.plantingId)
+    links.push({
+      label: t(loc, 'cards.record.plantingCard'),
+      href: plantingCardHref(input.plantingId)
+    });
+  return {
+    kind: 'harvest',
+    key: recordCardKey('harvest', input.rowId),
+    kicker: [t(loc, 'cards.record.harvest'), input.blockLabel].filter(Boolean).join(' · '),
+    title: input.cropLabel,
+    status: lockStatus(input.locked, loc),
+    facts,
+    sections: [],
+    asOf: opts.now,
+    provenance: [
+      { source: 'manual', detail: t(loc, 'cards.record.provHarvest') },
+      { source: 'data', detail: t(loc, 'cards.record.provRecord') }
+    ],
+    href: recordHref('harvest', input.rowId),
+    notices: [copyNotice(loc)],
+    links
   };
 }
 

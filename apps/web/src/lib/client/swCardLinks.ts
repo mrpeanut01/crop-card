@@ -21,6 +21,7 @@ export const SW_CARD_KIND_BY_PREFIX: Readonly<Record<string, string>> = {
   st: 'stock',
   tk: 'task',
   sc: 'scout',
+  hv: 'harvest',
   so: 'soilTest',
   an: 'animal',
   fl: 'flock',

@@ -14,6 +14,7 @@ export const CARD_KINDS = [
   'stock',
   'task',
   'scout',
+  'harvest',
   'soilTest',
   'animal',
   'flock',
@@ -27,6 +28,7 @@ export const CARD_KINDS = [
 /** Kinds built only from a saved record, never from the offline snapshot. */
 export const RECORD_ONLY_CARD_KINDS: readonly CardKind[] = [
   'scout',
+  'harvest',
   'irrigation',
   'profit',
   'digest'
@@ -248,6 +250,7 @@ export const CARD_KIND_LABEL: Record<CardKind, string> = {
   stock: 'Seed & stock',
   task: 'Task',
   scout: 'Scout',
+  harvest: 'Harvest',
   soilTest: 'Soil test',
   animal: 'Animal',
   flock: 'Flock',
@@ -269,6 +272,7 @@ export const CARD_KEY_PREFIX: Record<CardKind, string> = {
   stock: 'st',
   task: 'tk',
   scout: 'sc',
+  harvest: 'hv',
   /** `st` is taken by stock, whose keys are already printed on cards. */
   soilTest: 'so',
   animal: 'an',

@@ -30,6 +30,31 @@ import { withTenant } from '$lib/db/tenant';
 import { RECORD_KINDS, LOCK_WINDOW_MS, type RecordKind } from '$lib/db/recordsUnified';
 import { requireUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
+import { getRegistry } from '$lib/server/registry';
+import { toSprayProduct } from '$lib/server/cardSnapshot';
+import { prefsFor } from '$lib/db/userProfile';
+import { t, type MessageKey } from '$lib/i18n';
+import { cropDisplayName } from '$lib/i18n/cropName';
+import {
+  deconDetail,
+  fertilityDetail,
+  harvestDetail,
+  hayDetail,
+  plantingDetail,
+  scoutDetail,
+  sprayDetail,
+  type DetailProduct,
+  type RecordDetailView
+} from '$lib/records/recordDetail';
+
+const HAY_STATUS_KEY: Record<string, MessageKey> = {
+  aborted: 'hayui.status.aborted',
+  baling: 'hayui.status.baling',
+  complete: 'hayui.status.complete',
+  mowing: 'hayui.status.mowing',
+  raking: 'hayui.status.raking',
+  tedding: 'hayui.status.tedding'
+};
 
 function isLocked(occurredAt: number, lockedAt: number | undefined, now: number): boolean {
   if (lockedAt) return true;
@@ -54,11 +79,43 @@ export const load: PageServerLoad = async (event) => {
   }
   const rowId = params.id;
   const now = Date.now();
+  const prefs = { ...prefsFor(user.id), locale: event.locals.locale };
+  const registry = await getRegistry();
 
-  const blockLabelById = new Map(listBlocks().map((b) => [b.id, b.blockLabel ?? b.name]));
+  const blocks = listBlocks();
+  const blockById = new Map(blocks.map((b) => [b.id, b]));
+  const blockLabel = (id: string) => {
+    const b = blockById.get(id);
+    return b ? (b.blockLabel ?? b.name) : t(prefs.locale, 'records.field.deletedBlock');
+  };
   const sprayerLabelById = new Map(listSprayers().map((s) => [s.id, s.label]));
+  const products = (
+    list: Array<{
+      pluginId: string;
+      displayName?: string;
+      rate?: { amount: number; unit: string };
+    }>
+  ): DetailProduct[] =>
+    list.map((p) => {
+      const rec = registry.get(p.pluginId);
+      const label = rec ? toSprayProduct(rec.plugin) : null;
+      return {
+        pluginId: p.pluginId,
+        name: p.displayName ?? rec?.plugin.displayName ?? p.pluginId,
+        epaRegistrationNumber: label ? label.epaRegistrationNumber : undefined,
+        rate: p.rate
+      };
+    });
+  const cropLabel = (pluginId: string, cropId?: string | null) => {
+    const planting = cropId
+      ? blocks.flatMap((b) => b.plantings).find((p) => p.id === cropId)
+      : undefined;
+    const english =
+      planting?.varietyDisplayName ?? registry.get(pluginId)?.plugin.displayName ?? pluginId;
+    return cropDisplayName(pluginId, english, prefs.locale);
+  };
 
-  let detail: Record<string, unknown> | null = null;
+  let view: RecordDetailView | null = null;
   let locked = false;
   let lockedAt: number | undefined;
   let occurredAt = 0;
@@ -72,15 +129,20 @@ export const load: PageServerLoad = async (event) => {
     lockedAt = ev.lockedAt ?? evaluateSprayLock(ev);
     locked = isLocked(occurredAt, lockedAt, now);
     performerLabel = performerEmail(ev.performedById);
-    detail = {
-      blockLabel: blockLabelById.get(ev.blockId) ?? ev.blockId,
-      sprayerLabel: sprayerLabelById.get(ev.sprayerId) ?? ev.sprayerId,
-      products: ev.products,
-      conditions: ev.conditions,
-      rulesVersion: ev.rulesVersion,
-      pluginHashes: ev.pluginHashes,
-      customRateOverride: ev.customRateOverride
-    };
+    view = sprayDetail(
+      {
+        blockLabel: blockLabel(ev.blockId),
+        blockAcres: blockById.get(ev.blockId)?.acres ?? null,
+        sprayerLabel: sprayerLabelById.get(ev.sprayerId) ?? null,
+        products: products(ev.products),
+        conditions: ev.conditions,
+        customRateOverride: ev.customRateOverride,
+        notes: ev.notes,
+        rulesVersion: ev.rulesVersion,
+        pluginHashes: ev.pluginHashes
+      },
+      prefs
+    );
   } else if (kind === 'insecticide') {
     const ev = getInsecticideEvent(rowId);
     if (!ev) throw error(404, 'insecticide record not found');
@@ -94,15 +156,26 @@ export const load: PageServerLoad = async (event) => {
       attestedNoForagers: ev.attestedNoForagers,
       pollinatorVerdict: ev.pollinatorVerdict
     };
-    detail = {
-      blockLabel: blockLabelById.get(ev.blockId) ?? ev.blockId,
-      products: ev.products,
-      scoutObservation: ev.scoutObservation,
-      conditions: ev.conditions,
-      rulesVersion: ev.rulesVersion,
-      reEntryClearAt: ev.reEntryClearAt,
-      preHarvestClearAt: ev.preHarvestClearAt
-    };
+    view = sprayDetail(
+      {
+        blockLabel: blockLabel(ev.blockId),
+        blockAcres: blockById.get(ev.blockId)?.acres ?? null,
+        sprayerLabel: ev.sprayerId ? (sprayerLabelById.get(ev.sprayerId) ?? null) : null,
+        products: products(ev.products),
+        conditions: ev.conditions,
+        observation: ev.scoutObservation
+          ? {
+              subject: ev.scoutObservation.pest,
+              metric: ev.scoutObservation.metric,
+              value: ev.scoutObservation.value
+            }
+          : null,
+        reEntryClearAt: ev.reEntryClearAt,
+        preHarvestClearAt: ev.preHarvestClearAt,
+        rulesVersion: ev.rulesVersion
+      },
+      prefs
+    );
   } else if (kind === 'fungicide') {
     const ev = getFungicideEvent(rowId);
     if (!ev) throw error(404, 'fungicide record not found');
@@ -110,56 +183,81 @@ export const load: PageServerLoad = async (event) => {
     lockedAt = ev.lockedAt;
     locked = isLocked(occurredAt, lockedAt, now);
     performerLabel = performerEmail(ev.performedById);
-    detail = {
-      blockLabel: blockLabelById.get(ev.blockId) ?? ev.blockId,
-      products: ev.products,
-      diseaseObservation: ev.diseaseObservation,
-      conditions: ev.conditions,
-      rulesVersion: ev.rulesVersion,
-      reEntryClearAt: ev.reEntryClearAt,
-      preHarvestClearAt: ev.preHarvestClearAt
-    };
+    view = sprayDetail(
+      {
+        blockLabel: blockLabel(ev.blockId),
+        blockAcres: blockById.get(ev.blockId)?.acres ?? null,
+        sprayerLabel: ev.sprayerId ? (sprayerLabelById.get(ev.sprayerId) ?? null) : null,
+        products: products(ev.products),
+        conditions: ev.conditions,
+        observation: ev.diseaseObservation
+          ? {
+              subject: ev.diseaseObservation.disease,
+              metric: ev.diseaseObservation.metric,
+              value: ev.diseaseObservation.value
+            }
+          : null,
+        reEntryClearAt: ev.reEntryClearAt,
+        preHarvestClearAt: ev.preHarvestClearAt,
+        rulesVersion: ev.rulesVersion
+      },
+      prefs
+    );
   } else if (kind === 'scout') {
     const ev = getScoutObservation(rowId);
     if (!ev) throw error(404, 'scout record not found');
     occurredAt = ev.occurredAt;
     locked = isLocked(occurredAt, undefined, now);
     performerLabel = performerEmail(ev.performedById);
-    detail = {
-      blockLabel: blockLabelById.get(ev.blockId) ?? ev.blockId,
-      pest: ev.pest,
-      metric: ev.metric,
-      value: ev.value,
-      notes: ev.notes
-    };
+    view = scoutDetail(
+      {
+        blockLabel: blockLabel(ev.blockId),
+        pest: ev.pest,
+        metric: ev.metric,
+        value: ev.value,
+        notes: ev.notes
+      },
+      prefs
+    );
   } else if (kind === 'harvest') {
     const ev = listHarvestEvents().find((e) => e.id === rowId);
     if (!ev) throw error(404, 'harvest record not found');
     occurredAt = ev.occurredAt;
-    locked = isLocked(occurredAt, undefined, now);
-    detail = {
-      blockLabel: blockLabelById.get(ev.blockId) ?? ev.blockId,
-      cropPluginId: ev.cropPluginId,
-      quantity: ev.quantity,
-      lotNumber: ev.lotNumber
-    };
+    lockedAt = ev.lockedAt;
+    locked = isLocked(occurredAt, lockedAt, now);
+    view = harvestDetail(
+      {
+        blockLabel: blockLabel(ev.blockId),
+        cropLabel: cropLabel(ev.cropPluginId, ev.cropId),
+        cropPluginId: ev.cropPluginId,
+        quantity: ev.quantity,
+        lotNumber: ev.lotNumber,
+        moisturePct: ev.moisturePct
+      },
+      prefs
+    );
   } else if (kind === 'hay') {
     const c = getCutting(rowId);
     if (!c) throw error(404, 'hay record not found');
     occurredAt = c.mowAt ?? c.baleAt ?? c.storedAt ?? c.createdAt;
     locked = isLocked(occurredAt, undefined, now);
     performerLabel = performerEmail(c.performedById);
-    detail = {
-      blockLabel: blockLabelById.get(c.blockId) ?? c.blockId,
-      cropPluginId: c.cropPluginId,
-      cuttingNumber: c.cuttingNumber,
-      status: c.status,
-      baleType: c.baleType,
-      balesQuantity: c.balesQuantity,
-      baleMoisturePct: c.baleMoisturePct,
-      rulesVersion: c.rulesVersion,
-      notes: c.notes
-    };
+    const statusKey = HAY_STATUS_KEY[c.status];
+    view = hayDetail(
+      {
+        blockLabel: blockLabel(c.blockId),
+        cropLabel: cropLabel(c.cropPluginId, c.cropId),
+        cropPluginId: c.cropPluginId,
+        cuttingNumber: c.cuttingNumber,
+        statusLabel: statusKey ? t(prefs.locale, statusKey) : c.status,
+        baleType: c.baleType,
+        balesQuantity: c.balesQuantity,
+        baleMoisturePct: c.baleMoisturePct,
+        rulesVersion: c.rulesVersion,
+        notes: c.notes
+      },
+      prefs
+    );
   } else if (kind === 'fertility') {
     const row = db
       .select()
@@ -170,30 +268,38 @@ export const load: PageServerLoad = async (event) => {
     occurredAt = row.occurredAt.getTime();
     locked = isLocked(occurredAt, undefined, now);
     performerLabel = performerEmail(row.performedById);
-    detail = {
-      blockLabel: blockLabelById.get(row.blockId) ?? row.blockId,
-      source: row.source,
-      ratePerAcre: row.ratePerAcreHundredths / 100,
-      rateUnit: row.rateUnit,
-      nLbPerAcre: row.nDeliveredHundredths / 100,
-      pLbPerAcre: row.pDeliveredHundredths / 100,
-      kLbPerAcre: row.kDeliveredHundredths / 100,
-      notes: row.notes
-    };
+    view = fertilityDetail(
+      {
+        blockLabel: blockLabel(row.blockId),
+        source: row.source,
+        ratePerAcre: row.ratePerAcreHundredths / 100,
+        rateUnit: row.rateUnit,
+        nLbPerAcre: row.nDeliveredHundredths / 100,
+        pLbPerAcre: row.pDeliveredHundredths / 100,
+        kLbPerAcre: row.kDeliveredHundredths / 100,
+        notes: row.notes
+      },
+      prefs
+    );
   } else if (kind === 'planting') {
-    const planting = listBlocks()
-      .flatMap((b) => b.plantings)
-      .find((p) => p.id === rowId);
+    const planting = blocks.flatMap((b) => b.plantings).find((p) => p.id === rowId);
     if (!planting || planting.plantingDate == null) throw error(404, 'planting record not found');
     occurredAt = planting.plantingDate;
     locked = isLocked(occurredAt, undefined, now);
-    detail = {
-      blockLabel: blockLabelById.get(planting.blockId) ?? planting.blockId,
-      cropPluginId: planting.cropPluginId,
-      varietyDisplayName: planting.varietyDisplayName,
-      quantityPlanted: planting.quantityPlanted,
-      quantityUnit: planting.quantityUnit
-    };
+    view = plantingDetail(
+      {
+        blockLabel: blockLabel(planting.blockId),
+        cropLabel: cropDisplayName(
+          planting.cropPluginId,
+          planting.varietyDisplayName,
+          prefs.locale
+        ),
+        cropPluginId: planting.cropPluginId,
+        quantityPlanted: planting.quantityPlanted,
+        quantityUnit: planting.quantityUnit
+      },
+      prefs
+    );
   } else if (kind === 'decon') {
     const row = db
       .select({
@@ -213,13 +319,16 @@ export const load: PageServerLoad = async (event) => {
     occurredAt = row.occurredAt.getTime();
     locked = isLocked(occurredAt, undefined, now);
     performerLabel = performerEmail(row.performedById);
-    detail = {
-      equipmentLabel: row.equipmentLabel ?? row.equipmentId,
-      notes: row.notes,
-      payloadJson: row.payloadJson
-    };
+    view = deconDetail(
+      {
+        equipmentLabel: row.equipmentLabel ?? row.equipmentId,
+        notes: row.notes,
+        payloadJson: row.payloadJson
+      },
+      prefs
+    );
   }
-  if (!detail) throw error(404, 'record not found');
+  if (!view) throw error(404, 'record not found');
 
   return {
     kind,
@@ -228,7 +337,8 @@ export const load: PageServerLoad = async (event) => {
     locked,
     lockedAt,
     performerLabel,
-    detail,
+    rows: view.rows,
+    technical: view.technical,
     pollinator,
     canEdit: canMutate(user.role)
   };

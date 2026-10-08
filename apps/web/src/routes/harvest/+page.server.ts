@@ -263,6 +263,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     askSoldAsOrganic: farmHasOrganicStatus(),
     canWriteRecords: !!role && canMutate(role),
     isOwner: role === 'owner',
+    harvestCropNames: harvestCropNames(all, registry),
     focusPlantingId,
     taskContext,
     canRecordSale: canRecordSale(role, hasSoldDisposition),
@@ -273,3 +274,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     }
   };
 };
+
+/** #631: English crop names for recorded harvests, keyed by plugin id. */
+function harvestCropNames(
+  harvests: ReadonlyArray<{ cropPluginId: string }>,
+  registry: { get(id: string): { plugin: { displayName: string } } | undefined }
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const h of harvests) {
+    const name = registry.get(h.cropPluginId)?.plugin.displayName;
+    if (name) out[h.cropPluginId] = name;
+  }
+  return out;
+}

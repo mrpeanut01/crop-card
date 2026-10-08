@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { soilTestLine } from '$lib/fertility/soilLine';
   import { untrack } from 'svelte';
   import { createT } from '$lib/i18n';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
@@ -426,14 +427,7 @@
     <ul>
       {#each data.soilTests as t (t.id)}
         <li>
-          {fmt.instant(t.sampledAt, 'date')} — {tr('fert.soilLine', {
-            ph: t.ph?.toFixed(1) ?? '?',
-            om: t.organicMatterPct?.toFixed(1) ?? '?',
-            no3: t.nitratePpm ?? '?',
-            p: t.phosphorusPpm ?? '?',
-            k: t.potassiumPpm ?? '?'
-          })}
-          {t.unitsBasis === 'lb-per-acre' ? 'lb/A' : 'ppm'}
+          {fmt.instant(t.sampledAt, 'date')} — {soilTestLine(t, tr)}
           {#if labReportOf(t) || data.canAddSoilTest}
             <div class="lab-report" data-testid="soil-test-lab-report">
               <span class="lab-report-label">{tr('fert.labReport')}</span>

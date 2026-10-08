@@ -4,7 +4,7 @@
  * Mirror of sprayEvents.ts for the insecticide flow. Records are immutable
  * after the same 48-hour lock window so audit trails stay consistent across
  * herbicide / insecticide operations. Stores REI / PHI clear-by timestamps
- * computed from the plugin so the /today re-entry banner has a fast lookup.
+ * computed from the plugin so re-entry checks read them without the plugin.
  *
  * Phase 18a: tenant-scoped.
  */
@@ -187,7 +187,9 @@ export function assertEditable(event: InsecticideEvent): void {
   if (lockedAt !== undefined) throw new RecordLockedError(lockedAt);
 }
 
-/** Blocks currently inside a re-entry interval — drives the /today banner. */
+/** Insecticide sprays still inside a re-entry interval, for the /spray/insecticide
+ *  banner and GET /api/insecticide. /today builds its re-entry card from the
+ *  rows it already reads instead (ruling LF-3). */
 export function activeReEntryRestrictions(now: number = Date.now()): InsecticideEvent[] {
   const all = db
     .select()

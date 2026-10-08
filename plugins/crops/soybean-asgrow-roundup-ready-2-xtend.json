@@ -2,7 +2,7 @@
   "pluginId": "soybean-asgrow-roundup-ready-2-xtend",
   "type": "crop",
   "displayName": "Soybean — Asgrow RR2 Xtend (group 3.5)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "legume",
   "daysToMaturity": {
     "min": 110,
@@ -14,7 +14,13 @@
       "min": 1.25,
       "max": 1.75
     },
-    "seedsPerAcre": 140000
+    "seedsPerAcre": 140000,
+    "seedingRate": {
+      "seedsPerAcre": {
+        "min": 120000,
+        "max": 150000
+      }
+    }
   },
   "traits": [
     "glyphosate-tolerant-rr2",

@@ -6967,5 +6967,14 @@
       "quote": "UF/IFAS HS1435, Yacon, a Potential Tuberous Crop for Florida: \"rooted stem cuttings or plants propagated from corms can be planted in beds with 3- or 4-foot center-to-center spacing (Chqoue Delago et al. 2013) with 30–40 inches for plant spacing (Herman and Heller 1997).\"",
       "note": "'plant spacing' within beds (beds 3-4 ft center to center) is read as the distance between plants along the bed. The figure is cited from Herman and Heller 1997 rather than a UF trial. No other allowed yacon source found (other hits were journal articles)."
     }
+  },
+  "soybean-asgrow-roundup-ready-2-xtend": {
+    "seedingRate.seedsPerAcre": {
+      "url": "https://content.ces.ncsu.edu/soybean-planting-decisions",
+      "publisher": "NC State Extension, North Carolina Soybean Production Guide (AG-835), 5. Planting Decisions",
+      "date": "Publication date: July 31, 2025 (accessed 2026-10-08)",
+      "quote": "In planting situations earlier than mid-May, soybean seeding rates of 120,000 to 150,000 seeds/acre generally maximized yield, while with later planting dates (past mid-June), seeding rates of 165,000 to 175,000 seeds/acre were needed to maximize yield.",
+      "note": "#689. Seeds per acre for a full-season planting before mid-May, the usual Virginia planting for a group 3.5 bean (VCE 424-100 Soybean: two weeks after corn planting time, prior to June 10). Double-crop or late plantings need more seed (165,000 to 175,000 past mid-June, same sentence), which the plugin cannot express, so the full-season figure is stored. VCE 424-100 (2023) Part I Soybean was read and gives no seeding rate; the Virginia Tech soybean blog posts that gave one are no longer online, so no Virginia figure was counted."
+    }
   }
 }

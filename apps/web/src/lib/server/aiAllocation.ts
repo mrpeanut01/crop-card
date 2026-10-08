@@ -19,7 +19,13 @@ import { anthropicClient } from './anthropicClient';
 import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
 import type { BlockWithPlantings } from '$lib/db/blocks';
 import type { Crop } from '$lib/db/crops';
-import { planLayout, type PlanInput, type SeedRequest, type Assignment } from '$lib/layout/engine';
+import {
+  isProtectedBlock,
+  planLayout,
+  type PlanInput,
+  type SeedRequest,
+  type Assignment
+} from '$lib/layout/engine';
 import {
   blocksWithRoomForLeftover,
   cropsOnBlock,
@@ -97,6 +103,8 @@ export interface MatrixRow {
   fullFit: number;
   /** Share of the block still free (1 on field blocks). */
   freeShare: number;
+  /** #797 — the block is in a greenhouse Area; open ground goes first. */
+  protectedSpace?: boolean;
 }
 
 export interface AiAssignment {
@@ -911,7 +919,8 @@ export function buildCandidacyMatrix(input: PlanInput): MatrixRow[] {
         usableSqft: Math.round(usable.sqft),
         sharedBed,
         fullFit,
-        freeShare: Number(freeShare.toFixed(3))
+        freeShare: Number(freeShare.toFixed(3)),
+        ...(isProtectedBlock(input, block.id) ? { protectedSpace: true } : {})
       });
     }
   }
@@ -969,13 +978,15 @@ export function buildAllocationPrompt(
   const bedIds = new Set(input.bedBlockIds ?? []);
   const freeShareOf = (blockId: string) =>
     matrix.find((r) => r.blockId === blockId)?.freeShare ?? 1;
+  const protectedTag = (id: string) => (isProtectedBlock(input, id) ? ' | protected=Y' : '');
   const blockLines = input.blocks.map((b) => {
     if (bedIds.has(b.id)) {
-      return `- ${b.id} | ${b.blockLabel ?? b.name} | shared_bed=Y | free_share=${freeShareOf(b.id)} | sun=${b.sunExposure ?? '?'} | usable_sqft=${Math.round(bedUsableSqft(b))}`;
+      return `- ${b.id} | ${b.blockLabel ?? b.name} | shared_bed=Y | free_share=${freeShareOf(b.id)} | sun=${b.sunExposure ?? '?'} | usable_sqft=${Math.round(bedUsableSqft(b))}${protectedTag(b.id)}`;
     }
     const usable = usableSqft(b);
-    return `- ${b.id} | ${b.blockLabel ?? b.name} | acres=${b.acres ?? '?'} | sun=${b.sunExposure ?? '?'} | usable_sqft=${Math.round(usable.sqft)}`;
+    return `- ${b.id} | ${b.blockLabel ?? b.name} | acres=${b.acres ?? '?'} | sun=${b.sunExposure ?? '?'} | usable_sqft=${Math.round(usable.sqft)}${protectedTag(b.id)}`;
   });
+  const hasProtected = input.blocks.some((b) => isProtectedBlock(input, b.id));
   const hasSharedBeds = input.blocks.some((b) => bedIds.has(b.id));
   const sharedBedSection = hasSharedBeds
     ? [
@@ -1078,6 +1089,11 @@ export function buildAllocationPrompt(
       '- Prefer rotationOk=Y. Only use rotationOk=N when no Y options remain.',
       '- When threeSisters=Y for corn+legume+cucurbit, group them on the same block when capacity allows.',
       '- Avoid blocks with narrow=Y for that crop.',
+      ...(hasProtected
+        ? [
+            '- Blocks marked protected=Y are in a greenhouse or high tunnel, which is scarce space. Put a crop on open ground when an open block suits it and has room, and use protected space once the open blocks are full or have a reason against the crop. Never leave seed unplaced to keep it out of protected space.'
+          ]
+        : []),
       '',
       'Rationale style (READ CAREFULLY — the rationale text is shown directly to a non-technical farmer):',
       '- Write in plain English. Translate every column meaning above into normal language.',
@@ -1707,6 +1723,7 @@ function engineRationale(
   }
   if (row.threeSistersCandidate && threeSistersHere)
     bits.push(t(locale, 'wizard.engine.why.threeSisters'));
+  if (row.protectedSpace) bits.push(t(locale, 'wizard.engine.why.protected'));
   return bits.length > 0 ? bits.join('. ') + '.' : t(locale, 'wizard.engine.placedDot');
 }
 
@@ -1965,6 +1982,7 @@ export function hashInputsForMatrix(input: PlanInput): string {
     existingCrops: input.existingCrops,
     companions: input.companions,
     bedBlockIds: input.bedBlockIds ?? [],
+    protectedBlockIds: input.protectedBlockIds ?? [],
     plugins: [...pluginIds].sort().map((id) => input.pluginIndex[id] ?? null),
     day: Math.floor((input.nowMs ?? Date.now()) / DAY_MS_MATRIX)
   })}`;

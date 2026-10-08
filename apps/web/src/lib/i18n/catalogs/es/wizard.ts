@@ -1185,6 +1185,8 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
     'el bloque es angosto para el espaciado entre hileras de este cultivo',
   'wizard.engine.why.threeSisters':
     'parte de un grupo de las tres hermanas (maíz / frijol / calabaza)',
+  'wizard.engine.why.protected':
+    'es espacio de invernadero o túnel, que el plan llena después del terreno abierto que le conviene al cultivo',
   'wizard.engine.adv.underused':
     '{block} quedaría sembrado solo en un {pct}% con tu semilla de {seed}. Considera agregar un cultivo acompañante rápido, pedir más semilla o achicar la cama.',
   'wizard.engine.adv.family':

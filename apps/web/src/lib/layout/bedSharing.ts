@@ -62,6 +62,16 @@ export function sharedBedBlockIds(
   return blocks.filter((b) => b.fieldId && bedAreas.has(b.fieldId)).map((b) => b.id);
 }
 
+/** #797 — blocks in greenhouse Areas (glass, poly or high tunnel): protected
+ *  space the engine fills after open ground. */
+export function protectedBlockIds(
+  blocks: ReadonlyArray<{ id: string; fieldId?: string | null }>,
+  fields: ReadonlyArray<{ id: string; kind: string }>
+): string[] {
+  const covered = new Set(fields.filter((f) => f.kind === 'greenhouse').map((f) => f.id));
+  return blocks.filter((b) => b.fieldId && covered.has(b.fieldId)).map((b) => b.id);
+}
+
 /** Plantable square feet of a bed. A bed is worked from its edges, so there
  *  is no perimeter buffer: typed dimensions win, then the drawn shape, then
  *  the stored acres. */

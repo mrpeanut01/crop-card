@@ -1141,6 +1141,8 @@ export const enWizard = {
   'wizard.engine.why.rotation': 'a same-family crop was here recently — used as a last resort',
   'wizard.engine.why.narrow': "the block is narrow for this crop's row spacing",
   'wizard.engine.why.threeSisters': 'part of a three-sisters grouping (corn / beans / squash)',
+  'wizard.engine.why.protected':
+    'this is greenhouse or tunnel space, which the plan fills after open ground that suits the crop',
   'wizard.engine.adv.underused':
     '{block} would only be about {pct}% planted with your {seed} seed — consider adding a fast companion crop, ordering more seed, or shrinking the bed.',
   'wizard.engine.adv.family':

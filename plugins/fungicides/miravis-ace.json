@@ -1,7 +1,7 @@
 {
   "pluginId": "miravis-ace",
   "type": "fungicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No listing on the OMRI Products List (searched 2026-10-08: 'Miravis Ace'; no Miravis product). Conventional SDHI + DMI premix; label makes no organic statement."},
   "formulation": "SE",
   "defaultUnit": "fl-oz",
@@ -16,15 +16,6 @@
   "gpaCalibration": 15,
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 30,
-  "preHarvestIntervalsByCrop": [
-    { "cropPluginId": "wheat-soft-red-winter", "preHarvestIntervalDays": 7 },
-    { "cropPluginId": "wheat-hard-red-spring", "preHarvestIntervalDays": 7 },
-    { "cropPluginId": "wheat-hard-white-winter", "preHarvestIntervalDays": 7 },
-    { "cropPluginId": "barley-grain-thoroughbred", "preHarvestIntervalDays": 7 },
-    { "cropPluginId": "barley-hulless-streaker", "preHarvestIntervalDays": 7 },
-    { "cropPluginId": "oats-grain-jerry", "preHarvestIntervalDays": 7 },
-    { "cropPluginId": "oats-hulless-streaker", "preHarvestIntervalDays": 7 }
-  ],
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "100-1645",
   "targetDiseases": [

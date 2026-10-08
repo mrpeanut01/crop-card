@@ -89,7 +89,8 @@ const CHEMISTRY_CLASSES_FOR_PROMPT = [
   'ppo-inhibitor',
   'als-imidazolinone',
   'vlcfa-pyroxasulfone',
-  'clomazone'
+  'clomazone',
+  'thiocarbamate'
 ];
 
 const CROP_FAMILIES_FOR_PROMPT = [

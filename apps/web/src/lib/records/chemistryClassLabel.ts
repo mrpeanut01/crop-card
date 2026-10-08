@@ -22,6 +22,7 @@ const KEY: Record<ChemistryClass, MessageKey> = {
   'als-imidazolinone': 'records.chem.imidazolinone',
   'vlcfa-pyroxasulfone': 'records.chem.pyroxasulfone',
   clomazone: 'records.chem.clomazone',
+  thiocarbamate: 'records.chem.thiocarbamate',
   unclassified: 'records.chem.unclassified'
 };
 

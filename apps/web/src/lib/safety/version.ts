@@ -69,5 +69,10 @@
  * (or its family); a crop the table does not list, or an unknown crop,
  * gets the longest PHI on file, never the shortest. Products with one PHI
  * keep the verdicts they had.
+ * #654 — 0.7.7: the kill matrix gains the `thiocarbamate` class (HRAC 15,
+ * quoted from the Eptam 7E label). Eptam moves to it from `unclassified`
+ * and is no longer lethal to legume forage (alfalfa, birdsfoot trefoil,
+ * clovers), the one family its label covers; it stays lethal to every
+ * other family. Corn gluten meal stays `unclassified`.
  */
-export const RULES_VERSION = '0.7.6' as const;
+export const RULES_VERSION = '0.7.7' as const;

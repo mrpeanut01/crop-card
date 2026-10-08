@@ -147,6 +147,7 @@ export const esSprayui: Partial<Record<MessageKey, string>> = {
   'sprayui.chemclass.als-imidazolinone': 'inhibidor de ALS (imidazolinona)',
   'sprayui.chemclass.vlcfa-pyroxasulfone': 'inhibidor de VLCFA (piroxasulfona)',
   'sprayui.chemclass.clomazone': 'clomazona',
+  'sprayui.chemclass.thiocarbamate': 'tiocarbamato (EPTC)',
   'sprayui.chemclass.unclassified': 'clase no registrada',
   'sprayui.herb.contact': 'de contacto, sin grupo HRAC',
   'sprayui.dp.sprayer': 'Aspersora',

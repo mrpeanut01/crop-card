@@ -1081,6 +1081,7 @@ export const enRecords = {
   'records.chem.imidazolinone': 'ALS inhibitor (imidazolinone)',
   'records.chem.pyroxasulfone': 'VLCFA inhibitor (pyroxasulfone)',
   'records.chem.clomazone': 'Clomazone',
+  'records.chem.thiocarbamate': 'Thiocarbamate',
   'records.chem.insecticideLoad': 'insecticide',
   'records.chem.fungicideLoad': 'fungicide',
   'records.chem.unclassified': 'Unclassified',

@@ -22,6 +22,7 @@ export const CHEMISTRY_CLASSES = [
   'als-imidazolinone', // HRAC 2 (IMI subset) — imazethapyr, imazamox, imazaquin
   'vlcfa-pyroxasulfone', // HRAC 15 — pyroxasulfone (newer VLCFA inhibitor)
   'clomazone', // HRAC 13 — clomazone (carotenoid biosynthesis)
+  'thiocarbamate', // HRAC 15 — EPTC (Eptam); the Eptam label says Group 15 (#654)
   'unclassified' // no verified HRAC group on file; the kernel treats it as lethal to every family (#654)
 ] as const;
 

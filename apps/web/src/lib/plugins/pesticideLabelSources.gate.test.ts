@@ -1,7 +1,13 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { pesticideLabelSourceGaps, type LabelSourcePlugin } from './pesticideLabelSources';
+import {
+  LABEL_SOURCED_CLASSES,
+  pesticideLabelSourceGaps,
+  type LabelSourcePlugin
+} from './pesticideLabelSources';
+import { hracGroupOf } from '$lib/safety/cropFamilyLethality';
+import type { ChemistryClass } from '$lib/safety/types';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../..');
 const SOURCES = JSON.parse(
@@ -139,6 +145,38 @@ describe('pesticide label sources (#640 #661 #716)', () => {
       const herbicides = loadPesticides().filter((p) => p.type === 'herbicide' && p.ratePerAcre);
       expect(herbicides.length).toBeGreaterThan(50);
       for (const h of herbicides) expect(['label', 'fallback']).toContain(h.rateProvenance);
+    });
+  });
+
+  describe('label-sourced chemistry classes (#654)', () => {
+    const eptc = {
+      ...base,
+      activeIngredients: [{ chemistryClass: 'thiocarbamate' }]
+    };
+    it('the group each label-sourced class must quote is the kernel HRAC group', () => {
+      for (const [cls, group] of Object.entries(LABEL_SOURCED_CLASSES)) {
+        expect(hracGroupOf(cls as ChemistryClass)).toBe(group);
+      }
+    });
+
+    it('refuses a thiocarbamate herbicide without a quote that states Group 15', () => {
+      expect(pesticideLabelSourceGaps([eptc], {})).toHaveLength(1);
+      const entry = { chemistryClass: 'thiocarbamate', hracGroup: 15, sourceUrl: url };
+      expect(
+        pesticideLabelSourceGaps([eptc], {
+          chemistryClass: { x: { ...entry, quote: 'is a Group 150 herbicide' } }
+        })
+      ).toHaveLength(1);
+      expect(
+        pesticideLabelSourceGaps([eptc], {
+          chemistryClass: { x: { ...entry, chemistryClass: 'unclassified', quote: 'Group 15' } }
+        })
+      ).toHaveLength(1);
+      expect(
+        pesticideLabelSourceGaps([eptc], {
+          chemistryClass: { x: { ...entry, quote: 'Eptam 7E is a Group 15 herbicide.' } }
+        })
+      ).toEqual([]);
     });
   });
 });

@@ -4,6 +4,12 @@ import { listHarvestEvents } from '$lib/db/harvestEvents';
 import type { Archetype, CropPlugin, HarvestStyle } from '$lib/plugins/schemas';
 import type { RendererData } from '$lib/components/harvest/renderers/types';
 import { forageCutWindow, plantingHarvestKey } from '$lib/harvest/forageWindow';
+import {
+  attributeHarvest,
+  harvestStatusAt,
+  hasOpenEndedHarvest,
+  type HarvestStatus
+} from '$lib/harvest/attribution';
 import { getRegistry } from '$lib/server/registry';
 import { canSetUp, setupAreas, setupBlocks } from '$lib/server/setupContext';
 import { canSeeMoney } from '$lib/finance/redact';
@@ -18,12 +24,15 @@ import { dispositionViewsFor } from '$lib/server/harvestDispositions';
 import { farmHasOrganicStatus } from '$lib/harvest/organicAtHarvest.server';
 import { loadTaskContext } from '$lib/server/recordTaskClose';
 import { harvestWindowFor } from '$lib/calendar/harvestWindow';
+import { plantingOnView } from '$lib/plan/planV2Derive';
+import { isPerennialCrop } from '$lib/plugins/perennial';
 
 /** F2-15: owners see "Record a sale"; a quiet garden household only once
- *  the farm has any ledger entry. Helpers never see it. */
-function canRecordSale(role: string | undefined): boolean {
+ *  the farm has any ledger entry or (#733) has marked a harvest Sold.
+ *  Helpers never see it. */
+function canRecordSale(role: string | undefined, hasSoldDisposition: boolean): boolean {
   if (!canSeeMoney(role)) return false;
-  if (hasAnyLedgerEntry()) return true;
+  if (hasSoldDisposition || hasAnyLedgerEntry()) return true;
   const chrome = complianceChromeLevel(getFarmProfile(), {
     sprays: listSprayEvents({ limit: 1 }).length,
     insecticides: listInsecticideEvents({ limit: 1 }).length,
@@ -34,7 +43,7 @@ function canRecordSale(role: string | undefined): boolean {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export type HarvestStatus = 'too-early' | 'in-window' | 'past' | 'unknown';
+export type { HarvestStatus };
 
 export type { RendererData };
 
@@ -57,6 +66,9 @@ export interface PlantingHarvestStatus {
   plantingDate: number | null;
   windowStartMs?: number;
   windowEndMs?: number;
+  /** #662: picked until the planting ends; the window only says when
+   *  picking starts. */
+  openEnded: boolean;
   status: HarvestStatus;
   daysUntilWindow?: number;
   daysIntoWindow?: number;
@@ -75,15 +87,22 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const blocks = listBlocks();
   const registry = await getRegistry();
   const all = listHarvestEvents();
-  const harvestedSet = new Set(
-    all.map((e) =>
-      plantingHarvestKey({
-        cropId: e.cropId,
-        blockId: e.blockId,
-        cropPluginId: e.cropPluginId
-      })
-    )
+  const plantingRefs = blocks.flatMap((b) =>
+    b.plantings.map((p) => ({
+      id: p.id,
+      blockId: b.id,
+      cropPluginId: p.cropPluginId,
+      plantingDate: p.plantingDate
+    }))
   );
+  const attributed = new Map(all.map((e) => [e.id, attributeHarvest(e, plantingRefs)]));
+  const keyOf = (e: (typeof all)[number]) =>
+    plantingHarvestKey({
+      cropId: attributed.get(e.id),
+      blockId: e.blockId,
+      cropPluginId: e.cropPluginId
+    });
+  const harvestedSet = new Set(all.map(keyOf));
 
   const now = Date.now();
   const plantings: PlantingHarvestStatus[] = [];
@@ -91,11 +110,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const lastPickByPlanting = new Map<string, number>();
   const pickCountByPlanting = new Map<string, number>();
   for (const e of all) {
-    const k = plantingHarvestKey({
-      cropId: e.cropId,
-      blockId: e.blockId,
-      cropPluginId: e.cropPluginId
-    });
+    const k = keyOf(e);
     const prev = lastPickByPlanting.get(k);
     if (prev === undefined || e.occurredAt > prev) lastPickByPlanting.set(k, e.occurredAt);
     pickCountByPlanting.set(k, (pickCountByPlanting.get(k) ?? 0) + 1);
@@ -105,17 +120,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     for (const p of b.plantings) {
       const rec = registry.get(p.cropPluginId);
       const crop = rec?.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : undefined;
+      if (p.id !== focusPlantingId && !plantingOnView(p, !!crop && isPerennialCrop(crop))) {
+        continue;
+      }
       const key = plantingHarvestKey({ cropId: p.id, blockId: b.id, cropPluginId: p.cropPluginId });
       const priorPickCount = pickCountByPlanting.get(key) ?? 0;
       const lastPickMs = lastPickByPlanting.get(key);
       const hayOps = crop?.hayOperations;
 
-      let status: HarvestStatus = 'unknown';
       let windowStartMs: number | undefined;
       let windowEndMs: number | undefined;
-      let daysUntilWindow: number | undefined;
-      let daysIntoWindow: number | undefined;
-      let daysPastWindow: number | undefined;
 
       const isForage =
         crop?.archetype === 'forage-cutting-cycle' || crop?.harvestStyle === 'forage-cutting-cycle';
@@ -133,18 +147,21 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         windowEndMs = window?.endMs;
       }
 
-      if (windowStartMs !== undefined && windowEndMs !== undefined) {
-        if (now < windowStartMs) {
-          status = 'too-early';
-          daysUntilWindow = Math.ceil((windowStartMs - now) / DAY_MS);
-        } else if (now <= windowEndMs) {
-          status = 'in-window';
-          daysIntoWindow = Math.floor((now - windowStartMs) / DAY_MS);
-        } else {
-          status = 'past';
-          daysPastWindow = Math.floor((now - windowEndMs) / DAY_MS);
-        }
-      }
+      const archetypeOverride =
+        (p as { archetypeOverride?: Archetype | null }).archetypeOverride ?? null;
+      const openEnded =
+        !forageWindow &&
+        hasOpenEndedHarvest({
+          archetype: crop?.archetype,
+          archetypeOverride,
+          harvestStyle: crop?.harvestStyle,
+          cropFamily: crop?.cropFamily
+        });
+      const { status, daysUntilWindow, daysIntoWindow, daysPastWindow } = harvestStatusAt(
+        { startMs: windowStartMs, endMs: windowEndMs },
+        now,
+        openEnded
+      );
 
       plantings.push({
         blockId: b.id,
@@ -155,11 +172,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         cropFamily: crop?.cropFamily,
         harvestStyle: crop?.harvestStyle,
         archetype: crop?.archetype,
-        archetypeOverride:
-          (p as { archetypeOverride?: Archetype | null }).archetypeOverride ?? null,
+        archetypeOverride,
         plantingDate: p.plantingDate,
         windowStartMs,
         windowEndMs,
+        openEnded,
         status,
         daysUntilWindow,
         daysIntoWindow,
@@ -195,8 +212,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     const crop = rec?.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : undefined;
     const curing = crop?.postHarvestCuring;
     const blockName = blockNameById.get(h.blockId) ?? null;
+    const linkCropId = attributed.get(h.id) ?? null;
     if (!curing) {
-      return { ...h, blockName, curing: null };
+      return { ...h, blockName, linkCropId, curing: null };
     }
     const minMs = h.occurredAt + curing.durationWeeks.min * 7 * DAY_MS;
     const maxMs = h.occurredAt + curing.durationWeeks.max * 7 * DAY_MS;
@@ -215,6 +233,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     return {
       ...h,
       blockName,
+      linkCropId,
       curing: {
         method: curing.method,
         minWeeks: curing.durationWeeks.min,
@@ -230,19 +249,24 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   });
 
   const role = locals.user?.role;
+  const dispositions = dispositionViewsFor(
+    all.map((h) => h.id),
+    role
+  );
+  const hasSoldDisposition = Object.values(dispositions).some((list) =>
+    list.some((d) => d.kind === 'sold')
+  );
   return {
     plantings,
     recordedHarvests,
-    dispositions: dispositionViewsFor(
-      all.map((h) => h.id),
-      role
-    ),
+    dispositions,
     askSoldAsOrganic: farmHasOrganicStatus(),
     canWriteRecords: !!role && canMutate(role),
     isOwner: role === 'owner',
+    harvestCropNames: harvestCropNames(all, registry),
     focusPlantingId,
     taskContext,
-    canRecordSale: canRecordSale(role),
+    canRecordSale: canRecordSale(role, hasSoldDisposition),
     setup: {
       canEdit: canSetUp(locals.user?.role),
       areas: setupAreas(),
@@ -250,3 +274,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     }
   };
 };
+
+/** #631: English crop names for recorded harvests, keyed by plugin id. */
+function harvestCropNames(
+  harvests: ReadonlyArray<{ cropPluginId: string }>,
+  registry: { get(id: string): { plugin: { displayName: string } } | undefined }
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const h of harvests) {
+    const name = registry.get(h.cropPluginId)?.plugin.displayName;
+    if (name) out[h.cropPluginId] = name;
+  }
+  return out;
+}

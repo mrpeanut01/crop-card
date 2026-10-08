@@ -126,7 +126,7 @@ export async function buildYearSummary(
       occurredAtMs: e.occurredAt,
       products: e.products.map((p) => ({
         productId: p.pluginId,
-        displayName: p.pluginId,
+        displayName: registry.get(p.pluginId)?.plugin.displayName ?? p.pluginId,
         classes: p.chemistryClasses ?? []
       }))
     });
@@ -173,6 +173,7 @@ export async function buildYearSummary(
     harvests: harvestEvents.map((h) => ({
       cropPluginId: h.cropPluginId,
       occurredAtMs: h.occurredAt,
+      moisturePct: h.moisturePct,
       quantity: h.quantity,
       lotNumber: h.lotNumber
     })),

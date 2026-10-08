@@ -1,6 +1,7 @@
 import { t, type TranslateKey } from '$lib/i18n';
 import { dateToLocaleDateString } from '$lib/intlCache';
 import { intlLocale } from '$lib/prefs';
+import { isPerennialCrop, type PerennialCropSlice } from '$lib/plugins/perennial';
 import {
   EARLIEST_OFFSET_DAYS,
   defaultDtmFor,
@@ -13,6 +14,27 @@ export interface PlantingWindowCrop {
   cropFamily?: string | null;
   soilTempMinF?: number | null;
   dtmMaxDays?: number | null;
+  /** #672: a perennial's days to maturity are years to a first crop, so
+   *  they are never fitted between planting and this season's fall frost. */
+  perennial?: boolean;
+}
+
+/** The window facts for a crop plugin. A perennial carries no days to
+ *  maturity here, so neither the frost rule nor the prompt fits years to
+ *  a first crop into one season (#672). */
+export function plantingWindowCropOf(
+  plugin: PerennialCropSlice & {
+    plantingGuide?: { soilTempMinF?: number };
+    daysToMaturity?: { max: number };
+  }
+): Required<PlantingWindowCrop> {
+  const perennial = isPerennialCrop(plugin);
+  return {
+    cropFamily: plugin.cropFamily ?? null,
+    soilTempMinF: plugin.plantingGuide?.soilTempMinF ?? null,
+    dtmMaxDays: perennial ? null : (plugin.daysToMaturity?.max ?? null),
+    perennial
+  };
 }
 
 /** Frost dates as local calendar days (yyyy-mm-dd). Day strings, not epoch
@@ -79,7 +101,7 @@ export function deterministicPlantingWindow(
   locale?: string | null
 ): PlantingWindow {
   const hardiness = hardinessFrom(crop.soilTempMinF, crop.cropFamily);
-  const dtm = crop.dtmMaxDays ?? defaultDtmFor(hardiness);
+  const dtm = (crop.perennial ? null : crop.dtmMaxDays) ?? defaultDtmFor(hardiness);
   if (frost.frostFree) return frostFreeWindow(frost, dtm, locale);
   const earliest = addDays(
     frost.lastSpring,
@@ -102,7 +124,12 @@ export function deterministicPlantingWindow(
   let prime = addDays(frost.lastSpring, PRIME_OFFSET_DAYS[hardiness]);
   if (prime < earliest) prime = earliest;
   if (prime > naturalLatest) prime = naturalLatest;
-  return { earliest, prime, latest: naturalLatest, note: t(locale, HARDINESS_NOTE_KEY[hardiness]) };
+  return {
+    earliest,
+    prime,
+    latest: naturalLatest,
+    note: t(locale, crop.perennial ? 'plantui.window.perennial' : HARDINESS_NOTE_KEY[hardiness])
+  };
 }
 
 export const FROST_FREE_NOTE = 'No frost limit for this bed.';
@@ -154,9 +181,21 @@ export function isValidWindow(
   return earliest >= lo && latest <= hi;
 }
 
+function shiftYears(iso: string, years: number): string {
+  return `${String(Number(iso.slice(0, 4)) + years).padStart(4, '0')}${iso.slice(4)}`;
+}
+
+/** #646: how a typed date sits against the season's window, judged by
+ *  month and day in the date's own season. The window is moved to the
+ *  typed date's year (and, for a window that crosses the new year, the
+ *  season that starts that winter too), so an orchard set out years ago
+ *  is not "too early" just because its year is earlier. */
 export function dateFit(dateIso: string, w: PlantingWindow): DateFit | null {
   if (parseDay(dateIso) === null) return null;
-  if (dateIso < w.earliest) return 'early';
-  if (dateIso > w.latest) return 'late';
-  return 'ok';
+  if (parseDay(w.earliest) === null || parseDay(w.latest) === null) return null;
+  const k = Number(dateIso.slice(0, 4)) - Number(w.latest.slice(0, 4));
+  const fits = (years: number) =>
+    dateIso >= shiftYears(w.earliest, years) && dateIso <= shiftYears(w.latest, years);
+  if (fits(k) || fits(k + 1)) return 'ok';
+  return dateIso < shiftYears(w.earliest, k) ? 'early' : 'late';
 }

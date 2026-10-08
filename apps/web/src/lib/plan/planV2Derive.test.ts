@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import type { CalendarEvent } from '$lib/calendar/engine';
+import type { BlockWithPlantings, PlantingRecord } from '$lib/db/blocks';
+import { growingFacts, planBlockCard, planPlantingCard } from './planCards';
 import {
+  blockCompanions,
+  blocksOnView,
+  defaultStandingPlanting,
+  plantingOnView,
   blockHarvestWindowLabel,
   blockStatus,
   blockStatusTone,
@@ -165,5 +171,119 @@ describe('scheduledTaskTiming', () => {
     const due = Date.UTC(2026, 9, 4);
     const now = Date.UTC(2026, 9, 5, 14);
     expect(scheduledTaskTiming(due, now, NY).status).toBe('overdue');
+  });
+});
+
+describe('/plan shows the current plantings of a rotation block (#623)', () => {
+  const NOW = Date.UTC(2026, 9, 7, 15);
+  const D = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d, 12);
+  function p(
+    id: string,
+    cropPluginId: string,
+    plantingDate: number | null,
+    status: PlantingRecord['status'],
+    extra: Partial<PlantingRecord> = {}
+  ): PlantingRecord {
+    return {
+      id,
+      blockId: 'nfa',
+      cropPluginId,
+      varietyDisplayName: id,
+      plantingDate,
+      status,
+      ...extra
+    };
+  }
+  const soy25 = p('soy25', 'soybean', D(2025, 5, 15), 'harvested', {
+    harvestedAt: D(2025, 10, 1)
+  });
+  const corn26 = p('corn26', 'corn', D(2026, 5, 1), 'harvested', { harvestedAt: D(2026, 9, 20) });
+  const rye = p('rye', 'rye-cover', D(2026, 10, 3), 'active');
+  const soy27 = p('soy27', 'soybean', D(2027, 5, 15), 'planned');
+  const block = {
+    id: 'nfa',
+    name: 'North Field A',
+    plantings: [soy25, corn26, rye, soy27]
+  } as unknown as BlockWithPlantings;
+  const DTM: Record<string, number> = { soybean: 110, corn: 115, 'rye-cover': 200 };
+  const dtm = (id: string) => DTM[id];
+  const termination: CalendarEvent = {
+    kind: 'cover-termination',
+    blockId: 'nfa',
+    cropId: 'rye',
+    cropPluginId: 'rye-cover',
+    varietyDisplayName: 'rye',
+    startMs: D(2027, 4, 15),
+    endMs: D(2027, 5, 1),
+    title: 'Terminate rye'
+  };
+
+  it('reads the stored status before the dates', () => {
+    expect(plantingStatus(corn26.plantingDate, 115, NOW, 'harvested')).toBe('harvested');
+    expect(plantingStatus(D(2026, 5, 1), 115, NOW, 'failed')).toBe('ended');
+    expect(plantingStatus(D(2026, 5, 1), 115, NOW, 'archived')).toBe('ended');
+    expect(plantingStatus(D(2026, 5, 1), 115, NOW, 'active')).toBe('mature');
+  });
+
+  it('leaves out harvested annuals and keeps a harvested perennial standing', () => {
+    expect(plantingOnView(corn26)).toBe(false);
+    expect(plantingOnView({ status: 'failed' }, true)).toBe(false);
+    expect(plantingOnView({ status: 'harvested' }, true)).toBe(true);
+    const { blocks, endedCount } = blocksOnView([block]);
+    expect(blocks[0].plantings.map((x) => x.id)).toEqual(['rye', 'soy27']);
+    expect(endedCount.get('nfa')).toBe(2);
+    const orchard = blocksOnView([block], (id) => id === 'corn');
+    expect(orchard.blocks[0].plantings.map((x) => x.id)).toEqual(['corn26', 'rye', 'soy27']);
+  });
+
+  it('gives a rotation no companions', () => {
+    const map = blockCompanions([rye, soy27], [termination], dtm);
+    expect(map.get('rye')).toEqual([]);
+    expect(map.get('soy27')).toEqual([]);
+  });
+
+  it('pairs plantings that share time in the ground, or a planned group', () => {
+    const a = p('a', 'corn', D(2026, 5, 1), 'active');
+    const b = p('b', 'soybean', D(2026, 5, 20), 'active');
+    const c = p('c', 'soybean', D(2026, 10, 1), 'planned');
+    const map = blockCompanions([a, b, c], [], dtm);
+    expect(map.get('a')!.map((x) => x.id)).toEqual(['b']);
+    expect(map.get('c')).toEqual([]);
+    const g1 = p('g1', 'corn', D(2026, 5, 1), 'active', { groupRole: 'anchor' });
+    const g2 = p('g2', 'squash', D(2026, 10, 1), 'planned', { groupRole: 'companion' });
+    expect(
+      blockCompanions([g1, g2], [], dtm)
+        .get('g1')!
+        .map((x) => x.id)
+    ).toEqual(['g2']);
+  });
+
+  it('labels the block card from what is on view', () => {
+    const { blocks } = blocksOnView([block]);
+    const card = planBlockCard(
+      blocks[0],
+      new URLSearchParams(),
+      'nf',
+      { 'rye-cover': 200 },
+      undefined,
+      NOW
+    );
+    expect(card.status?.label).toBe('active');
+    const facts = growingFacts([corn26, rye, soy27], NOW);
+    expect(facts[0].value).toBe('corn26 · rye');
+    expect(facts[1].value).toBe('soy27');
+    const failed = growingFacts([p('x', 'corn', D(2026, 5, 1), 'failed')], NOW);
+    expect(failed[0].value).not.toContain('x');
+  });
+
+  it('shows a harvested planting as harvested on its card', () => {
+    const card = planPlantingCard({ planting: corn26, daysToMaturity: 115, now: NOW });
+    expect(card.status?.label).toBe('harvested');
+  });
+
+  it('opens a one-planting page on the planting in the ground', () => {
+    expect(defaultStandingPlanting([soy27, rye], NOW)?.id).toBe('rye');
+    expect(defaultStandingPlanting([soy27], NOW)?.id).toBe('soy27');
+    expect(defaultStandingPlanting([], NOW)).toBeUndefined();
   });
 });

@@ -18,8 +18,10 @@ import { pageOf, parseShow } from '$lib/records/pagination';
 import { listIrrigationEvents } from '$lib/db/irrigation';
 import { listFields } from '$lib/db/fields';
 import { farmOrganicChrome } from '$lib/organic/status.server';
+import { loadRecordNames } from '$lib/server/recordNames';
 import {
   RECORD_KINDS,
+  countPlannedPlantings,
   listUnifiedRecords,
   summarizeUnifiedRecords,
   type RecordKind
@@ -51,7 +53,7 @@ export const load: PageServerLoad = async (event) => {
         .filter((k) => (RECORD_KINDS as readonly string[]).includes(k)) as RecordKind[])
     : [...RECORD_KINDS];
 
-  const unfiltered = listUnifiedRecords({ blockId, fromMs, toMs }, prefs);
+  const unfiltered = listUnifiedRecords({ blockId, fromMs, toMs }, prefs, await loadRecordNames());
   const allRecords = sprayerId
     ? (() => {
         const range = { blockId, fromMs, toMs, limit: 10_000 };
@@ -135,6 +137,7 @@ export const load: PageServerLoad = async (event) => {
     organicChrome === 'full' || (organicChrome === 'entry' && user.role === 'owner');
 
   return {
+    plannedPlantings: activeKinds.includes('planting') ? countPlannedPlantings(blocks) : 0,
     organicLink,
     watering,
     chrome,

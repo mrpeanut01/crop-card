@@ -14,18 +14,129 @@ import { deriveTaskStatus } from '$lib/tasks/status';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export type PlantingStatus = 'planned' | 'active' | 'mature';
+export type PlantingStatus = 'planned' | 'active' | 'mature' | 'harvested' | 'ended';
 
+type StoredPlantingStatus = PlantingRecord['status'];
+
+/** #623: the stored status wins once the planting was marked harvested,
+ *  failed or archived; otherwise the planting date and days to maturity
+ *  tell planned, active and mature apart. */
 export function plantingStatus(
   plantingDate: number | null,
   daysToMaturity: number | undefined,
-  now: number = Date.now()
+  now: number = Date.now(),
+  stored?: StoredPlantingStatus
 ): PlantingStatus {
+  if (stored === 'harvested') return 'harvested';
+  if (stored === 'failed' || stored === 'archived') return 'ended';
   if (plantingDate == null) return 'planned';
   const dap = (now - plantingDate) / DAY_MS;
   if (dap < 0) return 'planned';
   if (daysToMaturity && dap > daysToMaturity) return 'mature';
   return 'active';
+}
+
+/** #623: whether /plan's block view shows the planting. A failed or
+ *  archived planting is over; a harvested one is over too unless it is a
+ *  perennial, which still stands in the block after its harvest (#751).
+ *  Everything else (planned, growing, mature) is shown. */
+export function plantingOnView(
+  p: Pick<PlantingRecord, 'status'>,
+  perennial: boolean = false
+): boolean {
+  if (p.status === 'failed' || p.status === 'archived') return false;
+  if (p.status === 'harvested') return perennial;
+  return true;
+}
+
+/** The block's plantings split into the ones /plan shows and the earlier
+ *  ones that are over (they stay in Records). */
+export function splitBlockPlantings<T extends Pick<PlantingRecord, 'status' | 'cropPluginId'>>(
+  plantings: readonly T[],
+  isPerennial: (cropPluginId: string) => boolean = () => false
+): { current: T[]; ended: T[] } {
+  const current: T[] = [];
+  const ended: T[] = [];
+  for (const p of plantings) {
+    (plantingOnView(p, isPerennial(p.cropPluginId)) ? current : ended).push(p);
+  }
+  return { current, ended };
+}
+
+/** #623: the planting a one-planting page opens on: the first, in the
+ *  caller's order, already in the ground at `now`, else the first. */
+export function defaultStandingPlanting<T extends { plantingDate: number | null }>(
+  plantings: readonly T[],
+  now: number
+): T | undefined {
+  return plantings.find((p) => p.plantingDate !== null && p.plantingDate <= now) ?? plantings[0];
+}
+
+/** Every block with only the plantings /plan shows (`splitBlockPlantings`),
+ *  plus how many earlier plantings each block had that are over. */
+export function blocksOnView(
+  blocks: readonly BlockWithPlantings[],
+  isPerennial: (cropPluginId: string) => boolean = () => false
+): { blocks: BlockWithPlantings[]; endedCount: Map<string, number> } {
+  const endedCount = new Map<string, number>();
+  const out = blocks.map((b) => {
+    const { current, ended } = splitBlockPlantings(b.plantings, isPerennial);
+    if (ended.length === 0) return b;
+    endedCount.set(b.id, ended.length);
+    return { ...b, plantings: current };
+  });
+  return { blocks: out, endedCount };
+}
+
+type SpanPlanting = Pick<PlantingRecord, 'id' | 'cropPluginId' | 'plantingDate' | 'groupRole'>;
+
+/** When the planting is in the ground: its date to the end of its last
+ *  harvest or cover termination window, else to days to maturity after
+ *  planting. An undated planting, or one with no end, is open-ended. */
+export function plantingSpan(
+  p: SpanPlanting,
+  events: readonly CalendarEvent[],
+  daysToMaturity: number | undefined
+): { startMs: number; endMs: number } {
+  const startMs = p.plantingDate ?? Number.NEGATIVE_INFINITY;
+  const ends = events
+    .filter(
+      (e) => e.cropId === p.id && (e.kind === 'harvest-window' || e.kind === 'cover-termination')
+    )
+    .map((e) => e.endMs);
+  if (ends.length > 0) return { startMs, endMs: Math.max(...ends) };
+  if (p.plantingDate != null && daysToMaturity) {
+    return { startMs, endMs: p.plantingDate + daysToMaturity * DAY_MS };
+  }
+  return { startMs, endMs: Number.POSITIVE_INFINITY };
+}
+
+/** #623: a planting's companions are the other shown plantings in the
+ *  block that share time in the ground with it, or that the plan grouped
+ *  with it (anchor and companion roles). A rotation (corn, then a rye
+ *  cover, then next year's soybeans) has none. */
+export function blockCompanions<T extends SpanPlanting>(
+  plantings: readonly T[],
+  events: readonly CalendarEvent[],
+  daysToMaturity: (cropPluginId: string) => number | undefined
+): Map<string, T[]> {
+  const spans = new Map(
+    plantings.map((p) => [p.id, plantingSpan(p, events, daysToMaturity(p.cropPluginId))])
+  );
+  const out = new Map<string, T[]>();
+  for (const a of plantings) {
+    const sa = spans.get(a.id)!;
+    out.set(
+      a.id,
+      plantings.filter((b) => {
+        if (b.id === a.id) return false;
+        if (a.groupRole && b.groupRole) return true;
+        const sb = spans.get(b.id)!;
+        return sa.startMs < sb.endMs && sb.startMs < sa.endMs;
+      })
+    );
+  }
+  return out;
 }
 
 export function plantingRoleLabel(
@@ -122,7 +233,7 @@ export type BlockStatus = 'empty' | 'planned' | 'active' | 'mature';
 export function blockStatus(statuses: readonly PlantingStatus[]): BlockStatus {
   if (statuses.length === 0) return 'empty';
   if (statuses.includes('active')) return 'active';
-  if (statuses.every((s) => s === 'mature')) return 'mature';
+  if (statuses.every((s) => s === 'mature' || s === 'harvested')) return 'mature';
   return 'planned';
 }
 

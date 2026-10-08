@@ -22,8 +22,7 @@
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
-  const archetypeShown = (a: string) =>
-    data.locale && data.locale !== 'en' ? archetypeLabel(a, data.locale) : a;
+  const archetypeShown = (a: string) => archetypeLabel(a, data.locale);
 
   let pendingCount = $state<number | null>(null);
   let openCards = $state<string[]>([]);
@@ -681,6 +680,13 @@
       </span>
     </div>
 
+    {#if data.plannedPlantings > 0}
+      <p class="planned-note" data-testid="planned-note">
+        {tr('records.plannedNote', { n: data.plannedPlantings })}
+        <a href="/plan">{tr('records.plannedLink')}</a>
+      </p>
+    {/if}
+
     <p class="void-status" role="status" aria-live="polite">{voidedNote ?? ''}</p>
 
     {#if data.records.length === 0}
@@ -718,8 +724,8 @@
                 </td>
                 <td>
                   <div class="block-name">{r.blockLabel ?? '—'}</div>
-                  {#if r.cropPluginId}
-                    <div class="block-sub">{r.cropPluginId}</div>
+                  {#if r.cropLabel && !r.detail.startsWith(r.cropLabel)}
+                    <div class="block-sub">{r.cropLabel}</div>
                   {/if}
                 </td>
                 <td class="detail-cell">
@@ -1234,6 +1240,15 @@
     letter-spacing: 0;
   }
 
+  .planned-note {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: var(--color-ink-muted, #7a7f75);
+  }
+  .planned-note a {
+    color: var(--color-forest-deep, #1f3a28);
+    font-weight: 600;
+  }
   .retention-strip {
     padding: 8px 16px;
     background: #eff6e9;

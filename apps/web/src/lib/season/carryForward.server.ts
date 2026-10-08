@@ -18,7 +18,7 @@ import { listLotsForItem, listStockItems, recordMovement } from '$lib/db/stock';
 import { listSprayers } from '$lib/db/sprayers';
 import { defaultCoverCredit } from '$lib/fertility/coverCropCredits';
 import { resolveArchetype } from '$lib/plugins/schemas';
-import { resolveCropAgronomy } from '$lib/plugins/familyDefaults';
+import { isPerennialCrop } from '$lib/plugins/perennial';
 import { cropDisplayName } from '$lib/i18n/cropName';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
@@ -96,18 +96,9 @@ function inYear(crop: Crop, year: number): boolean {
   return new Date(crop.plantingDate).getFullYear() === year;
 }
 
-const PERENNIAL_ARCHETYPES: ReadonlySet<string> = new Set([
-  'tree-fruit-multi-pick',
-  'perennial-vine-quality'
-]);
-
 function isPerennial(crop: Crop, pluginIndex: Record<string, CropPlugin>): boolean {
   const plug = pluginIndex[crop.cropPluginId];
-  if (!plug) return false;
-  return (
-    resolveCropAgronomy(plug).lifecycle === 'perennial' ||
-    PERENNIAL_ARCHETYPES.has(resolveArchetype(plug))
-  );
+  return !!plug && isPerennialCrop(plug);
 }
 
 /** A perennial in the ground by the end of `year` that was never marked

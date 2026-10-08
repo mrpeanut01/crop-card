@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { parseDecimal } from '$lib/harvest/details';
   import { Package } from 'lucide-svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
@@ -20,18 +21,18 @@
     quantity?: string;
     lotNumber?: string;
   }): Promise<string | null> {
-    const tagBits: string[] = [];
-    if (fruitCount.trim()) tagBits.push(`fruits=${fruitCount}`);
-    if (cureStart.trim()) tagBits.push(`cureStart=${cureStart}`);
-    if (moisturePct.trim()) tagBits.push(`moisture=${moisturePct}%`);
     const quantity = usText(totalLb) ? `${usText(totalLb)} lb` : input.quantity;
-    const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
+    const fruits = parseDecimal(fruitCount);
     // #322 — moisture also travels as a structured number so the kernel gate is reachable.
     const moisture = parseMoisturePct(moisturePct);
     return props.onCommit({
       quantity,
-      lotNumber: lot || undefined,
-      moisturePct: moisture
+      lotNumber: input.lotNumber || undefined,
+      moisturePct: moisture,
+      details: {
+        fruitCount: fruits === undefined ? undefined : Math.round(fruits),
+        cureStartDate: /^\d{4}-\d{2}-\d{2}$/.test(cureStart) ? cureStart : undefined
+      }
     });
   }
 </script>

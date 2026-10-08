@@ -51,6 +51,9 @@ export {
 import { LOCK_WINDOW_MS, RECORD_KINDS, type RecordKind } from './recordKinds';
 import { identityLabel } from '$lib/identity';
 import { DEFAULT_PREFS, formatQuantity, unitLabel, ymdInZone, type Prefs } from '$lib/prefs';
+import { observationLine } from '$lib/records/metricLabel';
+import { plantingInGround } from '$lib/garden/inGround';
+import type { BlockWithPlantings, PlantingRecord } from './blocks';
 
 export interface UnifiedRecord {
   /** Composite id: `${kind}:${rowId}` so it stays unique when one table has the same uuid as another (cannot happen in practice but keeps drill-down URLs unambiguous). */
@@ -62,6 +65,8 @@ export interface UnifiedRecord {
   blockId?: string;
   blockLabel?: string;
   cropPluginId?: string;
+  /** The crop's name for display; `cropPluginId` stays for exports. */
+  cropLabel?: string;
   performedById?: string;
   performerLabel?: string;
   /** One-line operator-readable summary. */
@@ -85,6 +90,42 @@ export interface UnifiedFilters {
   toMs?: number;
   /** Soft cap on rows per kind before merge. */
   perKindLimit?: number;
+}
+
+/** Plugin names for display. Without them rows show plugin ids, which is
+ *  what the GDPR export keeps. */
+export interface RecordNames {
+  product?: (pluginId: string) => string | undefined;
+  crop?: (pluginId: string) => string | undefined;
+}
+
+/** #630: a planting is a record only once it is in the ground: not still
+ *  planned, and not dated after now. */
+export function isPlantedRecord(
+  p: Pick<PlantingRecord, 'plantingDate' | 'status' | 'harvestedAt'>,
+  now: number
+): boolean {
+  if (p.plantingDate == null || p.plantingDate > now) return false;
+  return plantingInGround(
+    {
+      status: p.status ?? 'active',
+      plantingDateMs: p.plantingDate,
+      harvestedAtMs: p.harvestedAt ?? null
+    },
+    now
+  );
+}
+
+/** Plans left off /records because they are not planted yet. */
+export function countPlannedPlantings(
+  blocks: BlockWithPlantings[] = listBlocks(),
+  now: number = Date.now()
+): number {
+  let n = 0;
+  for (const b of blocks)
+    for (const p of b.plantings)
+      if ((p.status === 'planned' || p.status === 'active') && !isPlantedRecord(p, now)) n += 1;
+  return n;
 }
 
 function shortHash(payload: unknown): string {
@@ -162,19 +203,20 @@ interface PlantingRow {
   plantingDate: number;
 }
 
-function listPlantingRecords(filters: {
-  blockId?: string;
-  fromMs?: number;
-  toMs?: number;
-}): PlantingRow[] {
-  // Plantings live on `crops`. Surface every planting whose `plantingDate`
-  // falls in the window; treat plantingDate as the event timestamp.
-  const all = listBlocks();
+function listPlantingRecords(
+  all: BlockWithPlantings[],
+  filters: {
+    blockId?: string;
+    fromMs?: number;
+    toMs?: number;
+  },
+  now: number
+): PlantingRow[] {
   const rows: PlantingRow[] = [];
   for (const b of all) {
     if (filters.blockId && b.id !== filters.blockId) continue;
     for (const p of b.plantings) {
-      if (p.plantingDate == null) continue;
+      if (p.plantingDate == null || !isPlantedRecord(p, now)) continue;
       if (filters.fromMs !== undefined && p.plantingDate < filters.fromMs) continue;
       if (filters.toMs !== undefined && p.plantingDate > filters.toMs) continue;
       rows.push({
@@ -236,15 +278,26 @@ const HAY_STATUS_KEY: Record<string, MessageKey> = {
 
 export function listUnifiedRecords(
   filters: UnifiedFilters = {},
-  prefs: Pick<Prefs, 'units' | 'locale'> = DEFAULT_PREFS
+  prefs: Pick<Prefs, 'units' | 'locale'> = DEFAULT_PREFS,
+  names: RecordNames = {}
 ): UnifiedRecord[] {
   const now = Date.now();
   const kinds = new Set<RecordKind>(filters.kinds ?? RECORD_KINDS);
   const perKindLimit = filters.perKindLimit ?? 500;
   const out: UnifiedRecord[] = [];
 
-  const blockLabelById = new Map(listBlocks().map((b) => [b.id, b.blockLabel ?? b.name]));
+  const blocks = listBlocks();
+  const blockLabelById = new Map(blocks.map((b) => [b.id, b.blockLabel ?? b.name]));
+  const plantingById = new Map(blocks.flatMap((b) => b.plantings.map((p) => [p.id, p] as const)));
   const performerIds: string[] = [];
+  const productName = (pluginId: string, stored?: string) =>
+    stored ?? names.product?.(pluginId) ?? pluginId;
+  const cropName = (pluginId: string, cropId?: string | null): string | undefined => {
+    const planting = cropId ? plantingById.get(cropId) : undefined;
+    if (planting) return cropDisplayName(pluginId, planting.varietyDisplayName, prefs.locale);
+    const english = names.crop?.(pluginId);
+    return english ? cropDisplayName(pluginId, english, prefs.locale) : undefined;
+  };
 
   if (kinds.has('spray')) {
     const events = listSprayEvents({
@@ -255,7 +308,7 @@ export function listUnifiedRecords(
     });
     for (const e of events) {
       performerIds.push(e.performedById);
-      const products = e.products.map((p) => p.pluginId).join(', ');
+      const products = e.products.map((p) => productName(p.pluginId)).join(', ');
       out.push({
         id: `spray:${e.id}`,
         kind: 'spray',
@@ -291,7 +344,7 @@ export function listUnifiedRecords(
     });
     for (const e of events) {
       performerIds.push(e.performedById);
-      const products = e.products.map((p) => p.displayName ?? p.pluginId).join(', ');
+      const products = e.products.map((p) => productName(p.pluginId, p.displayName)).join(', ');
       out.push({
         id: `insecticide:${e.id}`,
         kind: 'insecticide',
@@ -302,7 +355,18 @@ export function listUnifiedRecords(
         performedById: e.performedById,
         detail: [
           e.scoutObservation
-            ? `${products} · ${e.scoutObservation.pest} ${e.scoutObservation.metric}=${e.scoutObservation.value}`
+            ? [
+                products,
+                observationLine(
+                  e.scoutObservation.pest,
+                  e.scoutObservation.metric,
+                  e.scoutObservation.value,
+                  null,
+                  prefs.locale
+                )
+              ]
+                .filter(Boolean)
+                .join(' · ')
             : products || t(prefs.locale, 'recui.detail.insecticideEvent'),
           pollinatorAttestationSummary(e)
         ]
@@ -324,7 +388,7 @@ export function listUnifiedRecords(
     });
     for (const e of events) {
       performerIds.push(e.performedById);
-      const products = e.products.map((p) => p.displayName ?? p.pluginId).join(', ');
+      const products = e.products.map((p) => productName(p.pluginId, p.displayName)).join(', ');
       out.push({
         id: `fungicide:${e.id}`,
         kind: 'fungicide',
@@ -334,7 +398,18 @@ export function listUnifiedRecords(
         blockLabel: blockLabelById.get(e.blockId),
         performedById: e.performedById,
         detail: e.diseaseObservation
-          ? `${products} · ${e.diseaseObservation.disease} ${e.diseaseObservation.metric}=${e.diseaseObservation.value}`
+          ? [
+              products,
+              observationLine(
+                e.diseaseObservation.disease,
+                e.diseaseObservation.metric,
+                e.diseaseObservation.value,
+                null,
+                prefs.locale
+              )
+            ]
+              .filter(Boolean)
+              .join(' · ')
           : products || t(prefs.locale, 'recui.detail.fungicideEvent'),
         hash: shortHash({ k: 'fungicide', id: e.id, o: e.occurredAt, p: e.products }),
         locked: isLocked(e.occurredAt, e.lockedAt, now),
@@ -360,7 +435,7 @@ export function listUnifiedRecords(
         blockId: e.blockId,
         blockLabel: blockLabelById.get(e.blockId),
         performedById: e.performedById,
-        detail: `${e.pest} · ${e.metric}=${e.value}`,
+        detail: observationLine(e.pest, e.metric, e.value, e.notes, prefs.locale),
         hash: shortHash({ k: 'scout', id: e.id, o: e.occurredAt, pest: e.pest, v: e.value }),
         // Scout observations are not subject to the FR-09 lock window — but the audit ledger still shows lock state, so we mark them locked once outside the 48h grace period for consistency.
         locked: isLocked(e.occurredAt, undefined, now)
@@ -379,6 +454,8 @@ export function listUnifiedRecords(
         e.moisturePct !== undefined
           ? ` · ${t(prefs.locale, 'recui.detail.moisture', { pct: e.moisturePct })}`
           : '';
+      const crop = cropName(e.cropPluginId, e.cropId);
+      const shown = crop ?? e.cropPluginId;
       out.push({
         id: `harvest:${e.id}`,
         kind: 'harvest',
@@ -387,9 +464,10 @@ export function listUnifiedRecords(
         blockId: e.blockId,
         blockLabel: blockLabelById.get(e.blockId),
         cropPluginId: e.cropPluginId,
+        cropLabel: crop,
         detail: e.quantity
-          ? `${e.cropPluginId} · ${e.quantity}${e.lotNumber ? ` · ${t(prefs.locale, 'recui.detail.lot', { lot: e.lotNumber })}` : ''}${moisture}`
-          : `${e.cropPluginId}${moisture}`,
+          ? `${shown} · ${e.quantity}${e.lotNumber ? ` · ${t(prefs.locale, 'recui.detail.lot', { lot: e.lotNumber })}` : ''}${moisture}`
+          : `${shown}${moisture}`,
         hash: shortHash({
           k: 'harvest',
           id: e.id,
@@ -428,6 +506,7 @@ export function listUnifiedRecords(
           : '';
       const statusKey = HAY_STATUS_KEY[c.status];
       const status = statusKey && prefs.locale ? t(prefs.locale, statusKey) : c.status;
+      const crop = cropName(c.cropPluginId, c.cropId);
       out.push({
         id: `hay:${c.id}`,
         kind: 'hay',
@@ -436,8 +515,9 @@ export function listUnifiedRecords(
         blockId: c.blockId,
         blockLabel: blockLabelById.get(c.blockId),
         cropPluginId: c.cropPluginId,
+        cropLabel: crop,
         performedById: c.performedById,
-        detail: `${c.cropPluginId} · ${t(prefs.locale, 'recui.detail.cutting', { n: c.cuttingNumber })} · ${status}${bale}${moisture}`,
+        detail: `${crop ?? c.cropPluginId} · ${t(prefs.locale, 'recui.detail.cutting', { n: c.cuttingNumber })} · ${status}${bale}${moisture}`,
         hash: shortHash({ k: 'hay', id: c.id, o: occurredAt, n: c.cuttingNumber, s: c.status }),
         locked: isLocked(occurredAt, undefined, now),
         recordedLate: c.recordedLate,
@@ -492,11 +572,15 @@ export function listUnifiedRecords(
   }
 
   if (kinds.has('planting')) {
-    const rows = listPlantingRecords({
-      blockId: filters.blockId,
-      fromMs: filters.fromMs,
-      toMs: filters.toMs
-    });
+    const rows = listPlantingRecords(
+      blocks,
+      {
+        blockId: filters.blockId,
+        fromMs: filters.fromMs,
+        toMs: filters.toMs
+      },
+      now
+    );
     for (const p of rows.slice(0, perKindLimit)) {
       out.push({
         id: `planting:${p.id}`,
@@ -506,7 +590,8 @@ export function listUnifiedRecords(
         blockId: p.blockId,
         blockLabel: blockLabelById.get(p.blockId),
         cropPluginId: p.cropPluginId,
-        detail: `${cropDisplayName(p.cropPluginId, p.varietyDisplayName, prefs.locale)} (${p.cropPluginId})`,
+        cropLabel: cropDisplayName(p.cropPluginId, p.varietyDisplayName, prefs.locale),
+        detail: cropDisplayName(p.cropPluginId, p.varietyDisplayName, prefs.locale),
         hash: shortHash({ k: 'planting', id: p.id, o: p.plantingDate, c: p.cropPluginId }),
         locked: isLocked(p.plantingDate, undefined, now)
       });

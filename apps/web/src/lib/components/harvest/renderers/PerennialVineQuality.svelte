@@ -1,11 +1,11 @@
 <script lang="ts">
+  import { parseDecimal } from '$lib/harvest/details';
   import { Grape } from 'lucide-svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
 
-  // Quality (Brix/pH/TA) is packed into the lotNumber tag pending #180 schema lift.
   const props: RendererProps = $props();
   const tr = $derived(createT(page.data?.locale));
 
@@ -14,14 +14,14 @@
   let ta = $state('');
 
   async function handleCommit(input: { quantity?: string; lotNumber?: string }) {
-    const qualityBits: string[] = [];
-    if (brix.trim()) qualityBits.push(`Brix=${brix.trim()}`);
-    if (phReading.trim()) qualityBits.push(`pH=${phReading.trim()}`);
-    if (ta.trim()) qualityBits.push(`TA=${ta.trim()}`);
-    const lot = [input.lotNumber, qualityBits.join(' / ')].filter(Boolean).join(' · ').trim();
     return props.onCommit({
       quantity: input.quantity,
-      lotNumber: lot || undefined
+      lotNumber: input.lotNumber || undefined,
+      details: {
+        brix: parseDecimal(brix),
+        ph: parseDecimal(phReading),
+        taGPerL: parseDecimal(ta)
+      }
     });
   }
 </script>

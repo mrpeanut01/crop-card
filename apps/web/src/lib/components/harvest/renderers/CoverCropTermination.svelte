@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { parseDecimal } from '$lib/harvest/details';
   import { Zap } from 'lucide-svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
@@ -17,12 +18,15 @@
     quantity?: string;
     lotNumber?: string;
   }): Promise<string | null> {
-    const tagBits: string[] = [];
-    if (method) tagBits.push(`method=${method}`);
-    if (residueCoverPct.trim()) tagBits.push(`residue=${residueCoverPct}%`);
     const quantity = biomassEstimate.trim() ? `${biomassEstimate} t/ac biomass` : input.quantity;
-    const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
-    return props.onCommit({ quantity, lotNumber: lot || undefined });
+    return props.onCommit({
+      quantity,
+      lotNumber: input.lotNumber || undefined,
+      details: {
+        terminationMethod: method || undefined,
+        residueCoverPct: parseDecimal(residueCoverPct)
+      }
+    });
   }
 </script>
 

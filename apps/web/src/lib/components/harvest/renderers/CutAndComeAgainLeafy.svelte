@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { parseDecimal } from '$lib/harvest/details';
   import { Leaf } from 'lucide-svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
@@ -22,12 +23,16 @@
     quantity?: string;
     lotNumber?: string;
   }): Promise<string | null> {
-    const tagBits: string[] = [`cut=${cutNumber}`];
-    if (usText(cutHeightInches)) tagBits.push(`cutHeight=${usText(cutHeightInches)}"`);
-    if (boltObserved) tagBits.push('bolt-observed');
     const quantity = usText(cutLb) ? `${usText(cutLb)} lb` : input.quantity;
-    const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
-    return props.onCommit({ quantity, lotNumber: lot || undefined });
+    return props.onCommit({
+      quantity,
+      lotNumber: input.lotNumber || undefined,
+      details: {
+        cutNumber,
+        cutHeightIn: parseDecimal(usText(cutHeightInches)),
+        boltObserved
+      }
+    });
   }
 </script>
 

@@ -16,6 +16,7 @@
 
 import { applySeasonSprayFilter } from '$lib/season/sprayWindowFilter.server';
 import { isSavedSowMethod, sowMethods, spacingModel, treeSizeRows } from '$lib/plan/spacingModel';
+import { isPerennialCrop } from '$lib/plugins/perennial';
 import { seedStartGuide } from '$lib/schedule/seedStart';
 import type { PageServerLoad } from './$types';
 import { t } from '$lib/i18n';
@@ -178,7 +179,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         archetype: resolveArchetype(c),
         seedStart: seedStartGuide(c),
         treeSizeClasses: treeSizeRows(c),
-        sowMethods: sowMethods(spacingModel(c)).filter(isSavedSowMethod)
+        sowMethods: sowMethods(spacingModel(c)).filter(isSavedSowMethod),
+        perennial: isPerennialCrop(c)
       };
     })
     .sort((a, b) => a.displayName.localeCompare(b.displayName));

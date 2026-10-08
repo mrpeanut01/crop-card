@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { resolveArchetype, type Archetype, type HarvestStyle } from '$lib/plugins/schemas';
+  import type { Archetype, HarvestStyle } from '$lib/plugins/schemas';
+  import { harvestFormArchetype, isBerryOnVineArchetype } from './reHarvest';
   import type { RendererData, RendererProps } from './renderers/types';
   import FallbackHarvestRenderer from './renderers/FallbackHarvestRenderer.svelte';
   import SmallGrainZadoks from './renderers/SmallGrainZadoks.svelte';
@@ -13,7 +14,8 @@
   import PerennialVineQuality from './renderers/PerennialVineQuality.svelte';
   import TreeFruitMultiPick from './renderers/TreeFruitMultiPick.svelte';
 
-  // resolveArchetype() order: archetypeOverride > archetype > harvestStyle (legacy) > cropFamily fallback.
+  // resolveArchetype() order: archetypeOverride > archetype > harvestStyle (legacy) > cropFamily fallback;
+  // berry families on the vine archetype get the pick form (#743).
 
   interface Props extends RendererProps {
     /** Plugin-declared archetype (Phase 27A, preferred). */
@@ -31,13 +33,14 @@
   // Override wins over plugin field wins over derivation. $derived so a
   // reactive parent (e.g. operator flips archetypeOverride mid-session)
   // re-dispatches without remounting the whole HarvestRouter tree.
-  const resolved: Archetype = $derived(
-    resolveArchetype({
-      archetype: props.archetypeOverride ?? props.archetype ?? undefined,
-      harvestStyle: props.harvestStyle,
-      cropFamily: props.cropFamily
-    })
-  );
+  const dispatch = $derived({
+    archetype: props.archetype,
+    archetypeOverride: props.archetypeOverride,
+    harvestStyle: props.harvestStyle,
+    cropFamily: props.cropFamily
+  });
+  const resolved: Archetype = $derived(harvestFormArchetype(dispatch));
+  const berry = $derived(isBerryOnVineArchetype(dispatch));
 
   // Strip the dispatch-only fields when handing off to the renderer.
   const rendererProps: RendererProps = $derived({
@@ -54,7 +57,8 @@
     onCommit: props.onCommit,
     error: props.error,
     onCancel: props.onCancel,
-    rendererData: props.rendererData
+    rendererData: props.rendererData,
+    ...(berry ? { formVariant: 'berry' as const } : {})
   });
 </script>
 

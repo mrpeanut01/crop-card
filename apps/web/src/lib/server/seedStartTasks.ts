@@ -114,6 +114,15 @@ export function materializeSeedStartTasks(input: SeedStartTaskInput): SeedStartT
 }
 
 const NOT_DATED_NOTE = 'Seed-start tasks are made once the planting has a date.';
+const ALREADY_IN_GROUND_NOTE = 'Already in the ground, so no seed-start tasks were made.';
+const DAY_MS = 86_400_000;
+
+/** #645: a planting whose in-ground date is a full day or more behind now
+ *  is already planted (an orchard set out years ago, a backdated record),
+ *  so there is nothing left to sow, harden off or transplant. */
+export function isAlreadyInGround(inGroundMs: number, nowMs: number): boolean {
+  return inGroundMs + DAY_MS <= nowMs;
+}
 const HARDEN_UNKNOWN_NOTE = 'Hardening-off timing is not known for this crop.';
 const SOW_UNKNOWN_NOTE =
   'Indoor start timing is not known for this crop. Set the sow date yourself.';
@@ -122,7 +131,8 @@ const NOTE_KEYS: Record<string, MessageKey> = {
   [SOW_AFTER_TRANSPLANT_NOTE]: 'sched.sowAfterTransplant',
   [SOW_UNKNOWN_NOTE]: 'sched.sowTimingUnknown',
   [HARDEN_UNKNOWN_NOTE]: 'sched.hardenUnknownNote',
-  [NOT_DATED_NOTE]: 'sched.notDatedNote'
+  [NOT_DATED_NOTE]: 'sched.notDatedNote',
+  [ALREADY_IN_GROUND_NOTE]: 'sched.alreadyInGroundNote'
 };
 
 /** The English seed-start notes in the viewer's language, for API
@@ -268,6 +278,10 @@ export function applyPlantingEstablishment(
       ...none,
       notes: [NOT_DATED_NOTE]
     };
+  }
+  if (isAlreadyInGround(crop.plantingDate, nowMs)) {
+    abortSeedStartTasks(cropId, nowMs);
+    return { ...none, notes: [ALREADY_IN_GROUND_NOTE] };
   }
   const result = materializeSeedStartTasks({
     cropId,

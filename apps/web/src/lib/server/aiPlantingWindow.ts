@@ -18,6 +18,8 @@ export interface PlantingWindowPromptInput {
   cropFamily: string | null;
   dtmMaxDays: number | null;
   soilTempMinF: number | null;
+  /** #672: a tree, vine, bush or other perennial set out for years. */
+  perennial?: boolean;
   year: number;
   /** The bed's effective frost (Phase 32E covers); `frostFree` for a
    *  heated greenhouse. */
@@ -51,6 +53,11 @@ export function buildPlantingWindowPrompt(input: PlantingWindowPromptInput): str
       ? [`${input.coverNote} These frost dates already include the cover.`]
       : []),
     `Crop family: ${input.cropFamily ?? 'unknown'}. Days to maturity (max): ${input.dtmMaxDays ?? 'unknown'}. Min soil temp: ${input.soilTempMinF != null ? `${input.soilTempMinF}°F` : 'unknown'}.`,
+    ...(input.perennial
+      ? [
+          'This is a perennial set out to stand for years. It does not need to bear a crop this season; give the window for setting it out.'
+        ]
+      : []),
     `A frost-date rule of thumb gives earliest ${input.baseline.earliest}, prime ${input.baseline.prime}, latest ${input.baseline.latest}. Adjust for this location and crop.`,
     '',
     'Rules:',

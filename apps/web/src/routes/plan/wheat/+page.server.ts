@@ -17,6 +17,7 @@ import {
   type SmallGrainStage
 } from '$lib/plan/smallGrain';
 import { spacingModel, SQFT_PER_ACRE, type SpacingModel } from '$lib/plan/spacingModel';
+import { defaultStandingPlanting, plantingOnView } from '$lib/plan/planV2Derive';
 
 export interface SmallGrainCandidate {
   plantingId: string;
@@ -70,6 +71,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       if (!rec || rec.plugin.type !== 'crop') continue;
       const crop = rec.plugin as CropPlugin;
       if (resolveArchetype(crop) !== 'small-grain.zadoks') continue;
+      if (p.id !== requested && !plantingOnView(p)) continue;
       plugins.set(crop.pluginId, crop);
       candidates.push({
         plantingId: p.id,
@@ -100,7 +102,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     selected = candidates.find((c) => c.plantingId === requested);
     if (!selected) error(404, t(locals.locale, 'plan.wheat.notSmallGrain'));
   } else {
-    selected = candidates[0];
+    selected = defaultStandingPlanting(candidates, now);
   }
 
   let plan: SmallGrainPlanView | null = null;

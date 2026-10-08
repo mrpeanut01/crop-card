@@ -75,6 +75,7 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'cardsui.kind.planting': 'Siembra',
   'cardsui.kind.profit': 'Ganancia de la temporada',
   'cardsui.kind.scout': 'Monitoreo',
+  'cardsui.kind.harvest': 'Cosecha',
   'cardsui.kind.soilTest': 'Análisis de suelo',
   'cardsui.kind.spray': 'Aspersión',
   'cardsui.kind.stock': 'Semillas y existencias',

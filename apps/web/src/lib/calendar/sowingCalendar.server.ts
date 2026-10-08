@@ -5,7 +5,7 @@ import { storedFrostView } from '$lib/climate/frostSettings';
 import { normalizeFrost } from '$lib/schedule/farmLocation';
 import { frostDatesFromMmDd } from '$lib/schedule/frostSeason';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
-import { deterministicPlantingWindow } from '$lib/plan/plantingWindow';
+import { deterministicPlantingWindow, plantingWindowCropOf } from '$lib/plan/plantingWindow';
 import { loadSeasonView } from '$lib/today/seasonView.server';
 import type { PluginRegistry } from '$lib/plugins';
 import type { CropPlugin } from '$lib/plugins/schemas';
@@ -152,14 +152,7 @@ export function loadSowingCalendar(
           frostFree: bed.frostFree
         }
       : farmFrost;
-    const w = deterministicPlantingWindow(
-      {
-        cropFamily: plugin.cropFamily ?? null,
-        soilTempMinF: plugin.plantingGuide?.soilTempMinF ?? null,
-        dtmMaxDays: plugin.daysToMaturity?.max ?? null
-      },
-      frost
-    );
+    const w = deterministicPlantingWindow(plantingWindowCropOf(plugin), frost);
     windows[crop.id] = { startMs: dayMs(w.earliest), endMs: dayMs(w.latest) };
   }
 

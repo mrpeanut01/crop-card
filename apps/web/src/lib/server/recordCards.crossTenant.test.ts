@@ -214,15 +214,20 @@ describe('record cards cross-tenant isolation', () => {
     expect(card.facts.find((f) => f.label === 'Recorded by')?.value).toBe(`${x.userId}@test.local`);
   });
 
-  it('a harvest with no crop id shows the old planting it came from', async () => {
+  it('a harvest record card is the harvest, linked to the old planting it came from', async () => {
     const [, harvestId] = x.records[2];
     const result = await runWithTenantAsync(x.ownerId, () =>
       buildRecordCards('harvest', harvestId, opts)
     );
+    expect(result!.cards).toHaveLength(1);
     const card = result!.cards[0];
-    expect(card.kind).toBe('planting');
-    expect(card.key).toBe(`pl_${x.ids[2]}`);
-    expect(card.links?.at(-1)?.href).toBe(`/records/harvest/${harvestId}`);
+    expect(card.kind).toBe('harvest');
+    expect(parseRecordCardKey(card.key)).toEqual({ recordKind: 'harvest', rowId: harvestId });
+    expect(card.facts[0].label).toBe('Harvested');
+    expect(card.links?.map((l) => l.href)).toEqual([
+      `/records/harvest/${harvestId}`,
+      `/cards/planting/pl_${x.ids[2]}`
+    ]);
   });
 
   it('GET answers owner and helper alike, and 404s a foreign or unknown record', async () => {

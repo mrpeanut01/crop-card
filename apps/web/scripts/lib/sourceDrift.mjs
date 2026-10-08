@@ -974,8 +974,34 @@ export function checkedIds(body) {
   return ids;
 }
 
-/** GitHub refuses issue bodies over 65,536 characters; two sections share one body. */
-export const SECTION_BUDGET = 30_000;
+/** GitHub refuses issue bodies over 65,536 characters; the two sections share one body. */
+export const SECTION_BUDGET = { weekly: 48_000, quotes: 14_000 };
+
+/**
+ * One line per host and reason, so a site that blocks the runner takes one line.
+ * @param {Unreachable[]} list
+ * @returns {string[]}
+ */
+export function unreachableLines(list) {
+  /** @type {Map<string, string[]>} */
+  const groups = new Map();
+  for (const u of list) {
+    let host = u.target;
+    try {
+      host = new URL(u.target).hostname;
+    } catch {
+      // a registration number, an OMRI code or a CFR citation
+    }
+    const key = `${u.kind} ${host === u.target ? '' : host}|${u.error}`;
+    groups.set(key, [...(groups.get(key) ?? []), u.target]);
+  }
+  return [...groups].map(([key, targets]) => {
+    const [label, error] = key.split('|');
+    return targets.length === 1
+      ? `- ${label.split(' ')[0]} \`${targets[0]}\`: ${error}`
+      : `- ${label.trim()}: ${targets.length} sources, ${error}`;
+  });
+}
 
 /**
  * @param {'weekly' | 'quotes'} section
@@ -984,7 +1010,13 @@ export const SECTION_BUDGET = 30_000;
  * @param {string} [repo]
  * @param {number} [budget]
  */
-export function renderSection(section, report, previousBody, repo, budget = SECTION_BUDGET) {
+export function renderSection(
+  section,
+  report,
+  previousBody,
+  repo,
+  budget = SECTION_BUDGET[section]
+) {
   for (const maxRefs of [12, 3, 1, 0]) {
     const text = renderSectionWith(section, report, previousBody, repo, maxRefs, Infinity);
     if (text.length <= budget) return text;
@@ -1039,7 +1071,7 @@ function renderSectionWith(section, report, previousBody, repo, maxRefs, maxItem
         unreachable.length +
         ' source(s): not the same as "no change"</summary>',
       '',
-      ...unreachable.slice(0, 200).map((u) => `- ${u.kind} \`${u.target}\`: ${u.error}`),
+      ...unreachableLines(unreachable).slice(0, 100),
       '',
       '</details>',
       ''

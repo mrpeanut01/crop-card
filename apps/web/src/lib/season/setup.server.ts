@@ -14,7 +14,7 @@
  * Phase 21a merge. Split out 2026-05-17 as a hotfix.
  */
 
-import { getSetting, setSetting } from '$lib/db/settings';
+import { getSettings, setSetting } from '$lib/db/settings';
 
 import {
   SEASON_SETUP_DEFAULTS,
@@ -23,6 +23,7 @@ import {
   PEST_VALUES,
   FERTILITY_VALUES,
   COVER_VALUES,
+  SEASON_SETUP_FIELDS,
   type SeasonSetup,
   type SeasonSetupField
 } from './setup';
@@ -54,6 +55,8 @@ function parseTransitioningYear(raw: string | undefined): number | null {
  *  absent, we treat the whole setup as absent rather than synthesizing
  *  defaults that the operator never confirmed. */
 export function loadSeasonSetup(year: number): SeasonSetup | null {
+  const saved = getSettings(SEASON_SETUP_FIELDS.map((f) => settingKey(year, f)));
+  const getSetting = (key: string) => saved.get(key);
   const philosophyRaw = getSetting(settingKey(year, 'philosophy'));
   if (!philosophyRaw) return null;
 

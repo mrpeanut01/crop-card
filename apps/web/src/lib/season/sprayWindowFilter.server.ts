@@ -1,6 +1,6 @@
 import type { HerbicidePlugin } from '$lib/plugins/schemas';
 import { seasonOfPlanting } from '$lib/today/seasonTimeline';
-import { getActivePlanningYear, planningFrost } from './planningYear.server';
+import { activePlanningYearAndFrost, type planningFrost } from './planningYear.server';
 import { loadSeasonSetup } from './setup.server';
 import {
   buildSeasonSprayFilter,
@@ -25,7 +25,7 @@ export function applySeasonSprayFilter<
   return filterSprayWindowsBySeason(
     events,
     (plantedAt) => {
-      season ??= { active: getActivePlanningYear(new Date(now)), frost: planningFrost() };
+      season ??= activePlanningYearAndFrost(new Date(now));
       return seasonOfPlanting(plantedAt, season.active, season.frost);
     },
     (year) => {

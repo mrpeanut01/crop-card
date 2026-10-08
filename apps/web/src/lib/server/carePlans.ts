@@ -36,6 +36,7 @@ import {
   PLAN_EDITED,
   PLAN_ENDED,
   addDaysYmd,
+  careTaskId,
   careTaskTitle,
   daysBetween,
   defaultLeadDays,
@@ -109,16 +110,23 @@ export function materializeCareTasks(now: number, timeZone: string): Materialize
   ];
   const subjects = careSubjects(refs);
   const byId = new Map(plans.map((p) => [p.id, p]));
-  let written = 0;
-  db.transaction(() => {
-    for (const plan of plans) {
-      const subject = subjects.get(careSubjectKey(plan.subjectType, plan.subjectId));
-      if (!subject?.active) continue;
-      if (daysBetween(today, plan.nextDueOn!) > horizonDays(plan.leadDays)) continue;
-      if (upsertCareTask(taskWrite(plan, subject))) written++;
-    }
+  // An open task under the same id makes the upsert a no-op (it only
+  // reopens a task the engine aborted), so those plans are skipped.
+  const openIds = new Set(openBefore.map((t) => t.id));
+  const due = plans.flatMap((plan) => {
+    const subject = subjects.get(careSubjectKey(plan.subjectType, plan.subjectId));
+    if (!subject?.active) return [];
+    if (daysBetween(today, plan.nextDueOn!) > horizonDays(plan.leadDays)) return [];
+    if (openIds.has(careTaskId(plan.id, plan.nextDueOn!))) return [];
+    return [taskWrite(plan, subject)];
   });
-  const swept = sweep(listOpenCareTasks(), byId, subjects, now);
+  let written = 0;
+  if (due.length > 0) {
+    db.transaction(() => {
+      for (const write of due) if (upsertCareTask(write)) written++;
+    });
+  }
+  const swept = sweep(written > 0 ? listOpenCareTasks() : openBefore, byId, subjects, now);
   return { written, ended: swept.ended, open: swept.open, subjects, plans: byId };
 }
 

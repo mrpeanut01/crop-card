@@ -6,6 +6,7 @@
 
 export {
   listSprayers,
+  sprayersFrom,
   getSprayer,
   recordSpray,
   recordDecon,

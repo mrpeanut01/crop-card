@@ -11,8 +11,10 @@ import {
  * The Loudoun default is never shown as if it were the farm's weather; the
  * strip asks for a location instead. NWS failures never throw.
  */
-export async function loadTodayWeather(): Promise<TodayWeather> {
-  const location = resolveWeatherLocation(null);
+export async function loadTodayWeather(
+  known?: Parameters<typeof resolveWeatherLocation>[1]
+): Promise<TodayWeather> {
+  const location = resolveWeatherLocation(null, known);
   if (!location || location.source === 'farm-default') return { status: 'needs-location' };
   let forecast;
   try {

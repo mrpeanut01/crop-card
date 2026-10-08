@@ -12,7 +12,8 @@ import { randomUUID } from 'node:crypto';
 import { getBlock, geometryCentroid, listBlocks } from '$lib/db/blocks';
 import { db } from '$lib/db/client';
 import { weatherForecastCache } from '$lib/db/schema';
-import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
+import { savedFarmLatLon } from '$lib/schedule/settings';
+import { LOUDOUN_DEFAULT_LAT_LON, type FarmLatLon } from '$lib/schedule/constants';
 import { fetchNwsPoints, nwsFetch, WeatherFetchError } from '$lib/server/weather';
 import { floorHour, HOUR_MS, type HourlyPoint, type WeatherProvenance } from '$lib/weather/leafWet';
 import { toRealTime } from '$lib/server/clock';
@@ -228,17 +229,25 @@ export interface WeatherLocation {
  * Loudoun default (`farm-default`, which callers may treat as "unknown"). Block reads go through the tenant-scoped repo, so a foreign
  * blockId resolves to `null` (caller 404s).
  */
-export function resolveWeatherLocation(blockId?: string | null): WeatherLocation | null {
+export function resolveWeatherLocation(
+  blockId?: string | null,
+  known?: {
+    blocks: ReadonlyArray<{ geometryGeojson?: string | null }>;
+    farm: FarmLatLon | null;
+  }
+): WeatherLocation | null {
   if (blockId) {
     const block = getBlock(blockId);
     if (!block) return null;
     const c = block.geometryGeojson ? geometryCentroid(block.geometryGeojson) : null;
     if (c) return { lat: c.lat, lon: c.lon, source: 'block' };
   }
-  for (const b of listBlocks()) {
+  for (const b of known?.blocks ?? listBlocks({ plantings: 'none' })) {
     const c = b.geometryGeojson ? geometryCentroid(b.geometryGeojson) : null;
     if (c) return { lat: c.lat, lon: c.lon, source: 'farm-block' };
   }
-  const farm = getFarmLatLon();
-  return { lat: farm.lat, lon: farm.lon, source: hasFarmLatLon() ? 'farm' : 'farm-default' };
+  const farm = known ? known.farm : savedFarmLatLon();
+  return farm
+    ? { lat: farm.lat, lon: farm.lon, source: 'farm' }
+    : { ...LOUDOUN_DEFAULT_LAT_LON, source: 'farm-default' };
 }

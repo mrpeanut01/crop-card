@@ -7,7 +7,7 @@
  * same key with different values.
  */
 
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { db } from './client';
 import { appSettings } from './schema';
 import { tenantValues, tenantWhere, requireOwnerId } from './tenant';
@@ -20,6 +20,29 @@ export function getSetting(key: string): string | undefined {
       .where(and(tenantWhere(appSettings), eq(appSettings.key, key)))
       .get()?.value ?? undefined
   );
+}
+
+/** Reads one setting; the default is `getSetting`, and a loader that
+ *  fetched several keys at once with `getSettings` can pass its own. */
+export type SettingReader = (key: string) => string | undefined;
+
+/** Several settings in one read; keys with no row are left out. */
+export function getSettings(keys: readonly string[]): Map<string, string> {
+  if (keys.length === 0) return new Map();
+  const rows = db
+    .select({ key: appSettings.key, value: appSettings.value })
+    .from(appSettings)
+    .where(and(tenantWhere(appSettings), inArray(appSettings.key, [...keys])))
+    .all();
+  return new Map(rows.flatMap((r) => (r.value == null ? [] : [[r.key, r.value] as const])));
+}
+
+/** A reader over the settings `keys`, fetched in one read. Keys outside the
+ *  list fall through to `getSetting`. */
+export function settingsReader(keys: readonly string[]): SettingReader {
+  const saved = getSettings(keys);
+  const known = new Set(keys);
+  return (key) => (known.has(key) ? saved.get(key) : getSetting(key));
 }
 
 export function setSetting(key: string, value: string): void {

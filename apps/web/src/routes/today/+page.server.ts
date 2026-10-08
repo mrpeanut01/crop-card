@@ -1,11 +1,15 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import {
+  GETTING_STARTED_DISMISSED_KEY,
+  ONBOARDING_STATUS_KEY,
   dismissGettingStarted,
   getGettingStartedDismissedAt,
   getOnboardingStatus,
   restoreGettingStarted
 } from '$lib/onboarding/state.server';
+import { FARM_ANIMALS_KEY, FARM_PROFILE_KEY } from '$lib/onboarding/profile';
+import { ASSISTANT_SKIPPED_SETTING } from '$lib/onboarding/gettingStarted';
 import { loadGettingStartedFacts } from '$lib/onboarding/gettingStarted.server';
 import { getFarmProfile } from '$lib/onboarding/state.server';
 import { currentUser } from '$lib/server/auth';
@@ -29,7 +33,7 @@ import type { PluginRegistry } from '$lib/plugins';
 import { listPlantingsForCardsByIds } from '$lib/db/cardSnapshot';
 import { getRegistry } from '$lib/server/registry';
 import { applySeasonSprayFilter } from '$lib/season/sprayWindowFilter.server';
-import { listSprayers } from '$lib/server/sprayers';
+import { sprayersFrom } from '$lib/server/sprayers';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { loadTodayWeather } from '$lib/server/todayWeather';
 import { derivePriorityAction } from '$lib/today/priorityAction';
@@ -44,8 +48,8 @@ import { firstDayOfWeek } from '$lib/intlCache';
 import { loadSeasonView } from '$lib/today/seasonView.server';
 import { needsDecon } from '$lib/equipment/decon';
 import { todaySetupPrompts } from '$lib/onboarding/pageSetup';
-import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
-import { getSetting } from '$lib/db/settings';
+import { savedFarmLatLon } from '$lib/schedule/settings';
+import { settingsReader, type SettingReader } from '$lib/db/settings';
 import { SETTINGS_KEYS } from '$lib/schedule/constants';
 import { coveredLogAlerts, healthPlugins } from '$lib/server/animalRecords';
 import { withOlderOverdue } from '$lib/today/olderOverdue';
@@ -80,10 +84,27 @@ function maxCuringDays(registry: PluginRegistry): number {
   return weeks * 7;
 }
 
+/** The settings this loader reads, fetched together in one query. */
+const TODAY_SETTING_KEYS = [
+  ONBOARDING_STATUS_KEY,
+  FARM_PROFILE_KEY,
+  FARM_ANIMALS_KEY,
+  GETTING_STARTED_DISMISSED_KEY,
+  ASSISTANT_SKIPPED_SETTING,
+  SETTINGS_KEYS.farmLatLon,
+  SETTINGS_KEYS.lastFrost,
+  SETTINGS_KEYS.firstFrost
+];
+
+function hasBothFrostDates(read: SettingReader): boolean {
+  return !!read(SETTINGS_KEYS.lastFrost) && !!read(SETTINGS_KEYS.firstFrost);
+}
+
 export const load: PageServerLoad = async ({ url, locals }) => {
   // An Owner who hasn't answered onboarding screen 2 goes back to it.
   // Impersonating superadmins are never bounced.
-  const onboardingStatus = locals.user?.activeOwnerId ? getOnboardingStatus() : null;
+  const settings = locals.user?.activeOwnerId ? settingsReader(TODAY_SETTING_KEYS) : null;
+  const onboardingStatus = settings ? getOnboardingStatus(settings) : null;
   if (
     onboardingStatus === 'in-progress' &&
     locals.user?.role === 'owner' &&
@@ -211,16 +232,26 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     season = loadSeasonView(registry, url.searchParams.get('season'), now, locals.locale);
   }
 
-  const sprayers = listSprayers();
+  const equipment = listEquipment();
+  const sprayers = sprayersFrom(equipment);
+  const read = settings ?? settingsReader(TODAY_SETTING_KEYS);
+  const farmLatLon = savedFarmLatLon(read);
+  const hasLocation = farmLatLon !== null;
+  const farmProfile = getFarmProfile(read);
   const isOwner = locals.user?.role === 'owner' && !!locals.user.activeOwnerId;
   const gettingStarted = isOwner
     ? {
         facts: loadGettingStartedFacts({
           ownerId: locals.user!.activeOwnerId!,
           userId: locals.user!.id,
-          blocks
+          blocks,
+          equipment,
+          profile: farmProfile,
+          hasLocation,
+          aiEnabled,
+          settings: read
         }),
-        dismissed: getGettingStartedDismissedAt() !== null
+        dismissed: getGettingStartedDismissedAt(read) !== null
       }
     : null;
 
@@ -238,7 +269,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     timeZone: prefs.timeZone
   });
 
-  const weather = await loadTodayWeather();
+  const weather = await loadTodayWeather({ blocks, farm: farmLatLon });
 
   // One read of spray + insecticide + fungicide events feeds both the YTD
   // count (since Jan 1) and the re-entry card (ruling LF-3), so it starts
@@ -290,7 +321,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     farmZone
   );
 
-  const coveredLogs = isOwner ? coveredLogAlerts(await healthPlugins(), farmTimeZone(), now) : [];
+  const coveredLogs = isOwner ? coveredLogAlerts(await healthPlugins(), careTimeZone, now) : [];
 
   const plantingNames: Record<string, { name: string; blockId: string }> = {};
   for (const b of blocks)
@@ -314,7 +345,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const dayEvents = dayCandidates.filter(notScheduled);
   const upcoming = upcomingCandidates.filter(notScheduled);
 
-  const hasLocation = hasFarmLatLon();
   const lowStock = lowStockItems();
   // Phase 32E (E4-15): watering and degree-day cards, Day view only.
   let advice: TodayAdviceCard[] = [];
@@ -322,7 +352,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     advice = await loadTodayAdvice({
       nowMs: now,
       seasonYear: Number(today.slice(0, 4)),
-      farmLatLon: hasLocation ? getFarmLatLon() : null,
+      farmLatLon,
       timeZone: careTimeZone,
       locale: locals?.locale,
       isOwner,
@@ -372,7 +402,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       blocks: blocks.length,
       plantings: totalPlantings
     },
-    farmProfile: getFarmProfile(),
+    farmProfile,
     gettingStarted,
     eventsToday: dayEvents,
     upcoming,
@@ -381,7 +411,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     season,
     blockNames: Object.fromEntries(blocks.map((b) => [b.id, b.name])),
     plantingNames,
-    equipmentLabels: Object.fromEntries(listEquipment().map((e) => [e.id, e.label])),
+    equipmentLabels: Object.fromEntries(equipment.map((e) => [e.id, e.label])),
     // #280 — lift `category` into the projection so the /today template
     // can resolve a /inventory/[type]/[id] link via the canonical
     // STOCK_CATEGORY_TO_INVENTORY_TYPE map (no 308-redirect RTT).
@@ -410,15 +440,14 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     winterizeAlerts,
     deconAlerts,
     reEntry,
-    setupLatLon: hasLocation ? getFarmLatLon() : null,
+    setupLatLon: farmLatLon,
     // #475 — ask the farm location and frost dates here too; the weather,
     // frost alerts and calendar all read them.
     setupPrompts: todaySetupPrompts(
       {
         // The Getting Started card already lists the location while it shows.
         hasLocation: hasLocation || (!!gettingStarted && !gettingStarted.dismissed),
-        hasFrostDates:
-          !!getSetting(SETTINGS_KEYS.lastFrost) && !!getSetting(SETTINGS_KEYS.firstFrost)
+        hasFrostDates: hasBothFrostDates(read)
       },
       locals.user?.role ?? 'helper',
       locals.locale

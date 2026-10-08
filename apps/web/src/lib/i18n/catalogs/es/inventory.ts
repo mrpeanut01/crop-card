@@ -1,6 +1,154 @@
 import type { MessageKey } from '../en';
 
 export const esInventory: Partial<Record<MessageKey, string>> = {
+  'equip.tpl.tractor-2wt-bcs.category': 'Tractor de dos ruedas',
+  'equip.tpl.tractor-2wt-bcs.label': 'Tractor de dos ruedas de a pie (BCS / Grillo)',
+  'equip.tpl.tractor-2wt-bcs.description':
+    'Tractor de a pie con toma de fuerza (PTO) e implementos de cambio rápido. Caballo de batalla para huertas de ¼ a 2 acres.',
+  'equip.tpl.tractor-subcompact.category': 'Tractor subcompacto',
+  'equip.tpl.tractor-subcompact.label': 'Tractor utilitario subcompacto (menos de 25 hp)',
+  'equip.tpl.tractor-subcompact.description':
+    'Diésel 4x4 con enganche de 3 puntos categoría 1; ideal para labranza y siega en fincas pequeñas.',
+  'equip.tpl.tractor-compact-utility.category': 'Tractor utilitario compacto',
+  'equip.tpl.tractor-compact-utility.label': 'Tractor utilitario compacto (25–50 hp)',
+  'equip.tpl.tractor-compact-utility.description':
+    'Tractor utilitario de gama media: labranza de ancho completo, empacado y aspersoras de PTO de hasta 200 gal.',
+  'equip.tpl.tractor-utility.category': 'Tractor utilitario',
+  'equip.tpl.tractor-utility.label': 'Tractor utilitario (50–100 hp)',
+  'equip.tpl.tractor-utility.description':
+    'Tractor agrícola estándar para heno, sembradoras grandes y aspersoras de arrastre de más de 200 gal.',
+  'equip.tpl.tractor-row-crop.category': 'Tractor para cultivos en hileras',
+  'equip.tpl.tractor-row-crop.label': 'Tractor para cultivos en hileras (más de 100 hp)',
+  'equip.tpl.tractor-row-crop.description':
+    'Tractor de despeje alto para maíz y soya. Trocha de ruedas ajustable.',
+  'equip.tpl.sprayer-backpack-4gal.category': 'Aspersora de mochila',
+  'equip.tpl.sprayer-backpack-4gal.label': 'Aspersora de mochila de 4 gal (Solo / Birchmeier)',
+  'equip.tpl.sprayer-backpack-4gal.description':
+    'Mochila con bomba manual de diafragma. Para aplicación puntual y parcelas pequeñas; calibre a su paso al caminar.',
+  'equip.tpl.sprayer-25gal-atv.category': 'Aspersora para ATV',
+  'equip.tpl.sprayer-25gal-atv.label': 'Aspersora de 25 gal para ATV/UTV',
+  'equip.tpl.sprayer-25gal-atv.description':
+    'Bomba de 12 V, sin barra o con barra de 3 boquillas; para hileras de frutales y aplicación puntual en cultivos en hileras.',
+  'equip.tpl.sprayer-50gal-pull.category': 'Aspersora de arrastre',
+  'equip.tpl.sprayer-50gal-pull.label': 'Aspersora de arrastre de 50 gal con barra',
+  'equip.tpl.sprayer-50gal-pull.description':
+    'Bomba de 12 V a demanda con barra de 12 pies en 3 secciones. Accionada por rueda o por bomba.',
+  'equip.tpl.sprayer-100gal-pull.category': 'Aspersora de arrastre',
+  'equip.tpl.sprayer-100gal-pull.label': 'Aspersora de arrastre de 100 gal con barra',
+  'equip.tpl.sprayer-100gal-pull.description':
+    'Bomba de rodillos accionada por PTO, plegado hidráulico de la barra, agitación mecánica.',
+  'equip.tpl.sprayer-200gal-3pt.category': 'Aspersora de 3 puntos',
+  'equip.tpl.sprayer-200gal-3pt.label': 'Aspersora de 3 puntos de 200 gal con barra',
+  'equip.tpl.sprayer-200gal-3pt.description':
+    'Enganche de 3 puntos categoría 2, bomba de rodillos por PTO, agitación por chorro, barra de 21 pies. Estándar para cultivos en hileras.',
+  'equip.tpl.sprayer-airblast-100gal.category': 'Aspersora de chorro de aire para frutales',
+  'equip.tpl.sprayer-airblast-100gal.label': 'Aspersora de chorro de aire para frutales de 100 gal',
+  'equip.tpl.sprayer-airblast-100gal.description':
+    'Chorro de aire accionado por PTO para copas de árboles frutales: aplicaciones de cobertura de fungicida e insecticida.',
+  'equip.tpl.tiller-pto-rotary-60.category': 'Cultivador rotativo',
+  'equip.tpl.tiller-pto-rotary-60.label': 'Cultivador rotativo de PTO de 60 pulg',
+  'equip.tpl.tiller-pto-rotary-60.description':
+    'Cultivador rotativo de 3 puntos categoría 1. Labranza primaria para preparar camas elevadas.',
+  'equip.tpl.disc-harrow-6ft.category': 'Rastra de discos',
+  'equip.tpl.disc-harrow-6ft.label': 'Rastra de discos de arrastre de 6 pies',
+  'equip.tpl.disc-harrow-6ft.description':
+    'Rastra de discos en tándem para incorporar residuos y preparar la cama de siembra.',
+  'equip.tpl.chisel-plow-7shank.category': 'Arado de cincel',
+  'equip.tpl.chisel-plow-7shank.label': 'Arado de cincel de 7 brazos',
+  'equip.tpl.chisel-plow-7shank.description':
+    'Arado de cincel montado, categoría 2, para labranza profunda y aliviar la compactación.',
+  'equip.tpl.bed-shaper-30in.category': 'Formadora de camas',
+  'equip.tpl.bed-shaper-30in.label': 'Formadora de camas elevadas de 30 pulg',
+  'equip.tpl.bed-shaper-30in.description':
+    'Forma camas elevadas de 4 a 10 pulg, con colocación opcional de plástico y goteo.',
+  'equip.tpl.power-harrow-walking.category': 'Grada rotativa',
+  'equip.tpl.power-harrow-walking.label': 'Grada rotativa de a pie (compatible con BCS)',
+  'equip.tpl.power-harrow-walking.description':
+    'Grada rotativa de PTO de 32 pulg para falsa siembra y cama de siembra fina sin voltear el suelo.',
+  'equip.tpl.seeder-walkbehind-earthway.category': 'Sembradora de empuje',
+  'equip.tpl.seeder-walkbehind-earthway.label': 'Sembradora de empuje Earthway 1001-B',
+  'equip.tpl.seeder-walkbehind-earthway.description':
+    '6 placas de semilla intercambiables; sembradora de precisión estándar en fincas pequeñas.',
+  'equip.tpl.seeder-jang-jp1.category': 'Sembradora de empuje',
+  'equip.tpl.seeder-jang-jp1.label': 'Sembradora de empuje Jang JP-1 (una hilera)',
+  'equip.tpl.seeder-jang-jp1.description':
+    'Sembradora de precisión de empuje con rodillos para hojas verdes, brásicas y aliáceas.',
+  'equip.tpl.planter-2row-plate.category': 'Sembradora de placas',
+  'equip.tpl.planter-2row-plate.label':
+    'Sembradora mecánica de placas de 2 hileras (Cole / Covington)',
+  'equip.tpl.planter-2row-plate.description':
+    'Sembradora de placas de 2 hileras para maíz, soya, calabaza y cucurbitáceas; hileras de 30 a 40 pulg.',
+  'equip.tpl.no-till-drill-7ft.category': 'Sembradora de labranza cero',
+  'equip.tpl.no-till-drill-7ft.label':
+    'Sembradora de labranza cero de 7 pies (Great Plains / Esch)',
+  'equip.tpl.no-till-drill-7ft.description':
+    'Sembradora de labranza cero con cuchillas para cultivos de cobertura, granos pequeños y siembras de heno.',
+  'equip.tpl.transplanter-mechanical.category': 'Trasplantadora',
+  'equip.tpl.transplanter-mechanical.label':
+    'Trasplantadora mecánica de rueda de agua (Mechanical Transplanter / Holland)',
+  'equip.tpl.transplanter-mechanical.description':
+    'Trasplantadora de arrastre con rueda de agua: 2 operadores, 1 hilera a la vez. Para plántulas de tomate, chile y brásicas.',
+  'equip.tpl.transplanter-paperpot.category': 'Trasplantadora de paper pot',
+  'equip.tpl.transplanter-paperpot.label': 'Trasplantadora Paper Pot (HP-262 / 264)',
+  'equip.tpl.transplanter-paperpot.description':
+    'Trasplantadora de paper pot de a pie para hojas verdes, aliáceas y mezcla de ensalada en alta densidad.',
+  'equip.tpl.mower-rotary-cutter-5ft.category': 'Chapeadora rotativa',
+  'equip.tpl.mower-rotary-cutter-5ft.label': 'Chapeadora rotativa de 5 pies (brush hog)',
+  'equip.tpl.mower-rotary-cutter-5ft.description':
+    'Chapeadora rotativa de PTO categoría 1/2 para potreros, cercas y siega gruesa.',
+  'equip.tpl.mower-finish-5ft.category': 'Podadora de acabado',
+  'equip.tpl.mower-finish-5ft.label': 'Podadora de acabado de 3 puntos de 5 pies',
+  'equip.tpl.mower-finish-5ft.description':
+    'Podadora de acabado tipo césped para el suelo del huerto frutal y el césped.',
+  'equip.tpl.mower-flail-6ft.category': 'Desbrozadora de mayales',
+  'equip.tpl.mower-flail-6ft.label': 'Desbrozadora de mayales de 6 pies',
+  'equip.tpl.mower-flail-6ft.description':
+    'Desbrozadora de mayales para cultivos de cobertura y residuos; corte más fino que la rotativa, mejor reparto de la biomasa.',
+  'equip.tpl.mower-disc-mower-conditioner.category': 'Segadora acondicionadora',
+  'equip.tpl.mower-disc-mower-conditioner.label': 'Segadora acondicionadora de discos de 9 pies',
+  'equip.tpl.mower-disc-mower-conditioner.description':
+    'Segadora acondicionadora de heno con rodillos de goma; primer paso para hacer heno.',
+  'equip.tpl.tedder-4basket.category': 'Henificadora',
+  'equip.tpl.tedder-4basket.label': 'Henificadora de 4 rotores',
+  'equip.tpl.tedder-4basket.description':
+    'Esparce y voltea las hileras para que sequen más rápido. 3 puntos categoría 1.',
+  'equip.tpl.rake-side-delivery.category': 'Rastrillo de heno',
+  'equip.tpl.rake-side-delivery.label': 'Rastrillo de heno de descarga lateral',
+  'equip.tpl.rake-side-delivery.description':
+    'Rastrillo de un rotor para formar hileras antes de empacar.',
+  'equip.tpl.baler-small-square.category': 'Empacadora de pacas pequeñas',
+  'equip.tpl.baler-small-square.label':
+    'Empacadora de pacas cuadradas pequeñas (pacas de 40–60 lb)',
+  'equip.tpl.baler-small-square.description':
+    'Empacadora de pacas cuadradas con recogedor. Estándar del heno en fincas pequeñas.',
+  'equip.tpl.baler-round-4x4.category': 'Empacadora de pacas redondas',
+  'equip.tpl.baler-round-4x4.label': 'Empacadora de pacas redondas de 4×4',
+  'equip.tpl.baler-round-4x4.description':
+    'Empacadora redonda compacta: las pacas caben en la caja de una camioneta estándar; unas 600 lb de heno seco.',
+  'equip.tpl.irrigation-drip-tape.category': 'Sistema de cinta de goteo',
+  'equip.tpl.irrigation-drip-tape.label': 'Kit de riego por cinta de goteo (1 acre, una zona)',
+  'equip.tpl.irrigation-drip-tape.description':
+    'Cinta de goteo de 15 mil, línea principal, válvula, filtro de malla y regulador de presión. Estándar para hortalizas en camas elevadas.',
+  'equip.tpl.irrigation-overhead-traveler.category': 'Cañón viajero',
+  'equip.tpl.irrigation-overhead-traveler.label': 'Riego con cañón viajero (manguera de 1.5 pulg)',
+  'equip.tpl.irrigation-overhead-traveler.description':
+    'Carrete de manguera con cañón viajero para potreros, heno y riego antes de sembrar. 200–400 gpm.',
+  'equip.tpl.manure-spreader-pull.category': 'Esparcidora de estiércol',
+  'equip.tpl.manure-spreader-pull.label': 'Esparcidora de estiércol de arrastre de 50 bu',
+  'equip.tpl.manure-spreader-pull.description':
+    'Esparcidora con batidores accionada por rueda para gallinaza y composta de lechería.',
+  'equip.tpl.broadcast-spreader-3pt.category': 'Voleadora',
+  'equip.tpl.broadcast-spreader-3pt.label': 'Voleadora de 3 puntos de 500 lb (tipo cono)',
+  'equip.tpl.broadcast-spreader-3pt.description':
+    'Voleadora de PTO categoría 1 para fertilizante granulado y cal. Franja de 30 pies a 540 RPM.',
+  'equip.tpl.flame-weeder-backpack.category': 'Desyerbadora de llama',
+  'equip.tpl.flame-weeder-backpack.label': 'Desyerbadora de llama de mochila (Red Dragon)',
+  'equip.tpl.flame-weeder-backpack.description':
+    'Desyerbadora de llama de mochila con propano de 5 lb para matar maleza antes de la emergencia en falsa siembra.',
+  'equip.tpl.greens-harvester-quickcut.category': 'Cosechadora de hojas verdes',
+  'equip.tpl.greens-harvester-quickcut.label': 'Cosechadora de hojas verdes Quick Cut',
+  'equip.tpl.greens-harvester-quickcut.description':
+    'Cosechadora de barra dentada a batería para mezcla de ensalada y hojas tiernas. Unas 30× más rápida que el cuchillo.',
   'inv.pageTitle': 'Inventario · CropCard',
   'inv.add.pageTitle': 'Nuevo: {type} · CropCard',
   'inv.add.amendmentTitle': 'Nueva pila de estiércol o composta',

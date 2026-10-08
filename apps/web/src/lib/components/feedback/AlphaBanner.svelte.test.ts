@@ -14,6 +14,8 @@ describe('AlphaBanner', () => {
     await tick();
     const banner = screen.getByTestId('alpha-banner');
     expect(banner).toHaveTextContent('alpha review');
+    expect(banner).toHaveTextContent('Send feedback in the account menu (top right).');
+    expect(banner).not.toHaveTextContent('More');
     expect(screen.getByRole('link', { name: 'sign in' }).getAttribute('href')).toBe(
       '#signin-title'
     );

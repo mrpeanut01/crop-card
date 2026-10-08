@@ -1,5 +1,148 @@
 /** Inventory, stock and equipment (Spanish UI pass). Prefixes: inv., equip., stockui. */
 export const enInventory = {
+  'equip.tpl.tractor-2wt-bcs.category': 'Two-wheel tractor',
+  'equip.tpl.tractor-2wt-bcs.label': '2-wheel walk-behind tractor (BCS / Grillo)',
+  'equip.tpl.tractor-2wt-bcs.description':
+    'PTO-driven walking tractor with quick-change implements. Workhorse for ¼–2 acre vegetable plots.',
+  'equip.tpl.tractor-subcompact.category': 'Subcompact tractor',
+  'equip.tpl.tractor-subcompact.label': 'Subcompact utility tractor (sub-25 hp)',
+  'equip.tpl.tractor-subcompact.description':
+    'Diesel 4WD with cat-1 3-point hitch; ideal for small-farm tillage and mowing.',
+  'equip.tpl.tractor-compact-utility.category': 'Compact utility tractor',
+  'equip.tpl.tractor-compact-utility.label': 'Compact utility tractor (25–50 hp)',
+  'equip.tpl.tractor-compact-utility.description':
+    'Mid-range utility tractor — handles full-width tillage, baling, and PTO sprayers up to 200 gal.',
+  'equip.tpl.tractor-utility.category': 'Utility tractor',
+  'equip.tpl.tractor-utility.label': 'Utility tractor (50–100 hp)',
+  'equip.tpl.tractor-utility.description':
+    'Standard farm tractor for hay operations, large planters, and 200+ gal pull sprayers.',
+  'equip.tpl.tractor-row-crop.category': 'Row-crop tractor',
+  'equip.tpl.tractor-row-crop.label': 'Row-crop tractor (100+ hp)',
+  'equip.tpl.tractor-row-crop.description':
+    'High-clearance row-crop tractor for corn / soybean operations. Adjustable wheel track.',
+  'equip.tpl.sprayer-backpack-4gal.category': 'Backpack sprayer',
+  'equip.tpl.sprayer-backpack-4gal.label': '4 gal backpack sprayer (Solo / Birchmeier)',
+  'equip.tpl.sprayer-backpack-4gal.description':
+    'Manual diaphragm pump backpack. Spot-spray + small-plot use; calibrate to walking pace.',
+  'equip.tpl.sprayer-25gal-atv.category': 'ATV-mount sprayer',
+  'equip.tpl.sprayer-25gal-atv.label': '25 gal ATV/UTV-mount sprayer',
+  'equip.tpl.sprayer-25gal-atv.description':
+    '12V pump, boomless or 3-nozzle boom; for orchard rows and row-crop spot work.',
+  'equip.tpl.sprayer-50gal-pull.category': 'Pull-behind sprayer',
+  'equip.tpl.sprayer-50gal-pull.label': '50 gal pull-behind boom sprayer',
+  'equip.tpl.sprayer-50gal-pull.description':
+    '12V on-demand pump with 3-section 12-ft boom. Ground-driven or pump-driven.',
+  'equip.tpl.sprayer-100gal-pull.category': 'Pull-behind sprayer',
+  'equip.tpl.sprayer-100gal-pull.label': '100 gal pull-behind boom sprayer',
+  'equip.tpl.sprayer-100gal-pull.description':
+    'PTO-driven roller pump, hydraulic boom fold, mechanical agitation.',
+  'equip.tpl.sprayer-200gal-3pt.category': '3-point sprayer',
+  'equip.tpl.sprayer-200gal-3pt.label': '200 gal 3-point boom sprayer',
+  'equip.tpl.sprayer-200gal-3pt.description':
+    'Cat-2 3-pt hitch, PTO roller pump, jet agitation, 21-ft boom. Standard for row-crop work.',
+  'equip.tpl.sprayer-airblast-100gal.category': 'Orchard airblast sprayer',
+  'equip.tpl.sprayer-airblast-100gal.label': '100 gal orchard airblast sprayer',
+  'equip.tpl.sprayer-airblast-100gal.description':
+    'PTO-driven airblast for tree fruit canopies — fungicide + insecticide cover sprays.',
+  'equip.tpl.tiller-pto-rotary-60.category': 'Rotary tiller',
+  'equip.tpl.tiller-pto-rotary-60.label': '60 in PTO rotary tiller',
+  'equip.tpl.tiller-pto-rotary-60.description':
+    'Cat-1 3-pt rotary tiller. Primary tillage for raised-bed prep.',
+  'equip.tpl.disc-harrow-6ft.category': 'Disc harrow',
+  'equip.tpl.disc-harrow-6ft.label': '6 ft pull-behind disc harrow',
+  'equip.tpl.disc-harrow-6ft.description':
+    'Tandem-gang disc harrow for residue incorporation and seedbed prep.',
+  'equip.tpl.chisel-plow-7shank.category': 'Chisel plow',
+  'equip.tpl.chisel-plow-7shank.label': '7-shank chisel plow',
+  'equip.tpl.chisel-plow-7shank.description':
+    'Cat-2 mounted chisel plow for deep tillage and compaction relief.',
+  'equip.tpl.bed-shaper-30in.category': 'Bed shaper',
+  'equip.tpl.bed-shaper-30in.label': '30 in raised-bed shaper',
+  'equip.tpl.bed-shaper-30in.description':
+    'Forms 4–10 in raised beds with optional plastic + drip layer.',
+  'equip.tpl.power-harrow-walking.category': 'Power harrow',
+  'equip.tpl.power-harrow-walking.label': 'Walk-behind power harrow (BCS-compatible)',
+  'equip.tpl.power-harrow-walking.description':
+    '32 in PTO power harrow for stale-bedding and fine seedbed prep without inversion.',
+  'equip.tpl.seeder-walkbehind-earthway.category': 'Walk-behind seeder',
+  'equip.tpl.seeder-walkbehind-earthway.label': 'Earthway 1001-B walk-behind seeder',
+  'equip.tpl.seeder-walkbehind-earthway.description':
+    '6 interchangeable seed plates; standard small-farm precision seeder.',
+  'equip.tpl.seeder-jang-jp1.category': 'Walk-behind seeder',
+  'equip.tpl.seeder-jang-jp1.label': 'Jang JP-1 push seeder (single-row)',
+  'equip.tpl.seeder-jang-jp1.description':
+    'Roller-based precision push seeder for greens, brassicas, alliums.',
+  'equip.tpl.planter-2row-plate.category': 'Plate planter',
+  'equip.tpl.planter-2row-plate.label': '2-row mechanical plate planter (Cole / Covington)',
+  'equip.tpl.planter-2row-plate.description':
+    '2-row plate planter for corn / soybean / pumpkin / cucurbit; 30–40 in row spacing.',
+  'equip.tpl.no-till-drill-7ft.category': 'No-till drill',
+  'equip.tpl.no-till-drill-7ft.label': '7 ft no-till drill (Great Plains / Esch)',
+  'equip.tpl.no-till-drill-7ft.description':
+    'Coulter-based no-till drill for cover crops, small grains, hay seedings.',
+  'equip.tpl.transplanter-mechanical.category': 'Transplanter',
+  'equip.tpl.transplanter-mechanical.label':
+    'Water-wheel mechanical transplanter (Mechanical Transplanter / Holland)',
+  'equip.tpl.transplanter-mechanical.description':
+    'Pulled water-wheel transplanter — 2 operators, 1 row at a time. For tomato, pepper, brassica plug starts.',
+  'equip.tpl.transplanter-paperpot.category': 'Paper-pot transplanter',
+  'equip.tpl.transplanter-paperpot.label': 'Paper Pot Transplanter (HP-262 / 264)',
+  'equip.tpl.transplanter-paperpot.description':
+    'Walk-behind paper-pot transplanter for high-density greens, alliums, and salad mix.',
+  'equip.tpl.mower-rotary-cutter-5ft.category': 'Rotary cutter',
+  'equip.tpl.mower-rotary-cutter-5ft.label': '5 ft rotary cutter (brush hog)',
+  'equip.tpl.mower-rotary-cutter-5ft.description':
+    'Cat-1/2 PTO rotary cutter for pasture, fence-line, and rough mowing.',
+  'equip.tpl.mower-finish-5ft.category': 'Finish mower',
+  'equip.tpl.mower-finish-5ft.label': '5 ft 3-point finish mower',
+  'equip.tpl.mower-finish-5ft.description':
+    'Lawn-quality finish mower for orchard floor and lawn maintenance.',
+  'equip.tpl.mower-flail-6ft.category': 'Flail mower',
+  'equip.tpl.mower-flail-6ft.label': '6 ft flail mower',
+  'equip.tpl.mower-flail-6ft.description':
+    'Cover-crop and crop-residue flail mower; finer cut than rotary, better for biomass distribution.',
+  'equip.tpl.mower-disc-mower-conditioner.category': 'Mower-conditioner',
+  'equip.tpl.mower-disc-mower-conditioner.label': '9 ft disc mower-conditioner',
+  'equip.tpl.mower-disc-mower-conditioner.description':
+    'Hay mower-conditioner with rubber rolls; first step in hay operation.',
+  'equip.tpl.tedder-4basket.category': 'Hay tedder',
+  'equip.tpl.tedder-4basket.label': '4-basket hay tedder',
+  'equip.tpl.tedder-4basket.description': 'Spreads + flips windrows for faster drying. Cat-1 3-pt.',
+  'equip.tpl.rake-side-delivery.category': 'Hay rake',
+  'equip.tpl.rake-side-delivery.label': 'Side-delivery hay rake',
+  'equip.tpl.rake-side-delivery.description':
+    'Single-rotor rake for forming windrows ahead of baling.',
+  'equip.tpl.baler-small-square.category': 'Small square baler',
+  'equip.tpl.baler-small-square.label': 'Small square baler (40–60 lb bales)',
+  'equip.tpl.baler-small-square.description': 'Pickup-style square baler. Small-farm hay standard.',
+  'equip.tpl.baler-round-4x4.category': 'Round baler',
+  'equip.tpl.baler-round-4x4.label': '4×4 round baler',
+  'equip.tpl.baler-round-4x4.description':
+    'Compact round baler — bales fit in standard pickup beds; ~600 lb dry hay.',
+  'equip.tpl.irrigation-drip-tape.category': 'Drip tape system',
+  'equip.tpl.irrigation-drip-tape.label': 'Drip tape irrigation kit (1 acre, single zone)',
+  'equip.tpl.irrigation-drip-tape.description':
+    '15 mil drip tape, header line, valve, screen filter, pressure regulator. Standard for raised-bed vegetables.',
+  'equip.tpl.irrigation-overhead-traveler.category': 'Traveling gun',
+  'equip.tpl.irrigation-overhead-traveler.label': 'Traveling gun irrigation (1.5 in hose)',
+  'equip.tpl.irrigation-overhead-traveler.description':
+    'Hose-reel traveler for pasture, hay, and pre-plant water-up. 200–400 gpm.',
+  'equip.tpl.manure-spreader-pull.category': 'Manure spreader',
+  'equip.tpl.manure-spreader-pull.label': '50 bu pull-behind manure spreader',
+  'equip.tpl.manure-spreader-pull.description':
+    'Ground-driven beater spreader for poultry litter / dairy compost.',
+  'equip.tpl.broadcast-spreader-3pt.category': 'Broadcast spreader',
+  'equip.tpl.broadcast-spreader-3pt.label': '500 lb 3-pt broadcast spreader (cone-type)',
+  'equip.tpl.broadcast-spreader-3pt.description':
+    'Cat-1 PTO broadcast spreader for granular fertilizer + lime. 30 ft swath at 540 RPM.',
+  'equip.tpl.flame-weeder-backpack.category': 'Flame weeder',
+  'equip.tpl.flame-weeder-backpack.label': 'Backpack flame weeder (Red Dragon)',
+  'equip.tpl.flame-weeder-backpack.description':
+    '5 lb propane backpack flame weeder for pre-emerge weed kill in stale beds.',
+  'equip.tpl.greens-harvester-quickcut.category': 'Greens harvester',
+  'equip.tpl.greens-harvester-quickcut.label': 'Quick Cut Greens Harvester',
+  'equip.tpl.greens-harvester-quickcut.description':
+    'Battery-powered serrated bar harvester for salad mix and baby greens. ~30× faster than knife.',
   'inv.pageTitle': 'Inventory — CropCard',
   'inv.add.pageTitle': 'New {type} — CropCard',
   'inv.add.amendmentTitle': 'New manure or compost pile',

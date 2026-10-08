@@ -448,6 +448,7 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'setup.plant.matchesAria': 'Cultivos encontrados',
   'setup.plant.noMatch': 'Aún no hay un cultivo con ese nombre. Prueba con una palabra más corta.',
   'setup.plant.pickExisting': 'Elegir un lugar existente',
+  'setup.plant.olderThanYear': 'Hace más de un año',
   'setup.plant.plantedAround': 'Sembrado alrededor de',
   'setup.plant.saveContinue': 'Guardar y continuar',
   'setup.plant.submit': 'Guardar siembra',

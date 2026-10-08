@@ -3,6 +3,7 @@
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
   import { saveSprayerFromTile } from '$lib/setup/sprayer';
+  import { templateText } from '$lib/equipment/templateText';
   import type {
     SetupCalibrationResult,
     SetupSprayerResult,
@@ -93,6 +94,7 @@
   />
   <ul class="tiles" aria-label={tr('setup.sprayer.typesAria')}>
     {#each templates as t (t.templateId)}
+      {@const label = templateText(t.templateId, 'label', t.label, page.data?.locale)}
       <li>
         <button
           type="button"
@@ -103,9 +105,11 @@
           data-template={t.templateId}
           data-autofocus={t === templates[0] ? true : undefined}
         >
-          <span class="tile-kicker">{t.category}</span>
-          <span class="tile-title serif">{t.tankGal != null ? `${t.tankGal} gal` : t.label}</span>
-          <span class="tile-desc">{savingId === t.templateId ? tr('setup.adding') : t.label}</span>
+          <span class="tile-kicker"
+            >{templateText(t.templateId, 'category', t.category, page.data?.locale)}</span
+          >
+          <span class="tile-title serif">{t.tankGal != null ? `${t.tankGal} gal` : label}</span>
+          <span class="tile-desc">{savingId === t.templateId ? tr('setup.adding') : label}</span>
         </button>
       </li>
     {/each}

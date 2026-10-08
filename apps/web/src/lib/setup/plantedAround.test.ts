@@ -3,6 +3,7 @@ import fc from 'fast-check';
 import {
   OLDER_KEY,
   OLDER_OPTION,
+  olderOption,
   dateForMonth,
   plantingDateMs,
   recentMonths,
@@ -23,6 +24,20 @@ describe('recentMonths', () => {
   it('crosses the year boundary from January', () => {
     const months = recentMonths(new Date(2027, 0, 3), 3);
     expect(months.map((m) => m.key)).toEqual(['2027-01', '2026-12', '2026-11']);
+  });
+});
+
+describe('recentMonths in Spanish', () => {
+  it('writes month names in the page language and keeps English byte-identical', () => {
+    const es = recentMonths(NOW, 2, 'es');
+    expect(es.map((m) => m.key)).toEqual(['2026-09', '2026-08']);
+    expect(es[0].label).toBe('septiembre de 2026');
+    expect(recentMonths(NOW, 2, 'en')).toEqual(recentMonths(NOW, 2));
+  });
+
+  it('translates the older-stand option', () => {
+    expect(olderOption()).toEqual(OLDER_OPTION);
+    expect(olderOption('es')).toEqual({ key: OLDER_KEY, label: 'Hace más de un año' });
   });
 });
 

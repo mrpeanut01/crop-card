@@ -463,10 +463,13 @@ export const enRecords = {
   'hayui.forecastNearest':
     "This block isn't mapped, so this is the forecast for your nearest mapped block.",
   'hayui.lede':
-    "Multi-step cutting workflow with weather-window gate and bale-moisture safety check (FR-19, FR-21, FR-22). Each cutting records mow → ted → rake → bale → store; the kernel enforces the plugin's moisture thresholds at the bale step.",
+    "Multi-step cutting workflow with weather-window gate and bale-moisture safety check. Each cutting records mow → ted → rake → bale → store; the safety check applies the crop's moisture limits at the bale step.",
   'hayui.load': 'Load',
   'hayui.moisture': 'Moisture %',
   'hayui.mowDecision': '1 — Mow decision',
+  'hayui.mowCue.bootToEarlyHead': 'boot to early head on the first cut',
+  'hayui.mowCue.quarterToHalfBloom': '1/4 to 1/2 bloom',
+  'hayui.mowCue.tenPctBloomOr28d': '10% bloom or 28 d after previous cut',
   'hayui.mowTrigger': 'Mow trigger:',
   'hayui.noCuttings': 'No cuttings recorded for this block + year.',
   'hayui.pickBlock': 'Pick a block',

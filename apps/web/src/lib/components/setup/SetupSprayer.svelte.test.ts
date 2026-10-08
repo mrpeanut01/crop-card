@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 
 vi.mock('$app/navigation', () => ({ invalidateAll: vi.fn(async () => {}) }));
+const page = vi.hoisted(() => ({ data: {} as Record<string, unknown> }));
+vi.mock('$app/state', () => ({ page }));
 
 import SetupSprayer from './SetupSprayer.svelte';
 import { SEED_EQUIPMENT_TEMPLATES } from '$lib/server/equipmentTemplates';
@@ -28,9 +30,18 @@ beforeEach(() => {
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
+  page.data = {};
 });
 
 describe('SetupSprayer', () => {
+  it('shows the template tiles in Spanish', () => {
+    page.data = { locale: 'es' };
+    render(SetupSprayer, { templates, canEdit: true, onDone: vi.fn() });
+    expect(screen.getByText('Aspersora de mochila')).toBeTruthy();
+    expect(screen.getByText('Aspersora de 25 gal para ATV/UTV')).toBeTruthy();
+    expect(screen.queryByText('Backpack sprayer')).toBeNull();
+  });
+
   it('tells a helper to ask the owner and offers no tiles', () => {
     render(SetupSprayer, { templates, canEdit: false, onDone: vi.fn() });
     expect(screen.getByText(/Ask the owner to add a sprayer/)).toBeInTheDocument();

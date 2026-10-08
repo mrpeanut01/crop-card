@@ -11,7 +11,9 @@
  *   product not allowed for organic use;
  * - a herbicide default `ratePerAcre` ships only as `rateProvenance:
  *   'label'` with a `rate` entry whose quote states the amount, or as an
- *   explicit `rateProvenance: 'fallback'` (swarm 2026-10-07, #737).
+ *   explicit `rateProvenance: 'fallback'` (swarm 2026-10-07, #737);
+ * - an organic "allowed" flag or an OMRI claim needs an OMRI or 7 CFR 205
+ *   quote (`organicAllowedFlagGaps`, #779).
  */
 
 export interface LabelSourcePlugin {
@@ -120,4 +122,93 @@ function rateGaps(p: LabelSourcePlugin, sources: LabelSources): string[] {
     ];
   }
   return [];
+}
+
+/**
+ * #779 — an organic "allowed" mark (`omriListed`, `certifiedOrganicAllowed`
+ * or `transitioningAllowed` set to true) ships only with an entry in
+ * epa-reg-sources.json (`complianceFlags.<pluginId>` or a `complianceFlags`
+ * data correction) that records that flag as true and quotes the OMRI
+ * Products List (omri.org) or 7 CFR 205 (ecfr.gov or govinfo.gov). A
+ * display name or note that says OMRI needs a sourced `omriListed: true`.
+ */
+
+export const ORGANIC_ALLOWED_FLAGS = [
+  'omriListed',
+  'certifiedOrganicAllowed',
+  'transitioningAllowed'
+] as const;
+
+export type OrganicAllowedFlag = (typeof ORGANIC_ALLOWED_FLAGS)[number];
+
+export interface OrganicFlagPlugin {
+  pluginId: string;
+  displayName: string;
+  notes?: string;
+  complianceFlags?: Partial<Record<OrganicAllowedFlag, boolean>>;
+}
+
+export interface OrganicFlagSources {
+  complianceFlags?: Record<string, unknown>;
+  dataCorrections?: Record<string, unknown>;
+}
+
+const OMRI_HOSTS = new Set(['omri.org', 'www.omri.org']);
+const CFR_HOSTS = new Set(['ecfr.gov', 'www.ecfr.gov', 'govinfo.gov', 'www.govinfo.gov']);
+
+type FlagSource = QuotedSource & Record<string, unknown>;
+
+function isOrganicSource(s: FlagSource): boolean {
+  if (typeof s.sourceUrl !== 'string' || typeof s.quote !== 'string') return false;
+  let url: URL;
+  try {
+    url = new URL(s.sourceUrl);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== 'https:') return false;
+  if (OMRI_HOSTS.has(url.hostname)) return s.quote.trim().length > 0;
+  return CFR_HOSTS.has(url.hostname) && /\b205\.\d/.test(s.quote);
+}
+
+function sourcedOrganicFlags(
+  pluginId: string,
+  sources: OrganicFlagSources
+): Set<OrganicAllowedFlag> {
+  const candidates: FlagSource[] = [];
+  const entry = sources.complianceFlags?.[pluginId];
+  if (entry && typeof entry === 'object') candidates.push(entry as FlagSource);
+  const corrections = sources.dataCorrections?.[pluginId];
+  for (const c of Array.isArray(corrections) ? corrections : []) {
+    if (c?.path !== 'complianceFlags' || !c.to || typeof c.to !== 'object') continue;
+    candidates.push({ ...c.to, sourceUrl: c.sourceUrl, quote: c.quote });
+  }
+  const out = new Set<OrganicAllowedFlag>();
+  for (const c of candidates) {
+    if (!isOrganicSource(c)) continue;
+    for (const f of ORGANIC_ALLOWED_FLAGS) if (c[f] === true) out.add(f);
+  }
+  return out;
+}
+
+export function organicAllowedFlagGaps(
+  plugins: readonly OrganicFlagPlugin[],
+  sources: OrganicFlagSources
+): string[] {
+  const gaps: string[] = [];
+  for (const p of plugins) {
+    const sourced = sourcedOrganicFlags(p.pluginId, sources);
+    for (const f of ORGANIC_ALLOWED_FLAGS) {
+      if (p.complianceFlags?.[f] === true && !sourced.has(f)) {
+        gaps.push(`${p.pluginId}: ${f} is true with no OMRI or 7 CFR 205 source`);
+      }
+    }
+    const saysOmri = [p.displayName, p.notes].some(
+      (s) => typeof s === 'string' && /\bOMRI\b/.test(s)
+    );
+    if (saysOmri && !(p.complianceFlags?.omriListed === true && sourced.has('omriListed'))) {
+      gaps.push(`${p.pluginId}: the name or notes say OMRI with no sourced omriListed`);
+    }
+  }
+  return gaps;
 }

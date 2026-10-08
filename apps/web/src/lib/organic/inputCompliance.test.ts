@@ -98,14 +98,11 @@ describe('philosophyFilter agrees with organic records on every shipped plugin (
     expect(bad).toEqual([]);
   });
 
-  it('the five composted or mined fertilizers marked allowed are not "not marked"', () => {
-    const marked = plugins.filter(
-      (p) =>
-        p.type === 'fertilizer' &&
-        p.complianceFlags?.certifiedOrganicAllowed === true &&
-        p.complianceFlags?.omriListed !== true
-    );
-    expect(marked.length).toBeGreaterThanOrEqual(5);
+  it('certifiedOrganicAllowed alone reads as allowed, never "not marked"', () => {
+    expect(
+      organicInputClass({ type: 'fertilizer', complianceFlags: { certifiedOrganicAllowed: true } })
+    ).toBe('allowed');
+    const marked = plugins.filter((p) => p.complianceFlags?.certifiedOrganicAllowed === true);
     for (const p of marked) expect(organicInputClass(p)).toBe('allowed');
   });
 

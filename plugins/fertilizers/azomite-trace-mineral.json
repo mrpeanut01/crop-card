@@ -1,7 +1,7 @@
 {
   "pluginId": "azomite-trace-mineral",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -10,7 +10,7 @@
     "k": 2
   },
   "form": "granular",
-  "displayName": "Azomite Trace Mineral (volcanic ash, OMRI)",
+  "displayName": "Azomite Trace Mineral (volcanic ash)",
   "organic": true,
   "applicationRange": {
     "min": 200,
@@ -18,10 +18,7 @@
     "unit": "lb-per-acre"
   },
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Mined hydrated sodium calcium aluminosilicate from Utah volcanic deposit. Carries broad trace mineral suite."
 }

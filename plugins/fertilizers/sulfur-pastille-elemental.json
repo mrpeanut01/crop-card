@@ -1,7 +1,7 @@
 {
   "pluginId": "sulfur-pastille-elemental",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -10,7 +10,7 @@
     "k": 0
   },
   "form": "granular",
-  "displayName": "Elemental Sulfur Pastilles (90% S, OMRI)",
+  "displayName": "Elemental Sulfur Pastilles (90% S)",
   "organic": true,
   "secondaryNutrients": {
     "s": 90
@@ -21,10 +21,7 @@
     "unit": "lb-per-acre"
   },
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Slow-release elemental sulfur. Used to acidify alkaline soils (lowering pH 0.5 to 1.5 units per ton/acre over 1 to 2 seasons)."
 }

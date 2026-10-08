@@ -2,7 +2,7 @@
   "pluginId": "champ-dp",
   "type": "fungicide",
   "displayName": "Champ DP (Nufarm copper hydroxide)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "epaRegistrationNumber": "55146-57",
   "defaultUnit": "lb",
   "applicationTiming": "COVER",
@@ -28,8 +28,7 @@
   "notes": "Brand-name copper hydroxide. Generic alternative to Kocide.",
   "complianceFlags": {
     "omriListed": false,
-    "nonGmoCompliant": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1"
 }

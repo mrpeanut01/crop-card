@@ -1,11 +1,11 @@
 {
   "pluginId": "milstop-potassium-bicarbonate",
   "type": "fungicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "SP",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
-  "displayName": "MilStop (potassium bicarbonate, OMRI)",
+  "displayName": "MilStop (potassium bicarbonate)",
   "applicationTiming": "COVER",
   "activeIngredients": [
     {
@@ -29,10 +29,7 @@
     "anthracnose suppression"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "BioWorks potassium bicarbonate contact fungicide. Disrupts powdery mildew cell membranes within hours."
 }

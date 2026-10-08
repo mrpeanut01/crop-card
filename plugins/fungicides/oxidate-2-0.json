@@ -1,10 +1,10 @@
 {
   "pluginId": "oxidate-2-0",
   "type": "fungicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
-  "displayName": "OxiDate 2.0 (hydrogen peroxide + peroxyacetic acid, OMRI)",
+  "displayName": "OxiDate 2.0 (hydrogen peroxide + peroxyacetic acid)",
   "applicationTiming": "COVER",
   "activeIngredients": [
     {
@@ -33,10 +33,7 @@
     "Botrytis"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "BioSafe broad-spectrum contact bactericide and fungicide. No residue. Useful in greenhouse and post-harvest sanitation."
 }

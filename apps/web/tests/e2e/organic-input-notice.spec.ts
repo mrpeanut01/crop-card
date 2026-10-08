@@ -72,7 +72,8 @@ test.describe('organic input notice', () => {
     await expect(notice).toContainText("This product isn't marked as allowed for organic use.");
 
     await source.fill('biochar');
-    await expect(notice).toHaveCount(0);
+    await expect(notice).toContainText('Biochar Soil Amendment');
+    await expect(notice).toContainText("This product isn't marked as allowed for organic use.");
 
     await source.fill('urea-46-0-0');
     await expect(notice).toBeVisible();
@@ -110,13 +111,13 @@ test.describe('organic input notice', () => {
     await expect(ins).toContainText('Spinosad');
     await expect(ins).toContainText('Tomato Row');
 
-    await page.goto(`/spray/fungicide?block=${blockId}&product=champ-dp&product=kocide-3000-o`);
+    await page.goto(`/spray/fungicide?block=${blockId}&product=champ-dp&product=regalia`);
     await page.waitForLoadState('networkidle');
     const fung = page.getByTestId('organic-input-notice');
     await expect(fung).toBeVisible();
     await expect(fung).toContainText('Champ DP');
     await expect(fung).toContainText("isn't marked as allowed for organic use");
-    await expect(fung).not.toContainText('Kocide');
+    await expect(fung).not.toContainText('Regalia');
 
     await page.setViewportSize({ width: 375, height: 800 });
     await page.reload();

@@ -2,7 +2,7 @@
   "pluginId": "javelin-wg",
   "type": "insecticide",
   "displayName": "Javelin WG (Certis Bt kurstaki)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "epaRegistrationNumber": "70051-66",
   "defaultUnit": "lb",
   "formulation": "WG",
@@ -26,12 +26,9 @@
   ],
   "pollinatorRisk": "none",
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
-  "notes": "Bt IRAC 11A — alternate to DiPel. OMRI.",
+  "notes": "Bt IRAC 11A — alternate to DiPel.",
   "complianceFlags": {
-    "omriListed": false,
-    "certifiedOrganicAllowed": false,
-    "nonGmoCompliant": true,
-    "transitioningAllowed": false
+    "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1",
   "scoutingThresholds": [

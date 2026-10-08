@@ -4068,6 +4068,7 @@
     },
     "regalia": {
       "omriListed": true,
+      "certifiedOrganicAllowed": true,
       "sourceUrl": "https://www.omri.org/omri-search?query=Regalia",
       "docDate": "2026-09-25",
       "quote": "REGALIA Biofungicide | ProFarm Group | pfb-18571 | NOP | Allowed with Restrictions | expires 2027-06-01"
@@ -4110,6 +4111,7 @@
     },
     "serenade-aso": {
       "omriListed": true,
+      "certifiedOrganicAllowed": true,
       "sourceUrl": "https://www.omri.org/omri-search?query=Serenade",
       "docDate": "2026-09-25",
       "quote": "Bayer Serenade ASO | Bayer CropScience LP | gus-4423 | NOP | Allowed with Restrictions | expires 2027-06-01"

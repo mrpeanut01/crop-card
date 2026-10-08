@@ -330,7 +330,7 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'inv.fert.application': 'Aplicación',
   'inv.fert.noRange': 'No se declaró un rango de aplicación.',
   'inv.fert.approachClass': 'Clase de enfoque',
-  'inv.fert.organic': 'OMRI / orgánico',
+  'inv.fert.organic': 'Origen orgánico',
   'inv.fert.conventional': 'Convencional',
   'inv.fert.impact': 'Efecto en el plan de nutrientes',
   'inv.fert.impactNote':

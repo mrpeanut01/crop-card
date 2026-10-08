@@ -1,11 +1,11 @@
 {
   "pluginId": "axxe-ammonium-nonanoate",
   "type": "herbicide",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "formulation": "SL",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
-  "displayName": "Axxe (ammonium nonanoate, OMRI)",
+  "displayName": "Axxe (ammonium nonanoate)",
   "activeIngredients": [
     {
       "name": "ammonium nonanoate",
@@ -23,10 +23,7 @@
   "deconRequired": false,
   "epaRegistrationNumber": "70299-23",
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "BioSafe Systems fatty acid salt that disrupts cell membranes. Faster knockdown than acetic acid formulations. Apply in full sun, 75 F or warmer. chemistryClass tag is nominal."
 }

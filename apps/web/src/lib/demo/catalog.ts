@@ -466,7 +466,7 @@ export const DEMO_PRODUCTS: Readonly<Record<string, DemoProduct>> = {
     pluginId: 'kocide-3000-o',
     kind: 'fungicide',
     dir: 'fungicides',
-    displayName: 'Kocide 3000-O (Certis copper hydroxide — OMRI)',
+    displayName: 'Kocide 3000-O (Certis copper hydroxide)',
     unit: 'lb',
     rate: { amount: 1.75, unit: 'lb' },
     codes: ['M01'],

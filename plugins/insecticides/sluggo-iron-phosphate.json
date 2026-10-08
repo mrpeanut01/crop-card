@@ -1,11 +1,11 @@
 {
   "pluginId": "sluggo-iron-phosphate",
   "type": "insecticide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "G",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
-  "displayName": "Sluggo (iron phosphate, OMRI slug/snail bait)",
+  "displayName": "Sluggo (iron phosphate, slug/snail bait)",
   "activeIngredients": [
     {
       "name": "iron (ferric) phosphate",
@@ -27,10 +27,7 @@
     "brown garden snail"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Neudorff iron phosphate pellet bait. Safe around pets and wildlife. Broadcast or spot-apply along bed edges."
 }

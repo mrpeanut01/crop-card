@@ -7,6 +7,7 @@ import { runWithTenant, tenantValues, withTenant } from '$lib/db/tenant';
 import { insertSprayEvent } from '$lib/db/sprayEvents';
 import { deleteSprayEvent } from '$lib/db/admin';
 import { insertFertilityApplication } from '$lib/db/fertility';
+import { insertFungicideEvent } from '$lib/db/fungicideEvents';
 import { createPlanned } from '$lib/db/crops';
 import { createStockItem, receiveLot } from '$lib/db/stock';
 import { createSeedStart } from '$lib/db/seedStarts';
@@ -31,7 +32,15 @@ describe('blockOrganicFacts', () => {
           rateUnit: 'lb'
         });
       apply('urea-46-0-0', now - 10 * DAY);
-      apply('biochar', now - 9 * DAY);
+      insertFungicideEvent({
+        blockId: farm.blockId,
+        performedById: farm.ownerUser,
+        occurredAt: now - 9 * DAY,
+        products: [{ pluginId: 'regalia', displayName: 'Regalia', fracCodes: ['P05'] }],
+        conditions: { tempF: 70, windMph: 5, rainForecastMmNext24h: 0 },
+        rulesVersion: 'test',
+        pluginHashes: {}
+      });
       apply('Neighbor compost', now - 8 * DAY);
       apply('urea-46-0-0', now - 2000 * DAY);
       const crop = createPlanned({

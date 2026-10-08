@@ -1,11 +1,11 @@
 {
   "pluginId": "sulfur-90w",
   "type": "insecticide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "formulation": "WP",
   "pluginSchemaVersion": "1.1",
-  "displayName": "Wettable Sulfur 90W (OMRI)",
+  "displayName": "Wettable Sulfur 90W",
   "activeIngredients": [
     {
       "name": "sulfur",
@@ -27,10 +27,7 @@
     "broad mite"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Multi-use elemental sulfur. Strong miticide and powdery mildew suppressant. Do not apply within 14 days of oil sprays or above 90 F.",
   "scoutingThresholds": [

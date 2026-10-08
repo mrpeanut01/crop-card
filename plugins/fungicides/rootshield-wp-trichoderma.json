@@ -1,11 +1,11 @@
 {
   "pluginId": "rootshield-wp-trichoderma",
   "type": "fungicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "formulation": "WP",
   "pluginSchemaVersion": "1.1",
-  "displayName": "RootShield WP (Trichoderma harzianum T-22, OMRI)",
+  "displayName": "RootShield WP (Trichoderma harzianum T-22)",
   "applicationTiming": "COVER",
   "activeIngredients": [
     {
@@ -30,10 +30,7 @@
     "Cylindrocladium"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "BioWorks Trichoderma soil and root inoculant. Colonizes root zone and competes with soilborne pathogens."
 }

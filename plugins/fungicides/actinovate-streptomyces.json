@@ -1,10 +1,10 @@
 {
   "pluginId": "actinovate-streptomyces",
   "type": "fungicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "SP",
   "pluginSchemaVersion": "1.1",
-  "displayName": "Actinovate AG (Streptomyces lydicus WYEC 108, OMRI)",
+  "displayName": "Actinovate AG (Streptomyces lydicus WYEC 108)",
   "applicationTiming": "COVER",
   "activeIngredients": [
     {
@@ -30,10 +30,7 @@
     "powdery mildew"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Novozymes (Pro-Farm) actinobacteria biological. Produces antibiotic compounds."
 }

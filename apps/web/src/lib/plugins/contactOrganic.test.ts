@@ -10,7 +10,7 @@ function actives(pluginId: string): Array<{ name: string }> {
 }
 
 describe('isContactOrganic', () => {
-  it('recognises the OMRI contact burndowns', () => {
+  it('recognises the contact burndowns', () => {
     for (const id of [
       'axxe-ammonium-nonanoate',
       'phydura-clove-citric',

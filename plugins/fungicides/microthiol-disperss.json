@@ -1,8 +1,8 @@
 {
   "pluginId": "microthiol-disperss",
   "type": "fungicide",
-  "displayName": "Microthiol Disperss (UPL sulfur — OMRI)",
-  "version": "1.0.0",
+  "displayName": "Microthiol Disperss (UPL sulfur)",
+  "version": "1.0.1",
   "formulation": "WP",
   "epaRegistrationNumber": "70506-187",
   "defaultUnit": "lb",
@@ -37,11 +37,9 @@
       "cucurbit"
     ]
   },
-  "notes": "OMRI organic micronized sulfur. Multi-site M02. Phytotox >85 °F; do NOT tank-mix with oil within 14 d.",
+  "notes": "Micronized sulfur. Multi-site M02. Phytotox >85 °F; do NOT tank-mix with oil within 14 d.",
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1"
 }

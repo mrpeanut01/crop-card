@@ -2,7 +2,7 @@
   "pluginId": "kumulus-df",
   "type": "fungicide",
   "displayName": "Kumulus DF (BASF sulfur)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "epaRegistrationNumber": "51036-352",
   "defaultUnit": "lb",
   "formulation": "DF",
@@ -30,8 +30,7 @@
   "notes": "Granular sulfur — phytotox >85 °F. Resistance management partner for DMI / SDHI.",
   "complianceFlags": {
     "omriListed": false,
-    "nonGmoCompliant": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1"
 }

@@ -1,10 +1,10 @@
 {
   "pluginId": "jms-stylet-oil-omri",
   "type": "insecticide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
-  "displayName": "JMS Stylet-Oil OMRI (paraffinic oil)",
+  "displayName": "JMS Stylet-Oil (paraffinic oil)",
   "activeIngredients": [
     {
       "name": "highly refined paraffinic oil",
@@ -28,12 +28,9 @@
     "psyllid"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
-  "notes": "JMS Flower Farms OMRI horticultural oil. Suppresses sucking insects on contact and disrupts virus transmission. Avoid sulfur tank-mix or above 90 F.",
+  "notes": "JMS Flower Farms horticultural oil. Suppresses sucking insects on contact and disrupts virus transmission. Avoid sulfur tank-mix or above 90 F.",
   "scoutingThresholds": [
     {
       "pest": "aphid",

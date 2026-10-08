@@ -1,11 +1,11 @@
 {
   "pluginId": "stargus-bacillus-amyloliquefaciens",
   "type": "fungicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "SC",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
-  "displayName": "Stargus (Bacillus amyloliquefaciens F727, OMRI)",
+  "displayName": "Stargus (Bacillus amyloliquefaciens F727)",
   "applicationTiming": "COVER",
   "activeIngredients": [
     {
@@ -30,10 +30,7 @@
     "bacterial leaf spot"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Pro-Farm Group biological broad-spectrum fungicide and bactericide. Different strain from Double Nickel."
 }

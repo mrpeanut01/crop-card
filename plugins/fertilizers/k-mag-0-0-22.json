@@ -2,7 +2,7 @@
   "pluginId": "k-mag-0-0-22",
   "type": "fertilizer",
   "displayName": "K-Mag / Sulfate of Potash-Magnesia (0-0-22, +11Mg, +22S)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "analysis": {
     "n": 0,
@@ -20,12 +20,9 @@
     "max": 400,
     "unit": "lb-per-acre"
   },
-  "notes": "Mined langbeinite — natural triple-source K + Mg + S. OMRI organic. Excellent for tomato + pepper Mg deficiency + nightshade S demand.",
+  "notes": "Mined langbeinite — natural triple-source K + Mg + S. Excellent for tomato + pepper Mg deficiency + nightshade S demand.",
   "complianceFlags": {
-    "omriListed": false,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": false,
-    "transitioningAllowed": false
+    "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1"
 }

@@ -1,11 +1,11 @@
 {
   "pluginId": "double-nickel-55",
   "type": "fungicide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "WG",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
-  "displayName": "Double Nickel 55 (Bacillus amyloliquefaciens D747, OMRI)",
+  "displayName": "Double Nickel 55 (Bacillus amyloliquefaciens D747)",
   "applicationTiming": "COVER",
   "activeIngredients": [
     {
@@ -31,10 +31,7 @@
     "Rhizoctonia"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Certis USA biological. Suited to soil drench and foliar. Excellent rotation partner with copper or sulfur."
 }

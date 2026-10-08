@@ -1,10 +1,10 @@
 {
   "pluginId": "madex-hp-virus",
   "type": "insecticide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
-  "displayName": "Madex HP (codling moth + Oriental fruit moth granulovirus, OMRI)",
+  "displayName": "Madex HP (codling moth + Oriental fruit moth granulovirus)",
   "activeIngredients": [
     {
       "name": "Cydia pomonella granulovirus Mexican strain",
@@ -26,10 +26,7 @@
     "Oriental fruit moth"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Andermatt Biocontrol Mexican-strain granulovirus. Suppresses CpGV-resistant populations.",
   "scoutingThresholds": [

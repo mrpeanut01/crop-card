@@ -1,7 +1,7 @@
 {
   "pluginId": "sustane-pelleted-poultry-4-6-4",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -10,7 +10,7 @@
     "k": 4
   },
   "form": "granular",
-  "displayName": "Sustane Pelleted Poultry Compost (4-6-4, OMRI)",
+  "displayName": "Sustane Pelleted Poultry Compost (4-6-4)",
   "organic": true,
   "applicationRange": {
     "min": 250,
@@ -18,10 +18,7 @@
     "unit": "lb-per-acre"
   },
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Sustane aerobically composted turkey-litter pellets. Drillable through standard spreaders. Lower odor than raw poultry litter."
 }

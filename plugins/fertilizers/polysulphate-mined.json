@@ -1,7 +1,7 @@
 {
   "pluginId": "polysulphate-mined",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -10,7 +10,7 @@
     "k": 14
   },
   "form": "granular",
-  "displayName": "Polysulphate (0-0-14 + 19S + 6Mg + 17Ca, OMRI)",
+  "displayName": "Polysulphate (0-0-14 + 19S + 6Mg + 17Ca)",
   "organic": true,
   "secondaryNutrients": {
     "ca": 17,
@@ -23,10 +23,7 @@
     "unit": "lb-per-acre"
   },
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "ICL mined polyhalite from Yorkshire UK. Naturally-occurring sulfate of K, Ca, Mg, S in a single granule. Chloride-free."
 }

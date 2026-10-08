@@ -1,11 +1,11 @@
 {
   "pluginId": "pfr-97-isaria",
   "type": "insecticide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "formulation": "WDG",
   "pluginSchemaVersion": "1.1",
-  "displayName": "PFR-97 20% WDG (Isaria fumosorosea, OMRI)",
+  "displayName": "PFR-97 20% WDG (Isaria fumosorosea)",
   "activeIngredients": [
     {
       "name": "Isaria fumosorosea Apopka strain 97",
@@ -29,10 +29,7 @@
     "spider mite suppression"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Certis USA biological. Distinct entomopathogenic fungus from Beauveria.",
   "scoutingThresholds": [

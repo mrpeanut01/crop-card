@@ -1,11 +1,11 @@
 {
   "pluginId": "azaguard",
   "type": "insecticide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "EC",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
-  "displayName": "AzaGuard (Azadirachtin 3%, OMRI)",
+  "displayName": "AzaGuard (Azadirachtin 3%)",
   "activeIngredients": [
     {
       "name": "azadirachtin",
@@ -31,10 +31,7 @@
     "Colorado potato beetle"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "BioSafe Systems neem-derived insect growth regulator. Disrupts molting, repels feeding, suppresses oviposition.",
   "scoutingThresholds": [

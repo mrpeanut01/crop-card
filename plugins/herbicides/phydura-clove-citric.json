@@ -1,10 +1,10 @@
 {
   "pluginId": "phydura-clove-citric",
   "type": "herbicide",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
-  "displayName": "Phydura (clove oil + citric acid, OMRI)",
+  "displayName": "Phydura (clove oil + citric acid)",
   "activeIngredients": [
     {
       "name": "eugenol",
@@ -25,10 +25,7 @@
   "requiresAMS": false,
   "deconRequired": false,
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "ProGuard botanical contact herbicide. Clove oil eugenol acts as a cell-membrane disruptor. Strong clove odor. chemistryClass tag is nominal."
 }

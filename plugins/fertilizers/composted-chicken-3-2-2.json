@@ -1,7 +1,7 @@
 {
   "pluginId": "composted-chicken-3-2-2",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -19,9 +19,7 @@
   },
   "complianceFlags": {
     "omriListed": false,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Hot-composted poultry manure. Higher N and P than cow manure. NOP requires composting protocols for organic certification."
 }

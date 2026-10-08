@@ -1,8 +1,8 @@
 {
   "pluginId": "kelp-meal-1-0-2",
   "type": "fertilizer",
-  "displayName": "Kelp Meal (1-0-2, OMRI)",
-  "version": "1.0.0",
+  "displayName": "Kelp Meal (1-0-2)",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "analysis": {
     "n": 1,
@@ -18,9 +18,7 @@
   },
   "notes": "Mineral + plant-hormone amendment. Macro-nutrient value low; valued for trace elements + alginic acid soil structure benefit.",
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1"
 }

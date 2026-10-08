@@ -1,11 +1,11 @@
 {
   "pluginId": "grandevo-wdg",
   "type": "insecticide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "formulation": "WDG",
   "pluginSchemaVersion": "1.1",
-  "displayName": "Grandevo WDG (Chromobacterium subtsugae, OMRI)",
+  "displayName": "Grandevo WDG (Chromobacterium subtsugae)",
   "activeIngredients": [
     {
       "name": "Chromobacterium subtsugae strain PRAA4-1",
@@ -29,10 +29,7 @@
     "whitefly"
   ],
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Marrone Bio Innovations biological. Multiple modes: repellency, reduced feeding, reduced fecundity.",
   "scoutingThresholds": [

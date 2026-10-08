@@ -1,7 +1,7 @@
 {
   "pluginId": "humic-acid-12-percent",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "gal",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -10,7 +10,7 @@
     "k": 0
   },
   "form": "liquid",
-  "displayName": "Humic Acid Liquid (12% humic, OMRI)",
+  "displayName": "Humic Acid Liquid (12% humic)",
   "organic": true,
   "applicationRange": {
     "min": 1,
@@ -18,10 +18,7 @@
     "unit": "gal-per-acre"
   },
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Leonardite-derived humic acid concentrate. Soil biology stimulant; not an N-P-K source. Chelates micronutrients and supports root development."
 }

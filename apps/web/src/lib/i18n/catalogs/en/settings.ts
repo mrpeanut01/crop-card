@@ -635,8 +635,7 @@ export const enSettings = {
   'settings.helpers.none': 'No helpers yet. Click "Invite helper" to send the first invite.',
   'settings.helpers.remove': 'Remove',
   'settings.helpers.pendingTitle': 'Pending invites · {count}',
-  'settings.helpers.pendingSub':
-    'Tokens are SHA-256 hashed in the DB. Plain token shows once at send.',
+  'settings.helpers.pendingSub': 'Each invite link works once.',
   'settings.helpers.noPending': 'No pending invites.',
   'settings.helpers.emailHashed': 'email hashed (SHA-256) · sent {date}',
   'settings.helpers.expires': 'expires {date}',

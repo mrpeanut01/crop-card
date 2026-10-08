@@ -331,7 +331,9 @@ export function demoFarmState(ownerId: string | null | undefined): DemoFarmState
 }
 
 export type FastForwardResult =
-  { ok: true; offsetMs: number } | { ok: false; reason: 'not-demo' | 'too-far' };
+  | { ok: true; offsetMs: number }
+  | { ok: false; reason: 'not-demo' }
+  | { ok: false; reason: 'too-far'; offsetMs: number };
 
 /** Moves a demo farm's date forward. The sample farm is rebuilt as it would
  *  look on the new date (the visitor's changes go, as with Reset); a farm
@@ -349,7 +351,7 @@ export function fastForwardDemo(
   const ownerId = user.activeOwnerId!;
   const state = demoFarmState(ownerId);
   const offsetMs = fastForwardOffset(choice, now, state.offsetMs);
-  if (offsetMs === null) return { ok: false, reason: 'too-far' };
+  if (offsetMs === null) return { ok: false, reason: 'too-far', offsetMs: state.offsetMs };
   const expiry = demoExpiryFor(user);
   if (expiry === null) return { ok: false, reason: 'not-demo' };
 

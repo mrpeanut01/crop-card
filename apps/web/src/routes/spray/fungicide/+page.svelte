@@ -26,6 +26,7 @@
   import LeafWetDial from '$lib/components/spray/LeafWetDial.svelte';
   import RainSparkline from '$lib/components/spray/RainSparkline.svelte';
   import DryWindowGate from '$lib/components/spray/DryWindowGate.svelte';
+  import RealWeatherNote from '$lib/components/demo/RealWeatherNote.svelte';
   import FracRotationTile from '$lib/components/spray/FracRotationTile.svelte';
   import {
     DEFAULT_LEAF_WET_THRESHOLD_HOURS,
@@ -548,6 +549,7 @@
         </span>
       {/if}
     </div>
+    <RealWeatherNote />
     {#if weather === null}
       <p class="gate-loading" role="status">{tr('sprayui.fun.loading')}</p>
     {:else}

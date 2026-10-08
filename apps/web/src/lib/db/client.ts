@@ -14,6 +14,7 @@ import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from './schema';
 import { instrumentSqlite } from './instrument';
+import { sqlEpochSeconds } from '../server/clock';
 
 type Db = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -48,9 +49,17 @@ export function applyConnectionPragmas(sqlite: Database.Database): void {
   sqlite.pragma('optimize = 0x10002');
 }
 
+/** Replaces the zero-arg `unixepoch()` with the request clock, so SQL
+ *  default save times follow a demo farm's fast forward (`sqlEpochSeconds`).
+ *  The one-argument form stays the built-in. */
+export function installRequestClock(sqlite: Database.Database): void {
+  sqlite.function('unixepoch', { deterministic: false }, () => sqlEpochSeconds());
+}
+
 function open() {
   const sqlite = new Database(databasePath());
   applyConnectionPragmas(sqlite);
+  installRequestClock(sqlite);
   instrumentSqlite(sqlite);
   _sqlite = sqlite;
   return drizzle(sqlite, { schema });

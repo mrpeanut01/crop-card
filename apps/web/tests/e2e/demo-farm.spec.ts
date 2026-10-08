@@ -9,6 +9,14 @@ async function expectNoOverflow(page: Page): Promise<void> {
   expect(width).toBeLessThanOrEqual(375);
 }
 
+/** On a phone the banner folds its options behind one toggle (#679). */
+async function openDemoOptions(page: Page): Promise<void> {
+  const toggle = page.getByTestId('demo-options-toggle');
+  if ((await toggle.isVisible()) && (await toggle.getAttribute('aria-expanded')) !== 'true') {
+    await toggle.click();
+  }
+}
+
 /** The production sign-in mode: the demo must work without direct login. */
 test.describe('demo farm from the sign-in page', () => {
   test.use({ baseURL: MAGIC_BASE, viewport: { width: 375, height: 800 } });
@@ -44,6 +52,7 @@ test.describe('demo farm from the sign-in page', () => {
     const farmCookie = (await page.context().cookies()).find((c) => c.name === 'cropcard.session');
     expect(farmCookie).toBeTruthy();
 
+    await openDemoOptions(page);
     page.once('dialog', (d) => d.accept());
     await Promise.all([
       page.waitForResponse((r) => r.url().includes('/demo?/reset')),
@@ -54,6 +63,7 @@ test.describe('demo farm from the sign-in page', () => {
     expect(resetCookie?.value).not.toBe(farmCookie?.value);
     await expect(page.getByTestId('demo-banner')).toBeVisible();
 
+    await openDemoOptions(page);
     await page.getByTestId('demo-leave').click();
     await page.waitForURL((u) => u.pathname === '/');
     await expect(page.getByTestId('demo-card')).toBeVisible();
@@ -70,6 +80,7 @@ test.describe('demo farm from the sign-in page', () => {
     await page.getByTestId('demo-start').click();
     await page.waitForURL('**/today');
 
+    await openDemoOptions(page);
     page.once('dialog', (d) => d.accept());
     await page.getByTestId('demo-scratch').click();
     await page.waitForURL('**/onboarding');
@@ -92,6 +103,7 @@ test.describe('demo farm from the sign-in page', () => {
     await expect(page.getByTestId('demo-banner')).toBeVisible();
     await expect(page.getByTestId('getting-started')).toBeVisible();
 
+    await openDemoOptions(page);
     await page.getByTestId('demo-leave').click();
     await page.waitForURL((u) => u.pathname === '/');
     expect(errors).toEqual([]);
@@ -105,6 +117,7 @@ test.describe('demo farm from the sign-in page', () => {
     await page.waitForURL('**/today');
     await expect(page.getByTestId('demo-date')).toHaveCount(0);
 
+    await openDemoOptions(page);
     await page.getByTestId('demo-ff').locator('summary').click();
     page.once('dialog', (d) => d.accept());
     await page.getByTestId('demo-ff-week').click();
@@ -114,6 +127,7 @@ test.describe('demo farm from the sign-in page', () => {
     expect(ahead).toBeGreaterThan(6.5 * 86_400_000);
     await expectNoOverflow(page);
 
+    await openDemoOptions(page);
     await page.getByTestId('demo-ff').locator('summary').click();
     page.once('dialog', (d) => d.accept());
     const phase = page.locator('[data-testid^="demo-ff-phase-"]').first();
@@ -134,6 +148,7 @@ test.describe('demo farm from the sign-in page', () => {
     await page.goto('/');
     await page.getByTestId('demo-start').click();
     await page.waitForURL('**/today');
+    await openDemoOptions(page);
     page.once('dialog', (d) => d.accept());
     await page.getByTestId('demo-scratch').click();
     await page.waitForURL('**/onboarding');
@@ -145,6 +160,7 @@ test.describe('demo farm from the sign-in page', () => {
     await page.getByRole('button', { name: /Take me to Today/ }).click();
     await expect(page).toHaveURL(/\/today$/, { timeout: 15_000 });
 
+    await openDemoOptions(page);
     await page.getByTestId('demo-ff').locator('summary').click();
     await expect(page.getByTestId('demo-ff-phase-midsummer')).toHaveCount(0);
     await page.getByTestId('demo-ff-month').click();
@@ -167,5 +183,29 @@ test.describe('demo farm from the sign-in page', () => {
     });
     expect(res.status()).toBe(403);
     expect(await res.json()).toMatchObject({ code: 'DEMO_DISABLED' });
+
+    const plain = await page.request.post('/settings/helpers?/invite', {
+      form: { email: 'someone@example.com' },
+      headers: { origin: MAGIC_BASE },
+      maxRedirects: 0
+    });
+    expect(plain.status()).toBe(303);
+    const back = plain.headers()['location'];
+    expect(back).toBe('/settings/helpers?demoBlocked=1');
+    await page.goto(back);
+    await expect(page.getByTestId('demo-blocked')).toBeVisible();
+  });
+
+  test('the banner folds to one line on a phone, with arrows on its toggles', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('demo-start').click();
+    await page.waitForURL('**/today');
+    await expect(page.getByTestId('demo-reset')).toBeHidden();
+    const toggle = page.getByTestId('demo-options-toggle');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByTestId('demo-reset')).toBeVisible();
+    await expect(page.locator('.try summary svg').first()).toBeVisible();
   });
 });

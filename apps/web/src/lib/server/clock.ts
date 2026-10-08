@@ -42,6 +42,17 @@ export function clockOffsetMs(): number {
   return s && s.active ? s.offsetMs : 0;
 }
 
+/** Seconds since the epoch on the request's clock, for SQLite's zero-arg
+ *  `unixepoch()` (the `DEFAULT (unixepoch() * 1000)` save times). Outside
+ *  a shifted demo request this is the real clock, as the built-in is, so a
+ *  real farm's save times and the 48 h windows read from them are
+ *  unchanged; a fast-forwarded demo farm stamps its own date, so its
+ *  records stay voidable for 48 h of demo time. Reads the original
+ *  `Date.now`, so test fake timers don't move SQL defaults. */
+export function sqlEpochSeconds(): number {
+  return Math.floor((realDateNow() + clockOffsetMs()) / 1000);
+}
+
 let installed = false;
 
 /** Points `Date.now()` and `new Date()` at the shifted clock. Idempotent. */

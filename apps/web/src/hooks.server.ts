@@ -558,7 +558,8 @@ const handleRequest: Handle = async ({ event, resolve: resolvePage }) => {
     return demoBlockedResponse(
       path,
       event.request.headers.get('x-sveltekit-action') === 'true',
-      event.locals.locale
+      event.locals.locale,
+      { method: event.request.method, contentType: event.request.headers.get('content-type') }
     );
   }
 

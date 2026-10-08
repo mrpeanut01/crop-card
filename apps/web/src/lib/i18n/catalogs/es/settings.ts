@@ -661,8 +661,7 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
     'Aún no hay ayudantes. Haz clic en "Invitar ayudante" para enviar la primera invitación.',
   'settings.helpers.remove': 'Quitar',
   'settings.helpers.pendingTitle': 'Invitaciones pendientes · {count}',
-  'settings.helpers.pendingSub':
-    'Los tokens se guardan con hash SHA-256 en la base de datos. El token en texto simple se muestra una sola vez al enviarlo.',
+  'settings.helpers.pendingSub': 'Cada enlace de invitación funciona una sola vez.',
   'settings.helpers.noPending': 'No hay invitaciones pendientes.',
   'settings.helpers.emailHashed': 'correo con hash (SHA-256) · enviada {date}',
   'settings.helpers.expires': 'vence {date}',

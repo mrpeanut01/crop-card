@@ -1,4 +1,5 @@
 <script lang="ts">
+  import RealWeatherNote from '$lib/components/demo/RealWeatherNote.svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
   import { MapPin } from 'lucide-svelte';
@@ -21,6 +22,7 @@
 <Modal {open} {onClose} title={tr('today.forecast.title')}>
   <div class="sheet" data-testid="forecast-sheet">
     {#if weather.status === 'ok' && weather.days.length > 0}
+      <RealWeatherNote />
       <ul class="days">
         {#each weather.days as d (d.date)}
           <li class="day">

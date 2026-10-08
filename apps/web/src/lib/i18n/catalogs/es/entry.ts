@@ -41,6 +41,10 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'entry.demo.ff.phase.winter': 'Invierno',
   'entry.demo.ff.errChoice': 'Elige cuánto adelantar la fecha.',
   'entry.demo.ff.errTooFar': 'La demostración puede adelantar la fecha hasta dos años.',
+  'entry.demo.ff.errTooFarAt':
+    'La fecha de la demostración es {today}. Se puede adelantar hasta dos años después de la fecha real, como máximo hasta el {limit}.',
+  'entry.demo.options': 'Opciones de la demostración',
+  'entry.demo.realWeather': 'Es el tiempo real de hoy, no el de la fecha de la demostración.',
   'entry.demo.leave': 'Salir y registrarse',
   'entry.demo.try': 'Qué probar',
   'entry.demo.try.week': 'Las tareas de esta semana',

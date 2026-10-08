@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DEMO_BLOCKED_MESSAGE, demoBlockedResponse, demoBlocksWrite } from './guard';
+import {
+  DEMO_BLOCKED_MESSAGE,
+  DEMO_BLOCKED_PARAM,
+  demoBlockedResponse,
+  demoBlocksWrite
+} from './guard';
 
 describe('demoBlocksWrite', () => {
   it.each([
@@ -49,6 +54,36 @@ describe('demoBlockedResponse', () => {
     const body = await res.json();
     expect(body).toMatchObject({ type: 'failure', status: 403 });
     expect(JSON.parse(body.data)).toEqual([{ error: 1 }, DEMO_BLOCKED_MESSAGE]);
+  });
+
+  it('sends a plain page form back to its page instead of a raw JSON body (#717)', () => {
+    for (const contentType of [
+      'application/x-www-form-urlencoded',
+      'multipart/form-data; boundary=----x'
+    ]) {
+      const res = demoBlockedResponse('/settings/helpers', false, 'es', {
+        method: 'POST',
+        contentType
+      });
+      expect(res.status).toBe(303);
+      expect(res.headers.get('location')).toBe(`/settings/helpers?${DEMO_BLOCKED_PARAM}=1`);
+    }
+  });
+
+  it('keeps JSON for API paths and non-form bodies', async () => {
+    const api = demoBlockedResponse('/api/invites', false, 'en', {
+      method: 'POST',
+      contentType: 'application/x-www-form-urlencoded'
+    });
+    expect(api.status).toBe(403);
+    const fetched = demoBlockedResponse('/settings/ai', false, 'en', {
+      method: 'POST',
+      contentType: 'application/json'
+    });
+    expect(fetched.status).toBe(403);
+    expect(await fetched.json()).toMatchObject({ code: 'DEMO_DISABLED' });
+    const del = demoBlockedResponse('/settings/ai', false, 'en', { method: 'DELETE' });
+    expect(del.status).toBe(403);
   });
 
   it('says it in the visitor’s language', async () => {

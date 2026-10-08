@@ -5,6 +5,9 @@
 export const DEMO_EMAIL_DOMAIN = 'demo.cropcard.invalid';
 export const DEMO_OWNER_PREFIX = 'owner_demo_';
 export const DEMO_TTL_MS = 4 * 60 * 60 * 1000;
+/** Query flag a refused plain form is sent back with; the demo banner shows
+ *  the refusal when it sees it (#717). */
+export const DEMO_BLOCKED_PARAM = 'demoBlocked';
 
 export function isDemoEmail(email: string | null | undefined): boolean {
   return !!email && email.toLowerCase().endsWith(`@${DEMO_EMAIL_DOMAIN}`);

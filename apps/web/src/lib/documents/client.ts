@@ -51,6 +51,7 @@ export async function uploadDocument(
 }
 
 export function refusalCopy(status: number, body: { code?: string; error?: string }): string {
+  if (body.code === 'DEMO_DISABLED' && body.error) return body.error;
   if (body.code === 'VAULT_OFF') return VAULT_OFF_COPY;
   if (body.code === 'OWNER_ONLY' || status === 403) return 'Only the farm owner can upload files.';
   if (body.error && body.code && body.code !== 'INVALID') return body.error;

@@ -9,6 +9,7 @@
   import { Wind, CloudRain, MapPin, ChevronRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import WeatherIcon from './WeatherIcon.svelte';
+  import RealWeatherNote from '$lib/components/demo/RealWeatherNote.svelte';
   import { rainHint, type TodayWeather } from '$lib/today/weatherSummary';
   import { fmt } from '$lib/prefsState.svelte';
 
@@ -90,6 +91,7 @@
     {:else}
       <span class="cells muted">{tr('today.weather.unavailable')}</span>
     {/if}
+    {#if weather.status === 'ok'}<RealWeatherNote inline />{/if}
   </button>
 </header>
 

@@ -12,7 +12,7 @@ import { FARM_ANIMAL_CHOICES, type FarmAnimalChoice, type FarmProfile } from './
 
 export type OnboardingScreen = 'farm' | 'growing';
 
-export const GROWING_CHOICES = ['garden', 'fields', 'hay', 'greenhouse'] as const;
+export const GROWING_CHOICES = ['garden', 'fields', 'hay', 'greenhouse', 'orchard'] as const;
 export type GrowingChoice = (typeof GROWING_CHOICES)[number];
 
 export interface GrowingOption {
@@ -33,7 +33,7 @@ export const GROWING_OPTIONS: readonly GrowingOption[] = [
   {
     id: 'garden',
     title: 'A garden',
-    blurb: 'Beds by the house, vegetables, herbs, a few fruit trees.',
+    blurb: 'Beds by the house or a market garden in permanent beds: vegetables, herbs, flowers.',
     starter: {
       name: 'Kitchen Garden',
       nameKey: 'onboard.starter.kitchenGarden',
@@ -43,7 +43,7 @@ export const GROWING_OPTIONS: readonly GrowingOption[] = [
   {
     id: 'fields',
     title: 'Fields',
-    blurb: 'Row crops, grain, market-garden blocks.',
+    blurb: 'Row crops and grain on open ground. Fields have no bed designer.',
     starter: {
       name: 'Home Field',
       nameKey: 'onboard.starter.homeField',
@@ -71,6 +71,16 @@ export const GROWING_OPTIONS: readonly GrowingOption[] = [
       kind: 'greenhouse',
       details: { structure: 'high-tunnel' }
     }
+  },
+  {
+    id: 'orchard',
+    title: 'Orchard or fruit',
+    blurb: 'Fruit or nut trees, vines and berries.',
+    starter: {
+      name: 'Orchard',
+      nameKey: 'onboard.starter.orchard',
+      kind: 'orchard'
+    }
   }
 ];
 
@@ -92,12 +102,12 @@ export function isLegacyStep(v: unknown): boolean {
 }
 
 /**
- * Garden and greenhouse on their own read as a household; fields or hay on
- * their own read as a farm; both is mixed. Nothing picked is no profile.
+ * Garden and greenhouse on their own read as a household; fields, hay or an
+ * orchard on their own read as a farm; both is mixed. Nothing picked is no profile.
  */
 export function profileForChoices(choices: readonly GrowingChoice[]): FarmProfile | null {
   const household = choices.some((c) => c === 'garden' || c === 'greenhouse');
-  const farm = choices.some((c) => c === 'fields' || c === 'hay');
+  const farm = choices.some((c) => c === 'fields' || c === 'hay' || c === 'orchard');
   if (household && farm) return 'mixed';
   if (farm) return 'farm';
   if (household) return 'garden';

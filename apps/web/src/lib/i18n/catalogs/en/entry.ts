@@ -286,14 +286,17 @@ export const enEntry = {
   'onboard.opt.animals.title': 'Animals',
   'onboard.opt.chickens.blurb': 'A few hens or ducks for eggs.',
   'onboard.opt.chickens.title': 'Backyard chickens',
-  'onboard.opt.fields.blurb': 'Row crops, grain, market-garden blocks.',
+  'onboard.opt.fields.blurb': 'Row crops and grain on open ground. Fields have no bed designer.',
   'onboard.opt.fields.title': 'Fields',
-  'onboard.opt.garden.blurb': 'Beds by the house, vegetables, herbs, a few fruit trees.',
+  'onboard.opt.garden.blurb':
+    'Beds by the house or a market garden in permanent beds: vegetables, herbs, flowers.',
   'onboard.opt.garden.title': 'A garden',
   'onboard.opt.greenhouse.blurb': 'Covered growing space for an early start and a late finish.',
   'onboard.opt.greenhouse.title': 'A greenhouse or high tunnel',
   'onboard.opt.hay.blurb': 'Hayfields to cut and bale, or ground for grazing.',
   'onboard.opt.hay.title': 'Hay or pasture',
+  'onboard.opt.orchard.blurb': 'Fruit or nut trees, vines and berries.',
+  'onboard.opt.orchard.title': 'Orchard or fruit',
   'onboard.opt.pets.blurb': 'Dogs, cats, rabbits and other companions.',
   'onboard.opt.pets.title': 'Pets',
   'onboard.orTapMap': 'or tap the map to drop a pin',
@@ -868,5 +871,6 @@ export const enEntry = {
   'onboard.starter.hayfield': 'Hayfield',
   'onboard.starter.highTunnel': 'High Tunnel',
   'onboard.starter.barn': 'Barn',
-  'onboard.starter.chickenCoop': 'Chicken Coop'
+  'onboard.starter.chickenCoop': 'Chicken Coop',
+  'onboard.starter.orchard': 'Orchard'
 } as const;

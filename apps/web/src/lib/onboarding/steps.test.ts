@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { CROP_AREA_KINDS, isCropBearing, validateAreaDetails } from '$lib/farm/areaKinds';
+import {
+  CROP_AREA_KINDS,
+  isCropBearing,
+  isDesignable,
+  validateAreaDetails
+} from '$lib/farm/areaKinds';
 import { isHousingAreaKind } from '$lib/animals/model';
 import { AREA_NAME_PLACEHOLDER } from '$lib/farm/kindStyle';
 import {
@@ -34,6 +39,23 @@ describe('growing choices', () => {
     expect(profileForChoices(['hay'])).toBe('farm');
     expect(profileForChoices(['fields', 'greenhouse'])).toBe('mixed');
     expect(profileForChoices(['garden', 'hay'])).toBe('mixed');
+    expect(profileForChoices(['orchard'])).toBe('farm');
+    expect(profileForChoices(['garden', 'orchard'])).toBe('mixed');
+  });
+
+  it('offers an orchard tile and points market gardens at the bed designer (#615)', () => {
+    const orchard = GROWING_OPTIONS.find((o) => o.id === 'orchard');
+    expect(orchard?.starter).toMatchObject({ name: 'Orchard', kind: 'orchard' });
+    expect(starterAreasFor(['orchard'], 'es')).toMatchObject([
+      { name: 'Huerta frutal', kind: 'orchard' }
+    ]);
+    const garden = GROWING_OPTIONS.find((o) => o.id === 'garden')!;
+    const fields = GROWING_OPTIONS.find((o) => o.id === 'fields')!;
+    expect(isDesignable(garden.starter.kind)).toBe(true);
+    expect(isDesignable(fields.starter.kind)).toBe(false);
+    expect(garden.blurb).toMatch(/market garden/);
+    expect(fields.blurb).not.toMatch(/market/);
+    expect(fields.blurb).toMatch(/no bed designer/);
   });
 
   it('creates one starter Area per choice with the right kind', () => {

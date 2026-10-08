@@ -301,14 +301,18 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'onboard.opt.animals.title': 'Animales',
   'onboard.opt.chickens.blurb': 'Unas cuantas gallinas o patos para huevos.',
   'onboard.opt.chickens.title': 'Gallinas de traspatio',
-  'onboard.opt.fields.blurb': 'Cultivos en hileras, granos, bloques de huerta comercial.',
+  'onboard.opt.fields.blurb':
+    'Cultivos en hileras y granos en terreno abierto. Los campos no tienen diseñador de camas.',
   'onboard.opt.fields.title': 'Campos',
-  'onboard.opt.garden.blurb': 'Camas junto a la casa, verduras, hierbas, algunos árboles frutales.',
+  'onboard.opt.garden.blurb':
+    'Camas junto a la casa o una huerta comercial en camas permanentes: verduras, hierbas, flores.',
   'onboard.opt.garden.title': 'Un huerto',
   'onboard.opt.greenhouse.blurb': 'Espacio cubierto para empezar temprano y terminar tarde.',
   'onboard.opt.greenhouse.title': 'Un invernadero o túnel alto',
   'onboard.opt.hay.blurb': 'Campos de heno para cortar y empacar, o terreno para pastoreo.',
   'onboard.opt.hay.title': 'Heno o pastura',
+  'onboard.opt.orchard.blurb': 'Árboles frutales o de nueces, vides y bayas.',
+  'onboard.opt.orchard.title': 'Huerta frutal',
   'onboard.opt.pets.blurb': 'Perros, gatos, conejos y otros compañeros.',
   'onboard.opt.pets.title': 'Mascotas',
   'onboard.orTapMap': 'o toca el mapa para colocar un marcador',
@@ -928,5 +932,6 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'onboard.starter.hayfield': 'Campo de heno',
   'onboard.starter.highTunnel': 'Túnel alto',
   'onboard.starter.barn': 'Granero',
-  'onboard.starter.chickenCoop': 'Gallinero'
+  'onboard.starter.chickenCoop': 'Gallinero',
+  'onboard.starter.orchard': 'Huerta frutal'
 };

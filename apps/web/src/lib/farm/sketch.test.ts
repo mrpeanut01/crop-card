@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import {
+  checkAreaBlocks,
   formatFt,
   layoutSketch,
   sketchAcres,
+  sketchDimsDiffer,
   storedSketchAcres,
   withSketchAcres,
   SQFT_PER_ACRE
@@ -104,6 +106,76 @@ describe('layoutSketch', () => {
     expect(out.unsized).toEqual([]);
   });
 
+  it('names Areas with blocks past their edge (#636)', () => {
+    const out = layoutSketch(
+      [
+        { id: 'n', name: 'North Field', widthFt: 660, lengthFt: 660 },
+        { id: 'w', name: 'Wheat Field', widthFt: 660, lengthFt: 660 }
+      ],
+      [
+        { id: 'a', name: 'North A', fieldId: 'n', widthFt: 330, lengthFt: 660 },
+        { id: 'b', name: 'North A', fieldId: 'n', widthFt: 330, lengthFt: 660 },
+        { id: 'c', name: 'North B', fieldId: 'n', widthFt: 330, lengthFt: 660 },
+        { id: 'd', name: 'Wheat', fieldId: 'w', widthFt: 660, lengthFt: 660 }
+      ]
+    );
+    expect(out.overflowing).toEqual(['North Field']);
+  });
+
+  it('keeps blocks past an edge and labels clear of every other Area (#636 #655)', () => {
+    const dim = fc.integer({ min: 10, max: 2000 });
+    const area = fc.record({
+      w: dim,
+      l: dim,
+      blocks: fc.array(fc.tuple(dim, dim), { maxLength: 4 }),
+      label: fc.integer({ min: 0, max: 3000 })
+    });
+    fc.assert(
+      fc.property(fc.array(area, { minLength: 1, maxLength: 8 }), (areas) => {
+        const fields = areas.map((a, i) => ({
+          id: `f${i}`,
+          name: `F${i}`,
+          widthFt: a.w,
+          lengthFt: a.l
+        }));
+        const blocks = areas.flatMap((a, i) =>
+          a.blocks.map(([w, l], j) => ({
+            id: `b${i}-${j}`,
+            name: `B${j}`,
+            fieldId: `f${i}`,
+            widthFt: w,
+            lengthFt: l
+          }))
+        );
+        const labelH = 40;
+        const out = layoutSketch(fields, blocks, {
+          widthFt: (f) => areas[Number(f.id.slice(1))].label,
+          heightFt: labelH
+        });
+        const extent = out.fields.map((f, i) => {
+          const right = Math.max(
+            f.x + f.w,
+            f.x + areas[i].label,
+            ...f.blocks.map((b) => b.x + b.w)
+          );
+          const bottom = Math.max(f.y + f.h, ...f.blocks.map((b) => b.y + b.h));
+          return { x: f.x, y: f.y - labelH, r: right, b: bottom };
+        });
+        for (let i = 0; i < extent.length; i++) {
+          const p = extent[i];
+          expect(p.y).toBeGreaterThanOrEqual(-1e-6);
+          expect(p.r).toBeLessThanOrEqual(out.width + 1e-6);
+          expect(p.b).toBeLessThanOrEqual(out.height + 1e-6);
+          for (let j = i + 1; j < extent.length; j++) {
+            const q = extent[j];
+            const apart = p.r <= q.x || q.r <= p.x || p.b <= q.y || q.b <= p.y;
+            expect(apart).toBe(true);
+          }
+        }
+      })
+    );
+  });
+
   it('never overlaps two fields', () => {
     const dim = fc.integer({ min: 10, max: 5000 });
     fc.assert(
@@ -133,5 +205,37 @@ describe('formatFt', () => {
   it('prints feet by default and metres for metric users', () => {
     expect(formatFt(1234.4)).toBe('1,234 ft');
     expect(formatFt(100, { units: 'metric' })).toBe('30 m');
+  });
+});
+
+describe('sketchDimsDiffer (#634)', () => {
+  it('flags typed dimensions far from the drawn size', () => {
+    expect(sketchDimsDiffer(926 / SQFT_PER_ACRE, 10, 16)).toBe(true);
+    expect(sketchDimsDiffer(160 / SQFT_PER_ACRE, 10, 16)).toBe(false);
+    expect(sketchDimsDiffer(170 / SQFT_PER_ACRE, 10, 16)).toBe(false);
+    expect(sketchDimsDiffer(undefined, 10, 16)).toBe(false);
+    expect(sketchDimsDiffer(1, undefined, 16)).toBe(false);
+  });
+});
+
+describe('checkAreaBlocks (#636)', () => {
+  it('warns when blocks add up to more than the Area and when a name repeats', () => {
+    const out = checkAreaBlocks(10, [
+      { name: 'North A', acres: 5 },
+      { name: 'north a ', acres: 5 },
+      { name: 'North B', acres: 5 }
+    ]);
+    expect(out.over).toEqual({ blocksAcres: 15, areaAcres: 10 });
+    expect(out.duplicates).toEqual(['North A']);
+  });
+
+  it('stays quiet when blocks fit, the Area has no size, or names differ', () => {
+    expect(checkAreaBlocks(10, [{ name: 'A', acres: 10 }])).toEqual({ over: null, duplicates: [] });
+    expect(checkAreaBlocks(undefined, [{ name: 'A', acres: 50 }]).over).toBeNull();
+    const blank = checkAreaBlocks(10, [
+      { name: '', acres: 1 },
+      { name: ' ', acres: 1 }
+    ]);
+    expect(blank.duplicates).toEqual([]);
   });
 });

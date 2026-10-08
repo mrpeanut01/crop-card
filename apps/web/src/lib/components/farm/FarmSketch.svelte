@@ -30,10 +30,24 @@
 
   const kindById = $derived(new Map(fields.map((f) => [f.id, f.kind ?? 'field'] as const)));
 
-  const layout = $derived(layoutSketch(fields, blocks));
+  function sizeText(w: number, h: number): string {
+    return `${formatFt(w, currentPrefs())} × ${formatFt(h, currentPrefs())}`;
+  }
+  function labelText(f: SketchInput): string {
+    const measured = !!(f.widthFt && f.widthFt > 0 && f.lengthFt && f.lengthFt > 0);
+    return `${f.name} ${measured ? sizeText(f.widthFt!, f.lengthFt!) : tr('farm.sketch.sizeFromArea')}`;
+  }
+
+  const base = $derived(layoutSketch(fields, blocks));
+  const font = $derived(Math.max(base.width, base.height, 1) * 0.028);
+  const layout = $derived(
+    layoutSketch(fields, blocks, {
+      widthFt: (f) => labelText(f).length * font * 0.62,
+      heightFt: font * 1.4
+    })
+  );
   const span = $derived(Math.max(layout.width, layout.height, 1));
   const pad = $derived(span * 0.06);
-  const font = $derived(span * 0.028);
   const viewBox = $derived(
     `${-pad} ${-pad} ${layout.width + pad * 2} ${layout.height + pad * 2 + font * 2.2}`
   );
@@ -144,9 +158,7 @@
           <text x={f.x} y={f.y - font * 0.4} font-size={font} class="sk-field-label"
             >{f.name}
             <tspan class="dims"
-              >{f.measured
-                ? `${formatFt(f.w, currentPrefs())} × ${formatFt(f.h, currentPrefs())}`
-                : tr('farm.sketch.sizeFromArea')}</tspan
+              >{f.measured ? sizeText(f.w, f.h) : tr('farm.sketch.sizeFromArea')}</tspan
             ></text
           >
         </g>
@@ -170,6 +182,11 @@
   {/if}
   <figcaption>
     {tr('farm.sketch.caption')}
+    {#if layout.overflowing.length > 0}
+      <span class="unsized overflow-note" data-testid="sketch-overflow"
+        >{tr('farm.sketch.blocksPastEdge', { names: layout.overflowing.join(', ') })}</span
+      >
+    {/if}
     {#if layout.unsized.length > 0}
       {#if onSizeArea && unsizedFields.length > 0}
         <span class="unsized">
@@ -293,5 +310,9 @@
   .unsized {
     display: block;
     margin-top: 4px;
+  }
+  .overflow-note {
+    color: #a4452c;
+    font-weight: 600;
   }
 </style>

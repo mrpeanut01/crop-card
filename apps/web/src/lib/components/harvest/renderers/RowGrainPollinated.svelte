@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { parseDecimal } from '$lib/harvest/details';
   import { Wheat } from 'lucide-svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
@@ -18,18 +19,18 @@
     quantity?: string;
     lotNumber?: string;
   }): Promise<string | null> {
-    const tagBits: string[] = [];
-    if (moisturePct.trim()) tagBits.push(`moisture=${moisturePct}%`);
-    if (testWeight.trim()) tagBits.push(`testWt=${testWeight} lb/bu`);
-    if (earCount.trim()) tagBits.push(`ears=${earCount}`);
     const quantity = bushels.trim() ? `${bushels} bu` : input.quantity;
-    const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
+    const ears = parseDecimal(earCount);
     // #322 — moisture also travels as a structured number so the kernel gate is reachable.
     const moisture = parseMoisturePct(moisturePct);
     return props.onCommit({
       quantity,
-      lotNumber: lot || undefined,
-      moisturePct: moisture
+      lotNumber: input.lotNumber || undefined,
+      moisturePct: moisture,
+      details: {
+        testWeightLbPerBu: parseDecimal(testWeight),
+        earCount: ears === undefined ? undefined : Math.round(ears)
+      }
     });
   }
 </script>

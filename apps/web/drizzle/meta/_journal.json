@@ -631,6 +631,13 @@
       "when": 1791260431565,
       "tag": "0089_retire_orchard_seasonal_tasks",
       "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "6",
+      "when": 1791416371908,
+      "tag": "0090_harvest_event_details",
+      "breakpoints": true
     }
   ]
 }

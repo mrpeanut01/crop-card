@@ -28,24 +28,14 @@
     /** Owner or helper; inspectors only read. */
     canWrite: boolean;
     isOwner: boolean;
-    /** Owner on a farm that keeps money: "Also record the money". */
-    canRecordSale: boolean;
     /** The farm has an organic status on file (B-15 `full`). */
     askSoldAsOrganic: boolean;
     online: boolean;
     onChanged: () => void | Promise<void>;
   }
 
-  const {
-    harvest,
-    dispositions,
-    canWrite,
-    isOwner,
-    canRecordSale,
-    askSoldAsOrganic,
-    online,
-    onChanged
-  }: Props = $props();
+  const { harvest, dispositions, canWrite, isOwner, askSoldAsOrganic, online, onChanged }: Props =
+    $props();
 
   const tr = $derived(createT(page.data?.locale));
   const zone = $derived(currentPrefs().timeZone);
@@ -245,7 +235,9 @@
                 }}>{tr('harvestui.disp.delete')}</button
               >
             {/if}
-            {#if isOwner && canRecordSale && d.kind === 'sold' && !d.ledgerEntryId}
+            <!-- #733: a Sold row is the owner saying they sold it, so the
+                 money link shows even on a quiet garden farm. -->
+            {#if isOwner && d.kind === 'sold' && !d.ledgerEntryId}
               {#if online}
                 <a
                   class="ghost"

@@ -48,6 +48,17 @@ describe('parseMoisturePct', () => {
       parseMoisturePct({ cropPluginId: 'x', occurredAtMs: 0, lotNumber: 'LOT-1 moisture 13%' })
     ).toBe(13);
   });
+  it('reads the stored moisture column first (#662)', () => {
+    expect(parseMoisturePct({ cropPluginId: 'x', occurredAtMs: 0, moisturePct: 13 })).toBe(13);
+    expect(
+      parseMoisturePct({
+        cropPluginId: 'x',
+        occurredAtMs: 0,
+        moisturePct: 12.5,
+        lotNumber: 'moisture=14%'
+      })
+    ).toBe(12.5);
+  });
   it('returns null with no tag', () => {
     expect(parseMoisturePct({ cropPluginId: 'x', occurredAtMs: 0, quantity: '40 bu' })).toBeNull();
   });

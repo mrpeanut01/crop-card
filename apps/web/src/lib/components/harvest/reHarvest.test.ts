@@ -54,3 +54,20 @@ describe('reHarvestArchetype (#196 / #197 follow-up)', () => {
     expect(reHarvestLabel('tree-fruit-multi-pick')).toBe('tree-fruit multi-pick');
   });
 });
+
+describe('berries on the vine archetype (#743)', () => {
+  it('picks again like continuous fruit', () => {
+    expect(
+      reHarvestArchetype({ archetype: 'perennial-vine-quality', cropFamily: 'small-fruit' })
+    ).toBe('continuous-harvest-fruit');
+    expect(reHarvestArchetype({ archetype: 'perennial-vine-quality', cropFamily: 'bramble' })).toBe(
+      'continuous-harvest-fruit'
+    );
+  });
+
+  it('leaves grapes and hops on the vine form', () => {
+    expect(
+      reHarvestArchetype({ archetype: 'perennial-vine-quality', cropFamily: 'vine-fruit' })
+    ).toBeNull();
+  });
+});

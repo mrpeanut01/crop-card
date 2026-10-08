@@ -25,12 +25,10 @@
     lotNumber?: string;
   }): Promise<string | null> {
     // #322 — moisture travels as a structured number so the kernel gate is reachable.
-    const tag = moisturePct.trim() ? `moisture=${moisturePct}%` : '';
-    const lot = [input.lotNumber, tag].filter(Boolean).join(' · ').trim();
     const moisture = parseMoisturePct(moisturePct);
     return props.onCommit({
       quantity: input.quantity,
-      lotNumber: lot || undefined,
+      lotNumber: input.lotNumber || undefined,
       moisturePct: moisture
     });
   }

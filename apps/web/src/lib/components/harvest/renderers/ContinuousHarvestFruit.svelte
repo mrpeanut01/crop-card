@@ -7,6 +7,7 @@
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { fmtQtyRange, usText } from './format';
+  import { parseDecimal } from '$lib/harvest/details';
 
   const props: RendererProps = $props();
   const tr = $derived(createT(page.data?.locale));
@@ -21,11 +22,12 @@
     quantity?: string;
     lotNumber?: string;
   }): Promise<string | null> {
-    const tagBits: string[] = [`pick=${visitNumber}`];
-    if (gradePct.trim()) tagBits.push(`grade=${gradePct}%`);
     const quantity = usText(pickLb) ? `${usText(pickLb)} lb` : input.quantity;
-    const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
-    return props.onCommit({ quantity, lotNumber: lot || undefined });
+    return props.onCommit({
+      quantity,
+      lotNumber: input.lotNumber || undefined,
+      details: { pickNumber: visitNumber, marketablePct: parseDecimal(gradePct) }
+    });
   }
 </script>
 
@@ -33,9 +35,15 @@
   <header class="archetype-head">
     <Apple size={18} strokeWidth={1.75} />
     <div>
-      <span class="archetype-name">{tr('harvestui.r.cont.name')}</span>
+      <span class="archetype-name"
+        >{props.formVariant === 'berry'
+          ? tr('harvestui.r.berry.name')
+          : tr('harvestui.r.cont.name')}</span
+      >
       <span class="archetype-sub">
-        {tr('harvestui.r.cont.sub', { n: visitNumber })}
+        {props.formVariant === 'berry'
+          ? tr('harvestui.r.berry.sub', { n: visitNumber })
+          : tr('harvestui.r.cont.sub', { n: visitNumber })}
       </span>
     </div>
   </header>

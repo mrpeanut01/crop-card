@@ -12,6 +12,8 @@
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { ymdInZone } from '$lib/prefs';
   import { harvestYtdCsv } from '$lib/harvest/ytdCsv';
+  import { compactDetails, harvestDetailLines } from '$lib/harvest/details';
+  import type { HarvestCommitInput } from '$lib/components/harvest/renderers/types';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
   import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
@@ -115,7 +117,7 @@
    *  renderer can render it. */
   async function commitFromRenderer(
     planting: PlantingHarvestStatus,
-    input: { quantity?: string; lotNumber?: string; moisturePct?: number }
+    input: HarvestCommitInput
   ): Promise<string | null> {
     lastError = null;
     lastNotice = null;
@@ -124,13 +126,16 @@
       taskQueued = false;
       taskRecord = { blockId: planting.blockId, cropPluginId: planting.cropPluginId };
     }
+    const details = input.details ? compactDetails(input.details) : undefined;
     const body = {
       blockId: planting.blockId,
+      cropId: planting.plantingId,
       cropPluginId: planting.cropPluginId,
       quantity: input.quantity,
       lotNumber: input.lotNumber,
       // #322 — structured moisture reaches the kernel gate.
       moisturePct: input.moisturePct,
+      ...(details ? { details } : {}),
       ...(openTask ? { taskId: openTask.id } : {})
     };
     try {
@@ -229,6 +234,8 @@
 
   function fmtRange(p: PlantingHarvestStatus) {
     if (!p.windowStartMs || !p.windowEndMs) return tr('harvestui.unknown');
+    if (p.openEnded)
+      return tr('harvestui.windowOpenEnded', { date: fmtWindowDay(p.windowStartMs, p) });
     return `${fmtWindowDay(p.windowStartMs, p)} – ${fmtWindowDay(p.windowEndMs, p)}`;
   }
 
@@ -634,6 +641,7 @@
             <th>{tr('harvestui.th.variety')}</th>
             <th>{tr('harvestui.th.quantity')}</th>
             <th>{tr('harvestui.th.lot')}</th>
+            <th>{tr('harvestui.th.details')}</th>
             <th>{tr('harvestui.th.curing')}</th>
             <th>{tr('harvestui.th.where')}</th>
           </tr>
@@ -648,6 +656,14 @@
               <td data-label={tr('harvestui.th.variety')}><code>{h.cropPluginId}</code></td>
               <td data-label={tr('harvestui.th.quantity')}>{h.quantity ?? '—'}</td>
               <td data-label={tr('harvestui.th.lot')}>{h.lotNumber ?? '—'}</td>
+              <td data-label={tr('harvestui.th.details')}>
+                {harvestDetailLines(
+                  h.details,
+                  tr,
+                  (v, q) => fmt.qty(v, q),
+                  (ymd) => fmt.day(ymd)
+                ).join(' · ') || '—'}
+              </td>
               <td data-label={tr('harvestui.th.curing')}>
                 {#if h.curing}
                   <span class="phase-badge phase-{h.curing.phase}">
@@ -693,14 +709,13 @@
     <DispositionPanel
       harvest={{
         id: dispositionHarvest.id,
-        cropId: dispositionHarvest.cropId ?? null,
+        cropId: dispositionHarvest.linkCropId ?? null,
         occurredAt: dispositionHarvest.occurredAt,
         quantity: dispositionHarvest.quantity ?? null
       }}
       dispositions={data.dispositions[dispositionHarvest.id] ?? []}
       canWrite={data.canWriteRecords}
       isOwner={data.isOwner}
-      canRecordSale={data.canRecordSale}
       askSoldAsOrganic={data.askSoldAsOrganic}
       {online}
       onChanged={() => invalidateAll()}

@@ -238,6 +238,9 @@ function timeRows(fromMs: number, toMs: number) {
 export interface FarmNames {
   plantingPlugin: Record<string, string>;
   plantingLabel: Record<string, string>;
+  /** #734: each planting's bed and date, so the form can tell repeats apart. */
+  plantingBlock?: Record<string, string>;
+  plantingDate?: Record<string, number | null>;
   crop: Record<string, string>;
   group: Record<string, string>;
   animal: Record<string, string>;
@@ -256,16 +259,21 @@ export async function farmNames(locale?: string | null): Promise<FarmNames> {
       id: crops.id,
       plugin: crops.cropPluginId,
       variety: crops.varietyDisplayName,
-      plantingDate: crops.plantingDate
+      plantingDate: crops.plantingDate,
+      blockId: crops.blockId
     })
     .from(crops)
     .where(withTenant(crops))
     .all();
   const plantingPlugin: Record<string, string> = {};
   const plantingLabel: Record<string, string> = {};
+  const plantingBlock: Record<string, string> = {};
+  const plantingDate: Record<string, number | null> = {};
   const crop: Record<string, string> = {};
   for (const p of plantings) {
     plantingPlugin[p.id] = p.plugin;
+    plantingBlock[p.id] = p.blockId;
+    plantingDate[p.id] = p.plantingDate ? p.plantingDate.getTime() : null;
     const name = (registry.get(p.plugin)?.plugin as { displayName?: string } | undefined)
       ?.displayName;
     crop[p.plugin] = locale
@@ -308,7 +316,18 @@ export async function farmNames(locale?: string | null): Promise<FarmNames> {
   const blockField = new Map(
     blockRows.filter((b) => b.fieldId).map((b) => [b.id, b.fieldId as string])
   );
-  return { plantingPlugin, plantingLabel, crop, group, animal, area, bed, blockField };
+  return {
+    plantingPlugin,
+    plantingLabel,
+    plantingBlock,
+    plantingDate,
+    crop,
+    group,
+    animal,
+    area,
+    bed,
+    blockField
+  };
 }
 
 function animalWindows(animalIds: Set<string>): Record<string, GroupWindow[]> {

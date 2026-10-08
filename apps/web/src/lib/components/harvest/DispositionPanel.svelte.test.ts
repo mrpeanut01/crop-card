@@ -7,11 +7,19 @@ import DispositionPanel from './DispositionPanel.svelte';
 
 const HOUR = 3_600_000;
 
-function setup(occurredAt: number) {
+function setup(
+  occurredAt: number,
+  opts: { cropId?: string | null; isOwner?: boolean; canWrite?: boolean } = {}
+) {
   const fetchMock = vi.fn(async () => new Response(JSON.stringify({}), { status: 200 }));
   vi.stubGlobal('fetch', fetchMock);
   render(DispositionPanel, {
-    harvest: { id: 'h1', cropId: null, occurredAt: occurredAt - 2 * HOUR, quantity: '40 lb' },
+    harvest: {
+      id: 'h1',
+      cropId: opts.cropId ?? null,
+      occurredAt: occurredAt - 2 * HOUR,
+      quantity: '40 lb'
+    },
     dispositions: [
       {
         id: 'd1',
@@ -28,9 +36,8 @@ function setup(occurredAt: number) {
         createdAt: occurredAt
       }
     ],
-    canWrite: true,
-    isOwner: true,
-    canRecordSale: false,
+    canWrite: opts.canWrite ?? true,
+    isOwner: opts.isOwner ?? true,
     askSoldAsOrganic: false,
     online: true,
     onChanged: () => {}
@@ -53,5 +60,21 @@ describe('DispositionPanel edits', () => {
     const body = JSON.parse(String(init.body));
     expect(body.recipient).toBe('Bea');
     expect('occurredAt' in body).toBe(false);
+  });
+});
+
+describe('DispositionPanel money link (#733, #718)', () => {
+  it('shows the owner "Also record the money" on a Sold row, linked to the planting', () => {
+    setup(Date.now() - HOUR, { cropId: 'crop-1' });
+    const link = screen.getByRole('link', { name: 'Also record the money' });
+    const href = new URL(link.getAttribute('href') ?? '', 'http://x');
+    expect(href.pathname).toBe('/finance/new');
+    expect(href.searchParams.get('cropId')).toBe('crop-1');
+    expect(href.searchParams.get('dispositionId')).toBe('d1');
+  });
+
+  it('never shows it to a helper', () => {
+    setup(Date.now() - HOUR, { cropId: 'crop-1', isOwner: false });
+    expect(screen.queryByRole('link', { name: 'Also record the money' })).toBeNull();
   });
 });

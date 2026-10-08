@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { parseDecimal } from '$lib/harvest/details';
   import { Sprout } from 'lucide-svelte';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
@@ -24,17 +25,14 @@
     quantity?: string;
     lotNumber?: string;
   }): Promise<string | null> {
-    const tagBits: string[] = [];
-    if (usText(dryPodLb)) tagBits.push(`pods=${usText(dryPodLb)} lb`);
-    if (storageMoisturePct.trim()) tagBits.push(`moisture=${storageMoisturePct}%`);
     const quantity = usText(cleanSeedLb) ? `${usText(cleanSeedLb)} lb seed` : input.quantity;
-    const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
     // #322 — moisture also travels as a structured number so the kernel gate is reachable.
     const moisture = parseMoisturePct(storageMoisturePct);
     return props.onCommit({
       quantity,
-      lotNumber: lot || undefined,
-      moisturePct: moisture
+      lotNumber: input.lotNumber || undefined,
+      moisturePct: moisture,
+      details: { dryPodLb: parseDecimal(usText(dryPodLb)) }
     });
   }
 </script>

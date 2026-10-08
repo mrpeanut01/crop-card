@@ -21,12 +21,9 @@
  * narrative is an *optional* enrichment layered on top; this module never
  * calls Claude and completes end-to-end with no key.
  *
- * Moisture note: `harvest_events` does not carry a dedicated `moisture_pct`
- * column (the archetype renderers pack it into the lot tag as
- * `moisture=<n>%`, Sprint 13/19). To stay migration-free we parse that tag
- * out of the harvest row's `quantity`/`lotNumber` text — see
- * `parseMoisturePct`. When a future schema lift adds the column, swap the
- * parse for a direct read; the aggregate shape is unchanged.
+ * Moisture note: the stored `moisture_pct` column wins. Rows saved before
+ * #662 may only carry the `moisture=<n>%` lot tag the archetype renderers
+ * used to write, so `parseMoisturePct` falls back to that text.
  */
 
 import type { Philosophy } from '$lib/season/setup';
@@ -173,7 +170,10 @@ export interface SprayApplicationRow {
 export interface HarvestRow {
   cropPluginId: string;
   occurredAtMs: number;
-  /** Free-text fields the renderers pack moisture into. */
+  /** #662: the structured moisture column (migration 0041); wins over
+   *  the text tag older rows carry. */
+  moisturePct?: number | null;
+  /** Free-text fields older renderers packed moisture into. */
   quantity?: string;
   lotNumber?: string;
 }
@@ -239,6 +239,9 @@ const MOISTURE_TAG = /moisture\s*=?\s*([0-9]+(?:\.[0-9]+)?)\s*%/i;
  *  Matches the `moisture=<n>%` tag the archetype renderers write. Returns
  *  null when no parseable reading is present. */
 export function parseMoisturePct(row: HarvestRow): number | null {
+  if (typeof row.moisturePct === 'number' && Number.isFinite(row.moisturePct)) {
+    return row.moisturePct;
+  }
   for (const field of [row.quantity, row.lotNumber]) {
     if (!field) continue;
     const m = MOISTURE_TAG.exec(field);

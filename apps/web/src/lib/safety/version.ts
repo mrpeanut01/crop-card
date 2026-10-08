@@ -80,5 +80,11 @@
  * metsulfuron stops corn, cereals and grass cover but keeps Chaparral's
  * labelled pasture use; chlorimuron stops every grass family; thifensulfuron
  * stops grass hay. An ingredient can only make a verdict stricter.
+ * Ruling LF-1 — 0.7.9: an ingredient can stop a crop plugin by id. Metsulfuron
+ * (Chaparral) stops the cool-season hay grasses (timothy, orchardgrass),
+ * which its label says not to use it on, while pasture keeps its labelled
+ * use. Thifensulfuron (Harmony SG) passes only on the wheat, barley, oats
+ * and triticale plugins in the cereal-grain and cover-grass families and
+ * stops every other plugin of those families. These stops only add.
  */
-export const RULES_VERSION = '0.7.8' as const;
+export const RULES_VERSION = '0.7.9' as const;

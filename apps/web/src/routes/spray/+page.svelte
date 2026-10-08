@@ -14,13 +14,13 @@
   import SetupPlantingBackfill from '$lib/components/setup/SetupPlantingBackfill.svelte';
   import type { SetupPlantingResult, SetupSprayerResult } from '$lib/setup/types';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
-  import { killsFamily, type CropFamily } from '$lib/safety/cropFamilyLethality';
-  import { ingredientKillsFamily } from '$lib/safety/ingredientLethality';
-  import { CHEMISTRY_CLASSES, type ChemistryClass } from '$lib/safety/types';
+  import type { CropFamily } from '$lib/safety/cropFamilyLethality';
+  import { herbicideHarm } from '$lib/spray/herbicideHarm';
   import { herbicideRatePreview } from '$lib/dilution/ratePreview';
   import FallbackRateLine from '$lib/components/spray/FallbackRateLine.svelte';
   import CropLabelRates from '$lib/components/spray/CropLabelRates.svelte';
   import type { CropRateRow } from '$lib/plugins/cropRate';
+  import type { EarlierLabel } from '$lib/plugins/earlierRegistration';
   import Banner from '$lib/components/ui/Banner.svelte';
   import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
@@ -229,7 +229,7 @@
     requiresDecon: boolean;
     dilutions?: Dilution[];
     noLabelRate?: string[];
-    cropLabel?: Array<{ pluginId: string; rows: CropRateRow[] }>;
+    cropLabel?: Array<{ pluginId: string; rows: CropRateRow[]; earlierLabels?: EarlierLabel[] }>;
     tankMixOrder?: TankMixStep[];
     ruleVersion: string;
     pluginHashes: Record<string, string>;
@@ -248,29 +248,18 @@
   );
   let taskOutcome = $state<RecordTaskClose | null>(null);
   let taskQueued = $state(false);
-  const pickedFamilies = $derived([
-    ...new Set(
-      selectedBlocks.flatMap((b) =>
-        b.crops.flatMap((c) => (typeof c.cropFamily === 'string' ? [String(c.cropFamily)] : []))
-      )
+  const pickedCrops = $derived(
+    selectedBlocks.flatMap((b) =>
+      b.crops.map((c) => ({
+        pluginId: String(c.pluginId),
+        displayName: String(c.displayName ?? c.pluginId),
+        family: typeof c.cropFamily === 'string' ? (c.cropFamily as CropFamily) : undefined
+      }))
     )
-  ]);
+  );
   type HerbicideRow = (typeof data.allHerbicides)[number];
-  function harmedFamilies(h: HerbicideRow): string[] {
-    const out = new Set<string>();
-    for (const cls of h.chemistryClasses) {
-      if (!cls || !(CHEMISTRY_CLASSES as readonly string[]).includes(cls)) continue;
-      for (const f of pickedFamilies) {
-        if (killsFamily(cls as ChemistryClass, f as CropFamily)) out.add(f);
-      }
-    }
-    for (const name of h.activeNames) {
-      for (const f of pickedFamilies) {
-        if (ingredientKillsFamily(name, f as CropFamily)) out.add(f);
-      }
-    }
-    return [...out].sort();
-  }
+  const harmedFamilies = (h: HerbicideRow) => herbicideHarm(h, pickedCrops).families;
+  const labelRulesOut = (h: HerbicideRow) => herbicideHarm(h, pickedCrops).ruledOut;
   const herbicideList = $derived.by(() => {
     const base = showAllHerbicides ? data.allHerbicides : data.herbicides;
     const q = herbicideQuery.trim().toLowerCase();
@@ -975,6 +964,7 @@
     <div class="cards">
       {#each herbicideList as h (h.pluginId)}
         {@const harmed = harmedFamilies(h)}
+        {@const ruledOut = labelRulesOut(h)}
         <button
           type="button"
           class="card"
@@ -986,7 +976,8 @@
           <strong>{h.displayName}</strong>
           {#if harmed.length > 0}
             <small class="harm" data-testid="herbicide-harm" lang="en" data-english-only="safety">
-              Harms {harmed.join(', ')} crops on the picked blocks
+              Harms {harmed.join(', ')} crops on the picked blocks{#if ruledOut.length > 0}. Its
+                label rules out {ruledOut.join(', ')}{/if}
             </small>
           {/if}
           {#if h.hracGroups && h.hracGroups.length > 0}
@@ -1421,7 +1412,7 @@
         </table>
         {#each result.cropLabel ?? [] as note (note.pluginId)}
           <h4 class="crop-rate-product">{herbicideName(note.pluginId)}</h4>
-          <CropLabelRates rows={note.rows} mixNote />
+          <CropLabelRates rows={note.rows} earlierLabels={note.earlierLabels} mixNote />
         {/each}
 
         <!-- Last-tank fill increments. Crystal-clear "pour this much

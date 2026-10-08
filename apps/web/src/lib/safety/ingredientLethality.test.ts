@@ -119,18 +119,15 @@ describe('per-ingredient lethality (#768)', () => {
     );
   });
 
-  it('Chaparral (metsulfuron) still passes on pasture and grass hay', () => {
+  it('Chaparral (metsulfuron) still passes on pasture and warm-season forage grass', () => {
     const chaparral = herbicide('chaparral-aminopyralid-metsulfuron');
-    for (const id of [
-      'orchard-grass-potomac',
-      'timothy-climax',
-      'sudangrass-piper',
-      'bmr-sorghum-sudan'
-    ]) {
+    for (const id of ['sudangrass-piper', 'bmr-sorghum-sudan']) {
       expect(codes(chaparral, crop(id)), id).toEqual([]);
     }
+    const hay = Object.keys(INGREDIENT_KILL_ADDITIONS.metsulfuron.killsCropPlugins ?? {});
     fc.assert(
       fc.property(fc.string({ minLength: 1, maxLength: 12 }), (id) => {
+        fc.pre(!hay.includes(id));
         expect(
           checkCropCompatibility([chaparral], { cropPluginId: id, cropFamily: 'forage-grass' })
         ).toEqual([]);

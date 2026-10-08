@@ -218,6 +218,8 @@ export const esSprayui: Partial<Record<MessageKey, string>> = {
     'La mezcla usa el extremo bajo de la dosis de la etiqueta para este cultivo. Use más solo si la etiqueta lo permite para sus malezas y su suelo.',
   'sprayui.cropRate.noRate':
     'No hay dosis de la etiqueta registrada para este cultivo. Revise la etiqueta.',
+  'sprayui.cropRate.earlierLabel':
+    'De una etiqueta de {year} del registro anterior {number}. Revise su etiqueta actual.',
   'sprayui.cropRate.byCropHint':
     'La dosis de la etiqueta depende del cultivo. La mezcla la usa cuando todos los cultivos del bloque tienen una registrada.',
   'sprayui.card.product': 'Producto',

@@ -4,13 +4,16 @@
   import { cropDisplayName } from '$lib/i18n/cropName';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { cropRateText, type CropRateRow } from '$lib/plugins/cropRate';
+  import { earlierLabelNotice, type EarlierLabel } from '$lib/plugins/earlierRegistration';
 
   interface Props {
     rows: CropRateRow[];
     /** Say that the mix uses the low end of the range (the /spray card). */
     mixNote?: boolean;
+    /** Ruling LF-2: labels filed under an earlier registration. */
+    earlierLabels?: EarlierLabel[];
   }
-  const { rows, mixNote = false }: Props = $props();
+  const { rows, mixNote = false, earlierLabels = [] }: Props = $props();
   const locale = $derived(page.data?.locale);
   const tr = $derived(createT(locale));
   const ranged = $derived(rows.some((r) => r.rate?.maxAmount !== undefined));
@@ -58,6 +61,11 @@
         {/each}
       </tbody>
     </table>
+    {#each earlierLabels as label (`${label.registration}|${label.year}`)}
+      <p class="note earlier" data-testid="crop-rate-earlier-label">
+        {earlierLabelNotice(label, locale)}
+      </p>
+    {/each}
     {#if mixNote && ranged}
       <p class="note">{tr('sprayui.cropRate.mixedAtLow')}</p>
     {/if}

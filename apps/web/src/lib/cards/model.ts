@@ -127,6 +127,9 @@ export interface CardBedMap {
   /** Epoch ms of the day `crops` describes. */
   onMs: number;
   beds: CardBedMapBed[];
+  /** Beds with no room left in the Area, listed by name instead of drawn
+   *  on top of each other (#756). */
+  notPlaced?: string[];
 }
 
 /** One open task on a Week or Month Card. Spray tasks carry no title or

@@ -244,7 +244,12 @@ export async function fillBed(args: {
   locale?: string | null;
 }): Promise<FillResponse> {
   const { userId, bed, req, inputs, locale } = args;
-  const plan = deterministicFillPlan(inputs.recipes, inputs.unplaced, inputs.ctx, req.dateMs);
+  const plan = deterministicFillPlan(
+    inputs.recipes,
+    inputs.unplaced,
+    { ...inputs.ctx, locale, plantingWindow: windowLookup(inputs) },
+    req.dateMs
+  );
   const tried = await tryAiWithGuard({
     endpoint: 'garden-fill',
     userId,
@@ -262,6 +267,7 @@ export async function fillBed(args: {
       provenance: 'fallback',
       fallbackReason: tried.fallbackReason,
       message: fallbackMessage(why, plan, req.dateMs, limit, locale),
+      notes: plan.notes,
       aiLimit: limit
     };
   }
@@ -293,7 +299,8 @@ export async function fillBed(args: {
       proposals: plan.proposals,
       provenance: 'fallback',
       fallbackReason: null,
-      message: fallbackMessage('invalid', plan, req.dateMs, null, locale)
+      message: fallbackMessage('invalid', plan, req.dateMs, null, locale),
+      notes: plan.notes
     };
   }
   return { proposals, provenance: 'ai', fallbackReason: null, message: null };

@@ -12,7 +12,7 @@ import {
   type DesignInput,
   type DesignPlantingInput
 } from './design';
-import { canvasFromArea, rectsOverlap } from './geometry';
+import { canvasFromArea, DEFAULT_SPOT_SPACING, rectsOverlap } from './geometry';
 import { seasonFrostMs } from './design';
 import { frostDatesFromMmDd } from '$lib/schedule/frostSeason';
 
@@ -122,6 +122,40 @@ describe('layoutBeds', () => {
     );
     expect(beds.find((b) => b.blockId === 'pot')).toMatchObject({ widthFt: 1, lengthFt: 1 });
     expect(beds.find((b) => b.blockId === 'bed')).toMatchObject({ widthFt: 4, lengthFt: 8 });
+  });
+});
+
+describe('layoutBeds paths and full Areas (#756)', () => {
+  it('leaves the designer path between beds laid out without a spot', () => {
+    const { beds } = layoutBeds(
+      [1, 2, 3].map((n) => block({ id: `b${n}`, name: `Bed ${n}`, widthFt: 2.5, lengthFt: 10 })),
+      canvas
+    );
+    for (let i = 0; i < beds.length; i++) {
+      for (let j = i + 1; j < beds.length; j++) {
+        const a = beds[i].rect;
+        const b = beds[j].rect;
+        const gapX = Math.max(b.x - (a.x + a.w), a.x - (b.x + b.w));
+        const gapY = Math.max(b.y - (a.y + a.l), a.y - (b.y + b.l));
+        expect(Math.max(gapX, gapY)).toBeGreaterThanOrEqual(DEFAULT_SPOT_SPACING.aisleFt);
+      }
+    }
+    for (const b of beds) expect(b.rect.x).toBeGreaterThanOrEqual(DEFAULT_SPOT_SPACING.insetFt);
+  });
+
+  it('lists beds with no room left instead of only stacking them at the corner', () => {
+    const many = Array.from({ length: 30 }, (_, i) =>
+      block({ id: `b${i}`, name: `Bed ${i}`, widthFt: 4, lengthFt: 8 })
+    );
+    const { beds, noRoomBedIds } = layoutBeds(many, canvas);
+    expect(noRoomBedIds.length).toBeGreaterThan(0);
+    const placed = beds.filter((b) => !noRoomBedIds.includes(b.blockId));
+    for (let i = 0; i < placed.length; i++) {
+      for (let j = i + 1; j < placed.length; j++) {
+        expect(rectsOverlap(placed[i].rect, placed[j].rect)).toBe(false);
+      }
+    }
+    expect(buildGardenDesign(input({ blocks: many }))!.noRoomBedIds).toEqual(noRoomBedIds);
   });
 });
 

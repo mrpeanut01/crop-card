@@ -13,7 +13,14 @@ import {
   parseMmDd
 } from '$lib/schedule/constants';
 import { frostSeasonYears, type MonthDay } from '$lib/schedule/frostSeason';
-import { bedRect, canvasFromArea, clampToArea, freeSpot, rectFt } from './geometry';
+import {
+  bedRect,
+  canvasFromArea,
+  clampToArea,
+  DEFAULT_SPOT_SPACING,
+  freeSpot,
+  rectFt
+} from './geometry';
 import { plantCount, resolveSpacing } from './plantCount';
 import { plantingOccupancy } from './occupancy';
 import type {
@@ -108,11 +115,13 @@ function byName(a: { name: string }, b: { name: string }): number {
 }
 
 /** Beds and containers laid out on the Area canvas. Stored positions win;
- *  the rest go to `freeSpot` in name order and are reported as unplaced. */
+ *  the rest go to `freeSpot` in name order, with the designer's own path
+ *  between beds, and are reported as unplaced. Beds with no free spot left
+ *  stay at the corner and are also listed in `noRoomBedIds` (#756). */
 export function layoutBeds(
   blocks: readonly DesignBlockInput[],
   canvas: GardenDesign['canvas']
-): { beds: BedLayout[]; unplacedBedIds: string[] } {
+): { beds: BedLayout[]; unplacedBedIds: string[]; noRoomBedIds: string[] } {
   const designable = blocks
     .filter((b) => b.kind === 'bed' || b.kind === 'container')
     .slice()
@@ -141,12 +150,22 @@ export function layoutBeds(
     }
   }
   const unplacedBedIds: string[] = [];
+  const noRoomBedIds: string[] = [];
   for (const bed of pending) {
-    const spot = freeSpot(bed.widthFt, bed.lengthFt, bed.rotationDeg, beds, canvas);
+    const spot = freeSpot(
+      bed.widthFt,
+      bed.lengthFt,
+      bed.rotationDeg,
+      beds,
+      canvas,
+      undefined,
+      DEFAULT_SPOT_SPACING
+    );
     beds.push(spot ? { ...bed, rect: spot } : bed);
     unplacedBedIds.push(bed.blockId);
+    if (!spot) noRoomBedIds.push(bed.blockId);
   }
-  return { beds, unplacedBedIds };
+  return { beds, unplacedBedIds, noRoomBedIds };
 }
 
 export function placedPlanting(
@@ -215,7 +234,7 @@ export function inSeason(
 export function buildGardenDesign(input: DesignInput): GardenDesign | null {
   if (!isDesignable(input.area.kind)) return null;
   const canvas = canvasFromArea(input.area);
-  const { beds, unplacedBedIds } = layoutBeds(input.blocks, canvas);
+  const { beds, unplacedBedIds, noRoomBedIds } = layoutBeds(input.blocks, canvas);
   const bedIds = new Set(beds.map((b) => b.blockId));
   const endOf = (p: DesignPlantingInput) =>
     plantingOccupancy(
@@ -260,7 +279,8 @@ export function buildGardenDesign(input: DesignInput): GardenDesign | null {
     asOf: input.asOf,
     readOnly: input.readOnlyReason !== null,
     readOnlyReason: input.readOnlyReason,
-    unplacedBedIds
+    unplacedBedIds,
+    ...(noRoomBedIds.length ? { noRoomBedIds } : {})
   };
 }
 

@@ -531,12 +531,14 @@
       const along = r.l - 0.4;
       const chip = openChip(bed, 'short');
       const both = `${full} · ${chip}`;
+      const vertical = fitText(textWidthFt(both, fontFt) <= along ? both : full, along, fontFt);
       return {
         name: '',
         chip: '',
         chipFont: fontFt * 0.8,
         chipOwnLine: false,
-        vertical: fitText(textWidthFt(both, fontFt) <= along ? both : full, along, fontFt)
+        vertical,
+        verticalTop: r.y + r.l - 0.2 - textWidthFt(vertical, fontFt)
       };
     }
     const room = r.w - 0.3;
@@ -555,7 +557,8 @@
       chip: sameLine || ownLine ? fitText(chip, room, chipFont) : '',
       chipFont,
       chipOwnLine: ownLine,
-      vertical: ''
+      vertical: '',
+      verticalTop: Infinity
     };
   }
 
@@ -786,7 +789,11 @@
               {@const glyph = familyGlyph(p.cropFamily)}
               {@const iconFt = Math.min(pr.w - 0.1, pr.l - 0.1, fontFt * 1.3)}
               {@const showIcon = iconFt * pxPerFt >= 12}
-              {@const fpLabel = footprintLabel(p, pr.w, iconFt, showIcon)}
+              {@const underName =
+                labels.vertical !== '' && pr.y + fontFt * 2.2 > labels.verticalTop}
+              {@const fpLabel = underName
+                ? { text: '', icon: false }
+                : footprintLabel(p, pr.w, iconFt, showIcon)}
               <g
                 class="planting {when}"
                 class:psel
@@ -833,7 +840,7 @@
                     <circle class="dot" {cx} {cy} r={Math.min(0.18, pr.w / 6, pr.l / 6)} />
                   {/each}
                 {/if}
-                {#if pr.w * pxPerFt > 24 && pr.l * pxPerFt > 16}
+                {#if !underName && pr.w * pxPerFt > 24 && pr.l * pxPerFt > 16}
                   {@const labelX = pr.x + 0.15 + (fpLabel.icon ? iconFt : 0)}
                   <text
                     class="fp-label"

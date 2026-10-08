@@ -1044,6 +1044,9 @@
       {#if fill}
         <div class="fill" data-testid="fill-results">
           {#if fill.message}<p class="banner">{fill.message}</p>{/if}
+          {#each fill.notes ?? [] as note, i (i)}
+            <p class="chip warn" data-testid="fill-note">{note}</p>
+          {/each}
           <AiLimitNudge limit={fill.aiLimit} isOwner={d.canEdit} />
           {#if fill.proposals.length === 0}
             <p class="empty">{tr('garden.insp.nothingFits')}</p>

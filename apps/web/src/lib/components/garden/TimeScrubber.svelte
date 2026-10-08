@@ -118,7 +118,7 @@
 <div class="scrubber" data-testid="time-scrubber" data-hint-anchor="designer_scrubber">
   <div class="row">
     <label for="designer-scrubber" class="label">
-      <span class="on">{tr('garden.scrub.on')} </span><strong>{dateLabel}</strong>
+      <span class="on">{`${tr('garden.scrub.on')} `}</span><strong>{dateLabel}</strong>
     </label>
     <button
       type="button"

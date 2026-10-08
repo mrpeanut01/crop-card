@@ -360,12 +360,16 @@ export function buildBedMap(
   const day = utcDayStart(onMs);
   const ivById = new Map(intervals.map((i) => [i.cropId, i]));
   const display = displayFootprints(design.beds, design.plantings, intervals, design.crops);
+  const noRoom = new Set(design.noRoomBedIds ?? []);
+  const drawn = design.beds.filter((b) => !noRoom.has(b.blockId));
+  const notPlaced = design.beds.filter((b) => noRoom.has(b.blockId)).map((b) => b.name);
   return {
+    ...(notPlaced.length ? { notPlaced } : {}),
     widthFt: design.canvas.widthFt,
     lengthFt: design.canvas.lengthFt,
     hasNorth: design.canvas.hasNorth,
     onMs: day,
-    beds: design.beds.map((b) => ({
+    beds: drawn.map((b) => ({
       name: b.name,
       kind: b.kind,
       x: b.rect.x,

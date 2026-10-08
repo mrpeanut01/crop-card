@@ -11,7 +11,6 @@ import { canSetUp, setupAreas, setupBlocks, setupSprayerTemplates } from '$lib/s
 import { organicBlocksForNotice } from '$lib/server/organicNotice';
 import { loadTaskContext } from '$lib/server/recordTaskClose';
 import { plantingPlannedAt, plantingStandsAt } from '$lib/server/sprayCrops';
-import { activeHerbicideReEntry, herbicideReiLookbackMs } from '$lib/spray/herbicideRei';
 
 /**
  * Load real blocks from DB. Deep-link query params:
@@ -37,7 +36,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       ])
   );
 
-  const { findRecentEditableEventForBlock, listSprayEvents } = await import('$lib/db/sprayEvents');
+  const { findRecentEditableEventForBlock } = await import('$lib/db/sprayEvents');
   const dbBlocks = listBlocks();
   // Phase 21b follow-up — pre-plant detection. A block is "pre-plant"
   // when none of its plantings are CURRENTLY IN THE GROUND
@@ -167,29 +166,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     if (herbicides.length === 0) herbicides = allHerbicides;
   }
 
-  const reiHours = new Map(
-    registry
-      .all()
-      .map((r) =>
-        r.plugin.type === 'herbicide'
-          ? ([r.plugin.pluginId, r.plugin.reEntryIntervalHours] as const)
-          : null
-      )
-      .filter((e) => e !== null)
-  );
-  const activeREI = activeHerbicideReEntry(
-    listSprayEvents({ fromMs: now - herbicideReiLookbackMs(reiHours.values()) }),
-    (id) => reiHours.get(id),
-    now
-  );
-  const reiBlockNames = Object.fromEntries(
-    dbBlocks.filter((b) => activeREI.some((e) => e.blockId === b.id)).map((b) => [b.id, b.name])
-  );
-
   return {
     blocks,
-    activeREI,
-    reiBlockNames,
     pasture: await loadSprayPastureContext(dbBlocks, registry),
     organicBlocks: organicBlocksForNotice(
       blocks.map((b) => b.id),

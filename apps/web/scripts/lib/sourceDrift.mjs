@@ -942,8 +942,20 @@ function renderFinding(f, checked, repo, maxRefs) {
       }`
     );
   }
-  if (f.refs.length > shown.length)
-    lines.push(`  - and ${f.refs.length - shown.length} more reference(s)`);
+  if (f.refs.length > shown.length) {
+    const rest = f.refs.slice(shown.length);
+    /** @type {Map<string, string[]>} */
+    const byPlugin = new Map();
+    for (const r of rest) {
+      const key = r.pluginId ?? r.file;
+      byPlugin.set(key, [...(byPlugin.get(key) ?? []), r.field ?? r.path]);
+    }
+    let line = [...byPlugin]
+      .map(([p, fields]) => `\`${p}\` ${[...new Set(fields)].join(', ')}`)
+      .join('; ');
+    if (line.length > 240) line = `${line.slice(0, 239)}…`;
+    lines.push(`  - ${shown.length ? 'Also: ' : ''}${line} (${rest.length} reference(s))`);
+  }
   if (f.oldDate || f.newDate)
     lines.push(`  - Old date ${f.oldDate ?? 'unknown'} → new date ${f.newDate ?? 'unknown'}`);
   if (f.detail) lines.push(`  - ${f.detail}`);

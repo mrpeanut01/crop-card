@@ -2089,6 +2089,10 @@
       "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00516-20190719.pdf",
       "on": "2026-10-08"
     },
+    "quote:epa-reg-sources.json:pollinator.sulfur-90w.sourceUrl:6bc0aaee6a7c": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/019713-00238-20170907.pdf",
+      "on": "2026-10-08"
+    },
     "quote:epa-reg-sources.json:rateByCrop.banvel.2.sourceUrl:1ec76fe75535": {
       "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
       "on": "2026-10-08"
@@ -2113,7 +2117,15 @@
       "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
       "on": "2026-10-08"
     },
+    "quote:orchard-calendar-sources.json:entries.pear-va-2026.swollen-bud.psylla.sources.1.url:ad6d7afeedca": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+      "on": "2026-10-08"
+    },
     "quote:orchard-calendar-sources.json:entries.pome-va-2026.half-inch-green.pests.sources.0.url:9d8c09e29cf4": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
+      "on": "2026-10-08"
+    },
+    "quote:orchard-calendar-sources.json:entries.pome-va-2026.silver-tip.aphids.sources.0.url:cea32f3bb333": {
       "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-419/ENTO-638.pdf",
       "on": "2026-10-08"
     },

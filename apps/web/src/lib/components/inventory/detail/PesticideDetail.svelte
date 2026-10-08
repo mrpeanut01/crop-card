@@ -25,7 +25,15 @@
   import type { PesticideDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
 
   type Props = Omit<PesticideDetailPayload, 'type'>;
-  const { item, lots, movements, plugin, phiByCrop = [], rateByCrop = [] }: Props = $props();
+  const {
+    item,
+    lots,
+    movements,
+    plugin,
+    phiByCrop = [],
+    rateByCrop = [],
+    rateByCropEarlierLabels = []
+  }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
   const rateFallback = $derived(isFallbackRate(plugin));
   const phiLongest = $derived(
@@ -144,7 +152,7 @@
       {:else}
         <p class="empty">{tr('inv.pest.noRate')}</p>
       {/if}
-      <CropLabelRates rows={rateByCrop} />
+      <CropLabelRates rows={rateByCrop} earlierLabels={rateByCropEarlierLabels} />
     </InvSection>
   </div>
 

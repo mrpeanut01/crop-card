@@ -13,6 +13,7 @@ import { SQFT_PER_ACRE } from './sketch';
 import { numberToLocaleString } from '$lib/intlCache';
 import { t } from '$lib/i18n';
 import { intlLocale } from '$lib/prefs';
+import { speciesWordsIn } from '$lib/i18n/speciesName';
 
 export interface CoopSpeciesOption {
   id: string;
@@ -28,12 +29,21 @@ export interface CoopSpeciesOption {
 export type CapacitySuggestion =
   { ok: true; count: number; basis: string; sourceName: string } | { ok: false; reason: string };
 
-export function coopSpeciesOption(p: SpeciesPlugin): CoopSpeciesOption {
+export function coopSpeciesOption(p: SpeciesPlugin, locale?: string | null): CoopSpeciesOption {
   const space = p.housingSpace;
+  const words = speciesWordsIn(
+    {
+      pluginId: p.pluginId,
+      displayName: p.displayName,
+      label: p.tile.label ?? p.displayName,
+      groupNoun: p.groupNoun
+    },
+    locale
+  );
   return {
     id: p.pluginId,
-    name: p.displayName,
-    plural: (p.tile.label ?? p.displayName).toLowerCase(),
+    name: words.displayName,
+    plural: words.label.toLowerCase(),
     indoorSqFt: space?.indoorSqFtPerAnimal ?? null,
     outdoorSqFt: space?.outdoorSqFtPerAnimal ?? null,
     sourceName: space?.sourceName ?? null

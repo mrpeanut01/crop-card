@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { detailsFromDraft, detailsSummary, draftFromDetails } from './areaDetailsForm';
 import { validateAreaDetails } from './areaKinds';
+import { t } from '$lib/i18n';
+import { FIXTURE_SPECIES } from '$lib/plugins/dataKinds.fixtures';
+import type { SpeciesPlugin } from '$lib/plugins/schemas';
 import {
   areaSqFt,
+  coopSpeciesOption,
   defaultCoopSpecies,
   suggestCapacity,
   type CoopSpeciesOption
@@ -190,5 +194,38 @@ describe('acresForApi', () => {
     expect(acresForApi(0.0023)).toBeUndefined();
     expect(acresForApi(0.126)).toBe(0.13);
     expect(acresForApi(null)).toBeUndefined();
+  });
+});
+
+describe('coop species words follow the viewer language (#633)', () => {
+  const plugin = (over: Record<string, unknown>) =>
+    ({ ...FIXTURE_SPECIES, ...over }) as unknown as SpeciesPlugin;
+  const shipped = plugin({
+    pluginId: 'chicken',
+    displayName: 'Chicken',
+    tile: { icon: 'egg', label: 'Chickens' }
+  });
+
+  it('names a shipped species in Spanish', () => {
+    const o = coopSpeciesOption(shipped, 'es');
+    expect(o.name).toBe(t('es', 'animallib.species.chicken.name'));
+    expect(o.plural).toBe(t('es', 'animallib.species.chicken.plural').toLowerCase());
+    expect(o.name).not.toBe('Chicken');
+  });
+
+  it('keeps English without a locale, and keeps a renamed farm copy as typed', () => {
+    expect(coopSpeciesOption(shipped)).toMatchObject({ name: 'Chicken', plural: 'chickens' });
+    expect(coopSpeciesOption(plugin({ pluginId: 'chicken', displayName: 'Hen' }), 'es').name).toBe(
+      'Hen'
+    );
+  });
+
+  it('writes square feet as pies² in the Spanish basis', () => {
+    const s = suggestCapacity(
+      { option: chicken, space: 'both', areaSqFt: null, shelterSqFt: 100, runSqFt: 400 },
+      'es'
+    );
+    expect(s.ok && s.basis).toMatch(/pies²/);
+    expect(s.ok && s.basis).not.toMatch(/sq ft/);
   });
 });

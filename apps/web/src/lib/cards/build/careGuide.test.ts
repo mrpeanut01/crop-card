@@ -78,7 +78,7 @@ describe('buildCareGuideCard', () => {
     });
     const es = buildCareGuideCard(withTree, 'apple-test', { locale: 'es' })!;
     expect(es.sections[0].items[2]).toBe(
-      'Estándar: al menos 30 ft entre árboles, primera fruta en 6 a 10 años'
+      'Estándar: al menos 30 pies entre árboles, primera fruta en 6 a 10 años'
     );
   });
 

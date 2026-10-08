@@ -37,13 +37,32 @@ describe('growing choices', () => {
   });
 
   it('creates one starter Area per choice with the right kind', () => {
-    expect(starterAreasFor(['garden', 'fields', 'hay', 'greenhouse'])).toEqual([
+    expect(
+      starterAreasFor(['garden', 'fields', 'hay', 'greenhouse']).map(
+        ({ nameKey: _, ...rest }) => rest
+      )
+    ).toEqual([
       { name: 'Kitchen Garden', kind: 'garden' },
       { name: 'Home Field', kind: 'field' },
       { name: 'Hayfield', kind: 'pasture', details: { use: 'hay' } },
       { name: 'High Tunnel', kind: 'greenhouse', details: { structure: 'high-tunnel' } }
     ]);
     expect(starterAreasFor([])).toEqual([]);
+  });
+
+  it('names starter Areas in the onboarding language (#614)', () => {
+    const all = ['garden', 'fields', 'hay', 'greenhouse'] as const;
+    expect(starterAreasFor(all, 'en').map((s) => s.name)).toEqual(
+      starterAreasFor(all).map((s) => s.name)
+    );
+    expect(starterAreasForAnswers([...all], ['animals', 'pets', 'chickens'], 'es')).toMatchObject([
+      { name: 'Huerto de la cocina', kind: 'garden' },
+      { name: 'Campo principal', kind: 'field' },
+      { name: 'Campo de heno', kind: 'pasture', details: { use: 'hay' } },
+      { name: 'Túnel alto', kind: 'greenhouse' },
+      { name: 'Granero', kind: 'barn' },
+      { name: 'Gallinero', kind: 'coop_pen' }
+    ]);
   });
 
   it('starter Areas use the same crop-area kinds and names as the setup sheets and map', () => {
@@ -108,7 +127,7 @@ describe('animal tiles', () => {
 
   it('seeds a Barn for animals, a Coop for chickens and nothing for pets', () => {
     expect(starterAreasForAnswers([], ['pets'])).toEqual([]);
-    expect(starterAreasForAnswers(['garden'], ['animals', 'pets', 'chickens'])).toEqual([
+    expect(starterAreasForAnswers(['garden'], ['animals', 'pets', 'chickens'])).toMatchObject([
       { name: 'Kitchen Garden', kind: 'garden' },
       { name: 'Barn', kind: 'barn' },
       { name: 'Chicken Coop', kind: 'coop_pen' }

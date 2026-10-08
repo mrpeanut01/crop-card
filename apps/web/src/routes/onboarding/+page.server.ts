@@ -245,10 +245,13 @@ export const actions: Actions = {
     }
     const existing = listFields();
     db.transaction(() => {
-      for (const s of starterAreasForAnswers(choices, animals)) {
-        if (existing.some((f) => f.kind === s.kind && f.name === s.name)) continue;
+      const english = starterAreasForAnswers(choices, animals);
+      const named = starterAreasForAnswers(choices, animals, event.locals.locale);
+      named.forEach((s, i) => {
+        const names = [s.name, english[i].name];
+        if (existing.some((f) => f.kind === s.kind && names.includes(f.name))) return;
         createField({ name: s.name, kind: s.kind, details: s.details ?? null });
-      }
+      });
       setFarmProfile(profile);
       if (farmAnimals) setFarmAnimals(farmAnimals);
       setOnboardingStatus('complete');

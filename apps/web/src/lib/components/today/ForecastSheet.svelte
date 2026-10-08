@@ -7,6 +7,7 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import WeatherIcon from './WeatherIcon.svelte';
   import { RAIN_POP_PCT, type TodayWeather } from '$lib/today/weatherSummary';
+  import { forecastWords } from '$lib/today/forecastText';
   import { fmt } from '$lib/prefsState.svelte';
 
   interface Props {
@@ -25,6 +26,7 @@
       <RealWeatherNote />
       <ul class="days">
         {#each weather.days as d (d.date)}
+          {@const words = forecastWords(d.shortForecast, page.data?.locale)}
           <li class="day">
             <div class="when">
               <span class="wd">{fmt.day(d.date, 'weekday')}</span>
@@ -41,7 +43,7 @@
               {/if}
             </div>
             <div class="detail">
-              {#if d.shortForecast}<span class="short">{d.shortForecast}</span>{/if}
+              {#if words}<span class="short" lang={words.lang ?? undefined}>{words.text}</span>{/if}
               <span class="meta">
                 <span class:wet={d.popPct >= RAIN_POP_PCT}
                   >{tr('today.forecast.rain', { pct: d.popPct })}</span

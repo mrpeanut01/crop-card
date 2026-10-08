@@ -13,6 +13,7 @@
   import type { CalendarGrid } from '$lib/today/views';
   import { shiftAnchor } from '$lib/today/views';
   import { RAIN_POP_PCT, type DayWeather } from '$lib/today/weatherSummary';
+  import { forecastWords } from '$lib/today/forecastText';
   import { fmt } from '$lib/prefsState.svelte';
 
   interface Props {
@@ -87,7 +88,7 @@
     const n = cells[d]?.length ?? 0;
     const w = weather[d];
     const parts = [fmt.day(d, 'date-long', { year: undefined })];
-    if (w) parts.push(w.shortForecast ?? '');
+    if (w) parts.push(forecastWords(w.shortForecast, page.data?.locale)?.text ?? '');
     parts.push(n === 0 ? tr('today.cal.nothingScheduledLc') : tr('today.cal.items', { count: n }));
     return parts.filter(Boolean).join(', ');
   }
@@ -139,7 +140,8 @@
             <span class="weekday">{fmt.day(d, 'weekday')}</span>
             <span class="serif daynum">{fmt.day(d, 'month-day')}</span>
             {#if w}
-              <span class="wx" title={w.shortForecast}>
+              {@const words = forecastWords(w.shortForecast, page.data?.locale)}
+              <span class="wx" title={words?.text}>
                 <WeatherIcon sky={w.sky} />
                 <span class="mono">
                   {#if w.overnightOnly}{fmt.qty(w.lowF, 'temperature')}{:else}{fmt.qty(
@@ -148,7 +150,8 @@
                     )}/{fmt.qty(w.lowF, 'temperature')}{/if}
                 </span>
                 {#if w.popPct >= RAIN_POP_PCT}<span class="pop">{w.popPct}%</span>{/if}
-                {#if w.shortForecast}<span class="sr-only">{w.shortForecast}</span>{/if}
+                {#if words}<span class="sr-only" lang={words.lang ?? undefined}>{words.text}</span
+                  >{/if}
               </span>
             {/if}
           </div>

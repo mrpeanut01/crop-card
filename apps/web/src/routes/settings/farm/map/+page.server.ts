@@ -25,7 +25,7 @@ export const load: ServerLoad = async ({ locals }) => {
   const blocks = listBlocks();
   const fields = listFields();
   const { housing, petsLayout } = await loadAreaHousing(fields);
-  const { coopSpecies, farmAnimals } = await loadCoopSpecies();
+  const { coopSpecies, farmAnimals } = await loadCoopSpecies(locals.locale);
   const grazing = await loadAreaGrazing(blocks, farmTimeZone());
   return {
     refused: false as const,

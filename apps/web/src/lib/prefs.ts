@@ -9,6 +9,7 @@
  */
 
 import { DEFAULT_TIME_ZONE, type DisplayUnits } from './profile';
+import { t, type MessageKey } from '$lib/i18n';
 import {
   dateTimeFormat,
   dateToLocaleDateString,
@@ -248,6 +249,22 @@ export interface FormatOpts {
   digits?: number;
   /** Omit the unit suffix (for table cells under a unit header). */
   bare?: boolean;
+  /** Write area and length units in this language ("pies²" in Spanish).
+   *  Without it the unit stays English, as exports need. */
+  locale?: string | null;
+}
+
+const UNIT_WORDS: Record<string, MessageKey> = {
+  ac: 'farm.unit.ac',
+  'sq ft': 'farm.unit.sqft',
+  ft: 'farm.unit.ft'
+};
+
+/** An area or length unit in `locale`; any other unit, and English, as is. */
+export function unitWord(unit: string, locale?: string | null): string {
+  if (!locale || locale === 'en') return unit;
+  const key = UNIT_WORDS[unit];
+  return key ? t(locale, key) : unit;
 }
 
 /** "12.5 ac" or "5.06 ha". Null/NaN renders as an em dash. */
@@ -262,7 +279,7 @@ export function formatQuantity(
   const digits = opts.digits ?? def.digits[prefs.units];
   const n = round(toDisplay(value, q, prefs), digits);
   if (opts.bare) return n;
-  const unit = def[prefs.units];
+  const unit = unitWord(def[prefs.units], opts.locale);
   return unit.startsWith('°') || unit.startsWith('/') ? `${n}${unit}` : `${n} ${unit}`;
 }
 
@@ -275,7 +292,7 @@ export const SMALL_AREA_ACRES = 0.1;
  *  garden bed, so a bed never reads as "0 ac". */
 export function formatArea(
   acres: number | null | undefined,
-  prefs: Pick<Prefs, 'units'>,
+  prefs: Pick<Prefs, 'units' | 'locale'>,
   opts: { digits?: number } = {}
 ): string {
   if (acres === null || acres === undefined || !Number.isFinite(acres)) return '—';
@@ -283,9 +300,9 @@ export function formatArea(
     const sqft = acres * SQFT_PER_ACRE;
     return prefs.units === 'metric'
       ? `${round(sqft * SQM_PER_SQFT, sqft * SQM_PER_SQFT < 10 ? 1 : 0)} m²`
-      : `${round(sqft, sqft < 10 ? 1 : 0)} sq ft`;
+      : `${round(sqft, sqft < 10 ? 1 : 0)} ${unitWord('sq ft', prefs.locale)}`;
   }
-  return formatQuantity(acres, 'area', prefs, opts);
+  return formatQuantity(acres, 'area', prefs, { ...opts, locale: prefs.locale });
 }
 
 /** Label-unit first, metric alongside for metric users:

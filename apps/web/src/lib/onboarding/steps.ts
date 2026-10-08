@@ -7,6 +7,7 @@
  */
 
 import type { AreaDetails, AreaKind } from '$lib/farm/areaKinds';
+import { t, type MessageKey } from '$lib/i18n';
 import { FARM_ANIMAL_CHOICES, type FarmAnimalChoice, type FarmProfile } from './profile';
 
 export type OnboardingScreen = 'farm' | 'growing';
@@ -23,6 +24,7 @@ export interface GrowingOption {
 
 export interface StarterArea {
   name: string;
+  nameKey: MessageKey;
   kind: AreaKind;
   details?: AreaDetails;
 }
@@ -32,25 +34,43 @@ export const GROWING_OPTIONS: readonly GrowingOption[] = [
     id: 'garden',
     title: 'A garden',
     blurb: 'Beds by the house, vegetables, herbs, a few fruit trees.',
-    starter: { name: 'Kitchen Garden', kind: 'garden' }
+    starter: {
+      name: 'Kitchen Garden',
+      nameKey: 'onboard.starter.kitchenGarden',
+      kind: 'garden'
+    }
   },
   {
     id: 'fields',
     title: 'Fields',
     blurb: 'Row crops, grain, market-garden blocks.',
-    starter: { name: 'Home Field', kind: 'field' }
+    starter: {
+      name: 'Home Field',
+      nameKey: 'onboard.starter.homeField',
+      kind: 'field'
+    }
   },
   {
     id: 'hay',
     title: 'Hay or pasture',
     blurb: 'Hayfields to cut and bale, or ground for grazing.',
-    starter: { name: 'Hayfield', kind: 'pasture', details: { use: 'hay' } }
+    starter: {
+      name: 'Hayfield',
+      nameKey: 'onboard.starter.hayfield',
+      kind: 'pasture',
+      details: { use: 'hay' }
+    }
   },
   {
     id: 'greenhouse',
     title: 'A greenhouse or high tunnel',
     blurb: 'Covered growing space for an early start and a late finish.',
-    starter: { name: 'High Tunnel', kind: 'greenhouse', details: { structure: 'high-tunnel' } }
+    starter: {
+      name: 'High Tunnel',
+      nameKey: 'onboard.starter.highTunnel',
+      kind: 'greenhouse',
+      details: { structure: 'high-tunnel' }
+    }
   }
 ];
 
@@ -84,8 +104,17 @@ export function profileForChoices(choices: readonly GrowingChoice[]): FarmProfil
   return null;
 }
 
-export function starterAreasFor(choices: readonly GrowingChoice[]): StarterArea[] {
-  return GROWING_OPTIONS.filter((o) => choices.includes(o.id)).map((o) => ({ ...o.starter }));
+/** A starter Area named in the language the owner onboarded in; the name
+ *  is stored as typed text from then on. English without a locale. */
+function named(s: StarterArea, locale?: string | null): StarterArea {
+  return { ...s, name: locale ? t(locale, s.nameKey) : s.name };
+}
+
+export function starterAreasFor(
+  choices: readonly GrowingChoice[],
+  locale?: string | null
+): StarterArea[] {
+  return GROWING_OPTIONS.filter((o) => choices.includes(o.id)).map((o) => named(o.starter, locale));
 }
 
 // ─── Animal tiles (Phase 32B) ────────────────────────────────────────────
@@ -106,7 +135,11 @@ export const ANIMAL_OPTIONS: readonly AnimalOption[] = [
     id: 'animals',
     title: 'Animals',
     blurb: 'Sheep, goats, cattle, pigs or horses.',
-    starter: { name: 'Barn', kind: 'barn' }
+    starter: {
+      name: 'Barn',
+      nameKey: 'onboard.starter.barn',
+      kind: 'barn'
+    }
   },
   {
     id: 'pets',
@@ -118,7 +151,11 @@ export const ANIMAL_OPTIONS: readonly AnimalOption[] = [
     id: 'chickens',
     title: 'Backyard chickens',
     blurb: 'A few hens or ducks for eggs.',
-    starter: { name: 'Chicken Coop', kind: 'coop_pen' }
+    starter: {
+      name: 'Chicken Coop',
+      nameKey: 'onboard.starter.chickenCoop',
+      kind: 'coop_pen'
+    }
   }
 ];
 
@@ -158,12 +195,13 @@ export function profileForAnswers(
 
 export function starterAreasForAnswers(
   growing: readonly GrowingChoice[],
-  animals: readonly AnimalChoice[]
+  animals: readonly AnimalChoice[],
+  locale?: string | null
 ): StarterArea[] {
-  const fromAnimals = ANIMAL_OPTIONS.filter((o) => animals.includes(o.id) && o.starter).map(
-    (o) => ({ ...o.starter! })
+  const fromAnimals = ANIMAL_OPTIONS.filter((o) => animals.includes(o.id) && o.starter).map((o) =>
+    named(o.starter!, locale)
   );
-  return [...starterAreasFor(growing), ...fromAnimals];
+  return [...starterAreasFor(growing, locale), ...fromAnimals];
 }
 
 export type OnboardingRoute =

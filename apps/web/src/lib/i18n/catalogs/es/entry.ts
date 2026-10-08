@@ -921,5 +921,11 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'entry.layout.impersonatingThisOwner': 'este propietario',
   'entry.layout.exitImpersonation': 'Salir de la suplantación',
   'entry.land.smsConsentTranslation':
-    'CropCard te enviará un código de inicio de sesión por mensaje de texto. Pueden aplicarse tarifas de mensajes y datos. Responde STOP para darte de baja o HELP para obtener ayuda.'
+    'CropCard te enviará un código de inicio de sesión por mensaje de texto. Pueden aplicarse tarifas de mensajes y datos. Responde STOP para darte de baja o HELP para obtener ayuda.',
+  'onboard.starter.kitchenGarden': 'Huerto de la cocina',
+  'onboard.starter.homeField': 'Campo principal',
+  'onboard.starter.hayfield': 'Campo de heno',
+  'onboard.starter.highTunnel': 'Túnel alto',
+  'onboard.starter.barn': 'Granero',
+  'onboard.starter.chickenCoop': 'Gallinero'
 };

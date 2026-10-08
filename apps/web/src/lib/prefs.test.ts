@@ -113,6 +113,16 @@ describe('formatArea: garden beds never read as 0 ac', () => {
     expect(formatArea(0.05, us)).toBe('2,178 sq ft');
   });
 
+  it('writes the unit in the viewer language only when asked (#621)', () => {
+    expect(formatArea(bed, { ...us, locale: 'es' })).toBe('40 pies²');
+    expect(formatArea(0.25, { ...us, locale: 'es' })).toBe('0.25 acres');
+    expect(formatArea(0.25, { ...us, locale: 'en' })).toBe('0.25 ac');
+    expect(formatArea(2, { ...metric, locale: 'es' })).toBe('0.81 ha');
+    expect(formatQuantity(0.25, 'area', us, { locale: 'es' })).toBe('0.25 acres');
+    expect(formatQuantity(12, 'weight', us, { locale: 'es' })).toBe('12 lb');
+    expect(formatQuantity(0.25, 'area', us)).toBe('0.25 ac');
+  });
+
   it('keeps acres and hectares for fields', () => {
     expect(formatArea(0.25, us)).toBe('0.25 ac');
     expect(formatArea(2, metric)).toBe('0.81 ha');

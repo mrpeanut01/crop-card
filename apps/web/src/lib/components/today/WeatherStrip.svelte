@@ -11,6 +11,7 @@
   import WeatherIcon from './WeatherIcon.svelte';
   import RealWeatherNote from '$lib/components/demo/RealWeatherNote.svelte';
   import { rainHint, type TodayWeather } from '$lib/today/weatherSummary';
+  import { forecastWords } from '$lib/today/forecastText';
   import { fmt } from '$lib/prefsState.svelte';
 
   interface Props {
@@ -56,15 +57,16 @@
     >
     {#if weather.status === 'ok'}
       {@const w = weather.summary}
+      {@const words = forecastWords(w.shortForecast, page.data?.locale)}
       <span
         class="cells"
         aria-label={weather.source === 'farm'
           ? tr('today.weather.atFarm')
           : tr('today.weather.local')}
       >
-        <span class="w-cell" title={w.shortForecast}>
+        <span class="w-cell" title={words?.text}>
           <WeatherIcon sky={w.sky} />
-          {#if w.shortForecast}<span class="sr-only">{w.shortForecast},</span>{/if}
+          {#if words}<span class="sr-only" lang={words.lang ?? undefined}>{words.text},</span>{/if}
           {#if w.tempKind === 'low'}<span class="lbl">{tr('today.weather.low')}</span>{/if}
           <span class="mono">{fmt.qty(w.tempF, 'temperature')}</span>
         </span>

@@ -182,6 +182,7 @@ export const enFarm = {
   'farm.notSet': 'Not set',
   'farm.unit.animals': 'animals',
   'farm.unit.ft': 'ft',
+  'farm.unit.ac': 'ac',
   'farm.unit.sqft': 'sq ft',
   'farm.coop.suggestedUpTo': 'Suggested: up to',
   'farm.coop.useInstead': 'Use {count} instead',

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
   import { onMount } from 'svelte';
-  import { dev } from '$app/env';
+  import { browser, dev } from '$app/env';
   // Fonts: `@font-face` declarations in $lib/styles/type.css use a local()
   // → CDN fallback chain so a missing font asset never crashes a route.
   // No npm dep on fontsource intentionally — the static `import` from
@@ -17,8 +17,18 @@
   import Banner from '$lib/components/ui/Banner.svelte';
   import UpdateToast from '$lib/components/ui/UpdateToast.svelte';
   import DemoBanner from '$lib/components/demo/DemoBanner.svelte';
+  import { setClientClockOffset } from '$lib/demo/clientClock';
 
   const { data, children } = $props();
+
+  // The /cards shell comes from the service worker without the demo clock
+  // script, and a tab can fall behind a fast forward made in another tab:
+  // put the tab on the farm's date before any child page reads the clock.
+  const demoClockOffset = () => data.demo?.offsetMs ?? 0;
+  if (browser) setClientClockOffset(demoClockOffset());
+  $effect.pre(() => {
+    setClientClockOffset(demoClockOffset());
+  });
   const tr = $derived(createT(data.locale));
 
   let pendingCount = $state<number | null>(null);

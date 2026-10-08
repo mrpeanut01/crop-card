@@ -2,6 +2,8 @@
  *  rebuilt as it would look on the new date; a Start from scratch farm only
  *  moves its clock. Time only ever moves forward. */
 
+import { t } from '$lib/i18n';
+import { formatCalendarDate } from '$lib/prefs';
 import { DAY_MS, addDaysYmd, ymdInYear, ymdOf, zonedMs } from './time';
 
 export const DEMO_CLOCK_OFFSET_KEY = 'demo_clock_offset_ms';
@@ -82,4 +84,19 @@ export function fastForwardOffset(
 export function parseOffset(raw: string | undefined | null): number {
   const n = Number(raw);
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
+/** A refused step names the farm's date now and the last date the demo
+ *  can reach, so a tab left behind by another tab's fast forward still
+ *  explains itself (#684). */
+export function tooFarMessage(
+  locale: string | null | undefined,
+  realNowMs: number,
+  offsetMs: number
+): string {
+  const day = (ms: number) => formatCalendarDate(ymdOf(ms), 'date', {}, locale);
+  return t(locale, 'entry.demo.ff.errTooFarAt', {
+    today: day(realNowMs + offsetMs),
+    limit: day(realNowMs + MAX_DEMO_OFFSET_MS)
+  });
 }

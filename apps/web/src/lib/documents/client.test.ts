@@ -52,6 +52,9 @@ describe('uploadDocument', () => {
   it('words the common refusals', () => {
     expect(refusalCopy(503, { code: 'VAULT_OFF' })).toBe("Document storage isn't set up yet.");
     expect(refusalCopy(403, { code: 'OWNER_ONLY' })).toBe('Only the farm owner can upload files.');
+    expect(
+      refusalCopy(403, { code: 'DEMO_DISABLED', error: 'No está disponible en la demo.' })
+    ).toBe('No está disponible en la demo.');
     expect(refusalCopy(500, {})).toBe("We couldn't save this file. Try again.");
     expect(fileHref('a b')).toBe('/api/documents/a%20b/file');
   });

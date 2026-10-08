@@ -92,4 +92,17 @@ describe('English-only messages', () => {
   it('no Spanish value exists for an English-only key', () => {
     for (const key of Object.keys(es)) expect(isEnglishOnly(key), key).toBe(false);
   });
+
+  it('does not double a sentence period after a value that ends in one (#612)', () => {
+    expect(t('es', 'entry.demo.banner', { time: '4:18 p.m.' })).toMatch(/a las 4:18 p\.m\.$/);
+    expect(t('en', 'entry.demo.banner', { time: '4:18 PM' })).toMatch(/at 4:18 PM\.$/);
+    fc.assert(
+      fc.property(fc.string(), fc.boolean(), (v, dot) => {
+        const value = dot ? `${v}.` : v;
+        const out = t('es', 'entry.demo.banner', { time: value });
+        expect(out.endsWith('..') && !value.endsWith('..')).toBe(false);
+        expect(out).toContain(value);
+      })
+    );
+  });
 });

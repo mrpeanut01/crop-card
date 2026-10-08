@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import { sql } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { db } from './client';
+import { runShifted } from '../server/clock';
 
 const WRITER = `
 const db = new (require('better-sqlite3'))(process.env.DB_PATH);
@@ -46,4 +47,41 @@ describe('db.transaction', () => {
     expect(errors).toEqual([]);
     expect(commits).toBeGreaterThan(0);
   }, 15_000);
+});
+
+describe('SQL default save times follow the request clock', () => {
+  const DAY = 86_400_000;
+  const WINDOW = 48 * 60 * 60 * 1000;
+
+  function stamp(): number {
+    db.run(
+      sql`create table if not exists _clock_probe (id integer primary key, created_at integer not null default (unixepoch() * 1000))`
+    );
+    const row = db.get<{ created_at: number }>(
+      sql`insert into _clock_probe default values returning created_at`
+    );
+    return row.created_at;
+  }
+
+  it('stamps the real time on a real farm, as the built-in does', () => {
+    const before = Math.floor(Date.now() / 1000) * 1000;
+    const at = stamp();
+    expect(at).toBeGreaterThanOrEqual(before);
+    expect(at).toBeLessThanOrEqual(Date.now());
+    const builtin = db.get<{ u: number }>(sql`select unixepoch('2020-01-01') as u`);
+    expect(builtin.u).toBe(1577836800);
+  });
+
+  it('stamps the demo date inside a fast-forwarded request, so the 48 h window holds', async () => {
+    const offset = 120 * DAY;
+    const { at, insideWindow } = await runShifted(offset, async () => {
+      const at = stamp();
+      return { at, insideWindow: Date.now() - at <= WINDOW };
+    });
+    expect(at).toBeGreaterThan(Date.now() + offset - 60_000);
+    expect(insideWindow).toBe(true);
+    const later = stamp();
+    expect(later).toBeLessThanOrEqual(Date.now());
+    expect(later).toBeLessThan(at - offset + 60_000);
+  });
 });

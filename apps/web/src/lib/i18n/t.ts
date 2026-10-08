@@ -38,9 +38,11 @@ function lookup(locale: Locale, key: string): string | undefined {
 
 function interpolate(template: string, params: MessageParams | undefined): string {
   if (!params) return template;
-  return template.replace(/\{(\w+)\}/g, (whole, name: string) =>
-    Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : whole
-  );
+  return template.replace(/\{(\w+)\}(\.(?!\.))?/g, (whole, name: string, dot?: string) => {
+    if (!Object.prototype.hasOwnProperty.call(params, name)) return whole;
+    const value = String(params[name]);
+    return dot && !value.endsWith('.') ? value + dot : value;
+  });
 }
 
 /** Translate `key` for `locale`. An unknown locale reads as English, a

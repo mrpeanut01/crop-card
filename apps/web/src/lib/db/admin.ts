@@ -13,6 +13,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { realNow } from '$lib/server/clock';
 import { type SQL, and, eq, inArray, isNotNull, isNull, lte, or } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
@@ -901,7 +902,7 @@ function wipeDocuments(): Record<string, number> {
   return db.transaction(() => {
     unscopedQueryNote('blob deletion queue');
     db.insert(blobDeletions)
-      .values({ storagePrefix: ownerStoragePrefix(ownerId) })
+      .values({ storagePrefix: ownerStoragePrefix(ownerId), requestedAt: new Date(realNow()) })
       .onConflictDoNothing()
       .run();
     return {

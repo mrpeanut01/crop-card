@@ -170,6 +170,13 @@ describe('demo fast forward', () => {
     expect(ownerCreatedAt(ownerId)).toBe(now);
     const more = fastForwardDemo(fakeEvent(user), { step: 'day' }, now);
     expect(more).toEqual({ ok: true, offsetMs: 8 * DAY_MS });
+    for (let i = 0; i < 24; i++) fastForwardDemo(fakeEvent(user), { step: 'month' }, now);
+    expect(fastForwardDemo(fakeEvent(user), { step: 'month' }, now)).toEqual({
+      ok: false,
+      reason: 'too-far',
+      offsetMs: demoFarmState(ownerId).offsetMs
+    });
+    expect(demoFarmState(ownerId).offsetMs).toBeGreaterThan(727 * DAY_MS);
     discardDemo(user);
   });
 

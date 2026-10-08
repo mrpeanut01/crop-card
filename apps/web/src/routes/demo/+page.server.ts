@@ -1,7 +1,7 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import { t } from '$lib/i18n';
 import { endDemo, fastForwardDemo, isDemoUser, startDemo } from '$lib/server/demo/lifecycle';
-import { parseFastForwardChoice } from '$lib/demo/fastForward';
+import { parseFastForwardChoice, tooFarMessage } from '$lib/demo/fastForward';
 import { realNow } from '$lib/server/clock';
 import type { PageServerLoad } from './$types';
 
@@ -42,10 +42,11 @@ export const actions: Actions = {
     const fd = await event.request.formData();
     const choice = parseFastForwardChoice(String(fd.get('to') ?? ''));
     if (!choice) return fail(400, { demoError: t(event.locals.locale, 'entry.demo.ff.errChoice') });
-    const result = fastForwardDemo(event, choice);
+    const now = realNow();
+    const result = fastForwardDemo(event, choice, now);
     if (!result.ok) {
       if (result.reason === 'not-demo') throw redirect(303, '/today');
-      return fail(400, { demoError: t(event.locals.locale, 'entry.demo.ff.errTooFar') });
+      return fail(400, { demoError: tooFarMessage(event.locals.locale, now, result.offsetMs) });
     }
     throw redirect(303, '/today');
   },

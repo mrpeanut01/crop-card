@@ -1,5 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { invalidateAll } from '$app/navigation';
+  import { ChevronDown, ChevronRight } from 'lucide-svelte';
   import { page } from '$app/state';
   import type { SubmitFunction } from '$app/forms';
   import { createT, type MessageKey } from '$lib/i18n';
@@ -15,6 +17,7 @@
     type DemoFarmKind
   } from '$lib/demo/fastForward';
   import { DAY_MS, ymdOf } from '$lib/demo/time';
+  import { DEMO_BLOCKED_PARAM } from '$lib/demo/identity';
 
   const {
     demo
@@ -25,6 +28,8 @@
 
   let busy = $state(false);
   let error = $state<string | null>(null);
+  let optsOpen = $state(false);
+  const blocked = $derived(page.url.searchParams.has(DEMO_BLOCKED_PARAM));
 
   const daysAhead = $derived(Math.round(demo.offsetMs / DAY_MS));
   const roomMs = $derived(MAX_DEMO_OFFSET_MS - demo.offsetMs);
@@ -84,6 +89,7 @@
       if (result.type === 'failure') {
         const msg = (result.data as { demoError?: unknown } | undefined)?.demoError;
         error = typeof msg === 'string' ? msg : tr('entry.demo.ff.errTooFar');
+        await invalidateAll();
         return;
       }
       await update();
@@ -100,73 +106,97 @@
       {tr('entry.demo.ff.today', { date: fmt.day(ymdOf(demo.today), 'date-long') })}
     </p>
   {/if}
-  <details class="try">
-    <summary>{tr('entry.demo.try')}</summary>
-    <ul>
-      {#each tryLinks as l (l.href)}
-        <li><a href={l.href}>{tr(l.key)}</a></li>
-      {/each}
-    </ul>
-  </details>
-  {#if demo.kind && (steps.length || phases.length)}
-    <details class="try ff" data-testid="demo-ff">
-      <summary>{tr('entry.demo.ff.title')}</summary>
-      <p class="ff-note">
-        {demo.kind === 'sample' ? tr('entry.demo.ff.noteSample') : tr('entry.demo.ff.noteScratch')}
-      </p>
-      <form method="POST" action="/demo?/forward" use:enhance={fullReload} class="ff-row">
-        {#each steps as s (s.id)}
-          <button
-            type="submit"
-            name="to"
-            value={`step:${s.id}`}
-            class="ff-btn"
-            disabled={busy}
-            data-testid={`demo-ff-${s.id}`}
-          >
-            {tr(`entry.demo.ff.step.${s.id}` as MessageKey)}
-          </button>
-        {/each}
-      </form>
-      {#if phases.length}
-        <p class="ff-sub">{tr('entry.demo.ff.jump')}</p>
-        <form method="POST" action="/demo?/forward" use:enhance={fullReload} class="ff-row">
-          {#each phases as p (p.id)}
-            <button
-              type="submit"
-              name="to"
-              value={`phase:${p.id}`}
-              class="ff-btn"
-              disabled={busy}
-              data-testid={`demo-ff-phase-${p.id}`}
-            >
-              <span>{tr(`entry.demo.ff.phase.${p.id}` as MessageKey)}</span>
-              <span class="ff-when">{fmt.day(ymdOf(p.at), 'month-day')}</span>
-            </button>
-          {/each}
-        </form>
-      {/if}
-    </details>
+  {#if blocked}
+    <p class="ff-error" role="alert" data-testid="demo-blocked">{tr('entry.demo.blocked')}</p>
   {/if}
   {#if error}
     <p class="ff-error" role="alert">{error}</p>
   {/if}
-  <div class="demo-actions">
-    <form method="POST" action="/demo?/reset" use:enhance={fullReload}>
-      <button type="submit" class="demo-btn" disabled={busy} data-testid="demo-reset">
-        {tr('entry.demo.reset')}
-      </button>
-    </form>
-    <form method="POST" action="/demo?/scratch" use:enhance={fullReload}>
-      <button type="submit" class="demo-btn" disabled={busy} data-testid="demo-scratch">
-        {tr('entry.demo.scratch')}
-      </button>
-    </form>
-    <form method="POST" action="/demo?/end" use:enhance={fullReload}>
-      <button type="submit" class="demo-btn ghost" disabled={busy} data-testid="demo-leave">
-        {tr('entry.demo.leave')}
-      </button>
-    </form>
+  <button
+    type="button"
+    class="opts-toggle"
+    aria-expanded={optsOpen}
+    aria-controls="demo-options"
+    data-testid="demo-options-toggle"
+    onclick={() => (optsOpen = !optsOpen)}
+  >
+    <span>{tr('entry.demo.options')}</span>
+    <ChevronDown size={18} aria-hidden="true" class="chev-down" />
+  </button>
+  <div id="demo-options" class="opts" class:open={optsOpen}>
+    <details class="try">
+      <summary>
+        <ChevronRight size={18} aria-hidden="true" class="chev" />
+        {tr('entry.demo.try')}
+      </summary>
+      <ul>
+        {#each tryLinks as l (l.href)}
+          <li><a href={l.href}>{tr(l.key)}</a></li>
+        {/each}
+      </ul>
+    </details>
+    {#if demo.kind && (steps.length || phases.length)}
+      <details class="try ff" data-testid="demo-ff">
+        <summary>
+          <ChevronRight size={18} aria-hidden="true" class="chev" />
+          {tr('entry.demo.ff.title')}
+        </summary>
+        <p class="ff-note">
+          {demo.kind === 'sample'
+            ? tr('entry.demo.ff.noteSample')
+            : tr('entry.demo.ff.noteScratch')}
+        </p>
+        <form method="POST" action="/demo?/forward" use:enhance={fullReload} class="ff-row">
+          {#each steps as s (s.id)}
+            <button
+              type="submit"
+              name="to"
+              value={`step:${s.id}`}
+              class="ff-btn"
+              disabled={busy}
+              data-testid={`demo-ff-${s.id}`}
+            >
+              {tr(`entry.demo.ff.step.${s.id}` as MessageKey)}
+            </button>
+          {/each}
+        </form>
+        {#if phases.length}
+          <p class="ff-sub">{tr('entry.demo.ff.jump')}</p>
+          <form method="POST" action="/demo?/forward" use:enhance={fullReload} class="ff-row">
+            {#each phases as p (p.id)}
+              <button
+                type="submit"
+                name="to"
+                value={`phase:${p.id}`}
+                class="ff-btn"
+                disabled={busy}
+                data-testid={`demo-ff-phase-${p.id}`}
+              >
+                <span>{tr(`entry.demo.ff.phase.${p.id}` as MessageKey)}</span>
+                <span class="ff-when">{fmt.day(ymdOf(p.at), 'month-day')}</span>
+              </button>
+            {/each}
+          </form>
+        {/if}
+      </details>
+    {/if}
+    <div class="demo-actions">
+      <form method="POST" action="/demo?/reset" use:enhance={fullReload}>
+        <button type="submit" class="demo-btn" disabled={busy} data-testid="demo-reset">
+          {tr('entry.demo.reset')}
+        </button>
+      </form>
+      <form method="POST" action="/demo?/scratch" use:enhance={fullReload}>
+        <button type="submit" class="demo-btn" disabled={busy} data-testid="demo-scratch">
+          {tr('entry.demo.scratch')}
+        </button>
+      </form>
+      <form method="POST" action="/demo?/end" use:enhance={fullReload}>
+        <button type="submit" class="demo-btn ghost" disabled={busy} data-testid="demo-leave">
+          {tr('entry.demo.leave')}
+        </button>
+      </form>
+    </div>
   </div>
 </Banner>
 
@@ -224,6 +254,51 @@
     min-height: 48px;
     display: inline-flex;
     align-items: center;
+    gap: 4px;
+    list-style: none;
+  }
+  .try summary::-webkit-details-marker {
+    display: none;
+  }
+  .try summary :global(.chev) {
+    flex: none;
+    transition: transform 0.15s ease;
+  }
+  .try[open] > summary :global(.chev) {
+    transform: rotate(90deg);
+  }
+  .opts-toggle {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    min-height: 48px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .opts-toggle :global(.chev-down) {
+    transition: transform 0.15s ease;
+  }
+  .opts-toggle[aria-expanded='true'] :global(.chev-down) {
+    transform: rotate(180deg);
+  }
+  @media (max-width: 640px) {
+    .opts-toggle {
+      display: inline-flex;
+    }
+    .opts:not(.open) {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .try summary :global(.chev),
+    .opts-toggle :global(.chev-down) {
+      transition: none;
+    }
   }
   .try ul {
     margin: 0 0 6px;

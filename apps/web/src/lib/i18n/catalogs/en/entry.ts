@@ -35,6 +35,10 @@ export const enEntry = {
   'entry.demo.ff.phase.winter': 'Winter',
   'entry.demo.ff.errChoice': 'Pick how far to move the date.',
   'entry.demo.ff.errTooFar': 'The demo can move the date up to two years ahead.',
+  'entry.demo.ff.errTooFarAt':
+    'The demo date is {today}. It can move up to two years past the real date, to {limit} at the latest.',
+  'entry.demo.options': 'Demo options',
+  'entry.demo.realWeather': "Today's real weather, not the demo date's.",
   'entry.demo.leave': 'Leave and sign up',
   'entry.demo.try': 'Things to try',
   'entry.demo.try.week': "This week's tasks",

@@ -23,5 +23,6 @@
   "requiresAMS": false,
   "deconRequired": false,
   "epaRegistrationNumber": "100-620",
+  "reEntryIntervalHours": 48,
   "notes": "Syngenta Group 5 PSII triazine PRE for cotton, celery, dill, parsley, fennel, pigeon pea."
 }

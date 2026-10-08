@@ -27,5 +27,6 @@
   "requiresAMS": true,
   "deconRequired": true,
   "epaRegistrationNumber": "264-1063",
+  "reEntryIntervalHours": 12,
   "notes": "Bayer POST corn premix combining Group 2 ALS with Group 27 HPPD. Add AMS and methylated seed oil."
 }

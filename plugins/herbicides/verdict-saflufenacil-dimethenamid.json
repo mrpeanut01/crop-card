@@ -27,5 +27,6 @@
   "requiresAMS": true,
   "deconRequired": false,
   "epaRegistrationNumber": "7969-279",
+  "reEntryIntervalHours": 12,
   "notes": "BASF PRE plus burndown premix. PPO for emerged broadleaves and Group 15 residual for grass and waterhemp."
 }

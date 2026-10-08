@@ -18,5 +18,6 @@
   "requiresAMS": false,
   "deconRequired": false,
   "epaRegistrationNumber": "264-738",
+  "reEntryIntervalHours": 12,
   "notes": "Bayer Group 5 PSII triazine for potato, soybean, tomato (transplant), wheat, asparagus. PRE and early POST."
 }

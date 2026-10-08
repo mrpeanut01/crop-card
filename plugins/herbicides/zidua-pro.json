@@ -31,5 +31,6 @@
   "requiresAMS": true,
   "deconRequired": false,
   "epaRegistrationNumber": "7969-365",
+  "reEntryIntervalHours": 12,
   "notes": "BASF PRE three-way premix for soybeans. Group 15 plus Group 14 plus Group 2 for residual and burndown."
 }

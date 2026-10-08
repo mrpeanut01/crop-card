@@ -33,6 +33,23 @@ describe('pesticide label sources (#640 #661 #716)', () => {
     expect(pesticideLabelSourceGaps(loadPesticides(), SOURCES)).toEqual([]);
   });
 
+  it('every herbicide with an EPA number carries a label REI, or a reason it cannot', () => {
+    const noReiOnLabel: Record<string, string> = {
+      crossbow:
+        'Label gives no REI hours; its only entry line is "Do not allow people (or pets) to enter the treated area until sprays have dried."',
+      'method-aminocyclopyrachlor': 'Non-crop label with no Agricultural Use Requirements box.'
+    };
+    const missing = loadPesticides()
+      .filter(
+        (p) =>
+          p.type === 'herbicide' &&
+          (p as { epaRegistrationNumber?: string }).epaRegistrationNumber &&
+          p.reEntryIntervalHours === undefined
+      )
+      .map((p) => p.pluginId);
+    expect(missing.sort()).toEqual(Object.keys(noReiOnLabel).sort());
+  });
+
   it('refuses a herbicide REI with no quote that states the hours', () => {
     const p = { ...base, reEntryIntervalHours: 24 };
     expect(pesticideLabelSourceGaps([p], {})).toHaveLength(1);

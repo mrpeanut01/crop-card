@@ -26,6 +26,7 @@
   "requiresAMS": false,
   "deconRequired": false,
   "epaRegistrationNumber": "59639-193",
+  "reEntryIntervalHours": 12,
   "defaultUnit": "oz",
   "notes": "Valent PRE premix for soybean and field corn. PPO plus VLCFA for broad residual on waterhemp, Palmer amaranth, grasses."
 }

@@ -4,6 +4,7 @@
   "displayName": "Liberty 280 SL (BASF)",
   "version": "1.0.1",
   "epaRegistrationNumber": "7969-448",
+  "reEntryIntervalHours": 12,
   "defaultUnit": "fl-oz",
   "formulation": "SL",
   "applicationTiming": "POST",

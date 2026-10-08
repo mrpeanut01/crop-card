@@ -4,6 +4,7 @@
   "displayName": "Halex GT (Syngenta)",
   "version": "1.0.1",
   "epaRegistrationNumber": "100-1282",
+  "reEntryIntervalHours": 24,
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
   "activeIngredients": [

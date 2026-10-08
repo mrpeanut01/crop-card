@@ -4,6 +4,7 @@
   "displayName": "Me-Too-Lachlor II",
   "version": "1.0.1",
   "epaRegistrationNumber": "19713-549",
+  "reEntryIntervalHours": 24,
   "defaultUnit": "fl-oz",
   "formulation": "EC",
   "applicationTiming": "PRE",

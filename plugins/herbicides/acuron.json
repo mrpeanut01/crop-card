@@ -5,6 +5,7 @@
   "version": "1.0.1",
   "formulation": "ZC",
   "epaRegistrationNumber": "100-1466",
+  "reEntryIntervalHours": 24,
   "defaultUnit": "fl-oz",
   "applicationTiming": "PRE",
   "activeIngredients": [
@@ -45,5 +46,12 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "grazingRestrictions": {
+    "grazeDays": 45,
+    "hayDays": 60,
+    "lactatingDairyGrazeDays": 45,
+    "meatAnimalRemovalBeforeSlaughterDays": 0,
+    "source": "Acuron herbicide, EPA Reg. No. 100-1466, EPA-accepted label 2021-11-10; use restrictions"
+  }
 }

@@ -30,5 +30,6 @@
   "requiresAMS": false,
   "deconRequired": true,
   "epaRegistrationNumber": "279-9595",
+  "reEntryIntervalHours": 4,
   "notes": "FMC POST broadleaf herbicide for soybeans, cereals and field corn; the label has no pasture or rangeland use. Group 2 ALS-inhibitor."
 }

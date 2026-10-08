@@ -21,6 +21,7 @@
   import FallbackRateLine from '$lib/components/spray/FallbackRateLine.svelte';
   import CropLabelRates from '$lib/components/spray/CropLabelRates.svelte';
   import type { CropRateRow } from '$lib/plugins/cropRate';
+  import type { EarlierLabel } from '$lib/plugins/earlierRegistration';
   import Banner from '$lib/components/ui/Banner.svelte';
   import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
@@ -229,7 +230,7 @@
     requiresDecon: boolean;
     dilutions?: Dilution[];
     noLabelRate?: string[];
-    cropLabel?: Array<{ pluginId: string; rows: CropRateRow[] }>;
+    cropLabel?: Array<{ pluginId: string; rows: CropRateRow[]; earlierLabels?: EarlierLabel[] }>;
     tankMixOrder?: TankMixStep[];
     ruleVersion: string;
     pluginHashes: Record<string, string>;
@@ -1421,7 +1422,7 @@
         </table>
         {#each result.cropLabel ?? [] as note (note.pluginId)}
           <h4 class="crop-rate-product">{herbicideName(note.pluginId)}</h4>
-          <CropLabelRates rows={note.rows} mixNote />
+          <CropLabelRates rows={note.rows} earlierLabels={note.earlierLabels} mixNote />
         {/each}
 
         <!-- Last-tank fill increments. Crystal-clear "pour this much

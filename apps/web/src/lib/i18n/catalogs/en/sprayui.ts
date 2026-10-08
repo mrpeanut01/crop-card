@@ -212,6 +212,8 @@ export const enSprayui = {
   'sprayui.cropRate.mixedAtLow':
     'The mix uses the low end of the label rate for this crop. Use more only as the label allows for your weeds and soil.',
   'sprayui.cropRate.noRate': 'No label rate on file for this crop. Check the label.',
+  'sprayui.cropRate.earlierLabel':
+    'From a {year} label of the earlier registration {number}. Check your current label.',
   'sprayui.cropRate.byCropHint':
     'Label rate depends on the crop. The mix uses it when every crop on the block has one on file.',
   'sprayui.card.product': 'Product',

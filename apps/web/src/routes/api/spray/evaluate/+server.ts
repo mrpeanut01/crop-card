@@ -29,6 +29,8 @@ import {
 import { getStockItem, getStockItemByPluginId, type StockItem } from '$lib/db/stock';
 import type { HerbicidePlugin } from '$lib/plugins/schemas';
 import { cropRateRows, withCropRate, type CropRateRow } from '$lib/plugins/cropRate';
+import { cropRateEarlierLabels } from '$lib/server/cropRateSources';
+import type { EarlierLabel } from '$lib/plugins/earlierRegistration';
 import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
 import {
   buildTankMixSteps,
@@ -201,9 +203,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   let tankMixOrder: TankMixStep[] | undefined;
   // #737: label rates and stage limits by crop for the crops on this block.
   const sprayedCropIds = [crops.primary, ...crops.coPlanted].map((c) => c.cropPluginId);
-  const cropLabel: Array<{ pluginId: string; rows: CropRateRow[] }> = fullProducts
+  const cropLabel: Array<{
+    pluginId: string;
+    rows: CropRateRow[];
+    earlierLabels: EarlierLabel[];
+  }> = fullProducts
     .map((p) => ({
       pluginId: p.pluginId,
+      earlierLabels: cropRateEarlierLabels(p),
       rows: cropRateRows(p, (id) => registry.get(id)?.plugin.displayName ?? id).filter((r) =>
         sprayedCropIds.includes(r.cropPluginId)
       )

@@ -74,5 +74,11 @@
  * and is no longer lethal to legume forage (alfalfa, birdsfoot trefoil,
  * clovers), the one family its label covers; it stays lethal to every
  * other family. Corn gluten meal stays `unclassified`.
+ * #768 — 0.7.8: per-active-ingredient lethality (`ingredientLethality.ts`)
+ * adds grass families to a sulfonylurea's class row from its label:
+ * nicosulfuron and thiencarbazone stop cereals, grass cover and grass hay;
+ * metsulfuron stops corn, cereals and grass cover but keeps Chaparral's
+ * labelled pasture use; chlorimuron stops every grass family; thifensulfuron
+ * stops grass hay. An ingredient can only make a verdict stricter.
  */
-export const RULES_VERSION = '0.7.7' as const;
+export const RULES_VERSION = '0.7.8' as const;

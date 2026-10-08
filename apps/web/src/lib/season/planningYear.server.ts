@@ -33,7 +33,17 @@ export function planningFrost(): PlanningFrost {
 }
 
 export function getActivePlanningYear(now: Date = new Date()): number {
-  return resolvePlanningYear(storedPlanningYear(), now, planningFrost());
+  return activePlanningYearAndFrost(now).active;
+}
+
+/** The active planning year and the frost dates it was resolved from, with
+ *  one frost read. */
+export function activePlanningYearAndFrost(now: Date = new Date()): {
+  active: number;
+  frost: PlanningFrost;
+} {
+  const frost = planningFrost();
+  return { active: resolvePlanningYear(storedPlanningYear(), now, frost), frost };
 }
 
 export function setActivePlanningYear(year: number, now: Date = new Date()): void {

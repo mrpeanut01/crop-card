@@ -54,6 +54,11 @@ export function listSprayers(): Sprayer[] {
   return listEquipment({ type: 'sprayer' }).map(toSprayer);
 }
 
+/** The sprayers in an equipment list the caller already read. */
+export function sprayersFrom(all: ReturnType<typeof listEquipment>): Sprayer[] {
+  return all.filter((e) => e.type === 'sprayer').map(toSprayer);
+}
+
 export function getSprayer(id: string): Sprayer | undefined {
   const eq = getEquipment(id);
   if (!eq || eq.type !== 'sprayer') return undefined;

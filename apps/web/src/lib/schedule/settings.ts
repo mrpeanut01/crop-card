@@ -5,7 +5,7 @@
  * Anything that calls `getSetting()` lives here.
  */
 
-import { getSetting } from '$lib/db/settings';
+import { getSetting, type SettingReader } from '$lib/db/settings';
 import {
   DEFAULT_AI_DAILY_QUOTA,
   LOUDOUN_DEFAULT_LAT_LON,
@@ -42,15 +42,20 @@ function toLocalDay(ms: number): string {
 }
 
 export function getFarmLatLon(): FarmLatLon {
-  const raw = getSetting(SETTINGS_KEYS.farmLatLon);
-  if (!raw) return LOUDOUN_DEFAULT_LAT_LON;
+  return savedFarmLatLon() ?? LOUDOUN_DEFAULT_LAT_LON;
+}
+
+/** The coordinates the owner saved, or null when none are saved (one read). */
+export function savedFarmLatLon(read: SettingReader = getSetting): FarmLatLon | null {
+  const raw = read(SETTINGS_KEYS.farmLatLon);
+  if (!raw) return null;
   try {
     const v = JSON.parse(raw) as { lat?: unknown; lon?: unknown };
     if (typeof v.lat === 'number' && typeof v.lon === 'number') return { lat: v.lat, lon: v.lon };
   } catch {
     /* fall through */
   }
-  return LOUDOUN_DEFAULT_LAT_LON;
+  return null;
 }
 
 /** The owner's own monthly AI cap, or null when they have not set one.
@@ -81,7 +86,5 @@ export function getAiDailyCallQuotaOverrides(): Partial<Record<AiEndpointName, n
 
 /** True once the owner has saved real coordinates (not the Loudoun default). */
 export function hasFarmLatLon(): boolean {
-  const raw = getSetting(SETTINGS_KEYS.farmLatLon);
-  if (!raw) return false;
-  return getFarmLatLon() !== LOUDOUN_DEFAULT_LAT_LON;
+  return savedFarmLatLon() !== null;
 }

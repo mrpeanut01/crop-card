@@ -14,7 +14,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, exists, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, exists, inArray, lt, sql } from 'drizzle-orm';
 import type { SprayerLoadClass } from '$lib/safety/types';
 import { db } from './client';
 import { equipment, equipmentLog, equipmentState } from './schema';
@@ -103,12 +103,25 @@ export function listEquipment(filter?: { type?: EquipmentType }): EquipmentWithS
     .where(withTenant(equipment, filter?.type ? eq(equipment.type, filter.type) : undefined))
     .$dynamic();
   const rows = q.all();
+  if (rows.length === 0) return [];
+  const states = new Map<string, typeof equipmentState.$inferSelect>();
+  for (const s of db
+    .select()
+    .from(equipmentState)
+    .where(
+      withTenant(
+        equipmentState,
+        inArray(
+          equipmentState.equipmentId,
+          rows.map((r) => r.id)
+        )
+      )
+    )
+    .all()) {
+    if (!states.has(s.equipmentId)) states.set(s.equipmentId, s);
+  }
   return rows.map((r) => {
-    const stateRow = db
-      .select()
-      .from(equipmentState)
-      .where(withTenant(equipmentState, eq(equipmentState.equipmentId, r.id)))
-      .get();
+    const stateRow = states.get(r.id);
     const state = stateRow ? rowToState(stateRow) : { equipmentId: r.id };
     return { ...rowToEquipment(r), state };
   });

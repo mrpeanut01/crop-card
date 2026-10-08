@@ -1,5 +1,5 @@
 import type { SnapshotFrostDates } from '$lib/cards/snapshot';
-import { deleteSetting, getSetting, setSetting } from '$lib/db/settings';
+import { deleteSetting, getSetting, getSettings, setSetting } from '$lib/db/settings';
 import { normalizeFrost } from '$lib/schedule/farmLocation';
 import { SETTINGS_KEYS, type FarmLatLon } from '$lib/schedule/constants';
 import { lookupFrostDates, type FrostProbability } from './frostNormals';
@@ -29,14 +29,21 @@ const KEY: Record<FrostField, string> = {
 };
 
 export function loadStoredFrost(): { dates: StoredFrostDates; provenance: StoredFrostProvenance } {
+  const s = getSettings([
+    KEY.lastFrost,
+    KEY.firstFrost,
+    KEY.lastHardFrost,
+    KEY.firstHardFrost,
+    SETTINGS_KEYS.frostProvenance
+  ]);
   return {
     dates: {
-      lastFrost: getSetting(KEY.lastFrost) ?? null,
-      firstFrost: getSetting(KEY.firstFrost) ?? null,
-      lastHardFrost: getSetting(KEY.lastHardFrost) ?? null,
-      firstHardFrost: getSetting(KEY.firstHardFrost) ?? null
+      lastFrost: s.get(KEY.lastFrost) ?? null,
+      firstFrost: s.get(KEY.firstFrost) ?? null,
+      lastHardFrost: s.get(KEY.lastHardFrost) ?? null,
+      firstHardFrost: s.get(KEY.firstHardFrost) ?? null
     },
-    provenance: parseFrostProvenance(getSetting(SETTINGS_KEYS.frostProvenance))
+    provenance: parseFrostProvenance(s.get(SETTINGS_KEYS.frostProvenance))
   };
 }
 

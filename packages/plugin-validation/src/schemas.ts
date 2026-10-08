@@ -849,6 +849,25 @@ export const harvestSeasonSchema = z.strictObject({
 });
 export type HarvestSeason = z.infer<typeof harvestSeasonSchema>;
 
+// #739: the crop's fertilizer N need, lb N per acre, as the extension
+// publication states it: one range, or the parts it is split into (fall plus
+// spring topdress), summed for the budget. Needs a source under
+// `nitrogenNeedLbPerAcre` in apps/web/scripts/crop-data-sources.json whose
+// quote states every part. Shown on /fertility; nothing is gated on it.
+
+export const nitrogenNeedSchema = z
+  .array(
+    z
+      .strictObject({
+        min: z.number().min(0).max(400),
+        max: z.number().min(0).max(400),
+      })
+      .refine((v) => v.min <= v.max, { message: "min must be ≤ max" }),
+  )
+  .min(1)
+  .max(3);
+export type NitrogenNeed = z.infer<typeof nitrogenNeedSchema>;
+
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal("crop"),
   cropFamily: z.preprocess(
@@ -1025,6 +1044,8 @@ export const cropPluginSchema = pluginBase.extend({
   forageHazards: forageHazardsSchema.optional(),
   /** Spacing and bearing age per tree size class (dwarf to standard). */
   treeSizeClasses: treeSizeClassesSchema.optional(),
+  /** #739: sourced fertilizer N need, lb N per acre, in parts. */
+  nitrogenNeedLbPerAcre: nitrogenNeedSchema.optional(),
   /** #686: sourced yearly harvest period for a perennial. */
   harvestSeason: harvestSeasonSchema.optional(),
   // ────────────────────────────────────────────────────────────────────

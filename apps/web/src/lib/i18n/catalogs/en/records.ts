@@ -74,6 +74,11 @@ export const enRecords = {
   'fert.npkNoAnalysis':
     'The label analysis is {analysis}, but nutrients can only be worked out from a weight rate.',
   'fert.notKnown': 'not known',
+  'fert.nNeedRow': 'N need, {crop}',
+  'fert.nNeedNone': '—',
+  'fert.nNeedSource': 'extension figure',
+  'fert.nNeedHint':
+    'N need is the fertilizer N an extension publication gives for this crop, before credits from manure or the crop before. Compare it with Total available.',
   'fert.atLeast': 'at least {value}',
   'fert.budgetUnknown':
     'Some applications this year have N, P₂O₅ or K₂O not known, so those totals are at least the figures shown.',

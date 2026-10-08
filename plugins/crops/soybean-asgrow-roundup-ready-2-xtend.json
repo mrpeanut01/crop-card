@@ -2,7 +2,7 @@
   "pluginId": "soybean-asgrow-roundup-ready-2-xtend",
   "type": "crop",
   "displayName": "Soybean — Asgrow RR2 Xtend (group 3.5)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "cropFamily": "legume",
   "daysToMaturity": {
     "min": 110,
@@ -37,5 +37,11 @@
     "daysFromPlantingMax": 70,
     "beeAttractive": false
   },
-  "archetype": "dry-seed-legume"
+  "archetype": "dry-seed-legume",
+  "nitrogenNeedLbPerAcre": [
+    {
+      "min": 0,
+      "max": 0
+    }
+  ]
 }

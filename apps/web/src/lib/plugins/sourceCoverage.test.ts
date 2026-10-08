@@ -35,6 +35,7 @@ import {
   isAllowedSpacingSource,
   treeSizeClassQuoteGaps,
   harvestSeasonQuoteGaps,
+  nitrogenNeedQuoteGaps,
   type SourceMap
 } from './sourceCoverage';
 
@@ -483,6 +484,49 @@ describe('#686 harvest season', () => {
         harvestSeason: { start: { month: 6, day: 31 }, end: { month: 7, day: 2 } }
       })
     ).toThrow();
+  });
+});
+
+describe('#739 crop N need', () => {
+  const entry = (quote: string, url = 'https://www.pubs.ext.vt.edu/424/424-100/x.pdf') => ({
+    'wheat-test': { nitrogenNeedLbPerAcre: { url, publisher: 'VCE', date: '2023', quote } }
+  });
+  const wheat = {
+    pluginId: 'wheat-test',
+    nitrogenNeedLbPerAcre: [
+      { min: 20, max: 20 },
+      { min: 40, max: 80 }
+    ]
+  };
+  const quote =
+    '20 lbs of N in the fall. Additional N should be applied in late March (40-80 lbs).';
+
+  it('asks for a source and accepts a quote that states every part', () => {
+    expect(
+      cropFactPaths(
+        cropPluginSchema.parse({
+          ...SEEDING_BASE,
+          nitrogenNeedLbPerAcre: wheat.nitrogenNeedLbPerAcre
+        })
+      )
+    ).toContain('nitrogenNeedLbPerAcre');
+    expect(nitrogenNeedQuoteGaps([wheat], entry(quote))).toEqual([]);
+    const soy = { pluginId: 'wheat-test', nitrogenNeedLbPerAcre: [{ min: 0, max: 0 }] };
+    expect(nitrogenNeedQuoteGaps([soy], entry('Zero N, 40-60 lbs each of P2O5 and K2O'))).toEqual(
+      []
+    );
+  });
+
+  it('refuses a missing part, a quote without N or a non-extension page', () => {
+    expect(nitrogenNeedQuoteGaps([wheat], entry('20 lbs of N in the fall.'))).toEqual([
+      'wheat-test: nitrogenNeedLbPerAcre quote does not state 40-80 lbs'
+    ]);
+    expect(nitrogenNeedQuoteGaps([wheat], entry(quote, 'https://example.com/a'))).toEqual([
+      'wheat-test: nitrogenNeedLbPerAcre source is not an extension or government page'
+    ]);
+    expect(
+      nitrogenNeedQuoteGaps([wheat], entry('20 lbs in the fall, then 40-80 lbs in March.'))
+    ).toEqual(['wheat-test: nitrogenNeedLbPerAcre quote does not name N']);
   });
 });
 

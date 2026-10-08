@@ -2,7 +2,7 @@
   "pluginId": "barley-grain-thoroughbred",
   "type": "crop",
   "displayName": "Barley — Thoroughbred (winter feed)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "cereal-grain",
   "daysToMaturity": {
     "min": 220,
@@ -42,6 +42,16 @@
         "drought",
         "heavy-nitrogen"
       ]
+    }
+  ],
+  "nitrogenNeedLbPerAcre": [
+    {
+      "min": 20,
+      "max": 20
+    },
+    {
+      "min": 80,
+      "max": 80
     }
   ]
 }

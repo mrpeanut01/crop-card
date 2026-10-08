@@ -13,6 +13,8 @@ import { stateChip } from '$lib/amendments/carryover';
 import { carryoverHref } from '$lib/farm/areaCarryover';
 import { loadTaskContext } from '$lib/server/recordTaskClose';
 import { listStockItems } from '$lib/db/stock';
+import { nitrogenNeedRows } from '$lib/fertility/nitrogenNeed';
+import { cropDisplayName } from '$lib/i18n/cropName';
 
 export interface FertilizerMark {
   displayName: string;
@@ -83,6 +85,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     return { id: b.id, name: b.name, state, stateText: stateChip(state, locals.locale) };
   });
   const batchNames = new Map((carry?.batches ?? []).map((b) => [b.id, b.name]));
+  const registry = await getRegistry();
+  const selectedBlock = blocks.find((b) => b.id === blockId);
+  const nitrogenNeeds = nitrogenNeedRows(selectedBlock?.plantings ?? [], year, (id) => {
+    const plugin = registry.get(id)?.plugin;
+    if (plugin?.type !== 'crop') return null;
+    return {
+      nitrogenNeedLbPerAcre: plugin.nitrogenNeedLbPerAcre,
+      name: cropDisplayName(id, plugin.displayName, locals.locale)
+    };
+  });
 
   return {
     organicBlocks,
@@ -114,6 +126,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     selectedBlockId: blockId,
     year,
     budget: blockId ? fertilityBudgetForBlock(blockId, year) : null,
+    nitrogenNeeds,
     applications: (blockId ? listFertilityApplicationsForBlock(blockId) : []).map((a) => ({
       ...a,
       batchName: a.amendmentBatchId ? (batchNames.get(a.amendmentBatchId) ?? null) : null,

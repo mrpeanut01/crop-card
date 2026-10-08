@@ -153,6 +153,13 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plan.farm.kicker': 'Plan · temporada {year}',
   'plan.farm.lede':
     'Pon tus campos, huerto, invernadero y establo en el mapa, y luego los bloques dentro de ellos. Dibújalos en el mapa, o escribe el ancho y el largo de cada uno y CropCard los dibuja como cajas. Los bloques son lo que el planificador llena con cultivos.',
+  'plan.farm.ledeSetUp':
+    'Tus áreas y bloques ya están en el mapa y la temporada está planificada. Toca un área o un bloque para editarlo, o dibuja uno nuevo.',
+  'plan.farm.mapBlocks.one': '{count} bloque en el mapa.',
+  'plan.farm.mapBlocks.other': '{count} bloques en el mapa.',
+  'plan.farm.openPlan': 'Abrir el plan →',
+  'plan.farm.pageTitleSetUp': 'Mapa de la granja · CropCard',
+  'plan.farm.titleSetUp': 'El mapa de tu granja',
   'plan.farm.loadingMap': 'Cargando el mapa…',
   'plan.farm.pageTitle': 'Dibuja tu granja · CropCard',
   'plan.farm.progress': 'Progreso de la configuración',

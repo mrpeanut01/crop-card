@@ -19,8 +19,8 @@ import {
   type SeasonDate
 } from './catalog';
 import {
+  DAY_MS,
   addDaysYmd,
-  addMonthsYmd,
   daysBetweenYmd,
   demoSeason,
   hashSeed,
@@ -71,6 +71,8 @@ export interface DemoSpray {
   kind: 'herbicide' | 'insecticide' | 'fungicide';
   sprayer: DemoSprayerKey;
   target?: string;
+  /** A dormant spray on bare trees: recorded with no leaf observation. */
+  dormant?: boolean;
   windMph: number;
   tempF: number;
 }
@@ -322,8 +324,12 @@ function lotNumber(cropPluginId: string, ymd: string): string {
   return `WR-${ymd.slice(2).replace(/-/g, '')}-${code}`;
 }
 
-export function buildDemoTimeline(now: number): DemoTimeline {
+/** `anchor` is when the visitor's farm was made (the real time, before any
+ *  fast forward); perennials are dated from its season so their planting
+ *  dates stay put as the demo date moves. */
+export function buildDemoTimeline(now: number, anchor: number = now): DemoTimeline {
   const season = demoSeason(now);
+  const anchorSeason = demoSeason(Math.min(anchor, now)).current;
   const { today, current: C } = season;
   const horizonEnd = addDaysYmd(today, TASK_HORIZON_DAYS);
   const doneFrom = addDaysYmd(today, -DONE_TASK_LOOKBACK_DAYS);
@@ -380,6 +386,7 @@ export function buildDemoTimeline(now: number): DemoTimeline {
         kind: 'fungicide',
         sprayer: recent.sprayer,
         target: recent.target,
+        dormant: planting.mode === 'perennial' && treesBare(today),
         windMph: between(rand, [2, 5]),
         tempF: SPRAY_TEMP_F[monthOf(today) - 1] + Math.round(rand() * 6 - 3)
       });
@@ -738,7 +745,7 @@ export function buildDemoTimeline(now: number): DemoTimeline {
   }
 
   function addPerennial(p: (typeof DEMO_PERENNIALS)[number]) {
-    const plantYmd = addMonthsYmd(today, -p.ageMonths).slice(0, 8) + '15';
+    const plantYmd = ymdInYear(anchorSeason - p.planted.yearsAgo, p.planted.mmdd);
     const key = `${p.key}@perennial`;
     const rand = randFor(key);
     out.plantings.push({
@@ -774,6 +781,7 @@ export function buildDemoTimeline(now: number): DemoTimeline {
             kind,
             sprayer: op.sprayer,
             target: op.target,
+            dormant: treesBare(ymd),
             windMph: between(rand, [2, 6]),
             tempF: SPRAY_TEMP_F[monthOf(ymd) - 1] + Math.round(rand() * 6 - 3)
           });
@@ -1044,6 +1052,21 @@ export function buildDemoTimeline(now: number): DemoTimeline {
     ];
   }
 
+  function gardenScoutBody(): string {
+    const growing = (keys: string[]) =>
+      out.plantings.some(
+        (p) =>
+          keys.includes(p.templateKey) && p.status === 'active' && p.plantingDate <= utcDayMs(today)
+      );
+    const tomatoes = growing(['cherokee', 'sungold']);
+    const squash = growing(['zucchini', 'butternut']);
+    if (tomatoes && squash)
+      return 'Turn leaves on the tomatoes and squash; log anything at threshold on /scout.';
+    if (tomatoes) return 'Turn leaves on the tomatoes; log anything at threshold on /scout.';
+    if (squash) return 'Turn leaves on the squash; log anything at threshold on /scout.';
+    return 'Turn leaves on whatever is up in the beds; log anything at threshold on /scout.';
+  }
+
   function addFarmRoutine() {
     const month = monthOf(today);
     const fieldSeason = month >= 4 && month <= 10;
@@ -1071,7 +1094,7 @@ export function buildDemoTimeline(now: number): DemoTimeline {
         ? 'Scout the kitchen garden for pests and disease'
         : 'Check stored squash and garlic for soft spots',
       body: fieldSeason
-        ? 'Turn leaves on the tomatoes and squash; log anything at threshold on /scout.'
+        ? gardenScoutBody()
         : 'Pull anything soft before it spreads to the rest of the crate.',
       category: fieldSeason ? 'scout' : 'other',
       due: utcDayMs(addDaysYmd(today, -2))
@@ -1302,6 +1325,29 @@ export function buildDemoTimeline(now: number): DemoTimeline {
       });
     }
   }
+}
+
+/** When a seed lot was bought: with the season's seed order in late
+ *  January, or ten days before an earlier sowing that used it (a fall-sown
+ *  crop, or a planting that already drew from the lot), and never in the
+ *  last three weeks. */
+export function seedReceiptAt(
+  t: DemoTimeline,
+  seedKey: string,
+  draws: readonly DemoPlanting[],
+  now: number
+): number {
+  const sowings = t.plantings
+    .filter((p) => p.seed === seedKey && (p.season === t.season.current || draws.includes(p)))
+    .map((p) => (p.sownIndoorsAt ?? p.plantingDate) - 10 * DAY_MS);
+  const order = zonedMs(ymdInYear(t.season.current, '01-20'), 9);
+  return Math.min(order, ...sowings, now - 21 * DAY_MS);
+}
+
+/** November through March the orchard trees have no leaves to look at. */
+export function treesBare(ymd: string): boolean {
+  const month = monthOf(ymd);
+  return month >= 11 || month <= 3;
 }
 
 interface RoutineItem {

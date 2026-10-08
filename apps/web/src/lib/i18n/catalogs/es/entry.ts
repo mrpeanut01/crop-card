@@ -822,6 +822,12 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
     'Haz el cierre de temporada desde /records cuando entre la última cosecha.',
   'entry.demoFarm.s.turnLeavesOnTheTomatoesAnd':
     'Voltea las hojas de los tomates y las calabazas; anota todo lo que llegue al umbral en /scout.',
+  'entry.demoFarm.s.turnLeavesOnTheTomatoesLog':
+    'Voltea las hojas de los tomates; anota todo lo que llegue al umbral en /scout.',
+  'entry.demoFarm.s.turnLeavesOnTheSquashLog':
+    'Voltea las hojas de las calabazas; anota todo lo que llegue al umbral en /scout.',
+  'entry.demoFarm.s.turnLeavesOnWhateverIsUp':
+    'Voltea las hojas de lo que ya brotó en las camas; anota todo lo que llegue al umbral en /scout.',
   'entry.demoFarm.s.waitForAnthesisPollenSheddingSo':
     'Espera a la antesis (liberación de polen) para que no se vuelva a levantar.',
   'entry.demoFarm.s.europeanCornBorer': 'barrenador europeo del maíz',

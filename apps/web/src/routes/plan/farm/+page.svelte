@@ -8,6 +8,7 @@
 
   const hasFields = $derived(data.fields.length > 0);
   const hasBlocks = $derived(data.blocks.length > 0);
+  const setUp = $derived(hasBlocks && data.blocks.some((b) => b.plantings.length > 0));
   const steps = $derived([
     { label: tr('plan.farm.stepAreas'), done: hasFields, current: !hasFields },
     { label: tr('plan.farm.stepBlocks'), done: hasBlocks, current: hasFields && !hasBlocks },
@@ -15,25 +16,29 @@
   ]);
 </script>
 
-<svelte:head><title>{tr('plan.farm.pageTitle')}</title></svelte:head>
+<svelte:head
+  ><title>{setUp ? tr('plan.farm.pageTitleSetUp') : tr('plan.farm.pageTitle')}</title></svelte:head
+>
 
 <div class="farm-setup">
   <header>
     <p class="kicker">{tr('plan.farm.kicker', { year: data.seasonYear })}</p>
-    <h1 class="serif">{tr('plan.farm.title')}</h1>
-    <p class="lede">{tr('plan.farm.lede')}</p>
-    <ol class="steps" aria-label={tr('plan.farm.progress')}>
-      {#each steps as s, i (s.label)}
-        <li
-          class:done={s.done}
-          class:current={s.current}
-          aria-current={s.current ? 'step' : undefined}
-        >
-          <span class="dot">{s.done ? '✓' : i + 1}</span>
-          {s.label}
-        </li>
-      {/each}
-    </ol>
+    <h1 class="serif">{setUp ? tr('plan.farm.titleSetUp') : tr('plan.farm.title')}</h1>
+    <p class="lede">{setUp ? tr('plan.farm.ledeSetUp') : tr('plan.farm.lede')}</p>
+    {#if !setUp}
+      <ol class="steps" aria-label={tr('plan.farm.progress')}>
+        {#each steps as s, i (s.label)}
+          <li
+            class:done={s.done}
+            class:current={s.current}
+            aria-current={s.current ? 'step' : undefined}
+          >
+            <span class="dot">{s.done ? '✓' : i + 1}</span>
+            {s.label}
+          </li>
+        {/each}
+      </ol>
+    {/if}
   </header>
 
   {#if browser}
@@ -59,7 +64,10 @@
   {/if}
 
   <footer class="continue-bar">
-    {#if hasBlocks}
+    {#if setUp}
+      <p>{tr('plan.farm.mapBlocks', { count: data.blocks.length })}</p>
+      <a class="continue" href="/plan">{tr('plan.farm.openPlan')}</a>
+    {:else if hasBlocks}
       <p>{tr('plan.farm.blocksReady', { count: data.blocks.length })}</p>
       <a class="continue" href="/plan">{tr('plan.farm.continue')}</a>
     {:else}

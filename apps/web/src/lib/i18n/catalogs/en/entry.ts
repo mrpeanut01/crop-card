@@ -764,6 +764,12 @@ export const enEntry = {
     'Run the season close-out from /records once the last harvest is in.',
   'entry.demoFarm.s.turnLeavesOnTheTomatoesAnd':
     'Turn leaves on the tomatoes and squash; log anything at threshold on /scout.',
+  'entry.demoFarm.s.turnLeavesOnTheTomatoesLog':
+    'Turn leaves on the tomatoes; log anything at threshold on /scout.',
+  'entry.demoFarm.s.turnLeavesOnTheSquashLog':
+    'Turn leaves on the squash; log anything at threshold on /scout.',
+  'entry.demoFarm.s.turnLeavesOnWhateverIsUp':
+    'Turn leaves on whatever is up in the beds; log anything at threshold on /scout.',
   'entry.demoFarm.s.waitForAnthesisPollenSheddingSo':
     'Wait for anthesis (pollen shedding) so it does not stand back up.',
   'entry.demoFarm.s.europeanCornBorer': 'European corn borer',

@@ -1183,8 +1183,9 @@ export interface DemoPerennial {
   bed: DemoBedKey;
   cropPluginId: string;
   variety: string;
-  /** Planted this many months before today, so its harvest window is open. */
-  ageMonths: number;
+  /** Planted on `mmdd` this many years before the season on show, so its
+   *  planting date stays put as the demo date moves within a season. */
+  planted: { mmdd: string; yearsAgo: number };
   dtm: [number, number];
   picks?: { start: string; everyDays: number; count: number; qty: [number, number]; unit: string };
   ops: Array<{
@@ -1203,7 +1204,7 @@ export const DEMO_PERENNIALS: readonly DemoPerennial[] = [
     bed: 'apple',
     cropPluginId: 'apple-honeycrisp',
     variety: 'Honeycrisp apple on G.41',
-    ageMonths: 48,
+    planted: { mmdd: '03-25', yearsAgo: 4 },
     dtm: [1095, 1825],
     picks: { start: '09-08', everyDays: 7, count: 4, qty: [3, 6], unit: 'bu' },
     ops: [
@@ -1216,7 +1217,7 @@ export const DEMO_PERENNIALS: readonly DemoPerennial[] = [
     bed: 'peach',
     cropPluginId: 'peach-redhaven',
     variety: 'Redhaven peach',
-    ageMonths: 42,
+    planted: { mmdd: '03-20', yearsAgo: 3 },
     dtm: [1095, 1460],
     picks: { start: '07-18', everyDays: 5, count: 4, qty: [1, 3], unit: 'bu' },
     ops: [
@@ -1229,7 +1230,7 @@ export const DEMO_PERENNIALS: readonly DemoPerennial[] = [
     bed: 'hay',
     cropPluginId: 'orchard-grass-potomac',
     variety: 'Potomac orchardgrass hay',
-    ageMonths: 40,
+    planted: { mmdd: '09-05', yearsAgo: 4 },
     dtm: [365, 1825],
     ops: [],
     cuttings: ['05-18', '06-29', '08-13', '09-27']

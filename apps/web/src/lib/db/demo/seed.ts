@@ -74,7 +74,12 @@ import {
   type DemoProduct,
   type DemoSprayerKey
 } from '$lib/demo/catalog';
-import { buildDemoTimeline, type DemoSpray, type DemoTimeline } from '$lib/demo/timeline';
+import {
+  buildDemoTimeline,
+  seedReceiptAt,
+  type DemoSpray,
+  type DemoTimeline
+} from '$lib/demo/timeline';
 import { DAY_MS, DEMO_FROST, DEMO_LAT_LON, addDaysYmd, ymdOf, zonedMs } from '$lib/demo/time';
 import { demoLocalizer, type DemoLocalizer } from '$lib/demo/localize';
 
@@ -84,6 +89,9 @@ export interface DemoSeedInput {
   ownerId: string;
   userId: string;
   now: number;
+  /** The real time the farm was made, before any fast forward; perennials
+   *  are dated from it. Defaults to `now`. */
+  anchor?: number;
   /** The visitor's language: names, notes and task titles are written in it. */
   locale?: string | null;
 }
@@ -160,7 +168,7 @@ export function seedDemoFarm(input: DemoSeedInput): DemoSeedSummary {
   if (requireOwnerId() !== input.ownerId) {
     throw new Error('seedDemoFarm: run it inside runWithTenant(ownerId)');
   }
-  const timeline = buildDemoTimeline(input.now);
+  const timeline = buildDemoTimeline(input.now, input.anchor ?? input.now);
   L = demoLocalizer(input.locale);
   let counts: Record<string, number>;
   try {
@@ -383,14 +391,15 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
               rate: product.rate
             }
           ],
-          diseaseObservation: s.target
-            ? {
-                disease: s.target,
-                metric: 'percent-leaf-area',
-                value: 2,
-                notes: 'Protective cover spray.'
-              }
-            : undefined,
+          diseaseObservation:
+            s.target && !s.dormant
+              ? {
+                  disease: s.target,
+                  metric: 'percent-leaf-area',
+                  value: 2,
+                  notes: 'Protective cover spray.'
+                }
+              : undefined,
           conditions,
           ...clears,
           rulesVersion: RULES_VERSION,
@@ -1089,8 +1098,7 @@ function writeStock(
         p.plantingDate <= now
       );
     });
-    const first = Math.min(now, ...draws.map((d) => d.plantingDate));
-    const at = receiptBefore(first);
+    const at = seedReceiptAt(t, s.key, draws, now);
     const total = draws.reduce((sum, d) => sum + (d.quantity?.amount ?? 0), 0);
     const lotId = insertLot({
       item,

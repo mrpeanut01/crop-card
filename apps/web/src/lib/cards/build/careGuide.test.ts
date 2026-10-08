@@ -418,3 +418,12 @@ describe('family tips with empty sections', () => {
     expect(tips?.label).toBe('beans and peas');
   });
 });
+
+describe('root and carrot-family tips (#757)', () => {
+  it('give no carrot thinning tip under Stake and prune', () => {
+    for (const family of ['root', 'apiaceae']) {
+      expect(FAMILY_CARE_TIPS[family].prune).toEqual([]);
+    }
+    expect(allCareTips().some((t) => /thin carrots/i.test(t.text))).toBe(false);
+  });
+});

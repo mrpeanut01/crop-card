@@ -241,6 +241,13 @@ const FAMILY_SCOUT_CADENCE: Partial<
   }
 };
 
+/** The pests and diseases the planner's scout reminder names for a crop
+ *  family, as a list ("root maggot", "wireworm", …). */
+export function scoutTargetsForFamily(family: CropFamily | undefined): string[] {
+  const cadence = family ? FAMILY_SCOUT_CADENCE[family] : undefined;
+  return cadence ? cadence.targets.split(',').map((s) => s.trim()) : [];
+}
+
 /* ─── Output shape ──────────────────────────────────────────────────── */
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -1221,7 +1228,7 @@ function planForPlanting(
         blockId: planting.blockId,
         cropPluginId: planting.cropPluginId,
         title: `Scout ${planting.varietyDisplayName} for ${cadence.targets}`,
-        body: `Walk the block, count target pests/lesions on representative plants. If any cross treatment thresholds, log via /scout and the system will queue the right insecticide.`,
+        body: `Walk the block, count target pests/lesions on representative plants. Log each count on /scout under Pest or disease count; /spray/insecticide checks it against the product's action threshold.`,
         recurrenceDays: cadence.recurrenceDays,
         windowStartMs: plantingDateMs + 14 * DAY_MS,
         windowEndMs: plantingDateMs + cadence.windowDays * DAY_MS

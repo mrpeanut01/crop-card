@@ -15,6 +15,8 @@
  * it's seed data.
  */
 
+import { templateText } from '$lib/equipment/templateText';
+
 export type EquipmentType =
   'sprayer' | 'planter' | 'drill' | 'rake' | 'baler' | 'tractor' | 'mower' | 'irrigation' | 'other';
 
@@ -630,3 +632,14 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     spec: { cutWidthIn: 14, batteryVolt: 18 }
   }
 ];
+
+/** The starter template's category ("Hay tedder") for a piece of gear made
+ *  from one, in the viewer's language; null for gear typed by hand. */
+export function templateCategoryFor(
+  spec: Record<string, unknown> | undefined,
+  locale?: string | null
+): string | null {
+  const id = typeof spec?.templateId === 'string' ? spec.templateId : null;
+  const tpl = id ? SEED_EQUIPMENT_TEMPLATES.find((t) => t.templateId === id) : undefined;
+  return tpl ? templateText(tpl.templateId, 'category', tpl.category, locale) : null;
+}

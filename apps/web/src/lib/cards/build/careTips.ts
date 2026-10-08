@@ -28,7 +28,6 @@ export const CARE_TIP_FIELDS = ['water', 'feed', 'prune', 'problems'] as const;
 const COMPOST_SPRING_FALL = 'Add compost to the soil in spring or fall.';
 const TREE_FEED = 'Feed in late winter. On sandy soil, give half in late winter and the rest in May.';
 const THIN_FRUIT = 'Thin fruit when it is about the size of a nickel so the rest hang 6 to 8 inches apart.';
-const THIN_CARROTS = 'Thin carrots to 2 to 3 inches between plants.';
 
 export const FAMILY_CARE_TIPS: Readonly<Record<string, FamilyCareTips>> = {
   solanaceae: {
@@ -130,7 +129,7 @@ export const FAMILY_CARE_TIPS: Readonly<Record<string, FamilyCareTips>> = {
     label: 'carrots, beets and radishes',
     water: [],
     feed: [],
-    prune: [{ id: 'root.prune.0', text: THIN_CARROTS }],
+    prune: [],
     problems: [
       { id: 'root.problems.0', text: 'Carrots prefer loamy or sandy soil free of stones and clods.' },
       { id: 'root.problems.1', text: 'Cracked roots: uneven watering.' }
@@ -140,7 +139,7 @@ export const FAMILY_CARE_TIPS: Readonly<Record<string, FamilyCareTips>> = {
     label: 'carrots, parsley and dill',
     water: [],
     feed: [],
-    prune: [{ id: 'apiaceae.prune.0', text: THIN_CARROTS }],
+    prune: [],
     problems: [
       {
         id: 'apiaceae.problems.0',

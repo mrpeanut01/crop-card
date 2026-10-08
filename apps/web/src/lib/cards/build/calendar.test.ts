@@ -5,12 +5,14 @@ import type { FarmSnapshot, SnapshotTask } from '../snapshot';
 import { sampleSnapshot } from './fixtures';
 import {
   EARLIER_DAYS_NOTE,
+  OUTSIDE_WINDOW_NOTE,
   MONTH_PER_DAY,
   PRINTED_MIX_PATTERN,
   PRINTED_RATE_PATTERN,
   WEEK_PER_DAY,
   completeDays,
   periodCardPrintHref,
+  periodTodayHref,
   periodPrintable,
   printedCalendarText,
   startOfWeekYmd
@@ -171,6 +173,26 @@ describe('Month Card', () => {
       lastYmd: '2026-06-30'
     });
     expect(buildMonthCard(old, '2026-07')).toBeNull();
+  });
+
+  it('says how many open tasks are older than the saved window (#758)', () => {
+    const window = { fromMs: NOW - 14 * 86_400_000, toMs: NOW + 62 * 86_400_000 };
+    const withOlder = snap([], { taskWindow: { ...window, olderOpen: 12 } });
+    const current = buildMonthCard(withOlder, '2026-06')!;
+    expect(current.notices?.some((n) => n.startsWith('12 open tasks from before'))).toBe(true);
+    const later = buildMonthCard(withOlder, '2026-07')!;
+    expect(later.notices?.some((n) => n.includes('open tasks from before')) ?? false).toBe(false);
+    const none = buildMonthCard(snap([]), '2026-06')!;
+    expect(none.notices?.some((n) => n.includes('open task')) ?? false).toBe(false);
+    const es = buildMonthCard(withOlder, '2026-06', { locale: 'es' })!;
+    expect(es.notices?.some((n) => n.startsWith('12 tareas abiertas'))).toBe(true);
+  });
+
+  it('links an out-of-window period to the matching /today view (#758)', () => {
+    expect(periodTodayHref('month', 'mo_2027-05')).toBe('/today?view=month&at=2027-05-01');
+    expect(periodTodayHref('week', 'wk_2027-05-03')).toBe('/today?view=week&at=2027-05-03');
+    expect(periodTodayHref('week', 'wk_nonsense')).toBe('/today');
+    expect(OUTSIDE_WINDOW_NOTE).not.toMatch(/online/i);
   });
 });
 

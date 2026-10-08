@@ -16,7 +16,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, asc, count, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
+import { and, asc, count, eq, gte, inArray, isNull, lt, lte, or } from 'drizzle-orm';
 import { db } from './client';
 import { equipment, equipmentState, tasks, users } from './schema';
 import { tenantValues, withTenant } from './tenant';
@@ -374,7 +374,25 @@ export function completeTask(
     .returning()
     .get();
   if (!row) throw new Error(`unknown task id: ${id}`);
+  if (row.kind === 'primary' && row.equipmentId) noteEquipmentUsed(row.equipmentId, now);
   return rowToTask(row);
+}
+
+/** A done primary task that names a piece of gear means the gear was used
+ *  (#670). Only moves "Last used" forward. */
+function noteEquipmentUsed(equipmentId: string, at: number): void {
+  db.update(equipmentState)
+    .set({ lastUsedAt: new Date(at) })
+    .where(
+      withTenant(
+        equipmentState,
+        and(
+          eq(equipmentState.equipmentId, equipmentId),
+          or(isNull(equipmentState.lastUsedAt), lt(equipmentState.lastUsedAt, new Date(at)))
+        )
+      )
+    )
+    .run();
 }
 
 export function abortTask(id: string, reason?: string, cascade = true, at?: number): Task {

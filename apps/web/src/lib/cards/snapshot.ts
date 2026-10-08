@@ -559,8 +559,9 @@ export interface FarmSnapshot {
    *  moment, so an offline chip can only read longer than the server's. */
   holdsProjectedTo?: number;
   /** The span `tasks` covers, so Week and Month Cards know which days are
-   *  complete. Absent on bundles saved before 32F. */
-  taskWindow?: { fromMs: number; toMs: number };
+   *  complete. Absent on bundles saved before 32F. `olderOpen` counts open
+   *  tasks dated before `fromMs` (#758); absent on older bundles. */
+  taskWindow?: { fromMs: number; toMs: number; olderOpen?: number };
   /** 33C carryover lines per block. Absent on bundles saved before it. */
   carryover?: SnapshotCarryoverLine[];
   /** #593 orchard calendars and stage marks. Absent on bundles saved before

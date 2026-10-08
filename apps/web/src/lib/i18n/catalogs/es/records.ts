@@ -19,6 +19,10 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'calib.label.sprayWidth': 'Ancho de aspersión (pulg)',
   'calib.label.stride': 'Tu paso (ft)',
   'calib.lastCalibrated': 'Última calibración: {date}',
+  'calib.empty.kicker': 'Calibrar',
+  'calib.empty.title': 'Todavía no hay aspersora en la granja',
+  'calib.empty.body':
+    'Agrega la aspersora que usas y haz la calibración aquí mismo. Elige el tipo más parecido al tuyo.',
   'calib.lede':
     'Método de 1/128 de acre (UC-10, FR-12). Camina la distancia de calibración a tu velocidad normal de aspersión y recoge lo que sale en una jarra: las onzas líquidas que recojas equivalen a tus galones por acre. La calculadora de dilución usa este GPA para escalar la dosis de cada producto.',
   'calib.outsideBand':
@@ -724,7 +728,24 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'scout.keptAgain': 'Guardado en este teléfono. ¿Guardar otra?',
   'scout.kicker': 'Monitoreo',
   'scout.lede':
-    'Anota lo que notes en tu recorrido. ¿Contando malezas? El conteo de malezas de abajo te dice si es hora de asperjar.',
+    'Anota lo que notes en tu recorrido, cuenta una plaga o enfermedad contra el umbral de acción de la etiqueta, o cuenta malezas para ver si necesitan control.',
+  'scout.pest.title': 'Conteo de plagas o enfermedades',
+  'scout.pest.help':
+    'Cuenta una plaga o enfermedad en plantas representativas. Elige un nombre de la lista para que el conteo coincida con el umbral de acción de la etiqueta de un insecticida; /spray/insecticide lo revisa antes de registrar.',
+  'scout.pest.label': 'Plaga o enfermedad',
+  'scout.pest.placeholder': 'p. ej. chinche del zapallo',
+  'scout.pest.metric': 'Qué contaste',
+  'scout.pest.value': 'Conteo',
+  'scout.pest.thresholds': 'Umbrales de acción en las etiquetas de insecticidas registradas:',
+  'scout.pest.noThreshold':
+    'Ninguna etiqueta de insecticida registrada fija un umbral de acción para esta plaga y este conteo. El conteo se guarda de todos modos.',
+  'scout.pest.save': 'Guardar conteo de plaga',
+  'scout.pest.errCanSave': 'Escribe la plaga o enfermedad y un conteo antes de guardar.',
+  'scout.weed.noHerbicideHelp':
+    'Tu plan de temporada dice sin herbicidas: cuando el conteo pase el umbral, cultiva, usa acolchado o desmaleza a mano.',
+  'scout.weed.noHerbicideAction':
+    'Tu plan de temporada dice sin herbicidas: cultiva, usa acolchado o desmaleza a mano en este lugar.',
+  'scout.savedNote': 'Guardado en la granja.',
   'scout.noObs':
     'Aún no hay observaciones registradas para este bloque: cuenta algunos lugares arriba y guarda para empezar a ver la tendencia.',
   'scout.notSaved': 'No guardado: ve Registros pendientes',
@@ -1042,6 +1063,8 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'recui.metric.lesionCountPerLeaf': 'Lesiones por hoja',
   'recui.metric.plantsInfectedPct': '% de plantas infectadas',
   'recui.metric.note': 'Nota',
+  'recui.metric.eggsPerPlant': 'Huevos por planta',
+  'recui.pest.broadleafWeed': 'Malezas de hoja ancha',
   'recui.metric.count': 'Conteo',
   'records.plannedNote':
     'Siembras planificadas que aún no están en el suelo: {n}. Quedan en el plan, no en sus registros, hasta su fecha de siembra.',

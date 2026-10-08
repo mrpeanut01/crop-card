@@ -410,8 +410,8 @@
     "date": "2016-08-21",
     "quote": "Thin the carrots to 2 to 3 inches between plants",
     "verdict": "partly",
-    "note": "Thinning supported; \"early\" and \"crowded roots stay small\" are not quoted.",
-    "shipped": "Thin carrots to 2 to 3 inches between plants."
+    "note": "Thinning supported; \"early\" and \"crowded roots stay small\" are not quoted. Removed (#757): the quote covers carrots only (not beets or radishes), sat under Stake and prune, and disagrees with the carrot plugins' sourced in-row spacing (VCE 426-331).",
+    "shipped": null
   },
   "root.problems.0": {
     "tip": "Forked or twisted roots: stones or clumps in the soil. Loosen the bed deeper next time.",
@@ -461,8 +461,8 @@
     "date": "2016-08-21",
     "quote": "Thin the carrots to 2 to 3 inches between plants",
     "verdict": "partly",
-    "note": "Carrot only; parsley and dill not covered.",
-    "shipped": "Thin carrots to 2 to 3 inches between plants."
+    "note": "Carrot only; parsley and dill not covered. Removed (#757): carrot-only advice under Stake and prune that disagrees with the carrot plugins' sourced in-row spacing (VCE 426-331).",
+    "shipped": null
   },
   "apiaceae.problems.0": {
     "tip": "Striped caterpillars on dill or parsley are swallowtail butterflies. Many growers share a plant with them.",

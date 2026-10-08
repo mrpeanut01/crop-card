@@ -2,6 +2,8 @@
   import { invalidateAll } from '$app/navigation';
   import { createT } from '$lib/i18n';
   import CalibrationWizard from '$lib/components/calibration/CalibrationWizard.svelte';
+  import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
+  import SetupSprayer from '$lib/components/setup/SetupSprayer.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
 
   const { data } = $props();
@@ -42,11 +44,28 @@
   {tr('calib.lede')}
 </p>
 
-<CalibrationWizard
-  sprayers={data.sprayers}
-  canSave={data.canSave}
-  initialSprayerId={data.initialSprayerId ?? undefined}
-/>
+{#if data.sprayers.length === 0}
+  <SetupCallout
+    kicker={tr('calib.empty.kicker')}
+    title={tr('calib.empty.title')}
+    canEdit={data.setup.canEdit}
+    askOwner={tr('setup.sprayer.askOwner')}
+    testId="calibrate-no-sprayer"
+  >
+    <p>{tr('calib.empty.body')}</p>
+    <SetupSprayer
+      templates={data.setup.sprayerTemplates}
+      canEdit={data.setup.canEdit}
+      onDone={() => invalidateAll()}
+    />
+  </SetupCallout>
+{:else}
+  <CalibrationWizard
+    sprayers={data.sprayers}
+    canSave={data.canSave}
+    initialSprayerId={data.initialSprayerId ?? undefined}
+  />
+{/if}
 
 {#if data.canSave && data.pendingCalibrations.length > 0}
   <section class="card pending-review" aria-labelledby="pending-review-title">

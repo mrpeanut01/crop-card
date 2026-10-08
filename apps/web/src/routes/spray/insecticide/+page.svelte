@@ -33,6 +33,12 @@
   import { pollinatorLabelText } from '$lib/pollinator/labelText';
   import { sunTimesFor } from '$lib/safety/sunTimes';
   import { checkIpmThreshold } from '$lib/safety/ipmThreshold';
+  import { ipmTile } from '$lib/spray/ipmTile';
+  import {
+    PEST_COUNT_METRICS,
+    scoutMetricLabel,
+    type PestCountMetric
+  } from '$lib/records/metricLabel';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { createT, t, type MessageKey } from '$lib/i18n';
   import { formatInstant } from '$lib/prefs';
@@ -72,47 +78,35 @@
   const selectedInsecticide = $derived(
     data.insecticides.find((p) => p.pluginId === selectedPluginId) ?? null
   );
-  const primaryThreshold = $derived(selectedInsecticide?.scoutingThresholds[0] ?? null);
+  let scoutPest = $state('');
+  let scoutMetric = $state<PestCountMetric>('count-per-plant');
+  let scoutValue = $state<number | null>(null);
+  let nowMs = $state(Date.now());
 
-  /** 5-week bucketed scout history for the selected (block, pest, metric).
-   *  Each bucket sums all observations in the week ending at `now − N×7d`.
-   *  Oldest-first so the bars left-to-right read chronologically. */
-  const sparkline = $derived.by(() => {
-    if (!primaryThreshold)
-      return [] as Array<{ weekLabel: string; count: number; triggered: boolean }>;
-    const obs = (data.scoutLogByBlock[selectedBlockId] ?? []).filter(
-      (o) => o.pest === primaryThreshold.pest && o.metric === primaryThreshold.metric
-    );
-    const now = Date.now();
-    const WEEK_MS = 7 * 86_400_000;
-    const buckets: Array<{ weekLabel: string; count: number; triggered: boolean }> = [];
-    for (let i = 4; i >= 0; i--) {
-      const startMs = now - (i + 1) * WEEK_MS;
-      const endMs = now - i * WEEK_MS;
-      const inBucket = obs.filter((o) => o.occurredAt >= startMs && o.occurredAt < endMs);
-      const sum = inBucket.reduce((acc, o) => acc + o.value, 0);
-      buckets.push({
-        weekLabel: i === 0 ? tr('sprayui.ipm.now') : tr('sprayui.ipm.weeksAgo', { count: i }),
-        count: sum,
-        triggered: sum >= primaryThreshold.threshold
+  /** Saved scout counts for the block plus the one typed on this page: the
+   *  same list the gate reads, so the tile and the gate agree (#740). */
+  const recentScout = $derived.by(() => {
+    const recent = [...(data.scoutLogByBlock[selectedBlockId] ?? [])];
+    if (scoutPest.trim() && scoutValue !== null) {
+      recent.push({
+        pest: scoutPest.trim(),
+        metric: scoutMetric,
+        value: scoutValue,
+        occurredAt: nowMs
       });
     }
-    return buckets;
+    return recent;
   });
-
-  const thisWeekCount = $derived(sparkline[sparkline.length - 1]?.count ?? 0);
-  const overBy = $derived(
-    primaryThreshold ? Math.max(0, thisWeekCount - primaryThreshold.threshold) : 0
-  );
-  const ipmTriggered = $derived(overBy > 0);
+  const tile = $derived(ipmTile(selectedInsecticide?.scoutingThresholds ?? [], recentScout, nowMs));
+  const primaryThreshold = $derived(tile?.threshold ?? null);
+  const latestCount = $derived(tile?.latest?.value ?? null);
+  const ipmTriggered = $derived(!!tile?.met);
   const sparklineMax = $derived(
-    Math.max(1, ...sparkline.map((b) => b.count), primaryThreshold?.threshold ?? 0)
+    Math.max(1, ...(tile?.weeks ?? []).map((b) => b.value ?? 0), primaryThreshold?.threshold ?? 0)
   );
-  let scoutPest = $state('');
-  let scoutMetric = $state<'count-per-plant' | 'pct-defoliation' | 'pct-infested-plants'>(
-    'count-per-plant'
+  const otherThresholds = $derived(
+    (selectedInsecticide?.scoutingThresholds ?? []).filter((t) => t !== primaryThreshold)
   );
-  let scoutValue = $state<number | null>(null);
   let windMph = $state(5);
   let tempF = $state(72);
   let rainPct = $state(10);
@@ -157,10 +151,6 @@
   // including the one typed on this page, must reach it.
   const ipmBlocked = $derived.by(() => {
     if (!selectedInsecticide || selectedInsecticide.scoutingThresholds.length === 0) return false;
-    const recent = [...(data.scoutLogByBlock[selectedBlockId] ?? [])];
-    if (scoutPest && scoutValue !== null) {
-      recent.push({ pest: scoutPest, metric: scoutMetric, value: scoutValue, occurredAt: nowMs });
-    }
     return (
       checkIpmThreshold(
         [
@@ -169,7 +159,7 @@
             scoutingThresholds: selectedInsecticide.scoutingThresholds
           }
         ],
-        recent
+        recentScout
       ).length > 0
     );
   });
@@ -178,7 +168,6 @@
   // server runs; the server re-checks on submit (422 POLLINATOR_BLOCK).
   let bloomStatus = $state<BloomStatus>('unknown');
   let attestedNoForagers = $state(false);
-  let nowMs = $state(Date.now());
   $effect(() => {
     const id = setInterval(() => (nowMs = Date.now()), 60_000);
     return () => clearInterval(id);
@@ -238,7 +227,7 @@
     const hasBlock = !!selectedBlockId;
     const hasProduct = !!selectedPluginId;
     const ipmReady = !ipmBlocked;
-    const hasObservation = !!scoutPest && scoutValue !== null;
+    const hasObservation = !!scoutPest.trim() && scoutValue !== null;
     return [
       { label: tr('sprayui.step.block'), state: hasBlock ? 'done' : 'active' },
       {
@@ -336,8 +325,8 @@
         rainForecastMmNext24h: (rainPct / 100) * 25.4
       }
     };
-    if (scoutPest && scoutValue !== null) {
-      body.scout = { pest: scoutPest, metric: scoutMetric, value: scoutValue };
+    if (scoutPest.trim() && scoutValue !== null) {
+      body.scout = { pest: scoutPest.trim(), metric: scoutMetric, value: scoutValue };
     }
     if (tankSize) body.tankSizeGallons = tankSize;
     body.bloomStatus = bloomStatus;
@@ -489,14 +478,20 @@
     <input
       id="scout-pest"
       type="text"
+      list="scout-pest-options"
       bind:value={scoutPest}
       placeholder={tr('sprayui.obs.pestPlaceholder')}
     />
+    <datalist id="scout-pest-options">
+      {#each new Set((selectedInsecticide?.scoutingThresholds ?? []).map((th) => th.pest)) as pest (pest)}
+        <option value={pest}></option>
+      {/each}
+    </datalist>
     <label for="scout-metric">{tr('sprayui.obs.metric')}</label>
     <select id="scout-metric" bind:value={scoutMetric}>
-      <option value="count-per-plant">{tr('sprayui.obs.countPerPlant')}</option>
-      <option value="pct-defoliation">{tr('sprayui.obs.defoliation')}</option>
-      <option value="pct-infested-plants">{tr('sprayui.obs.infested')}</option>
+      {#each PEST_COUNT_METRICS as m (m)}
+        <option value={m}>{scoutMetricLabel(m, data.locale)}</option>
+      {/each}
     </select>
     <label for="scout-value">{tr('sprayui.obs.value')}</label>
     <input id="scout-value" type="number" min="0" step="any" bind:value={scoutValue} />
@@ -563,40 +558,54 @@
       {/if}
     </header>
 
-    {#if primaryThreshold}
+    {#if tile && primaryThreshold}
       <div class="ipm-grid">
         <div class="ipm-dial">
-          <div class="dial-kicker">{tr('sprayui.ipm.thisWeek')}</div>
+          <div class="dial-kicker">{tr('sprayui.ipm.latest')}</div>
           <div class="dial-row">
-            <span class="dial-num serif" class:over={ipmTriggered}>{thisWeekCount}</span>
+            <span class="dial-num serif" class:over={ipmTriggered} data-testid="ipm-latest"
+              >{latestCount ?? '—'}</span
+            >
             <span class="dial-unit" lang="en" data-english-only="safety"
-              >{primaryThreshold.metric.replace(/-/g, ' ')}</span
+              >{primaryThreshold.pest} · {primaryThreshold.metric.replace(/-/g, ' ')}</span
             >
           </div>
           <div class="dial-sub">
             {tr('sprayui.ipm.actionThreshold')}
             <span class="mono">≥{primaryThreshold.threshold}</span>
-            {#if ipmTriggered}
-              · <span class="over">{tr('sprayui.ipm.over', { count: overBy })}</span>
+            {#if latestCount === null}
+              · {tr('sprayui.ipm.noCount')}
+            {:else if ipmTriggered}
+              · <span class="over"
+                >{tr('sprayui.ipm.over', {
+                  count: Number((latestCount - primaryThreshold.threshold).toFixed(2))
+                })}</span
+              >
             {:else}
-              · {tr('sprayui.ipm.below', { count: primaryThreshold.threshold - thisWeekCount })}
+              · {tr('sprayui.ipm.below', {
+                count: Number((primaryThreshold.threshold - latestCount).toFixed(2))
+              })}
             {/if}
           </div>
         </div>
         <div class="ipm-sparkline">
           <div class="spark-kicker">{tr('sprayui.ipm.history')}</div>
           <div class="spark-bars">
-            {#each sparkline as b (b.weekLabel)}
-              <div class="spark-col" title={`${b.weekLabel}: ${b.count}`}>
+            {#each tile.weeks as b (b.weeksAgo)}
+              {@const weekLabel =
+                b.weeksAgo === 0
+                  ? tr('sprayui.ipm.now')
+                  : tr('sprayui.ipm.weeksAgo', { count: b.weeksAgo })}
+              <div class="spark-col" title={`${weekLabel}: ${b.value ?? '—'}`}>
                 <div class="spark-bar-wrap">
                   <div
                     class="spark-bar"
                     class:triggered={b.triggered}
-                    style:height={`${Math.max(8, (b.count / sparklineMax) * 100)}%`}
+                    style:height={`${Math.max(8, ((b.value ?? 0) / sparklineMax) * 100)}%`}
                   ></div>
                 </div>
-                <span class="spark-count mono" class:triggered={b.triggered}>{b.count}</span>
-                <span class="spark-week mono">{b.weekLabel}</span>
+                <span class="spark-count mono" class:triggered={b.triggered}>{b.value ?? '—'}</span>
+                <span class="spark-week mono">{weekLabel}</span>
               </div>
             {/each}
             <div class="spark-divider" aria-hidden="true"></div>
@@ -607,6 +616,16 @@
           </div>
         </div>
       </div>
+      {#if otherThresholds.length > 0}
+        <p class="gate-body" data-testid="ipm-other-thresholds">
+          {tr('sprayui.ipm.anyOf')}
+          <span lang="en" data-english-only="safety"
+            >{otherThresholds
+              .map((th) => `${th.pest} ≥${th.threshold} ${th.metric.replace(/-/g, ' ')}`)
+              .join('; ')}</span
+          >
+        </p>
+      {/if}
     {:else}
       <p class="gate-body">
         {tr('sprayui.ipm.noThresholds')}

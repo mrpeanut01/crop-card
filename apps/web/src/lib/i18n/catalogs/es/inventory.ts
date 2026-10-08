@@ -634,6 +634,8 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
   'equip.viewOnly': 'Solo lectura',
   'equip.viewOnlyNote':
     'El rol de ayudante puede ver el equipo y registrar mantenimiento. Los propietarios crean y retiran equipo.',
+  'equip.add.template': 'Empezar con una plantilla',
+  'equip.add.templateNone': 'Ninguna, lo describo yo',
   'equip.add.title': 'Agregar equipo',
   'equip.add.type': 'Tipo',
   'equip.add.typePh': 'Tractor',

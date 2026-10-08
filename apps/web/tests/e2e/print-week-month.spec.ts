@@ -106,8 +106,11 @@ test.describe('printable Week and Month Cards', () => {
     await expect(card).toContainText('Turn the compost');
 
     await open(page, '/cards/month/mo_2019-01');
-    await expect(page.getByTestId('calendar-outside-window')).toContainText(
-      'outside the saved Cards'
+    const outside = page.getByTestId('calendar-outside-window');
+    await expect(outside).toContainText('cover the last two weeks and the next two months');
+    await expect(outside.getByRole('link', { name: /Today/ })).toHaveAttribute(
+      'href',
+      '/today?view=month&at=2019-01-01'
     );
   });
 

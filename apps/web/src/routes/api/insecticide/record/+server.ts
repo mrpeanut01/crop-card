@@ -3,8 +3,9 @@
  *
  * Persistence-side insecticide gate (Phase 10). Re-runs environmental gates
  * via the safety kernel + computes REI / PHI clear-by timestamps from the
- * plugin so the /today re-entry banner has a fast lookup. Auto-decrements
- * stock when a tank size is supplied (FIFO oldest non-expired lot).
+ * plugin so the re-entry banners and the /today re-entry card read them from
+ * the stored row. Auto-decrements stock when a tank size is supplied (FIFO
+ * oldest non-expired lot).
  */
 
 import { withClientRecordId } from '$lib/server/clientRecordId';

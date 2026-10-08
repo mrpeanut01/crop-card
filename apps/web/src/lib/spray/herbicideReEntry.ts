@@ -4,7 +4,12 @@
  * file and is never given an invented one.
  */
 
+import type { PluginRegistry } from '$lib/plugins';
+import type { SprayEvent } from '$lib/db/sprayEvents';
+
 const HOUR_MS = 60 * 60 * 1000;
+
+type RegistryView = Pick<PluginRegistry, 'get' | 'all'>;
 
 export interface TankReEntry {
   /** Longest REI any product in the tank has on file; null when none has one. */
@@ -74,4 +79,35 @@ export function herbicideReEntry(
 /** Whether a re-entry window is still running at `now`. */
 export function reEntryActive(rei: HerbicideReEntry | null, now: number): boolean {
   return rei !== null && rei.clearAt >= now;
+}
+
+/** A herbicide's sourced REI in hours; undefined when none is on file. */
+export function herbicideReiHoursOf(registry: RegistryView, pluginId: string): number | undefined {
+  const plugin = registry.get(pluginId)?.plugin;
+  if (!plugin || plugin.type !== 'herbicide') return undefined;
+  const h = plugin.reEntryIntervalHours;
+  return validHours(h) ? h : undefined;
+}
+
+export function longestHerbicideReiHours(registry: RegistryView): number {
+  let longest = 0;
+  for (const r of registry.all()) {
+    if (r.plugin.type !== 'herbicide') continue;
+    const h = herbicideReiHoursOf(registry, r.plugin.pluginId);
+    if (h !== undefined) longest = Math.max(longest, h);
+  }
+  return longest;
+}
+
+/** One herbicide spray record's re-entry window, from its stored clear time
+ *  and the library's REIs now. */
+export function herbicideReEntryFor(
+  registry: RegistryView,
+  ev: Pick<SprayEvent, 'occurredAt' | 'reEntryClearAt' | 'products'>
+): HerbicideReEntry | null {
+  return herbicideReEntry(
+    ev.occurredAt,
+    ev.reEntryClearAt,
+    ev.products.map((p) => herbicideReiHoursOf(registry, p.pluginId))
+  );
 }

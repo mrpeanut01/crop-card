@@ -298,6 +298,8 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'today.decon.run': 'Hacer la limpieza',
   'today.decon.see': 'Ver los pasos de limpieza',
   'today.decon.allEquipment': 'Todo el equipo',
+  'today.reEntry.heading': 'No entrar: intervalo de reingreso vigente',
+  'today.reEntry.openRecord': 'Abrir el registro de aplicación',
   'today.title': 'Hoy',
   'today.tray.log': 'Registrar la bandeja',
   'today.tray.notNow': 'Ahora no',

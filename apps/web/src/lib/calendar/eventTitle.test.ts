@@ -3,8 +3,16 @@ import {
   HARVEST_READINESS_BODY,
   calendarEventBody,
   calendarEventTitle,
-  harvestTargetLabel
+  harvestTargetLabel,
+  stageNameLabel
 } from './eventTitle';
+import { readdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { STAGE_NAME_KEYS } from './stageNames';
+import {
+  FAMILY_STAGE_TEMPLATES,
+  PERENNIAL_DAYOFYEAR_TEMPLATES
+} from '$lib/plugins/growthStageTemplates';
 import { speciesGroupTitle } from '$lib/i18n/speciesName';
 
 const harvest = {
@@ -68,5 +76,51 @@ describe('calendarEventBody', () => {
     };
     expect(calendarEventBody(spray, 'es')).toBe(spray.body);
     expect(calendarEventBody({}, 'es')).toBeUndefined();
+  });
+});
+
+describe('growth stage titles (#665)', () => {
+  const stageEvent = (title: string, code: string, name: string) => ({
+    title,
+    cropPluginId: 'tomato',
+    varietyDisplayName: 'Tomato',
+    detail: { stageCode: code, stageName: name }
+  });
+
+  it('translates a built-in stage name and keeps its code', () => {
+    const e = stageEvent('BBCH-89 — Fully ripe', 'BBCH-89', 'Fully ripe');
+    expect(calendarEventTitle(e, 'en')).toBe('BBCH-89 — Fully ripe');
+    expect(calendarEventTitle(e, 'es')).toBe('BBCH-89 — Madurez completa');
+  });
+
+  it('drops a word code that would repeat the name in English', () => {
+    const e = stageEvent('terminate — Termination window', 'terminate', 'Termination window');
+    expect(calendarEventTitle(e, 'es')).toBe('Ventana de terminación');
+    expect(calendarEventTitle(stageEvent('Bolting', 'bolt', 'Bolting'), 'es')).toBe(
+      'Espigado prematuro'
+    );
+  });
+
+  it('leaves a plugin-written stage name as written', () => {
+    const e = stageEvent('X1 — Purple haze', 'X1', 'Purple haze');
+    expect(calendarEventTitle(e, 'es')).toBe('X1 — Purple haze');
+    expect(stageNameLabel('Purple haze', 'es')).toBe('Purple haze');
+  });
+
+  it('has a translation for every built-in and shipped plugin stage name', () => {
+    const names = new Set<string>();
+    const collect = (stages: readonly { name: string }[] | undefined) =>
+      stages?.forEach((s) => names.add(s.name));
+    for (const table of Object.values(FAMILY_STAGE_TEMPLATES)) collect(table?.stages);
+    for (const tpl of Object.values(PERENNIAL_DAYOFYEAR_TEMPLATES)) collect(tpl?.stages);
+    const dir = path.resolve(__dirname, '../../../../../plugins/crops');
+    for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+      const plugin = JSON.parse(readFileSync(path.join(dir, file), 'utf8'));
+      collect(plugin.growthStageTable?.stages);
+      collect(plugin.zadoksStages);
+    }
+    expect(names.size).toBeGreaterThan(40);
+    expect([...names].filter((n) => !STAGE_NAME_KEYS[n])).toEqual([]);
+    for (const n of names) expect(stageNameLabel(n, 'es')).not.toBe(n);
   });
 });

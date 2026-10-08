@@ -17,8 +17,46 @@ import {
   parseCareMeta,
   rollupCareTasks,
   surfaceOn,
-  undatedPrompt
+  undatedPrompt,
+  carePlanTitleIn,
+  carePlanTitleToStore,
+  careCardTitle
 } from './carePlans';
+
+describe('built-in plan titles keep their language after an edit (#682)', () => {
+  const rabies = { title: 'Rabies vaccine' };
+
+  it('reads a built-in title in Spanish whatever its provenance', () => {
+    const plugin = { ...rabies, provenance: 'plugin' };
+    const edited = { ...rabies, provenance: 'manual' };
+    expect(carePlanTitleIn(plugin, 'es')).toBe('Vacuna contra la rabia');
+    expect(carePlanTitleIn(edited, 'es')).toBe('Vacuna contra la rabia');
+    expect(carePlanTitleIn(rabies, 'en')).toBe('Rabies vaccine');
+    expect(carePlanTitleIn(rabies, null)).toBe('Rabies vaccine');
+    expect(carePlanTitleIn({ title: 'Booster shot' }, 'es')).toBe('Booster shot');
+  });
+
+  it('stores an unchanged localized built-in title as its English default', () => {
+    expect(carePlanTitleToStore(' Vacuna contra la rabia ', rabies, 'es')).toBe('Rabies vaccine');
+    expect(carePlanTitleToStore('Rabies vaccine', rabies, 'en')).toBe('Rabies vaccine');
+    expect(carePlanTitleToStore('Rabia (3 años)', rabies, 'es')).toBe('Rabia (3 años)');
+    expect(carePlanTitleToStore(' Booster ', undefined, 'es')).toBe('Booster');
+    expect(carePlanTitleToStore('Vacuna contra la rabia', { title: 'Booster shot' }, 'es')).toBe(
+      'Vacuna contra la rabia'
+    );
+  });
+
+  it('a single-item care card reads the plan title it is given', () => {
+    expect(
+      careCardTitle(
+        'vaccination',
+        [{ planTitle: carePlanTitleIn(rabies, 'es'), subjectName: 'Toby' }],
+        null,
+        'es'
+      )
+    ).toBe('Vacuna contra la rabia: Toby');
+  });
+});
 import { HOLD_BEARING_KINDS } from '$lib/safety/animalWithdrawal';
 
 describe('care plan vocabulary (D0-4)', () => {

@@ -1,13 +1,15 @@
 /** A calendar event's title in the viewer's language, for display only.
  *  The engine builds English titles; this rebuilds the common shapes from
  *  the event's fields and leaves any other title as it is, with only the
- *  crop name swapped. Stage names and plugin text stay as written, except a
- *  crop seasonal row still carrying its shipped English (OP-21). */
+ *  crop name swapped. Built-in growth stage names are translated; other
+ *  plugin text stays as written, except a crop seasonal row still carrying
+ *  its shipped English (OP-21). */
 
 import { t, type MessageKey } from '$lib/i18n';
 import { cropDisplayName, cropDisplayNameByEnglish } from '$lib/i18n/cropName';
 import { seasonalRowText, seasonalTitleWithCrop } from '$lib/i18n/seasonalTaskText';
 import type { CalendarEvent } from './engine';
+import { STAGE_NAME_KEYS } from './stageNames';
 
 const HARVEST_TARGET_KEYS: Record<string, MessageKey> = {
   'Color-break (ship green / counter-ripen)': 'plan.cal.target.colorBreak',
@@ -20,6 +22,7 @@ const HARVEST_TARGET_KEYS: Record<string, MessageKey> = {
   'Fresh eating': 'plan.cal.target.freshEating',
   'Pollinator support (no harvest)': 'plan.cal.target.pollinator',
   'Subsequent cuttings': 'plan.cal.target.subsequentCuttings',
+  Sweet: 'plan.cal.target.sweet',
   'Terminate (no harvest)': 'plan.cal.target.terminate',
   'Vine-ripe': 'plan.cal.target.vineRipe'
 };
@@ -33,6 +36,27 @@ export function harvestTargetLabel(label: string, locale?: string | null): strin
 type TitleEvent = Pick<CalendarEvent, 'title' | 'varietyDisplayName' | 'detail'> & {
   cropPluginId?: string;
 };
+
+/** A built-in growth stage name in `locale`; plugin-written names as is. */
+export function stageNameLabel(name: string, locale?: string | null): string {
+  const key = STAGE_NAME_KEYS[name];
+  return key && locale ? t(locale, key) : name;
+}
+
+/** A stage window's title (`Fully ripe` or `BBCH-89 — Fully ripe`) with a
+ *  built-in stage name in `locale`. A word code ("terminate") would repeat
+ *  the name in English, so it is left off. */
+function stageTitle(e: TitleEvent, locale: string): string | null {
+  const name = typeof e.detail?.stageName === 'string' ? e.detail.stageName : null;
+  const code = typeof e.detail?.stageCode === 'string' ? e.detail.stageCode : null;
+  if (name === null || !STAGE_NAME_KEYS[name]) return null;
+  const shown = stageNameLabel(name, locale);
+  if (e.title === name) return shown;
+  if (code !== null && e.title === `${code} — ${name}`) {
+    return /^[a-z]/.test(code) ? shown : `${code} — ${shown}`;
+  }
+  return null;
+}
 
 function shownCrop(e: TitleEvent, locale?: string | null): string {
   return e.cropPluginId
@@ -66,6 +90,8 @@ export function calendarEventTitle(e: TitleEvent, locale?: string | null): strin
     });
     if (seasonal !== e.title) return seasonal;
   }
+  const stage = stageTitle(e, locale);
+  if (stage !== null) return stage;
   const label = typeof e.detail?.label === 'string' ? e.detail.label : null;
   if (label !== null && e.title === `Harvest target — ${label}: ${variety}`) {
     return t(locale, 'plan.cal.title.harvestTarget', {

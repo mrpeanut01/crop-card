@@ -373,15 +373,27 @@ const DEFAULT_NOTE_KEYS: Record<string, MessageKey> = {
     'animallib.careDefault.coreVaccinesNote'
 };
 
-/** A care plan title for display. The built-in dog and cat defaults (seeded
- *  with plugin provenance) read in `locale`; owner-typed titles as stored. */
-export function carePlanTitleIn(
-  plan: { title: string; provenance?: string | null },
-  locale?: string | null
-): string {
-  if (!locale || plan.provenance !== 'plugin') return plan.title;
+/** A care plan title for display. The built-in dog and cat default titles
+ *  read in `locale` while the stored title is still the shipped English
+ *  (a date edit keeps it); any other owner-typed title reads as stored. */
+export function carePlanTitleIn(plan: { title: string }, locale?: string | null): string {
+  if (!locale) return plan.title;
   const key = DEFAULT_TITLE_KEYS[plan.title];
   return key ? t(locale, key) : plan.title;
+}
+
+/** The title to save from the plan form: an unchanged built-in title is
+ *  stored as its English default, so it keeps reading in every language. */
+export function carePlanTitleToStore(
+  typed: string,
+  plan: { title: string } | null | undefined,
+  locale?: string | null
+): string {
+  const trimmed = typed.trim();
+  if (plan && DEFAULT_TITLE_KEYS[plan.title] && trimmed === carePlanTitleIn(plan, locale)) {
+    return plan.title;
+  }
+  return trimmed;
 }
 
 /** A built-in species care note in `locale`; anything else as is. */

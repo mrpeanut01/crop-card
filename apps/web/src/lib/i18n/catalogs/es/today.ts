@@ -288,6 +288,16 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'today.sum.planned.other': '{count} planeadas',
   'today.sum.skipped.one': '{count} omitida',
   'today.sum.skipped.other': '{count} omitidas',
+  'today.decon.aria': 'Limpieza del pulverizador',
+  'today.decon.title': 'Toca limpiar el pulverizador',
+  'today.decon.body.one':
+    'Un pulverizador todavía tiene restos de la última carga. Haz la limpieza antes de la próxima aplicación.',
+  'today.decon.body.other':
+    'Hay pulverizadores que todavía tienen restos de la última carga. Haz la limpieza antes de la próxima aplicación.',
+  'today.decon.lastLoad': 'última carga:',
+  'today.decon.run': 'Hacer la limpieza',
+  'today.decon.see': 'Ver los pasos de limpieza',
+  'today.decon.allEquipment': 'Todo el equipo',
   'today.title': 'Hoy',
   'today.tray.log': 'Registrar la bandeja',
   'today.tray.notNow': 'Ahora no',

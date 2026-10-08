@@ -154,7 +154,7 @@ test.describe('money (F2)', () => {
 
     await page.goto('/harvest');
     await page.waitForLoadState('networkidle');
-    await expect(page.locator('.stat-line')).toContainText(/1\s+events logged YTD/);
+    await expect(page.locator('.stat-line')).toContainText(/1\s+event logged YTD/);
   });
 
   test('"Record purchase as expense" prefills from a lot and is only allowed once', async ({

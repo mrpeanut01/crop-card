@@ -20,7 +20,11 @@
 
   const subject = $derived(data.subject);
   const showHolds = $derived(data.foods.length > 0);
-  const prefs = $derived({ timeZone: data.timeZone, units: 'us' as const });
+  const prefs = $derived({
+    timeZone: data.timeZone,
+    units: 'us' as const,
+    locale: page.data?.locale
+  });
   const routeLabel = new Map<string, string>(ROUTE_CHOICES.map((r) => [r.value, r.label]));
 
   let adding = $state(false);

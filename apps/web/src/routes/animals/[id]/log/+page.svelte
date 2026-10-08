@@ -6,7 +6,7 @@
   import HoldChips from '$lib/components/animals/HoldChips.svelte';
   import ProductionForm from '$lib/components/animals/ProductionForm.svelte';
   import HoldVoidPanel from '$lib/components/records/HoldVoidPanel.svelte';
-  import { errorText, useLabel } from '$lib/components/animals/labels';
+  import { errorText, quantityLabel, useLabel } from '$lib/components/animals/labels';
   import type { FoodStop } from '$lib/animals/holdCopy';
   import { formatInstant } from '$lib/prefs';
   import { lateLabel } from '$lib/records/lateLabel';
@@ -17,7 +17,11 @@
   const tr = $derived(createT(page.data?.locale));
 
   const subject = $derived(data.subject);
-  const prefs = $derived({ timeZone: data.timeZone, units: 'us' as const });
+  const prefs = $derived({
+    timeZone: data.timeZone,
+    units: 'us' as const,
+    locale: page.data?.locale
+  });
   const defaultKind = $derived(
     data.subject.speciesId === 'cattle' ||
       data.subject.speciesId === 'goat' ||
@@ -115,7 +119,7 @@
         {#each data.logs as l (l.id)}
           <li class="row">
             <div class="row-main">
-              <strong>{l.quantity} {l.unit}</strong>
+              <strong>{quantityLabel(tr, l.quantity, l.unit)}</strong>
               <span>{l.kind === 'weight' ? tr('animals.prod.weight') : useLabel(tr, l.use)}</span>
               {#if l.recordedLate}
                 <Pill tone="wheat">{lateLabel(true, l.daysLate, page.data?.locale)}</Pill>
